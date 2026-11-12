@@ -102,7 +102,8 @@
 #            giant (every type of the "giant" faction, the ogres too), ogre (the ogres)
 #            animated (every animated object, #483: generated, never written here)
 #            beast (the wild animals the druid calls, wildlife: the wolf and the bear, #839;
-#            content::beast_roster_tests checks them)
+#            content::beast_roster_tests checks them; and the warg, the dire warg, the deer,
+#            and the bat, #1341, animals the druid does not call)
 #   roles    archer (shoots: the goblin, kobold, and skeleton archers), caster (every
 #            combat = "caster" type), cultist (the minster's cult, and the necromancer and dark
 #            wizard of its kind), skeleton (walking bones), spirit (the incorporeal dead), troll
@@ -157,6 +158,11 @@
 #
 # Loot (spec §8 "Magic items"): loot, the chance in percent (default 0) that it drops a magic or
 # rare item where it dies, besides what it carried; the item level is the level's.
+#
+# Material drops (spec §7 "Material drops"; data/drops/README.toml): the crafting stock its body
+# leaves where it dies comes from its tags' files in data/drops/; [[creature.drops]] rows of the
+# same shape ({ material = "fur", count = "1", chance = 50 }, or object = "..." for an object) add
+# its own, and drops_from_tags = false (default true) switches its tags' rows off.
 #
 # Stats (spec §8 "Stats"; never shown to the player; combat and burden use them): stats, its scores
 # by stat (strength, dexterity, toughness, intelligence, willpower, presence; 1 to 40, default 10,

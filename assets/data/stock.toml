@@ -12,6 +12,10 @@
 #   plural    plural
 #   of        true: the material after the word ("a lump of amber"); default false, before it
 #             ("a steel ingot")
+#   unit      how many pieces' worth one piece of the group is (default 1, at least 1): a piece
+#             weighs and is worth `unit` times what 500 g of steel would in its material, and
+#             salvage and recipes count by it (piece::count_for). A hide is 8: 1.4 kg of leather,
+#             three to a jerkin, not twenty
 #   skill     the skill (skills.toml) that works the group's materials: salvage and recipes
 #   stat      the stat its checks are made by
 #   verb      the verb of its menu rows and dialogs ("Forge", "Make", "Cut")
@@ -19,7 +23,15 @@
 #   A skill is named with one stat only, everywhere in the file.
 #
 # gems = { skill, stat, verb }: the profession of the gems (materials with a `gem` table, no
-# group). Jewelcraft takes the gems, stone (stone, flint, obsidian, jade), and resin (amber).
+# group). Jewelcraft takes the gems, stone, and resin (amber).
+#
+# Each [[material]] (docs/design/recipes.md §3): one material's own row, over its group's:
+#   material  a material with a group, once
+#   skill     the skill that works it instead of its group's; its stat and verb are those the
+#             rows above give the skill, so some group (or the gems) must name it
+#   name      its own form word, singular, and
+#   plural    plural ("a fur pelt"); the group's `of` and `unit` still apply
+#   A row names a skill, a form word, or both.
 
 gems = { skill = "jewelcraft", stat = "dexterity", verb = "Cut" }
 
@@ -54,10 +66,22 @@ verb = "Make"
 group = "hide"
 name = "hide"
 plural = "hides"
+unit = 8
 skill = "woodcraft"
 stat = "dexterity"
 verb = "Make"
 
+# A bow's string: Woodcraft's, like the hide it comes from.
+[[group]]
+group = "sinew"
+name = "length"
+plural = "lengths"
+of = true
+skill = "woodcraft"
+stat = "dexterity"
+verb = "Make"
+
+# Jade is cut (Jewelcraft's); stone, flint, and obsidian are knapped by hand ([[material]] below).
 [[group]]
 group = "stone"
 name = "block"
@@ -81,9 +105,28 @@ group = "cloth"
 name = "bolt"
 plural = "bolts"
 of = true
+unit = 4
 
 [[group]]
 group = "glass"
 name = "lump"
 plural = "lumps"
 of = true
+
+# Knapped by hand, as primitive gear is made (#1339): Woodcraft's.
+[[material]]
+material = "flint"
+skill = "woodcraft"
+
+[[material]]
+material = "obsidian"
+skill = "woodcraft"
+
+[[material]]
+material = "stone"
+skill = "woodcraft"
+
+[[material]]
+material = "fur"
+name = "pelt"
+plural = "pelts"

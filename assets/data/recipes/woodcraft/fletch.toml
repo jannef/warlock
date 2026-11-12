@@ -1,0 +1,8 @@
+# Fletch (spec §8 "Fletching"): arrows or bolts for the launcher ready, by anyone, anywhere, with
+# a knife. `world/fletch.rs`'s rules, unchanged (data/fletch.toml).
+[[recipe]]
+id = "fletch"
+use = "fletch"
+anyone = true
+knife = true
+launcher = true

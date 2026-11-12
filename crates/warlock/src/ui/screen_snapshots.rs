@@ -11,6 +11,7 @@ use super::*;
 use crate::cli::Args;
 use crate::game::{GameContent, PlayerAction};
 use crate::save::{SaveCommand, SaveStore};
+use crate::settings::mods::Mods;
 use crate::ui::screens::{MenuChoice, ScreenStack};
 use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput, NativeKeyCode};
@@ -250,6 +251,26 @@ const CASES: &[Case] = &[
         actions: "wait",
         screen: Some("controls"),
         keys: Some("Up"),
+        size: (120, 44),
+        ..BASE
+    },
+    // A play key rebound with Ctrl held (#1323): Move north's first key becomes Ctrl+k, and the
+    // message says so (Search for a while's Ctrl keys are its defaults).
+    Case {
+        name: "controls-screen-ctrl-key",
+        actions: "wait",
+        screen: Some("controls"),
+        keys: Some("Enter Enter Ctrl+k"),
+        size: (120, 44),
+        ..BASE
+    },
+    // A command's keys open under it (#1324): Wait/search's `s` added to Move north moves, and
+    // the message says from where; "Add a key" waits below the new key.
+    Case {
+        name: "controls-screen-keys",
+        actions: "wait",
+        screen: Some("controls"),
+        keys: Some("Enter Up Enter s"),
         size: (120, 44),
         ..BASE
     },
@@ -716,8 +737,8 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
-    // Beside a forge's anvil with arms and armour picked up: Temper in the Here group, asking
-    // for something carried; then its list, metal arms and armour only (not the lantern).
+    // Beside a forge's anvil with arms and armour picked up: no Here group (Temper is a recipe on
+    // Metalcraft's screen, #1334); then the Temper list, metal arms and armour (no lantern).
     Case {
         name: "abilities-menu-forge",
         scenario: "forge",
@@ -766,7 +787,7 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
-    // A ranger after a batch (spec §8 "Fletching"): Fletch in Woodcraft's place, usable; the
+    // A ranger after a batch (spec §8 "Fletching"): Woodcraft… in the skill's place; the
     // message line says what was made.
     Case {
         name: "abilities-menu-fletch",
@@ -792,20 +813,40 @@ const CASES: &[Case] = &[
         screen: Some("salvage"),
         ..BASE
     },
-    // A warrior carries no knife: Fletch greyed out, with the reason.
+    // A warrior carries no knife: Woodcraft's screen (its row in the abilities menu, `e`) greys
+    // Fletch and Whittle, each with the reason in place of what it takes (#1334).
     Case {
-        name: "abilities-menu-fletch-no-knife",
+        name: "profession-woodcraft-no-knife",
         character: Some("human,male,warrior"),
         run: true,
         screen: Some("abilities"),
+        keys: Some("e"),
         ..BASE
     },
-    // A thief's dagger is a knife, but no bow is ready.
+    // A thief's dagger is a knife, but no bow is ready: Whittle can be made, Fletch not (`h`:
+    // Woodcraft…, after Disarm, Listen, Metalcraft…, Pick lock, Steal, and Forage).
     Case {
-        name: "abilities-menu-fletch-no-launcher",
+        name: "profession-woodcraft-no-launcher",
         character: Some("human,male,thief"),
         run: true,
         screen: Some("abilities"),
+        keys: Some("h"),
+        ..BASE
+    },
+    // Metalcraft's screen (`--screen profession`, the first profession's) away from an anvil:
+    // Temper under "Work", greyed "no anvil beside you".
+    Case {
+        name: "profession-metalcraft-no-anvil",
+        run: true,
+        screen: Some("profession"),
+        ..BASE
+    },
+    // Beside the forge's anvil: Temper can be made, what it takes under the list.
+    Case {
+        name: "profession-metalcraft-forge",
+        scenario: "forge",
+        actions: "move:E",
+        screen: Some("profession"),
         ..BASE
     },
     // Beside a healing spring (spec §7 "Special rooms"): Drink in the Here group, last.
@@ -813,6 +854,14 @@ const CASES: &[Case] = &[
         name: "abilities-menu-spring",
         scenario: "spring",
         actions: "move:N*5",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // Beside the darkness chamber's glowing fungus after a gather (spec §8 "Gathering herbs"):
+    // Gather in the Here group, everyone's; the message line says what was found.
+    Case {
+        name: "abilities-menu-gather",
+        actions: "move:N*3 open:N move:N*2 move:E*30 open:N move:N*2 move:W*6 gather:W",
         screen: Some("abilities"),
         ..BASE
     },
@@ -2065,12 +2114,43 @@ fn graveyard(case: &Case) -> crate::graveyard::GraveyardStore {
 
 /// Presses `keys` (as `--keys` writes them) in one frame, then lets the run and the screens
 /// catch up.
+/// Presses `keys` (as `--keys` names them; `Ctrl+k` holds Ctrl for the `k`): each run of keys
+/// with the same modifiers held in one frame, then a frame with none held.
 pub(super) fn press_keys(app: &mut App, keys: &str) {
+    let mut runs: Vec<(Mods, Vec<KeyboardInput>)> = Vec::new();
     for key in keys.split_whitespace() {
-        app.world_mut().write_message(press(key));
+        let (mods, key) = Mods::split(key);
+        match runs.last_mut() {
+            Some((held, presses)) if *held == mods => presses.push(press(key)),
+            _ => runs.push((mods, vec![press(key)])),
+        }
     }
+    for (mods, presses) in runs {
+        hold(app, mods);
+        for key in presses {
+            app.world_mut().write_message(key);
+        }
+        app.update();
+    }
+    hold(app, Mods::NONE);
     app.update();
-    app.update();
+}
+
+/// Holds exactly the modifiers `mods`, as the keyboard state the router reads.
+fn hold(app: &mut App, mods: Mods) {
+    let mut held = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
+    held.release_all();
+    let keys = [
+        (mods.ctrl, KeyCode::ControlLeft),
+        (mods.alt, KeyCode::AltLeft),
+        (mods.shift, KeyCode::ShiftLeft),
+        (mods.sup, KeyCode::SuperLeft),
+    ];
+    for (on, key) in keys {
+        if on {
+            held.press(key);
+        }
+    }
 }
 
 /// Applies the actions input asked for, as the game plugin does.

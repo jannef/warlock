@@ -804,7 +804,11 @@ fn skill_reader(effect: crate::skills::Effect) -> (&'static str, &'static str) {
         S::Wedge => ("world/wedge.rs", include_str!("../world/wedge.rs")),
         S::Freshness => ("world/freshness.rs", include_str!("../world/freshness.rs")),
         S::Bargain => ("world/shop.rs", include_str!("../world/shop.rs")),
-        S::Identify => ("world/appraise.rs", include_str!("../world/appraise.rs")),
+        S::Identify | S::IdentifyPotion | S::IdentifyMagic => {
+            ("world/appraise.rs", include_str!("../world/appraise.rs"))
+        }
+        S::Herbs => ("world/forage.rs", include_str!("../world/forage.rs")),
+        S::Dig => ("world/dig.rs", include_str!("../world/dig.rs")),
         S::Kick => ("world/door.rs", include_str!("../world/door.rs")),
         S::Slip => ("world/slip.rs", include_str!("../world/slip.rs")),
         S::Lookout | S::Stalk | S::Evade => {

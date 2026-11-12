@@ -1,0 +1,7 @@
+# Material drops of the `air` tag (README.toml). Air elementals: an essence of air.
+bodiless = true
+
+[[drop]]
+object = "essence_of_air"
+count = "1"
+chance = 60

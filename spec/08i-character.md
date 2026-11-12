@@ -453,7 +453,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     class's draws move; the drow's Sneak attack (40 %, `2d4`), summed with a thief's own. A creature type's skills are fixed values. A scenario without a
     character gives a player trained in nothing.
   - **Values** run 0 to 999 (`MAX_VALUE`), 100 a master; there is no hard cap, but points come
-    slowly past the soft cap (100). A value grows **only by level-up rolls** (below).
+    slowly past the soft cap (100). A value grows **only by skill rolls**: a level's and the
+    automatic ones (below).
   - **Training marks**: a meaningful use of a trained skill may earn it a mark, with its rule's
     chance (§7), one draw of the run's **training stream** (`training`, kept in the world state;
     never the gameplay stream, so training never changes a fight's rolls) per rule: a step of the
@@ -481,7 +482,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     taken Staggered (`staggered`; Balance). Only
     the player trains for now; creatures keep their type's
     skills. Marks are a **reservoir**: they raise nothing by
-    themselves and nothing is said; they gather until a level-up roll on the skill spends them.
+    themselves and nothing is said; they gather until a roll on the skill spends them.
+  - **Automatic rolls** (#1328): when a trained skill's marks reach `auto_at` (`[rolls]` in
+    `data/skills.toml`: 100, the ladder's `3d4` step) the skill rolls at once, with no choice:
+    the same roll as a level-up roll (below: its die, the class and race affinities, the soft
+    cap, the `spend` of the marks, the levels stream, "Your stealth improves."), so it falls back
+    below the threshold. It is checked wherever marks are added (`World::mark_skill`), for every
+    skill and way of training, and comes on top of the level's rolls, whatever level-up is due.
   - **Balance** (#1029): sure footing under a load, on bad ground, and after a stagger. Besides
     the burden's slowdown (`burden`), a step onto rough ground (off the overworld, `move_cost` over
     100 and not wading: bush, reeds, rubble, ice) spares a percent of what the terrain adds over
@@ -630,6 +637,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
     rotten food 25 points easier, at most 95 %); eating such food marks Appraise (`judged`, 10 %). A healer's and a
     sage's service price follows the same favour as a shop's (a `temple` service stays flat), and a service paid
     marks Negotiation (`deal`).
+  - **The professions' skills** (#1331, #1343; `docs/design/professions.md` §9): **Alchemy**
+    (`identify_potion`) and **Enchanting** (`identify_magic`) look the same way each hour, after
+    Appraise and from the same stream, each at its own things (5 / 25 / 40 % at 0 / 100 / 200):
+    Alchemy at potions and flasks of an unknown kind ("You recognise your fizzy scarlet potion:
+    a flask of fire."), Enchanting at unknown magic that is no potion or scroll (arms, armour,
+    jewellery, wands, rods: "You read the magic bound in your long sword: …"); neither marks
+    until its craft comes. **Mining** adds its `dig` percent to a dig turn's work (25 at 100,
+    40 at 200; §8 "Digging"), marked by every wall dug through (`dug`). **Herbalism** gives a
+    forage that found something a chance of a herb besides ("Foraging" below), and more herbs
+    to a gather from the glowing fungus ("Gathering herbs" below). **Jewelcraft**
+    has no use yet. Who trains them: gnomes Jewelcraft, dwarves and duergar Mining (dwarves
+    Jewelcraft now and then), kobolds Mining, halflings Herbalism; druids and witches Herbalism,
+    witches Alchemy; optional for the craftsperson (Jewelcraft, Mining), merchant (Jewelcraft),
+    commoner (Mining), ranger (Herbalism), wizard (Alchemy, Enchanting), druid (Alchemy), witch
+    (Enchanting), and aristocrat (Enchanting); and a story line each.
 - **Treating oneself** (`heal.rs`, `world/heal.rs`; #549, the owner 2026-10-27): the Heal
   skill's use, the abilities menu's **Heal** (`Ability::Heal`, in the skill's place among the
   Skills; `Action::Heal`, replay text `heal`, `heal:ID`, or `heal:ID:DIR`; cost `heal`, 2500: a
@@ -694,14 +716,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - No limit on trying again (the owner's rule): a victim that caught the player stays angry,
     and that is the price. Presentation shows only what comes of it, never a modifier or a roll.
 - **Fletching** (`world/fletch.rs`, data `data/fletch.toml`; #1021; the owner: "Do not require
-  small blade in hand, just in inventory is fine"): the abilities menu's **Fletch** (`Ability::Fletch`,
-  in Woodcraft's place among the Skills; nothing to aim; `Action::Fletch`, replay text `fletch`; no
-  key of its own). Anyone, anywhere, trained in Woodcraft or not.
+  small blade in hand, just in inventory is fine"): **Fletch**, a recipe of Woodcraft's open to
+  anyone, on Woodcraft's profession screen (its row in the abilities menu, "Woodcraft…"; #1334;
+  nothing to aim; `Action::Fletch`, replay text `fletch`; no key of its own). Anyone, anywhere, trained in Woodcraft or not.
   - **Needs**: a knife carried, in the pack, worn or wielded or neither (`Content::is_knife`: an
     object of the `daggers` weapon skill: a dagger, a stiletto, a knife; a short blade is none), and
-    a launcher ready whose `launches` has a row in the file (a bow, a crossbow; not a sling). The
-    menu greys it out "you have no knife" or "you have no bow or crossbow ready", and the rules
-    refuse in the same words, taking no time. No material is used up.
+    a launcher ready whose `launches` has a row in the file (a bow, a crossbow; not a sling). Its
+    row is greyed "no knife" or "no bow or crossbow ready", and the rules
+    refuse ("You have no knife.", "You have no bow or crossbow ready."), taking no time. No
+    material is used up.
   - **Time**: `seconds` (600: ten minutes), in turns of the `fletch` action, stopped like a rest
     ("You put down the knife."): the time is spent and nothing is made. On the overworld the
     encounter roll runs as for a forage.
@@ -714,8 +737,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Fletcher** (`talents/fletcher.toml`, effect `fletcher`, `TalentMods::fletcher`): the ranger's at
     level 1, nobody else's; five minutes, +4 to the check, twice the count after the margin, plain at
     any Woodcraft. The ranger's kit has a knife, carried, not wielded.
-- **Whittling** (`world/temper.rs`, `Craft::Whittle`; #1028; design `skill-uses.md` W3): Temper's twin for wood on the same rules, so one item has one state (`magic/worked.rs`) and one set of numbers (`data/temper.toml`: ten minutes, `13 + 2 x attempts`, three improvements). The abilities menu's **Whittle** (`Ability::Whittle`, beside Fletch in Woodcraft's place; everyone has it, anywhere; `Action::Whittle { item }`, replay text `whittle:LETTER`; asks for an item, `Aim::Item`, what `workable_wood` accepts) takes a weapon, missile weapon, shield, or armour whose main part is of a material of `group = "wood"` (bows, crossbows, staves, clubs), not a spirit weapon. Refused, taking no time, without a knife carried ("You have no knife."; greyed out `Unavailable::NoKnife`), with a stack of another material ("Only a weapon of wood can be whittled."), or at three improvements. The check is the natural roll plus Dexterity's modifier, `TalentMods::check(Dexterity)`, and Woodcraft's `whittle` points (`Effect::Whittle`, curve 0, 8 at 100, 12 at 200), as Temper's is Strength with Metalcraft. Woodcraft earns a mark per finished attempt (`Use::Whittle`, 100 %).
-- **Salvage** (`world/salvage.rs`, data `data/salvage.toml`; #1333; design `professions.md` §5; `docs/dev/crafting.md`): breaking an item into its materials, anywhere, with nothing. The abilities menu's **Salvage** (`Ability::Salvage`, Skills group, everyone's; `Action::Salvage { item }`, replay text `salvage:LETTER`; asks for an item) takes ten minutes (`seconds`, by `keep_at`; interrupted, nothing happens). Then one check per distinct material of the item (its resolved parts, gems included, in first-seen order) that a profession works (`data/stock.toml`: metal Metalcraft with Strength; wood, bone, and hide Woodcraft with Dexterity; stone, resin, and gems Jewelcraft with Dexterity; cloth and glass nothing): 2d12 + the stat's modifier + talents' checks of it + that skill's `craft` points (`Effect::Craft`, curve 0, 8 at 100, 12 at 200, read for that skill alone) against `difficulty` (12) + the material's `work`; a natural 2 fails, a natural 24 succeeds; untrained, the check is made the same. Made, the material comes back as stock, `yield` (50) % of its grams, at least one piece, or a gem whole with its size and cut; failed, it is lost, but a gem drops one cut (while above crude) or else one size (while above tiny), and shatters only on a natural 2 or with neither left to lose. The one item (one of a stack) is destroyed either way, its magic and improvements with it. Refused, with no time: worn or wielded, protected (quests, uniques, of Proof), unpaid, a spirit weapon, or nothing a profession works. Each profession rolled earns a mark (`Use::Salvage`, 100 %), that skill alone. No noise, no alignment.
+- **Whittling** (`world/temper.rs`, `Craft::Whittle`; #1028; design `skill-uses.md` W3): Temper's twin for wood on the same rules, so one item has one state (`magic/worked.rs`) and one set of numbers (`data/temper.toml`: ten minutes, `13 + 2 x attempts`, three improvements). **Whittle**, a recipe of Woodcraft's open to anyone (beside Fletch on Woodcraft's profession screen, #1334; anywhere; `Action::Whittle { item }`, replay text `whittle:LETTER`; asks for an item, the Whittle list, what `workable_wood` accepts) takes a weapon, missile weapon, shield, or armour whose main part is of a material of `group = "wood"` (bows, crossbows, staves, clubs), not a spirit weapon. Refused, taking no time, without a knife carried ("You have no knife."; its row greyed "no knife"), with a stack of another material ("Only a weapon of wood can be whittled."), or at three improvements. The check is the natural roll plus Dexterity's modifier, `TalentMods::check(Dexterity)`, and Woodcraft's `whittle` points (`Effect::Whittle`, curve 0, 8 at 100, 12 at 200), as Temper's is Strength with Metalcraft. Woodcraft earns a mark per finished attempt (`Use::Whittle`, 100 %).
+- **Salvage** (`world/salvage.rs`, data `data/salvage.toml`; #1333; design `professions.md` §5; `docs/dev/crafting.md`): breaking an item into its materials, anywhere, with nothing. The abilities menu's **Salvage** (`Ability::Salvage`, Skills group, everyone's; `Action::Salvage { item }`, replay text `salvage:LETTER`; asks for an item) takes ten minutes (`seconds`, by `keep_at`; interrupted, nothing happens). Then one check per distinct material of the item (its resolved parts, gems included, in first-seen order) that a profession works (`data/stock.toml`: metal Metalcraft with Strength; wood, bone, hide, and sinew Woodcraft with Dexterity, and flint, stone, and obsidian by their own rows; jade, resin, and gems Jewelcraft with Dexterity; cloth and glass nothing): 2d12 + the stat's modifier + talents' checks of it + that skill's `craft` points (`Effect::Craft`, curve 0, 8 at 100, 12 at 200, read for that skill alone) against `difficulty` (12) + the material's `work`; a natural 2 fails, a natural 24 succeeds; untrained, the check is made the same. Made, the material comes back as stock, `yield` (50) % of its grams, at least one piece, or a gem whole with its size and cut; failed, it is lost, but a gem drops one cut (while above crude) or else one size (while above tiny), and shatters only on a natural 2 or with neither left to lose. The one item (one of a stack) is destroyed either way, its magic and improvements with it. Refused, with no time: worn or wielded, protected (quests, uniques, of Proof), unpaid, a spirit weapon, or nothing a profession works. Each profession rolled earns a mark (`Use::Salvage`, 100 %), that skill alone. No noise, no alignment.
+- **Professions** (`content/recipe.rs`, `world/craft.rs`, `ui/profession_screen.rs`; #1334, design `docs/design/professions.md` §6, §8; `docs/dev/crafting.md`): a skill with a directory of **recipes** (`data/recipes/<skill>/<id>.toml`, one a file) is a profession: Metalcraft and Woodcraft. Its row in the abilities menu ("Metalcraft…", in the skill's place) opens its screen of recipes, known by skill value (`from`, never learned). Whoever is trained in the skill sees every recipe of it, the untrained only those open to anyone (`anyone`): the built-in Temper (Metalcraft), Whittle, and Fletch (Woodcraft), which run their own actions unchanged (#1337 Q3: they stay open to everyone). A recipe is greyed with the first reason it cannot be made now, decided by the rules: "beyond your skill", "no anvil beside you", "no knife", "no bow or crossbow ready", "no metal to hand", "no arrowheads". Recipes that make things (`result`, from stock and inputs at a `station`, in `seconds` against `difficulty`) are data checked at load; `Action::Craft` (`craft:ID[:POS,...]`, `-` a skipped optional) is refused, taking no time, until the forge comes (P5).
 - **Foraging** (`world/forage.rs`, data `data/forage.toml`, §7; #547; the owner, 2026-10-27:
   "survival can be used on wilderness map, some chance to gather food items"): Survival's use,
   the abilities menu's **Forage** (`Ability::Forage`, in the skill's place among the Skills;
@@ -736,10 +760,40 @@ developer notes (CLAUDE.md, `docs/dev/`).
     most 100, one gameplay draw; found, one of the row's `finds` by weight (one draw) and its
     `count` dice. The food is fresh (made now) and goes into the pack: "You gather 2 handfuls of
     berries."; else "You find nothing worth eating.". Then Survival may earn a mark (`forage`).
+  - **Herbs** (#1343): a forage that found something, by one trained in Herbalism, on ground
+    with a `herbs` list, has Herbalism's `herbs` percent (25 / 60 / 80 at 0 / 100 / 200) of one
+    herb besides, by weight, one of it: "Your eye for herbs finds an angelica root besides." Two
+    more gameplay draws, a herbalist's only: anyone else's forage draws as before. The lists
+    hold angelica root and the brewing herbs where they grow (#1340): moonwort and comfrey on
+    grassland and in forests, feverfew and vervain in forests, henbane and bog myrtle in swamps,
+    eyebright on hills; glowcap and mandrake never (the dungeon's). Herbalism marks on a
+    forage, 25 %.
     Nothing is remembered: the same spot may be tried again at once (no anti-farming limit, the
     time is the price). Presentation shows the outcome only, never the chance.
   - **Food** found is ordinary food (§8 "Hunger"): berries, mushrooms, and hazelnuts (new), and
     apples and angelica roots.
+- **Gathering herbs** (`world/gather.rs`, `data/herbs.toml`; #1340, design `recipes.md` §8): the
+  dungeon's glowing fungus (terrain `fungus`, the file's `terrain`) is gathered for herbs, the
+  inputs of Alchemy. The abilities menu's **Gather** (`Ability::Gather`, the *Here* group, as
+  Pray and Drink: listed only beside fungus; `Action::Gather(Dir)`, replay text `gather:DIR`;
+  no key of its own) is **everyone's**, while the file exists. With fungus on one cell beside
+  the player the menu gathers there at once; with more it asks the way. A way with no fungus is
+  refused, taking no time ("There is nothing here to gather.").
+  - **Time**: the file's `seconds` (300: five minutes), in turns of the `gather` action (1000),
+    stopped like a rest ("You stop gathering."); a gather cut short finds nothing, the time
+    spent.
+  - **The find**: trained in Herbalism, `count` (`1d2`, one gameplay draw per die) plus one for
+    every `value_per_count` (50) of Herbalism's trained value; untrained, `untrained` (1), no
+    draw. Each herb is one gameplay draw by weight from the `[[herb]]` rows at the level's item
+    level (a dungeon level's depth; a hand-made level's `item_level`), read as `gems.toml`'s
+    sizes are: `find` at level 1, `deeper` added per level past the first (negative for
+    moonwort), never below 0, none below `level`. Nine herbs: glowcap 40/0/1, moonwort 30/−1/1,
+    comfrey 20/0/1, feverfew and henbane 10/2/3, eyebright, bog myrtle, and vervain 6/2/4,
+    mandrake 2/2/6. Into the pack: "You gather 2 sprigs of moonwort and a glowcap." Then
+    Herbalism marks (`gather`, 100 %, the training stream).
+  - **The fungus never depletes**: nothing changes on the level (no picked state, no light
+    change), so it may be gathered again at once; time is the only cost. Fungus is placed by
+    the caves generator's patches and hand-made levels; the rooms generator places none.
 - **Talents** (`warlock-core/src/talent.rs`, the runtime; `content/talent.rs`, the data;
   `world/talent.rs`, the picks; M30, #229; design `docs/design/progression.md` §7, §10): knacks
   a character picks as they level, each a typed effect read where the rules already read what

@@ -6,14 +6,14 @@ rules it implements are in spec/08i-character.md. Keep it current with the code,
 Skills (spec §8 "Skills", #132) live in `warlock-core`: `skills.rs` (`Skills` per actor: trained
 skills only, a missing one is untrained and gives nothing; `Effect` and `Use`, the typed benefit
 and training-mark hooks; `Benefit` growth by `steps` or a `curve`; `Ladder` and `RollRules`, the
-level-up rolls' data; `Skills::mark` adds a mark, `Skills::roll` applies a roll and spends the
+skill rolls' data; `Skills::mark` adds a mark, `Skills::roll` applies a roll and spends the
 marks), `content/skill.rs` (`data/skills.toml`: the skills, `[ladder]`, `[rolls]`; adding a skill
-is one entry), `world/train.rs` (marks for the player only, each through `World::mark_skill`, the one hook (a quest's `skills` reward marks there too, docs/dev/quests.md), drawn from the `training` stream in
+is one entry), `world/train.rs` (marks for the player only, each through `World::mark_skill` in `world/skill_roll.rs`, the one hook (a quest's `skills` reward marks there too, docs/dev/quests.md), drawn from the `training` stream in
 `WorldState`, never the gameplay stream; nothing said), and `world/skill_roll.rs` (#230: the
 level-up rolls, below).
 
-**Growth is level-up rolls only** (design `docs/design/progression.md` §5). Marks are a
-reservoir: `World::level_up` (`world/talent.rs`) puts `World::level_rolls()` rolls (class
+**Growth is skill rolls only** (design `docs/design/progression.md` §5): a level's, and the
+automatic one (#1328). Marks are a reservoir: `World::level_up` (`world/talent.rs`) puts `World::level_rolls()` rolls (class
 `rolls` + race `rolls` + `RollRules::for_intelligence` of the raised Intelligence; 0 when the
 player is trained in nothing) into each level's `Due::rolls`; `refuse_due` refuses everything
 else ("You have skill rolls to spend."); `advance:SKILL` (`World::advance_skill`) throws
@@ -25,7 +25,13 @@ marks, the practice die, the known-for step, the die, the `RollBonus` and why, `
 `world::roll_count` (a `RollCount`: class, race, Intelligence, talents), read by the screen
 through `PerceptionView::skill_roll`/`roll_count` and by the dev `progress` dump (`rolls a
 level ...`, `roll dice athletics 1d3, ...`). `levelup:auto` spends rolls on the first trained skill
-(`advance_auto`). The Skills screen's meter (`skills::progress`) is the ladder step in quarters.
+(`advance_auto`). **Automatic rolls** (#1328): every mark is added through
+`World::mark_skill(id, by)` (`world/skill_roll.rs`; `World::train` calls it a mark at a time, and
+`World::teach_skills` with a quest reward's `marks` at once, after its words). Once the skill's marks reach `RollRules::auto_at` (`[rolls]
+auto_at`, 100; 0 turns it off) it rolls at once through `World::roll_skill`, the one path
+`advance_skill` uses too: the same dice, `levels_rng`, words, and spend, again while the spent
+marks are still at the threshold (a big gift). No `Due` is touched, and a pending level-up does
+not hold it back. The Skills screen's meter (`skills::progress`) is the ladder step in quarters.
 Tests: `skills.rs` (ladder, rolls, meter), `content/skill.rs`, `content/class.rs`
 (`known_for`, `rolls`), `world/skill_roll_tests.rs` (counts, refusals, dice and affinities,
 streams, saves and replays), `world/skills_tests.rs` (marks by use). Race and class grants are dice rolled in `character.rs` after every
@@ -132,17 +138,47 @@ never gear or statuses, no marks; JSON dumps carry it as a seen actor's `known`;
 writes the line. Tests `world/knowledge_tests.rs`.
 Metalcraft's `temper` benefit is read in
 `world/temper.rs::tempered` (the Strength check of an attempt at an anvil, whose difficulty rises
-with every attempt on the item, docs/dev/special-rooms.md); Metalcraft
-stays a skill "not usable yet" in the abilities menu, since Temper is offered by the anvil to
-anyone. The professions' skills (#1331, epic #1337) **Alchemy, Enchanting, Herbalism, Jewelcraft,
-and Mining** are data only for now, **no effect yet**: no marks, no benefit, and no class, race,
-or story trains them; but Jewelcraft, like Metalcraft and Woodcraft, has the `craft` benefit and
-a `salvage` mark (#1333: salvage, `docs/dev/crafting.md`; `Effect::Craft` is read per skill by
-`Actor::skill_effect_of`, never summed across skills). Kinds as `docs/design/professions.md` §9: Mining `rules`, Herbalism
-`passive`, the others `action` (shown "not usable yet"). Skill ids are file order (alphabetical),
-and `Skills` is saved and hashed by that index, so inserting them shifted the later skills'
-indices: state hashes and saves of runs with skills change (saves are pinned to the version).
-Effects and training grants are deferred to a follow-up issue.
+with every attempt on the item, docs/dev/special-rooms.md). Metalcraft and Woodcraft are
+**professions** (#1334, `docs/dev/crafting.md`): each has a recipe directory
+(`data/recipes/<skill>/`), so the abilities menu lists it as one `Ability::Profession` row in the
+skill's place ("Metalcraft…", "Woodcraft…"), which opens its recipe screen; Temper, Whittle, and
+Fletch are recipes there, open to everyone. The professions' skills (#1331, epic #1337) **Alchemy, Enchanting, Herbalism, Jewelcraft,
+and Mining**: kinds as `docs/design/professions.md` §9: Mining `rules`, Herbalism `passive`, the
+others `action` (shown "not usable yet"). Skill ids are file order (alphabetical), and `Skills` is
+saved and hashed by that index. Their first effects (#1343, one hook each):
+- **Mining**'s `dig` (`Effect::Dig`, 25 % more work a turn at 100, 40 % at 200) is added to the
+  talents' and items' `dig_percent` in `world/dig.rs::dig_turn`; a wall the player digs through
+  marks `Use::Dug` (100 %) there too, after `break_wall` (not in it: a rod of digging and a blast
+  break walls through it, and they are no dig).
+- **Herbalism**'s `herbs` (`Effect::Herbs`, 25 / 60 / 80 % at 0 / 100 / 200) is read in
+  `world/forage.rs::forage_herbs`: on a forage that found something, trained in it, on ground with
+  a `herbs` list (`forage.toml`, `ForageGround::herbs`: angelica root and the brewing herbs where
+  they grow, #1340), one more gameplay draw for the chance and one for which, one of it
+  into the pack. Nobody else draws, so a forage without Herbalism draws as before. Marks on
+  `forage`, 25 %.
+- **Herbalism**'s use is **Gather** (#1340, `world/gather.rs`, `content/herbs.rs`,
+  `data/herbs.toml`): the glowing fungus gives herbs to anyone beside it (`Ability::Gather`, the
+  abilities menu's *Here* group, offered by the fungus as a room's feature offers Pray, so the
+  skill stays `passive`). Untrained, one herb; trained, `count` + Herbalism's trained value /
+  `value_per_count` (`Skills::value_of_effect(Effect::Herbs)`), each drawn by weight at the
+  level's item level (`HerbRules::at`). Marks on `gather`, 100 %. The fungus never changes.
+- **Alchemy**'s `identify_potion` and **Enchanting**'s `identify_magic` (5 / 25 / 40 %) look in
+  `world/appraise.rs::appraise_hours` after Appraise's `identify`, from the same hour's stream:
+  Alchemy at the potions and flasks whose kind is unknown (`drink`), Enchanting at every other
+  unknown thing that is no scroll (affixes, wands, rods). Each draws only when trained and with a
+  candidate, so an appraiser alone draws as before. No marks until their crafts come.
+- **Crafting** (#1333, `docs/dev/crafting.md`): Metalcraft, Woodcraft, and Jewelcraft have
+  the `craft` benefit (`Effect::Craft`, Temper's curve), read per skill by
+  `Actor::skill_effect_of`, never summed across skills, and a `salvage` mark (salvage).
+- **Grants**: Jewelcraft gnome `1d6+4`, craftsperson optional 30 %, merchant and dwarf optional
+  20 %; Mining dwarf and duergar `1d6+4`, kobold `1d4+2`, craftsperson optional 25 %, commoner
+  10 %; Herbalism druid and witch `2d4+4`, ranger optional 30 %, halfling `1d4+2`; Alchemy witch
+  `2d6+10`, wizard and druid optional 25 %; Enchanting wizard optional 30 % `2d4+4`, witch 20 %,
+  aristocrat 15 %. Story lines (`01-parents.toml`): `miners_child`, `jewellers_child`,
+  `apothecarys_child`, `scholars_child`, and `wise_woman` gains Herbalism. The optional skills
+  draw in skill id order, so a class with a new optional skill before an old one draws differently
+  from then on (state hashes of such characters change). Tests: `world/dig_tests.rs`,
+  `world/forage_tests.rs`, `world/appraise_tests.rs`.
 A new
 effect or use is a variant there plus its one hook. The player sees values only
 (`PerceptionView::own_skills`, the Skills screen `ui/skills_screen.rs`, `A`); never marks or
@@ -155,8 +191,9 @@ Steal `Ability::Steal` (`docs/dev/stealing.md`), Heal `Ability::Heal` (`docs/dev
 Intimidate `Ability::Intimidate` (above; aimed at a cell, `Ability::reach` from the data),
 Bluff `Ability::Feint` (above; in a direction).
 A passive skill with a use of its own is listed as that use too (`Ability::every` asks
-`Ability::use_of` of every skill): Survival is `Ability::Forage` (below). Woodcraft is
-`Ability::Fletch`, which anyone has, trained or not (below), and `Ability::Wedge` for those trained
+`Ability::use_of` of every skill): Survival is `Ability::Forage` (below). A skill with a recipe
+directory is `Ability::Profession` instead, before any use (Metalcraft, Woodcraft:
+`docs/dev/crafting.md`); Woodcraft also gives `Ability::Wedge` to those trained
 (`Ability::every` adds it right after the skills while some skill gives `Effect::Wedge`; see
 `docs/dev/doors.md` "Wedging").
 
@@ -168,9 +205,10 @@ then `World::fletch`, a `keep_at` loop with the forage's `Watch::Forage`; tests
 `Content::fletch`; optional: without it Woodcraft is a skill with no use): `seconds`, `difficulty`,
 `count`, `value_per_count`, `half_within`, `one_within` (`FletchRules::made`, the margin's bands),
 `plain_from`, `knives` (a weapon skill: `Content::is_knife`), and `[[makes]]` by what a launcher's
-`launches` is. `world::fletch_lack` is the one place that says what is missing: the abilities row's
-`Unavailable::NoKnife` / `NoLauncher` (`Ability::unavailable`) and the rules' refusal, in the same
-words. The check reads Dexterity's modifier, `TalentMods::check`, `skill_effect(Effect::Fletch)`
+`launches` is. The Fletch recipe (`data/recipes/woodcraft/fletch.toml`: `anyone`, `knife`,
+`launcher`) is its row on Woodcraft's screen, greyed by `world/craft.rs` ("no knife", "no bow or
+crossbow ready": `fletch::fletch_makes`, the same test); `world::fletch_lack` is the rules'
+refusal (`Unavailable::NoKnife` / `NoLauncher`, "You have no knife."). The check reads Dexterity's modifier, `TalentMods::check`, `skill_effect(Effect::Fletch)`
 (Woodcraft's curve, Skill focus through it), and `TalentMods::fletcher`; the count and the brittle
 line read the trained value, `Skills::value_of_effect`, so no item or talent bonus moves them.
 Marks: `Use::Fletch` for every batch that ran its time, whatever it made. Fletcher's numbers are
@@ -180,7 +218,7 @@ A damaged item (Temper's failure, or acid, rust, or heat: `world/item_damage.rs`
 mended (`Mods::add_worked`: its Protection if it gives some, else its Defence, else its damage).
 Mithril and adamantium are metals, so Temper works them as steel.
 
-**Whittling** (#1028, design W3): `Action::Whittle { item }` (replay text `whittle:LETTER`, cost `whittle` a turn, `ActionKind::Whittle`) is Temper's twin for wood: `world/temper.rs` keeps both, a `Craft` (`Temper` or `Whittle`) in `Tempering` choosing the material group (`metal` or `wood`), the stat and effect (Strength and `Effect::Temper`, or Dexterity and `Effect::Whittle`), the mark (`Use::Temper`, `Use::Whittle`), the turn price, and the message lines. Both share `data/temper.toml` and `magic/worked.rs`, so one item has one state. `Ability::Whittle` stands beside Fletch in `Ability::every` (the skills iterator adds it after Fletch), is had by everyone, asks for an item (`ObjectList::Whittle`, `ScreenName::Whittle`, the list `world::workable_wood`), and is unavailable without a knife (`world::whittle_lack`, `Unavailable::NoKnife`). Tests: `world/whittle_tests.rs`.
+**Whittling** (#1028, design W3): `Action::Whittle { item }` (replay text `whittle:LETTER`, cost `whittle` a turn, `ActionKind::Whittle`) is Temper's twin for wood: `world/temper.rs` keeps both, a `Craft` (`Temper` or `Whittle`) in `Tempering` choosing the material group (`metal` or `wood`), the stat and effect (Strength and `Effect::Temper`, or Dexterity and `Effect::Whittle`), the mark (`Use::Temper`, `Use::Whittle`), the turn price, and the message lines. Both share `data/temper.toml` and `magic/worked.rs`, so one item has one state. The Whittle recipe (`data/recipes/woodcraft/whittle.toml`: `anyone`, `knife`) stands beside Fletch on Woodcraft's screen (`docs/dev/crafting.md`), opens the Whittle list over it (`ObjectList::Whittle`, `ScreenName::Whittle`, the list `world::workable_wood`), and is greyed "no knife" without one (the rules' refusal is `world::whittle_lack`). Tests: `world/whittle_tests.rs`.
 
 **Balance** (spec §8 "Skills", #1029, `docs/design/skill-uses.md` §6.13): besides `burden`,
 `Effect::Footing` is read in `World::step_price` (`world/schedule.rs`) in the `else` of the wading

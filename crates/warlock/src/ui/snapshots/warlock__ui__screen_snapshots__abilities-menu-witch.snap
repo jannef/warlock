@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  Dandy grows ┌─ Abilities ───────────────────────────────────────────────── Page 1/2 ─┐
- Your concent│                                                                        │
+ Your alchemy│                                                                        │
              │ Birth sign                                                             │
              │ > a  Transfixing stare  at a place you see                             │
              │ Class                                                                  │
@@ -15,13 +15,13 @@ expression: "render(case, content.clone())"
              │   f  Hex of weakness    4 mana, aimed                                  │
              │   g  Flay               2d4 necrotic, bites the wounded, 8 mana, aimed │
              │ Skills                                                                 │
-             │   h  Decipher           no unknown scroll                              │
-             │   i  Heal               nothing to treat                               │
-             │   j  Intimidate         at a place you see                             │
-             │   k  Forage             not usable here                                │
-             │   l  Fletch             you have no bow or crossbow ready              │
-             │   m  Whittle            on something you carry                         │
-             │   n  Salvage            on something you carry                         │
+             │   h  Alchemy            not usable yet                                 │
+             │   i  Decipher           no unknown scroll                              │
+             │   j  Heal               nothing to treat                               │
+             │   k  Intimidate         at a place you see                             │
+             │   l  Metalcraft…                                                       │
+             │   m  Forage             not usable here                                │
+             │   n  Woodcraft…                                                        │
              │ Weapon skills                                                          │
              │   o  Shield bash        you hold no shield                             │
              │                                                                        │
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
              │                                                                        │
              │ a-o or Enter use   > < page   Esc close                                │
              └────────────────────────────────────────────────────────────────────────┘
- The Hub  ·  HP 20/20  ·  MP 62/64  ·  Lv 8  ·  Dandy: unhurt  ·  08:00                  ? controls
+ The Hub  ·  HP 20/20  ·  MP 62/62  ·  Lv 8  ·  Dandy: unhurt  ·  08:00                  ? controls

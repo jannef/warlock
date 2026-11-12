@@ -11,6 +11,8 @@ More about creatures:
 - [Creatures in numbers](creature-numbers.md): their [stats](stats.md),
   [hit points](hit-points.md#hit-points), attacks, [speed](turns.md#speed), and senses, which the
   game never shows.
+- [What creatures leave](creature-drops.md): the hides, bones, flint, and essences their bodies
+  leave when they die.
 
 ## Factions
 

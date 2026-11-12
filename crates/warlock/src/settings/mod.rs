@@ -32,6 +32,7 @@
 pub mod clock;
 pub mod keymap;
 pub mod keys;
+pub mod mods;
 pub mod palette;
 
 use crate::cli::Args;
@@ -576,6 +577,10 @@ mod tests {
         let mut bindings = Bindings::default();
         bindings
             .bind_primary(KeyCommand::Wait, KeyBinding::Char("w".into()))
+            .expect("free key");
+        let chord = KeyBinding::from_text("Ctrl+r").expect("a key");
+        bindings
+            .bind_primary(KeyCommand::Read, chord)
             .expect("free key");
         store.save(&settings, &bindings).expect("save");
         let loaded = store.load();

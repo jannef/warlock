@@ -132,17 +132,37 @@ always succeeds.
 
 {{#include generated/heal-targets.md}}
 
+## Professions
+
+[Metalcraft](skills.md#skill-metalcraft) and [Woodcraft](skills.md#skill-woodcraft) are
+**professions**: crafts with a list of **recipes**, the things you can make or do with them. Each
+has one row in the [abilities menu](abilities.md#the-abilities-menu), in the skill's place among
+the Skills: **[Metalcraft…](abilities.md#ability-metalcraft)** and
+**[Woodcraft…](abilities.md#ability-woodcraft)**. The row opens the profession's list.
+
+You know a recipe by your skill, not by learning it. Some recipes are open to everyone, trained or
+not:
+
+- Metalcraft: **Temper**, a metal weapon or armour made finer at an anvil (see
+  [Forges](altars-forges-springs.md#forges)).
+- Woodcraft: **Fletch**, arrows or bolts for your bow or crossbow (see [Fletching](#fletching)),
+  and **Whittle**, a wooden weapon made finer with a knife (see [Whittling](#whittling)).
+
+Each row says what the recipe takes, such as "a metal weapon or armour, an anvil, about 10
+minutes". A recipe you cannot make now is greyed out with the reason: "no anvil beside you", "no
+knife", "no bow or crossbow ready". Choose a recipe by its letter, or move to it and press Enter.
+
 ## Fletching
 
-Anyone can make arrows and bolts, after a fashion. **[Fletch](abilities.md#ability-fletch)** is in everyone's [abilities menu](abilities.md), in
-[Woodcraft](skills.md#skill-woodcraft)'s place. You need:
+Anyone can make arrows and bolts, after a fashion. **Fletch** is a recipe on everyone's
+[Woodcraft…](abilities.md#ability-woodcraft) list (see [Professions](#professions)). You need:
 
 - a knife, in your [pack](objects.md#your-pack) or wielded. A dagger or a stiletto will do, or anything else of the
   [Daggers and knives](weapon-skills.md#weapon-skill-daggers) skill; a short sword will not.
 - a bow or a crossbow [ready](ranged.md#getting-ready). Fletching makes [arrows or bolts](ammunition.md) for it (nothing for a sling).
 
-Without them the menu greys it out: "you have no knife" or "you have no bow or crossbow ready". It
-uses up no material, and you can do it anywhere.
+Without them the list greys it out: "no knife" or "no bow or crossbow ready". It uses up no
+material, and you can do it anywhere.
 
 Something coming into view, or anything else that would wake you from a [rest](resting.md#how-resting-works), stops the work.
 The time is spent and nothing is made. A batch that runs its full time rolls a check on your
@@ -156,8 +176,8 @@ A [ranger](classes.md#ranger)'s [Fletcher](talents.md#talent-fletcher) makes thi
 ## Whittling
 
 With a knife carried, anyone can improve a wooden weapon the way an [anvil](altars-forges-springs.md#forges) improves a metal one.
-**[Whittle](abilities.md#ability-whittle)** is in everyone's [abilities menu](abilities.md), beside [Fletch](abilities.md#ability-fletch) in [Woodcraft](skills.md#skill-woodcraft)'s place. It is greyed out with
-"you have no knife" if you have none.
+**Whittle** is a recipe on everyone's [Woodcraft…](abilities.md#ability-woodcraft) list, beside
+Fletch (see [Professions](#professions)). It is greyed out with "no knife" if you have none.
 
 Choose a weapon, a missile weapon, or a shield whose main part is wood: bows, crossbows, staves,
 clubs. An attempt takes ten minutes. Something coming into view stops it; then the item is
@@ -196,6 +216,11 @@ with the land's chance below, plus what your [Survival](skills.md#skill-survival
 one of the land's finds is picked by the shares shown, and you gather a few of it, fresh, into your
 pack ("You gather 2 handfuls of berries."). Otherwise: "You find nothing worth eating." Either way,
 your [Survival](skills.md#skill-survival) may earn a training mark.
+
+If you are also trained in **[Herbalism](skills.md#skill-herbalism)**, a forage that finds something may find a herb
+besides: one of the land's herbs below, picked by the shares shown ("Your eye for herbs finds an
+angelica root besides."). The chance is 25 % at 0, 60 % at 100, and 80 % at 200. Land with no herbs
+gives none. A forage trains Herbalism one time in four, whatever it finds.
 
 {{#include generated/foraging.md}}
 

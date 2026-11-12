@@ -1,0 +1,7 @@
+# Material drops of the `skeleton` tag (README.toml). Walking bones: bone, with no body to leave.
+bodiless = true
+
+[[drop]]
+material = "bone"
+count = "1d3"
+chance = 80

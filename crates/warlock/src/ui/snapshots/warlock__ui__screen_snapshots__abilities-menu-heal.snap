@@ -4,6 +4,7 @@ expression: "render(case, content.clone())"
 ---
  You are bleeding.
  You feel sick.
+
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -16,18 +17,17 @@ expression: "render(case, content.clone())"
                     │   d  Decipher           no unknown scroll                │
                     │   e  Heal               on yourself or an ally           │
                     │   f  Knowledge          not usable yet                   │
-                    │   g  Forage             not usable here                  │
-                    │   h  Fletch             you have no knife                │
-                    │   i  Whittle            you have no knife                │
-                    │   j  Salvage            on something you carry           │
+                    │   g  Metalcraft…                                         │
+                    │   h  Forage             not usable here                  │
+                    │   i  Woodcraft…                                          │
                     │ Weapon skills                                            │
-                    │   k  Shield bash        in a direction                   │
+                    │   j  Shield bash        in a direction                   │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-k or Enter use   Esc close                             │
+                    │ a-j or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 

@@ -636,11 +636,13 @@ fn check_shop(level: &LevelTemplate, shop: &ShopPlan) {
         .collect();
     let (least, _) = shops.get(shop.kind).items;
     assert!(goods.len() >= usize::from(least).min(4), "{goods:?}");
-    // A grimoire is a spell scroll drawn that turned out to be one.
+    // A grimoire is a spell scroll drawn that turned out to be one; what the kind always lays
+    // out may be of a class it does not otherwise stock (the alchemist's herbs).
     for stack in goods {
         let grimoire = CONTENT.object(stack.object).grimoire.is_some();
+        let always = shops.get(shop.kind).always.contains(&stack.object);
         assert!(
-            grimoire || shops.stocks(&CONTENT, shop.kind, stack.object),
+            grimoire || always || shops.stocks(&CONTENT, shop.kind, stack.object),
             "{stack:?}"
         );
     }

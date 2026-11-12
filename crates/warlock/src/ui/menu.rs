@@ -13,6 +13,7 @@ use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{ACCENT, PANEL_BG, TEXT, TEXT_DIM};
 use crate::input::{Bindings, Context, KeyBinding, KeyCommand};
 use crate::render::console::Console;
+use crate::settings::mods::Mods;
 use bevy::input::keyboard::{Key, KeyCode, KeyboardInput};
 
 /// A key press reduced to what menus care about: the `Context::Menu` command it is bound to, or
@@ -104,11 +105,13 @@ impl Press {
     /// The press as screens see it: its menu meaning comes from the `Context::Menu` bindings,
     /// its text field meaning from the `Context::Text` bindings, and Esc always backs out,
     /// whatever is bound (it cannot be bound: no lockout).
-    pub fn from_input(input: &KeyboardInput, bindings: &Bindings) -> Self {
+    /// `mods` are the modifiers held: Ctrl, Alt, and Super make the press another binding (no
+    /// fixed key is one), and Shift is [`Press::shift`].
+    pub fn from_input(input: &KeyboardInput, mods: Mods, bindings: &Bindings) -> Self {
         let nav = if input.key_code == KeyCode::Escape {
             Nav::Back
         } else {
-            match bindings.lookup_in(Context::Menu, input) {
+            match bindings.lookup_in(Context::Menu, input, mods) {
                 Some(KeyCommand::MenuUp) => Nav::Up,
                 Some(KeyCommand::MenuDown) => Nav::Down,
                 Some(KeyCommand::MenuLeft) => Nav::Left,
@@ -126,7 +129,7 @@ impl Press {
         let edit = if input.key_code == KeyCode::Escape {
             Some(Edit::Back)
         } else {
-            match bindings.lookup_in(Context::Text, input) {
+            match bindings.lookup_in(Context::Text, input, mods) {
                 Some(KeyCommand::TextConfirm) => Some(Edit::Confirm),
                 Some(KeyCommand::TextBack) => Some(Edit::Back),
                 Some(KeyCommand::TextErase) => Some(Edit::Erase),
@@ -151,10 +154,10 @@ impl Press {
         Self {
             nav,
             edit,
-            binding: KeyBinding::from_input(input),
+            binding: KeyBinding::from_input(input, mods),
             repeat: input.repeat,
             text,
-            shift: false,
+            shift: mods.shift,
         }
     }
 
@@ -606,7 +609,7 @@ mod tests {
     #[test]
     fn menu_keys_come_from_the_bindings_and_esc_always_backs_out() {
         let mut b = Bindings::default();
-        let nav = |b: &Bindings, input: &KeyboardInput| Press::from_input(input, b).nav;
+        let nav = |b: &Bindings, input: &KeyboardInput| Press::from_input(input, Mods::NONE, b).nav;
         let down = key(KeyCode::ArrowDown, Key::ArrowDown);
         let s = key(KeyCode::KeyS, Key::Character("s".into()));
         let esc = key(KeyCode::Escape, Key::Escape);
@@ -653,22 +656,26 @@ mod tests {
             (KeyCode::Numpad5, "5", Key::Clear, Nav::Other),
         ] {
             for input in [on(code, digit), key(code, off)] {
-                let press = Press::from_input(&input, &b);
+                let press = Press::from_input(&input, Mods::NONE, &b);
                 assert_eq!(press.nav, nav, "{code:?}");
                 assert!(press.is_numpad());
                 assert_eq!(press.binding, Some(KeyBinding::Code(code)));
             }
             // With Num Lock on it still types its digit, for a text field.
             assert_eq!(
-                Press::from_input(&on(code, digit), &b).text,
+                Press::from_input(&on(code, digit), Mods::NONE, &b).text,
                 digit.chars().next()
             );
         }
-        let enter = Press::from_input(&key(KeyCode::NumpadEnter, Key::Enter), &b);
+        let enter = Press::from_input(&key(KeyCode::NumpadEnter, Key::Enter), Mods::NONE, &b);
         assert_eq!(enter.nav, Nav::Enter);
         assert_eq!(enter.edit, Some(Edit::Confirm));
         // The top row's digits are no navigation, and no numpad.
-        let top = Press::from_input(&key(KeyCode::Digit8, Key::Character("8".into())), &b);
+        let top = Press::from_input(
+            &key(KeyCode::Digit8, Key::Character("8".into())),
+            Mods::NONE,
+            &b,
+        );
         assert_eq!(top.nav, Nav::Other);
         assert!(!top.is_numpad());
     }

@@ -3,12 +3,16 @@
 //! Commands are listed by context (`input::Context`: in play, aiming, the rest prompt, menus
 //! and screens, info pages, dialogs, and in builds that have them the developer keys), then, at
 //! the very bottom, the abilities' own keys (play commands, unbound by default: the abilities
-//! menu has them all; #644); a key is unique within its context only. Enter on a command waits
-//! for a key, which becomes the command's primary key (its other keys, such as the numpad,
-//! stay). A key another command of the same context uses moves to this one, and the message
-//! says so; Esc (fixed) and the last key of a vital command (`settings::keys::VITAL`) are
-//! refused, so the player cannot lock themselves out. Esc cancels, Delete resets one command,
-//! and "Reset all keys" restores the defaults. "Export keys" and "Import keys" write and read
+//! menu has them all; #644); a key is unique within its context only. Enter on a command opens
+//! its keys as a sub-list under it (#1324): each key, the first the one hints name, then "Add a
+//! key". Enter on a key waits for one to replace it, on "Add a key" for one to add after the
+//! last; Delete removes the selected key; Esc closes the sub-list. A play command's key keeps
+//! the modifiers held with it (`Ctrl+r`; a modifier alone never binds, and kept shortcuts and
+//! modifiers on other contexts' keys are refused with the reason: `settings::mods`). A key
+//! another command of the same context uses moves to this one, and the message says so; Esc
+//! (fixed) and the last key of a vital command (`settings::keys::VITAL`) are refused, taken or
+//! removed, so the player cannot lock themselves out. Esc cancels, Delete on a command resets
+//! it, and "Reset all keys" restores the defaults. "Export keys" and "Import keys" write and read
 //! the keymap file (`settings::keymap`): in the config folder on the desktop, a download and a
 //! file picker on the web (whose file arrives a few frames later: [`receive_keymap`]).
 //!
@@ -18,10 +22,11 @@
 
 use super::menu::{Hints, Nav, Panel, Press, wrap};
 use super::{ACCENT, TEXT, TEXT_DIM};
-use crate::input::{Bindings, Context, KeyCommand};
+use crate::input::{Bindings, Context, KeyBinding, KeyCommand};
 use crate::render::console::Console;
 use crate::settings::keymap::{self, KeymapFile};
-use crate::settings::keys::{ABILITY_KEYS, Bound, REBINDABLE};
+use crate::settings::keys::{ABILITY_KEYS, Bound, Conflict, REBINDABLE};
+use crate::settings::mods;
 use bevy::prelude::*;
 
 /// What the screen is doing.
@@ -47,6 +52,10 @@ enum Row {
     /// The heading of the abilities' own keys, the last group ([`ABILITY_KEYS`]).
     AbilityKeys,
     Command(KeyCommand),
+    /// Key number `.1` (from 0, the one hints name) of the open command.
+    Key(KeyCommand, usize),
+    /// The open command's last row: capture a key to add.
+    AddKey(KeyCommand),
     Reset,
     Export,
     Import,
@@ -54,11 +63,23 @@ enum Row {
 }
 
 impl Row {
-    fn selectable(self) -> bool {
-        matches!(
-            self,
-            Row::Command(_) | Row::Reset | Row::Export | Row::Import | Row::Back
-        )
+    /// Whether the row can be selected: with a command's keys open, only its sub-list's rows.
+    fn selectable(self, open: bool) -> bool {
+        match open {
+            true => matches!(self, Row::Key(..) | Row::AddKey(_)),
+            false => matches!(
+                self,
+                Row::Command(_) | Row::Reset | Row::Export | Row::Import | Row::Back
+            ),
+        }
+    }
+
+    /// The command a row is or belongs to.
+    fn command(self) -> Option<KeyCommand> {
+        match self {
+            Row::Command(command) | Row::Key(command, _) | Row::AddKey(command) => Some(command),
+            _ => None,
+        }
     }
 
     /// The label of an action row.
@@ -68,7 +89,13 @@ impl Row {
             Row::Export => Some("Export keys…"),
             Row::Import => Some("Import keys…"),
             Row::Back => Some("Back"),
-            Row::Note(_) | Row::Blank | Row::Header(_) | Row::AbilityKeys | Row::Command(_) => None,
+            Row::Note(_)
+            | Row::Blank
+            | Row::Header(_)
+            | Row::AbilityKeys
+            | Row::Command(_)
+            | Row::Key(..)
+            | Row::AddKey(_) => None,
         }
     }
 }
@@ -83,6 +110,17 @@ const NOTES: [&str; 3] = [
     "On screens the numpad moves as the arrows do (fixed).",
 ];
 
+/// The command whose keys are open as a sub-list, and how many keys it has.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct Open {
+    command: KeyCommand,
+    keys: usize,
+}
+
+/// The widest panel a long key list widens the screen to; longer lists are cut short with `…`
+/// (each key shows in full in the command's sub-list).
+const WIDEST: i32 = 80;
+
 /// Selection state of the controls screen. Rows are the notes, then each context's commands
 /// under its heading, then the abilities' own keys under theirs, then "Reset all keys",
 /// "Export keys…", "Import keys…", and "Back"; in help, the notes and every command.
@@ -91,6 +129,8 @@ pub struct ControlsScreen {
     /// The selected row; in help, the first row shown.
     selected: usize,
     mode: Mode,
+    /// The command whose keys are open under it, if one is.
+    open: Option<Open>,
     /// Whether the developer keys are listed (they work in this launch).
     dev: bool,
     /// Result of the last action, a line or a few; a leading `!` marks a refusal (never color
@@ -107,6 +147,7 @@ impl ControlsScreen {
         let mut screen = Self {
             selected: 0,
             mode: Mode::Browse,
+            open: None,
             dev,
             message: Vec::new(),
             keymap,
@@ -120,6 +161,7 @@ impl ControlsScreen {
         Self {
             selected: 0,
             mode: Mode::ReadOnly,
+            open: None,
             dev,
             message: Vec::new(),
             keymap: KeymapFile::Nowhere,
@@ -144,39 +186,84 @@ impl ControlsScreen {
             rows.extend([Row::Blank, Row::Header(context)]);
             let commands =
                 (REBINDABLE.iter()).filter(|c| c.context() == context && !ABILITY_KEYS.contains(c));
-            rows.extend(commands.copied().map(Row::Command));
+            commands.for_each(|&c| self.push_command(&mut rows, c));
             if read_only && context == Context::Play {
                 rows.push(Row::Command(KeyCommand::Cancel));
             }
         }
         rows.extend([Row::Blank, Row::AbilityKeys]);
-        rows.extend(ABILITY_KEYS.iter().copied().map(Row::Command));
+        (ABILITY_KEYS.iter()).for_each(|&c| self.push_command(&mut rows, c));
         if !read_only {
             rows.extend([Row::Blank, Row::Reset, Row::Export, Row::Import, Row::Back]);
         }
         rows
     }
 
+    /// `command`'s row, and, when it is open, its keys and "Add a key" under it.
+    fn push_command(&self, rows: &mut Vec<Row>, command: KeyCommand) {
+        rows.push(Row::Command(command));
+        if let Some(open) = self.open.filter(|o| o.command == command) {
+            rows.extend((0..open.keys).map(|i| Row::Key(command, i)));
+            rows.push(Row::AddKey(command));
+        }
+    }
+
     /// The first selectable row from `from` on in direction `step` (wrapping around).
     fn next_selectable(&self, from: usize, step: isize) -> usize {
         let rows = self.rows();
         let n = rows.len() as isize;
+        let open = self.open.is_some();
         (0..n)
             .map(|i| (from as isize + step * i).rem_euclid(n) as usize)
-            .find(|&i| rows[i].selectable())
+            .find(|&i| rows[i].selectable(open))
             .unwrap_or(0)
     }
 
-    /// The command at the selected row, if it is one.
+    /// The command at the selected row, or whose key or "Add a key" it is.
     fn selected_command(&self) -> Option<KeyCommand> {
-        match self.rows().get(self.selected) {
-            Some(Row::Command(command)) => Some(*command),
-            _ => None,
+        self.rows().get(self.selected).and_then(|r| r.command())
+    }
+
+    /// Keeps the open sub-list's rows to the keys its command has now.
+    fn sync(&mut self, bindings: &Bindings) {
+        if let Some(open) = &mut self.open {
+            open.keys = bindings.keys_of(open.command).len();
+            let last = self.rows().len().saturating_sub(1);
+            self.selected = self.selected.min(last);
         }
+    }
+
+    /// Opens the keys of the command at the selected row under it, the first key selected.
+    fn open_keys(&mut self, command: KeyCommand, bindings: &Bindings) {
+        let keys = bindings.keys_of(command).len();
+        self.open = Some(Open { command, keys });
+        self.selected += 1;
+        self.message = vec![format!(
+            "The keys of {}. The first is the one hints name.",
+            command.name()
+        )];
+    }
+
+    /// Closes the open sub-list, its command selected.
+    fn close_keys(&mut self) {
+        let Some(open) = self.open.take() else {
+            return;
+        };
+        self.selected = (self.rows().iter())
+            .position(|r| *r == Row::Command(open.command))
+            .unwrap_or(0);
+        self.message.clear();
     }
 
     /// Applies a key press to `bindings`. Returns true when the player leaves the screen.
     pub fn handle(&mut self, press: &Press, bindings: &mut Bindings) -> bool {
+        self.sync(bindings);
+        let leave = self.apply(press, bindings);
+        self.sync(bindings);
+        leave
+    }
+
+    fn apply(&mut self, press: &Press, bindings: &mut Bindings) -> bool {
         match self.mode {
             Mode::Capture => {
                 self.capture(press, bindings);
@@ -186,6 +273,10 @@ impl ControlsScreen {
             Mode::Browse => {}
         }
         let row = self.rows().get(self.selected).copied();
+        if self.open.is_some() {
+            self.keys_list(press, row, bindings);
+            return false;
+        }
         match press.nav {
             Nav::Back => return true,
             Nav::Up => {
@@ -215,10 +306,7 @@ impl ControlsScreen {
                     };
                 }
                 Some(Row::Back) => return true,
-                Some(Row::Command(_)) => {
-                    self.mode = Mode::Capture;
-                    self.message.clear();
-                }
+                Some(Row::Command(command)) => self.open_keys(command, bindings),
                 _ => {}
             },
             Nav::Erase if !press.repeat => {
@@ -231,6 +319,33 @@ impl ControlsScreen {
             _ => {}
         }
         false
+    }
+
+    /// The open sub-list: the menu keys move within it, Enter captures a key for the selected
+    /// row, Delete removes the selected key, and Esc closes it.
+    fn keys_list(&mut self, press: &Press, row: Option<Row>, bindings: &mut Bindings) {
+        match press.nav {
+            Nav::Back => self.close_keys(),
+            Nav::Up => {
+                self.selected = self.next_selectable(self.selected + self.rows().len() - 1, -1);
+                self.message.clear();
+            }
+            Nav::Down => {
+                self.selected = self.next_selectable(self.selected + 1, 1);
+                self.message.clear();
+            }
+            Nav::Enter if !press.repeat => {
+                self.mode = Mode::Capture;
+                self.message.clear();
+            }
+            Nav::Erase if !press.repeat => {
+                if let Some(Row::Key(command, at)) = row {
+                    let removed = bindings.remove_key(command, at);
+                    self.message = vec![remove_message(command, removed, bindings)];
+                }
+            }
+            _ => {}
+        }
     }
 
     /// Help: the menu keys scroll; Esc or the help key (`?`) closes.
@@ -266,14 +381,39 @@ impl ControlsScreen {
             self.message = vec![refusal.into()];
             return;
         };
-        let Some(command) = self.selected_command() else {
-            self.mode = Mode::Browse;
-            return;
+        let (command, at) = match self.rows().get(self.selected) {
+            Some(Row::Key(command, at)) => (*command, Some(*at)),
+            Some(Row::AddKey(command)) => (*command, None),
+            _ => {
+                self.mode = Mode::Browse;
+                return;
+            }
         };
+        // Shift counts with a physical key bound in play (Shift+ArrowUp); a character carries
+        // it, and elsewhere Shift reverses a key (Shift+Tab), so it is left out there.
+        let key = match press.shift && command.context() == Context::Play {
+            true => mods::with_shift(key),
+            false => key,
+        };
+        if let Some(why) = key.refused_for(command) {
+            self.message = vec![format!("! {why}. Try another, or Esc to cancel.")];
+            return;
+        }
         let shown = key.display();
+        let name = command.name();
         self.mode = Mode::Browse;
-        self.message = vec![match bindings.bind_primary(command, key) {
-            Ok(Bound::Free) => format!("{} is now {shown}.", command.name()),
+        let keys: Vec<KeyBinding> = bindings.keys_of(command).into_iter().cloned().collect();
+        let had = keys.iter().position(|k| *k == key);
+        let old = at.and_then(|at| keys.get(at)).map(|k| k.display());
+        self.message = vec![match bindings.bind_at(command, key, at) {
+            Ok(Bound::Free) => match (had, old) {
+                (Some(had), _) if at.is_none_or(|at| at == had) => {
+                    format!("{name} has {shown} already.")
+                }
+                (Some(_), Some(old)) => format!("{name}: {shown} and {old} traded places."),
+                (None, Some(old)) => format!("{name}: {old} is now {shown}."),
+                _ => format!("{name}: {shown} added."),
+            },
             Ok(Bound::Moved {
                 from,
                 keyless: true,
@@ -300,15 +440,6 @@ impl ControlsScreen {
         // Room below the list for the message (up to four lines) and the footer; help has no
         // messages.
         let spare = if read_only { 6 } else { 12 };
-        let panel = Panel::new(console, " Controls ", 60, count as i32 + spare);
-        let message_rows = if read_only { 0 } else { 6 };
-        let visible = (panel.body_rows() - message_rows).max(1) as usize;
-        let first = if read_only {
-            self.selected
-        } else {
-            self.selected.saturating_sub(visible - 1)
-        }
-        .min(count.saturating_sub(visible));
         let label_w = rows
             .iter()
             .filter_map(|row| match row {
@@ -317,6 +448,27 @@ impl ControlsScreen {
             })
             .max()
             .unwrap_or(0) as i32;
+        // Wide enough for the longest key list (besides the label column: the marker, two
+        // spaces each side of the value, and the scroll arrow's column), within reason.
+        let longest = (rows.iter())
+            .filter_map(|row| match row {
+                Row::Command(c) => Some(key_list(bindings, *c).chars().count()),
+                _ => None,
+            })
+            .max()
+            .unwrap_or(0) as i32;
+        let width = (label_w + longest + 11).clamp(60, WIDEST);
+        let panel = Panel::new(console, " Controls ", width, count as i32 + spare);
+        let value_w = (panel.w - label_w - 11).max(1) as usize;
+        let message_rows = if read_only { 0 } else { 6 };
+        let visible = (panel.body_rows() - message_rows).max(1) as usize;
+        let first = if read_only {
+            self.selected
+        } else {
+            self.selected.saturating_sub(visible - 1)
+        }
+        .min(count.saturating_sub(visible));
+        let capturing = self.mode == Mode::Capture;
         for (i, row) in rows.iter().enumerate().skip(first).take(visible) {
             let y = panel.y + 2 + (i - first) as i32;
             // Help has nothing to select.
@@ -333,12 +485,24 @@ impl ControlsScreen {
                     console.print(panel.inner_x(), y, ABILITY_KEYS_TITLE, ACCENT);
                 }
                 Row::Command(command) => {
-                    let value = if selected && self.mode == Mode::Capture {
-                        "press a key...".to_string()
-                    } else {
-                        key_list(bindings, *command)
-                    };
+                    let value = fit(&key_list(bindings, *command), value_w);
                     panel.row(console, y, selected, &command.name(), &value, label_w);
+                }
+                Row::Key(command, at) => {
+                    let value = match bindings.keys_of(*command).get(*at) {
+                        _ if selected && capturing => "press a key...".to_string(),
+                        Some(key) => fit(&key.display(), value_w),
+                        None => String::new(),
+                    };
+                    let label = format!("  Key {}", at + 1);
+                    panel.row(console, y, selected, &label, &value, label_w);
+                }
+                Row::AddKey(_) => {
+                    let value = match selected && capturing {
+                        true => "press a key...",
+                        false => "",
+                    };
+                    panel.row(console, y, selected, "  Add a key", value, label_w);
                 }
                 Row::Reset | Row::Export | Row::Import | Row::Back => {
                     let label = row.action().unwrap_or_default();
@@ -368,8 +532,13 @@ impl ControlsScreen {
                 String::new()
             };
             format!("{scroll}{close}")
+        } else if self.open.is_some() {
+            format!(
+                "{} replace or add   {} remove   Esc done",
+                keys.confirm, keys.erase
+            )
         } else {
-            format!("{} rebind   {} reset   Esc back", keys.confirm, keys.erase)
+            format!("{} keys   {} reset   Esc back", keys.confirm, keys.erase)
         };
         panel.footer(console, &footer);
     }
@@ -459,6 +628,35 @@ fn wrap_hard(text: &str, width: i32) -> Vec<String> {
         .collect()
 }
 
+/// What removing a key from `command` did, in words (`bindings` as it is after).
+fn remove_message(
+    command: KeyCommand,
+    removed: Option<Result<KeyBinding, Conflict>>,
+    bindings: &Bindings,
+) -> String {
+    let name = command.name();
+    match removed {
+        Some(Ok(key)) if bindings.keys_of(command).is_empty() => {
+            format!("{name}: {} removed; it has no key now.", key.display())
+        }
+        Some(Ok(key)) => format!("{name}: {} removed.", key.display()),
+        Some(Err(conflict)) => format!(
+            "! {} is the only key for {name} and cannot be removed.",
+            conflict.key.display()
+        ),
+        None => String::new(),
+    }
+}
+
+/// `text` cut to `width` cells, ending in `…` when cut.
+fn fit(text: &str, width: usize) -> String {
+    if text.chars().count() <= width {
+        return text.to_string();
+    }
+    let kept: String = text.chars().take(width.saturating_sub(1)).collect();
+    format!("{kept}…")
+}
+
 /// A command's keys, primary first, separated by spaces.
 fn key_list(bindings: &Bindings, command: KeyCommand) -> String {
     let keys: Vec<String> = bindings
@@ -476,7 +674,6 @@ fn key_list(bindings: &Bindings, command: KeyCommand) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::input::KeyBinding;
     use warlock_core::Dir;
 
     fn nav(screen: &mut ControlsScreen, b: &mut Bindings, nav: Nav) -> bool {
@@ -504,20 +701,119 @@ mod tests {
         screen.message.join(" ")
     }
 
+    /// Closes any open keys, then opens `command`'s: its first key (or "Add a key") selected.
+    fn open(screen: &mut ControlsScreen, b: &mut Bindings, command: KeyCommand) {
+        if screen.open.is_some() {
+            nav(screen, b, Nav::Back);
+        }
+        select(screen, Row::Command(command));
+        nav(screen, b, Nav::Enter);
+    }
+
+    /// Waits for a key to replace the selected one (or to add) and presses `text`.
+    fn capture(screen: &mut ControlsScreen, b: &mut Bindings, text: &str) {
+        nav(screen, b, Nav::Enter);
+        assert_eq!(screen.mode, Mode::Capture);
+        key(screen, b, text);
+    }
+
     #[test]
     fn rebinding_replaces_the_primary_key() {
         let (mut screen, mut b) = (
             ControlsScreen::new(false, KeymapFile::Nowhere),
             Bindings::default(),
         );
-        // The first row selected is the first command, under its heading.
+        // The first row selected is the first command, under its heading; Enter opens its keys
+        // with the first selected.
         assert_eq!(screen.selected_command(), Some(KeyCommand::Move(Dir::N)));
         nav(&mut screen, &mut b, Nav::Enter);
-        assert_eq!(screen.mode, Mode::Capture);
-        key(&mut screen, &mut b, "w");
+        assert_eq!(
+            screen.rows()[screen.selected],
+            Row::Key(KeyCommand::Move(Dir::N), 0)
+        );
+        capture(&mut screen, &mut b, "w");
         assert_eq!(screen.mode, Mode::Browse);
-        assert_eq!(b.keys_of(KeyCommand::Move(Dir::N))[0].display(), "w");
-        assert!(message(&screen).contains("now w"));
+        assert_eq!(key_list(&b, KeyCommand::Move(Dir::N)), "w ↑");
+        assert_eq!(message(&screen), "Move north: Num8 is now w.");
+    }
+
+    #[test]
+    fn a_key_is_added_replaced_and_removed_in_the_sub_list() {
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
+        let north = KeyCommand::Move(Dir::N);
+        open(&mut screen, &mut b, north);
+        // Up wraps to "Add a key", the sub-list's last row; Down stays inside it.
+        nav(&mut screen, &mut b, Nav::Up);
+        assert_eq!(screen.rows()[screen.selected], Row::AddKey(north));
+        capture(&mut screen, &mut b, "w");
+        assert_eq!(key_list(&b, north), "Num8 ↑ w");
+        assert_eq!(message(&screen), "Move north: w added.");
+        // The new key's row is selected, "Add a key" below it.
+        assert_eq!(screen.rows()[screen.selected], Row::Key(north, 2));
+        assert_eq!(screen.rows()[screen.selected + 1], Row::AddKey(north));
+        nav(&mut screen, &mut b, Nav::Down);
+        nav(&mut screen, &mut b, Nav::Down);
+        assert_eq!(screen.rows()[screen.selected], Row::Key(north, 0));
+        // The second key replaced, leaving the others where they are.
+        nav(&mut screen, &mut b, Nav::Down);
+        capture(&mut screen, &mut b, "Ctrl+e");
+        assert_eq!(key_list(&b, north), "Num8 Ctrl+e w");
+        assert_eq!(message(&screen), "Move north: ↑ is now Ctrl+e.");
+        // A key it has already: in another place, the two trade; added, nothing changes.
+        capture(&mut screen, &mut b, "w");
+        assert_eq!(key_list(&b, north), "Num8 w Ctrl+e");
+        assert_eq!(message(&screen), "Move north: w and Ctrl+e traded places.");
+        nav(&mut screen, &mut b, Nav::Up);
+        nav(&mut screen, &mut b, Nav::Up);
+        assert_eq!(screen.rows()[screen.selected], Row::AddKey(north));
+        capture(&mut screen, &mut b, "Numpad8");
+        assert_eq!(message(&screen), "Move north has Num8 already.");
+        // Another command's key moves, and the message says what moved.
+        capture(&mut screen, &mut b, "s");
+        assert_eq!(key_list(&b, north), "Num8 w Ctrl+e s");
+        assert_eq!(message(&screen), "s moved to Move north (was Wait/search).");
+        // Delete removes the selected key (the one just added), and the rest stay.
+        assert_eq!(screen.rows()[screen.selected], Row::Key(north, 3));
+        nav(&mut screen, &mut b, Nav::Erase);
+        assert_eq!(key_list(&b, north), "Num8 w Ctrl+e");
+        assert_eq!(message(&screen), "Move north: s removed.");
+        for _ in 0..3 {
+            select(&mut screen, Row::Key(north, 0));
+            nav(&mut screen, &mut b, Nav::Erase);
+        }
+        assert_eq!(key_list(&b, north), "(none)");
+        assert_eq!(
+            message(&screen),
+            "Move north: Ctrl+e removed; it has no key now."
+        );
+        assert_eq!(screen.rows()[screen.selected], Row::AddKey(north));
+        // Esc closes the sub-list, the command selected, and the screen stays.
+        assert!(!nav(&mut screen, &mut b, Nav::Back));
+        assert_eq!(screen.open, None);
+        assert_eq!(screen.rows()[screen.selected], Row::Command(north));
+        assert!(!screen.rows().iter().any(|r| matches!(r, Row::AddKey(_))));
+    }
+
+    #[test]
+    fn a_vital_commands_last_key_is_not_removed() {
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
+        open(&mut screen, &mut b, KeyCommand::Confirm);
+        while b.keys_of(KeyCommand::Confirm).len() > 1 {
+            nav(&mut screen, &mut b, Nav::Erase);
+        }
+        let last = key_list(&b, KeyCommand::Confirm);
+        nav(&mut screen, &mut b, Nav::Erase);
+        assert_eq!(key_list(&b, KeyCommand::Confirm), last);
+        assert_eq!(
+            message(&screen),
+            format!("! {last} is the only key for Choose and cannot be removed.")
+        );
     }
 
     #[test]
@@ -526,8 +822,8 @@ mod tests {
             ControlsScreen::new(false, KeymapFile::Nowhere),
             Bindings::default(),
         );
-        nav(&mut screen, &mut b, Nav::Enter);
-        key(&mut screen, &mut b, "Numpad2");
+        open(&mut screen, &mut b, KeyCommand::Move(Dir::N));
+        capture(&mut screen, &mut b, "Numpad2");
         assert_eq!(
             message(&screen),
             "Num2 moved to Move north (was Move south)."
@@ -536,12 +832,11 @@ mod tests {
         assert_eq!(b.owner(&j), Some(KeyCommand::Move(Dir::N)));
         // Kick has one key: it is left with none, and the table shows that.
         let old = b.keys_of(KeyCommand::Kick)[0].display();
-        select(&mut screen, Row::Command(KeyCommand::Wait));
-        nav(&mut screen, &mut b, Nav::Enter);
-        key(&mut screen, &mut b, &old);
+        open(&mut screen, &mut b, KeyCommand::Wait);
+        capture(&mut screen, &mut b, &old);
         assert_eq!(
             message(&screen),
-            format!("{old} moved to Wait a turn; Kick has no key.")
+            format!("{old} moved to Wait/search; Kick has no key.")
         );
         assert_eq!(key_list(&b, KeyCommand::Kick), "(none)");
     }
@@ -553,14 +848,55 @@ mod tests {
             Bindings::default(),
         );
         // `w` for Up on the menus leaves play's keys alone, and `k` stays Move north in play.
-        select(&mut screen, Row::Command(KeyCommand::MenuUp));
-        nav(&mut screen, &mut b, Nav::Enter);
-        key(&mut screen, &mut b, "w");
-        assert_eq!(message(&screen), "Up is now w.");
+        open(&mut screen, &mut b, KeyCommand::MenuUp);
+        capture(&mut screen, &mut b, "w");
+        assert_eq!(message(&screen), "Up: ↑ is now w.");
         let w = KeyBinding::from_text("w").unwrap();
         assert_eq!(b.owner_in(Context::Menu, &w), Some(KeyCommand::MenuUp));
         assert_eq!(b.owner(&w), None);
         assert_eq!(b.keys_of(KeyCommand::MenuUp)[1].display(), "k");
+    }
+
+    #[test]
+    fn a_modified_key_binds_in_play_and_is_refused_elsewhere() {
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
+        open(&mut screen, &mut b, KeyCommand::Read);
+        capture(&mut screen, &mut b, "Ctrl+r");
+        let name = KeyCommand::Read.name();
+        assert_eq!(message(&screen), format!("{name}: r is now Ctrl+r."));
+        let ctrl_r = KeyBinding::from_text("Ctrl+r").unwrap();
+        assert_eq!(b.owner(&ctrl_r), Some(KeyCommand::Read));
+        assert_eq!(key_list(&b, KeyCommand::Read), "Ctrl+r");
+        // A menu key takes no modifiers: refused, and the screen waits on for another key.
+        open(&mut screen, &mut b, KeyCommand::MenuUp);
+        let before = b.0.clone();
+        capture(&mut screen, &mut b, "Ctrl+w");
+        assert_eq!(b.0, before);
+        assert_eq!(screen.mode, Mode::Capture);
+        assert!(message(&screen).starts_with("! Up takes plain keys only"));
+    }
+
+    #[test]
+    fn shift_counts_with_a_physical_key_in_play() {
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
+        open(&mut screen, &mut b, KeyCommand::Look);
+        nav(&mut screen, &mut b, Nav::Enter);
+        let press = Press {
+            shift: true,
+            binding: KeyBinding::from_text("ArrowUp"),
+            ..Press::nav(Nav::Other)
+        };
+        screen.handle(&press, &mut b);
+        assert_eq!(key_list(&b, KeyCommand::Look), "Shift+↑");
+        // The plain arrow still moves north.
+        let up = KeyBinding::from_text("ArrowUp").unwrap();
+        assert_eq!(b.owner(&up), Some(KeyCommand::Move(Dir::N)));
     }
 
     #[test]
@@ -570,6 +906,7 @@ mod tests {
             Bindings::default(),
         );
         let before = b.0.clone();
+        nav(&mut screen, &mut b, Nav::Enter);
         nav(&mut screen, &mut b, Nav::Enter);
         let press = Press {
             nav: Nav::Other,
@@ -594,9 +931,14 @@ mod tests {
             ControlsScreen::new(false, KeymapFile::Nowhere),
             Bindings::default(),
         );
+        // Esc backs out a step at a time: the capture, the command's keys, then the screen.
+        nav(&mut screen, &mut b, Nav::Enter);
         nav(&mut screen, &mut b, Nav::Enter);
         assert!(!nav(&mut screen, &mut b, Nav::Back));
         assert_eq!(screen.mode, Mode::Browse);
+        assert!(screen.open.is_some());
+        assert!(!nav(&mut screen, &mut b, Nav::Back));
+        assert_eq!(screen.open, None);
         assert!(nav(&mut screen, &mut b, Nav::Back));
     }
 
@@ -607,12 +949,14 @@ mod tests {
             Bindings::default(),
         );
         let before = b.to_map();
-        nav(&mut screen, &mut b, Nav::Enter);
-        key(&mut screen, &mut b, "w");
+        open(&mut screen, &mut b, KeyCommand::Move(Dir::N));
+        capture(&mut screen, &mut b, "w");
+        nav(&mut screen, &mut b, Nav::Back);
         nav(&mut screen, &mut b, Nav::Erase);
         assert_eq!(b.to_map(), before);
-        nav(&mut screen, &mut b, Nav::Enter);
-        key(&mut screen, &mut b, "w");
+        open(&mut screen, &mut b, KeyCommand::Move(Dir::N));
+        capture(&mut screen, &mut b, "w");
+        nav(&mut screen, &mut b, Nav::Back);
         select(&mut screen, Row::Reset);
         nav(&mut screen, &mut b, Nav::Enter);
         assert_eq!(b.to_map(), before);
@@ -632,9 +976,9 @@ mod tests {
         nav(&mut screen, &mut b, Nav::Enter);
         assert!(message(&screen).starts_with("! No keymap at"), "{screen:?}");
         // Rebind, export, reset, import: the rebinding is back.
-        select(&mut screen, Row::Command(KeyCommand::Descend));
-        nav(&mut screen, &mut b, Nav::Enter);
-        key(&mut screen, &mut b, "D");
+        open(&mut screen, &mut b, KeyCommand::Descend);
+        capture(&mut screen, &mut b, "D");
+        nav(&mut screen, &mut b, Nav::Back);
         select(&mut screen, Row::Export);
         nav(&mut screen, &mut b, Nav::Enter);
         assert_eq!(
@@ -680,7 +1024,7 @@ mod tests {
         assert_eq!(screen.selected_command(), Some(KeyCommand::NextTarget));
         for _ in 0..500 {
             nav(&mut screen, &mut b, Nav::Down);
-            assert!(screen.rows()[screen.selected].selectable());
+            assert!(screen.rows()[screen.selected].selectable(false));
         }
     }
 
@@ -750,6 +1094,35 @@ mod tests {
         (0..console.cols() as i32)
             .map(|x| console.get(x, y).map_or(' ', |c| c.ch))
             .collect()
+    }
+
+    #[test]
+    fn a_long_key_list_widens_the_panel_then_is_cut_short() {
+        let mut b = Bindings::default();
+        let north = KeyCommand::Move(Dir::N);
+        let draw = |b: &Bindings, screen: &ControlsScreen| {
+            let mut console = Console::default();
+            console.resize(120, 44);
+            screen.draw(&mut console, b);
+            let text: Vec<String> = (0..44).map(|y| line(&console, y)).collect();
+            text.into_iter().find(|l| l.contains("Move north")).unwrap()
+        };
+        let screen = ControlsScreen::new(false, KeymapFile::Nowhere);
+        let narrow = draw(&b, &screen);
+        for text in ["Ctrl+e", "Ctrl+f", "Ctrl+g", "Ctrl+h"] {
+            b.bind_at(north, KeyBinding::from_text(text).unwrap(), None)
+                .unwrap();
+        }
+        let wide = draw(&b, &screen);
+        assert!(wide.trim().len() > narrow.trim().len(), "{wide}");
+        assert!(wide.contains("Ctrl+h"), "{wide}");
+        for text in ["Ctrl+j", "Ctrl+u", "Ctrl+y", "Ctrl+z"] {
+            b.bind_at(north, KeyBinding::from_text(text).unwrap(), None)
+                .unwrap();
+        }
+        let cut = draw(&b, &screen);
+        assert!(cut.contains('…') && !cut.contains("Ctrl+z"), "{cut}");
+        assert!(cut.trim().chars().count() <= WIDEST as usize, "{cut}");
     }
 
     #[test]

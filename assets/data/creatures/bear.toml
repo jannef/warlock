@@ -32,3 +32,9 @@ damage_type = "slashing"
 name = "claws"
 verb = "claws"
 to_hit = 3
+
+# A pelt: fur, besides its tags' rows (material drops, data/drops/README.toml).
+[[creature.drops]]
+material = "fur"
+count = "1"
+chance = 50

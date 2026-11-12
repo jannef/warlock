@@ -1,0 +1,11 @@
+# Material drops of the `drow` tag (README.toml). The drow: steel, and now and then mithril.
+
+[[drop]]
+material = "steel"
+count = "1"
+chance = 30
+
+[[drop]]
+material = "mithril"
+count = "1"
+chance = 3

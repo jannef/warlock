@@ -10,7 +10,7 @@ treating a wound; those uses are explained on [Using your skills](skill-uses.md)
 - A trained skill has a **value**, usually between 5 and 30 when you start. 100 is a master. Past
   100 a skill still grows, but slowly.
 - `A` shows your **[Skills](the-screen.md#skills)** screen. It lists every skill you are trained in, with its value and a
-  small meter (`━━──`) of how practised it is, which is how big its next roll at a level-up will
+  small meter (`━━──`) of how practised it is, which is how big its next roll will
   be (see [Getting better](#getting-better)). Use the arrow keys to read what each skill is about. Looking takes no
   time. `A` on the [character screen](character.md) (`@`) opens it too, and the summary at the end of character
   creation lists the skills you will start with.
@@ -30,7 +30,8 @@ Not every skill does something yet. These do: the passive skills, [Appraise](ski
 (quicker in everything, and [kicking](doors.md#kicking) doors in; see [Doors](doors.md)), [Search](skills.md#skill-search) (see [Searching](searching.md)),
 [Disable device](skills.md#skill-disable-device) (disarming traps; see [Traps](traps.md#disarming-traps)), [Open lock](skills.md#skill-open-lock) (picking locks; see [Doors](doors.md#picking-locks)), [Steal](skills.md#skill-steal) (see
 [Stealing](skill-uses.md#stealing)), [Bluff](skills.md#skill-bluff) (see [Feinting](skill-uses.md#feinting)), [Heal](skills.md#skill-heal) (see [Treating yourself](skill-uses.md#treating-yourself)), and [Survival](skills.md#skill-survival) (see
-[Foraging](skill-uses.md#foraging)). The others are there to be trained, and get their uses as the game grows.
+[Foraging](skill-uses.md#foraging)), [Herbalism](skills.md#skill-herbalism) (herbs on a forage, more of them [gathered](herbs.md#gathering) from the glowing fungus), [Mining](skills.md#skill-mining) (quicker
+[digging](digging.md)), [Alchemy](skills.md#skill-alchemy), and [Enchanting](skills.md#skill-enchanting) (telling potions and magic). The others are there to be trained, and get their uses as the game grows.
 
 Skills used as actions appear in the [abilities menu](abilities.md) once you are trained in them, greyed out
 until their uses come. Their names there:
@@ -42,7 +43,8 @@ until their uses come. Their names there:
 - [Heal](skills.md#skill-heal): **[Heal](abilities.md#ability-heal)**
 - [Decipher script](skills.md#skill-decipher-script): **[Decipher](abilities.md#ability-decipher)** (see [Deciphering a scroll unread](scrolls.md#deciphering-a-scroll-unread))
 - [Survival](skills.md#skill-survival), though it is a passive skill: **[Forage](abilities.md#ability-forage)**
-- [Woodcraft](skills.md#skill-woodcraft): **[Fletch](abilities.md#ability-fletch)** for everyone, trained or not (see [Fletching](skill-uses.md#fletching)), and **[Wedge a door](abilities.md#ability-wedge)** for those
+- [Metalcraft](skills.md#skill-metalcraft): **[Metalcraft…](abilities.md#ability-metalcraft)**, its [profession](skill-uses.md#professions)'s recipes (Temper, for everyone)
+- [Woodcraft](skills.md#skill-woodcraft): **[Woodcraft…](abilities.md#ability-woodcraft)**, its [profession](skill-uses.md#professions)'s recipes (Fletch and Whittle, for everyone, trained or not), and **[Wedge a door](abilities.md#ability-wedge)** for those
   trained in it (see [Wedging a door](doors.md#wedging-a-door))
 
 {{#include generated/skills.md}}
@@ -105,7 +107,18 @@ The passive skills help you more the higher they are:
     60 % at 100, and 80 % at 200. Survival gives 15 %, 35 %, and 50 %. Rotten food is easier to
     tell, 25 points more, and no chance is above 95 %. Eating food whose freshness you could tell
     trains Appraise now and then.
-- **[Search](skills.md#skill-search)** helps you find [secret doors](doors.md#secret-doors) and other hidden things when you search (`s`, `S`). A
+- **[Alchemy](skills.md#skill-alchemy)** and **[Enchanting](skills.md#skill-enchanting)** look the same way, each hour, each at its own things.
+  Alchemy tells a [potion or flask](potions.md) whose kind you do not know ("You recognise your fizzy
+  scarlet potion: a flask of fire."). Enchanting tells a magic thing whose magic you do not know:
+  an [unidentified](magic-items.md#unidentified-items) weapon, armour, ring or amulet, or a [wand or rod](wands-and-rods.md). Each gives 5 % an hour at 0,
+  25 % at 100, and 40 % at 200, trained only, besides Appraise's own chance. Neither trains by it:
+  their crafts are still to come.
+- **[Mining](skills.md#skill-mining)** makes [digging](digging.md) quicker: each turn does 25 % more work at 100 and 40 % more at
+  200, on top of what talents and a Delving tool add.
+- **[Herbalism](skills.md#skill-herbalism)** may find a herb besides on a forage that finds something (see
+  [Foraging](skill-uses.md#foraging)), and finds one more herb for every 50 when you
+  [gather](herbs.md#gathering) from the glowing fungus.
+- **[Search](skills.md#skill-search)** helps you find [secret doors](doors.md#secret-doors) and other hidden things when you search (`s`, `Ctrl+s`). A
   master's search reaches one cell farther (see [Searching](searching.md)).
 - **[Spot](skills.md#skill-spot)** lets you [notice hidden things in passing](searching.md#noticing-in-passing) at all, except traps. The higher it is, the more you
   notice.
@@ -209,6 +222,9 @@ mark**. The chance is in the table of skills above. Skills you use all the time,
   ground that slows you (10 %: bush, reeds, rubble, ice; not water), and an action taken while
   [staggered](status-effects.md#status-staggered) (20 %).
 - **[Survival](skills.md#skill-survival)**: a journey on the [overworld](overworld.md#travel).
+- **[Herbalism](skills.md#skill-herbalism)**: a forage that runs its time, one time in four, and every
+  [gather](herbs.md#gathering) that runs its time.
+- **[Mining](skills.md#skill-mining)**: every wall you dig through.
 - **[Swim](skills.md#skill-swim)**: a step wading through [water](terrain.md#water) or [marsh](terrain.md#terrain-marsh) now and then (10 %), every [plunge through the ice](temperature.md#falling-in), and a
   quarter of the steps in [deep water](terrain.md#deep-water), made or not.
 - **[Steal](skills.md#skill-steal)**: every attempt to steal, whatever comes of it.
@@ -217,9 +233,15 @@ mark**. The chance is in the table of skills above. Skills you use all the time,
 - **[Open lock](skills.md#skill-open-lock)**: a try at picking a lock, whether it works or not.
 - **[Heal](skills.md#skill-heal)**: a try at treating yourself, whether it works or not.
 
-Only skills you are trained in earn marks. Marks raise nothing by themselves: they gather until
-your next level. The Skills screen's meter shows how practised a skill is (the step its marks have
-reached on the ladder below), never the marks.
+Only skills you are trained in earn marks. They gather until a roll on the skill spends them. The
+Skills screen's meter shows how practised a skill is (the step its marks have reached on the ladder
+below), never the marks.
+
+**Rolls of their own.** When a skill's marks reach 100, it gets a roll at once, by itself, without
+waiting for your next level. It is the same roll as a level-up's (below), and it is told the same
+way: "Your stealth improves." It spends half the marks, so the skill drops back below 100 and must
+earn its next one. It comes on top of your level's rolls, never instead of one, and it does not
+wait for a level-up you have not finished.
 
 **Skill rolls.** Every level gives you a number of **skill rolls** (see [Experience](experience.md)). You spend each
 one on a trained skill of your choice, before you do anything else. Nothing stops you putting every

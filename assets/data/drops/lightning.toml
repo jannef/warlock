@@ -1,0 +1,7 @@
+# Material drops of the `lightning` tag (README.toml). Lightning elementals: an essence of lightning.
+bodiless = true
+
+[[drop]]
+object = "essence_of_lightning"
+count = "1"
+chance = 60

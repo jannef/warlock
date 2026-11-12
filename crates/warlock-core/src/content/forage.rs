@@ -30,6 +30,9 @@ pub struct ForageGround {
     pub count: Dice,
     /// What may be found, each with its weight, in file order.
     pub finds: Vec<(ObjectId, u32)>,
+    /// What a herbalist may find besides, each with its weight, in file order (#1343; none
+    /// without a list).
+    pub herbs: Vec<(ObjectId, u32)>,
 }
 
 impl ForageRules {
@@ -61,6 +64,8 @@ struct GroundSpec {
     chance: u8,
     count: Dice,
     finds: Vec<FindSpec>,
+    #[serde(default)]
+    herbs: Vec<FindSpec>,
 }
 
 #[derive(Deserialize)]
@@ -89,17 +94,21 @@ impl ForageRules {
                 let name = spec.landscape.id();
                 return Err(err(format!("ground `{name}` is listed twice")));
             }
-            let mut finds = Vec::new();
-            for find in spec.finds {
-                let object = (content.object_id(&find.object))
-                    .ok_or_else(|| err(format!("unknown object `{}`", find.object)))?;
-                finds.push((object, find.weight));
-            }
+            let objects = |list: Vec<FindSpec>| -> Result<Vec<(ObjectId, u32)>, ContentError> {
+                (list.into_iter())
+                    .map(|find| {
+                        (content.object_id(&find.object))
+                            .map(|object| (object, find.weight))
+                            .ok_or_else(|| err(format!("unknown object `{}`", find.object)))
+                    })
+                    .collect()
+            };
             grounds.push(ForageGround {
                 landscape: spec.landscape,
                 chance: spec.chance,
                 count: spec.count,
-                finds,
+                finds: objects(spec.finds)?,
+                herbs: objects(spec.herbs)?,
             });
         }
         Ok(Self {
@@ -138,6 +147,33 @@ mod tests {
         }
         let forest = rules.ground(Landscape::Forest).expect("forest");
         assert_eq!(forest.chance, 40);
+        // A herbalist's extra find (#1343): angelica root and the herbs of brewing where they
+        // grow (#1340), none on the plains; glowcap and mandrake are the dungeon's.
+        let id = |name| content.object_id(name).expect(name);
+        let herbs: Vec<_> = forest.herbs.iter().map(|(o, _)| *o).collect();
+        assert_eq!(
+            herbs,
+            [
+                "angelica_root",
+                "moonwort",
+                "comfrey",
+                "feverfew",
+                "vervain"
+            ]
+            .map(id)
+        );
+        for ground in &rules.grounds {
+            for (herb, _) in &ground.herbs {
+                assert!(![id("glowcap"), id("mandrake")].contains(herb));
+            }
+        }
+        assert!(
+            rules
+                .ground(Landscape::Plains)
+                .expect("plains")
+                .herbs
+                .is_empty()
+        );
         assert_eq!((forest.count.min(), forest.count.max()), (1, 3));
     }
 

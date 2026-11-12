@@ -2059,6 +2059,13 @@ impl<'a> PerceptionView<'a> {
             .collect()
     }
 
+    /// The ways to the glowing fungus beside the player, in compass order (the Gather ability,
+    /// `world/gather.rs`): the menu gathers at once from the one, and asks the way when there
+    /// are more. The player sees what stands beside them.
+    pub fn gather_ways(&self) -> Vec<crate::geom::Dir> {
+        crate::world::fungus_ways(self.content, self.level, self.player.pos)
+    }
+
     /// What keeps the player from calling a familiar now (`world/familiar.rs`): one alive,
     /// wherever it is (they know their own), or a hostile they see.
     pub(crate) fn calling_barred(&self) -> Option<crate::ability::Unavailable> {
@@ -2164,6 +2171,12 @@ impl<'a> PerceptionView<'a> {
             .filter(|s| Some(s.object) == blank)
             .map(|s| s.count)
             .sum()
+    }
+
+    /// The recipes of profession `skill` the player sees, in path order, each with what it takes
+    /// and why it cannot be made now (`world/craft.rs`): what the profession's screen lists.
+    pub fn recipes(&self, skill: crate::skills::SkillId) -> Vec<crate::world::RecipeRow> {
+        crate::world::recipe_rows(self.content, self.level, self.player, skill)
     }
 
     /// What the player's spell `spell` costs them now, in mana (spec §8 "Spells": they know

@@ -9,15 +9,16 @@
 //!   actor, is never shown, and gives nothing. That is not the same as a value of 0, which is
 //!   trained (and shown) but gives little.
 //! - **Values** start from what the race and the class grant (dice, rolled when the character is
-//!   made, [`roll_grants`]), or what a creature type lists, and grow only by **level-up rolls**
+//!   made, [`roll_grants`]), or what a creature type lists, and grow only by **skill rolls**
 //!   (spec §8 "Skills"; `world/skill_roll.rs`): past the soft cap (100) a roll adds half
 //!   ([`RollRules`]). At most [`MAX_VALUE`].
 //! - **Training marks**: a meaningful use of a skill ([`Use`]) may earn it a mark, with the
 //!   chance its rule in data gives ([`MarkRule`]), drawn from the run's own training stream
 //!   (never the gameplay stream, so training never changes a fight's rolls). Marks are a
-//!   reservoir ([`Skills::mark`]): they raise nothing by themselves but set the die of the
-//!   skill's next level-up roll on the [`Ladder`], and the roll consumes half of them
-//!   ([`Skills::roll`]). Only the player trains, for now.
+//!   reservoir ([`Skills::mark`]): they set the die of the skill's next roll on the
+//!   [`Ladder`], and the roll consumes half of them ([`Skills::roll`]); at
+//!   [`RollRules::auto_at`] the skill rolls by itself (`World::mark_skill`). Only the player
+//!   trains, for now.
 //! - **Benefits**: a skill may give passive effects ([`Effect`]) that grow with its value
 //!   ([`Benefit`]). The rules ask an actor's skills for an effect ([`Skills::effect`]); its
 //!   untrained skills add nothing.
@@ -213,6 +214,10 @@ pub enum Effect {
     /// `world/forage.rs`); a skill with it, trained, lets the actor forage at all (the abilities
     /// menu's Forage).
     Forage,
+    /// Percent chance, on a forage that found something, of one more find from the ground's
+    /// `herbs` (spec §8 "Foraging": Herbalism; `world/forage.rs`); only a skill with it, trained,
+    /// gives it at all.
+    Herbs,
     /// Percent chance, an hour at a time, of telling how fresh a corpse or food is (spec §8
     /// "Hunger": Appraise, Survival; `world/freshness.rs`); only a skill with it, trained, gives
     /// it at all.
@@ -224,6 +229,13 @@ pub enum Effect {
     /// wears for what it is (spec §8 "Skills": Appraise; `world/appraise.rs`); only a skill with
     /// it, trained, gives it at all.
     Identify,
+    /// [`Effect::Identify`]'s chance for a potion or flask whose kind the actor does not know
+    /// (spec §8 "Skills": Alchemy; `world/appraise.rs`); only a skill with it, trained, gives it.
+    IdentifyPotion,
+    /// [`Effect::Identify`]'s chance for a magic thing whose magic the actor does not know
+    /// (spec §8 "Skills": Enchanting; `world/appraise.rs`); only a skill with it, trained, gives
+    /// it.
+    IdentifyMagic,
     /// Points added to the player's side of slipping past a creature that would see them by
     /// darkvision alone (spec §8 "Surprise and sneak attacks"; `world/slip.rs`).
     Slip,
@@ -280,6 +292,9 @@ pub enum Effect {
     /// Points added to the Strength score a kick at a closed door is rolled against (spec §8
     /// "Doors"; `world/door.rs`).
     Kick,
+    /// Percent more work a turn of digging does (spec §8 "Digging": Mining; `world/dig.rs`),
+    /// added to the talents' and items' `dig_percent`.
+    Dig,
     /// Points added to the check against bonds (spec §8 "Status effects"; `world/hold.rs`); a
     /// skill with it, trained, makes an action that bonds stop that check at all.
     Escape,
@@ -341,6 +356,10 @@ impl Effect {
             | Effect::Bargain
             | Effect::Freshness
             | Effect::Identify
+            | Effect::IdentifyPotion
+            | Effect::IdentifyMagic
+            | Effect::Herbs
+            | Effect::Dig
             | Effect::SurpriseEase => 100,
             Effect::SneakDice => MAX_SNEAK_DICE,
             Effect::Surprise | Effect::Initiative => MAX_SURPRISE_BONUS,
@@ -416,6 +435,8 @@ pub enum Use {
     Lookout,
     /// A forage that ran its time (spec §8 "Foraging"), whatever it found.
     Forage,
+    /// A gather that ran its time (spec §8 "Skills": Herbalism), whatever it found.
+    Gather,
     /// An attempt to steal from someone (spec §8 "Stealing"), whatever comes of it.
     Steal,
     /// A feint at a foe (spec §8 "Skills": Bluff), whatever comes of it.
@@ -494,6 +515,8 @@ pub enum Use {
     Overhear,
     /// A turn spent listening at a closed door (spec §5 "Hearing"), whatever is heard.
     Listen,
+    /// A wall the player dug through, breaking it (spec §8 "Digging": Mining).
+    Dug,
 }
 
 impl Use {
@@ -515,6 +538,7 @@ impl Use {
             Use::Travel => "a journey on the overworld",
             Use::Lookout => "keeping a lookout for those met on the overworld",
             Use::Forage => "foraging in the wild",
+            Use::Gather => "gathering herbs from the glowing fungus",
             Use::Steal => "trying to steal from someone",
             Use::Feint => "feinting at a foe",
             Use::Bluffed => "trying to talk your way past a party met on the way",
@@ -550,6 +574,7 @@ impl Use {
             Use::Sprung => "a hidden trap going off under you, or under a creature you see",
             Use::Overhear => "hearing a sound that is no news while resting or waiting",
             Use::Listen => "a turn spent listening at a closed door",
+            Use::Dug => "digging through a wall",
         }
     }
 }
@@ -656,6 +681,7 @@ impl Use {
             Use::Travel => "travel",
             Use::Lookout => "lookout",
             Use::Forage => "forage",
+            Use::Gather => "gather",
             Use::Steal => "steal",
             Use::Feint => "feint",
             Use::Bluffed => "talk_past",
@@ -689,6 +715,7 @@ impl Use {
             Use::Sprung => "sprung",
             Use::Overhear => "overhear",
             Use::Listen => "listen",
+            Use::Dug => "dug",
         }
     }
 }
@@ -716,9 +743,12 @@ impl Effect {
             Effect::Footing => "footing",
             Effect::SteadyEase => "steady_ease",
             Effect::Forage => "forage",
+            Effect::Herbs => "herbs",
             Effect::Freshness => "freshness",
             Effect::Bargain => "bargain",
             Effect::Identify => "identify",
+            Effect::IdentifyPotion => "identify_potion",
+            Effect::IdentifyMagic => "identify_magic",
             Effect::Slip => "slip",
             Effect::Lookout => "lookout",
             Effect::Stalk => "stalk",
@@ -737,6 +767,7 @@ impl Effect {
             Effect::Escape => "escape",
             Effect::Climb => "climb",
             Effect::Kick => "kick",
+            Effect::Dig => "dig",
             Effect::Pick => "pick",
             Effect::Fletch => "fletch",
             Effect::Wedge => "wedge",
@@ -863,16 +894,21 @@ pub struct RollRules {
     pub spend: u8,
     /// From this value on a roll adds half its result, rounded up.
     pub soft_cap: u16,
+    /// A skill whose marks reach this many rolls at once, by itself, between level-ups
+    /// (`World::mark_skill`); 0: never.
+    pub auto_at: u32,
 }
 
 impl Default for RollRules {
-    /// +1 at Intelligence 14, +2 at 18, …; a roll spends half the marks; halved from 100.
+    /// +1 at Intelligence 14, +2 at 18, …; a roll spends half the marks; halved from 100; a
+    /// skill rolls by itself at 100 marks.
     fn default() -> Self {
         Self {
             intelligence_from: 14,
             intelligence_every: 4,
             spend: 50,
             soft_cap: 100,
+            auto_at: 100,
         }
     }
 }
@@ -954,10 +990,16 @@ impl Skills {
     /// One training mark for skill `id`, if trained (they gather until a level-up roll spends
     /// them, [`Skills::roll`]). Returns whether it was trained.
     pub fn mark(&mut self, id: SkillId) -> bool {
+        self.add_marks(id, 1)
+    }
+
+    /// `by` training marks for skill `id`, if trained ([`Skills::mark`]). Returns whether it
+    /// was trained.
+    pub fn add_marks(&mut self, id: SkillId, by: u32) -> bool {
         let Some(trained) = self.0.get_mut(&id) else {
             return false;
         };
-        trained.marks = trained.marks.saturating_add(1);
+        trained.marks = trained.marks.saturating_add(by);
         true
     }
 

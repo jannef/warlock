@@ -48,7 +48,7 @@ pub(crate) fn fletch_lack(actor: &Actor, content: &Content) -> Option<Unavailabl
 }
 
 /// What `actor`'s ready launcher's ammunition is made as, if it has one fletching makes for.
-fn fletch_makes<'c>(actor: &Actor, content: &'c Content) -> Option<&'c FletchMakes> {
+pub(super) fn fletch_makes<'c>(actor: &Actor, content: &'c Content) -> Option<&'c FletchMakes> {
     let (launcher, _) = actor.launcher(content)?;
     let kind = content.object(launcher).launches.as_deref()?;
     content.fletch()?.makes_for(kind)

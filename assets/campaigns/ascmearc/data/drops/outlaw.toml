@@ -1,0 +1,11 @@
+# Material drops of the `outlaw` tag (data/drops/README.toml; the tag is this campaign's). The outlaws: a little iron and leather.
+
+[[drop]]
+material = "iron"
+count = "1"
+chance = 20
+
+[[drop]]
+material = "leather"
+count = "1"
+chance = 30

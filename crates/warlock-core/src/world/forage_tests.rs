@@ -47,12 +47,16 @@ fn survival(w: &World) -> SkillId {
     w.content().skill_id("survival").expect("Survival")
 }
 
-/// The player trained in Survival at `value` (`None`: untrained).
+/// The player trained in Survival at `value` (`None`: untrained), and never in Herbalism (a
+/// ranger may start with it: its herbs would join the finds).
 fn train(w: &mut World, value: Option<u16>) {
     let id = survival(w);
+    let herbalism = w.content().skill_id("herbalism").expect("Herbalism");
     let player = w.state.player;
     let skills = &mut w.state.actors.get_mut(&player).expect("player").skills;
-    let mut all: Vec<(SkillId, Trained)> = skills.iter().filter(|(s, _)| *s != id).collect();
+    let mut all: Vec<(SkillId, Trained)> = (skills.iter())
+        .filter(|(s, _)| *s != id && *s != herbalism)
+        .collect();
     if let Some(value) = value {
         all.push((id, Trained { value, marks: 0 }));
     }
@@ -293,4 +297,107 @@ fn forage_replays_verify() {
     let (verified, divergence) = replay.play(content).expect("replays");
     assert_eq!(divergence, None);
     assert_eq!(verified.state_hash(), w.state_hash());
+}
+
+/// The player trained in Herbalism at `value` too.
+fn train_herbalism(w: &mut World, value: u16) {
+    let id = w.content().skill_id("herbalism").expect("Herbalism");
+    w.player_mut().skills.add(id, value.into());
+}
+
+fn herbs_found(w: &World) -> usize {
+    (w.messages().iter())
+        .filter(|m| m.text.starts_with("Your eye for herbs finds "))
+        .count()
+}
+
+#[test]
+fn a_herbalists_forage_that_finds_something_may_find_a_herb_besides() {
+    let content = content(false, Some(100));
+    // Any herb a forage may find (angelica root, moonwort, ...: #1340).
+    let rules = content.forage().expect("forage.toml");
+    let all: Vec<_> = (rules.grounds.iter())
+        .flat_map(|g| g.herbs.iter().map(|(o, _)| *o))
+        .collect();
+    let roots = |w: &World| {
+        (w.state.player().inventory.iter())
+            .filter(|s| all.contains(&s.object))
+            .map(|s| s.count)
+            .sum::<u32>()
+    };
+    let (mut tried, mut herbs) = (0, 0);
+    for seed in 0..20 {
+        let mut w = World::new(content.clone(), "forest", Some(seed)).expect("world");
+        train(&mut w, Some(0));
+        train_herbalism(&mut w, 200);
+        assert_eq!(w.state.player().skill_effect(&content, Effect::Herbs), 80);
+        let before = (food_count(&w), roots(&w));
+        w.apply(&Action::Forage);
+        if last_message(&w).contains("stop foraging") {
+            continue; // cut short by a creature coming into view
+        }
+        tried += 1;
+        if herbs_found(&w) == 1 {
+            herbs += 1;
+            assert!(roots(&w) > before.1, "seed {seed}: the herb is in the pack");
+            // The find is food; the herb may be (angelica root) or not (moonwort).
+            assert!(food_count(&w) > before.0, "the find");
+        }
+    }
+    assert!(tried >= 10, "{tried} forages ran their time");
+    assert!(herbs > 0 && herbs < tried, "{herbs} herbs in {tried}");
+}
+
+#[test]
+fn a_forage_without_herbalism_draws_as_before() {
+    // The same forages with and without the `herbs` lists: one untrained in Herbalism draws
+    // nothing more, so the runs hash alike.
+    let with = content(false, None);
+    let text = include_str!("../../../../assets/data/forage.toml");
+    // Every `herbs = [...]`, on one line or several, left out.
+    let mut bare = String::new();
+    let mut skipping = false;
+    for line in text.lines() {
+        if line.starts_with("herbs = ") {
+            skipping = !line.ends_with(']');
+            continue;
+        }
+        if skipping {
+            skipping = line != "]";
+            continue;
+        }
+        bare.push_str(line);
+        bare.push('\n');
+    }
+    assert_ne!(bare, text);
+    let mut files = ContentFiles::builtin();
+    files.insert("data/forage.toml", &bare);
+    let without = Arc::new(Content::load(&files).expect("valid"));
+    for seed in 0..10 {
+        let run = |content: &Arc<Content>, herbalist: bool| {
+            let mut w = World::new(content.clone(), "forest", Some(seed)).expect("world");
+            train(&mut w, Some(100));
+            if herbalist {
+                train_herbalism(&mut w, 200);
+            }
+            for _ in 0..4 {
+                w.apply(&Action::Forage);
+            }
+            (w.state_hash(), herbs_found(&w))
+        };
+        assert_eq!(run(&with, false), run(&without, false), "seed {seed}");
+        // A herbalist on ground with no herbs draws nothing more either.
+        assert_eq!(run(&without, true).1, 0);
+    }
+}
+
+#[test]
+fn a_forage_marks_herbalism_now_and_then() {
+    let mut w = World::new(content(true, None), "forest", None).expect("world");
+    train(&mut w, Some(10));
+    train_herbalism(&mut w, 10);
+    let id = w.content().skill_id("herbalism").expect("Herbalism");
+    let marks = |w: &World| w.state.player().skills.get(id).map(|t| t.marks);
+    w.apply(&Action::Forage);
+    assert_eq!(marks(&w), Some(1), "eager: every forage marks");
 }

@@ -19,16 +19,16 @@ expression: "render(case, content.clone())"
                     │   i  Tame            in a direction                      │
                     │   j  Heal            nothing to treat                    │
                     │   k  Intimidate      at a place you see                  │
-                    │   l  Forage          not usable here                     │
-                    │   m  Fletch          you have no knife                   │
-                    │   n  Whittle         you have no knife                   │
-                    │   o  Salvage         on something you carry              │
+                    │   l  Metalcraft…                                         │
+                    │   m  Forage          not usable here                     │
+                    │   n  Woodcraft…                                          │
                     │ Weapon skills                                            │
-                    │   p  Shield bash     in a direction                      │
+                    │   o  Shield bash     in a direction                      │
                     │                                                          │
                     │ The unicorn's grace: your bleeding and poison end, and a │
                     │ disease is shaken off; then it rests a day.              │
                     │                                                          │
                     │                                                          │
-                    │ a-p or Enter use   Esc close                             │
- The Hub  ·  HP 59/5└──────────────────────────────────────────────────────────┘0        ? controls
+                    │ a-o or Enter use   Esc close                             │
+                    └──────────────────────────────────────────────────────────┘
+ The Hub  ·  HP 59/59  ·  MP 33/33  ·  Sta 9/15  ·  Zeal 5/13  ·  Lv 14  ·  08:00        ? controls

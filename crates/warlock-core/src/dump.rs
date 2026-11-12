@@ -82,6 +82,11 @@ pub enum Layer {
     /// source and what it asks for, or why it cannot be used now (`Shield bash (weapon skill):
     /// a direction`, `Steal (skill): not usable yet`).
     Abilities,
+    /// Not a map: every profession's recipes as its screen lists them for the player (spec §8
+    /// "Skills"; `world/craft.rs`), a `Metalcraft:` line per profession they have, then one a
+    /// line with what each takes and why it cannot be made now (`Temper: a metal weapon or
+    /// armour, an anvil, about 10 minutes (no anvil beside you)`).
+    Recipes,
     /// Not a map: the spells the player knows (spec §8 "Spells"), one a line in menu order with
     /// its tier and what it costs them now (`Frost: tier 2, 14 mana`), then the scrolls they
     /// could study, by position, with the chance in words (`study c, scroll of fireball: Fire
@@ -156,6 +161,7 @@ impl Layer {
         Layer::Attacks,
         Layer::Talents,
         Layer::Abilities,
+        Layer::Recipes,
         Layer::Spells,
         Layer::Traps,
         Layer::Locations,
@@ -188,6 +194,7 @@ impl Layer {
             Layer::Attacks => "attacks",
             Layer::Talents => "talents",
             Layer::Abilities => "abilities",
+            Layer::Recipes => "recipes",
             Layer::Spells => "spells",
             Layer::Traps => "traps",
             Layer::Locations => "locations",
@@ -224,8 +231,8 @@ impl FromStr for Layer {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, blood, \
                      scorch, inventory, equipment, stats, skills, weapon_skills, attacks, talents, \
-                     abilities, traps, locations, quests, story, companion, familiar, truth, actors, \
-                     progress, rooms, ice)"
+                     abilities, recipes, traps, locations, quests, story, companion, familiar, \
+                     truth, actors, progress, rooms, ice)"
                 )
             })
     }
@@ -288,6 +295,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
         Layer::Attacks => attack_rows(&world.perception()),
         Layer::Talents => talent_rows(&world.perception()),
         Layer::Abilities => ability_rows(&world.perception()),
+        Layer::Recipes => recipe_rows(&world.perception()),
         Layer::Spells => spell_rows(&world.perception()),
         Layer::Traps => trap_rows(&world.perception()),
         Layer::Locations => location_rows(&world.perception()),
@@ -358,6 +366,7 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         | Layer::Attacks
         | Layer::Talents
         | Layer::Abilities
+        | Layer::Recipes
         | Layer::Spells
         | Layer::Traps
         | Layer::Locations
@@ -1437,6 +1446,27 @@ fn ability_rows(view: &PerceptionView<'_>) -> Vec<String> {
         .collect()
 }
 
+/// Every profession's recipes as its screen lists them for the player: a `Metalcraft:` line,
+/// then one a line, `Temper: a metal weapon or armour, an anvil, about 10 minutes (no anvil
+/// beside you)`; `none` under a profession with no recipe they see.
+fn recipe_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    let content = view.content();
+    let mut rows = Vec::new();
+    for skill in content.recipes().professions() {
+        rows.push(format!("{}:", content.skill(skill).name));
+        let recipes = view.recipes(skill);
+        if recipes.is_empty() {
+            rows.push("  none".into());
+        }
+        for row in recipes {
+            let why = (row.unavailable)
+                .map_or(String::new(), |why| format!(" ({})", why.reason(content)));
+            rows.push(format!("  {}: {}{why}", row.name, row.takes));
+        }
+    }
+    rows
+}
+
 /// What an ability asks for, in a word or two.
 fn aim_word(aim: Aim) -> &'static str {
     match aim {
@@ -1448,6 +1478,7 @@ fn aim_word(aim: Aim) -> &'static str {
         Aim::Item => "an item you carry",
         Aim::Shape => "a weapon's shape",
         Aim::Spell => "a spell you know",
+        Aim::Recipes => "a recipe",
     }
 }
 
@@ -2666,10 +2697,10 @@ mod tests {
                 "Transfixing stare (sign): a cell",
                 "Disarm a trap (skill): a direction",
                 "Listen at a door (skill): a direction",
+                "Metalcraft… (skill): a recipe",
                 "Pick lock (skill): a direction",
                 "Steal (skill): a direction",
-                "Fletch (skill): you have no knife",
-                "Whittle (skill): you have no knife",
+                "Woodcraft… (skill): a recipe",
                 "Salvage (skill): an item you carry",
                 "Shield bash (weapon skill): you hold no shield",
             ]
@@ -2681,9 +2712,9 @@ mod tests {
                    "unavailable": null})
         );
         assert_eq!(
-            value["abilities"][5],
-            json!({"id": "fletch", "source": "skill", "aim": "nothing",
-                   "unavailable": "no_knife"})
+            value["abilities"][6],
+            json!({"id": "woodcraft", "source": "skill", "aim": "a recipe",
+                   "unavailable": null})
         );
         assert_eq!(
             value["abilities"][8],
@@ -2695,13 +2726,13 @@ mod tests {
             json!({"id": "disarm", "source": "skill", "aim": "a direction", "unavailable": null})
         );
         assert_eq!(
-            value["abilities"][3],
+            value["abilities"][4],
             json!({"id": "pick_lock", "source": "skill", "aim": "a direction",
                    "unavailable": null})
         );
         assert_eq!(value["abilities"][0]["aim"], "a cell");
         assert_eq!(
-            value["abilities"][4],
+            value["abilities"][5],
             json!({"id": "steal", "source": "skill", "aim": "a direction", "unavailable": null})
         );
         // The storeroom's small shield in hand: it can be used, in a direction.

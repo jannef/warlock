@@ -1,0 +1,12 @@
+# Material drops of the `earth` tag (README.toml). Earth elementals: an essence of earth, and stone.
+bodiless = true
+
+[[drop]]
+object = "essence_of_earth"
+count = "1"
+chance = 60
+
+[[drop]]
+material = "stone"
+count = "1d2"
+chance = 50

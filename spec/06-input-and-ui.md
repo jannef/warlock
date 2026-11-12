@@ -7,8 +7,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
 ## 6. Input and UI
 
 - Keyboard-first. The default keys are ADOM's (#350): every command ADOM has takes ADOM's key
-  (its manual's command list); one ADOM lacks, or has only behind a prefix (`:m`, `w s`) or Ctrl
-  (which bindings cannot hold), takes a key ADOM does not use. Movement is ADOM's: the numpad
+  (its manual's command list); one ADOM lacks, or has only behind a prefix (`:m`, `w s`), takes a
+  key ADOM does not use. Movement is ADOM's: the numpad
   and the arrows (4 directions); the vi keys are never bound in play by default (the owner,
   #644), as ADOM puts kick, look, and use a tool on `k`, `l`, and `u`. A settings file keeps the keys it lists (the player's own
   keymap is never rewritten); a command it does not list takes its default keys but those a
@@ -192,6 +192,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   bound there edits, every other key types. Delete resets a command, "Reset all keys" resets
   everything, and so does `--reset-keys` on the command line (saved at once; the game then starts
   as usual).
+- **Modifier keys** (#1323): a play command's key may be held with Ctrl, Alt, and Super (Option
+  and Command on macOS), and a physical key also with Shift (a character carries Shift itself);
+  the capture records the modifiers held with the key, and a modifier alone never binds. Written
+  `"Ctrl+r"`, `"Alt+ArrowUp"`, `"Super+s"` in the settings file and the keymap (`Cmd`, `Option`,
+  and `Control` read too), shown as the system names them (`Cmd+s` on macOS). Matching is exact:
+  `Ctrl+r` never fires `r`, nor `r` while Ctrl is held; Alt changes the character a key types, so
+  a modified key is read from the physical key when Alt is held, and a symbol typed with Option or
+  AltGr (`@`) still fires its plain binding. Shortcuts the system or browser keeps (Cmd+Q, Alt+F4,
+  Ctrl+W on the web, ...) are refused with a reason, and so are modifiers on a key of any other
+  context. Search for a while defaults to Ctrl+Num5 and Ctrl+s.
 - **Keymaps**: "Export keys…" in Controls writes every command's keys, by context, with a format
   version (`version = 1`), to `warlock-keys.toml` in the config folder (on the web, a download)
   and says where; "Import keys…" reads it back (on the web, from a file picker).
@@ -203,7 +213,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   file without a version (command ids at the top level, or a settings file's `[bindings]`) is
   read too, and a newer version as far as this one knows. The defaults ship as
   `keymaps/default.toml` beside the game.
-- First-phase commands: move, wait, search (`s`, a turn; `S`, for a while: up to 10 turns,
+- First-phase commands: move, wait/search (one command, "Wait/search": Num5 or `s`, a turn that
+  looks around; #1326), search for a while (Ctrl+s or Ctrl+Num5: up to 10 turns,
   stopping when something is found or interrupts, like a rest; §8 "Searching"; basic commands,
   not abilities), open/close door, kick (`k`, then a direction; §8 "Doors"),
   ascend/descend (ascend also leaves an outdoor area when no enemy is about, §7 "Leaving an
@@ -435,12 +446,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     it has, at a place they see (the aiming mode), in that skill's place; **Forage** (`Ability::Forage`,
     §8 "Foraging"), Survival's use, which whoever is trained in it has, asking for nothing, in
     that skill's place, greyed out "not usable here" (`Unavailable::NotHere`) outside the wild;
-    **Fletch** (`Ability::Fletch`, §8 "Fletching"), Woodcraft's use, which everyone has, trained
-    or not, asking for nothing, in that skill's place, greyed out "you have no knife"
-    (`Unavailable::NoKnife`) or "you have no bow or crossbow ready" (`Unavailable::NoLauncher`);
-    **Whittle** (`Ability::Whittle`, §8 "Skills", Woodcraft's second use), beside it, which everyone has,
-    asking for an item (the Whittle list: wooden weapons, `world::workable_wood`), greyed out "you
-    have no knife" (`Unavailable::NoKnife`);
+    a **profession** (`Ability::Profession`, §8 "Skills"; #1334), a skill with recipes, as one
+    row in that skill's place named with an ellipsis ("Metalcraft…", "Woodcraft…"), which
+    whoever is trained in the skill has, and everyone while one of its recipes is open to all
+    (Temper, Whittle, Fletch); never greyed, it opens the **profession screen**: its recipes the
+    player may see, grouped by what they make (the built-in Temper, Whittle, and Fletch first
+    under "Work"), each with what it takes in words ("a metal weapon or armour, an anvil, about
+    10 minutes"; never a difficulty or odds), greyed with the first reason it cannot be made now
+    ("beyond your skill", "no anvil beside you", "no knife", "no bow or crossbow ready", "no metal
+    to hand", "no arrowheads"); a letter or Enter makes an available one (Temper's and Whittle's
+    lists ask which item over it; Fletch begins at once); fixed keys, named in its footer;
     **Salvage** (`Ability::Salvage`, §8 "Skills", every profession's), after the skills' own uses,
     which everyone has, asking for an item (the Salvage list: what `world::salvageable` accepts,
     less what is worn or wielded), never greyed out;

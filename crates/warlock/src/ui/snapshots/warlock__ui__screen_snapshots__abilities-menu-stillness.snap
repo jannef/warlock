@@ -17,18 +17,18 @@ expression: "render(case, content.clone())"
                     │   f  Stillness          your mind is already still       │
                     │ Skills                                                   │
                     │   g  Listen at a door   in a direction                   │
-                    │   h  Fletch             you have no knife                │
-                    │   i  Whittle            you have no knife                │
-                    │   j  Salvage            on something you carry           │
+                    │   h  Metalcraft…                                         │
+                    │   i  Woodcraft…                                          │
                     │ Weapon skills                                            │
-                    │   k  Shield bash        you hold no shield               │
+                    │   j  Shield bash        you hold no shield               │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-k or Enter use   Esc close                             │
+                    │ a-j or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
 
  The Hub  ·  HP 117/117  ·  MP 227/227  ·  Ki 6/17  ·  Sta 10/19  ·  Lv 56  ·  08:00     ? controls

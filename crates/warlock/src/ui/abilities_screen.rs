@@ -319,6 +319,8 @@ pub(super) fn needs(aim: Aim) -> &'static str {
         Aim::Item => "on something you carry",
         Aim::Shape => "in a weapon's shape",
         Aim::Spell => "a scroll of a spell you know",
+        // It opens the profession's list, as the ellipsis in its name says.
+        Aim::Recipes => "",
     }
 }
 
@@ -370,10 +372,10 @@ mod tests {
             "Skills",
             "  b  Disarm a trap      in a direction",
             "  c  Listen at a door   in a direction",
-            "  d  Pick lock          in a direction",
-            "  e  Steal              in a direction",
-            "  f  Fletch             you have no knife",
-            "  g  Whittle            you have no knife",
+            "  d  Metalcraft…",
+            "  e  Pick lock          in a direction",
+            "  f  Steal              in a direction",
+            "  g  Woodcraft…",
             "  h  Salvage            on something you carry",
             "Weapon skills",
             "  i  Shield bash        you hold no shield",
@@ -408,7 +410,7 @@ mod tests {
         let stare = Ability::Sign(warlock_core::content::SignActive::TransfixingStare);
         assert_eq!(screen.selected(), Some(stare));
         assert_eq!(
-            screen.handle(&Press::typed('d'), &b),
+            screen.handle(&Press::typed('e'), &b),
             ScreenAction::UseAbility(Ability::PickLock)
         );
         let last = Some(Ability::ShieldBash);
@@ -429,7 +431,7 @@ mod tests {
             ScreenAction::UseAbility(Ability::ShieldBash)
         );
         assert_eq!(
-            screen.handle(&Press::typed('e'), &b),
+            screen.handle(&Press::typed('f'), &b),
             ScreenAction::UseAbility(Ability::Steal)
         );
         // `a` names the first row here (the stare), so it does not close the menu; Esc does.

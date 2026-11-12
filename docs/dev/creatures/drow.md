@@ -97,3 +97,5 @@ The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the r
 Gear condition (#1193, `data/gear_condition.toml`'s `drow` row): damaged 10 %, Fine 12 %, Marvellous 3 %, Masterwork 0.8 % (docs/dev/creatures.md, "Gear condition").
 
 Gear materials (#1191): the faction's `gear` in `data/factions.toml`: drow favour silk (30 %), chitin (15 %), and obsidian (10 %), the underdark's own, each its share of the draws for an item whose construction list holds it, the usual draw the rest (`docs/dev/objects.md` "Materials and variants").
+
+**Material drops** (#1341; `data/drops/`, docs/dev/objects.md "Material drops"): `drow.toml`: steel 1 (30 %), mithril 1 (3 %).

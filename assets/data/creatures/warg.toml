@@ -10,6 +10,7 @@ glyph = "C"
 fg = "#8a6a48"
 speed = 1250
 faction = "orcs"
+tags = ["beast"]
 alignment = "evil"
 vision = "low_light"
 sight = 12

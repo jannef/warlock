@@ -18,12 +18,12 @@ expression: "render(case, content.clone())"
              │ Talents                                                                │
              │   i  Blood magic                                                       │
              │ Skills                                                                 │
-             │   j  Decipher           no unknown scroll                              │
-             │   k  Knowledge          not usable yet                                 │
-             │   l  Listen at a door   in a direction                                 │
-             │   m  Fletch             you have no knife                              │
-             │   n  Whittle            you have no knife                              │
-             │   o  Salvage            on something you carry                         │
+             │   j  Alchemy            not usable yet                                 │
+             │   k  Decipher           no unknown scroll                              │
+             │   l  Knowledge          not usable yet                                 │
+             │   m  Listen at a door   in a direction                                 │
+             │   n  Metalcraft…                                                       │
+             │   o  Woodcraft…                                                        │
              │                                                                        │
              │ The basilisk's stare: a foe nearby that sees you slows to a crawl a    │
              │ moment; your eyes then rest two hours.                                 │

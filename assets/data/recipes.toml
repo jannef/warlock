@@ -1,0 +1,46 @@
+# Recipes (spec §8 "Skills": professions; docs/design/professions.md §6, docs/dev/crafting.md): what
+# the professions make, one file a recipe under `recipes/<skill>/`, the directory the profession.
+# A skill with a directory of recipes is a profession: the abilities menu lists one row for it,
+# "Metalcraft…", which opens its screen of recipes. Recipes are known by skill value, never
+# learned.
+#
+# This file holds what the professions share. For now, each profession's line in the abilities
+# menu (a profession without one shows its skill's description):
+#
+#   [[profession]]
+#     skill        the skill (skills.toml) whose directory it is
+#     description  the abilities menu's line for its row
+#
+# A recipe file, `recipes/<skill>/<id>.toml`, holds one [[recipe]]:
+#
+#   id          its file name (unique across professions); `craft:ID` names it
+#   name        the row's name (default: the result's name, or the action's for a `use` recipe)
+#   use         a built-in recipe: `temper`, `whittle`, or `fletch`. Its row runs that action, with
+#               its own list and rules; it takes no result, parts, inputs, ornament, difficulty,
+#               or seconds
+#   result      { object = "long_sword", count = 1 }: what is made (`count` dice above 1 only for
+#               a stackable object)
+#   [recipe.parts]  the result's parts the maker chooses: `blade = "stock"` (a stack of stock of
+#               the profession whose material the part may be made of), `head = { input =
+#               "arrowhead" }` (the material of that input); `main` is the first part. A part not
+#               listed is the base item's material
+#   inputs      [{ object = "arrowhead", count = 20, per_made = true }]: objects used up
+#   ornament    true: an optional gem for the result's ornament part
+#   difficulty  the check's base
+#   seconds     the work's time (1 or more)
+#   station     a terrain that must stand beside the maker (`anvil`)
+#   knife       true: a knife carried
+#   launcher    true: a bow or crossbow ready that fletching makes ammunition for
+#   from        the trained value the recipe is listed from (default 0)
+#   anyone      true: listed for those untrained in the skill too
+#
+# Only built-in recipes exist yet; generic ones (the forge, arrows) come with the phases of the
+# professions design that make them.
+
+[[profession]]
+skill = "metalcraft"
+description = "Your recipes as a smith."
+
+[[profession]]
+skill = "woodcraft"
+description = "Your recipes as a woodworker."

@@ -23,3 +23,5 @@ Presence (#1128, `world/aura.rs`): the bheur hag's cold aura (`sluggish`, radius
 ## Variance
 
 The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**: the hags hobble at 1000 (the bheur hag's winter at 1100); the sea hag, dread, at 700, slow and awful out of the water.
+
+**Material drops** (#1341; `data/drops/`, docs/dev/objects.md "Material drops"): `hag.toml`: henbane 1d2 (50 %, an object), bone 1 (30 %); the bog hag rolls `marsh-thing.toml` too.

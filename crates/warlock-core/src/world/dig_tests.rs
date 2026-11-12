@@ -530,3 +530,36 @@ fn a_fireball_trap_blasts_the_softer_walls_open() {
     assert!(said.contains(&"A fireball explodes!"), "{said:?}");
     assert!(said.contains(&"The walls collapse!"), "{said:?}");
 }
+
+#[test]
+fn a_miner_digs_faster_and_each_wall_dug_through_marks_mining() {
+    // The stone wall (hardness 600) at Strength 10 with the pick-axe: 60 turns untrained, 48 at
+    // Mining 100 (+25 %), 43 at 200 (+40 %).
+    let stone = |mining: Option<u16>| {
+        let mut w = cellar(10);
+        let id = w.content().skill_id("mining").expect("Mining");
+        let skills: crate::skills::Skills = (w.state.player().skills.iter())
+            .filter(|(s, _)| *s != id)
+            .collect();
+        w.player_mut().skills = skills;
+        if let Some(value) = mining {
+            w.player_mut().skills.add(id, value.into());
+        }
+        run(&mut w, "move:E*3");
+        let took = dig(&mut w, "N");
+        assert_eq!(terrain_at(&w, Pos::new(4, 1)), "rubble");
+        let marks = w.state.player().skills.get(id).map(|t| t.marks);
+        (took, marks)
+    };
+    assert_eq!(stone(None), (60 * 6, None));
+    assert_eq!(stone(Some(100)), (48 * 6, Some(1)));
+    assert_eq!(stone(Some(200)), (43 * 6, Some(1)));
+    // A wall a blast breaks is no dig: no mark.
+    let mut w = cellar(10);
+    let id = w.content().skill_id("mining").expect("Mining");
+    w.player_mut().skills.add(id, 10);
+    let had = w.state.player().skills.get(id).map(|t| t.marks);
+    let mut events = Vec::new();
+    w.blast(Pos::new(3, 1), 1, 1000, &mut events);
+    assert_eq!(w.state.player().skills.get(id).map(|t| t.marks), had);
+}

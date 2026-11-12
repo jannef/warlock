@@ -1,0 +1,6 @@
+# Material drops of the `fire-thing` tag (README.toml). The delf's burning things that leave a body (the salamander, the ember beetle).
+
+[[drop]]
+object = "essence_of_fire"
+count = "1"
+chance = 25

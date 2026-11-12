@@ -1,0 +1,14 @@
+# A herb (docs/design/recipes.md §8): an Alchemy input. A sticky, foul-smelling weed: poison eaten. Never floor loot (no
+# `level` or `frequency`); the alchemist sells glowcap and moonwort; the glowing fungus gives it
+# to a gather (data/herbs.toml).
+[[object]]
+id = "henbane"
+name = "sprig of henbane"
+plural = "sprigs of henbane"
+glyph = '"'
+fg = "#7c8a6c"
+class = "materials"
+materials = ["plant"]
+weight = 20
+value = 15
+stackable = true

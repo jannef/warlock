@@ -13,9 +13,8 @@ bar, and the info pages.
 | Attack | move into a [hostile](creatures.md#factions) [creature](creatures.md) |
 | [Swap places](npcs.md#getting-past) | move into any other creature |
 | [Chat](npcs.md#chatting) with someone next to you | `C` (then a direction, if several are near) |
-| Wait a [turn](time.md#what-takes-time) | `.` or numpad `5` |
-| [Search](searching.md#searching-1) the cells around you (a [turn](time.md#what-takes-time)) | `s` (see [Searching](searching.md)) |
-| [Search](searching.md#searching-1) for a while (up to 10 [turns](time.md#what-takes-time), stops when something turns up) | `S` |
+| Wait a [turn](time.md#what-takes-time), [searching](searching.md#searching-1) the cells around you | numpad `5` or `s` |
+| [Search](searching.md#searching-1) for a while (up to 10 [turns](time.md#what-takes-time), stops when something turns up) | `Ctrl` with `s` or numpad `5` |
 | Open a [door](doors.md) | `o`, then a direction (or walk into the door) |
 | Close a [door](doors.md) | `c`, then a direction |
 | [Kick](doors.md#kicking) (a [door](doors.md), to break it in, or a [creature](creatures.md)) | `k`, then a direction (see [Doors](doors.md)) |
@@ -60,12 +59,11 @@ arrows move in four directions only. If you prefer the vi keys (`hjklyubn`), bin
 Controls. Give Kick, Look around, and Use a tool other keys first, since they use `k`, `l`, and
 `u`, as in ADOM.
 
-Some commands ADOM does not have, or has only behind a prefix or `Ctrl`, which this game does not
-bind. They get keys ADOM leaves free: the [message history](the-screen.md#messages) `v`,
-[rest](resting.md#how-resting-works) `b`, the [talents](talents.md) `G`, and repeating an
-[ability](abilities.md) `X`. Searching for a while is `S`, search's key in capitals. In ADOM that
-key saves and quits; here you save and quit from the pause menu (`Esc`), or bind a key for it in
-Controls.
+Some commands ADOM does not have, or has only behind a prefix. They get keys ADOM leaves free:
+the [message history](the-screen.md#messages) `v`, [rest](resting.md#how-resting-works) `b`, the
+[talents](talents.md) `G`, and repeating an [ability](abilities.md) `X`. Waiting and searching are
+one command, numpad `5` or `s`, and searching for a while is `Ctrl` with either. You save and quit from the pause menu (`Esc`), or
+bind a key for it in Controls.
 
 Symbol keys such as `<`, `>`, and `?` are matched by the character they type, so they work on any
 keyboard layout.
@@ -80,7 +78,7 @@ On every menu and screen:
 | Left / right (change a setting) | Left / Right, numpad `4` / `6`, or `h` / `l` |
 | Choose | `Enter` or numpad `Enter` |
 | Back | `Esc`, always |
-| Reset a key (Controls), delete a saved [character](saving.md#when-the-game-saves) (Characters) | `Delete` or `Backspace` |
+| Remove a key or reset a command's keys (Controls), delete a saved [character](saving.md#when-the-game-saves) (Characters) | `Delete` or `Backspace` |
 | Mark a [stack](objects.md#piles), mark everything ([picking up](objects.md#picking-up), [dropping](objects.md#dropping)) | `Space`, `,` |
 | Next / previous page of a list of items | `>` or `PageDown` / `<` or `PageUp` |
 
@@ -119,10 +117,26 @@ on the [info pages](the-screen.md#info-pages), in the question windows, and (in 
 them) the developer keys. Last come the [ability](abilities.md#keys-of-their-own) keys, which have
 no key until you give them one.
 
-To rebind, select a command, press `Enter`, then press the new key. It becomes the command's main
-key, and its other keys (such as the numpad) stay. If another command in the same group already
-uses that key, the key moves to the new command and the screen says what moved. The old command
-keeps its other keys, or shows `(none)` if that was its only one.
+A command can have several keys: moving north is numpad `8` and Up. To change them, select the
+command and press `Enter`. Its keys open in a short list under it, one per line, with **Add a
+key** last. The first key is the main one, the key the hints on screen name.
+
+- **Replace a key**: select it, press `Enter`, then press the new key.
+- **Add a key**: select **Add a key**, press `Enter`, then press the new key.
+- **Remove a key**: select it and press `Delete`. A command may be left with no key.
+- `Esc` closes the list.
+
+If another command in the same group already uses the key you press, the key moves to this
+command and the screen says what moved. The old command keeps its other keys, or shows `(none)`
+if that was its only one.
+
+A key of play can be held with `Ctrl`, `Alt`, or `Super` (on a Mac `Ctrl`, `Option`, or `Cmd`):
+hold them while you press the new key, as in `Ctrl+r`. A modified key is its own key: `Ctrl+r`
+never does what `r` does, and `r` does nothing while `Ctrl` is held. `Shift` counts with keys
+that type no character, such as `Shift+Up`; a letter carries it already (`K` is not `k`). Keys
+your system or browser keeps for itself, such as `Cmd+Q`, `Alt+F4`, or `Ctrl+W` in the browser,
+cannot be bound, and the screen says why. The keys of menus, screens, and prompts take no
+modifiers.
 
 The same key can mean different things in different groups. `Tab` is the next target while
 [aiming](#aiming) and the next page on an [info screen](the-screen.md#info-pages). `d`
@@ -132,8 +146,8 @@ rest prompt.
 You cannot lock yourself out. `Esc` always backs out of every screen and cancels every prompt, and
 it cannot be taken. Nor can the last key for up, down, or choose on the menus (you need them to
 get back to Controls), or the last key that accepts a text field (you need it to name a new
-character). `Delete` resets the selected command to its default keys, and **Reset all keys**
-resets every command. If your keys still get in the way, start the game with
+character): they can be neither moved nor removed. `Delete` on a command whose keys are closed
+puts its default keys back, and **Reset all keys** resets every command. If your keys still get in the way, start the game with
 `warlock --reset-keys`: every key goes back to its default, and the game starts as usual. Your
 keys are kept with your [settings](settings.md).
 

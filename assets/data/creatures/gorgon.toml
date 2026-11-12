@@ -15,6 +15,7 @@ glyph = "q"
 fg = "#6a7078"
 speed = 700
 faction = "vermin"
+tags = ["dragon"]
 alignment = "neutral"
 vision = "darkvision"
 sight = 10
@@ -47,3 +48,13 @@ damage_type = "piercing"
 name = "horns"
 verb = "gores"
 to_hit = 7
+
+# Bone and a hard hide, besides its tags' rows (material drops, data/drops/README.toml).
+[[creature.drops]]
+material = "bone"
+count = "1d2"
+chance = 50
+[[creature.drops]]
+material = "hardened_leather"
+count = "1"
+chance = 40

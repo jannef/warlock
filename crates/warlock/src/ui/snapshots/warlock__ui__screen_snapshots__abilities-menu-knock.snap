@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You gain Knock.
- Your appraise improves. (×12) You learn Deep lungs.
+ Your alchemy improves. (×12) You learn Deep lungs.
              ┌─ Abilities ───────────────────────────────────────────────────────────┐
              │                                                                       │
              │ Birth sign                                                            │
@@ -15,20 +15,20 @@ expression: "render(case, content.clone())"
              │   d  Ray of frost       2d6 cold, numbs, 4 mana, aimed                │
              │   e  Magic missile      4d4 force, shoves on a big hit, 4 mana, aimed │
              │ Skills                                                                │
-             │   f  Decipher           no unknown scroll                             │
-             │   g  Knowledge          not usable yet                                │
-             │   h  Pick lock          in a direction                                │
-             │   i  Fletch             you have no knife                             │
-             │   j  Whittle            you have no knife                             │
-             │   k  Salvage            on something you carry                        │
+             │   f  Alchemy            not usable yet                                │
+             │   g  Decipher           no unknown scroll                             │
+             │   h  Knowledge          not usable yet                                │
+             │   i  Metalcraft…                                                      │
+             │   j  Woodcraft…                                                       │
              │ Weapon skills                                                         │
-             │   l  Shield bash        you hold no shield                            │
+             │   k  Shield bash        you hold no shield                            │
              │                                                                       │
              │ The basilisk's stare: a foe nearby that sees you slows to a crawl a   │
              │ moment; your eyes then rest two hours.                                │
              │                                                                       │
              │                                                                       │
-             │ a-l or Enter use   Esc close                                          │
+             │ a-k or Enter use   Esc close                                          │
              └───────────────────────────────────────────────────────────────────────┘
+
 
  The Hub  ·  HP 18/18  ·  MP 40/40  ·  Lv 4  ·  08:00  ·  11 Darkening, Year 1444        ? controls

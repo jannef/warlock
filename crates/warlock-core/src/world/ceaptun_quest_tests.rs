@@ -231,14 +231,18 @@ fn grave_goods_gives_a_trained_healer_a_hundred_marks() {
     w.player_mut().skills.add(heal, 30);
     w.player_mut().skills.mark(heal);
     hand_in_the_chalice(&mut w);
+    // 101 marks reach `[rolls] auto_at` (100): Heal rolls once at once (#1328), and the roll
+    // spends its share of the marks.
+    let rules = CONTENT.skill_rolls();
+    assert_eq!(rules.auto_at, 100);
     let trained = w.state.player().skills.get(heal).expect("heal");
-    assert_eq!(trained.value, 30, "the value is unchanged");
-    assert_eq!(trained.marks, 101);
+    assert!(trained.value > 30, "the automatic roll raised Heal");
+    assert_eq!(trained.marks, 101 - rules.spent(101));
+    assert!(trained.marks < rules.auto_at, "one roll, not two");
     let log = said(&w);
-    assert!(
-        log.contains(&"You learn more of healing.".to_string()),
-        "{log:?}"
-    );
+    let learn = log.iter().position(|m| m == "You learn more of healing.");
+    let improves = log.iter().position(|m| m == "Your heal improves.");
+    assert!(learn.is_some() && learn < improves, "{log:?}");
     assert!(!log.iter().any(|m| m.contains("dress a wound")));
 }
 

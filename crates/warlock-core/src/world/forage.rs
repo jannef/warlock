@@ -23,6 +23,12 @@
 //!   nothing worth eating." Then Survival may earn a training mark ([`Use::Forage`], the
 //!   training stream). Nothing is remembered of a forage: the same spot may be tried again at
 //!   once (no anti-farming limit, the owner's rule: time is the price).
+//! - **A herbalist's extra find** (#1343): when the find was made and the player is trained in a
+//!   skill with the `herbs` benefit (Herbalism), and the ground has `herbs`, one more draw of
+//!   the gameplay stream with the benefit's chance; made, one of the herbs by weight (one draw),
+//!   one of it, fresh, into the pack: "Your eye for herbs finds an angelica root besides."
+//!   Nobody else draws, so a forage without Herbalism draws as it did. Herbalism's mark is
+//!   [`Use::Forage`] too.
 //!
 //! [`Action::Forage`]: crate::action::Action::Forage
 
@@ -128,11 +134,38 @@ impl World {
                 self.say(text);
                 let [stack] = stacks;
                 object::add_to_inventory(self.state.inventory_mut(), stack, &content);
+                self.forage_herbs(ground);
             }
             None => self.say("You find nothing worth eating."),
         }
         if self.trains(Use::Forage) {
             self.train(Use::Forage);
         }
+    }
+
+    /// A herbalist's extra find on a forage that found something (module docs): nothing drawn
+    /// for one untrained in Herbalism, or on ground with no herbs.
+    fn forage_herbs(&mut self, ground: &ForageGround) {
+        let content = self.content.clone();
+        let me = self.state.player();
+        if ground.herbs.is_empty() || !me.skills.trains_effect(&content, Effect::Herbs) {
+            return;
+        }
+        let chance = me.skill_effect(&content, Effect::Herbs).clamp(0, 100);
+        if !self.state.rng.chance(chance.unsigned_abs()) {
+            return;
+        }
+        let Some(&herb) = pick_weighted(&mut self.state.rng, &ground.herbs) else {
+            return;
+        };
+        let mut stacks = [Stack::new(herb, 1)];
+        crate::rot::made_at(&mut stacks, &content, self.state.time);
+        let text = format!(
+            "Your eye for herbs finds {} besides.",
+            object::phrase(&stacks, self.lore())
+        );
+        self.say(text);
+        let [stack] = stacks;
+        object::add_to_inventory(self.state.inventory_mut(), stack, &content);
     }
 }

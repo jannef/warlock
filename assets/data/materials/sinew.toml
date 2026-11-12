@@ -1,0 +1,13 @@
+# A bow's string, a lute's strings (docs/design/recipes.md §3): an input to recipes, never an
+# item's part, so no rarity or gear (loot never makes anything of it). A group of its own, stock as
+# "a length of sinew".
+[[material]]
+id = "sinew"
+name = "sinew"
+resists = { acid = 20, rust = 100, fire = 0 }
+group = "sinew"
+color = "#c8b088"
+weight = 30
+value = 20
+fit = { weapon = "odd", armour = "odd", jewellery = "odd" }
+work = -1

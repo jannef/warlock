@@ -21,7 +21,8 @@ pub enum Action {
     /// Step in a direction; bumping a closed door opens it (unlocking it first with a key that
     /// fits, if it is locked).
     Move(Dir),
-    /// Let a turn pass.
+    /// Let a turn pass, looking around: the same as `Search(1)`, one code path (#1326; spec §8
+    /// "Searching"). Kept as its own spelling, `wait`, for replays, tests, and the manifests.
     Wait,
     /// Open the door in a direction; a locked one only with a key that fits, which unlocks it
     /// first (spec §8 "Doors").
@@ -213,8 +214,24 @@ pub enum Action {
     /// landscape and Survival. Interrupted, it finds nothing. Refused (no time) untrained, or
     /// anywhere but on land of the overworld or a local area of it.
     Forage,
-    /// Make arrows or bolts for the launcher ready (spec §8 "Fletching"; the Fletch ability, in
-    /// Woodcraft's place in the abilities menu): turns of the `fletch` action for
+    /// Gather herbs from the glowing fungus in a direction (spec §8 "Skills": Herbalism; the
+    /// Gather ability, the abilities menu's Here group): turns of the `gather` action for
+    /// `data/herbs.toml`'s time, then herbs drawn by the level's depth, more with Herbalism.
+    /// Interrupted, it finds nothing. The fungus is never picked over. Refused (no time) with no
+    /// fungus that way.
+    Gather(Dir),
+    /// Make a profession's recipe (spec §8 "Skills"; docs/design/professions.md §8;
+    /// `world/craft.rs`): `recipe` its id (`data/recipes/<skill>/<id>.toml`), `picks` the
+    /// inventory positions chosen for its steps in order, `None` a skipped optional one
+    /// (`craft:long_sword:c,f`, `craft:dagger:a,-`). A built-in recipe's row runs its own action
+    /// (`temper:`, `whittle:`, `fletch`), so this is refused for it; every generic recipe is
+    /// refused too until the forge comes (P5). Refused, it takes no time.
+    Craft {
+        recipe: String,
+        picks: Vec<Option<usize>>,
+    },
+    /// Make arrows or bolts for the launcher ready (spec §8 "Fletching"; the Fletch recipe of
+    /// Woodcraft's profession screen): turns of the `fletch` action for
     /// `data/fletch.toml`'s time, then a Dexterity check plus Woodcraft whose margin scales what
     /// is made. Interrupted, it makes nothing. Refused (no time) with no knife carried, or no bow
     /// or crossbow ready.
@@ -978,6 +995,14 @@ impl fmt::Display for Action {
             Action::Pray => f.write_str("pray"),
             Action::Drink => f.write_str("drink"),
             Action::Forage => f.write_str("forage"),
+            Action::Gather(d) => write!(f, "gather:{d}"),
+            Action::Craft { recipe, picks } if picks.is_empty() => write!(f, "craft:{recipe}"),
+            Action::Craft { recipe, picks } => {
+                let picks: Vec<String> = (picks.iter())
+                    .map(|p| p.map_or_else(|| "-".to_string(), position_text))
+                    .collect();
+                write!(f, "craft:{recipe}:{}", picks.join(","))
+            }
             Action::Fletch => f.write_str("fletch"),
             Action::Decipher { item } => write!(f, "decipher:{}", position_text(*item)),
             Action::Temper { item } => write!(f, "temper:{}", position_text(*item)),
@@ -1102,6 +1127,7 @@ impl FromStr for Action {
             "dig" => dir().map(Action::Dig),
             "disarm" => dir().map(Action::Disarm),
             "listen" => dir().map(Action::Listen),
+            "gather" => dir().map(Action::Gather),
             "wedge" => dir().map(Action::Wedge),
             "heal" => {
                 let usage = || {
@@ -1139,6 +1165,35 @@ impl FromStr for Action {
             "drink" => bare(Action::Drink),
             "forage" => bare(Action::Forage),
             "fletch" => bare(Action::Fletch),
+            "craft" => {
+                let usage = || {
+                    "`craft` needs a recipe's id and its picks, e.g. `craft:long_sword:c,f` \
+                     (`-` a skipped optional)"
+                        .to_string()
+                };
+                let arg = arg.ok_or_else(usage)?;
+                let (recipe, picks) = match arg.split_once(':') {
+                    Some((recipe, picks)) => (recipe, Some(picks)),
+                    None => (arg, None),
+                };
+                let id = |c: char| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_';
+                if recipe.is_empty() || !recipe.chars().all(id) {
+                    return Err(usage());
+                }
+                let picks = match picks {
+                    None => Vec::new(),
+                    Some(picks) => (picks.split(','))
+                        .map(|p| match p {
+                            "-" => Ok(None),
+                            p => parse_position(p).map(Some).ok_or_else(usage),
+                        })
+                        .collect::<Result<_, _>>()?,
+                };
+                Ok(Action::Craft {
+                    recipe: recipe.to_string(),
+                    picks,
+                })
+            }
             "decipher" => {
                 let usage = || "`decipher` needs a letter, e.g. `decipher:b`".to_string();
                 let item = arg.and_then(parse_position).ok_or_else(usage)?;
@@ -1833,6 +1888,18 @@ mod tests {
             Action::Pray,
             Action::Forage,
             Action::Fletch,
+            Action::Craft {
+                recipe: "temper".into(),
+                picks: Vec::new(),
+            },
+            Action::Craft {
+                recipe: "long_sword".into(),
+                picks: vec![Some(2), Some(5)],
+            },
+            Action::Craft {
+                recipe: "dagger".into(),
+                picks: vec![Some(0), None, Some(30)],
+            },
             Action::Decipher { item: 1 },
             Action::Temper { item: 0 },
             Action::Temper { item: 27 },
@@ -1919,6 +1986,7 @@ mod tests {
                 Action::Dig(d),
                 Action::Disarm(d),
                 Action::Listen(d),
+                Action::Gather(d),
                 Action::Wedge(d),
             ]);
         }

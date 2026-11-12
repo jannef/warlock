@@ -189,7 +189,7 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
   [pray](abilities.md#ability-pray) (see [Forgotten altars](altars-forges-springs.md#forgotten-altars)).
   Only rooms of 9 floor cells or more can be one.
 - **Forge.** A cold forge with an old anvil in the middle of the room; you smell soot and cold
-  iron from the doorway. Stand beside the anvil and you may [temper](abilities.md#ability-temper)
+  iron from the doorway. Stand beside the anvil and you may [temper](altars-forges-springs.md#forges)
   metal arms or armour you carry (see [Forges](altars-forges-springs.md#forges)). Only rooms of 9
   floor cells or more can be one.
 - **Shrine.** A squat stone shrine stands in the middle of the room. Like a forgotten altar it has

@@ -1,0 +1,14 @@
+# A herb (docs/design/recipes.md §8): an Alchemy input. The pale cap of the glowing fungus of the caves. Never floor loot (no
+# `level` or `frequency`); the alchemist sells glowcap and moonwort; the glowing fungus gives it
+# to a gather (data/herbs.toml).
+[[object]]
+id = "glowcap"
+name = "glowcap"
+plural = "glowcaps"
+glyph = '"'
+fg = "#9ccfb0"
+class = "materials"
+materials = ["plant"]
+weight = 20
+value = 5
+stackable = true

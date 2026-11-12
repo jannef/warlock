@@ -39,8 +39,9 @@ pub const VERSION: i64 = 1;
 pub fn export(bindings: &Bindings) -> String {
     let mut out = String::from(
         "# Warlock keymap: every command's keys, by where they are read. A key is the character it\n\
-         # types (\"k\", \">\", \"?\") or a key name (\"ArrowUp\", \"Numpad8\", \"Enter\", \"F5\"); an empty\n\
-         # list leaves a command without a key. Import it in Controls or with\n\
+         # types (\"k\", \">\", \"?\") or a key name (\"ArrowUp\", \"Numpad8\", \"Enter\", \"F5\"); in play\n\
+         # it may be held with Ctrl, Alt, Super, or Shift (\"Ctrl+r\", \"Alt+ArrowUp\", \"Super+s\").\n\
+         # An empty list leaves a command without a key. Import it in Controls or with\n\
          # `warlock --import-keys FILE`: commands it does not list keep their keys. Esc is fixed.\n",
     );
     out.push_str(&format!("version = {VERSION}\n"));
@@ -105,7 +106,7 @@ pub fn import(bindings: &mut Bindings, text: &str) -> Result<Report, String> {
             "written by a newer Warlock (version {version}); read as far as this one knows"
         ));
     }
-    let listed = listed(&table, &mut warnings);
+    let listed = listed(&crate::settings::keys::fold_merged(&table), &mut warnings);
     let before = bindings.clone();
     apply(bindings, listed, &mut warnings);
     let changed = (REBINDABLE.iter().copied())
@@ -149,7 +150,10 @@ fn listed(table: &toml::Table, warnings: &mut Vec<String>) -> Vec<(KeyCommand, V
         for item in items {
             match item.as_str().and_then(KeyBinding::from_text) {
                 Some(key) if keys.contains(&key) => {}
-                Some(key) => keys.push(key),
+                Some(key) => match key.refused_for(command) {
+                    Some(why) => warnings.push(format!("{place}: {why}; skipped")),
+                    None => keys.push(key),
+                },
                 None => warnings.push(format!("{place}: {item} is no key that can be bound")),
             }
         }
@@ -424,6 +428,13 @@ mod tests {
         b.bind_primary(KeyCommand::MenuUp, ch("w")).unwrap();
         b.bind_primary(KeyCommand::Loose, ch("f")).unwrap();
         b.bind_primary(KeyCommand::Quit, ch("Q")).unwrap();
+        // Modified keys (#1323).
+        let chord = |text| KeyBinding::from_text(text).unwrap();
+        b.bind_primary(KeyCommand::Read, chord("Ctrl+r")).unwrap();
+        b.bind_primary(KeyCommand::Look, chord("Shift+ArrowUp"))
+            .unwrap();
+        // Super+s: no platform keeps it (Super+e is Windows' Explorer, refused there).
+        b.bind_primary(KeyCommand::Eat, chord("Super+s")).unwrap();
         b.bind_primary(KeyCommand::Wait, ch("k")).unwrap(); // Kick is left without a key.
         b
     }
@@ -550,7 +561,7 @@ mod tests {
         assert_eq!(b.owner(&up), Some(KeyCommand::Move(Dir::N)));
         assert!(b.conflicts().is_empty());
         for needle in [
-            "x is listed for both Wait a turn and Look around",
+            "x is listed for both Wait/search and Look around",
             "Kick has no key now",
         ] {
             assert!(
@@ -615,7 +626,7 @@ mod tests {
         };
         assert_eq!(
             report.summary("x.toml"),
-            ["Imported x.toml: Wait a turn changed."]
+            ["Imported x.toml: Wait/search changed."]
         );
         report.changed.push(KeyCommand::Open);
         report.warnings = vec!["a".into(), "b".into(), "c".into()];

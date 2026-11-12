@@ -1,0 +1,7 @@
+# Material drops of the `construct` tag (README.toml). Things made, not born: the mud golem's stone. Animated objects carry the tag too, but break into their own pieces instead.
+bodiless = true
+
+[[drop]]
+material = "stone"
+count = "1d2"
+chance = 60

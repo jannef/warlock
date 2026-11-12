@@ -8,6 +8,8 @@
 # (shallow water, 200: twice as much). On the overworld a step's base is the terrain's
 # travel_minutes instead of 6 seconds.
 step = 1000
+# A creature's wait, a rest's turn, and the abilities priced as a wait. The player's own wait is a
+# turn of searching (`search` below; #1326).
 wait = 1000
 open_door = 1000
 close_door = 1000
@@ -71,8 +73,8 @@ call_familiar = 1000
 # A turn of digging into a wall with a digging tool ready (spec §8 "Digging"): digging goes on
 # turn after turn until the wall gives way or something interrupts it.
 dig = 1000
-# A turn of searching for secret doors and hidden traps around you (`s`; spec §8 "Searching"):
-# searching for a while (`z`) goes on turn after turn until something is found or interrupts it.
+# A turn of searching for secret doors and hidden traps around you (`s` or numpad 5: waiting is
+# searching; spec §8 "Searching"): searching for a while (Ctrl+s) goes on turn after turn until something is found or interrupts it.
 search = 1000
 # A turn of making out a labelled scroll without reading it (the Decipher ability; spec §8
 # "Scrolls"): a try takes decipher.toml's `seconds`, a turn of this after another.
@@ -88,6 +90,10 @@ drink = 1000
 # A turn of foraging in the wild (the Forage ability; spec §8 "Foraging"): a forage takes
 # forage.toml's `seconds` (10 minutes), a turn of this after another.
 forage = 1000
+
+# A turn of gathering herbs from the glowing fungus (the Gather ability; spec §8 "Skills":
+# Herbalism): a gather takes herbs.toml's `seconds` (5 minutes), a turn of this after another.
+gather = 1000
 
 # A turn of fletching (the Fletch ability; spec §8 "Fletching"): a batch takes fletch.toml's
 # `seconds` (10 minutes), a turn of this after another.

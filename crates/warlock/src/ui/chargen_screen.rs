@@ -1141,8 +1141,9 @@ mod tests {
             "Vision    Darkvision",
             "Scenario  Showcase, seed 1",
             // The starting skills beside the scores: the dwarf's and the warrior's.
-            "St  Strength      15    Athletics   17",
-            "To  Toughness     16    Initiative  12   Swim         9",
+            "St  Strength      15    Athletics   17   Metalcraft  10",
+            "Dx  Dexterity     10    Balance      9   Mining       7",
+            "To  Toughness     16    Initiative  10   Search       9",
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }

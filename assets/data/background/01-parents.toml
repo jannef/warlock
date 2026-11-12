@@ -124,6 +124,16 @@ tags = ["poor"]
 set = { trade = "the tinker's cart" }
 
 [[line]]
+id = "miners_child"
+tier = "common"
+weight = 2
+text = "Your mother worked the seams under the hill, and you grew up on the smell of lamp oil and wet stone."
+when = { race = ["human", "dwarf", "gnome", "half_orc", "kobold", "goblin", "duergar"] }
+effects = [{ skill = { mining = "2d4" } }]
+tags = ["poor"]
+set = { guardian = "your mother", trade = "the mine" }
+
+[[line]]
 id = "two_peoples"
 tier = "common"
 weight = 4
@@ -152,11 +162,38 @@ tags = ["trader"]
 set = { home = "the inn", trade = "the inn" }
 
 [[line]]
+id = "jewellers_child"
+tier = "uncommon"
+weight = 1
+text = "Your father cut gems for the rich, and you learned to tell a flaw by lamplight before you could read."
+when = { race = ["elf", "half_elf", "human", "dwarf", "halfling", "gnome", "duergar"] }
+effects = [{ skill = { jewelcraft = "2d4" } }]
+tags = ["trader"]
+set = { guardian = "your father", trade = "the bench" }
+
+[[line]]
+id = "apothecarys_child"
+tier = "uncommon"
+weight = 1
+text = "Your father kept an apothecary's shop, all little drawers and stoppered bottles, and you learned which draughts heal and which only smell as if they should."
+effects = [{ skill = { alchemy = "2d4" } }]
+tags = ["herbs", "trader"]
+set = { guardian = "your father", trade = "the shop" }
+
+[[line]]
+id = "scholars_child"
+tier = "uncommon"
+weight = 1
+text = "Your mother was a scholar of old enchantments, and you grew up among books that hummed when they were opened."
+effects = [{ skill = { enchanting = "2d4" } }]
+set = { guardian = "your mother", trade = "her books" }
+
+[[line]]
 id = "wise_woman"
 tier = "rare"
 weight = 1
 text = "Your grandmother was the wise woman of the parish, and you grew up among her jars and bundles, learning what cures and what kills."
-effects = [{ skill = { heal = "2d4", woodcraft = "2d4" } }, { stat = { willpower = 1 } }]
+effects = [{ skill = { heal = "2d4", herbalism = "2d4", woodcraft = "2d4" } }, { stat = { willpower = 1 } }]
 tags = ["herbs"]
 set = { guardian = "your grandmother" }
 

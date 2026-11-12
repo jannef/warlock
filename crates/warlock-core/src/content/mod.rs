@@ -38,6 +38,7 @@ mod disease;
 pub mod dread;
 #[cfg(test)]
 mod dread_roster_tests;
+mod drops;
 #[cfg(test)]
 mod drow_roster_tests;
 #[cfg(test)]
@@ -75,6 +76,7 @@ mod guild;
 mod hag_roster_tests;
 #[cfg(test)]
 mod hellegeat_tests;
+mod herbs;
 mod horoscope;
 mod hunger;
 mod intimidate;
@@ -108,6 +110,9 @@ mod quest;
 mod quest_roll;
 mod race;
 mod ranged;
+mod recipe;
+#[cfg(test)]
+mod recipe_tests;
 mod resource;
 mod rod;
 #[cfg(test)]
@@ -223,6 +228,7 @@ pub use danger::{Count, DangerRule, PlayerScale, Spawning};
 pub use decipher::DecipherRules;
 pub use dialogue::{Dialogue, DialogueId, Mutter, Service, ServiceKind, Speaker, Topic};
 pub use disease::{DiseaseDef, DiseaseId, SOURCES, Wading};
+pub use drops::{Drop, DropFrom, DropGoods, TagDrops};
 pub use dummy::DummyTraining;
 pub use dungeon::{
     ChestOdds, DungeonDef, Endless, Generator, LayerBoss, LevelPlan, Portal, RoomOdds, ShopOdds,
@@ -249,6 +255,7 @@ pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, Ornament, ROUGH_SATURATION, dull,
 };
 pub use guild::{GuildDef, RankBy, RankDef};
+pub use herbs::{Herb, HerbRules};
 pub use horoscope::{FULL_MOON_WITHIN, Flavour, Horoscope, Lucky, Sign, SignActive, SignPart};
 pub use hunger::{
     Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_NUTRITION, Overeating, Rotten, Starve, States,
@@ -293,6 +300,10 @@ pub(crate) use quest_roll::roll_known;
 pub use quest_roll::{Candidate, Pick, Roll, Rolled, Variant, one_of};
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use ranged::{RangeBand, RangedRules};
+pub use recipe::{
+    PartSource, ProfessionText, RecipeDef, RecipeId, RecipeInput, RecipePart, RecipeResult,
+    RecipeUse, Recipes,
+};
 pub use resource::{Build, MAX_RESOURCE, MaxFrom, OverTime, ResourceDef, ResourceId};
 pub use rod::{Rod, RodDoes, RodEffect, RodShape};
 pub use room_effect::{
@@ -338,7 +349,7 @@ pub use status::{
     StatusId, Wound,
 };
 pub use steal::StealRules;
-pub use stock::{Profession, Stock, StockGroup};
+pub use stock::{Profession, Stock, StockGroup, StockMaterial};
 pub use summon::Summon;
 pub use surprise::SurpriseRules;
 pub use swim::SwimRules;
@@ -664,6 +675,8 @@ pub struct Content {
     gems: Option<Gems>,
     /// Material stock's words and professions (`data/stock.toml`); empty without the file.
     stock: Stock,
+    /// The professions' recipes (`data/recipes/<skill>/`, `data/recipes.toml`); none without them.
+    recipes: Recipes,
     /// Unique items (`data/uniques/`, each campaign's too; spec §8 "Magic items").
     uniques: Uniques,
     /// Equipment slots, in display order.
@@ -682,6 +695,9 @@ pub struct Content {
     /// The condition creature gear spawns in (`data/gear_condition.toml`, spec §8 "Creature
     /// gear"); without the file, as made.
     gear_condition: GearConditions,
+    /// Material drops by creature tag (`data/drops/`, `content/drops.rs`); each creature type's
+    /// resolved rows are on it ([`CreatureDef::drops`]).
+    drops: Vec<TagDrops>,
     /// The numbers of encounters (`data/encounters.toml`, spec §7 "Leaving an outdoor area").
     encounters: EncounterRules,
     /// What becomes of a creature that catches the player stealing (`data/steal.toml`, spec §8
@@ -704,6 +720,9 @@ pub struct Content {
     /// What foraging in the wild gives (`data/forage.toml`, spec §8 "Foraging"); none without
     /// the file.
     forage: Option<ForageRules>,
+    /// What the glowing fungus gives a gatherer (`data/herbs.toml`, spec §8 "Skills": Herbalism);
+    /// none without the file, when nobody gathers.
+    herbs: Option<HerbRules>,
     /// The numbers of feinting (`data/feint.toml`, spec §8 "Skills": Bluff); none without the
     /// file, when nobody feints.
     feint: Option<FeintRules>,
@@ -878,6 +897,7 @@ impl Content {
             grimoires: grimoire::Grimoires::default(),
             gems: None,
             stock: Stock::default(),
+            recipes: Recipes::default(),
             uniques: Uniques::default(),
             slots: Vec::new(),
             chests: ChestRules::default(),
@@ -887,6 +907,7 @@ impl Content {
             search: SearchRules::default(),
             temper: TemperRules::default(),
             gear_condition: GearConditions::default(),
+            drops: Vec::new(),
             encounters: EncounterRules::default(),
             steal: None,
             surprise: None,
@@ -895,6 +916,7 @@ impl Content {
             fletch: None,
             salvage: None,
             forage: None,
+            herbs: None,
             feint: None,
             intimidate: None,
             ruin: RuinRules::default(),
@@ -1180,12 +1202,17 @@ impl Content {
         room_effects.resolve_populations(creature)?;
         content.room_effects = room_effects;
         content.load_gems(files)?;
+        // Recipes after stock, terrain, and gems: a stock part's materials must be the
+        // profession's, and an ornament needs the result's ornament part.
+        let settings = (files.get_optional(recipe::SETTINGS)).map(|text| (recipe::SETTINGS, text));
+        content.recipes = recipe::parse(settings, files.table("recipes"), &content)?;
         // Unique items before everything that may place one (gear, shops, levels, kits, quests).
         content.uniques = unique::parse(files.table("uniques"), &content)?;
         content.load_gear()?;
         content.load_throws()?;
         content.load_summons()?;
         content.load_splits()?;
+        content.load_drops(files)?;
         // Summon spells' pools, once every creature type is known.
         spell_def::resolve_summons(&mut content)?;
         spell_def::check_only_tags(&content).map_err(|m| ContentError::new("data/spells", m))?;
@@ -1269,6 +1296,10 @@ impl Content {
         let path = "data/forage.toml";
         if let Some(text) = files.get_optional(path) {
             content.forage = Some(ForageRules::parse(path, text, &content)?);
+        }
+        let path = "data/herbs.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.herbs = Some(HerbRules::parse(path, text, &content)?);
         }
         let path = "data/feint.toml";
         if let Some(text) = files.get_optional(path) {
@@ -3255,6 +3286,12 @@ impl Content {
         self.forage.as_ref()
     }
 
+    /// What the glowing fungus gives a gatherer (spec §8 "Skills": Herbalism; `data/herbs.toml`);
+    /// `None` without the file, when nobody gathers.
+    pub fn herbs(&self) -> Option<&HerbRules> {
+        self.herbs.as_ref()
+    }
+
     /// The penalties of shots by distance (spec §8 "Ranged combat"; `data/ranged.toml`); none
     /// without the file.
     pub fn ranged(&self) -> &RangedRules {
@@ -3338,6 +3375,15 @@ impl Content {
     /// "Stock"); empty without the file.
     pub fn stock(&self) -> &Stock {
         &self.stock
+    }
+
+    /// The professions' recipes (`data/recipes/<skill>/`; docs/dev/crafting.md), in path order.
+    pub fn recipes(&self) -> &Recipes {
+        &self.recipes
+    }
+
+    pub fn recipe(&self, id: RecipeId) -> &RecipeDef {
+        &self.recipes.list[usize::from(id.0)]
     }
 
     /// The unique items (spec §8 "Magic items"), in table order.
@@ -3889,6 +3935,25 @@ impl Content {
     /// else [`TemperRules::default`]).
     pub fn temper(&self) -> &TemperRules {
         &self.temper
+    }
+
+    /// Material drops by creature tag (`data/drops/`, spec §7 "Material drops"), in path
+    /// order; a creature type's own resolved rows are [`CreatureDef::drops`].
+    pub fn tag_drops(&self) -> &[TagDrops] {
+        &self.drops
+    }
+
+    /// Reads `data/drops/` and resolves every creature type's drop rows (`content/drops.rs`).
+    fn load_drops(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
+        self.drops = drops::parse(files.table("drops"), self)?;
+        let own: Vec<_> = (self.creatures.iter())
+            .map(|c| c.drop_spec.clone())
+            .collect();
+        let resolved = drops::resolve(self, &self.drops, &own)?;
+        for (def, rows) in self.creatures.iter_mut().zip(resolved) {
+            def.drops = rows;
+        }
+        Ok(())
     }
 
     /// The condition creature gear spawns in (spec §8 "Creature gear";
@@ -4866,11 +4931,11 @@ mod tests {
         assert_eq!(class("commoner"), ["athletics", "handle_animal"]);
         assert!(content.classes().iter().all(|c| !c.skills.is_empty()));
         assert_eq!(race("elf"), ["listen", "spot"]);
-        assert_eq!(race("dwarf"), ["metalcraft", "search"]);
-        assert_eq!(race("halfling"), ["listen", "stealth"]);
-        assert_eq!(race("gnome"), ["appraise", "listen"]);
+        assert_eq!(race("dwarf"), ["metalcraft", "mining", "search"]);
+        assert_eq!(race("halfling"), ["herbalism", "listen", "stealth"]);
+        assert_eq!(race("gnome"), ["appraise", "jewelcraft", "listen"]);
         assert_eq!(race("half_orc"), ["intimidate"]);
-        assert_eq!(race("kobold"), ["detect_traps", "disable_device"]);
+        assert_eq!(race("kobold"), ["detect_traps", "disable_device", "mining"]);
         assert!(race("human").is_empty());
         assert!(!content.race("human").expect("human").class_skill.is_zero());
         // Creatures may list skills; the player's come from the character.

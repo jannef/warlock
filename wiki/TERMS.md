@@ -47,7 +47,10 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A special room | `special-rooms.md#room-ID` | `special-rooms.md#room-draining` |
 | A trap | `traps.md#trap-ID` | `traps.md#trap-pit` |
 | A creature | `creatures.md#creature-ID` | `creatures.md#creature-kobold` |
+| What a creature's body leaves (its material drops) | `creature-drops.md#drops-ID` | `creature-drops.md#drops-wolf` |
+| A creature tag's material drops | `creature-drops.md#drops-tag-TAG` | `creature-drops.md#drops-tag-beast` |
 | An item class | `objects.md#class-ID` | `objects.md#class-melee-weapons` |
+| A herb (glowcap, moonwort, mandrake, …) | `herbs.md#herb-ID` | `herbs.md#herb-moonwort` |
 | A potion | `potions.md#potion-ID` | `potions.md#potion-of-healing` |
 | A use of the priest's prayer (disease, poison, wounds, release, mana, hunger, restoration) | `prayer.md#prayer-ID` | `prayer.md#prayer-wounds` |
 | A scroll | `scrolls.md#scroll-ID` | `scrolls.md#scroll-of-identify` |
@@ -128,6 +131,7 @@ above.
 | Stack, pile | `objects.md#piles` |
 | Pack, inventory | `objects.md#your-pack` |
 | Material, pieces | `materials.md#materials`, `materials.md#pieces` |
+| Material drops (stock a body leaves) | `creature-drops.md` |
 | Gem, size and cut | `gems.md`, `gems.md#size-and-cut` |
 | Scroll, reading, unknown scrolls | `scrolls.md`, `scrolls.md#unknown-scrolls` |
 | Making out a scroll, the check to read one (Decipher script's use) | `scrolls.md#making-out-a-scroll` |
@@ -196,9 +200,12 @@ above.
 | Intimidating (a threat at one foe) | `skill-uses.md#intimidating` |
 | Treating yourself, binding a wound | `skill-uses.md#treating-yourself` |
 | Fletching, brittle arrows and bolts, a knife | `skill-uses.md#fletching` |
+| Profession, recipe | `skill-uses.md#professions` |
 | Foraging | `skill-uses.md#foraging` |
 | Crafting, a craft skill, craft points, who works which material, a material's work | `crafting.md`, `crafting.md#who-works-what` |
 | Salvage, taking an item apart, a gem chipped or shattered | `crafting.md#salvage` |
+| Gather, gathering herbs, the glowing fungus | `herbs.md#gathering` |
+| Herbs (in general) | `herbs.md` |
 | Abilities, the abilities menu | `abilities.md#the-abilities-menu` |
 | Experience, XP, levels | `experience.md`, `experience.md#levels` |
 | The level curve to 100, the XP of every level | `experience.md#levels` |

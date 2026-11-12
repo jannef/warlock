@@ -24,19 +24,18 @@ use crate::object::Stack;
 pub const ID: &str = "piece";
 
 /// What a piece of `material` is called, singular and plural, without an article or a count: by
-/// its group's form word ("steel ingot"/"steel ingots", "lump of amber"/"lumps of amber"), else
-/// the object's own ("piece of glass"/"pieces of glass").
+/// its form word in `stock.toml`, its own or its group's ("steel ingot"/"steel ingots", "fur
+/// pelt", "lump of amber"/"lumps of amber"), else the object's own ("piece of glass"/"pieces of
+/// glass").
 pub fn names(content: &Content, def: &ObjectDef, material: MaterialId) -> (String, String) {
     let m = content.material(material);
-    let row = (m.group.as_deref()).and_then(|g| content.stock().group(g));
-    match row {
-        Some(row) if !row.of => (
-            format!("{} {}", m.name, row.name),
-            format!("{} {}", m.name, row.plural),
-        ),
-        Some(row) => (
-            format!("{} of {}", row.name, m.name),
-            format!("{} of {}", row.plural, m.name),
+    match content.stock().form_of(content, material) {
+        Some((name, plural, false)) => {
+            (format!("{} {name}", m.name), format!("{} {plural}", m.name))
+        }
+        Some((name, plural, true)) => (
+            format!("{name} of {}", m.name),
+            format!("{plural} of {}", m.name),
         ),
         None => (
             format!("{} of {}", def.name, m.name),
@@ -46,7 +45,8 @@ pub fn names(content: &Content, def: &ObjectDef, material: MaterialId) -> (Strin
 }
 
 /// How many pieces of `material` `grams` of it make: `max(1, round(grams / one piece's
-/// grams))`, the rule salvage and recipes share; `None` for a material no piece is made of.
+/// grams))`, the rule salvage and recipes share, one piece's grams being 500 × its `weight` % ×
+/// its group's `unit` ([`unit`]); `None` for a material no piece is made of.
 pub fn count_for(content: &Content, grams: u64, material: MaterialId) -> Option<u32> {
     count_of_share(content, grams, 100, material)
 }
@@ -61,6 +61,20 @@ fn count_of_share(
     let one = make(content, material, 1)?.weight(content).max(1);
     let n = (grams * percent + one * 50) / (one * 100);
     Some(u32::try_from(n.max(1)).unwrap_or(u32::MAX))
+}
+
+/// How many pieces' worth one of `stack` is: its material's group's `unit` in `stock.toml` for
+/// a piece (a leather hide is eight, [`crate::content::Stock::unit_of`]), 1 for anything else.
+/// [`Stack::weight`] and [`Stack::value`] multiply by it.
+pub fn unit(content: &Content, def: &ObjectDef, stack: &Stack) -> u32 {
+    if def.id != ID {
+        return 1;
+    }
+    let material = stack
+        .parts(content)
+        .first()
+        .map_or(def.material(), |p| p.material);
+    content.stock().unit_of(content, material)
 }
 
 /// `count` pieces of `material`; `None` without the piece object or for a material it cannot be
@@ -294,6 +308,62 @@ mod tests {
     }
 
     #[test]
+    fn a_groups_unit_scales_its_pieces() {
+        let content = content();
+        // A hide is 8 pieces' worth: 1.4 kg of leather, worth 8 times a piece's coin.
+        let hide = pieces(&content, "leather", 1);
+        assert_eq!((hide.weight(&content), hide.value(&content)), (1400, 8));
+        assert_eq!(pieces(&content, "leather", 3).weight(&content), 4200);
+        // A jerkin (3.5 kg of leather) takes 3 hides, not 20.
+        let jerkin = content.object(content.object_id("leather_jerkin").expect("jerkin"));
+        let grams = u64::from(jerkin.weight);
+        assert_eq!(
+            count_for(&content, grams, material(&content, "leather")),
+            Some(3)
+        );
+        // A bolt of cloth is 4: 4 × 500 g × wool's weight %.
+        let wool = material(&content, "wool");
+        let bolt = pieces(&content, "wool", 1);
+        let per = 500 * u64::from(content.material(wool).weight) / 100;
+        assert_eq!(bolt.weight(&content), 4 * per);
+        assert_eq!(count_for(&content, 8 * per, wool), Some(2));
+        // A unit of 1 is unchanged: three steel ingots in a long sword's 1.5 kg.
+        assert_eq!(
+            count_for(&content, 1500, material(&content, "steel")),
+            Some(3)
+        );
+        assert_eq!(unit(&content, content.object(hide.object), &hide), 8);
+        // Anything not a piece is 1.
+        let jerkin_stack = object(&content, "leather_jerkin");
+        let def = content.object(jerkin_stack.object);
+        assert_eq!(unit(&content, def, &jerkin_stack), 1);
+    }
+
+    #[test]
+    fn sinew_comes_in_lengths_and_fur_in_pelts() {
+        let content = content();
+        assert_eq!(
+            pieces(&content, "sinew", 1).describe(&content),
+            "a length of sinew"
+        );
+        assert_eq!(
+            pieces(&content, "sinew", 2).describe(&content),
+            "2 lengths of sinew"
+        );
+        let sinew = pieces(&content, "sinew", 1);
+        assert_eq!((sinew.weight(&content), sinew.value(&content)), (150, 0));
+        let mut pack = Vec::new();
+        add_to_inventory(&mut pack, pieces(&content, "sinew", 2), &content);
+        add_to_inventory(&mut pack, pieces(&content, "sinew", 1), &content);
+        assert_eq!(pack.len(), 1);
+        assert_eq!(pack[0].count, 3);
+        // Fur's own form word, the hide group's unit.
+        assert_eq!(pieces(&content, "fur", 1).describe(&content), "a fur pelt");
+        assert_eq!(pieces(&content, "fur", 3).describe(&content), "3 fur pelts");
+        assert_eq!(pieces(&content, "fur", 1).weight(&content), 1600);
+    }
+
+    #[test]
     fn a_tin_dagger_with_a_ruby_pommel_breaks_into_tin_and_its_ruby() {
         let content = content();
         let gems = content.gems().expect("gems");
@@ -326,7 +396,7 @@ mod tests {
         let content = content();
         let sword = object(&content, "long_sword");
         // 1.8 kg: a 90 % blade of steel (half, 810 g, in ingots of 500 g: 2), a 10 % grip of
-        // leather (90 g in hides of 175 g: 1).
+        // leather (90 g in hides of 1.4 kg: at least 1).
         assert_eq!(
             broken(&content, &sword),
             ["2 steel ingots", "a leather hide"]
@@ -336,7 +406,7 @@ mod tests {
         three.count = 3;
         assert_eq!(
             broken(&content, &three),
-            ["5 steel ingots", "2 leather hides"]
+            ["5 steel ingots", "a leather hide"]
         );
     }
 

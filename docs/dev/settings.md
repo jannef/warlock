@@ -45,11 +45,42 @@ before play's (`command_in`). Nothing matches a `KeyCode` or a character directl
 Cancel in play, which skips the rest at `--more--`, `Nav::Back` on every screen) and the letters
 and digits that name list rows (and the text a text field types).
 Hints name keys through `Bindings::key_name` and `ui::menu::Hints` (footers), never a literal key.
+
+Modifier keys (#1323, `settings/mods.rs`): a play command's key may be held with Ctrl, Alt, and
+Super (Command on macOS, the Windows/Super key elsewhere): `KeyBinding::Chord(Mods, key)`, made by
+`KeyBinding::chord` (never empty modifiers, never nested, Shift only with a physical key: a
+character carries Shift itself, `K` against `k`). The text form puts the modifiers first, `"Ctrl+r"`,
+`"Alt+ArrowUp"`, `"Shift+ArrowUp"`, `"Super+s"`, written Ctrl, Alt, Shift, Super in that order;
+reading also takes `Control`, `Option`, `Cmd`, `Command`, `Win`, `Meta` (`Mods::split`), and
+`settings.toml` and the keymap file use it alike. `KeyBinding::display` names the modifiers as
+the platform does (`Ctrl+Option+Cmd+s` on macOS, `Ctrl+Alt+Super+s` elsewhere and on the web).
+The router reads the held modifiers from `ButtonInput<KeyCode>` (`Mods::held`; a modifier pressed
+alone is dropped before anything reads it) and every lookup takes them
+(`Bindings::lookup_in(context, input, mods)`, `Press::from_input(input, mods, bindings)`).
+Matching is exact, through `mods::press_candidates`, tried in order: the physical key (held
+with Ctrl, Alt, or Super a chord whose key is a bound physical key, else the typed character, or
+the physical key's US letter or digit when Alt is held or the typed character is a control
+character, a letter's case from Shift: `mods::press_binding`, which is also `Press::binding` and
+what Controls captures), with Shift held first with Shift and then without; then the plain
+character typed, when neither Super nor
+Ctrl alone is held and, with Alt, it is no ASCII letter or digit (Option and AltGr type `@` and
+`{` on many layouts; Windows reports AltGr as Ctrl+Alt). So `Ctrl+r` never fires `r`, nor `r`
+while Ctrl is held, nor `Alt+r`; Shift+Tab is still a Tab its command reverses. `Press::binding`
+never holds Shift (screens read `press.shift`); Controls adds it to a physical key captured for a
+play command. `KeyBinding::refused_for` (`mods::refusal`) refuses a modifier on a command of
+another context, and the shortcuts the system or the browser keeps (macOS: Cmd+Q/W/H/M, Cmd+Tab,
+Cmd+Space; Windows and Linux: Alt+F4, Alt+Tab, Ctrl+Alt+Delete, Super+D/E/L/R/Tab; the web:
+Ctrl or Cmd with N/Q/T/W, Ctrl+Tab, Alt+F4), in Controls' capture (with the reason) and when a
+settings file or keymap is read (a warning; the key is skipped). The default keys with
+modifiers: Search for a while is Ctrl+Num5 and Ctrl+s (#1323's comment, #1326).
 Core knows no bindings, so a message names a key by its command's id (`messages::key("help")`
 writes `{key:help}`, as the welcome line does) and the message line fills it in as bound
 (`Message::display_with` with `ui::message_key`; dumps show the token).
-Binding a key another command of the same context uses moves it
-(`Bindings::bind_primary` returns `Bound::Moved`); refused with `Conflict` are the keys of fixed
+Controls binds a key in place of one of a command's keys or after its last
+(`Bindings::bind_at(command, key, Some(n) | None)`, #1324; `bind_primary`, the tests' shorthand, is `Some(0)`; a key the
+command has already trades places with the one replaced) and removes one by place
+(`Bindings::remove_key`). Binding a key another command of the same context uses moves it
+(`bind_at` returns `Bound::Moved`); refused with `Conflict` (taken or removed) are the keys of fixed
 commands outside `REBINDABLE` (Esc's Cancel) and the last key of a `VITAL` command (`MenuUp`,
 `MenuDown`, `Confirm`: what reaches Controls and its Reset all keys from anywhere; `TextConfirm`:
 what gets a new character past its name). `reset_command`
@@ -65,13 +96,17 @@ command also goes in `ABILITY_KEYS`, which Controls lists last, below every cont
 
 The default keys (`Bindings::default`) are ADOM's (#350; the source is ADOM's manual, its
 "Miscellaneous commands" list): a command ADOM has takes ADOM's key in its context, one ADOM lacks
-(or has only behind a prefix like `:m` or `w s`, or Ctrl, which a binding cannot hold) a key ADOM
-leaves free (`*`, `v`, `b`, `X`), and Throw is Missile's `t` in capitals, Search for a while Search's `S` (ADOM's save and quit: Quit has no default key, the pause menu quits). Movement is the
+(or has only behind a prefix like `:m` or `w s`) a key ADOM leaves free (`*`, `v`, `b`, `X`),
+and Throw is Missile's `t` in capitals, Wait/search numpad `5` and `s` (ADOM's search key; `.`
+is no longer bound, #1326), Search for a while Ctrl with either (Quit has no default key, the
+pause menu quits). Movement is the
 numpad and the arrows only (ADOM's `k`, `l`, `u` are kick, look, use a tool). A new default
 key must not be an ADOM key of another command. Changing defaults never rewrites a player's file:
 `settings.toml` lists every command's keys once written, so an old file keeps its old keymap, and
 `Bindings::from_table` gives a command the file does not list (new, or unbound when the file was
-written, like Search for a while before `S`) its defaults minus any key a listed command of its context has.
+written, like Search for a while before its Ctrl keys) its defaults minus any key a listed command of its context has. A command merged into another
+(`keys.rs::MERGED`: `search` into `wait`, #1326) has its keys moved to the one that took it over,
+after that one's own, by `fold_merged`, for a settings file and a keymap alike.
 
 The keymap file (`settings/keymap.rs`, #159): `export` writes every rebindable command by context
 (`[play]`, `[aim]`, ... from `Context::id`, `version = 1`); `import` applies a file to the live

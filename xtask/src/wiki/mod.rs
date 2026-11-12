@@ -29,6 +29,7 @@ mod damage;
 mod dialogue;
 mod digging;
 mod doors;
+mod drops;
 mod dungeons;
 mod encounters;
 mod experience;
@@ -38,6 +39,7 @@ mod gems;
 mod guild;
 mod healing;
 mod hearing;
+mod herbs;
 mod horoscope;
 mod hunger;
 mod kits;
@@ -179,6 +181,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("factions.md", creatures::factions),
         ("creature-tags.md", creatures::creature_tags),
         ("gear-condition.md", gear_condition::gear_condition),
+        ("creature-drops.md", drops::creature_drops),
+        ("drops-by-tag.md", drops::tag_drops),
         ("creature-stats.md", creatures::creature_stats),
         ("creature-defences.md", creatures::creature_defences),
         ("creature-attacks.md", creatures::creature_attacks),
@@ -432,6 +436,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("scrolls.md", scrolls::scrolls),
         ("decipher-chances.md", scrolls::decipher_chances),
         ("potions.md", potions::potions),
+        ("herbs.md", herbs::herbs),
+        ("gathering.md", herbs::gathering),
         ("potion-gambles.md", outcomes::gamble_outcomes),
         ("weapon-skills.md", weapon_skills::skills),
         ("weapon-marks.md", weapon_skills::marks),
@@ -975,17 +981,20 @@ mod tests {
             "| Ruby | - | `#d3213b` | 100% | - | - | ×1 | yes | 100% | 100% | 100% | +4 | gold and ruby \
              amulets, loose gems, and items set with one |"
         ));
-        // Material stock (#1332): the form word and the profession by group.
+        // Material stock (#1332, #1349): the form word, the unit, and the profession by group
+        // or by the material's own row.
         let pieces = text("pieces.md");
-        assert!(
-            pieces.contains(
-                "| Steel | metal | steel ingot | 500 g | 1 gold | Metalcraft (Strength) |"
-            )
-        );
         assert!(pieces.contains(
-            "| Amber | resin | lump of amber | 200 g | 3 gold | Jewelcraft (Dexterity) |"
+            "| Steel | metal | steel ingot | 1 | 500 g | 1 gold | Metalcraft (Strength) |"
         ));
-        assert!(pieces.contains("| Wool | cloth | bolt of wool |"));
+        assert!(pieces.contains(
+            "| Amber | resin | lump of amber | 1 | 200 g | 3 gold | Jewelcraft (Dexterity) |"
+        ));
+        assert!(pieces.contains(
+            "| Leather | hide | leather hide | 8 | 1.4 kg | 8 gold | Woodcraft (Dexterity) |"
+        ));
+        assert!(pieces.contains("| Flint | stone | block of flint | 1 |"));
+        assert!(pieces.contains("| Fur | hide | fur pelt | 8 |"));
         // Crafting (#1333): who works what, the work, the salvage odds.
         assert!(
             text("crafting-groups.md").contains("| Gems | loose gems | Jewelcraft | Dexterity |")
@@ -1413,7 +1422,10 @@ mod tests {
             "{races}"
         );
         let grants = text("skill-grants.md");
-        assert!(grants.contains("| Halfling | Listen `1d6+4`, Stealth `1d6+4` | - |"));
+        assert!(
+            grants
+                .contains("| Halfling | Herbalism `1d4+2`, Listen `1d6+4`, Stealth `1d6+4` | - |")
+        );
         assert!(
             grants.contains("| Human | one of the class's skills `+2d4+4`, picked at random | - |")
         );
@@ -1422,7 +1434,8 @@ mod tests {
         );
         assert!(grants.contains(
             "| Commoner | Athletics `2d4+4`, Handle animal `2d4+4` | Heal `2d4` (15 %), \
-             Metalcraft `2d4` (10 %), Survival `2d4` (30 %), Swim `2d4` (20 %), \
+             Metalcraft `2d4` (10 %), Mining `2d4` (10 %), Survival `2d4` (30 %), \
+             Swim `2d4` (20 %), \
              Woodcraft `2d4` (20 %) |"
         ));
         let ladder = text("skill-ladder.md");
@@ -1442,6 +1455,7 @@ mod tests {
             rolls.contains("at 14 and one more for every 4 points"),
             "{rolls}"
         );
+        assert!(rolls.contains("marks reach 100 rolls at once"), "{rolls}");
         assert!(
             text("races.md")
                 .contains("| Race | St | Dx | To | In | Wi | Pr | Vision | Starting age |"),

@@ -1,0 +1,16 @@
+# Material drops of the `dragon` tag (README.toml). Dragons (every combat = "dragon" type): dragonbone and dragonscale, always.
+
+[[drop]]
+material = "dragonbone"
+count = "1d2"
+chance = 100
+
+[[drop]]
+material = "dragonscale"
+count = "1d2"
+chance = 100
+
+[[drop]]
+material = "sinew"
+count = "1d2"
+chance = 60

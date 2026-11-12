@@ -74,3 +74,5 @@ gust; #1127's death throes).
 ## Variance
 
 The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**, by element: earth grinds at 800, ice at 850 to 950, fire and water at 1000 to 1100, air and lightning fast by design (#1167: air 1500 to 1850, lightning 1400 to 1600, the thunderhead 1700, the welkin wind 2000; fast by design); the vortices kept D3's quicker speeds (dust devil 1650, spark mote 1550, ember and water motes 1300; design §5.3); the invisible stalker at 1500.
+
+**Material drops** (#1341; `data/drops/`, docs/dev/objects.md "Material drops"): one `bodiless` file per element: `fire`, `ice`, `lightning`, `air`, `water`, `earth`.toml, the element's essence 1 (60 %, an object); `earth.toml` also stone 1d2 (50 %). The cinder elemental is a `fire-thing` too, whose row needs a corpse, so only its essence. A mote (small) at half.
