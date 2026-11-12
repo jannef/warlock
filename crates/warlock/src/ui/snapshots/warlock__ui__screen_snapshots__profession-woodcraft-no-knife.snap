@@ -13,11 +13,11 @@ expression: "render(case, content.clone())"
             ┌─ Woodcraft: recipes ─────────────────────────────────────────────────────┐
             │                                                                          │
             │ Work                                                                     │
-            │ > a - Whittle         no knife                                           │
+            │ > a - Whittle        no knife                                            │
             │ Missiles                                                                 │
-            │   b - Arrows          no knife                                           │
-            │   c - Crossbow bolts  no knife                                           │
-            │   d - Sling stones    no stone to hand                                   │
+            │   b - Arrows         no knife                                            │
+            │   c - Crossbow bolts no knife                                            │
+            │   d - Sling stones   no stone to hand                                    │
             │                                                                          │
             │ Takes a wooden weapon, a knife, about 10 minutes.                        │
             │                                                                          │

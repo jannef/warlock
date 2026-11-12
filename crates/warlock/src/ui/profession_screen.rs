@@ -288,12 +288,14 @@ mod tests {
             screen.handle(&press('a'), &Bindings::default()),
             ScreenAction::Open(ScreenName::Temper)
         );
-        // Woodcraft's rows: the built-in Whittle first, then the missiles and the hand-made
-        // weapons (path order); all greyed without a knife.
+        // Woodcraft's rows: the built-in Whittle first, then the hand-made weapons and the
+        // missiles; all greyed without a knife.
         let mut screen = ProfessionScreen::new(Some(&world.perception()), Some(wood));
         screen.fit(100, 60);
         let names: Vec<&str> = screen.recipes.iter().map(|e| e.name.as_str()).collect();
-        assert_eq!(names[..4], ["Whittle", "Arrows", "Crossbow bolts", "Club"]);
+        assert_eq!(names[..2], ["Whittle", "Club"]);
+        assert!(names.contains(&"Arrows") && names.contains(&"Crossbow bolts"));
+        assert!(!names.contains(&"Fletch"));
         assert_eq!(
             screen.recipes.get(0).and_then(|e| e.why.as_deref()),
             Some("no knife")

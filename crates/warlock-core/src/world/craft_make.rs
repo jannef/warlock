@@ -47,8 +47,8 @@
 //!   come back at the `yield`, the `per_made` ones untouched.
 //! - Either way the skill may earn a mark ([`Use::Craft`]).
 //!
-//! **Brewing** (docs/dev/crafting.md "Brewing"): a recipe with no part and no ornament chooses
-//! nothing ([`chooses_nothing`], Alchemy's): it has no steps, its object inputs are taken from
+//! **Brewing** (docs/dev/crafting.md "Brewing"): a recipe with no part, no ornament, and no
+//! count above 1 chooses nothing ([`chooses_nothing`], Alchemy's): it has no steps, its object inputs are taken from
 //! the pack (the first stacks of each), and the dialog only confirms them. Its check's stat and
 //! the dialog's verb are its profession row's (`data/recipes.toml`: Intelligence, "Brew"). A
 //! recipe with a `failure` object spends its inputs whole when it fails and makes that object; a
@@ -334,10 +334,11 @@ fn steps(content: &Content, recipe: &RecipeDef, free: impl Fn(usize) -> bool) ->
     (steps.len() <= MAX_PICKS).then_some(steps)
 }
 
-/// Whether `recipe` chooses nothing (no part, no ornament: a brew): its object inputs are taken
-/// from the pack, the first stacks of each.
+/// Whether `recipe` chooses nothing (no part, no ornament, not counted: a brew): its object
+/// inputs are taken from the pack, the first stacks of each. A counted recipe's inputs are
+/// chosen, for the stacks chosen cap its batch (the flaming arrows' arrows).
 fn chooses_nothing(recipe: &RecipeDef) -> bool {
-    recipe.parts.is_empty() && !recipe.ornament
+    recipe.parts.is_empty() && !recipe.ornament && !is_counted(recipe)
 }
 
 /// The grams of `material` part `part` of one of `recipe`'s result takes: its share of the

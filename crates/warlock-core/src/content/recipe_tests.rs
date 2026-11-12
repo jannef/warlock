@@ -130,8 +130,8 @@ fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_ma
         of(wood),
         [
             ("Arrows", None),
-            ("Club", None),
             ("Crossbow bolts", None),
+            ("Club", None),
             ("Dagger", None),
             ("Flaming arrows", None),
             ("Hand axe", None),
