@@ -1,0 +1,12 @@
+# A long-stemmed pipe of wood: Woodcraft's, with a knife carried and no station
+# (docs/design/recipes.md §6 "Gems, coins, miscellaneous"; docs/dev/crafting.md). It has no
+# aspect, so it comes out plain whatever the margin. The stock is priced by the weight.
+[[recipe]]
+id = "pipe"
+result = { object = "pipe" }
+difficulty = 7
+seconds = 600
+knife = true
+
+[recipe.parts]
+main = { stock = ["wood"] }

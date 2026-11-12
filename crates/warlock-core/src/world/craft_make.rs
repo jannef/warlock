@@ -8,8 +8,9 @@
 //!   order: a `"stock"` part (the pieces whose material the part may be made of and the
 //!   profession works, each with the count it would take), or a part with a table of sources
 //!   (the stacks of its `input`, then the pieces of its `stock` materials, then None if
-//!   `optional`: the arrows' head); then each object input no part's sources name (the stacks of
-//!   that object), then the ornament if the recipe offers one (the cut loose gems carried; None
+//!   `optional`: the arrows' head); then each input no part's sources name (the stacks of an
+//!   object input; the pieces of a stock input's material or group: a bow's sinew, a crossbow's
+//!   ingot of any metal), then the ornament if the recipe offers one (the cut loose gems carried; None
 //!   may be chosen). A step with one fitting stack is still a step: the player sees what is
 //!   spent. A `count = "fletch"` recipe's wood part has no step on wooded ground
 //!   (`world/fletch.rs`).
@@ -36,7 +37,9 @@
 //!   makes at least Fine, a natural 2 fails. An item with no aspect is plain whatever the margin.
 //!   Made, the stock and inputs are spent, the gem set, and the item goes into the pack
 //!   identified; failed, nothing is made, the gem is kept, and the stock and object inputs come
-//!   back at the settings' `yield` (pieces by [`crate::piece::count_for`], at least one of each).
+//!   back at the settings' `yield` (pieces by [`crate::piece::count_for`], at least one of each;
+//!   a stock input `count × yield / 100`, so none of a bow's one sinew). Inputs never set the
+//!   main material.
 //! - **Counted** (a count above 1, or `"fletch"`): no grades. The count is rolled (its dice, or
 //!   `world/fletch.rs`'s), then the margin keeps all of it, half rounded up within
 //!   `half_within`, one within `one_within`, else none ([`batch_made`]; a natural 2 none, a
@@ -55,7 +58,7 @@
 //! natural 2 makes its `fumble` object (else the failure's). What is made of a labelled type (a
 //! potion) is named truly beforehand and its type learned when made: the maker knows their work.
 //!
-//! A recipe needing a gem part or a stock input is refused ("You cannot make that yet.") until
+//! A recipe needing a gem part is refused ("You cannot make that yet.") until
 //! the phase that builds its step.
 //!
 //! [`PerceptionView::craft_steps`]: crate::perception::PerceptionView::craft_steps
@@ -63,7 +66,7 @@
 //! [`Effect::Craft`]: crate::skills::Effect::Craft
 //! [`Use::Craft`]: crate::skills::Use::Craft
 
-use super::craft::{RecipeLack, lack, stack_material, stock_only, worked_materials};
+use super::craft::{RecipeLack, input_fits, lack, stack_material, stock_only, worked_materials};
 use super::encounter::Watch;
 use super::fletch;
 use super::rest::Ended;
@@ -71,8 +74,8 @@ use super::{Actor, LevelState, Spent, World};
 use crate::action::Event;
 use crate::combat;
 use crate::content::{
-    ActionKind, Content, MaterialId, ObjectId, PartSource, RecipeCount, RecipeDef, RecipeId,
-    RecipeInput, RecipeSettings, counted,
+    ActionKind, Content, InputKind, MaterialId, ObjectId, PartSource, RecipeCount, RecipeDef,
+    RecipeId, RecipeInput, RecipeSettings, counted,
 };
 use crate::item_parts::{self, ItemPart};
 use crate::magic::Worked;
@@ -304,7 +307,7 @@ fn sourced(recipe: &RecipeDef) -> Vec<ObjectId> {
 fn steps(content: &Content, recipe: &RecipeDef, free: impl Fn(usize) -> bool) -> Option<Vec<Step>> {
     let result = recipe.result.as_ref()?;
     if chooses_nothing(recipe) {
-        // Its inputs are taken from the pack, never chosen; stock inputs are not built yet.
+        // Its inputs are taken from the pack, never chosen; a stock input is only chosen.
         return (recipe.inputs.iter())
             .all(|i| i.object().is_some())
             .then(Vec::new);
@@ -322,7 +325,7 @@ fn steps(content: &Content, recipe: &RecipeDef, free: impl Fn(usize) -> bool) ->
     }
     let taken = sourced(recipe);
     for (i, input) in recipe.inputs.iter().enumerate() {
-        if !taken.contains(&input.object()?) {
+        if !input.object().is_some_and(|o| taken.contains(&o)) {
             steps.push(Step::Input(i));
         }
     }
@@ -419,8 +422,11 @@ fn label(content: &Content, recipe: &RecipeDef, step: Step) -> String {
                 worked.iter().all(|m| group(m) == first).then_some(first)?
             })
             .unwrap_or_else(|| "material".into()),
-        Step::Input(i) => (recipe.inputs[i].object())
-            .map_or_else(String::new, |o| content.object(o).plural.clone()),
+        Step::Input(i) => match &recipe.inputs[i].kind {
+            InputKind::Object(o) => content.object(*o).plural.clone(),
+            InputKind::Material(m) => content.material(*m).name.clone(),
+            InputKind::Group(group) => group.clone(),
+        },
         Step::Ornament(part) => part_name(Some(part)).unwrap_or_default(),
     }
 }
@@ -508,8 +514,20 @@ pub(crate) fn craft_steps(
                     (CraftStepKind::Sources, *optional, options)
                 }
                 Step::Input(i) => {
-                    let object = def.inputs[i].object()?;
-                    (CraftStepKind::Input, false, inputs(object, None))
+                    let input = &def.inputs[i];
+                    // A stock input: the pieces of its material or group (a crossbow's ingot of
+                    // any metal: every metal ingot carried).
+                    let stock = || {
+                        (pack.iter().enumerate())
+                            .filter(|(_, s)| input_fits(content, input, s))
+                            .map(|(at, stack)| {
+                                let of = stack_material(content, stack);
+                                option(at, stack, input.count, input.per_made, of)
+                            })
+                            .collect()
+                    };
+                    let options = input.object().map_or_else(stock, |o| inputs(o, None));
+                    (CraftStepKind::Input, false, options)
                 }
                 Step::Ornament(_) => {
                     let options = (pack.iter().enumerate())
@@ -690,7 +708,7 @@ fn resolve(
             }
             Step::Input(i) => {
                 let input = &recipe.inputs[i];
-                if Some(stack.object) != input.object() {
+                if !input_fits(content, input, stack) {
                     return Err(will_not_do());
                 }
                 spends.push(input_spend(at, input, recipe, yield_percent));
@@ -792,6 +810,7 @@ fn taken(
 ) -> Result<(), String> {
     let yield_percent = bands(content.recipes().settings.as_ref()).3;
     for input in &recipe.inputs {
+        // Stock inputs are chosen, never taken (`steps`).
         let Some(object) = input.object() else {
             return Err("You cannot make that yet.".into());
         };
@@ -800,7 +819,7 @@ fn taken(
             if left == 0 {
                 break;
             }
-            if stack.object != object {
+            if !input_fits(content, input, stack) {
                 continue;
             }
             let count = stack.count.min(left);

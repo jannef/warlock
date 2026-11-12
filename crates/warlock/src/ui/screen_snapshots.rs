@@ -810,7 +810,7 @@ const CASES: &[Case] = &[
         character: Some("human,male,ranger"),
         run: true,
         screen: Some("abilities"),
-        keys: Some("f j"),
+        keys: Some("f p"),
         ..BASE
     },
     // A ranger's Whittle list (#1028): the wooden weapons carried (the bow), not the knife.

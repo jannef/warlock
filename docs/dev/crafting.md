@@ -107,7 +107,7 @@ hafts, the hand recipes' narrowed lists; `craft::stock_only`, "Routes and the re
 profession" below). The rest is used by the phase that makes the first recipe needing it, which
 also builds its wizard step and its row's words and lack: the head step (a table of sources
 with an input), `optional`, `brittle`, `per_made`, and counted results with P6 (#1336, the
-arrows: "Arrows and bolts" below), stock inputs with P7 (sinew, iron), `gem = true` with P11,
+arrows: "Arrows and bolts" below), stock inputs with P7 (sinew, iron; built, "Stock inputs" below), `gem = true` with P11,
 `failure` and `fumble` with P13 (brewing, "Brewing" below). The bands and `yield` are read from
 P5 (the forge, "Making a recipe" below). Until then the rows and the wizard read `"stock"`
 parts, parts with sources, object inputs, and the ornament. `data/stock.toml`'s `unit` and
@@ -187,7 +187,8 @@ so a hand knife may also be of ivory or dragonbone (both `bone`); jade is no wea
   works no stock falls back to the main material's profession, then Strength and "Make".
   `work` stays the main chosen part's material's (a spear's head, not its haft).
 - **The row's words** (`craft::stock_words`) price a part once per material group it may be of,
-  the base material's group first: "7 wood billets or 7 bone shards", "a bone shard or a block of
+  the base material's group first, each other group by its cheapest material (`value`: a bow
+  "or 4 horn shards", never dragonbone): "7 wood billets or 7 bone shards", "a bone shard or a block of
   flint". The greyed reason names the first material's group ("no bone to hand"; the haft's "no
   wood to hand").
 - **The wizard's label** for an unnamed main part is its stock's group when all of it is one
@@ -198,6 +199,43 @@ so a hand knife may also be of ivory or dragonbone (both `bone`); jade is no wea
   and greyed, the knife, skill, and station greyings, the profession's stat, verb, and mark, a
   bone javelin made and still thrown).
 
+## Stock inputs: bows, crossbows, the sling, the lute, the pipe
+
+P7 (#1352; `docs/design/recipes.md` §6 "Missile weapons" and the lute and pipe of "Gems, coins,
+miscellaneous", §3, §10) adds Woodcraft's missile weapons and two instruments, one file each under
+`recipes/woodcraft/`, all with a knife carried and no station, trained only. No Metalcraft route:
+nothing that shoots is a smith's.
+
+| Recipe | Parts | Inputs | `difficulty` | `seconds` | `from` | Stock |
+|---|---|---|---|---|---|---|
+| short_bow | main `{ stock = ["wood", "horn", "dragonbone"] }` | 1 sinew | 11 | 3600 | 0 | 4 |
+| long_bow | the same | 1 sinew | 13 | 3600 | 20 | 7 |
+| composite_bow | main `{ stock = ["horn", "wood", "dragonbone"] }` | 2 sinew | 15 | 5400 | 40 | 5 |
+| crossbow | main `{ stock = ["wood"] }` | `{ group = "metal", count = 1 }` | 14 | 5400 | 30 | 16 |
+| heavy_crossbow | the same | the same | 16 | 7200 | 60 | 23 |
+| sling | main `{ stock = ["hide"] }` | — | 8 | 600 | 0 | 1 leather hide |
+| lute | main `{ stock = ["wood"] }` | 1 sinew | 14 | 7200 | 40 | 8 |
+| pipe | main `{ stock = ["wood"] }` | — | 7 | 600 | 0 | 1 |
+
+- **A stock input** (`InputKind::Material`, `InputKind::Group`; `craft::input_fits`, the one
+  test of a stack against any input) is a wizard step like an object input (`CraftStepKind::Input`,
+  after the parts): it lists the pieces of the material ("sinew") or of any material of the group
+  ("metal": every metal ingot carried, so the wizard asks which), each with the count, greyed "too
+  few" on a stack with fewer. It is spent at the end like any stock, is never a part of what is
+  made (a bow has no sinew part; `made_of` holds no sinew), and a failure gives back
+  `count × yield / 100` of it (none of one length). It never sets the main material (`work`).
+- **The row** says it in pieces: "a length of sinew", "2 lengths of sinew", "an ingot of any
+  metal" (the group's form word from its first material, `stock.toml`). Its lack is
+  `RecipeLack::Stock` of the material, or of the group's first material, when no one stack
+  holds the count: "no sinew to hand", "no metal to hand" (a composite bow with one length too).
+- **The composite bow** keeps its base material, wood, so its stock counts are the design's (5
+  horn shards or 5 billets); the horn one is "a horn composite bow" (better: horn's `damage` is
+  -1 to wood's -2) and the wooden one plain "a composite bow". The lute and the pipe have no
+  `Aspect`, so they come out plain whatever the margin; the bows, crossbows, and sling take the
+  bands.
+- Tests: `world/craft_bow_tests.rs` (the design's counts, the rows' words, the sinew and metal
+  steps, the greyings and refusals with no time, a long bow made with its sinew spent and no part
+  of it, the ingot chosen spent, the composite bow's names, the plain lute).
 ## Armour and tools
 
 P9 (#1354; `docs/design/recipes.md` §6 "Shields", "Body armour", "Helmets", "Cloaks, gloves,
@@ -325,11 +363,11 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
   the inventory lists it), short (the material: "steel", "ruby"), takes, each (for every one
   made: "uses 1 each"), enough }`: pieces whose
   material the part's `made_of` holds and the profession works (`worked_materials`), stacks of
-  the input's object, cut loose gems (never an uncut one, `Cut::rough`). A part takes its share
+  the input's object or pieces of its material or group (`input_fits`), cut loose gems (never an uncut one, `Cut::rough`). A part takes its share
   of the result's weight scaled by the material's weight over the base part's (as the made item
   weighs it), in pieces (`piece::count_for`): a mithril blade takes as many mithril ingots as a
   steel one takes steel. A recipe with no part and no ornament (a brew) has no steps ("Brewing"
-  below). A recipe with a gem part, a stock input, or more than `MAX_PICKS` (8) steps has no
+  below). A recipe with a gem part or more than `MAX_PICKS` (8) steps has no
   steps either, and `craft:` refuses it ("You cannot make that yet.") until the phase that
   builds its step.
 - **The plan** (`craft_plan`, `PerceptionView::craft_plan(recipe, picks)`; `resolve`): every

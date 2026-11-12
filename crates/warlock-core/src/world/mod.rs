@@ -1783,6 +1783,8 @@ mod court_tests;
 #[cfg(test)]
 mod craft_armour_tests;
 #[cfg(test)]
+mod craft_bow_tests;
+#[cfg(test)]
 mod craft_hand_tests;
 #[cfg(test)]
 mod craft_make_tests;

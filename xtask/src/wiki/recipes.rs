@@ -7,7 +7,8 @@ use super::text::{Term, anchored, capital, link};
 use std::fmt::Write as _;
 use warlock_core::combat::HIGHEST;
 use warlock_core::content::{
-    Content, CutId, Cutting, MaterialId, PartSource, RecipeCount, RecipeUse, counted,
+    Content, CutId, Cutting, InputKind, MaterialId, PartSource, RecipeCount, RecipeInput,
+    RecipeUse, counted,
 };
 use warlock_core::dice::Dice;
 use warlock_core::skills::Effect;
@@ -122,7 +123,7 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
                     continue;
                 }
                 groups.push(group(first));
-                // The base material, else the piece's own (steel), else the first.
+                // The base material, else the piece's own (steel), else the group's cheapest.
                 let named = |want: MaterialId| {
                     (order.iter().copied()).find(|&m| m == want && group(m) == group(first))
                 };
@@ -131,6 +132,11 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
                         piece
                             .and_then(|p| p.parts.first())
                             .and_then(|p| named(p.material))
+                    })
+                    .or_else(|| {
+                        (order.iter().copied())
+                            .filter(|&m| group(m) == group(first))
+                            .min_by_key(|&m| content.material(m).value)
                     })
                     .unwrap_or(first);
                 if n == 0 && m == base.material {
@@ -150,10 +156,10 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
             }
             stock.push(words.join(" or "));
         }
+        // What is used up besides: arrowheads, a bow's sinew, a crossbow's ingot of any metal.
         let uses: Vec<String> = (r.inputs.iter())
             .filter_map(|i| {
-                let o = content.object(i.object()?);
-                let words = counted(&o.name, &o.plural, i.count);
+                let words = input_words(content, piece, i)?;
                 Some(match i.per_made {
                     true => format!("{words} for each made"),
                     false => words,
@@ -213,6 +219,32 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
          out at all (for a batch, all of it), with an average stat.\n",
     );
     out
+}
+
+/// An input in words: "a length of sinew", "an ingot of any metal", "20 arrowheads".
+fn input_words(
+    content: &Content,
+    piece: Option<&warlock_core::content::ObjectDef>,
+    input: &RecipeInput,
+) -> Option<String> {
+    let (one, many) = match &input.kind {
+        InputKind::Object(o) => {
+            let def = content.object(*o);
+            (def.name.clone(), def.plural.clone())
+        }
+        InputKind::Material(m) => warlock_core::piece::names(content, piece?, *m),
+        InputKind::Group(group) => {
+            let first = (content.materials().iter())
+                .position(|m| m.group.as_deref() == Some(group.as_str()))?;
+            let first = MaterialId(u16::try_from(first).ok()?);
+            let (name, plural, _) = content.stock().form_of(content, first)?;
+            (
+                format!("{name} of any {group}"),
+                format!("{plural} of any {group}"),
+            )
+        }
+    };
+    Some(counted(&one, &many, input.count))
 }
 
 /// The Alchemy values the brewing odds have a column for.

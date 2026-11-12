@@ -1,0 +1,13 @@
+# A short bow of wood, horn, or dragonbone, strung with a length of sinew (an input, never a
+# part): Woodcraft's, with a knife carried and no station (docs/design/recipes.md §6 "Missile
+# weapons"; docs/dev/crafting.md). The stock is priced by the weight.
+[[recipe]]
+id = "short_bow"
+result = { object = "short_bow" }
+difficulty = 11
+seconds = 3600
+knife = true
+inputs = [{ material = "sinew", count = 1 }]
+
+[recipe.parts]
+main = { stock = ["wood", "horn", "dragonbone"] }
