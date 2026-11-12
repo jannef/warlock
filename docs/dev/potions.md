@@ -194,8 +194,10 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
 ## Sources
 
 - Loot by `level` and `frequency` (`magic::loot`), as scrolls.
-- Brewing (#1357; `docs/dev/crafting.md` "Brewing"): Alchemy's herb recipes make 29 potions and
-  flasks; a brewed one is identified and its type learned (`learn_scroll`), and a failed brew
+- Brewing (#1357, #1358; `docs/dev/crafting.md` "Brewing"): Alchemy's herb recipes make 29 potions
+  and flasks, and its essence recipes nine more (the potions of frost, earthing, and sea legs; the
+  flasks of fire, frost, thunder, and smoke, pitch fire, and the blasting flask; the flask of fire
+  and pitch fire spend a bought flask of oil or tar); a brewed one is identified and its type learned (`learn_scroll`), and a failed brew
   makes a murky draught, a natural 2 a brewer's blunder, both known too.
 - Shops (`assets/data/shops.toml`): general stores and provisioners stock and buy the potions
   class (by loot frequency, so healing and antidote are the common ones); the `alchemist` kind

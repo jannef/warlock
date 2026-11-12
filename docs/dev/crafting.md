@@ -387,8 +387,19 @@ P13 (#1357; `docs/design/recipes.md` §6 "Potions (Alchemy)", §4, §12 items 5,
 29 herb recipes, `data/recipes/alchemy/<potion>.toml`, each `result` the potion, `inputs` of
 herbs only (`docs/dev/objects.md`'s herb objects), `seconds = 1200`, no station or knife, `failure
 = { object = "murky_draught" }`, `fumble = { object = "brewers_blunder" }`, and the table's
-`difficulty` and `from`. The essence rows are P14's (#1358); the elixirs, gambles, deeper
-draughts, holy water, oil, tar, and the hexing flasks are never brewed. Alchemy in
+`difficulty` and `from`. The elixirs, gambles, deeper draughts, holy water, oil, tar, and the
+hexing flasks are never brewed.
+
+P14 (#1358; `recipes.md` §6's essence rows, §9) adds nine files of the same shape whose `inputs`
+take an **essence** (`essence_of_<element>`, plain `[[object]]`s of class `materials`,
+`docs/dev/objects.md`): `potion_of_frost`, `potion_of_earthing`, `potion_of_sea_legs`,
+`flask_of_fire`, `flask_of_frost`, `flask_of_thunder`, `flask_of_smoke`, `pitch_fire`, and
+`blasting_flask` (38 brews in all). No code: an object input matches by object id as a herb does,
+and so do the bought `flask_of_oil` and `flask_of_tar` (inputs of the flask of fire and pitch
+fire), taken whether or not their type is known. Each essence's source is a tag's material drop
+(`data/drops/{fire,ice,lightning,air,water,earth}.toml`, `bodiless`; `fire-thing.toml`'s essence
+of fire at 25 %; `docs/dev/creatures.md`); `brew_tests.rs` checks every essence a brew takes drops
+from some creature and every flask input is stocked by a generated shop. Alchemy in
 `data/skills.toml` gains the `craft` curve (Metalcraft's) and the `craft` mark (100 %);
 `data/recipes.toml`'s Alchemy row names `stat = "intelligence"`, `verb = "Brew"`, and its
 `failed` and `fumbled` lines. In `world/craft_make.rs`:
@@ -419,7 +430,10 @@ draughts, holy water, oil, tar, and the hexing flasks are never brewed. Alchemy 
 - **Tests**: `world/brew_tests.rs` (the table's rows and the never-brewed, nothing chosen and the
   plan's words, the potion known and the mark, no grade at margin 20, the murky draught and the
   blunder with the herbs spent, the refusals with no time, Intelligence the stat, a replay of
-  gathers and a brew), `content/recipe_tests.rs` (Alchemy's row, a missing herb, an empty line),
+  gathers and a brew; the essence rows: each made from its inputs, a flask of fire spending one
+  bought oil, the refusals "not enough essences of fire" with no time, a failed blasting flask,
+  the essences' sources, and a replay that picks up an essence and oil, levels Alchemy past 50
+  with `xp:` and `advance:alchemy`, and brews a flask of fire), `content/recipe_tests.rs` (Alchemy's row, a missing herb, an empty line),
   the text snapshots `profession-alchemy-herbs` and `brew-dialog`. The wiki's brewing page,
   `wiki/src/recipes-alchemy.md`, includes `xtask/src/wiki/recipes.rs::brews` (the odds at Alchemy
   20, 50, 100 with an average Intelligence); the forge's tables (`recipes_of`) list each
