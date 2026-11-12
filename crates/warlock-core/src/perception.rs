@@ -2199,7 +2199,7 @@ impl<'a> PerceptionView<'a> {
     /// The recipes of profession `skill` the player sees, in path order, each with what it takes
     /// and why it cannot be made now (`world/craft.rs`): what the profession's screen lists.
     pub fn recipes(&self, skill: crate::skills::SkillId) -> Vec<crate::world::RecipeRow> {
-        crate::world::recipe_rows(self.content, self.level, self.player, skill)
+        crate::world::recipe_rows(self.content, self.lore, self.level, self.player, skill)
     }
 
     /// The choices of generic recipe `recipe`, in order, each with the stacks carried that it may

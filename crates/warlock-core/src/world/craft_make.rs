@@ -65,7 +65,9 @@
 //! [`Effect::Craft`]: crate::skills::Effect::Craft
 //! [`Use::Craft`]: crate::skills::Use::Craft
 
-use super::craft::{RecipeLack, input_fits, lack, stack_material, stock_only, worked_materials};
+use super::craft::{
+    RecipeLack, input_fits, known_object, lack, stack_material, stock_only, worked_materials,
+};
 use super::encounter::Watch;
 use super::fletch;
 use super::rest::Ended;
@@ -496,7 +498,7 @@ pub(crate) fn craft_steps(
         };
         let made_of = part.map(|p| content.object(result.object).made_of(p));
         (pack.iter().enumerate())
-            .filter(|(_, s)| s.object == object)
+            .filter(|(_, s)| known_object(lore, s, object))
             .filter_map(|(at, stack)| {
                 let of = part.and(main_material(content, stack));
                 if made_of.is_some_and(|list| !of.is_some_and(|m| list.contains(&m))) {
@@ -533,7 +535,7 @@ pub(crate) fn craft_steps(
                     // any metal: every metal ingot carried).
                     let stock = || {
                         (pack.iter().enumerate())
-                            .filter(|(_, s)| input_fits(content, input, s))
+                            .filter(|(_, s)| input_fits(lore, input, s))
                             .map(|(at, stack)| {
                                 let of = stack_material(content, stack);
                                 option(at, stack, input.count, input.per_made, of)
@@ -643,6 +645,7 @@ fn input_spend(at: usize, input: &RecipeInput, recipe: &RecipeDef, yield_percent
 /// spends, or why not, as the rules say it.
 fn resolve(
     content: &Content,
+    lore: Lore<'_>,
     level: &LevelState,
     player: &Actor,
     recipe: &RecipeDef,
@@ -706,7 +709,7 @@ fn resolve(
                     return Err(not_yet());
                 };
                 let made_of = def.made_of(part);
-                if *input == Some(stack.object) {
+                if input.is_some_and(|o| known_object(lore, stack, o)) {
                     let material = (main_material(content, stack))
                         .filter(|m| made_of.contains(m))
                         .ok_or_else(will_not_do)?;
@@ -725,7 +728,7 @@ fn resolve(
             }
             Step::Input(i) => {
                 let input = &recipe.inputs[i];
-                if !input_fits(content, input, stack) {
+                if !input_fits(lore, input, stack) {
                     return Err(will_not_do());
                 }
                 spends.push(input_spend(at, input, recipe, yield_percent));
@@ -749,7 +752,7 @@ fn resolve(
         }
     }
     if chooses_nothing(recipe) {
-        taken(content, player, recipe, &mut spends)?;
+        taken(content, lore, player, recipe, &mut spends)?;
     }
     // The batch: its most, at most what each stack taken covers (a counted recipe's).
     let most = batch_most(content, player, recipe);
@@ -826,6 +829,7 @@ fn resolve(
 /// `failure` object, else the settings' yield back as a chosen input's); too few is refused.
 fn taken(
     content: &Content,
+    lore: Lore<'_>,
     player: &Actor,
     recipe: &RecipeDef,
     spends: &mut Vec<Spend>,
@@ -841,7 +845,7 @@ fn taken(
             if left == 0 {
                 break;
             }
-            if !input_fits(content, input, stack) {
+            if !input_fits(lore, input, stack) {
                 continue;
             }
             let count = stack.count.min(left);
@@ -889,7 +893,7 @@ pub(crate) fn craft_plan(
     if def.uses == Some(RecipeUse::Set) {
         return super::set::plan(content, lore, player, def, picks);
     }
-    let resolved = resolve(content, level, player, def, picks)?;
+    let resolved = resolve(content, lore, level, player, def, picks)?;
     let pack = &player.inventory;
     // Stacks of one thing taken together (a brew's herbs from two stacks) are told as one; what
     // goes for each made, then the gem (the ornament, the last step), after them.
@@ -963,7 +967,7 @@ impl World {
         let def = content.recipe(id);
         let me = self.state.player();
         let level = self.state.current();
-        let refused = match lack(&content, level, me, def) {
+        let refused = match lack(&content, self.lore(), level, me, def) {
             Some(RecipeLack::Skill) => Some("That is beyond your skill.".to_string()),
             Some(RecipeLack::Station(t)) => {
                 Some(format!("There is no {} here.", content.terrain(t).name))
@@ -978,7 +982,7 @@ impl World {
             // The picks say what is missing.
             Some(RecipeLack::Stock(_) | RecipeLack::Input(_)) | None => None,
         };
-        let resolved = resolve(&content, level, me, def, picks);
+        let resolved = resolve(&content, self.lore(), level, me, def, picks);
         let resolved = match (refused, resolved) {
             (Some(text), _) | (None, Err(text)) => {
                 self.say(text);
@@ -1048,7 +1052,8 @@ impl World {
         let content = self.content.clone();
         let def = content.recipe(work.recipe);
         let level = self.state.current();
-        let Ok(resolved) = resolve(&content, level, self.state.player(), def, work.picks()) else {
+        let player = self.state.player();
+        let Ok(resolved) = resolve(&content, self.lore(), level, player, def, work.picks()) else {
             self.say("You have nothing left to work with.");
             return;
         };
@@ -1216,7 +1221,8 @@ pub(super) fn make_out_for_test(
     let id = content.recipes().id(recipe).expect("recipe");
     let def = content.recipe(id);
     let level = w.state.current();
-    let resolved = resolve(&content, level, w.state.player(), def, picks).expect("the picks hold");
+    let resolved =
+        resolve(&content, w.lore(), level, w.state.player(), def, picks).expect("the picks hold");
     match resolved.batch {
         Some(_) => w.make_batch(def, resolved, natural, margin),
         None => w.make_out(resolved, natural, margin),

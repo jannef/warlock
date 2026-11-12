@@ -528,6 +528,12 @@ fn flaming_arrows_take_an_arrow_each_and_a_flask_of_oil() {
     let arrows = Stack::new(object(&w, "arrow"), 12);
     carry(&mut w, arrows); // a
     give(&mut w, "flask_of_oil"); // b
+    // Unknown, the oil is no input (#1383): refused, with no time.
+    assert_eq!(craft(&mut w, "craft:flaming_arrows:a,b"), 0);
+    assert_eq!(last_message(&w), "That will not do for the flasks of oil.");
+    assert_eq!(count_of(&w, "flask_of_oil"), 1);
+    let oil = object(&w, "flask_of_oil");
+    w.learn_scroll(oil);
     sure_batch(&mut w, "craft:flaming_arrows:a,b");
     assert_eq!(count_of(&w, "flaming_arrow"), 10);
     assert_eq!(count_of(&w, "arrow"), 2, "one an arrow made");
@@ -537,6 +543,7 @@ fn flaming_arrows_take_an_arrow_each_and_a_flask_of_oil() {
     let arrows = Stack::new(object(&w, "arrow"), 4);
     carry(&mut w, arrows);
     give(&mut w, "flask_of_oil");
+    w.learn_scroll(oil);
     sure_batch(&mut w, "craft:flaming_arrows:a,b");
     assert_eq!(count_of(&w, "flaming_arrow"), 4);
     assert_eq!(count_of(&w, "arrow"), 0);

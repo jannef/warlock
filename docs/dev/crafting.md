@@ -267,7 +267,7 @@ nothing that shoots is a smith's.
 | pipe | main `{ stock = ["wood"] }` | — | 7 | 600 | 0 | 1 |
 
 - **A stock input** (`InputKind::Material`, `InputKind::Group`; `craft::input_fits`, the one
-  test of a stack against any input) is a wizard step like an object input (`CraftStepKind::Input`,
+  test of a stack against any input; an object input through `craft::known_object`, below) is a wizard step like an object input (`CraftStepKind::Input`,
   after the parts): it lists the pieces of the material ("sinew") or of any material of the group
   ("metal": every metal ingot carried, so the wizard asks which), each with the count, greyed "too
   few" on a stack with fewer. It is spent at the end like any stock, is never a part of what is
@@ -368,7 +368,8 @@ the cells beside the player, and the skills: presentation never decides availabi
   ("no metal to hand", "no wood to hand": no piece whose material fits a stock part, wood free on
   wooded ground for the arrows; a required part with sources wants its input or its stock),
   `Input` ("not enough arrowheads", "not enough sprigs of moonwort": too few carried; an input a
-  part's sources name is that part's), `Gem` for a recipe with a gem part and no cut gem
+  part's sources name is that part's; a stack of a type the player has not identified is not
+  counted, below), `Gem` for a recipe with a gem part and no cut gem
   carried (the gold amulet).
 - `takes` names a gem part "a cut gem" ("a gold ingot, a cut gem, about 1 hour and 30
   minutes").
@@ -487,7 +488,18 @@ take an **essence** (`essence_of_<element>`, plain `[[object]]`s of class `mater
 `flask_of_fire`, `flask_of_frost`, `flask_of_thunder`, `flask_of_smoke`, `pitch_fire`, and
 `blasting_flask` (38 brews in all). No code: an object input matches by object id as a herb does,
 and so do the bought `flask_of_oil` and `flask_of_tar` (inputs of the flask of fire and pitch
-fire), taken whether or not their type is known. Each essence's source is a tag's material drop
+fire).
+
+**Known inputs** (#1383): an object input counts only once the player knows its type.
+`craft::known_object(lore, stack, object)` is the one test (the stack is of the object and
+`Lore::is_identified(object)`: a labelled potion, flask, scroll, wand, or rod type not yet
+identified does not count; an unidentified magic item's base object is plain to see and does), and
+every object input is matched through it: `input_fits`, a part's sources' input in `lack`, the
+wizard's steps (`craft_steps`), `resolve` (a picked stack), and `taken` (a brew's). So `lack`,
+`recipe_rows`, and `resolve` take the world's `Lore`. An unknown flask of oil leaves the flask of
+fire's row greyed "not enough flasks of oil" and `craft:flask_of_fire` refused with no time ("You
+have too few flasks of oil."): otherwise the row would tell the player what the clear potion
+is. The flaming arrows' oil the same. Each essence's source is a tag's material drop
 (`data/drops/{fire,ice,lightning,air,water,earth}.toml`, `bodiless`; `fire-thing.toml`'s essence
 of fire at 25 %; `docs/dev/creatures.md`); `brew_tests.rs` checks every essence a brew takes drops
 from some creature and every flask input is stocked by a generated shop. Alchemy in

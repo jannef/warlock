@@ -7,6 +7,10 @@
 //!   anvil, about 10 minutes"; never a difficulty or odds) and the first reason it cannot be made
 //!   now, if any ([`RecipeLack`]): computed here, from the pack, the cells beside the player, and
 //!   the skills, so presentation never decides availability.
+//! - **Known inputs** ([`known_object`]): an object input counts only once the player knows its
+//!   type ([`Lore::is_identified`]: a labelled potion, flask, scroll, wand, or rod does not), in
+//!   the rows, the wizard's steps, and the action alike, so no row tells what an unknown stack is
+//!   (#1383).
 //! - **The action** ([`Action::Craft`], `craft:ID[:POS,...]`): a built-in recipe's row runs its
 //!   own action (`temper:`, `whittle:`), so `craft:` refuses it, taking no time, but for Cut
 //!   and Set, which are `craft:cut:LETTER` and `craft:set:ITEM,GEM` themselves (`world/cut.rs`,
@@ -22,6 +26,7 @@ use crate::content::{
     RecipeUse, TerrainId, article, counted,
 };
 use crate::geom::Dir;
+use crate::scroll_label::Lore;
 use crate::skills::SkillId;
 use crate::time::Duration;
 
@@ -100,6 +105,7 @@ impl RecipeLack {
 /// The rows of profession `skill` for `player` on `level` (the module docs).
 pub(crate) fn recipe_rows(
     content: &Content,
+    lore: Lore<'_>,
     level: &LevelState,
     player: &Actor,
     skill: SkillId,
@@ -111,7 +117,7 @@ pub(crate) fn recipe_rows(
             id,
             name: recipe.name.clone(),
             takes: takes(content, level, player, recipe),
-            unavailable: lack(content, level, player, recipe),
+            unavailable: lack(content, lore, level, player, recipe),
         })
         .collect()
 }
@@ -120,10 +126,11 @@ pub(crate) fn recipe_rows(
 /// knife, Set's item and gem, launcher, stock, inputs, a gem part. `"stock"` parts (but a
 /// `count = "fletch"` recipe's wood on wooded ground, `world/fletch.rs`), a required part's
 /// sources, object inputs (those a part's sources name only there), stock inputs, and gem parts
-/// are looked at. A stock input (a bow's sinew) wants one stack holding all it takes, as the
+/// are looked at, an object input only of a type the player knows. A stock input (a bow's sinew) wants one stack holding all it takes, as the
 /// wizard picks one.
 pub(super) fn lack(
     content: &Content,
+    lore: Lore<'_>,
     level: &LevelState,
     player: &Actor,
     recipe: &RecipeDef,
@@ -172,7 +179,8 @@ pub(super) fn lack(
                 optional,
             } => {
                 sourced.extend(*input);
-                let held = input.is_some_and(|o| player.inventory.iter().any(|s| s.object == o));
+                let pack = &player.inventory;
+                let held = input.is_some_and(|o| pack.iter().any(|s| known_object(lore, s, o)));
                 if !optional && !held && !carries(stock) {
                     return match (input, stock.first()) {
                         (Some(o), _) => Some(RecipeLack::Input(*o)),
@@ -184,7 +192,7 @@ pub(super) fn lack(
         }
     }
     for input in &recipe.inputs {
-        let fitting = (player.inventory.iter()).filter(|s| input_fits(content, input, s));
+        let fitting = (player.inventory.iter()).filter(|s| input_fits(lore, input, s));
         let Some(object) = input.object() else {
             if !fitting.into_iter().any(|s| s.count >= input.count) {
                 return input_material(content, input).map(RecipeLack::Stock);
@@ -203,19 +211,28 @@ pub(super) fn lack(
     (gem_part && !gem).then_some(RecipeLack::Gem)
 }
 
-/// Whether `stack` is what `input` takes: a stack of its object, or a piece of its material or of
-/// a material of its group (a crossbow's lock: an ingot of any metal).
+/// Whether `stack` is what `input` takes: a stack of its object, of a type the player knows
+/// ([`known_object`]), or a piece of its material or of a material of its group (a crossbow's
+/// lock: an ingot of any metal).
 pub(super) fn input_fits(
-    content: &Content,
+    lore: Lore<'_>,
     input: &RecipeInput,
     stack: &crate::object::Stack,
 ) -> bool {
+    let content = lore.content;
     match &input.kind {
-        InputKind::Object(object) => stack.object == *object,
+        InputKind::Object(object) => known_object(lore, stack, *object),
         InputKind::Material(material) => stack_material(content, stack) == Some(*material),
         InputKind::Group(group) => stack_material(content, stack)
             .is_some_and(|m| content.material(m).group.as_deref() == Some(group.as_str())),
     }
+}
+
+/// Whether `stack` is of `object` as the player knows it: of that object, and of a type they
+/// have identified (module docs). An unknown flask of oil is no flask of oil to a recipe, so its
+/// row cannot tell what it is (#1383). The one test every object input is matched by.
+pub(super) fn known_object(lore: Lore<'_>, stack: &crate::object::Stack, object: ObjectId) -> bool {
+    stack.object == object && lore.is_identified(object)
 }
 
 /// The material a stock input names, or the first of its group: what its lack and its words

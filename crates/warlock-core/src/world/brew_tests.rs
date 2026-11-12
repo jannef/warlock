@@ -445,7 +445,9 @@ fn a_flask_of_fire_from_a_found_essence_replays() {
     let mut w = World::new(content.clone(), "test_brewery", Some(3)).expect("world");
     let mut replay = Replay::new(&w);
     // Levels for Alchemy past the flask's 50 (the dev grant and the rolls), then the brew.
-    let text = "xp:30000 advance:alchemy*40 levelup:auto move:S pickup craft:flask_of_fire wait";
+    // The oil identified (the dev `identify`): an unknown flask is no input (#1383).
+    let text = "xp:30000 advance:alchemy*40 levelup:auto move:S pickup identify \
+                craft:flask_of_fire wait";
     for action in crate::action::parse_actions(text).expect("actions") {
         w.apply(&action);
         replay.push(&action, &w);
@@ -469,11 +471,20 @@ fn give_all(w: &mut World, inputs: &[(&str, u32)]) {
     }
 }
 
+/// The types of `inputs` known (a flask's; #1383), as if identified.
+fn know_all(w: &mut World, inputs: &[(&str, u32)]) {
+    for (id, _) in inputs {
+        let object = w.content.object_id(id).expect(id);
+        w.learn_scroll(object);
+    }
+}
+
 #[test]
 fn each_essence_recipe_makes_its_potion_or_flask_from_its_inputs() {
     for (id, inputs, _, _) in ESSENCE_ROWS {
         let mut w = world(100);
         give_all(&mut w, inputs);
+        know_all(&mut w, inputs);
         make_out_for_test(&mut w, id, &[], 12, 5);
         let made = w.content.object_id(id).expect(id);
         let pack = &w.state.player().inventory;
@@ -487,9 +498,9 @@ fn each_essence_recipe_makes_its_potion_or_flask_from_its_inputs() {
 #[test]
 fn a_flask_of_fire_spends_an_essence_and_a_bought_flask_of_oil() {
     let mut w = world(100);
-    // Bought oil is a potion of a type perhaps unknown; the recipe takes it all the same.
     give(&mut w, "flask_of_oil", 2);
     give(&mut w, "essence_of_fire", 1);
+    know_all(&mut w, &[("flask_of_oil", 1)]);
     let start = w.state.time;
     apply(&mut w, "craft:flask_of_fire");
     assert_eq!(w.state.time.since(start).as_seconds(), 1200);
@@ -506,6 +517,34 @@ fn a_flask_of_fire_spends_an_essence_and_a_bought_flask_of_oil() {
         !ids.iter().any(|(id, _)| id == "essence_of_fire"),
         "{ids:?}"
     );
+}
+
+#[test]
+fn an_unknown_flask_of_oil_is_no_input_until_identified() {
+    // #1383: the flask of fire's row must not tell an unknown clear potion is oil.
+    let mut w = world(100);
+    give(&mut w, "flask_of_oil", 1);
+    give(&mut w, "essence_of_fire", 1);
+    let oil = w.content.object_id("flask_of_oil").expect("oil");
+    assert!(w.lore().label(oil).is_some(), "a labelled potion type");
+    let row = |w: &World| {
+        (rows(w).into_iter())
+            .find(|r| r.starts_with("Flask of fire"))
+            .expect("listed")
+    };
+    let unknown = row(&w);
+    assert!(unknown.ends_with("(not enough flasks of oil)"), "{unknown}");
+    let start = w.state.time;
+    apply(&mut w, "craft:flask_of_fire");
+    assert_eq!(said(&w, 0), "You have too few flasks of oil.");
+    assert_eq!(w.state.time, start, "no time");
+    assert_eq!(w.state.player().inventory.len(), 2, "nothing spent");
+    // Identified, it counts.
+    w.learn_scroll(oil);
+    let known = row(&w);
+    assert!(!known.contains('('), "usable: {known}");
+    apply(&mut w, "craft:flask_of_fire");
+    assert_eq!(w.state.time.since(start).as_seconds(), 1200);
 }
 
 #[test]
