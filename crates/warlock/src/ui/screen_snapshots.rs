@@ -69,6 +69,10 @@ const ARMED: &str = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W m
 const HOARD: &str = "move:SW*2 pickup move:NE*2 move:E*2 move:NE pickup move:SW move:W*2 \
     move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N pickup move:S*2 \
     pickup move:NW move:W*2 move:N pickup move:SW pickup";
+/// The hub's secret closet found and its gems picked up (a medium fine sapphire, an uncut tiny
+/// garnet).
+const GEM_CLOSET: &str = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*6 move:SW move:W*3 \
+    search:50 move:S open:W move:W*2 pickup";
 /// Next to the hub's hermit.
 macro_rules! hermit {
     () => {
@@ -825,6 +829,36 @@ const CASES: &[Case] = &[
         screen: Some("salvage"),
         ..BASE
     },
+    // A craftsperson trained in Jewelcraft (fate 8) with the hub's secret closet's gems, a
+    // medium fine sapphire and an uncut tiny garnet (#1355): Jewelcraft's screen (the first
+    // profession whose recipes they see) lists Cut under Work; the Cut list both gems.
+    Case {
+        name: "profession-jewelcraft",
+        seed: Some(8),
+        character: Some("human,male,craftsperson"),
+        actions: GEM_CLOSET,
+        screen: Some("profession"),
+        ..BASE
+    },
+    Case {
+        name: "cut-list",
+        seed: Some(8),
+        character: Some("human,male,craftsperson"),
+        actions: GEM_CLOSET,
+        screen: Some("cut"),
+        ..BASE
+    },
+    // The garnet cut (it splits to nothing at this fate) and the sapphire re-cut a size smaller:
+    // the list holds the small fine sapphire, and the message line says what came of it.
+    Case {
+        name: "cut-list-after",
+        seed: Some(8),
+        character: Some("human,male,craftsperson"),
+        actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*6 move:SW move:W*3 \
+                  search:50 move:S open:W move:W*2 pickup craft:cut:l craft:cut:k",
+        screen: Some("cut"),
+        ..BASE
+    },
     // A warrior carries no knife: Woodcraft's screen (its row in the abilities menu, `e`) greys
     // Fletch and Whittle, each with the reason in place of what it takes (#1334).
     Case {
@@ -861,7 +895,7 @@ const CASES: &[Case] = &[
         screen: Some("profession"),
         ..BASE
     },
-    // The forge's stock picked up beside the anvil: the swords under "Melee weapons", those from
+    // The forge's stock picked up beside the anvil: the weapons under "Melee weapons", those from
     // a higher Metalcraft greyed "beyond your skill".
     Case {
         name: "profession-metalcraft-stock",
@@ -870,14 +904,14 @@ const CASES: &[Case] = &[
         screen: Some("profession"),
         ..BASE
     },
-    // The short sword's wizard (#1335): its first step, the blade, the ingots carried with what
-    // the recipe takes of each.
+    // The dagger's wizard (#1335): its first step, the metal, the ingots carried with what the
+    // recipe takes of each.
     Case {
         name: "craft-pick-blade",
         scenario: "forge",
         actions: "move:E pickup",
         screen: Some("profession"),
-        keys: Some("h"),
+        keys: Some("c"),
         ..BASE
     },
     // Its second, the pommel: None on `-`, the cut gems; the running choice in the header.
@@ -886,7 +920,7 @@ const CASES: &[Case] = &[
         scenario: "forge",
         actions: "move:E pickup",
         screen: Some("profession"),
-        keys: Some("h c"),
+        keys: Some("c c"),
         ..BASE
     },
     // The last pick asks in the one dialog, with the item named as it will be made.
@@ -895,7 +929,36 @@ const CASES: &[Case] = &[
         scenario: "forge",
         actions: "move:E pickup",
         screen: Some("profession"),
-        keys: Some("h c a"),
+        keys: Some("c c a"),
+        ..BASE
+    },
+    // A witch's Alchemy (#1357; `--screen profession`, the first profession she has recipes of)
+    // after three gathers at the hub's fungus: the brews, those from a higher Alchemy greyed
+    // "beyond your skill", those short of herbs "not enough".
+    Case {
+        name: "profession-alchemy-herbs",
+        character: Some("human,female,witch"),
+        actions: "move:N*6 move:E*30 move:N*3 move:W*6 gather:W*3",
+        screen: Some("profession"),
+        ..BASE
+    },
+    // A brew chooses nothing: its row asks at once in the one dialog, the potion named truly.
+    Case {
+        name: "brew-dialog",
+        character: Some("human,female,witch"),
+        actions: "move:N*6 move:E*30 move:N*3 move:W*6 gather:W*3",
+        screen: Some("profession"),
+        keys: Some("o"),
+        ..BASE
+    },
+    // The smith's javelin after its iron head (#1351): the haft, Woodcraft's wood billets on a
+    // Metalcraft recipe, never the ingots.
+    Case {
+        name: "craft-pick-haft",
+        scenario: "forge",
+        actions: "move:E pickup",
+        screen: Some("profession"),
+        keys: Some("i b"),
         ..BASE
     },
     // `--screen craft-pick`: the first recipe with a choice, the arrowheads, with nothing carried.
@@ -963,18 +1026,27 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A ranger below the hall's door: Listen and Wedge listed beside a closed door (left out
+    // elsewhere, the owner, #1327).
+    Case {
+        name: "abilities-menu-door",
+        character: Some("human,female,ranger"),
+        actions: "move:N*3",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Set on chosen from the menu: the aiming mode, its prompt in the message line.
     Case {
         name: "set-on-aim",
         actions: "ally:dire_warg:2",
-        keys: Some("a h"),
+        keys: Some("a k"),
         ..BASE
     },
     // Come to heel chosen from the menu: the order's words, no time.
     Case {
         name: "come-to-heel",
         actions: "ally:dire_warg:2",
-        keys: Some("a f"),
+        keys: Some("a i"),
         ..BASE
     },
     // A paladin of some level: the Class group, Lay on hands refused and greyed out short of
@@ -1594,11 +1666,19 @@ const CASES: &[Case] = &[
         keys: Some("Left"),
         ..BASE
     },
+    // The one trap known beside the player: `a b` (Disarm a trap, after the thief's birth
+    // sign's stare, #266) disarms it at once, with no prompt (#1327).
     Case {
-        name: "trap-disarm-prompt",
+        name: "trap-disarm-at-once",
         actions: "move:N*3 open:N move:N*2 move:E*67 open:S move:S*7 move:SW descend",
-        // `a b`: Disarm a trap, after the thief's birth sign's stare (#266).
         keys: Some("a b"),
+        ..BASE
+    },
+    // Two beside the thief to rob: `a e` (Steal) asks which way in the message line (#1327).
+    Case {
+        name: "steal-prompt",
+        actions: "ally:dire_warg:2",
+        keys: Some("a e"),
         ..BASE
     },
     Case {

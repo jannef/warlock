@@ -3,32 +3,32 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  Lēof, your hound, pads at your heel.
- A dire warg comes t┌─ Abilities ──────────────────────────────────────────────┐
+ A dire warg comes to your side.
+                    ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
                     │ Skills                                                   │
                     │   b  Decipher           no unknown scroll                │
                     │   c  Tame               you already have a companion     │
-                    │   d  Listen at a door   in a direction                   │
-                    │   e  Metalcraft…                                         │
-                    │   f  Forage             not usable here                  │
-                    │   g  Woodcraft…                                          │
-                    │   h  Wedge a door       in a direction                   │
-                    │   i  Salvage            on something you carry           │
+                    │   d  Metalcraft…                                         │
+                    │   e  Forage             not usable here                  │
+                    │   f  Woodcraft…                                          │
+                    │   g  Salvage            on something you carry           │
                     │ Weapon skills                                            │
-                    │   j  Shield bash        you hold no shield               │
+                    │   h  Shield bash        you hold no shield               │
                     │ Allies                                                   │
-                    │   k  Come to heel       no allies here                   │
-                    │   l  Hold here          no allies here                   │
-                    │   m  Set on             no allies here                   │
-                    │   n  Give               not beside you                   │
+                    │   i  Come to heel       no allies here                   │
+                    │   j  Hold here          no allies here                   │
+                    │   k  Set on             no allies here                   │
+                    │   l  Give               not beside you                   │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-n or Enter use   Esc close                             │
+                    │ a-l or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
  The Wildlands  ·  HP 20/20  ·  MP 4/4  ·  Sta 10/10  ·  Lv 1  ·  Lēof  ·  08:00         ? controls

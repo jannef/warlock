@@ -134,24 +134,32 @@ always succeeds.
 
 ## Professions
 
-[Metalcraft](skills.md#skill-metalcraft) and [Woodcraft](skills.md#skill-woodcraft) are
-**professions**: crafts with a list of **recipes**, the things you can make or do with them. Each
-has one row in the [abilities menu](abilities.md#the-abilities-menu), in the skill's place among
-the Skills: **[Metalcraft…](abilities.md#ability-metalcraft)** and
-**[Woodcraft…](abilities.md#ability-woodcraft)**. The row opens the profession's list.
+[Alchemy](skills.md#skill-alchemy), [Metalcraft](skills.md#skill-metalcraft), and
+[Woodcraft](skills.md#skill-woodcraft) are **professions**: crafts with a list of **recipes**, the
+things you can make or do with them. Each has one row in the
+[abilities menu](abilities.md#the-abilities-menu), in the skill's place among the Skills:
+**[Alchemy…](abilities.md#ability-alchemy)**, **[Metalcraft…](abilities.md#ability-metalcraft)**,
+and **[Woodcraft…](abilities.md#ability-woodcraft)**. The row opens the profession's list.
+Alchemy's recipes are potions, brewed from herbs by those trained in it (see
+[Brewing potions](recipes-alchemy.md)).
 
 You know a recipe by your skill, not by learning it. Some recipes are open to everyone, trained or
 not:
 
 - Metalcraft: **Temper**, a metal weapon or armour made finer at an anvil (see
   [Forges](altars-forges-springs.md#forges)).
-
-Those trained in Metalcraft also forge swords at an anvil from metal stock (see
-[Crafting](crafting.md)).
 - Woodcraft: **Arrows** and **Crossbow bolts** for your bow or crossbow (see
   [Fletching](#fletching)), **Sling stones** (see
   [Crafting](crafting.md#batches-arrowheads-arrows-and-stones)), and **Whittle**, a wooden weapon
   made finer with a knife (see [Whittling](#whittling)).
+
+Those trained in Metalcraft also forge weapons at an anvil from metal stock, and those trained in
+Woodcraft make knives, spears, clubs, and staves by hand from wood, bone, and flint (see
+[Crafting](crafting.md)).
+
+[Jewelcraft](skills.md#skill-jewelcraft) is a profession too, but only for those trained in it:
+its row, **[Jewelcraft…](abilities.md#ability-jewelcraft)**, holds **Cut**, which cuts a loose gem
+(see [Gem cutting](gem-cutting.md)).
 
 Each row says what the recipe takes, such as "a metal weapon or armour, an anvil, about 10
 minutes". A recipe you cannot make now is greyed out with the reason: "no anvil beside you", "no

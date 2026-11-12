@@ -1,0 +1,11 @@
+# A mace, forged at an anvil from the smith's metal stock (docs/design/recipes.md §6 "Melee
+# weapons", the metal route; docs/dev/crafting.md). The stock is priced by the weight.
+[[recipe]]
+id = "mace"
+result = { object = "mace" }
+difficulty = 11
+seconds = 3600
+station = "anvil"
+
+[recipe.parts]
+main = "stock"

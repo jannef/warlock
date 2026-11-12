@@ -7,8 +7,8 @@
 //! Each file holds one `[[recipe]]`, its file name its id (unique across professions); they are
 //! read in path order into [`Content::recipes`], a [`RecipeId`] being an index (never saved:
 //! actions name recipes by id). A recipe is either **built in** (`use`: Temper and Whittle,
-//! which run their own actions with their own lists and rules, and Jewelcraft's Cut and Set, not
-//! usable yet) or **generic** (a `result` made from stock and inputs in `seconds` against
+//! which run their own actions with their own lists and rules, and Jewelcraft's Cut and Set,
+//! whose files give their `difficulty` and `seconds`; Set not usable yet) or **generic** (a `result` made from stock and inputs in `seconds` against
 //! `difficulty`; parsed and checked now, made from P5). The format's second half (P4b) is parsed
 //! and checked here, and used by the phases that make the recipes needing it: part sources
 //! (`input`, a `stock` list, `optional` with `brittle`), `gem` parts, inputs of a material or a
@@ -19,6 +19,7 @@
 use super::{Content, ContentError, Landscape, MaterialId, ObjectId, TerrainId, duplicate_id};
 use crate::dice::Dice;
 use crate::skills::SkillId;
+use crate::stats::Stat;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -33,7 +34,7 @@ pub enum RecipeUse {
     Temper,
     /// Whittle a wooden weapon with a knife (`world/temper.rs`).
     Whittle,
-    /// Cut a loose gem (Jewelcraft's, docs/design/recipes.md §5): not usable yet (P10).
+    /// Cut or re-cut a loose gem (Jewelcraft's, docs/design/recipes.md §5; `world/cut.rs`).
     Cut,
     /// Set a cut gem in an item (Jewelcraft's, §5): not usable yet (P11).
     Set,
@@ -67,9 +68,16 @@ impl RecipeUse {
         }
     }
 
-    /// Whether its action exists yet (Cut and Set come with P10 and P11).
+    /// Whether its action exists yet (Set comes with P11).
     pub const fn usable(self) -> bool {
-        !matches!(self, RecipeUse::Cut | RecipeUse::Set)
+        !matches!(self, RecipeUse::Set)
+    }
+
+    /// Whether its file gives the check's `difficulty` and the work's `seconds` (Jewelcraft's
+    /// Cut and Set, whose numbers live in their recipes; Temper and Whittle keep theirs
+    /// in their own data files).
+    pub const fn checked(self) -> bool {
+        matches!(self, RecipeUse::Cut | RecipeUse::Set)
     }
 
     fn parse(id: &str) -> Result<Self, String> {
@@ -177,9 +185,10 @@ pub struct RecipeDef {
     pub inputs: Vec<RecipeInput>,
     /// The wizard offers an optional cut gem for the result's ornament part.
     pub ornament: bool,
-    /// The check's base (a generic recipe's).
+    /// The check's base (a generic recipe's, and Cut's and Set's).
     pub difficulty: i32,
-    /// The work's time, in seconds (a generic recipe's; a built-in one takes its action's).
+    /// The work's time, in seconds (a generic recipe's, and Cut's and Set's; another built-in
+    /// one takes its action's).
     pub seconds: u32,
     /// The terrain that must stand beside the maker.
     pub station: Option<TerrainId>,
@@ -207,6 +216,15 @@ pub struct ProfessionText {
     pub skill: SkillId,
     /// Its abilities-menu row's line ("Your recipes as a smith.").
     pub description: String,
+    /// The check's stat, over the stock's profession's (Alchemy's Intelligence: herbs are no
+    /// stock); without one the stock's decides (`world/craft_make.rs::profession_stat`).
+    pub stat: Option<Stat>,
+    /// The dialog's verb, the same way ("Brew").
+    pub verb: Option<String>,
+    /// What is said when a recipe with a `failure` object fails ("The brew clouds over.").
+    pub failed: Option<String>,
+    /// What is said when a recipe with a `fumble` object meets a natural 2.
+    pub fumbled: Option<String>,
 }
 
 /// The settings of `data/recipes.toml` the recipes share (docs/design/recipes.md §4, §5, §10).
@@ -255,6 +273,11 @@ impl Recipes {
             .map(|(i, r)| (RecipeId(i as u16), r))
     }
 
+    /// The first recipe running built-in `uses` (the Cut list's: what `craft:` names).
+    pub fn of_use(&self, uses: RecipeUse) -> Option<&RecipeDef> {
+        self.list.iter().find(|r| r.uses == Some(uses))
+    }
+
     /// The recipe with id `name`.
     pub fn id(&self, name: &str) -> Option<RecipeId> {
         let i = self.list.iter().position(|r| r.id == name)?;
@@ -266,6 +289,11 @@ impl Recipes {
         (self.professions.iter())
             .find(|p| p.skill == skill)
             .map(|p| p.description.as_str())
+    }
+
+    /// What `data/recipes.toml` says of profession `skill`, if it lists it.
+    pub fn profession(&self, skill: SkillId) -> Option<&ProfessionText> {
+        self.professions.iter().find(|p| p.skill == skill)
     }
 }
 
@@ -291,6 +319,14 @@ struct RecipesFile {
 struct ProfessionSpec {
     skill: String,
     description: String,
+    #[serde(default)]
+    stat: Option<Stat>,
+    #[serde(default)]
+    verb: Option<String>,
+    #[serde(default)]
+    failed: Option<String>,
+    #[serde(default)]
+    fumbled: Option<String>,
 }
 
 /// One file of `data/recipes/<skill>/`: one recipe (none in a file of comments only).
@@ -423,9 +459,17 @@ pub(super) fn parse<'a>(
                     row.skill
                 )));
             }
+            let empty = |line: &Option<String>| line.as_ref().is_some_and(String::is_empty);
+            if empty(&row.verb) || empty(&row.failed) || empty(&row.fumbled) {
+                return Err(err(format!("profession `{}`: an empty line", row.skill)));
+            }
             recipes.professions.push(ProfessionText {
                 skill,
                 description: row.description.clone(),
+                stat: row.stat,
+                verb: row.verb.clone(),
+                failed: row.failed.clone(),
+                fumbled: row.fumbled.clone(),
             });
         }
         recipes.settings = Some(settings_of(file).map_err(err)?);
@@ -527,8 +571,9 @@ fn place(path: &str) -> Option<(&str, &str)> {
     (segments.next()? == "recipes").then_some((dir, stem))
 }
 
-/// One recipe, checked: a known `use` with no result, parts, inputs, ornament, difficulty,
-/// seconds, failure, fumble, or brittle; a generic recipe with a result object, a count that
+/// One recipe, checked: a known `use` with no result, parts, inputs, ornament, failure, fumble,
+/// or brittle, and a `difficulty` and `seconds` of 1 or more exactly when it is
+/// [`RecipeUse::checked`] (Cut and Set); a generic recipe with a result object, a count that
 /// makes at least one and above 1 (or `fletch`) only on a stackable object, a `difficulty`, and
 /// `seconds` of 1 or more; inputs ([`input`]); parts ([`part_source`]); an ornament only on a
 /// result with an ornament part; `failure` and `fumble` stackable objects; `brittle` an object,
@@ -568,8 +613,7 @@ fn resolve(spec: RecipeSpec, skill: SkillId, content: &Content) -> Result<Recipe
             || !spec.parts.is_empty()
             || !spec.inputs.is_empty()
             || spec.ornament
-            || spec.difficulty.is_some()
-            || spec.seconds.is_some()
+            || (!uses.checked() && (spec.difficulty.is_some() || spec.seconds.is_some()))
             || spec.failure.is_some()
             || spec.fumble.is_some()
             || spec.brittle.is_some();
@@ -580,9 +624,18 @@ fn resolve(spec: RecipeSpec, skill: SkillId, content: &Content) -> Result<Recipe
                 uses.id()
             ));
         }
+        let (difficulty, seconds) = match uses.checked() {
+            true => (
+                spec.difficulty.ok_or("needs a `difficulty`")?,
+                (spec.seconds.filter(|&s| s > 0)).ok_or("needs `seconds` of 1 or more")?,
+            ),
+            false => (0, 0),
+        };
         let name = spec.name.clone().unwrap_or_else(|| uses.name().into());
         return Ok(RecipeDef {
             uses: Some(uses),
+            difficulty,
+            seconds,
             ..common(name)
         });
     }

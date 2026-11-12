@@ -1,0 +1,12 @@
+# A hand axe, its head forged (throwable, as every hand axe), forged at an anvil from the smith's
+# metal stock (docs/design/recipes.md §6 "Melee weapons", the metal route; docs/dev/crafting.md).
+# The stock is priced by the weight.
+[[recipe]]
+id = "hand_axe"
+result = { object = "hand_axe" }
+difficulty = 11
+seconds = 1800
+station = "anvil"
+
+[recipe.parts]
+main = "stock"

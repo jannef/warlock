@@ -130,6 +130,7 @@ mod creation;
 mod creature_burst;
 mod creature_cast;
 mod curse;
+mod cut;
 mod dark_face;
 mod decipher;
 mod den;
@@ -328,6 +329,7 @@ pub use craft_make::{CraftOption, CraftPlan, CraftStep, CraftStepKind, Grade, gr
 pub(crate) use craft_make::{craft_plan, craft_steps};
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
 pub use curse::{Rising, rise_candidates, rises_as};
+pub use cut::{CutBand, cut_band, cut_outcome, cuttable};
 pub use decipher::undeciphered;
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
 pub use disarm::SPRINGS_SHORT_BY;
@@ -770,6 +772,8 @@ enum Spent {
     Temper(temper::Tempering),
     /// Making a recipe (see [`World::make`]).
     Craft(craft_make::Crafting),
+    /// Cutting a loose gem (see [`World::cut`]).
+    Cut(cut::GemWork),
     /// Salvaging an item for its materials (see [`World::salvage`]).
     Salvage(salvage::Salvaging),
     /// Taming a beast beside the player (see [`World::tame`]).
@@ -1437,6 +1441,7 @@ impl World {
             Spent::Decipher(work) => self.decipher(work, &mut events),
             Spent::Temper(work) => self.temper(work, &mut events),
             Spent::Craft(work) => self.make(work, &mut events),
+            Spent::Cut(work) => self.cut(work, &mut events),
             Spent::Salvage(work) => self.salvage(work, &mut events),
             Spent::Tame(taming) => self.tame(taming, &mut events),
             Spent::Skip(duration) => {
@@ -1710,6 +1715,8 @@ mod balance_probe;
 #[cfg(test)]
 mod beast_den_tests;
 #[cfg(test)]
+mod beside_tests;
+#[cfg(test)]
 mod bestiary_tests;
 #[cfg(test)]
 mod blood_tests;
@@ -1721,6 +1728,8 @@ mod bond_tests;
 mod branch_tests;
 #[cfg(test)]
 mod breath_tests;
+#[cfg(test)]
+mod brew_tests;
 #[cfg(test)]
 mod buff_field_tests;
 #[cfg(test)]
@@ -1772,6 +1781,8 @@ mod cost_tests;
 #[cfg(test)]
 mod court_tests;
 #[cfg(test)]
+mod craft_hand_tests;
+#[cfg(test)]
 mod craft_make_tests;
 #[cfg(test)]
 mod craft_tests;
@@ -1787,6 +1798,8 @@ mod creature_flask_tests;
 mod creature_magic_tests;
 #[cfg(test)]
 mod curse_tests;
+#[cfg(test)]
+mod cut_tests;
 #[cfg(test)]
 mod damage_talent_tests;
 #[cfg(test)]

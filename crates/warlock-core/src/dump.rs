@@ -2687,19 +2687,19 @@ mod tests {
     #[test]
     fn abilities_show_what_the_player_can_do_and_why_not() {
         // The showcase thief: the class's skills used as actions (Disable device's, disarming a
-        // trap, Open lock's, picking a lock, and Steal's, stealing, each in a direction), the
-        // shield bash, which needs a shield in hand;
+        // trap, Open lock's, picking a lock, and Steal's, stealing, each in a direction, greyed
+        // with nothing beside the player to use them on, #1327; Listen's left out away from a
+        // closed door), the shield bash, which needs a shield in hand;
         // first their birth sign's stare (a Basilisk).
         let mut world = showcase();
         assert_eq!(
             layer_rows(&world, Layer::Abilities),
             [
                 "Transfixing stare (sign): a cell",
-                "Disarm a trap (skill): a direction",
-                "Listen at a door (skill): a direction",
+                "Disarm a trap (skill): no known trap beside you",
                 "Metalcraft… (skill): a recipe",
-                "Pick lock (skill): a direction",
-                "Steal (skill): a direction",
+                "Pick lock (skill): no lock beside you",
+                "Steal (skill): no one beside you to rob",
                 "Woodcraft… (skill): a recipe",
                 "Salvage (skill): an item you carry",
                 "Shield bash (weapon skill): you hold no shield",
@@ -2707,45 +2707,54 @@ mod tests {
         );
         let value = json(&world, &[], false);
         assert_eq!(
-            value["abilities"][7],
+            value["abilities"][6],
             json!({"id": "salvage", "source": "skill", "aim": "an item you carry",
                    "unavailable": null})
         );
         assert_eq!(
-            value["abilities"][6],
+            value["abilities"][5],
             json!({"id": "woodcraft", "source": "skill", "aim": "a recipe",
                    "unavailable": null})
         );
         assert_eq!(
-            value["abilities"][8],
+            value["abilities"][7],
             json!({"id": "shield_bash", "source": "weapon_skill", "aim": "a direction",
                    "unavailable": "no_shield"})
         );
         assert_eq!(
             value["abilities"][1],
-            json!({"id": "disarm", "source": "skill", "aim": "a direction", "unavailable": null})
+            json!({"id": "disarm", "source": "skill", "aim": "a direction",
+                   "unavailable": "no_target:trap"})
         );
         assert_eq!(
-            value["abilities"][4],
+            value["abilities"][3],
             json!({"id": "pick_lock", "source": "skill", "aim": "a direction",
-                   "unavailable": null})
+                   "unavailable": "no_target:lock"})
         );
         assert_eq!(value["abilities"][0]["aim"], "a cell");
         assert_eq!(
-            value["abilities"][5],
-            json!({"id": "steal", "source": "skill", "aim": "a direction", "unavailable": null})
+            value["abilities"][4],
+            json!({"id": "steal", "source": "skill", "aim": "a direction",
+                   "unavailable": "no_target:mark"})
         );
-        // The storeroom's small shield in hand: it can be used, in a direction.
-        let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
+        // Below the hall's door: Listen is listed, and Pick lock may be used, in a direction.
+        for action in crate::action::parse_actions("move:N*3").expect("actions") {
+            world.apply(&action);
+        }
+        let rows = layer_rows(&world, Layer::Abilities);
+        assert_eq!(rows[2], "Listen at a door (skill): a direction");
+        assert_eq!(rows[4], "Pick lock (skill): a direction");
+        // The storeroom's small shield in hand: with no foe beside, there is nobody to bash.
+        let walk = "open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
                     pickup:a equip:off_hand:b";
         for action in crate::action::parse_actions(walk).expect("actions") {
             world.apply(&action);
         }
         let rows = layer_rows(&world, Layer::Abilities);
-        assert_eq!(rows[8], "Shield bash (weapon skill): a direction");
+        assert_eq!(rows[7], "Shield bash (weapon skill): no foe within reach");
         assert_eq!(
-            json(&world, &[], false)["abilities"][8]["unavailable"],
-            Value::Null
+            json(&world, &[], false)["abilities"][7]["unavailable"],
+            "no_target:foe"
         );
         assert!(!Layer::Abilities.is_dev_only());
     }

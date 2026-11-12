@@ -2,8 +2,9 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Dandy grows ┌─ Abilities ───────────────────────────────────────────────── Page 1/2 ─┐
- Your alchemy│                                                                        │
+ Dandy grows stronger.
+ Your alchemy┌─ Abilities ───────────────────────────────────────────────── Page 1/2 ─┐
+             │                                                                        │
              │ Birth sign                                                             │
              │ > a  Transfixing stare  at a place you see                             │
              │ Class                                                                  │
@@ -15,7 +16,7 @@ expression: "render(case, content.clone())"
              │   f  Hex of weakness    4 mana, aimed                                  │
              │   g  Flay               2d4 necrotic, bites the wounded, 8 mana, aimed │
              │ Skills                                                                 │
-             │   h  Alchemy            not usable yet                                 │
+             │   h  Alchemy…                                                          │
              │   i  Decipher           no unknown scroll                              │
              │   j  Heal               nothing to treat                               │
              │   k  Intimidate         at a place you see                             │
@@ -23,12 +24,11 @@ expression: "render(case, content.clone())"
              │   m  Forage             not usable here                                │
              │   n  Woodcraft…                                                        │
              │   o  Salvage            on something you carry                         │
-             │ Weapon skills                                                          │
-             │   p  Shield bash        you hold no shield                             │
              │                                                                        │
              │ The basilisk's stare: a foe nearby that sees you slows to a crawl a    │
              │ moment; your eyes then rest two hours.                                 │
              │                                                                        │
              │                                                                        │
-             │ a-p or Enter use   > < page   Esc close                                │
- The Hub  ·  └────────────────────────────────────────────────────────────────────────┘  ? controls
+             │ a-o or Enter use   > < page   Esc close                                │
+             └────────────────────────────────────────────────────────────────────────┘
+ The Hub  ·  HP 20/20  ·  MP 62/62  ·  Lv 8  ·  Dandy: unhurt  ·  08:00                  ? controls

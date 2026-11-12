@@ -1,6 +1,7 @@
 //! Making a generic recipe (spec §8 "Skills": professions; docs/design/professions.md §7, §8,
 //! docs/design/recipes.md §4, §6, §10; docs/dev/crafting.md "Making a recipe"): the forge's
-//! swords, the arrowheads, the arrows and bolts, the sling stones, and the flaming arrows.
+//! weapons and the hand-made ones, the arrowheads, the arrows and bolts, the sling stones, the
+//! flaming arrows, and the brews.
 //!
 //! - **The steps** ([`craft_steps`], what the wizard lists, through
 //!   [`PerceptionView::craft_steps`]): one choice for each chosen part of the result, in part
@@ -25,8 +26,9 @@
 //!   natural roll): the profession's stat modifier, what the skill gives of [`Effect::Craft`]
 //!   (that skill's alone), the talents' checks of the stat (and Fletcher's for the arrows),
 //!   against the recipe's `difficulty` plus the `work` of the main chosen part's material. The
-//!   profession is the main material's when it is the recipe's own, else the recipe skill's
-//!   first stock group's (a steel-headed arrow is Woodcraft's work, by Dexterity).
+//!   profession is the recipe's directory's (a flint knife and a steel-headed arrow are
+//!   Woodcraft's work, by Dexterity), its stat and verb its row's in `data/recipes.toml` where
+//!   that names them ([`profession_stat`], [`profession_verb`]).
 //! - **Graded** (a count of 1): the margin's [`Grade`] by `data/recipes.toml`'s bands: a
 //!   Masterwork, Marvellous, Fine (three, two, one improvements, each an
 //!   [`crate::magic::Aspect`] of the item drawn as Temper draws it, one gameplay draw each, and
@@ -45,15 +47,23 @@
 //!   come back at the `yield`, the `per_made` ones untouched.
 //! - Either way the skill may earn a mark ([`Use::Craft`]).
 //!
-//! A recipe needing a gem part, a stock input, or a failure or fumble object is refused ("You
-//! cannot make that yet.") until the phase that builds its step.
+//! **Brewing** (docs/dev/crafting.md "Brewing"): a recipe with no part and no ornament chooses
+//! nothing ([`chooses_nothing`], Alchemy's): it has no steps, its object inputs are taken from
+//! the pack (the first stacks of each), and the dialog only confirms them. Its check's stat and
+//! the dialog's verb are its profession row's (`data/recipes.toml`: Intelligence, "Brew"). A
+//! recipe with a `failure` object spends its inputs whole when it fails and makes that object; a
+//! natural 2 makes its `fumble` object (else the failure's). What is made of a labelled type (a
+//! potion) is named truly beforehand and its type learned when made: the maker knows their work.
+//!
+//! A recipe needing a gem part or a stock input is refused ("You cannot make that yet.") until
+//! the phase that builds its step.
 //!
 //! [`PerceptionView::craft_steps`]: crate::perception::PerceptionView::craft_steps
 //! [`ActionKind::Craft`]: crate::content::ActionKind::Craft
 //! [`Effect::Craft`]: crate::skills::Effect::Craft
 //! [`Use::Craft`]: crate::skills::Use::Craft
 
-use super::craft::{RecipeLack, lack, stack_material, worked_materials};
+use super::craft::{RecipeLack, lack, stack_material, stock_only, worked_materials};
 use super::encounter::Watch;
 use super::fletch;
 use super::rest::Ended;
@@ -61,8 +71,8 @@ use super::{Actor, LevelState, Spent, World};
 use crate::action::Event;
 use crate::combat;
 use crate::content::{
-    ActionKind, Content, MaterialId, ObjectId, PartSource, Profession, RecipeCount, RecipeDef,
-    RecipeId, RecipeInput, RecipeSettings, counted,
+    ActionKind, Content, MaterialId, ObjectId, PartSource, RecipeCount, RecipeDef, RecipeId,
+    RecipeInput, RecipeSettings, counted,
 };
 use crate::item_parts::{self, ItemPart};
 use crate::magic::Worked;
@@ -228,21 +238,34 @@ pub(crate) fn batch_most(content: &Content, player: &Actor, recipe: &RecipeDef) 
     }
 }
 
-/// The profession whose stat and verb `recipe`'s work takes (module docs): the main chosen
-/// material's when it is the recipe's own, else the first stock group's of the recipe's skill.
-pub(crate) fn profession<'c>(
+/// The profession `recipe` is made by: its own skill's (the directory's: a flint knife is
+/// Woodcraft's, a steel one Metalcraft's, a steel-headed arrow Woodcraft's), else the main
+/// material's.
+fn profession<'c>(
     content: &'c Content,
     recipe: &RecipeDef,
     main: Option<MaterialId>,
-) -> Option<&'c Profession> {
+) -> Option<&'c crate::content::Profession> {
     let stock = content.stock();
-    (main.and_then(|m| stock.profession_of(content, m)))
-        .filter(|p| p.skill == recipe.skill)
-        .or_else(|| {
-            (stock.groups.iter())
-                .filter_map(|g| g.profession.as_ref())
-                .find(|p| p.skill == recipe.skill)
-        })
+    (stock.profession(recipe.skill)).or_else(|| stock.profession_of(content, main?))
+}
+
+/// The check's stat for `recipe`: its profession row's in `data/recipes.toml` where it names one
+/// (Alchemy's Intelligence: herbs are no stock), else [`profession`]'s, else Strength.
+fn profession_stat(content: &Content, recipe: &RecipeDef, main: Option<MaterialId>) -> Stat {
+    (content.recipes().profession(recipe.skill))
+        .and_then(|row| row.stat)
+        .or_else(|| profession(content, recipe, main).map(|p| p.stat))
+        .unwrap_or(Stat::Strength)
+}
+
+/// The dialog's verb for `recipe`, the same way: the row's ("Brew"), else [`profession`]'s, else
+/// "Make".
+fn profession_verb(content: &Content, recipe: &RecipeDef, main: Option<MaterialId>) -> String {
+    (content.recipes().profession(recipe.skill))
+        .and_then(|row| row.verb.clone())
+        .or_else(|| profession(content, recipe, main).map(|p| p.verb.clone()))
+        .unwrap_or_else(|| "Make".to_string())
 }
 
 /// A step of a recipe: which of its parts or inputs, or the ornament.
@@ -280,13 +303,18 @@ fn sourced(recipe: &RecipeDef) -> Vec<ObjectId> {
 /// here; `None` for a recipe this phase cannot make (the module docs).
 fn steps(content: &Content, recipe: &RecipeDef, free: impl Fn(usize) -> bool) -> Option<Vec<Step>> {
     let result = recipe.result.as_ref()?;
-    if recipe.failure.is_some() || recipe.fumble.is_some() {
-        return None;
+    if chooses_nothing(recipe) {
+        // Its inputs are taken from the pack, never chosen; stock inputs are not built yet.
+        return (recipe.inputs.iter())
+            .all(|i| i.object().is_some())
+            .then(Vec::new);
     }
     let mut steps = Vec::new();
     for part in &recipe.parts {
-        match part.source {
+        match &part.source {
             PartSource::Stock if free(part.part) => {}
+            // Stock alone (a spear's haft of another profession's wood) is a stock step.
+            source if stock_only(source) => steps.push(Step::Part(part.part)),
             PartSource::Stock => steps.push(Step::Part(part.part)),
             PartSource::Sources { .. } => steps.push(Step::Sources(part.part)),
             PartSource::Gem => return None,
@@ -304,6 +332,12 @@ fn steps(content: &Content, recipe: &RecipeDef, free: impl Fn(usize) -> bool) ->
         steps.push(Step::Ornament(def.ornament.or(placed.map(|o| o.part))?));
     }
     (steps.len() <= MAX_PICKS).then_some(steps)
+}
+
+/// Whether `recipe` chooses nothing (no part, no ornament: a brew): its object inputs are taken
+/// from the pack, the first stacks of each.
+fn chooses_nothing(recipe: &RecipeDef) -> bool {
+    recipe.parts.is_empty() && !recipe.ornament
 }
 
 /// The grams of `material` part `part` of one of `recipe`'s result takes: its share of the
@@ -327,7 +361,7 @@ fn part_grams(
 
 /// The pieces of `material` part `part` of `batch` of `recipe`'s result take
 /// ([`crate::piece::count_for`] of their grams).
-fn stock_need(
+pub(super) fn stock_need(
     content: &Content,
     recipe: &RecipeDef,
     part: usize,
@@ -377,9 +411,11 @@ fn label(content: &Content, recipe: &RecipeDef, step: Step) -> String {
         Step::Part(i) | Step::Sources(i) => (def.parts.get(i))
             .and_then(|p| part_name(p.part))
             .or_else(|| {
+                // The group of the stock it takes, when that is one group: "metal".
                 let worked = worked_materials(content, recipe, result.object, i);
-                let m = content.material(*worked.first()?);
-                m.group.clone()
+                let group = |m: &MaterialId| content.material(*m).group.clone();
+                let first = group(worked.first()?);
+                worked.iter().all(|m| group(m) == first).then_some(first)?
             })
             .unwrap_or_else(|| "material".into()),
         Step::Input(i) => (recipe.inputs[i].object())
@@ -539,10 +575,15 @@ struct Resolved {
     main: Option<MaterialId>,
     /// A counted recipe's batch at its most (capped by its `per_made` stacks); `None` graded.
     batch: Option<u32>,
+    /// What a failure makes, and a natural 2 (the recipe's `failure`, `fumble`).
+    failure: Option<ObjectId>,
+    fumble: Option<ObjectId>,
+    /// The profession.
+    skill: crate::skills::SkillId,
 }
 
 /// What input `input` chosen at `at` gives up.
-fn input_spend(at: usize, input: &RecipeInput, yield_percent: u32) -> Spend {
+fn input_spend(at: usize, input: &RecipeInput, recipe: &RecipeDef, yield_percent: u32) -> Spend {
     match input.per_made {
         true => Spend {
             at,
@@ -553,7 +594,10 @@ fn input_spend(at: usize, input: &RecipeInput, yield_percent: u32) -> Spend {
         false => Spend {
             at,
             count: input.count,
-            back: input.count * yield_percent / 100,
+            back: match recipe.failure {
+                Some(_) => 0,
+                None => input.count * yield_percent / 100,
+            },
             per: Per::Whole,
         },
     }
@@ -633,7 +677,7 @@ fn resolve(
                     let spec = (recipe.inputs.iter())
                         .find(|i| i.object() == Some(stack.object))
                         .ok_or_else(not_yet)?;
-                    spends.push(input_spend(at, spec, yield_percent));
+                    spends.push(input_spend(at, spec, recipe, yield_percent));
                     chosen.push((part, material));
                 } else {
                     let material = (stack_material(content, stack))
@@ -648,7 +692,7 @@ fn resolve(
                 if Some(stack.object) != input.object() {
                     return Err(will_not_do());
                 }
-                spends.push(input_spend(at, input, yield_percent));
+                spends.push(input_spend(at, input, recipe, yield_percent));
             }
             Step::Ornament(part) => {
                 let (gem, cutting) = (cut_gem(content, stack))
@@ -662,6 +706,9 @@ fn resolve(
                 gems.push(ItemPart::gem(content, Some(part), gem, cutting));
             }
         }
+    }
+    if chooses_nothing(recipe) {
+        taken(content, player, recipe, &mut spends)?;
     }
     // The batch: its most, at most what each stack taken covers (a counted recipe's).
     let most = batch_most(content, player, recipe);
@@ -727,7 +774,64 @@ fn resolve(
         spends,
         main: chosen.first().map(|&(_, m)| m),
         batch: is_counted(recipe).then_some(batch),
+        failure: recipe.failure,
+        fumble: recipe.fumble,
+        skill: recipe.skill,
     })
+}
+
+/// The object inputs of `recipe`, which chooses nothing, taken from `player`'s pack: the first
+/// stacks of each object until the count is met (all spent on a failure when the recipe has a
+/// `failure` object, else the settings' yield back as a chosen input's); too few is refused.
+fn taken(
+    content: &Content,
+    player: &Actor,
+    recipe: &RecipeDef,
+    spends: &mut Vec<Spend>,
+) -> Result<(), String> {
+    let yield_percent = bands(content.recipes().settings.as_ref()).3;
+    for input in &recipe.inputs {
+        let Some(object) = input.object() else {
+            return Err("You cannot make that yet.".into());
+        };
+        let mut left = input.count;
+        for (at, stack) in player.inventory.iter().enumerate() {
+            if left == 0 {
+                break;
+            }
+            if stack.object != object {
+                continue;
+            }
+            let count = stack.count.min(left);
+            left -= count;
+            let back = match recipe.failure {
+                Some(_) => 0,
+                None => count * yield_percent / 100,
+            };
+            spends.push(Spend {
+                at,
+                count,
+                back,
+                per: Per::Whole,
+            });
+        }
+        if left > 0 {
+            let plural = &content.object(object).plural;
+            return Err(format!("You have too few {plural}."));
+        }
+    }
+    Ok(())
+}
+
+/// What `made` is called before it is made: truly, though its type (a potion's) is unknown, for
+/// the recipe names it; else as the player would know it.
+fn made_name(content: &Content, lore: Lore<'_>, made: &Stack, article: bool) -> String {
+    match (lore.label(made.object).is_some(), article) {
+        (true, true) => made.describe(content),
+        (true, false) => made.title(content),
+        (false, true) => lore.describe(made),
+        (false, false) => lore.title(made),
+    }
 }
 
 /// What `recipe` with `picks` would make and use, in words (the module docs), or why not.
@@ -742,21 +846,34 @@ pub(crate) fn craft_plan(
     let def = content.recipe(recipe);
     let resolved = resolve(content, level, player, def, picks)?;
     let pack = &player.inventory;
-    let mut uses: Vec<String> = Vec::new();
+    // Stacks of one thing taken together (a brew's herbs from two stacks) are told as one; what
+    // goes for each made, then the gem (the ornament, the last step), after them.
+    let mut counts: Vec<(String, String, u32)> = Vec::new();
+    let mut each: Vec<String> = Vec::new();
+    let mut gems: Vec<String> = Vec::new();
     for spend in &resolved.spends {
         let stack = &pack[spend.at];
         let (one, many) = lore.names(stack);
-        uses.push(match (cut_gem(content, stack), spend.per) {
-            (Some(_), _) => format!("the {}", lore.title(stack)),
-            (None, Per::Made(each)) => format!("{} for each made", counted(&one, &many, each)),
-            (None, _) => counted(&one, &many, spend.count),
-        });
+        match (cut_gem(content, stack), spend.per) {
+            (Some(_), _) => gems.push(format!("the {}", lore.title(stack))),
+            (None, Per::Made(n)) => {
+                each.push(format!("{} for each made", counted(&one, &many, n)));
+            }
+            (None, _) => match counts.iter_mut().find(|(o, _, _)| *o == one) {
+                Some(seen) => seen.2 += spend.count,
+                None => counts.push((one, many, spend.count)),
+            },
+        }
     }
-    let verb = (profession(content, def, resolved.main))
-        .map_or_else(|| "Make".to_string(), |p| p.verb.clone());
+    let mut uses: Vec<String> = (counts.iter())
+        .map(|(one, many, n)| counted(one, many, *n))
+        .collect();
+    uses.extend(each);
+    uses.extend(gems);
+    let verb = profession_verb(content, def, resolved.main);
     let name = match resolved.batch {
         Some(_) => lore.names(&resolved.made).1,
-        None => lore.describe(&resolved.made),
+        None => made_name(content, lore, &resolved.made, true),
     };
     let seconds = fletch::fletcher_seconds(content, player, def);
     Ok(CraftPlan {
@@ -828,7 +945,7 @@ impl World {
         let at = def.station.map(|t| content.terrain(t).name.clone());
         let name = match resolved.batch {
             Some(_) => self.lore().names(&resolved.made).1,
-            None => self.lore().title(&resolved.made),
+            None => made_name(&content, self.lore(), &resolved.made, false),
         };
         let seconds = fletch::fletcher_seconds(&content, me, def);
         self.say(match at {
@@ -872,7 +989,7 @@ impl World {
     /// The modifier of the player's check for recipe `def` (the module docs).
     pub(crate) fn craft_modifier(&self, def: &RecipeDef, main: Option<MaterialId>) -> i32 {
         let content = &self.content;
-        let stat = profession(content, def, main).map_or(Stat::Strength, |p| p.stat);
+        let stat = profession_stat(content, def, main);
         let me = self.state.player();
         me.effective_stats(content).modifier(stat)
             + me.skill_effect_of(content, def.skill, Effect::Craft)
@@ -958,13 +1075,30 @@ impl World {
         let content = self.content.clone();
         let settings = content.recipes().settings.as_ref();
         let grade = grade(settings, natural, margin);
+        let spoilt = match grade {
+            Grade::Failed if natural == combat::FUMBLE => resolved.fumble.or(resolved.failure),
+            Grade::Failed => resolved.failure,
+            _ => None,
+        };
         let Resolved {
-            mut made, spends, ..
+            mut made,
+            spends,
+            skill,
+            main,
+            ..
         } = resolved;
         let failed = grade == Grade::Failed;
         self.spend_out(spends, u32::from(!failed));
+        if let Some(object) = spoilt {
+            self.brew_spoilt(skill, object, natural == combat::FUMBLE);
+            return;
+        }
         if failed {
-            self.say("The blade comes out brittle and you break it up for the metal.");
+            let metal = (main.and_then(|m| content.material(m).group.as_deref())) == Some("metal");
+            self.say(match metal {
+                true => "The blade comes out brittle and you break it up for the metal.",
+                false => "The work goes wrong, and you save what you can of it.",
+            });
             return;
         }
         let among = aspects(content.object(made.object));
@@ -981,8 +1115,9 @@ impl World {
             made.set_worked(worked);
             grade
         };
-        // The maker knows their work.
+        // The maker knows their work, and the type of what they made (a potion's).
         made.identify();
+        self.learn_scroll(made.object);
         let name = self.lore().describe(&made);
         let pack = &mut self.player_mut().inventory;
         crate::object::add_to_inventory(pack, made, &content);
@@ -992,6 +1127,30 @@ impl World {
             Grade::Fine => format!("This is {name}."),
             Grade::Plain | Grade::Failed => format!("You have made {name}."),
         });
+    }
+}
+
+impl World {
+    /// A recipe of profession `skill` failed and made `object` instead (a brew's murky draught,
+    /// or on a natural 2 (`fumbled`) its brewer's blunder): the profession's line, then the
+    /// object, known for what it is, into the pack.
+    fn brew_spoilt(&mut self, skill: crate::skills::SkillId, object: ObjectId, fumbled: bool) {
+        let content = self.content.clone();
+        let text = content
+            .recipes()
+            .profession(skill)
+            .and_then(|p| match fumbled {
+                true => p.fumbled.clone().or(p.failed.clone()),
+                false => p.failed.clone(),
+            });
+        self.say(text.unwrap_or_else(|| "The work goes wrong.".into()));
+        let mut made = Stack::one(object);
+        made.identify();
+        self.learn_scroll(object);
+        let name = self.lore().describe(&made);
+        let pack = &mut self.player_mut().inventory;
+        crate::object::add_to_inventory(pack, made, &content);
+        self.say(format!("You are left with {name}."));
     }
 }
 

@@ -2,33 +2,33 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- There are several objects here.
- You pick up 17 objects.
-
-
-
-            ┌─ Metalcraft: recipes ────────────────────────────────────────────────────┐
-            │                                                                          │
+ There are s┌─ Metalcraft: recipes ───────────────────────────────────────── Page 1/2 ─┐
+ You pick up│                                                                          │
             │ Work                                                                     │
-            │ > a - Temper          a metal weapon or armour, an anvil, about 10 minut │
+            │ > a - Temper        a metal weapon or armour, an anvil, about 10 minutes │
             │ Melee weapons                                                            │
-            │   b - Dagger          a steel ingot, an anvil, about 30 minutes          │
-            │   c - Great sword     beyond your skill                                  │
-            │   d - Knife           a steel ingot, an anvil, about 20 minutes          │
-            │   e - Long sword      beyond your skill                                  │
-            │   f - Rapier          beyond your skill                                  │
-            │   g - Scimitar        beyond your skill                                  │
-            │   h - Short sword     2 steel ingots, an anvil, about 1 hour             │
-            │ Materials                                                                │
-            │   i - Arrowheads      an iron ingot, an anvil, about 10 minutes          │
+            │   b - Battle axe    beyond your skill                                    │
+            │   c - Dagger        a steel ingot, an anvil, about 30 minutes            │
+            │   d - Glaive        beyond your skill                                    │
+            │   e - Great axe     beyond your skill                                    │
+            │   f - Great sword   beyond your skill                                    │
+            │   g - Halberd       beyond your skill                                    │
+            │   h - Hand axe      3 iron ingots, an anvil, about 30 minutes            │
+            │   i - Javelin       an iron ingot, 4 wood billets, an anvil, about 20 mi │
+            │   j - Knife         a steel ingot, an anvil, about 20 minutes            │
+            │   k - Long sword    beyond your skill                                    │
+            │   l - Mace          5 iron ingots, an anvil, about 1 hour                │
+            │   m - Maul          beyond your skill                                    │
+            │   n - Morning star  6 iron ingots, an anvil, about 1 hour                │
+            │   o - Rapier        beyond your skill                                    │
+            │   p - Scimitar      beyond your skill                                    │
+            │   q - Short sword   2 steel ingots, an anvil, about 1 hour               │
+            │   r - Spear         an iron ingot, 7 wood billets, an anvil, about 30 mi │
+            │   s - Stiletto      a steel ingot, an anvil, about 30 minutes            │
+            │   t - Trident       beyond your skill                                    │
             │                                                                          │
             │ Takes a metal weapon or armour, an anvil, about 10 minutes.              │
             │                                                                          │
-            │ a-i or Enter make   Esc back                                             │
+            │ a-t or Enter make   > < page   Esc back                                  │
             └──────────────────────────────────────────────────────────────────────────┘
-
-
-
-
-
  The Forge  ·  HP 17/17  ·  MP 2/2  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444        ? controls

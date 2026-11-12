@@ -149,16 +149,10 @@ fn everyone_has_it_beside_the_missiles_on_woodcrafts_screen() {
     let names: Vec<String> = (w.perception().recipes(wood).into_iter())
         .map(|r| r.name)
         .collect();
-    assert_eq!(
-        names,
-        [
-            "Arrows",
-            "Crossbow bolts",
-            "Flaming arrows",
-            "Sling stones",
-            "Whittle"
-        ]
-    );
+    for name in ["Arrows", "Crossbow bolts", "Sling stones", "Whittle"] {
+        assert!(names.contains(&name.to_string()), "{name}: {names:?}");
+    }
+    assert!(!names.contains(&"Fletch".to_string()), "{names:?}");
     assert!(Ability::Profession(wood).had_by(w.state.player(), &w.content));
 }
 

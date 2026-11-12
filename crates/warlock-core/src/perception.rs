@@ -2001,62 +2001,85 @@ impl<'a> PerceptionView<'a> {
         let allies_here = self.snapshot.allies.iter().any(|a| a.here);
         let companion_here = (self.snapshot.allies.iter())
             .any(|a| a.here && matches!(a.source, crate::world::AllySource::Companion(_)));
+        let beside = |ability| self.ways(crate::beside::Beside::Use(ability));
         (Ability::of(self.player, self.content).into_iter())
             .chain(here)
             .chain(orders)
-            .map(|ability| OwnAbility {
-                ability,
-                unavailable: match ability {
-                    // An order needs someone on the level to hear it (spec §8 "Allies").
-                    Ability::Heel | Ability::Hold | Ability::SetOn if !allies_here => {
-                        Some(crate::ability::Unavailable::NoAllies)
-                    }
-                    // Give needs the beast at hand (`world/collar.rs`).
-                    Ability::Give if self.snapshot.kept_beside.is_empty() => {
-                        Some(crate::ability::Unavailable::NotBeside)
-                    }
-                    // Decipher needs a scroll of an unidentified type (`world/decipher.rs`).
-                    Ability::Decipher
-                        if !(self.player.inventory.iter()).any(|stack| {
-                            crate::world::undeciphered(self.content, &self.lore(), stack)
-                        }) =>
-                    {
-                        Some(crate::ability::Unavailable::NoUnknownScroll)
-                    }
-                    // Sic 'em needs its beast on the level (`world/sic.rs`).
-                    Ability::Class(crate::content::ClassActive::Sic) if !companion_here => {
-                        Some(crate::ability::Unavailable::NoCompanion)
-                    }
-                    // A companion is one at a time (spec §8 "Allies": Tame).
-                    Ability::Tame if self.companion().is_some() => {
-                        Some(crate::ability::Unavailable::HaveCompanion)
-                    }
-                    Ability::Spell(spell) => {
-                        crate::ability::spell_unavailable(self.player, self.content, spell)
-                    }
-                    // An ally beside the player may need tending (`world/heal.rs`).
-                    Ability::Heal if !self.snapshot.ally_ailments.is_empty() => (ability
-                        .unavailable(self.player, self.content))
-                    .filter(|&why| why != crate::ability::Unavailable::NothingToTreat),
-                    // Calling a familiar asks for none alive and no hostile in sight.
-                    Ability::Class(crate::content::ClassActive::CallFamiliar) => self
-                        .calling_barred()
-                        .or_else(|| ability.unavailable(self.player, self.content)),
-                    // Foraging asks for the wild underfoot (spec §8 "Foraging").
-                    Ability::Forage
-                        if crate::world::forage_ground(
-                            self.content,
-                            self.level,
-                            self.player.pos,
-                        )
-                        .is_none() =>
-                    {
-                        Some(crate::ability::Unavailable::NotHere)
-                    }
-                    _ => ability.unavailable(self.player, self.content),
-                },
+            // Listen and Wedge only beside a closed door (the owner, #1327).
+            .filter(|&ability| {
+                !matches!(ability, Ability::Listen | Ability::Wedge)
+                    || beside(ability).is_some_and(|ways| !ways.is_empty())
+            })
+            .map(|ability| {
+                let unavailable = self.unavailable(ability, allies_here, companion_here);
+                // One aimed in a direction with nothing beside it may act on (#1327).
+                let no_target = (unavailable.is_none())
+                    .then(|| beside(ability))
+                    .flatten()
+                    .is_some_and(|ways| ways.is_empty());
+                let target = crate::beside::Beside::Use(ability).target(self.content);
+                OwnAbility {
+                    ability,
+                    unavailable: unavailable.or(target
+                        .filter(|_| no_target)
+                        .map(crate::ability::Unavailable::NoTarget)),
+                }
             })
             .collect()
+    }
+
+    /// Why the player cannot use `ability` now, before what is beside them is asked
+    /// ([`PerceptionView::abilities`]).
+    fn unavailable(
+        &self,
+        ability: Ability,
+        allies_here: bool,
+        companion_here: bool,
+    ) -> Option<crate::ability::Unavailable> {
+        match ability {
+            // An order needs someone on the level to hear it (spec §8 "Allies").
+            Ability::Heel | Ability::Hold | Ability::SetOn if !allies_here => {
+                Some(crate::ability::Unavailable::NoAllies)
+            }
+            // Give needs the beast at hand (`world/collar.rs`).
+            Ability::Give if self.snapshot.kept_beside.is_empty() => {
+                Some(crate::ability::Unavailable::NotBeside)
+            }
+            // Decipher needs a scroll of an unidentified type (`world/decipher.rs`).
+            Ability::Decipher
+                if !(self.player.inventory.iter())
+                    .any(|stack| crate::world::undeciphered(self.content, &self.lore(), stack)) =>
+            {
+                Some(crate::ability::Unavailable::NoUnknownScroll)
+            }
+            // Sic 'em needs its beast on the level (`world/sic.rs`).
+            Ability::Class(crate::content::ClassActive::Sic) if !companion_here => {
+                Some(crate::ability::Unavailable::NoCompanion)
+            }
+            // A companion is one at a time (spec §8 "Allies": Tame).
+            Ability::Tame if self.companion().is_some() => {
+                Some(crate::ability::Unavailable::HaveCompanion)
+            }
+            Ability::Spell(spell) => {
+                crate::ability::spell_unavailable(self.player, self.content, spell)
+            }
+            // An ally beside the player may need tending (`world/heal.rs`).
+            Ability::Heal if !self.snapshot.ally_ailments.is_empty() => (ability
+                .unavailable(self.player, self.content))
+            .filter(|&why| why != crate::ability::Unavailable::NothingToTreat),
+            // Calling a familiar asks for none alive and no hostile in sight.
+            Ability::Class(crate::content::ClassActive::CallFamiliar) => self
+                .calling_barred()
+                .or_else(|| ability.unavailable(self.player, self.content)),
+            // Foraging asks for the wild underfoot (spec §8 "Foraging").
+            Ability::Forage
+                if crate::world::forage_ground(self.content, self.level, self.player.pos)
+                    .is_none() =>
+            {
+                Some(crate::ability::Unavailable::NotHere)
+            }
+            _ => ability.unavailable(self.player, self.content),
+        }
     }
 
     /// The ways to the glowing fungus beside the player, in compass order (the Gather ability,

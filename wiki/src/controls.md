@@ -13,12 +13,12 @@ bar, and the info pages.
 | [Run](turns.md#running) (step after step until something stops you) | `Ctrl` with a movement key |
 | Attack | move into a [hostile](creatures.md#factions) [creature](creatures.md) |
 | [Swap places](npcs.md#getting-past) | move into any other creature |
-| [Chat](npcs.md#chatting) with someone next to you | `C` (then a direction, if several are near) |
+| [Chat](npcs.md#chatting) with someone next to you | `C` (then a direction, if several are near; see [Something beside you](#something-beside-you)) |
 | Wait a [turn](time.md#what-takes-time), [searching](searching.md#searching-1) the cells around you | numpad `5` or `s` |
 | [Search](searching.md#searching-1) for a while (up to 10 [turns](time.md#what-takes-time), stops when something turns up) | `Ctrl` with `s` or numpad `5` |
-| Open a [door](doors.md) | `o`, then a direction (or walk into the door) |
-| Close a [door](doors.md) | `c`, then a direction |
-| [Kick](doors.md#kicking) (a [door](doors.md), to break it in, or a [creature](creatures.md)) | `k`, then a direction (see [Doors](doors.md)) |
+| Open a [door](doors.md) or a [chest](chests.md) | `o` (then a direction, if several are beside you; or walk into the door) |
+| Close a [door](doors.md) | `c` (then a direction, if several are beside you) |
+| [Kick](doors.md#kicking) (a [door](doors.md), to break it in, or a [creature](creatures.md)) | `k`, then a direction, always (see [Doors](doors.md)) |
 | Go down [stairs](terrain.md#stairs), or enter a place on the [overworld](overworld.md#locations) | `>` |
 | Go up [stairs](terrain.md#stairs), or [leave an outdoor area](overworld.md#leaving-an-area) when no enemy is about | `<` |
 | [Pick up](objects.md#picking-up) | `,` or `;` |
@@ -170,14 +170,16 @@ a file, `keymaps/default.toml`.
 
 Some commands ask a question on the [message line](the-screen.md#messages) before they act:
 
-- Opening, closing, or [kicking](doors.md#kicking) a [door](doors.md),
-  [bashing](abilities.md#ability-shield-bash) with your shield, and
-  [stealing](abilities.md#ability-steal) ask `In which direction? (Esc to cancel)`.
-- [Digging](digging.md) asks `Dig in which direction? (Esc to cancel)` (see [Digging and
-  walls](digging.md)).
+- [Kicking](doors.md#kicking) asks `In which direction? (Esc to cancel)`, and so do opening or
+  closing a [door](doors.md), [bashing](abilities.md#ability-shield-bash) with your shield, and
+  [stealing](abilities.md#ability-steal) when more than one thing beside you could be meant (see
+  [Something beside you](#something-beside-you)).
+- [Digging](digging.md), with more than one wall beside you to dig, asks `Dig in which direction?
+  (Esc to cancel)` (see [Digging and walls](digging.md)).
 - [Chatting](npcs.md#chatting) when several creatures are near asks `Talk in which direction? (Esc
   to cancel)` (see [People and talk](npcs.md)).
-- [Disarming a trap](traps.md#disarming-traps) asks `Disarm in which direction? (Esc to cancel)`
+- [Disarming a trap](traps.md#disarming-traps), with more than one known trap beside you, asks
+  `Disarm in which direction? (Esc to cancel)`
   (see [Traps](traps.md#disarming-traps)).
 - [Resting](resting.md#how-resting-works) asks how long (see [Resting](resting.md)).
 
@@ -193,6 +195,36 @@ would buy (see [Shops](shops.md)). The window lists its answers, each with the k
 with the arrow keys and press `Enter`. The safe answer is selected at first, so pressing `Enter`
 alone never does something you might regret. The yes and no keys are their own: you can rebind
 them without touching any key of play.
+
+### Something beside you
+
+A command or [ability](abilities.md) that works on something next to you looks around you first:
+
+- With **nothing** beside you to use it on, it does nothing and tells you so at once, taking no
+  time. No prompt opens.
+- With **one** thing, it acts on that at once, without asking.
+- With **two or more**, it asks which way, as above.
+
+Only what you know counts: a door or chest you see or remember, a trap you know of, a creature you
+can see. What each one looks for:
+
+| Command or ability | What it works on beside you |
+|---|---|
+| Open | a closed [door](doors.md) or a shut [chest](chests.md) |
+| Close | an open door with nothing standing in it |
+| [Chat](npcs.md#chatting) | any creature |
+| Use tool, with a [digging](digging.md) tool ready | a wall you can dig through |
+| [Disarm a trap](abilities.md#ability-disarm) | a trap you know of |
+| [Pick lock](abilities.md#ability-pick-lock), [Knock](abilities.md#ability-knock) | a closed door or a shut chest (unless you can see the chest is not locked) |
+| [Listen at a door](abilities.md#ability-listen) | a closed door |
+| [Wedge a door](abilities.md#ability-wedge) | a closed door not wedged already |
+| [Steal](abilities.md#ability-steal) | a creature that is not hostile |
+| [Feint](abilities.md#ability-feint) | a hostile creature with a mind to fool |
+| [Tame](abilities.md#ability-tame) | a beast that can be tamed and is no ally |
+| [Gather](abilities.md#ability-gather) | the glowing fungus |
+| [Shield bash](abilities.md#ability-shield-bash), the smites and other class blows, weapon blows aimed in a direction | a hostile creature (a lunge reaches one two paces off) |
+
+[Kicking](doors.md#kicking) always asks: you may kick any way you like.
 
 ## Look mode
 

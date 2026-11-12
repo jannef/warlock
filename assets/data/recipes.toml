@@ -10,6 +10,11 @@
 #   [[profession]]
 #     skill        the skill (skills.toml) whose directory it is
 #     description  the abilities menu's line for its row
+#     stat         the check's stat when no chosen stock names one (stock.toml's `stat` does for
+#                  stock; herbs are no stock, so Alchemy names Intelligence here)
+#     verb         the confirming dialog's verb when no chosen stock names one ("Brew")
+#     failed       said when a recipe with a `failure` object fails
+#     fumbled      said when a recipe with a `fumble` object meets a natural 2
 #
 # and the bands the making reads (each above the last; used from the phases that make things):
 #
@@ -26,10 +31,11 @@
 #
 #   id          its file name (unique across professions); `craft:ID` names it
 #   name        the row's name (default: the result's name, or the action's for a `use` recipe)
-#   use         a built-in recipe: `temper`, `whittle`, `cut`, or `set` (Jewelcraft's,
-#               listed "not usable yet" until their phases). Its row runs that action, with its
-#               own list and rules; it takes no result, parts, inputs, ornament, difficulty,
-#               seconds, failure, fumble, or brittle
+#   use         a built-in recipe: `temper`, `whittle`, `cut`, or `set` (Jewelcraft's;
+#               Set listed "not usable yet" until its phase). Its row runs that action, with its
+#               own list and rules; it takes no result, parts, inputs, ornament, failure, fumble,
+#               or brittle, and a `difficulty` and `seconds` only for `cut` and `set`, which
+#               must give both (the others keep theirs in temper.toml)
 #   result      { object = "long_sword", count = 1 }: what is made (`count` dice, or "fletch" for
 #               the arrows' count, fletch.toml's with Woodcraft's share and the ranger's
 #               Fletcher; above 1 only for a stackable object). A count above 1 (or "fletch")
@@ -64,6 +70,9 @@
 #   fumble      { object = "brewers_blunder" }: what a natural 2 makes (a stackable object)
 #   brittle     the object made when an `optional` part is None; a recipe with an `optional`
 #               part names one, and only such a recipe
+#
+# Alchemy's recipes (recipes/alchemy/) take herbs only and choose nothing: no part, no ornament,
+# their inputs taken from the pack; the dialog confirms what they use.
 
 fine = 6
 marvellous = 12
@@ -73,6 +82,18 @@ half_within = 3
 one_within = 6
 yield = 50
 free_wood = ["forest", "dense_forest", "swamp"]
+
+[[profession]]
+skill = "alchemy"
+description = "Your recipes as a brewer of potions."
+stat = "intelligence"
+verb = "Brew"
+failed = "The brew clouds over and settles murky. That was not what you meant to make."
+fumbled = "The brew seethes and turns a colour no book speaks of."
+
+[[profession]]
+skill = "jewelcraft"
+description = "Your work as a gem cutter."
 
 [[profession]]
 skill = "metalcraft"

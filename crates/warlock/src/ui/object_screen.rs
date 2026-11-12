@@ -51,7 +51,7 @@ use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
 use warlock_core::burden::{Burden, Load};
 use warlock_core::color::Rgb;
-use warlock_core::content::{ClassActive, MAX_SPELL_RANK, Rarity, SpellId};
+use warlock_core::content::{ClassActive, MAX_SPELL_RANK, Rarity, RecipeUse, SpellId};
 use warlock_core::equipment;
 use warlock_core::object::{Stack, Weight, format_weight};
 use warlock_core::perception::PerceptionView;
@@ -80,6 +80,9 @@ pub enum ObjectList {
     /// What in the pack, not worn or wielded, has a material a profession works: choose one to
     /// take apart (the Salvage ability; `world/salvage.rs`).
     Salvage,
+    /// The loose gems in the pack that may be cut: choose one to cut (Jewelcraft's Cut recipe;
+    /// `world/cut.rs`).
+    Cut,
     /// The scrolls in the pack of a type not yet identified: choose one to make out, unread
     /// (the Decipher ability; `world/decipher.rs`).
     Decipher,
@@ -110,6 +113,7 @@ impl ObjectList {
             ObjectList::Temper => " Temper ",
             ObjectList::Whittle => " Whittle ",
             ObjectList::Salvage => " Salvage ",
+            ObjectList::Cut => " Cut ",
             ObjectList::Decipher => " Decipher ",
             ObjectList::Give => " Give ",
         }
@@ -126,6 +130,7 @@ impl ObjectList {
             ObjectList::Temper => "You carry no metal arms or armour to work.",
             ObjectList::Whittle => "You carry no wooden weapon to whittle.",
             ObjectList::Salvage => "You carry nothing worth taking apart.",
+            ObjectList::Cut => "You carry no gem that can be cut.",
             ObjectList::Decipher => "You carry no scroll you have not made out.",
             ObjectList::Give => "You carry nothing for a beast's neck.",
         }
@@ -146,6 +151,7 @@ impl ObjectList {
             | ObjectList::Temper
             | ObjectList::Whittle
             | ObjectList::Salvage
+            | ObjectList::Cut
             | ObjectList::Decipher
             | ObjectList::Give => 78,
         }
@@ -162,6 +168,7 @@ impl ObjectList {
                 | ObjectList::Temper
                 | ObjectList::Whittle
                 | ObjectList::Salvage
+                | ObjectList::Cut
                 | ObjectList::Decipher
                 | ObjectList::Give
         )
@@ -239,7 +246,8 @@ pub struct ObjectScreen {
     /// The inventory stack the player last asked to look at (its position): what the item
     /// description opened from here describes.
     looked: Option<usize>,
-    /// The identify list's spell, by the id it is cast by (`use:identify:c`).
+    /// The id the chosen action names: the identify list's spell, by the id it is cast by
+    /// (`use:identify:c`), or the Cut list's recipe (`craft:cut:c`).
     cast: Option<String>,
     /// The inventory's drop mode: letters mark stacks, Enter drops them.
     dropping: Dropping,
@@ -312,6 +320,10 @@ impl ObjectScreen {
                     warlock_core::world::salvageable(content, &pack[i])
                         && !view.equipment().holds(i)
                 })
+                .map(Item::Pack)
+                .collect(),
+            ObjectList::Cut => (0..pack.len())
+                .filter(|&i| warlock_core::world::cuttable(content, &pack[i]))
                 .map(Item::Pack)
                 .collect(),
             ObjectList::Decipher => (0..pack.len())
@@ -410,6 +422,7 @@ impl ObjectScreen {
                 ObjectList::Identify(IdentifyBy::Spell(spell)) => {
                     content.spell_of(spell).map(|s| s.id.clone())
                 }
+                ObjectList::Cut => (content.recipes().of_use(RecipeUse::Cut)).map(|r| r.id.clone()),
                 _ => None,
             },
             dropping: Dropping::No,
@@ -520,6 +533,13 @@ impl ObjectScreen {
             (ObjectList::Salvage, item) => ScreenAction::Act(Action::Salvage {
                 item: item.position(),
             }),
+            (ObjectList::Cut, item) => match &self.cast {
+                Some(recipe) => ScreenAction::Act(Action::Craft {
+                    recipe: recipe.clone(),
+                    picks: vec![Some(item.position())],
+                }),
+                None => ScreenAction::Stay,
+            },
             (ObjectList::Decipher, item) => ScreenAction::Act(Action::Decipher {
                 item: item.position(),
             }),
@@ -637,6 +657,7 @@ impl ObjectScreen {
                     | ObjectList::Temper
                     | ObjectList::Whittle
                     | ObjectList::Salvage
+                    | ObjectList::Cut
                     | ObjectList::Decipher
                     | ObjectList::Give => Action::Drop(chosen),
                 });
@@ -840,6 +861,7 @@ impl ObjectScreen {
             ObjectList::Temper => format!("{}   {page}Esc cancel", either("temper")),
             ObjectList::Whittle => format!("{}   {page}Esc cancel", either("whittle")),
             ObjectList::Salvage => format!("{}   {page}Esc cancel", either("salvage")),
+            ObjectList::Cut => format!("{}   {page}Esc cancel", either("cut")),
             ObjectList::Decipher => format!("{}   {page}Esc cancel", either("decipher")),
             ObjectList::Give => format!("{}   {page}Esc cancel", either("give")),
             ObjectList::PickUp => mark("pick up", "cancel"),
