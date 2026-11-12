@@ -56,6 +56,7 @@ mod outcomes;
 mod overworld;
 mod potions;
 mod prayer;
+mod recipes;
 mod resources;
 mod rooms;
 mod scenarios;
@@ -420,6 +421,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("altar-shares.md", outcomes::altar_shares),
         ("temper-odds.md", temper::temper_odds),
         ("temper-grades.md", temper::temper_grades),
+        ("recipes.md", recipes::recipes),
+        ("crafting-grades.md", recipes::crafting_grades),
         ("spring-outcomes.md", outcomes::spring_outcomes),
         ("risings.md", rooms::risings),
         ("magic-rarity.md", magic::magic_rarity),

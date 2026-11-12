@@ -1,0 +1,12 @@
+# A dagger, forged at an anvil from the smith's metal stock (docs/design/recipes.md §6
+# "Melee weapons", the metal route; docs/dev/crafting.md). The stock is priced by the weight.
+[[recipe]]
+id = "dagger"
+result = { object = "dagger" }
+difficulty = 11
+seconds = 1800
+station = "anvil"
+ornament = true
+
+[recipe.parts]
+main = "stock"

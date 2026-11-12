@@ -202,6 +202,8 @@ above.
 | Treating yourself, binding a wound | `skill-uses.md#treating-yourself` |
 | Fletching, brittle arrows and bolts, a knife | `skill-uses.md#fletching` |
 | Profession, recipe | `skill-uses.md#professions` |
+| Crafting, forging, a recipe, stock to forge from | `crafting.md`, `crafting.md#forging-a-weapon` (a recipe: its row, `recipe-ID`) |
+| Masterwork (crafted), a crafted item's grade, margin | `crafting.md#how-well-it-comes-out` |
 | Foraging | `skill-uses.md#foraging` |
 | Gather, gathering herbs, the glowing fungus | `herbs.md#gathering` |
 | Herbs (in general) | `herbs.md` |

@@ -1,0 +1,13 @@
+# A scimitar, forged at an anvil from the smith's metal stock (docs/design/recipes.md §6
+# "Melee weapons", the metal route; docs/dev/crafting.md). The stock is priced by the weight.
+[[recipe]]
+id = "scimitar"
+result = { object = "scimitar" }
+difficulty = 13
+seconds = 3600
+station = "anvil"
+from = 20
+ornament = true
+
+[recipe.parts]
+main = "stock"

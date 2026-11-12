@@ -33,7 +33,7 @@ fn sword(extra: &str) -> String {
 }
 
 #[test]
-fn the_built_in_recipes_are_metalcrafts_temper_and_woodcrafts_fletch_and_whittle() {
+fn the_built_in_recipes_are_the_forges_swords_and_temper_and_woodcrafts_fletch_and_whittle() {
     let content = Content::builtin().expect("content");
     let recipes = content.recipes();
     let metal = content.skill_id("metalcraft").expect("metalcraft");
@@ -44,7 +44,37 @@ fn the_built_in_recipes_are_metalcrafts_temper_and_woodcrafts_fletch_and_whittle
             .map(|(_, r)| (r.name.as_str(), r.uses))
             .collect()
     };
-    assert_eq!(of(metal), [("Temper", Some(RecipeUse::Temper))]);
+    assert_eq!(
+        of(metal),
+        [
+            ("Dagger", None),
+            ("Great sword", None),
+            ("Knife", None),
+            ("Long sword", None),
+            ("Rapier", None),
+            ("Scimitar", None),
+            ("Short sword", None),
+            ("Temper", Some(RecipeUse::Temper))
+        ]
+    );
+    // The forge's seven swords (docs/design/recipes.md §6): difficulty, seconds, from, and an
+    // ornament on all but the knife, at the anvil, of metal stock.
+    let anvil = content.terrain_id("anvil");
+    for (id, difficulty, seconds, from, ornament) in [
+        ("knife", 10, 1200, 0, false),
+        ("dagger", 11, 1800, 0, true),
+        ("short_sword", 12, 3600, 10, true),
+        ("scimitar", 13, 3600, 20, true),
+        ("long_sword", 13, 3600, 20, true),
+        ("rapier", 14, 3600, 30, true),
+        ("great_sword", 15, 5400, 40, true),
+    ] {
+        let r = content.recipe(recipes.id(id).expect(id));
+        let got = (r.difficulty, r.seconds, r.from, r.ornament, r.station);
+        assert_eq!(got, (difficulty, seconds, from, ornament, anvil), "{id}");
+        assert_eq!(r.parts.len(), 1, "{id}");
+        assert!(!r.anyone, "{id}");
+    }
     assert_eq!(
         of(wood),
         [
@@ -52,8 +82,10 @@ fn the_built_in_recipes_are_metalcrafts_temper_and_woodcrafts_fletch_and_whittle
             ("Whittle", Some(RecipeUse::Whittle))
         ]
     );
-    // Open to everyone, as they were before (#1337 Q3).
-    assert!(recipes.list.iter().all(|r| r.anyone && r.result.is_none()));
+    // The built-ins are open to everyone, as they were before (#1337 Q3).
+    let built_in = recipes.list.iter().filter(|r| r.uses.is_some());
+    assert!(built_in.clone().all(|r| r.anyone && r.result.is_none()));
+    assert_eq!(built_in.count(), 3);
     let temper = content.recipe(recipes.id("temper").expect("temper"));
     assert_eq!(temper.station, content.terrain_id("anvil"));
     assert_eq!(recipes.description(metal), Some("Your recipes as a smith."));

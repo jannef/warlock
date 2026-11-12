@@ -111,22 +111,22 @@ fn the_untrained_see_only_what_anyone_may_make_and_the_trained_what_is_beyond_th
     // Trained below the long sword's `from`: listed, beyond them.
     train(&mut w, "metalcraft", 10);
     assert_eq!(
-        rows(&w, "metalcraft")[0],
+        rows(&w, "metalcraft")[3],
         "Long sword: 3 steel ingots, an anvil, about 1 hour (beyond your skill)"
     );
     // At it: the anvil, then the stock, is what is missing.
     train(&mut w, "metalcraft", 20);
-    assert!(rows(&w, "metalcraft")[0].ends_with("(no anvil beside you)"));
+    assert!(rows(&w, "metalcraft")[3].ends_with("(no anvil beside you)"));
     // Five arrows to tip: none carried, then too few, then enough.
     assert_eq!(
-        rows(&w, "metalcraft")[2],
+        rows(&w, "metalcraft")[8],
         "Tipped arrows: 5 arrows, about 10 minutes (no arrows)"
     );
     give(&mut w, "arrow", 4);
-    assert!(rows(&w, "metalcraft")[2].ends_with("(no arrows)"));
+    assert!(rows(&w, "metalcraft")[8].ends_with("(no arrows)"));
     give(&mut w, "arrow", 1);
     assert_eq!(
-        rows(&w, "metalcraft")[2],
+        rows(&w, "metalcraft")[8],
         "Tipped arrows: 5 arrows, about 10 minutes"
     );
 }
@@ -136,7 +136,7 @@ fn a_stock_part_wants_a_piece_the_profession_works_that_the_part_may_be_made_of(
     let mut w = world(FIXTURE.clone(), "forge");
     w.apply(&Action::Move(Dir::E));
     train(&mut w, "metalcraft", 20);
-    let sword = |w: &World| rows(w, "metalcraft")[0].clone();
+    let sword = |w: &World| rows(w, "metalcraft")[3].clone();
     assert!(sword(&w).ends_with("(no metal to hand)"), "{}", sword(&w));
     // Hardwood is no metal; iron is.
     let wood = w.content.material_id("hardwood").expect("hardwood");
@@ -190,12 +190,12 @@ fn the_abilities_menu_lists_a_row_per_profession_and_no_temper_whittle_or_fletch
 }
 
 #[test]
-fn crafting_is_refused_with_no_time_until_the_forge() {
+fn crafting_a_built_in_unknown_or_out_of_reach_recipe_is_refused_with_no_time() {
     let mut w = world(FIXTURE.clone(), "forge");
     let start = w.state.time;
     for (text, said) in [
         ("craft:temper", "Temper is done from its own list."),
-        ("craft:long_sword:a", "You cannot make that yet."),
+        ("craft:long_sword:a", "That is beyond your skill."),
         ("craft:moonblade", "You know no such recipe."),
     ] {
         for action in crate::action::parse_actions(text).expect("parses") {

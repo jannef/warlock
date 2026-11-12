@@ -31,6 +31,7 @@ use super::characters_screen::CharactersScreen;
 use super::chargen_screen::{ChoiceScreen, Draft, Picks, Step, SummaryScreen};
 use super::chargen_talents_screen::ChargenTalentsScreen;
 use super::controls_screen::ControlsScreen;
+use super::craft_pick_screen::{CraftPickScreen, craft_dialog};
 use super::death_screen::DeathScreen;
 use super::describe_screen::DescribeScreen;
 use super::dialog_screen::{Dialog, DialogScreen};
@@ -74,7 +75,7 @@ use std::sync::Arc;
 use warlock_core::Action;
 use warlock_core::ability::Ability;
 use warlock_core::character::CharacterSpec;
-use warlock_core::content::{Content, SlotId};
+use warlock_core::content::{Content, RecipeId, SlotId};
 use warlock_core::perception::PerceptionView;
 use warlock_core::skills::SkillId;
 use warlock_core::world::Conversation;
@@ -185,6 +186,18 @@ pub enum ScreenName {
     /// The first profession's screen (`--screen profession`), as [`ScreenName::Profession`].
     #[value(name = "profession")]
     FirstProfession,
+    /// The forging wizard of a generic recipe (its row on a profession's screen): one list for
+    /// each choice, then the dialog.
+    #[value(skip)]
+    CraftPick(RecipeId),
+    /// The wizard of the first recipe with a choice (`--screen craft-pick`), as
+    /// [`ScreenName::CraftPick`].
+    #[value(name = "craft-pick")]
+    FirstCraftPick,
+    /// The dialog that asks to make the recipe of the wizard beneath with its picks, in the
+    /// rules' words; it opens from the wizard's last step, so it is no `--screen`.
+    #[value(skip)]
+    CraftConfirm,
     /// Talking with someone who has topics (`C` next to them): opens by itself when they answer;
     /// as `--screen`, over a run whose last action was such a chat (a replay's last step).
     Dialogue,
@@ -236,6 +249,9 @@ impl ScreenName {
                 | ScreenName::Scribe
                 | ScreenName::Profession(_)
                 | ScreenName::FirstProfession
+                | ScreenName::CraftPick(_)
+                | ScreenName::FirstCraftPick
+                | ScreenName::CraftConfirm
                 | ScreenName::Dialogue
                 | ScreenName::Death
                 | ScreenName::LevelUp
@@ -370,6 +386,8 @@ enum Screen {
     Scribe(ScribeScreen),
     /// A profession's recipes.
     Profession(ProfessionScreen),
+    /// The forging wizard: a generic recipe's choices.
+    CraftPick(CraftPickScreen),
     Dialogue(DialogueScreen),
     Death(DeathScreen),
     LevelUp(LevelUpScreen),
@@ -379,12 +397,14 @@ enum Screen {
 
 /// What a screen opening may read off the stack: the slot selected on the equipment screen
 /// beneath, if any (the first slot if none), the carried stack looked at on a screen beneath
-/// (the first if none), and the ability used last.
-#[derive(Clone, Copy, Debug, Default)]
+/// (the first if none), the ability used last, and the recipe and picks of the forging wizard
+/// beneath (what its dialog asks about).
+#[derive(Clone, Debug, Default)]
 struct Beneath {
     slot: Option<SlotId>,
     item: Option<usize>,
     ability: Option<Ability>,
+    craft: Option<(RecipeId, Vec<Option<usize>>)>,
 }
 
 impl Screen {
@@ -402,7 +422,7 @@ impl Screen {
         beneath: Beneath,
         talk: Option<&Conversation>,
     ) -> Self {
-        let Beneath { slot, item, .. } = beneath;
+        let Beneath { slot, item, .. } = beneath.clone();
         let objects = |list| Screen::Objects(ObjectScreen::new(list, run));
         let choice = |step| Screen::Choice(ChoiceScreen::new(step, content, draft));
         match name {
@@ -479,6 +499,13 @@ impl Screen {
                 Screen::Profession(ProfessionScreen::new(run, Some(skill)))
             }
             ScreenName::FirstProfession => Screen::Profession(ProfessionScreen::new(run, None)),
+            ScreenName::CraftPick(recipe) => {
+                Screen::CraftPick(CraftPickScreen::new(run, Some(recipe)))
+            }
+            ScreenName::FirstCraftPick => Screen::CraftPick(CraftPickScreen::new(run, None)),
+            ScreenName::CraftConfirm => {
+                Screen::Dialog(DialogScreen::new(craft_dialog(run, beneath.craft)))
+            }
             ScreenName::Dialogue => Screen::Dialogue(DialogueScreen::new(talk, run)),
             ScreenName::Death => Screen::Death(DeathScreen::new(run)),
             ScreenName::LevelUp => Screen::LevelUp(LevelUpScreen::new(run)),
@@ -532,6 +559,10 @@ impl Screen {
             Screen::Profession(screen) => match screen.skill() {
                 Some(skill) => ScreenName::Profession(skill),
                 None => ScreenName::FirstProfession,
+            },
+            Screen::CraftPick(screen) => match screen.chosen() {
+                Some((recipe, _)) => ScreenName::CraftPick(recipe),
+                None => ScreenName::FirstCraftPick,
             },
             Screen::Dialogue(_) => ScreenName::Dialogue,
             Screen::Death(_) => ScreenName::Death,
@@ -655,6 +686,16 @@ impl ScreenStack {
     /// The carried stack looked at on the topmost inventory or equipment screen, if any: what a
     /// description opened from it describes; or the scroll of identify chosen on the read list:
     /// what the identify list reads.
+    fn craft_chosen(&self) -> Option<(RecipeId, Vec<Option<usize>>)> {
+        self.screens.iter().rev().find_map(|s| match s {
+            Screen::CraftPick(screen) => screen.chosen(),
+            _ => None,
+        })
+    }
+
+    /// The carried stack looked at on the topmost inventory or equipment screen, if any: what a
+    /// description opened from it describes; or the scroll of identify chosen on the read list:
+    /// what the identify list reads.
     fn looked_item(&self) -> Option<usize> {
         self.screens.iter().rev().find_map(|s| match s {
             Screen::Objects(screen)
@@ -698,6 +739,8 @@ impl ScreenStack {
             match screen {
                 Screen::Equipment(screen) => screen.refresh(view),
                 Screen::Objects(screen) => screen.refresh(view),
+                Screen::Profession(screen) => screen.refresh(view),
+                Screen::CraftPick(screen) => screen.refresh(view),
                 _ => {}
             }
         }
@@ -818,6 +861,12 @@ impl ScreenStack {
                 }
                 screen.handle(press, bindings)
             }
+            Some(Screen::CraftPick(screen)) => {
+                if let Some((cols, rows)) = self.console {
+                    screen.fit(cols, rows);
+                }
+                screen.handle(press, bindings)
+            }
             Some(Screen::Dialogue(screen)) => screen.handle(press, bindings),
             Some(Screen::Death(screen)) => screen.handle(press),
             Some(Screen::LevelUp(screen)) => {
@@ -886,6 +935,7 @@ impl ScreenStack {
             Some(Screen::Shape(screen)) => screen.draw(console, bindings),
             Some(Screen::Scribe(screen)) => screen.draw(console, bindings),
             Some(Screen::Profession(screen)) => screen.draw(console, bindings),
+            Some(Screen::CraftPick(screen)) => screen.draw(console, bindings),
             Some(Screen::Dialogue(screen)) => screen.draw(console, bindings),
             Some(Screen::Death(screen)) => screen.draw(console, settings.clock, bindings),
             Some(Screen::LevelUp(screen)) => screen.draw(console, bindings),
@@ -941,6 +991,7 @@ impl Screens<'_> {
             slot: self.stack.selected_slot(),
             item,
             ability: self.stack.last_ability,
+            craft: self.stack.craft_chosen(),
         };
         // Only the screens that show the saved characters read them (a listing of the saves).
         let characters = match name {
@@ -1296,6 +1347,7 @@ mod tests {
                 slot: stack.selected_slot(),
                 item: stack.looked_item(),
                 ability: stack.last_ability,
+                craft: stack.craft_chosen(),
             };
             let saved = SavedCharacter {
                 id: "tamsin-1".into(),

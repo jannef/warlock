@@ -2,7 +2,9 @@
 # ability, the abilities menu's Here group, beside it). Arms and armour lie on the bench to work
 # on: a long sword, a dagger, a coat of chain mail, an iron helm, and a small shield. Each
 # attempt takes ten minutes and may improve or damage the piece, and mend a damaged one or break
-# it; data/temper.toml has the numbers.
+# it; data/temper.toml has the numbers. Beside the anvil lies the smith's stock to forge from
+# (Metalcraft's recipes, docs/dev/crafting.md): steel, iron, and mithril ingots, and a ruby and an
+# emerald for a pommel.
 arrival = "Soot blackens the walls of an old smithy. The anvil still stands."
 name = "The Forge"
 ambient = [6, 6, 8, 0]
@@ -42,3 +44,7 @@ objects = ["small_shield"]
 [[pile]]
 at = [6, 6]
 objects = ["dagger"]
+
+[[pile]]
+at = [6, 4]
+objects = ["piece*8", "piece:iron*4", "piece:mithril*3", "gem:ruby", "gem:emerald"]

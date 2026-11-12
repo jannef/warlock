@@ -118,6 +118,8 @@ pub const MAX_FORAGE_BONUS: i32 = 30;
 pub const MAX_TEMPER_BONUS: i32 = 20;
 /// The most a skill adds to whittling a wooden item with a knife (`world/temper.rs`).
 pub const MAX_WHITTLE_BONUS: i32 = 12;
+/// The most a skill adds to making a recipe (spec §8 "Skills": professions; `world/craft.rs`).
+pub const MAX_CRAFT_BONUS: i32 = 20;
 /// The most a skill adds to reading a scroll (spec §8 "Scrolls"; `world/decipher.rs`).
 pub const MAX_DECIPHER_BONUS: i32 = 20;
 /// The most a skill adds to a Swim check (spec §8 "Skills": a plunge through the ice).
@@ -315,6 +317,10 @@ pub enum Effect {
     /// Points added to the check of an attempt at whittling a wooden item with a knife (Woodcraft;
     /// `world/temper.rs`). Anyone may whittle; the skill only helps.
     Whittle,
+    /// Points added to the check of a recipe made with the skill's profession (spec §8
+    /// "Skills": professions; `world/craft.rs`): read of that skill alone
+    /// ([`crate::world::Actor::skill_effect_of`]).
+    Craft,
     /// Points added to a Swim check (spec §8 "Skills": Swim; `world/ice.rs`, a plunge through the
     /// ice; `world/swim.rs`, a step in deep water); only a skill with it, trained, asks the check
     /// at all.
@@ -382,6 +388,7 @@ impl Effect {
             Effect::Wedge => MAX_WEDGE_BONUS,
             Effect::Temper => MAX_TEMPER_BONUS,
             Effect::Whittle => MAX_WHITTLE_BONUS,
+            Effect::Craft => MAX_CRAFT_BONUS,
             Effect::Swim => MAX_SWIM_BONUS,
             Effect::ManaRegen => MAX_MANA_REGEN_BONUS,
             Effect::MaxMana => MAX_MANA_POOL_BONUS,
@@ -472,6 +479,8 @@ pub enum Use {
     Temper,
     /// An attempt at whittling a wooden item done, whatever comes of it.
     Whittle,
+    /// A recipe's work that ran its time (spec §8 "Skills": professions), whatever came of it.
+    Craft,
     /// A step onto wading terrain (spec §8 "Skills": Swim; `World::wade`).
     Wade,
     /// A step onto rough ground that is not water (spec §8 "Skills": Balance;
@@ -549,6 +558,7 @@ impl Use {
             Use::Wedge => "wedging a door shut",
             Use::Temper => "tempering an item at an anvil",
             Use::Whittle => "whittling a wooden item with a knife",
+            Use::Craft => "making a recipe, whatever comes of it",
             Use::Wade => "a step wading through water or marsh",
             Use::RoughStep => "a step onto rough ground that slows (bush, reeds, rubble, ice)",
             Use::Staggered => "acting while Staggered",
@@ -689,6 +699,7 @@ impl Use {
             Use::Wedge => "wedge",
             Use::Temper => "temper",
             Use::Whittle => "whittle",
+            Use::Craft => "craft",
             Use::Wade => "wade",
             Use::RoughStep => "rough_step",
             Use::Staggered => "staggered",
@@ -761,6 +772,7 @@ impl Effect {
             Effect::Wedge => "wedge",
             Effect::Temper => "temper",
             Effect::Whittle => "whittle",
+            Effect::Craft => "craft",
             Effect::Swim => "swim",
             Effect::ManaRegen => "mana_regen",
             Effect::MaxMana => "max_mana",

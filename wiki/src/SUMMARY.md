@@ -59,6 +59,7 @@
 - [Stats](stats.md)
 - [Skills](skills.md)
   - [Using your skills](skill-uses.md)
+    - [Crafting](crafting.md)
 - [Abilities](abilities.md)
 - [Combat](combat.md)
   - [Hit points and death](hit-points.md)

@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(&case, content.clone())"
 ---
- Welcome to Forge. Press ? for controls.
  A cold forge, and an anvil waiting.
+ There are several objects here.
 
 
 

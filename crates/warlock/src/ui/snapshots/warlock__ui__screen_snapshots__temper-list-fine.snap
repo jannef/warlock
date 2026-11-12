@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You pick up a dagger.
+ There are several objects here.
  You set to work on the long sword at the anvil. The metal rings true. This is a Fine long sword!
 
 

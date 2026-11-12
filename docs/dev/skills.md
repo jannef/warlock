@@ -119,7 +119,7 @@ is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`
 `kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, both for `find_trap` (a
 trap found), `World::disarm` for
 `disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, `World::heal` for `heal`, `World::forage_done` for `forage` (a forage that ran its time), `World::order` and `fight.rs::dies` for `handle` (an order given to one's allies, an ally's kill: Handle animal's marks, docs/dev/allies.md), `world/tame.rs::tame_check` for `handle` too (a try at taming), and the `tame` benefit read in `tame_odds` (trained at all, the Tame ability; docs/dev/companion.md "Taming"), `World::pay` and
-`World::trade` (a sale) in `world/shop.rs` for `deal`, `World::appraise` for `appraise`, `world/temper.rs::tempered` for `temper`, and `World::sidesteps` for a known trap avoided,
+`World::trade` (a sale) in `world/shop.rs` for `deal`, `World::appraise` for `appraise`, `world/temper.rs::tempered` for `temper`, `world/craft_make.rs::crafted` for `craft` (a recipe's work that ran its time), and `World::sidesteps` for a known trap avoided,
 `dodge`, besides `fight.rs::resolve`). Listen at a door (#1026) is `Use::Listen`, 100 % per `listen:DIR` (`world/listen.rs`, `hearing.md`). Marks from plain play (#1014, `docs/design/skill-uses.md` 6.8, 6.9, 6.11): `Use::Sight` (Spot) in `surprise.rs::mark_noticed`, the first sighting of a creature that has not noticed the player; `Use::Sprung` (Detect traps) in `trap.rs::train_from_sprung`, a hidden trap going off under the player, or (half the time, a training-stream draw) under a creature they see; `Use::Overhear` (Listen) in `perceive.rs::hear`, a sound that is no news heard while resting or waiting (`World::waiting` is set around the player's wait); Detect traps also marks on `disarm` and, with Spot, on `search`, as data. Concentration's `mana_regen` and `max_mana` (trained only, `Actor::mind`) are read in
 `World::mana_rate` and `Actor::max_mana` (`world/concentration.rs`, docs/dev/mana.md), its `cast`
 use reported by `World::spend_mana` (Spellcraft's `cast` mark, 25 %, rides the same use, #989; since #1270 its only mark). Spellcraft's `cast` (points on the Spellcraft check every cast with one's own mana makes) and `ward` (points off a miscast's total) are read in `world/miscast.rs` (`Actor::cast_bonus`, `Actor::miscast_ward`; #1271, docs/dev/spells.md "Miscasts"), by anyone: an untrained caster has none of them and checks all the same. Knowledge's `resist` (#667) is read
@@ -138,7 +138,10 @@ never gear or statuses, no marks; JSON dumps carry it as a seen actor's `known`;
 writes the line. Tests `world/knowledge_tests.rs`.
 Metalcraft's `temper` benefit is read in
 `world/temper.rs::tempered` (the Strength check of an attempt at an anvil, whose difficulty rises
-with every attempt on the item, docs/dev/special-rooms.md). Metalcraft and Woodcraft are
+with every attempt on the item, docs/dev/special-rooms.md), its `craft` benefit in
+`world/craft_make.rs::craft_modifier` (the Strength check of a forged recipe, read of Metalcraft
+alone through `Actor::skill_effect_of`, docs/dev/crafting.md "Making a recipe"). Metalcraft and
+Woodcraft are
 **professions** (#1334, `docs/dev/crafting.md`): each has a recipe directory
 (`data/recipes/<skill>/`), so the abilities menu lists it as one `Ability::Profession` row in the
 skill's place ("Metalcraft…", "Woodcraft…"), which opens its recipe screen; Temper, Whittle, and

@@ -39,6 +39,8 @@ struct Entry {
     why: Option<String>,
     /// The built-in action it runs, if it is one.
     uses: Option<RecipeUse>,
+    /// A generic recipe with choices to make: the forging wizard asks them.
+    wizard: bool,
 }
 
 #[derive(Debug)]
@@ -81,6 +83,7 @@ impl ProfessionScreen {
                     takes: row.takes,
                     why: row.unavailable.map(|why| why.reason(content)),
                     uses: def.uses,
+                    wizard: !view.craft_steps(row.id).is_empty(),
                 };
                 (class, entry)
             })
@@ -99,6 +102,15 @@ impl ProfessionScreen {
     /// The profession shown.
     pub fn skill(&self) -> Option<SkillId> {
         self.skill
+    }
+
+    /// The run changed (a recipe made): the rows read again, the cursor where it was.
+    pub fn refresh(&mut self, view: &PerceptionView<'_>) {
+        let cursor = self.recipes.cursor();
+        *self = Self::new(Some(view), self.skill);
+        if cursor < self.recipes.iter().count() {
+            self.recipes.select(cursor);
+        }
     }
 
     /// Lays the list out for a console of `cols` by `rows`: a page takes the rows the frame, the
@@ -143,7 +155,9 @@ impl ProfessionScreen {
             Some(RecipeUse::Fletch) => ScreenAction::Act(Action::Fletch),
             // Greyed "not usable yet" until P10 and P11 build their actions.
             Some(RecipeUse::Cut | RecipeUse::Set) => ScreenAction::Stay,
-            // The forge's wizard asks for the picks (P5); until then the rules refuse.
+            // The forging wizard asks for the picks, then the dialog; a recipe with none to make
+            // is applied at once, the rules saying what comes of it.
+            None if entry.wizard => ScreenAction::Open(ScreenName::CraftPick(entry.id)),
             None => ScreenAction::Act(Action::Craft {
                 recipe: entry.key.clone(),
                 picks: Vec::new(),

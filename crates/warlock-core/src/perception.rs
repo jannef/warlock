@@ -2179,6 +2179,23 @@ impl<'a> PerceptionView<'a> {
         crate::world::recipe_rows(self.content, self.level, self.player, skill)
     }
 
+    /// The choices of generic recipe `recipe`, in order, each with the stacks carried that it may
+    /// take (`world/craft_make.rs`): the forging wizard's steps. Empty for a recipe with none
+    /// (or one not made yet).
+    pub fn craft_steps(&self, recipe: crate::content::RecipeId) -> Vec<crate::world::CraftStep> {
+        crate::world::craft_steps(self.content, self.lore, self.player, recipe)
+    }
+
+    /// What `recipe` made with `picks` (inventory positions in step order, `None` a skipped
+    /// optional) would make and use, in words; or why it cannot, as the rules would say it.
+    pub fn craft_plan(
+        &self,
+        recipe: crate::content::RecipeId,
+        picks: &[Option<usize>],
+    ) -> Result<crate::world::CraftPlan, String> {
+        crate::world::craft_plan(self.content, self.lore, self.player, recipe, picks)
+    }
+
     /// What the player's spell `spell` costs them now, in mana (spec §8 "Spells": they know
     /// what their own spells cost); `None` for a spell they cannot cast.
     pub fn own_spell_cost(&self, spell: crate::content::SpellId) -> Option<i32> {

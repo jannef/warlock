@@ -8,8 +8,8 @@
 //!   now, if any ([`RecipeLack`]): computed here, from the pack, the cells beside the player, and
 //!   the skills, so presentation never decides availability.
 //! - **The action** ([`Action::Craft`], `craft:ID[:POS,...]`): a built-in recipe's row runs its
-//!   own action (`temper:`, `whittle:`, `fletch`), and generic recipes are made from P5 (the
-//!   forge), so every craft is refused for now, taking no time.
+//!   own action (`temper:`, `whittle:`, `fletch`), so `craft:` refuses it, taking no time; a
+//!   generic recipe is made by `world/craft_make.rs` (the forge's swords).
 //!
 //! [`Action::Craft`]: crate::action::Action::Craft
 //! [`PerceptionView::recipes`]: crate::perception::PerceptionView::recipes
@@ -111,7 +111,7 @@ pub(crate) fn recipe_rows(
 /// skill, station, knife, launcher, stock, inputs. Only `"stock"` parts and object inputs are
 /// looked at: the other part sources and the stock inputs (docs/design/recipes.md §10) are
 /// checked by the phases whose recipes first use them.
-fn lack(
+pub(super) fn lack(
     content: &Content,
     level: &LevelState,
     player: &Actor,
@@ -165,7 +165,7 @@ fn lack(
 
 /// The materials part `part` of `object` may be made of that `recipe`'s profession works, in the
 /// part's list order: what a stock stack must be of.
-fn worked_materials(
+pub(super) fn worked_materials(
     content: &Content,
     recipe: &RecipeDef,
     object: ObjectId,
@@ -179,7 +179,10 @@ fn worked_materials(
 }
 
 /// The material of `stack` when it is stock (a piece): its main part's.
-fn stack_material(content: &Content, stack: &crate::object::Stack) -> Option<MaterialId> {
+pub(super) fn stack_material(
+    content: &Content,
+    stack: &crate::object::Stack,
+) -> Option<MaterialId> {
     if Some(stack.object) != content.object_id(crate::piece::ID) {
         return None;
     }
@@ -273,9 +276,9 @@ fn stock_words(
 }
 
 impl World {
-    /// The player makes a recipe (the module docs): refused for now, taking no time, with a word
-    /// for why.
-    pub(super) fn start_craft(&mut self, recipe: &str, _picks: &[Option<usize>]) -> Spent {
+    /// The player makes a recipe (the module docs): a generic one is begun by
+    /// [`World::start_making`]; a built-in or unknown one is refused, taking no time.
+    pub(super) fn start_craft(&mut self, recipe: &str, picks: &[Option<usize>]) -> Spent {
         let content = self.content.clone();
         let Some(id) = content.recipes().id(recipe) else {
             self.say("You know no such recipe.");
@@ -285,7 +288,7 @@ impl World {
         let text = match def.uses {
             Some(uses) if !uses.usable() => "You cannot do that yet.".to_string(),
             Some(_) => format!("{} is done from its own list.", def.name),
-            None => "You cannot make that yet.".to_string(),
+            None => return self.start_making(id, picks),
         };
         self.say(text);
         Spent::Nothing
