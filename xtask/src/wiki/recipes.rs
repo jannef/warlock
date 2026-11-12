@@ -251,8 +251,9 @@ fn input_words(
 const BREWERS: [u16; 3] = [20, 50, 100];
 
 /// Alchemy's recipes (the brews: no part, no ornament), by the value they are listed from and
-/// their name: the potion, its herbs, time, difficulty, and the chance of a potion (not a murky
-/// draught or a brewer's blunder) at three Alchemy values with an average Intelligence.
+/// their name: the potion, what it takes (herbs, essences, a flask), time, difficulty, and the
+/// chance of a potion (not a murky draught or a brewer's blunder) at three Alchemy values with an
+/// average Intelligence.
 pub(super) fn brews(content: &Content) -> String {
     let Some(alchemy) = content.skill_id("alchemy") else {
         return String::new();
@@ -261,7 +262,7 @@ pub(super) fn brews(content: &Content) -> String {
         .find(|b| b.effect == warlock_core::skills::Effect::Craft);
     let bonus = |value: u16| craft.map_or(0, |b| b.at(value));
     let settings = content.recipes().settings.as_ref();
-    let mut out = String::from("| Potion | Herbs | Listed from | Time | Difficulty |");
+    let mut out = String::from("| Potion | Takes | Listed from | Time | Difficulty |");
     for value in BREWERS {
         let _ = write!(out, " Alchemy {value} |");
     }
@@ -281,9 +282,10 @@ pub(super) fn brews(content: &Content) -> String {
         let potion = content.object(result.object);
         let herbs: Vec<String> = (r.inputs.iter())
             .filter_map(|i| {
-                let def = content.object(i.object()?);
+                let object = i.object()?;
+                let def = content.object(object);
                 let name = counted(&def.name, &def.plural, i.count);
-                Some(link(Term::Herb, &def.id, &name))
+                Some(brew_input(content, object, &def.id, &name))
             })
             .collect();
         let _ = write!(
@@ -316,6 +318,24 @@ pub(super) fn brews(content: &Content) -> String {
         out.push('\n');
     }
     out
+}
+
+/// What a brew takes, linked where it is told of: a herb to its row, a flask (oil, tar) to its
+/// potion row, an essence to the materials page's essences.
+fn brew_input(
+    content: &Content,
+    object: warlock_core::content::ObjectId,
+    id: &str,
+    name: &str,
+) -> String {
+    let herb = (content.herbs()).is_some_and(|h| h.herbs.iter().any(|h| h.object == object));
+    if herb {
+        link(Term::Herb, id, name)
+    } else if content.object(object).drink.is_some() {
+        link(Term::Potion, id, name)
+    } else {
+        format!("[{name}](materials.md#herbs-and-essences)")
+    }
 }
 
 /// The materials part `part` of `def` may be made of as the recipe takes it: a `"stock"` part

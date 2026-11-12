@@ -6,9 +6,16 @@ If you are trained in [Alchemy](skills.md#skill-alchemy), you can brew
 and choose a potion. You need no station and no tools, and the flask is free: an alchemist always
 has bottles. You can brew anywhere.
 
+The battle flasks (fire, frost, thunder, smoke, pitch fire, the blasting flask) and three potions
+(frost, earthing, sea legs) also take an [essence](materials.md#herbs-and-essences). Elementals
+leave their element's essence when they die, and other fire creatures sometimes leave an essence
+of fire ([What creatures leave](creature-drops.md)). The flask of fire also takes a
+[flask of oil](potions.md#potion-flask-of-oil), and pitch fire a
+[flask of tar](potions.md#potion-flask-of-tar). You buy those; they are never brewed.
+
 ## How a brew goes
 
-There is nothing to choose. The herbs are taken from your pack, and you are asked to confirm:
+There is nothing to choose. What the brew takes comes from your pack, and you are asked to confirm:
 "Brew a potion of healing? It uses 2 sprigs of moonwort, and takes about 20 minutes."
 
 A brew takes 20 minutes. Anything that would stop a [rest](resting.md#how-resting-works) stops it;
@@ -21,7 +28,7 @@ recipe's difficulty.
 
 - **Made:** you have the potion, and you know it for what it is, even if you had never seen one
   before: you know your own work. Potions have no grades: a brew either works or it does not.
-- **Failed:** the herbs are spent and the brew goes murky. You are left with a
+- **Failed:** everything the brew took is spent and the brew goes murky. You are left with a
   [murky draught](potions.md#potion-murky-draught).
 - **A natural 2** always fails, and worse: you are left with a
   [brewer's blunder](potions.md#potion-brewers-blunder), a gamble to drink.
@@ -33,8 +40,8 @@ of it.
 ## The recipes
 
 You know a recipe by your Alchemy, never by learning it: each is listed from a skill value, and
-greyed out "beyond your skill" below it. A recipe whose herbs you lack is greyed out "not
-enough" of the herb that is short.
+greyed out "beyond your skill" below it. A recipe you lack something for is greyed out "not
+enough" of what is short.
 
 The last three columns are the chance that a brew makes the potion, for someone of average
 Intelligence with no talents (a dash: not yet listed at that value).
@@ -43,4 +50,4 @@ Intelligence with no talents (a dash: not yet listed at that value).
 
 Some potions are never brewed. The elixirs, the gamble draughts (the draught of chance and
 troll's blood), holy water, and the deeper potions (restoration, quickness, and the like) come
-only from loot and shops. Oil and tar are bought.
+only from loot and shops. Oil and tar are bought, never brewed.
