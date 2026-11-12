@@ -30,7 +30,7 @@ Not every skill does something yet. These do: the passive skills, [Appraise](ski
 (quicker in everything, and [kicking](doors.md#kicking) doors in; see [Doors](doors.md)), [Search](skills.md#skill-search) (see [Searching](searching.md)),
 [Disable device](skills.md#skill-disable-device) (disarming traps; see [Traps](traps.md#disarming-traps)), [Open lock](skills.md#skill-open-lock) (picking locks; see [Doors](doors.md#picking-locks)), [Steal](skills.md#skill-steal) (see
 [Stealing](skill-uses.md#stealing)), [Bluff](skills.md#skill-bluff) (see [Feinting](skill-uses.md#feinting)), [Heal](skills.md#skill-heal) (see [Treating yourself](skill-uses.md#treating-yourself)), and [Survival](skills.md#skill-survival) (see
-[Foraging](skill-uses.md#foraging)), [Herbalism](skills.md#skill-herbalism) (herbs on a forage), [Mining](skills.md#skill-mining) (quicker
+[Foraging](skill-uses.md#foraging)), [Herbalism](skills.md#skill-herbalism) (herbs on a forage, more of them [gathered](herbs.md#gathering) from the glowing fungus), [Mining](skills.md#skill-mining) (quicker
 [digging](digging.md)), [Alchemy](skills.md#skill-alchemy), and [Enchanting](skills.md#skill-enchanting) (telling potions and magic). The others are there to be trained, and get their uses as the game grows.
 
 Skills used as actions appear in the [abilities menu](abilities.md) once you are trained in them, greyed out
@@ -115,7 +115,8 @@ The passive skills help you more the higher they are:
 - **[Mining](skills.md#skill-mining)** makes [digging](digging.md) quicker: each turn does 25 % more work at 100 and 40 % more at
   200, on top of what talents and a Delving tool add.
 - **[Herbalism](skills.md#skill-herbalism)** may find a herb besides on a forage that finds something (see
-  [Foraging](skill-uses.md#foraging)).
+  [Foraging](skill-uses.md#foraging)), and finds one more herb for every 50 when you
+  [gather](herbs.md#gathering) from the glowing fungus.
 - **[Search](skills.md#skill-search)** helps you find [secret doors](doors.md#secret-doors) and other hidden things when you search (`s`, `Ctrl+s`). A
   master's search reaches one cell farther (see [Searching](searching.md)).
 - **[Spot](skills.md#skill-spot)** lets you [notice hidden things in passing](searching.md#noticing-in-passing) at all, except traps. The higher it is, the more you
@@ -220,7 +221,8 @@ mark**. The chance is in the table of skills above. Skills you use all the time,
   ground that slows you (10 %: bush, reeds, rubble, ice; not water), and an action taken while
   [staggered](status-effects.md#status-staggered) (20 %).
 - **[Survival](skills.md#skill-survival)**: a journey on the [overworld](overworld.md#travel).
-- **[Herbalism](skills.md#skill-herbalism)**: a forage that runs its time, one time in four.
+- **[Herbalism](skills.md#skill-herbalism)**: a forage that runs its time, one time in four, and every
+  [gather](herbs.md#gathering) that runs its time.
 - **[Mining](skills.md#skill-mining)**: every wall you dig through.
 - **[Swim](skills.md#skill-swim)**: a step wading through [water](terrain.md#water) or [marsh](terrain.md#terrain-marsh) now and then (10 %), every [plunge through the ice](temperature.md#falling-in), and a
   quarter of the steps in [deep water](terrain.md#deep-water), made or not.

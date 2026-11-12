@@ -645,7 +645,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     jewellery, wands, rods: "You read the magic bound in your long sword: …"); neither marks
     until its craft comes. **Mining** adds its `dig` percent to a dig turn's work (25 at 100,
     40 at 200; §8 "Digging"), marked by every wall dug through (`dug`). **Herbalism** gives a
-    forage that found something a chance of a herb besides ("Foraging" below). **Jewelcraft**
+    forage that found something a chance of a herb besides ("Foraging" below), and more herbs
+    to a gather from the glowing fungus ("Gathering herbs" below). **Jewelcraft**
     has no use yet. Who trains them: gnomes Jewelcraft, dwarves and duergar Mining (dwarves
     Jewelcraft now and then), kobolds Mining, halflings Herbalism; druids and witches Herbalism,
     witches Alchemy; optional for the craftsperson (Jewelcraft, Mining), merchant (Jewelcraft),
@@ -759,12 +760,37 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Herbs** (#1343): a forage that found something, by one trained in Herbalism, on ground
     with a `herbs` list, has Herbalism's `herbs` percent (25 / 60 / 80 at 0 / 100 / 200) of one
     herb besides, by weight, one of it: "Your eye for herbs finds an angelica root besides." Two
-    more gameplay draws, a herbalist's only: anyone else's forage draws as before. Angelica root
-    is the only herb until brewing's herbs come (#1340). Herbalism marks on a forage, 25 %.
+    more gameplay draws, a herbalist's only: anyone else's forage draws as before. The lists
+    hold angelica root and the brewing herbs where they grow (#1340): moonwort and comfrey on
+    grassland and in forests, feverfew and vervain in forests, henbane and bog myrtle in swamps,
+    eyebright on hills; glowcap and mandrake never (the dungeon's). Herbalism marks on a
+    forage, 25 %.
     Nothing is remembered: the same spot may be tried again at once (no anti-farming limit, the
     time is the price). Presentation shows the outcome only, never the chance.
   - **Food** found is ordinary food (§8 "Hunger"): berries, mushrooms, and hazelnuts (new), and
     apples and angelica roots.
+- **Gathering herbs** (`world/gather.rs`, `data/herbs.toml`; #1340, design `recipes.md` §8): the
+  dungeon's glowing fungus (terrain `fungus`, the file's `terrain`) is gathered for herbs, the
+  inputs of Alchemy. The abilities menu's **Gather** (`Ability::Gather`, the *Here* group, as
+  Pray and Drink: listed only beside fungus; `Action::Gather(Dir)`, replay text `gather:DIR`;
+  no key of its own) is **everyone's**, while the file exists. With fungus on one cell beside
+  the player the menu gathers there at once; with more it asks the way. A way with no fungus is
+  refused, taking no time ("There is nothing here to gather.").
+  - **Time**: the file's `seconds` (300: five minutes), in turns of the `gather` action (1000),
+    stopped like a rest ("You stop gathering."); a gather cut short finds nothing, the time
+    spent.
+  - **The find**: trained in Herbalism, `count` (`1d2`, one gameplay draw per die) plus one for
+    every `value_per_count` (50) of Herbalism's trained value; untrained, `untrained` (1), no
+    draw. Each herb is one gameplay draw by weight from the `[[herb]]` rows at the level's item
+    level (a dungeon level's depth; a hand-made level's `item_level`), read as `gems.toml`'s
+    sizes are: `find` at level 1, `deeper` added per level past the first (negative for
+    moonwort), never below 0, none below `level`. Nine herbs: glowcap 40/0/1, moonwort 30/−1/1,
+    comfrey 20/0/1, feverfew and henbane 10/2/3, eyebright, bog myrtle, and vervain 6/2/4,
+    mandrake 2/2/6. Into the pack: "You gather 2 sprigs of moonwort and a glowcap." Then
+    Herbalism marks (`gather`, 100 %, the training stream).
+  - **The fungus never depletes**: nothing changes on the level (no picked state, no light
+    change), so it may be gathered again at once; time is the only cost. Fungus is placed by
+    the caves generator's patches and hand-made levels; the rooms generator places none.
 - **Talents** (`warlock-core/src/talent.rs`, the runtime; `content/talent.rs`, the data;
   `world/talent.rs`, the picks; M30, #229; design `docs/design/progression.md` §7, §10): knacks
   a character picks as they level, each a typed effect read where the rules already read what

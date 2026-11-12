@@ -91,6 +91,10 @@ drink = 1000
 # forage.toml's `seconds` (10 minutes), a turn of this after another.
 forage = 1000
 
+# A turn of gathering herbs from the glowing fungus (the Gather ability; spec §8 "Skills":
+# Herbalism): a gather takes herbs.toml's `seconds` (5 minutes), a turn of this after another.
+gather = 1000
+
 # A turn of fletching (the Fletch ability; spec §8 "Fletching"): a batch takes fletch.toml's
 # `seconds` (10 minutes), a turn of this after another.
 fletch = 1000

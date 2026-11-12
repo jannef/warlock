@@ -214,6 +214,12 @@ pub enum Action {
     /// landscape and Survival. Interrupted, it finds nothing. Refused (no time) untrained, or
     /// anywhere but on land of the overworld or a local area of it.
     Forage,
+    /// Gather herbs from the glowing fungus in a direction (spec §8 "Skills": Herbalism; the
+    /// Gather ability, the abilities menu's Here group): turns of the `gather` action for
+    /// `data/herbs.toml`'s time, then herbs drawn by the level's depth, more with Herbalism.
+    /// Interrupted, it finds nothing. The fungus is never picked over. Refused (no time) with no
+    /// fungus that way.
+    Gather(Dir),
     /// Make arrows or bolts for the launcher ready (spec §8 "Fletching"; the Fletch ability, in
     /// Woodcraft's place in the abilities menu): turns of the `fletch` action for
     /// `data/fletch.toml`'s time, then a Dexterity check plus Woodcraft whose margin scales what
@@ -971,6 +977,7 @@ impl fmt::Display for Action {
             Action::Pray => f.write_str("pray"),
             Action::Drink => f.write_str("drink"),
             Action::Forage => f.write_str("forage"),
+            Action::Gather(d) => write!(f, "gather:{d}"),
             Action::Fletch => f.write_str("fletch"),
             Action::Decipher { item } => write!(f, "decipher:{}", position_text(*item)),
             Action::Temper { item } => write!(f, "temper:{}", position_text(*item)),
@@ -1094,6 +1101,7 @@ impl FromStr for Action {
             "dig" => dir().map(Action::Dig),
             "disarm" => dir().map(Action::Disarm),
             "listen" => dir().map(Action::Listen),
+            "gather" => dir().map(Action::Gather),
             "wedge" => dir().map(Action::Wedge),
             "heal" => {
                 let usage = || {
@@ -1905,6 +1913,7 @@ mod tests {
                 Action::Dig(d),
                 Action::Disarm(d),
                 Action::Listen(d),
+                Action::Gather(d),
                 Action::Wedge(d),
             ]);
         }
