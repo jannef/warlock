@@ -16,8 +16,8 @@
 
 use super::{Actor, LevelState, Spent, World};
 use crate::content::{
-    Content, MaterialId, ObjectId, PartSource, RecipeDef, RecipeId, RecipeUse, TerrainId, article,
-    counted,
+    Content, InputKind, MaterialId, ObjectId, PartSource, RecipeDef, RecipeId, RecipeInput,
+    RecipeUse, TerrainId, article, counted,
 };
 use crate::geom::Dir;
 use crate::skills::SkillId;
@@ -47,7 +47,8 @@ pub enum RecipeLack {
     Knife,
     /// No bow or crossbow ready that fletching makes ammunition for.
     Launcher,
-    /// No stack of stock fits a chosen part: this material's group is what is missing.
+    /// No stack of stock fits a chosen part, or holds a stock input: this material's group is
+    /// what is missing.
     Stock(MaterialId),
     /// Too few of an input carried.
     Input(ObjectId),
@@ -108,9 +109,10 @@ pub(crate) fn recipe_rows(
 }
 
 /// The first reason `player` cannot make `recipe` now, in the screen's order: not built yet,
-/// skill, station, knife, launcher, stock, inputs. Only `"stock"` parts and object inputs are
-/// looked at: the other part sources and the stock inputs (docs/design/recipes.md §10) are
-/// checked by the phases whose recipes first use them.
+/// skill, station, knife, launcher, stock, inputs. Only stock parts and the inputs are looked
+/// at: the other part sources (docs/design/recipes.md §10) are checked by the phases whose
+/// recipes first use them. A stock input (a bow's sinew) wants one stack holding all it takes,
+/// as the wizard picks one.
 pub(super) fn lack(
     content: &Content,
     level: &LevelState,
@@ -147,16 +149,64 @@ pub(super) fn lack(
             return worked.first().map(|&m| RecipeLack::Stock(m));
         }
     }
-    for (object, count) in (recipe.inputs.iter()).filter_map(|i| Some((i.object()?, i.count))) {
-        let carried: u32 = (player.inventory.iter())
-            .filter(|s| s.object == object)
-            .map(|s| s.count)
-            .sum();
-        if carried < count {
+    for input in &recipe.inputs {
+        let fitting = (player.inventory.iter()).filter(|s| input_fits(content, input, s));
+        let Some(object) = input.object() else {
+            if !fitting.into_iter().any(|s| s.count >= input.count) {
+                return input_material(content, input).map(RecipeLack::Stock);
+            }
+            continue;
+        };
+        if fitting.map(|s| s.count).sum::<u32>() < input.count {
             return Some(RecipeLack::Input(object));
         }
     }
     None
+}
+
+/// Whether `stack` is what `input` takes: a stack of its object, or a piece of its material or of
+/// a material of its group (a crossbow's lock: an ingot of any metal).
+pub(super) fn input_fits(
+    content: &Content,
+    input: &RecipeInput,
+    stack: &crate::object::Stack,
+) -> bool {
+    match &input.kind {
+        InputKind::Object(object) => stack.object == *object,
+        InputKind::Material(material) => stack_material(content, stack) == Some(*material),
+        InputKind::Group(group) => stack_material(content, stack)
+            .is_some_and(|m| content.material(m).group.as_deref() == Some(group.as_str())),
+    }
+}
+
+/// The material a stock input names, or the first of its group: what its lack and its words
+/// are said by.
+fn input_material(content: &Content, input: &RecipeInput) -> Option<MaterialId> {
+    match &input.kind {
+        InputKind::Object(_) => None,
+        InputKind::Material(material) => Some(*material),
+        InputKind::Group(group) => (content.materials().iter())
+            .position(|m| m.group.as_deref() == Some(group.as_str()))
+            .and_then(|i| u16::try_from(i).ok())
+            .map(MaterialId),
+    }
+}
+
+/// A stock input in words: "a length of sinew", "an ingot of any metal".
+fn stock_input_words(content: &Content, input: &RecipeInput) -> Option<String> {
+    let material = input_material(content, input)?;
+    let piece = content.object(content.object_id(crate::piece::ID)?);
+    let (one, many) = match &input.kind {
+        InputKind::Group(group) => {
+            let (name, plural, _) = content.stock().form_of(content, material)?;
+            (
+                format!("{name} of any {group}"),
+                format!("{plural} of any {group}"),
+            )
+        }
+        _ => crate::piece::names(content, piece, material),
+    };
+    Some(counted(&one, &many, input.count))
 }
 
 /// Whether a part's source is stock alone, the steps built so far: `"stock"`, or a table of
@@ -224,8 +274,8 @@ fn takes(content: &Content, player: &Actor, recipe: &RecipeDef) -> String {
         }
     }
     for input in &recipe.inputs {
-        // Stock inputs are told by the phase whose recipe first takes one (P7).
         let Some(object) = input.object() else {
+            words.extend(stock_input_words(content, input));
             continue;
         };
         let def = content.object(object);
@@ -279,9 +329,10 @@ fn stock_words(
     let worked = worked_materials(content, recipe, object, part);
     let piece = content.object(content.object_id(crate::piece::ID)?);
     let group = |m: MaterialId| content.material(m).group.clone();
-    // The base material's group first: a club is "7 wood billets or 7 bone shards".
+    // The base material's group first, each group by its cheapest: a club is "7 wood billets or
+    // 7 bone shards", a bow "4 wood billets or 4 horn shards".
     let mut order = worked.clone();
-    order.sort_by_key(|&m| group(m) != group(base.material));
+    order.sort_by_key(|&m| (group(m) != group(base.material), content.material(m).value));
     let mut groups: Vec<Option<String>> = Vec::new();
     let mut words: Vec<String> = Vec::new();
     for &first in &order {

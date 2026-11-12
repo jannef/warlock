@@ -1,0 +1,12 @@
+# A sling cut from a hide: Woodcraft's, with a knife carried and no station
+# (docs/design/recipes.md §6 "Missile weapons"; docs/dev/crafting.md). The stock is priced by the
+# weight.
+[[recipe]]
+id = "sling"
+result = { object = "sling" }
+difficulty = 8
+seconds = 600
+knife = true
+
+[recipe.parts]
+main = { stock = ["hide"] }

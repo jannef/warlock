@@ -5,7 +5,8 @@
 //! - **The steps** ([`craft_steps`], what the wizard lists, through
 //!   [`PerceptionView::craft_steps`]): one choice for each `"stock"` part of the result, in part
 //!   order (the pieces whose material the part may be made of and the profession works, each
-//!   with the count it would take), each object input (the stacks of that object), then the
+//!   with the count it would take), each input (the stacks of an object input; the pieces of a
+//!   stock input's material or group: a bow's sinew, a crossbow's ingot of any metal), then the
 //!   ornament if the recipe offers one (the cut loose gems carried; None may be chosen). A step
 //!   with one fitting stack is still a step: the player sees what is spent.
 //! - **The plan** ([`craft_plan`]): the picks, inventory positions in step order (`None` a
@@ -25,12 +26,13 @@
 //!   gameplay draw each, and `attempts` equal to them, so the anvil goes on from there), plain,
 //!   or failed; a natural 24 makes at least Fine, a natural 2 fails. An item with no aspect is
 //!   plain whatever the margin. Made, the stock and inputs are spent, the gem set, and the item
-//!   goes into the pack identified; failed, nothing is made, the gem is kept, and the stock and
-//!   object inputs come back at the settings' `yield` (pieces by [`crate::piece::count_for`],
-//!   at least one of each). Either way the skill may earn a mark ([`Use::Craft`]).
+//!   goes into the pack identified; failed, nothing is made, the gem is kept, the stock parts
+//!   come back at the settings' `yield` (pieces by [`crate::piece::count_for`], at least one of
+//!   each), and the inputs at `count × yield / 100` (a bow's one sinew is lost). Either way the skill may earn a mark ([`Use::Craft`]).
 //!
 //! Only stock parts (`"stock"`, or a table of `stock` alone: a spear's haft of another profession's
-//! wood), object inputs, and the ornament have steps yet: a recipe needing any other part source, a stock input, a count, a failure or fumble object, or a brittle result
+//! wood), inputs, and the ornament have steps yet: a recipe needing any other part source, a
+//! count, a failure or fumble object, or a brittle result
 //! is refused ("You cannot make that yet.") until the phase that builds its step.
 //!
 //! [`PerceptionView::craft_steps`]: crate::perception::PerceptionView::craft_steps
@@ -38,13 +40,14 @@
 //! [`Effect::Craft`]: crate::skills::Effect::Craft
 //! [`Use::Craft`]: crate::skills::Use::Craft
 
-use super::craft::{RecipeLack, lack, stack_material, stock_only, worked_materials};
+use super::craft::{RecipeLack, input_fits, lack, stack_material, stock_only, worked_materials};
 use super::rest::Ended;
 use super::{Actor, Spent, World};
 use crate::action::Event;
 use crate::combat;
 use crate::content::{
-    ActionKind, Content, MaterialId, RecipeCount, RecipeDef, RecipeId, RecipeSettings, counted,
+    ActionKind, Content, InputKind, MaterialId, RecipeCount, RecipeDef, RecipeId, RecipeSettings,
+    counted,
 };
 use crate::item_parts::{self, ItemPart};
 use crate::magic::Worked;
@@ -189,8 +192,7 @@ fn steps(content: &Content, recipe: &RecipeDef) -> Option<Vec<Step>> {
         }
         steps.push(Step::Part(part.part));
     }
-    for (i, input) in recipe.inputs.iter().enumerate() {
-        input.object()?;
+    for i in 0..recipe.inputs.len() {
         steps.push(Step::Input(i));
     }
     if recipe.ornament {
@@ -250,8 +252,11 @@ fn label(content: &Content, recipe: &RecipeDef, step: Step) -> String {
                 worked.iter().all(|m| group(m) == first).then_some(first)?
             })
             .unwrap_or_else(|| "material".into()),
-        Step::Input(i) => (recipe.inputs[i].object())
-            .map_or_else(String::new, |o| content.object(o).plural.clone()),
+        Step::Input(i) => match &recipe.inputs[i].kind {
+            InputKind::Object(o) => content.object(*o).plural.clone(),
+            InputKind::Material(m) => content.material(*m).name.clone(),
+            InputKind::Group(group) => group.clone(),
+        },
         Step::Ornament(part) => part_name(Some(part)).unwrap_or_default(),
     }
 }
@@ -300,7 +305,7 @@ pub(crate) fn craft_steps(
                 Step::Input(i) => {
                     let input = &def.inputs[i];
                     let options = (pack.iter().enumerate())
-                        .filter(|(_, s)| Some(s.object) == input.object())
+                        .filter(|(_, s)| input_fits(content, input, s))
                         .map(|(at, stack)| option(at, stack, input.count))
                         .collect();
                     (CraftStepKind::Input, false, options)
@@ -395,7 +400,7 @@ fn resolve(
             }
             Step::Input(i) => {
                 let input = &recipe.inputs[i];
-                if Some(stack.object) != input.object() {
+                if !input_fits(content, input, stack) {
                     return Err(format!("That will not do for the {what}."));
                 }
                 let back = input.count * yield_percent / 100;

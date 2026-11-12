@@ -5,7 +5,7 @@
 use super::text::{Term, anchored, link};
 use std::fmt::Write as _;
 use warlock_core::combat::HIGHEST;
-use warlock_core::content::{Content, MaterialId, PartSource, counted};
+use warlock_core::content::{Content, InputKind, MaterialId, PartSource, RecipeInput, counted};
 use warlock_core::skills::Effect;
 use warlock_core::time::Duration;
 use warlock_core::world::{Grade, grade};
@@ -69,7 +69,13 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
         let mut work = 0;
         for (n, part) in r.parts.iter().enumerate() {
             let base = &def.parts[part.part];
-            let name = (base.part).map_or("the weapon".to_string(), |p| {
+            // A lute or a pipe is no weapon: it is held in no slot.
+            let whole = if def.slot.is_some() {
+                "the weapon"
+            } else {
+                "the item"
+            };
+            let name = (base.part).map_or(whole.to_string(), |p| {
                 content.part_defs()[usize::from(p.0)].name.clone()
             });
             let materials = materials(content, r.skill, def, part);
@@ -81,7 +87,7 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
             // group: another material of the group takes as many of its own.
             let group = |m: MaterialId| content.material(m).group.clone();
             let mut order = materials.clone();
-            order.sort_by_key(|&m| group(m) != group(base.material));
+            order.sort_by_key(|&m| (group(m) != group(base.material), content.material(m).value));
             let mut groups = Vec::new();
             let mut words = Vec::new();
             for &first in &order {
@@ -103,6 +109,10 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
                 }
             }
             stock.push(words.join(" or "));
+        }
+        // What is used up besides: a bow's sinew, a crossbow's ingot of any metal.
+        for input in &r.inputs {
+            stock.extend(input_words(content, piece, input));
         }
         let mut needs = Vec::new();
         if let Some(t) = r.station {
@@ -148,6 +158,32 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
          chance the work comes out at all, with an average stat.\n",
     );
     out
+}
+
+/// An input in words: "a length of sinew", "an ingot of any metal", "20 arrowheads".
+fn input_words(
+    content: &Content,
+    piece: Option<&warlock_core::content::ObjectDef>,
+    input: &RecipeInput,
+) -> Option<String> {
+    let (one, many) = match &input.kind {
+        InputKind::Object(o) => {
+            let def = content.object(*o);
+            (def.name.clone(), def.plural.clone())
+        }
+        InputKind::Material(m) => warlock_core::piece::names(content, piece?, *m),
+        InputKind::Group(group) => {
+            let first = (content.materials().iter())
+                .position(|m| m.group.as_deref() == Some(group.as_str()))?;
+            let first = MaterialId(u16::try_from(first).ok()?);
+            let (name, plural, _) = content.stock().form_of(content, first)?;
+            (
+                format!("{name} of any {group}"),
+                format!("{plural} of any {group}"),
+            )
+        }
+    };
+    Some(counted(&one, &many, input.count))
 }
 
 /// The materials part `part` of `def` may be made of as the recipe takes it: a `"stock"` part

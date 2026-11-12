@@ -113,6 +113,15 @@ fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_ma
         ("ironwood_staff", 12, 2700, 30, true, 1),
         ("spear_by_hand", 10, 1800, 0, false, 2),
         ("javelin_by_hand", 9, 1200, 0, false, 2),
+        // P7's (#1352): the bows, crossbows, sling, lute, and pipe, by hand.
+        ("short_bow", 11, 3600, 0, false, 1),
+        ("long_bow", 13, 3600, 20, false, 1),
+        ("composite_bow", 15, 5400, 40, false, 1),
+        ("crossbow", 14, 5400, 30, false, 1),
+        ("heavy_crossbow", 16, 7200, 60, false, 1),
+        ("sling", 8, 600, 0, false, 1),
+        ("lute", 14, 7200, 40, false, 1),
+        ("pipe", 7, 600, 0, false, 1),
     ] {
         let r = content.recipe(recipes.id(id).expect(id));
         let got = (r.difficulty, r.seconds, r.from, r.ornament, r.parts.len());
@@ -126,13 +135,21 @@ fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_ma
         of(wood),
         [
             ("Club", None),
+            ("Composite bow", None),
+            ("Crossbow", None),
             ("Dagger", None),
             ("Fletch", Some(RecipeUse::Fletch)),
             ("Hand axe", None),
+            ("Heavy crossbow", None),
             ("Ironwood staff", None),
             ("Javelin", None),
             ("Knife", None),
+            ("Long war bow", None),
+            ("Lute", None),
+            ("Long-stemmed pipe", None),
             ("Quarterstaff", None),
+            ("Short bow", None),
+            ("Sling", None),
             ("Spear", None),
             ("Whittle", Some(RecipeUse::Whittle))
         ]

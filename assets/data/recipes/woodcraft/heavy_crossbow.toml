@@ -1,0 +1,15 @@
+# A heavy crossbow of wood, its lock and trigger of one ingot of any metal (an input: the wizard
+# asks which). Woodcraft's, with a knife carried and no station: nothing that shoots is a smith's
+# (docs/design/recipes.md §6 "Missile weapons"; docs/dev/crafting.md). The stock is priced by the
+# weight.
+[[recipe]]
+id = "heavy_crossbow"
+result = { object = "heavy_crossbow" }
+difficulty = 16
+seconds = 7200
+from = 60
+knife = true
+inputs = [{ group = "metal", count = 1 }]
+
+[recipe.parts]
+main = { stock = ["wood"] }

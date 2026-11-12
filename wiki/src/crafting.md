@@ -6,8 +6,8 @@ some [materials](materials.md#materials), and its checks use one [stat](stats.md
 take things apart for their materials: **salvage**. A smith trained in Metalcraft can also forge
 weapons at an anvil from metal **stock**: ingots of steel, iron, mithril, and the rest, which you
 can buy, find, or get by salvaging. Someone trained in Woodcraft can make knives, spears, clubs,
-and staves by hand, with a knife, from billets of wood, shards of bone, and blocks of flint or
-stone. The recipes are on the [Metalcraft…](abilities.md#ability-metalcraft) and
+staves, bows, crossbows, slings, a lute, and a pipe by hand, with a knife, from billets of wood,
+shards of bone and horn, hides, sinew, and blocks of flint or stone. The recipes are on the [Metalcraft…](abilities.md#ability-metalcraft) and
 [Woodcraft…](abilities.md#ability-woodcraft) lists in the
 [abilities menu](abilities.md#the-abilities-menu) (see [Professions](skill-uses.md#professions)).
 
@@ -68,6 +68,22 @@ recipes are greyed out "no knife".
 What you make depends on the recipe, not the material. A flint knife is Woodcraft's, made with
 Dexterity; a steel knife is Metalcraft's, forged with Strength. A smith's spear still takes a
 wooden haft, but it is a Metalcraft recipe all the same.
+
+## Bows, crossbows, and instruments
+
+[Bows, crossbows, and slings](objects.md#class-missile-weapons) are made by hand too, never at an
+anvil. A bow is carved from wood,
+horn, or dragonbone and strung with a length of **sinew** (a [piece](materials.md#pieces) of it); a composite bow takes two. Sinew is not
+a part of the bow: it is used up, like the stock. After the bow's material you choose the sinew to
+use. A composite bow of horn is the true one; one of wood is a cheaper copy, named plain
+"composite bow".
+
+A crossbow is made of wood, but its lock and trigger take one ingot of any metal. After the wood
+you choose which ingot to use. Without sinew or an ingot the recipe is greyed out "no sinew to
+hand" or "no metal to hand".
+
+A lute (strung with sinew) and a long-stemmed pipe are made the same way. They have nothing to
+improve, so they always come out plain, however well the work goes.
 
 Some weapons are never made by hand. A battle axe or a great axe of stone would shatter, a
 stiletto is a slim steel point, and a sword of dragonbone is only ever found.
