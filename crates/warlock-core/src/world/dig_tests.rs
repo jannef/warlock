@@ -51,11 +51,24 @@ fn content_of(map: &str, light: &str, scenario: &str) -> Arc<Content> {
 
 const LIT: &str = "[255, 255, 255, 0]";
 
+impl World {
+    /// Trains the player in Mining at 0, if untrained: digging needs it (#1391), and at 0 it
+    /// adds nothing to the work, so a test's times are the untrained digger's of before. The
+    /// test helper of every file that digs.
+    pub(crate) fn learn_mining(&mut self) {
+        let id = self.content().skill_id("mining").expect("Mining");
+        if self.state.player().skills.get(id).is_none() {
+            self.player_mut().skills.add(id, 0);
+        }
+    }
+}
+
 /// The cellar at Strength `strength`, with the pick-axe (a) and the mattock (b) picked up and the
 /// pick-axe ready in the Tool slot.
 fn cellar(strength: u8) -> World {
     let stats = format!("stats = {{ strength = {strength} }}");
     let mut w = World::new(content_of(CELLAR, LIT, &stats), "cellar", None).expect("world");
+    w.learn_mining();
     run(&mut w, "pickup equip:tool:a");
     w
 }
@@ -101,6 +114,7 @@ fn work_follows_power_and_strength() {
 fn a_tool_goes_in_the_tool_slot_and_digs_from_there() {
     let content = content_of(CELLAR, LIT, "");
     let mut w = World::new(content.clone(), "cellar", None).expect("world");
+    w.learn_mining();
     run(&mut w, "pickup");
     // Not ready yet: nothing to dig with, and no time passes.
     assert_eq!(dig(&mut w, "E"), 0);
@@ -170,8 +184,10 @@ fn burden_slows_digging() {
     let stats = "stats = { strength = 3, toughness = 3 }";
     let content = content_of(CELLAR, LIT, stats);
     let mut light = World::new(content.clone(), "cellar", None).expect("world");
+    light.learn_mining();
     run(&mut light, "pickup:a equip:tool:a move:E");
     let mut heavy = World::new(content, "cellar", None).expect("world");
+    heavy.learn_mining();
     run(&mut heavy, "pickup equip:tool:a move:E");
     assert_eq!(
         heavy.actor_load(heavy.player_id()).map(|l| l.burden()),
@@ -218,6 +234,7 @@ fn digging_stops_like_resting_and_the_work_stays_on_the_wall() {
 ";
     let content = content_of(PASSAGE, LIT, "");
     let mut w = World::new(content, "cellar", None).expect("world");
+    w.learn_mining();
     run(&mut w, "pickup equip:tool:a");
     assert!(w.creatures_in_view().is_empty());
     let took = dig(&mut w, "S");
@@ -277,6 +294,7 @@ fn digging_is_loud_and_what_it_brings_stops_it() {
 ";
     let content = content_of(NEXT_DOOR, LIT, "");
     let mut w = World::new(content.clone(), "cellar", None).expect("world");
+    w.learn_mining();
     run(&mut w, "pickup equip:tool:a move:S*2");
     let made = noise::noise(
         &content,
@@ -321,6 +339,7 @@ fn a_broken_wall_lets_light_and_sight_through_and_is_remembered() {
 ";
     let content = content_of(ROOMS, "[0, 0, 0, 0]", "");
     let mut w = World::new(content.clone(), "cellar", None).expect("world");
+    w.learn_mining();
     run(&mut w, "pickup equip:tool:a");
     let (wall, beyond) = (Pos::new(4, 2), Pos::new(6, 2));
     let lamp_lights = |w: &World, p: Pos| {
@@ -367,6 +386,7 @@ fn solid_rock_bared_by_a_dig_shows_its_face() {
 ";
     let content = content_of(ROCK, LIT, "");
     let mut w = World::new(content, "cellar", None).expect("world");
+    w.learn_mining();
     run(&mut w, "pickup equip:tool:a move:E");
     assert_eq!(terrain_at(&w, Pos::new(4, 1)), "void");
     dig(&mut w, "E");
@@ -431,6 +451,7 @@ fn explosions_break_walls_softer_than_their_blast() {
 #######
 ";
     let mut w = World::new(content_of(LAYERS, LIT, ""), "cellar", None).expect("world");
+    w.learn_mining();
     let broken = w.blast(Pos::new(3, 1), 3, 1000, &mut Vec::new());
     assert!(broken.contains(&Pos::new(3, 2)));
     assert_eq!(terrain_at(&w, Pos::new(3, 3)), "packed_earth");
@@ -454,6 +475,9 @@ fn digging_survives_saves_and_replays() {
     assert_eq!(dig(&mut loaded, "N"), 15 * 60);
     assert_eq!(loaded.state(), half.state());
     // A replay of a run that digs verifies.
+    // A dwarf, trained in Mining from the start (a replay starts from the scenario alone).
+    let dwarf = "character = { race = \"dwarf\", gender = \"male\", class = \"craftsperson\" }";
+    let content = content_of(CELLAR, LIT, dwarf);
     let mut recorded = World::new(content.clone(), "cellar", None).expect("world");
     let mut replay = Replay::new(&recorded);
     for action in parse_actions("pickup equip:tool:a move:E*3 dig:N move:N dig:N").expect("parse") {
@@ -507,6 +531,7 @@ fn a_fireball_trap_blasts_the_softer_walls_open() {
 ";
     let content = content_of(BLAST, LIT, "hp = 100");
     let mut w = World::new(content, "cellar", None).expect("world");
+    w.learn_mining();
     let out = run(&mut w, "move:E");
     for (p, terrain) in [
         (Pos::new(2, 1), "rubble"),
@@ -533,8 +558,8 @@ fn a_fireball_trap_blasts_the_softer_walls_open() {
 
 #[test]
 fn a_miner_digs_faster_and_each_wall_dug_through_marks_mining() {
-    // The stone wall (hardness 600) at Strength 10 with the pick-axe: 60 turns untrained, 48 at
-    // Mining 100 (+25 %), 43 at 200 (+40 %).
+    // The stone wall (hardness 600) at Strength 10 with the pick-axe: 60 turns at Mining 0, 48 at
+    // Mining 100 (+25 %), 43 at 200 (+40 %). Untrained, no digging at all (#1391).
     let stone = |mining: Option<u16>| {
         let mut w = cellar(10);
         let id = w.content().skill_id("mining").expect("Mining");
@@ -547,11 +572,13 @@ fn a_miner_digs_faster_and_each_wall_dug_through_marks_mining() {
         }
         run(&mut w, "move:E*3");
         let took = dig(&mut w, "N");
-        assert_eq!(terrain_at(&w, Pos::new(4, 1)), "rubble");
+        let broke = terrain_at(&w, Pos::new(4, 1)) == "rubble";
         let marks = w.state.player().skills.get(id).map(|t| t.marks);
+        assert_eq!(broke, mining.is_some());
         (took, marks)
     };
-    assert_eq!(stone(None), (60 * 6, None));
+    assert_eq!(stone(None), (0, None));
+    assert_eq!(stone(Some(0)), (60 * 6, Some(1)));
     assert_eq!(stone(Some(100)), (48 * 6, Some(1)));
     assert_eq!(stone(Some(200)), (43 * 6, Some(1)));
     // A wall a blast breaks is no dig: no mark.

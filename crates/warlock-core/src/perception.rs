@@ -1882,6 +1882,12 @@ impl<'a> PerceptionView<'a> {
         self.player.dig_tool(self.content).map(|(tool, _)| tool)
     }
 
+    /// Why the player cannot dig now, in the rules' words (no digging tool ready, or untrained
+    /// in Mining: `world::dig_refusal`), or `None` when `u` may ask for a direction.
+    pub fn dig_refusal(&self) -> Option<&'static str> {
+        crate::world::dig_refusal(self.player, self.content)
+    }
+
     /// The carried light the player has ready (spec §5 "Light sources": a lantern in the Tool
     /// slot), by its inventory position, lit or not: `u` uses it at once, without a direction.
     pub fn ready_light(&self) -> Option<usize> {

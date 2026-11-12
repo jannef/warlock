@@ -7,12 +7,16 @@ slowly, and [see across](sight.md#line-of-sight).
 
 ## Digging
 
-1. **Get a digging tool.** A pick-axe or a mattock goes in the Tool slot of your
+1. **Learn to mine.** Only someone trained in the [Mining](skills.md#skill-mining) skill can dig.
+   Every [dwarf](races.md#race-dwarf), [duergar](races.md#race-duergar), and
+   [kobold](races.md#race-kobold) knows it, and some craftspeople and commoners do. Anyone else
+   can learn it from [Alberich](npcs.md#alberich) in Fyrdelf, for gold.
+2. **Get a digging tool.** A pick-axe or a mattock goes in the Tool slot of your
    [equipment](equipment.md): press `i`, then `m` ([Tool](equipment.md#what-fits-where)), then the
    tool's letter. Ælfric's General Store in Cēaptūn sells a pick-axe.
-2. **Dig.** Press `u` (use a tool), then a direction: "Dig in which direction?". You start digging
+3. **Dig.** Press `u` (use a tool), then a direction: "Dig in which direction?". You start digging
    into the wall next to you ("You dig into the stone wall.").
-3. **Keep at it.** Digging goes on by itself, turn after turn, as [resting](resting.md) does,
+4. **Keep at it.** Digging goes on by itself, turn after turn, as [resting](resting.md) does,
    until the wall gives way: "After 6 minutes, the stone wall crumbles."
 
 Each turn of digging is a [normal action](turns.md#what-actions-cost), 6 seconds at a normal pace,
@@ -38,8 +42,9 @@ And with a pick-axe at other Strength scores:
 
 {{#include generated/digging-strength.md}}
 
-Without a tool ready, `u` tells you so: "You have no digging tool ready." Pointing it at open
-ground says "There is nothing to dig there."
+Without a tool ready, `u` tells you so: "You have no digging tool ready." Untrained in Mining, it
+says "You do not know how to mine: that takes the Mining skill." Pointing it at open ground says
+"There is nothing to dig there."
 
 ### Stopping and going on
 

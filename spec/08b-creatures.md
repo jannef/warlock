@@ -790,8 +790,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     beyond the overworld's memory (saved as always). Built in: Godgifu's five topics in Cēaptūn
     (the barrows, the marsh, the mines, the volcano, the pass), each from the town's cell.
   - **Services** (`world/service.rs`; the campaign design §6.1, #329): a dialogue's
-    `[[dialogue.service]]`s (`id`, `name`, `price` in gold, `does` = `cure`, `mend`, or `identify`, `reply`,
-    `nothing`) are sold for gold and asked for like topics (`ask:E:cure`): `World::topics` lists
+    `[[dialogue.service]]`s (`id`, `name`, `price` in gold, `does` = `cure`, `mend`, `identify`, or
+    `train_skill`, `reply`, `nothing`, and a training's `train`) are sold for gold and asked for like topics (`ask:E:cure`): `World::topics` lists
     them after the topics with their price now (`TopicView::price`; the dialogue screen shows
     "A cure for what ails you (60 gold)"). Refused, taking no time and nothing taken, with the
     `nothing` line when there is nothing to do (a cure: no status or disease, incubating ones
@@ -814,6 +814,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the gold only `Go back`). All or nothing: refused with the `nothing` line when everything is
     known and with "You cannot pay." short of the total, neither taking time. Pious does not
     halve it (a temple's talent).
+  - **Training** (`does = "train_skill"`, #1391): `train = { skill = "mining", value = 5 }` names
+    a skill (`data/skills.toml`, checked when content loads) and the value it is taught at: a
+    fixed number, no roll (5, the low end of a dwarf's Mining). Offered only while the player is
+    untrained in that skill: `World::topics` leaves it out once they are, and asked for anyway it
+    is the `nothing` line, no time. Bought, the player is trained at that value and told "Alberich
+    trains you in mining." Its price moves with favour as a healer's or a sage's does (not
+    `temple`; Pious does not halve it), and with a town's goodwill. Built in: Alberich, the
+    dwarven miser of Fyrdelf's fifth floor, teaches Mining for 500 gold (§7 "Dungeons"); digging
+    needs it (§8 "Digging").
   - **Goodwill** (`world/goodwill.rs`, `content/town.rs`; #1247): a campaign's `data/towns/`
     `[[town]]`s (`id`, `name`, `people`: npc or creature ids, `goodwill`: percent, `told`) name a
     town's people. Every quest one of them gives that the player completes (each completion of a

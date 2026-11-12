@@ -22,7 +22,7 @@
 use super::{Ended, LevelState, Spent, World, article};
 use crate::action::{Breach, Event, MAX_REST};
 use crate::content::StatUse;
-use crate::content::{ActionKind, Effect, LevelKind};
+use crate::content::{ActionKind, Content, Effect, LevelKind};
 use crate::geom::{Dir, Pos};
 use crate::noise::Act;
 use crate::sight::LineOfSight;
@@ -43,6 +43,24 @@ pub const MAX_DIG: Duration = MAX_REST;
 /// at Strength 10 does 200, a full 10 points: a wall of hardness 600 takes it 60 turns.
 pub fn dig_work(power: u16, strength: u8) -> u32 {
     u32::from(power) * (u32::from(strength) + 10)
+}
+
+/// What the player is told when they would dig untrained in Mining (#1391).
+pub const UNTRAINED: &str = "You do not know how to mine: that takes the Mining skill.";
+
+/// Why `digger` cannot dig at all now, in the words the player is told, or `None` when they
+/// can (spec §8 "Digging"): without a digging tool ready, or untrained in the skill
+/// `data/mining.toml` names (Mining; no rule without that file). The one check, read by
+/// [`World::start_dig`] and by perception ([`crate::PerceptionView::dig_refusal`]), so the
+/// game asks for no direction where the rules would refuse. Creatures do not dig.
+pub fn dig_refusal(digger: &super::Actor, content: &Content) -> Option<&'static str> {
+    if digger.dig_tool(content).is_none() {
+        return Some("You have no digging tool ready.");
+    }
+    let skill = content.mining().map(|rules| rules.skill);
+    skill
+        .is_some_and(|skill| digger.skills.get(skill).is_none())
+        .then_some(UNTRAINED)
 }
 
 /// How many turns of digging a wall of `hardness` takes with a tool of `power` at Strength
@@ -66,15 +84,16 @@ impl LevelState {
 
 impl World {
     /// Starts digging toward `dir` (spec §8 "Digging"): refused, taking no time, without a
-    /// digging tool ready, on the overworld, and toward anything that is no wall that breaks.
+    /// digging tool ready or untrained in Mining ([`dig_refusal`]), on the overworld, and toward
+    /// anything that is no wall that breaks.
     pub(super) fn start_dig(&mut self, dir: Dir) -> Spent {
         if self.refused_afloat("You cannot dig in deep water.") {
             return Spent::Nothing;
         }
         let content = self.content.clone();
         let player = self.state.player();
-        if player.dig_tool(&content).is_none() {
-            self.say("You have no digging tool ready.");
+        if let Some(why) = dig_refusal(player, &content) {
+            self.say(why);
             return Spent::Nothing;
         }
         let level = self.state.current();

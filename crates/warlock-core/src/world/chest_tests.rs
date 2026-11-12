@@ -402,6 +402,7 @@ fn a_blast_blows_a_coffer_apart_sparing_nothing_and_not_a_kist() {
 #[test]
 fn a_chest_is_no_wall_to_dig() {
     let mut w = world("hall");
+    w.learn_mining();
     give(&mut w, "pick_axe");
     let axe = w.state.player().inventory.len() - 1;
     run(&mut w, &format!("equip:tool:{axe}"));

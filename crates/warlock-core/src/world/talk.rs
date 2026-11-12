@@ -27,7 +27,7 @@
 use super::{Actor, ActorId, ActorKind, Spent, World};
 use crate::action::Event;
 use crate::content::StatUse;
-use crate::content::{ActionKind, Budge, Dialogue, DialogueId, Stance, Topic};
+use crate::content::{ActionKind, Budge, Dialogue, DialogueId, Service, Stance, Topic};
 use crate::geom::{Dir, Pos};
 use crate::noise::{self, Act, Heard, SoundKind, Volume};
 use serde::{Deserialize, Serialize};
@@ -221,7 +221,8 @@ impl World {
             items: None,
             ware: None,
         }));
-        topics.extend(dialogue.services.iter().map(|s| TopicView {
+        let offered = |s: &&Service| self.service_offered(s);
+        topics.extend(dialogue.services.iter().filter(offered).map(|s| TopicView {
             id: s.id.clone(),
             name: s.name.clone(),
             price: Some(self.service_price(id, s)),

@@ -333,7 +333,7 @@ pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text
 pub use curse::{Rising, rise_candidates, rises_as};
 pub use cut::{CutBand, cut_band, cut_outcome, cuttable};
 pub use decipher::undeciphered;
-pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
+pub use dig::{MAX_DIG, WORK_SCALE, dig_refusal, dig_work, digs_to_break};
 pub use disarm::SPRINGS_SHORT_BY;
 pub(crate) use encounter::view as encounter_view;
 pub use encounter::{
@@ -2216,6 +2216,8 @@ mod tests;
 mod theft_tests;
 #[cfg(test)]
 mod time_tests;
+#[cfg(test)]
+mod train_service_tests;
 #[cfg(test)]
 mod transmutation_rank_tests;
 #[cfg(test)]

@@ -1,9 +1,10 @@
 # Mining
 
 **Dig through a wall in a dungeon, and you may break out ore, stone, or a gem.** Only if you are
-trained in the [Mining](skills.md#skill-mining) skill. Untrained, a wall is just a wall. Every
-[dwarf](races.md#race-dwarf) and [duergar](races.md#race-duergar) knows Mining, and so do
-[kobolds](races.md#race-kobold).
+trained in the [Mining](skills.md#skill-mining) skill. Untrained, you cannot
+[dig](digging.md#digging) at all. Every [dwarf](races.md#race-dwarf) and
+[duergar](races.md#race-duergar) knows Mining, and so do [kobolds](races.md#race-kobold); anyone
+can learn it from [Alberich](npcs.md#alberich) in Fyrdelf, for gold.
 
 Mining happens only in the dungeons: the generated floors under the hills, the endless stair,
 the Pits. A town's walls, a hall's, or a rock on the [overworld](overworld.md) give nothing. A

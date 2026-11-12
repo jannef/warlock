@@ -2,5 +2,6 @@ name = "Quarry"
 description = "An old stone quarry under the hub: pick up the pick-axe, ready it in the Tool slot, and dig through earth, stone, and granite. A sealed chamber waits behind the pit's east wall."
 start_level = "quarry"
 seed = 1
-# A stonecutter come to work the old quarry.
-character = { race = "human", gender = "male", class = "craftsperson", name = "Bram" }
+# A dwarven stonecutter come to work the old quarry: a dwarf, so trained in Mining, which digging
+# needs (#1391).
+character = { race = "dwarf", gender = "male", class = "craftsperson", name = "Bram" }
