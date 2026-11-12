@@ -82,7 +82,16 @@ fn bluff_is_feint_in_the_menu_aimed_in_a_direction() {
     let content = w.content().clone();
     let rows = w.perception().abilities();
     let row = rows.iter().find(|a| a.ability == Ability::Feint);
-    assert_eq!(row.map(|r| r.unavailable), Some(None), "usable");
+    // Nobody beside to fool (#1327); a kobold there, it is usable.
+    let none = crate::ability::Unavailable::NoTarget(crate::beside::Target::Fool);
+    assert_eq!(row.map(|r| r.unavailable), Some(Some(none)));
+    let mut kobolded = liar("thief", 14, Some(10));
+    kobold_beside(&mut kobolded, 10);
+    kobolded.perceive(&mut Vec::new());
+    let usable = (kobolded.perception().abilities().into_iter())
+        .find(|a| a.ability == Ability::Feint)
+        .map(|r| r.unavailable);
+    assert_eq!(usable, Some(None), "usable");
     let skill = content.skill_id("bluff").expect("bluff");
     assert!(
         !rows.iter().any(|a| a.ability == Ability::Skill(skill)),

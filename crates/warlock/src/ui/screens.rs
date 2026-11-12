@@ -1542,6 +1542,7 @@ mod tests {
     // Directions on the numpad, ADOM's movement keys (#350).
     const NORTH: (KeyCode, &str) = (KeyCode::Numpad8, "8");
     const EAST: (KeyCode, &str) = (KeyCode::Numpad6, "6");
+    const KICK: (KeyCode, &str) = (KeyCode::KeyK, "k");
     const WEST: (KeyCode, &str) = (KeyCode::Numpad4, "4");
 
     /// An app with the router and the screen systems, on the main menu or in a run.
@@ -1677,8 +1678,8 @@ mod tests {
     #[test]
     fn prompts_stay_gameplay_input() {
         let mut app = app(true);
-        // The direction prompt: Esc cancels it rather than pausing.
-        frame(&mut app, &[(KeyCode::KeyO, "o")]);
+        // The direction prompt (Kick's, which always asks): Esc cancels it rather than pausing.
+        frame(&mut app, &[KICK]);
         assert!(matches!(
             app.world().resource::<InputMode>(),
             InputMode::Direction(_)
@@ -1686,8 +1687,8 @@ mod tests {
         frame(&mut app, &[ESC]);
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
         assert!(names(&app).is_empty());
-        frame(&mut app, &[(KeyCode::KeyO, "o"), NORTH]);
-        assert_eq!(actions(&app), [Action::Open(Dir::N)]);
+        frame(&mut app, &[KICK, NORTH]);
+        assert_eq!(actions(&app), [Action::Kick(Dir::N)]);
         // Look mode: Esc leaves it, `?` does nothing there.
         frame(&mut app, &[(KeyCode::KeyL, "l"), HELP]);
         assert!(matches!(
@@ -1727,16 +1728,24 @@ mod tests {
         frame(&mut app, &[USE]);
         assert_eq!(actions(&app), [Action::Dig(Dir::N)]);
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
-        // In the quarry with the pick-axe ready: `u` asks for a direction, Esc cancels it, and a
-        // direction digs.
-        let content = content();
-        let mut world = warlock_core::World::new(content.clone(), "quarry", None).expect("run");
-        for action in
-            warlock_core::action::parse_actions("move:E pickup equip:tool:a").expect("actions")
-        {
-            world.apply(&action);
-        }
-        let mut app = app_with(content, Some(Game::from_world(world, "tamsin-1".into())));
+        // In the quarry with the pick-axe ready, in the open: no wall beside, so the rules say so
+        // at once (#1327).
+        let quarry = |walk: &str| {
+            let content = content();
+            let mut world = warlock_core::World::new(content.clone(), "quarry", None).expect("run");
+            let walk = format!("move:E pickup equip:tool:a {walk}");
+            for action in warlock_core::action::parse_actions(&walk).expect("actions") {
+                world.apply(&action);
+            }
+            app_with(content, Some(Game::from_world(world, "tamsin-1".into())))
+        };
+        let mut app = quarry("");
+        frame(&mut app, &[USE]);
+        assert_eq!(actions(&app), [Action::Dig(Dir::N)]);
+        assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
+        // In the gap of the pit's wall, rock north-east and south-east: `u` asks for a
+        // direction, Esc cancels it, and a direction digs.
+        let mut app = quarry("move:E*4");
         frame(&mut app, &[USE]);
         assert_eq!(
             app.world().resource::<InputMode>(),
@@ -2351,7 +2360,7 @@ mod tests {
     }
 
     #[test]
-    fn the_weapon_skills_screen_opens_on_w_and_a_bash_asks_for_a_direction() {
+    fn the_weapon_skills_screen_opens_on_w_and_a_bash_with_no_foe_is_refused_at_once() {
         let mut app = app(true);
         let skills = (KeyCode::KeyW, "W");
         frame(&mut app, &[skills]);
@@ -2374,24 +2383,19 @@ mod tests {
         frame(&mut app, &[(KeyCode::KeyB, "B")]);
         assert_eq!(actions(&app), [Action::Bash(Dir::N)]);
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
-        // With a shield in hand, it asks for a direction in the message line, like opening a
-        // door, as the abilities menu does.
+        // With a shield in hand and no foe beside, the same, toward the storeroom's wall north
+        // (#1327).
         let mut app = with_a_shield();
         bind_b(&mut app);
         frame(&mut app, &[(KeyCode::KeyB, "B")]);
-        assert_eq!(
-            app.world().resource::<InputMode>(),
-            &InputMode::Ability(Ability::ShieldBash)
-        );
-        frame(&mut app, &[EAST]);
-        assert_eq!(actions(&app), [Action::Bash(Dir::E)]);
+        assert_eq!(actions(&app), [Action::Bash(Dir::N)]);
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
     }
 
     #[test]
-    fn a_disarm_key_asks_for_a_direction_and_disarms() {
-        // Disarming is an ability: unbound by default. Bound (here to `Y`), the showcase's
-        // thief, trained in Disable device, is asked which way, as the abilities menu asks.
+    fn a_disarm_key_with_no_known_trap_beside_is_refused_at_once() {
+        // Disarming is an ability: unbound by default. Bound (here to `Y`), with no trap known
+        // beside the showcase's thief, the rules say so at once, with no prompt (#1327).
         let mut app = app(true);
         {
             let mut bindings = app.world_mut().resource_mut::<Bindings>();
@@ -2401,29 +2405,41 @@ mod tests {
             bindings.0.push((key, disarm));
         }
         frame(&mut app, &[(KeyCode::KeyY, "Y")]);
-        assert_eq!(
-            app.world().resource::<InputMode>(),
-            &InputMode::Ability(Ability::Disarm)
-        );
-        assert!(actions(&app).is_empty(), "nothing yet");
-        frame(&mut app, &[EAST]);
-        assert_eq!(actions(&app), [Action::Disarm(Dir::E)]);
+        assert_eq!(actions(&app), [Action::Disarm(Dir::N)]);
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
     }
 
+    /// A run of the showcase's thief after `walk`.
+    fn thief_after(walk: &str) -> App {
+        let content = content();
+        let mut world = warlock_core::World::new(content.clone(), "showcase", None).expect("run");
+        for action in warlock_core::action::parse_actions(walk).expect("actions") {
+            world.apply(&action);
+        }
+        app_with(content, Some(Game::from_world(world, "tamsin-1".into())))
+    }
+
+    /// The ways to the creatures the player sees beside them, in compass order.
+    fn ways_to_creatures(app: &App) -> Vec<Dir> {
+        let game = app.world().resource::<Game>();
+        let view = game.world.perception();
+        let ways = view.ways(warlock_core::beside::Beside::Chat);
+        ways.expect("chat is aimed beside")
+    }
+
     #[test]
-    fn picking_a_lock_asks_for_a_direction_from_the_menu_or_its_own_key() {
+    fn picking_a_lock_acts_at_once_on_the_one_door_beside() {
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // The showcase's thief is trained in Open lock: `a` `e` (Pick lock, after their birth
-        // sign's stare, Disarm, Listen, and Metalcraft…) asks for a direction.
-        let mut app = app(true);
+        // Below the hall's door, the showcase's thief (trained in Open lock): `a` `e` (Pick
+        // lock, after their birth sign's stare, Disarm, Listen, and Metalcraft…) picks it at
+        // once, with no prompt (#1327).
+        let mut app = thief_after("move:N*3");
         frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyE, "e")]);
         assert!(names(&app).is_empty());
-        assert_eq!(mode(&app), InputMode::Ability(Ability::PickLock));
-        frame(&mut app, &[EAST]);
-        assert_eq!(actions(&app), [Action::PickLock(Dir::E)]);
+        assert_eq!(mode(&app), InputMode::Normal);
+        assert_eq!(actions(&app), [Action::PickLock(Dir::N)]);
         // Its own key is unbound by default; bound (here to `B`), it does the same.
-        let mut app = self::app(true);
+        let mut app = thief_after("move:N*3");
         {
             let mut bindings = app.world_mut().resource_mut::<Bindings>();
             let pick = crate::input::KeyCommand::PickLock;
@@ -2432,18 +2448,42 @@ mod tests {
             bindings.0.push((key, pick));
         }
         frame(&mut app, &[(KeyCode::KeyB, "B")]);
-        assert_eq!(mode(&app), InputMode::Ability(Ability::PickLock));
-        frame(&mut app, &[WEST]);
-        assert_eq!(actions(&app), [Action::PickLock(Dir::W)]);
+        assert_eq!(actions(&app), [Action::PickLock(Dir::N)]);
         assert_eq!(mode(&app), InputMode::Normal);
     }
 
     #[test]
-    fn a_professions_row_opens_its_recipes_and_esc_closes_them() {
-        // The thief's `a` `d` is Metalcraft…: its screen, over the menu's place; Temper there is
-        // greyed away from an anvil, so its letter does nothing.
+    fn opening_and_closing_act_at_once_on_the_one_door_beside_and_kick_always_asks() {
+        const OPEN: (KeyCode, &str) = (KeyCode::KeyO, "o");
+        const CLOSE: (KeyCode, &str) = (KeyCode::KeyC, "c");
+        let mode = |app: &App| *app.world().resource::<InputMode>();
+        // Nothing beside: the rules refuse at once, toward the first way (no wall beside).
         let mut app = app(true);
-        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyD, "d")]);
+        frame(&mut app, &[OPEN]);
+        assert_eq!(actions(&app), [Action::Open(Dir::N)]);
+        assert_eq!(mode(&app), InputMode::Normal);
+        // One door beside: opened at once; then closed at once.
+        let mut app = thief_after("move:N*3");
+        frame(&mut app, &[OPEN]);
+        assert_eq!(actions(&app), [Action::Open(Dir::N)]);
+        assert_eq!(mode(&app), InputMode::Normal);
+        let mut app = thief_after("move:N*3 open:N");
+        frame(&mut app, &[CLOSE]);
+        assert_eq!(actions(&app), [Action::Close(Dir::N)]);
+        // Kick asks whatever is beside.
+        frame(&mut app, &[KICK]);
+        assert!(matches!(mode(&app), InputMode::Direction(_)));
+        frame(&mut app, &[EAST]);
+        assert_eq!(actions(&app).last(), Some(&Action::Kick(Dir::E)));
+    }
+
+    #[test]
+    fn a_professions_row_opens_its_recipes_and_esc_closes_them() {
+        // The thief's `a` `c` is Metalcraft… (Listen is left out away from a door): its screen,
+        // over the menu's place; Temper there is greyed away from an anvil, so its letter does
+        // nothing.
+        let mut app = app(true);
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyC, "c")]);
         let metal = content().skill_id("metalcraft").expect("metalcraft");
         assert_eq!(names(&app), [ScreenName::Profession(metal)]);
         frame(&mut app, &[(KeyCode::KeyA, "a")]);
@@ -2454,18 +2494,27 @@ mod tests {
     }
 
     #[test]
-    fn stealing_asks_for_a_direction_from_the_menu_or_its_own_key() {
+    fn stealing_acts_at_once_on_one_beside_and_asks_among_several() {
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // The showcase's thief can steal: `a` `f` (Steal) asks for a direction in the message
-        // line, and a direction steals.
-        let mut app = app(true);
-        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyF, "f")]);
+        // The showcase's thief can steal; an ally beside is someone to rob: `a` `e` (Steal)
+        // steals from it at once.
+        let mut app = thief_after("ally:panther");
+        let [one] = ways_to_creatures(&app)[..] else {
+            panic!("one ally beside");
+        };
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyE, "e")]);
         assert!(names(&app).is_empty());
+        assert_eq!(mode(&app), InputMode::Normal);
+        assert_eq!(actions(&app), [Action::Steal(one)]);
+        // Two beside: it asks for a direction in the message line, and a direction steals.
+        let mut app = thief_after("ally:panther:2");
+        assert_eq!(ways_to_creatures(&app).len(), 2);
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyE, "e")]);
         assert_eq!(mode(&app), InputMode::Ability(Ability::Steal));
         frame(&mut app, &[EAST]);
         assert_eq!(actions(&app), [Action::Steal(Dir::E)]);
         // Unbound by default; bound (here to `Y`), it asks the same.
-        let mut app = self::app(true);
+        let mut app = thief_after("ally:panther:2");
         {
             let mut bindings = app.world_mut().resource_mut::<Bindings>();
             let steal = crate::input::KeyCommand::Steal;
@@ -2478,18 +2527,24 @@ mod tests {
         frame(&mut app, &[WEST]);
         assert_eq!(actions(&app), [Action::Steal(Dir::W)]);
         assert_eq!(mode(&app), InputMode::Normal);
+        // Nobody beside: refused at once, no prompt.
+        let mut app = self::app(true);
+        {
+            let mut bindings = app.world_mut().resource_mut::<Bindings>();
+            let key = crate::input::KeyBinding::from_text("Y").expect("a key");
+            bindings.0.push((key, crate::input::KeyCommand::Steal));
+        }
+        frame(&mut app, &[(KeyCode::KeyY, "Y")]);
+        assert_eq!(actions(&app), [Action::Steal(Dir::N)]);
+        assert_eq!(mode(&app), InputMode::Normal);
     }
 
     /// A run of the showcase's thief with the storeroom's small shield in hand.
     fn with_a_shield() -> App {
-        let content = content();
-        let mut world = warlock_core::World::new(content.clone(), "showcase", None).expect("run");
-        let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
-                    pickup:a equip:off_hand:b";
-        for action in warlock_core::action::parse_actions(walk).expect("actions") {
-            world.apply(&action);
-        }
-        app_with(content, Some(Game::from_world(world, "tamsin-1".into())))
+        thief_after(
+            "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
+             pickup:a equip:off_hand:b",
+        )
     }
 
     #[test]
@@ -2497,36 +2552,40 @@ mod tests {
         const ABILITIES: (KeyCode, &str) = (KeyCode::KeyA, "a");
         const REPEAT: (KeyCode, &str) = (KeyCode::KeyX, "X");
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // Without a shield: the menu opens on `a`; the shield bash (`i`) is greyed out, so its
+        // Without a shield: the menu opens on `a`; the shield bash (`h`) is greyed out, so its
         // letter only says why; Esc closes the menu, and no time passed.
         let mut app = app(true);
         frame(&mut app, &[ABILITIES]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
-        frame(&mut app, &[(KeyCode::KeyI, "i")]);
+        frame(&mut app, &[(KeyCode::KeyH, "h")]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
         frame(&mut app, &[ESC]);
         assert!(names(&app).is_empty() && actions(&app).is_empty());
         // The quick repeat with nothing used yet opens the menu.
         frame(&mut app, &[REPEAT]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
-        // With a shield: `a` `i` closes the menu and asks for a direction; a direction bashes.
-        let mut app = with_a_shield();
-        frame(&mut app, &[ABILITIES, (KeyCode::KeyI, "i")]);
+        // Two allies beside: `a` `e` closes the menu and asks for a direction; a direction
+        // steals.
+        let mut app = thief_after("ally:panther:2");
+        frame(&mut app, &[ABILITIES, (KeyCode::KeyE, "e")]);
         assert!(names(&app).is_empty());
-        assert_eq!(mode(&app), InputMode::Ability(Ability::ShieldBash));
+        assert_eq!(mode(&app), InputMode::Ability(Ability::Steal));
         frame(&mut app, &[EAST]);
-        assert_eq!(actions(&app), [Action::Bash(Dir::E)]);
+        assert_eq!(actions(&app), [Action::Steal(Dir::E)]);
         let stack = app.world().resource::<ScreenStack>();
-        assert_eq!(stack.last_ability(), Some(Ability::ShieldBash));
+        assert_eq!(stack.last_ability(), Some(Ability::Steal));
         // `X` uses it again; Esc cancels the direction prompt rather than pausing.
         frame(&mut app, &[REPEAT]);
-        assert_eq!(mode(&app), InputMode::Ability(Ability::ShieldBash));
+        assert_eq!(mode(&app), InputMode::Ability(Ability::Steal));
         frame(&mut app, &[ESC]);
         assert_eq!(mode(&app), InputMode::Normal);
         assert!(names(&app).is_empty());
         // The menu opens on it, so Enter repeats it too.
         frame(&mut app, &[ABILITIES, ENTER, WEST]);
-        assert_eq!(actions(&app), [Action::Bash(Dir::E), Action::Bash(Dir::W)]);
+        assert_eq!(
+            actions(&app),
+            [Action::Steal(Dir::E), Action::Steal(Dir::W)]
+        );
     }
 
     /// A run of a bard of level 16, who throws their voice (#244), with a key bound for it (`B`:
@@ -2807,12 +2866,27 @@ mod tests {
     }
 
     #[test]
-    fn chat_asks_for_a_direction_with_no_one_beside() {
+    fn chat_refuses_with_no_one_beside_acts_on_one_and_asks_among_several() {
+        const CHAT: (KeyCode, &str) = (KeyCode::KeyC, "C");
+        let mode = |app: &App| *app.world().resource::<InputMode>();
+        // No one beside: the rules say so at once (#1327).
         let mut app = app(true);
-        frame(&mut app, &[(KeyCode::KeyC, "C")]);
+        frame(&mut app, &[CHAT]);
+        assert_eq!(actions(&app), [Action::Chat(Dir::N)]);
+        assert_eq!(mode(&app), InputMode::Normal);
+        // One: talked to at once.
+        let mut app = thief_after("ally:panther");
+        let [one] = ways_to_creatures(&app)[..] else {
+            panic!("one ally beside");
+        };
+        frame(&mut app, &[CHAT]);
+        assert_eq!(actions(&app), [Action::Chat(one)]);
+        // Two: which way is asked.
+        let mut app = thief_after("ally:panther:2");
+        frame(&mut app, &[CHAT]);
         assert_eq!(
-            app.world().resource::<InputMode>(),
-            &InputMode::Direction(crate::input::KeyCommand::Chat)
+            mode(&app),
+            InputMode::Direction(crate::input::KeyCommand::Chat)
         );
         frame(&mut app, &[EAST]);
         assert_eq!(actions(&app), [Action::Chat(Dir::E)]);

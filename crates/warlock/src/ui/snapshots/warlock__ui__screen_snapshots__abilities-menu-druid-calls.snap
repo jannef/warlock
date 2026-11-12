@@ -20,11 +20,11 @@ expression: "render(case, content.clone())"
           │ Skills                                                                      │
           │   l  Alchemy             not usable yet                                     │
           │   m  Decipher            no unknown scroll                                  │
-          │   n  Tame                in a direction                                     │
+          │   n  Tame                no beast beside you to tame                        │
           │   o  Heal                nothing to treat                                   │
-          │   p  Listen at a door    in a direction                                     │
-          │   q  Metalcraft…                                                            │
-          │   r  Forage              not usable here                                    │
+          │   p  Metalcraft…                                                            │
+          │   q  Forage              not usable here                                    │
+          │   r  Woodcraft…                                                             │
           │                                                                             │
           │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; │
           │ your eyes then rest two hours.                                              │

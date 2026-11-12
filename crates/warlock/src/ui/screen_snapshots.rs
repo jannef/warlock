@@ -951,18 +951,27 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A ranger below the hall's door: Listen and Wedge listed beside a closed door (left out
+    // elsewhere, the owner, #1327).
+    Case {
+        name: "abilities-menu-door",
+        character: Some("human,female,ranger"),
+        actions: "move:N*3",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Set on chosen from the menu: the aiming mode, its prompt in the message line.
     Case {
         name: "set-on-aim",
         actions: "ally:dire_warg:2",
-        keys: Some("a h"),
+        keys: Some("a k"),
         ..BASE
     },
     // Come to heel chosen from the menu: the order's words, no time.
     Case {
         name: "come-to-heel",
         actions: "ally:dire_warg:2",
-        keys: Some("a f"),
+        keys: Some("a i"),
         ..BASE
     },
     // A paladin of some level: the Class group, Lay on hands refused and greyed out short of
@@ -1582,11 +1591,19 @@ const CASES: &[Case] = &[
         keys: Some("Left"),
         ..BASE
     },
+    // The one trap known beside the player: `a b` (Disarm a trap, after the thief's birth
+    // sign's stare, #266) disarms it at once, with no prompt (#1327).
     Case {
-        name: "trap-disarm-prompt",
+        name: "trap-disarm-at-once",
         actions: "move:N*3 open:N move:N*2 move:E*67 open:S move:S*7 move:SW descend",
-        // `a b`: Disarm a trap, after the thief's birth sign's stare (#266).
         keys: Some("a b"),
+        ..BASE
+    },
+    // Two beside the thief to rob: `a e` (Steal) asks which way in the message line (#1327).
+    Case {
+        name: "steal-prompt",
+        actions: "ally:dire_warg:2",
+        keys: Some("a e"),
         ..BASE
     },
     Case {

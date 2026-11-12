@@ -301,6 +301,7 @@ above.
 | Controls, keys, rebinding | `controls.md`, `controls.md#rebinding-keys` |
 | Look mode | `controls.md#look-mode` |
 | Aiming | `controls.md#aiming` |
+| Something beside you, acting at once on the one target | `controls.md#something-beside-you` |
 | Message line, status bar | `the-screen.md#the-screen`, `the-screen.md#messages` |
 | Character screen, info pages | `the-screen.md#character`, `the-screen.md#info-pages` |
 | The skills screen | `the-screen.md#skills` |

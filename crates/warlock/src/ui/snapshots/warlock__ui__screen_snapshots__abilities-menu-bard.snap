@@ -18,11 +18,11 @@ expression: "render(case, content.clone())"
           │   i  Bind               9 mana: you have 4                                  │
           │ Skills                                                                      │
           │   j  Alchemy            not usable yet                                      │
-          │   k  Feint              in a direction                                      │
+          │   k  Feint              no foe beside you to fool                           │
           │   l  Decipher           no unknown scroll                                   │
-          │   m  Disarm a trap      in a direction                                      │
+          │   m  Disarm a trap      no known trap beside you                            │
           │   n  Enchanting         not usable yet                                      │
-          │   o  Tame               in a direction                                      │
+          │   o  Tame               no beast beside you to tame                         │
           │   p  Heal               nothing to treat                                    │
           │   q  Intimidate         at a place you see                                  │
           │                                                                             │

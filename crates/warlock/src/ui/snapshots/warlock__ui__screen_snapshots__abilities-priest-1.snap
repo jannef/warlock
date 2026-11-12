@@ -4,6 +4,7 @@ expression: "render(case, content.clone())"
 ---
  Welcome to Showcase. Press ? for controls.
 
+
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -16,18 +17,17 @@ expression: "render(case, content.clone())"
                     │   d  Decipher           no unknown scroll                │
                     │   e  Heal               nothing to treat                 │
                     │   f  Knowledge          not usable yet                   │
-                    │   g  Listen at a door   in a direction                   │
-                    │   h  Metalcraft…                                         │
-                    │   i  Woodcraft…                                          │
-                    │   j  Salvage            on something you carry           │
+                    │   g  Metalcraft…                                         │
+                    │   h  Woodcraft…                                          │
+                    │   i  Salvage            on something you carry           │
                     │ Weapon skills                                            │
-                    │   k  Shield bash        in a direction                   │
+                    │   j  Shield bash        no foe within reach              │
                     │                                                          │
                     │ Pray (a cast's time, no mana): what ails you most is     │
                     │ answered, as far as your prayers reach; for now, your    │
                     │ wounds. Pray too often and nothing answers a while.      │
                     │                                                          │
-                    │ a-k or Enter use   Esc close                             │
+                    │ a-j or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 

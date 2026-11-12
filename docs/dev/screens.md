@@ -215,9 +215,20 @@ to open, read keys for, or draw one:
   and Esc go to play; every other command, and every held key's repeat, does nothing. Screens
   keep their keys while it waits beneath them. `more::draw` draws the page waited at with
   `--more--` after it, else the end of this turn's messages with earlier ones, one a row, in the
-  rows left. Presentation only: dumps and replays never see pages. The rules never ask: a `move` steps onto whatever is there. `C` with
-  exactly one creature in view next to the player chats with it at once
-  (`input::chat_partner`), else asks for a direction.
+  rows left. Presentation only: dumps and replays never see pages. The rules never ask: a `move` steps onto whatever is there.
+- **Something beside the player** (#1327, `warlock_core::beside`): `Beside` names what acts on
+  a cell beside the player (`Open`, `Close`, `Chat`, `Dig`, `Use(ability)` for an ability aimed
+  in a direction); `Beside::target` its `Target` (a closed door, a known trap, a foe, ...), and
+  `PerceptionView::ways` the ways to the legal ones, from the perception only.
+  `PerceptionView::way` turns them into `Way::Refuse(dir)` (none: `blank_way`, the first known
+  wall, no door or chest, else north, so nobody unseen is struck), `Way::Act(dir)`, or
+  `Way::Ask`. `Gameplay::beside` is the one input helper: `o`, `c`, `C`, `u` with a digging tool,
+  and `Gameplay::use_ability`'s `Aim::Direction` arm go through it (Kick never: it always asks).
+  `PerceptionView::abilities` reads the same ways: a direction ability otherwise usable but with
+  none is `Unavailable::NoTarget(target)` ("no lock beside you", `no_target:lock`), and Listen
+  and Wedge are left out without one (the owner). An unavailable ability is applied toward
+  `blank_way` too. Heal's and Give's ways between two kept beasts stay their own (`tend_way`,
+  `InputMode::GiveWay`).
 - Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Hints`,
   `Panel`, main and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`,
   `ui/controls_screen.rs` (commands grouped by `Context` under headings, notes on Esc and list
@@ -366,7 +377,7 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   arm in `Gameplay::use_ability`. Throwing one's voice (`Ability::ThrowVoice`, Class) is had
   by those a talent gives it. A lantern is no ability: `u` (`KeyCommand::UseTool`) turns a
   light ready in the Tool slot (`PerceptionView::ready_light`) at once, `Action::UseTool`, and
-  asks for a direction to dig otherwise (#643).
+  digs otherwise (#643), by the rule for something beside the player (above).
 - **Menu**: `ui/abilities_screen.rs` (`AbilitiesScreen`, `ScreenName::Abilities`, `--screen
   abilities`): the `PagedList<Entry, Source>`, greyed rows with their reason (an active weapon
   ability's after its stamina, `PerceptionView::own_weapon_stamina`: "3 stamina, in a
@@ -383,12 +394,13 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `Gameplay::press`), or the quick repeat:
   `input::route_keys` closes the top screen if any, remembers it (`ScreenStack::last_ability`,
   cleared with the stack when a run ends, like the creation picks), and calls
-  `Gameplay::use_ability`: `Aim::Direction` enters `InputMode::Ability(ability)` (the message
+  `Gameplay::use_ability`: `Aim::Direction` goes through `Gameplay::beside` (above): with
+  several targets it enters `InputMode::Ability(ability)` (the message
   line's "In which direction? (Esc to cancel)", disarming's "Disarm in which direction?",
   `ui/mod.rs`; a direction applies `ability.action(Some(dir))`),
   `Aim::Cell` starts aiming (`InputMode::Aim`, `AimKind::Ability`), `Aim::Nothing` applies it
-  at once, and one that cannot be used now is applied at once with a placeholder direction (or
-  the player's own cell) so the rules say why and take no time (as `u` does with no tool).
+  at once, and one that cannot be used now is applied at once toward `PerceptionView::blank_way`
+  (or the player's own cell) so the rules say why and take no time (as `u` does with no tool).
 - **Quick repeat**: the menu opens on `ScreenStack::last_ability` (else the first available row);
   `X` (`RepeatAbility`, passed the last ability by `route_keys`) answers `UseAbility(last)`, or
   opens the menu when there is none.
