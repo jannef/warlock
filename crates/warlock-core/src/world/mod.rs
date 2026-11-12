@@ -2041,6 +2041,7 @@ mod ruin_tests;
 mod rumour_tests;
 #[cfg(test)]
 mod run_tests;
+#[cfg(test)]
 mod salvage_tests;
 #[cfg(test)]
 mod sanctuary_tests;
