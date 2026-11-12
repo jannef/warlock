@@ -3,6 +3,9 @@
 //! beside an anvil. One action does it all; the item's state and its pure rules are
 //! `magic/worked.rs`, the numbers `data/temper.toml`.
 //!
+//! - **Who**: one trained in Metalcraft, the skill of its recipe (`recipes/metalcraft/
+//!   temper.toml`; #1387). Refused, taking no time, untrained ("You are not trained in
+//!   Metalcraft."); walking into an anvil untrained says what it needs ([`World::anvil_needs`]).
 //! - **Where**: beside a cell whose terrain a room effect's `feature` names and that `offers`
 //!   temper ([`crate::content::Content::offer`]); the first such cell around the player in
 //!   [`Dir::ALL`] order. Refused, taking no time, anywhere else ("There is no anvil here.").
@@ -29,8 +32,8 @@
 //! a knife, anywhere: [`Craft::Whittle`] against [`Craft::Temper`], on the same rules, numbers
 //! (`data/temper.toml`), and item state, so one item has one state. The item's main part is of a
 //! wood (`group = "wood"`: bows, staves, clubs); the check is Dexterity's, with Woodcraft
-//! ([`Effect::Whittle`]); the mark is [`Use::Whittle`]; a knife must be carried at the start and
-//! at the end. Its list shows what [`workable_wood`] accepts.
+//! ([`Effect::Whittle`]), which it needs trained (`recipes/woodcraft/whittle.toml`); the mark
+//! is [`Use::Whittle`]; a knife must be carried at the start and at the end. Its list shows what [`workable_wood`] accepts.
 //!
 //! [`Action::Temper`]: crate::action::Action::Temper
 //! [`Action::Whittle`]: crate::action::Action::Whittle
@@ -44,7 +47,7 @@ use super::{Actor, Spent, World};
 use crate::ability::Unavailable;
 use crate::action::Event;
 use crate::combat;
-use crate::content::{ActionKind, Content, ItemHarm, ItemKind, Offer};
+use crate::content::{ActionKind, Content, ItemHarm, ItemKind, Offer, RecipeUse, TerrainId};
 use crate::geom::{Dir, Pos};
 use crate::magic::Worked;
 use crate::magic::worked::aspects;
@@ -92,6 +95,14 @@ impl Craft {
         match self {
             Craft::Temper => Use::Temper,
             Craft::Whittle => Use::Whittle,
+        }
+    }
+
+    /// Its recipe, whose skill it needs trained (#1387).
+    const fn uses(self) -> RecipeUse {
+        match self {
+            Craft::Temper => RecipeUse::Temper,
+            Craft::Whittle => RecipeUse::Whittle,
         }
     }
 
@@ -213,9 +224,36 @@ impl World {
         })
     }
 
+    /// Whether the player is untrained in the skill of `craft`'s recipe, saying so
+    /// ([`World::untrained`]).
+    fn untrained_for(&mut self, craft: Craft) -> bool {
+        (self.skill_of_use(craft.uses())).is_some_and(|skill| self.untrained(skill))
+    }
+
+    /// What the player walking into terrain `terrain` is told, if it offers Temper and they are
+    /// untrained in its skill: what it needs ("You need Metalcraft to work at the anvil."; the
+    /// step is refused, taking no time, as any bump is). The trained are shown the profession's
+    /// screen by the game, and walking in says the plain bump.
+    pub(super) fn anvil_needs(&self, terrain: TerrainId) -> Option<String> {
+        if self.content.offer(terrain) != Some(Offer::Temper) {
+            return None;
+        }
+        let skill = self.skill_of_use(RecipeUse::Temper)?;
+        if self.state.player().skills.get(skill).is_some() {
+            return None;
+        }
+        let skill = &self.content.skill(skill).name;
+        let name = &self.content.terrain(terrain).name;
+        Some(format!("You need {skill} to work at the {name}."))
+    }
+
     /// The player begins to work the stack at `item` at the anvil beside them; refused, taking no
-    /// time, with none, with a stack that cannot be worked, or with one that can be no finer.
+    /// time, untrained in Metalcraft, with none, with a stack that cannot be worked, or with one
+    /// that can be no finer.
     pub(super) fn start_temper(&mut self, item: usize) -> Spent {
+        if self.untrained_for(Craft::Temper) {
+            return Spent::Nothing;
+        }
         if self.anvil_beside().is_none() {
             self.say("There is no anvil here.");
             return Spent::Nothing;
@@ -245,9 +283,13 @@ impl World {
         })
     }
 
-    /// The player begins to whittle the stack at `item`; refused, taking no time, without a knife
+    /// The player begins to whittle the stack at `item`; refused, taking no time, untrained in
+    /// Woodcraft, without a knife
     /// carried, with a stack that is not a wooden weapon, or with one that can be no finer.
     pub(super) fn start_whittle(&mut self, item: usize) -> Spent {
+        if self.untrained_for(Craft::Whittle) {
+            return Spent::Nothing;
+        }
         if whittle_lack(self.state.player(), &self.content).is_some() {
             self.say("You have no knife.");
             return Spent::Nothing;

@@ -1,4 +1,4 @@
-# Arrows, by anyone with a knife and a bow ready (spec §8 "Fletching"; docs/design/recipes.md §6
+# Arrows, by one trained in Woodcraft with a knife and a bow ready (spec §8 "Fletching"; docs/design/recipes.md §6
 # "Missiles"; docs/dev/crafting.md "Arrows and bolts"). The head is a metal arrowhead (one an
 # arrow), a bone shard or a stone block (one heads the whole batch), or none: a sharpened shaft,
 # the brittle arrow. The shaft is a billet of wood, priced by the batch's weight, and free on
@@ -13,7 +13,6 @@ difficulty = 12
 seconds = 600
 knife = true
 launcher = true
-anyone = true
 brittle = "brittle_arrow"
 
 [recipe.parts]

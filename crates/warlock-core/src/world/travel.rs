@@ -136,6 +136,11 @@ impl World {
             return self.open_door(to, events);
         }
         if !def.walkable && !def.swim {
+            // An anvil, untrained in its Metalcraft, says what it needs (`temper.rs`).
+            if let Some(text) = self.anvil_needs(terrain) {
+                self.say(text);
+                return Spent::Nothing;
+            }
             let name = def.name.clone();
             self.say(format!("The {name} blocks your way."));
             return Spent::Nothing;

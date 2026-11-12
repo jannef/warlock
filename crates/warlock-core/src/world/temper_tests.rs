@@ -135,7 +135,7 @@ fn here(w: &World) -> Option<RecipeLack> {
     let metal = w.content.skill_id("metalcraft").expect("metalcraft");
     (w.perception().recipes(metal).into_iter())
         .find(|r| r.name == "Temper")
-        .expect("everyone sees Temper")
+        .expect("the trained see Temper")
         .unavailable
 }
 
@@ -204,6 +204,32 @@ fn temper_can_be_made_only_beside_an_anvil() {
     w.apply(&Action::Temper { item: 0 });
     assert!(said(&w, "There is no anvil here."));
     assert_eq!(w.state.time, before, "refused, no time");
+}
+
+/// #1387: Temper is Metalcraft's. Untrained, there is no row, `temper:` is refused with no
+/// time, and walking into the anvil says what it needs; trained, it is a plain bump.
+#[test]
+fn the_untrained_cannot_temper_and_are_told_so_at_the_anvil() {
+    let mut w = world(false);
+    let metal = w.content.skill_id("metalcraft").expect("metalcraft");
+    // Trained (the craftsperson): walking into the anvil is a plain bump, with no time.
+    let before = w.state.time;
+    w.apply(&Action::Move(Dir::NE));
+    assert!(said(&w, "The anvil blocks your way."));
+    assert_eq!(w.state.time, before);
+    let skills = &mut w.player_mut().skills;
+    *skills = skills.iter().filter(|(s, _)| *s != metal).collect();
+    assert!(w.perception().recipes(metal).is_empty());
+    assert!(!Ability::Profession(metal).had_by(w.state.player(), &w.content));
+    give(&mut w, "long_sword");
+    w.apply(&Action::Temper { item: 0 });
+    assert!(said(&w, "You are not trained in Metalcraft."));
+    assert_eq!(w.state.time, before, "refused, no time");
+    assert_eq!(worked_after(&w), None, "untouched");
+    w.apply(&Action::Move(Dir::NE));
+    assert!(said(&w, "You need Metalcraft to work at the anvil."));
+    assert_eq!(w.state.time, before, "a bump, no time");
+    assert_eq!(w.player_pos(), Pos::new(4, 3));
 }
 
 #[test]

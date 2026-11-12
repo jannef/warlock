@@ -99,8 +99,7 @@ pub enum Ability {
     Intimidate,
     /// A profession (spec §8 "Skills"; docs/design/professions.md §8): a skill with a directory
     /// of recipes (`data/recipes/<skill>/`), listed in that skill's place as "Metalcraft…". Had
-    /// by whoever is trained in the skill, or by everyone while any of its recipes is `anyone`
-    /// (Temper, Whittle, the arrows); never unavailable: it opens the profession's screen
+    /// by whoever is trained in the skill (every recipe is its skill's, #1387); never unavailable: it opens the profession's screen
     /// ([`Aim::Recipes`]), which says why each recipe cannot be made now.
     Profession(SkillId),
     /// Break an item into its materials, anywhere (docs/dev/crafting.md; `world/salvage.rs`):
@@ -581,7 +580,7 @@ impl Ability {
     /// oneself, if they are trained in a skill with the `heal` effect; foraging, if they are
     /// trained in Survival (the forage benefit's); second wind,
     /// if they hold the talent; throwing one's voice, if a talent gives it (the bard's); a
-    /// profession, if they are trained in its skill or one of its recipes is anyone's; the
+    /// profession, if they are trained in its skill; the
     /// shield bash, everyone.
     pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
         match self {
@@ -613,10 +612,7 @@ impl Ability {
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
             Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
-            Ability::Profession(skill) => {
-                actor.skills.get(skill).is_some()
-                    || (content.recipes().of(skill)).any(|(_, recipe)| recipe.anyone)
-            }
+            Ability::Profession(skill) => actor.skills.get(skill).is_some(),
             Ability::ShieldBash | Ability::Salvage => true,
             Ability::Weapon(skill, id) => actor.weapon_abilities(content).contains(&(skill, id)),
             // A place offers it, not who one is ([`Ability::here`]); an order needs allies

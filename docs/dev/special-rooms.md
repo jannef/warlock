@@ -352,7 +352,8 @@ whose `feature` it is), so a spent altar, another terrain, offers nothing.
 Walking into a feature (#975): `input::offer_dialog`, beside the trap's question, asks for a step
 into a cell the perception shows (visible or remembered) whose terrain has an `offer_at`, with no
 actor seen on it. `Offer::asks` and the terrain's name make the question, `Ability::offered` the
-ability, and yes is `ScreenAction::UseAbility`, the menu's own path (Temper opens its list). A
+ability, and yes is `ScreenAction::UseAbility`, the menu's own path. An anvil (`Offer::Temper`,
+no ability) asks nothing: `input::step_screen` opens Metalcraft's screen (#1387, below). A
 new feature with an existing offer asks with no code; a new `Offer` states its words in `asks`.
 The rules are unchanged: a `move` into one says it blocks the way, with no time. Doors and chests
 act on a step, and the rest that block (`shrine_stone`, `shelves`, `statue`, `fountain`) offer
@@ -455,12 +456,13 @@ Metalcraft's `temper` benefit and mark (`data/skills.toml`; `skills::Effect::Tem
 which is `StatUse::Forged` too). No outcome table, and no `spent`: the anvil is never spent.
 
 Temper is a recipe of Metalcraft's (#1334, `docs/dev/crafting.md`:
-`data/recipes/metalcraft/temper.toml`, `anyone`, `station = "anvil"`), no row of the Here group
-(`Ability::offered(Offer::Temper)` is `None`): its row on Metalcraft's screen, greyed "no anvil
-beside you" away from one, or a walk into the anvil (`input.rs::offer_dialog`, #975, reading
-`Content::offer`: "Would you like to temper something at the anvil?") opens `ScreenName::Temper`
-(`ObjectList::Temper`, the stacks `world::workable` accepts), and choosing one applies
-`Action::Temper { item }`.
+`data/recipes/metalcraft/temper.toml`, `station = "anvil"`; the trained's alone, #1387), no row
+of the Here group (`Ability::offered(Offer::Temper)` is `None`): its row on Metalcraft's screen,
+greyed "no anvil beside you" away from one, opens `ScreenName::Temper` (`ObjectList::Temper`, the
+stacks `world::workable` accepts), and choosing one applies `Action::Temper { item }`. A walk
+into the anvil (`input.rs::step_screen`, reading `Content::offer`) asks nothing and opens
+Metalcraft's screen for the trained; untrained, the step goes to the rules, which refuse it with
+"You need Metalcraft to work at the anvil." (`World::anvil_needs`, no time).
 
 `world/temper.rs`: `temperable` (an item kind of weapon, launcher, shield, or armour, main part of
 `group = "metal"`, not a spirit weapon, and with an aspect to better), `workable` (and under

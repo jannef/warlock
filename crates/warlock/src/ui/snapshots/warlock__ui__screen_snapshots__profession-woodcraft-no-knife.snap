@@ -2,33 +2,33 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Welcome to Showcase. Press ? for controls.
-
-
-
-
-
-
-
-            ┌─ Woodcraft: recipes ─────────────────────────────────────────────────────┐
+ Welcome to ┌─ Woodcraft: recipes ────────────────────────────────────────── Page 1/3 ─┐
             │                                                                          │
             │ Work                                                                     │
-            │ > a - Whittle        no knife                                            │
+            │ > a - Whittle                no knife                                    │
+            │ Melee weapons                                                            │
+            │   b - Club                   no knife                                    │
+            │   c - Dagger                 no knife                                    │
+            │   d - Hand axe               no knife                                    │
+            │   e - Ironwood staff         beyond your skill                           │
+            │   f - Javelin                no knife                                    │
+            │   g - Knife                  no knife                                    │
+            │   h - Quarterstaff           no knife                                    │
+            │   i - Spear                  no knife                                    │
+            │ Missile weapons                                                          │
+            │   j - Composite bow          beyond your skill                           │
+            │   k - Crossbow               beyond your skill                           │
+            │   l - Heavy crossbow         beyond your skill                           │
+            │   m - Long war bow           beyond your skill                           │
+            │   n - Short bow              no knife                                    │
+            │   o - Sling                  no knife                                    │
             │ Missiles                                                                 │
-            │   b - Arrows         no knife                                            │
-            │   c - Crossbow bolts no knife                                            │
-            │   d - Sling stones   no stone to hand                                    │
+            │   p - Arrows                 no knife                                    │
+            │   q - Crossbow bolts         no knife                                    │
+            │   r - Flaming arrows         not enough arrows                           │
             │                                                                          │
             │ Takes a wooden weapon, a knife, about 10 minutes.                        │
             │                                                                          │
-            │ a-d or Enter make   Esc back                                             │
+            │ a-r or Enter make   > < page   Esc back                                  │
             └──────────────────────────────────────────────────────────────────────────┘
-
-
-
-
-
-
-
-
- The Hub  ·  HP 25/25  ·  MP 3/3  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  11 Darkening       ? controls
+ The Hub  ·  HP 16/16  ·  MP 3/3  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444          ? controls

@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You learn Dragon's hoard.
- Your thou┌─ Abilities ────────────────────────────────────────────────────── Page 1/2 ─┐
+ Your thou┌─ Abilities ─────────────────────────────────────────────────────────────────┐
           │                                                                             │
           │ Class                                                                       │
           │   a  Knock            no lock beside you                                    │
@@ -21,14 +21,14 @@ expression: "render(case, content.clone())"
           │   k  Heal             nothing to treat                                      │
           │   l  Jewelcraft…                                                            │
           │   m  Knowledge        not usable yet                                        │
-          │   n  Metalcraft…                                                            │
-          │   o  Woodcraft…                                                             │
-          │   p  Salvage          on something you carry                                │
+          │   n  Salvage          on something you carry                                │
+          │ Weapon skills                                                               │
+          │   o  Shield bash      you hold no shield                                    │
           │                                                                             │
           │ A bolt of raw force from your hand toward a place you aim at, through       │
           │ everyone on its line. Length 6.                                             │
           │                                                                             │
           │                                                                             │
-          │ a-p or Enter use   > < page   Esc close                                     │
+          │ a-o or Enter use   Esc close                                                │
           └─────────────────────────────────────────────────────────────────────────────┘
  The Hub  ·  HP 43/43  ·  MP 306/309  ·  Keen  ·  Lv 32  ·  08:00  ·  11 Darkening       ? controls

@@ -2,8 +2,8 @@
 //! docs/dev/crafting.md): what a profession's screen lists, and [`Action::Craft`].
 //!
 //! - **The rows** ([`recipe_rows`], what [`PerceptionView::recipes`] reads): a profession's
-//!   recipes in path order that the player may see (all of them for one trained in the skill,
-//!   else the `anyone` ones), each with what it takes in words the player sees elsewhere ("an
+//!   recipes in path order, for one trained in the skill (none for the untrained: every recipe
+//!   is a skill's, #1387), each with what it takes in words the player sees elsewhere ("an
 //!   anvil, about 10 minutes"; never a difficulty or odds) and the first reason it cannot be made
 //!   now, if any ([`RecipeLack`]): computed here, from the pack, the cells beside the player, and
 //!   the skills, so presentation never decides availability.
@@ -11,11 +11,13 @@
 //!   type ([`Lore::is_identified`]: a labelled potion, flask, scroll, wand, or rod does not), in
 //!   the rows, the wizard's steps, and the action alike, so no row tells what an unknown stack is
 //!   (#1383).
-//! - **The action** ([`Action::Craft`], `craft:ID[:POS,...]`): a built-in recipe's row runs its
-//!   own action (`temper:`, `whittle:`), so `craft:` refuses it, taking no time, but for Cut
-//!   and Set, which are `craft:cut:LETTER` and `craft:set:ITEM,GEM` themselves (`world/cut.rs`,
-//!   `world/set.rs`); a generic recipe is made by `world/craft_make.rs` (the forge's weapons, the
-//!   hand-made ones, the arrows, the brews).
+//! - **The action** ([`Action::Craft`], `craft:ID[:POS,...]`): refused, taking no time, for one
+//!   untrained in the recipe's skill ("You are not trained in Woodcraft."; `World::untrained`,
+//!   which `temper:` and `whittle:` ask too); a built-in recipe's row runs its own action
+//!   (`temper:`, `whittle:`), so `craft:` refuses it, taking no time, but for Cut and Set, which are
+//!   `craft:cut:LETTER` and `craft:set:ITEM,GEM` themselves (`world/cut.rs`, `world/set.rs`); a
+//!   generic recipe is made by `world/craft_make.rs` (the forge's weapons, the hand-made ones,
+//!   the arrows, the brews).
 //!
 //! [`Action::Craft`]: crate::action::Action::Craft
 //! [`PerceptionView::recipes`]: crate::perception::PerceptionView::recipes
@@ -110,9 +112,10 @@ pub(crate) fn recipe_rows(
     player: &Actor,
     skill: SkillId,
 ) -> Vec<RecipeRow> {
-    let trained = player.skills.get(skill).is_some();
+    if player.skills.get(skill).is_none() {
+        return Vec::new();
+    }
     (content.recipes().of(skill))
-        .filter(|(_, recipe)| trained || recipe.anyone)
         .map(|(id, recipe)| RecipeRow {
             id,
             name: recipe.name.clone(),
@@ -454,6 +457,27 @@ fn stock_words(
 }
 
 impl World {
+    /// Whether the player is untrained in profession `skill`, saying so ("You are not trained
+    /// in Metalcraft."): every recipe is its skill's (#1387), so its action is then refused,
+    /// taking no time.
+    pub(super) fn untrained(&mut self, skill: SkillId) -> bool {
+        if self.state.player().skills.get(skill).is_some() {
+            return false;
+        }
+        let name = &self.content.skill(skill).name;
+        self.say(format!("You are not trained in {name}."));
+        true
+    }
+
+    /// The skill of built-in recipe `uses` (Temper's Metalcraft, Whittle's Woodcraft), if the
+    /// content has it.
+    pub(super) fn skill_of_use(&self, uses: RecipeUse) -> Option<SkillId> {
+        self.content
+            .recipes()
+            .of_use(uses)
+            .map(|recipe| recipe.skill)
+    }
+
     /// The player makes a recipe (the module docs): a generic one is begun by
     /// [`World::start_making`]; a built-in or unknown one is refused, taking no time.
     pub(super) fn start_craft(&mut self, recipe: &str, picks: &[Option<usize>]) -> Spent {
@@ -463,6 +487,9 @@ impl World {
             return Spent::Nothing;
         };
         let def = content.recipe(id);
+        if self.untrained(def.skill) {
+            return Spent::Nothing;
+        }
         let text = match def.uses {
             Some(RecipeUse::Cut) => return self.start_cut(id, picks),
             Some(RecipeUse::Set) => return self.start_set(id, picks),

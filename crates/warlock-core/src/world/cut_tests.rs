@@ -444,7 +444,10 @@ fn the_odds_are_the_designs() {
 #[test]
 fn a_cut_replays() {
     // As the scenario starts: a large uncut ruby lies east of the player.
-    let mut w = World::new(FIXTURE.clone(), "test_alone", Some(8)).expect("world");
+    // A gnome, trained in Jewelcraft from birth: the untrained make nothing (#1387).
+    let gnome: crate::character::CharacterSpec = "gnome,female,commoner".parse().expect("spec");
+    let mut w =
+        World::with_character(FIXTURE.clone(), "test_alone", Some(8), Some(&gnome)).expect("world");
     let mut replay = Replay::new(&w);
     for action in parse_actions("move:E pickup craft:cut:a wait").expect("actions") {
         w.apply(&action);

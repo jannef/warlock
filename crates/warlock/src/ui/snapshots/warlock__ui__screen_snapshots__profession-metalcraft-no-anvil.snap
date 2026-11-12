@@ -2,33 +2,33 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Welcome to Showcase. Press ? for controls.
-
-
-
-
-
-
-
-
-
-            ┌─ Metalcraft: recipes ────────────────────────────────────────────────────┐
+ Welcome to ┌─ Metalcraft: recipes ───────────────────────────────────────── Page 1/3 ─┐
             │                                                                          │
             │ Work                                                                     │
-            │ > a - Temper        no anvil beside you                                  │
+            │ > a - Temper          no anvil beside you                                │
+            │ Melee weapons                                                            │
+            │   b - Battle axe      beyond your skill                                  │
+            │   c - Dagger          no anvil beside you                                │
+            │   d - Glaive          beyond your skill                                  │
+            │   e - Great axe       beyond your skill                                  │
+            │   f - Great sword     beyond your skill                                  │
+            │   g - Halberd         beyond your skill                                  │
+            │   h - Hand axe        no anvil beside you                                │
+            │   i - Javelin         no anvil beside you                                │
+            │   j - Knife           no anvil beside you                                │
+            │   k - Long sword      beyond your skill                                  │
+            │   l - Mace            no anvil beside you                                │
+            │   m - Maul            beyond your skill                                  │
+            │   n - Morning star    no anvil beside you                                │
+            │   o - Rapier          beyond your skill                                  │
+            │   p - Scimitar        beyond your skill                                  │
+            │   q - Short sword     no anvil beside you                                │
+            │   r - Spear           no anvil beside you                                │
+            │   s - Stiletto        no anvil beside you                                │
+            │   t - Trident         beyond your skill                                  │
             │                                                                          │
             │ Takes a metal weapon or armour, an anvil, about 10 minutes.              │
             │                                                                          │
-            │ a or Enter make   Esc back                                               │
+            │ a-t or Enter make   > < page   Esc back                                  │
             └──────────────────────────────────────────────────────────────────────────┘
-
-
-
-
-
-
-
-
-
-
- The Hub  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1  ·  08:00       ? controls
+ The Hub  ·  HP 16/16  ·  MP 3/3  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444          ? controls

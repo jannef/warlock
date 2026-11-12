@@ -432,8 +432,8 @@ name = "Metalcraft"
 description = "Working metal: smithing, mending arms and armour."
 kind = "action"
 mark = [{ on = "temper", chance = 100 }, { on = "craft", chance = 100 }, { on = "salvage", chance = 100 }]
-# Working an item at a forge's anvil (spec §7 "Special rooms"; the Temper ability, offered there
-# to anyone): added to the Strength check of an attempt, +8 at 100, +12 at 200.
+# Working an item at a forge's anvil (spec §7 "Special rooms"; the Temper recipe, for those
+# trained): added to the Strength check of an attempt, +8 at 100, +12 at 200.
 # Its craft (docs/dev/crafting.md; salvage.toml; the smith's recipes, data/recipes/metalcraft/):
 # the same, added to the check of salvaging a metal and of a recipe made, read for this skill
 # alone (never with another profession's craft).
@@ -636,7 +636,7 @@ name = "Woodcraft"
 description = "Working wood: carving, carpentry, and the making of bows, arrows, and bolts."
 kind = "action"
 mark = [{ on = "craft", chance = 100 }, { on = "whittle", chance = 100 }, { on = "wedge", chance = 100 }, { on = "salvage", chance = 100 }]
-# Whittling (the Whittle ability, which anyone has with a knife; temper.toml's rules, for wood):
+# Whittling (the Whittle recipe, for those trained, with a knife; temper.toml's rules, for wood):
 # the same, added to the Dexterity check of an attempt.
 # Wedging (spec §8 "Doors"; the Wedge ability, for those trained): the same curve, added to the
 # sturdiness of a door wedged shut.

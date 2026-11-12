@@ -66,7 +66,6 @@
 #   launcher    true: a launcher ready that shoots the result (its `ammo`, fletch.toml's
 #               [[makes]])
 #   from        the trained value the recipe is listed from (default 0)
-#   anyone      true: listed for those untrained in the skill too
 #   failure     { object = "murky_draught" }: what a failed check makes instead of nothing (a
 #               stackable object; the inputs are then spent whole)
 #   fumble      { object = "brewers_blunder" }: what a natural 2 makes (a stackable object)

@@ -10,7 +10,7 @@ use crate::skills::{SkillId, Trained};
 use std::sync::LazyLock;
 
 /// The built-in content with two generic recipes: a long sword of stock, from Metalcraft 20, and
-/// tipped arrows from arrows, for anyone.
+/// tipped arrows from arrows, from Metalcraft 0.
 static FIXTURE: LazyLock<Arc<Content>> = LazyLock::new(|| {
     let mut files = ContentFiles::builtin();
     files.insert(
@@ -20,7 +20,7 @@ static FIXTURE: LazyLock<Arc<Content>> = LazyLock::new(|| {
     );
     files.insert(
         "data/recipes/metalcraft/tipped.toml",
-        "[[recipe]]\nid = \"tipped\"\nname = \"Tipped arrows\"\nanyone = true\n\
+        "[[recipe]]\nid = \"tipped\"\nname = \"Tipped arrows\"\n\
          result = { object = \"arrow\", count = 5 }\ndifficulty = 10\nseconds = 600\n\
          inputs = [{ object = \"arrow\", count = 5 }]\n",
     );
@@ -72,15 +72,25 @@ fn rows(w: &World, id: &str) -> Vec<String> {
 }
 
 #[test]
-fn everyone_sees_the_built_in_rows_with_what_they_take_and_why_not() {
+fn the_built_in_rows_are_the_trained_with_what_they_take_and_why_not() {
     let content = Arc::new(Content::builtin().expect("content"));
     let mut w = world(content.clone(), "showcase");
+    // Untrained, no rows: every recipe is its skill's (#1387).
+    assert!(rows(&w, "metalcraft").is_empty());
+    assert!(rows(&w, "woodcraft").is_empty());
+    train(&mut w, "metalcraft", 1);
+    train(&mut w, "woodcraft", 1);
     assert_eq!(
-        rows(&w, "metalcraft"),
-        ["Temper: a metal weapon or armour, an anvil, about 10 minutes (no anvil beside you)"]
+        row(&w, "metalcraft", "Temper"),
+        "Temper: a metal weapon or armour, an anvil, about 10 minutes (no anvil beside you)"
     );
     assert_eq!(
-        rows(&w, "woodcraft"),
+        [
+            row(&w, "woodcraft", "Arrows"),
+            row(&w, "woodcraft", "Crossbow bolts"),
+            row(&w, "woodcraft", "Sling stones"),
+            row(&w, "woodcraft", "Whittle"),
+        ],
         [
             "Arrows: an arrowhead for each made or a bone shard or a block of flint, a wood \
              billet, a knife, a bow ready, about 10 minutes (no knife)",
@@ -92,34 +102,35 @@ fn everyone_sees_the_built_in_rows_with_what_they_take_and_why_not() {
     );
     // A knife: Whittle can be; the arrows still want a bow, the bolts a crossbow.
     give(&mut w, "knife", 1);
-    let rows_now = rows(&w, "woodcraft");
-    assert!(rows_now[0].ends_with("(no bow ready)"), "{rows_now:?}");
-    assert!(rows_now[1].ends_with("(no crossbow ready)"), "{rows_now:?}");
+    assert!(row(&w, "woodcraft", "Arrows").ends_with("(no bow ready)"));
+    assert!(row(&w, "woodcraft", "Crossbow bolts").ends_with("(no crossbow ready)"));
     assert_eq!(
-        rows_now[3],
+        row(&w, "woodcraft", "Whittle"),
         "Whittle: a wooden weapon, a knife, about 10 minutes"
     );
     // Beside the forge's anvil, Temper can be.
-    let w = world(content, "forge");
-    let mut w = w;
+    let mut w = world(content, "forge");
+    train(&mut w, "metalcraft", 1);
     w.apply(&Action::Move(Dir::E));
     assert_eq!(
-        rows(&w, "metalcraft"),
-        ["Temper: a metal weapon or armour, an anvil, about 10 minutes"]
+        row(&w, "metalcraft", "Temper"),
+        "Temper: a metal weapon or armour, an anvil, about 10 minutes"
     );
 }
 
 #[test]
-fn the_untrained_see_only_what_anyone_may_make_and_the_trained_what_is_beyond_them() {
+fn the_untrained_see_no_rows_and_the_trained_what_is_beyond_them() {
     let mut w = world(FIXTURE.clone(), "showcase");
     let names = |w: &World| -> Vec<String> {
         (w.perception().recipes(skill(w, "metalcraft")).into_iter())
             .map(|r| r.name)
             .collect()
     };
-    assert_eq!(names(&w), ["Temper", "Tipped arrows"]);
+    assert!(names(&w).is_empty());
     // Trained below the long sword's `from`: listed, beyond them.
     train(&mut w, "metalcraft", 10);
+    assert!(names(&w).contains(&"Temper".to_string()));
+    assert!(names(&w).contains(&"Tipped arrows".to_string()));
     assert_eq!(
         row(&w, "metalcraft", "Long sword"),
         "Long sword: 3 steel ingots, an anvil, about 1 hour (beyond your skill)"
@@ -165,22 +176,19 @@ fn a_stock_part_wants_a_piece_the_profession_works_that_the_part_may_be_made_of(
 #[test]
 fn the_abilities_menu_lists_a_row_per_profession_and_no_temper_whittle_or_fletch() {
     let content = Arc::new(Content::builtin().expect("content"));
-    let w = world(content.clone(), "forge");
-    let mut w = w;
+    let mut w = world(content.clone(), "forge");
     w.apply(&Action::Move(Dir::E));
-    let view = w.perception();
-    let own: Vec<(String, bool)> = (view.abilities().iter())
-        .map(|a| {
-            (
-                view.ability_name(a.ability).into_owned(),
-                a.unavailable.is_none(),
-            )
-        })
-        .collect();
-    // Untrained: both rows all the same (their built-in recipes are anyone's), usable; beside
-    // the anvil, no Temper of the Here group.
     let metal = Ability::Profession(skill(&w, "metalcraft"));
     let wood = Ability::Profession(skill(&w, "woodcraft"));
+    // Untrained: neither row, beside the anvil too (#1387).
+    let view = w.perception();
+    for row in [metal, wood] {
+        assert!(!view.abilities().iter().any(|a| a.ability == row));
+    }
+    // Trained: both rows, usable; beside the anvil, no Temper of the Here group.
+    train(&mut w, "metalcraft", 1);
+    train(&mut w, "woodcraft", 1);
+    let view = w.perception();
     for row in [metal, wood] {
         assert!(
             view.abilities()
@@ -188,7 +196,10 @@ fn the_abilities_menu_lists_a_row_per_profession_and_no_temper_whittle_or_fletch
                 .any(|a| a.ability == row && a.unavailable.is_none())
         );
     }
-    let names: Vec<&str> = own.iter().map(|(n, _)| n.as_str()).collect();
+    let names: Vec<String> = (view.abilities().iter())
+        .map(|a| view.ability_name(a.ability).into_owned())
+        .collect();
+    let names: Vec<&str> = names.iter().map(String::as_str).collect();
     assert!(
         names.contains(&"Metalcraft…") && names.contains(&"Woodcraft…"),
         "{names:?}"
@@ -200,21 +211,29 @@ fn the_abilities_menu_lists_a_row_per_profession_and_no_temper_whittle_or_fletch
 }
 
 #[test]
-fn crafting_a_built_in_unknown_or_out_of_reach_recipe_is_refused_with_no_time() {
+fn crafting_untrained_built_in_unknown_or_out_of_reach_is_refused_with_no_time() {
     let mut w = world(FIXTURE.clone(), "forge");
     let start = w.state.time;
-    for (text, said) in [
-        ("craft:temper", "Temper is done from its own list."),
-        ("craft:long_sword:a", "That is beyond your skill."),
-        ("craft:moonblade", "You know no such recipe."),
-    ] {
+    let said = |w: &mut World, text: &str, said: &str| {
         for action in crate::action::parse_actions(text).expect("parses") {
             w.apply(&action);
         }
         assert_eq!(w.state.time, start, "{text}");
         let last = (w.messages().iter().last()).map(|m| m.text.clone());
         assert_eq!(last.as_deref(), Some(said), "{text}");
-    }
+    };
+    // Untrained (#1387).
+    said(&mut w, "craft:temper", "You are not trained in Metalcraft.");
+    said(
+        &mut w,
+        "craft:long_sword:a",
+        "You are not trained in Metalcraft.",
+    );
+    said(&mut w, "craft:cut:a", "You are not trained in Jewelcraft.");
+    train(&mut w, "metalcraft", 1);
+    said(&mut w, "craft:temper", "Temper is done from its own list.");
+    said(&mut w, "craft:long_sword:a", "That is beyond your skill.");
+    said(&mut w, "craft:moonblade", "You know no such recipe.");
 }
 
 #[test]
