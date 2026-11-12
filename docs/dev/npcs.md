@@ -167,11 +167,13 @@ and dialect), hinted the same way: "la", "lad", "der" (there), "made up" (deligh
 "arl feller" (old man); and **goblins, kobolds, and ratfolk a very heavy Irish brogue**, the one
 accent laid on thick: "ye", "yer", "meself", "tis", "sure an'", "begorrah", "eejit", "feckin'",
 "grand", "craic", "wee", "me oul' da", "would ye ever", "th'" for the, "t'" for to, "ould" for old,
-"tink" for think, "dat" for that. Ids, topic names, and placeholders never change with the
+"tink" for think, "dat" for that; and **drow Middle English**, Chaucer's register made readable:
+"thou", "thee", "ye", "hast", "dost", "nat" (not), "eek" (also), "ywis" (truly), "anon", "certes",
+"sooth", "-eth" verbs ("he cometh"), "y-" past participles ("yslain"), "quod she" (said she). Ids, topic names, and placeholders never change with the
 accent. The rule binds speakers whose data says they are of that race (`race = "elf"`, `"halfling"`,
-`"gnome"`, `"goblin"`, `"kobold"`, `"ratfolk"`, or a creature that is one: a goblin, a kobold, a rat
-king who speaks). As of #1392 none speaks: the campaigns have no elf, halfling, gnome, goblin,
-kobold, or ratfolk NPC, and their creatures have no words, and Ælfrun of Holtwīc is a
+`"gnome"`, `"goblin"`, `"kobold"`, `"ratfolk"`, `"drow"`, or a creature that is one: a goblin, a kobold, a
+rat king, a drow who speaks). As of #1392 none speaks: the campaigns have no elf, halfling, gnome, goblin,
+kobold, ratfolk, or drow NPC, and their creatures have no words, and Ælfrun of Holtwīc is a
 human cottar; **half-elves and half-orcs speak as humans do** (Cockney or posh by their station, never
-the Brummie of elves); drow and the fey of Ælfhām are not elves by this rule. A new speaker
+the Brummie of elves); the fey of Ælfhām are not elves by this rule. A new speaker
 of one of these races is written in its accent from the start.
