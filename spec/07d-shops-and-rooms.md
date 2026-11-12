@@ -119,7 +119,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     into noises) until outraged; then it fights and chases like any hostile creature and goes back
     to its post when it has lost the player. It does not swap places with the player at its post
     (`budge = "off_post"`, §8 "Displacement"). Chatting with it (`C`) it answers in one-liners
-    about trade (`data/dialogue.toml`), and messages call it by its name ("Grimbold says: ...";
+    about trade (`data/dialogue.toml`), or in its own words when the level names it a unique
+    character (`npc`, below: Cēaptūn's smith, Eadric, who teaches Metalcraft, §8 "Dialogue"), and
+    messages call it by its name ("Grimbold says: ...";
     `World::called`); an outraged keeper is in no mood to talk.
   - **Magic items** (§8 "Magic items") are priced as their base item, identified or not, and
     sold to a shop they lie on its floor, magic and all, for sale at that price. Keys and quest
@@ -151,6 +153,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     [x0, y0, x1, y1] post = [x, y]` (the shop floor, inclusive, inside the map, not overlapping
     another shop; the post walkable, on it, and where no creature or the player starts); the
     keeper is spawned there from `[keeper]`, and the level places the goods like any objects.
+    An optional `npc = "eadric"` makes the keeper that unique character (it must have a
+    dialogue, checked when the level loads): it speaks the npc's dialogue, topics and services
+    included, instead of the shopkeepers' (#1394).
     Vaults have none.
   - **State**: each level state keeps its shops (`LevelState::shops`: the kind, the keeper's
     actor id and name, the floor, the post, the ways out, what the player owes, and the status; saved and

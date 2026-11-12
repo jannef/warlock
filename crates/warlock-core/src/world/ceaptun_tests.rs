@@ -2,7 +2,7 @@
 //! overworld cell and left by its edge, its two shops and their goods (and nothing sold before
 //! #1248 left unsold), the private houses, the town's animals (never a quest's kill), everyone in it at
 //! peace with the player, the Mynster a sanctuary where Sister Hild cures and mends for gold, the
-//! people known by their proper names, Godgifu's rumours (never a reveal; the ways they mark are `rumour_tests.rs`), the dev scenario, and
+//! people known by their proper names, Eadric the smith teaching Metalcraft (#1394), Godgifu's rumours (never a reveal; the ways they mark are `rumour_tests.rs`), the dev scenario, and
 //! a replay.
 
 use super::*;
@@ -19,6 +19,8 @@ const HILD: Pos = Pos::new(27, 25);
 const GODGIFU: Pos = Pos::new(46, 26);
 const LEOFRIC: Pos = Pos::new(60, 26);
 const WULFRUN: Pos = Pos::new(72, 26);
+/// Eadric the smith, the smithy's keeper, at his post.
+const EADRIC: Pos = Pos::new(39, 8);
 
 /// Built-in content with nobody hungering (a disease takes days to show).
 /// The dev scenario carries no pack; the tests give the player 60 gold, a cure's price.
@@ -391,6 +393,94 @@ fn factor_wulfrun_identifies_what_the_player_carries_for_gold() {
         .map(|d| CONTENT.speaker_name(d))
         .collect();
     assert_eq!(appraisers, ["Factor Wulfrun"]);
+}
+
+/// The player's Metalcraft, if trained.
+fn metalcraft(world: &World) -> Option<u16> {
+    let id = CONTENT.skill_id("metalcraft").expect("Metalcraft");
+    world.state().player().skills.value(id)
+}
+
+/// The town with the player (untrained in Metalcraft) holding `n` gold coins, west of Eadric.
+fn at_the_smithy(n: u32) -> World {
+    let mut w = town();
+    assert_eq!(metalcraft(&w), None, "Wulfstan never learnt it");
+    let coin = CONTENT.object_id("gold_coin").expect("gold");
+    let player = w.player_mut();
+    player.inventory.retain(|stack| stack.object != coin);
+    if n > 0 {
+        let mut gold = crate::object::Stack::one(coin);
+        gold.count = n;
+        player.inventory.push(gold);
+    }
+    put_player(&mut w, EADRIC.step(Dir::W));
+    w
+}
+
+#[test]
+fn eadric_the_smith_teaches_metalcraft_for_two_thousand_gold() {
+    let mut w = at_the_smithy(2100);
+    let eadric = who(&w, EADRIC);
+    assert_eq!(w.state.actors[&eadric].npc.as_deref(), Some("eadric"));
+    let shop = (w.state.current().shops.iter())
+        .find(|s| s.keeper == eadric)
+        .expect("he keeps the smithy");
+    assert_eq!(CONTENT.shops().expect("shops").get(shop.kind).id, "smithy");
+    let listed: Vec<(String, Option<u32>)> = (w.topics(eadric).into_iter())
+        .map(|t| (t.id, t.price))
+        .collect();
+    assert_eq!(
+        listed,
+        [
+            ("forge".to_string(), None),
+            ("smithing".to_string(), None),
+            ("mines".to_string(), None),
+            ("train_metalcraft".to_string(), Some(2000)),
+        ]
+    );
+    act(&mut w, "chat:E");
+    assert!(
+        said(&w)
+            .last()
+            .unwrap()
+            .starts_with("Eadric says: \"Mind the sparks")
+    );
+    let time = w.time();
+    act(&mut w, "ask:E:train_metalcraft");
+    assert_eq!((gold(&w), metalcraft(&w)), (100, Some(5)));
+    assert!(said(&w).contains(&"You pay Eadric 2000 gold.".to_string()));
+    assert!(said(&w).contains(&"Eadric trains you in metalcraft.".to_string()));
+    assert!(w.time() > time, "a chat's time");
+    // Gone once trained; asked for anyway, his `nothing`, for no time or gold.
+    assert!((w.topics(eadric).iter()).all(|t| t.id != "train_metalcraft"));
+    let time = w.time();
+    act(&mut w, "ask:E:train_metalcraft");
+    assert!(
+        said(&w)
+            .last()
+            .unwrap()
+            .starts_with("Eadric says: \"You know yer way")
+    );
+    assert_eq!((gold(&w), w.time(), metalcraft(&w)), (100, time, Some(5)));
+}
+
+#[test]
+fn the_smith_s_teaching_is_refused_short_of_gold_and_cheaper_with_goodwill() {
+    let mut w = at_the_smithy(1999);
+    let eadric = who(&w, EADRIC);
+    let time = w.time();
+    act(&mut w, "ask:E:train_metalcraft");
+    assert_eq!(said(&w).last().unwrap(), "You cannot pay.");
+    assert_eq!((gold(&w), w.time(), metalcraft(&w)), (1999, time, None));
+    // A quest done for the town takes 5% off, as off the town's other services.
+    let json = r#"{"records": {"barrow_rats": {"stage": "done", "completed": 1}}}"#;
+    w.state.quests = serde_json::from_str(json).expect("quests");
+    let price = (w.topics(eadric).into_iter())
+        .find(|t| t.id == "train_metalcraft")
+        .and_then(|t| t.price);
+    assert_eq!(price, Some(1900));
+    act(&mut w, "ask:E:train_metalcraft");
+    assert_eq!((gold(&w), metalcraft(&w)), (99, Some(5)));
 }
 
 #[test]

@@ -8,6 +8,6 @@
 [[town]]
 id = "ceaptun"
 name = "Cēaptūn"
-people = ["godgifu", "hild", "leofric", "wat", "wulfrun"]
+people = ["eadric", "godgifu", "hild", "leofric", "wat", "wulfrun"]
 goodwill = 5
 told = "Cēaptūn's folk think the better of you."

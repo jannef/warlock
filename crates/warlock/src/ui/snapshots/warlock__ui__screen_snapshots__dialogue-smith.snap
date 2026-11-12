@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Eadric says: "Mind the sparks, guv. Look all yer like. What yer pick up, yer pay for at the door,
+ innit."
+
+
+
+
+
+
+
+                  ┌─ Eadric ─────────────────────────────────────────────────────┐
+                  │                                                              │
+                  │ "Mind the sparks, guv. Look all yer like. What yer pick up,  │
+                  │ yer pay for at the door, innit."                             │
+                  │                                                              │
+                  │ > 1  The forge                                               │
+                  │   2  Smithing                                                │
+                  │   3  The mines                                               │
+                  │   4  Teach me to smith (2000 gold)                           │
+                  │                                                              │
+                  │ 1-4 or Enter  ask    Esc  leave                              │
+                  └──────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+ Cēaptūn  ·  HP 22/22  ·  MP 1/1  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  Overcast           ? controls

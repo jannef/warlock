@@ -4,7 +4,8 @@
 # the Mynster (who cures and mends for gold, §6.1), Godgifu of the Gæsthūs (rumours of the march:
 # the way to each marked on the map, never a hidden place: decisions 2026-10-25, question 9, and
 # 2026-10-27), Reeve Leofric, Factor Wulfrun (who
-# identifies what the player carries for gold, #432), and Wat One-Eye of the Gildhalle, the
+# identifies what the player carries for gold, #432), Eadric the smith (the smithy's keeper, who
+# teaches Metalcraft for gold, #1394), and Wat One-Eye of the Gildhalle, the
 # guildmaster of the Weyfarers' Gilde (docs/design/adventurers-guild.md §4). Their
 # quests are in data/quests/ (§6.2).
 
@@ -210,6 +211,56 @@ price = 100
 does = "identify"
 reply = "There. Entered and accounted for. Now you know what you're carrying, which is more than most."
 nothing = "You know everything you carry already. I shan't charge you for telling you so."
+
+# Eadric the smith, the keeper of the smithy on the square (levels/ceaptun.toml's `[[shop]]`
+# names him with `npc = "eadric"`, so he speaks these words and not the shopkeepers'; #1394). A
+# town tradesman, in Cockney. He teaches Metalcraft for gold (`train_skill`, world/service.rs):
+# offered only while the player is untrained in it, and cheaper with the town's goodwill.
+[[dialogue]]
+npc = "eadric"
+name = "Eadric"
+greet = "Mind the sparks, guv. Look all yer like. What yer pick up, yer pay for at the door, innit."
+greet_evil = [
+    "I sell steel to all sorts. Don't make me sorry I sold it to you.",
+    "Pay at the door an' keep yer 'ands where I can see 'em.",
+]
+lines = [
+    "Iron's dear since the mines shut. Every nail I make, I make from summat else.",
+    "Bring me yer broken blades. Good steel's never wasted, just waitin'.",
+    "That anvil's older than me gran. Use it if yer like. Mind yer fingers.",
+    "Folk fink smithin's all 'ammerin'. 'Alf of it's listenin' to the metal.",
+    "Dwarves reckon they invented the forge. Let 'em. I just make the stuff.",
+    "Blade that rings true when yer flick it, that's a blade worth 'avin'.",
+]
+mutter = { chance = 2, verb = "grumbles", lines = [
+    "Bellows wants patchin' again.",
+    "Too 'ot. No, too cold. Gawd's sake.",
+    "Where's me tongs got to?",
+] }
+
+[[dialogue.topic]]
+id = "forge"
+name = "The forge"
+reply = "Fire, anvil, bellows, an' a good arm. The anvil's free to anyone wiv the know-'ow: temper a blade, forge a new one from the bars there. Wivout the know-'ow, yer'll just stand there lookin' at it."
+
+[[dialogue.topic]]
+id = "smithing"
+name = "Smithing"
+reply = "Metalcraft, me old dad called it. 'Eat, 'ammer, quench, an' know when to stop. I'll learn yer the start of it, if yer like. Two fousand gold, an' worth every penny. Do the town a good turn or two an' I'll fink better of the price, mind."
+
+[[dialogue.topic]]
+id = "mines"
+name = "The mines"
+reply = "Iron come down from Fyrbeorg by the cartload, once. Then the diggings went quiet an' that was that. Now I melt down 'orseshoes an' pots. Somebody wants to open them shafts again, I'll buy every bar they bring up."
+
+[[dialogue.service]]
+id = "train_metalcraft"
+name = "Teach me to smith"
+price = 2000
+does = "train_skill"
+train = { skill = "metalcraft", value = 5 }
+reply = "Right. Grip the 'ammer down the 'andle, not up by the 'ead. 'Eat it till it's the colour of a sunset, then strike while it's soft. 'Ear that ring? That's it sayin' fank you. Off yer go, an' don't burn the place down."
+nothing = "You know yer way round an anvil already, guv. I ain't takin' yer money for nuffin'."
 
 # Wat One-Eye, guildmaster of the Weyfarers' Gilde, in the Gildhalle (docs/design/adventurers-
 # guild.md §4.2): a commoner, in Cockney. His chain's quests are his topics, one at a time

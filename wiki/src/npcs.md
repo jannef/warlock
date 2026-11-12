@@ -106,7 +106,9 @@ Negotiation now and then.
   (5), as if you had just picked it up, and it grows by use like any other. It is offered only
   while you are untrained in that skill: once you have it, it is gone from the list.
   [Alberich](#alberich), deep in Fyrdelf, teaches [Mining](skills.md#skill-mining), which you need
-  to [dig](digging.md#digging) at all.
+  to [dig](digging.md#digging) at all. [Eadric](#eadric-the-smith), the smith in Cēaptūn, teaches
+  [Metalcraft](skills.md#skill-metalcraft), which every smithing
+  [recipe](skill-uses.md#professions) needs.
 - With nothing to cure, mend, or identify, or a skill you already have, they tell you so, and you
   keep your gold. Without
   enough gold you are told "You cannot pay." Neither takes any time.
@@ -126,11 +128,21 @@ hoard. Ask him, and he teaches you [Mining](skills.md#skill-mining) for 500 gold
 or more by your [Presence](stats.md#stat-presence) and [Negotiation](skills.md#skill-negotiation),
 as a healer's price is). Bring a [pick-axe](digging.md#digging).
 
+### Eadric the smith
+
+**Eadric** keeps the smithy on Cēaptūn's market square ([Shops](shops.md)), beside the smith's
+fire and the [anvil](altars-forges-springs.md). Besides selling arms and armour, he teaches
+[Metalcraft](skills.md#skill-metalcraft) for **2000 gold**, a little less or more by your
+[Presence](stats.md#stat-presence) and [Negotiation](skills.md#skill-negotiation), and less again
+with the town's [goodwill](#goodwill). You start it at 5. Without it you cannot temper or forge
+anything at an anvil.
+
 ### Goodwill
 
 A town remembers who helps it. Every [quest](quests.md) you complete for one of a town's people
 earns it **goodwill**, and its people's services get cheaper: **5% off per quest** in Cēaptūn.
-Its people are Sister Hild, Reeve Leofric, Factor Wulfrun, Godgifu, and Wat One-Eye, so the
+Its people are Sister Hild, Reeve Leofric, Factor Wulfrun, Godgifu, Wat One-Eye, and Eadric the
+smith, so the
 [Weyfarers' Gilde's](guild.md) work counts too. A quest you do again counts again. Quests from
 elsewhere, such as Holtwīc's, do not count. You are told when it rises: "Cēaptūn's folk think
 the better of you."

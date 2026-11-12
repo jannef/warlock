@@ -77,6 +77,14 @@ unless `temple` (Pious never: it is for `cure` and `mend` only), then the town's
 mode says "who teaches for gold". The first teacher is **Alberich** (`npc = "alberich"`,
 `campaigns/ascmearc/data/dialogue/fyrdelf.toml`; creature type `dwarven_miser`, peaceful, no
 route), placed only by the pinned vault `alberichs_delving` on Fyrdelf 5: Mining for 500 gold.
+The second is **Eadric** (#1394; `npc = "eadric"`, `campaigns/ascmearc/data/dialogue/ceaptun.toml`,
+in Cockney), Cēaptūn's smith: the keeper of its smithy, made that npc by the level's `[[shop]]
+npc` (`content/level.rs::parse_shops` sets `CreatureSpawn::npc` on the keeper it spawns, after
+checking the npc has a dialogue), so he speaks his dialogue instead of the shopkeepers' while
+`World::called` still names him by the shop's `keeper`. Metalcraft for 2000 gold, at 5; he is in
+`data/towns/ceaptun.toml`'s `people`, so goodwill takes its share. Tests:
+`world/ceaptun_tests.rs` (`eadric_the_smith_teaches_metalcraft_for_two_thousand_gold`, short of
+gold and goodwill), `ui/screen_snapshots.rs` (`dialogue-smith`).
 Tests: `world/train_service_tests.rs` (a fixture teacher: listed while untrained, bought, gone,
 refusals, digging before and after, the replay and the save, the load checks),
 `mapgen/fyrdelf_tests.rs::alberich_keeps_his_delving_on_the_fifth_floor`.

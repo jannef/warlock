@@ -204,6 +204,11 @@ column. A [race](races.md) may have such a skill too: a [drow](races.md#race-dro
 
 {{#include generated/skill-grants.md}}
 
+A skill you never started with can still be learnt for gold, from a teacher
+([Training](npcs.md#services)): [Alberich](npcs.md#alberich) in Fyrdelf teaches
+[Mining](skills.md#skill-mining), and [Eadric the smith](npcs.md#eadric-the-smith) in Cēaptūn
+[Metalcraft](skills.md#skill-metalcraft).
+
 Some [creatures](creatures.md) are trained in skills too: deer listen well, and the [kobold shaman](creatures.md#creature-kobold-shaman) knows something of
 [spells](magic.md#the-spells). You never see a [creature](creatures.md)'s skills in the game. They are on
 [Creatures in numbers](creature-numbers.md#stats-and-skills).

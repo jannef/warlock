@@ -205,10 +205,12 @@ at = [29, 8]
 objects = ["fur_cloak"]
 
 # The smithy: arms, missiles, and armour, helms, shields, gloves, and boots. The smith's fire
-# burns in the corner beside the anvil.
+# burns in the corner beside the anvil. Its keeper is Eadric the smith, who speaks his own words
+# and teaches Metalcraft (data/dialogue/ceaptun.toml, #1394).
 [[shop]]
 kind = "smithy"
 keeper = "Eadric"
+npc = "eadric"
 area = [35, 4, 43, 8]
 post = [39, 8]
 

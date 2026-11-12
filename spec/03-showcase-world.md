@@ -36,7 +36,8 @@ square, and has no stairs: it is left by walking off its edge, or with `<` when 
 about (§7 "Leaving an outdoor area"): walled on the pass side and open to the river, it has two shops on the
 square (#1248; the general store, everything but arms and armour, and the smithy, arms, missiles,
 and armour, with the anvil; their goods on their floors, each the town's own kind of shop, §7
-"Shops"), private houses beside them (closed doors, beds, tables, and stools, a townsman at home),
+"Shops"; the smithy's keeper is Eadric the smith, who teaches Metalcraft for 2000 gold, §8
+"Dialogue", Training), private houses beside them (closed doors, beds, tables, and stools, a townsman at home),
 dogs and cats about the lanes (the shared `hound` and `cat`, wildlife in no population, so no quest
 draws them), the Mynster (the temple, a sanctuary) where Sister Hild cures and mends for gold (§8
 "Dialogue", Services), the Gæsthūs (the inn) where Godgifu tells rumours of the march (each marks the way on the map, §8 "Dialogue", Rumoured ways; never a
