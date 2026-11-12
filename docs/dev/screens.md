@@ -197,6 +197,9 @@ to open, read keys for, or draw one:
   comes first, as it always asks and any other answer would step in unasked; its "Dive in" is a
   plain move, so the keeper still turns back one who owes, and a trap under it would still go off.
   The hungry journey (overworld, walkable) and the offer cannot apply to a step into deep water.
+  With no dialog, a walk into an anvil opens a screen instead (`input::step_screen`, #1387):
+  Metalcraft's profession screen for one with its row, at once and with no time; untrained, the
+  step goes to the rules, which say what it needs.
 - **The message line and `--more--`** (`ui/more.rs`, spec §6 "Messages", #207): `Game::read` is
   the message log as it was when the player last acted (`Game::apply` takes it before applying;
   a new run starts with nothing read, so its welcome is news; `Game::from_world`, a resumed run,
@@ -411,8 +414,8 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   every context's group, under "Ability keys" (`controls_screen::Row::AbilityKeys`; text
   snapshot `controls-screen-bottom`).
 
-**Fletching** (#1021) is Woodcraft's arrows and bolts recipes since #1336, open to anyone on
-Woodcraft's screen, greyed "no knife", "no bow ready", or "no wood to hand"
+**Fletching** (#1021) is Woodcraft's arrows and bolts recipes since #1336, for the trained on
+Woodcraft's screen (#1387), greyed "no knife", "no bow ready", or "no wood to hand"
 (`profession-woodcraft-no-knife`, `-no-launcher`; `docs/dev/crafting.md` "Arrows and bolts").
 
 **Text snapshots** (#301): `ui/screen_snapshots.rs` (test only) checks the screens as text, in

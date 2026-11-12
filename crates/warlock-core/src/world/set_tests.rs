@@ -437,7 +437,10 @@ fn the_bone_amulet_is_woodcrafts_by_hand() {
 #[test]
 fn a_setting_replays() {
     // As the scenario starts: a long sword and a medium fine ruby lie east of the player.
-    let mut w = World::new(OPEN.clone(), "test_alone", Some(8)).expect("world");
+    // A gnome, trained in Jewelcraft from birth: the untrained make nothing (#1387).
+    let gnome: crate::character::CharacterSpec = "gnome,female,commoner".parse().expect("spec");
+    let mut w =
+        World::with_character(OPEN.clone(), "test_alone", Some(8), Some(&gnome)).expect("world");
     let mut replay = Replay::new(&w);
     for action in parse_actions("move:E pickup").expect("actions") {
         w.apply(&action);

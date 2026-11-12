@@ -2029,9 +2029,8 @@ mod tests {
             app.update();
         };
         for (scenario, walk, used) in [
-            ("shrine", "move:N open:N move:N*3", Some(Action::Pray)),
-            ("spring", "move:N*5", Some(Action::Drink)),
-            ("forge", "move:E", None),
+            ("shrine", "move:N open:N move:N*3", Action::Pray),
+            ("spring", "move:N*5", Action::Drink),
         ] {
             let content = content();
             let mut world = warlock_core::World::new(content.clone(), scenario, None).expect("run");
@@ -2062,19 +2061,46 @@ mod tests {
 
             frame(&mut app, &[NORTH]);
             frame(&mut app, &[yes]);
-            match &used {
-                // The ability's action.
-                Some(action) => {
-                    assert!(names(&app).is_empty(), "{scenario}");
-                    assert_eq!(actions(&app), std::slice::from_ref(action), "{scenario}");
-                }
-                // Temper's list, as the ability opens it; nothing is done yet.
-                None => {
-                    assert_eq!(names(&app), [ScreenName::Temper], "{scenario}");
-                    assert!(actions(&app).is_empty(), "{scenario}");
-                }
-            }
+            // The ability's action.
+            assert!(names(&app).is_empty(), "{scenario}");
+            assert_eq!(actions(&app), std::slice::from_ref(&used), "{scenario}");
         }
+    }
+
+    /// #1387: walking into an anvil opens Metalcraft's screen at once for one trained in it (the
+    /// forge's craftsperson), asking nothing and taking no time; a held key does not. Untrained
+    /// (a thief), the step goes to the rules, which say what it needs.
+    #[test]
+    fn walking_into_an_anvil_opens_metalcraft_for_the_trained_alone() {
+        let content = content();
+        let metal = content.skill_id("metalcraft").expect("metalcraft");
+        let walked = |spec: Option<&str>| {
+            let spec: Option<warlock_core::character::CharacterSpec> =
+                spec.map(|s| s.parse().expect("a character"));
+            let mut world =
+                warlock_core::World::with_character(content.clone(), "forge", None, spec.as_ref())
+                    .expect("run");
+            world.apply(&Action::Move(Dir::E));
+            app_with(
+                content.clone(),
+                Some(Game::from_world(world, "tamsin-1".into())),
+            )
+        };
+        let mut app = walked(None);
+        let mut held = key(NORTH.0, NORTH.1);
+        held.repeat = true;
+        app.world_mut().write_message(held);
+        app.update();
+        assert!(names(&app).is_empty());
+        frame(&mut app, &[NORTH]);
+        assert_eq!(names(&app), [ScreenName::Profession(metal)]);
+        assert!(actions(&app).is_empty(), "no action, no time");
+        frame(&mut app, &[ESC]);
+        assert!(names(&app).is_empty());
+        let mut app = walked(Some("human,male,thief"));
+        frame(&mut app, &[NORTH]);
+        assert!(names(&app).is_empty());
+        assert_eq!(actions(&app), [Action::Move(Dir::N)]);
     }
 
     #[test]
@@ -2437,11 +2463,11 @@ mod tests {
     #[test]
     fn picking_a_lock_acts_at_once_on_the_one_door_beside() {
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // Below the hall's door, the showcase's thief (trained in Open lock): `a` `e` (Pick
-        // lock, after their birth sign's stare, Disarm, Listen, and Metalcraft…) picks it at
+        // Below the hall's door, the showcase's thief (trained in Open lock): `a` `d` (Pick
+        // lock, after their birth sign's stare, Disarm, and Listen) picks it at
         // once, with no prompt (#1327).
         let mut app = thief_after("move:N*3");
-        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyE, "e")]);
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyD, "d")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Normal);
         assert_eq!(actions(&app), [Action::PickLock(Dir::N)]);
@@ -2486,14 +2512,13 @@ mod tests {
 
     #[test]
     fn a_professions_row_opens_its_recipes_and_esc_closes_them() {
-        // The thief's `a` `c` is Metalcraft… (Listen is left out away from a door): its screen,
-        // over the menu's place; Temper there is greyed away from an anvil, so its letter does
-        // nothing.
-        let mut app = app(true);
-        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyC, "c")]);
-        let metal = content().skill_id("metalcraft").expect("metalcraft");
-        assert_eq!(names(&app), [ScreenName::Profession(metal)]);
-        frame(&mut app, &[(KeyCode::KeyA, "a")]);
+        // The forge's craftsperson's `a` `b` is Metalcraft… (after the birth sign's stare): its
+        // screen, over the menu's place.
+        let content = content();
+        let metal = content.skill_id("metalcraft").expect("metalcraft");
+        let world = warlock_core::World::new(content.clone(), "forge", None).expect("run");
+        let mut app = app_with(content, Some(Game::from_world(world, "tamsin-1".into())));
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyB, "b")]);
         assert_eq!(names(&app), [ScreenName::Profession(metal)]);
         assert!(actions(&app).is_empty());
         frame(&mut app, &[ESC]);
@@ -2503,20 +2528,20 @@ mod tests {
     #[test]
     fn stealing_acts_at_once_on_one_beside_and_asks_among_several() {
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // The showcase's thief can steal; an ally beside is someone to rob: `a` `e` (Steal)
+        // The showcase's thief can steal; an ally beside is someone to rob: `a` `d` (Steal)
         // steals from it at once.
         let mut app = thief_after("ally:panther");
         let [one] = ways_to_creatures(&app)[..] else {
             panic!("one ally beside");
         };
-        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyE, "e")]);
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyD, "d")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Normal);
         assert_eq!(actions(&app), [Action::Steal(one)]);
         // Two beside: it asks for a direction in the message line, and a direction steals.
         let mut app = thief_after("ally:panther:2");
         assert_eq!(ways_to_creatures(&app).len(), 2);
-        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyE, "e")]);
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyD, "d")]);
         assert_eq!(mode(&app), InputMode::Ability(Ability::Steal));
         frame(&mut app, &[EAST]);
         assert_eq!(actions(&app), [Action::Steal(Dir::E)]);
@@ -2559,22 +2584,22 @@ mod tests {
         const ABILITIES: (KeyCode, &str) = (KeyCode::KeyA, "a");
         const REPEAT: (KeyCode, &str) = (KeyCode::KeyX, "X");
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // Without a shield: the menu opens on `a`; the shield bash (`h`) is greyed out, so its
+        // Without a shield: the menu opens on `a`; the shield bash (`f`) is greyed out, so its
         // letter only says why; Esc closes the menu, and no time passed.
         let mut app = app(true);
         frame(&mut app, &[ABILITIES]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
-        frame(&mut app, &[(KeyCode::KeyH, "h")]);
+        frame(&mut app, &[(KeyCode::KeyF, "f")]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
         frame(&mut app, &[ESC]);
         assert!(names(&app).is_empty() && actions(&app).is_empty());
         // The quick repeat with nothing used yet opens the menu.
         frame(&mut app, &[REPEAT]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
-        // Two allies beside: `a` `e` closes the menu and asks for a direction; a direction
+        // Two allies beside: `a` `d` closes the menu and asks for a direction; a direction
         // steals.
         let mut app = thief_after("ally:panther:2");
-        frame(&mut app, &[ABILITIES, (KeyCode::KeyE, "e")]);
+        frame(&mut app, &[ABILITIES, (KeyCode::KeyD, "d")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Ability(Ability::Steal));
         frame(&mut app, &[EAST]);

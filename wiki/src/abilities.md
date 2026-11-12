@@ -92,8 +92,8 @@ you never choose them, they work by themselves as you fight. They have their own
   you, or an [ally](allies.md) beside you, for [bleeding](status-effects.md#bleeding), a [poison](status-effects.md#poisoned), or a [disease](diseases.md#how-a-disease-goes) that shows. It asks which when
   there is more than one. Otherwise it is greyed out: "nothing to treat" (see
   [Treating yourself](skill-uses.md#treating-yourself)).
-- **Metalcraft…** and **Woodcraft…**: everyone has these two rows, in the skills' places among
-  the Skills. Each opens that [profession](skill-uses.md#professions)'s list of recipes.
+- **Metalcraft…** and **Woodcraft…**: those trained in [Metalcraft](skills.md#skill-metalcraft)
+  or [Woodcraft](skills.md#skill-woodcraft) have its row, in the skill's place among the Skills. Each opens that [profession](skill-uses.md#professions)'s list of recipes.
   Metalcraft's holds **Temper** (see [Forges](altars-forges-springs.md#forges)); Woodcraft's
   holds **Arrows** and **Crossbow bolts** (see [Fletching](skill-uses.md#fletching)), **Sling
   stones**, and **Whittle** (see [Whittling](skill-uses.md#whittling)). A recipe you cannot make

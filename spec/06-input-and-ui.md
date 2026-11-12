@@ -61,10 +61,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Walking into what offers an action** (§7 "Special rooms"): a step into a feature that offers
   an ability, which the player sees or remembers (where no creature they see stands), asks first,
   in the dialog: `Would you like to pray at the forgotten altar?`, `Would you like to drink from
-  the spring?`, `Would you like to temper something at the anvil?`, with the ability's name
-  (accept: it is used as from the abilities menu, Temper going on to its list) and `Leave it`
-  (cancel, selected first; no time). What offers nothing (a spent altar, shelves, a statue) blocks
-  as ever. Asking is the interface's: in the rules a `move` into it just stops.
+  the spring?`, with the ability's name (accept: it is used as from the abilities menu) and
+  `Leave it` (cancel, selected first; no time). An anvil asks nothing: walking into it opens
+  Metalcraft's profession screen at once, with all its recipes, for one trained in Metalcraft (no
+  time); the untrained are told "You need Metalcraft to work at the anvil." (no screen, no time;
+  the owner, #1387). What offers nothing (a spent altar, shelves, a statue) blocks as ever.
+  Asking is the interface's: in the rules a `move` into it just stops.
 - **Reading too close** (§8 "Scrolls"): a burst read from a scroll (fireball, frost) aimed where,
   as far as the player knows, it may catch them too (they stand within its radius of where it
   would go off: the first creature they see on the line of fire, the last cell before one they
@@ -462,9 +464,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     that skill's place, greyed out "not usable here" (`Unavailable::NotHere`) outside the wild;
     a **profession** (`Ability::Profession`, §8 "Skills"; #1334), a skill with recipes, as one
     row in that skill's place named with an ellipsis ("Metalcraft…", "Woodcraft…"), which
-    whoever is trained in the skill has, and everyone while one of its recipes is open to all
-    (Temper, Whittle, the arrows); never greyed, it opens the **profession screen**: its recipes
-    the player may see, grouped by what they make (the built-in Temper and Whittle first under
+    whoever is trained in the skill has (no recipe is open to the untrained, #1387); never
+    greyed, it opens the **profession screen**: its recipes, grouped by what they make (the built-in Temper and Whittle first under
     "Work"), each with what it takes in words ("a metal weapon or armour, an anvil, about
     10 minutes"; never a difficulty or odds), greyed with the first reason it cannot be made now
     ("beyond your skill", "no anvil beside you", "no knife", "no bow ready", "no metal to hand",

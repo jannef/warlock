@@ -143,8 +143,8 @@ and **[Woodcraft…](abilities.md#ability-woodcraft)**. The row opens the profes
 Alchemy's recipes are potions, brewed from herbs by those trained in it (see
 [Brewing potions](recipes-alchemy.md)).
 
-You know a recipe by your skill, not by learning it. Some recipes are open to everyone, trained or
-not:
+You know a recipe by your skill, not by learning it. Every recipe needs its skill: if you are not
+trained in it, you have no list and can make none of its recipes. Among them:
 
 - Metalcraft: **Temper**, a metal weapon or armour made finer at an anvil (see
   [Forges](altars-forges-springs.md#forges)).
@@ -170,8 +170,8 @@ knife", "no bow ready". Choose a recipe by its letter, or move to it and press E
 
 ## Fletching
 
-Anyone can make arrows and bolts. **Arrows** and **Crossbow bolts** are recipes on everyone's
-[Woodcraft…](abilities.md#ability-woodcraft) list (see [Professions](#professions)). You need:
+Making arrows and bolts needs [Woodcraft](skills.md#skill-woodcraft). **Arrows** and **Crossbow
+bolts** are recipes on the [Woodcraft…](abilities.md#ability-woodcraft) list (see [Professions](#professions)). You need:
 
 - a knife, in your [pack](objects.md#your-pack) or wielded. A dagger or a stiletto will do, or
   anything else of the [Daggers and knives](weapon-skills.md#weapon-skill-daggers) skill; a short
@@ -207,8 +207,9 @@ surer, and rangers start with a knife. But even a ranger's arrows need heads not
 
 ## Whittling
 
-With a knife carried, anyone can improve a wooden weapon the way an [anvil](altars-forges-springs.md#forges) improves a metal one.
-**Whittle** is a recipe on everyone's [Woodcraft…](abilities.md#ability-woodcraft) list, beside
+With a knife carried, those trained in [Woodcraft](skills.md#skill-woodcraft) can improve a wooden
+weapon the way an [anvil](altars-forges-springs.md#forges) improves a metal one.
+**Whittle** is a recipe on the [Woodcraft…](abilities.md#ability-woodcraft) list, beside
 the arrows (see [Professions](#professions)). It is greyed out with "no knife" if you have none.
 
 Choose a weapon, a missile weapon, or a shield whose main part is wood: bows, crossbows, staves,

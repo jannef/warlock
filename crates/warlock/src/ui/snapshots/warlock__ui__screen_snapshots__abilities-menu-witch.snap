@@ -20,15 +20,15 @@ expression: "render(case, content.clone())"
              │   i  Decipher           no unknown scroll                              │
              │   j  Heal               nothing to treat                               │
              │   k  Intimidate         at a place you see                             │
-             │   l  Metalcraft…                                                       │
-             │   m  Forage             not usable here                                │
-             │   n  Woodcraft…                                                        │
-             │   o  Salvage            on something you carry                         │
+             │   l  Forage             not usable here                                │
+             │   m  Salvage            on something you carry                         │
+             │ Weapon skills                                                          │
+             │   n  Shield bash        you hold no shield                             │
              │                                                                        │
              │ The basilisk's stare: a foe nearby that sees you slows to a crawl a    │
              │ moment; your eyes then rest two hours.                                 │
              │                                                                        │
              │                                                                        │
-             │ a-o or Enter use   > < page   Esc close                                │
+             │ a-n or Enter use   > < page   Esc close                                │
              └────────────────────────────────────────────────────────────────────────┘
  The Hub  ·  HP 20/20  ·  MP 62/62  ·  Lv 8  ·  Dandy: unhurt  ·  08:00                  ? controls

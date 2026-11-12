@@ -1,7 +1,6 @@
-# Whittle (spec §8 "Skills": Woodcraft): a wooden weapon made finer with a knife, by anyone,
-# anywhere. The Whittle list and `world/temper.rs`'s rules, unchanged (data/temper.toml).
+# Whittle (spec §8 "Skills": Woodcraft): a wooden weapon made finer with a knife, by one
+# trained in Woodcraft, anywhere. The Whittle list and `world/temper.rs`'s rules, unchanged (data/temper.toml).
 [[recipe]]
 id = "whittle"
 use = "whittle"
-anyone = true
 knife = true

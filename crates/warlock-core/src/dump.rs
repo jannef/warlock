@@ -2697,27 +2697,20 @@ mod tests {
             [
                 "Transfixing stare (sign): a cell",
                 "Disarm a trap (skill): no known trap beside you",
-                "Metalcraft… (skill): a recipe",
                 "Pick lock (skill): no lock beside you",
                 "Steal (skill): no one beside you to rob",
-                "Woodcraft… (skill): a recipe",
                 "Salvage (skill): an item you carry",
                 "Shield bash (weapon skill): you hold no shield",
             ]
         );
         let value = json(&world, &[], false);
         assert_eq!(
-            value["abilities"][6],
+            value["abilities"][4],
             json!({"id": "salvage", "source": "skill", "aim": "an item you carry",
                    "unavailable": null})
         );
         assert_eq!(
             value["abilities"][5],
-            json!({"id": "woodcraft", "source": "skill", "aim": "a recipe",
-                   "unavailable": null})
-        );
-        assert_eq!(
-            value["abilities"][7],
             json!({"id": "shield_bash", "source": "weapon_skill", "aim": "a direction",
                    "unavailable": "no_shield"})
         );
@@ -2727,13 +2720,13 @@ mod tests {
                    "unavailable": "no_target:trap"})
         );
         assert_eq!(
-            value["abilities"][3],
+            value["abilities"][2],
             json!({"id": "pick_lock", "source": "skill", "aim": "a direction",
                    "unavailable": "no_target:lock"})
         );
         assert_eq!(value["abilities"][0]["aim"], "a cell");
         assert_eq!(
-            value["abilities"][4],
+            value["abilities"][3],
             json!({"id": "steal", "source": "skill", "aim": "a direction",
                    "unavailable": "no_target:mark"})
         );
@@ -2743,7 +2736,7 @@ mod tests {
         }
         let rows = layer_rows(&world, Layer::Abilities);
         assert_eq!(rows[2], "Listen at a door (skill): a direction");
-        assert_eq!(rows[4], "Pick lock (skill): a direction");
+        assert_eq!(rows[3], "Pick lock (skill): a direction");
         // The storeroom's small shield in hand: with no foe beside, there is nobody to bash.
         let walk = "open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
                     pickup:a equip:off_hand:b";
@@ -2751,9 +2744,9 @@ mod tests {
             world.apply(&action);
         }
         let rows = layer_rows(&world, Layer::Abilities);
-        assert_eq!(rows[7], "Shield bash (weapon skill): no foe within reach");
+        assert_eq!(rows[5], "Shield bash (weapon skill): no foe within reach");
         assert_eq!(
-            json(&world, &[], false)["abilities"][7]["unavailable"],
+            json(&world, &[], false)["abilities"][5]["unavailable"],
             "no_target:foe"
         );
         assert!(!Layer::Abilities.is_dev_only());

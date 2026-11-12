@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You feel blessed.
- You spend 101 mana ┌─ Abilities ─────────────────────────────────── Page 1/2 ─┐
+ You spend 101 mana ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
@@ -20,15 +20,15 @@ expression: "render(case, content.clone())"
                     │   i  Decipher           no unknown scroll                │
                     │   j  Heal               nothing to treat                 │
                     │   k  Knowledge          not usable yet                   │
-                    │   l  Metalcraft…                                         │
-                    │   m  Forage             not usable here                  │
-                    │   n  Woodcraft…                                          │
-                    │   o  Salvage            on something you carry           │
+                    │   l  Forage             not usable here                  │
+                    │   m  Salvage            on something you carry           │
+                    │ Weapon skills                                            │
+                    │   n  Shield bash        no foe within reach              │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-o or Enter use   > < page   Esc close                  │
+                    │ a-n or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
  The Hub  ·  HP 44/44  ·  MP 13/123  ·  Blessed  ·  Lv 14  ·  08:00  ·  11 Darkening     ? controls

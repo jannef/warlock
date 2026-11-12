@@ -815,7 +815,7 @@ const CASES: &[Case] = &[
         character: Some("human,male,ranger"),
         run: true,
         screen: Some("abilities"),
-        keys: Some("f p"),
+        keys: Some("e p"),
         ..BASE
     },
     // A ranger's Whittle list (#1028): the wooden weapons carried (the bow), not the knife.
@@ -895,30 +895,33 @@ const CASES: &[Case] = &[
         keys: Some("b a a"),
         ..BASE
     },
-    // A warrior carries no knife: Woodcraft's screen (its row in the abilities menu, `e`) greys
-    // Fletch and Whittle, each with the reason in place of what it takes (#1334).
+    // A craftsperson carries no knife: Woodcraft's screen (its row in the abilities menu, `c`)
+    // greys the arrows and Whittle, each with the reason in place of what it takes (#1334). Only
+    // the trained have the row (#1387).
     Case {
         name: "profession-woodcraft-no-knife",
-        character: Some("human,male,warrior"),
+        character: Some("human,male,craftsperson"),
+        run: true,
+        screen: Some("abilities"),
+        keys: Some("c"),
+        ..BASE
+    },
+    // A ranger's knife, but their bow put away, so none is ready: Whittle can be made, the arrows
+    // not (`e`: Woodcraft…, after the stare, Decipher, Tame, and Forage).
+    Case {
+        name: "profession-woodcraft-no-launcher",
+        character: Some("human,male,ranger"),
+        actions: "remove:missile_weapon",
         run: true,
         screen: Some("abilities"),
         keys: Some("e"),
-        ..BASE
-    },
-    // A thief's dagger is a knife, but no bow is ready: Whittle can be made, Fletch not (`h`:
-    // Woodcraft…, after Disarm, Listen, Metalcraft…, Pick lock, Steal, and Forage).
-    Case {
-        name: "profession-woodcraft-no-launcher",
-        character: Some("human,male,thief"),
-        run: true,
-        screen: Some("abilities"),
-        keys: Some("h"),
         ..BASE
     },
     // Metalcraft's screen (`--screen profession`, the first profession's) away from an anvil:
     // Temper under "Work", greyed "no anvil beside you".
     Case {
         name: "profession-metalcraft-no-anvil",
+        character: Some("human,male,craftsperson"),
         run: true,
         screen: Some("profession"),
         ..BASE
@@ -1075,14 +1078,14 @@ const CASES: &[Case] = &[
     Case {
         name: "set-on-aim",
         actions: "ally:dire_warg:2",
-        keys: Some("a k"),
+        keys: Some("a i"),
         ..BASE
     },
     // Come to heel chosen from the menu: the order's words, no time.
     Case {
         name: "come-to-heel",
         actions: "ally:dire_warg:2",
-        keys: Some("a i"),
+        keys: Some("a g"),
         ..BASE
     },
     // A paladin of some level: the Class group, Lay on hands refused and greyed out short of
@@ -1710,11 +1713,11 @@ const CASES: &[Case] = &[
         keys: Some("a b"),
         ..BASE
     },
-    // Two beside the thief to rob: `a e` (Steal) asks which way in the message line (#1327).
+    // Two beside the thief to rob: `a d` (Steal) asks which way in the message line (#1327).
     Case {
         name: "steal-prompt",
         actions: "ally:dire_warg:2",
-        keys: Some("a e"),
+        keys: Some("a d"),
         ..BASE
     },
     Case {
@@ -1921,10 +1924,9 @@ fn hunger_stops_as_text() {
 
 /// Beside what offers an action, north of the player (spec §7 "Special rooms"): its scenario and
 /// the walk there.
-const OFFERS: [(&str, &str, &str); 3] = [
+const OFFERS: [(&str, &str, &str); 2] = [
     ("offer-dialog-altar", "shrine", "move:N open:N move:N*3"),
     ("offer-dialog-spring", "spring", "move:N*5"),
-    ("offer-dialog-anvil", "forge", "move:E"),
 ];
 
 /// #975: the question a step into each asks.
@@ -1936,6 +1938,27 @@ fn walking_into_what_offers_an_action_as_text() {
             name,
             scenario,
             actions,
+            keys: Some("Up"),
+            ..BASE
+        };
+        insta::assert_snapshot!(case.name, render(&case, content.clone()));
+    }
+}
+
+/// #1387: a step into an anvil asks nothing. The forge's craftsperson, trained in Metalcraft, is
+/// shown its screen; a thief, untrained, is told what it takes.
+#[test]
+fn walking_into_an_anvil_as_text() {
+    let content = Arc::new(Content::builtin().expect("content"));
+    for (name, character) in [
+        ("anvil-opens-metalcraft", None),
+        ("anvil-untrained", Some("human,male,thief")),
+    ] {
+        let case = Case {
+            name,
+            scenario: "forge",
+            character,
+            actions: "move:E",
             keys: Some("Up"),
             ..BASE
         };

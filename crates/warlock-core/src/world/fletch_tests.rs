@@ -63,7 +63,8 @@ static FIXTURE: LazyLock<Arc<Content>> = LazyLock::new(|| {
 });
 
 /// A hall with no one in it, or with a kobold in sight. The player is a human commoner carrying
-/// nothing, every score 10 (a modifier of 0), untrained in Woodcraft, `seed` their fate.
+/// nothing, every score 10 (a modifier of 0), trained in Woodcraft at 1 (the least, which adds
+/// nothing to a batch's count; the untrained make none, #1387), `seed` their fate.
 fn world(kobold: bool, seed: u64) -> World {
     let scenario = if kobold { "test_watched" } else { "test_alone" };
     let mut w = World::new(FIXTURE.clone(), scenario, Some(seed)).expect("world");
@@ -73,7 +74,7 @@ fn world(kobold: bool, seed: u64) -> World {
     me.inventory.clear();
     me.equipment = Default::default();
     me.stats = Stats::new(PerStat::splat(10), PerStat::splat(10));
-    set_skill(&mut w, "woodcraft", None);
+    set_skill(&mut w, "woodcraft", Some(1));
     w
 }
 
@@ -255,7 +256,7 @@ fn a_metal_arrowhead_heads_one_arrow_and_gives_it_its_metal() {
     pieces(&mut w, "hardwood", 1); // d
     sure_batch(&mut w, "craft:arrows:c,d");
     let made = count_of(&w, "arrow");
-    assert!((1..=4).contains(&made), "1d4 untrained: {made}");
+    assert!((1..=4).contains(&made), "1d4 at Woodcraft 1: {made}");
     assert_eq!(count_of(&w, "arrowhead"), 20 - made, "one an arrow");
     assert_eq!(count_of(&w, "piece"), 0, "the billet is spent");
     let arrows = (w.state.player().inventory.iter())
@@ -393,6 +394,33 @@ fn bolts_are_the_twin_for_a_crossbow() {
     assert_eq!(last_message(&w), "You have no crossbow ready.");
 }
 
+/// #1387: every recipe is its skill's. Untrained in Woodcraft, with all a batch takes, the
+/// player has no Woodcraft row and makes no arrows, bolts, or sling stones, taking no time.
+#[test]
+fn the_untrained_make_no_arrows_bolts_or_sling_stones() {
+    let mut w = equipped(false, 2, "short_bow");
+    pieces(&mut w, "wood", 1); // c
+    pieces(&mut w, "stone", 1); // d
+    set_skill(&mut w, "woodcraft", None);
+    let wood = skill(&w, "woodcraft");
+    assert!(w.perception().recipes(wood).is_empty());
+    let own = w.perception().abilities();
+    assert!(!own.iter().any(|o| o.ability == Ability::Profession(wood)));
+    for text in [
+        "craft:arrows:-,c",
+        "craft:bolts:-,c",
+        "craft:sling_stones:d",
+    ] {
+        assert_eq!(craft(&mut w, text), 0, "{text}");
+        assert_eq!(last_message(&w), "You are not trained in Woodcraft.");
+    }
+    assert_eq!(count_of(&w, "piece"), 2, "nothing spent");
+    // Trained, the same pack makes a batch.
+    set_skill(&mut w, "woodcraft", Some(1));
+    sure_batch(&mut w, "craft:arrows:-,c");
+    assert!(count_of(&w, "brittle_arrow") > 0, "{:?}", pack(&w));
+}
+
 #[test]
 fn the_knife_and_the_launcher_are_asked_for_with_no_time() {
     let mut w = world(false, 7);
@@ -400,7 +428,7 @@ fn the_knife_and_the_launcher_are_asked_for_with_no_time() {
     assert_eq!(
         row(&w, "arrows"),
         Some(Some(RecipeLack::Knife)),
-        "anyone has it"
+        "the trained have it"
     );
     assert_eq!(craft(&mut w, "craft:arrows:-,a"), 0);
     assert_eq!(last_message(&w), "You have no knife.");
@@ -443,9 +471,7 @@ fn the_knife_and_the_launcher_are_asked_for_with_no_time() {
 
 #[test]
 fn the_row_says_what_a_batch_takes() {
-    let mut w = equipped(false, 8, "short_bow");
-    // The flaming arrows are listed for those trained in Woodcraft alone.
-    set_skill(&mut w, "woodcraft", Some(1));
+    let w = equipped(false, 8, "short_bow");
     assert_eq!(
         takes(&w, "arrows"),
         "an arrowhead for each made or a bone shard or a block of flint, a wood billet, a knife, \

@@ -382,18 +382,21 @@ mod tests {
             "> a  Transfixing stare  at a place you see",
             "Skills",
             "  b  Disarm a trap      no known trap beside you",
-            "  c  Metalcraft…",
-            "  d  Pick lock          no lock beside you",
-            "  e  Steal              no one beside you to rob",
-            "  f  Woodcraft…",
-            "  g  Salvage            on something you carry",
+            "  c  Pick lock          no lock beside you",
+            "  d  Steal              no one beside you to rob",
+            "  e  Salvage            on something you carry",
             "Weapon skills",
-            "  h  Shield bash        you hold no shield",
-            "a-h or Enter use   Esc close",
+            "  f  Shield bash        you hold no shield",
+            "a-f or Enter use   Esc close",
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
         assert!(!text.contains("Listen at a door"), "{text}");
+        // Untrained in Metalcraft and Woodcraft, the thief has no profession rows (#1387).
+        assert!(
+            !text.contains("Metalcraft…") && !text.contains("Woodcraft…"),
+            "{text}"
+        );
         // The cursor starts on the first that can be used: the thief's birth sign's stare (a
         // Basilisk's).
         let stare = Ability::Sign(warlock_core::content::SignActive::TransfixingStare);
@@ -405,7 +408,7 @@ mod tests {
         let text = drawn(&screen, 80, 30).join("\n");
         for expected in [
             "  c  Listen at a door   in a direction",
-            "  e  Pick lock          in a direction",
+            "  d  Pick lock          in a direction",
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
@@ -416,7 +419,7 @@ mod tests {
         let b = Bindings::default();
         let world = thief(false);
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), None);
-        assert_eq!(screen.handle(&Press::typed('h'), &b), ScreenAction::Stay);
+        assert_eq!(screen.handle(&Press::typed('f'), &b), ScreenAction::Stay);
         assert_eq!(screen.selected(), Some(Ability::ShieldBash));
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(text.contains("Shield bash: you hold no shield."), "{text}");
@@ -427,7 +430,7 @@ mod tests {
         // With a shield in hand but no foe beside, it says so (#1327).
         let world = thief(true);
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), None);
-        assert_eq!(screen.handle(&Press::typed('h'), &b), ScreenAction::Stay);
+        assert_eq!(screen.handle(&Press::typed('f'), &b), ScreenAction::Stay);
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(text.contains("Shield bash: no foe within reach."), "{text}");
         // Someone beside to rob (an ally): Steal can be used; the cursor starts on the first that
@@ -437,7 +440,7 @@ mod tests {
         let stare = Ability::Sign(warlock_core::content::SignActive::TransfixingStare);
         assert_eq!(screen.selected(), Some(stare));
         assert_eq!(
-            screen.handle(&Press::typed('e'), &b),
+            screen.handle(&Press::typed('d'), &b),
             ScreenAction::UseAbility(Ability::Steal)
         );
         let last = Some(Ability::Steal);
@@ -445,7 +448,7 @@ mod tests {
         assert_eq!(screen.selected(), Some(Ability::Steal));
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(
-            text.contains("> e  Steal              in a direction"),
+            text.contains("> d  Steal              in a direction"),
             "{text}"
         );
         assert_eq!(
@@ -467,10 +470,10 @@ mod tests {
     fn a_tall_list_pages_and_never_covers_the_first_or_last_console_row() {
         let world = thief(false);
         let screen = AbilitiesScreen::new(Some(&world.perception()), None);
-        // Room for nine rows of list only: the thief's thirteen rows make two pages.
-        let lines = drawn(&screen, 80, 20);
+        // Room for seven rows of list only: the thief's nine rows make two pages.
+        let lines = drawn(&screen, 80, 18);
         assert!(lines[0].trim().is_empty(), "{lines:?}");
-        assert!(lines[19].trim().is_empty(), "{lines:?}");
+        assert!(lines[17].trim().is_empty(), "{lines:?}");
         assert!(lines.join("\n").contains("Page 1/2"), "{lines:?}");
     }
 
@@ -505,7 +508,7 @@ mod tests {
         let last = Some(Ability::ShieldBash);
         let screen = AbilitiesScreen::new(Some(&world.perception()), last);
         let text = drawn(&screen, 80, 13).join("\n");
-        assert!(text.contains("Page 8/8"), "{text}");
+        assert!(text.contains("Page 6/6"), "{text}");
         assert!(text.contains("> a  Shield bash"), "{text}");
     }
 }

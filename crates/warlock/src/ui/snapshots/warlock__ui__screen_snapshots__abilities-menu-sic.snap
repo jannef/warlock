@@ -17,12 +17,13 @@ expression: "render(case, content.clone())"
                     │ Skills                                                   │
                     │   g  Decipher           no unknown scroll                │
                     │   h  Tame               you already have a companion     │
-                    │   i  Metalcraft…                                         │
-                    │   j  Forage             not usable here                  │
-                    │   k  Woodcraft…                                          │
-                    │   l  Salvage            on something you carry           │
+                    │   i  Forage             not usable here                  │
+                    │   j  Woodcraft…                                          │
+                    │   k  Salvage            on something you carry           │
                     │ Weapon skills                                            │
-                    │   m  Shield bash        you hold no shield               │
+                    │   l  Shield bash        you hold no shield               │
+                    │ Allies                                                   │
+                    │   m  Come to heel                                        │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
@@ -30,5 +31,4 @@ expression: "render(case, content.clone())"
                     │                                                          │
                     │ a-m or Enter use   > < page   Esc close                  │
                     └──────────────────────────────────────────────────────────┘
-
  The Hub  ·  HP 118/118  ·  MP 181/181  ·  Focus 10/10  ·  Sta 10/20  ·  Lv 60           ? controls

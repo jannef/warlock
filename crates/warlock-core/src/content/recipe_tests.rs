@@ -106,7 +106,6 @@ fn the_built_in_recipes_are_the_forges_weapons_armour_tools_and_temper_and_woodc
         let got = (r.difficulty, r.seconds, r.from, r.ornament, r.station);
         assert_eq!(got, (difficulty, seconds, from, ornament, anvil), "{id}");
         assert_eq!(r.parts.len(), 1, "{id}");
-        assert!(!r.anyone, "{id}");
     }
     // P5b's (#1351, the same table): the rest of the smith's at the anvil, and the hand-made
     // ones, Woodcraft's, with a knife and no station; the spears' two parts (head, haft).
@@ -169,7 +168,6 @@ fn the_built_in_recipes_are_the_forges_weapons_armour_tools_and_temper_and_woodc
         let hand = Some(r.skill) == wood_id;
         assert_eq!(r.knife, hand, "{id}");
         assert_eq!(r.station.is_none(), hand, "{id}");
-        assert!(!r.anyone, "{id}");
     }
     assert_eq!(
         of(wood),
@@ -251,19 +249,19 @@ fn the_built_in_recipes_are_the_forges_weapons_armour_tools_and_temper_and_woodc
         let got = (r.difficulty, r.seconds, r.from, r.ornament, r.skill);
         let skill = content.skill_id(skill).expect(skill);
         assert_eq!(got, (difficulty, seconds, from, ornament, skill), "{id}");
-        assert!(!r.anyone && r.station.is_none(), "{id}");
+        assert!(r.station.is_none(), "{id}");
         let verb = (r.skill == jewel).then(|| "Make".to_string());
         assert_eq!(r.verb, verb, "{id}");
     }
     let set = content.recipe(recipes.id("set").expect("set"));
     assert_eq!((set.difficulty, set.seconds, set.from), (12, 1200, 10));
     assert_eq!(recipes.description(jewel), Some("Your work as a jeweller."));
-    // The other built-ins are open to everyone, as they were before (#1337 Q3).
+    // The other built-ins run their own actions, their skill's like every recipe (#1387).
     let built_in = (recipes.list.iter()).filter(|r| r.uses.is_some_and(|u| !u.checked()));
-    assert!(built_in.clone().all(|r| r.anyone && r.result.is_none()));
+    assert!(built_in.clone().all(|r| r.result.is_none()));
     assert_eq!(built_in.count(), 2);
     let cut = content.recipe(recipes.id("cut").expect("cut"));
-    assert!(!cut.anyone && cut.result.is_none());
+    assert!(cut.result.is_none());
     let temper = content.recipe(recipes.id("temper").expect("temper"));
     assert_eq!(temper.station, content.terrain_id("anvil"));
     assert_eq!(recipes.description(metal), Some("Your recipes as a smith."));
@@ -777,7 +775,7 @@ fn the_shipped_arrows_take_a_head_of_three_sources_and_the_loader_checks_them() 
     let arrows = recipe("arrows");
     assert_eq!(arrows.result.expect("made").count, RecipeCount::Fletch);
     assert_eq!(arrows.brittle, content.object_id("brittle_arrow"));
-    assert!(arrows.knife && arrows.launcher && arrows.anyone);
+    assert!(arrows.knife && arrows.launcher);
     let PartSource::Sources {
         input,
         stock,

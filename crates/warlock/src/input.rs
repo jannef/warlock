@@ -32,7 +32,7 @@ use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use warlock_core::ability::{self, Ability};
 use warlock_core::beside::{Beside, Way};
-use warlock_core::content::{LevelKind, RecipeUse, VisionProfile};
+use warlock_core::content::{LevelKind, Offer, RecipeUse, TerrainId, VisionProfile};
 use warlock_core::hunger::Hunger;
 use warlock_core::perception::{CellView, PerceptionView};
 use warlock_core::time::Duration;
@@ -1001,8 +1001,13 @@ impl Gameplay<'_> {
                 // asks (the owner's rule), and any other dialog's "go on" would step in unasked;
                 // its own "Dive in" is a plain move, which the rules still judge (the keeper turns
                 // back one who owes). A held key stops there (repeats never open the dialog).
-                match step_dialog(&game.world.perception(), dir) {
-                    Some(dialog) if !key.repeat => open = Some(dialog.into()),
+                // Walking into an anvil opens Metalcraft's screen for the trained (#1387).
+                let view = game.world.perception();
+                let screen = step_dialog(&view, dir)
+                    .map(ScreenAction::from)
+                    .or_else(|| step_screen(&view, dir).map(ScreenAction::Open));
+                match screen {
+                    Some(screen) if !key.repeat => open = Some(screen),
                     Some(_) => {}
                     None => {
                         self.actions.write(PlayerAction(Action::Move(dir)));
@@ -1013,8 +1018,12 @@ impl Gameplay<'_> {
             // A run's first step asks what a step would (#1325): the dialog's answer is a plain
             // step; with nothing to ask, the run.
             (InputMode::Normal, KeyCommand::Run(dir)) => {
-                match step_dialog(&game.world.perception(), dir) {
-                    Some(dialog) => open = Some(dialog.into()),
+                let view = game.world.perception();
+                let screen = step_dialog(&view, dir)
+                    .map(ScreenAction::from)
+                    .or_else(|| step_screen(&view, dir).map(ScreenAction::Open));
+                match screen {
+                    Some(screen) => open = Some(screen),
                     None => {
                         self.actions.write(PlayerAction(Action::Run(dir)));
                     }
@@ -1659,32 +1668,45 @@ fn hunger_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
     )
 }
 
-/// The dialog a step in `dir` opens first, if it walks into a feature the player sees or remembers
-/// that offers an action (spec §7 "Special rooms"; what the abilities menu's Here group reads, so
-/// a spent altar blocks as any wall does), where no one they see stands (moving there would be an
-/// attack, or stop): "Would you like to pray at the forgotten altar?", to use its ability, just as
-/// the menu does, or leave it (the safe answer, selected first, and Esc's; it takes no time). An
-/// anvil's Temper, a recipe of Metalcraft's with no row of its own, goes on to its list.
-fn offer_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
+/// The feature a step in `dir` walks into and what it offers, if the player sees or remembers
+/// it and no one they see stands there (moving there would be an attack, or stop).
+fn offered_at(view: &PerceptionView<'_>, dir: Dir) -> Option<(TerrainId, Offer)> {
     let to = view.viewer().step(dir);
     let terrain = match view.cell(to) {
         CellView::Visible(t) | CellView::Remembered(t) => t,
         CellView::Unknown => return None,
     };
     let offer = view.content().offer(terrain)?;
-    if view.actor_at(to).is_some() {
+    view.actor_at(to).is_none().then_some((terrain, offer))
+}
+
+/// The screen a step in `dir` opens instead, if any: walking into an anvil opens the profession
+/// screen of Temper's skill, Metalcraft, with all its recipes, for one trained in it (the owner,
+/// #1387); untrained, the step goes to the rules, which say what it needs, taking no time.
+fn step_screen(view: &PerceptionView<'_>, dir: Dir) -> Option<ScreenName> {
+    let (_, offer) = offered_at(view, dir)?;
+    if offer != Offer::Temper {
         return None;
     }
-    let (label, then) = match Ability::offered(offer) {
-        Some(ability) => (
-            ability.name(view.content()).into_owned(),
-            ScreenAction::UseAbility(ability),
-        ),
-        None => (
-            RecipeUse::Temper.name().to_string(),
-            ScreenAction::Replace(ScreenName::Temper),
-        ),
-    };
+    let skill = view.content().recipes().of_use(RecipeUse::Temper)?.skill;
+    let profession = Ability::Profession(skill);
+    let own = view.abilities().iter().any(|own| own.ability == profession);
+    own.then_some(ScreenName::Profession(skill))
+}
+
+/// The dialog a step in `dir` opens first, if it walks into a feature the player sees or remembers
+/// that offers an action (spec §7 "Special rooms"; what the abilities menu's Here group reads, so
+/// a spent altar blocks as any wall does), where no one they see stands (moving there would be an
+/// attack, or stop): "Would you like to pray at the forgotten altar?", to use its ability, just as
+/// the menu does, or leave it (the safe answer, selected first, and Esc's; it takes no time). An
+/// anvil asks nothing: its Temper is a recipe of Metalcraft's ([`step_screen`]).
+fn offer_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
+    let (terrain, offer) = offered_at(view, dir)?;
+    let ability = Ability::offered(offer)?;
+    let (label, then) = (
+        ability.name(view.content()).into_owned(),
+        ScreenAction::UseAbility(ability),
+    );
     let name = &view.content().terrain(terrain).name;
     let mut letters = name.chars();
     let title: String = (letters.next().iter().flat_map(|c| c.to_uppercase()))
@@ -2115,7 +2137,7 @@ mod tests {
             assert!(offer_dialog(&view, Dir::S).is_none(), "{scenario}");
         }
         // An anvil's Temper is a recipe of Metalcraft's, no row of the Here group: walking into
-        // the anvil still asks, and goes on to the Temper list.
+        // the anvil asks nothing, and opens Metalcraft's screen for the trained (#1387).
         let world = walked_to("forge", "move:E");
         let view = world.perception();
         let place = ability::Source::Place;
@@ -2125,13 +2147,25 @@ mod tests {
                 .iter()
                 .any(|own| own.ability.source() == place)
         );
+        assert_eq!(offer_dialog(&view, Dir::N), None);
+        let metal = view.content().skill_id("metalcraft").expect("metalcraft");
         assert_eq!(
-            offer_dialog(&view, Dir::N),
-            Some(
-                Dialog::new("Anvil", "Would you like to temper something at the anvil?")
-                    .accept("Temper", ScreenAction::Replace(ScreenName::Temper))
-                    .cancel("Leave it", ScreenAction::Close)
-            )
+            step_screen(&view, Dir::N),
+            Some(ScreenName::Profession(metal))
+        );
+        assert_eq!(step_screen(&view, Dir::S), None, "plain floor");
+        // Untrained, no screen: the step goes to the rules, which say what it needs.
+        let content = std::sync::Arc::new(warlock_core::content::Content::builtin().unwrap());
+        let thief: warlock_core::character::CharacterSpec = "human,male,thief".parse().unwrap();
+        let mut world =
+            warlock_core::World::with_character(content, "forge", None, Some(&thief)).unwrap();
+        world.apply(&Action::Move(Dir::E));
+        assert_eq!(step_screen(&world.perception(), Dir::N), None);
+        world.apply(&Action::Move(Dir::N));
+        let last = world.messages().iter().last().map(|m| m.text.clone());
+        assert_eq!(
+            last.as_deref(),
+            Some("You need Metalcraft to work at the anvil.")
         );
     }
 

@@ -75,7 +75,6 @@ when empty) on `ProfessionText` (`Recipes::profession`), and the bands (`RecipeS
 | `station` | a terrain id that must stand beside the maker |
 | `knife`, `launcher` | a knife carried; a launcher ready that shoots the result (its `ammo`) |
 | `from` | the trained value it is listed from (default 0) |
-| `anyone` | listed for the untrained too |
 
 Checked at load (`recipe::parse`; refusals tested in `content/recipe_tests.rs`): a file in a
 skill's directory (the directory a known skill), one `[[recipe]]` a file (a file with none, a
@@ -114,11 +113,10 @@ P5 (the forge, "Making a recipe" below). Until then the rows and the wizard read
 parts, parts with sources, object inputs, and the ornament. `data/stock.toml`'s `unit` and
 `[[material]]` overrides (P2b) are checked by `content/stock.rs`.
 
-The two built-ins open to everyone: `recipes/metalcraft/temper.toml` (`anyone`, `station =
-"anvil"`) and `recipes/woodcraft/whittle.toml` (`anyone`, `knife`). Temper, Whittle, and the
-arrows and bolts (once Fletch's built-in, #1336) stay open to everyone (#1337 Q3). Jewelcraft's
-`recipes/jewelcraft/cut.toml` (`difficulty = 12`, `seconds = 1800`, `from = 0`, not `anyone`:
-the trained's alone) is the third, and `recipes/jewelcraft/set.toml` (`difficulty = 12`,
+Every recipe is its skill's (#1387, the owner): the untrained see none and make none. The
+built-ins are `recipes/metalcraft/temper.toml` (`station = "anvil"`) and
+`recipes/woodcraft/whittle.toml` (`knife`), Jewelcraft's `recipes/jewelcraft/cut.toml`
+(`difficulty = 12`, `seconds = 1800`, `from = 0`) the third, and `recipes/jewelcraft/set.toml` (`difficulty = 12`,
 `seconds = 1200`, `from = 10`) the fourth.
 
 The generic recipes (P5, #1335; `docs/design/recipes.md` §6 "Melee weapons", the metal route):
@@ -167,7 +165,7 @@ weight, never written):
 | javelin_by_hand | Woodcraft | the same | 9 | 1200 | 0 | 1, 4 wood |
 
 The smith's are at an anvil (`station = "anvil"`); the hand-made ones need a knife carried
-(`knife = true`) and no station, and are trained only (no `anyone`). Ids are unique across
+(`knife = true`) and no station. Ids are unique across
 professions, so a base with two routes has the smith's at its own id and the hand route at
 `<base>_by_hand`; both rows are named by the result ("Knife"), each on its own profession's
 screen. Never made, so with no file: a stiletto by hand, a battle axe or great axe of stone, a
@@ -335,12 +333,14 @@ P8's hide routes (#1353) and the stone tools take `<base>_by_hand`.
 name and an ellipsis), described by `data/recipes.toml`'s line, `Aim::Recipes`, no cost, never
 unavailable. `Ability::every` lists it in its skill's place (skill order) for every skill with
 a recipe directory, before `Ability::use_of` and `Ability::Skill`, so a profession has no "not
-usable yet" row (Jewelcraft's went with Cut). `had_by`: trained in the skill, or any of its
-recipes `anyone` (so everyone has Metalcraft's and Woodcraft's rows, and the trained
-Jewelcraft's). The former `Ability::Temper`,
-`Ability::Whittle`, and `Ability::Fletch` are gone; `Offer::Temper` stays: the anvil is the
-Temper recipe's station and the walk-in dialog (`input.rs::offer_dialog`) still asks "Would you
-like to temper something at the anvil?", opening `ScreenName::Temper` directly
+usable yet" row (Jewelcraft's went with Cut). `had_by`: trained in the skill (#1387: no recipe is
+open to the untrained). The former `Ability::Temper`, `Ability::Whittle`, and `Ability::Fletch`
+are gone; `Offer::Temper` stays: the anvil is the Temper recipe's station, and walking into it
+(`input.rs::step_screen`, after `step_dialog` asks nothing) opens Metalcraft's profession screen,
+`ScreenName::Profession(skill)` of Temper's recipe's skill, at once, with no dialog and no time,
+for one who has that row (the owner, #1387). Untrained, the step goes to the rules:
+`travel.rs::player_moves` refuses it, taking no time, with `World::anvil_needs`' "You need
+Metalcraft to work at the anvil." in place of the plain "The anvil blocks your way."
 (`Ability::offered` is `None` for it, so the Here group lists only Pray and Drink). Wedge stays
 its own row (a door, not a recipe). `input.rs::use_ability` opens
 `ScreenName::Profession(skill)` for `Aim::Recipes`.
@@ -348,8 +348,7 @@ its own row (a door, not a recipe). `input.rs::use_ability` opens
 ## What the screen reads: `PerceptionView::recipes`
 
 `world/craft.rs::recipe_rows` (through `PerceptionView::recipes(skill)`): the profession's
-recipes in path order, every one for a player trained in the skill and only the `anyone` ones
-otherwise, each a `RecipeRow { id, name, takes, unavailable }`. Computed in core from the pack,
+recipes in path order, every one for a player trained in the skill and none otherwise, each a `RecipeRow { id, name, takes, unavailable }`. Computed in core from the pack,
 the cells beside the player, and the skills: presentation never decides availability.
 
 - `takes`: what a built-in works on ("a metal weapon or armour", "a wooden weapon"), each stock
@@ -573,9 +572,9 @@ The shipped ones (`docs/design/recipes.md` §6 "Missiles"):
 | Recipe | Profession | Chosen | Inputs | Count | Station, tools | Difficulty | Seconds | Listed |
 |---|---|---|---|---|---|---|---|---|
 | `arrowheads` | Metalcraft | `main` stock (metal) | — | 20 | anvil | 10 | 600 | from 0 |
-| `arrows` | Woodcraft | `head` sources (arrowheads; bone, stone; None: `brittle_arrow`), `shaft` stock (wood) | an arrowhead `per_made` | `fletch` | knife, a bow ready | 12 | 600 | anyone |
-| `bolts` | Woodcraft | the same; None: `brittle_bolt` | an arrowhead `per_made` | `fletch` | knife, a crossbow ready | 12 | 600 | anyone |
-| `sling_stones` | Woodcraft | `main` stock (stone) | — | 10 | — (no knife) | 6 | 600 | anyone |
+| `arrows` | Woodcraft | `head` sources (arrowheads; bone, stone; None: `brittle_arrow`), `shaft` stock (wood) | an arrowhead `per_made` | `fletch` | knife, a bow ready | 12 | 600 | 0 |
+| `bolts` | Woodcraft | the same; None: `brittle_bolt` | an arrowhead `per_made` | `fletch` | knife, a crossbow ready | 12 | 600 | 0 |
+| `sling_stones` | Woodcraft | `main` stock (stone) | — | 10 | — (no knife) | 6 | 600 | 0 |
 | `flaming_arrows` | Woodcraft | — | an arrow `per_made`, a flask of oil | 10 | — | 8 | 600 | from 0 |
 
 ## Arrows and bolts
