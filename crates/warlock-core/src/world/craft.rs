@@ -37,6 +37,8 @@ pub struct RecipeRow {
 /// Why a recipe cannot be made now (the screen greys its row with [`RecipeLack::reason`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RecipeLack {
+    /// A built-in recipe whose action is not built yet (Jewelcraft's Cut and Set).
+    NotYet,
     /// The player's trained value is below the recipe's `from`.
     Skill,
     /// No station of this terrain beside the player.
@@ -55,6 +57,7 @@ impl RecipeLack {
     /// The reason, as the row says it: "no anvil beside you".
     pub fn reason(self, content: &Content) -> String {
         match self {
+            RecipeLack::NotYet => "not usable yet".into(),
             RecipeLack::Skill => "beyond your skill".into(),
             RecipeLack::Station(t) => format!("no {} beside you", content.terrain(t).name),
             RecipeLack::Knife => "no knife".into(),
@@ -67,10 +70,11 @@ impl RecipeLack {
         }
     }
 
-    /// Its id in dumps: `skill`, `station:anvil`, `knife`, `launcher`, `stock:metal`,
+    /// Its id in dumps: `not_yet`, `skill`, `station:anvil`, `knife`, `launcher`, `stock:metal`,
     /// `input:arrowhead`.
     pub fn id(self, content: &Content) -> String {
         match self {
+            RecipeLack::NotYet => "not_yet".into(),
             RecipeLack::Skill => "skill".into(),
             RecipeLack::Station(t) => format!("station:{}", content.terrain(t).id),
             RecipeLack::Knife => "knife".into(),
@@ -103,14 +107,19 @@ pub(crate) fn recipe_rows(
         .collect()
 }
 
-/// The first reason `player` cannot make `recipe` now, in the screen's order: skill, station,
-/// knife, launcher, stock, inputs.
+/// The first reason `player` cannot make `recipe` now, in the screen's order: not built yet,
+/// skill, station, knife, launcher, stock, inputs. Only `"stock"` parts and object inputs are
+/// looked at: the other part sources and the stock inputs (docs/design/recipes.md §10) are
+/// checked by the phases whose recipes first use them.
 fn lack(
     content: &Content,
     level: &LevelState,
     player: &Actor,
     recipe: &RecipeDef,
 ) -> Option<RecipeLack> {
+    if recipe.uses.is_some_and(|u| !u.usable()) {
+        return Some(RecipeLack::NotYet);
+    }
     let value = player.skills.value(recipe.skill).unwrap_or(0);
     if value < recipe.from {
         return Some(RecipeLack::Skill);
@@ -142,13 +151,13 @@ fn lack(
             return worked.first().map(|&m| RecipeLack::Stock(m));
         }
     }
-    for input in &recipe.inputs {
+    for (object, count) in (recipe.inputs.iter()).filter_map(|i| Some((i.object()?, i.count))) {
         let carried: u32 = (player.inventory.iter())
-            .filter(|s| s.object == input.object)
+            .filter(|s| s.object == object)
             .map(|s| s.count)
             .sum();
-        if carried < input.count {
-            return Some(RecipeLack::Input(input.object));
+        if carried < count {
+            return Some(RecipeLack::Input(object));
         }
     }
     None
@@ -184,6 +193,8 @@ fn takes(content: &Content, player: &Actor, recipe: &RecipeDef) -> String {
     match recipe.uses {
         Some(RecipeUse::Temper) => words.push("a metal weapon or armour".into()),
         Some(RecipeUse::Whittle) => words.push("a wooden weapon".into()),
+        Some(RecipeUse::Cut) => words.push("a loose gem".into()),
+        Some(RecipeUse::Set) => words.push("an item and a cut gem".into()),
         Some(RecipeUse::Fletch) | None => {}
     }
     if let Some(result) = &recipe.result {
@@ -198,7 +209,11 @@ fn takes(content: &Content, player: &Actor, recipe: &RecipeDef) -> String {
         }
     }
     for input in &recipe.inputs {
-        let def = content.object(input.object);
+        // Stock inputs are told by the phase whose recipe first takes one (P7).
+        let Some(object) = input.object() else {
+            continue;
+        };
+        let def = content.object(object);
         words.push(match input.per_made {
             true => format!("{} {} for each made", article(&def.name), def.name),
             false => counted(&def.name, &def.plural, input.count),
@@ -222,6 +237,8 @@ fn takes(content: &Content, player: &Actor, recipe: &RecipeDef) -> String {
                 .fletch()
                 .map_or(0, |rules| rules.seconds * percent / 100)
         }
+        // Their actions' times come with them (P10, P11).
+        Some(RecipeUse::Cut | RecipeUse::Set) => 0,
         None => recipe.seconds,
     };
     if seconds > 0 {
@@ -266,6 +283,7 @@ impl World {
         };
         let def = content.recipe(id);
         let text = match def.uses {
+            Some(uses) if !uses.usable() => "You cannot do that yet.".to_string(),
             Some(_) => format!("{} is done from its own list.", def.name),
             None => "You cannot make that yet.".to_string(),
         };
