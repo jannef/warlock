@@ -1,5 +1,6 @@
 # A herb (docs/design/recipes.md §8): an Alchemy input. A grey-green fern of the shallows. Never floor loot (no
-# `level` or `frequency`); the alchemist sells glowcap and moonwort, and gathering is to come.
+# `level` or `frequency`); the alchemist sells glowcap and moonwort; the glowing fungus gives it
+# to a gather (data/herbs.toml).
 [[object]]
 id = "moonwort"
 name = "sprig of moonwort"

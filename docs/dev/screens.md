@@ -221,7 +221,11 @@ to open, read keys for, or draw one:
 - Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Hints`,
   `Panel`, main and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`,
   `ui/controls_screen.rs` (commands grouped by `Context` under headings, notes on Esc and list
-  letters, Reset all keys, Export keys…, Import keys…; also the `?` help: the same list,
+  letters, Reset all keys, Export keys…, Import keys…; Enter on a command opens its keys under
+  it as a sub-list, `Row::Key` and `Row::AddKey` (#1324): Enter replaces the selected key or adds
+  one, Delete (the `Erase` keys) removes it, Esc closes; Delete on a command resets it; the panel
+  widens from 60 up to 80 cells for a long key list and cuts a longer one short with `…`, each key
+  whole in the sub-list; also the `?` help: the same list,
   read-only, the developer keys only where they work), `ui/shape_screen.rs` (the shape list of the Hunter's Spirit weapon, `Aim::Shape`, opened by
   `use_ability`: every melee weapon, `PerceptionView::weapon_shapes`, in a `PagedList` grouped by
   weapon skill; a letter or Enter sends `Action::Shape`; `--screen shape`),

@@ -35,6 +35,7 @@
   - [Gems](gems.md)
   - [Scrolls](scrolls.md)
   - [Potions](potions.md)
+  - [Herbs](herbs.md)
 - [Equipment](equipment.md)
   - [Magic items](magic-items.md)
     - [Prefixes and suffixes](affixes.md)

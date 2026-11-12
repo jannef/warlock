@@ -428,6 +428,8 @@ pub enum Use {
     Lookout,
     /// A forage that ran its time (spec §8 "Foraging"), whatever it found.
     Forage,
+    /// A gather that ran its time (spec §8 "Skills": Herbalism), whatever it found.
+    Gather,
     /// An attempt to steal from someone (spec §8 "Stealing"), whatever comes of it.
     Steal,
     /// A feint at a foe (spec §8 "Skills": Bluff), whatever comes of it.
@@ -526,6 +528,7 @@ impl Use {
             Use::Travel => "a journey on the overworld",
             Use::Lookout => "keeping a lookout for those met on the overworld",
             Use::Forage => "foraging in the wild",
+            Use::Gather => "gathering herbs from the glowing fungus",
             Use::Steal => "trying to steal from someone",
             Use::Feint => "feinting at a foe",
             Use::Bluffed => "trying to talk your way past a party met on the way",
@@ -667,6 +670,7 @@ impl Use {
             Use::Travel => "travel",
             Use::Lookout => "lookout",
             Use::Forage => "forage",
+            Use::Gather => "gather",
             Use::Steal => "steal",
             Use::Feint => "feint",
             Use::Bluffed => "talk_past",

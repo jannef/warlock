@@ -152,10 +152,16 @@ saved and hashed by that index. Their first effects (#1343, one hook each):
   break walls through it, and they are no dig).
 - **Herbalism**'s `herbs` (`Effect::Herbs`, 25 / 60 / 80 % at 0 / 100 / 200) is read in
   `world/forage.rs::forage_herbs`: on a forage that found something, trained in it, on ground with
-  a `herbs` list (`forage.toml`, `ForageGround::herbs`; angelica root where it grows until the
-  brewing herbs come, #1340), one more gameplay draw for the chance and one for which, one of it
+  a `herbs` list (`forage.toml`, `ForageGround::herbs`: angelica root and the brewing herbs where
+  they grow, #1340), one more gameplay draw for the chance and one for which, one of it
   into the pack. Nobody else draws, so a forage without Herbalism draws as before. Marks on
   `forage`, 25 %.
+- **Herbalism**'s use is **Gather** (#1340, `world/gather.rs`, `content/herbs.rs`,
+  `data/herbs.toml`): the glowing fungus gives herbs to anyone beside it (`Ability::Gather`, the
+  abilities menu's *Here* group, offered by the fungus as a room's feature offers Pray, so the
+  skill stays `passive`). Untrained, one herb; trained, `count` + Herbalism's trained value /
+  `value_per_count` (`Skills::value_of_effect(Effect::Herbs)`), each drawn by weight at the
+  level's item level (`HerbRules::at`). Marks on `gather`, 100 %. The fungus never changes.
 - **Alchemy**'s `identify_potion` and **Enchanting**'s `identify_magic` (5 / 25 / 40 %) look in
   `world/appraise.rs::appraise_hours` after Appraise's `identify`, from the same hour's stream:
   Alchemy at the potions and flasks whose kind is unknown (`drink`), Enchanting at every other

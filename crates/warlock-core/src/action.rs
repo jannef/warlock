@@ -214,6 +214,12 @@ pub enum Action {
     /// landscape and Survival. Interrupted, it finds nothing. Refused (no time) untrained, or
     /// anywhere but on land of the overworld or a local area of it.
     Forage,
+    /// Gather herbs from the glowing fungus in a direction (spec §8 "Skills": Herbalism; the
+    /// Gather ability, the abilities menu's Here group): turns of the `gather` action for
+    /// `data/herbs.toml`'s time, then herbs drawn by the level's depth, more with Herbalism.
+    /// Interrupted, it finds nothing. The fungus is never picked over. Refused (no time) with no
+    /// fungus that way.
+    Gather(Dir),
     /// Make a profession's recipe (spec §8 "Skills"; docs/design/professions.md §8;
     /// `world/craft.rs`): `recipe` its id (`data/recipes/<skill>/<id>.toml`), `picks` the
     /// inventory positions chosen for its steps in order, `None` a skipped optional one
@@ -981,6 +987,7 @@ impl fmt::Display for Action {
             Action::Pray => f.write_str("pray"),
             Action::Drink => f.write_str("drink"),
             Action::Forage => f.write_str("forage"),
+            Action::Gather(d) => write!(f, "gather:{d}"),
             Action::Craft { recipe, picks } if picks.is_empty() => write!(f, "craft:{recipe}"),
             Action::Craft { recipe, picks } => {
                 let picks: Vec<String> = (picks.iter())
@@ -1111,6 +1118,7 @@ impl FromStr for Action {
             "dig" => dir().map(Action::Dig),
             "disarm" => dir().map(Action::Disarm),
             "listen" => dir().map(Action::Listen),
+            "gather" => dir().map(Action::Gather),
             "wedge" => dir().map(Action::Wedge),
             "heal" => {
                 let usage = || {
@@ -1963,6 +1971,7 @@ mod tests {
                 Action::Dig(d),
                 Action::Disarm(d),
                 Action::Listen(d),
+                Action::Gather(d),
                 Action::Wedge(d),
             ]);
         }

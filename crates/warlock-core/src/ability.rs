@@ -149,6 +149,12 @@ pub enum Ability {
     /// Drink at a healing spring (spec §7 "Special rooms"): [`Action::Drink`]. A place offers
     /// it, as Pray: listed only while the player stands next to a spring.
     Drink,
+    /// Gather herbs from the glowing fungus (spec §8 "Skills": Herbalism; `world/gather.rs`):
+    /// [`Action::Gather`] in a direction. The fungus offers it to everyone ([`Ability::here`]):
+    /// listed only while the player stands next to fungus, while `data/herbs.toml` exists. It
+    /// asks for the way only when fungus stands on more than one cell beside the player (the
+    /// menu's, by [`crate::perception::PerceptionView::gather_ways`]).
+    Gather,
     /// Come to heel (spec §8 "Allies"): [`Action::Order`] with [`Command::Heel`], every ally of
     /// the player's on the level follows. The Allies group ([`Ability::orders`]): listed while
     /// the player has an ally anywhere, unavailable ([`Unavailable::NoAllies`]) with none on the
@@ -450,6 +456,8 @@ impl Ability {
             .into_iter()
             .filter(|&offer| offers(offer))
             .filter_map(Ability::offered);
+        // The glowing fungus offers Gather, while herbs.toml exists.
+        let gather = content.herbs().map(|_| Ability::Gather);
         let mut all: Vec<Ability> = (signs.chain(class))
             .chain(classes)
             .chain(spells)
@@ -458,6 +466,7 @@ impl Ability {
             .chain(wedge)
             .chain(weapon_skills)
             .chain(here)
+            .chain(gather)
             .chain(Ability::orders(
                 content.allies().is_some(),
                 content.allies().is_some(),
@@ -518,6 +527,9 @@ impl Ability {
             .filter_map(|t| content.offer(t))
             .filter_map(Ability::offered)
             .collect();
+        if !crate::world::fungus_ways(content, level, at).is_empty() {
+            found.push(Ability::Gather);
+        }
         found.sort();
         found.dedup();
         found
@@ -600,7 +612,7 @@ impl Ability {
             Ability::Weapon(skill, id) => actor.weapon_abilities(content).contains(&(skill, id)),
             // A place offers it, not who one is ([`Ability::here`]); an order needs allies
             // ([`Ability::orders`]).
-            Ability::Pray | Ability::Drink => false,
+            Ability::Pray | Ability::Drink | Ability::Gather => false,
             Ability::Heel | Ability::Hold | Ability::SetOn | Ability::Give => false,
         }
     }
@@ -630,6 +642,7 @@ impl Ability {
             Ability::Weapon(_, id) => &content.weapon_ability(id).id,
             Ability::Pray => "pray",
             Ability::Drink => "drink",
+            Ability::Gather => "gather",
             Ability::Heel => "heel",
             Ability::Hold => "hold",
             Ability::SetOn => "set_on",
@@ -671,6 +684,7 @@ impl Ability {
             Ability::ShieldBash => "Shield bash",
             Ability::Pray => "Pray",
             Ability::Drink => "Drink",
+            Ability::Gather => "Gather",
             Ability::Heel => "Come to heel",
             Ability::Hold => "Hold here",
             Ability::SetOn => "Set on",
@@ -752,6 +766,11 @@ impl Ability {
                 "Drink from the spring beside you. Its water is mostly good, and now and then \
                  foul."
             }
+            Ability::Gather => {
+                "Search the glowing fungus beside you for five minutes for herbs to brew with. \
+                 Anyone finds one; Herbalism finds more, and the deeper the fungus grows, the \
+                 rarer the herbs. It never runs out."
+            }
             Ability::Heel => {
                 "Call your allies to your side: they follow you and fight what threatens you. \
                  A shout, heard about you; it takes no time."
@@ -794,7 +813,7 @@ impl Ability {
             Ability::ThrowVoice => Source::Class,
             Ability::SecondWind | Ability::BloodMagic => Source::Talent,
             Ability::ShieldBash | Ability::Weapon(..) => Source::WeaponSkill,
-            Ability::Pray | Ability::Drink => Source::Place,
+            Ability::Pray | Ability::Drink | Ability::Gather => Source::Place,
             Ability::Heel | Ability::Hold | Ability::SetOn | Ability::Give => Source::Ally,
         }
     }
@@ -838,6 +857,7 @@ impl Ability {
             | Ability::Wedge
             | Ability::Feint
             | Ability::Tame
+            | Ability::Gather
             | Ability::ShieldBash => Aim::Direction,
         }
     }
@@ -870,6 +890,7 @@ impl Ability {
             Ability::Pray => Some(ActionKind::Pray),
             Ability::Give => Some(ActionKind::Wear),
             Ability::Drink => Some(ActionKind::Drink),
+            Ability::Gather => Some(ActionKind::Gather),
             // An order takes no time (spec §8 "Allies"): it is priced as nothing.
             Ability::Heel | Ability::Hold | Ability::SetOn => None,
         }
@@ -906,6 +927,7 @@ impl Ability {
             | Ability::Weapon(..)
             | Ability::Pray
             | Ability::Drink
+            | Ability::Gather
             | Ability::Heel
             | Ability::Hold
             | Ability::SetOn
@@ -983,6 +1005,7 @@ impl Ability {
             (Ability::Wedge, Some(dir)) => Some(Action::Wedge(dir)),
             (Ability::Feint, Some(dir)) => Some(Action::Feint(dir)),
             (Ability::Tame, Some(dir)) => Some(Action::Tame(dir)),
+            (Ability::Gather, Some(dir)) => Some(Action::Gather(dir)),
             (Ability::ShieldBash, Some(dir)) => Some(Action::Bash(dir)),
             (
                 Ability::Disarm
@@ -992,6 +1015,7 @@ impl Ability {
                 | Ability::Wedge
                 | Ability::Feint
                 | Ability::Tame
+                | Ability::Gather
                 | Ability::ShieldBash,
                 None,
             ) => None,
@@ -1058,6 +1082,7 @@ impl Ability {
             | Ability::ShieldBash
             | Ability::Pray
             | Ability::Drink
+            | Ability::Gather
             | Ability::Heel
             | Ability::Hold
             | Ability::Give => None,
@@ -1143,6 +1168,7 @@ impl Ability {
             | Ability::Tame
             | Ability::Pray
             | Ability::Drink
+            | Ability::Gather
             // The profession's screen says why each recipe cannot be made now.
             | Ability::Profession(_)
             // Whether anyone is there to hear an order is the perception's to say.
@@ -1386,12 +1412,13 @@ mod tests {
             assert!(every.contains(&Ability::Profession(id)), "{skill}");
             assert!(!every.contains(&Ability::Skill(id)), "{skill}");
         }
-        let last: Vec<Ability> = every.iter().rev().take(6).rev().copied().collect();
+        let last: Vec<Ability> = every.iter().rev().take(7).rev().copied().collect();
         assert_eq!(
             last,
             [
                 Ability::Pray,
                 Ability::Drink,
+                Ability::Gather,
                 Ability::Heel,
                 Ability::Hold,
                 Ability::SetOn,

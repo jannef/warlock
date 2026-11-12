@@ -37,6 +37,7 @@ mod gems;
 mod guild;
 mod healing;
 mod hearing;
+mod herbs;
 mod horoscope;
 mod hunger;
 mod kits;
@@ -428,6 +429,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("scrolls.md", scrolls::scrolls),
         ("decipher-chances.md", scrolls::decipher_chances),
         ("potions.md", potions::potions),
+        ("herbs.md", herbs::herbs),
+        ("gathering.md", herbs::gathering),
         ("potion-gambles.md", outcomes::gamble_outcomes),
         ("weapon-skills.md", weapon_skills::skills),
         ("weapon-marks.md", weapon_skills::marks),

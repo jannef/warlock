@@ -88,6 +88,9 @@ pub(super) fn abilities(content: &Content) -> String {
                 "everyone beside a forgotten altar not yet spent (a prayer takes a minute)".into()
             }
             Ability::Drink => "everyone beside a healing spring (a drink takes ten seconds)".into(),
+            Ability::Gather => {
+                "everyone beside the [glowing fungus](herbs.md) (more herbs with Herbalism)".into()
+            }
             Ability::Heel | Ability::Hold | Ability::SetOn => {
                 "everyone with an ally (usable while one is on the level)".into()
             }
@@ -161,6 +164,10 @@ pub(super) fn abilities(content: &Content) -> String {
             Some(_) if a == Ability::Forage => {
                 let minutes = content.forage().map_or(0, |r| r.seconds / 60);
                 (aim(a.aim(content)), format!("{minutes} minutes (a forage)"))
+            }
+            Some(_) if a == Ability::Gather => {
+                let minutes = content.herbs().map_or(0, |r| r.seconds / 60);
+                (aim(a.aim(content)), format!("{minutes} minutes (a gather)"))
             }
             Some(kind) => {
                 let cost = content.action_costs().cost(kind);

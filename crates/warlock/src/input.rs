@@ -1279,6 +1279,14 @@ impl Gameplay<'_> {
         let usable = (game.world.perception().abilities().iter())
             .any(|own| own.ability == ability && own.unavailable.is_none());
         let content = game.world.content().clone();
+        // Gather from the one fungus beside the player at once; the way is asked among several.
+        if usable && ability == Ability::Gather {
+            let ways = game.world.perception().gather_ways();
+            if let [dir] = ways.as_slice() {
+                self.actions.write(PlayerAction(Action::Gather(*dir)));
+                return None;
+            }
+        }
         match (usable, ability.aim(&content)) {
             (true, ability::Aim::Direction) => *self.mode = InputMode::Ability(ability),
             (true, ability::Aim::Cell | ability::Aim::Corpse) => {

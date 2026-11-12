@@ -167,6 +167,7 @@ mod forget;
 mod free_blow;
 mod frenzy;
 pub(crate) mod freshness;
+mod gather;
 mod gaze;
 pub(crate) mod gear_condition;
 #[cfg(test)]
@@ -335,6 +336,7 @@ pub use familiar::{draw as familiar_draw, name_for as familiar_name};
 pub use fight::{Cause, Death};
 pub(crate) use forage::forage_ground;
 pub use free_blow::FreeBlows;
+pub(crate) use gather::fungus_ways;
 pub use gifts::{STARE_RANGE, Streak};
 pub use graveyard::Fallen;
 pub use guild::GuildRank;
@@ -750,6 +752,8 @@ enum Spent {
     Fletch(u32),
     /// Foraging in the wild for this many seconds (see [`World::forage`]).
     Forage(u32),
+    /// Gathering herbs from the glowing fungus for this many seconds (see [`World::gather`]).
+    Gather(u32),
     /// Making out a labelled scroll (see [`World::decipher`]).
     Decipher(decipher::Deciphering),
     /// Tempering an item at a forge's anvil (see [`World::temper`]).
@@ -1414,6 +1418,7 @@ impl World {
             Spent::Drink(draught) => self.drink(draught, &mut events),
             Spent::Fletch(seconds) => self.fletch(seconds, &mut events),
             Spent::Forage(seconds) => self.forage(seconds, &mut events),
+            Spent::Gather(seconds) => self.gather(seconds, &mut events),
             Spent::Decipher(work) => self.decipher(work, &mut events),
             Spent::Temper(work) => self.temper(work, &mut events),
             Spent::Tame(taming) => self.tame(taming, &mut events),
@@ -1553,6 +1558,7 @@ impl World {
             Action::Pray => return self.start_prayer(),
             Action::Drink => return self.start_drink(),
             Action::Forage => return self.start_forage(),
+            Action::Gather(dir) => return self.start_gather(*dir),
             Action::Fletch => return self.start_fletch(),
             Action::Craft { recipe, picks } => return self.start_craft(recipe, picks),
             Action::Decipher { item } => return self.start_decipher(*item),
@@ -1845,6 +1851,8 @@ mod frenzy_tests;
 mod freshness_tests;
 #[cfg(test)]
 mod gate_tests;
+#[cfg(test)]
+mod gather_tests;
 #[cfg(test)]
 mod gaze_tests;
 #[cfg(test)]

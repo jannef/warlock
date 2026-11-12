@@ -503,13 +503,28 @@ impl Bindings {
         found
     }
 
-    /// Makes `key` the primary (first) key of `command`. A key another command of the same
-    /// context uses is taken from it ([`Bound::Moved`]), unless that command is fixed (not in
-    /// [`REBINDABLE`]): those are never touched, so the player cannot lock themselves out.
+    /// Makes `key` the primary (first) key of `command`: [`Bindings::bind_at`] its first key. The
+    /// tests' shorthand (Controls binds by place).
+    #[cfg(test)]
     pub fn bind_primary(
         &mut self,
         command: KeyCommand,
         key: KeyBinding,
+    ) -> Result<Bound, Conflict> {
+        self.bind_at(command, key, Some(0))
+    }
+
+    /// Binds `key` to `command`: in place of its key number `at` (from 0, the primary), or
+    /// after its last key for `None` (or an `at` past them). A key the command already has
+    /// trades places with the one replaced (an added one stays where it is). A key another
+    /// command of the same context uses is taken from it ([`Bound::Moved`]), unless that command
+    /// is fixed (not in [`REBINDABLE`]) or it is a vital command's last key: those are never
+    /// touched, so the player cannot lock themselves out.
+    pub fn bind_at(
+        &mut self,
+        command: KeyCommand,
+        key: KeyBinding,
+        at: Option<usize>,
     ) -> Result<Bound, Conflict> {
         let mut bound = Bound::Free;
         if let Some(owner) = self.owner_in(command.context(), &key)
@@ -525,17 +540,43 @@ impl Bindings {
                 keyless: self.keys_of(owner).is_empty(),
             };
         }
-        let first = self.0.iter().position(|(_, c)| *c == command);
+        let own: Vec<usize> = (self.0.iter().enumerate())
+            .filter(|(_, (_, c))| *c == command)
+            .map(|(i, _)| i)
+            .collect();
         let same = self.0.iter().position(|(k, c)| *c == command && *k == key);
-        match (first, same) {
-            (Some(first), Some(same)) => {
-                let old = std::mem::replace(&mut self.0[first].0, key);
+        match (at.and_then(|n| own.get(n).copied()), same) {
+            (Some(target), Some(same)) => {
+                let old = std::mem::replace(&mut self.0[target].0, key);
                 self.0[same].0 = old;
             }
-            (Some(first), None) => self.0[first].0 = key,
-            (None, _) => self.0.push((key, command)),
+            (Some(target), None) => self.0[target].0 = key,
+            (None, Some(_)) => {}
+            (None, None) => {
+                let after = own.last().map_or(self.0.len(), |last| last + 1);
+                self.0.insert(after, (key, command));
+            }
         }
         Ok(bound)
+    }
+
+    /// Takes key number `at` (from 0, the primary) from `command`, and returns it; `None` when it
+    /// has no such key. Refused with [`Conflict`] for a fixed command's key or a [`VITAL`]
+    /// command's last.
+    pub fn remove_key(
+        &mut self,
+        command: KeyCommand,
+        at: usize,
+    ) -> Option<Result<KeyBinding, Conflict>> {
+        let key = self.keys_of(command).get(at).map(|k| (*k).clone())?;
+        if self.keeps(command, &key) {
+            return Some(Err(Conflict {
+                key,
+                owner: command,
+            }));
+        }
+        self.0.retain(|(k, c)| !(*c == command && *k == key));
+        Some(Ok(key))
     }
 
     /// Replaces all keys of `command` with `keys`, at the place of its first entry.
@@ -738,6 +779,53 @@ mod tests {
     #[test]
     fn default_bindings_have_no_conflicts() {
         assert!(Bindings::default().conflicts().is_empty());
+    }
+
+    #[test]
+    fn a_key_is_added_replaced_at_its_place_and_removed() {
+        let mut b = Bindings::default();
+        let north = KeyCommand::Move(Dir::N);
+        let shown = |b: &Bindings| -> Vec<String> {
+            b.keys_of(north).iter().map(|k| k.to_text()).collect()
+        };
+        assert_eq!(shown(&b), ["Numpad8", "ArrowUp"]);
+        // Added after the last key; a key it has already stays where it is.
+        assert_eq!(b.bind_at(north, ch("w"), None), Ok(Bound::Free));
+        assert_eq!(b.bind_at(north, ch("w"), None), Ok(Bound::Free));
+        assert_eq!(shown(&b), ["Numpad8", "ArrowUp", "w"]);
+        // The second key replaced; one of its own trades places.
+        b.bind_at(north, ch("W"), Some(1)).unwrap();
+        assert_eq!(shown(&b), ["Numpad8", "W", "w"]);
+        b.bind_at(north, ch("w"), Some(0)).unwrap();
+        assert_eq!(shown(&b), ["w", "W", "Numpad8"]);
+        // Another command's key moves, as for the primary.
+        let kick = b.keys_of(KeyCommand::Kick)[0].clone();
+        let got = b.bind_at(north, kick.clone(), None).unwrap();
+        assert!(matches!(got, Bound::Moved { keyless: true, .. }));
+        assert_eq!(b.keys_of(north).last(), Some(&&kick));
+        // Removed by place; none past the last.
+        assert_eq!(b.remove_key(north, 1), Some(Ok(ch("W"))));
+        assert_eq!(shown(&b).len(), 3);
+        assert_eq!(b.remove_key(north, 3), None);
+        assert!(b.conflicts().is_empty());
+    }
+
+    #[test]
+    fn a_vital_commands_last_key_is_never_removed() {
+        let mut b = Bindings::default();
+        let confirm = KeyCommand::Confirm;
+        while b.keys_of(confirm).len() > 1 {
+            assert!(matches!(b.remove_key(confirm, 0), Some(Ok(_))));
+        }
+        let last = b.keys_of(confirm)[0].clone();
+        assert_eq!(
+            b.remove_key(confirm, 0),
+            Some(Err(Conflict {
+                key: last,
+                owner: confirm
+            }))
+        );
+        assert_eq!(b.keys_of(confirm).len(), 1);
     }
 
     #[test]

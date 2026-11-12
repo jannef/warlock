@@ -260,7 +260,17 @@ const CASES: &[Case] = &[
         name: "controls-screen-ctrl-key",
         actions: "wait",
         screen: Some("controls"),
-        keys: Some("Enter Ctrl+k"),
+        keys: Some("Enter Enter Ctrl+k"),
+        size: (120, 44),
+        ..BASE
+    },
+    // A command's keys open under it (#1324): Wait/search's `s` added to Move north moves, and
+    // the message says from where; "Add a key" waits below the new key.
+    Case {
+        name: "controls-screen-keys",
+        actions: "wait",
+        screen: Some("controls"),
+        keys: Some("Enter Up Enter s"),
         size: (120, 44),
         ..BASE
     },
@@ -836,6 +846,14 @@ const CASES: &[Case] = &[
         name: "abilities-menu-spring",
         scenario: "spring",
         actions: "move:N*5",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // Beside the darkness chamber's glowing fungus after a gather (spec §8 "Gathering herbs"):
+    // Gather in the Here group, everyone's; the message line says what was found.
+    Case {
+        name: "abilities-menu-gather",
+        actions: "move:N*3 open:N move:N*2 move:E*30 open:N move:N*2 move:W*6 gather:W",
         screen: Some("abilities"),
         ..BASE
     },

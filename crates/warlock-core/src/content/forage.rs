@@ -147,9 +147,26 @@ mod tests {
         }
         let forest = rules.ground(Landscape::Forest).expect("forest");
         assert_eq!(forest.chance, 40);
-        // A herbalist's extra find (#1343): angelica root where it grows, none on the plains.
-        let angelica = content.object_id("angelica_root").expect("angelica root");
-        assert_eq!(forest.herbs, [(angelica, 1)]);
+        // A herbalist's extra find (#1343): angelica root and the herbs of brewing where they
+        // grow (#1340), none on the plains; glowcap and mandrake are the dungeon's.
+        let id = |name| content.object_id(name).expect(name);
+        let herbs: Vec<_> = forest.herbs.iter().map(|(o, _)| *o).collect();
+        assert_eq!(
+            herbs,
+            [
+                "angelica_root",
+                "moonwort",
+                "comfrey",
+                "feverfew",
+                "vervain"
+            ]
+            .map(id)
+        );
+        for ground in &rules.grounds {
+            for (herb, _) in &ground.herbs {
+                assert!(![id("glowcap"), id("mandrake")].contains(herb));
+            }
+        }
         assert!(
             rules
                 .ground(Landscape::Plains)

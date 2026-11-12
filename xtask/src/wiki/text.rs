@@ -97,6 +97,7 @@ pub(super) enum Term {
     Creature,
     Damage,
     Disease,
+    Herb,
     ItemClass,
     Potion,
     /// A use of the priest's prayer (disease, wounds, ...): on the prayer page.
@@ -130,6 +131,7 @@ impl Term {
             Term::Creature => ("creatures.md", "creature"),
             Term::Damage => ("damage-types.md", "damage"),
             Term::Disease => ("diseases.md", "disease"),
+            Term::Herb => ("herbs.md", "herb"),
             Term::ItemClass => ("objects.md", "class"),
             Term::Potion => ("potions.md", "potion"),
             Term::PrayerUse => ("prayer.md", "prayer"),
