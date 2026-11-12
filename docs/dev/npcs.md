@@ -168,5 +168,6 @@ and dialect), hinted the same way: "la", "lad", "der" (there), "made up" (deligh
 accent. The rule binds speakers whose data says they are of that race (`race = "elf"`, `"halfling"`,
 `"gnome"`, or a creature that is one). As of #1392 none speaks: the campaigns have no elf,
 halfling, or gnome NPC, and Ælfrun of Holtwīc is a
-human cottar; drow, half-elves, and the fey of Ælfhām are not elves by this rule. A new elf,
+human cottar; **half-elves and half-orcs speak as humans do** (Cockney or posh by their station, never
+the Brummie of elves); drow and the fey of Ælfhām are not elves by this rule. A new elf,
 halfling, or gnome who speaks is written in its accent from the start.
