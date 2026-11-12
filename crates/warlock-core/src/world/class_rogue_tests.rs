@@ -436,10 +436,13 @@ fn the_thiefs_skills_give_disarm_pick_lock_and_steal_from_the_first_level() {
         let id = content.skill_id(skill).expect("a skill");
         assert!(known.contains(&id), "{skill} known for");
     }
-    assert_eq!(own(&w, Ability::Disarm), Some(None));
-    assert_eq!(own(&w, Ability::PickLock), Some(None));
+    // Had, with nothing beside the player to use them on (#1327).
+    let none = |target| Some(Some(Unavailable::NoTarget(target)));
+    use crate::beside::Target;
+    assert_eq!(own(&w, Ability::Disarm), none(Target::Trap));
+    assert_eq!(own(&w, Ability::PickLock), none(Target::Lock));
     if content.steal().is_some() {
-        assert_eq!(own(&w, Ability::Steal), Some(None));
+        assert_eq!(own(&w, Ability::Steal), none(Target::Mark));
     }
     reach(&mut w, 60);
     assert_eq!(

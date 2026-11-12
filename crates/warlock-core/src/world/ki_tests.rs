@@ -184,6 +184,7 @@ fn quivering_palm_costs_five_ki_and_no_cooldown() {
     assert_eq!((w.state.turn, held(&w, "ki")), (turn, Some(5)));
     // Bare-handed: the blow, for all five, and no Spent after it.
     w.player_mut().equipment = Default::default();
+    w.perceive(&mut Vec::new());
     assert_eq!(own(&w, palm), Some(None));
     run(&mut w, "use:quivering_palm:E");
     assert!(w.state.turn > turn);

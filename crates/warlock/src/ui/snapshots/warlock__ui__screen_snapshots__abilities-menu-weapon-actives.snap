@@ -15,13 +15,13 @@ expression: "render(case, content.clone())"
          │   e  Woodcraft…                                                               │
          │   f  Salvage                            on something you carry                │
          │ Weapon skills                                                                 │
-         │   g  Shield bash                        in a direction                        │
+         │   g  Shield bash                        no foe within reach                   │
          │   h  Long blades: Deep cut              fires by itself                       │
-         │   i  Long blades: Vital strike          4 stamina, in a direction             │
+         │   i  Long blades: Vital strike          4 stamina: no foe within reach        │
          │   j  Spears: Brace                      fires by itself                       │
          │   k  Spears: Lunge                      3 stamina: your hands are not so held │
          │   l  Sword and Board: Staggering block  fires by itself                       │
-         │   m  Sword and Board: Shield rush       4 stamina, in a direction             │
+         │   m  Sword and Board: Shield rush       4 stamina: no foe within reach        │
          │   n  Sword and Board: Shield wall       5 stamina                             │
          │                                                                               │
          │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment;   │

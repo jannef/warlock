@@ -8,15 +8,15 @@ expression: "render(case, content.clone())"
                     │ > a  Horn's grace                                        │
                     │ Class                                                    │
                     │   b  Lay on hands    your zeal is not enough             │
-                    │   c  Smite           in a direction                      │
-                    │   d  Branding smite  in a direction                      │
+                    │   c  Smite           no foe within reach                 │
+                    │   d  Branding smite  no foe within reach                 │
                     │   e  Consecrate                                          │
                     │ Spells                                                   │
                     │   f  Blessing        4 mana                              │
                     │   g  Brand           7 mana                              │
                     │ Skills                                                   │
                     │   h  Decipher        no unknown scroll                   │
-                    │   i  Tame            in a direction                      │
+                    │   i  Tame            no beast beside you to tame         │
                     │   j  Heal            nothing to treat                    │
                     │   k  Intimidate      at a place you see                  │
                     │   l  Metalcraft…                                         │
@@ -24,7 +24,7 @@ expression: "render(case, content.clone())"
                     │   n  Woodcraft…                                          │
                     │   o  Salvage         on something you carry              │
                     │ Weapon skills                                            │
-                    │   p  Shield bash     in a direction                      │
+                    │   p  Shield bash     no foe within reach                 │
                     │                                                          │
                     │ The unicorn's grace: your bleeding and poison end, and a │
                     │ disease is shaken off; then it rests a day.              │

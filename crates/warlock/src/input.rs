@@ -31,12 +31,12 @@ use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use warlock_core::ability::{self, Ability};
+use warlock_core::beside::{Beside, Way};
 use warlock_core::content::{LevelKind, RecipeUse, VisionProfile};
 use warlock_core::hunger::Hunger;
 use warlock_core::perception::{CellView, PerceptionView};
 use warlock_core::time::Duration;
 use warlock_core::weather::Weather;
-use warlock_core::world::ActorKind;
 use warlock_core::{Action, Dir, Pos, Positions, Rest};
 
 /// What a key does.
@@ -1148,8 +1148,13 @@ impl Gameplay<'_> {
                 self.overlays.light_values = !self.overlays.light_values;
                 InputMode::Normal
             }
-            (InputMode::Normal, KeyCommand::Open | KeyCommand::Close | KeyCommand::Kick) => {
-                InputMode::Direction(command)
+            // Kick asks always: any way may be kicked.
+            (InputMode::Normal, KeyCommand::Kick) => InputMode::Direction(command),
+            (InputMode::Normal, KeyCommand::Open) => {
+                self.beside(Beside::Open, InputMode::Direction(command))
+            }
+            (InputMode::Normal, KeyCommand::Close) => {
+                self.beside(Beside::Close, InputMode::Direction(command))
             }
             (InputMode::Normal, KeyCommand::Abilities) => {
                 open = Some(ScreenAction::Open(ScreenName::Abilities));
@@ -1184,14 +1189,10 @@ impl Gameplay<'_> {
                 open = Some(ScreenAction::UseAbility(Ability::Steal));
                 InputMode::Normal
             }
-            // The one creature in view next to the player, at once; else ask which way.
-            (InputMode::Normal, KeyCommand::Chat) => match chat_partner(&game.world.perception()) {
-                Some(dir) => {
-                    self.actions.write(PlayerAction(Action::Chat(dir)));
-                    InputMode::Normal
-                }
-                None => InputMode::Direction(command),
-            },
+            // The one creature in view next to the player, at once; among several, ask which way.
+            (InputMode::Normal, KeyCommand::Chat) => {
+                self.beside(Beside::Chat, InputMode::Direction(command))
+            }
             (InputMode::Normal, KeyCommand::UseTool) => {
                 let view = game.world.perception();
                 if view.ready_light().is_some() {
@@ -1199,7 +1200,7 @@ impl Gameplay<'_> {
                     self.actions.write(PlayerAction(Action::UseTool));
                     InputMode::Normal
                 } else if view.ready_to_dig().is_some() {
-                    InputMode::Direction(command)
+                    self.beside(Beside::Dig, InputMode::Direction(command))
                 } else {
                     // Nothing to dig with: the rules say so ("You have no digging tool ready.").
                     self.actions.write(PlayerAction(Action::Dig(Dir::N)));
@@ -1309,16 +1310,10 @@ impl Gameplay<'_> {
         let usable = (game.world.perception().abilities().iter())
             .any(|own| own.ability == ability && own.unavailable.is_none());
         let content = game.world.content().clone();
-        // Gather from the one fungus beside the player at once; the way is asked among several.
-        if usable && ability == Ability::Gather {
-            let ways = game.world.perception().gather_ways();
-            if let [dir] = ways.as_slice() {
-                self.actions.write(PlayerAction(Action::Gather(*dir)));
-                return None;
-            }
-        }
         match (usable, ability.aim(&content)) {
-            (true, ability::Aim::Direction) => *self.mode = InputMode::Ability(ability),
+            (true, ability::Aim::Direction) => {
+                *self.mode = self.beside(Beside::Use(ability), InputMode::Ability(ability));
+            }
             (true, ability::Aim::Cell | ability::Aim::Corpse) => {
                 self.aim(AimKind::Ability(ability));
             }
@@ -1367,9 +1362,11 @@ impl Gameplay<'_> {
                     self.actions.write(PlayerAction(action));
                 }
             }
+            // Toward a known wall, if any, so nobody unseen is struck by mistake.
             (false, _) => {
-                let here = game.world.player_pos();
-                let action = (ability.action(&content, Some(Dir::N)))
+                let view = game.world.perception();
+                let here = view.viewer();
+                let action = (ability.action(&content, Some(view.blank_way())))
                     .or_else(|| ability.action_at(&content, here))
                     .or_else(|| ability.action_on(&content, 0));
                 if let Some(action) = action {
@@ -1378,6 +1375,25 @@ impl Gameplay<'_> {
             }
         }
         None
+    }
+
+    /// A command or an ability that acts on something beside the player (#1327,
+    /// [`warlock_core::beside`]): with nothing there, its action toward a blank way, so the
+    /// rules say why, taking no time; with one thing, its action toward it at once; with
+    /// several, `ask` (the mode to return). Kick never comes here.
+    fn beside(&mut self, what: Beside, ask: InputMode) -> InputMode {
+        let Some(game) = &self.game else {
+            return InputMode::Normal;
+        };
+        let view = game.world.perception();
+        let dir = match view.way(what) {
+            Some(Way::Refuse(dir) | Way::Act(dir)) => dir,
+            Some(Way::Ask) | None => return ask,
+        };
+        if let Some(action) = what.action(game.world.content(), dir) {
+            self.actions.write(PlayerAction(action));
+        }
+        InputMode::Normal
     }
 
     /// Heal on the patient the way `dir` (the player with none), once the way is asked
@@ -1434,19 +1450,6 @@ impl Gameplay<'_> {
             self.actions.write(PlayerAction(action));
         }
         *self.mode = InputMode::Normal;
-    }
-}
-
-/// The way to the one creature the player sees next to them, if there is exactly one (whom `C`
-/// talks to without asking).
-fn chat_partner(view: &PerceptionView<'_>) -> Option<Dir> {
-    let me = view.viewer();
-    let mut near = (view.actors().iter())
-        .filter(|a| a.kind == ActorKind::Creature && a.pos.chebyshev(me) == 1)
-        .map(|a| Dir::from_delta(a.pos.x - me.x, a.pos.y - me.y));
-    match (near.next(), near.next()) {
-        (Some(dir), None) => dir,
-        _ => None,
     }
 }
 

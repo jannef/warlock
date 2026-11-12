@@ -15,17 +15,17 @@ expression: "render(case, content.clone())"
                     │ Skills                                                   │
                     │   b  Metalcraft…                                         │
                     │   c  Woodcraft…                                          │
-                    │   d  Wedge a door       in a direction                   │
-                    │   e  Salvage            on something you carry           │
+                    │   d  Salvage            on something you carry           │
                     │ Weapon skills                                            │
-                    │   f  Shield bash        you hold no shield               │
+                    │   e  Shield bash        you hold no shield               │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-f or Enter use   Esc close                             │
+                    │ a-e or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
 
 
