@@ -43,10 +43,9 @@ use warlock_core::{Action, Dir, Pos, Positions, Rest};
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum KeyCommand {
     Move(Dir),
+    /// Wait a turn, which is searching the cells around the player for secret doors and hidden
+    /// traps (spec §8 "Searching"; #1326: one action, `Action::Wait`).
     Wait,
-    /// Search the cells around the player for secret doors and hidden traps: a turn (spec §8
-    /// "Searching").
-    Search,
     /// Search turn after turn, up to `data/search.toml`'s `turns`, stopping when something is
     /// found or something interrupts, like a rest.
     SearchLong,
@@ -303,8 +302,7 @@ impl KeyCommand {
     pub fn label(self) -> &'static str {
         match self {
             KeyCommand::Move(_) => "Move",
-            KeyCommand::Wait => "Wait a turn",
-            KeyCommand::Search => "Search",
+            KeyCommand::Wait => "Wait/search",
             KeyCommand::SearchLong => "Search for a while",
             KeyCommand::Open => "Open a door",
             KeyCommand::Close => "Close a door",
@@ -489,9 +487,8 @@ impl Default for Bindings {
             (Code(KeyCode::ArrowRight), Move(Dir::E)),
             (Code(KeyCode::ArrowDown), Move(Dir::S)),
             (Code(KeyCode::ArrowLeft), Move(Dir::W)),
-            (ch("."), Wait),
             (Code(KeyCode::Numpad5), Wait),
-            (ch("s"), Search),
+            (ch("s"), Wait),
             (
                 KeyBinding::chord(Mods::CTRL, Code(KeyCode::Numpad5)),
                 SearchLong,
@@ -844,12 +841,9 @@ impl Gameplay<'_> {
         let game = self.game.as_ref()?;
         let mods = self.mods();
         let command = command_in(*self.mode, key, mods, bindings, dev_keys(&self.args))?;
-        // Held keys repeat only for movement, waiting, and searching, and the aiming cursor's
+        // Held keys repeat only for movement and waiting (searching), and the aiming cursor's
         // moves.
-        let moves = matches!(
-            command,
-            KeyCommand::Move(_) | KeyCommand::Wait | KeyCommand::Search
-        );
+        let moves = matches!(command, KeyCommand::Move(_) | KeyCommand::Wait);
         if key.repeat && !moves {
             return None;
         }
@@ -1003,10 +997,6 @@ impl Gameplay<'_> {
             }
             (InputMode::Normal, KeyCommand::Wait) => {
                 self.actions.write(PlayerAction(Action::Wait));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Search) => {
-                self.actions.write(PlayerAction(Action::Search(1)));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::SearchLong) => {
@@ -1289,6 +1279,14 @@ impl Gameplay<'_> {
         let usable = (game.world.perception().abilities().iter())
             .any(|own| own.ability == ability && own.unavailable.is_none());
         let content = game.world.content().clone();
+        // Gather from the one fungus beside the player at once; the way is asked among several.
+        if usable && ability == Ability::Gather {
+            let ways = game.world.perception().gather_ways();
+            if let [dir] = ways.as_slice() {
+                self.actions.write(PlayerAction(Action::Gather(*dir)));
+                return None;
+            }
+        }
         match (usable, ability.aim(&content)) {
             (true, ability::Aim::Direction) => *self.mode = InputMode::Ability(ability),
             (true, ability::Aim::Cell | ability::Aim::Corpse) => {
@@ -1715,7 +1713,7 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Help), ["?"]);
         assert_eq!(keys(&b, KeyCommand::Cancel), ["Esc"]);
         assert_eq!(keys(&b, KeyCommand::Rest), ["b"]);
-        assert_eq!(keys(&b, KeyCommand::Search), ["s"]);
+        assert_eq!(keys(&b, KeyCommand::Wait), ["Num5", "s"]);
         assert_eq!(keys(&b, KeyCommand::SearchLong), ["Ctrl+Num5", "Ctrl+s"]);
         assert_eq!(keys(&b, KeyCommand::PickUp), [",", ";"]);
         assert_eq!(keys(&b, KeyCommand::Drop), ["d"]);

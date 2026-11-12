@@ -233,5 +233,5 @@ hags carry henbane and elementals leave their essence when they die
 - **Essences** (`*` in their element's colour, 50 g, 30 gold each): essence of fire, ice,
   lightning, air, water, and earth.
 
-An alchemist buys herbs, essences, and pieces (see [Shops](shops.md#selling)). Brewing with them
-is still to come.
+An alchemist buys herbs, essences, and pieces (see [Shops](shops.md#selling)). Where herbs are
+found is on [Herbs](herbs.md). Brewing with them is still to come.

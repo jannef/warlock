@@ -50,6 +50,7 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | What a creature's body leaves (its material drops) | `creature-drops.md#drops-ID` | `creature-drops.md#drops-wolf` |
 | A creature tag's material drops | `creature-drops.md#drops-tag-TAG` | `creature-drops.md#drops-tag-beast` |
 | An item class | `objects.md#class-ID` | `objects.md#class-melee-weapons` |
+| A herb (glowcap, moonwort, mandrake, …) | `herbs.md#herb-ID` | `herbs.md#herb-moonwort` |
 | A potion | `potions.md#potion-ID` | `potions.md#potion-of-healing` |
 | A use of the priest's prayer (disease, poison, wounds, release, mana, hunger, restoration) | `prayer.md#prayer-ID` | `prayer.md#prayer-wounds` |
 | A scroll | `scrolls.md#scroll-ID` | `scrolls.md#scroll-of-identify` |
@@ -200,6 +201,8 @@ above.
 | Treating yourself, binding a wound | `skill-uses.md#treating-yourself` |
 | Fletching, brittle arrows and bolts, a knife | `skill-uses.md#fletching` |
 | Foraging | `skill-uses.md#foraging` |
+| Gather, gathering herbs, the glowing fungus | `herbs.md#gathering` |
+| Herbs (in general) | `herbs.md` |
 | Abilities, the abilities menu | `abilities.md#the-abilities-menu` |
 | Experience, XP, levels | `experience.md`, `experience.md#levels` |
 | The level curve to 100, the XP of every level | `experience.md#levels` |

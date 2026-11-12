@@ -166,6 +166,7 @@ mod forget;
 mod free_blow;
 mod frenzy;
 pub(crate) mod freshness;
+mod gather;
 mod gaze;
 pub(crate) mod gear_condition;
 #[cfg(test)]
@@ -334,6 +335,7 @@ pub use fight::{Cause, Death};
 pub(crate) use fletch::fletch_lack;
 pub(crate) use forage::forage_ground;
 pub use free_blow::FreeBlows;
+pub(crate) use gather::fungus_ways;
 pub use gifts::{STARE_RANGE, Streak};
 pub use graveyard::Fallen;
 pub use guild::GuildRank;
@@ -689,7 +691,8 @@ pub struct World {
     /// Whether the player is resting ([`World::rest`]; not saved: a rest is one action): they
     /// heal faster.
     resting: bool,
-    /// Whether the player's action is a wait (not saved): sounds heard then train Listen.
+    /// Whether the player is waiting, which is searching (#1326; not saved): sounds heard then
+    /// train Listen.
     waiting: bool,
     /// The game time of the last perception (not saved: a loaded world has just perceived its
     /// moment): the birthday's note looks for the dawn between it and now.
@@ -749,6 +752,8 @@ enum Spent {
     Fletch(u32),
     /// Foraging in the wild for this many seconds (see [`World::forage`]).
     Forage(u32),
+    /// Gathering herbs from the glowing fungus for this many seconds (see [`World::gather`]).
+    Gather(u32),
     /// Making out a labelled scroll (see [`World::decipher`]).
     Decipher(decipher::Deciphering),
     /// Tempering an item at a forge's anvil (see [`World::temper`]).
@@ -1362,9 +1367,7 @@ impl World {
         let load = self.load_of(self.state.player);
         let (burden, slowed) = (load.burden(), load.penalty() != Burden::Unburdened);
         let quests = self.quest_progress();
-        self.waiting = matches!(action, Action::Wait);
         let spent = self.player_acts(action, &mut events);
-        self.waiting = false;
         self.forget_floors(&events);
         self.drop_orphan_pits(&events);
         // Taking off what raised them lowers the player's maximum hit points, mana, and pools.
@@ -1373,8 +1376,9 @@ impl World {
         self.keep_resources_within_max(self.state.player);
         self.burden_news(burden);
         self.quest_news(&quests);
-        // Acting (not waiting) under a load that slows the player trains balance.
-        let acted = matches!(spent, Spent::Turn(_)) && !matches!(action, Action::Wait);
+        // Acting (not waiting or searching, `Spent::Search`) under a load that slows the player
+        // trains balance.
+        let acted = matches!(spent, Spent::Turn(_));
         if acted && slowed && self.trains(Use::Burdened) {
             self.train(Use::Burdened);
         }
@@ -1399,7 +1403,12 @@ impl World {
             Spent::Rest(until, goal) => self.rest(until, goal, &mut events),
             Spent::Meal(dish) => self.dine(dish, &mut events),
             Spent::Dig(at) => self.dig(at, &mut events),
-            Spent::Search(turns) => self.search(turns, &mut events),
+            Spent::Search(turns) => {
+                // A sound heard again while waiting trains Listen a little (`perceive.rs`).
+                self.waiting = true;
+                self.search(turns, &mut events);
+                self.waiting = false;
+            }
             Spent::Study(lesson) => self.study(lesson, &mut events),
             Spent::Scribe(writing) => self.scribe(writing, &mut events),
             Spent::Calling(turns) => self.calling(turns, &mut events),
@@ -1409,6 +1418,7 @@ impl World {
             Spent::Drink(draught) => self.drink(draught, &mut events),
             Spent::Fletch(seconds) => self.fletch(seconds, &mut events),
             Spent::Forage(seconds) => self.forage(seconds, &mut events),
+            Spent::Gather(seconds) => self.gather(seconds, &mut events),
             Spent::Decipher(work) => self.decipher(work, &mut events),
             Spent::Temper(work) => self.temper(work, &mut events),
             Spent::Tame(taming) => self.tame(taming, &mut events),
@@ -1491,7 +1501,6 @@ impl World {
         // any level: taking stairs ends on another).
         let (done, kind) = match action {
             Action::Move(dir) => return self.player_moves(*dir, events),
-            Action::Wait => (true, ActionKind::Wait),
             Action::Open(dir) => return self.open_door(here.step(*dir), events),
             Action::Kick(dir) => return self.kick(*dir, events),
             Action::PickLock(dir) => return self.pick_lock(*dir, events),
@@ -1533,9 +1542,14 @@ impl World {
             Action::Read { item, target } => return self.read(*item, *target, events),
             Action::Scribe { spell } => return self.start_scribe(spell),
             Action::Dig(dir) => return self.start_dig(*dir),
-            Action::Search(_) if self.refused_afloat("You cannot search in deep water.") => {
+            // Waiting is searching (#1326): a turn of it looks around, one code path. Afloat, the
+            // turn passes without the checks (`search_turn`); searching for a while is refused.
+            Action::Search(turns)
+                if *turns > 1 && self.refused_afloat("You cannot search in deep water.") =>
+            {
                 return Spent::Nothing;
             }
+            Action::Wait => return Spent::Search(1),
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
             Action::Listen(dir) => return self.listen(*dir),
@@ -1544,6 +1558,7 @@ impl World {
             Action::Pray => return self.start_prayer(),
             Action::Drink => return self.start_drink(),
             Action::Forage => return self.start_forage(),
+            Action::Gather(dir) => return self.start_gather(*dir),
             Action::Fletch => return self.start_fletch(),
             Action::Decipher { item } => return self.start_decipher(*item),
             Action::Temper { item } => return self.start_temper(*item),
@@ -1833,6 +1848,8 @@ mod frenzy_tests;
 mod freshness_tests;
 #[cfg(test)]
 mod gate_tests;
+#[cfg(test)]
+mod gather_tests;
 #[cfg(test)]
 mod gaze_tests;
 #[cfg(test)]

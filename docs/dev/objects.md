@@ -285,7 +285,8 @@ stone as the loose gem is). Not a `herb` material group, because `made_of = ["an
 jewellery is every grouped material and would admit a moonwort ring, and a recipe's fixed input
 is plainly an object. The alchemist `always` lays out glowcap and moonwort and buys `materials`;
 the general store `never` lays out a herb or an essence (it stocks the class for pieces).
-Gathering is to come (P12); drops are below (P15).
+Gathering is Herbalism's Gather (#1340, `world/gather.rs`, `data/herbs.toml`; docs/dev/skills.md),
+and a herbalist's forage finds the surface ones; drops are below (P15).
 
 `piece::count_for(content, grams, material)` =
 `max(1, round(grams / one piece's grams))`, the rounding `break_up` shares (`count_of_share`).

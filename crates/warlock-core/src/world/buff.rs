@@ -47,7 +47,7 @@ impl World {
     pub(super) fn kind_of(&self, action: &Action) -> Option<ActionKind> {
         Some(match action {
             Action::Move(dir) | Action::Pay(Some(dir)) => self.move_kind(*dir),
-            Action::Wait | Action::Rest(_) | Action::UseTalent(_) => ActionKind::Wait,
+            Action::Rest(_) | Action::UseTalent(_) => ActionKind::Wait,
             Action::Open(_) => ActionKind::OpenDoor,
             Action::Close(_) => ActionKind::CloseDoor,
             Action::Kick(_) => ActionKind::Kick,
@@ -72,10 +72,11 @@ impl World {
             Action::Read { item, .. } => self.read_kind(*item),
             Action::Scribe { .. } => ActionKind::Scribe,
             Action::Dig(_) => ActionKind::Dig,
-            Action::Search(_) => ActionKind::Search,
+            Action::Wait | Action::Search(_) => ActionKind::Search,
             Action::Pray => ActionKind::Pray,
             Action::Drink => ActionKind::Drink,
             Action::Forage => ActionKind::Forage,
+            Action::Gather(_) => ActionKind::Gather,
             Action::Fletch => ActionKind::Fletch,
             Action::Decipher { .. } => ActionKind::Decipher,
             Action::Temper { .. } => ActionKind::Temper,

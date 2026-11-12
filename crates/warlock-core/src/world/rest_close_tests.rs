@@ -109,7 +109,15 @@ fn a_hostile_coming_close_stops_a_rest_on_that_very_turn() {
     let mut rested = world(OPEN, "deer");
     rested.apply(&Action::Rest(Rest::For(Duration::hours(1))));
     assert_eq!(rested.turn(), waited.turn());
-    assert_eq!(rested.state().actors, waited.state().actors);
+    // The player's marks may differ: a wait is a search (#1326), a rest's turns are not.
+    let others = |w: &World| {
+        let player = w.state().player;
+        (w.state().actors.iter())
+            .filter(|(id, _)| **id != player)
+            .map(|(_, a)| a.clone())
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(others(&rested), others(&waited));
     assert!(
         last(&rested).starts_with("The kobold comes close; you stop resting after"),
         "{}",

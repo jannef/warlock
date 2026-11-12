@@ -76,6 +76,7 @@ mod guild;
 mod hag_roster_tests;
 #[cfg(test)]
 mod hellegeat_tests;
+mod herbs;
 mod horoscope;
 mod hunger;
 mod intimidate;
@@ -250,6 +251,7 @@ pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, Ornament, ROUGH_SATURATION, dull,
 };
 pub use guild::{GuildDef, RankBy, RankDef};
+pub use herbs::{Herb, HerbRules};
 pub use horoscope::{FULL_MOON_WITHIN, Flavour, Horoscope, Lucky, Sign, SignActive, SignPart};
 pub use hunger::{
     Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_NUTRITION, Overeating, Rotten, Starve, States,
@@ -704,6 +706,9 @@ pub struct Content {
     /// What foraging in the wild gives (`data/forage.toml`, spec §8 "Foraging"); none without
     /// the file.
     forage: Option<ForageRules>,
+    /// What the glowing fungus gives a gatherer (`data/herbs.toml`, spec §8 "Skills": Herbalism);
+    /// none without the file, when nobody gathers.
+    herbs: Option<HerbRules>,
     /// The numbers of feinting (`data/feint.toml`, spec §8 "Skills": Bluff); none without the
     /// file, when nobody feints.
     feint: Option<FeintRules>,
@@ -895,6 +900,7 @@ impl Content {
             encounter_tables: Vec::new(),
             fletch: None,
             forage: None,
+            herbs: None,
             feint: None,
             intimidate: None,
             ruin: RuinRules::default(),
@@ -1266,6 +1272,10 @@ impl Content {
         let path = "data/forage.toml";
         if let Some(text) = files.get_optional(path) {
             content.forage = Some(ForageRules::parse(path, text, &content)?);
+        }
+        let path = "data/herbs.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.herbs = Some(HerbRules::parse(path, text, &content)?);
         }
         let path = "data/feint.toml";
         if let Some(text) = files.get_optional(path) {
@@ -3244,6 +3254,12 @@ impl Content {
     /// the file, when nobody forages.
     pub fn forage(&self) -> Option<&ForageRules> {
         self.forage.as_ref()
+    }
+
+    /// What the glowing fungus gives a gatherer (spec §8 "Skills": Herbalism; `data/herbs.toml`);
+    /// `None` without the file, when nobody gathers.
+    pub fn herbs(&self) -> Option<&HerbRules> {
+        self.herbs.as_ref()
     }
 
     /// The penalties of shots by distance (spec §8 "Ranged combat"; `data/ranged.toml`); none

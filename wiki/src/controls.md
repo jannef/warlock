@@ -13,8 +13,7 @@ bar, and the info pages.
 | Attack | move into a [hostile](creatures.md#factions) [creature](creatures.md) |
 | [Swap places](npcs.md#getting-past) | move into any other creature |
 | [Chat](npcs.md#chatting) with someone next to you | `C` (then a direction, if several are near) |
-| Wait a [turn](time.md#what-takes-time) | `.` or numpad `5` |
-| [Search](searching.md#searching-1) the cells around you (a [turn](time.md#what-takes-time)) | `s` (see [Searching](searching.md)) |
+| Wait a [turn](time.md#what-takes-time), [searching](searching.md#searching-1) the cells around you | numpad `5` or `s` |
 | [Search](searching.md#searching-1) for a while (up to 10 [turns](time.md#what-takes-time), stops when something turns up) | `Ctrl` with `s` or numpad `5` |
 | Open a [door](doors.md) | `o`, then a direction (or walk into the door) |
 | Close a [door](doors.md) | `c`, then a direction |
@@ -62,8 +61,8 @@ Controls. Give Kick, Look around, and Use a tool other keys first, since they us
 
 Some commands ADOM does not have, or has only behind a prefix. They get keys ADOM leaves free:
 the [message history](the-screen.md#messages) `v`, [rest](resting.md#how-resting-works) `b`, the
-[talents](talents.md) `G`, and repeating an [ability](abilities.md) `X`. Searching for a while is
-`Ctrl` with search's `s` or with numpad `5`. You save and quit from the pause menu (`Esc`), or
+[talents](talents.md) `G`, and repeating an [ability](abilities.md) `X`. Waiting and searching are
+one command, numpad `5` or `s`, and searching for a while is `Ctrl` with either. You save and quit from the pause menu (`Esc`), or
 bind a key for it in Controls.
 
 Symbol keys such as `<`, `>`, and `?` are matched by the character they type, so they work on any

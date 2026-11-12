@@ -17,8 +17,7 @@ expression: "render(case, content.clone())"
                               │   Move southwest                       Num1              │
                               │   Move west                            Num4 ←            │
                               │   Move northwest                       Num7              │
-                              │   Wait a turn                          . Num5            │
-                              │   Search                               s                 │
+                              │   Wait/search                          Num5 s            │
                               │   Search for a while                   Ctrl+Num5 Ctrl+s  │
                               │   Open a door                          o                 │
                               │   Close a door                         c                 │
@@ -38,6 +37,7 @@ expression: "render(case, content.clone())"
                               │   Rest                                 b                 │
                               │   Consume                              e                 │
                               │   Read a scroll                        r                 │
+                              │   Look around                          l                 │
                               │                                                          │
                               │                                                          │
                               │                                                          │

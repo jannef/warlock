@@ -33,7 +33,7 @@ pub(super) fn action_costs(content: &Content) -> String {
     for &kind in ActionKind::ALL {
         let what = match kind {
             ActionKind::Step => "A step onto normal ground (other ground: see Terrain)",
-            ActionKind::Wait => "Waiting",
+            ActionKind::Wait => "A creature waiting, or a turn of resting",
             ActionKind::OpenDoor => "Opening a door",
             ActionKind::CloseDoor => "Closing a door",
             ActionKind::OpenChest => "Opening a chest",
@@ -69,7 +69,9 @@ pub(super) fn action_costs(content: &Content) -> String {
                 "A turn of calling a familiar (the witch's Call familiar: an hour's sitting takes many)"
             }
             ActionKind::Dig => "A turn of digging (digging through a wall takes many)",
-            ActionKind::Search => "A turn of searching (searching for a while takes several)",
+            ActionKind::Search => {
+                "Waiting, which is a turn of searching (searching for a while takes several)"
+            }
             ActionKind::Pray => "A turn of praying at a forgotten altar (a prayer takes a minute)",
             ActionKind::Drink => {
                 "A turn of drinking at a healing spring (a drink takes ten seconds)"
@@ -78,6 +80,9 @@ pub(super) fn action_costs(content: &Content) -> String {
                 "A turn of making out a scroll without reading it (a try takes ten minutes)"
             }
             ActionKind::Forage => "A turn of foraging in the wild (a forage takes ten minutes)",
+            ActionKind::Gather => {
+                "A turn of gathering herbs from the glowing fungus (a gather takes five minutes)"
+            }
             ActionKind::Fletch => "A turn of fletching (a batch takes ten minutes)",
             ActionKind::Temper => {
                 "A turn of tempering an item at a forge's anvil (tempering takes ten minutes)"

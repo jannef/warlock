@@ -711,7 +711,7 @@ fn time_cut_up_differently_ends_the_same() {
     let mut waited = world_with(
         ALONE,
         "hp = 30",
-        &[("data/actions.toml", "wait = 10000\n")],
+        &[("data/actions.toml", "wait = 10000\nsearch = 10000\n")],
         Some(3),
     );
     for w in [&mut rested, &mut waited] {
