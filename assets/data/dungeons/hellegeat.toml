@@ -26,6 +26,8 @@ chests = { chance = 40, count = [1, 2] }
 # hezrous and bone devils. The folk keep their own factions, so demons and devils fight each
 # other on its floors (the Blood War); only what a gate calls is `loosed`. None of them strays out
 # of a Pit, and nothing strays in.
+# The Pits: hell's iron, and the gold that brings so many there (#1389, data/mining.toml).
+ores = ["iron", "gold"]
 danger = { base = 12, per_depth = 4, player = { percent = 50, from = 10, max = 30 } }
 population = ["lemure", "dretch", "imp", "quasit", "hell_hound", "bearded_devil", "nightmare",
   "mezzoloth", "balgura", "barbed_devil", "incubus", "succubus", "chasme", "canoloth", "hezrou",

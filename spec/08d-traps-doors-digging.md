@@ -498,6 +498,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`LevelState::dug`, saved) for the next dig. Messages: "After 6 minutes, the stone wall
     crumbles.", "A kobold comes into view; you stop digging after 3 minutes.", "You stop digging
     after 3 minutes."
+  - **Mining** (`world/mine.rs`, `data/mining.toml`; #1389): a wall the player digs through on a
+    floor of a dungeon branch may hold something, for one trained in Mining only (never on a
+    hand-made level, the overworld, or its areas; never a wall a blast or a rod breaks, nor a
+    statue). The wall's hardness band gives the chance that it does (packed earth 5 %, a stone
+    wall 20 %, granite 40 %); then one check, 2d12 + the Strength modifier + Mining's `craft`
+    points (+8 at 100, +12 at 200) + the talents' Strength checks, against the band's difficulty
+    (8, 12, 14; a natural 2 fails, a natural 24 makes it). Failed, nothing, and nothing is said.
+    Made, one draw by weight from the table at the floor's danger (§7 "Danger levels"; an endless
+    branch's keeps rising): a block of stone; a lump of ore of iron, copper, tin, or zinc at any
+    depth; silver from danger 3 and gold from 6, weighing more the deeper; an uncut loose gem from
+    danger 1 (its gem by rarity, its size by the depth, as loot's); mithril from danger 60 and
+    adamantium from 80, deeper than any bounded branch reaches, so in practice only on Grundlēas's
+    deep floors. A branch may name the only ores its rock holds (`ores` in its dungeon file; the
+    wiki lists each branch's), stone and gems found anyway. Ore and stone come one lump, one more
+    for every 6 the check was made by, at most 3. What is found lies on the rubble: "You break
+    out a lump of iron ore." All draws are the gameplay stream's, after the wall crumbles. A lump
+    of ore (`objects/ore.toml`, one object for every metal, as the piece is) is smelted at an
+    anvil into an ingot of its metal by Metalcraft's **Smelt** (§8 "Professions").
   - **Explosions** (`World::blast(center, radius, blast)`): an explosion breaks every wall in its
     burst whose hardness is below its blast, all at once and with no roll: the burst is the cells
     in line of sight of its centre within its radius, the walls bounding them included, taken

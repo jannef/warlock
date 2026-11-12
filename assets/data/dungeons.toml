@@ -31,6 +31,9 @@
 #   locks_per_depth  how much harder its locks are to pick (spec §8 "Doors") for each level below
 #              the first, on top of the lock's own difficulty (14 unless a vault gives it one;
 #              default 0)
+#   ores       the only ores (metal ids, each with an ore row in data/mining.toml) its walls give
+#              a miner (spec §8 "Digging"); `[]` none; stone and gems are found anyway (default:
+#              every ore of the table)
 #   loot       [fewest, most] items of loot on the floor of each level, rolled at the depth as
 #              item level (spec §8 "Magic items"; default none)
 #   chests     `{ chance, count }`: percent of its floors with chests and how many such

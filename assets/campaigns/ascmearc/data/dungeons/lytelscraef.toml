@@ -18,6 +18,8 @@ temperature = 6
 # Danger 1 on the first floor to 3 on the third (spec §7 "Danger levels"); nothing scales with
 # the player. The weakest of what lives in the campaign: rats, bats, beetles, grave worms, and
 # kobolds, all of level 1 or 2, so a first-level character of any class can clear it.
+# The mountain's foot: the common ores of the shallow rock (#1389, data/mining.toml).
+ores = ["iron", "copper", "tin"]
 danger = 1
 population = ["rat", "bat", "beetle", "grave_worm", "kobold"]
 # Only its own folk, and none drawn deeper: nothing tougher strays in.

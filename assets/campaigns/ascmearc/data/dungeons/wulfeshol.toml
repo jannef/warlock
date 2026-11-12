@@ -16,6 +16,8 @@ hidden_per_depth = 1
 loot = [2, 4]
 # Danger 6 on the first floor to 9 on the fourth (spec §7 "Danger levels"): his footpads and their
 # archers, the goblin bowmen he hires, and what lives in the dark under the roots.
+# Under the forest's roots: iron and copper (#1389, data/mining.toml).
+ores = ["iron", "copper"]
 danger = 6
 population = [
     "bat", "giant_centipede", "footpad", "goblin_archer", "barrow_spider", "footpad_archer",

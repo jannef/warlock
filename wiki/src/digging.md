@@ -22,7 +22,8 @@ you do ([Burden](burden.md)). The [Tunneler](talents.md#talent-tunneler) talent 
 much work a turn (see [Talents](talents.md)). [Magic](magic-items.md) that digs faster, on a
 pick-axe, gloves, or body armour, adds its percent of work a turn on top (see
 [Magic items](magic-items.md)). So does the [Mining](skills.md#skill-mining) skill: 25 % more at 100, 40 % more at
-200. Every wall you dig through trains it.
+200. Every wall you dig through trains it. Trained in Mining, a wall you dig through in a dungeon
+may give you ore, stone, or a gem (see [Mining](mining.md)).
 
 A pick-axe can itself be magic. Magic ones turn up rarely in the [loot](magic-items.md#finding-them)
 of the deeper places (from [item level](affixes.md#base-items) 3) and in [shops](shops.md). Its

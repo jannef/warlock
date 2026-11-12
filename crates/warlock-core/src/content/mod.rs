@@ -91,6 +91,7 @@ mod material;
 pub mod mimic;
 #[cfg(test)]
 mod mimic_roster_tests;
+mod mining;
 mod miscast;
 mod monster_pool;
 mod names;
@@ -276,6 +277,7 @@ pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, Stability};
 pub use material::{
     ANY, Fit, Fits, Found, ItemHarm, MaterialDef, MaterialId, ODD, POOR, Resists, VERY_RARE,
 };
+pub use mining::{Mined, MiningBand, MiningFind, MiningRules};
 pub use miscast::{Miscast, MiscastRules};
 pub use monster_pool::{MonsterPool, VaultMonsters};
 pub use names::{NameLists, Names};
@@ -723,6 +725,9 @@ pub struct Content {
     /// What the glowing fungus gives a gatherer (`data/herbs.toml`, spec §8 "Skills": Herbalism);
     /// none without the file, when nobody gathers.
     herbs: Option<HerbRules>,
+    /// What a wall a miner digs through gives (`data/mining.toml`, spec §8 "Digging"); none
+    /// without the file, when nothing is mined.
+    mining: Option<MiningRules>,
     /// The numbers of feinting (`data/feint.toml`, spec §8 "Skills": Bluff); none without the
     /// file, when nobody feints.
     feint: Option<FeintRules>,
@@ -917,6 +922,7 @@ impl Content {
             salvage: None,
             forage: None,
             herbs: None,
+            mining: None,
             feint: None,
             intimidate: None,
             ruin: RuinRules::default(),
@@ -1454,6 +1460,11 @@ impl Content {
             content.vaults.push(vault);
         }
         content.load_dungeons(files)?;
+        // After the branches: their `ores` are checked against the table.
+        let path = "data/mining.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.mining = Some(MiningRules::parse(path, text, &content)?);
+        }
         content.fill_generic();
         for v in &content.vaults {
             (v.check_dungeons(&content)).map_err(|m| ContentError::new(&v.file(), m))?;
@@ -3290,6 +3301,12 @@ impl Content {
     /// `None` without the file, when nobody gathers.
     pub fn herbs(&self) -> Option<&HerbRules> {
         self.herbs.as_ref()
+    }
+
+    /// What a wall a miner digs through gives (spec §8 "Digging"; `data/mining.toml`); `None`
+    /// without the file, when nothing is mined.
+    pub fn mining(&self) -> Option<&MiningRules> {
+        self.mining.as_ref()
     }
 
     /// The penalties of shots by distance (spec §8 "Ranged combat"; `data/ranged.toml`); none

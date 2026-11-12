@@ -21,6 +21,7 @@
   - [Encounters on the way](encounters.md)
 - [Terrain](terrain.md)
   - [Digging and walls](digging.md)
+    - [Mining](mining.md)
 - [Doors](doors.md)
   - [Chests](chests.md)
 - [Dungeons and danger](dungeons.md)

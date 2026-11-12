@@ -18,6 +18,8 @@ loot = [2, 4]
 temperature = 9
 # Danger 6 on the first floor to 9 on the fourth (spec §7 "Danger levels"): the fen's beasts and
 # things, which leave her be, and the footpads she pays in coin and worse.
+# Under the fen: bog iron and nothing else, as Fennmynster's (#1389, data/mining.toml).
+ores = ["iron"]
 danger = 6
 population = [
     "giant_leech", "giant_frog", "giant_centipede", "crocodile", "will_o_wisp", "footpad",

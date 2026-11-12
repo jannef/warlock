@@ -1,0 +1,17 @@
+# A lump of ore (spec §8 "Digging"; #1389, docs/design/professions.md §9): what a miner breaks out
+# of a dungeon's rock (data/mining.toml). One object for every metal, as the piece is one for every
+# material: its metal names it ("a lump of copper ore" in place of the iron written here) and is
+# what it is worth. Smelted at an anvil into an ingot of its metal by Metalcraft's Smelt
+# (recipes/metalcraft/smelt.toml). Never loot (no `kind`).
+[[object]]
+id = "ore"
+name = "lump of iron ore"
+plural = "lumps of iron ore"
+glyph = "*"
+fg = "#8a7a6a"
+class = "materials"
+materials = ["iron"]
+made_of = ["metal"]
+weight = 1000
+value = 1
+stackable = true

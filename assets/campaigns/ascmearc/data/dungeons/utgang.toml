@@ -26,6 +26,9 @@ shops = { chance = 0 }
 # Danger 13 at the top to 15 at the bottom, beside Fyrdelf 12's 16: the floors between its deep
 # workings (13 to 15 on 9 to 11) and the surface. The deep workings' folk, without the shallow
 # galleries' fillers (bats, kobolds, centipedes, motes) and with nothing above level 17.
+# The volcano's flank: the veins the heat brought up, the duergar's iron long worked out
+# (#1389, data/mining.toml).
+ores = ["copper", "zinc", "silver", "gold"]
 danger = 13
 population = [
     "ember_beetle", "duergar_miner", "ogre_zombie", "lesser_fire_elemental", "grave_hound",

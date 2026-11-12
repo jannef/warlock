@@ -448,10 +448,15 @@ name = "Mining"
 description = "Finding ore in the rock and breaking it out: digging comes easier."
 kind = "rules"
 # Digging (#1343, professions §9; spec §8 "Digging"): percent more work each turn of digging does,
-# added to what talents and a Delving tool add: 25 at 100, 40 at 200. Marked by every wall dug
-# through.
+# added to what talents and a Delving tool add: 25 at 100, 40 at 200. And ore (#1389,
+# data/mining.toml): only the trained break anything out of a wall they dig through, and the
+# `craft` points are added to that check (+8 at 100, +12 at 200, a profession's curve). Marked by
+# every wall dug through.
 mark = [{ on = "dug", chance = 100 }]
-benefit = [{ effect = "dig", curve = [[0, 0], [100, 25], [200, 40]] }]
+benefit = [
+    { effect = "dig", curve = [[0, 0], [100, 25], [200, 40]] },
+    { effect = "craft", curve = [[0, 0], [100, 8], [200, 12]] },
+]
 
 [[skill]]
 id = "music"
