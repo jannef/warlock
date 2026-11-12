@@ -379,8 +379,8 @@ fn takes(content: &Content, level: &LevelState, player: &Actor, recipe: &RecipeD
 }
 
 /// The stock part `part` of `batch` of `object` takes, from `materials`, priced in the part's
-/// base material where it is among them (else the first), once for each group they hold, the
-/// base material's group first: "3 steel ingots", "7 wood billets or 7 bone shards"
+/// base material where it is among them (else the cheapest of its group), once for each group
+/// they hold, the base material's group first: "3 steel ingots", "7 wood billets or 7 bone shards"
 /// (docs/design/professions.md §3: the part's share of the result's weight, in pieces; another
 /// material of the group takes as many of its own).
 fn stock_words(
@@ -394,10 +394,10 @@ fn stock_words(
     let base = content.object(object).parts.get(part)?;
     let piece = content.object(content.object_id(crate::piece::ID)?);
     let group = |m: MaterialId| content.material(m).group.clone();
-    // The base material's group first, each group by its cheapest: a club is "7 wood billets or
-    // 7 bone shards", a bow "4 wood billets or 4 horn shards".
+    // The base material's group first, each other group by its cheapest: a club is "7 wood
+    // billets or 7 bone shards", a bow "4 wood billets or 4 horn shards".
     let mut order = materials.to_vec();
-    order.sort_by_key(|&m| (group(m) != group(base.material), content.material(m).value));
+    order.sort_by_key(|&m| group(m) != group(base.material));
     let mut groups: Vec<Option<String>> = Vec::new();
     let mut words: Vec<String> = Vec::new();
     for &first in &order {
@@ -406,12 +406,18 @@ fn stock_words(
         }
         groups.push(group(first));
         // The base material when it is of this group, else the piece's own (steel: a wooden
-        // small shield in metal is "13 steel ingots", never adamantium's), else the first.
+        // small shield in metal is "13 steel ingots", never adamantium's), else the group's
+        // cheapest.
         let named = |want: MaterialId| {
             (materials.iter().copied()).find(|&m| m == want && group(m) == group(first))
         };
         let material = (named(base.material))
             .or_else(|| piece.parts.first().and_then(|p| named(p.material)))
+            .or_else(|| {
+                (materials.iter().copied())
+                    .filter(|&m| group(m) == group(first))
+                    .min_by_key(|&m| content.material(m).value)
+            })
             .unwrap_or(first);
         let count = super::craft_make::stock_need(content, recipe, part, material, batch)?;
         let (one, many) = crate::piece::names(content, piece, material);

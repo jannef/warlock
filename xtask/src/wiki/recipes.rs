@@ -115,7 +115,7 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
             // group: another material of the group takes as many of its own.
             let group = |m: MaterialId| content.material(m).group.clone();
             let mut order = materials.clone();
-            order.sort_by_key(|&m| (group(m) != group(base.material), content.material(m).value));
+            order.sort_by_key(|&m| group(m) != group(base.material));
             let mut groups = Vec::new();
             let mut words = Vec::new();
             for &first in &order {
@@ -123,7 +123,7 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
                     continue;
                 }
                 groups.push(group(first));
-                // The base material, else the piece's own (steel), else the first.
+                // The base material, else the piece's own (steel), else the group's cheapest.
                 let named = |want: MaterialId| {
                     (order.iter().copied()).find(|&m| m == want && group(m) == group(first))
                 };
@@ -132,6 +132,11 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
                         piece
                             .and_then(|p| p.parts.first())
                             .and_then(|p| named(p.material))
+                    })
+                    .or_else(|| {
+                        (order.iter().copied())
+                            .filter(|&m| group(m) == group(first))
+                            .min_by_key(|&m| content.material(m).value)
                     })
                     .unwrap_or(first);
                 if n == 0 && m == base.material {
