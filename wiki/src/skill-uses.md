@@ -134,11 +134,14 @@ always succeeds.
 
 ## Professions
 
-[Metalcraft](skills.md#skill-metalcraft) and [Woodcraft](skills.md#skill-woodcraft) are
-**professions**: crafts with a list of **recipes**, the things you can make or do with them. Each
-has one row in the [abilities menu](abilities.md#the-abilities-menu), in the skill's place among
-the Skills: **[Metalcraft…](abilities.md#ability-metalcraft)** and
-**[Woodcraft…](abilities.md#ability-woodcraft)**. The row opens the profession's list.
+[Alchemy](skills.md#skill-alchemy), [Metalcraft](skills.md#skill-metalcraft), and
+[Woodcraft](skills.md#skill-woodcraft) are **professions**: crafts with a list of **recipes**, the
+things you can make or do with them. Each has one row in the
+[abilities menu](abilities.md#the-abilities-menu), in the skill's place among the Skills:
+**[Alchemy…](abilities.md#ability-alchemy)**, **[Metalcraft…](abilities.md#ability-metalcraft)**,
+and **[Woodcraft…](abilities.md#ability-woodcraft)**. The row opens the profession's list.
+Alchemy's recipes are potions, brewed from herbs by those trained in it (see
+[Brewing potions](recipes-alchemy.md)).
 
 You know a recipe by your skill, not by learning it. Some recipes are open to everyone, trained or
 not:

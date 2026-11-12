@@ -38,7 +38,8 @@ fn the_built_in_recipes_are_the_forges_swords_and_temper_and_woodcrafts_fletch_a
     let recipes = content.recipes();
     let metal = content.skill_id("metalcraft").expect("metalcraft");
     let wood = content.skill_id("woodcraft").expect("woodcraft");
-    assert_eq!(recipes.professions(), [metal, wood]);
+    let alchemy = content.skill_id("alchemy").expect("alchemy");
+    assert_eq!(recipes.professions(), [alchemy, metal, wood]);
     let of = |skill| -> Vec<(&str, Option<RecipeUse>)> {
         (recipes.of(skill))
             .map(|(_, r)| (r.name.as_str(), r.uses))
@@ -568,4 +569,27 @@ fn the_settings_file_refuses_an_unknown_skill_a_profession_twice_or_bands_out_of
         let got = message(&settings(from, to));
         assert!(got.contains(expected), "{to}: `{got}` lacks `{expected}`");
     }
+}
+
+#[test]
+fn alchemys_row_and_its_brews_load_and_a_missing_herb_or_an_empty_line_is_refused() {
+    let content = Content::builtin().expect("content");
+    let alchemy = content.skill_id("alchemy").expect("alchemy");
+    let row = content
+        .recipes()
+        .profession(alchemy)
+        .expect("Alchemy's row");
+    assert_eq!(row.stat, Some(crate::stats::Stat::Intelligence));
+    assert_eq!(row.verb.as_deref(), Some("Brew"));
+    assert!(row.failed.is_some() && row.fumbled.is_some());
+    let path = "data/recipes/alchemy/potion_of_healing.toml";
+    let text = include_str!("../../../../assets/data/recipes/alchemy/potion_of_healing.toml");
+    let got = refused(path, &text.replace("\"moonwort\"", "\"dragonwort\""));
+    assert!(got.contains("dragonwort"), "{got}");
+    let empty = settings("verb = \"Brew\"", "verb = \"\"");
+    let message = match load_with(&[("data/recipes.toml", &empty)]) {
+        Ok(_) => panic!("loaded"),
+        Err(e) => e.message,
+    };
+    assert!(message.contains("an empty line"), "{message}");
 }

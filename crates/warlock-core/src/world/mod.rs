@@ -1726,6 +1726,8 @@ mod branch_tests;
 #[cfg(test)]
 mod breath_tests;
 #[cfg(test)]
+mod brew_tests;
+#[cfg(test)]
 mod buff_field_tests;
 #[cfg(test)]
 mod buff_tests;

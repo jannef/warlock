@@ -120,10 +120,10 @@ fn the_untrained_see_only_what_anyone_may_make_and_the_trained_what_is_beyond_th
     // Five arrows to tip: none carried, then too few, then enough.
     assert_eq!(
         rows(&w, "metalcraft")[8],
-        "Tipped arrows: 5 arrows, about 10 minutes (no arrows)"
+        "Tipped arrows: 5 arrows, about 10 minutes (not enough arrows)"
     );
     give(&mut w, "arrow", 4);
-    assert!(rows(&w, "metalcraft")[8].ends_with("(no arrows)"));
+    assert!(rows(&w, "metalcraft")[8].ends_with("(not enough arrows)"));
     give(&mut w, "arrow", 1);
     assert_eq!(
         rows(&w, "metalcraft")[8],

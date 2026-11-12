@@ -8,6 +8,7 @@ weapons at an anvil from metal **stock**: ingots of steel, iron, mithril, and th
 can buy, find, or get by salvaging. The recipes are on the
 [Metalcraft…](abilities.md#ability-metalcraft) list in the
 [abilities menu](abilities.md#the-abilities-menu) (see [Professions](skill-uses.md#professions)).
+An alchemist brews potions from herbs: see [Brewing potions](recipes-alchemy.md).
 
 ## Who works what
 

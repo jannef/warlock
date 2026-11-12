@@ -23,7 +23,7 @@ use warlock_core::skills::SkillId;
 
 /// Panel width: room for a recipe's name with what it takes.
 const WIDTH: i32 = 76;
-/// The name column's width, the letter's included.
+/// The name column's least width, the letter included (wider for a longer name).
 const NAME_W: i32 = 18;
 
 /// One recipe as the list shows it.
@@ -41,6 +41,8 @@ struct Entry {
     uses: Option<RecipeUse>,
     /// A generic recipe with choices to make: the forging wizard asks them.
     wizard: bool,
+    /// A generic recipe that chooses nothing (a brew) and can be made: the dialog confirms it.
+    confirm: bool,
 }
 
 #[derive(Debug)]
@@ -64,7 +66,13 @@ impl ProfessionScreen {
             };
         };
         let content = view.content();
-        let skill = skill.or_else(|| content.recipes().professions().first().copied());
+        // `--screen profession`: the first profession with a recipe the player sees.
+        let skill = skill.or_else(|| {
+            let all = content.recipes().professions();
+            (all.iter().copied())
+                .find(|&s| !view.recipes(s).is_empty())
+                .or(all.first().copied())
+        });
         let Some(skill) = skill else {
             return Self {
                 skill,
@@ -76,6 +84,7 @@ impl ProfessionScreen {
             .map(|row| {
                 let def = content.recipe(row.id);
                 let class = (def.result).map(|r| content.object(r.object).class);
+                let wizard = !view.craft_steps(row.id).is_empty();
                 let entry = Entry {
                     id: row.id,
                     key: def.id.clone(),
@@ -83,7 +92,8 @@ impl ProfessionScreen {
                     takes: row.takes,
                     why: row.unavailable.map(|why| why.reason(content)),
                     uses: def.uses,
-                    wizard: !view.craft_steps(row.id).is_empty(),
+                    wizard,
+                    confirm: !wizard && def.uses.is_none() && view.craft_plan(row.id, &[]).is_ok(),
                 };
                 (class, entry)
             })
@@ -102,6 +112,13 @@ impl ProfessionScreen {
     /// The profession shown.
     pub fn skill(&self) -> Option<SkillId> {
         self.skill
+    }
+
+    /// The recipe on the `>` row when it chooses nothing and can be made (a brew), with its
+    /// (empty) picks: what the confirming dialog asks about.
+    pub fn chosen(&self) -> Option<(RecipeId, Vec<Option<usize>>)> {
+        let entry = self.recipes.get(self.recipes.cursor())?;
+        entry.confirm.then(|| (entry.id, Vec::new()))
     }
 
     /// The run changed (a recipe made): the rows read again, the cursor where it was.
@@ -158,6 +175,8 @@ impl ProfessionScreen {
             // The forging wizard asks for the picks, then the dialog; a recipe with none to make
             // is applied at once, the rules saying what comes of it.
             None if entry.wizard => ScreenAction::Open(ScreenName::CraftPick(entry.id)),
+            // A brew chooses nothing: the dialog confirms what it uses.
+            None if entry.confirm => ScreenAction::Open(ScreenName::CraftConfirm),
             None => ScreenAction::Act(Action::Craft {
                 recipe: entry.key.clone(),
                 picks: Vec::new(),
@@ -176,6 +195,12 @@ impl ProfessionScreen {
         let right = panel.x + panel.w - 2;
         let fits = |y: i32| y < panel.y + panel.h - 2;
         let top = panel.y + 2;
+        // The name column fits the longest name ("x - Greater potion of presence") and a gap.
+        let longest = (self.recipes.iter())
+            .map(|e| e.name.chars().count() as i32)
+            .max()
+            .unwrap_or(0);
+        let name_w = NAME_W.max(longest + 5);
         if self.recipes.is_empty() && fits(top) {
             console.print(x + 2, top, "You know no recipe of it.", TEXT_DIM);
         }
@@ -205,7 +230,7 @@ impl ProfessionScreen {
                 console.print(x, y, ">", ACCENT);
             }
             console.print(x + 2, y, &format!("{letter} - {}", entry.name), color);
-            let state_x = x + 2 + NAME_W;
+            let state_x = x + 2 + name_w;
             let room = (right - state_x).max(0) as usize;
             let state = entry.why.as_ref().unwrap_or(&entry.takes);
             let state: String = state.chars().take(room).collect();

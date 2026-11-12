@@ -30,8 +30,9 @@ pub(super) fn recipes(content: &Content) -> String {
         "| Recipe | Listed from | Chosen | Stock | Ornament | Station | Time | Difficulty |\n\
          |---|:---:|---|---|:---:|---|---|:---:|\n",
     );
+    // The brews, which choose nothing, have their own table (`brews`).
     let mut rows: Vec<_> = (recipes.list.iter())
-        .filter(|r| r.result.is_some())
+        .filter(|r| r.result.is_some() && !r.parts.is_empty())
         .collect();
     rows.sort_by(|a, b| (a.skill, a.from, &a.name).cmp(&(b.skill, b.from, &b.name)));
     for r in rows {
@@ -80,6 +81,77 @@ pub(super) fn recipes(content: &Content) -> String {
          material takes as many pieces of its own: a mithril ingot is lighter, and so is the \
          blade made of it.\n",
     );
+    out
+}
+
+/// The Alchemy values the brewing odds have a column for.
+const BREWERS: [u16; 3] = [20, 50, 100];
+
+/// Alchemy's recipes (the brews: no part, no ornament), by the value they are listed from and
+/// their name: the potion, its herbs, time, difficulty, and the chance of a potion (not a murky
+/// draught or a brewer's blunder) at three Alchemy values with an average Intelligence.
+pub(super) fn brews(content: &Content) -> String {
+    let Some(alchemy) = content.skill_id("alchemy") else {
+        return String::new();
+    };
+    let craft = (content.skill(alchemy).benefits.iter())
+        .find(|b| b.effect == warlock_core::skills::Effect::Craft);
+    let bonus = |value: u16| craft.map_or(0, |b| b.at(value));
+    let settings = content.recipes().settings.as_ref();
+    let mut out = String::from("| Potion | Herbs | Listed from | Time | Difficulty |");
+    for value in BREWERS {
+        let _ = write!(out, " Alchemy {value} |");
+    }
+    out.push_str("\n|---|---|:---:|---|:---:|");
+    out.push_str(&":---:|".repeat(BREWERS.len()));
+    out.push('\n');
+    let mut rows: Vec<_> = (content.recipes().of(alchemy))
+        .map(|(_, r)| r)
+        .filter(|r| r.result.is_some())
+        .collect();
+    rows.sort_by(|a, b| (a.from, &a.name).cmp(&(b.from, &b.name)));
+    let sides = HIGHEST / 2;
+    for r in rows {
+        let Some(result) = r.result.as_ref() else {
+            continue;
+        };
+        let potion = content.object(result.object);
+        let herbs: Vec<String> = (r.inputs.iter())
+            .filter_map(|i| {
+                let def = content.object(i.object()?);
+                let name = counted(&def.name, &def.plural, i.count);
+                Some(link(Term::Herb, &def.id, &name))
+            })
+            .collect();
+        let _ = write!(
+            out,
+            "| {} | {} | {} | {} | {} |",
+            anchored(Term::Brew, &r.id, &link(Term::Potion, &potion.id, &r.name)),
+            herbs.join(", "),
+            r.from,
+            Duration::seconds(u64::from(r.seconds)).spoken(),
+            r.difficulty,
+        );
+        for value in BREWERS {
+            if value < r.from {
+                out.push_str(" — |");
+                continue;
+            }
+            let mut made = 0;
+            for a in 1..=sides {
+                for b in 1..=sides {
+                    let natural = a + b;
+                    let margin = natural + bonus(value) - r.difficulty;
+                    if grade(settings, natural, margin) != Grade::Failed {
+                        made += 1;
+                    }
+                }
+            }
+            let percent = f64::from(made) * 100.0 / f64::from(sides * sides);
+            let _ = write!(out, " {percent:.0}% |");
+        }
+        out.push('\n');
+    }
     out
 }
 
