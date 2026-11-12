@@ -1,0 +1,15 @@
+# Smelting (spec §8 "Digging"; #1389, docs/design/professions.md §9): a lump of ore, melted down
+# at an anvil's forge into an ingot of its metal (the piece of the ore's metal: its main part is
+# the input's). The trained's alone. Harder for the harder metals (their `work`); a failure loses
+# the lump.
+[[recipe]]
+id = "smelt"
+name = "Smelt"
+result = { object = "piece" }
+inputs = [{ object = "ore", count = 1 }]
+difficulty = 8
+seconds = 600
+station = "anvil"
+
+[recipe.parts]
+main = { input = "ore" }

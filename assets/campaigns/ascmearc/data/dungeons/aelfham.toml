@@ -27,6 +27,9 @@ ambient = [44, 38, 80, 0]
 # that come even (the sprite, the pixie, the boggle, the darkling) may join the Seelie court as
 # they are made (docs/dev/creatures/fey.md, "Courts"): strays of the bright court, neutral to the
 # player and at war with their hosts.
+# The fey's own country holds no cold iron, nor any base metal: silver and gold only (#1389,
+# data/mining.toml).
+ores = ["silver", "gold"]
 danger = { base = 4, per_depth = 1 }
 population = ["sprite", "pixie", "quickling", "boggle", "darkling", "redcap"]
 # Only fey: nothing from outside finds the way in.

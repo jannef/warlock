@@ -21,6 +21,8 @@ key = "rusty_key"
 temperature = 8
 # Danger 6 on the first floor to 9 on the fourth (spec §7 "Danger levels"): his dead, and what
 # comes to feed where the dead are.
+# Hlāwdūn's rock, as Cealdhlāw's (#1389, data/mining.toml).
+ores = ["iron", "copper", "tin"]
 danger = 6
 population = [
     "grave_worm", "barrow_spider", "skeleton", "zombie", "barrow_ghoul", "drowned", "ghost",

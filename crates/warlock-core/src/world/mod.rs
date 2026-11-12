@@ -214,6 +214,7 @@ mod mana;
 mod material_drops;
 mod merchants_eye;
 mod mimic;
+mod mine;
 pub(crate) mod mirrors;
 mod miscast;
 mod natural;
@@ -1989,6 +1990,8 @@ mod material_drops_tests;
 mod merchants_eye_tests;
 #[cfg(test)]
 mod mimic_tests;
+#[cfg(test)]
+mod mine_tests;
 #[cfg(test)]
 mod mirrors_tests;
 #[cfg(test)]

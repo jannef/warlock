@@ -84,15 +84,20 @@ pub fn roll(
     set: bool,
 ) -> Option<(MaterialId, Cutting)> {
     let gems = content.gems()?;
-    // By material id, never by load order (docs/dev/content.md).
+    let gem = by_rarity(content, rng)?;
+    let size = *pick_weighted(rng, &gems.size_weights(level))?;
+    let cut = *pick_weighted(rng, &gems.cut_weights(level, set))?;
+    Some((gem, Cutting { size, cut }))
+}
+
+/// A gem by its `rarity`, one draw, among the gem materials by material id (never by load
+/// order: docs/dev/content.md).
+fn by_rarity(content: &Content, rng: &mut Rng) -> Option<MaterialId> {
     let mut found: Vec<(MaterialId, u32)> = (content.materials().iter().enumerate())
         .filter_map(|(i, m)| Some((MaterialId(i as u16), m.gem.as_ref()?.rarity)))
         .collect();
     found.sort_by(|a, b| content.material(a.0).id.cmp(&content.material(b.0).id));
-    let gem = *pick_weighted(rng, &found)?;
-    let size = *pick_weighted(rng, &gems.size_weights(level))?;
-    let cut = *pick_weighted(rng, &gems.cut_weights(level, set))?;
-    Some((gem, Cutting { size, cut }))
+    pick_weighted(rng, &found).copied()
 }
 
 /// Whether a find at item level `level` is a loose gem, by the gems' `chance` (one draw), and
@@ -117,6 +122,20 @@ pub fn find_with(content: &Content, rng: &mut Rng, level: u8, more: i32) -> Opti
 pub fn loose(content: &Content, rng: &mut Rng, level: u8) -> Option<Stack> {
     let gems = content.gems()?;
     let (gem, cutting) = roll(content, rng, level, false)?;
+    Some(Stack::one(gems.object).with_parts(vec![ItemPart::gem(content, None, gem, cutting)]))
+}
+
+/// An uncut loose gem at item level `level`, as a miner breaks one out of the rock (spec §8
+/// "Digging"; `world/mine.rs`): its gem by rarity and its size by the level ([`roll`]'s first two
+/// draws), the roughest cut. A stack of one; `None` without gems or a rough cut.
+pub fn uncut(content: &Content, rng: &mut Rng, level: u8) -> Option<Stack> {
+    let gems = content.gems()?;
+    let cut = (gems.cuts().iter().position(|c| c.rough))
+        .and_then(|i| u8::try_from(i).ok())
+        .map(crate::content::CutId)?;
+    let gem = by_rarity(content, rng)?;
+    let size = *pick_weighted(rng, &gems.size_weights(level))?;
+    let cutting = Cutting { size, cut };
     Some(Stack::one(gems.object).with_parts(vec![ItemPart::gem(content, None, gem, cutting)]))
 }
 

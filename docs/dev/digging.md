@@ -31,5 +31,30 @@ A blast also blows apart a shut chest whose band's hardness is below it (`World:
 A statue of the stoned (`petrified`, #1126, `world/statue.rs`) is a breaking wall of hardness 1500
 (a quarter hour with a pick-axe; no fireball's blast of 1000 breaks it); whatever changes its
 terrain, `set_terrain` calls `World::statue_gone`, which spills what it held onto the rubble.
+
+## Mining
+
+`world/mine.rs` (#1389; tests `world/mine_tests.rs`), the data `data/mining.toml`
+(`content/mining.rs`: `MiningRules`, `MiningBand`, `MiningFind`, `Mined`; `Content::mining()`,
+loaded after the branches, so their `ores` are checked against its ore rows). `World::dig` calls
+`World::mine(at, wall)` once, after its "crumbles" line, when the wall it dug at no longer stands
+(the one line in `dig.rs`). `mine` gives nothing off a branch floor (`Content::branch_level`),
+for a statue (`TerrainDef::statue`), or to one untrained in the file's `skill` (Mining; no draws
+then). Draws, all `state.rng`, in this order: the band's `chance` (`MiningRules::band`: the
+hardest band not harder than the wall's `hardness`), the check (`combat::roll_natural`: stat
+modifier + `skill_effect_of(Mining, Effect::Craft)` (Mining's new `craft` curve, +8 at 100, +12 at
+200) + `TalentMods::check(stat)` against the band's `difficulty`; natural 2 fails, 24 makes), the
+row (`MiningRules::at(Content::floor_danger(level, player level), allow-list)`, `pick_weighted`;
+a row's weight is `rarity + deeper × (danger − its danger)`, 0 below its danger), and for the gem
+row `gem::uncut` (gem by rarity, size by the item level; the roughest cut). Count for ore and
+stone: `1 + margin / more_every`, at most `most`. The find is laid on the rubble's pile
+(`object::add_to_pile`) and said ("You break out 2 lumps of copper ore."). No mark of its own:
+Mining's `dug` mark is the wall's. The ore is `objects/ore.toml` (class `materials`, made of any
+metal, its main part the metal: `mine::ore`; named by the variant rule, "lump of iron ore" →
+"lump of copper ore"); `recipes/metalcraft/smelt.toml` (`main = { input = "ore" }`, result the
+piece) makes the ingot (`docs/dev/crafting.md`). A branch's allow-list is `DungeonDef::ores`
+(metal ids; `[]` none), stone and gems kept. The wiki's `mining.md` tables (`xtask/src/wiki/mining.rs`)
+give the bands, the rows with their weights by danger, and each branch's ores.
+
 A greater treasure room (#618) is reached only by breaking a wall: its breach, a found one a
 hollow wall that `set_terrain` forgets once broken (`docs/dev/special-rooms.md`).

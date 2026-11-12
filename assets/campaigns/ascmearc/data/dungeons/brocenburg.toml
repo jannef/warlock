@@ -20,6 +20,8 @@ key = "iron_key"
 # Danger 6 on the first floor to 9 on the fourth (spec §7 "Danger levels"): the goblins he hires
 # out to and their chiefs, footpads who ran with him, bats in the broken roof, and the ogres he
 # brings in, which come only out of depth (level 12): that is the point of hiring them.
+# Under the forest: iron and copper in the cellars' rock (#1389, data/mining.toml).
+ores = ["iron", "copper"]
 danger = 6
 population = [
     "bat", "goblin", "goblin_archer", "footpad", "goblin_chief", "footpad_archer", "ogre",

@@ -82,6 +82,7 @@ fn the_built_in_recipes_are_the_forges_weapons_armour_tools_and_temper_and_woodc
             ("Scimitar", None),
             ("Short sword", None),
             ("Small shield", None),
+            ("Smelt", None),
             ("Spear", None),
             ("Stiletto", None),
             ("Temper", Some(RecipeUse::Temper)),
