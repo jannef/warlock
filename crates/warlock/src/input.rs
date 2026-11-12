@@ -43,6 +43,9 @@ use warlock_core::{Action, Dir, Pos, Positions, Rest};
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum KeyCommand {
     Move(Dir),
+    /// Run in a direction: step after step until something worth stopping for (#1325,
+    /// `Action::Run`). Ctrl with a movement key by default.
+    Run(Dir),
     /// Wait a turn, which is searching the cells around the player for secret doors and hidden
     /// traps (spec §8 "Searching"; #1326: one action, `Action::Wait`).
     Wait,
@@ -302,6 +305,7 @@ impl KeyCommand {
     pub fn label(self) -> &'static str {
         match self {
             KeyCommand::Move(_) => "Move",
+            KeyCommand::Run(_) => "Run",
             KeyCommand::Wait => "Wait/search",
             KeyCommand::SearchLong => "Search for a while",
             KeyCommand::Open => "Open a door",
@@ -487,6 +491,16 @@ impl Default for Bindings {
             (Code(KeyCode::ArrowRight), Move(Dir::E)),
             (Code(KeyCode::ArrowDown), Move(Dir::S)),
             (Code(KeyCode::ArrowLeft), Move(Dir::W)),
+        ]);
+        // Running: Ctrl with each movement key (#1325).
+        let runs: Vec<_> = (table.0.iter())
+            .filter_map(|(key, command)| match command {
+                Move(dir) => Some((KeyBinding::chord(Mods::CTRL, key.clone()), Run(*dir))),
+                _ => None,
+            })
+            .collect();
+        table.0.extend(runs);
+        table.0.extend([
             (Code(KeyCode::Numpad5), Wait),
             (ch("s"), Wait),
             (
@@ -630,6 +644,17 @@ pub enum InputMode {
     /// [`KeyCommand::MoreNext`] (or [`KeyCommand::MoreSkip`], or Esc) before anything else
     /// (`ui::more`).
     More(usize),
+}
+
+/// The dialog a step in `dir` asks first, if any: diving into deep water, leaving a shop owing,
+/// stepping onto a known trap, setting out hungry on the overworld, or an offer (see the
+/// movement arm of `press`).
+fn step_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
+    (deep_water_dialog(view, dir))
+        .or_else(|| leaving_dialog(view, dir))
+        .or_else(|| trap_dialog(view, dir))
+        .or_else(|| hunger_dialog(view, dir))
+        .or_else(|| offer_dialog(view, dir))
 }
 
 /// The dialog a step in `dir` opens first, if it leaves the shop the player stands in owing
@@ -976,17 +1001,22 @@ impl Gameplay<'_> {
                 // asks (the owner's rule), and any other dialog's "go on" would step in unasked;
                 // its own "Dive in" is a plain move, which the rules still judge (the keeper turns
                 // back one who owes). A held key stops there (repeats never open the dialog).
-                let view = game.world.perception();
-                let dialog = (deep_water_dialog(&view, dir))
-                    .or_else(|| leaving_dialog(&view, dir))
-                    .or_else(|| trap_dialog(&view, dir))
-                    .or_else(|| hunger_dialog(&view, dir))
-                    .or_else(|| offer_dialog(&view, dir));
-                match dialog {
+                match step_dialog(&game.world.perception(), dir) {
                     Some(dialog) if !key.repeat => open = Some(dialog.into()),
                     Some(_) => {}
                     None => {
                         self.actions.write(PlayerAction(Action::Move(dir)));
+                    }
+                }
+                InputMode::Normal
+            }
+            // A run's first step asks what a step would (#1325): the dialog's answer is a plain
+            // step; with nothing to ask, the run.
+            (InputMode::Normal, KeyCommand::Run(dir)) => {
+                match step_dialog(&game.world.perception(), dir) {
+                    Some(dialog) => open = Some(dialog.into()),
+                    None => {
+                        self.actions.write(PlayerAction(Action::Run(dir)));
                     }
                 }
                 InputMode::Normal
@@ -1716,6 +1746,8 @@ mod tests {
         let b = Bindings::default();
         assert_eq!(keys(&b, KeyCommand::Move(Dir::N)), ["Num8", "↑"]);
         assert_eq!(keys(&b, KeyCommand::Move(Dir::NE)), ["Num9"]);
+        assert_eq!(keys(&b, KeyCommand::Run(Dir::N)), ["Ctrl+Num8", "Ctrl+↑"]);
+        assert_eq!(keys(&b, KeyCommand::Run(Dir::NE)), ["Ctrl+Num9"]);
         assert_eq!(keys(&b, KeyCommand::Descend), [">"]);
         assert!(keys(&b, KeyCommand::Quit).is_empty(), "the menu quits");
         assert_eq!(keys(&b, KeyCommand::Kick), ["k"]);

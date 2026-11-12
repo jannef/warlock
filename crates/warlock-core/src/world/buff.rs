@@ -46,7 +46,7 @@ impl World {
     /// what is no action in the world (settings, trading, the dev actions).
     pub(super) fn kind_of(&self, action: &Action) -> Option<ActionKind> {
         Some(match action {
-            Action::Move(dir) | Action::Pay(Some(dir)) => self.move_kind(*dir),
+            Action::Move(dir) | Action::Run(dir) | Action::Pay(Some(dir)) => self.move_kind(*dir),
             Action::Rest(_) | Action::UseTalent(_) => ActionKind::Wait,
             Action::Open(_) => ActionKind::OpenDoor,
             Action::Close(_) => ActionKind::CloseDoor,

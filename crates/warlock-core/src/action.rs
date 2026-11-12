@@ -21,6 +21,11 @@ pub enum Action {
     /// Step in a direction; bumping a closed door opens it (unlocking it first with a key that
     /// fits, if it is locked).
     Move(Dir),
+    /// Run in a direction (#1325; spec §6 "Running"): step after step until something worth
+    /// stopping for, a long action like a rest (each step a move's time). In the open it holds
+    /// the direction; landing in a corridor, it follows it to an intersection or a room. A first
+    /// step a run cannot take is a plain [`Action::Move`].
+    Run(Dir),
     /// Let a turn pass, looking around: the same as `Search(1)`, one code path (#1326; spec §8
     /// "Searching"). Kept as its own spelling, `wait`, for replays, tests, and the manifests.
     Wait,
@@ -928,6 +933,7 @@ impl fmt::Display for Action {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Action::Move(d) => write!(f, "move:{d}"),
+            Action::Run(d) => write!(f, "run:{d}"),
             Action::Wait => f.write_str("wait"),
             Action::Open(d) => write!(f, "open:{d}"),
             Action::Close(d) => write!(f, "close:{d}"),
@@ -1103,6 +1109,7 @@ impl FromStr for Action {
         };
         match verb {
             "move" => dir().map(Action::Move),
+            "run" => dir().map(Action::Run),
             "open" => dir().map(Action::Open),
             "close" => dir().map(Action::Close),
             "chat" => dir().map(Action::Chat),
@@ -1974,6 +1981,7 @@ mod tests {
         for d in Dir::ALL {
             all.extend([
                 Action::Move(d),
+                Action::Run(d),
                 Action::Open(d),
                 Action::Close(d),
                 Action::Chat(d),

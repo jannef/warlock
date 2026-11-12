@@ -72,7 +72,11 @@ another context, and the shortcuts the system or the browser keeps (macOS: Cmd+Q
 Cmd+Space; Windows and Linux: Alt+F4, Alt+Tab, Ctrl+Alt+Delete, Super+D/E/L/R/Tab; the web:
 Ctrl or Cmd with N/Q/T/W, Ctrl+Tab, Alt+F4), in Controls' capture (with the reason) and when a
 settings file or keymap is read (a warning; the key is skipped). The default keys with
-modifiers: Search for a while is Ctrl+Num5 and Ctrl+s (#1323's comment, #1326).
+modifiers: Search for a while is Ctrl+Num5 and Ctrl+s (#1323's comment, #1326); Run is Ctrl
+with each movement key, Ctrl+Num1-9 and Ctrl+arrows (`Bindings::default` derives them from the
+moves; #1325), none refused on any platform (`mods::tests::default_runs_are_never_refused`).
+macOS keeps Ctrl+arrows for Mission Control and Spaces by default, though `mods::reserved` does
+not refuse them: a Mac player turns those shortcuts off or runs with Ctrl+numpad or other keys.
 Core knows no bindings, so a message names a key by its command's id (`messages::key("help")`
 writes `{key:help}`, as the welcome line does) and the message line fills it in as bound
 (`Message::display_with` with `ui::message_key`; dumps show the token).

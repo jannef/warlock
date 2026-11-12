@@ -10,6 +10,7 @@ bar, and the info pages.
 |---|---|
 | Move (numpad) | `8` `9` `6` `3` `2` `1` `4` `7` |
 | Move (arrows) | Up, Right, Down, Left (four directions) |
+| [Run](turns.md#running) (step after step until something stops you) | `Ctrl` with a movement key |
 | Attack | move into a [hostile](creatures.md#factions) [creature](creatures.md) |
 | [Swap places](npcs.md#getting-past) | move into any other creature |
 | [Chat](npcs.md#chatting) with someone next to you | `C` (then a direction, if several are near) |

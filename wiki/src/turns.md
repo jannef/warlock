@@ -50,6 +50,30 @@ that is [hostile](creatures.md#factions) to you attacks it (see
 your step's time ("You swap places with the deer."). If it will not make way, that takes no time
 ("The sentry doesn't budge."); see [People and talk](npcs.md#getting-past).
 
+## Running
+
+Running moves you step after step in one direction, so you need not press a key for every step.
+Hold `Ctrl` and press a movement key ([Controls](controls.md)). Each step takes a step's time, as
+if you had walked it, and you can stop only where the run stops.
+
+**In the open**, you keep going the same way until the next step cannot be made: a
+[wall](terrain.md#walls) or other solid terrain, a closed [door](doors.md), a
+[creature](creatures.md), deep [water](terrain.md#water), a [trap](traps.md#finding-traps) you know
+of, or a cell you have never seen.
+
+**In a corridor** (your first step lands in one), you follow it around its bends. You stop where
+it branches (a side passage, or a closed door in its wall: a door counts as a way on), where it
+ends, and where it opens into a room.
+
+A run also stops for everything that stops a [rest](resting.md#how-resting-works). A
+[hostile](creatures.md#factions) creature that comes within 5 steps in view stops it ("The kobold
+comes close; you stop running."), and one farther off does not. So does an attack on you, or a
+message on the message line, such as finding [stairs](terrain.md#stairs) or something lying where
+you step.
+
+If your first step is not one a run can take, you take a plain step instead: into a door, it opens
+the door, and into a hostile creature, it attacks.
+
 ## Creatures act at their own pace
 
 Every [creature](creatures.md) has its own pace, its **[speed](#speed)** (below). The game does
