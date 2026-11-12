@@ -390,10 +390,10 @@ id = "jewelcraft"
 name = "Jewelcraft"
 description = "Cutting and setting gems, and the working of stone and amber."
 kind = "action"
-mark = [{ on = "salvage", chance = 100 }]
-# Its craft (docs/dev/crafting.md; salvage.toml): added to the check of salvaging a gem, jade, or
-# amber, +8 at 100, +12 at 200, read for this skill alone. No ability of its own yet (Cut and
-# Set come later).
+mark = [{ on = "craft", chance = 100 }, { on = "salvage", chance = 100 }]
+# Its craft (docs/dev/crafting.md; salvage.toml; the jeweller's recipes, data/recipes/jewelcraft/):
+# added to the check of salvaging a gem, jade, or amber, and of cutting a gem, +8 at 100, +12 at
+# 200, read for this skill alone.
 benefit = [{ effect = "craft", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]

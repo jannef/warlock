@@ -1,13 +1,14 @@
 //! The professions' recipes (spec §8 "Skills": professions; docs/dev/crafting.md): every generic
-//! recipe from `data/recipes/<skill>/`, and the grades a made item comes out at, from
-//! `data/recipes.toml`'s bands and the 2d12 rules (`world/craft_make.rs::grade`).
+//! recipe from `data/recipes/<skill>/`, the grades a made item comes out at, from
+//! `data/recipes.toml`'s bands and the 2d12 rules (`world/craft_make.rs::grade`), and gem cutting
+//! (`world/cut.rs`: the cut bands, a large uncut ruby's fates, the odds).
 
-use super::text::{Term, anchored, link};
+use super::text::{Term, anchored, capital, link};
 use std::fmt::Write as _;
 use warlock_core::combat::HIGHEST;
-use warlock_core::content::{Content, PartSource, counted};
+use warlock_core::content::{Content, CutId, Cutting, PartSource, RecipeUse, counted};
 use warlock_core::time::Duration;
-use warlock_core::world::{Grade, grade};
+use warlock_core::world::{CutBand, Grade, cut_band, cut_outcome, grade};
 
 /// The bonuses (the stat modifier, the skill, and the talents together) the odds table has a row
 /// for, and what reaches each.
@@ -201,6 +202,168 @@ pub(super) fn crafting_grades(content: &Content) -> String {
              other metal adds nothing.",
             list.join(", ")
         );
+    }
+    out
+}
+
+/// The gem the cutting tables follow, and the size it starts at: a large uncut ruby.
+const CUT_GEM: (&str, &str) = ("ruby", "large");
+
+/// The whole bonuses the cutting odds have a row for, and who reaches each.
+const CUT_BONUSES: [(i32, &str); 4] = [
+    (4, "an apprentice"),
+    (8, "Jewelcraft 100"),
+    (12, "Jewelcraft 200"),
+    (16, "a master with a steady hand"),
+];
+
+/// Gem cutting (Jewelcraft's Cut, `world/cut.rs`): the cut each margin reaches and what it does
+/// to the size, a large uncut ruby at each outcome with its worth, then the odds by bonus on a
+/// ruby and on a smokestone.
+pub(super) fn gem_cutting(content: &Content) -> String {
+    let (Some(gems), Some(recipe)) = (content.gems(), content.recipes().of_use(RecipeUse::Cut))
+    else {
+        return String::new();
+    };
+    let step = (content.recipes().settings.as_ref()).map_or(5, |s| s.cut_step);
+    let cuts = gems.cuts();
+    let first = cuts.iter().position(|c| !c.rough).unwrap_or(0);
+    let name = |i: usize| capital(&cuts[i].name);
+    let mut out =
+        String::from("| Margin | Cut | On an uncut gem | On a cut gem |\n|:---:|---|---|---|\n");
+    let _ = writeln!(
+        out,
+        "| below 0 | — | stays uncut, one size smaller | keeps its cut, one size smaller |"
+    );
+    for i in first..cuts.len() {
+        let low = (i - first) as i32 * step;
+        let margin = match i + 1 == cuts.len() {
+            true => format!("{low} or more"),
+            false => format!("{low} to {}", low + step - 1),
+        };
+        let uncut = match i == first {
+            true => "one size smaller",
+            false => "size kept",
+        };
+        let _ = writeln!(
+            out,
+            "| {margin} | {} | {uncut} | the better cut, one size smaller |",
+            name(i)
+        );
+    }
+    let plain = capital(&gems.cut(gems.plain().cut).name);
+    let _ = writeln!(
+        out,
+        "\nA natural 2 shatters the gem, whatever the margin. A natural 24 cuts it at least \
+         {}. Cutting takes {} against a difficulty of {} plus the gem's work.\n",
+        plain.to_lowercase(),
+        Duration::seconds(u64::from(recipe.seconds)).spoken(),
+        recipe.difficulty,
+    );
+
+    // A large uncut ruby at each outcome.
+    let (gem_id, size_id) = CUT_GEM;
+    let (Some(material), Some(size)) = (content.material_id(gem_id), gems.size_id(size_id)) else {
+        return out;
+    };
+    let def = content.material(material);
+    let Some(gem) = def.gem.as_ref() else {
+        return out;
+    };
+    let start = Cutting {
+        size,
+        cut: warlock_core::content::CutId(0),
+    };
+    let words = |c: Cutting| {
+        format!(
+            "{} {} {}",
+            gems.size(c.size).name,
+            gems.cut(c.cut).name,
+            def.name
+        )
+    };
+    let _ = writeln!(
+        out,
+        "A {} (worth {} gold) at each outcome:\n",
+        words(start),
+        gems.value(gem, start)
+    );
+    out.push_str("| Outcome | Becomes | Worth |\n|---|---|---:|\n");
+    let mut bands = vec![
+        ("Shattered", CutBand::Shattered),
+        ("Failed", CutBand::Failed),
+    ];
+    for (i, cut) in cuts.iter().enumerate().skip(first) {
+        bands.push((cut.name.as_str(), CutBand::Cut(CutId(i as u8))));
+    }
+    for (label, band) in &bands {
+        let (becomes, worth) = match cut_outcome(gems, start, *band) {
+            Some(c) => (format!("a {}", words(c)), gems.value(gem, c).to_string()),
+            None => ("nothing".to_string(), "0".to_string()),
+        };
+        let _ = writeln!(out, "| {} | {becomes} | {worth} |", capital(label));
+    }
+    let crude = Cutting {
+        size,
+        cut: CutId(first as u8),
+    };
+    let best = CutId((cuts.len() - 1) as u8);
+    if let Some(recut) = cut_outcome(gems, crude, CutBand::Cut(best)) {
+        let _ = writeln!(
+            out,
+            "\nRe-cut at best, a {} ({} gold) becomes a {} ({} gold).\n",
+            words(crude),
+            gems.value(gem, crude),
+            words(recut),
+            gems.value(gem, recut),
+        );
+    }
+
+    // The odds, by the check's whole bonus.
+    out.push_str("| Gem | Bonus | Who | Shattered | Failed |");
+    for c in &cuts[first..] {
+        let _ = write!(out, " {} |", capital(&c.name));
+    }
+    out.push_str("\n|---|:---:|---|:---:|:---:|");
+    for _ in first..cuts.len() {
+        out.push_str(":---:|");
+    }
+    out.push('\n');
+    let soft = (content.materials().iter())
+        .filter(|m| m.gem.is_some())
+        .min_by_key(|m| (m.work, m.gem.as_ref().map_or(0, |g| g.value)));
+    let mut rows: Vec<(&str, i32, i32, &str)> = (CUT_BONUSES.iter())
+        .map(|&(bonus, who)| (def.name.as_str(), def.work, bonus, who))
+        .collect();
+    if let Some(soft) = soft.filter(|m| m.work != def.work) {
+        let (bonus, who) = CUT_BONUSES[CUT_BONUSES.len() - 1];
+        rows.push((soft.name.as_str(), soft.work, bonus, who));
+    }
+    let sides = HIGHEST / 2;
+    for (gem_name, work, bonus, who) in rows {
+        let mut counts = vec![0u32; cuts.len() + 2];
+        for a in 1..=sides {
+            for b in 1..=sides {
+                let natural = a + b;
+                let margin = natural + bonus - (recipe.difficulty + work);
+                let i = match cut_band(gems, step, natural, margin) {
+                    CutBand::Shattered => 0,
+                    CutBand::Failed => 1,
+                    CutBand::Cut(c) => 2 + usize::from(c.0),
+                };
+                counts[i] += 1;
+            }
+        }
+        let _ = write!(
+            out,
+            "| {} ({work:+}) | {bonus:+} | {who} |",
+            capital(gem_name)
+        );
+        for i in (0..2).chain(2 + first..2 + cuts.len()) {
+            let percent = f64::from(counts[i]) * 100.0 / f64::from(sides * sides);
+            let _ = write!(out, " {percent:.0}% |");
+        }
+        out.push('\n');
     }
     out
 }

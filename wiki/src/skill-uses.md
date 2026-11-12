@@ -148,6 +148,10 @@ not:
 
 Those trained in Metalcraft also forge swords at an anvil from metal stock (see
 [Crafting](crafting.md)).
+
+[Jewelcraft](skills.md#skill-jewelcraft) is a profession too, but only for those trained in it:
+its row, **[Jewelcraft…](abilities.md#ability-jewelcraft)**, holds **Cut**, which cuts a loose gem
+(see [Gem cutting](gem-cutting.md)).
 - Woodcraft: **Fletch**, arrows or bolts for your bow or crossbow (see [Fletching](#fletching)),
   and **Whittle**, a wooden weapon made finer with a knife (see [Whittling](#whittling)).
 

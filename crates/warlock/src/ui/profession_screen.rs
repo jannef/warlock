@@ -64,7 +64,14 @@ impl ProfessionScreen {
             };
         };
         let content = view.content();
-        let skill = skill.or_else(|| content.recipes().professions().first().copied());
+        // `--screen profession`: the first profession the player sees recipes of (Jewelcraft's
+        // are the trained's alone), else the first.
+        let professions = content.recipes().professions();
+        let skill = skill.or_else(|| {
+            (professions.iter().copied())
+                .find(|&s| !view.recipes(s).is_empty())
+                .or_else(|| professions.first().copied())
+        });
         let Some(skill) = skill else {
             return Self {
                 skill,
@@ -153,8 +160,9 @@ impl ProfessionScreen {
             Some(RecipeUse::Temper) => ScreenAction::Open(ScreenName::Temper),
             Some(RecipeUse::Whittle) => ScreenAction::Open(ScreenName::Whittle),
             Some(RecipeUse::Fletch) => ScreenAction::Act(Action::Fletch),
-            // Greyed "not usable yet" until P10 and P11 build their actions.
-            Some(RecipeUse::Cut | RecipeUse::Set) => ScreenAction::Stay,
+            Some(RecipeUse::Cut) => ScreenAction::Open(ScreenName::Cut),
+            // Greyed "not usable yet" until P11 builds its action.
+            Some(RecipeUse::Set) => ScreenAction::Stay,
             // The forging wizard asks for the picks, then the dialog; a recipe with none to make
             // is applied at once, the rules saying what comes of it.
             None if entry.wizard => ScreenAction::Open(ScreenName::CraftPick(entry.id)),

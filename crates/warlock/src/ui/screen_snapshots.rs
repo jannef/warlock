@@ -69,6 +69,10 @@ const ARMED: &str = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W m
 const HOARD: &str = "move:SW*2 pickup move:NE*2 move:E*2 move:NE pickup move:SW move:W*2 \
     move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N pickup move:S*2 \
     pickup move:NW move:W*2 move:N pickup move:SW pickup";
+/// The hub's secret closet found and its gems picked up (a medium fine sapphire, an uncut tiny
+/// garnet).
+const GEM_CLOSET: &str = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*6 move:SW move:W*3 \
+    search:50 move:S open:W move:W*2 pickup";
 /// Next to the hub's hermit.
 macro_rules! hermit {
     () => {
@@ -811,6 +815,36 @@ const CASES: &[Case] = &[
         character: Some("human,male,ranger"),
         run: true,
         screen: Some("salvage"),
+        ..BASE
+    },
+    // A craftsperson trained in Jewelcraft (fate 8) with the hub's secret closet's gems, a
+    // medium fine sapphire and an uncut tiny garnet (#1355): Jewelcraft's screen (the first
+    // profession whose recipes they see) lists Cut under Work; the Cut list both gems.
+    Case {
+        name: "profession-jewelcraft",
+        seed: Some(8),
+        character: Some("human,male,craftsperson"),
+        actions: GEM_CLOSET,
+        screen: Some("profession"),
+        ..BASE
+    },
+    Case {
+        name: "cut-list",
+        seed: Some(8),
+        character: Some("human,male,craftsperson"),
+        actions: GEM_CLOSET,
+        screen: Some("cut"),
+        ..BASE
+    },
+    // The garnet cut (it splits to nothing at this fate) and the sapphire re-cut a size smaller:
+    // the list holds the small fine sapphire, and the message line says what came of it.
+    Case {
+        name: "cut-list-after",
+        seed: Some(8),
+        character: Some("human,male,craftsperson"),
+        actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*6 move:SW move:W*3 \
+                  search:50 move:S open:W move:W*2 pickup craft:cut:l craft:cut:k",
+        screen: Some("cut"),
         ..BASE
     },
     // A warrior carries no knife: Woodcraft's screen (its row in the abilities menu, `e`) greys

@@ -93,6 +93,8 @@ you never choose them, they work by themselves as you fight. They have their own
   holds **Fletch** (see [Fletching](skill-uses.md#fletching)) and **Whittle** (see
   [Whittling](skill-uses.md#whittling)). A recipe you cannot make now is greyed out with the
   reason: "no anvil beside you", "no knife", "no bow or crossbow ready".
+- **Jewelcraft…**: those trained in [Jewelcraft](skills.md#skill-jewelcraft) have it, in the
+  skill's place. It holds **Cut** (see [Gem cutting](gem-cutting.md)).
 - **Wedge a door**: anyone trained in [Woodcraft](skills.md#skill-woodcraft) has it, in the skill's place among the Skills. Choose
   a direction, and you spend a turn wedging the closed door that way shut, so that creatures must
   kick it in (see [Wedging a door](doors.md#wedging-a-door)).

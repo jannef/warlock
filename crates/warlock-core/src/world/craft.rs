@@ -8,8 +8,9 @@
 //!   now, if any ([`RecipeLack`]): computed here, from the pack, the cells beside the player, and
 //!   the skills, so presentation never decides availability.
 //! - **The action** ([`Action::Craft`], `craft:ID[:POS,...]`): a built-in recipe's row runs its
-//!   own action (`temper:`, `whittle:`, `fletch`), so `craft:` refuses it, taking no time; a
-//!   generic recipe is made by `world/craft_make.rs` (the forge's swords).
+//!   own action (`temper:`, `whittle:`, `fletch`), so `craft:` refuses it, taking no time, but
+//!   for Cut, which is `craft:cut:LETTER` itself (`world/cut.rs`); a generic recipe is made by
+//!   `world/craft_make.rs` (the forge's swords).
 //!
 //! [`Action::Craft`]: crate::action::Action::Craft
 //! [`PerceptionView::recipes`]: crate::perception::PerceptionView::recipes
@@ -37,7 +38,7 @@ pub struct RecipeRow {
 /// Why a recipe cannot be made now (the screen greys its row with [`RecipeLack::reason`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RecipeLack {
-    /// A built-in recipe whose action is not built yet (Jewelcraft's Cut and Set).
+    /// A built-in recipe whose action is not built yet (Jewelcraft's Set).
     NotYet,
     /// The player's trained value is below the recipe's `from`.
     Skill,
@@ -240,9 +241,7 @@ fn takes(content: &Content, player: &Actor, recipe: &RecipeDef) -> String {
                 .fletch()
                 .map_or(0, |rules| rules.seconds * percent / 100)
         }
-        // Their actions' times come with them (P10, P11).
-        Some(RecipeUse::Cut | RecipeUse::Set) => 0,
-        None => recipe.seconds,
+        Some(RecipeUse::Cut | RecipeUse::Set) | None => recipe.seconds,
     };
     if seconds > 0 {
         words.push(format!(
@@ -287,6 +286,7 @@ impl World {
         let def = content.recipe(id);
         let text = match def.uses {
             Some(uses) if !uses.usable() => "You cannot do that yet.".to_string(),
+            Some(RecipeUse::Cut) => return self.start_cut(id, picks),
             Some(_) => format!("{} is done from its own list.", def.name),
             None => return self.start_making(id, picks),
         };
