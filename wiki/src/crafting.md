@@ -12,6 +12,9 @@ Each material group is worked by one skill, with one stat:
 
 {{#include generated/crafting-groups.md}}
 
+Flint, stone, and obsidian are the exceptions: they are knapped by hand, so
+[Woodcraft](skills.md#skill-woodcraft) works them, with Dexterity, not Jewelcraft.
+
 Cloth and glass have no craft yet. Nothing made of them can be saved.
 
 Some materials are harder to work than others. A material's **work** is added to the difficulty
