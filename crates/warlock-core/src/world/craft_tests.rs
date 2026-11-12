@@ -215,28 +215,34 @@ fn crafting_a_built_in_unknown_or_out_of_reach_recipe_is_refused_with_no_time() 
 }
 
 #[test]
-fn jewelcrafts_cut_and_set_are_listed_but_not_usable_yet() {
-    // P10 and P11 add the files; a fixture gives Jewelcraft its directory now.
+fn jewelcrafts_cut_is_usable_and_set_listed_but_not_usable_yet() {
+    // P11 adds Set's file; a fixture stands in for it now, open to anyone.
     let mut files = ContentFiles::builtin();
     files.insert(
-        "data/recipes/jewelcraft/cut.toml",
-        "[[recipe]]\nid = \"cut\"\nuse = \"cut\"\nanyone = true\n",
-    );
-    files.insert(
         "data/recipes/jewelcraft/set.toml",
-        "[[recipe]]\nid = \"set\"\nuse = \"set\"\nanyone = true\n",
+        "[[recipe]]\nid = \"set\"\nuse = \"set\"\ndifficulty = 12\nseconds = 1200\n\
+         anyone = true\n",
     );
     let content = Arc::new(Content::load(&files).expect("fixture content is valid"));
     let mut w = world(content, "showcase");
+    // Cut is the trained's alone.
+    assert_eq!(
+        rows(&w, "jewelcraft"),
+        ["Set: an item and a cut gem, about 20 minutes (not usable yet)"]
+    );
+    let jewel = skill(&w, "jewelcraft");
+    w.player_mut().skills = [(jewel, Trained { value: 5, marks: 0 })]
+        .into_iter()
+        .collect();
     assert_eq!(
         rows(&w, "jewelcraft"),
         [
-            "Cut: a loose gem (not usable yet)",
-            "Set: an item and a cut gem (not usable yet)"
+            "Cut: a loose gem, about 30 minutes",
+            "Set: an item and a cut gem, about 20 minutes (not usable yet)"
         ]
     );
     let start = w.state.time;
-    for action in crate::action::parse_actions("craft:cut").expect("parses") {
+    for action in crate::action::parse_actions("craft:set").expect("parses") {
         w.apply(&action);
     }
     assert_eq!(w.state.time, start);

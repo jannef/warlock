@@ -60,6 +60,7 @@
 - [Skills](skills.md)
   - [Using your skills](skill-uses.md)
   - [Crafting](crafting.md)
+    - [Gem cutting](gem-cutting.md)
 - [Abilities](abilities.md)
 - [Combat](combat.md)
   - [Hit points and death](hit-points.md)

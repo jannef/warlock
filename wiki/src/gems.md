@@ -37,6 +37,13 @@ on its eighth.
 Gems of the same kind, size, and cut lie together in one stack ("3 rubies"). Any difference
 makes another stack.
 
+## Cutting
+
+One trained in [Jewelcraft](skills.md#skill-jewelcraft) can cut a loose gem, or cut it again to
+a finer cut. A good cut keeps the stone's size; a poor one, a failure, and every re-cut cost a
+size, and a natural 2 shatters the stone. See [Gem cutting](gem-cutting.md) for the cuts, what a
+large uncut ruby can become, and the odds.
+
 ## Finding gems
 
 Gems are rare. Now and then a find is a loose gem instead of an item. That can be one of the

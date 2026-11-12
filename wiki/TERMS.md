@@ -208,6 +208,7 @@ above.
 | Foraging | `skill-uses.md#foraging` |
 | Crafting, a craft skill, craft points, who works which material, a material's work | `crafting.md`, `crafting.md#who-works-what` |
 | Salvage, taking an item apart, a gem chipped or shattered | `crafting.md#salvage` |
+| Cut, gem cutting, a re-cut, a gem's cut grade | `gem-cutting.md`, `gem-cutting.md#how-well-it-comes-out` |
 | Gather, gathering herbs, the glowing fungus | `herbs.md#gathering` |
 | Herbs (in general) | `herbs.md` |
 | Abilities, the abilities menu | `abilities.md#the-abilities-menu` |
