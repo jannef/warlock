@@ -37,19 +37,30 @@ skills with a directory in skill order, `of(skill)`, `id(name)`, `description(sk
 after `data/stock.toml` (a stock part's materials must be the profession's) through
 `ContentFiles::table("recipes")`, so campaigns' `data/recipes/<skill>/` join in.
 
-`data/recipes.toml` is the settings file the professions share; today each profession's line in
-the abilities menu (`[[profession]] skill, description`, "Your recipes as a smith."; a
-profession without a row shows its skill's description). Its struct is `deny_unknown_fields`:
-the forge's bands, the counted bands, and a failure's yield join it with P4b and P5.
+`data/recipes.toml` is the settings file the professions share: each profession's line in the
+abilities menu (`[[profession]] skill, description`, "Your recipes as a smith."; a profession
+without a row shows its skill's description), and the bands (`RecipeSettings`,
+`Recipes::settings`, `None` only for content without the file), all required, struct
+`deny_unknown_fields`:
+
+| Setting | Value | Meaning (read from P5 on) |
+|---|---|---|
+| `fine`, `marvellous`, `masterwork` | 6, 12, 20 | the check's margin from which a made item is Fine, Marvellous, a Masterwork (recipes.md §4) |
+| `cut_step` | 5 | a gem's cut rises a grade every step of margin (§5) |
+| `half_within`, `one_within` | 3, 6 | how far below the difficulty a counted recipe still makes half its count, one (copies of `fletch.toml`'s, which P6 retires) |
+| `yield` | 50 | the percent of the stock and object inputs a failure gives back (`yield_percent`) |
+| `free_wood` | forest, dense forest, swamp | `Landscape`s where wood is free (an arrow's shaft takes no billet) |
 
 | Field | Meaning |
 |---|---|
 | `id` | the file name; `craft:ID` names it |
 | `name` | the row's name (default: the result object's, capitalized, or the use's) |
-| `use` | a **built-in** recipe: `temper`, `whittle`, `fletch` (`RecipeUse`); its row runs that existing action with its own list and rules |
-| `result` | `{ object, count }`: a **generic** recipe's result, `count` dice |
-| `[recipe.parts]` | `blade = "stock"` (`PartSource::Stock`) or `head = { input = "arrowhead" }` (`PartSource::Input`); `main` is the first part; sorted into the result's part order |
-| `inputs` | `[{ object, count, per_made }]` |
+| `use` | a **built-in** recipe: `temper`, `whittle`, `fletch`, `cut`, `set` (`RecipeUse`); its row runs that existing action with its own list and rules. Cut and Set (Jewelcraft's) have no action yet (`RecipeUse::usable` false): their rows are greyed "not usable yet" (`RecipeLack::NotYet`), `craft:cut` says "You cannot do that yet.", and the profession screen does nothing on them, until P10 and P11 (which add `recipes/jewelcraft/cut.toml` and `set.toml`: the loader needs no file now) |
+| `result` | `{ object, count }`: a **generic** recipe's result; `count` dice (`RecipeCount::Dice`) or `"fletch"` (`RecipeCount::Fletch`, Fletch's count) |
+| `[recipe.parts]` | `main` is the first part; sorted into the result's part order. `blade = "stock"` (`PartSource::Stock`: the profession's stock), a **table of sources** `head = { input = "arrowhead", stock = ["bone", "stone"], optional = true }` (`PartSource::Sources`: the wizard's one step offers the input's stacks, then stock of the listed groups or materials of any profession, then None if `optional`; `stock` holds the materials of the part's `made_of` the list names, in `made_of` order; a name both a group and a material, `stone`, is the group), or `setting = { gem = true }` (`PartSource::Gem`: a cut loose gem, required) |
+| `inputs` | `[{ object, count, per_made }]`, or fixed stock: `{ material = "sinew", count }`, `{ group = "metal", count }` (`InputKind`; `RecipeInput::object()` for an object input) |
+| `failure`, `fumble` | `{ object }`: what a failed check, a natural 2, makes instead of nothing |
+| `brittle` | the result when an `optional` part is None |
 | `ornament` | an optional gem for the result's ornament part |
 | `difficulty`, `seconds` | a generic recipe's check base and time |
 | `station` | a terrain id that must stand beside the maker |
@@ -67,6 +78,27 @@ holds a material of the profession (`Stock::profession_of`), an input part namin
 part source of a known shape; inputs that are objects, counts above 0; an ornament only on a
 result with an ornament part (`ObjectDef::ornament` or its class's `[[ornament]]`); a station
 that is terrain. The settings file: known skills, each once, non-empty descriptions.
+
+The format's second half (#1350, `docs/design/recipes.md` §10) adds these checks, each with a
+refusal test:
+
+| Field | Refused when |
+|---|---|
+| a part's table | it names no source; `gem` with another source or `optional`; an `input` none of the recipe's object inputs, or one whose own material (`ObjectDef::material`) the part's `made_of` does not hold; a `stock` list empty, naming neither a group some material has nor a material, a material not on the part's `made_of`, or a group none of whose materials is (a recipe narrows, never widens) |
+| `gem = true` | the part's `made_of` holds no gem material |
+| `inputs` | not exactly one of `object`, `material`, `group`; an unknown object or material; a group no material has, or a gem's id (gems have no group); a count of 0 |
+| `count` | neither dice nor `"fletch"`; above 1 (or `fletch`) on an object that does not stack |
+| `failure`, `fumble` | an unknown object, or one that does not stack |
+| `brittle` | an unknown object; a recipe with no `optional` part. An `optional` part with no `brittle` is refused too: no object part can be absent today, so "a part the result can lack" has no case yet |
+| `use` | not one of the five; with a result, parts, inputs, ornament, difficulty, seconds, failure, fumble, or brittle |
+| settings | `fine` not above 0, `marvellous` not above `fine`, `masterwork` not above `marvellous`, `cut_step` not above 0, `half_within` below 0, `one_within` not above `half_within`, `yield` above 100, a `free_wood` landscape twice or unknown, a band missing |
+
+No shipped recipe uses these yet. Each is used by the phase that makes the first recipe needing
+it, which also builds its wizard step and its row's words and lack: the head step and `brittle`
+with P6 (arrows), stock inputs with P7 (sinew, iron), `gem = true` with P11, `failure` and
+`fumble` with P13 (brewing), the bands with P5. Until then the rows read only `"stock"` parts and
+object inputs. `data/stock.toml`'s `unit` and `[[material]]` overrides (P2b) are checked by
+`content/stock.rs`.
 
 The three built-ins: `recipes/metalcraft/temper.toml` (`anyone`, `station = "anvil"`),
 `recipes/woodcraft/whittle.toml` (`anyone`, `knife`), `recipes/woodcraft/fletch.toml` (`anyone`,
@@ -101,7 +133,8 @@ the cells beside the player, and the skills: presentation never decides availabi
   station ("an anvil"), "a knife", "a bow or crossbow ready", then the time in
   `Duration::spoken` ("about 10 minutes": Temper's and Whittle's `data/temper.toml`, Fletch's
   `data/fletch.toml` cut by Fletcher, a generic recipe's `seconds`). Never a difficulty or odds.
-- `unavailable`: the first `RecipeLack` that applies, in this order: `Skill` ("beyond your
+- `unavailable`: the first `RecipeLack` that applies, in this order: `NotYet` ("not usable
+  yet": a built-in without its action, Cut and Set), `Skill` ("beyond your
   skill": the trained value below `from`), `Station` ("no anvil beside you"), `Knife` ("no
   knife"), `Launcher` ("no bow or crossbow ready": `fletch::fletch_makes`), `Stock` ("no metal to
   hand": no piece whose material fits a stock part), `Input` ("no arrowheads").
@@ -183,9 +216,10 @@ under a profession with none. The `abilities` layer lists `Metalcraft… (skill)
 
 ## Tests
 
-`content/recipe_tests.rs` (the built-ins, a generic fixture of every field, each check's
-refusal, the settings file's), `world/craft_tests.rs` (rows by training and place, each reason,
-`craft:` refused with no time, the abilities menu's rows), `ability.rs`'s registry test (the
+`content/recipe_tests.rs` (the built-ins, a generic fixture of every field, the second half's
+fixtures of every new field and the old shape unchanged, each check's refusal, the settings
+file's bands and refusals), `world/craft_tests.rs` (rows by training and place, each reason,
+`craft:` refused with no time, the abilities menu's rows, Cut and Set not usable yet), `ability.rs`'s registry test (the
 profession rows in their skills' places, no Temper, Whittle, or Fletch row), `input.rs`'s
 walk-in test (the anvil still asks, opening the Temper list), `ui/profession_screen.rs` (a
 built-in row's action, a greyed row), and the text snapshots `profession-*` in

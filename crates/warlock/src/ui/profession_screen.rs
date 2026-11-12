@@ -141,6 +141,8 @@ impl ProfessionScreen {
             Some(RecipeUse::Temper) => ScreenAction::Open(ScreenName::Temper),
             Some(RecipeUse::Whittle) => ScreenAction::Open(ScreenName::Whittle),
             Some(RecipeUse::Fletch) => ScreenAction::Act(Action::Fletch),
+            // Greyed "not usable yet" until P10 and P11 build their actions.
+            Some(RecipeUse::Cut | RecipeUse::Set) => ScreenAction::Stay,
             // The forge's wizard asks for the picks (P5); until then the rules refuse.
             None => ScreenAction::Act(Action::Craft {
                 recipe: entry.key.clone(),

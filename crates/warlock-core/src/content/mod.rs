@@ -301,8 +301,8 @@ pub use quest_roll::{Candidate, Pick, Roll, Rolled, Variant, one_of};
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use ranged::{RangeBand, RangedRules};
 pub use recipe::{
-    PartSource, ProfessionText, RecipeDef, RecipeId, RecipeInput, RecipePart, RecipeResult,
-    RecipeUse, Recipes,
+    InputKind, PartSource, ProfessionText, RecipeCount, RecipeDef, RecipeId, RecipeInput,
+    RecipePart, RecipeResult, RecipeSettings, RecipeUse, Recipes,
 };
 pub use resource::{Build, MAX_RESOURCE, MaxFrom, OverTime, ResourceDef, ResourceId};
 pub use rod::{Rod, RodDoes, RodEffect, RodShape};
