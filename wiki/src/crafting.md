@@ -4,12 +4,13 @@ Three [skills](skills.md) are crafts that work materials: [Metalcraft](skills.md
 [Woodcraft](skills.md#skill-woodcraft), and [Jewelcraft](skills.md#skill-jewelcraft). Each works
 some [materials](materials.md#materials), and its checks use one [stat](stats.md). Everyone can
 take things apart for their materials: **salvage**. A smith trained in Metalcraft can also forge
-weapons at an anvil from metal **stock**: ingots of steel, iron, mithril, and the rest, which you
+weapons, armour, and tools at an anvil from metal **stock**: ingots of steel, iron, mithril, and the rest, which you
 can buy, find, or get by salvaging. Someone trained in Woodcraft can make knives, spears, clubs,
-and staves by hand, with a knife, from billets of wood, shards of bone, and blocks of flint or
-stone. The recipes are on the [Metalcraft…](abilities.md#ability-metalcraft) and
+staves, bows, crossbows, slings, a lute, and a pipe by hand, with a knife, from billets of wood,
+shards of bone and horn, hides, sinew, and blocks of flint or stone. The recipes are on the [Metalcraft…](abilities.md#ability-metalcraft) and
 [Woodcraft…](abilities.md#ability-woodcraft) lists in the
 [abilities menu](abilities.md#the-abilities-menu) (see [Professions](skill-uses.md#professions)).
+An alchemist brews potions from herbs: see [Brewing potions](recipes-alchemy.md).
 One trained in Jewelcraft can cut loose gems and set them (see [Gem cutting](gem-cutting.md)),
 and make rings and amulets (see [Making jewellery](#making-jewellery)) on the
 [Jewelcraft…](abilities.md#ability-jewelcraft) list.
@@ -72,8 +73,45 @@ What you make depends on the recipe, not the material. A flint knife is Woodcraf
 Dexterity; a steel knife is Metalcraft's, forged with Strength. A smith's spear still takes a
 wooden haft, but it is a Metalcraft recipe all the same.
 
+## Bows, crossbows, and instruments
+
+[Bows, crossbows, and slings](objects.md#class-missile-weapons) are made by hand too, never at an
+anvil. A bow is carved from wood,
+horn, or dragonbone and strung with a length of **sinew** (a [piece](materials.md#pieces) of it); a composite bow takes two. Sinew is not
+a part of the bow: it is used up, like the stock. After the bow's material you choose the sinew to
+use. A composite bow of horn is the true one; one of wood is a cheaper copy, named plain
+"composite bow".
+
+A crossbow is made of wood, but its lock and trigger take one ingot of any metal. After the wood
+you choose which ingot to use. Without sinew or an ingot the recipe is greyed out "no sinew to
+hand" or "no metal to hand".
+
+A lute (strung with sinew) and a long-stemmed pipe are made the same way. They have nothing to
+improve, so they always come out plain, however well the work goes.
+
 Some weapons are never made by hand. A battle axe or a great axe of stone would shatter, a
 stiletto is a slim steel point, and a sword of dragonbone is only ever found.
+
+## Forging armour and tools
+
+At the [anvil](terrain.md#terrain-anvil) a smith also forges [armour](combat.md#defence): mail and
+plate, metal shields and helmets, gauntlets, and iron-shod boots. The smith forges tools too: a
+[lantern](lantern.md) of iron or brass, a [pick-axe](digging.md#digging), and a mattock. You choose
+the metal and, for a buckler, a tower shield, or a helm, a gem, just as for a weapon. The leather
+of a boot, a lantern's glass, and a pick's haft cost nothing.
+
+Metal is priced **by weight**, so mail is costly. A chain mail shirt weighs 11 kg and takes 22
+ingots and two hours. A suit of plate weighs 22 kg and takes 44 ingots and four hours, and it is
+listed only from Metalcraft 60. A [salvaged](#salvage) suit gives back half: a chain shirt gives
+11 ingots.
+
+A stone pick or mattock needs no forge. It is a digger's first tool, knapped by hand from blocks
+of stone or flint with [Woodcraft](skills.md#skill-woodcraft) and a knife, like the
+[hand-made weapons](#making-a-weapon-by-hand).
+
+Some things are never made. Candles are bought, since nobody works wax. Rope is cloth, which no
+craft works yet. Keys only open the locks they were made for. Household goods can only be
+salvaged.
 
 ## Making jewellery
 
@@ -127,8 +165,34 @@ A **Fine**, **Marvellous**, or **Masterwork** weapon is exactly a weapon the anv
 twice, or three times (see [Forges](altars-forges-springs.md#forges)): each grade is one more
 improvement to one of its numbers, and the forge counts as that many attempts. So you can temper
 a Fine weapon further, but each attempt is as hard as on any once-tempered weapon, and a
-Masterwork can be made no finer. A failure makes nothing: you break the work up and get half the
+Masterwork can be made no finer. Armour improves in its [Defence](combat.md#defence) or
+[Protection](combat.md#protection). Something with no numbers to improve, like a lantern or a
+pick-axe, always comes out plain. A failure makes nothing: you break the work up and get half the
 stock back, and keep the gem.
+
+## Batches: arrowheads, arrows, and stones
+
+Some recipes make a **batch** of many: [arrowheads](#recipe-arrowheads) by the score at an anvil,
+[arrows](#recipe-arrows) and [crossbow bolts](#recipe-bolts) (see
+[Fletching](skill-uses.md#fletching)), [sling stones](#recipe-sling-stones) chipped from a block
+of stone (no knife needed), and [flaming arrows](#recipe-flaming-arrows), arrows wrapped in rag
+and soaked in a flask of oil. A batch has no grade. Your check sets how many you get:
+
+- beat the difficulty, and you get the whole count;
+- fall up to 3 short, half of it, rounded up;
+- fall up to 6 short, one;
+- fall further, none: "You spoil the whole batch."
+
+A natural 2 always spoils the batch; a natural 24 always makes the whole count.
+
+An **arrowhead** is the one thing a smith makes for someone else: one ingot of any metal makes
+twenty, of that metal. A fletcher puts one on each arrow, and the arrow takes its metal. Bone and
+flint need no smith: a shard or a block heads a whole batch of arrows by itself.
+
+A batch only uses what it makes. One billet of wood is enough for up to 11 arrows or 4 bolts; a
+batch makes no more than your billets and arrowheads cover. Flaming arrows take one arrow each, so
+four arrows make at most four. If the batch is spoiled you keep your arrowheads and arrows, and
+get half of the wood or the metal back (a single billet or ingot always comes back whole).
 
 ## Salvage
 

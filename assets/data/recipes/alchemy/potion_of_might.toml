@@ -1,0 +1,15 @@
+# Brewed by an alchemist (docs/design/recipes.md §6 "Potions (Alchemy)"; docs/dev/crafting.md
+# "Brewing"): herbs only, no station, the flask free. A failed brew leaves a murky draught, a
+# natural 2 a brewer's blunder; the herbs are spent either way.
+[[recipe]]
+id = "potion_of_might"
+result = { object = "potion_of_might" }
+inputs = [
+    { object = "mandrake", count = 1 },
+    { object = "comfrey", count = 1 },
+]
+difficulty = 14
+seconds = 1200
+from = 50
+failure = { object = "murky_draught" }
+fumble = { object = "brewers_blunder" }

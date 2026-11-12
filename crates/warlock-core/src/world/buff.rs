@@ -77,7 +77,6 @@ impl World {
             Action::Drink => ActionKind::Drink,
             Action::Forage => ActionKind::Forage,
             Action::Gather(_) => ActionKind::Gather,
-            Action::Fletch => ActionKind::Fletch,
             Action::Decipher { .. } => ActionKind::Decipher,
             Action::Temper { .. } => ActionKind::Temper,
             Action::Whittle { .. } => ActionKind::Whittle,

@@ -1,5 +1,6 @@
-# A fletcher's first tries: a shaft cut by eye and a sharpened tip. It flies once, and is not sold
-# (no `kind` or `frequency`, as the flaming arrow).
+# An arrow with no head: a shaft cut by eye and a sharpened tip, what the arrows recipe makes when
+# no head is chosen (recipes/woodcraft/arrows.toml's `brittle`), of the shaft's wood. It flies
+# once, and is not sold (no `kind` or `frequency`, as the flaming arrow).
 [[object]]
 id = "brittle_arrow"
 name = "brittle arrow"
@@ -7,6 +8,7 @@ glyph = "/"
 fg = "#b8a080"
 class = "missiles"
 materials = ["wood"]
+made_of = ["wood"]
 weight = 25
 value = 0
 stackable = true

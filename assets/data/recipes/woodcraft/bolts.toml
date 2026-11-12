@@ -1,0 +1,19 @@
+# Crossbow bolts, the arrows' twin for a crossbow ready (docs/design/recipes.md §6 "Missiles";
+# docs/dev/crafting.md "Arrows and bolts"): a metal arrowhead each, a bone shard or a stone block
+# a batch, or none (the brittle bolt); a billet of wood for about four bolts, free on wooded
+# ground.
+[[recipe]]
+id = "bolts"
+name = "Crossbow bolts"
+result = { object = "bolt", count = "fletch" }
+inputs = [{ object = "arrowhead", count = 1, per_made = true }]
+difficulty = 12
+seconds = 600
+knife = true
+launcher = true
+anyone = true
+brittle = "brittle_bolt"
+
+[recipe.parts]
+head = { input = "arrowhead", stock = ["bone", "stone"], optional = true }
+shaft = "stock"

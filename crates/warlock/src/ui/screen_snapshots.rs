@@ -796,14 +796,26 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
-    // A ranger after a batch (spec §8 "Fletching"): Woodcraft… in the skill's place; the
-    // message line says what was made.
+    // A ranger after a batch in the forest area's glade, where wood is free (spec §8
+    // "Fletching"; #1336): Woodcraft… in the skill's place; the message line says what was made.
     Case {
         name: "abilities-menu-fletch",
+        scenario: "forest",
         character: Some("human,male,ranger"),
         run: true,
-        actions: "fletch",
+        actions: "craft:arrows:-",
         screen: Some("abilities"),
+        ..BASE
+    },
+    // The arrows' wizard in the forest area's glade (#1336): the head step alone (the shaft is
+    // cut from the trees), nothing carried to head them, None on `-` for brittle arrows.
+    Case {
+        name: "craft-pick-arrows-head",
+        scenario: "forest",
+        character: Some("human,male,ranger"),
+        run: true,
+        screen: Some("abilities"),
+        keys: Some("f p"),
         ..BASE
     },
     // A ranger's Whittle list (#1028): the wooden weapons carried (the bow), not the knife.
@@ -954,6 +966,25 @@ const CASES: &[Case] = &[
         actions: "move:E pickup",
         screen: Some("profession"),
         keys: Some("c c a"),
+        ..BASE
+    },
+    // A witch's Alchemy (#1357; `--screen profession`, the first profession she has recipes of)
+    // after three gathers at the hub's fungus: the brews, those from a higher Alchemy greyed
+    // "beyond your skill", those short of herbs "not enough".
+    Case {
+        name: "profession-alchemy-herbs",
+        character: Some("human,female,witch"),
+        actions: "move:N*6 move:E*30 move:N*3 move:W*6 gather:W*3",
+        screen: Some("profession"),
+        ..BASE
+    },
+    // A brew chooses nothing: its row asks at once in the one dialog, the potion named truly.
+    Case {
+        name: "brew-dialog",
+        character: Some("human,female,witch"),
+        actions: "move:N*6 move:E*30 move:N*3 move:W*6 gather:W*3",
+        screen: Some("profession"),
+        keys: Some("> b"),
         ..BASE
     },
     // The smith's javelin after its iron head (#1351): the haft, Woodcraft's wood billets on a

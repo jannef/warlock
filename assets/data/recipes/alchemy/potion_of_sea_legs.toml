@@ -1,0 +1,15 @@
+# Brewed by an alchemist (docs/design/recipes.md §6 "Potions (Alchemy)", §9; docs/dev/crafting.md
+# "Brewing"): an elemental's essence and what binds it, no station, the flask free. A failed brew
+# leaves a murky draught, a natural 2 a brewer's blunder; the inputs are spent either way.
+[[recipe]]
+id = "potion_of_sea_legs"
+result = { object = "potion_of_sea_legs" }
+inputs = [
+    { object = "essence_of_water", count = 1 },
+    { object = "glowcap", count = 1 },
+]
+difficulty = 13
+seconds = 1200
+from = 40
+failure = { object = "murky_draught" }
+fumble = { object = "brewers_blunder" }

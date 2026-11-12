@@ -6,7 +6,7 @@
 //! menu lists one row for it ([`crate::ability::Ability::Profession`]), which opens its screen.
 //! Each file holds one `[[recipe]]`, its file name its id (unique across professions); they are
 //! read in path order into [`Content::recipes`], a [`RecipeId`] being an index (never saved:
-//! actions name recipes by id). A recipe is either **built in** (`use`: Temper, Whittle, Fletch,
+//! actions name recipes by id). A recipe is either **built in** (`use`: Temper and Whittle,
 //! which run their own actions with their own lists and rules, and Jewelcraft's Cut and Set,
 //! whose files give their `difficulty` and `seconds`) or **generic** (a `result` made from stock and inputs in `seconds` against
 //! `difficulty`; parsed and checked now, made from P5). The format's second half (P4b) is parsed
@@ -19,6 +19,7 @@
 use super::{Content, ContentError, Landscape, MaterialId, ObjectId, TerrainId, duplicate_id};
 use crate::dice::Dice;
 use crate::skills::SkillId;
+use crate::stats::Stat;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -33,8 +34,6 @@ pub enum RecipeUse {
     Temper,
     /// Whittle a wooden weapon with a knife (`world/temper.rs`).
     Whittle,
-    /// Make arrows or bolts for the launcher ready (`world/fletch.rs`).
-    Fletch,
     /// Cut or re-cut a loose gem (Jewelcraft's, docs/design/recipes.md §5; `world/cut.rs`).
     Cut,
     /// Set a cut gem in an item (Jewelcraft's, §5; `world/set.rs`).
@@ -42,10 +41,9 @@ pub enum RecipeUse {
 }
 
 impl RecipeUse {
-    pub const ALL: [RecipeUse; 5] = [
+    pub const ALL: [RecipeUse; 4] = [
         RecipeUse::Temper,
         RecipeUse::Whittle,
-        RecipeUse::Fletch,
         RecipeUse::Cut,
         RecipeUse::Set,
     ];
@@ -55,7 +53,6 @@ impl RecipeUse {
         match self {
             RecipeUse::Temper => "temper",
             RecipeUse::Whittle => "whittle",
-            RecipeUse::Fletch => "fletch",
             RecipeUse::Cut => "cut",
             RecipeUse::Set => "set",
         }
@@ -66,14 +63,13 @@ impl RecipeUse {
         match self {
             RecipeUse::Temper => "Temper",
             RecipeUse::Whittle => "Whittle",
-            RecipeUse::Fletch => "Fletch",
             RecipeUse::Cut => "Cut",
             RecipeUse::Set => "Set",
         }
     }
 
     /// Whether its file gives the check's `difficulty` and the work's `seconds` (Jewelcraft's
-    /// Cut and Set, whose numbers live in their recipes; Temper, Whittle, and Fletch keep theirs
+    /// Cut and Set, whose numbers live in their recipes; Temper and Whittle keep theirs
     /// in their own data files).
     pub const fn checked(self) -> bool {
         matches!(self, RecipeUse::Cut | RecipeUse::Set)
@@ -154,7 +150,8 @@ pub enum RecipeCount {
     /// Dice (`count = 10`, `count = "2d6"`; 1 by default).
     Dice(Dice),
     /// Fletch's rule (`count = "fletch"`): `fletch.toml`'s count and Woodcraft's share, the
-    /// margin scaling it by the counted bands.
+    /// margin scaling it by the counted bands; the ranger's Fletcher read with it (the arrows
+    /// and bolts, `world/craft_make.rs`).
     Fletch,
 }
 
@@ -192,7 +189,7 @@ pub struct RecipeDef {
     pub station: Option<TerrainId>,
     /// A knife carried.
     pub knife: bool,
-    /// A bow or crossbow ready that fletching makes ammunition for.
+    /// A launcher ready that shoots the result (its `ammo`; `data/fletch.toml`'s `[[makes]]`).
     pub launcher: bool,
     /// The trained value the recipe is listed from (0: anyone with the skill).
     pub from: u16,
@@ -217,6 +214,15 @@ pub struct ProfessionText {
     pub skill: SkillId,
     /// Its abilities-menu row's line ("Your recipes as a smith.").
     pub description: String,
+    /// The check's stat, over the stock's profession's (Alchemy's Intelligence: herbs are no
+    /// stock); without one the stock's decides (`world/craft_make.rs::profession_stat`).
+    pub stat: Option<Stat>,
+    /// The dialog's verb, the same way ("Brew").
+    pub verb: Option<String>,
+    /// What is said when a recipe with a `failure` object fails ("The brew clouds over.").
+    pub failed: Option<String>,
+    /// What is said when a recipe with a `fumble` object meets a natural 2.
+    pub fumbled: Option<String>,
 }
 
 /// The settings of `data/recipes.toml` the recipes share (docs/design/recipes.md §4, §5, §10).
@@ -282,6 +288,11 @@ impl Recipes {
             .find(|p| p.skill == skill)
             .map(|p| p.description.as_str())
     }
+
+    /// What `data/recipes.toml` says of profession `skill`, if it lists it.
+    pub fn profession(&self, skill: SkillId) -> Option<&ProfessionText> {
+        self.professions.iter().find(|p| p.skill == skill)
+    }
 }
 
 /// `data/recipes.toml`: the settings the recipes share (docs/design/recipes.md §10).
@@ -306,6 +317,14 @@ struct RecipesFile {
 struct ProfessionSpec {
     skill: String,
     description: String,
+    #[serde(default)]
+    stat: Option<Stat>,
+    #[serde(default)]
+    verb: Option<String>,
+    #[serde(default)]
+    failed: Option<String>,
+    #[serde(default)]
+    fumbled: Option<String>,
 }
 
 /// One file of `data/recipes/<skill>/`: one recipe (none in a file of comments only).
@@ -439,9 +458,17 @@ pub(super) fn parse<'a>(
                     row.skill
                 )));
             }
+            let empty = |line: &Option<String>| line.as_ref().is_some_and(String::is_empty);
+            if empty(&row.verb) || empty(&row.failed) || empty(&row.fumbled) {
+                return Err(err(format!("profession `{}`: an empty line", row.skill)));
+            }
             recipes.professions.push(ProfessionText {
                 skill,
                 description: row.description.clone(),
+                stat: row.stat,
+                verb: row.verb.clone(),
+                failed: row.failed.clone(),
+                fumbled: row.fumbled.clone(),
             });
         }
         recipes.settings = Some(settings_of(file).map_err(err)?);

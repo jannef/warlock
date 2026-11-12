@@ -152,6 +152,7 @@ pub(super) fn steps(content: &Content, lore: Lore<'_>, player: &Actor) -> Vec<Cr
         name: lore.listed(stack),
         short,
         takes: 1,
+        each: false,
         enough: true,
     };
     let pack = player.inventory.iter().enumerate();

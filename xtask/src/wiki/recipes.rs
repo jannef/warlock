@@ -7,7 +7,11 @@
 use super::text::{Term, anchored, capital, link};
 use std::fmt::Write as _;
 use warlock_core::combat::HIGHEST;
-use warlock_core::content::{Content, CutId, Cutting, MaterialId, PartSource, RecipeUse, counted};
+use warlock_core::content::{
+    Content, CutId, Cutting, InputKind, MaterialId, PartSource, RecipeCount, RecipeInput,
+    RecipeUse, counted,
+};
+use warlock_core::dice::Dice;
 use warlock_core::skills::Effect;
 use warlock_core::time::Duration;
 use warlock_core::world::{CutBand, Grade, SetBand, cut_band, cut_outcome, grade, set_band};
@@ -43,10 +47,11 @@ pub(super) fn recipes_woodcraft(content: &Content) -> String {
 }
 
 /// Every generic recipe of profession `skill`, by the skill it is listed from and its name: what
-/// it makes, what is chosen (each part and what it may be of), the stock it takes in its base
-/// material (or the first it may be of, once a group), the ornament, what it needs (a station, a
-/// knife), the time, the difficulty, and the chance it comes out made (not failed) at three skill
-/// values with an average stat (modifier 0).
+/// it makes and how many, what is chosen (each part and what it may be of), the stock it takes in
+/// its base material (else steel, the piece's own, else the first it may be of, once a group; a
+/// batch's at its most for an untrained maker), what else it uses up, the ornament, what it needs
+/// (a station, a knife, a launcher), the time, the difficulty, and the chance it comes out made
+/// (not failed; a batch whole) at three skill values with an average stat (modifier 0).
 pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
     let Some(skill_id) = content.skill_id(skill) else {
         return String::new();
@@ -56,8 +61,8 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
     let craft = (skill_def.benefits.iter()).find(|b| b.effect == Effect::Craft);
     let at = ODDS_AT.map(|v| format!("{v}"));
     let mut out = format!(
-        "| Recipe | Listed from | Chosen | Stock | Ornament | Needs | Time | Difficulty | Made at \
-         {} {} |\n|---|:---:|---|---|:---:|---|---|:---:|:---:|\n",
+        "| Recipe | Listed from | Makes | Chosen | Stock | Uses up | Ornament | Needs | Time | \
+         Difficulty | Made at {} {} |\n|---|:---:|:---:|---|---|---|:---:|---|---|:---:|:---:|\n",
         skill_def.name,
         at.join(" / ")
     );
@@ -66,11 +71,26 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
         .collect();
     rows.sort_by(|a, b| (a.from, &a.name, &a.id).cmp(&(b.from, &b.name, &b.id)));
     let piece = (content.object_id(warlock_core::piece::ID)).map(|o| content.object(o));
+    let fletch = content.fletch();
     for r in rows {
         let Some(result) = r.result.as_ref() else {
             continue;
         };
         let def = content.object(result.object);
+        let (makes, most) = match result.count {
+            RecipeCount::Dice(dice) if dice.is_fixed() => {
+                (dice.max().to_string(), dice.max().max(1).unsigned_abs())
+            }
+            RecipeCount::Dice(dice) => (dice.to_string(), dice.max().max(1).unsigned_abs()),
+            RecipeCount::Fletch => {
+                let (dice, per) =
+                    fletch.map_or((Dice::fixed(1), 1), |f| (f.count, f.value_per_count));
+                (
+                    format!("{dice} + {} ÷ {per}", skill_def.name),
+                    dice.max().max(1).unsigned_abs(),
+                )
+            }
+        };
         let mut chosen = Vec::new();
         let mut stock = Vec::new();
         let mut work = 0;
@@ -89,10 +109,23 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
                 continue;
             }
             let materials = materials(content, r.skill, def, part);
-            chosen.push(format!(
-                "{name}: {}",
-                of_words(content, def, part.part, &materials)
-            ));
+            let mut of = of_words(content, def, part.part, &materials);
+            // A head of arrowheads or stock, or none: only the stock is priced, a piece a batch.
+            if let PartSource::Sources {
+                input, optional, ..
+            } = &part.source
+                && (input.is_some() || *optional)
+            {
+                if let Some(o) = input {
+                    of = format!("{} or {of}", content.object(*o).plural);
+                }
+                if *optional {
+                    of.push_str(" or none");
+                }
+                chosen.push(format!("{name}: {of}"));
+                continue;
+            }
+            chosen.push(format!("{name}: {of}"));
             // Priced in the base material where the part may be of it, else the first, once a
             // group: another material of the group takes as many of its own.
             let group = |m: MaterialId| content.material(m).group.clone();
@@ -105,14 +138,32 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
                     continue;
                 }
                 groups.push(group(first));
-                let m = (order.iter().copied())
-                    .find(|&m| m == base.material && group(m) == group(first))
+                // The base material, else the piece's own (steel), else the group's cheapest.
+                let named = |want: MaterialId| {
+                    (order.iter().copied()).find(|&m| m == want && group(m) == group(first))
+                };
+                let m = (named(base.material))
+                    .or_else(|| {
+                        piece
+                            .and_then(|p| p.parts.first())
+                            .and_then(|p| named(p.material))
+                    })
+                    .or_else(|| {
+                        (order.iter().copied())
+                            .filter(|&m| group(m) == group(first))
+                            .min_by_key(|&m| content.material(m).value)
+                    })
                     .unwrap_or(first);
                 if n == 0 && m == base.material {
                     work = content.material(m).work;
                 }
-                let grams = u64::from(def.weight) * u64::from(base.share) / 100;
-                let count = warlock_core::piece::count_for(content, grams, base.material);
+                // The part's grams in `m`, as the made item weighs it (a wooden shield's weight
+                // in metal, a leather cap's in steel), for a batch at its most.
+                let weight = |m: MaterialId| u64::from(content.material(m).weight).max(1);
+                let grams = u64::from(def.weight) * u64::from(base.share) * weight(m)
+                    / weight(base.material)
+                    / 100;
+                let count = warlock_core::piece::count_for(content, grams * u64::from(most), m);
                 if let (Some(count), Some(piece)) = (count, piece) {
                     let (one, many) = warlock_core::piece::names(content, piece, m);
                     words.push(counted(&one, &many, count));
@@ -120,6 +171,16 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
             }
             stock.push(words.join(" or "));
         }
+        // What is used up besides: arrowheads, a bow's sinew, a crossbow's ingot of any metal.
+        let uses: Vec<String> = (r.inputs.iter())
+            .filter_map(|i| {
+                let words = input_words(content, piece, i)?;
+                Some(match i.per_made {
+                    true => format!("{words} for each made"),
+                    false => words,
+                })
+            })
+            .collect();
         let mut needs = Vec::new();
         if let Some(t) = r.station {
             let t = content.terrain(t);
@@ -128,6 +189,13 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
         if r.knife {
             needs.push("a knife".to_string());
         }
+        if r.launcher {
+            needs.push("a launcher for it, ready".to_string());
+        }
+        let or_dash = |list: &[String], by: &str| match list.is_empty() {
+            true => "—".to_string(),
+            false => list.join(by),
+        };
         let difficulty = match work {
             0 => r.difficulty.to_string(),
             w => format!("{} ({w:+} work)", r.difficulty),
@@ -140,17 +208,17 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
             .collect();
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} | {} | {} | {} ({} s) | {difficulty} | {} |",
+            "| {} | {} | {makes} | {} | {} | {} | {} | {} | {} ({} s) | {difficulty} | {} |",
             anchored(Term::Recipe, &r.id, &r.name),
-            r.from,
-            chosen.join("; "),
-            stock.join("; "),
-            if r.ornament { "yes" } else { "no" },
-            if needs.is_empty() {
-                "—".to_string()
-            } else {
-                needs.join(", ")
+            match r.anyone {
+                true => "anyone".to_string(),
+                false => r.from.to_string(),
             },
+            or_dash(&chosen, "; "),
+            or_dash(&stock, "; "),
+            or_dash(&uses, ", "),
+            if r.ornament { "yes" } else { "no" },
+            or_dash(&needs, ", "),
             Duration::seconds(u64::from(r.seconds)).spoken(),
             r.seconds,
             odds.join(" / "),
@@ -160,10 +228,129 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
         "\nStock is counted in pieces of the base material (an ingot is 500 g of steel). Another \
          material takes as many pieces of its own: a mithril ingot is lighter, and so is the \
          blade made of it. The difficulty adds the base material's work where it has one; another \
-         material adds its own instead (see the table of work above). The last column is the \
-         chance the work comes out at all, with an average stat.\n",
+         material adds its own instead (see the table of work above). A batch's stock is what the \
+         most it can make weighs, for a maker untrained in the skill; a smaller batch takes less, \
+         and one piece always covers at least one. The last column is the chance the work comes \
+         out at all (for a batch, all of it), with an average stat.\n",
     );
     out
+}
+
+/// An input in words: "a length of sinew", "an ingot of any metal", "20 arrowheads".
+fn input_words(
+    content: &Content,
+    piece: Option<&warlock_core::content::ObjectDef>,
+    input: &RecipeInput,
+) -> Option<String> {
+    let (one, many) = match &input.kind {
+        InputKind::Object(o) => {
+            let def = content.object(*o);
+            (def.name.clone(), def.plural.clone())
+        }
+        InputKind::Material(m) => warlock_core::piece::names(content, piece?, *m),
+        InputKind::Group(group) => {
+            let first = (content.materials().iter())
+                .position(|m| m.group.as_deref() == Some(group.as_str()))?;
+            let first = MaterialId(u16::try_from(first).ok()?);
+            let (name, plural, _) = content.stock().form_of(content, first)?;
+            (
+                format!("{name} of any {group}"),
+                format!("{plural} of any {group}"),
+            )
+        }
+    };
+    Some(counted(&one, &many, input.count))
+}
+
+/// The Alchemy values the brewing odds have a column for.
+const BREWERS: [u16; 3] = [20, 50, 100];
+
+/// Alchemy's recipes (the brews: no part, no ornament), by the value they are listed from and
+/// their name: the potion, what it takes (herbs, essences, a flask), time, difficulty, and the
+/// chance of a potion (not a murky draught or a brewer's blunder) at three Alchemy values with an
+/// average Intelligence.
+pub(super) fn brews(content: &Content) -> String {
+    let Some(alchemy) = content.skill_id("alchemy") else {
+        return String::new();
+    };
+    let craft = (content.skill(alchemy).benefits.iter())
+        .find(|b| b.effect == warlock_core::skills::Effect::Craft);
+    let bonus = |value: u16| craft.map_or(0, |b| b.at(value));
+    let settings = content.recipes().settings.as_ref();
+    let mut out = String::from("| Potion | Takes | Listed from | Time | Difficulty |");
+    for value in BREWERS {
+        let _ = write!(out, " Alchemy {value} |");
+    }
+    out.push_str("\n|---|---|:---:|---|:---:|");
+    out.push_str(&":---:|".repeat(BREWERS.len()));
+    out.push('\n');
+    let mut rows: Vec<_> = (content.recipes().of(alchemy))
+        .map(|(_, r)| r)
+        .filter(|r| r.result.is_some())
+        .collect();
+    rows.sort_by(|a, b| (a.from, &a.name).cmp(&(b.from, &b.name)));
+    let sides = HIGHEST / 2;
+    for r in rows {
+        let Some(result) = r.result.as_ref() else {
+            continue;
+        };
+        let potion = content.object(result.object);
+        let herbs: Vec<String> = (r.inputs.iter())
+            .filter_map(|i| {
+                let object = i.object()?;
+                let def = content.object(object);
+                let name = counted(&def.name, &def.plural, i.count);
+                Some(brew_input(content, object, &def.id, &name))
+            })
+            .collect();
+        let _ = write!(
+            out,
+            "| {} | {} | {} | {} | {} |",
+            anchored(Term::Brew, &r.id, &link(Term::Potion, &potion.id, &r.name)),
+            herbs.join(", "),
+            r.from,
+            Duration::seconds(u64::from(r.seconds)).spoken(),
+            r.difficulty,
+        );
+        for value in BREWERS {
+            if value < r.from {
+                out.push_str(" — |");
+                continue;
+            }
+            let mut made = 0;
+            for a in 1..=sides {
+                for b in 1..=sides {
+                    let natural = a + b;
+                    let margin = natural + bonus(value) - r.difficulty;
+                    if grade(settings, natural, margin) != Grade::Failed {
+                        made += 1;
+                    }
+                }
+            }
+            let percent = f64::from(made) * 100.0 / f64::from(sides * sides);
+            let _ = write!(out, " {percent:.0}% |");
+        }
+        out.push('\n');
+    }
+    out
+}
+
+/// What a brew takes, linked where it is told of: a herb to its row, a flask (oil, tar) to its
+/// potion row, an essence to the materials page's essences.
+fn brew_input(
+    content: &Content,
+    object: warlock_core::content::ObjectId,
+    id: &str,
+    name: &str,
+) -> String {
+    let herb = (content.herbs()).is_some_and(|h| h.herbs.iter().any(|h| h.object == object));
+    if herb {
+        link(Term::Herb, id, name)
+    } else if content.object(object).drink.is_some() {
+        link(Term::Potion, id, name)
+    } else {
+        format!("[{name}](materials.md#herbs-and-essences)")
+    }
 }
 
 /// The materials part `part` of `def` may be made of as the recipe takes it: a `"stock"` part

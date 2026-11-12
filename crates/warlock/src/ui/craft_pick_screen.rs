@@ -1,10 +1,11 @@
 //! The forging wizard (spec §8 "Skills": professions; docs/design/professions.md §8; #1335):
 //! what a generic recipe's row on a profession's screen opens. One paged list for each choice of
 //! the recipe, in the order the rules give them (`PerceptionView::craft_steps`): the stock for
-//! each chosen part ("blade"), each input, then the ornament (the cut gems carried, after a
-//! **None** row on `-`). A row is a stack as the inventory lists it, with how many the recipe
-//! takes of it ("uses 3"); a stack too small is greyed "too few" and cannot be picked. The
-//! header carries the recipe's name and the running choice ("Long sword — blade: steel"). A
+//! each chosen part ("blade"; the arrows' head: arrowheads, then shards and blocks, after a
+//! **None** row that makes them brittle), each input, then the ornament (the cut gems carried,
+//! after a **None** row on `-`). A row is a stack as the inventory lists it, with how many the
+//! recipe takes of it ("uses 3", an arrowhead "uses 1 each"); a stack too small is greyed "too
+//! few" and cannot be picked. The header carries the recipe's name and the running choice ("Long sword — blade: steel"). A
 //! letter on the page, or Enter on the `>` row, picks and goes to the next step; `-` picks None
 //! where a step allows it; Esc goes back a step, its pick kept (the list opens on
 //! it), and closes the wizard from the first. The last pick opens the one dialog
@@ -22,7 +23,7 @@ use crate::render::console::Console;
 use warlock_core::Action;
 use warlock_core::content::RecipeId;
 use warlock_core::perception::PerceptionView;
-use warlock_core::world::{CraftOption, CraftStep};
+use warlock_core::world::{CraftOption, CraftStep, CraftStepKind};
 
 /// Panel width: room for a stack's listed name with what the recipe takes of it.
 const WIDTH: i32 = 64;
@@ -261,9 +262,12 @@ impl CraftPickScreen {
             y += 1;
         }
         if self.list().is_empty() && fits(y) {
-            let none = match step.optional {
-                true => "Nothing carried would do; None leaves it plain.",
-                false => "Nothing carried will do.",
+            let none = match (step.optional, step.kind) {
+                (true, CraftStepKind::Ornament) => {
+                    "Nothing carried would do; None leaves it plain."
+                }
+                (true, _) => "Nothing carried would do; None makes them brittle.",
+                (false, _) => "Nothing carried will do.",
             };
             console.print(x + 2, y, none, TEXT_DIM);
         }
@@ -290,9 +294,10 @@ impl CraftPickScreen {
             if selected {
                 console.print(x, y, ">", ACCENT);
             }
-            let state = match option.enough {
-                true => format!("uses {}", option.takes),
-                false => "too few".to_string(),
+            let state = match (option.enough, option.each) {
+                (true, true) => format!("uses {} each", option.takes),
+                (true, false) => format!("uses {}", option.takes),
+                (false, _) => "too few".to_string(),
             };
             let state_x = right - state.chars().count() as i32;
             let room = (state_x - x - 3).max(0) as usize;

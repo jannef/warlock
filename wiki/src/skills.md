@@ -45,7 +45,7 @@ until their uses come. Their names there:
 - [Survival](skills.md#skill-survival), though it is a passive skill: **[Forage](abilities.md#ability-forage)**
 - [Jewelcraft](skills.md#skill-jewelcraft): **[Jewelcraft…](abilities.md#ability-jewelcraft)**, its [profession](skill-uses.md#professions)'s recipes (Cut and Set, see [Gem cutting](gem-cutting.md); rings and amulets, see [Making jewellery](crafting.md#making-jewellery))
 - [Metalcraft](skills.md#skill-metalcraft): **[Metalcraft…](abilities.md#ability-metalcraft)**, its [profession](skill-uses.md#professions)'s recipes (Temper, for everyone)
-- [Woodcraft](skills.md#skill-woodcraft): **[Woodcraft…](abilities.md#ability-woodcraft)**, its [profession](skill-uses.md#professions)'s recipes (Fletch and Whittle, for everyone, trained or not), and **[Wedge a door](abilities.md#ability-wedge)** for those
+- [Woodcraft](skills.md#skill-woodcraft): **[Woodcraft…](abilities.md#ability-woodcraft)**, its [profession](skill-uses.md#professions)'s recipes (arrows, bolts, sling stones, and Whittle for everyone, trained or not), and **[Wedge a door](abilities.md#ability-wedge)** for those
   trained in it (see [Wedging a door](doors.md#wedging-a-door))
 
 {{#include generated/skills.md}}

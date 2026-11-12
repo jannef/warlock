@@ -700,6 +700,7 @@ impl ScreenStack {
     fn craft_chosen(&self) -> Option<(RecipeId, Vec<Option<usize>>)> {
         self.screens.iter().rev().find_map(|s| match s {
             Screen::CraftPick(screen) => screen.chosen(),
+            Screen::Profession(screen) => screen.chosen(),
             _ => None,
         })
     }

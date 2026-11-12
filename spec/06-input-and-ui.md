@@ -463,13 +463,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a **profession** (`Ability::Profession`, §8 "Skills"; #1334), a skill with recipes, as one
     row in that skill's place named with an ellipsis ("Metalcraft…", "Woodcraft…"), which
     whoever is trained in the skill has, and everyone while one of its recipes is open to all
-    (Temper, Whittle, Fletch); never greyed, it opens the **profession screen**: its recipes the
-    player may see, grouped by what they make (the built-in Temper, Whittle, and Fletch first
-    under "Work"), each with what it takes in words ("a metal weapon or armour, an anvil, about
+    (Temper, Whittle, the arrows); never greyed, it opens the **profession screen**: its recipes
+    the player may see, grouped by what they make (the built-in Temper and Whittle first under
+    "Work"), each with what it takes in words ("a metal weapon or armour, an anvil, about
     10 minutes"; never a difficulty or odds), greyed with the first reason it cannot be made now
-    ("beyond your skill", "no anvil beside you", "no knife", "no bow or crossbow ready", "no metal
-    to hand", "no arrowheads"); a letter or Enter makes an available one (Temper's and Whittle's
-    lists ask which item over it; Fletch begins at once); fixed keys, named in its footer;
+    ("beyond your skill", "no anvil beside you", "no knife", "no bow ready", "no metal to hand",
+    "no arrowheads"); a letter or Enter makes an available one (Temper's and Whittle's lists ask
+    which item over it; a generic recipe opens the forging wizard, the arrows' head step offering
+    None for brittle ones); fixed keys, named in its footer;
     **Salvage** (`Ability::Salvage`, §8 "Skills", every profession's), after the skills' own uses,
     which everyone has, asking for an item (the Salvage list: what `world::salvageable` accepts,
     less what is worn or wielded), never greyed out;

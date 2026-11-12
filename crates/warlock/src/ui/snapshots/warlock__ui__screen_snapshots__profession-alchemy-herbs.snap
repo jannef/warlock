@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You gather ┌─ Alchemy: recipes ──────────────────────────────────────────── Page 1/2 ─┐
+ You search │                                                                          │
+            │ Potions                                                                  │
+            │ > a - Blasting flask             beyond your skill                       │
+            │   b - Flask of fire              beyond your skill                       │
+            │   c - Flask of frost             beyond your skill                       │
+            │   d - Flask of smoke             beyond your skill                       │
+            │   e - Flask of thunder           beyond your skill                       │
+            │   f - Greater potion of grace    beyond your skill                       │
+            │   g - Greater potion of might    beyond your skill                       │
+            │   h - Greater potion of presence beyond your skill                       │
+            │   i - Greater potion of vigour   beyond your skill                       │
+            │   j - Greater potion of will     beyond your skill                       │
+            │   k - Greater potion of wit      beyond your skill                       │
+            │   l - Pitch fire                 beyond your skill                       │
+            │   m - Potion of antidote         not enough sprigs of feverfew           │
+            │   n - Potion of barkskin         beyond your skill                       │
+            │   o - Potion of cat's eyes       beyond your skill                       │
+            │   p - Potion of clear head       not enough sprigs of vervain            │
+            │   q - Potion of cure disease     beyond your skill                       │
+            │   r - Potion of earthing         beyond your skill                       │
+            │   s - Potion of frost            beyond your skill                       │
+            │   t - Potion of full healing     beyond your skill                       │
+            │   u - Potion of grace            beyond your skill                       │
+            │                                                                          │
+            │ Takes an essence of fire, an essence of lightning, about 20 minutes.     │
+            │                                                                          │
+            │ a-u or Enter make   > < page   Esc back                                  │
+            └──────────────────────────────────────────────────────────────────────────┘
+ The Hub  ·  HP 13/13  ·  MP 13/13  ·  Lv 1  ·  Dandy: unhurt  ·  08:19                  ? controls

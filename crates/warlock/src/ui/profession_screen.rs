@@ -1,13 +1,13 @@
 //! A profession's screen (spec §8 "Skills"; docs/design/professions.md §8; #1334): what its row
 //! in the abilities menu ("Metalcraft…") opens. The recipes the player sees
 //! (`PerceptionView::recipes`), in the one paged list grouped by the result's item class, the
-//! built-in recipes (Temper, Whittle, Fletch) first under "Work". A row is the recipe's name and
+//! built-in recipes (Temper, Whittle) first under "Work". A row is the recipe's name and
 //! what it takes in words ("a metal weapon or armour, an anvil, about 10 minutes"), never a
 //! difficulty or the odds; one that cannot be made now is greyed with its reason in place of
 //! what it takes ("no anvil beside you"), which the line under the list then gives in full. A
 //! letter on the page, or Enter on the `>` row, makes a recipe that can be made: a built-in one
-//! runs as from its old row (Temper's and Whittle's lists over this screen, Fletch at once);
-//! a greyed one does nothing. The list keys turn the page; Esc closes it. Every key is the
+//! runs as from its old row (Temper's and Whittle's lists over this screen), a generic one opens
+//! the forging wizard (the arrows too); a greyed one does nothing. The list keys turn the page; Esc closes it. Every key is the
 //! list's own, fixed.
 
 use super::menu::{Hints, Nav, Panel, Press};
@@ -23,7 +23,7 @@ use warlock_core::skills::SkillId;
 
 /// Panel width: room for a recipe's name with what it takes.
 const WIDTH: i32 = 76;
-/// The name column's width, the letter's included.
+/// The name column's least width, the letter included (wider for a longer name).
 const NAME_W: i32 = 18;
 
 /// One recipe as the list shows it.
@@ -41,6 +41,8 @@ struct Entry {
     uses: Option<RecipeUse>,
     /// A generic recipe with choices to make: the forging wizard asks them.
     wizard: bool,
+    /// A generic recipe that chooses nothing (a brew) and can be made: the dialog confirms it.
+    confirm: bool,
 }
 
 #[derive(Debug)]
@@ -83,6 +85,7 @@ impl ProfessionScreen {
             .map(|row| {
                 let def = content.recipe(row.id);
                 let class = (def.result).map(|r| content.object(r.object).class);
+                let wizard = !view.craft_steps(row.id).is_empty();
                 let entry = Entry {
                     id: row.id,
                     key: def.id.clone(),
@@ -90,7 +93,8 @@ impl ProfessionScreen {
                     takes: row.takes,
                     why: row.unavailable.map(|why| why.reason(content)),
                     uses: def.uses,
-                    wizard: !view.craft_steps(row.id).is_empty(),
+                    wizard,
+                    confirm: !wizard && def.uses.is_none() && view.craft_plan(row.id, &[]).is_ok(),
                 };
                 (class, entry)
             })
@@ -109,6 +113,13 @@ impl ProfessionScreen {
     /// The profession shown.
     pub fn skill(&self) -> Option<SkillId> {
         self.skill
+    }
+
+    /// The recipe on the `>` row when it chooses nothing and can be made (a brew), with its
+    /// (empty) picks: what the confirming dialog asks about.
+    pub fn chosen(&self) -> Option<(RecipeId, Vec<Option<usize>>)> {
+        let entry = self.recipes.get(self.recipes.cursor())?;
+        entry.confirm.then(|| (entry.id, Vec::new()))
     }
 
     /// The run changed (a recipe made): the rows read again, the cursor where it was.
@@ -159,13 +170,14 @@ impl ProfessionScreen {
         match entry.uses {
             Some(RecipeUse::Temper) => ScreenAction::Open(ScreenName::Temper),
             Some(RecipeUse::Whittle) => ScreenAction::Open(ScreenName::Whittle),
-            Some(RecipeUse::Fletch) => ScreenAction::Act(Action::Fletch),
             Some(RecipeUse::Cut) => ScreenAction::Open(ScreenName::Cut),
             // The wizard's two steps: the item, then the gem (`world/set.rs`).
             Some(RecipeUse::Set) => ScreenAction::Open(ScreenName::CraftPick(entry.id)),
             // The forging wizard asks for the picks, then the dialog; a recipe with none to make
             // is applied at once, the rules saying what comes of it.
             None if entry.wizard => ScreenAction::Open(ScreenName::CraftPick(entry.id)),
+            // A brew chooses nothing: the dialog confirms what it uses.
+            None if entry.confirm => ScreenAction::Open(ScreenName::CraftConfirm),
             None => ScreenAction::Act(Action::Craft {
                 recipe: entry.key.clone(),
                 picks: Vec::new(),
@@ -184,6 +196,12 @@ impl ProfessionScreen {
         let right = panel.x + panel.w - 2;
         let fits = |y: i32| y < panel.y + panel.h - 2;
         let top = panel.y + 2;
+        // The name column fits the longest name ("x - Greater potion of presence") and a gap.
+        let longest = (self.recipes.iter())
+            .map(|e| e.name.chars().count() as i32)
+            .max()
+            .unwrap_or(0);
+        let name_w = NAME_W.max(longest + 5);
         if self.recipes.is_empty() && fits(top) {
             console.print(x + 2, top, "You know no recipe of it.", TEXT_DIM);
         }
@@ -213,7 +231,7 @@ impl ProfessionScreen {
                 console.print(x, y, ">", ACCENT);
             }
             console.print(x + 2, y, &format!("{letter} - {}", entry.name), color);
-            let state_x = x + 2 + NAME_W;
+            let state_x = x + 2 + name_w;
             let room = (right - state_x).max(0) as usize;
             let state = entry.why.as_ref().unwrap_or(&entry.takes);
             let state: String = state.chars().take(room).collect();
@@ -270,12 +288,14 @@ mod tests {
             screen.handle(&press('a'), &Bindings::default()),
             ScreenAction::Open(ScreenName::Temper)
         );
-        // Woodcraft's rows: the built-ins first, Fletch then Whittle (path order), then the
-        // hand-made weapons; all greyed without a knife.
+        // Woodcraft's rows: the built-in Whittle first, then the hand-made weapons and the
+        // missiles; all greyed without a knife.
         let mut screen = ProfessionScreen::new(Some(&world.perception()), Some(wood));
         screen.fit(100, 60);
         let names: Vec<&str> = screen.recipes.iter().map(|e| e.name.as_str()).collect();
-        assert_eq!(names[..3], ["Fletch", "Whittle", "Club"]);
+        assert_eq!(names[..2], ["Whittle", "Club"]);
+        assert!(names.contains(&"Arrows") && names.contains(&"Crossbow bolts"));
+        assert!(!names.contains(&"Fletch"));
         assert_eq!(
             screen.recipes.get(0).and_then(|e| e.why.as_deref()),
             Some("no knife")

@@ -229,18 +229,13 @@ pub enum Action {
     /// `world/craft.rs`): `recipe` its id (`data/recipes/<skill>/<id>.toml`), `picks` the
     /// inventory positions chosen for its steps in order, `None` a skipped optional one
     /// (`craft:long_sword:c,f`, `craft:dagger:a,-`). A built-in recipe's row runs its own action
-    /// (`temper:`, `whittle:`, `fletch`), so this is refused for it; every generic recipe is
-    /// refused too until the forge comes (P5). Refused, it takes no time.
+    /// (`temper:`, `whittle:`), so this is refused for it; a generic one is made by
+    /// `world/craft_make.rs` (the forge, the arrows: `craft:arrows:b,c`). Refused, it takes no
+    /// time.
     Craft {
         recipe: String,
         picks: Vec<Option<usize>>,
     },
-    /// Make arrows or bolts for the launcher ready (spec §8 "Fletching"; the Fletch recipe of
-    /// Woodcraft's profession screen): turns of the `fletch` action for
-    /// `data/fletch.toml`'s time, then a Dexterity check plus Woodcraft whose margin scales what
-    /// is made. Interrupted, it makes nothing. Refused (no time) with no knife carried, or no bow
-    /// or crossbow ready.
-    Fletch,
     /// Make out the carried stack at this position, a scroll of a type not yet identified,
     /// without reading it (spec §8 "Scrolls"; the Decipher ability, Decipher script's use;
     /// `world/decipher.rs`): `data/decipher.toml`'s time of turns of the `decipher` action, then
@@ -1009,7 +1004,6 @@ impl fmt::Display for Action {
                     .collect();
                 write!(f, "craft:{recipe}:{}", picks.join(","))
             }
-            Action::Fletch => f.write_str("fletch"),
             Action::Decipher { item } => write!(f, "decipher:{}", position_text(*item)),
             Action::Temper { item } => write!(f, "temper:{}", position_text(*item)),
             Action::Whittle { item } => write!(f, "whittle:{}", position_text(*item)),
@@ -1171,7 +1165,6 @@ impl FromStr for Action {
             "pray" => bare(Action::Pray),
             "drink" => bare(Action::Drink),
             "forage" => bare(Action::Forage),
-            "fletch" => bare(Action::Fletch),
             "craft" => {
                 let usage = || {
                     "`craft` needs a recipe's id and its picks, e.g. `craft:long_sword:c,f` \
@@ -1894,7 +1887,6 @@ mod tests {
             Action::Advance("stealth".into()),
             Action::Pray,
             Action::Forage,
-            Action::Fletch,
             Action::Craft {
                 recipe: "temper".into(),
                 picks: Vec::new(),

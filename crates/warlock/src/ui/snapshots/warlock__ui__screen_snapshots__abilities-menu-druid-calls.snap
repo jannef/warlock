@@ -19,7 +19,7 @@ expression: "render(case, content.clone())"
           │   j  Call of the forest  2 called, 20 mana                                  │
           │   k  Cloudburst          20 mana                                            │
           │ Skills                                                                      │
-          │   l  Alchemy             not usable yet                                     │
+          │   l  Alchemy…                                                               │
           │   m  Decipher            no unknown scroll                                  │
           │   n  Tame                no beast beside you to tame                        │
           │   o  Heal                nothing to treat                                   │

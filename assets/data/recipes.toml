@@ -10,6 +10,11 @@
 #   [[profession]]
 #     skill        the skill (skills.toml) whose directory it is
 #     description  the abilities menu's line for its row
+#     stat         the check's stat when no chosen stock names one (stock.toml's `stat` does for
+#                  stock; herbs are no stock, so Alchemy names Intelligence here)
+#     verb         the confirming dialog's verb when no chosen stock names one ("Brew")
+#     failed       said when a recipe with a `failure` object fails
+#     fumbled      said when a recipe with a `fumble` object meets a natural 2
 #
 # and the bands the making reads (each above the last; used from the phases that make things):
 #
@@ -17,21 +22,26 @@
 #                a Masterwork (docs/design/recipes.md §4; below `fine` it is plain)
 #   cut_step     the margin a gem's cut rises by, a cut a step (§5)
 #   half_within  how far below the difficulty a counted recipe (arrows) still makes half its count
-#   one_within   ... still makes one (both as fletch.toml's, which the arrows recipe retires)
+#   one_within   ... still makes one
 #   yield        the percent of the stock and object inputs a failure gives back
-#   free_wood    the landscapes where wood is free: an arrow's shaft takes no billet
+#   free_wood    the landscapes where wood is free: a `count = "fletch"` recipe's `"stock"` part
+#                of wood (the arrows' and bolts' shaft) has no step and takes no billet there
 #
 # A recipe file, `recipes/<skill>/<id>.toml`, holds one [[recipe]]:
 #
 #   id          its file name (unique across professions); `craft:ID` names it
 #   name        the row's name (default: the result's name, or the action's for a `use` recipe)
-#   use         a built-in recipe: `temper`, `whittle`, `fletch`, `cut`, or `set` (Jewelcraft's
+#   use         a built-in recipe: `temper`, `whittle`, `cut`, or `set` (Jewelcraft's
 #               two). Its row runs that action, with its
 #               own list and rules; it takes no result, parts, inputs, ornament, failure, fumble,
 #               or brittle, and a `difficulty` and `seconds` only for `cut` and `set`, which
-#               must give both (the others keep theirs in temper.toml and fletch.toml)
+#               must give both (the others keep theirs in temper.toml)
 #   result      { object = "long_sword", count = 1 }: what is made (`count` dice, or "fletch" for
-#               Fletch's count; above 1 only for a stackable object)
+#               the arrows' count, fletch.toml's with Woodcraft's share and the ranger's
+#               Fletcher; above 1 only for a stackable object). A count above 1 (or "fletch")
+#               makes the recipe counted: no grades, the check's margin scales the count
+#               (`half_within`, `one_within`), its stock is priced by the batch's weight, and an
+#               input `per_made` caps the batch at what the stack chosen holds
 #   [recipe.parts]  the result's parts the maker chooses (`main` is the first part; a part not
 #               listed is the base item's material):
 #                 blade = "stock"    a stack of stock of the profession whose material the part
@@ -53,7 +63,8 @@
 #   seconds     the work's time (1 or more)
 #   station     a terrain that must stand beside the maker (`anvil`)
 #   knife       true: a knife carried
-#   launcher    true: a bow or crossbow ready that fletching makes ammunition for
+#   launcher    true: a launcher ready that shoots the result (its `ammo`, fletch.toml's
+#               [[makes]])
 #   from        the trained value the recipe is listed from (default 0)
 #   anyone      true: listed for those untrained in the skill too
 #   failure     { object = "murky_draught" }: what a failed check makes instead of nothing (a
@@ -62,8 +73,8 @@
 #   brittle     the object made when an `optional` part is None; a recipe with an `optional`
 #               part names one, and only such a recipe
 #
-# Only built-in recipes exist yet; generic ones (the forge, arrows) come with the phases of the
-# professions design that make them.
+# Alchemy's recipes (recipes/alchemy/) take herbs only and choose nothing: no part, no ornament,
+# their inputs taken from the pack; the dialog confirms what they use.
 
 fine = 6
 marvellous = 12
@@ -73,6 +84,14 @@ half_within = 3
 one_within = 6
 yield = 50
 free_wood = ["forest", "dense_forest", "swamp"]
+
+[[profession]]
+skill = "alchemy"
+description = "Your recipes as a brewer of potions."
+stat = "intelligence"
+verb = "Brew"
+failed = "The brew clouds over and settles murky. That was not what you meant to make."
+fumbled = "The brew seethes and turns a colour no book speaks of."
 
 [[profession]]
 skill = "jewelcraft"
