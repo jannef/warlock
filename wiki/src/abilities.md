@@ -99,7 +99,9 @@ you never choose them, they work by themselves as you fight. They have their own
   stones**, and **Whittle** (see [Whittling](skill-uses.md#whittling)). A recipe you cannot make
   now is greyed out with the reason: "no anvil beside you", "no knife", "no bow ready".
 - **Jewelcraft…**: those trained in [Jewelcraft](skills.md#skill-jewelcraft) have it, in the
-  skill's place. It holds **Cut** (see [Gem cutting](gem-cutting.md)).
+  skill's place. It holds **Cut** (see [Gem cutting](gem-cutting.md)), **Set** (see
+  [Setting a gem](gem-cutting.md#setting-a-gem)), and the rings and amulets (see
+  [Making jewellery](crafting.md#making-jewellery)).
 - **Wedge a door**: anyone trained in [Woodcraft](skills.md#skill-woodcraft) has it, in the skill's place among the Skills. Choose
   a direction, and you spend a turn wedging the closed door that way shut, so that creatures must
   kick it in (see [Wedging a door](doors.md#wedging-a-door)).

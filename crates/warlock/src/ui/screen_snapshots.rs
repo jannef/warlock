@@ -73,6 +73,11 @@ const HOARD: &str = "move:SW*2 pickup move:NE*2 move:E*2 move:NE pickup move:SW 
 /// garnet).
 const GEM_CLOSET: &str = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*6 move:SW move:W*3 \
     search:50 move:S open:W move:W*2 pickup";
+/// [`GEM_CLOSET`] by a craftsperson raised to Jewelcraft 17 (three levels' skill rolls), the hand
+/// axe out of the hand: ready to Set.
+const SET_READY: &str = "xp:4000 talent:hardy advance:jewelcraft*8 talent:healthy \
+    advance:jewelcraft*8 talent:lean advance:jewelcraft*8 move:N*3 open:N move:N*2 move:E*16 \
+    open:S move:S*6 move:SW move:W*3 search:50 move:S open:W move:W*2 pickup remove:main_hand";
 /// Next to the hub's hermit.
 macro_rules! hermit {
     () => {
@@ -859,6 +864,37 @@ const CASES: &[Case] = &[
         screen: Some("cut"),
         ..BASE
     },
+    // Set (#1356) by the same craftsperson, raised to Jewelcraft 17 by three levels' rolls, the
+    // hand axe taken out of the hand: the wizard's item step lists the axe (its pommel unset),
+    Case {
+        name: "set-pick-item",
+        seed: Some(8),
+        character: Some("human,male,craftsperson"),
+        actions: SET_READY,
+        screen: Some("profession"),
+        keys: Some("b"),
+        ..BASE
+    },
+    // its gem step the sapphire alone (never the uncut garnet),
+    Case {
+        name: "set-pick-gem",
+        seed: Some(8),
+        character: Some("human,male,craftsperson"),
+        actions: SET_READY,
+        screen: Some("profession"),
+        keys: Some("b a"),
+        ..BASE
+    },
+    // and the dialog names the axe as it would be.
+    Case {
+        name: "set-pick-dialog",
+        seed: Some(8),
+        character: Some("human,male,craftsperson"),
+        actions: SET_READY,
+        screen: Some("profession"),
+        keys: Some("b a a"),
+        ..BASE
+    },
     // A warrior carries no knife: Woodcraft's screen (its row in the abilities menu, `e`) greys
     // Fletch and Whittle, each with the reason in place of what it takes (#1334).
     Case {
@@ -961,7 +997,7 @@ const CASES: &[Case] = &[
         keys: Some("i b"),
         ..BASE
     },
-    // `--screen craft-pick`: the first recipe with a choice, the arrowheads, with nothing carried.
+    // `--screen craft-pick`: the first recipe with a choice, the amber amulet, with nothing carried.
     Case {
         name: "craft-pick-first",
         scenario: "forge",

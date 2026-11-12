@@ -43,6 +43,34 @@ otherwise. Compare the worth in the table above.
 
 A natural 2 shatters the gem, whatever its size.
 
+## Setting a gem
+
+**Set**, the other gem recipe on [Jewelcraft…](abilities.md#ability-jewelcraft), puts a cut gem
+into an item you already have: a sword's pommel, a shield's or bow's inlay, a helmet's studs, a
+ring's or an amulet's setting. You need Jewelcraft 10. Choose the item, then the gem; you are
+asked to confirm, with the item named as it will be: "Set a sapphire-pommelled hand axe?"
+
+- The item must have a place for a gem with none in it yet ("It is set already."). Something you
+  wear or wield must come off first.
+- Only a cut gem can be set, never an uncut one.
+
+It takes 20 minutes, anywhere. If something comes into view, you stop, nothing is lost, and the
+time is gone. Then you make one check, as for cutting: 2d12, plus your Dexterity modifier, the
+craft points of Jewelcraft, and your talents for Dexterity checks, against 12 plus the gem's
+work.
+
+- **Made:** the gem goes in with its size and cut, and the item is named by it ("It is now a
+  ruby-pommelled long sword."). A set gem adds its worth to the item and does nothing else.
+- **Failed:** the item is untouched, and the gem chips: its cut drops one (down to crude), and if
+  it cannot, its size drops one. A tiny crude gem has nothing left to lose and is gone.
+- **A natural 2** shatters the gem.
+
+{{#include generated/gem-setting.md}}
+
+Weapons forged with a gem in their ornament need no Set: the smith sets it with the work, with no
+check, and it is never lost.
+
 ## Training
 
-Every cut you finish may train [Jewelcraft](skills.md#getting-better), whatever came of it.
+Every cut or setting you finish may train [Jewelcraft](skills.md#getting-better), whatever came of
+it.

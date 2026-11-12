@@ -1,0 +1,13 @@
+# An amber amulet: its pendant from a lump of amber, the leather cord free: Jewelcraft's, by
+# Dexterity (docs/design/recipes.md §6 "Rings and amulets"; docs/dev/crafting.md "Jewellery").
+# No grade.
+[[recipe]]
+id = "amber_amulet"
+result = { object = "amber_amulet" }
+verb = "Make"
+difficulty = 12
+seconds = 3600
+from = 10
+
+[recipe.parts]
+pendant = { stock = ["amber"] }

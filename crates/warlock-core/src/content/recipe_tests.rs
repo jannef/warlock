@@ -176,6 +176,7 @@ fn the_built_in_recipes_are_the_forges_weapons_armour_tools_and_temper_and_woodc
         [
             ("Arrows", None),
             ("Crossbow bolts", None),
+            ("Bone amulet", None),
             ("Club", None),
             ("Composite bow", None),
             ("Crossbow", None),
@@ -199,12 +200,42 @@ fn the_built_in_recipes_are_the_forges_weapons_armour_tools_and_temper_and_woodc
             ("Whittle", Some(RecipeUse::Whittle))
         ]
     );
-    // Jewelcraft's Cut (P10), for the trained alone.
-    assert_eq!(of(jewel), [("Cut", Some(RecipeUse::Cut))]);
+    // Jewelcraft's Cut (P10) and Set and the jewellery (P11), for the trained alone.
     assert_eq!(
-        recipes.description(jewel),
-        Some("Your work as a gem cutter.")
+        of(jewel),
+        [
+            ("Amber amulet", None),
+            ("Cut", Some(RecipeUse::Cut)),
+            ("Gold amulet", None),
+            ("Gold ring", None),
+            ("Iron ring", None),
+            ("Jade amulet", None),
+            ("Set", Some(RecipeUse::Set)),
+            ("Silver ring", None)
+        ]
     );
+    // The jewellery (docs/design/recipes.md §6 "Rings and amulets"): difficulty, seconds, from,
+    // an ornament on the rings, and the dialog's verb; the bone amulet is Woodcraft's.
+    for (id, difficulty, seconds, from, ornament, skill) in [
+        ("iron_ring", 11, 3600, 0, true, "jewelcraft"),
+        ("silver_ring", 13, 3600, 20, true, "jewelcraft"),
+        ("gold_ring", 13, 3600, 20, true, "jewelcraft"),
+        ("bone_amulet", 10, 1800, 0, false, "woodcraft"),
+        ("jade_amulet", 12, 3600, 10, false, "jewelcraft"),
+        ("amber_amulet", 12, 3600, 10, false, "jewelcraft"),
+        ("gold_amulet", 14, 5400, 30, false, "jewelcraft"),
+    ] {
+        let r = content.recipe(recipes.id(id).expect(id));
+        let got = (r.difficulty, r.seconds, r.from, r.ornament, r.skill);
+        let skill = content.skill_id(skill).expect(skill);
+        assert_eq!(got, (difficulty, seconds, from, ornament, skill), "{id}");
+        assert!(!r.anyone && r.station.is_none(), "{id}");
+        let verb = (r.skill == jewel).then(|| "Make".to_string());
+        assert_eq!(r.verb, verb, "{id}");
+    }
+    let set = content.recipe(recipes.id("set").expect("set"));
+    assert_eq!((set.difficulty, set.seconds, set.from), (12, 1200, 10));
+    assert_eq!(recipes.description(jewel), Some("Your work as a jeweller."));
     // The other built-ins are open to everyone, as they were before (#1337 Q3).
     let built_in = (recipes.list.iter()).filter(|r| r.uses.is_some_and(|u| !u.checked()));
     assert!(built_in.clone().all(|r| r.anyone && r.result.is_none()));
@@ -443,7 +474,7 @@ fn the_formats_second_half_loads_part_sources_gems_stock_inputs_and_failures() {
     assert_eq!(amulet.fumble, Some(object("brittle_arrow")));
 
     // Jewelcraft is a profession with its directory; Cut and Set load as built-ins with their
-    // checks' numbers (Cut is shipped, Set a fixture until P11).
+    // checks' numbers (the fixture stands in for the shipped Set).
     let jewel = content.skill_id("jewelcraft").expect("jewelcraft");
     assert!(recipes.professions().contains(&jewel));
     let cut = recipe("cut");
@@ -452,7 +483,6 @@ fn the_formats_second_half_loads_part_sources_gems_stock_inputs_and_failures() {
     let set = recipe("set");
     assert_eq!(set.uses, Some(RecipeUse::Set));
     assert_eq!((set.difficulty, set.seconds, set.from), (12, 1200, 10));
-    assert!(RecipeUse::Cut.usable() && !RecipeUse::Set.usable() && RecipeUse::Temper.usable());
 }
 
 #[test]

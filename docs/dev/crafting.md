@@ -63,7 +63,8 @@ when empty) on `ProfessionText` (`Recipes::profession`), and the bands (`RecipeS
 |---|---|
 | `id` | the file name; `craft:ID` names it |
 | `name` | the row's name (default: the result object's, capitalized, or the use's) |
-| `use` | a **built-in** recipe: `temper`, `whittle`, `cut`, `set` (`RecipeUse`); its row runs that existing action with its own list and rules. Cut and Set (Jewelcraft's, `RecipeUse::checked`) give their check's `difficulty` and `seconds` in their file; Cut is "Cutting a gem" below. Set has no action yet (`RecipeUse::usable` false): its row is greyed "not usable yet" (`RecipeLack::NotYet`), `craft:set` says "You cannot do that yet.", and the profession screen does nothing on it, until P11 (which adds `recipes/jewelcraft/set.toml`) |
+| `use` | a **built-in** recipe: `temper`, `whittle`, `cut`, `set` (`RecipeUse`); its row runs that existing action with its own list and rules. Cut and Set (Jewelcraft's, `RecipeUse::checked`) give their check's `difficulty` and `seconds` in their file; Cut is "Cutting a gem" below, Set "Setting a gem" |
+| `verb` | the dialog's verb where it is not the profession's: `"Make"` on Jewelcraft's jewellery, whose profession says "Cut". A recipe's `verb` comes before its profession row's in `data/recipes.toml` (Alchemy's "Brew"), which comes before the stock's (`stock.toml`), else "Make" (`craft_make::profession_verb`); Set's dialog says its name, "Set" |
 | `result` | `{ object, count }`: a **generic** recipe's result; `count` dice (`RecipeCount::Dice`) or `"fletch"` (`RecipeCount::Fletch`, the arrows' count: "Arrows and bolts" below); above 1 or `"fletch"` makes it **counted** |
 | `[recipe.parts]` | `main` is the first part; sorted into the result's part order. `blade = "stock"` (`PartSource::Stock`: the profession's stock), a **table of sources** `head = { input = "arrowhead", stock = ["bone", "stone"], optional = true }` (`PartSource::Sources`: the wizard's one step offers the input's stacks, then stock of the listed groups or materials of any profession, then None if `optional`; `stock` holds the materials of the part's `made_of` the list names, in `made_of` order; a name both a group and a material, `stone`, is the group), or `setting = { gem = true }` (`PartSource::Gem`: a cut loose gem, required) |
 | `inputs` | `[{ object, count, per_made }]`, or fixed stock: `{ material = "sinew", count }`, `{ group = "metal", count }` (`InputKind`; `RecipeInput::object()` for an object input) |
@@ -117,7 +118,8 @@ The two built-ins open to everyone: `recipes/metalcraft/temper.toml` (`anyone`, 
 "anvil"`) and `recipes/woodcraft/whittle.toml` (`anyone`, `knife`). Temper, Whittle, and the
 arrows and bolts (once Fletch's built-in, #1336) stay open to everyone (#1337 Q3). Jewelcraft's
 `recipes/jewelcraft/cut.toml` (`difficulty = 12`, `seconds = 1800`, `from = 0`, not `anyone`:
-the trained's alone) is the third.
+the trained's alone) is the third, and `recipes/jewelcraft/set.toml` (`difficulty = 12`,
+`seconds = 1200`, `from = 10`) the fourth.
 
 The generic recipes (P5, #1335; `docs/design/recipes.md` §6 "Melee weapons", the metal route):
 the seven swords under `recipes/metalcraft/`, each `station = "anvil"`, its main part (the long
@@ -312,14 +314,17 @@ the cells beside the player, and the skills: presentation never decides availabi
   sources is its choices joined by "or" ("an arrowhead for each made or a bone shard or a block of
   flint"); a counted recipe's stock is priced for the batch at its most; wood free here is not
   said. Never a difficulty or odds.
-- `unavailable`: the first `RecipeLack` that applies, in this order: `NotYet` ("not usable
-  yet": a built-in without its action, Set), `Skill` ("beyond your
+- `unavailable`: the first `RecipeLack` that applies, in this order: `Skill` ("beyond your
   skill": the trained value below `from`), `Station` ("no anvil beside you"), `Knife` ("no
-  knife"), `Launcher(result)` ("no bow ready", "no crossbow ready": `fletch::shoots`), `Stock`
+  knife"), for Set `set::lack`'s `Setting` ("nothing to set a gem in") and `Gem` ("no gem to
+  hand"), `Launcher(result)` ("no bow ready", "no crossbow ready": `fletch::shoots`), `Stock`
   ("no metal to hand", "no wood to hand": no piece whose material fits a stock part, wood free on
   wooded ground for the arrows; a required part with sources wants its input or its stock),
   `Input` ("not enough arrowheads", "not enough sprigs of moonwort": too few carried; an input a
-  part's sources name is that part's).
+  part's sources name is that part's), `Gem` for a recipe with a gem part and no cut gem
+  carried (the gold amulet).
+- `takes` names a gem part "a cut gem" ("a gold ingot, a cut gem, about 1 hour and 30
+  minutes").
 
 ## The profession screen
 
@@ -354,10 +359,11 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
 - **Steps** (`craft_steps`, `PerceptionView::craft_steps(recipe)`): one `CraftStep` per choice in
   the wizard's order: each chosen part in part order, a stock part (`"stock"`, or a table of
   `stock` alone, P5b; `CraftStepKind::Stock`, labelled by the part's name, "blade", or for an
-  unnamed main part by its stock's group, "metal"; none for wood free here, "Arrows and bolts")
-  or a part with a table of sources with an input or `optional` (`Sources`: the input's stacks
+  unnamed main part by its stock's group, "metal"; none for wood free here, "Arrows and bolts"),
+  a part with a table of sources with an input or `optional` (`Sources`: the input's stacks
   whose material the part's `made_of` holds, then the pieces of its `stock` materials as
-  carried, `optional` when None may be chosen), each object input no part's sources name
+  carried, `optional` when None may be chosen), or a gem part (`Gem`, P11: "Jewellery" below),
+  each object input no part's sources name
   (`Input`), then the ornament (`Ornament`, `optional`; the part is `ObjectDef::ornament` or the
   class's `[[ornament]]`). Each lists the stacks carried that fit, `CraftOption { at, name (as
   the inventory lists it), short (the material: "steel", "ruby"), takes, each (for every one
@@ -367,7 +373,7 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
   of the result's weight scaled by the material's weight over the base part's (as the made item
   weighs it), in pieces (`piece::count_for`): a mithril blade takes as many mithril ingots as a
   steel one takes steel. A recipe with no part and no ornament (a brew) has no steps ("Brewing"
-  below). A recipe with a gem part or more than `MAX_PICKS` (8) steps has no
+  below). A recipe with more than `MAX_PICKS` (8) steps has no
   steps either, and `craft:` refuses it ("You cannot make that yet.") until the phase that
   builds its step.
 - **The plan** (`craft_plan`, `PerceptionView::craft_plan(recipe, picks)`; `resolve`): every
@@ -558,7 +564,7 @@ refused), `content/fletch.rs` (the trimmed file's refusals).
 
 `crates/warlock/src/ui/craft_pick_screen.rs`, `ScreenName::CraftPick(RecipeId)` (skipped by
 `--screen`; `--screen craft-pick` is `ScreenName::FirstCraftPick`, the first recipe with a
-choice: the arrowheads). The profession screen opens it for a generic recipe with steps
+choice: the amber amulet). The profession screen opens it for a generic recipe with steps
 (`Entry::wizard`; one without steps is applied at once, the rules saying why). One `PagedList`
 per step, grouped by the stacks' item class, read from `craft_steps` when it opens: a row is
 `letter - name` with "uses 3" ("uses 1 each" for a `per_made` input), greyed "too few" and unpickable when the stack holds too few; an
@@ -621,6 +627,73 @@ gem), dispatched from `World::start_craft` by one arm to `World::start_cut`; its
   ruby's fates with their worth, the odds by bonus on a ruby and a smokestone, all through
   `cut_band` and `cut_outcome`).
 
+## Setting a gem
+
+`world/set.rs` (P11, #1356; `docs/design/recipes.md` §5), tests in `world/set_tests.rs`. Set is
+Jewelcraft's built-in recipe, run by `Action::Craft` itself (`craft:set:ITEM,GEM`, two picks),
+dispatched from `World::start_craft` by one arm to `World::start_set`; its turns are
+`ActionKind::Craft`, its work `Spent::Set(set::Setting)`.
+
+- **The wizard**: the profession screen's Set row opens `ScreenName::CraftPick(set)`, the forging
+  wizard. `craft_steps` and `craft_plan` hand a Set recipe to `set::steps` and `set::plan` (one
+  line each): two steps, `CraftStepKind::Item` ("item": `settable` stacks not worn or wielded)
+  and `CraftStepKind::Gem` ("gem": the cut loose gems, `craft_make::cut_gem`), neither optional;
+  the plan's verb is the recipe's name, "Set", its name the item as it would be ("a
+  sapphire-pommelled hand axe"), its uses "the" and the gem. Text snapshots `set-pick-item`,
+  `set-pick-gem`, `set-pick-dialog`.
+- **What can be set** (`settable`, `ornament_part`): an item whose object names its `ornament`
+  part, else whose class has an `[[ornament]]` row in `data/gems.toml`, with no part of a gem's
+  material (`MaterialDef::gem`) in that place: a gold amulet's base ruby setting counts as set. A
+  loose gem, a piece, and a spirit weapon are not.
+- **Refused, no time**, in order: below `from` ("That is beyond your skill."), no item pick ("You
+  must choose the item."), no gem pick ("You must choose the gem."), more than two ("That is more
+  than the work takes."), no such stack ("You carry no such thing."), an item with no ornament
+  part ("No gem can be set in that."), one set already ("It is set already."), worn or wielded
+  ("Take it off first."), the gem not a cut loose gem ("Only a cut gem can be set."), either
+  protected ("You dare not work on it."), unpaid shop goods (`may_loose`).
+- **Time**: the recipe's `seconds` (20 minutes) by `keep_at`; stopped early, "...; you put down
+  your work." and nothing changes.
+- **The check**: Cut's, against `difficulty` + the gem's `work`; `set_band(natural, margin)`
+  (`SetBand`): a natural 2 `Shattered`, a natural 24 or a margin of 0 or more `Set`, else
+  `Chipped`.
+- **The outcome** (`World::set_out`): set, one item is set apart and replaced by itself with the
+  gem as its ornament part (`ItemPart::gem` with the part's id, replacing an own part of that
+  place; `item_parts::check`), said "You set the ruby. It is now a ruby-pommelled long sword."
+  The item's identification is not changed. Either way one gem is set apart and removed; chipped,
+  `salvage::chipped` gives it back a cut rougher or a size smaller ("The ruby slips and chips."
+  then "It is now a medium ruby."), or, with neither to lose, it is gone ("The ruby
+  shatters."), as on a natural 2.
+- **Marks**: `Use::Craft` on the recipe's skill, whatever came of it.
+- **The wiki**: `gem-cutting.md#setting-a-gem` (generated `recipes::gem_setting`: the odds by
+  bonus on a ruby and a smokestone, through `set_band`).
+
+## Jewellery
+
+P11 (#1356; `docs/design/recipes.md` §6 "Rings and amulets"), generic recipes:
+
+| Recipe | Profession | Parts | `difficulty` | `seconds` | `from` |
+|---|---|---|---|---|---|
+| iron_ring | Jewelcraft | main `{ stock = ["iron"] }`; an ornament | 11 | 3600 | 0 |
+| silver_ring | Jewelcraft | main `{ stock = ["silver"] }`; an ornament | 13 | 3600 | 20 |
+| gold_ring | Jewelcraft | main `{ stock = ["gold"] }`; an ornament | 13 | 3600 | 20 |
+| jade_amulet | Jewelcraft | main `{ stock = ["jade"] }` | 12 | 3600 | 10 |
+| amber_amulet | Jewelcraft | pendant `{ stock = ["amber"] }` (the cord free) | 12 | 3600 | 10 |
+| gold_amulet | Jewelcraft | chain `{ stock = ["gold"] }`, setting `{ gem = true }` | 14 | 5400 | 30 |
+| bone_amulet | Woodcraft, a knife | main `{ stock = ["bone"] }` (the group: bone, horn, ivory, dragonbone) | 10 | 1800 | 0 |
+
+- Each ring is its own metal (a recipe names its base object); a 10 g ring takes a whole ingot
+  (`count_for`'s minimum of one, recipes.md §12 item 12). Jewelcraft's name `verb = "Make"`.
+- **A gem part** (`PartSource::Gem`): `craft_make`'s `Step::Gem`, a step of the cut loose gems
+  that cannot be skipped (`CraftStepKind::Gem`, labelled by the part, "setting"); resolved as the
+  ornament is (`ItemPart::gem` with the part's id, given back whole on a failure). The row is
+  greyed `RecipeLack::Gem` ("no gem to hand") with no cut gem carried, and `craft:` refuses
+  "You have no gem to hand." with no time.
+- No aspect, so never graded; a failure of metal on an item with no aspect says "The work goes
+  wrong, and you save what you can of it." (the brittle blade's line is for arms and armour).
+- The wiki's table: generated `recipes-jewelcraft.md` (`recipes::recipes_jewelcraft`), under
+  `crafting.md`'s "The recipes"; the prose in `crafting.md#making-jewellery`. The first generic
+  recipe with steps, `--screen craft-pick`'s, is now the amber amulet.
+
 ## Salvage
 
 `world/salvage.rs` (one module; one line each in `world/mod.rs`'s `Spent` and dispatch,
@@ -677,9 +750,10 @@ under a profession with none. The `abilities` layer lists `Metalcraft… (skill)
 `content/recipe_tests.rs` (the built-ins, a generic fixture of every field, the second half's
 fixtures of every new field and the old shape unchanged, each check's refusal, the settings
 file's bands and refusals), `world/craft_tests.rs` (rows by training and place, each reason,
-`craft:` refused with no time, the abilities menu's rows, Cut usable and Set not yet), `world/cut_tests.rs` (Cutting a gem), `ability.rs`'s registry test (the
+`craft:` refused with no time, the abilities menu's rows, Jewelcraft's rows), `world/cut_tests.rs` (Cutting a gem), `ability.rs`'s registry test (the
 profession rows in their skills' places, no Temper, Whittle, or Fletch row; `world/fletch_tests.rs`
 for the counted recipes), `input.rs`'s
 walk-in test (the anvil still asks, opening the Temper list), `ui/profession_screen.rs` (a
-built-in row's action, a greyed row), and the text snapshots `profession-*` in
+built-in row's action, a greyed row), `world/set_tests.rs` (Setting a gem, Jewellery), and the
+text snapshots `profession-*` and `set-pick-*` in
 `ui/screen_snapshots.rs`. The forge's tests are under "Making a recipe" and "The forging wizard".

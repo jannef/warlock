@@ -11,7 +11,9 @@ shards of bone and horn, hides, sinew, and blocks of flint or stone. The recipes
 [Woodcraft…](abilities.md#ability-woodcraft) lists in the
 [abilities menu](abilities.md#the-abilities-menu) (see [Professions](skill-uses.md#professions)).
 An alchemist brews potions from herbs: see [Brewing potions](recipes-alchemy.md).
-One trained in Jewelcraft can cut loose gems: see [Gem cutting](gem-cutting.md).
+One trained in Jewelcraft can cut loose gems and set them (see [Gem cutting](gem-cutting.md)),
+and make rings and amulets (see [Making jewellery](#making-jewellery)) on the
+[Jewelcraft…](abilities.md#ability-jewelcraft) list.
 
 ## Who works what
 
@@ -111,11 +113,35 @@ Some things are never made. Candles are bought, since nobody works wax. Rope is 
 craft works yet. Keys only open the locks they were made for. Household goods can only be
 salvaged.
 
+## Making jewellery
+
+[Jewelcraft](skills.md#skill-jewelcraft) makes rings and amulets anywhere, with no tools, using
+Dexterity. Open [Jewelcraft…](abilities.md#ability-jewelcraft) and choose one. The lists work as
+at the anvil: first the stock, then a gem if the piece takes one.
+
+- **Rings** are each of their own metal: an iron ring takes iron, a gold ring gold. A ring is
+  light, but it still takes a whole ingot. You may set a cut gem in it as you make it, or choose
+  None and set one later with [Set](gem-cutting.md#setting-a-gem).
+- **Amulets**: a jade amulet takes a block of jade, an amber amulet a lump of amber (its cord
+  costs nothing). A gold amulet takes a gold ingot and a cut gem for its setting, which it cannot
+  do without: without a cut gem it is greyed out "no gem to hand". The gem names it: "a gold and
+  sapphire amulet".
+- **A bone amulet** is carved by hand, so it is [Woodcraft](skills.md#skill-woodcraft)'s, with a
+  knife in your pack. It takes a shard of bone, horn, ivory, or dragonbone; its cord costs
+  nothing.
+
+Rings and amulets are never Fine or better: they come out plain, however well you do. A failure
+gives back half the stock (at least one piece) and keeps the gem.
+
 ## The recipes
 
 You know a recipe by your skill in its craft, never by learning it: each is listed from a skill
 value, and greyed out "beyond your skill" below it. Only those trained in the craft see these
 recipes.
+
+### Jewelcraft
+
+{{#include generated/recipes-jewelcraft.md}}
 
 ### Metalcraft
 

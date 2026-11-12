@@ -8,7 +8,7 @@
 //! read in path order into [`Content::recipes`], a [`RecipeId`] being an index (never saved:
 //! actions name recipes by id). A recipe is either **built in** (`use`: Temper and Whittle,
 //! which run their own actions with their own lists and rules, and Jewelcraft's Cut and Set,
-//! whose files give their `difficulty` and `seconds`; Set not usable yet) or **generic** (a `result` made from stock and inputs in `seconds` against
+//! whose files give their `difficulty` and `seconds`) or **generic** (a `result` made from stock and inputs in `seconds` against
 //! `difficulty`; parsed and checked now, made from P5). The format's second half (P4b) is parsed
 //! and checked here, and used by the phases that make the recipes needing it: part sources
 //! (`input`, a `stock` list, `optional` with `brittle`), `gem` parts, inputs of a material or a
@@ -36,7 +36,7 @@ pub enum RecipeUse {
     Whittle,
     /// Cut or re-cut a loose gem (Jewelcraft's, docs/design/recipes.md §5; `world/cut.rs`).
     Cut,
-    /// Set a cut gem in an item (Jewelcraft's, §5): not usable yet (P11).
+    /// Set a cut gem in an item (Jewelcraft's, §5; `world/set.rs`).
     Set,
 }
 
@@ -66,11 +66,6 @@ impl RecipeUse {
             RecipeUse::Cut => "Cut",
             RecipeUse::Set => "Set",
         }
-    }
-
-    /// Whether its action exists yet (Set comes with P11).
-    pub const fn usable(self) -> bool {
-        !matches!(self, RecipeUse::Set)
     }
 
     /// Whether its file gives the check's `difficulty` and the work's `seconds` (Jewelcraft's
@@ -202,6 +197,9 @@ pub struct RecipeDef {
     pub anyone: bool,
     /// The built-in action the row runs, if it is one.
     pub uses: Option<RecipeUse>,
+    /// The dialog's verb, where it is not the profession's (`stock.toml`): a ring is made, not
+    /// cut ("Make").
+    pub verb: Option<String>,
     /// What a failed check makes instead of nothing (stackable; the inputs are spent).
     pub failure: Option<ObjectId>,
     /// What a natural 2 makes instead of nothing (stackable).
@@ -362,6 +360,7 @@ struct RecipeSpec {
     anyone: bool,
     #[serde(rename = "use")]
     uses: Option<String>,
+    verb: Option<String>,
     failure: Option<ObjectSpec>,
     fumble: Option<ObjectSpec>,
     brittle: Option<String>,
@@ -603,6 +602,7 @@ fn resolve(spec: RecipeSpec, skill: SkillId, content: &Content) -> Result<Recipe
         from: spec.from,
         anyone: spec.anyone,
         uses: None,
+        verb: spec.verb.clone(),
         failure: None,
         fumble: None,
         brittle: None,

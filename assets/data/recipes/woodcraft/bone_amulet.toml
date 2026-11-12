@@ -1,0 +1,12 @@
+# A bone amulet carved by hand from the bone group (bone, horn, ivory, dragonbone), the cord
+# free: Woodcraft's, with a knife carried (docs/design/recipes.md §6 "Rings and amulets";
+# docs/dev/crafting.md "Jewellery"). No grade: an amulet has no aspect to improve.
+[[recipe]]
+id = "bone_amulet"
+result = { object = "bone_amulet" }
+difficulty = 10
+seconds = 1800
+knife = true
+
+[recipe.parts]
+main = { stock = ["bone"] }

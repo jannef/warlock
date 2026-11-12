@@ -1,0 +1,14 @@
+# A gold ring, of gold alone, with an optional gem in its setting: Jewelcraft's, by Dexterity
+# (docs/design/recipes.md §6 "Rings and amulets"; docs/dev/crafting.md "Jewellery"). Each ring is
+# its own metal; a 10 g ring still takes a whole ingot (the design's §12 item 12). No grade.
+[[recipe]]
+id = "gold_ring"
+result = { object = "gold_ring" }
+verb = "Make"
+difficulty = 13
+seconds = 3600
+from = 20
+ornament = true
+
+[recipe.parts]
+main = { stock = ["gold"] }

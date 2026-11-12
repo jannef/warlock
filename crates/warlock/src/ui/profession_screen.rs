@@ -171,8 +171,8 @@ impl ProfessionScreen {
             Some(RecipeUse::Temper) => ScreenAction::Open(ScreenName::Temper),
             Some(RecipeUse::Whittle) => ScreenAction::Open(ScreenName::Whittle),
             Some(RecipeUse::Cut) => ScreenAction::Open(ScreenName::Cut),
-            // Greyed "not usable yet" until P11 builds its action.
-            Some(RecipeUse::Set) => ScreenAction::Stay,
+            // The wizard's two steps: the item, then the gem (`world/set.rs`).
+            Some(RecipeUse::Set) => ScreenAction::Open(ScreenName::CraftPick(entry.id)),
             // The forging wizard asks for the picks, then the dialog; a recipe with none to make
             // is applied at once, the rules saying what comes of it.
             None if entry.wizard => ScreenAction::Open(ScreenName::CraftPick(entry.id)),

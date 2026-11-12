@@ -253,6 +253,7 @@ mod sear;
 mod search;
 mod second_wind;
 mod service;
+mod set;
 mod shoot;
 mod shop;
 mod shrine;
@@ -362,6 +363,7 @@ use rest::Ended;
 pub use salvage::{chipped, salvageable};
 pub use sanctuary::Hallow;
 pub use scribe::scribe_turns;
+pub use set::{SetBand, set_band, settable};
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
 pub use sign_picks::BREATH_RANGE;
 pub use siphon::SIPHON_RANGE;
@@ -776,6 +778,8 @@ enum Spent {
     Cut(cut::GemWork),
     /// Salvaging an item for its materials (see [`World::salvage`]).
     Salvage(salvage::Salvaging),
+    /// Setting a cut gem in an item (see [`World::set`]).
+    Set(set::Setting),
     /// Taming a beast beside the player (see [`World::tame`]).
     Tame(tame::Taming),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
@@ -1443,6 +1447,7 @@ impl World {
             Spent::Craft(work) => self.make(work, &mut events),
             Spent::Cut(work) => self.cut(work, &mut events),
             Spent::Salvage(work) => self.salvage(work, &mut events),
+            Spent::Set(work) => self.set(work, &mut events),
             Spent::Tame(taming) => self.tame(taming, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
@@ -2080,6 +2085,8 @@ mod search_tests;
 mod service_haggle_tests;
 #[cfg(test)]
 mod service_tests;
+#[cfg(test)]
+mod set_tests;
 #[cfg(test)]
 mod shoot_tests;
 #[cfg(test)]
