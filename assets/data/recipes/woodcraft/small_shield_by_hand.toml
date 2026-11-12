@@ -1,0 +1,13 @@
+# A small shield of wood, hide, chitin, or dragonscale, with an inlay, by hand: Woodcraft's, with a
+# knife carried and no station (docs/design/recipes.md §6 "Shields", the hand route;
+# docs/dev/crafting.md "Hide gear"). The stock is priced by the weight.
+[[recipe]]
+id = "small_shield_by_hand"
+result = { object = "small_shield" }
+difficulty = 10
+seconds = 3600
+knife = true
+ornament = true
+
+[recipe.parts]
+main = { stock = ["wood", "hide", "chitin", "dragonscale"] }

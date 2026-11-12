@@ -1,0 +1,12 @@
+# A leather apron of hide (clothing: plain at any margin): Woodcraft's, with a knife carried and no
+# station (docs/design/recipes.md §6 "Clothing", the hand route; docs/dev/crafting.md "Hide gear").
+# The stock is priced by the weight.
+[[recipe]]
+id = "leather_apron"
+result = { object = "leather_apron" }
+difficulty = 8
+seconds = 1800
+knife = true
+
+[recipe.parts]
+main = { stock = ["hide"] }

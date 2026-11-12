@@ -120,6 +120,11 @@ pub(super) fn lack(
     if recipe.uses.is_some_and(|u| !u.usable()) {
         return Some(RecipeLack::NotYet);
     }
+    // A stock input (studded leather's ingot) has no step until P7 (#1352): greyed, as `craft:`
+    // refuses it.
+    if recipe.inputs.iter().any(|i| i.object().is_none()) {
+        return Some(RecipeLack::NotYet);
+    }
     let value = player.skills.value(recipe.skill).unwrap_or(0);
     if value < recipe.from {
         return Some(RecipeLack::Skill);

@@ -7,7 +7,7 @@ take things apart for their materials: **salvage**. A smith trained in Metalcraf
 weapons at an anvil from metal **stock**: ingots of steel, iron, mithril, and the rest, which you
 can buy, find, or get by salvaging. Someone trained in Woodcraft can make knives, spears, clubs,
 and staves by hand, with a knife, from billets of wood, shards of bone, and blocks of flint or
-stone. The recipes are on the [Metalcraft…](abilities.md#ability-metalcraft) and
+stone, and armour, shields, and clothes from hides. The recipes are on the [Metalcraft…](abilities.md#ability-metalcraft) and
 [Woodcraft…](abilities.md#ability-woodcraft) lists in the
 [abilities menu](abilities.md#the-abilities-menu) (see [Professions](skill-uses.md#professions)).
 
@@ -71,6 +71,28 @@ wooden haft, but it is a Metalcraft recipe all the same.
 
 Some weapons are never made by hand. A battle axe or a great axe of stone would shatter, a
 stiletto is a slim steel point, and a sword of dragonbone is only ever found.
+
+## Making armour and clothes by hand
+
+[Woodcraft](skills.md#skill-woodcraft) also works hides. With a knife in your pack you can make
+shields, a leather jerkin, studded leather, scale mail of bone, caps and helms, cloaks, gloves,
+boots, and plain clothes and shoes, anywhere. Choose the stock for the main part, as for a weapon:
+a shield may be of wood, hide, chitin, or dragonscale; scale mail of bone or dragonscale.
+
+A **hide** weighs 1.4 kg, so it goes much further than a billet: a small shield takes 13 billets
+of wood but only 2 hides. A leather jerkin takes 3 hides, a fur cloak 2 fur pelts, and a pair of
+shoes 1 hide. The tables below give every count.
+
+Studded leather and hobnailed boots also take one ingot of any metal for the studs or nails. The
+ingot is used up and is no part of what you make. These two recipes are greyed out "not usable
+yet" for now.
+
+Armour, shields, helmets, cloaks, gloves, and boots come out
+[Fine, Marvellous, or a Masterwork](#how-well-it-comes-out) like a weapon. Clothes and shoes have
+nothing to improve, so they always come out plain.
+
+Some things are never made yet: the padded coat, the wool cloak, and anything else of cloth or
+wool wait for a craft that weaves; a reed kilt is only bought or found.
 
 ## The recipes
 

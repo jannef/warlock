@@ -1,0 +1,13 @@
+# A pair of turnshoes of hide (clothing: plain at any margin): Woodcraft's, with a knife carried and
+# no station (docs/design/recipes.md §6 "Clothing", the hand route; docs/dev/crafting.md "Hide
+# gear"). The stock is priced by the weight.
+[[recipe]]
+id = "turnshoes"
+name = "Turnshoes"
+result = { object = "turnshoes" }
+difficulty = 7
+seconds = 1200
+knife = true
+
+[recipe.parts]
+main = { stock = ["hide"] }

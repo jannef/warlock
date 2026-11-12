@@ -1,0 +1,12 @@
+# A fur cloak of pelts or hides: Woodcraft's, with a knife carried and no station
+# (docs/design/recipes.md §6 "Cloaks, gloves, boots", the hand route; docs/dev/crafting.md "Hide
+# gear"). The stock is priced by the weight.
+[[recipe]]
+id = "fur_cloak"
+result = { object = "fur_cloak" }
+difficulty = 10
+seconds = 3600
+knife = true
+
+[recipe.parts]
+main = { stock = ["fur", "leather"] }

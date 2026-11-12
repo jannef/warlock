@@ -184,6 +184,55 @@ so a hand knife may also be of ivory or dragonbone (both `bone`); jade is no wea
   and greyed, the knife, skill, and station greyings, the profession's stat, verb, and mark, a
   bone javelin made and still thrown).
 
+## Hide gear
+
+P8 (#1353; `docs/design/recipes.md` §6 "Shields", "Body armour", "Helmets", "Cloaks, gloves,
+boots", "Clothing", the Woodcraft rows; the Metalcraft rows are P9's, #1354) adds Woodcraft's
+hand-made armour and clothing, one file each under `recipes/woodcraft/`, every one `knife = true`,
+no station, trained only, its main part a table of `stock`. Hide is Woodcraft's (`stock.toml`'s
+`hide` row, `unit = 8`: a leather hide is 1.4 kg, eight pieces' worth), so a hide count comes out
+of `piece::count_for` by weight like any other and is never written in a file. A base with a
+smith's route too has its hand route at `<base>_by_hand` (the smith's file keeps `<base>` for
+P9).
+
+| Recipe | Main `stock` | `difficulty` | `seconds` | `from` | Stock |
+|---|---|---|---|---|---|
+| buckler_by_hand | wood, hide, chitin, dragonscale | 10 | 3600 | 0 | 3 billets, 1 hide, 3 shards |
+| small_shield_by_hand | the same; an inlay | 10 | 3600 | 0 | 13 billets, 2 hides, 12 shards |
+| large_shield_by_hand | the same; an inlay | 12 | 5400 | 20 | 30 billets, 4 hides |
+| tower_shield_by_hand | the same | 14 | 7200 | 30 | 24 billets, 3 hides |
+| leather_jerkin | hide | 11 | 3600 | 0 | 3 hides |
+| studded_leather | hide; `inputs` 1 ingot of `metal` | 13 | 5400 | 20 | 5 hides, 1 ingot |
+| scale_mail_by_hand | bone, dragonscale | 14 | 7200 | 30 | 28 shards, 4 hides |
+| leather_cap_by_hand | hide, bone | 9 | 1800 | 0 | 1 hide, 3 shards |
+| iron_helm_by_hand | hide, bone | 11 | 3600 | 10 | 1 hide, 3 shards |
+| great_helm_by_hand | hide, bone | 13 | 5400 | 30 | 1 hide, 6 shards |
+| fur_cloak, travelling_cloak | fur, leather | 10 | 3600 | 0 | 2 pelts; 1 hide |
+| leather_gloves, leather_boots | hide | 9 | 1200, 1800 | 0 | 1 hide |
+| hide_tunic, leather_apron | hide | 8 | 1800 | 0 | 1 hide |
+| sandals, shoes, turnshoes, soft_boots | hide | 7 | 1200 | 0 | 1 hide |
+| hobnailed_boots | hide; `inputs` 1 ingot of `metal` | 7 | 1200 | 0 | 1 hide, 1 ingot |
+| clogs | wood | 7 | 1200 | 0 | 5 billets |
+
+- **Counts by weight**: chitin is lighter than wood, so a small shield takes 12 shards where the
+  design's table wrote 13; the rule (by weight) wins over the table.
+- **Names**: the pairs and the suit are named without "pair of" ("Shoes", "Scale mail") by the
+  file's `name`; the rest by the result.
+- **Grades**: shields, armour, helmets, cloaks, gloves, and boots have an aspect and come out
+  Fine to Masterwork by the bands; clothing has none and is plain at any margin (the existing
+  rule, "An item with no aspect is plain").
+- **The ingot inputs** (studded leather's studs, the hobnails) are a stock input
+  (`{ group = "metal", count = 1 }`), whose wizard step is P7's (#1352). Until it lands
+  `craft::lack` greys any recipe with a stock input "not usable yet" (`RecipeLack::NotYet`) and
+  `craft:` refuses it ("You cannot make that yet."), as `craft_make::steps` already did; the
+  data and its counts are in place. P7 drops that greying with its step.
+- Hide parts on metal items (a long sword's grip, iron-shod boots' leather) stay free
+  (recipes.md §12 item 13). Never yet: the padded coat, the wool cloak, every cloth garment
+  (tailoring), the reed kilt.
+- Tests: `world/craft_hide_tests.rs` (each file's fields, the counts, a jerkin made from three
+  hides, cloaks of pelts and of a hide, graded gear and plain clothing, the knife and skill
+  greyings, the ingot recipes greyed and refused).
+
 ## The rows: `Ability::Profession`
 
 `ability.rs`: `Ability::Profession(SkillId)`, `Source::Skill`, named "Metalcraft…" (the skill's

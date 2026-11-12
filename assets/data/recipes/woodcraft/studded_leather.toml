@@ -1,0 +1,14 @@
+# A studded leather jerkin of hides, its studs an ingot of any metal (spent, never a part):
+# Woodcraft's, with a knife carried and no station (docs/design/recipes.md §6 "Body armour", the
+# hand route; docs/dev/crafting.md "Hide gear"). The stock is priced by the weight.
+[[recipe]]
+id = "studded_leather"
+result = { object = "studded_leather" }
+difficulty = 13
+seconds = 5400
+knife = true
+from = 20
+inputs = [{ group = "metal", count = 1 }]
+
+[recipe.parts]
+main = { stock = ["hide"] }

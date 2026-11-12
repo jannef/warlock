@@ -1,0 +1,12 @@
+# A leather jerkin of hides: Woodcraft's, with a knife carried and no station
+# (docs/design/recipes.md §6 "Body armour", the hand route; docs/dev/crafting.md "Hide gear"). The
+# stock is priced by the weight.
+[[recipe]]
+id = "leather_jerkin"
+result = { object = "leather_jerkin" }
+difficulty = 11
+seconds = 3600
+knife = true
+
+[recipe.parts]
+main = { stock = ["hide"] }

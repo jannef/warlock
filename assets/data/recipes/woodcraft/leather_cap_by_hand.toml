@@ -1,0 +1,12 @@
+# A leather cap of hide or bone, by hand: Woodcraft's, with a knife carried and no station
+# (docs/design/recipes.md §6 "Helmets", the hand route; docs/dev/crafting.md "Hide gear"). The stock
+# is priced by the weight.
+[[recipe]]
+id = "leather_cap_by_hand"
+result = { object = "leather_cap" }
+difficulty = 9
+seconds = 1800
+knife = true
+
+[recipe.parts]
+main = { stock = ["hide", "bone"] }

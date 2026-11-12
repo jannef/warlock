@@ -69,7 +69,12 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
         let mut work = 0;
         for (n, part) in r.parts.iter().enumerate() {
             let base = &def.parts[part.part];
-            let name = (base.part).map_or("the weapon".to_string(), |p| {
+            // An unnamed main part: the weapon, or the item for armour and clothes.
+            let whole = match def.skill {
+                Some(_) => "the weapon",
+                None => "the item",
+            };
+            let name = (base.part).map_or(whole.to_string(), |p| {
                 content.part_defs()[usize::from(p.0)].name.clone()
             });
             let materials = materials(content, r.skill, def, part);
@@ -89,14 +94,28 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
                     continue;
                 }
                 groups.push(group(first));
+                // The base material where it is of the group, else the group's commonest on the
+                // list (a leather hide, not a dragonscale one, for a hide buckler).
+                let common =
+                    |m: MaterialId| content.material(m).rarity.as_ref().map_or(0, |f| f.weight);
                 let m = (order.iter().copied())
                     .find(|&m| m == base.material && group(m) == group(first))
+                    .or_else(|| {
+                        (order.iter().copied())
+                            .filter(|&m| group(m) == group(first))
+                            .max_by_key(|&m| (common(m), std::cmp::Reverse(m)))
+                    })
                     .unwrap_or(first);
                 if n == 0 && m == base.material {
                     work = content.material(m).work;
                 }
-                let grams = u64::from(def.weight) * u64::from(base.share) / 100;
-                let count = warlock_core::piece::count_for(content, grams, base.material);
+                // As the game prices it: the part's weight in `m`, in pieces of `m` (a hide is
+                // eight pieces' worth, so a leather shield takes fewer hides than billets).
+                let weight = |m: MaterialId| u64::from(content.material(m).weight).max(1);
+                let grams = u64::from(def.weight) * u64::from(base.share) * weight(m)
+                    / weight(base.material)
+                    / 100;
+                let count = warlock_core::piece::count_for(content, grams, m);
                 if let (Some(count), Some(piece)) = (count, piece) {
                     let (one, many) = warlock_core::piece::names(content, piece, m);
                     words.push(counted(&one, &many, count));
