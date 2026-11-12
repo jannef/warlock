@@ -1,0 +1,84 @@
+# Gathering herbs (spec §8 "Skills": Herbalism; #1340, docs/design/recipes.md §8): the dungeon's
+# glowing fungus can be gathered for herbs, the inputs of Alchemy. Anyone may gather (the Gather
+# ability, the abilities menu's Here group, beside the fungus); Herbalism makes it worth doing.
+#
+# A gather takes `seconds` of game time, in turns of the `gather` action (actions.toml); a
+# creature coming into view, a message, or a blow stops it, and a gather cut short finds nothing
+# (the time is spent). One that runs its time finds `count` herbs, plus one for each
+# `value_per_count` of Herbalism (skills.toml); one untrained in Herbalism finds `untrained`.
+# Each herb is one draw by weight from the rows below, at the level's item level (a dungeon
+# level's depth; a hand-made level's `item_level`). The fungus is never picked over: gather again
+# at once, as often as you like. The time is the price.
+#
+# Fields:
+#   terrain          the terrain herbs are gathered from (terrain.toml)
+#   seconds          how long a gather takes, in seconds (at least 1)
+#   count            dice: how many herbs a gatherer trained in Herbalism finds
+#   value_per_count  Herbalism's value that gives one more (above 0)
+#   untrained        how many one untrained in Herbalism finds
+#   [[herb]]         one row per herb, read as gems.toml's sizes are:
+#     object         the herb (objects/), a stackable object, once
+#     find           its weight at item level 1 (above 0)
+#     deeper         added to the weight for each item level past the first (default 0; it may
+#                    be negative, and the weight never goes below 0)
+#     level          the first item level it is found on (default 1): none above it
+
+terrain = "fungus"
+seconds = 300
+count = "1d2"
+value_per_count = 50
+untrained = 1
+
+# The fungus's own cap, at every depth.
+[[herb]]
+object = "glowcap"
+find = 40
+
+# Shallow and down, thinning deeper.
+[[herb]]
+object = "moonwort"
+find = 30
+deeper = -1
+
+[[herb]]
+object = "comfrey"
+find = 20
+
+# From depth 3.
+[[herb]]
+object = "feverfew"
+find = 10
+deeper = 2
+level = 3
+
+[[herb]]
+object = "henbane"
+find = 10
+deeper = 2
+level = 3
+
+# From depth 4.
+[[herb]]
+object = "eyebright"
+find = 6
+deeper = 2
+level = 4
+
+[[herb]]
+object = "bog_myrtle"
+find = 6
+deeper = 2
+level = 4
+
+[[herb]]
+object = "vervain"
+find = 6
+deeper = 2
+level = 4
+
+# From depth 6, the rarest.
+[[herb]]
+object = "mandrake"
+find = 2
+deeper = 2
+level = 6

@@ -314,10 +314,14 @@ fn herbs_found(w: &World) -> usize {
 #[test]
 fn a_herbalists_forage_that_finds_something_may_find_a_herb_besides() {
     let content = content(false, Some(100));
-    let angelica = content.object_id("angelica_root").expect("angelica root");
+    // Any herb a forage may find (angelica root, moonwort, ...: #1340).
+    let rules = content.forage().expect("forage.toml");
+    let all: Vec<_> = (rules.grounds.iter())
+        .flat_map(|g| g.herbs.iter().map(|(o, _)| *o))
+        .collect();
     let roots = |w: &World| {
         (w.state.player().inventory.iter())
-            .filter(|s| s.object == angelica)
+            .filter(|s| all.contains(&s.object))
             .map(|s| s.count)
             .sum::<u32>()
     };
@@ -335,8 +339,9 @@ fn a_herbalists_forage_that_finds_something_may_find_a_herb_besides() {
         tried += 1;
         if herbs_found(&w) == 1 {
             herbs += 1;
-            assert!(roots(&w) > before.1, "seed {seed}: the root is in the pack");
-            assert!(food_count(&w) >= before.0 + 2, "the find and the herb");
+            assert!(roots(&w) > before.1, "seed {seed}: the herb is in the pack");
+            // The find is food; the herb may be (angelica root) or not (moonwort).
+            assert!(food_count(&w) > before.0, "the find");
         }
     }
     assert!(tried >= 10, "{tried} forages ran their time");
@@ -349,10 +354,21 @@ fn a_forage_without_herbalism_draws_as_before() {
     // nothing more, so the runs hash alike.
     let with = content(false, None);
     let text = include_str!("../../../../assets/data/forage.toml");
-    let bare: String = (text.lines())
-        .filter(|l| !l.starts_with("herbs = "))
-        .map(|l| format!("{l}\n"))
-        .collect();
+    // Every `herbs = [...]`, on one line or several, left out.
+    let mut bare = String::new();
+    let mut skipping = false;
+    for line in text.lines() {
+        if line.starts_with("herbs = ") {
+            skipping = !line.ends_with(']');
+            continue;
+        }
+        if skipping {
+            skipping = line != "]";
+            continue;
+        }
+        bare.push_str(line);
+        bare.push('\n');
+    }
     assert_ne!(bare, text);
     let mut files = ContentFiles::builtin();
     files.insert("data/forage.toml", &bare);

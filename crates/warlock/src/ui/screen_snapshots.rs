@@ -819,6 +819,14 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // Beside the darkness chamber's glowing fungus after a gather (spec §8 "Gathering herbs"):
+    // Gather in the Here group, everyone's; the message line says what was found.
+    Case {
+        name: "abilities-menu-gather",
+        actions: "move:N*3 open:N move:N*2 move:E*30 open:N move:N*2 move:W*6 gather:W",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Two allies beside the player (spec §8 "Allies"): the Allies group's three orders, Set on
     // asking for a place.
     Case {

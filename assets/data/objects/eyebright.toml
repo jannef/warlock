@@ -1,5 +1,6 @@
 # A herb (docs/design/recipes.md §8): an Alchemy input. A tiny white flower of the hills. Never floor loot (no
-# `level` or `frequency`); the alchemist sells glowcap and moonwort, and gathering is to come.
+# `level` or `frequency`); the alchemist sells glowcap and moonwort; the glowing fungus gives it
+# to a gather (data/herbs.toml).
 [[object]]
 id = "eyebright"
 name = "sprig of eyebright"

@@ -348,8 +348,10 @@ description = "Knowing the plants: what heals, what harms, and where it grows."
 kind = "passive"
 # An eye for herbs (#1343, professions §9): trained, a forage that found something has this
 # percent chance of one more find, from the ground's `herbs` (forage.toml): 25 % at the lowest,
-# 60 % at 100, 80 % at 200. Marked by a forage that ran its time, now and then.
-mark = [{ on = "forage", chance = 25 }]
+# 60 % at 100, 80 % at 200. Marked by a forage that ran its time, now and then, and by every
+# gather from the glowing fungus that ran its time (Gather, herbs.toml; #1340), where a trained
+# gatherer finds one herb more for every 50 of Herbalism.
+mark = [{ on = "forage", chance = 25 }, { on = "gather", chance = 100 }]
 benefit = [{ effect = "herbs", curve = [[0, 25], [100, 60], [200, 80]] }]
 
 [[skill]]
