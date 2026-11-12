@@ -106,7 +106,7 @@ pub fn import(bindings: &mut Bindings, text: &str) -> Result<Report, String> {
             "written by a newer Warlock (version {version}); read as far as this one knows"
         ));
     }
-    let listed = listed(&table, &mut warnings);
+    let listed = listed(&crate::settings::keys::fold_merged(&table), &mut warnings);
     let before = bindings.clone();
     apply(bindings, listed, &mut warnings);
     let changed = (REBINDABLE.iter().copied())
@@ -561,7 +561,7 @@ mod tests {
         assert_eq!(b.owner(&up), Some(KeyCommand::Move(Dir::N)));
         assert!(b.conflicts().is_empty());
         for needle in [
-            "x is listed for both Wait a turn and Look around",
+            "x is listed for both Wait/search and Look around",
             "Kick has no key now",
         ] {
             assert!(
@@ -626,7 +626,7 @@ mod tests {
         };
         assert_eq!(
             report.summary("x.toml"),
-            ["Imported x.toml: Wait a turn changed."]
+            ["Imported x.toml: Wait/search changed."]
         );
         report.changed.push(KeyCommand::Open);
         report.warnings = vec!["a".into(), "b".into(), "c".into()];

@@ -213,7 +213,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   file without a version (command ids at the top level, or a settings file's `[bindings]`) is
   read too, and a newer version as far as this one knows. The defaults ship as
   `keymaps/default.toml` beside the game.
-- First-phase commands: move, wait, search (`s`, a turn; Ctrl+s or Ctrl+Num5, for a while: up to 10 turns,
+- First-phase commands: move, wait/search (one command, "Wait/search": Num5 or `s`, a turn that
+  looks around; #1326), search for a while (Ctrl+s or Ctrl+Num5: up to 10 turns,
   stopping when something is found or interrupts, like a rest; §8 "Searching"; basic commands,
   not abilities), open/close door, kick (`k`, then a direction; §8 "Doors"),
   ascend/descend (ascend also leaves an outdoor area when no enemy is about, §7 "Leaving an

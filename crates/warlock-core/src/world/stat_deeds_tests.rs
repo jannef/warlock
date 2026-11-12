@@ -159,7 +159,7 @@ fn a_faint_costs_willpower_marks() {
 }
 
 #[test]
-fn acting_overloaded_costs_dexterity_marks_but_waiting_and_dropping_do_not() {
+fn acting_overloaded_costs_dexterity_marks_but_waiting_searching_and_dropping_do_not() {
     let mut w = world_with(SURE.clone());
     set_stats(&mut w, 18);
     let boulder = w.content().object_id("boulder").expect("boulder");
@@ -168,8 +168,12 @@ fn acting_overloaded_costs_dexterity_marks_but_waiting_and_dropping_do_not() {
     p.equipment = Default::default();
     let load = w.load_of(w.state.player);
     assert_eq!(load.burden(), Burden::Overloaded);
-    run(&mut w, "wait*3");
-    assert_eq!(marks(&w, Stat::Dexterity), 0);
+    run(&mut w, "wait*3 search search:3");
+    assert_eq!(
+        marks(&w, Stat::Dexterity),
+        0,
+        "waiting is searching (#1326)"
+    );
     // Picking things up takes a turn each.
     let content = w.content().clone();
     let pile = ["dagger", "ration"]

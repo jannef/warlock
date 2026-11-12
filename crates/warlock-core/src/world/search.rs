@@ -9,7 +9,8 @@
 //! `hidden_per_depth` for each level below the first. Two checks find them (spec §8 "Checks",
 //! [`crate::check`]: 2d12 plus a modifier against the difficulty):
 //!
-//! - **Searching** ([`crate::Action::Search`]): each turn of it (the `search` action) checks
+//! - **Searching** ([`crate::Action::Search`]): each turn of it (the `search` action, and the
+//!   `wait` action, which is a turn of searching: #1326, waiting and searching are one) checks
 //!   every hidden feature within reach, the cells around the player (farther with a high Search
 //!   skill, those of them in line of sight), with the **active** check: the Intelligence
 //!   modifier, plus what the Search skill gives (for a hidden trap, the Detect traps skill in its
@@ -254,6 +255,10 @@ impl World {
     /// with the Search skill and Keen searcher), then a training mark's chance for the Search
     /// skill.
     fn search_turn(&mut self) {
+        // Treading deep water, a wait passes the turn without looking around.
+        if self.swimming() {
+            return;
+        }
         let player = self.state.player();
         let reach = 1
             + player.skill_effect(&self.content, Effect::SearchReach)

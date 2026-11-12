@@ -32,7 +32,9 @@ miss or a resisted spell stops it whatever is said), a message (`say`; `note` do
 hunger worsening, a hurt, an attack said; others' attacks and deaths stop it only within `CLOSE`,
 `perceive_events`, and a creature's spell only at the player or cast by or at one within
 `CLOSE`, its lines held and noted otherwise, `creature_cast.rs`), or death (`Ended`). The same rule holds for every long
-action through `keep_at` (dig, meals, search, study, ...). It perceives only after turns in which
+action through `keep_at` (dig, meals, search, study, ...), and so for a wait, which is a turn of
+searching (`Action::Wait` is `Spent::Search(1)`, #1326; docs/dev/searching.md); a rest's turns
+are plain waits and do not search. It perceives only after turns in which
 a creature that disturbs a rest could have come within `CLOSE` (`out_of_view_for`, which
 accounts for speed and the cheapest step and leaves out all but hostiles), in which the player
 heard something, in which anything happened but creatures moving (a hostile in view but not yet

@@ -283,7 +283,11 @@ fn time_cut_up_differently_ends_the_same() {
     // Waits of 6 s against waits of a minute (cost 10000): two minutes of bleeding and poison
     // in a hurt body, healing as the bleeding stops and the poison lets it.
     let mut quick = world_on(ALONE, "hp = 30");
-    let mut slow = world_with(ALONE, "hp = 30", &[("data/actions.toml", "wait = 10000\n")]);
+    let mut slow = world_with(
+        ALONE,
+        "hp = 30",
+        &[("data/actions.toml", "wait = 10000\nsearch = 10000\n")],
+    );
     for w in [&mut quick, &mut slow] {
         let player = w.player_id();
         set_hp(w, 30);

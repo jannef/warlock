@@ -554,7 +554,7 @@ mod tests {
         key(&mut screen, &mut b, &old);
         assert_eq!(
             message(&screen),
-            format!("{old} moved to Wait a turn; Kick has no key.")
+            format!("{old} moved to Wait/search; Kick has no key.")
         );
         assert_eq!(key_list(&b, KeyCommand::Kick), "(none)");
     }

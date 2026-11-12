@@ -497,6 +497,27 @@ fn sounds_that_are_no_news_train_listen_only_at_rest() {
 }
 
 #[test]
+fn a_sound_heard_again_while_waiting_or_searching_trains_listen() {
+    // Through `apply` (#1326): a wait and a search are one action, and a turn of it is waiting.
+    for action in [Action::Wait, Action::Search(1)] {
+        let mut w = eager("dark");
+        set(&mut w, "listen", Some(5));
+        let mut overheard = false;
+        for _ in 0..60 {
+            let (before, said) = (marks(&w, "listen"), w.messages().len());
+            w.apply(&action);
+            // A sound heard that is no news is not said: only Overhear marks Listen then.
+            if !w.perception().sounds().is_empty() && w.messages().len() == said {
+                assert!(marks(&w, "listen") > before, "{action}: overheard, a mark");
+                overheard = true;
+                break;
+            }
+        }
+        assert!(overheard, "{action}: the pacing rat is heard again");
+    }
+}
+
+#[test]
 fn a_hidden_trap_going_off_trains_detect_traps() {
     let mut w = eager("snares");
     set(&mut w, "detect_traps", Some(0));
@@ -514,13 +535,18 @@ fn a_hidden_trap_going_off_trains_detect_traps() {
     assert_eq!(marks(&w, "detect_traps"), None);
 }
 
+/// A turn passing without a search (a wait is one, #1326): a rest of one turn.
+fn turn_of_rest() -> Action {
+    Action::Rest(crate::action::Rest::For(Duration::seconds(6)))
+}
+
 #[test]
 fn a_hidden_trap_under_a_creature_the_player_sees_trains_detect_traps_half_the_time() {
     let mut total = 0;
     for n in 0..60 {
         let mut w = eager("snares");
         set(&mut w, "detect_traps", Some(0));
-        w.apply(&Action::Wait);
+        w.apply(&turn_of_rest());
         w.state.training = crate::rng::Rng::training(n);
         let rat = *w
             .state
@@ -560,9 +586,9 @@ fn first_sighting_of_an_unaware_creature_trains_spot_once() {
     let asleep = w.content.sleep_status().expect("asleep");
     let def = w.content.status(asleep).clone();
     (w.state.actors.get_mut(&rat).expect("rat").effects).add(asleep, &def, 1, None);
-    w.apply(&Action::Wait);
+    w.apply(&turn_of_rest());
     assert_eq!(marks(&w, "spot"), Some(1), "seen, and asleep");
-    w.apply(&Action::Wait);
+    w.apply(&turn_of_rest());
     assert_eq!(marks(&w, "spot"), Some(1), "once, not each turn");
 }
 

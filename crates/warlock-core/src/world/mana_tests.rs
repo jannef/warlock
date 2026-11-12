@@ -283,7 +283,10 @@ fn time_cut_up_differently_ends_the_same() {
     // dazed head, mana coming back as the hex lets it.
     let mut quick = world();
     let mut slow = World::new(
-        content_with(MAGE, &[("data/actions.toml", "wait = 10000\n")]),
+        content_with(
+            MAGE,
+            &[("data/actions.toml", "wait = 10000\nsearch = 10000\n")],
+        ),
         "hall",
         None,
     )
