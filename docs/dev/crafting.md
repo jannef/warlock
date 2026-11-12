@@ -13,7 +13,7 @@ forge, P5), the forging wizard, and salvage. Material stock (the piece) is in
   that work materials today (Alchemy, Enchanting, Herbalism, and Mining are skills with no craft
   yet, #1331). Each declares `{ effect = "craft", curve = [[0, 0], [100, 8], [200, 12]] }`
   (Temper's curve, read by salvage and by a recipe made) and a `salvage` mark rule at 100 %
-  (Metalcraft also a `craft` mark, for a recipe made). Temper's, Whittle's, and Fletch's own
+  (Metalcraft and Woodcraft also a `craft` mark, for a recipe made). Temper's, Whittle's, and Fletch's own
   effects (`Effect::Temper`, `Whittle`, `Fletch`) are unchanged.
 - **Who works what** is data, never code: `data/stock.toml`'s `[[group]]` rows name the skill,
   stat, and verb per material group, and `gems = { ... }` the gems' (no group). Today metal is
@@ -95,12 +95,13 @@ refusal test:
 | `use` | not one of the five; with a result, parts, inputs, ornament, difficulty, seconds, failure, fumble, or brittle |
 | settings | `fine` not above 0, `marvellous` not above `fine`, `masterwork` not above `marvellous`, `cut_step` not above 0, `half_within` below 0, `one_within` not above `half_within`, `yield` above 100, a `free_wood` landscape twice or unknown, a band missing |
 
-No shipped recipe uses these yet. Each is used by the phase that makes the first recipe needing
-it, which also builds its wizard step and its row's words and lack: the head step and `brittle`
-with P6 (arrows), stock inputs with P7 (sinew, iron), `gem = true` with P11, `failure` and
-`fumble` with P13 (brewing). The bands and `yield` are read from P5 (the forge, "Making a
-recipe" below). Until then the rows and the wizard read only `"stock"` parts, object inputs, and
-the ornament. `data/stock.toml`'s `unit` and `[[material]]` overrides (P2b) are checked by
+A table of `stock` alone (no `input`, not `optional`) is used from P5b (#1351: the spears'
+hafts, the hand recipes' narrowed lists; `craft::stock_only`, "Routes and the recipe's
+profession" below). The rest is used by the phase that makes the first recipe needing it, which
+also builds its wizard step and its row's words and lack: the input step and `brittle` with P6
+(arrows), stock inputs with P7 (sinew, iron), `gem = true` with P11, `failure` and `fumble` with
+P13 (brewing). The bands and `yield` are read from P5 (the forge, "Making a recipe" below).
+Until then the rows and the wizard read only stock parts, object inputs, and the ornament. `data/stock.toml`'s `unit` and `[[material]]` overrides (P2b) are checked by
 `content/stock.rs`.
 
 The three built-ins: `recipes/metalcraft/temper.toml` (`anyone`, `station = "anvil"`),
@@ -122,7 +123,66 @@ by the result's weight (`piece::count_for`), never written in the file.
 | rapier | 14 | 3600 | 30 | 2 |
 | great_sword | 15 | 5400 | 40 | 7 |
 
-The hand routes (a flint knife, a bone dagger) and the axes, maces, and polearms are P5b's.
+## Routes and the recipe's profession
+
+P5b (#1351; `docs/design/recipes.md` §6 "Melee weapons", §2 rows 1 and 4) adds the rest of the
+melee weapons, one file each, the columns the design's table (the stock is again priced by
+weight, never written):
+
+| Recipe | Profession | Parts | `difficulty` | `seconds` | `from` | Stock |
+|---|---|---|---|---|---|---|
+| stiletto | Metalcraft | main `"stock"` | 11 | 1800 | 0 | 1 steel |
+| hand_axe | Metalcraft | main `"stock"` | 11 | 1800 | 0 | 3 iron |
+| battle_axe | Metalcraft | main `"stock"` | 13 | 3600 | 20 | 5 iron |
+| great_axe | Metalcraft | main `"stock"` | 14 | 5400 | 30 | 10 iron |
+| mace | Metalcraft | main `"stock"` | 11 | 3600 | 0 | 5 iron |
+| morning_star | Metalcraft | main `"stock"` | 12 | 3600 | 10 | 6 iron |
+| war_hammer | Metalcraft | main `"stock"` | 12 | 3600 | 10 | 5 iron |
+| maul | Metalcraft | main `"stock"` | 13 | 5400 | 20 | 12 iron |
+| spear | Metalcraft | head `"stock"`, haft `{ stock = ["wood"] }`; an inlay | 11 | 1800 | 0 | 1 iron, 7 wood |
+| javelin | Metalcraft | head `"stock"`, haft `{ stock = ["wood"] }` | 10 | 1200 | 0 | 1 iron, 4 wood |
+| trident | Metalcraft | main `"stock"` | 13 | 3600 | 20 | 4 iron |
+| glaive | Metalcraft | main `"stock"`; an inlay | 14 | 5400 | 30 | 10 iron |
+| halberd | Metalcraft | main `"stock"`; an inlay | 15 | 5400 | 40 | 11 iron |
+| knife_by_hand | Woodcraft | main `{ stock = ["stone", "bone"] }` | 9 | 1200 | 0 | 1 |
+| dagger_by_hand | Woodcraft | main `{ stock = ["stone", "bone"] }` | 10 | 1800 | 0 | 1 |
+| hand_axe_by_hand | Woodcraft | main `{ stock = ["stone"] }` | 10 | 1800 | 0 | 3 |
+| club | Woodcraft | main `{ stock = ["wood", "bone"] }`; an inlay | 8 | 1200 | 0 | 7 |
+| quarterstaff | Woodcraft | main `{ stock = ["wood"] }`; a tip | 9 | 1800 | 0 | 10 |
+| ironwood_staff | Woodcraft | main `{ stock = ["ironwood"] }`; a tip | 12 (+3 work) | 2700 | 30 | 7 ironwood |
+| spear_by_hand | Woodcraft | head `{ stock = ["stone", "bone"] }`, haft `{ stock = ["wood"] }` | 10 | 1800 | 0 | 1, 7 wood |
+| javelin_by_hand | Woodcraft | the same | 9 | 1200 | 0 | 1, 4 wood |
+
+The smith's are at an anvil (`station = "anvil"`); the hand-made ones need a knife carried
+(`knife = true`) and no station, and are trained only (no `anyone`). Ids are unique across
+professions, so a base with two routes has the smith's at its own id and the hand route at
+`<base>_by_hand`; both rows are named by the result ("Knife"), each on its own profession's
+screen. Never made, so with no file: a stiletto by hand, a battle axe or great axe of stone, a
+sword of dragonbone. The `stone` and `bone` lists are groups (a name that is both is the group),
+so a hand knife may also be of ivory or dragonbone (both `bone`); jade is no weapon material.
+
+- **A table of stock** (`PartSource::Sources` with no `input`, not `optional`;
+  `craft::stock_only`) is a step like `"stock"`: `craft::worked_materials` returns its resolved
+  `stock` list (any profession's: the smith's spear takes Woodcraft's billets for its haft)
+  instead of the profession's materials on the part's `made_of`. The rows (`lack`, `takes`) and
+  the steps read it the same way. A table with an input or `optional` still has no steps (P6).
+- **The recipe's profession is its directory's** (`craft_make::profession`, through
+  `Stock::profession(skill)`: the first `stock.toml` row worked by the skill): the check's stat
+  and the dialog's verb ("Make" for Woodcraft, "Forge" for Metalcraft), the `craft` points, and
+  the mark (`Use::Craft` on `def.skill`). A flint knife is Woodcraft's with Dexterity, a steel
+  knife Metalcraft's with Strength. `work` stays the main chosen part's material's (a spear's
+  head, not its haft).
+- **The row's words** (`craft::stock_words`) price a part once per material group it may be of,
+  the base material's group first: "7 wood billets or 7 bone shards", "a bone shard or a block of
+  flint". The greyed reason names the first material's group ("no bone to hand"; the haft's "no
+  wood to hand").
+- **The wizard's label** for an unnamed main part is its stock's group when all of it is one
+  group ("metal", "wood"), else "material".
+- **A failure** not of metal says "The work goes wrong, and you save what you can of it." (the
+  metal's line stays).
+- Tests: `world/craft_hand_tests.rs` (the design's counts, the spear's steps, the haft refused
+  and greyed, the knife, skill, and station greyings, the profession's stat, verb, and mark, a
+  bone javelin made and still thrown).
 
 ## The rows: `Ability::Profession`
 
@@ -189,7 +249,7 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
 `world/craft_make_tests.rs`:
 
 - **Steps** (`craft_steps`, `PerceptionView::craft_steps(recipe)`): one `CraftStep` per choice in
-  the wizard's order: each `"stock"` part (`CraftStepKind::Stock`, labelled by the part's name,
+  the wizard's order: each stock part (`"stock"`, or a table of `stock` alone, P5b) (`CraftStepKind::Stock`, labelled by the part's name,
   "blade", or for an unnamed main part by its stock's group, "metal"), each object input
   (`Input`), then the ornament (`Ornament`, `optional`; the part is `ObjectDef::ornament` or the
   class's `[[ornament]]`). Each lists the stacks carried that fit, `CraftOption { at, name (as
@@ -208,7 +268,7 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
   than steps are refused ("That is more than the work takes."). The made item is the result's
   object with own parts (`ItemPart::material` for a chosen material other than the base part's,
   `ItemPart::gem` for the ornament; `item_parts::check`). `CraftPlan { verb, name, uses,
-  station, time }`: the verb `stock.toml`'s for the main material's profession ("Forge"), the
+  station, time }`: the verb `stock.toml`'s for the recipe's profession ("Forge"), the
   name `Lore::describe` of the made item ("a ruby-pommelled mithril long sword"), `uses` the
   pieces counted and "the ruby".
 - **Start** (`World::start_making`): refused with no time by the row's `lack` (beyond skill: "That
@@ -219,7 +279,7 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
   turns; stopped early, "...; you put down your work." and nothing is spent. Done (`crafted`),
   the plan is resolved again from the pack ("You have nothing left to work with."), then the
   check: two gameplay draws (`combat::roll_natural`), `craft_modifier` = the profession's stat
-  modifier (`stock.toml`'s `stat` for the main material: Strength for metal) +
+  modifier (`stock.toml`'s `stat` for the recipe's profession: Strength for Metalcraft) +
   `Actor::skill_effect_of(skill, Effect::Craft)` (that skill's benefit alone, the items' skill
   bonus counted; Metalcraft's `craft` curve is Temper's, +8 at 100, +12 at 200) +
   `TalentMods::check(stat)`, against `difficulty` + the main material's `work`.
@@ -238,9 +298,9 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
   Marvellous short sword!", "This is a Fine short sword.", "You have made a short sword.".
 - **Marks**: `Use::Craft` on the recipe's skill alone (`World::train_skill`; Metalcraft's
   `mark`, 100 %), whatever came of it; no stat use. Metalcraft, Woodcraft, and Jewelcraft all
-  have the `craft` benefit (salvage reads it too), but only Metalcraft the `craft` mark today;
-  the profession whose generic recipes come next (P5b) adds its own, and `skill_effect_of` keeps
-  one profession's benefit from counting for another's recipe.
+  have the `craft` benefit (salvage reads it too), and Metalcraft and Woodcraft the `craft`
+  mark (Woodcraft's from P5b); `skill_effect_of` keeps one profession's benefit from counting for
+  another's recipe.
 
 ## The forging wizard
 

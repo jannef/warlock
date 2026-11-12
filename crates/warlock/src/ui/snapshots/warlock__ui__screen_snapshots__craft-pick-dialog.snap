@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  There are several objects here.
- You pick up 17 objects.
+ You pick up 27 objects.
 
 
 
@@ -11,18 +11,18 @@ expression: "render(case, content.clone())"
 
 
 
-                            ┌─ Forge ─────────────────────────────────┐
-                            │                                         │
-                            │  Forge a ruby-pommelled mithril short   │
-                            │ sword? It uses 2 mithril ingots and the │
-                            │  ruby, at the anvil, and takes about 1  │
-                            │                  hour.                  │
-                            │                                         │
-                            │             Forge  (y)                  │
-                            │           > Not now  (n, Esc)           │
-                            │                                         │
-                            │ ↑/↓ choose  Enter select                │
-                            └─────────────────────────────────────────┘
+                            ┌─ Forge ──────────────────────────────────┐
+                            │                                          │
+                            │  Forge a ruby-pommelled mithril dagger?  │
+                            │ It uses a mithril ingot and the ruby, at │
+                            │  the anvil, and takes about 30 minutes.  │
+                            │                                          │
+                            │             Forge  (y)                   │
+                            │           > Not now  (n, Esc)            │
+                            │                                          │
+                            │ ↑/↓ choose  Enter select                 │
+                            └──────────────────────────────────────────┘
+
 
 
 

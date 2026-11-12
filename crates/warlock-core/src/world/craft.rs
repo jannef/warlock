@@ -138,11 +138,7 @@ pub(super) fn lack(
         return Some(RecipeLack::Launcher);
     }
     let result = recipe.result.as_ref();
-    for part in recipe
-        .parts
-        .iter()
-        .filter(|p| p.source == PartSource::Stock)
-    {
+    for part in (recipe.parts.iter()).filter(|p| stock_only(&p.source)) {
         let Some(result) = result else { break };
         let worked = worked_materials(content, recipe, result.object, part.part);
         let fits = (player.inventory.iter())
@@ -163,14 +159,34 @@ pub(super) fn lack(
     None
 }
 
-/// The materials part `part` of `object` may be made of that `recipe`'s profession works, in the
-/// part's list order: what a stock stack must be of.
+/// Whether a part's source is stock alone, the steps built so far: `"stock"`, or a table of
+/// `stock` with no input that cannot be left off (a spear's haft, `{ stock = ["wood"] }`, any
+/// profession's; docs/design/recipes.md §10).
+pub(super) fn stock_only(source: &PartSource) -> bool {
+    matches!(
+        source,
+        PartSource::Stock
+            | PartSource::Sources {
+                input: None,
+                optional: false,
+                ..
+            }
+    )
+}
+
+/// The materials part `part` of `object` may be made of as `recipe` takes it, in the part's list
+/// order: what a stock stack must be of. A `"stock"` part takes what the recipe's profession
+/// works; a table's `stock` list (any profession's) what it names.
 pub(super) fn worked_materials(
     content: &Content,
     recipe: &RecipeDef,
     object: ObjectId,
     part: usize,
 ) -> Vec<MaterialId> {
+    let source = (recipe.parts.iter()).find(|p| p.part == part);
+    if let Some(PartSource::Sources { stock, .. }) = source.map(|p| &p.source) {
+        return stock.clone();
+    }
     (content.object(object).made_of(part).iter().copied())
         .filter(|&m| {
             (content.stock().profession_of(content, m)).is_some_and(|p| p.skill == recipe.skill)
@@ -201,11 +217,7 @@ fn takes(content: &Content, player: &Actor, recipe: &RecipeDef) -> String {
         Some(RecipeUse::Fletch) | None => {}
     }
     if let Some(result) = &recipe.result {
-        for part in recipe
-            .parts
-            .iter()
-            .filter(|p| p.source == PartSource::Stock)
-        {
+        for part in (recipe.parts.iter()).filter(|p| stock_only(&p.source)) {
             if let Some(stock) = stock_words(content, recipe, result.object, part.part) {
                 words.push(stock);
             }
@@ -253,26 +265,38 @@ fn takes(content: &Content, player: &Actor, recipe: &RecipeDef) -> String {
     words.join(", ")
 }
 
-/// The stock a chosen part takes, priced in the part's base material where the profession works
-/// it (else the first it works): "3 steel ingots" (docs/design/professions.md §3: the part's
-/// share of the result's weight, in pieces).
+/// The stock a chosen part takes, priced in the part's base material where the recipe takes it
+/// (else the first it takes), once for each group it may be of: "3 steel ingots", "1 bone shard
+/// or 1 block of flint" (docs/design/professions.md §3: the part's share of the result's weight,
+/// in pieces; another material of the group takes as many of its own).
 fn stock_words(
     content: &Content,
     recipe: &RecipeDef,
     object: ObjectId,
     part: usize,
 ) -> Option<String> {
-    let def = content.object(object);
-    let base = def.parts.get(part)?;
+    let base = content.object(object).parts.get(part)?;
     let worked = worked_materials(content, recipe, object, part);
-    let material = (worked.iter().copied())
-        .find(|&m| m == base.material)
-        .or_else(|| worked.first().copied())?;
-    let grams = u64::from(def.weight) * u64::from(base.share) / 100;
-    let count = crate::piece::count_for(content, grams, material)?;
     let piece = content.object(content.object_id(crate::piece::ID)?);
-    let (one, many) = crate::piece::names(content, piece, material);
-    Some(counted(&one, &many, count))
+    let group = |m: MaterialId| content.material(m).group.clone();
+    // The base material's group first: a club is "7 wood billets or 7 bone shards".
+    let mut order = worked.clone();
+    order.sort_by_key(|&m| group(m) != group(base.material));
+    let mut groups: Vec<Option<String>> = Vec::new();
+    let mut words: Vec<String> = Vec::new();
+    for &first in &order {
+        if groups.contains(&group(first)) {
+            continue;
+        }
+        groups.push(group(first));
+        let material = (worked.iter().copied())
+            .find(|&m| m == base.material && group(m) == group(first))
+            .unwrap_or(first);
+        let (count, _) = super::craft_make::stock_need(content, recipe, part, material)?;
+        let (one, many) = crate::piece::names(content, piece, material);
+        words.push(counted(&one, &many, count));
+    }
+    (!words.is_empty()).then(|| words.join(" or "))
 }
 
 impl World {
