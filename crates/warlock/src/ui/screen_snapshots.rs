@@ -883,7 +883,7 @@ const CASES: &[Case] = &[
         screen: Some("profession"),
         ..BASE
     },
-    // The forge's stock picked up beside the anvil: the swords under "Melee weapons", those from
+    // The forge's stock picked up beside the anvil: the weapons under "Melee weapons", those from
     // a higher Metalcraft greyed "beyond your skill".
     Case {
         name: "profession-metalcraft-stock",
@@ -892,14 +892,14 @@ const CASES: &[Case] = &[
         screen: Some("profession"),
         ..BASE
     },
-    // The short sword's wizard (#1335): its first step, the blade, the ingots carried with what
-    // the recipe takes of each.
+    // The dagger's wizard (#1335): its first step, the metal, the ingots carried with what the
+    // recipe takes of each.
     Case {
         name: "craft-pick-blade",
         scenario: "forge",
         actions: "move:E pickup",
         screen: Some("profession"),
-        keys: Some("h"),
+        keys: Some("c"),
         ..BASE
     },
     // Its second, the pommel: None on `-`, the cut gems; the running choice in the header.
@@ -908,7 +908,7 @@ const CASES: &[Case] = &[
         scenario: "forge",
         actions: "move:E pickup",
         screen: Some("profession"),
-        keys: Some("h c"),
+        keys: Some("c c"),
         ..BASE
     },
     // The last pick asks in the one dialog, with the item named as it will be made.
@@ -917,10 +917,20 @@ const CASES: &[Case] = &[
         scenario: "forge",
         actions: "move:E pickup",
         screen: Some("profession"),
-        keys: Some("h c a"),
+        keys: Some("c c a"),
         ..BASE
     },
-    // `--screen craft-pick`: the first recipe with a choice, the dagger, with nothing carried.
+    // The smith's javelin after its iron head (#1351): the haft, Woodcraft's wood billets on a
+    // Metalcraft recipe, never the ingots.
+    Case {
+        name: "craft-pick-haft",
+        scenario: "forge",
+        actions: "move:E pickup",
+        screen: Some("profession"),
+        keys: Some("i b"),
+        ..BASE
+    },
+    // `--screen craft-pick`: the first recipe with a choice, the battle axe, with nothing carried.
     Case {
         name: "craft-pick-first",
         scenario: "forge",
@@ -985,18 +995,27 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A ranger below the hall's door: Listen and Wedge listed beside a closed door (left out
+    // elsewhere, the owner, #1327).
+    Case {
+        name: "abilities-menu-door",
+        character: Some("human,female,ranger"),
+        actions: "move:N*3",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Set on chosen from the menu: the aiming mode, its prompt in the message line.
     Case {
         name: "set-on-aim",
         actions: "ally:dire_warg:2",
-        keys: Some("a h"),
+        keys: Some("a k"),
         ..BASE
     },
     // Come to heel chosen from the menu: the order's words, no time.
     Case {
         name: "come-to-heel",
         actions: "ally:dire_warg:2",
-        keys: Some("a f"),
+        keys: Some("a i"),
         ..BASE
     },
     // A paladin of some level: the Class group, Lay on hands refused and greyed out short of
@@ -1616,11 +1635,19 @@ const CASES: &[Case] = &[
         keys: Some("Left"),
         ..BASE
     },
+    // The one trap known beside the player: `a b` (Disarm a trap, after the thief's birth
+    // sign's stare, #266) disarms it at once, with no prompt (#1327).
     Case {
-        name: "trap-disarm-prompt",
+        name: "trap-disarm-at-once",
         actions: "move:N*3 open:N move:N*2 move:E*67 open:S move:S*7 move:SW descend",
-        // `a b`: Disarm a trap, after the thief's birth sign's stare (#266).
         keys: Some("a b"),
+        ..BASE
+    },
+    // Two beside the thief to rob: `a e` (Steal) asks which way in the message line (#1327).
+    Case {
+        name: "steal-prompt",
+        actions: "ally:dire_warg:2",
+        keys: Some("a e"),
         ..BASE
     },
     Case {

@@ -53,6 +53,13 @@ fn give(w: &mut World, id: &str, count: u32) {
     w.player_mut().inventory.push(Stack::new(object, count));
 }
 
+/// The row of profession `id` named `name`, as [`rows`] says it.
+fn row(w: &World, id: &str, name: &str) -> String {
+    (rows(w, id).into_iter())
+        .find(|r| r.starts_with(&format!("{name}: ")))
+        .expect(name)
+}
+
 /// The rows of profession `id`, `Name: takes (why)`.
 fn rows(w: &World, id: &str) -> Vec<String> {
     let content = w.content.clone();
@@ -111,22 +118,22 @@ fn the_untrained_see_only_what_anyone_may_make_and_the_trained_what_is_beyond_th
     // Trained below the long sword's `from`: listed, beyond them.
     train(&mut w, "metalcraft", 10);
     assert_eq!(
-        rows(&w, "metalcraft")[3],
+        row(&w, "metalcraft", "Long sword"),
         "Long sword: 3 steel ingots, an anvil, about 1 hour (beyond your skill)"
     );
     // At it: the anvil, then the stock, is what is missing.
     train(&mut w, "metalcraft", 20);
-    assert!(rows(&w, "metalcraft")[3].ends_with("(no anvil beside you)"));
+    assert!(row(&w, "metalcraft", "Long sword").ends_with("(no anvil beside you)"));
     // Five arrows to tip: none carried, then too few, then enough.
     assert_eq!(
-        rows(&w, "metalcraft")[8],
+        row(&w, "metalcraft", "Tipped arrows"),
         "Tipped arrows: 5 arrows, about 10 minutes (no arrows)"
     );
     give(&mut w, "arrow", 4);
-    assert!(rows(&w, "metalcraft")[8].ends_with("(no arrows)"));
+    assert!(row(&w, "metalcraft", "Tipped arrows").ends_with("(no arrows)"));
     give(&mut w, "arrow", 1);
     assert_eq!(
-        rows(&w, "metalcraft")[8],
+        row(&w, "metalcraft", "Tipped arrows"),
         "Tipped arrows: 5 arrows, about 10 minutes"
     );
 }
@@ -136,7 +143,7 @@ fn a_stock_part_wants_a_piece_the_profession_works_that_the_part_may_be_made_of(
     let mut w = world(FIXTURE.clone(), "forge");
     w.apply(&Action::Move(Dir::E));
     train(&mut w, "metalcraft", 20);
-    let sword = |w: &World| rows(w, "metalcraft")[3].clone();
+    let sword = |w: &World| row(w, "metalcraft", "Long sword");
     assert!(sword(&w).ends_with("(no metal to hand)"), "{}", sword(&w));
     // Hardwood is no metal; iron is.
     let wood = w.content.material_id("hardwood").expect("hardwood");

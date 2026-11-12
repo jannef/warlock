@@ -2,33 +2,33 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- A cold forge, and an anvil waiting.
- There are several objects here.
-
-
-
-
-            ┌─ Metalcraft: recipes ────────────────────────────────────────────────────┐
-            │                                                                          │
+ A cold forg┌─ Metalcraft: recipes ───────────────────────────────────────── Page 1/2 ─┐
+ There are s│                                                                          │
             │ Work                                                                     │
             │ > a - Temper        a metal weapon or armour, an anvil, about 10 minutes │
             │ Melee weapons                                                            │
-            │   b - Dagger        no metal to hand                                     │
-            │   c - Great sword   beyond your skill                                    │
-            │   d - Knife         no metal to hand                                     │
-            │   e - Long sword    beyond your skill                                    │
-            │   f - Rapier        beyond your skill                                    │
-            │   g - Scimitar      beyond your skill                                    │
-            │   h - Short sword   no metal to hand                                     │
+            │   b - Battle axe    beyond your skill                                    │
+            │   c - Dagger        no metal to hand                                     │
+            │   d - Glaive        beyond your skill                                    │
+            │   e - Great axe     beyond your skill                                    │
+            │   f - Great sword   beyond your skill                                    │
+            │   g - Halberd       beyond your skill                                    │
+            │   h - Hand axe      no metal to hand                                     │
+            │   i - Javelin       no metal to hand                                     │
+            │   j - Knife         no metal to hand                                     │
+            │   k - Long sword    beyond your skill                                    │
+            │   l - Mace          no metal to hand                                     │
+            │   m - Maul          beyond your skill                                    │
+            │   n - Morning star  no metal to hand                                     │
+            │   o - Rapier        beyond your skill                                    │
+            │   p - Scimitar      beyond your skill                                    │
+            │   q - Short sword   no metal to hand                                     │
+            │   r - Spear         no metal to hand                                     │
+            │   s - Stiletto      no metal to hand                                     │
+            │   t - Trident       beyond your skill                                    │
             │                                                                          │
             │ Takes a metal weapon or armour, an anvil, about 10 minutes.              │
             │                                                                          │
-            │ a-h or Enter make   Esc back                                             │
+            │ a-t or Enter make   > < page   Esc back                                  │
             └──────────────────────────────────────────────────────────────────────────┘
-
-
-
-
-
-
  The Forge  ·  HP 17/17  ·  MP 2/2  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444        ? controls

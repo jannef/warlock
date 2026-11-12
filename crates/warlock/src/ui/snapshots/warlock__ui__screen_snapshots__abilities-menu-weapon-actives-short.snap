@@ -15,7 +15,7 @@ expression: "render(case, content.clone())"
          │   e  Woodcraft…                                                               │
          │   f  Salvage                            on something you carry                │
          │ Weapon skills                                                                 │
-         │   g  Shield bash                        in a direction                        │
+         │   g  Shield bash                        no foe within reach                   │
          │   h  Long blades: Deep cut              fires by itself                       │
          │   i  Long blades: Vital strike          4 stamina: you are short of breath    │
          │   j  Spears: Brace                      fires by itself                       │

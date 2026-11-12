@@ -3,21 +3,21 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  There are several objects here.
- You pick up 17 objects.
+ You pick up 27 objects.
 
 
 
 
 
 
-                  ┌─ Short sword: metal ─────────────────────────────────────────┐
+                  ┌─ Dagger: metal ──────────────────────────────────────────────┐
                   │                                                              │
-                  │ Short sword                                                  │
+                  │ Dagger                                                       │
                   │                                                              │
                   │ Materials                                                    │
-                  │ > a - 8 steel ingots                                  uses 2 │
-                  │   b - 4 iron ingots                                   uses 2 │
-                  │   c - 3 mithril ingots                                uses 2 │
+                  │ > a - 8 steel ingots                                  uses 1 │
+                  │   b - 4 iron ingots                                   uses 1 │
+                  │   c - 3 mithril ingots                                uses 1 │
                   │                                                              │
                   │                                                              │
                   │                                                              │

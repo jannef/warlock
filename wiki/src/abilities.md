@@ -16,10 +16,15 @@ left out.
 - Beside each ability is what it asks for once you choose it, such as `in a direction`.
 - An ability you cannot use right now is greyed out, with the reason: `you hold no shield`, `not
   usable yet` for a [skill](skills.md) whose use is not in the game yet, or `you are winded` while a
-  [status effect](status-effects.md#buffs-and-cooldowns) keeps you from it.
+  [status effect](status-effects.md#buffs-and-cooldowns) keeps you from it. One that works on
+  something next to you is greyed out while there is nothing beside you to use it on: `no lock
+  beside you`, `no foe within reach` (see [Something beside you](controls.md#something-beside-you)).
+- **Listen at a door** and **Wedge a door** are left out of the menu unless a closed
+  [door](doors.md) is next to you (for Wedge, one not wedged already).
 - The arrow keys move the `>` cursor, and the ability under it is described at the bottom.
 - A letter, or `Enter` on the `>` row, uses the ability. The menu closes and the ability asks for
-  what it needs: a direction on the message line, or a place with the aiming cursor (see
+  what it needs: a direction on the message line (only when more than one thing beside you could
+  be meant), or a place with the aiming cursor (see
   [Aiming](controls.md#aiming)). Then it takes its time like any other action. Choosing one you cannot use only
   tells you why.
 - A long list shows a page at a time. `>` and `<` turn the pages, and the letters start again at

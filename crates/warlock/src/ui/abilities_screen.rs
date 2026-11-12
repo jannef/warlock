@@ -42,6 +42,9 @@ const DESCRIPTION: i32 = 3;
 /// Rows besides the list: the frame, a margin, a gap, the description, a gap, the footer, the
 /// frame.
 const EXTRA: i32 = 6 + DESCRIPTION;
+/// Console rows the panel leaves free: the message line above it and the status bar below it
+/// (#1369), so a tall list pages instead of drawing over them.
+const OUTSIDE: i32 = 2;
 
 /// One ability as the menu shows it.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -175,11 +178,13 @@ impl AbilitiesScreen {
         }
     }
 
-    /// Lays the list out for a console of `cols` by `rows`: how many rows a page may take.
+    /// Lays the list out for a console of `cols` by `rows`: how many rows a page may take (the
+    /// panel keeps off the message line and the status bar).
     /// Drawing calls it, and so does the screen stack before a press, so a letter names what is
     /// drawn.
     pub fn fit(&self, _cols: u32, rows: u32) {
-        self.entries.set_room((rows as i32 - EXTRA).max(1) as usize);
+        self.entries
+            .set_room((rows as i32 - OUTSIDE - EXTRA).max(1) as usize);
     }
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
@@ -193,7 +198,8 @@ impl AbilitiesScreen {
         };
         let wide = longest(|e| &e.name) + longest(|e| &e.state) + ROW_EXTRA;
         let width = wide.clamp(WIDTH, (console.cols() as i32).max(WIDTH));
-        let panel = Panel::new(console, " Abilities ", width, count + EXTRA);
+        let height = (count + EXTRA).min(console.rows() as i32 - OUTSIDE);
+        let panel = Panel::new(console, " Abilities ", width, height);
         self.entries.draw_label(console, &panel);
         let (x, top) = (panel.inner_x(), panel.y + 2);
         let fits = |y: i32| y < panel.y + panel.h - 2;
@@ -335,14 +341,17 @@ mod tests {
 
     /// The showcase's thief, with the storeroom's small shield in hand if `shield`.
     fn thief(shield: bool) -> World {
+        let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 \
+                    move:N pickup:a equip:off_hand:b";
+        thief_after(if shield { walk } else { "" })
+    }
+
+    /// The showcase's thief after `walk`.
+    fn thief_after(walk: &str) -> World {
         let content = Arc::new(Content::builtin().expect("content"));
         let mut world = World::new(content, "showcase", None).expect("world");
-        if shield {
-            let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 \
-                        move:N pickup:a equip:off_hand:b";
-            for action in parse_actions(walk).expect("actions") {
-                world.apply(&action);
-            }
+        for action in parse_actions(walk).expect("actions") {
+            world.apply(&action);
         }
         world
     }
@@ -362,6 +371,8 @@ mod tests {
 
     #[test]
     fn lists_the_abilities_by_source_greying_out_what_cannot_be_used() {
+        // Away from a door, Listen is left out, and what acts on something beside the player is
+        // greyed with nothing there (#1327).
         let world = thief(false);
         let screen = AbilitiesScreen::new(Some(&world.perception()), None);
         let text = drawn(&screen, 80, 30).join("\n");
@@ -370,24 +381,34 @@ mod tests {
             "Birth sign",
             "> a  Transfixing stare  at a place you see",
             "Skills",
-            "  b  Disarm a trap      in a direction",
-            "  c  Listen at a door   in a direction",
-            "  d  Metalcraft…",
-            "  e  Pick lock          in a direction",
-            "  f  Steal              in a direction",
-            "  g  Woodcraft…",
-            "  h  Salvage            on something you carry",
+            "  b  Disarm a trap      no known trap beside you",
+            "  c  Metalcraft…",
+            "  d  Pick lock          no lock beside you",
+            "  e  Steal              no one beside you to rob",
+            "  f  Woodcraft…",
+            "  g  Salvage            on something you carry",
             "Weapon skills",
-            "  i  Shield bash        you hold no shield",
-            "a-i or Enter use   Esc close",
+            "  h  Shield bash        you hold no shield",
+            "a-h or Enter use   Esc close",
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
+        assert!(!text.contains("Listen at a door"), "{text}");
         // The cursor starts on the first that can be used: the thief's birth sign's stare (a
         // Basilisk's).
         let stare = Ability::Sign(warlock_core::content::SignActive::TransfixingStare);
         assert_eq!(screen.selected(), Some(stare));
         assert_eq!(screen.selected().map(|a| a.source()), Some(Source::Sign));
+        // Below the hall's door, Listen is listed, and Pick lock may be used.
+        let world = thief_after("move:N*3");
+        let screen = AbilitiesScreen::new(Some(&world.perception()), None);
+        let text = drawn(&screen, 80, 30).join("\n");
+        for expected in [
+            "  c  Listen at a door   in a direction",
+            "  e  Pick lock          in a direction",
+        ] {
+            assert!(text.contains(expected), "{expected:?} in\n{text}");
+        }
     }
 
     #[test]
@@ -395,7 +416,7 @@ mod tests {
         let b = Bindings::default();
         let world = thief(false);
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), None);
-        assert_eq!(screen.handle(&Press::typed('i'), &b), ScreenAction::Stay);
+        assert_eq!(screen.handle(&Press::typed('h'), &b), ScreenAction::Stay);
         assert_eq!(screen.selected(), Some(Ability::ShieldBash));
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(text.contains("Shield bash: you hold no shield."), "{text}");
@@ -403,35 +424,32 @@ mod tests {
         screen.handle(&Press::nav(Nav::Down), &b);
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(!text.contains("you hold no shield."), "{text}");
-        // With a shield in hand it can be used; the cursor starts on the first that can be used
-        // (the birth sign's stare) unless another was used last.
+        // With a shield in hand but no foe beside, it says so (#1327).
         let world = thief(true);
+        let mut screen = AbilitiesScreen::new(Some(&world.perception()), None);
+        assert_eq!(screen.handle(&Press::typed('h'), &b), ScreenAction::Stay);
+        let text = drawn(&screen, 80, 30).join("\n");
+        assert!(text.contains("Shield bash: no foe within reach."), "{text}");
+        // Someone beside to rob (an ally): Steal can be used; the cursor starts on the first that
+        // can be used (the birth sign's stare) unless another was used last.
+        let world = thief_after("ally:panther");
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), None);
         let stare = Ability::Sign(warlock_core::content::SignActive::TransfixingStare);
         assert_eq!(screen.selected(), Some(stare));
         assert_eq!(
             screen.handle(&Press::typed('e'), &b),
-            ScreenAction::UseAbility(Ability::PickLock)
+            ScreenAction::UseAbility(Ability::Steal)
         );
-        let last = Some(Ability::ShieldBash);
+        let last = Some(Ability::Steal);
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), last);
-        assert_eq!(screen.selected(), Some(Ability::ShieldBash));
-        assert_eq!(
-            screen.handle(&Press::typed('i'), &b),
-            ScreenAction::UseAbility(Ability::ShieldBash)
-        );
+        assert_eq!(screen.selected(), Some(Ability::Steal));
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(
-            text.contains("> i  Shield bash        in a direction"),
+            text.contains("> e  Steal              in a direction"),
             "{text}"
         );
-        assert!(text.contains("Strike someone next to you with the shield you hold."));
         assert_eq!(
             screen.handle(&Press::nav(Nav::Enter), &b),
-            ScreenAction::UseAbility(Ability::ShieldBash)
-        );
-        assert_eq!(
-            screen.handle(&Press::typed('f'), &b),
             ScreenAction::UseAbility(Ability::Steal)
         );
         // `a` names the first row here (the stare), so it does not close the menu; Esc does.
@@ -443,6 +461,17 @@ mod tests {
             screen.handle(&Press::nav(Nav::Back), &b),
             ScreenAction::Close
         );
+    }
+
+    #[test]
+    fn a_tall_list_pages_and_never_covers_the_first_or_last_console_row() {
+        let world = thief(false);
+        let screen = AbilitiesScreen::new(Some(&world.perception()), None);
+        // Room for nine rows of list only: the thief's thirteen rows make two pages.
+        let lines = drawn(&screen, 80, 20);
+        assert!(lines[0].trim().is_empty(), "{lines:?}");
+        assert!(lines[19].trim().is_empty(), "{lines:?}");
+        assert!(lines.join("\n").contains("Page 1/2"), "{lines:?}");
     }
 
     #[test]
@@ -476,7 +505,7 @@ mod tests {
         let last = Some(Ability::ShieldBash);
         let screen = AbilitiesScreen::new(Some(&world.perception()), last);
         let text = drawn(&screen, 80, 13).join("\n");
-        assert!(text.contains("Page 4/4"), "{text}");
+        assert!(text.contains("Page 8/8"), "{text}");
         assert!(text.contains("> a  Shield bash"), "{text}");
     }
 }

@@ -2,33 +2,33 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn┌─ Abilities ─────────────────────────────────────────────────────── Page 1/2 ─┐
- Your thou│                                                                              │
-          │ Class                                                                        │
-          │   a  Knock             in a direction                                        │
-          │   b  Scribe            a scroll of a spell you know                          │
-          │ Spells                                                                       │
-          │   c  Burning hands     4d4+2 fire, burns one in four, 4 mana, aimed          │
-          │   d  Ray of frost      2d8 cold, numbs, 2 mana, aimed                        │
-          │ > e  Magic missile     6d4+1 force, shoves on a big hit, 2 mana, aimed       │
-          │   f  Arcane bolt       6d6+4 force, shoves on a big hit, 7 mana, aimed       │
-          │   g  Blink             4 mana                                                │
-          │   h  Shatter           6d6+4 force, shoves on a big hit, 10 mana, aimed      │
-          │   i  Chain lightning   12d6+3 electricity, may arc, conducts, 14 mana, aimed │
-          │ Skills                                                                       │
-          │   j  Decipher          no unknown scroll                                     │
-          │   k  Heal              nothing to treat                                      │
-          │   l  Jewelcraft…                                                             │
-          │   m  Knowledge         not usable yet                                        │
-          │   n  Listen at a door  in a direction                                        │
-          │   o  Metalcraft…                                                             │
-          │   p  Woodcraft…                                                              │
-          │   q  Salvage           on something you carry                                │
-          │                                                                              │
-          │ A dart of force toward a place you aim at: it never misses the first         │
-          │ creature in its way. Range 8.                                                │
-          │                                                                              │
-          │                                                                              │
-          │ a-q or Enter use   > < page   Esc close                                      │
-          └──────────────────────────────────────────────────────────────────────────────┘
+ You learn Dragon's hoard.
+ Your thou┌─ Abilities ────────────────────────────────────────────────────── Page 1/2 ─┐
+          │                                                                             │
+          │ Class                                                                       │
+          │   a  Knock            no lock beside you                                    │
+          │   b  Scribe           a scroll of a spell you know                          │
+          │ Spells                                                                      │
+          │   c  Burning hands    4d4+2 fire, burns one in four, 4 mana, aimed          │
+          │   d  Ray of frost     2d8 cold, numbs, 2 mana, aimed                        │
+          │   e  Magic missile    6d4+1 force, shoves on a big hit, 2 mana, aimed       │
+          │ > f  Arcane bolt      6d6+4 force, shoves on a big hit, 7 mana, aimed       │
+          │   g  Blink            4 mana                                                │
+          │   h  Shatter          6d6+4 force, shoves on a big hit, 10 mana, aimed      │
+          │   i  Chain lightning  12d6+3 electricity, may arc, conducts, 14 mana, aimed │
+          │ Skills                                                                      │
+          │   j  Decipher         no unknown scroll                                     │
+          │   k  Heal             nothing to treat                                      │
+          │   l  Jewelcraft       not usable yet                                        │
+          │   m  Knowledge        not usable yet                                        │
+          │   n  Metalcraft…                                                            │
+          │   o  Woodcraft…                                                             │
+          │   p  Salvage          on something you carry                                │
+          │                                                                             │
+          │ A bolt of raw force from your hand toward a place you aim at, through       │
+          │ everyone on its line. Length 6.                                             │
+          │                                                                             │
+          │                                                                             │
+          │ a-p or Enter use   > < page   Esc close                                     │
+          └─────────────────────────────────────────────────────────────────────────────┘
  The Hub  ·  HP 43/43  ·  MP 306/309  ·  Keen  ·  Lv 32  ·  08:00  ·  11 Darkening       ? controls

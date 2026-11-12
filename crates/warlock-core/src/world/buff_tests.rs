@@ -270,7 +270,9 @@ fn blocked_actions_are_refused_and_abilities_that_cost_them_greyed_out() {
     // Worn off, the bash is back.
     run(&mut w, "wait*10");
     assert_eq!(effect(&w, player, "fumbling"), None);
-    assert_eq!(bash(&w).unavailable, None);
+    // With nobody beside to bash (#1327).
+    let none = Unavailable::NoTarget(crate::beside::Target::Foe);
+    assert_eq!(bash(&w).unavailable, Some(none));
 }
 
 #[test]

@@ -1719,6 +1719,8 @@ mod balance_probe;
 #[cfg(test)]
 mod beast_den_tests;
 #[cfg(test)]
+mod beside_tests;
+#[cfg(test)]
 mod bestiary_tests;
 #[cfg(test)]
 mod blood_tests;
@@ -1780,6 +1782,8 @@ mod corrode_tests;
 mod cost_tests;
 #[cfg(test)]
 mod court_tests;
+#[cfg(test)]
+mod craft_hand_tests;
 #[cfg(test)]
 mod craft_make_tests;
 #[cfg(test)]

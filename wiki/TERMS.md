@@ -203,6 +203,7 @@ above.
 | Fletching, brittle arrows and bolts, a knife | `skill-uses.md#fletching` |
 | Profession, recipe | `skill-uses.md#professions` |
 | Crafting, forging, a recipe, stock to forge from | `crafting.md`, `crafting.md#forging-a-weapon` (a recipe: its row, `recipe-ID`) |
+| Hand-made weapons, knapping flint, a bone or flint knife, a club, a staff by hand | `crafting.md#making-a-weapon-by-hand` |
 | Masterwork (crafted), a crafted item's grade, margin | `crafting.md#how-well-it-comes-out` |
 | Foraging | `skill-uses.md#foraging` |
 | Crafting, a craft skill, craft points, who works which material, a material's work | `crafting.md`, `crafting.md#who-works-what` |
@@ -302,6 +303,7 @@ above.
 | Controls, keys, rebinding | `controls.md`, `controls.md#rebinding-keys` |
 | Look mode | `controls.md#look-mode` |
 | Aiming | `controls.md#aiming` |
+| Something beside you, acting at once on the one target | `controls.md#something-beside-you` |
 | Message line, status bar | `the-screen.md#the-screen`, `the-screen.md#messages` |
 | Character screen, info pages | `the-screen.md#character`, `the-screen.md#info-pages` |
 | The skills screen | `the-screen.md#skills` |

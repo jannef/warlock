@@ -1,0 +1,12 @@
+# A knife knapped of stone or carved of bone, by hand: Woodcraft's, with a knife carried and no
+# station (docs/design/recipes.md §6 "Melee weapons", the hand route; docs/dev/crafting.md). The
+# stock is priced by the weight.
+[[recipe]]
+id = "knife_by_hand"
+result = { object = "knife" }
+difficulty = 9
+seconds = 1200
+knife = true
+
+[recipe.parts]
+main = { stock = ["stone", "bone"] }

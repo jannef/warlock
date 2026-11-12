@@ -5,28 +5,28 @@ expression: "render(case, content.clone())"
  You open the door. (×2)
  You search the glowing fungus for herbs. You gather a sprig of moonwort.
 
+
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
                     │ Skills                                                   │
-                    │   b  Disarm a trap      in a direction                   │
-                    │   c  Listen at a door   in a direction                   │
-                    │   d  Metalcraft…                                         │
-                    │   e  Pick lock          in a direction                   │
-                    │   f  Steal              in a direction                   │
-                    │   g  Woodcraft…                                          │
-                    │   h  Salvage            on something you carry           │
+                    │   b  Disarm a trap      no known trap beside you         │
+                    │   c  Metalcraft…                                         │
+                    │   d  Pick lock          no lock beside you               │
+                    │   e  Steal              no one beside you to rob         │
+                    │   f  Woodcraft…                                          │
+                    │   g  Salvage            on something you carry           │
                     │ Weapon skills                                            │
-                    │   i  Shield bash        you hold no shield               │
+                    │   h  Shield bash        you hold no shield               │
                     │ Here                                                     │
-                    │   j  Gather             in a direction                   │
+                    │   i  Gather             in a direction                   │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-j or Enter use   Esc close                             │
+                    │ a-i or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 

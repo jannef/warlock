@@ -125,6 +125,12 @@ fn test_files() -> ContentFiles {
     ] {
         made_of(&mut files, id, list);
     }
+    // The hand-made dagger's stone is gone from this dagger's list: its bone alone.
+    files.insert(
+        "data/recipes/woodcraft/dagger_by_hand.toml",
+        "[[recipe]]\nid = \"dagger_by_hand\"\nresult = { object = \"dagger\" }\ndifficulty = 10\n\
+         seconds = 1800\nknife = true\n[recipe.parts]\nmain = { stock = [\"bone\"] }\n",
+    );
     files.insert("levels/variants.toml", LEVEL);
     files.insert(
         "scenarios/variants.toml",

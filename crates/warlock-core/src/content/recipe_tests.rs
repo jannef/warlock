@@ -33,7 +33,7 @@ fn sword(extra: &str) -> String {
 }
 
 #[test]
-fn the_built_in_recipes_are_the_forges_swords_and_temper_and_woodcrafts_fletch_and_whittle() {
+fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_made_ones() {
     let content = Content::builtin().expect("content");
     let recipes = content.recipes();
     let metal = content.skill_id("metalcraft").expect("metalcraft");
@@ -48,14 +48,27 @@ fn the_built_in_recipes_are_the_forges_swords_and_temper_and_woodcrafts_fletch_a
     assert_eq!(
         of(metal),
         [
+            ("Battle axe", None),
             ("Dagger", None),
+            ("Glaive", None),
+            ("Great axe", None),
             ("Great sword", None),
+            ("Halberd", None),
+            ("Hand axe", None),
+            ("Javelin", None),
             ("Knife", None),
             ("Long sword", None),
+            ("Mace", None),
+            ("Maul", None),
+            ("Morning star", None),
             ("Rapier", None),
             ("Scimitar", None),
             ("Short sword", None),
-            ("Temper", Some(RecipeUse::Temper))
+            ("Spear", None),
+            ("Stiletto", None),
+            ("Temper", Some(RecipeUse::Temper)),
+            ("Trident", None),
+            ("War hammer", None)
         ]
     );
     // The forge's seven swords (docs/design/recipes.md §6): difficulty, seconds, from, and an
@@ -76,10 +89,52 @@ fn the_built_in_recipes_are_the_forges_swords_and_temper_and_woodcrafts_fletch_a
         assert_eq!(r.parts.len(), 1, "{id}");
         assert!(!r.anyone, "{id}");
     }
+    // P5b's (#1351, the same table): the rest of the smith's at the anvil, and the hand-made
+    // ones, Woodcraft's, with a knife and no station; the spears' two parts (head, haft).
+    let wood_id = content.skill_id("woodcraft");
+    for (id, difficulty, seconds, from, ornament, parts) in [
+        ("stiletto", 11, 1800, 0, false, 1),
+        ("hand_axe", 11, 1800, 0, false, 1),
+        ("battle_axe", 13, 3600, 20, false, 1),
+        ("great_axe", 14, 5400, 30, false, 1),
+        ("mace", 11, 3600, 0, false, 1),
+        ("morning_star", 12, 3600, 10, false, 1),
+        ("war_hammer", 12, 3600, 10, false, 1),
+        ("maul", 13, 5400, 20, false, 1),
+        ("spear", 11, 1800, 0, true, 2),
+        ("javelin", 10, 1200, 0, false, 2),
+        ("trident", 13, 3600, 20, false, 1),
+        ("glaive", 14, 5400, 30, true, 1),
+        ("halberd", 15, 5400, 40, true, 1),
+        ("knife_by_hand", 9, 1200, 0, false, 1),
+        ("dagger_by_hand", 10, 1800, 0, false, 1),
+        ("hand_axe_by_hand", 10, 1800, 0, false, 1),
+        ("club", 8, 1200, 0, true, 1),
+        ("quarterstaff", 9, 1800, 0, true, 1),
+        ("ironwood_staff", 12, 2700, 30, true, 1),
+        ("spear_by_hand", 10, 1800, 0, false, 2),
+        ("javelin_by_hand", 9, 1200, 0, false, 2),
+    ] {
+        let r = content.recipe(recipes.id(id).expect(id));
+        let got = (r.difficulty, r.seconds, r.from, r.ornament, r.parts.len());
+        assert_eq!(got, (difficulty, seconds, from, ornament, parts), "{id}");
+        let hand = Some(r.skill) == wood_id;
+        assert_eq!(r.knife, hand, "{id}");
+        assert_eq!(r.station.is_none(), hand, "{id}");
+        assert!(!r.anyone, "{id}");
+    }
     assert_eq!(
         of(wood),
         [
+            ("Club", None),
+            ("Dagger", None),
             ("Fletch", Some(RecipeUse::Fletch)),
+            ("Hand axe", None),
+            ("Ironwood staff", None),
+            ("Javelin", None),
+            ("Knife", None),
+            ("Quarterstaff", None),
+            ("Spear", None),
             ("Whittle", Some(RecipeUse::Whittle))
         ]
     );

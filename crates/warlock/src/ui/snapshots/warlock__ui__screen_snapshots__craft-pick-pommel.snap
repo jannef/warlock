@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  There are several objects here.
- You pick up 17 objects.
+ You pick up 27 objects.
 
 
 
@@ -11,9 +11,9 @@ expression: "render(case, content.clone())"
 
 
 
-                  ┌─ Short sword: pommel ────────────────────────────────────────┐
+                  ┌─ Dagger: pommel ─────────────────────────────────────────────┐
                   │                                                              │
-                  │ Short sword — metal: mithril                                 │
+                  │ Dagger — metal: mithril                                      │
                   │                                                              │
                   │   - - None                                                   │
                   │ Gems                                                         │

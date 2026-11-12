@@ -1,0 +1,13 @@
+# A spear with a knapped stone or carved bone head on a wooden haft, by hand: Woodcraft's, with a
+# knife carried and no station (docs/design/recipes.md §6 "Melee weapons", the hand route;
+# docs/dev/crafting.md). The stock is priced by the weight.
+[[recipe]]
+id = "spear_by_hand"
+result = { object = "spear" }
+difficulty = 10
+seconds = 1800
+knife = true
+
+[recipe.parts]
+head = { stock = ["stone", "bone"] }
+haft = { stock = ["wood"] }

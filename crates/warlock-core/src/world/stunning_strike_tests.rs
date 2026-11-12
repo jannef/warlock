@@ -67,7 +67,9 @@ fn stunning_strike_comes_at_level_twelve_in_place_of_deflect_missiles() {
     let w = ascetic(11);
     assert_eq!(own(&w), None, "not before 12");
     let w = ascetic(12);
-    assert_eq!(own(&w), Some(None));
+    // Had, with no foe beside to strike (#1327).
+    let none = Unavailable::NoTarget(crate::beside::Target::Foe);
+    assert_eq!(own(&w), Some(Some(none)));
     let talents = &w.state.player().talents;
     assert!(talents.has("stunning_strike"));
     // Deflect missiles left the table (a Finesse pick now); a bonus pick may still take it.
