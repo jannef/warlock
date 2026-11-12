@@ -1,0 +1,18 @@
+# An arrowhead (docs/design/professions.md §10, docs/design/recipes.md §7; #1336): the one
+# intermediate a smith makes for the fletcher, by the score from an ingot at an anvil
+# (recipes/metalcraft/arrowheads.toml). One object for arrows and bolts alike: a head is a head,
+# and the recipe decides what it tips. A stack of another metal carries it as its main part ("20
+# steel arrowheads"), and an arrow headed by it takes that metal for its head. It is worth its
+# metal (no value of its own), and never loot (no `kind`). Bone and flint heads need none: a
+# shard or a block heads a batch of arrows straight.
+[[object]]
+id = "arrowhead"
+name = "arrowhead"
+glyph = ","
+fg = "#a8a8b0"
+class = "materials"
+materials = ["iron"]
+made_of = ["metal", "bone", "stone"]
+weight = 5
+value = 0
+stackable = true

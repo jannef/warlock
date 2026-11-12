@@ -36,7 +36,7 @@ use super::encounter::Watch;
 use super::rest::Ended;
 use super::{LevelState, Spent, World};
 use crate::action::Event;
-use crate::content::{ActionKind, Content, ForageGround, LevelKind, parse_local_area};
+use crate::content::{ActionKind, Content, ForageGround, Landscape, LevelKind, parse_local_area};
 use crate::geom::Pos;
 use crate::magic::loot::pick_weighted;
 use crate::object::{self, Stack};
@@ -54,6 +54,13 @@ pub(crate) fn forage_ground<'a>(
     if level.water_at(content, at).is_some() {
         return None;
     }
+    rules.ground(landscape_at(content, level, at)?)
+}
+
+/// The landscape of the wild at `at` on `level`: the overworld's cell, or a local area's own
+/// overworld cell; `None` anywhere else (a dungeon, a town). What a forage searches, and where
+/// wood is free for arrows (`world/fletch.rs`).
+pub(crate) fn landscape_at(content: &Content, level: &LevelState, at: Pos) -> Option<Landscape> {
     let terrain = match level.kind {
         LevelKind::Overworld => level.terrain_at(at)?,
         _ => {
@@ -62,7 +69,7 @@ pub(crate) fn forage_ground<'a>(
             *content.level(&exit.to)?.terrain.get(exit.pos)?
         }
     };
-    rules.ground(content.terrain(terrain).landscape?)
+    content.terrain(terrain).landscape
 }
 
 impl World {

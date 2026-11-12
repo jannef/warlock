@@ -762,8 +762,6 @@ enum Spent {
     Pray(pray::Prayer),
     /// Drinking at a healing spring (see [`World::drink`]).
     Drink(drink::Draught),
-    /// Fletching for this many seconds (see [`World::fletch`]).
-    Fletch(u32),
     /// Foraging in the wild for this many seconds (see [`World::forage`]).
     Forage(u32),
     /// Gathering herbs from the glowing fungus for this many seconds (see [`World::gather`]).
@@ -1438,7 +1436,6 @@ impl World {
             Spent::Sanctuary(until) => self.sanctuary(until, &mut events),
             Spent::Pray(prayer) => self.pray(prayer, &mut events),
             Spent::Drink(draught) => self.drink(draught, &mut events),
-            Spent::Fletch(seconds) => self.fletch(seconds, &mut events),
             Spent::Forage(seconds) => self.forage(seconds, &mut events),
             Spent::Gather(seconds) => self.gather(seconds, &mut events),
             Spent::Decipher(work) => self.decipher(work, &mut events),
@@ -1585,7 +1582,6 @@ impl World {
             Action::Drink => return self.start_drink(),
             Action::Forage => return self.start_forage(),
             Action::Gather(dir) => return self.start_gather(*dir),
-            Action::Fletch => return self.start_fletch(),
             Action::Craft { recipe, picks } => return self.start_craft(recipe, picks),
             Action::Decipher { item } => return self.start_decipher(*item),
             Action::Temper { item } => return self.start_temper(*item),

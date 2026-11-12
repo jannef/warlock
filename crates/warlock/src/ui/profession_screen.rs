@@ -1,13 +1,13 @@
 //! A profession's screen (spec §8 "Skills"; docs/design/professions.md §8; #1334): what its row
 //! in the abilities menu ("Metalcraft…") opens. The recipes the player sees
 //! (`PerceptionView::recipes`), in the one paged list grouped by the result's item class, the
-//! built-in recipes (Temper, Whittle, Fletch) first under "Work". A row is the recipe's name and
+//! built-in recipes (Temper, Whittle) first under "Work". A row is the recipe's name and
 //! what it takes in words ("a metal weapon or armour, an anvil, about 10 minutes"), never a
 //! difficulty or the odds; one that cannot be made now is greyed with its reason in place of
 //! what it takes ("no anvil beside you"), which the line under the list then gives in full. A
 //! letter on the page, or Enter on the `>` row, makes a recipe that can be made: a built-in one
-//! runs as from its old row (Temper's and Whittle's lists over this screen, Fletch at once);
-//! a greyed one does nothing. The list keys turn the page; Esc closes it. Every key is the
+//! runs as from its old row (Temper's and Whittle's lists over this screen), a generic one opens
+//! the forging wizard (the arrows too); a greyed one does nothing. The list keys turn the page; Esc closes it. Every key is the
 //! list's own, fixed.
 
 use super::menu::{Hints, Nav, Panel, Press};
@@ -170,7 +170,6 @@ impl ProfessionScreen {
         match entry.uses {
             Some(RecipeUse::Temper) => ScreenAction::Open(ScreenName::Temper),
             Some(RecipeUse::Whittle) => ScreenAction::Open(ScreenName::Whittle),
-            Some(RecipeUse::Fletch) => ScreenAction::Act(Action::Fletch),
             Some(RecipeUse::Cut) => ScreenAction::Open(ScreenName::Cut),
             // Greyed "not usable yet" until P11 builds its action.
             Some(RecipeUse::Set) => ScreenAction::Stay,
@@ -289,12 +288,14 @@ mod tests {
             screen.handle(&press('a'), &Bindings::default()),
             ScreenAction::Open(ScreenName::Temper)
         );
-        // Woodcraft's rows: the built-ins first, Fletch then Whittle (path order), then the
-        // hand-made weapons; all greyed without a knife.
+        // Woodcraft's rows: the built-in Whittle first, then the hand-made weapons and the
+        // missiles; all greyed without a knife.
         let mut screen = ProfessionScreen::new(Some(&world.perception()), Some(wood));
         screen.fit(100, 60);
         let names: Vec<&str> = screen.recipes.iter().map(|e| e.name.as_str()).collect();
-        assert_eq!(names[..3], ["Fletch", "Whittle", "Club"]);
+        assert_eq!(names[..2], ["Whittle", "Club"]);
+        assert!(names.contains(&"Arrows") && names.contains(&"Crossbow bolts"));
+        assert!(!names.contains(&"Fletch"));
         assert_eq!(
             screen.recipes.get(0).and_then(|e| e.why.as_deref()),
             Some("no knife")

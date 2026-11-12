@@ -1145,10 +1145,8 @@ mod tests {
             "{fletching}"
         );
         assert!(
-            fletching.contains(
-                "| What a launcher of arrows gets | brittle arrows; from Woodcraft 25, arrows | \
-                 arrows |"
-            ),
+            fletching
+                .contains("| Made, up to 3 short | half the count, rounded up | 2 times that |"),
             "{fletching}"
         );
         assert!(equipment.contains("| `m` | Tool | Lantern, pick-axe, mattock | 6 seconds |"));

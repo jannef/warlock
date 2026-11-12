@@ -33,7 +33,8 @@ fn sword(extra: &str) -> String {
 }
 
 #[test]
-fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_made_ones() {
+fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_made_ones_and_missiles()
+ {
     let content = Content::builtin().expect("content");
     let recipes = content.recipes();
     let metal = content.skill_id("metalcraft").expect("metalcraft");
@@ -49,6 +50,7 @@ fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_ma
     assert_eq!(
         of(metal),
         [
+            ("Arrowheads", None),
             ("Battle axe", None),
             ("Dagger", None),
             ("Glaive", None),
@@ -127,14 +129,17 @@ fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_ma
     assert_eq!(
         of(wood),
         [
+            ("Arrows", None),
+            ("Crossbow bolts", None),
             ("Club", None),
             ("Dagger", None),
-            ("Fletch", Some(RecipeUse::Fletch)),
+            ("Flaming arrows", None),
             ("Hand axe", None),
             ("Ironwood staff", None),
             ("Javelin", None),
             ("Knife", None),
             ("Quarterstaff", None),
+            ("Sling stones", None),
             ("Spear", None),
             ("Whittle", Some(RecipeUse::Whittle))
         ]
@@ -148,7 +153,7 @@ fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_ma
     // The other built-ins are open to everyone, as they were before (#1337 Q3).
     let built_in = (recipes.list.iter()).filter(|r| r.uses.is_some_and(|u| !u.checked()));
     assert!(built_in.clone().all(|r| r.anyone && r.result.is_none()));
-    assert_eq!(built_in.count(), 3);
+    assert_eq!(built_in.count(), 2);
     let cut = content.recipe(recipes.id("cut").expect("cut"));
     assert!(!cut.anyone && cut.result.is_none());
     let temper = content.recipe(recipes.id("temper").expect("temper"));
@@ -555,7 +560,7 @@ fn every_check_of_the_formats_second_half_refuses() {
         (
             "data/recipes/jewelcraft/polish.toml",
             "[[recipe]]\nid = \"polish\"\nuse = \"polish\"\n".into(),
-            "(temper, whittle, fletch, cut, set)",
+            "(temper, whittle, cut, set)",
         ),
         (
             "data/recipes/jewelcraft/facet.toml",
@@ -653,6 +658,73 @@ fn the_settings_file_refuses_an_unknown_skill_a_profession_twice_or_bands_out_of
         let got = message(&settings(from, to));
         assert!(got.contains(expected), "{to}: `{got}` lacks `{expected}`");
     }
+}
+
+/// The shipped missiles (docs/design/recipes.md §6 "Missiles"; #1336): the arrows' head from
+/// arrowheads, then bone and stone, or none (the brittle arrow); counted; and the head's sources
+/// checked against the arrow's `made_of`.
+#[test]
+fn the_shipped_arrows_take_a_head_of_three_sources_and_the_loader_checks_them() {
+    let content = Content::builtin().expect("content");
+    let recipe = |id: &str| content.recipe(content.recipes().id(id).expect(id));
+    let arrows = recipe("arrows");
+    assert_eq!(arrows.result.expect("made").count, RecipeCount::Fletch);
+    assert_eq!(arrows.brittle, content.object_id("brittle_arrow"));
+    assert!(arrows.knife && arrows.launcher && arrows.anyone);
+    let PartSource::Sources {
+        input,
+        stock,
+        optional,
+    } = &arrows.parts[0].source
+    else {
+        panic!("the head's sources");
+    };
+    assert_eq!(*input, content.object_id("arrowhead"));
+    assert!(optional);
+    let names: Vec<&str> = (stock.iter())
+        .map(|&m| content.material(m).id.as_str())
+        .collect();
+    // Plain stone strikes as nothing: ammunition's head keeps only what can be a weapon's.
+    for m in [
+        "bone",
+        "horn",
+        "chitin",
+        "ivory",
+        "dragonbone",
+        "flint",
+        "obsidian",
+    ] {
+        assert!(names.contains(&m), "{m}: {names:?}");
+    }
+    assert!(!names.contains(&"iron"), "metal only as arrowheads");
+    assert_eq!(arrows.parts[1].source, PartSource::Stock);
+    assert_eq!(recipe("bolts").brittle, content.object_id("brittle_bolt"));
+    let heads = recipe("arrowheads").result.expect("made");
+    assert_eq!(heads.count, RecipeCount::Dice(crate::dice::Dice::fixed(20)));
+    let flaming = recipe("flaming_arrows");
+    assert!(flaming.inputs[0].per_made && !flaming.inputs[1].per_made);
+    // A head of a group or a material the arrow may not be made of is refused.
+    let text = include_str!("../../../../assets/data/recipes/woodcraft/arrows.toml");
+    let head = "stock = [\"bone\", \"stone\"]";
+    for (to, says) in [
+        ("stock = [\"bone\", \"cloth\"]", "none of the group"),
+        (
+            "stock = [\"bone\", \"silk\"]",
+            "is not what it may be made of",
+        ),
+    ] {
+        let bad = text.replace(head, to);
+        assert_ne!(bad, text, "{to}");
+        let mut files = ContentFiles::builtin();
+        files.insert("data/recipes/woodcraft/arrows.toml", &bad);
+        let error = Content::load(&files).expect_err(to).to_string();
+        assert!(error.contains(says), "{to}: {error}");
+    }
+    let bad = text.replace("brittle = \"brittle_arrow\"\n", "");
+    let mut files = ContentFiles::builtin();
+    files.insert("data/recipes/woodcraft/arrows.toml", &bad);
+    let error = Content::load(&files).expect_err("no brittle").to_string();
+    assert!(error.contains("`brittle`"), "{error}");
 }
 
 #[test]

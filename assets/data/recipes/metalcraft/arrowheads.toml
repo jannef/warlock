@@ -1,0 +1,13 @@
+# Arrowheads, forged at an anvil by the score from one ingot of any metal (docs/design/recipes.md
+# §6 "Missiles", §7; docs/dev/crafting.md "Counted recipes"): counted, so no grades; the check's
+# margin scales the 20. The ingot is priced by the batch's weight (a hundred grams: one ingot).
+[[recipe]]
+id = "arrowheads"
+name = "Arrowheads"
+result = { object = "arrowhead", count = 20 }
+difficulty = 10
+seconds = 600
+station = "anvil"
+
+[recipe.parts]
+main = "stock"

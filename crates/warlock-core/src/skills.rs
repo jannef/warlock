@@ -108,8 +108,6 @@ pub const MAX_HEAL_BONUS: i32 = 20;
 pub const MAX_TAME_BONUS: i32 = 20;
 /// The most a skill adds to picking a lock (spec §8 "Doors").
 pub const MAX_PICK_BONUS: i32 = 20;
-/// The most a skill adds to the check of a batch of arrows (spec §8 "Fletching").
-pub const MAX_FLETCH_BONUS: i32 = 12;
 /// The most a skill adds to the sturdiness of a wedged door (spec §8 "Doors").
 pub const MAX_WEDGE_BONUS: i32 = 12;
 /// The most percent a skill adds to the chance of a forage finding food (spec §8 "Foraging").
@@ -305,9 +303,6 @@ pub enum Effect {
     /// Points added to picking a lock (spec §8 "Doors"; `world/lockpick.rs`); a skill with it,
     /// trained, lets the actor pick locks at all (the Pick lock ability).
     Pick,
-    /// Points added to the check of a batch of arrows or bolts (spec §8 "Fletching";
-    /// `world/fletch.rs`). Anyone may fletch; the skill only helps.
-    Fletch,
     /// Points added to the sturdiness of a door the actor wedges shut (spec §8 "Doors";
     /// `world/wedge.rs`); a skill with it, trained, lets the actor wedge doors at all (the Wedge
     /// ability).
@@ -386,7 +381,6 @@ impl Effect {
             Effect::Climb => MAX_CLIMB_CUT,
             Effect::Pick => MAX_PICK_BONUS,
             Effect::Forage => MAX_FORAGE_BONUS,
-            Effect::Fletch => MAX_FLETCH_BONUS,
             Effect::Wedge => MAX_WEDGE_BONUS,
             Effect::Temper => MAX_TEMPER_BONUS,
             Effect::Whittle => MAX_WHITTLE_BONUS,
@@ -472,8 +466,6 @@ pub enum Use {
     Kick,
     /// A try at picking a lock (spec §8 "Doors"), whatever comes of it.
     Pick,
-    /// A batch of arrows or bolts that ran its time (spec §8 "Fletching"), whatever came of it.
-    Fletch,
     /// A door wedged shut (spec §8 "Doors").
     Wedge,
     /// An attempt on an item at a forge's anvil done (spec §7 "Special rooms"), whatever comes of
@@ -559,7 +551,6 @@ impl Use {
             Use::Wriggle => "wriggling past a creature in the way, whatever comes of it",
             Use::Kick => "kicking at a closed door",
             Use::Pick => "a try at picking a lock",
-            Use::Fletch => "fletching a batch of arrows or bolts",
             Use::Wedge => "wedging a door shut",
             Use::Temper => "tempering an item at an anvil",
             Use::Whittle => "whittling a wooden item with a knife",
@@ -701,7 +692,6 @@ impl Use {
             Use::Wriggle => "wriggle",
             Use::Kick => "kick",
             Use::Pick => "pick",
-            Use::Fletch => "fletch",
             Use::Wedge => "wedge",
             Use::Temper => "temper",
             Use::Whittle => "whittle",
@@ -775,7 +765,6 @@ impl Effect {
             Effect::Kick => "kick",
             Effect::Dig => "dig",
             Effect::Pick => "pick",
-            Effect::Fletch => "fletch",
             Effect::Wedge => "wedge",
             Effect::Temper => "temper",
             Effect::Whittle => "whittle",
@@ -1040,8 +1029,7 @@ impl Skills {
             .any(|(id, _)| (content.skill(id).benefits.iter()).any(|b| b.effect == effect))
     }
 
-    /// The highest trained value among the skills that give `effect`; 0 untrained (Woodcraft's,
-    /// for [`Effect::Fletch`]).
+    /// The highest trained value among the skills that give `effect`; 0 untrained.
     pub fn value_of_effect(&self, content: &Content, effect: Effect) -> u16 {
         (self.iter())
             .filter(|(id, _)| (content.skill(*id).benefits.iter()).any(|b| b.effect == effect))
