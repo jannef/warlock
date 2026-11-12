@@ -42,6 +42,9 @@ const DESCRIPTION: i32 = 3;
 /// Rows besides the list: the frame, a margin, a gap, the description, a gap, the footer, the
 /// frame.
 const EXTRA: i32 = 6 + DESCRIPTION;
+/// Console rows the panel leaves free: the message line above it and the status bar below it
+/// (#1369), so a tall list pages instead of drawing over them.
+const OUTSIDE: i32 = 2;
 
 /// One ability as the menu shows it.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -175,11 +178,13 @@ impl AbilitiesScreen {
         }
     }
 
-    /// Lays the list out for a console of `cols` by `rows`: how many rows a page may take.
+    /// Lays the list out for a console of `cols` by `rows`: how many rows a page may take (the
+    /// panel keeps off the message line and the status bar).
     /// Drawing calls it, and so does the screen stack before a press, so a letter names what is
     /// drawn.
     pub fn fit(&self, _cols: u32, rows: u32) {
-        self.entries.set_room((rows as i32 - EXTRA).max(1) as usize);
+        self.entries
+            .set_room((rows as i32 - OUTSIDE - EXTRA).max(1) as usize);
     }
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
@@ -193,7 +198,8 @@ impl AbilitiesScreen {
         };
         let wide = longest(|e| &e.name) + longest(|e| &e.state) + ROW_EXTRA;
         let width = wide.clamp(WIDTH, (console.cols() as i32).max(WIDTH));
-        let panel = Panel::new(console, " Abilities ", width, count + EXTRA);
+        let height = (count + EXTRA).min(console.rows() as i32 - OUTSIDE);
+        let panel = Panel::new(console, " Abilities ", width, height);
         self.entries.draw_label(console, &panel);
         let (x, top) = (panel.inner_x(), panel.y + 2);
         let fits = |y: i32| y < panel.y + panel.h - 2;
@@ -458,6 +464,17 @@ mod tests {
     }
 
     #[test]
+    fn a_tall_list_pages_and_never_covers_the_first_or_last_console_row() {
+        let world = thief(false);
+        let screen = AbilitiesScreen::new(Some(&world.perception()), None);
+        // Room for nine rows of list only: the thief's thirteen rows make two pages.
+        let lines = drawn(&screen, 80, 20);
+        assert!(lines[0].trim().is_empty(), "{lines:?}");
+        assert!(lines[19].trim().is_empty(), "{lines:?}");
+        assert!(lines.join("\n").contains("Page 1/2"), "{lines:?}");
+    }
+
+    #[test]
     fn it_opens_on_the_ability_used_last() {
         let world = thief(false);
         let view = world.perception();
@@ -488,7 +505,7 @@ mod tests {
         let last = Some(Ability::ShieldBash);
         let screen = AbilitiesScreen::new(Some(&world.perception()), last);
         let text = drawn(&screen, 80, 13).join("\n");
-        assert!(text.contains("Page 4/4"), "{text}");
+        assert!(text.contains("Page 8/8"), "{text}");
         assert!(text.contains("> a  Shield bash"), "{text}");
     }
 }

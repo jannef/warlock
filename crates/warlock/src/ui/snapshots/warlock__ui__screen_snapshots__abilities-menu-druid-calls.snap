@@ -2,8 +2,9 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn┌─ Abilities ────────────────────────────────────────────────────── Page 1/2 ─┐
- You call,│                                                                             │
+ You learn Sworn foe (animated).
+ You call,┌─ Abilities ────────────────────────────────────────────────────── Page 1/2 ─┐
+          │                                                                             │
           │ Birth sign                                                                  │
           │ > a  Transfixing stare   at a place you see                                 │
           │ Spells                                                                      │
@@ -23,12 +24,11 @@ expression: "render(case, content.clone())"
           │   n  Tame                no beast beside you to tame                        │
           │   o  Heal                nothing to treat                                   │
           │   p  Metalcraft…                                                            │
-          │   q  Forage              not usable here                                    │
-          │   r  Woodcraft…                                                             │
           │                                                                             │
           │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; │
           │ your eyes then rest two hours.                                              │
           │                                                                             │
           │                                                                             │
-          │ a-r or Enter use   > < page   Esc close                                     │
- The Hub  └─────────────────────────────────────────────────────────────────────────────┘? controls
+          │ a-p or Enter use   > < page   Esc close                                     │
+          └─────────────────────────────────────────────────────────────────────────────┘
+ The Hub  ·  HP 98/98  ·  MP 217/222  ·  Lv 36  ·  08:00  ·  11 Darkening, Year 1444     ? controls

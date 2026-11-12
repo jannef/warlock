@@ -170,7 +170,7 @@ to open, read keys for, or draw one:
   of stacks is the one `PagedList`** (the inventory, pick up, drop, throw, eat, read, identify, the
   equip choice;
   sell is a drop in a shop, identify a dev action): never a list or scrolling of its own. The
-  abilities menu is one too, grouped by `Source` instead of item class
+  abilities menu is one too, grouped by `Source` instead of item class (it keeps the top and bottom console rows free for the message line and status bar, #1369)
   (`PagedList::grouped(items, name)`; `PagedList::new` groups by item class). A stack's row
   names it with `Lore::listed` (its name and its numbers, `(+0 hit, 1d8)`, `(Dv +1, Pv 1)`;
   `magic::numbers`, #552), so the item lists' panels are 78 wide (the equip choice's too). Items
