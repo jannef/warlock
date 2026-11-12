@@ -1,0 +1,14 @@
+# A pair of hobnailed boots of hide, the nails an ingot of any metal (spent, never a part; clothing:
+# plain at any margin): Woodcraft's, with a knife carried and no station (docs/design/recipes.md §6
+# "Clothing", the hand route; docs/dev/crafting.md "Hide gear"). The stock is priced by the weight.
+[[recipe]]
+id = "hobnailed_boots"
+name = "Hobnailed boots"
+result = { object = "hobnailed_boots" }
+difficulty = 7
+seconds = 1200
+knife = true
+inputs = [{ group = "metal", count = 1 }]
+
+[recipe.parts]
+main = { stock = ["hide"] }

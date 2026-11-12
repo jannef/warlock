@@ -1,0 +1,12 @@
+# A buckler of wood, hide, chitin, or dragonscale, by hand: Woodcraft's, with a knife carried and no
+# station (docs/design/recipes.md §6 "Shields", the hand route; docs/dev/crafting.md "Hide gear").
+# The stock is priced by the weight.
+[[recipe]]
+id = "buckler_by_hand"
+result = { object = "buckler" }
+difficulty = 10
+seconds = 3600
+knife = true
+
+[recipe.parts]
+main = { stock = ["wood", "hide", "chitin", "dragonscale"] }

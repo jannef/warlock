@@ -1,0 +1,13 @@
+# A tower shield of wood, hide, chitin, or dragonscale, by hand: Woodcraft's, with a knife carried
+# and no station (docs/design/recipes.md §6 "Shields", the hand route; docs/dev/crafting.md "Hide
+# gear"). The stock is priced by the weight.
+[[recipe]]
+id = "tower_shield_by_hand"
+result = { object = "tower_shield" }
+difficulty = 14
+seconds = 7200
+knife = true
+from = 30
+
+[recipe.parts]
+main = { stock = ["wood", "hide", "chitin", "dragonscale"] }

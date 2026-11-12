@@ -1,0 +1,13 @@
+# An iron helm's shape of hide or bone, by hand: Woodcraft's, with a knife carried and no station
+# (docs/design/recipes.md §6 "Helmets", the hand route; docs/dev/crafting.md "Hide gear"). The stock
+# is priced by the weight.
+[[recipe]]
+id = "iron_helm_by_hand"
+result = { object = "iron_helm" }
+difficulty = 11
+seconds = 3600
+knife = true
+from = 10
+
+[recipe.parts]
+main = { stock = ["hide", "bone"] }

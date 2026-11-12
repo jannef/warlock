@@ -154,7 +154,8 @@ not:
   made finer with a knife (see [Whittling](#whittling)).
 
 Those trained in Metalcraft also forge weapons at an anvil from metal stock, and those trained in
-Woodcraft make knives, spears, clubs, and staves by hand from wood, bone, and flint (see
+Woodcraft make knives, spears, clubs, staves, armour, and clothes by hand from wood, bone, flint,
+and hides (see
 [Crafting](crafting.md)).
 
 [Jewelcraft](skills.md#skill-jewelcraft) is a profession too, but only for those trained in it:

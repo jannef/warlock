@@ -1,0 +1,13 @@
+# A pair of soft boots of hide (clothing: plain at any margin): Woodcraft's, with a knife carried
+# and no station (docs/design/recipes.md §6 "Clothing", the hand route; docs/dev/crafting.md "Hide
+# gear"). The stock is priced by the weight.
+[[recipe]]
+id = "soft_boots"
+name = "Soft boots"
+result = { object = "soft_boots" }
+difficulty = 7
+seconds = 1200
+knife = true
+
+[recipe.parts]
+main = { stock = ["hide"] }

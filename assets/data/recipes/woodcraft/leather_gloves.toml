@@ -1,0 +1,13 @@
+# A pair of leather gloves of hide: Woodcraft's, with a knife carried and no station
+# (docs/design/recipes.md §6 "Cloaks, gloves, boots", the hand route; docs/dev/crafting.md "Hide
+# gear"). The stock is priced by the weight.
+[[recipe]]
+id = "leather_gloves"
+name = "Leather gloves"
+result = { object = "leather_gloves" }
+difficulty = 9
+seconds = 1200
+knife = true
+
+[recipe.parts]
+main = { stock = ["hide"] }

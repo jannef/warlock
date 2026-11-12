@@ -1,0 +1,14 @@
+# A suit of scale mail, its scales of bone or dragonscale, by hand: Woodcraft's, with a knife
+# carried and no station (docs/design/recipes.md §6 "Body armour", the hand route;
+# docs/dev/crafting.md "Hide gear"). The stock is priced by the weight.
+[[recipe]]
+id = "scale_mail_by_hand"
+name = "Scale mail"
+result = { object = "scale_mail" }
+difficulty = 14
+seconds = 7200
+knife = true
+from = 30
+
+[recipe.parts]
+main = { stock = ["bone", "dragonscale"] }

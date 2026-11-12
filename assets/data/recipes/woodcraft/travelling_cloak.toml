@@ -1,0 +1,12 @@
+# A travelling cloak of hides or pelts: Woodcraft's, with a knife carried and no station
+# (docs/design/recipes.md §6 "Cloaks, gloves, boots", the hand route; docs/dev/crafting.md "Hide
+# gear"). The stock is priced by the weight.
+[[recipe]]
+id = "travelling_cloak"
+result = { object = "travelling_cloak" }
+difficulty = 10
+seconds = 3600
+knife = true
+
+[recipe.parts]
+main = { stock = ["leather", "fur"] }
