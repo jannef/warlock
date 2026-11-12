@@ -1,5 +1,6 @@
 //! Making a generic recipe (spec §8 "Skills": professions; docs/design/professions.md §7, §8,
-//! docs/design/recipes.md §4; docs/dev/crafting.md "Making a recipe"): the forge's swords.
+//! docs/design/recipes.md §4, §6; docs/dev/crafting.md "Making a recipe"): the forge's weapons and
+//! the hand-made ones.
 //!
 //! - **The steps** ([`craft_steps`], what the wizard lists, through
 //!   [`PerceptionView::craft_steps`]): one choice for each `"stock"` part of the result, in part
@@ -15,7 +16,8 @@
 //! - **The work**: the recipe's `seconds`, in turns of [`ActionKind::Craft`]
 //!   ([`World::keep_at`]); an interruption costs only the time. Done, the plan is made again
 //!   from the pack ("You have nothing left to work with." if it no longer holds), then one check
-//!   (two gameplay draws, the natural roll): the profession's stat modifier, what the skill gives
+//!   (two gameplay draws, the natural roll): the recipe's profession's stat modifier (its
+//!   directory's: a flint knife is Woodcraft's, with Dexterity), what the skill gives
 //!   of [`Effect::Craft`] (that skill's alone), and the talents' checks of the stat, against the
 //!   recipe's `difficulty` plus the `work` of the main chosen part's material. The margin's
 //!   [`Grade`] by `data/recipes.toml`'s bands: a Masterwork, Marvellous, Fine (three, two, one
@@ -27,8 +29,8 @@
 //!   object inputs come back at the settings' `yield` (pieces by [`crate::piece::count_for`],
 //!   at least one of each). Either way the skill may earn a mark ([`Use::Craft`]).
 //!
-//! Only `"stock"` parts, object inputs, and the ornament have steps yet: a recipe needing any
-//! other part source, a stock input, a count, a failure or fumble object, or a brittle result
+//! Only stock parts (`"stock"`, or a table of `stock` alone: a spear's haft of another profession's
+//! wood), object inputs, and the ornament have steps yet: a recipe needing any other part source, a stock input, a count, a failure or fumble object, or a brittle result
 //! is refused ("You cannot make that yet.") until the phase that builds its step.
 //!
 //! [`PerceptionView::craft_steps`]: crate::perception::PerceptionView::craft_steps
@@ -36,14 +38,13 @@
 //! [`Effect::Craft`]: crate::skills::Effect::Craft
 //! [`Use::Craft`]: crate::skills::Use::Craft
 
-use super::craft::{RecipeLack, lack, stack_material, worked_materials};
+use super::craft::{RecipeLack, lack, stack_material, stock_only, worked_materials};
 use super::rest::Ended;
 use super::{Actor, Spent, World};
 use crate::action::Event;
 use crate::combat;
 use crate::content::{
-    ActionKind, Content, MaterialId, PartSource, RecipeCount, RecipeDef, RecipeId, RecipeSettings,
-    counted,
+    ActionKind, Content, MaterialId, RecipeCount, RecipeDef, RecipeId, RecipeSettings, counted,
 };
 use crate::item_parts::{self, ItemPart};
 use crate::magic::Worked;
@@ -183,7 +184,7 @@ fn steps(content: &Content, recipe: &RecipeDef) -> Option<Vec<Step>> {
     }
     let mut steps = Vec::new();
     for part in &recipe.parts {
-        if part.source != PartSource::Stock {
+        if !stock_only(&part.source) {
             return None;
         }
         steps.push(Step::Part(part.part));
@@ -203,7 +204,7 @@ fn steps(content: &Content, recipe: &RecipeDef) -> Option<Vec<Step>> {
 /// The pieces of `material` part `part` of `recipe`'s result takes: its share of the result's
 /// weight, scaled by the material's weight over the base part's as the made item weighs it, in
 /// pieces ([`crate::piece::count_for`]); with the grams, for a failure's return.
-fn stock_need(
+pub(super) fn stock_need(
     content: &Content,
     recipe: &RecipeDef,
     part: usize,
@@ -242,9 +243,11 @@ fn label(content: &Content, recipe: &RecipeDef, step: Step) -> String {
         Step::Part(i) => (def.parts.get(i))
             .and_then(|p| part_name(p.part))
             .or_else(|| {
+                // The group of the stock it takes, when that is one group: "metal".
                 let worked = worked_materials(content, recipe, result.object, i);
-                let m = content.material(*worked.first()?);
-                m.group.clone()
+                let group = |m: &MaterialId| content.material(*m).group.clone();
+                let first = group(worked.first()?);
+                worked.iter().all(|m| group(m) == first).then_some(first)?
             })
             .unwrap_or_else(|| "material".into()),
         Step::Input(i) => (recipe.inputs[i].object())
@@ -454,8 +457,7 @@ pub(crate) fn craft_plan(
             }
         });
     }
-    let verb = (resolved.main)
-        .and_then(|m| content.stock().profession_of(content, m))
+    let verb = profession(content, def, resolved.main)
         .map_or_else(|| "Make".to_string(), |p| p.verb.clone());
     Ok(CraftPlan {
         verb,
@@ -467,6 +469,17 @@ pub(crate) fn craft_plan(
             Duration::seconds(u64::from(def.seconds)).spoken()
         ),
     })
+}
+
+/// The profession `recipe` is made by: its own skill's (the directory's: a flint knife is
+/// Woodcraft's, a steel one Metalcraft's), else the main material's.
+fn profession<'c>(
+    content: &'c Content,
+    recipe: &RecipeDef,
+    main: Option<MaterialId>,
+) -> Option<&'c crate::content::Profession> {
+    let stock = content.stock();
+    (stock.profession(recipe.skill)).or_else(|| stock.profession_of(content, main?))
 }
 
 /// `items` joined as a list is said: "a, b and c".
@@ -561,8 +574,7 @@ impl World {
     /// The modifier of the player's check for recipe `def` (the module docs).
     pub(crate) fn craft_modifier(&self, def: &RecipeDef, main: Option<MaterialId>) -> i32 {
         let content = &self.content;
-        let stat = (main.and_then(|m| content.stock().profession_of(content, m)))
-            .map_or(Stat::Strength, |p| p.stat);
+        let stat = profession(content, def, main).map_or(Stat::Strength, |p| p.stat);
         let me = self.state.player();
         me.effective_stats(content).modifier(stat)
             + me.skill_effect_of(content, def.skill, Effect::Craft)
@@ -594,7 +606,9 @@ impl World {
         let settings = content.recipes().settings.as_ref();
         let grade = grade(settings, natural, margin);
         let Resolved {
-            mut made, spends, ..
+            mut made,
+            spends,
+            main,
         } = resolved;
         // Highest position first, so a stack used up leaves the others where they were.
         let mut spends = spends;
@@ -613,7 +627,11 @@ impl World {
             }
         }
         if failed {
-            self.say("The blade comes out brittle and you break it up for the metal.");
+            let metal = (main.and_then(|m| content.material(m).group.as_deref())) == Some("metal");
+            self.say(match metal {
+                true => "The blade comes out brittle and you break it up for the metal.",
+                false => "The work goes wrong, and you save what you can of it.",
+            });
             return;
         }
         let among = aspects(content.object(made.object));

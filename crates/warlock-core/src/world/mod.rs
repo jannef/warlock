@@ -1776,6 +1776,8 @@ mod cost_tests;
 #[cfg(test)]
 mod court_tests;
 #[cfg(test)]
+mod craft_hand_tests;
+#[cfg(test)]
 mod craft_make_tests;
 #[cfg(test)]
 mod craft_tests;

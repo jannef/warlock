@@ -89,6 +89,14 @@ impl Stock {
         self.group_of(content, material)?.profession.as_ref()
     }
 
+    /// The profession of `skill` as the file names it: the first group's row (else material's
+    /// row) worked by that skill, with its stat and verb; none for a skill that works no stock.
+    pub fn profession(&self, skill: SkillId) -> Option<&Profession> {
+        let groups = self.groups.iter().filter_map(|g| g.profession.as_ref());
+        let own = self.materials.iter().filter_map(|m| m.profession.as_ref());
+        groups.chain(own).find(|p| p.skill == skill)
+    }
+
     /// The form word of a piece of `material`, singular and plural, and whether the material
     /// comes after it ("lump of amber"): its own row's word if it has one, else its group's;
     /// none for a material whose group has no row.

@@ -1,0 +1,12 @@
+# A stiletto, a slim steel point (no hand route: its bone and stone fall to the dagger's), forged
+# at an anvil from the smith's metal stock (docs/design/recipes.md §6 "Melee weapons", the metal
+# route; docs/dev/crafting.md). The stock is priced by the weight.
+[[recipe]]
+id = "stiletto"
+result = { object = "stiletto" }
+difficulty = 11
+seconds = 1800
+station = "anvil"
+
+[recipe.parts]
+main = "stock"

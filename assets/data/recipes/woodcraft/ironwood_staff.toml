@@ -1,0 +1,14 @@
+# An ironwood staff, of ironwood only (its work adds 3), with a tip: Woodcraft's, with a knife
+# carried and no station (docs/design/recipes.md §6 "Melee weapons", the hand route;
+# docs/dev/crafting.md). The stock is priced by the weight.
+[[recipe]]
+id = "ironwood_staff"
+result = { object = "ironwood_staff" }
+difficulty = 12
+seconds = 2700
+knife = true
+from = 30
+ornament = true
+
+[recipe.parts]
+main = { stock = ["ironwood"] }

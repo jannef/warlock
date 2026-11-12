@@ -5,8 +5,10 @@ Three [skills](skills.md) are crafts that work materials: [Metalcraft](skills.md
 some [materials](materials.md#materials), and its checks use one [stat](stats.md). Everyone can
 take things apart for their materials: **salvage**. A smith trained in Metalcraft can also forge
 weapons at an anvil from metal **stock**: ingots of steel, iron, mithril, and the rest, which you
-can buy, find, or get by salvaging. The recipes are on the
-[Metalcraft…](abilities.md#ability-metalcraft) list in the
+can buy, find, or get by salvaging. Someone trained in Woodcraft can make knives, spears, clubs,
+and staves by hand, with a knife, from billets of wood, shards of bone, and blocks of flint or
+stone. The recipes are on the [Metalcraft…](abilities.md#ability-metalcraft) and
+[Woodcraft…](abilities.md#ability-woodcraft) lists in the
 [abilities menu](abilities.md#the-abilities-menu) (see [Professions](skill-uses.md#professions)).
 
 ## Who works what
@@ -37,8 +39,10 @@ a time:
 
 1. **The metal**: the stacks of ingots you carry that the weapon may be made of, each with how many
    it takes. A stack with too few is greyed out "too few".
-2. **A gem for the pommel**, if the weapon has one: a cut gem you carry, or **None** (press `-`).
-   An uncut gem cannot be set.
+2. **The haft**, for a spear or a javelin: billets of wood. A smith needs wood for these too, so
+   the recipe is greyed out "no wood to hand" without it.
+3. **A gem for the ornament** (a pommel, an inlay), if the recipe has one: a cut gem you carry, or
+   **None** (press `-`). An uncut gem cannot be set.
 
 Esc goes back a step and keeps what you chose there. After the last choice you are asked to
 confirm, with the weapon named as it will be made: "Forge a ruby-pommelled mithril short sword? It
@@ -49,21 +53,45 @@ mithril blade is lighter. A set gem adds its worth. The weapon you make is
 [identified](magic-items.md#unidentified-items): you know your own work.
 
 Forging takes the recipe's time. Anything that would stop a [rest](resting.md#how-resting-works)
-stops it; then nothing is spent but the time. Every finished piece of work may train
-[Metalcraft](skills.md#skill-metalcraft), whatever came of it.
+stops it; then nothing is spent but the time. Every finished piece of work may train the craft's
+skill, [Metalcraft](skills.md#skill-metalcraft) or [Woodcraft](skills.md#skill-woodcraft),
+whatever came of it.
+
+## Making a weapon by hand
+
+Some weapons need no forge. With [Woodcraft](skills.md#skill-woodcraft) and a knife in your pack,
+you can make them anywhere: open [Woodcraft…](abilities.md#ability-woodcraft) and choose one. The
+lists are the same as at the anvil: the stock for each part (a knife's flint or bone, a spear's
+head and then its haft of wood), then a gem if the weapon has an ornament. Without a knife the
+recipes are greyed out "no knife".
+
+What you make depends on the recipe, not the material. A flint knife is Woodcraft's, made with
+Dexterity; a steel knife is Metalcraft's, forged with Strength. A smith's spear still takes a
+wooden haft, but it is a Metalcraft recipe all the same.
+
+Some weapons are never made by hand. A battle axe or a great axe of stone would shatter, a
+stiletto is a slim steel point, and a sword of dragonbone is only ever found.
 
 ## The recipes
 
-You know a recipe by your [Metalcraft](skills.md#skill-metalcraft), never by learning it: each is
-listed from a skill value, and greyed out "beyond your skill" below it.
+You know a recipe by your skill in its craft, never by learning it: each is listed from a skill
+value, and greyed out "beyond your skill" below it. Only those trained in the craft see these
+recipes.
 
-{{#include generated/recipes.md}}
+### Metalcraft
+
+{{#include generated/recipes-metalcraft.md}}
+
+### Woodcraft
+
+{{#include generated/recipes-woodcraft.md}}
 
 ## How well it comes out
 
-When the time is up you make one check: 2d12, plus your [Strength](stats.md#stat-strength)
-modifier, what [Metalcraft](skills.md#skill-metalcraft) gives (+8 at 100, +12 at 200), and your
-[talents](talents.md) for Strength checks, against the recipe's difficulty. How far you beat it
+When the time is up you make one check: 2d12, plus the craft's stat modifier
+([Strength](stats.md#stat-strength) for Metalcraft, [Dexterity](stats.md#stat-dexterity) for
+Woodcraft), what the craft's skill gives (+8 at 100, +12 at 200), and your [talents](talents.md)
+for checks of that stat, against the recipe's difficulty plus the main material's work. How far you beat it
 (the **margin**) sets the grade:
 
 {{#include generated/crafting-grades.md}}
@@ -72,8 +100,8 @@ A **Fine**, **Marvellous**, or **Masterwork** weapon is exactly a weapon the anv
 twice, or three times (see [Forges](altars-forges-springs.md#forges)): each grade is one more
 improvement to one of its numbers, and the forge counts as that many attempts. So you can temper
 a Fine weapon further, but each attempt is as hard as on any once-tempered weapon, and a
-Masterwork can be made no finer. A failure makes nothing: you break the blade up and get half the
-metal back, and keep the gem.
+Masterwork can be made no finer. A failure makes nothing: you break the work up and get half the
+stock back, and keep the gem.
 
 ## Salvage
 
