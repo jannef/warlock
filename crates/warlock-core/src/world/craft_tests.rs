@@ -206,3 +206,33 @@ fn crafting_is_refused_with_no_time_until_the_forge() {
         assert_eq!(last.as_deref(), Some(said), "{text}");
     }
 }
+
+#[test]
+fn jewelcrafts_cut_and_set_are_listed_but_not_usable_yet() {
+    // P10 and P11 add the files; a fixture gives Jewelcraft its directory now.
+    let mut files = ContentFiles::builtin();
+    files.insert(
+        "data/recipes/jewelcraft/cut.toml",
+        "[[recipe]]\nid = \"cut\"\nuse = \"cut\"\nanyone = true\n",
+    );
+    files.insert(
+        "data/recipes/jewelcraft/set.toml",
+        "[[recipe]]\nid = \"set\"\nuse = \"set\"\nanyone = true\n",
+    );
+    let content = Arc::new(Content::load(&files).expect("fixture content is valid"));
+    let mut w = world(content, "showcase");
+    assert_eq!(
+        rows(&w, "jewelcraft"),
+        [
+            "Cut: a loose gem (not usable yet)",
+            "Set: an item and a cut gem (not usable yet)"
+        ]
+    );
+    let start = w.state.time;
+    for action in crate::action::parse_actions("craft:cut").expect("parses") {
+        w.apply(&action);
+    }
+    assert_eq!(w.state.time, start);
+    let last = (w.messages().iter().last()).map(|m| m.text.clone());
+    assert_eq!(last.as_deref(), Some("You cannot do that yet."));
+}
