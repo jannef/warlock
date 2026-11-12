@@ -2,12 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Welcome to Forge. Press ? for controls.
  A cold forge, and an anvil waiting.
-
-
-
-
+ There are several objects here.
 
 
 
@@ -16,15 +12,19 @@ expression: "render(case, content.clone())"
             │                                                                          │
             │ Work                                                                     │
             │ > a - Temper        a metal weapon or armour, an anvil, about 10 minutes │
+            │ Melee weapons                                                            │
+            │   b - Dagger        no metal to hand                                     │
+            │   c - Great sword   beyond your skill                                    │
+            │   d - Knife         no metal to hand                                     │
+            │   e - Long sword    beyond your skill                                    │
+            │   f - Rapier        beyond your skill                                    │
+            │   g - Scimitar      beyond your skill                                    │
+            │   h - Short sword   no metal to hand                                     │
             │                                                                          │
             │ Takes a metal weapon or armour, an anvil, about 10 minutes.              │
             │                                                                          │
-            │ a or Enter make   Esc back                                               │
+            │ a-h or Enter make   Esc back                                             │
             └──────────────────────────────────────────────────────────────────────────┘
-
-
-
-
 
 
 

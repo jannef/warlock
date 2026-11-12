@@ -101,8 +101,7 @@ impl World {
                 self.content.weapon_ability(id).active?.action
             }
             Action::Act(..) => return None,
-            // Every craft is refused until the forge (P5) gives it a kind of its own.
-            Action::Craft { .. } => return None,
+            Action::Craft { .. } => ActionKind::Craft,
             Action::Cast(..) | Action::CastOn(..) => ActionKind::Cast,
             Action::Sell(_)
             | Action::Pay(None)

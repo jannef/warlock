@@ -90,6 +90,7 @@ pub(super) fn action_costs(content: &Content) -> String {
             ActionKind::Whittle => {
                 "A turn of whittling a wooden item with a knife (whittling takes ten minutes)"
             }
+            ActionKind::Craft => "A turn of making a recipe (the recipe says how long it takes)",
             ActionKind::Salvage => {
                 "A turn of salvaging an item for its materials (salvaging takes ten minutes)"
             }

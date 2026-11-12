@@ -103,6 +103,8 @@ pub(super) enum Term {
     /// A use of the priest's prayer (disease, wounds, ...): on the prayer page.
     PrayerUse,
     Race,
+    /// A profession's recipe: on the crafting page.
+    Recipe,
     Resource,
     Room,
     School,
@@ -136,6 +138,7 @@ impl Term {
             Term::Potion => ("potions.md", "potion"),
             Term::PrayerUse => ("prayer.md", "prayer"),
             Term::Race => ("races.md", "race"),
+            Term::Recipe => ("crafting.md", "recipe"),
             Term::Resource => ("resources.md", "resource"),
             Term::Room => ("special-rooms.md", "room"),
             Term::School => ("schools.md", "school"),

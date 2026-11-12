@@ -137,7 +137,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Wedge => "a door you wedge shut is harder to kick in",
         Effect::Temper => "tempering at a forge's anvil",
         Effect::Whittle => "whittling wood with a knife",
-        Effect::Craft => "its craft: salvaging the materials it works",
+        Effect::Craft => "its craft: making its recipes and salvaging the materials it works",
         Effect::Wade => "wading through water and marsh is quicker",
         Effect::Footing => "walking over rough ground (bush, reeds, rubble, ice) is quicker",
         Effect::SteadyEase => "less time lost when you are staggered",

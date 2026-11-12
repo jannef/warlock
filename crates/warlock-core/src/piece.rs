@@ -256,8 +256,15 @@ mod tests {
             pieces(&content, "glass", 2).describe(&content),
             "2 pieces of glass"
         );
-        // Without the file at all, every piece is a piece.
+        // Without the file at all, every piece is a piece (and no recipe takes stock).
         files.remove("data/stock.toml");
+        let made: Vec<String> = (files.table("recipes"))
+            .filter(|(_, text)| text.contains("\nresult ="))
+            .map(|(path, _)| path.to_string())
+            .collect();
+        for path in made {
+            files.remove(&path);
+        }
         let content = Content::load(&files).expect("content");
         assert_eq!(
             pieces(&content, "steel", 1).describe(&content),

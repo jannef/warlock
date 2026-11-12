@@ -849,6 +849,51 @@ const CASES: &[Case] = &[
         screen: Some("profession"),
         ..BASE
     },
+    // The forge's stock picked up beside the anvil: the swords under "Melee weapons", those from
+    // a higher Metalcraft greyed "beyond your skill".
+    Case {
+        name: "profession-metalcraft-stock",
+        scenario: "forge",
+        actions: "move:E pickup",
+        screen: Some("profession"),
+        ..BASE
+    },
+    // The short sword's wizard (#1335): its first step, the blade, the ingots carried with what
+    // the recipe takes of each.
+    Case {
+        name: "craft-pick-blade",
+        scenario: "forge",
+        actions: "move:E pickup",
+        screen: Some("profession"),
+        keys: Some("h"),
+        ..BASE
+    },
+    // Its second, the pommel: None on `-`, the cut gems; the running choice in the header.
+    Case {
+        name: "craft-pick-pommel",
+        scenario: "forge",
+        actions: "move:E pickup",
+        screen: Some("profession"),
+        keys: Some("h c"),
+        ..BASE
+    },
+    // The last pick asks in the one dialog, with the item named as it will be made.
+    Case {
+        name: "craft-pick-dialog",
+        scenario: "forge",
+        actions: "move:E pickup",
+        screen: Some("profession"),
+        keys: Some("h c a"),
+        ..BASE
+    },
+    // `--screen craft-pick`: the first recipe with a choice, the dagger, with nothing carried.
+    Case {
+        name: "craft-pick-first",
+        scenario: "forge",
+        actions: "move:E",
+        screen: Some("craft-pick"),
+        ..BASE
+    },
     // Beside a healing spring (spec §7 "Special rooms"): Drink in the Here group, last.
     Case {
         name: "abilities-menu-spring",

@@ -145,6 +145,9 @@ not:
 
 - Metalcraft: **Temper**, a metal weapon or armour made finer at an anvil (see
   [Forges](altars-forges-springs.md#forges)).
+
+Those trained in Metalcraft also forge swords at an anvil from metal stock (see
+[Crafting](crafting.md)).
 - Woodcraft: **Fletch**, arrows or bolts for your bow or crossbow (see [Fletching](#fletching)),
   and **Whittle**, a wooden weapon made finer with a knife (see [Whittling](#whittling)).
 

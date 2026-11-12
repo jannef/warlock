@@ -125,6 +125,7 @@ mod corpse_spell;
 mod corrode;
 mod court;
 mod craft;
+mod craft_make;
 mod creation;
 mod creature_burst;
 mod creature_cast;
@@ -323,6 +324,8 @@ pub(crate) use companion::smelt_within;
 pub use companion::{CompanionData, draw as companion_draw, name_for as companion_name};
 pub(crate) use craft::recipe_rows;
 pub use craft::{RecipeLack, RecipeRow};
+pub use craft_make::{CraftOption, CraftPlan, CraftStep, CraftStepKind, Grade, grade};
+pub(crate) use craft_make::{craft_plan, craft_steps};
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
 pub use curse::{Rising, rise_candidates, rises_as};
 pub use decipher::undeciphered;
@@ -767,6 +770,8 @@ enum Spent {
     Decipher(decipher::Deciphering),
     /// Tempering an item at a forge's anvil (see [`World::temper`]).
     Temper(temper::Tempering),
+    /// Making a recipe (see [`World::make`]).
+    Craft(craft_make::Crafting),
     /// Salvaging an item for its materials (see [`World::salvage`]).
     Salvage(salvage::Salvaging),
     /// Taming a beast beside the player (see [`World::tame`]).
@@ -1434,6 +1439,7 @@ impl World {
             Spent::Gather(seconds) => self.gather(seconds, &mut events),
             Spent::Decipher(work) => self.decipher(work, &mut events),
             Spent::Temper(work) => self.temper(work, &mut events),
+            Spent::Craft(work) => self.make(work, &mut events),
             Spent::Salvage(work) => self.salvage(work, &mut events),
             Spent::Tame(taming) => self.tame(taming, &mut events),
             Spent::Skip(duration) => {
@@ -1769,6 +1775,8 @@ mod corrode_tests;
 mod cost_tests;
 #[cfg(test)]
 mod court_tests;
+#[cfg(test)]
+mod craft_make_tests;
 #[cfg(test)]
 mod craft_tests;
 #[cfg(test)]

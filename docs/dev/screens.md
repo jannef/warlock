@@ -229,6 +229,10 @@ to open, read keys for, or draw one:
   read-only, the developer keys only where they work), `ui/shape_screen.rs` (the shape list of the Hunter's Spirit weapon, `Aim::Shape`, opened by
   `use_ability`: every melee weapon, `PerceptionView::weapon_shapes`, in a `PagedList` grouped by
   weapon skill; a letter or Enter sends `Action::Shape`; `--screen shape`),
+  `ui/craft_pick_screen.rs` (the forging wizard, `ScreenName::CraftPick(RecipeId)`: a paged list
+  per choice of a generic recipe, then `ScreenName::CraftConfirm`, the one dialog built from the
+  wizard's picks through `Beneath::craft`; `--screen craft-pick`; docs/dev/crafting.md "The forging
+  wizard"),
   `ui/profession_screen.rs` (a profession's recipes, `Aim::Recipes`, opened by `use_ability` as
   `ScreenName::Profession(skill)`: `PerceptionView::recipes` in a `PagedList` grouped by the
   result's item class, the built-in recipes first under "Work", each row its name and what it

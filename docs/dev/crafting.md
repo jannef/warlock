@@ -1,17 +1,19 @@
 # Crafting: professions, recipes, salvage
 
 Spec §8 "Skills" (professions); design `docs/design/professions.md` (§6 the recipe format, §8 the
-menus) and `docs/design/recipes.md` (the format's second half, P4b); epic #1337. This topic
-covers what is built: the recipe data, the profession rows of the abilities menu, the profession
-screen, `Action::Craft`, who works which material, and salvage. Material stock (the piece) is
-in `docs/dev/objects.md`.
+menus) and `docs/design/recipes.md` (§4 the grades, the format's second half, P4b); epic #1337.
+This topic covers what is built: the recipe data, the profession rows of the abilities menu, the
+profession screen, `Action::Craft`, who works which material, making a generic recipe (the
+forge, P5), the forging wizard, and salvage. Material stock (the piece) is in
+`docs/dev/objects.md`.
 
 ## Who works what: professions and stock
 
 - **The skills** (`data/skills.toml`): Metalcraft, Woodcraft, and Jewelcraft are the professions
   that work materials today (Alchemy, Enchanting, Herbalism, and Mining are skills with no craft
   yet, #1331). Each declares `{ effect = "craft", curve = [[0, 0], [100, 8], [200, 12]] }`
-  (Temper's curve) and a `salvage` mark rule at 100 %. Temper's, Whittle's, and Fletch's own
+  (Temper's curve, read by salvage and by a recipe made) and a `salvage` mark rule at 100 %
+  (Metalcraft also a `craft` mark, for a recipe made). Temper's, Whittle's, and Fletch's own
   effects (`Effect::Temper`, `Whittle`, `Fletch`) are unchanged.
 - **Who works what** is data, never code: `data/stock.toml`'s `[[group]]` rows name the skill,
   stat, and verb per material group, and `gems = { ... }` the gems' (no group). Today metal is
@@ -96,14 +98,31 @@ refusal test:
 No shipped recipe uses these yet. Each is used by the phase that makes the first recipe needing
 it, which also builds its wizard step and its row's words and lack: the head step and `brittle`
 with P6 (arrows), stock inputs with P7 (sinew, iron), `gem = true` with P11, `failure` and
-`fumble` with P13 (brewing), the bands with P5. Until then the rows read only `"stock"` parts and
-object inputs. `data/stock.toml`'s `unit` and `[[material]]` overrides (P2b) are checked by
+`fumble` with P13 (brewing). The bands and `yield` are read from P5 (the forge, "Making a
+recipe" below). Until then the rows and the wizard read only `"stock"` parts, object inputs, and
+the ornament. `data/stock.toml`'s `unit` and `[[material]]` overrides (P2b) are checked by
 `content/stock.rs`.
 
 The three built-ins: `recipes/metalcraft/temper.toml` (`anyone`, `station = "anvil"`),
 `recipes/woodcraft/whittle.toml` (`anyone`, `knife`), `recipes/woodcraft/fletch.toml` (`anyone`,
-`knife`, `launcher`). Temper, Whittle, and Fletch stay open to everyone (#1337 Q3). No generic
-recipe exists yet (P5 adds the forge's).
+`knife`, `launcher`). Temper, Whittle, and Fletch stay open to everyone (#1337 Q3).
+
+The generic recipes (P5, #1335; `docs/design/recipes.md` §6 "Melee weapons", the metal route):
+the seven swords under `recipes/metalcraft/`, each `station = "anvil"`, its main part (the long
+sword's `blade`) `"stock"`, an `ornament` (the pommel) on all but the knife. The stock is priced
+by the result's weight (`piece::count_for`), never written in the file.
+
+| Recipe | `difficulty` | `seconds` | `from` | Steel ingots |
+|---|---|---|---|---|
+| knife | 10 | 1200 | 0 | 1 |
+| dagger | 11 | 1800 | 0 | 1 |
+| short_sword | 12 | 3600 | 10 | 2 |
+| scimitar | 13 | 3600 | 20 | 3 |
+| long_sword | 13 | 3600 | 20 | 3 (its leather grip free) |
+| rapier | 14 | 3600 | 30 | 2 |
+| great_sword | 15 | 5400 | 40 | 7 |
+
+The hand routes (a flint knife, a bone dagger) and the axes, maces, and polearms are P5b's.
 
 ## The rows: `Ability::Profession`
 
@@ -158,10 +177,94 @@ picks for now; P5's wizard (`ui/craft_pick_screen.rs`) takes its place.
 `Action::Craft { recipe: String, picks: Vec<Option<usize>> }`, replay text `craft:ID[:POS,...]`
 (positions as `position_text`, `-` a skipped optional: `craft:long_sword:c,f`,
 `craft:dagger:a,-`), dispatched by one arm in `World::player_acts` to `World::start_craft`
-(`world/craft.rs`). It is refused, taking no time, for every recipe now: an unknown one ("You
-know no such recipe."), a built-in one ("Temper is done from its own list.": its row runs
-`temper:`, `whittle:`, or `fletch`), and a generic one ("You cannot make that yet.")
-until P5. `World::kind_of` gives it no kind yet.
+(`world/craft.rs`). An unknown recipe is refused ("You know no such recipe."), and so is a
+built-in one ("Temper is done from its own list.": its row runs `temper:`, `whittle:`, or
+`fletch`), both taking no time; a generic one goes to `World::start_making` ("Making a recipe"
+below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
+`World::kind_of`).
+
+## Making a recipe
+
+`world/craft_make.rs` (P5, #1335; `docs/design/recipes.md` §4, `professions.md` §7), tests in
+`world/craft_make_tests.rs`:
+
+- **Steps** (`craft_steps`, `PerceptionView::craft_steps(recipe)`): one `CraftStep` per choice in
+  the wizard's order: each `"stock"` part (`CraftStepKind::Stock`, labelled by the part's name,
+  "blade", or for an unnamed main part by its stock's group, "metal"), each object input
+  (`Input`), then the ornament (`Ornament`, `optional`; the part is `ObjectDef::ornament` or the
+  class's `[[ornament]]`). Each lists the stacks carried that fit, `CraftOption { at, name (as
+  the inventory lists it), short (the material: "steel", "ruby"), takes, enough }`: pieces whose
+  material the part's `made_of` holds and the profession works (`worked_materials`), stacks of
+  the input's object, cut loose gems (never an uncut one, `Cut::rough`). A part takes its share
+  of the result's weight scaled by the material's weight over the base part's (as the made item
+  weighs it), in pieces (`piece::count_for`): a mithril blade takes as many mithril ingots as a
+  steel one takes steel. A recipe with another part source, a stock input, a count above 1,
+  `failure`, `fumble`, or `brittle`, or more than `MAX_PICKS` (8) steps has no steps, and
+  `craft:` refuses it ("You cannot make that yet.") until the phase that builds its step.
+- **The plan** (`craft_plan`, `PerceptionView::craft_plan(recipe, picks)`; `resolve`): every
+  required step picked ("You must choose the metal."), the stack there ("You carry no such
+  thing."), fitting ("That will not do for the blade.", "Only a cut gem can be set."), holding
+  what it takes, summed over steps that pick it twice ("You have too few of those."); more picks
+  than steps are refused ("That is more than the work takes."). The made item is the result's
+  object with own parts (`ItemPart::material` for a chosen material other than the base part's,
+  `ItemPart::gem` for the ornament; `item_parts::check`). `CraftPlan { verb, name, uses,
+  station, time }`: the verb `stock.toml`'s for the main material's profession ("Forge"), the
+  name `Lore::describe` of the made item ("a ruby-pommelled mithril long sword"), `uses` the
+  pieces counted and "the ruby".
+- **Start** (`World::start_making`): refused with no time by the row's `lack` (beyond skill: "That
+  is beyond your skill."; no station: "There is no anvil here."; no knife), then by the plan's
+  reason. Then "You set to work on the long sword at the anvil." and `Spent::Craft(Crafting)`
+  (`Copy`: the picks in a `[Option<usize>; MAX_PICKS]`).
+- **The work** (`World::make`): `keep_at` for the recipe's `seconds` in `ActionKind::Craft`
+  turns; stopped early, "...; you put down your work." and nothing is spent. Done (`crafted`),
+  the plan is resolved again from the pack ("You have nothing left to work with."), then the
+  check: two gameplay draws (`combat::roll_natural`), `craft_modifier` = the profession's stat
+  modifier (`stock.toml`'s `stat` for the main material: Strength for metal) +
+  `Actor::skill_effect_of(skill, Effect::Craft)` (that skill's benefit alone, the items' skill
+  bonus counted; Metalcraft's `craft` curve is Temper's, +8 at 100, +12 at 200) +
+  `TalentMods::check(stat)`, against `difficulty` + the main material's `work`.
+- **The grade** (`grade(settings, natural, margin)`, `Grade`): below 0 `Failed`, from `fine`
+  `Fine`, from `marvellous` `Marvellous`, from `masterwork` `Masterwork`, else `Plain`; a natural
+  24 at least `Fine`, a natural 2 `Failed`. `make_out` spends the picks, highest position first.
+  Failed: each stock pick gives back `piece::count_for` of `yield` % of its grams (at most what
+  it took), an input `count × yield / 100`, the gem all of it; "The blade comes out brittle and
+  you break it up for the metal." Made: the gem is set, and an item whose base has an `Aspect`
+  takes `Grade::improvements()` (1, 2, 3; at most `temper.toml`'s `most`) improvements, each an
+  aspect drawn evenly (one gameplay draw), with `attempts` equal to them: a crafted Fine item is a
+  once-tempered one (Temper's difficulty `13 + 2`), and a crafted Masterwork is `finished`, so
+  Temper refuses it ("It can be made no finer."). An item with no aspect (a ring) is plain
+  whatever the margin. The item is identified, joins the pack (`add_to_inventory`, over the limit
+  as anything picked up), and is said: "You have made a Masterwork short sword!", "This is a
+  Marvellous short sword!", "This is a Fine short sword.", "You have made a short sword.".
+- **Marks**: `Use::Craft` on the recipe's skill alone (`World::train_skill`; Metalcraft's
+  `mark`, 100 %), whatever came of it; no stat use. Metalcraft, Woodcraft, and Jewelcraft all
+  have the `craft` benefit (salvage reads it too), but only Metalcraft the `craft` mark today;
+  the profession whose generic recipes come next (P5b) adds its own, and `skill_effect_of` keeps
+  one profession's benefit from counting for another's recipe.
+
+## The forging wizard
+
+`crates/warlock/src/ui/craft_pick_screen.rs`, `ScreenName::CraftPick(RecipeId)` (skipped by
+`--screen`; `--screen craft-pick` is `ScreenName::FirstCraftPick`, the first recipe with a
+choice: the dagger). The profession screen opens it for a generic recipe with steps
+(`Entry::wizard`; one without steps is applied at once, the rules saying why). One `PagedList`
+per step, grouped by the stacks' item class, read from `craft_steps` when it opens: a row is
+`letter - name` with "uses 3", greyed "too few" and unpickable when the stack holds too few; an
+optional step draws "- - None" above the list, picked by `-`. The header is the recipe's name and
+the picks so far ("Short sword — metal: mithril"), the title the recipe and the step's label. A
+letter or Enter picks and goes on; Esc goes back a step, its pick kept (the cursor on it), and
+closes from the first. The last pick returns `ScreenAction::Open(ScreenName::CraftConfirm)`:
+`Screen::new` builds the one `Dialog` (`craft_dialog`) from `Beneath::craft` (the wizard's recipe
+and picks, `ScreenStack::craft_chosen`) and the view's `craft_plan`: `Dialog::yes_no(verb, "Forge
+a ruby-pommelled mithril short sword? It uses 2 mithril ingots and the ruby, at the anvil, and
+takes about 1 hour.", verb, Action::Craft, "Not now")`; declined, it closes back to the last
+step; a plan the rules refuse is a dialog with the reason and Back. Accepted, the action applies
+and the wizard stays open beneath (as object lists do, #591): its `refresh` reads the steps again
+and, when they changed, starts over on its first step; the profession screen beneath refreshes
+its rows too. Every key is fixed and named in the footer ("a-c or Enter choose   - none   Esc
+back"): no `KeyCommand`, no `Context` entry. Tests: the module's own (picking, `-` only where
+optional, Esc back keeping the pick, the dialog's words) and the text snapshots `craft-pick-*`
+(each step, the dialog, `--screen craft-pick`) and `profession-metalcraft-stock`.
 
 ## Salvage
 
@@ -223,4 +326,4 @@ file's bands and refusals), `world/craft_tests.rs` (rows by training and place, 
 profession rows in their skills' places, no Temper, Whittle, or Fletch row), `input.rs`'s
 walk-in test (the anvil still asks, opening the Temper list), `ui/profession_screen.rs` (a
 built-in row's action, a greyed row), and the text snapshots `profession-*` in
-`ui/screen_snapshots.rs`.
+`ui/screen_snapshots.rs`. The forge's tests are under "Making a recipe" and "The forging wizard".

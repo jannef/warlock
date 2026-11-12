@@ -57,6 +57,7 @@ mod outcomes;
 mod overworld;
 mod potions;
 mod prayer;
+mod recipes;
 mod resources;
 mod rooms;
 mod scenarios;
@@ -306,6 +307,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("crafting-groups.md", crafting::crafting_groups),
         ("crafting-work.md", crafting::crafting_work),
         ("salvage.md", crafting::salvage),
+        ("recipes.md", recipes::recipes),
+        ("crafting-grades.md", recipes::crafting_grades),
         ("foraging.md", skills::foraging),
         ("skills.md", skills::skills),
         ("skill-benefits.md", skills::skill_benefits),

@@ -118,6 +118,8 @@ pub enum ActionKind {
     Temper,
     /// A turn of whittling a wooden item with a knife: an attempt takes many.
     Whittle,
+    /// A turn of making a recipe (a profession's, spec §8 "Skills"): the work takes many.
+    Craft,
     /// A turn of salvaging an item for its materials (`world/salvage.rs`): an attempt takes
     /// many.
     Salvage,
@@ -185,6 +187,7 @@ impl ActionKind {
         ActionKind::Fletch,
         ActionKind::Temper,
         ActionKind::Whittle,
+        ActionKind::Craft,
         ActionKind::Salvage,
         ActionKind::Disarm,
         ActionKind::Heal,
@@ -238,6 +241,7 @@ impl ActionKind {
             ActionKind::Fletch => "fletch",
             ActionKind::Temper => "temper",
             ActionKind::Whittle => "whittle",
+            ActionKind::Craft => "craft",
             ActionKind::Salvage => "salvage",
             ActionKind::Disarm => "disarm",
             ActionKind::Heal => "heal",
@@ -310,6 +314,7 @@ impl ActionKind {
             ActionKind::Fletch => "fletch",
             ActionKind::Temper => "temper",
             ActionKind::Whittle => "whittle",
+            ActionKind::Craft => "make things by a recipe",
             ActionKind::Salvage => "salvage",
             ActionKind::Disarm => "disarm traps",
             ActionKind::Heal => "tend your hurts",

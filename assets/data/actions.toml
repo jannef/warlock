@@ -105,6 +105,9 @@ temper = 1000
 # A turn of whittling a wooden item with a knife (the Whittle ability): an attempt takes
 # temper.toml's `seconds`, a turn of this after another.
 whittle = 1000
+# A turn of making a recipe (a profession's: the forge's swords, docs/dev/crafting.md): the work
+# takes the recipe's `seconds`, a turn of this after another.
+craft = 1000
 # A turn of salvaging an item for its materials (the Salvage ability): an attempt takes
 # salvage.toml's `seconds`, a turn of this after another.
 salvage = 1000

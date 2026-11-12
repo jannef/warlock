@@ -1,0 +1,11 @@
+# A knife, forged at an anvil from the smith's metal stock (docs/design/recipes.md §6
+# "Melee weapons", the metal route; docs/dev/crafting.md). The stock is priced by the weight.
+[[recipe]]
+id = "knife"
+result = { object = "knife" }
+difficulty = 10
+seconds = 1200
+station = "anvil"
+
+[recipe.parts]
+main = "stock"
