@@ -1,0 +1,16 @@
+# Material drops of the `giant` tag (README.toml). Giants (the ogres too): big bones and big hides.
+
+[[drop]]
+material = "bone"
+count = "1d3"
+chance = 50
+
+[[drop]]
+material = "leather"
+count = "1d2"
+chance = 50
+
+[[drop]]
+material = "sinew"
+count = "1"
+chance = 40

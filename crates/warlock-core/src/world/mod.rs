@@ -208,6 +208,7 @@ mod lucky;
 mod lurk;
 mod malison;
 mod mana;
+mod material_drops;
 mod merchants_eye;
 mod mimic;
 pub(crate) mod mirrors;
@@ -1935,6 +1936,8 @@ mod mana_talent_tests;
 mod mana_tests;
 #[cfg(test)]
 mod material_draw_tests;
+#[cfg(test)]
+mod material_drops_tests;
 #[cfg(test)]
 mod merchants_eye_tests;
 #[cfg(test)]

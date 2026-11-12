@@ -286,7 +286,7 @@ jewellery is every grouped material and would admit a moonwort ring, and a recip
 is plainly an object. The alchemist `always` lays out glowcap and moonwort and buys `materials`;
 the general store `never` lays out a herb or an essence (it stocks the class for pieces).
 Gathering is Herbalism's Gather (#1340, `world/gather.rs`, `data/herbs.toml`; docs/dev/skills.md),
-and a herbalist's forage finds the surface ones; drops are to come (P15).
+and a herbalist's forage finds the surface ones; drops are below (P15).
 
 `piece::count_for(content, grams, material)` =
 `max(1, round(grams / one piece's grams))`, the rounding `break_up` shares (`count_of_share`).
@@ -298,3 +298,30 @@ Cēaptūn lays out steel and iron ingots in its smithy (a wood billet is worth n
 `content/stock.rs` (professions, overrides, the loader's refusals), `world/stock.rs`
 (`profession_of`, Cēaptūn's piles through a save, the shops, herbs and essences, the alchemist).
 
+**Material drops** (#1341, P15; the design: docs/design/recipes.md §9, §10; spec §7 "Material
+drops"): a dead creature's body leaves stock on its cell. `data/drops/<tag>.toml`, one file per
+creature tag (the file name is the tag; `README.toml` skipped), holds `bodiless` (default false)
+and `[[drop]]` rows `{ material | object, count (dice), chance (percent) }`; a creature's own
+`[[creature.drops]]` rows (the same shape) add to its tags', and `drops_from_tags = false`
+switches its tags' off. `content/drops.rs` parses the files after every creature type is known
+(`Content::load_drops`, after `load_splits`) and resolves each type's rows once into
+`CreatureDef::drops` (`Drop { goods, count, chance, from }`, the chance **per mille**): every
+tag file it carries in path order (a union, not the first tag), then its own; a tag row only for
+a type with `corpse` unless the file is `bodiless`; none for an animated type (it carries
+`construct` but breaks into its own pieces); each chance × its size's `drops` % (`sizes.toml`,
+small 50: a halved 25 % stays exact as 125 ‰). `Content::tag_drops` keeps the files for the
+wiki. Loader refusals: neither or both of `material` and `object`, an unknown one, a gem (gems
+come by the gems' chance) or a material with no group, bad dice, a chance outside 1 to 100, a
+tag no creature carries (a typo would drop nothing), a tag's second file. The roll,
+`World::drops_of` (`world/material_drops.rs`), runs in `fight.rs::creature_dies` after the
+carried gear and `loot_of`, not for a body turned to stone (no corpse) nor a summoned or risen
+ally (which leave nothing): each row a draw below 1000 then its dice (a roll below 1 gives
+nothing), from the stream `materials/<actor id>`, so the loot (`drop/`) and gem draws and every
+generated map stand; pieces by `piece::make`, an object by `Stack::new`, same goods joined in
+one stack. Whoever made the kill. The untagged beasts were tagged for it (warg, dire warg,
+deer, bat: `beast`; the gorgon `dragon`, as every `combat = "dragon"` type is), which also
+makes them count for `tag:beast` and `tag:dragon` kill quests. Wiki: `creature-drops.md`
+(`xtask/src/wiki/drops.rs`: each creature's resolved rows, and each tag's as written). Tests:
+`world/material_drops_tests.rs` (the union and its order, bodiless rows, a spirit, half for
+small, the own stream with loot unchanged, one stack, the refusals, every file, the new tags,
+the arena's litter).

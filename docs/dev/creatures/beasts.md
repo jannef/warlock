@@ -59,3 +59,5 @@ Follow-up: a wolf-pack row in the Ascmearc's woods encounters as wildlife ("Hunt
 them be").
 
 Cries (#1128, `world/aura.rs`): the crocodile and the basilisk hiss now and then (loudness 40).
+
+**Material drops** (#1341; `data/drops/`, docs/dev/objects.md "Material drops"): `beast.toml`: leather 1 (60 %), bone 1d2 (50 %), sinew 1 (40 %), every beast with a corpse, a small one at half. Own rows: horn 1 (50 %) on the boar, great boar, and deer; fur 1 (50 %) on the wolf, bear, lynx, panther, badger, polecat, and hare (beside the leather row); chitin 1 (50 %) on the large spider, and on the beetle (untagged: its own row alone). The warg, dire warg, deer, and cave bat carry `beast` since (they were untagged), so `tag:beast` quests count them.

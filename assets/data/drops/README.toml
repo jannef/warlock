@@ -1,0 +1,23 @@
+# Material drops (spec §7 "Material drops"; the design: docs/design/recipes.md §9, §10;
+# content/drops.rs, world/material_drops.rs): the crafting stock a creature's body leaves where
+# it dies, after what it carried falls and its `loot` rolls. One file per creature tag, named by
+# the tag (`beast.toml`); a tag with nothing bodily to take (spirit, demon, fey, caster, ...) has
+# no file. The loader refuses a file whose tag no creature carries (a typo would drop nothing), so
+# a tag only a campaign's creatures carry has its file in that campaign's data/drops/ (outlaw).
+#
+#   bodiless  true: the rows apply to a creature that leaves no corpse too (the skeleton's bone,
+#             an elemental's essence); default false: only to one with `corpse` true
+#   [[drop]]  a row, each its own chance draw and dice:
+#     material  stock of this material, `count` pieces (piece.rs; a material with a `group`,
+#               never a gem: gems come by the gems' own chance)
+#     object    or this object, `count` of it (`essence_of_fire`, `henbane`); one of the two
+#     count     how many, as dice ("1d2", "1"); a roll below 1 gives nothing
+#     chance    the chance in percent, 1 to 100
+#
+# Which rows apply: every file of every tag the creature carries (a union, in path order), then
+# its own `[[creature.drops]]` rows (the same shape; creatures/README.toml); its file's
+# `drops_from_tags = false` switches its tags' rows off, and an animated object takes none (it
+# breaks into its own pieces). Each chance is scaled by its size's `drops` (sizes.toml: a small
+# body rolls at half). Pieces of one material from several rows join one stack. No cap; the
+# player's kills and everyone else's alike. Nothing drops from a body turned to stone, nor from
+# a summoned ally (which leaves nothing).

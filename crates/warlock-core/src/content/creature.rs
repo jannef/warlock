@@ -301,6 +301,12 @@ pub(super) struct CreatureSpec {
     /// items"); default 0.
     #[serde(default)]
     pub loot: u8,
+    /// Its own material drop rows, added to its tags' (`content/drops.rs`).
+    #[serde(default)]
+    pub drops: Vec<super::drops::DropSpec>,
+    /// Whether its tags' drop rows apply to it (default true).
+    #[serde(default = "yes")]
+    pub drops_from_tags: bool,
     /// Its natural attack, used when it wields no weapon: one (`[creature.attack]`), or several
     /// each struck in turn (`[[creature.attack]]`, a dragon's claws and bite).
     pub attack: Option<NaturalAttacks>,
@@ -724,6 +730,11 @@ impl CreatureSpec {
             leavings: self.leavings,
             first_sight: self.first_sight,
             loot: self.loot,
+            drops: Vec::new(),
+            drop_spec: super::drops::OwnDrops {
+                rows: self.drops,
+                from_tags: self.drops_from_tags,
+            },
             attack: r.attack,
             more_attacks: r.more_attacks,
             breath: r.breath,
@@ -924,6 +935,12 @@ pub struct CreatureDef {
     pub first_sight: Option<String>,
     /// Gameplay: the chance in percent that it drops a magic or rare item where it dies.
     pub loot: u8,
+    /// Gameplay: the crafting stock its body leaves where it dies, its rows resolved
+    /// (`content/drops.rs`: its tags' and its own, its size applied); rolled by
+    /// `world/material_drops.rs`. Rules only (the wiki states them).
+    pub drops: Vec<super::Drop>,
+    /// Its own drop rows as written, resolved with its tags' by `content::drops::resolve`.
+    pub(super) drop_spec: super::drops::OwnDrops,
     /// Gameplay: its natural attack, used when it wields no weapon; `None`: bare hands (1d3).
     /// With several (`[[creature.attack]]`), the first of them.
     pub attack: Option<NaturalAttack>,

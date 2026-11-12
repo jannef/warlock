@@ -70,3 +70,5 @@ poison 25 %. Tests: `world/creature_flask_tests.rs`; `content::tag`'s test lists
 goblin members.
 
 Gear condition (#1193, `data/gear_condition.toml`): the scavengers' gear is often damaged, the kobolds' 55 % and the goblins' 50 % (Fine 1 % and 1.5 %); the undead's 95 % (docs/dev/creatures.md, "Gear condition").
+
+**Material drops** (#1341; `data/drops/`, docs/dev/objects.md "Material drops"): `marsh-thing.toml`: bone 1 (40 %), leather 1 (30 %); the crocodile adds hardened leather 1 (60 %); the mud golem (no corpse) only `construct.toml`'s `bodiless` stone 1d2 (60 %). `fire-thing.toml`: essence of fire 1 (25 %) for the burning things with a corpse (the salamander, the ember beetle, which adds chitin 1 (50 %); not the magma crawler). The barrow spider and giant centipede add chitin 1 (50 %) to `vermin.toml`'s bone 1 (30 %). The dragons (`dragon.toml`): dragonbone 1d2 and dragonscale 1d2 (100 %), sinew 1d2 (60 %).

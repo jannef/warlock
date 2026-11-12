@@ -31,9 +31,17 @@ pub struct SizeDef {
     /// default.
     #[serde(default = "full_blood")]
     pub blood: u16,
+    /// The chance its material drops are rolled at, in percent of what is written (spec §7
+    /// "Material drops"; `content/drops.rs`); 100 by default.
+    #[serde(default = "full_drops")]
+    pub drops: u16,
 }
 
 fn full_blood() -> u16 {
+    100
+}
+
+fn full_drops() -> u16 {
     100
 }
 
@@ -45,6 +53,7 @@ impl SizeDef {
             name: "Medium".into(),
             carry: 100,
             blood: 100,
+            drops: 100,
         }
     }
 }

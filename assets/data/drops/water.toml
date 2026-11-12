@@ -1,0 +1,7 @@
+# Material drops of the `water` tag (README.toml). Water elementals: an essence of water.
+bodiless = true
+
+[[drop]]
+object = "essence_of_water"
+count = "1"
+chance = 60

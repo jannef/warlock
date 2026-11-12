@@ -9,6 +9,8 @@
 #           limit, 1.5 kg × (2 × Strength + Toughness), is scaled by it
 #   blood   how much blood it spills when hurt badly or killed, in percent of what a medium one
 #           does (default 100; presentation only, spec §8 "Blood")
+#   drops   the chance its material drops are rolled at, in percent of the chance written
+#           (default 100; spec §7 "Material drops", data/drops/): a small body is little hide
 #
 # `medium` is required: it is the size of every race and creature type that names none.
 
@@ -17,6 +19,7 @@ id = "small"
 name = "Small"
 carry = 75
 blood = 60
+drops = 50
 
 [[size]]
 id = "medium"

@@ -500,7 +500,7 @@ arms or armour an anvil or knife could work (`temper::arms`, aspects), never pro
 before a quest is given). The kind is by the main part's material group (`[kinds]`, metal: rust
 and acid): the one the material withstands least, never one at 100; else `ItemHarm::Work`
 ("damaged"). `World::loot_of` (a death's extra drop) is treasure, not gear, and takes no
-condition. Tribes chosen: undead (95 % damaged), duergar, hobgoblin, drow, devil (disciplined:
+condition. What a body leaves of crafting stock is the drops by tag (`data/drops/`; docs/dev/objects.md "Material drops"). Tribes chosen: undead (95 % damaged), duergar, hobgoblin, drow, devil (disciplined:
 8–10 % damaged, Fine 10–15 %), kobold, goblin, orc, troll (scavengers: 45–55 % damaged); the
 rest the default (30 %, Fine 4 %, Marvellous 0.8 %, Masterwork 0.2 %). Tests:
 `world/gear_condition_tests.rs`.

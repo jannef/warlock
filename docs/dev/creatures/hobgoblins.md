@@ -24,3 +24,5 @@ The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the r
 Gear condition (#1193, `data/gear_condition.toml`'s `hobgoblin` row, listed before `goblin` so it wins): a drilled order, damaged 10 %, Fine 10 %, Marvellous 2 %, Masterwork 0.4 % (docs/dev/creatures.md, "Gear condition").
 
 Gear materials (#1191): the faction's `gear` in `data/factions.toml`: the goblins' faction (goblins and hobgoblins) favours bronze (30 %), copper (10 %), and bone (10 %), each its share of the draws for an item whose construction list holds it, the usual draw the rest (`docs/dev/objects.md` "Materials and variants").
+
+**Material drops** (#1341; `data/drops/`, docs/dev/objects.md "Material drops"): a hobgoblin carries `goblin` and `hobgoblin`, so both files roll, `goblin.toml` first: flint 1 (30 %), iron 1 (20 %), leather 1 (30 %); then iron 1 (40 %), steel 1 (15 %), leather 1 (30 %).

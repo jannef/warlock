@@ -1,0 +1,11 @@
+# Material drops of the `duergar` tag (README.toml). The duergar: iron and steel.
+
+[[drop]]
+material = "iron"
+count = "1d2"
+chance = 50
+
+[[drop]]
+material = "steel"
+count = "1"
+chance = 30

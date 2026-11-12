@@ -183,7 +183,8 @@ A long sword and a chain mail shirt in each metal:
 
 Raw material comes in **pieces**: what a broken thing falls to (an animated thing that does not
 fall whole, for example; see [Animated objects](animated.md)), and the stock smiths and other
-crafters work with. A piece is one material, shown as `,` in its material's colour, and named by
+crafters work with, and what many creatures' bodies leave when they die (see
+[What creatures leave](creature-drops.md)). A piece is one material, shown as `,` in its material's colour, and named by
 its group: *a steel ingot*, *3 hardwood billets*, *a leather hide*, *a fur pelt*, *a bone
 shard*, *a length of sinew*, *a block of jade*, *a lump of amber*, *a bolt of wool*, *a lump of
 glass*.
@@ -222,7 +223,9 @@ others: the **work** column of the materials table is added to the difficulty of
 ### Herbs and essences
 
 Herbs and elemental essences are listed under **Materials** too, but they are things of their
-own, not pieces: nothing is made *of* moonwort. Each stacks, and none lies about as loot.
+own, not pieces: nothing is made *of* moonwort. Each stacks, and none lies about as loot, but
+hags carry henbane and elementals leave their essence when they die
+([What creatures leave](creature-drops.md)).
 
 - **Herbs** (`"`, 20 g each): glowcap and moonwort (5 gold), comfrey (8), feverfew and henbane
   (15), eyebright, bog myrtle, and vervain (25), and mandrake root (60). An alchemist always has

@@ -1,0 +1,16 @@
+# Material drops of the `troll` tag (README.toml). Trolls: bone, a hard hide, and sinew.
+
+[[drop]]
+material = "bone"
+count = "1d2"
+chance = 50
+
+[[drop]]
+material = "hardened_leather"
+count = "1"
+chance = 40
+
+[[drop]]
+material = "sinew"
+count = "1"
+chance = 30

@@ -33,3 +33,9 @@ damage_type = "piercing"
 name = "bite"
 verb = "bites"
 on_hit = [{ status = "poisoned", chance = 10, severity = 1 }]
+
+# Its shell: chitin, besides its tags' rows (material drops, data/drops/README.toml).
+[[creature.drops]]
+material = "chitin"
+count = "1"
+chance = 50

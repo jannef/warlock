@@ -1,0 +1,7 @@
+# Material drops of the `ice` tag (README.toml). Ice elementals: an essence of ice.
+bodiless = true
+
+[[drop]]
+object = "essence_of_ice"
+count = "1"
+chance = 60

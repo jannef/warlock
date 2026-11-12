@@ -1,0 +1,6 @@
+# Material drops of the `vermin` tag (README.toml). Rats, worms, and crawling things: little but bone.
+
+[[drop]]
+material = "bone"
+count = "1"
+chance = 30

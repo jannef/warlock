@@ -1,0 +1,11 @@
+# Material drops of the `ogre` tag (README.toml). The ogres, besides the giant rows.
+
+[[drop]]
+material = "bone"
+count = "1d2"
+chance = 40
+
+[[drop]]
+material = "leather"
+count = "1"
+chance = 40

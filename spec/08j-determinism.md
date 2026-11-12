@@ -44,7 +44,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   id>`: a hand-made level's, rolled as the level is first entered; its condition from
   `condition/<actor id>`); what a creature drops when
   it dies (`drop/<actor id>`, so a
-  kill never changes a later roll of the gameplay stream; actor ids are never reused);
+  kill never changes a later roll of the gameplay stream; actor ids are never reused), and the
+  crafting stock its body leaves (`materials/<actor id>`, its own so loot and gems never move;
+  §7 "Material drops");
   gameplay (`gameplay`, kept in the world state and saved; a teleport trap's destination is a
   hash, never this stream, §8 "Traps"); character creation (derived on
   demand: `character/gender` for the stat "other" raises, `character/birth/<race>` for the age

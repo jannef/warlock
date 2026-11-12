@@ -1,0 +1,16 @@
+# Material drops of the `hobgoblin` tag (README.toml). The hobgoblins' better stock, besides the goblin rows.
+
+[[drop]]
+material = "iron"
+count = "1"
+chance = 40
+
+[[drop]]
+material = "steel"
+count = "1"
+chance = 15
+
+[[drop]]
+material = "leather"
+count = "1"
+chance = 30

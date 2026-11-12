@@ -37,3 +37,5 @@ Two small extensions of what D1–D9 built, each for one of these types:
   `world/corrode_tests.rs::the_rust_monster_rusts_both_ways_and_never_cloth`.
 
 The hydra's heads: `world/split_tests.rs::heads_crawl_out_of_a_dead_hydra`.
+
+**Material drops** (#1341; `data/drops/`, docs/dev/objects.md "Material drops"): own rows on the cockatrice, gorgon, and hydra (and the basilisk): bone 1d2 (50 %), hardened leather 1 (40 %). The gorgon (`combat = "dragon"`) carries `dragon` since, as every dragon type does, and rolls `dragon.toml` before its own. The black pudding (`eyeless`, no corpse) and the hydra's heads (untagged) leave nothing; the rust monster stays untagged.
