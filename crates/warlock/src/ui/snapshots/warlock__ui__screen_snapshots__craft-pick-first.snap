@@ -12,9 +12,9 @@ expression: "render(case, content.clone())"
 
 
 
-                  ┌─ Battle axe: metal ──────────────────────────────────────────┐
+                  ┌─ Banded mail: metal ─────────────────────────────────────────┐
                   │                                                              │
-                  │ Battle axe                                                   │
+                  │ Banded mail                                                  │
                   │                                                              │
                   │   Nothing carried will do.                                   │
                   │                                                              │

@@ -33,7 +33,7 @@ fn sword(extra: &str) -> String {
 }
 
 #[test]
-fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_made_ones() {
+fn the_built_in_recipes_are_the_forges_weapons_armour_and_tools_and_woodcrafts_hand_made_ones() {
     let content = Content::builtin().expect("content");
     let recipes = content.recipes();
     let metal = content.skill_id("metalcraft").expect("metalcraft");
@@ -47,25 +47,41 @@ fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_ma
     assert_eq!(
         of(metal),
         [
+            ("Banded mail", None),
             ("Battle axe", None),
+            ("Buckler", None),
+            ("Chain mail", None),
             ("Dagger", None),
+            ("Gauntlets", None),
             ("Glaive", None),
             ("Great axe", None),
+            ("Great helm", None),
             ("Great sword", None),
             ("Halberd", None),
             ("Hand axe", None),
+            ("Iron helm", None),
+            ("Iron-shod boots", None),
             ("Javelin", None),
             ("Knife", None),
+            ("Lantern", None),
+            ("Large shield", None),
+            ("Leather cap", None),
             ("Long sword", None),
             ("Mace", None),
+            ("Mattock", None),
             ("Maul", None),
             ("Morning star", None),
+            ("Pick-axe", None),
+            ("Plate armour", None),
             ("Rapier", None),
+            ("Scale mail", None),
             ("Scimitar", None),
             ("Short sword", None),
+            ("Small shield", None),
             ("Spear", None),
             ("Stiletto", None),
             ("Temper", Some(RecipeUse::Temper)),
+            ("Tower shield", None),
             ("Trident", None),
             ("War hammer", None)
         ]
@@ -105,6 +121,26 @@ fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_ma
         ("trident", 13, 3600, 20, false, 1),
         ("glaive", 14, 5400, 30, true, 1),
         ("halberd", 15, 5400, 40, true, 1),
+        // P9's (#1354, recipes.md §6): armour, shields, helmets, gauntlets, boots, and tools at
+        // the anvil; the stone pick and mattock by hand.
+        ("chain_mail", 14, 7200, 30, false, 1),
+        ("scale_mail", 14, 7200, 30, false, 1),
+        ("banded_mail", 15, 10800, 40, false, 1),
+        ("plate_armour", 17, 14400, 60, false, 1),
+        ("buckler", 11, 3600, 0, true, 1),
+        ("small_shield", 12, 3600, 10, false, 1),
+        ("large_shield", 13, 5400, 20, false, 1),
+        ("tower_shield", 14, 7200, 30, true, 1),
+        ("leather_cap", 11, 1800, 0, false, 1),
+        ("iron_helm", 12, 3600, 10, true, 1),
+        ("great_helm", 14, 5400, 30, true, 1),
+        ("gauntlets", 12, 3600, 10, false, 1),
+        ("iron_shod_boots", 12, 3600, 10, false, 1),
+        ("lantern", 10, 1800, 0, false, 1),
+        ("pick_axe", 12, 3600, 10, false, 1),
+        ("mattock", 13, 3600, 20, false, 1),
+        ("pick_axe_by_hand", 11, 3600, 10, false, 1),
+        ("mattock_by_hand", 12, 3600, 20, false, 1),
         ("knife_by_hand", 9, 1200, 0, false, 1),
         ("dagger_by_hand", 10, 1800, 0, false, 1),
         ("hand_axe_by_hand", 10, 1800, 0, false, 1),
@@ -132,6 +168,8 @@ fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_ma
             ("Ironwood staff", None),
             ("Javelin", None),
             ("Knife", None),
+            ("Mattock", None),
+            ("Pick-axe", None),
             ("Quarterstaff", None),
             ("Spear", None),
             ("Whittle", Some(RecipeUse::Whittle))

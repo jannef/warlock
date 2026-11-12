@@ -184,6 +184,50 @@ so a hand knife may also be of ivory or dragonbone (both `bone`); jade is no wea
   and greyed, the knife, skill, and station greyings, the profession's stat, verb, and mark, a
   bone javelin made and still thrown).
 
+## Armour and tools
+
+P9 (#1354; `docs/design/recipes.md` §6 "Shields", "Body armour", "Helmets", "Cloaks, gloves,
+boots", "Light sources and tools", the metal route, and §12 item 15, mail by weight) adds one file
+each, every smith's `station = "anvil"`, main `"stock"`, the stock priced by the weight (never
+written: chain mail is 11 kg, so 22 ingots; salvage gives 11 back). The smith's take the base id;
+P8's hide routes (#1353) and the stone tools take `<base>_by_hand`.
+
+| Recipe | Profession | `name` | Ornament | `difficulty` | `seconds` | `from` | Stock |
+|---|---|---|---|---|---|---|---|
+| chain_mail | Metalcraft | Chain mail | — | 14 | 7200 | 30 | 22 iron |
+| scale_mail | Metalcraft | Scale mail | — | 14 | 7200 | 30 | 28 iron |
+| banded_mail | Metalcraft | Banded mail | — | 15 | 10800 | 40 | 34 steel |
+| plate_armour | Metalcraft | Plate armour | — | 17 | 14400 | 60 | 44 steel |
+| buckler | Metalcraft | | inlay | 11 | 3600 | 0 | 3 iron |
+| small_shield | Metalcraft | | — | 12 | 3600 | 10 | 13 (wooden base: steel) |
+| large_shield | Metalcraft | | — | 13 | 5400 | 20 | 30 (wooden base) |
+| tower_shield | Metalcraft | | inlay | 14 | 7200 | 30 | 24 iron |
+| leather_cap | Metalcraft | | — | 11 | 1800 | 0 | 3 (leather base: "a steel cap") |
+| iron_helm | Metalcraft | | studs | 12 | 3600 | 10 | 3 iron |
+| great_helm | Metalcraft | | studs | 14 | 5400 | 30 | 6 steel |
+| gauntlets | Metalcraft | Gauntlets | — | 12 | 3600 | 10 | 2 iron |
+| iron_shod_boots | Metalcraft | Iron-shod boots | — | 12 | 3600 | 10 | 4 iron |
+| lantern | Metalcraft | | — | 10 | 1800 | 0 | 1 iron or brass (its `made_of`) |
+| pick_axe | Metalcraft | | — | 12 | 3600 | 10 | 6 iron |
+| mattock | Metalcraft | | — | 13 | 3600 | 20 | 9 iron |
+| pick_axe_by_hand | Woodcraft | | — | 11 | 3600 | 10 | 6, `{ stock = ["stone"] }`, a knife |
+| mattock_by_hand | Woodcraft | | — | 12 | 3600 | 20 | 9, the same |
+
+- **No new code but the words**: the generic recipe already handles them. Grades follow the
+  base's aspects (`magic::aspects`): armour and shields improve in Defence and Protection; the
+  lantern, pick-axe, and mattock (no attack, no Defence) come out plain.
+- **A base of a material the recipe cannot take** (a wooden small shield forged in metal, a
+  leather cap in metal) is priced in the piece object's own material (steel), never the first of
+  the group in file order (adamantium): `craft::stock_words` and the wiki's
+  `xtask/src/wiki/recipes.rs` both fall back base material, then the piece's, then the first.
+  The count is the same whatever the metal (a piece weighs by its material).
+- **Never made, so no file**: candles (wax has no profession), rope (cloth), the keys, household
+  goods (salvage only).
+- Tests: `world/craft_armour_tests.rs` (the design's counts, mithril and bronze too, the rows'
+  words, the lantern of iron or brass only, the anvil, the stone pick's knife and no anvil, plate
+  beyond skill below 60, a graded suit against a plain lantern and pick-axe, a helm forged and
+  marked, salvage's half).
+
 ## The rows: `Ability::Profession`
 
 `ability.rs`: `Ability::Profession(SkillId)`, `Source::Skill`, named "Metalcraft…" (the skill's
@@ -306,7 +350,7 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
 
 `crates/warlock/src/ui/craft_pick_screen.rs`, `ScreenName::CraftPick(RecipeId)` (skipped by
 `--screen`; `--screen craft-pick` is `ScreenName::FirstCraftPick`, the first recipe with a
-choice: the dagger). The profession screen opens it for a generic recipe with steps
+choice in path order: banded mail). The profession screen opens it for a generic recipe with steps
 (`Entry::wizard`; one without steps is applied at once, the rules saying why). One `PagedList`
 per step, grouped by the stacks' item class, read from `craft_steps` when it opens: a row is
 `letter - name` with "uses 3", greyed "too few" and unpickable when the stack holds too few; an

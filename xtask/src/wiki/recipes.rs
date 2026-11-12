@@ -37,7 +37,7 @@ pub(super) fn recipes_woodcraft(content: &Content) -> String {
 
 /// Every generic recipe of profession `skill`, by the skill it is listed from and its name: what
 /// it makes, what is chosen (each part and what it may be of), the stock it takes in its base
-/// material (or the first it may be of, once a group), the ornament, what it needs (a station, a
+/// material (else steel, the piece's own, else the first it may be of, once a group), the ornament, what it needs (a station, a
 /// knife), the time, the difficulty, and the chance it comes out made (not failed) at three skill
 /// values with an average stat (modifier 0).
 pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
@@ -69,7 +69,7 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
         let mut work = 0;
         for (n, part) in r.parts.iter().enumerate() {
             let base = &def.parts[part.part];
-            let name = (base.part).map_or("the weapon".to_string(), |p| {
+            let name = (base.part).map_or("the item".to_string(), |p| {
                 content.part_defs()[usize::from(p.0)].name.clone()
             });
             let materials = materials(content, r.skill, def, part);
@@ -89,14 +89,27 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
                     continue;
                 }
                 groups.push(group(first));
-                let m = (order.iter().copied())
-                    .find(|&m| m == base.material && group(m) == group(first))
+                // The base material, else the piece's own (steel), else the first.
+                let named = |want: MaterialId| {
+                    (order.iter().copied()).find(|&m| m == want && group(m) == group(first))
+                };
+                let m = (named(base.material))
+                    .or_else(|| {
+                        piece
+                            .and_then(|p| p.parts.first())
+                            .and_then(|p| named(p.material))
+                    })
                     .unwrap_or(first);
                 if n == 0 && m == base.material {
                     work = content.material(m).work;
                 }
-                let grams = u64::from(def.weight) * u64::from(base.share) / 100;
-                let count = warlock_core::piece::count_for(content, grams, base.material);
+                // The part's grams in `m`, as the made item weighs it (a wooden shield's weight
+                // in metal, a leather cap's in steel).
+                let weight = |m: MaterialId| u64::from(content.material(m).weight).max(1);
+                let grams = u64::from(def.weight) * u64::from(base.share) * weight(m)
+                    / weight(base.material)
+                    / 100;
+                let count = warlock_core::piece::count_for(content, grams, m);
                 if let (Some(count), Some(piece)) = (count, piece) {
                     let (one, many) = warlock_core::piece::names(content, piece, m);
                     words.push(counted(&one, &many, count));
