@@ -1,0 +1,23 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The dwarven miser of Fyrdelf's deep workings (#1391): Alberich (his npc dialogue,
+# campaigns/ascmearc/data/dialogue/fyrdelf.toml), a dwarf gone a little mad down in the dark
+# with his gold, who teaches Mining for a price. Only his pinned vault on Fyrdelf's fifth floor
+# places him (vaults/alberichs_delving.toml). Peaceful: he fights no one, and stays by his hoard.
+[[creature]]
+id = "dwarven_miser"
+name = "dwarven miser"
+glyph = "h"
+fg = "#d4b048"
+faction = "peaceful"
+# One of the people: never greater or lesser than their kind.
+grades = false
+alignment = "neutral"
+race = "dwarf"
+vision = "darkvision"
+footsteps = 55
+hearing = 12
+weight = 64000
+stats = { strength = 15, dexterity = 12, toughness = 17, intelligence = 12, willpower = 14, presence = 7 }
+skills = { mining = 150, appraise = 80 }

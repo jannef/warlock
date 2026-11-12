@@ -83,6 +83,7 @@ fn the_secret_door_leads_into_the_treasure_room() {
 #[test]
 fn the_pick_axe_digs_into_the_greater_treasure_room() {
     let mut w = world();
+    w.learn_mining();
     run(
         &mut w,
         "move:SE*6 move:E*15 pickup equip:tool:a dig:E move:E*2",

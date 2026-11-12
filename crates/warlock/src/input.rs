@@ -1209,10 +1209,11 @@ impl Gameplay<'_> {
                     // A light ready (a lantern): its next mode, at once.
                     self.actions.write(PlayerAction(Action::UseTool));
                     InputMode::Normal
-                } else if view.ready_to_dig().is_some() {
+                } else if view.dig_refusal().is_none() {
                     self.beside(Beside::Dig, InputMode::Direction(command))
                 } else {
-                    // Nothing to dig with: the rules say so ("You have no digging tool ready.").
+                    // Nothing to dig with, or untrained in Mining: the rules say so ("You have no
+                    // digging tool ready.").
                     self.actions.write(PlayerAction(Action::Dig(Dir::N)));
                     InputMode::Normal
                 }

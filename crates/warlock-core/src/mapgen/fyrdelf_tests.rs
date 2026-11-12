@@ -101,6 +101,47 @@ fn the_hunters_statue_stands_inscribed_on_the_eleventh_floor() {
     }
 }
 
+/// Alberich, the dwarven miser who teaches Mining (#1391), waits in his delving on the fifth
+/// floor of every run, peaceful and with no route, and nowhere else.
+#[test]
+fn alberich_keeps_his_delving_on_the_fifth_floor() {
+    let v = (CONTENT.vaults().iter())
+        .find(|v| v.id() == "alberichs_delving")
+        .expect("the vault");
+    assert!(v.pinned, "stamped only where named");
+    let alberich = |floor: &LevelTemplate| {
+        (floor.creatures.iter())
+            .filter(|c| c.npc.as_deref() == Some("alberich"))
+            .count()
+    };
+    for seed in 1..=4 {
+        let floor = level(seed, 5);
+        assert_eq!(alberich(&floor), 1, "seed {seed}");
+        let spawn = (floor.creatures.iter())
+            .find(|c| c.npc.as_deref() == Some("alberich"))
+            .expect("Alberich");
+        assert_eq!(CONTENT.creature(spawn.creature).id, "dwarven_miser");
+        assert!(spawn.route.is_empty(), "he keeps to his post");
+        for depth in [4, 6] {
+            assert_eq!(
+                alberich(&level(seed, depth)),
+                0,
+                "seed {seed} depth {depth}"
+            );
+        }
+    }
+    // His one service teaches Mining.
+    let dialogue = (CONTENT.dialogues().iter())
+        .find(|d| d.speaker == crate::content::Speaker::Npc("alberich".into()))
+        .expect("his dialogue");
+    let [service] = &dialogue.services[..] else {
+        panic!("one service");
+    };
+    assert_eq!(service.price, 500);
+    let train = service.train.as_ref().expect("a teaching");
+    assert_eq!((train.skill.as_str(), train.value), ("mining", 5));
+}
+
 #[test]
 fn twelve_floors_of_danger_five_to_sixteen_hotter_downwards() {
     let def = CONTENT.dungeon("fyrdelf").expect("Fyrdelf");

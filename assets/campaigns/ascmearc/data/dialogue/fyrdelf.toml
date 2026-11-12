@@ -1,0 +1,60 @@
+# The people of Fyrdelf (the fields: data/dialogue.toml).
+#
+# Alberich (#1391), the dwarven miser of the fifth floor, placed by his vault's legend with
+# `npc = "alberich"` (vaults/alberichs_delving.toml). A dwarf, so he speaks Geordie
+# (docs/dev/npcs.md "Speech by race and station"), and a little mad: he talks to his gold,
+# counts it, and minds the player's hands. His name and his story nod to Das Rheingold, never
+# quoting it: the river's gold he stole from the daughters who mocked him, the love he forswore
+# for it, the ring forged from it and the curse he laid on whoever takes it, the helm that hides
+# him, the folk who dug his hoard, the one-eyed thief and his fiery friend who tricked him out of
+# it. He teaches Mining for gold (`train_skill`, world/service.rs): offered only while the player
+# is untrained in it.
+[[dialogue]]
+npc = "alberich"
+name = "Alberich"
+greet = "Whee's that? Keep yer hands where aa can see them, hinny. Aal this is mine, ye knaa. Every grain."
+lines = [
+    "Fower hundred an' ninety-eight, fower hundred an' ninety-nine... divvent breathe on it, man!",
+    "Aa had a ring once. Finest thing ever made. A one-eyed gadgie took it off us.",
+    "Whoever wears that ring, aa cursed it. Let him hev it. Let him hev aal the joy it brings him, ha!",
+    "Three lasses in the river laughed at us once. Splashin' aboot, callin' us ugly. Whee's laughin' noo, eh?",
+    "Aa gave up on love for this. Canny trade, mind. Gold divvent gan off wi' somebody else.",
+    "There was a helm, ye knaa. Pop it on an' ye're gone. Aa'd show ye, but aa cannit find it. Or aa'm wearin' it. Ye cannit tell, that's the beauty.",
+    "Once aa had a whole folk diggin' for us. Hammer, hammer, aal day lang. Noo it's just me an' the pick.",
+    "Me brother's a smith. Useless. Cannit make a spoon wi'oot whingin'.",
+    "The drake doon below's got a bigger hoard than mine. Aa hate it. Aa hate it, pet.",
+    "Divvent touch the heaps. Aa'll knaa. Aa've counted them.",
+    "Warm doon here, eh? Gold keeps ye warm, gold does.",
+]
+mutter = { chance = 3, verb = "mutters", lines = [
+    "One... two... three... aa've lost me place. One...",
+    "Mine. Mine. Aal mine.",
+    "Curse on him. Curse on the one-eyed thief an' his fiery marra.",
+    "Whee's laughin' noo, ye watery lasses?",
+    "There, there, me bonny heaps. Nee-one's tekkin' ye.",
+    "Where's me helm? Am aa wearin' it? Am aa even here?",
+] }
+
+[[dialogue.topic]]
+id = "gold"
+name = "Your gold"
+reply = "Mine. Aal of it. Dug it oot wi' these hands, an' other folk's hands, afore they ran off. Ye want some? Learn to dig yer own, bonny lad. Aa'll learn ye, for a price."
+
+[[dialogue.topic]]
+id = "ring"
+name = "The ring"
+reply = "Made it from the river's gold, aa did. The lasses guarded it an' laughed, so aa took it. Then a one-eyed gadgie an' his fiery marra tricked us into bein' a toad an' grabbed it. Curse on 'em. Curse on whoever hods it. Aa said it an' aa meant it."
+
+[[dialogue.topic]]
+id = "mining"
+name = "Mining"
+reply = "Rock's like a purse, hinny. Hit it reet an' it opens. Ore, stone, a bit gem if ye're lucky. Ye'll want a pick, an' some arm on ye, an' ye'll want teachin'. Five hundred gold, near enough."
+
+[[dialogue.service]]
+id = "train_mining"
+name = "Teach me to mine"
+price = 500
+does = "train_skill"
+train = { skill = "mining", value = 5 }
+reply = "Reet. Hold the pick like this. Nee, like THIS. Hit where the stone's tired. Hear that? That's it talkin'. Noo gan an' dig, an' divvent dig near my gold."
+nothing = "Ye can mine already, man. Aa'm not learnin' ye twice."

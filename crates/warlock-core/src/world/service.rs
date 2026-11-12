@@ -1,5 +1,6 @@
-//! Services (spec §8 "Services"; the campaign design §6.1, #329, #432): a cure, a mending, or
-//! an identification sold for gold by someone whose dialogue has a `[[dialogue.service]]`.
+//! Services (spec §8 "Services"; the campaign design §6.1, #329, #432, #1391): a cure, a
+//! mending, an identification, or a skill taught, sold for gold by someone whose dialogue has a
+//! `[[dialogue.service]]`.
 //!
 //! A service is asked for like a topic ([`World::topics`] lists it after the topics, with its
 //! price; `ask:E:cure` in action text), so it needs no screen, action, or key of its own.
@@ -19,6 +20,11 @@
 //!   ([`World::unidentified`]: unknown magic, or an unidentified scroll type) is identified in
 //!   one go through [`World::identify`], each saying what it turned out to be. Its price is per
 //!   such stack (not per piece), so the total is the data's price times their count.
+//! - **`train_skill`** (#1391): the player, untrained in the skill its `train` names, is trained
+//!   in it at `train.value` ([`crate::skills::Skills::add`]; a fixed number, no roll), and told
+//!   "Alberich trains you in mining." Offered only while they are untrained in it
+//!   ([`World::service_offered`]: [`World::topics`] leaves it out once trained; asked for anyway,
+//!   the speaker says its `nothing`, no time). Moved by favour like a healer's (never Pious).
 //!
 //! Then the speaker says the service's `reply`, and it takes the time of `chat`. The price is
 //! the data's, moved by the player's favour (their Presence, skills, and talents; a keeper's
@@ -35,11 +41,13 @@
 //! [`TalentMods::services`]: crate::talent::TalentMods::services
 
 use super::actor::undrained;
+use super::ally::capital;
 use super::goodwill::discounted;
 use super::shop::{count_of, haggling};
 use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, DialogueId, MAX_FAVOUR, Service, ServiceKind};
+use crate::skills::SkillId;
 use crate::skills::Use;
 
 /// The means a temple's cure names in `cured_by`.
@@ -59,7 +67,7 @@ impl World {
 
     /// [`World::service_price`] before the goodwill.
     fn haggled_price(&self, service: &Service) -> u32 {
-        let healing = service.does != ServiceKind::Identify;
+        let healing = matches!(service.does, ServiceKind::Cure | ServiceKind::Mend);
         let price = if healing && self.state.player().talent_mods(&self.content).services {
             service.price.div_ceil(2)
         } else {
@@ -80,6 +88,25 @@ impl World {
     pub fn service_items(&self, service: &Service) -> Option<u32> {
         (service.does == ServiceKind::Identify)
             .then(|| u32::try_from(self.unidentified().len()).unwrap_or(u32::MAX))
+    }
+
+    /// Whether `service` is offered to the player now: a training only while they are untrained
+    /// in its skill (never without a skills table to know it by); every other service always.
+    pub fn service_offered(&self, service: &Service) -> bool {
+        if service.train.is_none() {
+            return true;
+        }
+        (self.service_skill(service)).is_some_and(|skill| {
+            let player = self.state.player();
+            player.skills.get(skill).is_none()
+        })
+    }
+
+    /// The skill a `train_skill` service teaches, and `None` for any other (or without a skills
+    /// table: the loader refuses an unknown skill otherwise).
+    fn service_skill(&self, service: &Service) -> Option<SkillId> {
+        let train = service.train.as_ref()?;
+        self.content.skill_id(&train.skill)
     }
 
     /// The positions of the player's inventory stacks they do not fully know: unidentified magic,
@@ -111,6 +138,9 @@ impl World {
             }
             ServiceKind::Mend if actor.diseases.shows() => Some(CURE_FIRST.to_string()),
             ServiceKind::Identify if self.unidentified().is_empty() => {
+                Some(service.nothing.clone())
+            }
+            ServiceKind::TrainSkill if !self.service_offered(&service) => {
                 Some(service.nothing.clone())
             }
             _ => None,
@@ -151,9 +181,22 @@ impl World {
                     self.identify(item);
                 }
             }
+            ServiceKind::TrainSkill => self.teach_skill(id, &service),
         }
         self.answer(id, service.reply, Some(topic.to_string()), events);
         Some(Spent::Turn(self.price_of(player, ActionKind::Chat)))
+    }
+
+    /// A `train_skill` service done by `teacher`: the player trained in its skill at its value,
+    /// and told so in words.
+    fn teach_skill(&mut self, teacher: ActorId, service: &Service) {
+        let (Some(skill), Some(train)) = (self.service_skill(service), &service.train) else {
+            return;
+        };
+        self.player_mut().skills.add(skill, i32::from(train.value));
+        let name = self.content.skill(skill).name.to_lowercase();
+        let who = capital(&self.called(&self.state.actors[&teacher]));
+        self.say(format!("{who} trains you in {name}."));
     }
 
     /// Whether a prayer would end anything of actor `id`'s: a status or a disease (showing or

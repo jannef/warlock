@@ -643,7 +643,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a flask of fire."), Enchanting at unknown magic that is no potion or scroll (arms, armour,
     jewellery, wands, rods: "You read the magic bound in your long sword: …"); Enchanting does
     not mark until its craft comes, Alchemy marks by brewing (§8 "Professions"). **Mining** adds its `dig` percent to a dig turn's work (25 at 100,
-    40 at 200; §8 "Digging"), and only the trained break ore, stone, and uncut gems out of a
+    40 at 200; §8 "Digging"); only the trained dig at all (#1391), and only they break ore, stone, and uncut gems out of a
     dungeon wall they dig through, its `craft` points helping that check (§8 "Digging": Mining);
     marked by every wall dug through (`dug`). **Herbalism** gives a
     forage that found something a chance of a herb besides ("Foraging" below), and more herbs
@@ -652,7 +652,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Jewelcraft now and then), kobolds Mining, halflings Herbalism; druids and witches Herbalism,
     witches Alchemy; optional for the craftsperson (Jewelcraft, Mining), merchant (Jewelcraft),
     commoner (Mining), ranger (Herbalism), wizard (Alchemy, Enchanting), druid (Alchemy), witch
-    (Enchanting), and aristocrat (Enchanting); and a story line each.
+    (Enchanting), and aristocrat (Enchanting); and a story line each. Alberich of Fyrdelf
+    teaches Mining for gold (§8 "Dialogue": "Training").
 - **Treating oneself** (`heal.rs`, `world/heal.rs`; #549, the owner 2026-10-27): the Heal
   skill's use, the abilities menu's **Heal** (`Ability::Heal`, in the skill's place among the
   Skills; `Action::Heal`, replay text `heal`, `heal:ID`, or `heal:ID:DIR`; cost `heal`, 2500: a

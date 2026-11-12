@@ -241,6 +241,7 @@ fn the_breach_sounds_hollow_to_a_searcher_and_is_remembered() {
 #[test]
 fn digging_the_breach_opens_the_room() {
     let mut w = vault();
+    w.learn_mining();
     run(&mut w, "pickup");
     let pick = (w.state.player().inventory.iter())
         .position(|s| w.content().object(s.object).id == "pick_axe")

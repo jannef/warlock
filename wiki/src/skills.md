@@ -114,8 +114,10 @@ The passive skills help you more the higher they are:
   an [unidentified](magic-items.md#unidentified-items) weapon, armour, ring or amulet, or a [wand or rod](wands-and-rods.md). Each gives 5 % an hour at 0,
   25 % at 100, and 40 % at 200, trained only, besides Appraise's own chance. Neither trains by it:
   their crafts are still to come.
-- **[Mining](skills.md#skill-mining)** makes [digging](digging.md) quicker: each turn does 25 % more work at 100 and 40 % more at
-  200, on top of what talents and a Delving tool add.
+- **[Mining](skills.md#skill-mining)** lets you [dig](digging.md) at all: untrained, you cannot. It
+  makes digging quicker: each turn does 25 % more work at 100 and 40 % more at 200, on top of
+  what talents and a Delving tool add. [Alberich](npcs.md#alberich) in Fyrdelf teaches it for
+  gold.
 - **[Herbalism](skills.md#skill-herbalism)** may find a herb besides on a forage that finds something (see
   [Foraging](skill-uses.md#foraging)), and finds one more herb for every 50 when you
   [gather](herbs.md#gathering) from the glowing fungus.

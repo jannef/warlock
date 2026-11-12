@@ -76,8 +76,8 @@ class is still open to you.
 
 ## Services
 
-A few people sell a **service** for [gold](shops.md#money): a cure, a mending, or an
-identification. Services are listed on their screen after their topics, with the price:
+A few people sell a **service** for [gold](shops.md#money): a cure, a mending, an
+identification, or training in a [skill](skills.md). Services are listed on their screen after their topics, with the price:
 `A cure for what ails you (60 gold)`. Pick one as you would a topic. If there is something to do
 and you carry the gold, you pay (the coins go into their purse) and they do it. It takes the time
 of a chat.
@@ -102,7 +102,13 @@ Negotiation now and then.
   many are in it, so three unknown things cost 300 gold. The list shows the price per thing, and
   before you pay a dialog tells you the total. You pay for all or nothing: with too little gold
   for the whole lot, nothing is identified. Each thing's true name is told as it is learned.
-- With nothing to cure, mend, or identify, they tell you so, and you keep your gold. Without
+- **Training** teaches you a [skill](skills.md) you do not have yet. You start it at a low value
+  (5), as if you had just picked it up, and it grows by use like any other. It is offered only
+  while you are untrained in that skill: once you have it, it is gone from the list.
+  [Alberich](#alberich), deep in Fyrdelf, teaches [Mining](skills.md#skill-mining), which you need
+  to [dig](digging.md#digging) at all.
+- With nothing to cure, mend, or identify, or a skill you already have, they tell you so, and you
+  keep your gold. Without
   enough gold you are told "You cannot pay." Neither takes any time.
 - The **[Pious](talents.md#talent-pious)** talent ([Wayfarer](talents.md#wayfarer)) halves a
   temple's price for a cure or a mending (rounded up), and its cures also mend a point of each
@@ -110,6 +116,15 @@ Negotiation now and then.
   an identification.
 
 {{#include generated/services.md}}
+
+### Alberich
+
+On the fifth floor of Fyrdelf, the first of its deep caves, a dwarf keeps a little square chamber
+with a heap of gold dust in it. He is **Alberich**, and he is not quite right in the head: he
+counts his gold, talks to it, and watches your hands. He fights no one and never leaves his
+hoard. Ask him, and he teaches you [Mining](skills.md#skill-mining) for 500 gold (a little less
+or more by your [Presence](stats.md#stat-presence) and [Negotiation](skills.md#skill-negotiation),
+as a healer's price is). Bring a [pick-axe](digging.md#digging).
 
 ### Goodwill
 

@@ -12,7 +12,7 @@ legend entry gives a creature, `Actor::npc`; `Content::dialogue_of` prefers the 
 `lines`, `greet`, `greet_evil`/`greet_good` (cold lines for a character the speaker scorns for
 their alignment, said in turn instead of the greeting and lines: `World::cold_greeting`,
 `docs/dev/alignment.md`), `[[dialogue.topic]]`s (`id`, `name`, `reply`), `[[dialogue.service]]`s
-(`id`, `name`, `price`, `does`, `reply`, `nothing`; topic and service ids share one namespace,
+(`id`, `name`, `price`, `does`, `reply`, `nothing`, a training's `train`; topic and service ids share one namespace,
 and a service needs `data/shops.toml` for its currency), and `mutter` (chance per action, verb,
 lines). The loader checks only what resolves and what the code needs (#1205): ids once and
 without `:` or whitespace (`ask:E:ID`), at least one line to rotate and to mutter, `silent` with
@@ -64,6 +64,22 @@ Nothing is saved that was not before, and no stream is drawn. Tests: `world/serv
 `world/identify_service_tests.rs` (a fixture appraiser: the count, the refusals, magic and
 scroll types identified, the replay and the save), Wulfrun's in `world/ceaptun_tests.rs`,
 the screen's row in `ui/dialogue_screen.rs`; the wiki's table is `xtask/src/wiki/services.rs`.
+
+**Training** (#1391; the reusable kind for every teacher, #1394's smith next): `does =
+"train_skill"` with `train = { skill, value }` (`content::ServiceTraining`; the loader checks the
+skill is known, unless there is no skills table, and that only this kind has `train` and it
+always does). `World::service_offered` is false once the player is trained in the skill (and
+without a skills table), so `World::topics` leaves it out; `ask_service` refuses it then with
+the `nothing` line, no time. Bought: `Skills::add(skill, value)` (a fixed value, no stream drawn;
+5 for Mining, the low end of a dwarf's `1d6+4`), "Alberich trains you in mining." (`teach_skill`;
+the words a quest reward's teaching says), the `reply`, a chat's time. Price: favour moves it
+unless `temple` (Pious never: it is for `cure` and `mend` only), then the town's goodwill. Look
+mode says "who teaches for gold". The first teacher is **Alberich** (`npc = "alberich"`,
+`campaigns/ascmearc/data/dialogue/fyrdelf.toml`; creature type `dwarven_miser`, peaceful, no
+route), placed only by the pinned vault `alberichs_delving` on Fyrdelf 5: Mining for 500 gold.
+Tests: `world/train_service_tests.rs` (a fixture teacher: listed while untrained, bought, gone,
+refusals, digging before and after, the replay and the save, the load checks),
+`mapgen/fyrdelf_tests.rs::alberich_keeps_his_delving_on_the_fifth_floor`.
 
 **Goodwill** (#1247; spec §8 "Dialogue": "Goodwill"): `content/town.rs` (`TownDef`, a
 campaign's `data/towns/`, one file per town: `id`, `name`, `people`, `goodwill` in percent,
@@ -157,8 +173,11 @@ and a save, the hermit's topic offered to a full bard only), `world/calling_test
 ## Speech by race and station (#1392)
 
 Spoken text (topics, replies, services, rotation lines, mutters, quest text, arrival lines, cries
-with words) is written in the speaker's own register: commoners Cockney, the rich posh, dwarves
-Geordie (#1391), and **elves Brummie** (the Birmingham accent and dialect). Readability comes
+with words) is written in the speaker's own register: commoners Cockney, the rich posh,
+**dwarves Geordie** (#1391, the owner 2026-11-12), hinted the same way: "howay", "hinny", "pet",
+"canny", "divvent" (don't), "aa" (I), "wor" (our), "ye knaa", "gan" (go), "noo" (now), "doon",
+"oot", "aboot", "nee" (no), "reet" (right), "marra" (mate), "gadgie" (man), "bairn", "wey aye"
+(yes), "us" for me; and **elves Brummie** (the Birmingham accent and dialect). Readability comes
 first and the accent is hinted: "bab", "ar" (yes), "tara-a-bit" (goodbye), "yow" (you), "summat",
 "gambol" (a forward roll), "cob" (a bread roll), "bostin" (great), "babby", "ow am ya?", and the
 vowels only lightly ("loike", "noice"); **halflings and gnomes Scouse** (the Liverpool accent
@@ -173,9 +192,11 @@ accent laid on thick: "ye", "yer", "meself", "tis", "sure an'", "begorrah", "eej
 and **lizardfolk Dutch** (Nederlands, untranslated): they are alien to everyone else, so their
 lines are plain Dutch, "Wat moet je hier, warmbloed?". This is style only: languages have no game
 rules (no translation, no skill, no check), and the player understands what they understand. Ids, topic names, and placeholders never change with the
-accent. The rule binds speakers whose data says they are of that race (`race = "elf"`, `"halfling"`,
+accent. The rule binds speakers whose data says they are of that race (`race = "dwarf"` (and
+`"duergar"`, the grey dwarves), `"elf"`, `"halfling"`,
 `"gnome"`, `"goblin"`, `"kobold"`, `"ratfolk"`, `"drow"`, `"lizardfolk"`, or a creature that is one: a goblin,
-a kobold, a rat king, a drow who speaks). As of #1392 none speaks: the campaigns have no elf, halfling, gnome, goblin,
+a kobold, a rat king, a drow who speaks). The one dwarf who speaks is Alberich of Fyrdelf
+(#1391; the duergar traders keep shop with the shops' shared words and have no dialogue). As of #1392 none of the others speaks: the campaigns have no elf, halfling, gnome, goblin,
 kobold, ratfolk, drow, or lizardfolk NPC, and their creatures have no words, and Ælfrun of Holtwīc is a
 human cottar; **half-elves and half-orcs speak as humans do** (Cockney or posh by their station, never
 the Brummie of elves); the fey of Ælfhām are not elves by this rule. A new speaker
