@@ -21,7 +21,8 @@ pub enum Action {
     /// Step in a direction; bumping a closed door opens it (unlocking it first with a key that
     /// fits, if it is locked).
     Move(Dir),
-    /// Let a turn pass.
+    /// Let a turn pass, looking around: the same as `Search(1)`, one code path (#1326; spec §8
+    /// "Searching"). Kept as its own spelling, `wait`, for replays, tests, and the manifests.
     Wait,
     /// Open the door in a direction; a locked one only with a key that fits, which unlocks it
     /// first (spec §8 "Doors").

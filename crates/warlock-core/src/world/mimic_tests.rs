@@ -265,7 +265,8 @@ fn searching_and_spot_find_it_out() {
     // In passing, only those who notice everything notice it: trained in Spot.
     let mut w = world("keen");
     below(&mut w, 2);
-    run(&mut w, "wait*30");
+    // Resting: a wait would search (#1326).
+    run(&mut w, "rest:3m");
     assert!(disguised(&w), "untrained: never");
     let spot = w.content().skill_id("spot").expect("spot");
     let skills = &mut w.player_mut().skills;
@@ -278,7 +279,7 @@ fn searching_and_spot_find_it_out() {
         },
     ));
     *skills = all.into_iter().collect();
-    run(&mut w, "wait*30");
+    run(&mut w, "rest:3m");
     assert!(!disguised(&w), "trained in Spot");
 }
 

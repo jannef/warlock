@@ -1453,7 +1453,7 @@ mod tests {
     const DOWN: (KeyCode, &str) = (KeyCode::ArrowDown, "");
     const ENTER: (KeyCode, &str) = (KeyCode::Enter, "");
     const HELP: (KeyCode, &str) = (KeyCode::Slash, "?");
-    const WAIT: (KeyCode, &str) = (KeyCode::Period, ".");
+    const WAIT: (KeyCode, &str) = (KeyCode::KeyS, "s");
     // Directions on the numpad, ADOM's movement keys (#350).
     const NORTH: (KeyCode, &str) = (KeyCode::Numpad8, "8");
     const EAST: (KeyCode, &str) = (KeyCode::Numpad6, "6");

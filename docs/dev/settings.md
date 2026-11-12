@@ -94,13 +94,16 @@ command also goes in `ABILITY_KEYS`, which Controls lists last, below every cont
 The default keys (`Bindings::default`) are ADOM's (#350; the source is ADOM's manual, its
 "Miscellaneous commands" list): a command ADOM has takes ADOM's key in its context, one ADOM lacks
 (or has only behind a prefix like `:m` or `w s`) a key ADOM leaves free (`*`, `v`, `b`, `X`),
-and Throw is Missile's `t` in capitals, Search for a while Ctrl with Wait's numpad `5` or Search's
-`s` (Quit has no default key, the pause menu quits). Movement is the
+and Throw is Missile's `t` in capitals, Wait/search numpad `5` and `s` (ADOM's search key; `.`
+is no longer bound, #1326), Search for a while Ctrl with either (Quit has no default key, the
+pause menu quits). Movement is the
 numpad and the arrows only (ADOM's `k`, `l`, `u` are kick, look, use a tool). A new default
 key must not be an ADOM key of another command. Changing defaults never rewrites a player's file:
 `settings.toml` lists every command's keys once written, so an old file keeps its old keymap, and
 `Bindings::from_table` gives a command the file does not list (new, or unbound when the file was
-written, like Search for a while before its Ctrl keys) its defaults minus any key a listed command of its context has.
+written, like Search for a while before its Ctrl keys) its defaults minus any key a listed command of its context has. A command merged into another
+(`keys.rs::MERGED`: `search` into `wait`, #1326) has its keys moved to the one that took it over,
+after that one's own, by `fold_merged`, for a settings file and a keymap alike.
 
 The keymap file (`settings/keymap.rs`, #159): `export` writes every rebindable command by context
 (`[play]`, `[aim]`, ... from `Context::id`, `version = 1`); `import` applies a file to the live

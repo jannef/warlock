@@ -282,12 +282,13 @@ fn an_eye_for_traps_notices_traps_in_passing_but_not_secret_doors() {
         rng
     };
     let once = checked(&w);
-    run(&mut w, "wait");
+    // A turn of rest: a wait would search (#1326).
+    run(&mut w, "rest:6s");
     assert_eq!(w.state.rng, once, "one check, for the trap");
     // A warrior of a race without the eye notices neither.
     let mut human = world_in("traptest", "human");
     let before = human.state.rng.clone();
-    run(&mut human, "wait");
+    run(&mut human, "rest:6s");
     assert_eq!(human.state.rng, before, "no check at all");
 }
 
