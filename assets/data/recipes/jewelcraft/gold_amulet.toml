@@ -1,0 +1,15 @@
+# A gold amulet: its chain of gold, its setting a cut gem it cannot do without ("a gold and
+# sapphire amulet"): Jewelcraft's, by Dexterity (docs/design/recipes.md §6 "Rings and amulets";
+# docs/dev/crafting.md "Jewellery"). No grade.
+[[recipe]]
+id = "gold_amulet"
+name = "Gold amulet"
+result = { object = "gold_amulet" }
+verb = "Make"
+difficulty = 14
+seconds = 5400
+from = 30
+
+[recipe.parts]
+chain = { stock = ["gold"] }
+setting = { gem = true }

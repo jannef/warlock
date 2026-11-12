@@ -1,7 +1,8 @@
 //! The professions' recipes (spec §8 "Skills": professions; docs/dev/crafting.md): every generic
 //! recipe from `data/recipes/<skill>/`, a table a profession, the grades a made item comes out at,
 //! from `data/recipes.toml`'s bands and the 2d12 rules (`world/craft_make.rs::grade`), and gem
-//! cutting (`world/cut.rs`: the cut bands, a large uncut ruby's fates, the odds).
+//! cutting (`world/cut.rs`: the cut bands, a large uncut ruby's fates, the odds), and gem setting
+//! (`world/set.rs`: the odds).
 
 use super::text::{Term, anchored, capital, link};
 use std::fmt::Write as _;
@@ -9,7 +10,7 @@ use warlock_core::combat::HIGHEST;
 use warlock_core::content::{Content, CutId, Cutting, MaterialId, PartSource, RecipeUse, counted};
 use warlock_core::skills::Effect;
 use warlock_core::time::Duration;
-use warlock_core::world::{CutBand, Grade, cut_band, cut_outcome, grade};
+use warlock_core::world::{CutBand, Grade, SetBand, cut_band, cut_outcome, grade, set_band};
 
 /// The bonuses (the stat modifier, the skill, and the talents together) the odds table has a row
 /// for, and what reaches each.
@@ -29,6 +30,11 @@ const ODDS_AT: [u16; 3] = [50, 100, 200];
 /// Metalcraft's generic recipes ([`recipes_of`]).
 pub(super) fn recipes_metalcraft(content: &Content) -> String {
     recipes_of(content, "metalcraft")
+}
+
+/// Jewelcraft's generic recipes, the jewellery ([`recipes_of`]).
+pub(super) fn recipes_jewelcraft(content: &Content) -> String {
+    recipes_of(content, "jewelcraft")
 }
 
 /// Woodcraft's generic recipes ([`recipes_of`]).
@@ -70,9 +76,18 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
         let mut work = 0;
         for (n, part) in r.parts.iter().enumerate() {
             let base = &def.parts[part.part];
-            let name = (base.part).map_or("the weapon".to_string(), |p| {
+            let whole = match def.attack.is_some() {
+                true => "the weapon",
+                false => "the item",
+            };
+            let name = (base.part).map_or(whole.to_string(), |p| {
                 content.part_defs()[usize::from(p.0)].name.clone()
             });
+            if part.source == PartSource::Gem {
+                chosen.push(format!("{name}: a cut gem"));
+                stock.push("a cut gem".to_string());
+                continue;
+            }
             let materials = materials(content, r.skill, def, part);
             chosen.push(format!(
                 "{name}: {}",
@@ -473,5 +488,64 @@ pub(super) fn gem_cutting(content: &Content) -> String {
         }
         out.push('\n');
     }
+    out
+}
+
+/// Gem setting (Jewelcraft's Set, `world/set.rs`): the odds of each outcome by the check's whole
+/// bonus, on the cutting tables' ruby and on the softest gem.
+pub(super) fn gem_setting(content: &Content) -> String {
+    let Some(recipe) = content.recipes().of_use(RecipeUse::Set) else {
+        return String::new();
+    };
+    let mut out = String::from(
+        "| Gem | Bonus | Who | Set | Chipped | Shattered |\n|---|:---:|---|:---:|:---:|:---:|\n",
+    );
+    let gems = (content.materials().iter()).filter(|m| m.gem.is_some());
+    let ruby = gems.clone().find(|m| m.id == CUT_GEM.0);
+    let soft = gems.min_by_key(|m| (m.work, m.gem.as_ref().map_or(0, |g| g.value)));
+    let mut rows: Vec<(&str, i32, i32, &str)> = Vec::new();
+    if let Some(ruby) = ruby {
+        for &(bonus, who) in &CUT_BONUSES {
+            rows.push((ruby.name.as_str(), ruby.work, bonus, who));
+        }
+    }
+    if let Some(soft) = soft.filter(|m| Some(m.work) != ruby.map(|r| r.work)) {
+        let (bonus, who) = CUT_BONUSES[0];
+        rows.push((soft.name.as_str(), soft.work, bonus, who));
+    }
+    let sides = HIGHEST / 2;
+    for (gem_name, work, bonus, who) in rows {
+        let mut counts = [0u32; 3];
+        for a in 1..=sides {
+            for b in 1..=sides {
+                let natural = a + b;
+                let margin = natural + bonus - (recipe.difficulty + work);
+                let i = match set_band(natural, margin) {
+                    SetBand::Set => 0,
+                    SetBand::Chipped => 1,
+                    SetBand::Shattered => 2,
+                };
+                counts[i] += 1;
+            }
+        }
+        let _ = write!(
+            out,
+            "| {} ({work:+}) | {bonus:+} | {who} |",
+            capital(gem_name)
+        );
+        for n in counts {
+            let percent = f64::from(n) * 100.0 / f64::from(sides * sides);
+            let _ = write!(out, " {percent:.0}% |");
+        }
+        out.push('\n');
+    }
+    let _ = writeln!(
+        out,
+        "\nSetting takes {} against a difficulty of {} plus the gem's work, and is listed from \
+         Jewelcraft {}.",
+        Duration::seconds(u64::from(recipe.seconds)).spoken(),
+        recipe.difficulty,
+        recipe.from,
+    );
     out
 }

@@ -42,7 +42,8 @@ makes another stack.
 One trained in [Jewelcraft](skills.md#skill-jewelcraft) can cut a loose gem, or cut it again to
 a finer cut. A good cut keeps the stone's size; a poor one, a failure, and every re-cut cost a
 size, and a natural 2 shatters the stone. See [Gem cutting](gem-cutting.md) for the cuts, what a
-large uncut ruby can become, and the odds.
+large uncut ruby can become, and the odds. A cut gem can then be set in an item that has a
+place for one (see [Setting a gem](gem-cutting.md#setting-a-gem)).
 
 ## Finding gems
 

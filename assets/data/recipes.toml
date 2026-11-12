@@ -25,8 +25,8 @@
 #
 #   id          its file name (unique across professions); `craft:ID` names it
 #   name        the row's name (default: the result's name, or the action's for a `use` recipe)
-#   use         a built-in recipe: `temper`, `whittle`, `fletch`, `cut`, or `set` (Jewelcraft's;
-#               Set listed "not usable yet" until its phase). Its row runs that action, with its
+#   use         a built-in recipe: `temper`, `whittle`, `fletch`, `cut`, or `set` (Jewelcraft's
+#               two). Its row runs that action, with its
 #               own list and rules; it takes no result, parts, inputs, ornament, failure, fumble,
 #               or brittle, and a `difficulty` and `seconds` only for `cut` and `set`, which
 #               must give both (the others keep theirs in temper.toml and fletch.toml)
@@ -47,6 +47,8 @@
 #               "arrowhead", count = 20, per_made = true }`, `{ material = "sinew", count = 1 }`,
 #               or `{ group = "metal", count = 1 }` (any one material of the group; never a gem)
 #   ornament    true: an optional gem for the result's ornament part
+#   verb        the dialog's verb where it is not the profession's (stock.toml): "Make" for a
+#               ring, which Jewelcraft makes rather than cuts
 #   difficulty  the check's base
 #   seconds     the work's time (1 or more)
 #   station     a terrain that must stand beside the maker (`anvil`)
@@ -74,7 +76,7 @@ free_wood = ["forest", "dense_forest", "swamp"]
 
 [[profession]]
 skill = "jewelcraft"
-description = "Your work as a gem cutter."
+description = "Your work as a jeweller."
 
 [[profession]]
 skill = "metalcraft"

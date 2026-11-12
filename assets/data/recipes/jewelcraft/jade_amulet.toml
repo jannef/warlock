@@ -1,0 +1,12 @@
+# A jade amulet from a block of jade: Jewelcraft's, by Dexterity (docs/design/recipes.md §6
+# "Rings and amulets"; docs/dev/crafting.md "Jewellery"). No grade.
+[[recipe]]
+id = "jade_amulet"
+result = { object = "jade_amulet" }
+verb = "Make"
+difficulty = 12
+seconds = 3600
+from = 10
+
+[recipe.parts]
+main = { stock = ["jade"] }

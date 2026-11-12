@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You pick up a medium fine sapphire, an uncut tiny garnet, and 25 gold coins.
+ You put away a hand axe.
+
+
+
+
+
+
+
+                  ┌─ Set: gem ───────────────────────────────────────────────────┐
+                  │                                                              │
+                  │ Set — item: hand axe                                         │
+                  │                                                              │
+                  │ Gems                                                         │
+                  │ > a - a medium fine sapphire                          uses 1 │
+                  │                                                              │
+                  │                                                              │
+                  │                                                              │
+                  │ a or Enter choose   Esc back                                 │
+                  └──────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 27/27  ·  MP 1/1  ·  Lv 5  ·  08:04  ·  11 Darkening, Year 1444          ? controls

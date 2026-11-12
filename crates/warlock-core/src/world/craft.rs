@@ -9,7 +9,8 @@
 //!   the skills, so presentation never decides availability.
 //! - **The action** ([`Action::Craft`], `craft:ID[:POS,...]`): a built-in recipe's row runs its
 //!   own action (`temper:`, `whittle:`, `fletch`), so `craft:` refuses it, taking no time, but
-//!   for Cut, which is `craft:cut:LETTER` itself (`world/cut.rs`); a generic recipe is made by
+//!   for Cut and Set, which are `craft:cut:LETTER` and `craft:set:ITEM,GEM` themselves
+//!   (`world/cut.rs`, `world/set.rs`); a generic recipe is made by
 //!   `world/craft_make.rs` (the forge's swords).
 //!
 //! [`Action::Craft`]: crate::action::Action::Craft
@@ -38,8 +39,6 @@ pub struct RecipeRow {
 /// Why a recipe cannot be made now (the screen greys its row with [`RecipeLack::reason`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RecipeLack {
-    /// A built-in recipe whose action is not built yet (Jewelcraft's Set).
-    NotYet,
     /// The player's trained value is below the recipe's `from`.
     Skill,
     /// No station of this terrain beside the player.
@@ -52,13 +51,16 @@ pub enum RecipeLack {
     Stock(MaterialId),
     /// Too few of an input carried.
     Input(ObjectId),
+    /// No cut loose gem carried for a part that must be one (a gold amulet's setting, Set's).
+    Gem,
+    /// Nothing carried with an unset ornament part (Set's).
+    Setting,
 }
 
 impl RecipeLack {
     /// The reason, as the row says it: "no anvil beside you".
     pub fn reason(self, content: &Content) -> String {
         match self {
-            RecipeLack::NotYet => "not usable yet".into(),
             RecipeLack::Skill => "beyond your skill".into(),
             RecipeLack::Station(t) => format!("no {} beside you", content.terrain(t).name),
             RecipeLack::Knife => "no knife".into(),
@@ -68,14 +70,15 @@ impl RecipeLack {
                 format!("no {} to hand", def.group.as_deref().unwrap_or(&def.name))
             }
             RecipeLack::Input(o) => format!("no {}", content.object(o).plural),
+            RecipeLack::Gem => "no gem to hand".into(),
+            RecipeLack::Setting => "nothing to set a gem in".into(),
         }
     }
 
-    /// Its id in dumps: `not_yet`, `skill`, `station:anvil`, `knife`, `launcher`, `stock:metal`,
-    /// `input:arrowhead`.
+    /// Its id in dumps: `skill`, `station:anvil`, `knife`, `launcher`, `stock:metal`,
+    /// `input:arrowhead`, `gem`, `setting`.
     pub fn id(self, content: &Content) -> String {
         match self {
-            RecipeLack::NotYet => "not_yet".into(),
             RecipeLack::Skill => "skill".into(),
             RecipeLack::Station(t) => format!("station:{}", content.terrain(t).id),
             RecipeLack::Knife => "knife".into(),
@@ -85,6 +88,8 @@ impl RecipeLack {
                 format!("stock:{}", def.group.as_deref().unwrap_or(&def.id))
             }
             RecipeLack::Input(o) => format!("input:{}", content.object(o).id),
+            RecipeLack::Gem => "gem".into(),
+            RecipeLack::Setting => "setting".into(),
         }
     }
 }
@@ -108,19 +113,16 @@ pub(crate) fn recipe_rows(
         .collect()
 }
 
-/// The first reason `player` cannot make `recipe` now, in the screen's order: not built yet,
-/// skill, station, knife, launcher, stock, inputs. Only `"stock"` parts and object inputs are
-/// looked at: the other part sources and the stock inputs (docs/design/recipes.md §10) are
-/// checked by the phases whose recipes first use them.
+/// The first reason `player` cannot make `recipe` now, in the screen's order: skill, station,
+/// knife, launcher, Set's item and gem, stock, inputs, a gem part. Only stock parts, gem parts,
+/// and object inputs are looked at: the other part sources and the stock inputs
+/// (docs/design/recipes.md §10) are checked by the phases whose recipes first use them.
 pub(super) fn lack(
     content: &Content,
     level: &LevelState,
     player: &Actor,
     recipe: &RecipeDef,
 ) -> Option<RecipeLack> {
-    if recipe.uses.is_some_and(|u| !u.usable()) {
-        return Some(RecipeLack::NotYet);
-    }
     let value = player.skills.value(recipe.skill).unwrap_or(0);
     if value < recipe.from {
         return Some(RecipeLack::Skill);
@@ -137,6 +139,9 @@ pub(super) fn lack(
     }
     if recipe.launcher && super::fletch::fletch_makes(player, content).is_none() {
         return Some(RecipeLack::Launcher);
+    }
+    if recipe.uses == Some(RecipeUse::Set) {
+        return super::set::lack(content, player);
     }
     let result = recipe.result.as_ref();
     for part in (recipe.parts.iter()).filter(|p| stock_only(&p.source)) {
@@ -157,7 +162,9 @@ pub(super) fn lack(
             return Some(RecipeLack::Input(object));
         }
     }
-    None
+    let gem_part = (recipe.parts.iter()).any(|p| p.source == PartSource::Gem);
+    let gem = (player.inventory.iter()).any(|s| super::craft_make::cut_gem(content, s).is_some());
+    (gem_part && !gem).then_some(RecipeLack::Gem)
 }
 
 /// Whether a part's source is stock alone, the steps built so far: `"stock"`, or a table of
@@ -223,6 +230,9 @@ fn takes(content: &Content, player: &Actor, recipe: &RecipeDef) -> String {
                 words.push(stock);
             }
         }
+    }
+    if (recipe.parts.iter()).any(|p| p.source == PartSource::Gem) {
+        words.push("a cut gem".into());
     }
     for input in &recipe.inputs {
         // Stock inputs are told by the phase whose recipe first takes one (P7).
@@ -309,8 +319,8 @@ impl World {
         };
         let def = content.recipe(id);
         let text = match def.uses {
-            Some(uses) if !uses.usable() => "You cannot do that yet.".to_string(),
             Some(RecipeUse::Cut) => return self.start_cut(id, picks),
+            Some(RecipeUse::Set) => return self.start_set(id, picks),
             Some(_) => format!("{} is done from its own list.", def.name),
             None => return self.start_making(id, picks),
         };

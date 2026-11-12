@@ -8,24 +8,24 @@ expression: "render(case, content.clone())"
 
 
 
-
-
-
-
             ┌─ Jewelcraft: recipes ────────────────────────────────────────────────────┐
             │                                                                          │
             │ Work                                                                     │
             │ > a - Cut           a loose gem, about 30 minutes                        │
+            │   b - Set           beyond your skill                                    │
+            │ Rings                                                                    │
+            │   c - Gold ring     beyond your skill                                    │
+            │   d - Iron ring     no metal to hand                                     │
+            │   e - Silver ring   beyond your skill                                    │
+            │ Amulets                                                                  │
+            │   f - Amber amulet  beyond your skill                                    │
+            │   g - Gold amulet   beyond your skill                                    │
+            │   h - Jade amulet   beyond your skill                                    │
             │                                                                          │
             │ Takes a loose gem, about 30 minutes.                                     │
             │                                                                          │
-            │ a or Enter make   Esc back                                               │
+            │ a-h or Enter make   Esc back                                             │
             └──────────────────────────────────────────────────────────────────────────┘
-
-
-
-
-
 
 
 

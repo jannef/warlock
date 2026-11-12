@@ -1,0 +1,14 @@
+# A silver ring, of silver alone, with an optional gem in its setting: Jewelcraft's, by
+# Dexterity (docs/design/recipes.md §6 "Rings and amulets"; docs/dev/crafting.md "Jewellery").
+# Each ring is its own metal; the stock is priced by the weight, at least one ingot. No grade.
+[[recipe]]
+id = "silver_ring"
+result = { object = "silver_ring" }
+verb = "Make"
+difficulty = 13
+seconds = 3600
+from = 20
+ornament = true
+
+[recipe.parts]
+main = { stock = ["silver"] }

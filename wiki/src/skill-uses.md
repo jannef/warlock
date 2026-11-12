@@ -154,7 +154,9 @@ Woodcraft make knives, spears, clubs, and staves by hand from wood, bone, and fl
 
 [Jewelcraft](skills.md#skill-jewelcraft) is a profession too, but only for those trained in it:
 its row, **[Jewelcraft…](abilities.md#ability-jewelcraft)**, holds **Cut**, which cuts a loose gem
-(see [Gem cutting](gem-cutting.md)).
+(see [Gem cutting](gem-cutting.md)), **Set**, which sets a cut gem in an item (see
+[Setting a gem](gem-cutting.md#setting-a-gem)), and rings and amulets (see
+[Making jewellery](crafting.md#making-jewellery)).
 
 Each row says what the recipe takes, such as "a metal weapon or armour, an anvil, about 10
 minutes". A recipe you cannot make now is greyed out with the reason: "no anvil beside you", "no

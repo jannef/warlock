@@ -215,30 +215,32 @@ fn crafting_a_built_in_unknown_or_out_of_reach_recipe_is_refused_with_no_time() 
 }
 
 #[test]
-fn jewelcrafts_cut_is_usable_and_set_listed_but_not_usable_yet() {
-    // P11 adds Set's file; a fixture stands in for it now, open to anyone.
-    let mut files = ContentFiles::builtin();
-    files.insert(
-        "data/recipes/jewelcraft/set.toml",
-        "[[recipe]]\nid = \"set\"\nuse = \"set\"\ndifficulty = 12\nseconds = 1200\n\
-         anyone = true\n",
-    );
-    let content = Arc::new(Content::load(&files).expect("fixture content is valid"));
-    let mut w = world(content, "showcase");
-    // Cut is the trained's alone.
-    assert_eq!(
-        rows(&w, "jewelcraft"),
-        ["Set: an item and a cut gem, about 20 minutes (not usable yet)"]
-    );
+fn jewelcrafts_rows_are_cut_set_and_the_jewellery() {
+    let mut w = world(FIXTURE.clone(), "showcase");
+    w.player_mut().inventory.clear();
+    // Jewelcraft's are the trained's alone.
+    assert!(rows(&w, "jewelcraft").is_empty());
     let jewel = skill(&w, "jewelcraft");
-    w.player_mut().skills = [(jewel, Trained { value: 5, marks: 0 })]
-        .into_iter()
-        .collect();
+    w.player_mut().skills = [(
+        jewel,
+        Trained {
+            value: 10,
+            marks: 0,
+        },
+    )]
+    .into_iter()
+    .collect();
     assert_eq!(
         rows(&w, "jewelcraft"),
         [
+            "Amber amulet: a lump of amber, about 1 hour (no resin to hand)",
             "Cut: a loose gem, about 30 minutes",
-            "Set: an item and a cut gem, about 20 minutes (not usable yet)"
+            "Gold amulet: a gold ingot, a cut gem, about 1 hour and 30 minutes (beyond your skill)",
+            "Gold ring: a gold ingot, about 1 hour (beyond your skill)",
+            "Iron ring: an iron ingot, about 1 hour (no metal to hand)",
+            "Jade amulet: a block of jade, about 1 hour (no stone to hand)",
+            "Set: an item and a cut gem, about 20 minutes (nothing to set a gem in)",
+            "Silver ring: a silver ingot, about 1 hour (beyond your skill)"
         ]
     );
     let start = w.state.time;
@@ -247,5 +249,5 @@ fn jewelcrafts_cut_is_usable_and_set_listed_but_not_usable_yet() {
     }
     assert_eq!(w.state.time, start);
     let last = (w.messages().iter().last()).map(|m| m.text.clone());
-    assert_eq!(last.as_deref(), Some("You cannot do that yet."));
+    assert_eq!(last.as_deref(), Some("You must choose the item."));
 }

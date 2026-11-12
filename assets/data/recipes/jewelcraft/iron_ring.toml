@@ -1,0 +1,15 @@
+# An iron ring, of iron alone, with an optional gem in its setting: Jewelcraft's, by Dexterity
+# (docs/design/recipes.md §6 "Rings and amulets"; docs/dev/crafting.md "Jewellery"). Each ring is
+# its own metal; the stock is priced by the weight, at least one ingot. No grade: a ring has no
+# aspect to improve.
+[[recipe]]
+id = "iron_ring"
+result = { object = "iron_ring" }
+verb = "Make"
+difficulty = 11
+seconds = 3600
+from = 0
+ornament = true
+
+[recipe.parts]
+main = { stock = ["iron"] }

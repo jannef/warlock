@@ -6,7 +6,9 @@
 //!   [`PerceptionView::craft_steps`]): one choice for each `"stock"` part of the result, in part
 //!   order (the pieces whose material the part may be made of and the profession works, each
 //!   with the count it would take), each object input (the stacks of that object), then the
-//!   ornament if the recipe offers one (the cut loose gems carried; None may be chosen). A step
+//!   ornament if the recipe offers one (the cut loose gems carried; None may be chosen); a part
+//!   that must be a gem (`{ gem = true }`: a gold amulet's setting) is a step of the cut loose
+//!   gems with no None. Set's two steps are `world/set.rs`'s ([`super::set`]). A step
 //!   with one fitting stack is still a step: the player sees what is spent.
 //! - **The plan** ([`craft_plan`]): the picks, inventory positions in step order (`None` a
 //!   skipped optional), checked by the rules (the stack exists, fits, and suffices; an ornament
@@ -30,7 +32,7 @@
 //!   at least one of each). Either way the skill may earn a mark ([`Use::Craft`]).
 //!
 //! Only stock parts (`"stock"`, or a table of `stock` alone: a spear's haft of another profession's
-//! wood), object inputs, and the ornament have steps yet: a recipe needing any other part source, a stock input, a count, a failure or fumble object, or a brittle result
+//! wood), gem parts, object inputs, and the ornament have steps yet: a recipe needing any other part source, a stock input, a count, a failure or fumble object, or a brittle result
 //! is refused ("You cannot make that yet.") until the phase that builds its step.
 //!
 //! [`PerceptionView::craft_steps`]: crate::perception::PerceptionView::craft_steps
@@ -44,7 +46,8 @@ use super::{Actor, Spent, World};
 use crate::action::Event;
 use crate::combat;
 use crate::content::{
-    ActionKind, Content, MaterialId, RecipeCount, RecipeDef, RecipeId, RecipeSettings, counted,
+    ActionKind, Content, MaterialId, PartSource, RecipeCount, RecipeDef, RecipeId, RecipeSettings,
+    RecipeUse, counted,
 };
 use crate::item_parts::{self, ItemPart};
 use crate::magic::Worked;
@@ -67,6 +70,10 @@ pub enum CraftStepKind {
     Input,
     /// A cut gem for the result's ornament part, or none.
     Ornament,
+    /// A cut gem for a part that must be one (a gold amulet's setting), or Set's gem.
+    Gem,
+    /// An item carried to work on (Set's: one with its ornament part unset).
+    Item,
 }
 
 /// One stack a step may take.
@@ -172,6 +179,8 @@ enum Step {
     Input(usize),
     /// The result's ornament part.
     Ornament(crate::content::PartId),
+    /// The part at this index of the result's parts, a cut gem.
+    Gem(usize),
 }
 
 /// The steps of `recipe` in the wizard's order; `None` for a recipe this phase cannot make
@@ -184,10 +193,11 @@ fn steps(content: &Content, recipe: &RecipeDef) -> Option<Vec<Step>> {
     }
     let mut steps = Vec::new();
     for part in &recipe.parts {
-        if !stock_only(&part.source) {
-            return None;
+        match &part.source {
+            PartSource::Gem => steps.push(Step::Gem(part.part)),
+            source if stock_only(source) => steps.push(Step::Part(part.part)),
+            _ => return None,
         }
-        steps.push(Step::Part(part.part));
     }
     for (i, input) in recipe.inputs.iter().enumerate() {
         input.object()?;
@@ -220,7 +230,10 @@ pub(super) fn stock_need(
 }
 
 /// The cut loose gem of `stack`, if it is one (an uncut one is never set).
-fn cut_gem(content: &Content, stack: &Stack) -> Option<(MaterialId, crate::content::Cutting)> {
+pub(super) fn cut_gem(
+    content: &Content,
+    stack: &Stack,
+) -> Option<(MaterialId, crate::content::Cutting)> {
     let gems = content.gems()?;
     if stack.object != gems.object {
         return None;
@@ -253,6 +266,9 @@ fn label(content: &Content, recipe: &RecipeDef, step: Step) -> String {
         Step::Input(i) => (recipe.inputs[i].object())
             .map_or_else(String::new, |o| content.object(o).plural.clone()),
         Step::Ornament(part) => part_name(Some(part)).unwrap_or_default(),
+        Step::Gem(i) => (def.parts.get(i))
+            .and_then(|p| part_name(p.part))
+            .unwrap_or_else(|| "gem".into()),
     }
 }
 
@@ -265,6 +281,9 @@ pub(crate) fn craft_steps(
     recipe: RecipeId,
 ) -> Vec<CraftStep> {
     let def = content.recipe(recipe);
+    if def.uses == Some(RecipeUse::Set) {
+        return super::set::steps(content, lore, player);
+    }
     let Some(steps) = steps(content, def) else {
         return Vec::new();
     };
@@ -305,12 +324,15 @@ pub(crate) fn craft_steps(
                         .collect();
                     (CraftStepKind::Input, false, options)
                 }
-                Step::Ornament(_) => {
+                Step::Ornament(_) | Step::Gem(_) => {
                     let options = (pack.iter().enumerate())
                         .filter(|(_, s)| cut_gem(content, s).is_some())
                         .map(|(at, stack)| option(at, stack, 1))
                         .collect();
-                    (CraftStepKind::Ornament, true, options)
+                    match step {
+                        Step::Ornament(_) => (CraftStepKind::Ornament, true, options),
+                        _ => (CraftStepKind::Gem, false, options),
+                    }
                 }
             };
             CraftStep {
@@ -405,7 +427,7 @@ fn resolve(
                     back,
                 });
             }
-            Step::Ornament(part) => {
+            Step::Ornament(_) | Step::Gem(_) => {
                 let (gem, cutting) = (cut_gem(content, stack))
                     .ok_or_else(|| "Only a cut gem can be set.".to_string())?;
                 spends.push(Spend {
@@ -413,7 +435,12 @@ fn resolve(
                     count: 1,
                     back: 1,
                 });
-                own.push(ItemPart::gem(content, Some(part), gem, cutting));
+                let part = match step {
+                    Step::Gem(i) => def.parts.get(i).and_then(|p| p.part),
+                    Step::Ornament(part) => Some(part),
+                    Step::Part(_) | Step::Input(_) => None,
+                };
+                own.push(ItemPart::gem(content, part, gem, cutting));
             }
         }
     }
@@ -444,6 +471,9 @@ pub(crate) fn craft_plan(
     picks: &[Option<usize>],
 ) -> Result<CraftPlan, String> {
     let def = content.recipe(recipe);
+    if def.uses == Some(RecipeUse::Set) {
+        return super::set::plan(content, lore, player, def, picks);
+    }
     let resolved = resolve(content, player, def, picks)?;
     let pack = &player.inventory;
     let mut uses: Vec<String> = Vec::new();
@@ -457,8 +487,9 @@ pub(crate) fn craft_plan(
             }
         });
     }
-    let verb = profession(content, def, resolved.main)
-        .map_or_else(|| "Make".to_string(), |p| p.verb.clone());
+    let verb = (def.verb.clone())
+        .or_else(|| profession(content, def, resolved.main).map(|p| p.verb.clone()))
+        .unwrap_or_else(|| "Make".to_string());
     Ok(CraftPlan {
         verb,
         name: lore.describe(&resolved.made),
@@ -521,7 +552,8 @@ impl World {
                 Some(format!("There is no {} here.", content.terrain(t).name))
             }
             Some(RecipeLack::Knife) => Some("You have no knife.".into()),
-            Some(RecipeLack::NotYet | RecipeLack::Launcher) => {
+            Some(RecipeLack::Gem) => Some("You have no gem to hand.".into()),
+            Some(RecipeLack::Launcher | RecipeLack::Setting) => {
                 Some("You cannot make that yet.".into())
             }
             // The picks say what is missing.
@@ -628,7 +660,9 @@ impl World {
         }
         if failed {
             let metal = (main.and_then(|m| content.material(m).group.as_deref())) == Some("metal");
-            self.say(match metal {
+            // Arms and armour come out brittle; a ring (no aspect) just goes wrong.
+            let arms = !aspects(content.object(made.object)).is_empty();
+            self.say(match metal && arms {
                 true => "The blade comes out brittle and you break it up for the metal.",
                 false => "The work goes wrong, and you save what you can of it.",
             });
