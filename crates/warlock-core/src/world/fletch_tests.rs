@@ -12,6 +12,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::{PerStat, Stats};
+use crate::world::RecipeLack;
 use std::sync::LazyLock;
 
 const ROOM: &str = "\
@@ -120,10 +121,12 @@ fn count_of(w: &World, id: &str) -> u32 {
         .sum()
 }
 
-fn row(w: &World) -> Option<Option<Unavailable>> {
-    (w.perception().abilities().into_iter())
-        .find(|a| a.ability == Ability::Fletch)
-        .map(|a| a.unavailable)
+/// The Fletch recipe's row on Woodcraft's screen: whether it is listed, and why it cannot be
+/// made now.
+fn row(w: &World) -> Option<Option<RecipeLack>> {
+    (w.perception().recipes(woodcraft(w)).into_iter())
+        .find(|r| r.name == "Fletch")
+        .map(|r| r.unavailable)
 }
 
 fn said(w: &World, text: &str) -> bool {
@@ -182,25 +185,21 @@ fn a_dagger_a_stiletto_or_a_knife_is_a_knife_and_a_short_sword_is_not() {
     let mut w = world(false, 1);
     ready(&mut w, "short_bow");
     give(&mut w, "short_sword");
-    assert_eq!(row(&w), Some(Some(Unavailable::NoKnife)));
+    assert_eq!(row(&w), Some(Some(RecipeLack::Knife)));
 }
 
 #[test]
 fn each_reason_is_the_rows_and_the_refusal_with_no_time() {
     // Nothing at all: the knife is asked for first.
     let mut w = world(false, 1);
-    assert_eq!(
-        row(&w),
-        Some(Some(Unavailable::NoKnife)),
-        "anyone has the row"
-    );
+    assert_eq!(row(&w), Some(Some(RecipeLack::Knife)), "anyone has the row");
     let out = w.apply(&Action::Fletch);
     assert!(!out.took_turn && out.elapsed.is_zero());
     assert_eq!(last_message(&w), "You have no knife.");
     assert_eq!(Unavailable::NoKnife.reason(&w.content), "you have no knife");
     // A knife, no launcher.
     give(&mut w, "knife");
-    assert_eq!(row(&w), Some(Some(Unavailable::NoLauncher)));
+    assert_eq!(row(&w), Some(Some(RecipeLack::Launcher)));
     let out = w.apply(&Action::Fletch);
     assert!(!out.took_turn && out.elapsed.is_zero());
     assert_eq!(last_message(&w), "You have no bow or crossbow ready.");
@@ -210,20 +209,19 @@ fn each_reason_is_the_rows_and_the_refusal_with_no_time() {
     );
     // A sling is a launcher, of nothing to fletch.
     ready(&mut w, "sling");
-    assert_eq!(row(&w), Some(Some(Unavailable::NoLauncher)));
+    assert_eq!(row(&w), Some(Some(RecipeLack::Launcher)));
     // A bow in the pack is not ready.
     let mut w = world(false, 1);
     give(&mut w, "knife");
     give(&mut w, "short_bow");
-    assert_eq!(row(&w), Some(Some(Unavailable::NoLauncher)));
-    // Ready, it may be used; and Fletch stands where Woodcraft stood, for the untrained too.
+    assert_eq!(row(&w), Some(Some(RecipeLack::Launcher)));
+    // Ready, it may be made; and Woodcraft's profession row is there for the untrained too.
     let w = equipped(false, 1);
     assert_eq!(row(&w), Some(None));
     let wood = woodcraft(&w);
     assert!(
-        !(w.perception().abilities().iter())
-            .any(|a| matches!(a.ability, Ability::Skill(id) if id == wood)),
-        "Woodcraft is listed as its use"
+        (w.perception().abilities().iter()).any(|a| a.ability == Ability::Profession(wood)),
+        "Woodcraft is listed as its profession"
     );
 }
 

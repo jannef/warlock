@@ -11,8 +11,8 @@ expression: "render(case, content.clone())"
          │ Skills                                                                        │
          │   b  Heal                               nothing to treat                      │
          │   c  Intimidate                         at a place you see                    │
-         │   d  Fletch                             you have no knife                     │
-         │   e  Whittle                            you have no knife                     │
+         │   d  Metalcraft…                                                              │
+         │   e  Woodcraft…                                                               │
          │ Weapon skills                                                                 │
          │   f  Shield bash                        in a direction                        │
          │   g  Long blades: Deep cut              fires by itself                       │

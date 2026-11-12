@@ -200,6 +200,7 @@ above.
 | Intimidating (a threat at one foe) | `skill-uses.md#intimidating` |
 | Treating yourself, binding a wound | `skill-uses.md#treating-yourself` |
 | Fletching, brittle arrows and bolts, a knife | `skill-uses.md#fletching` |
+| Profession, recipe | `skill-uses.md#professions` |
 | Foraging | `skill-uses.md#foraging` |
 | Gather, gathering herbs, the glowing fungus | `herbs.md#gathering` |
 | Herbs (in general) | `herbs.md` |

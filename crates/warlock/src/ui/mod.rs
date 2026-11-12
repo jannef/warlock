@@ -57,6 +57,7 @@ mod name_screen;
 mod new_run_screen;
 mod object_screen;
 mod paged_list;
+mod profession_screen;
 mod quest_screen;
 mod rain;
 mod scorch;

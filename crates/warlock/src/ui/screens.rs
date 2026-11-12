@@ -47,6 +47,7 @@ use super::motion::Motion;
 use super::name_screen::NameScreen;
 use super::new_run_screen::{self, NewRunScreen};
 use super::object_screen::{IdentifyBy, ObjectList, ObjectScreen};
+use super::profession_screen::ProfessionScreen;
 use super::quest_screen::QuestScreen;
 use super::scribe_screen::ScribeScreen;
 use super::settings_screen::SettingsScreen;
@@ -75,6 +76,7 @@ use warlock_core::ability::Ability;
 use warlock_core::character::CharacterSpec;
 use warlock_core::content::{Content, SlotId};
 use warlock_core::perception::PerceptionView;
+use warlock_core::skills::SkillId;
 use warlock_core::world::Conversation;
 
 /// The screens that can be opened. Also the values of `--screen`, a dev flag for screenshots.
@@ -176,6 +178,13 @@ pub enum ScreenName {
     /// Choose a spell to write a scroll of (the wizard's Scribe, from the abilities menu): the
     /// spells known, grouped by school, each with its price and time.
     Scribe,
+    /// A profession's recipes (its row in the abilities menu, "Metalcraft…"): grouped by what
+    /// they make, each with what it takes, greyed with its reason when it cannot be made now.
+    #[value(skip)]
+    Profession(SkillId),
+    /// The first profession's screen (`--screen profession`), as [`ScreenName::Profession`].
+    #[value(name = "profession")]
+    FirstProfession,
     /// Talking with someone who has topics (`C` next to them): opens by itself when they answer;
     /// as `--screen`, over a run whose last action was such a chat (a replay's last step).
     Dialogue,
@@ -225,6 +234,8 @@ impl ScreenName {
                 | ScreenName::Abilities
                 | ScreenName::Shape
                 | ScreenName::Scribe
+                | ScreenName::Profession(_)
+                | ScreenName::FirstProfession
                 | ScreenName::Dialogue
                 | ScreenName::Death
                 | ScreenName::LevelUp
@@ -357,6 +368,8 @@ enum Screen {
     Shape(ShapeScreen),
     /// Choosing the spell of a scroll to write.
     Scribe(ScribeScreen),
+    /// A profession's recipes.
+    Profession(ProfessionScreen),
     Dialogue(DialogueScreen),
     Death(DeathScreen),
     LevelUp(LevelUpScreen),
@@ -462,6 +475,10 @@ impl Screen {
             ScreenName::Abilities => Screen::Abilities(AbilitiesScreen::new(run, beneath.ability)),
             ScreenName::Shape => Screen::Shape(ShapeScreen::new(run)),
             ScreenName::Scribe => Screen::Scribe(ScribeScreen::new(run)),
+            ScreenName::Profession(skill) => {
+                Screen::Profession(ProfessionScreen::new(run, Some(skill)))
+            }
+            ScreenName::FirstProfession => Screen::Profession(ProfessionScreen::new(run, None)),
             ScreenName::Dialogue => Screen::Dialogue(DialogueScreen::new(talk, run)),
             ScreenName::Death => Screen::Death(DeathScreen::new(run)),
             ScreenName::LevelUp => Screen::LevelUp(LevelUpScreen::new(run)),
@@ -512,6 +529,10 @@ impl Screen {
             Screen::Abilities(_) => ScreenName::Abilities,
             Screen::Shape(_) => ScreenName::Shape,
             Screen::Scribe(_) => ScreenName::Scribe,
+            Screen::Profession(screen) => match screen.skill() {
+                Some(skill) => ScreenName::Profession(skill),
+                None => ScreenName::FirstProfession,
+            },
             Screen::Dialogue(_) => ScreenName::Dialogue,
             Screen::Death(_) => ScreenName::Death,
             Screen::LevelUp(_) => ScreenName::LevelUp,
@@ -791,6 +812,12 @@ impl ScreenStack {
                 }
                 screen.handle(press, bindings)
             }
+            Some(Screen::Profession(screen)) => {
+                if let Some((cols, rows)) = self.console {
+                    screen.fit(cols, rows);
+                }
+                screen.handle(press, bindings)
+            }
             Some(Screen::Dialogue(screen)) => screen.handle(press, bindings),
             Some(Screen::Death(screen)) => screen.handle(press),
             Some(Screen::LevelUp(screen)) => {
@@ -858,6 +885,7 @@ impl ScreenStack {
             Some(Screen::Abilities(screen)) => screen.draw(console, bindings),
             Some(Screen::Shape(screen)) => screen.draw(console, bindings),
             Some(Screen::Scribe(screen)) => screen.draw(console, bindings),
+            Some(Screen::Profession(screen)) => screen.draw(console, bindings),
             Some(Screen::Dialogue(screen)) => screen.draw(console, bindings),
             Some(Screen::Death(screen)) => screen.draw(console, settings.clock, bindings),
             Some(Screen::LevelUp(screen)) => screen.draw(console, bindings),
@@ -2329,10 +2357,10 @@ mod tests {
     #[test]
     fn picking_a_lock_asks_for_a_direction_from_the_menu_or_its_own_key() {
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // The showcase's thief is trained in Open lock: `a` `d` (Pick lock, after their birth
-        // sign's stare, Disarm, and Listen) asks for a direction.
+        // The showcase's thief is trained in Open lock: `a` `e` (Pick lock, after their birth
+        // sign's stare, Disarm, Listen, and Metalcraft…) asks for a direction.
         let mut app = app(true);
-        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyD, "d")]);
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyE, "e")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Ability(Ability::PickLock));
         frame(&mut app, &[EAST]);
@@ -2354,12 +2382,27 @@ mod tests {
     }
 
     #[test]
+    fn a_professions_row_opens_its_recipes_and_esc_closes_them() {
+        // The thief's `a` `d` is Metalcraft…: its screen, over the menu's place; Temper there is
+        // greyed away from an anvil, so its letter does nothing.
+        let mut app = app(true);
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyD, "d")]);
+        let metal = content().skill_id("metalcraft").expect("metalcraft");
+        assert_eq!(names(&app), [ScreenName::Profession(metal)]);
+        frame(&mut app, &[(KeyCode::KeyA, "a")]);
+        assert_eq!(names(&app), [ScreenName::Profession(metal)]);
+        assert!(actions(&app).is_empty());
+        frame(&mut app, &[ESC]);
+        assert!(names(&app).is_empty());
+    }
+
+    #[test]
     fn stealing_asks_for_a_direction_from_the_menu_or_its_own_key() {
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // The showcase's thief can steal: `a` `e` (Steal) asks for a direction in the message
+        // The showcase's thief can steal: `a` `f` (Steal) asks for a direction in the message
         // line, and a direction steals.
         let mut app = app(true);
-        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyE, "e")]);
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyF, "f")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Ability(Ability::Steal));
         frame(&mut app, &[EAST]);

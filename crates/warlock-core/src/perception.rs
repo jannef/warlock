@@ -2173,6 +2173,12 @@ impl<'a> PerceptionView<'a> {
             .sum()
     }
 
+    /// The recipes of profession `skill` the player sees, in path order, each with what it takes
+    /// and why it cannot be made now (`world/craft.rs`): what the profession's screen lists.
+    pub fn recipes(&self, skill: crate::skills::SkillId) -> Vec<crate::world::RecipeRow> {
+        crate::world::recipe_rows(self.content, self.level, self.player, skill)
+    }
+
     /// What the player's spell `spell` costs them now, in mana (spec §8 "Spells": they know
     /// what their own spells cost); `None` for a spell they cannot cast.
     pub fn own_spell_cost(&self, spell: crate::content::SpellId) -> Option<i32> {

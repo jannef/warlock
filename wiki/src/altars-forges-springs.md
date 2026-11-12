@@ -66,9 +66,10 @@ A forge is a cold smithy: soot on the walls and an **anvil**, its hammer chained
 more anvil stands in Cēaptūn, in Eadric's Smithy beside the smith's fire. It is free to use; it is
 not the shop's service.
 
-To temper, walk into the anvil and say yes when asked, or stand beside it and choose
-[Temper](abilities.md#ability-temper) from the [abilities menu](abilities.md#the-abilities-menu)
-(listed under *Here* only there). Then pick something of metal you carry: a weapon, a missile
+To temper, walk into the anvil and say yes when asked, or stand beside it, open
+[Metalcraft…](abilities.md#ability-metalcraft) in the [abilities menu](abilities.md#the-abilities-menu),
+and choose **Temper** (a [recipe](skill-uses.md#professions) anyone can make; away from an anvil
+it is greyed out "no anvil beside you"). Then pick something of metal you carry: a weapon, a missile
 weapon, armour, or a shield whose main part is metal, as its
 [description](objects.md#what-an-object-is) says. Leather, wood, and bone will not do, and neither
 will [ammunition](ammunition.md), rings, or amulets.

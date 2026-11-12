@@ -23,8 +23,8 @@ expression: "render(case, content.clone())"
               │   m  Heal               nothing to treat                            │
               │   n  Knowledge          not usable yet                              │
               │   o  Listen at a door   in a direction                              │
-              │   p  Fletch             you have no knife                           │
-              │   q  Whittle            you have no knife                           │
+              │   p  Metalcraft…                                                    │
+              │   q  Woodcraft…                                                     │
               │                                                                     │
               │ Everything that ails you is answered at once: wounds, hunger,       │
               │ sickness and poison, hexes and holds, what was taken, and your mana │

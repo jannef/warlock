@@ -87,13 +87,12 @@ you never choose them, they work by themselves as you fight. They have their own
   you, or an [ally](allies.md) beside you, for [bleeding](status-effects.md#bleeding), a [poison](status-effects.md#poisoned), or a [disease](diseases.md#how-a-disease-goes) that shows. It asks which when
   there is more than one. Otherwise it is greyed out: "nothing to treat" (see
   [Treating yourself](skill-uses.md#treating-yourself)).
-- **Fletch**: everyone has it, in [Woodcraft](skills.md#skill-woodcraft)'s place among the Skills. It asks for nothing. You spend ten
-  minutes cutting arrows or bolts for the bow or crossbow you have [ready](ranged.md#getting-ready). It is greyed out with "you
-  have no knife" if you have none in your pack or anywhere on you, and with "you have no bow or
-  crossbow ready" (see [Fletching](skill-uses.md#fletching)).
-- **Whittle**: everyone has it, beside Fletch in [Woodcraft](skills.md#skill-woodcraft)'s place among the Skills. It asks which
-  wooden weapon you carry to improve, and takes ten minutes. It is greyed out with "you have no
-  knife" if you have none (see [Whittling](skill-uses.md#whittling)).
+- **Metalcraft…** and **Woodcraft…**: everyone has these two rows, in the skills' places among
+  the Skills. Each opens that [profession](skill-uses.md#professions)'s list of recipes.
+  Metalcraft's holds **Temper** (see [Forges](altars-forges-springs.md#forges)); Woodcraft's
+  holds **Fletch** (see [Fletching](skill-uses.md#fletching)) and **Whittle** (see
+  [Whittling](skill-uses.md#whittling)). A recipe you cannot make now is greyed out with the
+  reason: "no anvil beside you", "no knife", "no bow or crossbow ready".
 - **Wedge a door**: anyone trained in [Woodcraft](skills.md#skill-woodcraft) has it, in the skill's place among the Skills. Choose
   a direction, and you spend a turn wedging the closed door that way shut, so that creatures must
   kick it in (see [Wedging a door](doors.md#wedging-a-door)).

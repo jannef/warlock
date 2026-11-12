@@ -15,9 +15,9 @@ expression: "render(case, content.clone())"
                     │ > b  Veteran's wind                                      │
                     │ Skills                                                   │
                     │   c  Intimidate      at a place you see                  │
-                    │   d  Forage          not usable here                     │
-                    │   e  Fletch          you have no knife                   │
-                    │   f  Whittle         you have no knife                   │
+                    │   d  Metalcraft…                                         │
+                    │   e  Forage          not usable here                     │
+                    │   f  Woodcraft…                                          │
                     │ Weapon skills                                            │
                     │   g  Shield bash     in a direction                      │
                     │                                                          │

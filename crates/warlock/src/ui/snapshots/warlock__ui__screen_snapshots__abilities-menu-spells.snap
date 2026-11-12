@@ -19,9 +19,9 @@ expression: "render(case, content.clone())"
                     │   i  Decipher           no unknown scroll                │
                     │   j  Heal               nothing to treat                 │
                     │   k  Knowledge          not usable yet                   │
-                    │   l  Forage             not usable here                  │
-                    │   m  Fletch             you have no knife                │
-                    │   n  Whittle            you have no knife                │
+                    │   l  Metalcraft…                                         │
+                    │   m  Forage             not usable here                  │
+                    │   n  Woodcraft…                                          │
                     │ Weapon skills                                            │
                     │   o  Shield bash        in a direction                   │
                     │                                                          │

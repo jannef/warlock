@@ -130,35 +130,27 @@ fn without_a_knife_it_is_refused_with_its_reason() {
     assert!(said(&w, "You have no knife."));
     assert_eq!(w.state.time, before, "refused, no time");
     let content = w.content.clone();
+    let wood = content.skill_id("woodcraft").expect("woodcraft");
     let reason = |w: &World| {
-        let me = w.state.player();
-        Ability::Whittle.unavailable(me, &content)
+        (w.perception().recipes(wood).into_iter())
+            .find(|r| r.name == "Whittle")
+            .and_then(|r| r.unavailable)
     };
-    assert_eq!(reason(&w), Some(Unavailable::NoKnife));
+    assert_eq!(reason(&w), Some(crate::world::RecipeLack::Knife));
     assert_eq!(Unavailable::NoKnife.reason(&content), "you have no knife");
     give(&mut w, "knife");
     assert_eq!(reason(&w), None);
 }
 
 #[test]
-fn everyone_has_it_beside_fletch() {
+fn everyone_has_it_beside_fletch_on_woodcrafts_screen() {
     let w = world(false);
-    let every = Ability::every(&w.content);
-    let at = every
-        .iter()
-        .position(|&a| a == Ability::Fletch)
-        .expect("fletch");
-    assert_eq!(every[at + 1], Ability::Whittle);
-    assert!(Ability::Whittle.had_by(w.state.player(), &w.content));
-    assert_eq!(
-        Ability::Whittle.aim(&w.content),
-        crate::ability::Aim::Item,
-        "it asks which"
-    );
-    assert_eq!(
-        Ability::Whittle.action_on(&w.content, 3),
-        Some(Action::Whittle { item: 3 })
-    );
+    let wood = w.content.skill_id("woodcraft").expect("woodcraft");
+    let names: Vec<String> = (w.perception().recipes(wood).into_iter())
+        .map(|r| r.name)
+        .collect();
+    assert_eq!(names, ["Fletch", "Whittle"]);
+    assert!(Ability::Profession(wood).had_by(w.state.player(), &w.content));
 }
 
 #[test]

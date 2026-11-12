@@ -737,8 +737,8 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
-    // Beside a forge's anvil with arms and armour picked up: Temper in the Here group, asking
-    // for something carried; then its list, metal arms and armour only (not the lantern).
+    // Beside a forge's anvil with arms and armour picked up: no Here group (Temper is a recipe on
+    // Metalcraft's screen, #1334); then the Temper list, metal arms and armour (no lantern).
     Case {
         name: "abilities-menu-forge",
         scenario: "forge",
@@ -787,7 +787,7 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
-    // A ranger after a batch (spec §8 "Fletching"): Fletch in Woodcraft's place, usable; the
+    // A ranger after a batch (spec §8 "Fletching"): Woodcraft… in the skill's place; the
     // message line says what was made.
     Case {
         name: "abilities-menu-fletch",
@@ -805,20 +805,40 @@ const CASES: &[Case] = &[
         screen: Some("whittle"),
         ..BASE
     },
-    // A warrior carries no knife: Fletch greyed out, with the reason.
+    // A warrior carries no knife: Woodcraft's screen (its row in the abilities menu, `e`) greys
+    // Fletch and Whittle, each with the reason in place of what it takes (#1334).
     Case {
-        name: "abilities-menu-fletch-no-knife",
+        name: "profession-woodcraft-no-knife",
         character: Some("human,male,warrior"),
         run: true,
         screen: Some("abilities"),
+        keys: Some("e"),
         ..BASE
     },
-    // A thief's dagger is a knife, but no bow is ready.
+    // A thief's dagger is a knife, but no bow is ready: Whittle can be made, Fletch not (`h`:
+    // Woodcraft…, after Disarm, Listen, Metalcraft…, Pick lock, Steal, and Forage).
     Case {
-        name: "abilities-menu-fletch-no-launcher",
+        name: "profession-woodcraft-no-launcher",
         character: Some("human,male,thief"),
         run: true,
         screen: Some("abilities"),
+        keys: Some("h"),
+        ..BASE
+    },
+    // Metalcraft's screen (`--screen profession`, the first profession's) away from an anvil:
+    // Temper under "Work", greyed "no anvil beside you".
+    Case {
+        name: "profession-metalcraft-no-anvil",
+        run: true,
+        screen: Some("profession"),
+        ..BASE
+    },
+    // Beside the forge's anvil: Temper can be made, what it takes under the list.
+    Case {
+        name: "profession-metalcraft-forge",
+        scenario: "forge",
+        actions: "move:E",
+        screen: Some("profession"),
         ..BASE
     },
     // Beside a healing spring (spec §7 "Special rooms"): Drink in the Here group, last.

@@ -22,8 +22,8 @@ expression: "render(case, content.clone())"
              │   k  Decipher           no unknown scroll                              │
              │   l  Knowledge          not usable yet                                 │
              │   m  Listen at a door   in a direction                                 │
-             │   n  Fletch             you have no knife                              │
-             │   o  Whittle            you have no knife                              │
+             │   n  Metalcraft…                                                       │
+             │   o  Woodcraft…                                                        │
              │                                                                        │
              │ The basilisk's stare: a foe nearby that sees you slows to a crawl a    │
              │ moment; your eyes then rest two hours.                                 │

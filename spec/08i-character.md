@@ -716,14 +716,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - No limit on trying again (the owner's rule): a victim that caught the player stays angry,
     and that is the price. Presentation shows only what comes of it, never a modifier or a roll.
 - **Fletching** (`world/fletch.rs`, data `data/fletch.toml`; #1021; the owner: "Do not require
-  small blade in hand, just in inventory is fine"): the abilities menu's **Fletch** (`Ability::Fletch`,
-  in Woodcraft's place among the Skills; nothing to aim; `Action::Fletch`, replay text `fletch`; no
-  key of its own). Anyone, anywhere, trained in Woodcraft or not.
+  small blade in hand, just in inventory is fine"): **Fletch**, a recipe of Woodcraft's open to
+  anyone, on Woodcraft's profession screen (its row in the abilities menu, "Woodcraft…"; #1334;
+  nothing to aim; `Action::Fletch`, replay text `fletch`; no key of its own). Anyone, anywhere, trained in Woodcraft or not.
   - **Needs**: a knife carried, in the pack, worn or wielded or neither (`Content::is_knife`: an
     object of the `daggers` weapon skill: a dagger, a stiletto, a knife; a short blade is none), and
-    a launcher ready whose `launches` has a row in the file (a bow, a crossbow; not a sling). The
-    menu greys it out "you have no knife" or "you have no bow or crossbow ready", and the rules
-    refuse in the same words, taking no time. No material is used up.
+    a launcher ready whose `launches` has a row in the file (a bow, a crossbow; not a sling). Its
+    row is greyed "no knife" or "no bow or crossbow ready", and the rules
+    refuse ("You have no knife.", "You have no bow or crossbow ready."), taking no time. No
+    material is used up.
   - **Time**: `seconds` (600: ten minutes), in turns of the `fletch` action, stopped like a rest
     ("You put down the knife."): the time is spent and nothing is made. On the overworld the
     encounter roll runs as for a forage.
@@ -736,7 +737,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Fletcher** (`talents/fletcher.toml`, effect `fletcher`, `TalentMods::fletcher`): the ranger's at
     level 1, nobody else's; five minutes, +4 to the check, twice the count after the margin, plain at
     any Woodcraft. The ranger's kit has a knife, carried, not wielded.
-- **Whittling** (`world/temper.rs`, `Craft::Whittle`; #1028; design `skill-uses.md` W3): Temper's twin for wood on the same rules, so one item has one state (`magic/worked.rs`) and one set of numbers (`data/temper.toml`: ten minutes, `13 + 2 x attempts`, three improvements). The abilities menu's **Whittle** (`Ability::Whittle`, beside Fletch in Woodcraft's place; everyone has it, anywhere; `Action::Whittle { item }`, replay text `whittle:LETTER`; asks for an item, `Aim::Item`, what `workable_wood` accepts) takes a weapon, missile weapon, shield, or armour whose main part is of a material of `group = "wood"` (bows, crossbows, staves, clubs), not a spirit weapon. Refused, taking no time, without a knife carried ("You have no knife."; greyed out `Unavailable::NoKnife`), with a stack of another material ("Only a weapon of wood can be whittled."), or at three improvements. The check is the natural roll plus Dexterity's modifier, `TalentMods::check(Dexterity)`, and Woodcraft's `whittle` points (`Effect::Whittle`, curve 0, 8 at 100, 12 at 200), as Temper's is Strength with Metalcraft. Woodcraft earns a mark per finished attempt (`Use::Whittle`, 100 %).
+- **Whittling** (`world/temper.rs`, `Craft::Whittle`; #1028; design `skill-uses.md` W3): Temper's twin for wood on the same rules, so one item has one state (`magic/worked.rs`) and one set of numbers (`data/temper.toml`: ten minutes, `13 + 2 x attempts`, three improvements). **Whittle**, a recipe of Woodcraft's open to anyone (beside Fletch on Woodcraft's profession screen, #1334; anywhere; `Action::Whittle { item }`, replay text `whittle:LETTER`; asks for an item, the Whittle list, what `workable_wood` accepts) takes a weapon, missile weapon, shield, or armour whose main part is of a material of `group = "wood"` (bows, crossbows, staves, clubs), not a spirit weapon. Refused, taking no time, without a knife carried ("You have no knife."; its row greyed "no knife"), with a stack of another material ("Only a weapon of wood can be whittled."), or at three improvements. The check is the natural roll plus Dexterity's modifier, `TalentMods::check(Dexterity)`, and Woodcraft's `whittle` points (`Effect::Whittle`, curve 0, 8 at 100, 12 at 200), as Temper's is Strength with Metalcraft. Woodcraft earns a mark per finished attempt (`Use::Whittle`, 100 %).
+- **Professions** (`content/recipe.rs`, `world/craft.rs`, `ui/profession_screen.rs`; #1334, design `docs/design/professions.md` §6, §8; `docs/dev/crafting.md`): a skill with a directory of **recipes** (`data/recipes/<skill>/<id>.toml`, one a file) is a profession: Metalcraft and Woodcraft. Its row in the abilities menu ("Metalcraft…", in the skill's place) opens its screen of recipes, known by skill value (`from`, never learned). Whoever is trained in the skill sees every recipe of it, the untrained only those open to anyone (`anyone`): the built-in Temper (Metalcraft), Whittle, and Fletch (Woodcraft), which run their own actions unchanged (#1337 Q3: they stay open to everyone). A recipe is greyed with the first reason it cannot be made now, decided by the rules: "beyond your skill", "no anvil beside you", "no knife", "no bow or crossbow ready", "no metal to hand", "no arrowheads". Recipes that make things (`result`, from stock and inputs at a `station`, in `seconds` against `difficulty`) are data checked at load; `Action::Craft` (`craft:ID[:POS,...]`, `-` a skipped optional) is refused, taking no time, until the forge comes (P5).
 - **Foraging** (`world/forage.rs`, data `data/forage.toml`, §7; #547; the owner, 2026-10-27:
   "survival can be used on wilderness map, some chance to gather food items"): Survival's use,
   the abilities menu's **Forage** (`Ability::Forage`, in the skill's place among the Skills;

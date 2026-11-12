@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase. Press ? for controls.
+
+
+
+
+
+
+
+
+
+            ┌─ Woodcraft: recipes ─────────────────────────────────────────────────────┐
+            │                                                                          │
+            │ Work                                                                     │
+            │ > a - Fletch        no knife                                             │
+            │   b - Whittle       no knife                                             │
+            │                                                                          │
+            │ Takes a knife, a bow or crossbow ready, about 10 minutes.                │
+            │                                                                          │
+            │ a-b or Enter make   Esc back                                             │
+            └──────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 25/25  ·  MP 3/3  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  11 Darkening       ? controls

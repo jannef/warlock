@@ -1,0 +1,275 @@
+//! Crafting by recipe (spec §8 "Skills": professions; docs/design/professions.md §6, §8;
+//! docs/dev/crafting.md): what a profession's screen lists, and [`Action::Craft`].
+//!
+//! - **The rows** ([`recipe_rows`], what [`PerceptionView::recipes`] reads): a profession's
+//!   recipes in path order that the player may see (all of them for one trained in the skill,
+//!   else the `anyone` ones), each with what it takes in words the player sees elsewhere ("an
+//!   anvil, about 10 minutes"; never a difficulty or odds) and the first reason it cannot be made
+//!   now, if any ([`RecipeLack`]): computed here, from the pack, the cells beside the player, and
+//!   the skills, so presentation never decides availability.
+//! - **The action** ([`Action::Craft`], `craft:ID[:POS,...]`): a built-in recipe's row runs its
+//!   own action (`temper:`, `whittle:`, `fletch`), and generic recipes are made from P5 (the
+//!   forge), so every craft is refused for now, taking no time.
+//!
+//! [`Action::Craft`]: crate::action::Action::Craft
+//! [`PerceptionView::recipes`]: crate::perception::PerceptionView::recipes
+
+use super::{Actor, LevelState, Spent, World};
+use crate::content::{
+    Content, MaterialId, ObjectId, PartSource, RecipeDef, RecipeId, RecipeUse, TerrainId, article,
+    counted,
+};
+use crate::geom::Dir;
+use crate::skills::SkillId;
+use crate::time::Duration;
+
+/// One recipe as the profession's screen lists it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RecipeRow {
+    pub id: RecipeId,
+    pub name: String,
+    /// What it takes, in words: "a metal weapon or armour, an anvil, about 10 minutes".
+    pub takes: String,
+    /// Why it cannot be made now, the first reason that applies; `None` when it can.
+    pub unavailable: Option<RecipeLack>,
+}
+
+/// Why a recipe cannot be made now (the screen greys its row with [`RecipeLack::reason`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RecipeLack {
+    /// The player's trained value is below the recipe's `from`.
+    Skill,
+    /// No station of this terrain beside the player.
+    Station(TerrainId),
+    /// No knife carried.
+    Knife,
+    /// No bow or crossbow ready that fletching makes ammunition for.
+    Launcher,
+    /// No stack of stock fits a chosen part: this material's group is what is missing.
+    Stock(MaterialId),
+    /// Too few of an input carried.
+    Input(ObjectId),
+}
+
+impl RecipeLack {
+    /// The reason, as the row says it: "no anvil beside you".
+    pub fn reason(self, content: &Content) -> String {
+        match self {
+            RecipeLack::Skill => "beyond your skill".into(),
+            RecipeLack::Station(t) => format!("no {} beside you", content.terrain(t).name),
+            RecipeLack::Knife => "no knife".into(),
+            RecipeLack::Launcher => "no bow or crossbow ready".into(),
+            RecipeLack::Stock(m) => {
+                let def = content.material(m);
+                format!("no {} to hand", def.group.as_deref().unwrap_or(&def.name))
+            }
+            RecipeLack::Input(o) => format!("no {}", content.object(o).plural),
+        }
+    }
+
+    /// Its id in dumps: `skill`, `station:anvil`, `knife`, `launcher`, `stock:metal`,
+    /// `input:arrowhead`.
+    pub fn id(self, content: &Content) -> String {
+        match self {
+            RecipeLack::Skill => "skill".into(),
+            RecipeLack::Station(t) => format!("station:{}", content.terrain(t).id),
+            RecipeLack::Knife => "knife".into(),
+            RecipeLack::Launcher => "launcher".into(),
+            RecipeLack::Stock(m) => {
+                let def = content.material(m);
+                format!("stock:{}", def.group.as_deref().unwrap_or(&def.id))
+            }
+            RecipeLack::Input(o) => format!("input:{}", content.object(o).id),
+        }
+    }
+}
+
+/// The rows of profession `skill` for `player` on `level` (the module docs).
+pub(crate) fn recipe_rows(
+    content: &Content,
+    level: &LevelState,
+    player: &Actor,
+    skill: SkillId,
+) -> Vec<RecipeRow> {
+    let trained = player.skills.get(skill).is_some();
+    (content.recipes().of(skill))
+        .filter(|(_, recipe)| trained || recipe.anyone)
+        .map(|(id, recipe)| RecipeRow {
+            id,
+            name: recipe.name.clone(),
+            takes: takes(content, player, recipe),
+            unavailable: lack(content, level, player, recipe),
+        })
+        .collect()
+}
+
+/// The first reason `player` cannot make `recipe` now, in the screen's order: skill, station,
+/// knife, launcher, stock, inputs.
+fn lack(
+    content: &Content,
+    level: &LevelState,
+    player: &Actor,
+    recipe: &RecipeDef,
+) -> Option<RecipeLack> {
+    let value = player.skills.value(recipe.skill).unwrap_or(0);
+    if value < recipe.from {
+        return Some(RecipeLack::Skill);
+    }
+    if let Some(station) = recipe.station {
+        let beside =
+            (Dir::ALL.iter()).any(|&d| level.terrain_at(player.pos.step(d)) == Some(station));
+        if !beside {
+            return Some(RecipeLack::Station(station));
+        }
+    }
+    if recipe.knife && !(player.inventory.iter()).any(|s| content.is_knife(s.object)) {
+        return Some(RecipeLack::Knife);
+    }
+    if recipe.launcher && super::fletch::fletch_makes(player, content).is_none() {
+        return Some(RecipeLack::Launcher);
+    }
+    let result = recipe.result.as_ref();
+    for part in recipe
+        .parts
+        .iter()
+        .filter(|p| p.source == PartSource::Stock)
+    {
+        let Some(result) = result else { break };
+        let worked = worked_materials(content, recipe, result.object, part.part);
+        let fits = (player.inventory.iter())
+            .any(|stack| stack_material(content, stack).is_some_and(|m| worked.contains(&m)));
+        if !fits {
+            return worked.first().map(|&m| RecipeLack::Stock(m));
+        }
+    }
+    for input in &recipe.inputs {
+        let carried: u32 = (player.inventory.iter())
+            .filter(|s| s.object == input.object)
+            .map(|s| s.count)
+            .sum();
+        if carried < input.count {
+            return Some(RecipeLack::Input(input.object));
+        }
+    }
+    None
+}
+
+/// The materials part `part` of `object` may be made of that `recipe`'s profession works, in the
+/// part's list order: what a stock stack must be of.
+fn worked_materials(
+    content: &Content,
+    recipe: &RecipeDef,
+    object: ObjectId,
+    part: usize,
+) -> Vec<MaterialId> {
+    (content.object(object).made_of(part).iter().copied())
+        .filter(|&m| {
+            (content.stock().profession_of(content, m)).is_some_and(|p| p.skill == recipe.skill)
+        })
+        .collect()
+}
+
+/// The material of `stack` when it is stock (a piece): its main part's.
+fn stack_material(content: &Content, stack: &crate::object::Stack) -> Option<MaterialId> {
+    if Some(stack.object) != content.object_id(crate::piece::ID) {
+        return None;
+    }
+    stack.parts(content).first().map(|p| p.material)
+}
+
+/// What `recipe` takes, in words, joined with commas: what a built-in one works on, the stock
+/// and inputs, the station, a knife, a launcher, then the time.
+fn takes(content: &Content, player: &Actor, recipe: &RecipeDef) -> String {
+    let mut words: Vec<String> = Vec::new();
+    match recipe.uses {
+        Some(RecipeUse::Temper) => words.push("a metal weapon or armour".into()),
+        Some(RecipeUse::Whittle) => words.push("a wooden weapon".into()),
+        Some(RecipeUse::Fletch) | None => {}
+    }
+    if let Some(result) = &recipe.result {
+        for part in recipe
+            .parts
+            .iter()
+            .filter(|p| p.source == PartSource::Stock)
+        {
+            if let Some(stock) = stock_words(content, recipe, result.object, part.part) {
+                words.push(stock);
+            }
+        }
+    }
+    for input in &recipe.inputs {
+        let def = content.object(input.object);
+        words.push(match input.per_made {
+            true => format!("{} {} for each made", article(&def.name), def.name),
+            false => counted(&def.name, &def.plural, input.count),
+        });
+    }
+    if let Some(station) = recipe.station {
+        let name = &content.terrain(station).name;
+        words.push(format!("{} {name}", article(name)));
+    }
+    if recipe.knife {
+        words.push("a knife".into());
+    }
+    if recipe.launcher {
+        words.push("a bow or crossbow ready".into());
+    }
+    let seconds = match recipe.uses {
+        Some(RecipeUse::Temper | RecipeUse::Whittle) => content.temper().seconds,
+        Some(RecipeUse::Fletch) => {
+            let percent = (player.talent_mods(content).fletcher).map_or(100, |f| f.time_percent);
+            content
+                .fletch()
+                .map_or(0, |rules| rules.seconds * percent / 100)
+        }
+        None => recipe.seconds,
+    };
+    if seconds > 0 {
+        words.push(format!(
+            "about {}",
+            Duration::seconds(u64::from(seconds)).spoken()
+        ));
+    }
+    words.join(", ")
+}
+
+/// The stock a chosen part takes, priced in the part's base material where the profession works
+/// it (else the first it works): "3 steel ingots" (docs/design/professions.md §3: the part's
+/// share of the result's weight, in pieces).
+fn stock_words(
+    content: &Content,
+    recipe: &RecipeDef,
+    object: ObjectId,
+    part: usize,
+) -> Option<String> {
+    let def = content.object(object);
+    let base = def.parts.get(part)?;
+    let worked = worked_materials(content, recipe, object, part);
+    let material = (worked.iter().copied())
+        .find(|&m| m == base.material)
+        .or_else(|| worked.first().copied())?;
+    let grams = u64::from(def.weight) * u64::from(base.share) / 100;
+    let count = crate::piece::count_for(content, grams, material)?;
+    let piece = content.object(content.object_id(crate::piece::ID)?);
+    let (one, many) = crate::piece::names(content, piece, material);
+    Some(counted(&one, &many, count))
+}
+
+impl World {
+    /// The player makes a recipe (the module docs): refused for now, taking no time, with a word
+    /// for why.
+    pub(super) fn start_craft(&mut self, recipe: &str, _picks: &[Option<usize>]) -> Spent {
+        let content = self.content.clone();
+        let Some(id) = content.recipes().id(recipe) else {
+            self.say("You know no such recipe.");
+            return Spent::Nothing;
+        };
+        let def = content.recipe(id);
+        let text = match def.uses {
+            Some(_) => format!("{} is done from its own list.", def.name),
+            None => "You cannot make that yet.".to_string(),
+        };
+        self.say(text);
+        Spent::Nothing
+    }
+}

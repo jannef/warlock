@@ -61,8 +61,17 @@ pub(super) fn abilities(content: &Content) -> String {
                     .into()
             }
             Ability::Heal => "everyone trained in Heal (with something to treat)".into(),
-            Ability::Fletch => {
-                "everyone (usable with a knife carried and a bow or a crossbow ready)".into()
+            Ability::Profession(skill) => {
+                let open = (content.recipes().of(skill)).any(|(_, r)| r.anyone);
+                let skill = &content.skill(skill).name;
+                match open {
+                    true => format!(
+                        "everyone (some of its recipes are open to all; see \
+                         [Professions](skill-uses.md#professions)), and everyone trained in \
+                         {skill}"
+                    ),
+                    false => format!("everyone trained in {skill}"),
+                }
             }
             Ability::Forage => {
                 "everyone trained in Survival (usable in the wild: the overworld's land and its \
@@ -77,12 +86,6 @@ pub(super) fn abilities(content: &Content) -> String {
             }
             Ability::Pray => {
                 "everyone beside a forgotten altar not yet spent (a prayer takes a minute)".into()
-            }
-            Ability::Whittle => {
-                "everyone (usable with a knife carried; whittling takes ten minutes)".into()
-            }
-            Ability::Temper => {
-                "everyone beside a forge's anvil (tempering takes ten minutes)".into()
             }
             Ability::Drink => "everyone beside a healing spring (a drink takes ten seconds)".into(),
             Ability::Gather => {
@@ -153,18 +156,9 @@ pub(super) fn abilities(content: &Content) -> String {
                     format!("{turns} turns, each {turn} (a ritual)"),
                 )
             }
-            // A long action too: the batch's time.
-            Some(_) if a == Ability::Fletch => {
-                let minutes = content.fletch().map_or(0, |r| r.seconds / 60);
-                (aim(a.aim(content)), format!("{minutes} minutes (a batch)"))
-            }
             // A long action too: the forage's time.
             Some(_) if a == Ability::Decipher => {
                 let minutes = content.decipher().map_or(0, |r| r.seconds / 60);
-                (aim(a.aim(content)), format!("{minutes} minutes (a try)"))
-            }
-            Some(_) if a == Ability::Whittle => {
-                let minutes = content.temper().seconds / 60;
                 (aim(a.aim(content)), format!("{minutes} minutes (a try)"))
             }
             Some(_) if a == Ability::Forage => {
@@ -181,6 +175,10 @@ pub(super) fn abilities(content: &Content) -> String {
             }
             // An order is a shout: no time at all.
             None if a.source() == Source::Ally => (aim(a.aim(content)), "no time".to_string()),
+            // A profession's list: each recipe takes its own time.
+            None if matches!(a, Ability::Profession(_)) => {
+                (aim(a.aim(content)), "the recipe's time".to_string())
+            }
             None => ("—", "not usable yet".to_string()),
         };
         let _ = writeln!(
@@ -309,6 +307,7 @@ fn aim(aim: Aim) -> &'static str {
         Aim::Item => "an item you carry",
         Aim::Shape => "a weapon's shape, from every melee weapon",
         Aim::Spell => "a spell you know, from the list of them with their prices",
+        Aim::Recipes => "a recipe, from the profession's list",
     }
 }
 

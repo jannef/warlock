@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase. Press ? for controls.
+
+
+
+
+
+
+
+
+
+            ┌─ Woodcraft: recipes ─────────────────────────────────────────────────────┐
+            │                                                                          │
+            │ Work                                                                     │
+            │ > a - Fletch        no bow or crossbow ready                             │
+            │   b - Whittle       a wooden weapon, a knife, about 10 minutes           │
+            │                                                                          │
+            │ Takes a knife, a bow or crossbow ready, about 10 minutes.                │
+            │                                                                          │
+            │ a-b or Enter make   Esc back                                             │
+            └──────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 19/19  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1  ·  08:00       ? controls
