@@ -78,7 +78,7 @@ On every menu and screen:
 | Left / right (change a setting) | Left / Right, numpad `4` / `6`, or `h` / `l` |
 | Choose | `Enter` or numpad `Enter` |
 | Back | `Esc`, always |
-| Reset a key (Controls), delete a saved [character](saving.md#when-the-game-saves) (Characters) | `Delete` or `Backspace` |
+| Remove a key or reset a command's keys (Controls), delete a saved [character](saving.md#when-the-game-saves) (Characters) | `Delete` or `Backspace` |
 | Mark a [stack](objects.md#piles), mark everything ([picking up](objects.md#picking-up), [dropping](objects.md#dropping)) | `Space`, `,` |
 | Next / previous page of a list of items | `>` or `PageDown` / `<` or `PageUp` |
 
@@ -117,10 +117,18 @@ on the [info pages](the-screen.md#info-pages), in the question windows, and (in 
 them) the developer keys. Last come the [ability](abilities.md#keys-of-their-own) keys, which have
 no key until you give them one.
 
-To rebind, select a command, press `Enter`, then press the new key. It becomes the command's main
-key, and its other keys (such as the numpad) stay. If another command in the same group already
-uses that key, the key moves to the new command and the screen says what moved. The old command
-keeps its other keys, or shows `(none)` if that was its only one.
+A command can have several keys: moving north is numpad `8` and Up. To change them, select the
+command and press `Enter`. Its keys open in a short list under it, one per line, with **Add a
+key** last. The first key is the main one, the key the hints on screen name.
+
+- **Replace a key**: select it, press `Enter`, then press the new key.
+- **Add a key**: select **Add a key**, press `Enter`, then press the new key.
+- **Remove a key**: select it and press `Delete`. A command may be left with no key.
+- `Esc` closes the list.
+
+If another command in the same group already uses the key you press, the key moves to this
+command and the screen says what moved. The old command keeps its other keys, or shows `(none)`
+if that was its only one.
 
 A key of play can be held with `Ctrl`, `Alt`, or `Super` (on a Mac `Ctrl`, `Option`, or `Cmd`):
 hold them while you press the new key, as in `Ctrl+r`. A modified key is its own key: `Ctrl+r`
@@ -138,8 +146,8 @@ rest prompt.
 You cannot lock yourself out. `Esc` always backs out of every screen and cancels every prompt, and
 it cannot be taken. Nor can the last key for up, down, or choose on the menus (you need them to
 get back to Controls), or the last key that accepts a text field (you need it to name a new
-character). `Delete` resets the selected command to its default keys, and **Reset all keys**
-resets every command. If your keys still get in the way, start the game with
+character): they can be neither moved nor removed. `Delete` on a command whose keys are closed
+puts its default keys back, and **Reset all keys** resets every command. If your keys still get in the way, start the game with
 `warlock --reset-keys`: every key goes back to its default, and the game starts as usual. Your
 keys are kept with your [settings](settings.md).
 

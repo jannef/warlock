@@ -76,8 +76,11 @@ modifiers: Search for a while is Ctrl+Num5 and Ctrl+s (#1323's comment, #1326).
 Core knows no bindings, so a message names a key by its command's id (`messages::key("help")`
 writes `{key:help}`, as the welcome line does) and the message line fills it in as bound
 (`Message::display_with` with `ui::message_key`; dumps show the token).
-Binding a key another command of the same context uses moves it
-(`Bindings::bind_primary` returns `Bound::Moved`); refused with `Conflict` are the keys of fixed
+Controls binds a key in place of one of a command's keys or after its last
+(`Bindings::bind_at(command, key, Some(n) | None)`, #1324; `bind_primary`, the tests' shorthand, is `Some(0)`; a key the
+command has already trades places with the one replaced) and removes one by place
+(`Bindings::remove_key`). Binding a key another command of the same context uses moves it
+(`bind_at` returns `Bound::Moved`); refused with `Conflict` (taken or removed) are the keys of fixed
 commands outside `REBINDABLE` (Esc's Cancel) and the last key of a `VITAL` command (`MenuUp`,
 `MenuDown`, `Confirm`: what reaches Controls and its Reset all keys from anywhere; `TextConfirm`:
 what gets a new character past its name). `reset_command`
