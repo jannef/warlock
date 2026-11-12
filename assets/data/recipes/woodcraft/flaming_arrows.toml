@@ -1,0 +1,14 @@
+# Flaming arrows: arrows of any make, their heads wrapped in rag and soaked in a flask of oil
+# (docs/design/recipes.md §6 "Missiles"; docs/dev/crafting.md "Counted recipes"). Ten a batch,
+# an arrow for each made (fewer arrows carried, fewer made), and hardly a check to speak of.
+# What they fly as, the burning arrow, is never made.
+[[recipe]]
+id = "flaming_arrows"
+name = "Flaming arrows"
+result = { object = "flaming_arrow", count = 10 }
+inputs = [
+    { object = "arrow", count = 1, per_made = true },
+    { object = "flask_of_oil", count = 1 },
+]
+difficulty = 8
+seconds = 600

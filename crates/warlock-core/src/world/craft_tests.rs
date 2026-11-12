@@ -82,19 +82,22 @@ fn everyone_sees_the_built_in_rows_with_what_they_take_and_why_not() {
     assert_eq!(
         rows(&w, "woodcraft"),
         [
-            "Fletch: a knife, a bow or crossbow ready, about 10 minutes (no knife)",
+            "Arrows: an arrowhead for each made or a bone shard or a block of flint, a wood \
+             billet, a knife, a bow ready, about 10 minutes (no knife)",
+            "Crossbow bolts: an arrowhead for each made or a bone shard or a block of flint, a \
+             wood billet, a knife, a crossbow ready, about 10 minutes (no knife)",
+            "Sling stones: a block of stone, about 10 minutes (no stone to hand)",
             "Whittle: a wooden weapon, a knife, about 10 minutes (no knife)",
         ]
     );
-    // A knife: Whittle can be; Fletch still wants a launcher.
+    // A knife: Whittle can be; the arrows still want a bow, the bolts a crossbow.
     give(&mut w, "knife", 1);
+    let rows_now = rows(&w, "woodcraft");
+    assert!(rows_now[0].ends_with("(no bow ready)"), "{rows_now:?}");
+    assert!(rows_now[1].ends_with("(no crossbow ready)"), "{rows_now:?}");
     assert_eq!(
-        rows(&w, "woodcraft"),
-        [
-            "Fletch: a knife, a bow or crossbow ready, about 10 minutes \
-             (no bow or crossbow ready)",
-            "Whittle: a wooden weapon, a knife, about 10 minutes",
-        ]
+        rows_now[3],
+        "Whittle: a wooden weapon, a knife, about 10 minutes"
     );
     // Beside the forge's anvil, Temper can be.
     let w = world(content, "forge");

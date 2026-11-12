@@ -143,14 +143,16 @@ fn without_a_knife_it_is_refused_with_its_reason() {
 }
 
 #[test]
-fn everyone_has_it_beside_fletch_on_woodcrafts_screen() {
+fn everyone_has_it_beside_the_missiles_on_woodcrafts_screen() {
     let w = world(false);
     let wood = w.content.skill_id("woodcraft").expect("woodcraft");
     let names: Vec<String> = (w.perception().recipes(wood).into_iter())
         .map(|r| r.name)
         .collect();
-    assert!(names.contains(&"Fletch".to_string()), "{names:?}");
-    assert!(names.contains(&"Whittle".to_string()), "{names:?}");
+    for name in ["Arrows", "Crossbow bolts", "Sling stones", "Whittle"] {
+        assert!(names.contains(&name.to_string()), "{name}: {names:?}");
+    }
+    assert!(!names.contains(&"Fletch".to_string()), "{names:?}");
     assert!(Ability::Profession(wood).had_by(w.state.player(), &w.content));
 }
 

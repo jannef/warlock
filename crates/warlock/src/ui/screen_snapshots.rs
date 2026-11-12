@@ -791,14 +791,26 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
-    // A ranger after a batch (spec §8 "Fletching"): Woodcraft… in the skill's place; the
-    // message line says what was made.
+    // A ranger after a batch in the forest area's glade, where wood is free (spec §8
+    // "Fletching"; #1336): Woodcraft… in the skill's place; the message line says what was made.
     Case {
         name: "abilities-menu-fletch",
+        scenario: "forest",
         character: Some("human,male,ranger"),
         run: true,
-        actions: "fletch",
+        actions: "craft:arrows:-",
         screen: Some("abilities"),
+        ..BASE
+    },
+    // The arrows' wizard in the forest area's glade (#1336): the head step alone (the shaft is
+    // cut from the trees), nothing carried to head them, None on `-` for brittle arrows.
+    Case {
+        name: "craft-pick-arrows-head",
+        scenario: "forest",
+        character: Some("human,male,ranger"),
+        run: true,
+        screen: Some("abilities"),
+        keys: Some("f j"),
         ..BASE
     },
     // A ranger's Whittle list (#1028): the wooden weapons carried (the bow), not the knife.
@@ -949,7 +961,7 @@ const CASES: &[Case] = &[
         keys: Some("i b"),
         ..BASE
     },
-    // `--screen craft-pick`: the first recipe with a choice, the battle axe, with nothing carried.
+    // `--screen craft-pick`: the first recipe with a choice, the arrowheads, with nothing carried.
     Case {
         name: "craft-pick-first",
         scenario: "forge",
