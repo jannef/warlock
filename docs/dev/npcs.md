@@ -153,3 +153,30 @@ topics are callings', with no service or offer (`ui/look.rs::waits`: "a strange 
 (unhurt), who waits"). Nothing new is saved; nothing is drawn. Tests:
 `world/strange_spirit_tests.rs` (the spirit's silence and its topic, the oath asked, a replay
 and a save, the hermit's topic offered to a full bard only), `world/calling_tests.rs`.
+
+## Speech by race and station (#1392)
+
+Spoken text (topics, replies, services, rotation lines, mutters, quest text, arrival lines, cries
+with words) is written in the speaker's own register: commoners Cockney, the rich posh, dwarves
+Geordie (#1391), and **elves Brummie** (the Birmingham accent and dialect). Readability comes
+first and the accent is hinted: "bab", "ar" (yes), "tara-a-bit" (goodbye), "yow" (you), "summat",
+"gambol" (a forward roll), "cob" (a bread roll), "bostin" (great), "babby", "ow am ya?", and the
+vowels only lightly ("loike", "noice"); **halflings and gnomes Scouse** (the Liverpool accent
+and dialect), hinted the same way: "la", "lad", "der" (there), "made up" (delighted), "boss"
+(great), "sound", "me" for my, "ye" for you, "giz" (give us), "kecks" (trousers), "scran" (food),
+"arl feller" (old man); and **goblins, kobolds, and ratfolk a very heavy Irish brogue**, the one
+accent laid on thick: "ye", "yer", "meself", "tis", "sure an'", "begorrah", "eejit", "feckin'",
+"grand", "craic", "wee", "me oul' da", "would ye ever", "th'" for the, "t'" for to, "ould" for old,
+"tink" for think, "dat" for that; and **drow Middle English**, Chaucer's register made readable:
+"thou", "thee", "ye", "hast", "dost", "nat" (not), "eek" (also), "ywis" (truly), "anon", "certes",
+"sooth", "-eth" verbs ("he cometh"), "y-" past participles ("yslain"), "quod she" (said she);
+and **lizardfolk Dutch** (Nederlands, untranslated): they are alien to everyone else, so their
+lines are plain Dutch, "Wat moet je hier, warmbloed?". This is style only: languages have no game
+rules (no translation, no skill, no check), and the player understands what they understand. Ids, topic names, and placeholders never change with the
+accent. The rule binds speakers whose data says they are of that race (`race = "elf"`, `"halfling"`,
+`"gnome"`, `"goblin"`, `"kobold"`, `"ratfolk"`, `"drow"`, `"lizardfolk"`, or a creature that is one: a goblin,
+a kobold, a rat king, a drow who speaks). As of #1392 none speaks: the campaigns have no elf, halfling, gnome, goblin,
+kobold, ratfolk, drow, or lizardfolk NPC, and their creatures have no words, and Ælfrun of Holtwīc is a
+human cottar; **half-elves and half-orcs speak as humans do** (Cockney or posh by their station, never
+the Brummie of elves); the fey of Ælfhām are not elves by this rule. A new speaker
+of one of these races is written in its accent from the start.
