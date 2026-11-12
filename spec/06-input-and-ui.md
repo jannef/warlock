@@ -201,7 +201,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   a modified key is read from the physical key when Alt is held, and a symbol typed with Option or
   AltGr (`@`) still fires its plain binding. Shortcuts the system or browser keeps (Cmd+Q, Alt+F4,
   Ctrl+W on the web, ...) are refused with a reason, and so are modifiers on a key of any other
-  context. Search for a while defaults to Ctrl+Num5 and Ctrl+s.
+  context. Search for a while defaults to Ctrl+Num5 and Ctrl+s, Run to Ctrl with each movement
+  key (Ctrl+Num1-9, Ctrl+arrows).
 - **Keymaps**: "Export keys…" in Controls writes every command's keys, by context, with a format
   version (`version = 1`), to `warlock-keys.toml` in the config folder (on the web, a download)
   and says where; "Import keys…" reads it back (on the web, from a file picker).
@@ -607,6 +608,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   topic), and the screen reopens on it, now its reminder.
   Chatting takes the time of `chat` (§7 "Action costs"); with no creature the player sees there,
   it is refused ("You see no one there to talk to.") and takes none.
+- **Run** (Ctrl with a movement key; rebindable, `run:DIR` in replays; #1325) steps in that
+  direction turn after turn as one action, each step a move's time. In the open it holds the
+  direction until the next cell cannot be stepped onto (a wall or other solid terrain, a closed
+  door, a creature seen there, deep water, a known trap, the unknown). If the first step lands in
+  a corridor it follows the corridor through its bends instead, and stops at an intersection
+  (more than one way on; a closed door counts as one, so a side door stops it), a dead end, or
+  where the corridor opens into a room. The next step is worked out from what the player sees and
+  remembers, never ground truth. It stops for everything that stops a rest (below): a hostile
+  coming within 5 steps in view ("The kobold comes close; you stop running."), an attack, a
+  message (stairs or objects stepped onto say so). A first step a run cannot take is a plain
+  step (it opens a door, attacks a hostile), and asks the step's dialogs first.
 - **Rest** (`b`) asks in the message line: `Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to
   cancel)`. `h` rests an hour, `d` until 06:00, `n` until 18:00 (replay text `rest:1h`,
   `rest:dawn`, `rest:dusk`); any other command cancels. Resting is one action that passes turn

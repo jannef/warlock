@@ -590,4 +590,23 @@ mod tests {
             None
         );
     }
+
+    #[test]
+    fn default_runs_are_never_refused() {
+        // Ctrl with every movement key (#1325), on every platform; no default key is refused.
+        let b = Bindings::default();
+        for dir in Dir::ALL {
+            assert!(!b.keys_of(KeyCommand::Run(dir)).is_empty(), "{dir:?}");
+        }
+        let up = input(KeyCode::ArrowUp, Key::ArrowUp);
+        assert_eq!(b.lookup(&up, Mods::CTRL), Some(KeyCommand::Run(Dir::N)));
+        assert_eq!(b.lookup(&up, Mods::NONE), Some(KeyCommand::Move(Dir::N)));
+        let num3 = input(KeyCode::Numpad3, Key::Character("3".into()));
+        assert_eq!(b.lookup(&num3, Mods::CTRL), Some(KeyCommand::Run(Dir::SE)));
+        for platform in [Platform::Mac, Platform::Desktop, Platform::Web] {
+            for (key, command) in &b.0 {
+                assert_eq!(refusal(key, *command, platform), None, "{key:?}");
+            }
+        }
+    }
 }

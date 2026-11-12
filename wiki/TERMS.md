@@ -72,6 +72,7 @@ above.
 | A month by name (Frostmere, Rainmoon, …) | `time.md#the-calendar` |
 | Dawn, dusk, day, night | `time.md#days` |
 | Resting, rest until dawn | `resting.md#how-resting-works` |
+| Running | `turns.md#running` |
 | **Light, sight, and sound** | |
 | Light, lit, brightness | `light.md#what-light-is` |
 | Light source, torch, lantern light | `light.md#light-sources` |

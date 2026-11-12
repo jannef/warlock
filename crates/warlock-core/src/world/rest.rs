@@ -132,6 +132,7 @@ impl World {
             events.clear();
             let unseen_until = self.state.time + self.out_of_view_for();
             let (sprung, spawned) = (self.sprung, self.spawned);
+            let mut stood = self.player_pos();
             loop {
                 events.retain(|e| {
                     matches!(
@@ -151,12 +152,21 @@ impl World {
                     |e| matches!(e, Event::Disease { news, .. } if *news != DiseaseNews::Recovered),
                 );
                 let trapped = self.sprung != sprung;
+                // A step taken (a run's, `run.rs`) changes what is seen and what is near.
+                let moved = self.player_pos() != std::mem::replace(&mut stood, self.player_pos());
                 // A creature that came may walk into view sooner than the others could.
                 let newcomer = self.spawned != spawned;
                 // Within the stretch, a hostile in view but not yet close may shoot or cast, or a
                 // fight be seen near: what perception would stop the action for is looked at.
                 let happened = events.iter().any(|e| self.may_stop(e));
-                if done || heard || ill || trapped || newcomer || happened || self.weather_turned()
+                if done
+                    || heard
+                    || ill
+                    || trapped
+                    || moved
+                    || newcomer
+                    || happened
+                    || self.weather_turned()
                 {
                     break;
                 }
@@ -185,7 +195,8 @@ impl World {
             None => Ended::Done,
         };
         // Seen through to its end, longer than a turn: it trains Willpower (spec §8 "Stats").
-        if ended == Ended::Done && turns > 1 {
+        // A run is no such effort (`run.rs`).
+        if ended == Ended::Done && turns > 1 && !self.running {
             self.train_stat(StatUse::Endured);
         }
         ended

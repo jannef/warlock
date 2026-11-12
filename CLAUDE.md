@@ -124,7 +124,7 @@ trained skills, `Stealth 17`), `abilities` (the abilities menu's list), and `que
 log, active first) from perception;
 `actors` (dev-only: every actor's hit points, mana, load, stats, and skills with their marks).
 
-Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend use_tool
+Action text syntax: whitespace-separated `move:DIR run:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend use_tool
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
 eat:LETTER eat:floor:LETTER fletch give:LETTER[:DIR] read:LETTER[:X,Y|:LETTER] scribe:SPELL dig:DIR search search:N disarm:DIR listen:DIR gather:DIR wedge:DIR heal[:ID[:DIR]] feint:DIR intimidate:X,Y pray temper:LETTER whittle:LETTER decipher:LETTER drink use:ID[:DIR|:X,Y] chat:DIR ask:DIR:TOPIC steal:DIR tame:DIR throw_voice:X,Y order:follow|stay|hunt:X,Y rest:GOAL encounter:CHOICE stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N call:ID rank:SKILL:N
@@ -145,7 +145,7 @@ stack underfoot; `read:b:12,5` reads scroll stack `b` at level cell (12, 5) (a s
 fireball, lightning, frost, or any scroll of an aimed spell), `read:b` a scroll of a spell on
 oneself (haste) or the scroll of restoration, `read:b:c` reads it on inventory stack `c` (the scroll of
 identify), and `read:c` on a grimoire is a study of the spell it teaches, the grimoire kept, or, for a spell known below rank 10, a deepening to its next rank (rank times the learning time, always a check; docs/dev/spells.md "Ranks")
-(refused, with no time, for a spell known at rank 10 or a character not trained in Decipher script; docs/dev/spells.md "Learning"); `scribe:fireball` writes a scroll of a spell the player knows on the first blank scroll they carry (the wizard's Scribe: three times its mana and its grimoire's reading time, spent at the end; refused, no time, without a blank or the mana; docs/dev/scrolls.md); `dig:E` digs into the wall east with the tool in the Tool slot, turn
+(refused, with no time, for a spell known at rank 10 or a character not trained in Decipher script; docs/dev/spells.md "Learning"); `scribe:fireball` writes a scroll of a spell the player knows on the first blank scroll they carry (the wizard's Scribe: three times its mana and its grimoire's reading time, spent at the end; refused, no time, without a blank or the mana; docs/dev/scrolls.md); `run:E` runs east, step after step as one long action (in the open to whatever blocks the way, along a corridor through its bends to a branch, a side door, a dead end, or a room; it stops for whatever stops a rest; a first step a run cannot take is a plain `move`; docs/dev/time.md "Running"); `dig:E` digs into the wall east with the tool in the Tool slot, turn
 after turn until it gives way or something interrupts; `search` searches the cells around the
 player for secret doors and hidden traps for a turn, and `wait` is another spelling of it (waiting
 is searching, one action: #1326; the game's Wait/search, Num5 or `s`), `search:N` for up to N
