@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase. Press ? for controls.
+ Brūn, your hound, pads at your heel.
+
+
+
+
+
+
+
+
+
+           ┌─ Salvage ──────────────────────────────────────────────────────────────────┐
+           │                                                                            │
+           │ Melee weapons                                                              │
+           │ > a - ) a knife (+0 hit, 1d3)                                       200 g  │
+           │                                                                            │
+           │ a or Enter salvage   Esc cancel                                            │
+           └────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 20/20  ·  MP 4/4  ·  Sta 10/14  ·  Lv 1  ·  Brūn: unhurt  ·  08:00       ? controls

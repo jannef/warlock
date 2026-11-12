@@ -77,6 +77,9 @@ pub enum ObjectList {
     Temper,
     /// The wooden weapons in the pack: choose one to whittle with a knife (the Whittle ability).
     Whittle,
+    /// What in the pack, not worn or wielded, has a material a profession works: choose one to
+    /// take apart (the Salvage ability; `world/salvage.rs`).
+    Salvage,
     /// The scrolls in the pack of a type not yet identified: choose one to make out, unread
     /// (the Decipher ability; `world/decipher.rs`).
     Decipher,
@@ -106,6 +109,7 @@ impl ObjectList {
             ObjectList::Identify(_) => " Identify ",
             ObjectList::Temper => " Temper ",
             ObjectList::Whittle => " Whittle ",
+            ObjectList::Salvage => " Salvage ",
             ObjectList::Decipher => " Decipher ",
             ObjectList::Give => " Give ",
         }
@@ -121,6 +125,7 @@ impl ObjectList {
             ObjectList::Identify(_) => "You carry nothing unidentified.",
             ObjectList::Temper => "You carry no metal arms or armour to work.",
             ObjectList::Whittle => "You carry no wooden weapon to whittle.",
+            ObjectList::Salvage => "You carry nothing worth taking apart.",
             ObjectList::Decipher => "You carry no scroll you have not made out.",
             ObjectList::Give => "You carry nothing for a beast's neck.",
         }
@@ -140,6 +145,7 @@ impl ObjectList {
             | ObjectList::Identify(_)
             | ObjectList::Temper
             | ObjectList::Whittle
+            | ObjectList::Salvage
             | ObjectList::Decipher
             | ObjectList::Give => 78,
         }
@@ -155,6 +161,7 @@ impl ObjectList {
                 | ObjectList::Identify(_)
                 | ObjectList::Temper
                 | ObjectList::Whittle
+                | ObjectList::Salvage
                 | ObjectList::Decipher
                 | ObjectList::Give
         )
@@ -297,6 +304,14 @@ impl ObjectScreen {
                 .collect(),
             ObjectList::Whittle => (0..pack.len())
                 .filter(|&i| warlock_core::world::workable_wood(content, &pack[i]))
+                .map(Item::Pack)
+                .collect(),
+            // Never what is worn or wielded (the rules refuse it).
+            ObjectList::Salvage => (0..pack.len())
+                .filter(|&i| {
+                    warlock_core::world::salvageable(content, &pack[i])
+                        && !view.equipment().holds(i)
+                })
                 .map(Item::Pack)
                 .collect(),
             ObjectList::Decipher => (0..pack.len())
@@ -502,6 +517,9 @@ impl ObjectScreen {
             (ObjectList::Whittle, item) => ScreenAction::Act(Action::Whittle {
                 item: item.position(),
             }),
+            (ObjectList::Salvage, item) => ScreenAction::Act(Action::Salvage {
+                item: item.position(),
+            }),
             (ObjectList::Decipher, item) => ScreenAction::Act(Action::Decipher {
                 item: item.position(),
             }),
@@ -618,6 +636,7 @@ impl ObjectScreen {
                     | ObjectList::Identify(_)
                     | ObjectList::Temper
                     | ObjectList::Whittle
+                    | ObjectList::Salvage
                     | ObjectList::Decipher
                     | ObjectList::Give => Action::Drop(chosen),
                 });
@@ -820,6 +839,7 @@ impl ObjectScreen {
             ObjectList::Identify(_) => format!("{}   {page}Esc cancel", either("identify")),
             ObjectList::Temper => format!("{}   {page}Esc cancel", either("temper")),
             ObjectList::Whittle => format!("{}   {page}Esc cancel", either("whittle")),
+            ObjectList::Salvage => format!("{}   {page}Esc cancel", either("salvage")),
             ObjectList::Decipher => format!("{}   {page}Esc cancel", either("decipher")),
             ObjectList::Give => format!("{}   {page}Esc cancel", either("give")),
             ObjectList::PickUp => mark("pick up", "cancel"),

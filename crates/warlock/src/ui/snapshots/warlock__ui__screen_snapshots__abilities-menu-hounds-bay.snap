@@ -6,7 +6,6 @@ expression: "render(case, content.clone())"
  and flees from you. (×2) Your throat is raw from the howl.
 
 
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -18,14 +17,15 @@ expression: "render(case, content.clone())"
                     │   d  Jewelcraft      not usable yet                      │
                     │   e  Metalcraft…                                         │
                     │   f  Woodcraft…                                          │
+                    │   g  Salvage         on something you carry              │
                     │ Weapon skills                                            │
-                    │   g  Shield bash     in a direction                      │
+                    │   h  Shield bash     in a direction                      │
                     │                                                          │
                     │ An old soldier's second breath (an ability): hit points  │
                     │ back at once, then winded a quarter hour.                │
                     │                                                          │
                     │                                                          │
-                    │ a-g or Enter use   Esc close                             │
+                    │ a-h or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 

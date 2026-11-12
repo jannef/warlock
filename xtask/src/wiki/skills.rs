@@ -137,6 +137,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Wedge => "a door you wedge shut is harder to kick in",
         Effect::Temper => "tempering at a forge's anvil",
         Effect::Whittle => "whittling wood with a knife",
+        Effect::Craft => "its craft: salvaging the materials it works",
         Effect::Wade => "wading through water and marsh is quicker",
         Effect::Footing => "walking over rough ground (bush, reeds, rubble, ice) is quicker",
         Effect::SteadyEase => "less time lost when you are staggered",
@@ -209,6 +210,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Wedge => "wedged door's sturdiness",
             Effect::Temper => "tempering",
             Effect::Whittle => "whittling",
+            Effect::Craft => "craft",
             Effect::Wade => "wading's extra cost",
             Effect::Footing => "rough ground's extra cost",
             Effect::SteadyEase => "staggering's extra cost",
@@ -254,6 +256,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Wedge
                 | Effect::Temper
                 | Effect::Whittle
+                | Effect::Craft
                 | Effect::Swim
                 | Effect::Surprise
                 | Effect::Initiative

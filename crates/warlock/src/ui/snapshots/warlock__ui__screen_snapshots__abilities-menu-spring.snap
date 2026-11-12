@@ -3,8 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You open the door.
- Clear water wells up in an old stone basin.
-                    ┌─ Abilities ──────────────────────────────────────────────┐
+ Clear water wells u┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
@@ -19,16 +18,17 @@ expression: "render(case, content.clone())"
                     │   g  Listen at a door   in a direction                   │
                     │   h  Metalcraft…                                         │
                     │   i  Woodcraft…                                          │
+                    │   j  Salvage            on something you carry           │
                     │ Weapon skills                                            │
-                    │   j  Shield bash        you hold no shield               │
+                    │   k  Shield bash        you hold no shield               │
                     │ Here                                                     │
-                    │   k  Drink                                               │
+                    │   l  Drink                                               │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-k or Enter use   Esc close                             │
+                    │ a-l or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
  The Spring  ·  HP 18/18  ·  MP 14/14  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444     ? controls

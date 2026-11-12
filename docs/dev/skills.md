@@ -167,6 +167,9 @@ saved and hashed by that index. Their first effects (#1343, one hook each):
   Alchemy at the potions and flasks whose kind is unknown (`drink`), Enchanting at every other
   unknown thing that is no scroll (affixes, wands, rods). Each draws only when trained and with a
   candidate, so an appraiser alone draws as before. No marks until their crafts come.
+- **Crafting** (#1333, `docs/dev/crafting.md`): Metalcraft, Woodcraft, and Jewelcraft have
+  the `craft` benefit (`Effect::Craft`, Temper's curve), read per skill by
+  `Actor::skill_effect_of`, never summed across skills, and a `salvage` mark (salvage).
 - **Grants**: Jewelcraft gnome `1d6+4`, craftsperson optional 30 %, merchant and dwarf optional
   20 %; Mining dwarf and duergar `1d6+4`, kobold `1d4+2`, craftsperson optional 25 %, commoner
   10 %; Herbalism druid and witch `2d4+4`, ranger optional 30 %, halfling `1d4+2`; Alchemy witch

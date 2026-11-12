@@ -291,7 +291,7 @@ and a herbalist's forage finds the surface ones; drops are below (P15).
 `piece::count_for(content, grams, material)` =
 `max(1, round(grams / one piece's grams))`, the rounding `break_up` shares (`count_of_share`).
 `MaterialDef::work` (optional, signed, default 0) is the material's modifier on every salvage
-and recipe check (none reads it yet: P3). Shops (`shops.toml`): the smithy and the general
+and recipe check (salvage reads it, docs/dev/crafting.md). Shops (`shops.toml`): the smithy and the general
 stores stock `materials`; they, the weaponsmith, the armourer, and the fletcher buy them;
 Cēaptūn lays out steel and iron ingots in its smithy (a wood billet is worth nothing yet, so no shop trades it). Tests:
 `piece.rs` (names with and without a row, the §3 counts, units, sinew and pelts),

@@ -102,6 +102,10 @@ pub enum Ability {
     /// (Temper, Whittle, Fletch); never unavailable: it opens the profession's screen
     /// ([`Aim::Recipes`]), which says why each recipe cannot be made now.
     Profession(SkillId),
+    /// Break an item into its materials, anywhere (docs/dev/crafting.md; `world/salvage.rs`):
+    /// [`Action::Salvage`], every profession's at once, listed after the skills' own uses while
+    /// `data/salvage.toml` exists. Everyone has it; it asks which item ([`Aim::Item`]).
+    Salvage,
     /// Forage for food in the wild (spec §8 "Foraging"): [`Action::Forage`], Survival's use (the
     /// skill with the `forage` benefit, listed as this in its place, while `data/forage.toml`
     /// exists). Had by whoever is trained in it; unavailable ([`Unavailable::NotHere`]) anywhere
@@ -412,6 +416,8 @@ impl Ability {
         let wedge = (content.skills().iter())
             .any(|def| def.benefits.iter().any(|b| b.effect == Effect::Wedge))
             .then_some(Ability::Wedge);
+        // Every profession's: salvage, while its rules exist.
+        let salvage = content.salvage().is_some().then_some(Ability::Salvage);
         // Birth sign: the active gifts some sign grants, in their order.
         let signs = (SignActive::ALL.iter())
             .filter(|&&a| content.sign_active(a).is_some())
@@ -464,6 +470,7 @@ impl Ability {
             .chain(talents)
             .chain(skills)
             .chain(wedge)
+            .chain(salvage)
             .chain(weapon_skills)
             .chain(here)
             .chain(gather)
@@ -608,7 +615,7 @@ impl Ability {
                 actor.skills.get(skill).is_some()
                     || (content.recipes().of(skill)).any(|(_, recipe)| recipe.anyone)
             }
-            Ability::ShieldBash => true,
+            Ability::ShieldBash | Ability::Salvage => true,
             Ability::Weapon(skill, id) => actor.weapon_abilities(content).contains(&(skill, id)),
             // A place offers it, not who one is ([`Ability::here`]); an order needs allies
             // ([`Ability::orders`]).
@@ -634,6 +641,7 @@ impl Ability {
             Ability::Tame => "tame",
             Ability::Intimidate => "intimidate",
             Ability::Forage => "forage",
+            Ability::Salvage => "salvage",
             Ability::Decipher => "decipher",
             Ability::Heal => "heal",
             Ability::SecondWind => "second_wind",
@@ -677,6 +685,7 @@ impl Ability {
             Ability::Tame => "Tame",
             Ability::Intimidate => "Intimidate",
             Ability::Forage => "Forage",
+            Ability::Salvage => "Salvage",
             Ability::Decipher => "Decipher",
             Ability::Heal => "Heal",
             Ability::SecondWind => "Second wind",
@@ -738,6 +747,11 @@ impl Ability {
             Ability::Forage => {
                 "Spend a while searching the wild around you for something to eat: berries, \
                  nuts, mushrooms, roots."
+            }
+            Ability::Salvage => {
+                "Take an item you carry apart for ten minutes, for the metal, wood, bone, gems, \
+                 and such it is made of. Each material is saved by the skill that works it, or \
+                 lost; the item is gone either way. Anyone can, after a fashion."
             }
             Ability::Decipher => {
                 "Pore over a scroll you carry, of a kind you have not identified, for ten \
@@ -808,6 +822,7 @@ impl Ability {
             | Ability::Intimidate
             | Ability::Forage
             | Ability::Profession(_)
+            | Ability::Salvage
             | Ability::Decipher
             | Ability::Heal => Source::Skill,
             Ability::ThrowVoice => Source::Class,
@@ -846,7 +861,7 @@ impl Ability {
             | Ability::Heel
             | Ability::Hold
             | Ability::Drink => Aim::Nothing,
-            Ability::Give | Ability::Decipher => Aim::Item,
+            Ability::Salvage | Ability::Give | Ability::Decipher => Aim::Item,
             Ability::Profession(_) => Aim::Recipes,
             Ability::ThrowVoice | Ability::SetOn | Ability::Intimidate => Aim::Cell,
             Ability::Heal => Aim::Ailment,
@@ -883,6 +898,7 @@ impl Ability {
             Ability::Tame => Some(ActionKind::Tame),
             Ability::Intimidate => Some(ActionKind::Intimidate),
             Ability::Forage => Some(ActionKind::Forage),
+            Ability::Salvage => Some(ActionKind::Salvage),
             Ability::Decipher => Some(ActionKind::Decipher),
             Ability::Heal => Some(ActionKind::Heal),
             Ability::SecondWind | Ability::BloodMagic => Some(ActionKind::Wait),
@@ -919,6 +935,7 @@ impl Ability {
             | Ability::Intimidate
             | Ability::Forage
             | Ability::Profession(_)
+            | Ability::Salvage
             | Ability::Decipher
             | Ability::Heal
             | Ability::SecondWind
@@ -1023,7 +1040,7 @@ impl Ability {
             (Ability::Drink, _) => Some(Action::Drink),
             (Ability::Forage, _) => Some(Action::Forage),
             // It asks for an item ([`Ability::action_on`]).
-            (Ability::Decipher, _) => None,
+            (Ability::Salvage | Ability::Decipher, _) => None,
             (Ability::Heel, _) => Some(Action::Order(Command::Heel)),
             (Ability::Hold, _) => Some(Action::Order(Command::Hold)),
             // It asks for a cell ([`Ability::action_at`]).
@@ -1036,6 +1053,7 @@ impl Ability {
     pub fn action_on(self, content: &Content, item: usize) -> Option<Action> {
         match self {
             Ability::Decipher => Some(Action::Decipher { item }),
+            Ability::Salvage => Some(Action::Salvage { item }),
             Ability::Give => Some(Action::Give { item, ally: None }),
             Ability::Class(active) if active.aims_item() => Some(Action::UseOn(active, item)),
             Ability::Spell(spell) if aims_item(content, spell) => {
@@ -1075,6 +1093,7 @@ impl Ability {
             | Ability::Tame
             | Ability::Forage
             | Ability::Profession(_)
+            | Ability::Salvage
             | Ability::Decipher
             | Ability::Heal
             | Ability::SecondWind
@@ -1162,6 +1181,8 @@ impl Ability {
             | Ability::Intimidate
             | Ability::Forage
             | Ability::BloodMagic
+            // The list says what may be salvaged; the rules refuse the rest.
+            | Ability::Salvage
             // Whether the pack holds an unknown scroll is the perception's to say.
             | Ability::Decipher
             // Whether the player has a companion is the perception's to say.
@@ -1403,6 +1424,7 @@ mod tests {
                 "forage",
                 "woodcraft",
                 "wedge",
+                "salvage",
             ]
         );
         // Metalcraft and Woodcraft are professions (a recipe directory each), in their skills'

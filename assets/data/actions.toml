@@ -105,6 +105,9 @@ temper = 1000
 # A turn of whittling a wooden item with a knife (the Whittle ability): an attempt takes
 # temper.toml's `seconds`, a turn of this after another.
 whittle = 1000
+# A turn of salvaging an item for its materials (the Salvage ability): an attempt takes
+# salvage.toml's `seconds`, a turn of this after another.
+salvage = 1000
 # Trying to disarm a trap you know of next to you (the Disarm ability; spec §8 "Disarming traps"):
 # careful work, whether it comes off, fails, or sets the trap off.
 disarm = 2000

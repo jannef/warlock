@@ -824,6 +824,7 @@ fn skill_reader(effect: crate::skills::Effect) -> (&'static str, &'static str) {
         S::Climb => ("world/trap.rs", include_str!("../world/trap.rs")),
         S::Pick => ("world/lockpick.rs", include_str!("../world/lockpick.rs")),
         S::Temper | S::Whittle => ("world/temper.rs", include_str!("../world/temper.rs")),
+        S::Craft => ("world/salvage.rs", include_str!("../world/salvage.rs")),
         S::Swim => ("world/ice.rs", include_str!("../world/ice.rs")),
         S::Resist => ("world/knowledge.rs", include_str!("../world/knowledge.rs")),
         S::SneakDice => ("world/ambush.rs", include_str!("../world/ambush.rs")),
@@ -858,7 +859,11 @@ fn every_shipped_skill_suffix_raises_a_read_benefit() {
         for b in &skill.benefits {
             let (file, source) = skill_reader(b.effect);
             let needle = format!("Effect::{:?})", b.effect);
-            let read = (source.lines()).any(|l| l.contains("skill_effect(") && l.contains(&needle));
+            // A profession's craft is read for its one skill (`skill_effect_of`), affixes counted.
+            let read = (source.lines()).any(|l| {
+                (l.contains("skill_effect(") || l.contains("skill_effect_of("))
+                    && l.contains(&needle)
+            });
             assert!(
                 read,
                 "{}'s skill {} gives `{}`, not read through skill_effect in {file}",

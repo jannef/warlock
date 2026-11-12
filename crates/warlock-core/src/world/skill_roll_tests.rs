@@ -397,9 +397,10 @@ fn training_rolls_by_itself_and_replays() {
 #[test]
 fn the_professions_skills_load_can_be_trained_and_rolled() {
     // Jewelcraft, Mining, Herbalism, Alchemy, and Enchanting (#1331): every one but Jewelcraft
-    // has its first effect (#1343); only Mining and Herbalism mark yet.
+    // has its first effect (#1343); only Mining and Herbalism mark yet, but Jewelcraft's craft and
+    // salvage mark (#1333, `world/salvage_tests.rs`).
     let mut w = world("human,male,warrior");
-    for id in ["alchemy", "enchanting", "herbalism", "jewelcraft", "mining"] {
+    for id in ["alchemy", "enchanting", "herbalism", "mining"] {
         let def = w.content().skill(skill(&w, id));
         assert_eq!(def.benefits.is_empty(), id == "jewelcraft", "{id}");
         assert_eq!(

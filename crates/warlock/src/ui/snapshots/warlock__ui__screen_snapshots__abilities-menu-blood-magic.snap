@@ -24,11 +24,11 @@ expression: "render(case, content.clone())"
              │   m  Listen at a door   in a direction                                 │
              │   n  Metalcraft…                                                       │
              │   o  Woodcraft…                                                        │
+             │   p  Salvage            on something you carry                         │
              │                                                                        │
              │ The basilisk's stare: a foe nearby that sees you slows to a crawl a    │
              │ moment; your eyes then rest two hours.                                 │
              │                                                                        │
              │                                                                        │
-             │ a-o or Enter use   > < page   Esc close                                │
-             └────────────────────────────────────────────────────────────────────────┘
- The Hub  ·  HP 19/24  ·  MP 136/149  ·  Lv 15  ·  08:00  ·  11 Darkening, Year 1444     ? controls
+             │ a-p or Enter use   > < page   Esc close                                │
+ The Hub  ·  └────────────────────────────────────────────────────────────────────────┘  ? controls

@@ -87,6 +87,9 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Pray => {
                 "everyone beside a forgotten altar not yet spent (a prayer takes a minute)".into()
             }
+            Ability::Salvage => {
+                "everyone (anywhere, with nothing; see [Crafting](crafting.md#salvage))".into()
+            }
             Ability::Drink => "everyone beside a healing spring (a drink takes ten seconds)".into(),
             Ability::Gather => {
                 "everyone beside the [glowing fungus](herbs.md) (more herbs with Herbalism)".into()
@@ -159,6 +162,10 @@ pub(super) fn abilities(content: &Content) -> String {
             // A long action too: the forage's time.
             Some(_) if a == Ability::Decipher => {
                 let minutes = content.decipher().map_or(0, |r| r.seconds / 60);
+                (aim(a.aim(content)), format!("{minutes} minutes (a try)"))
+            }
+            Some(_) if a == Ability::Salvage => {
+                let minutes = content.salvage().map_or(0, |r| r.seconds / 60);
                 (aim(a.aim(content)), format!("{minutes} minutes (a try)"))
             }
             Some(_) if a == Ability::Forage => {
