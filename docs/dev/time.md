@@ -48,7 +48,29 @@ overworld, with Blood scent, and for light-blind eyes, where only a perception w
 creatures away from them take coarse turns (`world/stride.rs`, `docs/dev/creatures.md`), and
 `out_of_view_for` counts a stride's head start. On the overworld each turn of a rest or a forage rolls for an
 encounter (`World::watch_roll`, `docs/dev/encounters.md` "Camping and foraging"); the line it says
-stops the long action. A new action that takes time
+stops the long action. A turn in which the player moved is
+always perceived (a run's step, below; a push).
+
+**Running** (`world/run.rs`, #1325; `Action::Run(dir)`, `run:DIR`, `KeyCommand::Run`, Ctrl with a
+movement key by default) is one more long action through `keep_at`: `act` is a plain step
+(`player_moves`, with the per-step training `apply` gives a step), and `more` says whether there is
+a next step and which, a pure function of the perception (what the player sees and remembers,
+`PerceptionView::cell`, the creatures seen, the traps known; never ground truth), looked at after
+each step's perception (a stale view, `viewer() != player_pos()`, is never judged). It is decided
+in core turn by turn rather than by the client sending moves, so a run is one recorded action, its
+stops are the rest's (`Ended`), and frame timing never touches it. `steppable` is a cell a run may
+step onto (known walkable ground, not deep water, a closed door, or a shut chest, no creature
+seen, no trap known); `ways_on(at, from)` groups the open cells (walkable or a closed door) around
+`at` by neighbours round the ring and drops the group holding `from`; `way_on` is a corridor's one
+way on (exactly one group, one or two cells wide; wider is a room). The first step lands in a
+corridor when `way_on` has one there: the run follows it (the way's steppable cell nearest the
+heading, orthogonal on a tie) and stops at an intersection, a dead end, or a room; else it holds
+its direction until the next cell is not `steppable`. A first step that is not `steppable` is a
+plain `Move` (`start_running`); the client asks the step's dialogs first (`input.rs::step_dialog`).
+A creature coming close says "{came}; you stop running."; a run's end trains no Willpower
+(`World::running`). Tests: `world/run_tests.rs`.
+
+A new action that takes time
 needs an `ActionKind` (with its id and a line in `data/actions.toml`) and must return its price
 there,
 asked through `price_of`/`step_price`/`price_for`: those apply the actor's burden (`docs/dev/burden.md`,

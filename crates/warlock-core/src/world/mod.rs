@@ -242,6 +242,7 @@ mod rooted;
 mod rot;
 mod ruin;
 mod rumour;
+mod run;
 mod sanctuary;
 mod schedule;
 mod scribe;
@@ -695,6 +696,9 @@ pub struct World {
     /// Whether the player is waiting, which is searching (#1326; not saved): sounds heard then
     /// train Listen.
     waiting: bool,
+    /// Whether the player is running ([`World::run`]; not saved: a run is one action): a run
+    /// seen through to its end trains no Willpower (`keep_at`).
+    running: bool,
     /// The game time of the last perception (not saved: a loaded world has just perceived its
     /// moment): the birthday's note looks for the dawn between it and now.
     perceived_at: GameTime,
@@ -729,6 +733,8 @@ enum Spent {
     Turn(i64),
     /// A rest until this moment (see [`World::rest`]).
     Rest(GameTime, Rest),
+    /// Running in this direction (see [`World::run`]).
+    Run(Dir),
     /// A meal (see [`World::dine`]).
     Meal(eat::Dish),
     /// Digging into the wall at this cell (see [`World::dig`]).
@@ -1201,6 +1207,7 @@ impl World {
             mutters: Vec::new(),
             resting: false,
             waiting: false,
+            running: false,
             perceived_at: time,
             stood_on,
             acting: Some(player),
@@ -1402,6 +1409,7 @@ impl World {
                 self.perceive(&mut events);
             }
             Spent::Rest(until, goal) => self.rest(until, goal, &mut events),
+            Spent::Run(dir) => self.run(dir, &mut events),
             Spent::Meal(dish) => self.dine(dish, &mut events),
             Spent::Dig(at) => self.dig(at, &mut events),
             Spent::Search(turns) => {
@@ -1502,6 +1510,7 @@ impl World {
         // any level: taking stairs ends on another).
         let (done, kind) = match action {
             Action::Move(dir) => return self.player_moves(*dir, events),
+            Action::Run(dir) => return self.start_running(*dir, events),
             Action::Open(dir) => return self.open_door(here.step(*dir), events),
             Action::Kick(dir) => return self.kick(*dir, events),
             Action::PickLock(dir) => return self.pick_lock(*dir, events),
@@ -2024,6 +2033,8 @@ mod rot_tests;
 mod ruin_tests;
 #[cfg(test)]
 mod rumour_tests;
+#[cfg(test)]
+mod run_tests;
 #[cfg(test)]
 mod sanctuary_tests;
 #[cfg(test)]
