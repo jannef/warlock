@@ -17,16 +17,16 @@ expression: "render(case, content.clone())"
                             │   Move southwest                       Num1                  │
                             │   Move west                            Num4 ←                │
                             │   Move northwest                       Num7                  │
-                            │   Run north                            Ctrl+Num8 Ctrl+↑      │
-                            │   Run northeast                        Ctrl+Num9             │
-                            │   Run east                             Ctrl+Num6 Ctrl+→      │
-                            │   Run southeast                        Ctrl+Num3             │
-                            │   Run south                            Ctrl+Num2 Ctrl+↓      │
-                            │   Run southwest                        Ctrl+Num1             │
-                            │   Run west                             Ctrl+Num4 Ctrl+←      │
-                            │   Run northwest                        Ctrl+Num7             │
+                            │   Run north                            Alt+Num8 Alt+↑        │
+                            │   Run northeast                        Alt+Num9              │
+                            │   Run east                             Alt+Num6 Alt+→        │
+                            │   Run southeast                        Alt+Num3              │
+                            │   Run south                            Alt+Num2 Alt+↓        │
+                            │   Run southwest                        Alt+Num1              │
+                            │   Run west                             Alt+Num4 Alt+←        │
+                            │   Run northwest                        Alt+Num7              │
                             │   Wait/search                          Num5 s                │
-                            │   Search for a while                   Ctrl+Num5 Ctrl+s      │
+                            │   Search for a while                   Alt+Num5 Alt+s        │
                             │   Open a door                          o                     │
                             │   Close a door                         c                     │
                             │   Kick                                 k                     │

@@ -214,8 +214,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   a modified key is read from the physical key when Alt is held, and a symbol typed with Option or
   AltGr (`@`) still fires its plain binding. Shortcuts the system or browser keeps (Cmd+Q, Alt+F4,
   Ctrl+W on the web, ...) are refused with a reason, and so are modifiers on a key of any other
-  context. Search for a while defaults to Ctrl+Num5 and Ctrl+s, Run to Ctrl with each movement
-  key (Ctrl+Num1-9, Ctrl+arrows).
+  context. Search for a while defaults to Alt+Num5 and Alt+s, Run to Alt with each movement
+  key (Alt+Num1-9, Alt+arrows): Alt on every platform (#1385; macOS keeps Ctrl+arrows), Option on
+  a Mac, named `Alt` there too.
 - **Keymaps**: "Export keys…" in Controls writes every command's keys, by context, with a format
   version (`version = 1`), to `warlock-keys.toml` in the config folder (on the web, a download)
   and says where; "Import keys…" reads it back (on the web, from a file picker).
@@ -228,7 +229,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   read too, and a newer version as far as this one knows. The defaults ship as
   `keymaps/default.toml` beside the game.
 - First-phase commands: move, wait/search (one command, "Wait/search": Num5 or `s`, a turn that
-  looks around; #1326), search for a while (Ctrl+s or Ctrl+Num5: up to 10 turns,
+  looks around; #1326), search for a while (Alt+s or Alt+Num5: up to 10 turns,
   stopping when something is found or interrupts, like a rest; §8 "Searching"; basic commands,
   not abilities), open/close door, kick (`k`, then a direction; §8 "Doors"),
   ascend/descend (ascend also leaves an outdoor area when no enemy is about, §7 "Leaving an
@@ -630,7 +631,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   topic), and the screen reopens on it, now its reminder.
   Chatting takes the time of `chat` (§7 "Action costs"); with no creature the player sees there,
   it is refused ("You see no one there to talk to.") and takes none.
-- **Run** (Ctrl with a movement key; rebindable, `run:DIR` in replays; #1325) steps in that
+- **Run** (Alt with a movement key; rebindable, `run:DIR` in replays; #1325) steps in that
   direction turn after turn as one action, each step a move's time. In the open it holds the
   direction until the next cell cannot be stepped onto (a wall or other solid terrain, a closed
   door, a creature seen there, deep water, a known trap, the unknown). If the first step lands in
