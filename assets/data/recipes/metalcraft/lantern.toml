@@ -1,0 +1,12 @@
+# A lantern of iron or brass, the glass free; it has no aspect, so it comes out plain, forged at an
+# anvil from the smith's metal stock (docs/design/recipes.md §6 "Light sources and tools", the metal
+# route; docs/dev/crafting.md). The stock is priced by the weight.
+[[recipe]]
+id = "lantern"
+result = { object = "lantern" }
+difficulty = 10
+seconds = 1800
+station = "anvil"
+
+[recipe.parts]
+main = "stock"

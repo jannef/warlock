@@ -1,0 +1,13 @@
+# A buckler of metal, with an inlay, forged at an anvil from the smith's metal stock
+# (docs/design/recipes.md §6 "Shields", the metal route; docs/dev/crafting.md). The stock is priced
+# by the weight.
+[[recipe]]
+id = "buckler"
+result = { object = "buckler" }
+difficulty = 11
+seconds = 3600
+station = "anvil"
+ornament = true
+
+[recipe.parts]
+main = "stock"
