@@ -10,12 +10,12 @@ bar, and the info pages.
 |---|---|
 | Move (numpad) | `8` `9` `6` `3` `2` `1` `4` `7` |
 | Move (arrows) | Up, Right, Down, Left (four directions) |
-| [Run](turns.md#running) (step after step until something stops you) | `Ctrl` with a movement key |
+| [Run](turns.md#running) (step after step until something stops you) | `Alt` with a movement key (`Option` on a Mac) |
 | Attack | move into a [hostile](creatures.md#factions) [creature](creatures.md) |
 | [Swap places](npcs.md#getting-past) | move into any other creature |
 | [Chat](npcs.md#chatting) with someone next to you | `C` (then a direction, if several are near; see [Something beside you](#something-beside-you)) |
 | Wait a [turn](time.md#what-takes-time), [searching](searching.md#searching-1) the cells around you | numpad `5` or `s` |
-| [Search](searching.md#searching-1) for a while (up to 10 [turns](time.md#what-takes-time), stops when something turns up) | `Ctrl` with `s` or numpad `5` |
+| [Search](searching.md#searching-1) for a while (up to 10 [turns](time.md#what-takes-time), stops when something turns up) | `Alt` with `s` or numpad `5` (`Option` on a Mac) |
 | Open a [door](doors.md) or a [chest](chests.md) | `o` (then a direction, if several are beside you; or walk into the door) |
 | Close a [door](doors.md) | `c` (then a direction, if several are beside you) |
 | [Kick](doors.md#kicking) (a [door](doors.md), to break it in, or a [creature](creatures.md)) | `k`, then a direction, always (see [Doors](doors.md)) |
@@ -63,7 +63,7 @@ Controls. Give Kick, Look around, and Use a tool other keys first, since they us
 Some commands ADOM does not have, or has only behind a prefix. They get keys ADOM leaves free:
 the [message history](the-screen.md#messages) `v`, [rest](resting.md#how-resting-works) `b`, the
 [talents](talents.md) `G`, and repeating an [ability](abilities.md) `X`. Waiting and searching are
-one command, numpad `5` or `s`, and searching for a while is `Ctrl` with either. You save and quit from the pause menu (`Esc`), or
+one command, numpad `5` or `s`, and searching for a while is `Alt` with either. You save and quit from the pause menu (`Esc`), or
 bind a key for it in Controls.
 
 Symbol keys such as `<`, `>`, and `?` are matched by the character they type, so they work on any
@@ -131,7 +131,7 @@ If another command in the same group already uses the key you press, the key mov
 command and the screen says what moved. The old command keeps its other keys, or shows `(none)`
 if that was its only one.
 
-A key of play can be held with `Ctrl`, `Alt`, or `Super` (on a Mac `Ctrl`, `Option`, or `Cmd`):
+A key of play can be held with `Ctrl`, `Alt`, or `Super` (on a Mac `Ctrl`, `Option`, or `Cmd`; Controls calls `Option` `Alt`):
 hold them while you press the new key, as in `Ctrl+r`. A modified key is its own key: `Ctrl+r`
 never does what `r` does, and `r` does nothing while `Ctrl` is held. `Shift` counts with keys
 that type no character, such as `Shift+Up`; a letter carries it already (`K` is not `k`). Keys

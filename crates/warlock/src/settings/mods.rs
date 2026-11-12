@@ -6,7 +6,7 @@
 //! A modified binding is [`KeyBinding::Chord`]. Its text form puts the modifiers before the key,
 //! `"Ctrl+r"`, `"Alt+ArrowUp"`, `"Super+s"`, in that order (Ctrl, Alt, Shift, Super); reading
 //! also takes `Control`, `Option`, `Cmd`, `Command`, `Win`, and `Meta`. Controls, `?`, and the
-//! hint lines show the platform's names: `Option` and `Cmd` on macOS.
+//! hint lines show the platform's names: `Cmd` on macOS (Alt stays `Alt`, #1385).
 //!
 //! Matching is exact ([`press_candidates`]): `Ctrl+r` never fires `r`, nor `r` while Ctrl is
 //! held. Alt changes the character a key types (Option on macOS, AltGr elsewhere, which some
@@ -67,6 +67,10 @@ impl Mods {
         ctrl: true,
         ..Mods::NONE
     };
+    pub const ALT: Mods = Mods {
+        alt: true,
+        ..Mods::NONE
+    };
 
     /// The modifiers held now.
     pub fn held(keys: &ButtonInput<KeyCode>) -> Self {
@@ -106,10 +110,12 @@ impl Mods {
         self.names(["Ctrl", "Alt", "Shift", "Super"])
     }
 
-    /// The prefix as `platform` names the keys: `Option+` and `Cmd+` on macOS.
+    /// The prefix as `platform` names the keys: `Cmd+` on macOS. Alt keeps its name there (the
+    /// Option key, labelled Alt on many Mac keyboards; #1385), so the default keys, which hold
+    /// Alt, read the same on every platform.
     pub fn display_on(self, platform: Platform) -> String {
         match platform {
-            Platform::Mac => self.names(["Ctrl", "Option", "Shift", "Cmd"]),
+            Platform::Mac => self.names(["Ctrl", "Alt", "Shift", "Cmd"]),
             Platform::Desktop | Platform::Web => self.to_text(),
         }
     }
@@ -447,7 +453,7 @@ mod tests {
     #[test]
     fn the_platform_names_the_modifiers() {
         let all = key("Ctrl+Alt+Super+s");
-        assert_eq!(all.display_on(Platform::Mac), "Ctrl+Option+Cmd+s");
+        assert_eq!(all.display_on(Platform::Mac), "Ctrl+Alt+Cmd+s");
         assert_eq!(all.display_on(Platform::Desktop), "Ctrl+Alt+Super+s");
         assert_eq!(all.display_on(Platform::Web), "Ctrl+Alt+Super+s");
         assert_eq!(key("Shift+ArrowUp").display_on(Platform::Mac), "Shift+↑");
@@ -490,8 +496,9 @@ mod tests {
             b.lookup_in(Context::Aim, &tab, mods("Shift+")),
             Some(KeyCommand::NextTarget)
         );
-        // Alt with an arrow is another key.
-        assert_eq!(b.lookup(&up, mods("Alt+")), None);
+        // Alt with an arrow is another key: Run (#1385).
+        assert_eq!(b.lookup(&up, mods("Alt+")), Some(KeyCommand::Run(Dir::N)));
+        assert_eq!(b.lookup(&up, mods("Ctrl+Alt+")), None);
     }
 
     #[test]
@@ -593,16 +600,29 @@ mod tests {
 
     #[test]
     fn default_runs_are_never_refused() {
-        // Ctrl with every movement key (#1325), on every platform; no default key is refused.
+        // Alt with every movement key (#1325, #1385), on every platform; no default key is refused.
         let b = Bindings::default();
         for dir in Dir::ALL {
             assert!(!b.keys_of(KeyCommand::Run(dir)).is_empty(), "{dir:?}");
         }
         let up = input(KeyCode::ArrowUp, Key::ArrowUp);
-        assert_eq!(b.lookup(&up, Mods::CTRL), Some(KeyCommand::Run(Dir::N)));
+        assert_eq!(b.lookup(&up, Mods::ALT), Some(KeyCommand::Run(Dir::N)));
         assert_eq!(b.lookup(&up, Mods::NONE), Some(KeyCommand::Move(Dir::N)));
         let num3 = input(KeyCode::Numpad3, Key::Character("3".into()));
-        assert_eq!(b.lookup(&num3, Mods::CTRL), Some(KeyCommand::Run(Dir::SE)));
+        assert_eq!(b.lookup(&num3, Mods::ALT), Some(KeyCommand::Run(Dir::SE)));
+        // Ctrl is no default modifier any more: macOS keeps Ctrl+arrows for Spaces (#1385).
+        assert_eq!(b.lookup(&up, Mods::CTRL), None);
+        assert!(
+            b.0.iter().all(|(key, _)| !key.mods().ctrl),
+            "no Ctrl default"
+        );
+        // Option+s on a Mac types `ß` (a dead key on some layouts), Windows' Alt+s an `s`:
+        // both are Search for a while, read from the physical key.
+        let search = Some(KeyCommand::SearchLong);
+        assert_eq!(b.lookup(&typed(KeyCode::KeyS, "ß"), Mods::ALT), search);
+        assert_eq!(b.lookup(&typed(KeyCode::KeyS, "s"), Mods::ALT), search);
+        let dead = input(KeyCode::KeyS, Key::Dead(None));
+        assert_eq!(b.lookup(&dead, Mods::ALT), search);
         for platform in [Platform::Mac, Platform::Desktop, Platform::Web] {
             for (key, command) in &b.0 {
                 assert_eq!(refusal(key, *command, platform), None, "{key:?}");

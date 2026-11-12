@@ -77,7 +77,7 @@ heard again trains Listen a little (`perceive.rs`); and it does not count as act
 mark under a load, no Dexterity mark lost while Overloaded, no hungry step). Rest does not
 search, nor do creatures' waits or the abilities priced as a wait. Treading deep water, a wait
 passes the turn without the checks (`search_turn`), and searching for a while is refused. The
-app binds Num5 and `s` (`KeyCommand::Wait`, "Wait/search", `wait`) and Ctrl+Num5 and Ctrl+s
+app binds Num5 and `s` (`KeyCommand::Wait`, "Wait/search", `wait`) and Alt+Num5 and Alt+s
 (`KeyCommand::SearchLong`, `search:N` with `SearchRules::turns`); basic commands, not
 abilities. `dump`'s `truth` layer and `warlock-cli gen` mark secret doors `S`; `truth` marks a
 standing breach `H`.

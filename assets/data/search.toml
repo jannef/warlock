@@ -7,7 +7,7 @@
 # branch every hidden feature is harder by the branch's `hidden_per_depth` for each level below
 # the first (dungeons.toml).
 #
-# - Searching (`s` or numpad 5, a turn, as every wait is; Ctrl+s, for a while): every hidden feature on the cells around you
+# - Searching (`s` or numpad 5, a turn, as every wait is; Alt+s, for a while): every hidden feature on the cells around you
 #   (farther with a high Search skill) gets the active check: 2d12 + your Intelligence modifier +
 #   what your Search skill gives + your race's `search` (races.toml).
 # - In passing, after every turn you take: every hidden feature on the cells around you gets the
@@ -20,7 +20,7 @@
 # What the passive check loses against searching: you notice less in passing than where you
 # look.
 passive_penalty = 4
-# Searching for a while (Ctrl+s) goes on for at most this many turns, stopping at once when
+# Searching for a while (Alt+s) goes on for at most this many turns, stopping at once when
 # something is found or interrupts it (1 to 100: what a `search:N` action may say).
 turns = 10
 # A secret door's difficulty where its level gives none: `secret = true` in a level legend, and
