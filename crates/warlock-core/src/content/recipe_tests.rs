@@ -33,13 +33,14 @@ fn sword(extra: &str) -> String {
 }
 
 #[test]
-fn the_built_in_recipes_are_the_forges_swords_and_temper_and_woodcrafts_fletch_and_whittle() {
+fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_made_ones() {
     let content = Content::builtin().expect("content");
     let recipes = content.recipes();
     let metal = content.skill_id("metalcraft").expect("metalcraft");
     let wood = content.skill_id("woodcraft").expect("woodcraft");
     let alchemy = content.skill_id("alchemy").expect("alchemy");
-    assert_eq!(recipes.professions(), [alchemy, metal, wood]);
+    let jewel = content.skill_id("jewelcraft").expect("jewelcraft");
+    assert_eq!(recipes.professions(), [alchemy, jewel, metal, wood]);
     let of = |skill| -> Vec<(&str, Option<RecipeUse>)> {
         (recipes.of(skill))
             .map(|(_, r)| (r.name.as_str(), r.uses))
@@ -48,14 +49,27 @@ fn the_built_in_recipes_are_the_forges_swords_and_temper_and_woodcrafts_fletch_a
     assert_eq!(
         of(metal),
         [
+            ("Battle axe", None),
             ("Dagger", None),
+            ("Glaive", None),
+            ("Great axe", None),
             ("Great sword", None),
+            ("Halberd", None),
+            ("Hand axe", None),
+            ("Javelin", None),
             ("Knife", None),
             ("Long sword", None),
+            ("Mace", None),
+            ("Maul", None),
+            ("Morning star", None),
             ("Rapier", None),
             ("Scimitar", None),
             ("Short sword", None),
-            ("Temper", Some(RecipeUse::Temper))
+            ("Spear", None),
+            ("Stiletto", None),
+            ("Temper", Some(RecipeUse::Temper)),
+            ("Trident", None),
+            ("War hammer", None)
         ]
     );
     // The forge's seven swords (docs/design/recipes.md §6): difficulty, seconds, from, and an
@@ -76,17 +90,67 @@ fn the_built_in_recipes_are_the_forges_swords_and_temper_and_woodcrafts_fletch_a
         assert_eq!(r.parts.len(), 1, "{id}");
         assert!(!r.anyone, "{id}");
     }
+    // P5b's (#1351, the same table): the rest of the smith's at the anvil, and the hand-made
+    // ones, Woodcraft's, with a knife and no station; the spears' two parts (head, haft).
+    let wood_id = content.skill_id("woodcraft");
+    for (id, difficulty, seconds, from, ornament, parts) in [
+        ("stiletto", 11, 1800, 0, false, 1),
+        ("hand_axe", 11, 1800, 0, false, 1),
+        ("battle_axe", 13, 3600, 20, false, 1),
+        ("great_axe", 14, 5400, 30, false, 1),
+        ("mace", 11, 3600, 0, false, 1),
+        ("morning_star", 12, 3600, 10, false, 1),
+        ("war_hammer", 12, 3600, 10, false, 1),
+        ("maul", 13, 5400, 20, false, 1),
+        ("spear", 11, 1800, 0, true, 2),
+        ("javelin", 10, 1200, 0, false, 2),
+        ("trident", 13, 3600, 20, false, 1),
+        ("glaive", 14, 5400, 30, true, 1),
+        ("halberd", 15, 5400, 40, true, 1),
+        ("knife_by_hand", 9, 1200, 0, false, 1),
+        ("dagger_by_hand", 10, 1800, 0, false, 1),
+        ("hand_axe_by_hand", 10, 1800, 0, false, 1),
+        ("club", 8, 1200, 0, true, 1),
+        ("quarterstaff", 9, 1800, 0, true, 1),
+        ("ironwood_staff", 12, 2700, 30, true, 1),
+        ("spear_by_hand", 10, 1800, 0, false, 2),
+        ("javelin_by_hand", 9, 1200, 0, false, 2),
+    ] {
+        let r = content.recipe(recipes.id(id).expect(id));
+        let got = (r.difficulty, r.seconds, r.from, r.ornament, r.parts.len());
+        assert_eq!(got, (difficulty, seconds, from, ornament, parts), "{id}");
+        let hand = Some(r.skill) == wood_id;
+        assert_eq!(r.knife, hand, "{id}");
+        assert_eq!(r.station.is_none(), hand, "{id}");
+        assert!(!r.anyone, "{id}");
+    }
     assert_eq!(
         of(wood),
         [
+            ("Club", None),
+            ("Dagger", None),
             ("Fletch", Some(RecipeUse::Fletch)),
+            ("Hand axe", None),
+            ("Ironwood staff", None),
+            ("Javelin", None),
+            ("Knife", None),
+            ("Quarterstaff", None),
+            ("Spear", None),
             ("Whittle", Some(RecipeUse::Whittle))
         ]
     );
-    // The built-ins are open to everyone, as they were before (#1337 Q3).
-    let built_in = recipes.list.iter().filter(|r| r.uses.is_some());
+    // Jewelcraft's Cut (P10), for the trained alone.
+    assert_eq!(of(jewel), [("Cut", Some(RecipeUse::Cut))]);
+    assert_eq!(
+        recipes.description(jewel),
+        Some("Your work as a gem cutter.")
+    );
+    // The other built-ins are open to everyone, as they were before (#1337 Q3).
+    let built_in = (recipes.list.iter()).filter(|r| r.uses.is_some_and(|u| !u.checked()));
     assert!(built_in.clone().all(|r| r.anyone && r.result.is_none()));
     assert_eq!(built_in.count(), 3);
+    let cut = content.recipe(recipes.id("cut").expect("cut"));
+    assert!(!cut.anyone && cut.result.is_none());
     let temper = content.recipe(recipes.id("temper").expect("temper"));
     assert_eq!(temper.station, content.terrain_id("anvil"));
     assert_eq!(recipes.description(metal), Some("Your recipes as a smith."));
@@ -264,12 +328,9 @@ fn the_formats_second_half_loads_part_sources_gems_stock_inputs_and_failures() {
         ("data/recipes/metalcraft/spear.toml", spear),
         ("data/recipes/jewelcraft/gold_amulet.toml", amulet),
         (
-            "data/recipes/jewelcraft/cut.toml",
-            "[[recipe]]\nid = \"cut\"\nuse = \"cut\"\n",
-        ),
-        (
             "data/recipes/jewelcraft/set.toml",
-            "[[recipe]]\nid = \"set\"\nuse = \"set\"\nfrom = 10\n",
+            "[[recipe]]\nid = \"set\"\nuse = \"set\"\ndifficulty = 12\nseconds = 1200\n\
+             from = 10\n",
         ),
     ])
     .expect("loads");
@@ -321,12 +382,17 @@ fn the_formats_second_half_loads_part_sources_gems_stock_inputs_and_failures() {
     assert_eq!(amulet.failure, Some(object("arrow")));
     assert_eq!(amulet.fumble, Some(object("brittle_arrow")));
 
-    // Jewelcraft is a profession once it has a directory; Cut and Set load as built-ins.
+    // Jewelcraft is a profession with its directory; Cut and Set load as built-ins with their
+    // checks' numbers (Cut is shipped, Set a fixture until P11).
     let jewel = content.skill_id("jewelcraft").expect("jewelcraft");
     assert!(recipes.professions().contains(&jewel));
-    assert_eq!(recipe("cut").uses, Some(RecipeUse::Cut));
-    assert_eq!(recipe("set").uses, Some(RecipeUse::Set));
-    assert!(!RecipeUse::Cut.usable() && RecipeUse::Temper.usable());
+    let cut = recipe("cut");
+    assert_eq!(cut.uses, Some(RecipeUse::Cut));
+    assert_eq!((cut.difficulty, cut.seconds, cut.from), (12, 1800, 0));
+    let set = recipe("set");
+    assert_eq!(set.uses, Some(RecipeUse::Set));
+    assert_eq!((set.difficulty, set.seconds, set.from), (12, 1200, 10));
+    assert!(RecipeUse::Cut.usable() && !RecipeUse::Set.usable() && RecipeUse::Temper.usable());
 }
 
 #[test]
@@ -492,8 +558,26 @@ fn every_check_of_the_formats_second_half_refuses() {
             "(temper, whittle, fletch, cut, set)",
         ),
         (
-            "data/recipes/jewelcraft/cut.toml",
-            "[[recipe]]\nid = \"cut\"\nuse = \"cut\"\nfailure = { object = \"arrow\" }\n".into(),
+            "data/recipes/jewelcraft/facet.toml",
+            "[[recipe]]\nid = \"facet\"\nuse = \"cut\"\ndifficulty = 12\nseconds = 60\n\
+             failure = { object = \"arrow\" }\n"
+                .into(),
+            "a `use` recipe runs its action",
+        ),
+        // Cut and Set give their check's numbers; the other built-ins never do.
+        (
+            "data/recipes/jewelcraft/set.toml",
+            "[[recipe]]\nid = \"set\"\nuse = \"set\"\nseconds = 60\n".into(),
+            "needs a `difficulty`",
+        ),
+        (
+            "data/recipes/jewelcraft/set.toml",
+            "[[recipe]]\nid = \"set\"\nuse = \"set\"\ndifficulty = 12\nseconds = 0\n".into(),
+            "needs `seconds` of 1 or more",
+        ),
+        (
+            "data/recipes/woodcraft/carve.toml",
+            "[[recipe]]\nid = \"carve\"\nuse = \"whittle\"\ndifficulty = 12\n".into(),
             "a `use` recipe runs its action",
         ),
     ];

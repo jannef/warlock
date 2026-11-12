@@ -30,10 +30,11 @@
 #
 #   id          its file name (unique across professions); `craft:ID` names it
 #   name        the row's name (default: the result's name, or the action's for a `use` recipe)
-#   use         a built-in recipe: `temper`, `whittle`, `fletch`, `cut`, or `set` (Jewelcraft's,
-#               listed "not usable yet" until their phases). Its row runs that action, with its
-#               own list and rules; it takes no result, parts, inputs, ornament, difficulty,
-#               seconds, failure, fumble, or brittle
+#   use         a built-in recipe: `temper`, `whittle`, `fletch`, `cut`, or `set` (Jewelcraft's;
+#               Set listed "not usable yet" until its phase). Its row runs that action, with its
+#               own list and rules; it takes no result, parts, inputs, ornament, failure, fumble,
+#               or brittle, and a `difficulty` and `seconds` only for `cut` and `set`, which
+#               must give both (the others keep theirs in temper.toml and fletch.toml)
 #   result      { object = "long_sword", count = 1 }: what is made (`count` dice, or "fletch" for
 #               Fletch's count; above 1 only for a stackable object)
 #   [recipe.parts]  the result's parts the maker chooses (`main` is the first part; a part not
@@ -83,6 +84,10 @@ stat = "intelligence"
 verb = "Brew"
 failed = "The brew clouds over and settles murky. That was not what you meant to make."
 fumbled = "The brew seethes and turns a colour no book speaks of."
+
+[[profession]]
+skill = "jewelcraft"
+description = "Your work as a gem cutter."
 
 [[profession]]
 skill = "metalcraft"

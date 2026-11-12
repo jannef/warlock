@@ -1,0 +1,14 @@
+# A spear: its head forged, its haft of wood billets (another profession's stock: recipes.md §10),
+# an inlay, forged at an anvil from the smith's metal stock (docs/design/recipes.md §6 "Melee
+# weapons", the metal route; docs/dev/crafting.md). The stock is priced by the weight.
+[[recipe]]
+id = "spear"
+result = { object = "spear" }
+difficulty = 11
+seconds = 1800
+station = "anvil"
+ornament = true
+
+[recipe.parts]
+head = "stock"
+haft = { stock = ["wood"] }

@@ -1,0 +1,13 @@
+# A club of wood or bone, with an inlay (wood is free only for arrows: a club costs billets):
+# Woodcraft's, with a knife carried and no station (docs/design/recipes.md §6 "Melee weapons", the
+# hand route; docs/dev/crafting.md). The stock is priced by the weight.
+[[recipe]]
+id = "club"
+result = { object = "club" }
+difficulty = 8
+seconds = 1200
+knife = true
+ornament = true
+
+[recipe.parts]
+main = { stock = ["wood", "bone"] }

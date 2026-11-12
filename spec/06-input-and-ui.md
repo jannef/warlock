@@ -28,6 +28,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
   wielding, eating), which is done as it is chosen and takes its time. Prompts in the message
   line (a direction to open, close, kick, or bash, to dig, or to chat, how long to rest, look
   mode, aiming a shot or a throw, `--more--`) are not screens.
+- **Something beside the player** (#1327): a command or ability that acts on a cell beside the
+  player (open, close, chat, dig, and every ability aimed in a direction: disarm, pick lock,
+  Knock, listen, wedge, steal, feint, tame, gather, the shield bash, the aimed class blows, and
+  the weapon actives aimed in a direction) first counts what it may act on there, as the player
+  knows it (a door or chest seen or remembered, a known trap, a creature in view; never a hidden
+  trap, a secret door, or an unseen creature). None: its action is applied toward a known wall
+  beside the player (else north), so the rules refuse it in their own words, taking no time,
+  and no prompt opens. One: its action is applied toward it at once. Several: the direction is
+  asked. Kick always asks: any way may be kicked. Action text naming a direction is refused by
+  the rules as before. The abilities menu greys such an ability with nothing beside the player
+  ("no lock beside you", "no foe within reach"), and leaves Listen and Wedge out entirely unless
+  a closed door (for Wedge, one not wedged already) is beside the player (the owner). Heal and
+  Give keep their own way asked between two kept beasts beside the player.
 - **The dialog**: every question the game asks first (quitting, a step onto a known trap, a
   step into what offers an action, a shop's way out and its offers) is one dialog screen given its content: a title (on its
   frame), the question, and its options, each a label (`Pay 47 gold and leave`, `Stay`), a role
@@ -603,8 +616,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (§8 "Hunger"), and nothing else makes them drop or change anything yet. Worn and wielded things weigh what they weigh.
   Weights read `450 g` below a kilogram and `3.5 kg` above.
 - **Chat** (`C`; §8 "Dialogue"): with exactly one creature in view next to the player, it talks
-  to that one at once; otherwise it asks for a direction in the message line ("Talk in which
-  direction? (Esc to cancel)"), like opening a door. The answer is a message: `The gardener says:
+  to that one at once; with several it asks for a direction in the message line ("Talk in which
+  direction? (Esc to cancel)"), like opening a door; with none the rules say so at once
+  (§6 "Something beside the player"). The answer is a message: `The gardener says:
   "Mind the beds. Flowers bruise if you so much as look at them."` A creature with topics also
   opens the **dialogue screen**: its name as the title, what it said (wrapped), and its topics
   numbered 1 to 9 with a `>` marker on the selected one; a topic's number, or Enter on the

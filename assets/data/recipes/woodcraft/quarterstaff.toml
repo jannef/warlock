@@ -1,0 +1,13 @@
+# A quarterstaff of any wood, with a tip: Woodcraft's, with a knife carried and no station
+# (docs/design/recipes.md §6 "Melee weapons", the hand route; docs/dev/crafting.md). The stock is
+# priced by the weight.
+[[recipe]]
+id = "quarterstaff"
+result = { object = "quarterstaff" }
+difficulty = 9
+seconds = 1800
+knife = true
+ornament = true
+
+[recipe.parts]
+main = { stock = ["wood"] }

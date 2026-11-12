@@ -9,8 +9,9 @@
 //! **This is the one registry**: a system that gives abilities adds them here, as a variant of
 //! [`Ability`] with its name, source, aim, cost, and action, a line in [`Ability::every`] that
 //! lists it, and who has it ([`Ability::had_by`]); [`Ability::unavailable`] says when it cannot
-//! be used now and why (the menu greys it out with the reason). Nothing else gets a key of its
-//! own. A limit on how often an ability may be used is a **cooldown status** (spec §8 "Status
+//! be used now and why (the menu greys it out with the reason; one aimed in a direction with
+//! nothing beside the player to act on, [`crate::beside`], is greyed by the perception). Nothing
+//! else gets a key of its own. A limit on how often an ability may be used is a **cooldown status** (spec §8 "Status
 //! effects": Winded, with `eases` and no tick) given as it is used: while it lasts the ability is
 //! [`Unavailable::While`] it, and so is one whose kind of action a status `blocks`; nothing
 //! counts uses.
@@ -62,8 +63,8 @@ pub enum Ability {
     Disarm,
     /// Listen at a closed door next to the actor (spec §5 "Hearing"; `world/listen.rs`):
     /// [`Action::Listen`], the use of Listen (the skill with the hearing effect, listed as this
-    /// in its place). Had by whoever is trained in it; usable whenever they have it (the rules
-    /// refuse, taking no time, where there is no closed door).
+    /// in its place). Had by whoever is trained in it; listed only while a closed door is beside
+    /// them (the owner, #1327; [`crate::beside`]).
     Listen,
     /// Pick the lock of a door next to the actor (spec §8 "Doors"): [`Action::PickLock`], the
     /// use of Open lock (the skill with the pick effect, listed as this in its place). Had by
@@ -76,8 +77,8 @@ pub enum Ability {
     Steal,
     /// Wedge shut the closed door next to the actor (spec §8 "Doors"; `world/wedge.rs`):
     /// [`Action::Wedge`], Woodcraft's second use (the skill with the `wedge` effect). Had by
-    /// whoever is trained in it; usable whenever they have it (the rules refuse, taking no time,
-    /// where there is no closed door).
+    /// whoever is trained in it; listed only while a closed door not wedged already is beside
+    /// them (the owner, #1327; [`crate::beside`]).
     Wedge,
     /// Feint at a foe next to you (spec §8 "Skills": Bluff; #1016): [`Action::Feint`], Bluff's
     /// use (the skill with the `feint` benefit, listed as this in its place while
@@ -156,8 +157,8 @@ pub enum Ability {
     /// Gather herbs from the glowing fungus (spec §8 "Skills": Herbalism; `world/gather.rs`):
     /// [`Action::Gather`] in a direction. The fungus offers it to everyone ([`Ability::here`]):
     /// listed only while the player stands next to fungus, while `data/herbs.toml` exists. It
-    /// asks for the way only when fungus stands on more than one cell beside the player (the
-    /// menu's, by [`crate::perception::PerceptionView::gather_ways`]).
+    /// asks for the way only when fungus stands on more than one cell beside the player
+    /// ([`crate::beside`], by [`crate::perception::PerceptionView::gather_ways`]).
     Gather,
     /// Come to heel (spec §8 "Allies"): [`Action::Order`] with [`Command::Heel`], every ally of
     /// the player's on the level follows. The Allies group ([`Ability::orders`]): listed while
@@ -330,6 +331,9 @@ pub enum Unavailable {
     /// Tame with a companion already (spec §8 "Allies": a companion is for good, and one at a
     /// time).
     HaveCompanion,
+    /// One aimed in a direction with nothing beside the player it may act on, as they know it
+    /// (#1327, [`crate::beside`]): "no lock beside you".
+    NoTarget(crate::beside::Target),
 }
 
 impl Unavailable {
@@ -363,6 +367,7 @@ impl Unavailable {
             Unavailable::FamiliarLives => "your familiar lives".into(),
             Unavailable::Watched => "something is watching".into(),
             Unavailable::HaveCompanion => "you already have a companion".into(),
+            Unavailable::NoTarget(target) => target.reason().into(),
         }
     }
 
@@ -386,6 +391,7 @@ impl Unavailable {
             Unavailable::FamiliarLives => "familiar_lives".into(),
             Unavailable::Watched => "watched".into(),
             Unavailable::HaveCompanion => "have_companion".into(),
+            Unavailable::NoTarget(target) => format!("no_target:{}", target.id()).into(),
             Unavailable::While(status) => format!("while:{}", content.status(status).id).into(),
             Unavailable::Short(resource) => {
                 format!("short:{}", content.resource(resource).id).into()
@@ -1504,9 +1510,11 @@ mod tests {
         // The showcase's thief is trained in Steal; a warrior is not.
         let thief = crate::World::new(content.clone(), "showcase", None).expect("thief");
         let mine = thief.perception().abilities();
+        // Nobody beside them to rob at the start (#1327).
+        let none = Unavailable::NoTarget(crate::beside::Target::Mark);
         assert!(
             mine.iter()
-                .any(|a| a.ability == steal && a.unavailable.is_none())
+                .any(|a| a.ability == steal && a.unavailable == Some(none))
         );
         let spec = "human,male,warrior".parse().expect("spec");
         let warrior =

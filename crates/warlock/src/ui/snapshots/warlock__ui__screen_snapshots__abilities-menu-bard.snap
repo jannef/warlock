@@ -2,8 +2,9 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn┌─ Abilities ────────────────────────────────────────────────────── Page 1/2 ─┐
- You spend│                                                                             │
+ You learn Sworn foe (beast).
+ You spend┌─ Abilities ────────────────────────────────────────────────────── Page 1/2 ─┐
+          │                                                                             │
           │ Birth sign                                                                  │
           │ > a  Transfixing stare  at a place you see                                  │
           │ Class                                                                       │
@@ -17,18 +18,17 @@ expression: "render(case, content.clone())"
           │   h  Thunderclap        4d6 force, shoves on a big hit, 13 mana: you have 4 │
           │   i  Bind               9 mana: you have 4                                  │
           │ Skills                                                                      │
-          │   j  Alchemy…                                                               │
-          │   k  Feint              in a direction                                      │
+          │   j  Alchemy            not usable yet                                      │
+          │   k  Feint              no foe beside you to fool                           │
           │   l  Decipher           no unknown scroll                                   │
-          │   m  Disarm a trap      in a direction                                      │
+          │   m  Disarm a trap      no known trap beside you                            │
           │   n  Enchanting         not usable yet                                      │
-          │   o  Tame               in a direction                                      │
-          │   p  Heal               nothing to treat                                    │
-          │   q  Intimidate         at a place you see                                  │
+          │   o  Tame               no beast beside you to tame                         │
           │                                                                             │
           │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; │
           │ your eyes then rest two hours.                                              │
           │                                                                             │
           │                                                                             │
-          │ a-q or Enter use   > < page   Esc close                                     │
- The Hub  └─────────────────────────────────────────────────────────────────────────────┘? controls
+          │ a-o or Enter use   > < page   Esc close                                     │
+          └─────────────────────────────────────────────────────────────────────────────┘
+ The Hub  ·  HP 38/38  ·  MP 4/110  ·  Inspiration 0/5  ·  Sta 9/14  ·  Lv 26            ? controls

@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Disarm in which direction? (Esc to cancel)
-
+ You gain 5 experience for finding your way here.
+ You fail to disarm the arrow trap.
 
 
 

@@ -66,12 +66,13 @@ impl ProfessionScreen {
             };
         };
         let content = view.content();
-        // `--screen profession`: the first profession with a recipe the player sees.
+        // `--screen profession`: the first profession the player sees recipes of (Jewelcraft's
+        // are the trained's alone), else the first.
+        let professions = content.recipes().professions();
         let skill = skill.or_else(|| {
-            let all = content.recipes().professions();
-            (all.iter().copied())
+            (professions.iter().copied())
                 .find(|&s| !view.recipes(s).is_empty())
-                .or(all.first().copied())
+                .or_else(|| professions.first().copied())
         });
         let Some(skill) = skill else {
             return Self {
@@ -170,8 +171,9 @@ impl ProfessionScreen {
             Some(RecipeUse::Temper) => ScreenAction::Open(ScreenName::Temper),
             Some(RecipeUse::Whittle) => ScreenAction::Open(ScreenName::Whittle),
             Some(RecipeUse::Fletch) => ScreenAction::Act(Action::Fletch),
-            // Greyed "not usable yet" until P10 and P11 build their actions.
-            Some(RecipeUse::Cut | RecipeUse::Set) => ScreenAction::Stay,
+            Some(RecipeUse::Cut) => ScreenAction::Open(ScreenName::Cut),
+            // Greyed "not usable yet" until P11 builds its action.
+            Some(RecipeUse::Set) => ScreenAction::Stay,
             // The forging wizard asks for the picks, then the dialog; a recipe with none to make
             // is applied at once, the rules saying what comes of it.
             None if entry.wizard => ScreenAction::Open(ScreenName::CraftPick(entry.id)),
@@ -287,11 +289,12 @@ mod tests {
             screen.handle(&press('a'), &Bindings::default()),
             ScreenAction::Open(ScreenName::Temper)
         );
-        // Woodcraft's rows, Fletch then Whittle (path order), both greyed without a knife.
+        // Woodcraft's rows: the built-ins first, Fletch then Whittle (path order), then the
+        // hand-made weapons; all greyed without a knife.
         let mut screen = ProfessionScreen::new(Some(&world.perception()), Some(wood));
         screen.fit(100, 60);
         let names: Vec<&str> = screen.recipes.iter().map(|e| e.name.as_str()).collect();
-        assert_eq!(names, ["Fletch", "Whittle"]);
+        assert_eq!(names[..3], ["Fletch", "Whittle", "Club"]);
         assert_eq!(
             screen.recipes.get(0).and_then(|e| e.why.as_deref()),
             Some("no knife")
