@@ -1,0 +1,14 @@
+# A pair of gauntlets, forged at an anvil from the smith's metal stock (docs/design/recipes.md §6
+# "Cloaks, gloves, boots", the metal route; docs/dev/crafting.md). The stock is priced by the
+# weight.
+[[recipe]]
+id = "gauntlets"
+name = "Gauntlets"
+result = { object = "gauntlets" }
+difficulty = 12
+seconds = 3600
+station = "anvil"
+from = 10
+
+[recipe.parts]
+main = "stock"

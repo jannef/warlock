@@ -1,0 +1,9 @@
+# Cut (docs/design/recipes.md §5; docs/dev/crafting.md "Cutting a gem"): a loose gem carried cut,
+# or re-cut, by Dexterity and Jewelcraft against `difficulty` + the gem's `work`. The bands are
+# data/recipes.toml's `cut_step`; the rules are `world/cut.rs`.
+[[recipe]]
+id = "cut"
+use = "cut"
+difficulty = 12
+seconds = 1800
+from = 0

@@ -100,11 +100,15 @@ same parts (`Stack::same_goods`), and a shop's bill counts goods, object and par
 (`docs/dev/shops.md`). Variants (below) are own parts of a non-gem material in place of a base
 part: `ItemPart::material`; `check` keeps them on their part's construction list.
 
-**Fletching's objects** (#1021; `docs/dev/skills.md` "Fletching"): `knife` is a plain weapon of
-the `daggers` skill, which is what a knife is to `Content::is_knife` (a dagger and a stiletto count;
-`short_blades` do not). `brittle_arrow` and `brittle_bolt` break on every hit (`breaks = 100`) and,
-with no `kind` or `frequency`, are never in loot or shops; `Content::ammunition`'s lowest id keeps
-`arrow` and `bolt` the names of their kinds.
+**Fletching's objects** (#1021, #1336; `docs/dev/crafting.md` "Arrows and bolts"): `knife` is a
+plain weapon of the `daggers` skill, which is what a knife is to `Content::is_knife` (a dagger and a
+stiletto count; `short_blades` do not). `brittle_arrow` and `brittle_bolt` break on every hit
+(`breaks = 100`), are made of any wood (`made_of = ["wood"]`: the shaft's), and, with no `kind`
+or `frequency`, are never in loot or shops; `Content::ammunition`'s lowest id keeps `arrow` and
+`bolt` the names of their kinds. The arrow's and the bolt's shaft may be any wood
+(`made_of = ["wood"]` in its part's table: only crafting reads it, loot varies the main part
+alone). `arrowhead` (class `materials`, 5 g, worth its metal, never loot) is the smith's
+intermediate: one object for arrows and bolts, its main part its metal.
 
 Whittle (#1028) works the same `Stack::worked` state as Temper, on a weapon, launcher, shield, or armour whose main part is of a material of `group = "wood"` (`world/temper.rs`).
 

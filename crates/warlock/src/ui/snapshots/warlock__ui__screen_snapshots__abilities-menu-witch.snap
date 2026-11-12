@@ -16,7 +16,7 @@ expression: "render(case, content.clone())"
              │   f  Hex of weakness    4 mana, aimed                                  │
              │   g  Flay               2d4 necrotic, bites the wounded, 8 mana, aimed │
              │ Skills                                                                 │
-             │   h  Alchemy            not usable yet                                 │
+             │   h  Alchemy…                                                          │
              │   i  Decipher           no unknown scroll                              │
              │   j  Heal               nothing to treat                               │
              │   k  Intimidate         at a place you see                             │

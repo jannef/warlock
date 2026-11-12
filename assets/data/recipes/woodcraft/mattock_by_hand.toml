@@ -1,0 +1,13 @@
+# A stone mattock: its head knapped of stone blocks, by hand: Woodcraft's, with a knife carried and
+# no station (docs/design/recipes.md §6 "Light sources and tools", the hand route;
+# docs/dev/crafting.md). The stock is priced by the weight.
+[[recipe]]
+id = "mattock_by_hand"
+result = { object = "mattock" }
+difficulty = 12
+seconds = 3600
+knife = true
+from = 20
+
+[recipe.parts]
+main = { stock = ["stone"] }

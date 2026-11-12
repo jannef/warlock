@@ -33,12 +33,15 @@ fn sword(extra: &str) -> String {
 }
 
 #[test]
-fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_made_ones() {
+fn the_built_in_recipes_are_the_forges_weapons_armour_tools_and_temper_and_woodcrafts_hand_made_ones_and_missiles()
+ {
     let content = Content::builtin().expect("content");
     let recipes = content.recipes();
     let metal = content.skill_id("metalcraft").expect("metalcraft");
     let wood = content.skill_id("woodcraft").expect("woodcraft");
-    assert_eq!(recipes.professions(), [metal, wood]);
+    let alchemy = content.skill_id("alchemy").expect("alchemy");
+    let jewel = content.skill_id("jewelcraft").expect("jewelcraft");
+    assert_eq!(recipes.professions(), [alchemy, jewel, metal, wood]);
     let of = |skill| -> Vec<(&str, Option<RecipeUse>)> {
         (recipes.of(skill))
             .map(|(_, r)| (r.name.as_str(), r.uses))
@@ -47,25 +50,42 @@ fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_ma
     assert_eq!(
         of(metal),
         [
+            ("Arrowheads", None),
+            ("Banded mail", None),
             ("Battle axe", None),
+            ("Buckler", None),
+            ("Chain mail", None),
             ("Dagger", None),
+            ("Gauntlets", None),
             ("Glaive", None),
             ("Great axe", None),
+            ("Great helm", None),
             ("Great sword", None),
             ("Halberd", None),
             ("Hand axe", None),
+            ("Iron helm", None),
+            ("Iron-shod boots", None),
             ("Javelin", None),
             ("Knife", None),
+            ("Lantern", None),
+            ("Large shield", None),
+            ("Leather cap", None),
             ("Long sword", None),
             ("Mace", None),
+            ("Mattock", None),
             ("Maul", None),
             ("Morning star", None),
+            ("Pick-axe", None),
+            ("Plate armour", None),
             ("Rapier", None),
+            ("Scale mail", None),
             ("Scimitar", None),
             ("Short sword", None),
+            ("Small shield", None),
             ("Spear", None),
             ("Stiletto", None),
             ("Temper", Some(RecipeUse::Temper)),
+            ("Tower shield", None),
             ("Trident", None),
             ("War hammer", None)
         ]
@@ -105,6 +125,26 @@ fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_ma
         ("trident", 13, 3600, 20, false, 1),
         ("glaive", 14, 5400, 30, true, 1),
         ("halberd", 15, 5400, 40, true, 1),
+        // P9's (#1354, recipes.md §6): armour, shields, helmets, gauntlets, boots, and tools at
+        // the anvil; the stone pick and mattock by hand.
+        ("chain_mail", 14, 7200, 30, false, 1),
+        ("scale_mail", 14, 7200, 30, false, 1),
+        ("banded_mail", 15, 10800, 40, false, 1),
+        ("plate_armour", 17, 14400, 60, false, 1),
+        ("buckler", 11, 3600, 0, true, 1),
+        ("small_shield", 12, 3600, 10, false, 1),
+        ("large_shield", 13, 5400, 20, false, 1),
+        ("tower_shield", 14, 7200, 30, true, 1),
+        ("leather_cap", 11, 1800, 0, false, 1),
+        ("iron_helm", 12, 3600, 10, true, 1),
+        ("great_helm", 14, 5400, 30, true, 1),
+        ("gauntlets", 12, 3600, 10, false, 1),
+        ("iron_shod_boots", 12, 3600, 10, false, 1),
+        ("lantern", 10, 1800, 0, false, 1),
+        ("pick_axe", 12, 3600, 10, false, 1),
+        ("mattock", 13, 3600, 20, false, 1),
+        ("pick_axe_by_hand", 11, 3600, 10, false, 1),
+        ("mattock_by_hand", 12, 3600, 20, false, 1),
         ("knife_by_hand", 9, 1200, 0, false, 1),
         ("dagger_by_hand", 10, 1800, 0, false, 1),
         ("hand_axe_by_hand", 10, 1800, 0, false, 1),
@@ -134,11 +174,13 @@ fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_ma
     assert_eq!(
         of(wood),
         [
+            ("Arrows", None),
+            ("Crossbow bolts", None),
             ("Club", None),
             ("Composite bow", None),
             ("Crossbow", None),
             ("Dagger", None),
-            ("Fletch", Some(RecipeUse::Fletch)),
+            ("Flaming arrows", None),
             ("Hand axe", None),
             ("Heavy crossbow", None),
             ("Ironwood staff", None),
@@ -146,18 +188,29 @@ fn the_built_in_recipes_are_the_forges_weapons_and_temper_and_woodcrafts_hand_ma
             ("Knife", None),
             ("Long war bow", None),
             ("Lute", None),
+            ("Mattock", None),
+            ("Pick-axe", None),
             ("Long-stemmed pipe", None),
             ("Quarterstaff", None),
             ("Short bow", None),
             ("Sling", None),
+            ("Sling stones", None),
             ("Spear", None),
             ("Whittle", Some(RecipeUse::Whittle))
         ]
     );
-    // The built-ins are open to everyone, as they were before (#1337 Q3).
-    let built_in = recipes.list.iter().filter(|r| r.uses.is_some());
+    // Jewelcraft's Cut (P10), for the trained alone.
+    assert_eq!(of(jewel), [("Cut", Some(RecipeUse::Cut))]);
+    assert_eq!(
+        recipes.description(jewel),
+        Some("Your work as a gem cutter.")
+    );
+    // The other built-ins are open to everyone, as they were before (#1337 Q3).
+    let built_in = (recipes.list.iter()).filter(|r| r.uses.is_some_and(|u| !u.checked()));
     assert!(built_in.clone().all(|r| r.anyone && r.result.is_none()));
-    assert_eq!(built_in.count(), 3);
+    assert_eq!(built_in.count(), 2);
+    let cut = content.recipe(recipes.id("cut").expect("cut"));
+    assert!(!cut.anyone && cut.result.is_none());
     let temper = content.recipe(recipes.id("temper").expect("temper"));
     assert_eq!(temper.station, content.terrain_id("anvil"));
     assert_eq!(recipes.description(metal), Some("Your recipes as a smith."));
@@ -335,12 +388,9 @@ fn the_formats_second_half_loads_part_sources_gems_stock_inputs_and_failures() {
         ("data/recipes/metalcraft/spear.toml", spear),
         ("data/recipes/jewelcraft/gold_amulet.toml", amulet),
         (
-            "data/recipes/jewelcraft/cut.toml",
-            "[[recipe]]\nid = \"cut\"\nuse = \"cut\"\n",
-        ),
-        (
             "data/recipes/jewelcraft/set.toml",
-            "[[recipe]]\nid = \"set\"\nuse = \"set\"\nfrom = 10\n",
+            "[[recipe]]\nid = \"set\"\nuse = \"set\"\ndifficulty = 12\nseconds = 1200\n\
+             from = 10\n",
         ),
     ])
     .expect("loads");
@@ -392,12 +442,17 @@ fn the_formats_second_half_loads_part_sources_gems_stock_inputs_and_failures() {
     assert_eq!(amulet.failure, Some(object("arrow")));
     assert_eq!(amulet.fumble, Some(object("brittle_arrow")));
 
-    // Jewelcraft is a profession once it has a directory; Cut and Set load as built-ins.
+    // Jewelcraft is a profession with its directory; Cut and Set load as built-ins with their
+    // checks' numbers (Cut is shipped, Set a fixture until P11).
     let jewel = content.skill_id("jewelcraft").expect("jewelcraft");
     assert!(recipes.professions().contains(&jewel));
-    assert_eq!(recipe("cut").uses, Some(RecipeUse::Cut));
-    assert_eq!(recipe("set").uses, Some(RecipeUse::Set));
-    assert!(!RecipeUse::Cut.usable() && RecipeUse::Temper.usable());
+    let cut = recipe("cut");
+    assert_eq!(cut.uses, Some(RecipeUse::Cut));
+    assert_eq!((cut.difficulty, cut.seconds, cut.from), (12, 1800, 0));
+    let set = recipe("set");
+    assert_eq!(set.uses, Some(RecipeUse::Set));
+    assert_eq!((set.difficulty, set.seconds, set.from), (12, 1200, 10));
+    assert!(RecipeUse::Cut.usable() && !RecipeUse::Set.usable() && RecipeUse::Temper.usable());
 }
 
 #[test]
@@ -560,11 +615,29 @@ fn every_check_of_the_formats_second_half_refuses() {
         (
             "data/recipes/jewelcraft/polish.toml",
             "[[recipe]]\nid = \"polish\"\nuse = \"polish\"\n".into(),
-            "(temper, whittle, fletch, cut, set)",
+            "(temper, whittle, cut, set)",
         ),
         (
-            "data/recipes/jewelcraft/cut.toml",
-            "[[recipe]]\nid = \"cut\"\nuse = \"cut\"\nfailure = { object = \"arrow\" }\n".into(),
+            "data/recipes/jewelcraft/facet.toml",
+            "[[recipe]]\nid = \"facet\"\nuse = \"cut\"\ndifficulty = 12\nseconds = 60\n\
+             failure = { object = \"arrow\" }\n"
+                .into(),
+            "a `use` recipe runs its action",
+        ),
+        // Cut and Set give their check's numbers; the other built-ins never do.
+        (
+            "data/recipes/jewelcraft/set.toml",
+            "[[recipe]]\nid = \"set\"\nuse = \"set\"\nseconds = 60\n".into(),
+            "needs a `difficulty`",
+        ),
+        (
+            "data/recipes/jewelcraft/set.toml",
+            "[[recipe]]\nid = \"set\"\nuse = \"set\"\ndifficulty = 12\nseconds = 0\n".into(),
+            "needs `seconds` of 1 or more",
+        ),
+        (
+            "data/recipes/woodcraft/carve.toml",
+            "[[recipe]]\nid = \"carve\"\nuse = \"whittle\"\ndifficulty = 12\n".into(),
             "a `use` recipe runs its action",
         ),
     ];
@@ -640,4 +713,94 @@ fn the_settings_file_refuses_an_unknown_skill_a_profession_twice_or_bands_out_of
         let got = message(&settings(from, to));
         assert!(got.contains(expected), "{to}: `{got}` lacks `{expected}`");
     }
+}
+
+/// The shipped missiles (docs/design/recipes.md §6 "Missiles"; #1336): the arrows' head from
+/// arrowheads, then bone and stone, or none (the brittle arrow); counted; and the head's sources
+/// checked against the arrow's `made_of`.
+#[test]
+fn the_shipped_arrows_take_a_head_of_three_sources_and_the_loader_checks_them() {
+    let content = Content::builtin().expect("content");
+    let recipe = |id: &str| content.recipe(content.recipes().id(id).expect(id));
+    let arrows = recipe("arrows");
+    assert_eq!(arrows.result.expect("made").count, RecipeCount::Fletch);
+    assert_eq!(arrows.brittle, content.object_id("brittle_arrow"));
+    assert!(arrows.knife && arrows.launcher && arrows.anyone);
+    let PartSource::Sources {
+        input,
+        stock,
+        optional,
+    } = &arrows.parts[0].source
+    else {
+        panic!("the head's sources");
+    };
+    assert_eq!(*input, content.object_id("arrowhead"));
+    assert!(optional);
+    let names: Vec<&str> = (stock.iter())
+        .map(|&m| content.material(m).id.as_str())
+        .collect();
+    // Plain stone strikes as nothing: ammunition's head keeps only what can be a weapon's.
+    for m in [
+        "bone",
+        "horn",
+        "chitin",
+        "ivory",
+        "dragonbone",
+        "flint",
+        "obsidian",
+    ] {
+        assert!(names.contains(&m), "{m}: {names:?}");
+    }
+    assert!(!names.contains(&"iron"), "metal only as arrowheads");
+    assert_eq!(arrows.parts[1].source, PartSource::Stock);
+    assert_eq!(recipe("bolts").brittle, content.object_id("brittle_bolt"));
+    let heads = recipe("arrowheads").result.expect("made");
+    assert_eq!(heads.count, RecipeCount::Dice(crate::dice::Dice::fixed(20)));
+    let flaming = recipe("flaming_arrows");
+    assert!(flaming.inputs[0].per_made && !flaming.inputs[1].per_made);
+    // A head of a group or a material the arrow may not be made of is refused.
+    let text = include_str!("../../../../assets/data/recipes/woodcraft/arrows.toml");
+    let head = "stock = [\"bone\", \"stone\"]";
+    for (to, says) in [
+        ("stock = [\"bone\", \"cloth\"]", "none of the group"),
+        (
+            "stock = [\"bone\", \"silk\"]",
+            "is not what it may be made of",
+        ),
+    ] {
+        let bad = text.replace(head, to);
+        assert_ne!(bad, text, "{to}");
+        let mut files = ContentFiles::builtin();
+        files.insert("data/recipes/woodcraft/arrows.toml", &bad);
+        let error = Content::load(&files).expect_err(to).to_string();
+        assert!(error.contains(says), "{to}: {error}");
+    }
+    let bad = text.replace("brittle = \"brittle_arrow\"\n", "");
+    let mut files = ContentFiles::builtin();
+    files.insert("data/recipes/woodcraft/arrows.toml", &bad);
+    let error = Content::load(&files).expect_err("no brittle").to_string();
+    assert!(error.contains("`brittle`"), "{error}");
+}
+
+#[test]
+fn alchemys_row_and_its_brews_load_and_a_missing_herb_or_an_empty_line_is_refused() {
+    let content = Content::builtin().expect("content");
+    let alchemy = content.skill_id("alchemy").expect("alchemy");
+    let row = content
+        .recipes()
+        .profession(alchemy)
+        .expect("Alchemy's row");
+    assert_eq!(row.stat, Some(crate::stats::Stat::Intelligence));
+    assert_eq!(row.verb.as_deref(), Some("Brew"));
+    assert!(row.failed.is_some() && row.fumbled.is_some());
+    let path = "data/recipes/alchemy/potion_of_healing.toml";
+    let text = include_str!("../../../../assets/data/recipes/alchemy/potion_of_healing.toml");
+    let got = refused(path, &text.replace("\"moonwort\"", "\"dragonwort\""));
+    assert!(got.contains("dragonwort"), "{got}");
+    let empty = settings("verb = \"Brew\"", "verb = \"\"");
+    let message = match load_with(&[("data/recipes.toml", &empty)]) {
+        Ok(_) => panic!("loaded"),
+        Err(e) => e.message,
+    };
+    assert!(message.contains("an empty line"), "{message}");
 }

@@ -9,7 +9,7 @@ use super::text::{Term, anchored};
 use std::fmt::Write as _;
 use warlock_core::burden::Burden;
 use warlock_core::check::{CONTEST_WAYS, contest_ways, ways};
-use warlock_core::content::{Content, OptionalSkill, TalentEffect};
+use warlock_core::content::{Content, OptionalSkill, RecipeCount, TalentEffect};
 use warlock_core::dice::Dice;
 use warlock_core::skills::{Effect, SkillId};
 
@@ -133,7 +133,6 @@ fn effect_name(effect: Effect) -> &'static str {
         }
         Effect::SongDegrees => "your songs last longer",
         Effect::SongCraft => "your songs are harder to shake off",
-        Effect::Fletch => "fletching: a better check for a batch of arrows or bolts",
         Effect::Wedge => "a door you wedge shut is harder to kick in",
         Effect::Temper => "tempering at a forge's anvil",
         Effect::Whittle => "whittling wood with a knife",
@@ -206,7 +205,6 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Intimidate => "threat's difficulty",
             Effect::SongDegrees => "song degrees",
             Effect::SongCraft => "song's difficulty",
-            Effect::Fletch => "fletching",
             Effect::Wedge => "wedged door's sturdiness",
             Effect::Temper => "tempering",
             Effect::Whittle => "whittling",
@@ -252,7 +250,6 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Intimidate
                 | Effect::SongDegrees
                 | Effect::SongCraft
-                | Effect::Fletch
                 | Effect::Wedge
                 | Effect::Temper
                 | Effect::Whittle
@@ -530,10 +527,17 @@ pub(super) fn foraging(content: &Content) -> String {
     out
 }
 
-/// Fletching's numbers (spec §8 "Fletching"; `data/fletch.toml`, Woodcraft's curve, and Fletcher's
-/// effect): the time, the check, the count, the margin's bands, and what is made.
+/// Fletching's numbers (spec §8 "Fletching"; the `count = "fletch"` recipes, `data/fletch.toml`,
+/// `data/recipes.toml`'s bands, and Fletcher's effect): the time, the check, the count, the
+/// margin's bands, and what each head makes.
 pub(super) fn fletching(content: &Content) -> String {
     let Some(rules) = content.fletch() else {
+        return "Nobody fletches.\n".into();
+    };
+    let recipes = content.recipes();
+    let fletch =
+        (recipes.list.iter()).find(|r| r.result.is_some_and(|x| x.count == RecipeCount::Fletch));
+    let (Some(arrows), Some(settings)) = (fletch, recipes.settings.as_ref()) else {
         return "Nobody fletches.\n".into();
     };
     let fletcher = (content.talents().iter())
@@ -547,8 +551,9 @@ pub(super) fn fletching(content: &Content) -> String {
             _ => None,
         });
     let (check, times, time) = fletcher.unwrap_or((0, 1, 100));
-    let seconds = rules.seconds;
+    let seconds = arrows.seconds;
     let per = rules.value_per_count;
+    let skill = &content.skill(arrows.skill).name;
     let mut out = String::from("| | Anyone | With Fletcher |\n|---|:---:|:---:|\n");
     let _ = writeln!(
         out,
@@ -558,44 +563,31 @@ pub(super) fn fletching(content: &Content) -> String {
     );
     let _ = writeln!(
         out,
-        "| Check | 2d12 + Dexterity modifier + talents + Woodcraft's points, against {} | the same, +{check} |",
-        rules.difficulty
+        "| Check | 2d12 + Dexterity modifier + talents + {skill}'s craft points, against {} \
+         and the head's work | the same, +{check} |",
+        arrows.difficulty
     );
     let _ = writeln!(
         out,
-        "| Count | `{}` + Woodcraft's value ÷ {per} | the same |",
+        "| Count | `{}` + {skill}'s value ÷ {per} | the same |",
         rules.count
     );
     let _ = writeln!(
         out,
         "| Made, check {0} or more | the whole count | {times} times the count |",
-        rules.difficulty
+        arrows.difficulty
     );
     let _ = writeln!(
         out,
         "| Made, up to {} short | half the count, rounded up | {times} times that |",
-        rules.half_within
+        settings.half_within
     );
     let _ = writeln!(
         out,
         "| Made, up to {} short | one | {times} |",
-        rules.one_within
+        settings.one_within
     );
     let _ = writeln!(out, "| Made, shorter still | none | none |");
-    let name = |id| content.object(id).plural.clone();
-    let mut rows: Vec<_> = rules.makes.iter().collect();
-    rows.sort_by(|a, b| a.launches.cmp(&b.launches));
-    for row in rows {
-        let _ = writeln!(
-            out,
-            "| What a launcher of {} gets | {}; from Woodcraft {}, {} | {} |",
-            content.object(row.plain).plural,
-            name(row.brittle),
-            rules.plain_from,
-            name(row.plain),
-            name(row.plain)
-        );
-    }
     out
 }
 
