@@ -277,7 +277,7 @@ pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, Stability};
 pub use material::{
     ANY, Fit, Fits, Found, ItemHarm, MaterialDef, MaterialId, ODD, POOR, Resists, VERY_RARE,
 };
-pub use mining::{Mined, MiningBand, MiningFind, MiningRules};
+pub use mining::{Mined, MiningBand, MiningFind, MiningRules, Vein, Veins};
 pub use miscast::{Miscast, MiscastRules};
 pub use monster_pool::{MonsterPool, VaultMonsters};
 pub use names::{NameLists, Names};
@@ -1463,7 +1463,7 @@ impl Content {
         // After the branches: their `ores` are checked against the table.
         let path = "data/mining.toml";
         if let Some(text) = files.get_optional(path) {
-            content.mining = Some(MiningRules::parse(path, text, &content)?);
+            content.mining = Some(MiningRules::parse(path, text, &mut content)?);
         }
         content.fill_generic();
         for v in &content.vaults {

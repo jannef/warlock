@@ -84,6 +84,12 @@ impl Rng {
         Self::stream(run_seed, &format!("deep_water/{level}"))
     }
 
+    /// The ore vein stream of generated level `level` (`mapgen/vein.rs`, #1390): whether the floor
+    /// has veins, of what, and where, apart from every other stream so no other draw moves.
+    pub fn veins(run_seed: u64, level: &str) -> Self {
+        Self::stream(run_seed, &format!("veins/{level}"))
+    }
+
     /// The stream that hides traps on generated level `level` (spec §8 "Traps"), apart from its
     /// map's, so a level is the same with or without traps.
     pub fn traps(run_seed: u64, level: &str) -> Self {

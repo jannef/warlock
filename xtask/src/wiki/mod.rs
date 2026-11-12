@@ -428,6 +428,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("digging-strength.md", digging::digging_strength),
         ("mining-walls.md", mining::mining_walls),
         ("mining-finds.md", mining::mining_finds),
+        ("mining-veins.md", mining::mining_veins),
         ("mining-dungeons.md", mining::mining_dungeons),
         ("special-rooms.md", rooms::special_rooms),
         ("branch-odds.md", rooms::branch_odds),

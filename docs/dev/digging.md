@@ -56,5 +56,17 @@ piece) makes the ingot (`docs/dev/crafting.md`). A branch's allow-list is `Dunge
 (metal ids; `[]` none), stone and gems kept. The wiki's `mining.md` tables (`xtask/src/wiki/mining.rs`)
 give the bands, the rows with their weights by danger, and each branch's ores.
 
+**Veins** (#1390): `[veins]` (`Veins`: `chance`, `count`, `wall`) and an ore row's `vein = { fg,
+size }` (`MiningFind::vein`, `Vein`). The loader makes one terrain per vein,
+`add_vein_terrain`: a clone of `wall`'s `TerrainDef` (hardness, glyph, ground, `stone`) with id
+`vein_<metal>`, name "vein of <metal> ore", a description, and the row's `fg`, appended to the
+terrain list after `terrain.toml`'s (so no hand-made level names one). `MiningRules::vein_of`
+maps a terrain back to its metal, `vein_table` is `at` with only the vein rows. In `mine`, a vein
+wall skips the band's `chance` draw and the table draw: the check is rolled as for any wall and
+gives `count` made, 1 failed (`lay_mined` lays and says it). The trained rule, the branch-floor
+rule, and blasts giving nothing are unchanged; `dig.rs` is untouched. Placement is
+`mapgen/vein.rs` (`docs/dev/mapgen.md`); the wiki's `mining-veins.md` table lists them, and
+`mining-walls.md` leaves veins out.
+
 A greater treasure room (#618) is reached only by breaking a wall: its breach, a found one a
 hollow wall that `set_terrain` forgets once broken (`docs/dev/special-rooms.md`).

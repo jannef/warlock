@@ -2,9 +2,14 @@
 //! that a wall a miner digs through gives anything, the check that breaks it out, and the table
 //! of what it can be, by rarity and the floor's danger.
 //!
+//! Veins (#1390): an ore row with a `vein` has veins of its ore, wall sections drawn in its
+//! colour that always give it; the loader makes one wall terrain per vein (`vein_<metal>`, a copy
+//! of the `[veins]` table's `wall`), and `mapgen/vein.rs` lays them.
+//!
 //! The rule itself lives in `world/mine.rs`. The file is optional: without it nothing is mined.
 
-use super::{ContentError, MaterialId, ObjectId, SkillId};
+use super::{ContentError, MaterialId, ObjectId, SkillId, TerrainId};
+use crate::color::Rgb;
 use crate::stats::Stat;
 use serde::Deserialize;
 
@@ -25,6 +30,27 @@ pub struct MiningRules {
     pub most: u32,
     /// The table, in file order.
     pub finds: Vec<MiningFind>,
+    /// How often veins run through a branch's floor, and how many; `None`: never.
+    pub veins: Option<Veins>,
+}
+
+/// How often a branch's floor has veins (`mapgen/vein.rs`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Veins {
+    /// Percent chance a floor has any.
+    pub chance: u8,
+    /// How many a floor with veins has, fewest and most.
+    pub count: [u8; 2],
+    /// The wall terrain veins replace and are copies of (its hardness, glyph, and look).
+    pub wall: TerrainId,
+}
+
+/// A vein of an ore row's metal: the wall terrain of it, and how many cells one has.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Vein {
+    pub terrain: TerrainId,
+    /// Fewest and most cells.
+    pub size: [u16; 2],
 }
 
 /// One hardness band: walls at least this hard (and softer than the next band) give a check
@@ -60,6 +86,8 @@ pub struct MiningFind {
     pub deeper: i32,
     /// The first danger it is found at: none on a floor less dangerous.
     pub danger: u32,
+    /// Its veins (an ore row's only); `None`: it has none.
+    pub vein: Option<Vein>,
 }
 
 impl MiningFind {
@@ -95,6 +123,22 @@ impl MiningRules {
             .collect()
     }
 
+    /// The vein table on a floor of danger `danger` whose ores are limited to `ores`: [`Self::at`]
+    /// with only the rows that have veins.
+    pub fn vein_table(&self, danger: u32, ores: Option<&[MaterialId]>) -> Vec<(usize, u32)> {
+        let mut table = self.at(danger, ores);
+        table.retain(|&(i, _)| self.finds[i].vein.is_some());
+        table
+    }
+
+    /// The metal whose vein `terrain` is, if it is one.
+    pub fn vein_of(&self, terrain: TerrainId) -> Option<MaterialId> {
+        self.finds.iter().find_map(|f| match (f.what, f.vein) {
+            (Mined::Ore(m), Some(v)) if v.terrain == terrain => Some(m),
+            _ => None,
+        })
+    }
+
     /// The metals the table has an ore row for, in file order.
     pub fn ores(&self) -> impl Iterator<Item = MaterialId> + '_ {
         self.finds.iter().filter_map(|f| match f.what {
@@ -114,6 +158,22 @@ struct MiningFile {
     most: u32,
     band: Vec<BandSpec>,
     find: Vec<FindSpec>,
+    veins: Option<VeinsSpec>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct VeinsSpec {
+    chance: u8,
+    count: [u8; 2],
+    wall: String,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct VeinSpec {
+    fg: Rgb,
+    size: [u16; 2],
 }
 
 #[derive(Deserialize)]
@@ -136,6 +196,7 @@ struct FindSpec {
     deeper: i32,
     #[serde(default)]
     danger: u32,
+    vein: Option<VeinSpec>,
 }
 
 impl MiningRules {
@@ -143,11 +204,14 @@ impl MiningRules {
     /// bands in rising hardness with a chance of at most 100; `more_every` above 0 and `most` at
     /// least 1; rows naming exactly one of `ore`, `piece`, `gem`, an ore a material the ore
     /// object can be made of, a piece a material pieces are made of, no row twice, a rarity above
-    /// 0), then checks every branch's `ores` against it: each a metal with an ore row.
+    /// 0), then checks every branch's `ores` against it: each a metal with an ore row. Veins:
+    /// a `[veins]` table with a chance of at most 100, a count and sizes rising from at least 1,
+    /// and a `wall` that breaks; a `vein` only on an ore row, and only with the table. Each vein
+    /// becomes a wall terrain of its own, added to `content`.
     pub(super) fn parse(
         file: &str,
         text: &str,
-        content: &super::Content,
+        content: &mut super::Content,
     ) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: MiningFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -187,7 +251,30 @@ impl MiningRules {
         let material = |name: &str| {
             (content.material_id(name)).ok_or_else(|| err(format!("unknown material `{name}`")))
         };
+        let veins = match &parsed.veins {
+            None => None,
+            Some(v) => {
+                let wall = (content.terrain_id(&v.wall))
+                    .ok_or_else(|| err(format!("unknown terrain `{}`", v.wall)))?;
+                let def = content.terrain(wall);
+                if def.breaks.is_none() || def.walkable {
+                    return Err(err(format!("veins: `{}` is no wall that breaks", v.wall)));
+                }
+                if v.chance > 100 {
+                    return Err(err("veins: `chance` above 100".into()));
+                }
+                if v.count[0] == 0 || v.count[0] > v.count[1] {
+                    return Err(err("veins: `count` must rise from 1 or more".into()));
+                }
+                Some(Veins {
+                    chance: v.chance,
+                    count: v.count,
+                    wall,
+                })
+            }
+        };
         let mut finds: Vec<MiningFind> = Vec::new();
+        let mut vein_looks: Vec<(usize, MaterialId, Rgb)> = Vec::new();
         for spec in parsed.find {
             let what = match (&spec.ore, &spec.piece, spec.gem) {
                 (Some(name), None, false) => {
@@ -217,15 +304,45 @@ impl MiningRules {
             if spec.rarity == 0 {
                 return Err(err(format!("{what:?}: `rarity` must be above 0")));
             }
+            let vein = match (&spec.vein, what) {
+                (None, _) => None,
+                (Some(_), _) if veins.is_none() => {
+                    return Err(err(format!("{what:?}: a `vein` needs a `[veins]` table")));
+                }
+                (Some(v), Mined::Ore(metal)) => {
+                    if v.size[0] == 0 || v.size[0] > v.size[1] {
+                        return Err(err(format!(
+                            "{what:?}: vein `size` must rise from 1 or more"
+                        )));
+                    }
+                    vein_looks.push((finds.len(), metal, v.fg));
+                    Some(Vein {
+                        // Made below, once the table is read.
+                        terrain: TerrainId(0),
+                        size: v.size,
+                    })
+                }
+                (Some(_), _) => return Err(err(format!("{what:?}: only an ore has veins"))),
+            };
             finds.push(MiningFind {
                 what,
                 rarity: spec.rarity,
                 deeper: spec.deeper,
                 danger: spec.danger,
+                vein,
             });
         }
         if finds.is_empty() {
             return Err(err("there must be at least one `[[find]]`".into()));
+        }
+        if let Some(v) = veins {
+            for (row, metal, fg) in vein_looks {
+                let terrain = add_vein_terrain(content, v.wall, metal, fg)
+                    .map_err(|m| err(format!("veins: {m}")))?;
+                if let Some(vein) = finds[row].vein.as_mut() {
+                    vein.terrain = terrain;
+                }
+            }
         }
         let rules = MiningRules {
             skill,
@@ -235,6 +352,7 @@ impl MiningRules {
             more_every: parsed.more_every,
             most: parsed.most,
             finds,
+            veins,
         };
         for def in content.dungeons() {
             for name in def.ores.iter().flatten() {
@@ -250,4 +368,31 @@ impl MiningRules {
         }
         Ok(rules)
     }
+}
+
+/// Adds the wall terrain of a vein of `metal`: a copy of `wall` with the id `vein_<metal>`, named
+/// "vein of <metal> ore", drawn in `fg` on the wall's own ground.
+fn add_vein_terrain(
+    content: &mut super::Content,
+    wall: TerrainId,
+    metal: MaterialId,
+    fg: Rgb,
+) -> Result<TerrainId, String> {
+    let metal_def = content.material(metal);
+    let (id, name) = (format!("vein_{}", metal_def.id), metal_def.name.clone());
+    let terrain = (u16::try_from(content.terrain.len()))
+        .map(TerrainId)
+        .map_err(|_| "too many terrain types".to_string())?;
+    if content.terrain_ids.insert(id.clone(), terrain).is_some() {
+        return Err(format!("terrain `{id}` already exists"));
+    }
+    let def = super::TerrainDef {
+        id,
+        name: format!("vein of {name} ore"),
+        description: Some(format!("A seam of {name} ore runs through the rock.")),
+        fg,
+        ..content.terrain(wall).clone()
+    };
+    content.terrain.push(def);
+    Ok(terrain)
 }

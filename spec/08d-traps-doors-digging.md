@@ -516,6 +516,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     out a lump of iron ore." All draws are the gameplay stream's, after the wall crumbles. A lump
     of ore (`objects/ore.toml`, one object for every metal, as the piece is) is smelted at an
     anvil into an ingot of its metal by Metalcraft's **Smelt** (§8 "Professions").
+  - **Veins** (`mapgen/vein.rs`, `data/mining.toml`'s `[veins]` and the ore rows' `vein`;
+    #1390): one dungeon-branch floor in five has 1 to 3 veins, each a cluster of wall cells of
+    one ore (iron and copper 4 to 10 cells, the precious fewer, mithril 2 to 5, adamantium 2 to
+    4), grown from a wall that faces open ground on into the rock behind it, never on a vault, a
+    secret door, the level's edge, or the ring round a special room. A vein's terrain is the stone
+    wall drawn in the ore's colour (`vein_<metal>`, made at load from the wall), remembered like
+    any wall and named by look mode ("a vein of copper ore"). Its ore is drawn by the mining
+    table's weights at the floor's danger among the ores with veins and the branch's own `ores`,
+    so silver and gold veins come deeper and mithril and adamantium only very deep (Grundlēas).
+    Digging through a vein cell always gives its ore to one trained in Mining, with no chance
+    draw and no table: the check is made as for any wall and sets only the count (one lump
+    failed, else one more for every 6 it was made by, at most 3). Untrained, or by a blast,
+    nothing. Laid last, from the stream `veins/<level id>` (§8 "Determinism"), so a floor
+    without veins is unchanged and one with them differs only in its rock.
   - **Explosions** (`World::blast(center, radius, blast)`): an explosion breaks every wall in its
     burst whose hardness is below its blast, all at once and with no roll: the burst is the cells
     in line of sight of its centre within its radius, the walls bounding them included, taken

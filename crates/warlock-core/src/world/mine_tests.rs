@@ -216,6 +216,21 @@ fn bad_files_are_refused() {
         ("hardness = 400", "hardness = 0", "rise"),
         ("chance = 20", "chance = 101", "above 100"),
         ("gem = true", "gem = true\nore = \"tin\"", "exactly one"),
+        (
+            "gem = true",
+            "gem = true\nvein = { fg = \"#ffffff\", size = [1, 2] }",
+            "only an ore",
+        ),
+        ("size = [4, 10]", "size = [0, 10]", "vein `size`"),
+        ("size = [4, 10]", "size = [5, 4]", "vein `size`"),
+        ("count = [1, 3]", "count = [0, 3]", "`count`"),
+        ("wall = \"wall\"", "wall = \"floor\"", "no wall that breaks"),
+        ("wall = \"wall\"", "wall = \"stonework\"", "unknown terrain"),
+        (
+            "[veins]\nchance = 20",
+            "[veins]\nchance = 101",
+            "`chance` above 100",
+        ),
     ] {
         let bad = text.replacen(from, to, 1);
         assert_ne!(bad, text, "{from}");
@@ -224,6 +239,17 @@ fn bad_files_are_refused() {
         let error = Content::load(&files).expect_err(from).to_string();
         assert!(error.contains(says), "{from}: {error}");
     }
+    // A vein without the `[veins]` table.
+    let bad = text.replacen(
+        "[veins]\nchance = 20\ncount = [1, 3]\nwall = \"wall\"\n",
+        "",
+        1,
+    );
+    assert_ne!(bad, text);
+    let mut files = ContentFiles::builtin();
+    files.insert("data/mining.toml", &bad);
+    let error = Content::load(&files).expect_err("veins").to_string();
+    assert!(error.contains("needs a `[veins]` table"), "{error}");
     // A branch naming an ore the table has no row for.
     let mut files = ContentFiles::builtin();
     let dungeons = format!(
@@ -234,6 +260,43 @@ fn bad_files_are_refused() {
     files.insert("data/dungeons.toml", &dungeons);
     let error = Content::load(&files).expect_err("steel").to_string();
     assert!(error.contains("no ore row"), "{error}");
+}
+
+#[test]
+fn a_vein_always_gives_its_ore_to_the_trained_the_check_setting_the_count() {
+    let content = content("rooms", 5, "ores = [\"iron\"]");
+    let copper = content.terrain_id("vein_copper").expect("a copper vein");
+    let def = content.terrain(copper);
+    assert_eq!(def.name, "vein of copper ore");
+    let wall = content.terrain(content.terrain_id("wall").expect("wall"));
+    assert_eq!(
+        (def.glyph, def.bg, def.breaks),
+        (wall.glyph, wall.bg, wall.breaks)
+    );
+    assert_ne!(def.fg, wall.fg);
+    let at = |w: &World| w.player_pos().step(Dir::N);
+    // Untrained: nothing.
+    let mut w = World::new(content.clone(), "mine", Some(1)).expect("world");
+    train(&mut w, "mining", None);
+    w.mine(at(&w), copper);
+    assert!(w.ground_truth().0.objects_at(at(&w)).is_empty());
+    // Trained at the least: every vein wall gives its ore, at least one lump (copper, though
+    // the branch's own rock holds only iron: the vein says what it is).
+    let mut w = World::new(content.clone(), "mine", Some(1)).expect("world");
+    train(&mut w, "mining", Some(1));
+    let mut counts = std::collections::BTreeSet::new();
+    for _ in 0..200 {
+        let at = at(&w);
+        w.state.current_mut().set_pile(at, Vec::new());
+        w.mine(at, copper);
+        let found = w.ground_truth().0.objects_at(at).to_vec();
+        assert_eq!(found.len(), 1);
+        assert_eq!(metal(&w, &found[0]), "copper");
+        counts.insert(found[0].count);
+    }
+    assert!(counts.contains(&1) && counts.len() > 1, "{counts:?}");
+    let line = w.messages().iter().last().expect("a line").text.clone();
+    assert!(line.contains("copper ore"), "{line}");
 }
 
 /// A forge room with an anvil north of the player, a dwarf craftsperson carrying `ore`.

@@ -49,6 +49,7 @@ mod shop;
 mod special;
 mod treasury;
 mod vault;
+mod vein;
 mod way_up;
 
 use crate::chest::Chest;
@@ -687,6 +688,15 @@ pub fn generate_for(
             treasury::fill(&mut template, content, (seed, luck), (pal, def));
             crate::gear::arm(&mut template, content, seed);
             crate::animated::arm(&mut template, content, seed);
+            // Last, from its own stream: only walls change (`vein.rs`).
+            let danger = content.floor_danger(id, visit.player_level);
+            vein::lay(
+                &mut template,
+                content,
+                (seed, pal),
+                (def, danger),
+                &canvas.stamped,
+            );
             return Ok(template);
         }
     }
@@ -912,7 +922,8 @@ pub(crate) fn place_loot(
 
 /// The template as text: terrain glyphs, the top object of each pile over them, traps (hidden
 /// ones too) over those, creatures on top, `*` for a light placed on floor, `&` for a locked
-/// door, and `S` for a secret door. Trailing spaces are trimmed. Used by snapshot tests.
+/// door, `S` for a secret door, and `V` for a vein of ore (`vein.rs`). Trailing spaces are
+/// trimmed. Used by snapshot tests.
 pub fn ascii(template: &LevelTemplate, content: &Content) -> String {
     draw(template, content, false)
 }
@@ -925,6 +936,7 @@ pub fn ascii_with_rooms(template: &LevelTemplate, content: &Content) -> String {
 
 fn draw(template: &LevelTemplate, content: &Content, rooms: bool) -> String {
     let floor = content.terrain_id("floor");
+    let veins = content.mining();
     let mut out = String::new();
     for y in 0..template.terrain.height() {
         let row: String = (0..template.terrain.width())
@@ -948,6 +960,8 @@ fn draw(template: &LevelTemplate, content: &Content, rooms: bool) -> String {
                     '&'
                 } else if template.secrets.contains_key(&p) {
                     'S'
+                } else if veins.is_some_and(|m| m.vein_of(t).is_some()) {
+                    'V'
                 } else if let Some(room) = room {
                     content.room_effect(room.effect).mark
                 } else {
@@ -1037,5 +1051,7 @@ mod vault_monsters_tests;
 mod vault_stamp_tests;
 #[cfg(test)]
 mod vault_turn_tests;
+#[cfg(test)]
+mod vein_tests;
 #[cfg(test)]
 mod way_up_tests;
