@@ -5,6 +5,7 @@ expression: "render(case, content.clone())"
  Welcome to Showcase. Press ? for controls.
 
 
+
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -17,18 +18,17 @@ expression: "render(case, content.clone())"
                     │   d  Decipher           no unknown scroll                │
                     │   e  Heal               nothing to treat                 │
                     │   f  Knowledge          not usable yet                   │
-                    │   g  Metalcraft…                                         │
-                    │   h  Woodcraft…                                          │
-                    │   i  Salvage            on something you carry           │
+                    │   g  Salvage            on something you carry           │
                     │ Weapon skills                                            │
-                    │   j  Shield bash        no foe within reach              │
+                    │   h  Shield bash        no foe within reach              │
                     │                                                          │
                     │ Pray (a cast's time, no mana): what ails you most is     │
                     │ answered, as far as your prayers reach; for now, your    │
                     │ wounds. Pray too often and nothing answers a while.      │
                     │                                                          │
-                    │ a-j or Enter use   Esc close                             │
+                    │ a-h or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
 
  The Hub  ·  HP 17/17  ·  MP 14/14  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444        ? controls

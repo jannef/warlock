@@ -350,6 +350,7 @@ fn services(content: &Content, actor: &SeenActor) -> String {
             ServiceKind::Cure => "cures",
             ServiceKind::Identify => "identifies",
             ServiceKind::Mend => "mends",
+            ServiceKind::TrainSkill => "teaches",
         };
         if !verbs.contains(&verb) {
             verbs.push(verb);

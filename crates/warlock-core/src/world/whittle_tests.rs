@@ -143,8 +143,8 @@ fn without_a_knife_it_is_refused_with_its_reason() {
 }
 
 #[test]
-fn everyone_has_it_beside_the_missiles_on_woodcrafts_screen() {
-    let w = world(false);
+fn the_trained_have_it_beside_the_missiles_on_woodcrafts_screen() {
+    let mut w = world(false);
     let wood = w.content.skill_id("woodcraft").expect("woodcraft");
     let names: Vec<String> = (w.perception().recipes(wood).into_iter())
         .map(|r| r.name)
@@ -154,6 +154,18 @@ fn everyone_has_it_beside_the_missiles_on_woodcrafts_screen() {
     }
     assert!(!names.contains(&"Fletch".to_string()), "{names:?}");
     assert!(Ability::Profession(wood).had_by(w.state.player(), &w.content));
+    // Untrained, none of it (#1387): no screen, no row, and Whittle refused with no time.
+    let skills = &mut w.player_mut().skills;
+    *skills = skills.iter().filter(|(s, _)| *s != wood).collect();
+    assert!(w.perception().recipes(wood).is_empty());
+    assert!(!Ability::Profession(wood).had_by(w.state.player(), &w.content));
+    give(&mut w, "knife");
+    give(&mut w, "short_bow");
+    let before = w.state.time;
+    w.apply(&Action::Whittle { item: 0 });
+    assert!(said(&w, "You are not trained in Woodcraft."));
+    assert_eq!(w.state.time, before, "refused, no time");
+    assert_eq!(worked_after(&w), None, "untouched");
 }
 
 #[test]

@@ -479,9 +479,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     rock (`void`) shows its `face`, a stone wall, once a cell next to it is broken open, as
     generated levels wall their open ground, so a tunnel is walled like a corridor.
   - **Digging** (`Action::Dig(dir)`, `dig:E`; key `u`): with a digging tool ready (the first thing
-    worn or wielded with `dig` power: a pick-axe, 10, or a mattock, 15, in the Tool slot), into the
-    wall next to the player in that direction. Refused, taking no time: without a tool ("You have
-    no digging tool ready."), toward open ground ("There is nothing to dig there."), toward
+    worn or wielded with `dig` power: a pick-axe, 10, or a mattock, 15, in the Tool slot) and
+    trained in Mining (#1391; any value), into the wall next to the player in that direction.
+    Refused, taking no time: without a tool ("You have no digging tool ready."), untrained in
+    Mining ("You do not know how to mine: that takes the Mining skill."; the skill `data/mining.toml`
+    names; dwarves, duergar, and kobolds start with it, some craftspeople and commoners by chance,
+    and Alberich of Fyrdelf teaches it for gold, §8 "Dialogue": "Training"; `u` asks for no
+    direction then), toward open ground ("There is nothing to dig there."), toward
     anything else that does not break ("You cannot dig through the closed door."), and on the
     overworld ("You cannot dig here."). It says "You dig into the stone wall." ("You go on digging
     at the stone wall." on a wall dug into before) and goes on turn after turn like a rest, through

@@ -210,10 +210,7 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
             out,
             "| {} | {} | {makes} | {} | {} | {} | {} | {} | {} ({} s) | {difficulty} | {} |",
             anchored(Term::Recipe, &r.id, &r.name),
-            match r.anyone {
-                true => "anyone".to_string(),
-                false => r.from.to_string(),
-            },
+            r.from,
             or_dash(&chosen, "; "),
             or_dash(&stock, "; "),
             or_dash(&uses, ", "),

@@ -270,7 +270,9 @@ mod tests {
 
     fn world(scenario: &str) -> World {
         let content = Arc::new(Content::builtin().expect("content"));
-        let spec: CharacterSpec = "human,female,ranger".parse().expect("a character");
+        // A craftsperson: trained in Metalcraft and Woodcraft, whose recipes are the trained's
+        // alone (#1387).
+        let spec: CharacterSpec = "human,female,craftsperson".parse().expect("a character");
         World::with_character(content, scenario, None, Some(&spec)).expect("world")
     }
 

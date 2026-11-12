@@ -44,8 +44,8 @@ until their uses come. Their names there:
 - [Decipher script](skills.md#skill-decipher-script): **[Decipher](abilities.md#ability-decipher)** (see [Deciphering a scroll unread](scrolls.md#deciphering-a-scroll-unread))
 - [Survival](skills.md#skill-survival), though it is a passive skill: **[Forage](abilities.md#ability-forage)**
 - [Jewelcraft](skills.md#skill-jewelcraft): **[Jewelcraft…](abilities.md#ability-jewelcraft)**, its [profession](skill-uses.md#professions)'s recipes (Cut and Set, see [Gem cutting](gem-cutting.md); rings and amulets, see [Making jewellery](crafting.md#making-jewellery))
-- [Metalcraft](skills.md#skill-metalcraft): **[Metalcraft…](abilities.md#ability-metalcraft)**, its [profession](skill-uses.md#professions)'s recipes (Temper, for everyone)
-- [Woodcraft](skills.md#skill-woodcraft): **[Woodcraft…](abilities.md#ability-woodcraft)**, its [profession](skill-uses.md#professions)'s recipes (arrows, bolts, sling stones, and Whittle for everyone, trained or not), and **[Wedge a door](abilities.md#ability-wedge)** for those
+- [Metalcraft](skills.md#skill-metalcraft): **[Metalcraft…](abilities.md#ability-metalcraft)**, its [profession](skill-uses.md#professions)'s recipes (Temper among them)
+- [Woodcraft](skills.md#skill-woodcraft): **[Woodcraft…](abilities.md#ability-woodcraft)**, its [profession](skill-uses.md#professions)'s recipes (arrows, bolts, sling stones, and Whittle among them), and **[Wedge a door](abilities.md#ability-wedge)** for those
   trained in it (see [Wedging a door](doors.md#wedging-a-door))
 
 {{#include generated/skills.md}}
@@ -114,8 +114,10 @@ The passive skills help you more the higher they are:
   an [unidentified](magic-items.md#unidentified-items) weapon, armour, ring or amulet, or a [wand or rod](wands-and-rods.md). Each gives 5 % an hour at 0,
   25 % at 100, and 40 % at 200, trained only, besides Appraise's own chance. Neither trains by it:
   their crafts are still to come.
-- **[Mining](skills.md#skill-mining)** makes [digging](digging.md) quicker: each turn does 25 % more work at 100 and 40 % more at
-  200, on top of what talents and a Delving tool add.
+- **[Mining](skills.md#skill-mining)** lets you [dig](digging.md) at all: untrained, you cannot. It
+  makes digging quicker: each turn does 25 % more work at 100 and 40 % more at 200, on top of
+  what talents and a Delving tool add. [Alberich](npcs.md#alberich) in Fyrdelf teaches it for
+  gold.
 - **[Herbalism](skills.md#skill-herbalism)** may find a herb besides on a forage that finds something (see
   [Foraging](skill-uses.md#foraging)), and finds one more herb for every 50 when you
   [gather](herbs.md#gathering) from the glowing fungus.

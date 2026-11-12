@@ -5,29 +5,29 @@ expression: "render(case, content.clone())"
  You feel more skilled at fighting with weapon and shield. You have learned the staggering block.
  You feel more skilled at bashing with a shield. You have learned the stunning bash.
 
+
                 ┌─ Abilities ──────────────────────────────────────────────────────┐
                 │                                                                  │
                 │ Birth sign                                                       │
                 │ > a  Transfixing stare                  at a place you see       │
                 │ Skills                                                           │
                 │   b  Disarm a trap                      no known trap beside you │
-                │   c  Metalcraft…                                                 │
-                │   d  Pick lock                          no lock beside you       │
-                │   e  Steal                              no one beside you to rob │
-                │   f  Woodcraft…                                                  │
-                │   g  Salvage                            on something you carry   │
+                │   c  Pick lock                          no lock beside you       │
+                │   d  Steal                              no one beside you to rob │
+                │   e  Salvage                            on something you carry   │
                 │ Weapon skills                                                    │
-                │   h  Shield bash                        you hold no shield       │
-                │   i  Long blades: Deep cut              fires by itself          │
-                │   j  Shield bashing: Stunning bash      fires by itself          │
-                │   k  Sword and Board: Staggering block  fires by itself          │
+                │   f  Shield bash                        you hold no shield       │
+                │   g  Long blades: Deep cut              fires by itself          │
+                │   h  Shield bashing: Stunning bash      fires by itself          │
+                │   i  Sword and Board: Staggering block  fires by itself          │
                 │                                                                  │
                 │ The basilisk's stare: a foe nearby that sees you slows to a      │
                 │ crawl a moment; your eyes then rest two hours.                   │
                 │                                                                  │
                 │                                                                  │
-                │ a-k or Enter use   Esc close                                     │
+                │ a-i or Enter use   Esc close                                     │
                 └──────────────────────────────────────────────────────────────────┘
+
 
 
 

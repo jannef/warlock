@@ -186,6 +186,7 @@ fn hobnailed_boots_kick_as_if_stronger_and_stop_when_taken_off() {
 fn a_delving_pick_axe_digs_faster() {
     let dig = |pick: Stack| {
         let mut w = world();
+        w.learn_mining();
         let me = w.state.player;
         wear(&mut w, me, "tool", pick);
         run(&mut w, "dig:E").elapsed.as_seconds()
@@ -346,6 +347,7 @@ fn the_pick_axe_is_a_tool_rolled_magic_from_item_level_3() {
     // Worn and dug with: faster than a plain one.
     let dig = |pick: Stack| {
         let mut w = world();
+        w.learn_mining();
         let me = w.state.player;
         wear(&mut w, me, "tool", pick);
         run(&mut w, "dig:E").elapsed.as_seconds()

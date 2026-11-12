@@ -211,9 +211,7 @@ fn the_player_perceives_only_their_own_trained_skills() {
         own,
         [
             Ability::Skill(skill(&w, "enchanting")),
-            Ability::Profession(skill(&w, "metalcraft")),
             Ability::PickLock,
-            Ability::Profession(skill(&w, "woodcraft")),
             Ability::Salvage,
             Ability::ShieldBash
         ]

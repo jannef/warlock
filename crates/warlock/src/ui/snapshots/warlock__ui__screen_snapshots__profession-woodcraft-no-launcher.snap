@@ -2,33 +2,33 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Welcome to Showcase. Press ? for controls.
-
-
-
-
-
-
-
-            ┌─ Woodcraft: recipes ─────────────────────────────────────────────────────┐
-            │                                                                          │
+ Brūn, your ┌─ Woodcraft: recipes ────────────────────────────────────────── Page 1/3 ─┐
+ You put awa│                                                                          │
             │ Work                                                                     │
-            │ > a - Whittle        a wooden weapon, a knife, about 10 minutes          │
+            │ > a - Whittle                a wooden weapon, a knife, about 10 minutes  │
+            │ Melee weapons                                                            │
+            │   b - Club                   no bone to hand                             │
+            │   c - Dagger                 no bone to hand                             │
+            │   d - Hand axe               no stone to hand                            │
+            │   e - Ironwood staff         beyond your skill                           │
+            │   f - Javelin                no bone to hand                             │
+            │   g - Knife                  no bone to hand                             │
+            │   h - Quarterstaff           no wood to hand                             │
+            │   i - Spear                  no bone to hand                             │
+            │ Missile weapons                                                          │
+            │   j - Composite bow          beyond your skill                           │
+            │   k - Crossbow               beyond your skill                           │
+            │   l - Heavy crossbow         beyond your skill                           │
+            │   m - Long war bow           beyond your skill                           │
+            │   n - Short bow              no bone to hand                             │
+            │   o - Sling                  no hide to hand                             │
             │ Missiles                                                                 │
-            │   b - Arrows         no bow ready                                        │
-            │   c - Crossbow bolts no crossbow ready                                   │
-            │   d - Sling stones   no stone to hand                                    │
+            │   p - Arrows                 no bow ready                                │
+            │   q - Crossbow bolts         no crossbow ready                           │
+            │   r - Flaming arrows         not enough flasks of oil                    │
             │                                                                          │
             │ Takes a wooden weapon, a knife, about 10 minutes.                        │
             │                                                                          │
-            │ a-d or Enter make   Esc back                                             │
+            │ a-r or Enter make   > < page   Esc back                                  │
             └──────────────────────────────────────────────────────────────────────────┘
-
-
-
-
-
-
-
-
- The Hub  ·  HP 19/19  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1  ·  08:00       ? controls
+ The Hub  ·  HP 20/20  ·  MP 4/4  ·  Sta 10/14  ·  Lv 1  ·  Brūn: unhurt  ·  08:00       ? controls

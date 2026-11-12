@@ -1,0 +1,27 @@
+# Vault of the Ascmearc (#1391): Alberich's delving on Fyrdelf's fifth floor, the first of the
+# deep workings. A low chamber cut square out of the cave rock, a sconce at either end, rubble
+# from his digging in the corners, and the miser himself beside his hoard: he teaches Mining for
+# gold (his npc dialogue, data/dialogue/fyrdelf.toml). Fyrdelf names it for its fifth floor
+# (`vaults` in its `[[dungeon.levels]]`), so it is stamped there for certain and nowhere else,
+# and the unique character it places is met once. Peaceful and with no route, he keeps to his
+# post by the hoard (docs/dev/npcs.md).
+#
+# The hoard (`$`) is a named place, "the hoard": its note is said when the player comes beside
+# it and in look mode. It is gold dust pressed into the floor, nothing to pick up.
+name = "Alberich's delving"
+map = '''
+####¡####
+#:.....:#
+#.fffff.#
++.fA$ff.#
+#.fffff.#
+#:.....:#
+####¡####
+'''
+
+[legend]
+"¡" = "sconce"
+"f" = "flagstones"
+":" = "rubble"
+"A" = { terrain = "flagstones", creature = "dwarven_miser", npc = "alberich", carry = ["gold_coin*300"] }
+"$" = { terrain = "flagstones", name = "the hoard", note = "Gold dust and little nuggets, swept into a hollow of the floor and patted flat. Someone has counted it into tiny heaps, and counted the heaps again." }

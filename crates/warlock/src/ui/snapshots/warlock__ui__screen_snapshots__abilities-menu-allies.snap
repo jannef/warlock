@@ -5,30 +5,30 @@ expression: "render(case, content.clone())"
  Welcome to Showcase. Press ? for controls.
  Two dire wargs come to your side.
 
+
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
                     │ Skills                                                   │
                     │   b  Disarm a trap      no known trap beside you         │
-                    │   c  Metalcraft…                                         │
-                    │   d  Pick lock          no lock beside you               │
-                    │   e  Steal              in a direction                   │
-                    │   f  Woodcraft…                                          │
-                    │   g  Salvage            on something you carry           │
+                    │   c  Pick lock          no lock beside you               │
+                    │   d  Steal              in a direction                   │
+                    │   e  Salvage            on something you carry           │
                     │ Weapon skills                                            │
-                    │   h  Shield bash        you hold no shield               │
+                    │   f  Shield bash        you hold no shield               │
                     │ Allies                                                   │
-                    │   i  Come to heel                                        │
-                    │   j  Hold here                                           │
-                    │   k  Set on             at a place you see               │
+                    │   g  Come to heel                                        │
+                    │   h  Hold here                                           │
+                    │   i  Set on             at a place you see               │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-k or Enter use   Esc close                             │
+                    │ a-i or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
 
  The Hub  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1  ·  08:00       ? controls

@@ -4,6 +4,7 @@ expression: "render(case, content.clone())"
 ---
  Beald, your boar, pads at your heel.
  You search the land about you for something to eat. You find nothing worth eating.
+
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -11,23 +12,22 @@ expression: "render(case, content.clone())"
                     │ Skills                                                   │
                     │   b  Decipher           no unknown scroll                │
                     │   c  Tame               you already have a companion     │
-                    │   d  Metalcraft…                                         │
-                    │   e  Forage                                              │
-                    │   f  Woodcraft…                                          │
-                    │   g  Salvage            on something you carry           │
+                    │   d  Forage                                              │
+                    │   e  Woodcraft…                                          │
+                    │   f  Salvage            on something you carry           │
                     │ Weapon skills                                            │
-                    │   h  Shield bash        you hold no shield               │
+                    │   g  Shield bash        you hold no shield               │
                     │ Allies                                                   │
-                    │   i  Come to heel                                        │
-                    │   j  Hold here                                           │
-                    │   k  Set on             at a place you see               │
-                    │   l  Give               on something you carry           │
+                    │   h  Come to heel                                        │
+                    │   i  Hold here                                           │
+                    │   j  Set on             at a place you see               │
+                    │   k  Give               on something you carry           │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-l or Enter use   Esc close                             │
+                    │ a-k or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 

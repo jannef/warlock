@@ -400,7 +400,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`shops = { chance = 100 }`: about one gallery floor in four) kept by a **duergar trader** (the
   campaign's own keeper type, with the shared keeper's kit). Its vaults (`campaigns/ascmearc/vaults/`):
   the **foreman's cabin** on each gallery level (a duergar miner at his post, a pick-axe, a lamp,
-  a brass key), the **hunter's statue** on level 11 alone (a worn statue on a raised floor between
+  a brass key), **Alberich's delving** on level 5 alone (#1391: a square chamber with a sconce at
+  either end, rubble in its corners, and a named place, the hoard; in it **Alberich**, a dwarven
+  miser, peaceful and at his post, who teaches Mining for 500 gold, §8 "Dialogue": "Training"),
+  the **hunter's statue** on level 11 alone (a worn statue on a raised floor between
   two torches, its plinth inscribed: the hint of the Hunter's oath,
   `docs/design/prestige-classes.md` §8), and the **drake's hoard** on level 12 alone (the fire
   drake on its gold, a rare and a magic find, ringed with lava). The drake is not in the population, so it is met there

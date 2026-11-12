@@ -66,18 +66,19 @@ A forge is a cold smithy: soot on the walls and an **anvil**, its hammer chained
 more anvil stands in Cēaptūn, in Eadric's Smithy beside the smith's fire. It is free to use; it is
 not the shop's service.
 
-To temper, walk into the anvil and say yes when asked, or stand beside it, open
-[Metalcraft…](abilities.md#ability-metalcraft) in the [abilities menu](abilities.md#the-abilities-menu),
-and choose **Temper** (a [recipe](skill-uses.md#professions) anyone can make; away from an anvil
-it is greyed out "no anvil beside you"). Then pick something of metal you carry: a weapon, a missile
-weapon, armour, or a shield whose main part is metal, as its
+Tempering needs [Metalcraft](skills.md#skill-metalcraft). If you are not trained, walking into
+the anvil only tells you so. If you are, walking into the anvil opens your
+[Metalcraft…](abilities.md#ability-metalcraft) list of recipes; so does its row in the
+[abilities menu](abilities.md#the-abilities-menu). Choose **Temper** (a
+[recipe](skill-uses.md#professions); away from an anvil it is greyed out "no anvil beside you").
+Then pick something of metal you carry: a weapon, a missile weapon, armour, or a shield whose main part is metal, as its
 [description](objects.md#what-an-object-is) says. Leather, wood, and bone will not do, and neither
 will [ammunition](ammunition.md), rings, or amulets.
 
 An attempt is ten minutes of work. Anything that would stop a
 [rest](resting.md#how-resting-works) stops it. The item is then untouched and the attempt does not
-count, but the time is gone. Anyone may temper; [Metalcraft](skills.md#skill-metalcraft) only makes
-it go better. Every finished attempt may train [Metalcraft](skills.md#skill-metalcraft) and
+count, but the time is gone. The more [Metalcraft](skills.md#skill-metalcraft) you have, the better it
+goes. Every finished attempt may train [Metalcraft](skills.md#skill-metalcraft) and
 [Strength](stats.md#stat-strength), whatever came of it.
 
 What an attempt does depends on the item:

@@ -62,16 +62,7 @@ pub(super) fn abilities(content: &Content) -> String {
             }
             Ability::Heal => "everyone trained in Heal (with something to treat)".into(),
             Ability::Profession(skill) => {
-                let open = (content.recipes().of(skill)).any(|(_, r)| r.anyone);
-                let skill = &content.skill(skill).name;
-                match open {
-                    true => format!(
-                        "everyone (some of its recipes are open to all; see \
-                         [Professions](skill-uses.md#professions)), and everyone trained in \
-                         {skill}"
-                    ),
-                    false => format!("everyone trained in {skill}"),
-                }
+                format!("everyone trained in {}", content.skill(skill).name)
             }
             Ability::Forage => {
                 "everyone trained in Survival (usable in the wild: the overworld's land and its \

@@ -229,6 +229,7 @@ fn run(w: &mut World, actions: &str) {
 #[test]
 fn a_meal_and_digging_go_on_with_a_hostile_farther_off_in_view() {
     let mut w = world(PEN, "kobold");
+    w.learn_mining();
     run(&mut w, "pickup");
     let (ration, pick) = (carried(&w, "ration"), carried(&w, "pick_axe"));
     let turn = w.turn();

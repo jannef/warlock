@@ -227,7 +227,9 @@ pub use creature_rarity::{COMMON, CreatureRarity};
 pub use damage_type::{CharColors, DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
 pub use danger::{Count, DangerRule, PlayerScale, Spawning};
 pub use decipher::DecipherRules;
-pub use dialogue::{Dialogue, DialogueId, Mutter, Service, ServiceKind, Speaker, Topic};
+pub use dialogue::{
+    Dialogue, DialogueId, Mutter, Service, ServiceKind, ServiceTraining, Speaker, Topic,
+};
 pub use disease::{DiseaseDef, DiseaseId, SOURCES, Wading};
 pub use drops::{Drop, DropFrom, DropGoods, TagDrops};
 pub use dummy::DummyTraining;
@@ -5560,6 +5562,7 @@ mod tests {
                 "wights_niches",
                 "wyrms_bed",
                 // The campaigns' own, after the shared ones.
+                "alberichs_delving",
                 "attorcoppes_web",
                 "barrow_chamber",
                 "captains_hall",

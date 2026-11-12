@@ -175,6 +175,7 @@ fn a_stoned_creature_is_a_statue_holding_what_it_carried() {
 #[test]
 fn a_statue_is_dug_through_and_falls_to_rubble_and_what_it_held() {
     let mut w = world("stats = { strength = 18 }");
+    w.learn_mining();
     let at = stone_the_kobold(&mut w);
     run(&mut w, "pickup:a equip:tool:a dig:E");
     assert_eq!(terrain_at(&w, at), "rubble", "{:?}", said(&w).last());

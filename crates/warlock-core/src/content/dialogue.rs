@@ -12,7 +12,8 @@
 //! as they ask, and an optional `calls`: a calling of its campaign, the topic offered only while
 //! the calling is open and asking it calling the player, with `departs` the speaker then leaving;
 //! `world/calling.rs`) asked about on the dialogue screen, optional `[[dialogue.service]]`s (`id`, `name`,
-//! `price`, `does`, `reply`, `nothing`: a cure or a mending for gold, asked for like a topic;
+//! `price`, `does`, `reply`, `nothing`, and `train` for a training: a cure, a mending, an
+//! identification, or a skill taught for gold, asked for like a topic;
 //! `world/service.rs`), an optional `[dialogue.offer]` (one item at a fixed price, asked for
 //! like a topic; `content/offer.rs`, `world/wares.rs`), an optional `speaks_to` (the alignment
 //! bands it talks to at all) with its `silent` (what it does for anyone else), and an optional `mutter`: the percent chance per
@@ -125,15 +126,19 @@ pub enum ServiceKind {
     Identify,
     /// Mends every point of stat damage at once.
     Mend,
+    /// Trains the player in the skill its `train` names, at that table's `value`: offered only
+    /// while they are untrained in it (`world/service.rs`, #1391).
+    TrainSkill,
 }
 
 impl ServiceKind {
-    /// Its id in the data: `cure`, `identify`, `mend`.
+    /// Its id in the data: `cure`, `identify`, `mend`, `train_skill`.
     pub fn id(self) -> &'static str {
         match self {
             Self::Cure => "cure",
             Self::Identify => "identify",
             Self::Mend => "mend",
+            Self::TrainSkill => "train_skill",
         }
     }
 }
@@ -160,6 +165,19 @@ pub struct Service {
     pub reply: String,
     /// What the speaker says when there is nothing to do: "Nothing ails you, child."
     pub nothing: String,
+    /// What a `train_skill` service teaches (`train = { skill = "mining", value = 5 }`); given
+    /// for that kind only.
+    #[serde(default)]
+    pub train: Option<ServiceTraining>,
+}
+
+/// What a `train_skill` service teaches: the skill (an id in `data/skills.toml`) and the value
+/// the player starts it at.
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ServiceTraining {
+    pub skill: String,
+    pub value: u16,
 }
 
 /// What a creature mutters to itself now and then.
@@ -376,6 +394,19 @@ fn parse_file<'a>(
                 return Err(bad(
                     "it is paid in the shops' currency: data/shops.toml is needed".into(),
                 ));
+            }
+            match (service.does, &service.train) {
+                // Without a skills table no skill is known, and the teaching is never offered.
+                (ServiceKind::TrainSkill, Some(t))
+                    if !content.skills().is_empty() && content.skill_id(&t.skill).is_none() =>
+                {
+                    return Err(bad(format!("`train`: unknown skill `{}`", t.skill)));
+                }
+                (ServiceKind::TrainSkill, None) => {
+                    return Err(bad("`train_skill` needs `train = { skill, value }`".into()));
+                }
+                (ServiceKind::TrainSkill, Some(_)) | (_, None) => {}
+                (_, Some(_)) => return Err(bad("only `train_skill` has `train`".into())),
             }
         }
         let offer = match spec.offer {

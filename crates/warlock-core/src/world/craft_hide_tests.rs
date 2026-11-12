@@ -301,7 +301,7 @@ fn each_hide_recipe_is_woodcrafts_by_hand_as_the_design_tables_give_it() {
         let got = (r.difficulty, r.seconds, r.from, r.ornament);
         assert_eq!(got, (difficulty, seconds, from, ornament), "{id}");
         assert_eq!(r.skill, woodcraft(&w), "{id}");
-        assert!(r.knife && r.station.is_none() && !r.anyone, "{id}");
+        assert!(r.knife && r.station.is_none(), "{id}");
         assert_eq!(r.parts.len(), 1, "{id}");
         // Only the studs and the hobnails are an input: one ingot of any metal.
         let ingot = matches!(id, "studded_leather" | "hobnailed_boots");

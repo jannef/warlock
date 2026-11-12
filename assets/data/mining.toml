@@ -23,7 +23,8 @@
 # are left out there. Stone and gems are found everywhere.
 #
 # Fields:
-#   skill       the skill a miner must be trained in (skills.toml)
+#   skill       the skill a miner must be trained in (skills.toml): to dig at all (#1391) and to
+#               find anything
 #   stat        the stat whose modifier the check adds
 #   ore         the ore object (objects/ore.toml): made of a metal, it is that metal's ore
 #   more_every  the check's margin that gives one more lump (above 0)

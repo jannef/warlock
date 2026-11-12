@@ -193,8 +193,6 @@ pub struct RecipeDef {
     pub launcher: bool,
     /// The trained value the recipe is listed from (0: anyone with the skill).
     pub from: u16,
-    /// Listed for the untrained too.
-    pub anyone: bool,
     /// The built-in action the row runs, if it is one.
     pub uses: Option<RecipeUse>,
     /// The dialog's verb, where it is not the profession's (`stock.toml`): a ring is made, not
@@ -356,8 +354,6 @@ struct RecipeSpec {
     launcher: bool,
     #[serde(default)]
     from: u16,
-    #[serde(default)]
-    anyone: bool,
     #[serde(rename = "use")]
     uses: Option<String>,
     verb: Option<String>,
@@ -600,7 +596,6 @@ fn resolve(spec: RecipeSpec, skill: SkillId, content: &Content) -> Result<Recipe
         knife: spec.knife,
         launcher: spec.launcher,
         from: spec.from,
-        anyone: spec.anyone,
         uses: None,
         verb: spec.verb.clone(),
         failure: None,

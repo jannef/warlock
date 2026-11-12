@@ -10,7 +10,15 @@ solid terrain, into walkable, transparent, plain ground); `void` (solid rock) ha
 level's edge never break (`LevelState::on_edge`, `breaks_at`). `Action::Dig(Dir)` (`dig:DIR`,
 key `u` = `KeyCommand::UseTool`, ADOM's use-tool key, a direction prompt; `a` is the
 abilities menu, #156; with a carried light ready in the Tool slot, a lantern, `u` turns it
-instead, `Action::UseTool`, `world/lamp.rs`, #643) needs `Actor::dig_tool`; `start_dig` refuses (no time) or returns
+instead, `Action::UseTool`, `world/lamp.rs`, #643) needs `Actor::dig_tool` and the player trained
+in Mining (#1391: the skill `data/mining.toml` names, no rule without that file; untrained,
+`dig::UNTRAINED`, "You do not know how to mine: that takes the Mining skill."). Both are one
+function, `dig::dig_refusal(actor, content)`, read by `start_dig` and by
+`PerceptionView::dig_refusal`, so `u` (`input.rs`) asks for no direction where the rules would
+refuse and sends `dig:N` for the words instead; creatures never dig, so it is the player's rule
+only. Tests that dig train the player at Mining 0 (`World::learn_mining`, a `#[cfg(test)]` helper
+in `dig_tests.rs`: 0 adds no speed, so the times of before hold); a teacher sells it
+(`train_skill`, `docs/dev/npcs.md` "Services"). `start_dig` refuses (no time) or returns
 `Spent::Dig(at)`, and `dig` runs `keep_at` with a `dig` action per turn
 (priced by `price_of`, so burden slows it): `dig_turn` makes `Act::Dig` noise (`DIG_NOISE` 80,
 `SoundKind::Digging`) and adds `dig_work(power, strength)` (power × (Strength score + 10), in

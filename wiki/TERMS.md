@@ -299,7 +299,8 @@ above.
 | Familiar's sight | `familiars.md#familiars-sight` |
 | Hunter's bond, shared sight, shared buffs | `companions.md#hunters-bond` |
 | People, townsfolk, chatting, topics | `npcs.md#chatting` |
-| Services (cure, mending, identification) | `npcs.md#services` |
+| Services (cure, mending, identification, training) | `npcs.md#services` |
+| Alberich (teaches Mining) | `npcs.md#alberich` |
 | Goodwill (a town's, cheaper services) | `npcs.md#goodwill` |
 | The pedlar's offer, his wares | `npcs.md#the-pedlars-offer` |
 | Quest, quest log | `quests.md`, `quests.md#the-quest-log` |
