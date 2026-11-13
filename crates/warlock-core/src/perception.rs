@@ -1791,7 +1791,7 @@ impl<'a> PerceptionView<'a> {
         let mut lines =
             describe::appraised_for(stack, self.lore, self.appraisal(), Some(self.player));
         if self.player.talent_mods(self.content).eye_for_make {
-            let percent = self.content.salvage().map_or(0, |s| s.percent);
+            let percent = crate::world::salvage_percent(self.content, self.player);
             let protected = crate::world::protected_in(self.content, self.quests, stack);
             let make = describe::make_lines(stack, self.lore, percent, protected);
             let at = (lines.iter())

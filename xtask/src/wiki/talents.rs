@@ -981,6 +981,22 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              and easy\" for -2 or less)",
             content.salvage().map_or(0, |s| s.percent)
         ),
+        TalentEffect::WasteNot { salvage, failed } => format!(
+            "[salvage](crafting.md#salvage) gives back {salvage}% of each material's weight \
+             (everyone else: {}%), and a [failed recipe](crafting.md#how-well-it-comes-out) gives back \
+             {failed}% of its stock and inputs (everyone else: {}%; a failed brew is still spent \
+             on its murky draught)",
+            content.salvage().map_or(0, |s| s.percent),
+            content
+                .recipes()
+                .settings
+                .as_ref()
+                .map_or(0, |s| s.yield_percent)
+        ),
+        TalentEffect::TemperSafe => "a failed [Temper](altars-forges-springs.md#forges) or \
+             [Whittle](skill-uses.md#whittling) damages nothing: the item stays as it was, though \
+             the attempt still counts toward the next one's difficulty"
+            .to_string(),
         TalentEffect::LootMagicPercent { value } => format!(
             "the weights of the rarities better than a find's least {} (anything found: magic \
              and rare; what creatures drop, always magic: rare)",

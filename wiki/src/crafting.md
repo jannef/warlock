@@ -259,3 +259,22 @@ The hardwood quarterstaff with its ruby gives 5 hardwood billets when the Woodcr
 made, and the ruby when the Jewelcraft check is made.
 
 {{#include generated/salvage.md}}
+
+## The craftsperson
+
+A [craftsperson](classes.md#craftsperson) works their trades better than anyone, and their class
+abilities change the rules above.
+
+### Waste not
+
+From level 6 a craftsperson has **Waste not**: nothing is lost in their hands but time.
+
+- **Salvage** gives back three quarters of each material's weight instead of half (still at least
+  one piece). The hardwood quarterstaff above gives 8 billets instead of 5. A gem's fate is
+  unchanged: a failed check still chips it, and a natural 2 still shatters it.
+- **A failed recipe** gives back all of its stock and inputs instead of half. A failed batch gives
+  back all its wood and metal. A failed [brew](recipes-alchemy.md#how-a-brew-goes) is still spent on its murky draught.
+- **A failed temper** at [the anvil](altars-forges-springs.md#forges), or a failed
+  [whittle](skill-uses.md#whittling), damages nothing, even on a natural 2: the item stays as it
+  was, and a damaged item is never destroyed. The attempt still counts, so the next one is as hard
+  as it would have been.
