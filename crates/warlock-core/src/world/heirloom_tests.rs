@@ -106,11 +106,11 @@ fn the_heritage_talents_are_only_for_creation() {
 
 #[test]
 fn family_wealth_brings_gold_and_a_few_gems() {
-    // A warrior's 25 gold, four times over; an ascetic's 5, at least 60 more (an aristocrat's
+    // A warrior's 25 gold, ten times over; an ascetic's 5, at least 180 more (an aristocrat's
     // is their class's: `the_aristocrat_is_born_to_family_wealth`).
     for (character, before, after) in [
-        ("human,male,warrior", 25, 100),
-        ("human,male,ascetic", 5, 65),
+        ("human,male,warrior", 25, 250),
+        ("human,male,ascetic", 5, 185),
     ] {
         let plain = start(character, &[], 4).expect("starts");
         let rich = start(character, &["family_wealth"], 4).expect("starts");
@@ -126,10 +126,10 @@ fn family_wealth_brings_gold_and_a_few_gems() {
 #[test]
 fn the_aristocrat_is_born_to_family_wealth() {
     // Their class gives it at level 1 (#1404), handed down as the run begins: the kit's 255 gold
-    // and at most 150 more, two or three gems beside the kit's one, kitted or not.
+    // and at most 450 more, two or three gems beside the kit's one, kitted or not.
     let world = start("human,male,aristocrat", &[], 4).expect("starts");
     assert!(world.state().player().talents.has("family_wealth"));
-    assert_eq!(gold(&world), 405);
+    assert_eq!(gold(&world), 705);
     assert!((3..=4).contains(&gems(&world)), "{}", gems(&world));
     // Never their pick (it is theirs), but Father's sword is open to their first.
     let spec: CharacterSpec = "human,male,aristocrat".parse().expect("a character");

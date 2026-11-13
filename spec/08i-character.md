@@ -863,8 +863,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     creation = true }`, `Need::Creation`: "to be a new character", met at character level 1
     only, so never a level's pick), in the `heritage` tree (`no_free`). What they give is handed
     out once, as they are taken (`World::hand_down`, from `World::learn`), on top of the kit:
-    **Family wealth** (`starting_gold`: 300 % of the gold coins carried more, at least 60 and at
-    most 150; `starting_gems`: 2 to 3 loose gems at item level 2, from the stream
+    **Family wealth** (`starting_gold`: 900 % of the gold coins carried more, at least 180 and at
+    most 450; `starting_gems`: 2 to 3 loose gems at item level 2, from the stream
     `character/family-wealth/<race>,<gender>,<class>`) and **Father's sword** (needs Family
     wealth; `heirloom`: the race's weapon from its table, else the fallback, with 2 to 4 affixes
     at item level 6 (`loot::heirloom`: two a magic item's prefix and suffix, more a rare item's,
