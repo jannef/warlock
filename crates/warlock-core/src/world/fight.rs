@@ -1260,6 +1260,8 @@ impl World {
             let stoned = of.is_some_and(|s| self.content.status(s).statue);
             // A business partner takes the stake with them (`invest.rs`).
             self.partner_dies(id);
+            // A patron's open commission is off (`patron.rs`).
+            self.patron_dies(id);
             let lines = self.creature_dies(id, credited, stoned);
             self.news
                 .splice(earned..earned, lines.into_iter().chain(crawled));

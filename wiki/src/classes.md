@@ -419,6 +419,15 @@ it a [training mark](skills.md#getting-better).
 <a id="field-forge"></a>**Field forge** (from level 32) makes an anvil wherever you are: a
 [makeshift anvil](altars-forges-springs.md#the-makeshift-anvil) from one ingot and an hour's work.
 
+<a id="patron"></a>**The patron** ([Patron](talents.md#talent-patron), from level 12) is a
+well-to-do burgher at the Gæsthūs in Cēaptūn who commissions Fine work from the craftsperson's
+trades, one piece at a time, hands over the stock for it, and pays its full worth on delivery.
+See [The patron](patron.md).
+
+**Quick hands** (from level 40) makes every craft take half its time, and **Master's hand**
+(from level 50) makes every grade and every cut come sooner (the numbers are under
+[Crafting](crafting.md#quick-hands) and [Master's hand](crafting.md#masters-hand)).
+
 {{#include generated/class-levels.md:merchant}}
 
 <a id="invest"></a>**The merchant's investment** ([Invest](talents.md#talent-invest), from level 1)

@@ -183,6 +183,8 @@ above.
 | The craftsperson's two trades at creation, Time served | `classes.md#trades` |
 | Eye for the make, reading an item's make | `classes.md#eye-for-the-make` |
 | Make do and mend, mending in the field | `classes.md#make-do-and-mend` |
+| Master's hand, grades and cuts sooner | `crafting.md#masters-hand` |
+| Quick hands, every craft in half the time | `crafting.md#quick-hands` |
 | Waste not, nothing lost in a craftsperson's hands | `crafting.md#waste-not` |
 | A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents.md#delver` |
 | Class abilities | `talents.md#class-abilities`, `abilities.md` |
@@ -319,6 +321,7 @@ above.
 | Goodwill (a town's, cheaper services) | `npcs.md#goodwill` |
 | The aristocrat's stipend, their servant in Cēaptūn | `classes.md#stipend` |
 | The merchant's investment, their business partner in Cēaptūn | `classes.md#invest` |
+| The craftsperson's patron, a commission | `patron.md`, `patron.md#what-does-the-patron-want` |
 | The pedlar's offer, his wares | `npcs.md#the-pedlars-offer` |
 | Quest, quest log | `quests.md`, `quests.md#the-quest-log` |
 | Sorts of creatures (a quest's), drawn quests | `quests.md#sorts-of-creatures`, `quests.md#drawn-quests` |

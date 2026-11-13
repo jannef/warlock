@@ -427,8 +427,12 @@ fn takes(content: &Content, level: &LevelState, player: &Actor, recipe: &RecipeD
         words.push(format!("{} {word} ready", article(word)));
     }
     let seconds = match recipe.uses {
-        Some(RecipeUse::Temper | RecipeUse::Whittle) => content.temper().seconds,
-        Some(RecipeUse::Cut | RecipeUse::Set | RecipeUse::Enchant(_)) => recipe.seconds,
+        Some(RecipeUse::Temper | RecipeUse::Whittle) => {
+            super::mastery::craft_seconds(content, player, content.temper().seconds)
+        }
+        Some(RecipeUse::Cut | RecipeUse::Set | RecipeUse::Enchant(_)) => {
+            super::mastery::craft_seconds(content, player, recipe.seconds)
+        }
         None => super::fletch::fletcher_seconds(content, player, recipe),
     };
     if seconds > 0 {

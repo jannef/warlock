@@ -212,6 +212,9 @@
 #                                 a failed recipe `failed` % of its stock and object inputs, each
 #                                 where more than everyone's (the most held)
 #   temper_safe                   a failed Temper or Whittle damages nothing (the attempt counts)
+#   craft_time_percent { value }  every craft takes that percent of its time (the least held)
+#   grade_ease { value }          added to a made check's margin as its grade or cut is read,
+#                                 never to whether it is made
 #   loot_magic_percent { value }  loot it finds and creatures drop: the weights of the rarities
 #                                 better than the least the find may be, that percent more
 #   read_percent { value }        reading a scroll takes that percent more time (negative: less)

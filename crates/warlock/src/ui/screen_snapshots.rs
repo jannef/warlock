@@ -1739,6 +1739,17 @@ const CASES: &[Case] = &[
         screen: Some("dialogue"),
         ..BASE
     },
+    // A craftsperson's patron at the Gæsthūs (#1421): a commission given with its stock, then
+    // the reminder while it waits, in the message history.
+    Case {
+        name: "patron-commission",
+        scenario: "ceaptun",
+        character: Some("human,male,craftsperson"),
+        talents: Some("smith,wright,healthy,lean,wortcunner"),
+        actions: "xp:60000 levelup:auto move:SW move:S*3 open:S move:S*2 move:E*4 chat:E chat:E",
+        screen: Some("messages"),
+        ..BASE
+    },
     Case {
         name: "quest-offer",
         actions: concat!(hermit!(), " chat:SE ask:SE:quest-rats"),

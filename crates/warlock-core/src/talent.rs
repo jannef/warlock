@@ -319,6 +319,8 @@ pub struct TalentMods {
     pub stipend_magic_percent: i32,
     /// A business partner in town invests for it (Invest, `world/invest.rs`).
     pub invest: bool,
+    /// A patron in town commissions work from it (Patron, `world/patron.rs`).
+    pub patron: bool,
     /// Percent faster hunger burns (negative: slower).
     pub hunger_percent: i32,
     /// Percent more sickness from rotten food (negative: less).
@@ -356,6 +358,12 @@ pub struct TalentMods {
     pub failed_percent: u32,
     /// A failed Temper or Whittle damages nothing (Waste not; `world/temper.rs::work_out`).
     pub temper_safe: bool,
+    /// The percent of its time every craft takes, where held (Quick hands; the least held;
+    /// `world/mastery.rs::craft_seconds`).
+    pub craft_time_percent: Option<u32>,
+    /// Added to a made check's margin as it is graded, never to the check (Master's hand;
+    /// `world/mastery.rs::graded_margin`).
+    pub grade_ease: i32,
     /// Percent more often loot it finds rolls magic and rare.
     pub loot_magic_percent: i32,
     /// Percent more time reading a scroll takes (negative: less).
@@ -1466,6 +1474,7 @@ impl TalentMods {
                 self.stipend_magic_percent += magic;
             }
             TalentEffect::Invest => self.invest = true,
+            TalentEffect::Patron => self.patron = true,
             TalentEffect::HungerPercent { value } => self.hunger_percent += value,
             TalentEffect::RotHarmPercent { value } => self.rot_harm_percent += value,
             TalentEffect::SmellRot => self.smell_rot = true,
@@ -1486,6 +1495,11 @@ impl TalentMods {
                 self.failed_percent = self.failed_percent.max(failed);
             }
             TalentEffect::TemperSafe => self.temper_safe = true,
+            TalentEffect::CraftTimePercent { value } => {
+                let least = self.craft_time_percent.map_or(value, |had| had.min(value));
+                self.craft_time_percent = Some(least);
+            }
+            TalentEffect::GradeEase { value } => self.grade_ease += value,
             // Handed out as the talent is taken (`World::take_talent`), never read after.
             TalentEffect::WeaponRanks { .. }
             | TalentEffect::TakeUpSkills { .. }

@@ -128,7 +128,7 @@ impl World {
         self.say(format!("You set to taking the {name} apart."));
         Spent::Salvage(Salvaging {
             item,
-            seconds: rules.seconds,
+            seconds: self.craft_seconds(rules.seconds),
         })
     }
 

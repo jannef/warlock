@@ -1013,21 +1013,25 @@ developer notes (CLAUDE.md, `docs/dev/`).
     adds "or your own hands" to a holder of Make do and mend), Waste not (at 6,
     #1420: salvage gives back 75 % of each material's weight, not 50; a failed recipe gives back
     all its stock and inputs, a failed brew still spent; a failed Temper or Whittle, a natural 2
-    too, damages nothing, its attempt counted), Make do and mend (at 18, #1422, the
+    too, damages nothing, its attempt counted), Patron (below, at 12, #1421), Make do and mend (at 18, #1422, the
     craftsperson design §7.5: an ability, `use:make_do_and_mend:c`, on a damaged thing carried,
     not worn or wielded, anywhere and with nothing: ten minutes, then a check by the stat of the
     profession that works its main material plus that profession's craft points against 10 plus
     the material's work; made, the damage is gone, its lost improvements still lost and the
     attempts at the anvil as they were; failed, nothing happens, never a thing destroyed;
     refused, no time, for one worn, protected, unpaid, or of a material no profession works;
-    greyed "nothing to mend" with none; `world/make_do.rs`), and Field forge
+    greyed "nothing to mend" with none; `world/make_do.rs`), Field forge
     (#1424, at 32: an active aimed in a direction, `use:field_forge:E`, `world/field_forge.rs`:
     one ingot of any metal carried is set on open ground beside the player, walkable floor with
     nobody, nothing, and no known trap on it, no door, chest, stairs, grave, water, ice, fungus,
     or shop floor, never the overworld, in an hour of `craft` turns through `keep_at`; no check;
     interrupted, nothing is made and the ingot kept; done, the cell is a `makeshift_anvil` for
     good (§7 "Special rooms": Forges); refused, no time, without an ingot ("You have no ingot to
-    set."), on the overworld, or on other ground); merchant (Delver, Scholar) Haggler (favour +15 %: the one class ability on
+    set."), on the overworld, or on other ground), Quick hands (#1425, at 40: every craft,
+    recipes, Temper, Whittle, Cut, Set, Salvage, Make do and mend, and Field forge, takes half
+    its time, after Fletcher's share for arrows; `world/mastery.rs::craft_seconds`), and Master's
+    hand (#1425, at 50: 4 added to a made check's margin as its grade or a gem's cut is read,
+    never to whether it is made; `world/mastery.rs::graded_margin`); merchant (Delver, Scholar) Haggler (favour +15 %: the one class ability on
     shop favour, #787), Invest (below, at 1, #1407), Deep pockets (coins weightless) and Pack mule (the burden line's first step, #1198), Merchant's eye (#816, at 12: an
     ability, on a thing carried, that identifies it as the scroll of identify would, for a
     reading's time and nothing else; refused, no time, for a thing already known); #789 cut its level 40 Insured (shops paid +50 %), a
@@ -1072,6 +1076,27 @@ developer notes (CLAUDE.md, `docs/dev/`).
     deep (`fire_deep`, the fire drake slain and the mines reopened): everything done, 30 a week,
     about 16 % a year. If the partner dies, the stake is lost. Saved and hashed:
     `WorldState::fund` (`cents`, `week`), left out until something is first put in.
+  - **Patron** (the craftsperson's class ability from level 12, #1421; the craftsperson design
+    §7.4; `world/patron.rs`, `data/patron.toml`): the craftsperson's **patron**, a town's class
+    helper for `patron` (Cēaptūn's third `[[town.servant]]`, a well-to-do burgher in the
+    Gæsthūs, of the character's race and speaking its register, npc dialogues with
+    `[dialogue.patron]` words), placed as the ability is given if the town is made by then, else
+    as the town is made; never twice, never replaced. Chatting with none open commissions one
+    piece of work: drawn (stream `patron/<n>`, `n` the commissions given before) from every
+    recipe with no built-in use making one thing whose result has an aspect to better (arms,
+    armour, shields, bows: the graded things; never jewellery, potions, tools, counted goods) of
+    every profession the character is trained in at the recipe's `from` or more; the patron
+    hands over the recipe's stock for one (each stock part and stock table in pieces of the base
+    material, else the piece's own, else the cheapest; each object and stock input; never a gem),
+    set down at the feet what would overload. An empty pool: "Come back when your hands are worth
+    hiring." The open commission is in the quest log (kind `commission`) and counts as no quest:
+    no experience, rank, goodwill, Invest bonus, or record. Chatting while one is open takes the
+    first carried piece of the work's object that is Fine or better (one not worn first; whoever
+    made it) and pays `pays` = 100 % of its worth (the grade's ×2, ×3, ×5 counted; `bonus` = 50 %
+    more for the character's maker's mark once that exists), training Negotiation as a deal; only
+    plain ones: refused, "I asked for Fine work"; none: the patron waits. One open at a time, the
+    next offered at once: no cap, no wait. If the patron dies, the open commission is dropped.
+    Saved and hashed: `WorldState::patron` (`taken`, `open`), left out until the first.
   - **Prestige classes** (#876, P1 of `docs/design/prestige-classes.md` §4; the owner, PR #835:
     "not going to be a general multiclass thing. More like prestige classes achievable by
     finding a 'hidden' mechanism"): a character has **one level**, read off the one curve from

@@ -1,0 +1,123 @@
+# A craftsperson's patron (#1421; world/patron.rs; the craftsperson design §7.4): a well-to-do
+# burgher lodging at the Gæsthūs in Cēaptūn in the run of a craftsperson of level 12 or more, of
+# the craftsperson's own race, speaking in that race's register (docs/dev/npcs.md "Speech by race
+# and station"; a patron is a person of means, so a human one speaks posh).
+# data/towns/ceaptun.toml names the npc for each race. Each has one-liners, said before
+# `waiting`, and `[dialogue.patron]`, said when spoken to: `offer` as a commission is given (`{work}` the thing asked for with its
+# article, `{stock}` the stock handed over with it), `waiting` while one is open and nothing
+# carried will do (`{work}`), `plain` when only a plain one is carried (`{work}`), `delivered`
+# as the work is handed in (`{gold}` the price), `idle` when nothing the player can make is worth
+# commissioning, and `address`, how the patron addresses the player by gender (`{address}` in
+# any of them).
+
+# Humans, half-elves, and half-orcs: posh.
+[[dialogue]]
+npc = "patron"
+lines = [
+    "One does like a well-made thing about the house.",
+    "The Gæsthūs keeps a tolerable table, I find.",
+    "Good work is never cheap, and cheap work is never good.",
+]
+[dialogue.patron]
+offer = "Ah, {address}. I want {work}, Fine or better. Do take {stock} for it, and do not keep me waiting too long."
+waiting = "The stock I gave you was for {work}, {address}. I can wait; I would rather not."
+plain = "That is {work}, {address}, and no more. I asked for Fine work."
+delivered = "Splendid. Quite splendid. {gold} gold, as agreed, and worth every coin."
+idle = "Come back when your hands are worth hiring, {address}."
+address = { male = "sir", female = "madam", other = "my dear" }
+
+# Dwarves and duergar: Geordie.
+[[dialogue]]
+npc = "patron_dwarf"
+lines = [
+    "Aa like a thing that's made proper, me.",
+    "The Gæsthūs does a canny stew, like.",
+    "Good work's never cheap, an' cheap work's never good, man.",
+]
+[dialogue.patron]
+offer = "Now then, {address}. Aa want {work}, Fine or better, mind. Here's {stock} for it."
+waiting = "Aa gave ye that stock for {work}, {address}. Divvent dawdle, like."
+plain = "That's {work} an' nowt more, {address}. Aa said Fine work, man."
+delivered = "Eeh, that's canny work. {gold} gold, like we said, an' worth it."
+idle = "Come back when yer hands are worth hirin', {address}."
+address = { male = "marra", female = "pet", other = "hinny" }
+
+# Elves: Brummie.
+[[dialogue]]
+npc = "patron_elf"
+lines = [
+    "I loike a thing that's made proper, I do.",
+    "The Gæsthūs does a decent bit of grub, ar.",
+    "Good work ain't cheap, and cheap work ain't good.",
+]
+[dialogue.patron]
+offer = "Alroight, {address}? I want {work}, Fine or better. Here's {stock} for it, loike."
+waiting = "That stock was for {work}, {address}. I'm not in a hurry, but I ain't patient neither."
+plain = "That's {work}, {address}, and that's all it is. I asked for Fine work."
+delivered = "Bostin'. Proper bostin'. {gold} gold, loike we said."
+idle = "Come back when yower hands are worth hirin', {address}."
+address = { male = "bab", female = "bab", other = "bab" }
+
+# Halflings and gnomes: Scouse.
+[[dialogue]]
+npc = "patron_halfling"
+lines = [
+    "I like a thing that's made proper, me.",
+    "The scran in the Gæsthūs is boss, la.",
+    "Good work's never cheap, and cheap work's never good.",
+]
+[dialogue.patron]
+offer = "Alright, {address}? I want {work}, Fine or better. Here's {stock} for it, la."
+waiting = "That stock was for {work}, {address}. Get grafting, eh."
+plain = "That's {work}, {address}, and nothin' more. I said Fine work."
+delivered = "That's boss, that. {gold} gold, like we said."
+idle = "Come back when yer hands are worth hirin', {address}."
+address = { male = "lad", female = "queen", other = "la" }
+
+# Goblins, kobolds, and ratfolk: a heavy Irish brogue.
+[[dialogue]]
+npc = "patron_goblin"
+lines = [
+    "I do like a t'ing dat's made proper, so I do.",
+    "Dey keep a grand table at de Gæsthūs, sure.",
+    "Good work's never cheap, an' cheap work's never good.",
+]
+[dialogue.patron]
+offer = "Ah, {address}. I'm after {work}, Fine or better, so. Here's {stock} for it."
+waiting = "Dat stock was for {work}, {address}. I'm waitin' on it, so I am."
+plain = "Dat's {work}, {address}, an' nuttin' more. I said Fine work, sure."
+delivered = "Ah, grand job. {gold} gold, as we said, an' worth it."
+idle = "Come back when yer hands are worth hirin', {address}."
+address = { male = "boyo", female = "missus", other = "pet" }
+
+# Drow: Middle English.
+[[dialogue]]
+npc = "patron_drow"
+lines = [
+    "Wel-wrought thinges plesen me.",
+    "The Gæsthūs kepeth a goodly table.",
+    "Good werk is nevere chepe, ne chepe werk good.",
+]
+[dialogue.patron]
+offer = "Wel met, {address}. I wolde have {work}, Fine or bettre. Here is {stock} therfore."
+waiting = "That stuff was for {work}, {address}. I abyde, but nat for evere."
+plain = "That is {work}, {address}, and namore. Fine werk I asked of thee."
+delivered = "Certes, this is good werk. {gold} gold, as we acorded."
+idle = "Com agayn whan thyn hondes ben worth the hiring, {address}."
+address = { male = "sire", female = "dame", other = "frend" }
+
+# Lizardfolk: Dutch.
+[[dialogue]]
+npc = "patron_lizardfolk"
+lines = [
+    "Ik houd van goed gemaakte dingen.",
+    "De Gæsthūs heeft een behoorlijke keuken.",
+    "Goed werk is nooit goedkoop, en goedkoop werk nooit goed.",
+]
+[dialogue.patron]
+offer = "Goedendag, {address}. Ik wil {work}, Fine of beter. Hier is {stock} ervoor."
+waiting = "Die voorraad was voor {work}, {address}. Ik wacht, maar niet eeuwig."
+plain = "Dat is {work}, {address}, en meer niet. Ik vroeg om Fine werk."
+delivered = "Prachtig werk. {gold} goud, zoals afgesproken."
+idle = "Kom terug als uw handen het inhuren waard zijn, {address}."
+address = { male = "meneer", female = "mevrouw", other = "vriend" }
