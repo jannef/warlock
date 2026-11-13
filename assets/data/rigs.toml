@@ -1,0 +1,74 @@
+# Rigs (spec §8 "Traps": "Rigging traps"; the craftsperson design §7.6; docs/dev/traps.md): the
+# traps the craftsperson's Trapwright rigs on a cell beside them, from the abilities menu's Class
+# group through the rig list and a direction (`rig:tripwire:E`; the rules are `world/rig.rs`).
+# The file is optional: without it Trapwright is "not usable yet".
+#
+# The cell is beside the rigger on a level (never the overworld): walkable floor with nobody on
+# it, and no trap, chest, door, stairs, shop floor, water, ice, or glowing fungus. The work takes
+# `seconds` of game time, in turns of the `craft` action; a creature coming into view, a message,
+# or a blow stops it, and work cut short does nothing (the time is spent, the inputs kept). Done,
+# one check: 2d12 + the Dexterity modifier + `skill`'s `craft` points (skills.toml: Woodcraft's)
+# + the talents' Dexterity checks against `difficulty`. A natural 2 always fails, a natural 24
+# always succeeds. Made, the trap is placed, known to the rigger, with its charges, and the
+# inputs are spent. Failed, nothing is placed and the inputs are kept. A natural 2 springs it on
+# the rigger instead: the trap is placed and the inputs spent, it goes off at them at once, and
+# it stands with a charge less. A hidden trap already on the cell is found at the end, and
+# nothing is rigged. A creature (an ally too) that a rigged trap kills is the rigger's kill.
+#
+#   difficulty   what the check must reach
+#   skill        the skill whose `craft` points add to it (anyone with Trapwright rigs; a trained
+#                wright rigs better)
+#
+# Each [[rig]]:
+#   id, name     its id (`rig:ID:DIR`) and what the list calls it
+#   trap         the trap it places (an id in traps.toml)
+#   seconds      how long the work takes, in seconds (at least 1)
+#   takes        exactly one of:
+#     ammo       ammunition of this kind (objects' `ammo`): the stack readied in the missile
+#                slot if it is of the kind, else the first such stack carried; up to `most` of
+#                it are spent, and the trap has a charge for each
+#     stock      one piece of stock of this material group (stock.toml: "wood", a billet),
+#                spent; the trap has `charges`
+#     dig_tool   true: a digging tool ready in the Tool slot, kept; the trap has `charges`
+#   most         with `ammo`: the most it takes (1 to 100)
+#   charges      without `ammo`: how often the trap goes off before it is spent (1 to 100)
+#   knife        true: a knife must be carried (kept)
+#   wall         a wall must stand within this many cells of the cell in one of the eight
+#                directions (1 to 10; a shot's slit is the nearest wall)
+#   made         said when it is rigged
+#   snaps        said when a natural 2 springs it on the rigger
+
+difficulty = 10
+skill = "woodcraft"
+
+[[rig]]
+id = "tripwire"
+name = "Tripwire"
+trap = "rigged_arrows"
+seconds = 300
+ammo = "arrow"
+most = 3
+wall = 2
+made = "You rig a tripwire across the way."
+snaps = "The tripwire snaps as you set it!"
+
+[[rig]]
+id = "stakes"
+name = "Stakes"
+trap = "rigged_stakes"
+seconds = 600
+stock = "wood"
+charges = 2
+knife = true
+made = "You set sharpened stakes in the ground."
+snaps = "A stake springs loose as you set it!"
+
+[[rig]]
+id = "pitfall"
+name = "Pitfall"
+trap = "rigged_pit"
+seconds = 1200
+dig_tool = true
+charges = 3
+made = "You dig a pit and lay a thin crust over it."
+snaps = "The crust gives way under you!"

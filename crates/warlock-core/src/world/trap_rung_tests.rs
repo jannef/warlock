@@ -166,8 +166,10 @@ fn worst(def: &crate::content::TrapDef, danger: u8) -> i32 {
 #[test]
 fn the_lowest_rung_never_kills_a_fresh_character() {
     let content = content_at(0);
+    // A rigged trap (`data/rigs.toml`) lies only where its rigger set it, known to them.
+    let rigged = |t: &&crate::content::TrapDef| t.id.starts_with("rigged_");
     let damaging: Vec<&str> = (content.trap_defs().iter())
-        .filter(|t| t.effect.damage().is_some())
+        .filter(|t| t.effect.damage().is_some() && !rigged(t))
         .map(|t| t.id.as_str())
         .collect();
     assert_eq!(damaging.len(), 6);
@@ -202,7 +204,7 @@ fn the_lowest_rung_never_kills_a_fresh_character() {
             }
         }
     }
-    for def in content.trap_defs() {
+    for def in content.trap_defs().iter().filter(|t| !rigged(t)) {
         assert!(
             worst(def, 0) < fewest,
             "the {}'s worst, {}, against {fewest} hit points",

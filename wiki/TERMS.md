@@ -129,6 +129,7 @@ above.
 | Healing spring | `altars-forges-springs.md#healing-springs` |
 | Trap, hidden trap, known trap | `traps.md#finding-traps` |
 | Disarming | `traps.md#disarming-traps` |
+| Rig, rigging, Trapwright, a rigged trap | `traps.md#rigging-traps` (the talent: `talents.md#talent-trapwright`) |
 | Searching, noticing in passing | `searching.md#searching-1`, `searching.md#noticing-in-passing` |
 | **Objects** | |
 | Object, item class | `objects.md#what-an-object-is`, `objects.md#item-classes` |

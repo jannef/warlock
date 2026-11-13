@@ -433,6 +433,10 @@ they make: the arms, armour, and jewellery of their making are worth half again,
 more for them, and they can bear one [enchantment](magic-items.md#capacity) more (the numbers are
 under [Crafting](crafting.md#makers-mark)).
 
+<a id="trapwright"></a>**Trapwright** (from level 25) rigs a trap on the cell beside you: a
+tripwire from arrows, stakes from a billet of wood, or a pitfall dug with your pick. A creature
+your trap kills is your kill. See [Rigging traps](traps.md#rigging-traps).
+
 {{#include generated/class-levels.md:merchant}}
 
 <a id="invest"></a>**The merchant's investment** ([Invest](talents.md#talent-invest), from level 1)

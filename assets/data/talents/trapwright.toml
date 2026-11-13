@@ -1,0 +1,11 @@
+# The craftsperson's class ability from level 25 (spec §8 "Class abilities": Trapwright; the
+# craftsperson design §7.6): an active of the abilities menu's Class group, the rig list then a
+# direction (`rig:tripwire:E`, `world/rig.rs`, the rigs `data/rigs.toml`).
+[[talent]]
+id = "trapwright"
+name = "Trapwright"
+tree = "class"
+granted = true
+description = "You rig traps (an ability): a tripwire from arrows, stakes from a billet of wood, or a pitfall dug with a pick, on a cell beside you. A creature your trap kills is your kill."
+effects = [{ kind = "rigs" }]
+systems = ["traps"]

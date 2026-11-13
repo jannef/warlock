@@ -276,6 +276,9 @@ pub enum Aim {
     /// A weapon's shape, from the list of every one there is (the Hunter's Spirit weapon:
     /// [`crate::world::weapon_shapes`], `use:spirit_weapon:long_sword`).
     Shape,
+    /// A rig, from the list of them with what each takes, then a direction (the craftsperson's
+    /// Trapwright: [`crate::perception::PerceptionView::rigs`], `rig:tripwire:E`).
+    Rig,
     /// A spell the player knows, from the list of them with each one's price (the wizard's
     /// Scribe: [`crate::perception::PerceptionView::scribes`], `scribe:fireball`).
     Spell,
@@ -858,6 +861,7 @@ impl Ability {
             Ability::Class(active) if active.aims_cell() => Aim::Cell,
             Ability::Class(active) if active.aims_item() => Aim::Item,
             Ability::Class(active) if active.aims_shape() => Aim::Shape,
+            Ability::Class(active) if active.aims_rig() => Aim::Rig,
             Ability::Class(active) if active.aims_spell() => Aim::Spell,
             Ability::Weapon(_, id) => match content.weapon_ability(id).active.map(|a| a.aim) {
                 Some(ActiveAim::Direction) => Aim::Direction,
@@ -1165,6 +1169,11 @@ impl Ability {
                         (blocked.map(Unavailable::While))
                             .or((actor.mana < cost).then_some(Unavailable::NoMana))
                     })
+                    // Trapwright asks for the rigs (`data/rigs.toml`).
+                    .or_else(|| {
+                        (active == ClassActive::Rig && content.rigs().is_none())
+                            .then_some(Unavailable::NotYet)
+                    })
                     // Scribe spends mana, which a status that blocks casting keeps (Raging);
                     // the same status keeps a witch from her calling.
                     .or_else(|| {
@@ -1266,6 +1275,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::MerchantsEye
         | ClassActive::FieldForge
         | ClassActive::MakeDo
+        | ClassActive::Rig
         | ClassActive::SpiritWeapon
         | ClassActive::Sic
         | ClassActive::Volley => Vec::new(),

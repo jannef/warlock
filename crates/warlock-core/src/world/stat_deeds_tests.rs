@@ -205,6 +205,7 @@ fn springing_a_known_trap_costs_intelligence_marks_and_a_hidden_one_nothing() {
             known,
             charges: None,
             dir: None,
+            rigged: false,
         };
         w.state.current_mut().traps.insert(at, trap);
         w.step_onto_trap(at, player, &mut Vec::new());

@@ -672,6 +672,9 @@ pub enum ClassActive {
     /// A damaged thing the player carries mended in the field, without an anvil, by a check that
     /// destroys nothing (the craftsperson's Make do and mend, `world/make_do.rs`).
     MakeDo,
+    /// A trap rigged on a cell beside the player, from the rig list then a direction (the
+    /// craftsperson's Trapwright, `world/rig.rs`, `rig:tripwire:E`).
+    Rig,
     /// A weapon of spirit-stuff called into the hand in the shape chosen, as a wield (the
     /// Hunter's Spirit weapon, `world/spirit_weapon.rs`).
     SpiritWeapon,
@@ -712,6 +715,7 @@ impl ClassActive {
         ClassActive::MerchantsEye,
         ClassActive::FieldForge,
         ClassActive::MakeDo,
+        ClassActive::Rig,
         ClassActive::SpiritWeapon,
     ];
 
@@ -750,6 +754,7 @@ impl ClassActive {
             ClassActive::MerchantsEye => "merchants_eye",
             ClassActive::FieldForge => "field_forge",
             ClassActive::MakeDo => "make_do_and_mend",
+            ClassActive::Rig => "trapwright",
             ClassActive::SpiritWeapon => "spirit_weapon",
         }
     }
@@ -829,6 +834,12 @@ impl ClassActive {
         matches!(self, ClassActive::SpiritWeapon)
     }
 
+    /// Whether it asks for a rig, then a direction, before it is used (the craftsperson's
+    /// Trapwright: [`crate::action::Action::Rig`], `rig:tripwire:E`).
+    pub const fn aims_rig(self) -> bool {
+        matches!(self, ClassActive::Rig)
+    }
+
     /// Whether it asks for a spell the player knows before it is used (the wizard's Scribe,
     /// [`crate::action::Action::Scribe`], `scribe:fireball`).
     pub const fn aims_spell(self) -> bool {
@@ -876,6 +887,8 @@ impl ClassActive {
             ClassActive::FieldForge => ActionKind::Craft,
             // A turn of it; a mend takes its `seconds` of them (`world/make_do.rs`).
             ClassActive::MakeDo => ActionKind::Craft,
+            // A turn of it; a rig takes its `seconds` of them (`world/rig.rs`).
+            ClassActive::Rig => ActionKind::Craft,
             // A turn of it; a scroll takes a study's turns (`world/scribe.rs`).
             ClassActive::Scribe => ActionKind::Scribe,
             // A turn of it; the ritual takes `call_turns` of them (`world/familiar.rs`).

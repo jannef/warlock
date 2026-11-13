@@ -4,10 +4,12 @@ use super::combat::percent;
 use super::text::{Term, anchored, article, capital, signed};
 use std::fmt::Write as _;
 use warlock_core::check;
-use warlock_core::content::{Bolt, Burst, BurstIce, Content, TrapEffect, TrapNoise};
+use warlock_core::content::{Bolt, Burst, BurstIce, Content, RigTakes, TrapEffect, TrapNoise};
 use warlock_core::skills::Effect;
 use warlock_core::stats::modifier;
+use warlock_core::time::Duration;
 use warlock_core::world::SPRINGS_SHORT_BY;
+use warlock_core::world::takes_words;
 
 /// The traps (spec §8 "Traps"): what each does, its damage dice, how often it goes off, and what
 /// it sounds like. Never a to-hit, which the player does not know.
@@ -46,7 +48,11 @@ pub(super) fn traps(content: &Content) -> String {
         let damage = (t.effect.damage()).map_or("—".to_string(), |d| {
             super::damage::typed_dice(content, d, t.effect.damage_kind())
         });
+        let rigged = (content.rigs().into_iter())
+            .flat_map(|r| r.rigs.iter())
+            .any(|r| content.trap(r.trap).id == t.id);
         let goes_off = match t.charges {
+            None if rigged => "as [rigged](#rigging-traps)".to_string(),
             None => "every time".to_string(),
             Some(1) => "once".to_string(),
             Some(2) => "twice".to_string(),
@@ -60,6 +66,57 @@ pub(super) fn traps(content: &Content) -> String {
             t.glyph
         );
     }
+    out
+}
+
+/// The rigs (spec §8 "Traps": "Rigging traps", `data/rigs.toml`): the craftsperson's
+/// Trapwright, each rig with the trap it places, what it takes, how long it takes, how often the
+/// trap goes off, and its damage; then the check.
+pub(super) fn rigs(content: &Content) -> String {
+    let Some(rules) = content.rigs() else {
+        return "No traps can be rigged.\n".to_string();
+    };
+    let mut out = String::from(
+        "| Rig | Trap | Takes | Time | Goes off | Damage | Needs |\n\
+         |---|---|---|---|---|:---:|---|\n",
+    );
+    for (_, rig) in rules.iter() {
+        let trap = content.trap(rig.trap);
+        let goes_off = match &rig.takes {
+            RigTakes::Ammo { .. } => "once for each arrow".to_string(),
+            RigTakes::Stock { charges, .. } | RigTakes::DigTool { charges } => match charges {
+                1 => "once".to_string(),
+                2 => "twice".to_string(),
+                n => format!("{n} times"),
+            },
+        };
+        let damage = (trap.effect.damage()).map_or("—".to_string(), |d| {
+            super::damage::typed_dice(content, d, trap.effect.damage_kind())
+        });
+        let needs = match rig.wall {
+            Some(1) => "a wall next to the cell".to_string(),
+            Some(n) => format!("a wall within {n} cells of the cell, in a straight line"),
+            None => "—".to_string(),
+        };
+        let time = Duration::seconds(u64::from(rig.seconds)).spoken();
+        let _ = writeln!(
+            out,
+            "| {} | [{}](#trap-{}) | {} | {time} | {goes_off} | {damage} | {needs} |",
+            rig.name,
+            capital(&trap.name),
+            trap.id.replace('_', "-"),
+            capital(&takes_words(content, rig)),
+        );
+    }
+    let _ = writeln!(
+        out,
+        "\nThe check: 2d12 + your [Dexterity](stats.md) modifier + the crafting bonus of \
+         [{}](skills.md#skill-{}) + your talents' Dexterity checks, against **{}**. A \
+         natural 2 always fails, and springs the trap on you; a natural 24 always succeeds.",
+        content.skill(rules.skill).name,
+        content.skill(rules.skill).id.replace('_', "-"),
+        rules.difficulty
+    );
     out
 }
 
