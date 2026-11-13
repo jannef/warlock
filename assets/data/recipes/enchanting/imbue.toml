@@ -1,0 +1,14 @@
+# Imbue (docs/design/enchanting.md §8; docs/dev/enchanting.md "The recipes"): a plain item of
+# capacity 3 or more made rare, with as many affixes as a found rare (`[rare] affixes`) but never
+# more than its capacity, split as a rare's; the first affix of the first crystal's families, the
+# second of the second's, the third of the third's, any more of all three; and a name. Failed,
+# the three crystals are spent and the item is as it was; a natural 2 warps it. The rules are
+# `world/enchant.rs`.
+[[recipe]]
+id = "imbue"
+use = "enchant"
+enchant = "imbue"
+crystals = 3
+difficulty = 15
+seconds = 7200
+from = 30

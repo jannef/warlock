@@ -50,14 +50,24 @@ pub enum EnchantKind {
     Kindle,
     /// One affix more on a magic item with room, of the kind it lacks.
     Quicken,
+    /// A magic item's affixes rolled anew, as many and of the same kinds.
+    Recast,
+    /// A plain item made rare: three to six affixes within its capacity, one crystal's families
+    /// for each of the first three.
+    Imbue,
+    /// A magic item made rare: one affix more and a name.
+    Ennoble,
     /// Every affix off: the item plain again, nothing back.
     Unbind,
 }
 
 impl EnchantKind {
-    pub const ALL: [EnchantKind; 3] = [
+    pub const ALL: [EnchantKind; 6] = [
         EnchantKind::Kindle,
         EnchantKind::Quicken,
+        EnchantKind::Recast,
+        EnchantKind::Imbue,
+        EnchantKind::Ennoble,
         EnchantKind::Unbind,
     ];
 
@@ -66,6 +76,9 @@ impl EnchantKind {
         match self {
             EnchantKind::Kindle => "kindle",
             EnchantKind::Quicken => "quicken",
+            EnchantKind::Recast => "recast",
+            EnchantKind::Imbue => "imbue",
+            EnchantKind::Ennoble => "ennoble",
             EnchantKind::Unbind => "unbind",
         }
     }
@@ -75,6 +88,9 @@ impl EnchantKind {
         match self {
             EnchantKind::Kindle => "Kindle",
             EnchantKind::Quicken => "Quicken",
+            EnchantKind::Recast => "Recast",
+            EnchantKind::Imbue => "Imbue",
+            EnchantKind::Ennoble => "Ennoble",
             EnchantKind::Unbind => "Unbind",
         }
     }

@@ -14,6 +14,17 @@ give.
 - **Quicken** gives a magic item of one affix the other kind: a suffix beside its prefix, or a
   prefix beside its suffix. It takes one crystal, and the item must have room for one more
   (its [capacity](magic-items.md#capacity)). It does not work on a rare item.
+- **Recast** rolls a magic item's affixes anew: as many as it had, of the same kinds (a prefix
+  for its prefix, a suffix for its suffix), all of the crystal's colour. It takes one crystal.
+  It does not work on a rare item: unbind it, then imbue it.
+- **Imbue** makes a plain item [rare](magic-items.md#rarity), with a name and three to six
+  affixes, as many as a found rare item rolls but never more than the item's
+  [capacity](magic-items.md#capacity). It takes **three crystals**, and the order you choose them
+  in matters: the first affix is of the first crystal's colour, the second of the second's, the
+  third of the third's, and any more of any of the three. The item must hold three affixes at
+  least ("It would not hold so much.").
+- **Ennoble** makes a magic item rare: one affix more, of the crystal's colour, and a name. It
+  takes one crystal, and the item must hold three affixes at least and have room for one more.
 - **Unbind** takes every affix off a magic or rare item. It is plain again, and you get nothing
   back. It takes no crystal.
 
@@ -21,7 +32,7 @@ Each recipe works one item you carry. You must take it off first if you wear or 
 you must know what its magic is ([identify](magic-items.md#unidentified-items) it first). A
 [unique item](magic-items.md#unique-items) or something a quest asks for will not take your
 will. Arrows, bolts, and other [ammunition](ammunition.md) are worked a whole stack at once, for
-one crystal.
+the same crystals as one item. Imbue's three crystals may all come from one stack.
 
 {{#include generated/recipes-enchanting.md}}
 
@@ -35,10 +46,10 @@ take them), the work is refused before it starts: "No more of that nature will t
 ## How strong the magic is
 
 The affix is rolled as [loot](magic-items.md#finding-them) is, at an item level: the greater of
-the item's own and your **reach**. Your reach grows with Enchanting, from item level 1 to 12
-(the table above). So a beginner kindles weak magic, and a master rolls the strongest tiers. A
-deep find you quicken keeps its own item level if it is higher than your reach. The item takes
-the roll's item level.
+the item's own and your **reach** (a plain item's, Kindle's and Imbue's, is your reach). Your
+reach grows with Enchanting, from item level 1 to 12 (the table above). So a beginner kindles
+weak magic, and a master rolls the strongest tiers. A deep find you quicken, recast, or ennoble
+keeps its own item level if it is higher than your reach. The item takes the roll's item level.
 
 ## The check
 
@@ -49,10 +60,11 @@ natural 2 always fails and a natural 24 always succeeds. If you are interrupted,
 your work and nothing is spent.
 
 - **Made**: the item is enchanted and you know its magic. "The long sword takes the red
-  crystal's glow. It is now a Sharp long sword."
-- **Failed**: the crystal goes dark and is spent. The item is as it was. A failed Unbind leaves
-  the magic where it was.
-- **A natural 2**: the crystal is spent and the item **warps**: it is
+  crystal's glow. It is now a Sharp long sword." An imbued or ennobled item wakes with its
+  name: "The long sword drinks the three crystals and wakes as Grim Bite."
+- **Failed**: the crystals go dark and are spent. The item is as it was. A failed Unbind
+  leaves the magic where it was.
+- **A natural 2**: the crystals are spent and the item **warps**: it is
   [damaged](materials.md#item-damage), as a failed temper damages it, and an item already damaged
   falls apart. An item of Proof is spared.
 

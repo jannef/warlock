@@ -69,6 +69,9 @@ pub(super) fn recipes_enchanting(content: &Content) -> String {
         let works = match kind {
             EnchantKind::Kindle => "a plain item: one affix",
             EnchantKind::Quicken => "a magic item of one affix: the other kind",
+            EnchantKind::Recast => "a magic item: its affixes rolled anew",
+            EnchantKind::Imbue => "a plain item of capacity 3+: rare, 3 to 6 affixes",
+            EnchantKind::Ennoble => "a magic item of capacity 3+: rare, one affix more",
             EnchantKind::Unbind => "a magic or rare item: every affix off",
         };
         let odds: Vec<String> = (ODDS_AT.iter())

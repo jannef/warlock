@@ -918,8 +918,8 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Enchanting (#1430) by a wizard trained in it at this fate (11), with Father's sword, a
-    // Masterwork rare, in the pack: Kindle and Quicken greyed "nothing to enchant" (no plain
-    // item free, the rare refused), Unbind ready;
+    // Masterwork rare, in the pack: the six works (#1431) greyed by skill or "nothing to
+    // enchant" (no plain item free, the rare refused), Unbind ready;
     Case {
         name: "profession-enchanting",
         seed: Some(13),
@@ -937,7 +937,7 @@ const CASES: &[Case] = &[
         talents: Some(ENCHANTER),
         run: true,
         screen: Some("profession"),
-        keys: Some("c"),
+        keys: Some("f"),
         ..BASE
     },
     // and the dialog, with nothing used up, says only the time.
@@ -948,7 +948,7 @@ const CASES: &[Case] = &[
         talents: Some(ENCHANTER),
         run: true,
         screen: Some("profession"),
-        keys: Some("c a"),
+        keys: Some("f a"),
         ..BASE
     },
     // A Wright craftsperson whose kit's knife (`b`) is dropped: Woodcraft's screen (its row in the
