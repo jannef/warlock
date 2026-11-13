@@ -751,8 +751,15 @@ mod tests {
                             };
                             load.penalty()
                         };
+                        // Without the heritage nobody is ever Strained, but Family wealth's 450
+                        // coins (4.5 kg) and Father's sword, a player's own pick, may Strain the
+                        // weakest of the small peoples; they never Overload anyone.
                         assert!(
-                            load(weakest, kit + carry + heirs) < Burden::Strained,
+                            load(weakest, kit + carry + told) < Burden::Strained,
+                            "{character}: {kit} g + {told} g + {carry} g of {weakest}"
+                        );
+                        assert!(
+                            load(weakest, kit + carry + heirs) < Burden::Overloaded,
                             "{character}: {kit} g + {heirs} g + {carry} g of {weakest}"
                         );
                         if !may_burden {
