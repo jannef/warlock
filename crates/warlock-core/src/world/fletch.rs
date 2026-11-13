@@ -89,13 +89,15 @@ pub(super) fn fletcher_check(content: &Content, actor: &Actor, recipe: &RecipeDe
 }
 
 /// How long `actor`'s work on `recipe` takes, in seconds: its `seconds`, cut by Fletcher for a
-/// `count = "fletch"` recipe.
+/// `count = "fletch"` recipe, then by Quick hands (every recipe's time, read here alone:
+/// [`super::mastery::craft_seconds`]).
 pub(super) fn fletcher_seconds(content: &Content, actor: &Actor, recipe: &RecipeDef) -> u32 {
     let percent = match is_fletch(recipe) {
         true => (actor.talent_mods(content).fletcher).map_or(100, |f| f.time_percent),
         false => 100,
     };
-    (recipe.seconds * percent / 100).max(1)
+    let seconds = (recipe.seconds * percent / 100).max(1);
+    super::mastery::craft_seconds(content, actor, seconds)
 }
 
 /// Whether wood is free at `at` on `level` (module docs): its landscape on `data/recipes.toml`'s

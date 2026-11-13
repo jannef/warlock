@@ -87,7 +87,7 @@ impl World {
         self.say(format!("You set to mending the {name}."));
         Spent::MakeDo(Mending {
             item,
-            seconds: rules.seconds,
+            seconds: self.craft_seconds(rules.seconds),
         })
     }
 

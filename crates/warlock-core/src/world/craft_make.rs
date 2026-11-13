@@ -1141,7 +1141,9 @@ impl World {
     fn make_out(&mut self, resolved: Resolved, natural: i32, margin: i32) {
         let content = self.content.clone();
         let settings = content.recipes().settings.as_ref();
-        let grade = grade(settings, natural, margin);
+        // Master's hand: the grade comes sooner, never the making (`mastery.rs`).
+        let eased = super::mastery::graded_margin(&content, self.state.player(), margin);
+        let grade = grade(settings, natural, eased);
         let spoilt = match grade {
             Grade::Failed if natural == combat::FUMBLE => resolved.fumble.or(resolved.failure),
             Grade::Failed => resolved.failure,

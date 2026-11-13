@@ -492,6 +492,13 @@ pub enum TalentEffect {
     /// A failed Temper or Whittle damages nothing: the item is as it was, the attempt counted
     /// (Waste not; `world/temper.rs`).
     TemperSafe,
+    /// Every craft it works takes `value` % of its time: recipes, Temper and Whittle, Cut and
+    /// Set, Salvage, and the craftsperson's actives (Quick hands; the least held;
+    /// `world/mastery.rs::craft_seconds`).
+    CraftTimePercent { value: u32 },
+    /// Added to a made check's margin as its grade or cut is read, never to whether it is made
+    /// (Master's hand; summed; `world/mastery.rs::graded_margin`).
+    GradeEase { value: i32 },
     /// The actor notices hidden things in passing as if trained in Spot and Detect traps, with
     /// this much added.
     Notice { value: i32 },
@@ -1467,6 +1474,9 @@ impl TalentEffect {
             }
             TalentEffect::Consecrate { time, .. } => duration(time),
             TalentEffect::FieldForge { seconds: 0 } => Err("`field_forge`: `seconds` is 0".into()),
+            TalentEffect::CraftTimePercent { value: 0 } => {
+                Err("`craft_time_percent`: `value` is 0".into())
+            }
             TalentEffect::Sanctuary { time, lasts, .. } => {
                 duration(time)?;
                 duration(lasts)

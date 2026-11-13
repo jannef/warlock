@@ -285,3 +285,25 @@ From level 6 a craftsperson has **Waste not**: nothing is lost in their hands bu
   [whittle](skill-uses.md#whittling), damages nothing, even on a natural 2: the item stays as it
   was, and a damaged item is never destroyed. The attempt still counts, so the next one is as hard
   as it would have been.
+
+### Quick hands
+
+From level 40 a craftsperson has **Quick hands**: every craft takes half its time. That is every
+[recipe](#the-recipes), a temper at [the anvil](altars-forges-springs.md#forges), a
+[whittle](skill-uses.md#whittling), [cutting and setting a gem](gem-cutting.md),
+[salvage](#salvage), [Make do and mend](classes.md#make-do-and-mend), and
+[Field forge](classes.md#field-forge). A long sword takes half as long to forge, and salvage five
+minutes instead of ten. A ranger's [Fletcher](talents.md#talent-fletcher) halves arrows too, and
+the two together make them in a quarter of the time. Gathering herbs, foraging, scribing, and
+deciphering are not crafts and take as long as ever. The times the game shows are the halved
+ones.
+
+### Master's hand
+
+From level 50 a craftsperson has **Master's hand**: when a check is made, **4** is added to its
+margin before the grade or the cut is read. A failed check still fails, and a natural 2 still
+fails or shatters the gem. So a [Fine](#how-well-it-comes-out) piece comes from a margin of 2,
+Marvellous from 8, and a Masterwork from 16, and every [cut](gem-cutting.md#how-well-it-comes-out)
+comes 4 sooner. The grade tables above and the cut tables under
+[Gem cutting](gem-cutting.md#how-well-it-comes-out) have a "With Master's hand" column. Setting
+a gem, batches, and brews have no grade and are unchanged.
