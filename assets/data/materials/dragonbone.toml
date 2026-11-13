@@ -10,7 +10,7 @@ to_hit = 1
 damage = 1
 protection = 110
 value = 2500
-rarity = { weight = 10, level = 10 }
-gear = { weight = 5, level = 10 }
+rarity = { weight = 10, deeper = 5, level = 6 }
+gear = { weight = 5, deeper = 2, level = 10 }
 work = 5
 binding = 2

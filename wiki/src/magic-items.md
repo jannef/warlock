@@ -63,9 +63,36 @@ even. A rare that loses some stays rare and keeps its name, so a rare on a plain
 just two affixes. The rares with more are rings and amulets, gem-set and finer items, and the
 precious materials.
 
-How it works out for what you find: nearly nine finds in ten can bear two enchantments, so about
-87 % of rares keep two affixes, 10 % to 12 % keep three or more, and only 7 % to 8 % keep all they
-rolled. A magic item (one or two affixes) almost always fits: about 87 % lose nothing.
+### Deeper finds
+
+The deeper you go, the better made the things you find, so they can bear more. From
+[item level](#finding-them) 3 on, every weapon, missile weapon, shield, and piece of armour you
+find (on the floor, in a chest or a hoard, in a den or a room) may be **Fine**, **Marvellous**, or
+**Masterwork**, never damaged. What creatures carry gets the same chances on top of its
+[own](creatures.md#gear). Rings, amulets, ammunition, and the
+[gear you start with](starting-kit.md) are not affected. Deeper finds are also set with a
+[gem](gems.md) more often, for the kinds of item that ever are:
+
+{{#include generated/gear-depth.md}}
+
+The [materials](materials.md) that hold magic best come deeper and grow more common as you go:
+dragonbone and dragonscale from item level 6, mithril from 8, adamantium from 16; gold a little
+more at every level.
+
+How it works out for what you find:
+
+| Item level | Rares that keep three affixes or more | Rares that keep all they rolled |
+|---:|---:|---:|
+| 1 | 11 % | 8 % |
+| 4 | 15 % | 10 % |
+| 8 | 28 % | 18 % |
+| 12 | 49 % | 32 % |
+| 16 | 57 % | 38 % |
+| 20 | 64 % | 45 % |
+
+Near the surface, nearly nine finds in ten can bear two enchantments, so most rares keep two
+affixes. A magic item (one or two affixes) almost always fits: about nine in ten lose nothing, at
+any depth.
 
 Only a damaged Fine, Marvellous, or Masterwork item can bear less than it holds. It keeps all its
 magic, which works as before.

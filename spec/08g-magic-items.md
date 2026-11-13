@@ -168,8 +168,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and for an item whose construction list lets it be made of other materials, its material (one
     draw by the materials' `rarity` at the item level, or for a creature's drop their `gear` at
     the creature's level; §7 "Materials", `variant::draw`). With nothing left to roll an item has
-    fewer affixes, with none it is normal; then a wand's rung, and last the trim (below). Loot
-    is found unidentified (its gems and material show).
+    fewer affixes, with none it is normal; then a wand's rung, then its make, and last the trim
+    (below). Loot is found unidentified (its gems and material show).
+  - **Deeper finds are better made** (#1436; `data/gear_condition.toml` `[[depth]]`,
+    `world/gear_condition.rs::make`): from item level 3 on, a row by item level gives loot's arms
+    and armour (single pieces with something to better) a chance in per mille of Fine,
+    Marvellous, or Masterwork (one draw from the loot stream after the wand's rung, then the
+    aspects as the anvil draws them; none at item levels 1 and 2 or for anything else, so
+    shallow levels draw as before), never damaged; at item level 3 3.6 % improved, at 11 48 %,
+    at 30 75 %. Creature gear adds the row of its level's item level to its tribe's condition
+    odds (§8 "Creature gear"). The row also adds percent to an `[[ornament]]` class's chance of a
+    set gem (1 at item level 3 to 18 at 30). The precious, high-`binding` materials come deeper
+    and more often (§7 "Materials": mithril from item level 8, dragonbone and dragonscale from 6,
+    adamantium from 16, gold more each level). Kits, the background's gifts, the stipend, and the
+    pedlar take no make.
   - **Capacity and the trim** (`magic/capacity.rs`, #1427, docs/design/enchanting.md §3, §4;
     docs/dev/enchanting.md): an item holds 1 to 6 affixes in all (`capacity`): 2 (the owner, 2026-11-13), +1 for
     jewellery, + its quality (Fine 1, Marvellous 2, Masterwork 3; none while damaged), + its main
@@ -184,9 +196,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `quality` and parts that fit, and a test holds it. Only a damaged improved piece is ever over
     its capacity; nothing strips it. The item description tells the capacity in words only to a
     character trained in Appraise ("It can bear two enchantments.", "It bears all it can.").
-    Measured (`magic/shares_tests.rs`, accepted by the owner): about 87 % of loot's bases hold
-    2, so about 87 % of rares keep two affixes and 10 % to 12 % three or more; about 87 % of
-    magic-grade finds are untrimmed.
+    Measured (`magic/shares_tests.rs`): at item level 1 about 86 % of loot's bases hold 2, so 86 %
+    of rares keep two affixes and 11 % three or more; deeper finds are better made (above), so
+    rares keep three or more 15 % of the time at item level 4, 28 % at 8, 49 % at 12, 57 % at
+    16, and 64 % at 20; 88 % to 92 % of magic-grade finds are untrimmed.
   - **Where**: generated branch levels' floors hold `loot` items (the Depths 2 to 4) on plain
     floor where nothing lies, stands, shines, or leads away, and vault `loot` cells an item at
     least of their grade; outdoor ruins' loot cells too (local areas have no floor loot); all
