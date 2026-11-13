@@ -37,6 +37,9 @@ temperature = 10
 # elemental) come only out of depth, at the bottom; those above (the duergar priest and hulk, the
 # ogre mage, the hobgoblin captain, the orc war chief) wait for deeper places, so no bounty names
 # what next to never comes here.
+# The duergar's working mine: the common metals and silver, not gold (that stays with Ūtgang,
+# Ælfhām, and Hellegeat); no mithril or adamantium (#1401, data/mining.toml).
+ores = ["iron", "copper", "tin", "zinc", "silver"]
 danger = 5
 population = [
     "bat", "kobold", "kobold_archer", "kobold_shaman", "kobold_alchemist", "giant_centipede",
