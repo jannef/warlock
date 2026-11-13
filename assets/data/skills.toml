@@ -299,7 +299,9 @@ description = "The binding of magic into things, and the reading of what is boun
 kind = "action"
 # Reading what is bound (#1343, professions §9): trained, each game hour this percent chance of
 # telling one magic thing you carry or wear whose magic you do not know (5 % at the lowest, 25 % at
-# 100, 40 % at 200), beside Appraise's look at anything. No marks until its craft comes.
+# 100, 40 % at 200), beside Appraise's look at anything. Marks: every salvage that made a check
+# on an identified magic item's affixes (enchanting.toml), whatever came of it.
+mark = [{ on = "salvage", chance = 100 }]
 benefit = [{ effect = "identify_magic", curve = [[0, 5], [100, 25], [200, 40]] }]
 
 [[skill]]

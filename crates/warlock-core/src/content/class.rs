@@ -669,6 +669,9 @@ pub enum ClassActive {
     /// An ingot set on a heap of stones beside the player in an hour: a makeshift anvil, for
     /// good (the craftsperson's Field forge, `world/field_forge.rs`).
     FieldForge,
+    /// A damaged thing the player carries mended in the field, without an anvil, by a check that
+    /// destroys nothing (the craftsperson's Make do and mend, `world/make_do.rs`).
+    MakeDo,
     /// A weapon of spirit-stuff called into the hand in the shape chosen, as a wield (the
     /// Hunter's Spirit weapon, `world/spirit_weapon.rs`).
     SpiritWeapon,
@@ -708,6 +711,7 @@ impl ClassActive {
         ClassActive::Scribe,
         ClassActive::MerchantsEye,
         ClassActive::FieldForge,
+        ClassActive::MakeDo,
         ClassActive::SpiritWeapon,
     ];
 
@@ -745,6 +749,7 @@ impl ClassActive {
             ClassActive::Scribe => "scribe",
             ClassActive::MerchantsEye => "merchants_eye",
             ClassActive::FieldForge => "field_forge",
+            ClassActive::MakeDo => "make_do_and_mend",
             ClassActive::SpiritWeapon => "spirit_weapon",
         }
     }
@@ -813,9 +818,9 @@ impl ClassActive {
     }
 
     /// Whether it asks for a stack the player carries before it is used
-    /// (`use:merchants_eye:c`).
+    /// (`use:merchants_eye:c`, `use:make_do_and_mend:c`).
     pub const fn aims_item(self) -> bool {
-        matches!(self, ClassActive::MerchantsEye)
+        matches!(self, ClassActive::MerchantsEye | ClassActive::MakeDo)
     }
 
     /// Whether it asks for a weapon's shape before it is used, an object id
@@ -869,6 +874,8 @@ impl ClassActive {
             ClassActive::MerchantsEye => ActionKind::Read,
             // A turn of it; setting the block takes the talent's seconds (`world/field_forge.rs`).
             ClassActive::FieldForge => ActionKind::Craft,
+            // A turn of it; a mend takes its `seconds` of them (`world/make_do.rs`).
+            ClassActive::MakeDo => ActionKind::Craft,
             // A turn of it; a scroll takes a study's turns (`world/scribe.rs`).
             ClassActive::Scribe => ActionKind::Scribe,
             // A turn of it; the ritual takes `call_turns` of them (`world/familiar.rs`).

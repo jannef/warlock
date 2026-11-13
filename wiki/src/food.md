@@ -4,7 +4,8 @@ Food (`%`) keeps [hunger](hunger.md#how-hungry-you-are) away. Press `e` (the Eat
 consume something. A list titled "Consume what?" shows what you can eat: first what lies where
 you stand ("lying here"), then the food you carry (see [Lists of
 objects](objects.md#lists-of-objects)). Press a letter, or `Enter` on the marked row, to eat it.
-Your potions are in the same list and are drunk the same way (see [Potions](potions.md)).
+Your potions are in the same list and are drunk the same way (see [Potions](potions.md)), and so
+are your [magic crystals](crystals.md#consuming-a-crystal).
 
 ## Eating
 

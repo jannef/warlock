@@ -119,7 +119,7 @@ impl World {
                 self.say("Where?");
                 Spent::Nothing
             }
-            (ClassActive::MerchantsEye, _) => {
+            (ClassActive::MerchantsEye | ClassActive::MakeDo, _) => {
                 self.say("Use it on what?");
                 Spent::Nothing
             }

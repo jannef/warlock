@@ -348,6 +348,14 @@ pub struct TalentMods {
     pub trade_bonus: i32,
     /// Item descriptions read an item's make (Eye for the make; `PerceptionView::describe_item`).
     pub eye_for_make: bool,
+    /// Salvage's yield in percent, where more than `data/salvage.toml`'s (Waste not; the most
+    /// held; `world/salvage.rs::salvage_percent`).
+    pub salvage_percent: u8,
+    /// What a failed recipe gives back in percent, where more than `data/recipes.toml`'s `yield`
+    /// (Waste not; the most held; `world/craft_make.rs::failed_percent`).
+    pub failed_percent: u32,
+    /// A failed Temper or Whittle damages nothing (Waste not; `world/temper.rs::work_out`).
+    pub temper_safe: bool,
     /// Percent more often loot it finds rolls magic and rare.
     pub loot_magic_percent: i32,
     /// Percent more time reading a scroll takes (negative: less).
@@ -690,6 +698,8 @@ pub struct TalentMods {
     pub merchants_eye: bool,
     /// The active Field forge: the seconds it takes to set a makeshift anvil, if it has it.
     pub field_forge: Option<u32>,
+    /// The active Make do and mend, if it has it (`world/make_do.rs`).
+    pub make_do: Option<MakeDo>,
     /// The active Spirit weapon, and what a spirit weapon in its hand gives, if it has it.
     pub spirit_weapon: Option<SpiritWeapon>,
     /// How much higher every skill it is trained in counts (Jack of all trades).
@@ -849,6 +859,14 @@ pub struct Sanctuary {
     pub radius: u8,
     pub lasts: crate::time::Duration,
     pub regen: u16,
+}
+
+/// The active Make do and mend (spec §8 "Class abilities"; `world/make_do.rs`): how long a mend
+/// takes, in seconds, and its check's difficulty before the material's `work`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MakeDo {
+    pub seconds: u32,
+    pub difficulty: i32,
 }
 
 /// The active Knock (spec §8 "Class abilities", "Chests"): its mana.
@@ -1183,6 +1201,7 @@ impl TalentMods {
             A::LowBlow => self.low_blow,
             A::MerchantsEye => self.merchants_eye,
             A::FieldForge => self.field_forge.is_some(),
+            A::MakeDo => self.make_do.is_some(),
             A::SpiritWeapon => self.spirit_weapon.is_some(),
             A::MasterThief => self.finisher,
             A::Inspire | A::Lullaby => self.songs.iter().any(|s| s.active == active),
@@ -1462,6 +1481,11 @@ impl TalentMods {
             TalentEffect::Trade { skill, .. } => self.trades.extend(content.skill_id(&skill)),
             TalentEffect::TradeBonus { value } => self.trade_bonus += value,
             TalentEffect::EyeForMake => self.eye_for_make = true,
+            TalentEffect::WasteNot { salvage, failed } => {
+                self.salvage_percent = self.salvage_percent.max(salvage);
+                self.failed_percent = self.failed_percent.max(failed);
+            }
+            TalentEffect::TemperSafe => self.temper_safe = true,
             // Handed out as the talent is taken (`World::take_talent`), never read after.
             TalentEffect::WeaponRanks { .. }
             | TalentEffect::TakeUpSkills { .. }
@@ -2085,6 +2109,15 @@ impl TalentMods {
             TalentEffect::LowBlow => self.low_blow = true,
             TalentEffect::MerchantsEye => self.merchants_eye = true,
             TalentEffect::FieldForge { seconds } => self.field_forge = Some(seconds),
+            TalentEffect::MakeDo {
+                seconds,
+                difficulty,
+            } => {
+                self.make_do = Some(MakeDo {
+                    seconds,
+                    difficulty,
+                })
+            }
             TalentEffect::SpiritWeapon {
                 to_hit,
                 threat,

@@ -26,6 +26,7 @@ impl World {
         }
         match active {
             ClassActive::MerchantsEye => self.merchants_eye(item),
+            ClassActive::MakeDo => self.start_make_do(item),
             _ => Spent::Nothing,
         }
     }
