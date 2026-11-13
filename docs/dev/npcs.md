@@ -85,6 +85,13 @@ checking the npc has a dialogue), so he speaks his dialogue instead of the shopk
 `data/towns/ceaptun.toml`'s `people`, so goodwill takes its share. Tests:
 `world/ceaptun_tests.rs` (`eadric_the_smith_teaches_metalcraft_for_two_thousand_gold`, short of
 gold and goodwill), `ui/screen_snapshots.rs` (`dialogue-smith`).
+**Ceolred** (#1443; `npc = "ceolred"`, the same file, Cockney), Eadric's apprentice, is no teacher
+and no keeper: a `villager` placed by the level's legend (`P`, beside the smithy's fire) with
+`npc`, rotation lines and mutters only, one line per notable material in words, never numbers
+(hard or soft, light or heavy, rust, what a material's `binding` and `work` mean for magic and
+the anvil; lines at most 72 characters). He is not in `data/towns/ceaptun.toml`'s `people` (he
+gives no quests). Test: `world/ceaptun_tests.rs`
+(`ceolred_the_apprentice_stands_in_the_smithy_at_peace_and_keeps_no_shop`).
 The third is **Old Tregear** (#1434; `npc = "tregear"`, `campaigns/ascmearc/data/dialogue/
 gimmwic.toml`, in the deep gnomes' Cornish), on Gimmwīc's cutting floor: Jewelcraft for 1500
 gold, at 5. Gimmwīc has no `data/towns/` entry, so no goodwill moves its prices.

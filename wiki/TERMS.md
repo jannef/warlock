@@ -305,6 +305,7 @@ above.
 | Services (cure, mending, identification, training) | `npcs.md#services` |
 | Alberich (teaches Mining) | `npcs.md#alberich` |
 | Eadric the smith (teaches Metalcraft) | `npcs.md#eadric-the-smith` |
+| Ceolred, the smith's apprentice (explains the materials) | `npcs.md#ceolred-the-smiths-apprentice` |
 | Goodwill (a town's, cheaper services) | `npcs.md#goodwill` |
 | The aristocrat's stipend, their servant in Cēaptūn | `classes.md#stipend` |
 | The merchant's investment, their business partner in Cēaptūn | `classes.md#invest` |

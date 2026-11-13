@@ -287,3 +287,58 @@ reply = "We does the work the reeve can't pay for an' the sisters won't touch. D
 id = "board"
 name = "The board"
 reply = "Bills three deep, an' most of 'em older than you. There's always a job on it, mind. Ask me an' I'll tell you the next."
+
+# Ceolred, Eadric's apprentice (#1443): stands in the smithy beside the fire (levels/ceaptun.toml's
+# `P`, `npc = "ceolred"`; a villager, not a keeper). A young Cēaptūn commoner in Cockney, he
+# recites what Eadric has drilled into him about the materials, in words and never in numbers
+# (the wiki has the table): hard or soft, light or heavy, what holds an edge, what rusts, what
+# takes a spell well or badly (a material's `binding`), what is hard to work (its `work`). One
+# line per notable material; no topics, no service.
+[[dialogue]]
+npc = "ceolred"
+name = "Ceolred"
+greet = "Eadric's me master. Ask 'im about prices. Ask me about metal."
+greet_evil = [
+    "I'm only the apprentice. Don't 'urt me. Please.",
+    "Eadric says I'm not to sell yer nuffin'. I'm only sweepin'.",
+]
+lines = [
+    "Iron's cheap an' tough, but it rusts if yer look at it wrong.",
+    "Steel's iron wiv the muck beaten out. 'Olds an edge, rusts less.",
+    "Bronze is a bit soft, but it don't rust. Good for a shield, that.",
+    "Brass? Pretty. Bit soft for a blade, though. Fine for fittin's.",
+    "Copper's soft as butter, near enough. Bends before it bites.",
+    "Tin's no use for a sword. Mix it wiv copper an' you've bronze.",
+    "Pewter's soft an' easy 'andled. Mugs an' plates, not blades.",
+    "Zinc an' cadmium? Soft, an' nasty to work. Nobody forges wiv 'em.",
+    "Lead's 'eavy as sin an' dull as a spoon. Won't 'old a spell neiver.",
+    "Silver's soft, but it 'urts the dead. Spits spells out, though.",
+    "Gold's soft an' 'eavy. It likes a spell, mind.",
+    "Electrum's gold an' silver together. 'Eavy, soft, fond of magic.",
+    "Aluminium's light as a feather an' don't rust. Bit soft, tho'.",
+    "Duralumin's the light stuff made 'arder. Rare, an' nice to wear.",
+    "Chromium's 'ard an' shiny an' don't rust. Fiddly to work, mind.",
+    "Nicrosil's 'ard as steel an' shrugs off acid. Awkward on the anvil.",
+    "Bendalloy's 'eavy, soft, an' stubborn. Spells don't stick to it.",
+    "Mithril's light as linen, 'ard as steel. Takes a spell like a dream.",
+    "Adamantium? Nuffin' cuts it, nuffin' burns it. Murder to work.",
+    "Dragonbone's light, tough, an' murder to work. Magic loves it, though.",
+    "Dragonscale turns fire, acid, an' most else. A spell sinks right in.",
+    "Ironwood's a wood that finks it's a metal. 'Ard to carve, keeps magic.",
+    "Wood's light an' soft. Good for a bow or a 'aft, no good for a wall.",
+    "'Ardwood's tougher than plain wood. Still burns, mind.",
+    "Leather's light an' supple. Boil it an' it goes 'ard, see.",
+    "Bone's light an' brittle. Horn's much the same, 'arder to shape.",
+    "Ivory's pretty, an' it likes a spell. Elephants ain't so keen.",
+    "Stone's 'eavy an' dull, an' it won't 'old a spell. Flint chips, mind.",
+    "Obsidian cuts keen, but it's glass, an' glass breaks. No spells.",
+    "Jade's 'ard an' pretty an' a bit friendly to magic. Dwarves like it.",
+    "Silk's the lightest cloth. Wool's warm. Neiver stops a blade.",
+    "Gems? Ask the gnomes. Rubies an' sapphires are 'ard to cut, I 'ear.",
+]
+mutter = { chance = 2, verb = "mumbles", lines = [
+    "Iron's 'ard, steel's 'arder, mithril's... what was it again?",
+    "Pump the bellows, sweep the floor, learn the metals.",
+    "Don't touch the 'ot end. Don't touch the 'ot end.",
+    "Is it dinner yet?",
+] }
