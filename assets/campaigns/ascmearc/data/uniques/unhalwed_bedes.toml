@@ -6,5 +6,7 @@ name = "The Unhalwed Bedes"
 object = "bone_amulet"
 affixes = ["mystic:7", "of_clarity:12", "of_the_owl:2", "of_shadows:7"]
 level = 12
+# Four enchantments need its make (docs/dev/enchanting.md): a flawless smokestone setting.
+parts = [{ part = "setting", of = "smokestone", cut = "flawless" }]
 power = { vision = "darkvision", phrase = "Its wearer sees in the dark." }
 lore = "Each bead is a knucklebone, and none of them a saint's."

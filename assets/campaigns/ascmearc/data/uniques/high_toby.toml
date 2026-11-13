@@ -7,5 +7,8 @@ name = "High Toby"
 object = "long_bow"
 affixes = ["hunters:4", "steady:4", "of_precision:2"]
 level = 12
+# Three enchantments need its make (docs/dev/enchanting.md): Fine, an amethyst inlay.
+quality = "fine"
+parts = [{ part = "inlay", of = "amethyst" }]
 power = { inflict = "frightened", chance = 25, severity = 1, phrase = "Its arrows put fear in what they strike." }
 lore = "Many a coach has stopped for it, and many a coachman run."

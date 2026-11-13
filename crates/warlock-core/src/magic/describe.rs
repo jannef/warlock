@@ -52,6 +52,9 @@ fn line(kind: LineKind, text: impl Into<String>) -> Line {
 pub struct Appraisal {
     /// What each gem in it is worth.
     pub gems: bool,
+    /// How many enchantments it can bear (docs/dev/enchanting.md): for a character trained in
+    /// Appraise.
+    pub capacity: bool,
 }
 
 /// [`lines`] for a player with an eye for worth: each gem's worth after its line (`Pommel: small
@@ -71,6 +74,15 @@ pub(crate) fn appraised_for(
 ) -> Vec<Line> {
     let content = lore.content;
     let mut out = lines_named(stack, content, lore.names(stack));
+    if appraisal.capacity
+        && let Some(said) = capacity_line(stack, content)
+    {
+        // After the affixes, before a unique's power and lore.
+        let at = (out.iter())
+            .rposition(|l| !matches!(l.kind, LineKind::Power | LineKind::Lore))
+            .map_or(out.len(), |i| i + 1);
+        out.insert(at, said);
+    }
     out.extend(grimoire_lines(stack, lore, user));
     out.extend(wand_lines(stack, lore, user));
     out.extend(rod_lines(stack, lore));
@@ -91,6 +103,42 @@ pub(crate) fn appraised_for(
         }
     }
     out
+}
+
+/// How many enchantments `stack` can bear, in words (docs/dev/enchanting.md), for a base item
+/// (one with a `kind`): what it can bear while it is plain or its magic unidentified (`It can
+/// bear two enchantments.`), else what it bears against that (`It bears one enchantment and
+/// could bear one more.`, `It bears all it can.`, `It bears more than its make should hold.`).
+fn capacity_line(stack: &Stack, content: &Content) -> Option<Line> {
+    content.object(stack.object).kind?;
+    let room = usize::from(super::capacity(stack, content));
+    let text = match stack.known_magic().map(|m| m.affixes.len()) {
+        None => format!("It can bear {}.", enchantments(room)),
+        Some(n) if n > room => "It bears more than its make should hold.".to_string(),
+        Some(n) if n == room => "It bears all it can.".to_string(),
+        Some(n) => format!(
+            "It bears {} and could bear {} more.",
+            enchantments(n),
+            number_word(room - n)
+        ),
+    };
+    Some(line(LineKind::Stat, text))
+}
+
+/// `n` enchantments in words: "one enchantment", "two enchantments".
+fn enchantments(n: usize) -> String {
+    match n {
+        1 => "one enchantment".to_string(),
+        n => format!("{} enchantments", number_word(n)),
+    }
+}
+
+/// `n` (up to six, the most an item bears) in words.
+fn number_word(n: usize) -> &'static str {
+    ["no", "one", "two", "three", "four", "five", "six"]
+        .get(n)
+        .copied()
+        .unwrap_or("many")
 }
 
 /// What a grimoire teaches (spec §8 "Spells": "Learning", "Ranks"): its spell and level, then

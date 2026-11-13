@@ -28,7 +28,7 @@ The recipes take their effects from Path of Exile's currency crafting (named onc
 
 | Piece | Proposal |
 |---|---|
-| Capacity | an item holds **1 to 6 affixes in all** (prefixes and suffixes together; the three-per-kind caps stand): 1 for the base, + its quality (Fine +1, Marvellous +2, Masterwork +3: `Worked::improved.len()`), + its main material's **`binding`** (a new `MaterialDef` field, −2 to +2: **silver −2**, soft metals and knapped stone −1, steel and iron 0, gold +1, mithril, adamantium, dragonbone, dragonscale +2), + its set gem (+1, a flawless one +2), + 1 for jewellery (rings and amulets are made to hold magic), clamped to 1..6. `magic::capacity(stack, content)` is the one read. The capacity is **not told to everyone**: the item description gives it only to a craftsperson (Eye for the make) or a character trained in Appraise; the rest are told only, in words, when a recipe finds no room. Only a damaged Masterwork can be over its capacity (nothing is stripped after the fact; the recipes refuse to add to it); every shipped hand-made item is given a make that fits. §3 |
+| Capacity | an item holds **1 to 6 affixes in all** (prefixes and suffixes together; the three-per-kind caps stand): 2 for the base (the owner, 2026-11-13; first written as 1), + its quality (Fine +1, Marvellous +2, Masterwork +3: `Worked::improved.len()`), + its main material's **`binding`** (a new `MaterialDef` field, −2 to +2: **silver −2**, soft metals and knapped stone −1, steel and iron 0, gold +1, mithril, adamantium, dragonbone, dragonscale +2), + its set gem (+1, a flawless one +2), + 1 for jewellery (rings and amulets are made to hold magic), clamped to 1..6. `magic::capacity(stack, content)` is the one read. The capacity is **not told to everyone**: the item description gives it only to a craftsperson (Eye for the make) or a character trained in Appraise; the rest are told only, in words, when a recipe finds no room. Only a damaged Masterwork can be over its capacity (nothing is stripped after the fact; the recipes refuse to add to it); every shipped hand-made item is given a make that fits. §3 |
 | The loot trim | **settled by the owner**: an item whose affixes outnumber its capacity, **as the very last step of making it** (after its material, gem, rung, and gear condition), drops them one at a time from the kind (prefix or suffix) with more, one of that kind at random, a suffix on a tie, until it fits; the draws come from the item's own stream after its last draw today (the wand rung's), so an item that needs no trim draws exactly as before. **A trimmed rare stays rare** and keeps its name. **Hand-made content is trimmed like loot** (uniques, a legend's `[[item]]`, the heirloom); the shipped ones are given materials, quality, and gems so that none is, and a test holds it. §4, §4.1 |
 | Crystals | **six colours**, one stackable object each (`objects/crystal_red.toml`, …, class `materials`): red (blood and fire), blue (mind and frost), green (venom and quickness), white (ward and light), black (grave and shadow), gold (craft and fortune). `data/crystals.toml` names each colour's **tags** (which creatures leave it: the first colour in file order whose tag the creature carries) and **families** (the affix categories it may roll; every category belongs to at least one colour, most to two). Red never rolls mana, blue never rolls life, as the brief asks. A crystal can also be **consumed** (the abilities menu, any character): a little mana, a Willpower mark, a step toward evil. §5 |
 | Sources | **Soulglass**, a level-11 necromancy ray (3d6 necrotic, range 6): a living creature it kills leaves no corpse but crystals of its colour (one, two from level 10, three from level 20; a creature of level 15 or more may leave a rare material too). The witch's at level 16; anyone's from its grimoire (the owner's answer). And **salvage**: each affix of an identified magic item gives, on an Enchanting check, one crystal of its colour. §6, §10 |
@@ -62,7 +62,7 @@ The brief (#1414, 2026-11-13): an item has a **maximum number of affixes**, 1 to
 
 | Term | Value | Read from |
 |---|---|---|
-| The base | 1 | every item with a `kind` |
+| The base | **2** (the owner, 2026-11-13, after E1's measurement; first written as 1) | every item with a `kind` |
 | Jewellery | +1 | `ObjectDef::is_jewellery()` (ring and amulet kinds): a ring is made to carry a charm, and loot already gives jewellery most of the stat and skill suffixes |
 | Quality | plain 0, **Fine +1, Marvellous +2, Masterwork +3** | `Worked::improved.len()` (so a damaged item, whose improvements are none while damaged, counts as plain) |
 | Material | its main part's **`binding`**, −2 to +2 (the table below) | `MaterialDef::binding`, a new optional field (default 0, steel's), of the main part's material as `Stack::parts` resolves it (a bronze long sword's bronze; the base material otherwise) |
@@ -83,26 +83,26 @@ What that gives, with the clamp (the forge's grades from `recipes.md` §4; loot'
 
 | Item | Base | Jewellery | Quality | Material | Gem | **Capacity** |
 |---|---|---|---|---|---|---|
-| a steel long sword | 1 | | 0 | 0 | | **1** |
-| a Fine steel long sword | 1 | | +1 | 0 | | **2** |
-| a ruby-pommelled steel long sword | 1 | | 0 | 0 | +1 | **2** |
-| a Marvellous bronze scimitar | 1 | | +2 | 0 | | **3** |
-| a Masterwork steel great sword with a flawless diamond pommel | 1 | | +3 | 0 | +2 | **6** |
-| a Fine mithril long sword, a sapphire pommel | 1 | | +1 | +2 | +1 | **5** |
-| a Masterwork adamantium plate | 1 | | +3 | +2 | | **6** |
-| an iron ring | 1 | +1 | | 0 | | **2** |
-| a gold ring | 1 | +1 | | +1 | | **3** |
-| a gold and emerald ring | 1 | +1 | | +1 | +1 | **4** |
-| a gold and flawless-cut ruby amulet (the gold amulet's required setting) | 1 | +1 | | +1 | +2 | **5** |
-| a tin ring | 1 | +1 | | −1 | | **1** (1 + 1 − 1) |
-| a silver ring (the hub's) | 1 | +1 | | −2 | | **1** (the clamp: 1 + 1 − 2 = 0) |
-| a silver ring set with a flawless gem | 1 | +1 | | −2 | +2 | **2** |
-| a mithril ring set with a flawless gem | 1 | +1 | | +2 | +2 | **6** |
-| a flint knife | 1 | | 0 | −1 | | **1** (the clamp) |
-| a leather jerkin, Fine | 1 | | +1 | 0 | | **2** |
-| a dragonscale scale mail, Marvellous | 1 | | +2 | +2 | | **5** |
-| a wooden short bow with an amethyst inlay | 1 | | 0 | 0 | +1 | **2** |
-| arrows (a stack) | 1 | | | 0 | | **1** |
+| a steel long sword | 2 | | 0 | 0 | | **2** |
+| a Fine steel long sword | 2 | | +1 | 0 | | **3** |
+| a ruby-pommelled steel long sword | 2 | | 0 | 0 | +1 | **3** |
+| a Marvellous bronze scimitar | 2 | | +2 | 0 | | **4** |
+| a Masterwork steel great sword with a flawless diamond pommel | 2 | | +3 | 0 | +2 | **6** |
+| a Fine mithril long sword, a sapphire pommel | 2 | | +1 | +2 | +1 | **6** |
+| a Masterwork adamantium plate | 2 | | +3 | +2 | | **6** |
+| an iron ring | 2 | +1 | | 0 | | **3** |
+| a gold ring | 2 | +1 | | +1 | | **4** |
+| a gold and emerald ring | 2 | +1 | | +1 | +1 | **5** |
+| a gold and flawless-cut ruby amulet (the gold amulet's required setting) | 2 | +1 | | +1 | +2 | **6** |
+| a tin ring | 2 | +1 | | −1 | | **2** |
+| a silver ring (the hub's) | 2 | +1 | | −2 | | **1** |
+| a silver ring set with a flawless gem | 2 | +1 | | −2 | +2 | **3** |
+| a mithril ring set with a flawless gem | 2 | +1 | | +2 | +2 | **6** |
+| a flint knife | 2 | | 0 | −1 | | **1** |
+| a leather jerkin, Fine | 2 | | +1 | 0 | | **3** |
+| a dragonscale scale mail, Marvellous | 2 | | +2 | +2 | | **6** |
+| a wooden short bow with an amethyst inlay | 2 | | 0 | 0 | +1 | **3** |
+| arrows (a stack) | 2 | | | 0 | | **2** |
 
 Rules around it:
 
@@ -125,12 +125,14 @@ Rules around it:
 | **Where** | **the very last step** of making an item, after the material (`variant::draw`), the ornament (`gem::ornament`), the wand's rung, **and gear condition** (`world/gear_condition.rs`), so the capacity is read from the item exactly as it will exist. `loot::make_from` stops short of it; the one function `loot::finished(content, rng, stack)` (the trim, `trim(magic, capacity, rng)` in `magic/capacity.rs`) is the last line of every path that completes an item: `make`, `make_as`, `roll_with`, `roll_pool`, the heirloom, and creature gear (`gear.rs` calls it **after** `gear_condition` has drawn). Callers: floor loot, chests, hoards, dens, room loot, creature gear, animated things, starting kits (`kit.rs`), the background's gifts, the stipend, the pedlar's offer (`favoured`), the heirloom, and the balance probe. A path that forgets the call is caught by a test that rolls every entry point at a deep level and asserts `count <= capacity` |
 | **Which affixes go** | repeat until the count fits the capacity: take the **kind (prefix or suffix) with more affixes** on the item; drop **one of that kind at random**; on a **tie, drop a suffix**. So a four-affix rare of two and two on a capacity-1 base loses a suffix, then (2 against 1) a prefix, then (1 against 1) a suffix: a prefix is left |
 | **The draws** | each random drop is one `rng.index(n)` among that kind's affixes **from the same stream the item rolled from**, after its last draw today (the wand rung's, or gear condition's if that path draws it from the same stream; the implementer reads `gear_condition.rs` for which stream it uses and keeps the trim on the item's own). An item that needs no trim draws exactly as before; one that does shifts what follows on that stream (the next find of a hoard, the next piece of a creature's gear). Those shifts move the mapgen snapshots that hold magic items and the replays through them; the PR regenerates and notes them (`docs/dev/merging.md`: generated files are taken whole). No new stream: a derived one per item would need a key per call site |
-| **Rarity** | **unchanged**: a rare trimmed to two affixes, or one, is a rare still, with its name and its colour; `Magic::check` already allows it (at least one affix, at most three of a kind). A magic item is never trimmed (at most two affixes, a prefix and a suffix; a capacity-1 base drops its suffix, so a plain tin ring is magic with one affix) |
+| **Rarity** | **unchanged**: a rare trimmed to two affixes, or one, is a rare still, with its name and its colour; `Magic::check` already allows it (at least one affix, at most three of a kind). A magic item is never trimmed (at most two affixes, a prefix and a suffix; a capacity-1 base drops its suffix, so a plain silver ring is magic with one affix) |
 | **Gear condition** | `world/gear_condition.rs` draws Fine, Marvellous, or Masterwork **after** the gear is made, which can only raise the capacity, and a damaged condition empties the improvements, which lowers it. The owner's order (the trim last) makes both count: a Fine piece keeps a second affix it rolled (its capacity is 2 once the condition is drawn), and a damaged piece is trimmed to its plain capacity. Gear's draws before the trim are unchanged; only the trim's are appended |
 | **Hand-made content** | **not exempt** (the owner's answer 3): a unique's template (`content/unique.rs`), a legend's `[[item]]` (`level.rs::magic_of`), and the heirloom (`loot::heirloom`, Father's sword) go through the same trim. Uniques and legend items are made at load, where there is no item stream, so they use the same `trim` with a stream keyed by the item's own id (`trim/{id}`), a backstop that never fires on shipped data. **The shipped items are instead given the quality, material, gem, or jewellery their affixes need** (§4.1), and a dev test, `hand_made_items_are_never_trimmed`, runs every unique, every legend `[[item]]` of every campaign and the showcase, and the heirloom (every race's weapon at its top count), asserts that the capacity holds all their affixes, and fails with the item's id and the shortfall. Quality is a data key hand-made items did not have: `quality = "fine" \| "marvellous" \| "masterwork"` on a unique, a legend's `[[item]]`, and the heirloom effect (it fills `Worked::improved`, as the forge's grade does), beside the `parts` key that already sets materials and gems (E1) |
 | **Value** | an item's worth follows its affixes (`value_with` and the rarity multipliers): a trimmed rare is worth less than it rolled. No compensation in `[rarity]`: §12 measures the effect, and the weights are tuned after |
 
 ### 4.1 The shipped hand-made items over capacity today, and the change that fits each
+
+**Since E1** (the owner, 2026-11-13): the base is 2, so every capacity below is one higher (to the clamp of 6). The changes were kept, each still fits with room; Stonebiter and the trap hall's dagger (two affixes) needed none at base 2 and are plain again.
 
 Capacity as it stands (§3, silver −2, each object's own materials and setting) against the affixes the item carries. Each of the 13 shipped items below has more affixes than its capacity today; the change is what makes it fit, so none is trimmed. (Quality is the new `quality` key; materials and gems are the existing `parts` key; a gem's cut is its `cut`.) The implementer re-reads the data when writing E1 and adds any item that has appeared since; the test finds them.
 
@@ -152,7 +154,7 @@ Capacity as it stands (§3, silver −2, each object's own materials and setting
 
 Already within capacity, unchanged: the hub's long sword (Sharp and of the Bear, a small fine emerald pommel: 1 + 1 = 2), the trap hall's Hollow Charm (a gold amulet, three affixes: 1 + 1 + 1 = 3, and its ruby setting adds one or more), and the hub's **silver ring** (of the Mule, one affix: its capacity is 1 by the clamp, which silver's −2 makes the whole of it). A stat's worth: Masterwork gear is a visible power rise on the showcase's rack and the pedlar's wares (improvements give to-hit, damage, or protection); the PR notes the pedlar's prices (`value_with` follows mithril and flawless gems) and the showcase's expectations in the golden manifest, if any entry holds them.
 
-**The heirloom** (Father's sword, `heirloom { min = 2, max = 4, level = 6 }`): handed out at creation on the race's own weapon, at two to four affixes. Its make becomes part of the gift: the effect gains `quality = "masterwork"`, a family's best-kept weapon (capacity 1 + 3 = 4 on any weapon whose main material binds 0 or more, which every race's weapon in `fathers_sword.toml` has: steel, iron, wood, leather), so a count of four is never trimmed. **The consequence is deliberate and flagged for the owner: the heirloom is now a Masterwork weapon**, with Masterwork's three improvements. If that is too much, the alternative that keeps every answer true is `max = 3` with `quality = "marvellous"` (capacity 3); the E1 PR measures both and says which it took. The dev test runs every race's weapon at the top count.
+**The heirloom** (Father's sword, `heirloom { min = 2, max = 4, level = 6 }`): handed out at creation on the race's own weapon, at two to four affixes. Its make becomes part of the gift: the effect gains `quality = "masterwork"`, a family's best-kept weapon (capacity 1 + 3 = 4 on any weapon whose main material binds 0 or more, which every race's weapon in `fathers_sword.toml` has: steel, iron, wood, leather), so a count of four is never trimmed. **The consequence is deliberate and flagged for the owner: the heirloom is now a Masterwork weapon**, with Masterwork's three improvements. If that is too much, the alternative that keeps every answer true is `max = 3` with `quality = "marvellous"` (capacity 3); the E1 PR measures both and says which it took. The dev test runs every race's weapon at the top count. **E1 took Masterwork** (`max = 4` kept); at base 2 its capacity is 5, and Marvellous (4) would now hold the four as well.
 
 The pedlar's three uniques (the Brosinga Mene, the Eorcanstān, the Unhalwed Bedes) are in the table; they are offered by `content/offer.rs` at run time through the same `unique:` templates, so one change fits both.
 
@@ -309,7 +311,7 @@ Today magic loot is 3.25 % of finds and rares 0.5 %; a rare has three to six aff
 
 | Effect | Estimate | Reading |
 |---|---|---|
-| **Rares are trimmed** | loot's bases are plain and mostly common metals: a rare on a plain steel sword (capacity 1) keeps one affix; jewellery (capacity 2 to 4: iron 2, gold 3, gem-set gold 4; silver 1, or 2 with a flawless gem), gem-set weapons (2: the `[[ornament]]` chance is a few percent of a class's loot), and mithril or dragonbone variants (3) keep more. The shares test measures it; the first-pass expectation is that about a third of rolled rares keep three or more affixes, nearly all of them jewellery. Found rares get rarer in effect; found magic items are untouched (two affixes fit any base but a tin ring or a flint knife) | this is the owner's intent: a deep rare is a deep base. The player who wants six affixes makes the base (a Masterwork mithril blade, a flawless gem) or finds it: the gates are Metalcraft, Jewelcraft, and depth, not Enchanting |
+| **Rares are trimmed** | loot's bases are plain and mostly common metals: a rare on a plain steel sword (capacity 2, at base 2) keeps two affixes; jewellery (capacity 3 to 5: iron 3, gold 4, gem-set gold 5; silver 1, or 3 with a flawless gem), gem-set weapons (3: the `[[ornament]]` chance is a few percent of a class's loot), and mithril or dragonbone variants (4) keep more. The shares test measures it; the first-pass expectation was that about a third of rolled rares keep three or more affixes, nearly all of them jewellery. **Measured in E1 (#1427), with the base raised to 2 by the owner on 2026-11-13 and the result accepted:** about 87 % of loot's bases hold 2, so about 87 % of rares keep two affixes, 10 % to 12 % three or more, and 7 % to 8 % are untrimmed; about 87 % of magic-grade finds are untrimmed. Found rares get rarer in effect; found magic items are nearly untouched (two affixes fit any base but silver, soft metal, or knapped stone) | this is the owner's intent: a deep rare is a deep base. The player who wants six affixes makes the base (a Masterwork mithril blade, a flawless gem) or finds it: the gates are Metalcraft, Jewelcraft, and depth, not Enchanting |
 | **Crystals are plentiful** | Soulglass costs about 11 mana a cast (level 11, a ray, `attack`) and a kill gives one to three crystals; a floor of twenty living kills is ten to twenty crystals; salvage adds one per affix caught. A Kindle costs one, an Imbue three, a seal one more | as PoE's common currency; the limit is the capacity and the roll, not the crystal. Numbers to tune by the yield levels (`[yield] levels = [10, 20]`) and the salvage difficulty |
 | **Capacity is the gate** | an Imbue needs a capacity-3 base: a Marvellous anything, a Fine item with a gem, a gold ring, a Fine mithril or ironwood piece; six needs a Masterwork and a flawless gem or dragon stuff. Masterwork from the forge is a master's one in four (`recipes.md` §4), Temper's third improvement is at difficulty 17 | the professions chain together: the smith makes the base, the jeweller the gem, the enchanter the magic; a solo character trains two of the three over a game |
 | **Rolls at the reach** | a level-5 wizard with Enchanting 30 rolls at item level 4: +1 to +2 affixes, the first tiers; the top tiers at Enchanting 110, which the level-up rolls reach past level 20 | the enchanter grows as loot's depth does; a deep found rare (level 12) keeps its depth under any enchanter |

@@ -146,6 +146,8 @@ above.
 | Loot, item level | `magic-items.md#finding-them` |
 | Looking at an item, its description | `magic-items.md#looking-at-an-item` |
 | Unidentified, identify | `magic-items.md#unidentified-items` |
+| Capacity, enchantments an item can bear, the trim | `magic-items.md#capacity` |
+| Binding (a material's) | `magic-items.md#capacity`, `materials.md` |
 | Affix, prefix, suffix | `affixes.md#prefixes`, `affixes.md#suffixes` |
 | Base item | `affixes.md#base-items` |
 | Unique item | `magic-items.md#unique-items` |

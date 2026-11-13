@@ -20,7 +20,11 @@
 //!   allows, its weight) are local; the rest (stats, hit points, Defence, regeneration, speed,
 //!   carrying, stealth, light) global.
 //! - **Loot** ([`loot`]): the item level comes from the dungeon depth; rarity is a weighted draw.
+//! - **Capacity** ([`capacity`]): an item holds 1 to 6 affixes by its make (its quality, its
+//!   main material's `binding`, a set gem, jewellery); every item made is trimmed to it as the
+//!   last step of its making, loot and hand-made items alike (docs/dev/enchanting.md).
 
+pub mod capacity;
 pub mod describe;
 pub mod loot;
 pub mod mods;
@@ -29,10 +33,11 @@ pub mod numbers;
 pub mod worked;
 
 pub use crate::content::{AffixKind, Effect, ItemKind, Rarity};
+pub use capacity::capacity;
 pub use loot::{LootGrade, LootPool};
 pub use mods::Mods;
 pub use numbers::Numbers;
-pub use worked::{Aspect, Worked};
+pub use worked::{Aspect, Quality, Worked};
 
 use crate::content::{AffixDef, Content, ObjectDef};
 use serde::{Deserialize, Serialize};

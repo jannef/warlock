@@ -112,7 +112,10 @@ fn chatting_makes_one_favoured_identified_offer_the_same_each_run() {
     let item = wares.item.clone().expect("for sale");
     let magic = item.magic().expect("magic");
     assert_eq!(magic.rarity, Rarity::Rare);
-    assert!((4..=6).contains(&magic.affixes.len()), "{magic:?}");
+    // Rolled with four to six, then held to what its make can bear (docs/dev/enchanting.md).
+    let room = crate::magic::capacity(&item, &CONTENT);
+    assert!((1..=6).contains(&magic.affixes.len()), "{magic:?}");
+    assert!(magic.affixes.len() <= usize::from(room), "{magic:?}");
     assert!(magic.unique.is_none());
     // The player's level plus four, at least four.
     assert_eq!(magic.level, (w.player_level() + 4).max(4));

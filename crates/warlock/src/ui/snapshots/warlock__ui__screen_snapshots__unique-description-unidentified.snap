@@ -7,7 +7,6 @@ expression: "render(case, content.clone())"
 
 
 
-
                   ┌─ Item ───────────────────────────────────────────────────────┐
                   │                                                              │
                   │ ) Dagger                                                     │
@@ -24,9 +23,10 @@ expression: "render(case, content.clone())"
                   │ Unidentified: what its magic does is unknown, though it      │
                   │ works all the same.                                          │
                   │                                                              │
+                  │ It can bear two enchantments.                                │
+                  │                                                              │
                   │ Esc close                                                    │
                   └──────────────────────────────────────────────────────────────┘
-
 
 
 

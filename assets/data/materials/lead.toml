@@ -7,3 +7,4 @@ resists = { acid = 20, rust = 100, fire = 20 }
 color = "#7c8088"
 weight = 144
 value = 20
+binding = -1

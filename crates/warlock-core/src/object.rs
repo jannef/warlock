@@ -223,6 +223,11 @@ impl Stack {
         self.magic.as_deref()
     }
 
+    /// What it rolled, to change (the trim, [`crate::magic::capacity::trim`]).
+    pub(crate) fn magic_mut(&mut self) -> Option<&mut Magic> {
+        self.magic.as_deref_mut()
+    }
+
     /// What an anvil's work has done to it, if any: ground truth, for the rules and dev tools.
     pub(crate) fn worked(&self) -> Option<&Worked> {
         self.worked.as_deref()
@@ -548,6 +553,15 @@ impl Stack {
         let names = self.names(content);
         let word = self.worked_word();
         name::title(&names, word, self.magic(), self.is_identified(), content)
+    }
+
+    /// The affixes it holds against its capacity, as they truly are, for a base item (one with a
+    /// `kind`): ` (holds 1/2)` (docs/dev/enchanting.md). For dev tools only.
+    pub(crate) fn holds_text(&self, content: &Content) -> Option<String> {
+        content.object(self.object).kind?;
+        let held = self.magic().map_or(0, |m| m.affixes.len());
+        let room = crate::magic::capacity(self, content);
+        Some(format!(" (holds {held}/{room})"))
     }
 
     /// As it truly is, identified or not: for dev tools only.

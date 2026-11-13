@@ -87,7 +87,8 @@ or steal.
 {{#include generated/magic-suffixes.md}}
 
 Each tier's value is rolled once, when the item is made, anywhere within its range. An item
-remembers each affix's tier and value, so that enchanting can work on them later.
+remembers each affix's tier and value. How many affixes an item can hold is its
+[capacity](magic-items.md#capacity).
 
 ## What systems have affixes
 

@@ -8,5 +8,8 @@ name = "Grendles Grāpe"
 object = "gauntlets"
 affixes = ["accurate:5", "vicious:3", "hardened:4", "of_the_bear:6", "of_celerity:11", "of_the_ox:5"]
 level = 12
+# Six enchantments need its make (docs/dev/enchanting.md): Masterwork mithril.
+quality = "masterwork"
+parts = [{ of = "mithril" }]
 power = { ward = "staggered", message = "You keep your feet.", phrase = "No blow staggers its wearer." }
 lore = "The fingers close a little tighter than the hand inside them does."

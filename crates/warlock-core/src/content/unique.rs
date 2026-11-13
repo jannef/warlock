@@ -1,6 +1,6 @@
 //! Unique items (spec §8 "Magic items": "Unique items"; `data/uniques/` and each campaign's
 //! `data/uniques/`, one file per item named by its id): a rare item with a set name, set affixes
-//! and parts, an item level, a power ([`Power`]: a rule only a unique carries), and a line of
+//! and parts, a make (`quality`), an item level, a power ([`Power`]: a rule only a unique carries), and a line of
 //! lore. Content places one as `unique:ID` wherever it names objects (a pile, a legend's
 //! `objects` and `carry`, and `wield`/`wear` by the same name, a gear line, a kit, a shop's or a
 //! scenario's `carry`, a quest reward's `items`); [`Uniques::place`] makes it. Content places
@@ -12,11 +12,11 @@
 //! The item is [`Magic`] of rarity rare with its name, plus [`Magic::unique`] (its id, saved),
 //! by which its power and lore are found again ([`Content::unique`]).
 
-use super::level::{ItemPartSpec, item_part, magic_of};
+use super::level::{ItemPartSpec, hand_made, item_part, magic_of};
 use super::status::{OnHit, OnHitSpec};
 use super::{Content, ContentError, ObjectId, StatusId};
 use crate::item_parts;
-use crate::magic::Magic;
+use crate::magic::{Magic, Quality};
 use crate::object::Stack;
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -109,6 +109,8 @@ struct UniqueSpec {
     #[serde(default)]
     parts: Vec<ItemPartSpec>,
     level: Option<u8>,
+    /// Its make (`"fine"`, `"marvellous"`, `"masterwork"`), so its capacity holds its affixes.
+    quality: Option<Quality>,
     power: Option<PowerSpec>,
     lore: Option<String>,
 }
@@ -166,6 +168,7 @@ fn resolve(spec: UniqueSpec, content: &Content) -> Result<UniqueDef, String> {
         item_parts::check(def, &own, content)?;
         stack = stack.with_parts(own);
     }
+    let stack = hand_made(stack, spec.quality, &spec.id, content)?;
     let (power, phrase) = match spec.power {
         Some(p) => (Some(power(&p, content)?), Some(p.phrase.trim().to_string())),
         None => (None, None),

@@ -236,6 +236,7 @@ at = [19, 14]
 object = "iron_helm"
 name = "Dread Visage"
 affixes = ["hale:3", "accurate:1", "radiant:2", "of_the_owl:1"]
+quality = "masterwork"
 identified = true
 
 [[item]]
@@ -243,6 +244,7 @@ at = [18, 14]
 object = "short_bow"
 name = "Storm Song"
 affixes = ["hunters:1", "glinting:2", "of_celerity:1"]
+quality = "marvellous"
 
 [[item]]
 at = [18, 14]

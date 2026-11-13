@@ -230,7 +230,7 @@ char, the same way, `1` a little soot to `9` charred through), `inventory`
 (what the player
 carries, grouped by item class under `Class:` header lines as the screens group it, each stack by
 its position as action text names it with its numbers as the lists show them, `a long sword (+0
-hit, 1d8)`, a spirit weapon marked `(spirit)`, a wand whose type is known with its rung, `(rung 2)`, a flask whose type is known with its throw's range, `(throw 6)`, and weighs, worn and wielded things marked, their burden
+hit, 1d8)`, a spirit weapon marked `(spirit)`, a wand whose type is known with its rung, `(rung 2)`, a flask whose type is known with its throw's range, `(throw 6)`, a base item the affixes it truly holds against its capacity, `(holds 1/2)` (docs/dev/enchanting.md), and weighs, worn and wielded things marked, their burden
 and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's name, race, gender, and class (`Class Bard`; `Class Bard 30` at the class's cap;
@@ -392,6 +392,7 @@ file). Topics:
 - `docs/dev/traps.md` — trap data, triggering, known traps, the dev trap actions
 - `docs/dev/searching.md` — secret doors, the active and passive checks, who notices, the secrets stream
 - `docs/dev/magic-items.md` — affixes, rarities, base items, loot, identification, the item description
+- `docs/dev/enchanting.md` — affix capacity (`magic/capacity.rs`, materials' `binding`), the trim as the last step of making any item (`loot::finished`, gear's after its condition), `quality` on hand-made items, the capacity line for the Appraise-trained
 - `docs/dev/potions.md` — potions: the drink kinds, drinking through Consume, words and colours, sources, their talents
 - `docs/dev/prayer.md` — the priest's prayer: `data/prayer.toml`, the prayer talents and `TalentMods::prayer`, the face, the problems in priority order, the strain and its lock, the fixes, the dumps
 - `docs/dev/scrolls.md` — reading, spell scrolls on the traps' shared spell code, the scroll of identify, the read and identify lists

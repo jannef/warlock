@@ -17,6 +17,43 @@
 use crate::content::{ItemHarm, ObjectDef};
 use serde::{Deserialize, Serialize};
 
+/// The make a hand-made item is given in data (`quality = "masterwork"` on a unique, a level's
+/// `[[item]]`, the heirloom; docs/design/enchanting.md §4), as the forge's grades give it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Quality {
+    Fine,
+    Marvellous,
+    Masterwork,
+}
+
+impl Quality {
+    /// How many improvements it is.
+    pub const fn improvements(self) -> usize {
+        match self {
+            Quality::Fine => 1,
+            Quality::Marvellous => 2,
+            Quality::Masterwork => 3,
+        }
+    }
+
+    /// An item of base item `def` made at this quality: its improvements in its aspects in turn
+    /// (the first first, and round again), each one attempt, with no draw. `None` for an item
+    /// with no aspect to better (a ring).
+    pub fn worked(self, def: &ObjectDef) -> Option<Worked> {
+        let among = aspects(def);
+        if among.is_empty() {
+            return None;
+        }
+        let mut worked = Worked::default();
+        for i in 0..self.improvements() {
+            worked.attempted();
+            worked.improve(among[i % among.len()]);
+        }
+        Some(worked)
+    }
+}
+
 /// What its dice grow by, in sides, per [`Aspect::Die`].
 pub const SIDES_PER_DIE: u32 = 2;
 
@@ -101,6 +138,11 @@ impl Worked {
     pub fn count(&self, aspect: Aspect) -> i32 {
         let n = self.improved.iter().filter(|&&a| a == aspect).count();
         i32::try_from(n).unwrap_or(i32::MAX)
+    }
+
+    /// How many improvements it has now (none while damaged): Fine is one, Masterwork three.
+    pub fn improvements(&self) -> usize {
+        self.improved.len()
     }
 
     /// How many sides its improvements add to its dice.

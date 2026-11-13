@@ -572,7 +572,9 @@ fn monsters(content: &Arc<Content>) -> Vec<Monster> {
             let (carry, equipment) = if seed == 0 {
                 (Vec::new(), Default::default())
             } else {
-                let p = crate::gear::roll(content, &mut Rng::gear(seed, "balance"), cid, il);
+                let mut rng = Rng::gear(seed, "balance");
+                let mut p = crate::gear::roll(content, &mut rng, cid, il);
+                crate::gear::finish(content, &mut rng, &mut p);
                 (p.items, p.equipment)
             };
             let spawn = CreatureSpawn {

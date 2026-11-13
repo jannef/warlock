@@ -7,7 +7,6 @@ expression: "render(case, content.clone())"
 
 
 
-
                   ┌─ Item ───────────────────────────────────────────────────────┐
                   │                                                              │
                   │ ) Sharp emerald-pommelled long sword of the Bear             │
@@ -24,9 +23,10 @@ expression: "render(case, content.clone())"
                   │ Prefix  Sharp: +2 damage                                     │
                   │ Suffix  of the Bear: +2 to Strength                          │
                   │                                                              │
+                  │ It bears two enchantments and could bear one more.           │
+                  │                                                              │
                   │ Esc close                                                    │
                   └──────────────────────────────────────────────────────────────┘
-
 
 
 
