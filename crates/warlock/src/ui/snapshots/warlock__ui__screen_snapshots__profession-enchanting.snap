@@ -10,20 +10,20 @@ expression: "render(case, content.clone())"
 
 
 
-
             ┌─ Enchanting: recipes ────────────────────────────────────────────────────┐
             │                                                                          │
             │ Work                                                                     │
-            │ > a - Kindle        nothing to enchant                                   │
-            │   b - Quicken       nothing to enchant                                   │
-            │   c - Unbind        a magic item, about 30 minutes                       │
+            │ > a - Ennoble       beyond your skill                                    │
+            │   b - Imbue         beyond your skill                                    │
+            │   c - Kindle        nothing to enchant                                   │
+            │   d - Quicken       nothing to enchant                                   │
+            │   e - Recast        beyond your skill                                    │
+            │   f - Unbind        a magic item, about 30 minutes                       │
             │                                                                          │
-            │ Takes a plain item, a crystal, about 1 hour.                             │
+            │ Takes a magic item, a crystal, about 1 hour and 30 minutes.              │
             │                                                                          │
-            │ a-c or Enter make   Esc back                                             │
+            │ a-f or Enter make   Esc back                                             │
             └──────────────────────────────────────────────────────────────────────────┘
-
-
 
 
 

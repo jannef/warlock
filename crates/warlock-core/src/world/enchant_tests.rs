@@ -1,5 +1,5 @@
 //! Enchanting's recipes (docs/design/enchanting.md §7, §8; `world/enchant.rs`): Kindle, Quicken,
-//! and Unbind made, failed, and warped; the colour rule and `Magic::check` on every result; the
+//! Recast, Imbue, Ennoble, and Unbind made, failed, and warped; the colour rule and `Magic::check` on every result; the
 //! reach and the item level; a whole stack of arrows at once; the wizard's steps, the plan, and
 //! the rows' lacks; every refusal with no time; the hour and the mark; and a replay.
 
@@ -7,7 +7,7 @@ use super::enchant::{EnchantBand, crystal_object, enchant_band, enchant_out_for_
 use super::*;
 use crate::action::parse_actions;
 use crate::content::{AffixKind, ContentFiles, Rarity, RecipeId};
-use crate::magic::{Affix, Magic};
+use crate::magic::{Affix, Magic, Quality, capacity};
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
@@ -120,6 +120,21 @@ fn magic_sword(w: &mut World, affixes: &[&str], rare: bool, identified: bool) {
         .push(Stack::with_magic(sword, 1, magic));
 }
 
+/// The last stack of the pack made of `quality`.
+fn worked_as(w: &mut World, quality: Quality) {
+    let content = w.content.clone();
+    let stack = w.player_mut().inventory.last_mut().expect("a stack");
+    let worked = quality.worked(content.object(stack.object)).expect("arms");
+    stack.set_worked(worked);
+}
+
+/// The kinds of `magic`'s affixes, in order.
+fn kinds(w: &World, magic: &Magic) -> Vec<AffixKind> {
+    (magic.affixes.iter())
+        .map(|a| w.content.affixes().get(&a.id).expect("affix").kind)
+        .collect()
+}
+
 fn texts(w: &World) -> Vec<String> {
     w.messages().iter().map(|m| m.text.clone()).collect()
 }
@@ -181,7 +196,7 @@ fn the_band_is_made_from_a_margin_of_0_and_a_natural_2_warps() {
 }
 
 #[test]
-fn the_three_recipes_load_as_enchantings_profession() {
+fn the_six_recipes_load_as_enchantings_profession() {
     let w = world(1);
     let recipes = w.content.recipes();
     let skill = enchanting(&w);
@@ -191,8 +206,11 @@ fn the_three_recipes_load_as_enchantings_profession() {
     assert_eq!(
         rows,
         [
+            ("ennoble", 1, 14, 5400, 40),
+            ("imbue", 3, 15, 7200, 30),
             ("kindle", 1, 11, 3600, 0),
             ("quicken", 1, 13, 3600, 10),
+            ("recast", 1, 12, 3600, 20),
             ("unbind", 0, 10, 1800, 0)
         ]
     );
@@ -371,6 +389,12 @@ fn the_steps_plan_and_rows_say_what_the_work_takes() {
         "the plain sword; never the worn ring or a magic one"
     );
     assert_eq!(at(1), [3]);
+    // Imbue's crystals are told apart: their order matters.
+    let steps = w.perception().craft_steps(recipe(&w, "imbue"));
+    assert_eq!(
+        (steps.iter().map(|s| s.label.as_str())).collect::<Vec<_>>(),
+        ["item", "first crystal", "second crystal", "third crystal"]
+    );
     let steps = w.perception().craft_steps(recipe(&w, "unbind"));
     assert_eq!(steps.len(), 1);
     assert_eq!(
@@ -397,41 +421,83 @@ fn the_steps_plan_and_rows_say_what_the_work_takes() {
             .map(|r| (r.name, r.takes, r.unavailable.map(|l| l.id(&w.content))))
             .collect()
     };
+    let row = |name: &str, takes: &str, lack: Option<&str>| {
+        (name.to_string(), takes.to_string(), lack.map(String::from))
+    };
     assert_eq!(
         rows(&w),
         [
-            (
-                "Kindle".into(),
-                "a plain item, a crystal, about 1 hour".into(),
-                None
+            // The steel sword holds two: no rare can be made of it.
+            row(
+                "Ennoble",
+                "a magic item, a crystal, about 1 hour and 30 minutes",
+                Some("room")
             ),
-            (
-                "Quicken".into(),
-                "a magic item, a crystal, about 1 hour".into(),
-                None
+            row(
+                "Imbue",
+                "a plain item, 3 crystals, about 2 hours",
+                Some("room")
             ),
-            (
-                "Unbind".into(),
-                "a magic item, about 30 minutes".into(),
-                None
-            ),
+            row("Kindle", "a plain item, a crystal, about 1 hour", None),
+            row("Quicken", "a magic item, a crystal, about 1 hour", None),
+            row("Recast", "a magic item, a crystal, about 1 hour", None),
+            row("Unbind", "a magic item, about 30 minutes", None),
         ]
     );
-    // No crystal: Kindle and Quicken wait for one.
-    w.player_mut().inventory.remove(3);
+    // No crystal: the works that take one wait for it.
+    super::outcome::remove_stacks(w.player_mut(), &[3]);
     let lacks: Vec<Option<String>> = rows(&w).into_iter().map(|r| r.2).collect();
+    let some = |s: &str| Some(s.to_string());
     assert_eq!(
         lacks,
-        [Some("crystal".into()), Some("crystal".into()), None]
+        [
+            some("room"),
+            some("room"),
+            some("crystal"),
+            some("crystal"),
+            some("crystal"),
+            None
+        ]
+    );
+    // A Masterwork sword holds four, but two crystals are not Imbue's three.
+    item(&mut w, "long_sword", 1);
+    worked_as(&mut w, Quality::Masterwork);
+    crystal(&mut w, "red");
+    crystal(&mut w, "blue");
+    assert_eq!(rows(&w)[1].2, some("crystal"));
+    crystal(&mut w, "blue");
+    assert_eq!(rows(&w)[1].2, None);
+    let n = w.state.player().inventory.len();
+    let picks = [Some(n - 4), Some(n - 2), Some(n - 3), Some(n - 1)];
+    let plan = (w.perception())
+        .craft_plan(recipe(&w, "imbue"), &picks)
+        .expect("a plan");
+    assert_eq!(
+        (plan.name.as_str(), plan.uses.as_str(), plan.time.as_str()),
+        (
+            "the Masterwork long sword",
+            "a blue crystal, a red crystal, and a blue crystal",
+            "about 2 hours"
+        )
     );
     // A sword of two affixes has no room; nothing plain, nothing to kindle.
     let mut w = world(1);
     magic_sword(&mut w, &["sharp", "of_the_bear"], false, true);
     let lacks: Vec<Option<String>> = rows(&w).into_iter().map(|r| r.2).collect();
-    assert_eq!(lacks, [Some("nothing".into()), Some("room".into()), None]);
+    assert_eq!(
+        lacks,
+        [
+            some("room"),
+            some("nothing"),
+            some("nothing"),
+            some("room"),
+            some("crystal"),
+            None
+        ]
+    );
     train(&mut w, 5);
     let lacks: Vec<Option<String>> = rows(&w).into_iter().map(|r| r.2).collect();
-    assert_eq!(lacks[1], Some("skill".into()));
+    assert_eq!(lacks[3], Some("skill".into()));
 }
 
 #[test]
@@ -446,6 +512,8 @@ fn every_refusal_takes_no_time() {
     apply(&mut w, "equip:left_ring:f");
     let ruby = w.content.object_id("heart_crystal").expect("heart-crystal");
     w.player_mut().inventory.push(Stack::one(ruby)); // g
+    item(&mut w, "long_sword", 1); // h
+    worked_as(&mut w, Quality::Masterwork);
     let before = w.state.time;
     for (picks, line) in [
         ("craft:kindle", "You must choose the item."),
@@ -468,6 +536,23 @@ fn every_refusal_takes_no_time() {
         ),
         ("craft:unbind:a", "There is no magic in it."),
         ("craft:unbind:d,b", "That is more than the work takes."),
+        ("craft:recast:a,b", "There is no magic in it."),
+        (
+            "craft:recast:e,b",
+            "It is rare: unbind it, then imbue it anew.",
+        ),
+        ("craft:imbue:a,b", "You must choose the crystals."),
+        ("craft:imbue:a,b,b,b", "It would not hold so much."),
+        ("craft:imbue:d,b,b,b", "There is magic in it already."),
+        ("craft:ennoble:a,b", "There is no magic in it."),
+        ("craft:ennoble:d,b", "It would not hold so much."),
+        (
+            "craft:ennoble:e,b",
+            "It is rare already: this work cannot add to it.",
+        ),
+        // A Masterwork sword holds four; one red crystal is not three.
+        ("craft:imbue:h,b,b,b", "You do not carry so many crystals."),
+        ("craft:imbue:h,b,g,g", "That is no crystal."),
     ] {
         apply(&mut w, picks);
         assert_eq!(last(&w), line, "{picks}");
@@ -606,4 +691,186 @@ fn an_enchanting_replays() {
     let (verified, divergence) = replay.play(FIXTURE.clone()).expect("replays");
     assert_eq!(divergence, None);
     assert_eq!(verified.state_hash(), w.state_hash());
+}
+
+#[test]
+fn recast_rolls_as_many_affixes_of_the_same_kinds_anew() {
+    for seed in 1..12 {
+        let mut w = world(seed);
+        magic_sword(&mut w, &["sharp", "of_the_bear"], false, true);
+        crystal(&mut w, "blue");
+        enchant_out_for_test(&mut w, "recast", &[Some(0), Some(1)], EnchantBand::Made);
+        let magic = checked(&w, 0);
+        assert_eq!(magic.rarity, Rarity::Magic);
+        assert_eq!(magic.name, None);
+        assert_eq!(kinds(&w, &magic), [AffixKind::Prefix, AffixKind::Suffix]);
+        let blue = families(&w, "blue");
+        for affix in &magic.affixes {
+            assert!(blue.contains(&category(&w, affix)), "{:?}", magic.affixes);
+        }
+        assert_eq!(magic.level, 11);
+        assert_eq!(w.state.player().inventory.len(), 1, "the crystal is spent");
+    }
+    // One suffix stays one suffix.
+    let mut w = world(2);
+    magic_sword(&mut w, &["of_the_bear"], false, true);
+    crystal(&mut w, "red");
+    enchant_out_for_test(&mut w, "recast", &[Some(0), Some(1)], EnchantBand::Made);
+    let magic = checked(&w, 0);
+    assert_eq!(kinds(&w, &magic), [AffixKind::Suffix]);
+    // Failed: the old affixes stay, the crystal is spent.
+    let mut w = world(2);
+    magic_sword(&mut w, &["sharp", "of_the_bear"], false, true);
+    crystal(&mut w, "red");
+    enchant_out_for_test(&mut w, "recast", &[Some(0), Some(1)], EnchantBand::Failed);
+    let ids: Vec<String> = checked(&w, 0).affixes.into_iter().map(|a| a.id).collect();
+    assert_eq!(ids, ["sharp", "of_the_bear"]);
+    assert_eq!(w.state.player().inventory.len(), 1);
+}
+
+#[test]
+fn imbue_makes_a_plain_item_rare_within_its_capacity() {
+    for seed in 1..16 {
+        // A Marvellous steel sword holds three: always three affixes.
+        let mut w = world(seed);
+        item(&mut w, "long_sword", 1);
+        worked_as(&mut w, Quality::Marvellous);
+        assert_eq!(capacity(&w.state.player().inventory[0], &w.content), 3);
+        crystal(&mut w, "red");
+        crystal(&mut w, "blue");
+        crystal(&mut w, "white");
+        let picks = [Some(0), Some(1), Some(2), Some(3)];
+        enchant_out_for_test(&mut w, "imbue", &picks, EnchantBand::Made);
+        let magic = checked(&w, 0);
+        assert_eq!(magic.rarity, Rarity::Rare);
+        assert!(magic.identified);
+        assert_eq!(magic.affixes.len(), 3, "{:?}", magic.affixes);
+        assert_eq!(magic.level, 11);
+        // Prefixes before suffixes, each affix of one crystal's colour.
+        let k = kinds(&w, &magic);
+        assert!(k.windows(2).all(|p| p[0] <= p[1]), "{k:?}");
+        let colours = ["red", "blue", "white"].map(|c| families(&w, c));
+        for a in &magic.affixes {
+            assert!(colours.iter().any(|f| f.contains(&category(&w, a))));
+        }
+        assert_eq!(
+            w.state.player().inventory.len(),
+            1,
+            "the crystals are spent"
+        );
+        let name = magic.name.clone().expect("a name");
+        let line =
+            format!("The Marvellous long sword drinks the three crystals and wakes as {name}.");
+        assert!(said(&w, &line), "{:?}", texts(&w));
+    }
+    // Three red crystals from one stack: every affix red; a Masterwork sword holds four.
+    let mut seen = Vec::new();
+    for seed in 1..24 {
+        let mut w = world(seed);
+        item(&mut w, "long_sword", 1);
+        worked_as(&mut w, Quality::Masterwork);
+        crystal(&mut w, "red");
+        w.player_mut().inventory[1].count = 4;
+        let picks = [Some(0), Some(1), Some(1), Some(1)];
+        enchant_out_for_test(&mut w, "imbue", &picks, EnchantBand::Made);
+        let magic = checked(&w, 0);
+        let red = families(&w, "red");
+        assert!(magic.affixes.iter().all(|a| red.contains(&category(&w, a))));
+        assert!((3..=4).contains(&magic.affixes.len()));
+        seen.push(magic.affixes.len());
+        assert_eq!(
+            w.state.player().inventory[1].count,
+            1,
+            "three of four spent"
+        );
+    }
+    assert!(seen.contains(&4), "{seen:?}");
+}
+
+#[test]
+fn imbues_crystals_each_give_an_affix_of_their_colour() {
+    // A green crystal first and two black ones: one affix at least is green's, and all are of
+    // the two colours.
+    for seed in 1..16 {
+        let mut w = world(seed);
+        item(&mut w, "long_sword", 1);
+        worked_as(&mut w, Quality::Marvellous);
+        crystal(&mut w, "green");
+        crystal(&mut w, "black");
+        crystal(&mut w, "black");
+        let picks = [Some(0), Some(1), Some(2), Some(3)];
+        enchant_out_for_test(&mut w, "imbue", &picks, EnchantBand::Made);
+        let magic = checked(&w, 0);
+        let green = families(&w, "green");
+        let black = families(&w, "black");
+        let of = |f: &[String], a: &Affix| f.contains(&category(&w, a));
+        assert!(magic.affixes.iter().any(|a| of(&green, a)));
+        assert!((magic.affixes.iter()).all(|a| of(&green, a) || of(&black, a)));
+        assert!((magic.affixes.iter()).filter(|a| of(&black, a)).count() >= 2);
+    }
+}
+
+#[test]
+fn a_failed_imbue_spends_all_three_crystals() {
+    let mut w = world(1);
+    crystal(&mut w, "red"); // a
+    item(&mut w, "long_sword", 1); // b
+    worked_as(&mut w, Quality::Masterwork);
+    crystal(&mut w, "blue"); // c
+    w.player_mut().inventory[2].count = 2;
+    let picks = [Some(1), Some(0), Some(2), Some(2)];
+    enchant_out_for_test(&mut w, "imbue", &picks, EnchantBand::Failed);
+    assert!(said(&w, "The crystals go dark in your hands."));
+    assert_eq!(pack(&w), ["a Masterwork long sword"]);
+    // A natural 2: it warps, and the crystals around it are spent all the same.
+    let red = crystal_object(&w.content, "red");
+    w.player_mut().inventory.insert(0, Stack::one(red));
+    w.player_mut().inventory.push(Stack::new(red, 2));
+    let picks = [Some(1), Some(0), Some(2), Some(2)];
+    enchant_out_for_test(&mut w, "imbue", &picks, EnchantBand::Warped);
+    assert_eq!(pack(&w), ["a warped long sword"], "{:?}", texts(&w));
+}
+
+#[test]
+fn ennoble_makes_a_magic_item_rare_with_one_affix_more_and_a_name() {
+    let mut drew = Vec::new();
+    for seed in 1..16 {
+        let mut w = world(seed);
+        magic_sword(&mut w, &["sharp"], false, true);
+        worked_as(&mut w, Quality::Marvellous);
+        crystal(&mut w, "red");
+        let thing = format!("The {}", w.lore().title(&w.state.player().inventory[0]));
+        enchant_out_for_test(&mut w, "ennoble", &[Some(0), Some(1)], EnchantBand::Made);
+        let magic = checked(&w, 0);
+        assert_eq!(magic.rarity, Rarity::Rare);
+        assert_eq!(magic.affixes.len(), 2);
+        let k = kinds(&w, &magic);
+        assert!(k.windows(2).all(|p| p[0] <= p[1]), "{k:?}");
+        let added = (magic.affixes.iter())
+            .find(|a| a.id != "sharp")
+            .expect("added");
+        assert!(families(&w, "red").contains(&category(&w, added)));
+        drew.push(k);
+        let name = magic.name.clone().expect("a name");
+        let line = format!("{thing} takes the red crystal's glow and wakes as {name}.");
+        assert!(said(&w, &line), "{:?}", texts(&w));
+    }
+    // Both kinds have room on a magic item: either may be drawn.
+    assert!(drew.iter().any(|k| k[1] == AffixKind::Suffix), "{drew:?}");
+    assert!(drew.iter().any(|k| k[1] == AffixKind::Prefix), "{drew:?}");
+    // A Fine sword holds two, too few for a rare; a Marvellous one of two affixes takes a third.
+    let mut w = world(1);
+    magic_sword(&mut w, &["sharp", "of_the_bear"], false, true);
+    worked_as(&mut w, Quality::Fine);
+    crystal(&mut w, "red");
+    let before = w.state.time;
+    apply(&mut w, "craft:ennoble:a,b");
+    assert_eq!(last(&w), "It would not hold so much.");
+    assert_eq!(w.state.time, before);
+    let content = w.content.clone();
+    let stack = &mut w.player_mut().inventory[0];
+    let worked = Quality::Marvellous.worked(content.object(stack.object));
+    stack.set_worked(worked.expect("arms"));
+    apply(&mut w, "craft:ennoble:a,b");
+    assert_eq!(w.state.time.since(before).as_seconds(), 5400);
 }

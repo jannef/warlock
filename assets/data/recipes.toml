@@ -37,7 +37,8 @@
 #               ornament, failure, fumble, or brittle, and a `difficulty` and `seconds` only for
 #               `cut`, `set`, and `enchant`, which must give both (the others keep theirs in
 #               temper.toml)
-#   enchant     an `enchant` recipe's kind: `kindle`, `quicken`, or `unbind` (each once;
+#   enchant     an `enchant` recipe's kind: `kindle`, `quicken`, `recast`, `imbue`,
+#               `ennoble`, or `unbind` (each once;
 #               docs/dev/enchanting.md "The recipes")
 #   crystals    the crystals an `enchant` recipe takes, 0 to 3: at least one for a kind that
 #               rolls affixes, none for `unbind`; only on an `enchant` recipe

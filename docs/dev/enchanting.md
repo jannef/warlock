@@ -195,8 +195,9 @@ check was made; untrained, none.
 
 ## The recipes
 
-E4 (#1430; design §7, §8). Enchanting is a profession: `data/recipes/enchanting/` holds
-`kindle.toml`, `quicken.toml`, and `unbind.toml`, so its row "Enchanting…" is in the abilities
+E4 (#1430) and E5 (#1431; design §7, §8). Enchanting is a profession: `data/recipes/enchanting/`
+holds `kindle.toml`, `quicken.toml`, `recast.toml`, `imbue.toml`, `ennoble.toml`, and
+`unbind.toml` (rows in file-name order), so its row "Enchanting…" is in the abilities
 menu for the trained, and `data/recipes.toml`'s `[[profession]]` gives it "Your work as an
 enchanter.", `stat = "willpower"`, `verb = "Enchant"`. `data/skills.toml` gives Enchanting
 the professions' `craft` curve (0, 8 at 100, 12 at 200; salvage's affix checks read it too), its
@@ -204,18 +205,22 @@ reach `enchant_level` (`Effect::EnchantLevel`, `[[0, 1], [110, 12], [200, 12]]`,
 `MAX_ENCHANT_LEVEL` 12), and a `craft` mark at 100 %.
 
 - **The data** (`content/recipe.rs`): `use = "enchant"` with `enchant = "kindle" | "quicken" |
-  "unbind"` (`RecipeUse::Enchant(EnchantKind)`) and `crystals` (`RecipeDef::crystals`, 0 to
+  "recast" | "imbue" | "ennoble" | "unbind"` (`RecipeUse::Enchant(EnchantKind)`) and `crystals` (`RecipeDef::crystals`, 0 to
   `MOST_CRYSTALS` 3); `difficulty` and `seconds` required as Cut's and Set's (`checked()`). The
   loader refuses an `enchant` kind on another `use` or missing on `enchant`, a kind twice,
-  `crystals` above 3 or on another `use`, a kind that rolls (Kindle, Quicken) with none, and
-  Unbind with any.
+  `crystals` above 3 or on another `use`, a kind that rolls (all but Unbind) with none, and
+  Unbind with any. Imbue's file gives 3.
 - **The rules** (`world/enchant.rs`; `Spent::Enchant(Enchanting)`, dispatched by one line each
   from `World::start_craft`, `craft::lack`, `craft::takes`, `craft_make::craft_steps`, and
-  `craft_plan`): `craft:kindle:ITEM,CRYSTAL`, `craft:quicken:ITEM,CRYSTAL`, `craft:unbind:ITEM`.
+  `craft_plan`): `craft:kindle:ITEM,CRYSTAL`, `craft:quicken:ITEM,CRYSTAL`, `craft:recast:ITEM,CRYSTAL`,
+  `craft:imbue:ITEM,C1,C2,C3`, `craft:ennoble:ITEM,CRYSTAL`, `craft:unbind:ITEM`.
   The wizard's steps are the item (`CraftStepKind::Item`: the stacks `refusal` passes) and a
-  crystal for each the recipe takes (`CraftStepKind::Input`, "crystal": every crystal carried,
-  any colour). The plan's verb is the recipe's name ("Kindle"), its name "the long sword", its
-  uses the crystal ("a red crystal"; nothing for Unbind, whose dialog says only its time).
+  crystal for each the recipe takes (`CraftStepKind::Input`, "crystal", Imbue's "first crystal",
+  "second crystal", "third crystal": every crystal carried, any colour; one stack may be picked
+  for several, `resolve` refusing more picks of it than it holds: "You do not carry so many
+  crystals."). The plan's verb is the recipe's name ("Kindle"), its name "the long sword", its
+  uses the crystals in pick order ("a red crystal"; "a red crystal, a red crystal, and a blue
+  crystal"; nothing for Unbind, whose dialog says only its time).
 - **Refused, no time**, in order: untrained (`World::untrained`), below `from`, no item pick, more
   picks than the work takes, no crystal pick, then `refusal`: no such stack, not a base item or a
   spirit weapon ("No magic can be bound in that."; ammunition is a base item, the whole stack
@@ -224,15 +229,21 @@ reach `enchant_level` (`Effect::EnchantLevel`, `[[0, 1], [110, 12], [200, 12]]`,
   Kindle on magic ("There is magic in it already."), Quicken or Unbind on a plain item ("There is
   no magic in it."), Quicken on a rare ("It is rare already: this work cannot add to it.": a
   rare's Quicken takes the heart-crystal, E6), Quicken on two affixes or at capacity ("It holds
-  all it can."); then the crystal pick that is no crystal ("That is no crystal."), nothing of
+  all it can."); Recast on a plain item ("There is no magic in it.") or a rare ("It is rare:
+  unbind it, then imbue it anew."); Imbue on magic ("There is magic in it already.") or an item
+  of capacity below 3 ("It would not hold so much."); Ennoble on a plain item, a rare (Quicken's
+  words), capacity below 3 ("It would not hold so much."), or at capacity ("It holds all it
+  can."); then the crystal pick that is no crystal ("That is no crystal."), nothing of
   its colour's families left to roll in the kinds the work may add ("No more of that nature will
-  take."), a quest's object ("It will not take your will."), and unpaid goods (`may_loose`).
+  take."; Recast: for each kind the item has, on an empty item; Imbue: each crystal's families
+  for either kind, on the plain item), a quest's object ("It will not take your will."), and unpaid goods (`may_loose`).
 - **The rows** (`enchant::lack`, after the skill): `RecipeLack::Nothing` ("nothing to enchant":
   no stack the work may take), `Room` ("it holds all it can": Quicken's, every refused stack
-  short only of room), `Crystal` ("no crystal to hand"). `takes`: "a plain item, a crystal, about
+  short only of room or capacity: Quicken's, Imbue's, Ennoble's), `Crystal` ("no crystal to hand":
+  fewer crystals carried, all stacks counted, than the recipe takes). `takes`: "a plain item, a crystal, about
   1 hour", "a magic item, a crystal, about 1 hour", "a magic item, about 30 minutes".
 - **The roll's item level**: the reach is `skill_effect_of(enchanting, EnchantLevel)` clamped
-  to 1..12; Kindle rolls at the reach, Quicken at the greater of the item's `Magic.level` and the
+  to 1..12; Kindle and Imbue roll at the reach, Quicken, Recast, and Ennoble at the greater of the item's `Magic.level` and the
   reach, Unbind's check reads the item's own. The made item's `Magic.level` is the roll's.
 - **The check** (`World::enchanted`, after `keep_at` ran the recipe's `seconds`, Quick hands' share
   of them, `mastery::craft_seconds`, as the plan and the row say; an interruption
@@ -244,12 +255,25 @@ reach `enchant_level` (`Effect::EnchantLevel`, `[[0, 1], [110, 12], [200, 12]]`,
   weights among the kinds with a candidate (`magic::loot::pick_weighted`, one draw), then
   `roll_affix_within` (affix, tier, value: three draws) with the crystal's `families`; the item
   gets a `Magic` of rarity magic, the roll's level, identified. Quicken rolls the kind the item
-  lacks (a prefix goes first among the affixes, a suffix last), the level the roll's. Unbind
+  lacks (a prefix goes after the last prefix, a suffix last: `place`), the level the roll's.
+  Recast rolls one affix for each the item had, of the same kinds in order, with the crystal's
+  families, the old ones gone first (none can crowd another out: a magic item holds one of each
+  kind); rarity and the lack of a name kept. Imbue (`imbued`) draws the count from `[rare]
+  affixes` (`pick_weighted`), held to the capacity, then the split (`loot::rare_split`), then
+  each affix: the n-th of the n-th crystal's families, past the crystals of all their families
+  together; a prefix while the split has one left and the families can roll one, else a suffix
+  (a slot neither can fill is skipped); then the name (`loot::rare_name`); a fresh rare `Magic`.
+  Ennoble draws the kind evenly (`Rng::index`) among the kinds below `MAX_PER_KIND` that can
+  roll, the affix, then the name; the rarity becomes rare. Unbind
   draws nothing and clears the `Magic` (`Stack::set_magic(None)`): its `Worked`, parts, rung,
   and charges stay. "The long sword takes the red crystal's glow. It is now a Sharp long sword.",
-  "The magic goes out of Grim Bite. It is now a long sword." The item is changed in place,
+  "The magic goes out of Grim Bite. It is now a long sword.", "The long sword drinks the three
+  crystals and wakes as Grim Bite.", "The Sharp long sword takes the red crystal's glow and wakes
+  as Storm Hunger." (Ennoble). `Magic::check` holds on every result (the tests). The item is changed in place,
   a whole stack at once.
-- **Failed**: the crystal is spent ("The crystal goes dark in your hands."), the item as it was;
+- **Failed**: the crystals are spent ("The crystal goes dark in your hands.", "The crystals go
+  dark in your hands."; `World::spend_crystals`: one from each pick, a stack picked twice gives
+  two), the item as it was;
   Unbind's "The Sharp long sword clings to its magic." **Warped** (a natural 2): the crystal is
   spent and `World::harm_item(item, ItemHarm::Enchant)` ("warped", withstood by no material; an
   item of Proof is spared as protected): "The long sword warps under your hands.", or, warped

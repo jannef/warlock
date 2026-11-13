@@ -1,0 +1,13 @@
+# Recast (docs/design/enchanting.md §8; docs/dev/enchanting.md "The recipes"): a magic item's
+# affixes rolled anew, as many as it had and of the same kinds, of the crystal's families, at the
+# greater of its item level and the enchanter's reach. A rare is refused (Unbind, then Imbue).
+# Failed, the crystal is spent and the item is as it was; a natural 2 warps it. The rules are
+# `world/enchant.rs`.
+[[recipe]]
+id = "recast"
+use = "enchant"
+enchant = "recast"
+crystals = 1
+difficulty = 12
+seconds = 3600
+from = 20

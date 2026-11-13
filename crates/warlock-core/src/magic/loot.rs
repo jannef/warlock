@@ -479,7 +479,7 @@ fn roll_magic(
 
 /// How many of a rare item's `count` affixes are prefixes and how many suffixes: one draw,
 /// evenly among the splits that keep at most [`crate::content::MAX_PER_KIND`] of each.
-fn rare_split(rng: &mut Rng, count: i32) -> (i32, i32) {
+pub(crate) fn rare_split(rng: &mut Rng, count: i32) -> (i32, i32) {
     let most = crate::content::MAX_PER_KIND as i32;
     let prefixes = rng.range((count - most).max(0), count.min(most));
     (prefixes, count - prefixes)
@@ -688,7 +688,7 @@ pub fn tier_window(a: &AffixDef, level: u8) -> Range<usize> {
 }
 
 /// A rare item's two-word name: a first word, and a second for its kind of item.
-fn rare_name(content: &Content, rng: &mut Rng, def: &ObjectDef) -> String {
+pub(crate) fn rare_name(content: &Content, rng: &mut Rng, def: &ObjectDef) -> String {
     let affixes = content.affixes();
     let first = rng.pick(&affixes.first_names).cloned().unwrap_or_default();
     let seconds = def.kind.and_then(|k| affixes.second_names.get(&k));
