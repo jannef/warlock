@@ -701,6 +701,9 @@ pub struct World {
     /// Whether the missile that just reached someone was caught (not saved; Diamond soul,
     /// `ascetic.rs`): its flight ends there, and it falls.
     caught: bool,
+    /// The creature a spell with `crystal` is striking now (not saved; Soulglass, `crystal.rs`):
+    /// if it dies of the blow it leaves crystals, not a corpse.
+    glassing: Option<ActorId>,
     /// Traps sprung since this world was created or loaded (not saved): a rest perceives every
     /// turn in which one went off (a teleport moves someone farther than a step).
     sprung: u64,
@@ -1261,6 +1264,7 @@ impl World {
             held: None,
             sleeper_struck: None,
             caught: false,
+            glassing: None,
             sprung: 0,
             spawned: 0,
             reshaped: 0,

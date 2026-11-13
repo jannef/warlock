@@ -489,6 +489,9 @@ struct EffectSpec {
     mana: Option<String>,
     /// A percent of the harm a single-target damage spell does that comes back to its caster.
     leech: Option<u8>,
+    /// A single-target damage spell whose kill leaves crystals, not a corpse (Soulglass).
+    #[serde(default)]
+    crystal: bool,
     /// A burst's targets: only creatures of these tags (Rebuke).
     #[serde(default)]
     only_tags: Vec<String>,
@@ -657,6 +660,10 @@ pub struct SpellEffect {
     pub mana: Option<Roll>,
     /// The percent of the harm it does that comes back to its caster (Leech, 1 to 100).
     pub leech: Option<u8>,
+    /// Whether a creature it kills leaves crystals of its colour in place of its corpse and its
+    /// body's crafting stock (Soulglass, docs/design/enchanting.md §6; `world/crystal.rs`): a
+    /// single-target `damage` spell's.
+    pub crystal: bool,
     /// A burst's targets: only creatures with one of these tags, friend or foe (Rebuke); empty:
     /// everyone.
     pub only_tags: Vec<String>,
@@ -1381,6 +1388,8 @@ fn effect(
     let hexes = [SpellPurpose::Damage, SpellPurpose::Hex];
     only("leech", e.leech.is_some(), &[SpellPurpose::Damage])?;
     shaped("leech", e.leech.is_some(), &single)?;
+    only("crystal", e.crystal, &[SpellPurpose::Damage])?;
+    shaped("crystal", e.crystal, &single)?;
     only("only_tags", !e.only_tags.is_empty(), &hexes)?;
     shaped("only_tags", !e.only_tags.is_empty(), &[Shape::Burst])?;
     only(
@@ -1492,6 +1501,7 @@ fn effect(
         charm,
         mana,
         leech: e.leech,
+        crystal: e.crystal,
         only_tags: e.only_tags,
         only_terrain: e.only_terrain,
         only_sighted: e.only_sighted,
@@ -1954,6 +1964,18 @@ damage = "2d6"
             ),
             (
                 spell(
+                    "damage",
+                    "burst",
+                    &format!("range = 3\nradius = 1\n{harm}effect = {{ crystal = true }}"),
+                ),
+                "a `burst` has no `crystal`",
+            ),
+            (
+                spell("hex", "ray", "range = 3\neffect = { crystal = true }"),
+                "a `hex` spell has no `crystal`",
+            ),
+            (
+                spell(
                     "buff",
                     "self",
                     "effect = { status = \"hasted\", only_terrain = \"plants\" }",
@@ -2293,6 +2315,7 @@ damage = "2d6"
             ("sleep", 6, None, 11, false),
             ("slick", 6, None, 11, false),
             ("slumber", 15, None, 15, false),
+            ("soulglass", 11, Some("3d6"), 11, true),
             ("spark", 1, Some("2d4"), 4, true),
             ("sunfire", 30, Some("10d6"), 90, true),
             ("thunderclap", 7, Some("2d6"), 13, true),

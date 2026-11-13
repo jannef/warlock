@@ -193,6 +193,34 @@ the saved list after the materials ("You save 2 steel ingots and a red crystal."
 `Use::Salvage` on Enchanting (its new `mark = [{ on = "salvage", chance = 100 }]`) when any affix
 check was made; untrained, none.
 
+## Soulglass
+
+The necromancy ray that leaves crystals (#1429; the design's §6): `data/spells/soulglass.toml`
+(level 11, a ray with an attack roll, necrotic `3d6`, range 6, Leech's look and ranks' shape),
+the witch's at level 16 (`talents/soulglass.toml`, `classes/10-witch.toml`), anyone's from its
+grimoire (`objects/scroll_of_soulglass.toml`, level 6, frequency 20, as the other level-11
+spells' scrolls; its grimoire one time in ten, `Content::grimoire_or`). A scroll or a wand of it
+crystallises too: the effect is the spell's.
+
+- **The key**: `[spell.effect] crystal = true` (`SpellEffect::crystal`), refused by `spell_def`
+  off a `damage` spell or off a single-target shape (ray, bolt, touch), as `leech` is: the hook
+  is in `cast.rs::spell_attack`, the one place a single target's roll is made, because
+  `spell_strikes` does not know the spell.
+- **The mark**: `spell_attack` sets `World::glassing` (not saved) to the target around its
+  `spell_strikes`, whoever casts it (a reflected one marks the caster it turns on). A kill of that
+  blow reaches `fight.rs::creature_dies`, which asks `World::crystallise` (`world/crystal.rs`)
+  before anything else of the body: a type with a corpse (`Content::corpse_of`), no animated
+  thing, and a colour (`Crystals::colour_of`) leaves `yield_at(level)` crystals of its colour (no
+  draw), no corpse, and no `drops_of` stock (as a statue leaves none); a creature tagged `dragon`
+  also `[rare] dragon` (no draw), any other of `[rare] level` or more one `chance(chance)` draw
+  and, made, an `index` among `materials`, all from the gameplay stream. Its gear falls as any
+  dead creature's; a summoned or risen one leaves nothing, a statue's death is the statue's
+  (stone first), and no cursed room raises glass. Anything else dies as it would.
+- **Words**, where the player sees the cell: "Its body turns to glass: where it fell lies a green
+  crystal." / "… lie 3 red crystals and a heart-crystal." (`object::phrase`), after the death
+  line.
+- **Not built**: the design's creature `crystal = "…"` override (no creature needs one).
+
 ## Tests
 
 `content/crystal_tests.rs` (the owner's order and two rules, the yield, every affix's colour and
@@ -200,7 +228,9 @@ word, every creature's colour by its first tags, the loader's refusals), `world/
 (consuming through `eat`: mana to the maximum, the marks, the step and its diminishing, from the
 floor, the rare materials refused with no time, a replay; salvage: a crystal per affix by its
 check, unidentified magic's the same by the same fate with nothing named, Enchanting's mark, the rare materials' chance at item level 10 and none
-below).
+below), `world/soulglass_tests.rs` (a kobold's green crystal and nothing else, Leech's corpse,
+the yield by level and the gorgon's heart-crystal, a creature of no colour dying as ever, the rare
+material's chance from level 15 and none below, the witch's grant at 16).
 
 `magic/capacity_tests.rs`: the design's examples (the silver ring's clamp among them), a damaged
 and repaired Masterwork, `binding` from a variant's part, the trim's sequence on 2+2, 3+3, 3+1,

@@ -397,6 +397,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (one heal roll for the caster and their allies in a burst about them, two casts' time); 14
     Rebuke (fire on the undead in a burst alone, friend or foe, and Frightened 3); 20 Cloudburst
     (an hour of rain under the open sky, putting out what burns there).
+    **Soulglass** (#1429; design `docs/design/enchanting.md` §6; `world/crystal.rs`): 11, a
+    necrotic ray with an attack roll, `3d6`, range 6, `[spell.effect] crystal`; the witch's at 16,
+    anyone's from its grimoire. A creature it kills that leaves a corpse, is no animated thing,
+    and has a colour (`data/crystals.toml`) leaves its colour's crystals (one, two from level 10,
+    three from 20) and no corpse or crafting stock; a dragon also a heart-crystal, any other of
+    level 15 or more a 10 % chance of a rare material; its gear falls as ever.
     **Healing harms the undead** (#1278): a healing spell (a `heal` that feeds on no corpse:
     Mend, Cure wounds, Benison; never Grave feast) that lands on a creature tagged `undead` does
     its roll (its rung, rank, and hooks) as fire harm instead ("The light of mending sears the

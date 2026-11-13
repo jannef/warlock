@@ -1069,7 +1069,10 @@ impl World {
         };
         let damage = Damage::new(amount + sneak, def.damage_type);
         let start = made.len();
+        // Soulglass: a kill of this blow leaves crystals (`crystal.rs`).
+        self.glassing = def.effect.crystal.then_some(target);
         let harm = self.spell_strikes(by, target, source, (damage, strike), made);
+        self.glassing = None;
         super::surprise::mark_caught(&mut made[start..], (by, target), caught);
         self.leech(by, def, harm);
         (strike, amount + sneak)

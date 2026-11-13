@@ -4,8 +4,9 @@ A **magic crystal** is magic caught in a stone. There are six colours, and each 
 is the blood and the fire, blue the mind and the frost, and so on. An enchanter will bind them
 into arms and armour. The colour decides what kinds of magic a crystal can give.
 
-You get crystals by [salvaging](crafting.md#salvage) magic items, identified or not. No shop
-sells them and none lie on the floor.
+You get crystals by [salvaging](crafting.md#salvage) magic items, identified or not, and from
+the creatures you kill with [Soulglass](#soulglass). No shop sells them and none lie on the
+floor.
 Anyone can [consume](#consuming-a-crystal) one.
 
 ## The colours
@@ -31,6 +32,19 @@ An [unidentified](magic-items.md#unidentified-items) item gives crystals the sam
 messages do not name its affixes ("You catch some of its magic in a red crystal."), but the
 colours you get hint at what it was.
 
+## Soulglass
+
+[Soulglass](magic.md#spell-soulglass) is a ray of necromancy. The [witch](classes.md#witch) learns
+it at level 16, and anyone can learn it from its grimoire. A living creature it kills turns to
+glass: it leaves no corpse and none of the crafting stock its body would give, but crystals of its
+colour lie where it fell. What it carried falls as usual.
+
+A stronger creature leaves more crystals, and a very strong one may leave a
+[rare material](#rare-materials) too (how many and how often is under [The numbers](#the-numbers)).
+A creature with no corpse (a spirit, a fire elemental), an animated thing, a summoned creature,
+and a creature of no colour die as they would from any other spell. The undead take no
+[necrotic](spellcasting.md#spell-types) harm, so Soulglass does nothing to them.
+
 ## Consuming a crystal
 
 Crystals are in the Consume list (`e`, the same list as [food](food.md) and
@@ -53,7 +67,8 @@ Two rare materials come with very powerful magic:
 - the **heart-crystal**, which will add an affix to a rare item beyond its roll, and
 - the **soul-fetter**, which will keep one affix while the rest are made again.
 
-Salvaging a rare item of a high enough item level can leave one.
+Salvaging a rare item of a high enough item level can leave one, and so can a powerful creature
+killed by [Soulglass](#soulglass). A dragon always leaves a heart-crystal.
 
 Morwenna, a deep gnome on the cutting floor of Gimmwīc, reads crystals and will tell you what each
 colour holds, if you stop to listen (see [People](npcs.md)).
