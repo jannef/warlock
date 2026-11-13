@@ -2,9 +2,9 @@
 
 Developer notes for working on this part of Warlock; the approved design is
 `docs/design/enchanting.md` (#1414), built in phases E1 to E6 (#1427 to #1432). Keep it current
-with the code, as CLAUDE.md says. E1 and E2 are built: affix capacity and the trim; the crystals,
-consuming one, and salvage's affix checks. The Soulglass spell, the recipes, and the seals are
-later phases.
+with the code, as CLAUDE.md says. E1, E2, and E4 are built: affix capacity and the trim; the
+crystals, consuming one, and salvage's affix checks; the profession with Kindle, Quicken, and
+Unbind. The Soulglass spell, Recast, Imbue, Ennoble, and the seals are later phases.
 
 ## Affix capacity
 
@@ -157,7 +157,7 @@ families, so change them with the colours.
 
 `data/enchanting.toml` (`EnchantingRules`, `Content::enchanting`): `salvage_difficulty = 12`,
 `salvage_tier_step = 3` (`salvage_against(affix)` = 12 + tier ÷ 3, a tier-12 affix +4),
-`level_step = 3` and `seal_seconds = 1800` (read by E4 and E6).
+`level_step = 3` (the recipes' check, below) and `seal_seconds = 1800` (E6).
 
 ## Consuming a crystal
 
@@ -193,6 +193,76 @@ the saved list after the materials ("You save 2 steel ingots and a red crystal."
 `Use::Salvage` on Enchanting (its new `mark = [{ on = "salvage", chance = 100 }]`) when any affix
 check was made; untrained, none.
 
+## The recipes
+
+E4 (#1430; design §7, §8). Enchanting is a profession: `data/recipes/enchanting/` holds
+`kindle.toml`, `quicken.toml`, and `unbind.toml`, so its row "Enchanting…" is in the abilities
+menu for the trained, and `data/recipes.toml`'s `[[profession]]` gives it "Your work as an
+enchanter.", `stat = "willpower"`, `verb = "Enchant"`. `data/skills.toml` gives Enchanting
+the professions' `craft` curve (0, 8 at 100, 12 at 200; salvage's affix checks read it too), its
+reach `enchant_level` (`Effect::EnchantLevel`, `[[0, 1], [110, 12], [200, 12]]`, at most
+`MAX_ENCHANT_LEVEL` 12), and a `craft` mark at 100 %.
+
+- **The data** (`content/recipe.rs`): `use = "enchant"` with `enchant = "kindle" | "quicken" |
+  "unbind"` (`RecipeUse::Enchant(EnchantKind)`) and `crystals` (`RecipeDef::crystals`, 0 to
+  `MOST_CRYSTALS` 3); `difficulty` and `seconds` required as Cut's and Set's (`checked()`). The
+  loader refuses an `enchant` kind on another `use` or missing on `enchant`, a kind twice,
+  `crystals` above 3 or on another `use`, a kind that rolls (Kindle, Quicken) with none, and
+  Unbind with any.
+- **The rules** (`world/enchant.rs`; `Spent::Enchant(Enchanting)`, dispatched by one line each
+  from `World::start_craft`, `craft::lack`, `craft::takes`, `craft_make::craft_steps`, and
+  `craft_plan`): `craft:kindle:ITEM,CRYSTAL`, `craft:quicken:ITEM,CRYSTAL`, `craft:unbind:ITEM`.
+  The wizard's steps are the item (`CraftStepKind::Item`: the stacks `refusal` passes) and a
+  crystal for each the recipe takes (`CraftStepKind::Input`, "crystal": every crystal carried,
+  any colour). The plan's verb is the recipe's name ("Kindle"), its name "the long sword", its
+  uses the crystal ("a red crystal"; nothing for Unbind, whose dialog says only its time).
+- **Refused, no time**, in order: untrained (`World::untrained`), below `from`, no item pick, more
+  picks than the work takes, no crystal pick, then `refusal`: no such stack, not a base item or a
+  spirit weapon ("No magic can be bound in that."; ammunition is a base item, the whole stack
+  worked at once at the single cost), magic unidentified ("You must know what is bound in it
+  first."), worn or wielded ("Take it off first."), a unique ("It will not take your will.");
+  Kindle on magic ("There is magic in it already."), Quicken or Unbind on a plain item ("There is
+  no magic in it."), Quicken on a rare ("It is rare already: this work cannot add to it.": a
+  rare's Quicken takes the heart-crystal, E6), Quicken on two affixes or at capacity ("It holds
+  all it can."); then the crystal pick that is no crystal ("That is no crystal."), nothing of
+  its colour's families left to roll in the kinds the work may add ("No more of that nature will
+  take."), a quest's object ("It will not take your will."), and unpaid goods (`may_loose`).
+- **The rows** (`enchant::lack`, after the skill): `RecipeLack::Nothing` ("nothing to enchant":
+  no stack the work may take), `Room` ("it holds all it can": Quicken's, every refused stack
+  short only of room), `Crystal` ("no crystal to hand"). `takes`: "a plain item, a crystal, about
+  1 hour", "a magic item, a crystal, about 1 hour", "a magic item, about 30 minutes".
+- **The roll's item level**: the reach is `skill_effect_of(enchanting, EnchantLevel)` clamped
+  to 1..12; Kindle rolls at the reach, Quicken at the greater of the item's `Magic.level` and the
+  reach, Unbind's check reads the item's own. The made item's `Magic.level` is the roll's.
+- **The check** (`World::enchanted`, after `keep_at` ran the recipe's `seconds`; an interruption
+  spends nothing but the time): `combat::roll_natural` (two gameplay draws) + Willpower's
+  modifier + `TalentMods::check(Willpower)` + `skill_effect_of(enchanting, Craft)` against
+  `difficulty` + level ÷ `level_step`; `enchant_band`: a natural 2 `Warped`, a natural 24 or a
+  margin of 0 or more `Made`, else `Failed`.
+- **Made** (`World::enchant_out`, `worked`): Kindle draws the kind by `[magic]`'s prefix and suffix
+  weights among the kinds with a candidate (`magic::loot::pick_weighted`, one draw), then
+  `roll_affix_within` (affix, tier, value: three draws) with the crystal's `families`; the item
+  gets a `Magic` of rarity magic, the roll's level, identified. Quicken rolls the kind the item
+  lacks (a prefix goes first among the affixes, a suffix last), the level the roll's. Unbind
+  draws nothing and clears the `Magic` (`Stack::set_magic(None)`): its `Worked`, parts, rung,
+  and charges stay. "The long sword takes the red crystal's glow. It is now a Sharp long sword.",
+  "The magic goes out of Grim Bite. It is now a long sword." The item is changed in place,
+  a whole stack at once.
+- **Failed**: the crystal is spent ("The crystal goes dark in your hands."), the item as it was;
+  Unbind's "The Sharp long sword clings to its magic." **Warped** (a natural 2): the crystal is
+  spent and `World::harm_item(item, ItemHarm::Enchant)` ("warped", withstood by no material; an
+  item of Proof is spared as protected): "The long sword warps under your hands.", or, warped
+  already, destroyed ("... warps and falls apart.").
+- **`roll_affix_within`** (`magic/loot.rs`): `roll_affix` is its call with every family; the
+  candidates (`candidates`, sorted by affix id) are narrowed to the categories `families` holds.
+  `rolls_within` says whether there is any, drawing nothing.
+- **Marks**: `Use::Craft` on Enchanting, whatever came of it. No noise, no alignment.
+- **The wiki**: `wiki/src/enchanting.md` and the generated `recipes-enchanting.md`
+  (`xtask/src/wiki/enchanting.rs`: each recipe's crystals, time, listed from, difficulty, and the
+  odds of a made check at three skill values, from `enchant_band`).
+- **Snapshots**: `profession-enchanting`, `enchant-pick-item`, `enchant-dialog`
+  (`crates/warlock/src/ui/screen_snapshots.rs`).
+
 ## Soulglass
 
 The necromancy ray that leaves crystals (#1429; the design's §6): `data/spells/soulglass.toml`
@@ -223,7 +293,11 @@ crystallises too: the effect is the spell's.
 
 ## Tests
 
-`content/crystal_tests.rs` (the owner's order and two rules, the yield, every affix's colour and
+`world/enchant_tests.rs` (the band; the three recipes' data; Kindle of every colour on many
+fates holding `Magic::check` and the colour rule; a failure and a warp; Quicken's lacking kind;
+Unbind made and failed; a stack of arrows at once; the reach and a deeper item's level; the
+steps, the plan, and the rows' lacks; every refusal with no time; the hour and the mark; a
+replay). `content/crystal_tests.rs` (the owner's order and two rules, the yield, every affix's colour and
 word, every creature's colour by its first tags, the loader's refusals), `world/crystal_tests.rs`
 (consuming through `eat`: mana to the maximum, the marks, the step and its diminishing, from the
 floor, the rare materials refused with no time, a replay; salvage: a crystal per affix by its

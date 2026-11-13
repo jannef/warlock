@@ -114,6 +114,11 @@ Tests: `content/tag.rs` (the word rule, the built-in members, the undead check),
 `world/tag_tests.rs` (levels summed, a bled-out one counts, a trap's or another's kill does not,
 the override, `what`, load checks of tag targets and of creature tags); the wiki table is
 `creatures::creature_tags` (`creature-tags.md`).
+**A patron's commission** (#1421, `world/patron.rs`; docs/dev/npcs.md "The craftsperson's
+patron"): not a `QuestDef`; while one is open `PerceptionView::quests` lists it after the active
+quests (`PerceptionView::commission`: id `commission`, `QuestKind::Commission`, which a quest file
+cannot name, `#[serde(skip_deserializing)]`). It has no `QuestRecord`, so nothing that tallies
+quests (experience, guild rank, the Invest bonus, goodwill, `completed`) sees it.
 **Escort quests** (#1139, `world/escort.rs`): `Goal::Escort { escort, level, joins }`
 (`type = "escort"`, `target` a level as `reach` names one, `escort` a speaker that must be
 `Speaker::Npc`, `joins` a reply; never rolled; `escort` and

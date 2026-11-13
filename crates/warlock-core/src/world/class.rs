@@ -127,6 +127,8 @@ impl World {
         let content = self.content.clone();
         let character = self.state.character.clone();
         let given = grant(&content, character.as_ref(), self.player_mut(), level);
+        // A town helper the ability brings, in a town made already (a patron, `stipend.rs`).
+        super::stipend::place_given(&mut self.state, &content, &given);
         // A run restored keeps what its talents grant (spec §8 "Resources").
         let grants = self
             .state

@@ -124,6 +124,9 @@ pub enum ItemHarm {
     /// A failed attempt at the anvil or with the knife (`world/temper.rs`): no material
     /// withstands it, being the craft's own blunder.
     Work,
+    /// An enchanting recipe's natural 2 (`world/enchant.rs`): magic bound wrong warps the thing;
+    /// no material withstands it.
+    Enchant,
 }
 
 impl ItemHarm {
@@ -137,6 +140,7 @@ impl ItemHarm {
             ItemHarm::Rust => "rust",
             ItemHarm::Fire => "fire",
             ItemHarm::Work => "work",
+            ItemHarm::Enchant => "enchant",
         }
     }
 
@@ -147,6 +151,7 @@ impl ItemHarm {
             ItemHarm::Rust => "rusted",
             ItemHarm::Fire => "scorched",
             ItemHarm::Work => crate::magic::worked::DAMAGED,
+            ItemHarm::Enchant => "warped",
         }
     }
 }
@@ -162,13 +167,13 @@ pub struct Resists {
 }
 
 impl Resists {
-    /// The chance to withstand `harm`: 0 for [`ItemHarm::Work`].
+    /// The chance to withstand `harm`: 0 for [`ItemHarm::Work`] and [`ItemHarm::Enchant`].
     pub const fn of(&self, harm: ItemHarm) -> u8 {
         match harm {
             ItemHarm::Acid => self.acid,
             ItemHarm::Rust => self.rust,
             ItemHarm::Fire => self.fire,
-            ItemHarm::Work => 0,
+            ItemHarm::Work | ItemHarm::Enchant => 0,
         }
     }
 }

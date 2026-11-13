@@ -147,6 +147,7 @@ mod eat;
 mod edge_leave;
 mod element_gifts;
 mod elixir;
+mod enchant;
 mod encounter;
 mod encounter_area;
 mod endless;
@@ -229,6 +230,7 @@ mod orison;
 mod outcome;
 mod pack;
 mod path;
+pub(crate) mod patron;
 mod perceive;
 mod pit;
 mod potion;
@@ -343,6 +345,7 @@ pub use cut::{CutBand, cut_band, cut_outcome, cuttable};
 pub use decipher::undeciphered;
 pub use dig::{MAX_DIG, WORK_SCALE, dig_refusal, dig_work, digs_to_break};
 pub use disarm::SPRINGS_SHORT_BY;
+pub use enchant::{EnchantBand, enchant_band};
 pub(crate) use encounter::view as encounter_view;
 pub use encounter::{
     Choice as EncounterChoice, EncounterView, Forced as EncounterForced, KNOWN_LINE,
@@ -514,6 +517,9 @@ pub struct WorldState {
     /// A merchant's stake with their business partner (`world/invest.rs`).
     #[serde(default, skip_serializing_if = "invest::Fund::is_empty")]
     pub(crate) fund: invest::Fund,
+    /// A craftsperson's commissions from their patron (`world/patron.rs`).
+    #[serde(default, skip_serializing_if = "patron::Patron::is_empty")]
+    pub(crate) patron: patron::Patron,
     /// Sounds the player perceived lately: those like them are no news ([`noise::news`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) recent_sounds: Vec<Recent>,
@@ -801,6 +807,8 @@ enum Spent {
     Craft(craft_make::Crafting),
     /// Cutting a loose gem (see [`World::cut`]).
     Cut(cut::GemWork),
+    /// Working an enchanting recipe on an item (see [`World::enchant`]).
+    Enchant(enchant::Enchanting),
     /// Salvaging an item for its materials (see [`World::salvage`]).
     Salvage(salvage::Salvaging),
     /// Mending a damaged item in the field (see [`World::make_do`]).
@@ -1019,6 +1027,7 @@ impl World {
             uniques_offered: BTreeSet::new(),
             stipend: stipend::Stipend::default(),
             fund: invest::Fund::default(),
+            patron: patron::Patron::default(),
             recent_sounds: Vec::new(),
             weather_override: None,
             death: None,
@@ -1375,6 +1384,7 @@ impl World {
             experience: self.state.experience,
             progress: &self.state.progress,
             quests: &self.state.quests,
+            patron: &self.state.patron,
             messages: &self.state.messages,
             lore: self.lore(),
             snapshot: &self.perception,
@@ -1502,6 +1512,7 @@ impl World {
             Spent::FieldForge(work) => self.field_forge(work, &mut events),
             Spent::Craft(work) => self.make(work, &mut events),
             Spent::Cut(work) => self.cut(work, &mut events),
+            Spent::Enchant(work) => self.enchant(work, &mut events),
             Spent::Salvage(work) => self.salvage(work, &mut events),
             Spent::MakeDo(work) => self.make_do(work, &mut events),
             Spent::Set(work) => self.set(work, &mut events),
@@ -1914,6 +1925,8 @@ mod element_gift_tests;
 #[cfg(test)]
 mod elixir_tests;
 #[cfg(test)]
+mod enchant_tests;
+#[cfg(test)]
 mod encounter_tests;
 #[cfg(test)]
 mod endless_tests;
@@ -2095,6 +2108,8 @@ mod overworld_tests;
 mod pack_tests;
 #[cfg(test)]
 mod parts_tests;
+#[cfg(test)]
+mod patron_tests;
 #[cfg(test)]
 mod pit_tests;
 #[cfg(test)]

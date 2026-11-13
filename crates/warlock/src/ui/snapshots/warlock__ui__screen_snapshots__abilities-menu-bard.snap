@@ -22,7 +22,7 @@ expression: "render(case, content.clone())"
           │   k  Feint              no foe beside you to fool                           │
           │   l  Decipher           no unknown scroll                                   │
           │   m  Disarm a trap      no known trap beside you                            │
-          │   n  Enchanting         not usable yet                                      │
+          │   n  Enchanting…                                                            │
           │   o  Tame               no beast beside you to tame                         │
           │                                                                             │
           │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; │

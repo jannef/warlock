@@ -8,7 +8,8 @@
 //! race (`speech`, `default` for the races not named), placed on cell `at` of level `level` as it
 //! is made, only in a run whose character holds the class ability `talent`: an aristocrat's own
 //! servant (Stipend; `[dialogue.stipend]` words), a merchant's business partner (Invest,
-//! `world/invest.rs`; `[dialogue.partner]` words).
+//! `world/invest.rs`; `[dialogue.partner]` words), a craftsperson's patron (Patron,
+//! `world/patron.rs`; `[dialogue.patron]` words).
 
 use super::dialogue::Speaker;
 use super::{Content, ContentError, DialogueId};
@@ -73,7 +74,7 @@ struct TownFile {
 /// Parses the towns table (`table`: its files in order). A helper's creature types
 /// must be known, its `speech` must have a `default`, and each npc it names must have a dialogue
 /// with the words its talent's effect reads: `[dialogue.stipend]` for Stipend's,
-/// `[dialogue.partner]` for Invest's.
+/// `[dialogue.partner]` for Invest's, `[dialogue.patron]` for Patron's.
 pub(super) fn parse<'a>(
     table: impl Iterator<Item = (&'a str, &'a str)>,
     content: &Content,
@@ -102,6 +103,7 @@ fn check_servant(servant: &TownServant, content: &Content) -> Result<(), String>
     let effects = (book.id(&servant.talent)).map_or(&[][..], |t| &book.get(t).effects[..]);
     let stipend = effects.iter().any(|e| matches!(e, TalentEffect::Stipend));
     let partner = effects.iter().any(|e| matches!(e, TalentEffect::Invest));
+    let patron = effects.iter().any(|e| matches!(e, TalentEffect::Patron));
     let kinds = &servant.creature;
     for id in [&kinds.male, &kinds.female, &kinds.other] {
         if content.creature_id(id).is_none() {
@@ -126,6 +128,11 @@ fn check_servant(servant: &TownServant, content: &Content) -> Result<(), String>
         if partner && d.partner.is_none() {
             return Err(format!(
                 "npc `{npc}` has no dialogue with `[dialogue.partner]`"
+            ));
+        }
+        if patron && d.patron.is_none() {
+            return Err(format!(
+                "npc `{npc}` has no dialogue with `[dialogue.patron]`"
             ));
         }
     }

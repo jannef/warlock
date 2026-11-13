@@ -41,7 +41,11 @@ fn the_built_in_recipes_are_the_forges_weapons_armour_tools_and_temper_and_woodc
     let wood = content.skill_id("woodcraft").expect("woodcraft");
     let alchemy = content.skill_id("alchemy").expect("alchemy");
     let jewel = content.skill_id("jewelcraft").expect("jewelcraft");
-    assert_eq!(recipes.professions(), [alchemy, jewel, metal, wood]);
+    let enchanting = content.skill_id("enchanting").expect("enchanting");
+    assert_eq!(
+        recipes.professions(),
+        [alchemy, enchanting, jewel, metal, wood]
+    );
     let of = |skill| -> Vec<(&str, Option<RecipeUse>)> {
         (recipes.of(skill))
             .map(|(_, r)| (r.name.as_str(), r.uses))
@@ -666,7 +670,48 @@ fn every_check_of_the_formats_second_half_refuses() {
         (
             "data/recipes/jewelcraft/polish.toml",
             "[[recipe]]\nid = \"polish\"\nuse = \"polish\"\n".into(),
-            "(temper, whittle, cut, set)",
+            "(temper, whittle, cut, set, enchant)",
+        ),
+        // Enchanting's (#1430): a kind, once, with the crystals it takes.
+        (
+            "data/recipes/enchanting/glow.toml",
+            "[[recipe]]\nid = \"glow\"\nuse = \"enchant\"\ndifficulty = 9\nseconds = 60\n".into(),
+            "needs an `enchant` kind",
+        ),
+        (
+            "data/recipes/enchanting/glow.toml",
+            "[[recipe]]\nid = \"glow\"\nuse = \"enchant\"\nenchant = \"glow\"\ndifficulty = 9\nseconds = 60\n".into(),
+            "unknown `enchant` `glow`",
+        ),
+        (
+            "data/recipes/enchanting/glow.toml",
+            "[[recipe]]\nid = \"glow\"\nuse = \"set\"\nenchant = \"kindle\"\ndifficulty = 9\nseconds = 60\n".into(),
+            "`enchant` is only for",
+        ),
+        (
+            "data/recipes/enchanting/glow.toml",
+            "[[recipe]]\nid = \"glow\"\nuse = \"enchant\"\nenchant = \"kindle\"\ncrystals = 4\ndifficulty = 9\nseconds = 60\n".into(),
+            "`crystals` 4 is above 3",
+        ),
+        (
+            "data/recipes/enchanting/glow.toml",
+            "[[recipe]]\nid = \"glow\"\nuse = \"enchant\"\nenchant = \"quicken\"\ndifficulty = 9\nseconds = 60\n".into(),
+            "`quicken` takes a crystal at least",
+        ),
+        (
+            "data/recipes/enchanting/glow.toml",
+            "[[recipe]]\nid = \"glow\"\nuse = \"enchant\"\nenchant = \"unbind\"\ncrystals = 1\ndifficulty = 9\nseconds = 60\n".into(),
+            "`unbind` takes no crystal",
+        ),
+        (
+            "data/recipes/enchanting/zap.toml",
+            "[[recipe]]\nid = \"zap\"\nuse = \"enchant\"\nenchant = \"unbind\"\ndifficulty = 9\nseconds = 60\n".into(),
+            "a second `unbind`",
+        ),
+        (
+            "data/recipes/jewelcraft/glow.toml",
+            "[[recipe]]\nid = \"glow\"\nuse = \"set\"\ncrystals = 1\ndifficulty = 9\nseconds = 60\n".into(),
+            "`crystals` is only for",
         ),
         (
             "data/recipes/jewelcraft/facet.toml",

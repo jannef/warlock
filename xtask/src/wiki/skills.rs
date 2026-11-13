@@ -137,6 +137,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Temper => "tempering at a forge's anvil",
         Effect::Whittle => "whittling wood with a knife",
         Effect::Craft => "its craft: making its recipes and salvaging the materials it works",
+        Effect::EnchantLevel => "the item level your enchanting rolls its magic at",
         Effect::Wade => "wading through water and marsh is quicker",
         Effect::Footing => "walking over rough ground (bush, reeds, rubble, ice) is quicker",
         Effect::SteadyEase => "less time lost when you are staggered",
@@ -209,6 +210,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Temper => "tempering",
             Effect::Whittle => "whittling",
             Effect::Craft => "craft",
+            Effect::EnchantLevel => "enchanting's item level",
             Effect::Wade => "wading's extra cost",
             Effect::Footing => "rough ground's extra cost",
             Effect::SteadyEase => "staggering's extra cost",
@@ -279,6 +281,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 Effect::Speed | Effect::ManaRegen => format!("+{n}%"),
                 Effect::MaxMana => format!("+{n} mana"),
                 Effect::Hearing | Effect::Learn => n.to_string(),
+                Effect::EnchantLevel => format!("item level {n}"),
                 Effect::Burden => {
                     let slowed = |b: Burden| factor(b.slow_eased(100, n));
                     format!(

@@ -38,9 +38,68 @@ pub enum RecipeUse {
     Cut,
     /// Set a cut gem in an item (Jewelcraft's, §5; `world/set.rs`).
     Set,
+    /// One of Enchanting's works (`use = "enchant"` with its `enchant` kind;
+    /// docs/design/enchanting.md §8; `world/enchant.rs`).
+    Enchant(EnchantKind),
 }
 
+/// What an Enchanting recipe does to the item it works (docs/design/enchanting.md §8).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum EnchantKind {
+    /// A plain item made magic with one affix of its crystal's families.
+    Kindle,
+    /// One affix more on a magic item with room, of the kind it lacks.
+    Quicken,
+    /// Every affix off: the item plain again, nothing back.
+    Unbind,
+}
+
+impl EnchantKind {
+    pub const ALL: [EnchantKind; 3] = [
+        EnchantKind::Kindle,
+        EnchantKind::Quicken,
+        EnchantKind::Unbind,
+    ];
+
+    /// Its id in data (`enchant = "kindle"`).
+    pub const fn id(self) -> &'static str {
+        match self {
+            EnchantKind::Kindle => "kindle",
+            EnchantKind::Quicken => "quicken",
+            EnchantKind::Unbind => "unbind",
+        }
+    }
+
+    /// The row's name when the recipe gives none.
+    pub const fn name(self) -> &'static str {
+        match self {
+            EnchantKind::Kindle => "Kindle",
+            EnchantKind::Quicken => "Quicken",
+            EnchantKind::Unbind => "Unbind",
+        }
+    }
+
+    /// Whether it rolls affixes, and so takes a crystal at least (Unbind takes none).
+    pub const fn rolls(self) -> bool {
+        !matches!(self, EnchantKind::Unbind)
+    }
+
+    fn parse(id: &str) -> Result<Self, String> {
+        (Self::ALL.into_iter().find(|k| k.id() == id)).ok_or_else(|| {
+            let ids: Vec<&str> = Self::ALL.iter().map(|k| k.id()).collect();
+            format!("unknown `enchant` `{id}` ({})", ids.join(", "))
+        })
+    }
+}
+
+/// Enchanting's `use` id.
+const ENCHANT: &str = "enchant";
+
+/// The most crystals an Enchanting recipe takes (docs/design/enchanting.md §8: Imbue's three).
+pub const MOST_CRYSTALS: u8 = 3;
+
 impl RecipeUse {
+    /// The uses but Enchanting's, which `use = "enchant"` names with its `enchant` kind.
     pub const ALL: [RecipeUse; 4] = [
         RecipeUse::Temper,
         RecipeUse::Whittle,
@@ -55,6 +114,7 @@ impl RecipeUse {
             RecipeUse::Whittle => "whittle",
             RecipeUse::Cut => "cut",
             RecipeUse::Set => "set",
+            RecipeUse::Enchant(_) => ENCHANT,
         }
     }
 
@@ -65,19 +125,32 @@ impl RecipeUse {
             RecipeUse::Whittle => "Whittle",
             RecipeUse::Cut => "Cut",
             RecipeUse::Set => "Set",
+            RecipeUse::Enchant(kind) => kind.name(),
         }
     }
 
     /// Whether its file gives the check's `difficulty` and the work's `seconds` (Jewelcraft's
-    /// Cut and Set, whose numbers live in their recipes; Temper and Whittle keep theirs
-    /// in their own data files).
+    /// Cut and Set and Enchanting's works, whose numbers live in their recipes; Temper and
+    /// Whittle keep theirs in their own data files).
     pub const fn checked(self) -> bool {
-        matches!(self, RecipeUse::Cut | RecipeUse::Set)
+        matches!(
+            self,
+            RecipeUse::Cut | RecipeUse::Set | RecipeUse::Enchant(_)
+        )
     }
 
-    fn parse(id: &str) -> Result<Self, String> {
+    /// The use `id` names, an `enchant` one's kind from `enchant`.
+    fn parse(id: &str, enchant: Option<&str>) -> Result<Self, String> {
+        if id == ENCHANT {
+            let kind = enchant.ok_or("`use = \"enchant\"` needs an `enchant` kind")?;
+            return EnchantKind::parse(kind).map(RecipeUse::Enchant);
+        }
+        if enchant.is_some() {
+            return Err("`enchant` is only for `use = \"enchant\"`".into());
+        }
         (Self::ALL.into_iter().find(|u| u.id() == id)).ok_or_else(|| {
-            let ids: Vec<&str> = Self::ALL.iter().map(|u| u.id()).collect();
+            let mut ids: Vec<&str> = Self::ALL.iter().map(|u| u.id()).collect();
+            ids.push(ENCHANT);
             format!("unknown `use` `{id}` ({})", ids.join(", "))
         })
     }
@@ -195,6 +268,8 @@ pub struct RecipeDef {
     pub from: u16,
     /// The built-in action the row runs, if it is one.
     pub uses: Option<RecipeUse>,
+    /// The crystals an Enchanting recipe takes (0 to [`MOST_CRYSTALS`]; 0 for any other).
+    pub crystals: u8,
     /// The dialog's verb, where it is not the profession's (`stock.toml`): a ring is made, not
     /// cut ("Make").
     pub verb: Option<String>,
@@ -356,6 +431,8 @@ struct RecipeSpec {
     from: u16,
     #[serde(rename = "use")]
     uses: Option<String>,
+    enchant: Option<String>,
+    crystals: Option<u8>,
     verb: Option<String>,
     failure: Option<ObjectSpec>,
     fumble: Option<ObjectSpec>,
@@ -499,6 +576,11 @@ pub(super) fn parse<'a>(
             .ok_or_else(|| err(format!("recipe `{stem}`: no skill `{dir}` (its directory)")))?;
         let recipe =
             resolve(spec, skill, content).map_err(|m| err(format!("recipe `{stem}`: {m}")))?;
+        if let Some(RecipeUse::Enchant(kind)) = recipe.uses
+            && recipes.list.iter().any(|r| r.uses == recipe.uses)
+        {
+            return Err(err(format!("recipe `{stem}`: a second `{}`", kind.id())));
+        }
         recipes.list.push(recipe);
     }
     Ok(recipes)
@@ -597,13 +679,14 @@ fn resolve(spec: RecipeSpec, skill: SkillId, content: &Content) -> Result<Recipe
         launcher: spec.launcher,
         from: spec.from,
         uses: None,
+        crystals: 0,
         verb: spec.verb.clone(),
         failure: None,
         fumble: None,
         brittle: None,
     };
     if let Some(uses) = &spec.uses {
-        let uses = RecipeUse::parse(uses)?;
+        let uses = RecipeUse::parse(uses, spec.enchant.as_deref())?;
         let generic = spec.result.is_some()
             || !spec.parts.is_empty()
             || !spec.inputs.is_empty()
@@ -626,13 +709,34 @@ fn resolve(spec: RecipeSpec, skill: SkillId, content: &Content) -> Result<Recipe
             ),
             false => (0, 0),
         };
+        let crystals = match (uses, spec.crystals) {
+            (RecipeUse::Enchant(kind), n) => {
+                let n = n.unwrap_or(0);
+                if n > MOST_CRYSTALS {
+                    return Err(format!("`crystals` {n} is above {MOST_CRYSTALS}"));
+                }
+                if kind.rolls() != (n > 0) {
+                    return Err(match kind.rolls() {
+                        true => format!("`{}` takes a crystal at least", kind.id()),
+                        false => format!("`{}` takes no crystal", kind.id()),
+                    });
+                }
+                n
+            }
+            (_, Some(_)) => return Err("`crystals` is only for `use = \"enchant\"`".into()),
+            (_, None) => 0,
+        };
         let name = spec.name.clone().unwrap_or_else(|| uses.name().into());
         return Ok(RecipeDef {
             uses: Some(uses),
             difficulty,
             seconds,
+            crystals,
             ..common(name)
         });
+    }
+    if spec.enchant.is_some() || spec.crystals.is_some() {
+        return Err("`enchant` and `crystals` are only for `use = \"enchant\"`".into());
     }
     let result = spec.result.as_ref().ok_or("needs a `result` or a `use`")?;
     let object = (content.object_id(&result.object))

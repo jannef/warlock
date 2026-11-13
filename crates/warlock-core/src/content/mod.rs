@@ -105,6 +105,7 @@ mod outcome;
 mod overworld;
 pub(crate) mod part;
 mod particles;
+mod patron;
 mod plural;
 mod potion;
 mod prayer;
@@ -232,8 +233,8 @@ pub use damage_type::{CharColors, DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES}
 pub use danger::{Count, DangerRule, PlayerScale, Spawning};
 pub use decipher::DecipherRules;
 pub use dialogue::{
-    AfterLines, Dialogue, DialogueId, GenderWords, Mutter, PartnerWords, ServantWords, Service,
-    ServiceKind, ServiceTraining, Speaker, Topic,
+    AfterLines, Dialogue, DialogueId, GenderWords, Mutter, PartnerWords, PatronWords, ServantWords,
+    Service, ServiceKind, ServiceTraining, Speaker, Topic,
 };
 pub use disease::{DiseaseDef, DiseaseId, SOURCES, Wading};
 pub use drops::{Drop, DropFrom, DropGoods, TagDrops};
@@ -298,6 +299,7 @@ pub use outcome::{
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole, and_list};
 pub use particles::{ParticleEmitter, ParticleTrigger};
+pub use patron::PatronRules;
 pub use plural::Plurals;
 pub use potion::{Draught, Drink, Flask, Splash};
 pub use prayer::{Face, FaceWords, Faced, PrayerRules, PrayerUse, UseDef};
@@ -311,8 +313,8 @@ pub use quest_roll::{Candidate, Pick, Roll, Rolled, Variant, one_of};
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use ranged::{RangeBand, RangedRules};
 pub use recipe::{
-    InputKind, PartSource, ProfessionText, RecipeCount, RecipeDef, RecipeId, RecipeInput,
-    RecipePart, RecipeResult, RecipeSettings, RecipeUse, Recipes,
+    EnchantKind, InputKind, MOST_CRYSTALS, PartSource, ProfessionText, RecipeCount, RecipeDef,
+    RecipeId, RecipeInput, RecipePart, RecipeResult, RecipeSettings, RecipeUse, Recipes,
 };
 pub use resource::{Build, MAX_RESOURCE, MaxFrom, OverTime, ResourceDef, ResourceId};
 pub use rod::{Rod, RodDoes, RodEffect, RodShape};
@@ -746,6 +748,9 @@ pub struct Content {
     /// What a merchant's investment pays and costs (`data/invest.toml`, spec §8 "Class
     /// abilities": Invest); none without the file, when no one invests.
     invest: Option<InvestRules>,
+    /// What a craftsperson's patron pays for a commission (`data/patron.toml`, spec §8 "Class
+    /// abilities": Patron); none without the file, when no one commissions work.
+    patron: Option<PatronRules>,
     /// The numbers of intimidating (`data/intimidate.toml`, spec §8 "Skills": Intimidate); none
     /// without the file, when nobody intimidates.
     intimidate: Option<IntimidateRules>,
@@ -946,6 +951,7 @@ impl Content {
             feint: None,
             stipend: None,
             invest: None,
+            patron: None,
             intimidate: None,
             ruin: RuinRules::default(),
             decipher: None,
@@ -1343,6 +1349,10 @@ impl Content {
         let path = "data/invest.toml";
         if let Some(text) = files.get_optional(path) {
             content.invest = Some(InvestRules::parse(path, text)?);
+        }
+        let path = "data/patron.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.patron = Some(PatronRules::parse(path, text)?);
         }
         let path = "data/intimidate.toml";
         if let Some(text) = files.get_optional(path) {
@@ -3431,6 +3441,12 @@ impl Content {
     /// `data/invest.toml`); `None` without the file, when no one invests.
     pub fn invest(&self) -> Option<&InvestRules> {
         self.invest.as_ref()
+    }
+
+    /// What a craftsperson's patron pays (spec §8 "Class abilities": Patron;
+    /// `data/patron.toml`); `None` without the file, when no one commissions work.
+    pub fn patron(&self) -> Option<&PatronRules> {
+        self.patron.as_ref()
     }
 
     /// The numbers of intimidating (spec §8 "Skills": Intimidate; `data/intimidate.toml`); `None`

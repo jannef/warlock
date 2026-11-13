@@ -82,6 +82,8 @@ const GEMCUTTER: &str = "gemcutter,smith,hardy,healthy,lean";
 /// the hand axe out of the hand: ready to Set.
 const SET_READY: &str = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*6 move:SW move:W*3 \
     search:50 move:S open:W move:W*2 pickup remove:main_hand";
+/// A wizard's creation picks with Father's sword (an identified Masterwork rare, carried).
+const ENCHANTER: &str = "family_wealth,fathers_sword,hardy";
 /// Next to the hub's hermit.
 macro_rules! hermit {
     () => {
@@ -915,6 +917,40 @@ const CASES: &[Case] = &[
         keys: Some("b a a"),
         ..BASE
     },
+    // Enchanting (#1430) by a wizard trained in it at this fate (11), with Father's sword, a
+    // Masterwork rare, in the pack: Kindle and Quicken greyed "nothing to enchant" (no plain
+    // item free, the rare refused), Unbind ready;
+    Case {
+        name: "profession-enchanting",
+        seed: Some(13),
+        character: Some("human,female,wizard"),
+        talents: Some(ENCHANTER),
+        run: true,
+        screen: Some("profession"),
+        ..BASE
+    },
+    // Unbind's item step lists the sword alone (never the wielded staff),
+    Case {
+        name: "enchant-pick-item",
+        seed: Some(13),
+        character: Some("human,female,wizard"),
+        talents: Some(ENCHANTER),
+        run: true,
+        screen: Some("profession"),
+        keys: Some("c"),
+        ..BASE
+    },
+    // and the dialog, with nothing used up, says only the time.
+    Case {
+        name: "enchant-dialog",
+        seed: Some(13),
+        character: Some("human,female,wizard"),
+        talents: Some(ENCHANTER),
+        run: true,
+        screen: Some("profession"),
+        keys: Some("c a"),
+        ..BASE
+    },
     // A Wright craftsperson whose kit's knife (`b`) is dropped: Woodcraft's screen (its row in the
     // abilities menu, `c`) greys the arrows and Whittle, each with the reason in place of what it
     // takes (#1334). Only the trained have the row (#1387).
@@ -1701,6 +1737,17 @@ const CASES: &[Case] = &[
         actions: "move:SE*4 move:E*22 open:S move:S*2 move:E*2 chat:E ask:E:invest_100 \
                   skip:24h*30 chat:E",
         screen: Some("dialogue"),
+        ..BASE
+    },
+    // A craftsperson's patron at the Gæsthūs (#1421): a commission given with its stock, then
+    // the reminder while it waits, in the message history.
+    Case {
+        name: "patron-commission",
+        scenario: "ceaptun",
+        character: Some("human,male,craftsperson"),
+        talents: Some("smith,wright,healthy,lean,wortcunner"),
+        actions: "xp:60000 levelup:auto move:SW move:S*3 open:S move:S*2 move:E*4 chat:E chat:E",
+        screen: Some("messages"),
         ..BASE
     },
     Case {

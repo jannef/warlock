@@ -47,10 +47,14 @@ pub fn craft_dialog(
     let at = plan
         .station
         .map_or(String::new(), |s| format!(", at the {s}"));
-    let text = format!(
-        "{} {}? It uses {}{at}, and takes {}.",
-        plan.verb, plan.name, plan.uses, plan.time
-    );
+    // A work that uses nothing up and needs no station (Enchanting's Unbind) says only its time.
+    let text = match plan.uses.is_empty() && at.is_empty() {
+        true => format!("{} {}? It takes {}.", plan.verb, plan.name, plan.time),
+        false => format!(
+            "{} {}? It uses {}{at}, and takes {}.",
+            plan.verb, plan.name, plan.uses, plan.time
+        ),
+    };
     let action = Action::Craft {
         recipe: view.content().recipe(recipe).id.clone(),
         picks,

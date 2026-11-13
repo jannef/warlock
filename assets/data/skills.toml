@@ -300,9 +300,18 @@ kind = "action"
 # Reading what is bound (#1343, professions §9): trained, each game hour this percent chance of
 # telling one magic thing you carry or wear whose magic you do not know (5 % at the lowest, 25 % at
 # 100, 40 % at 200), beside Appraise's look at anything. Marks: every salvage that made a check
-# on an identified magic item's affixes (enchanting.toml), whatever came of it.
-mark = [{ on = "salvage", chance = 100 }]
-benefit = [{ effect = "identify_magic", curve = [[0, 5], [100, 25], [200, 40]] }]
+# on a magic item's affixes (enchanting.toml), and every enchanting recipe worked to its end
+# (data/recipes/enchanting/), whatever came of either.
+mark = [{ on = "craft", chance = 100 }, { on = "salvage", chance = 100 }]
+# Its craft (docs/dev/enchanting.md; the enchanter's recipes): added to the Willpower check of an
+# enchanting recipe and of salvage's affix checks, +8 at 100, +12 at 200, read for this skill
+# alone. Its reach, `enchant_level`: the item level an enchanting recipe rolls its affixes at
+# (the greater of it and the item's own), 1 untrained or at 0, 12 at 110 and above.
+benefit = [
+    { effect = "identify_magic", curve = [[0, 5], [100, 25], [200, 40]] },
+    { effect = "craft", curve = [[0, 0], [100, 8], [200, 12]] },
+    { effect = "enchant_level", curve = [[0, 1], [110, 12], [200, 12]] },
+]
 
 [[skill]]
 id = "escape_artist"

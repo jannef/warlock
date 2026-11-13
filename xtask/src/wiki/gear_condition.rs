@@ -100,5 +100,6 @@ fn kind_of(harm: ItemHarm) -> &'static str {
         ItemHarm::Rust => "rust",
         ItemHarm::Fire => "heat",
         ItemHarm::Work => "a failed attempt",
+        ItemHarm::Enchant => "a botched enchanting",
     }
 }
