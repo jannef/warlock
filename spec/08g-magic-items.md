@@ -171,7 +171,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     fewer affixes, with none it is normal; then a wand's rung, and last the trim (below). Loot
     is found unidentified (its gems and material show).
   - **Capacity and the trim** (`magic/capacity.rs`, #1427, docs/design/enchanting.md §3, §4;
-    docs/dev/enchanting.md): an item holds 1 to 6 affixes in all (`capacity`): 1, +1 for
+    docs/dev/enchanting.md): an item holds 1 to 6 affixes in all (`capacity`): 2 (the owner, 2026-11-13), +1 for
     jewellery, + its quality (Fine 1, Marvellous 2, Masterwork 3; none while damaged), + its main
     part's material's `binding` (§7, −2 to +2), + a gem in its ornament part (+1, a flawless one
     +2), clamped to 1..6; the three-per-kind caps stand beside it. The very last step of making
@@ -184,6 +184,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `quality` and parts that fit, and a test holds it. Only a damaged improved piece is ever over
     its capacity; nothing strips it. The item description tells the capacity in words only to a
     character trained in Appraise ("It can bear two enchantments.", "It bears all it can.").
+    Measured (`magic/shares_tests.rs`, accepted by the owner): about 87 % of loot's bases hold
+    2, so about 87 % of rares keep two affixes and 10 % to 12 % three or more; about 87 % of
+    magic-grade finds are untrimmed.
   - **Where**: generated branch levels' floors hold `loot` items (the Depths 2 to 4) on plain
     floor where nothing lies, stands, shines, or leads away, and vault `loot` cells an item at
     least of their grade; outdoor ruins' loot cells too (local areas have no floor loot); all

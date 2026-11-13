@@ -310,9 +310,19 @@ fn the_capacity_line_is_told_only_to_one_trained_in_appraise() {
     assert!(!told(&lines(&w, item)) && !told(&lines(&w, dagger)));
     w.player_mut().skills.add(skill("appraise"), 1);
     let sword = lines(&w, item);
-    assert!(sword.contains(&"It can bear one enchantment.".to_string()), "{sword:?}");
-    assert!(lines(&w, dagger).contains(&"It can bear one enchantment.".to_string()));
+    assert!(
+        sword.contains(&"It can bear two enchantments.".to_string()),
+        "{sword:?}"
+    );
+    assert!(lines(&w, dagger).contains(&"It can bear two enchantments.".to_string()));
     w.player_mut().inventory[item].identify();
     let known = lines(&w, item);
-    assert!(known.contains(&"It bears all it can.".to_string()), "{known:?}");
+    let bears = match w.state.player().inventory[item]
+        .known_magic()
+        .map(|m| m.affixes.len())
+    {
+        Some(2) => "It bears all it can.",
+        _ => "It bears one enchantment and could bear one more.",
+    };
+    assert!(known.contains(&bears.to_string()), "{known:?}");
 }

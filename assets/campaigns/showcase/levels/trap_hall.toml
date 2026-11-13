@@ -111,7 +111,6 @@ objects = ["rod_of_digging", "rod_of_sleep"]
 at = [38, 19]
 object = "dagger"
 affixes = ["sharp:1", "of_the_lynx:1"]
-quality = "fine"
 
 # Magic items of the game's systems (#635), identified, one a cell further east past a gap: a
 # caster's staff (spells and mana), a mail coat for the pools (stamina and rage, eased for a

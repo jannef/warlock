@@ -2,10 +2,10 @@
 //! prefixes and suffixes together, an item can hold, and the trim that holds every item made to
 //! it.
 //!
-//! - **The capacity** ([`capacity`], the one read): 1 for the base, +1 for jewellery (a ring, an
+//! - **The capacity** ([`capacity`], the one read): [`BASE`] (2), +1 for jewellery (a ring, an
 //!   amulet), + its quality (Fine 1, Marvellous 2, Masterwork 3: [`Worked::improvements`], none
-//!   while damaged), + its main part's material's `binding` (−2 to +2; silver −2, mithril +2),
-//!   + a gem in its ornament part (+1, a gem of the finest cut +2), at least 1 and at most
+//!   while damaged), + its main part's material's `binding` (−2 to +2; silver −2, mithril
+//!   +2), + a gem in its ornament part (+1, a gem of the finest cut +2), at least 1 and at most
 //!   [`MOST`]. The three-per-kind caps stand beside it.
 //! - **The trim** ([`trim`]): while an item's affixes outnumber its capacity, one of the kind
 //!   (prefix or suffix) it has more of goes, one of that kind at random (one `rng.index` draw), a
@@ -20,6 +20,9 @@ use crate::content::Content;
 use crate::object::Stack;
 use crate::rng::Rng;
 
+/// What every item holds before its kind, quality, material, and gem (the owner, 2026-11-13).
+pub const BASE: i32 = 2;
+
 /// The most affixes any item holds: three of each kind.
 pub const MOST: u8 = (crate::content::MAX_PER_KIND * 2) as u8;
 
@@ -33,7 +36,7 @@ pub fn capacity(stack: &Stack, content: &Content) -> u8 {
         .first()
         .map_or(0, |p| i32::from(content.material(p.material).binding));
     let gem = gem_term(stack, content);
-    let sum = 1 + jewellery + quality + binding + gem;
+    let sum = BASE + jewellery + quality + binding + gem;
     u8::try_from(sum.clamp(1, i32::from(MOST))).unwrap_or(1)
 }
 

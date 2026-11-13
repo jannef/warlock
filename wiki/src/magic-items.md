@@ -33,7 +33,7 @@ that keep at most three of each:
 Every item can bear only so many **enchantments** (affixes, [prefixes](affixes.md#prefixes) and
 [suffixes](affixes.md#suffixes) together): one to six. It is the sum of:
 
-- **1** for any item;
+- **2** for any item;
 - **+1** for a ring or an amulet (they are made to carry a charm);
 - **+1** for a Fine item, **+2** for a Marvellous one, **+3** for a Masterwork one (see
   [Forges](altars-forges-springs.md#forges) and [Crafting](crafting.md#how-well-it-comes-out));
@@ -46,22 +46,26 @@ It is never less than one or more than six. Some examples:
 
 | Item | Can bear |
 |---|---:|
-| a steel long sword | 1 |
-| a Fine steel long sword, or one with a ruby pommel | 2 |
-| a Marvellous bronze scimitar | 3 |
-| an iron ring | 2 |
-| a gold ring | 3 |
-| a gold ring set with an emerald | 4 |
+| a steel long sword | 2 |
+| a Fine steel long sword, or one with a ruby pommel | 3 |
+| a Marvellous bronze scimitar | 4 |
+| an iron ring | 3 |
+| a gold ring | 4 |
+| a gold ring set with an emerald | 5 |
 | a silver ring | 1 |
-| a Fine mithril long sword with a sapphire pommel | 5 |
+| a Fine mithril long sword with a sapphire pommel | 6 |
 | a Masterwork great sword with a flawless diamond pommel | 6 |
 
 **Every item is made to fit.** Loot, what creatures carry, and the game's own named items never
 hold more than they can bear. A find that rolls more loses the extra, one at a time: one from
 whichever of its prefixes or suffixes it has more of, picked at random, a suffix when they are
 even. A rare that loses some stays rare and keeps its name, so a rare on a plain steel sword has
-just one affix. The rares with many affixes are rings and amulets, gem-set and finer items, and
-the precious materials.
+just two affixes. The rares with more are rings and amulets, gem-set and finer items, and the
+precious materials.
+
+How it works out for what you find: nearly nine finds in ten can bear two enchantments, so about
+87 % of rares keep two affixes, 10 % to 12 % keep three or more, and only 7 % to 8 % keep all they
+rolled. A magic item (one or two affixes) almost always fits: about 87 % lose nothing.
 
 Only a damaged Fine, Marvellous, or Masterwork item can bear less than it holds. It keeps all its
 magic, which works as before.

@@ -63,7 +63,14 @@ fn roll_untrimmed(c: &Content, n: usize, level: u8, grade: LootGrade) -> Vec<Sta
     (0..n)
         .filter_map(|_| {
             let base = loot::base_in(c, &mut rng, &classes, level)?;
-            Some(loot::make_as_unfinished(c, &mut rng, base, 1, (level, grade), source))
+            Some(loot::make_as_unfinished(
+                c,
+                &mut rng,
+                base,
+                1,
+                (level, grade),
+                source,
+            ))
         })
         .filter(|s| s.magic().is_some())
         .collect()

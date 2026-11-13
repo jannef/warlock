@@ -1066,7 +1066,7 @@ mod tests {
             Some(&world.perception()),
         );
         let names: Vec<&str> = screen.entries.iter().map(|e| e.name.as_str()).collect();
-        let mut unknown = vec!["a Fine dagger (magic) (+0 hit, 1d6, range 5)"];
+        let mut unknown = vec!["a dagger (magic) (+0 hit, 1d4, range 5)"];
         unknown.extend(labelled[..3].iter().map(String::as_str));
         assert_eq!(names, unknown);
         assert_eq!(

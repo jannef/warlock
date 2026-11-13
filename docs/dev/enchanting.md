@@ -12,7 +12,7 @@ affixes, prefixes and suffixes together, an item can hold:
 
 | Term | Value | Read from |
 |---|---|---|
-| The base | 1 | every item |
+| The base | 2 (`capacity::BASE`; the owner, 2026-11-13) | every item |
 | Jewellery | +1 | `ObjectDef::is_jewellery()` (ring and amulet kinds) |
 | Quality | Fine +1, Marvellous +2, Masterwork +3 | `Worked::improvements()` (none while damaged) |
 | Material | −2 to +2 | `MaterialDef::binding` of the main part's material (`Stack::parts(content)[0]`, a variant's own) |
@@ -67,11 +67,13 @@ one attempt, with no draw; refused at load for an item with no aspect (a ring). 
 changes (design §4.1): the Brosinga Mene (a mithril chain, a flawless ruby setting), the
 Eorcanstān (a mithril band, a flawless sapphire setting), Grendles Grāpe (Masterwork mithril),
 High Toby (Fine, an amethyst inlay), the Turncoat (Masterwork), the Unhalwed Bedes (a flawless
-smokestone setting), Widowmaker (Marvellous), Stonebiter (Fine); in the test world the trap
-hall's dagger (Fine), Rune Song (Masterwork, a topaz tip), Ash Coat (Masterwork), the hub's Dread
+smokestone setting), Widowmaker (Marvellous); in the test world Rune Song (Masterwork, a topaz tip), Ash Coat (Masterwork), the hub's Dread
 Visage (Masterwork) and Storm Song (Marvellous). Father's sword's heirloom is Masterwork
-(`quality = "masterwork"` in `data/talents/fathers_sword.toml`: capacity 4 on every race's
-weapon, its 2 to 4 affixes never trimmed).
+(`quality = "masterwork"` in `data/talents/fathers_sword.toml`: capacity 5 on every race's
+weapon, its 2 to 4 affixes never trimmed; Marvellous, 4, would now hold them too). The design
+chose these against a base of 1; with the base at 2 every one still fits with room to spare, and
+the two that no longer needed a make (Stonebiter and the trap hall's dagger, two affixes each)
+are plain again.
 
 ## What the player sees
 
@@ -94,3 +96,13 @@ and 1+3 at capacities 1 to 5 with the rarity and name kept, the trim's draws onl
 every loot path at item levels 1 to 20 and every creature's gear after its condition within
 capacity, and `hand_made_items_are_never_trimmed`. `magic/shares_tests.rs` prints the share of
 rares the trim leaves at each affix count; `magic/describe` tests the capacity line.
+
+## The measured shares
+
+`magic/shares_tests.rs` at item levels 1, 4, 8, and 12, with the base at 2 (the owner accepted
+them, 2026-11-13; design §12 expected more trimming headroom for rares): about 87 % of loot's
+bases have capacity 2, 2 % to 3 % capacity 1 (silver, the soft metals and knapped stone), and
+about 10 % 3 or more (jewellery, gems, Fine gear, the precious materials). Rares roll three to six
+affixes, so only 7 % to 8 % are left untrimmed: about 87 % keep two, 10 % to 12 % keep three or
+more. Finds of the magic grade are untrimmed about 87 % of the time; about 70 % hold one affix and 28 %
+two.

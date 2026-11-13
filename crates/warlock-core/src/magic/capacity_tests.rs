@@ -10,17 +10,28 @@ fn content() -> Content {
 }
 
 fn object(c: &Content, id: &str) -> crate::content::ObjectId {
-    c.object_id(id).unwrap_or_else(|| panic!("no object `{id}`"))
+    c.object_id(id)
+        .unwrap_or_else(|| panic!("no object `{id}`"))
 }
 
 /// One of `id`, made of `main` if given, of `quality` if given, with a gem of `cut` in its
 /// ornament part if given.
-fn item(c: &Content, id: &str, main: Option<&str>, quality: Option<Quality>, gem: Option<(&str, &str)>) -> Stack {
+fn item(
+    c: &Content,
+    id: &str,
+    main: Option<&str>,
+    quality: Option<Quality>,
+    gem: Option<(&str, &str)>,
+) -> Stack {
     let o = object(c, id);
     let def = c.object(o);
     let mut own = Vec::new();
     if let Some(m) = main {
-        own.push(ItemPart::material(c, None, c.material_id(m).expect("material")));
+        own.push(ItemPart::material(
+            c,
+            None,
+            c.material_id(m).expect("material"),
+        ));
     }
     if let Some((g, cut)) = gem {
         let gems = c.gems().expect("gems");
@@ -29,7 +40,12 @@ fn item(c: &Content, id: &str, main: Option<&str>, quality: Option<Quality>, gem
             cut: gems.cut_id(cut).expect("cut"),
         };
         let part = crate::gem::ornament_part(c, def);
-        own.push(ItemPart::gem(c, part, c.material_id(g).expect("gem"), cutting));
+        own.push(ItemPart::gem(
+            c,
+            part,
+            c.material_id(g).expect("gem"),
+            cutting,
+        ));
     }
     let mut stack = Stack::one(o);
     if !own.is_empty() {
@@ -45,22 +61,110 @@ fn item(c: &Content, id: &str, main: Option<&str>, quality: Option<Quality>, gem
 fn the_examples_of_the_design_hold() {
     let c = content();
     let rows: [(&str, Stack, u8); 16] = [
-        ("steel long sword", item(&c, "long_sword", None, None, None), 1),
-        ("Fine long sword", item(&c, "long_sword", None, Some(Quality::Fine), None), 2),
-        ("ruby-pommelled", item(&c, "long_sword", None, None, Some(("ruby", "fair"))), 2),
-        ("Marvellous bronze scimitar", item(&c, "scimitar", Some("bronze"), Some(Quality::Marvellous), None), 3),
-        ("Masterwork great sword, flawless diamond", item(&c, "great_sword", None, Some(Quality::Masterwork), Some(("diamond", "flawless"))), 6),
-        ("Fine mithril long sword, sapphire", item(&c, "long_sword", Some("mithril"), Some(Quality::Fine), Some(("sapphire", "fine"))), 5),
-        ("Masterwork adamantium plate", item(&c, "plate_armour", Some("adamantium"), Some(Quality::Masterwork), None), 6),
-        ("iron ring", item(&c, "gold_ring", Some("iron"), None, None), 2),
-        ("gold ring", item(&c, "gold_ring", None, None, None), 3),
-        ("gold and emerald ring", item(&c, "gold_ring", None, None, Some(("emerald", "fair"))), 4),
-        ("tin ring", item(&c, "gold_ring", Some("tin"), None, None), 1),
+        (
+            "steel long sword",
+            item(&c, "long_sword", None, None, None),
+            2,
+        ),
+        (
+            "Fine long sword",
+            item(&c, "long_sword", None, Some(Quality::Fine), None),
+            3,
+        ),
+        (
+            "ruby-pommelled",
+            item(&c, "long_sword", None, None, Some(("ruby", "fair"))),
+            3,
+        ),
+        (
+            "Marvellous bronze scimitar",
+            item(
+                &c,
+                "scimitar",
+                Some("bronze"),
+                Some(Quality::Marvellous),
+                None,
+            ),
+            4,
+        ),
+        (
+            "Masterwork great sword, flawless diamond",
+            item(
+                &c,
+                "great_sword",
+                None,
+                Some(Quality::Masterwork),
+                Some(("diamond", "flawless")),
+            ),
+            6,
+        ),
+        (
+            "Fine mithril long sword, sapphire",
+            item(
+                &c,
+                "long_sword",
+                Some("mithril"),
+                Some(Quality::Fine),
+                Some(("sapphire", "fine")),
+            ),
+            6,
+        ),
+        (
+            "Masterwork adamantium plate",
+            item(
+                &c,
+                "plate_armour",
+                Some("adamantium"),
+                Some(Quality::Masterwork),
+                None,
+            ),
+            6,
+        ),
+        (
+            "iron ring",
+            item(&c, "gold_ring", Some("iron"), None, None),
+            3,
+        ),
+        ("gold ring", item(&c, "gold_ring", None, None, None), 4),
+        (
+            "gold and emerald ring",
+            item(&c, "gold_ring", None, None, Some(("emerald", "fair"))),
+            5,
+        ),
+        (
+            "tin ring",
+            item(&c, "gold_ring", Some("tin"), None, None),
+            2,
+        ),
         ("silver ring", item(&c, "silver_ring", None, None, None), 1),
-        ("silver ring, flawless gem", item(&c, "silver_ring", None, None, Some(("ruby", "flawless"))), 2),
-        ("mithril ring, flawless gem", item(&c, "gold_ring", Some("mithril"), None, Some(("ruby", "flawless"))), 6),
-        ("Marvellous dragonscale scale mail", item(&c, "scale_mail", Some("dragonscale"), Some(Quality::Marvellous), None), 5),
-        ("arrows", Stack::new(object(&c, "arrow"), 20), 1),
+        (
+            "silver ring, flawless gem",
+            item(&c, "silver_ring", None, None, Some(("ruby", "flawless"))),
+            3,
+        ),
+        (
+            "mithril ring, flawless gem",
+            item(
+                &c,
+                "gold_ring",
+                Some("mithril"),
+                None,
+                Some(("ruby", "flawless")),
+            ),
+            6,
+        ),
+        (
+            "Marvellous dragonscale scale mail",
+            item(
+                &c,
+                "scale_mail",
+                Some("dragonscale"),
+                Some(Quality::Marvellous),
+                None,
+            ),
+            6,
+        ),
+        ("arrows", Stack::new(object(&c, "arrow"), 20), 2),
     ];
     for (name, stack, want) in rows {
         assert_eq!(capacity(&stack, &c), want, "{name}");
@@ -71,15 +175,15 @@ fn the_examples_of_the_design_hold() {
 fn a_damaged_masterwork_counts_as_plain() {
     let c = content();
     let mut sword = item(&c, "long_sword", None, Some(Quality::Masterwork), None);
-    assert_eq!(capacity(&sword, &c), 4);
+    assert_eq!(capacity(&sword, &c), 5);
     let mut worked = sword.worked().cloned().expect("worked");
     worked.damage(ItemHarm::Rust);
     sword.set_worked(worked);
-    assert_eq!(capacity(&sword, &c), 1);
+    assert_eq!(capacity(&sword, &c), 2);
     let mut repaired = sword.worked().cloned().expect("worked");
     repaired.repair();
     sword.set_worked(repaired);
-    assert_eq!(capacity(&sword, &c), 1, "repair does not raise it again");
+    assert_eq!(capacity(&sword, &c), 2, "repair does not raise it again");
     let _ = Worked::default();
 }
 
@@ -91,12 +195,24 @@ fn affixes(c: &Content, p: usize, s: usize) -> Vec<Affix> {
     for (want, n) in [(AffixKind::Prefix, p), (AffixKind::Suffix, s)] {
         let mut taken: Vec<&str> = Vec::new();
         for a in c.affixes().all() {
-            if out.iter().filter(|x: &&Affix| c.affixes().get(&x.id).is_some_and(|d| d.kind == want)).count() == n {
+            if out
+                .iter()
+                .filter(|x: &&Affix| c.affixes().get(&x.id).is_some_and(|d| d.kind == want))
+                .count()
+                == n
+            {
                 break;
             }
-            if a.kind == want && super::super::may_roll(a, kind, def) && !taken.contains(&a.category.as_str()) {
+            if a.kind == want
+                && super::super::may_roll(a, kind, def)
+                && !taken.contains(&a.category.as_str())
+            {
                 taken.push(&a.category);
-                out.push(Affix { id: a.id.clone(), tier: 1, value: a.tiers[0].max });
+                out.push(Affix {
+                    id: a.id.clone(),
+                    tier: 1,
+                    value: a.tiers[0].max,
+                });
             }
         }
     }
@@ -117,7 +233,11 @@ fn rare(affixes: Vec<Affix>) -> Magic {
 
 fn kinds(c: &Content, m: &Magic) -> (usize, usize) {
     let p = (m.affixes.iter())
-        .filter(|a| c.affixes().get(&a.id).is_some_and(|d| d.kind == AffixKind::Prefix))
+        .filter(|a| {
+            c.affixes()
+                .get(&a.id)
+                .is_some_and(|d| d.kind == AffixKind::Prefix)
+        })
         .count();
     (p, m.affixes.len() - p)
 }
@@ -163,7 +283,11 @@ fn the_trim_draws_only_when_it_trims() {
     let mut m = rare(affixes(&c, 1, 1));
     trim(&mut m, 2, &mut rng, &c);
     assert_eq!(m.affixes.len(), 2);
-    assert_eq!(rng.clone().below(1_000_000), before, "no draw for an item that fits");
+    assert_eq!(
+        rng.clone().below(1_000_000),
+        before,
+        "no draw for an item that fits"
+    );
     trim(&mut m, 1, &mut rng, &c);
     assert_eq!(m.affixes.len(), 1);
     assert_ne!(rng.below(1_000_000), before, "one draw for the trim");
@@ -175,9 +299,9 @@ fn binding_is_read_from_a_variant_main_part() {
     let steel = item(&c, "long_sword", None, None, None);
     let mithril = item(&c, "long_sword", Some("mithril"), None, None);
     let silver = item(&c, "long_sword", Some("silver"), Some(Quality::Fine), None);
-    assert_eq!(capacity(&steel, &c), 1);
-    assert_eq!(capacity(&mithril, &c), 3);
-    assert_eq!(capacity(&silver, &c), 1, "1 + 1 − 2, at least 1");
+    assert_eq!(capacity(&steel, &c), 2);
+    assert_eq!(capacity(&mithril, &c), 4);
+    assert_eq!(capacity(&silver, &c), 1, "2 + 1 − 2");
 }
 
 /// Every item made at a deep level, by every path, holds no more affixes than its capacity.
@@ -212,10 +336,19 @@ fn every_loot_path_holds_its_items_to_their_capacity() {
                 fits(&s, "favoured");
             }
             let sword = object(&c, "long_sword");
-            fits(&loot::make(&c, &mut rng, sword, 1, level, LootGrade::Rare), "make");
+            fits(
+                &loot::make(&c, &mut rng, sword, 1, level, LootGrade::Rare),
+                "make",
+            );
             let source = crate::variant::Source::gear(level);
-            fits(&loot::make_as(&c, &mut rng, sword, 1, (level, LootGrade::Rare), source), "make_as");
-            fits(&loot::heirloom(&c, &mut rng, sword, 6, (level, None)), "heirloom");
+            fits(
+                &loot::make_as(&c, &mut rng, sword, 1, (level, LootGrade::Rare), source),
+                "make_as",
+            );
+            fits(
+                &loot::heirloom(&c, &mut rng, sword, 6, (level, None)),
+                "heirloom",
+            );
         }
     }
     // Creature gear: trimmed after its condition, so a damaged piece fits its plain capacity.
@@ -264,8 +397,16 @@ fn written() -> Vec<(String, String, Option<[i64; 2]>, String, usize)> {
             let at = t.get("at")?.as_array()?;
             Some([at.first()?.as_integer()?, at.get(1)?.as_integer()?])
         };
-        let count = |t: &toml::Table| t.get("affixes").and_then(|a| a.as_array()).map_or(0, Vec::len);
-        let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("").to_string();
+        let count = |t: &toml::Table| {
+            t.get("affixes")
+                .and_then(|a| a.as_array())
+                .map_or(0, Vec::len)
+        };
+        let stem = path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("")
+            .to_string();
         for (key, uniques) in [("unique", true), ("item", false)] {
             let Some(rows) = value.get(key).and_then(|v| v.as_array()) else {
                 continue;
@@ -275,9 +416,17 @@ fn written() -> Vec<(String, String, Option<[i64; 2]>, String, usize)> {
                 if n == 0 {
                     continue;
                 }
-                let object = row.get("object").and_then(|o| o.as_str()).unwrap_or("").to_string();
+                let object = row
+                    .get("object")
+                    .and_then(|o| o.as_str())
+                    .unwrap_or("")
+                    .to_string();
                 let name = match uniques {
-                    true => row.get("id").and_then(|i| i.as_str()).unwrap_or("").to_string(),
+                    true => row
+                        .get("id")
+                        .and_then(|i| i.as_str())
+                        .unwrap_or("")
+                        .to_string(),
                     false => stem.clone(),
                 };
                 found.push((key.to_string(), name, at_of(row), object, n));
@@ -292,19 +441,30 @@ fn hand_made_items_are_never_trimmed() {
     let c = content();
     let mut short = Vec::new();
     let written = written();
-    assert!(written.iter().any(|w| w.0 == "unique"), "the uniques are found");
-    assert!(written.iter().any(|w| w.0 == "item"), "the levels' items are found");
+    assert!(
+        written.iter().any(|w| w.0 == "unique"),
+        "the uniques are found"
+    );
+    assert!(
+        written.iter().any(|w| w.0 == "item"),
+        "the levels' items are found"
+    );
     for (kind, name, at, object, n) in written {
         let stack = match kind.as_str() {
             "unique" => c.unique(&name).map(|u| u.stack.clone()),
             _ => {
                 let [x, y] = at.expect("an [[item]] has `at`");
-                let pos = crate::geom::Pos { x: x as i32, y: y as i32 };
-                (c.level(&name)).and_then(|l| l.objects.get(&pos)).and_then(|pile| {
-                    (pile.iter())
-                        .find(|s| c.object(s.object).id == object && s.magic().is_some())
-                        .cloned()
-                })
+                let pos = crate::geom::Pos {
+                    x: x as i32,
+                    y: y as i32,
+                };
+                (c.level(&name))
+                    .and_then(|l| l.objects.get(&pos))
+                    .and_then(|pile| {
+                        (pile.iter())
+                            .find(|s| c.object(s.object).id == object && s.magic().is_some())
+                            .cloned()
+                    })
             }
         };
         let Some(stack) = stack else {
@@ -314,13 +474,22 @@ fn hand_made_items_are_never_trimmed() {
         let room = usize::from(capacity(&stack, &c));
         let held = stack.magic().map_or(0, |m| m.affixes.len());
         if n > room || held < n {
-            short.push(format!("{kind} `{name}` ({object}): {n} affixes, capacity {room}"));
+            short.push(format!(
+                "{kind} `{name}` ({object}): {n} affixes, capacity {room}"
+            ));
         }
     }
     // The heirloom: every race's weapon at the top count, of the effect's make.
     for (_, def) in c.talents().iter() {
         for effect in &def.effects {
-            let TalentEffect::Heirloom { weapons, fallback, max, quality, .. } = effect else {
+            let TalentEffect::Heirloom {
+                weapons,
+                fallback,
+                max,
+                quality,
+                ..
+            } = effect
+            else {
                 continue;
             };
             for weapon in weapons.values().chain([fallback]) {
@@ -331,10 +500,15 @@ fn hand_made_items_are_never_trimmed() {
                 }
                 let room = capacity(&stack, &c);
                 if *max > room {
-                    short.push(format!("heirloom `{weapon}`: {max} affixes, capacity {room}"));
+                    short.push(format!(
+                        "heirloom `{weapon}`: {max} affixes, capacity {room}"
+                    ));
                 }
             }
         }
     }
-    assert!(short.is_empty(), "hand-made items over their capacity: {short:#?}");
+    assert!(
+        short.is_empty(),
+        "hand-made items over their capacity: {short:#?}"
+    );
 }

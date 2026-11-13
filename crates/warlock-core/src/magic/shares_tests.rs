@@ -134,7 +134,10 @@ fn trim_shares_hold_every_find_to_its_capacity() {
                     .collect::<Vec<_>>()
                     .join(" ")
             };
-            println!("item level {level}, {grade:?}: untrimmed {:.1}%", pct(untrimmed));
+            println!(
+                "item level {level}, {grade:?}: untrimmed {:.1}%",
+                pct(untrimmed)
+            );
             println!("  capacity       {}", row(&room));
             println!("  affixes rolled {}", row(&rolled));
             println!("  affixes kept   {}", row(&kept));

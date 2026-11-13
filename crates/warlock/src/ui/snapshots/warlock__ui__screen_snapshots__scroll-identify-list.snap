@@ -14,7 +14,7 @@ expression: "render(case, content.clone())"
            ┌─ Identify ─────────────────────────────────────────────────────────────────┐
            │                                                                            │
            │ Melee weapons                                                              │
-           │ > a - ) a Fine dagger (magic) (+0 hit, 1d6, range 5)                450 g  │
+           │ > a - ) a dagger (magic) (+0 hit, 1d4, range 5)                     450 g  │
            │ Scrolls                                                                    │
            │   b - ? 2 scrolls labelled FOOGARFOO                                100 g  │
            │   c - ? 2 scrolls labelled PRABARHU                                 100 g  │

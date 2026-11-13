@@ -8,7 +8,5 @@ name = "Stonebiter"
 object = "dagger"
 affixes = ["sharp:2", "of_the_ox:2"]
 level = 6
-# Two enchantments need its make (docs/dev/enchanting.md): Fine.
-quality = "fine"
 power = { vision = "low_light", phrase = "Its bearer sees in the gloom." }
 lore = "Notched from a hundred quarry walls, and none of them won."

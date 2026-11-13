@@ -28,9 +28,7 @@ use super::rest::Ended;
 use super::{Actor, Spent, World};
 use crate::action::Event;
 use crate::combat;
-use crate::content::{
-    ActionKind, Content, Cutting, MaterialId, PartId, RecipeDef, RecipeId,
-};
+use crate::content::{ActionKind, Content, Cutting, MaterialId, PartId, RecipeDef, RecipeId};
 pub use crate::gem::ornament_part;
 use crate::item_parts::{self, ItemPart};
 use crate::object::{self, Stack};
@@ -59,7 +57,6 @@ pub fn set_band(natural: i32, margin: i32) -> SetBand {
         _ => SetBand::Chipped,
     }
 }
-
 
 /// Whether `stack` has a gem in its ornament part `part` already.
 fn is_set(content: &Content, stack: &Stack, part: PartId) -> bool {

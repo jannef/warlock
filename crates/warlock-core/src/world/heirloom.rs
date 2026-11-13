@@ -66,7 +66,8 @@ impl World {
                     };
                     let mut rng = Rng::stream(seed, &format!("character/fathers-sword/{spec}"));
                     let count = rng.range(i32::from(min), i32::from(max)) as u8;
-                    let mut stack = loot::heirloom(&content, &mut rng, object, count, (level, quality));
+                    let mut stack =
+                        loot::heirloom(&content, &mut rng, object, count, (level, quality));
                     stack.identify();
                     self.wield_heirloom(&content, stack);
                 }

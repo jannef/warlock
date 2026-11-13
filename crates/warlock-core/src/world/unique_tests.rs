@@ -184,7 +184,10 @@ fn unidentified_it_hides_its_name_affixes_power_and_lore() {
     run(&mut w, "identify");
     let known = stack(&w);
     assert_eq!(known.title(&content), "Widowmaker");
-    assert_eq!(known.describe(&content), "Widowmaker, a Marvellous stiletto");
+    assert_eq!(
+        known.describe(&content),
+        "Widowmaker, a Marvellous stiletto"
+    );
     let lines = describe::lines(&known, &content);
     assert_eq!(shown(&lines, LineKind::Power), ["Its every cut poisons."]);
     assert_eq!(

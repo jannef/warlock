@@ -276,7 +276,7 @@ mod tests {
         assert!(has(&helm, "Rare Masterwork iron helm · iron · 1.5 kg"));
         assert!(has(&helm, "Radiant: glows"));
         let bow = text(&DescribeScreen::new(Some(&view), Some(1)));
-        assert!(has(&bow, "} Short bow"), "{bow:#?}");
+        assert!(has(&bow, "} Marvellous short bow"), "{bow:#?}");
         assert!(has(&bow, "Unidentified"));
         assert!(!has(&bow, "Hunter") && !has(&bow, "Storm Song") && !has(&bow, "Prefix"));
         // Identified, its affixes show.
