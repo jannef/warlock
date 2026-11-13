@@ -17,7 +17,7 @@
 use super::talent::Due;
 use super::{World, WorldError};
 use crate::character::CharacterSpec;
-use crate::content::{Content, TalentId};
+use crate::content::{Content, TalentId, article};
 use crate::rng::Rng;
 use crate::talent;
 use std::sync::Arc;
@@ -157,7 +157,8 @@ impl World {
                 self.learn(id, choice).map_err(|why| {
                     let why = why.trim_end_matches('.');
                     WorldError::Character(format!(
-                        "talent `{pick}`: {why} (a {} takes {count} at creation)",
+                        "talent `{pick}`: {why} ({} {} takes {count} at creation)",
+                        article(&spec.class),
                         spec.class
                     ))
                 })?;

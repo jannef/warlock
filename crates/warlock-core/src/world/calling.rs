@@ -148,7 +148,8 @@ impl World {
         let Some(calling) = (content.calling(self.campaign(), id)).filter(|c| c.is_from(&class))
         else {
             self.say(format!(
-                "No calling of this world opens `{id}` to a {class} (dev)."
+                "No calling of this world opens `{id}` to {} {class} (dev).",
+                crate::content::article(&class)
             ));
             return Spent::Nothing;
         };
