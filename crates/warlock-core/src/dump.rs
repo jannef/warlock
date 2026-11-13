@@ -966,9 +966,8 @@ fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
 /// The player's equipment, one slot a line by its letter: `c Body: a leather jerkin (b)` (the
 /// inventory position in parentheses, as action text names it), `a Head: -` when empty.
 fn equipment_rows(view: &PerceptionView<'_>) -> Vec<String> {
-    let content = view.content();
     let worn = view.equipment();
-    (content.slot_ids())
+    (view.own_slots().into_iter())
         .enumerate()
         .map(|(i, (slot, def))| {
             let what = match worn.get(slot) {

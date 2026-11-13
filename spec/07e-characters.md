@@ -154,7 +154,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   paladin 550, Good under any birth animal unless the race is evil (#317); thief and witch −200, Callous; the rest 0), `skills` (as for races),
   `known_for` (the skills of `skills` it is known for, its `2d6+10` ones: a level-up roll on one
   throws its die a step up the ladder), `optional_skills` (ADOM-like: skills a new character
-  may or may not start with, each `{ chance, dice }`, the chance in percent; #662), `rolls`
+  may or may not start with, each `{ chance, dice }`, the chance in percent; #662),
+  `skill_choice` (`{ skills, dice }`: one of two or more skills, none of `skills`, picked at
+  random, that a new character always starts with by the dice; the commoner's one profession,
+  #1406), `rolls`
   (skill rolls each level gives, default
   2: the thief and the ranger 3, the bard 4), `weapon_skills` (starting ranks as for races), `weapon_skill_choice` (two or more
   sets of such ranks, one picked at random when the character is made), and `styles` and
@@ -182,9 +185,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   learn a spell from a grimoire (#1270; §8 "Spells": "Learning, the number": the witch, priest, and
   druid well, the bard, paladin, and ranger a little, the aristocrat, ascetic, and merchant by
   chance), and in Spellcraft, which casting trains; the commoner athletics and handle animal a
-  little. Each class also has two to five optional skills, modest ones at `2d4` (10 to 35 %;
+  little, and one profession picked at random (alchemy, jewelcraft, metalcraft, or woodcraft,
+  `2d4+4`; #1406). Each class also has two to five optional skills, modest ones at `2d4` (10 to 35 %;
   the thief balance, bluff, and listen; the warrior heal, metalcraft, and survival; the commoner
-  heal, metalcraft, survival, swim, and woodcraft; the full lists are in the wiki). Weapon skills: berserker unarmed 1 and axes 2 or great blades 2, bard short blades 1
+  heal, mining, survival, and swim; the full lists are in the wiki). Weapon skills: berserker unarmed 1 and axes 2 or great blades 2, bard short blades 1
   and daggers `1d2`, priest maces 2, druid staves 2 and slings 1, ascetic
   unarmed 2 and staves 1, paladin long blades 2 and shield bashing 1,
   ranger bows 2 and short blades 1, thief daggers 2 and thrown 1, wizard staves 1, witch daggers

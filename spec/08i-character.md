@@ -11,7 +11,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Class limits** (#1279): a class may be closed to races (`races_not`: no goblin, drow,
     kobold, lizardfolk, duergar, or ratfolk paladin; no elven or dwarven witch) or open to a
     race only with some genders (`only`: a drow priest is female), and may be `hidden` (the
-    commoner, craftsperson, and merchant, for now). New run's class step lists only the classes
+    craftsperson and merchant, for now; the commoner is offered again since #1406). New run's class step lists only the classes
     open to the race and gender chosen, never a hidden one, so its Random draws only those;
     `--character` refuses a closed pair with the reason in words (`a drow may be a priest only
     if female`) but takes a hidden class, and a scenario's own character is never checked
@@ -650,7 +650,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     to a gather from the glowing fungus ("Gathering herbs" below). **Jewelcraft**
     cuts gems (its profession's Cut, "Professions" below). Who trains them: gnomes Jewelcraft, dwarves and duergar Mining (dwarves
     Jewelcraft now and then), kobolds Mining, halflings Herbalism; druids and witches Herbalism,
-    witches Alchemy; optional for the craftsperson (Jewelcraft, Mining), merchant (Jewelcraft),
+    witches Alchemy; the commoner one profession at random (Alchemy, Jewelcraft, Metalcraft, or
+    Woodcraft, `2d4+4`, #1406); optional for the craftsperson (Jewelcraft, Mining), merchant (Jewelcraft),
     commoner (Mining), ranger (Herbalism), wizard (Alchemy, Enchanting), druid (Alchemy), witch
     (Enchanting), and aristocrat (Enchanting); and a story line each. Alberich of Fyrdelf
     teaches Mining for gold, and Eadric, Cēaptūn's smith, Metalcraft (§8 "Dialogue": "Training").
@@ -791,15 +792,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
   dungeon's glowing fungus (terrain `fungus`, the file's `terrain`) is gathered for herbs, the
   inputs of Alchemy. The abilities menu's **Gather** (`Ability::Gather`, the *Here* group, as
   Pray and Drink: listed only beside fungus; `Action::Gather(Dir)`, replay text `gather:DIR`;
-  no key of its own) is **everyone's**, while the file exists. With fungus on one cell beside
-  the player the menu gathers there at once; with more it asks the way. A way with no fungus is
-  refused, taking no time ("There is nothing here to gather.").
+  no key of its own) is offered to everyone beside fungus, while the file exists, but only one
+  trained in the file's `skill` (Herbalism; #1400) may use it: anyone else sees the row greyed
+  out ("you are untrained in Herbalism", `Unavailable::Untrained`) and `gather:DIR` is refused,
+  taking no time ("You do not know what to do with these: gathering herbs takes the Herbalism
+  skill."). With fungus on one cell beside the player the menu gathers there at once; with more
+  it asks the way. A way with no fungus is refused first, taking no time ("There is nothing here
+  to gather.").
   - **Time**: the file's `seconds` (300: five minutes), in turns of the `gather` action (1000),
     stopped like a rest ("You stop gathering."); a gather cut short finds nothing, the time
     spent.
-  - **The find**: trained in Herbalism, `count` (`1d2`, one gameplay draw per die) plus one for
-    every `value_per_count` (50) of Herbalism's trained value; untrained, `untrained` (1), no
-    draw. Each herb is one gameplay draw by weight from the `[[herb]]` rows at the level's item
+  - **The find**: `count` (`1d2`, one gameplay draw per die) plus one for every
+    `value_per_count` (50) of Herbalism's trained value. Each herb is one gameplay draw by weight from the `[[herb]]` rows at the level's item
     level (a dungeon level's depth; a hand-made level's `item_level`), read as `gems.toml`'s
     sizes are: `find` at level 1, `deeper` added per level past the first (negative for
     moonwort), never below 0, none below `level`. Nine herbs: glowcap 40/0/1, moonwort 30/−1/1,
@@ -860,9 +864,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     at item level 6 (`loot::heirloom`: two a magic item's prefix and suffix, more a rare item's,
     named), identified, readied in its own slot when free, else carried, from the stream
     `character/fathers-sword/<race>,<gender>,<class>`). Each stream is its own, so no other roll
-    moves. **Landed noble** (#1405; also `class = "aristocrat"`): the Stipend below is larger
+    moves. The aristocrat's class gives Family wealth at level 1 (#1404), handed down as the
+    run begins (`World::begin`, on top of the kit, whether or not the run takes the kit), so it is
+    never their pick (held already) and Father's sword is open to their first. **Landed noble**
+    (#1405; also `class = "aristocrat"`): the Stipend below is larger
     (`stipend_more`: its gold +100 %, its loot roll made by 15 points more, always, its magic odds
-    +200 %: 47 % of level-ups bring a find). The weakest of a small race may start Burdened with them, never Strained. (Favoured
+    +200 %: 47 % of level-ups bring a find). The weakest of a small race may start Burdened with
+    them, never Strained. (Favoured
     child, which doubled the background story's luckier odds, was cut in #787 with its
     `background` system: no talent is left on the story's draw.)
   - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
@@ -949,7 +957,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     32, 40, 50, and 60 at first; the culls of #774 and #787 left some empty, and the ranger's
     Stalker's eye came at 2 with #788): a talent of the **Class abilities** tree (`class = true` in
     `data/talents.toml`; `granted`, never on a pick list) or an ordinary talent it hands out
-    (the aristocrat's Riposte at 18, the commoner's Second wind at 32). The player is given each
+    (the aristocrat's Family wealth at 1 and Riposte at 18, the commoner's Second wind at 32). The player is given each
     as they reach its level ("You gain Fencing." with the level's news), level 1's at
     creation, and again whatever is missing when a run is restored, so a grown table reaches a
     save; one already held (picked earlier, or a story's boon) is not given again: its level
@@ -962,10 +970,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     those trees spends a bonus pick before an ordinary one, any other is refused for it ("You
     must choose a talent of Weaponcraft or Delver."), and a bonus pick nothing fits is dropped
     like any other. The everyday folk have theirs (bonus picks at 10, 20, 30, 45, 55):
-    aristocrat (Weaponcraft, Delver) Stipend (below), Fencing (Duelist one rank higher), Riposte, Iron will (+2
-    on Willpower checks, Presence +1), Peerless (+2 on the confirmation roll); commoner (any
-    tree) Pack mule (the burden line's first step, #1198), Stubborn (+1 on
-    Toughness checks, poison never lowers scores), Big hands (+1 damage with maces and
+    aristocrat (Weaponcraft, Delver) Family wealth (at 1, #1404), Stipend (below, at 1),
+    Fencing (Duelist one rank higher), Riposte, Peerless (+2 on the confirmation roll; #1404 cut
+    Iron will at 32); commoner (any
+    tree) Pack mule (the burden line's first step, #1198), Stubborn (Toughness +2,
+    #1406; poison never lowers scores), Big hands (+1 damage with maces and
     unarmed), Second wind, Salt of the earth (healing and resting +25 %), Unlikely hero (every
     stat +1); craftsperson (Weaponcraft, Guard, Delver) Sturdy work (Protection +1 in body
     armour), Masterwork (melee threat +1), Artisan (Protection +1 per armour piece worn, +2
@@ -1067,8 +1076,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     **Adds an action and saved state** (`Stack::spirit`).
   - **Scholar, Grit, Delver** (#240; the design's §7.5 but for the five mana talents, which
     came with #242: Deep well, Clear mind, Meditation, Frugal caster, Blood magic, §8 "Mana"). Their effects share what the class abilities use where the rules
-    are the same (`checks` and `stat`: Iron will, +2 on Willpower checks and Presence +1). Iron will is a Grit talent the
-    aristocrat's table also gives. #787 cut Keen appraiser, Silver tongue, and Well liked;
+    are the same (`checks` and `stat`: Iron will, +2 on Willpower checks and Presence +1). #787 cut Keen appraiser, Silver tongue, and Well liked;
     Haggler is the merchant's class ability alone. New: Scroll savant (Scholar; Intelligence 13; #775 merged
     Careful reader into it): `read_percent`
     (reading takes half the time; with the wizard's Scroll adept a quarter, the least talents

@@ -4,9 +4,19 @@ Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185)
 rules it implements are in spec/07b-data.md and spec/06-input-and-ui.md. Keep it current with the code, as CLAUDE.md says.
 
 Equipment (spec §6 "Equipment", §7; M16): slots are data, `data/slots.toml`
-(`content/slot.rs`: `SlotDef` with `id`, `name`, `fits`, `action`, `mark`, `hand`; `SlotId` is an
+(`content/slot.rs`: `SlotDef` with `id`, `name`, `fits`, `action`, `mark`, `hand`, `class`; `SlotId` is an
 index in screen order, in the content fingerprint), so **a new slot is one entry there** (saves
-change). Objects say where they go (`slot` = a slot's `fits`,
+change). **A class's own slots** (#1404: the aristocrat's `extra_ring_1` to `_3`, after the hands'
+rings): `SlotDef::class` names the one class whose characters have the slot (checked in
+`Content::check_class_tables`); `SlotDef::belongs_to` and `Content::slots_for(class)` give the
+slots one of a class has (`None`: a creature or a run without a character, every slot without a
+class). The readers of "every slot" that a player sees or acts on go through them:
+`PerceptionView::own_slots` (the equipment screen's rows, lettered by row, so `SlotRow::slot`
+carries the id and nobody else's letters move; the choice's height; the `equipment` dump layer)
+and `World::own_slot` (`equip:` and `remove:` refuse another class's slot as an unknown one).
+`free_slot` (kits, heirlooms' fallback, spawn data, escorts) never picks a class's slot, so a
+creature or an ally never wears there; what reads the equipment itself (`Mods::worn`, Defence,
+`Actor::weapon`) reads whatever is in it, so a ring there works as on either hand. Objects say where they go (`slot` = a slot's `fits`,
 `two_handed`, `light_weapon` (any hand; a shield, anything with `bash`, too: two-shield
 fighting, `docs/dev/weapon-skills.md`), `ammo`, `launches`; `Content::fits`, `Content::fires`, `Content::hand_slots`).
 `equipment.rs` holds the runtime side: `Equipment` (slot → inventory position, on

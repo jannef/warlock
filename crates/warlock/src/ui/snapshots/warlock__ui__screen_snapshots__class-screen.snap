@@ -18,6 +18,7 @@ expression: "render(case, content.clone())"
               │   Witch                                                              │
               │   Warrior                                                            │
               │   Aristocrat                                                         │
+              │   Commoner                                                           │
               │   Random                                                             │
               │                                                                      │
               │   A cutpurse, burglar, and picker of locks who lives by nimble       │

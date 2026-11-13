@@ -36,7 +36,7 @@ use crate::object::{self, Stack};
 /// The slot an escort wearing `equipment` puts `object` in: the first free one it fits (its own
 /// kind of slot first), else the first it fits, taken; `None` if it fits none.
 pub fn escort_slot(content: &Content, equipment: &Equipment, object: ObjectId) -> Option<SlotId> {
-    let fitting: Vec<SlotId> = (content.slot_ids())
+    let fitting: Vec<SlotId> = (content.slots_for(None))
         .map(|(id, _)| id)
         .filter(|&s| content.fits_properly(object, s))
         .collect();

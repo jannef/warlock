@@ -119,8 +119,8 @@ The passive skills help you more the higher they are:
   what talents and a Delving tool add. [Alberich](npcs.md#alberich) in Fyrdelf teaches it for
   gold.
 - **[Herbalism](skills.md#skill-herbalism)** may find a herb besides on a forage that finds something (see
-  [Foraging](skill-uses.md#foraging)), and finds one more herb for every 50 when you
-  [gather](herbs.md#gathering) from the glowing fungus.
+  [Foraging](skill-uses.md#foraging)). You need it to [gather](herbs.md#gathering) herbs from
+  the glowing fungus, and it finds one more herb there for every 50.
 - **[Search](skills.md#skill-search)** helps you find [secret doors](doors.md#secret-doors) and other hidden things when you search (`s`, `Alt+s`). A
   master's search reaches one cell farther (see [Searching](searching.md)).
 - **[Spot](skills.md#skill-spot)** lets you [notice hidden things in passing](searching.md#noticing-in-passing) at all, except traps. The higher it is, the more you
@@ -190,7 +190,9 @@ past it. On [Stealth](skills.md#skill-stealth)'s quiet, it is 15 % less noise be
 
 Each [race](races.md) trains one or two skills. Each [class](classes.md) trains a handful: a few of them well (`2d6+10`), the
 rest a little (`2d4+4`). A skill both your [race](races.md) and your [class](classes.md) train adds the two. [Humans](races.md#race-human) train no skill of
-their own, but they put extra work into one of their [class](classes.md)'s skills, picked at random. The dice are
+their own, but they put extra work into one of their [class](classes.md)'s skills, picked at random. Every
+[commoner](classes.md#commoner) learned one trade growing up: one of the [professions](crafting.md), picked at
+random, which they always start with. The dice are
 rolled when your character is made, after your [stats](character.md#how-your-stats-add-up), so they never change a [stat](stats.md).
 
 Each [class](classes.md) also has a few skills its members **may** start with. Each has the chance in the last
@@ -199,7 +201,7 @@ column, then its dice, rolled once when your character is made. So two character
 
 Your [race](races.md)'s skill and the [human](races.md#race-human)'s extra [class](classes.md) skill add to one of these as to any other. But a
 level-up roll on one of them is an ordinary roll: the [class](classes.md)'s +1 is only for the skills in its Trains
-column. A [race](races.md) may have such a skill too: a [drow](races.md#race-drow) may start with [Sneak attack](skills.md#skill-sneak-attack), whatever their class
+column, and the same goes for the [commoner](classes.md#commoner)'s trade. A [race](races.md) may have such a skill too: a [drow](races.md#race-drow) may start with [Sneak attack](skills.md#skill-sneak-attack), whatever their class
 (rolled after the class's own).
 
 {{#include generated/skill-grants.md}}

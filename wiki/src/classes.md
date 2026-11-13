@@ -20,8 +20,8 @@ later open onto a [prestige class](prestige-classes.md).
 The first eleven classes are adventurers. The last four are everyday folk: an
 [aristocrat](classes.md#aristocrat), a [commoner](classes.md#commoner), a
 [craftsperson](classes.md#craftsperson), and a [merchant](classes.md#merchant). They were never
-trained for this, and it mostly shows. For now a new run offers only the aristocrat of them (see
-[Who may take which](#who-may-take-which)).
+trained for this, and it mostly shows. For now a new run offers only the aristocrat and the
+commoner of them (see [Who may take which](#who-may-take-which)).
 
 {{#include generated/classes.md}}
 

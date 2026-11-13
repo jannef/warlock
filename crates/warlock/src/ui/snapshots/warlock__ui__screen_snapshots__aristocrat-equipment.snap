@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to World. Press ? for controls.
+
+
+┌─ Equipment ──────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                  │
+│ > a  Head             —                                                                          │
+│   b  Neck             —                                                                          │
+│   c  Body           [ a houppelande                                                       700 g  │
+│   d  Cloak          [ a fur cloak (Dv +0, Pv 1)                                          2.5 kg  │
+│   e  Main hand      ) a rapier (+0 hit, 1d6)                                             1.1 kg  │
+│   f  Off hand         —                                                                          │
+│   g  Hands            —                                                                          │
+│   h  Left ring      = a gold ring (magic)                                                  10 g  │
+│   i  Right ring       —                                                                          │
+│   j  Extra ring 1     —                                                                          │
+│   k  Extra ring 2     —                                                                          │
+│   l  Extra ring 3     —                                                                          │
+│   m  Feet           [ a pair of leather boots (Dv +0, Pv 0)                                1 kg  │
+│   n  Missile weapon   —                                                                          │
+│   o  Missiles         —                                                                          │
+│   p  Tool           ( a lantern                                                           400 g  │
+│                                                                                                  │
+│ Defence (Dv) 11   ·   Protection (Pv) 1                                                          │
+│ Carrying 11.7 kg   ·   Your weight 81.7 kg (you 70 kg)                                           │
+│                                                                                                  │
+│ a-p choose a slot   A-P look   Esc close                                                         │
+└─ 1 Char · 2 Inv · 3 Eqp · 4 Skl · 5 Weap · 6 Mag · 7 Qst · 8 Tal · 9 Story ──────────────────────┘
+
+
+ The Wildlands  ·  HP 14/14  ·  MP 10/10  ·  Lv 1  ·  08:00  ·  11 Darkening  ·  Clear   ? controls

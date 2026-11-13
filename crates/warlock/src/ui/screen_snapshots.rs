@@ -1017,7 +1017,8 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Beside the darkness chamber's glowing fungus after a gather (spec §8 "Gathering herbs"):
-    // Gather in the Here group, everyone's; the message line says what was found.
+    // Gather in the Here group, greyed out for Tamsin, untrained in Herbalism (#1400); the
+    // message line says why she was refused.
     Case {
         name: "abilities-menu-gather",
         actions: "move:N*3 open:N move:N*2 move:E*30 open:N move:N*2 move:W*6 gather:W",
@@ -1336,6 +1337,15 @@ const CASES: &[Case] = &[
         name: "kit-equipment",
         scenario: "world",
         kit: true,
+        run: true,
+        screen: Some("equipment"),
+        ..BASE
+    },
+    // An aristocrat's three extra ring slots (#1404), after the hands' rings.
+    Case {
+        name: "aristocrat-equipment",
+        scenario: "world",
+        character: Some("human,female,aristocrat"),
         run: true,
         screen: Some("equipment"),
         ..BASE

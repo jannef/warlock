@@ -686,7 +686,8 @@ fn family_lines(tier: &Tier, content: &Content) -> Result<Vec<Line>, String> {
         let mut slots = vec![slot];
         if line.count > 1 {
             slots.extend(
-                (content.slot_ids())
+                // A creature's slots: never a class's own (the aristocrat's extra rings).
+                (content.slots_for(None))
                     .map(|(s, _)| s)
                     .filter(|&s| s != slot && content.slot(s).fits == kind),
             );

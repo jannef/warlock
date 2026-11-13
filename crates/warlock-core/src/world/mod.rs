@@ -347,7 +347,7 @@ pub use familiar::{draw as familiar_draw, name_for as familiar_name};
 pub use fight::{Cause, Death};
 pub(crate) use forage::forage_ground;
 pub use free_blow::FreeBlows;
-pub(crate) use gather::fungus_ways;
+pub(crate) use gather::{fungus_ways, unskilled};
 pub use gifts::{STARE_RANGE, Streak};
 pub use graveyard::Fallen;
 pub use guild::GuildRank;
@@ -392,7 +392,7 @@ use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
 use crate::content::{
     ActionKind, CombatStance, Content, Here, ObjectId, RaceDef, StairsDir, Stance, StatusId,
-    TalentActive,
+    TalentActive, TalentEffect,
 };
 use crate::geom::{Dir, Pos};
 use crate::hunger::Satiation;
@@ -1040,7 +1040,7 @@ impl World {
         };
         stars::grant(&content, state.character.as_ref(), &[], &mut player.talents);
         // The class abilities of level 1 (spec §8 "Class abilities").
-        class::grant(&content, state.character.as_ref(), &mut player, 1);
+        let given = class::grant(&content, state.character.as_ref(), &mut player, 1);
         player.hp = player.max_hp(&content);
         player.mana = player.max_mana(&content);
         crate::rot::made_at(&mut player.inventory, &content, def.start);
@@ -1069,12 +1069,21 @@ impl World {
             state.messages.push(0, text);
         }
         let mut world = Self::assemble(content, state);
+        // What the class's level-1 talents hand down (the aristocrat's Family wealth: its gold
+        // and gems, on top of the kit), as a creation pick's would be (`heirloom.rs`).
+        let content = world.content.clone();
+        let handed: Vec<_> = (given.iter())
+            .flat_map(|&id| content.talents().get(id).effects.iter().cloned())
+            .filter(TalentEffect::is_handed_down)
+            .collect();
+        let inherits = !handed.is_empty();
+        world.hand_down(handed.into_iter());
         // Animal companion's beast and the witch's familiar (spec §8 "Allies"; `companion.rs`,
         // `familiar.rs`), before the story knows them.
         world.bring_companion();
         world.bring_familiar();
         let kept = world.companion().is_some() || world.familiar().is_some();
-        if world.settle_in() || kept {
+        if world.settle_in() || kept || inherits {
             *world.perception =
                 Perception::compute(&world.state, &world.content, &mut world.lights);
         }

@@ -1,11 +1,11 @@
 //! Gathering herbs from the glowing fungus (spec §8 "Skills": Herbalism; #1340,
-//! `world/gather.rs`): Gather is listed only beside fungus, a gather takes its five minutes and
-//! finds herbs by the level's depth (one untrained, `1d2` + Herbalism ÷ 50 trained), a broken
-//! one finds nothing, a refusal takes no time, the fungus never changes, Herbalism is marked,
-//! and replays verify.
+//! `world/gather.rs`): Gather is listed only beside fungus, refused untrained in Herbalism
+//! (#1400), a gather takes its five minutes and finds herbs by the level's depth (`1d2` +
+//! Herbalism ÷ 50), a broken one finds nothing, a refusal takes no time, the fungus never
+//! changes, Herbalism is marked, and replays verify.
 
 use super::*;
-use crate::ability::{Ability, Source};
+use crate::ability::{Ability, Source, Unavailable};
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
@@ -27,7 +27,7 @@ const ROOM: &str = "\
 const FUNGUS: Pos = Pos::new(5, 2);
 
 /// The built-in content with [`ROOM`] at item level `depth`; the kobold only with `kobold`, the
-/// second fungus only with `two`.
+/// second fungus only with `two`. The player is a witch, trained in Herbalism.
 fn world(depth: u8, kobold: bool, two: bool) -> World {
     let mut files = ContentFiles::builtin();
     let k = if kobold {
@@ -48,7 +48,7 @@ fn world(depth: u8, kobold: bool, two: bool) -> World {
     files.insert(
         "scenarios/test_fungus.toml",
         "name = \"T\"\nstart_level = \"test_fungus\"\n\
-         character = { race = \"human\", gender = \"female\", class = \"priest\" }\n",
+         character = { race = \"human\", gender = \"female\", class = \"witch\" }\n",
     );
     let content = Arc::new(Content::load(&files).expect("fixture content is valid"));
     World::new(content, "test_fungus", None).expect("world")
@@ -129,14 +129,39 @@ fn gather_is_listed_only_beside_fungus_and_refused_elsewhere() {
 }
 
 #[test]
-fn the_untrained_find_one_herb_and_the_trained_more() {
+fn the_untrained_are_refused_and_the_trained_find_more() {
     let mut w = world(1, false, false);
     train(&mut w, None);
+    // Listed beside the fungus all the same, greyed out with the reason.
+    let gather = (w.perception().abilities().into_iter())
+        .find(|a| a.ability == Ability::Gather)
+        .expect("listed");
+    let skill = herbalism(&w);
+    assert_eq!(gather.unavailable, Some(Unavailable::Untrained(skill)));
+    assert_eq!(
+        Unavailable::Untrained(skill).reason(w.content()),
+        "you are untrained in Herbalism"
+    );
+    // Refused, taking no time, with nothing found and nothing marked.
     let start = w.state.time;
+    let out = w.apply(&Action::Gather(Dir::NE));
+    assert!(!out.took_turn && out.elapsed.is_zero());
+    assert_eq!(w.state.time, start);
+    assert_eq!(last_message(&w), super::gather::UNTRAINED);
+    assert_eq!(herbs(&w), 0);
+    // Not the way to the fungus: the place is asked first.
+    w.apply(&Action::Gather(Dir::S));
+    assert_eq!(last_message(&w), "There is nothing here to gather.");
+    // Trained at 0: `1d2`, one or two, and the row is no longer greyed out.
+    train(&mut w, Some(0));
+    assert!(
+        (w.perception().abilities().into_iter())
+            .any(|a| a.ability == Ability::Gather && a.unavailable.is_none())
+    );
     w.apply(&Action::Gather(Dir::NE));
     assert_eq!(w.state.time.since(start).as_seconds(), seconds(&w));
     assert!(said(&w, "You search the glowing fungus for herbs."));
-    assert_eq!(herbs(&w), 1, "untrained: one");
+    assert!((1..=2).contains(&herbs(&w)), "{}", herbs(&w));
     assert!(
         last_message(&w).starts_with("You gather "),
         "{}",

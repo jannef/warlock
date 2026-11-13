@@ -30,7 +30,7 @@ impl World {
         put_on: Option<String>,
     ) -> Spent {
         let content = self.content.clone();
-        let Some(slot) = content.slot_id(slot) else {
+        let Some(slot) = self.own_slot(slot) else {
             self.say(format!("There is no slot `{slot}`."));
             return Spent::Nothing;
         };
@@ -100,10 +100,18 @@ impl World {
         self.price_for(&kinds)
     }
 
+    /// The player's slot `id`: none for an id no slot has, or a slot of another class's (the
+    /// aristocrat's extra rings, for anyone else).
+    fn own_slot(&self, id: &str) -> Option<SlotId> {
+        let slot = self.content.slot_id(id)?;
+        let class = self.state.character.as_ref().map(|c| c.spec.class.as_str());
+        self.content.slot(slot).belongs_to(class).then_some(slot)
+    }
+
     /// Takes off what is in slot `slot` (an id).
     pub(super) fn remove(&mut self, slot: &str) -> Spent {
         let content = self.content.clone();
-        let Some(slot) = content.slot_id(slot) else {
+        let Some(slot) = self.own_slot(slot) else {
             self.say(format!("There is no slot `{slot}`."));
             return Spent::Nothing;
         };

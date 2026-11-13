@@ -14,7 +14,10 @@ in some places made by hand. Stand beside it, open the abilities menu (`a`), and
 **[Gather](abilities.md#ability-gather)** under *Here*. With fungus on one side of you, you
 gather from it at once; with fungus on several sides, you are asked which way.
 
-Anyone can gather. [Herbalism](skills.md#skill-herbalism) makes it worth doing:
+Only those trained in [Herbalism](skills.md#skill-herbalism) can gather. Without it, Gather
+shows greyed out beside the fungus, and you are told "You do not know what to do with these: gathering herbs takes the Herbalism
+skill."
+Trying takes no time. The more Herbalism you have, the more you find:
 
 {{#include generated/gathering.md}}
 
@@ -23,7 +26,7 @@ nothing, and the time is gone. A gather that runs its time gives you the herbs a
 gather 2 sprigs of moonwort and a glowcap."
 
 The fungus never runs out. Gather again at once, as often as you like: time is the only cost.
-Each gather that runs its time trains Herbalism, if you know it.
+Each gather that runs its time trains Herbalism.
 
 ## What you find
 

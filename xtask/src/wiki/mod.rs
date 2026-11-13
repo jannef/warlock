@@ -1135,7 +1135,7 @@ mod tests {
             "| `f` | Off hand | Knife, stiletto, dagger, short sword, hand axe, buckler, "
         ));
         assert!(equipment.contains(
-            "| `k` | Missile weapon | Short bow (shoots arrows), long war bow (shoots arrows), \
+            "| `k`, an aristocrat's `n` | Missile weapon | Short bow (shoots arrows), long war bow (shoots arrows), \
              composite bow (shoots arrows), crossbow (shoots crossbow bolts), heavy crossbow \
              (shoots crossbow bolts), sling (shoots sling stones), wand of burning hands, wand of \
              magic missile, wand of scorching ray, wand of sleep, wand of web, wand of shatter, wand of bind, wand of fireball, \
@@ -1143,7 +1143,7 @@ mod tests {
              other, any other weapon, and anything made for throwing |"
         ));
         assert!(equipment.contains(
-            "| `l` | Missiles | Brittle arrow, brittle bolt, sling stone, arrow, crossbow bolt, \
+            "| `l`, an aristocrat's `o` | Missiles | Brittle arrow, brittle bolt, sling stone, arrow, crossbow bolt, \
              flaming arrow | 6 seconds |"
         ));
         let fletching = text("fletching.md");
@@ -1156,7 +1156,9 @@ mod tests {
                 .contains("| Made, up to 3 short | half the count, rounded up | 2 times that |"),
             "{fletching}"
         );
-        assert!(equipment.contains("| `m` | Tool | Lantern, pick-axe, mattock | 6 seconds |"));
+        assert!(equipment.contains(
+            "| `m`, an aristocrat's `p` | Tool | Lantern, pick-axe, mattock | 6 seconds |"
+        ));
         let digging = text("digging.md");
         assert!(
             digging.contains(
@@ -1444,10 +1446,9 @@ mod tests {
             grants.contains("| Drow | Spot `1d6+4`, Stealth `1d4+2` | Sneak attack `2d4` (40 %) |")
         );
         assert!(grants.contains(
-            "| Commoner | Athletics `2d4+4`, Handle animal `2d4+4` | Heal `2d4` (15 %), \
-             Metalcraft `2d4` (10 %), Mining `2d4` (10 %), Survival `2d4` (30 %), \
-             Swim `2d4` (20 %), \
-             Woodcraft `2d4` (20 %) |"
+            "| Commoner | Athletics `2d4+4`, Handle animal `2d4+4`; one of Alchemy, Jewelcraft, \
+             Metalcraft, Woodcraft `2d4+4`, picked at random | Heal `2d4` (15 %), \
+             Mining `2d4` (10 %), Survival `2d4` (30 %), Swim `2d4` (20 %) |"
         ));
         let ladder = text("skill-ladder.md");
         assert!(

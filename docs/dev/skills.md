@@ -160,11 +160,14 @@ saved and hashed by that index. Their first effects (#1343, one hook each):
   into the pack. Nobody else draws, so a forage without Herbalism draws as before. Marks on
   `forage`, 25 %.
 - **Herbalism**'s use is **Gather** (#1340, `world/gather.rs`, `content/herbs.rs`,
-  `data/herbs.toml`): the glowing fungus gives herbs to anyone beside it (`Ability::Gather`, the
+  `data/herbs.toml`): the glowing fungus offers it to anyone beside it (`Ability::Gather`, the
   abilities menu's *Here* group, offered by the fungus as a room's feature offers Pray, so the
-  skill stays `passive`). Untrained, one herb; trained, `count` + Herbalism's trained value /
-  `value_per_count` (`Skills::value_of_effect(Effect::Herbs)`), each drawn by weight at the
-  level's item level (`HerbRules::at`). Marks on `gather`, 100 %. The fungus never changes.
+  skill stays `passive`), but only one trained in the file's `skill` (Herbalism) may gather
+  (#1400): `gather::unskilled` is the one check, read by `World::start_gather` (refused, no time,
+  `gather::UNTRAINED`, after the fungus is found) and by `Ability::unavailable`
+  (`Unavailable::Untrained(skill)`, "you are untrained in Herbalism", id `untrained:herbalism`).
+  A gather finds `count` + the skill's trained value / `value_per_count`, each drawn by weight
+  at the level's item level (`HerbRules::at`). Marks on `gather`, 100 %. The fungus never changes.
 - **Alchemy**'s `identify_potion` and **Enchanting**'s `identify_magic` (5 / 25 / 40 %) look in
   `world/appraise.rs::appraise_hours` after Appraise's `identify`, from the same hour's stream:
   Alchemy at the potions and flasks whose kind is unknown (`drink`), Enchanting at every other
