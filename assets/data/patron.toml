@@ -1,0 +1,17 @@
+# The craftsperson's patron (spec §8 "Class abilities": Patron; #1421, the craftsperson design
+# §7.4; crates/warlock-core/src/content/patron.rs, world/patron.rs). A character with the Patron
+# class ability (the craftsperson's, from level 12) has a patron in town (a campaign's town's
+# `servant` entry for `patron`, data/towns/), who commissions graded work from their trades: a
+# chat offers one when none is open, the work drawn from every recipe of the player's trained
+# professions within their skill whose result can be Fine (arms, armour, shields, helmets,
+# bows, gloves, boots), the recipe's stock advanced with it; a chat while one is open takes the
+# first of that thing carried that is Fine or better, and pays for it. One is open at a time;
+# there is no cap and no wait between them.
+#
+# Fields:
+#   pays   percent of the delivered item's worth paid (its grade's ×2, ×3, ×5 counted)
+#   bonus  percent more for a piece that bears the player's maker's mark (Maker's mark, the
+#          craftsperson design §7.10; read once maker's marks exist)
+
+pays = 100
+bonus = 50

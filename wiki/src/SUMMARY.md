@@ -47,6 +47,7 @@
 - [Your character](character.md)
   - [Races](races.md)
   - [Classes](classes.md)
+    - [The patron](patron.md)
     - [Prayer](prayer.md)
     - [Prestige classes](prestige-classes.md)
   - [Allies](allies.md)

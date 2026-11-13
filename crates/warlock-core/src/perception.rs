@@ -1361,6 +1361,8 @@ pub struct PerceptionView<'a> {
     pub(crate) progress: &'a crate::world::Progress,
     /// The player's quests, which they know.
     pub(crate) quests: &'a crate::world::Quests,
+    /// The patron's open commission, which the player knows (`world/patron.rs`).
+    pub(crate) patron: &'a crate::world::patron::Patron,
     /// Everything the player was told, which they know.
     pub(crate) messages: &'a crate::messages::MessageLog,
     /// What the player knows of scroll types: how they name what they see.

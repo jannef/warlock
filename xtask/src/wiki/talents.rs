@@ -877,6 +877,15 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             ),
             None => "nothing: investing is not in this game".to_string(),
         },
+        TalentEffect::Patron => match content.patron() {
+            Some(rules) => format!(
+                "a patron in town commissions Fine (or better) arms and armour from your trades, \
+                 advances the stock, and pays {} % of the piece's worth (see \
+                 [the patron](patron.md))",
+                rules.pays
+            ),
+            None => "nothing: the patron is not in this game".to_string(),
+        },
         TalentEffect::HungerPercent { value } => format!("hunger pace {}", percent(value)),
         TalentEffect::SmellRot => {
             "the eat list says whether food smells fresh, turning (old), or rotten"

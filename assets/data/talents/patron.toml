@@ -1,0 +1,11 @@
+# The craftsperson's class ability from level 12 (spec §8 "Class abilities": Patron; the
+# craftsperson design §7.4; #1421): a town helper, its numbers in ../patron.toml, the patron a
+# town's (a campaign's data/towns/), the rule in world/patron.rs.
+[[talent]]
+id = "patron"
+name = "Patron"
+tree = "class"
+granted = true
+description = "A well-to-do patron in town commissions your work: one fine piece at a time, the stock for it advanced, paid in full on delivery."
+effects = [{ kind = "patron" }]
+systems = ["shops", "talk"]

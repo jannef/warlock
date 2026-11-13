@@ -229,6 +229,7 @@ mod orison;
 mod outcome;
 mod pack;
 mod path;
+pub(crate) mod patron;
 mod perceive;
 mod pit;
 mod potion;
@@ -515,6 +516,9 @@ pub struct WorldState {
     /// A merchant's stake with their business partner (`world/invest.rs`).
     #[serde(default, skip_serializing_if = "invest::Fund::is_empty")]
     pub(crate) fund: invest::Fund,
+    /// A craftsperson's commissions from their patron (`world/patron.rs`).
+    #[serde(default, skip_serializing_if = "patron::Patron::is_empty")]
+    pub(crate) patron: patron::Patron,
     /// Sounds the player perceived lately: those like them are no news ([`noise::news`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) recent_sounds: Vec<Recent>,
@@ -1022,6 +1026,7 @@ impl World {
             uniques_offered: BTreeSet::new(),
             stipend: stipend::Stipend::default(),
             fund: invest::Fund::default(),
+            patron: patron::Patron::default(),
             recent_sounds: Vec::new(),
             weather_override: None,
             death: None,
@@ -1378,6 +1383,7 @@ impl World {
             experience: self.state.experience,
             progress: &self.state.progress,
             quests: &self.state.quests,
+            patron: &self.state.patron,
             messages: &self.state.messages,
             lore: self.lore(),
             snapshot: &self.perception,
@@ -2099,6 +2105,8 @@ mod overworld_tests;
 mod pack_tests;
 #[cfg(test)]
 mod parts_tests;
+#[cfg(test)]
+mod patron_tests;
 #[cfg(test)]
 mod pit_tests;
 #[cfg(test)]

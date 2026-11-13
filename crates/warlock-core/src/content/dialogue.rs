@@ -61,6 +61,7 @@ struct DialogueSpec {
     mutter: Option<MutterSpec>,
     stipend: Option<ServantWords>,
     partner: Option<PartnerWords>,
+    patron: Option<PatronWords>,
     #[serde(default)]
     after: Vec<AfterLines>,
 }
@@ -233,6 +234,27 @@ pub struct PartnerWords {
     pub withdrawn: String,
 }
 
+/// A patron's words (`[dialogue.patron]`, #1421; `world/patron.rs`): the dialogue of a
+/// craftsperson's patron, who commissions graded work. `{work}` becomes the thing asked for with
+/// its article ("a long sword"), `{stock}` the stock advanced ("3 steel ingots"), `{gold}` what
+/// is paid, and `{address}` the word for the player's gender.
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PatronWords {
+    /// Said as a commission is given (`{work}`, `{stock}`).
+    pub offer: String,
+    /// Said while one is open and nothing carried will do (`{work}`).
+    pub waiting: String,
+    /// Said as the work is handed in and paid for (`{gold}`).
+    pub delivered: String,
+    /// Said when only plain pieces of the work are carried (`{work}`).
+    pub plain: String,
+    /// Said when nothing the player can make is worth commissioning.
+    pub idle: String,
+    /// How the patron addresses the player, by gender: "sir", "madam".
+    pub address: GenderWords,
+}
+
 /// A word for each gender.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -288,6 +310,8 @@ pub struct Dialogue {
     pub stipend: Option<ServantWords>,
     /// A business partner's words: the speaker invests for the player (`world/invest.rs`).
     pub partner: Option<PartnerWords>,
+    /// A patron's words: the speaker commissions work from the player (`world/patron.rs`).
+    pub patron: Option<PatronWords>,
     /// The campaign whose `data/dialogue/` it is in; `None` for shared ones (the shopkeeper's)
     /// and those outside every campaign.
     pub campaign: Option<String>,
@@ -532,6 +556,7 @@ fn parse_file<'a>(
             mutter,
             stipend: spec.stipend,
             partner: spec.partner,
+            patron: spec.patron,
             campaign: campaign.clone(),
         });
         files.push(file);
