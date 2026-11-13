@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You see here Ash Coat, a chain mail shirt.
- You pick up Ash Coat, a chain mail shirt.
+ You see here Ash Coat, a Masterwork chain mail shirt.
+ You pick up Ash Coat, a Masterwork chain mail shirt.
 
 
 
@@ -11,13 +11,13 @@ expression: "render(case, content.clone())"
                   │                                                              │
                   │ [ Ash Coat                                                   │
                   │                                                              │
-                  │ Rare chain mail shirt · iron · 11 kg                         │
+                  │ Rare Masterwork chain mail shirt · iron · 11 kg              │
                   │                                                              │
                   │ Worn: body                                                   │
                   │ Armour +2                                                    │
                   │ Protection 3 (+1 against slashing, −1 against piercing)      │
                   │ Dexterity adds at most +4 to Defence while worn              │
-                  │ Dv +2, Pv 3                                                  │
+                  │ Dv +4, Pv 4                                                  │
                   │                                                              │
                   │ Prefix  Tireless: +3 to maximum stamina                      │
                   │ Prefix  Mage-wrought: hinders casting 7 points less          │

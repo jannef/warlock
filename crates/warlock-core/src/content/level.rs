@@ -32,7 +32,8 @@
 //! tables mark shops (spec §7 "Shops"): `kind` (an id in `data/shops.toml`), the `keeper`'s
 //! name, the shop floor's `area` (inclusive: everything lying there is for sale), and the
 //! keeper's `post` on it, where the keeper (`data/shops.toml`'s `[keeper]`) is spawned, and
-//! optionally the unique character the keeper is (`npc`, whose dialogue it speaks).
+//! optionally the unique character the keeper is (`npc`, whose dialogue it speaks) and its
+//! creature type (`creature`, default the `[keeper]`'s).
 //! Optional `danger = N` (spec §7 "Danger levels"; 0 to 99, or `{ base, player }`) with
 //! `population` (creature ids), `population_count`, `stray`, `stray_pool`, `out_of_depth`,
 //! `deeper`, `deeper_cap`, `dread_one_in`, `neutral`, and `spawn`, as a dungeon branch gives them
@@ -63,7 +64,7 @@ use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::item_parts::{self, ItemPart};
 use crate::light::Light;
-use crate::magic::{Affix, LootGrade, LootPool, Magic};
+use crate::magic::{Affix, LootGrade, LootPool, Magic, Quality};
 use crate::object::{Stack, add_to_pile};
 use crate::temperature::Temperature;
 use serde::{Deserialize, Serialize};
@@ -183,6 +184,9 @@ struct ShopSpec {
     /// The unique character the keeper is (`npc = "eadric"`, #1394): it speaks that npc's
     /// dialogue, not the shopkeepers'; default none.
     npc: Option<String>,
+    /// The keeper's creature type, carrying `data/shops.toml`'s `[keeper]` kit (Gimmwīc's deep
+    /// gnomes, #1434); default the `[keeper]`'s own.
+    creature: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -199,7 +203,8 @@ struct PileSpec {
 /// gem or a loose gem, `parts = [{ part = "pommel", of = "emerald", size = "small", cut = "fine"
 /// }]` (spec §7 "Gems"; a loose gem's gem is its main part, no `part`), or made of another
 /// material, `parts = [{ of = "bronze" }]` (a variant, #193: no size or cut), with affixes or
-/// without.
+/// without; of a `quality` (`"masterwork"`) or plain. Trimmed to its capacity at load like any
+/// item made ([`hand_made`]).
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ItemSpec {
@@ -220,6 +225,9 @@ struct ItemSpec {
     level: Option<u8>,
     /// How many (ammunition), default 1.
     count: Option<u32>,
+    /// Its make, as the forge's grades give it (`"fine"`, `"marvellous"`, `"masterwork"`), so its
+    /// capacity holds its affixes (docs/dev/enchanting.md); none: plain.
+    quality: Option<Quality>,
 }
 
 /// A gem an `[[item]]` is made with: the part it is (none: the main part, a loose gem's), the gem,
@@ -1341,6 +1349,10 @@ fn parse_shops(
         }
         let mut keeper = shops.keeper_spawn(plan.post);
         keeper.npc = spec.npc.clone();
+        if let Some(id) = &spec.creature {
+            keeper.creature = (content.creature_id(id))
+                .ok_or_else(|| bad(&format!("unknown keeper creature `{id}`")))?;
+        }
         creatures.push(keeper);
         plans.push(plan);
     }
@@ -1458,14 +1470,37 @@ fn parse_item(spec: &ItemSpec, content: &Content) -> Result<Stack, String> {
     } else {
         Stack::new(object, count)
     };
-    if spec.parts.is_empty() {
-        return Ok(stack);
+    let stack = if spec.parts.is_empty() {
+        stack
+    } else {
+        let own = (spec.parts.iter())
+            .map(|p| item_part(p, content))
+            .collect::<Result<Vec<_>, _>>()?;
+        item_parts::check(def, &own, content)?;
+        stack.with_parts(own)
+    };
+    let [x, y] = spec.at;
+    hand_made(stack, spec.quality, &format!("{}@{x},{y}", def.id), content)
+}
+
+/// A hand-made item (a level's `[[item]]`, a unique item) finished as every item made is: of
+/// `quality` if given (refused for an item with no aspect to better, a ring), then trimmed to its
+/// capacity (docs/dev/enchanting.md) from the stream `trim/<key>` of seed 0. The shipped ones are
+/// given the make their affixes need, so the trim never fires on them (a test holds it).
+pub(super) fn hand_made(
+    mut stack: Stack,
+    quality: Option<Quality>,
+    key: &str,
+    content: &Content,
+) -> Result<Stack, String> {
+    let def = content.object(stack.object);
+    if let Some(quality) = quality {
+        let worked = (quality.worked(def))
+            .ok_or_else(|| format!("`quality`: {} have nothing to better", def.plural))?;
+        stack.set_worked(worked);
     }
-    let own = (spec.parts.iter())
-        .map(|p| item_part(p, content))
-        .collect::<Result<Vec<_>, _>>()?;
-    item_parts::check(def, &own, content)?;
-    Ok(stack.with_parts(own))
+    let mut rng = crate::rng::Rng::stream(0, &format!("trim/{key}"));
+    Ok(crate::magic::loot::finished(content, &mut rng, stack))
 }
 
 /// What a magic or rare `[[item]]` rolled: rare with a `name`, else magic.

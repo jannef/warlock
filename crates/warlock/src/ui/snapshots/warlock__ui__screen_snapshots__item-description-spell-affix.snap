@@ -2,21 +2,22 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You see here Rune Song, a quarterstaff.
- You pick up Rune Song, a quarterstaff.
-
+ You see here Rune Song, a Masterwork topaz-tipped quarterstaff.
+ You pick up Rune Song, a Masterwork topaz-tipped quarterstaff.
 
                   ┌─ Item ───────────────────────────────────────────────────────┐
                   │                                                              │
                   │ ) Rune Song                                                  │
                   │                                                              │
-                  │ Rare quarterstaff · wood · 2 kg                              │
+                  │ Rare Masterwork topaz-tipped quarterstaff · wood, topaz tip  │
+                  │ · 2 kg                                                       │
+                  │ Tip: small topaz, fair cut                                   │
                   │                                                              │
                   │ Staff, for both hands                                        │
-                  │ Damage 1d6; criticals on 22–24, ×2 damage                    │
+                  │ Damage 1d8; criticals on 22–24, ×2 damage                    │
                   │ Bludgeoning damage                                           │
                   │ Parry +1                                                     │
-                  │ To hit +0, damage 1d6                                        │
+                  │ To hit +1, damage 1d8+1                                      │
                   │ Dv +1                                                        │
                   │                                                              │
                   │ Prefix  Potent: +3 on every spell's roll, harm or healing    │
@@ -27,7 +28,6 @@ expression: "render(case, content.clone())"
                   │                                                              │
                   │ Esc close                                                    │
                   └──────────────────────────────────────────────────────────────┘
-
 
 
 

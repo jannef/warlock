@@ -66,6 +66,10 @@
 #   work      how hard it is to work (default 0, steel's): a signed modifier on the check of every
 #             salvage and recipe that works it (docs/design/professions.md §4; the profession
 #             that works it is its group's in stock.toml). Soft metals −3, adamantium +8
+#   binding   how well it holds magic, −2 to +2 (default 0, steel's): a term of the affix
+#             capacity of an item whose main part is of it (docs/dev/enchanting.md). Silver −2;
+#             the soft metals and knapped stone −1; gold, electrum, ironwood, ivory, jade, amber,
+#             and silk +1; mithril, adamantium, dragonbone, and dragonscale +2
 #   gem      makes it a gem (spec §7 "Gems"; precious, with no group): an inline
 #             table of
 #               color   "#rrggbb": a loose gem's glyph, and a ring set with it

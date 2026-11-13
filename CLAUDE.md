@@ -50,7 +50,7 @@ Game flags (`cargo run -p warlock -- --help`):
   of a generated forest area of the overworld at 06:30, `arena` in the dark corner of the arena
   where kobolds and giant rats fight, `quarry` in the quarry beside a pick-axe (its pit holds a pool of deep water to swim in, with `--character lizardfolk,female,warrior`), `traps` in the
   trap hall, `summoners` in the summoning hall's south hall (three summoners behind doors), `thieves` in the thieves' hall (a pixie, a nymph, and an imp that rob you as they fight, behind doors; a blink dog past statues), `chests`
-  in the chest hall (every kind of chest, a mimic, and both treasure rooms), `cealdhlaw` on the first floor of Cealdhlāw, the Ascmearc's first dungeon, `fennmynster` on
+  in the chest hall (every kind of chest, a mimic, and both treasure rooms), `cealdhlaw` on the first floor of Cealdhlāw, the Ascmearc's first dungeon, `deopgang` on the first floor of Dēopgang, the deep way down from the south-west corner, `gimmwic` in Gimmwīc, the deep gnomes' town at its bottom, `fennmynster` on
   the first floor of Fennmynster, the drowned minster's cellars, `fyrdelf` on the first floor of Fyrdelf,
   its deepest, `grundleas` on the first floor of Grundlēas, the endless branch that forgets each floor left, `hellegeat` on the first floor of Pit 1 of Hellegeat, the fiends' branch a `portal` miscast opens (its record made at the start: its `<` climbs out to the hub), `rat_king` on its tenth floor, kept by its first layer boss, Gnægan the Rat King, whose death opens the way down (a level-1 warrior: give levels with `xp:` and `levelup:auto`), `utgang` on the top floor of Ūtgang, the way up from Fyrdelf's bottom (its `<` climbs out and reveals its hidden way in), `drake`
   in a lava hall eleven cells from the fire drake, a dragon (a level-1 warrior: give levels with `xp:` and `levelup:auto`), `shrine` before three forgotten altars, good, neutral, and evil, to pray at, `forge`
@@ -230,7 +230,7 @@ char, the same way, `1` a little soot to `9` charred through), `inventory`
 (what the player
 carries, grouped by item class under `Class:` header lines as the screens group it, each stack by
 its position as action text names it with its numbers as the lists show them, `a long sword (+0
-hit, 1d8)`, a spirit weapon marked `(spirit)`, a wand whose type is known with its rung, `(rung 2)`, a flask whose type is known with its throw's range, `(throw 6)`, and weighs, worn and wielded things marked, their burden
+hit, 1d8)`, a spirit weapon marked `(spirit)`, a wand whose type is known with its rung, `(rung 2)`, a flask whose type is known with its throw's range, `(throw 6)`, a base item the affixes it truly holds against its capacity, `(holds 1/2)` (docs/dev/enchanting.md), and weighs, worn and wielded things marked, their burden
 and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's name, race, gender, and class (`Class Bard`; `Class Bard 30` at the class's cap;
@@ -392,6 +392,7 @@ file). Topics:
 - `docs/dev/traps.md` — trap data, triggering, known traps, the dev trap actions
 - `docs/dev/searching.md` — secret doors, the active and passive checks, who notices, the secrets stream
 - `docs/dev/magic-items.md` — affixes, rarities, base items, loot, identification, the item description
+- `docs/dev/enchanting.md` — affix capacity (`magic/capacity.rs`, materials' `binding`), the trim as the last step of making any item (`loot::finished`, gear's after its condition), `quality` on hand-made items, the capacity line for the Appraise-trained
 - `docs/dev/potions.md` — potions: the drink kinds, drinking through Consume, words and colours, sources, their talents
 - `docs/dev/prayer.md` — the priest's prayer: `data/prayer.toml`, the prayer talents and `TalentMods::prayer`, the face, the problems in priority order, the strain and its lock, the fixes, the dumps
 - `docs/dev/scrolls.md` — reading, spell scrolls on the traps' shared spell code, the scroll of identify, the read and identify lists

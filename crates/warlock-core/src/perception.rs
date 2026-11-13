@@ -1767,12 +1767,16 @@ impl<'a> PerceptionView<'a> {
         &self.player.inventory
     }
 
-    /// What item descriptions show the player of worth (spec §8 "Talents": Gem lore), by their
-    /// own abilities.
+    /// What item descriptions show the player of worth (spec §8 "Talents": Gem lore) and of
+    /// make (an item's capacity, to a holder of Eye for the make or one trained in Appraise:
+    /// docs/dev/enchanting.md), by their own abilities.
     pub fn appraisal(&self) -> crate::magic::describe::Appraisal {
         let talents = self.player.talent_mods(self.content);
+        let appraise = self.content.skill_id("appraise");
+        let trained = appraise.and_then(|s| self.player.skills.value(s));
         crate::magic::describe::Appraisal {
             gems: talents.gem_worth,
+            capacity: talents.eye_for_make || trained.is_some_and(|v| v > 0),
         }
     }
 

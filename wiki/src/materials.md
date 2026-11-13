@@ -29,6 +29,10 @@ Every other material is measured against steel:
   blade or head.
 - **armour**: how much of an armour's [Protection](combat.md#protection) an armour of it keeps.
 - **worth**.
+- **binding**: how well it holds magic. It is added to the number of
+  [enchantments](magic-items.md#capacity) an item made of it can bear: silver −2, the soft
+  metals and knapped stone −1, gold, ivory, jade, amber, and silk +1, mithril, adamantium, and
+  the dragon stuff +2.
 
 A material with no weapon figures cannot be a weapon's working part, so there is no leather
 sword. One with no armour figure cannot be armour, so there is no flint mail.

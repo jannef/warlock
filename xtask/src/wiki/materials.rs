@@ -53,13 +53,14 @@ fn how_often(weight: u32) -> &'static str {
 /// Every material by group, then name: its group, colour, weight, weapon modifiers, the
 /// Protection an armour of it keeps, and worth, all on steel's scale; whether it is precious
 /// (shown in names); its chance to withstand each kind of item damage (acid, rust, fire); its
-/// `work` (added to the difficulty of working it); and the objects made of it, in part or whole.
+/// `work` (added to the difficulty of working it); its `binding` (what it adds to the
+/// enchantments an item of it can bear); and the objects made of it, in part or whole.
 pub(super) fn materials(content: &Content) -> String {
     let mut out = String::from(
         "| Material | Group | Colour | Weight | Weapon (to hit / damage) | Armour | Worth | \
          Precious (shown in names) | Withstands acid | Withstands rust | Withstands fire | Work | \
-         Objects made of it, in part or whole |\n\
-         |---|---|---|---:|:---:|---:|---:|:---:|---:|---:|---:|---:|---|\n",
+         Binding | Objects made of it, in part or whole |\n\
+         |---|---|---|---:|:---:|---:|---:|:---:|---:|---:|---:|---:|---:|---|\n",
     );
     // A loose gem is made of its gem, never of what its object would be without one.
     let loose = content.gems().map(|g| g.object);
@@ -95,7 +96,7 @@ pub(super) fn materials(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {group} | {colour} | {}% | {weapon} | {armour} | {} | {} | {}% | {}% | {}% \
-             | {} | {made} |",
+             | {} | {} | {made} |",
             capital(&m.name),
             m.weight,
             times(m.value),
@@ -104,6 +105,7 @@ pub(super) fn materials(content: &Content) -> String {
             resists.rust,
             resists.fire,
             signed(m.work),
+            signed(i32::from(m.binding)),
         );
     }
     out

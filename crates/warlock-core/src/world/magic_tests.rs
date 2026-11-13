@@ -691,13 +691,13 @@ fn generated_levels_hold_floor_and_vault_loot() {
     assert_eq!(
         names(Pos::new(19, 14)),
         [
-            "Dread Visage, an iron helm",
+            "Dread Visage, a Masterwork iron helm",
             "a Sharp emerald-pommelled long sword of the Bear"
         ]
     );
     assert_eq!(
         names(Pos::new(18, 14)),
-        ["a silver ring (magic)", "a short bow (rare)"]
+        ["a silver ring (magic)", "a Marvellous short bow (rare)"]
     );
     let helm = &level.objects_at(Pos::new(19, 14))[0];
     let mods = crate::magic::Mods::local(helm, &content);

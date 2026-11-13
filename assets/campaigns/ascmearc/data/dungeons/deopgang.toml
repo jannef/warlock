@@ -1,0 +1,79 @@
+# Dēopgang, "the deep way" (#1434; the fields: data/dungeons.toml): the deep gnomes' road down
+# from the foot of Grægweall, in the Ascmearc's south-west corner, to their town at its bottom.
+# Its way in on the overworld is open to anyone who walks there (no quest reveals it). Four floors
+# of the gnomes' old cut galleries, then seven of the wild deep they dug into, and at the bottom
+# Gimmwīc, the deep gnomes' town (levels/gimmwic.toml), a hand-made level the eleventh floor's
+# `>` leads to (`bottom`).
+
+[[dungeon]]
+id = "deopgang"
+name = "Dēopgang"
+arrival = "Cut steps, worn hollow, go down into still, cold air. Far below, a hammer rings."
+generator = "rooms"
+depth = 11
+size = [80, 21]
+bottom = "gimmwic"
+traps = ["arrow", "spear", "pit", "frost", "lightning_bolt", "alarm", "teleport"]
+# The gnomes hide their ways as well as they cut them: more secret doors than the duergar's mine,
+# harder to find the deeper they go, and locks as hard as Fyrdelf's.
+secret_doors = [1, 3]
+hidden_per_depth = 2
+locks_per_depth = 2
+loot = [3, 6]
+key = "brass_key"
+temperature = 12
+# More chests than the shared odds: the deep's old caches (spec §8 "Chests").
+chests = { chance = 40, count = [1, 2] }
+# Danger 14 on the first floor to 24 on the eleventh (spec §7 "Danger levels"), the Ascmearc's
+# deepest tier after Fyrdelf (5 to 16) and Ūtgang (13 to 15). The folk of the deep: the duergar
+# who dig toward the gnomes' veins, the drow who raid them, the elementals of stone and water in
+# the rock, the trolls and the stone giant who live in the dark, the knockers and the dead of old
+# cave-ins, and the deep's lurkers (the basilisk, the black pudding, the rust monster that eats
+# metal, the invisible stalker). Nothing from the surface (no bats, kobolds, wolves, or orcs'
+# raiders), and nothing above level 27: the stone troll comes only out of depth, at the bottom.
+# Gems lie thick in the deep's rock (#1434): the walls give only silver and gold for ore, so a
+# miner's finds that are not stone are more often uncut gems (data/mining.toml: with the common
+# ores left out, the gem row weighs more than three times as much among the rest); no mithril or
+# adamantium (they start at danger 60 and 80).
+ores = ["silver", "gold"]
+danger = 14
+population = [
+    "rust_monster", "duergar_smith", "earth_elemental", "troll", "knocker",
+    "drow_warrior", "water_elemental", "duergar_crossbowman", "duergar_skeleton", "ogre_mauler",
+    "basilisk", "drow_crossbowman", "meenlock", "duergar_veteran", "rotting_troll",
+    "black_pudding", "ogre_mage", "drow_stalker", "duergar_priest", "fetch", "revenant",
+    "troll_shaman", "drow_mage", "duergar_hulk", "grave_knight", "invisible_stalker",
+    "greater_earth_elemental", "drow_priestess", "stone_giant", "wight_lord",
+    "duergar_spider_rider", "stone_troll",
+]
+# As deep and as dangerous as Fyrdelf's lowest floors and below: the dread come oftener
+# (docs/design/monster-dread.md §8), one draw in 50 (the default is one in 100).
+dread_one_in = 50
+
+# The deep-gnome traders (spec §7 "Shops"): on the gallery floors, about one in two with a fitting
+# room has a store of theirs. Shops stand on rooms levels only, so the wild deep has none.
+shops = { chance = 50, kinds = ["general_store"], keeper = "deep_gnome_trader", names = [
+    "Jago", "Peder", "Kitto", "Locryn", "Mawgan", "Tristan",
+    "Demelza", "Elowen", "Jenna", "Lowena", "Morwenna", "Tamsin",
+] }
+
+# The gnomes' old galleries: cut halls and passages.
+[[dungeon.levels]]
+from = 1
+to = 4
+
+# The wild deep: caverns, the dread oftener as the floors near the bottom (one draw in 40 on the
+# last three).
+[[dungeon.levels]]
+from = 5
+to = 8
+generator = "caves"
+size = [120, 60]
+
+[[dungeon.levels]]
+from = 9
+to = 11
+generator = "caves"
+size = [120, 60]
+temperature = 14
+dread_one_in = 40

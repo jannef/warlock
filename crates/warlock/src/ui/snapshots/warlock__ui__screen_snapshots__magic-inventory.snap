@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You pick up Dread Visage, an iron helm and a Sharp emerald-pommelled long sword of the Bear.
- You put on Dread Visage, an iron helm.
+ You pick up Dread Visage, a Masterwork iron helm and a Sharp emerald-pommelled long sword of the Be
+ You put on Dread Visage, a Masterwork iron helm.
 
 
 
@@ -13,9 +13,9 @@ expression: "render(case, content.clone())"
 │ Melee weapons                                                                                    │
 │   a - ) a Sharp emerald-pommelled long sword of the Bear (+0 hit, 1d9+2)                 1.8 kg  │
 │ Missile weapons                                                                                  │
-│   b - } a short bow (rare) (+0 hit, 1d6, range 10)                                        700 g  │
+│   b - } a Marvellous short bow (rare) (+1 hit, 1d8, range 10)                             700 g  │
 │ Helmets                                                                                          │
-│   c - [ Dread Visage, an iron helm (+1 hit, Dv +0, Pv 1) (being worn)                    1.5 kg  │
+│   c - [ Dread Visage, a Masterwork iron helm (+1 hit, Dv +0, Pv 4) (being worn)          1.5 kg  │
 │ Rings                                                                                            │
 │   d - = a silver ring (magic)                                                              10 g  │
 │ Tools                                                                                            │

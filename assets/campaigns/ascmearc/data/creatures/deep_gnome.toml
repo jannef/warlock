@@ -1,0 +1,24 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The deep gnomes of Gimmwīc (#1434; docs/dev/creatures/deep-gnomes.md), the town at the bottom of
+# Dēopgang: small, grey-skinned, bald folk of the deep, gem-cutters and smiths who would rather
+# make a thing than buy it. The townsfolk go about the town's lanes and workshops. Peaceful; they
+# talk, and mutter to themselves now and then, mostly about their work
+# (campaigns/ascmearc/data/dialogue/gimmwic.toml), in the Cornish of the deep.
+[[creature]]
+id = "deep_gnome"
+name = "deep gnome"
+glyph = "@"
+fg = "#9c9cb0"
+faction = "peaceful"
+tags = ["deep-gnome"]
+# One of the people: never greater or lesser than their kind.
+grades = false
+alignment = "good"
+vision = "darkvision"
+size = "small"
+footsteps = 30
+hearing = 12
+weight = 38000
+stats = { strength = 9, dexterity = 13, toughness = 12, intelligence = 13, willpower = 13 }

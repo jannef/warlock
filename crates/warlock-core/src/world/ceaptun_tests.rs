@@ -386,13 +386,13 @@ fn factor_wulfrun_identifies_what_the_player_carries_for_gold() {
     act(&mut w, "ask:E:identify");
     assert_eq!(said(&w).last().unwrap(), "You cannot pay.");
     assert_eq!(w.unidentified().len(), 1);
-    // Nobody else in the campaigns offers it.
+    // Nobody else in the campaigns offers it but Gimmwīc's gem dealer (#1434).
     let appraisers: Vec<String> = (0..CONTENT.dialogues().len())
         .map(|i| DialogueId(i as u16))
         .filter(|&d| (CONTENT.dialogue(d).services.iter()).any(|s| s.does == ServiceKind::Identify))
         .map(|d| CONTENT.speaker_name(d))
         .collect();
-    assert_eq!(appraisers, ["Factor Wulfrun"]);
+    assert_eq!(appraisers, ["Factor Wulfrun", "Kerensa"]);
 }
 
 /// The player's Metalcraft, if trained.

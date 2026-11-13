@@ -1,0 +1,10 @@
+# A developer's start in Gimmwīc, the deep gnomes' town at the bottom of Dēopgang (#1434): on its
+# stairs up. It carries no gold of its own: a scenario's carry goes on top of every character's
+# kit in kit.rs's burden tests, and a purse would burden the weakest.
+# Listed on New run in developer builds only (a release lists the campaign's start).
+name = "Gimmwīc"
+description = "The deep gnomes' town at the bottom of Dēopgang: the gem dealer, the outfitters, the Glimmering, the cutting floor and Old Tregear, and Headman Peran."
+start_level = "gimmwic"
+seed = 4
+character = { race = "human", gender = "female", class = "warrior", name = "Wulfgifu" }
+wield = ["lantern"]

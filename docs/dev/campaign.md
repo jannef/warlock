@@ -297,6 +297,18 @@ hidden way in (`0` at (103, 17)), revealed when the player first climbs out. No 
 names it; it opens to rolled quests once revealed (`World::branch_open`). Its dev scenario is
 `utgang`.
 
+Dēopgang (`deopgang`, #1434, `docs/dev/mapgen.md` "A bottom", `docs/dev/creatures/deep-gnomes.md`)
+is the Ascmearc's deepest tier: eleven floors from danger 14 to 24 (four rooms floors of the
+gnomes' cut galleries with deep-gnome traders' shops, then seven of caves), ores silver and gold
+only (so a miner's finds that are not stone are more often gems), more chests than the shared
+odds, and `bottom = "gimmwic"`: its eleventh floor's `>` leads down to Gimmwīc, the deep gnomes'
+town, a hand-made level with no danger. Its way in is an ordinary location (`D` at (18, 57), the
+south-west corner against Grægweall, no `hidden`): the owner chose no quest gate. The town has
+Headman Peran (`peran`, its leader, for the letter quest of #1435), the Glimmering (a sanctuary;
+Mother Senara: cure and mend), Kerensa's Stones (`gem_dealer`; identify), Jory's Outfitters
+(`outfitter`), and the cutting floor (three anvils; Old Tregear teaches Jewelcraft). Its dev
+scenarios are `deopgang` (its first floor) and `gimmwic` (the town).
+
 The dev scenario `drake` (#1099, `docs/dev/creatures.md` "Dragons") starts on `drakes_lair`, a
 hand-made Ascmearc level with no stairs: the fire drake in a lava hall like its hoard's, for
 replays and captures of a dragon's fight.

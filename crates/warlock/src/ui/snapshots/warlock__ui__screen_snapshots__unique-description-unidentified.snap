@@ -25,6 +25,8 @@ expression: "render(case, content.clone())"
                   │ Taken apart, it would give a steel ingot.                    │
                   │ It will take three more improvements at the anvil.           │
                   │                                                              │
+                  │ It can bear two enchantments.                                │
+                  │                                                              │
                   │ Esc close                                                    │
                   └──────────────────────────────────────────────────────────────┘
 

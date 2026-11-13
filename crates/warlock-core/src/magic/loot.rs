@@ -32,7 +32,11 @@
 //! 8. **its material** (#193, #194): an item its construction list lets be made of other
 //!    materials is made of one by their `rarity` at the item level, or by their `gear` at the
 //!    creature's level for what a creature drops (one draw: [`crate::variant::draw`]); none for
-//!    one made only of its own.
+//!    one made only of its own;
+//! 9. **a wand's rung** (one draw, a wand's only);
+//! 10. **the trim** ([`finished`], the very last step of every path that completes an item,
+//!     creature gear's after its condition): an item with more affixes than its capacity
+//!     ([`super::capacity`]) loses them one at a time, one `index` draw each; none when it fits.
 //!
 //! What is rolled is unidentified (its gems and material show at once: materials are not
 //! hidden).
@@ -42,7 +46,7 @@
 //! the find: coins (the purse of a chest of that level, [`crate::chest::purse`]), a loose gem
 //! ([`gem::loose`]), or step 1's draw among the class's objects and steps 2 to 8.
 
-use super::{Affix, AffixKind, Magic, Rarity, may_roll};
+use super::{Affix, AffixKind, Magic, Quality, Rarity, may_roll};
 use crate::chest;
 use crate::content::{AffixDef, Content, ItemClassId, ItemKind, ObjectDef, ObjectId};
 use crate::gem;
@@ -217,14 +221,15 @@ fn drawn(
     } else {
         1
     };
-    Some(make_from(
+    let made = make_from(
         content,
         rng,
         object,
         count,
         (level, grade, luck.magic),
         Some(source),
-    ))
+    );
+    Some(finished(content, rng, made))
 }
 
 /// What a class is found as: coins and gems have no `frequency`, and are found by the purse and
@@ -310,7 +315,7 @@ pub fn base_in(
 
 /// `count` of `object` made as loot makes its base item at item level `level`, at least of
 /// `grade`: draws 3 to 7 of [`roll`] (the rarity, the affixes, a rare item's name, an ornament),
-/// unidentified. What is never magic (no `kind`) draws no rarity and stays normal. A starting
+/// then 9 and 10 (a wand's rung, the trim), unidentified. What is never magic (no `kind`) draws no rarity and stays normal. A starting
 /// kit's magic items are made so (spec §8 "Character creation").
 pub fn make(
     content: &Content,
@@ -320,7 +325,8 @@ pub fn make(
     level: u8,
     grade: LootGrade,
 ) -> Stack {
-    make_from(content, rng, object, count, (level, grade, 0), None)
+    let made = make_from(content, rng, object, count, (level, grade, 0), None);
+    finished(content, rng, made)
 }
 
 /// [`make`] for a creature's gear (spec §8 "Creature gear"): its material drawn as `source` has
@@ -333,7 +339,27 @@ pub fn make_as(
     (level, grade): (u8, LootGrade),
     source: Source,
 ) -> Stack {
+    let made = make_as_unfinished(content, rng, object, count, (level, grade), source);
+    finished(content, rng, made)
+}
+
+/// [`make_as`] short of its trim: creature gear's ([`crate::gear`]), which draws its condition
+/// first and then finishes each piece ([`finished`]).
+pub(crate) fn make_as_unfinished(
+    content: &Content,
+    rng: &mut Rng,
+    object: ObjectId,
+    count: u32,
+    (level, grade): (u8, LootGrade),
+    source: Source,
+) -> Stack {
     make_from(content, rng, object, count, (level, grade, 0), Some(source))
+}
+
+/// `stack` finished: trimmed to its capacity from `rng` ([`super::capacity::trim`]; no draw
+/// when it fits). The very last step of every path that makes an item (the module docs' 10).
+pub fn finished(content: &Content, rng: &mut Rng, stack: Stack) -> Stack {
+    super::capacity::trimmed(content, rng, stack)
 }
 
 /// [`make`] at `(level, grade, luck)` ([`roll_with`]), its material drawn as `source` has it
@@ -481,8 +507,15 @@ fn affixed(
 /// An heirloom (spec §8 "Talents": Father's sword): `object` with `count` affixes rolled at item
 /// level `level`, from `rng`: two are a magic item's prefix and suffix, one a prefix, and more a
 /// rare item's, split as a rare item's are and named (fewer when nothing more may roll on it).
-/// Unidentified, like any loot; no ornament and no other material.
-pub fn heirloom(content: &Content, rng: &mut Rng, object: ObjectId, count: u8, level: u8) -> Stack {
+/// Unidentified, like any loot; no ornament and no other material; of `quality` if given
+/// ([`Quality::worked`]); then [`finished`].
+pub fn heirloom(
+    content: &Content,
+    rng: &mut Rng,
+    object: ObjectId,
+    count: u8,
+    (level, quality): (u8, Option<Quality>),
+) -> Stack {
     let def = content.object(object);
     let count = i32::from(count);
     let (rarity, split) = match count {
@@ -490,10 +523,14 @@ pub fn heirloom(content: &Content, rng: &mut Rng, object: ObjectId, count: u8, l
         2 => (Rarity::Magic, (1, 1)),
         _ => (Rarity::Rare, rare_split(rng, count)),
     };
-    match affixed(content, rng, def, level.max(1), rarity, split) {
+    let mut stack = match affixed(content, rng, def, level.max(1), rarity, split) {
         Some(magic) => Stack::with_magic(object, 1, magic),
         None => Stack::one(object),
+    };
+    if let Some(worked) = quality.and_then(|q| q.worked(def)) {
+        stack.set_worked(worked);
     }
+    finished(content, rng, stack)
 }
 
 /// A favoured find (spec §8 "Overworld encounters": the pedlar's offer, #808): a base item
@@ -516,7 +553,7 @@ pub fn favoured(
     bases.sort_by(|a, b| content.object(a.0).id.cmp(&content.object(b.0).id));
     let object = *pick_weighted(rng, &bases)?;
     let count = *pick_weighted(rng, counts)?;
-    Some(heirloom(content, rng, object, count, level))
+    Some(heirloom(content, rng, object, count, (level, None)))
 }
 
 /// Whether some affix of `kind` may roll on base item `def` at item level `level` (what

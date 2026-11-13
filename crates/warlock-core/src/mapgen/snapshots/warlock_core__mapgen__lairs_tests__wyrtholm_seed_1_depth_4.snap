@@ -4,7 +4,7 @@ expression: "describe(&level(\"wyrtholm\", 1, 4))"
 ---
 Wyrtholm 4 (wyrtholm:4) 100x40
 stairs Up at (89, 25) -> wyrtholm:3
-sallow at (62, 34) route  carrying a stiletto (rare) (wielded)
+sallow at (62, 34) route  carrying a Marvellous stiletto (rare) (wielded)
 marsh_troll at (26, 5) route W W W W N E E E E W W W W S E E E E
 giant_leech at (15, 19) route S S E E E E E N N S S W W W W W N N
 giant_centipede at (31, 37) route W N N N N S S S S E

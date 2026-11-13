@@ -165,6 +165,33 @@ markup = 130
 pays = 40
 generated = false
 
+# Gimmwīc's gem dealer (#1434): loose gems, cut and uncut, and rings and amulets, and it buys
+# them all, and stock for setting. A town's own kind: no generated level has one.
+[[shop]]
+id = "gem_dealer"
+name = "gem dealer"
+title = "{keeper}'s Stones"
+stock = ["gems", "rings", "amulets"]
+buys = ["gems", "rings", "amulets", "materials"]
+items = [5, 9]
+markup = 125
+pays = 45
+generated = false
+
+# Gimmwīc's outfitters (#1434): the makers' stock (ingots, billets, herbs, and essences), the
+# tools of the deep (picks, lanterns, rope), and food for the climb back. A town's own kind: no
+# generated level has one.
+[[shop]]
+id = "outfitter"
+name = "outfitter"
+title = "{keeper}'s Outfitters"
+stock = ["materials", "tools", "light_sources", "food", "potions"]
+buys = ["materials", "tools", "light_sources", "food", "potions", "gems"]
+items = [6, 10]
+markup = 130
+pays = 35
+generated = false
+
 # A provisioner's potions are few among its wares, the commoner the more often (healing,
 # antidote: spec §8 "Potions").
 [[shop]]

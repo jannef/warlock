@@ -173,6 +173,26 @@ fn eye_for_the_make_reads_an_items_make() {
     );
 }
 
+/// Eye for the make tells an item's capacity (docs/dev/enchanting.md) without Appraise; with
+/// neither, it is never told.
+#[test]
+fn eye_for_the_make_tells_the_capacity_without_appraise() {
+    let mut world = start("human,male,craftsperson", &["smith", "wright"], 1);
+    let dagger = CONTENT.object_id("dagger").expect("a dagger");
+    world.player_mut().inventory.push(Stack::one(dagger));
+    world.player_mut().skills = Default::default();
+    let told = |world: &World| -> bool {
+        let view = world.perception();
+        let stack = (view.inventory().iter())
+            .find(|s| s.object == dagger)
+            .expect("carried");
+        (view.describe_item(stack).into_iter()).any(|l| l.text == "It can bear two enchantments.")
+    };
+    assert!(told(&world), "Eye for the make, no Appraise");
+    world.player_mut().talents = Default::default();
+    assert!(!told(&world), "neither");
+}
+
 #[test]
 fn a_scenarios_own_character_takes_its_named_picks() {
     // The forge's smith, without the kit: Smith and Wright, nothing else picked.

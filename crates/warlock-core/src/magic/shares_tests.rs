@@ -85,3 +85,62 @@ fn shares_follow_the_weights_and_deep_finds_roll_deep_tiers() {
         assert!(bad.is_empty(), "level {level}: {bad:#?}");
     }
 }
+
+/// The trim's effect on loot (docs/design/enchanting.md §12, E1): 4 000 rares and 4 000 magic
+/// items rolled at item levels 1, 4, 8, and 12 as loot makes them, before and after the trim.
+/// Prints, per level, the capacity distribution, the affix counts before and after, and the
+/// share left untrimmed. `cargo test -p warlock-core trim_shares -- --nocapture` prints it.
+#[test]
+fn trim_shares_hold_every_find_to_its_capacity() {
+    let c = Content::builtin().expect("built-in content");
+    let mut classes: Vec<crate::content::ItemClassId> = (c.object_defs().iter())
+        .filter(|o| o.frequency > 0 && o.kind.is_some())
+        .map(|o| o.class)
+        .collect();
+    classes.sort();
+    classes.dedup();
+    const N: usize = 4_000;
+    for level in LEVELS {
+        let mut rng = Rng::stream(13, "trim shares");
+        for grade in [LootGrade::Rare, LootGrade::Magic] {
+            // Magic grade: magic or rare, by the weights.
+            let (mut rolled, mut kept, mut room) = ([0u32; 7], [0u32; 7], [0u32; 7]);
+            let mut untrimmed = 0;
+            let mut items = 0;
+            while items < N {
+                let Some(base) = loot::base_in(&c, &mut rng, &classes, level) else {
+                    continue;
+                };
+                let source = crate::variant::Source::Loot;
+                let made = loot::make_as_unfinished(&c, &mut rng, base, 1, (level, grade), source);
+                let Some(before) = made.magic().map(|m| m.affixes.len()) else {
+                    continue;
+                };
+                items += 1;
+                let (cap, was) = (capacity(&made, &c), made.rarity());
+                let done = loot::finished(&c, &mut rng, made);
+                let after = done.magic().map_or(0, |m| m.affixes.len());
+                assert!(after <= usize::from(cap) && after >= 1);
+                assert_eq!(done.rarity(), was, "the trim keeps the rarity");
+                rolled[before] += 1;
+                kept[after] += 1;
+                room[usize::from(cap)] += 1;
+                untrimmed += u32::from(before == after);
+            }
+            let pct = |n: u32| 100.0 * f64::from(n) / N as f64;
+            let row = |a: &[u32; 7]| {
+                (1..7)
+                    .map(|i| format!("{i}:{:5.1}%", pct(a[i])))
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            };
+            println!(
+                "item level {level}, {grade:?}: untrimmed {:.1}%",
+                pct(untrimmed)
+            );
+            println!("  capacity       {}", row(&room));
+            println!("  affixes rolled {}", row(&rolled));
+            println!("  affixes kept   {}", row(&kept));
+        }
+    }
+}

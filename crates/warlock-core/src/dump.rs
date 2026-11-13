@@ -947,8 +947,11 @@ fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
             .map_or(String::new(), |m| format!(" ({m})"));
         let owed = (unpaid.get(i).copied().flatten())
             .map_or(String::new(), |p| format!(" (unpaid, {p} gold)"));
+        // Last, the affixes it holds against its capacity, as they truly are
+        // (docs/dev/enchanting.md).
+        let holds = s.holds_text(content).unwrap_or_default();
         rows.push(format!(
-            "{} - {name}{mark}{owed} ({weight})",
+            "{} - {name}{mark}{owed} ({weight}){holds}",
             position_text(i)
         ));
     }
@@ -1594,7 +1597,7 @@ fn actor_rows(world: &World) -> Vec<String> {
             let w = a.weight(content);
             let load = world.actor_load(a.id).expect("the actor exists");
             let carried: Vec<String> = (a.inventory.iter())
-                .map(|s| s.describe_truth(content))
+                .map(|s| s.describe_truth(content) + &s.holds_text(content).unwrap_or_default())
                 .collect();
             let carried = if carried.is_empty() {
                 "nothing".to_string()

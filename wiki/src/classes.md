@@ -382,8 +382,9 @@ description. It adds a line on what [salvage](crafting.md#salvage) would give of
 check went well, a line on how many more improvements
 [the anvil](altars-forges-springs.md#forges) (for metal) or a knife (for wood) could still give
 arms or armour, or that the thing is damaged, and a line when its main material is hard or soft
-to [work](crafting.md#who-works-what). It never tells you the odds, or how often a smith has
-worked the piece before.
+to [work](crafting.md#who-works-what). Like [Appraise](skills.md#skill-appraise), it also tells
+you how many [enchantments the item can bear](magic-items.md#capacity). It never tells you the
+odds, or how often a smith has worked the piece before.
 
 {{#include generated/class-levels.md:merchant}}
 

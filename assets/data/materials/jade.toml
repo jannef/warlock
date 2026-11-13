@@ -10,3 +10,4 @@ value = 400
 rarity = { weight = 40 }
 gear = { weight = 10 }
 work = 2
+binding = 1

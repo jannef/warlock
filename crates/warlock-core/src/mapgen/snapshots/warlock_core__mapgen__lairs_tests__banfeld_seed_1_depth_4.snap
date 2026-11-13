@@ -4,7 +4,7 @@ expression: "describe(&level(\"banfeld\", 1, 4))"
 ---
 Bānfeld 4 (banfeld:4) 80x21
 stairs Up at (26, 16) -> banfeld:3
-osrick at (23, 8) route  carrying a rusted mace (wielded), a bone amulet (rare) (being worn)
+osrick at (23, 8) route  carrying a rusted mace (wielded), a bone and smokestone amulet (rare) (being worn)
 zombie at (26, 8) route 
 zombie at (30, 8) route 
 zombie at (13, 17) route E W W E E W W E E W
