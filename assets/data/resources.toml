@@ -32,8 +32,9 @@
 #                 resource is granted and ends with it (and the resource with the status, if
 #                 something cures that); a status that `eases` by itself may end first (rage: Raging)
 #   builds        what builds it up: [{ on = "kill", amount = 5 }]; events are
-#                 kill (a kill credited to the holder), hit (a blow of theirs hits), critical (a
-#                 blow of theirs is a critical), struck (they are hit), sneak_attack (a sneak
+#                 kill (a kill credited to the holder), hit (a blow of theirs hits), melee_hit
+#                 (a melee blow of theirs hits), melee_kill (a melee blow of theirs kills),
+#                 critical (a blow of theirs is a critical), struck (they are hit), sneak_attack (a sneak
 #                 attack of theirs hits), feint (a feint of theirs fools its foe), and mark_kill
 #                 (they kill their mark: a marked pool's)
 #   marked        its points are in one creature's guard, the holder's mark (Openings; default

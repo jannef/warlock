@@ -609,11 +609,11 @@ pub struct TalentMods {
     /// While raging, the statuses that tick nothing, and what of the rage holding on to the
     /// last hit point costs; `None` without Unstoppable.
     pub unstoppable: Option<Unstoppable>,
-    /// The active Whirlwind.
-    pub whirlwind: bool,
     /// The active Charge (`world/charge.rs`): what each cell moved costs on top of its
     /// talent's `resource`, if it has it.
     pub charge: Option<u16>,
+    /// Whirling charge: Charge strikes the hostiles beside its way (`world/charge.rs`).
+    pub whirling_charge: bool,
     /// The active Smite, if it has it.
     pub smite: Option<Smite>,
     /// The modes of smiting it has (Branding smite, Wrathful smite; `world/smite.rs`): each
@@ -1198,7 +1198,6 @@ impl TalentMods {
             A::WarCry => self.war_cry.is_some(),
             A::Cackle => self.cackle.is_some(),
             A::VeteransWind => self.veterans_wind.is_some(),
-            A::Whirlwind => self.whirlwind,
             A::Charge => self.charge.is_some(),
             A::LayOnHands => self.lay_on_hands.is_some(),
             A::Smite => self.smite.is_some(),
@@ -2034,7 +2033,7 @@ impl TalentMods {
                 held.numb.extend(ids);
                 held.cost = held.cost.max(cost);
             }
-            TalentEffect::Whirlwind => self.whirlwind = true,
+            TalentEffect::WhirlingCharge => self.whirling_charge = true,
             TalentEffect::Charge { per_cell } => self.charge = Some(per_cell),
             TalentEffect::Smite {
                 per_levels,

@@ -745,7 +745,7 @@ impl Actor {
                 mods.get(ItemEffect::Deflection) + talents.deflection + mage_armour,
             ),
         ];
-        // Iron stance (spec §8 "Class abilities") softens a stance's Dodge penalty.
+        // Wild guard (spec §8 "Stances") softens a stance's Dodge penalty.
         let stance =
             (content.stance_def(self.stance).defence()).map(|(category, bonus)| match category {
                 Category::Dodge => (category, talents.stance_dodge(self.stance, bonus)),

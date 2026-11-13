@@ -62,7 +62,7 @@ Before the attack, so its sneak attack builds in the new mark's pool:
 
 `free_blow_at`: `free_blow.rs::strike_free` (riposte, opportunist, a lurk's gatekeeper blow,
 hair trigger, retribution, a cleave) and `weapon_ability.rs`'s free shot (Point-blank shot).
-The class active Whirlwind strikes everyone around through `player_blow`: an area, untouched.
+Whirling charge's blows on the way (`charge.rs::whirl`) go through `strike_free` too.
 
 Vanishing act stays where a sneak attack's blow kills, in `fight.rs::resolve` (`unseen` is
 known only there); it no longer rides a build.
