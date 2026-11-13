@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Your patron says: "One does like a well-made thing about the house. The stock I gave you was for a
- javelin, sir. I can wait; I would rather not."
+ Your patron says: "Good work is never cheap, and cheap work is never good. The stock I gave you
+ was for a javelin, sir. I can wait; I would rather not."
 
 ┌─ Messages ───────────────────────────────────────────────────────────────────────────────────────┐
 │                                                                                                  │
@@ -20,11 +20,11 @@ expression: "render(case, content.clone())"
 │ You learn Skill focus (herbalism).                                                               │
 │ You learn Deep lungs.                                                                            │
 │ You open the door.                                                                               │
-│ Your patron says: "Ah, sir. I want a javelin, Fine or better. Here is 4 wood billets and an iron │
-│   ingot for it; do not keep me waiting too long."                                                │
+│ Your patron says: "Ah, sir. I want a javelin, Fine or better. Do take 4 wood billets and an iron │
+│   ingot for it, and do not keep me waiting too long."                                            │
 │ You receive 4 wood billets and an iron ingot.                                                    │
-│ Your patron says: "One does like a well-made thing about the house. The stock I gave you was for │
-│   a javelin, sir. I can wait; I would rather not."                                               │
+│ Your patron says: "Good work is never cheap, and cheap work is never good. The stock I gave you  │
+│   was for a javelin, sir. I can wait; I would rather not."                                       │
 │                                                                                                  │
 │ v or Esc close                                                                                   │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
