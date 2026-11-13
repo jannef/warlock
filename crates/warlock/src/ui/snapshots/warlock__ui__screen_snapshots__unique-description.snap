@@ -4,7 +4,6 @@ expression: "render(case, content.clone())"
 ---
  You pick up a dagger (rare).
  This is Stonebiter, a dagger!
-
                   ┌─ Item ───────────────────────────────────────────────────────┐
                   │                                                              │
                   │ ) Stonebiter                                                 │
@@ -23,12 +22,13 @@ expression: "render(case, content.clone())"
                   │                                                              │
                   │ It bears all it can.                                         │
                   │                                                              │
+                  │ It would not come apart.                                     │
+                  │ It will take three more improvements at the anvil.           │
                   │ Power   Its bearer sees in the gloom.                        │
                   │                                                              │
                   │ Notched from a hundred quarry walls, and none of them won.   │
                   │                                                              │
                   │ Esc close                                                    │
                   └──────────────────────────────────────────────────────────────┘
-
 
  The Quarry  ·  HP 24/24  ·  MP 0/0  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444       ? controls

@@ -353,8 +353,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   attacks faster" (affix magnitudes are item properties and shown; speed only in words; global
   attack effects say "with every attack"); an identified unique item (§8 "Magic items") adds its
   power in words, "Power  Its every cut poisons.", and its lore as the last line. With the
-  craftsperson's Eye for the make (§8 "Class abilities"), the item's make follows, before any
-  lore: "Taken apart, it would give 2 steel ingots." (or "Nothing in it is worth saving.", "It
+  craftsperson's Eye for the make (§8 "Class abilities"), the item's make follows the capacity
+  line, before any power and lore: "Taken apart, it would give 2 steel ingots." (or "Nothing in it is worth saving.", "It
   would not come apart."), "It will take two more improvements at the anvil." (or "with a
   knife", "It can be made no finer.", "It is damaged: work at the anvil would make it good."),
   and "Adamantium is very hard to work." where its main material is hard or soft. Never the

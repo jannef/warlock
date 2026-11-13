@@ -1784,7 +1784,8 @@ impl<'a> PerceptionView<'a> {
     /// [`crate::magic::describe::appraised`] with their eye for worth, a wand whose type they
     /// know saying what it does in their hands ([`PerceptionView::wand_does`]).
     /// With Eye for the make (the craftsperson's), what it reads of the item's make follows
-    /// ([`crate::magic::describe::make_lines`]), before a unique's lore.
+    /// ([`crate::magic::describe::make_lines`]), after the capacity line, before a unique's
+    /// power and lore.
     pub fn describe_item(&self, stack: &Stack) -> Vec<crate::magic::describe::Line> {
         use crate::magic::describe::{self, LineKind};
         let mut lines =
@@ -1793,10 +1794,9 @@ impl<'a> PerceptionView<'a> {
             let percent = self.content.salvage().map_or(0, |s| s.percent);
             let protected = crate::world::protected_in(self.content, self.quests, stack);
             let make = describe::make_lines(stack, self.lore, percent, protected);
-            let at = match lines.last() {
-                Some(last) if last.kind == LineKind::Lore => lines.len() - 1,
-                _ => lines.len(),
-            };
+            let at = (lines.iter())
+                .rposition(|l| !matches!(l.kind, LineKind::Power | LineKind::Lore))
+                .map_or(lines.len(), |i| i + 1);
             lines.splice(at..at, make);
         }
         lines
