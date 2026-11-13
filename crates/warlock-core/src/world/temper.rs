@@ -292,7 +292,7 @@ impl World {
         Spent::Temper(Tempering {
             craft: Craft::Temper,
             item,
-            seconds: self.content.temper().seconds,
+            seconds: self.craft_seconds(self.content.temper().seconds),
         })
     }
 
@@ -324,7 +324,7 @@ impl World {
         Spent::Temper(Tempering {
             craft: Craft::Whittle,
             item,
-            seconds: self.content.temper().seconds,
+            seconds: self.craft_seconds(self.content.temper().seconds),
         })
     }
 

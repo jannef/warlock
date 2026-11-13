@@ -550,6 +550,29 @@ fn the_work_takes_its_hour_and_marks_enchanting() {
     assert!(made && failed);
 }
 
+/// Quick hands (#1425) halves an enchanting's hour, as the plan's time says.
+#[test]
+fn quick_hands_halves_the_hour() {
+    let mut w = world(1);
+    w.player_mut().talents.take("quick_hands", None);
+    item(&mut w, "long_sword", 1);
+    crystal(&mut w, "red");
+    let id = recipe(&w, "kindle");
+    let content = w.content.clone();
+    let plan = super::enchant::plan(
+        &content,
+        w.lore(),
+        w.state.player(),
+        content.recipe(id),
+        &[Some(0), Some(1)],
+    )
+    .expect("a plan");
+    assert_eq!(plan.time, "about 30 minutes");
+    let start = w.state.time;
+    apply(&mut w, "craft:kindle:a,b");
+    assert_eq!(w.state.time.since(start).as_seconds(), 1800);
+}
+
 #[test]
 fn an_enchanting_replays() {
     // A wizard, trained in Enchanting from birth here: the untrained make nothing (#1387).

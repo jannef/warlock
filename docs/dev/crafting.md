@@ -907,6 +907,36 @@ stack), and `world/class_ability.rs`'s bare `use` ("Use it on what?").
   row greyed and the wielded left out, made with the attempts kept, failed with nothing lost, Eye
   for the make's line, a replay), the `make-do-list` screen snapshot.
 
+## Quick hands and Master's hand (the craftsperson's)
+
+`world/mastery.rs` (#1425; the craftsperson design §7.8, §7.9): the craftsperson's passives at
+levels 40 and 50, each one read.
+
+- **Quick hands** (`data/talents/quick_hands.toml`, `{ kind = "craft_time_percent", value = 50
+  }`, `TalentEffect::CraftTimePercent`, `TalentMods::craft_time_percent`, the least held):
+  `mastery::craft_seconds(content, actor, base)` (and `World::craft_seconds(base)` for the
+  player) is the time of every craft, at least a second. Every craft's `start_*` asks it for the
+  seconds its `keep_at` loop runs: `fletch::fletcher_seconds` (every recipe's time, read there
+  alone: forged, counted after Fletcher's `time_percent` so the two multiply, brewed, Smelt,
+  and any recipe a later profession adds, enchanting's too), `temper.rs` (Temper and Whittle),
+  `cut.rs`, `set.rs`, `salvage.rs`, `make_do.rs`, and `field_forge.rs`. The lists that tell a
+  craft's time ask the same (`craft.rs::takes`, the forging wizard's and Set's `CraftPlan`), so
+  the time shown is the time spent. Not crafts, unchanged: Gather, Forage, Scribe, Decipher. A
+  new craft's loop calls `craft_seconds` with its data's seconds.
+- **Master's hand** (`data/talents/masters_hand.toml`, `{ kind = "grade_ease", value = 4 }`,
+  `TalentEffect::GradeEase`, `TalentMods::grade_ease`, summed): `mastery::graded_margin(content,
+  actor, margin)` adds it to a made check's margin (0 or more), never a failure's, so whether the
+  work is made never changes. Two reads: `craft_make.rs::make_out` before `grade` (Fine from 2,
+  Marvellous from 8, Masterwork from 16) and `cut.rs`'s check before `cut_band` (each cut a step
+  of 4 sooner). A natural 2 still fails or shatters; a natural 24 still makes Fine or the plain
+  cut at least. Set, a counted batch, and a brew have no grade and are unchanged.
+- **Wiki**: `xtask/src/wiki/recipes.rs` reads the talent's `grade_ease` (`grade_ease`): the
+  grades' and the cuts' margin tables gain a "With Master's hand" column, and the odds tables a
+  column of the graded outcomes with it.
+- **Tests**: `world/mastery_tests.rs` (the levels, the halved times of a recipe, Fletcher's share
+  multiplied, Temper and Salvage run through, the eased margin and a failure kept, each grade and a
+  cut four sooner).
+
 ## Maker's mark
 
 The craftsperson's passive at level 60 (#1426; the craftsperson design §7.10): the talent

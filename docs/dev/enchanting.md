@@ -234,7 +234,8 @@ reach `enchant_level` (`Effect::EnchantLevel`, `[[0, 1], [110, 12], [200, 12]]`,
 - **The roll's item level**: the reach is `skill_effect_of(enchanting, EnchantLevel)` clamped
   to 1..12; Kindle rolls at the reach, Quicken at the greater of the item's `Magic.level` and the
   reach, Unbind's check reads the item's own. The made item's `Magic.level` is the roll's.
-- **The check** (`World::enchanted`, after `keep_at` ran the recipe's `seconds`; an interruption
+- **The check** (`World::enchanted`, after `keep_at` ran the recipe's `seconds`, Quick hands' share
+  of them, `mastery::craft_seconds`, as the plan and the row say; an interruption
   spends nothing but the time): `combat::roll_natural` (two gameplay draws) + Willpower's
   modifier + `TalentMods::check(Willpower)` + `skill_effect_of(enchanting, Craft)` against
   `difficulty` + level ÷ `level_step`; `enchant_band`: a natural 2 `Warped`, a natural 24 or a

@@ -189,7 +189,12 @@ pub(super) fn plan(
         station: None,
         time: format!(
             "about {}",
-            Duration::seconds(u64::from(def.seconds)).spoken()
+            Duration::seconds(u64::from(super::mastery::craft_seconds(
+                content,
+                player,
+                def.seconds
+            )))
+            .spoken()
         ),
     })
 }
@@ -239,7 +244,7 @@ impl World {
             recipe: id,
             item,
             gem,
-            seconds: def.seconds,
+            seconds: self.craft_seconds(def.seconds),
         })
     }
 

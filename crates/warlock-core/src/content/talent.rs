@@ -495,6 +495,13 @@ pub enum TalentEffect {
     /// A failed Temper or Whittle damages nothing: the item is as it was, the attempt counted
     /// (Waste not; `world/temper.rs`).
     TemperSafe,
+    /// Every craft it works takes `value` % of its time: recipes, Temper and Whittle, Cut and
+    /// Set, Salvage, and the craftsperson's actives (Quick hands; the least held;
+    /// `world/mastery.rs::craft_seconds`).
+    CraftTimePercent { value: u32 },
+    /// Added to a made check's margin as its grade or cut is read, never to whether it is made
+    /// (Master's hand; summed; `world/mastery.rs::graded_margin`).
+    GradeEase { value: i32 },
     /// Its graded work bears its mark (Maker's mark): an item made with a `kind` is built marked
     /// (`world/craft_make.rs::make_out`, the one read), and a marked item is worth
     /// `worth_percent` % more ([`TalentBook::mark_percent`], `Worked::value`), the patron pays
@@ -1477,6 +1484,9 @@ impl TalentEffect {
             TalentEffect::FieldForge { seconds: 0 } => Err("`field_forge`: `seconds` is 0".into()),
             TalentEffect::MakersMark { worth_percent: 0 } => {
                 Err("`makers_mark`: `worth_percent` is 0".into())
+            }
+            TalentEffect::CraftTimePercent { value: 0 } => {
+                Err("`craft_time_percent`: `value` is 0".into())
             }
             TalentEffect::Sanctuary { time, lasts, .. } => {
                 duration(time)?;

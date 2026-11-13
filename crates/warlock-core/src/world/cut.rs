@@ -165,7 +165,7 @@ impl World {
         Spent::Cut(GemWork {
             recipe: id,
             item,
-            seconds: def.seconds,
+            seconds: self.craft_seconds(def.seconds),
         })
     }
 
@@ -213,7 +213,10 @@ impl World {
         let against = def.difficulty + content.material(gem).work;
         let natural = combat::roll_natural(&mut self.state.rng);
         let step = (content.recipes().settings.as_ref()).map_or(5, |s| s.cut_step);
-        let band = cut_band(gems, step, natural, natural + modifier - against);
+        // Master's hand: the cut comes sooner, never the making (`mastery.rs`).
+        let margin = natural + modifier - against;
+        let margin = super::mastery::graded_margin(&content, self.state.player(), margin);
+        let band = cut_band(gems, step, natural, margin);
         let left = cut_outcome(gems, cutting, band);
 
         let at = self.set_apart(work.item);
