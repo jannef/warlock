@@ -2869,6 +2869,28 @@ impl Content {
                 ));
             }
         }
+        // A bottom (spec §7 "Dungeon branches"): `bottom` names a hand-made level of the same
+        // campaign whose `<` leads back to the deepest level.
+        for def in self.dungeons.values() {
+            let Some(bottom) = &def.bottom else { continue };
+            let deepest = def.level_id(def.depth);
+            let back = |l: &LevelTemplate| {
+                (l.stairs.iter())
+                    .any(|s| s.dir == StairsDir::Up && s.to.as_deref() == Some(deepest.as_str()))
+            };
+            let fits = self.levels.get(bottom).is_some_and(back)
+                && self.level_campaigns.get(bottom).cloned().flatten() == def.campaign;
+            if !fits {
+                return Err(ContentError::new(
+                    "data/dungeons/",
+                    format!(
+                        "dungeon `{}`: `bottom = \"{bottom}\"` is no hand-made level of its \
+                         campaign with a `<` back to `{deepest}`",
+                        def.id
+                    ),
+                ));
+            }
+        }
         for scenario in self.scenarios.values() {
             let file = format!("scenarios/{}.toml", scenario.id);
             let campaign = scenario.campaign.as_deref().unwrap_or_default();

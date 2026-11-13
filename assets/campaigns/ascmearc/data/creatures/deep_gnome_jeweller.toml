@@ -1,0 +1,24 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The master jeweller of Gimmwīc's cutting floor (#1434; docs/dev/creatures/deep-gnomes.md): Old
+# Tregear (his npc dialogue, campaigns/ascmearc/data/dialogue/gimmwic.toml), who teaches
+# Jewelcraft for gold, as Cēaptūn's smith teaches Metalcraft. Only the town's legend places him.
+# Peaceful; he keeps to his wheel.
+[[creature]]
+id = "deep_gnome_jeweller"
+name = "deep-gnome jeweller"
+glyph = "@"
+fg = "#e0b8e8"
+faction = "peaceful"
+tags = ["deep-gnome"]
+# One of the people: never greater or lesser than their kind.
+grades = false
+alignment = "good"
+vision = "darkvision"
+size = "small"
+footsteps = 30
+hearing = 9
+weight = 37000
+stats = { strength = 10, dexterity = 18, toughness = 12, intelligence = 15, willpower = 14, presence = 11 }
+skills = { jewelcraft = 180, metalcraft = 90, appraise = 120 }

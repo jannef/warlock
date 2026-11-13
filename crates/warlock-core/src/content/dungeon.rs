@@ -11,6 +11,10 @@
 //! level gets a `<` back up (`mapgen/way_up.rs`), and its first level's `<` climbs out to its way
 //! in, however the branch was entered.
 //!
+//! A branch with `bottom` (a hand-made level of its campaign, `bottom = "gimmwic"`) ends in that
+//! level: its deepest level's `>` leads there, and the hand-made level's own `<` names the deepest
+//! level (checked by `Content::validate`), so it arrives on that staircase coming back up.
+//!
 //! A branch with `endless` instead of `depth` has no last floor (spec §7 "The endless branch",
 //! `world/endless.rs`): every staircase makes a new floor, only the current one exists, and each
 //! floor is drawn rooms or caves as it is made. It has one row of per-depth tables, read at every
@@ -153,6 +157,8 @@ struct DungeonSpec {
     depth: Option<u32>,
     /// The level (another branch's) its deepest level's stairs down lead to; default none.
     below: Option<String>,
+    /// The hand-made level of its campaign its deepest level's stairs down lead to; default none.
+    bottom: Option<String>,
     /// Floors without end, instead of `depth`.
     endless: Option<EndlessSpec>,
     /// A branch of Pits, opened only by a portal (spec §7 "The Pits").
@@ -529,6 +535,9 @@ pub struct DungeonDef {
     /// The level of another branch its deepest level's `>` leads to, which gets a `<` back up
     /// (checked by `Content::validate`); `None`: the deepest level has no way down.
     pub below: Option<String>,
+    /// The hand-made level of its campaign its deepest level's `>` leads to (checked by
+    /// `Content::validate`; that level's `<` leads back); `None`: none.
+    pub bottom: Option<String>,
     /// Floors without end (spec §7 "The endless branch"); `None`: `depth` levels.
     pub endless: Option<Endless>,
     /// A branch of Pits (spec §7 "The Pits"): its levels are `id@S:N`, never `id:N`.
@@ -598,14 +607,14 @@ impl DungeonDef {
 
     /// Whether level `depth` (1-based) has a way down.
     pub fn leads_down(&self, depth: u32) -> bool {
-        self.endless.is_some() || depth < self.depth || self.below.is_some()
+        self.endless.is_some() || depth < self.depth || self.below.is_some() || self.bottom.is_some()
     }
 
     /// Where the `>` of level `id`, at `depth`, leads: the next level of its own instance
-    /// ([`sibling`]), or below the deepest, [`Self::below`].
+    /// ([`sibling`]), or below the deepest, [`Self::below`] or [`Self::bottom`].
     pub fn down_to(&self, id: &str, depth: u32) -> Option<String> {
         if self.endless.is_none() && depth >= self.depth {
-            return self.below.clone();
+            return self.below.clone().or_else(|| self.bottom.clone());
         }
         Some(sibling(id, depth + 1))
     }
@@ -783,15 +792,22 @@ impl DungeonFile {
                     )));
                 }
             };
+            if spec.bottom.is_some() && (spec.below.is_some() || spec.endless.is_some()) {
+                return Err(err(format!(
+                    "dungeon `{id}`: `bottom` has neither `below` nor `endless` beside it"
+                )));
+            }
             if spec.below.is_some() && spec.endless.is_some() {
                 return Err(err(format!(
                     "dungeon `{id}`: an endless branch has no deepest level for `below`"
                 )));
             }
             // Nothing leads out of a Pit but its own `<`, and it ends (spec §7 "The Pits").
-            if spec.portal.is_some() && (spec.endless.is_some() || spec.below.is_some()) {
+            if spec.portal.is_some()
+                && (spec.endless.is_some() || spec.below.is_some() || spec.bottom.is_some())
+            {
                 return Err(err(format!(
-                    "dungeon `{id}`: a portal branch has neither `endless` nor `below`"
+                    "dungeon `{id}`: a portal branch has neither `endless`, `below`, nor `bottom`"
                 )));
             }
             let check_size = |generator: Generator, [w, h]: [i32; 2]| {
@@ -988,6 +1004,7 @@ impl DungeonFile {
                 bosses,
                 dread,
                 below: spec.below,
+                bottom: spec.bottom,
                 endless: spec.endless.map(|e| Endless {
                     caves: e.caves,
                     caves_size: (e.caves_size[0], e.caves_size[1]),

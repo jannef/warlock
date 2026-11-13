@@ -1,0 +1,10 @@
+# A developer's start in Gimmwīc, the deep gnomes' town at the bottom of Dēopgang (#1434): on its
+# stairs up, with 2000 gold to spend at its stores, its temple, and its jeweller's teaching.
+# Listed on New run in developer builds only (a release lists the campaign's start).
+name = "Gimmwīc"
+description = "The deep gnomes' town at the bottom of Dēopgang: the gem dealer, the outfitters, the Glimmering, the cutting floor and Old Tregear, and Headman Peran."
+start_level = "gimmwic"
+seed = 4
+character = { race = "dwarf", gender = "female", class = "warrior", name = "Brakka" }
+wield = ["lantern"]
+carry = ["gold_coin*2000"]
