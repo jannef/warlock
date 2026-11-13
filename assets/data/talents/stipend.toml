@@ -1,0 +1,11 @@
+# The aristocrat's class ability from level 1 (spec §8 "Class abilities": Stipend; #1405): passive,
+# its numbers in ../stipend.toml, its servant a town's (a campaign's data/towns/), the rule in
+# world/stipend.rs.
+[[talent]]
+id = "stipend"
+name = "Stipend"
+tree = "class"
+granted = true
+description = "Your family puts by an allowance for you with every level you gain: gold, and now and then something finer. Your own servant keeps it in town until you call for it."
+effects = [{ kind = "stipend" }]
+systems = ["experience", "magic_items", "talk"]

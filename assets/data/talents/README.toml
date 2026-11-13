@@ -152,6 +152,11 @@
 #   wading_proof                  wading never gives it a disease
 #   beast_friend                  creatures of animal factions (../factions.toml) are neutral
 #                                 to it until it attacks one of that type
+#   stipend                       each level reached adds to its family's stipend, which its
+#                                 servant hands over (../stipend.toml, the aristocrat's)
+#   stipend_more { gold, chance, magic }  the stipend's gold that percent more, its loot roll
+#                                 made by `chance` percentage points more often, and its magic
+#                                 and rare rarities `magic` percent more likely
 #   hunger_percent { value }      hunger burns that percent faster (negative: slower)
 #   rot_harm_percent { value }    the sickness rotten food gives, that percent more (rounded
 #                                 down; negative: less)

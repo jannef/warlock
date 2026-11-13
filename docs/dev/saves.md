@@ -32,6 +32,10 @@ releases every development build shares the version, so there the content finger
 decoder are what refuse a save a build cannot read (a renamed `.sav.bad`, as below); saves are
 not promised across development builds.
 
+An aristocrat's stipend (`world/stipend.rs`, #1405) is `WorldState::stipend` (`Stipend`: the
+gold and the finds put by, each left out while empty, the whole left out while both are), saved
+and hashed; its servant is an actor like any other (its `npc` names its dialogue).
+
 A charmed ally (`world/charm.rs`, `docs/dev/allies.md` "Charmed") saves its charm in its
 `Actor::ally`: `AllySource::Charmed { spell, faction }`, the `faction_override` it had (left out
 while `None`) put back when the charm ends, and `Ally::until`. A save of this build with one

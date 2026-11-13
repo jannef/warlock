@@ -229,6 +229,7 @@ impl World {
         self.news.push("You feel more experienced.".into());
         self.news.push(format!("Welcome to level {after}."));
         self.level_up(before, after);
+        self.grow_stipend(before, after);
     }
 
     /// What total level `level` adds to the player's hit points: half the hit points of the

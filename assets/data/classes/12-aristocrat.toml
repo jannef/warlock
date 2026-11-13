@@ -16,6 +16,7 @@ styles = { duelist = 1 }
 # one by one as the levels come; bonus talents from Weaponcraft and Delver.
 abilities = [
     { level = 1, talent = "family_wealth" },
+    { level = 1, talent = "stipend" },
     { level = 6, talent = "fencing" },
     { level = 18, talent = "riposte" },
     { level = 50, talent = "peerless" },

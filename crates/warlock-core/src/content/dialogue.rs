@@ -57,6 +57,7 @@ struct DialogueSpec {
     speaks_to: Option<crate::alignment::Requirement>,
     silent: Option<String>,
     mutter: Option<MutterSpec>,
+    stipend: Option<ServantWords>,
 }
 
 #[derive(Deserialize)]
@@ -190,6 +191,39 @@ pub struct Mutter {
     pub lines: Vec<String>,
 }
 
+/// A family servant's words (`[dialogue.stipend]`, #1405; `world/stipend.rs`): the dialogue of
+/// an aristocrat's own servant, who hands over the stipend when chatted with. Its `lines` and
+/// `handover` may say `{address}`, which becomes the word for the player's gender.
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ServantWords {
+    /// Said as the stipend is handed over, instead of a line.
+    pub handover: String,
+    /// How the servant addresses their master, by gender: "m'lord", "m'lady".
+    pub address: GenderWords,
+}
+
+/// A word for each gender.
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct GenderWords {
+    pub male: String,
+    pub female: String,
+    pub other: String,
+}
+
+impl GenderWords {
+    /// The word for `gender`.
+    pub fn of(&self, gender: crate::character::Gender) -> &str {
+        use crate::character::Gender;
+        match gender {
+            Gender::Male => &self.male,
+            Gender::Female => &self.female,
+            Gender::Other => &self.other,
+        }
+    }
+}
+
 /// What a creature says.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Dialogue {
@@ -218,6 +252,8 @@ pub struct Dialogue {
     /// What it does for a character outside `speaks_to`: "The spirit looks through you."
     pub silent: Option<String>,
     pub mutter: Option<Mutter>,
+    /// A family servant's words: the speaker hands over the stipend (`world/stipend.rs`).
+    pub stipend: Option<ServantWords>,
     /// The campaign whose `data/dialogue/` it is in; `None` for shared ones (the shopkeeper's)
     /// and those outside every campaign.
     pub campaign: Option<String>,
@@ -453,6 +489,7 @@ fn parse_file<'a>(
             speaks_to: spec.speaks_to,
             silent: spec.silent,
             mutter,
+            stipend: spec.stipend,
             campaign: campaign.clone(),
         });
         files.push(file);

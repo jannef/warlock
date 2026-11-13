@@ -167,7 +167,7 @@ draws. With classes: one draw among those that hold something at the item level 
 coins (`chest::purse`, the purse of a chest of that level), a loose gem (`gem::loose`; which
 classes these are comes from the currency's and the gem object's `class`, never `Luck::gems`), or
 the base and the rest of `roll_with`'s draws among the class's objects, with the finder's
-`Luck::magic`. Tests: `magic/pool_tests.rs`. **A drop's item level**
+`Luck::magic`. Tests: `magic/pool_tests.rs`. The aristocrat's stipend (`world/stipend.rs`, #1405) rolls `roll_with` once a level-up, by `data/stipend.toml`'s chance, at the level, with its `Luck` from data (plus Landed noble's), on the stream `stipend/<level>`, keeping only magic and rare finds and the `keep` classes. **A drop's item level**
 (`world/loot.rs::drop_level`): the creature type's level, at least the floor's item level, at
 most `MAX_ITEM_LEVEL`; floor loot keeps the floor's (`world/magic_tests.rs`,
 `a_drop_rolls_at_the_creatures_level_at_least_the_floors`).

@@ -1660,6 +1660,16 @@ const CASES: &[Case] = &[
         screen: Some("dialogue"),
         ..BASE
     },
+    // An aristocrat's squire at the Gæsthūs (#1405): the stipend of a few levels handed over,
+    // then a flattering one-liner, in the message history.
+    Case {
+        name: "servant-stipend",
+        scenario: "ceaptun",
+        character: Some("human,male,aristocrat"),
+        actions: "xp:5000 levelup:auto move:SW move:S*3 open:S move:S*2 move:SW*4 chat:W chat:W",
+        screen: Some("messages"),
+        ..BASE
+    },
     Case {
         name: "quest-offer",
         actions: concat!(hermit!(), " chat:SE ask:SE:quest-rats"),

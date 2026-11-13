@@ -167,9 +167,15 @@ impl World {
             .and_then(|level| level.shops.iter().find(|s| s.keeper == actor.id));
         let proper =
             (self.dialogue_of(actor)).and_then(|d| self.content.dialogue(d).name.as_deref());
+        // An aristocrat's own servant is theirs: "your squire" (`stipend.rs`).
+        let servant =
+            (self.dialogue_of(actor)).is_some_and(|d| self.content.dialogue(d).stipend.is_some());
         match (keeper, proper) {
             (Some(shop), _) => shop.name.clone(),
             (None, Some(name)) => name.to_string(),
+            (None, None) if servant => {
+                format!("your {}", self.content.creature(actor.creature).name)
+            }
             (None, None) => crate::content::the(&self.content.creature(actor.creature).name),
         }
     }
@@ -250,6 +256,10 @@ impl World {
         if self.escort_joins(id, dialogue, events) {
             self.train_stat(StatUse::Chat);
             return Spent::Turn(price);
+        }
+        // An aristocrat's servant hands over the stipend (`stipend.rs`).
+        if let Some(spent) = self.servant_chat(id, dialogue, events) {
+            return spent;
         }
         let actor = &self.state.actors[&id];
         let d = self.content.dialogue(dialogue);
@@ -371,7 +381,7 @@ impl World {
     }
 
     /// The `k`-th one-liner of `d` for creature `id`.
-    fn one_liner(&self, id: ActorId, d: &Dialogue, k: u32) -> String {
+    pub(super) fn one_liner(&self, id: ActorId, d: &Dialogue, k: u32) -> String {
         let key = self.rotation_key(id, b"lines");
         d.lines[rotation(key, k, d.lines.len())].clone()
     }

@@ -1,0 +1,127 @@
+# An aristocrat's own servant (#1405; world/stipend.rs): the squire, chambermaid, or servant who
+# waits at Cēaptūn's Gæsthūs in an aristocrat's run, of the aristocrat's own race, and speaks in
+# that race's register (docs/dev/npcs.md "Speech by race and station"; a servant is no lord, so a
+# human one is a Cockney commoner). data/towns/ceaptun.toml names the npc for each race. Each
+# has one-liners that flatter their better, and `[dialogue.stipend]`: the line said as they hand
+# over the family's stipend, and how they address their master by gender (`{address}` in the
+# lines and the handover becomes it).
+
+# Humans, half-elves, and half-orcs: Cockney.
+[[dialogue]]
+npc = "servant"
+lines = [
+    "A pleasure to see yer, {address}. The 'ole town's brighter for it, innit.",
+    "Them boots, {address}! Fit for the King 'imself, they are.",
+    "Word is yer slew a beast twice yer size, {address}. I always said yer would.",
+    "I tells everyone at the Gæsthūs, {address}: there's none finer in the march than you.",
+    "Yer bearin', {address}! Blood tells. Can't buy that, can yer.",
+    "If yer don't mind me sayin', {address}, yer look more 'andsome every time.",
+    "Yer family'd be proud of yer, {address}. Proud as punch.",
+    "I keeps yer things ready, {address}, same as always. Nothin' but the best for yer.",
+    "The rabble 'ere don't know quality, {address}. I do.",
+]
+[dialogue.stipend]
+handover = "Yer family's sent yer stipend on, {address}, all counted proper. 'Ere it is, every penny."
+address = { male = "m'lord", female = "m'lady", other = "guv'nor" }
+
+# Dwarves and duergar: Geordie.
+[[dialogue]]
+npc = "servant_dwarf"
+lines = [
+    "Howay, {address}! Ye look grand the day, ye knaa. Like a king under the mountain.",
+    "That beard of yours, {address}. Divvent let anyone tell ye different, it's canny.",
+    "Aa telt them all at the inn: nee dwarf in the march stands taller than mine.",
+    "Wey aye, {address}, the forge-folk sing of your deeds already.",
+    "Ye've the old blood in ye, {address}. Ye can see it in the way ye walk.",
+    "Aa keep your gear oiled and shinin', {address}. Only the best for wor house.",
+    "Them goblins'll run when they hear you're comin', {address}. Mark us.",
+    "Your da would be reet proud, {address}, so he would.",
+]
+[dialogue.stipend]
+handover = "Word from hyem, {address}: your stipend, all of it, counted twice. Here ye gan."
+address = { male = "me lord", female = "me lady", other = "your honour" }
+
+# Elves: Brummie.
+[[dialogue]]
+npc = "servant_elf"
+lines = [
+    "Ow am ya, {address}? Bostin, as ever, I can see that.",
+    "Yow walk loike the old songs, {address}. Light as anythin'.",
+    "Them humans stare at yow, {address}. Can't blame 'em, can ya?",
+    "I tell everyone, {address}: there's nobody noicer in all the march.",
+    "A thousand years of good breedin', {address}. It shows, it does.",
+    "Yower hair, {address}! Loike moonlight on the brook.",
+    "I've kept yower things just so, {address}. Nothin' but the best.",
+    "The whole town's talkin' about yow, {address}. All good, mind.",
+]
+[dialogue.stipend]
+handover = "Yower family's sent summat on, {address}: yower stipend, every bit. There yow go."
+address = { male = "yer lordship", female = "yer ladyship", other = "yer honour" }
+
+# Halflings and gnomes: Scouse.
+[[dialogue]]
+npc = "servant_halfling"
+lines = [
+    "Ey, {address}, ye look boss today. Proper boss.",
+    "I'm made up just to see ye, {address}. Made up.",
+    "Them big folk don't know quality, {address}. I do, la.",
+    "Ye've got class, {address}. Ye can't learn that, can ye?",
+    "I told the whole Gæsthūs, {address}: ye're the best in the march. Sound.",
+    "Them kecks, {address}! Fit for a prince, them.",
+    "I've got yer scran warm and yer boots shined, {address}. Only the best.",
+    "Yer family'd be dead proud of ye, {address}. Dead proud.",
+]
+[dialogue.stipend]
+handover = "Yer family's sent yer stipend, {address}. All counted, la. Here, it's yours."
+address = { male = "me lord", female = "me lady", other = "boss" }
+
+# Goblins, kobolds, and ratfolk: a heavy Irish brogue.
+[[dialogue]]
+npc = "servant_goblin"
+lines = [
+    "Ah, {address}, sure an' ye're a sight for sore eyes, so ye are.",
+    "Begorrah, {address}, th' whole town's talkin' about ye. Grand t'ings, all of it.",
+    "Would ye ever look at th' fine cut of ye, {address}. Like a king, so.",
+    "Me oul' da always said I'd serve th' best, {address}. Tis yerself he meant.",
+    "I tink ye're th' cleverest in th' whole march, {address}, an' I'm no eejit.",
+    "Tis an honour t' polish yer boots, {address}. A feckin' honour.",
+    "Them big folk are only jealous of ye, {address}. Pay 'em no mind.",
+    "Ye've th' look of ould money about ye, {address}. Grand altogether.",
+]
+[dialogue.stipend]
+handover = "Yer family's sent on yer stipend, {address}, an' not a coin missin', I swear it. Here, take it."
+address = { male = "yer lordship", female = "yer ladyship", other = "yer honour" }
+
+# Drow: Middle English.
+[[dialogue]]
+npc = "servant_drow"
+lines = [
+    "Hail, {address}. Thou art fairer than the moon that never shineth below.",
+    "Certes, {address}, none in this sunlit town is thy peer.",
+    "Ywis, {address}, thy house shall sing of thy deeds anon.",
+    "The surface folk gape at thee, {address}, and well they may.",
+    "In sooth, {address}, thy bearing sheweth thy noble blood.",
+    "Thy gear I have kept clean, {address}, as befitteth thy rank.",
+    "Thy mother's house would be glad of thee, {address}, and eek proud.",
+    "Hast thou slain another foe, {address}? Thou art ever victorious.",
+]
+[dialogue.stipend]
+handover = "Thy house hath sent thy stipend, {address}, y-counted every coin. Take it, I pray thee."
+address = { male = "my lord", female = "my lady", other = "my liege" }
+
+# Lizardfolk: Dutch.
+[[dialogue]]
+npc = "servant_lizardfolk"
+lines = [
+    "Goedendag, {address}. Uw schubben glanzen vandaag als goud.",
+    "Niemand in deze stad is zo edel als u, {address}.",
+    "De warmbloeden staren naar u, {address}. Begrijpelijk.",
+    "Uw familie zou trots zijn, {address}. Heel trots.",
+    "Ik heb uw spullen gepoetst, {address}. Alleen het beste voor u.",
+    "Wat een houding, {address}! Echt van hoge afkomst.",
+    "Iedereen in de herberg spreekt over uw daden, {address}.",
+    "U wordt elke dag sterker, {address}. Dat zie ik meteen.",
+]
+[dialogue.stipend]
+handover = "Uw familie stuurt uw toelage, {address}. Alles is geteld. Alstublieft."
+address = { male = "heer", female = "vrouwe", other = "edele" }

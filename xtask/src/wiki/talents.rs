@@ -746,6 +746,35 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::BeastFriend => "creatures of animal factions are neutral to you until you \
                                       attack one of that type"
             .to_string(),
+        TalentEffect::Stipend => match content.stipend() {
+            Some(rules) => format!(
+                "each level you reach puts by {} plus {} gold, and ({} % of the time) one loot \
+                 roll at that level with the odds of a magic or rare item {}{}, kept if magic, \
+                 rare, a potion, a scroll, or a gem; your servant hands it all over when you \
+                 talk to them (see [Stipend](classes.md#stipend))",
+                rules.each,
+                rules.dice,
+                rules.chance,
+                percent(rules.magic),
+                if rules.gems == 0 {
+                    String::new()
+                } else {
+                    format!(" and of a gem {}", percent(rules.gems))
+                },
+            ),
+            None => "nothing: the stipend is not in this game".to_string(),
+        },
+        TalentEffect::StipendMore {
+            gold,
+            chance,
+            magic,
+        } => format!(
+            "your [stipend](classes.md#stipend) puts by {} gold, makes its loot roll {} \
+             percentage points more often, and the odds of a magic or rare item in it are {}",
+            percent(gold),
+            signed(chance),
+            percent(magic)
+        ),
         TalentEffect::HungerPercent { value } => format!("hunger pace {}", percent(value)),
         TalentEffect::SmellRot => {
             "the eat list says whether food smells fresh, turning (old), or rotten"

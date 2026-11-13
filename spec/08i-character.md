@@ -866,8 +866,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `character/fathers-sword/<race>,<gender>,<class>`). Each stream is its own, so no other roll
     moves. The aristocrat's class gives Family wealth at level 1 (#1404), handed down as the
     run begins (`World::begin`, on top of the kit, whether or not the run takes the kit), so it is
-    never their pick (held already) and Father's sword is open to their first. The weakest of a
-    small race may start Burdened with them, never Strained. (Favoured
+    never their pick (held already) and Father's sword is open to their first. **Landed noble**
+    (#1405; also `class = "aristocrat"`): the Stipend below is larger
+    (`stipend_more`: its gold +100 %, its loot roll made by 15 points more, always, its magic odds
+    +200 %: 47 % of level-ups bring a find). The weakest of a small race may start Burdened with
+    them, never Strained. (Favoured
     child, which doubled the background story's luckier odds, was cut in #787 with its
     `background` system: no talent is left on the story's draw.)
   - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
@@ -967,8 +970,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     those trees spends a bonus pick before an ordinary one, any other is refused for it ("You
     must choose a talent of Weaponcraft or Delver."), and a bonus pick nothing fits is dropped
     like any other. The everyday folk have theirs (bonus picks at 10, 20, 30, 45, 55):
-    aristocrat (Weaponcraft, Delver) Family wealth (at 1, #1404), Fencing (Duelist one rank
-    higher), Riposte, Peerless (+2 on the confirmation roll; #1404 cut Iron will at 32); commoner (any
+    aristocrat (Weaponcraft, Delver) Family wealth (at 1, #1404), Stipend (below, at 1),
+    Fencing (Duelist one rank higher), Riposte, Peerless (+2 on the confirmation roll; #1404 cut
+    Iron will at 32); commoner (any
     tree) Pack mule (the burden line's first step, #1198), Stubborn (Toughness +2,
     #1406; poison never lowers scores), Big hands (+1 damage with maces and
     unarmed), Second wind, Salt of the earth (healing and resting +25 %), Unlikely hero (every
@@ -984,6 +988,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Trade routes, Credit, Magnate, Golden tongue), and left their levels empty. The adventurers'
     tables come with I1–I3 (#243–#245). Dumps mark them `Haggler (class)`;
     JSON `talents[].class`, `due.bonus`. **Saves change** (`Due::bonus`, `Magic::carried`).
+  - **Stipend** (the aristocrat's class ability from level 1, #1405; `world/stipend.rs`,
+    `data/stipend.toml`): at every level the character reaches, a prestige class's too, their
+    family puts by gold (150 + 10d10, about 200) and, by 85 %, the find of one loot roll at that
+    level as item level with the magic and rare rarities +100 % likelier, kept when magic or
+    rare, a potion, a scroll, or a gem (38 % of level-ups, levels 2 to 60; a test keeps it within
+    the owner's 30 to 50 %), else
+    thrown away; each level draws from its own stream `stipend/<level>`. It accumulates (in
+    the save) until the character speaks with their own **servant**, a town's (Cēaptūn's
+    `servant` in its `data/towns/` file): in an aristocrat's run only, placed in the Gæsthūs
+    as the town is made, a squire for a man, a chambermaid for a woman, a servant for anyone
+    else, of the character's race and speaking its register (npc dialogues with
+    `[dialogue.stipend]` words, by race). Chatting hands over everything with the servant's
+    `handover` line: into the pack, or set down at the feet what would leave the character
+    Overloaded; with nothing put by, a flattering one-liner. If the servant dies, no one else
+    brings it: the stipend grows on and is never handed over.
   - **Prestige classes** (#876, P1 of `docs/design/prestige-classes.md` §4; the owner, PR #835:
     "not going to be a general multiclass thing. More like prestige classes achievable by
     finding a 'hidden' mechanism"): a character has **one level**, read off the one curve from

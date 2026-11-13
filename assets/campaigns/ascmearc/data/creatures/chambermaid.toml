@@ -1,0 +1,17 @@
+# An aristocrat's own chambermaid (#1405; world/stipend.rs): waits at Cēaptūn's Gæsthūs in an
+# aristocrat's run only, for a female aristocrat, of the aristocrat's own race (its words, by race, are in
+# data/dialogue/servants.toml; data/towns/ceaptun.toml places it). Peaceful; holds the family's
+# stipend and hands it over when spoken to.
+[[creature]]
+id = "chambermaid"
+name = "chambermaid"
+glyph = "@"
+fg = "#c8b8e0"
+faction = "peaceful"
+# One of the people: never greater or lesser than their kind.
+grades = false
+alignment = "good"
+footsteps = 40
+hearing = 12
+weight = 65000
+stats = { strength = 10, presence = 12 }

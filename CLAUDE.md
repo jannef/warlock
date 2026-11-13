@@ -274,7 +274,7 @@ player may take now by id with their choices, the first kills that paid, each ro
 draw and the size of its pool now, `roll slug_charm scroll_of_lightning x1 of 4`, each calling of
 the run's campaign and where the player stands with it, `calling hunter: open`, `calling hunter:
 level 30 not met`, `calling hunter: not for a thief`, `called hunter at 30`, the named
-monsters dead, `slain fire_drake`, the stat training
+monsters dead, `slain fire_drake`, what an aristocrat's stipend holds, `stipend 412 gold: a fizzy pink potion`, the stat training
 marks with the price in force (the drop's for a negative pile), `stat marks St 120/160, To -30/75`,
 each known spell's rung of its roll's ladder with the score and the outside rungs, `fireball rung 2/4 (In 16; +1 Empower)`, the learning, `learning 36 (Decipher script 108)` (the skill's trained value) or `cannot learn: not trained in Decipher script`, **dev-only**),
 `rooms`

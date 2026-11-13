@@ -1010,10 +1010,11 @@ mod tests {
                 .map(|t| book.get(t).id.as_str())
                 .collect()
         };
-        // Level 1's (Family wealth, #1404) and nothing more before Fencing at 6.
-        assert!(at(5).contains(&"family_wealth") && !at(5).contains(&"fencing"));
-        assert!(at(18).ends_with(&["fencing", "riposte"]), "{:?}", at(18));
+        // Level 1's (Family wealth, #1404; the Stipend, #1405) and nothing more before Fencing at 6.
+        assert_eq!(at(5), ["family_wealth", "stipend"]);
+        assert_eq!(at(18), ["family_wealth", "stipend", "fencing", "riposte"]);
         assert!(at(60).contains(&"peerless") && !at(60).contains(&"iron_will"));
+        assert_eq!(at(60).len(), 5);
         assert_eq!((aristocrat.bonus_at(10), aristocrat.bonus_at(11)), (1, 0));
         let trees = aristocrat.bonus_trees(book).expect("named trees");
         let names: Vec<&str> = trees.iter().map(|&t| book.tree(t).id.as_str()).collect();

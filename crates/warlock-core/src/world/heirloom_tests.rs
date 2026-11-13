@@ -138,6 +138,8 @@ fn the_aristocrat_is_born_to_family_wealth() {
     let book = CONTENT.talents();
     let offered = |id: &str| offers.iter().any(|(t, _)| book.get(*t).id == id);
     assert!(!offered("family_wealth") && offered("fathers_sword"));
+    // Landed noble (#1405) is offered beside it.
+    assert!(offered("landed_noble"));
     let err = start("human,male,aristocrat", &["family_wealth"], 4).expect_err("held");
     assert!(err.to_string().contains("Family wealth"), "{err}");
     let world = start("human,male,aristocrat", &["fathers_sword"], 4).expect("starts");
