@@ -83,12 +83,14 @@ fn mods(world: &World) -> crate::talent::TalentMods {
 #[test]
 fn level_one_abilities_come_with_the_character_and_others_with_their_levels() {
     let mut w = world("merchant");
-    assert!(holds(&w, "haggler"), "level 1's");
+    assert!(holds(&w, "haggler") && holds(&w, "invest"), "level 1's");
     assert!(!holds(&w, "deep_pockets"));
     // (A birth sign's gifts come first and are no business of the class.)
     let rows = dump::layer_rows(&w, Layer::Talents);
-    assert_eq!(rows.last().map(String::as_str), Some("Haggler (class)"));
-    assert!(rows.iter().filter(|r| r.contains("(class)")).count() == 1);
+    let class: Vec<&str> = (rows.iter().map(String::as_str))
+        .filter(|r| r.contains("(class)"))
+        .collect();
+    assert_eq!(class, ["Haggler (class)", "Invest (class)"]);
     // Level 6 brings Deep pockets, as news of the level.
     reach(&mut w, 6);
     assert!(holds(&w, "deep_pockets"));

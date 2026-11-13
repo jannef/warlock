@@ -58,6 +58,7 @@ struct DialogueSpec {
     silent: Option<String>,
     mutter: Option<MutterSpec>,
     stipend: Option<ServantWords>,
+    partner: Option<PartnerWords>,
 }
 
 #[derive(Deserialize)]
@@ -203,6 +204,22 @@ pub struct ServantWords {
     pub address: GenderWords,
 }
 
+/// A business partner's words (`[dialogue.partner]`, #1407; `world/invest.rs`): the dialogue of
+/// a merchant's partner, who invests the gold put with them. `{gold}` becomes an amount of gold,
+/// `{fee}` the fee taken from it.
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PartnerWords {
+    /// Said after a one-liner when the player holds a stake: what it is worth now (`{gold}`).
+    pub worth: String,
+    /// Said after a one-liner when they hold none.
+    pub idle: String,
+    /// Said as gold is put in (`{gold}` the amount, `{fee}` the fee).
+    pub invested: String,
+    /// Said as gold is taken out (`{gold}` the amount, `{fee}` the fee).
+    pub withdrawn: String,
+}
+
 /// A word for each gender.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -254,6 +271,8 @@ pub struct Dialogue {
     pub mutter: Option<Mutter>,
     /// A family servant's words: the speaker hands over the stipend (`world/stipend.rs`).
     pub stipend: Option<ServantWords>,
+    /// A business partner's words: the speaker invests for the player (`world/invest.rs`).
+    pub partner: Option<PartnerWords>,
     /// The campaign whose `data/dialogue/` it is in; `None` for shared ones (the shopkeeper's)
     /// and those outside every campaign.
     pub campaign: Option<String>,
@@ -490,6 +509,7 @@ fn parse_file<'a>(
             silent: spec.silent,
             mutter,
             stipend: spec.stipend,
+            partner: spec.partner,
             campaign: campaign.clone(),
         });
         files.push(file);

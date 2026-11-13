@@ -863,11 +863,7 @@ mod tests {
         let gender = ChoiceScreen::new(Step::Gender, &CONTENT, &d);
         assert_eq!(gender.chosen(), Some("female"));
         let class = ChoiceScreen::new(Step::Class, &CONTENT, &d);
-        assert_eq!(
-            class.choices.len(),
-            13,
-            "the craftsperson and merchant hidden"
-        );
+        assert_eq!(class.choices.len(), 14, "the craftsperson hidden");
         assert_eq!(class.chosen(), Some("thief"));
         // A remembered choice wins; without either, the first option.
         let mut remembered = d.clone();
@@ -934,7 +930,7 @@ mod tests {
             |s: &ChoiceScreen| -> Vec<String> { s.choices.iter().map(|c| c.id.clone()).collect() };
         let mut class = ChoiceScreen::new(Step::Class, &CONTENT, &d);
         let listed = ids(&class);
-        for closed in ["priest", "paladin", "craftsperson", "merchant"] {
+        for closed in ["priest", "paladin", "craftsperson"] {
             assert!(
                 !listed.iter().any(|id| id == closed),
                 "{closed}: {listed:?}"

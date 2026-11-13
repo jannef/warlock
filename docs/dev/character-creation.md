@@ -73,7 +73,7 @@ closed or hidden class). `Draft::spec` falls back from a preselected class not o
 scenario's, or one remembered before the race or gender changed) to the first offered.
 `CharacterSpec::check_open` (`check` plus `refuses`) is what the game's and `warlock-cli`'s
 `--character` ask; hidden classes pass it, so dev runs, tests, replays, and scenarios keep the
-craftsperson and the merchant (the commoner is offered again since #1406). A scenario's own character, a replay, and a save are never checked (the test
+craftsperson (the commoner is offered again since #1406, the merchant since #1407). A scenario's own character, a replay, and a save are never checked (the test
 world's forge and quarry keep their craftspeople). Tests: `character.rs`
 (`classes_are_closed_to_some_races_and_genders`, `class_limits_name_known_races`),
 `chargen_screen.rs` (`the_class_step_lists_and_draws_only_classes_open_to_the_race_and_gender`),

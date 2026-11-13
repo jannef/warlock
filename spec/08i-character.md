@@ -11,7 +11,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Class limits** (#1279): a class may be closed to races (`races_not`: no goblin, drow,
     kobold, lizardfolk, duergar, or ratfolk paladin; no elven or dwarven witch) or open to a
     race only with some genders (`only`: a drow priest is female), and may be `hidden` (the
-    craftsperson and merchant, for now; the commoner is offered again since #1406). New run's class step lists only the classes
+    craftsperson, for now; the commoner is offered again since #1406, the merchant since #1407). New run's class step lists only the classes
     open to the race and gender chosen, never a hidden one, so its Random draws only those;
     `--character` refuses a closed pair with the reason in words (`a drow may be a priest only
     if female`) but takes a hidden class, and a scenario's own character is never checked
@@ -979,7 +979,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     stat +1); craftsperson (Weaponcraft, Guard, Delver) Sturdy work (Protection +1 in body
     armour), Masterwork (melee threat +1), Artisan (Protection +1 per armour piece worn, +2
     melee damage); merchant (Delver, Scholar) Haggler (favour +15 %: the one class ability on
-    shop favour, #787), Deep pockets (coins weightless) and Pack mule (the burden line's first step, #1198), Merchant's eye (#816, at 12: an
+    shop favour, #787), Invest (below, at 1, #1407), Deep pockets (coins weightless) and Pack mule (the burden line's first step, #1198), Merchant's eye (#816, at 12: an
     ability, on a thing carried, that identifies it as the scroll of identify would, for a
     reading's time and nothing else; refused, no time, for a thing already known); #789 cut its level 40 Insured (shops paid +50 %), a
     capstone that paid only in gold. The favour cap is 50 %. #774 cut the filler and the duplicates (Connoisseur, Hearty, Keen
@@ -1003,6 +1003,26 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `handover` line: into the pack, or set down at the feet what would leave the character
     Overloaded; with nothing put by, a flattering one-liner. If the servant dies, no one else
     brings it: the stipend grows on and is never handed over.
+  - **Invest** (the merchant's class ability from level 1, #1407; `world/invest.rs`,
+    `data/invest.toml`): the merchant's **business partner**, a town's class helper for `invest`
+    (Cēaptūn's second `[[town.servant]]`, placed by the servant's code, keyed by the class
+    ability: in a merchant's run only, at the corner desk of Factor Wulfrun's office, of the
+    character's race and speaking its register, npc dialogues with `[dialogue.partner]` words),
+    keeps a stake for them like a mutual fund. Chatting gives a one-liner and what the stake is
+    worth in whole gold; the topics put in 100 or 1000 gold or all carried, or take out 100 or
+    1000 or everything (any amount by id, `ask:E:invest_250`), each for a chat's time, the
+    partner keeping a fee of 2 % going in and 2 % coming out (rounded up); taken out, gold that
+    would overload the character is set down at their feet; more than carried or held is refused
+    with no time. Every game week (seven days from the epoch) begun since the stake last took
+    its return, wherever the character is (one tick after every action, so a long rest or a
+    journey catches up every week), the stake (kept in hundredths of a coin) changes by 10 +
+    4d201−404 basis points plus the bonus, each week from its own stream `invest/<week>`: about
+    5 % a year on average (1.001^(360/7) = 5.3 %), a yearly spread of about 8 %, three years in
+    ten losing. The bonus, derived from the quest records: +1 basis point per quest of the
+    partner's town's people completed (each once; thirteen in Cēaptūn) and +6 for Fire in the
+    deep (`fire_deep`, the fire drake slain and the mines reopened): everything done, 29 a week,
+    about 16 % a year. If the partner dies, the stake is lost. Saved and hashed:
+    `WorldState::fund` (`cents`, `week`), left out until something is first put in.
   - **Prestige classes** (#876, P1 of `docs/design/prestige-classes.md` §4; the owner, PR #835:
     "not going to be a general multiclass thing. More like prestige classes achievable by
     finding a 'hidden' mechanism"): a character has **one level**, read off the one curve from

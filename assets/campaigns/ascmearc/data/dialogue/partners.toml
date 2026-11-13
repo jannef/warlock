@@ -1,0 +1,126 @@
+# A merchant's business partner (#1407; world/invest.rs): keeps a desk in Factor Wulfrun's office
+# at Cēaptūn in a merchant's run, of the merchant's own race, and speaks in that race's register
+# (docs/dev/npcs.md "Speech by race and station"; a partner in trade is a person of means, so a
+# human one speaks posh). data/towns/ceaptun.toml names the npc for each race. Each has
+# businesslike one-liners and `[dialogue.partner]`: what the stake is worth (`worth`, `{gold}`)
+# or that there is none (`idle`), said after a one-liner, and what they say as gold goes in
+# (`invested`) or comes out (`withdrawn`), `{gold}` the amount and `{fee}` the fee kept.
+
+# Humans, half-elves, and half-orcs: posh.
+[[dialogue]]
+npc = "partner"
+lines = [
+    "Ah, partner. Wool is up, tin is down, and the pass is open. One cannot ask for more.",
+    "I have been through the ledgers twice this morning. They balance, which is always a relief.",
+    "The salt barges are late again. I have taken the liberty of buying the delay.",
+    "Never sell in a panic, partner. Other people's panic, however, is a splendid time to buy.",
+    "Wulfrun lends me the corner desk. Frightfully decent of her, and the rent is reasonable.",
+    "A word to the wise: the Holtwīc honey trade is worth watching.",
+]
+[dialogue.partner]
+worth = "Your stake stands at {gold} gold this week."
+idle = "You have nothing with me at present. Idle gold earns nothing, you know."
+invested = "{gold} gold, less {fee} for the paperwork. Consider it working."
+withdrawn = "{gold} gold out, less {fee} for my trouble. Do spend it wisely."
+
+# Dwarves and duergar: Geordie.
+[[dialogue]]
+npc = "partner_dwarf"
+lines = [
+    "Now then, partner. Iron's up, wool's doon. Aa'm buyin' iron.",
+    "The ledgers balance, ye knaa. Aa counted them twice, like.",
+    "Never sell when folk panic. Buy, man. Buy.",
+    "Them salt barges is late again. Aa've bought up the delay, wey aye.",
+    "The factor lets us have the corner desk. Canny lass, that one.",
+    "If the mines ever open again, partner, we'll be rich as kings.",
+]
+[dialogue.partner]
+worth = "Your stake's worth {gold} gold this week, partner."
+idle = "Ye've nowt wi' us yet. Gold in a purse divvent grow, man."
+invested = "{gold} gold, less {fee} for the writin'. It's workin' noo."
+withdrawn = "{gold} gold oot, less {fee} for wor trouble. Divvent waste it."
+
+# Elves: Brummie.
+[[dialogue]]
+npc = "partner_elf"
+lines = [
+    "Alroight, partner? Wool's up, tin's down. Not bad, all told.",
+    "I've been through the books twice. They add up, they do.",
+    "Never sell when everyone's in a flap. That's when yow buy.",
+    "Them salt barges are late again. I've bought the delay, ain't I.",
+    "The factor lets us 'ave the corner desk. Proper noice of 'er.",
+    "Keep an eye on the honey trade, partner. Bostin' prospects.",
+]
+[dialogue.partner]
+worth = "Yower stake's worth {gold} gold this week."
+idle = "Yow've got nothin' with me yet. Gold in a purse don't grow, does it?"
+invested = "{gold} gold, less {fee} for the paperwork. It's workin' now."
+withdrawn = "{gold} gold out, less {fee} for me trouble. Spend it careful."
+
+# Halflings and gnomes: Scouse.
+[[dialogue]]
+npc = "partner_halfling"
+lines = [
+    "Alright, partner? Wool's up, tin's down. Sound.",
+    "I've been through the books twice, la. They add up.",
+    "Never sell when everyone's losin' the plot. That's when ye buy.",
+    "Them salt barges are late again. I've bought the delay, me.",
+    "The factor lets us have the corner desk. She's sound, her.",
+    "Keep an eye on the honey trade, partner. It's boss.",
+]
+[dialogue.partner]
+worth = "Yer stake's worth {gold} gold this week, la."
+idle = "Ye've got nothin' with me yet. Gold in a purse doesn't grow, does it?"
+invested = "{gold} gold, less {fee} for the paperwork. It's graftin' now."
+withdrawn = "{gold} gold out, less {fee} for me trouble. Don't go blowin' it."
+
+# Goblins, kobolds, and ratfolk: a heavy Irish brogue.
+[[dialogue]]
+npc = "partner_goblin"
+lines = [
+    "Ah, partner. Wool's up, tin's down, an' th' pass is open. Grand.",
+    "I went t'rough th' ledgers twice, so I did. They balance.",
+    "Never sell when th' rest are in a panic. Tis then ye buy, sure.",
+    "Th' salt barges are late again. I've bought up th' delay, so.",
+    "Th' factor lets us have th' corner desk. Decent oul' skin, she is.",
+    "Keep an eye on th' honey trade, partner. There's money in it.",
+]
+[dialogue.partner]
+worth = "Yer stake's worth {gold} gold this week, so it is."
+idle = "Ye've nuttin' wit' me yet. Gold in a purse doesn't grow, sure."
+invested = "{gold} gold, less {fee} for th' paperwork. Tis workin' now."
+withdrawn = "{gold} gold out, less {fee} for me trouble. Mind ye don't waste it."
+
+# Drow: Middle English.
+[[dialogue]]
+npc = "partner_drow"
+lines = [
+    "Hail, partner. Wool riseth and tin falleth; the pass is open.",
+    "Twice have I gone through the ledgers. Certes, they balance.",
+    "Sell nat when others are afeared, but buy, ywis.",
+    "The salt barges are late anon. I have bought the delay.",
+    "The factor granteth us the corner desk, and asketh little.",
+    "Mark thou the honey trade, partner. There is profit in it.",
+]
+[dialogue.partner]
+worth = "Thy stake is worth {gold} gold this week."
+idle = "Thou hast nought with me as yet. Gold in a purse groweth nat."
+invested = "{gold} gold, less {fee} for the writing. It worketh now."
+withdrawn = "{gold} gold out, less {fee} for my labour. Spend it wisely."
+
+# Lizardfolk: Dutch.
+[[dialogue]]
+npc = "partner_lizardfolk"
+lines = [
+    "Goedendag, partner. Wol stijgt, tin daalt. De pas is open.",
+    "Ik heb de boeken twee keer nagekeken. Ze kloppen.",
+    "Nooit verkopen in paniek. Dan moet je juist kopen.",
+    "De zoutschepen zijn weer laat. Ik heb de vertraging gekocht.",
+    "De factor geeft ons het bureau in de hoek. Redelijke huur.",
+    "Let op de honinghandel, partner. Daar zit geld in.",
+]
+[dialogue.partner]
+worth = "Uw inleg is deze week {gold} goud waard."
+idle = "U hebt nog niets bij mij. Goud in een buidel groeit niet."
+invested = "{gold} goud, min {fee} voor het papierwerk. Het werkt nu."
+withdrawn = "{gold} goud eruit, min {fee} voor de moeite. Besteed het goed."

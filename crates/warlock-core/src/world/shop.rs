@@ -242,7 +242,11 @@ pub fn count_of(stacks: &[Stack], object: crate::content::ObjectId) -> u32 {
 
 /// Takes `amount` of `object` out of `stacks`, from the last stack back. Returns the positions
 /// of the stacks that emptied and are gone (to follow with the equipment).
-fn take(stacks: &mut Vec<Stack>, object: crate::content::ObjectId, amount: u32) -> Positions {
+pub(super) fn take(
+    stacks: &mut Vec<Stack>,
+    object: crate::content::ObjectId,
+    amount: u32,
+) -> Positions {
     let mut left = amount;
     for stack in stacks.iter_mut().rev() {
         if stack.object == object && left > 0 {

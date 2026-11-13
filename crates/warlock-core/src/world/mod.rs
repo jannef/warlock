@@ -195,6 +195,7 @@ mod hurl;
 mod ice;
 mod incorporeal;
 mod intimidate;
+mod invest;
 mod item_damage;
 mod jack;
 mod knock;
@@ -500,6 +501,9 @@ pub struct WorldState {
     /// (`world/stipend.rs`).
     #[serde(default, skip_serializing_if = "stipend::Stipend::is_empty")]
     pub(crate) stipend: stipend::Stipend,
+    /// A merchant's stake with their business partner (`world/invest.rs`).
+    #[serde(default, skip_serializing_if = "invest::Fund::is_empty")]
+    pub(crate) fund: invest::Fund,
     /// Sounds the player perceived lately: those like them are no news ([`noise::news`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) recent_sounds: Vec<Recent>,
@@ -981,6 +985,7 @@ impl World {
             wares: BTreeMap::new(),
             uniques_offered: BTreeSet::new(),
             stipend: stipend::Stipend::default(),
+            fund: invest::Fund::default(),
             recent_sounds: Vec::new(),
             weather_override: None,
             death: None,
@@ -1473,6 +1478,8 @@ impl World {
             }
         }
         self.state.listening = None;
+        // A merchant's stake takes every week's return begun meanwhile (`invest.rs`).
+        self.tick_fund();
         self.encounter_tick(&mut events);
         if self.state.death.is_none() {
             self.burden_news(burden);
@@ -1961,6 +1968,8 @@ mod identify_spell_tests;
 mod incorporeal_tests;
 #[cfg(test)]
 mod intimidate_tests;
+#[cfg(test)]
+mod invest_tests;
 #[cfg(test)]
 mod item_damage_tests;
 #[cfg(test)]
