@@ -20,9 +20,11 @@
 //! - **Call familiar** ([`World::start_calling`], `use:call_familiar`): with none alive and no
 //!   hostile in sight, an hour's sitting (`call_turns` turns of the `call_familiar` action through
 //!   [`World::keep_at`]: anything that would stop a rest stops it, the time spent and nothing
-//!   else lost), and a new beast at her feet. No mana, no cooldown, no count, no marks.
-//!   [`calling_draw`] is the start's draw, on the gameplay stream, with `bargain_kinds` (the imp)
-//!   in her race's list from `bargain_level` of her class on.
+//!   else lost), and a beast at her feet. No mana, no cooldown, no count, no marks. A witch
+//!   who has had one (`Character::familiar`, set as her first comes) gets **that one back**,
+//!   its kind and name, at the grade her level gives now, with no draw; one who never had one
+//!   draws: [`calling_draw`] is the start's draw, on the gameplay stream, with `bargain_kinds`
+//!   (the imp) in her race's list from `bargain_level` of her class on.
 //!
 //! Nothing here draws from any stream but the start's, a kept beast's name's, and a calling's. A
 //! run without a familiar calls none of it to any effect.
@@ -30,7 +32,7 @@
 use super::rest::Ended;
 use super::{Actor, ActorId, AllySource, CompanionData, Spent, World, WorldState};
 use crate::action::{AttackKind, Event};
-use crate::character::CharacterSpec;
+use crate::character::{CharacterSpec, RememberedFamiliar};
 use crate::content::{ActionKind, Content, CreatureId, LevelKind, Stacking};
 use crate::geom::Pos;
 use crate::rng::Rng;
@@ -116,7 +118,7 @@ impl World {
             return;
         };
         if let Some(at) = self.familiar_cell() {
-            self.make_familiar(creature, at);
+            self.make_familiar(creature, at, None);
         }
     }
 
@@ -133,7 +135,10 @@ impl World {
 
     /// Makes a familiar of type `creature` at `at`, at the player's grade, whole, named, and
     /// said: "Tibb, your cat, winds about your ankles." On the overworld it is in the retinue.
-    fn make_familiar(&mut self, creature: CreatureId, at: Pos) {
+    /// With `returning`, the name of the familiar she remembers, it is that one come back:
+    /// "Tibb, your cat, comes back to you out of the dark." Either way it is the one her
+    /// character remembers from now on (`Character::familiar`).
+    fn make_familiar(&mut self, creature: CreatureId, at: Pos, returning: Option<String>) {
         let content = self.content.clone();
         let overworld = self.state.current().kind == LevelKind::Overworld;
         let own = content.creature(creature).level;
@@ -146,7 +151,8 @@ impl World {
             quarry: None,
         };
         let id = self.make_ally(creature, at, AllySource::Familiar(data), None);
-        let name = name_for(&content, self.state.seed, id);
+        let back = returning.is_some();
+        let name = returning.unwrap_or_else(|| name_for(&content, self.state.seed, id));
         if let Some(actor) = self.state.actors.get_mut(&id) {
             if let Some(data) = actor.kept_mut() {
                 data.name = name.clone();
@@ -157,10 +163,19 @@ impl World {
                 ally.retinue = true;
             }
         }
+        if let Some(character) = self.state.character.as_mut() {
+            character.familiar = Some(RememberedFamiliar {
+                creature,
+                name: name.clone(),
+            });
+        }
         let kind = &content.creature(creature).name;
-        let line = (content.familiars())
-            .and_then(|rules| rules.arrives(creature))
-            .unwrap_or("keeps to your heel");
+        let line = if back {
+            Some("comes back to you out of the dark")
+        } else {
+            (content.familiars()).and_then(|rules| rules.arrives(creature))
+        };
+        let line = line.unwrap_or("keeps to your heel");
         self.say(format!("{name}, your {kind}, {line}."));
     }
 
@@ -208,10 +223,20 @@ impl World {
         }
     }
 
-    /// The hour is up: the draw on the gameplay stream, and a new familiar at her feet, or
-    /// nothing with no list for her race or no free cell (the hour is spent either way).
+    /// The hour is up: the familiar she remembers back at her feet, or, for one who never had
+    /// one, the draw on the gameplay stream and a new one; nothing with no list for her race or
+    /// no free cell (the hour is spent either way).
     fn finish_calling(&mut self, events: &mut Vec<Event>) {
         let content = self.content.clone();
+        let remembered = (self.state.character.as_ref()).and_then(|c| c.familiar.clone());
+        if let Some(RememberedFamiliar { creature, name }) = remembered {
+            let Some(at) = self.familiar_cell() else {
+                self.say("Nothing comes.");
+                return;
+            };
+            self.make_familiar(creature, at, Some(name));
+            return self.perceive_familiar(events);
+        }
         let total = self.player_level();
         let drawn = self.state.character.clone().and_then(|character| {
             // Her class's own level, not what a prestige class adds to it.
@@ -225,8 +250,12 @@ impl World {
             return;
         };
         self.say("Something comes out of the dark and sits at your feet.");
-        self.make_familiar(creature, at);
-        // The last turn's perception did not know it.
+        self.make_familiar(creature, at, None);
+        self.perceive_familiar(events);
+    }
+
+    /// The last turn's perception did not know the familiar just come: it perceives once more.
+    fn perceive_familiar(&mut self, events: &mut Vec<Event>) {
         let mut seen = Vec::new();
         self.perceive(&mut seen);
         events.append(&mut seen);

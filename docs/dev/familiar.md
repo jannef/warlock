@@ -17,8 +17,9 @@ read their `CompanionData`.
 | the name in the words (`called`, `End::Named`, `pack_phrase`, the Heal rows), growth (`grade_above`, `growth_protection`, `grow_companion`), always along (`follow_along`), the scent's growl, the status bar, the Character screen's `With` rows, look mode, `kept_beside` | `Actor::companion()`, `World::companion()` (Pack tactics and the ranger's later abilities, Tame); `Actor::familiar()`, `World::familiar()` (the touch, the harrying, `bring_familiar`) |
 
 A familiar and a companion may be had at once (the owner, §16 Q8): each is at most one of its
-source. Nothing is on `WorldState`: `World::familiar()` is derived from the actors, on any level
-or in the retinue. A familiar's kill pays as any ally's (`[xp] ally_percent`): the witch has no
+source. `World::familiar()` is derived from the actors, on any level or in the retinue; the only
+familiar state outside them is `Character::familiar`, the one she remembers (Call familiar,
+below). A familiar's kill pays as any ally's (`[xp] ally_percent`): the witch has no
 `ally_share`.
 
 ## The data
@@ -66,9 +67,19 @@ familiar". `world/familiar.rs`:
 - `World::calling`: `call_turns` turns of `ActionKind::CallFamiliar` through `keep_at`, as a study.
   `Ended::Came`/`Said` break it off, the time spent and nothing else lost; there is nothing in
   flight between actions, nothing saved.
-- `finish_calling`: `calling_draw` on the **gameplay** stream (two draws: the jackpot, then the pick;
+- `finish_calling`: the familiar she remembers comes back (#1470). `Character::familiar`
+  (`RememberedFamiliar`: the creature and the name; saved and hashed with the character, left out
+  of the JSON while none) is set by `make_familiar` whenever a familiar comes, the start's or a
+  calling's, and nothing clears it, so it outlives the beast. With it, `finish_calling` makes that
+  kind with that name (`make_familiar`'s `returning`) at the grade the player's level gives now,
+  says "Tibb, your cat, comes back to you out of the dark." instead of the draw's two lines, and
+  **draws nothing**: no `calling_draw`, no `name_for`, so the gameplay stream stays where it was and
+  later draws differ from a run before #1470. A re-call therefore never has the rare jackpot or the
+  bargain kinds; only the first familiar draws. Without it (a witch who never had one: no room at
+  the start, or a later Familiar talent), `calling_draw` on the **gameplay** stream (two draws: the
+  jackpot, then the pick;
   `bargain_kinds` join the race's list, never the rares, from `bargain_level` of the character's
-  class level, the first of `Character::class_levels`). `familiar_cell` (the player's cell on the
+  class level, the first of `Character::class_levels`), and that one is remembered. `familiar_cell` (the player's cell on the
   overworld, where `make_familiar` puts it in the retinue; else `free_cell_near`, `None` when that
   has only the player's own cell: "Nothing comes.", the hour spent; `bring_familiar` then makes none
   either). The last turn's perception did not know the new actor, so it perceives once more.
@@ -139,14 +150,14 @@ the growl still read the type's `nose` through `smelt`, so her cat hunts by eye 
 As the companion's (`docs/dev/companion.md`), a row or a segment per kept beast in actor id order.
 The story is told the companion chapter's plain line until F3 (`Witness::kept` is what the
 chapter's `when` reads; `Witness::companion`, what its `only` lines read, stays a companion's).
-Dumps: the `familiar` layer and JSON `familiar`, one function with the companion's
+Dumps: the `familiar` layer and JSON `familiar`, one function with the companion's; the layer says `no familiar; Tibb, a cat, answers a calling` while the one remembered is dead
 (`dump.rs::Kept`); the `actors` layer's `(familiar; follow; named Tibb, grade 12)`.
 
 ## Determinism, saves, replays
 
 Streams above; the touch, the harrying, and growth draw nothing; a calling draws on the gameplay
 stream at its end. A run without a witch hashes as before; no shipped scenario, replay, or golden
-has a witch. Saved: the variant inside `Actor::ally`; a calling is one action, nothing in flight. The
+has a witch. Saved: the variant inside `Actor::ally`, and `Character::familiar`; a calling is one action, nothing in flight. The
 new creatures and the new action change the content fingerprint: development saves are invalidated
 (the owner, #834: no aliases, no shims).
 
@@ -156,7 +167,7 @@ new creatures and the new action change the content fingerprint: development sav
 touch (giver, degrees, the other hexes kept going), a summoned cat, the harrying, growth and always
 along, both kept beasts at once, the save round trip. `world/familiar_call_tests.rs`: the refusals
 and the menu's reasons, the hour, the interruption, no free cell, the overworld, the draw's odds with
-and without the imp, an imp as a familiar, determinism. `world/bond_tests.rs`, Familiar's sight: the
+and without the imp, an imp as a familiar, determinism, the lost familiar back the same (kind, name, grade now, no draw), a first call that draws and is remembered, the memory through a save. `world/bond_tests.rs`, Familiar's sight: the
 talent at 25, its eyes, the nose through a door and not a wall, its reach by the rules or the kind,
 the retinue, each talent its own beast, no buff. `content/familiar.rs`'s load checks.
 `caster_tests`'s witch table. `input.rs::tend_way`. The screen snapshots `abilities-menu-witch` (the

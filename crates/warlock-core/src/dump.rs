@@ -106,7 +106,8 @@ pub enum Layer {
     /// (where seen), health in words, and order; `no companion` without one.
     Companion,
     /// The player's familiar, as the companion layer says a companion (`world/familiar.rs`);
-    /// `no familiar` without one.
+    /// `no familiar` without one, `no familiar; Tibb, a cat, answers a calling` while the one
+    /// she remembers is dead (`Character::familiar`).
     Familiar,
     /// Not a map: the player's quest log, one quest a line, active first (`Rats in the arena
     /// (active, from the old hermit): Kill 3 giant rats in the Arena. 2 / 3 killed.`).
@@ -736,7 +737,7 @@ fn story_rows(world: &World) -> Vec<String> {
 }
 
 /// Which kept beast a dump says: the companion or the familiar.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 enum Kept {
     Companion,
     Familiar,
@@ -797,7 +798,18 @@ fn wears(view: &PerceptionView<'_>, ally: &crate::perception::AllyView) -> Optio
 fn kept_rows(view: &PerceptionView<'_>, kept: Kept) -> Vec<String> {
     let content = view.content();
     let Some((ally, data)) = kept.of(view) else {
-        return vec![format!("no {}", kept.id())];
+        let remembered = (view.character())
+            .and_then(|c| c.familiar.as_ref())
+            .filter(|_| kept == Kept::Familiar);
+        let Some(lost) = remembered else {
+            return vec![format!("no {}", kept.id())];
+        };
+        let kind = &content.creature(lost.creature).name;
+        return vec![format!(
+            "no familiar; {}, {} {kind}, answers a calling",
+            lost.name,
+            article(kind)
+        )];
     };
     let kind = &content.creature(ally.creature).name;
     let head = format!(
