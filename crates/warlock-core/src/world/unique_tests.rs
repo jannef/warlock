@@ -167,7 +167,7 @@ fn unidentified_it_hides_its_name_affixes_power_and_lore() {
     let stack = |w: &World| w.state.actors[&player].inventory[item].clone();
     let hidden = stack(&w);
     assert!(hidden.known_magic().is_none());
-    assert_eq!(hidden.title(&content), "stiletto");
+    assert_eq!(hidden.title(&content), "Marvellous stiletto");
     assert!(!hidden.describe(&content).contains("Widowmaker"));
     let lines = describe::lines(&hidden, &content);
     let shown = |lines: &[describe::Line], kind: LineKind| {
@@ -184,7 +184,7 @@ fn unidentified_it_hides_its_name_affixes_power_and_lore() {
     run(&mut w, "identify");
     let known = stack(&w);
     assert_eq!(known.title(&content), "Widowmaker");
-    assert_eq!(known.describe(&content), "Widowmaker, a stiletto");
+    assert_eq!(known.describe(&content), "Widowmaker, a Marvellous stiletto");
     let lines = describe::lines(&known, &content);
     assert_eq!(shown(&lines, LineKind::Power), ["Its every cut poisons."]);
     assert_eq!(

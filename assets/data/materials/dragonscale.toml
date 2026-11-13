@@ -11,3 +11,4 @@ value = 3000
 rarity = { weight = 10, level = 10 }
 gear = { weight = 5, level = 10 }
 fit = { weapon = "poor", jewellery = "poor" }
+binding = 2

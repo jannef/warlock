@@ -289,3 +289,30 @@ fn untrained_nobody_tells_a_potion_or_magic() {
     w.appraise_hours(now, 50 * HOUR);
     assert_eq!(w.state_hash(), hash, "nothing trained, nothing told");
 }
+
+/// An item's capacity (docs/dev/enchanting.md) is told only to one trained in Appraise, and the
+/// count of an unidentified item's affixes never.
+#[test]
+fn the_capacity_line_is_told_only_to_one_trained_in_appraise() {
+    let mut w = world("warrior");
+    let item = carry_sword(&mut w);
+    let plain = BUILTIN.object_id("dagger").expect("dagger");
+    w.player_mut().inventory.push(Stack::one(plain));
+    let dagger = w.state.player().inventory.len() - 1;
+    let lines = |w: &World, at: usize| -> Vec<String> {
+        let stack = &w.state.player().inventory[at];
+        (w.perception().describe_item(stack).into_iter())
+            .map(|l| l.text)
+            .collect()
+    };
+    let told = |lines: &[String]| lines.iter().any(|l| l.contains("bear"));
+    w.player_mut().skills = Default::default();
+    assert!(!told(&lines(&w, item)) && !told(&lines(&w, dagger)));
+    w.player_mut().skills.add(skill("appraise"), 1);
+    let sword = lines(&w, item);
+    assert!(sword.contains(&"It can bear one enchantment.".to_string()), "{sword:?}");
+    assert!(lines(&w, dagger).contains(&"It can bear one enchantment.".to_string()));
+    w.player_mut().inventory[item].identify();
+    let known = lines(&w, item);
+    assert!(known.contains(&"It bears all it can.".to_string()), "{known:?}");
+}

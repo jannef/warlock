@@ -116,7 +116,8 @@ give comes at once, on top of your [starting kit](starting-kit.md).
 - **[Father's sword](talents.md#talent-fathers-sword)** (needs Family wealth) is your people's
   heirloom weapon: not always a sword, but always a weapon. It is [magic](magic-items.md), with 2 to
   4 [affixes](affixes.md#prefixes) rolled at item level 6. Two make it magic; more make it
-  [rare](magic-items.md#rarity) and give it a name. You
+  [rare](magic-items.md#rarity) and give it a name. It is a [Masterwork](altars-forges-springs.md#forges) piece, so it can bear all
+  four ([Capacity](magic-items.md#capacity)). You
   [know what it does](magic-items.md#unidentified-items) from the start. It is readied in its own
   [slot](equipment.md#what-fits-where) if your kit left that free: the main hand, or the
   [missile weapon](ranged.md#getting-ready) slot for a sling or a bow. Otherwise it waits in your

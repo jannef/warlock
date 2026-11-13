@@ -7,7 +7,7 @@
 //! among its alternatives when it has several; for a line with a `magic` chance, one draw for
 //! it; for a spell scroll one draw for its grimoire ([`Content::grimoire_or`]); for a magic
 //! piece the loot draws that make it ([`loot::make_as`]: at least magic, at
-//! the floor's item level, with nobody's luck) with its material; for a plain one only its
+//! the floor's item level, with nobody's luck; finished after its condition, [`finish`]) with its material; for a plain one only its
 //! material, by the materials' `gear` weights at the creature's level and its type's faction's
 //! favoured materials ([`variant::draw`]; none
 //! for a placement that names its material). A piece that would overload the creature (what it
@@ -100,7 +100,7 @@ fn make_piece(
     }
     if magic {
         let grade = (item_level, LootGrade::Magic);
-        return loot::make_as(content, rng, stack.object, stack.count, grade, source);
+        return loot::make_as_unfinished(content, rng, stack.object, stack.count, grade, source);
     }
     if stack.own_parts().is_some() {
         return stack.clone();
@@ -109,6 +109,16 @@ fn make_piece(
     match variant::draw(content, rng, def, source, item_level) {
         Some(part) => stack.clone().with_parts(vec![part]),
         None => stack.clone(),
+    }
+}
+
+/// Finishes every piece of `pack`, gear [`roll`] made and its condition drew
+/// ([`loot::finished`]: the trim to its capacity, the very last step), from the gear's own
+/// stream `rng`, in pack order: no draw for a piece that fits.
+pub fn finish(content: &Content, rng: &mut Rng, pack: &mut Pack) {
+    for piece in &mut pack.items {
+        let made = std::mem::replace(piece, Stack::new(piece.object, piece.count));
+        *piece = loot::finished(content, rng, made);
     }
 }
 
@@ -124,6 +134,7 @@ pub fn arm(template: &mut LevelTemplate, content: &Content, seed: u64) {
         }
         let mut pack = roll(content, &mut rng, spawn.creature, level);
         crate::world::gear_condition::apply(content, &mut condition, spawn.creature, &mut pack);
+        finish(content, &mut rng, &mut pack);
         // What it was given already (a monster pool's key, `mapgen/population.rs`) comes after
         // its gear, so the gear's equipment still points at it.
         let given = std::mem::replace(&mut spawn.carry, pack.items);

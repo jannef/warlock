@@ -18,7 +18,7 @@
 //!   for each level above the first), so deeper finds run larger and finer.
 
 use crate::color::Rgb;
-use crate::content::{Content, Cutting, MaterialId, ObjectDef, dull};
+use crate::content::{Content, Cutting, MaterialId, ObjectDef, PartId, dull};
 use crate::item_parts::ItemPart;
 use crate::magic::loot::pick_weighted;
 use crate::object::Stack;
@@ -149,4 +149,10 @@ pub fn ornament(content: &Content, rng: &mut Rng, def: &ObjectDef, level: u8) ->
     let (gem, cutting) = roll(content, rng, level, true)?;
     let part = def.ornament.unwrap_or(placed.part);
     Some(ItemPart::gem(content, Some(part), gem, cutting))
+}
+
+/// The part a gem is set as in an item of `def`: its own `ornament`, else its class's.
+pub fn ornament_part(content: &Content, def: &ObjectDef) -> Option<PartId> {
+    let placed = content.gems()?.ornament(def.class).map(|o| o.part);
+    def.ornament.or(placed)
 }

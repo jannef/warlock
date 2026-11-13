@@ -29,8 +29,9 @@ use super::{Actor, Spent, World};
 use crate::action::Event;
 use crate::combat;
 use crate::content::{
-    ActionKind, Content, Cutting, MaterialId, ObjectDef, PartId, RecipeDef, RecipeId,
+    ActionKind, Content, Cutting, MaterialId, PartId, RecipeDef, RecipeId,
 };
+pub use crate::gem::ornament_part;
 use crate::item_parts::{self, ItemPart};
 use crate::object::{self, Stack};
 use crate::scroll_label::Lore;
@@ -59,11 +60,6 @@ pub fn set_band(natural: i32, margin: i32) -> SetBand {
     }
 }
 
-/// The part a gem is set as in an item of `def`: its own `ornament`, else its class's.
-pub fn ornament_part(content: &Content, def: &ObjectDef) -> Option<PartId> {
-    let placed = content.gems()?.ornament(def.class).map(|o| o.part);
-    def.ornament.or(placed)
-}
 
 /// Whether `stack` has a gem in its ornament part `part` already.
 fn is_set(content: &Content, stack: &Stack, part: PartId) -> bool {

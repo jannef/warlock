@@ -3,6 +3,9 @@
 Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
 rules it implements are in spec/08g-magic-items.md. Keep it current with the code, as CLAUDE.md says.
 
+Affix capacity and the trim that holds every item made to it (`magic/capacity.rs`,
+`loot::finished`, `quality` on hand-made items) are in `docs/dev/enchanting.md`.
+
 Magic items (spec §8 "Magic items", #149) live in `warlock-core`: `content/affix.rs`
 (`data/affixes.toml`, the settings file with the rarity weights and rare names, and
 `data/affixes/`, one file per prefix or suffix named by its id, read in path order; see

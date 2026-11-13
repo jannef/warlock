@@ -9,5 +9,7 @@ name = "The Brosinga Mene"
 object = "gold_amulet"
 affixes = ["shimmering:5", "oaken:5", "hale:11", "of_the_salamander:12", "of_warmth:12", "of_the_wind:7"]
 level = 12
+# Six enchantments need its make (docs/dev/enchanting.md): a mithril chain, a flawless ruby.
+parts = [{ part = "chain", of = "mithril" }, { part = "setting", of = "ruby", cut = "flawless" }]
 power = { ward = "poisoned", message = "The venom finds no hold on you.", phrase = "No venom takes hold of its wearer." }
 lore = "Hama carried it off to the bright city, and nobody since has said where it went."

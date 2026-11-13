@@ -13,3 +13,4 @@ value = 500
 rarity = { weight = 40 }
 gear = { weight = 10 }
 fit = { weapon = "poor", armour = "poor" }
+binding = 1

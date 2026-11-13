@@ -2,9 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You pick up Dread Visage, an iron helm and a Sharp emerald-pommelled long sword of the Bear.
- You put on Dread Visage, an iron helm.
-
+ You pick up Dread Visage, a Masterwork iron helm and a Sharp emerald-pommelled long sword of the Be
+ You put on Dread Visage, a Masterwork iron helm.
 
 
 
@@ -12,21 +11,22 @@ expression: "render(case, content.clone())"
                   │                                                              │
                   │ [ Dread Visage (being worn)                                  │
                   │                                                              │
-                  │ Rare iron helm · iron · 1.5 kg                               │
+                  │ Rare Masterwork iron helm · iron · 1.5 kg                    │
                   │                                                              │
                   │ Worn: head                                                   │
                   │ Protection 1                                                 │
                   │ Adds to every attack: +1 to hit                              │
-                  │ Dv +0, Pv 1                                                  │
+                  │ Dv +0, Pv 4                                                  │
                   │                                                              │
                   │ Prefix  Hale: +6 to maximum hit points                       │
                   │ Prefix  Accurate: +1 to hit with every attack                │
                   │ Prefix  Radiant: glows                                       │
                   │ Suffix  of the Owl: +1 to Intelligence                       │
                   │                                                              │
+                  │ It bears all it can.                                         │
+                  │                                                              │
                   │ Esc close                                                    │
                   └──────────────────────────────────────────────────────────────┘
-
 
 
 

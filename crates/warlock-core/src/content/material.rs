@@ -86,6 +86,11 @@ pub struct MaterialDef {
     /// works it (docs/design/professions.md §4; steel 0, the default; tin −3, adamantium +8).
     #[serde(default)]
     pub work: i32,
+    /// How well it holds magic (docs/design/enchanting.md §3): a term of the affix capacity of
+    /// an item whose main part is of it ([`crate::magic::capacity`]), −2 to +2; steel 0, the
+    /// default; silver −2, mithril +2.
+    #[serde(default)]
+    pub binding: i8,
     /// How it withstands each kind of item damage, in percent (spec §7 "Materials";
     /// `world/item_damage.rs`): `resists = { acid = 20, rust = 10, fire = 95 }`, every kind
     /// given. One without withstands nothing.
@@ -262,7 +267,8 @@ impl MaterialDef {
     /// Checks what a material file cannot say on its own: a `weight` above 0 (a variant's
     /// weight divides by its base material's, [`crate::variant::weight`]); a `rarity` or `gear`
     /// only with a `group` (only grouped materials are drawn for another item's); and a gem
-    /// with no `group` (a part's material is never a gem: gems are set, [`super::gem`]).
+    /// with no `group` (a part's material is never a gem: gems are set, [`super::gem`]); a
+    /// `binding` of −2 to +2.
     pub(super) fn check(&self) -> Result<(), String> {
         if self.weight == 0 {
             return Err(format!(
@@ -278,6 +284,12 @@ impl MaterialDef {
                     self.id
                 ));
             }
+        }
+        if !(-2..=2).contains(&self.binding) {
+            return Err(format!(
+                "material `{}`: `binding` is -2 to 2, not {}",
+                self.id, self.binding
+            ));
         }
         if self.gem.is_some() && self.group.is_some() {
             return Err(format!(

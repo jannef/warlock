@@ -386,7 +386,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the weight at level 1, `deeper` per level past the first, never below 0, none below `level`),
   `work` (#1332: how hard it is to work, a signed modifier on every salvage and recipe check that
   works it, steel 0; the soft metals −3, copper and gold −2, mithril, ruby, and sapphire +4,
-  adamantium +8; docs/design/professions.md §4),
+  adamantium +8; docs/design/professions.md §4), `binding` (#1427: how well it holds magic,
+  −2 to +2, steel 0; silver −2, the soft metals and knapped stone −1, gold, electrum, ironwood,
+  ivory, jade, amber, silk +1, mithril, adamantium, dragonbone, dragonscale +2; a term of an
+  item's affix capacity, §8 "Magic items"),
   `resists` (#1168: `{ acid, rust, fire }`, its chance in percent to withstand each kind of item damage, none withstood without it; withstood, nothing happens, else the item is damaged, the
   anvil's one state that Temper or Whittle mends, and one damaged already is destroyed; a failed
   Temper or Whittle is item damage no material withstands. Noble metals, mithril, adamantium,

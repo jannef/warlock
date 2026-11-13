@@ -250,8 +250,8 @@ mod tests {
             names,
             [
                 "a silver ring (magic)",
-                "a short bow (rare)",
-                "Dread Visage, an iron helm",
+                "a Marvellous short bow (rare)",
+                "Dread Visage, a Masterwork iron helm",
                 "a Sharp emerald-pommelled long sword of the Bear",
             ]
         );
@@ -273,10 +273,10 @@ mod tests {
         assert!(has(&sword, "Suffix  of the Bear: +2 to Strength"));
         let helm = text(&DescribeScreen::new(Some(&view), Some(2)));
         assert!(has(&helm, "[ Dread Visage"));
-        assert!(has(&helm, "Rare iron helm · iron · 1.5 kg"));
+        assert!(has(&helm, "Rare Masterwork iron helm · iron · 1.5 kg"));
         assert!(has(&helm, "Radiant: glows"));
         let bow = text(&DescribeScreen::new(Some(&view), Some(1)));
-        assert!(has(&bow, "} Short bow"));
+        assert!(has(&bow, "} Short bow"), "{bow:#?}");
         assert!(has(&bow, "Unidentified"));
         assert!(!has(&bow, "Hunter") && !has(&bow, "Storm Song") && !has(&bow, "Prefix"));
         // Identified, its affixes show.

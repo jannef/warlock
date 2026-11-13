@@ -9,8 +9,9 @@
 //!   one draw for how many and then each gem's, from the stream
 //!   `character/family-wealth/<race>,<gender>,<class>`.
 //! - **The heirloom** (`heirloom`): the race's weapon (else the effect's `fallback`) with `min` to
-//!   `max` affixes at item level `level` ([`loot::heirloom`]), one draw for how many and then the
-//!   affixes', from the stream `character/fathers-sword/<race>,<gender>,<class>`; identified (it
+//!   `max` affixes at item level `level`, of the effect's `quality` ([`loot::heirloom`]), one
+//!   draw for how many and then the affixes' (and the trim's, which never fires on the shipped
+//!   heirloom: docs/dev/enchanting.md), from the stream `character/fathers-sword/<race>,<gender>,<class>`; identified (it
 //!   is the family's own), readied in its own slot (the main hand, every hand for a two-handed
 //!   one, the missile weapon slot for a launcher) when that is free, else carried: the kit's own
 //!   weapon stays where it is.
@@ -56,6 +57,7 @@ impl World {
                     min,
                     max,
                     level,
+                    quality,
                 } => {
                     let race = self.state.character.as_ref().map(|c| c.spec.race.clone());
                     let weapon = (race.and_then(|r| weapons.get(&r).cloned())).unwrap_or(fallback);
@@ -64,7 +66,7 @@ impl World {
                     };
                     let mut rng = Rng::stream(seed, &format!("character/fathers-sword/{spec}"));
                     let count = rng.range(i32::from(min), i32::from(max)) as u8;
-                    let mut stack = loot::heirloom(&content, &mut rng, object, count, level);
+                    let mut stack = loot::heirloom(&content, &mut rng, object, count, (level, quality));
                     stack.identify();
                     self.wield_heirloom(&content, stack);
                 }

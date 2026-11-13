@@ -11,7 +11,7 @@ Exile. The lists and numbers below are not final and will change after playtesti
 |---|---|---|---|
 | Normal | none | "long sword" | white |
 | Magic | a [prefix](affixes.md#prefixes), a [suffix](affixes.md#suffixes), or one of each (most have one) | "Sharp long sword of the Bear" | blue |
-| Rare | three to six affixes (most often three), at most three prefixes and three suffixes | "Grim Bite, long sword" | yellow |
+| Rare | three to six affixes (most often three), at most three prefixes and three suffixes, fewer if the item cannot bear them ([Capacity](#capacity)) | "Grim Bite, long sword" | yellow |
 
 The color is the color of the item's name, in your pack, on the equipment screen, and in its
 description. The item's glyph keeps its own color. [Unique items](#unique-items) are rares too.
@@ -27,6 +27,48 @@ that keep at most three of each:
 - four affixes: one, two, or three prefixes, a third each;
 - five affixes: two or three prefixes, a half each;
 - six affixes: always three and three.
+
+## Capacity
+
+Every item can bear only so many **enchantments** (affixes, [prefixes](affixes.md#prefixes) and
+[suffixes](affixes.md#suffixes) together): one to six. It is the sum of:
+
+- **1** for any item;
+- **+1** for a ring or an amulet (they are made to carry a charm);
+- **+1** for a Fine item, **+2** for a Marvellous one, **+3** for a Masterwork one (see
+  [Forges](altars-forges-springs.md#forges) and [Crafting](crafting.md#how-well-it-comes-out));
+  a damaged item counts as plain, and stays so once mended until it is made finer again;
+- its main material's **binding**, −2 to +2 (the [materials table](materials.md) lists it:
+  silver −2, tin and flint −1, steel and iron 0, gold +1, mithril and dragonbone +2);
+- **+1** for a [gem](gems.md) set in it, **+2** for a flawless one.
+
+It is never less than one or more than six. Some examples:
+
+| Item | Can bear |
+|---|---:|
+| a steel long sword | 1 |
+| a Fine steel long sword, or one with a ruby pommel | 2 |
+| a Marvellous bronze scimitar | 3 |
+| an iron ring | 2 |
+| a gold ring | 3 |
+| a gold ring set with an emerald | 4 |
+| a silver ring | 1 |
+| a Fine mithril long sword with a sapphire pommel | 5 |
+| a Masterwork great sword with a flawless diamond pommel | 6 |
+
+**Every item is made to fit.** Loot, what creatures carry, and the game's own named items never
+hold more than they can bear. A find that rolls more loses the extra, one at a time: one from
+whichever of its prefixes or suffixes it has more of, picked at random, a suffix when they are
+even. A rare that loses some stays rare and keeps its name, so a rare on a plain steel sword has
+just one affix. The rares with many affixes are rings and amulets, gem-set and finer items, and
+the precious materials.
+
+Only a damaged Fine, Marvellous, or Masterwork item can bear less than it holds. It keeps all its
+magic, which works as before.
+
+The game tells you what an item can bear only if you are trained in
+[Appraise](skills.md#skill-appraise): its description then says "It can bear two
+enchantments.", or how many more it could bear.
 
 ## Finding them
 

@@ -49,6 +49,26 @@ fn roll_many(c: &Content, n: usize, level: u8, grade: LootGrade) -> Vec<Stack> {
         .collect()
 }
 
+/// `n` items made as loot makes them at `level` but short of the trim (`loot::finished`): what
+/// the rolls give before an item is held to its capacity (docs/dev/enchanting.md).
+fn roll_untrimmed(c: &Content, n: usize, level: u8, grade: LootGrade) -> Vec<Stack> {
+    let mut rng = Rng::stream(7, "magic-test");
+    let mut classes: Vec<_> = (c.object_defs().iter())
+        .filter(|o| o.frequency > 0 && o.kind.is_some())
+        .map(|o| o.class)
+        .collect();
+    classes.sort();
+    classes.dedup();
+    let source = crate::variant::Source::Loot;
+    (0..n)
+        .filter_map(|_| {
+            let base = loot::base_in(c, &mut rng, &classes, level)?;
+            Some(loot::make_as_unfinished(c, &mut rng, base, 1, (level, grade), source))
+        })
+        .filter(|s| s.magic().is_some())
+        .collect()
+}
+
 #[test]
 fn the_builtin_affixes_cover_every_kind_of_item() {
     let c = content();
@@ -87,7 +107,8 @@ fn the_builtin_affixes_cover_every_kind_of_item() {
 #[test]
 fn magic_items_have_one_or_two_affixes_and_mostly_one() {
     let c = content();
-    let items = roll_many(&c, 3000, 8, LootGrade::Magic);
+    // Before the trim: a capacity-1 base keeps one (`capacity_tests.rs`).
+    let items = roll_untrimmed(&c, 3000, 8, LootGrade::Magic);
     let (mut one, mut two) = (0, 0);
     for stack in &items {
         let Some(magic) = stack.magic() else { continue };
@@ -116,7 +137,8 @@ fn magic_items_have_one_or_two_affixes_and_mostly_one() {
 #[test]
 fn rare_items_have_three_to_six_affixes_at_most_three_of_each() {
     let c = content();
-    let items = roll_many(&c, 2000, 8, LootGrade::Rare);
+    // Before the trim: most bases hold fewer (`capacity_tests.rs`).
+    let items = roll_untrimmed(&c, 2000, 8, LootGrade::Rare);
     let mut counts = [0usize; 7];
     for stack in &items {
         let magic = stack.magic().expect("rare");

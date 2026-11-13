@@ -453,14 +453,18 @@ pub enum TalentEffect {
     /// Handed out once, as it is taken (Father's sword): the race's heirloom weapon (`weapons`,
     /// by race id; `fallback` for a race without one), magic with `min` to `max` affixes rolled at
     /// item level `level` and identified, from the stream
-    /// `character/fathers-sword/<race>,<gender>,<class>`; wielded in the main hand when it is
-    /// free, else carried.
+    /// `character/fathers-sword/<race>,<gender>,<class>`, of `quality` if given; wielded in the
+    /// main hand when it is free, else carried.
     Heirloom {
         weapons: BTreeMap<String, String>,
         fallback: String,
         min: u8,
         max: u8,
         level: u8,
+        /// Its make (`quality = "masterwork"`), so its capacity holds its affixes
+        /// (docs/dev/enchanting.md); none: plain.
+        #[serde(default)]
+        quality: Option<crate::magic::Quality>,
     },
     /// The actor notices hidden things in passing as if trained in Spot and Detect traps, with
     /// this much added.

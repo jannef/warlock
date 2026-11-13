@@ -6,3 +6,4 @@ resists = { acid = 70, rust = 100, fire = 100 }
 group = "stone"
 color = "#8c8a84"
 weight = 80
+binding = -1

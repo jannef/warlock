@@ -5,7 +5,7 @@ expression: "describe(&level(\"brocenburg\", 1, 4))"
 Brocenburg 4 (brocenburg:4) 80x21
 stairs Up at (31, 6) -> brocenburg:3
 goblin at (14, 8) route  carrying a damaged club (wielded)
-herrick at (4, 9) route  carrying a great axe (magic) (wielded in both hands), a suit of banded mail (rare) (being worn)
+herrick at (4, 9) route  carrying a great axe (magic) (wielded in both hands), a Masterwork suit of banded mail (rare) (being worn)
 goblin at (14, 10) route  carrying a damaged club (wielded)
 goblin at (47, 15) route E E S S W W W N S E E E N N W W carrying a bone club (wielded)
 footpad at (15, 10) route W W E E E S N W W W E E carrying an iron short sword (wielded), a leather jerkin (being worn)

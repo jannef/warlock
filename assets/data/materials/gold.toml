@@ -15,3 +15,4 @@ rarity = { weight = 10 }
 gear = { weight = 5 }
 fit = { weapon = "poor", armour = "poor" }
 work = -2
+binding = 1

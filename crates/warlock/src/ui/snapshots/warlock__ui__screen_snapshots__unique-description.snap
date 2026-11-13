@@ -2,33 +2,33 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You pick up a dagger (rare).
- This is Stonebiter, a dagger!
-
+ You pick up a Fine dagger (rare).
+ This is Stonebiter, a Fine dagger!
 
                   ┌─ Item ───────────────────────────────────────────────────────┐
                   │                                                              │
                   │ ) Stonebiter                                                 │
                   │                                                              │
-                  │ Rare dagger · steel · 450 g                                  │
+                  │ Rare Fine dagger · steel · 450 g                             │
                   │                                                              │
                   │ Dagger, for the main hand                                    │
-                  │ Damage 1d4; criticals on 20–24, ×2 damage                    │
+                  │ Damage 1d6; criticals on 20–24, ×2 damage                    │
                   │ Piercing damage                                              │
                   │ Thrown up to 5 cells                                         │
                   │ Finesse: Dexterity guides its blows, not Strength            │
-                  │ To hit +0, damage 1d4+2, range 5                             │
+                  │ To hit +0, damage 1d6+2, range 5                             │
                   │                                                              │
                   │ Prefix  Sharp: +2 damage                                     │
                   │ Suffix  of the Ox: +2 to Toughness                           │
+                  │                                                              │
+                  │ It bears all it can.                                         │
+                  │                                                              │
                   │ Power   Its bearer sees in the gloom.                        │
                   │                                                              │
                   │ Notched from a hundred quarry walls, and none of them won.   │
                   │                                                              │
                   │ Esc close                                                    │
                   └──────────────────────────────────────────────────────────────┘
-
-
 
 
  The Quarry  ·  HP 24/24  ·  MP 0/0  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444       ? controls

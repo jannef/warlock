@@ -62,7 +62,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   at `at = [x, y]` after the `[[pile]]`s: `object` (a base item), `affixes` (affix ids, each with
   an optional tier, `"sharp:2"`, default 1; its value the top of the tier's range), `name` (a
   rare item's: with a name it is rare, without magic), `identified` (default false), `level`
-  (the item level, default that of its highest tier), and `count` (stackable ones, default 1).
+  (the item level, default that of its highest tier), `count` (stackable ones, default 1), and
+  `quality` (`"fine"`, `"marvellous"`, `"masterwork"`: its make, improvements in its aspects in
+  turn; refused for an item with no aspect; §8 "Magic items": capacity).
   The item must be one its affixes may roll on (§8 "Magic items"), else a content error. An
   `[[item]]` may give `parts` (§7 "Gems"), with affixes or without: gems, each `{ part, of, size,
   cut }` (`part` a part id, none for a loose gem's gem, its main part; `of` a gem; `size` and

@@ -168,8 +168,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and for an item whose construction list lets it be made of other materials, its material (one
     draw by the materials' `rarity` at the item level, or for a creature's drop their `gear` at
     the creature's level; §7 "Materials", `variant::draw`). With nothing left to roll an item has
-    fewer affixes, with none it is normal. Loot is found unidentified (its gems and material
-    show).
+    fewer affixes, with none it is normal; then a wand's rung, and last the trim (below). Loot
+    is found unidentified (its gems and material show).
+  - **Capacity and the trim** (`magic/capacity.rs`, #1427, docs/design/enchanting.md §3, §4;
+    docs/dev/enchanting.md): an item holds 1 to 6 affixes in all (`capacity`): 1, +1 for
+    jewellery, + its quality (Fine 1, Marvellous 2, Masterwork 3; none while damaged), + its main
+    part's material's `binding` (§7, −2 to +2), + a gem in its ornament part (+1, a flawless one
+    +2), clamped to 1..6; the three-per-kind caps stand beside it. The very last step of making
+    any item (`loot::finished`: loot, chests, hoards, dens, room loot, creature gear after its
+    condition, animated things, kits, the background's gifts, the stipend, the pedlar's offer,
+    the heirloom) trims it to its capacity: while it holds more, one affix of the kind it has
+    more of goes, at random among them (one draw from the item's own stream), a suffix on a tie;
+    its rarity and name stay. An item that fits draws nothing. Hand-made items (uniques, a
+    level's `[[item]]`) are trimmed at load from `trim/<key>`; the shipped ones are given a
+    `quality` and parts that fit, and a test holds it. Only a damaged improved piece is ever over
+    its capacity; nothing strips it. The item description tells the capacity in words only to a
+    character trained in Appraise ("It can bear two enchantments.", "It bears all it can.").
   - **Where**: generated branch levels' floors hold `loot` items (the Depths 2 to 4) on plain
     floor where nothing lies, stands, shines, or leads away, and vault `loot` cells an item at
     least of their grade; outdoor ruins' loot cells too (local areas have no floor loot); all
@@ -192,7 +206,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     1.5 gems. A mimic standing in for a chest carries the same stacks from the same draws (§8 "Mimics").
   - **Unique items** (`content/unique.rs`, data `data/uniques/` and each campaign's
     `data/uniques/`, §7; #423, docs/design/adventurers-guild.md §9): one of a kind, like ADOM's
-    artifacts: a **rare** item with a set name, set affixes and parts, an item level, a
+    artifacts: a **rare** item with a set name, set affixes and parts, a `quality` (its make,
+    as a level's `[[item]]`), an item level, a
     **power**, and a line of **lore**; no new rarity or color. Its `Magic` adds `unique` (its id,
     saved like the affixes), by which its power and lore are found. Content places one as
     `unique:ID` wherever it names objects (a pile, a legend's `objects` and `carry`, and `wield`

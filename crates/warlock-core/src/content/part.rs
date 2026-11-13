@@ -485,6 +485,7 @@ mod tests {
             gear: None,
             fit: Default::default(),
             work: 0,
+            binding: 0,
             resists: None,
         }
     }
