@@ -378,7 +378,19 @@ pub(super) fn skill_grants(content: &Content) -> String {
     out.push_str("\n| Class | Trains | May start with |\n|---|---|---|\n");
     for c in content.classes() {
         let may = optional(&c.optional_skills);
-        let _ = writeln!(out, "| {} | {} | {may} |", c.name, list(&c.skills));
+        let mut trains = list(&c.skills);
+        if let Some(choice) = &c.skill_choice {
+            let names: Vec<&str> = (choice.skills.iter())
+                .map(|&id| skill_name(content, id))
+                .collect();
+            let _ = write!(
+                trains,
+                "; one of {} `{}`, picked at random",
+                names.join(", "),
+                choice.dice
+            );
+        }
+        let _ = writeln!(out, "| {} | {trains} | {may} |", c.name);
     }
     out
 }

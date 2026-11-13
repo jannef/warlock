@@ -35,7 +35,9 @@
 //!   order, from their own stream, `character/optional-skills/<race>,<gender>,<class>`, the
 //!   class's first, so no other roll moves (a race's draws come after every class's); a skill
 //!   the race or the class trains too sums the two. The race's extra class skill picks among
-//!   the guaranteed ones only.
+//!   the guaranteed ones only. Last, a class's **skill choice** (`skill_choice`, the
+//!   commoner's one profession): one of its skills picked uniformly, then its dice, from its own
+//!   stream, `character/skill-choice/<race>,<gender>,<class>`, so again nothing else moves.
 //! - **Eyes**: the player's vision profile is the race's.
 //! - **Weapon skills** (spec §8 "Weapon skills"): the race's starting ranks plus the class's,
 //!   and one set of the class's `weapon_skill_choice` if it has one, at most 10 each. Dice
@@ -530,6 +532,7 @@ impl CharacterSpec {
         let potential = stats::roll(&race.potential, &mut rng);
         let mut skills = starting_skills(race, class, &mut rng);
         optional_skills((race, class), &mut skills, seed, self);
+        skill_choice(class, &mut skills, seed, self);
         let (weapon_skills, trained) = self.weapon_skills(content, seed);
         let character = Character {
             name: random_name(content, seed, self, 0).unwrap_or_else(|| NAMELESS.into()),
@@ -638,6 +641,19 @@ fn optional_skills(
             skills.add(o.skill, o.dice.roll(&mut rng));
         }
     }
+}
+
+/// The class's one skill picked at random (`skill_choice`, the commoner's profession) a
+/// character of `spec` in a run with `seed` starts with, added to `skills`: the pick, then its
+/// dice, from the stream `character/skill-choice/<spec>`, so no other roll moves; nothing drawn
+/// for a class without one.
+fn skill_choice(class: &ClassDef, skills: &mut Skills, seed: u64, spec: &CharacterSpec) {
+    let Some(choice) = &class.skill_choice else {
+        return;
+    };
+    let mut rng = Rng::stream(seed, &format!("character/skill-choice/{spec}"));
+    let skill = choice.skills[rng.index(choice.skills.len())];
+    skills.add(skill, choice.dice.roll(&mut rng));
 }
 
 /// Starting stats from the adjustments: scores 10 plus `by`, potentials `base_potential` plus
@@ -1174,7 +1190,11 @@ mod tests {
         assert_eq!(refused("human,female,paladin"), None);
         assert_eq!(refused("half_orc,other,witch"), None);
         // Hidden classes are never offered, but `--character` still takes them.
-        for hidden in ["commoner", "craftsperson", "merchant"] {
+        assert!(
+            !content.class("commoner").expect("a class").hidden,
+            "offered (#1406)"
+        );
+        for hidden in ["craftsperson", "merchant"] {
             assert!(content.class(hidden).expect("a class").hidden);
             assert_eq!(refused(&format!("human,male,{hidden}")), None);
         }
@@ -1227,6 +1247,7 @@ mod tests {
                         && !l.starts_with("class_skill = ")
                         && !l.starts_with("known_for = ")
                         && !l.starts_with("optional_skills = ")
+                        && !l.starts_with("skill_choice = ")
                 })
                 .collect();
             kept.join("\n")
@@ -1270,18 +1291,23 @@ mod tests {
         Content::load(&files).expect("valid content")
     }
 
-    /// The built-in content with no class's (`classes`) and no race's (`races`) optional skills.
-    fn without_optional(tables: &[&str]) -> Content {
+    /// The built-in content without the lines starting with any of `fields` in `tables`.
+    fn without(tables: &[&str], fields: &[&str]) -> Content {
         let mut files = ContentFiles::builtin();
         for table in tables {
             files.edit_table(table, |text| {
                 let kept: Vec<&str> = (text.lines())
-                    .filter(|l| !l.starts_with("optional_skills = "))
+                    .filter(|l| !fields.iter().any(|f| l.starts_with(f)))
                     .collect();
                 kept.join("\n")
             });
         }
         Content::load(&files).expect("valid content")
+    }
+
+    /// The built-in content with no class's (`classes`) and no race's (`races`) optional skills.
+    fn without_optional(tables: &[&str]) -> Content {
+        without(tables, &["optional_skills = "])
     }
 
     /// The built-in content with no optional skills at all.
@@ -1291,8 +1317,12 @@ mod tests {
 
     #[test]
     fn skills_are_rolled_after_everything_else_and_never_move_a_score() {
-        // The guaranteed skills: optional ones are the next test's.
-        let content = no_optional_content();
+        // The guaranteed skills: optional ones are the next test's, a class's skill choice the
+        // commoner's.
+        let content = without(
+            &["classes", "races"],
+            &["optional_skills = ", "skill_choice = "],
+        );
         let plain = skill_free_content();
         assert!(plain.skills().is_empty());
         for race in &content.races().list {
@@ -1430,6 +1460,52 @@ mod tests {
         // The same seed and choices, the same skills.
         let one = start(&content, "elf,male,commoner", 7);
         assert_eq!(one.skills, start(&content, "elf,male,commoner", 7).skills);
+    }
+
+    #[test]
+    fn a_commoner_always_starts_with_one_profession_and_handle_animal() {
+        // #1406: one of the skill choice's skills, picked at random, and nothing else moves.
+        let content = content();
+        let plain = without(&["classes"], &["skill_choice = "]);
+        let commoner = content.class("commoner").expect("the commoner");
+        let choice = commoner.skill_choice.as_ref().expect("a skill choice");
+        let professions = content.recipes().professions();
+        assert_eq!(choice.skills, professions, "the professions, all of them");
+        let handle = content.skill_id("handle_animal").expect("the skill");
+        let mut picked = BTreeSet::new();
+        for race in &content.races().list {
+            let spec = CharacterSpec::new(&race.id, Gender::Female, "commoner");
+            for seed in 0..12 {
+                let with = spec.start(&content, seed, start_date()).expect("starts");
+                let before = spec.start(&plain, seed, start_date()).expect("starts");
+                assert!(with.skills.get(handle).is_some(), "{spec} seed {seed}");
+                assert_eq!(with.stats, before.stats, "{spec} seed {seed}");
+                let mut grew = Vec::new();
+                for (id, t) in with.skills.iter() {
+                    let was = before.skills.value(id).unwrap_or(0);
+                    let gain = i32::from(t.value) - i32::from(was);
+                    if !choice.skills.contains(&id) {
+                        assert_eq!(gain, 0, "{spec} {id}");
+                    } else if gain > 0 {
+                        grew.push(id);
+                        let (lo, hi) = (choice.dice.min(), choice.dice.max());
+                        assert!((lo..=hi).contains(&gain), "{spec} {id}: {gain}");
+                    }
+                }
+                assert_eq!(grew.len(), 1, "{spec} seed {seed}: {grew:?}");
+                picked.insert(grew[0]);
+            }
+        }
+        assert_eq!(picked.len(), choice.skills.len(), "every one is drawn");
+        // No other class picks one.
+        for class in content.classes() {
+            assert_eq!(
+                class.skill_choice.is_some(),
+                class.id == "commoner",
+                "{}",
+                class.id
+            );
+        }
     }
 
     #[test]

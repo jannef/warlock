@@ -206,7 +206,7 @@ wiki's effect text appends "while raging".
 | `searching` | `search.rs::search_modifier` (searching only; Keen searcher; `search`, in both looks, is above) |
 | `trap_damage_percent` | `World::trap_deals` (before the blood and the hurt; at least 1) |
 | `kick_noise_percent` | `noise::noise` (`Act::Kick`) |
-| `stat` | handed out, not read: `class::hand_out` raises score and potential (`Stats::gift`) at the pick or the grant; a Toughness gift raises `hp` with the maximum |
+| `stat` | handed out, not read: `class::hand_out` raises score and potential (`Stats::gift`) at the pick or the grant; a Toughness gift raises `hp` with the maximum (Stubborn's +2 since #1406, its +1 on Toughness checks gone) |
 | `weightless_coins` | `burden::load` (coins, item class `coins`, left out of the load) |
 | `quest_gold_percent` | `World::complete` (`quest.rs`) |
 | `favour_percent` | `world::shop::favour` (before the cap, `MAX_FAVOUR`) |

@@ -71,6 +71,7 @@ struct ClassSpec {
     known_for: Vec<String>,
     #[serde(default)]
     optional_skills: BTreeMap<String, OptionalSpec>,
+    skill_choice: Option<SkillChoiceSpec>,
     #[serde(default = "two_rolls")]
     rolls: u8,
     #[serde(default)]
@@ -97,6 +98,25 @@ struct ClassSpec {
     only: Vec<OnlySpec>,
     #[serde(default)]
     hidden: bool,
+}
+
+/// `{ skills = ["alchemy", "metalcraft"], dice = "2d4+4" }`: one of the skills, picked at
+/// random, by the dice.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SkillChoiceSpec {
+    skills: Vec<String>,
+    dice: Dice,
+}
+
+/// One skill a new character of the class always starts trained in, picked at random from a few
+/// (spec §8 "Skills": the commoner's one profession).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SkillChoice {
+    /// The skills it picks from, in skill order (at least two, none of the class's skills).
+    pub skills: Vec<SkillId>,
+    /// The picked skill's starting value.
+    pub dice: Dice,
 }
 
 /// `{ race = "drow", genders = ["female"] }`: a character of that race may take the class
@@ -207,6 +227,9 @@ pub struct ClassDef {
     /// The skills a new character may start with besides [`ClassDef::skills`], each by its
     /// chance (spec §8 "Skills"), in skill order; none of them one of the class's skills.
     pub optional_skills: Vec<OptionalSkill>,
+    /// One skill picked at random that a new character always starts with, by its dice (the
+    /// commoner's profession); none for most classes.
+    pub skill_choice: Option<SkillChoice>,
     /// The skill rolls each level gives (spec §8 "Skills"), before the race's and
     /// Intelligence's.
     pub rolls: u8,
@@ -316,6 +339,35 @@ impl ClassDef {
         known_for.sort();
         let optional_skills = super::skill::optional_skills(&spec.optional_skills, skill_id)
             .map_err(|m| err(format!("class `{id}`: optional_skills: {m}")))?;
+        let skill_choice = match spec.skill_choice {
+            None => None,
+            Some(choice) => {
+                let mut picks = Vec::with_capacity(choice.skills.len());
+                for name in &choice.skills {
+                    let skill = skill_id(name).ok_or_else(|| {
+                        err(format!(
+                            "class `{id}`: skill_choice: unknown skill `{name}`"
+                        ))
+                    })?;
+                    if skills.iter().any(|&(s, _)| s == skill) || picks.contains(&skill) {
+                        return Err(err(format!(
+                            "class `{id}`: skill_choice: `{name}` is named twice or is one of its skills"
+                        )));
+                    }
+                    picks.push(skill);
+                }
+                if picks.len() < 2 {
+                    return Err(err(format!(
+                        "class `{id}`: skill_choice: name two skills or more"
+                    )));
+                }
+                picks.sort();
+                Some(SkillChoice {
+                    skills: picks,
+                    dice: choice.dice,
+                })
+            }
+        };
         let ranks = |data: &BTreeMap<String, Dice>, ranked| {
             (weapon_table.starting_ranks(data, ranked))
                 .map_err(|m| err(format!("class `{id}`: {m}")))
@@ -352,6 +404,7 @@ impl ClassDef {
             skills,
             known_for,
             optional_skills,
+            skill_choice,
             rolls: spec.rolls,
             creation_talents: spec.creation_talents,
             weapon_skills,

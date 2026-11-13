@@ -11,7 +11,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Class limits** (#1279): a class may be closed to races (`races_not`: no goblin, drow,
     kobold, lizardfolk, duergar, or ratfolk paladin; no elven or dwarven witch) or open to a
     race only with some genders (`only`: a drow priest is female), and may be `hidden` (the
-    commoner, craftsperson, and merchant, for now). New run's class step lists only the classes
+    craftsperson and merchant, for now; the commoner is offered again since #1406). New run's class step lists only the classes
     open to the race and gender chosen, never a hidden one, so its Random draws only those;
     `--character` refuses a closed pair with the reason in words (`a drow may be a priest only
     if female`) but takes a hidden class, and a scenario's own character is never checked
@@ -650,7 +650,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     to a gather from the glowing fungus ("Gathering herbs" below). **Jewelcraft**
     cuts gems (its profession's Cut, "Professions" below). Who trains them: gnomes Jewelcraft, dwarves and duergar Mining (dwarves
     Jewelcraft now and then), kobolds Mining, halflings Herbalism; druids and witches Herbalism,
-    witches Alchemy; optional for the craftsperson (Jewelcraft, Mining), merchant (Jewelcraft),
+    witches Alchemy; the commoner one profession at random (Alchemy, Jewelcraft, Metalcraft, or
+    Woodcraft, `2d4+4`, #1406); optional for the craftsperson (Jewelcraft, Mining), merchant (Jewelcraft),
     commoner (Mining), ranger (Herbalism), wizard (Alchemy, Enchanting), druid (Alchemy), witch
     (Enchanting), and aristocrat (Enchanting); and a story line each. Alberich of Fyrdelf
     teaches Mining for gold, and Eadric, Cēaptūn's smith, Metalcraft (§8 "Dialogue": "Training").
@@ -962,8 +963,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     like any other. The everyday folk have theirs (bonus picks at 10, 20, 30, 45, 55):
     aristocrat (Weaponcraft, Delver) Fencing (Duelist one rank higher), Riposte, Iron will (+2
     on Willpower checks, Presence +1), Peerless (+2 on the confirmation roll); commoner (any
-    tree) Pack mule (the burden line's first step, #1198), Stubborn (+1 on
-    Toughness checks, poison never lowers scores), Big hands (+1 damage with maces and
+    tree) Pack mule (the burden line's first step, #1198), Stubborn (Toughness +2,
+    #1406; poison never lowers scores), Big hands (+1 damage with maces and
     unarmed), Second wind, Salt of the earth (healing and resting +25 %), Unlikely hero (every
     stat +1); craftsperson (Weaponcraft, Guard, Delver) Sturdy work (Protection +1 in body
     armour), Masterwork (melee threat +1), Artisan (Protection +1 per armour piece worn, +2
