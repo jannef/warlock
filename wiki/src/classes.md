@@ -386,6 +386,11 @@ to [work](crafting.md#who-works-what). Like [Appraise](skills.md#skill-appraise)
 you how many [enchantments the item can bear](magic-items.md#capacity). It never tells you the
 odds, or how often a smith has worked the piece before.
 
+<a id="patron"></a>**The patron** ([Patron](talents.md#talent-patron), from level 12) is a
+well-to-do burgher at the Gæsthūs in Cēaptūn who commissions Fine work from the craftsperson's
+trades, one piece at a time, hands over the stock for it, and pays its full worth on delivery.
+See [The patron](patron.md).
+
 {{#include generated/class-levels.md:merchant}}
 
 <a id="invest"></a>**The merchant's investment** ([Invest](talents.md#talent-invest), from level 1)

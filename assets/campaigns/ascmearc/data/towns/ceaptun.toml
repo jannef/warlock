@@ -27,6 +27,17 @@ at = [40, 27]
 creature = { male = "squire", female = "chambermaid", other = "servant" }
 speech = { default = "servant", dwarf = "servant_dwarf", duergar = "servant_dwarf", elf = "servant_elf", halfling = "servant_halfling", gnome = "servant_halfling", goblin = "servant_goblin", kobold = "servant_goblin", ratfolk = "servant_goblin", drow = "servant_drow", lizardfolk = "servant_lizardfolk" }
 
+# A craftsperson's patron (#1421; world/patron.rs), for Patron (data/dialogue/patrons.toml): a
+# well-to-do burgher lodging in the Gæsthūs's north-east corner, who commissions graded work from
+# the craftsperson's trades, advances the stock, and pays in full. The class ability comes at
+# level 12, so the patron is placed as the ability is given if the town is made by then.
+[[town.servant]]
+talent = "patron"
+level = "ceaptun"
+at = [50, 23]
+creature = { male = "patron", female = "patron", other = "patron" }
+speech = { default = "patron", dwarf = "patron_dwarf", duergar = "patron_dwarf", elf = "patron_elf", halfling = "patron_halfling", gnome = "patron_halfling", goblin = "patron_goblin", kobold = "patron_goblin", ratfolk = "patron_goblin", drow = "patron_drow", lizardfolk = "patron_lizardfolk" }
+
 # A merchant's business partner (#1407; world/invest.rs), for Invest (data/dialogue/partners.toml):
 # keeps the corner desk in Factor Wulfrun's office, invests the gold put with them, and says what
 # the stake is worth when spoken to. `bonus`: basis points more on every week's return for each

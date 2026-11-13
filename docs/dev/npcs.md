@@ -120,7 +120,7 @@ A town's class helpers, `[[town.servant]]` (`content/town.rs::TownServant`: `tal
 ability whose holder has them, `level`, `at`, `creature` by gender, `speech` npc ids by race id
 with a `default`; the loader checks the creatures, the `default`, and that each npc's
 dialogue has the words the talent's effect reads: `[dialogue.stipend]` for `stipend`,
-`[dialogue.partner]` for `invest`), are placed by `stipend::place_servant` (one line in
+`[dialogue.partner]` for `invest`, `[dialogue.patron]` for `patron`), are placed by `stipend::place_servant` (one line in
 `travel.rs::instantiate_level`, after the escorts) when their level is made, each only if the
 player holds its `talent` (`Talents::has`); never twice (an actor with that npc exists).
 Cēaptūn's servant (`talent = "stipend"`) lodges at the Gæsthūs (40, 27): `squire`, `chambermaid`,
@@ -159,6 +159,36 @@ the partner entry's `bonus`). `World::partner_dies` (one line in `fight.rs::dies
 `world/invest_tests.rs` (the class and the partner by race, the fees and topics, refusals, a long
 skip against week-by-week and a rest across a week's turn, the quests' bonus, the death, the
 yearly return by simulation, a save and a replay), `content/invest.rs`.
+
+**The craftsperson's patron** (#1421; spec §8 "Class abilities": Patron; the craftsperson design
+§7.4): `world/patron.rs`, `content/patron.rs` (`data/patron.toml`: `pays`, the percent of the
+work's worth paid, and `bonus`, more for a piece bearing the player's maker's mark, read once
+Maker's mark lands; shared). Cēaptūn's third class helper (`talent = "patron"`) lodges in the
+Gæsthūs's north-east corner (50, 23): `patron` (`campaigns/ascmearc/data/creatures/`), speaking
+`campaigns/ascmearc/data/dialogue/patrons.toml` (posh, then the race registers below). The
+ability comes at level 12, so `stipend::place_given` (one line in `class.rs::grant_class`) places
+the helpers of the class abilities just given whose town is made already; a town made later
+places them as it is made (`place_servant`); never twice, and a dead patron is never replaced
+(the grant comes once). A dialogue's `[dialogue.patron]` (`PatronWords`: `offer` with `{work}`
+and `{stock}`, `waiting` and `plain` with `{work}`, `delivered` with `{gold}`, `idle`, `address`
+by gender for `{address}`) makes its speaker a patron, "your patron". `World::patron_chat` (one
+line in `chat`, after the partner's), a chat's time: with none open, draws the work
+(`patron::pool`: every recipe with no `use` making one thing whose result has a `worked::aspects`
+of every profession the player is trained in at its `from` or more, in recipe order; one
+`rng.index` on the stream `patron/<taken>`), says `offer`, and hands over `patron::advance` (each
+`"stock"` part and stock table in pieces of the base material, else the piece's own, else the
+cheapest, `craft_make::stock_need` for one; each object and stock input, a table's own input
+left out when the table gave stock; never a gem) through `World::receive`; an empty pool says
+`idle`. While one is open it takes the first stack of the work's object that is Fine or better
+(`Worked::improvements` above 0; not a spirit weapon; one not worn first, through
+`hand_over_one`), pays `PatronRules::paid` of its `Stack::value` in gold through `receive`, says
+`delivered`, and marks Negotiation (`Use::Deal`); else `plain` (a plain one carried) or
+`waiting`. `WorldState::patron` (`Patron { taken, open: Option<Commission { recipe, giver, offer
+}> }`, saved and hashed, left out while empty). The open commission is in the quest log
+(`PerceptionView::commission`, one line in `PerceptionView::quests`, after the active quests:
+`QuestKind::Commission`, never read from a file; no `QuestRecord`, so it counts as no quest).
+`World::patron_dies` (one line in `fight.rs::dies`) drops the open one. The `progress` dump's
+row: `patron 2 taken, open long_sword`. Tests: `world/patron_tests.rs`, `content/patron.rs`.
 
 **A trader's offer** (#808, docs/design/overworld-encounters.md §15 Q7; spec §8 "Dialogue"):
 `content/offer.rs` (`TradeOffer`, a dialogue's `[dialogue.offer]`: `id`, `name`, `reply` said on

@@ -13,7 +13,9 @@
 //! ([`place_servant`], one line in `travel.rs::instantiate_level`), only in a run with the
 //! ability: the creature type for the player's gender speaking the npc dialogue for their race.
 //! The same placing serves every class helper keyed by its class ability (a merchant's business
-//! partner, `invest.rs`). Chatting with anyone
+//! partner, `invest.rs`; a craftsperson's patron, `patron.rs`, whose ability comes at level 12 and
+//! who is placed as it is given when the town is made already, [`place_given`]). Chatting with
+//! anyone
 //! whose dialogue has `[dialogue.stipend]` words ([`World::servant_chat`], one line in
 //! `talk.rs::chat`) hands over everything put by, with the `handover` line: the gold and the
 //! items into the pack, each set down at the player's feet instead if it would leave them
@@ -27,6 +29,7 @@ use super::{ActorId, Spent, World, WorldState};
 use crate::action::Event;
 use crate::content::{
     ActionKind, Content, CreatureSpawn, Dialogue, DialogueId, MAX_ITEM_LEVEL, Rarity, StatUse,
+    TalentId, TownServant,
 };
 use crate::equipment::Equipment;
 use crate::geom::Pos;
@@ -102,40 +105,59 @@ pub(crate) fn of_level(
 }
 
 /// Places every town's class helper that waits on level `level` (just made) whose class ability
-/// the character holds: an aristocrat's servant, a merchant's business partner (`invest.rs`).
-/// The module docs.
+/// the character holds: an aristocrat's servant, a merchant's business partner (`invest.rs`), a
+/// craftsperson's patron (`patron.rs`). The module docs.
 pub(super) fn place_servant(state: &mut WorldState, content: &Content, level: &str) {
+    let helpers = content.towns().iter().flat_map(|t| &t.servants);
+    for servant in helpers.filter(|s| s.level == level) {
+        place(state, content, servant);
+    }
+}
+
+/// Places the town helpers of class abilities `given`, just given (a patron's at level 12), whose
+/// town is made already; a town made later places them as it is made ([`place_servant`]).
+pub(super) fn place_given(state: &mut WorldState, content: &Content, given: &[TalentId]) {
+    let book = content.talents();
+    let helpers = content.towns().iter().flat_map(|t| &t.servants);
+    for servant in helpers {
+        let new = (book.id(&servant.talent)).is_some_and(|t| given.contains(&t));
+        if new && state.levels.contains_key(&servant.level) {
+            place(state, content, servant);
+        }
+    }
+}
+
+/// Places town helper `servant` on its level (which must be made) if the character holds its
+/// class ability and no actor of the run is it yet.
+fn place(state: &mut WorldState, content: &Content, servant: &TownServant) {
     let Some(character) = state.character.as_ref() else {
         return;
     };
     let (race, gender) = (character.spec.race.clone(), character.spec.gender);
-    let helpers = content.towns().iter().flat_map(|t| &t.servants);
-    for servant in helpers.filter(|s| s.level == level) {
-        if !state.player().talents.has(&servant.talent) {
-            continue;
-        }
-        let npc = servant.npc_for(&race).to_string();
-        if (state.actors.values()).any(|a| a.npc.as_deref() == Some(npc.as_str())) {
-            continue;
-        }
-        let Some(creature) = content.creature_id(servant.creature.of(gender)) else {
-            continue;
-        };
-        let spawn = CreatureSpawn {
-            creature,
-            faction: None,
-            alignment: None,
-            npc: Some(npc),
-            pos: Pos::new(servant.at[0], servant.at[1]),
-            route: Vec::new(),
-            carry: Vec::new(),
-            equipment: Equipment::default(),
-            rolls_gear: false,
-            asleep: false,
-            status: Vec::new(),
-        };
-        super::travel::make_creature(state, content, level, &spawn);
+    if !state.player().talents.has(&servant.talent) {
+        return;
     }
+    let npc = servant.npc_for(&race).to_string();
+    if (state.actors.values()).any(|a| a.npc.as_deref() == Some(npc.as_str())) {
+        return;
+    }
+    let Some(creature) = content.creature_id(servant.creature.of(gender)) else {
+        return;
+    };
+    let spawn = CreatureSpawn {
+        creature,
+        faction: None,
+        alignment: None,
+        npc: Some(npc),
+        pos: Pos::new(servant.at[0], servant.at[1]),
+        route: Vec::new(),
+        carry: Vec::new(),
+        equipment: Equipment::default(),
+        rolls_gear: false,
+        asleep: false,
+        status: Vec::new(),
+    };
+    super::travel::make_creature(state, content, &servant.level, &spawn);
 }
 
 impl World {
@@ -259,7 +281,7 @@ impl World {
     }
 
     /// Every stack of `stacks` named, however many: "412 gold coins, a potion, and a ruby".
-    fn listed(&self, stacks: &[Stack]) -> String {
+    pub(super) fn listed(&self, stacks: &[Stack]) -> String {
         let names: Vec<String> = stacks.iter().map(|s| self.lore().describe(s)).collect();
         match names.as_slice() {
             [] => "nothing".into(),

@@ -1008,7 +1008,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the improvements it will still take, or that it is damaged, never the attempts made on it;
     and whether its main material is very hard (work +4 or more), hard (+1 to +3), or soft and
     easy (−2 or less) to work; and, as to one trained in Appraise, how many enchantments it can
-    bear (§8 "Magic items"); perception only, `PerceptionView::describe_item`); merchant (Delver, Scholar) Haggler (favour +15 %: the one class ability on
+    bear (§8 "Magic items"); perception only, `PerceptionView::describe_item`), Patron (below,
+    at 12, #1421); merchant (Delver, Scholar) Haggler (favour +15 %: the one class ability on
     shop favour, #787), Invest (below, at 1, #1407), Deep pockets (coins weightless) and Pack mule (the burden line's first step, #1198), Merchant's eye (#816, at 12: an
     ability, on a thing carried, that identifies it as the scroll of identify would, for a
     reading's time and nothing else; refused, no time, for a thing already known); #789 cut its level 40 Insured (shops paid +50 %), a
@@ -1053,6 +1054,27 @@ developer notes (CLAUDE.md, `docs/dev/`).
     deep (`fire_deep`, the fire drake slain and the mines reopened): everything done, 30 a week,
     about 16 % a year. If the partner dies, the stake is lost. Saved and hashed:
     `WorldState::fund` (`cents`, `week`), left out until something is first put in.
+  - **Patron** (the craftsperson's class ability from level 12, #1421; the craftsperson design
+    §7.4; `world/patron.rs`, `data/patron.toml`): the craftsperson's **patron**, a town's class
+    helper for `patron` (Cēaptūn's third `[[town.servant]]`, a well-to-do burgher in the
+    Gæsthūs, of the character's race and speaking its register, npc dialogues with
+    `[dialogue.patron]` words), placed as the ability is given if the town is made by then, else
+    as the town is made; never twice, never replaced. Chatting with none open commissions one
+    piece of work: drawn (stream `patron/<n>`, `n` the commissions given before) from every
+    recipe with no built-in use making one thing whose result has an aspect to better (arms,
+    armour, shields, bows: the graded things; never jewellery, potions, tools, counted goods) of
+    every profession the character is trained in at the recipe's `from` or more; the patron
+    hands over the recipe's stock for one (each stock part and stock table in pieces of the base
+    material, else the piece's own, else the cheapest; each object and stock input; never a gem),
+    set down at the feet what would overload. An empty pool: "Come back when your hands are worth
+    hiring." The open commission is in the quest log (kind `commission`) and counts as no quest:
+    no experience, rank, goodwill, Invest bonus, or record. Chatting while one is open takes the
+    first carried piece of the work's object that is Fine or better (one not worn first; whoever
+    made it) and pays `pays` = 100 % of its worth (the grade's ×2, ×3, ×5 counted; `bonus` = 50 %
+    more for the character's maker's mark once that exists), training Negotiation as a deal; only
+    plain ones: refused, "I asked for Fine work"; none: the patron waits. One open at a time, the
+    next offered at once: no cap, no wait. If the patron dies, the open commission is dropped.
+    Saved and hashed: `WorldState::patron` (`taken`, `open`), left out until the first.
   - **Prestige classes** (#876, P1 of `docs/design/prestige-classes.md` §4; the owner, PR #835:
     "not going to be a general multiclass thing. More like prestige classes achievable by
     finding a 'hidden' mechanism"): a character has **one level**, read off the one curve from

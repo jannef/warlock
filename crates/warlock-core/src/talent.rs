@@ -319,6 +319,8 @@ pub struct TalentMods {
     pub stipend_magic_percent: i32,
     /// A business partner in town invests for it (Invest, `world/invest.rs`).
     pub invest: bool,
+    /// A patron in town commissions work from it (Patron, `world/patron.rs`).
+    pub patron: bool,
     /// Percent faster hunger burns (negative: slower).
     pub hunger_percent: i32,
     /// Percent more sickness from rotten food (negative: less).
@@ -1444,6 +1446,7 @@ impl TalentMods {
                 self.stipend_magic_percent += magic;
             }
             TalentEffect::Invest => self.invest = true,
+            TalentEffect::Patron => self.patron = true,
             TalentEffect::HungerPercent { value } => self.hunger_percent += value,
             TalentEffect::RotHarmPercent { value } => self.rot_harm_percent += value,
             TalentEffect::SmellRot => self.smell_rot = true,

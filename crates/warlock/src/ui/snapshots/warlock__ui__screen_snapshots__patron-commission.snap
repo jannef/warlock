@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Your patron says: "One does like a well-made thing about the house. The stock I gave you was for a
+ javelin, sir. I can wait; I would rather not."
+
+┌─ Messages ───────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                  │
+│ The log keeps the last 200 messages.                                                             │
+│ Welcome to Cēaptūn. Press ? for controls.                                                        │
+│ You gain 60000 experience (dev).                                                                 │
+│ You feel more experienced.                                                                       │
+│ Welcome to level 13.                                                                             │
+│ You gain Patron.                                                                                 │
+│ Your appraise improves. (×48)                                                                    │
+│ You learn Skill focus (appraise).                                                                │
+│ You learn Skill focus (athletics).                                                               │
+│ You learn Skill focus (concentration).                                                           │
+│ You learn Skill focus (herbalism).                                                               │
+│ You learn Deep lungs.                                                                            │
+│ You open the door.                                                                               │
+│ Your patron says: "Ah, sir. I want a javelin, Fine or better. Here is 4 wood billets and an iron │
+│   ingot for it; do not keep me waiting too long."                                                │
+│ You receive 4 wood billets and an iron ingot.                                                    │
+│ Your patron says: "One does like a well-made thing about the house. The stock I gave you was for │
+│   a javelin, sir. I can wait; I would rather not."                                               │
+│                                                                                                  │
+│ v or Esc close                                                                                   │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+
+ Cēaptūn  ·  HP 30/30  ·  MP 2/2  ·  Lv 13  ·  08:01  ·  11 Darkening  ·  Overcast       ? controls

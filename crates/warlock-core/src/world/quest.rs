@@ -330,7 +330,8 @@ impl PerceptionView<'_> {
                 shown.then(|| view(def, record))
             })
         };
-        of(true).chain(of(false)).collect()
+        // A patron's open commission among the active ones, last (`patron.rs`).
+        (of(true).chain(self.commission()).chain(of(false))).collect()
     }
 }
 

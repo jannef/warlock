@@ -351,6 +351,9 @@ pub enum TalentEffect {
     /// A business partner in town invests the gold put with them (Invest: `data/invest.toml`,
     /// `world/invest.rs`).
     Invest,
+    /// A patron in town commissions graded work from its trades and advances the stock (Patron:
+    /// `data/patron.toml`, `world/patron.rs`).
+    Patron,
     /// Hunger burns this percent faster (negative: slower).
     HungerPercent { value: i32 },
     /// The sickness rotten food gives, this percent more (negative: less), rounded down.

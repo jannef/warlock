@@ -68,6 +68,10 @@ pub enum QuestKind {
     Reach,
     Deliver,
     Escort,
+    /// A patron's commission (`world/patron.rs`): never in a quest file, only in the log while
+    /// one is open, and counted as no quest (no experience, rank, or record).
+    #[serde(skip_deserializing)]
+    Commission,
 }
 
 impl QuestKind {
@@ -79,6 +83,7 @@ impl QuestKind {
             QuestKind::Reach => "reach",
             QuestKind::Deliver => "deliver",
             QuestKind::Escort => "escort",
+            QuestKind::Commission => "commission",
         }
     }
 }
@@ -724,6 +729,8 @@ fn resolve(
                 waits,
             }
         }
+        // Never read from a file (`skip_deserializing`).
+        QuestKind::Commission => return Err("a commission is no quest of a file".into()),
     };
     let reward = &spec.reward;
     if reward.gold > 0 && content.object_id(GOLD).is_none() {

@@ -168,10 +168,10 @@ impl World {
         let proper =
             (self.dialogue_of(actor)).and_then(|d| self.content.dialogue(d).name.as_deref());
         // An aristocrat's own servant is theirs: "your squire" (`stipend.rs`); so is a merchant's
-        // business partner (`invest.rs`).
+        // business partner (`invest.rs`), and a craftsperson's patron (`patron.rs`).
         let servant = (self.dialogue_of(actor)).is_some_and(|d| {
             let d = self.content.dialogue(d);
-            d.stipend.is_some() || d.partner.is_some()
+            d.stipend.is_some() || d.partner.is_some() || d.patron.is_some()
         });
         match (keeper, proper) {
             (Some(shop), _) => shop.name.clone(),
@@ -267,6 +267,10 @@ impl World {
         }
         // A merchant's business partner says what the stake is worth (`invest.rs`).
         if let Some(spent) = self.partner_chat(id, dialogue, events) {
+            return spent;
+        }
+        // A craftsperson's patron commissions work, or takes it and pays (`patron.rs`).
+        if let Some(spent) = self.patron_chat(id, dialogue, events) {
             return spent;
         }
         let actor = &self.state.actors[&id];
