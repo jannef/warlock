@@ -4,7 +4,7 @@
 
 use super::fixture_factions::make_peace;
 use super::*;
-use crate::action::parse_actions;
+use crate::action::{letter, parse_actions};
 use crate::content::ContentFiles;
 use crate::equipment;
 use crate::replay::Replay;
@@ -180,6 +180,96 @@ fn rings_fit_either_hand() {
         equipment::mark(w.content(), w.perception().equipment(), 5).as_deref(),
         Some("on right hand")
     );
+}
+
+/// The armory as a human of `class`, everything picked up.
+fn world_as(class: &str) -> World {
+    let spec: crate::character::CharacterSpec = format!("human,female,{class}")
+        .parse()
+        .expect("a character");
+    let mut w = World::with_character(content(), "armory", None, Some(&spec)).expect("world");
+    run(&mut w, PICK_ALL);
+    w
+}
+
+#[test]
+fn an_aristocrat_alone_has_three_extra_ring_slots() {
+    // Nobody else has them: refused as no slot at all, never offered, never listed.
+    for mut w in [world(), world_as("warrior")] {
+        assert_eq!(took(&mut w, "equip:extra_ring_1:f"), 0);
+        assert_eq!(last_message(&w), "There is no slot `extra_ring_1`.");
+        assert_eq!(took(&mut w, "remove:extra_ring_3"), 0);
+        let names: Vec<&str> = (w.perception().own_slots().iter())
+            .map(|(_, s)| s.name.as_str())
+            .collect();
+        assert_eq!(names.len(), 13, "{names:?}");
+        assert!(!names.iter().any(|n| n.starts_with("Extra")));
+        let rows = crate::dump::layer_rows(&w, crate::dump::Layer::Equipment);
+        assert!(rows.iter().any(|r| r.starts_with("j Feet:")), "{rows:?}");
+    }
+    // An aristocrat wears a ring in each, after the hands' rings, as on either hand. (Their
+    // Family wealth came first in the pack: the rings are further down.)
+    let mut w = world_as("aristocrat");
+    let ring = w.content().object_id("silver_ring").expect("a ring");
+    let at: Vec<usize> = (w.state().player().inventory.iter().enumerate())
+        .filter(|(_, s)| s.object == ring)
+        .map(|(i, _)| i)
+        .collect();
+    let (f, g) = (at[0], at[1]);
+    let (lf, lg) = (letter(f).expect("a letter"), letter(g).expect("a letter"));
+    let names: Vec<&str> = (w.perception().own_slots().iter())
+        .map(|(_, s)| s.name.as_str())
+        .collect();
+    assert_eq!(
+        names[7..12],
+        [
+            "Left ring",
+            "Right ring",
+            "Extra ring 1",
+            "Extra ring 2",
+            "Extra ring 3"
+        ]
+    );
+    assert!(
+        took(&mut w, &format!("equip:extra_ring_1:{lf}")) > 0,
+        "it takes its time"
+    );
+    assert_eq!(last_message(&w), "You put on a silver ring.");
+    run(&mut w, &format!("equip:extra_ring_3:{lg}"));
+    assert_eq!(
+        worn(&w),
+        pairs(&[
+            ("extra_ring_1", "silver_ring"),
+            ("extra_ring_3", "silver_ring")
+        ])
+    );
+    assert_eq!(
+        equipment::mark(w.content(), w.perception().equipment(), f).as_deref(),
+        Some("on a finger")
+    );
+    let rows = crate::dump::layer_rows(&w, crate::dump::Layer::Equipment);
+    let row = format!("j Extra ring 1: a silver ring ({lf})");
+    assert!(rows.contains(&row), "{rows:?}");
+    assert!(
+        rows.iter()
+            .any(|r| r.starts_with("m Feet:")
+                && rows.last().is_some_and(|t| t.starts_with("p Tool"))),
+        "{rows:?}"
+    );
+    // What is worn there counts as worn: magic read through the equipment reads it.
+    let player = w.state().player();
+    let items: Vec<usize> = player.equipment.items().iter().map(|&(_, i)| i).collect();
+    assert_eq!(items, [f, g]);
+    // A ring nobody names a slot for goes to the hands' rings, never an extra one.
+    let mut hands = equipment::Equipment::default();
+    for slot in ["left_ring", "right_ring"] {
+        hands.put(&[w.content().slot_id(slot).expect(slot)], 0);
+    }
+    assert_eq!(equipment::free_slot(w.content(), &hands, ring), None);
+    // The save keeps them.
+    let state = w.state.as_ref().clone();
+    let back = World::from_state(w.content.clone(), state).expect("restore");
+    assert_eq!(back.state_hash(), w.state_hash());
 }
 
 #[test]

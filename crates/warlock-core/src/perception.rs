@@ -92,8 +92,8 @@ use crate::content::Shops;
 use crate::content::{Choice, DialogueId, ResourceId, TalentId, TreeId};
 use crate::content::{
     CombatStance, Content, CreatureId, DamageTypeId, DiseaseId, FactionId, Factor, Flow,
-    ItemClassId, LevelKind, LightId, MaterialId, ObjectId, Place, RaceDef, RoomEffectDef, SlotId,
-    Stance, StatusId, TerrainId, TrapId, VisionProfile, WeaponSkillId, ZoneKind,
+    ItemClassId, LevelKind, LightId, MaterialId, ObjectId, Place, RaceDef, RoomEffectDef, SlotDef,
+    SlotId, Stance, StatusId, TerrainId, TrapId, VisionProfile, WeaponSkillId, ZoneKind,
 };
 use crate::daylight::{self, DayPhase};
 use crate::equipment::Equipment;
@@ -1834,6 +1834,13 @@ impl<'a> PerceptionView<'a> {
     /// What of their inventory the player wears and wields, by slot.
     pub fn equipment(&self) -> &'a Equipment {
         &self.player.equipment
+    }
+
+    /// The slots the player has, in display order: every slot but another class's own (the
+    /// aristocrat's extra rings, #1404; `Content::slots_for`).
+    pub fn own_slots(&self) -> Vec<(SlotId, &'a SlotDef)> {
+        let class = self.character.map(|c| c.spec.class.as_str());
+        self.content.slots_for(class).collect()
     }
 
     /// What the player has ready to shoot (spec §8 "Ranged combat"): their missile weapon, where

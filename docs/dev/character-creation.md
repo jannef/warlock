@@ -186,7 +186,10 @@ is (saved and hashed as `Actor::spells` always is). Only the test world's `circl
 it is the one built-in scenario with no `character` (it gives the eyes, stats, hit points, and
 300 mana itself; `world/character_tests.rs` and `content/mod.rs`'s scenario test name it). The heritage talents (Family wealth's gold and gems, Father's sword's
 heirloom; #697) come on top as they are taken, after the pack (`world/heirloom.rs`,
-docs/dev/progression.md "Creation picks"): the summary's kit list does not name them. `rot::made_at` dates the food as before. Tests: `content/kit.rs` (parsing,
+docs/dev/progression.md "Creation picks"): the summary's kit list does not name them. The
+aristocrat's Family wealth is its class's at level 1 (#1404): `World::begin` hands it down
+(`hand_down` on what `class::grant` gave, `TalentEffect::is_handed_down`) right after
+`assemble`, on top of the kit, and recomputes perception. `rot::made_at` dates the food as before. Tests: `content/kit.rs` (parsing,
 refusals), `kit.rs` (Twin Blades and Duelist, the berserker's pick, deterministic choices, no
 other roll moves, the casters' random scrolls within their dice and below level 10, every
 starting scroll and potion known and named in the `inventory` dump, every worn or wielded item finds its slot unless an earlier line took it (a

@@ -1341,6 +1341,15 @@ const CASES: &[Case] = &[
         screen: Some("equipment"),
         ..BASE
     },
+    // An aristocrat's three extra ring slots (#1404), after the hands' rings.
+    Case {
+        name: "aristocrat-equipment",
+        scenario: "world",
+        character: Some("human,female,aristocrat"),
+        run: true,
+        screen: Some("equipment"),
+        ..BASE
+    },
     Case {
         name: "kit-inventory",
         scenario: "world",

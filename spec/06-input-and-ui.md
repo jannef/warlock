@@ -356,7 +356,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Read-only; Esc, Back, or Enter closes it.
 - **Equipment** (`i`, ADOM's; M16), as in ADOM: the slots, lettered `a` to `m` in this order — Head, Neck,
   Body, Cloak, Main hand, Off hand, Hands, Left ring, Right ring, Feet, Missile weapon, Missiles,
-  Tool (data, `data/slots.toml`, §7, so more can be added; the Tool slot came with M19) — each with
+  Tool (data, `data/slots.toml`, §7, so more can be added; the Tool slot came with M19), and for
+  an aristocrat alone Extra ring 1 to 3 after the Right ring (to `p` Tool; #1404) — each with
   what is in it (glyph, name with its numbers as the item lists give them, weight) or `—`, then
   the player's Defence and Protection in all, `Defence (Dv) 14   ·   Protection (Pv) 4` (the
   character screen's numbers: the rules' own, counting unidentified magic too, which an attentive
@@ -366,7 +367,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   holds, such as a two-handed weapon in the off hand), in the item list (above), marked as in the
   inventory; the stack already there is the `>` row. Choosing a stack (its letter, or Enter) puts it
   on in the slot, taking off first what is there (a swap) and moving it if it is in another slot;
-  choosing what is already there takes it off. Rings fit either ring slot, a light weapon (`light_weapon`, §7: the
+  choosing what is already there takes it off. Rings fit every ring slot the player has, a light weapon (`light_weapon`, §7: the
   dagger, the stiletto, the short sword) either hand (the off hand too: two weapons, §8 "Fighting styles"), a
   shield either hand (two shields), a
   two-handed weapon takes both hands (and puts away what they hold), launchers and their ammunition go in the missile weapon

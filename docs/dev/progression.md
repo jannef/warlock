@@ -352,9 +352,11 @@ unchanged, and `same_choice` compares without the picks (`default_name`).
 new character"; the wiki says "only at character creation") is met only at character level 1,
 so only the creation picks offer it (the creation step, `--talents`, Random) and a level's pick
 refuses it in words. Family wealth and Father's sword (tree `heritage`, `no_free`) are the
-first; their effects (`starting_gold`, `starting_gems`, `heirloom`) are hand-outs, not
-`TalentMods`: `World::hand_down` (`world/heirloom.rs`, one line in `learn`) gives them once, as
-the talent is taken, each from its own stream (`character/family-wealth/<spec>`,
+first; their effects (`starting_gold`, `starting_gems`, `heirloom`; `TalentEffect::is_handed_down`)
+are hand-outs, not `TalentMods`: `World::hand_down` (`world/heirloom.rs`, one line in `learn`, and
+one in `World::begin` for a class's level-1 talents: the aristocrat's Family wealth, #1404, so
+`may_take` refuses it as held and Father's sword is open to their first pick) gives them once, as
+the talent is taken or given, each from its own stream (`character/family-wealth/<spec>`,
 `character/fathers-sword/<spec>`), so the kit and every other roll stay as they were. The
 heirloom is `loot::heirloom` (2 affixes: magic, prefix and suffix; more: rare, split and named
 as a rare item's), identified, and readied in its own slot only if that is free. Its weapons

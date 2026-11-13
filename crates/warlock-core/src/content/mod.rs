@@ -3167,6 +3167,15 @@ impl Content {
         (0u8..).zip(&self.slots).map(|(i, s)| (SlotId(i), s))
     }
 
+    /// The slots one of class `class` has (`None`: no character, a creature), with their ids, in
+    /// display order: every slot but those of another class ([`SlotDef::belongs_to`]).
+    pub fn slots_for<'a>(
+        &'a self,
+        class: Option<&'a str>,
+    ) -> impl Iterator<Item = (SlotId, &'a SlotDef)> + 'a {
+        self.slot_ids().filter(move |(_, s)| s.belongs_to(class))
+    }
+
     /// Whether `object` goes in `slot`: it fits there properly ([`Content::fits_properly`]), or
     /// the slot takes weapons (the missile weapon slot) and it is one or can be thrown.
     pub fn fits(&self, object: ObjectId, slot: SlotId) -> bool {
@@ -3904,8 +3913,22 @@ impl Content {
     }
 
     /// Checks the classes' and prestige classes' level tables against the talents (spec §8
-    /// "Class abilities"): what they name resolves.
+    /// "Class abilities"): what they name resolves; and a class's own slots name a class.
     fn check_class_tables(&self) -> Result<(), ContentError> {
+        // A slot of one class's (the aristocrat's extra rings) names a class there is.
+        if !self.classes.is_empty()
+            && let Some(slot) = (self.slots.iter())
+                .find(|s| s.class.as_ref().is_some_and(|c| self.class(c).is_none()))
+        {
+            return Err(ContentError::new(
+                "data/slots.toml",
+                format!(
+                    "slot `{}`: no class `{}`",
+                    slot.id,
+                    slot.class.as_deref().unwrap_or_default()
+                ),
+            ));
+        }
         for class in &self.classes {
             class.check_table(&self.talents)?;
         }

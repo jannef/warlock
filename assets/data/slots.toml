@@ -14,6 +14,9 @@
 #           (default false): the missile weapon slot, whose contents `t` shoots or throws
 #   hand    one of the hands (default false): a two-handed object (`two_handed` in objects.toml)
 #           takes every hand slot
+#   class   only a character of this class (an id in data/classes/) has the slot: nobody else
+#           sees, fills, or is given it (the aristocrat's extra ring slots); default: everyone,
+#           creatures too
 #
 # What is worn and wielded fights and protects (spec §8 "Combat": the weapon in the first hand
 # that holds one, the missile weapon in a `ready` slot, and every worn thing's armour, shield,
@@ -77,6 +80,32 @@ name = "Right ring"
 fits = "ring"
 action = "wear"
 mark = "on right hand"
+
+# An aristocrat's rings past the two any hand wears (#1404): born to wealth, they wear more.
+
+[[slot]]
+id = "extra_ring_1"
+name = "Extra ring 1"
+fits = "ring"
+action = "wear"
+mark = "on a finger"
+class = "aristocrat"
+
+[[slot]]
+id = "extra_ring_2"
+name = "Extra ring 2"
+fits = "ring"
+action = "wear"
+mark = "on a finger"
+class = "aristocrat"
+
+[[slot]]
+id = "extra_ring_3"
+name = "Extra ring 3"
+fits = "ring"
+action = "wear"
+mark = "on a finger"
+class = "aristocrat"
 
 [[slot]]
 id = "feet"
