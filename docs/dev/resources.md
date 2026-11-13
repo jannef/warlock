@@ -38,7 +38,7 @@ statuses).
   The loader checks only well-formedness (#1205): unique ids, resolution, the divisors above,
   `ended` only with `ends_at_zero`; the grant and the pool keep a value within the maximum. `ResourceId` is an index, in `Content::fingerprint` (its own
   group, after the damage types). `Build` is the closed list of events (`kill`, `hit`,
-  `critical`, `struck`, `sneak_attack`; `Build::ALL` in wiki order). Loaded before the talents,
+  `critical`, `struck`, `sneak_attack`, `feint`, `mark_kill`; `Build::ALL` in wiki order). Loaded before the talents,
   whose class actives may cost one (`TalentDef::resource: Option<ResourceCost>`, data `resource =
   { id, cost }`, checked: a known id, a talent with a class active, a cost no more than
   `ResourceDef::most`, the data's `max` with what `max_from` adds at the highest level for
@@ -60,7 +60,7 @@ statuses).
     damage, so a killing blow counts), and `ambush.rs::ambushed`
     (`SneakAttack`, when the sneak attack's dice are added; a pool `marked` in data builds only
     on its holder's mark, `World::build_resources`), and `mark.rs::mark_dies` (`MarkKill`, beside
-    `Kill`: the holder killed its mark; docs/dev/openings.md). A new event is a `Build` variant and
+    `Kill`: the holder killed its mark; docs/dev/openings.md), and `feint.rs::feint` (`Feint`, a feint the foe falls for). A new event is a `Build` variant and
     one call where it happens.
   - `World::spend_resource(id, resource, amount, events) -> bool`: refused when not held or
     short; spending to 0 ends one that `ends_at_zero`. `world/class_ability.rs::use_class` spends
@@ -173,7 +173,7 @@ statuses).
 - **Openings** (R3, #251; `world/openings.rs`; the mark and its builds in **docs/dev/openings.md**):
   the thief's Sneak attack (level 1, #682) grants the pool
   (`grants_resource`); `marked = true` (its points are in one creature's guard); its builds are
-  the data's `sneak_attack` and `mark_kill`; Master thief's `finisher` effect is
+  the data's `sneak_attack`, `feint`, and `mark_kill`; Master thief's `finisher` effect is
   the class active `ClassActive::MasterThief` (`use:master_thief:E`, aimed, the cost `resource = {
   id = "openings", cost = 5 }` on the talent): a melee blow with `Profile::sure_critical` (every
   hit a critical, no confirmation draw; `combat::strike_with`). `use_class` refuses an aimed

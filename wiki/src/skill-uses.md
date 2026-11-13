@@ -75,6 +75,10 @@ modifier, plus what your Bluff adds (the benefits table).
   twice before you do has recovered by the time you strike.
 - Otherwise: "The kobold is not fooled." The turn is spent.
 
+For a [thief](classes.md#thief), a feint counts as an attack on that creature. A feint it falls
+for gives one [opening](resources.md#resource-openings). Any feint, made or not, makes the
+creature your [mark](resources.md#the-mark): feinting at a new foe loses the openings you had.
+
 {{#include generated/feinting.md}}
 
 You may feint as often as you like. Half of your feints train Bluff, whatever comes of them. There

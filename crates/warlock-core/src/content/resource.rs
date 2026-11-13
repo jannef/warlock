@@ -39,6 +39,9 @@ pub enum Build {
     /// A sneak attack of the holder's hit: a blow at a creature unaware of it (spec §8 "Class
     /// abilities": the thief's sneak attack).
     SneakAttack,
+    /// A feint of the holder's fooled its foe (`world/feint.rs`: it falls for it). A chosen
+    /// attack under the mark rule (`world/mark.rs`), made before the check.
+    Feint,
     /// The holder killed its mark, the creature its openings are in (`world/mark.rs`; a wound
     /// it dealt bleeding the mark to death counts). Raised beside `Kill`, before the mark is
     /// cleared.
@@ -47,12 +50,13 @@ pub enum Build {
 
 impl Build {
     /// Every event, in the order the wiki lists them.
-    pub const ALL: [Build; 6] = [
+    pub const ALL: [Build; 7] = [
         Build::Kill,
         Build::Hit,
         Build::Critical,
         Build::Struck,
         Build::SneakAttack,
+        Build::Feint,
         Build::MarkKill,
     ];
 
@@ -64,6 +68,7 @@ impl Build {
             Build::Critical => "critical",
             Build::Struck => "struck",
             Build::SneakAttack => "sneak_attack",
+            Build::Feint => "feint",
             Build::MarkKill => "mark_kill",
         }
     }
@@ -76,6 +81,7 @@ impl Build {
             Build::Critical => "a critical",
             Build::Struck => "being hit",
             Build::SneakAttack => "a sneak attack that hits",
+            Build::Feint => "a feint the foe falls for",
             Build::MarkKill => "a kill of the creature the openings are in",
         }
     }
@@ -402,6 +408,17 @@ mod tests {
         assert_eq!(Build::MarkKill.id(), "mark_kill");
         let old = text.replace("mark_kill", "sneak_kill");
         assert!(parse("r.toml", &old, none).is_err(), "sneak_kill is gone");
+    }
+
+    #[test]
+    fn a_pool_may_be_built_by_a_feint() {
+        let text = "[[resource]]\nid = \"openings\"\nname = \"Openings\"\nshort = \"Openings\"\n\
+                    max = 5\nstart = 0\nmarked = true\n\
+                    builds = [{ on = \"feint\", amount = 1 }]\n";
+        let list = parse("r.toml", text, none).expect("parses");
+        assert_eq!(list[0].built_by(Build::Feint), 1);
+        assert_eq!(list[0].built_by(Build::SneakAttack), 0);
+        assert_eq!(Build::Feint.id(), "feint");
     }
 
     #[test]

@@ -5,7 +5,7 @@
 //!
 //! - [`World::choose_mark`], before every attack the player **chooses** at a creature (a blow by
 //!   moving or attacking, a kick, a bash, a class or weapon active's blow, a shot, a throw, a
-//!   single-target attack spell): no mark, it becomes the mark and the pool is kept; the mark,
+//!   single-target attack spell, a feint): no mark, it becomes the mark and the pool is kept; the mark,
 //!   nothing; another living creature, the pool is emptied (said, when it held anything) and
 //!   the target becomes the mark.
 //! - [`World::free_blow_at`], before the player's free blows (a riposte, an opportunist's, a
