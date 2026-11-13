@@ -1,0 +1,40 @@
+# Soulglass (docs/design/enchanting.md §6): a necromancy ray whose kill leaves crystals of the
+# slain's nature (../crystals.toml) in place of its corpse and its body's crafting stock; what it
+# carried falls as any dead creature's.
+[[spell]]
+id = "soulglass"
+name = "Soulglass"
+description = "A ray of grave-cold toward a place you aim at: it strikes the first creature in its way, if it hits, and one it kills leaves no corpse but a crystal of its nature."
+level = 11
+school = "necromancy"
+kind = "damage"
+shape = "ray"
+resolution = "attack"
+damage_type = "necrotic"
+range = 6
+damage = "3d6"
+effect = { crystal = true }
+
+[spell.cast]
+effect = "pale_ray"
+noun = "soulglass"
+verb = "withers"
+noise = { sound = "chanting", loudness = 20 }
+
+[spell.grows]
+damage = "willpower 13 4d6, 16 5d6, 19 6d6, 25 6d6+2"
+range = "willpower 14 7, 18 8"
+
+# What rereading its grimoire adds, rank by rank (README.toml `[spell.ranks]`; Leech's shape). At
+# rank 10: +3 to hit, +3 on the roll, a cell farther, 1s rolled again twice, ten percent off the
+# mana, a die more, and a critical threatened a roll lower.
+[spell.ranks]
+2 = { to_hit = 1 }
+3 = { bonus = 1 }
+4 = { cells = 1 }
+5 = { reroll = 1 }
+6 = { to_hit = 2 }
+7 = { mana_off = 10 }
+8 = { bonus = 2 }
+9 = { dice = 1 }
+10 = { threat = 1, reroll = 1 }

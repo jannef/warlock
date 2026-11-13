@@ -61,6 +61,8 @@ pub enum Target {
     Wall,
     /// The glowing fungus (Gather).
     Fungus,
+    /// Open ground with nothing on it (Field forge, `world/field_forge.rs`).
+    Ground,
 }
 
 impl Target {
@@ -79,6 +81,7 @@ impl Target {
             Target::Beast => "no beast beside you to tame",
             Target::Wall => "nothing beside you to dig",
             Target::Fungus => "no fungus beside you",
+            Target::Ground => "no open ground beside you",
         }
     }
 
@@ -98,6 +101,7 @@ impl Target {
             Target::Beast => "beast",
             Target::Wall => "wall",
             Target::Fungus => "fungus",
+            Target::Ground => "ground",
         }
     }
 }
@@ -127,6 +131,7 @@ impl Beside {
                 Ability::Listen => Target::ClosedDoor,
                 Ability::Wedge => Target::Unwedged,
                 Ability::PickLock | Ability::Class(ClassActive::Knock) => Target::Lock,
+                Ability::Class(ClassActive::FieldForge) => Target::Ground,
                 Ability::Steal => Target::Mark,
                 Ability::Feint => Target::Fool,
                 Ability::Tame => Target::Beast,
@@ -174,7 +179,9 @@ impl PerceptionView<'_> {
         if target == Target::Fungus {
             return Some(self.gather_ways());
         }
-        if target == Target::Wall && self.level_kind() == LevelKind::Overworld {
+        if matches!(target, Target::Wall | Target::Ground)
+            && self.level_kind() == LevelKind::Overworld
+        {
             return Some(Vec::new());
         }
         let me = self.viewer();
@@ -286,6 +293,13 @@ impl PerceptionView<'_> {
                 (self.seen_creature(p)).is_some_and(|a| self.stance(a) == Stance::Hostile)
             }
             Target::Fungus => false,
+            Target::Ground => {
+                self.known(p)
+                    .is_some_and(|t| crate::world::open_ground(self.content, self.level, t, p))
+                    && self.actor_at(p).is_none()
+                    && self.trap(p).is_none()
+                    && self.objects(p).is_empty()
+            }
         }
     }
 }

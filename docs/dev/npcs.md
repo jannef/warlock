@@ -14,7 +14,10 @@ their alignment, said in turn instead of the greeting and lines: `World::cold_gr
 `docs/dev/alignment.md`), `[[dialogue.topic]]`s (`id`, `name`, `reply`), `[[dialogue.service]]`s
 (`id`, `name`, `price`, `does`, `reply`, `nothing`, a training's `train`; topic and service ids share one namespace,
 and a service needs `data/shops.toml` for its currency), and `mutter` (chance per action, verb,
-lines). The loader checks only what resolves and what the code needs (#1205): ids once and
+lines), and `[[dialogue.after]]` (`quest`, `lines`: one-liners that join the rotation once the
+player has done that quest, `World::one_liner` reading `QuestRecord::completed`; the quest ids
+are checked as the quests load, `content/quest.rs::parse`; #1446: Kerensa's and Ysella's about
+the bound crystal guardian). The loader checks only what resolves and what the code needs (#1205): ids once and
 without `:` or whitespace (`ask:E:ID`), at least one line to rotate and to mutter, `silent` with
 `speaks_to`; no length, count, or style limits (the dialogue screen asks topics past nine by the
 arrow keys and cuts what overflows). `world/talk.rs` is the one place talk happens: `World::chat` (`Action::Chat`, cost

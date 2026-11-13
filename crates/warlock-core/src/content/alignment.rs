@@ -80,6 +80,9 @@ pub struct Shifts {
     /// Consecrating an unholy place (Consecrate).
     #[serde(default)]
     pub consecrate: i32,
+    /// Consuming a magic crystal (docs/design/enchanting.md §5), a crystal.
+    #[serde(default)]
+    pub consume_crystal: i32,
     /// Praying at a good forgotten altar (spec §7 "Special rooms").
     #[serde(default)]
     pub prayed_good: i32,
@@ -156,6 +159,7 @@ impl AlignmentRules {
             s.pay_debt,
             s.eat_kin,
             s.consecrate,
+            s.consume_crystal,
         ];
         if amounts.iter().any(|a| a.abs() > MAX) {
             return Err(err(format!("every [shift] is -{MAX} to {MAX}")));

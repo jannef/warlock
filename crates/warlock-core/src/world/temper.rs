@@ -22,8 +22,12 @@
 //! - **The outcome**: made, an improvement in an [`Aspect`] drawn evenly (one gameplay draw) among
 //!   those the base item has, or a damaged item repaired, whatever damaged it (acid, rust, heat,
 //!   or a failure); failed, item damage of the kind [`ItemHarm::Work`] (`item_damage.rs`): the
-//!   item damaged, or a damaged one destroyed. No material withstands a failure: it is the
-//!   craft's own blunder, not the world's. A stack of several is worked one at a time: the one
+//!   item damaged, or a damaged one destroyed. No material's `resists` withstands a failure: it
+//!   is the craft's own blunder, not the world's; but a `proof` one (adamantium) is never
+//!   damaged by anything, so it only fails to improve ("no harm is done"). In hands that spoil
+//!   nothing (Waste not's `temper_safe`, `TalentMods::temper_safe`) a failure, a natural 2 too,
+//!   leaves the item as it was, the attempt counted; on a `proof` item proof comes first and its
+//!   line is said. Neither draws from the rng. A stack of several is worked one at a time: the one
 //!   worked is set apart at the end of the pack, and being worked it joins nothing again. Then the item, if it survived,
 //!   is identified, and says what it is now ("This is ...!"). Metalcraft may earn a mark
 //!   ([`Use::Temper`]), whatever came of it. The anvil is never spent.
@@ -40,7 +44,7 @@
 //! [`TemperRules::against`]: crate::content::TemperRules::against
 //! [`Aspect`]: crate::magic::Aspect
 
-use super::item_damage::Harmed;
+use super::item_damage::{Harmed, proof};
 use super::loot::Identified;
 use super::rest::Ended;
 use super::{Actor, Spent, World};
@@ -122,27 +126,30 @@ impl Craft {
         }
     }
 
-    /// What the item does when the work goes well, badly, mends it, and ends it.
-    const fn lines(self) -> [&'static str; 4] {
+    /// What the item does when the work goes well, badly, mends it, and ends it, and what is
+    /// said when it goes wrong in hands that spoil nothing (Waste not).
+    const fn lines(self) -> [&'static str; 5] {
         match self {
             Craft::Temper => [
                 "The metal rings true.",
                 "The metal cracks under the hammer.",
                 "You hammer the damage out.",
                 "It shatters under the hammer!",
+                "The work goes wrong, but you know when to stop before the steel spoils.",
             ],
             Craft::Whittle => [
                 "The wood takes the knife well.",
                 "The knife slips and splits the wood.",
                 "You pare the damage away.",
                 "It splinters under the knife!",
+                "The work goes wrong, but you know when to stop before the wood spoils.",
             ],
         }
     }
 }
 
-/// What is said of a failed attempt the item withstands (`item_damage.rs`; no material
-/// withstands a failure, so only a protection could).
+/// What is said of a failed attempt the item withstands (`item_damage.rs`: a protected item, or
+/// one of a `proof` material).
 const WITHSTOOD: &str = "The work goes wrong, but no harm is done.";
 
 /// Whether `stack` is of a kind an anvil works at all: a weapon, a missile weapon, armour, or a
@@ -393,7 +400,15 @@ impl World {
     /// What came of an attempt `made` or failed by `craft` on the stack at `at`, one item, with
     /// `worked` its state so far (the attempt counted): whether it survived.
     fn work_out(&mut self, craft: Craft, at: usize, mut worked: Worked, made: bool) -> bool {
-        let [good, bad, mended, ended] = craft.lines();
+        let [good, bad, mended, ended, spared] = craft.lines();
+        let is_proof = proof(&self.content, &self.state.player().inventory[at]);
+        if !made && !is_proof && self.state.player().talent_mods(&self.content).temper_safe {
+            // Waste not: the item as it was, the attempt counted (a natural 2 the same); a proof
+            // item withstands below instead, with its own line.
+            self.player_mut().inventory[at].set_worked(worked);
+            self.say(spared);
+            return true;
+        }
         if !made {
             // A failure is item damage like any other (`item_damage.rs`).
             self.player_mut().inventory[at].set_worked(worked);

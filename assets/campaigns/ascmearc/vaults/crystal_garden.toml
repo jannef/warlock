@@ -1,0 +1,23 @@
+# Vault of the Ascmearc (#1446): a crystal garden of Meyn Bew, the earth-plane pocket under
+# Gimmwīc. A room where the living crystal has grown up out of the floor in clusters, each lit
+# from within, with a little loose stone and a gem or two among them. Meyn Bew names it for its
+# first three floors (`vaults` in its `[[dungeon.levels]]`), so one is stamped on each for
+# certain and nowhere else.
+name = "Crystal garden"
+dungeons = ["meynbew"]
+map = '''
+###########
+#u...a...g#
+#..u...a..#
++....$....+
+#..g...u..#
+#a...g...u#
+###########
+'''
+
+[legend]
+"u" = { terrain = "crystal", light = "crystal_blue" }
+"a" = { terrain = "crystal", light = "crystal_amber" }
+"g" = { terrain = "crystal", light = "crystal_green" }
+# What the crystal has pushed up out of the rock: an uncut stone.
+"$" = { terrain = "floor", objects = ["gem:amethyst"] }

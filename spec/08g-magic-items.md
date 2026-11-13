@@ -184,7 +184,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     pedlar take no make.
   - **Capacity and the trim** (`magic/capacity.rs`, #1427, docs/design/enchanting.md §3, §4;
     docs/dev/enchanting.md): an item holds 1 to 6 affixes in all (`capacity`): 2 (the owner, 2026-11-13), +1 for
-    jewellery, + its quality (Fine 1, Marvellous 2, Masterwork 3; none while damaged), + its main
+    jewellery, + its quality (Fine 0, Marvellous 1, Masterwork 2, #1444; none while damaged), + its main
     part's material's `binding` (§7, −2 to +2), + a gem in its ornament part (+1, a flawless one
     +2), clamped to 1..6; the three-per-kind caps stand beside it. The very last step of making
     any item (`loot::finished`: loot, chests, hoards, dens, room loot, creature gear after its
@@ -197,10 +197,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     its capacity; nothing strips it. The item description tells the capacity in words only to a
     holder of Eye for the make (the craftsperson's talent) or a character trained in Appraise
     ("It can bear two enchantments.", "It bears all it can.").
-    Measured (`magic/shares_tests.rs`, accepted by the owner): at item level 1 about 86 % of loot's bases hold 2, so 86 %
+    Measured (`magic/shares_tests.rs`, with #1444's smaller quality term): at item level 1 about 86 % of loot's bases hold 2, so 86 %
     of rares keep two affixes and 11 % three or more; deeper finds are better made (above), so
-    rares keep three or more 15 % of the time at item level 4, 28 % at 8, 49 % at 12, 57 % at
-    16, and 64 % at 20; 88 % to 92 % of magic-grade finds are untrimmed.
+    rares keep three or more 14 % of the time at item level 4, 17 % at 8, 26 % at 12, 34 % at
+    16, and 41 % at 20; 88 % to 90 % of magic-grade finds are untrimmed.
   - **Where**: generated branch levels' floors hold `loot` items (the Depths 2 to 4) on plain
     floor where nothing lies, stands, shines, or leads away, and vault `loot` cells an item at
     least of their grade; outdoor ruins' loot cells too (local areas have no floor loot); all

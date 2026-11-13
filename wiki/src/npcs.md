@@ -42,6 +42,9 @@ few words' time: half a normal action, 3 seconds (see
   all of their lines, in an order of their own, before saying one again, and never says the same
   line twice in a row.
 - Some greet you the first time you talk to them, with a line they say only then.
+- Some have more to say once you have done a [quest](quests.md) that touches them: in Gimmwīc,
+  Kerensa and Ysella talk of the [crystal guardian](quests.md#lures) once it is bound. These
+  lines join the rest.
 - Good folk turn cold to an [Evil or Wicked](alignment.md) character (see
   [Alignment](alignment.md)). They answer with a cold word instead of their greeting and their
   talk.
@@ -73,6 +76,15 @@ Speak to it and it grants you the calling: you become a Hunter (see
 It has one hit point and never fights back. Killed, it leaves no corpse and is worth no
 experience, and killing it is killing a peaceful good soul. The road may bring it again while the
 class is still open to you.
+
+### Morwenna
+
+**Morwenna** reads [magic crystals](crystals.md). She is a deep gnome who stands by a brazier on
+the cutting floor of [Gimmwīc](ascmearc.md#gimmwīc), near Old Tregear. She has no topics and
+sells nothing, but each time you chat she tells you something about the crystals: what kinds of
+magic each colour holds, what the [rare materials](crystals.md#rare-materials) do, and what
+[consuming one](crystals.md#consuming-a-crystal) does to you. Chat with her a few times to hear
+them all.
 
 ## Services
 

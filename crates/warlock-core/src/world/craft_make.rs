@@ -39,7 +39,7 @@
 //!   makes at least Fine, a natural 2 fails. An item with no aspect is plain whatever the margin.
 //!   Made, the stock and inputs are spent, the gem set, and the item goes into the pack
 //!   identified; failed, nothing is made, the gem is kept, and the stock and object inputs come
-//!   back at the settings' `yield` (pieces by [`crate::piece::count_for`], at least one of each;
+//!   back at the settings' `yield`, or the holder's Waste not's where more ([`failed_percent`]) (pieces by [`crate::piece::count_for`], at least one of each;
 //!   a stock input `count × yield / 100`, so none of a bow's one sinew). Inputs never set the
 //!   main material.
 //! - **Counted** (a count above 1, or `"fletch"`): no grades. The count is rolled (its dice, or
@@ -186,6 +186,17 @@ fn bands(settings: Option<&RecipeSettings>) -> (i32, i32, i32, u32) {
     settings.map_or(BANDS, |s| {
         (s.fine, s.marvellous, s.masterwork, s.yield_percent)
     })
+}
+
+/// What a failed recipe gives back to `player`, in percent of its stock and object inputs:
+/// `data/recipes.toml`'s `yield`, or the holder's Waste not where that is more
+/// (`TalentMods::failed_percent`; the craftsperson design §7.3), at most all of it. The one read,
+/// by [`resolve`] and [`taken`] as they set each [`Spend::back`].
+fn failed_percent(content: &Content, player: &Actor) -> u32 {
+    let percent = bands(content.recipes().settings.as_ref()).3;
+    percent
+        .max(player.talent_mods(content).failed_percent)
+        .min(100)
 }
 
 /// The grade of a check of natural roll `natural` made by `margin` (the roll and the modifier
@@ -659,7 +670,7 @@ fn resolve(
     if picks.len() > steps.len() {
         return Err("That is more than the work takes.".into());
     }
-    let yield_percent = bands(content.recipes().settings.as_ref()).3;
+    let yield_percent = failed_percent(content, player);
     let pack = &player.inventory;
     // The parts' chosen materials, in step order, and the ornament's gem.
     let mut chosen: Vec<(usize, MaterialId)> = Vec::new();
@@ -834,7 +845,7 @@ fn taken(
     recipe: &RecipeDef,
     spends: &mut Vec<Spend>,
 ) -> Result<(), String> {
-    let yield_percent = bands(content.recipes().settings.as_ref()).3;
+    let yield_percent = failed_percent(content, player);
     for input in &recipe.inputs {
         // Stock inputs are chosen, never taken (`steps`).
         let Some(object) = input.object() else {
@@ -992,7 +1003,12 @@ impl World {
         };
         let mut held = [None; MAX_PICKS];
         held[..picks.len()].copy_from_slice(picks);
-        let at = def.station.map(|t| content.terrain(t).name.clone());
+        // The station beside them by its own name: a makeshift anvil is one.
+        let level = self.state.current();
+        let at = (def.station)
+            .and_then(|t| super::craft::station_beside(&content, level, me.pos, t))
+            .and_then(|p| level.terrain_at(p))
+            .map(|t| content.terrain(t).name.clone());
         let name = match resolved.batch {
             Some(_) => self.lore().names(&resolved.made).1,
             None => made_name(&content, self.lore(), &resolved.made, false),
@@ -1148,9 +1164,14 @@ impl World {
             let metal = (main.and_then(|m| content.material(m).group.as_deref())) == Some("metal");
             // Arms and armour come out brittle; a ring (no aspect) just goes wrong.
             let arms = !aspects(content.object(made.object)).is_empty();
-            self.say(match metal && arms {
-                true => "The blade comes out brittle and you break it up for the metal.",
-                false => "The work goes wrong, and you save what you can of it.",
+            let all = self.state.player().talent_mods(&content).failed_percent >= 100;
+            self.say(match (metal && arms, all) {
+                (true, false) => "The blade comes out brittle and you break it up for the metal.",
+                (true, true) => {
+                    "The blade comes out brittle and you break it up for the metal, every ounce."
+                }
+                (false, false) => "The work goes wrong, and you save what you can of it.",
+                (false, true) => "The work goes wrong, but you save every scrap of it.",
             });
             return;
         }

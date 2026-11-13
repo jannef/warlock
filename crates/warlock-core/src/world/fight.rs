@@ -1272,7 +1272,8 @@ impl World {
 
     /// Creature `id` dies: it leaves the world, and what it carried (worn and wielded things
     /// too) falls on its cell, on top of what lies there, in the order it carried them, and its
-    /// corpse on top of that (spec §8 "Hunger"); `stoned`, it is a statue instead (`statue.rs`).
+    /// corpse on top of that (spec §8 "Hunger"); `stoned`, it is a statue instead (`statue.rs`);
+    /// struck dead by Soulglass, crystals take the corpse's and its stock's place (`crystal.rs`).
     /// `by_player`: the player killed it. Returns the lines for an animated thing's components that
     /// broke as they fell, if the player saw it ([`World::break_lines`]).
     fn creature_dies(&mut self, id: ActorId, by_player: bool, stoned: bool) -> Vec<String> {
@@ -1302,8 +1303,14 @@ impl World {
         let (mut dropped, broken) = self.remains(&actor);
         let mut lines = self.break_lines(&actor.level, actor.pos, &broken);
         dropped.extend(self.loot_of(&actor));
-        // Its body's crafting stock, unless it is stone now (`material_drops.rs`).
-        if !stoned {
+        // Struck dead by Soulglass, its body is crystals (`crystal.rs`).
+        let glass = (!stoned).then(|| self.crystallise(&actor)).flatten();
+        // Its body's crafting stock, unless it is stone or glass now (`material_drops.rs`).
+        let glassed = glass.is_some();
+        if let Some((crystals, line)) = glass {
+            dropped.extend(crystals);
+            lines.extend(line);
+        } else if !stoned {
             dropped.extend(self.drops_of(&actor));
         }
         // An incorporeal creature dies inside a wall: what it carried falls out of it.
@@ -1320,7 +1327,7 @@ impl World {
             object::add_to_pile(&mut pile, &dropped, &self.content);
             level.set_pile(actor.pos, pile);
         }
-        if !stoned {
+        if !stoned && !glassed {
             self.leave_corpse(&actor);
             // In a cursed room the dead rise (spec §7 "Special rooms"; `curse.rs`).
             lines.extend(self.curse_corpse(&actor, by_player));
@@ -1329,6 +1336,8 @@ impl World {
         self.keeper_died(id, &actor.level);
         // A dead escort fails its quest (`escort.rs`).
         lines.extend(self.escort_dies(&actor));
+        // A lure quest's creature killed unbound forms anew (`lure.rs`).
+        lines.extend(self.lured_dies(&actor));
         self.fallen.push(actor);
         lines
     }

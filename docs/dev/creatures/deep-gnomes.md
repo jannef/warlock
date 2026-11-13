@@ -26,7 +26,12 @@ from the Scouse of the surface gnomes.
 All campaign-owned, in `assets/campaigns/ascmearc/data/creatures/` (`deep_gnome*`), tag
 `deep-gnome`:
 
-- `deep_gnome`: the townsfolk, peaceful; one-liners and mutters, no topics.
+- `deep_gnome`: the townsfolk, peaceful; one-liners and mutters, no topics. One of them is
+  Morwenna (`npc = "morwenna"`, #1428), the crystal-reader by the cutting floor's east brazier:
+  her rotating lines hint, in words, what each magic crystal colour binds (the families of
+  `data/crystals.toml`), what the heart-crystal and the soul-fetter do, and what consuming a
+  crystal does (`docs/dev/enchanting.md`); no topics, no services. Her lines are written by hand:
+  change them with the colours' families.
 - `deep_gnome_headman`: Headman Peran (`npc = "peran"`), Gimmwīc's leader in its moot hall;
   topics on the town, the surface, and the deep; Factor Wulfrun's letter (`gnome_letter`, #1435)
   is delivered to him, and he gives its answer back (`gnome_reply`; `docs/dev/campaign.md`).
@@ -40,7 +45,24 @@ All campaign-owned, in `assets/campaigns/ascmearc/data/creatures/` (`deep_gnome*
   (`outfitter`; a level `[[shop]] creature`), and the generated stores on Dēopgang's gallery
   floors (the branch's `shops` table with `keeper = "deep_gnome_trader"`).
 
+- `deep_gnome_binder`: Ysella the Binder (`ysella`, #1446) in the garden at the town's east
+  edge: topics on binding and Meyn Bew, and the lure quest `crystal_guardian`
+  (`docs/dev/quests.md` "Lure quests"), which opens the crystal portal beside her.
+
+## The crystal guardian
+
+`crystal_guardian` (#1446, campaign-owned, `unique`): a crystalline earth elemental of level 26
+(tags `elemental`, `earth`; faction `elemental`), slow (850) so it can be led, not incorporeal
+(living crystal, not bedrock), with a staggering fist and thrown crystal shards like the earth
+line's stones. In no population: only the lure quest makes it, on the crystal hollow at the bottom
+of Meyn Bew, and anew there after a death while the quest is active. Its dialogue has no words:
+one-liners and a `hums` mutter of notes. Bound, it is of the `peaceful` faction, carries `bound`
+(its circle), and stands in the corner of Kerensa's Stones; Kerensa and Ysella then have lines
+about it (`[[dialogue.after]]`).
+
 ## Tests
 
 `world/deep_gnome_tests.rs`: the town's people are all of the tag, none hostile, and the four
 named ones are there; Dēopgang 11's `>` leads to the town and back.
+`world/crystal_guardian_tests.rs`: the lure quest, the portal, the guardian's following, the
+binding, the boon, and its re-forming.

@@ -255,8 +255,8 @@ pub(crate) fn progress(
         Goal::Bring { object, count, .. } => (carried(object), count),
         Goal::Reach { .. } => (u32::from(record.is_some_and(|r| r.reached)), 1),
         Goal::Deliver { object, .. } => (carried(object), 1),
-        // Done by the arrival alone (`escort.rs`): never ready to hand in.
-        Goal::Escort { .. } => (0, 1),
+        // Done by the arrival alone (`escort.rs`, `lure.rs`): never ready to hand in.
+        Goal::Escort { .. } | Goal::Lure { .. } => (0, 1),
     };
     (have.min(need), need)
 }
@@ -425,6 +425,17 @@ pub fn asks(content: &Content, def: &QuestDef) -> String {
             speaker_called(content, *escort),
             in_sentence(&content.place_name(level))
         ),
+        Goal::Lure {
+            creature,
+            level,
+            waits,
+            ..
+        } => format!(
+            "Lure {} from {} to {}.",
+            crate::content::the(&content.creature(*creature).name),
+            in_sentence(&content.place_name(&waits.level)),
+            in_sentence(&content.place_name(level))
+        ),
     }
 }
 
@@ -569,6 +580,15 @@ fn status(
         Goal::Deliver { object, .. } => {
             format!("You no longer carry the {}.", content.object(object).name)
         }
+        Goal::Lure {
+            creature,
+            ref level,
+            ..
+        } => format!(
+            "{} is not yet bound in {}.",
+            capitalized(&crate::content::the(&content.creature(creature).name)),
+            in_sentence(&content.place_name(level))
+        ),
     }
 }
 
@@ -612,7 +632,7 @@ fn progress_news(content: &Content, def: &QuestDef, (have, need): (u32, u32)) ->
             "Quest updated: you have reached {}.",
             in_sentence(&content.place_name(level))
         ),
-        Goal::Deliver { .. } | Goal::Escort { .. } => "Quest updated:".into(),
+        Goal::Deliver { .. } | Goal::Escort { .. } | Goal::Lure { .. } => "Quest updated:".into(),
     };
     if done {
         text.push(' ');
@@ -730,6 +750,10 @@ impl World {
         else {
             return;
         };
+        if let Some(opens) = location.opens.clone() {
+            self.say(opens);
+            return;
+        }
         let place = in_sentence(&location.name);
         let who = capitalized(&self.called(&self.state.actors[&id]));
         self.say(format!("{who} marks {place} on your map."));
@@ -787,6 +811,9 @@ impl World {
             && self.state.levels.contains_key(&w.level)
         {
             super::escort_waits::place_waiting(&mut self.state, &content, &w.level);
+        }
+        if let Goal::Lure { waits, .. } = &given.goal {
+            self.lure_places(&waits.level);
         }
         if let Some(letter) = handed {
             let who = capitalized(&self.called(&self.state.actors[&id]));

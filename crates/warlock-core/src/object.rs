@@ -244,10 +244,16 @@ impl Stack {
         self.worked().and_then(Worked::word)
     }
 
-    /// What it does when it attacks, if it can: its object's attack, its dice as an anvil's work
-    /// left them (the one place they are read; to hit and plus damage are [`Mods::local`]'s).
+    /// What it does when it attacks, if it can: its object's attack, its dice as its material
+    /// ([`variant::dice`]) and an anvil's work left them (the one place they are read; to hit and
+    /// plus damage are [`Mods::local`]'s).
     pub fn attack(&self, content: &Content) -> Option<Attack> {
-        let mut attack = content.object(self.object).attack?;
+        let def = content.object(self.object);
+        let mut attack = def.attack?;
+        if self.parts.is_some() {
+            let more = variant::dice(def, &self.parts(content), content);
+            attack.damage = attack.damage.more(more);
+        }
         if let Some(worked) = self.worked() {
             attack.damage = attack.damage.grow(worked.sides());
         }

@@ -105,11 +105,32 @@ A damaged item is a point worse than a plain one until it is mended. It loses a 
 [damage](combat.md#damage). So stopping while you are ahead is a real choice.
 [Acid, rust, and heat](materials.md#item-damage) damage an item the same way (it is then called
 *corroded*, *rusted*, or *scorched* instead of *damaged*), and the anvil mends it all the same.
-Damaged again by anything, it is destroyed. No material withstands a failed attempt.
+Damaged again by anything, it is destroyed. No material withstands a failed attempt, except
+[adamantium](materials.md#protected-items), which nothing damages: a failed attempt on it only
+fails to improve it.
 
 The anvil neither adds nor takes [affixes](magic-items.md); they stay through improvement, damage,
 and repair. Whatever survives is [identified](magic-items.md#unidentified-items). A worked item is
 like no other and never stacks; from a stack, one is worked at a time. The anvil never wears out.
+
+### The makeshift anvil
+
+A [craftsperson](classes.md#field-forge) of level 32 can build an anvil anywhere with
+[Field forge](talents.md#talent-field-forge). Choose it in the
+[abilities menu](abilities.md#the-abilities-menu) and pick a cell beside you. You need one
+[ingot](crafting.md) of any metal. The cell must be open floor with nothing on it: no one standing
+there, nothing lying there, no trap you know of, and no door, chest, stairs, grave, water, ice,
+glowing fungus, or shop floor. It cannot be done on the overworld map.
+
+The work takes 1 hour. If something interrupts you, nothing is built and you keep the ingot. When
+the hour is up the ingot is used and the cell becomes a **makeshift anvil**. There is no roll: it
+always works.
+
+A makeshift anvil is an anvil in every way. You can [temper](#forges) at it, and forge, smelt, and
+make every [recipe](crafting.md) that needs an anvil. Walking into it opens your Metalcraft
+recipes, just as the real anvil does. It stays where you built it for good. It blocks the way like
+a wall; a [pick-axe](digging.md) clears it back to floor, and [mining](mining.md) finds nothing in
+it.
 
 ## Healing springs
 

@@ -154,6 +154,32 @@ the quest has failed; home, it is done). The example, the Ascmearc's first escor
 Ælfrun (a `cottar`, dialogue in `data/dialogue/holtwic.toml`), `waits` on Ælfhām's moss bed
 (`aelfham:3`, the pinned `moss_bower` vault), `reveals` the mound as given, done home in
 Holtwīc with her thanks and the wise-woman's `done`. Tests: `world/wynflaed_quest_tests.rs`.
+**Lure quests** (#1446, `world/lure.rs`, whose module docs are the rules): `Goal::Lure {
+creature, level, waits, binding }` (`type = "lure"`, `target` a unique creature type, `level` a
+hand-made level of the campaign, `waits = { level, at }` with no `creature`, `[quest.binding]`:
+`content::Binding { status, faction, post, words, shatters, reforms, boon }`, `Boon { skill,
+bonus }`; `QuestDef::lure()`; never rolled; load checks: the target unique, the status without
+`eases`, the faction known, the post walkable on `level`, at least one word). Hooks, one line
+each: `travel.rs::travel` → `World::lure_places(to)` (after `escorts_home`: the creature made on
+its place if the quest is active and none of its type is anywhere, the `reforms` line when
+`Quests::slain` holds it), `quest.rs::give` → the same for the `waits` level; `travel.rs::
+take_stairs` → `World::lure_home` after `followers_arrive` (the creature, unbound, on `level`
+with the player and the giver: `words`, `bind` (faction, stance, mind, `post`, the status through
+`afflict_one`), `complete_saying(giver, q, None)`); `fight.rs::creature_dies` →
+`World::lured_dies` (unbound while active: the `shatters` line; the quest stays active, nothing
+fails, the next arrival on the `waits` level makes it anew); `cut.rs` and `set.rs` add
+`World::binding_boon(skill)` to the check (a bound one on the player's level). It travels only by
+the stairs' own rule (`stair_followers.rs`: hostile and beside the player), so it is never lost to
+a level change it cannot make: left behind, it stays on its floor until fetched. `progress` is
+(0, 1); the log's status "The crystal guardian is not yet bound in Gimmwīc."; the objective
+"Lure the crystal guardian from Meyn Bew 4 to Gimmwīc." The dev action `lure:ID`
+(`World::lure_dev`, no time) brings the active quest's creature beside the player, aware of them,
+made if it is nowhere. The example: Ysella the Binder's `crystal_guardian`
+(`campaigns/ascmearc/data/quests/ysella.toml`), revealing Gimmwīc's hidden `meyn_bew` (the
+crystal portal, `opens` said instead of the map line) as given; reward 1200 gold, 4000
+experience, an uncut sapphire; the bound guardian keeps Kerensa's Stones' corner (67, 4), its
+`bound` circle (enchantment) on it, and gives Jewelcraft's Cut and Set +2 in Gimmwīc. Tests:
+`world/crystal_guardian_tests.rs`.
 **Guilds** and their ranks, derived from these records and named as a quest is given or done,
 are `docs/dev/guild.md`.
 Presentation reads `PerceptionView::quests()` (`QuestView` strings, shared by the log and the

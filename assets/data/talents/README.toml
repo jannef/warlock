@@ -208,6 +208,10 @@
 #   trade_bonus { value }         added to the dice of each trade it takes as it is handed down
 #   eye_for_make                  item descriptions read the item's make: what salvage would
 #                                 give, the improvements left, how hard its stuff is to work
+#   waste_not { salvage, failed } salvage gives back `salvage` % of each made material's grams,
+#                                 a failed recipe `failed` % of its stock and object inputs, each
+#                                 where more than everyone's (the most held)
+#   temper_safe                   a failed Temper or Whittle damages nothing (the attempt counts)
 #   loot_magic_percent { value }  loot it finds and creatures drop: the weights of the rarities
 #                                 better than the least the find may be, that percent more
 #   read_percent { value }        reading a scroll takes that percent more time (negative: less)
@@ -587,6 +591,19 @@
 #                                 `use:merchants_eye:c`): the stack is identified as the scroll
 #                                 of identify would, for the time of a `read`; refused, no
 #                                 time, for one already known
+#   field_forge { seconds }       the active Field forge (aimed in a direction,
+#                                 `use:field_forge:E`): an ingot of any metal carried is set on
+#                                 the open ground there over `seconds` (1 or more), a
+#                                 `makeshift_anvil` for good; refused, no time, on the overworld,
+#                                 without an ingot, or where the ground is not open
+#   make_do { seconds, difficulty }   the active Make do and mend (on a damaged stack carried,
+#                                 `use:make_do_and_mend:c`): after `seconds` of work, anywhere,
+#                                 a check by the stat of the profession that works its main
+#                                 material, plus that profession's craft points, against
+#                                 difficulty plus the material's work: made, the damage is gone
+#                                 (the attempts kept); failed, nothing happens to it; refused, no
+#                                 time, for one worn or wielded, protected, or of a material no
+#                                 profession works
 #   spirit_weapon { to_hit, threat, ignores_protection, phrase }   the active Spirit weapon (a
 #                                 prestige class's, `use:spirit_weapon:long_sword`): a weapon of
 #                                 spirit-stuff in the shape of any melee weapon is called into

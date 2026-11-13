@@ -3,7 +3,8 @@
 Most dungeons follow the rules on [Dungeons and danger](dungeons.md). The ones here have something
 of their own: Grundlēas never ends, Fennmynster and Fyrdelf hide their ways in until a quest names
 them, Ūtgang is found only from below, Ælfhām lies in the fey's own country, Dēopgang ends in a
-town, and the four lairs each hold a criminal the Gilde wants dead.
+town, Meyn Bew opens only for a quest, and the four lairs each hold a criminal the Gilde wants
+dead.
 
 ## Grundlēas
 
@@ -198,6 +199,28 @@ Duergar, drow, trolls, elementals of stone and water, and the dead of old cave-i
 Secret doors and [chests](chests.md) are commoner than elsewhere, and its rock gives only silver
 and gold for ore, so a [miner](mining.md) finds [gems](gems.md) more often. The eleventh floor's
 stairs down lead to [Gimmwīc](ascmearc.md#gimmwīc), the deep gnomes' town.
+
+## Meyn Bew
+
+**Meyn Bew**, "the living stones" in the deep gnomes' tongue, is a pocket of the elemental plane
+of earth under [Gimmwīc](ascmearc.md#gimmwīc). Its way in is a ring of crystal light in the rock
+of the town's garden, beside Ysella the Binder. It is not there at all until she gives you her
+[quest](quests.md#lures): then she sings it open, and it stays open. Its first floor's stairs up
+lead back out through it.
+
+Inside are four floors of rooms and passages at 12 °C, cut by no one. A faint violet
+[light](light.md#what-light-is) glows from the crystal in the rock everywhere, and a room of each
+of the first three floors is grown over with glowing crystal. Its
+[danger](dungeons.md#who-lives-there-and-how-many) runs from 22 on the first floor to 25 on the
+fourth, and only the earth's own live there:
+[earth elementals](creatures.md#creature-earth-elemental) and
+[greater earth elementals](creatures.md#creature-greater-earth-elemental),
+[basilisks](creatures.md#creature-basilisk), [stone giants](creatures.md#creature-stone-giant),
+and [stone trolls](creatures.md#creature-stone-troll). It has traps (pits, lightning, and frost),
+no shops, and no ore.
+
+At the bottom, the fourth floor holds the **crystal hollow**, where the
+[crystal guardian](creatures.md#creature-crystal-guardian) waits for you to lure it home.
 
 ## Ælfhām
 

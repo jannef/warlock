@@ -64,6 +64,7 @@
   - [Crafting](crafting.md)
     - [Brewing potions](recipes-alchemy.md)
     - [Gem cutting](gem-cutting.md)
+    - [Magic crystals](crystals.md)
 - [Abilities](abilities.md)
 - [Combat](combat.md)
   - [Hit points and death](hit-points.md)

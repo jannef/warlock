@@ -69,13 +69,17 @@ Tune by eye:
 `forest` scenario or `--content-dir` scenarios with `start_level = "local:x,y"` capture them.
 
 Hidden locations (#327; spec §7 "Hidden locations"; the campaign design §8): a legend's `hidden =
-{ id, terrain, to, name }` on a plain overworld cell (`content/level.rs::parse_hidden`; `to` is
+{ id, terrain, to, name, opens }` on a plain overworld cell (or on a plain cell of a hand-made level, #1446:
+Gimmwīc's crystal portal; never in a vault, `Vault::new`; ids unique within a campaign,
+`Content::validate`; `Content::hidden_locations` lists a campaign's, its overworld's first, and
+`hidden_location` finds one by id; `opens`, optional, is what the player is told as a quest
+reveals it, instead of "<Giver> marks … on your map.") (`content/level.rs::parse_hidden`; `to` is
 checked with the stairs' targets in `Content::validate`) goes into `LevelTemplate::hidden` and
 `LevelState::hidden` (by cell; ground truth). It works like a secret door: the terrain grid holds
 the plain terrain, so the view, memory, look mode, local areas (`Content::local_area` reads the
 template), and every perception-built dump show it with no filter; only `world/reveal.rs` and the
 dev views (`dump.rs::truth_rows`, the F2 overlay in `ui/dev.rs`) read `hidden`.
-`World::reveal_location(id)` (the one reveal, called by `world/quest.rs` at a quest's
+`World::reveal_location(id)` (the one reveal, on whichever level of the campaign holds it, called by `world/quest.rs` at a quest's
 `reveals.when` (`given` or `done`; a rolled quest's variant reveals its own, #422), by the dev
 `quest_roll` choosing a variant, by the dev action `reveal:ID`, and by
 `World::reveal_way_out`, the climb-out trigger below) records the id in

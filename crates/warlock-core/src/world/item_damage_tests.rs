@@ -57,9 +57,10 @@ fn the_material_chance_decides_over_seeds() {
 
 #[test]
 fn no_material_withstands_a_failed_attempt_and_the_extremes_draw_nothing() {
-    let mut w = sword_of("adamantium");
+    // Mithril withstands rust at 100, but not a failed attempt.
+    let mut w = sword_of("mithril");
     let rng = w.state.rng.clone();
-    assert!(w.withstands(0, ItemHarm::Acid));
+    assert!(w.withstands(0, ItemHarm::Rust));
     assert!(!w.withstands(0, ItemHarm::Work));
     assert_eq!(w.state.rng, rng, "0 and 100 draw nothing");
     assert_eq!(w.harm_item(0, ItemHarm::Work), Harmed::Damaged);
@@ -70,6 +71,27 @@ fn no_material_withstands_a_failed_attempt_and_the_extremes_draw_nothing() {
     assert_eq!((worked.damaged, worked.by), (true, None));
     assert_eq!(w.harm_item(0, ItemHarm::Work), Harmed::Destroyed);
     assert!(w.state.player().inventory.is_empty());
+}
+
+#[test]
+fn adamantium_is_never_damaged_by_anything() {
+    // #1444: a proof material withstands every harm, a failed attempt too, drawing nothing; it is
+    // not protected (it may still be salvaged or set).
+    let w = sword_of("adamantium");
+    assert!(!w.item_protected(&w.state.player().inventory[0]));
+    for harm in [
+        ItemHarm::Acid,
+        ItemHarm::Rust,
+        ItemHarm::Fire,
+        ItemHarm::Work,
+    ] {
+        let mut v = w.clone();
+        let rng = v.state.rng.clone();
+        assert_eq!(v.harm_item(0, harm), Harmed::Withstood, "{harm:?}");
+        assert_eq!(v.state.rng, rng, "{harm:?}: nothing drawn");
+        assert!(v.state.player().inventory[0].worked().is_none());
+    }
+    assert!(harmed_by_all(&w).iter().all(|h| *h == Harmed::Withstood));
 }
 
 #[test]

@@ -27,7 +27,7 @@ use crate::content::{
     Content, InputKind, MaterialId, ObjectId, PartSource, RecipeDef, RecipeId, RecipeInput,
     RecipeUse, TerrainId, article, counted,
 };
-use crate::geom::Dir;
+use crate::geom::{Dir, Pos};
 use crate::scroll_label::Lore;
 use crate::skills::SkillId;
 use crate::time::Duration;
@@ -125,6 +125,22 @@ pub(crate) fn recipe_rows(
         .collect()
 }
 
+/// The station `station` beside `at` on `level`: the first cell around it (in [`Dir::ALL`]
+/// order) whose terrain is the station or works as it ([`Content::works_as`]: a makeshift anvil
+/// is an anvil). The one station test every recipe's [`lack`] shares.
+pub(crate) fn station_beside(
+    content: &Content,
+    level: &LevelState,
+    at: Pos,
+    station: TerrainId,
+) -> Option<Pos> {
+    (Dir::ALL.iter().map(|&d| at.step(d))).find(|&p| {
+        level
+            .terrain_at(p)
+            .is_some_and(|t| content.works_as(t) == station)
+    })
+}
+
 /// The first reason `player` cannot make `recipe` now, in the screen's order: skill, station,
 /// knife, Set's item and gem, launcher, stock, inputs, a gem part. `"stock"` parts (but a
 /// `count = "fletch"` recipe's wood on wooded ground, `world/fletch.rs`), a required part's
@@ -142,12 +158,10 @@ pub(super) fn lack(
     if value < recipe.from {
         return Some(RecipeLack::Skill);
     }
-    if let Some(station) = recipe.station {
-        let beside =
-            (Dir::ALL.iter()).any(|&d| level.terrain_at(player.pos.step(d)) == Some(station));
-        if !beside {
-            return Some(RecipeLack::Station(station));
-        }
+    if let Some(station) = recipe.station
+        && station_beside(content, level, player.pos, station).is_none()
+    {
+        return Some(RecipeLack::Station(station));
     }
     if recipe.knife && !(player.inventory.iter()).any(|s| content.is_knife(s.object)) {
         return Some(RecipeLack::Knife);

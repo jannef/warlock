@@ -226,6 +226,7 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Poison lore",
                 "Cause wounds",
                 "Grave feast",
+                "Soulglass",
                 "Malison",
                 "Charnel burst",
                 "Leech",
@@ -406,6 +407,7 @@ fn the_spells_are_abilities_by_level() {
             "Lightning bolt",
             "Remove disease",
             "Silence",
+            "Soulglass",
             // Level 12.
             "Benison",
             "Fire cloak",

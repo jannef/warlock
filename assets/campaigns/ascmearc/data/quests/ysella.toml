@@ -1,0 +1,42 @@
+# Ysella the Binder's quest (#1446; the fields: data/quests.toml): the Ascmearc's lure quest.
+# Gimmwīc's binder wants a crystal guardian for the town's gem trade, and the only one to be had
+# keeps the hollow at the bottom of Meyn Bew, a pocket of the plane of earth under the town.
+# Asked, she opens the crystal portal beside her (the reveal of the town's hidden `meyn_bew`), and
+# the guardian is made on the crystal hollow's bed (`waits`, world/lure.rs). It follows whoever
+# stands beside it as they take the stairs, so the player leads it up four floors and out through
+# the portal; in Gimmwīc, with Ysella there, she binds it (`[quest.binding]`): for good at
+# peace, its spell circle on it, it walks to Kerensa's Stones and keeps to the corner by her
+# counter, and Jewelcraft's Cut and Set go better anywhere in the town while it stands there.
+# Killed unbound, it forms again in the hollow the next time the player comes down to it.
+
+[[quest]]
+id = "crystal_guardian"
+name = "The crystal guardian"
+giver = "ysella"
+type = "lure"
+target = "crystal_guardian"
+level = "gimmwic"
+waits = { level = "meynbew:4", at = "the crystal hollow" }
+reward = { gold = 1200, xp = 4000, items = ["gem:sapphire"] }
+alignment = 10
+reveals = { location = "meyn_bew" }
+offer = "There's a guardian at the bottom o' Meyn Bew, my 'ansum, all crystal, singin' to itself in the dark. Bound proper, a thing like that'd steady every cutter's 'and in Gimmwīc. But it won't come for askin'. It'll only come chasin' 'ee."
+accept = "So: wake 'un, let 'un come after 'ee, an' keep 'un close on the stairs. Bring 'un back through 'ere to me an' I'll sing 'un the note. Don't 'ee break 'un. If 'ee do, the 'ollow grows another, dreckly."
+reminder = "The guardian's down in Meyn Bew still, emmet. Keep 'un close on every stair an' bring 'un back through the portal to me."
+done = "There. Bound, an' 'appy with it. Listen to 'un 'um! Take this, my lover, an' come cut a stone in town some day. 'Ee'll feel the difference."
+where = "Meyn Bew opens beside Ysella, in Gimmwīc's garden; the guardian keeps its hollow on the fourth floor."
+
+[quest.binding]
+status = "bound"
+faction = "peaceful"
+# Kerensa's Stones (the `[[shop]]` of levels/gimmwic.toml): the corner by her counter.
+post = [67, 4]
+words = [
+    "Ysella lifts her hands and sings one long, low note.",
+    "The crystal guardian stops, and rings back, true and clear. The note goes on, and on.",
+    "When it ends, the guardian stands quiet. A circle of rose-violet light turns slowly about it.",
+]
+shatters = "The crystal guardian bursts into shards. Far below, in its hollow, crystal begins to grow."
+reforms = "Somewhere on this floor, crystal rings as it grows into a guardian again."
+# Jewelcraft's Cut and Set checks made in Gimmwīc while it stands bound there.
+boon = { skill = "jewelcraft", bonus = 2 }

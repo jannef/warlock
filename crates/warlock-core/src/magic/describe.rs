@@ -417,11 +417,19 @@ fn lines_named(stack: &Stack, content: &Content, (name, plural): (String, String
     let spirit = gift.map(|(_, threat, pierces, _)| Spirit { threat, pierces });
     let (_, damage) = crate::variant::weapon(def, &parts, content);
     let protection = stack.base_protection(content);
+    let shield = def.shield + crate::variant::shield(def, &parts, content);
     let attack = stack.attack(content);
     out.extend(
-        stats(def, attack.as_ref(), content, damage, protection, spirit)
-            .into_iter()
-            .map(|t| line(LineKind::Stat, t)),
+        stats(
+            def,
+            attack.as_ref(),
+            content,
+            damage,
+            (protection, shield),
+            spirit,
+        )
+        .into_iter()
+        .map(|t| line(LineKind::Stat, t)),
     );
     // Then what it gives in all, in numbers, as the player knows it (`numbers`): to hit and
     // damage with its material and known affixes, Dv and Pv.
@@ -604,7 +612,14 @@ fn dice(n: i32) -> &'static str {
 /// The base stats of `def` in words: how it is held or worn, its damage and criticals, how far it
 /// shoots or is thrown, what it needs, how quick it is, its Defence, and whether it breaks.
 pub fn base_stats(def: &ObjectDef, content: &Content) -> Vec<String> {
-    stats(def, def.attack.as_ref(), content, 0, def.protection, None)
+    stats(
+        def,
+        def.attack.as_ref(),
+        content,
+        0,
+        (def.protection, def.shield),
+        None,
+    )
 }
 
 /// What a spirit weapon's gifts change in its own stats: the threat lowered, and whether it
@@ -615,14 +630,14 @@ struct Spirit {
     pierces: bool,
 }
 
-/// [`base_stats`] of one made of another material: `damage` more to its damage dice and
-/// `protection` its Protection.
+/// [`base_stats`] of one made of another material: `damage` more to its damage dice (its dice
+/// are `attack`'s), and `protection` its Protection and `shield` its Defence as a shield.
 fn stats(
     def: &ObjectDef,
     attack: Option<&crate::combat::Attack>,
     content: &Content,
     damage: i32,
-    protection: i32,
+    (protection, shield): (i32, i32),
     spirit: Option<Spirit>,
 ) -> Vec<String> {
     let mut out = Vec::new();
@@ -729,8 +744,8 @@ fn stats(
     if !weak.is_empty() {
         out.push(format!("Vulnerable to {}", weak.join(", ")));
     }
-    if def.shield > 0 {
-        out.push(format!("Shield +{}", def.shield));
+    if shield > 0 {
+        out.push(format!("Shield +{shield}"));
     }
     if let Some(max) = def.max_dex {
         out.push(format!(
@@ -788,10 +803,17 @@ fn how_held(def: &ObjectDef, content: &Content) -> Option<String> {
 /// ("Taken apart, it would give 2 steel ingots and a small ruby."; "Nothing in it is worth
 /// saving."; "It would not come apart." for one `protected` from harm); for arms or armour an
 /// anvil or a knife betters, the improvements it will still take, or that it is damaged (never
-/// the attempts made on it, the difficulty's secret); and how hard its main material is to work,
+/// the attempts made on it, the difficulty's secret; "or your own hands" to one who `mends`, a
+/// holder of Make do and mend); and how hard its main material is to work,
 /// when it is hard or soft (its `work`: +4 or more very hard, +1 to +3 hard, -2 or less soft and
 /// easy). Perception only: nothing is drawn.
-pub fn make_lines(stack: &Stack, lore: Lore<'_>, percent: u8, protected: bool) -> Vec<Line> {
+pub fn make_lines(
+    stack: &Stack,
+    lore: Lore<'_>,
+    percent: u8,
+    protected: bool,
+    mends: bool,
+) -> Vec<Line> {
     let content = lore.content;
     let mut out = Vec::new();
     let mut one = stack.clone();
@@ -826,7 +848,8 @@ pub fn make_lines(stack: &Stack, lore: Lore<'_>, percent: u8, protected: bool) -
         let worked = stack.worked();
         let text = match worked.map_or(0, |w| w.improved.len()) {
             _ if worked.is_some_and(|w| w.damaged) => {
-                format!("It is damaged: work {place} would make it good.")
+                let hands = if mends { ", or your own hands" } else { "" };
+                format!("It is damaged: work {place} would make it good{hands}.")
             }
             done if done >= most => "It can be made no finer.".to_string(),
             done => {

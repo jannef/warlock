@@ -403,7 +403,7 @@ fn content_checks_hidden_locations_and_reveals() {
         let message = error(&with(&legend));
         assert!(message.contains(says), "{legend}: {message}");
     }
-    // Only on the overworld.
+    // A hand-made level may hide one too (Gimmwīc's crystal portal, #1446).
     let mut files = ContentFiles::builtin();
     let arena = include_str!("../../../../assets/campaigns/showcase/levels/arena.toml").replacen(
         "[legend]\n",
@@ -413,11 +413,7 @@ fn content_checks_hidden_locations_and_reveals() {
     );
     let arena = arena.replacen("map = '''\n#", "map = '''\n9", 1);
     files.insert("campaigns/showcase/levels/arena.toml", &arena);
-    assert!(
-        error(&files).contains("only the overworld"),
-        "{}",
-        error(&files)
-    );
+    Content::load(&files).expect("a hidden location on a hand-made level");
     // A quest reveals a location the overworld hides.
     let mut files = files_with_quest_reveal("nowhere");
     assert!(

@@ -1270,6 +1270,8 @@ mod tests {
                     Some((reward, _)) if l.starts_with("reward = ") => format!("{reward} }}"),
                     _ => l.to_string(),
                 })
+                // Nor does a binding's boon name a skill (the crystal guardian's, #1446).
+                .filter(|l| !l.starts_with("boon = "))
                 .collect();
             kept.join("\n")
         });

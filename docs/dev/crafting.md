@@ -339,6 +339,34 @@ says "The work goes wrong, and you save what you can of it." The ore comes from 
 (`docs/dev/digging.md` "Mining"). Tests: `world/mine_tests.rs` (copper ore to a copper ingot, one
 lump spent; not listed for the untrained).
 
+## Stations and the makeshift anvil: `works_as`, Field forge
+
+A recipe's `station` is a terrain beside the maker. A terrain may serve as another's station:
+`TerrainDef::works_as` (`works_as = "anvil"` in `data/terrain.toml`, resolved at load; a terrain
+that works as one that works as another is refused). It is read in one place,
+`Content::works_as(terrain)` (its `works_as`, else itself), which both station tests ask:
+`world/craft.rs::station_beside` (every recipe's `lack`, so `start_making` and the screen; the
+"You set to work on the dagger at the makeshift anvil." line names the cell's own terrain) and
+`Content::offer` (what a feature offers, so Temper's `anvil_beside`, `anvil_needs`, and the
+walk-in, `input.rs::step_screen`, need no change). Mining finds nothing in a terrain that works as
+a station (`world/mine.rs`).
+
+The one such terrain is `makeshift_anvil`, which the craftsperson's **Field forge** (level 32,
+`ClassActive::FieldForge`, `data/talents/field_forge.toml`'s `field_forge { seconds = 3600 }`,
+`TalentMods::field_forge`) makes, in `world/field_forge.rs`: `use:field_forge:E`, aimed in a
+direction (`Aim::Direction`; the abilities menu's way is `beside::Target::Ground`, open ground the
+player knows: `world::open_ground` on the known terrain, nobody seen, no known trap, nothing
+lying there). The rules: the overworld refused (the menu: `Unavailable::NotHere`); the first
+stack of ingots carried (a `piece` of a `metal`-group material, not unpaid goods) else "You
+have no ingot to set."; the cell open ground (`open_ground`: walkable, no door, chest, stairs,
+grave, freezing water, ice, swim water, glowing fungus, or shop floor), nobody on it (ground
+truth), no known trap, nothing lying there; each refused with its line and no time. Then
+`Spent::FieldForge(Forging { at, seconds })`: `seconds` in `craft` turns by `keep_at`, as a
+gather; interrupted, nothing ("...; you leave the anvil unfinished."); done, the ingot and the
+cell are asked again, one ingot is spent, and `set_terrain(at, makeshift_anvil)`. No check, no
+draw, no mark. The terrain is saved with the level; a pick clears it (`hardness` 300, becoming
+floor). Tests: `world/field_forge_tests.rs`.
+
 ## The rows: `Ability::Profession`
 
 `ability.rs`: `Ability::Profession(SkillId)`, `Source::Skill`, named "Metalcraft…" (the skill's
@@ -800,14 +828,82 @@ is not listed): `seconds = 600`, `difficulty = 12`, `yield = 50`.
   improvements, rung, and charges go with the item; its name is the lore's title, so an
   unidentified item is never named. What is saved joins the pack ("You save X and Y.", or
   "Nothing is left worth keeping.").
+- **Magic** (docs/dev/enchanting.md "Salvage's affix checks"): before the material checks,
+  `World::catch_magic` (`world/crystal.rs`) makes one Enchanting check per affix of a magic or
+  rare item, identified or not (an unidentified one's lines name no affix), each made a crystal
+  of the affix's colour, and a deep rare's chance of a rare material; the crystals join the saved
+  list after the materials.
 - **Marks**: `Use::Salvage` on each distinct profession rolled, that skill alone
-  (`World::train_skill`, a filter on `World::train`'s loop); untrained skills get none. No noise,
-  no alignment.
+  (`World::train_skill`, a filter on `World::train`'s loop), and on Enchanting when an affix
+  check was made; untrained skills get none. No noise, no alignment.
 - **Tests**: `world/salvage_tests.rs` (the owner's ruby-tipped hardwood quarterstaff over many
   fates: both, wood only, ruby only, neither, the shattering; the cut kept; `chipped`'s ladder;
   ten minutes; one of a stack; every refusal with no time, unpaid goods in Grimbold's shop; an
   interruption; the marks; `skill_effect_of` not summing; the ability; a replay),
   `content/salvage.rs` (the loader), the `Salvage` screen snapshot (`screen_snapshots.rs`).
+
+## Waste not (the craftsperson's)
+
+The craftsperson's class ability at level 6 (#1420; the craftsperson design §7.3;
+`data/talents/waste_not.toml`): "nothing lost but time", two effects and three reads, each
+where the rule already reads its number:
+
+- **`waste_not { salvage, failed }`** (`TalentMods::salvage_percent`, `failed_percent`, the most
+  held of each). `salvage`: `world::salvage_percent(content, actor)` is `data/salvage.toml`'s
+  `yield` or the holder's, whichever is more, read by `salvaged` for `piece::break_up` and by
+  Eye for the make's line (`PerceptionView::describe_item`), so the description counts what the
+  work would give. 75: a quarterstaff gives 8 billets for 5, chain mail 17 iron ingots for 11. A
+  gem's fate (chipped, shattered) is unchanged. `failed`: `craft_make.rs::failed_percent`, the
+  settings' `yield` or the holder's, at most 100, read by `resolve` and `taken` as they set each
+  `Spend::back` (stock by `piece::count_for`, never more than was taken; object inputs `count ×
+  percent / 100`). 100: a failed recipe, a natural 2 too, gives back all its stock and object
+  inputs, and a counted recipe that made none its stock and whole inputs (`per_made` ones were
+  never spent). A brew with a `failure` object still spends its inputs (`back` 0 before the
+  percent is asked). The metal-arms line ends ", every ounce."; another failure says "The work
+  goes wrong, but you save every scrap of it."
+- **`temper_safe`** (`TalentMods::temper_safe`): `temper.rs::work_out`'s failure arm, before item
+  damage is asked: the item keeps its `Worked` as it was, the attempt counted (`attempts` + 1, so
+  the next is harder), and nothing is drawn; a damaged item is never destroyed. Temper and Whittle
+  alike, a natural 2 too ("The work goes wrong, but you know when to stop before the steel
+  spoils." / "... the wood spoils.").
+
+Tests: `world/waste_not_tests.rs` (level 6, each read with and without the talent).
+
+## Make do and mend
+
+`world/make_do.rs` (#1422; the craftsperson design §7.5): the craftsperson's class active at
+level 18, the talent `make_do_and_mend` with `{ kind = "make_do", seconds = 600, difficulty = 10
+}` (`TalentEffect::MakeDo`, `TalentMods::make_do`). One line each in `world/mod.rs`'s `Spent`
+(`Spent::MakeDo`) and dispatch, `world/merchants_eye.rs`'s `use_class_on` (the class actives on a
+stack), and `world/class_ability.rs`'s bare `use` ("Use it on what?").
+
+- **The ability**: `ClassActive::MakeDo` (id `make_do_and_mend`, `aims_item`, `ActionKind::Craft`),
+  the abilities menu's Class group; `Aim::Item` opens `ScreenName::MakeDo` (`--screen make-do`,
+  `ObjectList::MakeDo`: `world::mendable` stacks, damaged ones, not worn or wielded). Greyed
+  "nothing to mend" (`Unavailable::NothingToMend`, from `world::mends_any` in
+  `PerceptionView::unavailable`) with none. `Action::UseOn(MakeDo, item)`, text
+  `use:make_do_and_mend:LETTER`.
+- **Refused, no time** (in this order): no such stack ("You carry no such thing."); not damaged
+  ("There is nothing wrong with it."); worn or wielded ("Take it off first."); a main material no
+  profession works (`World::profession_of`: cloth, glass; "You know no craft that would mend
+  it."); protected (`World::item_protected`: "You dare not work on it."); unpaid goods
+  (`may_loose`).
+- **Time**: `seconds` by `keep_at` in `craft` turns; interrupted, nothing happens and the time is
+  spent ("...; you put down your work.").
+- **The check**, at the end, the stack checked again: natural (two gameplay draws) + the main
+  material's profession's stat modifier + `TalentMods::check(stat)` + `skill_effect_of(skill,
+  Craft)` against `difficulty + work` (`check::makes`); untrained, the stat alone, as Salvage's.
+- **Made**: one item set apart (`World::set_apart`) and `Worked::repair`: `damaged` and `by`
+  cleared, the improvements lost stay lost, `attempts` untouched; nothing re-identified. "You make
+  good the damage: it is a long sword again."
+- **Failed**: nothing changes ("You cannot make it good here; it will need an anvil."); a natural
+  2 the same. Nothing is ever destroyed; trying again costs only the time.
+- **Marks**: `Use::Craft` on that profession alone (`World::train_skill`), if trained.
+- **Eye for the make** says the damaged line with ", or your own hands" to a holder
+  (`magic/describe.rs::make_lines`'s `mends`).
+- **Tests**: `world/make_do_tests.rs` (the level, the action text, every refusal with no time, the
+  row greyed and the wielded left out, made with the attempts kept, failed with nothing lost, Eye
+  for the make's line, a replay), the `make-do-list` screen snapshot.
 
 ## Dumps
 

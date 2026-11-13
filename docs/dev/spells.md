@@ -1150,6 +1150,11 @@ the shape too and refuses each field off its kind and shape).
   `World::leech`, never past their maximum. Read there and not in `spell_strikes` (the design's
   words) because `spell_strikes` does not know the spell. A reflected Leech mends the reflector, who
   is its striker then. The menu's roll says `half of it yours` (`all`, `part`).
+- **`crystal = true`** (Soulglass, #1429; a single-target damage spell's, refused off that kind
+  and those shapes as `leech` is): `spell_attack` marks its target (`World::glassing`, not
+  saved) around `spell_strikes`, and a kill of that blow leaves crystals in place of the corpse
+  (`World::crystallise`; `docs/dev/enchanting.md` "Soulglass"). The witch's at 16; its scroll
+  `scroll_of_soulglass` (level 6) and that scroll's grimoire.
 - **`only_tags`** (Rebuke; a damage or hex burst's, each tag one some creature carries,
   `spell_def::check_only_tags` once creatures load): `World::is_of_tags`. `cast_burst_at` is
   `cast_burst` with the filter (the traps', the scrolls', and Blaze's calls are unchanged); the
