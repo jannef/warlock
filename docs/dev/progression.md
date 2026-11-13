@@ -184,7 +184,7 @@ wiki's effect text appends "while raging".
 | `stillness { name, statuses }` (Stillness, on the ascetic's Still mind at 25, #850) | `World::stillness` (`world/ascetic.rs`, its own section), from `use_class`: every listed status the player suffers is removed and `World::ended` says its `end` words, `Spent::NoTime`, two ki its talent's `resource`; `TalentMods::stillness: Option<Vec<StatusId>>`; `Unavailable::Still` (`ability.rs::still`) greys it and refuses it before the spend with none of them to end; `name` is the menu's (`TalentEffect::active_name`), as the talent's own is Still mind; each status id is checked at load |
 | `stunning_strike`, `quivering_palm` | `world/ascetic.rs` (`World::stunning_strike`; `World::palm_blow`, the one body of both blows, Quivering palm's caller in `class_ability.rs`); `use_class` refuses either with a weapon in hand (`ClassActive::bare_handed`) or nobody hostile there before the ki is spent; `TalentMods::stunning_strike`/`quivering_palm: Option<PalmBlow>` |
 | `low_blow` | `world/thief.rs` (`World::low_blow`, `use_class`; `thief_may` refuses "There is no one there to blind."); `Technique::sneak`, taken in `resolve` by `low_blow_taken`, passes `sneaks` as unaware (no `startle`, no flat-footed) |
-| `sneak_kill_status` | `World::resolve` → `World::vanishing_act` (`world/thief.rs`), beside `Build::SneakKill` |
+| `sneak_kill_status` | `World::resolve` → `World::vanishing_act` (`world/thief.rs`), where a sneak attack's blow kills |
 | `trained_skills` | `Actor::skill_effect` (a bonus for every trained skill, as `skill`'s) |
 | `missile_dodge` | `World::target_against` (from `resolve` for shots and throws, `trap_strikes` for trap missiles) |
 | `spell_damage_percent` | `World::evaded` in `spell_hurts` (bursts and bolts, before resistances) |
@@ -549,8 +549,8 @@ hash differently from before. The dump's `talents` layer marks it `(race)`, the 
 The `resources` system (#225, `docs/dev/resources.md`) is in the list: its five talents (R5,
 #253; Zealot, #914) are Battle trance (Might, berserker 6: rage starts 6 higher, decays at 67 %), Inner calm
 (Finesse, ascetic 18: ki +2 at most, back at 150 %), Steady hand (Weaponcraft, ranger 12: focus back
-at 150 %), and Patient blade (Shadow, thief 32: openings decay at 50 %, and a sneak attack that
-kills builds one more, the `sneak_kill` event), and Zealot (Grit, who holds Smite from level 6: a
+at 150 %), and Patient blade (Shadow, thief 32: openings decay at 50 %, and the thief's kill of
+their mark builds one more, the `mark_kill` event, docs/dev/openings.md), and Zealot (Grit, who holds Smite from level 6: a
 blow taken builds a second zeal); the only class-limited picks (`needs = { class, level }`, Zealot's
 by `needs = { talents = { smite = 1 }, level = 6 }`, the paladin alone holding Smite since #891). `world/resource_talent_tests.rs` covers each rule and the
 prerequisites. A talent of a resource the class has not been granted yet holds the change until

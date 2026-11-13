@@ -267,6 +267,12 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                 } else {
                     effects
                 };
+                // The creature the player's openings are in (`world/mark.rs`).
+                let effects = if actor.marked {
+                    format!("{effects}, your mark")
+                } else {
+                    effects
+                };
                 // What lives in it shows (docs/design/monster-dread.md §5.5): "writhing".
                 let writhing = match content.creature(actor.creature).dies_into {
                     Some(_) => ", writhing",
@@ -1372,6 +1378,48 @@ map = '''
             said[1],
             "A big deer (unhurt, unaware of you), on stone floor."
         );
+    }
+
+    #[test]
+    fn the_creature_your_openings_are_in_is_your_mark() {
+        // A dark hall: the dwarf thief's sling stone finds the deer unaware, a sneak attack
+        // that builds an opening in its guard.
+        let hall = r##"
+name = "Hall"
+ambient = [0, 0, 0, 0]
+map = '''
+#######
+#@..d.#
+#######
+'''
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"d" = { terrain = "floor", creature = "deer" }
+"##;
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert("levels/hall.toml", hall);
+        files.insert(
+            "scenarios/hall.toml",
+            "name = \"Hall\"\nstart_level = \"hall\"\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("content"));
+        let spec = "dwarf,male,thief"
+            .parse::<warlock_core::character::CharacterSpec>()
+            .expect("a character")
+            .with_talents(["healthy", "lean"].map(String::from).to_vec());
+        let marked = (1..40).find_map(|seed| {
+            let mut w =
+                World::start_run(content.clone(), "hall", Some(seed), Some(&spec), None, true)
+                    .expect("starts");
+            w.apply(&"fire:4,1".parse::<Action>().expect("action"));
+            let view = w.perception();
+            let deer = (view.actors().iter()).find(|a| a.marked)?;
+            Some((describe(&view, deer.pos, true), view.own_mark()))
+        });
+        let (said, mark) = marked.expect("some stone lands a sneak attack");
+        // "A deer (badly wounded, bleeding, your mark), on blood-spattered stone floor; ..."
+        assert!(said.contains(", your mark), on "), "{said}");
+        assert_eq!(mark.as_deref(), Some("the deer"));
     }
 
     #[test]

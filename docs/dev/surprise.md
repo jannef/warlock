@@ -65,7 +65,8 @@ Keep it current with the code, as CLAUDE.md says.
   `sneak_dice` d6s `and` the talents' `ambush`), `World::sneaks(attacker, target, unaware,
   missile)` (dice, unaware or `off_guard`: Surprised, Stunned; vitals for the attacker, a missile within
   `missile_reach` + `sneak_reach`, Chebyshev; no draw), `sneak_threat` (Master thief),
-  `ambushed` (the dice on a hit, gameplay stream; `Build::SneakAttack`; the player's
+  `ambushed` (the dice on a hit, gameplay stream; `Build::SneakAttack`, a marked pool only on
+  the attacker's mark, `mark.rs::builds_on`; the player's
   `Use::SneakAttack`, training stream), `has_vitals` and `vitals` (the struck side's
   `no_criticals`), `no_vital_spot` (Vital strike's and the
   finisher's "It has no vital spot.", a `news` line after the blow's).
@@ -112,7 +113,9 @@ Keep it current with the code, as CLAUDE.md says.
 | `weapon_ability.rs::approached` | a flat-footed keeper fires no Point-blank shot |
 | `schedule.rs::slowed` | `Effects::slow_with(price, status_cost)`: the dear action |
 | `weapon_ability.rs::spend_actions` | a `per_action` status that ends pushes `Event::Status { began: false }` (its `end` line: "You recover your wits.", Staggered's and Pinned's too) |
-| `fight.rs::resolve` (#684) | `lurked` (a lurk's blow on a creature not hunting the player is unaware: `startle`, flat-footed, dice) and `low_blow_taken` (a low blow passes `sneaks` as unaware: dice only); `vanishing_act` beside `Build::SneakKill` |
+| `fight.rs::resolve` (#684) | `lurked` (a lurk's blow on a creature not hunting the player is unaware: `startle`, flat-footed, dice) and `low_blow_taken` (a low blow passes `sneaks` as unaware: dice only); `vanishing_act` on a sneak attack's blow that kills |
+| the player's chosen attacks (#1461): `fight.rs::player_attacks`, `player_blow_with`, `player_kicks`, `bash`; `weapon_active.rs::rush`, `sweep` (the aimed one); `shoot.rs::fire`, `throw`, `weapon_active.rs::active_shot`, `volley.rs` (`choose_at_cell`); `cast.rs::cast_single` (the player's spell that rolls to hit) | `choose_mark` (`mark.rs`) before the attack: the mark rule, so its sneak attack builds in the new mark's pool (docs/dev/openings.md) |
+| `free_blow.rs::strike_free`, `weapon_ability.rs` (a free shot) (#1461) | `free_blow_at` (`mark.rs`): sets a mark when none stands, never moves one |
 | `free_blow.rs::free_blows_of`, `step_up` (#684) | Lurking switches the gatekeeper's blow on; `lie_in_wait` flags the player's blow from a lurk (`Technique::lurk`, cleared after) |
 | `feint.rs::feint` (#1016) | Bluff's use: a failed Willpower check is `afflict(surprised)` with no initiative check, and on `World::fresh`, so the foe's first action in that turn does not ease it (`docs/dev/skills.md`) |
 | `perceive.rs::perceive` | `mark_noticed` |

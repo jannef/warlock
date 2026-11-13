@@ -189,6 +189,12 @@ impl World {
     /// and its talents' builds: Blood frenzy's rage a kill), each by its amount, up to its
     /// maximum. Resources it does not hold are not built.
     pub(crate) fn gain_resource(&mut self, id: ActorId, on: Build) {
+        self.build_resources(id, on, true);
+    }
+
+    /// [`World::gain_resource`], the pools `marked` in data (Openings) built only when `marked`
+    /// says they may be (the attack was at the holder's mark, or none stands: `mark.rs`).
+    pub(super) fn build_resources(&mut self, id: ActorId, on: Build, marked: bool) {
         let Some(actor) = self.state.actors.get(&id) else {
             return;
         };
@@ -197,6 +203,7 @@ impl World {
             .into_owned()
             .resource_builds;
         let gains: Vec<(ResourceId, u16, u16)> = (actor.resources.iter())
+            .filter(|pool| marked || !self.content.resource(pool.resource).marked)
             .filter_map(|pool| {
                 let more = (talents.iter())
                     .filter(|(r, b, _)| *r == pool.resource && *b == on)

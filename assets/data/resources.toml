@@ -34,7 +34,11 @@
 #   builds        what builds it up: [{ on = "kill", amount = 5 }]; events are
 #                 kill (a kill credited to the holder), hit (a blow of theirs hits), critical (a
 #                 blow of theirs is a critical), struck (they are hit), sneak_attack (a sneak
-#                 attack of theirs hits), and sneak_kill (a sneak attack of theirs kills)
+#                 attack of theirs hits), and mark_kill (they kill their mark: a marked pool's)
+#   marked        its points are in one creature's guard, the holder's mark (Openings; default
+#                 false): the mark is the creature of their last chosen attack, a chosen attack
+#                 at another living creature empties the pool, and it builds on nobody else;
+#                 the mark's death clears it and keeps the pool (docs/dev/openings.md)
 #
 # The numbers are the progression design's first guesses (§4.18).
 
@@ -66,7 +70,8 @@ max = 10
 regenerates = 6
 resting = false
 
-# The thief's openings: built by sneak attacks, a point lost every 20 base turns.
+# The thief's openings: built by sneak attacks and by killing the mark, a point lost every 20
+# base turns; they are in the guard of one creature, the mark (docs/dev/openings.md).
 [[resource]]
 id = "openings"
 name = "Openings"
@@ -74,7 +79,8 @@ short = "Openings"
 max = 5
 start = 0
 decays = 120
-builds = [{ on = "sneak_attack", amount = 1 }]
+marked = true
+builds = [{ on = "sneak_attack", amount = 1 }, { on = "mark_kill", amount = 1 }]
 
 # The ascetic's ki (the ki tricks design): granted full by Martial arts at level 1, a point back
 # every three base turns, resting too; it never ends. Its maximum is 4, plus the Willpower

@@ -146,6 +146,9 @@ pub struct OwnResource {
     pub resource: ResourceId,
     pub value: u16,
     pub max: u16,
+    /// Its points are in one creature's guard (`marked` in data: Openings), the mark
+    /// [`PerceptionView::own_mark`] names.
+    pub marked: bool,
 }
 
 /// A grimoire the player could learn from (spec §8 "Spells": "Learning"): one teaching a spell
@@ -289,6 +292,10 @@ pub struct SeenActor {
     /// for everyone otherwise (spec §8 "Surprise and sneak attacks": the unaware mark).
     #[serde(skip)]
     pub unaware: bool,
+    /// It is the player's mark, the creature their openings are in (`world/mark.rs`): their
+    /// own choice, so they know it.
+    #[serde(skip)]
+    pub marked: bool,
     /// It is an ally of the player's (spec §8 "Allies"), which they know by sight.
     #[serde(skip)]
     pub ally: bool,
@@ -1031,6 +1038,7 @@ impl Perception {
                 health: a.health(content),
                 shape: shape(a, content),
                 unaware: false,
+                marked: a.id != state.player && state.player().mark == Some(a.id),
                 ally: a.master() == Some(state.player),
                 companion: a.master() == Some(state.player) && a.kept().is_some(),
                 grade: a.graded(),
@@ -2397,9 +2405,22 @@ impl<'a> PerceptionView<'a> {
                     resource: pool.resource,
                     value: pool.value.min(max),
                     max,
+                    marked: self.content.resource(pool.resource).marked,
                 }
             })
             .collect()
+    }
+
+    /// The player's mark, the creature their openings are in (`world/mark.rs`), as they know it:
+    /// "the kobold" while they see it, "an unseen foe" while they do not; `None` without one.
+    /// Their own choice, so nothing hidden.
+    pub fn own_mark(&self) -> Option<String> {
+        let mark = self.player.mark?;
+        let seen = (self.snapshot.actors.iter()).find(|a| a.id == mark);
+        Some(seen.map_or_else(
+            || "an unseen foe".to_string(),
+            |a| crate::content::the(&self.content.creature(a.creature).name),
+        ))
     }
 
     /// The player's level, experience total, and the total at which the next level comes (none

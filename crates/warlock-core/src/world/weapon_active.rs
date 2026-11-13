@@ -281,6 +281,7 @@ impl World {
         let with = me.shield_item(&content);
         let base = self.attack_price(player, ActionKind::Melee, with, skills);
         self.pay_active(id, events);
+        self.choose_mark(target);
         let blow = self.strike_with(target, seen, (Some(shield), profile, skills), events);
         self.after_attack(player, target, super::free_blow::parried(blow), events);
         if let WeaponDoes::Knockback { status, .. } = effect {
@@ -451,6 +452,13 @@ impl World {
         let with = me.weapon_item(&content);
         let base = self.attack_price(player, ActionKind::Melee, with, melee);
         self.pay_active(id, events);
+        // The one aimed at is chosen (the mark rule, `mark.rs`); the rest are swept up.
+        if let Some(&(aimed, _)) = (around.first()).filter(|(t, _)| {
+            let at = self.state.actors.get(t).map(|a| a.pos);
+            at == Some(here.step(from))
+        }) {
+            self.choose_mark(aimed);
+        }
         for (i, (target, seen)) in around.into_iter().enumerate() {
             if self.state.death.is_some() {
                 break;
@@ -469,7 +477,7 @@ impl World {
                 None => {
                     let mut profile = me.melee(&content);
                     profile.to_hit += to_hit;
-                    self.player_blow_with(target, seen, profile, events)
+                    self.strike_with(target, seen, (None, profile, melee), events)
                 }
             };
             self.after_attack(player, target, super::free_blow::parried(blow), events);
@@ -519,6 +527,7 @@ impl World {
             profile,
             range,
         };
+        self.choose_at_cell(at, false);
         self.player_looses(at, loose, events);
         self.technique = Technique::default();
         self.exert(ActionKind::Shoot);

@@ -127,6 +127,7 @@ impl World {
         // exertion, which may leave the player hungrier (no longer Bloated).
         let price = self.shot_price(self.state.player, launcher);
         let price = self.rapid_shot(self.state.player, price, events);
+        self.choose_at_cell(at, false);
         self.player_looses(at, loose, events);
         self.exert(ActionKind::Shoot);
         Spent::Turn(price)
@@ -185,6 +186,7 @@ impl World {
         };
         // Priced as the throw begins, with what is thrown still in the pack.
         let price = self.attack_price(self.state.player, ActionKind::Throw, None, throwing);
+        self.choose_at_cell(at, false);
         self.player_looses(at, loose, events);
         self.exert(ActionKind::Throw);
         Spent::Turn(price)

@@ -127,6 +127,7 @@ pub(super) fn beside(world: &mut World, creature: &str, hp: i32) -> ActorId {
         summoner: None,
         ally: None,
         risen: None,
+        mark: None,
         alignment_override: None,
         inventory: Vec::new(),
         equipment: Default::default(),

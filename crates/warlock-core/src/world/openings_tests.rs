@@ -101,6 +101,7 @@ fn beside(world: &mut World, creature: &str, hp: i32, dir: Dir) -> ActorId {
         summoner: None,
         ally: None,
         risen: None,
+        mark: None,
         alignment_override: None,
         inventory: Vec::new(),
         equipment: Default::default(),
@@ -157,13 +158,13 @@ fn a_sneak_attack_that_hits_builds_an_opening_up_to_five() {
         damage: 2,
         kind: None,
     };
-    w.ambushed(player, false, hit);
+    w.ambushed((player, player), false, hit);
     assert_eq!(held(&w), Some(0), "a seen blow builds nothing");
     let missed = Blow::missed(None);
-    w.ambushed(player, true, missed);
+    w.ambushed((player, player), true, missed);
     assert_eq!(held(&w), Some(0), "a miss builds nothing");
     for n in 1..=7u16 {
-        w.ambushed(player, true, hit);
+        w.ambushed((player, player), true, hit);
         assert_eq!(held(&w), Some(n.min(5)));
     }
 }

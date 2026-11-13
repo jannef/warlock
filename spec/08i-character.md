@@ -1679,8 +1679,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `surprise_difficulty`; §8 "Surprise and sneak attacks"), Pack mule and Porter (the
     burden line's first two steps, #1198), Improved sneak attack (+2d6 on top of the skill's: dice of the same sides
     add up), Vanishing act (40, #684: a sneak attack of the thief's that kills leaves them
-    Light-footed, a degree, `sneak_kill_status`, read where `Build::SneakKill` is raised in
-    `World::resolve`; `world/thief.rs`), Hide in plain sight (no footsteps while Unburdened;
+    Light-footed, a degree, `sneak_kill_status`, read in `World::resolve` where a sneak
+    attack's blow kills; `world/thief.rs`), Hide in plain sight (no footsteps while Unburdened;
     attacks half as loud), Master thief (an attack on an unaware creature threatens a critical
     2 lower, never below 3; and its finisher, an active aimed in a direction, `use:master_thief:E`,
     for 5 openings: a melee blow that is a critical whenever it hits, with no confirmation roll,

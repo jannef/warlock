@@ -455,7 +455,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `missile_reach` (6) cells, Chebyshev, plus Long reach's `sneak_reach`. Decided before the
     strike (no draw), the dice drawn from the gameplay stream on a hit; the player's mark Sneak
     attack (`sneak_attack`, 50 %) and Dexterity (`sneak_attack`, 20 %) on the training stream.
-    A sneak attack that hits raises the `sneak_attack` weapon-ability trigger (§8i "Weapon
+    A sneak attack that hits builds the attacker's resources (`sneak_attack`; the thief's
+    openings only on their mark, or with none standing: §8 "Resources", "The mark",
+    `world/mark.rs`). A sneak attack that hits raises the `sneak_attack` weapon-ability trigger (§8i "Weapon
     abilities": Knife in the dark, Hunter's shot) with the attack's skills, after its `hit`
     triggers (`World::sneak_trigger`); none without the dice. The thief's actives (#684): a
     Lurk's blow on a hostile that steps up beside them and was not hunting them counts as

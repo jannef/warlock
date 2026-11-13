@@ -505,6 +505,7 @@ impl World {
                 heal(actor, &content, left, rate);
                 mana::regain(actor, &content, left, mana_rate);
                 crate::resource::pass(&mut actor.resources, &content, &paces, left);
+                super::mark::faded(actor, &content);
                 return;
             }
             // Up to the next moment something happens: a tick, an easing, a hit point or a point
@@ -560,6 +561,7 @@ impl World {
             for ended in crate::resource::pass(&mut actor.resources, &content, &paces, step) {
                 gone.extend(resource::ended(actor, &content, ended, events));
             }
+            super::mark::faded(actor, &content);
             let mut moment = Moment {
                 damage: 0,
                 drained: 0,

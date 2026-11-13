@@ -225,8 +225,8 @@ pub use companion::{
 };
 pub use creature::{
     Budge, Combat, CorpseGifts, Corrodes, CorrodesWhat, CreatureDef, CreatureId, DEFAULT_SIGHT,
-    Disarms, Hide, Incorporeal, NORMAL_SPEED, NaturalAttack, OnEat, SkillGift, is_proper, the,
-    the_start,
+    Disarms, Hide, Incorporeal, NORMAL_SPEED, NaturalAttack, OnEat, SkillGift, is_proper,
+    possessive, the, the_start,
 };
 pub use creature_rarity::{COMMON, CreatureRarity};
 pub use crystal::{CrystalColour, Crystals, EnchantingRules, RareMaterials};

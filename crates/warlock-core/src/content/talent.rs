@@ -277,7 +277,7 @@ pub enum TalentEffect {
     /// rules' `missile_reach` (Long reach; `World::sneaks`).
     SneakReach { value: i32 },
     /// A sneak attack of its that kills leaves it a degree of `status` (Vanishing act:
-    /// Light-footed; read where `Build::SneakKill` is raised, `world/thief.rs`).
+    /// Light-footed; read in `World::resolve` where a sneak attack's blow kills, `world/thief.rs`).
     SneakKillStatus { status: String },
     /// The perception snapshot tells which creatures in view have not noticed it, and they are
     /// drawn with the unaware mark (Stalker's eye; `SeenActor::unaware`).
