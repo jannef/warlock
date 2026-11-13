@@ -2,15 +2,22 @@
 
 The Openings pool (`data/resources.toml`, `docs/dev/resources.md` "Openings") remembers whose
 guard its points are in: the **mark**. Design: `docs/design/thief-openings.md` (#1449); this
-file is phase O1 (#1461): the mark, the kill that carries, and the builds. Spec §8 "Resources"
+file covers phases O1 (#1461: the mark, the kill that carries, and the builds) and O2 (#1462:
+a feint builds). Spec §8 "Resources"
 and "Surprise and sneak attacks".
 
 ## Data
 
 - `marked = true` on a `[[resource]]` (`ResourceDef::marked`): its points are in one creature's
   guard. Only Openings has it. Every rule below reads the flag, never the id.
-- `builds = [{ on = "sneak_attack", amount = 1 }, { on = "mark_kill", amount = 1 }]` on Openings.
+- `builds` on Openings, one each: `sneak_attack`, `feint` (O2, #1462), and `mark_kill`.
   `Build::MarkKill` (`mark_kill`) replaced `Build::SneakKill` (`sneak_kill`, gone).
+
+| Build | Where | The mark rule |
+|---|---|---|
+| `sneak_attack` | `ambush.rs`, when the sneak dice land | the attack ran `choose_mark` or `free_blow_at` first; `builds_on` skips a free blow's at a stranger |
+| `feint` | `feint.rs::feint`, on "falls for it" | `choose_mark(foe)` after the refusals, before the check: a feint at a new foe empties the pool first, then builds; a failed feint builds nothing and still moves the mark |
+| `mark_kill` | `mark.rs::mark_dies`, from `fight.rs::dies` | the mark is cleared after the build |
 - Patient blade (`talents/patient_blade.toml`): `resource_build` +1 on `mark_kill` (the mark's
   kill gives two) beside its `resource_rate` −50.
 
@@ -50,7 +57,8 @@ Before the attack, so its sneak attack builds in the new mark's pool:
   direction; the rest are struck through `strike_with` and swept up, an area);
 - `shoot.rs::fire` and `throw`, `weapon_active.rs::active_shot`, `volley.rs` (`choose_at_cell`);
 - `cast.rs::cast_single`, the player's own single-target spell that rolls to hit (a wand's and a
-  scroll's bolt too). Bursts, cones, and other area spells touch nothing.
+  scroll's bolt too). Bursts, cones, and other area spells touch nothing;
+- `feint.rs::feint` (O2), after its refusals and before its check: a refused feint moves nothing.
 
 `free_blow_at`: `free_blow.rs::strike_free` (riposte, opportunist, a lurk's gatekeeper blow,
 hair trigger, retribution, a cleave) and `weapon_ability.rs`'s free shot (Point-blank shot).
@@ -82,6 +90,8 @@ attack. Saves are pinned to the version (no shim).
 free blow sets and never moves or builds on a stranger; a throw counts and a burst does not;
 the mark's death by the thief carries and adds one, by another carries; a departure, a level
 change, and the decay to 0 clear; Low blow's refusal; the dumps, a save, and a replay);
-`world/resource_talent_tests.rs` (Patient blade's two); `content/resource.rs` (`marked` and
-`mark_kill` parse, `sneak_kill` is refused); `ui/look.rs`'s
+`world/feint_tests.rs` (a feint made builds one, at the mark too; a failed one builds none and
+moves the mark; one at a new foe empties first, then builds; a refused one moves nothing);
+`world/resource_talent_tests.rs` (Patient blade's two); `content/resource.rs` (`marked`,
+`mark_kill`, and `feint` parse, `sneak_kill` is refused); `ui/look.rs`'s
 `the_creature_your_openings_are_in_is_your_mark` (look mode's "your mark", `own_mark`).

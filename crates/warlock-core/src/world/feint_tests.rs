@@ -284,3 +284,104 @@ fn a_feint_replays() {
     }
     assert_eq!(w.state_hash(), twin.state_hash());
 }
+
+/// Openings (`mark.rs`; #1462): the player's pool, held at `value`.
+fn hold_openings(w: &mut World, value: u16) {
+    let id = w.content().resource_id("openings").expect("openings");
+    w.player_mut().resources.set(id, value);
+}
+
+fn openings_held(w: &World) -> u16 {
+    let id = w.content().resource_id("openings").expect("openings");
+    (w.state.player().resources.get(id)).map_or(0, |p| p.value)
+}
+
+/// A thief holding `held` openings, kobolds east and west of them, their mark the one `mark`
+/// of them (if any), feints east on the first gameplay stream from 0 whose feint is `made` (or
+/// not). The foes do not act. The world after, and the kobold feinted at.
+fn feint_openings(held: u16, mark: Option<Dir>, made: bool) -> (World, ActorId) {
+    for seed in 0..200 {
+        let mut w = liar("thief", 14, Some(50));
+        hold_openings(&mut w, held);
+        let kobold = kobold_beside(&mut w, 10);
+        let west = w.player_pos().step(Dir::W);
+        let other = foe_at(&mut w, "kobold", west, 10);
+        for id in [kobold, other] {
+            w.state.actors.get_mut(&id).expect("there").energy = -100_000;
+        }
+        w.player_mut().mark = match mark {
+            Some(Dir::E) => Some(kobold),
+            Some(_) => Some(other),
+            None => None,
+        };
+        w.state.rng = Rng::gameplay(seed);
+        assert!(feint(&mut w).took_turn);
+        if fooled(&w, kobold) == made {
+            return (w, kobold);
+        }
+    }
+    panic!("no feint came out made = {made}");
+}
+
+/// How many times the player was told `text`.
+fn told(w: &World, text: &str) -> usize {
+    (w.messages().iter())
+        .filter(|m| m.display().contains(text))
+        .count()
+}
+
+#[test]
+fn a_feint_made_builds_an_opening_in_the_foes_guard() {
+    let (w, kobold) = feint_openings(0, None, true);
+    assert_eq!(openings_held(&w), 1, "one opening");
+    assert_eq!(w.state.player().mark, Some(kobold), "the foe is the mark");
+    // At the mark itself the pool grows, nothing lost.
+    let (w, kobold) = feint_openings(2, Some(Dir::E), true);
+    assert_eq!(openings_held(&w), 3);
+    assert_eq!(w.state.player().mark, Some(kobold));
+    assert_eq!(told(&w, "are lost"), 0);
+    // Full, it stays full.
+    let (w, _) = feint_openings(5, Some(Dir::E), true);
+    assert_eq!(openings_held(&w), 5);
+}
+
+#[test]
+fn a_failed_feint_builds_nothing_and_still_moves_the_mark() {
+    let (w, kobold) = feint_openings(1, None, false);
+    assert_eq!(openings_held(&w), 1, "nothing built");
+    assert_eq!(w.state.player().mark, Some(kobold), "the mark set");
+    // Over an empty pool the mark set fades with the turn's time (`mark::faded`).
+    let (w, _) = feint_openings(0, None, false);
+    assert_eq!((openings_held(&w), w.state.player().mark), (0, None));
+    // Marked elsewhere, the old mark's openings are lost (and the new mark over the emptied
+    // pool fades with the turn).
+    let (w, _) = feint_openings(2, Some(Dir::W), false);
+    assert_eq!(openings_held(&w), 0, "the old mark's openings lost");
+    assert_eq!(w.state.player().mark, None, "the old mark is gone");
+    assert_eq!(told(&w, "Your openings on the kobold are lost."), 1);
+}
+
+#[test]
+fn a_feint_at_a_new_foe_empties_the_pool_first_then_builds() {
+    let (w, kobold) = feint_openings(3, Some(Dir::W), true);
+    assert_eq!(openings_held(&w), 1, "emptied, then one");
+    assert_eq!(w.state.player().mark, Some(kobold));
+    assert_eq!(told(&w, "Your openings on the kobold are lost."), 1);
+    let lines: Vec<String> = w.messages().iter().map(|m| m.display()).collect();
+    let lost = lines.iter().position(|m| m.contains("are lost"));
+    let fell = lines.iter().position(|m| m.ends_with("falls for it."));
+    assert!(lost.is_some() && lost < fell, "lost before the check");
+}
+
+#[test]
+fn a_refused_feint_moves_no_mark() {
+    let mut w = liar("thief", 14, Some(50));
+    hold_openings(&mut w, 2);
+    let west = w.player_pos().step(Dir::W);
+    let other = foe_at(&mut w, "kobold", west, 10);
+    w.player_mut().mark = Some(other);
+    let at = beside(&w);
+    foe_at(&mut w, "skeleton_warrior", at, 3);
+    assert!(!feint(&mut w).took_turn);
+    assert_eq!((openings_held(&w), w.state.player().mark), (2, Some(other)));
+}

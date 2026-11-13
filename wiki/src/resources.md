@@ -38,6 +38,7 @@ while you hold 2 focus spends them and takes 10 % less time. A [volley](talents.
 ([Sneak attack](talents.md#talent-sneak-attack)), starting at 0.
 
 - Every [sneak attack](skills.md#skill-sneak-attack) that hits gives one, up to 5.
+- Every [feint](skill-uses.md#feinting) the foe falls for gives one.
 - Killing your [mark](#the-mark) yourself gives one more.
 - One slips away every 20 base turns (2 minutes). When empty, the pool stays with you.
 - At level 12, [Low blow](abilities.md#ability-low-blow) (an ability, aimed in a direction) spends
@@ -53,8 +54,8 @@ guard they are in ("Openings 3/5, in the kobold's guard"), and looking at the cr
 mark".
 
 - **Switching foes loses them.** The first creature you choose to attack becomes your mark. A
-  blow, a kick, a shield bash, an ability's blow, a shot or a throw at its square, or a spell that
-  rolls to hit all count. Choose to attack a different creature while your mark lives, and every
+  blow, a kick, a shield bash, an ability's blow, a shot or a throw at its square, a spell that
+  rolls to hit, or a [feint](skill-uses.md#feinting), made or not, all count. Choose to attack a different creature while your mark lives, and every
   opening is lost ("Your openings on the kobold are lost."); the new creature is your mark.
 - **Blows you did not choose change nothing.** A [free blow](stances.md#free-blows) (a riposte, an
   opportunist's blow, a lurk's) makes its target your mark only when you have none. On anyone
