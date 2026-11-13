@@ -17,6 +17,10 @@
 //!   at the floor's item level ([`crate::gem::uncut`], two draws). It lies on the rubble, and is
 //!   said: "You break out a lump of iron ore."
 //!
+//! - **A vein** (#1390; `mapgen/vein.rs` lays them): a wall of a vein's terrain
+//!   ([`MiningRules::vein_of`]) always gives its ore, with no chance draw and no table: the
+//!   check is made all the same, and sets only the count, one lump failed, else as above.
+//!
 //! Every draw is the gameplay stream's, in that order. Mining's mark is the wall's own
 //! ([`crate::skills::Use::Dug`], `world/dig.rs`): no mark of its own.
 
@@ -65,12 +69,19 @@ impl World {
         let modifier = me.effective_stats(&content).modifier(rules.stat)
             + me.skill_effect_of(&content, rules.skill, Effect::Craft)
             + me.talent_mods(&content).check(rules.stat);
-        if !self.state.rng.chance(u32::from(band.chance)) {
+        let vein = rules.vein_of(wall);
+        if vein.is_none() && !self.state.rng.chance(u32::from(band.chance)) {
             return;
         }
         let natural = combat::roll_natural(&mut self.state.rng);
         let margin = natural + modifier - band.difficulty;
         let made = natural == combat::HIGHEST || (natural != combat::FUMBLE && margin >= 0);
+        let count = (1 + margin.max(0) / rules.more_every).clamp(1, rules.most as i32) as u32;
+        if let Some(metal) = vein {
+            let found = ore(&content, rules, metal, if made { count } else { 1 });
+            self.lay_mined(at, found);
+            return;
+        }
         if !made {
             return;
         }
@@ -81,7 +92,6 @@ impl World {
         let Some(&row) = pick_weighted(&mut self.state.rng, &table) else {
             return;
         };
-        let count = (1 + margin.max(0) / rules.more_every).clamp(1, rules.most as i32) as u32;
         let found = match rules.finds[row].what {
             Mined::Ore(metal) => Some(ore(&content, rules, metal, count)),
             Mined::Piece(material) => crate::piece::make(&content, material, count),
@@ -89,9 +99,14 @@ impl World {
                 crate::gem::uncut(&content, &mut self.state.rng, content.item_level(&here))
             }
         };
-        let Some(found) = found else {
-            return;
-        };
+        if let Some(found) = found {
+            self.lay_mined(at, found);
+        }
+    }
+
+    /// Lays what was broken out of the wall at `at` on its rubble, and says so.
+    fn lay_mined(&mut self, at: Pos, found: Stack) {
+        let content = self.content.clone();
         let text = format!("You break out {}.", found.describe(&content));
         let level = self.state.current_mut();
         let mut pile = vec![found];

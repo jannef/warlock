@@ -1,5 +1,6 @@
 //! Mining (spec §8 "Digging"; `data/mining.toml`, the branches' `ores`): which walls may hold
-//! something and how hard it is to break out, what comes out by danger, and each dungeon's ores.
+//! something and how hard it is to break out, what comes out by danger, the veins, and each
+//! dungeon's ores.
 
 use super::combat::percent;
 use super::text::capital;
@@ -33,15 +34,19 @@ fn find_id(content: &Content, what: Mined) -> String {
     }
 }
 
-/// Every wall that breaks (no statue), softest first: its hardness, the chance it holds
-/// something for a miner, and the check's difficulty.
+/// Every wall that breaks (no statue, no vein: a vein always holds its ore), softest first: its
+/// hardness, the chance it holds something for a miner, and the check's difficulty.
 pub(super) fn mining_walls(content: &Content) -> String {
     let Some(rules) = content.mining() else {
         return "Nothing is mined.\n".into();
     };
     let mut walls: Vec<_> = (content.terrain_defs().iter())
-        .filter(|t| t.statue.is_none())
-        .filter_map(|t| Some((t, t.breaks?.hardness)))
+        .enumerate()
+        .filter(|(i, t)| {
+            let id = warlock_core::content::TerrainId(*i as u16);
+            t.statue.is_none() && rules.vein_of(id).is_none()
+        })
+        .filter_map(|(_, t)| Some((t, t.breaks?.hardness)))
         .collect();
     walls.sort_by(|a, b| a.1.cmp(&b.1).then_with(|| a.0.name.cmp(&b.0.name)));
     let mut out =
@@ -84,6 +89,51 @@ pub(super) fn mining_finds(content: &Content) -> String {
             find_name(content, find.what),
             find.rarity,
             find.deeper,
+            find.danger
+        );
+        for table in &tables {
+            let total: u32 = table.iter().map(|(_, w)| w).sum();
+            let share = match table.iter().find(|(r, _)| *r == i) {
+                Some(&(_, w)) => percent(w, total.max(1)),
+                None => "—".into(),
+            };
+            let _ = write!(out, " {share} |");
+        }
+        out.push('\n');
+    }
+    out
+}
+
+/// How often a floor has veins, then every ore with veins, in the file's order: how many cells a
+/// vein has, the first danger it is found at, and its share of the veins at several dangers
+/// (where a dungeon allows every ore).
+pub(super) fn mining_veins(content: &Content) -> String {
+    let Some((rules, veins)) = content.mining().and_then(|r| Some((r, r.veins?))) else {
+        return "There are no veins.\n".into();
+    };
+    let [least, most] = veins.count;
+    let mut out = format!(
+        "A dungeon floor has veins {}% of the time: {least} to {most} of them.\n\n",
+        veins.chance
+    );
+    out.push_str("| Vein | Cells | From danger |");
+    for d in DANGERS {
+        let _ = write!(out, " Danger {d} |");
+    }
+    out.push_str("\n|---|---:|---:|");
+    out.push_str(&"---:|".repeat(DANGERS.len()));
+    out.push('\n');
+    let tables: Vec<_> = DANGERS.iter().map(|&d| rules.vein_table(d, None)).collect();
+    for (i, find) in rules.finds.iter().enumerate() {
+        let (Some(vein), Mined::Ore(m)) = (find.vein, find.what) else {
+            continue;
+        };
+        let [fewest, most] = vein.size;
+        let _ = write!(
+            out,
+            "| <a id=\"vein-{}\"></a>{} | {fewest} to {most} | {} |",
+            content.material(m).id,
+            capital(&content.terrain(vein.terrain).name),
             find.danger
         );
         for table in &tables {

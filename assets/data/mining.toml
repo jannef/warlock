@@ -13,6 +13,12 @@
 # was made by, at most `most`; the gem row one uncut loose gem, its gem by rarity and its size by
 # the floor's depth as gems.toml finds them. What is found lies on the rubble.
 #
+# Veins (#1390): now and then a floor of a dungeon branch has a few veins, wall sections of an ore
+# drawn in its colour. A vein's wall always gives its ore to a miner who digs through it: no chance
+# and no table. The check is made all the same, and sets only the count: one lump failed, else as
+# above. Which ore a vein is of is drawn by the table's weights at the floor's danger, only among
+# the rows with a `vein` and the branch's ores, so the precious ones lie deeper.
+#
 # A branch may name the only ores its rock holds (`ores` in its dungeon file); the other ore rows
 # are left out there. Stone and gems are found everywhere.
 #
@@ -23,12 +29,17 @@
 #   ore         the ore object (objects/ore.toml): made of a metal, it is that metal's ore
 #   more_every  the check's margin that gives one more lump (above 0)
 #   most        the most lumps one wall gives (at least 1)
+#   [veins]     chance (percent of a branch's floors with veins), count ([fewest, most] veins on
+#               such a floor), wall (the terrain a vein is cut from: its hardness, glyph, look)
 #   [[band]]    hardness (from), chance (percent, 0 to 100), difficulty; rising in hardness
 #   [[find]]    one row per find, exactly one of:
 #     ore       a metal: lumps of its ore (smelted at an anvil into its ingots: Smelt)
 #     piece     a material: pieces of it (stock.toml names them: "a block of stone")
 #     gem       true: an uncut loose gem
 #   and:
+#     vein      an ore row only: { fg = "#rrggbb", size = [fewest, most] }: it has veins, wall
+#               cells drawn in this colour, this many cells each (a copy of `[veins]`'s wall,
+#               named "vein of <metal> ore")
 #     rarity    its weight at its first danger (above 0)
 #     deeper    added to the weight for each danger past its first (default 0; it may be
 #               negative, and the weight never goes below 0)
@@ -39,6 +50,11 @@ stat = "strength"
 ore = "ore"
 more_every = 6
 most = 3
+
+[veins]
+chance = 20
+count = [1, 3]
+wall = "wall"
 
 # Packed earth: soft, and seldom holds anything.
 [[band]]
@@ -67,18 +83,22 @@ rarity = 30
 [[find]]
 ore = "iron"
 rarity = 40
+vein = { fg = "#b05a48", size = [4, 10] }
 
 [[find]]
 ore = "copper"
 rarity = 30
+vein = { fg = "#58a07c", size = [4, 10] }
 
 [[find]]
 ore = "tin"
 rarity = 20
+vein = { fg = "#6c7a8c", size = [4, 9] }
 
 [[find]]
 ore = "zinc"
 rarity = 10
+vein = { fg = "#80a0bc", size = [3, 8] }
 
 # The precious metals: rare near the surface, more common the deeper.
 [[find]]
@@ -86,12 +106,14 @@ ore = "silver"
 rarity = 4
 deeper = 1
 danger = 3
+vein = { fg = "#d0d4dc", size = [3, 7] }
 
 [[find]]
 ore = "gold"
 rarity = 2
 deeper = 1
 danger = 6
+vein = { fg = "#d8b040", size = [3, 6] }
 
 # Uncut gems: a few near the surface, more deeper (and larger: gems.toml sizes by depth).
 [[find]]
@@ -108,9 +130,11 @@ ore = "mithril"
 rarity = 2
 deeper = 1
 danger = 60
+vein = { fg = "#90d0e8", size = [2, 5] }
 
 [[find]]
 ore = "adamantium"
 rarity = 1
 deeper = 1
 danger = 80
+vein = { fg = "#9070c0", size = [2, 4] }

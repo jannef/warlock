@@ -106,7 +106,7 @@ above.
 | Deep water, swimming | `terrain.md#deep-water` |
 | Digging, wall hardness | `digging.md#digging`, `digging.md#what-breaks-and-what-does-not` |
 | Explosions, blasts | `digging.md#explosions` |
-| Mining, ore, smelting, each dungeon's ores | `mining.md` (a find: `mining.md#mined-ID`, `mining.md#mined-iron`) |
+| Mining, ore, smelting, veins, each dungeon's ores | `mining.md` (a find: `mining.md#mined-ID`, `mining.md#mined-iron`; a vein: `mining.md#vein-ID`, `mining.md#veins`) |
 | Doors; locked, kicked, broken doors | `doors.md`, `doors.md#locked-doors`, `doors.md#kicking` |
 | Creatures opening doors | `doors.md#creatures-and-doors` |
 | Keys, skeleton key | `doors.md#keys` |

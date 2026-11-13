@@ -41,6 +41,24 @@ Each find's share of what you break out, where a dungeon's rock holds every ore:
 A gem comes out uncut, its kind by how rare it is, its size larger the deeper you are, as
 [gems](gems.md) are found anywhere. [Cut](gem-cutting.md) it yourself, or sell it as it is.
 
+## Veins
+
+Now and then a dungeon floor has **veins**: a few wall cells of one ore, drawn in its colour
+against the grey stone. Look at one and the game names it: "a vein of copper ore". A vein runs on
+into the rock behind the wall, so digging into it may bare more of it.
+
+**A vein always gives its ore.** There is no chance that it holds nothing, and no draw of what
+it holds: dig through a cell of copper vein and you break out copper ore. You still make the
+check above, but it only sets how much: fail it and you get one lump, succeed and you get one
+more for every 6 you beat the difficulty by, at most 3. Only if you are trained in
+[Mining](skills.md#skill-mining): untrained, a vein crumbles to rubble like any wall.
+
+Which ore a vein is of follows the same rules as everything else mined. It is one of the
+dungeon's own ores (below), and the precious ones come deeper down: mithril and adamantium veins
+lie only as deep as the endless stair goes.
+
+{{#include generated/mining-veins.md}}
+
 ## Each dungeon's ores
 
 Not every dungeon holds every metal. A fen holds only bog iron; the fey's own country holds no
