@@ -2270,6 +2270,23 @@ impl<'a> PerceptionView<'a> {
         crate::world::craft_steps(self.content, self.lore, self.level, self.player, recipe)
     }
 
+    /// [`Self::craft_steps`] as the picks made so far (in step order) narrow them: an
+    /// Enchanting recipe's seals follow its crystals and item, its affix kept its item.
+    pub fn craft_steps_given(
+        &self,
+        recipe: crate::content::RecipeId,
+        picks: &[Option<usize>],
+    ) -> Vec<crate::world::CraftStep> {
+        crate::world::craft_steps_given(
+            self.content,
+            self.lore,
+            self.level,
+            self.player,
+            recipe,
+            picks,
+        )
+    }
+
     /// What `recipe` made with `picks` (inventory positions in step order, `None` a skipped
     /// optional) would make and use, in words; or why it cannot, as the rules would say it.
     pub fn craft_plan(

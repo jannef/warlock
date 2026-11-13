@@ -2,9 +2,9 @@
 
 Developer notes for working on this part of Warlock; the approved design is
 `docs/design/enchanting.md` (#1414), built in phases E1 to E6 (#1427 to #1432). Keep it current
-with the code, as CLAUDE.md says. E1, E2, and E4 are built: affix capacity and the trim; the
-crystals, consuming one, and salvage's affix checks; the profession with Kindle, Quicken, and
-Unbind. The Soulglass spell, Recast, Imbue, Ennoble, and the seals are later phases.
+with the code, as CLAUDE.md says. All six are built: affix capacity and the trim; the
+crystals, consuming one, and salvage's affix checks; the Soulglass spell; the profession with
+its six recipes; and the seals and the rare materials (E6).
 
 ## Affix capacity
 
@@ -133,12 +133,15 @@ and objects:
   hold the category; `colour_of_object` the colour a crystal object is (the rare materials are
   none). The design's `crystal = "white"` override on a creature is not built (no creature needs
   one yet).
-- `[[family]]`: every affix category once with the words a seal will name it by (E6).
+- `[[family]]`: every affix category once with the words a seal names it by
+  (`Crystals::families`, `family_word`); a seal's pick is its index here.
 - `[yield] levels = [10, 20]`: `yield_at(level)`, Soulglass's count (E3): one, plus one per level
   reached.
 - `[rare]`: `materials` (`heart_crystal`, `soul_fetter`: class `materials`, 30 g, value 300, not
-  crystals), Soulglass's `level`, `chance`, `dragon` (E3), and salvage's `salvage_level = 10`,
-  `salvage_chance = 3`.
+  crystals), Soulglass's `level`, `chance`, `dragon` (E3), salvage's `salvage_level = 10`,
+  `salvage_chance = 3`, and which the recipes take: `heart` (a rare's Quicken) and `fetter`
+  (Recast's affix kept), each one of `materials` (`RareMaterials::{heart, fetter}`; the loader
+  refuses otherwise).
 - `[consume] mana = 6`, `marks = 12` (a tenth of a point's price at score 10: 20 + 10 × 10 =
   120 marks; a minor stat potion gives 15, so a crystal is worth drinking for Willpower alone
   without outdoing a potion made for it).
@@ -157,7 +160,7 @@ families, so change them with the colours.
 
 `data/enchanting.toml` (`EnchantingRules`, `Content::enchanting`): `salvage_difficulty = 12`,
 `salvage_tier_step = 3` (`salvage_against(affix)` = 12 + tier ÷ 3, a tier-12 affix +4),
-`level_step = 3` (the recipes' check, below) and `seal_seconds = 1800` (E6).
+`level_step = 3` (the recipes' check, below) and `seal_seconds = 1800` (a seal's time, below).
 
 ## Consuming a crystal
 
@@ -228,7 +231,7 @@ reach `enchant_level` (`Effect::EnchantLevel`, `[[0, 1], [110, 12], [200, 12]]`,
   first."), worn or wielded ("Take it off first."), a unique ("It will not take your will.");
   Kindle on magic ("There is magic in it already."), Quicken or Unbind on a plain item ("There is
   no magic in it."), Quicken on a rare ("It is rare already: this work cannot add to it.": a
-  rare's Quicken takes the heart-crystal, E6), Quicken on two affixes or at capacity ("It holds
+  rare's Quicken takes the heart-crystal: below), Quicken on two affixes or at capacity ("It holds
   all it can."); Recast on a plain item ("There is no magic in it.") or a rare ("It is rare:
   unbind it, then imbue it anew."); Imbue on magic ("There is magic in it already.") or an item
   of capacity below 3 ("It would not hold so much."); Ennoble on a plain item, a rare (Quicken's
@@ -288,6 +291,59 @@ reach `enchant_level` (`Effect::EnchantLevel`, `[[0, 1], [110, 12], [200, 12]]`,
 - **Snapshots**: `profession-enchanting`, `enchant-pick-item`, `enchant-dialog`
   (`crates/warlock/src/ui/screen_snapshots.rs`).
 
+## Seals and the rare materials
+
+E6 (#1432; design §9; `world/seal.rs`, its tests `world/seal_tests.rs`).
+
+- **The picks** (`seal::slots`): the item, a crystal for each the recipe takes, then three seal
+  slots (none for Unbind), then Recast's affix kept. A seal's pick is a family's index in
+  `[[family]]`, the affix kept's its index among the item's affixes (`magic.affixes`, prefixes
+  first); trailing picks may be left off, `-` skips one: `craft:kindle:a,b,4,17`,
+  `craft:recast:a,b,-,-,-,0`. More picks than the slots: "That is more than the work takes."
+- **A seal** (`seal::check`, in `resolve` after the crystals): its family must be of the colour
+  of a crystal picked (Imbue: of any; "The red crystal holds nothing of mana.", "The crystals
+  hold nothing of …"), not sealed twice ("You have sealed that already."), one the item could
+  take at the roll's level of either kind and does not keep (`seal::sealable`; Recast keeps only
+  its kept affix; "There is nothing to seal there."), and paid: one crystal more from the first
+  crystal picked whose colour holds the family with one to spare after the picks and the seals
+  before it ("You carry too few crystals for the seals."); an index past the list: "There is no
+  such seal." The sealed categories are taken out of every crystal's families before the kinds
+  and "No more of that nature will take." are decided, so the roll never draws them. Each seal
+  adds `seal_seconds` (`enchant::work_seconds`, then Quick hands' share). No state is left on the
+  item.
+- **The heart-crystal** (`[rare] heart`): Quicken on a rare (`refusal` lets it through below its
+  capacity and with a kind below `MAX_PER_KIND`) takes the first heart-crystal carried ("A rare
+  takes a heart-crystal beside the crystal, and you have none."); it draws its kind evenly among
+  the kinds with room (`Rng::index`, as Ennoble) and keeps the rarity and the name. "Grim Bite
+  takes the red crystal's glow and the heart-crystal's, and holds more." A magic item's Quicken
+  takes none. Ennoble on a rare: "It is rare already: only a heart-crystal's Quicken adds to it."
+- **The soul-fetter** (`[rare] fetter`): Recast with an affix kept takes the first soul-fetter
+  carried ("You have no soul-fetter to keep it with."; an index past the item's affixes: "There
+  is no such magic in it."; keeping the only one: "Nothing would be left to recast."); the kept
+  affix stays exactly (tier and value), the others roll anew of their kinds with the kept one's
+  category out, each placed by kind (`place`). "The soul-fetter holds one enchantment fast: of the
+  Bear."
+- **Spent**: the seals' crystals, the heart-crystal, and the fetter are spent with the crystals,
+  made, failed, or warped (`Resolved::all_spent`; "The heart-crystal goes dark with it.", "The
+  soul-fetter crumbles to nothing." when the work does not take).
+- **The wizard** (`enchant::steps` with the picks so far; `PerceptionView::craft_steps_given`):
+  after the crystals, three optional seal steps (`CraftStepKind::Family`: "seal", "second seal",
+  "third seal"; an option's `at` the family's index, its name the family's word, sorted by word),
+  listing the families of the crystals picked (of every crystal carried before one is), less
+  those sealed in the steps before and, with the item picked, those it could not take; then, for
+  Recast while a soul-fetter is carried, the optional "affix kept" (`CraftStepKind::Affix`, the
+  item's affixes, "Sharp: +2 damage"). The screen (`ui/craft_pick_screen.rs`) reads the steps again
+  after each pick (`CraftPickScreen::reread`, called from `input::route_keys` through
+  `ScreenStack::reread` while `is_stale`), lists a seal step's families under one "Families"
+  header with "a crystal more", and a seal's None skips the seals after it (Esc skips back over
+  them).
+- **The dialog** (`enchant::uses_words`): "Kindle the long sword? It uses a red crystal and two
+  more red crystals, sealing out fire and the critical, and takes about 2 hours."; "… a red crystal
+  and a heart-crystal …"; "… a red crystal and a soul-fetter (keeping Sharp) …".
+- **The wiki**: `wiki/src/enchanting.md` "Seals" and "The rare materials", with
+  `generated/enchanting-seals.md` (`xtask/src/wiki/enchanting.rs`: the seal's cost and time, the
+  most seals, the materials' sources and chances from `data/crystals.toml`).
+
 ## Soulglass
 
 The necromancy ray that leaves crystals (#1429; the design's §6): `data/spells/soulglass.toml`
@@ -318,7 +374,12 @@ crystallises too: the effect is the spell's.
 
 ## Tests
 
-`world/enchant_tests.rs` (the band; the three recipes' data; Kindle of every colour on many
+`world/seal_tests.rs` (a seal shuts its family on many fates; each costs a crystal of the colour
+and half an hour; every seal refusal with no time; the seal steps narrowed by the crystal, the item,
+and the seals before; a rare's Quicken with and without a heart-crystal, made, failed, and at
+capacity; Recast keeping an affix with a soul-fetter, its refusals, the affix step and the plan's
+words, a failure spending the fetter; Imbue's seals paid by the first crystal of their colour; a
+replay). `world/enchant_tests.rs` (the band; the three recipes' data; Kindle of every colour on many
 fates holding `Magic::check` and the colour rule; a failure and a warp; Quicken's lacking kind;
 Unbind made and failed; a stack of arrows at once; the reach and a deeper item's level; the
 steps, the plan, and the rows' lacks; every refusal with no time; the hour and the mark; a

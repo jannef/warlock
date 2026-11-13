@@ -2,14 +2,16 @@
 //! `data/recipes/enchanting/` with what it works on, the crystals it takes, its time, the skill it
 //! is listed from, its difficulty, and the odds of a made check at three skill values; and the
 //! enchanter's reach by skill value. From the recipe files, `data/skills.toml`'s Enchanting, and
-//! `data/enchanting.toml`.
+//! `data/enchanting.toml`. And the seals and the rare materials (docs/design/enchanting.md §9;
+//! `world/seal.rs`): a seal's cost and time, and where the rare materials come from, with their
+//! chances, from `data/enchanting.toml` and `data/crystals.toml`.
 
 use std::fmt::Write as _;
 use warlock_core::combat::HIGHEST;
 use warlock_core::content::{Content, EnchantKind, RecipeUse};
 use warlock_core::skills::{Effect, MAX_ENCHANT_LEVEL};
 use warlock_core::time::Duration;
-use warlock_core::world::{EnchantBand, enchant_band};
+use warlock_core::world::{EnchantBand, MOST_SEALS, enchant_band};
 
 /// The skill values the odds are given at.
 const ODDS_AT: [u16; 3] = [20, 60, 110];
@@ -68,8 +70,12 @@ pub(super) fn recipes_enchanting(content: &Content) -> String {
     for (r, kind) in rows {
         let works = match kind {
             EnchantKind::Kindle => "a plain item: one affix",
-            EnchantKind::Quicken => "a magic item of one affix: the other kind",
-            EnchantKind::Recast => "a magic item: its affixes rolled anew",
+            EnchantKind::Quicken => {
+                "a magic item of one affix: the other kind; a rare, with a heart-crystal: one more"
+            }
+            EnchantKind::Recast => {
+                "a magic item: its affixes rolled anew (one kept with a soul-fetter)"
+            }
             EnchantKind::Imbue => "a plain item of capacity 3+: rare, 3 to 6 affixes",
             EnchantKind::Ennoble => "a magic item of capacity 3+: rare, one affix more",
             EnchantKind::Unbind => "a magic or rare item: every affix off",
@@ -106,4 +112,58 @@ pub(super) fn recipes_enchanting(content: &Content) -> String {
         "\nThe check adds one to the difficulty for every {step} item levels of the roll."
     );
     out
+}
+
+/// The seals and the rare materials: what a seal costs, and the heart-crystal's and the
+/// soul-fetter's work and sources with their exact chances.
+pub(super) fn enchanting_seals(content: &Content) -> String {
+    let (Some(crystals), Some(rules)) = (content.crystals(), content.enchanting()) else {
+        return "There are no seals.\n".to_string();
+    };
+    let rare = &crystals.rare;
+    let name = |id| content.object(id).describe(1);
+    let mut out = String::new();
+    let _ = writeln!(
+        out,
+        "- **A seal** costs one more crystal of the colour it seals and adds {} to the work. A \
+         roll takes at most {MOST_SEALS} seals.",
+        Duration::seconds(u64::from(rules.seal_seconds)).spoken(),
+    );
+    let _ = writeln!(
+        out,
+        "- **{}** is what Quicken takes beside its crystal to add an affix to a rare item.",
+        capital(&name(rare.heart)),
+    );
+    let _ = writeln!(
+        out,
+        "- **{}** is what Recast takes to keep the affix you choose.",
+        capital(&name(rare.fetter)),
+    );
+    let materials: Vec<String> = rare.materials.iter().map(|&m| name(m)).collect();
+    let _ = writeln!(
+        out,
+        "- [Soulglass](magic.md#spell-soulglass) on a creature of level {} or more: a {}% chance \
+         of {} (even odds). A dragon always leaves {}.",
+        rare.level,
+        rare.chance,
+        materials.join(" or "),
+        name(rare.dragon),
+    );
+    let _ = writeln!(
+        out,
+        "- [Salvaging](crafting.md#salvage) a rare item of item level {} or more: a {}% chance of \
+         {} (even odds).",
+        rare.salvage_level,
+        rare.salvage_chance,
+        materials.join(" or "),
+    );
+    out
+}
+
+/// `text` with its first letter in capitals.
+fn capital(text: &str) -> String {
+    let mut chars = text.chars();
+    chars
+        .next()
+        .map_or_else(String::new, |c| c.to_uppercase().chain(chars).collect())
 }

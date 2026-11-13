@@ -107,6 +107,11 @@ pub enum CraftStepKind {
     Gem,
     /// An item carried to work on (Set's: one with its ornament part unset).
     Item,
+    /// An affix family a seal shuts out of an enchanting's roll (an option's `at` is the
+    /// family's index in `data/crystals.toml`'s `[[family]]` list).
+    Family,
+    /// The affix a soul-fetter keeps through a Recast (`at`: its index among the item's).
+    Affix,
 }
 
 /// One stack a step may take.
@@ -471,7 +476,7 @@ pub(crate) fn craft_steps(
         return super::set::steps(content, lore, player);
     }
     if let Some(RecipeUse::Enchant(_)) = def.uses {
-        return super::enchant::steps(content, lore, player, def);
+        return super::enchant::steps(content, lore, player, def, &[]);
     }
     let free = |part| fletch::part_free(content, level, player, def, part);
     let Some(steps) = steps(content, def, free) else {
