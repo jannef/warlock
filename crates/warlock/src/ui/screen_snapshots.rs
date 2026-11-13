@@ -631,6 +631,16 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A warrior at level 1 (#1466): Charge among the class abilities, its stamina by the pace,
+    // asking for a cell.
+    Case {
+        name: "abilities-menu-charge",
+        character: Some("human,male,warrior"),
+        kit: true,
+        actions: "wait",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // A berserker at level 25 (#844): War cry under Rage among the class abilities, greyed
     // while no rage is held.
     Case {

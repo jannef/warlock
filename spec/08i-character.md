@@ -1365,6 +1365,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     sees. Its one refusal is the rage: not held, or less than 4, "You have not the rage for
     it.", no time; a roar with nobody to hear it still spends the turn, the rage, and the noise;
     each cry marks Intimidate),
+    Charge (the warrior's at 1, #1466, `world/charge.rs`: `use:charge:X,Y`, aimed in the
+    targeting mode at a hostile the player sees; they rush along the straight line to it,
+    `Pos::line_between`, the line a missile flies, and end in the last cell before it, then strike
+    it once, an ordinary melee attack with what follows one; at least a cell gained, so refused
+    beside it; refused, no time and nothing spent, over a wall, a closed door, deep water, ice,
+    a known trap, or anyone the player sees on the line, at nobody seen or nobody hostile, on
+    the overworld, swimming, or too burdened to move; someone unseen on the line stops it short
+    with no blow, an unknown trap goes off and stops it there; the steps provoke no free blows,
+    no opportunist's, gatekeeper's, brace, or point-blank; 1 stamina and 1 more a cell moved,
+    spent as it begins, refused while short of the whole; the steps' time, each priced as a step
+    onto its terrain, the blow free with its exertion; its talent grants Stamina, §8
+    "Resources"),
     Veteran's wind (1 hit point a level back, at least 10, then Winded; a wait), Whirlwind (a
     blow at every hostile beside, clockwise from the north, each with the free blows the end of
     an attack brings, for one melee attack's price and one exertion), Lay on hands (2 hit
@@ -1600,7 +1612,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Bonus picks**: ranger (Weaponcraft, Wayfarer) at 10, 20, 30, 45, 55; bard (any tree) at
     5, 10, 15, 23, 28 (#874); thief (Finesse, Shadow, Delver) at 4, 10, 16, 22, 28, 34, 46, 58.
   - **The bard's 30 levels** (#874; the bard design §5): its table is the old one halved, every
-    ability by 30 (Mend and Trained wind 1, Travelled hands 3, Fast healer 6, Inspire 9, Jack of
+    ability by 30 (Mend 1, Travelled hands 3, Fast healer 6, Inspire 9, Jack of
     all trades 12, Throw your voice 16, Lullaby 20, Master of none 25, Virtuoso 30), and the
     class ends there, `max_level = 30` ("Prestige classes" above): experience past it counts and
     buys nothing until the Hunter's calling, when Hunter 1 comes at total level 31.

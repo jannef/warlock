@@ -611,6 +611,9 @@ pub struct TalentMods {
     pub unstoppable: Option<Unstoppable>,
     /// The active Whirlwind.
     pub whirlwind: bool,
+    /// The active Charge (`world/charge.rs`): what each cell moved costs on top of its
+    /// talent's `resource`, if it has it.
+    pub charge: Option<u16>,
     /// The active Smite, if it has it.
     pub smite: Option<Smite>,
     /// The modes of smiting it has (Branding smite, Wrathful smite; `world/smite.rs`): each
@@ -1196,6 +1199,7 @@ impl TalentMods {
             A::Cackle => self.cackle.is_some(),
             A::VeteransWind => self.veterans_wind.is_some(),
             A::Whirlwind => self.whirlwind,
+            A::Charge => self.charge.is_some(),
             A::LayOnHands => self.lay_on_hands.is_some(),
             A::Smite => self.smite.is_some(),
             A::BrandingSmite | A::WrathfulSmite | A::BanishingSmite => {
@@ -2031,6 +2035,7 @@ impl TalentMods {
                 held.cost = held.cost.max(cost);
             }
             TalentEffect::Whirlwind => self.whirlwind = true,
+            TalentEffect::Charge { per_cell } => self.charge = Some(per_cell),
             TalentEffect::Smite {
                 per_levels,
                 sides,

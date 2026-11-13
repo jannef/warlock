@@ -149,26 +149,18 @@ fn a_level_brings_its_abilities_and_says_so() {
     let mut w = world("warrior");
     assert_eq!(
         class_rows(&w),
-        ["Weapon drill", "Trained wind"],
+        ["Weapon drill", "Charge"],
         "the signature from the start"
     );
     reach(&mut w, 5);
-    assert_eq!(class_rows(&w), ["Weapon drill", "Trained wind"]);
+    assert_eq!(class_rows(&w), ["Weapon drill", "Charge"]);
     reach(&mut w, 6);
     assert!(said(&w).contains(&"You gain Shield line.".to_string()));
-    assert_eq!(
-        class_rows(&w),
-        ["Weapon drill", "Trained wind", "Shield line"]
-    );
+    assert_eq!(class_rows(&w), ["Weapon drill", "Charge", "Shield line"]);
     reach(&mut w, 12);
     assert_eq!(
         class_rows(&w),
-        [
-            "Weapon drill",
-            "Trained wind",
-            "Shield line",
-            "Veteran's wind"
-        ]
+        ["Weapon drill", "Charge", "Shield line", "Veteran's wind"]
     );
     // A restored world has them too.
     let restored = World::from_state(w.content().clone(), w.state().clone()).expect("restored");
@@ -176,7 +168,7 @@ fn a_level_brings_its_abilities_and_says_so() {
     assert_eq!(restored.state_hash(), w.state_hash());
     // A run on the scenario's own character has its class's too (the showcase's thief).
     let plain = World::new(BUILTIN.clone(), "showcase", Some(7)).expect("world");
-    assert_eq!(class_rows(&plain), ["Sneak attack", "Trained wind"]);
+    assert_eq!(class_rows(&plain), ["Sneak attack"]);
 }
 
 #[test]
@@ -754,7 +746,7 @@ fn class_actives_replay_and_dump_the_same() {
     let bytes = crate::save::encode(&w);
     let loaded = crate::save::decode(&bytes, BUILTIN.clone()).expect("loads");
     assert_eq!(loaded.state(), w.state());
-    assert_eq!(class_rows(&loaded), ["Rage", "Trained wind"]);
+    assert_eq!(class_rows(&loaded), ["Rage"]);
     let abilities = (Action::Use(ClassActive::Smite, Some(Dir::E))).to_string();
     assert_eq!(abilities, "use:smite:E");
 }

@@ -623,6 +623,9 @@ pub enum ClassActive {
     /// What clouds the mind or holds the body ended at once, for ki, taking no time (the
     /// ascetic's Stillness, on Still mind, `world/ascetic.rs`).
     Stillness,
+    /// A rush to a hostile the player sees, ending beside it with a blow, provoking no free
+    /// blows on the way, for stamina by the distance (the warrior's Charge, `world/charge.rs`).
+    Charge,
     /// Shots at a cell, several for the price of one, then a cooldown (the ranger's Volley).
     Volley,
     /// The companion set on a creature the player sees, savage, for focus (the ranger's Sic 'em,
@@ -685,6 +688,7 @@ impl ClassActive {
     pub const ALL: &[ClassActive] = &[
         ClassActive::Rage,
         ClassActive::WarCry,
+        ClassActive::Charge,
         ClassActive::VeteransWind,
         ClassActive::Whirlwind,
         ClassActive::LayOnHands,
@@ -724,6 +728,7 @@ impl ClassActive {
         match self {
             ClassActive::Rage => "rage",
             ClassActive::WarCry => "war_cry",
+            ClassActive::Charge => "charge",
             ClassActive::VeteransWind => "veterans_wind",
             ClassActive::Whirlwind => "whirlwind",
             ClassActive::LayOnHands => "lay_on_hands",
@@ -817,9 +822,13 @@ impl ClassActive {
         matches!(self, ClassActive::Inspire | ClassActive::Lullaby)
     }
 
-    /// Whether it asks for a cell before it is used (`use:volley:12,5`, `use:sic:12,5`).
+    /// Whether it asks for a cell before it is used (`use:volley:12,5`, `use:sic:12,5`,
+    /// `use:charge:12,5`).
     pub const fn aims_cell(self) -> bool {
-        matches!(self, ClassActive::Volley | ClassActive::Sic)
+        matches!(
+            self,
+            ClassActive::Volley | ClassActive::Sic | ClassActive::Charge
+        )
     }
 
     /// Whether it asks for a stack the player carries before it is used
@@ -881,6 +890,8 @@ impl ClassActive {
             | ClassActive::Cackle
             | ClassActive::Knock => ActionKind::Cast,
             ClassActive::Volley => ActionKind::Shoot,
+            // A run of steps: what blocks a step blocks it (the blow at its end comes free).
+            ClassActive::Charge => ActionKind::Step,
             ClassActive::Inspire | ClassActive::Lullaby => ActionKind::Song,
             ClassActive::MerchantsEye => ActionKind::Read,
             // A turn of it; setting the block takes the talent's seconds (`world/field_forge.rs`).

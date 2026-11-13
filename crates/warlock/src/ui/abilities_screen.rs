@@ -26,7 +26,7 @@ use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
 use warlock_core::ability::{Ability, Aim, Source, Unavailable};
-use warlock_core::content::SpellId;
+use warlock_core::content::{ClassActive, SpellId};
 use warlock_core::perception::PerceptionView;
 use warlock_core::world::{reach_words, reroll_words};
 
@@ -102,6 +102,15 @@ impl AbilitiesScreen {
                             match own.unavailable {
                                 Some(_) => format!("{head}: {state}").into(),
                                 None if state.is_empty() => head.into(),
+                                None => format!("{head}, {state}").into(),
+                            }
+                        }
+                        // Charge says its stamina, a point and a point more a pace.
+                        Ability::Class(ClassActive::Charge) => {
+                            let (base, per) = content.charge_cost().unwrap_or((0, 0));
+                            let head = format!("{base} stamina + {per} a pace");
+                            match own.unavailable {
+                                Some(_) => format!("{head}: {state}").into(),
                                 None => format!("{head}, {state}").into(),
                             }
                         }
