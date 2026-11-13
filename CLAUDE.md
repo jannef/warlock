@@ -128,7 +128,7 @@ Action text syntax: whitespace-separated `move:DIR run:DIR wait open:DIR close:D
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
 eat:LETTER eat:floor:LETTER craft:ID[:POS,...] give:LETTER[:DIR] read:LETTER[:X,Y|:LETTER] scribe:SPELL dig:DIR search search:N disarm:DIR listen:DIR gather:DIR wedge:DIR heal[:ID[:DIR]] feint:DIR intimidate:X,Y pray temper:LETTER whittle:LETTER salvage:LETTER decipher:LETTER drink use:ID[:DIR|:X,Y] chat:DIR ask:DIR:TOPIC steal:DIR tame:DIR throw_voice:X,Y order:follow|stay|hunt:X,Y rest:GOAL encounter:CHOICE stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N call:ID rank:SKILL:N
-skip:DURATION weather:KIND spawn ally:CREATURE[:N[:DURATION]] meet:ENTRY[:OUTCOME] effect:ID@X,Y[>X,Y] zone:KIND@X,Y,R identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID quest_roll:ID:TARGET`
+skip:DURATION weather:KIND spawn ally:CREATURE[:N[:DURATION]] meet:ENTRY[:OUTCOME] effect:ID@X,Y[>X,Y] zone:KIND@X,Y,R identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID lure:ID quest_roll:ID:TARGET`
 (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`; `frenzy` is refused: only rage gives it); `LETTERS` = stacks by position, as letters
 for the first 26 (`a` = 0, the first) or numbers for any (`0,2,30`; mixed works too, `ac,30`),
@@ -212,8 +212,9 @@ through `World::grant_resource_with_status` (with the status it brings: Raging),
 e.g. `resource:rage wait*3`
 (`docs/dev/resources.md`); `infect` is the dev disease: the player catches `DISEASE`, an id in `assets/data/diseases.toml`,
 as if they had lost the check (it incubates, then shows), e.g. `infect:the_shakes rest:24h*3`,
-no game time; `reveal` is the dev reveal: hidden location `ID` of the overworld (a legend's `hidden`,
+no game time; `reveal` is the dev reveal: hidden location `ID` of the campaign (a legend's `hidden`, on the overworld or a hand-made level,
 `docs/dev/overworld.md`) is revealed and marked on the map as a quest would, no game time;
+`lure` is the dev lure: active lure quest `ID`'s creature comes beside the player, aware of them (made if it is nowhere), e.g. `ask:E:quest-crystal_guardian` on Ysella then `descend lure:crystal_guardian ascend` (`docs/dev/quests.md` "Lure quests"), no game time;
 `quest_roll` is the dev roll: active rolled quest `ID`, with no progress yet, draws `TARGET`
 instead (a creature, `tag:` a tag, or an object id its pool can hold, or a variant id; its kills
 count from then, a variant's reveal is made; `docs/dev/quests.md`), no game time;

@@ -423,6 +423,8 @@ impl World {
             self.say(format!("You mark {found} on your map."));
         }
         self.followers_arrive(&followers, &from, way);
+        // A lure quest's creature that followed the player home is bound (`lure.rs`).
+        self.lure_home(events);
         true
     }
 
@@ -466,6 +468,8 @@ impl World {
         self.follow_along(&from, to, old, arrival);
         // An escort brought home completes its quest (`escort.rs`).
         self.escorts_home();
+        // A lure quest's creature waits on its level, formed anew if it was killed (`lure.rs`).
+        self.lure_places(to);
         // Sounds remembered on the level left say nothing about this one.
         self.state.recent_sounds.clear();
         if let Some(line) = self.content.arrival(to) {
@@ -642,7 +646,7 @@ pub(super) fn instantiate_level(
     state.endless.made(content, id);
     super::graveyard::name_statues(state, content, id);
     super::graves::carve_graves(state, content, id);
-    // The hidden locations revealed before the overworld was made (spec §7 "Hidden locations").
+    // The hidden locations revealed before the level was made (spec §7 "Hidden locations").
     super::reveal::apply_revealed(state, id);
     // Under the open sky its water has frozen and thawed with the weather of the last weeks.
     state.pre_roll_ice(content, id);

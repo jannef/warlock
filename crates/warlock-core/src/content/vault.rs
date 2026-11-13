@@ -148,6 +148,9 @@ impl Vault {
         if !template.rooms.is_empty() {
             return Err("a vault cannot mark special rooms".into());
         }
+        if let Some(at) = template.hidden.keys().next() {
+            return Err(format!("a vault cannot hide a location (at {at})"));
+        }
         // A vault's chests are of the floor it is stamped on (spec §8 "Chests"): no level or
         // band of their own, and no mimic (its type is its level).
         if let (LevelKind::Outdoor, Some(at)) = (template.kind, template.chests.keys().next()) {

@@ -672,6 +672,21 @@ bg = "#0d0d10"
 walkable = false
 glow = 0.35
 
+# Gimmwīc's crystal portal (#1446): a ring of violet crystal light in the rock that leads into
+# Meyn Bew, the earth-plane pocket Ysella the Binder opens. A way down: hidden on its cell
+# (levels/gimmwic.toml's `hidden`) until her quest is given.
+[[terrain]]
+id = "crystal_portal"
+name = "crystal portal"
+description = "A ring of crystal hangs in the rock, humming; the stone inside it is not quite here."
+stone = true
+glyph = ">"
+fg = "#d8c0ff"
+bg = "#1a1030"
+stairs = "down"
+light = "crystal_portal"
+glow = 0.4
+
 [[terrain]]
 id = "fungus"
 plants = true

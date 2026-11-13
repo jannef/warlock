@@ -18,7 +18,9 @@
 //! like a topic; `content/offer.rs`, `world/wares.rs`), an optional `speaks_to` (the alignment
 //! bands it talks to at all) with its `silent` (what it does for anyone else), and an optional `mutter`: the percent chance per
 //! action that it mutters one of the mutter's `lines` (with a `verb`, "mutters" by default) while
-//! the player is near enough to hear it.
+//! the player is near enough to hear it. `[[dialogue.after]]` (`quest`, `lines`): one-liners
+//! that join its `lines` once the player has done that quest (Kerensa's about the bound crystal
+//! guardian; the quest ids are checked as the quests load).
 
 use super::creature::CreatureId;
 use super::{Content, ContentError};
@@ -59,6 +61,17 @@ struct DialogueSpec {
     mutter: Option<MutterSpec>,
     stipend: Option<ServantWords>,
     partner: Option<PartnerWords>,
+    #[serde(default)]
+    after: Vec<AfterLines>,
+}
+
+/// One-liners a speaker adds to its own once the player has done a quest (`[[dialogue.after]]`).
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AfterLines {
+    /// The quest, by id (checked as the quests load: `quest.rs`).
+    pub quest: String,
+    pub lines: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -258,6 +271,8 @@ pub struct Dialogue {
     /// One-liners, said in turn ([`crate::world`]'s rotation: each once a round, in an order of
     /// the speaker's own, never the same twice in a row).
     pub lines: Vec<String>,
+    /// One-liners that join `lines` once the player has done a quest, in file order.
+    pub after: Vec<AfterLines>,
     /// What the player may ask about; with any, chatting opens the dialogue screen.
     pub topics: Vec<Topic>,
     /// What the speaker sells as a service, listed after the topics.
@@ -482,6 +497,12 @@ fn parse_file<'a>(
             }
             (Some(_), Some(_)) | (None, None) => {}
         }
+        if let Some(a) = spec.after.iter().find(|a| a.lines.is_empty()) {
+            return Err(bad(format!(
+                "after `{}`: `lines` needs at least one line",
+                a.quest
+            )));
+        }
         let mutter = match spec.mutter {
             Some(m) => {
                 if m.lines.is_empty() {
@@ -502,6 +523,7 @@ fn parse_file<'a>(
             greet_evil: spec.greet_evil,
             greet_good: spec.greet_good,
             lines: spec.lines,
+            after: spec.after,
             topics: spec.topic,
             services: spec.service,
             offer,

@@ -131,6 +131,17 @@ does = "identify"
 reply = "There. Every article looked at proper. Now 'ee know what 'ee're carryin', which is more'n most emmets."
 nothing = "'Ee know all 'ee carry already, my lover. I shan't charge 'ee for sayin' so."
 
+# Once the crystal guardian is bound and stands in her shop (#1446, Ysella's quest).
+[[dialogue.after]]
+quest = "crystal_guardian"
+lines = [
+    "Mind the guardian, my lover. 'E don't move, but 'e don't miss nothin'.",
+    "Since 'e come, every stone 'ere sings true. Cuts finer, an' all.",
+    "'Ee brought 'un 'ome? Proper job. Best thing for the trade in an age.",
+    "Cut 'ere in town an' 'e 'ums along. Steadies the 'and, that 'ummin'.",
+    "Thieves keep clear o' me shop now. Can't think why.",
+]
+
 # Mother Senara of the Glimmering, Gimmwīc's temple: she cures and mends for gold, as Cēaptūn's
 # Sister Hild does.
 [[dialogue]]
@@ -175,6 +186,63 @@ does = "mend"
 temple = true
 reply = "There. Whole again, as 'ee was made."
 nothing = "'Ee're whole, child. Go with the light."
+
+# Ysella the Binder (#1446), who keeps to the garden at the town's east edge: she binds the deep's
+# crystal to the gnomes' work, and gives the quest for the crystal guardian of Meyn Bew
+# (data/quests/ysella.toml), opening the crystal portal beside her as she gives it.
+[[dialogue]]
+npc = "ysella"
+name = "Ysella the Binder"
+greet = "Wasson, emmet? Stand still a minute. The stone's listenin' to 'ee."
+greet_evil = [
+    "There's blood in yer echo, emmet. The crystal won't sing for 'ee.",
+    "I bind stone, not folk. Don't make me learn 'ow.",
+]
+lines = [
+    "Every stone 'as a song in 'un. Bindin's just learnin' the tune.",
+    "Cut a crystal wrong an' it sulks for a 'undred year. Proper teasy.",
+    "The deep's full o' places that ain't quite 'ere. I know a few.",
+    "Old Tregear cuts 'em. I wake 'em. Different trade, same stone.",
+    "Garden's quiet. Stone 'ears better where 'tis quiet, my lover.",
+]
+mutter = { chance = 2, verb = "hums", lines = [
+    "...mmmm... there's the note... 'old it, 'old it...",
+    "...quarter tone down, my 'ansum, an' sing...",
+] }
+
+[[dialogue.topic]]
+id = "binding"
+name = "Binding"
+reply = "A bound stone works for the town, my 'ansum: lights the Glimmerin', steadies a cutter's wheel. 'Ee don't chain it. 'Ee sing it the note it's been waitin' for, an' it stays. Takes a lifetime to learn. I'm still at it."
+
+[[dialogue.topic]]
+id = "meyn_bew"
+name = "Meyn Bew"
+reply = "Meyn Bew, the livin' stones. A pocket o' the deep where the rock's more alive than not, like a bubble in glass. I can open the way, if there's call to. What's in there don't love visitors, mind. It's all crystal, an' crystal's got a long memory."
+
+# Once the crystal guardian is bound (#1446): her own lines about it.
+[[dialogue.after]]
+quest = "crystal_guardian"
+lines = [
+    "'Ear 'un 'ummin' over at Kerensa's? That's 'im content, that is.",
+    "Bound proper, 'e is. Won't wander, won't sulk, won't 'urt a soul.",
+    "Stones cut in town come out finer now. 'E sings 'em true.",
+]
+
+# The crystal guardian of Meyn Bew (#1446): no words, only its note. Hostile, it is in no mood to
+# talk; calm (in its hollow before it sees anyone, or bound in Kerensa's Stones), it hums.
+[[dialogue]]
+creature = "crystal_guardian"
+lines = [
+    "Mmmmmmmmmmm.",
+    "Ting... ting... ting.",
+    "Hmmmmmmm... ting.",
+]
+mutter = { chance = 3, verb = "hums", lines = [
+    "Mmmmmmmmmmmm...",
+    "...ting... ting...",
+    "Hmmmmmm... mmmmm...",
+] }
 
 # Old Tregear, master jeweller of the cutting floor. He teaches Jewelcraft for gold
 # (`train_skill`, world/service.rs), as Cēaptūn's smith Eadric teaches Metalcraft: offered only

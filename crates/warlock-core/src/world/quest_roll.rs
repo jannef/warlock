@@ -27,12 +27,9 @@ use crate::rng::Rng;
 
 impl World {
     /// Whether the player can enter dungeon branch `branch`: no hidden location of the run's
-    /// overworld leads into it, or each that does has been revealed.
+    /// campaign leads into it, or each that does has been revealed.
     pub(super) fn branch_open(&self, branch: &str) -> bool {
-        let Some(overworld) = self.content.overworld_of(&self.state.campaign) else {
-            return true;
-        };
-        (overworld.hidden.values()).all(|h| {
+        (self.content.hidden_locations(&self.state.campaign)).all(|(_, _, h)| {
             let into = (h.to.as_deref()).is_some_and(|to| self.content.is_in(to, branch));
             !into || self.state.revealed.contains(&h.id)
         })

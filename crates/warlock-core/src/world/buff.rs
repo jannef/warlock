@@ -120,6 +120,7 @@ impl World {
             | Action::Resource(_)
             | Action::Infect(_)
             | Action::Reveal(_)
+            | Action::Lure(_)
             | Action::QuestRoll { .. }
             | Action::Talent { .. }
             | Action::Advance(_)

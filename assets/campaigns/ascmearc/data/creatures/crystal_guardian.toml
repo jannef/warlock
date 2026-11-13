@@ -1,0 +1,58 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The crystal guardian (#1446; docs/dev/creatures/deep-gnomes.md "The crystal guardian"): a
+# crystalline earth elemental that keeps the hollow at the bottom of Meyn Bew, the earth-plane
+# pocket Ysella the Binder opens from Gimmwīc. Once at a time (`unique`), in no population:
+# only her quest makes it, on the hollow's place (`waits`), and makes it anew there if it is
+# killed before it is bound (world/lure.rs). Its fight is the lure: slow, so it can be led, and
+# it follows whoever stands beside it as they take the stairs, up four floors and through the
+# portal home, where Ysella binds it to the gem trade. Unlike the earth line it does not glide
+# through the walls: a pocket of living crystal, not bedrock. Its blows stagger, and it throws
+# crystal shards at what is not beside it.
+[[creature]]
+id = "crystal_guardian"
+level = 26
+xp = 140
+xp_percent = 200
+rarity = "very_rare"
+loot = 100
+unique = true
+name = "crystal guardian"
+glyph = "E"
+fg = "#c8d8ff"
+glow = 0.35
+# Slower than anyone it chases: it can be led, never outrun by accident.
+speed = 850
+faction = "elemental"
+tags = ["elemental", "earth"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 12
+footsteps = 110
+hearing = 12
+weight = 1400000
+stats = { strength = 27, dexterity = 14, toughness = 28, intelligence = 18, willpower = 26, presence = 22 }
+base_hp = 330
+natural = { defence = 1, protection = 8, name = "crystal body" }
+resist = { slashing = 25, piercing = 50, electricity = 100, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d10"
+damage_type = "bludgeoning"
+to_hit = 4
+name = "fist"
+verb = "strikes"
+threat = 24
+crit = 3
+on_hit = [{ status = "staggered", chance = 20, severity = 1 }]
+[creature.throw]
+object = "boulder"
+name = "crystal shard"
+damage = "3d8"
+damage_type = "piercing"
+range = 7
+cost = 1500
+verb = "flings"
+on_hit = [{ status = "staggered", chance = 15, severity = 1 }]

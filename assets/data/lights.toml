@@ -147,6 +147,12 @@ id = "crystal_amber"
 color = [320, 220, 40, 0]
 radius = 7
 
+# Gimmwīc's crystal portal (terrain.toml): a soft violet ring of light.
+[[light]]
+id = "crystal_portal"
+color = [180, 110, 320, 0]
+radius = 5
+
 # The will-o'-wisp (creatures/will_o_wisp.toml): a pale, cold light that lights a few cells
 # around it; magical, so steady.
 [[light]]

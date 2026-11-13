@@ -208,7 +208,8 @@ impl World {
         let me = self.state.player();
         let modifier = me.effective_stats(&content).modifier(stat)
             + me.talent_mods(&content).check(stat)
-            + me.skill_effect_of(&content, def.skill, Effect::Craft);
+            + me.skill_effect_of(&content, def.skill, Effect::Craft)
+            + self.binding_boon(def.skill);
         let against = def.difficulty + content.material(gem).work;
         let natural = combat::roll_natural(&mut self.state.rng);
         let step = (content.recipes().settings.as_ref()).map_or(5, |s| s.cut_step);

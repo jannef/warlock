@@ -374,9 +374,9 @@ pub(super) struct LegendDetail {
     /// The closed door on this cell is secret (spec §8 "Searching"): `true` (the default
     /// difficulty) or its difficulty. It looks like the wall around it until it is found.
     secret: Option<SecretSpec>,
-    /// A location hidden on this overworld cell until a quest reveals it (spec §7 "Hidden
-    /// locations"): `hidden = { id, terrain, to, name }`. Until then the cell is the plain
-    /// terrain it shows, in every way.
+    /// A location hidden on this cell (of the overworld or a hand-made level) until a quest
+    /// reveals it (spec §7 "Hidden locations"): `hidden = { id, terrain, to, name, opens }`.
+    /// Until then the cell is the plain terrain it shows, in every way.
     hidden: Option<HiddenSpec>,
     /// The name of the place on this cell (`name = "Beorggeat"`): a location's, or a landmark's;
     /// look mode names it, and a way in on this cell goes by it.
@@ -413,7 +413,8 @@ pub(super) struct AnimatedPlacement {
 }
 
 /// A legend entry's hidden location: the location's `id` (what quests' `reveals` name), the
-/// `terrain` the cell becomes (stairs down), the level `to` it leads, and its `name`.
+/// `terrain` the cell becomes (stairs down), the level `to` it leads, its `name`, and what the
+/// player is told as a quest opens it (`opens`; default: the giver marks it on their map).
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct HiddenSpec {
@@ -423,6 +424,8 @@ pub(super) struct HiddenSpec {
     #[serde(default)]
     to: Option<String>,
     name: String,
+    #[serde(default)]
+    opens: Option<String>,
 }
 
 /// A legend's `loot`: a grade, or a pool.
@@ -533,8 +536,8 @@ pub struct StairsLink {
     pub name: Option<String>,
 }
 
-/// A location hidden on an overworld cell until a quest reveals it (spec §7 "Hidden
-/// locations"): until then the cell is the plain terrain it shows. Ground truth.
+/// A location hidden on a cell of the overworld or a hand-made level until a quest reveals it
+/// (spec §7 "Hidden locations"): until then the cell is the plain terrain it shows. Ground truth.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HiddenLocation {
     /// The location's id: what a quest's `reveals` names.
@@ -545,6 +548,10 @@ pub struct HiddenLocation {
     pub to: Option<String>,
     /// What it is called once known.
     pub name: String,
+    /// What the player is told as a quest reveals it, instead of "<Giver> marks <name> on your
+    /// map." (a way that opens before their eyes: Gimmwīc's crystal portal).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub opens: Option<String>,
 }
 
 /// A named place on a cell of a hand-made level or a vault (a legend's `name`): a location, a
@@ -808,7 +815,7 @@ pub(super) fn parse_level(
                 places.insert(pos, place);
             }
             if let Some(spec) = &detail.hidden {
-                let location = parse_hidden(spec, parsed.kind, terrain, content)
+                let location = parse_hidden(spec, terrain, content)
                     .map_err(|m| err(format!("legend `{ch}`: {m}")))?;
                 if hidden
                     .values()
@@ -1260,19 +1267,16 @@ fn parse_place(detail: &LegendDetail) -> Result<Option<Place>, String> {
     }))
 }
 
-/// A legend entry's hidden location on a cell of `terrain` (spec §7 "Hidden locations"): only
-/// on the overworld, on a walkable cell that is no location already, becoming stairs down. Where
-/// it leads is checked with the other stairs' targets.
+/// A legend entry's hidden location on a cell of `terrain` (spec §7 "Hidden locations"): on
+/// the overworld or a hand-made level (never a vault: `Vault::new`), on a walkable cell that is
+/// no location already, becoming stairs down. Where it leads is checked with the other stairs'
+/// targets.
 fn parse_hidden(
     spec: &HiddenSpec,
-    kind: LevelKind,
     terrain: TerrainId,
     content: &Content,
 ) -> Result<HiddenLocation, String> {
     let id = &spec.id;
-    if kind != LevelKind::Overworld {
-        return Err("only the overworld has hidden locations".into());
-    }
     if !super::dialogue::is_id(id) {
         return Err(format!(
             "hidden location `{id}`: {}",
@@ -1300,6 +1304,7 @@ fn parse_hidden(
         terrain: entrance,
         to: spec.to.clone(),
         name: spec.name.clone(),
+        opens: spec.opens.clone(),
     })
 }
 

@@ -20,6 +20,10 @@
 //!   player: they say `thanks` (optional), and the giver, if on that level, else the escort,
 //!   says `done` and pays. `waits` places the escort as the quest is given
 //!   (`world/escort_waits.rs`). Their death fails it.
+//! - `lure`: `target` a unique creature type, `level` the hand-made level it is lured to,
+//!   `waits` the place the quest makes it on as it is given and again whenever the player comes
+//!   to that level and it is nowhere (killed, it forms anew), and `[quest.binding]`: what becomes
+//!   of it once it stands on `level` with the player and the giver (`world/lure.rs`).
 //!
 //! Asking the giver about a quest **gives** it (there is no accepting or declining, #422): the
 //! giver says `offer`, then `accept` (optional) in the same reply, and it is active at once.
@@ -45,8 +49,10 @@ use super::object::{ObjectId, parse_stacks};
 use super::quest_roll::{self, PickSpec, Rolled, Variant, VariantSpec};
 use super::tag::{TAG_TARGET, spoken};
 use super::{Content, ContentError};
+use super::{FactionId, StatusId};
 use crate::alignment::{MAX as ALIGNMENT_MAX, Requirement};
 use crate::dice::Dice;
+use crate::geom::Pos;
 use crate::object::Stack;
 use crate::skills::SkillId;
 use serde::Deserialize;
@@ -68,6 +74,7 @@ pub enum QuestKind {
     Reach,
     Deliver,
     Escort,
+    Lure,
 }
 
 impl QuestKind {
@@ -79,6 +86,7 @@ impl QuestKind {
             QuestKind::Reach => "reach",
             QuestKind::Deliver => "deliver",
             QuestKind::Escort => "escort",
+            QuestKind::Lure => "lure",
         }
     }
 }
@@ -110,6 +118,7 @@ struct QuestSpec {
     joins: Option<String>,
     thanks: Option<String>,
     waits: Option<WaitsSpec>,
+    binding: Option<BindingSpec>,
     #[serde(default)]
     reward: RewardSpec,
     offer: Option<String>,
@@ -146,13 +155,64 @@ impl Requires {
     }
 }
 
-/// An escort quest's `waits = { creature = "cottar", level = "aelfham:3", at = "the moss bed" }`.
+/// An escort quest's `waits = { creature = "cottar", level = "aelfham:3", at = "the moss bed" }`;
+/// a lure quest's names no `creature` (it is the quest's `target`).
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct WaitsSpec {
-    creature: String,
+    creature: Option<String>,
     level: String,
     at: String,
+}
+
+/// A lure quest's `[quest.binding]` (`world/lure.rs`).
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct BindingSpec {
+    status: String,
+    faction: String,
+    post: [i32; 2],
+    words: Vec<String>,
+    shatters: Option<String>,
+    reforms: Option<String>,
+    boon: Option<BoonSpec>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct BoonSpec {
+    skill: String,
+    bonus: i32,
+}
+
+/// What becomes of a lure quest's creature once it is brought home (`world/lure.rs`): bound by
+/// the giver, it carries `status` for good (a circled one: its spell circle shows it), joins
+/// `faction`, walks to `post` on the quest's level and stays there, and gives its `boon`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Binding {
+    /// The status it carries from then on (no `eases`: it lasts until cured, and nothing cures
+    /// it).
+    pub status: StatusId,
+    /// The faction it joins (one at peace with the player: `peaceful`).
+    pub faction: FactionId,
+    /// The cell of the quest's level it walks to and keeps.
+    pub post: Pos,
+    /// What the player is told as it is bound, a message each, before the giver's `done`.
+    pub words: Vec<String>,
+    /// What the player is told as it dies unbound, while the quest is active.
+    pub shatters: Option<String>,
+    /// What the player is told as it forms anew on its level after a death.
+    pub reforms: Option<String>,
+    /// What it does for the player's checks while it stands bound on their level.
+    pub boon: Option<Boon>,
+}
+
+/// A bound creature's help (`world/lure.rs`): `bonus` to the player's checks of skill `skill`'s
+/// recipes (Jewelcraft's Cut and Set) made on its level.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Boon {
+    pub skill: SkillId,
+    pub bonus: i32,
 }
 
 /// Where an escort quest places its escort as it is given (`world/escort.rs`, [`Waits`]): a
@@ -292,6 +352,14 @@ pub enum Goal {
         /// Where the quest places the escort as it is given; `None`: a level places them.
         waits: Option<Waits>,
     },
+    /// Lure `creature`, a unique type the quest makes on `waits`, to `level`, a hand-made level,
+    /// where the giver binds it (`world/lure.rs`).
+    Lure {
+        creature: CreatureId,
+        level: String,
+        waits: Waits,
+        binding: Binding,
+    },
 }
 
 /// What completing a quest gives.
@@ -388,6 +456,7 @@ impl QuestDef {
             Goal::Reach { .. } => QuestKind::Reach,
             Goal::Deliver { .. } => QuestKind::Deliver,
             Goal::Escort { .. } => QuestKind::Escort,
+            Goal::Lure { .. } => QuestKind::Lure,
         }
     }
 
@@ -424,14 +493,30 @@ impl QuestDef {
         }
     }
 
-    /// The levels or branches it names: a kill's `level`, a reach's or an escort's target.
+    /// The levels or branches it names: a kill's `level`, a reach's or an escort's target, a
+    /// lure's level.
     pub fn places(&self) -> impl Iterator<Item = &str> {
         let place = match &self.goal {
             Goal::Kill { level, .. } => level.as_deref(),
-            Goal::Reach { level } | Goal::Escort { level, .. } => Some(level.as_str()),
+            Goal::Reach { level } | Goal::Escort { level, .. } | Goal::Lure { level, .. } => {
+                Some(level.as_str())
+            }
             _ => None,
         };
         place.into_iter()
+    }
+
+    /// A lure quest's creature, its level, where it waits, and its binding (`world/lure.rs`).
+    pub fn lure(&self) -> Option<(CreatureId, &str, &Waits, &Binding)> {
+        match &self.goal {
+            Goal::Lure {
+                creature,
+                level,
+                waits,
+                binding,
+            } => Some((*creature, level.as_str(), waits, binding)),
+            _ => None,
+        }
     }
 
     /// What a kill quest is after.
@@ -573,6 +658,20 @@ pub(super) fn parse<'a>(
     if quests.len() > usize::from(u16::MAX) {
         return Err(err("too many quests".into()));
     }
+    // A dialogue's lines after a quest name one that exists.
+    let after = (content.dialogues.iter()).flat_map(|d| d.after.iter().map(move |a| (d, a)));
+    for (d, a) in after {
+        if !quests.iter().any(|q| q.id == a.quest) {
+            let who = match &d.speaker {
+                Speaker::Creature(c) => content.creature(*c).id.clone(),
+                Speaker::Npc(npc) => npc.clone(),
+            };
+            return Err(err(format!(
+                "the dialogue of `{who}` has lines after `{}`, which is no quest",
+                a.quest
+            )));
+        }
+    }
     Ok(quests)
 }
 
@@ -626,7 +725,12 @@ fn resolve(
         unused("escort", spec.escort.is_some())?;
         unused("joins", spec.joins.is_some())?;
         unused("thanks", spec.thanks.is_some())?;
+    }
+    if !matches!(kind, QuestKind::Escort | QuestKind::Lure) {
         unused("waits", spec.waits.is_some())?;
+    }
+    if kind != QuestKind::Lure {
+        unused("binding", spec.binding.is_some())?;
     }
     let goal = match kind {
         QuestKind::Kill => {
@@ -714,7 +818,10 @@ fn resolve(
             }
             let joins = spec.joins.clone().ok_or("an escort quest needs `joins`")?;
             let waits = (spec.waits.as_ref())
-                .map(|w| waits(content, campaign, w))
+                .map(|w| {
+                    let creature = (w.creature.as_deref()).ok_or("`waits` needs `creature`")?;
+                    waits(content, campaign, creature, w)
+                })
                 .transpose()?;
             Goal::Escort {
                 escort,
@@ -723,6 +830,15 @@ fn resolve(
                 thanks: spec.thanks.clone(),
                 waits,
             }
+        }
+        QuestKind::Lure => {
+            unused("what", spec.what.is_some())?;
+            unused("to", spec.to.is_some())?;
+            unused("count", spec.count.is_some())?;
+            if roll.is_some() {
+                return Err("a lure quest is not rolled".into());
+            }
+            lure(content, campaign, &target, &spec)?
         }
     };
     let reward = &spec.reward;
@@ -798,13 +914,83 @@ fn names_level(content: &Content, campaign: &str, id: &str) -> bool {
     content.has_level(campaign, id) && !content.is_portal_floor(id)
 }
 
-/// An escort quest's `waits`, checked: a known creature type, a level of the campaign, and a
-/// place of that name on it (a hand-made level's, or a vault's its branch level stamps for
-/// certain), exactly one.
-fn waits(content: &Content, campaign: &str, w: &WaitsSpec) -> Result<Waits, String> {
-    let creature = (content.creature_id(&w.creature))
-        .filter(|_| w.creature != "player")
-        .ok_or_else(|| format!("`waits`: unknown creature `{}`", w.creature))?;
+/// A lure quest's goal, checked: `target` a unique creature type, `level` a hand-made level of
+/// the campaign, `waits` (with no `creature` of its own) a place for it, and a `binding` whose
+/// status lasts, whose faction is known, and whose post is a walkable cell of `level`.
+fn lure(content: &Content, campaign: &str, target: &str, spec: &QuestSpec) -> Result<Goal, String> {
+    let creature = (content.creature_id(target))
+        .filter(|&c| target != "player" && content.creature(c).unique)
+        .ok_or_else(|| format!("`target`: `{target}` is no unique creature type"))?;
+    let level = spec.level.as_deref().ok_or("a lure quest needs `level`")?;
+    let template = (content.level(level))
+        .filter(|_| names_level(content, campaign, level))
+        .ok_or_else(|| format!("`level`: `{level}` is no hand-made level of the campaign"))?;
+    let w = spec.waits.as_ref().ok_or("a lure quest needs `waits`")?;
+    if w.creature.is_some() {
+        return Err("a lure quest's `waits` has no `creature`: it is the `target`".into());
+    }
+    let waits = waits(content, campaign, target, w)?;
+    let b = spec
+        .binding
+        .as_ref()
+        .ok_or("a lure quest needs `binding`")?;
+    let bad = |m: String| format!("`binding`: {m}");
+    let status = (content.status_id(&b.status))
+        .ok_or_else(|| bad(format!("unknown status `{}`", b.status)))?;
+    if content.status(status).eases.is_some() {
+        return Err(bad(format!(
+            "status `{}` eases away: it must last",
+            b.status
+        )));
+    }
+    let faction = (content.factions().id(&b.faction))
+        .ok_or_else(|| bad(format!("unknown faction `{}`", b.faction)))?;
+    let post = Pos::new(b.post[0], b.post[1]);
+    let walkable = (template.terrain.get(post)).is_some_and(|&t| content.terrain(t).walkable);
+    if !walkable {
+        return Err(bad(format!(
+            "`post` {post} is no walkable cell of `{level}`"
+        )));
+    }
+    if b.words.is_empty() {
+        return Err(bad("`words` needs at least one line".into()));
+    }
+    let boon = match &b.boon {
+        Some(boon) => Some(Boon {
+            skill: (content.skill_id(&boon.skill))
+                .ok_or_else(|| bad(format!("boon: unknown skill `{}`", boon.skill)))?,
+            bonus: boon.bonus,
+        }),
+        None => None,
+    };
+    Ok(Goal::Lure {
+        creature,
+        level: level.to_string(),
+        waits,
+        binding: Binding {
+            status,
+            faction,
+            post,
+            words: b.words.clone(),
+            shatters: b.shatters.clone(),
+            reforms: b.reforms.clone(),
+            boon,
+        },
+    })
+}
+
+/// An escort quest's `waits` (or a lure quest's, `creature` its target), checked: a known
+/// creature type, a level of the campaign, and a place of that name on it (a hand-made level's,
+/// or a vault's its branch level stamps for certain), exactly one.
+fn waits(
+    content: &Content,
+    campaign: &str,
+    creature: &str,
+    w: &WaitsSpec,
+) -> Result<Waits, String> {
+    let creature = (content.creature_id(creature))
+        .filter(|_| creature != "player")
+        .ok_or_else(|| format!("`waits`: unknown creature `{creature}`"))?;
     if !names_level(content, campaign, &w.level) {
         return Err(format!("`waits`: unknown level `{}`", w.level));
     }
@@ -855,8 +1041,8 @@ fn texts(spec: &QuestSpec, roll: Option<&Rolled>) -> Result<QuestTexts, String> 
     })
 }
 
-/// A `reveals` of a quest of campaign `campaign`, checked: it names a hidden location of the
-/// campaign's overworld.
+/// A `reveals` of a quest of campaign `campaign`, checked: it names a hidden location of one of
+/// the campaign's levels (its overworld's, or a hand-made level's).
 pub(super) fn reveal(
     content: &Content,
     campaign: Option<&str>,
@@ -867,7 +1053,7 @@ pub(super) fn reveal(
         .is_none()
     {
         return Err(format!(
-            "`reveals`: the overworld has no hidden location `{}`",
+            "`reveals`: the campaign has no hidden location `{}`",
             r.location
         ));
     }

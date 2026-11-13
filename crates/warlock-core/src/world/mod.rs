@@ -210,6 +210,7 @@ mod listen;
 mod lockpick;
 mod loot;
 mod lucky;
+mod lure;
 mod lurk;
 mod malison;
 mod mana;
@@ -1688,6 +1689,7 @@ impl World {
             Action::Resource(id) => return self.grant_resource_dev(id, events),
             Action::Infect(id) => return self.infect_dev(id),
             Action::Reveal(id) => return self.reveal_dev(id),
+            Action::Lure(id) => return self.lure_dev(id),
             Action::QuestRoll { quest, target } => return self.quest_roll_dev(quest, target),
             Action::LevelUpAuto => return self.level_up_auto(),
             Action::GrantXp(xp) => return self.grant_xp_dev(*xp),
@@ -1851,6 +1853,8 @@ mod creature_cast_tests;
 mod creature_flask_tests;
 #[cfg(test)]
 mod creature_magic_tests;
+#[cfg(test)]
+mod crystal_guardian_tests;
 #[cfg(test)]
 mod curse_tests;
 #[cfg(test)]

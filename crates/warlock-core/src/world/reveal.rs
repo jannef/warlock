@@ -1,6 +1,6 @@
-//! Hidden locations (spec §7 "Hidden locations"): a location on the overworld that is, until a
-//! quest reveals it, the plain terrain its cell shows, in every way (as a secret door is the wall
-//! it looks like). Revealing it turns the cell into its entrance, links the entrance to the
+//! Hidden locations (spec §7 "Hidden locations"): a location on the overworld (or a hand-made
+//! level: Gimmwīc's crystal portal) that is, until a quest reveals it, the plain terrain its cell
+//! shows, in every way (as a secret door is the wall it looks like). Revealing it turns the cell into its entrance, links the entrance to the
 //! level it leads to, and marks it on the player's map (their memory of the overworld), wherever
 //! they are. Climbing out through one reveals it too ([`World::reveal_way_out`], called by
 //! `world/travel.rs::take_stairs`). `world/quest.rs` reveals at a quest's stage ([`crate::content::RevealWhen`]); the
@@ -12,28 +12,23 @@ use crate::content::{StairsDir, StairsLink};
 use crate::geom::Pos;
 
 impl World {
-    /// Reveals hidden location `id` of the overworld: if the overworld has been made, its cell
-    /// becomes the entrance, leading on, and is marked on the player's map; if not, it will be
-    /// as it is made ([`apply_revealed`]). Returns whether anything changed: `false` for a
-    /// location revealed before, or one the overworld does not have.
+    /// Reveals hidden location `id` of the run's campaign (on its overworld or a hand-made
+    /// level): if its level has been made, its cell becomes the entrance, leading on, and is
+    /// marked on the player's map; if not, it will be as it is made ([`apply_revealed`]).
+    /// Returns whether anything changed: `false` for a location revealed before, or one the
+    /// campaign does not have.
     pub(super) fn reveal_location(&mut self, id: &str) -> bool {
-        let Some(overworld) = self
-            .content
-            .overworld_of(&self.state.campaign)
-            .map(|o| o.id.clone())
+        let Some(level) = (self.content.hidden_locations(&self.state.campaign))
+            .find(|(_, _, h)| h.id == id)
+            .map(|(level, _, _)| level.to_string())
         else {
             return false;
         };
-        if self
-            .content
-            .hidden_location(&self.state.campaign, id)
-            .is_none()
-            || !self.state.revealed.insert(id.into())
-        {
+        if !self.state.revealed.insert(id.into()) {
             return false;
         }
-        if let Some(at) = reveal_on(&mut self.state, &overworld, id)
-            && self.state.current_level == overworld
+        if let Some(at) = reveal_on(&mut self.state, &level, id)
+            && self.state.current_level == level
         {
             let level = self.state.current();
             self.lights.terrain_changed(level, &self.content, at);
@@ -72,7 +67,7 @@ impl World {
     }
 }
 
-/// The overworld `level_id` as it is made: the locations revealed before it was are revealed on
+/// Level `level_id` as it is made: the locations revealed before it was are revealed on
 /// it now (called by `instantiate_level`; a layer boss's lair keeps its hidden stairs under the
 /// boss's id, never revealed this way: `world/layer_boss.rs`).
 pub(super) fn apply_revealed(state: &mut WorldState, level_id: &str) {

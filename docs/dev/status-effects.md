@@ -83,7 +83,9 @@ buff and hex spell's status a school, whose colour its spell circle about the ac
 `fire_cloaked` (abjuration); `ill_wished`,
 `drowsy` (enchantment), `weakened` (necromancy), `sluggish`, `webbed` (transmutation). A circled
 status must have `seen` (a load-time check: the circle shows only what look mode may say) and be
-laid by a buff or hex spell (which makes its circle a buff's or a hex's); a buff or hex
+laid by a buff or hex spell (which makes its circle a buff's or a hex's), or name its own `kind`
+(`"buff"` or `"hex"`) when no spell lays it: the lure quest's `bound` (enchantment, a buff; #1446,
+`world/lure.rs`), permanent (no `eases`), on the crystal guardian once bound; a buff or hex
 spell's status without a row has no circle. **The circle's light** (docs/design/buff-circles.md §8):
 `circles::shed_lights` fills `StatusDef::light` at load with the school's `circle_<school>` preset
 (`data/lights.toml`: radius 1, steady, luma 40 to 52 and UV 90 at the source) for every circled
