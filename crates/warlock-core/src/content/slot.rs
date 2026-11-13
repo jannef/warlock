@@ -7,7 +7,9 @@
 //! `mark` the inventory gives a thing there ("being worn"). Slots may share what fits them
 //! (`fits`, default the id): a ring fits either ring slot. The two `hand` slots are the hands: a
 //! two-handed object takes both. A slot that `takes_weapons` also holds any weapon or
-//! throwable (the missile weapon slot).
+//! throwable (the missile weapon slot). A slot with a `class` belongs to the characters of that
+//! class alone (the aristocrat's three extra ring slots, #1404): nobody else has it, so it is not
+//! shown, filled, or offered for them ([`super::Content::slots_for`]).
 
 use super::{ActionKind, ContentError};
 use serde::{Deserialize, Serialize};
@@ -40,6 +42,8 @@ struct SlotSpec {
     /// Any weapon and anything thrown fits, besides what `fits` names.
     #[serde(default)]
     takes_weapons: bool,
+    /// Only a character of this class has the slot (a class id, checked once the classes load).
+    class: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -65,6 +69,16 @@ pub struct SlotDef {
     /// Any weapon (no missile weapon's ammunition) and any throwing weapon fits here too, besides
     /// what `fits` names: the missile weapon slot, whose contents `t` throws or shoots.
     pub takes_weapons: bool,
+    /// Only a character of this class has it (the aristocrat's extra ring slots); `None`:
+    /// everyone does, creatures too.
+    pub class: Option<String>,
+}
+
+impl SlotDef {
+    /// Whether one of class `class` (`None`: no character, a creature) has this slot.
+    pub fn belongs_to(&self, class: Option<&str>) -> bool {
+        self.class.is_none() || self.class.as_deref() == class
+    }
 }
 
 /// Parses `data/slots.toml`.
@@ -100,6 +114,7 @@ pub(super) fn parse(file: &str, text: &str) -> Result<Vec<SlotDef>, ContentError
             mark: spec.mark,
             hand: spec.hand,
             takes_weapons: spec.takes_weapons,
+            class: spec.class,
         });
     }
     Ok(slots)

@@ -102,6 +102,10 @@ fn level_one_abilities_come_with_the_character_and_others_with_their_levels() {
     let mut w = world("aristocrat");
     reach(&mut w, 18);
     assert!(holds(&w, "riposte") && holds(&w, "fencing"));
+    // Family wealth from the start (#1404); Iron will no longer at 32.
+    assert!(holds(&w, "family_wealth"));
+    reach(&mut w, 32);
+    assert!(!holds(&w, "iron_will") || !said(&w).contains(&"You gain Iron will.".to_string()));
     assert!(w.state.player().talent_mods(w.content()).free_blows.riposte);
     let json = dump::json(&w, &[], false);
     let riposte = (json["talents"].as_array().expect("talents").iter())
@@ -136,13 +140,13 @@ fn a_talent_already_picked_is_not_given_again_but_brings_a_pick_in_its_place() {
 
 #[test]
 fn stat_gifts_raise_score_and_potential_once() {
-    let mut w = world("aristocrat");
+    let mut w = world("berserker");
     let before = w.state.player().stats;
     reach(&mut w, 32);
     let after = w.state.player().stats;
-    // Iron will: Presence +1, score and potential (stat training may add more of its own).
-    assert!(after.score(Stat::Presence) > before.score(Stat::Presence));
-    assert!(after.potential(Stat::Presence) > before.potential(Stat::Presence));
+    // Mighty thews: Strength +2, score and potential (stat training may add more of its own).
+    assert!(after.score(Stat::Strength) >= before.score(Stat::Strength) + 2);
+    assert!(after.potential(Stat::Strength) >= before.potential(Stat::Strength) + 2);
     // A restore gives nothing twice.
     let state = w.state.as_ref().clone();
     let back = World::from_state(BUILTIN.clone(), state).expect("restore");

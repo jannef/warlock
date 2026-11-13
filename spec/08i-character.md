@@ -860,7 +860,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     at item level 6 (`loot::heirloom`: two a magic item's prefix and suffix, more a rare item's,
     named), identified, readied in its own slot when free, else carried, from the stream
     `character/fathers-sword/<race>,<gender>,<class>`). Each stream is its own, so no other roll
-    moves. The weakest of a small race may start Burdened with them, never Strained. (Favoured
+    moves. The aristocrat's class gives Family wealth at level 1 (#1404), handed down as the
+    run begins (`World::begin`, on top of the kit, whether or not the run takes the kit), so it is
+    never their pick (held already) and Father's sword is open to their first. The weakest of a
+    small race may start Burdened with them, never Strained. (Favoured
     child, which doubled the background story's luckier odds, was cut in #787 with its
     `background` system: no talent is left on the story's draw.)
   - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
@@ -947,7 +950,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     32, 40, 50, and 60 at first; the culls of #774 and #787 left some empty, and the ranger's
     Stalker's eye came at 2 with #788): a talent of the **Class abilities** tree (`class = true` in
     `data/talents.toml`; `granted`, never on a pick list) or an ordinary talent it hands out
-    (the aristocrat's Riposte at 18, the commoner's Second wind at 32). The player is given each
+    (the aristocrat's Family wealth at 1 and Riposte at 18, the commoner's Second wind at 32). The player is given each
     as they reach its level ("You gain Fencing." with the level's news), level 1's at
     creation, and again whatever is missing when a run is restored, so a grown table reaches a
     save; one already held (picked earlier, or a story's boon) is not given again: its level
@@ -960,8 +963,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     those trees spends a bonus pick before an ordinary one, any other is refused for it ("You
     must choose a talent of Weaponcraft or Delver."), and a bonus pick nothing fits is dropped
     like any other. The everyday folk have theirs (bonus picks at 10, 20, 30, 45, 55):
-    aristocrat (Weaponcraft, Delver) Fencing (Duelist one rank higher), Riposte, Iron will (+2
-    on Willpower checks, Presence +1), Peerless (+2 on the confirmation roll); commoner (any
+    aristocrat (Weaponcraft, Delver) Family wealth (at 1, #1404), Fencing (Duelist one rank
+    higher), Riposte, Peerless (+2 on the confirmation roll; #1404 cut Iron will at 32); commoner (any
     tree) Pack mule (the burden line's first step, #1198), Stubborn (+1 on
     Toughness checks, poison never lowers scores), Big hands (+1 damage with maces and
     unarmed), Second wind, Salt of the earth (healing and resting +25 %), Unlikely hero (every
@@ -1050,8 +1053,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     **Adds an action and saved state** (`Stack::spirit`).
   - **Scholar, Grit, Delver** (#240; the design's §7.5 but for the five mana talents, which
     came with #242: Deep well, Clear mind, Meditation, Frugal caster, Blood magic, §8 "Mana"). Their effects share what the class abilities use where the rules
-    are the same (`checks` and `stat`: Iron will, +2 on Willpower checks and Presence +1). Iron will is a Grit talent the
-    aristocrat's table also gives. #787 cut Keen appraiser, Silver tongue, and Well liked;
+    are the same (`checks` and `stat`: Iron will, +2 on Willpower checks and Presence +1). #787 cut Keen appraiser, Silver tongue, and Well liked;
     Haggler is the merchant's class ability alone. New: Scroll savant (Scholar; Intelligence 13; #775 merged
     Careful reader into it): `read_percent`
     (reading takes half the time; with the wizard's Scroll adept a quarter, the least talents

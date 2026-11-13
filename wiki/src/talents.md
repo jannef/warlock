@@ -111,6 +111,8 @@ give comes at once, on top of your [starting kit](starting-kit.md).
   each, so the weakest of the small peoples ([halflings](races.md#race-halfling),
   [gnomes](races.md#race-gnome), [goblins](races.md#race-goblin), [kobolds](races.md#race-kobold),
   [ratfolk](races.md#race-ratfolk)) may set out [Burdened](burden.md#burden-1).
+  An [aristocrat](classes.md#aristocrat) is born to it: their class gives it at level 1, so they
+  never pick it, and they may pick Father's sword straight away.
 - **[Father's sword](talents.md#talent-fathers-sword)** (needs Family wealth) is your people's
   heirloom weapon: not always a sword, but always a weapon. It is [magic](magic-items.md), with 2 to
   4 [affixes](affixes.md#prefixes) rolled at item level 6. Two make it magic; more make it

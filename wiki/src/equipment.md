@@ -10,7 +10,8 @@ You can wear and wield what you carry:
   [shield](objects.md#class-shields) or a light weapon in your [off
   hand](fighting-styles.md#two-weapons);
 - [gloves](objects.md#class-gloves), a [ring](objects.md#class-rings) on each hand, and
-  [boots](objects.md#class-boots);
+  [boots](objects.md#class-boots) (an [aristocrat](classes.md#aristocrat) wears three more
+  rings besides);
 - a [missile weapon](objects.md#class-missile-weapons) with its
   [missiles](objects.md#class-missiles) ready;
 - a [tool](objects.md#class-tools).
@@ -26,7 +27,9 @@ weight.
 ## The equipment screen
 
 Press `i`. The screen lists every slot with its letter and what is in it, or `—` when it is
-empty. Below the slots it shows what you carry and what it weighs, as the
+empty. An [aristocrat](classes.md#aristocrat) alone has three more ring slots, Extra ring 1 to 3,
+right after the right ring, so their later slots have later letters (their Tool slot is `p`). A
+ring worn there works just as one on either hand. Below the slots it shows what you carry and what it weighs, as the
 [inventory](objects.md#your-pack) does:
 
 {{#include generated/equipment.md}}
@@ -36,7 +39,7 @@ long it takes to put one on there, or take it off, at a [normal pace](turns.md#w
 
 - Press a slot's letter, or move the `>` with the arrow keys and press `Enter`, to choose what
   goes there. On this screen every letter names a slot, even `e`, `i`, `k`, `l`, and `m`.
-- Press a slot's letter in upper case (`A` to `M`) to look at what is in it (see
+- Press a slot's letter in upper case (`A` to `M`, an aristocrat's to `P`) to look at what is in it (see
   [Magic items](magic-items.md#looking-at-an-item)).
 - The next screen lists what you carry that fits the slot (see [Lists of
   objects](objects.md#lists-of-objects)). Press its letter, or `Enter` on the `>` row, to put it
