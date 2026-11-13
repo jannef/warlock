@@ -166,6 +166,9 @@ pub enum ScreenName {
     Whittle,
     /// Choose something carried to take apart for its materials (the Salvage ability).
     Salvage,
+    /// Choose a damaged thing carried to mend in the field (the craftsperson's Make do and mend,
+    /// `world/make_do.rs`).
+    MakeDo,
     /// Choose a loose gem to cut (Jewelcraft's Cut recipe, from its profession's screen).
     Cut,
     /// Choose a scroll to make out unread (the Decipher ability, spec §8 "Scrolls"): those of a
@@ -248,6 +251,7 @@ impl ScreenName {
                 | ScreenName::Temper
                 | ScreenName::Whittle
                 | ScreenName::Salvage
+                | ScreenName::MakeDo
                 | ScreenName::Cut
                 | ScreenName::Decipher
                 | ScreenName::Give
@@ -498,6 +502,7 @@ impl Screen {
             ScreenName::Temper => objects(ObjectList::Temper),
             ScreenName::Whittle => objects(ObjectList::Whittle),
             ScreenName::Salvage => objects(ObjectList::Salvage),
+            ScreenName::MakeDo => objects(ObjectList::MakeDo),
             ScreenName::Cut => objects(ObjectList::Cut),
             ScreenName::Decipher => objects(ObjectList::Decipher),
             ScreenName::Give => objects(ObjectList::Give),
@@ -549,6 +554,7 @@ impl Screen {
                 ObjectList::Temper => ScreenName::Temper,
                 ObjectList::Whittle => ScreenName::Whittle,
                 ObjectList::Salvage => ScreenName::Salvage,
+                ObjectList::MakeDo => ScreenName::MakeDo,
                 ObjectList::Cut => ScreenName::Cut,
                 ObjectList::Decipher => ScreenName::Decipher,
                 ObjectList::Give => ScreenName::Give,

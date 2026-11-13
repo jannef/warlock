@@ -32,7 +32,7 @@ use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use warlock_core::ability::{self, Ability};
 use warlock_core::beside::{Beside, Way};
-use warlock_core::content::{LevelKind, Offer, RecipeUse, TerrainId, VisionProfile};
+use warlock_core::content::{ClassActive, LevelKind, Offer, RecipeUse, TerrainId, VisionProfile};
 use warlock_core::hunger::Hunger;
 use warlock_core::perception::{CellView, PerceptionView};
 use warlock_core::time::Duration;
@@ -1303,6 +1303,8 @@ impl Gameplay<'_> {
         let game = self.game.as_ref()?;
         let by = match ability {
             Ability::Spell(spell) => IdentifyBy::Spell(spell),
+            // Make do and mend has its own list (`use_ability`).
+            Ability::Class(ClassActive::MakeDo) => return None,
             Ability::Class(active) => IdentifyBy::Class(active),
             _ => return None,
         };
@@ -1336,6 +1338,9 @@ impl Gameplay<'_> {
                 }
                 if ability == Ability::Salvage {
                     return Some(ScreenAction::Open(ScreenName::Salvage));
+                }
+                if ability == Ability::Class(ClassActive::MakeDo) {
+                    return Some(ScreenAction::Open(ScreenName::MakeDo));
                 }
                 if ability == Ability::Decipher {
                     return Some(ScreenAction::Open(ScreenName::Decipher));

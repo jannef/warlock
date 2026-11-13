@@ -210,6 +210,7 @@ mod lockpick;
 mod loot;
 mod lucky;
 mod lurk;
+mod make_do;
 mod malison;
 mod mana;
 mod material_drops;
@@ -359,6 +360,8 @@ pub(crate) use item_damage::protected_in;
 pub use learn::{Odds, UNTRAINED, study_odds, study_turns};
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
+pub use make_do::mendable;
+pub(crate) use make_do::mends_any;
 pub use mirrors::Image;
 pub use miscast::{NEAR as MISCAST_NEAR, entry_for as miscast_entry};
 pub use orison::PrayerState;
@@ -790,6 +793,8 @@ enum Spent {
     Cut(cut::GemWork),
     /// Salvaging an item for its materials (see [`World::salvage`]).
     Salvage(salvage::Salvaging),
+    /// Mending a damaged item in the field (see [`World::make_do`]).
+    MakeDo(make_do::Mending),
     /// Setting a cut gem in an item (see [`World::set`]).
     Set(set::Setting),
     /// Taming a beast beside the player (see [`World::tame`]).
@@ -1486,6 +1491,7 @@ impl World {
             Spent::Craft(work) => self.make(work, &mut events),
             Spent::Cut(work) => self.cut(work, &mut events),
             Spent::Salvage(work) => self.salvage(work, &mut events),
+            Spent::MakeDo(work) => self.make_do(work, &mut events),
             Spent::Set(work) => self.set(work, &mut events),
             Spent::Tame(taming) => self.tame(taming, &mut events),
             Spent::Skip(duration) => {
@@ -2022,6 +2028,8 @@ mod lullaby_tests;
 mod lurk_tests;
 #[cfg(test)]
 mod magic_tests;
+#[cfg(test)]
+mod make_do_tests;
 #[cfg(test)]
 mod malison_tests;
 #[cfg(test)]

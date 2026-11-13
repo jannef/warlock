@@ -666,6 +666,9 @@ pub enum ClassActive {
     /// A careful look that tells a thing the player carries for what it is, as the scroll of
     /// identify would (the merchant's Merchant's eye).
     MerchantsEye,
+    /// A damaged thing the player carries mended in the field, without an anvil, by a check that
+    /// destroys nothing (the craftsperson's Make do and mend, `world/make_do.rs`).
+    MakeDo,
     /// A weapon of spirit-stuff called into the hand in the shape chosen, as a wield (the
     /// Hunter's Spirit weapon, `world/spirit_weapon.rs`).
     SpiritWeapon,
@@ -704,6 +707,7 @@ impl ClassActive {
         ClassActive::Knock,
         ClassActive::Scribe,
         ClassActive::MerchantsEye,
+        ClassActive::MakeDo,
         ClassActive::SpiritWeapon,
     ];
 
@@ -740,6 +744,7 @@ impl ClassActive {
             ClassActive::Knock => "knock",
             ClassActive::Scribe => "scribe",
             ClassActive::MerchantsEye => "merchants_eye",
+            ClassActive::MakeDo => "make_do_and_mend",
             ClassActive::SpiritWeapon => "spirit_weapon",
         }
     }
@@ -807,9 +812,9 @@ impl ClassActive {
     }
 
     /// Whether it asks for a stack the player carries before it is used
-    /// (`use:merchants_eye:c`).
+    /// (`use:merchants_eye:c`, `use:make_do_and_mend:c`).
     pub const fn aims_item(self) -> bool {
-        matches!(self, ClassActive::MerchantsEye)
+        matches!(self, ClassActive::MerchantsEye | ClassActive::MakeDo)
     }
 
     /// Whether it asks for a weapon's shape before it is used, an object id
@@ -861,6 +866,8 @@ impl ClassActive {
             ClassActive::Volley => ActionKind::Shoot,
             ClassActive::Inspire | ClassActive::Lullaby => ActionKind::Song,
             ClassActive::MerchantsEye => ActionKind::Read,
+            // A turn of it; a mend takes its `seconds` of them (`world/make_do.rs`).
+            ClassActive::MakeDo => ActionKind::Craft,
             // A turn of it; a scroll takes a study's turns (`world/scribe.rs`).
             ClassActive::Scribe => ActionKind::Scribe,
             // A turn of it; the ritual takes `call_turns` of them (`world/familiar.rs`).

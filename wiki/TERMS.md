@@ -180,6 +180,7 @@ above.
 | Trade, Crafts, the tools of the trade (Smith, Wright, Gemcutter, Brewster, Pitman, Wortcunner, Spellwright) | `talents.md#crafts-a-craftspersons-trades` (a trade: its row) |
 | The craftsperson's two trades at creation, Time served | `classes.md#trades` |
 | Eye for the make, reading an item's make | `classes.md#eye-for-the-make` |
+| Make do and mend, mending in the field | `classes.md#make-do-and-mend` |
 | A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents.md#delver` |
 | Class abilities | `talents.md#class-abilities`, `abilities.md` |
 | The bard, a bard's cap at 30, Travelled hands, Jack of all trades | `classes.md#bard` |

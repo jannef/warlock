@@ -688,6 +688,8 @@ pub struct TalentMods {
     pub low_blow: bool,
     /// The active Merchant's eye: a stack it carries identified, for the time of a reading.
     pub merchants_eye: bool,
+    /// The active Make do and mend, if it has it (`world/make_do.rs`).
+    pub make_do: Option<MakeDo>,
     /// The active Spirit weapon, and what a spirit weapon in its hand gives, if it has it.
     pub spirit_weapon: Option<SpiritWeapon>,
     /// How much higher every skill it is trained in counts (Jack of all trades).
@@ -847,6 +849,14 @@ pub struct Sanctuary {
     pub radius: u8,
     pub lasts: crate::time::Duration,
     pub regen: u16,
+}
+
+/// The active Make do and mend (spec §8 "Class abilities"; `world/make_do.rs`): how long a mend
+/// takes, in seconds, and its check's difficulty before the material's `work`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MakeDo {
+    pub seconds: u32,
+    pub difficulty: i32,
 }
 
 /// The active Knock (spec §8 "Class abilities", "Chests"): its mana.
@@ -1180,6 +1190,7 @@ impl TalentMods {
             A::Lurk => self.lurk.is_some(),
             A::LowBlow => self.low_blow,
             A::MerchantsEye => self.merchants_eye,
+            A::MakeDo => self.make_do.is_some(),
             A::SpiritWeapon => self.spirit_weapon.is_some(),
             A::MasterThief => self.finisher,
             A::Inspire | A::Lullaby => self.songs.iter().any(|s| s.active == active),
@@ -2081,6 +2092,15 @@ impl TalentMods {
             }
             TalentEffect::LowBlow => self.low_blow = true,
             TalentEffect::MerchantsEye => self.merchants_eye = true,
+            TalentEffect::MakeDo {
+                seconds,
+                difficulty,
+            } => {
+                self.make_do = Some(MakeDo {
+                    seconds,
+                    difficulty,
+                })
+            }
             TalentEffect::SpiritWeapon {
                 to_hit,
                 threat,

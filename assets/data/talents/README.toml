@@ -587,6 +587,14 @@
 #                                 `use:merchants_eye:c`): the stack is identified as the scroll
 #                                 of identify would, for the time of a `read`; refused, no
 #                                 time, for one already known
+#   make_do { seconds, difficulty }   the active Make do and mend (on a damaged stack carried,
+#                                 `use:make_do_and_mend:c`): after `seconds` of work, anywhere,
+#                                 a check by the stat of the profession that works its main
+#                                 material, plus that profession's craft points, against
+#                                 difficulty plus the material's work: made, the damage is gone
+#                                 (the attempts kept); failed, nothing happens to it; refused, no
+#                                 time, for one worn or wielded, protected, or of a material no
+#                                 profession works
 #   spirit_weapon { to_hit, threat, ignores_protection, phrase }   the active Spirit weapon (a
 #                                 prestige class's, `use:spirit_weapon:long_sword`): a weapon of
 #                                 spirit-stuff in the shape of any melee weapon is called into

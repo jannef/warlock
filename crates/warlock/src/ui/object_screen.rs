@@ -80,6 +80,9 @@ pub enum ObjectList {
     /// What in the pack, not worn or wielded, has a material a profession works: choose one to
     /// take apart (the Salvage ability; `world/salvage.rs`).
     Salvage,
+    /// What in the pack is damaged, not worn or wielded: choose one to mend in the field (the
+    /// craftsperson's Make do and mend; `world/make_do.rs`).
+    MakeDo,
     /// The loose gems in the pack that may be cut: choose one to cut (Jewelcraft's Cut recipe;
     /// `world/cut.rs`).
     Cut,
@@ -113,6 +116,7 @@ impl ObjectList {
             ObjectList::Temper => " Temper ",
             ObjectList::Whittle => " Whittle ",
             ObjectList::Salvage => " Salvage ",
+            ObjectList::MakeDo => " Make do and mend ",
             ObjectList::Cut => " Cut ",
             ObjectList::Decipher => " Decipher ",
             ObjectList::Give => " Give ",
@@ -130,6 +134,7 @@ impl ObjectList {
             ObjectList::Temper => "You carry no metal arms or armour to work.",
             ObjectList::Whittle => "You carry no wooden weapon to whittle.",
             ObjectList::Salvage => "You carry nothing worth taking apart.",
+            ObjectList::MakeDo => "You carry nothing damaged to mend.",
             ObjectList::Cut => "You carry no gem that can be cut.",
             ObjectList::Decipher => "You carry no scroll you have not made out.",
             ObjectList::Give => "You carry nothing for a beast's neck.",
@@ -151,6 +156,7 @@ impl ObjectList {
             | ObjectList::Temper
             | ObjectList::Whittle
             | ObjectList::Salvage
+            | ObjectList::MakeDo
             | ObjectList::Cut
             | ObjectList::Decipher
             | ObjectList::Give => 78,
@@ -168,6 +174,7 @@ impl ObjectList {
                 | ObjectList::Temper
                 | ObjectList::Whittle
                 | ObjectList::Salvage
+                | ObjectList::MakeDo
                 | ObjectList::Cut
                 | ObjectList::Decipher
                 | ObjectList::Give
@@ -320,6 +327,11 @@ impl ObjectScreen {
                     warlock_core::world::salvageable(content, &pack[i])
                         && !view.equipment().holds(i)
                 })
+                .map(Item::Pack)
+                .collect(),
+            // Never what is worn or wielded (the rules refuse it).
+            ObjectList::MakeDo => (0..pack.len())
+                .filter(|&i| warlock_core::world::mendable(&pack[i]) && !view.equipment().holds(i))
                 .map(Item::Pack)
                 .collect(),
             ObjectList::Cut => (0..pack.len())
@@ -533,6 +545,9 @@ impl ObjectScreen {
             (ObjectList::Salvage, item) => ScreenAction::Act(Action::Salvage {
                 item: item.position(),
             }),
+            (ObjectList::MakeDo, item) => {
+                ScreenAction::Act(Action::UseOn(ClassActive::MakeDo, item.position()))
+            }
             (ObjectList::Cut, item) => match &self.cast {
                 Some(recipe) => ScreenAction::Act(Action::Craft {
                     recipe: recipe.clone(),
@@ -657,6 +672,7 @@ impl ObjectScreen {
                     | ObjectList::Temper
                     | ObjectList::Whittle
                     | ObjectList::Salvage
+                    | ObjectList::MakeDo
                     | ObjectList::Cut
                     | ObjectList::Decipher
                     | ObjectList::Give => Action::Drop(chosen),
@@ -861,6 +877,7 @@ impl ObjectScreen {
             ObjectList::Temper => format!("{}   {page}Esc cancel", either("temper")),
             ObjectList::Whittle => format!("{}   {page}Esc cancel", either("whittle")),
             ObjectList::Salvage => format!("{}   {page}Esc cancel", either("salvage")),
+            ObjectList::MakeDo => format!("{}   {page}Esc cancel", either("mend")),
             ObjectList::Cut => format!("{}   {page}Esc cancel", either("cut")),
             ObjectList::Decipher => format!("{}   {page}Esc cancel", either("decipher")),
             ObjectList::Give => format!("{}   {page}Esc cancel", either("give")),
