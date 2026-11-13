@@ -220,19 +220,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
   their character (M30, #226; the design is `docs/design/progression.md` §3). **The curve is
   written in kills** of the player's own level (`[kills]`): with m = n − 1 a level n costs
   `k(n) = plateau × m ÷ (m + ramp) + slope_per_100 ÷ 100 × m` kills (213, 5, 285: 38 for level
-  2, 163 for level 10, 223 for 20, 365 for 60, 485 for 100, before the early discount), each worth the
+  2, 163 for level 10, 223 for 20, 365 for 60, 485 for 100), times the curve's **scale**
+  (`[kills] scale`, an exact `times ÷ over`: two thirds since the owner's cut of 2026-11-13, #1468,
+  every level a third cheaper: 26 for level 2, 108 for 10, 149 for 20, 243 for 60, 323 for 100,
+  before the early discount), each worth the
   **creature XP guideline**
   `per_level × n + base` (5 and 10, which the creature data follows: a content test fails for a
   type more than three times off it either way, but for the listed outliers, the bat, the deer,
-  and the shopkeeper); a level's XP is `k(n) × guideline(n)` times its **early discount**
+  and the shopkeeper); a level's XP is `k(n) × scale × guideline(n)` times its **early discount**
   (`[early] percent`, owner 2026-10-27: 25, 30, 35, 40, 50, 60, 70, 80, 90, and 95 % for levels 2
   to 11, 100 % from level 12 on; the list may cover levels 2 to the cap, each value 1 to 100, never
   decreasing, else the file is refused), rounded once from the exact fraction, and the threshold
-  of level n is the sum over levels 2 to n (192 for level 2, 691 for 3, 1 619 for 4, 3 104 for 5,
-  29 715 for 10, 52 688 for 12, 205 205 for 20, 2 845 856 for 60, 9 966 935 for the curve's top,
+  of level n is the sum over levels 2 to n (128 for level 2, 461 for 3, 1 080 for 4, 2 070 for 5,
+  19 811 for 10, 35 127 for 12, 136 806 for 20, 1 897 239 for 60, 6 644 628 for the curve's top,
   level 100 (`max_level`, #877; `docs/design/prestige-classes.md` §5); from level 12 on
-  each level costs what it would undiscounted, so the totals are 15 892 lower than without the
-  discount: about 2 600 such kills to reach level 20 and 14 600 to reach 60; a test pins the
+  each level costs what it would undiscounted, so the totals are 10 592 lower than without the
+  discount: about 1 700 such kills to reach level 20 and 9 700 to reach 60; a test pins the
   table's hash; XP beyond the cap counts but buys nothing). The level also stops at the
   character's **class cap** (`ClassDef::max_level`, default `[levels] class_max`, 60: every class
   today; a run without a character stops there too) until a prestige class raises it, at most to

@@ -4,13 +4,15 @@
 # Thresholds, in kills (the [kills] table): with m = n − 1, a level n costs
 # k(n) = plateau × m ÷ (m + ramp) + slope_per_100 ÷ 100 × m kills of the player's own level, each
 # worth the creature XP guideline, per_level × n + base. That level's XP is k(n) × guideline(n),
-# times the level's early discount (the [early] table: percent[0] for level 2, percent[1] for
-# level 3, ...; 100 % after the list), rounded once, and the
-# XP total needed to reach level n is the sum of those for levels 2 to n. With 213, 5, and 285
-# and the discount below: 10 kills for level 2 (192 XP; 38 and 767 undiscounted), 146 for level
-# 10 (29 715 XP in all), 365 for level 60 (2 845 856 XP in all), 485 for level 100 (9 966 935
-# XP in all); about 2 600 kills of your own level to reach level 20 and 14 600 to reach level 60. From level 12 on every level costs what
-# it would without the discount, so later totals are 15 892 XP lower. The first term ramps
+# times the curve's scale (`[kills] scale`, times ÷ over: two thirds, #1468), times the level's
+# early discount (the [early] table: percent[0] for level 2, percent[1] for level 3, ...; 100 %
+# after the list), rounded once, and the
+# XP total needed to reach level n is the sum of those for levels 2 to n. With 213, 5, and 285,
+# the scale, and the discount below: 6 kills for level 2 (128 XP; 26 and 511 undiscounted), 98
+# for level 10 (19 811 XP in all), 243 for level 60 (1 897 239 XP in all), 323 for level 100
+# (6 644 628 XP in all); about 1 700 kills of your own level to reach level 20 and 9 700 to reach
+# level 60. From level 12 on every level costs what
+# it would without the discount, so later totals are 10 592 XP lower. The first term ramps
 # quickly toward a plateau, the second keeps every level costlier than the last. A character's thresholds are these times their race's and their
 # class's `experience` percents (races.toml, classes/), rounded: an elf wizard needs 175 %,
 # a half-orc commoner 72 %. max_level is the cap; XP beyond it still counts but buys nothing.
@@ -59,6 +61,9 @@ plateau = 213
 ramp = 5
 slope_per_100 = 285
 guideline = { per_level = 5, base = 10 }
+# Every level costs times ÷ over of the above, exactly, before the one rounding (owner
+# 2026-11-13, #1468: two thirds, a third less).
+scale = { times = 2, over = 3 }
 
 # The early levels go faster (owner 2026-10-27): the percent of its curve XP each level from 2 on
 # costs, here levels 2 to 11; level 12 and later pay 100 %.

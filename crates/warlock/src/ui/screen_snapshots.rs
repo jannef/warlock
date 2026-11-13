@@ -562,7 +562,7 @@ const CASES: &[Case] = &[
     Case {
         name: "magic-screen-trained",
         character: Some("human,female,wizard"),
-        actions: "xp:200000 levelup:auto rank:sniper:5 rank:toucher:3",
+        actions: "xp:133334 levelup:auto rank:sniper:5 rank:toucher:3",
         screen: Some("magic"),
         size: (112, 40),
         ..BASE
@@ -591,7 +591,7 @@ const CASES: &[Case] = &[
     Case {
         name: "magic-screen-short",
         character: Some("human,female,wizard"),
-        actions: "xp:200000 levelup:auto",
+        actions: "xp:133334 levelup:auto",
         screen: Some("magic"),
         size: (80, 14),
         ..BASE
@@ -637,7 +637,7 @@ const CASES: &[Case] = &[
         name: "abilities-menu-war-cry",
         character: Some("human,male,berserker"),
         kit: true,
-        actions: "xp:350000 levelup:auto",
+        actions: "xp:233334 levelup:auto",
         screen: Some("abilities"),
         ..BASE
     },
@@ -647,7 +647,7 @@ const CASES: &[Case] = &[
         name: "abilities-menu-knock",
         character: Some("human,male,wizard"),
         kit: true,
-        actions: "xp:3000 levelup:auto",
+        actions: "xp:2000 levelup:auto",
         screen: Some("abilities"),
         ..BASE
     },
@@ -656,7 +656,7 @@ const CASES: &[Case] = &[
         name: "abilities-menu-sic",
         character: Some("human,male,ranger"),
         kit: true,
-        actions: "xp:90000000 levelup:auto",
+        actions: "xp:60000000 levelup:auto",
         screen: Some("abilities"),
         ..BASE
     },
@@ -666,7 +666,7 @@ const CASES: &[Case] = &[
         name: "abilities-menu-merchants-eye",
         character: Some("human,male,merchant"),
         kit: true,
-        actions: "xp:60000 levelup:auto",
+        actions: "xp:40000 levelup:auto",
         screen: Some("abilities"),
         ..BASE
     },
@@ -690,7 +690,7 @@ const CASES: &[Case] = &[
     Case {
         name: "scribe-list",
         character: Some("human,female,wizard"),
-        actions: "xp:200000 levelup:auto",
+        actions: "xp:133334 levelup:auto",
         screen: Some("scribe"),
         ..BASE
     },
@@ -708,7 +708,7 @@ const CASES: &[Case] = &[
         name: "abilities-menu-stunning-strike",
         character: Some("human,male,ascetic"),
         kit: true,
-        actions: "xp:80000 levelup:auto",
+        actions: "xp:53334 levelup:auto",
         screen: Some("abilities"),
         ..BASE
     },
@@ -718,7 +718,7 @@ const CASES: &[Case] = &[
         name: "abilities-menu-stillness",
         character: Some("human,male,ascetic"),
         kit: true,
-        actions: "xp:3000000 levelup:auto",
+        actions: "xp:2000000 levelup:auto",
         screen: Some("abilities"),
         ..BASE
     },
@@ -739,7 +739,7 @@ const CASES: &[Case] = &[
         name: "abilities-priest-60",
         character: Some("human,male,priest"),
         kit: true,
-        actions: "xp:30000000 levelup:auto",
+        actions: "xp:20000000 levelup:auto",
         screen: Some("abilities"),
         keys: Some("Down Down"),
         ..BASE
@@ -1120,7 +1120,7 @@ const CASES: &[Case] = &[
     Case {
         name: "abilities-menu-druid-calls",
         character: Some("human,female,druid"),
-        actions: "xp:1000000 levelup:auto use:call_of_the_wild",
+        actions: "xp:666667 levelup:auto use:call_of_the_wild",
         screen: Some("abilities"),
         ..BASE
     },
@@ -1154,7 +1154,7 @@ const CASES: &[Case] = &[
         character: Some("human,male,paladin"),
         // Seed 12: a Unicorn-born paladin (#272: Good, and a Birth sign gift in the menu).
         seed: Some(12),
-        actions: "xp:100000 levelup:auto use:lay_on_hands",
+        actions: "xp:66667 levelup:auto use:lay_on_hands",
         screen: Some("abilities"),
         ..BASE
     },
@@ -1164,7 +1164,7 @@ const CASES: &[Case] = &[
         name: "abilities-menu-thief",
         character: Some("human,female,thief"),
         kit: true,
-        actions: "xp:100000 levelup:auto",
+        actions: "xp:66667 levelup:auto",
         screen: Some("abilities"),
         ..BASE
     },
@@ -1174,7 +1174,7 @@ const CASES: &[Case] = &[
     Case {
         name: "abilities-menu-spells",
         character: Some("human,female,priest"),
-        actions: "xp:100000 levelup:auto use:blessing drain:101",
+        actions: "xp:66667 levelup:auto use:blessing drain:101",
         screen: Some("abilities"),
         ..BASE
     },
@@ -1184,7 +1184,7 @@ const CASES: &[Case] = &[
     Case {
         name: "abilities-menu-spells-grown",
         character: Some("gnome,male,wizard"),
-        actions: "xp:1000000 levelup:auto afflict:keen",
+        actions: "xp:666667 levelup:auto afflict:keen",
         screen: Some("abilities"),
         keys: Some("Down Down Down Down"),
         ..BASE
@@ -1195,7 +1195,7 @@ const CASES: &[Case] = &[
     Case {
         name: "abilities-menu-bard",
         character: Some("human,female,bard"),
-        actions: "xp:400000 levelup:auto drain:106",
+        actions: "xp:266667 levelup:auto drain:106",
         screen: Some("abilities"),
         ..BASE
     },
@@ -1204,7 +1204,7 @@ const CASES: &[Case] = &[
     Case {
         name: "abilities-menu-witch",
         character: Some("human,female,witch"),
-        actions: "xp:20000 levelup:auto",
+        actions: "xp:13334 levelup:auto",
         screen: Some("abilities"),
         ..BASE
     },
@@ -1229,7 +1229,7 @@ const CASES: &[Case] = &[
     Case {
         name: "level-up-rolls",
         character: Some("human,male,warrior"),
-        actions: "xp:691",
+        actions: "xp:461",
         size: (100, 40),
         ..BASE
     },
@@ -1238,7 +1238,7 @@ const CASES: &[Case] = &[
     Case {
         name: "level-up-rolls-marks",
         character: Some("human,female,thief"),
-        actions: "search:100*2 xp:691",
+        actions: "search:100*2 xp:461",
         size: (80, 25),
         ..BASE
     },
@@ -1246,21 +1246,21 @@ const CASES: &[Case] = &[
     Case {
         name: "level-up-rolls-halved",
         character: Some("human,male,warrior"),
-        actions: "xp:300000 levelup:auto xp:600000",
+        actions: "xp:200000 levelup:auto xp:400000",
         size: (80, 25),
         ..BASE
     },
     Case {
         name: "level-up-talent",
         character: Some("human,male,warrior"),
-        actions: "xp:691 advance:athletics*6",
+        actions: "xp:461 advance:athletics*6",
         size: (100, 40),
         ..BASE
     },
     Case {
         name: "level-up-choice",
         character: Some("human,male,warrior"),
-        actions: "xp:691 advance:athletics*6",
+        actions: "xp:461 advance:athletics*6",
         // Skill focus's letter on the talent list.
         keys: Some("p"),
         size: (100, 40),
@@ -1279,7 +1279,7 @@ const CASES: &[Case] = &[
     Case {
         name: "talents-screen-spellcraft",
         character: Some("human,male,wizard"),
-        actions: "xp:880 talent:school_focus:evocation advance:spellcraft*8",
+        actions: "xp:587 talent:school_focus:evocation advance:spellcraft*8",
         screen: Some("talents"),
         size: (100, 40),
         ..BASE
@@ -1354,7 +1354,7 @@ const CASES: &[Case] = &[
         name: "abilities-menu-fire-breath",
         seed: Some(2),
         character: Some("human,male,warrior"),
-        actions: "xp:300000 talent:fire_breath levelup:auto use:fire_breath:11,15",
+        actions: "xp:200000 talent:fire_breath levelup:auto use:fire_breath:11,15",
         screen: Some("abilities"),
         ..BASE
     },
@@ -1365,7 +1365,7 @@ const CASES: &[Case] = &[
         scenario: "arena",
         seed: Some(21),
         character: Some("human,male,warrior"),
-        actions: "xp:300000 talent:hounds_bay levelup:auto use:hounds_bay",
+        actions: "xp:200000 talent:hounds_bay levelup:auto use:hounds_bay",
         screen: Some("abilities"),
         ..BASE
     },
@@ -1374,7 +1374,7 @@ const CASES: &[Case] = &[
         name: "abilities-menu-blood-magic",
         seed: Some(4),
         character: Some("elf,female,wizard"),
-        actions: "xp:200000 talent:blood_magic levelup:auto drain:20 use:blood_magic",
+        actions: "xp:133334 talent:blood_magic levelup:auto drain:20 use:blood_magic",
         screen: Some("abilities"),
         ..BASE
     },
@@ -1724,7 +1724,7 @@ const CASES: &[Case] = &[
         name: "servant-stipend",
         scenario: "ceaptun",
         character: Some("human,male,aristocrat"),
-        actions: "xp:5000 levelup:auto move:SW move:S*3 open:S move:S*2 move:SW*4 chat:W chat:W",
+        actions: "xp:3334 levelup:auto move:SW move:S*3 open:S move:S*2 move:SW*4 chat:W chat:W",
         screen: Some("messages"),
         ..BASE
     },
@@ -1746,7 +1746,7 @@ const CASES: &[Case] = &[
         scenario: "ceaptun",
         character: Some("human,male,craftsperson"),
         talents: Some("smith,wright,healthy,lean,wortcunner"),
-        actions: "xp:60000 levelup:auto move:SW move:S*3 open:S move:S*2 move:E*4 chat:E chat:E",
+        actions: "xp:40000 levelup:auto move:SW move:S*3 open:S move:S*2 move:E*4 chat:E chat:E",
         screen: Some("messages"),
         ..BASE
     },
@@ -1895,7 +1895,7 @@ fn the_oath_topic() {
     let case = Case {
         name: "dialogue-calling-topic",
         character: Some("human,male,bard"),
-        actions: concat!(hermit!(), " xp:545660 levelup:auto chat:SE"),
+        actions: concat!(hermit!(), " xp:363777 levelup:auto chat:SE"),
         screen: Some("dialogue"),
         ..BASE
     };
