@@ -1,0 +1,12 @@
+# The craftsperson's class ability from level 40 (spec §8 "Class abilities": Quick hands; the
+# craftsperson design §7.8): passive, read in one place, `world/mastery.rs::craft_seconds`, which
+# every craft's loop asks for its time (recipes, Temper, Whittle, Cut, Set, Salvage, Make do and
+# mend, Field forge).
+[[talent]]
+id = "quick_hands"
+name = "Quick hands"
+tree = "class"
+granted = true
+description = "Your hands know the work: every craft in half the time."
+effects = [{ kind = "craft_time_percent", value = 50 }]
+systems = ["skills"]

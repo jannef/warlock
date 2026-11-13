@@ -424,6 +424,10 @@ well-to-do burgher at the Gæsthūs in Cēaptūn who commissions Fine work from 
 trades, one piece at a time, hands over the stock for it, and pays its full worth on delivery.
 See [The patron](patron.md).
 
+**Quick hands** (from level 40) makes every craft take half its time, and **Master's hand**
+(from level 50) makes every grade and every cut come sooner (the numbers are under
+[Crafting](crafting.md#quick-hands) and [Master's hand](crafting.md#masters-hand)).
+
 {{#include generated/class-levels.md:merchant}}
 
 <a id="invest"></a>**The merchant's investment** ([Invest](talents.md#talent-invest), from level 1)

@@ -125,6 +125,7 @@ impl World {
             return Spent::Nothing;
         }
         self.say("You heap up stones to set an ingot on.");
+        let seconds = self.craft_seconds(seconds);
         Spent::FieldForge(Forging { at, seconds })
     }
 

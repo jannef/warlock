@@ -1006,6 +1006,19 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              [Whittle](skill-uses.md#whittling) damages nothing: the item stays as it was, though \
              the attempt still counts toward the next one's difficulty"
             .to_string(),
+        TalentEffect::CraftTimePercent { value } => format!(
+            "every craft takes {value}% of its time: [recipes](crafting.md#the-recipes) \
+             (after [Fletcher](talents.md#talent-fletcher)'s share), \
+             [Temper](altars-forges-springs.md#forges), [Whittle](skill-uses.md#whittling), \
+             [cutting and setting gems](gem-cutting.md), [salvage](crafting.md#salvage), and \
+             the craftsperson's own works"
+        ),
+        TalentEffect::GradeEase { value } => format!(
+            "{} to the margin of a made check as its [grade](crafting.md#how-well-it-comes-out) \
+             or a [gem's cut](gem-cutting.md) is read: every grade and every cut comes {value} \
+             sooner; whether the work is made is unchanged",
+            signed(value)
+        ),
         TalentEffect::LootMagicPercent { value } => format!(
             "the weights of the rarities better than a find's least {} (anything found: magic \
              and rare; what creatures drop, always magic: rare)",

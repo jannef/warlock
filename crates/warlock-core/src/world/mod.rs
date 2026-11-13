@@ -217,6 +217,7 @@ mod lurk;
 mod make_do;
 mod malison;
 mod mana;
+mod mastery;
 mod material_drops;
 mod merchants_eye;
 mod mimic;
@@ -2067,6 +2068,8 @@ mod malison_tests;
 mod mana_talent_tests;
 #[cfg(test)]
 mod mana_tests;
+#[cfg(test)]
+mod mastery_tests;
 #[cfg(test)]
 mod material_draw_tests;
 #[cfg(test)]

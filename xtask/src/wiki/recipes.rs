@@ -25,6 +25,36 @@ const BONUSES: [(i32, &str); 4] = [
     (16, "Metalcraft 200 and a strong arm"),
 ];
 
+/// What Master's hand adds to a made check's margin as it is graded (the craftsperson's level-50
+/// passive, `world/mastery.rs::graded_margin`): its `grade_ease`, 0 without the talent.
+fn grade_ease(content: &Content) -> i32 {
+    (content.talents().id("masters_hand"))
+        .map(|id| content.talents().get(id))
+        .and_then(|t| {
+            t.effects.iter().find_map(|e| match e {
+                warlock_core::content::TalentEffect::GradeEase { value } => Some(*value),
+                _ => None,
+            })
+        })
+        .unwrap_or(0)
+}
+
+/// `margin` as Master's hand grades it: `ease` added to a made check, never to a failure.
+fn eased(margin: i32, ease: i32) -> i32 {
+    match margin >= 0 {
+        true => margin + ease,
+        false => margin,
+    }
+}
+
+/// The percentages of `counts` (each of `total`) from `from` on, joined by " / ".
+fn percents(counts: &[u32], from: usize, total: u32) -> String {
+    let parts: Vec<String> = (counts[from..].iter())
+        .map(|&n| format!("{:.0}%", f64::from(n) * 100.0 / f64::from(total)))
+        .collect();
+    parts.join(" / ")
+}
+
 /// The recipe the odds are for: the long sword, of steel.
 const ODDS_FOR: &str = "long_sword";
 
@@ -417,42 +447,57 @@ pub(super) fn crafting_grades(content: &Content) -> String {
         at(Grade::Marvellous),
         at(Grade::Masterwork),
     );
-    let mut out =
-        String::from("| Margin | Grade | Improvements | What you hear |\n|:---:|---|:---:|---|\n");
+    let ease = grade_ease(content);
+    // The margin from which a grade comes with Master's hand: never below 0 (a made check).
+    let mastered = |from: i32| (from - ease).max(0);
+    let mut out = String::from(
+        "| Margin | With Master's hand | Grade | Improvements | What you hear |\n\
+         |:---:|:---:|---|:---:|---|\n",
+    );
+    let range = |from: i32, to: Option<i32>| match to {
+        None => format!("{from} or more"),
+        Some(to) if to < from => "—".to_string(),
+        Some(to) => format!("{from} to {to}"),
+    };
     let rows = [
         (
-            format!("{masterwork} or more"),
+            range(masterwork, None),
+            range(mastered(masterwork), None),
             "Masterwork",
             3,
             "You have made a Masterwork long sword!",
         ),
         (
-            format!("{marvellous} to {}", masterwork - 1),
+            range(marvellous, Some(masterwork - 1)),
+            range(mastered(marvellous), Some(mastered(masterwork) - 1)),
             "Marvellous",
             2,
             "This is a Marvellous long sword!",
         ),
         (
-            format!("{fine} to {}", marvellous - 1),
+            range(fine, Some(marvellous - 1)),
+            range(mastered(fine), Some(mastered(marvellous) - 1)),
             "Fine",
             1,
             "This is a Fine long sword.",
         ),
         (
-            format!("0 to {}", fine - 1),
+            range(0, Some(fine - 1)),
+            range(0, Some(mastered(fine) - 1)),
             "Plain",
             0,
             "You have made a long sword.",
         ),
         (
             "below 0".to_string(),
+            "below 0".to_string(),
             "Failed",
             0,
             "The blade comes out brittle and you break it up for the metal.",
         ),
     ];
-    for (margin, name, n, words) in rows {
-        let _ = writeln!(out, "| {margin} | {name} | {n} | \"{words}\" |");
+    for (margin, with, name, n, words) in rows {
+        let _ = writeln!(out, "| {margin} | {with} | {name} | {n} | \"{words}\" |");
     }
     let yield_percent = content
         .recipes()
@@ -475,16 +520,20 @@ pub(super) fn crafting_grades(content: &Content) -> String {
         recipe.name.to_lowercase()
     );
     out.push_str(
-        "| Bonus | Who | Failed | Plain | Fine | Marvellous | Masterwork |\n\
-         |:---:|---|:---:|:---:|:---:|:---:|:---:|\n",
+        "| Bonus | Who | Failed | Plain | Fine | Marvellous | Masterwork | With Master's hand \
+         (Plain / Fine / Marvellous / Masterwork) |\n\
+         |:---:|---|:---:|:---:|:---:|:---:|:---:|:---:|\n",
     );
     let sides = HIGHEST / 2;
     for (bonus, who) in BONUSES {
         let mut counts = [0u32; 5];
+        let mut mastered = [0u32; 5];
         for a in 1..=sides {
             for b in 1..=sides {
                 let natural = a + b;
-                counts[grade(settings, natural, natural + bonus - difficulty) as usize] += 1;
+                let margin = natural + bonus - difficulty;
+                counts[grade(settings, natural, margin) as usize] += 1;
+                mastered[grade(settings, natural, eased(margin, ease)) as usize] += 1;
             }
         }
         let _ = write!(out, "| {bonus:+} | {who} |");
@@ -492,7 +541,7 @@ pub(super) fn crafting_grades(content: &Content) -> String {
             let percent = f64::from(n) * 100.0 / f64::from(sides * sides);
             let _ = write!(out, " {percent:.0}% |");
         }
-        out.push('\n');
+        let _ = writeln!(out, " {} |", percents(&mastered, 1, (sides * sides) as u32));
     }
     let mut works: Vec<_> = (content.materials().iter())
         .filter(|m| m.group.as_deref() == Some("metal") && m.work != 0)
@@ -536,18 +585,29 @@ pub(super) fn gem_cutting(content: &Content) -> String {
     let cuts = gems.cuts();
     let first = cuts.iter().position(|c| !c.rough).unwrap_or(0);
     let name = |i: usize| capital(&cuts[i].name);
-    let mut out =
-        String::from("| Margin | Cut | On an uncut gem | On a cut gem |\n|:---:|---|---|---|\n");
+    let ease = grade_ease(content);
+    let mut out = String::from(
+        "| Margin | With Master's hand | Cut | On an uncut gem | On a cut gem |\n\
+         |:---:|:---:|---|---|---|\n",
+    );
     let _ = writeln!(
         out,
-        "| below 0 | — | stays uncut, one size smaller | keeps its cut, one size smaller |"
+        "| below 0 | below 0 | — | stays uncut, one size smaller | keeps its cut, one size \
+         smaller |"
     );
+    // The margins from `low` to `high` (none: and more) of a made check, eased by `by`.
+    let band = |low: i32, high: Option<i32>, by: i32| {
+        let from = if low == 0 { 0 } else { (low - by).max(0) };
+        match high {
+            None => format!("{from} or more"),
+            Some(high) if high - by < from => "—".to_string(),
+            Some(high) => format!("{from} to {}", high - by),
+        }
+    };
     for i in first..cuts.len() {
         let low = (i - first) as i32 * step;
-        let margin = match i + 1 == cuts.len() {
-            true => format!("{low} or more"),
-            false => format!("{low} to {}", low + step - 1),
-        };
+        let high = (i + 1 < cuts.len()).then_some(low + step - 1);
+        let margin = format!("{} | {}", band(low, high, 0), band(low, high, ease));
         let uncut = match i == first {
             true => "one size smaller",
             false => "size kept",
@@ -626,16 +686,19 @@ pub(super) fn gem_cutting(content: &Content) -> String {
         );
     }
 
-    // The odds, by the check's whole bonus.
+    // The odds, by the check's whole bonus, then the made cuts' with Master's hand.
+    let ease = grade_ease(content);
     out.push_str("| Gem | Bonus | Who | Shattered | Failed |");
     for c in &cuts[first..] {
         let _ = write!(out, " {} |", capital(&c.name));
     }
+    let names: Vec<String> = (cuts[first..].iter()).map(|c| capital(&c.name)).collect();
+    let _ = write!(out, " With Master's hand ({}) |", names.join(" / "));
     out.push_str("\n|---|:---:|---|:---:|:---:|");
     for _ in first..cuts.len() {
         out.push_str(":---:|");
     }
-    out.push('\n');
+    out.push_str(":---:|\n");
     let soft = (content.materials().iter())
         .filter(|m| m.gem.is_some())
         .min_by_key(|m| (m.work, m.gem.as_ref().map_or(0, |g| g.value)));
@@ -649,16 +712,18 @@ pub(super) fn gem_cutting(content: &Content) -> String {
     let sides = HIGHEST / 2;
     for (gem_name, work, bonus, who) in rows {
         let mut counts = vec![0u32; cuts.len() + 2];
+        let mut mastered = vec![0u32; cuts.len() + 2];
+        let index = |band| match band {
+            CutBand::Shattered => 0,
+            CutBand::Failed => 1,
+            CutBand::Cut(c) => 2 + usize::from(c.0),
+        };
         for a in 1..=sides {
             for b in 1..=sides {
                 let natural = a + b;
                 let margin = natural + bonus - (recipe.difficulty + work);
-                let i = match cut_band(gems, step, natural, margin) {
-                    CutBand::Shattered => 0,
-                    CutBand::Failed => 1,
-                    CutBand::Cut(c) => 2 + usize::from(c.0),
-                };
-                counts[i] += 1;
+                counts[index(cut_band(gems, step, natural, margin))] += 1;
+                mastered[index(cut_band(gems, step, natural, eased(margin, ease)))] += 1;
             }
         }
         let _ = write!(
@@ -670,7 +735,8 @@ pub(super) fn gem_cutting(content: &Content) -> String {
             let percent = f64::from(counts[i]) * 100.0 / f64::from(sides * sides);
             let _ = write!(out, " {percent:.0}% |");
         }
-        out.push('\n');
+        let total = (sides * sides) as u32;
+        let _ = writeln!(out, " {} |", percents(&mastered, 2 + first, total));
     }
     out
 }

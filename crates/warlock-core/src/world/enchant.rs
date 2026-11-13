@@ -18,8 +18,9 @@
 //! - **The item level of the roll**: the greater of the item's own and the enchanter's reach
 //!   (Enchanting's [`Effect::EnchantLevel`], 1 to 12); Kindle's is the reach, Unbind's the
 //!   item's own. The item takes the roll's level.
-//! - **Time**: the recipe's `seconds`, in turns of the `craft` action ([`World::keep_at`]):
-//!   interrupted, nothing is spent, but the time is.
+//! - **Time**: the recipe's `seconds` (Quick hands' share of it, `mastery::craft_seconds`), in
+//!   turns of the `craft` action ([`World::keep_at`]): interrupted, nothing is spent, but the
+//!   time is. No grade, so Master's hand has nothing to ease.
 //! - **The check**: two gameplay draws (the natural roll), plus Willpower's modifier, its talents'
 //!   checks, and Enchanting's [`Effect::Craft`], against the recipe's `difficulty` + the roll's
 //!   item level ÷ `level_step` (`data/enchanting.toml`; [`enchant_band`]). Made (or a natural
@@ -345,7 +346,12 @@ pub(super) fn plan(
         station: None,
         time: format!(
             "about {}",
-            Duration::seconds(u64::from(recipe.seconds)).spoken()
+            Duration::seconds(u64::from(super::mastery::craft_seconds(
+                content,
+                player,
+                recipe.seconds
+            )))
+            .spoken()
         ),
     })
 }
@@ -402,7 +408,7 @@ impl World {
             recipe: id,
             item,
             crystal: resolved.crystal,
-            seconds: def.seconds,
+            seconds: self.craft_seconds(def.seconds),
         })
     }
 
