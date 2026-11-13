@@ -2,6 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
+ You fly into a rage!
 ┌─ Character ──────────────────────────────────────────────────────────────────────────────────────┐
 │                                                                                                  │
 │ Tamsin                                                                                           │
@@ -28,7 +29,6 @@ expression: "render(case, content.clone())"
 │     Rage          11/20                                                                          │
 │     Focus         10/10                                                                          │
 │     Openings      0/5                                                                            │
-│     Stamina       10/11                                                                          │
 │     Alignment     Callous                                                                        │
 │     Status        Raging                                                                         │
 │                                                                                                  │

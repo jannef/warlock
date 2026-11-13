@@ -3,7 +3,8 @@
 //! (`use:rage`, `use:smite:E`): Rage, War cry (for rage, `world/war_cry.rs`), Veteran's wind, Whirlwind, Lay on hands, Smite (for zeal, `world/smite.rs`), Holy
 //! radiance, Stunning strike, Quivering palm and Step of the wind (for ki, `world/ascetic.rs`; the last takes no time), the songs (Inspire, for inspiration, `world/song.rs`), the thief's
 //! Lurk and Low blow (`world/thief.rs`), Master thief's finisher (for openings,
-//! `world/openings.rs`; the ranger's Volley, aimed at a cell, is `world/volley.rs`). The
+//! `world/openings.rs`; the ranger's Volley, aimed at a cell, is `world/volley.rs`, and the
+//! warrior's Charge, aimed at a creature, `world/charge.rs`). The
 //! abilities themselves are talents of the class tree, given as levels come (`world/class.rs`)
 //! and read through `Actor::talent_mods`. Each active refuses, taking no time, without the
 //! ability, while its cooldown (or the rage and the exhaustion after it) lasts, and (an aimed
@@ -37,6 +38,11 @@ impl World {
         events: &mut Vec<Event>,
     ) -> Spent {
         if !self.may_use_class(active) {
+            return Spent::Nothing;
+        }
+        // One aimed at a cell asks where before anything is spent (`use_class_at` uses it).
+        if active.aims_cell() {
+            self.say("Where?");
             return Spent::Nothing;
         }
         let dir = match (active.aimed(), dir) {
@@ -115,10 +121,8 @@ impl World {
                 | ClassActive::FieldForge,
                 None,
             ) => Spent::Nothing,
-            (ClassActive::Volley | ClassActive::Sic, _) => {
-                self.say("Where?");
-                Spent::Nothing
-            }
+            // Asked where above.
+            (ClassActive::Volley | ClassActive::Sic | ClassActive::Charge, _) => Spent::Nothing,
             (ClassActive::MerchantsEye | ClassActive::MakeDo, _) => {
                 self.say("Use it on what?");
                 Spent::Nothing

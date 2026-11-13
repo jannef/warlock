@@ -45,6 +45,10 @@ use warlock_core::{Action, Dir, Pos, ReadTarget};
 /// weapon's.
 const VOLLEY: Ability = Ability::Class(ClassActive::Volley);
 
+/// The warrior's Charge, aimed as a rush is: the straight line to the foe, which a wall or a
+/// creature on it blocks.
+const CHARGE: Ability = Ability::Class(ClassActive::Charge);
+
 /// The path's dots: faint, warm, and never lit, so the line reads in the dark too.
 pub const PATH_GLYPH: char = '·';
 pub const PATH_COLOR: Rgb = Rgb::new(0xe0, 0xb0, 0x50);
@@ -223,6 +227,7 @@ impl Aim {
         }
         if let AimKind::Ability(ability) = self.kind
             && ability != VOLLEY
+            && ability != CHARGE
         {
             return sight_line(view, self.at, ability.reach_at(view.content(), view.time()));
         }

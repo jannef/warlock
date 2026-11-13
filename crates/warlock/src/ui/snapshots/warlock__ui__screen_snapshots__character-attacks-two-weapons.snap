@@ -3,6 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You pick up a leather jerkin, a dagger, and 2 wax candles.
+ 36 gold coins do not go there.
 ┌─ Character ──────────────────────────────────────────────────────────────────────────────────────┐
 │                                                                                                  │
 │ Garrick                                                                                          │
@@ -27,7 +28,6 @@ expression: "render(case, content.clone())"
 │ HP  Hit points    20/20   MP  Mana       4/4                                                     │
 │ Dv  Defence       12      Pv  Protection  1                                                      │
 │     Stance        Neutral                                                                        │
-│     Stamina       11/14                                                                          │
 │     Alignment     Neutral                                                                        │
 │     Resistant to  acid                                                                           │
 │                                                                                                  │
@@ -37,4 +37,4 @@ expression: "render(case, content.clone())"
 │ @ or Esc close   A skills                                                                        │
 └─ 1 Char · 2 Inv · 3 Eqp · 4 Skl · 5 Weap · 6 Mag · 7 Qst · 8 Tal · 9 Story ──────────────────────┘
 
- The Hub  ·  HP 20/20  ·  MP 4/4  ·  Sta 11/14  ·  Lv 1  ·  Brūn: unhurt  ·  08:00       ? controls
+ The Hub  ·  HP 20/20  ·  MP 4/4  ·  Lv 1  ·  Brūn: unhurt  ·  08:00  ·  11 Darkening    ? controls

@@ -1,6 +1,6 @@
 ---
 source: crates/warlock/src/ui/screen_snapshots.rs
-expression: "render(&case, hunger_content(nutrition))"
+expression: "render(&case, content)"
 ---
  You feel weak from hunger. You should eat soon. --more--
 
@@ -31,4 +31,4 @@ expression: "render(&case, hunger_content(nutrition))"
 
 
 
- The Wildlands  ·  HP 20/20  ·  MP 4/4  ·  Sta 10/10  ·  Weak  ·  Lv 1  ·  08:19         ? controls
+ The Wildlands  ·  HP 20/20  ·  MP 4/4  ·  Weak  ·  Lv 1  ·  Lēof: with you  ·  08:19    ? controls

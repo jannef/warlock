@@ -29,7 +29,6 @@ bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["finesse", "vigour"] }
 abilities = [
     { level = 1, talent = "martial_arts" },
     { level = 1, talent = "flurry" },
-    { level = 1, talent = "trained_wind" },
     { level = 6, talent = "step_of_the_wind" },
     { level = 12, talent = "stunning_strike" },
     { level = 18, talent = "patient_defence" },

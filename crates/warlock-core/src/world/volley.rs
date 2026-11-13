@@ -32,6 +32,7 @@ impl World {
         match active {
             ClassActive::Volley => self.volley(at, events),
             ClassActive::Sic => self.sic(at, events),
+            ClassActive::Charge => self.charge(at, events),
             _ => Spent::Nothing,
         }
     }

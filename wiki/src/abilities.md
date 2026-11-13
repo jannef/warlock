@@ -115,7 +115,7 @@ you never choose them, they work by themselves as you fight. They have their own
   while you have one.
 - **Other skills used as actions** ([Knowledge](skills.md#skill-knowledge), ...): each is in the menu once you are trained in it
   (see [Skills](skills.md)), greyed out until its use comes to the game.
-- **[Class abilities](talents.md#class-abilities)** ([Rage](abilities.md#ability-rage), [War cry](abilities.md#ability-war-cry), [Lullaby](abilities.md#ability-lullaby), [Cackle](abilities.md#ability-cackle), [Veteran's wind](abilities.md#ability-veterans-wind), [Whirlwind](abilities.md#ability-whirlwind), [Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance),
+- **[Class abilities](talents.md#class-abilities)** ([Rage](abilities.md#ability-rage), [War cry](abilities.md#ability-war-cry), [Charge](abilities.md#ability-charge), [Lullaby](abilities.md#ability-lullaby), [Cackle](abilities.md#ability-cackle), [Veteran's wind](abilities.md#ability-veterans-wind), [Whirlwind](abilities.md#ability-whirlwind), [Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance),
   [Step of the wind](abilities.md#ability-step-of-the-wind), [Stunning strike](abilities.md#ability-stunning-strike), [Patient defence](abilities.md#ability-patient-defence), [Stillness](abilities.md#ability-stillness), [Quivering palm](abilities.md#ability-quivering-palm), [Consecrate](abilities.md#ability-consecrate), [Orison](abilities.md#ability-orison), [Sanctuary](abilities.md#ability-sanctuary), [Knock](abilities.md#ability-knock)) come
   from your [class](classes.md)'s level table (see [Classes](classes.md#levels)). Each is under Class from the level that brings
   it.
@@ -124,6 +124,19 @@ you never choose them, they work by themselves as you fight. They have their own
   - A [paladin](classes.md#paladin)'s holy gifts are never greyed out by [alignment](alignment.md), but they do nothing unless you are
     Kind or better (see [Alignment](alignment.md)).
   - They have no key of their own yet: `X` uses the one you used last again.
+- **[Charge](abilities.md#ability-charge)**, the [warrior](classes.md#warrior)'s at level 1, rushes a foe you see.
+  Aim it like a shot, at the creature. You run along the straight line to it, stop in the cell
+  before it, and strike it once, as an ordinary [melee attack](combat.md).
+  - It costs 1 [stamina](resources.md#stamina), plus 1 for every cell you run. It takes the time
+    of those steps; the blow is free.
+  - You must gain at least one cell, so it is refused when you already stand beside the foe.
+  - A wall, a closed door, deep water, ice, a [trap](traps.md) you know of, or anyone you see on
+    the line refuses it before you move. So does too little stamina for the whole run. A refused
+    charge takes no time and costs nothing.
+  - Nobody you pass or leave behind gets a [free blow](stances.md#free-blows) at you on the way.
+  - Someone you cannot see on the line stops you short, with no blow. A hidden trap goes off as
+    you run over it and stops you there.
+  - Charge also gives the warrior their stamina pool from level 1.
 - **[War cry](abilities.md#ability-war-cry)**, the [berserker](classes.md#berserker)'s at level 25, is paid in [rage](resources.md): 4 of it, plus the time of a wait.
   So it is greyed out with "you have not the rage for it" until you [rage](abilities.md#ability-rage). You roar as loud as a
   [howl](hearing.md), heard across the floor; it wakes sleepers and draws the curious.

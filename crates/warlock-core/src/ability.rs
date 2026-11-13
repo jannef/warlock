@@ -1268,6 +1268,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::MakeDo
         | ClassActive::SpiritWeapon
         | ClassActive::Sic
+        | ClassActive::Charge
         | ClassActive::Volley => Vec::new(),
     };
     cooldowns.into_iter().find(|&s| actor.effects.has(s))

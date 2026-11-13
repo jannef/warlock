@@ -950,10 +950,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the player toward evil empties it (§8 "Alignment"). Shown as `Zeal 7/12`. Zealot (the one
     pickable on it, #914, below) makes a blow taken build two.
   - **Stamina** (#560, the combat progression design §4.5): the pool weapon actives pay
-    from (§8 "Weapon abilities", #564). The granted talent **Trained wind**
-    (`grants_resource`) is in the level-1 row of the warrior's, berserker's, paladin's,
-    ranger's, ascetic's, thief's, and bard's tables, so those hold it from creation, full; a saved
-    character of those classes is granted it on load (`World::grant_class`). Its maximum is 10
+    from (§8 "Weapon abilities", #564), and the warrior's Charge (§8 "Class abilities"). The
+    warrior's granted talent **Charge** (`grants_resource`) is in the level-1 row of their
+    table, so a warrior holds it from creation, full; a saved warrior is granted it on load
+    (`World::grant_class`). Everyone else gets it, full, from the first weapon active a rank
+    teaches (Trained wind, which gave it to every fighting class at level 1, is gone, #1466). Its maximum is 10
     + the Toughness modifier + a point per 10 levels, at least 5 (`max_from`), so Toughness 14
     holds 12 at level 1; it comes back a point every 12 s (2 base turns), resting too, and sits
     at 0. A berserker holds Rage and Stamina at once. Shown as `Sta 7/12`. Talents (the
