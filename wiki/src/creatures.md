@@ -182,10 +182,6 @@ kit a place gives a creature are always as made. The chances, by the creature's
 
 {{#include generated/gear-condition.md}}
 
-Deeper down, gear is better made: the chances of Fine, Marvellous, and Masterwork in the
-[table of deeper finds](magic-items.md#deeper-finds) are added to these, and the chance of a
-damaged piece shrinks to make room.
-
 ## Grades
 
 Two of the same creature need not be the same fight. When a creature comes into being, there is a

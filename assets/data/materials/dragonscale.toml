@@ -8,7 +8,7 @@ color = "#3fa36b"
 weight = 40
 protection = 130
 value = 3000
-rarity = { weight = 10, deeper = 5, level = 6 }
-gear = { weight = 5, deeper = 2, level = 10 }
+rarity = { weight = 10, level = 10 }
+gear = { weight = 5, level = 10 }
 fit = { weapon = "poor", jewellery = "poor" }
 binding = 2

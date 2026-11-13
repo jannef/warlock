@@ -99,3 +99,34 @@ the abilities menu or `KeyCommand::Disarm` (unbound). The wiki's `trap-disarm.md
 (`xtask/src/wiki/traps.rs::disarming`) uses `check::ways` and `check::ways_short_by`. Tests:
 `world/disarm_tests.rs` (rigged streams for each outcome, the pit's climb, a door's trap,
 refusals, the modifier, marks, the menu, saves and replays), `check.rs`, `ability.rs`.
+
+**Rigging** (spec §8 "Traps": "Rigging traps", #1423; the craftsperson design §7.6) is
+`world/rig.rs`: the craftsperson's Trapwright (`data/talents/trapwright.toml`, `effects = [{
+kind = "rigs" }]` → `TalentMods::rigs` → `ClassActive::Rig`, id `trapwright`, `Aim::Rig`).
+The rigs are `data/rigs.toml` (`content/rig.rs`: `RigRules { difficulty, skill, rigs }`,
+`RigDef { trap, seconds, takes: RigTakes::{Ammo, Stock, DigTool}, knife, wall, made, snaps }`,
+`RigId` its index; optional, and without it `Ability::unavailable` says `NotYet`; the loader
+refuses a trap that is none, not exactly one of `ammo`/`stock`/`dig_tool`, `most` or `charges`
+outside 1 to 100 or on the wrong kind, ammunition no object is, a stock group `stock.toml`
+lacks, `wall` outside 1 to 10, `seconds` 0). The three traps it places (`rigged_arrows`,
+`rigged_stakes`, `rigged_pit`) are the last rows of `data/traps.toml`, so no older trap's
+`TrapId` moves; they have no `charges` (the rig gives them) and no `grows`. The app: the
+abilities menu opens `ui/rig_screen.rs` (`ScreenName::Rig`, `--screen rig`; rows from
+`PerceptionView::rigs`, `RigRow` with what is lacking, a lacking row stays), which acts with
+`Action::Rig { rig, dir: None }`; `input.rs::act` turns that into `InputMode::RigWay(RigId)`,
+the direction prompt, whose answer sends `rig:ID:DIR`. The rules: `World::start_rig` (refusals,
+no time: the ability, the rig, a direction, the overworld, afloat, `World::rig_refusal` on the
+cell as the player knows it, the wall in a straight line within `wall` cells, the inputs by
+`rig::lack`) → `Spent::Rig(Rigging)` → `World::rig` (`keep_at` in `craft` turns, the last cut
+to the rig's time) → `World::rigged` (a hidden trap there is found, someone there blocks, the
+inputs found again, `combat::roll_natural` + Dexterity + `skill_effect_of(skill, Craft)` +
+`TalentMods::check(Dexterity)` against `difficulty` by `check::makes`; made or a natural 2: the
+inputs spent, `Trap { known, charges, rigged: true }` placed and in `trap_memory`; a natural 2
+then `spring_trap(at, player)`, a pit's climb as a `run_turn`; then `perceive`). **The kill**:
+`Trap::rigged` (saved, skipped while false) makes `spring_trap` set `World::rigger` (not saved)
+around `set_off`; `trap_deals` then hurts with `Harm::Actor(player)` and wounds `by` them, so
+`dies` credits the player as for their own blow, unless the victim is the player (then
+`Harm::Trap`, `Cause::Trap`). Dumps: `truth` adds `rig::rigged_rows`; JSON `known_traps[]`
+carries `rigged` (`PerceptionView::rigged`). The wiki's `rigs.md` is
+`xtask/src/wiki/traps.rs::rigs`, and `traps.md` says a rigged trap goes off "as rigged". Tests:
+`world/rig_tests.rs`, `content/rig.rs`, the rig list's screen snapshot.

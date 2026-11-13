@@ -289,10 +289,6 @@ stone as the loose gem is). Not a `herb` material group, because `made_of = ["an
 jewellery is every grouped material and would admit a moonwort ring, and a recipe's fixed input
 is plainly an object. The alchemist `always` lays out glowcap and moonwort and buys `materials`;
 the general store `never` lays out a herb or an essence (it stocks the class for pieces).
-**Magic crystals** are objects of the same kind: six `crystal_<colour>` (black, blue, white, red,
-green, gold; `*` in the colour, 20 g, 25 gold, made of stone) and the two rare materials
-`heart_crystal` and `soul_fetter` (30 g, 300 gold), caught in salvage and never sold (every shop
-that stocks `materials` has them in `never`; docs/dev/enchanting.md).
 Gathering is Herbalism's Gather (#1340, `world/gather.rs`, `data/herbs.toml`; docs/dev/skills.md),
 and a herbalist's forage finds the surface ones; drops are below (P15).
 

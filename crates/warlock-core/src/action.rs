@@ -271,6 +271,16 @@ pub enum Action {
     Salvage {
         item: usize,
     },
+    /// Rig a trap of rig `rig` (an id in `data/rigs.toml`) on the cell `dir` of the player (spec
+    /// §8 "Traps": "Rigging traps"; the craftsperson's Trapwright, `world/rig.rs`):
+    /// `rig:tripwire:E`. Turn after turn of the `craft` action for the rig's time, then a
+    /// Dexterity check: made, the trap is placed, known, and the inputs spent. Refused (no time)
+    /// without the ability, a direction (`rig:tripwire`), a cell that may hold it, or what it
+    /// takes.
+    Rig {
+        rig: String,
+        dir: Option<Dir>,
+    },
     /// Give the carried stack at this position (one of it) to the player's companion beside them,
     /// for its neck (spec §8 "Allies"; the Give ability, the abilities menu's Allies group;
     /// `world/collar.rs`): priced as a `wear`, and what it wore falls on its cell. `ally` is the
@@ -1008,6 +1018,8 @@ impl fmt::Display for Action {
             Action::Temper { item } => write!(f, "temper:{}", position_text(*item)),
             Action::Whittle { item } => write!(f, "whittle:{}", position_text(*item)),
             Action::Salvage { item } => write!(f, "salvage:{}", position_text(*item)),
+            Action::Rig { rig, dir: None } => write!(f, "rig:{rig}"),
+            Action::Rig { rig, dir: Some(d) } => write!(f, "rig:{rig}:{d}"),
             Action::Give { item, ally } => {
                 write!(f, "give:{}", position_text(*item))?;
                 match ally {
@@ -1213,6 +1225,23 @@ impl FromStr for Action {
                 let usage = || "`salvage` needs a letter, e.g. `salvage:b`".to_string();
                 let item = arg.and_then(parse_position).ok_or_else(usage)?;
                 Ok(Action::Salvage { item })
+            }
+            "rig" => {
+                let usage =
+                    || "`rig:ID:DIR` names a rig and a way, e.g. `rig:tripwire:E`".to_string();
+                let arg = arg.ok_or_else(usage)?;
+                let (rig, dir) = match arg.split_once(':') {
+                    Some((rig, d)) => (rig, Some(d.parse::<Dir>().map_err(|_| usage())?)),
+                    None => (arg, None),
+                };
+                let id = |c: char| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_';
+                if rig.is_empty() || !rig.chars().all(id) {
+                    return Err(usage());
+                }
+                Ok(Action::Rig {
+                    rig: rig.to_string(),
+                    dir,
+                })
             }
             "give" => {
                 let usage = || "`give:LETTER[:DIR]` names a stack, e.g. `give:b`".to_string();
@@ -1904,6 +1933,14 @@ mod tests {
             Action::Temper { item: 27 },
             Action::Whittle { item: 3 },
             Action::Salvage { item: 2 },
+            Action::Rig {
+                rig: "tripwire".into(),
+                dir: Some(Dir::E),
+            },
+            Action::Rig {
+                rig: "pitfall".into(),
+                dir: None,
+            },
             Action::Give {
                 item: 1,
                 ally: None,

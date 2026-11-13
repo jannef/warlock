@@ -314,8 +314,7 @@ one by its letter and aim it.
 
 `e` (Consume) opens a list of what you can [eat](food.md#eating), titled "Consume what?". It shows
 [food](food.md) lying where you stand first, then the food you carry. A letter, or `Enter` on the
-marked row, eats it. [Potions](potions.md) and [magic crystals](crystals.md#consuming-a-crystal)
-are in the same list. See [Food and corpses](food.md).
+marked row, eats it. See [Food and corpses](food.md).
 
 ## Abilities
 

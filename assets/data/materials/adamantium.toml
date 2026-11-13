@@ -12,7 +12,7 @@ to_hit = 0
 damage = 1
 protection = 130
 value = 3000
-rarity = { weight = 10, deeper = 6, level = 16 }
-gear = { weight = 5, deeper = 2, level = 24 }
+rarity = { weight = 10, level = 30 }
+gear = { weight = 5, level = 40 }
 work = 8
 binding = 2

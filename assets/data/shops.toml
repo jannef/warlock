@@ -91,9 +91,6 @@ never = [
     "bog_myrtle", "comfrey", "essence_of_air", "essence_of_earth", "essence_of_fire",
     "essence_of_ice", "essence_of_lightning", "essence_of_water", "eyebright", "feverfew",
     "glowcap", "henbane", "mandrake", "moonwort", "vervain",
-    # Magic crystals and the rare materials: caught in salvage, never sold (enchanting.md §5, §9).
-    "crystal_black", "crystal_blue", "crystal_gold", "crystal_green", "crystal_red",
-    "crystal_white", "heart_crystal", "soul_fetter",
 ]
 buys = [
     "melee_weapons", "missile_weapons", "missiles", "shields", "body_armour", "helmets",
@@ -118,9 +115,6 @@ never = [
     "elixir_of_might", "elixir_of_presence", "elixir_of_vigour", "elixir_of_will",
     "elixir_of_wit", "flask_of_fire", "flask_of_frost", "flask_of_thunder", "pitch_fire",
     "trolls_blood",
-    # Magic crystals and the rare materials: caught in salvage, never sold (enchanting.md §5, §9).
-    "crystal_black", "crystal_blue", "crystal_gold", "crystal_green", "crystal_red",
-    "crystal_white", "heart_crystal", "soul_fetter",
 ]
 buys = [
     "cloaks", "clothing", "light_sources", "tools", "household", "materials", "food", "potions",
@@ -161,11 +155,6 @@ title = "{keeper}'s Smithy"
 stock = [
     "melee_weapons", "missile_weapons", "missiles", "shields", "body_armour", "helmets", "gloves",
     "boots", "materials",
-]
-never = [
-    # Magic crystals and the rare materials: caught in salvage, never sold (enchanting.md §5, §9).
-    "crystal_black", "crystal_blue", "crystal_gold", "crystal_green", "crystal_red",
-    "crystal_white", "heart_crystal", "soul_fetter",
 ]
 buys = [
     "melee_weapons", "missile_weapons", "missiles", "shields", "body_armour", "helmets", "gloves",

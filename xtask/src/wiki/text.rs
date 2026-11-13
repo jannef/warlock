@@ -97,8 +97,6 @@ pub(super) enum Term {
     CasterStyle,
     CasterStyleAbility,
     Creature,
-    /// A colour of magic crystal: on the crystals page.
-    Crystal,
     Damage,
     Disease,
     Herb,
@@ -136,7 +134,6 @@ impl Term {
             Term::CasterStyle => ("schools.md", "style"),
             Term::CasterStyleAbility => ("schools.md", "style-ability"),
             Term::Creature => ("creatures.md", "creature"),
-            Term::Crystal => ("crystals.md", "crystal"),
             Term::Damage => ("damage-types.md", "damage"),
             Term::Disease => ("diseases.md", "disease"),
             Term::Herb => ("herbs.md", "herb"),

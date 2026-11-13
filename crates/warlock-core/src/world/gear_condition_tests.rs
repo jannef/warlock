@@ -1,8 +1,8 @@
 //! The condition creature gear spawns in (`world/gear_condition.rs`, #1193): the shares by tribe
 //! over many creatures, the kind by the material, protected items untouched, the loader's checks,
-//! and a damaged weapon in a creature's hand; deeper finds' make (#1436).
+//! and a damaged weapon in a creature's hand.
 
-use super::gear_condition::{apply, conditioned, kind, make, quest_objects, stream};
+use super::gear_condition::{apply, conditioned, kind, quest_objects, stream};
 use super::*;
 use crate::content::{ContentFiles, CreatureId, ItemHarm, PER_MILLE};
 use crate::gear;
@@ -38,12 +38,7 @@ fn shares(id: &str, seeds: u64) -> (u32, u32, [u32; 3]) {
         let may: Vec<bool> = (pack.items.iter())
             .map(|s| conditioned(&CONTENT, &quest, s))
             .collect();
-        apply(
-            &CONTENT,
-            &mut stream(seed, "test"),
-            (creature(id), 1),
-            &mut pack,
-        );
+        apply(&CONTENT, &mut stream(seed, "test"), creature(id), &mut pack);
         for (stack, may) in pack.items.iter().zip(may) {
             could += u32::from(may);
             let Some(w) = stack.worked() else {
@@ -185,12 +180,7 @@ fn protected_items_are_untouched() {
         for stack in [&unique, &proof, &sharp] {
             pack.items.push(stack.clone());
         }
-        apply(
-            &CONTENT,
-            &mut stream(seed, "test"),
-            (skeleton, 1),
-            &mut pack,
-        );
+        apply(&CONTENT, &mut stream(seed, "test"), skeleton, &mut pack);
         assert!(pack.items[..2].iter().all(|s| s.worked().is_none()));
         touched += usize::from(pack.items[2].worked().is_some());
     }
@@ -257,64 +247,6 @@ fn without_the_file_gear_is_as_made() {
     let made = pack.clone();
     let mut rng = stream(1, "test");
     let before = rng.clone();
-    apply(&content, &mut rng, (skeleton, 10), &mut pack);
+    apply(&content, &mut rng, skeleton, &mut pack);
     assert_eq!((pack.items, rng), (made.items, before));
-}
-
-/// Loot's make (#1436): nothing drawn where the depth row gives nothing (item level 1) or for
-/// what takes no make (a ring); deep, a long sword is often improved and never damaged.
-#[test]
-fn deeper_loot_is_better_made_and_shallow_loot_draws_nothing() {
-    let sword = Stack::one(CONTENT.object_id("long_sword").expect("long sword"));
-    let ring = (CONTENT.object_defs().iter())
-        .position(|o| o.is_jewellery())
-        .map(|i| Stack::one(crate::content::ObjectId(i as u16)))
-        .expect("a ring");
-    for (stack, level) in [(&sword, 1), (&sword, 2), (&ring, 30)] {
-        let mut rng = Rng::stream(1, "make");
-        let before = rng.clone();
-        let mut made = stack.clone();
-        make(&CONTENT, &mut rng, level, &mut made);
-        assert_eq!((&made, rng), (stack, before));
-    }
-    let row = CONTENT.gear_condition().depth_at(20);
-    assert!(row.odds().improved() > 0);
-    let mut improved = [0u32; 3];
-    const N: u32 = 4000;
-    let mut rng = Rng::stream(1, "make");
-    for _ in 0..N {
-        let mut made = sword.clone();
-        make(&CONTENT, &mut rng, 20, &mut made);
-        if let Some(w) = made.worked() {
-            assert!(!w.damaged);
-            improved[w.improvements() - 1] += 1;
-        }
-    }
-    let expected = [row.fine, row.marvellous, row.masterwork].map(|p| u32::from(p) * N / PER_MILLE);
-    for (got, want) in improved.into_iter().zip(expected) {
-        let slack = 4 * want.isqrt() + want / 10 + 1;
-        assert!(
-            got.abs_diff(want) <= slack,
-            "{improved:?} against {expected:?}"
-        );
-    }
-}
-
-/// Creature gear adds the depth row of its level to its tribe's odds: deeper, more improved.
-#[test]
-fn deeper_creature_gear_is_better_made() {
-    let improved = |level: u8| {
-        let mut n = 0;
-        for seed in 0..300 {
-            let id = creature("skeleton_warrior");
-            let mut pack = gear::roll(&CONTENT, &mut Rng::gear(seed, "test"), id, 10);
-            apply(&CONTENT, &mut stream(seed, "test"), (id, level), &mut pack);
-            n += (pack.items.iter())
-                .filter(|s| s.worked().is_some_and(|w| w.improvements() > 0))
-                .count();
-        }
-        n
-    };
-    let (shallow, deep) = (improved(1), improved(20));
-    assert!(deep > shallow * 5 + 20, "{shallow} shallow, {deep} deep");
 }

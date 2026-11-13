@@ -800,46 +800,14 @@ is not listed): `seconds = 600`, `difficulty = 12`, `yield = 50`.
   improvements, rung, and charges go with the item; its name is the lore's title, so an
   unidentified item is never named. What is saved joins the pack ("You save X and Y.", or
   "Nothing is left worth keeping.").
-- **Magic** (docs/dev/enchanting.md "Salvage's affix checks"): before the material checks,
-  `World::catch_magic` (`world/crystal.rs`) makes one Enchanting check per affix of a magic or
-  rare item, identified or not (an unidentified one's lines name no affix), each made a crystal
-  of the affix's colour, and a deep rare's chance of a rare material; the crystals join the saved
-  list after the materials.
 - **Marks**: `Use::Salvage` on each distinct profession rolled, that skill alone
-  (`World::train_skill`, a filter on `World::train`'s loop), and on Enchanting when an affix
-  check was made; untrained skills get none. No noise, no alignment.
+  (`World::train_skill`, a filter on `World::train`'s loop); untrained skills get none. No noise,
+  no alignment.
 - **Tests**: `world/salvage_tests.rs` (the owner's ruby-tipped hardwood quarterstaff over many
   fates: both, wood only, ruby only, neither, the shattering; the cut kept; `chipped`'s ladder;
   ten minutes; one of a stack; every refusal with no time, unpaid goods in Grimbold's shop; an
   interruption; the marks; `skill_effect_of` not summing; the ability; a replay),
   `content/salvage.rs` (the loader), the `Salvage` screen snapshot (`screen_snapshots.rs`).
-
-## Waste not (the craftsperson's)
-
-The craftsperson's class ability at level 6 (#1420; the craftsperson design §7.3;
-`data/talents/waste_not.toml`): "nothing lost but time", two effects and three reads, each
-where the rule already reads its number:
-
-- **`waste_not { salvage, failed }`** (`TalentMods::salvage_percent`, `failed_percent`, the most
-  held of each). `salvage`: `world::salvage_percent(content, actor)` is `data/salvage.toml`'s
-  `yield` or the holder's, whichever is more, read by `salvaged` for `piece::break_up` and by
-  Eye for the make's line (`PerceptionView::describe_item`), so the description counts what the
-  work would give. 75: a quarterstaff gives 8 billets for 5, chain mail 17 iron ingots for 11. A
-  gem's fate (chipped, shattered) is unchanged. `failed`: `craft_make.rs::failed_percent`, the
-  settings' `yield` or the holder's, at most 100, read by `resolve` and `taken` as they set each
-  `Spend::back` (stock by `piece::count_for`, never more than was taken; object inputs `count ×
-  percent / 100`). 100: a failed recipe, a natural 2 too, gives back all its stock and object
-  inputs, and a counted recipe that made none its stock and whole inputs (`per_made` ones were
-  never spent). A brew with a `failure` object still spends its inputs (`back` 0 before the
-  percent is asked). The metal-arms line ends ", every ounce."; another failure says "The work
-  goes wrong, but you save every scrap of it."
-- **`temper_safe`** (`TalentMods::temper_safe`): `temper.rs::work_out`'s failure arm, before item
-  damage is asked: the item keeps its `Worked` as it was, the attempt counted (`attempts` + 1, so
-  the next is harder), and nothing is drawn; a damaged item is never destroyed. Temper and Whittle
-  alike, a natural 2 too ("The work goes wrong, but you know when to stop before the steel
-  spoils." / "... the wood spoils.").
-
-Tests: `world/waste_not_tests.rs` (level 6, each read with and without the talent).
 
 ## Dumps
 

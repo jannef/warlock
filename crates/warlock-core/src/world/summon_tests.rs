@@ -338,17 +338,13 @@ fn the_goblin_wizard_calls_forth_goblins_that_pay_when_killed() {
     assert!(!came.is_empty(), "it summoned");
     let goblins = w.content().factions().id("goblins");
     assert!(came.iter().all(|a| a.faction(w.content()) == goblins));
-    // One of them, set down beside the player, frail and stripped of its gear (deeper gear is
-    // often finer, #1436, and a blow that glances off leaves it to the wizard's spark): struck
-    // until it dies.
+    // One of them, set down beside the player, frail: struck until it dies.
     let victim = came[0].id;
     let player = w.player_pos();
     let beside = Pos::new(player.x + 1, player.y);
     if let Some(a) = w.state.actors.get_mut(&victim) {
         a.pos = beside;
         a.hp = 1;
-        a.inventory.clear();
-        a.equipment = Default::default();
     }
     let xp = w.state.experience;
     for _ in 0..50 {

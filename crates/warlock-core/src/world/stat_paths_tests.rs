@@ -129,7 +129,6 @@ fn every_new_use_has_its_rules_by_stat_in_the_data() {
         (StatUse::Searched, vec![Intelligence]),
         (StatUse::Foraged, vec![Intelligence]),
         (StatUse::Prayed, vec![Willpower]),
-        (StatUse::Consumed, vec![Willpower]),
         (StatUse::HeldOut, vec![Willpower]),
         (StatUse::Steadied, vec![Willpower]),
         (StatUse::Inspired, vec![Presence]),

@@ -121,6 +121,10 @@ impl World {
                 self.say("Use it on what?");
                 Spent::Nothing
             }
+            (ClassActive::Rig, _) => {
+                self.say("Rig what, and where? Name a rig and a way: `rig:tripwire:E`.");
+                Spent::Nothing
+            }
             (ClassActive::SpiritWeapon, _) => {
                 self.say("Call it in what shape?");
                 Spent::Nothing

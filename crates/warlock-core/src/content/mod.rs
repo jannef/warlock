@@ -28,7 +28,6 @@ mod companion;
 mod creature;
 mod creature_rarity;
 mod creature_spells;
-mod crystal;
 mod damage_type;
 pub mod danger;
 mod decipher;
@@ -117,6 +116,7 @@ mod recipe;
 #[cfg(test)]
 mod recipe_tests;
 mod resource;
+mod rig;
 mod rod;
 #[cfg(test)]
 mod room_burden_tests;
@@ -227,7 +227,6 @@ pub use creature::{
     the_start,
 };
 pub use creature_rarity::{COMMON, CreatureRarity};
-pub use crystal::{CrystalColour, Crystals, EnchantingRules, RareMaterials};
 pub use damage_type::{CharColors, DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
 pub use danger::{Count, DangerRule, PlayerScale, Spawning};
 pub use decipher::DecipherRules;
@@ -258,7 +257,7 @@ pub use flow::{FLOW_SPEEDS, Flow};
 pub use forage::{ForageGround, ForageRules};
 pub use gaze::Gaze;
 pub use gear::{Gear, GearLine, RACIAL_CHANCE};
-pub use gear_condition::{Depth, GearConditions, Odds, PER_MILLE, TribeOdds};
+pub use gear_condition::{GearConditions, Odds, PER_MILLE, TribeOdds};
 pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, Ornament, ROUGH_SATURATION, dull,
 };
@@ -315,6 +314,7 @@ pub use recipe::{
     RecipePart, RecipeResult, RecipeSettings, RecipeUse, Recipes,
 };
 pub use resource::{Build, MAX_RESOURCE, MaxFrom, OverTime, ResourceDef, ResourceId};
+pub use rig::{RigDef, RigId, RigRules, RigTakes};
 pub use rod::{Rod, RodDoes, RodEffect, RodShape};
 pub use room_effect::{
     Collapse, Dressing, Here, Hoard, Mirrors, Offer, RoomEffectDef, RoomEffectId, RoomEffects,
@@ -728,6 +728,9 @@ pub struct Content {
     /// The numbers of salvaging an item for its materials (`data/salvage.toml`); without it
     /// nobody salvages.
     salvage: Option<SalvageRules>,
+    /// The traps the craftsperson's Trapwright rigs (`data/rigs.toml`, spec §8 "Traps"); none
+    /// without the file, when Trapwright is not usable yet.
+    rigs: Option<RigRules>,
     /// What foraging in the wild gives (`data/forage.toml`, spec §8 "Foraging"); none without
     /// the file.
     forage: Option<ForageRules>,
@@ -829,11 +832,6 @@ pub struct Content {
     study: Option<StudyRules>,
     /// The check of reading a scroll (`data/decipher.toml`, spec §8 "Scrolls"); none without it.
     decipher: Option<DecipherRules>,
-    /// The magic crystals' colours (`data/crystals.toml`, docs/dev/enchanting.md); none without
-    /// it.
-    crystals: Option<Crystals>,
-    /// Enchanting's numbers (`data/enchanting.toml`); none without it.
-    enchanting: Option<EnchantingRules>,
     /// What a failed study may bring (`data/mishaps/`), in path order.
     mishaps: Vec<Mishap>,
     /// The Spellcraft check every cast makes (`data/miscast.toml`, spec §8 "Spells": "Miscasts");
@@ -940,6 +938,7 @@ impl Content {
             encounter_tables: Vec::new(),
             fletch: None,
             salvage: None,
+            rigs: None,
             forage: None,
             herbs: None,
             mining: None,
@@ -949,8 +948,6 @@ impl Content {
             intimidate: None,
             ruin: RuinRules::default(),
             decipher: None,
-            crystals: None,
-            enchanting: None,
             swim: None,
             ranged: RangedRules::default(),
             prayer: None,
@@ -1324,6 +1321,10 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.salvage = Some(SalvageRules::parse(path, text)?);
         }
+        let path = "data/rigs.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.rigs = Some(RigRules::parse(path, text, &content)?);
+        }
         let path = "data/forage.toml";
         if let Some(text) = files.get_optional(path) {
             content.forage = Some(ForageRules::parse(path, text, &content)?);
@@ -1455,15 +1456,6 @@ impl Content {
         let path = "data/familiars.toml";
         if let Some(text) = files.get_optional(path) {
             content.familiars = Some(FamiliarRules::parse(path, text, &content)?);
-        }
-        // The crystals name objects, creature tags, and affix categories.
-        let path = "data/crystals.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.crystals = Some(Crystals::parse(path, text, &content)?);
-        }
-        let path = "data/enchanting.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.enchanting = Some(EnchantingRules::parse(path, text)?);
         }
         let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         for (path, id, text) in files.in_dir("scenarios") {
@@ -3358,6 +3350,12 @@ impl Content {
         self.salvage.as_ref()
     }
 
+    /// The traps the craftsperson's Trapwright rigs (`data/rigs.toml`); `None` without the file,
+    /// when Trapwright is not usable yet.
+    pub fn rigs(&self) -> Option<&RigRules> {
+        self.rigs.as_ref()
+    }
+
     /// Whether `object` is a knife, to fletch with (`data/fletch.toml`'s `knives`, a weapon
     /// skill: "Daggers and knives", so a dagger, a stiletto, or a knife; a short sword is not).
     pub fn is_knife(&self, object: ObjectId) -> bool {
@@ -4095,18 +4093,6 @@ impl Content {
     /// it, and then every scroll simply reads.
     pub fn decipher(&self) -> Option<&DecipherRules> {
         self.decipher.as_ref()
-    }
-
-    /// The magic crystals' colours (`data/crystals.toml`): none without it, and then no crystal
-    /// is caught or consumed.
-    pub fn crystals(&self) -> Option<&Crystals> {
-        self.crystals.as_ref()
-    }
-
-    /// Enchanting's numbers (`data/enchanting.toml`): none without it, and then salvage makes no
-    /// affix checks.
-    pub fn enchanting(&self) -> Option<&EnchantingRules> {
-        self.enchanting.as_ref()
     }
 
     /// What a failed study may bring (`data/mishaps/`), in path order.

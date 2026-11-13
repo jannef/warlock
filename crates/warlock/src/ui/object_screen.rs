@@ -272,11 +272,10 @@ impl ObjectScreen {
         };
         let content = view.content();
         let (pile, pack) = (view.objects(view.viewer()), view.inventory());
-        // What may be consumed: food, potions (spec §8 "Potions": drunk from this list), and
-        // magic crystals (`world/crystal.rs`).
+        // What may be consumed: food, and potions (spec §8 "Potions": drunk from this list).
         let edible = |s: &Stack| {
             let def = content.object(s.object);
-            def.food.is_some() || def.drink.is_some() || view.is_crystal(s)
+            def.food.is_some() || def.drink.is_some()
         };
         let reading = |s: &Stack| content.object(s.object).read.as_ref();
         let readable =

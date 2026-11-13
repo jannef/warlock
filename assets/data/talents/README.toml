@@ -208,10 +208,6 @@
 #   trade_bonus { value }         added to the dice of each trade it takes as it is handed down
 #   eye_for_make                  item descriptions read the item's make: what salvage would
 #                                 give, the improvements left, how hard its stuff is to work
-#   waste_not { salvage, failed } salvage gives back `salvage` % of each made material's grams,
-#                                 a failed recipe `failed` % of its stock and object inputs, each
-#                                 where more than everyone's (the most held)
-#   temper_safe                   a failed Temper or Whittle damages nothing (the attempt counts)
 #   loot_magic_percent { value }  loot it finds and creatures drop: the weights of the rarities
 #                                 better than the least the find may be, that percent more
 #   read_percent { value }        reading a scroll takes that percent more time (negative: less)

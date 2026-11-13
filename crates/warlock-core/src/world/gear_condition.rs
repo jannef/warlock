@@ -10,8 +10,7 @@
 //!   ([`super::item_damage::protected`]: a unique, of Proof, or what any quest may ask for). A
 //!   fixed kit (a level file's placed gear, a vault's) is never rolled, so it stays as made.
 //! - **The draw**: one draw below [`PER_MILLE`] per piece, in pack order, against the odds of the
-//!   creature's tribe (the first `[[tribe]]` whose tag it has, else `[default]`) with the
-//!   `[[depth]]` row of the level's item level added ([`crate::content::Odds::deeper`]); for an improved
+//!   creature's tribe (the first `[[tribe]]` whose tag it has, else `[default]`); for an improved
 //!   piece then one draw per improvement for its [`Aspect`] among those its base item has, as the
 //!   anvil draws them. The improvements are capped at `temper.toml`'s `most`, and each counts as
 //!   one attempt made on it.
@@ -22,13 +21,6 @@
 //! - **The stream**: its own, `condition/<key>` with the gear stream's key (a generated level's
 //!   id, drawn in spawn order, or a placed creature's actor id): the gear's draws and everything
 //!   else on the level are the same with or without it.
-//!
-//! **Loot's make** ([`make`], #1436): loot's arms and armour (floor loot, chests, hoards, dens,
-//! room loot: every find [`crate::magic::loot`] makes with `Source::Loot`) are as made but for the
-//! `[[depth]]` row of their item level: Fine, Marvellous, or Masterwork by its chances, never
-//! damaged. One draw below [`PER_MILLE`] from the loot stream, after the wand's rung and before
-//! the trim, then the aspects as above; none where the row gives nothing (the shallow levels,
-//! whose draws are as before) or for what takes no make.
 
 use super::item_damage::protected;
 use super::temper::arms;
@@ -46,16 +38,10 @@ pub(crate) fn stream(seed: u64, key: &str) -> Rng {
 }
 
 /// Draws the condition of every piece in `pack`, just rolled for a creature of type `creature`
-/// on a level of item level `level` (module docs).
-pub(crate) fn apply(
-    content: &Content,
-    rng: &mut Rng,
-    (creature, level): (CreatureId, u8),
-    pack: &mut Pack,
-) {
+/// (module docs).
+pub(crate) fn apply(content: &Content, rng: &mut Rng, creature: CreatureId, pack: &mut Pack) {
     let rules = content.gear_condition();
-    let tribe = rules.odds(&content.creature(creature).tags);
-    let odds = tribe.deeper(&rules.depth_at(level));
+    let odds = rules.odds(&content.creature(creature).tags);
     if odds == Default::default() {
         return;
     }
@@ -70,53 +56,29 @@ pub(crate) fn apply(
             stack.set_worked(worked);
             continue;
         };
-        improve(content, rng, improved, stack);
+        let among = aspects(content.object(stack.object));
+        let most = improved.min(content.temper().most);
+        if most == 0 {
+            continue;
+        }
+        let mut worked = Worked::default();
+        for _ in 0..most {
+            worked.attempted();
+            worked.improve(among[rng.index(among.len())]);
+        }
+        stack.set_worked(worked);
     }
 }
 
-/// Loot's make (module docs): `stack`, a find at item level `level`, made Fine, Marvellous, or
-/// Masterwork by the `[[depth]]` row there, from `rng`; no draw where the row gives nothing or
-/// `stack` takes no make.
-pub(crate) fn make(content: &Content, rng: &mut Rng, level: u8, stack: &mut Stack) {
-    let odds = content.gear_condition().depth_at(level).odds();
-    if odds.improved() == 0 || !improvable(content, stack) {
-        return;
-    }
-    if let Some(improved) = odds.of(rng.below(PER_MILLE)) {
-        improve(content, rng, improved, stack);
-    }
-}
-
-/// `stack` given `improved` improvements (at most `temper.toml`'s `most`), each one attempt, in
-/// aspects drawn as the anvil draws them; nothing for none.
-fn improve(content: &Content, rng: &mut Rng, improved: u8, stack: &mut Stack) {
-    let among = aspects(content.object(stack.object));
-    let most = improved.min(content.temper().most);
-    if most == 0 {
-        return;
-    }
-    let mut worked = Worked::default();
-    for _ in 0..most {
-        worked.attempted();
-        worked.improve(among[rng.index(among.len())]);
-    }
-    stack.set_worked(worked);
-}
-
-/// Whether `stack` takes a condition: one that may be improved ([`improvable`]) and is not
-/// protected.
+/// Whether `stack` takes a condition: a single piece of arms or armour with something to better,
+/// of this world, worked by nobody yet, and not protected.
 pub(super) fn conditioned(content: &Content, quest: &BTreeSet<ObjectId>, stack: &Stack) -> bool {
-    improvable(content, stack) && !protected(content, quest, stack)
-}
-
-/// Whether `stack` may be made finer: a single piece of arms or armour with something to better,
-/// of this world, and worked by nobody yet.
-fn improvable(content: &Content, stack: &Stack) -> bool {
     stack.count == 1
         && !stack.is_spirit()
         && stack.worked().is_none()
         && arms(content, stack)
         && !aspects(content.object(stack.object)).is_empty()
+        && !protected(content, quest, stack)
 }
 
 /// What damaged `stack` is called by its main part's material (module docs).

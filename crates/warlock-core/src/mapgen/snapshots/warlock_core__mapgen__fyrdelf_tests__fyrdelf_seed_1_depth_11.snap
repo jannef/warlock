@@ -5,26 +5,26 @@ expression: "describe(&level(1, 11))"
 Fyrdelf 11 (fyrdelf:11) 120x60
 stairs Up at (85, 40) -> fyrdelf:10
 stairs Down at (10, 4) -> fyrdelf:12
-duergar_skeleton at (71, 3) route S S S S S S E E W W N N N N N N carrying a Fine nicrosil war hammer (wielded), a rusted iron helm (being worn)
-duergar_skeleton at (41, 14) route E E E E E E W W E E W W W W W W carrying a Fine bronze war hammer (wielded)
+duergar_skeleton at (71, 3) route S S S S S S E E W W N N N N N N carrying a corroded nicrosil war hammer (wielded), a rusted iron helm (being worn)
+duergar_skeleton at (41, 14) route E E E E E E W W E E W W W W W W carrying a corroded bronze war hammer (wielded)
 troll at (20, 27) route W W W W W W N S E E E E E E
 imp at (57, 43) route W E E E E W W W W E
 hell_hound at (28, 31) route N N N N N S S S S S
-duergar_skeleton at (82, 50) route S N W W W E E E S N carrying a corroded bronze war hammer (wielded), a rusted steel helm (being worn)
+duergar_skeleton at (82, 50) route S N W W W E E E S N carrying a corroded bronze war hammer (wielded), a steel helm (being worn)
 charred_dead at (112, 42) route W W E E W W E E
 quasit at (87, 20) route E E E E W W W W
-orc_veteran at (51, 17) route W W W W W W W W W W E E E E E E E E E E carrying a Fine scimitar (wielded), a Fine bone suit of scale mail (being worn), a Fine bone helm (being worn), a Fine small shield (in off hand)
+orc_veteran at (51, 17) route W W W W W W W W W W E E E E E E E E E E carrying a rusted scimitar (wielded), a damaged bone suit of scale mail (being worn), a bone helm (being worn), a damaged small shield (in off hand)
 lesser_lightning_elemental at (111, 25) route E E W W W W E E E W W W E E E E W W
 animated_blade_15 at (76, 16) route N W W W E E E E E S N W W W W W E E E S carrying a spear (wielded)
 ogre at (85, 13) route S S W W E E N N
 animated_armour_15 at (18, 36) route W W W W S W W W E E E N E E E E carrying a studded leather jerkin (being worn), a great helm (being worn)
 duergar_miner at (84, 4) route S N N N E E E W W W S S S N carrying a leather cap (being worn)
-orc_veteran at (107, 21) route S S W W E E N N carrying a rusted scimitar (wielded), a rusted iron helm (being worn), a small shield (in off hand)
+orc_veteran at (107, 21) route S S W W E E N N carrying a scimitar (wielded), an iron helm (being worn), a small shield (in off hand)
 warg at (42, 23) route N N N S S S W W S S N N E E N N N S S S
-orc_berserker at (71, 8) route N N N N S N S S S S carrying a damaged flint great axe (wielded in both hands)
+orc_berserker at (71, 8) route N N N N S N S S S S carrying a flint great axe (wielded in both hands)
 fire_salamander at (107, 23) route E E E E E S S W W E W E E N N W W W W W
 lesser_lightning_elemental at (7, 15) route S E E S S S S S W E N N N N N W W N
-orc_berserker at (16, 55) route E S E E E E E E N N S S W W W W W W N W carrying a rusted great axe (wielded in both hands)
+orc_berserker at (16, 55) route E S E E E E E E N N S S W W W W W W N W carrying a great axe (wielded in both hands)
 ogre at (43, 24) route W N N N S S S E carrying a maul (wielded in both hands)
 hill_troll at (91, 19) route S S S S S S W W W W E E E E N N N N N N carrying a rusted maul (wielded in both hands)
 animated_armour_15 at (50, 33) route S S W W W E E E N N carrying a chain mail shirt (being worn), an iron helm (being worn), a pair of leather gloves (being worn)
@@ -32,49 +32,49 @@ quasit at (88, 23) route S S W W W E E E N N
 troll at (87, 4) route N N E S S N N W S S
 hell_hound at (17, 23) route W W S S N N E E
 orc_raider at (6, 37) route W W W W N N S S N N S S E E E E carrying a damaged flint battle axe (wielded)
-draugr at (26, 10) route N N N N N S S S S S carrying a Marvellous bronze great axe (wielded in both hands)
+draugr at (26, 10) route N N N N N S S S S S carrying a bronze great axe (wielded in both hands)
 quasit at (31, 6) route W W W W W E E E E E
 charred_dead at (72, 41) route N W N N S S E S
-duergar_crossbowman at (107, 6) route E E E E E W W W W W carrying a Fine crossbow (readied), 20 crossbow bolts (quivered), a Fine studded leather jerkin (being worn)
+duergar_crossbowman at (107, 6) route E E E E E W W W W W carrying a damaged crossbow (readied), 20 crossbow bolts (quivered), a damaged studded leather jerkin (being worn)
 lesser_fire_elemental at (17, 33) route S S S S W W E E N N N N
 hobgoblin_warcaster at (92, 32) route W W N N N W W E E S S S E E carrying a quarterstaff (wielded in both hands), a bone and garnet amulet (magic) (being worn), 20 copper coins
 water_elemental at (62, 13) route W W W W W W E W E W E E E E E E
 earth_elemental at (76, 36) route E E N N E W W W E E E W S S W W
 ash_wraith at (73, 35) route S S E E E W W W N N
 burning_skull at (45, 23) route W W W W W W E E E E E E
-duergar_crossbowman at (28, 13) route W W E E S N W W E E carrying 20 crossbow bolts (quivered), a steel hand axe (wielded), a studded leather jerkin (being worn)
-duergar_skeleton at (85, 48) route W W W W W W W W E E E E E E E E carrying a Fine bronze war hammer (wielded)
+duergar_crossbowman at (28, 13) route W W E E S N W W E E carrying 20 crossbow bolts (quivered), a Marvellous steel hand axe (wielded), a Fine studded leather jerkin (being worn)
+duergar_skeleton at (85, 48) route W W W W W W W W E E E E E E E E carrying a corroded bronze war hammer (wielded)
 troll at (19, 25) route N N N N N N N W W W E E E S S S S S S S
 charred_dead at (115, 32) route W W W W W E N N N S S S W E E E E E
 lesser_lightning_elemental at (84, 3) route E E E E E S S S S N N N N W W W W W
 lesser_fire_elemental at (96, 26) route N N N N N S S S N N N S S S S S
-hobgoblin_legionnaire at (63, 7) route N N N N S S S S carrying a Fine bronze spear (wielded), a Fine bronze large shield (in off hand), a corroded bronze chain mail shirt (being worn), a bronze helm (being worn)
+hobgoblin_legionnaire at (63, 7) route N N N N S S S S carrying a corroded bronze spear (wielded), a Fine bronze large shield (in off hand), a bronze chain mail shirt (being worn), a bronze helm (being worn)
 magma_crawler at (85, 52) route N N N N N N N N S S S S S S S S
 earth_elemental at (103, 46) route N N N E E W W S S S
-hobgoblin_warcaster at (50, 40) route W W W W W W W W W E E E E E E E E E carrying a Fine quarterstaff (wielded in both hands), a bronze amulet (being worn)
+hobgoblin_warcaster at (50, 40) route W W W W W W W W W E E E E E E E E E carrying a quarterstaff (wielded in both hands), a bronze amulet (being worn)
 barghest at (27, 3) route E S S W N N E E W W S S E N N W
-duergar_skeleton at (88, 13) route E E E E E E E W W W W W W W carrying a Fine bronze war hammer (wielded), a corroded bronze helm (being worn)
+duergar_skeleton at (88, 13) route E E E E E E E W W W W W W W carrying a corroded bronze war hammer (wielded), a corroded bronze helm (being worn)
 charred_dead at (35, 46) route S S S S W W E E N N N N
 orc_raider at (30, 48) route N E E E E W W W W S carrying a rusted battle axe (wielded)
 spark_mote at (8, 12) route S S S S S S S N E W S N N N N N N N
-orc_veteran at (73, 11) route S W E W N S E W E N carrying a Fine bone suit of scale mail (being worn)
+orc_veteran at (73, 11) route S W E W N S E W E N carrying a bone suit of scale mail (being worn)
 lesser_air_elemental at (25, 9) route N N N N N N N S S S S S S S
 burning_skull at (112, 19) route E W W W W W E E E E E W
-duergar_crossbowman at (110, 2) route W W W W E E E W W E E W W W E E E E carrying a Fine crossbow (readied), 12 steel crossbow bolts (quivered), a Fine studded leather jerkin (being worn)
-ogre_mauler at (69, 44) route S S S S S S W N S E N N N N N N carrying a Fine maul (wielded in both hands)
-duergar_skeleton at (16, 41) route N N N N S S S S carrying a Fine bronze war hammer (wielded), a Fine bronze helm (being worn)
+duergar_crossbowman at (110, 2) route W W W W E E E W W E E W W W E E E E carrying a crossbow (readied), 12 steel crossbow bolts (quivered), a Fine studded leather jerkin (being worn)
+ogre_mauler at (69, 44) route S S S S S S W N S E N N N N N N carrying a maul (wielded in both hands)
+duergar_skeleton at (16, 41) route N N N N S S S S carrying a corroded bronze war hammer (wielded), a corroded bronze helm (being worn)
 spectre at (90, 54) route N E E S N S N W W S
 lesser_fire_elemental at (84, 30) route W W E E W W E E
 dretch at (47, 14) route E S S E S N N N S S S N W N N W
 animated_blade_16 at (58, 14) route W W E E E W W W W W E E E E E W W W E E carrying a club (wielded)
 duergar_miner at (17, 28) route W W W W W W W E E E E E E E carrying a steel pick-axe (in use)
 animated_blade_15 at (73, 44) route W E W E E S S S E W N N N W W E W E carrying a quarterstaff (magic) (wielded in both hands)
-hobgoblin_warcaster at (48, 9) route E E E E S S W E N N W W W W carrying a quarterstaff (wielded in both hands), a bone amulet (being worn), a Fine studded leather jerkin (being worn)
+hobgoblin_warcaster at (48, 9) route E E E E S S W E N N W W W W carrying a quarterstaff (wielded in both hands), a bone amulet (being worn), a studded leather jerkin (being worn)
 magma_crawler at (93, 20) route E E S S S S E E W W N N N N W W
-duergar_crossbowman at (103, 17) route E E E E E E E E E W W W W W W W W W carrying a Fine hardwood crossbow (readied), 12 crossbow bolts (quivered), a Fine steel hand axe (wielded)
+duergar_crossbowman at (103, 17) route E E E E E E E E E W W W W W W W W W carrying a Fine hardwood crossbow (readied), 12 crossbow bolts (quivered), a steel hand axe (wielded)
 lesser_lightning_elemental at (56, 45) route N N N N E E S N W W S S S S
 knocker at (29, 31) route W W W W S N E E E E
-orc_raider at (65, 44) route E W S S S S W E N N N N E W carrying a Fine battle axe (wielded)
+orc_raider at (65, 44) route E W S S S S W E N N N N E W carrying a rusted battle axe (wielded)
 barghest at (107, 22) route S W W W W W E E E E E N
 water_elemental at (14, 21) route S S S S N N N N
 hell_hound at (12, 28) route E E E E W W W W
@@ -84,7 +84,7 @@ gallows_dead at (58, 33) route S S S S S N N N N S S S S N N N N N
 orc_berserker at (110, 30) route W W S E S S S S S N N N N N W N E E carrying a rusted great axe (wielded in both hands)
 duergar_skeleton at (101, 3) route W S S E W N N E carrying a rusted iron helm (being worn)
 magma_crawler at (21, 29) route E N S S S S S S N N N N N N S W
-hobgoblin_archer at (12, 39) route E E E E E E W W W W W W carrying a long war bow (readied), 15 horn arrows (quivered), a Marvellous studded leather jerkin (being worn)
+hobgoblin_archer at (12, 39) route E E E E E E W W W W W W carrying a long war bow (readied), 15 horn arrows (quivered), a studded leather jerkin (being worn)
 animated_armour_19 at (65, 21) route  carrying a leather jerkin (being worn), a large shield (in off hand)
 animated_armour_19 at (55, 20) route  carrying a studded leather jerkin (being worn)
 animated_blade_19 at (59, 24) route  carrying a hand axe (wielded)
@@ -116,9 +116,9 @@ place a hooded figure at (46, 54): Its empty hands are held as if about a hilt t
  #.....E..#####  #..............######..................#####  ###     ##.............###...#####   ####............#
  #........##..####...................................".##              #....)........## #####      ##...............#
  ##............##..................................o.."######         ##...........###             #...h...........##
-  #.........................................##.......".R##RR###########............#############   #..............##
+  #.........................................##.......".R##R)###########............#############   #..............##
   ##..................###........####......#######.....R‡RRR)‡‡‡‡R.........##..............T...##  ##...........z.#
-   #.................## ###.....##  ##.....##    ##....ARARRRRR!RA........#####........u.....w..## ##............##
+   #.................## ###.....##  ##.....##    ##....ARARRRRRRRA........#####........u.....w..## ##............##
    ##.........E.....##    ###.[..## ##......###   ####.R)RRRRARRRA.*....###   ###................###.......o....##
     ##..............##      ##....###.........##     ##.RRRRRRRAR......##       ###........................C..E.#####
     ##...........C...#  #### ##...........C..z.#  ######.RRRRR‡R......##          ##....u..................S.....#..##

@@ -277,6 +277,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
             encounter_header(world),
             truth_rows(world),
             chest_rows(world),
+            crate::world::rigged_rows(world),
             statue_rows(world),
             grave_rows(world),
             leaving_rows(world),
@@ -1485,6 +1486,7 @@ fn aim_word(aim: Aim) -> &'static str {
         Aim::Ailment => "what to treat",
         Aim::Item => "an item you carry",
         Aim::Shape => "a weapon's shape",
+        Aim::Rig => "a rig and a direction",
         Aim::Spell => "a spell you know",
         Aim::Recipes => "a recipe",
     }
@@ -2163,7 +2165,12 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         .collect();
     let traps: Vec<Value> = (view.known_traps().into_iter())
         .map(|(p, trap)| {
-            json!({ "pos": p, "trap": content.trap(trap).id, "seen": view.sees_objects_at(p) })
+            json!({
+                "pos": p,
+                "trap": content.trap(trap).id,
+                "seen": view.sees_objects_at(p),
+                "rigged": view.rigged(p),
+            })
         })
         .collect();
     let locations: Vec<Value> = (view.known_locations().into_iter())

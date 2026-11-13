@@ -14,10 +14,8 @@
 # South of the street: Jory's Outfitters, the makers' stock (ingots, billets, herbs, essences),
 # the deep's tools, and food; the cutting floor, the town's open workshop, with three anvils
 # (every Metalcraft and Jewelcraft recipe that asks for one is made here, Temper too), two
-# forge braziers, and the workbenches, where Old Tregear (T) teaches Jewelcraft for gold and
-# Morwenna (C), the crystal-reader, warms herself by a brazier and talks of what each magic
-# crystal binds (docs/dev/enchanting.md); two houses with a gnome at home in one; the mushroom
-# garden and its pool, east; and down the lane
+# forge braziers, and the workbenches, where Old Tregear (T) teaches Jewelcraft for gold; two
+# houses with a gnome at home in one; the mushroom garden and its pool, east; and down the lane
 # the fungus farm and a third house.
 #
 # The townsfolk (deep gnomes, 1-6) go about the street, the lane, the farm, and the garden.
@@ -41,7 +39,7 @@ map = '''
 ###..........###................##::##=.....=##=.....=###.".....".."..##
 ###..........###.A........SS..A.##::##.......##.......###.."..........##
 ##¡..........###B......T........##::##..sΠs..##..sΠs..###...6.......".##
-###..........###............C..B##::##l....7.##......l###.............##
+###..........###...............B##::##l....7.##......l###.............##
 ###..........###.A..............##::#####################...~~~~~~~...##
 ################....wwwwwwww....##:4#####################...~~~~~~~...##
 ##################################::#l......=############...~~~~~~~.."##
@@ -92,7 +90,6 @@ map = '''
 "P" = { terrain = "floor", light = "lamp", creature = "deep_gnome_headman", npc = "peran" }
 "M" = { terrain = "floor", creature = "deep_gnome_priest", npc = "senara" }
 "T" = { terrain = "floor", creature = "deep_gnome_jeweller", npc = "tregear" }
-"C" = { terrain = "floor", creature = "deep_gnome", npc = "morwenna" }
 
 # The Glimmering, walls and door included, is a sanctuary (data/room_effects.toml).
 [[room]]

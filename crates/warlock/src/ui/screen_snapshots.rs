@@ -700,6 +700,16 @@ const CASES: &[Case] = &[
         screen: Some("scribe"),
         ..BASE
     },
+    // The craftsperson's Trapwright asks for a rig (#1423): each with what it takes and its
+    // time; a knife and a billet carried but no arrows or digging tool, so the tripwire and
+    // the pitfall greyed with what is lacking.
+    Case {
+        name: "rig-list",
+        character: Some("human,female,craftsperson"),
+        actions: "xp:3000000 levelup:auto",
+        screen: Some("rig"),
+        ..BASE
+    },
     // An ascetic past level 12 (#848): Stunning strike among the class abilities, asking for
     // a direction, paid in ki.
     Case {

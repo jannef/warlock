@@ -324,6 +324,7 @@ pub(super) fn needs(aim: Aim) -> &'static str {
         Aim::Ailment => "on yourself or an ally",
         Aim::Item => "on something you carry",
         Aim::Shape => "in a weapon's shape",
+        Aim::Rig => "a trap beside you",
         Aim::Spell => "a scroll of a spell you know",
         // It opens the profession's list, as the ellipsis in its name says.
         Aim::Recipes => "",

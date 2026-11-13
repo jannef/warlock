@@ -128,6 +128,7 @@ above.
 | Healing spring | `altars-forges-springs.md#healing-springs` |
 | Trap, hidden trap, known trap | `traps.md#finding-traps` |
 | Disarming | `traps.md#disarming-traps` |
+| Rig, rigging, Trapwright, a rigged trap | `traps.md#rigging-traps` (the talent: `talents.md#talent-trapwright`) |
 | Searching, noticing in passing | `searching.md#searching-1`, `searching.md#noticing-in-passing` |
 | **Objects** | |
 | Object, item class | `objects.md#what-an-object-is`, `objects.md#item-classes` |
@@ -147,7 +148,6 @@ above.
 | Looking at an item, its description | `magic-items.md#looking-at-an-item` |
 | Unidentified, identify | `magic-items.md#unidentified-items` |
 | Capacity, enchantments an item can bear, the trim | `magic-items.md#capacity` |
-| Deeper finds, better make and gems by item level | `magic-items.md#deeper-finds` |
 | Binding (a material's) | `magic-items.md#capacity`, `materials.md` |
 | Affix, prefix, suffix | `affixes.md#prefixes`, `affixes.md#suffixes` |
 | Base item | `affixes.md#base-items` |
@@ -181,7 +181,6 @@ above.
 | Trade, Crafts, the tools of the trade (Smith, Wright, Gemcutter, Brewster, Pitman, Wortcunner, Spellwright) | `talents.md#crafts-a-craftspersons-trades` (a trade: its row) |
 | The craftsperson's two trades at creation, Time served | `classes.md#trades` |
 | Eye for the make, reading an item's make | `classes.md#eye-for-the-make` |
-| Waste not, nothing lost in a craftsperson's hands | `crafting.md#waste-not` |
 | A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents.md#delver` |
 | Class abilities | `talents.md#class-abilities`, `abilities.md` |
 | The bard, a bard's cap at 30, Travelled hands, Jack of all trades | `classes.md#bard` |
@@ -219,8 +218,6 @@ above.
 | Foraging | `skill-uses.md#foraging` |
 | Crafting, a craft skill, craft points, who works which material, a material's work | `crafting.md`, `crafting.md#who-works-what` |
 | Salvage, taking an item apart, a gem chipped or shattered | `crafting.md#salvage` |
-| Magic crystal, a crystal's colour, consuming a crystal | `crystals.md`, a colour `crystals.md#crystal-ID` (`crystals.md#crystal-red`), `crystals.md#consuming-a-crystal` |
-| Heart-crystal, soul-fetter (rare materials) | `crystals.md#rare-materials` |
 | Cut, gem cutting, a re-cut, a gem's cut grade | `gem-cutting.md`, `gem-cutting.md#how-well-it-comes-out` |
 | Set, setting a gem in an item, a gem chipped in the setting | `gem-cutting.md#setting-a-gem` |
 | Jewellery, making rings and amulets, a bone amulet | `crafting.md#making-jewellery` |

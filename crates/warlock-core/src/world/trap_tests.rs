@@ -268,7 +268,10 @@ fn builtin_traps_load_and_bad_ones_are_reported() {
             "lightning_bolt",
             "pit",
             "alarm",
-            "teleport"
+            "teleport",
+            "rigged_arrows",
+            "rigged_stakes",
+            "rigged_pit"
         ]
     );
     assert!(content.glyphs().contains(&'^'));

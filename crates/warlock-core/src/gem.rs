@@ -140,17 +140,10 @@ pub fn uncut(content: &Content, rng: &mut Rng, level: u8) -> Option<Stack> {
 }
 
 /// Whether loot sets an item of `def` at item level `level` with a gem, by its class's
-/// ornament `chance` and `more` percent besides (deeper finds', `gear_condition.toml`'s
-/// `[[depth]]`; one draw, none for a class never set), and if so the part it becomes.
-pub fn ornament(
-    content: &Content,
-    rng: &mut Rng,
-    def: &ObjectDef,
-    (level, more): (u8, u8),
-) -> Option<ItemPart> {
+/// ornament `chance` (one draw, none for a class never set), and if so the part it becomes.
+pub fn ornament(content: &Content, rng: &mut Rng, def: &ObjectDef, level: u8) -> Option<ItemPart> {
     let placed = content.gems()?.ornament(def.class)?;
-    let chance = u32::from(placed.chance);
-    if chance == 0 || !rng.chance((chance + u32::from(more)).min(100)) {
+    if placed.chance == 0 || !rng.chance(u32::from(placed.chance)) {
         return None;
     }
     let (gem, cutting) = roll(content, rng, level, true)?;
