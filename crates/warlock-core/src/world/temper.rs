@@ -22,8 +22,9 @@
 //! - **The outcome**: made, an improvement in an [`Aspect`] drawn evenly (one gameplay draw) among
 //!   those the base item has, or a damaged item repaired, whatever damaged it (acid, rust, heat,
 //!   or a failure); failed, item damage of the kind [`ItemHarm::Work`] (`item_damage.rs`): the
-//!   item damaged, or a damaged one destroyed. No material withstands a failure: it is the
-//!   craft's own blunder, not the world's. A stack of several is worked one at a time: the one
+//!   item damaged, or a damaged one destroyed. No material's `resists` withstands a failure: it
+//!   is the craft's own blunder, not the world's; but a `proof` one (adamantium) is never
+//!   damaged by anything, so it only fails to improve ("no harm is done"). A stack of several is worked one at a time: the one
 //!   worked is set apart at the end of the pack, and being worked it joins nothing again. Then the item, if it survived,
 //!   is identified, and says what it is now ("This is ...!"). Metalcraft may earn a mark
 //!   ([`Use::Temper`]), whatever came of it. The anvil is never spent.

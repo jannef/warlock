@@ -244,6 +244,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("material-tribes.md", materials::material_tribes),
         ("construction.md", materials::construction),
         ("variants.md", materials::variants),
+        ("fighting-metals.md", materials::fighting_metals),
         ("pieces.md", materials::pieces),
         ("gems.md", gems::gems),
         ("gem-sizes.md", gems::sizes),
@@ -993,7 +994,7 @@ mod tests {
                 .contains("| Gold and ruby amulet | `\"` | amulets | gold chain, ruby setting |")
         );
         assert!(text("materials.md").contains(
-            "| Ruby | - | `#d3213b` | 100% | - | - | ×1 | yes | 100% | 100% | 100% | +4 | +0 | gold and ruby \
+            "| Ruby | - | `#d3213b` | 100% | - | - | - | ×1 | yes | 100% | 100% | 100% | +4 | +0 | gold and ruby \
              amulets, loose gems, and items set with one |"
         ));
         // Material stock (#1332, #1349): the form word, the unit, and the profession by group
@@ -1018,7 +1019,7 @@ mod tests {
         // Materials (#193, #194): their properties on steel's scale, how often they are found,
         // what each item may be made of, and a long sword and chain mail in each metal.
         assert!(text("materials.md").contains(
-            "| Bronze | metal | `#cd7f32` | 112% | +0 / −1 | 80% | ×0.8 | no | 40% | 80% | 80% | −1 | +0 | bronze keys, minster reliquaries |"
+            "| Bronze | metal | `#cd7f32` | 112% | +0 / −1 | 80% | 100% | ×0.8 | no | 40% | 80% | 80% | −1 | +0 | bronze keys, minster reliquaries |"
         ));
         assert!(text("material-finds.md").contains(
             "| Steel | 300 (common) | +60 | 1 | 20 (rare) | +15 | good | good | good | good |"
@@ -1033,7 +1034,15 @@ mod tests {
         assert!(construction.contains("| Long sword | steel | any metal, dragonbone |"));
         assert!(construction.contains("| Gold ring | gold | any material |"));
         assert!(!construction.contains("| Rock |"));
-        assert!(text("variants.md").contains("| Bronze | 2 kg | +0 / −1 | 65 gold |"));
+        assert!(text("variants.md").contains("| Bronze | 2 kg | +0 / −1 | 1d9 | 65 gold |"));
+        // #1444: adamantium rolls a die more, doubles a shield's Defence, steel armour's PV.
+        let fighting = text("fighting-metals.md");
+        assert!(
+            fighting.contains("| Long sword | 1d9 | 2d9+1 |"),
+            "{fighting}"
+        );
+        assert!(fighting.contains("| Suit of plate armour | Protection 6 | Protection 12 |"));
+        assert!(fighting.contains("| Tower shield | Defence 3 | Defence 6 |"));
         // Gems: their worth and how often they are found, the sizes and cuts, and ornaments.
         assert!(text("gems.md").contains("| Diamond | `#e8f4ff` | 400 gold | 1.9% |"));
         assert!(text("gem-sizes.md").contains("| Small (plain) | ×1 | 1 g | 33% |"));
@@ -1275,7 +1284,7 @@ mod tests {
             "{disarm}"
         );
         assert!(text("materials.md").contains(
-            "| Steel | metal | `#a8b0b8` | 100% | +0 / +0 | 100% | ×1 | no | 20% | 10% | 95% | +0 | +0 | knives, \
+            "| Steel | metal | `#a8b0b8` | 100% | +0 / +0 | 100% | 100% | ×1 | no | 20% | 10% | 95% | +0 | +0 | knives, \
              stilettos, daggers, short swords, scimitars,"
         ));
         assert!(text("pack.md").contains("| Your own weight | 70 kg |"));

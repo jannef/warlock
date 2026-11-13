@@ -417,11 +417,19 @@ fn lines_named(stack: &Stack, content: &Content, (name, plural): (String, String
     let spirit = gift.map(|(_, threat, pierces, _)| Spirit { threat, pierces });
     let (_, damage) = crate::variant::weapon(def, &parts, content);
     let protection = stack.base_protection(content);
+    let shield = def.shield + crate::variant::shield(def, &parts, content);
     let attack = stack.attack(content);
     out.extend(
-        stats(def, attack.as_ref(), content, damage, protection, spirit)
-            .into_iter()
-            .map(|t| line(LineKind::Stat, t)),
+        stats(
+            def,
+            attack.as_ref(),
+            content,
+            damage,
+            (protection, shield),
+            spirit,
+        )
+        .into_iter()
+        .map(|t| line(LineKind::Stat, t)),
     );
     // Then what it gives in all, in numbers, as the player knows it (`numbers`): to hit and
     // damage with its material and known affixes, Dv and Pv.
@@ -604,7 +612,14 @@ fn dice(n: i32) -> &'static str {
 /// The base stats of `def` in words: how it is held or worn, its damage and criticals, how far it
 /// shoots or is thrown, what it needs, how quick it is, its Defence, and whether it breaks.
 pub fn base_stats(def: &ObjectDef, content: &Content) -> Vec<String> {
-    stats(def, def.attack.as_ref(), content, 0, def.protection, None)
+    stats(
+        def,
+        def.attack.as_ref(),
+        content,
+        0,
+        (def.protection, def.shield),
+        None,
+    )
 }
 
 /// What a spirit weapon's gifts change in its own stats: the threat lowered, and whether it
@@ -615,14 +630,14 @@ struct Spirit {
     pierces: bool,
 }
 
-/// [`base_stats`] of one made of another material: `damage` more to its damage dice and
-/// `protection` its Protection.
+/// [`base_stats`] of one made of another material: `damage` more to its damage dice (its dice
+/// are `attack`'s), and `protection` its Protection and `shield` its Defence as a shield.
 fn stats(
     def: &ObjectDef,
     attack: Option<&crate::combat::Attack>,
     content: &Content,
     damage: i32,
-    protection: i32,
+    (protection, shield): (i32, i32),
     spirit: Option<Spirit>,
 ) -> Vec<String> {
     let mut out = Vec::new();
@@ -729,8 +744,8 @@ fn stats(
     if !weak.is_empty() {
         out.push(format!("Vulnerable to {}", weak.join(", ")));
     }
-    if def.shield > 0 {
-        out.push(format!("Shield +{}", def.shield));
+    if shield > 0 {
+        out.push(format!("Shield +{shield}"));
     }
     if let Some(max) = def.max_dex {
         out.push(format!(

@@ -152,6 +152,10 @@ fn quest_objects_and_uniques_survive_any_number_of_casts() {
     pile.push(Stack::with_magic(sword, 1, magic));
     pile.push(Stack::with_magic(sword, 1, proof));
     pile.push(Stack::new(sword, 1));
+    // #1444: nor does adamantium, which nothing harms.
+    let adamantium = w.content().material_id("adamantium").expect("adamantium");
+    let part = crate::item_parts::ItemPart::material(w.content(), None, adamantium);
+    pile.push(Stack::new(sword, 1).with_parts(vec![part]));
     w.state.current_mut().set_pile(at, pile);
     let fire = Some(kind(&w, "fire"));
     let player = w.state.player;
@@ -161,8 +165,8 @@ fn quest_objects_and_uniques_survive_any_number_of_casts() {
     assert_eq!(count(&w, at, "apple"), 5);
     assert_eq!(
         count(&w, at, "long_sword"),
-        2,
-        "a unique and one of Proof never burn, a plain one does"
+        3,
+        "a unique, one of Proof, and one of adamantium never burn, a plain one does"
     );
     assert_eq!(count(&w, at, "bread"), 0, "food no quest asks for burns");
 }

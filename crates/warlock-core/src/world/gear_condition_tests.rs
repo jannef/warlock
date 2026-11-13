@@ -207,6 +207,42 @@ fn protected_items_are_untouched() {
 }
 
 #[test]
+fn adamantium_gear_is_never_found_damaged() {
+    // #1444: a skeleton's gear is nearly always damaged; adamantium of it never is, and the
+    // draws are the same with or without it (an iron sword after it fares the same).
+    let skeleton = creature("skeleton_warrior");
+    let (mut improved, mut iron_same) = (0, 0);
+    for seed in 0..200 {
+        let mut pack = Pack {
+            items: vec![of("long_sword", "adamantium"), of("long_sword", "iron")],
+            ..Pack::default()
+        };
+        let mut alone = Pack {
+            items: vec![of("long_sword", "iron"), of("long_sword", "iron")],
+            ..Pack::default()
+        };
+        apply(
+            &CONTENT,
+            &mut stream(seed, "test"),
+            (skeleton, 1),
+            &mut pack,
+        );
+        apply(
+            &CONTENT,
+            &mut stream(seed, "test"),
+            (skeleton, 1),
+            &mut alone,
+        );
+        let adamantium = pack.items[0].worked();
+        assert!(adamantium.is_none_or(|w| !w.damaged), "seed {seed}");
+        improved += usize::from(adamantium.is_some());
+        iron_same += usize::from(pack.items[1].worked() == alone.items[1].worked());
+    }
+    assert_eq!(iron_same, 200, "the same draws");
+    assert!(improved < 200);
+}
+
+#[test]
 fn a_damaged_weapon_is_weaker_in_a_creatures_hand() {
     let w = World::new(CONTENT.clone(), "traps", None).expect("traps");
     let kobold = CONTENT.creature_id("kobold").expect("kobold");

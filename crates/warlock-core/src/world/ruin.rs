@@ -13,7 +13,8 @@
 //! - **Spared**: what is protected from all item damage (`item_damage.rs`,
 //!   [`World::item_protected`]; #1170): a unique item, an item of Proof, and every object a
 //!   quest asks to be brought or delivered, so no stray Fireball can break a quest. A quest's
-//!   reward is not spared unless another quest asks for it.
+//!   reward is not spared unless another quest asks for it. Neither is anything of a `proof`
+//!   material (adamantium; `item_damage.rs`).
 //! - **Draws**: the ruin stream ([`crate::rng::Rng::ruin`]), kept in the state from the first
 //!   draw on, so a cast over no pile the table touches leaves every other stream and the hash
 //!   as they were.
@@ -22,7 +23,7 @@
 //!   nothing is said, and the pile simply shows less when next seen.
 
 use super::World;
-use super::item_damage::protected;
+use super::item_damage::{proof, protected};
 use super::spell::Caster;
 use super::talk::capitalized;
 use crate::content::DamageTypeId;
@@ -56,7 +57,7 @@ impl World {
             let seen = self.perception.sees_actors_at(p);
             let mut changed = false;
             for stack in &mut pile {
-                if protected(&content, &quest, stack) {
+                if protected(&content, &quest, stack) || proof(&content, stack) {
                     continue;
                 }
                 let Some(row) = rules.row(&content, kind, stack) else {

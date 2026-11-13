@@ -69,7 +69,7 @@ fn the_examples_of_the_design_hold() {
         (
             "Fine long sword",
             item(&c, "long_sword", None, Some(Quality::Fine), None),
-            3,
+            2,
         ),
         (
             "ruby-pommelled",
@@ -85,7 +85,7 @@ fn the_examples_of_the_design_hold() {
                 Some(Quality::Marvellous),
                 None,
             ),
-            4,
+            3,
         ),
         (
             "Masterwork great sword, flawless diamond",
@@ -107,7 +107,7 @@ fn the_examples_of_the_design_hold() {
                 Some(Quality::Fine),
                 Some(("sapphire", "fine")),
             ),
-            6,
+            5,
         ),
         (
             "Masterwork adamantium plate",
@@ -118,7 +118,7 @@ fn the_examples_of_the_design_hold() {
                 Some(Quality::Masterwork),
                 None,
             ),
-            6,
+            5,
         ),
         (
             "iron ring",
@@ -162,7 +162,7 @@ fn the_examples_of_the_design_hold() {
                 Some(Quality::Marvellous),
                 None,
             ),
-            6,
+            5,
         ),
         ("arrows", Stack::new(object(&c, "arrow"), 20), 2),
     ];
@@ -175,7 +175,7 @@ fn the_examples_of_the_design_hold() {
 fn a_damaged_masterwork_counts_as_plain() {
     let c = content();
     let mut sword = item(&c, "long_sword", None, Some(Quality::Masterwork), None);
-    assert_eq!(capacity(&sword, &c), 5);
+    assert_eq!(capacity(&sword, &c), 4);
     let mut worked = sword.worked().cloned().expect("worked");
     worked.damage(ItemHarm::Rust);
     sword.set_worked(worked);
@@ -301,7 +301,7 @@ fn binding_is_read_from_a_variant_main_part() {
     let silver = item(&c, "long_sword", Some("silver"), Some(Quality::Fine), None);
     assert_eq!(capacity(&steel, &c), 2);
     assert_eq!(capacity(&mithril, &c), 4);
-    assert_eq!(capacity(&silver, &c), 1, "2 + 1 − 2");
+    assert_eq!(capacity(&silver, &c), 1, "2 + 0 − 2, at least 1");
 }
 
 /// Every item made at a deep level, by every path, holds no more affixes than its capacity.

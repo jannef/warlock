@@ -14,14 +14,15 @@ affixes, prefixes and suffixes together, an item can hold:
 |---|---|---|
 | The base | 2 (`capacity::BASE`; the owner, 2026-11-13) | every item |
 | Jewellery | +1 | `ObjectDef::is_jewellery()` (ring and amulet kinds) |
-| Quality | Fine +1, Marvellous +2, Masterwork +3 | `Worked::improvements()` (none while damaged) |
+| Quality | Fine +0, Marvellous +1, Masterwork +2 (#1444; first +1/+2/+3) | `Worked::improvements()` − 1, never below 0 (none while damaged) |
 | Material | −2 to +2 | `MaterialDef::binding` of the main part's material (`Stack::parts(content)[0]`, a variant's own) |
 | The set gem | +1, the finest cut (flawless, the last `[[cut]]` of `gems.toml`) +2 | the part of `gem::ornament_part` whose material is a gem; a base item's own gem part (the gold amulet's ruby setting) has no cut and counts +1 |
 | Clamp | 1 to `MOST` (6) | `MAX_PER_KIND × 2` |
 
 `binding` is a new optional material field (`data/materials/*.toml`, default 0, steel's; the
 loader refuses one outside −2..=2): silver −2; tin, pewter, zinc, cadmium, bendalloy, lead, stone,
-flint, obsidian −1; gold, electrum, ironwood, ivory, jade, amber, silk +1; mithril, adamantium,
+flint, obsidian −1; gold, electrum, ironwood, ivory, jade, amber, silk, adamantium +1 (#1444:
+a fighting metal, its gifts a die more, twice steel's Protection, and no item damage); mithril,
 dragonbone, dragonscale +2. The three-per-kind caps (`Rarity::most_per_kind`) stand beside the
 capacity. `Magic::check` never reads it: a save or level file over capacity still loads.
 
@@ -96,9 +97,9 @@ Eorcanstān (a mithril band, a flawless sapphire setting), Grendles Grāpe (Mast
 High Toby (Fine, an amethyst inlay), the Turncoat (Masterwork), the Unhalwed Bedes (a flawless
 smokestone setting), Widowmaker (Marvellous); in the test world Rune Song (Masterwork, a topaz tip), Ash Coat (Masterwork), the hub's Dread
 Visage (Masterwork) and Storm Song (Marvellous). Father's sword's heirloom is Masterwork
-(`quality = "masterwork"` in `data/talents/fathers_sword.toml`: capacity 5 on every race's
-weapon, its 2 to 4 affixes never trimmed; Marvellous, 4, would now hold them too). The design
-chose these against a base of 1; with the base at 2 every one still fits with room to spare, and
+(`quality = "masterwork"` in `data/talents/fathers_sword.toml`: capacity 4 on every race's
+weapon since #1444, its 2 to 4 affixes never trimmed). The design chose these against a base of 1
+and quality +1/+2/+3; with the base at 2 and quality +0/+1/+2 (#1444) every one still fits, and
 the two that no longer needed a make (Stonebiter and the trap hall's dagger, two affixes each)
 are plain again.
 
@@ -130,19 +131,23 @@ make in `world/gear_condition_tests.rs`; `magic/describe` tests the capacity lin
 ## The measured shares
 
 `magic/shares_tests.rs` at item levels 1, 4, 8, 12, 16, and 20 (4 000 rares and 4 000
-magic-grade finds each, loot's bases of every class), with the base at 2 and deeper finds better
-made (#1436). Before #1436 every level looked like level 1: about 87 % of bases held 2 and 10 % to
-12 % of rares kept three or more.
+magic-grade finds each, loot's bases of every class), with the base at 2, deeper finds better
+made (#1436), and the quality's term scaled down (Fine +0, Marvellous +1, Masterwork +2) and
+adamantium's binding to +1 (#1444). Before #1436 every level looked like level 1: about 87 % of
+bases held 2 and 10 % to 12 % of rares kept three or more. With #1436 and the old quality term
+(+1/+2/+3) rares kept three or more 11 %, 15 %, 28 %, 49 %, 57 %, and 64 % of the time at the six
+levels.
 
 | Item level | Rares: capacity 2 | Rares keep 3+ | Rares untrimmed | Magic-grade untrimmed |
 |---:|---:|---:|---:|---:|
 | 1 | 85.5 % | 11.3 % | 8.4 % | 87.5 % |
-| 4 | 82.8 % | 15.4 % | 10.1 % | 88.2 % |
-| 8 | 70.0 % | 28.2 % | 17.6 % | 89.5 % |
-| 12 | 49.0 % | 49.4 % | 32.2 % | 90.3 % |
-| 16 | 41.2 % | 57.2 % | 38.1 % | 91.7 % |
-| 20 | 34.2 % | 64.4 % | 45.3 % | 92.3 % |
+| 4 | 84.2 % | 13.9 % | 8.8 % | 88.0 % |
+| 8 | 81.0 % | 17.4 % | 10.7 % | 88.5 % |
+| 12 | 72.8 % | 26.1 % | 16.8 % | 87.8 % |
+| 16 | 64.9 % | 33.7 % | 21.4 % | 89.8 % |
+| 20 | 57.5 % | 41.0 % | 26.1 % | 89.8 % |
 
-The test fails if rares at item levels 1 and 4 keep three or more a fifth of the time or more, or
-at 16 and 20 half the time or less. Magic-grade finds (one or two affixes) are untrimmed about 88 %
-to 92 % of the time at every level.
+The test fails if rares at item levels 1 and 4 keep three or more a fifth of the time or more, at
+16 and 20 a quarter of the time or less (half before #1444), or if the share falls from one level
+to the next. Magic-grade finds (one or two affixes) are untrimmed about 88 % to 90 % of the time at
+every level.

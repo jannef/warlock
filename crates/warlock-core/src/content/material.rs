@@ -67,10 +67,18 @@ pub struct MaterialDef {
     /// To every roll of a weapon's damage as its working part, steel 0.
     #[serde(default)]
     pub damage: Option<i32>,
+    /// Dice more of a weapon's own size a weapon of it rolls as its working part, steel 0, the
+    /// default (adamantium 1: a long sword's 1d9 is 2d9; [`crate::variant::dice`]).
+    #[serde(default)]
+    pub dice: u32,
     /// What of an armour's Protection an armour of it keeps, in percent (steel 100). None: it
     /// cannot be armour.
     #[serde(default)]
     pub protection: Option<u32>,
+    /// What of a shield's Defence a shield of it gives, in percent (steel 100, the default;
+    /// adamantium 200; [`crate::variant::shield`]).
+    #[serde(default = "steel")]
+    pub defence: u32,
     /// How often loot makes an item of it ([`Found`]); none: never.
     #[serde(default)]
     pub rarity: Option<Found>,
@@ -96,6 +104,10 @@ pub struct MaterialDef {
     /// given. One without withstands nothing.
     #[serde(default)]
     pub(super) resists: Option<Resists>,
+    /// Never damaged by anything (`world/item_damage.rs`): acid, rust, heat, a failed working,
+    /// a spell's ruin, and never found damaged in a creature's gear (adamantium; default false).
+    #[serde(default)]
+    pub proof: bool,
 }
 
 /// A kind of item damage (spec §7 "Materials", `world/item_damage.rs`): what leaves an item

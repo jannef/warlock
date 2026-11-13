@@ -12,7 +12,7 @@ use crate::color::Rgb;
 use crate::content::{ContentFiles, ObjectId, PartRole, VERY_RARE};
 use crate::item_parts::ItemPart;
 use crate::magic::describe::lines;
-use crate::magic::{Affix, LootGrade, Magic, Rarity, loot};
+use crate::magic::{Affix, LootGrade, Magic, Mods, Rarity, loot};
 use crate::object::Stack;
 use crate::variant::Source;
 
@@ -703,6 +703,119 @@ fn builtin() -> Arc<Content> {
     Arc::new(Content::builtin().expect("built-in content"))
 }
 
+/// One of `id` made of `material` (its own when that is its base item's), from the built-in
+/// content.
+fn made(content: &Content, id: &str, material: &str) -> Stack {
+    let object = object(content, id);
+    let m = content.material_id(material).expect(material);
+    match m == content.object(object).material() {
+        true => Stack::one(object),
+        false => Stack::one(object).with_parts(vec![ItemPart::material(content, None, m)]),
+    }
+}
+
+#[test]
+fn adamantium_rolls_a_die_more_and_doubles_armour_and_shields() {
+    // #1444: a die more of the weapon's own size and its +1; twice steel's Protection; twice a
+    // shield's Defence. The other metals roll their own dice.
+    let content = builtin();
+    let dice = |id: &str, m: &str| {
+        let attack = made(&content, id, m).attack(&content).expect("attacks");
+        attack.damage.to_string()
+    };
+    assert_eq!(dice("long_sword", "steel"), "1d9");
+    assert_eq!(dice("long_sword", "adamantium"), "2d9");
+    assert_eq!(dice("long_sword", "mithril"), "1d9");
+    assert_eq!(
+        dice("dagger", "adamantium"),
+        dice("dagger", "steel").replacen('1', "2", 1)
+    );
+    let damage = |m: &str| {
+        let stack = made(&content, "long_sword", m);
+        Mods::local(&stack, &content).get(crate::magic::Effect::Damage)
+    };
+    assert_eq!(damage("adamantium"), 1);
+    let pv = |id: &str, m: &str| made(&content, id, m).base_protection(&content);
+    assert_eq!(
+        (
+            pv("plate_armour", "steel"),
+            pv("plate_armour", "adamantium")
+        ),
+        (6, 12)
+    );
+    assert_eq!(
+        (pv("great_helm", "steel"), pv("great_helm", "adamantium")),
+        (2, 4)
+    );
+    // Chain mail is iron (90): 3 × 200 / 90, rounded.
+    assert_eq!(
+        (pv("chain_mail", "iron"), pv("chain_mail", "adamantium")),
+        (3, 7)
+    );
+    let dv = |id: &str, m: &str| {
+        let stack = made(&content, id, m);
+        let def = content.object(stack.object);
+        def.shield + Mods::local(&stack, &content).get(crate::magic::Effect::Shield)
+    };
+    assert_eq!(
+        (dv("tower_shield", "iron"), dv("tower_shield", "adamantium")),
+        (3, 6)
+    );
+    assert_eq!(
+        (dv("small_shield", "wood"), dv("small_shield", "adamantium")),
+        (1, 2)
+    );
+    assert_eq!(
+        dv("small_shield", "bronze"),
+        1,
+        "every other material keeps it"
+    );
+    // Not worse but dearer: adamantium is better in every way.
+    let steel = content.material(content.material_id("steel").expect("steel"));
+    let adamantium = content.material(content.material_id("adamantium").expect("adamantium"));
+    for id in ["long_sword", "plate_armour", "tower_shield"] {
+        let def = content.object(object(&content, id));
+        assert!(
+            !crate::variant::worse_but_dearer(def, steel, adamantium),
+            "{id}"
+        );
+    }
+    // The item description says the dice and the shield's Defence.
+    let said = |id: &str| {
+        let stack = made(&content, id, "adamantium");
+        lines(&stack, &content)
+            .into_iter()
+            .map(|l| l.text)
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+    assert!(said("long_sword").contains("2d9"), "{}", said("long_sword"));
+    // Wielded: the inventory's numbers and the attacks (the character screen's) roll 2d9.
+    let mut w = super::class_active_tests::world("warrior");
+    let me = w.player_mut();
+    me.inventory.clear();
+    me.equipment = Default::default();
+    me.inventory
+        .push(made(&content, "long_sword", "adamantium"));
+    for action in parse_actions("equip:main_hand:a").expect("actions") {
+        w.apply(&action);
+    }
+    let rows = |layer| crate::dump::layer_rows(&w, layer).join("\n");
+    let inventory = rows(crate::dump::Layer::Inventory);
+    assert!(inventory.contains("2d9+1)"), "{inventory}");
+    let attacks = rows(crate::dump::Layer::Attacks);
+    assert!(
+        attacks.contains("Main hand adamantium long sword:"),
+        "{attacks}"
+    );
+    assert!(attacks.contains("2d9+"), "{attacks}");
+    assert!(
+        said("tower_shield").contains("Shield +6"),
+        "{}",
+        said("tower_shield")
+    );
+}
+
 #[test]
 fn the_built_in_materials_are_the_issues_tables() {
     let content = builtin();
@@ -728,7 +841,7 @@ fn the_built_in_materials_are_the_issues_tables() {
         ("silver", 134, -1, -1, 50, 1500),
         // The dread design §5.8's two (#1131): light and quick, heavy and hard.
         ("mithril", 50, 1, 0, 100, 2000),
-        ("adamantium", 120, 0, 1, 130, 3000),
+        ("adamantium", 120, 0, 1, 200, 3000),
     ];
     for (id, weight, hit, damage, protection, value) in metals {
         let def = m(id);

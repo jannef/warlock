@@ -29,9 +29,16 @@
 #   damage    to every roll of its damage: an item made of another material
 #             strikes with the difference of the two materials' modifiers. A material with
 #             neither cannot be a weapon's working part (leather, cloth); one given, the other is 0
+#   dice      dice more of a weapon's own size a weapon of it rolls (default 0, steel's): an item
+#             made of another material rolls the difference more, never fewer (adamantium 1: a
+#             long sword's 1d9 is 2d9). What has dice of its own takes them: a melee weapon, a
+#             thrown one, a launcher; ammunition strikes with its launcher's dice
 #   protection what of an armour's Protection an armour of it keeps, in percent: an
 #             armour made of another material has its Protection × its material's protection
 #             over its base item's, rounded. None: it cannot be armour (flint, obsidian)
+#   defence   what of a shield's Defence a shield of it gives, in percent (default 100, steel's):
+#             a shield made of another material has its Defence × its material's defence over
+#             its base item's, rounded (adamantium 200: a tower shield's 3 is 6)
 #   value     what it is worth, in percent of steel (default 100): an item made of
 #             other parts than its base item is worth the base item's value times what its parts
 #             are worth (each part's share of the weight times its material's value) over what
@@ -63,13 +70,17 @@
 #             its alloys corrode but hardly rust; the soft metals (tin, pewter, lead, zinc,
 #             cadmium, bendalloy) melt; cloth, flesh, plant, paper, and wax nothing but rust;
 #             wood burns; stone and glass stand acid and heat
+#   proof     never damaged by anything (default false): it withstands acid, rust, and heat, a
+#             failed Temper only fails to improve it, a spell's ruin spares it, and a creature's
+#             gear of it is never found damaged (world/item_damage.rs). Adamantium alone
 #   work      how hard it is to work (default 0, steel's): a signed modifier on the check of every
 #             salvage and recipe that works it (docs/design/professions.md §4; the profession
 #             that works it is its group's in stock.toml). Soft metals −3, adamantium +8
 #   binding   how well it holds magic, −2 to +2 (default 0, steel's): a term of the affix
 #             capacity of an item whose main part is of it (docs/dev/enchanting.md). Silver −2;
 #             the soft metals and knapped stone −1; gold, electrum, ironwood, ivory, jade, amber,
-#             and silk +1; mithril, adamantium, dragonbone, and dragonscale +2. Deeper finds
+#             and silk +1; adamantium +1 (a fighting metal: its gift is `dice` and Protection);
+#             mithril, dragonbone, and dragonscale +2. Deeper finds
 #             come of the high-binding materials more often (#1436): their `rarity` starts
 #             shallower than their worth alone would and grows by `deeper`
 #   gem      makes it a gem (spec §7 "Gems"; precious, with no group): an inline

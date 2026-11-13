@@ -94,7 +94,8 @@ fn shares_follow_the_weights_and_deep_finds_roll_deep_tiers() {
 /// materials better deeper, #1436), before and after the trim. Prints, per level, the capacity
 /// distribution, the affix counts before and after, and the share left untrimmed; fails if
 /// shallow rares (levels 1 and 4) keep three affixes or more a fifth of the time or more, or deep
-/// ones (16 and 20) half of the time or less. `cargo test -p warlock-core trim_shares -- --nocapture` prints it.
+/// ones (16 and 20) less than a quarter of the time (half before #1444 scaled the quality's term
+/// down), or if any level's share is below the one before it. `cargo test -p warlock-core trim_shares -- --nocapture` prints it.
 #[test]
 fn trim_shares_hold_every_find_to_its_capacity() {
     let c = Content::builtin().expect("built-in content");
@@ -105,6 +106,7 @@ fn trim_shares_hold_every_find_to_its_capacity() {
     classes.sort();
     classes.dedup();
     const N: usize = 4_000;
+    let mut rising = 0.0;
     for level in TRIM_LEVELS {
         let mut rng = Rng::stream(13, "trim shares");
         for grade in [LootGrade::Rare, LootGrade::Magic] {
@@ -146,15 +148,20 @@ fn trim_shares_hold_every_find_to_its_capacity() {
             println!("  capacity       {}", row(&room));
             println!("  affixes rolled {}", row(&rolled));
             println!("  affixes kept   {}", row(&kept));
-            // Deeper finds are better made (#1436): shallow rares stay modest, deep ones mostly
-            // keep three affixes or more.
+            // Deeper finds are better made (#1436): shallow rares stay modest, deep ones keep
+            // three affixes or more far more often, and the share never falls with depth.
             let three_or_more = pct(kept[3..].iter().sum());
             if grade == LootGrade::Rare {
                 match level {
                     1 | 4 => assert!(three_or_more < 20.0, "level {level}: {three_or_more:.1}%"),
-                    16 | 20 => assert!(three_or_more > 50.0, "level {level}: {three_or_more:.1}%"),
+                    16 | 20 => assert!(three_or_more > 25.0, "level {level}: {three_or_more:.1}%"),
                     _ => {}
                 }
+                assert!(
+                    three_or_more + 1.0 >= rising,
+                    "level {level}: {three_or_more:.1}% after {rising:.1}%"
+                );
+                rising = three_or_more;
             }
         }
     }

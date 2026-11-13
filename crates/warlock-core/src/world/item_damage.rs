@@ -7,8 +7,12 @@
 //!   Proof"), and every object a quest asks to be brought or delivered
 //!   ([`World::quest_objects`]) are never harmed, by anything. A quest's reward is not
 //!   protected unless another quest asks for it.
-//! - **Withstood**: [`World::withstands`], the one check every source makes, first: protected,
-//!   it withstands everything, drawing nothing. Else the item's
+//! - **Proof**: an item whose main part's material is `proof` (adamantium; [`proof`]) is never
+//!   damaged either: it withstands every harm, a failed attempt too, drawing nothing; a spell's
+//!   ruin spares it (`ruin.rs`), and creatures' gear of it is never found damaged
+//!   (`gear_condition.rs`). Unlike a protected item it may still be salvaged or set with a gem.
+//! - **Withstood**: [`World::withstands`], the one check every source makes, first: protected
+//!   or proof, it withstands everything, drawing nothing. Else the item's
 //!   main part's material withstands the [`ItemHarm`] by its `resists` chance in percent
 //!   (`data/materials/`): 0 never, 100 always, neither drawing; else one gameplay draw. A failed
 //!   attempt ([`ItemHarm::Work`]) is never withstood by the material. Withstood, nothing changes.
@@ -43,7 +47,7 @@ impl World {
     pub(super) fn withstands(&mut self, at: usize, harm: ItemHarm) -> bool {
         let content = &self.content;
         let stack = &self.state.player().inventory[at];
-        if self.item_protected(stack) {
+        if self.item_protected(stack) || proof(content, stack) {
             return true;
         }
         let main = stack.parts(content).first().map(|p| p.material);
@@ -112,6 +116,12 @@ pub(crate) fn protected_in(content: &Content, quests: &super::Quests, stack: &St
         true => protected(content, &quest, stack),
         false => quest.contains(&stack.object),
     }
+}
+
+/// Whether `stack`'s main part is of a `proof` material, never damaged by anything (module
+/// docs): adamantium.
+pub(crate) fn proof(content: &Content, stack: &Stack) -> bool {
+    (stack.parts(content).first()).is_some_and(|p| content.material(p.material).proof)
 }
 
 /// Whether `stack` is protected from item damage, `quest` the quests' objects

@@ -18,7 +18,8 @@
 //! - **The kind**: by its main part's material, among the kinds its material group lists
 //!   (`[kinds]`): the one the material withstands least (a tie: the first listed), never one it
 //!   always withstands (100). None left, or a group not listed: plainly "damaged". So iron and
-//!   steel rust, bronze and silver corrode, and wood and leather are just damaged.
+//!   steel rust, bronze and silver corrode, and wood and leather are just damaged. A piece of a
+//!   `proof` material (adamantium; `item_damage.rs`) drawn damaged stays as made instead.
 //! - **The stream**: its own, `condition/<key>` with the gear stream's key (a generated level's
 //!   id, drawn in spawn order, or a placed creature's actor id): the gear's draws and everything
 //!   else on the level are the same with or without it.
@@ -65,6 +66,10 @@ pub(crate) fn apply(
             continue;
         }
         let Some(improved) = odds.of(rng.below(PER_MILLE)) else {
+            // Adamantium is never found damaged: it stays as made (`item_damage.rs`).
+            if super::item_damage::proof(content, stack) {
+                continue;
+            }
             let mut worked = Worked::default();
             worked.damage(kind(content, stack));
             stack.set_worked(worked);
