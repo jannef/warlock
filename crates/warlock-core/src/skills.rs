@@ -119,6 +119,9 @@ pub const MAX_WHITTLE_BONUS: i32 = 12;
 /// The most a profession adds to a check of its craft (making a recipe, `world/craft_make.rs`;
 /// salvage, `world/salvage.rs`).
 pub const MAX_CRAFT_BONUS: i32 = 20;
+/// The highest item level an enchanting recipe's reach gives (docs/design/enchanting.md §7: the
+/// ladders' top).
+pub const MAX_ENCHANT_LEVEL: i32 = 12;
 /// The most a skill adds to reading a scroll (spec §8 "Scrolls"; `world/decipher.rs`).
 pub const MAX_DECIPHER_BONUS: i32 = 20;
 /// The most a skill adds to a Swim check (spec §8 "Skills": a plunge through the ice).
@@ -318,6 +321,10 @@ pub enum Effect {
     /// whose material is worked ([`crate::world::Actor::skill_effect_of`]), never summed across
     /// skills.
     Craft,
+    /// The item level an enchanting recipe rolls its affixes at, before the item's own
+    /// (docs/design/enchanting.md §7, the reach; `world/enchant.rs`): Enchanting's, at most
+    /// [`MAX_ENCHANT_LEVEL`].
+    EnchantLevel,
     /// Points added to a Swim check (spec §8 "Skills": Swim; `world/ice.rs`, a plunge through the
     /// ice; `world/swim.rs`, a step in deep water); only a skill with it, trained, asks the check
     /// at all.
@@ -385,6 +392,7 @@ impl Effect {
             Effect::Temper => MAX_TEMPER_BONUS,
             Effect::Whittle => MAX_WHITTLE_BONUS,
             Effect::Craft => MAX_CRAFT_BONUS,
+            Effect::EnchantLevel => MAX_ENCHANT_LEVEL,
             Effect::Swim => MAX_SWIM_BONUS,
             Effect::ManaRegen => MAX_MANA_REGEN_BONUS,
             Effect::MaxMana => MAX_MANA_POOL_BONUS,
@@ -769,6 +777,7 @@ impl Effect {
             Effect::Temper => "temper",
             Effect::Whittle => "whittle",
             Effect::Craft => "craft",
+            Effect::EnchantLevel => "enchant_level",
             Effect::Swim => "swim",
             Effect::ManaRegen => "mana_regen",
             Effect::MaxMana => "max_mana",

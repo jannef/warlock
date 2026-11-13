@@ -147,6 +147,7 @@ mod eat;
 mod edge_leave;
 mod element_gifts;
 mod elixir;
+mod enchant;
 mod encounter;
 mod encounter_area;
 mod endless;
@@ -342,6 +343,7 @@ pub use cut::{CutBand, cut_band, cut_outcome, cuttable};
 pub use decipher::undeciphered;
 pub use dig::{MAX_DIG, WORK_SCALE, dig_refusal, dig_work, digs_to_break};
 pub use disarm::SPRINGS_SHORT_BY;
+pub use enchant::{EnchantBand, enchant_band};
 pub(crate) use encounter::view as encounter_view;
 pub use encounter::{
     Choice as EncounterChoice, EncounterView, Forced as EncounterForced, KNOWN_LINE,
@@ -800,6 +802,8 @@ enum Spent {
     Craft(craft_make::Crafting),
     /// Cutting a loose gem (see [`World::cut`]).
     Cut(cut::GemWork),
+    /// Working an enchanting recipe on an item (see [`World::enchant`]).
+    Enchant(enchant::Enchanting),
     /// Salvaging an item for its materials (see [`World::salvage`]).
     Salvage(salvage::Salvaging),
     /// Mending a damaged item in the field (see [`World::make_do`]).
@@ -1501,6 +1505,7 @@ impl World {
             Spent::FieldForge(work) => self.field_forge(work, &mut events),
             Spent::Craft(work) => self.make(work, &mut events),
             Spent::Cut(work) => self.cut(work, &mut events),
+            Spent::Enchant(work) => self.enchant(work, &mut events),
             Spent::Salvage(work) => self.salvage(work, &mut events),
             Spent::MakeDo(work) => self.make_do(work, &mut events),
             Spent::Set(work) => self.set(work, &mut events),
@@ -1912,6 +1917,8 @@ mod edge_leave_tests;
 mod element_gift_tests;
 #[cfg(test)]
 mod elixir_tests;
+#[cfg(test)]
+mod enchant_tests;
 #[cfg(test)]
 mod encounter_tests;
 #[cfg(test)]

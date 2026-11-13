@@ -11,7 +11,8 @@ shards of bone and horn, hides, sinew, and blocks of flint or stone, and armour,
 clothes from hides. The recipes are on the [Metalcraft…](abilities.md#ability-metalcraft) and
 [Woodcraft…](abilities.md#ability-woodcraft) lists in the
 [abilities menu](abilities.md#the-abilities-menu) (see [Professions](skill-uses.md#professions)).
-An alchemist brews potions from herbs: see [Brewing potions](recipes-alchemy.md).
+An alchemist brews potions from herbs: see [Brewing potions](recipes-alchemy.md). An enchanter
+binds magic from crystals into what they carry: see [Enchanting](enchanting.md).
 A recipe counts a potion, flask, or scroll you carry only once you know what it is
 ([unknown potions](potions.md#unknown-potions), [unknown scrolls](scrolls.md#unknown-scrolls)):
 an unknown one is no use to it.

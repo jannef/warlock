@@ -32,10 +32,15 @@
 #   id          its file name (unique across professions); `craft:ID` names it
 #   name        the row's name (default: the result's name, or the action's for a `use` recipe)
 #   use         a built-in recipe: `temper`, `whittle`, `cut`, or `set` (Jewelcraft's
-#               two). Its row runs that action, with its
-#               own list and rules; it takes no result, parts, inputs, ornament, failure, fumble,
-#               or brittle, and a `difficulty` and `seconds` only for `cut` and `set`, which
-#               must give both (the others keep theirs in temper.toml)
+#               two), or `enchant` (Enchanting's, with its `enchant` kind). Its row runs that
+#               action, with its own list and rules; it takes no result, parts, inputs,
+#               ornament, failure, fumble, or brittle, and a `difficulty` and `seconds` only for
+#               `cut`, `set`, and `enchant`, which must give both (the others keep theirs in
+#               temper.toml)
+#   enchant     an `enchant` recipe's kind: `kindle`, `quicken`, or `unbind` (each once;
+#               docs/dev/enchanting.md "The recipes")
+#   crystals    the crystals an `enchant` recipe takes, 0 to 3: at least one for a kind that
+#               rolls affixes, none for `unbind`; only on an `enchant` recipe
 #   result      { object = "long_sword", count = 1 }: what is made (`count` dice, or "fletch" for
 #               the arrows' count, fletch.toml's with Woodcraft's share and the ranger's
 #               Fletcher; above 1 only for a stackable object). A count above 1 (or "fletch")
@@ -91,6 +96,12 @@ stat = "intelligence"
 verb = "Brew"
 failed = "The brew clouds over and settles murky. That was not what you meant to make."
 fumbled = "The brew seethes and turns a colour no book speaks of."
+
+[[profession]]
+skill = "enchanting"
+description = "Your work as an enchanter."
+stat = "willpower"
+verb = "Enchant"
 
 [[profession]]
 skill = "jewelcraft"

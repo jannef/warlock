@@ -1,7 +1,7 @@
 # Magic crystals
 
 A **magic crystal** is magic caught in a stone. There are six colours, and each is a nature: red
-is the blood and the fire, blue the mind and the frost, and so on. An enchanter will bind them
+is the blood and the fire, blue the mind and the frost, and so on. An [enchanter](enchanting.md) binds them
 into arms and armour. The colour decides what kinds of magic a crystal can give.
 
 You get crystals by [salvaging](crafting.md#salvage) magic items, identified or not, and from

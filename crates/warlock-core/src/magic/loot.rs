@@ -598,23 +598,67 @@ pub(crate) fn roll_affix(
     kind: AffixKind,
     rolled: &[Affix],
 ) -> Option<Affix> {
-    let item = def.kind?;
+    roll_affix_within(content, rng, def, level, kind, rolled, None)
+}
+
+/// The affixes [`roll_affix_within`] draws among, as indices into the affixes with their
+/// weights, by affix id (like the bases: not by the order the affix files load in).
+fn candidates(
+    content: &Content,
+    def: &ObjectDef,
+    level: u8,
+    kind: AffixKind,
+    rolled: &[Affix],
+    families: Option<&[String]>,
+) -> Vec<(usize, u32)> {
+    let Some(item) = def.kind else {
+        return Vec::new();
+    };
     let affixes = content.affixes();
     let taken: Vec<&str> = (rolled.iter())
         .filter_map(|a| affixes.get(&a.id).map(|d| d.category.as_str()))
         .collect();
-    // By affix id, like the bases: not by the order the affix files load in.
     let mut candidates: Vec<(usize, u32)> = (affixes.all().iter().enumerate())
         .filter(|(_, a)| {
             a.kind == kind
                 && a.weight > 0
                 && a.tiers_at(level) > 0
                 && !taken.contains(&a.category.as_str())
+                && families.is_none_or(|f| f.contains(&a.category))
                 && may_roll(a, item, def)
         })
         .map(|(i, a)| (i, a.weight))
         .collect();
     candidates.sort_by(|a, b| affixes.all()[a.0].id.cmp(&affixes.all()[b.0].id));
+    candidates
+}
+
+/// Whether [`roll_affix_within`] has anything to draw (and so draws nothing to find out).
+pub(crate) fn rolls_within(
+    content: &Content,
+    def: &ObjectDef,
+    level: u8,
+    kind: AffixKind,
+    rolled: &[Affix],
+    families: Option<&[String]>,
+) -> bool {
+    !candidates(content, def, level, kind, rolled, families).is_empty()
+}
+
+/// [`roll_affix`] with the candidates narrowed to the affix categories `families` holds (a
+/// crystal's colour, docs/design/enchanting.md §8; `None`: every category): the affix by weight,
+/// then its tier in the window at `level`, then its value in the tier (three draws).
+pub(crate) fn roll_affix_within(
+    content: &Content,
+    rng: &mut Rng,
+    def: &ObjectDef,
+    level: u8,
+    kind: AffixKind,
+    rolled: &[Affix],
+    families: Option<&[String]>,
+) -> Option<Affix> {
+    let affixes = content.affixes();
+    let candidates = candidates(content, def, level, kind, rolled, families);
     let a = &affixes.all()[*pick_weighted(rng, &candidates)?];
     let window = tier_window(a, level);
     let tier = window.start + rng.index(window.len());
