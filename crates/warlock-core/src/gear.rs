@@ -133,7 +133,12 @@ pub fn arm(template: &mut LevelTemplate, content: &Content, seed: u64) {
             continue;
         }
         let mut pack = roll(content, &mut rng, spawn.creature, level);
-        crate::world::gear_condition::apply(content, &mut condition, spawn.creature, &mut pack);
+        crate::world::gear_condition::apply(
+            content,
+            &mut condition,
+            (spawn.creature, level),
+            &mut pack,
+        );
         finish(content, &mut rng, &mut pack);
         // What it was given already (a monster pool's key, `mapgen/population.rs`) comes after
         // its gear, so the gear's equipment still points at it.

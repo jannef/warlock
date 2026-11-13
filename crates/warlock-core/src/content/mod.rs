@@ -256,7 +256,7 @@ pub use flow::{FLOW_SPEEDS, Flow};
 pub use forage::{ForageGround, ForageRules};
 pub use gaze::Gaze;
 pub use gear::{Gear, GearLine, RACIAL_CHANCE};
-pub use gear_condition::{GearConditions, Odds, PER_MILLE, TribeOdds};
+pub use gear_condition::{Depth, GearConditions, Odds, PER_MILLE, TribeOdds};
 pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, Ornament, ROUGH_SATURATION, dull,
 };

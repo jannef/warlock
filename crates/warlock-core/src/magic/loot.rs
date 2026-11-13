@@ -33,7 +33,12 @@
 //!    materials is made of one by their `rarity` at the item level, or by their `gear` at the
 //!    creature's level for what a creature drops (one draw: [`crate::variant::draw`]); none for
 //!    one made only of its own;
-//! 9. **a wand's rung** (one draw, a wand's only);
+//! 9. **a wand's rung** (one draw, a wand's only), then **its make** (#1436), loot's only
+//!    (`Source::Loot`): arms and armour are Fine, Marvellous, or Masterwork by the `[[depth]]`
+//!    row of `data/gear_condition.toml` at the item level (one draw, then one per improvement;
+//!    none where the row gives nothing or for what takes no make:
+//!    [`crate::world::gear_condition::make`]); the same row adds its `ornament` percent to step
+//!    7's chance;
 //! 10. **the trim** ([`finished`], the very last step of every path that completes an item,
 //!     creature gear's after its condition): an item with more affixes than its capacity
 //!     ([`super::capacity`]) loses them one at a time, one `index` draw each; none when it fits.
@@ -386,7 +391,14 @@ fn make_from(
         Some(magic) => Stack::with_magic(object, count, magic),
         None => Stack::new(object, count),
     };
-    let ornament = gem::ornament(content, rng, def, level);
+    // Deeper loot is set with a gem more often, and better made (#1436).
+    let loot = source == Some(Source::Loot);
+    let more = if loot {
+        content.gear_condition().depth_at(level).ornament
+    } else {
+        0
+    };
+    let ornament = gem::ornament(content, rng, def, (level, more));
     // Its own parts in its base parts' order: the main part's material, then the gem it is set
     // with.
     let material = source.and_then(|source| variant::draw(content, rng, def, source, level));
@@ -396,8 +408,11 @@ fn make_from(
     } else {
         stack.with_parts(own)
     };
-    // A wand's rung last (the spell scaling design §7.4): one draw, a wand's only.
+    // A wand's rung (the spell scaling design §7.4): one draw, a wand's only.
     stack.draw_wand_rung(content, rng);
+    if loot {
+        crate::world::gear_condition::make(content, rng, level, &mut stack);
+    }
     stack
 }
 

@@ -147,6 +147,7 @@ above.
 | Looking at an item, its description | `magic-items.md#looking-at-an-item` |
 | Unidentified, identify | `magic-items.md#unidentified-items` |
 | Capacity, enchantments an item can bear, the trim | `magic-items.md#capacity` |
+| Deeper finds, better make and gems by item level | `magic-items.md#deeper-finds` |
 | Binding (a material's) | `magic-items.md#capacity`, `materials.md` |
 | Affix, prefix, suffix | `affixes.md#prefixes`, `affixes.md#suffixes` |
 | Base item | `affixes.md#base-items` |

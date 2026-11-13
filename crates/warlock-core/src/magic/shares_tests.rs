@@ -10,6 +10,9 @@ use std::collections::BTreeMap;
 const ITEMS: usize = 10_000;
 const LEVELS: [u8; 4] = [1, 4, 8, 12];
 
+/// The trim's levels: the shares' and two deeper (#1436: deeper finds are better made).
+const TRIM_LEVELS: [u8; 6] = [1, 4, 8, 12, 16, 20];
+
 /// Each affix's chance to be a pick of its kind on `def` at `level`: its weight over the weights
 /// of every affix of that kind that may roll there (the first pick's, before any category is
 /// taken).
@@ -87,9 +90,11 @@ fn shares_follow_the_weights_and_deep_finds_roll_deep_tiers() {
 }
 
 /// The trim's effect on loot (docs/design/enchanting.md §12, E1): 4 000 rares and 4 000 magic
-/// items rolled at item levels 1, 4, 8, and 12 as loot makes them, before and after the trim.
-/// Prints, per level, the capacity distribution, the affix counts before and after, and the
-/// share left untrimmed. `cargo test -p warlock-core trim_shares -- --nocapture` prints it.
+/// items rolled at item levels 1, 4, 8, 12, 16, and 20 as loot makes them (its make and
+/// materials better deeper, #1436), before and after the trim. Prints, per level, the capacity
+/// distribution, the affix counts before and after, and the share left untrimmed; fails if
+/// shallow rares (levels 1 and 4) keep three affixes or more a fifth of the time or more, or deep
+/// ones (16 and 20) half of the time or less. `cargo test -p warlock-core trim_shares -- --nocapture` prints it.
 #[test]
 fn trim_shares_hold_every_find_to_its_capacity() {
     let c = Content::builtin().expect("built-in content");
@@ -100,7 +105,7 @@ fn trim_shares_hold_every_find_to_its_capacity() {
     classes.sort();
     classes.dedup();
     const N: usize = 4_000;
-    for level in LEVELS {
+    for level in TRIM_LEVELS {
         let mut rng = Rng::stream(13, "trim shares");
         for grade in [LootGrade::Rare, LootGrade::Magic] {
             // Magic grade: magic or rare, by the weights.
@@ -141,6 +146,16 @@ fn trim_shares_hold_every_find_to_its_capacity() {
             println!("  capacity       {}", row(&room));
             println!("  affixes rolled {}", row(&rolled));
             println!("  affixes kept   {}", row(&kept));
+            // Deeper finds are better made (#1436): shallow rares stay modest, deep ones mostly
+            // keep three affixes or more.
+            let three_or_more = pct(kept[3..].iter().sum());
+            if grade == LootGrade::Rare {
+                match level {
+                    1 | 4 => assert!(three_or_more < 20.0, "level {level}: {three_or_more:.1}%"),
+                    16 | 20 => assert!(three_or_more > 50.0, "level {level}: {three_or_more:.1}%"),
+                    _ => {}
+                }
+            }
         }
     }
 }

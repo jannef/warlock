@@ -11,7 +11,7 @@ to_hit = -2
 damage = 1
 protection = 50
 value = 2000
-rarity = { weight = 10 }
+rarity = { weight = 10, deeper = 3 }
 gear = { weight = 5 }
 fit = { weapon = "poor", armour = "poor" }
 work = -2
