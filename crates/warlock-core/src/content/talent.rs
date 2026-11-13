@@ -1156,6 +1156,10 @@ pub enum TalentEffect {
     /// The class active Merchant's eye: a stack the player carries is identified, for the time of
     /// a reading (`world/merchants_eye.rs`; spec §8 "Class abilities").
     MerchantsEye,
+    /// The class active Make do and mend: a damaged thing the player carries mended in the field,
+    /// with no anvil, in `seconds`, by a check against `difficulty` plus its main material's
+    /// `work` that destroys nothing (`world/make_do.rs`; the craftsperson design §7.5).
+    MakeDo { seconds: u32, difficulty: i32 },
     /// The class active Spirit weapon: a melee weapon of spirit-stuff called into the hand in a
     /// shape chosen (`world/spirit_weapon.rs`; spec §8 "Prestige classes"), which strikes
     /// `to_hit` surer, threatens `threat` lower, and ignores all Protection if
@@ -1300,6 +1304,7 @@ impl TalentEffect {
             TalentEffect::Knock { .. } => A::Knock,
             TalentEffect::Scribe { .. } => A::Scribe,
             TalentEffect::MerchantsEye => A::MerchantsEye,
+            TalentEffect::MakeDo { .. } => A::MakeDo,
             TalentEffect::SpiritWeapon { .. } => A::SpiritWeapon,
             _ => return None,
         })

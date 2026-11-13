@@ -1,0 +1,11 @@
+# The craftsperson's class ability from level 18 (spec §8 "Class abilities": Make do and mend;
+# the craftsperson design §7.5): an active on a damaged thing carried, `use:make_do_and_mend:c`,
+# `world/make_do.rs`.
+[[talent]]
+id = "make_do_and_mend"
+name = "Make do and mend"
+tree = "class"
+granted = true
+description = "You can mend a damaged thing you carry anywhere, without an anvil (an ability): it takes a while, and if your hands fail you, nothing is spoiled but the time."
+effects = [{ kind = "make_do", seconds = 600, difficulty = 10 }]
+systems = ["skills"]

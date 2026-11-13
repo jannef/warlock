@@ -1009,10 +1009,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the improvements it will still take, or that it is damaged, never the attempts made on it;
     and whether its main material is very hard (work +4 or more), hard (+1 to +3), or soft and
     easy (−2 or less) to work; and, as to one trained in Appraise, how many enchantments it can
-    bear (§8 "Magic items"); perception only, `PerceptionView::describe_item`), Waste not (at 6,
+    bear (§8 "Magic items"); perception only, `PerceptionView::describe_item`; the damaged line
+    adds "or your own hands" to a holder of Make do and mend), Waste not (at 6,
     #1420: salvage gives back 75 % of each material's weight, not 50; a failed recipe gives back
     all its stock and inputs, a failed brew still spent; a failed Temper or Whittle, a natural 2
-    too, damages nothing, its attempt counted); merchant (Delver, Scholar) Haggler (favour +15 %: the one class ability on
+    too, damages nothing, its attempt counted), Make do and mend (at 18, #1422, the
+    craftsperson design §7.5: an ability, `use:make_do_and_mend:c`, on a damaged thing carried,
+    not worn or wielded, anywhere and with nothing: ten minutes, then a check by the stat of the
+    profession that works its main material plus that profession's craft points against 10 plus
+    the material's work; made, the damage is gone, its lost improvements still lost and the
+    attempts at the anvil as they were; failed, nothing happens, never a thing destroyed;
+    refused, no time, for one worn, protected, unpaid, or of a material no profession works;
+    greyed "nothing to mend" with none; `world/make_do.rs`); merchant (Delver, Scholar) Haggler (favour +15 %: the one class ability on
     shop favour, #787), Invest (below, at 1, #1407), Deep pockets (coins weightless) and Pack mule (the burden line's first step, #1198), Merchant's eye (#816, at 12: an
     ability, on a thing carried, that identifies it as the scroll of identify would, for a
     reading's time and nothing else; refused, no time, for a thing already known); #789 cut its level 40 Insured (shops paid +50 %), a

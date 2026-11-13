@@ -788,10 +788,17 @@ fn how_held(def: &ObjectDef, content: &Content) -> Option<String> {
 /// ("Taken apart, it would give 2 steel ingots and a small ruby."; "Nothing in it is worth
 /// saving."; "It would not come apart." for one `protected` from harm); for arms or armour an
 /// anvil or a knife betters, the improvements it will still take, or that it is damaged (never
-/// the attempts made on it, the difficulty's secret); and how hard its main material is to work,
+/// the attempts made on it, the difficulty's secret; "or your own hands" to one who `mends`, a
+/// holder of Make do and mend); and how hard its main material is to work,
 /// when it is hard or soft (its `work`: +4 or more very hard, +1 to +3 hard, -2 or less soft and
 /// easy). Perception only: nothing is drawn.
-pub fn make_lines(stack: &Stack, lore: Lore<'_>, percent: u8, protected: bool) -> Vec<Line> {
+pub fn make_lines(
+    stack: &Stack,
+    lore: Lore<'_>,
+    percent: u8,
+    protected: bool,
+    mends: bool,
+) -> Vec<Line> {
     let content = lore.content;
     let mut out = Vec::new();
     let mut one = stack.clone();
@@ -826,7 +833,8 @@ pub fn make_lines(stack: &Stack, lore: Lore<'_>, percent: u8, protected: bool) -
         let worked = stack.worked();
         let text = match worked.map_or(0, |w| w.improved.len()) {
             _ if worked.is_some_and(|w| w.damaged) => {
-                format!("It is damaged: work {place} would make it good.")
+                let hands = if mends { ", or your own hands" } else { "" };
+                format!("It is damaged: work {place} would make it good{hands}.")
             }
             done if done >= most => "It can be made no finer.".to_string(),
             done => {

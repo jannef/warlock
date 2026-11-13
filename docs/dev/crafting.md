@@ -841,6 +841,42 @@ where the rule already reads its number:
 
 Tests: `world/waste_not_tests.rs` (level 6, each read with and without the talent).
 
+## Make do and mend
+
+`world/make_do.rs` (#1422; the craftsperson design §7.5): the craftsperson's class active at
+level 18, the talent `make_do_and_mend` with `{ kind = "make_do", seconds = 600, difficulty = 10
+}` (`TalentEffect::MakeDo`, `TalentMods::make_do`). One line each in `world/mod.rs`'s `Spent`
+(`Spent::MakeDo`) and dispatch, `world/merchants_eye.rs`'s `use_class_on` (the class actives on a
+stack), and `world/class_ability.rs`'s bare `use` ("Use it on what?").
+
+- **The ability**: `ClassActive::MakeDo` (id `make_do_and_mend`, `aims_item`, `ActionKind::Craft`),
+  the abilities menu's Class group; `Aim::Item` opens `ScreenName::MakeDo` (`--screen make-do`,
+  `ObjectList::MakeDo`: `world::mendable` stacks, damaged ones, not worn or wielded). Greyed
+  "nothing to mend" (`Unavailable::NothingToMend`, from `world::mends_any` in
+  `PerceptionView::unavailable`) with none. `Action::UseOn(MakeDo, item)`, text
+  `use:make_do_and_mend:LETTER`.
+- **Refused, no time** (in this order): no such stack ("You carry no such thing."); not damaged
+  ("There is nothing wrong with it."); worn or wielded ("Take it off first."); a main material no
+  profession works (`World::profession_of`: cloth, glass; "You know no craft that would mend
+  it."); protected (`World::item_protected`: "You dare not work on it."); unpaid goods
+  (`may_loose`).
+- **Time**: `seconds` by `keep_at` in `craft` turns; interrupted, nothing happens and the time is
+  spent ("...; you put down your work.").
+- **The check**, at the end, the stack checked again: natural (two gameplay draws) + the main
+  material's profession's stat modifier + `TalentMods::check(stat)` + `skill_effect_of(skill,
+  Craft)` against `difficulty + work` (`check::makes`); untrained, the stat alone, as Salvage's.
+- **Made**: one item set apart (`World::set_apart`) and `Worked::repair`: `damaged` and `by`
+  cleared, the improvements lost stay lost, `attempts` untouched; nothing re-identified. "You make
+  good the damage: it is a long sword again."
+- **Failed**: nothing changes ("You cannot make it good here; it will need an anvil."); a natural
+  2 the same. Nothing is ever destroyed; trying again costs only the time.
+- **Marks**: `Use::Craft` on that profession alone (`World::train_skill`), if trained.
+- **Eye for the make** says the damaged line with ", or your own hands" to a holder
+  (`magic/describe.rs::make_lines`'s `mends`).
+- **Tests**: `world/make_do_tests.rs` (the level, the action text, every refusal with no time, the
+  row greyed and the wielded left out, made with the attempts kept, failed with nothing lost, Eye
+  for the make's line, a replay), the `make-do-list` screen snapshot.
+
 ## Dumps
 
 The `recipes` layer: a `Metalcraft:` line per profession, then each row the player sees,

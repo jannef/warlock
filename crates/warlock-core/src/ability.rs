@@ -311,6 +311,9 @@ pub enum Unavailable {
     Untrained(SkillId),
     /// The Heal ability with nothing to treat: no bleeding, poison, or disease that shows.
     NothingToTreat,
+    /// Make do and mend with nothing damaged carried that is not worn or wielded
+    /// (`world/make_do.rs`).
+    NothingToMend,
     /// A triggered weapon ability: it fires by itself, never chosen.
     FiresByItself,
     /// An active weapon ability while the actor does not hold what it is for: a weapon of its
@@ -350,6 +353,7 @@ impl Unavailable {
                 format!("you are untrained in {}", content.skill(skill).name).into()
             }
             Unavailable::NothingToTreat => "nothing to treat".into(),
+            Unavailable::NothingToMend => "nothing to mend".into(),
             Unavailable::FiresByItself => "fires by itself".into(),
             Unavailable::While(status) => {
                 format!("you are {}", content.status(status).name.to_lowercase()).into()
@@ -386,6 +390,7 @@ impl Unavailable {
                 format!("untrained:{}", content.skill(skill).id).into()
             }
             Unavailable::NothingToTreat => "nothing_to_treat".into(),
+            Unavailable::NothingToMend => "nothing_to_mend".into(),
             Unavailable::FiresByItself => "fires_by_itself".into(),
             Unavailable::NotSoHeld => "not_so_held".into(),
             Unavailable::NoAllies => "no_allies".into(),
@@ -1259,6 +1264,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::Knock
         | ClassActive::Scribe
         | ClassActive::MerchantsEye
+        | ClassActive::MakeDo
         | ClassActive::SpiritWeapon
         | ClassActive::Sic
         | ClassActive::Volley => Vec::new(),

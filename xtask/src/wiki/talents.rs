@@ -2137,6 +2137,22 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 warlock_core::content::BASE_TURN
             ))
         ),
+        TalentEffect::MakeDo {
+            seconds,
+            difficulty,
+        } => format!(
+            "active (on a damaged thing you carry, not worn or wielded, anywhere, with no anvil \
+             or tool; {} of work, cut short by anything that would stop a rest): one check, 2d12 \
+             plus the [modifier](stats.md#modifiers) of the stat of the craft that works its \
+             main material and that craft's points (a stat alone, untrained), against \
+             {difficulty} plus the material's [work](crafting.md#who-works-what). Made, the \
+             damage is gone (the improvements it lost stay lost, and the next attempt at the \
+             anvil is as hard as before); failed, nothing happens to it, and you may try again. \
+             It never destroys anything. Refused, with no time spent, for something worn or \
+             wielded, [protected](materials.md#protected-items), unpaid, or of a material no \
+             craft works (cloth, glass)",
+            warlock_core::time::Duration::seconds(u64::from(seconds)).spoken()
+        ),
         TalentEffect::SpiritWeapon {
             to_hit,
             threat,
