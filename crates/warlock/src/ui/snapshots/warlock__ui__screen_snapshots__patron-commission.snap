@@ -12,6 +12,7 @@ expression: "render(case, content.clone())"
 │ You gain 60000 experience (dev).                                                                 │
 │ You feel more experienced.                                                                       │
 │ Welcome to level 13.                                                                             │
+│ You gain Waste not.                                                                              │
 │ You gain Patron.                                                                                 │
 │ Your appraise improves. (×48)                                                                    │
 │ You learn Skill focus (appraise).                                                                │
@@ -28,7 +29,6 @@ expression: "render(case, content.clone())"
 │                                                                                                  │
 │ v or Esc close                                                                                   │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
-
 
 
  Cēaptūn  ·  HP 30/30  ·  MP 2/2  ·  Lv 13  ·  08:01  ·  11 Darkening  ·  Overcast       ? controls
