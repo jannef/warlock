@@ -124,6 +124,11 @@ pub enum Ability {
     /// ([`Unavailable::NoUnknownScroll`], the perception knows) while the pack holds none. It
     /// asks which scroll ([`Aim::Item`]).
     Decipher,
+    /// Consume a magic crystal (docs/design/enchanting.md §5; `world/crystal.rs`):
+    /// [`Action::Consume`], for mana, a Willpower mark, and a step toward evil. Everyone's while
+    /// `data/crystals.toml` exists, in the Items group; unavailable ([`Unavailable::NoCrystal`],
+    /// the perception knows) while the pack holds none. It asks which crystal ([`Aim::Item`]).
+    Consume,
     /// Catch a second wind (spec §8 "Talents"): [`Action::UseTalent`], the active of the
     /// Second wind talent (a talent with the `second_wind` effect). Had by whoever holds it;
     /// unavailable while its cooldown (Winded) lasts.
@@ -196,7 +201,7 @@ pub enum Source {
     Skill,
     /// A weapon skill or a fighting style (spec §8 "Weapon skills", "Fighting styles").
     WeaponSkill,
-    /// Something worn or carried (none yet: a lantern is used as a tool, `u`).
+    /// Something carried: a magic crystal consumed (a lantern is used as a tool, `u`).
     Item,
     /// The place the character stands in (spec §7 "Special rooms"): what a special room's
     /// feature offers next to it (Pray at a forgotten altar, Drink at a spring).
@@ -295,6 +300,8 @@ pub enum Unavailable {
     NotYet,
     /// Decipher with no scroll of an unidentified type in the pack.
     NoUnknownScroll,
+    /// Consume crystal with no magic crystal in the pack.
+    NoCrystal,
     /// While a status lasts (spec §8 "Status effects"): one that blocks the kind of action the
     /// ability is (a raging berserker cannot read), or the ability's cooldown, which the class
     /// abilities bring (Winded: "you are winded"). Only time lifts it.
@@ -344,6 +351,7 @@ impl Unavailable {
             Unavailable::NoKnife => "you have no knife".into(),
             Unavailable::NotYet => "not usable yet".into(),
             Unavailable::NoUnknownScroll => "no unknown scroll".into(),
+            Unavailable::NoCrystal => "no crystal".into(),
             Unavailable::NoMana => "you have too little mana".into(),
             Unavailable::NotHere => "not usable here".into(),
             Unavailable::Untrained(skill) => {
@@ -380,6 +388,7 @@ impl Unavailable {
             Unavailable::NoKnife => "no_knife".into(),
             Unavailable::NotYet => "not_yet".into(),
             Unavailable::NoUnknownScroll => "no_unknown_scroll".into(),
+            Unavailable::NoCrystal => "no_crystal".into(),
             Unavailable::NoMana => "no_mana".into(),
             Unavailable::NotHere => "not_here".into(),
             Unavailable::Untrained(skill) => {
@@ -428,6 +437,8 @@ impl Ability {
             .then_some(Ability::Wedge);
         // Every profession's: salvage, while its rules exist.
         let salvage = content.salvage().is_some().then_some(Ability::Salvage);
+        // Items: consuming a magic crystal, while there are crystals.
+        let consume = content.crystals().is_some().then_some(Ability::Consume);
         // Birth sign: the active gifts some sign grants, in their order.
         let signs = (SignActive::ALL.iter())
             .filter(|&&a| content.sign_active(a).is_some())
@@ -482,6 +493,7 @@ impl Ability {
             .chain(wedge)
             .chain(salvage)
             .chain(weapon_skills)
+            .chain(consume)
             .chain(here)
             .chain(gather)
             .chain(Ability::orders(
@@ -622,7 +634,7 @@ impl Ability {
             Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
             Ability::Profession(skill) => actor.skills.get(skill).is_some(),
-            Ability::ShieldBash | Ability::Salvage => true,
+            Ability::ShieldBash | Ability::Salvage | Ability::Consume => true,
             Ability::Weapon(skill, id) => actor.weapon_abilities(content).contains(&(skill, id)),
             // A place offers it, not who one is ([`Ability::here`]); an order needs allies
             // ([`Ability::orders`]).
@@ -650,6 +662,7 @@ impl Ability {
             Ability::Forage => "forage",
             Ability::Salvage => "salvage",
             Ability::Decipher => "decipher",
+            Ability::Consume => "consume",
             Ability::Heal => "heal",
             Ability::SecondWind => "second_wind",
             Ability::BloodMagic => "blood_magic",
@@ -694,6 +707,7 @@ impl Ability {
             Ability::Forage => "Forage",
             Ability::Salvage => "Salvage",
             Ability::Decipher => "Decipher",
+            Ability::Consume => "Consume crystal",
             Ability::Heal => "Heal",
             Ability::SecondWind => "Second wind",
             Ability::BloodMagic => "Blood magic",
@@ -765,6 +779,11 @@ impl Ability {
                  minutes: if you make out the writing, you learn what it is without reading it. \
                  Failed, the time is gone and you may try again."
             }
+            Ability::Consume => {
+                "Crush a magic crystal you carry and drink what is in it: some mana comes back, \
+                 your will hardens, and something of what it was stays with you. It is no \
+                 good deed."
+            }
             Ability::Heal => {
                 "Tend your own hurts or an ally's beside you: bind a bleeding wound, or try to \
                  ease a poison or a disease (once each)."
@@ -832,6 +851,7 @@ impl Ability {
             | Ability::Salvage
             | Ability::Decipher
             | Ability::Heal => Source::Skill,
+            Ability::Consume => Source::Item,
             Ability::ThrowVoice => Source::Class,
             Ability::SecondWind | Ability::BloodMagic => Source::Talent,
             Ability::ShieldBash | Ability::Weapon(..) => Source::WeaponSkill,
@@ -868,7 +888,7 @@ impl Ability {
             | Ability::Heel
             | Ability::Hold
             | Ability::Drink => Aim::Nothing,
-            Ability::Salvage | Ability::Give | Ability::Decipher => Aim::Item,
+            Ability::Salvage | Ability::Give | Ability::Decipher | Ability::Consume => Aim::Item,
             Ability::Profession(_) => Aim::Recipes,
             Ability::ThrowVoice | Ability::SetOn | Ability::Intimidate => Aim::Cell,
             Ability::Heal => Aim::Ailment,
@@ -907,6 +927,7 @@ impl Ability {
             Ability::Forage => Some(ActionKind::Forage),
             Ability::Salvage => Some(ActionKind::Salvage),
             Ability::Decipher => Some(ActionKind::Decipher),
+            Ability::Consume => Some(ActionKind::Drink),
             Ability::Heal => Some(ActionKind::Heal),
             Ability::SecondWind | Ability::BloodMagic => Some(ActionKind::Wait),
             Ability::ShieldBash => Some(ActionKind::Melee),
@@ -944,6 +965,7 @@ impl Ability {
             | Ability::Profession(_)
             | Ability::Salvage
             | Ability::Decipher
+            | Ability::Consume
             | Ability::Heal
             | Ability::SecondWind
             | Ability::BloodMagic
@@ -1047,7 +1069,7 @@ impl Ability {
             (Ability::Drink, _) => Some(Action::Drink),
             (Ability::Forage, _) => Some(Action::Forage),
             // It asks for an item ([`Ability::action_on`]).
-            (Ability::Salvage | Ability::Decipher, _) => None,
+            (Ability::Salvage | Ability::Decipher | Ability::Consume, _) => None,
             (Ability::Heel, _) => Some(Action::Order(Command::Heel)),
             (Ability::Hold, _) => Some(Action::Order(Command::Hold)),
             // It asks for a cell ([`Ability::action_at`]).
@@ -1060,6 +1082,7 @@ impl Ability {
     pub fn action_on(self, content: &Content, item: usize) -> Option<Action> {
         match self {
             Ability::Decipher => Some(Action::Decipher { item }),
+            Ability::Consume => Some(Action::Consume { item }),
             Ability::Salvage => Some(Action::Salvage { item }),
             Ability::Give => Some(Action::Give { item, ally: None }),
             Ability::Class(active) if active.aims_item() => Some(Action::UseOn(active, item)),
@@ -1102,6 +1125,7 @@ impl Ability {
             | Ability::Profession(_)
             | Ability::Salvage
             | Ability::Decipher
+            | Ability::Consume
             | Ability::Heal
             | Ability::SecondWind
             | Ability::BloodMagic
@@ -1191,8 +1215,9 @@ impl Ability {
             | Ability::BloodMagic
             // The list says what may be salvaged; the rules refuse the rest.
             | Ability::Salvage
-            // Whether the pack holds an unknown scroll is the perception's to say.
+            // Whether the pack holds an unknown scroll or a crystal is the perception's to say.
             | Ability::Decipher
+            | Ability::Consume
             // Whether the player has a companion is the perception's to say.
             | Ability::Tame
             | Ability::Pray

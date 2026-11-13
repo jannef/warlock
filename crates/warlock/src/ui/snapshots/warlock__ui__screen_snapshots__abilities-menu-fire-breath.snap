@@ -6,27 +6,27 @@ expression: "render(case, content.clone())"
  Fire roars from your throat! You feel drained.
 
 
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
-                    │   a  Fire breath     you are drained                     │
+                    │   a  Fire breath      you are drained                    │
                     │ Class                                                    │
                     │ > b  Veteran's wind                                      │
                     │ Skills                                                   │
-                    │   c  Intimidate      at a place you see                  │
-                    │   d  Forage          not usable here                     │
-                    │   e  Salvage         on something you carry              │
+                    │   c  Intimidate       at a place you see                 │
+                    │   d  Forage           not usable here                    │
+                    │   e  Salvage          on something you carry             │
                     │ Weapon skills                                            │
-                    │   f  Shield bash     no foe within reach                 │
+                    │   f  Shield bash      no foe within reach                │
+                    │ Items                                                    │
+                    │   g  Consume crystal  no crystal                         │
                     │                                                          │
                     │ An old soldier's second breath (an ability): hit points  │
                     │ back at once, then winded a quarter hour.                │
                     │                                                          │
                     │                                                          │
-                    │ a-f or Enter use   Esc close                             │
+                    │ a-g or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
 
 
 

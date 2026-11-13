@@ -477,6 +477,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     **Salvage** (`Ability::Salvage`, §8 "Skills", every profession's), after the skills' own uses,
     which everyone has, asking for an item (the Salvage list: what `world::salvageable` accepts,
     less what is worn or wielded), never greyed out;
+    **Consume crystal** (`Ability::Consume`, under Items, §8 "Skills": salvage's crystals),
+    which everyone has, asking for a magic crystal carried (`--screen consume-crystal`), greyed
+    "no crystal" without one;
     and each other skill used as
     an action (`kind = "action"`, §8 "Skills") the player
     is trained in, listed but never available until its use comes (it then becomes an ability of

@@ -1381,6 +1381,12 @@ impl<'a> PerceptionView<'a> {
     /// What the player knows of scroll types (spec §8 "Scrolls"): every name presentation shows
     /// of a stack goes through it ([`crate::scroll_label::Lore::describe`]), so an unidentified
     /// scroll shows by its label.
+    /// Whether `stack` is a magic crystal, one the Consume crystal ability takes
+    /// (`data/crystals.toml`; the rare materials are not): the list the ability opens.
+    pub fn is_crystal(&self, stack: &crate::object::Stack) -> bool {
+        (self.content.crystals()).is_some_and(|c| c.colour_of_object(stack.object).is_some())
+    }
+
     pub fn lore(&self) -> crate::scroll_label::Lore<'a> {
         self.lore
     }
@@ -2068,6 +2074,12 @@ impl<'a> PerceptionView<'a> {
                     .any(|stack| crate::world::undeciphered(self.content, &self.lore(), stack)) =>
             {
                 Some(crate::ability::Unavailable::NoUnknownScroll)
+            }
+            // Consume crystal needs a magic crystal in the pack (`world/crystal.rs`).
+            Ability::Consume
+                if !(self.player.inventory.iter()).any(|stack| self.is_crystal(stack)) =>
+            {
+                Some(crate::ability::Unavailable::NoCrystal)
             }
             // Sic 'em needs its beast on the level (`world/sic.rs`).
             Ability::Class(crate::content::ClassActive::Sic) if !companion_here => {

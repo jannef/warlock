@@ -4,7 +4,6 @@ expression: "render(case, content.clone())"
 ---
  You open the door.
  Clear water wells up in an old stone basin.
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -20,15 +19,16 @@ expression: "render(case, content.clone())"
                     │   g  Salvage            on something you carry           │
                     │ Weapon skills                                            │
                     │   h  Shield bash        you hold no shield               │
+                    │ Items                                                    │
+                    │   i  Consume crystal    no crystal                       │
                     │ Here                                                     │
-                    │   i  Drink                                               │
+                    │   j  Drink                                               │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-i or Enter use   Esc close                             │
+                    │ a-j or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
 
  The Spring  ·  HP 18/18  ·  MP 14/14  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444     ? controls

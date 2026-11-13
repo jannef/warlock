@@ -23,8 +23,13 @@
 //!   material is lost, but a failed gem only drops a cut (while above the roughest true cut) or
 //!   else a size (while above the smallest) ([`chipped`]); a natural 2, or a gem with nothing to
 //!   lose, shatters it. A material no profession works gives nothing and is not mentioned.
+//! - **Magic** (docs/design/enchanting.md §10; `world/crystal.rs`, [`World::catch_magic`]):
+//!   before the material checks, an identified magic or rare item makes one Enchanting check
+//!   per affix, each made a crystal of the affix's colour among what is saved, and a rare of
+//!   item level 10 or more a small chance of a rare material; an unidentified one gives nothing.
 //! - **Marks**: [`Use::Salvage`] for each profession rolled, on that skill alone
-//!   ([`World::train_skill`]), whatever came of it. No noise, no alignment.
+//!   ([`World::train_skill`]), whatever came of it, and on Enchanting when an affix check was
+//!   made. No noise, no alignment.
 //!
 //! [`Action::Salvage`]: crate::action::Action::Salvage
 //! [`Actor::skill_effect_of`]: super::Actor::skill_effect_of
@@ -155,6 +160,9 @@ impl World {
             self.say("You have nothing left to work on.");
             return;
         };
+        let stack = stack.single();
+        // Enchanting's checks on its affixes first (`crystal.rs`), drawn before the materials'.
+        let caught = self.catch_magic(&stack);
         // Each distinct material a profession works, in first-seen order.
         let mut works: Vec<(MaterialId, SkillId, Stat)> = Vec::new();
         for part in stack.parts(&content).iter() {
@@ -186,6 +194,9 @@ impl World {
         super::outcome::remove_stacks(self.player_mut(), &[at]);
         let name = self.lore().title(&one);
         self.say(format!("You take the {name} apart."));
+        for line in caught.lines {
+            self.say(line);
+        }
         // What it falls to, each fall by its material, kept, chipped, or lost by its check.
         let mut saved: Vec<Stack> = Vec::new();
         for fall in crate::piece::break_up(&one, &content, rules.percent) {
@@ -223,6 +234,7 @@ impl World {
                 }
             }
         }
+        saved.extend(caught.stacks);
         if saved.is_empty() {
             self.say("Nothing is left worth keeping.");
         } else {
@@ -233,6 +245,10 @@ impl World {
             }
         }
         let mut practised: Vec<SkillId> = Vec::new();
+        if let Some(enchanting) = (content.skill_id("enchanting")).filter(|_| caught.checked) {
+            practised.push(enchanting);
+            self.train_skill(Use::Salvage, enchanting);
+        }
         for check in &checks {
             if !practised.contains(&check.skill) {
                 practised.push(check.skill);

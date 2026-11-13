@@ -40,6 +40,8 @@
 //! The give screen (the Give ability, spec §8 "Allies") lists what fits a neck; choosing one
 //! fastens it on the player's kept beast beside them ([`Action::Give`]; with two, input asks
 //! which way first).
+//! The consume-crystal screen (the Consume crystal ability, docs/dev/enchanting.md) lists the
+//! magic crystals carried; choosing one consumes one of it ([`Action::Consume`]).
 
 use super::character_screen::{fit_joined, thresholds};
 use super::menu::{Hints, Nav, Panel, Press, wrap};
@@ -86,6 +88,9 @@ pub enum ObjectList {
     /// The scrolls in the pack of a type not yet identified: choose one to make out, unread
     /// (the Decipher ability; `world/decipher.rs`).
     Decipher,
+    /// The magic crystals in the pack: choose one to consume (the Consume crystal ability;
+    /// `world/crystal.rs`).
+    Crystal,
     /// What fits a neck, for a kept beast of the player's (the Give ability; `world/collar.rs`).
     Give,
 }
@@ -115,6 +120,7 @@ impl ObjectList {
             ObjectList::Salvage => " Salvage ",
             ObjectList::Cut => " Cut ",
             ObjectList::Decipher => " Decipher ",
+            ObjectList::Crystal => " Consume crystal ",
             ObjectList::Give => " Give ",
         }
     }
@@ -132,6 +138,7 @@ impl ObjectList {
             ObjectList::Salvage => "You carry nothing worth taking apart.",
             ObjectList::Cut => "You carry no gem that can be cut.",
             ObjectList::Decipher => "You carry no scroll you have not made out.",
+            ObjectList::Crystal => "You carry no magic crystal.",
             ObjectList::Give => "You carry nothing for a beast's neck.",
         }
     }
@@ -153,6 +160,7 @@ impl ObjectList {
             | ObjectList::Salvage
             | ObjectList::Cut
             | ObjectList::Decipher
+            | ObjectList::Crystal
             | ObjectList::Give => 78,
         }
     }
@@ -170,6 +178,7 @@ impl ObjectList {
                 | ObjectList::Salvage
                 | ObjectList::Cut
                 | ObjectList::Decipher
+                | ObjectList::Crystal
                 | ObjectList::Give
         )
     }
@@ -328,6 +337,10 @@ impl ObjectScreen {
                 .collect(),
             ObjectList::Decipher => (0..pack.len())
                 .filter(|&i| warlock_core::world::undeciphered(content, &view.lore(), &pack[i]))
+                .map(Item::Pack)
+                .collect(),
+            ObjectList::Crystal => (0..pack.len())
+                .filter(|&i| view.is_crystal(&pack[i]))
                 .map(Item::Pack)
                 .collect(),
             // Beside an escort, anything it could put on (`world/escort.rs`).
@@ -543,6 +556,9 @@ impl ObjectScreen {
             (ObjectList::Decipher, item) => ScreenAction::Act(Action::Decipher {
                 item: item.position(),
             }),
+            (ObjectList::Crystal, item) => ScreenAction::Act(Action::Consume {
+                item: item.position(),
+            }),
             (ObjectList::Give, item) => ScreenAction::Act(Action::Give {
                 item: item.position(),
                 ally: None,
@@ -659,6 +675,7 @@ impl ObjectScreen {
                     | ObjectList::Salvage
                     | ObjectList::Cut
                     | ObjectList::Decipher
+                    | ObjectList::Crystal
                     | ObjectList::Give => Action::Drop(chosen),
                 });
             }
@@ -863,6 +880,7 @@ impl ObjectScreen {
             ObjectList::Salvage => format!("{}   {page}Esc cancel", either("salvage")),
             ObjectList::Cut => format!("{}   {page}Esc cancel", either("cut")),
             ObjectList::Decipher => format!("{}   {page}Esc cancel", either("decipher")),
+            ObjectList::Crystal => format!("{}   {page}Esc cancel", either("consume")),
             ObjectList::Give => format!("{}   {page}Esc cancel", either("give")),
             ObjectList::PickUp => mark("pick up", "cancel"),
         }

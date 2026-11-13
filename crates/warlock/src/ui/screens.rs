@@ -171,6 +171,9 @@ pub enum ScreenName {
     /// Choose a scroll to make out unread (the Decipher ability, spec §8 "Scrolls"): those of a
     /// type not yet identified.
     Decipher,
+    /// Choose a magic crystal to consume (the Consume crystal ability, docs/dev/enchanting.md):
+    /// the crystals carried.
+    ConsumeCrystal,
     /// Choose what to give a kept beast of the player's for its neck (the Give ability, spec §8
     /// "Allies"): what fits a neck, carried.
     Give,
@@ -250,6 +253,7 @@ impl ScreenName {
                 | ScreenName::Salvage
                 | ScreenName::Cut
                 | ScreenName::Decipher
+                | ScreenName::ConsumeCrystal
                 | ScreenName::Give
                 | ScreenName::Abilities
                 | ScreenName::Shape
@@ -500,6 +504,7 @@ impl Screen {
             ScreenName::Salvage => objects(ObjectList::Salvage),
             ScreenName::Cut => objects(ObjectList::Cut),
             ScreenName::Decipher => objects(ObjectList::Decipher),
+            ScreenName::ConsumeCrystal => objects(ObjectList::Crystal),
             ScreenName::Give => objects(ObjectList::Give),
             ScreenName::Abilities => Screen::Abilities(AbilitiesScreen::new(run, beneath.ability)),
             ScreenName::Shape => Screen::Shape(ShapeScreen::new(run)),
@@ -551,6 +556,7 @@ impl Screen {
                 ObjectList::Salvage => ScreenName::Salvage,
                 ObjectList::Cut => ScreenName::Cut,
                 ObjectList::Decipher => ScreenName::Decipher,
+                ObjectList::Crystal => ScreenName::ConsumeCrystal,
                 ObjectList::Give => ScreenName::Give,
             },
             Screen::Equipment(_) => ScreenName::Equipment,

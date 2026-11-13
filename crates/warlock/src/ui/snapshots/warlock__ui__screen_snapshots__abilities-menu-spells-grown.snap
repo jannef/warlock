@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You learn Dragon's hoard.
- Your thou┌─ Abilities ─────────────────────────────────────────────────────────────────┐
+ Your thou┌─ Abilities ────────────────────────────────────────────────────── Page 1/2 ─┐
           │                                                                             │
           │ Class                                                                       │
           │   a  Knock            no lock beside you                                    │
@@ -29,6 +29,6 @@ expression: "render(case, content.clone())"
           │ everyone on its line. Length 6.                                             │
           │                                                                             │
           │                                                                             │
-          │ a-o or Enter use   Esc close                                                │
+          │ a-o or Enter use   > < page   Esc close                                     │
           └─────────────────────────────────────────────────────────────────────────────┘
  The Hub  ·  HP 43/43  ·  MP 306/309  ·  Keen  ·  Lv 32  ·  08:00  ·  11 Darkening       ? controls

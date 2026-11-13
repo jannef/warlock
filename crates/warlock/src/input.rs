@@ -1328,7 +1328,7 @@ impl Gameplay<'_> {
             (true, ability::Aim::Cell | ability::Aim::Corpse) => {
                 self.aim(AimKind::Ability(ability));
             }
-            // Give's and Decipher's lists; the identify list asks which stack (`identify_by`,
+            // Give's, Salvage's, Decipher's, and Consume crystal's lists; the identify list asks which stack (`identify_by`,
             // before this).
             (true, ability::Aim::Item) => {
                 if ability == Ability::Give {
@@ -1339,6 +1339,9 @@ impl Gameplay<'_> {
                 }
                 if ability == Ability::Decipher {
                     return Some(ScreenAction::Open(ScreenName::Decipher));
+                }
+                if ability == Ability::Consume {
+                    return Some(ScreenAction::Open(ScreenName::ConsumeCrystal));
                 }
             }
             (true, ability::Aim::Nothing) => {

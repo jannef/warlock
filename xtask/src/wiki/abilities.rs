@@ -82,6 +82,11 @@ pub(super) fn abilities(content: &Content) -> String {
                 "everyone (anywhere, with nothing; see [Crafting](crafting.md#salvage))".into()
             }
             Ability::Drink => "everyone beside a healing spring (a drink takes ten seconds)".into(),
+            Ability::Consume => {
+                "everyone (usable with a magic crystal in the pack; see \
+                 [Crystals](crystals.md#consuming-a-crystal))"
+                    .into()
+            }
             Ability::Gather => {
                 "everyone trained in [Herbalism](skills.md#skill-herbalism) beside the [glowing fungus](herbs.md)".into()
             }

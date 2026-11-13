@@ -129,6 +129,7 @@ mod craft_make;
 mod creation;
 mod creature_burst;
 mod creature_cast;
+mod crystal;
 mod curse;
 mod cut;
 mod dark_face;
@@ -1612,6 +1613,7 @@ impl World {
             Action::Forage => return self.start_forage(),
             Action::Gather(dir) => return self.start_gather(*dir),
             Action::Craft { recipe, picks } => return self.start_craft(recipe, picks),
+            Action::Consume { item } => return self.consume_crystal(*item),
             Action::Decipher { item } => return self.start_decipher(*item),
             Action::Temper { item } => return self.start_temper(*item),
             Action::Whittle { item } => return self.start_whittle(*item),

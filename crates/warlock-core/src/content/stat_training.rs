@@ -138,6 +138,8 @@ pub enum StatUse {
     Cast,
     /// A prayer done at a forgotten altar.
     Prayed,
+    /// A magic crystal consumed (the Consume crystal ability).
+    Consumed,
     /// A check against a drain of the player's stats made.
     HeldOut,
     /// Recovering one's wits after a surprise: Surprised ending with the player's next action.
@@ -259,6 +261,7 @@ impl StatUse {
             StatUse::HungryFight => "a blow of yours that lands while you are Hungry or worse",
             StatUse::Cast => "spending mana on an ability",
             StatUse::Prayed => "praying at a forgotten altar",
+            StatUse::Consumed => "consuming a magic crystal",
             StatUse::HeldOut => "holding out against something that drains your stats",
             StatUse::Steadied => "recovering your wits after a surprise",
             StatUse::Chat => "chatting with someone",

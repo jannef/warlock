@@ -215,6 +215,8 @@ above.
 | Foraging | `skill-uses.md#foraging` |
 | Crafting, a craft skill, craft points, who works which material, a material's work | `crafting.md`, `crafting.md#who-works-what` |
 | Salvage, taking an item apart, a gem chipped or shattered | `crafting.md#salvage` |
+| Magic crystal, a crystal's colour, consuming a crystal | `crystals.md`, a colour `crystals.md#crystal-ID` (`crystals.md#crystal-red`), `crystals.md#consuming-a-crystal` |
+| Heart-crystal, soul-fetter (rare materials) | `crystals.md#rare-materials` |
 | Cut, gem cutting, a re-cut, a gem's cut grade | `gem-cutting.md`, `gem-cutting.md#how-well-it-comes-out` |
 | Set, setting a gem in an item, a gem chipped in the setting | `gem-cutting.md#setting-a-gem` |
 | Jewellery, making rings and amulets, a bone amulet | `crafting.md#making-jewellery` |
