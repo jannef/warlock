@@ -2199,6 +2199,11 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              craft works (cloth, glass)",
             warlock_core::time::Duration::seconds(u64::from(seconds)).spoken()
         ),
+        TalentEffect::Rigs => "active (a rig from the rig list, then a direction): a trap is \
+            rigged on the cell beside you, from arrows, a billet of wood, or a pit dug with the \
+            digging tool you have ready; what it kills is your kill. See \
+            [Rigging traps](traps.md#rigging-traps)"
+            .to_string(),
         TalentEffect::SpiritWeapon {
             to_hit,
             threat,

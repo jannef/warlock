@@ -50,6 +50,7 @@ use super::new_run_screen::{self, NewRunScreen};
 use super::object_screen::{IdentifyBy, ObjectList, ObjectScreen};
 use super::profession_screen::ProfessionScreen;
 use super::quest_screen::QuestScreen;
+use super::rig_screen::RigScreen;
 use super::scribe_screen::ScribeScreen;
 use super::settings_screen::SettingsScreen;
 use super::shape_screen::ShapeScreen;
@@ -186,6 +187,9 @@ pub enum ScreenName {
     /// Choose a spell to write a scroll of (the wizard's Scribe, from the abilities menu): the
     /// spells known, grouped by school, each with its price and time.
     Scribe,
+    /// Choose a trap to rig (the craftsperson's Trapwright, from the abilities menu): each rig
+    /// with what it takes, greyed with what is lacking; a direction is asked next.
+    Rig,
     /// A profession's recipes (its row in the abilities menu, "Metalcraft…"): grouped by what
     /// they make, each with what it takes, greyed with its reason when it cannot be made now.
     #[value(skip)]
@@ -258,6 +262,7 @@ impl ScreenName {
                 | ScreenName::Abilities
                 | ScreenName::Shape
                 | ScreenName::Scribe
+                | ScreenName::Rig
                 | ScreenName::Profession(_)
                 | ScreenName::FirstProfession
                 | ScreenName::CraftPick(_)
@@ -395,6 +400,7 @@ enum Screen {
     Shape(ShapeScreen),
     /// Choosing the spell of a scroll to write.
     Scribe(ScribeScreen),
+    Rig(RigScreen),
     /// A profession's recipes.
     Profession(ProfessionScreen),
     /// The forging wizard: a generic recipe's choices.
@@ -509,6 +515,7 @@ impl Screen {
             ScreenName::Abilities => Screen::Abilities(AbilitiesScreen::new(run, beneath.ability)),
             ScreenName::Shape => Screen::Shape(ShapeScreen::new(run)),
             ScreenName::Scribe => Screen::Scribe(ScribeScreen::new(run)),
+            ScreenName::Rig => Screen::Rig(RigScreen::new(run)),
             ScreenName::Profession(skill) => {
                 Screen::Profession(ProfessionScreen::new(run, Some(skill)))
             }
@@ -573,6 +580,7 @@ impl Screen {
             Screen::Abilities(_) => ScreenName::Abilities,
             Screen::Shape(_) => ScreenName::Shape,
             Screen::Scribe(_) => ScreenName::Scribe,
+            Screen::Rig(_) => ScreenName::Rig,
             Screen::Profession(screen) => match screen.skill() {
                 Some(skill) => ScreenName::Profession(skill),
                 None => ScreenName::FirstProfession,
@@ -764,6 +772,19 @@ impl ScreenStack {
         }
     }
 
+    /// Whether the top screen asks to read the run again after a press (the forging wizard's
+    /// later steps follow its picks: [`CraftPickScreen::reread`]).
+    pub fn is_stale(&self) -> bool {
+        matches!(self.screens.last(), Some(Screen::CraftPick(s)) if s.is_stale())
+    }
+
+    /// Reads the run again into the top screen when it asks ([`Self::is_stale`]).
+    pub fn reread(&mut self, view: &PerceptionView<'_>) {
+        if let Some(Screen::CraftPick(screen)) = self.screens.last_mut() {
+            screen.reread(view);
+        }
+    }
+
     /// Applies one key press to the top screen; settings and bindings change in place. A held
     /// key's repeats may move the selection or change a value, but never open, close, or choose.
     pub fn handle(
@@ -873,6 +894,12 @@ impl ScreenStack {
                 }
                 screen.handle(press, bindings)
             }
+            Some(Screen::Rig(screen)) => {
+                if let Some((cols, rows)) = self.console {
+                    screen.fit(cols, rows);
+                }
+                screen.handle(press, bindings)
+            }
             Some(Screen::Profession(screen)) => {
                 if let Some((cols, rows)) = self.console {
                     screen.fit(cols, rows);
@@ -952,6 +979,7 @@ impl ScreenStack {
             Some(Screen::Abilities(screen)) => screen.draw(console, bindings),
             Some(Screen::Shape(screen)) => screen.draw(console, bindings),
             Some(Screen::Scribe(screen)) => screen.draw(console, bindings),
+            Some(Screen::Rig(screen)) => screen.draw(console, bindings),
             Some(Screen::Profession(screen)) => screen.draw(console, bindings),
             Some(Screen::CraftPick(screen)) => screen.draw(console, bindings),
             Some(Screen::Dialogue(screen)) => screen.draw(console, bindings),

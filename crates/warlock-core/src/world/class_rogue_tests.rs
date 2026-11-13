@@ -115,6 +115,7 @@ fn beside(world: &mut World, creature: &str, hp: i32, dir: Dir) -> ActorId {
         summoner: None,
         ally: None,
         risen: None,
+        mark: None,
         alignment_override: None,
         inventory: Vec::new(),
         equipment: Default::default(),
@@ -409,10 +410,10 @@ fn sneak_attacks_add_up_and_master_thief_threatens_sooner() {
         kind: None,
     };
     let rng = w.state.rng.clone();
-    assert_eq!(w.ambushed(player, false, hit), hit);
+    assert_eq!(w.ambushed((player, player), false, hit), hit);
     assert_eq!(w.state.rng, rng);
     let n = skill(&w) + 2;
-    let damage = w.ambushed(player, true, hit).damage;
+    let damage = w.ambushed((player, player), true, hit).damage;
     assert!((2 + n..=2 + 6 * n).contains(&damage), "{damage} for {n}d6");
 }
 

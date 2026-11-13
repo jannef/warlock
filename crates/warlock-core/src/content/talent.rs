@@ -277,7 +277,7 @@ pub enum TalentEffect {
     /// rules' `missile_reach` (Long reach; `World::sneaks`).
     SneakReach { value: i32 },
     /// A sneak attack of its that kills leaves it a degree of `status` (Vanishing act:
-    /// Light-footed; read where `Build::SneakKill` is raised, `world/thief.rs`).
+    /// Light-footed; read in `World::resolve` where a sneak attack's blow kills, `world/thief.rs`).
     SneakKillStatus { status: String },
     /// The perception snapshot tells which creatures in view have not noticed it, and they are
     /// drawn with the unaware mark (Stalker's eye; `SeenActor::unaware`).
@@ -1183,6 +1183,9 @@ pub enum TalentEffect {
     /// with no anvil, in `seconds`, by a check against `difficulty` plus its main material's
     /// `work` that destroys nothing (`world/make_do.rs`; the craftsperson design §7.5).
     MakeDo { seconds: u32, difficulty: i32 },
+    /// The class active Trapwright: a trap rigged on a cell beside the player from what the rig
+    /// list (`data/rigs.toml`) asks (`world/rig.rs`; spec §8 "Traps": "Rigging traps").
+    Rigs,
     /// The class active Spirit weapon: a melee weapon of spirit-stuff called into the hand in a
     /// shape chosen (`world/spirit_weapon.rs`; spec §8 "Prestige classes"), which strikes
     /// `to_hit` surer, threatens `threat` lower, and ignores all Protection if
@@ -1330,6 +1333,7 @@ impl TalentEffect {
             TalentEffect::MerchantsEye => A::MerchantsEye,
             TalentEffect::FieldForge { .. } => A::FieldForge,
             TalentEffect::MakeDo { .. } => A::MakeDo,
+            TalentEffect::Rigs => A::Rig,
             TalentEffect::SpiritWeapon { .. } => A::SpiritWeapon,
             _ => return None,
         })

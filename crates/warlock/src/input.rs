@@ -32,7 +32,9 @@ use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use warlock_core::ability::{self, Ability};
 use warlock_core::beside::{Beside, Way};
-use warlock_core::content::{ClassActive, LevelKind, Offer, RecipeUse, TerrainId, VisionProfile};
+use warlock_core::content::{
+    ClassActive, LevelKind, Offer, RecipeUse, RigId, TerrainId, VisionProfile,
+};
 use warlock_core::hunger::Hunger;
 use warlock_core::perception::{CellView, PerceptionView};
 use warlock_core::time::Duration;
@@ -635,6 +637,8 @@ pub enum InputMode {
     /// Waiting for the way to the kept beast this stack goes on: Give, with more than one beside
     /// the player (the owner, #907 Q4; [`PerceptionView::kept_beside`]).
     GiveWay(usize),
+    /// Waiting for the way to rig this trap on: Trapwright, after the rig list (#1423).
+    RigWay(RigId),
     /// Asking how long to rest ([`REST_CHOICES`]).
     Rest,
     /// Look mode: a cursor at this level position.
@@ -777,6 +781,10 @@ pub fn route_keys(
                 &mut new_settings,
                 &mut new_bindings,
             );
+            // A pick in the forging wizard narrows its later steps: read before the next press.
+            if let Some(game) = play.game.as_ref().filter(|_| screens.stack.is_stale()) {
+                screens.stack.reread(&game.world.perception());
+            }
             if new_settings != *settings {
                 *settings = new_settings;
             }
@@ -978,6 +986,17 @@ impl Gameplay<'_> {
                 InputMode::Normal
             }
             (InputMode::GiveWay(_), _) => InputMode::Normal,
+            (InputMode::RigWay(rig), KeyCommand::Move(dir)) => {
+                let content = game.world.content();
+                if let Some(rules) = content.rigs() {
+                    self.actions.write(PlayerAction(Action::Rig {
+                        rig: rules.rig(rig).id.clone(),
+                        dir: Some(dir),
+                    }));
+                }
+                InputMode::Normal
+            }
+            (InputMode::RigWay(_), _) => InputMode::Normal,
             (InputMode::Direction(cmd), KeyCommand::Move(dir)) => {
                 let action = match cmd {
                     KeyCommand::Open => Action::Open(dir),
@@ -1293,6 +1312,13 @@ impl Gameplay<'_> {
             *self.mode = InputMode::GiveWay(*item);
             return None;
         }
+        // The rig is chosen (Trapwright's list): the way is asked next.
+        if let (Action::Rig { rig, dir: None }, Some(game)) = (&action, &self.game)
+            && let Some(rig) = game.world.content().rigs().and_then(|r| r.id(rig))
+        {
+            *self.mode = InputMode::RigWay(rig);
+            return None;
+        }
         self.actions.write(PlayerAction(action));
         None
     }
@@ -1353,6 +1379,8 @@ impl Gameplay<'_> {
             }
             // The shape list asks which weapon (the Hunter's Spirit weapon).
             (true, ability::Aim::Shape) => return Some(ScreenAction::Open(ScreenName::Shape)),
+            // The rig list asks which trap, then the way (the craftsperson's Trapwright).
+            (true, ability::Aim::Rig) => return Some(ScreenAction::Open(ScreenName::Rig)),
             // The scribe list asks which spell (the wizard's Scribe).
             (true, ability::Aim::Spell) => return Some(ScreenAction::Open(ScreenName::Scribe)),
             // A profession's row opens its recipes.
@@ -1543,6 +1571,7 @@ fn command_in(
         | InputMode::Direction(_)
         | InputMode::Ability(_)
         | InputMode::GiveWay(_)
+        | InputMode::RigWay(_)
         | InputMode::Look(_) => None,
     };
     (own.and_then(|context| bindings.lookup_in(context, key, mods)))

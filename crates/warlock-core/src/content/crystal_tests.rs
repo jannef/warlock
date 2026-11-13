@@ -162,6 +162,10 @@ fn the_loader_refuses_a_category_in_no_colour_an_unknown_tag_and_a_loose_object(
     assert!(twice.contains("twice"), "{twice}");
     let chance = refused("salvage_chance = 3", "salvage_chance = 101");
     assert!(chance.contains("0 to 100"), "{chance}");
+    let heart = refused("heart = \"heart_crystal\"", "heart = \"soul_fetter\"");
+    assert!(heart.contains("two of the `materials`"), "{heart}");
+    let fetter = refused("fetter = \"soul_fetter\"", "fetter = \"crystal_red\"");
+    assert!(fetter.contains("two of the `materials`"), "{fetter}");
     let marks = refused("marks = 12", "marks = 0");
     assert!(marks.contains("`marks` must be at least 1"), "{marks}");
 }

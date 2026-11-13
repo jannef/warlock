@@ -855,7 +855,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     shows its maximum, how it changes over time (it **regenerates** toward its maximum or
     **decays** toward 0, a point every so many seconds, while resting too or not), whether it
     **ends at zero**, what the player is told then, what **builds** it (`kill`, `hit`,
-    `critical`, `struck`, `sneak_attack`, `sneak_kill`, each by an amount), and the **status** it brings, if
+    `critical`, `struck`, `sneak_attack`, `feint`, `mark_kill`, each by an amount), whether its points are
+    in one creature's guard (**marked**: Openings), and the **status** it brings, if
     any (Rage: Raging), which lasts exactly as long as the resource is held. Ids are in the
     content fingerprint.
   - **State**: `Actor::resources`, the pools it holds in resource order, each its value and its
@@ -866,7 +867,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     or what it holds if that is more), `World::gain_resource(actor, event)` (called where the
     event happens: a kill credited to the holder in `dies`, a blow of theirs that hits and one
     that is a critical, and their being hit, in `resolve`; a sneak attack that hits in
-    `ambushed`, and one whose blow kills (`sneak_kill`, after the hit's) in `resolve`; each builds every resource held that builds on it, up to its maximum; one not
+    `ambushed` (a marked pool only on its holder's mark), and the holder's kill of its own mark
+    (`mark_kill`, in `dies` beside `kill`), and a feint the foe falls for (`feint`, in `feint`); each builds every resource held that builds on it, up to its maximum; one not
     held is not built), `World::spend_resource` (refused, nothing spent, when not held or short;
     a cost of 0 asks only that it is held), `World::end_resource` (the holder loses it and its
     bar; the player is told its `ended`, if it has one), and time. Talents add to them: a
@@ -921,9 +923,29 @@ developer notes (CLAUDE.md, `docs/dev/`).
     too; with less it is an ordinary shot, `World::rapid_shot`); Sic 'em (level 40) costs 5 and
     Volley (level 50) 6, neither with a cooldown.
   - **Openings** (the thief's; R3, #251, `world/openings.rs`): Sneak attack (level 1; #682)
-    grants them at 0 (`grants_resource`); each sneak attack that hits builds one (to 5), one
+    grants them at 0 (`grants_resource`); each sneak attack that hits builds one (to 5), and so
+    does each feint the foe falls for (`feint`, #1462; `world/feint.rs`), one
     slips away every 120 s (20 base turns), and at 0 they stay, held. Master thief (level 60)
     spends 5 on its finisher (§8 "Class abilities").
+    - **The mark** (#1461; `world/mark.rs`, `docs/dev/openings.md`; the openings design
+      `docs/design/thief-openings.md` §3): the openings are in one creature's guard,
+      `Actor::mark` (saved, hashed, left out while none). Every attack the thief **chooses** at a
+      creature (a blow by moving or attacking, a kick, a bash, a class or weapon active's blow, a
+      shot or a throw at its cell, a single-target spell that rolls to hit, a feint, made or
+      not, after its refusals and before its check) sets it when none
+      stands, keeps it on the mark, and on another creature still in the game **empties the
+      pool** first ("Your openings on the kobold are lost.", said only when it held anything)
+      and makes that one the mark; this runs before the attack, so its sneak attack builds on
+      the new mark. A free blow (riposte, opportunist, a lurk's, hair trigger, a cleave, a free
+      shot) sets a mark when none stands and never moves one; its sneak attack on another than
+      the mark builds nothing. Area effects touch nothing. The mark's **death**, by any hand,
+      clears it and the pool stays, carried to the next target; the thief's own kill (credited,
+      a bleed included) builds one more (`mark_kill`; Patient blade: two). A departure (a lapsed
+      summons), a level change, and time passing with the pool at 0 clear it, the pool kept; a
+      mark out of sight stays the mark. Low blow and the finisher at another than a standing mark
+      are refused, no time, nothing spent ("Your openings are in the kobold's guard."). The player
+      sees it: the character screen's `Openings 3/5, in the kobold's guard`, look mode's "your
+      mark"; "an unseen foe" while they do not see it.
   - **Ki** (the ascetic's; R4, #252; the ki tricks design, #846): Martial arts (level 1) grants
     it, full. Its maximum is 4, plus the Willpower modifier, plus a point per 6 character levels,
     at least 3 (`max_from = { stat = "willpower", per_levels = 6, least = 3 }`: 5 at level 1 with
@@ -990,7 +1012,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     decays at 67 % of its pace; **Inner calm** (Finesse; ascetic, level 18): ki holds 2 more (7) and
     comes back at 150 %; **Steady hand** (Weaponcraft; ranger, level 12): focus comes back at
     150 % (still not while resting); **Patient blade** (Shadow; thief, level 32): openings decay
-    at 50 %, and a sneak attack that kills builds one more (two in all); **Zealot** (Grit; who
+    at 50 %, and the thief's kill of their mark builds one more (two in all); **Zealot** (Grit; who
     holds Smite, level 6; #914): a blow that hits them builds a second zeal. Rage, Blood frenzy,
     Mighty rage, Unstoppable, Rapid shot, Volley, Improved sneak attack, and Master thief carry
     it too. **Saves change** (a new id group in the fingerprint).

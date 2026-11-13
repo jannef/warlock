@@ -104,9 +104,9 @@ The **Heritage** tree holds what your family gave you. Its talents are offered *
 The Talents page shows them with "to be a new character", which no later level meets. What they
 give comes at once, on top of your [starting kit](starting-kit.md).
 
-- **[Family wealth](talents.md#talent-family-wealth)** gives you three times the
+- **[Family wealth](talents.md#talent-family-wealth)** gives you nine times the
   [gold coins](shops.md#money) you start with more: your [class](classes.md)'s purse, and any a
-  start of the world adds. That is at least 60 and at most 150 more. It also gives two or three
+  start of the world adds. That is at least 180 and at most 450 more. It also gives two or three
   loose [gems](gems.md), as found at [item level](magic-items.md#finding-them) 2. Coins weigh 10 g
   each, so the weakest of the small peoples ([halflings](races.md#race-halfling),
   [gnomes](races.md#race-gnome), [goblins](races.md#race-goblin), [kobolds](races.md#race-kobold),

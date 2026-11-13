@@ -64,6 +64,10 @@ impl World {
         if dir.is_some_and(|d| active.strikes() && self.hostile_toward(d).is_none()) {
             return Spent::Nothing;
         }
+        // Openings spent on another than the creature they are in (`mark.rs`).
+        if self.off_mark(active, dir) {
+            return Spent::Nothing;
+        }
         if active.bare_handed() && self.state.player().weapon_item(&self.content).is_some() {
             self.say("Your hands are not free.");
             return Spent::Nothing;
@@ -125,6 +129,10 @@ impl World {
             (ClassActive::Volley | ClassActive::Sic | ClassActive::Charge, _) => Spent::Nothing,
             (ClassActive::MerchantsEye | ClassActive::MakeDo, _) => {
                 self.say("Use it on what?");
+                Spent::Nothing
+            }
+            (ClassActive::Rig, _) => {
+                self.say("Rig what, and where? Name a rig and a way: `rig:tripwire:E`.");
                 Spent::Nothing
             }
             (ClassActive::SpiritWeapon, _) => {

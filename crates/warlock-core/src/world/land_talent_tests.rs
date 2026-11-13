@@ -251,7 +251,7 @@ fn ambusher_hurts_a_creature_that_has_not_seen_you() {
     assert_eq!(
         {
             let unseen = w.sneaking(player, rat, false);
-            w.ambushed(player, unseen, hit)
+            w.ambushed((player, player), unseen, hit)
         },
         hit,
         "without the talent"
@@ -266,7 +266,7 @@ fn ambusher_hurts_a_creature_that_has_not_seen_you() {
     assert_eq!(
         {
             let unseen = w.sneaking(player, rat, false);
-            w.ambushed(player, unseen, missed)
+            w.ambushed((player, player), unseen, missed)
         },
         missed,
         "a miss"
@@ -274,7 +274,7 @@ fn ambusher_hurts_a_creature_that_has_not_seen_you() {
     assert_eq!(w.state.rng, rng, "nothing drawn for a miss");
     let ambushed = {
         let unseen = w.sneaking(player, rat, false);
-        w.ambushed(player, unseen, hit)
+        w.ambushed((player, player), unseen, hit)
     }
     .damage;
     assert!((3..=8).contains(&ambushed), "{ambushed}");
@@ -284,7 +284,7 @@ fn ambusher_hurts_a_creature_that_has_not_seen_you() {
     assert_eq!(
         {
             let unseen = w.sneaking(player, rat, false);
-            w.ambushed(player, unseen, hit)
+            w.ambushed((player, player), unseen, hit)
         },
         hit
     );
@@ -297,7 +297,7 @@ fn ambusher_hurts_a_creature_that_has_not_seen_you() {
     assert_eq!(
         {
             let unseen = lit.sneaking(player, rat, false);
-            lit.ambushed(player, unseen, hit)
+            lit.ambushed((player, player), unseen, hit)
         },
         hit
     );

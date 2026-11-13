@@ -3,29 +3,31 @@
 //! [`EnchantKind`] each), made by [`Action::Craft`] with the item's position, then a crystal's
 //! for each the recipe takes (`craft:kindle:ITEM,CRYSTAL`, `craft:quicken:ITEM,CRYSTAL`,
 //! `craft:recast:ITEM,CRYSTAL`, `craft:imbue:ITEM,C1,C2,C3`, `craft:ennoble:ITEM,CRYSTAL`,
-//! `craft:unbind:ITEM`), from the profession's screen through the wizard's steps ([`steps`],
-//! [`plan`]). One stack may give several of Imbue's crystals, one each.
+//! `craft:unbind:ITEM`), then up to three seals and Recast's affix kept (`world/seal.rs`:
+//! `craft:kindle:ITEM,CRYSTAL,SEAL`, `craft:recast:ITEM,CRYSTAL,-,-,-,AFFIX`), from the
+//! profession's screen through the wizard's steps ([`steps`], [`plan`]). One stack may give
+//! several of Imbue's crystals, one each.
 //!
 //! - **What**: an item carried, not worn or wielded: a base item (one with a kind; ammunition is
 //!   one, the whole stack worked at once), not a spirit weapon, its magic identified, not a
 //!   unique ([`refusal`]); a quest's object is refused at the start ("It will not take your
 //!   will."), unpaid goods as everywhere ([`World::may_loose`]). Then each kind's own: **Kindle**
-//!   a plain item; **Quicken** a magic (not rare: a rare's takes a heart-crystal, a later phase)
-//!   item with one affix and room for another (`magic::capacity`); **Recast** a magic (not
-//!   rare: Unbind, then Imbue) item; **Imbue** a plain item of capacity 3 or more ("It would not
+//!   a plain item; **Quicken** a magic item with one affix and room for another
+//!   (`magic::capacity`), or a rare with room, which takes a heart-crystal too; **Recast** a
+//!   magic (not rare: Unbind, then Imbue) item; **Imbue** a plain item of capacity 3 or more ("It would not
 //!   hold so much."); **Ennoble** a magic item of capacity 3 or more with room for one affix
 //!   more; **Unbind** a magic or rare item. No station, no tool: anywhere.
 //! - **The colour**: the crystal's colour (`data/crystals.toml`) narrows the roll to its
-//!   families ([`crate::magic::loot::roll_affix_within`]); with nothing left to roll there the
-//!   work is refused before it starts ("No more of that nature will take."). Imbue's first
+//!   families, less those the seals shut ([`crate::magic::loot::roll_affix_within`]); with
+//!   nothing left to roll there the work is refused before it starts ("No more of that nature will take."). Imbue's first
 //!   affix is of its first crystal's families, the second of the second's, the third of the
 //!   third's, any more of all three; each of its crystals must have something to roll.
 //! - **The item level of the roll**: the greater of the item's own and the enchanter's reach
 //!   (Enchanting's [`Effect::EnchantLevel`], 1 to 12); Kindle's and Imbue's are the reach,
 //!   Unbind's the item's own. The item takes the roll's level.
-//! - **Time**: the recipe's `seconds` (Quick hands' share of it, `mastery::craft_seconds`), in
-//!   turns of the `craft` action ([`World::keep_at`]): interrupted, nothing is spent, but the
-//!   time is. No grade, so Master's hand has nothing to ease.
+//! - **Time**: the recipe's `seconds` and each seal's `seal_seconds` (Quick hands' share of
+//!   them, `mastery::craft_seconds`), in turns of the `craft` action ([`World::keep_at`]):
+//!   interrupted, nothing is spent, but the time is. No grade, so Master's hand has nothing to ease.
 //! - **The check**: two gameplay draws (the natural roll), plus Willpower's modifier, its talents'
 //!   checks, and Enchanting's [`Effect::Craft`], against the recipe's `difficulty` + the roll's
 //!   item level ÷ `level_step` (`data/enchanting.toml`; [`enchant_band`]). Made (or a natural
@@ -46,15 +48,16 @@
 
 use super::ally::capital;
 use super::craft::RecipeLack;
-use super::craft_make::{CraftOption, CraftPlan, CraftStep, CraftStepKind};
+use super::craft_make::{CraftOption, CraftPlan, CraftStep, CraftStepKind, MAX_PICKS};
 use super::item_damage::Harmed;
 use super::rest::Ended;
-use super::{Actor, Spent, World};
+use super::seal;
+use super::{Actor, LevelState, Spent, World};
 use crate::action::Event;
 use crate::combat;
 use crate::content::{
-    ActionKind, AffixKind, Content, EnchantKind, ItemHarm, MAX_PER_KIND, MOST_CRYSTALS, ObjectDef,
-    Rarity, RecipeDef, RecipeId, RecipeUse,
+    ActionKind, AffixKind, Content, EnchantKind, ItemHarm, MAX_PER_KIND, ObjectDef, Rarity,
+    RecipeDef, RecipeId, RecipeUse,
 };
 use crate::magic::loot::{pick_weighted, rare_name, rare_split, roll_affix_within, rolls_within};
 use crate::magic::{Affix, Magic, capacity};
@@ -157,8 +160,14 @@ pub(super) fn refusal(
             EnchantKind::Quicken | EnchantKind::Recast | EnchantKind::Ennoble | EnchantKind::Unbind,
             None,
         ) => Some("There is no magic in it."),
-        (EnchantKind::Quicken | EnchantKind::Ennoble, Some(m)) if m.rarity == Rarity::Rare => {
-            Some("It is rare already: this work cannot add to it.")
+        // A rare's Quicken takes a heart-crystal too (`resolve`).
+        (EnchantKind::Quicken, Some(m)) if m.rarity == Rarity::Rare => {
+            let full =
+                m.affixes.len() >= usize::from(room) || with_room(content, &m.affixes).is_empty();
+            full.then_some(FULL)
+        }
+        (EnchantKind::Ennoble, Some(m)) if m.rarity == Rarity::Rare => {
+            Some("It is rare already: only a heart-crystal's Quicken adds to it.")
         }
         (EnchantKind::Recast, Some(m)) if m.rarity == Rarity::Rare => {
             Some("It is rare: unbind it, then imbue it anew.")
@@ -204,12 +213,14 @@ pub(super) fn lack(content: &Content, player: &Actor, recipe: &RecipeDef) -> Opt
     (crystals < u32::from(recipe.crystals)).then_some(RecipeLack::Crystal)
 }
 
-/// The wizard's steps of `recipe`: the item, then a crystal for each it takes.
+/// The wizard's steps of `recipe` as `picks` (in step order, so far) narrow them: the item, a
+/// crystal for each it takes, the seals, and Recast's affix kept (`seal::steps`).
 pub(super) fn steps(
     content: &Content,
     lore: Lore<'_>,
     player: &Actor,
     recipe: &RecipeDef,
+    picks: &[Option<usize>],
 ) -> Vec<CraftStep> {
     let Some(RecipeUse::Enchant(kind)) = recipe.uses else {
         return Vec::new();
@@ -252,25 +263,93 @@ pub(super) fn steps(
             options: crystals.clone(),
         });
     }
+    let item = (picks.first().copied().flatten())
+        .filter(|&at| refusal(content, player, at, kind).is_none())
+        .map(|at| {
+            let stack = &player.inventory[at];
+            let affixes: &[Affix] = stack.magic().map_or(&[], |m| &m.affixes);
+            seal::Item {
+                def: content.object(stack.object),
+                level: roll_level(content, player, kind, stack),
+                had: match kind {
+                    EnchantKind::Recast => Vec::new(),
+                    _ => affixes.to_vec(),
+                },
+                affixes,
+            }
+        });
+    steps.extend(seal::steps(
+        content,
+        player,
+        kind,
+        recipe.crystals,
+        picks,
+        item,
+    ));
     steps
+}
+
+/// The steps of `recipe` for `player` as `picks` narrow them: an Enchanting recipe's seals and
+/// affix kept follow its picks (`seal::steps`); any other's are [`craft_steps`]'s.
+///
+/// [`craft_steps`]: super::craft_steps
+pub(crate) fn craft_steps_given(
+    content: &Content,
+    lore: Lore<'_>,
+    level: &LevelState,
+    player: &Actor,
+    recipe: RecipeId,
+    picks: &[Option<usize>],
+) -> Vec<CraftStep> {
+    let def = content.recipe(recipe);
+    match def.uses {
+        Some(RecipeUse::Enchant(_)) => steps(content, lore, player, def, picks),
+        _ => super::craft_steps(content, lore, level, player, recipe),
+    }
+}
+
+/// The item level a work of `kind` on `stack` rolls at (the module docs).
+fn roll_level(content: &Content, player: &Actor, kind: EnchantKind, stack: &Stack) -> u8 {
+    let own = stack.magic().map_or(0, |m| m.level);
+    let reach = reach(content, player);
+    match kind {
+        EnchantKind::Kindle | EnchantKind::Imbue => reach,
+        EnchantKind::Quicken | EnchantKind::Recast | EnchantKind::Ennoble => own.max(reach),
+        EnchantKind::Unbind => own,
+    }
 }
 
 /// The picks checked: the item's position, the crystals' (none for Unbind, the same stack once
 /// for each it gives), the item level of the roll, the families each crystal allows (in pick
-/// order), and the kinds of affix the roll may draw: Kindle's and Ennoble's choice, Quicken's
-/// one, Recast's in the item's order; empty for Imbue (its split draws them) and Unbind.
+/// order, the seals' shut out), and the kinds of affix the roll may draw: Kindle's and Ennoble's
+/// choice, Quicken's (a rare's: those with room), Recast's in the item's order (less the one
+/// kept); empty for Imbue (its split draws them) and Unbind. Then the seals' categories, what
+/// else is spent (a crystal for each seal, the heart-crystal, the soul-fetter: positions), and
+/// Recast's affix kept (its index among the item's).
 struct Resolved {
     item: usize,
     crystals: Vec<usize>,
     level: u8,
     families: Vec<Vec<String>>,
     kinds: Vec<AffixKind>,
+    seals: Vec<String>,
+    spent: Vec<usize>,
+    heart: Option<usize>,
+    fetter: Option<usize>,
+    kept: Option<usize>,
 }
 
 impl Resolved {
     /// The families of the first crystal (the one-crystal works'), or every family (none).
     fn first(&self) -> Option<&[String]> {
         self.families.first().map(Vec::as_slice)
+    }
+
+    /// Every position spent, a stack once for each of it: the crystals, then the rest.
+    fn all_spent(&self) -> Vec<usize> {
+        let mut all = self.crystals.clone();
+        all.extend(&self.spent);
+        all
     }
 }
 
@@ -285,15 +364,16 @@ fn resolve(
     let Some(RecipeUse::Enchant(kind)) = recipe.uses else {
         return Err("You know no such recipe.".into());
     };
-    let want = 1 + usize::from(recipe.crystals);
+    let slots = seal::slots(kind, recipe.crystals);
     let item = match picks.first() {
         Some(Some(item)) => *item,
         _ => return Err("You must choose the item.".into()),
     };
-    if picks.len() > want {
+    if picks.len() > slots.len() {
         return Err("That is more than the work takes.".into());
     }
-    if picks.len() < want || picks[1..].contains(&None) {
+    let pick = |i: usize| picks.get(i).copied().flatten();
+    if slots.crystals.clone().any(|i| pick(i).is_none()) {
         return Err(match recipe.crystals {
             1 => "You must choose the crystal.",
             _ => "You must choose the crystals.",
@@ -304,7 +384,7 @@ fn resolve(
         return Err(text.into());
     }
     let stack = &player.inventory[item];
-    let crystals: Vec<usize> = picks[1..].iter().flatten().copied().collect();
+    let crystals: Vec<usize> = slots.crystals.clone().filter_map(pick).collect();
     let mut families = Vec::new();
     for (n, &at) in crystals.iter().enumerate() {
         let stone = player.inventory.get(at).ok_or("You carry no such thing.")?;
@@ -317,15 +397,39 @@ fn resolve(
         }
         families.push(colour.families.clone());
     }
-    let own = stack.magic().map_or(0, |m| m.level);
-    let reach = reach(content, player);
-    let level = match kind {
-        EnchantKind::Kindle | EnchantKind::Imbue => reach,
-        EnchantKind::Quicken | EnchantKind::Recast | EnchantKind::Ennoble => own.max(reach),
-        EnchantKind::Unbind => own,
-    };
+    let level = roll_level(content, player, kind, stack);
     let def = content.object(stack.object);
     let rolled: &[Affix] = stack.magic().map_or(&[], |m| &m.affixes);
+    let rare = stack.magic().is_some_and(|m| m.rarity == Rarity::Rare);
+    let rares = content.crystals().map(|c| (c.rare.heart, c.rare.fetter));
+    let heart = match (kind, rare) {
+        (EnchantKind::Quicken, true) => Some(
+            (rares.and_then(|(heart, _)| seal::carried(player, heart)))
+                .ok_or("A rare takes a heart-crystal beside the crystal, and you have none.")?,
+        ),
+        _ => None,
+    };
+    let kept = slots.affix.and_then(pick);
+    if kept.is_some_and(|k| k >= rolled.len()) {
+        return Err("There is no such magic in it.".into());
+    }
+    let fetter = match kept {
+        Some(_) => Some(
+            (rares.and_then(|(_, fetter)| seal::carried(player, fetter)))
+                .ok_or("You have no soul-fetter to keep it with.")?,
+        ),
+        None => None,
+    };
+    // What the item keeps through the work: Recast's kept affix alone, the rest all it has.
+    let had: Vec<Affix> = match kind {
+        EnchantKind::Recast => kept.map(|k| rolled[k].clone()).into_iter().collect(),
+        _ => rolled.to_vec(),
+    };
+    let seals: Vec<usize> = slots.seals.clone().filter_map(pick).collect();
+    let sealed = seal::check(content, player, (def, level), &had, &crystals, &seals)?;
+    for family in &mut families {
+        family.retain(|c| !sealed.categories.contains(c));
+    }
     let first = families.first().map(Vec::as_slice);
     let can = |k: AffixKind, rolled: &[Affix], families: Option<&[String]>| {
         rolls_within(content, def, level, k, rolled, families)
@@ -333,17 +437,27 @@ fn resolve(
     let both = [AffixKind::Prefix, AffixKind::Suffix];
     let kinds: Vec<AffixKind> = match kind {
         EnchantKind::Kindle => both.into_iter().filter(|&k| can(k, &[], first)).collect(),
+        EnchantKind::Quicken if rare => (with_room(content, rolled).into_iter())
+            .filter(|&k| can(k, rolled, first))
+            .collect(),
         EnchantKind::Quicken => (lacking(content, rolled).into_iter())
             .filter(|&k| can(k, rolled, first))
             .collect(),
         EnchantKind::Ennoble => (with_room(content, rolled).into_iter())
             .filter(|&k| can(k, rolled, first))
             .collect(),
-        // Each kind the item has, again: a magic item holds one affix of each kind, so no two
-        // of them can crowd each other's category out.
+        // Each kind the item has, again (less the one kept): a magic item holds one affix of
+        // each kind, so no two of them can crowd each other's category out.
         EnchantKind::Recast => {
-            let kinds = kinds_of(content, rolled);
-            if !kinds.iter().all(|&k| can(k, &[], first)) {
+            let others: Vec<Affix> = (rolled.iter().enumerate())
+                .filter(|&(i, _)| Some(i) != kept)
+                .map(|(_, a)| a.clone())
+                .collect();
+            let kinds = kinds_of(content, &others);
+            if kinds.is_empty() {
+                return Err("Nothing would be left to recast.".into());
+            }
+            if !kinds.iter().all(|&k| can(k, &had, first)) {
                 return Err(NOTHING.into());
             }
             kinds
@@ -361,13 +475,28 @@ fn resolve(
     if drawn && kinds.is_empty() {
         return Err(NOTHING.into());
     }
+    let mut spent = sealed.crystals;
+    spent.extend(heart);
+    spent.extend(fetter);
     Ok(Resolved {
         item,
         crystals,
         level,
         families,
         kinds,
+        seals: sealed.categories,
+        spent,
+        heart,
+        fetter,
+        kept,
     })
+}
+
+/// How long work of recipe `def` with `seals` takes before Quick hands: its own time and each
+/// seal's (`data/enchanting.toml` `seal_seconds`).
+fn work_seconds(content: &Content, def: &RecipeDef, seals: usize) -> u32 {
+    let each = content.enchanting().map_or(0, |r| r.seal_seconds);
+    def.seconds + each * seals as u32
 }
 
 /// The kinds of `rolled`'s affixes, in their order.
@@ -434,18 +563,67 @@ fn the(lore: Lore<'_>, stack: &Stack) -> String {
     }
 }
 
-/// The crystals at `crystals` in words, in pick order (the order matters to Imbue): "a red
-/// crystal", "a red crystal, a red crystal, and a blue crystal".
-fn crystal_words(lore: Lore<'_>, player: &Actor, crystals: &[usize]) -> String {
-    let words: Vec<String> = (crystals.iter())
-        .map(|&at| lore.describe(&player.inventory[at].single()))
-        .collect();
-    match words.as_slice() {
+/// `words` listed: "a", "a and b", "a, b, and c".
+fn listed(words: &[String]) -> String {
+    match words {
         [] => String::new(),
         [one] => one.clone(),
         [first, second] => format!("{first} and {second}"),
         [rest @ .., last] => format!("{}, and {last}", rest.join(", ")),
     }
+}
+
+/// What the work `resolved` uses, in words, in order (the order of the crystals matters to
+/// Imbue): "a red crystal", "a red crystal, a red crystal, and a blue crystal", then the seals'
+/// crystals, the heart-crystal, the soul-fetter with what it keeps, and what the seals shut out:
+/// "a red crystal and one more red crystal, sealing out fire".
+fn uses_words(content: &Content, lore: Lore<'_>, player: &Actor, resolved: &Resolved) -> String {
+    let pack = &player.inventory;
+    let mut words: Vec<String> = (resolved.crystals.iter())
+        .map(|&at| lore.describe(&pack[at].single()))
+        .collect();
+    let mut more: Vec<(usize, u32)> = Vec::new();
+    for &at in &resolved.spent {
+        if Some(at) == resolved.heart || Some(at) == resolved.fetter {
+            continue;
+        }
+        match more.iter_mut().find(|(a, _)| *a == at) {
+            Some(seen) => seen.1 += 1,
+            None => more.push((at, 1)),
+        }
+    }
+    for (at, n) in more {
+        words.push(match n {
+            1 => format!("one more {}", lore.title(&pack[at].single())),
+            n => format!(
+                "{} more {}",
+                number_word(n as usize),
+                lore.names(&pack[at]).1
+            ),
+        });
+    }
+    if let Some(at) = resolved.heart {
+        words.push(lore.describe(&pack[at].single()));
+    }
+    if let (Some(at), Some(k)) = (resolved.fetter, resolved.kept) {
+        let item = &pack[resolved.item];
+        let affix = (item.magic().and_then(|m| m.affixes.get(k)))
+            .and_then(|a| content.affixes().get(&a.id))
+            .map_or(String::new(), |d| d.name.clone());
+        words.push(format!(
+            "{} (keeping {affix})",
+            lore.describe(&pack[at].single())
+        ));
+    }
+    let mut text = listed(&words);
+    if !resolved.seals.is_empty() {
+        let shut = seal::words(content, &resolved.seals);
+        text = match text.is_empty() {
+            true => format!("sealing out {shut}"),
+            false => format!("{text}, sealing out {shut}"),
+        };
+    }
+    text
 }
 
 /// What working `recipe` with `picks` would do and use, in words (the dialog's), or why not.
@@ -457,17 +635,16 @@ pub(super) fn plan(
     picks: &[Option<usize>],
 ) -> Result<CraftPlan, String> {
     let resolved = resolve(content, player, recipe, picks)?;
+    let seconds = work_seconds(content, recipe, resolved.seals.len());
     Ok(CraftPlan {
         verb: recipe.verb.clone().unwrap_or_else(|| recipe.name.clone()),
         name: the(lore, &player.inventory[resolved.item]),
-        uses: crystal_words(lore, player, &resolved.crystals),
+        uses: uses_words(content, lore, player, &resolved),
         station: None,
         time: format!(
             "about {}",
             Duration::seconds(u64::from(super::mastery::craft_seconds(
-                content,
-                player,
-                recipe.seconds
+                content, player, seconds
             )))
             .spoken()
         ),
@@ -484,21 +661,18 @@ fn number_word(n: usize) -> String {
     }
 }
 
-/// An enchanting under way: the recipe, the item's and the crystals' positions (in pick order),
-/// how long.
+/// An enchanting under way: the recipe, the picks (in step order), how long.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct Enchanting {
     recipe: RecipeId,
-    item: usize,
-    crystals: [Option<usize>; MOST_CRYSTALS as usize],
+    picks: [Option<usize>; MAX_PICKS],
+    len: u8,
     seconds: u32,
 }
 
 impl Enchanting {
     fn picks(self) -> Vec<Option<usize>> {
-        let mut picks = vec![Some(self.item)];
-        picks.extend(self.crystals.iter().flatten().map(|&c| Some(c)));
-        picks
+        self.picks[..usize::from(self.len)].to_vec()
     }
 }
 
@@ -528,20 +702,19 @@ impl World {
             self.say("It will not take your will.");
             return Spent::Nothing;
         }
-        if !self.may_loose(item) || !resolved.crystals.iter().all(|&c| self.may_loose(c)) {
+        if !self.may_loose(item) || !resolved.all_spent().iter().all(|&c| self.may_loose(c)) {
             return Spent::Nothing;
         }
         let thing = the(self.lore(), &self.state.player().inventory[item]);
         self.say(format!("You take {thing} in your lap and begin."));
-        let mut crystals = [None; MOST_CRYSTALS as usize];
-        for (slot, &at) in crystals.iter_mut().zip(&resolved.crystals) {
-            *slot = Some(at);
-        }
+        let mut held = [None; MAX_PICKS];
+        held[..picks.len()].copy_from_slice(picks);
+        let seconds = work_seconds(&content, def, resolved.seals.len());
         Spent::Enchant(Enchanting {
             recipe: id,
-            item,
-            crystals,
-            seconds: self.craft_seconds(def.seconds),
+            picks: held,
+            len: picks.len() as u8,
+            seconds: self.craft_seconds(seconds),
         })
     }
 
@@ -600,13 +773,23 @@ impl World {
         let thing = the(self.lore(), &self.state.player().inventory[at]);
         let stone = (resolved.crystals.first())
             .map(|&c| self.lore().title(&self.state.player().inventory[c]));
-        let dark = match resolved.crystals.len() {
+        let dark = match resolved.crystals.len() + resolved.seals.len() {
             1 => "The crystal goes dark in your hands.",
             _ => "The crystals go dark in your hands.",
         };
-        let mut crystals = resolved.crystals.clone();
+        let mut crystals = resolved.all_spent();
+        // What the fetter keeps, by name, before the work changes the item.
+        let kept = (resolved.kept)
+            .and_then(|k| self.state.player().inventory[at].magic()?.affixes.get(k))
+            .and_then(|a| content.affixes().get(&a.id))
+            .map(|d| d.name.clone());
         match band {
             EnchantBand::Made => {
+                if let Some(kept) = &kept {
+                    self.say(format!(
+                        "The soul-fetter holds one enchantment fast: {kept}."
+                    ));
+                }
                 let stack = self.state.player().inventory[at].clone();
                 let made = self.worked(&content, kind, stack, resolved);
                 let name = self.lore().describe(&made);
@@ -625,6 +808,10 @@ impl World {
                         "{} takes the {stone}'s glow and wakes as {title}.",
                         capital(&thing)
                     ),
+                    (EnchantKind::Quicken, Some(stone)) if resolved.heart.is_some() => format!(
+                        "{} takes the {stone}'s glow and the heart-crystal's, and holds more.",
+                        capital(&thing)
+                    ),
                     (_, Some(stone)) => format!(
                         "{} takes the {stone}'s glow. It is now {name}.",
                         capital(&thing)
@@ -636,11 +823,15 @@ impl World {
                 EnchantKind::Unbind => {
                     self.say(format!("{} clings to its magic.", capital(&thing)))
                 }
-                _ => self.say(dark),
+                _ => {
+                    self.say(dark);
+                    self.rare_lost(resolved);
+                }
             },
             EnchantBand::Warped => {
                 if stone.is_some() {
                     self.say(dark);
+                    self.rare_lost(resolved);
                 }
                 match self.harm_item(at, ItemHarm::Enchant) {
                     Harmed::Withstood => {}
@@ -659,6 +850,16 @@ impl World {
             }
         }
         self.spend_crystals(&crystals);
+    }
+
+    /// The heart-crystal or the soul-fetter of a work that did not take, said gone.
+    fn rare_lost(&mut self, resolved: &Resolved) {
+        if resolved.heart.is_some() {
+            self.say("The heart-crystal goes dark with it.");
+        }
+        if resolved.fetter.is_some() {
+            self.say("The soul-fetter crumbles to nothing.");
+        }
     }
 
     /// One crystal from the stack at each of `crystals` (a stack named twice gives two); a stack
@@ -724,10 +925,12 @@ impl World {
                 let Some(mut magic) = stack.magic().cloned() else {
                     return stack;
                 };
-                let drawn = match (kind, resolved.kinds.as_slice()) {
+                // Ennoble and a rare's Quicken draw evenly among the kinds with room.
+                let evenly = kind == EnchantKind::Ennoble || magic.rarity == Rarity::Rare;
+                let drawn = match (evenly, resolved.kinds.as_slice()) {
                     (_, []) => return stack,
-                    (EnchantKind::Ennoble, kinds) => kinds[rng.index(kinds.len())],
-                    (_, kinds) => kinds[0],
+                    (true, kinds) => kinds[rng.index(kinds.len())],
+                    (false, kinds) => kinds[0],
                 };
                 let rolled = &magic.affixes;
                 let Some(affix) =
@@ -748,15 +951,20 @@ impl World {
                 let Some(mut magic) = stack.magic().cloned() else {
                     return stack;
                 };
-                let mut rolled: Vec<Affix> = Vec::new();
+                // The kept affix stays; the rest roll anew, each placed by its kind.
+                let kept: Vec<Affix> = (resolved.kept)
+                    .and_then(|k| magic.affixes.get(k).cloned())
+                    .into_iter()
+                    .collect();
+                let mut rolled = kept.clone();
                 for &k in &resolved.kinds {
                     if let Some(affix) =
                         roll_affix_within(content, rng, def, level, k, &rolled, families)
                     {
-                        rolled.push(affix);
+                        place(content, &mut rolled, affix, k);
                     }
                 }
-                if rolled.is_empty() {
+                if rolled.len() == kept.len() {
                     return stack;
                 }
                 magic.affixes = rolled;

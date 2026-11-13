@@ -81,6 +81,7 @@ impl World {
             Action::Temper { .. } => ActionKind::Temper,
             Action::Whittle { .. } => ActionKind::Whittle,
             Action::Salvage { .. } => ActionKind::Salvage,
+            Action::Rig { .. } => ActionKind::Craft,
             Action::Give { .. } => ActionKind::Wear,
             Action::Disarm(_) => ActionKind::Disarm,
             Action::Listen(_) => ActionKind::Wait,

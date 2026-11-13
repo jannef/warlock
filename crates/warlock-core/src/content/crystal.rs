@@ -50,6 +50,10 @@ pub struct RareMaterials {
     pub chance: u8,
     /// The one a dragon always gives.
     pub dragon: ObjectId,
+    /// The one Quicken takes beside its crystal to add to a rare (a heart-crystal).
+    pub heart: ObjectId,
+    /// The one Recast takes to keep an affix (a soul-fetter).
+    pub fetter: ObjectId,
     /// Salvaging a rare of this item level or more, identified or not, may give one.
     pub salvage_level: u8,
     /// The percent chance it does.
@@ -228,6 +232,12 @@ impl Crystals {
             return Err(err("[rare] a rare material is no crystal".into()));
         }
         let dragon = object(&r.dragon)?;
+        let (heart, fetter) = (object(&r.heart)?, object(&r.fetter)?);
+        if !materials.contains(&heart) || !materials.contains(&fetter) || heart == fetter {
+            return Err(err(
+                "[rare] `heart` and `fetter` are two of the `materials`".into(),
+            ));
+        }
         if spec.consume.mana < 1 {
             return Err(err("[consume] `mana` must be at least 1".into()));
         }
@@ -243,6 +253,8 @@ impl Crystals {
                 level: r.level,
                 chance: r.chance,
                 dragon,
+                heart,
+                fetter,
                 salvage_level: r.salvage_level,
                 salvage_chance: r.salvage_chance,
             },
@@ -295,6 +307,8 @@ struct RareSpec {
     level: u8,
     chance: u8,
     dragon: String,
+    heart: String,
+    fetter: String,
     salvage_level: u8,
     salvage_chance: u8,
 }

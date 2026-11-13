@@ -5,7 +5,7 @@
 use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
-use crate::character::CharacterSpec;
+use crate::character::{CharacterSpec, RememberedFamiliar};
 use crate::content::{ClassActive, Content, ContentFiles};
 use crate::perception::Perception;
 use crate::time::Duration;
@@ -138,6 +138,13 @@ fn lose_familiar(w: &mut World) {
     *w.perception = Perception::compute(&w.state, &w.content, &mut w.lights);
 }
 
+/// She never had one: the familiar is gone and forgotten, as for a witch who gained the talent
+/// with none yet.
+fn forget_familiar(w: &mut World) {
+    lose_familiar(w);
+    w.state.character.as_mut().expect("a character").familiar = None;
+}
+
 fn reason(w: &World) -> Option<Unavailable> {
     let view = w.perception();
     let row = (view.abilities().into_iter()).find(|a| a.ability == CALL);
@@ -218,7 +225,7 @@ fn without_the_data_nothing_comes() {
 fn an_hour_brings_a_new_familiar_named_at_her_grade_at_her_feet() {
     let mut w = witch("fcall_room", 3);
     run(&mut w, "xp:1000 levelup:auto");
-    lose_familiar(&mut w);
+    forget_familiar(&mut w);
     let (time, mana) = (w.state.time, w.state.player().mana);
     run(&mut w, "use:call_familiar");
     assert_eq!(w.state.time.since(time), Duration::seconds(3600));
@@ -246,6 +253,15 @@ fn an_hour_brings_a_new_familiar_named_at_her_grade_at_her_feet() {
     assert!(
         messages[n - 1].starts_with(&format!("{}, your {kind}, ", data.name)),
         "{messages:?}"
+    );
+    // She remembers it from now on.
+    let remembered = w.state.character.as_ref().and_then(|c| c.familiar.clone());
+    assert_eq!(
+        remembered,
+        Some(RememberedFamiliar {
+            creature: actor.creature,
+            name: data.name.clone(),
+        })
     );
     // The perception knows it at once.
     assert!(w.perception().actors().iter().any(|a| a.id == id));
@@ -276,6 +292,43 @@ fn a_familiar_that_dies_may_be_called_again() {
     let new = w.familiar().unwrap_or_else(|| panic!("{:?}", said(&w)));
     assert_ne!(new, id);
     assert_eq!(w.state.actors[&new].pos.chebyshev(w.player_pos()), 1);
+}
+
+#[test]
+fn the_familiar_she_lost_comes_back_the_same_at_her_grade_now() {
+    let mut w = witch("fcall_room", 3);
+    let id = w.familiar().expect("a familiar");
+    let (kind, name, grade) = {
+        let actor = &w.state.actors[&id];
+        let data = actor.familiar().expect("familiar data");
+        (actor.creature, data.name.clone(), data.grade)
+    };
+    run(&mut w, "xp:20000 levelup:auto");
+    lose_familiar(&mut w);
+    let rng = w.state.rng.clone();
+    run(&mut w, "use:call_familiar");
+    let new = w.familiar().unwrap_or_else(|| panic!("{:?}", said(&w)));
+    assert_ne!(new, id);
+    let actor = &w.state.actors[&new];
+    let data = actor.familiar().expect("familiar data");
+    assert_eq!(actor.creature, kind, "the same kind");
+    assert_eq!(data.name, name, "the same name");
+    assert!(data.grade > grade, "at the grade her level gives now");
+    assert_eq!(i32::from(data.grade), i32::from(w.player_level()));
+    assert_eq!(actor.hp, actor.max_hp(w.content()));
+    assert_eq!(actor.pos.chebyshev(w.player_pos()), 1, "at her feet");
+    assert_eq!(w.state.rng, rng, "no draw on the gameplay stream");
+    let kind = &w.content().creature(kind).name;
+    let messages = said(&w);
+    assert_eq!(
+        last(&w),
+        format!("{name}, your {kind}, comes back to you out of the dark.")
+    );
+    assert!(
+        !(messages.iter()).any(|m| m.starts_with("Something comes out of the dark")),
+        "{messages:?}"
+    );
+    assert!(w.perception().actors().iter().any(|a| a.id == new));
 }
 
 #[test]
@@ -367,7 +420,7 @@ fn an_imp_is_her_familiar_as_any_beast_is() {
     lose_familiar(&mut w);
     let imp = w.content().creature_id("imp").expect("imp");
     let at = w.familiar_cell().expect("a free cell");
-    w.make_familiar(imp, at);
+    w.make_familiar(imp, at, None);
     let id = w.familiar().expect("the imp");
     let data = w.state.actors[&id].familiar().expect("familiar data");
     assert_eq!(
@@ -400,4 +453,36 @@ fn a_calling_replays_the_same_and_survives_a_save() {
     let loaded = crate::save::decode(&crate::save::encode(&a), CONTENT.clone()).expect("loads");
     assert_eq!(loaded.state_hash(), a.state_hash());
     assert_eq!(loaded.familiar(), a.familiar());
+}
+
+#[test]
+fn the_save_keeps_the_familiar_she_remembers_after_it_died() {
+    let mut w = witch("fcall_room", 9);
+    let remembered = w.state.character.as_ref().and_then(|c| c.familiar.clone());
+    assert!(remembered.is_some(), "the start's familiar is remembered");
+    lose_familiar(&mut w);
+    let mut loaded = crate::save::decode(&crate::save::encode(&w), CONTENT.clone()).expect("loads");
+    assert_eq!(loaded.state_hash(), w.state_hash());
+    let kept = loaded
+        .state
+        .character
+        .as_ref()
+        .and_then(|c| c.familiar.clone());
+    assert_eq!(kept, remembered);
+    let lost = remembered.as_ref().expect("remembered");
+    let kind = &loaded.content().creature(lost.creature).name;
+    let dump = crate::dump::ascii(&loaded, &[crate::dump::Layer::Familiar]);
+    assert!(
+        dump.contains(&format!(
+            "no familiar; {}, a {kind}, answers a calling",
+            lost.name
+        )),
+        "{dump}"
+    );
+    run(&mut loaded, "use:call_familiar");
+    let id = loaded.familiar().expect("it came back");
+    let data = loaded.state.actors[&id].familiar().expect("familiar data");
+    let remembered = remembered.expect("remembered");
+    assert_eq!(data.name, remembered.name);
+    assert_eq!(loaded.state.actors[&id].creature, remembered.creature);
 }

@@ -12,8 +12,10 @@
 //!   blow's `resolve`); the foe is not surprised and keeps its Defence. Refused, no time,
 //!   without a hostile there.
 //! - **Vanishing act** (a class passive, `sneak_kill_status`): a sneak attack of theirs that
-//!   kills leaves them a degree of its status (Light-footed), read where `Build::SneakKill` is
-//!   raised in `fight.rs::resolve`.
+//!   kills leaves them a degree of its status (Light-footed), read in `fight.rs::resolve` where
+//!   a sneak attack's blow kills.
+//! - The mark (`mark.rs`): Low blow and the finisher at another than the creature the openings
+//!   are in are refused (`World::off_mark`, in `use_class`).
 //!
 //! Nothing here draws: the blows draw as any blow does.
 

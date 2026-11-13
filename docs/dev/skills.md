@@ -85,7 +85,10 @@ or seen. Marked by `Use::Feint` at 50 %, on the training stream, whatever came o
 would end with the foe's next action, which falls between the feint and the blow, so `World::feint`
 puts it on `World::fresh` (`weapon_ability.rs::spend_actions`): the foe's first action in the
 feint's turn does not ease it. `fresh` is emptied as a turn ends, so it is never saved across
-one. The foe's second action ends it; both cost it dear. The ability's id is `feint`, as the
+one. The foe's second action ends it; both cost it dear. A feint is a chosen attack
+(`docs/dev/openings.md`; #1462): `World::choose_mark(foe)` after the refusals and before the
+check (a feint at a new foe empties the pool, and a failed one still moves the mark); made, it
+builds `Build::Feint` (`feint`: Openings one). The ability's id is `feint`, as the
 Duelist's weapon active, False lead, is (`Ability::Weapon`, `use:false_lead:E`): the two rows are told apart by
 `Source`, and nothing looks an ability up by id. No caught-out check (the owner): `World::steal`
 and the shops read nothing of Bluff. Tests: `world/feint_tests.rs`, `content/feint.rs`. Music's

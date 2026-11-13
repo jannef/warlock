@@ -82,7 +82,9 @@ you never choose them, they work by themselves as you fight. They have their own
   you (see [Stealing](skill-uses.md#stealing)).
 - **Feint**: anyone trained in the [Bluff](skills.md#skill-bluff) skill has it, in the skill's place among the Skills. It asks
   for a direction and lies to the hostile creature there. Unless it sees through you, it is
-  [surprised](status-effects.md#status-surprised), and your next blow finds it off guard (see [Feinting](skill-uses.md#feinting)). This is not the
+  [surprised](status-effects.md#status-surprised), and your next blow finds it off guard (see [Feinting](skill-uses.md#feinting)). For a
+  [thief](classes.md#thief) it makes the creature the [mark](resources.md#the-mark), and a feint it
+  falls for gives an [opening](resources.md#resource-openings). This is not the
   Duelist style's [False lead](fighting-styles.md#style-ability-false-lead), which is a blow.
 - **Intimidate**: anyone trained in the [Intimidate](skills.md#skill-intimidate) skill has it, in the skill's place among the
   Skills. It asks for a place you see within 6 cells and threatens the hostile creature there.

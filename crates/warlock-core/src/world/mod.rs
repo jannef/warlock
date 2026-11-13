@@ -218,6 +218,7 @@ mod lurk;
 mod make_do;
 mod malison;
 mod mana;
+mod mark;
 mod mastery;
 mod material_drops;
 mod merchants_eye;
@@ -248,6 +249,7 @@ mod resource;
 mod rest;
 mod restore;
 mod reveal;
+mod rig;
 mod rod;
 mod rooms;
 mod rooted;
@@ -259,6 +261,7 @@ mod salvage;
 mod sanctuary;
 mod schedule;
 mod scribe;
+mod seal;
 mod sear;
 mod search;
 mod second_wind;
@@ -346,6 +349,7 @@ pub use cut::{CutBand, cut_band, cut_outcome, cuttable};
 pub use decipher::undeciphered;
 pub use dig::{MAX_DIG, WORK_SCALE, dig_refusal, dig_work, digs_to_break};
 pub use disarm::SPRINGS_SHORT_BY;
+pub(crate) use enchant::craft_steps_given;
 pub use enchant::{EnchantBand, enchant_band};
 pub(crate) use encounter::view as encounter_view;
 pub use encounter::{
@@ -377,9 +381,12 @@ pub use orison::PrayerState;
 pub use pit::Pit;
 pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
 use rest::Ended;
+pub(crate) use rig::rigged_rows;
+pub use rig::{RigRow, takes_words};
 pub use salvage::{chipped, salvage_percent, salvageable};
 pub use sanctuary::Hallow;
 pub use scribe::scribe_turns;
+pub use seal::MOST_SEALS;
 pub use set::{SetBand, set_band, settable};
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
 pub use sign_picks::BREATH_RANGE;
@@ -717,6 +724,9 @@ pub struct World {
     /// Traps sprung since this world was created or loaded (not saved): a rest perceives every
     /// turn in which one went off (a teleport moves someone farther than a step).
     sprung: u64,
+    /// Who rigged the trap going off now, if the player did (not saved; `trap.rs`, `rig.rs`):
+    /// its blows are theirs.
+    rigger: Option<ActorId>,
     /// Creatures that came to the player's level since this world was created or loaded (not
     /// saved): a rest perceives every turn in which one came (`spawn.rs`).
     spawned: u64,
@@ -814,6 +824,8 @@ enum Spent {
     Salvage(salvage::Salvaging),
     /// Mending a damaged item in the field (see [`World::make_do`]).
     MakeDo(make_do::Mending),
+    /// Rigging a trap beside the player (see [`World::rig`]).
+    Rig(rig::Rigging),
     /// Setting a cut gem in an item (see [`World::set`]).
     Set(set::Setting),
     /// Taming a beast beside the player (see [`World::tame`]).
@@ -1071,6 +1083,7 @@ impl World {
             split_from: None,
             ally: None,
             risen: None,
+            mark: None,
             alignment: content.alignment().map(|_| alignment),
             alignment_override: None,
             npc: None,
@@ -1281,6 +1294,7 @@ impl World {
             caught: false,
             glassing: None,
             sprung: 0,
+            rigger: None,
             spawned: 0,
             reshaped: 0,
             found: 0,
@@ -1516,6 +1530,7 @@ impl World {
             Spent::Enchant(work) => self.enchant(work, &mut events),
             Spent::Salvage(work) => self.salvage(work, &mut events),
             Spent::MakeDo(work) => self.make_do(work, &mut events),
+            Spent::Rig(work) => self.rig(work, &mut events),
             Spent::Set(work) => self.set(work, &mut events),
             Spent::Tame(taming) => self.tame(taming, &mut events),
             Spent::Skip(duration) => {
@@ -1663,6 +1678,7 @@ impl World {
             Action::Temper { item } => return self.start_temper(*item),
             Action::Whittle { item } => return self.start_whittle(*item),
             Action::Salvage { item } => return self.start_salvage(*item),
+            Action::Rig { rig, dir } => return self.start_rig(rig, *dir),
             Action::Give { item, ally } => return self.give_collar(*item, *ally),
             Action::UseTalent(TalentActive::SecondWind) => return self.second_wind(events),
             Action::UseTalent(TalentActive::BloodMagic) => return self.blood_magic(),
@@ -2074,6 +2090,8 @@ mod mana_talent_tests;
 #[cfg(test)]
 mod mana_tests;
 #[cfg(test)]
+mod mark_tests;
+#[cfg(test)]
 mod mastery_tests;
 #[cfg(test)]
 mod material_draw_tests;
@@ -2151,6 +2169,8 @@ mod rest_close_tests;
 mod retribution_tests;
 #[cfg(test)]
 mod reveal_tests;
+#[cfg(test)]
+mod rig_tests;
 #[cfg(test)]
 mod rod_tests;
 #[cfg(test)]

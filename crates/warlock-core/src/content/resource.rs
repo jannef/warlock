@@ -39,19 +39,25 @@ pub enum Build {
     /// A sneak attack of the holder's hit: a blow at a creature unaware of it (spec §8 "Class
     /// abilities": the thief's sneak attack).
     SneakAttack,
-    /// A sneak attack of the holder's killed (after its hit built `SneakAttack`).
-    SneakKill,
+    /// A feint of the holder's fooled its foe (`world/feint.rs`: it falls for it). A chosen
+    /// attack under the mark rule (`world/mark.rs`), made before the check.
+    Feint,
+    /// The holder killed its mark, the creature its openings are in (`world/mark.rs`; a wound
+    /// it dealt bleeding the mark to death counts). Raised beside `Kill`, before the mark is
+    /// cleared.
+    MarkKill,
 }
 
 impl Build {
     /// Every event, in the order the wiki lists them.
-    pub const ALL: [Build; 6] = [
+    pub const ALL: [Build; 7] = [
         Build::Kill,
         Build::Hit,
         Build::Critical,
         Build::Struck,
         Build::SneakAttack,
-        Build::SneakKill,
+        Build::Feint,
+        Build::MarkKill,
     ];
 
     /// Its id in data: `sneak_attack`.
@@ -62,7 +68,8 @@ impl Build {
             Build::Critical => "critical",
             Build::Struck => "struck",
             Build::SneakAttack => "sneak_attack",
-            Build::SneakKill => "sneak_kill",
+            Build::Feint => "feint",
+            Build::MarkKill => "mark_kill",
         }
     }
 
@@ -74,7 +81,8 @@ impl Build {
             Build::Critical => "a critical",
             Build::Struck => "being hit",
             Build::SneakAttack => "a sneak attack that hits",
-            Build::SneakKill => "a sneak attack that kills",
+            Build::Feint => "a feint the foe falls for",
+            Build::MarkKill => "a kill of the creature the openings are in",
         }
     }
 }
@@ -121,6 +129,8 @@ struct ResourceSpec {
     resting: bool,
     #[serde(default)]
     ends_at_zero: bool,
+    #[serde(default)]
+    marked: bool,
     ended: Option<String>,
     lacking: Option<String>,
     status: Option<String>,
@@ -197,6 +207,10 @@ pub struct ResourceDef {
     pub resting: bool,
     /// Whether it ends at zero: the holder loses it (and its bar) until it is granted again.
     pub ends_at_zero: bool,
+    /// Whether its points are in one creature's guard (Openings): its holder's mark
+    /// (`Actor::mark`, `world/mark.rs`) is kept while it holds it, a chosen attack at another
+    /// living creature empties it, and it builds on nobody but the mark.
+    pub marked: bool,
     /// What the player is told when it ends ("Your rage subsides."), if anything.
     pub ended: Option<String>,
     /// How the abilities menu says an ability it pays for is out of reach while too little is
@@ -301,6 +315,7 @@ pub(super) fn parse(
             over_time,
             resting: spec.resting,
             ends_at_zero: spec.ends_at_zero,
+            marked: spec.marked,
             ended: spec.ended,
             lacking: spec.lacking,
             status: tied,
@@ -373,13 +388,37 @@ mod tests {
         let rage = &list[0];
         assert_eq!((rage.max, rage.start, rage.show_max), (20, 12, false));
         assert_eq!(rage.over_time, Some(OverTime::Decays { every: 6 }));
-        assert!(rage.ends_at_zero && rage.resting);
+        assert!(rage.ends_at_zero && rage.resting && !rage.marked);
         assert_eq!(rage.built_by(Build::Kill), 5);
         assert_eq!(rage.built_by(Build::Hit), 0);
         let focus = &list[1];
         assert_eq!(focus.start, 10, "it starts full without a `start`");
         assert!(focus.show_max && !focus.resting && !focus.ends_at_zero);
         assert_eq!(focus.over_time, Some(OverTime::Regenerates { every: 6 }));
+    }
+
+    #[test]
+    fn a_pool_may_be_marked_and_built_by_the_marks_kill() {
+        let text = "[[resource]]\nid = \"openings\"\nname = \"Openings\"\nshort = \"Openings\"\n\
+                    max = 5\nstart = 0\nmarked = true\n\
+                    builds = [{ on = \"mark_kill\", amount = 1 }]\n";
+        let list = parse("r.toml", text, none).expect("parses");
+        assert!(list[0].marked);
+        assert_eq!(list[0].built_by(Build::MarkKill), 1);
+        assert_eq!(Build::MarkKill.id(), "mark_kill");
+        let old = text.replace("mark_kill", "sneak_kill");
+        assert!(parse("r.toml", &old, none).is_err(), "sneak_kill is gone");
+    }
+
+    #[test]
+    fn a_pool_may_be_built_by_a_feint() {
+        let text = "[[resource]]\nid = \"openings\"\nname = \"Openings\"\nshort = \"Openings\"\n\
+                    max = 5\nstart = 0\nmarked = true\n\
+                    builds = [{ on = \"feint\", amount = 1 }]\n";
+        let list = parse("r.toml", text, none).expect("parses");
+        assert_eq!(list[0].built_by(Build::Feint), 1);
+        assert_eq!(list[0].built_by(Build::SneakAttack), 0);
+        assert_eq!(Build::Feint.id(), "feint");
     }
 
     #[test]

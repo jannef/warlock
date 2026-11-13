@@ -38,12 +38,37 @@ while you hold 2 focus spends them and takes 10 % less time. A [volley](talents.
 ([Sneak attack](talents.md#talent-sneak-attack)), starting at 0.
 
 - Every [sneak attack](skills.md#skill-sneak-attack) that hits gives one, up to 5.
+- Every [feint](skill-uses.md#feinting) the foe falls for gives one.
+- Killing your [mark](#the-mark) yourself gives one more.
 - One slips away every 20 base turns (2 minutes). When empty, the pool stays with you.
 - At level 12, [Low blow](abilities.md#ability-low-blow) (an ability, aimed in a direction) spends
   3 for a melee blow that counts as a sneak attack, whatever the foe knows.
 - At level 60, [Master thief](talents.md#talent-master-thief) gives the **finisher** (an ability,
   aimed in a direction). It spends all 5 for a melee blow that is a [critical](combat.md#criticals)
   whenever it hits, with no confirmation roll. A miss still spends them.
+
+### The mark
+
+Your openings are gaps in one creature's guard: your **mark**. The character screen shows whose
+guard they are in ("Openings 3/5, in the kobold's guard"), and looking at the creature says "your
+mark".
+
+- **Switching foes loses them.** The first creature you choose to attack becomes your mark. A
+  blow, a kick, a shield bash, an ability's blow, a shot or a throw at its square, a spell that
+  rolls to hit, or a [feint](skill-uses.md#feinting), made or not, all count. Choose to attack a different creature while your mark lives, and every
+  opening is lost ("Your openings on the kobold are lost."); the new creature is your mark.
+- **Blows you did not choose change nothing.** A [free blow](stances.md#free-blows) (a riposte, an
+  opportunist's blow, a lurk's) makes its target your mark only when you have none. On anyone
+  else, its [sneak attack](skills.md#skill-sneak-attack) gives no opening. Area effects, like a fireball, never touch your mark.
+- **A kill carries them over.** When your mark dies, by anyone's hand, your openings stay, and
+  the next creature you attack becomes your mark with them. If you killed it yourself (a bleeding
+  wound you dealt counts), you get one more opening.
+- **Your mark is forgotten** when it vanishes (a summoned creature's time runs out), when you
+  take the stairs to another level, and when your openings run down to 0. Your openings stay.
+  A mark that steps out of sight is still your mark.
+- **Spending them on someone else is refused.** [Low blow](abilities.md#ability-low-blow) and the
+  [finisher](talents.md#talent-master-thief) at a creature other
+  than your mark do nothing and take no time ("Your openings are in the kobold's guard.").
 
 **Ki.** The [ascetic](classes.md#ascetic) gets ki, full, with
 [martial arts](talents.md#talent-martial-arts) at level 1. The pool holds 4, plus your
@@ -205,8 +230,8 @@ as a pick from its trees, from the level given:
   12): focus comes back half again as fast, a point every 4 seconds instead of every 6. It still
   does not come back while you rest.
 - **[Patient blade](talents.md#talent-patient-blade)** (Shadow; [thief](classes.md#thief), level
-  32): openings slip away half as fast, a point every 40 base turns instead of every 20. A
-  [sneak attack](talents.md#talent-sneak-attack) that kills gives two openings instead of one.
+  32): openings slip away half as fast, a point every 40 base turns instead of every 20. Killing
+  your [mark](#the-mark) yourself gives two openings instead of one.
 - **[Zealot](talents.md#talent-zealot)** (Grit; whoever holds [Smite](talents.md#talent-smite), so
   the [paladin](classes.md#paladin), level 6): every blow that hits you builds 2
   [zeal](#resource-zeal) instead of 1. A blow you give still builds 1, and the pool holds no more.

@@ -89,6 +89,23 @@ pub struct Kills {
     pub slope_per_100: u32,
     /// What a creature of a level is worth, which turns kills into XP.
     pub guideline: Guideline,
+    /// What the whole curve is scaled by, exactly (owner, #1468: two thirds); 1 without it.
+    #[serde(default)]
+    pub scale: Scale,
+}
+
+/// An exact fraction `times ÷ over` the level curve is scaled by (`[kills] scale`).
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct Scale {
+    pub times: u32,
+    pub over: u32,
+}
+
+impl Default for Scale {
+    fn default() -> Self {
+        Self { times: 1, over: 1 }
+    }
 }
 
 /// The creature XP guideline: a creature of level n is worth about `per_level × n + base` XP.
@@ -237,14 +254,18 @@ fn early_percent(early: &[u8], n: u8) -> u128 {
 
 /// The kills of the player's own level that level `n` (2 or more) costs, as an exact fraction
 /// `(numerator, denominator)` in hundredths of a kill:
-/// `(plateau × 100 × m + slope × m × (m + ramp)) × percent ÷ ((m + ramp) × 100)` with m = n − 1
-/// and percent the level's early discount (100 past it).
+/// `(plateau × 100 × m + slope × m × (m + ramp)) × percent × times ÷ ((m + ramp) × 100 × over)`
+/// with m = n − 1, percent the level's early discount (100 past it), and `times ÷ over` the
+/// curve's `scale`.
 fn kills_fraction(kills: &Kills, early: &[u8], n: u8) -> (u128, u128) {
     let m = u128::from(n.saturating_sub(1));
     let over = m + u128::from(kills.ramp);
     let numerator =
         u128::from(kills.plateau) * 100 * m + u128::from(kills.slope_per_100) * m * over;
-    (numerator * early_percent(early, n), over.max(1) * 100)
+    (
+        numerator * early_percent(early, n) * u128::from(kills.scale.times),
+        over.max(1) * 100 * u128::from(kills.scale.over),
+    )
 }
 
 /// Rounds `numerator ÷ denominator` to the nearest whole number, halves up.
@@ -276,6 +297,8 @@ impl Experience {
             k.slope_per_100,
             k.guideline.per_level,
             k.guideline.base,
+            k.scale.times,
+            k.scale.over,
             p.discovery.first_kill,
             p.discovery.arrival,
             p.spell.per_level,
@@ -284,6 +307,11 @@ impl Experience {
             return Err(err(format!(
                 "every number in [kills] and [discovery] must be at most {MAX_PARAM}"
             )));
+        }
+        if k.scale.times == 0 || k.scale.over == 0 {
+            return Err(err(
+                "[kills] scale's times and over must be at least 1".into()
+            ));
         }
         // `Experience::zero_difference` reads the bands from the last.
         if (p.zero_difference.windows(2)).any(|pair| pair[1].from <= pair[0].from) {
@@ -483,36 +511,34 @@ mod tests {
         let x = builtin();
         assert_eq!(x.max_level(), 100);
         // Level 2: 213 × 1/6 + 2.85 = 38.35 kills of level-2 creatures worth 20 (767 XP), at
-        // the early discount's 25 %: 9.5875 kills, 191.75 XP.
-        assert_eq!(
-            (x.kills_for(2), x.xp_for(2), x.threshold(2)),
-            (10, 192, 192)
-        );
+        // the scale's two thirds (#1468) 25.57 kills (511.33 XP), and at the early discount's
+        // 25 %: 6.39 kills, 127.83 XP.
+        assert_eq!((x.kills_for(2), x.xp_for(2), x.threshold(2)), (6, 128, 128));
         assert_eq!(
             (x.kills_for(3), x.xp_for(3), x.threshold(3)),
-            (20, 499, 691)
+            (13, 333, 461)
         );
-        assert_eq!((x.kills_for(10), x.threshold(10)), (146, 29_715));
-        assert_eq!((x.kills_for(20), x.threshold(20)), (223, 205_205));
-        assert_eq!((x.kills_for(40), x.kills_for(60)), (300, 365));
-        assert_eq!(x.threshold(60), 2_845_856);
+        assert_eq!((x.kills_for(10), x.threshold(10)), (98, 19_811));
+        assert_eq!((x.kills_for(20), x.threshold(20)), (149, 136_806));
+        assert_eq!((x.kills_for(40), x.kills_for(60)), (200, 243));
+        assert_eq!(x.threshold(60), 1_897_239);
         // The curve carried on to 100 (docs/design/prestige-classes.md §5).
         let row = |l: u8| (x.kills_for(l), x.xp_for(l), x.threshold(l));
-        assert_eq!(row(30), (264, 42_292, 545_660));
-        assert_eq!(row(31), (268, 44_232, 589_892));
-        assert_eq!(row(40), (300, 62_989, 1_080_032));
-        assert_eq!(row(50), (333, 86_561, 1_837_200));
-        assert_eq!(row(70), (395, 142_293, 4_134_600));
-        assert_eq!(row(80), (425, 174_443, 5_732_002));
-        assert_eq!(row(90), (455, 209_447, 7_666_604));
-        assert_eq!(row(100), (485, 247_304, 9_966_935));
+        assert_eq!(row(30), (176, 28_195, 363_777));
+        assert_eq!(row(31), (179, 29_488, 393_265));
+        assert_eq!(row(40), (200, 41_992, 720_024));
+        assert_eq!(row(50), (222, 57_707, 1_224_803));
+        assert_eq!(row(70), (264, 94_862, 2_756_402));
+        assert_eq!(row(80), (284, 116_296, 3_821_338));
+        assert_eq!(row(90), (304, 139_632, 5_111_074));
+        assert_eq!(row(100), (323, 164_869, 6_644_628));
         assert_eq!((x.threshold(1), x.threshold(0), x.xp_for(1)), (0, 0, 0));
-        assert_eq!(x.threshold(101), 9_966_935, "past the cap: the cap's");
-        // About 2 600 even-level kills to level 20, 14 600 to 60 (3 000 and 15 000 before the
+        assert_eq!(x.threshold(101), 6_644_628, "past the cap: the cap's");
+        // About 1 700 even-level kills to level 20, 9 700 to 60 (2 000 and 10 000 before the
         // early discount).
         let kills = |to: u8| (2..=to).map(|l| x.kills_for(l)).sum::<u32>();
-        assert!((2_550..=2_650).contains(&kills(20)), "{}", kills(20));
-        assert!((14_500..=14_700).contains(&kills(60)), "{}", kills(60));
+        assert!((1_680..=1_780).contains(&kills(20)), "{}", kills(20));
+        assert!((9_650..=9_800).contains(&kills(60)), "{}", kills(60));
         // Every level costs more than the last, in XP and in kills.
         for l in 3..=100 {
             assert!(x.xp_for(l) > x.xp_for(l - 1), "level {l}");
@@ -522,10 +548,11 @@ mod tests {
 
     #[test]
     fn early_levels_are_discounted() {
-        // The owner's numbers (2026-10-27): the XP to reach levels 2 to 12.
+        // The XP to reach levels 2 to 12: the owner's discount (2026-10-27) on the curve cut by a
+        // third (#1468).
         let x = builtin();
         let expected = [
-            192, 691, 1_619, 3_104, 5_519, 9_118, 14_165, 20_936, 29_715, 40_243, 52_688,
+            128, 461, 1_080, 2_070, 3_680, 6_079, 9_444, 13_958, 19_811, 26_830, 35_127,
         ];
         let got: Vec<u32> = (2..=12).map(|l| x.threshold(l)).collect();
         assert_eq!(got, expected);
@@ -538,7 +565,7 @@ mod tests {
             ),
         )
         .expect("parses");
-        assert_eq!((plain.threshold(2), plain.threshold(10)), (767, 45_052));
+        assert_eq!((plain.threshold(2), plain.threshold(10)), (511, 30_034));
         for l in 12..=100 {
             assert_eq!(x.xp_for(l), plain.xp_for(l), "level {l}");
             assert_eq!(x.kills_for(l), plain.kills_for(l), "level {l}");
@@ -546,8 +573,8 @@ mod tests {
         for l in 2..=11 {
             assert!(x.xp_for(l) < plain.xp_for(l), "level {l}");
         }
-        assert_eq!(plain.threshold(60) - x.threshold(60), 15_892);
-        assert_eq!(plain.threshold(100) - x.threshold(100), 15_892);
+        assert_eq!(plain.threshold(60) - x.threshold(60), 10_592);
+        assert_eq!(plain.threshold(100) - x.threshold(100), 10_592);
     }
 
     #[test]
@@ -562,7 +589,7 @@ mod tests {
             }
         }
         assert_eq!(
-            hash, 0xced8_72ce_a4b4_1681,
+            hash, 0xfe50_d605_0322_71f1,
             "experience table hash {hash:#018x}"
         );
     }
@@ -571,11 +598,11 @@ mod tests {
     fn factors_scale_the_thresholds() {
         let x = builtin();
         let at = |f: Factor| [2, 10, 60].map(|l| x.threshold_for(l, f));
-        assert_eq!(at(Factor::default()), [192, 29_715, 2_845_856]);
-        assert_eq!(at(factor(140, 125)), [336, 52_001, 4_980_248], "elf wizard");
+        assert_eq!(at(Factor::default()), [128, 19_811, 1_897_239]);
+        assert_eq!(at(factor(140, 125)), [224, 34_669, 3_320_168], "elf wizard");
         assert_eq!(
             at(factor(90, 80)),
-            [138, 21_395, 2_049_016],
+            [92, 14_264, 1_366_012],
             "half-orc commoner"
         );
         assert_eq!(factor(140, 125).percent(), 175);
@@ -583,18 +610,18 @@ mod tests {
         assert_eq!(factor(115, 115).percent(), 132);
         // The level follows the character's own thresholds.
         let wizard = factor(140, 125);
-        assert_eq!(x.level_for(335, wizard, MAX_LEVEL), 1);
-        assert_eq!(x.level_for(336, wizard, MAX_LEVEL), 2);
+        assert_eq!(x.level_for(223, wizard, MAX_LEVEL), 1);
+        assert_eq!(x.level_for(224, wizard, MAX_LEVEL), 2);
         assert_eq!(
-            x.level_for(497, factor(90, 80), MAX_LEVEL),
+            x.level_for(331, factor(90, 80), MAX_LEVEL),
             2,
-            "691 × 72 %: 498"
+            "461 × 72 %: 332"
         );
-        assert_eq!(x.level_for(498, factor(90, 80), MAX_LEVEL), 3);
+        assert_eq!(x.level_for(332, factor(90, 80), MAX_LEVEL), 3);
         // The steepest factor still counts to the top.
         let steepest = factor(*FACTORS.end(), *FACTORS.end());
         assert_eq!(x.level_for(u32::MAX, steepest, MAX_LEVEL), 100);
-        assert_eq!(x.threshold_for(100, steepest), 4 * 9_966_935);
+        assert_eq!(x.threshold_for(100, steepest), 4 * 6_644_628);
     }
 
     #[test]
@@ -602,23 +629,23 @@ mod tests {
         let x = builtin();
         let normal = Factor::default();
         assert_eq!(x.level_for(0, normal, MAX_LEVEL), 1);
-        assert_eq!(x.level_for(191, normal, MAX_LEVEL), 1);
-        assert_eq!(x.level_for(192, normal, MAX_LEVEL), 2);
-        assert_eq!(x.level_for(690, normal, MAX_LEVEL), 2);
-        assert_eq!(x.level_for(691, normal, MAX_LEVEL), 3);
-        assert_eq!(x.level_for(2_845_855, normal, MAX_LEVEL), 59);
-        assert_eq!(x.level_for(2_845_856, normal, MAX_LEVEL), 60);
-        assert_eq!(x.level_for(9_966_934, normal, MAX_LEVEL), 99);
-        assert_eq!(x.level_for(9_966_935, normal, MAX_LEVEL), 100);
+        assert_eq!(x.level_for(127, normal, MAX_LEVEL), 1);
+        assert_eq!(x.level_for(128, normal, MAX_LEVEL), 2);
+        assert_eq!(x.level_for(460, normal, MAX_LEVEL), 2);
+        assert_eq!(x.level_for(461, normal, MAX_LEVEL), 3);
+        assert_eq!(x.level_for(1_897_238, normal, MAX_LEVEL), 59);
+        assert_eq!(x.level_for(1_897_239, normal, MAX_LEVEL), 60);
+        assert_eq!(x.level_for(6_644_627, normal, MAX_LEVEL), 99);
+        assert_eq!(x.level_for(6_644_628, normal, MAX_LEVEL), 100);
         assert_eq!(x.level_for(u32::MAX, normal, MAX_LEVEL), 100, "capped");
         // The default class cap, 60, below the curve's end.
         let class_max = x.class_max();
         assert_eq!(x.level_for(u32::MAX, normal, class_max), 60);
-        assert_eq!(x.level_for(2_845_855, normal, class_max), 59);
+        assert_eq!(x.level_for(1_897_238, normal, class_max), 59);
         // A class cap below the curve's top holds the level there; XP past it still counts.
         assert_eq!(x.level_for(u32::MAX, normal, 30), 30);
-        assert_eq!(x.level_for(545_660, normal, 30), 30);
-        assert_eq!(x.level_for(545_659, normal, 30), 29);
+        assert_eq!(x.level_for(363_777, normal, 30), 30);
+        assert_eq!(x.level_for(363_776, normal, 30), 29);
         assert_eq!(
             x.level_for(u32::MAX, normal, 0),
             1,
@@ -785,6 +812,9 @@ mod tests {
             ("bonus_levels = 4", "bonus_levels = 4\nlinear = 10"),
             ("arrival = 5", "arrival = 5\nidentify = 10"),
             ("percent = [25,", "speed = 2\npercent = [25,"),
+            ("over = 3", "over = 0"),
+            ("times = 2", "times = 0"),
+            ("over = 3", "over = 3, under = 1"),
         ] {
             let text = SHIPPED.replace(from, to);
             assert_ne!(text, SHIPPED, "{from} is in the file");
@@ -793,6 +823,14 @@ mod tests {
         // A curve too steep to count at the top is refused, not wrapped.
         let steep = SHIPPED.replace("plateau = 213", "plateau = 100000");
         assert!(Experience::parse("x", &steep).is_err());
+        // Without a scale the curve is unscaled: level 2 at the discount, 38.35 × 20 × 25 %.
+        let unscaled = SHIPPED.replace("scale = { times = 2, over = 3 }\n", "");
+        assert_ne!(unscaled, SHIPPED, "the scale is in the file");
+        let unscaled = Experience::parse("x", &unscaled).expect("valid");
+        assert_eq!(
+            (unscaled.threshold(2), unscaled.threshold(60)),
+            (192, 2_845_856)
+        );
     }
 
     #[test]

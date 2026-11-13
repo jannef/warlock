@@ -713,6 +713,8 @@ pub struct TalentMods {
     pub field_forge: Option<u32>,
     /// The active Make do and mend, if it has it (`world/make_do.rs`).
     pub make_do: Option<MakeDo>,
+    /// The active Trapwright: traps rigged on a cell beside it (`world/rig.rs`).
+    pub rigs: bool,
     /// The active Spirit weapon, and what a spirit weapon in its hand gives, if it has it.
     pub spirit_weapon: Option<SpiritWeapon>,
     /// How much higher every skill it is trained in counts (Jack of all trades).
@@ -1216,6 +1218,7 @@ impl TalentMods {
             A::MerchantsEye => self.merchants_eye,
             A::FieldForge => self.field_forge.is_some(),
             A::MakeDo => self.make_do.is_some(),
+            A::Rig => self.rigs,
             A::SpiritWeapon => self.spirit_weapon.is_some(),
             A::MasterThief => self.finisher,
             A::Inspire | A::Lullaby => self.songs.iter().any(|s| s.active == active),
@@ -2140,6 +2143,7 @@ impl TalentMods {
                     difficulty,
                 })
             }
+            TalentEffect::Rigs => self.rigs = true,
             TalentEffect::SpiritWeapon {
                 to_hit,
                 threat,

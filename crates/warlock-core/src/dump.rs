@@ -60,7 +60,7 @@ pub enum Layer {
     /// any, then their own scores, one stat a line (`Strength 12`, lowered while a status effect
     /// or stat damage lowers it), then their alignment band (`Alignment Kind`; spec §8
     /// "Alignment", never the score), then their status effects by name (`Effects Bleeding,
-    /// Diseased`) and the diseases they know they have (`Diseases filth fever`) if any; never
+    /// Diseased`), the creature their openings are in (`Mark the kobold`), and the diseases they know they have (`Diseases filth fever`) if any; never
     /// potentials, modifiers, how severe an effect is, or a disease's timers.
     Stats,
     /// Not a map: the player's own trained skills, one a line in skill order (`Stealth 17`);
@@ -106,7 +106,8 @@ pub enum Layer {
     /// (where seen), health in words, and order; `no companion` without one.
     Companion,
     /// The player's familiar, as the companion layer says a companion (`world/familiar.rs`);
-    /// `no familiar` without one.
+    /// `no familiar` without one, `no familiar; Tibb, a cat, answers a calling` while the one
+    /// she remembers is dead (`Character::familiar`).
     Familiar,
     /// Not a map: the player's quest log, one quest a line, active first (`Rats in the arena
     /// (active, from the old hermit): Kill 3 giant rats in the Arena. 2 / 3 killed.`).
@@ -278,6 +279,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
             encounter_header(world),
             truth_rows(world),
             chest_rows(world),
+            crate::world::rigged_rows(world),
             statue_rows(world),
             grave_rows(world),
             leaving_rows(world),
@@ -736,7 +738,7 @@ fn story_rows(world: &World) -> Vec<String> {
 }
 
 /// Which kept beast a dump says: the companion or the familiar.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 enum Kept {
     Companion,
     Familiar,
@@ -797,7 +799,18 @@ fn wears(view: &PerceptionView<'_>, ally: &crate::perception::AllyView) -> Optio
 fn kept_rows(view: &PerceptionView<'_>, kept: Kept) -> Vec<String> {
     let content = view.content();
     let Some((ally, data)) = kept.of(view) else {
-        return vec![format!("no {}", kept.id())];
+        let remembered = (view.character())
+            .and_then(|c| c.familiar.as_ref())
+            .filter(|_| kept == Kept::Familiar);
+        let Some(lost) = remembered else {
+            return vec![format!("no {}", kept.id())];
+        };
+        let kind = &content.creature(lost.creature).name;
+        return vec![format!(
+            "no familiar; {}, {} {kind}, answers a calling",
+            lost.name,
+            article(kind)
+        )];
     };
     let kind = &content.creature(ally.creature).name;
     let head = format!(
@@ -1032,6 +1045,10 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
         .collect();
     if !effects.is_empty() {
         rows.push(format!("Effects {}", effects.join(", ")));
+    }
+    // Whose guard their openings are in (`world/mark.rs`), their own choice.
+    if let Some(mark) = view.own_mark() {
+        rows.push(format!("Mark {mark}"));
     }
     let diseases: Vec<&str> = (view.own_diseases())
         .map(|d| content.disease(d).name.as_str())
@@ -1488,6 +1505,7 @@ fn aim_word(aim: Aim) -> &'static str {
         Aim::Ailment => "what to treat",
         Aim::Item => "an item you carry",
         Aim::Shape => "a weapon's shape",
+        Aim::Rig => "a rig and a direction",
         Aim::Spell => "a spell you know",
         Aim::Recipes => "a recipe",
     }
@@ -1726,6 +1744,11 @@ fn actor_rows(world: &World) -> Vec<String> {
             // Who summoned it (spec §8 "Summoning"), and so whose side it took.
             let court = match a.summoner {
                 Some(by) => format!("{court}; summoned by {by}"),
+                None => court,
+            };
+            // Whose guard its openings are in (`world/mark.rs`).
+            let court = match a.mark {
+                Some(mark) => format!("{court}; mark {mark}"),
                 None => court,
             };
             // Whose ally it is, what made it one, how long it stays, and its order (spec §8
@@ -2056,6 +2079,10 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             if a.unaware {
                 seen["unaware"] = json!(true);
             }
+            // The player's mark (`world/mark.rs`).
+            if a.marked {
+                seen["marked"] = json!(true);
+            }
             // An ally of the player's (spec §8 "Allies").
             if a.ally {
                 seen["ally"] = json!(true);
@@ -2166,7 +2193,12 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         .collect();
     let traps: Vec<Value> = (view.known_traps().into_iter())
         .map(|(p, trap)| {
-            json!({ "pos": p, "trap": content.trap(trap).id, "seen": view.sees_objects_at(p) })
+            json!({
+                "pos": p,
+                "trap": content.trap(trap).id,
+                "seen": view.sees_objects_at(p),
+                "rigged": view.rigged(p),
+            })
         })
         .collect();
     let locations: Vec<Value> = (view.known_locations().into_iter())
@@ -2282,6 +2314,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 "id": content.resource(r.resource).id,
                 "current": r.value,
                 "max": r.max,
+                "on": view.own_mark().filter(|_| r.marked),
             }))
             .collect::<Vec<_>>(),
         "experience": view.own_experience(),

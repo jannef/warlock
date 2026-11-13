@@ -24,7 +24,7 @@ use crate::render::console::Console;
 use warlock_core::burden::{Burden, Load};
 use warlock_core::character::{Character, Gender};
 use warlock_core::color::Rgb;
-use warlock_core::content::Content;
+use warlock_core::content::{Content, possessive};
 use warlock_core::object::{Weight, format_weight};
 use warlock_core::perception::{PerceptionView, Progress};
 use warlock_core::stats::{PerStat, Stat};
@@ -234,7 +234,10 @@ impl CharacterScreen {
             resources: (view.own_resources().iter())
                 .map(|r| {
                     let name = content.resource(r.resource).name.clone();
-                    (name, format!("{}/{}", r.value, r.max))
+                    // Whose guard the openings are in: "3/5, in the kobold's guard".
+                    let on = (view.own_mark().filter(|_| r.marked))
+                        .map_or(String::new(), |m| format!(", in {} guard", possessive(&m)));
+                    (name, format!("{}/{}{on}", r.value, r.max))
                 })
                 .collect(),
             talents: view.own_talents().iter().filter(|t| !t.class).count(),
@@ -655,7 +658,7 @@ mod tests {
             "Dv  Defence       11      Pv  Protection  0",
             "Lv  Level         1",
             // A human thief's level 2: 192 × 95 %.
-            "XP  Experience    0 / 182",
+            "XP  Experience    0 / 122",
             // A thief starts Callous: the band, never the score.
             "    Alignment     Callous",
         ] {

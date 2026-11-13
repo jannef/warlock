@@ -36,6 +36,7 @@ pub(super) fn foe_at(w: &mut World, creature: &str, at: Pos, score: u8) -> Actor
         summoner: None,
         ally: None,
         risen: None,
+        mark: None,
         alignment_override: None,
         inventory: Vec::new(),
         equipment: Default::default(),

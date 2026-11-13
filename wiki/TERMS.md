@@ -129,6 +129,7 @@ above.
 | Healing spring | `altars-forges-springs.md#healing-springs` |
 | Trap, hidden trap, known trap | `traps.md#finding-traps` |
 | Disarming | `traps.md#disarming-traps` |
+| Rig, rigging, Trapwright, a rigged trap | `traps.md#rigging-traps` (the talent: `talents.md#talent-trapwright`) |
 | Searching, noticing in passing | `searching.md#searching-1`, `searching.md#noticing-in-passing` |
 | **Objects** | |
 | Object, item class | `objects.md#what-an-object-is`, `objects.md#item-classes` |
@@ -225,7 +226,8 @@ above.
 | Crafting, a craft skill, craft points, who works which material, a material's work | `crafting.md`, `crafting.md#who-works-what` |
 | Salvage, taking an item apart, a gem chipped or shattered | `crafting.md#salvage` |
 | Magic crystal, a crystal's colour, consuming a crystal | `crystals.md`, a colour `crystals.md#crystal-ID` (`crystals.md#crystal-red`), `crystals.md#consuming-a-crystal` |
-| Heart-crystal, soul-fetter (rare materials) | `crystals.md#rare-materials` |
+| Heart-crystal, soul-fetter (rare materials) | `crystals.md#rare-materials`; what they do: `enchanting.md#the-rare-materials` |
+| Seal (in enchanting) | `enchanting.md#seals` |
 | Enchanting, Kindle, Quicken, Unbind, an enchanting recipe | `enchanting.md`, `enchanting.md#the-recipes` |
 | Reach (an enchanter's item level), warped (a natural 2 in enchanting) | `enchanting.md#how-strong-the-magic-is`, `enchanting.md#the-check` |
 | Cut, gem cutting, a re-cut, a gem's cut grade | `gem-cutting.md`, `gem-cutting.md#how-well-it-comes-out` |

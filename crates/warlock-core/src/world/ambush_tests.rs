@@ -135,7 +135,7 @@ fn a_sneak_attack_that_hits_marks_sneak_attack_and_dexterity() {
     };
     let gameplay = w.state.rng.clone();
     for _ in 0..40 {
-        let damage = w.ambushed(player, true, hit).damage;
+        let damage = w.ambushed((player, player), true, hit).damage;
         assert!((3..=8).contains(&damage), "{damage}");
     }
     assert_ne!(w.state.rng, gameplay, "the dice are gameplay draws");
@@ -143,8 +143,8 @@ fn a_sneak_attack_that_hits_marks_sneak_attack_and_dexterity() {
     assert!((5..=35).contains(&marks), "about half: {marks}");
     // A seen blow, or a miss, marks nothing and draws nothing.
     let rng = (w.state.rng.clone(), w.state.training.clone());
-    w.ambushed(player, false, hit);
-    w.ambushed(player, true, Blow::missed(None));
+    w.ambushed((player, player), false, hit);
+    w.ambushed((player, player), true, Blow::missed(None));
     assert_eq!((w.state.rng.clone(), w.state.training.clone()), rng);
 }
 

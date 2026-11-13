@@ -730,6 +730,7 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
             split_from: None,
             ally: None,
             risen: None,
+            mark: None,
             alignment: None,
             alignment_override: None,
             npc: None,

@@ -316,6 +316,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("crystal-colours.md", crystals::crystal_colours),
         ("crystal-rules.md", crystals::crystal_rules),
         ("recipes-enchanting.md", enchanting::recipes_enchanting),
+        ("enchanting-seals.md", enchanting::enchanting_seals),
         ("recipes-jewelcraft.md", recipes::recipes_jewelcraft),
         ("recipes-metalcraft.md", recipes::recipes_metalcraft),
         ("recipes-woodcraft.md", recipes::recipes_woodcraft),
@@ -475,6 +476,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("trap-damage.md", traps::by_danger),
         ("trap-avoid.md", traps::avoiding),
         ("trap-disarm.md", traps::disarming),
+        ("rigs.md", traps::rigs),
     ];
     let mut files: Vec<(String, String)> = tables
         .iter()

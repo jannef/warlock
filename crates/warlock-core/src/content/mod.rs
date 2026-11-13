@@ -118,6 +118,7 @@ mod recipe;
 #[cfg(test)]
 mod recipe_tests;
 mod resource;
+mod rig;
 mod rod;
 #[cfg(test)]
 mod room_burden_tests;
@@ -224,8 +225,8 @@ pub use companion::{
 };
 pub use creature::{
     Budge, Combat, CorpseGifts, Corrodes, CorrodesWhat, CreatureDef, CreatureId, DEFAULT_SIGHT,
-    Disarms, Hide, Incorporeal, NORMAL_SPEED, NaturalAttack, OnEat, SkillGift, is_proper, the,
-    the_start,
+    Disarms, Hide, Incorporeal, NORMAL_SPEED, NaturalAttack, OnEat, SkillGift, is_proper,
+    possessive, the, the_start,
 };
 pub use creature_rarity::{COMMON, CreatureRarity};
 pub use crystal::{CrystalColour, Crystals, EnchantingRules, RareMaterials};
@@ -317,6 +318,7 @@ pub use recipe::{
     RecipeId, RecipeInput, RecipePart, RecipeResult, RecipeSettings, RecipeUse, Recipes,
 };
 pub use resource::{Build, MAX_RESOURCE, MaxFrom, OverTime, ResourceDef, ResourceId};
+pub use rig::{RigDef, RigId, RigRules, RigTakes};
 pub use rod::{Rod, RodDoes, RodEffect, RodShape};
 pub use room_effect::{
     Collapse, Dressing, Here, Hoard, Mirrors, Offer, RoomEffectDef, RoomEffectId, RoomEffects,
@@ -730,6 +732,9 @@ pub struct Content {
     /// The numbers of salvaging an item for its materials (`data/salvage.toml`); without it
     /// nobody salvages.
     salvage: Option<SalvageRules>,
+    /// The traps the craftsperson's Trapwright rigs (`data/rigs.toml`, spec §8 "Traps"); none
+    /// without the file, when Trapwright is not usable yet.
+    rigs: Option<RigRules>,
     /// What foraging in the wild gives (`data/forage.toml`, spec §8 "Foraging"); none without
     /// the file.
     forage: Option<ForageRules>,
@@ -945,6 +950,7 @@ impl Content {
             encounter_tables: Vec::new(),
             fletch: None,
             salvage: None,
+            rigs: None,
             forage: None,
             herbs: None,
             mining: None,
@@ -1329,6 +1335,10 @@ impl Content {
         let path = "data/salvage.toml";
         if let Some(text) = files.get_optional(path) {
             content.salvage = Some(SalvageRules::parse(path, text)?);
+        }
+        let path = "data/rigs.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.rigs = Some(RigRules::parse(path, text, &content)?);
         }
         let path = "data/forage.toml";
         if let Some(text) = files.get_optional(path) {
@@ -3392,6 +3402,12 @@ impl Content {
     /// the file, when nobody salvages.
     pub fn salvage(&self) -> Option<&SalvageRules> {
         self.salvage.as_ref()
+    }
+
+    /// The traps the craftsperson's Trapwright rigs (`data/rigs.toml`); `None` without the file,
+    /// when Trapwright is not usable yet.
+    pub fn rigs(&self) -> Option<&RigRules> {
+        self.rigs.as_ref()
     }
 
     /// Whether `object` is a knife, to fletch with (`data/fletch.toml`'s `knives`, a weapon

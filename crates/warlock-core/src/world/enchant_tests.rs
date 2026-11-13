@@ -381,7 +381,7 @@ fn the_steps_plan_and_rows_say_what_the_work_takes() {
     let at = |n: usize| -> Vec<usize> { steps[n].options.iter().map(|o| o.at).collect() };
     assert_eq!(
         (steps.iter().map(|s| s.label.as_str())).collect::<Vec<_>>(),
-        ["item", "crystal"]
+        ["item", "crystal", "seal", "second seal", "third seal"]
     );
     assert_eq!(
         at(0),
@@ -393,7 +393,15 @@ fn the_steps_plan_and_rows_say_what_the_work_takes() {
     let steps = w.perception().craft_steps(recipe(&w, "imbue"));
     assert_eq!(
         (steps.iter().map(|s| s.label.as_str())).collect::<Vec<_>>(),
-        ["item", "first crystal", "second crystal", "third crystal"]
+        [
+            "item",
+            "first crystal",
+            "second crystal",
+            "third crystal",
+            "seal",
+            "second seal",
+            "third seal"
+        ]
     );
     let steps = w.perception().craft_steps(recipe(&w, "unbind"));
     assert_eq!(steps.len(), 1);
@@ -518,7 +526,10 @@ fn every_refusal_takes_no_time() {
     for (picks, line) in [
         ("craft:kindle", "You must choose the item."),
         ("craft:kindle:a", "You must choose the crystal."),
-        ("craft:kindle:a,b,b", "That is more than the work takes."),
+        (
+            "craft:kindle:a,b,-,-,-,b",
+            "That is more than the work takes.",
+        ),
         ("craft:kindle:a,g", "That is no crystal."),
         ("craft:kindle:b,b", "No magic can be bound in that."),
         (
@@ -530,10 +541,6 @@ fn every_refusal_takes_no_time() {
         ("craft:kindle:z,b", "You carry no such thing."),
         ("craft:quicken:a,b", "There is no magic in it."),
         ("craft:quicken:d,b", "It holds all it can."),
-        (
-            "craft:quicken:e,b",
-            "It is rare already: this work cannot add to it.",
-        ),
         ("craft:unbind:a", "There is no magic in it."),
         ("craft:unbind:d,b", "That is more than the work takes."),
         ("craft:recast:a,b", "There is no magic in it."),
@@ -548,7 +555,7 @@ fn every_refusal_takes_no_time() {
         ("craft:ennoble:d,b", "It would not hold so much."),
         (
             "craft:ennoble:e,b",
-            "It is rare already: this work cannot add to it.",
+            "It is rare already: only a heart-crystal's Quicken adds to it.",
         ),
         // A Masterwork sword holds four; one red crystal is not three.
         ("craft:imbue:h,b,b,b", "You do not carry so many crystals."),

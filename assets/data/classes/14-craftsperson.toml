@@ -23,6 +23,7 @@ abilities = [
     { level = 6, talent = "waste_not" },
     { level = 12, talent = "patron" },
     { level = 18, talent = "make_do_and_mend" },
+    { level = 25, talent = "trapwright" },
     { level = 32, talent = "field_forge" },
     { level = 40, talent = "quick_hands" },
     { level = 50, talent = "masters_hand" },
