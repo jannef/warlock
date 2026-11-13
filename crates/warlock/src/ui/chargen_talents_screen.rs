@@ -8,7 +8,9 @@
 //! drops the picks that needed it. With every pick marked the step moves on to the name. The
 //! **Random** row takes the character's Random picks, the ones a run started without picks gets
 //! (`World::random_creation`), and moves on. Esc steps back to the class; the picks are
-//! remembered (`Picks::talents`) and kept where they still hold.
+//! remembered (`Picks::talents`) and kept where they still hold. A class with creation bonus
+//! picks (the craftsperson's two trades) lists its own trees alone until those are marked, under
+//! the title "Choose a trade" (`World::creation_bonus_left`), then every tree for the rest.
 //!
 //! A plain state machine like every screen, testable without a window.
 
@@ -59,6 +61,9 @@ pub struct ChargenTalentsScreen {
     count: u8,
     /// The picks marked, in the order marked.
     picks: Vec<String>,
+    /// The class's creation bonus picks still to mark (the craftsperson's trades), which the
+    /// list offers first; kept by `rebuild`.
+    trades: u8,
     entries: PagedList<Entry, Group>,
     /// A talent's choices, listed in its place.
     choosing: Option<PagedList<Entry, Group>>,
@@ -82,6 +87,7 @@ impl ChargenTalentsScreen {
             content: content.clone(),
             count,
             picks: Vec::new(),
+            trades: 0,
             entries: PagedList::empty(),
             choosing: None,
             notice: None,
@@ -142,6 +148,7 @@ impl ChargenTalentsScreen {
                 }
             }
         };
+        self.trades = (self.draft.as_ref()).map_or(0, |w| w.creation_bonus_left(&self.picks));
         if let Some(world) = &self.draft {
             add(world.creation_offers(&[]).map_or(Vec::new(), |(_, o)| o));
             for n in 1..=self.picks.len() {
@@ -339,7 +346,10 @@ impl ChargenTalentsScreen {
         self.fit(console.cols(), console.rows());
         let list = self.list();
         let count = list.tallest().max(1) as i32;
-        let title = format!(" Choose your talents (4 of 5): {} left ", self.left());
+        let title = match self.trades {
+            0 => format!(" Choose your talents (4 of 5): {} left ", self.left()),
+            n => format!(" Choose a trade (4 of 5): {n} left "),
+        };
         let panel = Panel::new(console, &title, WIDTH, count + EXTRA);
         list.draw_label(console, &panel);
         let (x, top) = (panel.inner_x(), panel.y + 2);
@@ -475,6 +485,27 @@ mod tests {
         // Unmarking Healthy now drops Fast healer, which needed it.
         screen.choose(at(&screen, "healthy"));
         assert!(screen.picks().is_empty(), "{:?}", screen.picks());
+    }
+
+    #[test]
+    fn a_craftsperson_marks_two_trades_first() {
+        let content = content();
+        let mut screen =
+            ChargenTalentsScreen::new(&content, &draft(&content, "human,male,craftsperson"), None);
+        assert_eq!((screen.count, screen.trades), (5, 2));
+        let crafts = content.talents().tree_id("crafts").expect("crafts");
+        let trees = |s: &ChargenTalentsScreen| -> Vec<TreeId> {
+            (s.entries.iter())
+                .filter_map(|e| e.talent)
+                .map(|t| content.talents().get(t).tree)
+                .collect()
+        };
+        assert!(trees(&screen).iter().all(|&t| t == crafts));
+        screen.choose(at(&screen, "smith"));
+        assert_eq!(screen.trades, 1);
+        screen.choose(at(&screen, "wright"));
+        assert_eq!(screen.trades, 0);
+        assert!(trees(&screen).iter().any(|&t| t != crafts));
     }
 
     #[test]

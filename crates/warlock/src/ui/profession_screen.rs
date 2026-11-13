@@ -265,15 +265,13 @@ mod tests {
     use super::*;
     use std::sync::Arc;
     use warlock_core::World;
-    use warlock_core::character::CharacterSpec;
     use warlock_core::content::Content;
 
     fn world(scenario: &str) -> World {
         let content = Arc::new(Content::builtin().expect("content"));
-        // A craftsperson: trained in Metalcraft and Woodcraft, whose recipes are the trained's
-        // alone (#1387).
-        let spec: CharacterSpec = "human,female,craftsperson".parse().expect("a character");
-        World::with_character(content, scenario, None, Some(&spec)).expect("world")
+        // The scenario's craftsperson: the forge's smith, trained in Metalcraft and Woodcraft by
+        // his trades, whose recipes are the trained's alone (#1387).
+        World::new(content, scenario, None).expect("world")
     }
 
     #[test]

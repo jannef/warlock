@@ -175,6 +175,12 @@ pub fn temperable(content: &Content, stack: &Stack) -> bool {
     craftable(content, stack, Craft::Temper)
 }
 
+/// Whether a knife may work `stack` at all: arms or armour, of wood, with something an
+/// improvement could better (Whittle's [`temperable`]).
+pub fn whittleable(content: &Content, stack: &Stack) -> bool {
+    craftable(content, stack, Craft::Whittle)
+}
+
 /// Whether an anvil accepts `stack` now: [`temperable`], and not at its last improvement.
 pub fn workable(content: &Content, stack: &Stack) -> bool {
     temperable(content, stack) && !finished(content, stack)
@@ -183,7 +189,7 @@ pub fn workable(content: &Content, stack: &Stack) -> bool {
 /// Whether a knife accepts `stack` now: arms of wood with something to better, and not at its
 /// last improvement.
 pub fn workable_wood(content: &Content, stack: &Stack) -> bool {
-    craftable(content, stack, Craft::Whittle) && !finished(content, stack)
+    whittleable(content, stack) && !finished(content, stack)
 }
 
 /// What `actor` lacks to whittle: a knife carried.

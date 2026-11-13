@@ -265,6 +265,22 @@ fn level_table(content: &Content, table: Table, out: &mut String) {
             levels.join(", ")
         );
     }
+    let creation = match table {
+        Table::Class(class) => (class.creation_bonus.as_ref()).zip(class.creation_trees(book)),
+        Table::Prestige(_) => None,
+    };
+    if let Some((bonus, trees)) = creation {
+        let trees: Vec<String> = (trees.iter()).map(|&t| book.tree(t).name.clone()).collect();
+        let _ = writeln!(
+            out,
+            "{} bonus talent{} at character creation, from {}, taken before the others.\n",
+            [
+                "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"
+            ][usize::from(bonus.count.clamp(1, 8)) - 1],
+            if bonus.count == 1 { "" } else { "s" },
+            trees.join(" or ")
+        );
+    }
     out.push_str("| Level | Ability | Effect |\n|---:|---|---|\n");
     for (level, id) in table.abilities() {
         let Some(talent) = book.id(id) else { continue };
@@ -955,6 +971,16 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::TradeBonus { value } => {
             format!("each trade you take at creation is trained {} more", signed(value))
         }
+        TalentEffect::EyeForMake => format!(
+            "an item's description reads its make: what [salvage](crafting.md#salvage) would \
+             give of it if every check went well ({}% of each material's weight, a gem whole; \
+             never the odds), how many more improvements \
+             [the anvil](altars-forges-springs.md#forges) or a knife could give it, or that it is \
+             damaged, and how hard its main material is to work (\"very hard\" for a \
+             [work](crafting.md#who-works-what) of +4 or more, \"hard\" for +1 to +3, \"soft \
+             and easy\" for -2 or less)",
+            content.salvage().map_or(0, |s| s.percent)
+        ),
         TalentEffect::LootMagicPercent { value } => format!(
             "the weights of the rarities better than a find's least {} (anything found: magic \
              and rare; what creatures drop, always magic: rare)",

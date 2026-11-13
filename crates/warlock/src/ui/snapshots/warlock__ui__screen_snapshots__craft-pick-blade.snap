@@ -15,7 +15,7 @@ expression: "render(case, content.clone())"
                   │ Dagger                                                       │
                   │                                                              │
                   │ Materials                                                    │
-                  │ > a - 8 steel ingots                                  uses 1 │
+                  │ > a - 11 steel ingots                                 uses 1 │
                   │   b - 4 iron ingots                                   uses 1 │
                   │   c - 3 mithril ingots                                uses 1 │
                   │                                                              │

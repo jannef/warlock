@@ -94,6 +94,14 @@ branch above. Tests: `mapgen/way_up_tests.rs` (Ūtgang's three rooms floors and 
 `<` however entered, Fyrdelf 12's second `<` within 30 steps of the drake for twelve seeds and
 no other floor's, the `below` content checks).
 
+A bottom (#1434): a branch's `bottom` (`DungeonDef::bottom`, exclusive with `below`, `endless`,
+and `portal`) names a hand-made level of its campaign; `leads_down` is true on its deepest level,
+whose `>` leads there (`down_to`). No stairs are placed: the hand-made level carries its own `<`
+naming the deepest level (`Content::validate` refuses a bottom without one or of another
+campaign), so `World::travel` arrives on it, and back up on the deepest level's `>`. Dēopgang's
+bottom is Gimmwīc, the deep gnomes' town. Tests: `content/dungeon.rs` (parse and exclusions),
+`content/mod.rs` (the validate checks), `world/deep_gnome_tests.rs` (down to the town and back).
+
 Special rooms (spec §7 "Special rooms") have their own topic file, `docs/dev/special-rooms.md`:
 the effects' data, the draw (`mapgen/special.rs`, last, from the level's map stream), the whole-level
 version, and what the rules ask of them.

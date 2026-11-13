@@ -27,6 +27,8 @@ pub(super) struct Case {
     pub(super) seed: Option<u64>,
     /// `--character`; the run starts with its kit.
     pub(super) character: Option<&'static str>,
+    /// `--talents`: the character's creation picks (none: its Random picks).
+    pub(super) talents: Option<&'static str>,
     /// Starts with the character's starting kit without naming a character.
     pub(super) kit: bool,
     /// Action text applied before the app starts; empty opens the main menu, unless `run`.
@@ -51,6 +53,7 @@ pub(super) const BASE: Case = Case {
     scenario: "showcase",
     seed: None,
     character: None,
+    talents: None,
     kit: false,
     actions: "",
     run: false,
@@ -73,11 +76,12 @@ const HOARD: &str = "move:SW*2 pickup move:NE*2 move:E*2 move:NE pickup move:SW 
 /// garnet).
 const GEM_CLOSET: &str = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*6 move:SW move:W*3 \
     search:50 move:S open:W move:W*2 pickup";
-/// [`GEM_CLOSET`] by a craftsperson raised to Jewelcraft 17 (three levels' skill rolls), the hand
-/// axe out of the hand: ready to Set.
-const SET_READY: &str = "xp:4000 talent:hardy advance:jewelcraft*8 talent:healthy \
-    advance:jewelcraft*8 talent:lean advance:jewelcraft*8 move:N*3 open:N move:N*2 move:E*16 \
-    open:S move:S*6 move:SW move:W*3 search:50 move:S open:W move:W*2 pickup remove:main_hand";
+/// A craftsperson's creation picks with Gemcutter first: Jewelcraft their trade.
+const GEMCUTTER: &str = "gemcutter,smith,hardy,healthy,lean";
+/// [`GEM_CLOSET`] by a [`GEMCUTTER`] craftsperson (Jewelcraft 16 at fate 8: Set's 10 and more),
+/// the hand axe out of the hand: ready to Set.
+const SET_READY: &str = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*6 move:SW move:W*3 \
+    search:50 move:S open:W move:W*2 pickup remove:main_hand";
 /// Next to the hub's hermit.
 macro_rules! hermit {
     () => {
@@ -767,7 +771,7 @@ const CASES: &[Case] = &[
         name: "temper-list-fine",
         scenario: "forge",
         actions: "move:SW move:S pickup move:W pickup move:E*2 pickup move:E pickup move:N*2 \
-                  temper:d",
+                  temper:g",
         screen: Some("temper"),
         ..BASE
     },
@@ -775,7 +779,7 @@ const CASES: &[Case] = &[
         name: "temper-list-damaged",
         scenario: "forge",
         actions: "move:SW move:S pickup move:W pickup move:E*2 pickup move:E pickup move:N*2 \
-                  temper:d temper:d",
+                  temper:g temper:g",
         screen: Some("temper"),
         ..BASE
     },
@@ -834,13 +838,14 @@ const CASES: &[Case] = &[
         screen: Some("salvage"),
         ..BASE
     },
-    // A craftsperson trained in Jewelcraft (fate 8) with the hub's secret closet's gems, a
+    // A Gemcutter craftsperson (Jewelcraft their trade) with the hub's secret closet's gems, a
     // medium fine sapphire and an uncut tiny garnet (#1355): Jewelcraft's screen (the first
     // profession whose recipes they see) lists Cut under Work; the Cut list both gems.
     Case {
         name: "profession-jewelcraft",
         seed: Some(8),
         character: Some("human,male,craftsperson"),
+        talents: Some(GEMCUTTER),
         actions: GEM_CLOSET,
         screen: Some("profession"),
         ..BASE
@@ -849,27 +854,31 @@ const CASES: &[Case] = &[
         name: "cut-list",
         seed: Some(8),
         character: Some("human,male,craftsperson"),
+        talents: Some(GEMCUTTER),
         actions: GEM_CLOSET,
         screen: Some("cut"),
         ..BASE
     },
     // The garnet cut (it splits to nothing at this fate) and the sapphire re-cut a size smaller:
-    // the list holds the small fine sapphire, and the message line says what came of it.
+    // the list holds the small fine sapphire (and the trade's uncut garnet), and the message line
+    // says what came of it.
     Case {
         name: "cut-list-after",
         seed: Some(8),
         character: Some("human,male,craftsperson"),
+        talents: Some(GEMCUTTER),
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*6 move:SW move:W*3 \
                   search:50 move:S open:W move:W*2 pickup craft:cut:n craft:cut:m",
         screen: Some("cut"),
         ..BASE
     },
-    // Set (#1356) by the same craftsperson, raised to Jewelcraft 17 by three levels' rolls, the
+    // Set (#1356) by the same craftsperson, Jewelcraft 16 from their trade, the
     // hand axe taken out of the hand: the wizard's item step lists the axe (its pommel unset),
     Case {
         name: "set-pick-item",
         seed: Some(8),
         character: Some("human,male,craftsperson"),
+        talents: Some(GEMCUTTER),
         actions: SET_READY,
         screen: Some("profession"),
         keys: Some("b"),
@@ -880,6 +889,7 @@ const CASES: &[Case] = &[
         name: "set-pick-gem",
         seed: Some(8),
         character: Some("human,male,craftsperson"),
+        talents: Some(GEMCUTTER),
         actions: SET_READY,
         screen: Some("profession"),
         keys: Some("b a"),
@@ -890,18 +900,20 @@ const CASES: &[Case] = &[
         name: "set-pick-dialog",
         seed: Some(8),
         character: Some("human,male,craftsperson"),
+        talents: Some(GEMCUTTER),
         actions: SET_READY,
         screen: Some("profession"),
         keys: Some("b a a"),
         ..BASE
     },
-    // A craftsperson carries no knife: Woodcraft's screen (its row in the abilities menu, `c`)
-    // greys the arrows and Whittle, each with the reason in place of what it takes (#1334). Only
-    // the trained have the row (#1387).
+    // A Wright craftsperson whose kit's knife (`b`) is dropped: Woodcraft's screen (its row in the
+    // abilities menu, `c`) greys the arrows and Whittle, each with the reason in place of what it
+    // takes (#1334). Only the trained have the row (#1387).
     Case {
         name: "profession-woodcraft-no-knife",
         character: Some("human,male,craftsperson"),
-        run: true,
+        talents: Some("wright,smith,healthy,lean,skill_focus:appraise"),
+        actions: "drop:b",
         screen: Some("abilities"),
         keys: Some("c"),
         ..BASE
@@ -922,6 +934,7 @@ const CASES: &[Case] = &[
     Case {
         name: "profession-metalcraft-no-anvil",
         character: Some("human,male,craftsperson"),
+        talents: Some("smith,wright,healthy,lean,skill_focus:appraise"),
         run: true,
         screen: Some("profession"),
         ..BASE
@@ -1513,14 +1526,14 @@ const CASES: &[Case] = &[
     Case {
         name: "unique-description-unidentified",
         scenario: "quarry",
-        actions: "move:W pickup",
+        actions: "drop move:W pickup",
         screen: Some("describe"),
         ..BASE
     },
     Case {
         name: "unique-description",
         scenario: "quarry",
-        actions: "move:W pickup identify",
+        actions: "drop move:W pickup identify",
         screen: Some("describe"),
         ..BASE
     },
@@ -2262,12 +2275,16 @@ pub(super) fn start(case: &Case, content: Arc<Content>) -> App {
 
     let game = (case.run || !case.actions.is_empty()).then(|| {
         let kit = case.kit || case.character.is_some();
-        let character = args.character.as_ref();
+        let picks = case.talents.map(warlock_core::world::parse_talents);
+        let character = (args.character.clone()).map(|c| match picks {
+            Some(p) => c.with_talents(p),
+            None => c,
+        });
         let world = World::start_run(
             content.clone(),
             case.scenario,
             case.seed,
-            character,
+            character.as_ref(),
             None,
             kit,
         )

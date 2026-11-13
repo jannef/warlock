@@ -26,6 +26,8 @@ const CAVE: Pos = Pos::new(14, 27);
 const YARD: Pos = Pos::new(19, 32);
 /// Grundlēas, the endless branch (#1010): open to anyone, far from the pass.
 const GROUNDLESS: Pos = Pos::new(52, 52);
+/// Dēopgang's way in, the south-west corner against Grægweall (#1434).
+const DEOPGANG: Pos = Pos::new(18, 57);
 const FENNMYNSTER: Pos = Pos::new(70, 48);
 const FYRDELF: Pos = Pos::new(97, 21);
 /// The four lairs of the wanted (the guild design §8), hidden on reserved sites.
@@ -229,6 +231,7 @@ fn the_locations_are_named_and_six_cells_apart() {
         BTreeMap::from([
             (CAVE, ("cave_mouth", "Lytelscræf")),
             (BARROW, ("barrow", "Cealdhlāw")),
+            (DEOPGANG, ("dungeon_entrance", "Dēopgang")),
             (GROUNDLESS, ("dungeon_entrance", "Grundlēas")),
             (TOWN, ("town", "Cēaptūn")),
             (YARD, ("graveyard", "Līctūn")),

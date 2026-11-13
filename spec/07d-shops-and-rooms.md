@@ -32,12 +32,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     cloaks, gloves, and boots), a provisioner ("{keeper}'s Provisions": light sources, tools,
     food, and a few potions, §8 "Potions"; 120 %, 30 %), an alchemist ("{keeper}'s Apothecary":
     potions only, a stack of potions of healing always first; 140 %, 40 %), and a fletcher ("{keeper}'s Fletchery": missile weapons and missiles;
-    125 %, 40 %). Two kinds are a town's own (`generated = false`: the shared odds, and a branch
+    125 %, 40 %). Some kinds are a town's own (`generated = false`: the shared odds, and a branch
     without `kinds` of its own, never draw them; #1248), Cēaptūn's: a smithy ("{keeper}'s
     Smithy": melee weapons, missile weapons, missiles, and armour of every kind but cloaks; 130 %,
     40 %) and a town store ("{keeper}'s General Store": everything else a general store sells,
     cloaks, light sources, tools, food, potions, scrolls, wands, and rods; buys clothing, household
-    goods, and gems too, and never lays out an elixir; 140 %, 30 %). General stores stock and buy scrolls (§8 "Scrolls"), and a generated one always lays out a
+    goods, and gems too, and never lays out an elixir; 140 %, 30 %); and Gimmwīc's (#1434): a gem
+    dealer ("{keeper}'s Stones": gems, rings, and amulets; buys materials too; 125 %, 45 %) and an
+    outfitter ("{keeper}'s Outfitters": materials, tools, light sources, food, and potions; buys
+    gems too; 130 %, 35 %). General stores stock and buy scrolls (§8 "Scrolls"), and a generated one always lays out a
     stack of scrolls of identify first (the kind's `always`, as many as its count of stacks allows); scribes wait for more scrolls.
     A kind's `never` lists objects of a stocked class it never lays out: general stores and
     provisioners never have an elixir (§8 "Potions"; #568).

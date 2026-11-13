@@ -159,7 +159,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   random, that a new character always starts with by the dice; the commoner's one profession,
   #1406), `rolls`
   (skill rolls each level gives, default
-  2: the thief and the ranger 3, the bard 4), `weapon_skills` (starting ranks as for races), `weapon_skill_choice` (two or more
+  2: the thief, the ranger, and the craftsperson 3, the bard 4), `creation_bonus` (`{ count,
+  trees }`: that many bonus talent picks at creation from those trees, spent before the
+  ordinary ones: the craftsperson's two trades, §8 "Talents"), `weapon_skills` (starting ranks as for races), `weapon_skill_choice` (two or more
   sets of such ranks, one picked at random when the character is made), and `styles` and
   `style_choice` (the same for fighting styles, §8 "Fighting styles"; `weapon_skills` names no
   style and `styles` nothing but styles), `abilities` (the level table: `{ level, talent }`

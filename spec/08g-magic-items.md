@@ -195,8 +195,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     level's `[[item]]`) are trimmed at load from `trim/<key>`; the shipped ones are given a
     `quality` and parts that fit, and a test holds it. Only a damaged improved piece is ever over
     its capacity; nothing strips it. The item description tells the capacity in words only to a
-    character trained in Appraise ("It can bear two enchantments.", "It bears all it can.").
-    Measured (`magic/shares_tests.rs`): at item level 1 about 86 % of loot's bases hold 2, so 86 %
+    holder of Eye for the make (the craftsperson's talent) or a character trained in Appraise
+    ("It can bear two enchantments.", "It bears all it can.").
+    Measured (`magic/shares_tests.rs`, accepted by the owner): at item level 1 about 86 % of loot's bases hold 2, so 86 %
     of rares keep two affixes and 11 % three or more; deeper finds are better made (above), so
     rares keep three or more 15 % of the time at item level 4, 28 % at 8, 49 % at 12, 57 % at
     16, and 64 % at 20; 88 % to 92 % of magic-grade finds are untrimmed.

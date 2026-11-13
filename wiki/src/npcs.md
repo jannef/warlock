@@ -108,7 +108,8 @@ Negotiation now and then.
   [Alberich](#alberich), deep in Fyrdelf, teaches [Mining](skills.md#skill-mining), which you need
   to [dig](digging.md#digging) at all. [Eadric](#eadric-the-smith), the smith in Cēaptūn, teaches
   [Metalcraft](skills.md#skill-metalcraft), which every smithing
-  [recipe](skill-uses.md#professions) needs.
+  [recipe](skill-uses.md#professions) needs. [Old Tregear](#old-tregear), in Gimmwīc, teaches
+  [Jewelcraft](skills.md#skill-jewelcraft).
 - With nothing to cure, mend, or identify, or a skill you already have, they tell you so, and you
   keep your gold. Without
   enough gold you are told "You cannot pay." Neither takes any time.
@@ -136,6 +137,13 @@ fire and the [anvil](altars-forges-springs.md). Besides selling arms and armour,
 [Presence](stats.md#stat-presence) and [Negotiation](skills.md#skill-negotiation), and less again
 with the town's [goodwill](#goodwill). You start it at 5. Without it you cannot temper or forge
 anything at an anvil.
+
+### Old Tregear
+
+**Old Tregear** works the cutting floor of [Gimmwīc](ascmearc.md#gimmwīc), the deep gnomes' town.
+He teaches [Jewelcraft](skills.md#skill-jewelcraft) for **1500 gold**, a little less or more by
+your [Presence](stats.md#stat-presence) and [Negotiation](skills.md#skill-negotiation). You start
+it at 5. Without it you cannot [cut](gem-cutting.md) a gem.
 
 ### Goodwill
 

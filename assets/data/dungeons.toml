@@ -17,7 +17,11 @@
 #              the branch is a way up (spec §7 "Ways up"); its deepest level's `>` leads there,
 #              that level gets a `<` back up near a vault it names, and its first level's `<`
 #              climbs out to its way in, however it was entered (default none)
-#   size       [width, height]
+#   bottom     a hand-made level of the same campaign (`bottom = "gimmwic"`) its deepest level's
+#              `>` leads to; that level's own `<` must name the deepest level (`to =
+#              "deopgang:11"`), and the player arrives on it (default none; not with `below`,
+#              `endless`, or `portal`)
+#   size      [width, height]
 #   creatures  creature ids generators may place on patrol (default none)
 #   traps      trap ids (data/traps.toml) generators hide on each level, all hidden, never on or
 #              next to stairs nor on a patrol; an id named twice comes up twice as often

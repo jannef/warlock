@@ -98,7 +98,8 @@ Only a damaged Fine, Marvellous, or Masterwork item can bear less than it holds.
 magic, which works as before.
 
 The game tells you what an item can bear only if you are trained in
-[Appraise](skills.md#skill-appraise): its description then says "It can bear two
+[Appraise](skills.md#skill-appraise) or have the craftsperson's talent
+[Eye for the make](classes.md#eye-for-the-make): its description then says "It can bear two
 enchantments.", or how many more it could bear.
 
 ## Finding them

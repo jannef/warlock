@@ -1,0 +1,22 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# A priest of the Glimmering, Gimmwīc's temple (#1434; docs/dev/creatures/deep-gnomes.md): Mother
+# Senara (her npc dialogue, campaigns/ascmearc/data/dialogue/gimmwic.toml), who cures and mends
+# for gold, as Cēaptūn's Sister Hild does. Only the town's legend places her. Peaceful.
+[[creature]]
+id = "deep_gnome_priest"
+name = "deep-gnome priest"
+glyph = "@"
+fg = "#c8e0e8"
+faction = "peaceful"
+tags = ["deep-gnome"]
+# One of the people: never greater or lesser than their kind.
+grades = false
+alignment = "good"
+vision = "darkvision"
+size = "small"
+footsteps = 30
+hearing = 12
+weight = 35000
+stats = { strength = 8, toughness = 11, intelligence = 13, willpower = 17, presence = 14 }

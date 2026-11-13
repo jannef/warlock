@@ -75,6 +75,32 @@ The sexton, **Old Dudda**, walks his rounds of the stones. He will [talk](npcs.m
 has nothing to sell and nothing to ask of you. Like the town, Līctūn has no
 [stairs](terrain.md#stairs); walk off its edge to leave.
 
+### Gimmwīc
+
+Far below the south-west corner, at the bottom of [Dēopgang](dungeon-guide.md#dēopgang), lies
+**Gimmwīc**, the town of the **deep gnomes**. They are small, grey, bald folk of the deep who love
+gemstones and making things more than anything else. They are friendly, and nothing comes there to
+fight you. You cannot play one yet.
+
+Their talk turns to their work, and they speak the Cornish of the deep: "my 'ansum", "dreckly"
+(some day), "proper job" (well done). To them you are an *emmet*, someone from up top.
+
+- **Headman Peran** speaks for the town in its moot hall. He will [talk](npcs.md) of the town, the
+  surface, and the deep. Factor Wulfrun's letter for the deep gnomes goes to him
+  ([quests](quests.md#who-gives-quests)), and he sends an answer back.
+- **The Glimmering**, the temple, is lit by crystals that never go dark. Its floor is a
+  [sanctuary](special-rooms.md): wounds heal faster there and nothing hostile steps in. **Mother
+  Senara** [cures and mends](npcs.md#services) for gold.
+- **Kerensa's Stones**, a gem dealer, sells and buys [gems](gems.md), rings, and amulets.
+  Kerensa also [identifies](npcs.md#services) what you carry.
+- **Jory's Outfitters** sells the makers' stock ([ingots](materials.md), billets, [herbs](herbs.md),
+  and essences), tools, lanterns, food, and potions.
+- **The cutting floor** has three [anvils](altars-forges-springs.md) and workbenches, free to use.
+  **[Old Tregear](npcs.md#old-tregear)** works there, and teaches
+  [Jewelcraft](skills.md#skill-jewelcraft) for gold.
+
+Its stairs up lead back to Dēopgang's eleventh floor.
+
 ### The dungeons
 
 A little cave, **[Lytelscræf](dungeons.md#the-dungeons)**, opens two cells from the pass where you
@@ -101,6 +127,10 @@ Under the volcano, **[Ūtgang](dungeon-guide.md#ūtgang)**, a way up from the bo
 hidden too, and no one tells of it: you find its mouth by climbing out of it. Somewhere in the
 holly wood near Holtwīc, a fairy mound hides **[Ælfhām](dungeon-guide.md#ælfhām)**, the hall of
 the dark court of the fey.
+
+In the south-west corner, at the foot of Grægweall, steps cut into the mountain lead down into
+**[Dēopgang](dungeon-guide.md#dēopgang)**, the deepest and most dangerous dungeon of the march. It
+is not hidden. At its bottom is [Gimmwīc](#gimmwīc), the deep gnomes' town.
 
 The map below shows them all anyway. A few places lead "nowhere yet": `>` there says so.
 
@@ -142,6 +172,8 @@ kind. Creatures keep their plain English names.
 | Holtwīc | *holt* "wood" + *wīc* "dwelling" | the dwelling at the wood | the village at the north road's end |
 | Līctūn | *līc* "body, corpse" + *tūn* "enclosure" | the corpse-yard | Cēaptūn's churchyard |
 | Ælfhām | *ælf* "elf" + *hām* "home" | the elves' home | the fey hall under the mound |
+| Dēopgang | *dēop* "deep" + *gang* "way, passage" | the deep way | the deep gnomes' road down |
+| Gimmwīc | *gimm* "gem" + *wīc* "dwelling" | the gem dwelling | the deep gnomes' town |
 | Wyrtholm | *wyrt* "herb, root" + *holm* "islet" | the herb islet | Mother Sallow's lair |
 | Wulfeshol | *wulfes* "wolf's" + *hol* "hole, den" | the wolf's hole | Black Wystan's lair |
 | Bānfeld | *bān* "bone" + *feld* "field" | the bone field | Brother Osrick's lair |

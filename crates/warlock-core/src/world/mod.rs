@@ -332,7 +332,7 @@ pub(crate) use craft::recipe_rows;
 pub use craft::{RecipeLack, RecipeRow};
 pub use craft_make::{CraftOption, CraftPlan, CraftStep, CraftStepKind, Grade, grade};
 pub(crate) use craft_make::{craft_plan, craft_steps};
-pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
+pub use creation::{chosen_with_talents, creation_bonus, creation_count, parse_talents, pick_text};
 pub use curse::{Rising, rise_candidates, rises_as};
 pub use cut::{CutBand, cut_band, cut_outcome, cuttable};
 pub use decipher::undeciphered;
@@ -355,6 +355,7 @@ pub use graveyard::Fallen;
 pub use guild::GuildRank;
 pub(crate) use hash::fnv1a;
 pub(crate) use heal::allies_beside;
+pub(crate) use item_damage::protected_in;
 pub use learn::{Odds, UNTRAINED, study_odds, study_turns};
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
@@ -382,7 +383,7 @@ pub(crate) use swim::shore_refusal;
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
 pub(crate) use talk_past::offered as encounter_choices;
-pub use temper::{temperable, workable, workable_wood};
+pub use temper::{temperable, whittleable, workable, workable_wood};
 use travel::{enter_room, instantiate_level, level_template};
 pub(crate) use unseen::{Concealed, DRAUGHT, unseen_by_player};
 pub use voice::VOICE_RANGE;
@@ -849,9 +850,25 @@ impl World {
         name: Option<&str>,
         kit: bool,
     ) -> Result<Self, WorldError> {
+        // The scenario's own character's named picks (`character = { .., talents = [..] }`): for
+        // a run as that character (none given, or the same race, gender, and class naming no
+        // picks of its own, as a replay records it).
+        let own = (content.scenario(scenario))
+            .filter(|s| match (character, &s.character) {
+                (None, _) => true,
+                (Some(c), Some(theirs)) => c.talents.is_empty() && *c == *theirs,
+                (Some(_), None) => false,
+            })
+            .map(|s| s.character_talents.clone())
+            .unwrap_or_default();
         let mut world = Self::begin(content, scenario, seed, character, name, kit)?;
+        if !world.started_with_kit() && !own.is_empty() {
+            world.take_scenario_picks(&own)?;
+            *world.perception =
+                Perception::compute(&world.state, &world.content, &mut world.lights);
+        }
         if world.started_with_kit() {
-            world.take_creation()?;
+            world.take_creation(&own)?;
             world.tell_background();
             world.player_mut().mana = world.state.player().max_mana(&world.content);
             *world.perception =
@@ -1822,6 +1839,8 @@ mod craft_make_tests;
 #[cfg(test)]
 mod craft_tests;
 #[cfg(test)]
+mod craftsperson_tests;
+#[cfg(test)]
 mod creation_tests;
 #[cfg(test)]
 mod creature_burst_tests;
@@ -1843,6 +1862,8 @@ mod damage_tests;
 mod dark_face_tests;
 #[cfg(test)]
 mod decipher_tests;
+#[cfg(test)]
+mod deep_gnome_tests;
 #[cfg(test)]
 mod den_tests;
 #[cfg(test)]
@@ -1929,6 +1950,8 @@ mod gear_tests;
 mod gem_tests;
 #[cfg(test)]
 mod gifts_tests;
+#[cfg(test)]
+mod gnome_letter_tests;
 #[cfg(test)]
 mod goodwill_tests;
 #[cfg(test)]

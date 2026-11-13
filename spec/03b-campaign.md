@@ -59,7 +59,10 @@ every new run starts in it.
   (`levels/lictun.toml`, 46×25, no stairs, no danger) inside a drystone wall with a lych-gate on
   the road, fifty gravestones in rows (§7 "Graves"), a yew in each corner, a little stone chapel
   in the middle with its altar, and **Old Dudda** the sexton (npc `dudda`, type `sexton`) on his
-  rounds of the stones, with grim, dry one-liners and mutters and no topics. The rest of the design's forty sites are reserved: plain
+  rounds of the stones, with grim, dry one-liners and mutters and no topics. **Dēopgang** (#1434,
+  "the deep way"), in the south-west corner against Grægweall (18, 57), visible to anyone who walks
+  there, is the deepest tier (§7 "Dēopgang"), and at its bottom lies **Gimmwīc** ("the gem
+  dwelling"), the deep gnomes' town. The rest of the design's forty sites are reserved: plain
   cells today, spaced so a later level drops in without moving anything.
 - **Quests** (#340, design §6.2; `campaigns/ascmearc/data/quests/`): three people in Cēaptūn
   give a chain each (three quests, Wulfrun's two), every quest offered once the one before it
@@ -75,7 +78,11 @@ every new run starts in it.
     done, since Fyrdelf starts at danger 5, and given only from character level 5 (`min_level`:
     asked sooner, she says she doesn't think the player ready, and gives and marks nothing); it
     **reveals Fyrdelf** as it is given; 100 gold, 220 XP), "Fire in the deep" (kill the fire drake in Fyrdelf, a named
-    monster: its death counts however it came; 500 gold, 900 XP).
+    monster: its death counts however it came; 500 gold, 900 XP), "A letter for the deep" (#1435,
+    once the drake is dead: deliver a sealed letter to Headman Peran in Gimmwīc, at Dēopgang's
+    bottom, who pays with a cut sapphire; 600 XP; nothing revealed or gated: Dēopgang is open to
+    anyone). Then **Headman Peran** gives "The moot's answer" (deliver his sealed reply back up
+    to Wulfrun; 300 gold, 300 XP).
   - **Wat One-Eye** (#425, the guild design §4, §7), guildmaster of **the Weyfarers' Gilde**
     (Middle English: a new organisation) in the **Gildhalle**, a timber hall in the town's
     south-east corner with its bounty board by the door: a chain of rolled quests, each drawn as

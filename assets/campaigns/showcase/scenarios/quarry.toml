@@ -3,5 +3,5 @@ description = "An old stone quarry under the hub: pick up the pick-axe, ready it
 start_level = "quarry"
 seed = 1
 # A dwarven stonecutter come to work the old quarry: a dwarf, so trained in Mining, which digging
-# needs (#1391).
-character = { race = "dwarf", gender = "male", class = "craftsperson", name = "Bram" }
+# needs (#1391), and in Metalcraft; his trades are the others, a wright's and a gemcutter's.
+character = { race = "dwarf", gender = "male", class = "craftsperson", name = "Bram", talents = ["wright", "gemcutter"] }

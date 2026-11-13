@@ -29,6 +29,10 @@
 # it, only the south road's nearest point nine cells north; by road and grass it is some sixty
 # steps from the pass. Its floors have no end and are never the same twice.
 #
+# Dēopgang (D, "the deep way"; #1434) is open to anyone who walks there too: neat steps cut into
+# the foot of Grægweall in the south-west corner, beyond Lindwudu, the deep gnomes' way down to
+# their town, Gimmwīc (levels/gimmwic.toml), at the bottom of its eleven floors.
+#
 # The town leads into Cēaptūn (levels/ceaptun.toml). The locations that lead nowhere yet (the
 # barrow, the hidden two) get their levels from later work (the dungeon branches); the rest of
 # the design's forty sites
@@ -96,7 +100,7 @@ MMMMMMMMMMMMMMMMMMMFFFFFFFFfffffffffff.""""""""""""""""""""""""""""""""sssss.sss
 MMMMMMMMMMMMMMMMMFFFfffffFffffffffff.."""""""""""""""""""""""""""""""s""""s"s...ss....s...wwwwwwwwwwwwwwwwwwwwwwwwwwwwww
 MMMMMMMMMMMMMMMMMMFFfffffffffffffffff.""."""""""""""""""""""""""""""""""""""....ss........wwwwwwwwwwwwwwwwwwwwwwwwwwwwww
 MMMMMMMMMMMMMMMMMMffFfffffffffff.........."""""""""""""""""""""""""""""...................wwwwwwwwwwwwwwwwwwwwwwwwwwwwww
-MMMMMMMMMMMMMMMMMMffffffff.f.ff...........""""""""""."""""."""".""""""""..................wwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+MMMMMMMMMMMMMMMMMMDfffffff.f.ff...........""""""""""."""""."""".""""""""..................wwwwwwwwwwwwwwwwwwwwwwwwwwwwww
 MMMMMMMMMMMMMMMMMMf.ff....f...f.f................."......"..."."..".......................wwwwwwwwwwwwwwwwwwwwwwwwwwwwww
 MMMMMMMMMMMMMMMMMMM.ff..................................."................................wwwwwwwwwwwwwwwwwwwwwwwwwwwwww
 '''
@@ -132,6 +136,9 @@ MMMMMMMMMMMMMMMMMMM.ff..................................."......................
 "8" = { terrain = "cave_mouth", name = "Lytelscræf", to = "lytelscraef:1" }
 # Open to anyone, far from the pass: the branch without a bottom, which forgets each floor left.
 "9" = { terrain = "dungeon_entrance", name = "Grundlēas", to = "grundleas:1", note = "Steps cut in bare rock, going down. Worn letters on the lintel: no stair goes twice to one place." }
+# Open to anyone, in the south-west corner against Grægweall (#1434): the deep gnomes' way down,
+# eleven floors to their town, Gimmwīc, at its bottom. No road and no quest leads to it.
+"D" = { terrain = "dungeon_entrance", name = "Dēopgang", to = "deopgang:1", note = "Steps cut small and neat into the mountain's foot, going down. A gem is set in the lintel, too high to reach." }
 "2" = { terrain = "swamp", hidden = { id = "fennmynster", terrain = "dungeon_entrance", to = "fennmynster:1", name = "Fennmynster" } }
 "3" = { terrain = "hills", hidden = { id = "fyrdelf", terrain = "mine", to = "fyrdelf:1", name = "Fyrdelf" } }
 # The fairy mound in the holly wood over Ælfhām, the Unseelie court's hall (#1140): hidden until

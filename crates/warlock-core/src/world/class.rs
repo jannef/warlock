@@ -149,9 +149,17 @@ impl World {
     }
 
     /// The trees a bonus talent pick brought by total level `level` may come from (the class of
-    /// that level's `bonus_talents`), in display order; `None`: any tree.
+    /// that level's `bonus_talents`; level 1's, the creation bonus picks, the class's
+    /// `creation_bonus`), in display order; `None`: any tree.
     pub(crate) fn bonus_trees_at(&self, level: u8) -> Option<Vec<crate::content::TreeId>> {
         let character = self.state.character.as_ref()?;
+        let creation = (level == 1)
+            .then(|| self.content.class(&character.spec.class))
+            .flatten()
+            .and_then(|class| class.creation_trees(self.content.talents()));
+        if creation.is_some() {
+            return creation;
+        }
         let (table, _) = character.class_of(&self.content, level)?;
         table.bonus_trees(self.content.talents())
     }

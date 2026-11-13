@@ -76,6 +76,7 @@ struct ClassSpec {
     rolls: u8,
     #[serde(default)]
     creation_talents: u8,
+    creation_bonus: Option<CreationBonus>,
     #[serde(default)]
     weapon_skills: BTreeMap<String, Dice>,
     #[serde(default)]
@@ -134,6 +135,17 @@ pub struct OnlySpec {
 pub(super) struct AbilitySpec {
     level: u8,
     talent: String,
+}
+
+/// `{ count = 2, trees = ["crafts"] }`: that many bonus talent picks at creation, from those
+/// trees (the craftsperson's two trades; the craftsperson design §4).
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CreationBonus {
+    /// How many (1 to 8).
+    pub count: u8,
+    /// The trees they come from, by id (at least one).
+    pub trees: Vec<String>,
 }
 
 /// `{ levels = [10, 20], trees = ["guard"] }`: a bonus talent pick at each of those levels,
@@ -235,6 +247,9 @@ pub struct ClassDef {
     pub rolls: u8,
     /// Talent picks at creation beyond everyone's (spec §8 "Talents": the bard's one more).
     pub creation_talents: u8,
+    /// Bonus talent picks at creation, from its own trees (the craftsperson's two trades):
+    /// level 1's `Due::bonus` (`world/creation.rs`).
+    pub creation_bonus: Option<CreationBonus>,
     /// Starting ranks in weapon skills (spec §8 "Weapon skills"), in skill order: added to the
     /// race's.
     pub weapon_skills: Vec<(WeaponSkillId, Dice)>,
@@ -383,6 +398,17 @@ impl ClassDef {
         let style_choice = choice(&spec.style_choice, Ranked::Styles)?;
         let abilities = table_rows(spec.abilities);
         let bonus_talents = bonus_rows(spec.bonus_talents);
+        if let Some(b) = &spec.creation_bonus {
+            if !(1..=8).contains(&b.count) {
+                return Err(err(format!(
+                    "class `{id}`: creation_bonus: count {} is not 1 to 8",
+                    b.count
+                )));
+            }
+            if b.trees.is_empty() {
+                return Err(err(format!("class `{id}`: creation_bonus names no tree")));
+            }
+        }
         for o in &spec.only {
             if o.genders.is_empty() {
                 return Err(err(format!(
@@ -407,6 +433,7 @@ impl ClassDef {
             skill_choice,
             rolls: spec.rolls,
             creation_talents: spec.creation_talents,
+            creation_bonus: spec.creation_bonus,
             weapon_skills,
             weapon_skill_choice,
             styles,
@@ -523,12 +550,33 @@ impl ClassDef {
         Some(trees)
     }
 
+    /// The trees of `book` its creation bonus picks come from, in display order; `None` for a
+    /// class without them.
+    pub fn creation_trees(&self, book: &TalentBook) -> Option<Vec<TreeId>> {
+        let bonus = self.creation_bonus.as_ref()?;
+        let mut trees: Vec<TreeId> = (bonus.trees.iter())
+            .filter_map(|t| book.tree_id(t))
+            .collect();
+        trees.sort();
+        Some(trees)
+    }
+
     /// Checks its level table against `book` (once the talents are loaded; nothing to check
     /// against a book without a class tree, whose class tables give nothing): every talent it
-    /// names is in the book, and every bonus tree is a tree that is no class tree.
+    /// names is in the book, and every bonus tree, its creation bonus's too, is a tree that is no
+    /// class tree.
     pub(super) fn check_table(&self, book: &TalentBook) -> Result<(), ContentError> {
         let err = |m: String| ContentError::new(&self.file, format!("class `{}`: {m}", self.id));
-        check_rows(&err, &self.abilities, &self.bonus_talents, book)
+        check_rows(&err, &self.abilities, &self.bonus_talents, book)?;
+        if !book.has_class_tree() {
+            return Ok(());
+        }
+        for tree in self.creation_bonus.iter().flat_map(|b| &b.trees) {
+            if book.tree_id(tree).is_none() {
+                return Err(err(format!("creation_bonus: unknown tree `{tree}`")));
+            }
+        }
+        Ok(())
     }
 }
 

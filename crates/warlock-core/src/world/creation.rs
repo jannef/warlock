@@ -38,8 +38,17 @@ pub fn pick_text(id: &str, choice: Option<&str>) -> String {
     }
 }
 
-/// How many talents a character of `spec` picks at creation: everyone's, the class's more (the
-/// bard's), and the more its race's granted talents give (the humans' Versatile).
+/// The bonus picks a character of `spec` takes at creation, from its class's own trees (the
+/// craftsperson's two trades: `creation_bonus`), besides [`creation_count`]'s.
+pub fn creation_bonus(content: &Content, spec: &CharacterSpec) -> u8 {
+    (content.class(&spec.class))
+        .and_then(|c| c.creation_bonus.as_ref())
+        .map_or(0, |b| b.count)
+}
+
+/// How many talents a character of `spec` picks at creation, its bonus picks
+/// ([`creation_bonus`]) aside: everyone's, the class's more (the bard's), and the more its race's
+/// granted talents give (the humans' Versatile).
 pub fn creation_count(content: &Content, spec: &CharacterSpec) -> u8 {
     let class = content.class(&spec.class).map_or(0, |c| c.creation_talents);
     let mut granted = talent::Talents::default();
@@ -88,24 +97,53 @@ impl World {
     }
 
     /// The creation picks still due on a drafted run ([`World::draft`]), after `picks` (each
-    /// `id` or `id:choice`) are taken: how many are left, and the talents that may fill the next,
-    /// tree by tree, with the choices each may be taken for. An error (in words) when a pick of
-    /// `picks` cannot be taken.
+    /// `id` or `id:choice`) are taken: how many are left, bonus picks included, and the talents
+    /// that may fill the next, tree by tree, with the choices each may be taken for: while a
+    /// bonus pick is left, those of the class's creation trees alone (the craftsperson's trades
+    /// come first). An error (in words) when a pick of `picks` cannot be taken.
     pub fn creation_offers(
         &self,
         picks: &[String],
     ) -> Result<(u8, Vec<(TalentId, Vec<Option<String>>)>), String> {
+        let world = self.after_picks(picks)?;
+        let due = world.creation_due();
+        let left = due.map_or(0, |d| d.talents + d.bonus);
+        Ok((left, world.creation_choices()))
+    }
+
+    /// The bonus picks of the class's creation trees still due on a drafted run after `picks`
+    /// (the craftsperson's trades left to choose; 0 for every other class).
+    pub fn creation_bonus_left(&self, picks: &[String]) -> u8 {
+        (self.after_picks(picks).ok())
+            .and_then(|w| w.creation_due())
+            .map_or(0, |d| d.bonus)
+    }
+
+    /// The drafted run with `picks` taken, or why one cannot be.
+    fn after_picks(&self, picks: &[String]) -> Result<Self, String> {
         let mut world = self.clone();
         for pick in picks {
             let (id, choice) = split(pick);
             world.learn(id, choice)?;
         }
-        let left = world.creation_due().map_or(0, |d| d.talents);
-        let offers = match left {
-            0 => Vec::new(),
-            _ => talent::offers(&world.content, &world.candidate()),
+        Ok(world)
+    }
+
+    /// The talents that may fill the next creation pick, with their choices: the creation
+    /// trees' while a bonus pick is due (any, should none of them fit), else any tree's; none
+    /// when nothing is due.
+    fn creation_choices(&self) -> Vec<(TalentId, Vec<Option<String>>)> {
+        let Some(due) = self.creation_due() else {
+            return Vec::new();
         };
-        Ok((left, offers))
+        let bonus = match due.bonus {
+            0 => Vec::new(),
+            _ => self.bonus_offers_at(1),
+        };
+        match bonus.is_empty() {
+            true => talent::offers(&self.content, &self.candidate()),
+            false => bonus,
+        }
     }
 
     /// The Random picks of a drafted run ([`World::draft`]): the talents its character takes
@@ -116,10 +154,10 @@ impl World {
         world.take_random().unwrap_or_default()
     }
 
-    /// The creation picks due, if any (level 1's talent picks).
+    /// The creation picks due, if any (level 1's talent and bonus picks).
     fn creation_due(&self) -> Option<Due> {
         (self.state.progress.due.first())
-            .filter(|d| d.level == 1 && d.talents > 0)
+            .filter(|d| d.level == 1 && (d.talents > 0 || d.bonus > 0))
             .copied()
     }
 
@@ -129,28 +167,33 @@ impl World {
             return;
         };
         let talents = creation_count(&self.content, spec);
-        if talents > 0 {
+        let bonus = creation_bonus(&self.content, spec);
+        if talents > 0 || bonus > 0 {
             let due = Due {
                 level: 1,
                 talents,
                 rolls: 0,
-                bonus: 0,
+                bonus,
             };
             self.state.progress.due.insert(0, due);
             self.settle_due();
         }
     }
 
-    /// Spends the creation picks: the ones the character names, else the Random picks, and
-    /// records them in the character. Fails when a named pick cannot be taken, or when they are
-    /// too few or too many.
-    pub(super) fn take_creation(&mut self) -> Result<(), WorldError> {
+    /// Spends the creation picks: the ones the character names, else the scenario's own
+    /// character's (`scenario`, its `talents`, none for another character) and then the Random
+    /// picks for the rest, and records them in the character. Fails when a named pick cannot be
+    /// taken, or when they are too few or too many.
+    pub(super) fn take_creation(&mut self, scenario: &[String]) -> Result<(), WorldError> {
         let Some(spec) = self.state.character.as_ref().map(|c| c.spec.clone()) else {
             return Ok(());
         };
-        let count = creation_count(&self.content, &spec);
+        let count = creation_count(&self.content, &spec) + creation_bonus(&self.content, &spec);
         let taken = if spec.talents.is_empty() {
-            self.take_random()?
+            self.take_named(scenario)?;
+            let mut taken = scenario.to_vec();
+            taken.extend(self.take_random()?);
+            taken
         } else {
             for pick in &spec.talents {
                 let (id, choice) = split(pick);
@@ -168,11 +211,35 @@ impl World {
         if let Some(due) = self.creation_due() {
             return Err(WorldError::Character(format!(
                 "{} more talent(s) to pick: this character takes {count} at creation",
-                due.talents
+                due.talents + due.bonus
             )));
         }
         if let Some(character) = &mut self.state.character {
             character.spec.talents = taken;
+        }
+        Ok(())
+    }
+
+    /// A run of the scenario's own character without the starting kit (a dev launch, tests,
+    /// golden walks): its creation picks are opened, the scenario's named `picks` taken, and
+    /// the rest dropped (no Random picks: such a run takes nothing it is not told to).
+    pub(super) fn take_scenario_picks(&mut self, picks: &[String]) -> Result<(), WorldError> {
+        self.open_creation();
+        self.take_named(picks)?;
+        self.state.progress.due.retain(|d| d.level != 1);
+        Ok(())
+    }
+
+    /// Takes the scenario's own character's named picks, in order; a pick that cannot be taken
+    /// is an error naming the scenario.
+    fn take_named(&mut self, picks: &[String]) -> Result<(), WorldError> {
+        for pick in picks {
+            let (id, choice) = split(pick);
+            self.learn(id, choice).map_err(|why| {
+                let why = why.trim_end_matches('.');
+                let scenario = &self.state.scenario;
+                WorldError::Character(format!("scenario `{scenario}`: talent `{pick}`: {why}"))
+            })?;
         }
         Ok(())
     }
@@ -185,7 +252,7 @@ impl World {
         let mut rng = Rng::stream(self.state.seed, &format!("character/talents/{spec}"));
         let mut taken = Vec::new();
         while self.creation_due().is_some() {
-            let offers = talent::offers(&self.content, &self.candidate());
+            let offers = self.creation_choices();
             if offers.is_empty() {
                 break;
             }

@@ -1,0 +1,33 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# A deep-gnome trader (#1434; docs/dev/creatures/deep-gnomes.md): keeps a store in Gimmwīc (its
+# level file's `[[shop]]` tables name the type with `creature`) and on the rooms floors of
+# Dēopgang (the branch's `shops`), with data/shops.toml's shared kit and purse, at its post beside
+# the door. Like every keeper it trades with all and fights no one until robbed or attacked: then
+# it is outraged, and dangerous. Small and quick-handed, and it sees in the dark.
+[[creature]]
+id = "deep_gnome_trader"
+level = 18
+xp = 400
+name = "deep-gnome trader"
+glyph = "@"
+fg = "#b4a8d0"
+speed = 1150
+faction = "merchants"
+tags = ["deep-gnome"]
+# One of the people: never greater or lesser than their kind.
+grades = false
+alignment = "good"
+vision = "darkvision"
+size = "small"
+# It keeps to its post by the door: it does not swap places with you there.
+budge = "off_post"
+sight = 12
+opens_doors = true
+footsteps = 35
+hearing = 10
+weight = 40000
+stats = { strength = 18, dexterity = 17, toughness = 18, intelligence = 15, willpower = 15, presence = 13 }
+base_hp = 56
+skills = { appraise = 80, negotiation = 60 }

@@ -109,6 +109,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   map."), as a quest's reveal would; arriving on the overworld any other way reveals nothing. A
   `below` naming the branch itself, an unknown level, an endless branch's, or another campaign's
   is a content error, as is `below` on an endless branch.
+  **A bottom** (`bottom = "gimmwic"`, #1434): a bounded branch may end in a hand-made level of its
+  campaign instead; its deepest level's `>` leads there, and that level's own `<` must lead back to
+  the deepest level (a content error otherwise, or with `below`, `endless`, or a portal).
   The Ascmearc's first branch is **Cealdhlāw** (`cealdhlaw`, #337; the campaign design §7), the
   cold barrow under Hlāwdūn, its way in on the overworld from the start: six floors, the barrow's
   passages (rooms, 80×21) on 1–2 and the hill's hollows (caves, 100×40) on 3–6, danger 1 to 6
@@ -419,6 +422,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
   foot (103, 17), is a hidden location revealed only by climbing out of it, never by a quest. Its
   `arrival`: "Warm air breathes up the shaft from far below." The `utgang` dev scenario starts on
   level 1.
+- **Dēopgang** (#1434; `campaigns/ascmearc/data/dungeons/deopgang.toml`): "the deep way", the
+  deep gnomes' road down from the foot of Grægweall in the south-west corner (18, 57), a visible
+  location from the start (no quest gates it). Eleven floors, danger 14 to 24: the gnomes' old cut
+  galleries (rooms, 80×21) on 1–4, with the deep-gnome traders' general stores in about half, and
+  the wild deep (caves, 120×60) on 5–11; 12 °C, 14 °C on 9–11. Its population is the folk of the
+  deep (duergar, drow, earth and water elementals, trolls, ogres, the stone giant, knockers, the
+  dead of old cave-ins, the deep's lurkers), nothing above level 27 and nothing from the surface;
+  the dread one in 50, one in 40 on 9–11; more secret doors and chests than the shared odds; ores
+  silver and gold only, so gems are a larger share of a miner's finds. Its bottom ("A bottom") is
+  **Gimmwīc** ("the gem dwelling", `levels/gimmwic.toml`), the deep gnomes' town, a hand-made
+  level with no danger: Headman Peran in the moot hall, the Glimmering (a sanctuary; Mother Senara
+  cures and mends), Kerensa's Stones (a gem dealer; she identifies), Jory's Outfitters, and the
+  cutting floor with three anvils, where Old Tregear teaches Jewelcraft (§8 "Dialogue":
+  "Training"). Its `arrival`: "Cut steps, worn hollow, go down into still, cold air. Far below, a
+  hammer rings." The dev scenarios `deopgang` and `gimmwic` start on its first floor and in the
+  town.
 - **Ælfhām** (#1140; `campaigns/ascmearc/data/dungeons/aelfham.toml`): "the elves' home", the
   Unseelie court's hall behind a fairy mound in Holegnwudu, its way in a hidden location of the
   overworld (25, 13), seven cells north-east of Holtwīc, leading to `aelfham:1` and revealed by

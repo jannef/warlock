@@ -2,7 +2,7 @@
 # Fyrdelf chain. The lost shaft under Fyrbeorg, which she marks on the player's map as they take it
 # up (the reveal, §8), offered only to someone who has been four levels down into Cealdhlāw
 # (Fyrdelf starts deeper than that) and given only from level 5 (asked before, she says `early`),
-# and what woke in its deep workings.
+# and what woke in its deep workings; then the letter to the deep gnomes and their answer (#1435).
 
 [[quest]]
 id = "lost_shaft"
@@ -37,3 +37,41 @@ accept = "It lies at the bottom of the workings, twelve levels down. Take water.
 reminder = "The fire drake, at the bottom of Fyrdelf."
 done = "Dead? Truly? Then I shall write a new page in the ledger, the first in years. Here. The mines owe me more, but this is what I have."
 where = "It lies on Fyrdelf's twelfth and lowest level."
+
+# After the drake (#1435): with the mines open again, Wulfrun wants trade with the deep gnomes'
+# gem-cutters, and sends a letter (the shared `sealed_letter`) to Headman Peran of Gimmwīc, at the
+# bottom of Dēopgang. Dēopgang is open to anyone (no `reveals`: its way in is never hidden), so the
+# quest only tells the way. Peran pays for the walk down with a cut stone and, once that is done,
+# gives the moot's answer to carry back up: the second stage, his to give, hers to take. It lives
+# here, beside the letter it answers, because a quest `requires` only those loaded before it.
+[[quest]]
+id = "gnome_letter"
+name = "A letter for the deep"
+giver = "wulfrun"
+requires = "fire_deep"
+type = "deliver"
+target = "sealed_letter"
+to = "peran"
+reward = { xp = 600, items = ["gem:sapphire"] }
+alignment = 10
+offer = "With the drake dead the mines may dig again, and stones want cutting. The traders whisper of deep gnomes, grey folk who cut gems as nobody up here can, in a town at the bottom of the Deep Way. Carry this letter to whoever speaks for them? It proposes trade, most politely."
+accept = "Splendid. The Deep Way is Dēopgang: steps cut into the foot of Grægweall, in the far south-west beyond Lindwudu. Eleven levels down, I am told. Do keep the seal unbroken."
+reminder = "My letter, to whoever speaks for the deep gnomes, at the bottom of Dēopgang."
+done = "A letter? From up top? Well I never. Factor Wulfrun, an' a seal an' all. Trade, she says, proper polite. The moot'll want to chew on that. 'Ere, my 'ansum, for the walk down. 'Tis a fair stone, cut in Gimmwīc."
+where = "Dēopgang's steps are cut into the foot of Grægweall, in the far south-west beyond Lindwudu. Gimmwīc lies at its bottom."
+
+[[quest]]
+id = "gnome_reply"
+name = "The moot's answer"
+giver = "peran"
+requires = "gnome_letter"
+type = "deliver"
+target = "sealed_letter"
+to = "wulfrun"
+reward = { gold = 300, xp = 300 }
+alignment = 10
+offer = "The moot's sat on yer Factor's letter, my 'ansum, an' sat long. 'Ere's our answer, sealed proper. Carry 'un back up to 'er, would 'ee? A stone for a sack, fair weights, an' no emmets down the Deep Way without they're asked."
+accept = "Mind it don't get wet. Ink runs, an' then where's we to?"
+reminder = "Our answer goes up to yer Factor Wulfrun, in the market town. Dreckly'll do. Not too dreckly, mind."
+done = "From the gnomes? Sealed with a garnet, of all things. Fair weights, a stone for a sack, no visitors unasked... I can live with every word of it. The town owes you, and so do I. Here."
+where = "Factor Wulfrun keeps her office in Cēaptūn."

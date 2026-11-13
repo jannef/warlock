@@ -206,6 +206,8 @@
 #                                 of the holder's: a level-up roll on it throws the die one step
 #                                 up, as a class's known-for skill does
 #   trade_bonus { value }         added to the dice of each trade it takes as it is handed down
+#   eye_for_make                  item descriptions read the item's make: what salvage would
+#                                 give, the improvements left, how hard its stuff is to work
 #   loot_magic_percent { value }  loot it finds and creatures drop: the weights of the rarities
 #                                 better than the least the find may be, that percent more
 #   read_percent { value }        reading a scroll takes that percent more time (negative: less)

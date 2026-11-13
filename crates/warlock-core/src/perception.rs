@@ -1768,23 +1768,38 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// What item descriptions show the player of worth (spec §8 "Talents": Gem lore) and of
-    /// make (an item's capacity, to one trained in Appraise: docs/dev/enchanting.md), by their
-    /// own abilities.
+    /// make (an item's capacity, to a holder of Eye for the make or one trained in Appraise:
+    /// docs/dev/enchanting.md), by their own abilities.
     pub fn appraisal(&self) -> crate::magic::describe::Appraisal {
         let talents = self.player.talent_mods(self.content);
         let appraise = self.content.skill_id("appraise");
         let trained = appraise.and_then(|s| self.player.skills.value(s));
         crate::magic::describe::Appraisal {
             gems: talents.gem_worth,
-            capacity: trained.is_some_and(|v| v > 0),
+            capacity: talents.eye_for_make || trained.is_some_and(|v| v > 0),
         }
     }
 
     /// `stack`'s description as the player knows it (spec §6 "Item description"):
     /// [`crate::magic::describe::appraised`] with their eye for worth, a wand whose type they
     /// know saying what it does in their hands ([`PerceptionView::wand_does`]).
+    /// With Eye for the make (the craftsperson's), what it reads of the item's make follows
+    /// ([`crate::magic::describe::make_lines`]), after the capacity line, before a unique's
+    /// power and lore.
     pub fn describe_item(&self, stack: &Stack) -> Vec<crate::magic::describe::Line> {
-        crate::magic::describe::appraised_for(stack, self.lore, self.appraisal(), Some(self.player))
+        use crate::magic::describe::{self, LineKind};
+        let mut lines =
+            describe::appraised_for(stack, self.lore, self.appraisal(), Some(self.player));
+        if self.player.talent_mods(self.content).eye_for_make {
+            let percent = self.content.salvage().map_or(0, |s| s.percent);
+            let protected = crate::world::protected_in(self.content, self.quests, stack);
+            let make = describe::make_lines(stack, self.lore, percent, protected);
+            let at = (lines.iter())
+                .rposition(|l| !matches!(l.kind, LineKind::Power | LineKind::Lore))
+                .map_or(lines.len(), |i| i + 1);
+            lines.splice(at..at, make);
+        }
+        lines
     }
 
     /// What the wand `stack` does in the player's hands once they know its type (its rung comes

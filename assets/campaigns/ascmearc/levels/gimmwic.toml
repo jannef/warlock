@@ -1,0 +1,256 @@
+# Gimmwīc, "the gem dwelling" (#1434): the deep gnomes' town at the bottom of Dēopgang, cut out of
+# the rock. A hand-made level below the branch's eleventh floor (data/dungeons/deopgang.toml's
+# `bottom`): its stairs up (<) lead back there, and the player arrives on them. Nothing comes: no
+# danger, no population. Everyone here is peaceful (the townsfolk, the people, the traders), so
+# the town is safe unless the player steals. Deep gnomes see in the dark; the lamps, torches, and
+# the Glimmering's crystals are for their guests and their work.
+#
+# North of the street, from the west: the arrival cave and its stairs; the moot hall, where
+# Headman Peran (P) speaks for the town at its long table; across the lane the Glimmering, the
+# temple, a sanctuary (the [[room]] table: wounds heal faster and nothing hostile steps in) lit by
+# its crystals, where Mother Senara (M) cures and mends for gold beside the altar; and Kerensa's
+# Stones, the gem dealer, who also appraises (identifies) what the player carries for gold.
+#
+# South of the street: Jory's Outfitters, the makers' stock (ingots, billets, herbs, essences),
+# the deep's tools, and food; the cutting floor, the town's open workshop, with three anvils
+# (every Metalcraft and Jewelcraft recipe that asks for one is made here, Temper too), two
+# forge braziers, and the workbenches, where Old Tregear (T) teaches Jewelcraft for gold; two
+# houses with a gnome at home in one; the mushroom garden and its pool, east; and down the lane
+# the fungus farm and a third house.
+#
+# The townsfolk (deep gnomes, 1-6) go about the street, the lane, the farm, and the garden.
+name = "Gimmwīc"
+arrival = "Lamplight, and the ring of hammers on small anvils: Gimmwīc, the deep gnomes' town."
+# The deep's stable cold, a little warmed by the forges.
+temperature = 14
+item_level = 14
+map = '''
+########################################################################
+####......########################::####################################
+###...<....####l......P.......l###::##.r....M_......u.##################
+##."...@....###...s.s.s.s.s....###::##................###...........####
+#¡..........##¡...ΠΠΠΠΠΠΠΠΠΠ...¡##3:##....u.....r.....###...........####
+##..........¡##...s.s.s.s.s....###::##................##¡...........¡###
+##........".###l..............l###::##.a............g.###...........####
+###.".......##########'###########::#########'################'#########
+##::::::::1:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::##
+##::::::::::::::::::::::::::::::::::::::2:::::::::::::::::::::::::::::##
+#######'###############''#########::#####+########+######:::..........##
+###..........###................##::##=.....=##=.....=###.".....".."..##
+###..........###.A........SS..A.##::##.......##.......###.."..........##
+##¡..........###B......T........##::##..sΠs..##..sΠs..###...6.......".##
+###..........###...............B##::##l....7.##......l###.............##
+###..........###.A..............##::#####################...~~~~~~~...##
+################....wwwwwwww....##:4#####################...~~~~~~~...##
+##################################::#l......=############...~~~~~~~.."##
+##################################::#........############...~~~~~~~...##
+##################...............#::+..sΠs...############."...........##
+##################.".."..".."..".#::#........############.....".......##
+##################....5...........::#.8.....=###########################
+##################.."..".."..".."#::####################################
+##################l..............#::####################################
+##################################::####################################
+########################################################################
+'''
+
+[legend]
+":" = "flagstones"
+'"' = "fungus"
+"l" = { terrain = "floor", light = "lamp" }
+"¡" = "sconce"
+"B" = "brazier"
+"A" = "anvil"
+"w" = "workbench"
+"S" = "shelves"
+"=" = "bed"
+"Π" = "table"
+"s" = "stool"
+# Where a run started here begins (the `gimmwic` scenario), beside the stairs.
+"@" = { terrain = "floor", spawn = "player" }
+# The stairs back up to Dēopgang's eleventh floor (its `>` leads here: `bottom`).
+"<" = { terrain = "stairs_up", to = "deopgang:11" }
+# The Glimmering's crystals, set by the first gnomes.
+"r" = { terrain = "crystal", light = "crystal_red" }
+"u" = { terrain = "crystal", light = "crystal_blue" }
+"a" = { terrain = "crystal", light = "crystal_amber" }
+"g" = { terrain = "crystal", light = "crystal_green" }
+# The townsfolk on their rounds.
+"1" = { terrain = "flagstones", creature = "deep_gnome", route = "E50 W50" }
+"2" = { terrain = "flagstones", creature = "deep_gnome", route = "W30 E30" }
+"3" = { terrain = "flagstones", creature = "deep_gnome", route = "S18 N18" }
+"4" = { terrain = "flagstones", creature = "deep_gnome", route = "N12 S12" }
+"5" = { terrain = "floor", creature = "deep_gnome", route = "E8 W8" }
+"6" = { terrain = "floor", creature = "deep_gnome", route = "E6 W6" }
+# At home.
+"7" = { terrain = "floor", creature = "deep_gnome" }
+"8" = { terrain = "floor", creature = "deep_gnome" }
+# The town's people (campaigns/ascmearc/data/dialogue/gimmwic.toml).
+# A lamp over the headman's seat: the hall's two by its walls leave the head of the long table
+# dark, and a guest without darkvision must see him to talk to him (#1435's letter goes to him).
+"P" = { terrain = "floor", light = "lamp", creature = "deep_gnome_headman", npc = "peran" }
+"M" = { terrain = "floor", creature = "deep_gnome_priest", npc = "senara" }
+"T" = { terrain = "floor", creature = "deep_gnome_jeweller", npc = "tregear" }
+
+# The Glimmering, walls and door included, is a sanctuary (data/room_effects.toml).
+[[room]]
+effect = "sanctuary"
+area = [37, 1, 54, 7]
+
+# Kerensa's Stones: loose gems, uncut and cut, and rings and amulets, some set with a stone. Its
+# keeper is Kerensa, a deep-gnome trader who speaks her own words and appraises for gold.
+[[shop]]
+kind = "gem_dealer"
+keeper = "Kerensa"
+npc = "kerensa"
+creature = "deep_gnome_trader"
+area = [57, 3, 67, 6]
+post = [62, 6]
+
+[[pile]]
+at = [58, 3]
+objects = ["gem:garnet*3"]
+
+[[pile]]
+at = [60, 3]
+objects = ["gem:zircon*2"]
+
+[[pile]]
+at = [62, 3]
+objects = ["gem:amethyst*2"]
+
+[[pile]]
+at = [64, 3]
+objects = ["gem:topaz"]
+
+[[pile]]
+at = [66, 3]
+objects = ["gem:ruby"]
+
+[[item]]
+at = [58, 5]
+object = "gem"
+parts = [{ of = "smokestone", size = "small", cut = "uncut" }]
+
+[[item]]
+at = [58, 5]
+object = "gem"
+parts = [{ of = "garnet", size = "medium", cut = "uncut" }]
+
+[[item]]
+at = [60, 5]
+object = "gem"
+parts = [{ of = "heliodor", size = "small", cut = "uncut" }]
+
+[[item]]
+at = [60, 5]
+object = "gem"
+parts = [{ of = "sapphire", size = "tiny", cut = "uncut" }]
+
+[[item]]
+at = [64, 5]
+object = "gem"
+parts = [{ of = "emerald", size = "small", cut = "fine" }]
+
+[[item]]
+at = [66, 5]
+object = "gem"
+parts = [{ of = "diamond", size = "tiny", cut = "fine" }]
+
+[[pile]]
+at = [58, 6]
+objects = ["silver_ring", "iron_ring"]
+
+[[item]]
+at = [60, 6]
+object = "gold_ring"
+parts = [{ part = "setting", of = "garnet", size = "tiny", cut = "fair" }]
+
+[[pile]]
+at = [64, 6]
+objects = ["gold_amulet"]
+
+[[item]]
+at = [66, 6]
+object = "silver_ring"
+parts = [{ part = "setting", of = "amethyst", size = "tiny", cut = "fine" }]
+
+# Jory's Outfitters: the makers' stock (ingots of iron, steel, copper, silver, and gold; billets;
+# herbs and essences), the deep's tools and light, and food for the climb back.
+[[shop]]
+kind = "outfitter"
+keeper = "Jory"
+creature = "deep_gnome_trader"
+area = [3, 11, 12, 15]
+post = [7, 11]
+
+[[pile]]
+at = [3, 11]
+objects = ["piece:iron*8"]
+
+[[pile]]
+at = [4, 11]
+objects = ["piece*6"]
+
+[[pile]]
+at = [5, 11]
+objects = ["piece:copper*6"]
+
+[[pile]]
+at = [9, 11]
+objects = ["piece:silver*4"]
+
+[[pile]]
+at = [10, 11]
+objects = ["piece:gold*2"]
+
+[[pile]]
+at = [12, 11]
+objects = ["piece:wood*8"]
+
+[[pile]]
+at = [3, 13]
+objects = ["glowcap*3"]
+
+[[pile]]
+at = [4, 13]
+objects = ["moonwort*3"]
+
+[[pile]]
+at = [5, 13]
+objects = ["essence_of_earth*2"]
+
+[[pile]]
+at = [6, 13]
+objects = ["essence_of_fire"]
+
+[[pile]]
+at = [9, 13]
+objects = ["pick_axe"]
+
+[[pile]]
+at = [10, 13]
+objects = ["lantern"]
+
+[[pile]]
+at = [11, 13]
+objects = ["rope"]
+
+[[pile]]
+at = [12, 13]
+objects = ["flask_of_oil*3"]
+
+[[pile]]
+at = [3, 15]
+objects = ["ration*6"]
+
+[[pile]]
+at = [5, 15]
+objects = ["candle*10"]
+
+[[pile]]
+at = [9, 15]
+objects = ["potion_of_healing*2"]
+
+[[pile]]
+at = [12, 15]
+objects = ["dried_meat*8"]

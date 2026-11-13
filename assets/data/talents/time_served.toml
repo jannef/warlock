@@ -1,0 +1,10 @@
+# The craftsperson's class ability from level 1 (spec §8 "Class abilities": Time served; the
+# craftsperson design §7.1): passive, read once, as each trade is handed down (world/trade.rs).
+[[talent]]
+id = "time_served"
+name = "Time served"
+tree = "class"
+granted = true
+description = "You served your time at a trade: each trade you take when you are made starts well above a dabbler's."
+effects = [{ kind = "trade_bonus", value = 6 }]
+systems = ["skills"]

@@ -395,6 +395,8 @@ mod tests {
                 "weaponsmith",
                 "armourer",
                 "smithy",
+                "gem_dealer",
+                "outfitter",
                 "provisioner",
                 "alchemist",
                 "fletcher"

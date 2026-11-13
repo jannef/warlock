@@ -1198,7 +1198,10 @@ mod tests {
             !content.class("merchant").expect("a class").hidden,
             "offered (#1407)"
         );
-        assert!(content.class("craftsperson").expect("a class").hidden);
+        assert!(
+            !content.class("craftsperson").expect("a class").hidden,
+            "offered (#1419)"
+        );
         assert_eq!(refused("human,male,craftsperson"), None);
         // What character creation offers is exactly what is open and not hidden.
         for race in &content.races().list {
