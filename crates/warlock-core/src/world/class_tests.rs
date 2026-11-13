@@ -131,11 +131,35 @@ fn a_talent_already_picked_is_not_given_again_but_brings_a_pick_in_its_place() {
     );
     assert_eq!(w.due().map(|d| (d.level, d.talents)), Some((32, 1)));
     assert!(holds(&w, "big_hands"), "the others still come");
-    // Without the pick made early, the level brings nothing to choose.
-    let mut w = world("commoner");
-    arrive(&mut w, 32);
+    // Without the pick made early, the level brings nothing to choose: a run (by its seed) whose
+    // `levelup:auto` picks up to 31 left Second wind alone (they follow the character's skills
+    // and gifts, #1406's trade among them).
+    let spec: CharacterSpec = "human,male,commoner".parse().expect("a character");
+    let grant = |w: &mut World, level: u8| {
+        let spec = w.state.character.as_ref().map(|c| &c.spec);
+        let factor = Factor::of(w.content(), spec);
+        let more = w.content().experience().threshold_for(level, factor) - w.player_xp();
+        run(w, &format!("xp:{more}"));
+        w.player_level() == level
+    };
+    let mut w = (1..)
+        .find_map(|seed| {
+            let w = World::with_character(BUILTIN.clone(), "showcase", Some(seed), Some(&spec));
+            let mut w = w.expect("world");
+            // Gifts that hasten the XP (Riddler's mind) may skip a level: another seed.
+            if !grant(&mut w, 31) {
+                return None;
+            }
+            while w.due().is_some() {
+                run(&mut w, "levelup:auto");
+            }
+            (!holds(&w, "second_wind")).then_some(w)
+        })
+        .expect("a seed");
+    assert!(grant(&mut w, 32));
+    w.advance_auto();
     assert!(holds(&w, "second_wind"));
-    assert_eq!(w.due().map(|d| d.level), None);
+    assert_eq!(w.due().map(|d| d.level), None, "{:?}", said(&w));
 }
 
 #[test]
@@ -172,6 +196,31 @@ fn unlikely_hero_raises_every_stat_and_toughness_the_hit_points() {
             "{stat:?}"
         );
     }
+    assert_eq!(
+        p.max_hp(w.content()) - max,
+        p.hp - hp,
+        "hit points rise with the maximum"
+    );
+}
+
+#[test]
+fn stubborn_raises_toughness_by_two_and_the_hit_points_with_it() {
+    // #1406: the stat itself, score and potential, at the commoner's 12.
+    let mut w = world("commoner");
+    reach(&mut w, 11);
+    let (stats, hp, max) = {
+        let p = w.state.player();
+        (p.stats, p.hp, p.max_hp(w.content()))
+    };
+    w.grant_class(12, true);
+    assert!(holds(&w, "stubborn"));
+    let p = w.state.player();
+    for stat in Stat::ALL {
+        let more = if stat == Stat::Toughness { 2 } else { 0 };
+        assert_eq!(p.stats.score(stat), stats.score(stat) + more, "{stat:?}");
+        assert_eq!(p.stats.potential(stat), stats.potential(stat) + more);
+    }
+    assert!(p.max_hp(w.content()) > max);
     assert_eq!(
         p.max_hp(w.content()) - max,
         p.hp - hp,
@@ -320,7 +369,11 @@ fn checks_of_a_stat_take_the_talents_bonus() {
     );
     assert_eq!(mods(&w).check(Stat::Willpower), 2);
     give(&mut w, "stubborn");
-    assert_eq!(mods(&w).check(Stat::Toughness), 1);
+    assert_eq!(
+        mods(&w).check(Stat::Toughness),
+        0,
+        "Toughness itself instead (#1406)"
+    );
     let poisoned = w.content().status_id("poisoned").expect("poisoned");
     assert!(mods(&w).no_penalty.contains(&poisoned));
 }

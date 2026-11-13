@@ -1446,10 +1446,9 @@ mod tests {
             grants.contains("| Drow | Spot `1d6+4`, Stealth `1d4+2` | Sneak attack `2d4` (40 %) |")
         );
         assert!(grants.contains(
-            "| Commoner | Athletics `2d4+4`, Handle animal `2d4+4` | Heal `2d4` (15 %), \
-             Metalcraft `2d4` (10 %), Mining `2d4` (10 %), Survival `2d4` (30 %), \
-             Swim `2d4` (20 %), \
-             Woodcraft `2d4` (20 %) |"
+            "| Commoner | Athletics `2d4+4`, Handle animal `2d4+4`; one of Alchemy, Jewelcraft, \
+             Metalcraft, Woodcraft `2d4+4`, picked at random | Heal `2d4` (15 %), \
+             Mining `2d4` (10 %), Survival `2d4` (30 %), Swim `2d4` (20 %) |"
         ));
         let ladder = text("skill-ladder.md");
         assert!(

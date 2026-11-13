@@ -20,7 +20,12 @@ potentials `base_potential` + the race's, never below the score. Flags for rules
 `ClassDef` with `stats`, `hp`, `alignment`, `known_for`, `optional_skills` (#662, rolled from
 their own stream `character/optional-skills/<spec>`, so adding or changing one moves no other
 roll; a race's `optional_skills`, #682, come after the class's from the same stream;
-`docs/dev/skills.md`; Decipher script, the one way to learn from a grimoire since #1270,
+`docs/dev/skills.md`; `skill_choice`, #1406, `ClassDef::skill_choice`: one of its skills
+picked uniformly, then its dice, from the stream `character/skill-choice/<spec>` after the
+optional skills, so nothing else moves; the loader refuses an unknown skill, one of the class's
+`skills`, one named twice, or fewer than two; only the commoner has one, the four professions
+(`data/recipes/`) at `2d4+4`, its optional Metalcraft and Woodcraft dropped, its Mining kept;
+like an optional skill it gets no class bonus on a level-up roll; Decipher script, the one way to learn from a grimoire since #1270,
 `docs/dev/spells.md` "Learning": wizard, witch, priest, druid `2d6+10` in `skills`, bard,
 paladin, ranger `2d4+4`, aristocrat `{ chance = 35, dice = "2d4+4" }`, ascetic `{ chance = 20,
 dice = "2d4" }`, and merchant `{ chance = 25, dice = "2d4" }` in `optional_skills`; Spellcraft,
@@ -68,7 +73,7 @@ closed or hidden class). `Draft::spec` falls back from a preselected class not o
 scenario's, or one remembered before the race or gender changed) to the first offered.
 `CharacterSpec::check_open` (`check` plus `refuses`) is what the game's and `warlock-cli`'s
 `--character` ask; hidden classes pass it, so dev runs, tests, replays, and scenarios keep the
-everyday folk. A scenario's own character, a replay, and a save are never checked (the test
+craftsperson and the merchant (the commoner is offered again since #1406). A scenario's own character, a replay, and a save are never checked (the test
 world's forge and quarry keep their craftspeople). Tests: `character.rs`
 (`classes_are_closed_to_some_races_and_genders`, `class_limits_name_known_races`),
 `chargen_screen.rs` (`the_class_step_lists_and_draws_only_classes_open_to_the_race_and_gender`),
