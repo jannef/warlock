@@ -785,6 +785,15 @@ const CASES: &[Case] = &[
         screen: Some("temper"),
         ..BASE
     },
+    // The craftsperson's Make do and mend list (#1422): the damaged long sword alone.
+    Case {
+        name: "make-do-list",
+        scenario: "forge",
+        actions: "move:SW move:S pickup move:W pickup move:E*2 pickup move:E pickup move:N*2 \
+                  temper:g temper:g",
+        screen: Some("make-do"),
+        ..BASE
+    },
     // A ranger in the Thornwood after a forage (spec §8 "Foraging"): Survival listed as its
     // use, Forage, usable; the message line says what came of it.
     Case {

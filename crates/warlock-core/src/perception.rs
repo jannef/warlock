@@ -1797,9 +1797,10 @@ impl<'a> PerceptionView<'a> {
         let mut lines =
             describe::appraised_for(stack, self.lore, self.appraisal(), Some(self.player));
         if self.player.talent_mods(self.content).eye_for_make {
-            let percent = self.content.salvage().map_or(0, |s| s.percent);
+            let percent = crate::world::salvage_percent(self.content, self.player);
             let protected = crate::world::protected_in(self.content, self.quests, stack);
-            let make = describe::make_lines(stack, self.lore, percent, protected);
+            let mends = self.player.talent_mods(self.content).make_do.is_some();
+            let make = describe::make_lines(stack, self.lore, percent, protected, mends);
             let at = (lines.iter())
                 .rposition(|l| !matches!(l.kind, LineKind::Power | LineKind::Lore))
                 .map_or(lines.len(), |i| i + 1);
@@ -2089,6 +2090,12 @@ impl<'a> PerceptionView<'a> {
                     .any(|stack| crate::world::undeciphered(self.content, &self.lore(), stack)) =>
             {
                 Some(crate::ability::Unavailable::NoUnknownScroll)
+            }
+            // Make do and mend needs a damaged thing carried, not worn (`world/make_do.rs`).
+            Ability::Class(crate::content::ClassActive::MakeDo)
+                if !crate::world::mends_any(self.player) =>
+            {
+                Some(crate::ability::Unavailable::NothingToMend)
             }
             // Sic 'em needs its beast on the level (`world/sic.rs`).
             Ability::Class(crate::content::ClassActive::Sic) if !companion_here => {

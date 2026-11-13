@@ -1,0 +1,11 @@
+# The craftsperson's class ability from level 6 (spec §8 "Class abilities": Waste not; the
+# craftsperson design §7.3): passive, three reads: salvage's yield (world/salvage.rs), a failed
+# recipe's stock back (world/craft_make.rs), and a failed Temper or Whittle (world/temper.rs).
+[[talent]]
+id = "waste_not"
+name = "Waste not"
+tree = "class"
+granted = true
+description = "Nothing is lost in your hands but time: what you take apart gives back more, a failed work loses none of its stock, and a failed temper spoils nothing."
+effects = [{ kind = "waste_not", salvage = 75, failed = 100 }, { kind = "temper_safe" }]
+systems = ["skills"]

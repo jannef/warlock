@@ -47,7 +47,8 @@ stone, hide, cloth, glass, and resin (amber).
 An item can be **damaged** in several ways, and it is always the same state. A damaged item loses
 its improvements and is a point worse until it is mended, at an
 [anvil](altars-forges-springs.md#forges) or, for wood, with a knife
-([Whittle](skill-uses.md#whittling)). That is the state a failed attempt at an anvil leaves it
+([Whittle](skill-uses.md#whittling)), or anywhere by a craftsperson's
+[Make do and mend](classes.md#make-do-and-mend). That is the state a failed attempt at an anvil leaves it
 in. An item damaged again, by anything, is **destroyed**. Only its name tells what did it: *a
 corroded*, *a rusted*, *a scorched*, or *a damaged long sword*.
 

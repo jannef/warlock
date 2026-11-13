@@ -18,8 +18,8 @@
 //!   Untrained, the check is made all the same.
 //! - **The outcome**: the one item (a stack of several gives up one, set apart first, as Temper
 //!   sets it apart) is destroyed whatever comes of the checks: its magic, improvements, rung, and
-//!   charges are gone. A made material gives its stock, `yield` % of its grams
-//!   ([`crate::piece::break_up`]); a gem comes out whole, its size and cut kept. A failed
+//!   charges are gone. A made material gives its stock, `yield` % of its grams, or the
+//!   holder's Waste not's where that is more ([`salvage_percent`]; [`crate::piece::break_up`]); a gem comes out whole, its size and cut kept. A failed
 //!   material is lost, but a failed gem only drops a cut (while above the roughest true cut) or
 //!   else a size (while above the smallest) ([`chipped`]); a natural 2, or a gem with nothing to
 //!   lose, shatters it. A material no profession works gives nothing and is not mentioned.
@@ -55,6 +55,14 @@ pub fn salvageable(content: &Content, stack: &Stack) -> bool {
         && !money
         && (stack.parts(content).iter())
             .any(|p| content.stock().profession_of(content, p.material).is_some())
+}
+
+/// The percent of a made material's grams salvage gives `actor` back: `data/salvage.toml`'s
+/// `yield`, or the holder's Waste not where that is more (`TalentMods::salvage_percent`; the
+/// craftsperson design §7.3). The one read, for the work and for Eye for the make's line.
+pub fn salvage_percent(content: &Content, actor: &super::Actor) -> u8 {
+    let percent = content.salvage().map_or(0, |s| s.percent);
+    percent.max(actor.talent_mods(content).salvage_percent)
 }
 
 /// What a failed check leaves of a gem cut as `cutting`: one cut rougher while it is above the
@@ -189,6 +197,7 @@ impl World {
                 natural,
             });
         }
+        let percent = salvage_percent(&content, self.state.player());
         let at = self.set_apart(item);
         let one = self.state.player().inventory[at].clone();
         super::outcome::remove_stacks(self.player_mut(), &[at]);
@@ -199,7 +208,7 @@ impl World {
         }
         // What it falls to, each fall by its material, kept, chipped, or lost by its check.
         let mut saved: Vec<Stack> = Vec::new();
-        for fall in crate::piece::break_up(&one, &content, rules.percent) {
+        for fall in crate::piece::break_up(&one, &content, percent) {
             let Some(material) = fall.parts(&content).first().map(|p| p.material) else {
                 continue;
             };

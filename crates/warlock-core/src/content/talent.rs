@@ -484,6 +484,14 @@ pub enum TalentEffect {
     /// left in it, how hard its stuff is to work (Eye for the make;
     /// [`crate::magic::describe::make_lines`]).
     EyeForMake,
+    /// Nothing is wasted in its hands (Waste not): salvage gives back `salvage` % of each made
+    /// material's grams, and a failed recipe `failed` % of its stock and object inputs, each
+    /// where it is more than everyone's (`data/salvage.toml`'s, `data/recipes.toml`'s `yield`;
+    /// `world/salvage.rs::salvage_percent`, `world/craft_make.rs::failed_percent`).
+    WasteNot { salvage: u8, failed: u32 },
+    /// A failed Temper or Whittle damages nothing: the item is as it was, the attempt counted
+    /// (Waste not; `world/temper.rs`).
+    TemperSafe,
     /// The actor notices hidden things in passing as if trained in Spot and Detect traps, with
     /// this much added.
     Notice { value: i32 },
@@ -1148,6 +1156,10 @@ pub enum TalentEffect {
     /// The class active Merchant's eye: a stack the player carries is identified, for the time of
     /// a reading (`world/merchants_eye.rs`; spec §8 "Class abilities").
     MerchantsEye,
+    /// The class active Make do and mend: a damaged thing the player carries mended in the field,
+    /// with no anvil, in `seconds`, by a check against `difficulty` plus its main material's
+    /// `work` that destroys nothing (`world/make_do.rs`; the craftsperson design §7.5).
+    MakeDo { seconds: u32, difficulty: i32 },
     /// The class active Spirit weapon: a melee weapon of spirit-stuff called into the hand in a
     /// shape chosen (`world/spirit_weapon.rs`; spec §8 "Prestige classes"), which strikes
     /// `to_hit` surer, threatens `threat` lower, and ignores all Protection if
@@ -1292,6 +1304,7 @@ impl TalentEffect {
             TalentEffect::Knock { .. } => A::Knock,
             TalentEffect::Scribe { .. } => A::Scribe,
             TalentEffect::MerchantsEye => A::MerchantsEye,
+            TalentEffect::MakeDo { .. } => A::MakeDo,
             TalentEffect::SpiritWeapon { .. } => A::SpiritWeapon,
             _ => return None,
         })
