@@ -120,9 +120,14 @@ impl World {
         profile
     }
 
-    /// `blow` by `attacker`, `unseen` (it is [`World::sneaking`]), with the sneak dice added
-    /// when it hit.
-    pub(super) fn ambushed(&mut self, attacker: ActorId, unseen: bool, blow: Blow) -> Blow {
+    /// `blow` by `attacker` at `target`, `unseen` (it is [`World::sneaking`]), with the sneak
+    /// dice added when it hit.
+    pub(super) fn ambushed(
+        &mut self,
+        (attacker, target): (ActorId, ActorId),
+        unseen: bool,
+        blow: Blow,
+    ) -> Blow {
         if !unseen || !blow.strike.is_hit() {
             return blow;
         }
@@ -130,8 +135,10 @@ impl World {
             return blow;
         };
         let extra = dice.roll(&mut self.state.rng).max(0);
-        // A sneak attack that hits builds the attacker's resources (spec §8 "Resources").
-        self.gain_resource(attacker, Build::SneakAttack);
+        // A sneak attack that hits builds the attacker's resources (spec §8 "Resources"); its
+        // openings only on its mark, or with none standing (`mark.rs`).
+        let marked = self.builds_on(attacker, target);
+        self.build_resources(attacker, Build::SneakAttack, marked);
         // And marks the player's Sneak attack and Dexterity (training stream).
         if attacker == self.state.player && self.trains(Use::SneakAttack) {
             self.train(Use::SneakAttack);

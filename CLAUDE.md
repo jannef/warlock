@@ -240,7 +240,7 @@ and its thresholds),
 their alignment band, `Alignment Kind`, then their combat stance when it is not neutral,
 `Stance Frenzy`, then each guild they belong to with their rank, `Guild
 Weyfarers' Gilde, Tin`, then
-`Effects Bleeding, Diseased` when they suffer any, then `Diseases filth fever`, the diseases they
+`Effects Bleeding, Diseased` when they suffer any, then `Mark the kobold`, the creature their openings are in (docs/dev/openings.md), then `Diseases filth fever`, the diseases they
 know they have, then what they resist in words, `Resistant to cold`, `Vulnerable to fire`,
 `Immune to poison`), `weapon_skills` (the player's
 ranks and progress toward the next, `Long blades 2 (40%)`, fighting styles too (the caster styles among them, `Sniper 2 (10%)`; JSON `caster_styles` has those alone), those in use
@@ -262,7 +262,7 @@ words; `no familiar` without one; docs/dev/familiar.md), `truth`
 glyph, **dev-only**; on a level with a danger
 it and `actors` start with `danger 3 population 2/6 spawn next 08:15:00`), `actors` (every actor on the level with its hit points, mana, its resources (`resources rage
 11/20 (0)`, with progress), and
-Defence and Protection, its alignment (`alignment evil`; the player's score and band), its court (`court seelie`, a fey's), whether it is unseen (`invisible`, by its kind or a status now, or `shadowy`), whether it is `rooted`, its weight, what it carries and of that wears and wields (magic items as they truly
+Defence and Protection, its alignment (`alignment evil`; the player's score and band), its court (`court seelie`, a fey's), the player's mark (`mark #12`, docs/dev/openings.md), whether it is unseen (`invisible`, by its kind or a status now, or `shadowy`), whether it is `rooted`, its weight, what it carries and of that wears and wields (magic items as they truly
 are, "(unidentified)" marked, a wand's rung `(rung 2)`, an anvil's work `(attempts 2: die to_hit)`), what its magic items do to it (`magic strength +1`), its burden
 and carrying limit, its weapon skills with marks, its stats as score/potential, its status
 effects with severities, its diseases (progressions, checks won in a row, time to their next
@@ -286,7 +286,7 @@ each known spell's rung of its roll's ladder with the score and the outside rung
 strong light dazzles light-blind eyes, `allies 2` while the player has allies on the level or in their retinue, `encounter pending: a band of kobolds (ambush, evade,
 fight)` while an overworld encounter waits for an answer, and the
 `temperature`; JSON dumps add `hp`, `mana` (`current`, `max`), `resources` (the
-ones held: `id`, `current`, `max`), `defence`, `protection`, `resistances` (by damage type id, the
+ones held: `id`, `current`, `max`, and `on`, the mark a marked pool's points are in, else null), `defence`, `protection`, `resistances` (by damage type id, the
 word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `guilds` (`id`, `name`, `rank`; left out before joining one), `hunger`, `stance` (the combat stance's id), `dazzled`, `encounter` (the overworld encounter pending: `entry`, `name`, `outcome`, `title`, `text`, `choices` (`id`, `label`), or null; with `--state` also the dev `encounter_tables`, those matching the player's cell, and the dev `callings`, each of the campaign's with its `class`, `level`, `from`, and `status`: `open`, `level_not_met`, `not_from`, `called`), `effects`
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
@@ -297,7 +297,7 @@ word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the ba
 `raised`, `age`, `born`, `sign`, and `lucky`, a lucky day's title, only for one born on it, `prestige`, the prestige class once called, and `classes`, every class with its own level, `[{ class, level }]`), `due` (the level-up choices due: `level`, `talents`,
 `rolls`, `bonus`, or null), `abilities` (in menu order: `id`, `source`,
 `aim`, and `unavailable`, the reason's id or null), `quests` (the log: `id`, `name`, `kind`, `active`, `completed`, `giver`, `target` (what a rolled quest drew, else null),
-`objective`, `status`), `story` (the background story's lines: `chapter`, `line`, `text`; `character.story` the ids, `parents/plain_folk`), each seen actor's `health` and `effects` (those that show), `known` (what the player's Knowledge tells of its kind, by damage type id, the word; left out while it tells nothing), `ally` (true for an ally of the player's), and a composite animated thing's `bands` (its colours, top first), `allies` (the player's allies wherever they are: `id`, `creature`, `name`, `health`, `order`, `at`, `source`, `lasts` (minutes, or null), `retinue`, `here`), `companion` (the player's companion: `id`, `name`, `creature`, `grade`, `health`, `order`, `at`, `pos` (where seen, else null), `retinue`; null without one), `room` (the
+`objective`, `status`), `story` (the background story's lines: `chapter`, `line`, `text`; `character.story` the ids, `parents/plain_folk`), each seen actor's `health` and `effects` (those that show), `known` (what the player's Knowledge tells of its kind, by damage type id, the word; left out while it tells nothing), `ally` (true for an ally of the player's), `marked` (true for the player's mark), and a composite animated thing's `bands` (its colours, top first), `allies` (the player's allies wherever they are: `id`, `creature`, `name`, `health`, `order`, `at`, `source`, `lasts` (minutes, or null), `retinue`, `here`), `companion` (the player's companion: `id`, `name`, `creature`, `grade`, `health`, `order`, `at`, `pos` (where seen, else null), `retinue`; null without one), `room` (the
 special room the player stands in, if they know it), and per inventory stack (in position
 order) its `letter` (the position as action text), `class` (item class id), `name`, `rarity`,
 `identified`, `magic` (affixes only once identified), and `numbers` (what it gives as the
@@ -374,6 +374,7 @@ file). Topics:
 - `docs/dev/caster-styles.md` — the caster styles (Sniper, Toucher, Battle caster): the grip by the spell, their benefit in the hooks, `practise_cast` and the `Outcome`, the caster curve, the Magic page (the schools of magic are only spell categories since #1263)
 - `docs/dev/spells.md` — the spell data: spell levels (0 to 70), the cost table, the `[[spell]]` files and their checks (none on strength), tags, learning
 - `docs/dev/resources.md` — alternative resources: the data, `Actor::resources`, grant, gain, spend, and end, time in the status loop, ability costs, the dev grant
+- `docs/dev/openings.md` — the thief's openings: the mark (`Actor::mark`, `world/mark.rs`), chosen attacks and free blows, the builds (`mark_kill`), the clears, the refusal, what the player sees
 - `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn, blood by damage type, fire's char
 - `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight, spawning, gear (a stable index: roster PRs edit only their own `docs/dev/creatures/<tribe>.md`, e.g. `undead.md`, never this file)
 - `docs/dev/summoning.md` — creatures' summoning (enemy-only): the `summon` table, the cooldown status, who summoned whom, the AI hook, the words

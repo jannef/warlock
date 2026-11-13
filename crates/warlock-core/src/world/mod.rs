@@ -217,6 +217,7 @@ mod lurk;
 mod make_do;
 mod malison;
 mod mana;
+mod mark;
 mod mastery;
 mod material_drops;
 mod merchants_eye;
@@ -1070,6 +1071,7 @@ impl World {
             split_from: None,
             ally: None,
             risen: None,
+            mark: None,
             alignment: content.alignment().map(|_| alignment),
             alignment_override: None,
             npc: None,
@@ -2070,6 +2072,8 @@ mod malison_tests;
 mod mana_talent_tests;
 #[cfg(test)]
 mod mana_tests;
+#[cfg(test)]
+mod mark_tests;
 #[cfg(test)]
 mod mastery_tests;
 #[cfg(test)]

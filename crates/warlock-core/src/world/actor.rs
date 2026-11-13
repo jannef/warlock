@@ -247,6 +247,12 @@ pub struct Actor {
     /// left out of saves and hashes then.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub risen: Option<GameTime>,
+    /// Whose guard its openings are in (the thief's mark; `world/mark.rs`): the creature its
+    /// last chosen attack was at, while it holds a pool `marked` in data (Openings). Set and
+    /// cleared only in `mark.rs`; creatures never have one. Left out of saves and hashes while
+    /// `None`, so runs without a thief save and hash as before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mark: Option<ActorId>,
     /// Its alignment score (spec §8 "Alignment"; [`crate::alignment`]): the player's, when the
     /// content has alignment rules; creatures have none, and stand where [`Actor::nature`]
     /// says. Moved only by `World::shift_alignment`; never shown as a number.

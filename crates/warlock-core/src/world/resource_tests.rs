@@ -440,8 +440,8 @@ fn creatures_are_shown_none_and_the_dumps_show_the_players_own() {
     assert_eq!(
         json["resources"],
         serde_json::json!([
-            { "id": "rage", "current": 11, "max": 20 },
-            { "id": "focus", "current": 10, "max": 10 },
+            { "id": "rage", "current": 11, "max": 20, "on": null },
+            { "id": "focus", "current": 10, "max": 10, "on": null },
         ])
     );
     let actors = crate::dump::ascii(&w, &[crate::dump::Layer::Actors]);

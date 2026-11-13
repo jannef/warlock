@@ -48,6 +48,16 @@ pub fn the(name: &str) -> String {
     }
 }
 
+/// `called` ("the kobold", "Black Wystan") as an owner: "the kobold's", and a name ending
+/// in s with the apostrophe alone ("Hrothgar's", "the Hounds'").
+pub fn possessive(called: &str) -> String {
+    if called.ends_with('s') {
+        format!("{called}'")
+    } else {
+        format!("{called}'s")
+    }
+}
+
 /// [`the`] at the start of a sentence: "The kobold", "Black Wystan".
 pub fn the_start(name: &str) -> String {
     if is_proper(name) {

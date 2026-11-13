@@ -398,6 +398,7 @@ impl World {
         // In another's turn: said after that turn's reports, as a free blow is.
         let earlier = std::mem::take(&mut self.news);
         self.held = Some(Vec::new());
+        self.choose_at_cell(at, true);
         self.player_looses(at, loose, events);
         let held = self.held.take().unwrap_or_default();
         self.news = earlier;

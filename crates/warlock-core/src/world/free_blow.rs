@@ -546,6 +546,8 @@ impl World {
         }
         let seen =
             (self.state.actors.get(&at)).is_some_and(|a| self.perception.sees_actors_at(a.pos));
+        // A blow the player did not choose never moves their mark (`mark.rs`).
+        self.free_blow_at(at);
         if !blow.kind.out_of_turn() {
             return self.player_blow(at, seen, Some(blow), events);
         }

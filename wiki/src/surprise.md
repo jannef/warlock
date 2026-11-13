@@ -110,7 +110,8 @@ thief's [Improved sneak attack](talents.md#talent-improved-sneak-attack). They a
   surprise the foe.
 - [Vanishing act](talents.md#talent-vanishing-act) leaves you light on your feet after a sneak
   attack that kills.
-- Every sneak attack that hits gives the thief an [opening](resources.md#resource-openings).
+- Every sneak attack that hits gives the thief an [opening](resources.md#resource-openings),
+  if it is on their [mark](resources.md#the-mark) or they have none.
 - Two weapon abilities trigger on a sneak attack that hits:
   [Knife in the dark](weapon-skills.md#weapon-ability-knife-in-the-dark) and
   [Hunter's shot](fighting-styles.md#style-ability-hunters-shot).

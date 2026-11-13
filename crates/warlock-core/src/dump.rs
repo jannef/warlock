@@ -60,7 +60,7 @@ pub enum Layer {
     /// any, then their own scores, one stat a line (`Strength 12`, lowered while a status effect
     /// or stat damage lowers it), then their alignment band (`Alignment Kind`; spec §8
     /// "Alignment", never the score), then their status effects by name (`Effects Bleeding,
-    /// Diseased`) and the diseases they know they have (`Diseases filth fever`) if any; never
+    /// Diseased`), the creature their openings are in (`Mark the kobold`), and the diseases they know they have (`Diseases filth fever`) if any; never
     /// potentials, modifiers, how severe an effect is, or a disease's timers.
     Stats,
     /// Not a map: the player's own trained skills, one a line in skill order (`Stealth 17`);
@@ -1033,6 +1033,10 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
     if !effects.is_empty() {
         rows.push(format!("Effects {}", effects.join(", ")));
     }
+    // Whose guard their openings are in (`world/mark.rs`), their own choice.
+    if let Some(mark) = view.own_mark() {
+        rows.push(format!("Mark {mark}"));
+    }
     let diseases: Vec<&str> = (view.own_diseases())
         .map(|d| content.disease(d).name.as_str())
         .collect();
@@ -1728,6 +1732,11 @@ fn actor_rows(world: &World) -> Vec<String> {
                 Some(by) => format!("{court}; summoned by {by}"),
                 None => court,
             };
+            // Whose guard its openings are in (`world/mark.rs`).
+            let court = match a.mark {
+                Some(mark) => format!("{court}; mark {mark}"),
+                None => court,
+            };
             // Whose ally it is, what made it one, how long it stays, and its order (spec §8
             // "Allies"): `; ally of #0 (summoned, 4 min; follow)`, `(companion; stay at (12, 5))`,
             // `(summoned; follow; retinue)`.
@@ -2056,6 +2065,10 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             if a.unaware {
                 seen["unaware"] = json!(true);
             }
+            // The player's mark (`world/mark.rs`).
+            if a.marked {
+                seen["marked"] = json!(true);
+            }
             // An ally of the player's (spec §8 "Allies").
             if a.ally {
                 seen["ally"] = json!(true);
@@ -2282,6 +2295,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 "id": content.resource(r.resource).id,
                 "current": r.value,
                 "max": r.max,
+                "on": view.own_mark().filter(|_| r.marked),
             }))
             .collect::<Vec<_>>(),
         "experience": view.own_experience(),

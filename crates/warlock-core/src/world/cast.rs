@@ -952,6 +952,10 @@ impl World {
         }
         let last = path.last().copied();
         let target = last.and_then(|p| self.state.actor_at(&level, p).map(|a| a.id));
+        // A spell of the player's that rolls to hit is an attack they chose (`mark.rs`).
+        if let Some(target) = target.filter(|_| caster == self.state.player && def.rolls_to_hit()) {
+            self.choose_mark(target);
+        }
         let Some(target) = target else {
             // Finding no one it flies on, but its nature falls where it was aimed, if it got
             // that far: Ray of frost builds a bridge a cell at a time.
@@ -1054,7 +1058,7 @@ impl World {
                 let profile = self.sneak_threat(by, unseen, profile);
                 let blow = combat::strike(&profile, &against, &mut self.state.rng);
                 // The sneak dice come on top, as after Protection.
-                let sneak = self.ambushed(by, unseen, blow).damage - blow.damage;
+                let sneak = self.ambushed((by, target), unseen, blow).damage - blow.damage;
                 self.spell_practised(target, skills, blow, made);
                 let spell = (AttackKind::Spell, skills);
                 self.sneak_trigger((by, target), spell, (unseen, Some(blow)), made);

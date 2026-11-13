@@ -2,10 +2,10 @@
 id = "patient_blade"
 name = "Patient blade"
 tree = "shadow"
-description = "Your openings fade more slowly, and a sneak attack that kills gives you two."
+description = "Your openings fade more slowly, and a foe you have been working on gives you two openings when it falls."
 needs = { class = "thief", level = 32 }
 effects = [
     { kind = "resource_rate", resource = "openings", value = -50 },
-    { kind = "resource_build", resource = "openings", on = "sneak_kill", amount = 1 },
+    { kind = "resource_build", resource = "openings", on = "mark_kill", amount = 1 },
 ]
 systems = ["stealth", "resources", "sneak_attack"]

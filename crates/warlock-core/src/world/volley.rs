@@ -69,6 +69,7 @@ impl World {
             self.spend_resource(player, cost.resource, cost.amount, events);
         }
         self.say("You loose a volley!");
+        self.choose_at_cell(at, false);
         for _ in 0..volley.shots {
             if self.state.death.is_some() {
                 break;
