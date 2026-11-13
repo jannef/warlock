@@ -2,18 +2,56 @@
 
 use super::actions::at_normal_pace;
 use super::order;
-use super::text::{Term, anchored, capital, glyph, yes};
+use super::text::{Term, anchored, article, capital, glyph, yes};
 use std::fmt::Write as _;
 use warlock_core::content::{BASE_TURN, Content, ItemClassId, ObjectDef, ObjectId, price};
 use warlock_core::object::format_weight;
 
 /// The equipment slots in the order the screen lists them, with their letters, what goes in
-/// each, and how long putting a thing on there or taking it off takes.
+/// each, and how long putting a thing on there or taking it off takes. A class's own slot (the
+/// aristocrat's extra rings) says whose it is, with its letter for them; every other slot has
+/// the letter it has for everyone else.
 pub(super) fn equipment(content: &Content) -> String {
     let mut out = String::from(
         "| Letter | Slot | What goes there | On or off takes |\n|:---:|---|---|---:|\n",
     );
-    for (i, (slot, def)) in content.slot_ids().enumerate() {
+    for (slot, def) in content.slot_ids() {
+        // Its letter for whoever has it; for an ordinary slot also the letter of each class
+        // whose own slots come before it ("`j`, an aristocrat's `m`").
+        let letter_for = |class: Option<&str>| {
+            let i = (content.slots_for(class))
+                .position(|(s, _)| s == slot)
+                .unwrap_or_default();
+            char::from(b'a' + i as u8)
+        };
+        let mut letter = format!("`{}`", letter_for(def.class.as_deref()));
+        if def.class.is_none() {
+            let mut classes: Vec<&str> = (content.slots().iter())
+                .filter_map(|s| s.class.as_deref())
+                .collect();
+            classes.dedup();
+            for class in classes {
+                let theirs = letter_for(Some(class));
+                if theirs != letter_for(None) {
+                    let name = content.class(class).map_or(class, |c| c.name.as_str());
+                    let _ = write!(
+                        letter,
+                        ", {} {}'s `{theirs}`",
+                        article(name),
+                        name.to_lowercase()
+                    );
+                }
+            }
+        }
+        let name = match &def.class {
+            Some(class) => {
+                let plural = content
+                    .class(class)
+                    .map_or(class.clone(), |c| format!("{}s", c.name.to_lowercase()));
+                format!("{} ([{plural}](classes.md#{class}) only)", def.name)
+            }
+            None => def.name.clone(),
+        };
         let fits: Vec<String> = (order::objects(content).into_iter())
             .filter(|&(id, _)| content.fits_properly(id, slot))
             .map(|(_, o)| {
@@ -40,9 +78,7 @@ pub(super) fn equipment(content: &Content) -> String {
         let cost = content.action_costs().cost(def.action);
         let _ = writeln!(
             out,
-            "| `{}` | {} | {fits} | {} |",
-            char::from(b'a' + i as u8),
-            def.name,
+            "| {letter} | {name} | {fits} | {} |",
             at_normal_pace(price(cost, BASE_TURN))
         );
     }
@@ -53,7 +89,8 @@ pub(super) fn equipment(content: &Content) -> String {
 pub(super) fn goes_on(content: &Content, id: ObjectId) -> String {
     // Where it belongs; else where it may be readied (rocks: the missile weapon slot).
     let names = |proper: bool| -> Vec<String> {
-        (content.slot_ids())
+        // Everyone's slots: the extra rings of an aristocrat's are in the slot table.
+        (content.slots_for(None))
             .filter(|&(s, _)| {
                 if proper {
                     content.fits_properly(id, s)

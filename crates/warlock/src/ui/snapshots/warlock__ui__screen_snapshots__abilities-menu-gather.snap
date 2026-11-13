@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You open the door. (×2)
- You search the glowing fungus for herbs. You gather a sprig of moonwort.
+ You do not know what to do with these: gathering herbs takes the Herbalism skill.
 
 
 
@@ -19,7 +19,7 @@ expression: "render(case, content.clone())"
                     │ Weapon skills                                            │
                     │   f  Shield bash        you hold no shield               │
                     │ Here                                                     │
-                    │   g  Gather             in a direction                   │
+                    │   g  Gather             you are untrained in Herbalism   │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
 
 
 
- The Hub  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1  ·  08:09       ? controls
+ The Hub  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1  ·  08:04       ? controls

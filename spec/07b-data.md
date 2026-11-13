@@ -746,9 +746,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `right_ring` both fit `ring`), `action` (the action that puts a thing on here or takes it off,
   for its time: `wield`, `wear`, `body_armor`, or `ready` in `data/actions.toml`), `mark` (what
   the inventory says of a thing here: "being worn"), and `hand` (default false; a two-handed
-  object takes every hand slot, and a light weapon fits every one). The built-in slots, ADOM's: Head, Neck, Body (`body_armor`),
+  object takes every hand slot, and a light weapon fits every one), and `class` (default none: a
+  class id; only a character of that class has the slot, nobody else sees, fills, or is given
+  it, and creatures never: `Content::slots_for`; a known class, checked once the classes load).
+  The built-in slots, ADOM's: Head, Neck, Body (`body_armor`),
   Cloak, Main hand and Off hand (`wield`, hands; "wielded", "in off hand"), Hands, Left ring
-  and Right ring ("on left hand", "on right hand"), Feet, Missile weapon and Missiles (`ready`;
+  and Right ring ("on left hand", "on right hand"), the aristocrat's Extra ring 1 to 3 (`class =
+  "aristocrat"`, fit `ring`, "on a finger"; #1404: born to wealth, they wear more), Feet, Missile weapon and Missiles (`ready`;
   "readied", "quivered"), Tool (`ready`, "in use"; M19); the rest `wear`, "being worn". The wiki
   shows them in a generated table with what fits each.
 - **Factions** (`data/factions.toml`, optional; without it everyone is neutral): `[[faction]]`

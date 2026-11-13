@@ -1,5 +1,6 @@
-//! The equipment screen (spec §6; `e`), as in ADOM: every slot by its letter (`a` Head to `m`
-//! Tool, from `data/slots.toml`) with what is in it, or `—`.
+//! The equipment screen (spec §6; `e`), as in ADOM: every slot the player has by its letter (`a`
+//! Head to `m` Tool, from `data/slots.toml`; an aristocrat's three extra ring slots too, after the
+//! hands' rings, to `p`) with what is in it, or `—`.
 //!
 //! A slot's letter, or Enter on the `>` row, opens the choice of what goes there
 //! ([`ItemScreen`]): the inventory stacks that fit the slot, in the one paged list
@@ -88,6 +89,8 @@ struct Text<'a> {
 /// A slot as the equipment screen shows it.
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct SlotRow {
+    /// The slot it is (rows skip another class's own slots, so a row's place is not its id).
+    slot: SlotId,
     name: String,
     item: Option<Item>,
     /// Where in the inventory what it holds is.
@@ -129,14 +132,13 @@ impl EquipmentScreen {
 
     /// Reads the player's equipment again (after a choice was done), keeping the `>` row.
     pub fn refresh(&mut self, view: &PerceptionView<'_>) {
-        let content = view.content();
         let worn = view.equipment();
-        self.rows = content
-            .slot_ids()
+        self.rows = (view.own_slots().into_iter())
             .map(|(slot, def)| {
                 let item = worn.get(slot);
                 let slots = item.map_or(Vec::new(), |i| worn.slots_of(i));
                 SlotRow {
+                    slot,
                     name: def.name.clone(),
                     item: (item.and_then(|i| view.inventory().get(i))).map(|s| Item::of(s, view)),
                     held: item,
@@ -152,7 +154,7 @@ impl EquipmentScreen {
 
     /// The slot on the `>` row: the one a choice opened from here is for.
     pub fn selected(&self) -> SlotId {
-        SlotId(u8::try_from(self.cursor).unwrap_or(0))
+        self.rows.get(self.cursor).map_or(SlotId(0), |r| r.slot)
     }
 
     /// Where in the inventory what the `>` row's slot holds is: what a description opened from
@@ -306,7 +308,7 @@ impl ItemScreen {
         let Some(view) = view else { return screen };
         let content = view.content();
         // The slots, and the equipment screen's totals line.
-        screen.rows = content.slots().len() + 1;
+        screen.rows = view.own_slots().len() + 1;
         if usize::from(slot.0) >= content.slots().len() {
             return screen;
         }
@@ -648,7 +650,7 @@ mod tests {
             item: 8,
         });
         screen.refresh(&world.perception());
-        assert_eq!(screen.selected(), SlotId(9));
+        assert_eq!(Some(screen.selected()), world.content().slot_id("feet"));
         let text = drawn(|c| screen.draw(c, &b));
         assert!(row(&text, "> j  Feet").contains("a pair of leather boots"));
         world.apply(&Action::Move(Dir::E));

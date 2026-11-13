@@ -1010,9 +1010,10 @@ mod tests {
                 .map(|t| book.get(t).id.as_str())
                 .collect()
         };
-        assert!(at(5).is_empty());
-        assert_eq!(at(18), ["fencing", "riposte"]);
-        assert_eq!(at(60).len(), 4);
+        // Level 1's (Family wealth, #1404) and nothing more before Fencing at 6.
+        assert!(at(5).contains(&"family_wealth") && !at(5).contains(&"fencing"));
+        assert!(at(18).ends_with(&["fencing", "riposte"]), "{:?}", at(18));
+        assert!(at(60).contains(&"peerless") && !at(60).contains(&"iron_will"));
         assert_eq!((aristocrat.bonus_at(10), aristocrat.bonus_at(11)), (1, 0));
         let trees = aristocrat.bonus_trees(book).expect("named trees");
         let names: Vec<&str> = trees.iter().map(|&t| book.tree(t).id.as_str()).collect();
@@ -1030,7 +1031,7 @@ mod tests {
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
         // Rows out of order are read by level, lowest first.
-        let content = with_aristocrat(|t| t.replacen("level = 32,", "level = 2,", 1))
+        let content = with_aristocrat(|t| t.replacen("level = 50,", "level = 2,", 1))
             .expect("rows in any order");
         let aristocrat = content.class("aristocrat").expect("aristocrat");
         let levels: Vec<u8> = aristocrat.abilities.iter().map(|(l, _)| *l).collect();

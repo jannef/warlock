@@ -1284,6 +1284,17 @@ impl TalentEffect {
         )
     }
 
+    /// Whether it is handed down once as it is taken (`world/heirloom.rs`): Family wealth's gold
+    /// and gems, Father's sword's heirloom.
+    pub fn is_handed_down(&self) -> bool {
+        matches!(
+            self,
+            TalentEffect::StartingGold { .. }
+                | TalentEffect::StartingGems { .. }
+                | TalentEffect::Heirloom { .. }
+        )
+    }
+
     /// Whether it may carry a `while` condition: only a kind the one sum reads
     /// ([`crate::talent::Talents::mods`]), never one read off the talent's effects directly (an
     /// active, a spell given, what is rolled or handed down once when it is taken).
