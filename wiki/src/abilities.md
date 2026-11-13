@@ -129,7 +129,7 @@ you never choose them, they work by themselves as you fight. They have their own
 - **[Charge](abilities.md#ability-charge)**, the [warrior](classes.md#warrior)'s at level 1, rushes a foe you see.
   Aim it like a shot, at the creature. You run along the straight line to it, stop in the cell
   before it, and strike it once, as an ordinary [melee attack](combat.md).
-  - It costs 1 [stamina](resources.md#stamina), plus 1 for every cell you run. It takes the time
+  - It costs 1 [stamina](resources.md#resource-stamina), plus 1 for every cell you run. It takes the time
     of those steps; the blow is free.
   - You must gain at least one cell, so it is refused when you already stand beside the foe.
   - A wall, a closed door, deep water, ice, a [trap](traps.md) you know of, or anyone you see on
