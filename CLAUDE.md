@@ -257,7 +257,7 @@ a paragraph a line as the story screen tells it, `no story` without one), `compa
 player's animal companion as they know it, `Snel, a hound (grade 12) at (12, 5): unhurt, order
 follow`, the cell only where they see it, `Snel, a hound (grade 12): with you` in the retinue,
 `no companion` without one; docs/dev/companion.md), `familiar` (the witch's familiar, in the same
-words; `no familiar` without one; docs/dev/familiar.md), `truth`
+words; `no familiar` without one, `no familiar; Tibb, a cat, answers a calling` while the one remembered is dead; docs/dev/familiar.md), `truth`
 (ground truth, hidden traps and secret doors (`S`) too, a sealed room's standing breach (`H`), a line per chest after the map, `chest 7 (hutch) at (12, 5): shut, locked, holds 3 stacks`, a line per gravestone with its inscription, `grave at (7, 3): Here lies …`, a line per zone, `zone fire by #0 until 08:01:00, harm 4: (30, 14)`, and hidden locations by their entrance's
 glyph, **dev-only**; on a level with a danger
 it and `actors` start with `danger 3 population 2/6 spawn next 08:15:00`), `actors` (every actor on the level with its hit points, mana, its resources (`resources rage

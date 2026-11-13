@@ -60,7 +60,8 @@
 
 use crate::alignment::Score;
 use crate::content::{
-    Calendar, ClassDef, Content, PrestigeDef, RaceDef, ScenarioDef, Sign, Table, WeaponSkillId,
+    Calendar, ClassDef, Content, CreatureId, PrestigeDef, RaceDef, ScenarioDef, Sign, Table,
+    WeaponSkillId,
 };
 use crate::kit::{self, Pack};
 use crate::rng::Rng;
@@ -204,6 +205,19 @@ pub struct Character {
     /// of the JSON while none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub prestige: Option<String>,
+    /// The witch's familiar as she remembers it (spec §8 "Allies": "The familiar"): the kind
+    /// and name of the first that came to her, set as it comes (`World::make_familiar`) and
+    /// kept after it dies, so a calling brings that one back. Left out of the JSON while none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub familiar: Option<RememberedFamiliar>,
+}
+
+/// A familiar remembered by its witch ([`Character::familiar`]): its kind and its name.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RememberedFamiliar {
+    pub creature: CreatureId,
+    pub name: String,
 }
 
 impl Character {
@@ -542,6 +556,7 @@ impl CharacterSpec {
             sign,
             story: Vec::new(),
             prestige: None,
+            familiar: None,
         };
         Ok(Start {
             stats: starting_stats(by, potential, content.races().base_potential),

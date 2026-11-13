@@ -1655,7 +1655,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     list, or rarely a rare one, at her heel from the first turn, whose touch lays her evil eye and
     which goes for what she has hexed, §8 "Allies": "The familiar"; `TalentEffect::Familiar` read
     by `World::bring_familiar`; with it the active Call familiar, #930, `use:call_familiar`: an
-    hour's sitting brings another when hers is dead, the imp among the draw from her level 30), Animal companion (the ranger's level 1, #916: a beast of the
+    hour's sitting brings hers back, the same kind and name, when it is dead; only one who never had one draws, the imp among that draw from her level 30), Animal companion (the ranger's level 1, #916: a beast of the
     race's kind, or rarely a rare one, at their side from the first turn, that grows with their
     level and always comes along, §8 "Allies": "The animal companion"; `TalentEffect::Companion`
     read by `World::bring_companion`; and `tame = 2`, `TalentMods::tame`, the ranger's edge at
