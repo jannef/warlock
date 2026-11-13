@@ -754,7 +754,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     of the speaker's own (a Fisher–Yates shuffle drawn from FNV-1a and SplitMix64's finalizer
     over the run seed, the actor, and the round), and a round never starts with the line the last
     one ended on, so the same line never comes twice in a row. Each actor counts the lines it has
-    said (`Actor::talk`, saved and hashed once it has said something).
+    said (`Actor::talk`, saved and hashed once it has said something). **Lines after a quest**
+    (`[[dialogue.after]]`, #1446): once the player has done quest `quest`, its `lines` join the
+    speaker's one-liners (the rotation runs over both), so Kerensa of Gimmwīc speaks of the bound
+    crystal guardian.
   - **Topics**: the answer is an event (`Event::Talked`: who, what they said, the topics the
     player may ask about, and the topic it answers); one with topics opens the dialogue screen
     (§6). Asking (`Action::Ask { dir, topic }`, replay text `ask:E:rooms`) takes no time and gets
@@ -929,6 +932,28 @@ developer notes (CLAUDE.md, `docs/dev/`).
     named place `at` of that level (or the nearest free cell), as the quest is given or as the
     level is first made after; once only. The Ascmearc's first: Gammer Wynflæd's "Taken under
     the hill", Ælfrun on the moss bed at the bottom of Ælfhām, home to Holtwīc.
+  - **Lure quests** (`world/lure.rs`, #1446): `type = "lure"`, `target` a unique creature type,
+    `level` a hand-made level, `waits = { level, at }` its place, and `[quest.binding]`. While the
+    quest is active and no creature of the type is anywhere, one is made on its place as the
+    quest is given (if that level exists) and whenever the player arrives on that level: killed
+    before it is bound, it forms anew there ("Somewhere on this floor, crystal rings as it grows
+    into a guardian again."), so the quest never fails and may be tried again. It is hostile,
+    and comes along only by the stairs' rule (§8 "Stair followers": beside the player as they
+    take a staircase), so the player leads it up floor by floor; left behind, it stays where it
+    was. Once it stands on `level` with the player (they arrive by the stairs) and the giver is
+    there too, the giver binds it: the binding's `words` are told, it joins the binding's
+    `faction` (at peace), calms, takes the binding's `post` as its own (it walks there and
+    stays), and carries the binding's `status` for good (one that never eases, shown by its
+    spell circle, §4.8); the giver says `done` and pays. Its `boon` adds to the player's checks of
+    one skill's recipes on its level while it stands there bound. The log's status while active:
+    "The crystal guardian is not yet bound in Gimmwīc." The Ascmearc's one: Ysella the Binder's
+    "The crystal guardian": asked, she opens the crystal portal beside her in Gimmwīc's garden (a
+    hidden location of the town, §7 "Hidden locations"), into Meyn Bew, a pocket of the plane of
+    earth, four floors of danger 22 to 25; the guardian (a slow, crystalline earth elemental of
+    level 26) waits in the crystal hollow on the fourth; bound, it stands in the corner of
+    Kerensa's Stones (the `bound` status, an enchantment circle), Kerensa and Ysella speak of it
+    (§8 "Dialogue": lines after a quest), and Jewelcraft's Cut and Set checks made in Gimmwīc get
+    +2. The reward: 1200 gold, 4000 experience, and an uncut sapphire.
   - **Creature tags** (`content/tag.rs`, #421, #441): a creature type carries plain singular
     words, chosen by hand as a card game gives creatures types (`tags = ["goblin", "archer"]`);
     there is one flat pool and no registry: a tag exists because a creature carries it. A kill

@@ -1,6 +1,7 @@
 # Magic crystals (docs/design/enchanting.md §5, §9, §10; docs/dev/enchanting.md; the loader is
 # content/crystal.rs): six colours, one object each, no grades. A crystal is caught from a magic
-# item's affix when it is salvaged (salvage.toml, enchanting.toml), and is what the Enchanting
+# item's affix when it is salvaged (salvage.toml, enchanting.toml) or left by a creature the
+# Soulglass spell kills (spells/soulglass.toml, world/crystal.rs), and is what the Enchanting
 # recipes bind (to come). Anyone may consume one for mana ([consume]).
 #
 # [[colour]]  the colours, in order; the order is the rule: a creature's colour is the first
@@ -18,7 +19,7 @@
 # [[family]]  each affix category once, with the words a seal names it by ("fire", "the
 #             critical"): `category` and `word`. Every category of every affix has one.
 #
-# [yield]     the crystals a creature leaves to the Soulglass spell (to come): one, and one more
+# [yield]     the crystals a creature leaves to the Soulglass spell: one, and one more
 #             from each of `levels` its level reaches (one, two from level 10, three from 20).
 #
 # [rare]      the rare materials (heart_crystal.toml, soul_fetter.toml):

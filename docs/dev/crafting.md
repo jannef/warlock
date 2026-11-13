@@ -340,6 +340,34 @@ says "The work goes wrong, and you save what you can of it." The ore comes from 
 (`docs/dev/digging.md` "Mining"). Tests: `world/mine_tests.rs` (copper ore to a copper ingot, one
 lump spent; not listed for the untrained).
 
+## Stations and the makeshift anvil: `works_as`, Field forge
+
+A recipe's `station` is a terrain beside the maker. A terrain may serve as another's station:
+`TerrainDef::works_as` (`works_as = "anvil"` in `data/terrain.toml`, resolved at load; a terrain
+that works as one that works as another is refused). It is read in one place,
+`Content::works_as(terrain)` (its `works_as`, else itself), which both station tests ask:
+`world/craft.rs::station_beside` (every recipe's `lack`, so `start_making` and the screen; the
+"You set to work on the dagger at the makeshift anvil." line names the cell's own terrain) and
+`Content::offer` (what a feature offers, so Temper's `anvil_beside`, `anvil_needs`, and the
+walk-in, `input.rs::step_screen`, need no change). Mining finds nothing in a terrain that works as
+a station (`world/mine.rs`).
+
+The one such terrain is `makeshift_anvil`, which the craftsperson's **Field forge** (level 32,
+`ClassActive::FieldForge`, `data/talents/field_forge.toml`'s `field_forge { seconds = 3600 }`,
+`TalentMods::field_forge`) makes, in `world/field_forge.rs`: `use:field_forge:E`, aimed in a
+direction (`Aim::Direction`; the abilities menu's way is `beside::Target::Ground`, open ground the
+player knows: `world::open_ground` on the known terrain, nobody seen, no known trap, nothing
+lying there). The rules: the overworld refused (the menu: `Unavailable::NotHere`); the first
+stack of ingots carried (a `piece` of a `metal`-group material, not unpaid goods) else "You
+have no ingot to set."; the cell open ground (`open_ground`: walkable, no door, chest, stairs,
+grave, freezing water, ice, swim water, glowing fungus, or shop floor), nobody on it (ground
+truth), no known trap, nothing lying there; each refused with its line and no time. Then
+`Spent::FieldForge(Forging { at, seconds })`: `seconds` in `craft` turns by `keep_at`, as a
+gather; interrupted, nothing ("...; you leave the anvil unfinished."); done, the ingot and the
+cell are asked again, one ingot is spent, and `set_terrain(at, makeshift_anvil)`. No check, no
+draw, no mark. The terrain is saved with the level; a pick clears it (`hardness` 300, becoming
+floor). Tests: `world/field_forge_tests.rs`.
+
 ## The rows: `Ability::Profession`
 
 `ability.rs`: `Ability::Profession(SkillId)`, `Source::Skill`, named "Metalcraft…" (the skill's

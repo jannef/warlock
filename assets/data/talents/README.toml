@@ -591,6 +591,11 @@
 #                                 `use:merchants_eye:c`): the stack is identified as the scroll
 #                                 of identify would, for the time of a `read`; refused, no
 #                                 time, for one already known
+#   field_forge { seconds }       the active Field forge (aimed in a direction,
+#                                 `use:field_forge:E`): an ingot of any metal carried is set on
+#                                 the open ground there over `seconds` (1 or more), a
+#                                 `makeshift_anvil` for good; refused, no time, on the overworld,
+#                                 without an ingot, or where the ground is not open
 #   make_do { seconds, difficulty }   the active Make do and mend (on a damaged stack carried,
 #                                 `use:make_do_and_mend:c`): after `seconds` of work, anywhere,
 #                                 a check by the stat of the profession that works its main

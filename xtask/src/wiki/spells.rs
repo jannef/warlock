@@ -569,6 +569,9 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
             "; {percent} % of the hit points it takes come back to you"
         );
     }
+    if spell.effect.crystal {
+        text.push_str("; what it kills leaves crystals, not a corpse");
+    }
     if spell.effect.douses {
         text.push_str("; it puts out the fires on its cells");
     }

@@ -60,7 +60,7 @@ pub(super) fn place_waiting(state: &mut WorldState, content: &Content, level: &s
 
 /// The cell `waits` puts its escort on: its place's, or the nearest walkable one no one stands
 /// on (ring search, in row order); `None` if there is none.
-fn spot(state: &WorldState, content: &Content, waits: &Waits) -> Option<Pos> {
+pub(super) fn spot(state: &WorldState, content: &Content, waits: &Waits) -> Option<Pos> {
     let here = &state.levels[&waits.level];
     let named = |places: &std::collections::BTreeMap<Pos, crate::content::Place>| {
         (places.iter())

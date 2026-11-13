@@ -1,0 +1,8 @@
+[[talent]]
+id = "soulglass"
+name = "Soulglass"
+tree = "class"
+granted = true
+description = "A ray of grave-cold (paid in mana): what it kills leaves no corpse but a crystal of its nature."
+effects = [{ kind = "spell", spell = "soulglass" }]
+systems = ["spells", "mana", "combat"]

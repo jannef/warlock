@@ -35,11 +35,12 @@ Every item can bear only so many **enchantments** (affixes, [prefixes](affixes.m
 
 - **2** for any item;
 - **+1** for a ring or an amulet (they are made to carry a charm);
-- **+1** for a Fine item, **+2** for a Marvellous one, **+3** for a Masterwork one (see
+- nothing more for a Fine item, **+1** for a Marvellous one, **+2** for a Masterwork one (see
   [Forges](altars-forges-springs.md#forges) and [Crafting](crafting.md#how-well-it-comes-out));
   a damaged item counts as plain, and stays so once mended until it is made finer again;
 - its main material's **binding**, −2 to +2 (the [materials table](materials.md) lists it:
-  silver −2, tin and flint −1, steel and iron 0, gold +1, mithril and dragonbone +2);
+  silver −2, tin and flint −1, steel and iron 0, gold and adamantium +1, mithril and dragonbone
+  +2);
 - **+1** for a [gem](gems.md) set in it, **+2** for a flawless one.
 
 It is never less than one or more than six. Some examples:
@@ -47,13 +48,15 @@ It is never less than one or more than six. Some examples:
 | Item | Can bear |
 |---|---:|
 | a steel long sword | 2 |
-| a Fine steel long sword, or one with a ruby pommel | 3 |
-| a Marvellous bronze scimitar | 4 |
+| a Fine steel long sword | 2 |
+| a steel long sword with a ruby pommel | 3 |
+| a Marvellous bronze scimitar | 3 |
 | an iron ring | 3 |
 | a gold ring | 4 |
 | a gold ring set with an emerald | 5 |
 | a silver ring | 1 |
-| a Fine mithril long sword with a sapphire pommel | 6 |
+| a Fine mithril long sword with a sapphire pommel | 5 |
+| a Masterwork adamantium plate armour | 5 |
 | a Masterwork great sword with a flawless diamond pommel | 6 |
 
 **Every item is made to fit.** Loot, what creatures carry, and the game's own named items never
@@ -76,19 +79,19 @@ find (on the floor, in a chest or a hoard, in a den or a room) may be **Fine**, 
 {{#include generated/gear-depth.md}}
 
 The [materials](materials.md) that hold magic best come deeper and grow more common as you go:
-dragonbone and dragonscale from item level 6, mithril from 8, adamantium from 16; gold a little
-more at every level.
+dragonbone and dragonscale from item level 6, mithril from 8, adamantium (a fighting metal, which
+holds less) from 16; gold a little more at every level.
 
 How it works out for what you find:
 
 | Item level | Rares that keep three affixes or more | Rares that keep all they rolled |
 |---:|---:|---:|
 | 1 | 11 % | 8 % |
-| 4 | 15 % | 10 % |
-| 8 | 28 % | 18 % |
-| 12 | 49 % | 32 % |
-| 16 | 57 % | 38 % |
-| 20 | 64 % | 45 % |
+| 4 | 14 % | 9 % |
+| 8 | 17 % | 11 % |
+| 12 | 26 % | 17 % |
+| 16 | 34 % | 21 % |
+| 20 | 41 % | 26 % |
 
 Near the surface, nearly nine finds in ten can bear two enchantments, so most rares keep two
 affixes. A magic item (one or two affixes) almost always fits: about nine in ten lose nothing, at

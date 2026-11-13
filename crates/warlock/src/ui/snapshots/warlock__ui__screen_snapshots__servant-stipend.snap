@@ -21,7 +21,7 @@ expression: "render(case, content.clone())"
 │ You open the door.                                                                               │
 │ Your squire says: "Yer family's sent yer stipend on, m'lord, all counted proper. 'Ere it is,     │
 │   every penny."                                                                                  │
-│ You receive 1010 gold coins and a hazy blue potion.                                              │
+│ You receive 1010 gold coins and a sticky blue potion.                                            │
 │ You are burdened.                                                                                │
 │ Your squire says: "The rabble 'ere don't know quality, m'lord. I do."                            │
 │                                                                                                  │

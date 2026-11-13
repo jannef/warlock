@@ -1,0 +1,47 @@
+# Meyn Bew, "the living stones" in the deep gnomes' Cornish (#1446; the fields:
+# data/dungeons.toml): a pocket of the elemental plane of earth that Ysella the Binder opens
+# from Gimmwīc's garden (levels/gimmwic.toml's hidden `meyn_bew`, revealed as her quest is given).
+# Four floors of halls and passages cut by no one, where the rock is more alive than not: crystal
+# grows in the rooms and glows in the dark, and what lives here is of the earth (its elementals,
+# and the stone-kin of the deep). Its first floor's `<` climbs back out through the portal. At
+# the bottom, the crystal hollow (vaults/crystal_hollow.toml), where the crystal guardian waits
+# for the quest that made it (world/lure.rs).
+
+[[dungeon]]
+id = "meynbew"
+name = "Meyn Bew"
+arrival = "The air hums. Every wall here is crystal, and every crystal is listening."
+generator = "rooms"
+depth = 4
+size = [80, 21]
+traps = ["pit", "lightning_bolt", "frost"]
+traps_per_level = [1, 3]
+loot = [2, 4]
+# A faint violet glow everywhere: the crystal in the rock.
+ambient = [30, 24, 48, 0]
+temperature = 12
+# Its walls give no ore a gnome would want: gems and stone (data/mining.toml).
+ores = []
+# Danger 22 on the first floor to 25 on the fourth (spec §7 "Danger levels"), as deep as
+# Dēopgang's lowest floors above Gimmwīc. Only the earth's own: its elementals, the basilisk
+# whose eyes turn flesh to stone, and the stone giant and stone troll of the deep rock. Nothing
+# strays in from outside.
+danger = { base = 22, per_depth = 1 }
+population = ["earth_elemental", "basilisk", "greater_earth_elemental", "stone_giant", "stone_troll"]
+stray = 0
+out_of_depth = 0
+population_count = { per_1000 = 25, least = 10, most = 30 }
+# A pocket of another plane keeps no trade, and no special room.
+shops = { chance = 0 }
+room_effects = { chance = 0 }
+
+# Crystal grows in a room of every floor above the bottom.
+[[dungeon.levels]]
+from = 1
+to = 3
+vaults = ["crystal_garden"]
+
+# The bottom: the crystal hollow, the guardian's place.
+[[dungeon.levels]]
+from = 4
+vaults = ["crystal_hollow"]

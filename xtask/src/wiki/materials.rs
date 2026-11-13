@@ -50,17 +50,19 @@ fn how_often(weight: u32) -> &'static str {
     }
 }
 
-/// Every material by group, then name: its group, colour, weight, weapon modifiers, the
-/// Protection an armour of it keeps, and worth, all on steel's scale; whether it is precious
-/// (shown in names); its chance to withstand each kind of item damage (acid, rust, fire); its
+/// Every material by group, then name: its group, colour, weight, weapon modifiers (and the dice
+/// more a weapon of it rolls), the Protection an armour of it keeps, the Defence a shield of it
+/// gives, and worth, all on steel's scale; whether it is precious
+/// (shown in names); its chance to withstand each kind of item damage (acid, rust, fire), or
+/// "never damaged" for a `proof` one; its
 /// `work` (added to the difficulty of working it); its `binding` (what it adds to the
 /// enchantments an item of it can bear); and the objects made of it, in part or whole.
 pub(super) fn materials(content: &Content) -> String {
     let mut out = String::from(
-        "| Material | Group | Colour | Weight | Weapon (to hit / damage) | Armour | Worth | \
-         Precious (shown in names) | Withstands acid | Withstands rust | Withstands fire | Work | \
-         Binding | Objects made of it, in part or whole |\n\
-         |---|---|---|---:|:---:|---:|---:|:---:|---:|---:|---:|---:|---:|---|\n",
+        "| Material | Group | Colour | Weight | Weapon (to hit / damage) | Armour | Shield | Worth \
+         | Precious (shown in names) | Withstands acid | Withstands rust | Withstands fire | \
+         Work | Binding | Objects made of it, in part or whole |\n\
+         |---|---|---|---:|:---:|---:|---:|---:|:---:|---:|---:|---:|---:|---:|---|\n",
     );
     // A loose gem is made of its gem, never of what its object would be without one.
     let loose = content.gems().map(|g| g.object);
@@ -88,22 +90,30 @@ pub(super) fn materials(content: &Content) -> String {
         let group = m.group.as_deref().unwrap_or("-");
         let colour = (m.color.or(m.gem.as_ref().map(|g| g.color)))
             .map_or("-".to_string(), |c| format!("`{c}`"));
-        let weapon = (m.weapon()).map_or("-".to_string(), |(hit, damage)| {
-            format!("{} / {}", signed(hit), signed(damage))
+        let weapon = (m.weapon()).map_or("-".to_string(), |(hit, damage)| match m.dice {
+            0 => format!("{} / {}", signed(hit), signed(damage)),
+            1 => format!("{} / {}, a die more", signed(hit), signed(damage)),
+            n => format!("{} / {}, {n} dice more", signed(hit), signed(damage)),
         });
         let armour = (m.protection).map_or("-".to_string(), |p| format!("{p}%"));
+        // What cannot be armour is no shield either.
+        let shield = (m.protection).map_or("-".to_string(), |_| format!("{}%", m.defence));
         let resists = m.resists();
+        let withstands = |chance: u8| match m.proof {
+            true => "never damaged".to_string(),
+            false => format!("{chance}%"),
+        };
         let _ = writeln!(
             out,
-            "| {} | {group} | {colour} | {}% | {weapon} | {armour} | {} | {} | {}% | {}% | {}% \
-             | {} | {} | {made} |",
+            "| {} | {group} | {colour} | {}% | {weapon} | {armour} | {shield} | {} | {} | {} | {} \
+             | {} | {} | {} | {made} |",
             capital(&m.name),
             m.weight,
             times(m.value),
             yes(m.precious),
-            resists.acid,
-            resists.rust,
-            resists.fire,
+            withstands(resists.acid),
+            withstands(resists.rust),
+            withstands(resists.fire),
             signed(m.work),
             signed(i32::from(m.binding)),
         );
@@ -310,11 +320,12 @@ fn list_words(content: &Content, object: &ObjectDef, list: &[MaterialId]) -> Str
 }
 
 /// A long sword and a chain mail shirt in each metal they may be made of: weight, what the metal
-/// does in a fight, and worth.
+/// does in a fight (the sword's to hit and damage modifiers and its dice), and worth.
 pub(super) fn variants(content: &Content) -> String {
     let mut out = String::from(
-        "| Metal | Long sword | To hit, damage | Worth | Chain mail shirt | Protection | Worth |\n\
-         |---|---:|:---:|---:|---:|---:|---:|\n",
+        "| Metal | Long sword | To hit, damage | Dice | Worth | Chain mail shirt | Protection \
+         | Worth |\n\
+         |---|---:|:---:|---:|---:|---:|---:|---:|\n",
     );
     let (Some(sword), Some(mail)) = (
         content.object_id("long_sword"),
@@ -338,9 +349,12 @@ pub(super) fn variants(content: &Content) -> String {
             continue;
         }
         let (hit, damage) = variant::weapon(s_def, &s.parts(content), content);
+        let dice = s
+            .attack(content)
+            .map_or("-".to_string(), |a| a.damage.to_string());
         let _ = writeln!(
             out,
-            "| {} | {} | {} / {} | {} gold | {} | {} | {} gold |",
+            "| {} | {} | {} / {} | {dice} | {} gold | {} | {} | {} gold |",
             capital(&m.name),
             format_weight(s.weight(content)),
             signed(hit),
@@ -350,6 +364,72 @@ pub(super) fn variants(content: &Content) -> String {
             c.base_protection(content),
             c.value(content),
         );
+    }
+    out
+}
+
+/// The common weapons, armour, helmets, and shields as made and in each material that rolls
+/// more dice (`dice`; adamantium): a weapon's dice and damage modifier, an armour's or helmet's
+/// Protection, a shield's Defence.
+pub(super) fn fighting_metals(content: &Content) -> String {
+    const PIECES: [&str; 14] = [
+        "dagger",
+        "short_sword",
+        "long_sword",
+        "great_sword",
+        "battle_axe",
+        "mace",
+        "chain_mail",
+        "scale_mail",
+        "banded_mail",
+        "plate_armour",
+        "iron_helm",
+        "great_helm",
+        "small_shield",
+        "tower_shield",
+    ];
+    let metals: Vec<_> = (by_group(content).into_iter())
+        .filter(|(_, m)| m.dice > 0)
+        .collect();
+    let mut out = String::from("| Item | As made |");
+    for (_, m) in &metals {
+        let _ = write!(out, " In {} |", m.name);
+    }
+    out.push_str("\n|---|---:|");
+    out.push_str(&"---:|".repeat(metals.len()));
+    out.push('\n');
+    // What one of `stack` gives in a fight: its dice and damage, Protection, or Defence.
+    let numbers = |stack: &Stack| {
+        let def = content.object(stack.object);
+        let parts = stack.parts(content);
+        if let Some(attack) = stack.attack(content) {
+            let (_, damage) = variant::weapon(def, &parts, content);
+            return attack.damage.plus(damage).to_string();
+        }
+        if def.shield > 0 {
+            let shield = def.shield + variant::shield(def, &parts, content);
+            return format!("Defence {shield}");
+        }
+        format!("Protection {}", stack.base_protection(content))
+    };
+    for id in PIECES {
+        let Some(object) = content.object_id(id) else {
+            continue;
+        };
+        let def = content.object(object);
+        let plain = Stack::one(object);
+        let _ = write!(out, "| {} | {} |", capital(&def.name), numbers(&plain));
+        for (m, _) in &metals {
+            let cell = match def.made_of(0).contains(m) {
+                true => {
+                    let made = plain.clone();
+                    numbers(&made.with_parts(vec![ItemPart::material(content, None, *m)]))
+                }
+                false => "-".to_string(),
+            };
+            let _ = write!(out, " {cell} |");
+        }
+        out.push('\n');
     }
     out
 }

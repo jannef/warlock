@@ -9,9 +9,13 @@
 //! - **heavier or lighter**: each part's share of the weight scales by its material's `weight`
 //!   over the base part's ([`weight`]);
 //! - **better or worse to strike with**: to hit and damage change by the difference of the main
-//!   parts' weapon modifiers ([`weapon`]), on whatever attacks with it or is shot;
+//!   parts' weapon modifiers ([`weapon`]), on whatever attacks with it or is shot; and what has
+//!   dice of its own (a melee weapon, a thrown one, a launcher; not ammunition, which strikes
+//!   with its launcher's) rolls the difference of their `dice` more of its own size ([`dice`]:
+//!   an adamantium long sword's 2d9);
 //! - **more or less protective**: armour keeps its Protection × the main parts' `protection`
-//!   ratio, rounded ([`protection`]);
+//!   ratio, rounded ([`protection`]), and a shield its Defence × their `defence` ratio
+//!   ([`shield`]);
 //! - **dearer or cheaper**: by its parts' shares and values, as every item of other parts
 //!   ([`crate::content::ObjectDef::value_with`]);
 //! - drawn in its main material's `color` ([`color`]).
@@ -77,6 +81,35 @@ pub fn weapon(def: &ObjectDef, parts: &[Part], content: &Content) -> (i32, i32) 
         }
         _ => (0, 0),
     }
+}
+
+/// How many more dice of its own size one of `def` made of `parts` rolls for its main part's
+/// material: the difference of the two materials' `dice`, never below 0 (0 when either cannot be
+/// a weapon's working part, and for jewellery). Read where its dice are built
+/// ([`crate::object::Stack::attack`]).
+pub fn dice(def: &ObjectDef, parts: &[Part], content: &Content) -> u32 {
+    let Some((base, made)) = main(def, parts, content) else {
+        return 0;
+    };
+    match (base.weapon(), made.weapon()) {
+        (Some(_), Some(_)) if !def.is_jewellery() => made.dice.saturating_sub(base.dice),
+        _ => 0,
+    }
+}
+
+/// What the main part's material adds to the Defence of one of `def` made of `parts`, a shield:
+/// its own Defence × the material's `defence` over the base item's main material's, rounded to
+/// the nearest, less its own (0 for anything but a shield).
+pub fn shield(def: &ObjectDef, parts: &[Part], content: &Content) -> i32 {
+    let Some((base, made)) = main(def, parts, content) else {
+        return 0;
+    };
+    if def.shield <= 0 || base.defence == 0 {
+        return 0;
+    }
+    let (base, made) = (i64::from(base.defence), i64::from(made.defence));
+    let scaled = (i64::from(def.shield) * made * 2 + base) / (2 * base);
+    i32::try_from(scaled).map_or(0, |s| s - def.shield)
 }
 
 /// The Protection one of `def` made of `parts` gives while worn: its own, times the main part's
@@ -263,8 +296,9 @@ pub fn draw(
 }
 
 /// Whether `made` is worse in a fight than `base` on one of `def` and dearer (#194's rule): to
-/// hit or damage lower on what strikes or is shot, Protection kept lower on armour that has
-/// some. Jewellery, and what neither strikes nor protects (a shield, a tool), is never worse.
+/// hit, damage, or dice lower on what strikes or is shot, Protection kept lower on armour that
+/// has some, Defence lower on a shield. Jewellery, and what neither strikes nor protects (a
+/// tool), is never worse.
 pub fn worse_but_dearer(def: &ObjectDef, base: &MaterialDef, made: &MaterialDef) -> bool {
     if def.is_jewellery() || made.value <= base.value {
         return false;
@@ -272,7 +306,7 @@ pub fn worse_but_dearer(def: &ObjectDef, base: &MaterialDef, made: &MaterialDef)
     let strikes = def.attack.is_some() || def.ammo.is_some();
     let weaker = match (base.weapon(), made.weapon()) {
         (Some((hit, damage)), Some((more_hit, more_damage))) => {
-            more_hit < hit || more_damage < damage
+            more_hit < hit || more_damage < damage || made.dice < base.dice
         }
         _ => false,
     };
@@ -280,5 +314,6 @@ pub fn worse_but_dearer(def: &ObjectDef, base: &MaterialDef, made: &MaterialDef)
         (Some(base), Some(made)) => made < base,
         _ => false,
     };
-    (strikes && weaker) || (def.protection > 0 && thinner)
+    let lighter = def.shield > 0 && made.defence < base.defence;
+    (strikes && weaker) || (def.protection > 0 && thinner) || lighter
 }

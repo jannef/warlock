@@ -45,7 +45,8 @@ pub(super) fn dialogue(content: &Content) -> String {
             out,
             "| {who} | {} | {} | {topics} | {mutters} |",
             yes(d.greet.is_some()),
-            d.lines.len()
+            // Those a done quest adds count too.
+            d.lines.len() + d.after.iter().map(|a| a.lines.len()).sum::<usize>()
         );
     }
     out

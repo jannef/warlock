@@ -21,8 +21,9 @@ When the time is up you make one check: 2d12, plus your
 [Dexterity](stats.md#stat-dexterity) [modifier](stats.md#modifiers), the
 [craft points](crafting.md#who-works-what) Jewelcraft gives (+8 at 100, +12 at 200), and your
 [talents](talents.md) for Dexterity checks. The difficulty is 12 plus the gem's
-[work](crafting.md#who-works-what): a ruby is harder to cut than a smokestone. How far you beat it
-(the **margin**) sets the cut:
+[work](crafting.md#who-works-what): a ruby is harder to cut than a smokestone. In
+[Gimmwīc](ascmearc.md#gimmwīc), once the [crystal guardian](quests.md#lures) stands bound there,
+you get **+2** more. How far you beat it (the **margin**) sets the cut:
 
 {{#include generated/gem-cutting.md}}
 
@@ -56,8 +57,8 @@ asked to confirm, with the item named as it will be: "Set a sapphire-pommelled h
 
 It takes 20 minutes, anywhere. If something comes into view, you stop, nothing is lost, and the
 time is gone. Then you make one check, as for cutting: 2d12, plus your Dexterity modifier, the
-craft points of Jewelcraft, and your talents for Dexterity checks, against 12 plus the gem's
-work.
+craft points of Jewelcraft, your talents for Dexterity checks, and the crystal guardian's +2 in
+Gimmwīc, against 12 plus the gem's work.
 
 - **Made:** the gem goes in with its size and cut, and the item is named by it ("It is now a
   ruby-pommelled long sword."). A set gem adds its worth to the item and does nothing else.

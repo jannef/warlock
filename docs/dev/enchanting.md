@@ -15,14 +15,15 @@ affixes, prefixes and suffixes together, an item can hold:
 |---|---|---|
 | The base | 2 (`capacity::BASE`; the owner, 2026-11-13) | every item |
 | Jewellery | +1 | `ObjectDef::is_jewellery()` (ring and amulet kinds) |
-| Quality | Fine +1, Marvellous +2, Masterwork +3 | `Worked::improvements()` (none while damaged) |
+| Quality | Fine +0, Marvellous +1, Masterwork +2 (#1444; first +1/+2/+3) | `Worked::improvements()` − 1, never below 0 (none while damaged) |
 | Material | −2 to +2 | `MaterialDef::binding` of the main part's material (`Stack::parts(content)[0]`, a variant's own) |
 | The set gem | +1, the finest cut (flawless, the last `[[cut]]` of `gems.toml`) +2 | the part of `gem::ornament_part` whose material is a gem; a base item's own gem part (the gold amulet's ruby setting) has no cut and counts +1 |
 | Clamp | 1 to `MOST` (6) | `MAX_PER_KIND × 2` |
 
 `binding` is a new optional material field (`data/materials/*.toml`, default 0, steel's; the
 loader refuses one outside −2..=2): silver −2; tin, pewter, zinc, cadmium, bendalloy, lead, stone,
-flint, obsidian −1; gold, electrum, ironwood, ivory, jade, amber, silk +1; mithril, adamantium,
+flint, obsidian −1; gold, electrum, ironwood, ivory, jade, amber, silk, adamantium +1 (#1444:
+a fighting metal, its gifts a die more, twice steel's Protection, and no item damage); mithril,
 dragonbone, dragonscale +2. The three-per-kind caps (`Rarity::most_per_kind`) stand beside the
 capacity. `Magic::check` never reads it: a save or level file over capacity still loads.
 
@@ -97,9 +98,9 @@ Eorcanstān (a mithril band, a flawless sapphire setting), Grendles Grāpe (Mast
 High Toby (Fine, an amethyst inlay), the Turncoat (Masterwork), the Unhalwed Bedes (a flawless
 smokestone setting), Widowmaker (Marvellous); in the test world Rune Song (Masterwork, a topaz tip), Ash Coat (Masterwork), the hub's Dread
 Visage (Masterwork) and Storm Song (Marvellous). Father's sword's heirloom is Masterwork
-(`quality = "masterwork"` in `data/talents/fathers_sword.toml`: capacity 5 on every race's
-weapon, its 2 to 4 affixes never trimmed; Marvellous, 4, would now hold them too). The design
-chose these against a base of 1; with the base at 2 every one still fits with room to spare, and
+(`quality = "masterwork"` in `data/talents/fathers_sword.toml`: capacity 4 on every race's
+weapon since #1444, its 2 to 4 affixes never trimmed). The design chose these against a base of 1
+and quality +1/+2/+3; with the base at 2 and quality +0/+1/+2 (#1444) every one still fits, and
 the two that no longer needed a make (Stonebiter and the trap hall's dagger, two affixes each)
 are plain again.
 
@@ -262,6 +263,34 @@ reach `enchant_level` (`Effect::EnchantLevel`, `[[0, 1], [110, 12], [200, 12]]`,
 - **Snapshots**: `profession-enchanting`, `enchant-pick-item`, `enchant-dialog`
   (`crates/warlock/src/ui/screen_snapshots.rs`).
 
+## Soulglass
+
+The necromancy ray that leaves crystals (#1429; the design's §6): `data/spells/soulglass.toml`
+(level 11, a ray with an attack roll, necrotic `3d6`, range 6, Leech's look and ranks' shape),
+the witch's at level 16 (`talents/soulglass.toml`, `classes/10-witch.toml`), anyone's from its
+grimoire (`objects/scroll_of_soulglass.toml`, level 6, frequency 20, as the other level-11
+spells' scrolls; its grimoire one time in ten, `Content::grimoire_or`). A scroll or a wand of it
+crystallises too: the effect is the spell's.
+
+- **The key**: `[spell.effect] crystal = true` (`SpellEffect::crystal`), refused by `spell_def`
+  off a `damage` spell or off a single-target shape (ray, bolt, touch), as `leech` is: the hook
+  is in `cast.rs::spell_attack`, the one place a single target's roll is made, because
+  `spell_strikes` does not know the spell.
+- **The mark**: `spell_attack` sets `World::glassing` (not saved) to the target around its
+  `spell_strikes`, whoever casts it (a reflected one marks the caster it turns on). A kill of that
+  blow reaches `fight.rs::creature_dies`, which asks `World::crystallise` (`world/crystal.rs`)
+  before anything else of the body: a type with a corpse (`Content::corpse_of`), no animated
+  thing, and a colour (`Crystals::colour_of`) leaves `yield_at(level)` crystals of its colour (no
+  draw), no corpse, and no `drops_of` stock (as a statue leaves none); a creature tagged `dragon`
+  also `[rare] dragon` (no draw), any other of `[rare] level` or more one `chance(chance)` draw
+  and, made, an `index` among `materials`, all from the gameplay stream. Its gear falls as any
+  dead creature's; a summoned or risen one leaves nothing, a statue's death is the statue's
+  (stone first), and no cursed room raises glass. Anything else dies as it would.
+- **Words**, where the player sees the cell: "Its body turns to glass: where it fell lies a green
+  crystal." / "… lie 3 red crystals and a heart-crystal." (`object::phrase`), after the death
+  line.
+- **Not built**: the design's creature `crystal = "…"` override (no creature needs one).
+
 ## Tests
 
 `world/enchant_tests.rs` (the band; the three recipes' data; Kindle of every colour on many
@@ -273,7 +302,9 @@ word, every creature's colour by its first tags, the loader's refusals), `world/
 (consuming through `eat`: mana to the maximum, the marks, the step and its diminishing, from the
 floor, the rare materials refused with no time, a replay; salvage: a crystal per affix by its
 check, unidentified magic's the same by the same fate with nothing named, Enchanting's mark, the rare materials' chance at item level 10 and none
-below).
+below), `world/soulglass_tests.rs` (a kobold's green crystal and nothing else, Leech's corpse,
+the yield by level and the gorgon's heart-crystal, a creature of no colour dying as ever, the rare
+material's chance from level 15 and none below, the witch's grant at 16).
 
 `magic/capacity_tests.rs`: the design's examples (the silver ring's clamp among them), a damaged
 and repaired Masterwork, `binding` from a variant's part, the trim's sequence on 2+2, 3+3, 3+1,
@@ -287,19 +318,23 @@ make in `world/gear_condition_tests.rs`; `magic/describe` tests the capacity lin
 ## The measured shares
 
 `magic/shares_tests.rs` at item levels 1, 4, 8, 12, 16, and 20 (4 000 rares and 4 000
-magic-grade finds each, loot's bases of every class), with the base at 2 and deeper finds better
-made (#1436). Before #1436 every level looked like level 1: about 87 % of bases held 2 and 10 % to
-12 % of rares kept three or more.
+magic-grade finds each, loot's bases of every class), with the base at 2, deeper finds better
+made (#1436), and the quality's term scaled down (Fine +0, Marvellous +1, Masterwork +2) and
+adamantium's binding to +1 (#1444). Before #1436 every level looked like level 1: about 87 % of
+bases held 2 and 10 % to 12 % of rares kept three or more. With #1436 and the old quality term
+(+1/+2/+3) rares kept three or more 11 %, 15 %, 28 %, 49 %, 57 %, and 64 % of the time at the six
+levels.
 
 | Item level | Rares: capacity 2 | Rares keep 3+ | Rares untrimmed | Magic-grade untrimmed |
 |---:|---:|---:|---:|---:|
 | 1 | 85.5 % | 11.3 % | 8.4 % | 87.5 % |
-| 4 | 82.8 % | 15.4 % | 10.1 % | 88.2 % |
-| 8 | 70.0 % | 28.2 % | 17.6 % | 89.5 % |
-| 12 | 49.0 % | 49.4 % | 32.2 % | 90.3 % |
-| 16 | 41.2 % | 57.2 % | 38.1 % | 91.7 % |
-| 20 | 34.2 % | 64.4 % | 45.3 % | 92.3 % |
+| 4 | 84.2 % | 13.9 % | 8.8 % | 88.0 % |
+| 8 | 81.0 % | 17.4 % | 10.7 % | 88.5 % |
+| 12 | 72.8 % | 26.1 % | 16.8 % | 87.8 % |
+| 16 | 64.9 % | 33.7 % | 21.4 % | 89.8 % |
+| 20 | 57.5 % | 41.0 % | 26.1 % | 89.8 % |
 
-The test fails if rares at item levels 1 and 4 keep three or more a fifth of the time or more, or
-at 16 and 20 half the time or less. Magic-grade finds (one or two affixes) are untrimmed about 88 %
-to 92 % of the time at every level.
+The test fails if rares at item levels 1 and 4 keep three or more a fifth of the time or more, at
+16 and 20 a quarter of the time or less (half before #1444), or if the share falls from one level
+to the next. Magic-grade finds (one or two affixes) are untrimmed about 88 % to 90 % of the time at
+every level.

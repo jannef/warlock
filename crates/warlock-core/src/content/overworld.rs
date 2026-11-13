@@ -137,11 +137,32 @@ pub(super) fn link_edge_exits(levels: &mut BTreeMap<String, LevelTemplate>) {
 
 impl Content {
     /// The campaign `campaign`'s hidden location `id` and its cell (spec §7 "Hidden locations"),
-    /// if its overworld ([`Content::overworld_of`]) has one by that id.
-    pub fn hidden_location(&self, campaign: &str, id: &str) -> Option<(Pos, &HiddenLocation)> {
-        (self.overworld_of(campaign)?.hidden.iter())
-            .find(|(_, h)| h.id == id)
-            .map(|(p, h)| (*p, h))
+    /// if one of its levels has one by that id ([`Content::hidden_locations`]).
+    pub fn hidden_location<'a>(
+        &'a self,
+        campaign: &'a str,
+        id: &str,
+    ) -> Option<(Pos, &'a HiddenLocation)> {
+        (self.hidden_locations(campaign))
+            .find(|(_, _, h)| h.id == id)
+            .map(|(_, p, h)| (p, h))
+    }
+
+    /// Every hidden location of campaign `campaign` with its level's id and its cell: its
+    /// overworld's, then those of its other hand-made levels in level id order (spec §7 "Hidden
+    /// locations"; ids are unique within a campaign, `Content::validate`).
+    pub fn hidden_locations<'a>(
+        &'a self,
+        campaign: &'a str,
+    ) -> impl Iterator<Item = (&'a str, Pos, &'a HiddenLocation)> + 'a {
+        let overworld = self.overworld_of(campaign);
+        let others = (self.levels.values()).filter(move |l| {
+            l.kind != LevelKind::Overworld
+                && !l.hidden.is_empty()
+                && self.level_campaign(&l.id).unwrap_or_default() == campaign
+        });
+        (overworld.into_iter().chain(others))
+            .flat_map(|l| (l.hidden.iter()).map(move |(p, h)| (l.id.as_str(), *p, h)))
     }
 
     /// The local area with level id `id` (`local:x,y`) of campaign `campaign`'s overworld

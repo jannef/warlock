@@ -18,6 +18,8 @@
 #   [[dialogue.topic]]  what you may ask about, on the dialogue screen that chatting opens (at
 #            most 9): `id` (lower-case letters, digits, underscores; replays name it, `ask:E:id`),
 #            `name` (what you pick), `reply` (at most 280 characters)
+#   [[dialogue.after]]  one-liners that join `lines` once you have done a quest: `quest` (a quest
+#            id), `lines` (at least one; the same 72 characters)
 #   mutter   { chance, verb, lines }: the chance in percent per action (1 to 100) that it
 #            mutters one of these lines (in turn, like the one-liners) while it goes about its
 #            routine and you are within earshot; `verb` is how ("mutters" by default). You hear

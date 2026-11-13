@@ -239,6 +239,27 @@ fn a_failed_temper_spoils_nothing_and_counts() {
 }
 
 #[test]
+fn adamantium_withstands_before_waste_not_spares() {
+    // #1444 with #1420: a proof item's failure is withstood by its material, its own line said.
+    let mut w = world(true);
+    let m = w.content.material_id("adamantium").expect("adamantium");
+    let part = crate::item_parts::ItemPart::material(&w.content, None, m);
+    let sword = one(&w, "long_sword").with_parts(vec![part]);
+    w.player_mut().inventory.insert(0, sword);
+    let withstood = "The work goes wrong, but no harm is done.";
+    assert!(fail(&mut w, &Action::Temper { item: 0 }, withstood));
+    assert!(!said(
+        &w,
+        "The work goes wrong, but you know when to stop before the steel spoils."
+    ));
+    let after = w.state.player().inventory[0]
+        .worked()
+        .cloned()
+        .expect("worked");
+    assert_eq!((after.damaged, after.attempts), (false, 1));
+}
+
+#[test]
 fn a_failed_whittle_spoils_nothing() {
     let mut w = world(true);
     let (knife, bow) = (one(&w, "knife"), one(&w, "short_bow"));

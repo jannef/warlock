@@ -22,14 +22,26 @@
 //!   draw picks one of the rare materials at even odds (a second draw). The lines name an
 //!   affix only when the player knows the item's magic; an unidentified item's say "its
 //!   magic". Everything is drawn before anything changes.
+//! - **Soulglass** ([`World::crystallise`], docs/design/enchanting.md §6): a spell with
+//!   `[spell.effect] crystal` marks the creature it strikes (`World::glassing`, set in
+//!   `cast.rs::spell_attack` around its blow, whoever casts it, from a scroll or a wand too). If
+//!   the blow kills it, `fight.rs::creature_dies` asks here before it lays a corpse: a kind that
+//!   leaves a corpse, is no animated thing, and has a colour ([`Crystals::colour_of`]) leaves
+//!   no corpse and no crafting stock (`material_drops.rs`), and in their place its colour's
+//!   crystals, [`Crystals::yield_at`] its type's level (no draw), and a rare material: a
+//!   `dragon`'s always `[rare] dragon`, else from `[rare] level` on one `chance` % draw and,
+//!   made, an even pick of the two (a second draw), from the gameplay stream. What it carried
+//!   falls as any dead creature's; a summoned or risen one leaves nothing, as ever.
 //!
 //! [`Action::Eat`]: crate::action::Action::Eat
+//! [`Crystals::colour_of`]: crate::content::Crystals::colour_of
+//! [`Crystals::yield_at`]: crate::content::Crystals::yield_at
 //! [`EnchantingRules::salvage_against`]: crate::content::EnchantingRules::salvage_against
 //! [`Crystals::colour_of_affix`]: crate::content::Crystals::colour_of_affix
 
 use super::alignment::Deed;
 use super::ally::capital;
-use super::{Spent, World};
+use super::{Actor, Spent, World};
 use crate::action::{Meal, Positions};
 use crate::combat;
 use crate::content::{ActionKind, AffixKind, StatUse};
@@ -167,8 +179,51 @@ impl World {
         }
         caught
     }
+
+    /// What `actor`, a creature just dead, leaves in place of its body if a Soulglass blow
+    /// killed it (module docs): its colour's crystals, perhaps a rare material, and the line
+    /// saying so where the player sees its cell. `None` when no `crystal` spell struck it, or
+    /// its kind leaves no corpse, is an animated thing, or has no colour: it dies as it would.
+    pub(super) fn crystallise(&mut self, actor: &Actor) -> Option<(Vec<Stack>, Option<String>)> {
+        if self.glassing != Some(actor.id) {
+            return None;
+        }
+        let content = self.content.clone();
+        let crystals = content.crystals()?;
+        let def = content.creature(actor.creature);
+        if content.corpse_of(actor.creature).is_none() || def.animated.is_some() {
+            return None;
+        }
+        let colour = crystals.colour_of(&content, actor.creature)?;
+        let mut left = vec![Stack::new(colour.object, crystals.yield_at(def.level))];
+        // The rare material: a dragon's always, else one chance draw from `level` on and an
+        // even pick between the two (a second draw).
+        let rare = &crystals.rare;
+        if def.tags.iter().any(|t| t == "dragon") {
+            left.push(Stack::new(rare.dragon, 1));
+        } else if def.level >= rare.level && self.state.rng.chance(u32::from(rare.chance)) {
+            let pick = self.state.rng.index(rare.materials.len());
+            left.push(Stack::new(rare.materials[pick], 1));
+        }
+        let seen =
+            actor.level == self.state.current_level && self.perception.sees_actors_at(actor.pos);
+        let line = seen.then(|| {
+            let verb = if left.len() == 1 && left[0].count == 1 {
+                "lies"
+            } else {
+                "lie"
+            };
+            let what = crate::object::phrase(&left, self.lore());
+            format!("Its body turns to glass: where it fell {verb} {what}.")
+        });
+        Some((left, line))
+    }
 }
 
 #[cfg(test)]
 #[path = "crystal_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "soulglass_tests.rs"]
+mod soulglass_tests;

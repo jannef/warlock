@@ -92,6 +92,16 @@ struct SchoolRow {
 struct StatusRow {
     status: String,
     school: School,
+    /// For a status no spell lays (a lure quest's binding, `world/lure.rs`): whether it is a
+    /// `"buff"` or a `"hex"`. A spell's status takes its spell's kind and names none.
+    kind: Option<RowKind>,
+}
+
+#[derive(Clone, Copy, Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum RowKind {
+    Buff,
+    Hex,
 }
 
 /// Parses and checks `data/circles.toml` against the loaded statuses and spells.
@@ -151,12 +161,21 @@ pub(super) fn parse(
                 row.school.id()
             )));
         };
-        let &hex = spell_kind.get(&status).ok_or_else(|| {
-            err(format!(
-                "status `{name}` is circled but no buff or hex spell lays it: a circle is a \
-                 spell's mark"
-            ))
-        })?;
+        let hex = match (spell_kind.get(&status), row.kind) {
+            (Some(&hex), None) => hex,
+            (Some(_), Some(_)) => {
+                return Err(err(format!(
+                    "status `{name}`: a spell lays it, so its `kind` is the spell's"
+                )));
+            }
+            (None, Some(kind)) => matches!(kind, RowKind::Hex),
+            (None, None) => {
+                return Err(err(format!(
+                    "status `{name}` is circled but no buff or hex spell lays it: a circle is a \
+                     spell's mark, or a binding's with its `kind`"
+                )));
+            }
+        };
         if circles
             .by_status
             .insert(status, circles.rows.len())
@@ -218,7 +237,9 @@ mod tests {
         assert_eq!(row("webbed"), Some((School::Transmutation, true)));
         assert_eq!(row("ill_wished"), Some((School::Enchantment, true)));
         assert_eq!(row("fortified"), None, "a potion's boost has no circle");
-        assert_eq!(circles.rows().len(), 22);
+        // No spell lays a lure quest's binding: its row names its kind (#1446).
+        assert_eq!(row("bound"), Some((School::Enchantment, false)));
+        assert_eq!(circles.rows().len(), 23);
         assert_eq!(circles.color(School::Abjuration).to_string(), "#80b4e0");
     }
 

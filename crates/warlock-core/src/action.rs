@@ -409,6 +409,11 @@ pub enum Action {
     /// its id, as a quest would: it is marked on the player's map. For tests and captures. Takes
     /// no game time; recorded in replays.
     Reveal(String),
+    /// Dev command: active lure quest `ID`'s creature (spec §8 "Quests": "Lure quests") comes
+    /// beside the player, aware of them: made if it is nowhere, else taken from wherever it is
+    /// (`world/lure.rs`). For replays, tests, and captures that skip the walk. Takes no game
+    /// time; recorded in replays.
+    Lure(String),
     /// Dev command: active rolled quest `quest`, with no progress yet, draws `target` instead
     /// (spec §8 "Quests": a target its pool may hold, or a variant's id), its kills counted
     /// from now and a variant's reveal made. For replays, tests, and captures. Takes no game
@@ -1074,6 +1079,7 @@ impl fmt::Display for Action {
             Action::Resource(id) => write!(f, "resource:{id}"),
             Action::Infect(id) => write!(f, "infect:{id}"),
             Action::Reveal(id) => write!(f, "reveal:{id}"),
+            Action::Lure(id) => write!(f, "lure:{id}"),
             Action::QuestRoll { quest, target } => write!(f, "quest_roll:{quest}:{target}"),
             Action::Freeze { at, radius } => write!(f, "freeze:{},{},{radius}", at.x, at.y),
             Action::Thaw { at, radius } => write!(f, "thaw:{},{},{radius}", at.x, at.y),
@@ -1618,6 +1624,10 @@ impl FromStr for Action {
                 }
                 _ => Err("`reveal` needs a hidden location id, e.g. `reveal:fennmynster`".into()),
             },
+            "lure" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() && !id.contains(':') => Ok(Action::Lure(id.to_string())),
+                _ => Err("`lure` needs a lure quest's id, e.g. `lure:crystal_guardian`".into()),
+            },
             // A tag's target keeps its own colon (`quest_roll:hunt:tag:goblin`).
             "quest_roll" => match arg.and_then(|a| a.split_once(':')) {
                 Some((quest, target))
@@ -1872,6 +1882,7 @@ mod tests {
             Action::Infect("filth_fever".into()),
             Action::Infect("Odd_Case".into()),
             Action::Reveal("old_barrow".into()),
+            Action::Lure("crystal_guardian".into()),
             Action::Talent {
                 id: "hardy".into(),
                 choice: None,

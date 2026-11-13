@@ -72,6 +72,10 @@
 #                 unique, an animated thing, and a creature with a `mindless` tag; `message` and
 #                 `ends` follow its name as it takes and as it ends
 #     mana        a `heal` spell's mana back to the caster: a roll
+#     crystal     true: a `damage` spell whose kill of a creature that leaves a corpse, is no
+#                 animated thing, and has a colour (../crystals.toml) leaves that colour's
+#                 crystals and perhaps a rare material in place of its corpse and its body's
+#                 crafting stock (Soulglass; `world/crystal.rs`)
 #     arcs        a `damage` ray's, bolt's, touch's, or line's, of a type that arcs (`[types]` in
 #                 ../spells.toml): that many jumps are taken without a draw, every jump of
 #                 it reaching 2 cells rather than the arc's one

@@ -45,8 +45,8 @@ map = '''
 ###..........###.A..............##::#####################...~~~~~~~...##
 ################....wwwwwwww....##:4#####################...~~~~~~~...##
 ##################################::#l......=############...~~~~~~~.."##
-##################################::#........############...~~~~~~~...##
-##################...............#::+..sΠs...############."...........##
+##################################::#........############...~~~~~~~.O.##
+##################...............#::+..sΠs...############."........Kl.##
 ##################.".."..".."..".#::#........############.....".......##
 ##################....5...........::#.8.....=###########################
 ##################.."..".."..".."#::####################################
@@ -93,6 +93,10 @@ map = '''
 "M" = { terrain = "floor", creature = "deep_gnome_priest", npc = "senara" }
 "T" = { terrain = "floor", creature = "deep_gnome_jeweller", npc = "tregear" }
 "C" = { terrain = "floor", creature = "deep_gnome", npc = "morwenna" }
+# Ysella the Binder in the garden at the town's east edge (#1446), and beside her the crystal
+# portal into Meyn Bew, hidden (plain floor) until she gives her quest (data/quests/ysella.toml).
+"K" = { terrain = "floor", creature = "deep_gnome_binder", npc = "ysella" }
+"O" = { terrain = "floor", hidden = { id = "meyn_bew", terrain = "crystal_portal", to = "meynbew:1", name = "Meyn Bew", opens = "Ysella sings one long note. The rock beside her rings, and opens on a ring of crystal light." } }
 
 # The Glimmering, walls and door included, is a sanctuary (data/room_effects.toml).
 [[room]]

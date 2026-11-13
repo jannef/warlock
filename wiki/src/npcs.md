@@ -42,6 +42,9 @@ few words' time: half a normal action, 3 seconds (see
   all of their lines, in an order of their own, before saying one again, and never says the same
   line twice in a row.
 - Some greet you the first time you talk to them, with a line they say only then.
+- Some have more to say once you have done a [quest](quests.md) that touches them: in Gimmwīc,
+  Kerensa and Ysella talk of the [crystal guardian](quests.md#lures) once it is bound. These
+  lines join the rest.
 - Good folk turn cold to an [Evil or Wicked](alignment.md) character (see
   [Alignment](alignment.md)). They answer with a cold word instead of their greeting and their
   talk.

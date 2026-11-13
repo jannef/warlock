@@ -11,9 +11,12 @@
 #              must have a light `circle_<id>` in lights.toml
 #
 # [[status]]   one row per circled status: a `kind = "buff"` or `"hex"` spell's status (one without
-#              a row has no circle; a sleep's, `sleeps`, never has one: Slumber's `asleep`, a den's)
+#              a row has no circle; a sleep's, `sleeps`, never has one: Slumber's `asleep`, a den's),
+#              or a status no spell lays that names its own `kind` (a lure quest's binding)
 #   status     an id in data/status.toml; it must have `seen` (others see it on a creature)
 #   school     the school whose colour it is drawn in
+#   kind       "buff" or "hex", only for a status no spell lays (a spell's status takes its
+#              spell's)
 #
 # Rows are in no particular order: a circle orders its effects by status order (data/status.toml).
 
@@ -76,6 +79,13 @@ school = "transmutation"
 [[status]]
 status = "blessed"
 school = "abjuration"
+
+# A lure quest's binding (the crystal guardian's, Gimmwīc's): no spell lays it, so it names its
+# kind.
+[[status]]
+status = "bound"
+school = "enchantment"
+kind = "buff"
 
 # Fire cloak.
 [[status]]

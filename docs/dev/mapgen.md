@@ -102,6 +102,17 @@ campaign), so `World::travel` arrives on it, and back up on the deepest level's 
 bottom is Gimmwīc, the deep gnomes' town. Tests: `content/dungeon.rs` (parse and exclusions),
 `content/mod.rs` (the validate checks), `world/deep_gnome_tests.rs` (down to the town and back).
 
+**Meyn Bew** (#1446; `campaigns/ascmearc/data/dungeons/meynbew.toml`): a pocket of the plane of
+earth under Gimmwīc, entered only through the crystal portal Ysella the Binder's quest reveals
+in the town (a hidden location of a hand-made level, `docs/dev/overworld.md`), so its first
+floor's `<` (the run's `entered_from`) climbs back out onto the portal. Four `rooms` floors 80×21
+of danger 22 to 25 (`stray = 0`, `out_of_depth = 0`: earth, greater earth, basilisk, stone giant,
+stone troll), a violet `ambient`, no shop, no special room, no ore (`ores = []`). The plane's
+crystal comes from vaults (the generators have no palette of their own): `crystal_garden` (crystal
+clusters lit red, amber, and green round an uncut amethyst) is pinned on floors 1 to 3, and
+`crystal_hollow` on floor 4, with the named place "the crystal hollow" the lure quest's `waits`
+names. Tests: `world/crystal_guardian_tests.rs` (the portal, the floors, the hollow).
+
 Special rooms (spec §7 "Special rooms") have their own topic file, `docs/dev/special-rooms.md`:
 the effects' data, the draw (`mapgen/special.rs`, last, from the level's map stream), the whole-level
 version, and what the rules ask of them.

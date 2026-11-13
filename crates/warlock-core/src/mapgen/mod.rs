@@ -717,6 +717,7 @@ fn layer_boss_stairs(
         terrain,
         to,
         name: creature.name.clone(),
+        opens: None,
     };
     (at, hidden)
 }

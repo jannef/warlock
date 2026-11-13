@@ -144,10 +144,15 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   Fennmynster."), and it is **marked on the player's map** (their memory of the overworld holds
   the entrance) wherever they are; revealed before the overworld is made, it is applied as it is
   made. A rumoured way (§8 "Dialogue") that passes it marks only its plain terrain. The id
-  (without `:` or whitespace: `reveal:ID`) is unique on the overworld; a hidden
-  location on any other level, on a cell that is not walkable or is a location already, with an
+  (without `:` or whitespace: `reveal:ID`) is unique in its campaign; a hidden
+  location in a vault, on a cell that is not walkable or is a location already, with an
   unknown `terrain` or one that is no way down, or an unknown `to` is a content error.
   Without `to` it leads nowhere yet (its level is not built), like stairs without one.
+  A hand-made level may hide one too (#1446): Gimmwīc's crystal portal into Meyn Bew, a
+  `crystal_portal` (stairs down) on a plain floor cell of its garden, opened as Ysella the
+  Binder gives her quest. Its `opens` line ("Ysella sings one long note. The rock beside her
+  rings, and opens on a ring of crystal light.") is said instead of the map line; revealed while
+  its level is not yet made, it is applied as that level is made.
   The Ascmearc hides seven: Fennmynster and Fyrdelf, and the four lairs of the wanted (Wyrtholm,
   Wulfeshol, Bānfeld, Brocenburg; #426), each revealed by its own variant of Wat One-Eye's
   "Wanted" (§8 "Quests": a variant's `reveals`), so a run is shown one lair and never the others.

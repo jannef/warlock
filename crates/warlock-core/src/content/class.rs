@@ -666,6 +666,9 @@ pub enum ClassActive {
     /// A careful look that tells a thing the player carries for what it is, as the scroll of
     /// identify would (the merchant's Merchant's eye).
     MerchantsEye,
+    /// An ingot set on a heap of stones beside the player in an hour: a makeshift anvil, for
+    /// good (the craftsperson's Field forge, `world/field_forge.rs`).
+    FieldForge,
     /// A damaged thing the player carries mended in the field, without an anvil, by a check that
     /// destroys nothing (the craftsperson's Make do and mend, `world/make_do.rs`).
     MakeDo,
@@ -707,6 +710,7 @@ impl ClassActive {
         ClassActive::Knock,
         ClassActive::Scribe,
         ClassActive::MerchantsEye,
+        ClassActive::FieldForge,
         ClassActive::MakeDo,
         ClassActive::SpiritWeapon,
     ];
@@ -744,6 +748,7 @@ impl ClassActive {
             ClassActive::Knock => "knock",
             ClassActive::Scribe => "scribe",
             ClassActive::MerchantsEye => "merchants_eye",
+            ClassActive::FieldForge => "field_forge",
             ClassActive::MakeDo => "make_do_and_mend",
             ClassActive::SpiritWeapon => "spirit_weapon",
         }
@@ -767,6 +772,7 @@ impl ClassActive {
                 | ClassActive::LowBlow
                 | ClassActive::MasterThief
                 | ClassActive::Knock
+                | ClassActive::FieldForge
         )
     }
 
@@ -780,9 +786,9 @@ impl ClassActive {
     }
 
     /// Whether it is a blow aimed at someone in its direction (refused with nobody hostile
-    /// there); Knock is aimed at a lock instead.
+    /// there); Knock is aimed at a lock instead, Field forge at open ground.
     pub const fn strikes(self) -> bool {
-        self.aimed() && !matches!(self, ClassActive::Knock)
+        self.aimed() && !matches!(self, ClassActive::Knock | ClassActive::FieldForge)
     }
 
     /// Whether it is a holy gift that may be given an `alignment` in its data (spec §8
@@ -866,6 +872,8 @@ impl ClassActive {
             ClassActive::Volley => ActionKind::Shoot,
             ClassActive::Inspire | ClassActive::Lullaby => ActionKind::Song,
             ClassActive::MerchantsEye => ActionKind::Read,
+            // A turn of it; setting the block takes the talent's seconds (`world/field_forge.rs`).
+            ClassActive::FieldForge => ActionKind::Craft,
             // A turn of it; a mend takes its `seconds` of them (`world/make_do.rs`).
             ClassActive::MakeDo => ActionKind::Craft,
             // A turn of it; a scroll takes a study's turns (`world/scribe.rs`).

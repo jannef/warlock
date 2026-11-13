@@ -312,7 +312,13 @@ south-west corner against Grægweall, no `hidden`): the owner chose no quest gat
 Headman Peran (`peran`, its leader, for the letter quest of #1435), the Glimmering (a sanctuary;
 Mother Senara: cure and mend), Kerensa's Stones (`gem_dealer`; identify), Jory's Outfitters
 (`outfitter`), and the cutting floor (three anvils; Old Tregear teaches Jewelcraft). Its dev
-scenarios are `deopgang` (its first floor) and `gimmwic` (the town).
+scenarios are `deopgang` (its first floor) and `gimmwic` (the town). In the garden at the town's
+east edge Ysella the Binder (`ysella`, #1446) gives the lure quest `crystal_guardian`
+(`docs/dev/quests.md` "Lure quests"): it reveals the town's hidden `meyn_bew`, the crystal portal
+beside her, into Meyn Bew (`meynbew`, `docs/dev/mapgen.md` "Meyn Bew"), four rooms floors of
+danger 22 to 25 whose fourth holds the crystal hollow and the crystal guardian. Brought home and
+bound, the guardian keeps a corner of Kerensa's Stones, and Jewelcraft's Cut and Set checks in
+the town get +2.
 
 The dev scenario `drake` (#1099, `docs/dev/creatures.md` "Dragons") starts on `drakes_lair`, a
 hand-made Ascmearc level with no stairs: the fire drake in a lava hall like its hoard's, for

@@ -696,6 +696,8 @@ pub struct TalentMods {
     pub low_blow: bool,
     /// The active Merchant's eye: a stack it carries identified, for the time of a reading.
     pub merchants_eye: bool,
+    /// The active Field forge: the seconds it takes to set a makeshift anvil, if it has it.
+    pub field_forge: Option<u32>,
     /// The active Make do and mend, if it has it (`world/make_do.rs`).
     pub make_do: Option<MakeDo>,
     /// The active Spirit weapon, and what a spirit weapon in its hand gives, if it has it.
@@ -1198,6 +1200,7 @@ impl TalentMods {
             A::Lurk => self.lurk.is_some(),
             A::LowBlow => self.low_blow,
             A::MerchantsEye => self.merchants_eye,
+            A::FieldForge => self.field_forge.is_some(),
             A::MakeDo => self.make_do.is_some(),
             A::SpiritWeapon => self.spirit_weapon.is_some(),
             A::MasterThief => self.finisher,
@@ -2105,6 +2108,7 @@ impl TalentMods {
             }
             TalentEffect::LowBlow => self.low_blow = true,
             TalentEffect::MerchantsEye => self.merchants_eye = true,
+            TalentEffect::FieldForge { seconds } => self.field_forge = Some(seconds),
             TalentEffect::MakeDo {
                 seconds,
                 difficulty,

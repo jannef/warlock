@@ -102,6 +102,9 @@ pub(super) struct TerrainSpec {
     /// Whether it is stone (spec §8 "Searching": dwarves notice what is hidden on stone).
     #[serde(default)]
     pub stone: bool,
+    /// The station it serves as (spec §7 "Special rooms": a makeshift anvil works as an anvil):
+    /// a terrain id, one that works as nothing itself.
+    pub works_as: Option<String>,
     /// Whether things grow on it (spec §8 "Spells": Bramble calls them up).
     #[serde(default)]
     pub plants: bool,
@@ -264,6 +267,10 @@ pub struct TerrainDef {
     /// Gameplay: stone, worked or not (spec §8 "Searching"): dwarves notice the hidden features
     /// on it in passing (a secret door in a stone wall, a trap in a stone floor).
     pub stone: bool,
+    /// Gameplay: the station it serves as, its own terrain otherwise (a makeshift anvil works
+    /// as the anvil: every recipe's station test and the anvil's walk-in read it through
+    /// [`crate::content::Content::works_as`], the one read).
+    pub works_as: Option<TerrainId>,
     /// Gameplay: things grow on it (spec §8 "Spells"): a spell with `only_terrain = "plants"`
     /// takes only those standing on it (Bramble).
     pub plants: bool,

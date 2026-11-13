@@ -1264,6 +1264,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::Knock
         | ClassActive::Scribe
         | ClassActive::MerchantsEye
+        | ClassActive::FieldForge
         | ClassActive::MakeDo
         | ClassActive::SpiritWeapon
         | ClassActive::Sic

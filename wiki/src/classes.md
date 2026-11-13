@@ -340,6 +340,10 @@ creature dies under a hex she laid herself, whatever killed it and wherever it i
 [mana](mana.md) equal to half its level (rounded down, at least 1), never past her maximum: "The
 hex comes home."
 
+**The witch's soulglass** ([Soulglass](magic.md#spell-soulglass), from level 16) is a ray of
+necromancy. A creature it kills leaves no corpse but [magic crystals](crystals.md#soulglass) of
+its nature, for an enchanter to bind or for her to [consume](crystals.md#consuming-a-crystal).
+
 {{#include generated/class-levels.md:warrior}}
 
 {{#include generated/class-levels.md:aristocrat}}
@@ -411,6 +415,9 @@ It never destroys anything. You cannot mend something you wear or wield (take it
 [protected](materials.md#protected-items) item, goods you have not paid for, or something of a
 material no craft works, like cloth or glass. If you are trained in the craft, the check may earn
 it a [training mark](skills.md#getting-better).
+
+<a id="field-forge"></a>**Field forge** (from level 32) makes an anvil wherever you are: a
+[makeshift anvil](altars-forges-springs.md#the-makeshift-anvil) from one ingot and an hour's work.
 
 {{#include generated/class-levels.md:merchant}}
 
