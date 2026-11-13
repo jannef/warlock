@@ -346,7 +346,7 @@ pub use familiar::{draw as familiar_draw, name_for as familiar_name};
 pub use fight::{Cause, Death};
 pub(crate) use forage::forage_ground;
 pub use free_blow::FreeBlows;
-pub(crate) use gather::fungus_ways;
+pub(crate) use gather::{fungus_ways, unskilled};
 pub use gifts::{STARE_RANGE, Streak};
 pub use graveyard::Fallen;
 pub use guild::GuildRank;

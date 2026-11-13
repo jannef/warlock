@@ -83,7 +83,7 @@ pub(super) fn abilities(content: &Content) -> String {
             }
             Ability::Drink => "everyone beside a healing spring (a drink takes ten seconds)".into(),
             Ability::Gather => {
-                "everyone beside the [glowing fungus](herbs.md) (more herbs with Herbalism)".into()
+                "everyone trained in [Herbalism](skills.md#skill-herbalism) beside the [glowing fungus](herbs.md)".into()
             }
             Ability::Heel | Ability::Hold | Ability::SetOn => {
                 "everyone with an ally (usable while one is on the level)".into()

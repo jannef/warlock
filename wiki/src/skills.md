@@ -119,8 +119,8 @@ The passive skills help you more the higher they are:
   what talents and a Delving tool add. [Alberich](npcs.md#alberich) in Fyrdelf teaches it for
   gold.
 - **[Herbalism](skills.md#skill-herbalism)** may find a herb besides on a forage that finds something (see
-  [Foraging](skill-uses.md#foraging)), and finds one more herb for every 50 when you
-  [gather](herbs.md#gathering) from the glowing fungus.
+  [Foraging](skill-uses.md#foraging)). You need it to [gather](herbs.md#gathering) herbs from
+  the glowing fungus, and it finds one more herb there for every 50.
 - **[Search](skills.md#skill-search)** helps you find [secret doors](doors.md#secret-doors) and other hidden things when you search (`s`, `Alt+s`). A
   master's search reaches one cell farther (see [Searching](searching.md)).
 - **[Spot](skills.md#skill-spot)** lets you [notice hidden things in passing](searching.md#noticing-in-passing) at all, except traps. The higher it is, the more you

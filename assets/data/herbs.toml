@@ -1,11 +1,12 @@
 # Gathering herbs (spec §8 "Skills": Herbalism; #1340, docs/design/recipes.md §8): the dungeon's
-# glowing fungus can be gathered for herbs, the inputs of Alchemy. Anyone may gather (the Gather
-# ability, the abilities menu's Here group, beside the fungus); Herbalism makes it worth doing.
+# glowing fungus can be gathered for herbs, the inputs of Alchemy. Only one trained in `skill` may
+# gather (the Gather ability, the abilities menu's Here group, beside the fungus; #1400): anyone
+# else is refused, taking no time.
 #
 # A gather takes `seconds` of game time, in turns of the `gather` action (actions.toml); a
 # creature coming into view, a message, or a blow stops it, and a gather cut short finds nothing
 # (the time is spent). One that runs its time finds `count` herbs, plus one for each
-# `value_per_count` of Herbalism (skills.toml); one untrained in Herbalism finds `untrained`.
+# `value_per_count` of the skill's trained value (skills.toml).
 # Each herb is one draw by weight from the rows below, at the level's item level (a dungeon
 # level's depth; a hand-made level's `item_level`). The fungus is never picked over: gather again
 # at once, as often as you like. The time is the price.
@@ -13,9 +14,9 @@
 # Fields:
 #   terrain          the terrain herbs are gathered from (terrain.toml)
 #   seconds          how long a gather takes, in seconds (at least 1)
-#   count            dice: how many herbs a gatherer trained in Herbalism finds
-#   value_per_count  Herbalism's value that gives one more (above 0)
-#   untrained        how many one untrained in Herbalism finds
+#   skill            the skill a gatherer must be trained in (skills.toml; Herbalism)
+#   count            dice: how many herbs a gather finds, before the skill
+#   value_per_count  the skill's value that gives one more (above 0)
 #   [[herb]]         one row per herb, read as gems.toml's sizes are:
 #     object         the herb (objects/), a stackable object, once
 #     find           its weight at item level 1 (above 0)
@@ -27,7 +28,7 @@ terrain = "fungus"
 seconds = 300
 count = "1d2"
 value_per_count = 50
-untrained = 1
+skill = "herbalism"
 
 # The fungus's own cap, at every depth.
 [[herb]]
