@@ -791,15 +791,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
   dungeon's glowing fungus (terrain `fungus`, the file's `terrain`) is gathered for herbs, the
   inputs of Alchemy. The abilities menu's **Gather** (`Ability::Gather`, the *Here* group, as
   Pray and Drink: listed only beside fungus; `Action::Gather(Dir)`, replay text `gather:DIR`;
-  no key of its own) is **everyone's**, while the file exists. With fungus on one cell beside
-  the player the menu gathers there at once; with more it asks the way. A way with no fungus is
-  refused, taking no time ("There is nothing here to gather.").
+  no key of its own) is offered to everyone beside fungus, while the file exists, but only one
+  trained in the file's `skill` (Herbalism; #1400) may use it: anyone else sees the row greyed
+  out ("you are untrained in Herbalism", `Unavailable::Untrained`) and `gather:DIR` is refused,
+  taking no time ("You do not know what to do with these: gathering herbs takes the Herbalism
+  skill."). With fungus on one cell beside the player the menu gathers there at once; with more
+  it asks the way. A way with no fungus is refused first, taking no time ("There is nothing here
+  to gather.").
   - **Time**: the file's `seconds` (300: five minutes), in turns of the `gather` action (1000),
     stopped like a rest ("You stop gathering."); a gather cut short finds nothing, the time
     spent.
-  - **The find**: trained in Herbalism, `count` (`1d2`, one gameplay draw per die) plus one for
-    every `value_per_count` (50) of Herbalism's trained value; untrained, `untrained` (1), no
-    draw. Each herb is one gameplay draw by weight from the `[[herb]]` rows at the level's item
+  - **The find**: `count` (`1d2`, one gameplay draw per die) plus one for every
+    `value_per_count` (50) of Herbalism's trained value. Each herb is one gameplay draw by weight from the `[[herb]]` rows at the level's item
     level (a dungeon level's depth; a hand-made level's `item_level`), read as `gems.toml`'s
     sizes are: `find` at level 1, `deeper` added per level past the first (negative for
     moonwort), never below 0, none below `level`. Nine herbs: glowcap 40/0/1, moonwort 30/−1/1,

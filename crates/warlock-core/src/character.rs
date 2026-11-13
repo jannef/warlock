@@ -1218,6 +1218,8 @@ mod tests {
         files.remove("data/background.toml");
         // Mining names its skill.
         files.remove("data/mining.toml");
+        // Gathering herbs names its skill.
+        files.remove("data/herbs.toml");
         // Skill affixes go with the skills, and the uniques that have them.
         files.remove("campaigns/ascmearc/data/uniques");
         let untrained = |text: &str| -> String {

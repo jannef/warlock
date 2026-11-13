@@ -5,6 +5,7 @@
 
 use super::{ContentError, ObjectId, TerrainId};
 use crate::dice::Dice;
+use crate::skills::SkillId;
 use serde::Deserialize;
 
 /// The rules of gathering that live in data.
@@ -18,8 +19,8 @@ pub struct HerbRules {
     pub count: Dice,
     /// Herbalism's value that gives one more.
     pub value_per_count: u16,
-    /// How many one untrained in Herbalism finds.
-    pub untrained: u8,
+    /// The skill a gatherer must be trained in, whose value gives more (Herbalism; #1400).
+    pub skill: SkillId,
     /// The herbs, in file order.
     pub herbs: Vec<Herb>,
 }
@@ -67,7 +68,7 @@ struct HerbsFile {
     seconds: u32,
     count: Dice,
     value_per_count: u16,
-    untrained: u8,
+    skill: String,
     herb: Vec<HerbSpec>,
 }
 
@@ -87,7 +88,7 @@ fn first_level() -> u8 {
 }
 
 impl HerbRules {
-    /// Parses `data/herbs.toml`: a known terrain, a time of at least a second, a
+    /// Parses `data/herbs.toml`: a known terrain and skill, a time of at least a second, a
     /// `value_per_count` above 0 (a divisor), and herbs that are known stackable objects, each
     /// once, with a weight above 0 and a `level` of at least 1.
     pub(super) fn parse(
@@ -99,6 +100,8 @@ impl HerbRules {
         let parsed: HerbsFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
         let terrain = (content.terrain_id(&parsed.terrain))
             .ok_or_else(|| err(format!("unknown terrain `{}`", parsed.terrain)))?;
+        let skill = (content.skill_id(&parsed.skill))
+            .ok_or_else(|| err(format!("unknown skill `{}`", parsed.skill)))?;
         if parsed.seconds == 0 {
             return Err(err("`seconds` must be at least 1".into()));
         }
@@ -142,7 +145,7 @@ impl HerbRules {
             seconds: parsed.seconds,
             count: parsed.count,
             value_per_count: parsed.value_per_count,
-            untrained: parsed.untrained,
+            skill,
             herbs,
         })
     }
@@ -190,6 +193,11 @@ mod tests {
         let text = include_str!("../../../../assets/data/herbs.toml");
         for (from, to, says) in [
             ("seconds = 300", "seconds = 0", "`seconds`"),
+            (
+                "skill = \"herbalism\"",
+                "skill = \"nothing\"",
+                "unknown skill",
+            ),
             (
                 "terrain = \"fungus\"",
                 "terrain = \"moss\"",

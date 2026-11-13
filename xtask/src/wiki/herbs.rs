@@ -10,21 +10,17 @@ use warlock_core::content::Content;
 /// The depths the herb table shows shares at.
 const DEPTHS: [u8; 4] = [1, 3, 6, 10];
 
-/// Gathering's numbers: the time, and how many herbs a gather finds, trained or not.
+/// Gathering's numbers: the time, and how many herbs a gather finds.
 pub(super) fn gathering(content: &Content) -> String {
     let Some(rules) = content.herbs() else {
         return "Nobody gathers herbs.\n".into();
     };
     format!(
-        "A gather takes {} minutes. Untrained in Herbalism, you find {}. Trained, you find `{}`, \
-         plus one for every {} of Herbalism.\n",
+        "A gather takes {} minutes. You find `{}` herbs, plus one for every {} of {}.\n",
         rules.seconds / 60,
-        match rules.untrained {
-            1 => "one herb".to_string(),
-            n => format!("{n} herbs"),
-        },
         rules.count,
         rules.value_per_count,
+        content.skill(rules.skill).name,
     )
 }
 

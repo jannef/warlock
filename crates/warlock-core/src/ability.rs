@@ -306,6 +306,9 @@ pub enum Unavailable {
     NoMana,
     /// One the place does not allow: foraging anywhere but in the wild (spec §8 "Foraging").
     NotHere,
+    /// One a place offers that asks for a skill the actor is not trained in: Gather without
+    /// Herbalism (#1400, `world/gather.rs`).
+    Untrained(SkillId),
     /// The Heal ability with nothing to treat: no bleeding, poison, or disease that shows.
     NothingToTreat,
     /// A triggered weapon ability: it fires by itself, never chosen.
@@ -343,6 +346,9 @@ impl Unavailable {
             Unavailable::NoUnknownScroll => "no unknown scroll".into(),
             Unavailable::NoMana => "you have too little mana".into(),
             Unavailable::NotHere => "not usable here".into(),
+            Unavailable::Untrained(skill) => {
+                format!("you are untrained in {}", content.skill(skill).name).into()
+            }
             Unavailable::NothingToTreat => "nothing to treat".into(),
             Unavailable::FiresByItself => "fires by itself".into(),
             Unavailable::While(status) => {
@@ -376,6 +382,9 @@ impl Unavailable {
             Unavailable::NoUnknownScroll => "no_unknown_scroll".into(),
             Unavailable::NoMana => "no_mana".into(),
             Unavailable::NotHere => "not_here".into(),
+            Unavailable::Untrained(skill) => {
+                format!("untrained:{}", content.skill(skill).id).into()
+            }
             Unavailable::NothingToTreat => "nothing_to_treat".into(),
             Unavailable::FiresByItself => "fires_by_itself".into(),
             Unavailable::NotSoHeld => "not_so_held".into(),
@@ -780,8 +789,8 @@ impl Ability {
             }
             Ability::Gather => {
                 "Search the glowing fungus beside you for five minutes for herbs to brew with. \
-                 Anyone finds one; Herbalism finds more, and the deeper the fungus grows, the \
-                 rarer the herbs. It never runs out."
+                 It takes Herbalism, and more of it finds more; the deeper the fungus grows, \
+                 the rarer the herbs. It never runs out."
             }
             Ability::Heel => {
                 "Call your allies to your side: they follow you and fight what threatens you. \
@@ -1169,6 +1178,7 @@ impl Ability {
             Ability::Weapon(_, id) => weapon_unavailable(actor, content, id),
             Ability::Heal => (crate::heal::treatable(actor, content).is_empty())
                 .then_some(Unavailable::NothingToTreat),
+            Ability::Gather => crate::world::unskilled(actor, content).map(Unavailable::Untrained),
             Ability::ThrowVoice
             | Ability::Disarm
             | Ability::Listen
@@ -1187,7 +1197,6 @@ impl Ability {
             | Ability::Tame
             | Ability::Pray
             | Ability::Drink
-            | Ability::Gather
             // The profession's screen says why each recipe cannot be made now.
             | Ability::Profession(_)
             // Whether anyone is there to hear an order is the perception's to say.
