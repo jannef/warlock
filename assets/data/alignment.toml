@@ -33,7 +33,7 @@
 #   eat_kin            eating the corpse of one of your own race (a creature's `race`), or of a
 #                      creature who talks (has a dialogue) and is not hostile to you
 #   consecrate         consecrating an unholy place (the class ability Consecrate); default 0
-#   consume_crystal    consuming a magic crystal (the Consume crystal ability; crystals.toml), a
+#   consume_crystal    consuming a magic crystal (from the Consume list, `e`; crystals.toml), a
 #                      crystal; default 0
 #   prayed_good        praying at a good forgotten altar (spec §7 "Special rooms"; a neutral
 #   prayed_evil        altar's prayer moves nothing), and at an evil one

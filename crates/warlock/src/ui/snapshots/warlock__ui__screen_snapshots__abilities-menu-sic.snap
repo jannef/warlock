@@ -22,8 +22,8 @@ expression: "render(case, content.clone())"
                     │   k  Salvage            on something you carry           │
                     │ Weapon skills                                            │
                     │   l  Shield bash        you hold no shield               │
-                    │ Items                                                    │
-                    │   m  Consume crystal    no crystal                       │
+                    │ Allies                                                   │
+                    │   m  Come to heel                                        │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │

@@ -47,10 +47,12 @@ pub(super) fn crystal_rules(content: &Content) -> String {
     let mut out = String::new();
     let _ = writeln!(
         out,
-        "- **Consuming** a crystal takes a turn and gives {} mana (never past your maximum), one \
-         Willpower training mark, and a step of {} toward evil, which shrinks the more evil you \
-         already are.",
+        "- **Consuming** a crystal takes a turn and gives {} mana (never past your maximum), {} \
+         Willpower [training marks](stats.md#training) (an average score of 10 needs {} for its \
+         next point), and a step of {} toward evil, which shrinks the more evil you already are.",
         crystals.consume_mana,
+        crystals.consume_marks,
+        content.stat_training().base_price(10),
         content
             .alignment()
             .map_or(0, |a| a.shift.consume_crystal)
@@ -58,7 +60,7 @@ pub(super) fn crystal_rules(content: &Content) -> String {
     );
     let _ = writeln!(
         out,
-        "- **Salvage** checks each affix of an identified magic item: 2d12 plus your Willpower \
+        "- **Salvage** checks each affix of a magic item, identified or not: 2d12 plus your Willpower \
          modifier, what talents add to Willpower checks, and what Enchanting gives to its craft, \
          against {} plus one for every {} tiers of the affix (a tier-12 affix is +{}). A natural \
          {FUMBLE} always fails, a natural {HIGHEST} always succeeds.",
@@ -68,7 +70,7 @@ pub(super) fn crystal_rules(content: &Content) -> String {
     );
     let _ = writeln!(
         out,
-        "- **Rare materials**: salvaging an identified rare item of item level {} or more has a \
+        "- **Rare materials**: salvaging a rare item of item level {} or more has a \
          {}% chance of leaving {} (even odds).",
         crystals.rare.salvage_level,
         crystals.rare.salvage_chance,

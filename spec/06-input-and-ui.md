@@ -477,9 +477,6 @@ developer notes (CLAUDE.md, `docs/dev/`).
     **Salvage** (`Ability::Salvage`, §8 "Skills", every profession's), after the skills' own uses,
     which everyone has, asking for an item (the Salvage list: what `world::salvageable` accepts,
     less what is worn or wielded), never greyed out;
-    **Consume crystal** (`Ability::Consume`, under Items, §8 "Skills": salvage's crystals),
-    which everyone has, asking for a magic crystal carried (`--screen consume-crystal`), greyed
-    "no crystal" without one;
     and each other skill used as
     an action (`kind = "action"`, §8 "Skills") the player
     is trained in, listed but never available until its use comes (it then becomes an ability of
@@ -666,7 +663,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   feel satiated."), and someone muttering (§8 "Dialogue"), which are logged all the same. Hit points come back twice as fast while resting
   (§8 "Healing").
   It is a gameplay input mode like the open/close/kick direction prompt, not a menu screen.
-- **Consume** (`e`, id `eat`: the Eat command, renamed; §8 "Hunger") opens the choice of what to consume, food and potions (§8 "Potions"): what lies on the player's
+- **Consume** (`e`, id `eat`: the Eat command, renamed; §8 "Hunger") opens the choice of what to consume, food, potions (§8 "Potions"), and magic crystals (§8 "Consuming a crystal"): what lies on the player's
   cell first (marked "lying here"; the `>` cursor starts on it, as ADOM asks about the floor
   first), then what is in the inventory, in the item list (above), grouped by class (Food, then
   Potions; an unknown potion by its word and colour, "a fizzy red potion"); with nothing, "You have

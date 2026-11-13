@@ -2709,7 +2709,6 @@ mod tests {
                 "Steal (skill): no one beside you to rob",
                 "Salvage (skill): an item you carry",
                 "Shield bash (weapon skill): you hold no shield",
-                "Consume crystal (item): no crystal",
             ]
         );
         let value = json(&world, &[], false);

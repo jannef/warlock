@@ -241,13 +241,12 @@ The item itself is gone either way, with any improvements from a
 [forge](altars-forges-springs.md#forges). From a stack, only one is taken apart. Materials that no
 craft works, like a cloth wrapping, give nothing.
 
-Its [magic](magic-items.md) can be caught. Before the material checks, an
-[identified](magic-items.md#unidentified-items) magic or rare item makes one more check for each
-of its affixes, on [Willpower](stats.md#stat-willpower) and
+Its [magic](magic-items.md) can be caught. Before the material checks, a magic or rare item
+makes one more check for each of its affixes, on [Willpower](stats.md#stat-willpower) and
 [Enchanting](skills.md#skill-enchanting). Each one made leaves a
 [magic crystal](crystals.md) of the affix's colour. A deep rare item may also leave a rare
-material. An unidentified item's magic goes out unread: it gives nothing, and you learn nothing
-about it by taking it apart. [Magic crystals](crystals.md#catching-crystals-in-salvage) has the
+material. This works on an [unidentified](magic-items.md#unidentified-items) item too, but the
+messages do not name its affixes. [Magic crystals](crystals.md#catching-crystals-in-salvage) has the
 numbers.
 
 You cannot salvage:

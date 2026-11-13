@@ -6,27 +6,27 @@ expression: "render(case, content.clone())"
  and flees from you. (×2) Your throat is raw from the howl.
 
 
+
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
-                    │   a  Hound's bay      you are hoarse                     │
+                    │   a  Hound's bay     you are hoarse                      │
                     │ Class                                                    │
                     │ > b  Veteran's wind                                      │
                     │ Skills                                                   │
-                    │   c  Intimidate       at a place you see                 │
+                    │   c  Intimidate      at a place you see                  │
                     │   d  Jewelcraft…                                         │
-                    │   e  Salvage          on something you carry             │
+                    │   e  Salvage         on something you carry              │
                     │ Weapon skills                                            │
-                    │   f  Shield bash      no foe within reach                │
-                    │ Items                                                    │
-                    │   g  Consume crystal  no crystal                         │
+                    │   f  Shield bash     no foe within reach                 │
                     │                                                          │
                     │ An old soldier's second breath (an ability): hit points  │
                     │ back at once, then winded a quarter hour.                │
                     │                                                          │
                     │                                                          │
-                    │ a-g or Enter use   Esc close                             │
+                    │ a-f or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
 
 

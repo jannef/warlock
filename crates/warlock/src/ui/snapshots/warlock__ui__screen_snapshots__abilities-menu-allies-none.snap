@@ -4,6 +4,7 @@ expression: "render(case, content.clone())"
 ---
  Lēof, your hound, pads at your heel.
  A dire warg comes to your side.
+
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -16,19 +17,18 @@ expression: "render(case, content.clone())"
                     │   f  Salvage            on something you carry           │
                     │ Weapon skills                                            │
                     │   g  Shield bash        you hold no shield               │
-                    │ Items                                                    │
-                    │   h  Consume crystal    no crystal                       │
                     │ Allies                                                   │
-                    │   i  Come to heel       no allies here                   │
-                    │   j  Hold here          no allies here                   │
-                    │   k  Set on             no allies here                   │
-                    │   l  Give               not beside you                   │
+                    │   h  Come to heel       no allies here                   │
+                    │   i  Hold here          no allies here                   │
+                    │   j  Set on             no allies here                   │
+                    │   k  Give               not beside you                   │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-l or Enter use   Esc close                             │
+                    │ a-k or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
  The Wildlands  ·  HP 20/20  ·  MP 4/4  ·  Sta 10/10  ·  Lv 1  ·  Lēof  ·  08:00         ? controls

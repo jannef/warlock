@@ -24,9 +24,9 @@
 //!   else a size (while above the smallest) ([`chipped`]); a natural 2, or a gem with nothing to
 //!   lose, shatters it. A material no profession works gives nothing and is not mentioned.
 //! - **Magic** (docs/design/enchanting.md §10; `world/crystal.rs`, [`World::catch_magic`]):
-//!   before the material checks, an identified magic or rare item makes one Enchanting check
-//!   per affix, each made a crystal of the affix's colour among what is saved, and a rare of
-//!   item level 10 or more a small chance of a rare material; an unidentified one gives nothing.
+//!   before the material checks, a magic or rare item, identified or not, makes one Enchanting
+//!   check per affix, each made a crystal of the affix's colour among what is saved, and a rare
+//!   of item level 10 or more a small chance of a rare material.
 //! - **Marks**: [`Use::Salvage`] for each profession rolled, on that skill alone
 //!   ([`World::train_skill`]), whatever came of it, and on Enchanting when an affix check was
 //!   made. No noise, no alignment.

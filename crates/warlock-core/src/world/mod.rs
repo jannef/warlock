@@ -1613,7 +1613,6 @@ impl World {
             Action::Forage => return self.start_forage(),
             Action::Gather(dir) => return self.start_gather(*dir),
             Action::Craft { recipe, picks } => return self.start_craft(recipe, picks),
-            Action::Consume { item } => return self.consume_crystal(*item),
             Action::Decipher { item } => return self.start_decipher(*item),
             Action::Temper { item } => return self.start_temper(*item),
             Action::Whittle { item } => return self.start_whittle(*item),

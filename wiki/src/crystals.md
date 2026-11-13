@@ -4,8 +4,8 @@ A **magic crystal** is magic caught in a stone. There are six colours, and each 
 is the blood and the fire, blue the mind and the frost, and so on. An enchanter will bind them
 into arms and armour. The colour decides what kinds of magic a crystal can give.
 
-You get crystals by [salvaging](crafting.md#salvage) magic items you have
-[identified](magic-items.md#unidentified-items). No shop sells them and none lie on the floor.
+You get crystals by [salvaging](crafting.md#salvage) magic items, identified or not. No shop
+sells them and none lie on the floor.
 Anyone can [consume](#consuming-a-crystal) one.
 
 ## The colours
@@ -21,22 +21,26 @@ blue. Mana is blue, never red.
 
 ## Catching crystals in salvage
 
-When you [salvage](crafting.md#salvage) an identified magic or rare item, each of its affixes
+When you [salvage](crafting.md#salvage) a magic or rare item, each of its affixes
 gets a check before the materials do. You make it even if you are not trained in
 [Enchanting](skills.md#skill-enchanting). A made check leaves one crystal of the affix's colour:
 the first colour in the table whose families hold it. A failed one leaves nothing. Deeper magic
 (a higher tier) is harder to catch.
 
-An unidentified item gives nothing: its magic goes out unread.
+An [unidentified](magic-items.md#unidentified-items) item gives crystals the same way. The
+messages do not name its affixes ("You catch some of its magic in a red crystal."), but the
+colours you get hint at what it was.
 
 ## Consuming a crystal
 
-**[Consume crystal](abilities.md#ability-consume)** is in everyone's
-[abilities menu](abilities.md#the-abilities-menu), under Items. Choose a crystal you carry. You
-crush it and drink what is in it. This takes a turn and needs no check. It gives:
+Crystals are in the Consume list (`e`, the same list as [food](food.md) and
+[potions](potions.md)), whether they are in your pack or on the floor where you stand. Choose
+one: you crush it and drink what is in it. This takes a turn and needs no check, and you need not
+be hungry. It gives:
 
 - **mana**, the same for every colour, never past your maximum,
-- a [training mark](stats.md#training) in Willpower,
+- several [training marks](stats.md#training) in Willpower (how many is under
+  [The numbers](#the-numbers)),
 - a step toward evil on your [alignment](alignment.md). A crystal is what is left of a soul.
 
 It is never refused, even when your mana is full. The rare materials are not crystals and cannot
@@ -49,7 +53,10 @@ Two rare materials come with very powerful magic:
 - the **heart-crystal**, which will add an affix to a rare item beyond its roll, and
 - the **soul-fetter**, which will keep one affix while the rest are made again.
 
-Salvaging an identified rare item of a high enough item level can leave one.
+Salvaging a rare item of a high enough item level can leave one.
+
+Morwenna, a deep gnome on the cutting floor of Gimmwīc, reads crystals and will tell you what each
+colour holds, if you stop to listen (see [People](npcs.md)).
 
 ## The numbers
 

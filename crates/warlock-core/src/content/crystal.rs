@@ -9,7 +9,7 @@
 //! The loader refuses: no colour, a colour twice, an unknown or non-stacking object, an object
 //! two colours share, a malformed tag, **a category of some affix in no colour** (it could never be
 //! enchanted), a `[[family]]` word missing for a category or given twice, an unknown rare
-//! material, a chance above 100, and no mana for `[consume]`.
+//! material, a chance above 100, and no mana or no marks for `[consume]`.
 //!
 //! A family that is no affix's category, and a tag no creature carries, are not refused: tests
 //! load content with affixes or campaigns left out. `crystal_tests.rs` holds the built-in table
@@ -50,7 +50,7 @@ pub struct RareMaterials {
     pub chance: u8,
     /// The one a dragon always gives.
     pub dragon: ObjectId,
-    /// Salvaging an identified rare of this item level or more may give one.
+    /// Salvaging a rare of this item level or more, identified or not, may give one.
     pub salvage_level: u8,
     /// The percent chance it does.
     pub salvage_chance: u8,
@@ -68,6 +68,8 @@ pub struct Crystals {
     pub rare: RareMaterials,
     /// The mana a crystal consumed gives.
     pub consume_mana: i32,
+    /// The Willpower training marks a crystal consumed gives (`StatUse::Consumed`'s count).
+    pub consume_marks: u16,
 }
 
 /// Enchanting's numbers (`data/enchanting.toml`).
@@ -229,6 +231,9 @@ impl Crystals {
         if spec.consume.mana < 1 {
             return Err(err("[consume] `mana` must be at least 1".into()));
         }
+        if spec.consume.marks < 1 {
+            return Err(err("[consume] `marks` must be at least 1".into()));
+        }
         Ok(Crystals {
             colours,
             families,
@@ -242,6 +247,7 @@ impl Crystals {
                 salvage_chance: r.salvage_chance,
             },
             consume_mana: spec.consume.mana,
+            consume_marks: spec.consume.marks,
         })
     }
 }
@@ -297,6 +303,7 @@ struct RareSpec {
 #[serde(deny_unknown_fields)]
 struct ConsumeSpec {
     mana: i32,
+    marks: u16,
 }
 
 #[cfg(test)]

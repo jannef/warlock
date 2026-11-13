@@ -7,26 +7,26 @@ expression: "render(case, content.clone())"
 
 
 
+
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
-                    │   a  Blaze            you are burnt out                  │
+                    │   a  Blaze        you are burnt out                      │
                     │ Skills                                                   │
-                    │   b  Heal             nothing to treat                   │
-                    │ > c  Intimidate       at a place you see                 │
+                    │   b  Heal         nothing to treat                       │
+                    │ > c  Intimidate   at a place you see                     │
                     │   d  Metalcraft…                                         │
-                    │   e  Salvage          on something you carry             │
+                    │   e  Salvage      on something you carry                 │
                     │ Weapon skills                                            │
-                    │   f  Shield bash      no foe within reach                │
-                    │ Items                                                    │
-                    │   g  Consume crystal  no crystal                         │
+                    │   f  Shield bash  no foe within reach                    │
                     │                                                          │
                     │ Threaten a foe you see nearby: unless it keeps its       │
                     │ nerve, it flees from you a moment, longer the better you │
                     │ intimidate.                                              │
                     │                                                          │
-                    │ a-g or Enter use   Esc close                             │
+                    │ a-f or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
 
 

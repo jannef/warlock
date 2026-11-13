@@ -25,11 +25,14 @@
 #   materials        the two objects, drawn at even odds where one is given
 #   level, chance    Soulglass on a creature of `level` or more: a `chance` % draw for one
 #   dragon           the one a creature tagged `dragon` always gives
-#   salvage_level    salvaging an identified rare of this item level or more: after its affixes'
+#   salvage_level    salvaging a rare (identified or not) of this item level or more: after its affixes'
 #   salvage_chance   checks, a `salvage_chance` % draw for one
 #
-# [consume]   consuming a crystal (the Consume crystal ability, world/crystal.rs):
+# [consume]   consuming a crystal (from the Consume list, `e`, beside food and potions;
+#             world/crystal.rs):
 #   mana      the mana it gives, never past the maximum (flat, whatever the colour)
+#   marks     the Willpower training marks it gives (stats.toml's `consumed` use, each with
+#             that rule's chance): a tenth of a point's price at an average score (120 at 10)
 
 [[colour]]
 id = "black"
@@ -377,3 +380,4 @@ salvage_chance = 3
 
 [consume]
 mana = 6
+marks = 12

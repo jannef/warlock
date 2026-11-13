@@ -92,7 +92,7 @@ every base item, and the `actors` layer's items (`Stack::describe_truth`) the sa
 ## Crystals
 
 `data/crystals.toml`, loaded by `content/crystal.rs` (`Content::crystals`, optional: without it
-no crystal is caught or consumed and Consume crystal is not listed), after the creatures, affixes,
+no crystal is caught or consumed, and the Consume list offers none), after the creatures, affixes,
 and objects:
 
 - `[[colour]]` rows, a `Vec` in file order (black, blue, white, red, green, gold; the owner's
@@ -110,16 +110,21 @@ and objects:
 - `[rare]`: `materials` (`heart_crystal`, `soul_fetter`: class `materials`, 30 g, value 300, not
   crystals), Soulglass's `level`, `chance`, `dragon` (E3), and salvage's `salvage_level = 10`,
   `salvage_chance = 3`.
-- `[consume] mana = 6`.
+- `[consume] mana = 6`, `marks = 12` (a tenth of a point's price at score 10: 20 + 10 × 10 =
+  120 marks; a minor stat potion gives 15, so a crystal is worth drinking for Willpower alone
+  without outdoing a potion made for it).
 
 The loader refuses: no colour; a colour twice; an unknown, non-stacking, or shared object; a
 malformed tag (that some creature carries each tag is a test, `every_colours_tag_is_carried`, not
 a loader check: tests load content without a campaign, and `outlaw` is the Ascmearc's; so is that
 every family is an affix's category, `every_family_is_an_affix_category`: tests strip affixes); **an affix category in no colour** (it could never be enchanted: add the
 category to a colour when adding an affix); a category with no `[[family]]` word, or one twice; a
-rare material that is a crystal; a chance above 100; `[consume] mana` below 1.
+rare material that is a crystal; a chance above 100; `[consume] mana` or `marks` below 1.
 Crystals and rare materials are in the `never` lists of the shops that stock `materials`
-(`data/shops.toml`).
+(`data/shops.toml`). The game says what a colour binds only in words, through Morwenna, a deep
+gnome on Gimmwīc's cutting floor (`npc = "morwenna"`, `campaigns/ascmearc/data/dialogue/
+gimmwic.toml`; `docs/dev/creatures/deep-gnomes.md`): her lines are hand-written from the
+families, so change them with the colours.
 
 `data/enchanting.toml` (`EnchantingRules`, `Content::enchanting`): `salvage_difficulty = 12`,
 `salvage_tier_step = 3` (`salvage_against(affix)` = 12 + tier ÷ 3, a tier-12 affix +4),
@@ -127,33 +132,35 @@ Crystals and rare materials are in the `never` lists of the shops that stock `ma
 
 ## Consuming a crystal
 
-`world/crystal.rs::consume_crystal`: `Action::Consume { item }`, text `consume:LETTER`, through
-`Ability::Consume` ("Consume crystal", id `consume`, `Source::Item`: the Items group's first
-ability; everyone's while `data/crystals.toml` exists; `Aim::Item` opens
-`ScreenName::ConsumeCrystal`, `--screen consume-crystal`, `ObjectList::Crystal` over
-`PerceptionView::is_crystal`; unavailable `Unavailable::NoCrystal`, "no crystal", from the
-perception). The menu name is "Consume crystal", not the design's bare "Consume", because the
-play command that eats and drinks (`e`) is already called Consume. One crystal of the stack, a
+A crystal is consumed as food is eaten and a potion drunk: it is in the Consume list (`e`,
+`ObjectList::Eat`, whose filter takes `PerceptionView::is_crystal` beside food and drinks), and
+the action is `Action::Eat` (`eat:b`, `eat:floor:a`): `world/eat.rs::eat` hands a crystal to
+`world/crystal.rs::consume_crystal` before it looks for a drink or food. No ability, no screen of
+its own, no hunger needed. One crystal of the stack (from the pack or the pile underfoot), a
 turn of `ActionKind::Drink`, no check, no draw: `[consume] mana` (to the maximum, as a potion's
-mana; never refused for a full pool), `train_stat(StatUse::Consumed)` (`data/stats.toml`:
-Willpower, 100 %), and `player_did(Deed::ConsumedCrystal)` (`[shift] consume_crystal = -20` in
-`data/alignment.toml`, diminishing as every deed does). "You crush the red crystal and drink what
-is in it. Something of it stays." Refused, no time: no such stack ("You carry no such thing."),
-anything but a crystal ("That is no magic crystal."), unpaid shop goods (`may_loose`).
+mana; never refused for a full pool), `train_stat_times(StatUse::Consumed, None, [consume]
+marks)` (`data/stats.toml`: Willpower, 100 %, so twelve marks), and
+`player_did(Deed::ConsumedCrystal)` (`[shift] consume_crystal = -20` in `data/alignment.toml`,
+diminishing as every deed does). "You crush the red crystal and drink what is in it. Something
+of it stays." In a shop it is bought as a drunk potion is (`drank_goods`; no shop stocks
+crystals). The rare materials are no crystals: the list leaves them out, and `eat` refuses them
+("You cannot consume a heart-crystal.").
 
 ## Salvage's affix checks
 
 `world/crystal.rs::catch_magic`, called by `world/salvage.rs::salvaged` before its material
-checks (so its draws come first; nothing changes until all are drawn). An **identified** magic or
-rare item: one check per affix in the item's order, `combat::roll_natural` (two gameplay draws) +
+checks (so its draws come first; nothing changes until all are drawn). A magic or rare item,
+**identified or not** (it is gone at once, so what its crystals' colours tell matters to no one;
+the owner, 2026-11-13): one check per affix in the item's order, `combat::roll_natural` (two gameplay draws) +
 Willpower's modifier + `TalentMods::check(Willpower)` + `skill_effect_of(enchanting, Craft)`
 (0 until E4 gives Enchanting its `craft` curve) against `salvage_against(affix)`, `check::makes`.
 Made: one crystal of `colour_of_affix` ("You catch its Flaming magic in a red crystal.", "You
 catch its magic of the Bear in a red crystal."); failed: "Its Flaming magic goes out unread.".
+An unidentified item's lines name no affix: "You catch some of its magic in a red crystal.",
+"Some of its magic goes out unread.".
 Then a rare of item level `salvage_level` or more draws `chance(salvage_chance)`, and a made draw
 `index` among `materials` ("Where its magic was, a heart-crystal is left."). The crystals join
-the saved list after the materials ("You save 2 steel ingots and a red crystal."). An
-**unidentified** item draws nothing and says "Its magic goes out unread." once. Marks:
+the saved list after the materials ("You save 2 steel ingots and a red crystal."). Marks:
 `Use::Salvage` on Enchanting (its new `mark = [{ on = "salvage", chance = 100 }]`) when any affix
 check was made; untrained, none.
 
@@ -161,9 +168,9 @@ check was made; untrained, none.
 
 `content/crystal_tests.rs` (the owner's order and two rules, the yield, every affix's colour and
 word, every creature's colour by its first tags, the loader's refusals), `world/crystal_tests.rs`
-(consuming: mana to the maximum, the mark, the step and its diminishing, the refusals with no
-time, the ability's row, a replay; salvage: a crystal per affix by its check, nothing and no draw
-from unidentified magic, Enchanting's mark, the rare materials' chance at item level 10 and none
+(consuming through `eat`: mana to the maximum, the marks, the step and its diminishing, from the
+floor, the rare materials refused with no time, a replay; salvage: a crystal per affix by its
+check, unidentified magic's the same by the same fate with nothing named, Enchanting's mark, the rare materials' chance at item level 10 and none
 below).
 
 `magic/capacity_tests.rs`: the design's examples (the silver ring's clamp among them), a damaged

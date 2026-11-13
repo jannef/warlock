@@ -236,13 +236,6 @@ pub enum Action {
         recipe: String,
         picks: Vec<Option<usize>>,
     },
-    /// Consume one magic crystal of the carried stack at this position (docs/design/enchanting.md
-    /// §5; the Consume crystal ability; `world/crystal.rs`): a turn of the `drink` action, for
-    /// mana, a Willpower mark, and a step toward evil. Refused (no time) for a stack that is no
-    /// crystal.
-    Consume {
-        item: usize,
-    },
     /// Make out the carried stack at this position, a scroll of a type not yet identified,
     /// without reading it (spec §8 "Scrolls"; the Decipher ability, Decipher script's use;
     /// `world/decipher.rs`): `data/decipher.toml`'s time of turns of the `decipher` action, then
@@ -1011,7 +1004,6 @@ impl fmt::Display for Action {
                     .collect();
                 write!(f, "craft:{recipe}:{}", picks.join(","))
             }
-            Action::Consume { item } => write!(f, "consume:{}", position_text(*item)),
             Action::Decipher { item } => write!(f, "decipher:{}", position_text(*item)),
             Action::Temper { item } => write!(f, "temper:{}", position_text(*item)),
             Action::Whittle { item } => write!(f, "whittle:{}", position_text(*item)),
@@ -1201,11 +1193,6 @@ impl FromStr for Action {
                     recipe: recipe.to_string(),
                     picks,
                 })
-            }
-            "consume" => {
-                let usage = || "`consume` needs a letter, e.g. `consume:b`".to_string();
-                let item = arg.and_then(parse_position).ok_or_else(usage)?;
-                Ok(Action::Consume { item })
             }
             "decipher" => {
                 let usage = || "`decipher` needs a letter, e.g. `decipher:b`".to_string();
@@ -1912,7 +1899,6 @@ mod tests {
                 recipe: "dagger".into(),
                 picks: vec![Some(0), None, Some(30)],
             },
-            Action::Consume { item: 2 },
             Action::Decipher { item: 1 },
             Action::Temper { item: 0 },
             Action::Temper { item: 27 },

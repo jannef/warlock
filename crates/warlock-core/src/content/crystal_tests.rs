@@ -44,6 +44,7 @@ fn the_six_colours_load_in_the_owners_order_with_his_two_rules() {
     }
     assert!(has("red", "life") && has("white", "life") && has("blue", "mana"));
     assert_eq!(crystals.consume_mana, 6);
+    assert_eq!(crystals.consume_marks, 12);
     assert_eq!(
         [1, 9, 10, 19, 20, 40].map(|l| crystals.yield_at(l)),
         [1, 1, 2, 2, 3, 3]
@@ -161,4 +162,6 @@ fn the_loader_refuses_a_category_in_no_colour_an_unknown_tag_and_a_loose_object(
     assert!(twice.contains("twice"), "{twice}");
     let chance = refused("salvage_chance = 3", "salvage_chance = 101");
     assert!(chance.contains("0 to 100"), "{chance}");
+    let marks = refused("marks = 12", "marks = 0");
+    assert!(marks.contains("`marks` must be at least 1"), "{marks}");
 }

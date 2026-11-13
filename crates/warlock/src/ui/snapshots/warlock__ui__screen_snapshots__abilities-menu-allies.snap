@@ -5,6 +5,7 @@ expression: "render(case, content.clone())"
  Welcome to Showcase. Press ? for controls.
  Two dire wargs come to your side.
 
+
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -16,19 +17,18 @@ expression: "render(case, content.clone())"
                     │   e  Salvage            on something you carry           │
                     │ Weapon skills                                            │
                     │   f  Shield bash        you hold no shield               │
-                    │ Items                                                    │
-                    │   g  Consume crystal    no crystal                       │
                     │ Allies                                                   │
-                    │   h  Come to heel                                        │
-                    │   i  Hold here                                           │
-                    │   j  Set on             at a place you see               │
+                    │   g  Come to heel                                        │
+                    │   h  Hold here                                           │
+                    │   i  Set on             at a place you see               │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-j or Enter use   Esc close                             │
+                    │ a-i or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
 
  The Hub  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1  ·  08:00       ? controls

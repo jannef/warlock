@@ -387,9 +387,7 @@ mod tests {
             "  e  Salvage            on something you carry",
             "Weapon skills",
             "  f  Shield bash        you hold no shield",
-            "Items",
-            "  g  Consume crystal    no crystal",
-            "a-g or Enter use   Esc close",
+            "a-f or Enter use   Esc close",
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
@@ -510,7 +508,7 @@ mod tests {
         let last = Some(Ability::ShieldBash);
         let screen = AbilitiesScreen::new(Some(&world.perception()), last);
         let text = drawn(&screen, 80, 13).join("\n");
-        assert!(text.contains("Page 6/7"), "{text}");
+        assert!(text.contains("Page 6/6"), "{text}");
         assert!(text.contains("> a  Shield bash"), "{text}");
     }
 }

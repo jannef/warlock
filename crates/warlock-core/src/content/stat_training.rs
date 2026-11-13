@@ -138,7 +138,7 @@ pub enum StatUse {
     Cast,
     /// A prayer done at a forgotten altar.
     Prayed,
-    /// A magic crystal consumed (the Consume crystal ability).
+    /// A magic crystal consumed (from the Consume list, `e`; `world/crystal.rs`).
     Consumed,
     /// A check against a drain of the player's stats made.
     HeldOut,

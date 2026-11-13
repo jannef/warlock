@@ -1079,14 +1079,14 @@ const CASES: &[Case] = &[
     Case {
         name: "set-on-aim",
         actions: "ally:dire_warg:2",
-        keys: Some("a j"),
+        keys: Some("a i"),
         ..BASE
     },
     // Come to heel chosen from the menu: the order's words, no time.
     Case {
         name: "come-to-heel",
         actions: "ally:dire_warg:2",
-        keys: Some("a h"),
+        keys: Some("a g"),
         ..BASE
     },
     // A paladin of some level: the Class group, Lay on hands refused and greyed out short of
@@ -1570,15 +1570,6 @@ const CASES: &[Case] = &[
         character: Some("human,male,wizard"),
         actions: "move:E pickup",
         screen: Some("decipher"),
-        ..BASE
-    },
-    // The Consume crystal ability's list (docs/dev/enchanting.md): everyone's, here with no
-    // crystal carried.
-    Case {
-        name: "consume-crystal-none",
-        scenario: "traps",
-        actions: "wait",
-        screen: Some("consume-crystal"),
         ..BASE
     },
     Case {

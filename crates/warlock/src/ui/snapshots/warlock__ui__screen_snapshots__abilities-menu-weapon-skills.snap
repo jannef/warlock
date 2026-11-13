@@ -5,6 +5,7 @@ expression: "render(case, content.clone())"
  You feel more skilled at fighting with weapon and shield. You have learned the staggering block.
  You feel more skilled at bashing with a shield. You have learned the stunning bash.
 
+
                 ┌─ Abilities ──────────────────────────────────────────────────────┐
                 │                                                                  │
                 │ Birth sign                                                       │
@@ -19,15 +20,14 @@ expression: "render(case, content.clone())"
                 │   g  Long blades: Deep cut              fires by itself          │
                 │   h  Shield bashing: Stunning bash      fires by itself          │
                 │   i  Sword and Board: Staggering block  fires by itself          │
-                │ Items                                                            │
-                │   j  Consume crystal                    no crystal               │
                 │                                                                  │
                 │ The basilisk's stare: a foe nearby that sees you slows to a      │
                 │ crawl a moment; your eyes then rest two hours.                   │
                 │                                                                  │
                 │                                                                  │
-                │ a-j or Enter use   Esc close                                     │
+                │ a-i or Enter use   Esc close                                     │
                 └──────────────────────────────────────────────────────────────────┘
+
 
 
 
