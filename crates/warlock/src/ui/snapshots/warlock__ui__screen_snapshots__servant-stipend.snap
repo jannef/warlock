@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Your squire says: "I tells everyone at the Gæsthūs, m'lord: there's none finer in the march than
- you."
+ You are burdened.
+ Your squire says: "The rabble 'ere don't know quality, m'lord. I do."
 
 
 ┌─ Messages ───────────────────────────────────────────────────────────────────────────────────────┐
@@ -23,11 +23,11 @@ expression: "render(case, content.clone())"
 │   every penny."                                                                                  │
 │ You receive 1010 gold coins and a hazy blue potion.                                              │
 │ You are burdened.                                                                                │
-│ Your squire says: "I tells everyone at the Gæsthūs, m'lord: there's none finer in the march than │
-│   you."                                                                                          │
+│ Your squire says: "The rabble 'ere don't know quality, m'lord. I do."                            │
 │                                                                                                  │
 │ v or Esc close                                                                                   │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
+
 
 
 

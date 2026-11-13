@@ -669,7 +669,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   feel satiated."), and someone muttering (§8 "Dialogue"), which are logged all the same. Hit points come back twice as fast while resting
   (§8 "Healing").
   It is a gameplay input mode like the open/close/kick direction prompt, not a menu screen.
-- **Consume** (`e`, id `eat`: the Eat command, renamed; §8 "Hunger") opens the choice of what to consume, food and potions (§8 "Potions"): what lies on the player's
+- **Consume** (`e`, id `eat`: the Eat command, renamed; §8 "Hunger") opens the choice of what to consume, food, potions (§8 "Potions"), and magic crystals (§8 "Consuming a crystal"): what lies on the player's
   cell first (marked "lying here"; the `>` cursor starts on it, as ADOM asks about the floor
   first), then what is in the inventory, in the item list (above), grouped by class (Food, then
   Potions; an unknown potion by its word and colour, "a fizzy red potion"); with nothing, "You have

@@ -86,7 +86,8 @@ Their talk turns to their work, and they speak the Cornish of the deep: "my 'ans
 (some day), "proper job" (well done). To them you are an *emmet*, someone from up top.
 
 - **Headman Peran** speaks for the town in its moot hall. He will [talk](npcs.md) of the town, the
-  surface, and the deep.
+  surface, and the deep. Factor Wulfrun's letter for the deep gnomes goes to him
+  ([quests](quests.md#who-gives-quests)), and he sends an answer back.
 - **The Glimmering**, the temple, is lit by crystals that never go dark. Its floor is a
   [sanctuary](special-rooms.md): wounds heal faster there and nothing hostile steps in. **Mother
   Senara** [cures and mends](npcs.md#services) for gold.

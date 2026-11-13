@@ -1,0 +1,14 @@
+# The soul-fetter (docs/design/enchanting.md §9): a rare material, the Enchanting input that
+# keeps one affix through a reroll (to come). Very rarely caught by salvaging a rare item of item level 10 or more
+# (crystals.toml `[rare]`). Not a crystal: it cannot be consumed. Never floor loot, never
+# stocked. Made of stone, as the crystals are.
+[[object]]
+id = "soul_fetter"
+name = "soul-fetter"
+glyph = "*"
+fg = "#c8d4e8"
+class = "materials"
+materials = ["stone"]
+weight = 30
+value = 300
+stackable = true

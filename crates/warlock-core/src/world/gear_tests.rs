@@ -335,7 +335,12 @@ fn generated_levels_roll_gear_from_their_own_stream_and_nothing_else_moves() {
                     continue;
                 }
                 let mut pack = gear::roll(&builtin, &mut rng, spawn.creature, with.item_level);
-                super::gear_condition::apply(&builtin, &mut condition, spawn.creature, &mut pack);
+                super::gear_condition::apply(
+                    &builtin,
+                    &mut condition,
+                    (spawn.creature, with.item_level),
+                    &mut pack,
+                );
                 assert_eq!(
                     (&pack.items, &pack.equipment),
                     (&spawn.carry, &spawn.equipment)
@@ -364,7 +369,7 @@ fn a_hand_made_levels_creatures_roll_from_their_own_stream_unless_given_a_kit() 
         let mut rng = Rng::gear(traps.state.seed, &key);
         let mut pack = gear::roll(&builtin, &mut rng, kobold, item_level);
         let mut condition = super::gear_condition::stream(traps.state.seed, &key);
-        super::gear_condition::apply(&builtin, &mut condition, kobold, &mut pack);
+        super::gear_condition::apply(&builtin, &mut condition, (kobold, item_level), &mut pack);
         assert_eq!(
             (&pack.items, &pack.equipment),
             (&actor.inventory, &actor.equipment)

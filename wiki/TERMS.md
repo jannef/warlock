@@ -147,6 +147,7 @@ above.
 | Looking at an item, its description | `magic-items.md#looking-at-an-item` |
 | Unidentified, identify | `magic-items.md#unidentified-items` |
 | Capacity, enchantments an item can bear, the trim | `magic-items.md#capacity` |
+| Deeper finds, better make and gems by item level | `magic-items.md#deeper-finds` |
 | Binding (a material's) | `magic-items.md#capacity`, `materials.md` |
 | Affix, prefix, suffix | `affixes.md#prefixes`, `affixes.md#suffixes` |
 | Base item | `affixes.md#base-items` |
@@ -181,6 +182,7 @@ above.
 | The craftsperson's two trades at creation, Time served | `classes.md#trades` |
 | Eye for the make, reading an item's make | `classes.md#eye-for-the-make` |
 | Make do and mend, mending in the field | `classes.md#make-do-and-mend` |
+| Waste not, nothing lost in a craftsperson's hands | `crafting.md#waste-not` |
 | A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents.md#delver` |
 | Class abilities | `talents.md#class-abilities`, `abilities.md` |
 | The bard, a bard's cap at 30, Travelled hands, Jack of all trades | `classes.md#bard` |
@@ -218,6 +220,8 @@ above.
 | Foraging | `skill-uses.md#foraging` |
 | Crafting, a craft skill, craft points, who works which material, a material's work | `crafting.md`, `crafting.md#who-works-what` |
 | Salvage, taking an item apart, a gem chipped or shattered | `crafting.md#salvage` |
+| Magic crystal, a crystal's colour, consuming a crystal | `crystals.md`, a colour `crystals.md#crystal-ID` (`crystals.md#crystal-red`), `crystals.md#consuming-a-crystal` |
+| Heart-crystal, soul-fetter (rare materials) | `crystals.md#rare-materials` |
 | Cut, gem cutting, a re-cut, a gem's cut grade | `gem-cutting.md`, `gem-cutting.md#how-well-it-comes-out` |
 | Set, setting a gem in an item, a gem chipped in the setting | `gem-cutting.md#setting-a-gem` |
 | Jewellery, making rings and amulets, a bone amulet | `crafting.md#making-jewellery` |
@@ -308,6 +312,7 @@ above.
 | Services (cure, mending, identification, training) | `npcs.md#services` |
 | Alberich (teaches Mining) | `npcs.md#alberich` |
 | Eadric the smith (teaches Metalcraft) | `npcs.md#eadric-the-smith` |
+| Ceolred, the smith's apprentice (explains the materials) | `npcs.md#ceolred-the-smiths-apprentice` |
 | Goodwill (a town's, cheaper services) | `npcs.md#goodwill` |
 | The aristocrat's stipend, their servant in Cēaptūn | `classes.md#stipend` |
 | The merchant's investment, their business partner in Cēaptūn | `classes.md#invest` |

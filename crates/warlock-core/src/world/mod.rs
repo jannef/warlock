@@ -129,6 +129,7 @@ mod craft_make;
 mod creation;
 mod creature_burst;
 mod creature_cast;
+mod crystal;
 mod curse;
 mod cut;
 mod dark_face;
@@ -368,7 +369,7 @@ pub use orison::PrayerState;
 pub use pit::Pit;
 pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
 use rest::Ended;
-pub use salvage::{chipped, salvageable};
+pub use salvage::{chipped, salvage_percent, salvageable};
 pub use sanctuary::Hallow;
 pub use scribe::scribe_turns;
 pub use set::{SetBand, set_band, settable};
@@ -1957,6 +1958,8 @@ mod gem_tests;
 #[cfg(test)]
 mod gifts_tests;
 #[cfg(test)]
+mod gnome_letter_tests;
+#[cfg(test)]
 mod goodwill_tests;
 #[cfg(test)]
 mod guild_tests;
@@ -2302,6 +2305,8 @@ mod voice_tests;
 mod war_cry_tests;
 #[cfg(test)]
 mod wares_tests;
+#[cfg(test)]
+mod waste_not_tests;
 #[cfg(test)]
 mod way_out_tests;
 #[cfg(test)]

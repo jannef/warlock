@@ -1378,6 +1378,12 @@ impl<'a> PerceptionView<'a> {
         self.content
     }
 
+    /// Whether `stack` is a magic crystal, one the Consume list (`e`) offers beside food and
+    /// potions (`data/crystals.toml`; the rare materials are not; `world/crystal.rs`).
+    pub fn is_crystal(&self, stack: &crate::object::Stack) -> bool {
+        (self.content.crystals()).is_some_and(|c| c.colour_of_object(stack.object).is_some())
+    }
+
     /// What the player knows of scroll types (spec §8 "Scrolls"): every name presentation shows
     /// of a stack goes through it ([`crate::scroll_label::Lore::describe`]), so an unidentified
     /// scroll shows by its label.
@@ -1791,7 +1797,7 @@ impl<'a> PerceptionView<'a> {
         let mut lines =
             describe::appraised_for(stack, self.lore, self.appraisal(), Some(self.player));
         if self.player.talent_mods(self.content).eye_for_make {
-            let percent = self.content.salvage().map_or(0, |s| s.percent);
+            let percent = crate::world::salvage_percent(self.content, self.player);
             let protected = crate::world::protected_in(self.content, self.quests, stack);
             let mends = self.player.talent_mods(self.content).make_do.is_some();
             let make = describe::make_lines(stack, self.lore, percent, protected, mends);

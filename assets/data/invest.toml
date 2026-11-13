@@ -18,9 +18,9 @@
 #
 # A year is 360 days, 51 3/7 weeks. At the base, 10 basis points a week, the stake grows by
 # 5.3 % a year on average (1.001^(360/7)), with a standard deviation of about 8.3 %: about three
-# years in ten lose money. Each of Cēaptūn's thirteen quests adds 1 (all of them: 23, 12.5 % a
-# year) and Fire in the deep, which reopens the mines, 6 more (everything: 29, 16 % a year, and
-# one year in twenty-five loses). world/invest_tests.rs checks these by simulation.
+# years in ten lose money. Each of Cēaptūn's fourteen quests adds 1 (all of them: 24, 13 % a
+# year) and Fire in the deep, which reopens the mines, 6 more (everything: 30, 16 % a year, and
+# one year in thirty loses). world/invest_tests.rs checks these by simulation.
 
 fees = { invest = 2, withdraw = 2 }
 week = { base = 10, dice = "4d201-404" }

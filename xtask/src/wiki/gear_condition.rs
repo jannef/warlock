@@ -61,6 +61,38 @@ pub(super) fn gear_condition(content: &Content) -> String {
     out
 }
 
+/// Deeper finds' make and gems by item level (#1436), from `[[depth]]`: each row's chances of
+/// Fine, Marvellous, and Masterwork, and the percent more of a set gem, for the item levels it
+/// covers.
+pub(super) fn gear_depth(content: &Content) -> String {
+    let rows = &content.gear_condition().depth;
+    let mut out = String::from(
+        "| Item level | Fine | Marvellous | Masterwork | Better made in all | A set gem |\n\
+         |---|:---:|:---:|:---:|:---:|:---:|\n",
+    );
+    if let Some(first) = rows.first().filter(|r| r.level > 1) {
+        let below = match first.level {
+            2 => "1".to_string(),
+            n => format!("1 to {}", n - 1),
+        };
+        let _ = writeln!(out, "| {below} | 0% | 0% | 0% | 0% | +0% |");
+    }
+    for (i, row) in rows.iter().enumerate() {
+        let levels = match rows.get(i + 1) {
+            Some(next) if next.level == row.level + 1 => row.level.to_string(),
+            Some(next) => format!("{} to {}", row.level, next.level - 1),
+            None => format!("{} and deeper", row.level),
+        };
+        let odds = row.odds();
+        let _ = write!(out, "| {levels} |");
+        for n in [odds.fine, odds.marvellous, odds.masterwork].map(u32::from) {
+            let _ = write!(out, " {} |", percent(n));
+        }
+        let _ = writeln!(out, " {} | +{}% |", percent(odds.improved()), row.ornament);
+    }
+    out
+}
+
 /// What the kind is, in words.
 fn kind_of(harm: ItemHarm) -> &'static str {
     match harm {

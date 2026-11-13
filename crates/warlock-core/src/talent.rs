@@ -348,6 +348,14 @@ pub struct TalentMods {
     pub trade_bonus: i32,
     /// Item descriptions read an item's make (Eye for the make; `PerceptionView::describe_item`).
     pub eye_for_make: bool,
+    /// Salvage's yield in percent, where more than `data/salvage.toml`'s (Waste not; the most
+    /// held; `world/salvage.rs::salvage_percent`).
+    pub salvage_percent: u8,
+    /// What a failed recipe gives back in percent, where more than `data/recipes.toml`'s `yield`
+    /// (Waste not; the most held; `world/craft_make.rs::failed_percent`).
+    pub failed_percent: u32,
+    /// A failed Temper or Whittle damages nothing (Waste not; `world/temper.rs::work_out`).
+    pub temper_safe: bool,
     /// Percent more often loot it finds rolls magic and rare.
     pub loot_magic_percent: i32,
     /// Percent more time reading a scroll takes (negative: less).
@@ -1470,6 +1478,11 @@ impl TalentMods {
             TalentEffect::Trade { skill, .. } => self.trades.extend(content.skill_id(&skill)),
             TalentEffect::TradeBonus { value } => self.trade_bonus += value,
             TalentEffect::EyeForMake => self.eye_for_make = true,
+            TalentEffect::WasteNot { salvage, failed } => {
+                self.salvage_percent = self.salvage_percent.max(salvage);
+                self.failed_percent = self.failed_percent.max(failed);
+            }
+            TalentEffect::TemperSafe => self.temper_safe = true,
             // Handed out as the talent is taken (`World::take_talent`), never read after.
             TalentEffect::WeaponRanks { .. }
             | TalentEffect::TakeUpSkills { .. }

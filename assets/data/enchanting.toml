@@ -1,0 +1,20 @@
+# Enchanting's numbers (docs/design/enchanting.md §7, §9, §10; docs/dev/enchanting.md; the loader
+# is content/crystal.rs). The colours and the crystals are crystals.toml.
+#
+# Salvaging a magic or rare item, identified or not (salvage.toml), first makes one check for each
+# of its affixes, in the item's order: 2d12 + Willpower's modifier + the talents' Willpower checks +
+# Enchanting's `craft` points (skills.toml) against `salvage_difficulty` + the affix's tier
+# divided by `salvage_tier_step` (rounded down: a top tier, 12, is +4). A natural 2 always fails,
+# a natural 24 always succeeds. Each check made catches one crystal of the affix's colour.
+#
+# Fields:
+#   salvage_difficulty  what an affix's check must reach, before its tier
+#   salvage_tier_step   the tiers that add one to the check's difficulty (at least 1)
+#   level_step          the item levels of an enchanting roll that add one to its difficulty
+#                       (the recipes, to come; at least 1)
+#   seal_seconds        the time a seal adds to a recipe, in seconds (to come)
+
+salvage_difficulty = 12
+salvage_tier_step = 3
+level_step = 3
+seal_seconds = 1800

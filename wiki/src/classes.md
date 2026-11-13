@@ -385,7 +385,12 @@ arms or armour, or that the thing is damaged (and, once you have
 [Make do and mend](classes.md#make-do-and-mend), that your own hands could mend it), and a line when its main material is hard or soft
 to [work](crafting.md#who-works-what). Like [Appraise](skills.md#skill-appraise), it also tells
 you how many [enchantments the item can bear](magic-items.md#capacity). It never tells you the
-odds, or how often a smith has worked the piece before.
+odds, or how often a smith has worked the piece before. With
+[Waste not](crafting.md#waste-not) it counts the three quarters salvage then gives back.
+
+**Waste not**, from level 6, means nothing is lost in a craftsperson's hands but time: salvage
+gives back more, a failed recipe loses none of its stock, and a failed temper spoils nothing
+(the numbers are under [Crafting](crafting.md#waste-not)).
 
 <a id="make-do-and-mend"></a>**Make do and mend** (from level 18) mends a
 [damaged](materials.md#item-damage) thing you carry, anywhere, with no anvil and no tools. Choose
@@ -430,7 +435,7 @@ to **about 5 % a year on average**, but about three years in ten lose money.
 The more Cēaptūn owes you, the better the partner does. Every
 [quest](quests.md) you have completed for one of Cēaptūn's people adds 0.01 % to every week's
 return (each quest once). Completing Wulfrun's Fire in the deep, which slays the fire drake and
-lets the town dig in its mines again, adds 0.06 % more. With all of Cēaptūn's thirteen quests
-done the stake grows by about 16 % a year, and only about one year in twenty-five loses.
+lets the town dig in its mines again, adds 0.06 % more. With all of Cēaptūn's fourteen quests
+done the stake grows by about 16 % a year, and only about one year in thirty loses.
 
 If the partner dies, your stake dies with them.

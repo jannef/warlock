@@ -141,7 +141,7 @@ the shop the player stands in and `pay` pays it (spec §7 "Shops"); `SLOT` = a s
 `docs/dev/doors.md`), `bash:DIR` bashes with the held shield, `fire:X,Y` shoots the readied missile weapon at level
 cell (X, Y), `throw:c:X,Y` throws one of
 inventory stack `c` there (any weapon is thrown whole, badly: `t` in the game sends `fire` for a launcher, else `throw` for what the Missile weapon slot holds); `eat:b` eats one of inventory stack `b`, `eat:floor:a` one of the top
-stack underfoot; `read:b:12,5` reads scroll stack `b` at level cell (12, 5) (a spell scroll:
+stack underfoot (a potion is drunk, and a magic crystal consumed, at once: a turn, `[consume]` of `data/crystals.toml`, mana to the maximum, Willpower marks, a step toward evil; docs/dev/enchanting.md); `read:b:12,5` reads scroll stack `b` at level cell (12, 5) (a spell scroll:
 fireball, lightning, frost, or any scroll of an aimed spell), `read:b` a scroll of a spell on
 oneself (haste) or the scroll of restoration, `read:b:c` reads it on inventory stack `c` (the scroll of
 identify), and `read:c` on a grimoire is a study of the spell it teaches, the grimoire kept, or, for a spell known below rank 10, a deepening to its next rank (rank times the learning time, always a check; docs/dev/spells.md "Ranks")

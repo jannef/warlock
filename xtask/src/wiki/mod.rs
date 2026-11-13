@@ -25,6 +25,7 @@ mod combat;
 mod companions;
 mod crafting;
 mod creatures;
+mod crystals;
 mod damage;
 mod dialogue;
 mod digging;
@@ -183,6 +184,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("factions.md", creatures::factions),
         ("creature-tags.md", creatures::creature_tags),
         ("gear-condition.md", gear_condition::gear_condition),
+        ("gear-depth.md", gear_condition::gear_depth),
         ("creature-drops.md", drops::creature_drops),
         ("drops-by-tag.md", drops::tag_drops),
         ("creature-stats.md", creatures::creature_stats),
@@ -309,6 +311,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("crafting-groups.md", crafting::crafting_groups),
         ("crafting-work.md", crafting::crafting_work),
         ("salvage.md", crafting::salvage),
+        ("crystal-colours.md", crystals::crystal_colours),
+        ("crystal-rules.md", crystals::crystal_rules),
         ("recipes-jewelcraft.md", recipes::recipes_jewelcraft),
         ("recipes-metalcraft.md", recipes::recipes_metalcraft),
         ("recipes-woodcraft.md", recipes::recipes_woodcraft),

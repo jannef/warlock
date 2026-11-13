@@ -730,7 +730,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Fine, Marvellous, or Masterwork (improvements as the Temper ability makes them, each counted as
   an attempt), or as made. By default 30 % damaged, 4 % Fine, 0.8 % Marvellous, 0.2 % Masterwork;
   the undead's gear 95 % damaged; scavengers' (kobolds, goblins, orcs, trolls) about half;
-  disciplined orders' (duergar, hobgoblins, drow, devils) 8 to 10 %, and Fine 10 to 15 %. A fixed
+  disciplined orders' (duergar, hobgoblins, drow, devils) 8 to 10 %, and Fine 10 to 15 %. From
+  item level 3 on, the `[[depth]]` row of the level's item level adds its Fine, Marvellous, and
+  Masterwork chances to these, damaged giving way (#1436, §8 "Magic items"). A fixed
   kit is never rolled and stays as made. The creature fights with the piece as it is, and it
   drops as it is, its condition in its name. No talent (a sub-feature of item condition).
 - **Named monsters** (#424): a creature type whose `name` starts upper-case is a proper name
