@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Your squire says: "I tells everyone at the Gæsthūs, m'lord: there's none finer in the march than
+ you."
+
+
+┌─ Messages ───────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                  │
+│ The log keeps the last 200 messages.                                                             │
+│ Welcome to Cēaptūn. Press ? for controls.                                                        │
+│ You gain 5000 experience (dev).                                                                  │
+│ You feel more experienced.                                                                       │
+│ Welcome to level 6.                                                                              │
+│ You gain Fencing.                                                                                │
+│ Word comes from home: your stipend has grown.                                                    │
+│ Your athletics improves. (×15)                                                                   │
+│ You learn Deep lungs.                                                                            │
+│ You learn Healthy.                                                                               │
+│ You open the door.                                                                               │
+│ Your squire says: "Yer family's sent yer stipend on, m'lord, all counted proper. 'Ere it is,     │
+│   every penny."                                                                                  │
+│ You receive 1010 gold coins and a hazy blue potion.                                              │
+│ You are burdened.                                                                                │
+│ Your squire says: "I tells everyone at the Gæsthūs, m'lord: there's none finer in the march than │
+│   you."                                                                                          │
+│                                                                                                  │
+│ v or Esc close                                                                                   │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+
+ Cēaptūn  ·  HP 18/18  ·  MP 24/24  ·  Burdened  ·  Lv 6  ·  08:01  ·  Overcast          ? controls

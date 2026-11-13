@@ -105,6 +105,23 @@ such a service "(free)" and asks no pay dialog. `World::complete_saying` calls
 and the Gilde's counting but Holtwīc's not, the cap and a free cure), the screen's row in
 `ui/dialogue_screen.rs`; the wiki's table is `xtask/src/wiki/services.rs::towns`.
 
+**The aristocrat's servant** (#1405; spec §8 "Class abilities": Stipend): `world/stipend.rs`.
+A town's optional `[town.servant]` (`content/town.rs::TownServant`: `level`, `at`, `creature` by
+gender, `speech` npc ids by race id with a `default`; the loader checks the creatures, the
+`default`, and that each npc's dialogue has `[dialogue.stipend]`) is placed by
+`stipend::place_servant` (one line in `travel.rs::instantiate_level`, after the escorts) when its
+level is made, only if the player's talents give `TalentMods::stipend`; never twice (an actor
+with that npc exists). Cēaptūn's lodges at the Gæsthūs (40, 27): `squire`, `chambermaid`,
+`servant` (`campaigns/ascmearc/data/creatures/`), speaking `campaigns/ascmearc/data/dialogue/
+servants.toml` (Cockney, Geordie, Brummie, Scouse, Irish, Middle English, Dutch, by the rule
+below). A dialogue's `[dialogue.stipend]` (`ServantWords`: `handover`, `address` by gender,
+`GenderWords`) makes its speaker a family servant: `World::called` names it "your squire",
+`World::servant_chat` (one line in `chat` after the escort) hands over `WorldState::stipend`
+with the `handover` line, or says a one-liner (the rotation, `talk.said` counted), `{address}`
+replaced by the gender's word; it takes `chat`'s time and trains the chat. Handed over: gold
+coins then the finds into the pack, each stack that would leave the player Overloaded set down
+on their cell ("Too much to carry, set down at your feet: …"). Tests: `world/stipend_tests.rs`.
+
 **A trader's offer** (#808, docs/design/overworld-encounters.md §15 Q7; spec §8 "Dialogue"):
 `content/offer.rs` (`TradeOffer`, a dialogue's `[dialogue.offer]`: `id`, `name`, `reply` said on
 a sale, `sold` said after, `level = { bonus, least }`, `affixes` as `[count, weight]` pairs,
@@ -204,7 +221,9 @@ accent. The rule binds speakers whose data says they are of that race (`race = "
 `"duergar"`, the grey dwarves), `"elf"`, `"halfling"`,
 `"gnome"`, `"goblin"`, `"kobold"`, `"ratfolk"`, `"drow"`, `"lizardfolk"`, or a creature that is one: a goblin,
 a kobold, a rat king, a drow who speaks). The one dwarf who speaks is Alberich of Fyrdelf
-(#1391; the duergar traders keep shop with the shops' shared words and have no dialogue). As of #1392 none of the others speaks: the campaigns have no elf, halfling, gnome, goblin,
+(#1391; the duergar traders keep shop with the shops' shared words and have no dialogue), but for
+an aristocrat's own servant, who is of the aristocrat's race and has a dialogue for each register
+(#1405, `servants.toml`). As of #1392 none of the others speaks: the campaigns have no elf, halfling, gnome, goblin,
 kobold, ratfolk, drow, or lizardfolk NPC, and their creatures have no words, and Ælfrun of Holtwīc is a
 human cottar; **half-elves and half-orcs speak as humans do** (Cockney or posh by their station, never
 the Brummie of elves); the fey of Ælfhām are not elves by this rule. A new speaker

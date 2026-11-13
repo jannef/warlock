@@ -167,6 +167,7 @@ pub mod starter;
 mod stat_training;
 mod status;
 mod steal;
+mod stipend;
 mod stock;
 mod summon;
 #[cfg(test)]
@@ -228,7 +229,8 @@ pub use damage_type::{CharColors, DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES}
 pub use danger::{Count, DangerRule, PlayerScale, Spawning};
 pub use decipher::DecipherRules;
 pub use dialogue::{
-    Dialogue, DialogueId, Mutter, Service, ServiceKind, ServiceTraining, Speaker, Topic,
+    Dialogue, DialogueId, GenderWords, Mutter, ServantWords, Service, ServiceKind, ServiceTraining,
+    Speaker, Topic,
 };
 pub use disease::{DiseaseDef, DiseaseId, SOURCES, Wading};
 pub use drops::{Drop, DropFrom, DropGoods, TagDrops};
@@ -353,6 +355,7 @@ pub use status::{
     StatusId, Wound,
 };
 pub use steal::StealRules;
+pub use stipend::StipendRules;
 pub use stock::{Profession, Stock, StockGroup, StockMaterial};
 pub use summon::Summon;
 pub use surprise::SurpriseRules;
@@ -367,7 +370,7 @@ pub use temper::TemperRules;
 pub use terrain::{Breakable, Freeze, FreezeSpec, StairsDir, TerrainDef, TerrainId};
 pub use theft::{Blinks, SMALL as SMALL_LOOT, Steals, Takes};
 pub use throw::Throw;
-pub use town::TownDef;
+pub use town::{TownDef, TownServant};
 pub use trap::{Trap, TrapAvoid, TrapDef, TrapEffect, TrapId, TrapNoise};
 pub use unique::{Power, UNIQUE, UniqueDef, Uniques};
 pub use unseen::Invisible;
@@ -733,6 +736,9 @@ pub struct Content {
     /// The numbers of feinting (`data/feint.toml`, spec §8 "Skills": Bluff); none without the
     /// file, when nobody feints.
     feint: Option<FeintRules>,
+    /// What an aristocrat's stipend grows by with each level (`data/stipend.toml`, spec §8
+    /// "Class abilities": Stipend); none without the file, when it never grows.
+    stipend: Option<StipendRules>,
     /// The numbers of intimidating (`data/intimidate.toml`, spec §8 "Skills": Intimidate); none
     /// without the file, when nobody intimidates.
     intimidate: Option<IntimidateRules>,
@@ -926,6 +932,7 @@ impl Content {
             herbs: None,
             mining: None,
             feint: None,
+            stipend: None,
             intimidate: None,
             ruin: RuinRules::default(),
             decipher: None,
@@ -1313,6 +1320,10 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.feint = Some(FeintRules::parse(path, text, &content)?);
         }
+        let path = "data/stipend.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.stipend = Some(StipendRules::parse(path, text, &content)?);
+        }
         let path = "data/intimidate.toml";
         if let Some(text) = files.get_optional(path) {
             content.intimidate = Some(IntimidateRules::parse(path, text, &content)?);
@@ -1486,7 +1497,7 @@ impl Content {
         }
         content.quests = quest::parse(files.table("quests"), &content)?;
         content.guilds = guild::parse(files.table("guilds"), &content)?;
-        content.towns = town::parse(files.table("towns"))?;
+        content.towns = town::parse(files.table("towns"), &content)?;
         content.callings = calling::parse(files.table("callings"), &content)?;
         content.encounter_tables = encounter::parse(files.table("encounters"), &content)?;
         content.validate()?;
@@ -3323,6 +3334,12 @@ impl Content {
         self.feint.as_ref()
     }
 
+    /// What an aristocrat's stipend grows by (spec §8 "Class abilities": Stipend;
+    /// `data/stipend.toml`); `None` without the file, when it never grows.
+    pub fn stipend(&self) -> Option<&StipendRules> {
+        self.stipend.as_ref()
+    }
+
     /// The numbers of intimidating (spec §8 "Skills": Intimidate; `data/intimidate.toml`); `None`
     /// without the file, when nobody intimidates.
     pub fn intimidate(&self) -> Option<&IntimidateRules> {
@@ -4238,6 +4255,12 @@ impl Content {
         let npc = npc.and_then(|n| find(&Speaker::Npc(n.to_string())));
         npc.or_else(|| find(&Speaker::Creature(creature)))
             .map(|i| DialogueId(i as u16))
+    }
+
+    /// The npc dialogue of unique character `npc`, if it has one.
+    pub fn dialogue_of_npc(&self, npc: &str) -> Option<DialogueId> {
+        let speaker = Speaker::Npc(npc.to_string());
+        (self.dialogues.iter().position(|d| d.speaker == speaker)).map(|i| DialogueId(i as u16))
     }
 
     /// Month names for showing dates.

@@ -303,6 +303,7 @@ above.
 | Alberich (teaches Mining) | `npcs.md#alberich` |
 | Eadric the smith (teaches Metalcraft) | `npcs.md#eadric-the-smith` |
 | Goodwill (a town's, cheaper services) | `npcs.md#goodwill` |
+| The aristocrat's stipend, their servant in Cēaptūn | `classes.md#stipend` |
 | The pedlar's offer, his wares | `npcs.md#the-pedlars-offer` |
 | Quest, quest log | `quests.md`, `quests.md#the-quest-log` |
 | Sorts of creatures (a quest's), drawn quests | `quests.md#sorts-of-creatures`, `quests.md#drawn-quests` |

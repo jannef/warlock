@@ -285,6 +285,7 @@ mod stat_training;
 mod statue;
 mod status;
 mod steal;
+mod stipend;
 mod stock;
 mod stride;
 mod summon;
@@ -495,6 +496,10 @@ pub struct WorldState {
     /// The unique items traders' offers have made in the run (`world/wares.rs`): each once.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub(crate) uniques_offered: BTreeSet<String>,
+    /// What an aristocrat's family has put by for them, until their servant hands it over
+    /// (`world/stipend.rs`).
+    #[serde(default, skip_serializing_if = "stipend::Stipend::is_empty")]
+    pub(crate) stipend: stipend::Stipend,
     /// Sounds the player perceived lately: those like them are no news ([`noise::news`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) recent_sounds: Vec<Recent>,
@@ -975,6 +980,7 @@ impl World {
             parties: Vec::new(),
             wares: BTreeMap::new(),
             uniques_offered: BTreeSet::new(),
+            stipend: stipend::Stipend::default(),
             recent_sounds: Vec::new(),
             weather_override: None,
             death: None,
@@ -2174,6 +2180,8 @@ mod statue_tests;
 mod status_tests;
 #[cfg(test)]
 mod steal_tests;
+#[cfg(test)]
+mod stipend_tests;
 #[cfg(test)]
 mod strange_spirit_tests;
 #[cfg(test)]

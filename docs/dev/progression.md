@@ -363,6 +363,13 @@ nobody_starts_strained_and_only_wealth_burdens` adds the heritage at its heavies
 Strained, and Burdened only for the weakest of a small race. Tests: `world/heirloom_tests.rs`.
 The background story (docs/dev/background.md) reads the talents held after the creation picks:
 its `only` lines force Family wealth's and Father's sword's chapters, so nothing is paid twice.
+Landed noble (#1405; `heritage`, `needs = { creation = true, class = "aristocrat" }`) is no
+hand-down: its `stipend_more` (`TalentMods::stipend_gold_percent`, `stipend_chance`,
+`stipend_magic_percent`) is read by `world/stipend.rs::of_level`, as the aristocrat's class
+ability Stipend's `stipend` effect (`TalentMods::stipend`, level 1 of the class table) is read by
+`grow_stipend`, one line in `experience.rs::rise_from` after `level_up` (every level reached,
+a prestige class's too). The rule and its numbers: `docs/dev/npcs.md` "The aristocrat's servant",
+`data/stipend.toml`.
 No talent reads the story's draw: Hard-won and Storyteller were cut in #774, Favoured child
 (#705) in #787, and the `background` system with it.
 

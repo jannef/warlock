@@ -309,6 +309,14 @@ pub struct TalentMods {
     pub wading_proof: bool,
     /// Creatures of animal factions are neutral to it until it attacks one of their type.
     pub beast_friend: bool,
+    /// Each level reached adds to the family's stipend (Stipend, `world/stipend.rs`).
+    pub stipend: bool,
+    /// Percent more gold the stipend grows by (Landed noble).
+    pub stipend_gold_percent: i32,
+    /// Percentage points more chance of the stipend's loot roll (Landed noble).
+    pub stipend_chance: i32,
+    /// Percent more likely magic and rare finds are in the stipend's loot roll (Landed noble).
+    pub stipend_magic_percent: i32,
     /// Percent faster hunger burns (negative: slower).
     pub hunger_percent: i32,
     /// Percent more sickness from rotten food (negative: less).
@@ -1416,6 +1424,16 @@ impl TalentMods {
             TalentEffect::ClimbPercent { value } => self.climb_percent += value,
             TalentEffect::WadingProof => self.wading_proof = true,
             TalentEffect::BeastFriend => self.beast_friend = true,
+            TalentEffect::Stipend => self.stipend = true,
+            TalentEffect::StipendMore {
+                gold,
+                chance,
+                magic,
+            } => {
+                self.stipend_gold_percent += gold;
+                self.stipend_chance += chance;
+                self.stipend_magic_percent += magic;
+            }
             TalentEffect::HungerPercent { value } => self.hunger_percent += value,
             TalentEffect::RotHarmPercent { value } => self.rot_harm_percent += value,
             TalentEffect::SmellRot => self.smell_rot = true,

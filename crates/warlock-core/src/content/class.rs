@@ -957,9 +957,9 @@ mod tests {
                 .map(|t| book.get(t).id.as_str())
                 .collect()
         };
-        assert!(at(5).is_empty());
-        assert_eq!(at(18), ["fencing", "riposte"]);
-        assert_eq!(at(60).len(), 4);
+        assert_eq!(at(5), ["stipend"]);
+        assert_eq!(at(18), ["stipend", "fencing", "riposte"]);
+        assert_eq!(at(60).len(), 5);
         assert_eq!((aristocrat.bonus_at(10), aristocrat.bonus_at(11)), (1, 0));
         let trees = aristocrat.bonus_trees(book).expect("named trees");
         let names: Vec<&str> = trees.iter().map(|&t| book.tree(t).id.as_str()).collect();

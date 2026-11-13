@@ -130,7 +130,8 @@ pub enum Layer {
     /// types whose first kill has paid (`discovered kobold, rat`), the animal types a
     /// Beast-friend attacked (`empathy broken rat`), and the stat training marks the player holds
     /// (`stat marks St 3, To 1`), each rolled quest's draw with the size of the pool it could
-    /// draw from now (`roll verses scroll_of_frost x1 of 4`), and the named monsters dead
+    /// draw from now (`roll verses scroll_of_frost x1 of 4`), what an aristocrat's stipend holds
+    /// (`stipend 412 gold: a potion of healing`), and the named monsters dead
     /// (`slain fire_drake`). **Dev-only.**
     Progress,
     /// The level's special rooms (spec §7 "Special rooms"; ground truth): the terrain, with the
@@ -1272,6 +1273,8 @@ fn progress_rows(world: &World) -> Vec<String> {
             roll.target, roll.count
         ));
     }
+    // What an aristocrat's family has put by, waiting with their servant (`world/stipend.rs`).
+    rows.extend(world.stipend_row());
     let slain: Vec<&str> = world.quests().slain().collect();
     if !slain.is_empty() {
         rows.push(format!("slain {}", slain.join(", ")));

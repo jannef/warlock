@@ -15,6 +15,7 @@ styles = { duelist = 1 }
 # The level table (spec §8 "Class abilities"): their tutors' lessons and their family's name,
 # one by one as the levels come; bonus talents from Weaponcraft and Delver.
 abilities = [
+    { level = 1, talent = "stipend" },
     { level = 6, talent = "fencing" },
     { level = 18, talent = "riposte" },
     { level = 32, talent = "iron_will" },

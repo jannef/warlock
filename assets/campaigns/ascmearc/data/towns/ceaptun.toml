@@ -11,3 +11,14 @@ name = "Cēaptūn"
 people = ["eadric", "godgifu", "hild", "leofric", "wat", "wulfrun"]
 goodwill = 5
 told = "Cēaptūn's folk think the better of you."
+
+# An aristocrat's own servant (#1405; world/stipend.rs), in an aristocrat's run only (a character
+# with the Stipend class ability): a squire for a man, a chambermaid for a woman, a servant for
+# anyone else (`creature`, by gender), of their own race and speaking its register (`speech`: npc
+# dialogues of data/dialogue/servants.toml by race id, `default` for every race not named). They
+# lodge at the Gæsthūs, by its west wall, and hand over the family's stipend when spoken to.
+[town.servant]
+level = "ceaptun"
+at = [40, 27]
+creature = { male = "squire", female = "chambermaid", other = "servant" }
+speech = { default = "servant", dwarf = "servant_dwarf", duergar = "servant_dwarf", elf = "servant_elf", halfling = "servant_halfling", gnome = "servant_halfling", goblin = "servant_goblin", kobold = "servant_goblin", ratfolk = "servant_goblin", drow = "servant_drow", lizardfolk = "servant_lizardfolk" }
