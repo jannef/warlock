@@ -12,6 +12,11 @@
 //! (`ScreenName::CraftConfirm`), which asks with what the rules say of the picks; declined, it
 //! closes back to the last step; accepted, it applies `Action::Craft`. After the work the
 //! wizard opens again on its first step with the pack as it is now. Every key is fixed.
+//!
+//! An enchanting's later steps follow its earlier picks (`PerceptionView::craft_steps_given`,
+//! read again after each pick, [`CraftPickScreen::reread`]): the seals list the families of the
+//! crystals picked in words, the affix kept the item's affixes; a seal's None skips the seals
+//! after it (and Esc skips back over them).
 
 use super::dialog_screen::Dialog;
 use super::menu::{Hints, Nav, Panel, Press};
@@ -21,7 +26,7 @@ use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::Bindings;
 use crate::render::console::Console;
 use warlock_core::Action;
-use warlock_core::content::RecipeId;
+use warlock_core::content::{ItemClassId, RecipeId};
 use warlock_core::perception::PerceptionView;
 use warlock_core::world::{CraftOption, CraftStep, CraftStepKind};
 
@@ -74,6 +79,10 @@ pub struct CraftPickScreen {
     picks: Vec<Option<usize>>,
     /// Each step's stacks, grouped by item class.
     lists: Vec<PagedList<CraftOption>>,
+    /// The steps with no pick made, to tell a changed pack from picks that narrowed them.
+    base: Vec<CraftStep>,
+    /// A pick was made since the steps were read: they are read again ([`Self::reread`]).
+    stale: bool,
 }
 
 impl CraftPickScreen {
@@ -87,6 +96,8 @@ impl CraftPickScreen {
             step: 0,
             picks: Vec::new(),
             lists: Vec::new(),
+            base: Vec::new(),
+            stale: false,
         };
         if let Some(view) = view {
             screen.read(view);
@@ -111,6 +122,8 @@ impl CraftPickScreen {
         self.recipe = Some(recipe);
         self.name = content.recipe(recipe).name.clone();
         self.steps = view.craft_steps(recipe);
+        self.base = self.steps.clone();
+        self.stale = false;
         self.picks = vec![None; self.steps.len()];
         self.step = 0;
         self.lists = (0..self.steps.len())
@@ -123,9 +136,38 @@ impl CraftPickScreen {
         let Some(recipe) = self.recipe else {
             return;
         };
-        if view.craft_steps(recipe) != self.steps {
+        if view.craft_steps(recipe) != self.base {
             self.read(view);
         }
+    }
+
+    /// Whether a pick was made since the steps were read.
+    pub fn is_stale(&self) -> bool {
+        self.stale
+    }
+
+    /// Reads the steps again as the picks made narrow them (the module docs): a step whose
+    /// options changed gets its new list, and loses a pick no longer among them.
+    pub fn reread(&mut self, view: &PerceptionView<'_>) {
+        let Some(recipe) = self.recipe.filter(|_| self.stale) else {
+            return;
+        };
+        self.stale = false;
+        let steps = view.craft_steps_given(recipe, &self.picks);
+        if steps.len() != self.steps.len() {
+            return;
+        }
+        for (i, step) in steps.into_iter().enumerate() {
+            if step == self.steps[i] {
+                continue;
+            }
+            if (self.picks[i]).is_some_and(|at| !step.options.iter().any(|o| o.at == at)) {
+                self.picks[i] = None;
+            }
+            self.steps[i] = step;
+            self.lists[i] = self.list_of(view, i);
+        }
+        self.go_to(self.step);
     }
 
     /// The list of the step shown.
@@ -138,6 +180,17 @@ impl CraftPickScreen {
         let Some(step) = self.steps.get(step) else {
             return PagedList::empty();
         };
+        if matches!(step.kind, CraftStepKind::Family | CraftStepKind::Affix) {
+            // Not stacks: one group, headed by what they are.
+            let header = match step.kind {
+                CraftStepKind::Family => "Families",
+                _ => "Its magic",
+            };
+            let items = (step.options.iter().cloned())
+                .map(|o| (ItemClassId(0), o))
+                .collect();
+            return PagedList::grouped(items, |_| header.to_string());
+        }
         let content = view.content();
         let pack = view.inventory();
         let items = (step.options.iter())
@@ -165,7 +218,12 @@ impl CraftPickScreen {
             if self.step == 0 {
                 return ScreenAction::Close;
             }
-            self.go_to(self.step - 1);
+            // Back over seals skipped by a None, to the first of them.
+            let mut to = self.step - 1;
+            while to > 0 && self.skipped_seal(to) && self.skipped_seal(to - 1) {
+                to -= 1;
+            }
+            self.go_to(to);
             return ScreenAction::Stay;
         }
         let Some(step) = self.steps.get(self.step) else {
@@ -207,11 +265,25 @@ impl CraftPickScreen {
         }
     }
 
-    /// Makes the step's pick and goes on: to the next step, or after the last to the dialog.
+    /// Whether step `step` is a seal with None picked.
+    fn skipped_seal(&self, step: usize) -> bool {
+        self.steps[step].kind == CraftStepKind::Family && self.picks[step].is_none()
+    }
+
+    /// Makes the step's pick and goes on: to the next step, or after the last to the dialog. A
+    /// seal's None is None for the seals after it too, which are passed over.
     fn pick(&mut self, at: Option<usize>) -> ScreenAction {
         self.picks[self.step] = at;
-        if self.step + 1 < self.steps.len() {
-            self.go_to(self.step + 1);
+        self.stale = true;
+        let mut next = self.step + 1;
+        if at.is_none() && self.steps[self.step].kind == CraftStepKind::Family {
+            while next < self.steps.len() && self.steps[next].kind == CraftStepKind::Family {
+                self.picks[next] = None;
+                next += 1;
+            }
+        }
+        if next < self.steps.len() {
+            self.go_to(next);
             return ScreenAction::Stay;
         }
         ScreenAction::Open(ScreenName::CraftConfirm)
@@ -270,6 +342,8 @@ impl CraftPickScreen {
                 (true, CraftStepKind::Ornament) => {
                     "Nothing carried would do; None leaves it plain."
                 }
+                (true, CraftStepKind::Family) => "Nothing of the crystal's nature to seal.",
+                (true, CraftStepKind::Affix) => "Choose the item first.",
                 (true, _) => "Nothing carried would do; None makes them brittle.",
                 (false, _) => "Nothing carried will do.",
             };
@@ -298,10 +372,12 @@ impl CraftPickScreen {
             if selected {
                 console.print(x, y, ">", ACCENT);
             }
-            let state = match (option.enough, option.each) {
-                (true, true) => format!("uses {} each", option.takes),
-                (true, false) => format!("uses {}", option.takes),
-                (false, _) => "too few".to_string(),
+            let state = match (step.kind, option.enough, option.each) {
+                (CraftStepKind::Family, _, _) => "a crystal more".to_string(),
+                (CraftStepKind::Affix, _, _) => "kept".to_string(),
+                (_, true, true) => format!("uses {} each", option.takes),
+                (_, true, false) => format!("uses {}", option.takes),
+                (_, false, _) => "too few".to_string(),
             };
             let state_x = right - state.chars().count() as i32;
             let room = (state_x - x - 3).max(0) as usize;
@@ -395,5 +471,93 @@ mod tests {
             screen.handle(&Press::nav(Nav::Back), &keys),
             ScreenAction::Close
         );
+    }
+
+    /// A wizard trained in Enchanting with a long sword and four red crystals picked up.
+    fn enchanter() -> World {
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.edit_table("classes", |text| {
+            text.replace(
+                "enchanting = { chance = 30,",
+                "enchanting = { chance = 100,",
+            )
+        });
+        files.insert(
+            "levels/test_seal_ui.toml",
+            "name = \"Test\"\nambient = [120, 120, 120, 0]\nmap = '''\n#####\n#@..#\n#####\n'''\n\
+             [legend]\n\"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+             [[item]]\nat = [2, 1]\nobject = \"long_sword\"\n\
+             [[item]]\nat = [2, 1]\nobject = \"crystal_red\"\ncount = 4\n",
+        );
+        files.insert(
+            "scenarios/test_seal_ui.toml",
+            "name = \"T\"\nstart_level = \"test_seal_ui\"\n\
+             character = { race = \"human\", gender = \"female\", class = \"wizard\" }\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("content"));
+        let mut world = World::new(content, "test_seal_ui", Some(5)).expect("world");
+        for action in warlock_core::action::parse_actions("move:E pickup").expect("parses") {
+            world.apply(&action);
+        }
+        world
+    }
+
+    /// Picks the row of the step shown whose short name is `short`, then reads the steps again
+    /// (as `route_keys` does after a press).
+    fn choose_short(screen: &mut CraftPickScreen, view: &PerceptionView<'_>, short: &str) {
+        let row = (screen.list().iter())
+            .position(|o| o.short == short)
+            .unwrap_or_else(|| panic!("{short} in step {}", screen.step));
+        screen.lists[screen.step].select(row);
+        screen.choose(row);
+        screen.reread(view);
+    }
+
+    #[test]
+    fn the_seals_follow_the_crystal_and_none_skips_the_rest() {
+        let world = enchanter();
+        let view = world.perception();
+        let kindle = view.content().recipes().id("kindle").expect("kindle");
+        let mut screen = CraftPickScreen::new(Some(&view), Some(kindle));
+        screen.fit(100, 60);
+        let labels: Vec<&str> = screen.steps.iter().map(|s| s.label.as_str()).collect();
+        assert_eq!(
+            labels,
+            ["item", "crystal", "seal", "second seal", "third seal"]
+        );
+        choose_short(&mut screen, &view, "long sword");
+        choose_short(&mut screen, &view, "red crystal");
+        assert_eq!(screen.step, 2);
+        assert_eq!(screen.steps[2].kind, CraftStepKind::Family);
+        let words: Vec<String> = screen.list().iter().map(|o| o.name.clone()).collect();
+        assert!(
+            !words.is_empty() && !words.iter().any(|w| w == "mana"),
+            "{words:?}"
+        );
+        // The first seal is not offered again; None then skips the third.
+        let first = words[0].clone();
+        choose_short(&mut screen, &view, &first);
+        assert_eq!(screen.step, 3);
+        assert!(!screen.list().iter().any(|o| o.name == first));
+        let keys = Bindings::default();
+        assert_eq!(
+            screen.handle(&Press::typed('-'), &keys),
+            ScreenAction::Open(ScreenName::CraftConfirm)
+        );
+        let (_, picks) = screen.chosen().expect("chosen");
+        assert_eq!(picks.len(), 5);
+        assert!(picks[2].is_some() && picks[3].is_none() && picks[4].is_none());
+        let dialog = craft_dialog(Some(&view), screen.chosen());
+        assert!(
+            dialog
+                .text
+                .contains(&format!("one more red crystal, sealing out {first}")),
+            "{}",
+            dialog.text
+        );
+        // Esc from the skipped third seal goes back over it to the first one skipped.
+        screen.go_to(4);
+        screen.handle(&Press::nav(Nav::Back), &keys);
+        assert_eq!(screen.step, 3);
     }
 }

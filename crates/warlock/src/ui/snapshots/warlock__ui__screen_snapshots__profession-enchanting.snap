@@ -16,7 +16,7 @@ expression: "render(case, content.clone())"
             │ > a - Ennoble       beyond your skill                                    │
             │   b - Imbue         beyond your skill                                    │
             │   c - Kindle        nothing to enchant                                   │
-            │   d - Quicken       nothing to enchant                                   │
+            │   d - Quicken       it holds all it can                                  │
             │   e - Recast        beyond your skill                                    │
             │   f - Unbind        a magic item, about 30 minutes                       │
             │                                                                          │

@@ -13,10 +13,12 @@ give.
   [suffix](affixes.md#suffixes)). It takes one crystal.
 - **Quicken** gives a magic item of one affix the other kind: a suffix beside its prefix, or a
   prefix beside its suffix. It takes one crystal, and the item must have room for one more
-  (its [capacity](magic-items.md#capacity)). It does not work on a rare item.
+  (its [capacity](magic-items.md#capacity)). On a rare item it adds one affix more, of either
+  kind, if the item has room, and it takes a [heart-crystal](#the-rare-materials) too.
 - **Recast** rolls a magic item's affixes anew: as many as it had, of the same kinds (a prefix
   for its prefix, a suffix for its suffix), all of the crystal's colour. It takes one crystal.
-  It does not work on a rare item: unbind it, then imbue it.
+  It does not work on a rare item: unbind it, then imbue it. With a
+  [soul-fetter](#the-rare-materials) you keep one affix you choose, and only the rest are rolled.
 - **Imbue** makes a plain item [rare](magic-items.md#rarity), with a name and three to six
   affixes, as many as a found rare item rolls but never more than the item's
   [capacity](magic-items.md#capacity). It takes **three crystals**, and the order you choose them
@@ -43,6 +45,35 @@ lists them). A red crystal never gives mana, a blue one never gives life. If not
 colour can be added to the item (it already has every kind the colour gives, or the item cannot
 take them), the work is refused before it starts: "No more of that nature will take."
 
+## Seals
+
+A **seal** keeps one family of magic out of the roll. After you choose the crystals, the work
+asks for up to three seals: a list of the families your crystal's colour gives, in words
+("fire", "the critical", "mana"). Choose one by its letter, or None (`-`) for no more seals.
+The rest of the roll is drawn as before, only never from a sealed family. So a red crystal
+sealed against fire and the critical can still give damage, strength, or life, but never fire
+or the critical.
+
+Each seal costs **one more crystal of the same colour**, taken from the crystals you chose (for
+Imbue, from the first of its three whose colour has that family), and makes the work longer. A
+seal holds for that one work only: it leaves nothing on the item. You cannot seal a family the
+crystal's colour does not give ("The red crystal holds nothing of mana."), the same family
+twice, or a family the item already has or could never take ("There is nothing to seal there.").
+
+{{#include generated/enchanting-seals.md}}
+
+## The rare materials
+
+Two [rare materials](crystals.md#rare-materials) go further than any crystal:
+
+- A **heart-crystal** lets Quicken add an affix to a rare item, one at a time, as long as the
+  item has room for it. Each Quicken on a rare item takes one heart-crystal beside its crystal.
+- A **soul-fetter** lets Recast keep one affix exactly as it is. The work asks which affix to
+  keep after the seals (only when you carry a soul-fetter); the other affixes are rolled anew.
+
+Both are spent whether the work takes or not, as the crystals are. The list above says where
+they come from, and how often.
+
 ## How strong the magic is
 
 The affix is rolled as [loot](magic-items.md#finding-them) is, at an item level: the greater of
@@ -62,8 +93,8 @@ your work and nothing is spent.
 - **Made**: the item is enchanted and you know its magic. "The long sword takes the red
   crystal's glow. It is now a Sharp long sword." An imbued or ennobled item wakes with its
   name: "The long sword drinks the three crystals and wakes as Grim Bite."
-- **Failed**: the crystals go dark and are spent. The item is as it was. A failed Unbind
-  leaves the magic where it was.
+- **Failed**: the crystals go dark and are spent, with any heart-crystal or soul-fetter. The
+  item is as it was. A failed Unbind leaves the magic where it was.
 - **A natural 2**: the crystals are spent and the item **warps**: it is
   [damaged](materials.md#item-damage), as a failed temper damages it, and an item already damaged
   falls apart. An item of Proof is spared.

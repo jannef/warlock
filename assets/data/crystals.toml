@@ -2,7 +2,7 @@
 # content/crystal.rs): six colours, one object each, no grades. A crystal is caught from a magic
 # item's affix when it is salvaged (salvage.toml, enchanting.toml) or left by a creature the
 # Soulglass spell kills (spells/soulglass.toml, world/crystal.rs), and is what the Enchanting
-# recipes bind (to come). Anyone may consume one for mana ([consume]).
+# recipes bind (world/enchant.rs). Anyone may consume one for mana ([consume]).
 #
 # [[colour]]  the colours, in order; the order is the rule: a creature's colour is the first
 #             colour one of whose tags it carries, and an affix's colour is the first colour whose
@@ -26,6 +26,9 @@
 #   materials        the two objects, drawn at even odds where one is given
 #   level, chance    Soulglass on a creature of `level` or more: a `chance` % draw for one
 #   dragon           the one a creature tagged `dragon` always gives
+#   heart            the one Quicken takes beside its crystal to add an affix to a rare
+#                    (world/enchant.rs)
+#   fetter           the one Recast takes to keep the affix chosen while the rest roll anew
 #   salvage_level    salvaging a rare (identified or not) of this item level or more: after its affixes'
 #   salvage_chance   checks, a `salvage_chance` % draw for one
 #
@@ -376,6 +379,8 @@ materials = ["heart_crystal", "soul_fetter"]
 level = 15
 chance = 10
 dragon = "heart_crystal"
+heart = "heart_crystal"
+fetter = "soul_fetter"
 salvage_level = 10
 salvage_chance = 3
 

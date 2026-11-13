@@ -764,6 +764,19 @@ impl ScreenStack {
         }
     }
 
+    /// Whether the top screen asks to read the run again after a press (the forging wizard's
+    /// later steps follow its picks: [`CraftPickScreen::reread`]).
+    pub fn is_stale(&self) -> bool {
+        matches!(self.screens.last(), Some(Screen::CraftPick(s)) if s.is_stale())
+    }
+
+    /// Reads the run again into the top screen when it asks ([`Self::is_stale`]).
+    pub fn reread(&mut self, view: &PerceptionView<'_>) {
+        if let Some(Screen::CraftPick(screen)) = self.screens.last_mut() {
+            screen.reread(view);
+        }
+    }
+
     /// Applies one key press to the top screen; settings and bindings change in place. A held
     /// key's repeats may move the selection or change a value, but never open, close, or choose.
     pub fn handle(

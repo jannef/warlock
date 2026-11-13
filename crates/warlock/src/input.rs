@@ -777,6 +777,10 @@ pub fn route_keys(
                 &mut new_settings,
                 &mut new_bindings,
             );
+            // A pick in the forging wizard narrows its later steps: read before the next press.
+            if let Some(game) = play.game.as_ref().filter(|_| screens.stack.is_stale()) {
+                screens.stack.reread(&game.world.perception());
+            }
             if new_settings != *settings {
                 *settings = new_settings;
             }

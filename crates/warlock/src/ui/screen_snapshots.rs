@@ -919,7 +919,8 @@ const CASES: &[Case] = &[
     },
     // Enchanting (#1430) by a wizard trained in it at this fate (11), with Father's sword, a
     // Masterwork rare, in the pack: the six works (#1431) greyed by skill or "nothing to
-    // enchant" (no plain item free, the rare refused), Unbind ready;
+    // enchant" (no plain item free), Quicken "it holds all it can" (the rare at its capacity,
+    // #1432), Unbind ready;
     Case {
         name: "profession-enchanting",
         seed: Some(13),
