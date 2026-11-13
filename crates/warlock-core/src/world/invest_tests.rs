@@ -303,8 +303,8 @@ fn a_year_returns_about_five_percent_and_one_in_four_loses() {
     );
     assert!((0.035..=0.07).contains(&mean), "{mean}");
     assert!((0.15..=0.40).contains(&lost), "{lost}");
-    // Everything done: every quest of Cēaptūn's people (13) and Fire in the deep (6 more).
-    let (mean, lost) = yearly(19, 4000);
+    // Everything done: every quest of Cēaptūn's people (14) and Fire in the deep (6 more).
+    let (mean, lost) = yearly(20, 4000);
     println!(
         "invest, all done: {:.1} % a year, {:.0} % of years lose",
         mean * 100.0,

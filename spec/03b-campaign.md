@@ -78,7 +78,11 @@ every new run starts in it.
     done, since Fyrdelf starts at danger 5, and given only from character level 5 (`min_level`:
     asked sooner, she says she doesn't think the player ready, and gives and marks nothing); it
     **reveals Fyrdelf** as it is given; 100 gold, 220 XP), "Fire in the deep" (kill the fire drake in Fyrdelf, a named
-    monster: its death counts however it came; 500 gold, 900 XP).
+    monster: its death counts however it came; 500 gold, 900 XP), "A letter for the deep" (#1435,
+    once the drake is dead: deliver a sealed letter to Headman Peran in Gimmwīc, at Dēopgang's
+    bottom, who pays with a cut sapphire; 600 XP; nothing revealed or gated: Dēopgang is open to
+    anyone). Then **Headman Peran** gives "The moot's answer" (deliver his sealed reply back up
+    to Wulfrun; 300 gold, 300 XP).
   - **Wat One-Eye** (#425, the guild design §4, §7), guildmaster of **the Weyfarers' Gilde**
     (Middle English: a new organisation) in the **Gildhalle**, a timber hall in the town's
     south-east corner with its bounty board by the door: a chain of rolled quests, each drawn as

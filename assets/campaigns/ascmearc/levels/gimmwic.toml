@@ -85,7 +85,9 @@ map = '''
 "7" = { terrain = "floor", creature = "deep_gnome" }
 "8" = { terrain = "floor", creature = "deep_gnome" }
 # The town's people (campaigns/ascmearc/data/dialogue/gimmwic.toml).
-"P" = { terrain = "floor", creature = "deep_gnome_headman", npc = "peran" }
+# A lamp over the headman's seat: the hall's two by its walls leave the head of the long table
+# dark, and a guest without darkvision must see him to talk to him (#1435's letter goes to him).
+"P" = { terrain = "floor", light = "lamp", creature = "deep_gnome_headman", npc = "peran" }
 "M" = { terrain = "floor", creature = "deep_gnome_priest", npc = "senara" }
 "T" = { terrain = "floor", creature = "deep_gnome_jeweller", npc = "tregear" }
 

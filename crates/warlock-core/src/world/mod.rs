@@ -1932,6 +1932,8 @@ mod gem_tests;
 #[cfg(test)]
 mod gifts_tests;
 #[cfg(test)]
+mod gnome_letter_tests;
+#[cfg(test)]
 mod goodwill_tests;
 #[cfg(test)]
 mod guild_tests;
