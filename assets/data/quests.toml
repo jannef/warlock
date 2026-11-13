@@ -44,6 +44,21 @@
 #                hand-made level or a vault the branch level stamps for certain, exactly one)
 #                of level `level`, or the nearest free cell; made when that level is first made
 #                if it is not yet
+#     "lure"     target a unique creature type, `level` a hand-made level of the campaign, and
+#                `waits = { level, at }` (no `creature`: the target): while the quest is active
+#                and no creature of the type is anywhere, one is made on the place `at` of
+#                `waits.level` as the quest is given (if that level exists) and whenever you come
+#                to that level, so one killed forms anew. Hostile, it follows you up and down the
+#                stairs when it is beside you as you take them (spec §8 "Stair followers"); once
+#                it stands on `level` with you and the giver, the giver binds it and the quest is
+#                done (the giver says `done` and pays). `[quest.binding]` says how: `status` (one
+#                with no `eases`, data/status.toml: it carries it for good), `faction` (the one it
+#                joins: at peace with you), `post` ([x, y] on `level`, walkable: where it walks
+#                and stays), `words` (what you are told as it is bound, a message each),
+#                `shatters` (optional: told as it dies unbound), `reforms` (optional: told as it
+#                forms anew on the level you came to), and `boon = { skill, bonus }` (optional:
+#                `bonus` to your checks of that skill's recipes on its level while it stands
+#                there bound: Jewelcraft's Cut and Set). Never repeatable or rolled
 #   reward     { gold, items, xp, skills }, each optional: gold coins, objects as levels place them
 #              (`["potion_of_healing*2"]`), experience, and skills taught, by skill id
 #              (`skills = { heal = { start = "1d4", marks = 100 } }`): a skill the player is
@@ -68,9 +83,10 @@
 #              default 0): helping quests good, dark ones evil. A giver offers it whatever
 #              the player's alignment, scorn or not; only `requires_alignment` limits that
 #   repeatable offered again once done (default false)
-#   reveals    a hidden location of the overworld it reveals (a legend's `hidden`; optional):
-#              { location = "ID", when = "given" }, `when` "given" (the default) or "done". The
-#              speaker marks it on the player's map
+#   reveals    a hidden location of the campaign it reveals (a legend's `hidden`, on the
+#              overworld or a hand-made level; optional): { location = "ID", when = "given" },
+#              `when` "given" (the default) or "done". The speaker marks it on the player's map,
+#              or the location's `opens` line is said instead
 #   where      where the goal lies, in words, after the objective in the quest log (optional)
 #
 # Rolled quests: instead of `target`, a kill or bring quest may draw its target as it is given

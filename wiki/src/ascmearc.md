@@ -98,6 +98,11 @@ Their talk turns to their work, and they speak the Cornish of the deep: "my 'ans
 - **The cutting floor** has three [anvils](altars-forges-springs.md) and workbenches, free to use.
   **[Old Tregear](npcs.md#old-tregear)** works there, and teaches
   [Jewelcraft](skills.md#skill-jewelcraft) for gold.
+- **Ysella the Binder** keeps to the garden at the town's east edge, where she binds the deep's
+  crystal to the gnomes' work. Her [quest](quests.md#lures) opens the way into
+  [Meyn Bew](dungeon-guide.md#meyn-bew), a pocket of the plane of earth, and asks you to lure its
+  crystal guardian home. Bound, it stands in Kerensa's Stones for good, and every gem you
+  [cut or set](gem-cutting.md) in the town comes out a little better.
 
 Its stairs up lead back to Dēopgang's eleventh floor.
 

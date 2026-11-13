@@ -232,8 +232,8 @@ pub use damage_type::{CharColors, DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES}
 pub use danger::{Count, DangerRule, PlayerScale, Spawning};
 pub use decipher::DecipherRules;
 pub use dialogue::{
-    Dialogue, DialogueId, GenderWords, Mutter, PartnerWords, ServantWords, Service, ServiceKind,
-    ServiceTraining, Speaker, Topic,
+    AfterLines, Dialogue, DialogueId, GenderWords, Mutter, PartnerWords, ServantWords, Service,
+    ServiceKind, ServiceTraining, Speaker, Topic,
 };
 pub use disease::{DiseaseDef, DiseaseId, SOURCES, Wading};
 pub use drops::{Drop, DropFrom, DropGoods, TagDrops};
@@ -303,8 +303,8 @@ pub use potion::{Draught, Drink, Flask, Splash};
 pub use prayer::{Face, FaceWords, Faced, PrayerRules, PrayerUse, UseDef};
 pub use prestige::{PrestigeDef, Table};
 pub use quest::{
-    GOLD, Goal, KillTarget, QuestDef, QuestId, QuestKind, QuestTexts, Reveal, RevealWhen, Reward,
-    SkillReward, Waits,
+    Binding, Boon, GOLD, Goal, KillTarget, QuestDef, QuestId, QuestKind, QuestTexts, Reveal,
+    RevealWhen, Reward, SkillReward, Waits,
 };
 pub(crate) use quest_roll::roll_known;
 pub use quest_roll::{Candidate, Pick, Roll, Rolled, Variant, one_of};
@@ -2829,6 +2829,22 @@ impl Content {
                     &self.level_file(&level.id),
                     "a campaign can have only one level of kind `overworld`",
                 ));
+            }
+        }
+        // A hidden location's id names one place in its campaign, whichever level holds it.
+        let mut hidden_ids: BTreeMap<(&str, &str), &str> = BTreeMap::new();
+        for level in self.levels.values() {
+            let campaign = self.level_campaign(&level.id).unwrap_or_default();
+            for hidden in level.hidden.values() {
+                if let Some(first) = hidden_ids.insert((campaign, &hidden.id), &level.id) {
+                    return Err(ContentError::new(
+                        &self.level_file(&level.id),
+                        format!(
+                            "hidden location `{}` is placed on level `{first}` already",
+                            hidden.id
+                        ),
+                    ));
+                }
             }
         }
         for level in self.levels.values() {
@@ -5701,6 +5717,8 @@ mod tests {
                 "attorcoppes_web",
                 "barrow_chamber",
                 "captains_hall",
+                "crystal_garden",
+                "crystal_hollow",
                 "drakes_hoard",
                 "foremans_cabin",
                 "gnaegans_midden",

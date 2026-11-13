@@ -391,10 +391,20 @@ impl World {
         }));
     }
 
-    /// The `k`-th one-liner of `d` for creature `id`.
+    /// The `k`-th one-liner of `d` for creature `id`: of its `lines`, and of its lines after each
+    /// quest the player has done (`[[dialogue.after]]`).
     pub(super) fn one_liner(&self, id: ActorId, d: &Dialogue, k: u32) -> String {
         let key = self.rotation_key(id, b"lines");
-        d.lines[rotation(key, k, d.lines.len())].clone()
+        let done =
+            |quest: &str| (self.state.quests.records.get(quest)).is_some_and(|r| r.completed > 0);
+        let lines: Vec<&String> = (d.lines.iter())
+            .chain(
+                (d.after.iter())
+                    .filter(|a| done(&a.quest))
+                    .flat_map(|a| &a.lines),
+            )
+            .collect();
+        lines[rotation(key, k, lines.len())].clone()
     }
 
     /// Creature `id`, having acted, may mutter (see the module docs).

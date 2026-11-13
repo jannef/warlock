@@ -1327,6 +1327,8 @@ impl World {
         self.keeper_died(id, &actor.level);
         // A dead escort fails its quest (`escort.rs`).
         lines.extend(self.escort_dies(&actor));
+        // A lure quest's creature killed unbound forms anew (`lure.rs`).
+        lines.extend(self.lured_dies(&actor));
         self.fallen.push(actor);
         lines
     }

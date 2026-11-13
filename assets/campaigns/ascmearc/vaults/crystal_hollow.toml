@@ -1,0 +1,30 @@
+# Vault of the Ascmearc (#1446): the crystal hollow at the bottom of Meyn Bew, the earth-plane
+# pocket under Gimmwīc. A long chamber walled in living crystal, lit violet and blue from within,
+# with a bed of loose stones at its heart where the crystal guardian takes shape. Meyn Bew names
+# it for its fourth floor (`vaults` in its `[[dungeon.levels]]`), so it is stamped there for
+# certain and nowhere else.
+#
+# The heart (`G`) is a named place, "the crystal hollow": the guardian stands there once
+# Ysella's quest asks for it, and forms there again if it is killed before it is bound (a vault
+# places no unique by its quest, so the quest places it on this place's cell: its `waits`,
+# data/quests/ysella.toml; world/lure.rs). Until then the bed is empty, and its note is said
+# when the player comes beside it.
+name = "Crystal hollow"
+dungeons = ["meynbew"]
+map = '''
+###############
+#v.u..a..u..v.#
+#.............#
++...a..G..a...+
+#.............#
+#v.u..$..u..v.#
+###############
+'''
+
+[legend]
+"v" = { terrain = "crystal", light = "crystal_portal" }
+"u" = { terrain = "crystal", light = "crystal_blue" }
+"a" = { terrain = "crystal", light = "crystal_amber" }
+"G" = { terrain = "floor", name = "the crystal hollow", note = "A bed of loose stones and crystal shards, ringing faintly, as if something large had just stood up from it." }
+# Stones the guardian has shed.
+"$" = { terrain = "floor", objects = ["gem:zircon*2", "gem:topaz"] }

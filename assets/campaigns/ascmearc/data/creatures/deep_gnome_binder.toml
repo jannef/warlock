@@ -1,0 +1,25 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The binder of Gimmwīc (#1446; docs/dev/creatures/deep-gnomes.md): Ysella the Binder (her npc
+# dialogue, campaigns/ascmearc/data/dialogue/gimmwic.toml), who keeps to the garden at the town's
+# east edge and binds the deep's crystal to the gnomes' work. Her quest opens the crystal portal
+# beside her and asks for the crystal guardian of Meyn Bew. Only the town's legend places her.
+# Peaceful, and old.
+[[creature]]
+id = "deep_gnome_binder"
+name = "deep-gnome binder"
+glyph = "@"
+fg = "#e0b8e8"
+faction = "peaceful"
+tags = ["deep-gnome"]
+# One of the people: never greater or lesser than their kind.
+grades = false
+alignment = "good"
+vision = "darkvision"
+size = "small"
+footsteps = 30
+hearing = 10
+weight = 34000
+stats = { strength = 8, dexterity = 12, toughness = 11, intelligence = 17, willpower = 18, presence = 14 }
+skills = { jewelcraft = 60 }

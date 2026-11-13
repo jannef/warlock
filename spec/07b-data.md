@@ -907,8 +907,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   with a `wave` animation). §5 "Weather".
 - **Spell circles' statuses** (`data/circles.toml`, optional; §4.8 "Spell circles"):
   `[[school]]` rows (`id`, a school of magic, and `color`, `"#rrggbb"`) and `[[status]]` rows
-  (`status` and `school`). Checked at load: a known status that has `seen`, laid by a buff or hex
-  spell (which says whether its circle is a buff's or a hex's), listed once (a buff or hex
+  (`status` and `school`, and `kind`, `"buff"` or `"hex"`, only for a status no spell lays: a
+  lure quest's binding). Checked at load: a known status that has `seen`, laid by a buff or hex
+  spell (which says whether its circle is a buff's or a hex's) or naming its `kind`, listed once (a buff or hex
   spell's status without a row has no circle); every school named has a colour and a light, `circle_<school>` in
   `data/lights.toml`. One rule reads it: a circled status without a `light` of its own sheds its
   school's (§8 "Status effects"), so the rows' statuses and schools are in the content

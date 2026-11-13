@@ -44,6 +44,8 @@ Talking about quests takes no time.
   else and hand in there. You need room for it in your [pack](objects.md#your-pack). Without it in
   your pack you cannot hand it in, so if you drop it, pick it up again.
 - **Escort**: bring someone home ("Bring Eadgyth safely to the Hamlet."). See below.
+- **Lure**: lead a creature that hunts you back to someone who can tame it ("Lure the crystal
+  guardian from Meyn Bew 4 to Gimmwīc."). See [Lures](#lures).
 
 ### Escorts
 
@@ -62,6 +64,30 @@ the one you brought home pays.
 
 If they die, whether they had joined you or not, the quest **fails**. The log says so, and it is
 never offered again.
+
+### Lures
+
+A lure quest asks you to bring back a creature that will not come willingly: it comes only
+chasing you. The one in the march is **Ysella the Binder's**, in
+[Gimmwīc](ascmearc.md#gimmwīc): the **crystal guardian** at the bottom of
+[Meyn Bew](dungeon-guide.md#meyn-bew).
+
+- It waits in its place, awake, once the quest is given.
+- It follows you up or down the stairs only when it is right beside you, and knows you are
+  there, as you take them, as [any hostile creature does](terrain.md#stairs). Leave it behind and
+  it stays on that floor until you come back for it.
+- It is slow, so you can stay ahead of it. Its fists and the shards it throws hit hard all the
+  same.
+- When it comes into Gimmwīc with you, and Ysella is there, she **binds** it. It is at peace for
+  good, a slow circle of light turns about it, and it walks to Kerensa's Stones, the gem dealer,
+  and stands in the corner by her counter. The quest is done: **1200 gold**, **4000
+  [experience](experience.md)**, and an uncut sapphire.
+- While it stands bound in the town, every [Cut and Set](gem-cutting.md) you make in Gimmwīc gets
+  **+2** to its check.
+
+If you kill it before it is bound, nothing fails: a new one grows in its hollow, and it is there
+the next time you come down to that floor. Killed after it is bound, it is gone for good, and so is
+the +2; the quest stays done.
 
 ## Sorts of creatures
 
