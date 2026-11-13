@@ -263,7 +263,7 @@ step or two smaller (50 marks → 25 → 12 → 6 → 3: `3d3`, `2d4`, `1d5`, `1
 marks still gains 1. Past 100, a roll adds half its result, rounded up. The game says "Your stealth
 improves."
 
-- A skill your **[class](classes.md) is known for** (its `2d6+10` skills) throws the die one step up the ladder.
+- A skill your **[class](classes.md) is known for** (its `2d6+10` skills) throws the die one step up the ladder. So does a **[trade](talents.md#crafts-a-craftspersons-trades)** of yours; a skill that is both still goes up one step, not two.
 - Any **other skill your [class](classes.md) trains**, or a skill **your [race](races.md) trains**, adds 1 to the roll.
 
 Both stack: a [halfling](races.md#race-halfling) [thief](classes.md#thief)'s [stealth](skills.md#skill-stealth) is both a class specialty and racial, so it rolls one step up and +1.

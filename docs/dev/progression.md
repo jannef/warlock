@@ -374,6 +374,29 @@ a prestige class's too). The rule and its numbers: `docs/dev/npcs.md` "The arist
 `data/stipend.toml`. The merchant's Invest (`invest`, `TalentMods::invest`, #1407) gates the
 business partner's deals (`world/invest.rs`); the partner is placed by the talent id, as the
 servant is: `docs/dev/npcs.md` "The merchant's business partner", `data/invest.toml`.
+
+**Crafts** (#1418; the craftsperson design `docs/design/craftsperson.md` §3, §4): the `crafts`
+tree, after `heritage`, holds the seven trades (Smith, Wright, Gemcutter, Brewster, Pitman,
+Wortcunner, Spellwright; one file each in `data/talents/`), one per profession skill, each
+`needs = { creation = true, class = "craftsperson", race_lacks = "<skill>" }`: a craftsperson's
+creation pick alone (`Need::Class`, `Need::Creation`), never a level's or a bonus tree's.
+`race_lacks` is `Need::RaceLacks(SkillId)`: met unless the character's race's guaranteed
+`skills` name the skill (`RaceDef::teaches`; never `optional_skills` or a human's
+`class_skill`); a run without a character meets it. Its words are derived from `races.toml`
+(`Races::teaching`, file order): "not to be a dwarf or a duergar"; a `race_lacks` on a skill no
+race teaches everyone is dropped at load (`resolve_needs`), so it never shows empty. The effect
+is `trade { skill, dice, tools }` (`TalentEffect::Trade`, `is_handed_down`): `World::hand_down`
+calls `World::learn_trade` (`world/trade.rs`), which rolls `dice` plus `TalentMods::trade_bonus`
+(`trade_bonus { value }`, summed; Time served's in P2) from the stream
+`character/trade/<spec>/<skill>` into `Skills::add`, then makes each tool line (`KitLineSpec`,
+`Content::kit_lines`; checked once objects load, `talent::check_trades`) from the same stream,
+as a kit line is made, and puts it in the pack via `World::story_item` (readied or worn in a free
+slot, its labelled type known). The sum keeps `TalentMods::trades: Vec<SkillId>`, read once in
+`world::skill_roll` (its `trades` argument): a roll on a trade is one step up the ladder, as a
+known-for skill's (`SkillRoll::known`; `SkillRoll::trade` when the step is the trade's, not the
+class's; never two steps). The craftsperson stays hidden until P2 (#1419), which adds its two
+free trades (`creation_bonus`) and Time served. Tests: `world/trade_tests.rs`,
+`content::talent::tests::a_trade_names_its_skill_and_tools_and_the_races_it_is_closed_to`.
 No talent reads the story's draw: Hard-won and Storyteller were cut in #774, Favoured child
 (#705) in #787, and the `background` system with it.
 

@@ -132,7 +132,7 @@ impl World {
     }
 
     /// An item into the pack as a kit line puts it: worn or wielded in a free slot, else carried.
-    fn story_item(&mut self, content: &Content, mut stack: Stack, keep: Keep) {
+    pub(super) fn story_item(&mut self, content: &Content, mut stack: Stack, keep: Keep) {
         let date = self.state.time;
         crate::rot::made_at(std::iter::once(&mut stack), content, date);
         if crate::kit::is_labelled(content, stack.object) {

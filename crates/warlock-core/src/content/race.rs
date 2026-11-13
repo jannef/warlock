@@ -224,6 +224,14 @@ pub struct RaceDef {
     pub bare: Vec<SlotId>,
 }
 
+impl RaceDef {
+    /// Whether every one of the race has `skill` (its `skills`, never a chance of
+    /// `optional_skills` nor a human's `class_skill`).
+    pub fn teaches(&self, skill: SkillId) -> bool {
+        self.skills.iter().any(|&(s, _)| s == skill)
+    }
+}
+
 /// Every race, and the base every potential starts from.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Races {
@@ -234,6 +242,11 @@ pub struct Races {
 }
 
 impl Races {
+    /// The races that teach everyone `skill` ([`RaceDef::teaches`]), in file order.
+    pub fn teaching(&self, skill: SkillId) -> impl Iterator<Item = &RaceDef> {
+        self.list.iter().filter(move |r| r.teaches(skill))
+    }
+
     /// Parses `data/races.toml`; `has_vision` says whether a vision profile id exists,
     /// `size_index` where a size id is in [`super::Content::sizes`], `skill_id` which skill a
     /// skill id is, `weapon_table` the weapon skills starting ranks may name, and `resist`
