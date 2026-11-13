@@ -75,8 +75,9 @@ const LOUD_MARKS: u32 = 30;
 
 impl World {
     /// The player sets out to consume `meal`: a potion is drunk at once ([`World::drink_potion`],
-    /// spec §8 "Potions"), food is a meal. Refused, taking no time, when there is no such stack,
-    /// or it is neither food nor a potion, or it is food and nobody hungers.
+    /// spec §8 "Potions"), a magic crystal consumed at once ([`World::consume_crystal`]), food is
+    /// a meal. Refused, taking no time, when there is no such stack, or it is none of those, or
+    /// it is food and nobody hungers.
     pub(super) fn eat(&mut self, meal: Meal, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let stack = match meal {
@@ -93,6 +94,10 @@ impl World {
             });
             return Spent::Nothing;
         };
+        // A magic crystal is consumed at once (`world/crystal.rs`).
+        if (content.crystals()).is_some_and(|c| c.colour_of_object(stack.object).is_some()) {
+            return self.consume_crystal(meal, &stack);
+        }
         let def = content.object(stack.object);
         if def.drink.is_some() {
             return self.drink_potion(meal, &stack, events);

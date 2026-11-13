@@ -74,6 +74,15 @@ It has one hit point and never fights back. Killed, it leaves no corpse and is w
 experience, and killing it is killing a peaceful good soul. The road may bring it again while the
 class is still open to you.
 
+### Morwenna
+
+**Morwenna** reads [magic crystals](crystals.md). She is a deep gnome who stands by a brazier on
+the cutting floor of [Gimmwīc](ascmearc.md#gimmwīc), near Old Tregear. She has no topics and
+sells nothing, but each time you chat she tells you something about the crystals: what kinds of
+magic each colour holds, what the [rare materials](crystals.md#rare-materials) do, and what
+[consuming one](crystals.md#consuming-a-crystal) does to you. Chat with her a few times to hear
+them all.
+
 ## Services
 
 A few people sell a **service** for [gold](shops.md#money): a cure, a mending, an

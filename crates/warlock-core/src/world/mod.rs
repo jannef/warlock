@@ -129,6 +129,7 @@ mod craft_make;
 mod creation;
 mod creature_burst;
 mod creature_cast;
+mod crystal;
 mod curse;
 mod cut;
 mod dark_face;

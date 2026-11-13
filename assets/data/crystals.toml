@@ -1,0 +1,383 @@
+# Magic crystals (docs/design/enchanting.md §5, §9, §10; docs/dev/enchanting.md; the loader is
+# content/crystal.rs): six colours, one object each, no grades. A crystal is caught from a magic
+# item's affix when it is salvaged (salvage.toml, enchanting.toml), and is what the Enchanting
+# recipes bind (to come). Anyone may consume one for mana ([consume]).
+#
+# [[colour]]  the colours, in order; the order is the rule: a creature's colour is the first
+#             colour one of whose tags it carries, and an affix's colour is the first colour whose
+#             families hold its category. Each has:
+#   id        the colour's id (unique)
+#   name      the colour in words ("red")
+#   object    the crystal object of the colour (objects/; it must stack)
+#   nature    what the colour is, in words ("the blood and the fire"), for the wiki
+#   tags      creature tags (creatures/; each carried by some creature): whose nature it is
+#   families  affix categories (affixes/; each some affix's): what an enchanter may roll with it.
+#             Every category of every affix is in at least one colour, else it could never be
+#             enchanted. A category may be in two.
+#
+# [[family]]  each affix category once, with the words a seal names it by ("fire", "the
+#             critical"): `category` and `word`. Every category of every affix has one.
+#
+# [yield]     the crystals a creature leaves to the Soulglass spell (to come): one, and one more
+#             from each of `levels` its level reaches (one, two from level 10, three from 20).
+#
+# [rare]      the rare materials (heart_crystal.toml, soul_fetter.toml):
+#   materials        the two objects, drawn at even odds where one is given
+#   level, chance    Soulglass on a creature of `level` or more: a `chance` % draw for one
+#   dragon           the one a creature tagged `dragon` always gives
+#   salvage_level    salvaging a rare (identified or not) of this item level or more: after its affixes'
+#   salvage_chance   checks, a `salvage_chance` % draw for one
+#
+# [consume]   consuming a crystal (from the Consume list, `e`, beside food and potions;
+#             world/crystal.rs):
+#   mana      the mana it gives, never past the maximum (flat, whatever the colour)
+#   marks     the Willpower training marks it gives (stats.toml's `consumed` use, each with
+#             that rule's chance): a tenth of a point's price at an average score (120 at 10)
+
+[[colour]]
+id = "black"
+name = "black"
+object = "crystal_black"
+nature = "the grave and the shadow"
+tags = ["undead", "skeleton", "spirit", "demon", "devil", "yugoloth", "fiend", "cultist", "hag"]
+families = [
+    "necrotic_damage", "necrotic_resistance", "poison_damage", "critical_chance",
+    "critical_multiplier", "mana_on_kill", "stamina_on_kill", "stealth", "steal", "openings",
+    "spell_critical",
+]
+
+# Never `life` or `life_regeneration` (the owner's rule).
+[[colour]]
+id = "blue"
+name = "blue"
+object = "crystal_blue"
+nature = "the mind and the frost"
+tags = ["caster", "drow", "ice", "water", "air", "lightning", "elemental"]
+families = [
+    "mana", "mana_regeneration", "mana_cost", "spell_power", "spell_to_hit", "spell_reach",
+    "spell_duration", "spell_armour", "spell_critical", "wand_rungs", "intelligence", "willpower",
+    "cold_damage", "cold_resistance", "electricity_damage", "electricity_resistance", "deflection",
+    "focus", "ki", "inspiration", "decipher_script",
+]
+
+[[colour]]
+id = "white"
+name = "white"
+object = "crystal_white"
+nature = "the ward and the light"
+tags = ["priest", "earth", "construct", "duergar"]
+families = [
+    "armour", "protection", "shield", "parry", "deflection", "natural_armour", "max_dexterity",
+    "durability", "proof", "weight", "light", "force_resistance", "necrotic_resistance", "disease",
+    "heal", "life", "life_regeneration", "willpower", "presence", "spell_armour", "focus",
+]
+
+# Never `mana`, `mana_regeneration`, or `mana_cost` (the owner's rule).
+[[colour]]
+id = "red"
+name = "red"
+object = "crystal_red"
+nature = "the blood and the fire"
+tags = [
+    "fire", "fire-thing", "dragon", "troll", "ogre", "giant", "orc", "hobgoblin", "outlaw", "beast",
+]
+families = [
+    "physical_damage", "extra_damage", "accuracy", "critical_chance", "critical_multiplier",
+    "attack_speed", "range", "draw", "kick", "carrying", "fire_damage", "fire_resistance",
+    "strength", "toughness", "life", "life_regeneration", "rage", "stamina", "stamina_cost",
+    "stamina_pace", "stamina_on_kill", "parry",
+]
+
+[[colour]]
+id = "green"
+name = "green"
+object = "crystal_green"
+nature = "the venom and the quickness"
+tags = ["vermin", "marsh-thing", "eyeless", "kobold", "goblin", "archer"]
+families = [
+    "poison_damage", "poison_resistance", "acid_damage", "acid_resistance", "dexterity", "dodge",
+    "movement_speed", "attack_speed", "range", "max_dexterity", "natural_armour", "weight",
+    "stealth", "steal", "openings", "open_lock", "disable_device", "traps", "tumble", "balance",
+    "athletics", "survival", "search", "spot", "listen", "hunger", "disease", "potions",
+]
+
+[[colour]]
+id = "gold"
+name = "gold"
+object = "crystal_gold"
+nature = "the craft and the fortune"
+tags = ["fey", "summoner"]
+families = [
+    "negotiation", "appraise", "presence", "inspiration", "decipher_script", "digging",
+    "durability", "proof", "carrying", "kick", "accuracy", "potions", "wand_rungs", "open_lock",
+    "disable_device", "traps", "search", "spot", "hunger",
+]
+
+# The families in words, by category id.
+[[family]]
+category = "accuracy"
+word = "the true aim"
+[[family]]
+category = "acid_damage"
+word = "acid"
+[[family]]
+category = "acid_resistance"
+word = "the ward against acid"
+[[family]]
+category = "appraise"
+word = "the appraising eye"
+[[family]]
+category = "armour"
+word = "armour"
+[[family]]
+category = "athletics"
+word = "the leap and the climb"
+[[family]]
+category = "attack_speed"
+word = "the quick blow"
+[[family]]
+category = "balance"
+word = "balance"
+[[family]]
+category = "carrying"
+word = "the strong back"
+[[family]]
+category = "cold_damage"
+word = "frost"
+[[family]]
+category = "cold_resistance"
+word = "the ward against cold"
+[[family]]
+category = "critical_chance"
+word = "the critical"
+[[family]]
+category = "critical_multiplier"
+word = "the brutal blow"
+[[family]]
+category = "decipher_script"
+word = "old writing"
+[[family]]
+category = "deflection"
+word = "the turning of missiles"
+[[family]]
+category = "dexterity"
+word = "dexterity"
+[[family]]
+category = "digging"
+word = "digging"
+[[family]]
+category = "disable_device"
+word = "disarming"
+[[family]]
+category = "disease"
+word = "the ward against disease"
+[[family]]
+category = "dodge"
+word = "the dodge"
+[[family]]
+category = "draw"
+word = "the steady draw"
+[[family]]
+category = "durability"
+word = "durability"
+[[family]]
+category = "electricity_damage"
+word = "lightning"
+[[family]]
+category = "electricity_resistance"
+word = "the ward against lightning"
+[[family]]
+category = "extra_damage"
+word = "the heavy blow"
+[[family]]
+category = "fire_damage"
+word = "fire"
+[[family]]
+category = "fire_resistance"
+word = "the ward against fire"
+[[family]]
+category = "focus"
+word = "focus"
+[[family]]
+category = "force_resistance"
+word = "the ward against force"
+[[family]]
+category = "heal"
+word = "the leech"
+[[family]]
+category = "hunger"
+word = "hunger"
+[[family]]
+category = "inspiration"
+word = "inspiration"
+[[family]]
+category = "intelligence"
+word = "intelligence"
+[[family]]
+category = "ki"
+word = "ki"
+[[family]]
+category = "kick"
+word = "the kick"
+[[family]]
+category = "life"
+word = "life"
+[[family]]
+category = "life_regeneration"
+word = "mending"
+[[family]]
+category = "light"
+word = "light"
+[[family]]
+category = "listen"
+word = "listening"
+[[family]]
+category = "mana"
+word = "mana"
+[[family]]
+category = "mana_cost"
+word = "thrift with mana"
+[[family]]
+category = "mana_on_kill"
+word = "mana from the slain"
+[[family]]
+category = "mana_regeneration"
+word = "mana's return"
+[[family]]
+category = "max_dexterity"
+word = "suppleness"
+[[family]]
+category = "movement_speed"
+word = "speed"
+[[family]]
+category = "natural_armour"
+word = "a hardened hide"
+[[family]]
+category = "necrotic_damage"
+word = "withering"
+[[family]]
+category = "necrotic_resistance"
+word = "the ward against withering"
+[[family]]
+category = "negotiation"
+word = "haggling"
+[[family]]
+category = "open_lock"
+word = "lockpicking"
+[[family]]
+category = "openings"
+word = "guile"
+[[family]]
+category = "parry"
+word = "the parry"
+[[family]]
+category = "physical_damage"
+word = "the edge"
+[[family]]
+category = "poison_damage"
+word = "venom"
+[[family]]
+category = "poison_resistance"
+word = "the ward against poison"
+[[family]]
+category = "potions"
+word = "potions"
+[[family]]
+category = "presence"
+word = "presence"
+[[family]]
+category = "proof"
+word = "proofing"
+[[family]]
+category = "protection"
+word = "protection"
+[[family]]
+category = "rage"
+word = "rage"
+[[family]]
+category = "range"
+word = "reach"
+[[family]]
+category = "search"
+word = "searching"
+[[family]]
+category = "shield"
+word = "the shield"
+[[family]]
+category = "spell_armour"
+word = "casting in armour"
+[[family]]
+category = "spell_critical"
+word = "the baleful spell"
+[[family]]
+category = "spell_duration"
+word = "lingering spells"
+[[family]]
+category = "spell_power"
+word = "spell power"
+[[family]]
+category = "spell_reach"
+word = "far casting"
+[[family]]
+category = "spell_to_hit"
+word = "the aimed spell"
+[[family]]
+category = "spot"
+word = "keen sight"
+[[family]]
+category = "stamina"
+word = "stamina"
+[[family]]
+category = "stamina_cost"
+word = "ease"
+[[family]]
+category = "stamina_on_kill"
+word = "stamina from the slain"
+[[family]]
+category = "stamina_pace"
+word = "breath"
+[[family]]
+category = "steal"
+word = "the light finger"
+[[family]]
+category = "stealth"
+word = "stealth"
+[[family]]
+category = "strength"
+word = "strength"
+[[family]]
+category = "survival"
+word = "the wild"
+[[family]]
+category = "toughness"
+word = "toughness"
+[[family]]
+category = "traps"
+word = "wariness of traps"
+[[family]]
+category = "tumble"
+word = "the tumble"
+[[family]]
+category = "wand_rungs"
+word = "wands"
+[[family]]
+category = "weight"
+word = "lightness"
+[[family]]
+category = "willpower"
+word = "willpower"
+
+[yield]
+levels = [10, 20]
+
+[rare]
+materials = ["heart_crystal", "soul_fetter"]
+level = 15
+chance = 10
+dragon = "heart_crystal"
+salvage_level = 10
+salvage_chance = 3
+
+[consume]
+mana = 6
+marks = 12

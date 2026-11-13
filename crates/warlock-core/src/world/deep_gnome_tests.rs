@@ -66,7 +66,7 @@ fn the_town_is_peaceful_and_its_people_are_deep_gnomes() {
         );
     }
     let npcs: Vec<&str> = townsfolk.iter().filter_map(|a| a.npc.as_deref()).collect();
-    for npc in ["kerensa", "peran", "senara", "tregear"] {
+    for npc in ["kerensa", "morwenna", "peran", "senara", "tregear"] {
         assert!(npcs.contains(&npc), "{npc}: {npcs:?}");
     }
 }

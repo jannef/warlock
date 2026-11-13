@@ -43,7 +43,7 @@ pub(super) fn creatures(content: &Content) -> String {
 fn creature_table(content: &Content, campaign: Option<&str>) -> String {
     let mut out = String::from(
         "| Creature | Glyph | Faction | Toward you | Attacks | Opens doors | Carries a light | \
-         Drops magic | Gear |\n|---|:---:|---|---|---|:---:|:---:|:---:|---|\n",
+         Drops magic | Crystal | Gear |\n|---|:---:|---|---|---|:---:|:---:|:---:|:---:|---|\n",
     );
     let player = content.creature_id("player");
     let theirs = (listed(content).into_iter()).filter(|(_, c)| c.campaign.as_deref() == campaign);
@@ -88,9 +88,14 @@ fn creature_table(content: &Content, campaign: Option<&str>) -> String {
             0 => "-".to_string(),
             n => format!("{n}%"),
         };
+        // The colour of crystal its nature is (data/crystals.toml): the first whose tags it
+        // carries.
+        let crystal = (content.crystals())
+            .and_then(|k| k.colour_of(content, id))
+            .map_or_else(|| "-".into(), |k| link(Term::Crystal, &k.id, &k.name));
         let _ = writeln!(
             out,
-            "| {} | {} | {faction} | {stance} | {attacks} | {} | {} | {drops} | {} |",
+            "| {} | {} | {faction} | {stance} | {attacks} | {} | {} | {drops} | {crystal} | {} |",
             anchored(Term::Creature, &c.id, &capital(&c.name)),
             glyph(c.glyph),
             yes(c.opens_doors),

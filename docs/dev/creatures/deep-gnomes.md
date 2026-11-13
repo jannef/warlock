@@ -26,7 +26,12 @@ from the Scouse of the surface gnomes.
 All campaign-owned, in `assets/campaigns/ascmearc/data/creatures/` (`deep_gnome*`), tag
 `deep-gnome`:
 
-- `deep_gnome`: the townsfolk, peaceful; one-liners and mutters, no topics.
+- `deep_gnome`: the townsfolk, peaceful; one-liners and mutters, no topics. One of them is
+  Morwenna (`npc = "morwenna"`, #1428), the crystal-reader by the cutting floor's east brazier:
+  her rotating lines hint, in words, what each magic crystal colour binds (the families of
+  `data/crystals.toml`), what the heart-crystal and the soul-fetter do, and what consuming a
+  crystal does (`docs/dev/enchanting.md`); no topics, no services. Her lines are written by hand:
+  change them with the colours' families.
 - `deep_gnome_headman`: Headman Peran (`npc = "peran"`), Gimmwīc's leader in its moot hall;
   topics on the town, the surface, and the deep; Factor Wulfrun's letter (`gnome_letter`, #1435)
   is delivered to him, and he gives its answer back (`gnome_reply`; `docs/dev/campaign.md`).

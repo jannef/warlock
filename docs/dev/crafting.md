@@ -800,9 +800,14 @@ is not listed): `seconds = 600`, `difficulty = 12`, `yield = 50`.
   improvements, rung, and charges go with the item; its name is the lore's title, so an
   unidentified item is never named. What is saved joins the pack ("You save X and Y.", or
   "Nothing is left worth keeping.").
+- **Magic** (docs/dev/enchanting.md "Salvage's affix checks"): before the material checks,
+  `World::catch_magic` (`world/crystal.rs`) makes one Enchanting check per affix of a magic or
+  rare item, identified or not (an unidentified one's lines name no affix), each made a crystal
+  of the affix's colour, and a deep rare's chance of a rare material; the crystals join the saved
+  list after the materials.
 - **Marks**: `Use::Salvage` on each distinct profession rolled, that skill alone
-  (`World::train_skill`, a filter on `World::train`'s loop); untrained skills get none. No noise,
-  no alignment.
+  (`World::train_skill`, a filter on `World::train`'s loop), and on Enchanting when an affix
+  check was made; untrained skills get none. No noise, no alignment.
 - **Tests**: `world/salvage_tests.rs` (the owner's ruby-tipped hardwood quarterstaff over many
   fates: both, wood only, ruby only, neither, the shattering; the cut kept; `chipped`'s ladder;
   ten minutes; one of a stack; every refusal with no time, unpaid goods in Grimbold's shop; an
