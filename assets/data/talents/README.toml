@@ -38,6 +38,9 @@
 #                   lucky = true                         born on a lucky day
 #                   creation = true                      only at character creation (the
 #                                                        creation picks), never a level's
+#                   race_lacks = "metalcraft"            not of a race whose `skills`
+#                                                        (../races.toml) name that skill;
+#                                                        asks nothing when no race's do
 #                   any_weapon_skill = { roles = ["melee"], of = ["unarmed"], rank = 3 }
 #                                                        any one of the weapon skills of those
 #                                                        roles or named, at that rank
@@ -194,6 +197,15 @@
 #                                 to max affixes (2: magic; more: rare) at that item level,
 #                                 identified, wielded in a free main hand, else carried (the
 #                                 stream character/fathers-sword/<character>)
+#   trade { skill, dice, tools }  handed out once, as it is taken (a Crafts trade): the skill
+#                                 trained at `dice` plus the holder's trade_bonus, then `tools`,
+#                                 kit lines as ../classes/ write them (`"piece:steel*3"`,
+#                                 `{ wield = "pick_axe" }`), each carried, worn, or wielded, their
+#                                 labelled types known (the stream
+#                                 character/trade/<character>/<skill>); the skill stays a trade
+#                                 of the holder's: a level-up roll on it throws the die one step
+#                                 up, as a class's known-for skill does
+#   trade_bonus { value }         added to the dice of each trade it takes as it is handed down
 #   loot_magic_percent { value }  loot it finds and creatures drop: the weights of the rarities
 #                                 better than the least the find may be, that percent more
 #   read_percent { value }        reading a scroll takes that percent more time (negative: less)

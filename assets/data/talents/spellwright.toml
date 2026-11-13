@@ -1,0 +1,11 @@
+# A Crafts trade (the craftsperson design §3): a craftsperson's creation pick, never one the race
+# teaches everyone; trains Enchanting at 3d6 and hands down the tools of the trade
+# (world/trade.rs). A scroll of identify, known by its name.
+[[talent]]
+id = "spellwright"
+name = "Spellwright"
+tree = "crafts"
+description = "You were apprenticed to a spellwright: you start trained in Enchanting, with a scroll of identify, and your enchanting grows as a spellwright's does."
+needs = { creation = true, class = "craftsperson", race_lacks = "enchanting" }
+effects = [{ kind = "trade", skill = "enchanting", dice = "3d6", tools = ["scroll_of_identify"] }]
+systems = ["skills"]

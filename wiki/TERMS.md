@@ -175,6 +175,7 @@ above.
 | Alignment, good, evil, band | `alignment.md`, `alignment.md#what-moves-you` |
 | Talent, prerequisites | `talents.md`, `talents.md#choices-and-prerequisites` (a talent: its row) |
 | Racial talents | `talents.md#racial-talents` |
+| Trade, Crafts, the tools of the trade (Smith, Wright, Gemcutter, Brewster, Pitman, Wortcunner, Spellwright) | `talents.md#crafts-a-craftspersons-trades` (a trade: its row) |
 | A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents.md#delver` |
 | Class abilities | `talents.md#class-abilities`, `abilities.md` |
 | The bard, a bard's cap at 30, Travelled hands, Jack of all trades | `classes.md#bard` |

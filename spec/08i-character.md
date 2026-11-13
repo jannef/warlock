@@ -873,6 +873,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     them, never Strained. (Favoured
     child, which doubled the background story's luckier odds, was cut in #787 with its
     `background` system: no talent is left on the story's draw.)
+  - **Crafts** (`world/trade.rs`; #1418, the craftsperson design §3, §4): the trades, one per
+    profession skill: **Smith** (Metalcraft), **Wright** (Woodcraft), **Gemcutter**
+    (Jewelcraft), **Brewster** (Alchemy), **Pitman** (Mining), **Wortcunner** (Herbalism), and
+    **Spellwright** (Enchanting). Only a craftsperson's creation picks offer them (`needs = {
+    creation = true, class = "craftsperson" }`), and never a trade the race teaches everyone
+    (`race_lacks`: its `skills` in `races.toml`, never a chance or a human's class skill; "not to
+    be a dwarf or a duergar"). A trade is handed out once, as it is taken (`trade`): its skill
+    trained at `3d6` plus any trade bonus, then the tools of the trade (kit lines: three steel
+    ingots; four wood billets and a sinew; an uncut garnet or zircon; two moonwort and two
+    glowcaps; a pick-axe, readied if the Tool slot is free; two comfrey and a vervain; a scroll
+    of identify), each from the stream `character/trade/<race>,<gender>,<class>/<skill>`, so no
+    other roll moves. A level-up roll on a trade throws the die one step up, as on a skill the
+    class is known for (never two steps). The craftsperson class is hidden from New run until
+    #1419.
   - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
     lowered later keeps the talent): other talents (a talent with a choice may be
     needed only by one of the same choice, taken for the same), stat **scores** (the stored

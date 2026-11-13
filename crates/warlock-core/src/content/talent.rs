@@ -462,6 +462,20 @@ pub enum TalentEffect {
         max: u8,
         level: u8,
     },
+    /// Handed out once, as it is taken (a Crafts trade: Smith, Wright, ...; `world/trade.rs`):
+    /// `skill` trained at `dice` plus the holder's `trade_bonus`, rolled from the stream
+    /// `character/trade/<race>,<gender>,<class>/<skill>`, and the tools of the trade, kit lines
+    /// (`content/kit.rs`) made from the same stream and carried, worn, or wielded as they say.
+    /// The skill is then a trade of the holder's: a level-up roll on it throws the die one step
+    /// up, as a class's known-for skill does (`TalentMods::trades`, read in `skill_roll`).
+    Trade {
+        skill: String,
+        dice: Dice,
+        #[serde(default)]
+        tools: Vec<super::kit::KitLineSpec>,
+    },
+    /// Added to the dice of every trade it takes, as the trade is handed down (Time served).
+    TradeBonus { value: i32 },
     /// The actor notices hidden things in passing as if trained in Spot and Detect traps, with
     /// this much added.
     Notice { value: i32 },
@@ -1295,13 +1309,14 @@ impl TalentEffect {
     }
 
     /// Whether it is handed down once as it is taken (`world/heirloom.rs`): Family wealth's gold
-    /// and gems, Father's sword's heirloom.
+    /// and gems, Father's sword's heirloom, a trade's skill and tools.
     pub fn is_handed_down(&self) -> bool {
         matches!(
             self,
             TalentEffect::StartingGold { .. }
                 | TalentEffect::StartingGems { .. }
                 | TalentEffect::Heirloom { .. }
+                | TalentEffect::Trade { .. }
         )
     }
 
@@ -1326,6 +1341,8 @@ impl TalentEffect {
                     | TalentEffect::StartingGold { .. }
                     | TalentEffect::StartingGems { .. }
                     | TalentEffect::Heirloom { .. }
+                    | TalentEffect::Trade { .. }
+                    | TalentEffect::TradeBonus { .. }
                     | TalentEffect::TerrainAs { .. }
                     | TalentEffect::Scent { .. }
                     | TalentEffect::NightSight { .. }
@@ -1444,6 +1461,8 @@ impl TalentEffect {
                 // Its weapons are checked once the objects load (`check_heirlooms`).
                 Ok(())
             }
+            // Its tools are checked once the objects load (`check_trades`).
+            TalentEffect::Trade { skill: name, .. } => skill(name),
             TalentEffect::WeaponRanks { skills, .. } => {
                 skills.iter().try_for_each(|id| weapon_skill(id))
             }
@@ -1600,6 +1619,9 @@ pub enum Need {
     Level(u8),
     /// A race, by id.
     Race(String),
+    /// Not of a race whose people all have this skill (`skills` in `races.toml`: a dwarf's
+    /// Metalcraft): a Crafts trade is never one the race teaches everyone.
+    RaceLacks(SkillId),
     /// Eyes: the race's vision profile, any one of these ids.
     Eyes(Vec<String>),
     /// A class, by id.
@@ -1637,6 +1659,12 @@ impl Need {
             Need::Class(id) => {
                 let name = content.class(id).map_or(id.as_str(), |c| c.name.as_str());
                 format!("to be {} {}", article(name), name.to_lowercase())
+            }
+            Need::RaceLacks(skill) => {
+                let races: Vec<String> = (content.races().teaching(*skill))
+                    .map(|r| format!("{} {}", article(&r.name), r.name.to_lowercase()))
+                    .collect();
+                format!("not to be {}", crate::talent::list_with(&races, "or"))
             }
             Need::Eyes(ids) => {
                 let names: Vec<String> = (ids.iter())
@@ -1691,6 +1719,8 @@ pub struct Needs {
     /// 0 asks nothing.
     pub level: u8,
     pub race: Option<String>,
+    /// A skill the race must not teach everyone (`race_lacks`); left out when no race does.
+    pub race_lacks: Option<SkillId>,
     /// The race's vision profiles, any one of which will do; empty asks nothing.
     pub eyes: Vec<String>,
     pub class: Option<String>,
@@ -1724,6 +1754,7 @@ impl Needs {
         let chosen = self.chosen.map(Need::Chosen);
         let level = (self.level > 0).then_some(Need::Level(self.level));
         let race = self.race.clone().map(Need::Race);
+        let race_lacks = self.race_lacks.map(Need::RaceLacks);
         let eyes = (!self.eyes.is_empty()).then(|| Need::Eyes(self.eyes.clone()));
         let class = self.class.clone().map(Need::Class);
         let animal = self.animal.clone().map(Need::Animal);
@@ -1739,6 +1770,7 @@ impl Needs {
             .chain(chosen)
             .chain(level)
             .chain(race)
+            .chain(race_lacks)
             .chain(eyes)
             .chain(class)
             .chain(animal)
@@ -2014,6 +2046,8 @@ struct NeedsSpec {
     chosen: Option<u8>,
     level: u8,
     race: Option<String>,
+    /// A skill the race must not teach everyone (a Crafts trade's own).
+    race_lacks: Option<String>,
     /// One vision profile or several, any one of which will do.
     eyes: Option<OneOrMany>,
     class: Option<String>,
@@ -2136,6 +2170,16 @@ fn resolve_needs(
     {
         return Err(format!("needs an unknown class `{class}`"));
     }
+    // A skill no race teaches everyone asks nothing: the need is left out, and so are its words.
+    let race_lacks = match &spec.race_lacks {
+        Some(_) if content.skills().is_empty() => None,
+        Some(name) => {
+            let id = (content.skill_id(name))
+                .ok_or_else(|| format!("`race_lacks`: unknown skill `{name}`"))?;
+            content.races().teaching(id).next().map(|_| id)
+        }
+        None => None,
+    };
     let eyes = spec.eyes.as_ref().map_or(&[][..], OneOrMany::ids).to_vec();
     if let Some(unknown) = eyes.iter().find(|e| content.vision(e).is_none()) {
         return Err(format!("needs unknown eyes `{unknown}` (a vision profile)"));
@@ -2157,6 +2201,7 @@ fn resolve_needs(
         chosen: spec.chosen,
         level: spec.level,
         race: spec.race,
+        race_lacks,
         eyes,
         class: spec.class,
         animal: spec.animal,
@@ -2186,6 +2231,20 @@ pub(super) fn check_heirlooms(content: &Content) -> Result<(), String> {
                         def.id
                     ));
                 }
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Every `trade` effect's tools are kit lines that resolve (objects load after the talents):
+/// the first that does not, in words.
+pub(super) fn check_trades(content: &Content) -> Result<(), String> {
+    for (_, def) in content.talents().iter() {
+        for effect in &def.effects {
+            if let TalentEffect::Trade { tools, .. } = effect {
+                (content.kit_lines(tools))
+                    .map_err(|m| format!("talent `{}`: `trade`: {m}", def.id))?;
             }
         }
     }
@@ -2553,6 +2612,66 @@ systems = ["hit_points"]
             ))
             .contains("not in the list")
         );
+    }
+
+    #[test]
+    fn a_trade_names_its_skill_and_tools_and_the_races_it_is_closed_to() {
+        let trade = |needs: &str, effect: &str| {
+            let text = format!(
+                "[[talent]]\nid = \"x\"\nname = \"X\"\ntree = \"vigour\"\ndescription = \"d\"\n\
+                 systems = [\"hit_points\"]\nneeds = {{ {needs} }}\neffects = [{effect}]\n"
+            );
+            load(
+                SETTINGS,
+                &[("healthy", HEALTHY), ("hardy", HARDY), ("x", &text)],
+            )
+        };
+        let smith = r#"{ kind = "trade", skill = "metalcraft", dice = "3d6", tools = ["piece*3", { wield = "pick_axe" }, "gem:garnet:uncut|gem:zircon:uncut"] }"#;
+        let content = trade(r#"creation = true, race_lacks = "metalcraft""#, smith).expect("loads");
+        let book = content.talents();
+        let def = book.get(book.id("x").expect("x"));
+        let metalcraft = content.skill_id("metalcraft").expect("metalcraft");
+        assert!(def.needs.iter().any(|n| n == Need::RaceLacks(metalcraft)));
+        assert!(def.effects[0].is_handed_down());
+        // Its words name every race whose people all have the skill, in file order.
+        assert_eq!(
+            Need::RaceLacks(metalcraft).words(&content),
+            "not to be a dwarf or a duergar"
+        );
+        // A skill no race teaches everyone asks nothing: the need is left out.
+        let content = trade(r#"race_lacks = "woodcraft""#, smith).expect("loads");
+        let book = content.talents();
+        assert!(book.get(book.id("x").expect("x")).needs.is_empty());
+        for (needs, effect, why) in [
+            (
+                r#"race_lacks = "smithing""#,
+                smith,
+                "unknown skill `smithing`",
+            ),
+            (
+                "",
+                r#"{ kind = "trade", skill = "smithing", dice = "3d6" }"#,
+                "unknown skill",
+            ),
+            (
+                "",
+                r#"{ kind = "trade", skill = "mining", dice = "3d6", tools = ["spork"] }"#,
+                "unknown object `spork`",
+            ),
+            (
+                "",
+                r#"{ kind = "trade", skill = "mining", dice = "3d6", tools = ["gem:garnet:shiny"] }"#,
+                "no cut",
+            ),
+            (
+                "",
+                r#"{ kind = "trade", skill = "mining", dice = "3d6", while = "raging" }"#,
+                "while",
+            ),
+        ] {
+            let e = err(trade(needs, effect));
+            assert!(e.contains(why), "{effect}: {e}");
+        }
     }
 
     #[test]

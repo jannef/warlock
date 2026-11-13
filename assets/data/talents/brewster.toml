@@ -1,0 +1,11 @@
+# A Crafts trade (the craftsperson design §3): a craftsperson's creation pick, never one the race
+# teaches everyone; trains Alchemy at 3d6 and hands down the tools of the trade
+# (world/trade.rs). Two sprigs of moonwort and two glowcaps: a potion of healing's and a potion of mana's herbs.
+[[talent]]
+id = "brewster"
+name = "Brewster"
+tree = "crafts"
+description = "You were apprenticed to a brewster: you start trained in Alchemy, with moonwort and glowcaps for a draught or two, and your brewing grows as a brewster's does."
+needs = { creation = true, class = "craftsperson", race_lacks = "alchemy" }
+effects = [{ kind = "trade", skill = "alchemy", dice = "3d6", tools = ["moonwort*2", "glowcap*2"] }]
+systems = ["skills"]

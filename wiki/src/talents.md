@@ -124,6 +124,33 @@ give comes at once, on top of your [starting kit](starting-kit.md).
 
 {{#include generated/talents-heirlooms.md}}
 
+## Crafts: a craftsperson's trades
+
+The **Crafts** tree holds the trades: one for each [profession](crafting.md#who-works-what) skill.
+Only a [craftsperson](classes.md#craftsperson) may take one, and only at
+[character creation](character.md). No other class is offered them, and no later level is. A
+craftsperson may spend any of their creation picks on trades, so a human craftsperson may set out
+with three. For now New run does not offer the craftsperson, so nobody can take a trade there yet.
+
+A trade is never one your [race](races.md) already gives everyone. A
+[dwarf](races.md#race-dwarf) is born to [Metalcraft](skills.md#skill-metalcraft) and
+[Mining](skills.md#skill-mining), so Smith and Pitman are closed to them. The Talents page says
+so: "you need not to be a dwarf or a duergar". A skill a race gives only by chance (a human's
+extra class skill, say) does not count.
+
+Taking a trade does three things:
+
+- It **trains the skill** at `3d6` (3 to 18), rolled once as you take it. If you have the skill
+  already, the roll adds to it.
+- It gives you the **tools of the trade**, on top of your [starting kit](starting-kit.md). A
+  pick-axe is readied in the Tool [slot](equipment.md#what-fits-where) if your kit left it free,
+  and carried otherwise. A scroll is known by its name from the start.
+- The skill **grows faster**: a [skill roll](skills.md#getting-better) on it throws the
+  die one step up the ladder, as on a skill your [class](classes.md) is known for. A skill that is
+  both rolls one step up, not two.
+
+{{#include generated/crafts-trades.md}}
+
 ## Racial talents
 
 The **Racial** tree holds what each people is good at. Every talent in it asks for its
