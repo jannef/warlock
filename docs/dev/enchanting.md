@@ -78,12 +78,13 @@ are plain again.
 ## What the player sees
 
 The item description (`magic/describe.rs::appraised_for`, through `Appraisal::capacity`) adds one
-line after the affixes, before a unique's power and lore, only for a character trained in Appraise
-(any value above 0; `PerceptionView::appraisal`): `It can bear two enchantments.` for a plain item
+line after the affixes, before a unique's power and lore, only for a holder of Eye for the make
+(the craftsperson's talent, `TalentMods::eye_for_make`) or a character trained in Appraise (any
+value above 0); `PerceptionView::appraisal` is the one read: `It can bear two enchantments.` for a plain item
 or one whose magic is unidentified (the count of its affixes stays hidden), `It bears one
 enchantment and could bear one more.`, `It bears all it can.`, `It bears more than its make should
-hold.` Everyone else is never told. Eye for the make (the craftsperson's talent, a later issue)
-adds its holder.
+hold.` Everyone else is never told (`world/appraise_tests.rs`,
+`world/craftsperson_tests.rs::eye_for_the_make_tells_the_capacity_without_appraise`).
 
 The dumps show the truth: the `inventory` layer adds `(holds 1/2)` (affixes held / capacity) to
 every base item, and the `actors` layer's items (`Stack::describe_truth`) the same.

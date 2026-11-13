@@ -160,7 +160,7 @@ impl World {
 
     /// The talents the player may take now for a bonus pick of total level `level`, with their
     /// choices.
-    fn bonus_offers_at(&self, level: u8) -> Vec<(TalentId, Vec<Option<String>>)> {
+    pub(super) fn bonus_offers_at(&self, level: u8) -> Vec<(TalentId, Vec<Option<String>>)> {
         let trees = self.bonus_trees_at(level);
         (talent::offers(&self.content, &self.candidate()).into_iter())
             .filter(|(id, _)| self.fits_bonus(&trees, *id))

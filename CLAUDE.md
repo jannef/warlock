@@ -60,8 +60,8 @@ Game flags (`cargo run -p warlock -- --help`):
   (default: the scenario's seed; a number, or a word hashed with FNV-1a, e.g. `--seed warlock`),
   `--character RACE,GENDER,CLASS` (e.g. `dwarf,female,warrior`; default: the scenario's
   character; like `--seed` it shapes the run other flags start and alone does not skip the menu;
-  a class closed to the race and gender, `drow,male,priest`, is refused, while the class hidden
-  from New run, the craftsperson, is taken; `assets/data/classes/README.toml`),
+  a class closed to the race and gender, `drow,male,priest`, is refused, while a class hidden
+  from New run (none is now) is taken; `assets/data/classes/README.toml`),
   `--name NAME` (the character's name, up to 20 characters; default: the scenario's for its own
   character, else one of the race's names picked from the seed; like `--character`). A run
   started with `--character` or `--name` (or from New run) has a chosen character and starts with

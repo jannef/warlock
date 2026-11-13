@@ -12,15 +12,15 @@ expression: "render(case, content.clone())"
             │                                                                          │
             │ Work                                                                     │
             │ > a - Cut           a loose gem, about 30 minutes                        │
-            │   b - Set           beyond your skill                                    │
+            │   b - Set           an item and a cut gem, about 20 minutes              │
             │ Rings                                                                    │
             │   c - Gold ring     beyond your skill                                    │
             │   d - Iron ring     no metal to hand                                     │
             │   e - Silver ring   beyond your skill                                    │
             │ Amulets                                                                  │
-            │   f - Amber amulet  beyond your skill                                    │
+            │   f - Amber amulet  no resin to hand                                     │
             │   g - Gold amulet   beyond your skill                                    │
-            │   h - Jade amulet   beyond your skill                                    │
+            │   h - Jade amulet   no stone to hand                                     │
             │                                                                          │
             │ Takes a loose gem, about 30 minutes.                                     │
             │                                                                          │
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
 
 
 
- The Hub  ·  HP 17/17  ·  MP 1/1  ·  Lv 1  ·  08:04  ·  11 Darkening, Year 1444          ? controls
+ The Hub  ·  HP 19/19  ·  MP 1/1  ·  Lv 1  ·  08:04  ·  11 Darkening, Year 1444          ? controls

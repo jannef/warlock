@@ -346,6 +346,8 @@ pub struct TalentMods {
     pub trades: Vec<SkillId>,
     /// Added to a trade's dice as the trade is handed down (Time served; `world/trade.rs`).
     pub trade_bonus: i32,
+    /// Item descriptions read an item's make (Eye for the make; `PerceptionView::describe_item`).
+    pub eye_for_make: bool,
     /// Percent more often loot it finds rolls magic and rare.
     pub loot_magic_percent: i32,
     /// Percent more time reading a scroll takes (negative: less).
@@ -1456,6 +1458,7 @@ impl TalentMods {
             // stays a trade of the holder's.
             TalentEffect::Trade { skill, .. } => self.trades.extend(content.skill_id(&skill)),
             TalentEffect::TradeBonus { value } => self.trade_bonus += value,
+            TalentEffect::EyeForMake => self.eye_for_make = true,
             // Handed out as the talent is taken (`World::take_talent`), never read after.
             TalentEffect::WeaponRanks { .. }
             | TalentEffect::TakeUpSkills { .. }

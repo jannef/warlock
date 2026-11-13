@@ -20,8 +20,7 @@ later open onto a [prestige class](prestige-classes.md).
 The first eleven classes are adventurers. The last four are everyday folk: an
 [aristocrat](classes.md#aristocrat), a [commoner](classes.md#commoner), a
 [craftsperson](classes.md#craftsperson), and a [merchant](classes.md#merchant). They were never
-trained for this, and it mostly shows. For now a new run offers the aristocrat, the commoner,
-and the merchant of them (see [Who may take which](#who-may-take-which)).
+trained for this, and it mostly shows. A new run offers all four.
 
 {{#include generated/classes.md}}
 
@@ -368,6 +367,24 @@ four times as likely as usual: about 47 % of level-ups then bring a find.
 {{#include generated/class-levels.md:commoner}}
 
 {{#include generated/class-levels.md:craftsperson}}
+
+<a id="trades"></a>**The craftsperson's trades.** A craftsperson learns no craft from the class
+itself. Instead they pick two [trades](talents.md#crafts-a-craftspersons-trades) as a new
+character, before their other [talents](talents.md): the Talents step asks "Choose a trade"
+first. Each trade trains its craft skill at `3d6`, and
+[Time served](talents.md#talent-time-served) adds 6 to that, so a trade starts at 9 to 24.
+Each also comes with the tools of the trade. A craftsperson may spend an ordinary pick on a
+third trade too. Their skills grow fast: three [skill rolls](skills.md#getting-better) a level,
+and a roll on a trade throws the die one step up.
+
+<a id="eye-for-the-make"></a>**Eye for the make** works whenever you look at an item's
+description. It adds a line on what [salvage](crafting.md#salvage) would give of it if every
+check went well, a line on how many more improvements
+[the anvil](altars-forges-springs.md#forges) (for metal) or a knife (for wood) could still give
+arms or armour, or that the thing is damaged, and a line when its main material is hard or soft
+to [work](crafting.md#who-works-what). Like [Appraise](skills.md#skill-appraise), it also tells
+you how many [enchantments the item can bear](magic-items.md#capacity). It never tells you the
+odds, or how often a smith has worked the piece before.
 
 {{#include generated/class-levels.md:merchant}}
 

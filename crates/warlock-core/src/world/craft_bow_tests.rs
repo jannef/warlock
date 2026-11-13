@@ -271,11 +271,12 @@ fn a_lute_comes_out_plain_whatever_the_margin() {
 
 #[test]
 fn a_short_bow_made_at_the_forge_replays() {
-    // The forge's craftsperson picks up the stock (wood `f`, sinew `i`) and the bench's dagger.
+    // The forge's craftsperson picks up the stock (wood `c` and sinew `d`, joining his trade's) and the
+    // bench's dagger.
     let content = Arc::new(Content::load(&ContentFiles::builtin()).expect("content"));
     let mut w = World::new(content.clone(), "forge", None).expect("world");
     let mut replay = crate::replay::Replay::new(&w);
-    let actions = "move:E pickup move:S move:S pickup craft:short_bow:f,i";
+    let actions = "move:E pickup move:S move:S pickup craft:short_bow:c,d";
     for action in crate::action::parse_actions(actions).expect("actions") {
         w.apply(&action);
         replay.push(&action, &w);

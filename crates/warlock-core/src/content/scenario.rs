@@ -43,6 +43,12 @@ pub struct ScenarioDef {
     /// a run of it told no name gives them (`character::default_name`). Filled in by the loader.
     #[serde(skip)]
     pub character_name: Option<String>,
+    /// The talents the scenario's own character picks at creation (`character = { ..,
+    /// talents = ["smith", "gemcutter"] }`): taken as a run of it starts, with or without the
+    /// starting kit, in order, before any Random picks (`world/creation.rs`). Filled in by the
+    /// loader; empty for none.
+    #[serde(skip)]
+    pub character_talents: Vec<String>,
     /// Without a character: the player's vision profile (an id in `data/vision.toml`; default
     /// `normal`).
     #[serde(default)]
@@ -112,6 +118,8 @@ struct CharacterTable {
     class: String,
     #[serde(default)]
     name: Option<String>,
+    #[serde(default)]
+    talents: Vec<String>,
 }
 
 fn default_date() -> [u32; 3] {
@@ -146,6 +154,7 @@ impl ScenarioDef {
         def.player_stats = Stats::from_data(&def.stats, &def.potential).map_err(err)?;
         if let Some(table) = def.character_table.take() {
             def.character = Some(CharacterSpec::new(table.race, table.gender, table.class));
+            def.character_talents = table.talents;
             def.character_name = match &table.name {
                 Some(name) => Some(check_name(name).map_err(err)?.to_string()),
                 None => None,

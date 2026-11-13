@@ -5,8 +5,6 @@ expression: "render(case, content.clone())"
  You see here a dagger (rare).
  You pick up a dagger (rare).
 
-
-
                   ┌─ Item ───────────────────────────────────────────────────────┐
                   │                                                              │
                   │ ) Dagger                                                     │
@@ -25,9 +23,11 @@ expression: "render(case, content.clone())"
                   │                                                              │
                   │ It can bear two enchantments.                                │
                   │                                                              │
+                  │ Taken apart, it would give a steel ingot.                    │
+                  │ It will take three more improvements at the anvil.           │
+                  │                                                              │
                   │ Esc close                                                    │
                   └──────────────────────────────────────────────────────────────┘
-
 
 
 

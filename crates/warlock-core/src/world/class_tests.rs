@@ -407,13 +407,7 @@ fn weapons_and_styles_read_the_talents_benefits() {
     let mut w = world("aristocrat");
     let duelist = w.content().weapon_skills().id("duelist").expect("duelist");
     let maces = w.content().weapon_skills().id("maces").expect("maces");
-    let long = w
-        .content()
-        .weapon_skills()
-        .id("long_blades")
-        .expect("long blades");
     let before_maces = w.state.player().benefit(w.content(), Some(maces));
-    let before_long = w.state.player().benefit(w.content(), Some(long));
     give(&mut w, "fencing");
     let duelist = &w.content().weapon_skills().skill(duelist).clone();
     let (_, ranks) = mods(&w).weapon_benefit(&duelist.id, duelist.role, 0);
@@ -421,12 +415,6 @@ fn weapons_and_styles_read_the_talents_benefits() {
     give(&mut w, "big_hands");
     let maced = w.state.player().benefit(w.content(), Some(maces));
     assert_eq!(maced.damage, before_maces.damage + 1);
-    give(&mut w, "masterwork");
-    let honed = w.state.player().benefit(w.content(), Some(long));
-    assert_eq!(
-        (honed.damage, honed.threat),
-        (before_long.damage, before_long.threat + 1)
-    );
 }
 
 #[test]
@@ -445,16 +433,10 @@ fn armour_talents_add_protection() {
         &mut w,
         &format!("equip:body:{} equip:head:{}", n - 2, n - 1),
     );
-    let p = w.state.player();
-    let pieces = (p.equipment.items().into_iter())
-        .filter(|&(_, i)| p.inventory[i].protection(w.content()) > 0)
-        .count() as i32;
-    assert!(pieces > 0);
     let worn = w.state.player().protection(w.content(), None).base;
-    give(&mut w, "sturdy_work");
-    give(&mut w, "artisan");
+    give(&mut w, "armour_drill");
     let more = w.state.player().protection(w.content(), None).base;
-    assert_eq!(more, worn + 1 + pieces, "Sturdy work, Artisan's pieces");
+    assert_eq!(more, worn + 1, "Armour drill, in body armour");
 }
 
 #[test]

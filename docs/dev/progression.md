@@ -387,16 +387,36 @@ creation pick alone (`Need::Class`, `Need::Creation`), never a level's or a bonu
 race teaches everyone is dropped at load (`resolve_needs`), so it never shows empty. The effect
 is `trade { skill, dice, tools }` (`TalentEffect::Trade`, `is_handed_down`): `World::hand_down`
 calls `World::learn_trade` (`world/trade.rs`), which rolls `dice` plus `TalentMods::trade_bonus`
-(`trade_bonus { value }`, summed; Time served's in P2) from the stream
+(`trade_bonus { value }`, summed; Time served's, the craftsperson's at level 1) from the stream
 `character/trade/<spec>/<skill>` into `Skills::add`, then makes each tool line (`KitLineSpec`,
 `Content::kit_lines`; checked once objects load, `talent::check_trades`) from the same stream,
 as a kit line is made, and puts it in the pack via `World::story_item` (readied or worn in a free
 slot, its labelled type known). The sum keeps `TalentMods::trades: Vec<SkillId>`, read once in
 `world::skill_roll` (its `trades` argument): a roll on a trade is one step up the ladder, as a
 known-for skill's (`SkillRoll::known`; `SkillRoll::trade` when the step is the trade's, not the
-class's; never two steps). The craftsperson stays hidden until P2 (#1419), which adds its two
-free trades (`creation_bonus`) and Time served. Tests: `world/trade_tests.rs`,
+class's; never two steps). Tests: `world/trade_tests.rs`,
 `content::talent::tests::a_trade_names_its_skill_and_tools_and_the_races_it_is_closed_to`.
+
+**The craftsperson's two** (#1419; the design §4, §5): the class file's `creation_bonus = {
+count = 2, trees = ["crafts"] }` (`ClassDef::creation_bonus`, `creation_trees`;
+`world/creation.rs::creation_bonus`) opens level 1's `Due` with `bonus: 2` beside
+`talents: creation_count` (`open_creation`), and `World::bonus_trees_at(1)` answers the class's
+creation trees (the level table's for every other level). The bonus machinery does the rest: a
+Crafts talent spends a bonus pick before an ordinary one (`learn`), `settle_due` drops a bonus
+pick no trade fits. `creation_offers` counts the bonus picks in what is left and offers the
+creation trees' talents alone while one is due (`creation_choices`, also what `take_random`
+draws from, so a random craftsperson gets two random trades its race allows, then its ordinary
+picks); `creation_bonus_left` is the Talents step's title ("Choose a trade"). A third trade is an
+ordinary pick. The class's level 1 abilities, granted in `begin` before the picks are taken,
+are **Time served** (`trade_bonus { value = 6 }`: each trade `3d6+6`) and **Eye for the make**
+(`eye_for_make`, `TalentMods::eye_for_make`, read once, in `PerceptionView::describe_item`,
+which adds `magic::describe::make_lines`: what salvage would give at `salvage.toml`'s yield
+(`piece::break_up`, the materials a profession works), or that the item is protected
+(`world::protected_in`, the rules' `item_protected` over perception's quests, a unique or Proof only once identified, so nothing hidden leaks) or holds nothing
+worth saving; for arms and armour `temperable` or `whittleable`, the improvements left to
+`temper.toml`'s `most` or that it is damaged, never `attempts`; the main material's `work` in
+words. No draw, no state). A scenario's own character may name its picks (`talents` in its
+`character` table; docs/dev/character-creation.md). Tests: `world/craftsperson_tests.rs`.
 No talent reads the story's draw: Hard-won and Storyteller were cut in #774, Favoured child
 (#705) in #787, and the `background` system with it.
 
@@ -464,7 +484,9 @@ Tests: `talent_wits_tests.rs` (each step's limit, penalty, price, and Defence; t
 
 The everyday folk (#246: aristocrat, commoner, craftsperson, merchant) have their tables: nine
 abilities each at 1, 6, 12, 18, 25, 32, 40, 50, 60 (34 class-tree talents, plus Riposte and
-Second wind, which their tables hand out), and bonus picks at 10, 20, 30, 45, 55. The
+Second wind, which their tables hand out), and bonus picks at 10, 20, 30, 45, 55; the
+craftsperson's table is being rebuilt (#1415: Time served and Eye for the make at 1 since #1419,
+the rest phase by phase; Sturdy work, Masterwork, and Artisan deleted). The
 warrior, berserker, paladin, and ascetic (I1) have theirs, in `world/class_active_tests.rs`; the
 ranger, thief, and bard (I2, #244) theirs, in `world/class_rogue_tests.rs` (the kill tally and
 Favoured prey, every passive, Volley and Inspire, the abilities the thief's skills give, Lurk,

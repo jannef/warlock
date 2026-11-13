@@ -115,8 +115,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`*`) or unmarks it (and the picks that needed it); one with several choices lists them in its
   place (Esc back); marking may list a talent the marks open (Healthy, then Fast healer); with
   every pick marked, the step goes on to the name. The frame says how many are left (`Choose
-  your talents (4 of 5): 2 left`). Esc goes back to the class, the marks remembered where they
-  still hold.
+  your talents (4 of 5): 2 left`); a craftsperson's two trades come first, the Crafts tree alone
+  listed under `Choose a trade (4 of 5): 2 left` until both are marked (#1419). Esc goes back to
+  the class, the marks remembered where they still hold.
   Right after the race comes **Born under the stars** (§8 "Birth sign"; `--screen sign`), which
   chooses nothing: the birth date, the sign, and the age ("You were born on 3 Seedtide 1419, in
   the year of the Metal Manticore. You are 25 years old."), the animal's and the element's lines
@@ -351,7 +352,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the same." or each affix (never the item level: a hidden number), "Prefix  Sharp: +2 damage", "Suffix  of Celerity:
   attacks faster" (affix magnitudes are item properties and shown; speed only in words; global
   attack effects say "with every attack"); an identified unique item (§8 "Magic items") adds its
-  power in words, "Power  Its every cut poisons.", and its lore as the last line. Never the
+  power in words, "Power  Its every cut poisons.", and its lore as the last line. With the
+  craftsperson's Eye for the make (§8 "Class abilities"), the item's make follows the capacity
+  line, before any power and lore: "Taken apart, it would give 2 steel ingots." (or "Nothing in it is worth saving.", "It
+  would not come apart."), "It will take two more improvements at the anvil." (or "with a
+  knife", "It can be made no finer.", "It is damaged: work at the anvil would make it good."),
+  and "Adamantium is very hard to work." where its main material is hard or soft. Never the
   player's own to-hit or a modifier (the character screen has those).
   Read-only; Esc, Back, or Enter closes it.
 - **Equipment** (`i`, ADOM's; M16), as in ADOM: the slots, lettered `a` to `m` in this order — Head, Neck,

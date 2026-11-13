@@ -1,0 +1,11 @@
+# The craftsperson's class ability from level 1 (spec §8 "Class abilities": Eye for the make;
+# the craftsperson design §7.2): passive and perception only, read by the item description
+# (`PerceptionView::describe_item`, the lines `magic/describe.rs::make_lines`).
+[[talent]]
+id = "eye_for_the_make"
+name = "Eye for the make"
+tree = "class"
+granted = true
+description = "You read an item's make at a glance: what it would come apart into, how much more work it would take, and how hard its stuff is to work."
+effects = [{ kind = "eye_for_make" }]
+systems = ["skills"]

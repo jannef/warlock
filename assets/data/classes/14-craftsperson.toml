@@ -2,33 +2,32 @@
 id = "craftsperson"
 name = "Craftsperson"
 description = "A smith, carpenter, or weaver who knows a trade inside out: sure hands, a patient mind, and few words."
-# Not offered at character creation, for now.
-hidden = true
 stats = { strength = 1, dexterity = "1d3", intelligence = 1, presence = "-1d2" }
 hp = 3
 mana = 1
 experience = 90
-skills = { metalcraft = "2d6+10", woodcraft = "2d6+10", appraise = "2d4+4", negotiation = "2d4+4" }
-known_for = ["metalcraft", "woodcraft"]
-optional_skills = { athletics = { chance = 25, dice = "2d4" }, jewelcraft = { chance = 30, dice = "2d4" }, mining = { chance = 25, dice = "2d4" }, search = { chance = 20, dice = "2d4" } }
-rolls = 2
+# No profession of its own: the two trades it takes at creation are the choice (the Crafts tree,
+# `creation_bonus`), each a trade of theirs, so a roll on one is a step up.
+skills = { appraise = "2d4+4", negotiation = "2d4+4" }
+optional_skills = { athletics = { chance = 25, dice = "2d4" }, search = { chance = 20, dice = "2d4" } }
+rolls = 3
 weapon_skills = { axes = 1 }
-# The level table (spec §8 "Class abilities"): the tricks of a trade, one by one as the levels
-# come; bonus talents from Weaponcraft, Guard, and Delver.
+# Two bonus picks at creation, of the Crafts tree: the character's two trades.
+creation_bonus = { count = 2, trees = ["crafts"] }
+# The level table (spec §8 "Class abilities"; the craftsperson design §6): the trades' start and
+# an eye for the make at level 1; bonus talents from Grit, Delver, and Scholar.
 abilities = [
-    { level = 18, talent = "sturdy_work" },
-    { level = 50, talent = "masterwork" },
-    { level = 60, talent = "artisan" },
+    { level = 1, talent = "time_served" },
+    { level = 1, talent = "eye_for_the_make" },
 ]
-bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["weaponcraft", "guard", "delver"] }
-# A hand axe, work gloves and boots, and something of their own making: the weaver's rope, the
-# cobbler's boots, or the smith's helm.
+bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["grit", "delver", "scholar"] }
+# A hand axe and a knife, work gloves, an apron, and boots.
 kit = [
     { wield = "hand_axe" },
+    "knife",
     { wear = "leather_gloves" },
     { wear = "leather_apron" },
     { wear = "leather_boots" },
-    "rope|leather_boots|iron_helm",
     "candle*2",
     "ration",
     "gold_coin*25",

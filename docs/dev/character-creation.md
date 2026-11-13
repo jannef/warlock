@@ -56,7 +56,14 @@ hunter") read it. Replays record the spec, the name (`Replay::name`), and
 whether the run started with the kit (`Replay::kit`). A run with the kit also takes its creation talents
 (`CharacterSpec::talents`, else the Random picks; the Talents step after the class,
 `ui/chargen_talents_screen.rs`, and `--talents`; `docs/dev/progression.md` "Creation picks"),
-and the summary's Talents row names them. The summary and the character screen show
+and the summary's Talents row names them. A class's `creation_bonus` (`ClassDef::creation_bonus`,
+`{ count, trees }`, `content/class.rs`: count 1 to 8, trees named and known) adds that many
+**bonus picks at level 1** from its trees, spent first (the craftsperson's two trades; same
+section). A scenario's own character may name its picks (`character = { .., talents = [..] }`,
+`ScenarioDef::character_talents`): a run of it (no character given, or the same race, gender, and class naming no picks, as a replay records it) takes them first, with or without the kit
+(`World::take_scenario_picks` without it, the rest dropped; with it the Random picks fill the
+rest), so the forge's Wulfhere smiths and works wood (Smith, Wright) and the quarry's Bram works wood and
+gems (Wright, Gemcutter) now that the craftsperson trains no profession of its own. The summary and the character screen show
 final scores only: never dice, a breakdown, a modifier, or a potential (the step screens and the
 wiki show adjustments as written in data; the wiki also gives the modifiers and the races'
 potentials exactly). Balance is not a goal; classes only adjust starting scores, give hit
@@ -72,9 +79,9 @@ paladin`, `a drow may be a priest only if female`); `ClassDef::offered_to` adds 
 closed or hidden class). `Draft::spec` falls back from a preselected class not offered (the
 scenario's, or one remembered before the race or gender changed) to the first offered.
 `CharacterSpec::check_open` (`check` plus `refuses`) is what the game's and `warlock-cli`'s
-`--character` ask; hidden classes pass it, so dev runs, tests, replays, and scenarios keep the
-craftsperson (the commoner is offered again since #1406, the merchant since #1407). A scenario's own character, a replay, and a save are never checked (the test
-world's forge and quarry keep their craftspeople). Tests: `character.rs`
+`--character` ask; hidden classes pass it (no class is hidden now: the commoner is offered again
+since #1406, the merchant since #1407, the craftsperson since #1419). A scenario's own character,
+a replay, and a save are never checked. Tests: `character.rs`
 (`classes_are_closed_to_some_races_and_genders`, `class_limits_name_known_races`),
 `chargen_screen.rs` (`the_class_step_lists_and_draws_only_classes_open_to_the_race_and_gender`),
 `warlock-cli`'s `characters_are_race_gender_class`, the text snapshots `class-screen-drow-male`
