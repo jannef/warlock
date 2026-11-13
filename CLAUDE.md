@@ -178,7 +178,7 @@ throws the player's voice to level cell (X, Y) (one they see, within 6; the bard
 with its choice) when a level's pick is due (every third level; until it is made every other
 action is refused), `advance:stealth` spends one of a level's skill rolls (on a trained skill; `world/skill_roll.rs`), `levelup:auto`
 is the dev action that spends every choice due with the first the player may take, and `xp:2500`
-the dev experience grant (no time; `xp:691` brings a 100 % character to level 3); `rank:long_blades:5`
+the dev experience grant (no time; `xp:461` brings a 100 % character to level 3); `rank:long_blades:5`
 the dev weapon rank (a weapon skill or style at that rank, 0 to 10, and
 saying what it teaches, as a rank risen would; no time; docs/dev/weapon-abilities.md); `call:hunter`
 the dev calling (the player is called into prestige class `hunter`, an id in `assets/data/prestige/`,

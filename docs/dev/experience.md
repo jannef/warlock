@@ -9,7 +9,9 @@ classes' default cap `class_max` 60): `content/experience.rs` holds the rules fr
 kills (`[kills]`: `plateau`, `ramp`, `slope_per_100`, and the creature XP `guideline`), turned
 into a threshold table once at load with exact integer math (`Experience::threshold`, rounded
 once per level from the exact fraction; a test pins the table's hash, so a deliberate change to
-the curve updates it), the early levels' discount (`[early] percent`, owner 2026-10-27: level 2
+the curve updates it), the curve's `[kills] scale` (an exact fraction `times ÷ over`, default
+1; two thirds since #1468, owner 2026-11-13: every level a third cheaper; folded into
+`kills_fraction` before the one rounding, so `kills_for` shrinks with it), the early levels' discount (`[early] percent`, owner 2026-10-27: level 2
 pays `percent[0]` % of its curve XP, level 3 `percent[1]`, and so on, levels past the list 100 %;
 folded into `kills_fraction`, so `xp_for`, `threshold`, and `kills_for` all see it; the test
 `early_levels_are_discounted` pins the owner's totals and checks that levels 12 and up cost what
