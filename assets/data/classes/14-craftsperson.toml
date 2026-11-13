@@ -19,6 +19,7 @@ creation_bonus = { count = 2, trees = ["crafts"] }
 abilities = [
     { level = 1, talent = "time_served" },
     { level = 1, talent = "eye_for_the_make" },
+    { level = 6, talent = "waste_not" },
 ]
 bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["grit", "delver", "scholar"] }
 # A hand axe and a knife, work gloves, an apron, and boots.

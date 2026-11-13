@@ -28,6 +28,7 @@ mod companion;
 mod creature;
 mod creature_rarity;
 mod creature_spells;
+mod crystal;
 mod damage_type;
 pub mod danger;
 mod decipher;
@@ -226,6 +227,7 @@ pub use creature::{
     the_start,
 };
 pub use creature_rarity::{COMMON, CreatureRarity};
+pub use crystal::{CrystalColour, Crystals, EnchantingRules, RareMaterials};
 pub use damage_type::{CharColors, DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
 pub use danger::{Count, DangerRule, PlayerScale, Spawning};
 pub use decipher::DecipherRules;
@@ -827,6 +829,11 @@ pub struct Content {
     study: Option<StudyRules>,
     /// The check of reading a scroll (`data/decipher.toml`, spec §8 "Scrolls"); none without it.
     decipher: Option<DecipherRules>,
+    /// The magic crystals' colours (`data/crystals.toml`, docs/dev/enchanting.md); none without
+    /// it.
+    crystals: Option<Crystals>,
+    /// Enchanting's numbers (`data/enchanting.toml`); none without it.
+    enchanting: Option<EnchantingRules>,
     /// What a failed study may bring (`data/mishaps/`), in path order.
     mishaps: Vec<Mishap>,
     /// The Spellcraft check every cast makes (`data/miscast.toml`, spec §8 "Spells": "Miscasts");
@@ -942,6 +949,8 @@ impl Content {
             intimidate: None,
             ruin: RuinRules::default(),
             decipher: None,
+            crystals: None,
+            enchanting: None,
             swim: None,
             ranged: RangedRules::default(),
             prayer: None,
@@ -1446,6 +1455,15 @@ impl Content {
         let path = "data/familiars.toml";
         if let Some(text) = files.get_optional(path) {
             content.familiars = Some(FamiliarRules::parse(path, text, &content)?);
+        }
+        // The crystals name objects, creature tags, and affix categories.
+        let path = "data/crystals.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.crystals = Some(Crystals::parse(path, text, &content)?);
+        }
+        let path = "data/enchanting.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.enchanting = Some(EnchantingRules::parse(path, text)?);
         }
         let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         for (path, id, text) in files.in_dir("scenarios") {
@@ -4077,6 +4095,18 @@ impl Content {
     /// it, and then every scroll simply reads.
     pub fn decipher(&self) -> Option<&DecipherRules> {
         self.decipher.as_ref()
+    }
+
+    /// The magic crystals' colours (`data/crystals.toml`): none without it, and then no crystal
+    /// is caught or consumed.
+    pub fn crystals(&self) -> Option<&Crystals> {
+        self.crystals.as_ref()
+    }
+
+    /// Enchanting's numbers (`data/enchanting.toml`): none without it, and then salvage makes no
+    /// affix checks.
+    pub fn enchanting(&self) -> Option<&EnchantingRules> {
+        self.enchanting.as_ref()
     }
 
     /// What a failed study may bring (`data/mishaps/`), in path order.

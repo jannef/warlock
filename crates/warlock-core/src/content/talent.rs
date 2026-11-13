@@ -484,6 +484,14 @@ pub enum TalentEffect {
     /// left in it, how hard its stuff is to work (Eye for the make;
     /// [`crate::magic::describe::make_lines`]).
     EyeForMake,
+    /// Nothing is wasted in its hands (Waste not): salvage gives back `salvage` % of each made
+    /// material's grams, and a failed recipe `failed` % of its stock and object inputs, each
+    /// where it is more than everyone's (`data/salvage.toml`'s, `data/recipes.toml`'s `yield`;
+    /// `world/salvage.rs::salvage_percent`, `world/craft_make.rs::failed_percent`).
+    WasteNot { salvage: u8, failed: u32 },
+    /// A failed Temper or Whittle damages nothing: the item is as it was, the attempt counted
+    /// (Waste not; `world/temper.rs`).
+    TemperSafe,
     /// The actor notices hidden things in passing as if trained in Spot and Detect traps, with
     /// this much added.
     Notice { value: i32 },

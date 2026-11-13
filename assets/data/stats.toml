@@ -266,7 +266,7 @@ on = "disarmed"
 chance = 20
 
 # Willpower: noticing, enduring, resisting, fighting hungry, spending mana, praying, struggling,
-# holding out, steadying, casting.
+# holding out, steadying, casting, consuming a crystal.
 [[training.use]]
 stat = "willpower"
 on = "spot"
@@ -295,6 +295,11 @@ chance = 30
 [[training.use]]
 stat = "willpower"
 on = "prayed"
+chance = 100
+
+[[training.use]]
+stat = "willpower"
+on = "consumed"
 chance = 100
 
 [[training.use]]

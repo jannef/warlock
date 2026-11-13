@@ -228,8 +228,8 @@ effect kinds (`potion_marks_percent`, `potion_heals`, `potion_smell`) and `World
 
 ## UI
 
-- The Consume list (`ui/object_screen.rs`, `ObjectList::Eat`) lists food and potions, floor
-  first, grouped by class (Food, then Potions). Text snapshots: `consume-list`,
+- The Consume list (`ui/object_screen.rs`, `ObjectList::Eat`) lists food and potions (and magic
+  crystals, docs/dev/enchanting.md), floor first, grouped by class (Food, then Potions). Text snapshots: `consume-list`,
   `potion-description`, `potion-description-unidentified` (`ui/screen_snapshots.rs`).
 
 ## Tests

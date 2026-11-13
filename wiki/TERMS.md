@@ -181,6 +181,7 @@ above.
 | Trade, Crafts, the tools of the trade (Smith, Wright, Gemcutter, Brewster, Pitman, Wortcunner, Spellwright) | `talents.md#crafts-a-craftspersons-trades` (a trade: its row) |
 | The craftsperson's two trades at creation, Time served | `classes.md#trades` |
 | Eye for the make, reading an item's make | `classes.md#eye-for-the-make` |
+| Waste not, nothing lost in a craftsperson's hands | `crafting.md#waste-not` |
 | A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents.md#delver` |
 | Class abilities | `talents.md#class-abilities`, `abilities.md` |
 | The bard, a bard's cap at 30, Travelled hands, Jack of all trades | `classes.md#bard` |
@@ -218,6 +219,8 @@ above.
 | Foraging | `skill-uses.md#foraging` |
 | Crafting, a craft skill, craft points, who works which material, a material's work | `crafting.md`, `crafting.md#who-works-what` |
 | Salvage, taking an item apart, a gem chipped or shattered | `crafting.md#salvage` |
+| Magic crystal, a crystal's colour, consuming a crystal | `crystals.md`, a colour `crystals.md#crystal-ID` (`crystals.md#crystal-red`), `crystals.md#consuming-a-crystal` |
+| Heart-crystal, soul-fetter (rare materials) | `crystals.md#rare-materials` |
 | Cut, gem cutting, a re-cut, a gem's cut grade | `gem-cutting.md`, `gem-cutting.md#how-well-it-comes-out` |
 | Set, setting a gem in an item, a gem chipped in the setting | `gem-cutting.md#setting-a-gem` |
 | Jewellery, making rings and amulets, a bone amulet | `crafting.md#making-jewellery` |

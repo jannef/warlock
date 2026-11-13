@@ -214,3 +214,36 @@ does = "train_skill"
 train = { skill = "jewelcraft", value = 5 }
 reply = "Right. 'Old 'un in the clamp, so. Find the grain. Small cuts, my 'ansum, small cuts, an' look after every one. There. 'Ee'll ruin a few afore 'ee make one. Everyone does."
 nothing = "'Ee can cut a stone already, emmet. I'm not teachin' 'ee twice."
+
+# Morwenna, the crystal-reader of the cutting floor (#1428): she reads the magic crystals that
+# salvage catches (docs/dev/enchanting.md) and rotates hints of what each binds, in words, never
+# numbers: every colour's families (data/crystals.toml), the heart-crystal, the soul-fetter, and
+# what consuming one does. No topics, no services.
+[[dialogue]]
+npc = "morwenna"
+name = "Morwenna"
+greet = "Crystals, is it? I read 'em, my 'ansum. Every colour 'olds its own."
+greet_evil = [
+    "Black crystals 'ee'll be after. I can smell the grave on 'ee.",
+    "I'll tell 'ee what a crystal binds. I won't tell 'ee twice, emmet.",
+]
+lines = [
+    "Black's the grave's. Rot an' poison in a blade, an' shadows to 'ide in.",
+    "Black likes a killin' blow, too. Strikes deep an' feeds 'ee for it.",
+    "Blue's the mind an' the frost. Mana, spells, cold an' lightnin'.",
+    "White wards 'ee. Armour, a shield arm, life, an' a light to see by.",
+    "Red's blood an' fire. Bite in a blade, a strong arm, a 'ot edge.",
+    "Green's venom an' quick feet. Poison, acid, an' clever fingers.",
+    "Gold's the maker's luck. A sharp eye, a good bargain, a sure 'and.",
+    "A crystal binds its own kind only. Red won't 'old frost, nor blue fire.",
+    "Take a charmed thing apart an' its magic runs to crystal. Quick, mind.",
+    "No need to know what a charm is to catch 'un. It goes all the same.",
+    "A 'eart-crystal makes room. One charm more on a rare than it 'ad.",
+    "A soul-fetter 'olds one charm fast while the rest is cast anew.",
+    "Crush a crystal an' drink it: mana back, a 'arder will. An' a stain.",
+]
+mutter = { chance = 2, lines = [
+    "...red for the blood, blue for the mind, black for the grave...",
+    "Proper colour, that. Proper job.",
+    "'Old 'un to the light... there. Green, an' a deep green.",
+] }

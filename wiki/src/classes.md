@@ -384,7 +384,12 @@ check went well, a line on how many more improvements
 arms or armour, or that the thing is damaged, and a line when its main material is hard or soft
 to [work](crafting.md#who-works-what). Like [Appraise](skills.md#skill-appraise), it also tells
 you how many [enchantments the item can bear](magic-items.md#capacity). It never tells you the
-odds, or how often a smith has worked the piece before.
+odds, or how often a smith has worked the piece before. With
+[Waste not](crafting.md#waste-not) it counts the three quarters salvage then gives back.
+
+**Waste not**, from level 6, means nothing is lost in a craftsperson's hands but time: salvage
+gives back more, a failed recipe loses none of its stock, and a failed temper spoils nothing
+(the numbers are under [Crafting](crafting.md#waste-not)).
 
 {{#include generated/class-levels.md:merchant}}
 
