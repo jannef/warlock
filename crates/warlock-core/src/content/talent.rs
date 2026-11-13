@@ -348,6 +348,9 @@ pub enum TalentEffect {
     /// (percentage points), and its magic and rare rarities `magic` percent more likely (Landed
     /// noble).
     StipendMore { gold: i32, chance: i32, magic: i32 },
+    /// A business partner in town invests the gold put with them (Invest: `data/invest.toml`,
+    /// `world/invest.rs`).
+    Invest,
     /// Hunger burns this percent faster (negative: slower).
     HungerPercent { value: i32 },
     /// The sickness rotten food gives, this percent more (negative: less), rounded down.

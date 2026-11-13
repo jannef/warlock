@@ -157,6 +157,8 @@
 #   stipend_more { gold, chance, magic }  the stipend's gold that percent more, its loot roll
 #                                 made by `chance` percentage points more often, and its magic
 #                                 and rare rarities `magic` percent more likely
+#   invest                        its business partner in town invests the gold put with them,
+#                                 every week a random return (../invest.toml, the merchant's)
 #   hunger_percent { value }      hunger burns that percent faster (negative: slower)
 #   rot_harm_percent { value }    the sickness rotten food gives, that percent more (rounded
 #                                 down; negative: less)

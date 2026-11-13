@@ -775,6 +775,16 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             signed(chance),
             percent(magic)
         ),
+        TalentEffect::Invest => match content.invest() {
+            Some(rules) => format!(
+                "your business partner invests the gold you put with them ({} % kept going in, \
+                 {} % coming out): every week it changes by {} plus {} basis points (hundredths \
+                 of a percent), {} more per quest of their town's people done and more for some \
+                 quests (see [Invest](classes.md#invest))",
+                rules.fee_in, rules.fee_out, rules.base, rules.dice, rules.per_quest
+            ),
+            None => "nothing: investing is not in this game".to_string(),
+        },
         TalentEffect::HungerPercent { value } => format!("hunger pace {}", percent(value)),
         TalentEffect::SmellRot => {
             "the eat list says whether food smells fresh, turning (old), or rotten"

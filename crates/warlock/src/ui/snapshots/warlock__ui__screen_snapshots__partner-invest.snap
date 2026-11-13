@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Your business partner says: "A word to the wise: the Holtwīc honey trade is worth watching. Your
+ stake stands at 98 gold this week." Your 2 loaves of bread have rotted away. Factor --more--
+
+
+
+
+
+
+
+
+                  ┌─ The business partner ───────────────────────────────────────┐
+                  │                                                              │
+                  │ "A word to the wise: the Holtwīc honey trade is worth        │
+                  │ watching. Your stake stands at 98 gold this week."           │
+                  │                                                              │
+                  │ > 1  Invest all your gold (24)                               │
+                  │   2  Withdraw everything (98 gold)                           │
+                  │                                                              │
+                  │ 1-2 or Enter  ask    Esc  leave                              │
+                  └──────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+ Cēaptūn  ·  HP 15/15  ·  MP 5/5  ·  Lv 1  ·  08:03  ·  11 Deepwinter  ·  Rain           ? controls

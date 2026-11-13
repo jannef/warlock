@@ -80,6 +80,7 @@ mod herbs;
 mod horoscope;
 mod hunger;
 mod intimidate;
+mod invest;
 mod item_class;
 mod kit;
 mod layer_boss;
@@ -229,8 +230,8 @@ pub use damage_type::{CharColors, DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES}
 pub use danger::{Count, DangerRule, PlayerScale, Spawning};
 pub use decipher::DecipherRules;
 pub use dialogue::{
-    Dialogue, DialogueId, GenderWords, Mutter, ServantWords, Service, ServiceKind, ServiceTraining,
-    Speaker, Topic,
+    Dialogue, DialogueId, GenderWords, Mutter, PartnerWords, ServantWords, Service, ServiceKind,
+    ServiceTraining, Speaker, Topic,
 };
 pub use disease::{DiseaseDef, DiseaseId, SOURCES, Wading};
 pub use drops::{Drop, DropFrom, DropGoods, TagDrops};
@@ -266,6 +267,7 @@ pub use hunger::{
     Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_NUTRITION, Overeating, Rotten, Starve, States,
 };
 pub use intimidate::IntimidateRules;
+pub use invest::InvestRules;
 #[cfg(test)]
 pub(crate) use item_class::BUILTIN as BUILTIN_ITEM_CLASSES;
 pub use item_class::{ItemClassDef, ItemClassId, MAX_ITEM_CLASSES};
@@ -739,6 +741,9 @@ pub struct Content {
     /// What an aristocrat's stipend grows by with each level (`data/stipend.toml`, spec §8
     /// "Class abilities": Stipend); none without the file, when it never grows.
     stipend: Option<StipendRules>,
+    /// What a merchant's investment pays and costs (`data/invest.toml`, spec §8 "Class
+    /// abilities": Invest); none without the file, when no one invests.
+    invest: Option<InvestRules>,
     /// The numbers of intimidating (`data/intimidate.toml`, spec §8 "Skills": Intimidate); none
     /// without the file, when nobody intimidates.
     intimidate: Option<IntimidateRules>,
@@ -933,6 +938,7 @@ impl Content {
             mining: None,
             feint: None,
             stipend: None,
+            invest: None,
             intimidate: None,
             ruin: RuinRules::default(),
             decipher: None,
@@ -1324,6 +1330,10 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.stipend = Some(StipendRules::parse(path, text, &content)?);
         }
+        let path = "data/invest.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.invest = Some(InvestRules::parse(path, text)?);
+        }
         let path = "data/intimidate.toml";
         if let Some(text) = files.get_optional(path) {
             content.intimidate = Some(IntimidateRules::parse(path, text, &content)?);
@@ -1498,6 +1508,7 @@ impl Content {
         content.quests = quest::parse(files.table("quests"), &content)?;
         content.guilds = guild::parse(files.table("guilds"), &content)?;
         content.towns = town::parse(files.table("towns"), &content)?;
+
         content.callings = calling::parse(files.table("callings"), &content)?;
         content.encounter_tables = encounter::parse(files.table("encounters"), &content)?;
         content.validate()?;
@@ -3347,6 +3358,12 @@ impl Content {
     /// `data/stipend.toml`); `None` without the file, when it never grows.
     pub fn stipend(&self) -> Option<&StipendRules> {
         self.stipend.as_ref()
+    }
+
+    /// What a merchant's investment pays and costs (spec §8 "Class abilities": Invest;
+    /// `data/invest.toml`); `None` without the file, when no one invests.
+    pub fn invest(&self) -> Option<&InvestRules> {
+        self.invest.as_ref()
     }
 
     /// The numbers of intimidating (spec §8 "Skills": Intimidate; `data/intimidate.toml`); `None`

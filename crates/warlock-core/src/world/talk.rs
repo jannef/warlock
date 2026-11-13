@@ -167,9 +167,12 @@ impl World {
             .and_then(|level| level.shops.iter().find(|s| s.keeper == actor.id));
         let proper =
             (self.dialogue_of(actor)).and_then(|d| self.content.dialogue(d).name.as_deref());
-        // An aristocrat's own servant is theirs: "your squire" (`stipend.rs`).
-        let servant =
-            (self.dialogue_of(actor)).is_some_and(|d| self.content.dialogue(d).stipend.is_some());
+        // An aristocrat's own servant is theirs: "your squire" (`stipend.rs`); so is a merchant's
+        // business partner (`invest.rs`).
+        let servant = (self.dialogue_of(actor)).is_some_and(|d| {
+            let d = self.content.dialogue(d);
+            d.stipend.is_some() || d.partner.is_some()
+        });
         match (keeper, proper) {
             (Some(shop), _) => shop.name.clone(),
             (None, Some(name)) => name.to_string(),
@@ -236,6 +239,7 @@ impl World {
             ware: None,
         }));
         topics.extend(self.offer_topic(actor.id, id));
+        topics.extend(self.invest_topics(id));
         topics
     }
 
@@ -259,6 +263,10 @@ impl World {
         }
         // An aristocrat's servant hands over the stipend (`stipend.rs`).
         if let Some(spent) = self.servant_chat(id, dialogue, events) {
+            return spent;
+        }
+        // A merchant's business partner says what the stake is worth (`invest.rs`).
+        if let Some(spent) = self.partner_chat(id, dialogue, events) {
             return spent;
         }
         let actor = &self.state.actors[&id];
@@ -304,6 +312,9 @@ impl World {
             return spent;
         }
         if let Some(spent) = self.ask_offer(id, dialogue, topic, events) {
+            return spent;
+        }
+        if let Some(spent) = self.ask_invest(id, dialogue, topic, events) {
             return spent;
         }
         if let Some(spent) = self.ask_calling(id, dialogue, topic, events) {

@@ -9,9 +9,11 @@
 //! `stipend/<level>`, so nothing else moves. It accumulates in [`WorldState::stipend`] (saved
 //! and hashed; left out while empty).
 //!
-//! A town's `servant` (`content/town.rs`) is placed as its level is made ([`place_servant`],
-//! one line in `travel.rs::instantiate_level`), only in a run with the ability: the creature
-//! type for the player's gender speaking the npc dialogue for their race. Chatting with anyone
+//! A town's `servant` for `stipend` (`content/town.rs`) is placed as its level is made
+//! ([`place_servant`], one line in `travel.rs::instantiate_level`), only in a run with the
+//! ability: the creature type for the player's gender speaking the npc dialogue for their race.
+//! The same placing serves every class helper keyed by its class ability (a merchant's business
+//! partner, `invest.rs`). Chatting with anyone
 //! whose dialogue has `[dialogue.stipend]` words ([`World::servant_chat`], one line in
 //! `talk.rs::chat`) hands over everything put by, with the `handover` line: the gold and the
 //! items into the pack, each set down at the player's feet instead if it would leave them
@@ -99,20 +101,19 @@ pub(crate) fn of_level(
     Some((u32::try_from(gold).unwrap_or(u32::MAX), kept))
 }
 
-/// Places the servant of every town whose `servant` waits on level `level` (just made), in a
-/// run whose character has the Stipend ability (the module docs).
+/// Places every town's class helper that waits on level `level` (just made) whose class ability
+/// the character holds: an aristocrat's servant, a merchant's business partner (`invest.rs`).
+/// The module docs.
 pub(super) fn place_servant(state: &mut WorldState, content: &Content, level: &str) {
     let Some(character) = state.character.as_ref() else {
         return;
     };
-    if !state.player().talent_mods(content).stipend {
-        return;
-    }
     let (race, gender) = (character.spec.race.clone(), character.spec.gender);
-    for town in content.towns() {
-        let Some(servant) = town.servant.as_ref().filter(|s| s.level == level) else {
+    let helpers = content.towns().iter().flat_map(|t| &t.servants);
+    for servant in helpers.filter(|s| s.level == level) {
+        if !state.player().talents.has(&servant.talent) {
             continue;
-        };
+        }
         let npc = servant.npc_for(&race).to_string();
         if (state.actors.values()).any(|a| a.npc.as_deref() == Some(npc.as_str())) {
             continue;
@@ -225,6 +226,13 @@ impl World {
             all.push(Stack::new(coin, stipend.gold));
         }
         all.extend(stipend.items);
+        self.receive(all);
+    }
+
+    /// `all` into the player's pack, or at their feet each stack that would overload them, and
+    /// says so: a servant's handover, a partner's withdrawal (`invest.rs`).
+    pub(super) fn receive(&mut self, all: Vec<Stack>) {
+        let content = self.content.clone();
         let (mut taken, mut left) = (Vec::new(), Vec::new());
         for stack in all {
             let load = self.load_of(self.state.player);

@@ -3,7 +3,6 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
 
-
               ┌─ Choose your class (3 of 5) ─────────────────────────────────────────┐
               │                                                                      │
               │   Berserker                                                          │
@@ -19,6 +18,7 @@ expression: "render(case, content.clone())"
               │   Warrior                                                            │
               │   Aristocrat                                                         │
               │   Commoner                                                           │
+              │   Merchant                                                           │
               │   Random                                                             │
               │                                                                      │
               │   A cutpurse, burglar, and picker of locks who lives by nimble       │

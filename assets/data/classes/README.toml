@@ -17,7 +17,7 @@
 #   only          races that may take the class only with some genders: `[{ race = "drow",
 #                 genders = ["female"] }]` (the priest; default none), refused and left out
 #                 the same way for the other genders
-#   hidden        `true`: never offered at character creation (the craftsperson and the merchant, for
+#   hidden        `true`: never offered at character creation (the craftsperson, for
 #                 now); the
 #                 class keeps its data and stays usable through `--character` and a scenario's
 #                 own character, for development and tests (default false)

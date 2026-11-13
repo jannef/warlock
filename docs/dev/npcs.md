@@ -106,12 +106,14 @@ and the Gilde's counting but Holtwīc's not, the cap and a free cure), the scree
 `ui/dialogue_screen.rs`; the wiki's table is `xtask/src/wiki/services.rs::towns`.
 
 **The aristocrat's servant** (#1405; spec §8 "Class abilities": Stipend): `world/stipend.rs`.
-A town's optional `[town.servant]` (`content/town.rs::TownServant`: `level`, `at`, `creature` by
-gender, `speech` npc ids by race id with a `default`; the loader checks the creatures, the
-`default`, and that each npc's dialogue has `[dialogue.stipend]`) is placed by
-`stipend::place_servant` (one line in `travel.rs::instantiate_level`, after the escorts) when its
-level is made, only if the player's talents give `TalentMods::stipend`; never twice (an actor
-with that npc exists). Cēaptūn's lodges at the Gæsthūs (40, 27): `squire`, `chambermaid`,
+A town's class helpers, `[[town.servant]]` (`content/town.rs::TownServant`: `talent`, the class
+ability whose holder has them, `level`, `at`, `creature` by gender, `speech` npc ids by race id
+with a `default`; the loader checks the creatures, the `default`, and that each npc's
+dialogue has the words the talent's effect reads: `[dialogue.stipend]` for `stipend`,
+`[dialogue.partner]` for `invest`), are placed by `stipend::place_servant` (one line in
+`travel.rs::instantiate_level`, after the escorts) when their level is made, each only if the
+player holds its `talent` (`Talents::has`); never twice (an actor with that npc exists).
+Cēaptūn's servant (`talent = "stipend"`) lodges at the Gæsthūs (40, 27): `squire`, `chambermaid`,
 `servant` (`campaigns/ascmearc/data/creatures/`), speaking `campaigns/ascmearc/data/dialogue/
 servants.toml` (Cockney, Geordie, Brummie, Scouse, Irish, Middle English, Dutch, by the rule
 below). A dialogue's `[dialogue.stipend]` (`ServantWords`: `handover`, `address` by gender,
@@ -120,7 +122,33 @@ below). A dialogue's `[dialogue.stipend]` (`ServantWords`: `handover`, `address`
 with the `handover` line, or says a one-liner (the rotation, `talk.said` counted), `{address}`
 replaced by the gender's word; it takes `chat`'s time and trains the chat. Handed over: gold
 coins then the finds into the pack, each stack that would leave the player Overloaded set down
-on their cell ("Too much to carry, set down at your feet: …"). Tests: `world/stipend_tests.rs`.
+on their cell ("Too much to carry, set down at your feet: …"; `World::receive`, which the
+partner's withdrawals share). Tests: `world/stipend_tests.rs`.
+
+**The merchant's business partner** (#1407; spec §8 "Class abilities": Invest): `world/invest.rs`,
+`content/invest.rs` (`data/invest.toml`: `fees`, `week` (`base` and `dice` in basis points),
+`bonus.quest` per quest of the partner's town, `steps`; shared, so it names no campaign's quest).
+Cēaptūn's second class helper (`talent = "invest"`, `bonus = { fire_deep = 6 }`: a helper's own
+per-quest bonus, `TownServant::bonus`, quest ids checked) keeps the corner desk of
+Wulfrun's office (75, 23): `business_partner`, speaking `campaigns/ascmearc/data/dialogue/
+partners.toml` (posh for humans, as a person of means, then the race registers below). A
+dialogue's `[dialogue.partner]` (`PartnerWords`: `worth` and `idle`, said after a one-liner;
+`invested` and `withdrawn`, with `{gold}` and `{fee}`) makes its speaker a partner, "your business
+partner". `World::partner_chat` (one line in `chat`, after the servant's) says a one-liner and the
+stake's worth; `World::invest_topics` (one line in `topics`, last) lists `invest_<step>` /
+`invest_all` and `withdraw_<step>` / `withdraw_all` by what the player carries and holds, only for
+a holder of `TalentMods::invest`; `World::ask_invest` (one line in `ask`, after the offer) parses
+any `invest_<n>` or `withdraw_<n>` and deals, a chat's time, or refuses with no time.
+`World::tick_fund` (one line in `World::apply`, after the action's time and before the
+encounter tick) gives every week begun since `Fund::week` its return (`invest::week_return`: the
+stream `invest/<week>`; `invest::grown` on the hundredths), so the result is the same however
+the time passed. `World::invest_bonus` is derived from the quest records (distinct quests
+completed whose giver's town keeps a helper for a talent with `TalentEffect::Invest`, plus
+the partner entry's `bonus`). `World::partner_dies` (one line in `fight.rs::dies`) zeroes the stake. The
+`progress` dump's row: `invest 98.24 gold, week 74260, bonus 0 bp`. Tests:
+`world/invest_tests.rs` (the class and the partner by race, the fees and topics, refusals, a long
+skip against week-by-week and a rest across a week's turn, the quests' bonus, the death, the
+yearly return by simulation, a save and a replay), `content/invest.rs`.
 
 **A trader's offer** (#808, docs/design/overworld-encounters.md §15 Q7; spec §8 "Dialogue"):
 `content/offer.rs` (`TradeOffer`, a dialogue's `[dialogue.offer]`: `id`, `name`, `reply` said on
@@ -223,7 +251,7 @@ accent. The rule binds speakers whose data says they are of that race (`race = "
 a kobold, a rat king, a drow who speaks). The one dwarf who speaks is Alberich of Fyrdelf
 (#1391; the duergar traders keep shop with the shops' shared words and have no dialogue), but for
 an aristocrat's own servant, who is of the aristocrat's race and has a dialogue for each register
-(#1405, `servants.toml`). As of #1392 none of the others speaks: the campaigns have no elf, halfling, gnome, goblin,
+(#1405, `servants.toml`), and a merchant's business partner, the same (#1407, `partners.toml`). As of #1392 none of the others speaks: the campaigns have no elf, halfling, gnome, goblin,
 kobold, ratfolk, drow, or lizardfolk NPC, and their creatures have no words, and Ælfrun of Holtwīc is a
 human cottar; **half-elves and half-orcs speak as humans do** (Cockney or posh by their station, never
 the Brummie of elves); the fey of Ælfhām are not elves by this rule. A new speaker

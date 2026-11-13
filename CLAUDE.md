@@ -60,8 +60,8 @@ Game flags (`cargo run -p warlock -- --help`):
   (default: the scenario's seed; a number, or a word hashed with FNV-1a, e.g. `--seed warlock`),
   `--character RACE,GENDER,CLASS` (e.g. `dwarf,female,warrior`; default: the scenario's
   character; like `--seed` it shapes the run other flags start and alone does not skip the menu;
-  a class closed to the race and gender, `drow,male,priest`, is refused, while the classes hidden
-  from New run, craftsperson and merchant, are taken; `assets/data/classes/README.toml`),
+  a class closed to the race and gender, `drow,male,priest`, is refused, while the class hidden
+  from New run, the craftsperson, is taken; `assets/data/classes/README.toml`),
   `--name NAME` (the character's name, up to 20 characters; default: the scenario's for its own
   character, else one of the race's names picked from the seed; like `--character`). A run
   started with `--character` or `--name` (or from New run) has a chosen character and starts with
@@ -274,7 +274,7 @@ player may take now by id with their choices, the first kills that paid, each ro
 draw and the size of its pool now, `roll slug_charm scroll_of_lightning x1 of 4`, each calling of
 the run's campaign and where the player stands with it, `calling hunter: open`, `calling hunter:
 level 30 not met`, `calling hunter: not for a thief`, `called hunter at 30`, the named
-monsters dead, `slain fire_drake`, what an aristocrat's stipend holds, `stipend 412 gold: a fizzy pink potion`, the stat training
+monsters dead, `slain fire_drake`, what an aristocrat's stipend holds, `stipend 412 gold: a fizzy pink potion`, a merchant's stake with their partner in hundredths, its last week, and the weekly bonus in basis points, `invest 98.24 gold, week 74260, bonus 0 bp`, the stat training
 marks with the price in force (the drop's for a negative pile), `stat marks St 120/160, To -30/75`,
 each known spell's rung of its roll's ladder with the score and the outside rungs, `fireball rung 2/4 (In 16; +1 Empower)`, the learning, `learning 36 (Decipher script 108)` (the skill's trained value) or `cannot learn: not trained in Decipher script`, **dev-only**),
 `rooms`

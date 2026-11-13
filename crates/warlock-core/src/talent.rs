@@ -317,6 +317,8 @@ pub struct TalentMods {
     pub stipend_chance: i32,
     /// Percent more likely magic and rare finds are in the stipend's loot roll (Landed noble).
     pub stipend_magic_percent: i32,
+    /// A business partner in town invests for it (Invest, `world/invest.rs`).
+    pub invest: bool,
     /// Percent faster hunger burns (negative: slower).
     pub hunger_percent: i32,
     /// Percent more sickness from rotten food (negative: less).
@@ -1434,6 +1436,7 @@ impl TalentMods {
                 self.stipend_chance += chance;
                 self.stipend_magic_percent += magic;
             }
+            TalentEffect::Invest => self.invest = true,
             TalentEffect::HungerPercent { value } => self.hunger_percent += value,
             TalentEffect::RotHarmPercent { value } => self.rot_harm_percent += value,
             TalentEffect::SmellRot => self.smell_rot = true,

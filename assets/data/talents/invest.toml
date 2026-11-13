@@ -1,0 +1,11 @@
+# The merchant's class ability from level 1 (spec §8 "Class abilities": Invest; #1407): passive,
+# its numbers in ../invest.toml, its business partner a town's (a campaign's data/towns/), the
+# rule in world/invest.rs.
+[[talent]]
+id = "invest"
+name = "Invest"
+tree = "class"
+granted = true
+description = "Your business partner in town puts your gold to work. Week by week it grows, or now and then shrinks; the more the town owes you, the better it does."
+effects = [{ kind = "invest" }]
+systems = ["shops", "talk"]

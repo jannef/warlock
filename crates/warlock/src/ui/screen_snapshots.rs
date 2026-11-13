@@ -1670,6 +1670,17 @@ const CASES: &[Case] = &[
         screen: Some("messages"),
         ..BASE
     },
+    // A merchant's business partner in Wulfrun's office (#1407): 100 gold put in, a month gone,
+    // and the dialogue screen on what the stake is worth and the deals.
+    Case {
+        name: "partner-invest",
+        scenario: "ceaptun",
+        character: Some("human,male,merchant"),
+        actions: "move:SE*4 move:E*22 open:S move:S*2 move:E*2 chat:E ask:E:invest_100 \
+                  skip:24h*30 chat:E",
+        screen: Some("dialogue"),
+        ..BASE
+    },
     Case {
         name: "quest-offer",
         actions: concat!(hermit!(), " chat:SE ask:SE:quest-rats"),

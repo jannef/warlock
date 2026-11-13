@@ -371,7 +371,9 @@ hand-down: its `stipend_more` (`TalentMods::stipend_gold_percent`, `stipend_chan
 ability Stipend's `stipend` effect (`TalentMods::stipend`, level 1 of the class table) is read by
 `grow_stipend`, one line in `experience.rs::rise_from` after `level_up` (every level reached,
 a prestige class's too). The rule and its numbers: `docs/dev/npcs.md` "The aristocrat's servant",
-`data/stipend.toml`.
+`data/stipend.toml`. The merchant's Invest (`invest`, `TalentMods::invest`, #1407) gates the
+business partner's deals (`world/invest.rs`); the partner is placed by the talent id, as the
+servant is: `docs/dev/npcs.md` "The merchant's business partner", `data/invest.toml`.
 No talent reads the story's draw: Hard-won and Storyteller were cut in #774, Favoured child
 (#705) in #787, and the `background` system with it.
 

@@ -34,7 +34,10 @@ not promised across development builds.
 
 An aristocrat's stipend (`world/stipend.rs`, #1405) is `WorldState::stipend` (`Stipend`: the
 gold and the finds put by, each left out while empty, the whole left out while both are), saved
-and hashed; its servant is an actor like any other (its `npc` names its dialogue).
+and hashed; its servant is an actor like any other (its `npc` names its dialogue). A merchant's
+stake (`world/invest.rs`, #1407) is `WorldState::fund` (`Fund`: `cents`, hundredths of a coin,
+and `week`, the last week whose return it took; left out until something is first put in), saved
+and hashed; the business partner is an actor like the servant.
 
 A charmed ally (`world/charm.rs`, `docs/dev/allies.md` "Charmed") saves its charm in its
 `Actor::ally`: `AllySource::Charmed { spell, faction }`, the `faction_override` it had (left out
