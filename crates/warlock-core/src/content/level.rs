@@ -32,7 +32,8 @@
 //! tables mark shops (spec §7 "Shops"): `kind` (an id in `data/shops.toml`), the `keeper`'s
 //! name, the shop floor's `area` (inclusive: everything lying there is for sale), and the
 //! keeper's `post` on it, where the keeper (`data/shops.toml`'s `[keeper]`) is spawned, and
-//! optionally the unique character the keeper is (`npc`, whose dialogue it speaks).
+//! optionally the unique character the keeper is (`npc`, whose dialogue it speaks) and its
+//! creature type (`creature`, default the `[keeper]`'s).
 //! Optional `danger = N` (spec §7 "Danger levels"; 0 to 99, or `{ base, player }`) with
 //! `population` (creature ids), `population_count`, `stray`, `stray_pool`, `out_of_depth`,
 //! `deeper`, `deeper_cap`, `dread_one_in`, `neutral`, and `spawn`, as a dungeon branch gives them
@@ -183,6 +184,9 @@ struct ShopSpec {
     /// The unique character the keeper is (`npc = "eadric"`, #1394): it speaks that npc's
     /// dialogue, not the shopkeepers'; default none.
     npc: Option<String>,
+    /// The keeper's creature type, carrying `data/shops.toml`'s `[keeper]` kit (Gimmwīc's deep
+    /// gnomes, #1434); default the `[keeper]`'s own.
+    creature: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -1345,6 +1349,10 @@ fn parse_shops(
         }
         let mut keeper = shops.keeper_spawn(plan.post);
         keeper.npc = spec.npc.clone();
+        if let Some(id) = &spec.creature {
+            keeper.creature = (content.creature_id(id))
+                .ok_or_else(|| bad(&format!("unknown keeper creature `{id}`")))?;
+        }
         creatures.push(keeper);
         plans.push(plan);
     }

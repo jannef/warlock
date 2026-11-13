@@ -9,9 +9,11 @@ expression: "render(case, content.clone())"
                     │   Ælfhām                                                 │
                     │   Cealdhlāw                                              │
                     │   Cēaptūn                                                │
+                    │   Dēopgang                                               │
                     │   Drake                                                  │
                     │   Fennmynster                                            │
                     │   Fyrdelf                                                │
+                    │   Gimmwīc                                                │
                     │   Grundlēas                                              │
                     │   Holtwīc                                                │
                     │   Rat King                                               │
@@ -25,8 +27,6 @@ expression: "render(case, content.clone())"
                     │   Depths                                                 │
                     │   Forest                                                 │
                     │   Forge                                                  │
-                    │   Hellegeat                                              │
-                    │   Quarry                                                 │
                     │                                                          │
                     │   Come down through Beorggeat into the Ascmearc; the     │
                     │   market town of Cēaptūn lies a short way east along the │

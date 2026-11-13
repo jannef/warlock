@@ -118,8 +118,10 @@ fn neutral_animals_are_a_fifth_or_less_of_what_they_were() {
             sum[1] += s[1];
         }
     }
+    // Over 4 %: the deep branches with next to no animals (Dēopgang's eleven floors, #1434)
+    // thin the whole.
     assert!(
-        percent(all_before) > 5.0,
+        percent(all_before) > 4.0,
         "there were neutral animals: {all_before:?}"
     );
     assert!(

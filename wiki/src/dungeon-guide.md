@@ -2,8 +2,8 @@
 
 Most dungeons follow the rules on [Dungeons and danger](dungeons.md). The ones here have something
 of their own: Grundlēas never ends, Fennmynster and Fyrdelf hide their ways in until a quest names
-them, Ūtgang is found only from below, Ælfhām lies in the fey's own country, and the four lairs
-each hold a criminal the Gilde wants dead.
+them, Ūtgang is found only from below, Ælfhām lies in the fey's own country, Dēopgang ends in a
+town, and the four lairs each hold a criminal the Gilde wants dead.
 
 ## Grundlēas
 
@@ -187,6 +187,17 @@ climbing out, and from then on it is on your map: a quick way back down to the d
 are as dangerous as the deep workings just above Fyrdelf's bottom (see the tables on
 [Dungeons and danger](dungeons.md)). They are warmer the deeper they go, 14 °C, then 18 °C, and
 22 °C at the bottom, with Fyrdelf's traps and locks, the deep workings' folk, and no shops.
+
+## Dēopgang
+
+**Dēopgang**, the deep way, goes down from the foot of Grægweall in the south-west corner. It is
+the deepest [danger](dungeons.md#who-lives-there-and-how-many) of the march, 14 on its first floor
+to 24 on its eleventh. Floors 1 to 4 are the deep gnomes' old cut galleries, where deep-gnome
+traders sometimes keep a [general store](shops.md); floors 5 to 11 are the wild deep, wide caves.
+Duergar, drow, trolls, elementals of stone and water, and the dead of old cave-ins live there.
+Secret doors and [chests](chests.md) are commoner than elsewhere, and its rock gives only silver
+and gold for ore, so a [miner](mining.md) finds [gems](gems.md) more often. The eleventh floor's
+stairs down lead to [Gimmwīc](ascmearc.md#gimmwīc), the deep gnomes' town.
 
 ## Ælfhām
 

@@ -85,6 +85,9 @@ checking the npc has a dialogue), so he speaks his dialogue instead of the shopk
 `data/towns/ceaptun.toml`'s `people`, so goodwill takes its share. Tests:
 `world/ceaptun_tests.rs` (`eadric_the_smith_teaches_metalcraft_for_two_thousand_gold`, short of
 gold and goodwill), `ui/screen_snapshots.rs` (`dialogue-smith`).
+The third is **Old Tregear** (#1434; `npc = "tregear"`, `campaigns/ascmearc/data/dialogue/
+gimmwic.toml`, in the deep gnomes' Cornish), on Gimmwīc's cutting floor: Jewelcraft for 1500
+gold, at 5. Gimmwīc has no `data/towns/` entry, so no goodwill moves its prices.
 Tests: `world/train_service_tests.rs` (a fixture teacher: listed while untrained, bought, gone,
 refusals, digging before and after, the replay and the save, the load checks),
 `mapgen/fyrdelf_tests.rs::alberich_keeps_his_delving_on_the_fifth_floor`.
@@ -243,15 +246,21 @@ accent laid on thick: "ye", "yer", "meself", "tis", "sure an'", "begorrah", "eej
 "thou", "thee", "ye", "hast", "dost", "nat" (not), "eek" (also), "ywis" (truly), "anon", "certes",
 "sooth", "-eth" verbs ("he cometh"), "y-" past participles ("yslain"), "quod she" (said she);
 and **lizardfolk Dutch** (Nederlands, untranslated): they are alien to everyone else, so their
-lines are plain Dutch, "Wat moet je hier, warmbloed?". This is style only: languages have no game
+lines are plain Dutch, "Wat moet je hier, warmbloed?"; and **deep gnomes Cornish** (#1434), the
+West Country of the tin mines, kept apart from the Scouse of the gnomes up top: "my 'ansum", "my
+lover", "dreckly" (later, some day), "proper job" (well done), "wasson?" (what's going on?),
+"'ee" (you), "'un" (him, it), "where's it to?", "emmet" (an outsider: anyone from up top),
+"teasy" (cross), "giss on" (get away), dropped h's ("'ands"), and talk that turns to the work.
+This is style only: languages have no game
 rules (no translation, no skill, no check), and the player understands what they understand. Ids, topic names, and placeholders never change with the
 accent. The rule binds speakers whose data says they are of that race (`race = "dwarf"` (and
 `"duergar"`, the grey dwarves), `"elf"`, `"halfling"`,
 `"gnome"`, `"goblin"`, `"kobold"`, `"ratfolk"`, `"drow"`, `"lizardfolk"`, or a creature that is one: a goblin,
+a deep gnome (tag `deep-gnome`: no playable race, so no `race` field),
 a kobold, a rat king, a drow who speaks). The one dwarf who speaks is Alberich of Fyrdelf
 (#1391; the duergar traders keep shop with the shops' shared words and have no dialogue), but for
 an aristocrat's own servant, who is of the aristocrat's race and has a dialogue for each register
-(#1405, `servants.toml`), and a merchant's business partner, the same (#1407, `partners.toml`). As of #1392 none of the others speaks: the campaigns have no elf, halfling, gnome, goblin,
+(#1405, `servants.toml`), and a merchant's business partner, the same (#1407, `partners.toml`). The deep gnomes of Gimmwīc speak (#1434, `campaigns/ascmearc/data/dialogue/gimmwic.toml`). As of #1392 none of the others speaks: the campaigns have no elf, halfling, gnome, goblin,
 kobold, ratfolk, drow, or lizardfolk NPC, and their creatures have no words, and Ælfrun of Holtwīc is a
 human cottar; **half-elves and half-orcs speak as humans do** (Cockney or posh by their station, never
 the Brummie of elves); the fey of Ælfhām are not elves by this rule. A new speaker

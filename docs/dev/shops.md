@@ -23,8 +23,9 @@ them). Every object has a `value` (required; test fixtures with their own object
 `value = 0`; fixtures that replace `factions.toml` but keep the built-in creatures need the
 `merchants` and `outraged` factions, and fixtures that replace creatures or objects start from
 `ContentFiles::default()` or drop `data/shops.toml`). A shop is a `ShopPlan` in the template
-(level files: `[[shop]] kind keeper area post`, and an optional `npc` the keeper is, whose
-dialogue it then speaks, #1394; generated: `mapgen/shop.rs`, last after special
+(level files: `[[shop]] kind keeper area post`, an optional `npc` the keeper is, whose
+dialogue it then speaks, #1394, and an optional `creature`, the keeper's creature type in place of
+the `[keeper]`'s, with its kit, Gimmwīc's deep gnomes, #1434; generated: `mapgen/shop.rs`, last after special
 rooms, rooms levels only, from the map stream, by the branch's `ShopOdds`: its own `shops` table
 or the shared odds, docs/dev/mapgen.md; each stack after `always` drawn from what the kind
 stocks by its loot `frequency`, 100 for what is never loot, `magic::loot::pick_weighted`, one

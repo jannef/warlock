@@ -1,8 +1,8 @@
 ---
 source: crates/warlock/src/ui/screen_snapshots.rs
-expression: "render(&case, content.clone())"
+expression: "render(&case, content)"
 ---
- You learn Sworn foe (devil).
+ You learn Sworn foe (demon).
  The old hermit says: "Hm? A visitor. Sit, if you can find a stone nobody's sitting on."
 
 
