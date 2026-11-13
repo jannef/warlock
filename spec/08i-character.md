@@ -1020,7 +1020,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the material's work; made, the damage is gone, its lost improvements still lost and the
     attempts at the anvil as they were; failed, nothing happens, never a thing destroyed;
     refused, no time, for one worn, protected, unpaid, or of a material no profession works;
-    greyed "nothing to mend" with none; `world/make_do.rs`); merchant (Delver, Scholar) Haggler (favour +15 %: the one class ability on
+    greyed "nothing to mend" with none; `world/make_do.rs`), and Field forge
+    (#1424, at 32: an active aimed in a direction, `use:field_forge:E`, `world/field_forge.rs`:
+    one ingot of any metal carried is set on open ground beside the player, walkable floor with
+    nobody, nothing, and no known trap on it, no door, chest, stairs, grave, water, ice, fungus,
+    or shop floor, never the overworld, in an hour of `craft` turns through `keep_at`; no check;
+    interrupted, nothing is made and the ingot kept; done, the cell is a `makeshift_anvil` for
+    good (§7 "Special rooms": Forges); refused, no time, without an ingot ("You have no ingot to
+    set."), on the overworld, or on other ground); merchant (Delver, Scholar) Haggler (favour +15 %: the one class ability on
     shop favour, #787), Invest (below, at 1, #1407), Deep pockets (coins weightless) and Pack mule (the burden line's first step, #1198), Merchant's eye (#816, at 12: an
     ability, on a thing carried, that identifies it as the scroll of identify would, for a
     reading's time and nothing else; refused, no time, for a thing already known); #789 cut its level 40 Insured (shops paid +50 %), a

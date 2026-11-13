@@ -123,6 +123,7 @@ above.
 | Special room | `special-rooms.md` (a room: its row) |
 | Forgotten altar, praying | `altars-forges-springs.md#forgotten-altars` |
 | Forge, tempering, Fine, Marvellous, Masterwork, damaged items | `altars-forges-springs.md#forges` |
+| Makeshift anvil, Field forge | `altars-forges-springs.md#the-makeshift-anvil`, `classes.md#field-forge` |
 | Item damage, corroded, rusted, scorched, withstanding | `materials.md#item-damage` |
 | Protected items, of Proof | `materials.md#protected-items` |
 | Healing spring | `altars-forges-springs.md#healing-springs` |

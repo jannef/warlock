@@ -158,6 +158,7 @@ mod eyes;
 mod familiar;
 mod feature;
 mod feint;
+mod field_forge;
 mod fight;
 mod first_sight;
 mod flask;
@@ -349,6 +350,7 @@ pub use encounter::{
 pub use escort::{escort_slot, fits_escort};
 pub use experience::{Discovered, Progress};
 pub use familiar::{draw as familiar_draw, name_for as familiar_name};
+pub(crate) use field_forge::open_ground;
 pub use fight::{Cause, Death};
 pub(crate) use forage::forage_ground;
 pub use free_blow::FreeBlows;
@@ -792,6 +794,8 @@ enum Spent {
     Decipher(decipher::Deciphering),
     /// Tempering an item at a forge's anvil (see [`World::temper`]).
     Temper(temper::Tempering),
+    /// Setting an ingot on a heap of stones (see [`World::field_forge`]).
+    FieldForge(field_forge::Forging),
     /// Making a recipe (see [`World::make`]).
     Craft(craft_make::Crafting),
     /// Cutting a loose gem (see [`World::cut`]).
@@ -1494,6 +1498,7 @@ impl World {
             Spent::Gather(seconds) => self.gather(seconds, &mut events),
             Spent::Decipher(work) => self.decipher(work, &mut events),
             Spent::Temper(work) => self.temper(work, &mut events),
+            Spent::FieldForge(work) => self.field_forge(work, &mut events),
             Spent::Craft(work) => self.make(work, &mut events),
             Spent::Cut(work) => self.cut(work, &mut events),
             Spent::Salvage(work) => self.salvage(work, &mut events),
@@ -1923,6 +1928,8 @@ mod experience_tests;
 mod feature_tests;
 #[cfg(test)]
 mod feint_tests;
+#[cfg(test)]
+mod field_forge_tests;
 #[cfg(test)]
 mod fight_tests;
 #[cfg(test)]

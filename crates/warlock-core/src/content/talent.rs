@@ -1156,6 +1156,9 @@ pub enum TalentEffect {
     /// The class active Merchant's eye: a stack the player carries is identified, for the time of
     /// a reading (`world/merchants_eye.rs`; spec §8 "Class abilities").
     MerchantsEye,
+    /// The class active Field forge: an ingot carried set on a heap of stones beside the player
+    /// in `seconds`, a makeshift anvil for good (`world/field_forge.rs`; the craftsperson's).
+    FieldForge { seconds: u32 },
     /// The class active Make do and mend: a damaged thing the player carries mended in the field,
     /// with no anvil, in `seconds`, by a check against `difficulty` plus its main material's
     /// `work` that destroys nothing (`world/make_do.rs`; the craftsperson design §7.5).
@@ -1304,6 +1307,7 @@ impl TalentEffect {
             TalentEffect::Knock { .. } => A::Knock,
             TalentEffect::Scribe { .. } => A::Scribe,
             TalentEffect::MerchantsEye => A::MerchantsEye,
+            TalentEffect::FieldForge { .. } => A::FieldForge,
             TalentEffect::MakeDo { .. } => A::MakeDo,
             TalentEffect::SpiritWeapon { .. } => A::SpiritWeapon,
             _ => return None,
@@ -1462,6 +1466,7 @@ impl TalentEffect {
                 status(status_id)
             }
             TalentEffect::Consecrate { time, .. } => duration(time),
+            TalentEffect::FieldForge { seconds: 0 } => Err("`field_forge`: `seconds` is 0".into()),
             TalentEffect::Sanctuary { time, lasts, .. } => {
                 duration(time)?;
                 duration(lasts)

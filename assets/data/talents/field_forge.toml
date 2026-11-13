@@ -1,0 +1,12 @@
+# The craftsperson's class ability from level 32 (spec §8 "Class abilities": Field forge; the
+# craftsperson design §7.7): an active aimed in a direction (`use:field_forge:E`), the rule in
+# `world/field_forge.rs`: an ingot carried set on a heap of stones in an hour, a makeshift anvil
+# (terrain.toml's `makeshift_anvil`) for good.
+[[talent]]
+id = "field_forge"
+name = "Field forge"
+tree = "class"
+granted = true
+description = "Wherever you are, an ingot on a heap of stones makes an anvil (an ability): an hour's work on open ground beside you, and the anvil stays."
+effects = [{ kind = "field_forge", seconds = 3600 }]
+systems = ["skills"]

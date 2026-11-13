@@ -56,7 +56,9 @@ impl World {
             return;
         };
         let def = content.terrain(wall);
-        let Some(breaks) = def.breaks.filter(|_| def.statue.is_none()) else {
+        // A statue or a makeshift anvil (a station set by hand) holds no rock.
+        let Some(breaks) = (def.breaks).filter(|_| def.statue.is_none() && def.works_as.is_none())
+        else {
             return;
         };
         let me = self.state.player();

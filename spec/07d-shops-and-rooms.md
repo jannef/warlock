@@ -594,6 +594,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
       "a corroded", "a rusted", "a scorched long sword" by what else damaged it). Numbers show as any
       item's; the attempts are hidden, printed by the dev `actors` dump. Worth (`Stack::value`):
       Fine ×2, Marvellous ×3, Masterwork ×5, damaged ×½ rounded up.
+    - **The makeshift anvil** (#1424; the craftsperson's Field forge, §8 "Class abilities"): terrain
+      `makeshift_anvil` ("makeshift anvil", `π` a shade duller than the anvil's, not walkable,
+      stone, `hardness` 300 becoming floor), with `works_as = "anvil"` (a terrain's optional
+      station: `Content::works_as`, the one read). It is an anvil for everything: every recipe whose
+      station is the anvil (the station test `world/craft.rs::station_beside`), Temper, and the
+      walk-in (`Content::offer` asks what it works as). It stays for good, a terrain of its level,
+      saved with it; a pick clears it to floor, and Mining finds nothing in it.
 
   - **Healing springs** (`feature = "spring"`, `offers = { drink = "spring" }`, #416;
     `world/drink.rs`, the design's §9.10): the spring is its own terrain, `spring` ("spring", a

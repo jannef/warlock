@@ -416,6 +416,9 @@ It never destroys anything. You cannot mend something you wear or wield (take it
 material no craft works, like cloth or glass. If you are trained in the craft, the check may earn
 it a [training mark](skills.md#getting-better).
 
+<a id="field-forge"></a>**Field forge** (from level 32) makes an anvil wherever you are: a
+[makeshift anvil](altars-forges-springs.md#the-makeshift-anvil) from one ingot and an hour's work.
+
 {{#include generated/class-levels.md:merchant}}
 
 <a id="invest"></a>**The merchant's investment** ([Invest](talents.md#talent-invest), from level 1)
