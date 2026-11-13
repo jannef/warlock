@@ -1,0 +1,23 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The headman of Gimmwīc (#1434; docs/dev/creatures/deep-gnomes.md): Headman Peran (his npc
+# dialogue, campaigns/ascmearc/data/dialogue/gimmwic.toml), who speaks for the deep gnomes from
+# the moot hall. Only the town's legend places him. Peaceful, and old.
+[[creature]]
+id = "deep_gnome_headman"
+name = "deep-gnome headman"
+glyph = "@"
+fg = "#d8d0f0"
+faction = "peaceful"
+tags = ["deep-gnome"]
+# One of the people: never greater or lesser than their kind.
+grades = false
+alignment = "good"
+vision = "darkvision"
+size = "small"
+footsteps = 30
+hearing = 10
+weight = 36000
+stats = { strength = 8, dexterity = 11, toughness = 11, intelligence = 16, willpower = 16, presence = 15 }
+skills = { appraise = 100, jewelcraft = 80 }

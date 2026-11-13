@@ -1,0 +1,216 @@
+# The people of Gimmwīc, the deep gnomes' town at the bottom of Dēopgang (#1434; the fields:
+# data/dialogue.toml; levels/gimmwic.toml places them). Deep gnomes speak the Cornish of the deep
+# (docs/dev/npcs.md "Speech by race and station"): "my 'ansum", "my lover", "dreckly" (later,
+# some day), "proper job" (well done), "where's it to?" (where is it?), "wasson?" (what's going
+# on?), "'ee" (you), "'un" (him, it), "emmet" (an outsider: anyone from up top), "teasy" (cross),
+# "giss on" (get away with you), "crib" (a bite to eat); never the Scouse of the gnomes
+# up top. They are makers before they are anything else: gem-cutters, smiths, and setters, and
+# their talk turns to the work.
+#
+# The townsfolk (the `deep_gnome` type): one-liners and mutters, no topics.
+[[dialogue]]
+creature = "deep_gnome"
+greet = "Wasson, emmet? Come all the way down the Deep Way, did 'ee? Proper job."
+greet_evil = [
+    "Giss on. We know your sort, even down 'ere.",
+    "Keep yer 'ands off the stones, emmet. I'm watchin'.",
+]
+lines = [
+    "Cut a stone wrong and 'ee've lost 'un. Measure twice, my 'ansum.",
+    "Got a garnet in me pocket wants a settin'. I'll get to 'un dreckly.",
+    "Tregear's wheel been singin' since first shift. Summat 'andsome, that.",
+    "Mother Senara'll see to 'ee at the Glimmerin', if 'ee're 'urt.",
+    "Kerensa'll tell 'ee what's in yer pack. An' what it's worth, my lover.",
+    "Up top they buy their pots. Buy 'em! Never made a thing, some of 'em.",
+    "Duergar diggin' at our veins again. Dig like a pig roots, they do.",
+    "Every gnome cuts 'is first stone at seven. Mine were a smokestone.",
+    "Steady 'and, sharp eye, an' patience. That's jewelcraft. Patience.",
+    "Anvils on the cuttin' floor is free to use. Just leave 'em tidy.",
+]
+mutter = { chance = 2, lines = [
+    "...quarter turn more on the wheel...",
+    "Where's me loupe to? 'Ad 'un a minute ago.",
+    "Proper job, that. Proper job.",
+    "Facet, facet, facet...",
+    "Dreckly. I'll do 'un dreckly.",
+] }
+
+# The traders (the `deep_gnome_trader` type), in Gimmwīc's outfitters and on Dēopgang's gallery
+# floors: trade talk, no topics.
+[[dialogue]]
+creature = "deep_gnome_trader"
+greet = "Come in, my 'ansum. What 'ee pick up, 'ee pay for at the door. Fair?"
+greet_evil = [
+    "I'll trade with 'ee. I'll count me stock after, mind.",
+    "Pay at the door, emmet, an' keep yer 'ands where I can see 'em.",
+]
+lines = [
+    "Good iron, good silver, good billets. Make summat with 'em, go on.",
+    "I'll buy what 'ee've found, if it's worth the carryin'.",
+    "Gold's gold, but a good ingot's a thing waitin' to be made.",
+    "Prices is fair. Fairer'n up top, I 'ear.",
+    "Mind the step, my lover. Mind everything down 'ere, really.",
+]
+
+# Headman Peran of the moot hall, who speaks for Gimmwīc. Old, careful, and courteous to
+# strangers, in the deep's Cornish.
+[[dialogue]]
+npc = "peran"
+name = "Headman Peran"
+greet = "Welcome to Gimmwīc, stranger. Not many come down the Deep Way an' live to say so."
+greet_evil = [
+    "There's blood on 'ee. Speak yer business an' go, emmet.",
+    "Gimmwīc's door is open. Don't make us shut 'un.",
+]
+lines = [
+    "Sit, sit. The moot hall's chairs is gnome-sized, mind. Perch, then.",
+    "We cut stone, we set stone, we make things. That's Gimmwīc.",
+    "Up top they think we're a story. Suits us, mostly.",
+    "The Deep Way's 'ard. 'Ard keeps the wrong folk out.",
+    "We've 'eld this 'all since before the mountain smoked.",
+    "Trade's a fine thing. Makin's finer.",
+]
+mutter = { chance = 2, lines = [
+    "...the moot sits dreckly, an' not before...",
+    "Proper job. Proper job.",
+] }
+
+[[dialogue.topic]]
+id = "gimmwic"
+name = "Gimmwīc"
+reply = "Gimmwīc's the deep gnomes' town, my 'ansum, an' always was. We cut it out the rock a cut at a time. The Glimmerin' for the 'urt, Kerensa for stones, Jory for stock, an' Tregear's cuttin' floor for them as wants to learn. The anvils there is free to any as works clean."
+
+[[dialogue.topic]]
+id = "up_top"
+name = "The folk up top"
+reply = "We trade up the Deep Way now an' then, quiet like, a stone for a sack o' flour. The emmets in the market town don't ask where 'tis from. Never 'ave. We don't tell 'em. That's 'ow it's stayed friendly, see."
+
+[[dialogue.topic]]
+id = "deep"
+name = "The deep"
+reply = "Duergar to the east, diggin' at our veins. Drow come up from below when they're teasy. Trolls, an' worse, in the wild caves between. That's why the Deep Way twists so, an' why its doors 'ide. Mind the dark, my lover."
+
+# Kerensa, the gem dealer (levels/gimmwic.toml's `[[shop]]` names her with `npc = "kerensa"`, so
+# she speaks these words and not the traders'). She appraises what the player carries for gold, as
+# Cēaptūn's Factor Wulfrun does: a jeweller's eye for every article.
+[[dialogue]]
+npc = "kerensa"
+name = "Kerensa"
+greet = "Stones an' settin's, my lover. Look all 'ee like. Touch, an' 'ee pay."
+greet_evil = [
+    "I'll sell to 'ee. I'll count every stone after.",
+    "Pay at the door, emmet. I've a quick eye an' a quicker 'and.",
+]
+lines = [
+    "A ruby's only red glass till someone cuts 'un proper.",
+    "Uncut's cheaper. 'Ee pay for the cuttin', see. Or do it yerself.",
+    "I'll buy any stone 'ee bring. Fair price. Gnome's fair, not emmet's.",
+    "That ring I set meself. Three days on the claws alone.",
+    "I can tell 'ee what anything is. For a fee, mind.",
+]
+mutter = { chance = 2, lines = [
+    "Flawless... near enough flawless...",
+    "Who's been at me loupe?",
+] }
+
+[[dialogue.topic]]
+id = "gems"
+name = "Gems"
+reply = "Uncut, they're dull pebbles; cut proper, they're fire. Size an' cut make the price, not the stone alone. A big stone badly cut's worth less than a small one done fine. I sell both. Buy uncut an' cut 'un yerself, if Tregear's taught 'ee."
+
+[[dialogue.topic]]
+id = "appraisal"
+name = "Appraisals"
+reply = "A jeweller's eye sees more'n stones, my 'ansum. Charmed blades, scrolls, the lot. A 'undred gold an article 'ee don't know, a bundle o' the same countin' as one. I look at everything 'ee carry or nothin'. No 'alves."
+
+[[dialogue.service]]
+id = "identify"
+name = "An appraisal of your goods"
+price = 100
+does = "identify"
+reply = "There. Every article looked at proper. Now 'ee know what 'ee're carryin', which is more'n most emmets."
+nothing = "'Ee know all 'ee carry already, my lover. I shan't charge 'ee for sayin' so."
+
+# Mother Senara of the Glimmering, Gimmwīc's temple: she cures and mends for gold, as Cēaptūn's
+# Sister Hild does.
+[[dialogue]]
+npc = "senara"
+name = "Mother Senara"
+greet = "Peace on 'ee, child of the deep or up top. The Glimmerin' turns no one away."
+greet_evil = [
+    "There's blood on 'ee. Pray first, then come back.",
+    "Even 'ee may be 'ealed, in time. Not today.",
+]
+lines = [
+    "Rest 'ere as long as 'ee need. Nothin' 'ostile crosses this floor.",
+    "The stones in the walls was set by the first gnomes. Mind 'em.",
+    "A cure costs gold. The crystals don't light theirselves.",
+    "Make summat with yer 'ands each day. 'Tis 'ealin' too.",
+    "The Glimmerin' keeps the light when the lamps go out.",
+]
+mutter = { chance = 2, verb = "prays", lines = [
+    "...keep the light, keep the stone, keep the 'and steady...",
+    "...an' bring the cutters 'ome from the deep...",
+] }
+
+[[dialogue.topic]]
+id = "glimmering"
+name = "The Glimmering"
+reply = "The Glimmerin's our temple, child: crystals the first gnomes set in the rock, that never went dark. We 'eal, we bury, we keep the light. Rest on its floor an' yer wounds close the quicker."
+
+[[dialogue.service]]
+id = "cure"
+name = "A cure for what ails you"
+price = 60
+does = "cure"
+temple = true
+reply = "Go in 'ealth, child. An' keep out the wild caves."
+nothing = "Nothin' ails 'ee, child."
+
+[[dialogue.service]]
+id = "mend"
+name = "A mending of body"
+price = 40
+does = "mend"
+temple = true
+reply = "There. Whole again, as 'ee was made."
+nothing = "'Ee're whole, child. Go with the light."
+
+# Old Tregear, master jeweller of the cutting floor. He teaches Jewelcraft for gold
+# (`train_skill`, world/service.rs), as Cēaptūn's smith Eadric teaches Metalcraft: offered only
+# while the player is untrained in it, and cheaper with the town's goodwill (none yet: Gimmwīc
+# gives no quests).
+[[dialogue]]
+npc = "tregear"
+name = "Old Tregear"
+greet = "Mind the wheel, emmet. Speak, but don't jog me elbow."
+greet_evil = [
+    "I'll teach anyone 'oo pays. I won't like it.",
+    "Keep yer 'ands off me stones an' we'll get on.",
+]
+lines = [
+    "Sixty year on this wheel. Still learnin', my 'ansum.",
+    "A stone's got a grain like wood. Find 'un, cut with 'un.",
+    "Proper job's a stone that catches the light from every side.",
+    "Anvil's free. Wheel's mine. Ask first.",
+    "Rings an' amulets is easy. Settin' a stone straight, that's art.",
+]
+mutter = { chance = 3, verb = "mutters", lines = [
+    "Quarter turn... quarter turn... there.",
+    "Giss on, 'ee stubborn little garnet.",
+    "Proper job. Proper job.",
+] }
+
+[[dialogue.topic]]
+id = "jewelcraft"
+name = "Jewelcraft"
+reply = "Cuttin' stones, settin' 'em, makin' rings an' amulets from good metal. 'Ee need a steady 'and an' a knife an' patience, an' 'ee need teachin'. Fifteen 'undred gold, an' I'll show 'ee 'ow to 'old a stone so it don't fly off the wheel."
+
+[[dialogue.service]]
+id = "train_jewelcraft"
+name = "Teach me to cut stones"
+price = 1500
+does = "train_skill"
+train = { skill = "jewelcraft", value = 5 }
+reply = "Right. 'Old 'un in the clamp, so. Find the grain. Small cuts, my 'ansum, small cuts, an' look after every one. There. 'Ee'll ruin a few afore 'ee make one. Everyone does."
+nothing = "'Ee can cut a stone already, emmet. I'm not teachin' 'ee twice."

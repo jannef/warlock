@@ -59,7 +59,10 @@ every new run starts in it.
   (`levels/lictun.toml`, 46×25, no stairs, no danger) inside a drystone wall with a lych-gate on
   the road, fifty gravestones in rows (§7 "Graves"), a yew in each corner, a little stone chapel
   in the middle with its altar, and **Old Dudda** the sexton (npc `dudda`, type `sexton`) on his
-  rounds of the stones, with grim, dry one-liners and mutters and no topics. The rest of the design's forty sites are reserved: plain
+  rounds of the stones, with grim, dry one-liners and mutters and no topics. **Dēopgang** (#1434,
+  "the deep way"), in the south-west corner against Grægweall (18, 57), visible to anyone who walks
+  there, is the deepest tier (§7 "Dēopgang"), and at its bottom lies **Gimmwīc** ("the gem
+  dwelling"), the deep gnomes' town. The rest of the design's forty sites are reserved: plain
   cells today, spaced so a later level drops in without moving anything.
 - **Quests** (#340, design §6.2; `campaigns/ascmearc/data/quests/`): three people in Cēaptūn
   give a chain each (three quests, Wulfrun's two), every quest offered once the one before it

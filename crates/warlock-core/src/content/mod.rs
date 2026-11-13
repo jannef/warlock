@@ -2888,6 +2888,28 @@ impl Content {
                 ));
             }
         }
+        // A bottom (spec §7 "Dungeon branches"): `bottom` names a hand-made level of the same
+        // campaign whose `<` leads back to the deepest level.
+        for def in self.dungeons.values() {
+            let Some(bottom) = &def.bottom else { continue };
+            let deepest = def.level_id(def.depth);
+            let back = |l: &LevelTemplate| {
+                (l.stairs.iter())
+                    .any(|s| s.dir == StairsDir::Up && s.to.as_deref() == Some(deepest.as_str()))
+            };
+            let fits = self.levels.get(bottom).is_some_and(back)
+                && self.level_campaigns.get(bottom).cloned().flatten() == def.campaign;
+            if !fits {
+                return Err(ContentError::new(
+                    "data/dungeons/",
+                    format!(
+                        "dungeon `{}`: `bottom = \"{bottom}\"` is no hand-made level of its \
+                         campaign with a `<` back to `{deepest}`",
+                        def.id
+                    ),
+                ));
+            }
+        }
         for scenario in self.scenarios.values() {
             let file = format!("scenarios/{}.toml", scenario.id);
             let campaign = scenario.campaign.as_deref().unwrap_or_default();
@@ -4642,6 +4664,25 @@ mod tests {
         let last = SpellId(u16::try_from(with_spell.spells().len() - 1).expect("few"));
         assert_eq!(with_spell.spell_id("zap"), Some(last), "last in path order");
         assert_ne!(a, with_spell.fingerprint_for("showcase"));
+    }
+
+    #[test]
+    fn a_bottom_is_a_level_of_its_campaign_with_a_way_back_up() {
+        const TOWN: &str = "campaigns/ascmearc/levels/gimmwic.toml";
+        const BRANCH: &str = "campaigns/ascmearc/data/dungeons/deopgang.toml";
+        let edited = |path: &str, from: &str, to: &str| {
+            let mut files = ContentFiles::builtin();
+            let text = files.get(path).expect("the file").to_string();
+            assert!(text.contains(from), "{from}");
+            files.insert(path, &text.replace(from, to));
+            Content::load(&files).unwrap_err().to_string()
+        };
+        // The town's `<` must lead back to the deepest floor.
+        let err = edited(TOWN, "to = \"deopgang:11\"", "to = \"deopgang:10\"");
+        assert!(err.contains("`bottom = \"gimmwic\"`"), "{err}");
+        // A level of another campaign is no bottom.
+        let err = edited(BRANCH, "bottom = \"gimmwic\"", "bottom = \"hub\"");
+        assert!(err.contains("`bottom = \"hub\"`"), "{err}");
     }
 
     fn minimal_files(level_map: &str, extra_legend: &str) -> ContentFiles {

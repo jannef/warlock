@@ -740,7 +740,13 @@ mod tests {
         // New creature data should be worth about the guideline's XP at its level: a creature
         // more than three times off it either way is a mistake, unless it is one of these
         // deliberate outliers (the vermin, worth less; the keepers, not meant to be fought).
-        const OUTLIERS: &[&str] = &["bat", "deer", "duergar_trader", "shopkeeper"];
+        const OUTLIERS: &[&str] = &[
+            "bat",
+            "deep_gnome_trader",
+            "deer",
+            "duergar_trader",
+            "shopkeeper",
+        ];
         let content = Content::builtin().expect("content");
         let guideline = content.experience().guideline();
         assert_eq!(
