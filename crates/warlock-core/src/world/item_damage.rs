@@ -84,17 +84,33 @@ impl World {
     /// chalice lies in its barrow first), a rolled quest's drawn object while it is active. A
     /// quest's reward is among them only when another quest asks for it.
     pub(super) fn quest_objects(&self) -> BTreeSet<ObjectId> {
-        let quests = &self.state.quests;
-        let done = |id: &str| quests.record(id).is_some_and(|r| r.completed > 0);
-        (self.content.quests().iter())
-            .filter_map(|def| match def.is_rolled() {
-                false if done(&def.id) && !def.repeatable => None,
-                false => def.hand_in(),
-                true if quests.is_active(def) => quests.given(&self.content, def).hand_in(),
-                true => None,
-            })
-            .map(|(object, _)| object)
-            .collect()
+        quest_objects(&self.content, &self.state.quests)
+    }
+}
+
+/// [`World::quest_objects`] of `quests` (the item description reads it too: Eye for the make).
+fn quest_objects(content: &Content, quests: &super::Quests) -> BTreeSet<ObjectId> {
+    let done = |id: &str| quests.record(id).is_some_and(|r| r.completed > 0);
+    (content.quests().iter())
+        .filter_map(|def| match def.is_rolled() {
+            false if done(&def.id) && !def.repeatable => None,
+            false => def.hand_in(),
+            true if quests.is_active(def) => quests.given(content, def).hand_in(),
+            true => None,
+        })
+        .map(|(object, _)| object)
+        .collect()
+}
+
+/// Whether the player knows `stack` to be protected from item damage while the quests stand as
+/// `quests` (the item description's Eye for the make, which reads perception, not the world):
+/// [`protected`] once its magic is identified; before, only a quest's object, so an unknown
+/// unique or Proof is not given away.
+pub(crate) fn protected_in(content: &Content, quests: &super::Quests, stack: &Stack) -> bool {
+    let quest = quest_objects(content, quests);
+    match stack.is_identified() {
+        true => protected(content, &quest, stack),
+        false => quest.contains(&stack.object),
     }
 }
 

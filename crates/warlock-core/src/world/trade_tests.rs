@@ -21,7 +21,8 @@ const TRADES: [&str; 7] = [
 ];
 
 /// A kitted run of the showcase as `character` with `talents` named first, the creation picks
-/// left filled with the first talents offered outside the Heritage and Crafts trees.
+/// left filled with the first talents offered outside the Heritage and Crafts trees (a
+/// craftsperson's bonus picks, which only trades fill, with the first trades offered).
 fn start(character: &str, talents: &[&str], seed: u64) -> Result<World, WorldError> {
     let spec: CharacterSpec = character.parse().expect("a character");
     let draft = World::draft(CONTENT.clone(), "showcase", Some(seed), &spec)?;
@@ -37,6 +38,7 @@ fn start(character: &str, talents: &[&str], seed: u64) -> Result<World, WorldErr
         }
         let (id, ways) = (offers.iter())
             .find(|(id, _)| !skip.contains(&book.get(*id).tree))
+            .or_else(|| offers.first())
             .expect("a talent to pick");
         let id = &book.get(*id).id;
         picks.push(crate::world::pick_text(id, ways[0].as_deref()));
@@ -81,16 +83,31 @@ fn trade_of(trade: &str) -> (&'static str, &'static [(&'static str, u32)]) {
 
 #[test]
 fn every_trade_trains_its_skill_and_hands_down_its_tools() {
-    // A halfling would be refused Wortcunner: a human may take every trade.
-    let plain = start("human,female,craftsperson", &[], 3).expect("starts");
+    // A halfling would be refused Wortcunner: a human may take every trade. A craftsperson takes
+    // two: beside each, a second (`with`), against a run of that one and a third (`plain`).
     for trade in TRADES {
-        let world = start("human,female,craftsperson", &[trade], 3).expect("starts");
+        let with = if trade == "spellwright" {
+            "brewster"
+        } else {
+            "spellwright"
+        };
+        // A third whose tools are none of the trade's (Smith's and Wright's are both pieces).
+        let shares = |t: &str| {
+            let objects = |t: &str| trade_of(t).1.iter().map(|&(o, _)| o).collect::<Vec<_>>();
+            objects(t).iter().any(|o| objects(trade).contains(o))
+        };
+        let other = (TRADES.into_iter())
+            .find(|t| ![trade, with].contains(t) && !shares(t))
+            .expect("a third trade");
+        let world = start("human,female,craftsperson", &[trade, with], 3).expect("starts");
+        let plain = start("human,female,craftsperson", &[with, other], 3).expect("starts");
         assert!(world.state().player().talents.has(trade), "{trade}");
         let (id, tools) = trade_of(trade);
         let before = skill(&plain, id).unwrap_or(0);
         let after = skill(&world, id).expect("trained");
+        // `3d6`, and Time served's 6.
         assert!(
-            (3..=18).contains(&(after - before)),
+            (9..=24).contains(&(after - before)),
             "{trade}: {before} -> {after}"
         );
         for &(object, n) in tools {
@@ -207,7 +224,7 @@ fn a_trade_is_a_craftspersons_creation_pick_alone() {
             .all(|(t, _)| CONTENT.talents().get(*t).tree != crafts)
     );
     // Never a level's pick.
-    let mut world = start("human,female,craftsperson", &[], 1).expect("starts");
+    let mut world = start("human,female,craftsperson", &["smith", "wright"], 1).expect("starts");
     for action in crate::action::parse_actions("xp:2431 talent:brewster").expect("actions") {
         world.apply(&action);
     }
@@ -243,16 +260,16 @@ fn a_trade_rolls_a_step_up_at_a_level() {
         roll.die,
         CONTENT.ladder().die(CONTENT.ladder().step(roll.marks) + 1)
     );
-    // The class is known for Metalcraft already: one step, the class's.
+    // The class is known for nothing: Metalcraft's step is the trade's too.
     let metalcraft = CONTENT.skill_id("metalcraft").expect("metalcraft");
     let roll = view.skill_roll(metalcraft).expect("trained");
-    assert!(roll.known && !roll.trade, "{roll:?}");
+    assert!(roll.known && roll.trade, "{roll:?}");
     assert_eq!(
         roll.die,
         CONTENT.ladder().die(CONTENT.ladder().step(roll.marks) + 1)
     );
     // Without the trade, no step.
-    let plain = start("human,female,craftsperson", &["wortcunner"], 5).expect("starts");
+    let plain = start("human,female,craftsperson", &["wortcunner", "smith"], 5).expect("starts");
     let herbalism = CONTENT.skill_id("herbalism").expect("herbalism");
     assert!(
         plain
@@ -272,8 +289,8 @@ fn a_trade_rolls_a_step_up_at_a_level() {
 #[test]
 fn a_trade_moves_no_other_roll() {
     // Two trades of one pick each: everything but their skills and tools is the same.
-    let brewster = start("elf,female,craftsperson", &["brewster"], 9).expect("starts");
-    let wortcunner = start("elf,female,craftsperson", &["wortcunner"], 9).expect("starts");
+    let brewster = start("elf,female,craftsperson", &["brewster", "smith"], 9).expect("starts");
+    let wortcunner = start("elf,female,craftsperson", &["wortcunner", "smith"], 9).expect("starts");
     let tools = ["moonwort", "glowcap", "comfrey", "vervain"].map(|o| CONTENT.object_id(o));
     let kit = |w: &World| -> Vec<Stack> {
         (w.state().player().inventory.iter())
@@ -294,6 +311,6 @@ fn a_trade_moves_no_other_roll() {
         wortcunner.state().player().stats
     );
     // The same character and seed learn the same.
-    let again = start("elf,female,craftsperson", &["brewster"], 9).expect("starts");
+    let again = start("elf,female,craftsperson", &["brewster", "smith"], 9).expect("starts");
     assert_eq!(again.state_hash(), brewster.state_hash());
 }

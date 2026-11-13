@@ -17,8 +17,7 @@
 #   only          races that may take the class only with some genders: `[{ race = "drow",
 #                 genders = ["female"] }]` (the priest; default none), refused and left out
 #                 the same way for the other genders
-#   hidden        `true`: never offered at character creation (the craftsperson, for
-#                 now); the
+#   hidden        `true`: never offered at character creation (no class now); the
 #                 class keeps its data and stays usable through `--character` and a scenario's
 #                 own character, for development and tests (default false)
 #   stats         adjustments to the starting scores by stat id (strength, dexterity, toughness,
@@ -67,9 +66,13 @@
 #                 level-up roll on it adds nothing for the class
 #   rolls         the skill rolls each level gives (spec §8 "Skills"; default 2): the
 #                 race's (races.toml) and Intelligence's (skills.toml `[rolls]`) are added. Most
-#                 classes 2, the thief and the ranger 3, the bard 4: learning is the bard's gift
+#                 classes 2, the thief, the ranger, and the craftsperson 3, the bard 4: learning is
+#                 the bard's gift
 #   creation_talents  talent picks at creation beyond everyone's (experience.toml `[levels]`
 #                 `creation_talents`; default 0): the bard, the lucky class, has 1
+#   creation_bonus  `{ count = 2, trees = ["crafts"] }`: that many bonus talent picks at
+#                 creation (1 to 8), from those trees, spent before the ordinary ones (the
+#                 craftsperson's two trades; default none)
 #   weapon_skills starting ranks in weapon skills (spec §8 "Weapon skills"), by skill id in
 #                 weapon_skills.toml, a number or dice (every result within 0 to 10), added to the
 #                 race's (at most 10)

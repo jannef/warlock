@@ -1740,7 +1740,8 @@ mod tests {
         let quarry = |walk: &str| {
             let content = content();
             let mut world = warlock_core::World::new(content.clone(), "quarry", None).expect("run");
-            let walk = format!("move:E pickup equip:tool:a {walk}");
+            // The pick-axe after the trades' tools (`d`).
+            let walk = format!("move:E pickup equip:tool:d {walk}");
             for action in warlock_core::action::parse_actions(&walk).expect("actions") {
                 world.apply(&action);
             }
@@ -2674,9 +2675,13 @@ mod tests {
     #[test]
     fn single_stacks_and_empty_hands_need_no_screen() {
         use warlock_core::Positions;
-        // The quarry's start, where the player carries nothing (no lantern either).
+        // The quarry's start, the trades' tools dropped and left behind: the player carries
+        // nothing (no lantern either).
         let content = content();
-        let world = warlock_core::World::new(content.clone(), "quarry", None).expect("run");
+        let mut world = warlock_core::World::new(content.clone(), "quarry", None).expect("run");
+        for action in warlock_core::action::parse_actions("drop move:N").expect("actions") {
+            world.apply(&action);
+        }
         let mut app = app_with(content, Some(Game::from_world(world, "bram-1".into())));
         // Nothing here and nothing carried: the actions are refused by the core, no screen.
         frame(&mut app, &[(KeyCode::Comma, ","), (KeyCode::KeyD, "d")]);

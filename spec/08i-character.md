@@ -10,12 +10,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   dwarf,female,warrior`, §9); otherwise the scenario's character (§7). It decides:
   - **Class limits** (#1279): a class may be closed to races (`races_not`: no goblin, drow,
     kobold, lizardfolk, duergar, or ratfolk paladin; no elven or dwarven witch) or open to a
-    race only with some genders (`only`: a drow priest is female), and may be `hidden` (the
-    craftsperson, for now; the commoner is offered again since #1406, the merchant since #1407). New run's class step lists only the classes
+    race only with some genders (`only`: a drow priest is female), and may be `hidden` (none is
+    now: the commoner is offered again since #1406, the merchant since #1407, the craftsperson
+    since #1419). New run's class step lists only the classes
     open to the race and gender chosen, never a hidden one, so its Random draws only those;
     `--character` refuses a closed pair with the reason in words (`a drow may be a priest only
-    if female`) but takes a hidden class, and a scenario's own character is never checked
-    (the test world's craftspeople at the forge and the quarry).
+    if female`) but takes a hidden class, and a scenario's own character is never checked.
   - **Name** (#218): the character has a name, 1 to 20 characters, typed on New run's Name step
     (after the class, before the summary; §6) or given on the command line (`--name Brakka`).
     The step's Random, and an empty field, give one of the race's names for the gender
@@ -651,7 +651,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     cuts gems (its profession's Cut, "Professions" below). Who trains them: gnomes Jewelcraft, dwarves and duergar Mining (dwarves
     Jewelcraft now and then), kobolds Mining, halflings Herbalism; druids and witches Herbalism,
     witches Alchemy; the commoner one profession at random (Alchemy, Jewelcraft, Metalcraft, or
-    Woodcraft, `2d4+4`, #1406); optional for the craftsperson (Jewelcraft, Mining), merchant (Jewelcraft),
+    Woodcraft, `2d4+4`, #1406); the craftsperson the two trades it picks at creation ("Talents":
+    Crafts, #1419); optional for the merchant (Jewelcraft),
     commoner (Mining), ranger (Herbalism), wizard (Alchemy, Enchanting), druid (Alchemy), witch
     (Enchanting), and aristocrat (Enchanting); and a story line each. Alberich of Fyrdelf
     teaches Mining for gold, and Eadric, Cēaptūn's smith, Metalcraft (§8 "Dialogue": "Training").
@@ -847,8 +848,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     uniformly, and a choice of it, from the stream `character/talents/<race>,<gender>,<class>`
     (a pure function of the seed and the character). What was taken is recorded in the
     character's `talents` (saves, replays: `character.talents`), and nothing is said. A run on
-    the scenario's own character without the kit (a dev launch, tests, walks) picks none, and a
-    replay without `talents` starts as it did before. Prerequisites see the run as it starts
+    the scenario's own character without the kit (a dev launch, tests, walks) picks none but
+    the scenario's own (`character = { .., talents = ["smith", "wright"] }`: the forge's
+    smith, the quarry's dwarf, a craftsperson's trades), which a run of it (no character given, or the same race, gender, and class naming no picks, as a replay records it) takes first with or
+    without the kit (with the kit, the Random picks then fill the rest; a pick that cannot be
+    taken fails the start, naming the scenario), and a replay without `talents` starts as it did
+    before. Prerequisites see the run as it starts
     (scores, skills, the class's level 1 abilities, the sign's gifts), and picks may chain
     (Healthy, then Fast healer). Character creation's Talents step (§6 "New run") reads the run
     drafted (`World::draft`, `creation_offers`, `random_creation`). The humans' extra pick is
@@ -885,8 +890,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     glowcaps; a pick-axe, readied if the Tool slot is free; two comfrey and a vervain; a scroll
     of identify), each from the stream `character/trade/<race>,<gender>,<class>/<skill>`, so no
     other roll moves. A level-up roll on a trade throws the die one step up, as on a skill the
-    class is known for (never two steps). The craftsperson class is hidden from New run until
-    #1419.
+    class is known for (never two steps). A craftsperson's two **bonus picks at creation**
+    (`creation_bonus = { count = 2, trees = ["crafts"] }` in the class file, #1419) are its
+    trades: level 1's `Due::bonus`, from the class's creation trees (`World::bonus_trees_at(1)`),
+    spent before the ordinary picks by everything that spends picks (the Talents step lists the
+    Crafts tree alone under "Choose a trade" until both are marked, the Random picks draw them
+    first, `--talents` takes a trade in order as a bonus pick while one is due, a third trade
+    an ordinary pick). Time served (the class's, at level 1) trains each at `3d6+6`.
   - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
     lowered later keeps the talent): other talents (a talent with a choice may be
     needed only by one of the same choice, taken for the same), stat **scores** (the stored
@@ -990,9 +1000,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     tree) Pack mule (the burden line's first step, #1198), Stubborn (Toughness +2,
     #1406; poison never lowers scores), Big hands (+1 damage with maces and
     unarmed), Second wind, Salt of the earth (healing and resting +25 %), Unlikely hero (every
-    stat +1); craftsperson (Weaponcraft, Guard, Delver) Sturdy work (Protection +1 in body
-    armour), Masterwork (melee threat +1), Artisan (Protection +1 per armour piece worn, +2
-    melee damage); merchant (Delver, Scholar) Haggler (favour +15 %: the one class ability on
+    stat +1); craftsperson (Grit, Delver, Scholar; its two trades at creation, "Talents": Crafts;
+    #1419, the craftsperson design §6, §7) Time served (at 1: each trade it takes at creation
+    trained 6 more) and Eye for the make (at 1: an item's description reads its make, in words:
+    what salvage would give of it if every check went well, a gem whole, or that it would not
+    come apart or holds nothing worth saving; for arms and armour an anvil or a knife betters,
+    the improvements it will still take, or that it is damaged, never the attempts made on it;
+    and whether its main material is very hard (work +4 or more), hard (+1 to +3), or soft and
+    easy (−2 or less) to work; perception only, `PerceptionView::describe_item`); merchant (Delver, Scholar) Haggler (favour +15 %: the one class ability on
     shop favour, #787), Invest (below, at 1, #1407), Deep pockets (coins weightless) and Pack mule (the burden line's first step, #1198), Merchant's eye (#816, at 12: an
     ability, on a thing carried, that identifies it as the scroll of identify would, for a
     reading's time and nothing else; refused, no time, for a thing already known); #789 cut its level 40 Insured (shops paid +50 %), a

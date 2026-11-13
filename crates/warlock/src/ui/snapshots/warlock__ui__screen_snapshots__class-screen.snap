@@ -18,6 +18,7 @@ expression: "render(case, content.clone())"
               │   Warrior                                                            │
               │   Aristocrat                                                         │
               │   Commoner                                                           │
+              │   Craftsperson                                                       │
               │   Merchant                                                           │
               │   Random                                                             │
               │                                                                      │

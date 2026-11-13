@@ -5,7 +5,6 @@ expression: "render(case, content.clone())"
  You pick up a dagger (rare).
  This is Stonebiter, a dagger!
 
-
                   ┌─ Item ───────────────────────────────────────────────────────┐
                   │                                                              │
                   │ ) Stonebiter                                                 │
@@ -22,12 +21,13 @@ expression: "render(case, content.clone())"
                   │ Prefix  Sharp: +2 damage                                     │
                   │ Suffix  of the Ox: +2 to Toughness                           │
                   │ Power   Its bearer sees in the gloom.                        │
+                  │ It would not come apart.                                     │
+                  │ It will take three more improvements at the anvil.           │
                   │                                                              │
                   │ Notched from a hundred quarry walls, and none of them won.   │
                   │                                                              │
                   │ Esc close                                                    │
                   └──────────────────────────────────────────────────────────────┘
-
 
 
 

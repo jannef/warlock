@@ -2,6 +2,8 @@ name = "Forge"
 description = "A cold forge with an anvil, some arms and armour to work on, and ingots and gems to forge from: stand beside the anvil and choose Metalcraft from the abilities menu, to temper or to forge a sword."
 start_level = "forge"
 seed = 1
-# A smith come to see what the old anvil can still do.
-character = { race = "human", gender = "male", class = "craftsperson", name = "Wulfhere" }
+# A smith come to see what the old anvil can still do: his trades, a smith's and a wright's (the
+# crafts the class trained before it trained none of its own), keep him at the anvil and on the
+# javelin's haft.
+character = { race = "human", gender = "male", class = "craftsperson", name = "Wulfhere", talents = ["smith", "wright"] }
 wield = ["lantern"]

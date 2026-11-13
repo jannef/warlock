@@ -734,6 +734,81 @@ fn how_held(def: &ObjectDef, content: &Content) -> Option<String> {
     })
 }
 
+/// What the craftsperson's Eye for the make reads of `stack` (spec §8 "Class abilities"; the
+/// craftsperson design §7.2), in words and never a number, as `lore` names things: what salvage
+/// would give of one if every check went well, at `percent` of each material's grams, a gem whole
+/// ("Taken apart, it would give 2 steel ingots and a small ruby."; "Nothing in it is worth
+/// saving."; "It would not come apart." for one `protected` from harm); for arms or armour an
+/// anvil or a knife betters, the improvements it will still take, or that it is damaged (never
+/// the attempts made on it, the difficulty's secret); and how hard its main material is to work,
+/// when it is hard or soft (its `work`: +4 or more very hard, +1 to +3 hard, -2 or less soft and
+/// easy). Perception only: nothing is drawn.
+pub fn make_lines(stack: &Stack, lore: Lore<'_>, percent: u8, protected: bool) -> Vec<Line> {
+    let content = lore.content;
+    let mut out = Vec::new();
+    let mut one = stack.clone();
+    one.count = 1;
+    let worked = |s: &Stack| {
+        (s.parts(content).first())
+            .is_some_and(|p| content.stock().profession_of(content, p.material).is_some())
+    };
+    let saved: Vec<Stack> = match crate::world::salvageable(content, &one) {
+        true => crate::piece::break_up(&one, content, percent)
+            .into_iter()
+            .filter(worked)
+            .collect(),
+        false => Vec::new(),
+    };
+    let apart = match () {
+        () if protected => "It would not come apart.".to_string(),
+        () if saved.is_empty() => "Nothing in it is worth saving.".to_string(),
+        () => format!(
+            "Taken apart, it would give {}.",
+            crate::object::phrase(&saved, lore)
+        ),
+    };
+    out.push(line(LineKind::Note, apart));
+    let place = match () {
+        () if crate::world::temperable(content, stack) => Some("at the anvil"),
+        () if crate::world::whittleable(content, stack) => Some("with a knife"),
+        () => None,
+    };
+    if let Some(place) = place {
+        let most = usize::from(content.temper().most);
+        let worked = stack.worked();
+        let text = match worked.map_or(0, |w| w.improved.len()) {
+            _ if worked.is_some_and(|w| w.damaged) => {
+                format!("It is damaged: work {place} would make it good.")
+            }
+            done if done >= most => "It can be made no finer.".to_string(),
+            done => {
+                // `most` is at most the grades' three (`data/temper.toml`).
+                let (count, what) = match most - done {
+                    1 => ("one", "improvement"),
+                    2 => ("two", "improvements"),
+                    _ => ("three", "improvements"),
+                };
+                format!("It will take {count} more {what} {place}.")
+            }
+        };
+        out.push(line(LineKind::Note, text));
+    }
+    if let Some(part) = stack.parts(content).first() {
+        let material = content.material(part.material);
+        let hard = match material.work {
+            w if w >= 4 => Some("very hard to work"),
+            1..=3 => Some("hard to work"),
+            w if w <= -2 => Some("soft and easy to work"),
+            _ => None,
+        };
+        if let Some(hard) = hard {
+            let name = capitalized(&material.name);
+            out.push(line(LineKind::Note, format!("{name} is {hard}.")));
+        }
+    }
+    out
+}
+
 fn capitalized(text: &str) -> String {
     let mut chars = text.chars();
     chars

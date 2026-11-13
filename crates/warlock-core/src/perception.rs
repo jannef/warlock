@@ -1779,8 +1779,23 @@ impl<'a> PerceptionView<'a> {
     /// `stack`'s description as the player knows it (spec §6 "Item description"):
     /// [`crate::magic::describe::appraised`] with their eye for worth, a wand whose type they
     /// know saying what it does in their hands ([`PerceptionView::wand_does`]).
+    /// With Eye for the make (the craftsperson's), what it reads of the item's make follows
+    /// ([`crate::magic::describe::make_lines`]), before a unique's lore.
     pub fn describe_item(&self, stack: &Stack) -> Vec<crate::magic::describe::Line> {
-        crate::magic::describe::appraised_for(stack, self.lore, self.appraisal(), Some(self.player))
+        use crate::magic::describe::{self, LineKind};
+        let mut lines =
+            describe::appraised_for(stack, self.lore, self.appraisal(), Some(self.player));
+        if self.player.talent_mods(self.content).eye_for_make {
+            let percent = self.content.salvage().map_or(0, |s| s.percent);
+            let protected = crate::world::protected_in(self.content, self.quests, stack);
+            let make = describe::make_lines(stack, self.lore, percent, protected);
+            let at = match lines.last() {
+                Some(last) if last.kind == LineKind::Lore => lines.len() - 1,
+                _ => lines.len(),
+            };
+            lines.splice(at..at, make);
+        }
+        lines
     }
 
     /// What the wand `stack` does in the player's hands once they know its type (its rung comes

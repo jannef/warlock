@@ -476,6 +476,10 @@ pub enum TalentEffect {
     },
     /// Added to the dice of every trade it takes, as the trade is handed down (Time served).
     TradeBonus { value: i32 },
+    /// Item descriptions read an item's make: what salvage would give of it, the improvements
+    /// left in it, how hard its stuff is to work (Eye for the make;
+    /// [`crate::magic::describe::make_lines`]).
+    EyeForMake,
     /// The actor notices hidden things in passing as if trained in Spot and Detect traps, with
     /// this much added.
     Notice { value: i32 },

@@ -16,9 +16,10 @@ expression: "render(case, content.clone())"
            ┌─ Cut ──────────────────────────────────────────────────────────────────────┐
            │                                                                            │
            │ Gems                                                                       │
-           │ > a - * a fine sapphire                                               1 g  │
+           │ > a - * an uncut garnet                                               1 g  │
+           │   b - * a fine sapphire                                               1 g  │
            │                                                                            │
-           │ a or Enter cut   Esc cancel                                                │
+           │ a-b or Enter cut   Esc cancel                                              │
            └────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -30,5 +31,4 @@ expression: "render(case, content.clone())"
 
 
 
-
- The Hub  ·  HP 17/17  ·  MP 1/1  ·  Lv 1  ·  09:04  ·  11 Darkening, Year 1444          ? controls
+ The Hub  ·  HP 19/19  ·  MP 1/1  ·  Lv 1  ·  09:04  ·  11 Darkening, Year 1444          ? controls

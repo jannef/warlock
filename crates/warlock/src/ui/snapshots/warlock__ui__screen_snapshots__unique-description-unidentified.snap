@@ -7,7 +7,6 @@ expression: "render(case, content.clone())"
 
 
 
-
                   ┌─ Item ───────────────────────────────────────────────────────┐
                   │                                                              │
                   │ ) Dagger                                                     │
@@ -23,10 +22,11 @@ expression: "render(case, content.clone())"
                   │                                                              │
                   │ Unidentified: what its magic does is unknown, though it      │
                   │ works all the same.                                          │
+                  │ Taken apart, it would give a steel ingot.                    │
+                  │ It will take three more improvements at the anvil.           │
                   │                                                              │
                   │ Esc close                                                    │
                   └──────────────────────────────────────────────────────────────┘
-
 
 
 

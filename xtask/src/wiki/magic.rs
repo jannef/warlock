@@ -351,7 +351,7 @@ fn talents_beside(content: &Content, a: &AffixDef) -> &'static [&'static str] {
     match (a.effect, pool) {
         (E::ToHit, _) => &["weapon_focus"],
         (E::Damage, _) => &["brawn"],
-        (E::Threat, _) => &["improved_critical", "masterwork"],
+        (E::Threat, _) => &["improved_critical"],
         (E::Crit, _) => &["brutal_critical"],
         (E::Range, _) => &["far_shot"],
         (E::Resistance, _) => &["elemental_ward"],
