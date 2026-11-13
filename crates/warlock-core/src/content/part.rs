@@ -480,13 +480,16 @@ mod tests {
             weight: 100,
             to_hit: None,
             damage: None,
+            dice: 0,
             protection: None,
+            defence: 100,
             rarity: None,
             gear: None,
             fit: Default::default(),
             work: 0,
             binding: 0,
             resists: None,
+            proof: false,
         }
     }
 

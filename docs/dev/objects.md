@@ -201,6 +201,17 @@ runs over every campaign's quests).
 Mithril and adamantium (`data/materials/`) are very rare from item level 20 and 30 (gear from
 creature level 30 and 40); the wiki's materials table has the three chances.
 
+**Adamantium, the fighting metal** (#1444): three material fields, read in one place each.
+`dice` (`variant::dice`, read in `Stack::attack`, the one place dice are built): a weapon of it
+rolls that many more dice of its own size (`Roll::more`), so a melee, thrown, or missile weapon
+(not ammunition, which has no dice of its own) of adamantium rolls 2d9 for 1d9. `defence`
+(`variant::shield`, added as `Effect::Shield` in `Mods::local`, so Defence, the numbers, and the
+item description's "Shield +N" all read it): a shield's Defence × it over the base material's.
+`proof` (`item_damage::proof`): `World::withstands` withstands every `ItemHarm` (`Work` too) with
+no draw, `ruin.rs` spares it, and `gear_condition::apply` leaves a piece drawn damaged as made
+(its draws unchanged). It is not `protected`: salvage and Set still take it. Armour of it keeps
+200 % (`protection`), twice a steel piece's Protection.
+
 **Gems** (spec §7 "Gems", #191): a gem is a material with a `gem` table (`content/gem.rs`,
 `GemDef`: `color`, `value` in gold for the plain size and cut, `rarity`, `plural`; a gem is
 precious, checked), one file each in `data/materials/` (diamond, ruby, emerald, sapphire, topaz,

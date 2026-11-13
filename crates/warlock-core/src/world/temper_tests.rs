@@ -100,6 +100,28 @@ fn a_failed_attempt_never_harms_a_sword_of_proof() {
     assert_eq!((after.damaged, after.attempts), (false, 1));
 }
 
+#[test]
+fn a_failed_attempt_never_harms_adamantium_but_it_may_fail_to_improve() {
+    // #1444: adamantium is never damaged; a failure is withstood, its attempt still counted.
+    let mut w = world(false);
+    let id = object(&w, "long_sword");
+    let m = w.content.material_id("adamantium").expect("adamantium");
+    let part = crate::item_parts::ItemPart::material(&w.content, None, m);
+    (w.player_mut().inventory).insert(0, Stack::one(id).with_parts(vec![part]));
+    let saved = w.state.clone();
+    let failed = (0..500).find(|&n| {
+        w.state = saved.clone();
+        w.state.rng = Rng::stream(n, "temper_tests_adamantium");
+        w.apply(&Action::Temper { item: 0 });
+        said(&w, "The work goes wrong, but no harm is done.")
+    });
+    assert!(failed.is_some(), "some attempt fails");
+    let after = first(&w).worked().cloned().expect("worked");
+    assert_eq!((after.damaged, after.attempts), (false, 1));
+    assert!(after.improved.is_empty(), "nor is it improved");
+    assert_eq!(w.state.player().inventory.len(), 1, "never destroyed");
+}
+
 /// A long sword with an affix that rolls on it, of tier 1, unidentified, in the pack's first place.
 fn magic_sword(w: &mut World) {
     let id = object(w, "long_sword");

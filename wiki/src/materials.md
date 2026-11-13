@@ -26,12 +26,14 @@ Every other material is measured against steel:
 - **weight**: how heavy an item of it is compared with the same item of steel. Metals go by
   their real densities, the rest by what an item of them weighs.
 - **[to hit](combat.md#hitting)** and **[damage](combat.md#damage)**: what it does as a weapon's
-  blade or head.
+  blade or head. A few materials also add **dice**: a weapon of adamantium rolls one more die of
+  its own size.
 - **armour**: how much of an armour's [Protection](combat.md#protection) an armour of it keeps.
+- **shield**: how much of a shield's [Defence](combat.md#defence) a shield of it gives.
 - **worth**.
 - **binding**: how well it holds magic. It is added to the number of
   [enchantments](magic-items.md#capacity) an item made of it can bear: silver −2, the soft
-  metals and knapped stone −1, gold, ivory, jade, amber, and silk +1, mithril, adamantium, and
+  metals and knapped stone −1, gold, ivory, jade, amber, silk, and adamantium +1, mithril and
   the dragon stuff +2.
 
 A material with no weapon figures cannot be a weapon's working part, so there is no leather
@@ -72,10 +74,11 @@ What is reached then **withstands** it by its main material's chance, in the **W
   your mithril chain mail shirt.*
 - Otherwise the item is damaged, or destroyed if it was damaged already.
 
-Gold, silver, mithril, adamantium, dragonscale, and the gems nearly always withstand everything.
+Gold, silver, mithril, dragonscale, and the gems nearly always withstand everything.
+Adamantium is never damaged at all (see [Protected items](#protected-items)).
 Iron and steel rust and corrode easily but stand heat. Copper and its alloys corrode but hardly
 rust. The soft metals melt. Wood and cloth burn. Nothing but metal rusts. A failed attempt at an
-anvil is never withstood. Fighting bare-handed or with a spell risks nothing.
+anvil is never withstood, except by adamantium. Fighting bare-handed or with a spell risks nothing.
 
 ### Protected items
 
@@ -87,6 +90,10 @@ Some items no harm reaches at all: not acid, rust, or fire, not a failed attempt
 - items of the [of Proof](affixes.md#suffixes) affix, whether or not you have identified it;
 - anything a [quest](quests.md) asks you to bring or deliver, until that quest is done for good.
   What a quest gives you as its reward is an ordinary item, unless another quest asks for it.
+
+**Adamantium** is never harmed either: no acid, rust, or fire damages it, a failed attempt at
+an anvil only fails to improve it, a spell's ruin leaves it be, and a creature's adamantium gear
+is never found damaged. Unlike the items above, you can still take it apart or set a gem in it.
 
 ## Items of other materials
 
@@ -106,10 +113,13 @@ Compared with its usual material, an item of another one:
 - **strikes** better or worse. [To hit](combat.md#hitting) and [damage](combat.md#damage) change
   by the difference between the two materials' weapon figures: a bronze long sword is +0 to hit
   and −1 damage against steel. This counts for every blow, throw, and shot made with it, and for
-  [arrows and bolts](ammunition.md) by their heads.
+  [arrows and bolts](ammunition.md) by their heads. A material with more dice adds that many
+  dice of the weapon's own size to a melee weapon, a thrown one, or a bow or crossbow. Arrows
+  and bolts get no dice: a shot rolls its launcher's.
 - **protects** more or less. Armour keeps its [Protection](combat.md#protection) times its
   material's armour figure over the usual one's, rounded to the nearest. An iron chain mail
-  shirt's Protection 3 is 1 in tin and 4 in chromium.
+  shirt's Protection 3 is 1 in tin and 4 in chromium. A shield's [Defence](combat.md#defence)
+  changes the same way by the shield figure, which is 100% for every material but adamantium.
 - is **worth** more or less, by its parts' shares and their materials' worth, like any item with
   several parts. A gold long sword is worth about nineteen steel ones.
 - is drawn in its material's **colour**. A ring set with a gem keeps its gem's colour.
@@ -173,8 +183,11 @@ Chromium, nicrosil, dragonbone, and dragonscale appear only deep. Mithril appear
 depth 20 and adamantium from depth 30 (on creatures, from levels 30 and 40).
 
 - **Mithril** is half the weight of steel and quicker in the hand (+1 to hit).
-- **Adamantium** is a little heavier than steel and bites deeper (+1 damage), and armour of it
-  keeps 130% of its Protection.
+- **Adamantium** is a little heavier than steel and the best metal to fight with. A weapon of it
+  rolls one more die of its own size and bites deeper (+1 damage): a long sword's 1d9 is 2d9+1.
+  Armour and helmets of it have twice steel's Protection, and a shield of it twice its Defence.
+  It is never damaged by anything (see [Protected items](#protected-items)). It holds less magic
+  than mithril, though (binding +1).
 
 Neither is a precious metal, and acid runs off both. An [anvil](altars-forges-springs.md#forges)
 works them as it does steel. Items placed by hand in the world's made places are always what
@@ -183,6 +196,10 @@ they were placed as.
 A long sword and a chain mail shirt in each metal:
 
 {{#include generated/variants.md}}
+
+The common weapons, armour, helmets, and shields as usually made and in adamantium:
+
+{{#include generated/fighting-metals.md}}
 
 ## Pieces
 

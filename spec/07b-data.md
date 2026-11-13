@@ -380,19 +380,25 @@ developer notes (CLAUDE.md, `docs/dev/`).
   items but never made into them), `color` (an item of it drawn so where its base item is of
   another material), `weight` (percent of steel's for an item of it, at least 1; metals by real
   density, the rest an effective weight), `to_hit` and `damage` (as a weapon's working part;
-  neither: it cannot be one), `protection` (percent of an armour's Protection kept; none: it
-  cannot be armour), `value` (above), `rarity` and `gear` (how often loot, by item
+  neither: it cannot be one), `dice` (#1444: dice more of a weapon's own size a weapon of it
+  rolls, steel 0, adamantium 1: a long sword's 1d9 is 2d9; on what has dice of its own, a melee,
+  thrown, or missile weapon, never ammunition, which strikes with its launcher's), `protection`
+  (percent of an armour's Protection kept; none: it cannot be armour), `defence` (#1444: percent
+  of a shield's Defence a shield of it gives, steel 100, the default; adamantium 200), `value` (above), `rarity` and `gear` (how often loot, by item
   level, and creatures' gear, by creature level, make an item of it: `{ weight, deeper, level }`,
   the weight at level 1, `deeper` per level past the first, never below 0, none below `level`),
   `work` (#1332: how hard it is to work, a signed modifier on every salvage and recipe check that
   works it, steel 0; the soft metals −3, copper and gold −2, mithril, ruby, and sapphire +4,
   adamantium +8; docs/design/professions.md §4), `binding` (#1427: how well it holds magic,
   −2 to +2, steel 0; silver −2, the soft metals and knapped stone −1, gold, electrum, ironwood,
-  ivory, jade, amber, silk +1, mithril, adamantium, dragonbone, dragonscale +2; a term of an
+  ivory, jade, amber, silk, adamantium +1, mithril, dragonbone, dragonscale +2; a term of an
   item's affix capacity, §8 "Magic items"),
   `resists` (#1168: `{ acid, rust, fire }`, its chance in percent to withstand each kind of item damage, none withstood without it; withstood, nothing happens, else the item is damaged, the
   anvil's one state that Temper or Whittle mends, and one damaged already is destroyed; a failed
-  Temper or Whittle is item damage no material withstands. Noble metals, mithril, adamantium,
+  Temper or Whittle is item damage no material's `resists` withstands. `proof = true` (#1444,
+  adamantium alone): never damaged by anything, a failed Temper or Whittle too (it only fails to
+  improve), spared by a spell's ruin, and never found damaged in creature gear; unlike a
+  protected item it may still be salvaged or set. Noble metals, mithril,
   dragonscale, and the gems withstand nearly everything; iron and steel rust and corrode but
   stand heat; wood and cloth burn; nothing but metal rusts; `world/item_damage.rs`). Protected
   from all item damage, a spell's ruin of floor items too (#1170): a unique item, an item of the
@@ -407,8 +413,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   118 / 0 / −1 / 70% / ×6, aluminium 34 / +1 / −2 / 70% / ×8, duralumin 36 / +1 / −1 / 90% /
   ×10, chromium 92 / 0 / +1 / 110% / ×9, nicrosil 108 / 0 / +1 / 110% / ×10, silver 134 / −1 /
   −1 / 50% / ×15, and the dread design's two (#1131) mithril 50 / +1 / 0 / 100% / ×20 (very rare
-  from item level 20, gear from 30) and adamantium 120 / 0 / +1 / 130% / ×30 (from 30, gear from
-  40); the organic ones (#194): wood 40 / −1 / −2 / 30% / ×0.2, hardwood 50 / 0 / −1 /
+  from item level 20, gear from 30) and adamantium 120 / 0 / +1 and a die more / 200% (a shield
+  200% too) / ×30 (from 30, gear from 40; #1444 made it the fighting metal); the organic ones (#194): wood 40 / −1 / −2 / 30% / ×0.2, hardwood 50 / 0 / −1 /
   40% / ×0.4, ironwood 70 / 0 / 0 / 60% / ×3, bone 60 / 0 / −1 / 50% / ×0.3, horn 50 / 0 / −1 /
   45% / ×0.5, ivory 65 / −1 / −1 / 40% / ×5, chitin 45 / 0 / −1 / 60% / ×0.6, dragonbone 55 / +1
   / +1 / 110% / ×25 (bone group), flint 80 / 0 / −1 / − / ×0.1, obsidian 75 / 0 / 0 / − / ×0.3
