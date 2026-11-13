@@ -5,5 +5,5 @@ name = "Dēopgang"
 description = "Straight into Dēopgang, the deep way: eleven floors of gnome-cut galleries and the wild deep, down to the deep gnomes' town."
 start_level = "deopgang:1"
 seed = 1
-character = { race = "dwarf", gender = "male", class = "warrior", name = "Hrothgar" }
+character = { race = "human", gender = "male", class = "warrior", name = "Hrothgar" }
 wield = ["lantern"]

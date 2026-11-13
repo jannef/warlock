@@ -1844,6 +1844,8 @@ mod dark_face_tests;
 #[cfg(test)]
 mod decipher_tests;
 #[cfg(test)]
+mod deep_gnome_tests;
+#[cfg(test)]
 mod den_tests;
 #[cfg(test)]
 mod dig_tests;

@@ -607,7 +607,10 @@ impl DungeonDef {
 
     /// Whether level `depth` (1-based) has a way down.
     pub fn leads_down(&self, depth: u32) -> bool {
-        self.endless.is_some() || depth < self.depth || self.below.is_some() || self.bottom.is_some()
+        self.endless.is_some()
+            || depth < self.depth
+            || self.below.is_some()
+            || self.bottom.is_some()
     }
 
     /// Where the `>` of level `id`, at `depth`, leads: the next level of its own instance
@@ -1202,6 +1205,24 @@ mod tests {
         }
         let at = "[[dungeon]]\nid = \"p@1\"\ngenerator = \"rooms\"\ndepth = 1\nsize = [80, 21]\n";
         assert!(resolve(at).is_err(), "`@` belongs to a Pit's levels");
+    }
+
+    #[test]
+    fn a_bottom_is_where_the_deepest_level_leads_and_stands_alone() {
+        let base = "[[dungeon]]\nid = \"d\"\ngenerator = \"rooms\"\nsize = [80, 21]\n";
+        let d = resolve(&format!("{base}depth = 3\nbottom = \"town\"\n")).unwrap();
+        let d = &d[0];
+        assert_eq!(d.bottom.as_deref(), Some("town"));
+        assert!(d.leads_down(3));
+        assert_eq!(d.down_to("d:3", 3).as_deref(), Some("town"));
+        assert_eq!(d.down_to("d:2", 2).as_deref(), Some("d:3"));
+        for bad in [
+            "depth = 3\nbottom = \"town\"\nbelow = \"e:2\"\n",
+            "bottom = \"town\"\n[dungeon.endless]\ncaves = 0\ncaves_size = [100, 40]\n",
+            "depth = 3\nbottom = \"town\"\n[dungeon.portal]\n",
+        ] {
+            assert!(resolve(&format!("{base}{bad}")).is_err(), "{bad}");
+        }
     }
 
     #[test]

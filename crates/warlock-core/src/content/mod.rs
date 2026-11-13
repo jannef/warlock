@@ -4636,6 +4636,25 @@ mod tests {
         assert_ne!(a, with_spell.fingerprint_for("showcase"));
     }
 
+    #[test]
+    fn a_bottom_is_a_level_of_its_campaign_with_a_way_back_up() {
+        const TOWN: &str = "campaigns/ascmearc/levels/gimmwic.toml";
+        const BRANCH: &str = "campaigns/ascmearc/data/dungeons/deopgang.toml";
+        let edited = |path: &str, from: &str, to: &str| {
+            let mut files = ContentFiles::builtin();
+            let text = files.get(path).expect("the file").to_string();
+            assert!(text.contains(from), "{from}");
+            files.insert(path, &text.replace(from, to));
+            Content::load(&files).unwrap_err().to_string()
+        };
+        // The town's `<` must lead back to the deepest floor.
+        let err = edited(TOWN, "to = \"deopgang:11\"", "to = \"deopgang:10\"");
+        assert!(err.contains("`bottom = \"gimmwic\"`"), "{err}");
+        // A level of another campaign is no bottom.
+        let err = edited(BRANCH, "bottom = \"gimmwic\"", "bottom = \"hub\"");
+        assert!(err.contains("`bottom = \"hub\"`"), "{err}");
+    }
+
     fn minimal_files(level_map: &str, extra_legend: &str) -> ContentFiles {
         let mut files = ContentFiles::default();
         files.insert("data/item_classes.toml", BUILTIN_ITEM_CLASSES);
