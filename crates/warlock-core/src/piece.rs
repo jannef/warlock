@@ -256,8 +256,9 @@ mod tests {
             pieces(&content, "glass", 2).describe(&content),
             "2 pieces of glass"
         );
-        // Without the file at all, every piece is a piece (and no recipe takes stock).
+        // Without the file at all, every piece is a piece (and no recipe or rig takes stock).
         files.remove("data/stock.toml");
+        files.remove("data/rigs.toml");
         let made: Vec<String> = (files.table("recipes"))
             .filter(|(_, text)| text.contains("\nresult ="))
             .map(|(path, _)| path.to_string())

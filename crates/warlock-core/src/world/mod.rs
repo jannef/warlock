@@ -247,6 +247,7 @@ mod resource;
 mod rest;
 mod restore;
 mod reveal;
+mod rig;
 mod rod;
 mod rooms;
 mod rooted;
@@ -378,6 +379,8 @@ pub use orison::PrayerState;
 pub use pit::Pit;
 pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
 use rest::Ended;
+pub(crate) use rig::rigged_rows;
+pub use rig::{RigRow, takes_words};
 pub use salvage::{chipped, salvage_percent, salvageable};
 pub use sanctuary::Hallow;
 pub use scribe::scribe_turns;
@@ -719,6 +722,9 @@ pub struct World {
     /// Traps sprung since this world was created or loaded (not saved): a rest perceives every
     /// turn in which one went off (a teleport moves someone farther than a step).
     sprung: u64,
+    /// Who rigged the trap going off now, if the player did (not saved; `trap.rs`, `rig.rs`):
+    /// its blows are theirs.
+    rigger: Option<ActorId>,
     /// Creatures that came to the player's level since this world was created or loaded (not
     /// saved): a rest perceives every turn in which one came (`spawn.rs`).
     spawned: u64,
@@ -816,6 +822,8 @@ enum Spent {
     Salvage(salvage::Salvaging),
     /// Mending a damaged item in the field (see [`World::make_do`]).
     MakeDo(make_do::Mending),
+    /// Rigging a trap beside the player (see [`World::rig`]).
+    Rig(rig::Rigging),
     /// Setting a cut gem in an item (see [`World::set`]).
     Set(set::Setting),
     /// Taming a beast beside the player (see [`World::tame`]).
@@ -1283,6 +1291,7 @@ impl World {
             caught: false,
             glassing: None,
             sprung: 0,
+            rigger: None,
             spawned: 0,
             reshaped: 0,
             found: 0,
@@ -1518,6 +1527,7 @@ impl World {
             Spent::Enchant(work) => self.enchant(work, &mut events),
             Spent::Salvage(work) => self.salvage(work, &mut events),
             Spent::MakeDo(work) => self.make_do(work, &mut events),
+            Spent::Rig(work) => self.rig(work, &mut events),
             Spent::Set(work) => self.set(work, &mut events),
             Spent::Tame(taming) => self.tame(taming, &mut events),
             Spent::Skip(duration) => {
@@ -1665,6 +1675,7 @@ impl World {
             Action::Temper { item } => return self.start_temper(*item),
             Action::Whittle { item } => return self.start_whittle(*item),
             Action::Salvage { item } => return self.start_salvage(*item),
+            Action::Rig { rig, dir } => return self.start_rig(rig, *dir),
             Action::Give { item, ally } => return self.give_collar(*item, *ally),
             Action::UseTalent(TalentActive::SecondWind) => return self.second_wind(events),
             Action::UseTalent(TalentActive::BloodMagic) => return self.blood_magic(),
@@ -2151,6 +2162,8 @@ mod rest_close_tests;
 mod retribution_tests;
 #[cfg(test)]
 mod reveal_tests;
+#[cfg(test)]
+mod rig_tests;
 #[cfg(test)]
 mod rod_tests;
 #[cfg(test)]

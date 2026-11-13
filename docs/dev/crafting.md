@@ -919,8 +919,9 @@ levels 40 and 50, each one read.
   seconds its `keep_at` loop runs: `fletch::fletcher_seconds` (every recipe's time, read there
   alone: forged, counted after Fletcher's `time_percent` so the two multiply, brewed, Smelt,
   and any recipe a later profession adds, enchanting's too), `temper.rs` (Temper and Whittle),
-  `cut.rs`, `set.rs`, `salvage.rs`, `make_do.rs`, and `field_forge.rs`. The lists that tell a
-  craft's time ask the same (`craft.rs::takes`, the forging wizard's and Set's `CraftPlan`), so
+  `cut.rs`, `set.rs`, `salvage.rs`, `make_do.rs`, `field_forge.rs`, and `rig.rs`. The lists that
+  tell a craft's time ask the same (`craft.rs::takes`, the forging wizard's and Set's `CraftPlan`,
+  the rig list), so
   the time shown is the time spent. Not crafts, unchanged: Gather, Forage, Scribe, Decipher. A
   new craft's loop calls `craft_seconds` with its data's seconds.
 - **Master's hand** (`data/talents/masters_hand.toml`, `{ kind = "grade_ease", value = 4 }`,

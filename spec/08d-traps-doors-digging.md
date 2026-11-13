@@ -167,6 +167,32 @@ developer notes (CLAUDE.md, `docs/dev/`).
     those not trained in the skill; the thief is
     trained in Disable device from level 1 (`2d6+10`, known for; #684 took the Trapfinding
     class ability that gave it).
+  - **Rigging traps** (`warlock-core/src/world/rig.rs`; #1423, the craftsperson design §7.6):
+    the craftsperson's Trapwright (at 25), a class active (§6 "Abilities": the Class group,
+    `Aim::Rig`: the rig list, `ui/rig_screen.rs`, then the direction prompt) and an action with
+    replay text, `rig:ID:DIR` (`Action::Rig`, `ActionKind::Craft`). The rigs are data
+    (`data/rigs.toml`, `content/rig.rs`: `RigRules { difficulty, skill, [[rig]] }`; optional:
+    without it the ability is "not usable yet"): a tripwire (`rigged_arrows`, a shot: up to 3
+    arrows of the stack readied, else the first carried, a charge for each; a wall within 2
+    cells in a straight line, for the slit), stakes (`rigged_stakes`, a strike: a wood billet
+    and a knife carried, 2 charges), a pitfall (`rigged_pit`, a pit: a digging tool ready, kept,
+    3 charges); the three trap rows have no `grows`. The cell is the one beside the player in
+    the direction: on a level, never the overworld, walkable floor, nobody seen on it, no known
+    trap, chest, door, stairs, shop floor, water, ice, or glowing fungus; refused with the
+    reason and no time. The work is the rig's `seconds` of `craft` turns (`World::keep_at`),
+    interrupted for nothing; at its end the cell and inputs are asked again (a hidden trap there
+    is found, someone unseen is in the way), then one check, two gameplay draws: 2d12 +
+    Dexterity modifier + the skill's `craft` points (Woodcraft) + the talents' Dexterity checks
+    against `difficulty` (10). Made: the trap is placed, `known`, `rigged` (`Trap::rigged`,
+    saved, default false), with the rig's charges, and the inputs spent ("You rig a tripwire
+    across the way."). Failed: nothing ("The rig will not hold."). A natural 2: placed and
+    spent, then sprung at once at the rigger (`World::spring_trap`, a pit's climb as another
+    turn), so it stands a charge less ("The tripwire snaps as you set it!"). A rigged trap's
+    blows are the player's (`World::spring_trap` sets `World::rigger`, read by `trap_deals`):
+    what it kills is their kill (experience, quests, the tally, as their own arrow's), unless it
+    is the player. Being known, stepping onto it asks and may be sidestepped. Creatures, allies
+    too, know nothing of it. Dumps: `truth` lists each rigged trap, `trap rigged_arrows at (12,
+    5): 3 charges (rigged)`; JSON `known_traps[]` has `rigged`.
 - **Doors** (`warlock-core/src/door.rs`, the rules; `world/door.rs`, applying them; M19, #130):
   locked doors and keys, and kicking doors in.
   - **Locks** are per-cell state of a level, not terrain of their own: a locked door is the

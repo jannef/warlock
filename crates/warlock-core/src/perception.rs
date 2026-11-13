@@ -2104,6 +2104,13 @@ impl<'a> PerceptionView<'a> {
             Ability::Class(crate::content::ClassActive::Sic) if !companion_here => {
                 Some(crate::ability::Unavailable::NoCompanion)
             }
+            // Trapwright rigs on a level, never the overworld (`world/rig.rs`).
+            Ability::Class(crate::content::ClassActive::Rig) => {
+                (ability.unavailable(self.player, self.content)).or_else(|| {
+                    (self.level.kind() == crate::content::LevelKind::Overworld)
+                        .then_some(crate::ability::Unavailable::NotHere)
+                })
+            }
             // A companion is one at a time (spec §8 "Allies": Tame).
             Ability::Tame if self.companion().is_some() => {
                 Some(crate::ability::Unavailable::HaveCompanion)

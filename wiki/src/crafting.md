@@ -292,8 +292,8 @@ From level 6 a craftsperson has **Waste not**: nothing is lost in their hands bu
 From level 40 a craftsperson has **Quick hands**: every craft takes half its time. That is every
 [recipe](#the-recipes) (an [enchanting](enchanting.md) too), a temper at [the anvil](altars-forges-springs.md#forges), a
 [whittle](skill-uses.md#whittling), [cutting and setting a gem](gem-cutting.md),
-[salvage](#salvage), [Make do and mend](classes.md#make-do-and-mend), and
-[Field forge](classes.md#field-forge). A long sword takes half as long to forge, and salvage five
+[salvage](#salvage), [Make do and mend](classes.md#make-do-and-mend),
+[Field forge](classes.md#field-forge), and [rigging a trap](traps.md#rigging-traps). A long sword takes half as long to forge, and salvage five
 minutes instead of ten. A ranger's [Fletcher](talents.md#talent-fletcher) halves arrows too, and
 the two together make them in a quarter of the time. Gathering herbs, foraging, scribing, and
 deciphering are not crafts and take as long as ever. The times the game shows are the halved
