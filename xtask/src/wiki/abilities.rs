@@ -304,6 +304,7 @@ fn aim(aim: Aim) -> &'static str {
         Aim::Ailment => "what to treat, when there is more than one",
         Aim::Item => "an item you carry",
         Aim::Shape => "a weapon's shape, from every melee weapon",
+        Aim::Rig => "a rig, from the list of them with what each takes, then a direction",
         Aim::Spell => "a spell you know, from the list of them with their prices",
         Aim::Recipes => "a recipe, from the profession's list",
     }

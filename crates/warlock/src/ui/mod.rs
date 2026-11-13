@@ -61,6 +61,7 @@ mod paged_list;
 mod profession_screen;
 mod quest_screen;
 mod rain;
+mod rig_screen;
 mod scorch;
 #[cfg(test)]
 mod screen_snapshots;
@@ -558,6 +559,11 @@ fn draw_messages(
     }
     if let InputMode::GiveWay(_) = mode {
         let prompt = "Give it to which side? (Esc to cancel)";
+        console.print(1, 0, prompt, ACCENT);
+        return;
+    }
+    if let InputMode::RigWay(_) = mode {
+        let prompt = "Rig it on which side? (Esc to cancel)";
         console.print(1, 0, prompt, ACCENT);
         return;
     }

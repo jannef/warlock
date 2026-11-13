@@ -153,8 +153,20 @@ impl World {
     /// next cell) aims its missile or blades at the victim where it stands, its bolt (with no
     /// `dir` of its own) through them, and its blast at `at`. Pushes
     /// [`Event::TrapSprung`] and what came of it. Returns the energy the victim pays on top of its
-    /// action: a pit's climb out, else 0. Nothing happens if no trap lies there.
+    /// action: a pit's climb out, else 0. Nothing happens if no trap lies there. A trap the
+    /// player rigged (`rig.rs`) deals its blows as the player's, so what it kills is their kill
+    /// ([`World::trap_deals`]); one it springs on the player is a trap's harm all the same.
     pub(super) fn spring_trap(&mut self, at: Pos, victim: ActorId, events: &mut Vec<Event>) -> i64 {
+        let rigged = (self.state.current().traps.get(&at)).is_some_and(|t| t.rigged);
+        let rigger = rigged.then_some(self.state.player);
+        let before = std::mem::replace(&mut self.rigger, rigger);
+        let climb = self.set_off(at, victim, events);
+        self.rigger = before;
+        climb
+    }
+
+    /// [`World::spring_trap`]'s work, with the rigger, if any, set aside in `self.rigger`.
+    fn set_off(&mut self, at: Pos, victim: ActorId, events: &mut Vec<Event>) -> i64 {
         let content = self.content.clone();
         let level = self.state.current_mut();
         let Some(trap) = level.traps.get_mut(&at) else {
@@ -294,7 +306,8 @@ impl World {
 
     /// Trap `trap` deals `blow` to `target`, from `source`, the way every blow is dealt (spec
     /// §8 "Blood", "Status effects"): a big hit's blood, the damage, which may kill (a trap's
-    /// kill earns no one anything), and if it lives the statuses its wound causes. The target's
+    /// kill earns no one anything, but a rigged trap's is its rigger's, the player's, unless it
+    /// is the rigger it kills), and if it lives the statuses its wound causes. The target's
     /// talents and what it wears scale the damage first (Trap sense: half; of Wariness: its percent
     /// less; together at most [`TRAP_DAMAGE_CUT`] off; rounded down, at least 1).
     fn trap_deals(
@@ -319,8 +332,10 @@ impl World {
             blow.damage = i32::try_from(scaled).unwrap_or(i32::MAX).max(1);
         }
         self.spill(u32::from(trap.0), target, source, blow);
-        if !self.hurt(target, blow.damage, Harm::Trap(trap), events) {
-            self.wounded(target, &blow, None, events);
+        let by = self.rigger.filter(|&rigger| rigger != target);
+        let harm = by.map_or(Harm::Trap(trap), Harm::Actor);
+        if !self.hurt(target, blow.damage, harm, events) {
+            self.wounded(target, &blow, by, events);
         }
     }
 

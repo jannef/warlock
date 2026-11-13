@@ -178,3 +178,40 @@ difficulty = 18
 sign = "faint runes"
 fg = "#c890ff"
 kind = "teleport"
+
+# Rigged traps (data/rigs.toml; the craftsperson's Trapwright, spec §8 "Traps": "Rigging
+# traps"): placed only by a rigger, known to them, with the charges the rig gives. Their damage
+# is their own, never grown by danger. Kept last, so the traps above keep their ids.
+[[trap]]
+id = "rigged_arrows"
+name = "tripwire"
+sign = "a tripwire"
+fg = "#c8b48c"
+message = "A tripwire looses an arrow!"
+kind = "shot"
+object = "arrow"
+damage = "1d6"
+damage_type = "piercing"
+to_hit = 2
+noise = { sound = "bowstring", loudness = 40 }
+
+[[trap]]
+id = "rigged_stakes"
+name = "stake trap"
+sign = "sharpened stakes"
+fg = "#a88858"
+message = "Sharpened stakes spring up!"
+kind = "strike"
+noun = "stake"
+damage = "1d6"
+damage_type = "piercing"
+to_hit = 2
+
+[[trap]]
+id = "rigged_pit"
+name = "pitfall"
+sign = "a thin crust over a hole"
+fg = "#9a7a58"
+kind = "pit"
+damage = "1d6"
+damage_type = "bludgeoning"

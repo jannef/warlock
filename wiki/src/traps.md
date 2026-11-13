@@ -106,7 +106,7 @@ A trap's blow wounds like any other. A big one spills [blood](hit-points.md#bloo
 [bleeding](status-effects.md#bleeding). Traps can kill you as well as creatures. A creature killed
 by a trap drops what it carried, as from any death. But a trap's kill earns you no
 [experience](experience.md) and counts for no [quest](quests.md), even if you lured the creature
-there. If a trap kills you, the death screen names it ("Killed by a fireball trap"). Someone who
+there. A trap you [rigged](#rigging-traps) yourself is the exception. If a trap kills you, the death screen names it ("Killed by a fireball trap"). Someone who
 makes way for you onto a trap you stood on sets it off too.
 
 No trap lies on water that can [freeze](temperature.md#water-freezes), and a
@@ -143,6 +143,34 @@ remembers a failed try; time, and the risk, are the only price. Disarming earns 
 [experience](experience.md).
 
 {{#include generated/trap-disarm.md}}
+
+## Rigging traps
+
+A [craftsperson](classes.md#craftsperson) of level 25 can rig traps of their own, with
+[Trapwright](talents.md#talent-trapwright). Choose it in the [abilities menu](abilities.md), pick a
+trap from the list, then the way: the trap goes on the cell beside you in that direction. The list
+greys out a trap you lack something for, and says what.
+
+{{#include generated/rigs.md}}
+
+- **Where.** On a level, never the [overworld](overworld.md). The cell must be open floor with
+  nobody on it, and no trap, [chest](chests.md), door, [stairs](terrain.md#stairs), shop floor,
+  water, or [ice](temperature.md#walking-on-ice). A tripwire also needs a wall near, for its arrow
+  to shoot from.
+- **The work** takes the time above. A creature coming into view, or anything that interrupts
+  you, stops it; then nothing is rigged and nothing used up, but the time is gone. If a hidden trap
+  was there all along, you find it instead.
+- **The check** comes at the end. [Woodcraft](skills.md#skill-woodcraft) helps, but you rig without
+  it too. Made, the trap is in place, and the arrows or the billet are used up (a digging tool and
+  a knife are kept). Failed, nothing is rigged and you keep what you had. On the worst roll the
+  trap goes off at you as you set it, and stays with a charge less.
+- **Your own trap** is [known](#finding-traps) to you: stepping onto it asks first, and you may
+  [step past it](#stepping-past-a-known-trap). Creatures know nothing of it, and neither do your
+  [allies](allies.md): keep your hound away from it. You can [disarm](#disarming-traps) it like any
+  other.
+- **Its kills are yours.** A creature your trap kills earns you its
+  [experience](experience.md) and counts for your [quests](quests.md), as if your own arrow had
+  killed it. Its damage never grows with [danger](#damage-by-danger).
 
 ## Trapped doors
 

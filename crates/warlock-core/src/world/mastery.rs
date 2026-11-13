@@ -5,7 +5,7 @@
 //!   its time. Every craft's loop asks [`craft_seconds`] for its seconds as the work is started,
 //!   and every list that names a craft's time asks it too, so the time shown is the time spent:
 //!   a recipe (forged, counted, brewed, enchanted, Smelt; after Fletcher's share, so the two
-//!   multiply), Temper and Whittle, Cut and Set, Salvage, Make do and mend, and Field forge. A
+//!   multiply), Temper and Whittle, Cut and Set, Salvage, Make do and mend, Field forge, and a rig. A
 //!   recipe's time is read in one place, [`super::fletch::fletcher_seconds`], so a recipe of any
 //!   profession gets it. Gather, Forage, Scribe, and Decipher are no crafts and keep their time.
 //!   At least a second, as ever.

@@ -594,6 +594,10 @@ pub struct Trap {
     /// The way a bolt runs from it; `None`: along the longest clear line from it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dir: Option<Dir>,
+    /// Rigged by the player (the craftsperson's Trapwright, `world/rig.rs`): what it kills is
+    /// the player's kill.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub rigged: bool,
 }
 
 impl Trap {
@@ -604,6 +608,7 @@ impl Trap {
             known,
             charges: def.charges,
             dir,
+            rigged: false,
         }
     }
 }

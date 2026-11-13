@@ -475,6 +475,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("trap-damage.md", traps::by_danger),
         ("trap-avoid.md", traps::avoiding),
         ("trap-disarm.md", traps::disarming),
+        ("rigs.md", traps::rigs),
     ];
     let mut files: Vec<(String, String)> = tables
         .iter()
