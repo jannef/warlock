@@ -131,7 +131,10 @@ the sky from `WorldState::sky` (the weather's clouds included) and overworld sig
 `Event::Attacked` (kept only when the player sees both ends), a noise (`noise::Act::Attack`), and
 messages built in `World::perceive_events` (unseen ends are "something"). The app shows a lunge
 (`ui/motion.rs`, `motion` switch), a shot glyph, and a creature's `on = "attack"` particle burst
-(`ui/effects.rs`, `particles` switch); `Event::Died` has no effect of its own. No creature
+(`ui/effects.rs`, `particles` switch); `Event::Died` has no effect of its own. What a dead
+creature leaves is `fight.rs::creature_dies`: its gear, then its body's stock and its corpse, or a
+statue (`statue.rs`), or, struck dead by a `crystal` spell (Soulglass), its colour's crystals in
+place of both (`World::crystallise`, `docs/dev/enchanting.md` "Soulglass"). No creature
 behavior may use randomness (combat rolls are the rules', from the gameplay stream); tie-breaks
 are by distance, direction order, and actor id.
 

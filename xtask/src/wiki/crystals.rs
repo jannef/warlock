@@ -76,5 +76,19 @@ pub(super) fn crystal_rules(content: &Content) -> String {
         crystals.rare.salvage_chance,
         rare.join(" or "),
     );
+    let yields: Vec<String> = (crystals.yield_levels.iter())
+        .enumerate()
+        .map(|(i, level)| format!("{} from level {level}", i + 2))
+        .collect();
+    let _ = writeln!(
+        out,
+        "- **[Soulglass](magic.md#spell-soulglass)** leaves 1 crystal, {}. A creature of level {} \
+         or more has a {}% chance of leaving {} as well (even odds); a dragon always leaves {}.",
+        yields.join(", "),
+        crystals.rare.level,
+        crystals.rare.chance,
+        rare.join(" or "),
+        content.object(crystals.rare.dragon).describe(1),
+    );
     out
 }

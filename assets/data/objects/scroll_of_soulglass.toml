@@ -1,0 +1,20 @@
+# A scroll of soulglass (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Soulglass, a
+# level-11 spell, at its own rungs, free of mana; its grimoire teaches the spell for good. Level
+# and frequency by its spell's level (README.toml): the lower, the commoner the scroll.
+[[object]]
+id = "scroll_of_soulglass"
+name = "scroll of soulglass"
+plural = "scrolls of soulglass"
+glyph = "?"
+fg = "#c8d8e0"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 200
+stackable = true
+level = 6
+frequency = 20
+
+[object.read]
+kind = "spell"
+spell = "soulglass"

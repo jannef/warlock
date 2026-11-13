@@ -235,7 +235,8 @@ fn every_class_has_mana_and_its_guaranteed_spells() {
         }
         // A full caster: a cantrip at level 1 and three to twelve spells in all (the spell types
         // design §8, Q13; the priest's fewest: their rite is the Orison, docs/dev/prayer.md), the
-        // druid's calls (summons, #839) counted apart: they are its pack, not its spellbook.
+        // druid's calls (summons, #839) counted apart: they are its pack, not its spellbook. The
+        // witch's thirteenth is Soulglass (the enchanting design §6, the owner's answer 11).
         let full = FULL.contains(&class.id.as_str());
         if full {
             assert!(
@@ -246,7 +247,7 @@ fn every_class_has_mana_and_its_guaranteed_spells() {
             let book = (spells.iter())
                 .filter(|&&(_, _, k)| k != SpellPurpose::Summon)
                 .count();
-            assert!((3..=12).contains(&book), "{}: {spells:?}", class.id);
+            assert!((3..=13).contains(&book), "{}: {spells:?}", class.id);
         }
         // Only the casters and the hybrids have any, and a hybrid's are few (the bard's five:
         // Mend, Mesmerise, Thunderclap, Bind, Sense the quick): a class's row is a way to meet a

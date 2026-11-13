@@ -45,6 +45,7 @@ abilities = [
     { level = 12, talent = "poison_lore" },
     { level = 12, talent = "cause_wounds" },
     { level = 14, talent = "grave_feast" },
+    { level = 16, talent = "soulglass" },
     { level = 18, talent = "malison" },
     { level = 18, talent = "charnel_burst" },
     { level = 24, talent = "leech" },
