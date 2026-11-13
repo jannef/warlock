@@ -52,7 +52,6 @@ fn the_fighting_classes_hold_it_from_level_one_and_the_others_do_not() {
         "paladin",
         "ranger",
         "ascetic",
-        "thief",
         "bard",
     ] {
         let w = start(class);
@@ -63,7 +62,10 @@ fn the_fighting_classes_hold_it_from_level_one_and_the_others_do_not() {
         );
         assert_eq!(held(&w), Some(max(&w)), "{class} holds stamina, full");
     }
-    for class in ["wizard", "priest", "witch", "druid", "commoner", "merchant"] {
+    // The thief has Exploit at level 1 in its place (#1463): no pool until an active rank.
+    for class in [
+        "wizard", "priest", "witch", "druid", "commoner", "merchant", "thief",
+    ] {
         let w = start(class);
         assert!(w.state.character.is_some());
         assert_eq!(held(&w), None, "{class} holds none");

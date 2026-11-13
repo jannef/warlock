@@ -31,12 +31,14 @@ kit = [
 bonus_talents = { levels = [4, 10, 16, 22, 28, 34, 46, 58], trees = ["shadow", "finesse", "delver"] }
 # The level table (spec §8 "Class abilities"). Evasion is the Finesse talent, given. Sneak
 # attack, the class passive beside the skill, grants the Openings pool (data/resources.toml)
-# that sneak attacks build, and Low blow and Master thief's finisher spend it. Lurk, Low blow,
-# and Vanishing act hold the slots of Trapfinding, Pick lock, and Light fingers, which only
-# gave what the class's skills give (#684).
+# that sneak attacks build; Exploit spends every opening held at once, Low blow adds to it, and
+# Master thief's finisher spends five. Lurk, Low blow, and Vanishing act hold the slots of
+# Trapfinding, Pick lock, and Light fingers, which only gave what the class's skills give
+# (#684). No Trained wind: nothing the thief does costs stamina before a weapon rank grants the
+# pool (the openings design §7).
 abilities = [
     { level = 1, talent = "sneak_attack" },
-    { level = 1, talent = "trained_wind" },
+    { level = 1, talent = "exploit" },
     { level = 6, talent = "lurk" },
     { level = 12, talent = "low_blow" },
     { level = 18, talent = "evasion" },

@@ -12,7 +12,7 @@ expression: "render(case, content.clone())"
                     │ > a  Transfixing stare  at a place you see               │
                     │ Class                                                    │
                     │   b  Lurk                                                │
-                    │   c  Low blow           not enough openings              │
+                    │   c  Exploit            you have no opening              │
                     │ Skills                                                   │
                     │   d  Disarm a trap      no known trap beside you         │
                     │   e  Pick lock          no lock beside you               │
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
 
 
 
- The Hub  ·  HP 31/31  ·  MP 20/20  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 15  ·  08:00    ? controls
+ The Hub  ·  HP 31/31  ·  MP 20/20  ·  Openings 0/5  ·  Lv 15  ·  08:00                  ? controls

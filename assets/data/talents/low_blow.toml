@@ -3,7 +3,9 @@ id = "low_blow"
 name = "Low blow"
 tree = "class"
 granted = true
-description = "Sand in the eyes and the knife where it hurts: three openings buy a blow in a direction (an ability) that is a sneak attack whatever the foe knows."
-effects = [{ kind = "low_blow" }]
-resource = { id = "openings", cost = 3 }
+description = "Sand in the eyes before the knife: your exploits leave the foe stunned, open to your next blow and slow to its own, and each opening spent makes them likelier to hit."
+effects = [
+    { kind = "exploit_status", status = "stunned" },
+    { kind = "exploit_to_hit", value = 1 },
+]
 systems = ["sneak_attack", "resources"]

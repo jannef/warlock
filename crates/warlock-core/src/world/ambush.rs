@@ -136,9 +136,12 @@ impl World {
         };
         let extra = dice.roll(&mut self.state.rng).max(0);
         // A sneak attack that hits builds the attacker's resources (spec §8 "Resources"); its
-        // openings only on its mark, or with none standing (`mark.rs`).
-        let marked = self.builds_on(attacker, target);
-        self.build_resources(attacker, Build::SneakAttack, marked);
+        // openings only on its mark, or with none standing (`mark.rs`); an exploit's, spending
+        // them, builds none (`openings.rs`).
+        if !self.exploiting(attacker) {
+            let marked = self.builds_on(attacker, target);
+            self.build_resources(attacker, Build::SneakAttack, marked);
+        }
         // And marks the player's Sneak attack and Dexterity (training stream).
         if attacker == self.state.player && self.trains(Use::SneakAttack) {
             self.train(Use::SneakAttack);

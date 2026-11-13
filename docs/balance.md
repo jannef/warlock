@@ -979,6 +979,8 @@ rank 4 at level 10, 6 at 20, 8 at 40, and 9 at 60 (Sniper 9 to 10; #1095's run, 
 
 The thief's main-hand blow on the monsters of their level (trained stats), aware and caught unawares. The Sneak attack value assumed, the dice it gives with the talents, and the share of the monsters within two levels with vitals (no dice and no critical on the rest, so their first blow gains only the flat-footed Defence); then each cell: P(hit) aware / unaware % · damage of a blow aware : the first blow unaware · how many times as much, the median over the monsters within two levels that have vitals.
 
+The thief's Exploit (#1463) is a sneak attack whatever the foe knows: the aware P(hit) (the foe keeps its Defence; Low blow adds 1 per opening from 12), the sneak dice of the unaware blow, and 1d6 more per opening spent (3.5 each). The probe's own table of it comes with the ladder's top (O4, #1464; the openings design §10).
+
 | L | Sneak attack | dice | with vitals | Thief plain | Thief magic |
 |---|---|---|---|---|---|
 | 1 | 15 | 1d6 | 82% | 72/78 · 2.7:6.0 · ×2.2 | 72/78 · 2.7:6.0 · ×2.2 |

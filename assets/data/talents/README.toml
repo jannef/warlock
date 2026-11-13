@@ -511,9 +511,16 @@
 #   lurk { status }               the active Lurk (`use:lurk`, a wait): that status (Lurking)
 #                                 until its next action; a hostile stepping up beside it takes
 #                                 its blow at once, caught unawares unless it was hunting it
-#   low_blow                      the active Low blow, aimed in a direction
-#                                 (`use:low_blow:E`): a blow that is a sneak attack whatever the
-#                                 foe knows (its price the talent's `resource` cost: openings)
+#   exploit                       the active Exploit, aimed in a direction
+#                                 (`use:exploit:E`): every opening held spent on one blow that
+#                                 is a sneak attack whatever the foe knows (its `resource` cost,
+#                                 1, the least it needs; refused at a foe without vitals)
+#   exploit_dice { dice }         an exploit that hits does `dice` more damage per opening spent,
+#                                 after Protection, never multiplied (dice of the same sides add
+#                                 up: two 1d6 are 2d6)
+#   exploit_to_hit { value }      an exploit is that much likelier to hit per opening spent
+#   exploit_status { status }     an exploit that hits leaves the foe a degree of that status
+#                                 (Low blow: Stunned)
 #   trained_skills { value }      every skill it is trained in counts that much higher
 #   grants_resource { resource }  it holds that alternative resource (data/resources.toml) from
 #                                 the moment it has the talent, at its start, for good

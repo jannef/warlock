@@ -380,7 +380,15 @@ pub(super) fn effects_text(content: &Content, def: &TalentDef) -> String {
     let mut parts: Vec<String> = plain.chain(def.effects_while.iter().map(under)).collect();
     if let Some(cost) = def.resource {
         let name = content.resource(cost.resource).name.to_lowercase();
-        parts.push(format!("costs {} {name}", cost.amount));
+        // Exploit spends every one held; its cost is the least it needs.
+        if def.effects.contains(&TalentEffect::Exploit) {
+            parts.push(format!(
+                "spends all the {name} held (at least {})",
+                cost.amount
+            ));
+        } else {
+            parts.push(format!("costs {} {name}", cost.amount));
+        }
     }
     parts.join("; ")
 }
@@ -2020,11 +2028,24 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              unless it was already hunting you; refused with a hostile you see beside you",
             status(&id)
         ),
-        TalentEffect::LowBlow => "active (the time of a melee attack), in a direction: a blow \
-                                  that is a sneak attack whatever the foe knows (the sneak \
-                                  attack dice on a hit; the foe is not surprised and keeps its \
-                                  Defence; no dice on a thing without vitals)"
+        TalentEffect::Exploit => "active (the time of a melee attack), in a direction: every \
+                                  opening you hold spent on one blow that is a sneak attack \
+                                  whatever the foe knows (the sneak attack dice on a hit; the foe \
+                                  is not surprised and keeps its Defence); refused with no \
+                                  opening, at another than the creature your openings are in, \
+                                  and at a thing you see without vitals"
             .to_string(),
+        TalentEffect::ExploitDice { dice } => format!(
+            "an exploit that hits does +{dice} damage per opening spent, after Protection, never \
+             multiplied by a critical"
+        ),
+        TalentEffect::ExploitToHit { value } => {
+            format!("an exploit is {} to hit per opening spent", signed(value))
+        }
+        TalentEffect::ExploitStatus { status: id } => format!(
+            "an exploit that hits leaves the foe {} (1 degree)",
+            status(&id)
+        ),
         TalentEffect::TrainedSkills { value } => {
             format!("every trained skill counts {}", signed(value))
         }

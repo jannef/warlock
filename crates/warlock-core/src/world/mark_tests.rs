@@ -344,14 +344,13 @@ fn a_departure_a_level_change_and_the_decay_to_zero_clear_the_mark_and_keep_the_
 }
 
 #[test]
-fn low_blow_is_refused_on_another_than_the_mark() {
+fn an_exploit_is_refused_on_another_than_the_mark() {
     let mut w = thief();
-    reach(&mut w, 12);
     let east = beside(&mut w, "kobold", Dir::E);
     let west = beside(&mut w, "kobold", Dir::W);
     set(&mut w, 3);
     w.choose_mark(west);
-    let outcome = w.apply(&"use:low_blow:E".parse().expect("action"));
+    let outcome = w.apply(&"use:exploit:E".parse().expect("action"));
     assert!(!outcome.took_turn, "refused");
     assert_eq!(told(&w, "Your openings are in the kobold's guard."), 1);
     assert_eq!(
@@ -359,20 +358,13 @@ fn low_blow_is_refused_on_another_than_the_mark() {
         (3, Some(west)),
         "nothing spent or moved"
     );
-    let outcome = w.apply(&"use:low_blow:W".parse().expect("action"));
+    let outcome = w.apply(&"use:exploit:W".parse().expect("action"));
     assert!(outcome.took_turn, "at the mark: struck");
-    assert!(held(&w) <= 1, "three spent; a hit's sneak dice build one");
+    assert!(
+        held(&w) <= 1,
+        "every one spent; only the mark's kill gives one back"
+    );
     assert!(w.state.actors.contains_key(&east));
-}
-
-/// Grants the XP that takes the player to `level` and spends every choice it brings.
-fn reach(world: &mut World, level: u8) {
-    let spec = world.state.character.as_ref().map(|c| &c.spec);
-    let factor = crate::content::Factor::of(world.content(), spec);
-    let need = world.content().experience().threshold_for(level, factor);
-    let more = need - world.player_xp();
-    run(world, &format!("xp:{more} levelup:auto"));
-    assert_eq!(world.player_level(), level, "reached level {level}");
 }
 
 #[test]

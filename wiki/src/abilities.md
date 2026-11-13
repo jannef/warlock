@@ -61,11 +61,11 @@ you never choose them, they work by themselves as you fight. They have their own
   the blow is a [sneak attack](skills.md#skill-sneak-attack), it may be [Surprised](status-effects.md#status-surprised), and it is struck without its Dexterity
   and Dodge. You cannot lurk with a hostile you see already beside you ("Too late to lurk.", no
   time). It costs nothing and has no cooldown.
-- **Low blow**: the [thief](classes.md#thief)'s, from level 12, for 3 [openings](resources.md#resource-openings). It is a melee blow, in the time of
+- **Exploit**: the [thief](classes.md#thief)'s, from level 1. It spends every [opening](resources.md#resource-openings) you hold on a melee blow, in the time of
   one, at the hostile in the direction you choose. It is a [sneak attack](skills.md#skill-sneak-attack) whatever the foe knows: the
-  dice land if it hits. The foe is not [Surprised](status-effects.md#status-surprised) by it and keeps its whole Defence. A thing
-  with no vitals takes the blow without the dice (see [Criticals](combat.md#criticals)). With nobody hostile there, it
-  is refused and costs nothing.
+  dice land if it hits, and 1d6 more for each opening spent. The foe is not [Surprised](status-effects.md#status-surprised) by it and keeps its whole Defence.
+  [Low blow](talents.md#talent-low-blow) (level 12) adds +1 to hit per opening and stuns the foe it hits. It is refused, costing nothing, with no
+  opening, nobody hostile there, a creature other than your [mark](resources.md#the-mark), or one you see without vitals (see [Exploit](resources.md#exploit)).
 - **Shield bash**: anyone can bash with a shield (see [Weapon skills](weapon-skills.md)), so it is always in the menu,
   and you can use it while you hold a shield. It strikes whoever stands in the direction you
   choose, in the time of a blow.

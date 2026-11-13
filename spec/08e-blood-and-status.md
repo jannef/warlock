@@ -942,7 +942,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       clears it and the pool stays, carried to the next target; the thief's own kill (credited,
       a bleed included) builds one more (`mark_kill`; Patient blade: two). A departure (a lapsed
       summons), a level change, and time passing with the pool at 0 clear it, the pool kept; a
-      mark out of sight stays the mark. Low blow and the finisher at another than a standing mark
+      mark out of sight stays the mark. Exploit and the finisher at another than a standing mark
       are refused, no time, nothing spent ("Your openings are in the kobold's guard."). The player
       sees it: the character screen's `Openings 3/5, in the kobold's guard`, look mode's "your
       mark"; "an unseen foe" while they do not see it.
@@ -974,7 +974,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Stamina** (#560, the combat progression design §4.5): the pool weapon actives pay
     from (§8 "Weapon abilities", #564). The granted talent **Trained wind**
     (`grants_resource`) is in the level-1 row of the warrior's, berserker's, paladin's,
-    ranger's, ascetic's, thief's, and bard's tables, so those hold it from creation, full; a saved
+    ranger's, ascetic's, and bard's tables (not the thief's since #1463), so those hold it from creation, full; a saved
     character of those classes is granted it on load (`World::grant_class`). Its maximum is 10
     + the Toughness modifier + a point per 10 levels, at least 5 (`max_from`), so Toughness 14
     holds 12 at level 1; it comes back a point every 12 s (2 base turns), resting too, and sits

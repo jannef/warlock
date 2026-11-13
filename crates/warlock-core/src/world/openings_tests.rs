@@ -1,6 +1,8 @@
-//! The thief's Openings (spec §8 "Resources" and "Class abilities"; #251): Sneak attack (level 1)
-//! grants the pool, a sneak attack that hits builds it, it slips away with time, and Master
-//! thief's finisher spends five for a blow that is a critical whenever it hits.
+//! The thief's Openings (spec §8 "Resources" and "Class abilities"; #251, #1463): Sneak attack
+//! (level 1) grants the pool, a sneak attack that hits builds it, it slips away with time,
+//! Exploit (level 1) spends every one held on a sneak attack whatever the foe knows, its dice by
+//! the openings spent and Low blow's stun and to-hit added, and Master thief's finisher spends
+//! five for a blow that is a critical whenever it hits.
 
 use super::*;
 use crate::ability::{Ability, Unavailable};
@@ -202,10 +204,10 @@ fn the_finisher_needs_five_openings_and_a_hostile() {
     let row = (dump::layer_rows(&w, Layer::Abilities).into_iter())
         .find(|r| r.starts_with("Master thief"))
         .expect("in the abilities menu");
-    assert_eq!(row, "Master thief (class): not enough openings");
+    assert_eq!(row, "Master thief (class): you have no opening");
     let outcome = w.apply(&"use:master_thief:E".parse().expect("action"));
     assert!(!outcome.took_turn);
-    assert_eq!(last(&w), "You have too little openings.");
+    assert_eq!(last(&w), "You have no opening.");
     // With five, but nobody there: refused, and nothing spent.
     set(&mut w, 5);
     assert_eq!(finisher.unavailable(w.state.player(), w.content()), None);
@@ -272,5 +274,210 @@ fn the_finisher_replays() {
     assert_eq!(
         Action::Use(ClassActive::MasterThief, Some(Dir::E)).to_string(),
         "use:master_thief:E"
+    );
+}
+
+/// The player's events of using Exploit `dir`, without the turn's end (no creature acts after).
+fn exploit_now(w: &mut World, dir: Dir) -> (Spent, Vec<Event>) {
+    let mut events = Vec::new();
+    w.perceive(&mut events);
+    let spent = w.use_class(ClassActive::Exploit, Some(dir), &mut events);
+    (spent, events)
+}
+
+/// Whether `events` hold a hit of the player's on `target`.
+fn hit_on(w: &World, events: &[Event], target: ActorId) -> bool {
+    let player = w.state.player;
+    (events.iter()).any(|e| {
+        matches!(e, Event::Attacked { attacker, target: t, strike: Some(s), .. }
+            if (*attacker, *t) == (player, target) && s.is_hit())
+    })
+}
+
+fn exploit_row(w: &World) -> String {
+    (dump::layer_rows(w, Layer::Abilities).into_iter())
+        .find(|r| r.starts_with("Exploit"))
+        .expect("in the abilities menu")
+}
+
+#[test]
+fn exploit_comes_at_level_one_and_its_refusals_take_no_time_and_spend_nothing() {
+    let mut w = thief();
+    let exploit = Ability::Class(ClassActive::Exploit);
+    let id = openings(&w);
+    assert!(
+        exploit.had_by(w.state.player(), w.content()),
+        "from level 1"
+    );
+    assert_eq!(
+        exploit.unavailable(w.state.player(), w.content()),
+        Some(Unavailable::Short(id))
+    );
+    assert_eq!(exploit_row(&w), "Exploit (class): you have no opening");
+    let turn = w.state.turn;
+    let outcome = w.apply(&"use:exploit:E".parse().expect("action"));
+    assert!(!outcome.took_turn);
+    assert_eq!(last(&w), "You have no opening.");
+    set(&mut w, 3);
+    assert_eq!(exploit_row(&w), "Exploit (class): no foe within reach");
+    // No direction, nobody there.
+    let outcome = w.apply(&Action::Use(ClassActive::Exploit, None));
+    assert!(!outcome.took_turn);
+    assert_eq!(last(&w), "Which way?");
+    let outcome = w.apply(&"use:exploit:E".parse().expect("action"));
+    assert!(!outcome.took_turn);
+    assert_eq!(last(&w), "There is no one there.");
+    // A skeleton the player sees has no vitals: refused.
+    let skeleton = beside(&mut w, "skeleton", 5000, Dir::E);
+    let (spent, _) = exploit_now(&mut w, Dir::E);
+    assert_eq!(exploit_row(&w), "Exploit (class): a direction");
+    assert!(matches!(spent, Spent::Nothing));
+    assert_eq!(last(&w), "It has no vital spot.");
+    assert_eq!(
+        (w.state.turn, held(&w)),
+        (turn, Some(3)),
+        "no time, nothing spent"
+    );
+    assert!(w.state.actors.contains_key(&skeleton));
+}
+
+#[test]
+fn exploit_spends_every_opening_on_a_sneak_attack_whatever_the_foe_knows() {
+    let mut w = thief();
+    let content = w.content().clone();
+    let kobold = beside(&mut w, "kobold", 5000, Dir::E);
+    let surprised = content.status_id("surprised").expect("surprised");
+    let mut hit = false;
+    for n in (1..=5u16).cycle().take(40) {
+        set(&mut w, n);
+        let before = w.state.actors[&kobold].hp;
+        let (spent, events) = exploit_now(&mut w, Dir::E);
+        assert!(matches!(spent, Spent::Turn(_)), "used");
+        assert_eq!(held(&w), Some(0), "every one spent, none built back");
+        assert_eq!(w.state.player().mark, None, "the mark goes with the pool");
+        assert!(!w.state.actors[&kobold].effects.has(surprised));
+        let words = match n {
+            1 => "You strike at the opening.",
+            2..=4 => "You press your openings.",
+            _ => "You tear into every opening!",
+        };
+        assert!(
+            (w.messages().iter()).any(|m| m.display().contains(words)),
+            "{words}"
+        );
+        if hit_on(&w, &events, kobold) {
+            // The plain blow, the sneak dice, and n of the ladder's 1d6.
+            let done = before - w.state.actors[&kobold].hp;
+            assert!(done >= i32::from(n), "{done} for {n}");
+            hit = true;
+        }
+    }
+    assert!(hit, "one of forty exploits hit");
+    assert_eq!(w.technique, super::weapon_active::Technique::default());
+}
+
+#[test]
+fn the_ladders_dice_are_one_d6_an_opening_on_a_hit_only() {
+    let mut w = thief();
+    let hit = Blow {
+        strike: Strike::Hit { critical: false },
+        damage: 2,
+        kind: None,
+    };
+    assert_eq!(w.land_exploit(0, hit), hit, "no openings, no dice");
+    let missed = Blow::missed(None);
+    assert_eq!(w.land_exploit(5, missed), missed, "a miss, no dice");
+    for n in 1..=5u16 {
+        for _ in 0..20 {
+            let extra = w.land_exploit(n, hit).damage - 2;
+            let n = i32::from(n);
+            assert!((n..=6 * n).contains(&extra), "{extra} for {n}");
+        }
+    }
+    // A critical never multiplies them: they are added to the blow's damage as it stands.
+    let critical = Blow {
+        strike: Strike::Hit { critical: true },
+        ..hit
+    };
+    let extra = w.land_exploit(1, critical).damage - 2;
+    assert!((1..=6).contains(&extra));
+}
+
+#[test]
+fn low_blow_stuns_the_foe_and_gives_one_to_hit_an_opening() {
+    let mut w = thief();
+    let content = w.content().clone();
+    let stunned = content.status_id("stunned").expect("stunned");
+    let ladder = w.state.player().talent_mods(&content).exploit;
+    assert_eq!((ladder.to_hit, ladder.status), (0, None), "not before 12");
+    reach(&mut w, 12);
+    let ladder = w.state.player().talent_mods(&content).exploit;
+    assert_eq!((ladder.to_hit, ladder.status), (1, Some(stunned)));
+    let kobold = beside(&mut w, "kobold", 5000, Dir::E);
+    for _ in 0..40 {
+        set(&mut w, 2);
+        w.state.actors.get_mut(&kobold).expect("kobold").effects = Default::default();
+        let (_, events) = exploit_now(&mut w, Dir::E);
+        if hit_on(&w, &events, kobold) {
+            assert!(
+                w.state.actors[&kobold].effects.has(stunned),
+                "stunned by the hit"
+            );
+            return;
+        }
+        assert!(
+            !w.state.actors[&kobold].effects.has(stunned),
+            "a miss stuns nothing"
+        );
+    }
+    panic!("no exploit hit the kobold");
+}
+
+#[test]
+fn a_killing_exploit_leaves_one_opening_and_no_mark() {
+    let mut w = thief();
+    let kobold = beside(&mut w, "kobold", 1, Dir::E);
+    for _ in 0..40 {
+        set(&mut w, 4);
+        exploit_now(&mut w, Dir::E);
+        if !w.state.actors.contains_key(&kobold) {
+            assert_eq!(held(&w), Some(1), "the mark's kill gives one back");
+            assert_eq!(w.state.player().mark, None);
+            return;
+        }
+    }
+    panic!("no exploit killed the kobold");
+}
+
+#[test]
+fn exploit_replays() {
+    let spec: CharacterSpec = "human,male,thief".parse().expect("a character");
+    let mut w = World::start_run(
+        BUILTIN.clone(),
+        "showcase",
+        Some(7),
+        Some(&spec),
+        None,
+        true,
+    )
+    .expect("world");
+    let mut replay = Replay::new(&w);
+    let text = "use:exploit:E resource:openings use:exploit:E wait";
+    for action in parse_actions(text).expect("actions") {
+        w.apply(&action);
+        replay.push(&action, &w);
+    }
+    let verified = Replay::from_json(&replay.to_json())
+        .expect("json")
+        .run(BUILTIN.clone())
+        .expect("the replay verifies");
+    assert_eq!(verified.state_hash(), w.state_hash());
+    assert_eq!(
+        Action::Use(ClassActive::Exploit, Some(Dir::E)).to_string(),
+        "use:exploit:E"
+    );
+    assert!(
+        ClassActive::from_id("low_blow").is_none(),
+        "no longer a class active"
     );
 }

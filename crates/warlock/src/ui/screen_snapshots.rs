@@ -1148,14 +1148,14 @@ const CASES: &[Case] = &[
     Case {
         name: "set-on-aim",
         actions: "ally:dire_warg:2",
-        keys: Some("a i"),
+        keys: Some("a j"),
         ..BASE
     },
     // Come to heel chosen from the menu: the order's words, no time.
     Case {
         name: "come-to-heel",
         actions: "ally:dire_warg:2",
-        keys: Some("a g"),
+        keys: Some("a h"),
         ..BASE
     },
     // A paladin of some level: the Class group, Lay on hands refused and greyed out short of
@@ -1169,7 +1169,7 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
-    // A thief of level 12 (#684): Lurk ready, Low blow greyed out short of openings; Disarm,
+    // A thief of level 12 (#684, #1463): Lurk ready, Exploit greyed out with no opening; Disarm,
     // Pick lock, and Steal from the class's skills.
     Case {
         name: "abilities-menu-thief",
@@ -1825,19 +1825,19 @@ const CASES: &[Case] = &[
         keys: Some("Left"),
         ..BASE
     },
-    // The one trap known beside the player: `a b` (Disarm a trap, after the thief's birth
-    // sign's stare, #266) disarms it at once, with no prompt (#1327).
+    // The one trap known beside the player: `a c` (Disarm a trap, after the thief's birth
+    // sign's stare and Exploit, #266) disarms it at once, with no prompt (#1327).
     Case {
         name: "trap-disarm-at-once",
         actions: "move:N*3 open:N move:N*2 move:E*67 open:S move:S*7 move:SW descend",
-        keys: Some("a b"),
+        keys: Some("a c"),
         ..BASE
     },
-    // Two beside the thief to rob: `a d` (Steal) asks which way in the message line (#1327).
+    // Two beside the thief to rob: `a e` (Steal) asks which way in the message line (#1327).
     Case {
         name: "steal-prompt",
         actions: "ally:dire_warg:2",
-        keys: Some("a d"),
+        keys: Some("a e"),
         ..BASE
     },
     Case {

@@ -166,8 +166,19 @@ fn the_three_tables_come_with_the_levels() {
             "Master hunter"
         ]
     );
+    // The thief: Exploit at 1 and no Trained wind, so no stamina until a weapon rank grants it.
     let mut t = world("thief");
-    assert_eq!(class_rows(&t), ["Sneak attack", "Trained wind"]);
+    assert_eq!(class_rows(&t), ["Sneak attack", "Exploit"]);
+    let stamina = t.content().resource_id("stamina").expect("stamina");
+    assert!(
+        t.state.player().resources.get(stamina).is_none(),
+        "no stamina pool"
+    );
+    run(&mut t, "rank:daggers:10");
+    assert!(
+        t.state.player().resources.get(stamina).is_some(),
+        "an active rank grants it"
+    );
     reach(&mut t, 18);
     assert!(said(&t).contains(&"You gain Evasion.".to_string()));
     let mut b = world("bard");
@@ -450,7 +461,7 @@ fn the_thiefs_skills_give_disarm_pick_lock_and_steal_from_the_first_level() {
         class_rows(&w),
         [
             "Sneak attack",
-            "Trained wind",
+            "Exploit",
             "Lurk",
             "Low blow",
             "Evasion",
@@ -566,89 +577,33 @@ fn lurking_a_hostile_stepping_up_takes_the_thiefs_blow_unawares_unless_it_hunts_
 }
 
 #[test]
-fn a_low_blow_is_a_sneak_attack_for_three_openings_whatever_the_foe_knows() {
-    let mut w = world("thief");
-    let content = w.content().clone();
-    let player = w.state.player;
-    let openings = content.resource_id("openings").expect("openings");
-    let held = |w: &World| (w.state.player().resources.get(openings)).map_or(0, |p| p.value);
-    let low = Ability::Class(ClassActive::LowBlow);
-    reach(&mut w, 12);
-    w.player_mut().talents.forget("patient_blade");
-    w.player_mut().resources.set(openings, 0);
-    assert_eq!(own(&w, low), Some(Some(Unavailable::Short(openings))));
-    let turn = w.state.turn;
-    run(&mut w, "use:low_blow:E");
-    assert_eq!(last(&w), "You have too little openings.");
-    // Nobody there: refused, nothing spent.
-    w.player_mut().resources.set(openings, 5);
-    run(&mut w, "use:low_blow:E");
-    assert_eq!(last(&w), "There is no one there to blind.");
-    assert_eq!((w.state.turn, held(&w)), (turn, 5));
-    // A kobold that sees the thief: each low blow spends three, and one that hits is a sneak
-    // attack (it builds an opening back) on a foe that is not Surprised.
-    let kobold = beside(&mut w, "kobold", 5000, Dir::E);
-    let surprised = content.status_id("surprised").expect("surprised");
-    let mut hit = false;
-    for _ in 0..30 {
-        w.player_mut().resources.set(openings, 5);
-        let out = w.apply(&Action::Use(ClassActive::LowBlow, Some(Dir::E)));
-        assert!(out.took_turn);
-        let landed = (out.events.iter()).any(|e| {
-            matches!(e, Event::Attacked { attacker, target, strike: Some(s), .. }
-                if (*attacker, *target) == (player, kobold) && s.is_hit())
-        });
-        assert!(!w.state.actors[&kobold].effects.has(surprised));
-        if landed {
-            assert_eq!(held(&w), 3, "spent three, built one");
-            hit = true;
-            break;
-        }
-        assert_eq!(held(&w), 2, "spent three");
-    }
-    assert!(hit, "one of thirty low blows hit");
-    assert_eq!(w.technique, super::weapon_active::Technique::default());
-    // A skeleton has no vitals: the blow lands without dice, and the thief is told.
-    w.state.actors.remove(&kobold);
-    let skeleton = beside(&mut w, "skeleton", 5000, Dir::E);
-    for _ in 0..30 {
-        w.player_mut().resources.set(openings, 5);
-        let out = w.apply(&Action::Use(ClassActive::LowBlow, Some(Dir::E)));
-        let landed = (out.events.iter()).any(|e| {
-            matches!(e, Event::Attacked { target, strike: Some(s), .. }
-                if *target == skeleton && s.is_hit())
-        });
-        if landed {
-            assert_eq!(held(&w), 2, "no sneak attack, nothing built");
-            assert!(said(&w).contains(&"It has no vital spot.".to_string()));
-            return;
-        }
-    }
-    panic!("no low blow hit the skeleton");
-}
-
-#[test]
 fn vanishing_act_a_sneak_attack_that_kills_leaves_the_thief_light_footed() {
     let mut w = world("thief");
     let content = w.content().clone();
     let openings = content.resource_id("openings").expect("openings");
     reach(&mut w, 40);
+    // The picks may have taken Patient blade (the mark's kill gives two).
+    w.player_mut().talents.forget("patient_blade");
     let mods = w.state.player().talent_mods(&content);
     assert_eq!(mods.sneak_kill_status, content.status_id("light_footed"));
     let kobold = beside(&mut w, "kobold", 1, Dir::E);
     for _ in 0..30 {
         assert!(!suffers(&w, "light_footed"));
-        w.player_mut().resources.set(openings, 5);
-        run(&mut w, "use:low_blow:E");
+        w.player_mut().resources.set(openings, 3);
+        run(&mut w, "use:exploit:E");
         if !w.state.actors.contains_key(&kobold) {
             assert!(
                 suffers(&w, "light_footed"),
                 "the kill leaves them light-footed"
             );
+            // Three spent, the mark's kill gave one back, and no mark stands.
+            let held = w.state.player().resources.get(openings).map(|p| p.value);
+            assert_eq!(held, Some(1));
+            assert_eq!(w.state.player().mark, None);
             return;
         }
     }
-    panic!("no low blow killed the kobold");
+    panic!("no exploit killed the kobold");
 }
 
 #[test]
@@ -901,7 +856,7 @@ fn the_thiefs_actives_replay_and_parse() {
     )
     .expect("world");
     let mut replay = Replay::new(&w);
-    let text = "xp:100000 levelup:auto use:lurk wait use:low_blow:E resource:openings wait";
+    let text = "xp:100000 levelup:auto use:lurk wait resource:openings use:exploit:E wait";
     for action in parse_actions(text).expect("actions") {
         w.apply(&action);
         replay.push(&action, &w);
@@ -914,8 +869,8 @@ fn the_thiefs_actives_replay_and_parse() {
     for (text, action) in [
         ("use:lurk", Action::Use(ClassActive::Lurk, None)),
         (
-            "use:low_blow:E",
-            Action::Use(ClassActive::LowBlow, Some(Dir::E)),
+            "use:exploit:E",
+            Action::Use(ClassActive::Exploit, Some(Dir::E)),
         ),
     ] {
         assert_eq!(
