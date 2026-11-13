@@ -1476,8 +1476,12 @@ mod tests {
         let plain = without(&["classes"], &["skill_choice = "]);
         let commoner = content.class("commoner").expect("the commoner");
         let choice = commoner.skill_choice.as_ref().expect("a skill choice");
-        let professions = content.recipes().professions();
-        assert_eq!(choice.skills, professions, "the professions, all of them");
+        // Every profession but Enchanting, which binds magic and works no trade's material
+        // (#1430): no commoner grew up an enchanter.
+        let enchanting = content.skill_id("enchanting");
+        let mut professions = content.recipes().professions();
+        professions.retain(|&p| Some(p) != enchanting);
+        assert_eq!(choice.skills, professions, "the trades, all of them");
         let handle = content.skill_id("handle_animal").expect("the skill");
         let mut picked = BTreeSet::new();
         for race in &content.races().list {

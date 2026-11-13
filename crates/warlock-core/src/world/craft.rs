@@ -63,6 +63,12 @@ pub enum RecipeLack {
     Gem,
     /// Nothing carried with an unset ornament part (Set's).
     Setting,
+    /// Nothing carried an enchanting recipe may work (`world/enchant.rs`).
+    Nothing,
+    /// Only items with no room for another affix (Quicken's).
+    Room,
+    /// No crystal carried, for an enchanting recipe that takes one.
+    Crystal,
 }
 
 impl RecipeLack {
@@ -82,11 +88,14 @@ impl RecipeLack {
             RecipeLack::Input(o) => format!("not enough {}", content.object(o).plural),
             RecipeLack::Gem => "no gem to hand".into(),
             RecipeLack::Setting => "nothing to set a gem in".into(),
+            RecipeLack::Nothing => "nothing to enchant".into(),
+            RecipeLack::Room => "it holds all it can".into(),
+            RecipeLack::Crystal => "no crystal to hand".into(),
         }
     }
 
     /// Its id in dumps: `skill`, `station:anvil`, `knife`, `launcher`, `stock:metal`,
-    /// `input:arrowhead`, `gem`, `setting`.
+    /// `input:arrowhead`, `gem`, `setting`, `nothing`, `room`, `crystal`.
     pub fn id(self, content: &Content) -> String {
         match self {
             RecipeLack::Skill => "skill".into(),
@@ -100,6 +109,9 @@ impl RecipeLack {
             RecipeLack::Input(o) => format!("input:{}", content.object(o).id),
             RecipeLack::Gem => "gem".into(),
             RecipeLack::Setting => "setting".into(),
+            RecipeLack::Nothing => "nothing".into(),
+            RecipeLack::Room => "room".into(),
+            RecipeLack::Crystal => "crystal".into(),
         }
     }
 }
@@ -154,6 +166,9 @@ pub(super) fn lack(
     }
     if recipe.uses == Some(RecipeUse::Set) {
         return super::set::lack(content, player);
+    }
+    if let Some(RecipeUse::Enchant(_)) = recipe.uses {
+        return super::enchant::lack(content, player, recipe);
     }
     let result = recipe.result.as_ref();
     if let Some(result) = result.filter(|_| recipe.launcher)
@@ -324,6 +339,9 @@ fn takes(content: &Content, level: &LevelState, player: &Actor, recipe: &RecipeD
         Some(RecipeUse::Whittle) => words.push("a wooden weapon".into()),
         Some(RecipeUse::Cut) => words.push("a loose gem".into()),
         Some(RecipeUse::Set) => words.push("an item and a cut gem".into()),
+        Some(RecipeUse::Enchant(kind)) => {
+            words.extend(super::enchant::takes(kind, recipe.crystals))
+        }
         None => {}
     }
     let input_words = |input: &crate::content::RecipeInput| {
@@ -396,7 +414,7 @@ fn takes(content: &Content, level: &LevelState, player: &Actor, recipe: &RecipeD
     }
     let seconds = match recipe.uses {
         Some(RecipeUse::Temper | RecipeUse::Whittle) => content.temper().seconds,
-        Some(RecipeUse::Cut | RecipeUse::Set) => recipe.seconds,
+        Some(RecipeUse::Cut | RecipeUse::Set | RecipeUse::Enchant(_)) => recipe.seconds,
         None => super::fletch::fletcher_seconds(content, player, recipe),
     };
     if seconds > 0 {
@@ -493,6 +511,7 @@ impl World {
         let text = match def.uses {
             Some(RecipeUse::Cut) => return self.start_cut(id, picks),
             Some(RecipeUse::Set) => return self.start_set(id, picks),
+            Some(RecipeUse::Enchant(_)) => return self.start_enchant(id, picks),
             Some(_) => format!("{} is done from its own list.", def.name),
             None => return self.start_making(id, picks),
         };

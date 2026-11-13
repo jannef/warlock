@@ -32,6 +32,7 @@ mod digging;
 mod doors;
 mod drops;
 mod dungeons;
+mod enchanting;
 mod encounters;
 mod experience;
 mod familiars;
@@ -313,6 +314,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("salvage.md", crafting::salvage),
         ("crystal-colours.md", crystals::crystal_colours),
         ("crystal-rules.md", crystals::crystal_rules),
+        ("recipes-enchanting.md", enchanting::recipes_enchanting),
         ("recipes-jewelcraft.md", recipes::recipes_jewelcraft),
         ("recipes-metalcraft.md", recipes::recipes_metalcraft),
         ("recipes-woodcraft.md", recipes::recipes_woodcraft),

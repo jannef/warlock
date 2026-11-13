@@ -68,7 +68,7 @@ pub(super) const fn lines(kind: ItemHarm) -> Lines {
             withstood: "The heat leaves your {} unmarked.",
             once: "heat_leaves_unmarked",
         },
-        ItemHarm::Acid | ItemHarm::Work => Lines {
+        ItemHarm::Acid | ItemHarm::Work | ItemHarm::Enchant => Lines {
             worn: "The acid eats at your {}.",
             struck: "Your {} comes away pitted.",
             gone: "The acid eats your {} away.",

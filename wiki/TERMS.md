@@ -220,6 +220,8 @@ above.
 | Salvage, taking an item apart, a gem chipped or shattered | `crafting.md#salvage` |
 | Magic crystal, a crystal's colour, consuming a crystal | `crystals.md`, a colour `crystals.md#crystal-ID` (`crystals.md#crystal-red`), `crystals.md#consuming-a-crystal` |
 | Heart-crystal, soul-fetter (rare materials) | `crystals.md#rare-materials` |
+| Enchanting, Kindle, Quicken, Unbind, an enchanting recipe | `enchanting.md`, `enchanting.md#the-recipes` |
+| Reach (an enchanter's item level), warped (a natural 2 in enchanting) | `enchanting.md#how-strong-the-magic-is`, `enchanting.md#the-check` |
 | Cut, gem cutting, a re-cut, a gem's cut grade | `gem-cutting.md`, `gem-cutting.md#how-well-it-comes-out` |
 | Set, setting a gem in an item, a gem chipped in the setting | `gem-cutting.md#setting-a-gem` |
 | Jewellery, making rings and amulets, a bone amulet | `crafting.md#making-jewellery` |

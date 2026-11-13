@@ -11,8 +11,9 @@ forge, P5), the forging wizard, and salvage. Material stock (the piece) is in
 
 - **The skills** (`data/skills.toml`): Metalcraft, Woodcraft, and Jewelcraft are the professions
   that work materials today; Alchemy is a profession that works no material (it brews from
-  herbs, "Brewing" below), and Enchanting, Herbalism, and Mining are skills with no craft yet
-  (#1331). Each of the three declares `{ effect = "craft", curve = [[0, 0], [100, 8], [200, 12]] }`
+  herbs, "Brewing" below), Enchanting a profession that binds magic into what is carried
+  (Willpower, its recipes built in: docs/dev/enchanting.md "The recipes"), and Herbalism and
+  Mining are skills with no craft yet (#1331). Each of the three declares `{ effect = "craft", curve = [[0, 0], [100, 8], [200, 12]] }`
   (Temper's curve, read by salvage and by a recipe made) and a `salvage` mark rule at 100 %
   (Metalcraft, Woodcraft, and Jewelcraft also a `craft` mark, for a recipe made or a gem cut). Temper's and Whittle's own
   effects (`Effect::Temper`, `Whittle`) are unchanged; Fletch's (`Effect::Fletch`, `Use::Fletch`)
@@ -33,8 +34,8 @@ forge, P5), the forging wizard, and salvage. Material stock (the piece) is in
 ## Recipes as data
 
 `assets/data/recipes/<skill>/<id>.toml`, one `[[recipe]]` a file; the directory is the
-profession (a skill with a recipe directory is a profession: Jewelcraft, Metalcraft, and
-Woodcraft). `content/recipe.rs`: `RecipeDef`, `RecipeId` (an index
+profession (a skill with a recipe directory is a profession: Alchemy, Enchanting, Jewelcraft,
+Metalcraft, and Woodcraft). `content/recipe.rs`: `RecipeDef`, `RecipeId` (an index
 in path order, never saved: actions name recipes by id), `RecipeUse`, `PartSource`, `RecipePart`,
 `RecipeInput`, `RecipeResult`, and `Recipes` (`Content::recipes()`: the list, `professions()` the
 skills with a directory in skill order, `of(skill)`, `of_use(uses)` (the recipe running a
@@ -375,7 +376,8 @@ the cells beside the player, and the skills: presentation never decides availabi
 - `unavailable`: the first `RecipeLack` that applies, in this order: `Skill` ("beyond your
   skill": the trained value below `from`), `Station` ("no anvil beside you"), `Knife` ("no
   knife"), for Set `set::lack`'s `Setting` ("nothing to set a gem in") and `Gem` ("no gem to
-  hand"), `Launcher(result)` ("no bow ready", "no crossbow ready": `fletch::shoots`), `Stock`
+  hand"), for Enchanting's `enchant::lack`'s `Nothing` ("nothing to enchant"), `Room` ("it holds
+  all it can"), and `Crystal` ("no crystal to hand"), `Launcher(result)` ("no bow ready", "no crossbow ready": `fletch::shoots`), `Stock`
   ("no metal to hand", "no wood to hand": no piece whose material fits a stock part, wood free on
   wooded ground for the arrows; a required part with sources wants its input or its stock),
   `Input` ("not enough arrowheads", "not enough sprigs of moonwort": too few carried; an input a

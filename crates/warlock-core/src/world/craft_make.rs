@@ -457,6 +457,9 @@ pub(crate) fn craft_steps(
     if def.uses == Some(RecipeUse::Set) {
         return super::set::steps(content, lore, player);
     }
+    if let Some(RecipeUse::Enchant(_)) = def.uses {
+        return super::enchant::steps(content, lore, player, def);
+    }
     let free = |part| fletch::part_free(content, level, player, def, part);
     let Some(steps) = steps(content, def, free) else {
         return Vec::new();
@@ -893,6 +896,9 @@ pub(crate) fn craft_plan(
     if def.uses == Some(RecipeUse::Set) {
         return super::set::plan(content, lore, player, def, picks);
     }
+    if let Some(RecipeUse::Enchant(_)) = def.uses {
+        return super::enchant::plan(content, lore, player, def, picks);
+    }
     let resolved = resolve(content, lore, level, player, def, picks)?;
     let pack = &player.inventory;
     // Stacks of one thing taken together (a brew's herbs from two stacks) are told as one; what
@@ -978,7 +984,9 @@ impl World {
                 "You have no {} ready.",
                 fletch::launcher_word(&content, o)
             )),
-            Some(RecipeLack::Setting) => Some("You cannot make that yet.".into()),
+            Some(
+                RecipeLack::Setting | RecipeLack::Nothing | RecipeLack::Room | RecipeLack::Crystal,
+            ) => Some("You cannot make that yet.".into()),
             // The picks say what is missing.
             Some(RecipeLack::Stock(_) | RecipeLack::Input(_)) | None => None,
         };

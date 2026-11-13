@@ -853,6 +853,7 @@ fn skill_reader(effect: crate::skills::Effect) -> (&'static str, &'static str) {
         S::Pick => ("world/lockpick.rs", include_str!("../world/lockpick.rs")),
         S::Temper | S::Whittle => ("world/temper.rs", include_str!("../world/temper.rs")),
         S::Craft => ("world/salvage.rs", include_str!("../world/salvage.rs")),
+        S::EnchantLevel => ("world/enchant.rs", include_str!("../world/enchant.rs")),
         S::Swim => ("world/ice.rs", include_str!("../world/ice.rs")),
         S::Resist => ("world/knowledge.rs", include_str!("../world/knowledge.rs")),
         S::SneakDice => ("world/ambush.rs", include_str!("../world/ambush.rs")),

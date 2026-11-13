@@ -223,6 +223,11 @@ impl Stack {
         self.magic.as_deref()
     }
 
+    /// Its magic made `magic`, or none (an enchanting recipe, `world/enchant.rs`).
+    pub(crate) fn set_magic(&mut self, magic: Option<Magic>) {
+        self.magic = magic.map(Box::new);
+    }
+
     /// What it rolled, to change (the trim, [`crate::magic::capacity::trim`]).
     pub(crate) fn magic_mut(&mut self) -> Option<&mut Magic> {
         self.magic.as_deref_mut()
