@@ -992,7 +992,12 @@ impl World {
         };
         let mut held = [None; MAX_PICKS];
         held[..picks.len()].copy_from_slice(picks);
-        let at = def.station.map(|t| content.terrain(t).name.clone());
+        // The station beside them by its own name: a makeshift anvil is one.
+        let level = self.state.current();
+        let at = (def.station)
+            .and_then(|t| super::craft::station_beside(&content, level, me.pos, t))
+            .and_then(|p| level.terrain_at(p))
+            .map(|t| content.terrain(t).name.clone());
         let name = match resolved.batch {
             Some(_) => self.lore().names(&resolved.made).1,
             None => made_name(&content, self.lore(), &resolved.made, false),

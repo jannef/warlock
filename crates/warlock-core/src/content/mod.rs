@@ -1600,6 +1600,7 @@ impl Content {
                 roofed: spec.roofed,
                 stains: spec.stains,
                 stone: spec.stone,
+                works_as: resolve(&spec.works_as)?,
                 plants: spec.plants,
                 step_noise: spec.step_noise,
                 toggle_noise: spec.toggle_noise,
@@ -1636,6 +1637,15 @@ impl Content {
             });
         }
         check_chests(&defs).map_err(err)?;
+        if let Some(def) = (defs.iter()).find(|d| {
+            d.works_as
+                .is_some_and(|t| defs[usize::from(t.0)].works_as.is_some())
+        }) {
+            return Err(err(format!(
+                "terrain `{}`: `works_as` names a terrain that works as another",
+                def.id
+            )));
+        }
         let statues: Vec<&str> = (defs.iter().filter(|d| d.statue.is_some()))
             .map(|d| d.id.as_str())
             .collect();
@@ -4154,10 +4164,19 @@ impl Content {
             })
     }
 
+    /// The station terrain `terrain` serves as: its `works_as` (a makeshift anvil, the anvil),
+    /// else itself. The one read of `works_as`: recipes' stations ([`crate::world`]'s
+    /// `station_beside`) and what a feature offers ([`Content::offer`]) both ask it.
+    pub fn works_as(&self, terrain: TerrainId) -> TerrainId {
+        self.terrain(terrain).works_as.unwrap_or(terrain)
+    }
+
     /// What a place offers beside a cell of terrain `terrain`, with an outcome table or without
-    /// one (Temper has its own rules): the first effect whose `feature` it is and that `offers`
-    /// something.
+    /// one (Temper has its own rules): the first effect whose `feature` it is, or the feature
+    /// it works as ([`Content::works_as`]: walking into a makeshift anvil opens Metalcraft's
+    /// screen as the anvil does), and that `offers` something.
     pub fn offer(&self, terrain: TerrainId) -> Option<Offer> {
+        let terrain = self.works_as(terrain);
         (self.room_effects.defs().iter())
             .filter(|e| e.feature == Some(terrain))
             .find_map(|e| e.offers.as_ref().map(|(offer, _)| *offer))

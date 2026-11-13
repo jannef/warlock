@@ -2103,6 +2103,12 @@ impl<'a> PerceptionView<'a> {
             Ability::Class(crate::content::ClassActive::CallFamiliar) => self
                 .calling_barred()
                 .or_else(|| ability.unavailable(self.player, self.content)),
+            // Field forge sets an anvil on a level, never the overworld (`world/field_forge.rs`).
+            Ability::Class(crate::content::ClassActive::FieldForge)
+                if self.level.kind() == crate::content::LevelKind::Overworld =>
+            {
+                Some(crate::ability::Unavailable::NotHere)
+            }
             // Foraging asks for the wild underfoot (spec §8 "Foraging").
             Ability::Forage
                 if crate::world::forage_ground(self.content, self.level, self.player.pos)

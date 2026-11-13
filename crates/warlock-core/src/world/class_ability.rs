@@ -101,6 +101,7 @@ impl World {
             (ClassActive::LowBlow, Some(dir)) => self.low_blow(dir, events),
             (ClassActive::MasterThief, Some(dir)) => self.finisher(dir, events),
             (ClassActive::Knock, Some(dir)) => self.knock(dir),
+            (ClassActive::FieldForge, Some(dir)) => self.start_field_forge(dir),
             (
                 ClassActive::Smite
                 | ClassActive::BrandingSmite
@@ -110,7 +111,8 @@ impl World {
                 | ClassActive::QuiveringPalm
                 | ClassActive::LowBlow
                 | ClassActive::MasterThief
-                | ClassActive::Knock,
+                | ClassActive::Knock
+                | ClassActive::FieldForge,
                 None,
             ) => Spent::Nothing,
             (ClassActive::Volley | ClassActive::Sic, _) => {

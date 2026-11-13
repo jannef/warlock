@@ -688,6 +688,8 @@ pub struct TalentMods {
     pub low_blow: bool,
     /// The active Merchant's eye: a stack it carries identified, for the time of a reading.
     pub merchants_eye: bool,
+    /// The active Field forge: the seconds it takes to set a makeshift anvil, if it has it.
+    pub field_forge: Option<u32>,
     /// The active Spirit weapon, and what a spirit weapon in its hand gives, if it has it.
     pub spirit_weapon: Option<SpiritWeapon>,
     /// How much higher every skill it is trained in counts (Jack of all trades).
@@ -1180,6 +1182,7 @@ impl TalentMods {
             A::Lurk => self.lurk.is_some(),
             A::LowBlow => self.low_blow,
             A::MerchantsEye => self.merchants_eye,
+            A::FieldForge => self.field_forge.is_some(),
             A::SpiritWeapon => self.spirit_weapon.is_some(),
             A::MasterThief => self.finisher,
             A::Inspire | A::Lullaby => self.songs.iter().any(|s| s.active == active),
@@ -2081,6 +2084,7 @@ impl TalentMods {
             }
             TalentEffect::LowBlow => self.low_blow = true,
             TalentEffect::MerchantsEye => self.merchants_eye = true,
+            TalentEffect::FieldForge { seconds } => self.field_forge = Some(seconds),
             TalentEffect::SpiritWeapon {
                 to_hit,
                 threat,

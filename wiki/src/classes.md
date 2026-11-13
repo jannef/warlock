@@ -386,6 +386,9 @@ to [work](crafting.md#who-works-what). Like [Appraise](skills.md#skill-appraise)
 you how many [enchantments the item can bear](magic-items.md#capacity). It never tells you the
 odds, or how often a smith has worked the piece before.
 
+<a id="field-forge"></a>**Field forge** (from level 32) makes an anvil wherever you are: a
+[makeshift anvil](altars-forges-springs.md#the-makeshift-anvil) from one ingot and an hour's work.
+
 {{#include generated/class-levels.md:merchant}}
 
 <a id="invest"></a>**The merchant's investment** ([Invest](talents.md#talent-invest), from level 1)

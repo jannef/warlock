@@ -587,6 +587,11 @@
 #                                 `use:merchants_eye:c`): the stack is identified as the scroll
 #                                 of identify would, for the time of a `read`; refused, no
 #                                 time, for one already known
+#   field_forge { seconds }       the active Field forge (aimed in a direction,
+#                                 `use:field_forge:E`): an ingot of any metal carried is set on
+#                                 the open ground there over `seconds` (1 or more), a
+#                                 `makeshift_anvil` for good; refused, no time, on the overworld,
+#                                 without an ingot, or where the ground is not open
 #   spirit_weapon { to_hit, threat, ignores_protection, phrase }   the active Spirit weapon (a
 #                                 prestige class's, `use:spirit_weapon:long_sword`): a weapon of
 #                                 spirit-stuff in the shape of any melee weapon is called into

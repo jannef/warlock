@@ -2121,6 +2121,16 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 warlock_core::content::BASE_TURN
             ))
         ),
+        TalentEffect::FieldForge { seconds } => format!(
+            "active (aimed in a direction, at open ground beside you, {} minutes of work; no \
+             mana, cooldown, or check): an [ingot](crafting.md) of any metal you carry is set on a \
+             heap of stones there, a [makeshift \
+             anvil](altars-forges-springs.md#the-makeshift-anvil) that serves every recipe and Temper as a \
+             forge's anvil does, and stays for good. Interrupted, nothing is made and the ingot \
+             kept. Refused, with no time spent, without an ingot, on the overworld, or where the \
+             ground is not open floor",
+            seconds / 60
+        ),
         TalentEffect::SpiritWeapon {
             to_hit,
             threat,

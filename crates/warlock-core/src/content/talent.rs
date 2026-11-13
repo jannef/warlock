@@ -1148,6 +1148,9 @@ pub enum TalentEffect {
     /// The class active Merchant's eye: a stack the player carries is identified, for the time of
     /// a reading (`world/merchants_eye.rs`; spec §8 "Class abilities").
     MerchantsEye,
+    /// The class active Field forge: an ingot carried set on a heap of stones beside the player
+    /// in `seconds`, a makeshift anvil for good (`world/field_forge.rs`; the craftsperson's).
+    FieldForge { seconds: u32 },
     /// The class active Spirit weapon: a melee weapon of spirit-stuff called into the hand in a
     /// shape chosen (`world/spirit_weapon.rs`; spec §8 "Prestige classes"), which strikes
     /// `to_hit` surer, threatens `threat` lower, and ignores all Protection if
@@ -1292,6 +1295,7 @@ impl TalentEffect {
             TalentEffect::Knock { .. } => A::Knock,
             TalentEffect::Scribe { .. } => A::Scribe,
             TalentEffect::MerchantsEye => A::MerchantsEye,
+            TalentEffect::FieldForge { .. } => A::FieldForge,
             TalentEffect::SpiritWeapon { .. } => A::SpiritWeapon,
             _ => return None,
         })
@@ -1449,6 +1453,7 @@ impl TalentEffect {
                 status(status_id)
             }
             TalentEffect::Consecrate { time, .. } => duration(time),
+            TalentEffect::FieldForge { seconds: 0 } => Err("`field_forge`: `seconds` is 0".into()),
             TalentEffect::Sanctuary { time, lasts, .. } => {
                 duration(time)?;
                 duration(lasts)

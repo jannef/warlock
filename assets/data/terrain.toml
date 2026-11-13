@@ -20,7 +20,9 @@
 # and fire hold none), stone (gameplay, spec §8 "Searching": stone, worked or not; dwarves notice
 # what is hidden on it in passing, a secret door in a stone wall or a trap in a stone floor;
 # default false), plants (gameplay, spec §8 "Spells": things grow on it, so Bramble catches whoever
-# stands on it; default false),
+# stands on it; default false), works_as (gameplay: a terrain id it serves as a station of, one
+# that works as nothing itself: a makeshift anvil works as the anvil, for every recipe made there
+# and for Temper, and walking into it is walking into the anvil; default none),
 # anim (presentation-only, §4.3).
 # Noise (gameplay, spec §5 "Hearing"): step_noise (how loud steps onto it are, in percent of the
 # walker's footsteps; default 100), toggle_noise (doors and shut chests only: how loud
@@ -380,6 +382,22 @@ walkable = false
 glyph = "π"
 fg = "#8c8f96"
 bg = "#0d0d10"
+
+# A makeshift anvil (spec §7 "Special rooms"; the craftsperson's Field forge, `world/field_forge.rs`):
+# an ingot set on a heap of stones, which serves as an anvil wherever it was set, for good. A pick
+# clears it to bare floor; nothing is mined out of it.
+[[terrain]]
+id = "makeshift_anvil"
+name = "makeshift anvil"
+description = "A block of metal set on a heap of stones: a rough anvil, but it rings true enough under the hammer."
+stone = true
+works_as = "anvil"
+walkable = false
+hardness = 300
+becomes = "floor"
+glyph = "π"
+fg = "#76787d"
+bg = "#0b0b0d"
 
 # A healing spring's basin (spec §7 "Special rooms"): the feature of the spring room, where Drink
 # (the abilities menu's Here group) is offered beside it. It never runs dry.
