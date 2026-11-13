@@ -155,12 +155,10 @@ than 6. For example, Presence 12 holds 11 at level 1, and Presence 16 holds 16 a
   "Your zeal deserts you."
 
 **Stamina** is the fighter's breath: the pool that active weapon abilities are paid from (see
-[Combat](stances.md#stamina)). Every [warrior](classes.md#warrior), [berserker](classes.md#berserker),
-[paladin](classes.md#paladin), [ranger](classes.md#ranger), [ascetic](classes.md#ascetic),
-and [bard](classes.md#bard) holds it, full, from level 1
-([Trained wind](talents.md#talent-trained-wind)). Anyone else, the [thief](classes.md#thief) too,
-gets it, full, from the first
-[weapon rank](weapon-skills.md#marks-and-ranks) that teaches an active ability.
+[Combat](stances.md#stamina)), and the [warrior's](classes.md#warrior)
+[Charge](talents.md#talent-charge). A warrior holds it, full, from level 1 (Charge gives it).
+Anyone else gets it, full, from the first [weapon rank](weapon-skills.md#marks-and-ranks) that
+teaches an active ability.
 
 The pool holds 10, plus your [Toughness](stats.md#stat-toughness) [modifier](stats.md#modifiers),
 plus a point per 10 [levels](experience.md#levels), and never less than 5 (Toughness 14 holds 12 at

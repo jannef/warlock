@@ -137,12 +137,7 @@ fn the_three_tables_come_with_the_levels() {
     let mut w = world("ranger");
     assert_eq!(
         class_rows(&w),
-        [
-            "Fletcher",
-            "Animal companion",
-            "Favoured prey",
-            "Trained wind"
-        ]
+        ["Fletcher", "Animal companion", "Favoured prey"]
     );
     reach(&mut w, 60);
     assert_eq!(
@@ -151,7 +146,6 @@ fn the_three_tables_come_with_the_levels() {
             "Fletcher",
             "Animal companion",
             "Favoured prey",
-            "Trained wind",
             "Stalker's eye",
             "Tracker",
             "Barkskin",
@@ -166,7 +160,7 @@ fn the_three_tables_come_with_the_levels() {
             "Master hunter"
         ]
     );
-    // The thief: Exploit at 1 and no Trained wind, so no stamina until a weapon rank grants it.
+    // The thief: Exploit at 1 and no stamina until a weapon rank grants it.
     let mut t = world("thief");
     assert_eq!(class_rows(&t), ["Sneak attack", "Exploit"]);
     let stamina = t.content().resource_id("stamina").expect("stamina");
@@ -182,9 +176,9 @@ fn the_three_tables_come_with_the_levels() {
     reach(&mut t, 18);
     assert!(said(&t).contains(&"You gain Evasion.".to_string()));
     let mut b = world("bard");
-    assert_eq!(class_rows(&b), ["Mend", "Trained wind"]);
+    assert_eq!(class_rows(&b), ["Mend"]);
     reach(&mut b, 3);
-    assert_eq!(class_rows(&b), ["Mend", "Trained wind", "Travelled hands"]);
+    assert_eq!(class_rows(&b), ["Mend", "Travelled hands"]);
     let restored = World::from_state(b.content().clone(), b.state().clone()).expect("restored");
     assert_eq!(class_rows(&restored), class_rows(&b));
 }

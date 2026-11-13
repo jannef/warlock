@@ -6,27 +6,27 @@ expression: "render(case, content.clone())"
  grace is spent.
 
 
-
-                    ┌─ Abilities ──────────────────────────────────────────────┐
-                    │                                                          │
-                    │ Birth sign                                               │
-                    │   a  Horn's grace  you are graceless                     │
-                    │ Skills                                                   │
-                    │   b  Heal          nothing to treat                      │
-                    │ > c  Intimidate    at a place you see                    │
-                    │   d  Metalcraft…                                         │
-                    │   e  Forage        not usable here                       │
-                    │   f  Salvage       on something you carry                │
-                    │ Weapon skills                                            │
-                    │   g  Shield bash   no foe within reach                   │
-                    │                                                          │
-                    │ Threaten a foe you see nearby: unless it keeps its       │
-                    │ nerve, it flees from you a moment, longer the better you │
-                    │ intimidate.                                              │
-                    │                                                          │
-                    │ a-g or Enter use   Esc close                             │
-                    └──────────────────────────────────────────────────────────┘
-
+                  ┌─ Abilities ─────────────────────────────────────────────────┐
+                  │                                                             │
+                  │ Birth sign                                                  │
+                  │   a  Horn's grace  you are graceless                        │
+                  │ Class                                                       │
+                  │ > b  Charge        1 stamina + 1 a pace, at a place you see │
+                  │ Skills                                                      │
+                  │   c  Heal          nothing to treat                         │
+                  │   d  Intimidate    at a place you see                       │
+                  │   e  Metalcraft…                                            │
+                  │   f  Forage        not usable here                          │
+                  │   g  Salvage       on something you carry                   │
+                  │ Weapon skills                                               │
+                  │   h  Shield bash   no foe within reach                      │
+                  │                                                             │
+                  │ Rush a foe you see along the straight way and strike it as  │
+                  │ you come (an ability): a point of stamina, and one more a   │
+                  │ pace. Nobody you pass gets a blow in.                       │
+                  │                                                             │
+                  │ a-h or Enter use   Esc close                                │
+                  └─────────────────────────────────────────────────────────────┘
 
 
 

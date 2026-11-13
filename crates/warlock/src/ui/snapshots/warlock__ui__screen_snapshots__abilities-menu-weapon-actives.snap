@@ -4,31 +4,31 @@ expression: "render(case, content.clone())"
 ---
  You feel more skilled at fighting with weapon and shield. You have learned the staggering block. Yo
  You feel more skilled with spears. You have learned the brace. You have learned the lunge.
-
-         ┌─ Abilities ───────────────────────────────────────────────────────────────────┐
-         │                                                                               │
-         │ Birth sign                                                                    │
-         │ > a  Transfixing stare                  at a place you see                    │
-         │ Skills                                                                        │
-         │   b  Heal                               nothing to treat                      │
-         │   c  Intimidate                         at a place you see                    │
-         │   d  Salvage                            on something you carry                │
-         │ Weapon skills                                                                 │
-         │   e  Shield bash                        no foe within reach                   │
-         │   f  Long blades: Deep cut              fires by itself                       │
-         │   g  Long blades: Vital strike          4 stamina: no foe within reach        │
-         │   h  Spears: Brace                      fires by itself                       │
-         │   i  Spears: Lunge                      3 stamina: your hands are not so held │
-         │   j  Sword and Board: Staggering block  fires by itself                       │
-         │   k  Sword and Board: Shield rush       4 stamina: no foe within reach        │
-         │   l  Sword and Board: Shield wall       5 stamina                             │
-         │                                                                               │
-         │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment;   │
-         │ your eyes then rest two hours.                                                │
-         │                                                                               │
-         │                                                                               │
-         │ a-l or Enter use   Esc close                                                  │
-         └───────────────────────────────────────────────────────────────────────────────┘
-
+        ┌─ Abilities ──────────────────────────────────────────────────────────────────────┐
+        │                                                                                  │
+        │ Birth sign                                                                       │
+        │ > a  Transfixing stare                  at a place you see                       │
+        │ Class                                                                            │
+        │   b  Charge                             1 stamina + 1 a pace, at a place you see │
+        │ Skills                                                                           │
+        │   c  Heal                               nothing to treat                         │
+        │   d  Intimidate                         at a place you see                       │
+        │   e  Salvage                            on something you carry                   │
+        │ Weapon skills                                                                    │
+        │   f  Shield bash                        no foe within reach                      │
+        │   g  Long blades: Deep cut              fires by itself                          │
+        │   h  Long blades: Vital strike          4 stamina: no foe within reach           │
+        │   i  Spears: Brace                      fires by itself                          │
+        │   j  Spears: Lunge                      3 stamina: your hands are not so held    │
+        │   k  Sword and Board: Staggering block  fires by itself                          │
+        │   l  Sword and Board: Shield rush       4 stamina: no foe within reach           │
+        │   m  Sword and Board: Shield wall       5 stamina                                │
+        │                                                                                  │
+        │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; your │
+        │ eyes then rest two hours.                                                        │
+        │                                                                                  │
+        │                                                                                  │
+        │ a-m or Enter use   Esc close                                                     │
+        └──────────────────────────────────────────────────────────────────────────────────┘
 
  The Hub  ·  HP 25/25  ·  MP 3/3  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  11 Darkening       ? controls

@@ -1538,7 +1538,7 @@ Every system the design added meets the coverage bar (`assets/data/talents.toml`
 1 since #773, checked when the game loads):
 - `weapon_abilities` has 4 talents (Early mastery, Brace of steel, Practised technique,
   Drillmaster).
-- `stamina` has 5 (Trained wind, Deep lungs, Steady breathing, Armour-breaker, Drillmaster;
+- `stamina` has 5 (Charge, which replaced Trained wind in #1466, Deep lungs, Steady breathing, Armour-breaker, Drillmaster;
   Second breath and Bellows were cut in #774).
 - `stat_training` has 2 (Gourmand, Cauldron; #726; Hard-won and
   Gifted were cut in #774, Long fast became a `hunger` talent in #775, and Quick study of the

@@ -1463,6 +1463,13 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 names.join(" and ")
             )
         }
+        TalentEffect::Charge { per_cell } => format!(
+            "active, aimed at a hostile you see: you rush along the straight line to it and \
+             strike it once, ending beside it, for {per_cell} more stamina a cell moved (at \
+             least 1 cell, the time of the steps, the blow free); creatures passed or left get \
+             no free blows, and a wall, a closed door, deep water, a known trap, or a creature \
+             you see on the line refuses it"
+        ),
         TalentEffect::Whirlwind => {
             "active (the time of a melee attack, one exertion): one blow at \
              every hostile beside you, clockwise from the north"

@@ -34,8 +34,7 @@ bonus_talents = { levels = [4, 10, 16, 22, 28, 34, 46, 58], trees = ["shadow", "
 # that sneak attacks build; Exploit spends every opening held at once, Low blow adds to it, and
 # Master thief's finisher spends five. Lurk, Low blow, and Vanishing act hold the slots of
 # Trapfinding, Pick lock, and Light fingers, which only gave what the class's skills give
-# (#684). No Trained wind: nothing the thief does costs stamina before a weapon rank grants the
-# pool (the openings design §7).
+# (#684).
 abilities = [
     { level = 1, talent = "sneak_attack" },
     { level = 1, talent = "exploit" },
