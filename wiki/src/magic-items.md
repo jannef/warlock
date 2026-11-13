@@ -41,7 +41,8 @@ Every item can bear only so many **enchantments** (affixes, [prefixes](affixes.m
 - its main material's **binding**, −2 to +2 (the [materials table](materials.md) lists it:
   silver −2, tin and flint −1, steel and iron 0, gold and adamantium +1, mithril and dragonbone
   +2);
-- **+1** for a [gem](gems.md) set in it, **+2** for a flawless one.
+- **+1** for a [gem](gems.md) set in it, **+2** for a flawless one;
+- **+1** for a craftsperson's [maker's mark](crafting.md#makers-mark).
 
 It is never less than one or more than six. Some examples:
 

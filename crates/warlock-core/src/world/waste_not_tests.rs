@@ -201,6 +201,7 @@ fn a_failed_temper_spoils_nothing_and_counts() {
         attempts: 2,
         damaged: false,
         by: None,
+        marked: false,
     });
     w.player_mut().inventory.insert(0, sword);
     assert!(fail(&mut w, &Action::Temper { item: 0 }, spared));
@@ -218,6 +219,7 @@ fn a_failed_temper_spoils_nothing_and_counts() {
         attempts: 2,
         damaged: true,
         by: None,
+        marked: false,
     });
     w.player_mut().inventory.insert(0, sword);
     assert!(fail(&mut w, &Action::Temper { item: 0 }, spared));

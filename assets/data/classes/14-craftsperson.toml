@@ -16,7 +16,7 @@ weapon_skills = { axes = 1 }
 creation_bonus = { count = 2, trees = ["crafts"] }
 # The level table (spec §8 "Class abilities"; the craftsperson design §6): the trades' start and
 # an eye for the make at level 1; Waste not at 6, a patron at 12, Make do and mend at 18, Field forge at 32,
-# Quick hands at 40, Master's hand at 50; bonus talents from Grit, Delver, and Scholar.
+# Quick hands at 40, Master's hand at 50, Maker's mark at 60; bonus talents from Grit, Delver, and Scholar.
 abilities = [
     { level = 1, talent = "time_served" },
     { level = 1, talent = "eye_for_the_make" },
@@ -26,6 +26,7 @@ abilities = [
     { level = 32, talent = "field_forge" },
     { level = 40, talent = "quick_hands" },
     { level = 50, talent = "masters_hand" },
+    { level = 60, talent = "makers_mark" },
 ]
 bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["grit", "delver", "scholar"] }
 # A hand axe and a knife, work gloves, an apron, and boots.

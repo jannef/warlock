@@ -502,6 +502,11 @@ pub enum TalentEffect {
     /// Added to a made check's margin as its grade or cut is read, never to whether it is made
     /// (Master's hand; summed; `world/mastery.rs::graded_margin`).
     GradeEase { value: i32 },
+    /// Its graded work bears its mark (Maker's mark): an item made with a `kind` is built marked
+    /// (`world/craft_make.rs::make_out`, the one read), and a marked item is worth
+    /// `worth_percent` % more ([`TalentBook::mark_percent`], `Worked::value`), the patron pays
+    /// more for it, and it holds one enchantment more (`magic/capacity.rs`).
+    MakersMark { worth_percent: u32 },
     /// The actor notices hidden things in passing as if trained in Spot and Detect traps, with
     /// this much added.
     Notice { value: i32 },
@@ -1477,6 +1482,9 @@ impl TalentEffect {
             }
             TalentEffect::Consecrate { time, .. } => duration(time),
             TalentEffect::FieldForge { seconds: 0 } => Err("`field_forge`: `seconds` is 0".into()),
+            TalentEffect::MakersMark { worth_percent: 0 } => {
+                Err("`makers_mark`: `worth_percent` is 0".into())
+            }
             TalentEffect::CraftTimePercent { value: 0 } => {
                 Err("`craft_time_percent`: `value` is 0".into())
             }
@@ -1887,9 +1895,18 @@ pub struct TalentBook {
     pub systems: Vec<SystemDef>,
     list: Vec<TalentDef>,
     ids: BTreeMap<String, TalentId>,
+    /// What a maker's mark adds to an item's worth, in percent (the most a `makers_mark` effect
+    /// says; 0 with none).
+    mark_percent: u32,
 }
 
 impl TalentBook {
+    /// What a marked item is worth more, in percent (Maker's mark's `worth_percent`, the most
+    /// any talent says; `Worked::value`).
+    pub fn mark_percent(&self) -> u32 {
+        self.mark_percent
+    }
+
     pub fn get(&self, id: TalentId) -> &TalentDef {
         &self.list[usize::from(id.0)]
     }
@@ -2314,6 +2331,7 @@ pub(super) fn parse<'a>(
         systems: Vec::new(),
         list: Vec::new(),
         ids: BTreeMap::new(),
+        mark_percent: 0,
     };
     let mut tree_files: BTreeMap<String, &str> = BTreeMap::new();
     for (file, t) in trees {
@@ -2409,6 +2427,14 @@ pub(super) fn parse<'a>(
             alignment: spec.alignment,
         });
     }
+    book.mark_percent = (book.list.iter())
+        .flat_map(|t| &t.effects)
+        .filter_map(|e| match e {
+            TalentEffect::MakersMark { worth_percent } => Some(*worth_percent),
+            _ => None,
+        })
+        .max()
+        .unwrap_or(0);
     Ok(book)
 }
 

@@ -183,6 +183,7 @@ above.
 | The craftsperson's two trades at creation, Time served | `classes.md#trades` |
 | Eye for the make, reading an item's make | `classes.md#eye-for-the-make` |
 | Make do and mend, mending in the field | `classes.md#make-do-and-mend` |
+| Maker's mark, a marked piece | `crafting.md#makers-mark` |
 | Master's hand, grades and cuts sooner | `crafting.md#masters-hand` |
 | Quick hands, every craft in half the time | `crafting.md#quick-hands` |
 | Waste not, nothing lost in a craftsperson's hands | `crafting.md#waste-not` |

@@ -308,3 +308,20 @@ Marvellous from 8, and a Masterwork from 16, and every [cut](gem-cutting.md#how-
 comes 4 sooner. The grade tables above and the cut tables under
 [Gem cutting](gem-cutting.md#how-well-it-comes-out) have a "With Master's hand" column. Setting
 a gem, batches, and brews have no grade and are unchanged.
+
+### Maker's mark
+
+From level 60 what a craftsperson makes bears their **mark**. Every weapon, piece of armour,
+shield, tool, ring, and amulet they [make](#the-recipes) is marked, whatever its
+[grade](#how-well-it-comes-out), plain ones too. Ingots, batches of arrows and stones, and
+[brews](recipes-alchemy.md#how-a-brew-goes) are never marked. Its description says so: "It bears
+Brakka's mark." Its name does not change.
+
+- **Worth:** a marked piece is worth **half again** (+50 %, rounded down), on top of its grade. A
+  marked Fine steel long sword is worth three times a plain one. A marked piece that is later
+  damaged is worth half of that.
+- **The patron** pays **50 % more** for a marked piece than for the same piece unmarked, on top of
+  its higher worth ([The patron](patron.md#delivering)).
+- **Enchantments:** a marked piece can bear **one more** ([Capacity](magic-items.md#capacity)).
+
+The mark stays for good: tempering, damage, and mending never take it away.

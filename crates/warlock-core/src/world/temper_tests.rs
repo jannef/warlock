@@ -207,6 +207,7 @@ fn set_worked(w: &mut World, improved: Vec<Aspect>, attempts: u8, damaged: bool)
         attempts,
         damaged,
         by: None,
+        marked: false,
     };
     w.player_mut().inventory[0].set_worked(worked);
 }

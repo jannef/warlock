@@ -364,6 +364,8 @@ pub struct TalentMods {
     /// Added to a made check's margin as it is graded, never to the check (Master's hand;
     /// `world/mastery.rs::graded_margin`).
     pub grade_ease: i32,
+    /// Its graded work is built bearing its mark (Maker's mark; `world/craft_make.rs::make_out`).
+    pub makers_mark: bool,
     /// Percent more often loot it finds rolls magic and rare.
     pub loot_magic_percent: i32,
     /// Percent more time reading a scroll takes (negative: less).
@@ -1500,6 +1502,7 @@ impl TalentMods {
                 self.craft_time_percent = Some(least);
             }
             TalentEffect::GradeEase { value } => self.grade_ease += value,
+            TalentEffect::MakersMark { .. } => self.makers_mark = true,
             // Handed out as the talent is taken (`World::take_talent`), never read after.
             TalentEffect::WeaponRanks { .. }
             | TalentEffect::TakeUpSkills { .. }

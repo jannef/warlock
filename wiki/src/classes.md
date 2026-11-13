@@ -428,6 +428,11 @@ See [The patron](patron.md).
 (from level 50) makes every grade and every cut come sooner (the numbers are under
 [Crafting](crafting.md#quick-hands) and [Master's hand](crafting.md#masters-hand)).
 
+<a id="makers-mark"></a>**Maker's mark** (from level 60) puts the craftsperson's name on what
+they make: the arms, armour, and jewellery of their making are worth half again, the patron pays
+more for them, and they can bear one [enchantment](magic-items.md#capacity) more (the numbers are
+under [Crafting](crafting.md#makers-mark)).
+
 {{#include generated/class-levels.md:merchant}}
 
 <a id="invest"></a>**The merchant's investment** ([Invest](talents.md#talent-invest), from level 1)

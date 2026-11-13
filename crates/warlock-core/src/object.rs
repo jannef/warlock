@@ -474,12 +474,13 @@ impl Stack {
     /// What it is worth, in gold coins: each one's value, made of its [`Stack::parts`]
     /// ([`crate::content::ObjectDef::value_with`]: a gem by its size and cut; a piece times its
     /// unit, [`crate::piece::unit`]), times the count.
-    /// Magic does not change it; an anvil's work does ([`Worked::value`]).
+    /// Magic does not change it; an anvil's work and a maker's mark do ([`Worked::value`]).
     pub fn value(&self, content: &Content) -> u64 {
         let def = content.object(self.object);
         let each = u64::from(def.value_with(&self.parts(content), content))
             * u64::from(crate::piece::unit(content, def, self));
-        let each = self.worked().map_or(each, |w| w.value(each));
+        let mark = content.talents().mark_percent();
+        let each = self.worked().map_or(each, |w| w.value(each, mark));
         each * u64::from(self.count)
     }
 
@@ -596,6 +597,9 @@ impl Stack {
             } else {
                 format!(" (attempts {}: {})", worked.attempts, improved.join(" "))
             };
+            if worked.marked {
+                text += " (marked)";
+            }
         }
         match self.magic() {
             Some(m) if !m.identified => format!("{text} (unidentified)"),

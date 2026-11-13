@@ -1796,8 +1796,9 @@ impl<'a> PerceptionView<'a> {
     /// power and lore.
     pub fn describe_item(&self, stack: &Stack) -> Vec<crate::magic::describe::Line> {
         use crate::magic::describe::{self, LineKind};
+        let maker = self.character.map(|c| c.name.as_str());
         let mut lines =
-            describe::appraised_for(stack, self.lore, self.appraisal(), Some(self.player));
+            describe::appraised_for(stack, self.lore, self.appraisal(), Some(self.player), maker);
         if self.player.talent_mods(self.content).eye_for_make {
             let percent = crate::world::salvage_percent(self.content, self.player);
             let protected = crate::world::protected_in(self.content, self.quests, stack);
