@@ -341,6 +341,11 @@ pub struct TalentMods {
     pub skill_rolls: i32,
     /// The character levels that bring one more talent pick, once for each (1: at creation).
     pub extra_picks: Vec<u8>,
+    /// Its trades (the Crafts talents): a level-up roll on one throws the die one step up, as a
+    /// class's known-for skill does (`world/skill_roll.rs`).
+    pub trades: Vec<SkillId>,
+    /// Added to a trade's dice as the trade is handed down (Time served; `world/trade.rs`).
+    pub trade_bonus: i32,
     /// Percent more often loot it finds rolls magic and rare.
     pub loot_magic_percent: i32,
     /// Percent more time reading a scroll takes (negative: less).
@@ -1447,6 +1452,10 @@ impl TalentMods {
             TalentEffect::XpPercent { value } => self.xp_percent += value,
             TalentEffect::SkillRolls { value } => self.skill_rolls += value,
             TalentEffect::ExtraPick { level } => self.extra_picks.push(level),
+            // Its skill and tools are handed out as it is taken (`world/trade.rs`); the skill
+            // stays a trade of the holder's.
+            TalentEffect::Trade { skill, .. } => self.trades.extend(content.skill_id(&skill)),
+            TalentEffect::TradeBonus { value } => self.trade_bonus += value,
             // Handed out as the talent is taken (`World::take_talent`), never read after.
             TalentEffect::WeaponRanks { .. }
             | TalentEffect::TakeUpSkills { .. }
@@ -2435,6 +2444,10 @@ impl<'a> Candidate<'a> {
             },
             Need::Level(level) => self.level >= *level,
             Need::Race(id) => self.race == Some(id.as_str()),
+            // No race (a run without a character) has no skill of its people's to lack.
+            Need::RaceLacks(skill) => (self.race)
+                .and_then(|r| content.race(r))
+                .is_none_or(|r| !r.teaches(*skill)),
             Need::Eyes(ids) => ids.iter().any(|id| self.eyes == Some(id.as_str())),
             Need::Class(id) => self.class == Some(id.as_str()),
             Need::Animal(id) => self.sign.is_some_and(|s| s.is_animal(id)),

@@ -1,0 +1,11 @@
+# A Crafts trade (the craftsperson design §3): a craftsperson's creation pick, never one the race
+# teaches everyone; trains Mining at 3d6 and hands down the tools of the trade
+# (world/trade.rs). A pick-axe, readied in the Tool slot if it is free, else carried.
+[[talent]]
+id = "pitman"
+name = "Pitman"
+tree = "crafts"
+description = "You worked the pits: you start trained in Mining, with a pick-axe, and your mining grows as a pitman's does."
+needs = { creation = true, class = "craftsperson", race_lacks = "mining" }
+effects = [{ kind = "trade", skill = "mining", dice = "3d6", tools = [{ wield = "pick_axe" }] }]
+systems = ["skills"]

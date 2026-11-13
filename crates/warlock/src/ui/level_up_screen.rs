@@ -465,7 +465,12 @@ fn explain_roll(roll: &SkillRoll, soft_cap: u16) -> String {
         roll.practice
     );
     if roll.known {
-        text += &format!(", one die up to {} as your class's own skill", roll.die);
+        let why = if roll.trade {
+            "your trade"
+        } else {
+            "your class's own skill"
+        };
+        text += &format!(", one die up to {} as {why}", roll.die);
     }
     match roll.bonus {
         Some(RollBonus::Class) => text += ", +1 as your class trains it",

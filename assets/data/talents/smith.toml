@@ -1,0 +1,11 @@
+# A Crafts trade (the craftsperson design §3): a craftsperson's creation pick, never one the race
+# teaches everyone; trains Metalcraft at 3d6 and hands down the tools of the trade
+# (world/trade.rs). Three steel ingots: a knife's or a dagger's worth, three for a long sword.
+[[talent]]
+id = "smith"
+name = "Smith"
+tree = "crafts"
+description = "You were apprenticed to a smith: you start trained in Metalcraft, with three ingots of steel, and your smithing grows as a smith's does."
+needs = { creation = true, class = "craftsperson", race_lacks = "metalcraft" }
+effects = [{ kind = "trade", skill = "metalcraft", dice = "3d6", tools = ["piece*3"] }]
+systems = ["skills"]

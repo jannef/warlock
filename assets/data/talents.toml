@@ -22,6 +22,14 @@ id = "heritage"
 name = "Heritage"
 description = "What your family gave you: only at character creation."
 
+# The trades (the craftsperson design §3): a craftsperson's creation picks only (`needs = {
+# creation = true, class = "craftsperson" }`), one per profession skill, never one the race
+# teaches everyone (`race_lacks`); each trains its skill and hands down the tools of the trade.
+[[tree]]
+id = "crafts"
+name = "Crafts"
+description = "A trade learned young: a craftsperson's, at character creation."
+
 [[tree]]
 id = "vigour"
 name = "Vigour"

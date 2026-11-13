@@ -2376,9 +2376,11 @@ impl<'a> PerceptionView<'a> {
     /// level-up screen shows them); `None` for a skill the player is not trained in.
     pub fn skill_roll(&self, skill: SkillId) -> Option<SkillRoll> {
         let trained = self.player.skills.get(skill)?;
+        let trades = self.player.talent_mods(self.content).trades.clone();
         Some(world::skill_roll(
             self.content,
             self.character,
+            &trades,
             skill,
             trained,
         ))

@@ -1,0 +1,11 @@
+# A Crafts trade (the craftsperson design §3): a craftsperson's creation pick, never one the race
+# teaches everyone; trains Herbalism at 3d6 and hands down the tools of the trade
+# (world/trade.rs). Two sprigs of comfrey and a sprig of vervain.
+[[talent]]
+id = "wortcunner"
+name = "Wortcunner"
+tree = "crafts"
+description = "You were taught the lore of herbs: you start trained in Herbalism, with comfrey and vervain, and your herb-lore grows as a wortcunner's does."
+needs = { creation = true, class = "craftsperson", race_lacks = "herbalism" }
+effects = [{ kind = "trade", skill = "herbalism", dice = "3d6", tools = ["comfrey*2", "vervain"] }]
+systems = ["skills"]
