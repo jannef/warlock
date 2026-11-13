@@ -1049,8 +1049,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     4d201−404 basis points plus the bonus, each week from its own stream `invest/<week>`: about
     5 % a year on average (1.001^(360/7) = 5.3 %), a yearly spread of about 8 %, three years in
     ten losing. The bonus, derived from the quest records: +1 basis point per quest of the
-    partner's town's people completed (each once; thirteen in Cēaptūn) and +6 for Fire in the
-    deep (`fire_deep`, the fire drake slain and the mines reopened): everything done, 29 a week,
+    partner's town's people completed (each once; fourteen in Cēaptūn) and +6 for Fire in the
+    deep (`fire_deep`, the fire drake slain and the mines reopened): everything done, 30 a week,
     about 16 % a year. If the partner dies, the stake is lost. Saved and hashed:
     `WorldState::fund` (`cents`, `week`), left out until something is first put in.
   - **Prestige classes** (#876, P1 of `docs/design/prestige-classes.md` §4; the owner, PR #835:

@@ -28,7 +28,8 @@ All campaign-owned, in `assets/campaigns/ascmearc/data/creatures/` (`deep_gnome*
 
 - `deep_gnome`: the townsfolk, peaceful; one-liners and mutters, no topics.
 - `deep_gnome_headman`: Headman Peran (`npc = "peran"`), Gimmwīc's leader in its moot hall;
-  topics on the town, the surface, and the deep (the letter quest of #1435 starts from him).
+  topics on the town, the surface, and the deep; Factor Wulfrun's letter (`gnome_letter`, #1435)
+  is delivered to him, and he gives its answer back (`gnome_reply`; `docs/dev/campaign.md`).
 - `deep_gnome_priest`: Mother Senara (`senara`) of the Glimmering, the town's temple (a sanctuary
   room): `cure` (60) and `mend` (40), `temple = true`.
 - `deep_gnome_jeweller`: Old Tregear (`tregear`) of the cutting floor: teaches Jewelcraft for 1500

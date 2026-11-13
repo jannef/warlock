@@ -178,7 +178,7 @@ snapshots.
 ## Cēaptūn's quests (#340; the design's §6.2)
 
 `campaigns/ascmearc/data/quests/{hild,leofric,wulfrun}.toml`, one file a giver, three chains
-(three quests each, Wulfrun's two), each quest offered once the one before it is done (so a
+(three quests each), each quest offered once the one before it is done (so a
 giver shows one quest topic at a time): Reeve Leofric's Cealdhlāw chain (`barrow_rats`: kill 5 rats anywhere in Cealdhlāw, 5 skeletal rats for a Beast-friend, a `fallback` variant;
 `barrow_heart`: reach `cealdhlaw:4`; `wight`: kill the barrow wight), Sister Hild's Fennmynster
 chain (`grave_goods`: bring the `silver_chalice`; `fen_minster`: reach `fennmynster:3`, which
@@ -186,7 +186,12 @@ reveals `fennmynster` as it is given; `water_keeps`: bring the `minster_reliquar
 Factor Wulfrun's Fyrdelf chain (`lost_shaft`: reach `fyrdelf:2`, which `requires` `barrow_heart`
 (Fyrdelf starts at danger 5, so nobody is sent there before danger 4) and has `min_level = 5`
 (asked sooner, Wulfrun says her `early` line and gives nothing) and reveals `fyrdelf` as it is given;
-`fire_deep`: kill the fire drake, a named monster: its death counts however it came). Each reach and bring quest has a `where` for the log. The
+`fire_deep`: kill the fire drake, a named monster: its death counts however it came; then
+#1435's two deliveries, `gnome_letter`, the shared `sealed_letter` to Headman Peran of Gimmwīc
+(`to = "peran"`, paid there with a cut sapphire), and `gnome_reply`, given by Peran once that is
+done, the moot's answer carried back to Wulfrun; both in `wulfrun.toml`, since `requires` names
+only quests loaded before, and neither reveals anything: Dēopgang is not hidden and no quest
+gates it, the owner's rule). Each reach and bring quest has a `where` for the log. The
 quest objects are shared objects (`data/objects/{silver_chalice,minster_reliquary}.toml`,
 worth 0: never traded). The chalice lies on the barrow chamber's plinth, which Cealdhlāw names
 for its second floor (`[[dungeon.levels]] vaults`: certain, once, and never drawn at random); the

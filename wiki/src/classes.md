@@ -409,7 +409,7 @@ to **about 5 % a year on average**, but about three years in ten lose money.
 The more Cēaptūn owes you, the better the partner does. Every
 [quest](quests.md) you have completed for one of Cēaptūn's people adds 0.01 % to every week's
 return (each quest once). Completing Wulfrun's Fire in the deep, which slays the fire drake and
-lets the town dig in its mines again, adds 0.06 % more. With all of Cēaptūn's thirteen quests
-done the stake grows by about 16 % a year, and only about one year in twenty-five loses.
+lets the town dig in its mines again, adds 0.06 % more. With all of Cēaptūn's fourteen quests
+done the stake grows by about 16 % a year, and only about one year in thirty loses.
 
 If the partner dies, your stake dies with them.
