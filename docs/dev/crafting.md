@@ -814,6 +814,33 @@ is not listed): `seconds = 600`, `difficulty = 12`, `yield = 50`.
   interruption; the marks; `skill_effect_of` not summing; the ability; a replay),
   `content/salvage.rs` (the loader), the `Salvage` screen snapshot (`screen_snapshots.rs`).
 
+## Waste not (the craftsperson's)
+
+The craftsperson's class ability at level 6 (#1420; the craftsperson design §7.3;
+`data/talents/waste_not.toml`): "nothing lost but time", two effects and three reads, each
+where the rule already reads its number:
+
+- **`waste_not { salvage, failed }`** (`TalentMods::salvage_percent`, `failed_percent`, the most
+  held of each). `salvage`: `world::salvage_percent(content, actor)` is `data/salvage.toml`'s
+  `yield` or the holder's, whichever is more, read by `salvaged` for `piece::break_up` and by
+  Eye for the make's line (`PerceptionView::describe_item`), so the description counts what the
+  work would give. 75: a quarterstaff gives 8 billets for 5, chain mail 17 iron ingots for 11. A
+  gem's fate (chipped, shattered) is unchanged. `failed`: `craft_make.rs::failed_percent`, the
+  settings' `yield` or the holder's, at most 100, read by `resolve` and `taken` as they set each
+  `Spend::back` (stock by `piece::count_for`, never more than was taken; object inputs `count ×
+  percent / 100`). 100: a failed recipe, a natural 2 too, gives back all its stock and object
+  inputs, and a counted recipe that made none its stock and whole inputs (`per_made` ones were
+  never spent). A brew with a `failure` object still spends its inputs (`back` 0 before the
+  percent is asked). The metal-arms line ends ", every ounce."; another failure says "The work
+  goes wrong, but you save every scrap of it."
+- **`temper_safe`** (`TalentMods::temper_safe`): `temper.rs::work_out`'s failure arm, before item
+  damage is asked: the item keeps its `Worked` as it was, the attempt counted (`attempts` + 1, so
+  the next is harder), and nothing is drawn; a damaged item is never destroyed. Temper and Whittle
+  alike, a natural 2 too ("The work goes wrong, but you know when to stop before the steel
+  spoils." / "... the wood spoils.").
+
+Tests: `world/waste_not_tests.rs` (level 6, each read with and without the talent).
+
 ## Dumps
 
 The `recipes` layer: a `Metalcraft:` line per profession, then each row the player sees,
