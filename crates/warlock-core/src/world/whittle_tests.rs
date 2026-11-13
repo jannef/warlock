@@ -285,6 +285,7 @@ fn the_table_is_the_anvils_row_by_row() {
         attempts: 5,
         damaged: true,
         by: None,
+        marked: false,
     });
     let gone = (0..500).find(|&n| {
         let mut v = again.clone();

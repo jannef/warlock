@@ -907,6 +907,32 @@ stack), and `world/class_ability.rs`'s bare `use` ("Use it on what?").
   row greyed and the wielded left out, made with the attempts kept, failed with nothing lost, Eye
   for the make's line, a replay), the `make-do-list` screen snapshot.
 
+## Maker's mark
+
+The craftsperson's passive at level 60 (#1426; the craftsperson design §7.10): the talent
+`makers_mark` with `{ kind = "makers_mark", worth_percent = 50 }` (`TalentEffect::MakersMark`,
+`TalentMods::makers_mark`, `worth_percent` 0 refused at load).
+
+- **The one read**: `world/craft_make.rs::make_out`, after the grade's improvements are drawn: a
+  holder's made item whose object has a `kind` (arms, armour, a tool, jewellery) is built with
+  `Worked::marked` (a plain one gets a `Worked` with nothing else on it), whatever the grade. A
+  counted batch (`make_batch`), a brew's spoilt draught, and a kindless result (an ingot, a
+  lantern, a potion) are never marked. No draw: the mark changes no stream.
+- **Worth**: `Worked::value(worth, mark_percent)`, after the grade's multiplier or the damage's
+  halving, `worth_percent` more, rounded down. The percent is `TalentBook::mark_percent` (the
+  most any `makers_mark` effect says, cached at load), so a marked item keeps its worth whoever
+  carries it.
+- **Kept**: `Worked::damage` and `repair`, Temper, and Make do and mend never touch the flag.
+- **Read elsewhere**: the patron's `bonus` (`world/patron.rs`, `PatronRules::paid`), the capacity
+  (+1, `magic/capacity.rs`), the description's line (`magic/describe.rs::mark_line`: "It bears
+  {name}'s mark." with the character's name from `PerceptionView::describe_item`, "It bears its
+  maker's mark." from the nameless `lines`), the dev dump's ` (marked)`.
+- **Saves**: `Worked::marked` is new saved state, left out while false (saves pinned to the
+  version).
+- **Tests**: `world/makers_mark_tests.rs` (the level, a made sword marked and worth half again, the
+  description, the capacity, a brew and an ingot unmarked, the patron's pay, no mark without the
+  talent).
+
 ## Dumps
 
 The `recipes` layer: a `Metalcraft:` line per profession, then each row the player sees,

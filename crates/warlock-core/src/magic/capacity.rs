@@ -5,7 +5,8 @@
 //! - **The capacity** ([`capacity`], the one read): [`BASE`] (2), +1 for jewellery (a ring, an
 //!   amulet), + its quality (Fine 0, Marvellous 1, Masterwork 2: [`Worked::improvements`] less
 //!   one, never below 0, none while damaged; #1444), + its main part's material's `binding` (−2
-//!   to +2; silver −2, adamantium +1, mithril +2), + a gem in its ornament part (+1, a gem of the finest cut +2), at least 1 and at most
+//!   to +2; silver −2, adamantium +1, mithril +2), + a gem in its ornament part (+1, a gem of the finest cut +2), + 1 for a maker's mark
+//!   (Maker's mark, [`Worked::marked`](super::Worked::marked)), at least 1 and at most
 //!   [`MOST`]. The three-per-kind caps stand beside it.
 //! - **The trim** ([`trim`]): while an item's affixes outnumber its capacity, one of the kind
 //!   (prefix or suffix) it has more of goes, one of that kind at random (one `rng.index` draw), a
@@ -38,7 +39,9 @@ pub fn capacity(stack: &Stack, content: &Content) -> u8 {
         .first()
         .map_or(0, |p| i32::from(content.material(p.material).binding));
     let gem = gem_term(stack, content);
-    let sum = BASE + jewellery + quality + binding + gem;
+    // A maker's mark holds one more (Maker's mark, the craftsperson's).
+    let mark = i32::from(stack.worked().is_some_and(super::Worked::marked));
+    let sum = BASE + jewellery + quality + binding + gem + mark;
     u8::try_from(sum.clamp(1, i32::from(MOST))).unwrap_or(1)
 }
 

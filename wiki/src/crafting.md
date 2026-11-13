@@ -286,3 +286,20 @@ From level 6 a craftsperson has **Waste not**: nothing is lost in their hands bu
   [whittle](skill-uses.md#whittling), damages nothing, even on a natural 2: the item stays as it
   was, and a damaged item is never destroyed. The attempt still counts, so the next one is as hard
   as it would have been.
+
+### Maker's mark
+
+From level 60 what a craftsperson makes bears their **mark**. Every weapon, piece of armour,
+shield, tool, ring, and amulet they [make](#the-recipes) is marked, whatever its
+[grade](#how-well-it-comes-out), plain ones too. Ingots, batches of arrows and stones, and
+[brews](recipes-alchemy.md#how-a-brew-goes) are never marked. Its description says so: "It bears
+Brakka's mark." Its name does not change.
+
+- **Worth:** a marked piece is worth **half again** (+50 %, rounded down), on top of its grade. A
+  marked Fine steel long sword is worth three times a plain one. A marked piece that is later
+  damaged is worth half of that.
+- **The patron** pays **50 % more** for a marked piece than for the same piece unmarked, on top of
+  its higher worth ([The patron](patron.md#delivering)).
+- **Enchantments:** a marked piece can bear **one more** ([Capacity](magic-items.md#capacity)).
+
+The mark stays for good: tempering, damage, and mending never take it away.

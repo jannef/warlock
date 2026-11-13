@@ -1027,7 +1027,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     or shop floor, never the overworld, in an hour of `craft` turns through `keep_at`; no check;
     interrupted, nothing is made and the ingot kept; done, the cell is a `makeshift_anvil` for
     good (§7 "Special rooms": Forges); refused, no time, without an ingot ("You have no ingot to
-    set."), on the overworld, or on other ground); merchant (Delver, Scholar) Haggler (favour +15 %: the one class ability on
+    set."), on the overworld, or on other ground), and Maker's mark (#1426, at 60, passive: every
+    item with a kind (arms, armour, a tool, jewellery; never an ingot, a batch, or a brew) the
+    holder makes bears their mark, whatever its grade, `Worked::marked`, saved and never lost;
+    a marked item is worth 50 % more on top of its grade, the patron pays its `bonus` 50 % more
+    for it, it can bear one enchantment more (§8 "Magic items"), and its description says "It
+    bears Brakka's mark."); merchant (Delver, Scholar) Haggler (favour +15 %: the one class ability on
     shop favour, #787), Invest (below, at 1, #1407), Deep pockets (coins weightless) and Pack mule (the burden line's first step, #1198), Merchant's eye (#816, at 12: an
     ability, on a thing carried, that identifies it as the scroll of identify would, for a
     reading's time and nothing else; refused, no time, for a thing already known); #789 cut its level 40 Insured (shops paid +50 %), a

@@ -21,7 +21,8 @@
 //! - **Hand-in** (the same chat while one is open): the first stack carried of the work's object
 //!   that is Fine or better (one improvement at least; one not worn first) is taken and paid for,
 //!   `data/patron.toml`'s `pays` percent of its worth (`Stack::value`, the grade's multiplier
-//!   counted), with `delivered`; Negotiation is marked (`Use::Deal`). Whose work it is, the
+//!   counted), `bonus` percent more for one bearing a maker's mark (`Worked::marked`, Maker's
+//!   mark), with `delivered`; Negotiation is marked (`Use::Deal`). Whose work it is, the
 //!   patron does not ask. Only plain ones carried: `plain`; none: a one-liner (the rotation),
 //!   then `waiting`.
 //! - **One at a time**: the next is offered by the next chat; no cap, no wait.
@@ -257,7 +258,7 @@ impl World {
                     Some(item) => {
                         let (taken, stack) = self.hand_over_one(item, ActionKind::Chat);
                         spent = taken;
-                        let marked = false;
+                        let marked = stack.worked().is_some_and(|w| w.marked());
                         let gold = rules.paid(stack.value(&content), marked);
                         let gold = u32::try_from(gold).unwrap_or(u32::MAX);
                         let what = self.lore().describe(&stack);

@@ -41,7 +41,9 @@
 //!   identified; failed, nothing is made, the gem is kept, and the stock and object inputs come
 //!   back at the settings' `yield`, or the holder's Waste not's where more ([`failed_percent`]) (pieces by [`crate::piece::count_for`], at least one of each;
 //!   a stock input `count × yield / 100`, so none of a bow's one sinew). Inputs never set the
-//!   main material.
+//!   main material. Made by a holder of Maker's mark, an item with a `kind` (arms, armour,
+//!   jewellery: never an ingot or a brew) bears their mark (`Worked::marked`, the talent's one
+//!   read), whatever its grade.
 //! - **Counted** (a count above 1, or `"fletch"`): no grades. The count is rolled (its dice, or
 //!   `world/fletch.rs`'s), then the margin keeps all of it, half rounded up within
 //!   `half_within`, one within `one_within`, else none ([`batch_made`]; a natural 2 none, a
@@ -1197,6 +1199,14 @@ impl World {
             made.set_worked(worked);
             grade
         };
+        // A master's work bears their mark (Maker's mark, the one read): arms, armour, and
+        // jewellery, whatever the grade.
+        let def = content.object(made.object);
+        if def.kind.is_some() && self.state.player().talent_mods(&content).makers_mark {
+            let mut worked = made.worked().cloned().unwrap_or_default();
+            worked.mark();
+            made.set_worked(worked);
+        }
         // The maker knows their work, and the type of what they made (a potion's).
         made.identify();
         self.learn_scroll(made.object);

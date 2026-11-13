@@ -183,6 +183,7 @@ above.
 | The craftsperson's two trades at creation, Time served | `classes.md#trades` |
 | Eye for the make, reading an item's make | `classes.md#eye-for-the-make` |
 | Make do and mend, mending in the field | `classes.md#make-do-and-mend` |
+| Maker's mark, a marked piece | `crafting.md#makers-mark` |
 | Waste not, nothing lost in a craftsperson's hands | `crafting.md#waste-not` |
 | A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents.md#delver` |
 | Class abilities | `talents.md#class-abilities`, `abilities.md` |

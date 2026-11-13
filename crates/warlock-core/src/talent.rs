@@ -358,6 +358,8 @@ pub struct TalentMods {
     pub failed_percent: u32,
     /// A failed Temper or Whittle damages nothing (Waste not; `world/temper.rs::work_out`).
     pub temper_safe: bool,
+    /// Its graded work is built bearing its mark (Maker's mark; `world/craft_make.rs::make_out`).
+    pub makers_mark: bool,
     /// Percent more often loot it finds rolls magic and rare.
     pub loot_magic_percent: i32,
     /// Percent more time reading a scroll takes (negative: less).
@@ -1489,6 +1491,7 @@ impl TalentMods {
                 self.failed_percent = self.failed_percent.max(failed);
             }
             TalentEffect::TemperSafe => self.temper_safe = true,
+            TalentEffect::MakersMark { .. } => self.makers_mark = true,
             // Handed out as the talent is taken (`World::take_talent`), never read after.
             TalentEffect::WeaponRanks { .. }
             | TalentEffect::TakeUpSkills { .. }

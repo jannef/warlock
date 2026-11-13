@@ -61,19 +61,20 @@ pub struct Appraisal {
 /// emerald, fine cut (worth 40 gold)`), as `appraisal` shows.
 /// An unidentified scroll is called by its label (spec §8 "Scrolls"), as `lore` names it.
 pub fn appraised(stack: &Stack, lore: Lore<'_>, appraisal: Appraisal) -> Vec<Line> {
-    appraised_for(stack, lore, appraisal, None)
+    appraised_for(stack, lore, appraisal, None, None)
 }
 
 /// [`appraised`] as `user` would use it: a wand whose type is known says what it does in their
-/// hands ([`wand_does`]).
+/// hands ([`wand_does`]); a maker's mark is `maker`'s, the player's name ([`mark_line`]).
 pub(crate) fn appraised_for(
     stack: &Stack,
     lore: Lore<'_>,
     appraisal: Appraisal,
     user: Option<&Actor>,
+    maker: Option<&str>,
 ) -> Vec<Line> {
     let content = lore.content;
-    let mut out = lines_named(stack, content, lore.names(stack));
+    let mut out = lines_named(stack, content, lore.names(stack), maker);
     if appraisal.capacity
         && let Some(said) = capacity_line(stack, content)
     {
@@ -121,6 +122,18 @@ fn capacity_line(stack: &Stack, content: &Content) -> Option<Line> {
             enchantments(n),
             number_word(room - n)
         ),
+    };
+    Some(line(LineKind::Stat, text))
+}
+
+/// Whose mark `stack` bears (Maker's mark, the craftsperson's): "It bears Brakka's mark.", the
+/// maker being the player (no one else makes marked work); "It bears its maker's mark." where
+/// no name is known. `None` for an unmarked item.
+fn mark_line(stack: &Stack, maker: Option<&str>) -> Option<Line> {
+    stack.worked().filter(|w| w.marked())?;
+    let text = match maker {
+        Some(name) => format!("It bears {name}'s mark."),
+        None => "It bears its maker's mark.".to_string(),
     };
     Some(line(LineKind::Stat, text))
 }
@@ -379,11 +392,17 @@ fn boosted(stat: crate::stats::Stat) -> &'static str {
 /// garnet, uncut`), its base stats, and its affixes if identified (`Sharp: +2 damage`) or a note
 /// that its magic is unknown.
 pub fn lines(stack: &Stack, content: &Content) -> Vec<Line> {
-    lines_named(stack, content, stack.names(content))
+    lines_named(stack, content, stack.names(content), None)
 }
 
-/// [`lines`] with what it is called, singular and plural (a scroll's label).
-fn lines_named(stack: &Stack, content: &Content, (name, plural): (String, String)) -> Vec<Line> {
+/// [`lines`] with what it is called, singular and plural (a scroll's label), and whose mark it
+/// bears, if marked.
+fn lines_named(
+    stack: &Stack,
+    content: &Content,
+    (name, plural): (String, String),
+    maker: Option<&str>,
+) -> Vec<Line> {
     let def = content.object(stack.object);
     let mut out = Vec::new();
     let base = if stack.count == 1 {
@@ -435,6 +454,7 @@ fn lines_named(stack: &Stack, content: &Content, (name, plural): (String, String
     // damage with its material and known affixes, Dv and Pv.
     let numbers = super::Numbers::of(stack, content).lines(content);
     out.extend(numbers.into_iter().map(|t| line(LineKind::Stat, t)));
+    out.extend(mark_line(stack, maker));
     // A spirit weapon's power, as a unique's is said.
     if let Some((_, _, _, phrase)) = gift {
         out.push(line(LineKind::Power, phrase));

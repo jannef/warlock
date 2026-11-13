@@ -1006,6 +1006,13 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              [Whittle](skill-uses.md#whittling) damages nothing: the item stays as it was, though \
              the attempt still counts toward the next one's difficulty"
             .to_string(),
+        TalentEffect::MakersMark { worth_percent } => format!(
+            "the arms, armour, and jewellery you [make](crafting.md#the-recipes) bear your \
+             mark, whatever their grade: each is worth {worth_percent}% more, \
+             [your patron](patron.md) pays {}% more for one, and it holds one \
+             [enchantment](magic-items.md#capacity) more",
+            content.patron().map_or(0, |p| p.bonus)
+        ),
         TalentEffect::LootMagicPercent { value } => format!(
             "the weights of the rarities better than a find's least {} (anything found: magic \
              and rare; what creatures drop, always magic: rare)",

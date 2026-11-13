@@ -62,7 +62,7 @@ fn check_stack(content: &Content, stack: &Stack) {
     assert_eq!(def.material(), parts[0].material);
     // A creature's gear may be damaged or improved (#1193): its worth follows its grade.
     let worth = u64::from(def.value) * u64::from(stack.count);
-    let worth = stack.worked().map_or(worth, |w| w.value(worth));
+    let worth = stack.worked().map_or(worth, |w| w.value(worth, 0));
     assert_eq!(stack.value(content), worth);
     let name = if stack.count == 1 {
         &def.name

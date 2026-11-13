@@ -35,6 +35,9 @@ of its worth** in gold. Its grade counts: a Fine piece is worth twice a plain on
 one three times, a Masterwork five times. A shop pays far less. Every delivery trains
 [Negotiation](skills.md#skill-negotiation).
 
+A piece that bears your [maker's mark](crafting.md#makers-mark) is paid **50 % more**, on top
+of the half again the mark adds to its worth.
+
 The patron never asks who made it: a Fine piece you found will do. A plain one will not ("I asked
 for Fine work"), and a damaged one is no better than plain.
 

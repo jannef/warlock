@@ -2062,6 +2062,8 @@ mod magic_tests;
 #[cfg(test)]
 mod make_do_tests;
 #[cfg(test)]
+mod makers_mark_tests;
+#[cfg(test)]
 mod malison_tests;
 #[cfg(test)]
 mod mana_talent_tests;

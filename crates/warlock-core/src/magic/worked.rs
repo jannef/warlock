@@ -11,6 +11,11 @@
 //! whole life and is never shown in the game. Affixes are another matter ([`super::Magic`]): the
 //! work never touches them.
 //!
+//! A craftsperson's work may also bear their **mark** (Maker's mark, `world/craft_make.rs`):
+//! saved with the rest, never lost to damage or repair, worth more ([`Worked::value`]), and
+//! read by the patron (`world/patron.rs`) and the capacity (`super::capacity`). A plain marked
+//! item carries a `Worked` with nothing else on it.
+//!
 //! The numbers are read in two places: to hit, plus damage, Defence, and Protection through
 //! [`super::Mods::local`], the dice through [`Stack::attack`](crate::object::Stack::attack).
 
@@ -131,6 +136,9 @@ pub struct Worked {
     /// What damaged it, for its word; none: a failed attempt (or not damaged).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) by: Option<ItemHarm>,
+    /// Whether it bears its maker's mark (Maker's mark).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub(crate) marked: bool,
 }
 
 impl Worked {
@@ -160,14 +168,31 @@ impl Worked {
         GRADES.get(grade).map(|&(word, _)| word)
     }
 
-    /// `worth` as it stands now: multiplied by its grade, or halved (rounded up) while damaged.
-    pub fn value(&self, worth: u64) -> u64 {
-        if self.damaged {
-            return worth.div_ceil(2);
+    /// `worth` as it stands now: multiplied by its grade, or halved (rounded up) while damaged;
+    /// then, marked, `mark_percent` % more (rounded down;
+    /// [`TalentBook::mark_percent`](crate::content::TalentBook::mark_percent)).
+    pub fn value(&self, worth: u64, mark_percent: u32) -> u64 {
+        let worth = if self.damaged {
+            worth.div_ceil(2)
+        } else {
+            let grade = self.improved.len().checked_sub(1);
+            let times = grade.and_then(|g| GRADES.get(g)).map_or(1, |&(_, by)| by);
+            worth.saturating_mul(times)
+        };
+        match self.marked {
+            true => worth.saturating_mul(100 + u64::from(mark_percent)) / 100,
+            false => worth,
         }
-        let grade = self.improved.len().checked_sub(1);
-        let times = grade.and_then(|g| GRADES.get(g)).map_or(1, |&(_, by)| by);
-        worth.saturating_mul(times)
+    }
+
+    /// Whether it bears its maker's mark.
+    pub fn marked(&self) -> bool {
+        self.marked
+    }
+
+    /// It bears its maker's mark from now on.
+    pub(crate) fn mark(&mut self) {
+        self.marked = true;
     }
 
     /// Whether its improvements number `most` or more: it can be made no finer.
@@ -260,13 +285,23 @@ mod tests {
             improved: vec![Aspect::ToHit; n],
             ..Worked::default()
         };
-        let worth: Vec<u64> = (0..=3).map(|n| of(n).value(81)).collect();
+        let worth: Vec<u64> = (0..=3).map(|n| of(n).value(81, 50)).collect();
         assert_eq!(worth, [81, 162, 243, 405]);
         let damaged = Worked {
             damaged: true,
             ..Worked::default()
         };
-        assert_eq!((damaged.value(81), damaged.value(80)), (41, 40));
+        assert_eq!((damaged.value(81, 50), damaged.value(80, 50)), (41, 40));
+        // The mark: half again on top of the grade (or the damage), rounded down.
+        let marked = |n: usize| Worked {
+            marked: true,
+            ..of(n)
+        };
+        let worth: Vec<u64> = (0..=3).map(|n| marked(n).value(81, 50)).collect();
+        assert_eq!(worth, [121, 243, 364, 607]);
+        let mut damaged = damaged;
+        damaged.mark();
+        assert_eq!(damaged.value(80, 50), 60);
     }
 
     #[test]
@@ -278,6 +313,7 @@ mod tests {
             attempts: 1,
             damaged,
             by: None,
+            marked: false,
         };
         assert!(of(vec![Aspect::Die], false).is_valid(sword));
         assert!(!of(vec![Aspect::Die], false).is_valid(shirt));
