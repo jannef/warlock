@@ -1174,7 +1174,8 @@ impl ObjectSpec {
 
 /// Parses objects as level files place them: ids, each optionally with a count (`"arrow*12"`),
 /// first on top; a loose gem names its gem (`"gem:ruby*3"`: the gems' object made of that gem,
-/// of the plain size and cut; spec §7 "Gems"), and anything else may name another material its
+/// of the plain size and cut, or of a cut named after it, `"gem:garnet:uncut"`; spec §7
+/// "Gems"), and anything else may name another material its
 /// base item may be made of (`"dagger:bronze"`, a variant, #193), and a unique item is named by
 /// its id (`"unique:widowmaker"`, spec §8 "Magic items"). A stackable
 /// object becomes one stack (the same placement twice joins it); any other object becomes a
@@ -1261,10 +1262,20 @@ fn placed_gem(
     gem: &str,
 ) -> Result<Stack, String> {
     let id = &content.object(object).id;
+    // A cut may follow the gem (`gem:garnet:uncut`); the size is the plain one.
+    let (gem, cut) = match gem.split_once(':') {
+        Some((gem, cut)) => (gem.trim(), Some(cut.trim())),
+        None => (gem, None),
+    };
     let material = (content.material_id(gem))
         .filter(|m| content.material(*m).gem.is_some())
         .ok_or_else(|| format!("`{id}:{gem}`: `{gem}` is no gem (data/materials/)"))?;
-    let part = ItemPart::gem(content, None, material, gems.plain());
+    let mut cutting = gems.plain();
+    if let Some(cut) = cut {
+        cutting.cut = (gems.cut_id(cut))
+            .ok_or_else(|| format!("`{id}:{gem}:{cut}`: `{cut}` is no cut (data/gems.toml)"))?;
+    }
+    let part = ItemPart::gem(content, None, material, cutting);
     Ok(Stack::one(object).with_parts(vec![part]))
 }
 

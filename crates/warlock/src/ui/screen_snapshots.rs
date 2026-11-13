@@ -860,7 +860,7 @@ const CASES: &[Case] = &[
         seed: Some(8),
         character: Some("human,male,craftsperson"),
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*6 move:SW move:W*3 \
-                  search:50 move:S open:W move:W*2 pickup craft:cut:l craft:cut:k",
+                  search:50 move:S open:W move:W*2 pickup craft:cut:n craft:cut:m",
         screen: Some("cut"),
         ..BASE
     },

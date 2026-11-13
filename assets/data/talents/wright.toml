@@ -1,0 +1,11 @@
+# A Crafts trade (the craftsperson design §3): a craftsperson's creation pick, never one the race
+# teaches everyone; trains Woodcraft at 3d6 and hands down the tools of the trade
+# (world/trade.rs). Four wood billets and a length of sinew: a short bow's worth.
+[[talent]]
+id = "wright"
+name = "Wright"
+tree = "crafts"
+description = "You were apprenticed to a wright: you start trained in Woodcraft, with four billets of wood and a length of sinew, and your woodwork grows as a wright's does."
+needs = { creation = true, class = "craftsperson", race_lacks = "woodcraft" }
+effects = [{ kind = "trade", skill = "woodcraft", dice = "3d6", tools = ["piece:wood*4", "piece:sinew"] }]
+systems = ["skills"]

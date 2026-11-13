@@ -271,7 +271,7 @@ pub use invest::InvestRules;
 #[cfg(test)]
 pub(crate) use item_class::BUILTIN as BUILTIN_ITEM_CLASSES;
 pub use item_class::{ItemClassDef, ItemClassId, MAX_ITEM_CLASSES};
-pub use kit::{Keep, Kit, KitItem, RandomScrolls};
+pub use kit::{Keep, Kit, KitItem, KitLineSpec, RandomScrolls};
 pub use learning::{Band, Mishap, MishapEffect, StudyRules, drawn_among};
 pub use leaving::{Laid, Leaving};
 pub(crate) use level::validate_route;
@@ -1253,6 +1253,7 @@ impl Content {
         }
         scroll::check_spells(&content).map_err(|m| ContentError::new("data/objects", m))?;
         talent::check_heirlooms(&content).map_err(|m| ContentError::new("data/talents", m))?;
+        talent::check_trades(&content).map_err(|m| ContentError::new("data/talents", m))?;
         spell_def::check_effects(&content).map_err(|m| ContentError::new("data/spells", m))?;
         breath::check_effects(&content)?;
         burst::check_effects(&content)?;

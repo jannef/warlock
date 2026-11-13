@@ -1,6 +1,6 @@
 //! What a family hands down (spec §8 "Talents": the talents only for character creation, #697):
-//! Family wealth's gold and gems and Father's sword's heirloom weapon, handed out once, as the
-//! talent is taken ([`World::hand_down`], from `World::learn`). Their `creation` need keeps them
+//! Family wealth's gold and gems and Father's sword's heirloom weapon (and a Crafts trade's skill
+//! and tools, `trade.rs`), handed out once, as the talent is taken ([`World::hand_down`], from `World::learn`). Their `creation` need keeps them
 //! to the creation picks, so they come while the run is being made, on top of the starting kit.
 //!
 //! - **Gold** (`starting_gold`): `percent` of the gold coins the character carries then (the
@@ -69,6 +69,9 @@ impl World {
                     let mut stack = loot::heirloom(&content, &mut rng, object, count, (level, quality));
                     stack.identify();
                     self.wield_heirloom(&content, stack);
+                }
+                TalentEffect::Trade { skill, dice, tools } => {
+                    self.learn_trade(&content, &spec, &skill, dice, &tools)
                 }
                 _ => {}
             }

@@ -299,6 +299,7 @@ mod talk_past;
 mod tame;
 mod temper;
 mod thief;
+mod trade;
 mod train;
 mod trap;
 mod travel;
@@ -2242,6 +2243,8 @@ mod tests;
 mod theft_tests;
 #[cfg(test)]
 mod time_tests;
+#[cfg(test)]
+mod trade_tests;
 #[cfg(test)]
 mod train_service_tests;
 #[cfg(test)]

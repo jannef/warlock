@@ -297,6 +297,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("talents.md", talents::talents),
         ("talents-racial.md", talents::racial),
         ("talents-heirlooms.md", talents::heirlooms),
+        ("crafts-trades.md", talents::trades),
         ("talents-by-system.md", talents::by_system),
         ("class-levels.md", talents::class_levels),
         ("prayer-strain.md", prayer::prayer_strain),

@@ -97,8 +97,11 @@ pub struct SkillRoll {
     pub marks: u32,
     /// The die the marks set on the ladder.
     pub practice: Dice,
-    /// Whether the class is known for the skill: one step up the ladder.
+    /// Whether the class is known for the skill, or it is a trade of the player's (the Crafts
+    /// talents): one step up the ladder, never two.
     pub known: bool,
+    /// Whether the step is the trade's alone (the class is not known for the skill).
+    pub trade: bool,
     /// The die rolled: `practice`, a step up when `known`.
     pub die: Dice,
     /// Why the roll adds 1, if it does.
@@ -114,23 +117,27 @@ impl SkillRoll {
     }
 }
 
-/// The level-up roll on `skill`, trained as `trained`, of a player of `character`: the die the
-/// skill's marks set on the ladder, one step up for a skill the class is known for (or the
-/// prestige class, once called: the union of both; spec §8 "Prestige classes"), +1 for any
-/// other skill the class trains or a skill the race trains, halved from the soft cap on.
+/// The level-up roll on `skill`, trained as `trained`, of a player of `character` whose trades
+/// are `trades` (`TalentMods::trades`): the die the skill's marks set on the ladder, one step up
+/// for a skill the class is known for (or the prestige class, once called: the union of both;
+/// spec §8 "Prestige classes") or a trade (the step is one, whatever gives it), +1 for any other
+/// skill the class trains or a skill the race trains, halved from the soft cap on.
 pub fn skill_roll(
     content: &Content,
     character: Option<&Character>,
+    trades: &[SkillId],
     skill: SkillId,
     trained: Trained,
 ) -> SkillRoll {
     let class = character.and_then(|c| c.spec.class(content).ok());
     let prestige = character.and_then(|c| c.prestige(content));
     let race = character.and_then(|c| c.spec.race(content).ok());
-    let known = class.is_some_and(|c| c.is_known_for(skill))
+    let classes = class.is_some_and(|c| c.is_known_for(skill))
         || prestige.is_some_and(|p| p.known_for.contains(&skill));
-    let trains = class.is_some_and(|c| c.trains(skill) && !known);
-    let racial = race.is_some_and(|r| r.skills.iter().any(|&(s, _)| s == skill));
+    let trade = !classes && trades.contains(&skill);
+    let known = classes || trade;
+    let trains = class.is_some_and(|c| c.trains(skill) && !classes);
+    let racial = race.is_some_and(|r| r.teaches(skill));
     let bonus = match (trains, racial) {
         (true, _) => Some(RollBonus::Class),
         (false, true) => Some(RollBonus::Race),
@@ -142,6 +149,7 @@ pub fn skill_roll(
         marks: trained.marks,
         practice: ladder.die(step),
         known,
+        trade,
         die: ladder.die(step + usize::from(known)),
         bonus,
         halved: trained.value >= content.skill_rolls().soft_cap,
@@ -191,7 +199,9 @@ impl World {
     /// and the words, never the number. The one path of a level-up roll and an automatic one.
     fn roll_skill(&mut self, id: SkillId, trained: Trained) {
         let content = self.content.clone();
-        let roll = skill_roll(&content, self.state.character.as_ref(), id, trained);
+        let trades = self.state.player().talent_mods(&content).trades.clone();
+        let character = self.state.character.as_ref();
+        let roll = skill_roll(&content, character, &trades, id, trained);
         let seed = self.state.seed;
         let rng = (self.state.levels_rng).get_or_insert_with(|| Rng::levels(seed));
         let rolled = roll.dice().roll(rng);

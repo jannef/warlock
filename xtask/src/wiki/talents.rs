@@ -4,8 +4,8 @@
 use super::text::{Term, anchored, link, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{
-    Content, Faced, Need, OverTime, PrayerUse, Role, SignActive, SmiteRiderKind, SongOn, SpellData,
-    SpellModSpec, StatusId, Table, TalentDef, TalentEffect, TreeId,
+    Content, Faced, Keep, KitLineSpec, Need, OverTime, PrayerUse, Role, SignActive, SmiteRiderKind,
+    SongOn, SpellData, SpellModSpec, StatusId, Table, TalentDef, TalentEffect, TreeId,
 };
 use warlock_core::noise::SONG_NOISE;
 
@@ -91,6 +91,82 @@ pub(super) fn heirlooms(content: &Content) -> String {
         }
     }
     out
+}
+
+/// The Crafts trades (the craftsperson design §3): each trade's skill, its dice, the tools of
+/// the trade, and the races it is closed to (those whose people all have the skill), trades by
+/// name.
+pub(super) fn trades(content: &Content) -> String {
+    let mut rows: Vec<&TalentDef> = (content.talents().iter())
+        .map(|(_, t)| t)
+        .filter(|t| (t.effects.iter()).any(|e| matches!(e, TalentEffect::Trade { .. })))
+        .collect();
+    rows.sort_by(|a, b| a.name.cmp(&b.name));
+    let mut out = String::from(
+        "| Trade | Skill | Dice | Tools of the trade | Closed to |\n|---|---|---|---|---|\n",
+    );
+    for def in rows {
+        for effect in &def.effects {
+            let TalentEffect::Trade { skill, dice, tools } = effect else {
+                continue;
+            };
+            let Some(id) = content.skill_id(skill) else {
+                continue;
+            };
+            let closed: Vec<String> = (def.needs.iter())
+                .filter_map(|n| match n {
+                    Need::RaceLacks(skill) => Some(skill),
+                    _ => None,
+                })
+                .flat_map(|skill| content.races().teaching(skill))
+                .map(|r| link(Term::Race, &r.id, &r.name))
+                .collect();
+            let _ = writeln!(
+                out,
+                "| {} | {} | {dice} | {} | {} |",
+                link(Term::Talent, &def.id, &def.name),
+                link(Term::Skill, skill, &content.skill(id).name),
+                tools_text(content, tools),
+                if closed.is_empty() {
+                    "—".to_string()
+                } else {
+                    closed.join(", ")
+                }
+            );
+        }
+    }
+    out
+}
+
+/// A trade's tools in words: each line's alternatives joined by "or", lines by commas, a
+/// readied one marked.
+fn tools_text(content: &Content, tools: &[KitLineSpec]) -> String {
+    let Ok(kit) = content.kit_lines(tools) else {
+        return "—".to_string();
+    };
+    let lines: Vec<String> = (kit.items().iter())
+        .map(|line| {
+            let one_of: Vec<String> = (line.one_of.iter())
+                .map(|stacks| {
+                    (stacks.iter())
+                        .map(|s| s.describe(content))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                })
+                .collect();
+            let text = one_of.join(" or ");
+            match line.keep {
+                Keep::Carry => text,
+                Keep::Wield => format!("{text} (readied if its slot is free)"),
+                Keep::Wear => format!("{text} (worn if its slot is free)"),
+            }
+        })
+        .collect();
+    if lines.is_empty() {
+        "—".to_string()
+    } else {
+        lines.join(", ")
+    }
 }
 
 /// The racial talents (spec §8 "Talents", the Racial tree), race by race: those a race grants,
@@ -865,6 +941,20 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              [identified](magic-items.md#unidentified-items), readied in its own \
              [slot](equipment.md#what-fits-where) if that is free, else carried"
         ),
+        TalentEffect::Trade { skill, dice, .. } => {
+            let name =
+                (content.skill_id(&skill)).map_or(skill.clone(), |s| content.skill(s).name.clone());
+            format!(
+                "at creation, [{name}](skills.md#skill-{}) trained at {dice}, \
+                 and the [tools of the trade](talents.md#crafts-a-craftspersons-trades); a \
+                 [skill roll](skills.md#getting-better) on it throws the die one step up, as on a \
+                 skill your class is known for (never two steps)",
+                skill.replace('_', "-")
+            )
+        }
+        TalentEffect::TradeBonus { value } => {
+            format!("each trade you take at creation is trained {} more", signed(value))
+        }
         TalentEffect::LootMagicPercent { value } => format!(
             "the weights of the rarities better than a find's least {} (anything found: magic \
              and rare; what creatures drop, always magic: rare)",
