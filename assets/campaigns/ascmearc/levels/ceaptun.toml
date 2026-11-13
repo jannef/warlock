@@ -44,7 +44,7 @@ TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 ......#.............e.................................................................↓↓..
 ......#.WWWWWWWW...............................................................*......↓↓..
 .rrrr.#.WppppppW...WWWWWWWWWWWWW..WWWWWWWWWWW...WWWWWWWWWWW...WWWWWWWWWWW.....~~~~~...↓↓..
-.rxrr.#.WppppppW...WpppppppppppW..WBppppppppW...W=p=pppppBW...W=pp=W=pppW....~~~~~~~.T↓↓..
+.rxrr.#.WppppppW...WpppppppppppW..WBPpppppppW...W=p=pppppBW...W=pp=W=pppW....~~~~~~~.T↓↓..
 .rrrr.#.WpppCppW...WppppplpppppW..WAppppppppW...WppppplpppW...WplppWpplpW....~~~~~~~..↓↓.T
 .rrrr.#.WppppppW...WpppppppppppW..WpppplppppW...WpppsΠΠsppW...WpΠspWpppsW.....~~~~~...↓↓..
 ......#.WppppppW...WpppppppppppW..WpppppppppW...WpppppppppW...WppppWpΠ8pW........6....↓↓..
@@ -118,6 +118,8 @@ TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 "L" = { terrain = "plank_floor", creature = "reeve", npc = "leofric" }
 "F" = { terrain = "plank_floor", creature = "mine_factor", npc = "wulfrun" }
 "M" = { terrain = "plank_floor", creature = "guildmaster", npc = "wat" }
+# Ceolred, the smith's apprentice, beside the smithy's fire: a villager, not a keeper (#1443).
+"P" = { terrain = "plank_floor", creature = "villager", npc = "ceolred" }
 # The Gildhalle's bounty board, nailed up beside its door (a named place: look mode reads it).
 "N" = { terrain = "timber_wall", name = "the bounty board", note = "Bills nailed up three deep, most of them years old." }
 # The Gilde's yard across the lane (spec §8 "Weapon skills": "Target dummies"): beaten earth, a

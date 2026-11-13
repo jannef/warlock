@@ -138,6 +138,14 @@ fire and the [anvil](altars-forges-springs.md). Besides selling arms and armour,
 with the town's [goodwill](#goodwill). You start it at 5. Without it you cannot temper or forge
 anything at an anvil.
 
+### Ceolred, the smith's apprentice
+
+**Ceolred** is Eadric's apprentice. He stands beside the smith's fire in the smithy and sells
+nothing. Talk to him and he recites what his master has drilled into him about the
+[materials](materials.md): which are hard or soft, light or heavy, which hold an edge, which rust,
+which take a spell well or badly, and which are hard to work. He tells it in words, never numbers;
+the exact figures are in the tables on that page.
+
 ### Old Tregear
 
 **Old Tregear** works the cutting floor of [Gimmwīc](ascmearc.md#gimmwīc), the deep gnomes' town.

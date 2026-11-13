@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Factor Wulfrun mutters: "Where did I put that ledger?"
+ You open the door.
  Factor Wulfrun says: "Yes? I am frightfully busy. Well, no, but I like to look it."
 
 

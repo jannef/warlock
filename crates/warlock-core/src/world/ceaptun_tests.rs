@@ -21,6 +21,8 @@ const LEOFRIC: Pos = Pos::new(60, 26);
 const WULFRUN: Pos = Pos::new(72, 26);
 /// Eadric the smith, the smithy's keeper, at his post.
 const EADRIC: Pos = Pos::new(39, 8);
+/// Ceolred, his apprentice, beside the smith's fire.
+const CEOLRED: Pos = Pos::new(36, 4);
 
 /// Built-in content with nobody hungering (a disease takes days to show).
 /// The dev scenario carries no pack; the tests give the player 60 gold, a cure's price.
@@ -290,8 +292,9 @@ fn everyone_in_town_is_at_peace_with_the_player() {
     let others: Vec<&Actor> = (w.state.actors.values())
         .filter(|a| a.level == "ceaptun" && a.id != player)
         .collect();
-    // Eight townsfolk, five people, two keepers, four training dummies, two dogs, and two cats.
-    assert_eq!(others.len(), 23);
+    // Eight townsfolk, six people (the smith's apprentice among them), two keepers, four training
+    // dummies, two dogs, and two cats.
+    assert_eq!(others.len(), 24);
     for actor in others {
         assert_ne!(
             w.stance(actor.id, player),
@@ -302,6 +305,35 @@ fn everyone_in_town_is_at_peace_with_the_player() {
         );
     }
     assert_eq!(w.danger("ceaptun"), 0, "nothing comes to the town");
+}
+
+#[test]
+fn ceolred_the_apprentice_stands_in_the_smithy_at_peace_and_keeps_no_shop() {
+    let mut w = town();
+    let id = who(&w, CEOLRED);
+    assert_eq!(w.state.actors[&id].npc.as_deref(), Some("ceolred"));
+    assert_ne!(w.stance(id, w.state.player), Stance::Hostile);
+    assert!((w.state.current().shops.iter()).all(|s| s.keeper != id));
+    let smithy = (w.state.current().shops.iter())
+        .find(|s| s.name == "Eadric")
+        .expect("the smithy");
+    let inside = |p: Pos| {
+        (smithy.min.x..=smithy.max.x).contains(&p.x) && (smithy.min.y..=smithy.max.y).contains(&p.y)
+    };
+    assert!(inside(CEOLRED), "inside the smithy");
+    put_player(&mut w, CEOLRED.step(Dir::S));
+    act(&mut w, "chat:N");
+    let line = said(&w).last().unwrap().clone();
+    assert!(line.starts_with("Ceolred says: \""), "{line}");
+    // Every line is words, never a number.
+    let d = CONTENT.dialogue_of_npc("ceolred").expect("a dialogue");
+    assert!(
+        CONTENT
+            .dialogue(d)
+            .lines
+            .iter()
+            .all(|l| !l.contains(char::is_numeric))
+    );
 }
 
 #[test]
