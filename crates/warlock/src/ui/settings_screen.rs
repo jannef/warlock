@@ -2,10 +2,9 @@
 //! palette (spec §4.7), the clock, and the temperature unit (°C or °F, spec §6). Changes apply
 //! live, because the screen edits the [`Settings`] resource that rendering reads.
 
-use super::menu::{Hints, Nav, Panel, Press};
+use super::menu::{HINTS, Nav, Panel, Press};
 use super::screens::{ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
-use crate::input::Bindings;
 use crate::render::console::Console;
 use crate::settings::{EffectSwitches, MAX_FONT_PX, MIN_FONT_PX, Settings};
 
@@ -177,7 +176,7 @@ impl SettingsScreen {
         ScreenAction::Stay
     }
 
-    pub fn draw(&self, console: &mut Console, settings: &Settings, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console, settings: &Settings) {
         let panel = Panel::new(console, " Settings ", 60, 28);
         let label_w = 18;
         let mut switches = settings.effects;
@@ -261,7 +260,7 @@ impl SettingsScreen {
             console.print(panel.inner_x(), y, text, color);
             y += 1;
         }
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         let footer = format!(
             "{} select   {} change   Esc back",
             keys.up_down(),
@@ -292,11 +291,11 @@ mod tests {
     /// room, the samples show too.
     #[test]
     fn the_help_fits_above_the_footer() {
-        let (settings, bindings) = (Settings::default(), Bindings::default());
+        let settings = Settings::default();
         let mut console = Console::default();
         for (rows, samples) in [(24, false), (40, true)] {
             console.resize(80, rows);
-            SettingsScreen::default().draw(&mut console, &settings, &bindings);
+            SettingsScreen::default().draw(&mut console, &settings);
             let lines = text(&console);
             let shown = lines.join("\n");
             let at = |s: &str| lines.iter().position(|l| l.contains(s));

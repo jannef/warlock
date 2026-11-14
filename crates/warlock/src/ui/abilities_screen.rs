@@ -19,7 +19,7 @@
 //! passes while it is open.
 
 use super::character_screen::fit_joined;
-use super::menu::{Hints, Nav, Panel, Press};
+use super::menu::{HINTS, Nav, Panel, Press};
 use super::paged_list::{PagedList, Row, draw_header};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM};
@@ -275,7 +275,7 @@ impl AbilitiesScreen {
     /// The footer: the letters of the page shown and Enter to use, the page keys while there are
     /// pages, and how to leave, keys as bound.
     fn footer(&self, bindings: &Bindings) -> String {
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         let page = (self.entries.hint(&keys)).map_or(String::new(), |hint| format!("{hint}   "));
         let confirm = &keys.confirm;
         let close = match bindings.keys_of(KeyCommand::Abilities).first() {

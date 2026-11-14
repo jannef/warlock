@@ -6,7 +6,7 @@
 //! `>` row, calls a weapon of that shape ([`Action::Shape`], `use:spirit_weapon:long_sword`);
 //! the list keys turn the page; Esc closes it. The keys are the list's own, fixed.
 
-use super::menu::{Hints, Nav, Panel, Press};
+use super::menu::{HINTS, Nav, Panel, Press};
 use super::paged_list::{PagedList, Row, draw_header};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM};
@@ -104,7 +104,7 @@ impl ShapeScreen {
         }
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         // Rows: margin, the list, a gap, the footer, the frame.
         self.fit(console.cols(), console.rows());
         let count = self.shapes.tallest().max(1) as i32;
@@ -145,12 +145,12 @@ impl ShapeScreen {
             console.print(x + 8, y, &name, color);
             console.print(weight_x, y, &weight, TEXT_DIM);
         }
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         let confirm = &keys.confirm;
         let choose = match self.shapes.last_letter() {
             Some('a') => format!("a or {confirm}"),
             Some(last) => format!("a-{last} or {confirm}"),
-            None => confirm.clone(),
+            None => confirm.to_string(),
         };
         let page = (self.shapes.hint(&keys)).map_or(String::new(), |hint| format!("{hint}   "));
         panel.footer(console, &format!("{choose} call   {page}Esc back"));

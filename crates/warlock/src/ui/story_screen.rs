@@ -13,10 +13,9 @@
 //! It reads the paragraphs from the perception snapshot when it opens
 //! ([`PerceptionView::story`]); no game time passes while it is open.
 
-use super::menu::{Hints, Nav, Panel, Press, wrap};
+use super::menu::{HINTS, Nav, Panel, Press, wrap};
 use super::screens::{ScreenAction, ScreenName};
 use super::{TEXT, TEXT_DIM};
-use crate::input::Bindings;
 use crate::render::console::Console;
 use std::sync::atomic::{AtomicU64, Ordering};
 use warlock_core::perception::PerceptionView;
@@ -128,7 +127,7 @@ impl StoryScreen {
         lines
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         let (cols, rows) = (console.cols() as i32, console.rows() as i32);
         self.fit(cols as u32, rows as u32);
         let width = self.width().min(cols);
@@ -136,7 +135,7 @@ impl StoryScreen {
         let shown = visible(lines.len(), rows);
         let panel = Panel::new(console, &self.title, width, shown as i32 + EXTRA);
         if !self.opening {
-            super::info_tabs::draw_tabs(console, &panel, bindings, ScreenName::Story);
+            super::info_tabs::draw_tabs(console, &panel, ScreenName::Story);
         }
         let first = self.first.min(lines.len().saturating_sub(shown));
         let x = panel.inner_x() + 1;
@@ -155,7 +154,7 @@ impl StoryScreen {
             let y = panel.y + 2 + shown as i32;
             console.print(panel.x + panel.w - 3, y, "↓", TEXT_DIM);
         }
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         let close = if self.opening {
             format!("{} continue", keys.confirm)
         } else {
@@ -203,7 +202,7 @@ mod tests {
     fn shown(screen: &StoryScreen, cols: u32, rows: u32) -> Vec<String> {
         let mut console = Console::default();
         console.resize(cols, rows);
-        screen.draw(&mut console, &Bindings::default());
+        screen.draw(&mut console);
         (0..rows as i32)
             .map(|y| {
                 (0..cols as i32)

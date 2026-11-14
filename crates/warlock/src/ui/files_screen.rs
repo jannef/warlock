@@ -3,10 +3,9 @@
 //! (portable or the platform's folders), and an Open folder action for each (spec §7). The
 //! same facts as `warlock --paths`, from `paths.rs`.
 
-use super::menu::{Hints, Nav, Panel, Press, wrap};
+use super::menu::{HINTS, Nav, Panel, Press, wrap};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM};
-use crate::input::Bindings;
 use crate::paths::{Entry, Locations, Reason};
 use crate::render::console::Console;
 use std::path::Path;
@@ -75,7 +74,7 @@ impl FilesScreen {
         ScreenAction::Stay
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         let panel = Panel::new(console, " Where are my files? ", 80, 31);
         let (x, w) = (panel.inner_x(), panel.inner_w());
         let mut y = panel.y + 2;
@@ -126,7 +125,7 @@ impl FilesScreen {
         let footer = if self.entries.is_empty() {
             "Esc back".to_string()
         } else {
-            let keys = Hints::of(bindings);
+            let keys = HINTS;
             let (up_down, confirm) = (keys.up_down(), keys.confirm);
             format!("{up_down} select   {confirm} open folder   Esc back")
         };
