@@ -5,11 +5,17 @@
 # archives and uploads them as workflow artifacts only; nothing is published, and the Pages
 # deploy happens only with the `publish_pages` input). This is the only
 # workflow that uses macOS and Windows runners: CI runs on Linux, and macOS is checked locally.
+#
+# Caches (#1575): a cache saved on a tag can only be restored by that same tag, so a tag run
+# never saves one. It restores the caches of main, which the weekly scheduled run keeps warm
+# (it builds and uploads the archives as a manual run does, and publishes nothing).
 name: Release
 
 on:
   push:
     tags: ["v*"]
+  schedule:
+    - cron: "23 3 * * 1"
   workflow_dispatch:
     inputs:
       publish_pages:
@@ -51,6 +57,8 @@ jobs:
       - name: Install pinned toolchain
         run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref_type != 'tag' }}
       # Without the test world: `--no-default-features` leaves out the `showcase` feature
       # (docs/dev/campaign.md, "The test world in release builds").
       - name: Release build
@@ -105,6 +113,8 @@ jobs:
       - name: Install pinned toolchain
         run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref_type != 'tag' }}
       # The CLI must match the wasm-bindgen crate version in Cargo.lock exactly.
       - name: Install wasm-bindgen-cli
         run: |

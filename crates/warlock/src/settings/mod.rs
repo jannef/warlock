@@ -266,6 +266,9 @@ pub struct Loaded {
     pub bindings: Bindings,
     /// Problems found, each worth a log line; the rest of the file was still used.
     pub warnings: Vec<String>,
+    /// The file could not be read at all (not TOML, not UTF-8): it is set aside as
+    /// `settings.toml.bad` so the defaults are never written over it (#1576).
+    damaged: bool,
 }
 
 impl Loaded {
@@ -274,6 +277,14 @@ impl Loaded {
             settings: Settings::default(),
             bindings: Bindings::default(),
             warnings,
+            damaged: false,
+        }
+    }
+
+    fn damaged(warnings: Vec<String>) -> Self {
+        Self {
+            damaged: true,
+            ..Self::defaults(warnings)
         }
     }
 }
@@ -285,7 +296,7 @@ pub fn parse(text: &str) -> Loaded {
         Ok(table) => table,
         Err(err) => {
             let message = format!("settings file is not valid TOML ({err}); using defaults");
-            return Loaded::defaults(vec![message]);
+            return Loaded::damaged(vec![message]);
         }
     };
     let mut warnings = Vec::new();
@@ -373,6 +384,7 @@ pub fn parse(text: &str) -> Loaded {
         settings,
         bindings,
         warnings,
+        damaged: false,
     }
 }
 
@@ -427,13 +439,14 @@ impl SettingsStore {
     }
 
     /// Reads the file. Missing means defaults, silently; unreadable or damaged means defaults
-    /// with a warning.
+    /// with a warning, and a damaged file is renamed `settings.toml.bad` (as an unusable save
+    /// is), so the first change in Settings does not write the defaults over the player's keys.
     pub fn load(&self) -> Loaded {
         let Some(backend) = &self.backend else {
             return Loaded::defaults(Vec::new());
         };
         let place = backend.describe(FILE_NAME);
-        match backend.read(FILE_NAME) {
+        let mut loaded = match backend.read(FILE_NAME) {
             Ok(bytes) => match String::from_utf8(bytes) {
                 Ok(text) => {
                     let mut loaded = parse(&text);
@@ -442,13 +455,21 @@ impl SettingsStore {
                     }
                     loaded
                 }
-                Err(_) => Loaded::defaults(vec![format!(
+                Err(_) => Loaded::damaged(vec![format!(
                     "cannot read {place}: not UTF-8; using defaults"
                 )]),
             },
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Loaded::defaults(Vec::new()),
             Err(e) => Loaded::defaults(vec![format!("cannot read {place}: {e}; using defaults")]),
+        };
+        if loaded.damaged {
+            let bad = format!("{FILE_NAME}.bad");
+            loaded.warnings.push(match backend.rename(FILE_NAME, &bad) {
+                Ok(()) => format!("the damaged file was kept as {}", backend.describe(&bad)),
+                Err(e) => format!("cannot set the damaged file aside: {e}"),
+            });
         }
+        loaded
     }
 
     /// Where the settings file is, for messages; `None` where settings are not stored.
@@ -502,13 +523,13 @@ pub fn load_for(args: &Args) -> (SettingsStore, Settings, Bindings) {
     let store = SettingsStore::from_args(args);
     let mut loaded = store.load();
     for warning in &loaded.warnings {
-        eprintln!("warlock: warning: {warning}");
+        crate::logging::warn_early(warning.clone());
     }
     if args.reset_keys {
         loaded.bindings = Bindings::default();
         match store.save(&loaded.settings, &loaded.bindings) {
             Ok(()) => eprintln!("warlock: every key is back to its default"),
-            Err(e) => eprintln!("warlock: warning: keys reset for this launch only: {e}"),
+            Err(e) => crate::logging::warn_early(format!("keys reset for this launch only: {e}")),
         }
     }
     (store, loaded.settings, loaded.bindings)
@@ -680,8 +701,22 @@ mod tests {
         let loaded = store.load();
         assert_eq!(loaded.settings, Settings::default());
         assert_eq!(loaded.bindings.0, Bindings::default().0);
-        assert_eq!(loaded.warnings.len(), 1);
+        assert_eq!(loaded.warnings.len(), 2);
         assert!(loaded.warnings[0].contains("not valid TOML"));
+        assert!(loaded.warnings[1].contains("settings.toml.bad"));
+        // Set aside, never overwritten: the next save (a change in Settings) leaves it be (#1576).
+        assert_eq!(
+            backend.read("settings.toml.bad").expect("bad"),
+            b"font_px = [[["
+        );
+        store
+            .save(&Settings::default(), &Bindings::default())
+            .expect("save");
+        assert_eq!(
+            backend.read("settings.toml.bad").expect("bad"),
+            b"font_px = [[["
+        );
+        assert!(store.load().warnings.is_empty());
     }
 
     #[test]

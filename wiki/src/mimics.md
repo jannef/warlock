@@ -35,7 +35,7 @@ creature takes any notice of it. It is found out when:
   "You notice the coffer breathing: a young mimic!"
 
 Until it is found out it has seen no one, so a [thief's](classes.md#thief)
-[sneak attack](talents.md#talent-sneak-attack) lands on it. Once found out it is an ordinary
+[sneak attack](classes.md#talent-sneak-attack) lands on it. Once found out it is an ordinary
 [hostile](creatures.md#factions) creature of the vermin, and it never disguises itself again. It
 is [slow](turns.md#speed) (speed 800), so you can walk away from it.
 

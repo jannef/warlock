@@ -175,8 +175,8 @@ amount in between equally likely:
 
 - **Every piece adds up.** Body armour, helm, gloves, boots, and cloak each add their Protection
   (see the armour table above). So does the magic of *[Hardened](affixes.md#prefixes)* armour (see [Magic items](magic-items.md)).
-  Some [talents](talents.md) add to it too, in any armour: [Bulwark](talents.md#talent-bulwark) 2, and the [berserker's](classes.md#berserker)
-  [Battle-scarred](talents.md#talent-battle-scarred) 1, or 3 while [raging](status-effects.md#status-raging). The `Pv` on the character
+  Some [talents](talents.md) add to it too, in any armour: [Bulwark](classes.md#talent-bulwark) 2, and the [berserker's](classes.md#berserker)
+  [Battle-scarred](classes.md#talent-battle-scarred) 1, or 3 while [raging](status-effects.md#status-raging). The `Pv` on the character
   screen shows your Protection as it is now. A [shield](objects.md#class-shields) gives [Defence](combat.md#defence) only. Creatures have their
   own: a [cave beetle's](creatures.md#creature-beetle) shell turns aside much of what hits it.
 - **[Criticals](combat.md#criticals) punch through.** A confirmed critical rolls its damage twice (or more) first, and

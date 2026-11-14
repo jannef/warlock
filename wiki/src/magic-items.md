@@ -141,9 +141,9 @@ Their magic works all the same while you wear or wield them. An unknown
 that glows lights your way. Wearing it for a while does not tell you what it is. These do:
 
 - a [scroll of identify](scrolls.md#the-scroll-of-identify);
-- a [merchant](classes.md#merchant)'s [Merchant's eye](talents.md#talent-merchants-eye), from
+- a [merchant](classes.md#merchant)'s [Merchant's eye](classes.md#talent-merchants-eye), from
   level 12: a careful look that takes as long as reading a scroll;
-- carrying the item for a day, if you were born to [Old lore](talents.md#talent-old-lore);
+- carrying the item for a day, if you were born to [Old lore](horoscope.md#talent-old-lore);
 - Factor Wulfrun in Cēaptūn, for 100 [gold](shops.md#money) per unidentified
   [stack](objects.md#piles) you carry (see [Services](npcs.md#services)).
 
@@ -188,7 +188,7 @@ Rules from elsewhere in the game carry over:
 - **[Defence](combat.md#defence)**: among Armour, Shield, Parry, Deflection, and natural armour,
   only the best counts. Dodge adds up (see [Combat](combat.md)).
   **[Protection](combat.md#protection)** always adds up, piece by piece, and a
-  [Hardened](talents.md#talent-hardened) piece of armour adds its magic to its own (see
+  [Hardened](classes.md#talent-hardened) piece of armour adds its magic to its own (see
   [Combat](combat.md#protection)).
 - **[Hit points](hit-points.md#hit-points)** and **[mana](mana.md#how-much)**: putting on
   something that adds to them raises your maximum, not what you have now. Taking it off lowers

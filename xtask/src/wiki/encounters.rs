@@ -95,7 +95,7 @@ pub(super) fn checks(content: &Content) -> String {
         .filter_map(|(t, e)| match e {
             TalentEffect::Notice { value } => Some(format!(
                 "{} ({})",
-                link(Term::Talent, &t.id, &t.name),
+                super::talents::talent_link(content, &t.id, &t.name),
                 signed(*value)
             )),
             _ => None,

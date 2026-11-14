@@ -632,17 +632,21 @@ impl World {
         false
     }
 
+    /// The open shop the player owes that a step from `from` onto `to` leaves by one of its
+    /// ways out, if any: the step its keeper turns back ([`World::turned_back`]), and one a
+    /// charge may not take (`charge.rs`).
+    pub(super) fn owing_exit(&self, from: Pos, to: Pos) -> Option<&Shop> {
+        (self.state.current().shops.iter())
+            .find(|s| s.is_open() && s.contains(from) && s.is_exit(to) && !s.unpaid.is_empty())
+    }
+
     /// Where the player ends up trying to step from `from` onto `to`, if the keeper of the open
     /// shop they stand in turns them back (spec §7 "Shops"): `to` is one of its ways out and they
     /// owe it something. They are pushed one cell away from the way out, the other way from the
     /// step, or else onto the nearest free cell of the shop floor (the first in row order among
     /// the nearest), or else they stay where they are. Says why.
     pub(super) fn turned_back(&mut self, from: Pos, to: Pos) -> Option<Pos> {
-        let shops = &self.state.current().shops;
-        let shop = shops
-            .iter()
-            .find(|s| s.is_open() && s.contains(from) && s.is_exit(to) && !s.unpaid.is_empty())?
-            .clone();
+        let shop = self.owing_exit(from, to)?.clone();
         let level = self.state.current();
         let free = |p: Pos| {
             p != from

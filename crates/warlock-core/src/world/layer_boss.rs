@@ -39,11 +39,11 @@ impl World {
             to: hidden.to,
             name: None,
         });
+        // On any level: the cache keeps every level visited (#1518).
+        self.lights.terrain_changed(state, &self.content, at);
         if self.state.current_level != level {
             return;
         }
-        let here = self.state.current();
-        self.lights.terrain_changed(here, &self.content, at);
         let line = if self.perception.is_visible(at) {
             format!("With {} dead, stairs open in the floor.", the(&hidden.name))
         } else {

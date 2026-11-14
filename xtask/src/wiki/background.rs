@@ -224,7 +224,7 @@ fn when_text(content: &Content, line: &StoryLine) -> String {
         });
     }
     let talent = |id: &String| match content.talents().id(id) {
-        Some(t) => link(Term::Talent, id, &content.talents().get(t).name),
+        Some(t) => super::talents::talent_link(content, id, &content.talents().get(t).name),
         None => id.clone(),
     };
     for id in &w.talents {
@@ -349,7 +349,7 @@ fn talent_link(content: &Content, id: &str, choice: Option<&str>) -> String {
     match content.talents().id(id) {
         Some(t) => {
             let name = content.talents().get(t).name_for(content, choice);
-            link(Term::Talent, id, &name)
+            super::talents::talent_link(content, id, &name)
         }
         None => id.to_string(),
     }

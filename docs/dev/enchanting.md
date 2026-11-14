@@ -28,8 +28,8 @@ dragonbone, dragonscale +2. The three-per-kind caps (`Rarity::most_per_kind`) st
 capacity. `Magic::check` never reads it: a save or level file over capacity still loads.
 
 Only a damaged Fine, Marvellous, or Masterwork piece is ever over its capacity (its improvements
-are gone while damaged, and a repair does not bring them back). Nothing strips it; the recipes of
-later phases refuse to add to it.
+are gone while damaged, and a repair does not bring them back). Nothing strips it; the recipes refuse
+to add to it ("It holds all it can.").
 
 ## The trim
 

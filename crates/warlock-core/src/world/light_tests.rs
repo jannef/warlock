@@ -667,6 +667,37 @@ fn door_changes_invalidate_cached_masks_of_lights_inside_the_room() {
 }
 
 #[test]
+fn terrain_changed_on_another_level_drops_its_cached_masks() {
+    // A wall between the player and a torch hides a lair's stairs, opened while the player is
+    // elsewhere (#1518): back on the level, the light is as a cold cache (a reload) makes it.
+    let map = "#########\n#@..#.T.#\n#########\n";
+    let mut w = dark_world(map, "normal");
+    let wall = Pos::new(4, 1);
+    let floor = w.state.current().terrain[Pos::new(2, 1)];
+    let hidden = crate::content::HiddenLocation {
+        id: "lair".into(),
+        terrain: floor,
+        to: None,
+        name: "the lair".into(),
+        opens: None,
+    };
+    w.state.current_mut().hidden.insert(wall, hidden);
+    assert!(w.apply(&Action::Wait).took_turn, "the masks are cached");
+    let here = w.state.current_level.clone();
+    let elsewhere = w.state.current().clone();
+    w.state.levels.insert("elsewhere".into(), elsewhere);
+    w.state.current_level = "elsewhere".into();
+    w.open_lair(&here, "lair");
+    w.state.current_level = here;
+    w.state.levels.remove("elsewhere");
+    assert_eq!(w.state.current().terrain[wall], floor, "the wall is open");
+    assert!(w.apply(&Action::Wait).took_turn);
+    let cold = teleport(&w, w.player_pos());
+    assert_eq!(w.perception, cold.perception, "as a reload sees it");
+    check_invariants(&w).expect("cache agrees with a cold recomputation");
+}
+
+#[test]
 fn the_lantern_takes_a_turn_and_lights_the_way() {
     let map = "##########\n#@.......#\n##########\n";
     let mut w = dark_world(map, "normal");

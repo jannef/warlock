@@ -11,7 +11,7 @@
 # Fields:
 #   pays   percent of the delivered item's worth paid (its grade's ×2, ×3, ×5 counted)
 #   bonus  percent more for a piece that bears the player's maker's mark (Maker's mark, the
-#          craftsperson design §7.10; read once maker's marks exist)
+#          craftsperson design §7.10)
 
 pays = 100
 bonus = 50

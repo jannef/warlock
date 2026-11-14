@@ -301,8 +301,9 @@ pub(super) fn creature_stats(content: &Content) -> String {
         .map(|s| format!(" {} |", s.abbrev()))
         .collect();
     let mut out = format!(
-        "| Creature | Level | XP | Rarity |{stats} Potentials | Skills | Weapon skills |\n\
+        "{}| Creature | Level | XP | Rarity |{stats} Potentials | Skills | Weapon skills |\n\
          |---|:---:|---:|---|{}---|---|---|\n",
+        super::text::stat_key(),
         ":---:|".repeat(Stat::COUNT)
     );
     for (_, c) in listed(content) {

@@ -146,7 +146,7 @@ teaches an active ("You learn to pace your breath."). Creatures use no actives.
 {{#include generated/weapon-abilities.md}}
 
 The [Early mastery](talents.md#talent-early-mastery) talent teaches every one of them a rank sooner. So do the talents that
-make you fight as someone more practised ([Stylist](talents.md#talent-stylist), [Fencing](talents.md#talent-fencing)). A status these abilities leave,
+make you fight as someone more practised ([Stylist](talents.md#talent-stylist), [Fencing](classes.md#talent-fencing)). A status these abilities leave,
 such as [Bleeding](status-effects.md#bleeding) or [Staggered](status-effects.md#status-staggered), is a [status effect](status-effects.md) like any other: a [staggered](status-effects.md#status-staggered) foe's next
 action takes half again as long. A brace and a point-blank shot are [free blows](stances.md#free-blows), so they bring
 no free blows of their own.

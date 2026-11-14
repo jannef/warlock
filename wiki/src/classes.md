@@ -13,7 +13,7 @@ did before you set out. Your class:
   priest's habit).
 
 No [spells](magic.md) come with it at the start. A class with a level table also gives
-**[class abilities](talents.md#class-abilities)** as you reach its levels, and bonus
+**[class abilities](classes.md#levels)** as you reach its levels, and bonus
 [talents](talents.md) (see [Levels](#levels) below). You keep your class for good, but a class may
 later open onto a [prestige class](prestige-classes.md).
 
@@ -21,6 +21,10 @@ The first eleven classes are adventurers. The last four are everyday folk: an
 [aristocrat](classes.md#aristocrat), a [commoner](classes.md#commoner), a
 [craftsperson](classes.md#craftsperson), and a [merchant](classes.md#merchant). They were never
 trained for this, and it mostly shows. A new run offers all four.
+
+The first table is what each class adds to your starting stats. The second gives its hit points
+and the weapon skills and fighting styles it starts you in. A short description of each class
+follows.
 
 {{#include generated/classes.md}}
 
@@ -106,18 +110,18 @@ The bard has two **[songs](abilities.md#songs)**:
 
 [Songs](abilities.md#songs) tells them in full: what they cost, how far they are heard, how
 [Music](skills.md#skill-music) lengthens them, and the odds of shaking the lullaby off. A
-[virtuoso](talents.md#talent-virtuoso) (level 30) sings for nothing, a degree longer.
+[virtuoso](classes.md#talent-virtuoso) (level 30) sings for nothing, a degree longer.
 
-**[Travelled hands](talents.md#talent-travelled-hands)** (level 3) raises, once, every
+**[Travelled hands](classes.md#talent-travelled-hands)** (level 3) raises, once, every
 [weapon skill](weapon-skills.md) and [fighting style](fighting-styles.md) the bard has at rank 0 to
 rank 1. It never raises a hidden style. The bard is a point
 surer with whatever comes to hand.
 
-**[Jack of all trades](talents.md#talent-jack-of-all-trades)** (level 12) trains every
+**[Jack of all trades](classes.md#talent-jack-of-all-trades)** (level 12) trains every
 [skill](skills.md) the bard lacks at 1d4+1, except Sneak attack, the thief's. From then on they are
 skills like any other: used, marked, and raised at a level.
 
-**[Master of none](talents.md#talent-master-of-none)** (level 25) makes every skill the bard is
+**[Master of none](classes.md#talent-master-of-none)** (level 25) makes every skill the bard is
 trained in count 5 higher.
 
 {{#include generated/class-levels.md:priest}}
@@ -141,7 +145,7 @@ and the [paladin](classes.md#paladin)'s at 12. It works only while you are Neutr
 minute's prayer, for 15 [mana](mana.md#spending-it), lifts a cursed, draining, or haunted room's
 curse for good (see [Special rooms](cursed-and-hallowed.md#cursed-rooms)).
 
-Its dark twin is **[Communion with the dark](talents.md#talent-communion)** (the priest's at level
+Its dark twin is **[Communion with the dark](classes.md#talent-communion)** (the priest's at level
 9). It works only while you are Callous or worse. While you stand in a
 [cursed](special-rooms.md#room-cursed), [draining](special-rooms.md#room-draining), or
 [haunted](special-rooms.md#room-haunted) room, or on a level such a curse lies over, your prayers
@@ -158,16 +162,16 @@ as fast. It ends when the priest strikes from it (see
 
 {{#include generated/class-levels.md:ascetic}}
 
-The [ascetic](classes.md#ascetic)'s [flurry](talents.md#talent-flurry),
+The [ascetic](classes.md#ascetic)'s [flurry](classes.md#talent-flurry),
 [stunning strike](abilities.md#ability-stunning-strike), and
 [quivering palm](abilities.md#ability-quivering-palm) run on [ki](resources.md#resource-ki) (see
 [Resources](resources.md)).
 
-**[Martial arts](talents.md#talent-martial-arts)** gives you [ki](resources.md#resource-ki) at level
+**[Martial arts](classes.md#talent-martial-arts)** gives you [ki](resources.md#resource-ki) at level
 1, full. You have 5 with [Willpower](stats.md#stat-willpower) 12, and more as your Willpower and
 your [level](experience.md#levels) grow.
 
-**[Flurry](talents.md#talent-flurry)** (level 1) spends it. Every attack with nothing in your hands
+**[Flurry](classes.md#talent-flurry)** (level 1) spends it. Every attack with nothing in your hands
 strikes a second blow, at −2 [to hit](combat.md#hitting), for a point of ki. With no ki left, the
 attack is a single blow.
 
@@ -189,7 +193,7 @@ dodge (it misses by your Dexterity or Dodge) or parry. Used again while poised, 
 action more. It works with any grip, a staff too.
 
 **[Stillness](abilities.md#ability-stillness)** (level 25, with
-[still mind](talents.md#talent-still-mind)) costs 2 ki and takes no time at all. It ends at once
+[still mind](classes.md#talent-still-mind)) costs 2 ki and takes no time at all. It ends at once
 whichever of these you suffer, so you act this very turn: [held](status-effects.md#status-held),
 [pinned](status-effects.md#status-pinned), [staggered](status-effects.md#status-staggered),
 [stunned](status-effects.md#status-stunned), [surprised](status-effects.md#status-surprised),
@@ -197,7 +201,7 @@ whichever of these you suffer, so you act this very turn: [held](status-effects.
 [drowsy](status-effects.md#status-drowsy), and [webbed](status-effects.md#status-webbed). With none
 of them on you it is refused and costs nothing. Any grip will do.
 
-**[Diamond soul](talents.md#talent-diamond-soul)** (level 40) adds +2
+**[Diamond soul](classes.md#talent-diamond-soul)** (level 40) adds +2
 [Deflection](combat.md#defence). While you hold no weapon and no shield, it also lets you pluck from
 the air a [shot or a throw](ranged.md) that would hit you, a [trap](traps.md)'s arrow too, for a
 point of ki, spent by itself. The hit becomes a miss, and the missile falls at your feet. With no
@@ -242,20 +246,20 @@ A smite's extra effect still spends its zeal when it has nothing to do, and a bl
 damage carries no extra effect.
 
 **[Lay on hands](abilities.md#ability-lay-on-hands)** (level 1) spends 6 zeal and a spell's time to
-heal 2 hit points a level. **[Avatar](talents.md#talent-avatar)** (level 60) makes it heal fully,
+heal 2 hit points a level. **[Avatar](classes.md#talent-avatar)** (level 60) makes it heal fully,
 cure every status that ticks and every [disease](diseases.md), and cost half: 3 zeal.
 
-**[Retribution](talents.md#talent-retribution)** (level 25) works by itself. When a hostile creature
+**[Retribution](classes.md#talent-retribution)** (level 25) works by itself. When a hostile creature
 beside you lands a blow of its melee attack on you, your smite answers once the attack is over. It
 costs 4 zeal and an [exertion](stances.md#stamina), and no time. The blow has already built its
 point, so 3 zeal is enough. With less, or while you are off guard, nothing happens. An attack it
 answers is not also [riposted](fighting-styles.md#style-ability-riposte); see
 [Combat](stances.md#free-blows).
 
-**[Holy wrath](talents.md#talent-holy-wrath)** (level 40) works by itself and costs nothing. Every
+**[Holy wrath](classes.md#talent-holy-wrath)** (level 40) works by itself and costs nothing. Every
 blow, shot, or throw of yours that hits the unholy, smites too, rolls 1d6 more of the blow's own
 kind. It is [resisted](damage-types.md#armour-and-resistance) but never soaked by Protection. From
-[Avatar](talents.md#talent-avatar) on, it lands on every creature you hit.
+[Avatar](classes.md#talent-avatar) on, it lands on every creature you hit.
 
 **[Zealot](talents.md#talent-zealot)** is the one talent pick on the pool, from level 6. Every blow
 that hits you builds 2 zeal instead of 1, for a paladin who stands in the doorway and takes them.
@@ -270,7 +274,7 @@ zeal builds whichever side you are on.
 
 {{#include generated/class-levels.md:ranger}}
 
-The [ranger](classes.md#ranger)'s [rapid shot](talents.md#talent-rapid-shot) and
+The [ranger](classes.md#ranger)'s [rapid shot](classes.md#talent-rapid-shot) and
 [volley](abilities.md#ability-volley) run on [focus](resources.md#resource-focus) (see
 [Resources](resources.md)).
 
@@ -278,11 +282,11 @@ The ranger's **favoured prey** is the kind of [creature](creatures.md) you have 
 counted over every [level](experience.md#levels). When two are tied, the one that got there first
 stays favoured until another is killed more often.
 
-**[Pack tactics](talents.md#talent-pack-tactics)** (level 18) makes you and your
+**[Pack tactics](classes.md#talent-pack-tactics)** (level 18) makes you and your
 [companion](companions.md#companions) hunt as one. A creature standing beside you both is
 **flanked**. Your melee attacks and your companion's at it get +2 [to hit](combat.md#hitting) (not
 shots, throws, or spells). Your companion's attacks at your favoured prey also carry your favoured
-prey bonus to hit and damage ([Master hunter](talents.md#talent-master-hunter)'s too).
+prey bonus to hit and damage ([Master hunter](classes.md#talent-master-hunter)'s too).
 
 **[Sic 'em](abilities.md#ability-sic)** (level 40) sets your companion on a creature you see, for 5
 [focus](resources.md#resource-focus). It [hunts that creature, savage](companions.md#companions).
@@ -292,17 +296,17 @@ A **[volley](abilities.md#ability-volley)** looses three shots of your
 after another, for the time of one ordinary shot. It stops early when you run out of ammunition,
 and costs 6 [focus](resources.md#resource-focus).
 
-**[Rapid shot](talents.md#talent-rapid-shot)** gives you focus (10, full). Every shot you loose
+**[Rapid shot](classes.md#talent-rapid-shot)** gives you focus (10, full). Every shot you loose
 while you have at least 2 focus spends 2 and takes 10 % less [time](turns.md#what-actions-cost).
 With less, it is an ordinary shot.
 
 {{#include generated/class-levels.md:thief}}
 
-The [thief](classes.md#thief)'s [sneak attacks](talents.md#talent-sneak-attack) build
+The [thief](classes.md#thief)'s [sneak attacks](classes.md#talent-sneak-attack) build
 [openings](resources.md#resource-openings). [Exploit](abilities.md#ability-exploit), theirs from
 level 1, spends every one they hold on a single sneak attack, deeper for each, and
-[Low blow](talents.md#talent-low-blow) at 12, [Improved sneak attack](talents.md#talent-improved-sneak-attack)
-at 32, and [Master thief](talents.md#talent-master-thief) at 60 add to it (see
+[Low blow](classes.md#talent-low-blow) at 12, [Improved sneak attack](classes.md#talent-improved-sneak-attack)
+at 32, and [Master thief](classes.md#talent-master-thief) at 60 add to it (see
 [Exploit](resources.md#exploit)). From level 18 [Thrown exploit](resources.md#thrown-exploit)
 makes the same blow with a thrown weapon, at a foe up to 6 cells away. The thief has no
 [stamina](resources.md) until a [weapon rank](weapon-skills.md#marks-and-ranks) teaches an active
@@ -321,7 +325,7 @@ the next.
 
 {{#include generated/class-levels.md:witch}}
 
-**The witch's familiar** ([Familiar](talents.md#talent-familiar), from level 1) is a small beast at
+**The witch's familiar** ([Familiar](classes.md#talent-familiar), from level 1) is a small beast at
 her heel. Its [touch](familiars.md#the-touch) lays her [evil eye](magic.md#spell-evil-eye), and it
 [goes for what she has hexed](familiars.md#what-it-goes-for). If it is lost, another comes to an
 hour's [calling](familiars.md#call-familiar). From level 30 that may be an
@@ -339,7 +343,7 @@ of her hexes, she does not cackle at all, and no time is spent. The cackle is lo
 [loudness](hearing.md#how-loud) 60, louder than talk. Whoever [hears it](hearing.md#creatures-hear-you)
 comes to look.
 
-**The witch's malison** ([Malison](talents.md#talent-malison), from level 18) works by itself. A
+**The witch's malison** ([Malison](classes.md#talent-malison), from level 18) works by itself. A
 creature under a hex, anyone's, takes 3 more [damage](combat.md) from her blows, shots, and spells
 for each hex it is under, before its [resistances](damage-types.md#armour-and-resistance). When a
 creature dies under a hex she laid herself, whatever killed it and wherever it is, she gains
@@ -354,7 +358,7 @@ its nature, for an enchanter to bind or for her to [consume](crystals.md#consumi
 
 {{#include generated/class-levels.md:aristocrat}}
 
-<a id="stipend"></a>**The aristocrat's stipend** ([Stipend](talents.md#talent-stipend), from level
+<a id="stipend"></a>**The aristocrat's stipend** ([Stipend](classes.md#talent-stipend), from level
 1) is money from home. Every time the aristocrat gains a [level](experience.md), their family puts
 by 150 + 10d10 gold (about 200). With an 85 % chance it also adds one
 [loot roll](magic-items.md) at that level, with [magic and rare](magic-items.md) items twice as
@@ -382,7 +386,7 @@ four times as likely as usual: about 47 % of level-ups then bring a find.
 itself. Instead they pick two [trades](talents.md#crafts-a-craftspersons-trades) as a new
 character, before their other [talents](talents.md): the Talents step asks "Choose a trade"
 first. Each trade trains its craft skill at `3d6`, and
-[Time served](talents.md#talent-time-served) adds 6 to that, so a trade starts at 9 to 24.
+[Time served](classes.md#talent-time-served) adds 6 to that, so a trade starts at 9 to 24.
 Each also comes with the tools of the trade. A craftsperson may spend an ordinary pick on a
 third trade too. Their skills grow fast: three [skill rolls](skills.md#getting-better) a level,
 and a roll on a trade throws the die one step up.
@@ -425,7 +429,7 @@ it a [training mark](skills.md#getting-better).
 <a id="field-forge"></a>**Field forge** (from level 32) makes an anvil wherever you are: a
 [makeshift anvil](altars-forges-springs.md#the-makeshift-anvil) from one ingot and an hour's work.
 
-<a id="patron"></a>**The patron** ([Patron](talents.md#talent-patron), from level 12) is a
+<a id="patron"></a>**The patron** ([Patron](classes.md#talent-patron), from level 12) is a
 well-to-do burgher at the Gæsthūs in Cēaptūn who commissions Fine work from the craftsperson's
 trades, one piece at a time, hands over the stock for it, and pays its full worth on delivery.
 See [The patron](patron.md).
@@ -445,7 +449,7 @@ your trap kills is your kill. See [Rigging traps](traps.md#rigging-traps).
 
 {{#include generated/class-levels.md:merchant}}
 
-<a id="invest"></a>**The merchant's investment** ([Invest](talents.md#talent-invest), from level 1)
+<a id="invest"></a>**The merchant's investment** ([Invest](classes.md#talent-invest), from level 1)
 works like a fund. The merchant has a business partner at the corner desk of Factor Wulfrun's
 office in Cēaptūn, of the merchant's own race and speaking as their people speak. Only a
 merchant's run has them. [Talk](npcs.md#chatting) to them and they tell you what your stake is
