@@ -20,8 +20,13 @@ branch's traps (`mapgen::hide_traps`, from the stream `traps/<level id>`, so the
 with or without them), then a few of its doors (`mapgen::hide_secrets`, secret doors, from the
 stream `secrets/<level id>`, only where `connect::validate` still reaches the stairs and every key
 without them; `docs/dev/searching.md`). On about one `caves` floor in six a pool has a deep middle (`mapgen/deep.rs`, #1020: stream `deep_water/<level id>`, `Rng::deep_water`, drawn once the cave is built and before `build_walls`, so a floor without it is exactly its old self; a blob of 40 to 70 free floor cells becomes water, those with all eight neighbours in it `deep_water`; kept off creature routes and special rooms, and undone if it would cut any walkable cell off). Rooms floors, vaults, special rooms and hand-made levels never have it. Last of all, after `animated::arm`, a branch floor may get **ore veins** (`mapgen/vein.rs`, #1390; tests `mapgen/vein_tests.rs`): stream `veins/<level id>` (`Rng::veins`), so every other step draws as before; draws: `[veins] chance` of `data/mining.toml`, the count, then per vein its ore (`MiningRules::vein_table` at `Content::floor_danger(id, visit.player_level)` with the branch's `ores`, `pick_weighted`), a start among the `pal.wall` cells, its size, and its growth (a random cell of it, a random cardinal) over `wall` and `void` cells alike, never a stamped cell, the edge, a secret door's cell, or a special room's box grown by one. Only rock changes (`veins_change_only_rock`); veins are the same with secret doors or without (a secret door is no rock either way). The vein terrains are made at load (`content/mining.rs::add_vein_terrain`, `docs/dev/digging.md`); `ascii` draws them `V`. The insta snapshots in
-`src/mapgen/snapshots/` and `src/mapgen/local/snapshots/` flag any change in generator output:
-review the maps in the diff, then accept them deliberately. Loot (`mapgen::place_loot`: floor
+`src/mapgen/snapshots/` and `src/mapgen/local/snapshots/` flag any change in the generator's
+layout: review the maps in the diff, then accept them deliberately. They hold the terrain and
+stairs (with locks, secret doors, veins, special rooms, shops, and named places; a local area its
+start and flow) and leave out what is put on it, creatures, objects, traps, and lights, which
+churn with every loot or roster change (#1526); `describe` checks those instead
+(`nothing_on_a_wall_in`: on walkable ground, one creature to a cell, chests and traps where they
+may be). Loot (`mapgen::place_loot`: floor
 items by the branch's `loot`, vault `loot` cells, each a grade or a pool of item classes,
 `magic/loot.rs::roll_pool` at the floor's item level, `docs/dev/magic-items.md`) is rolled once a
 map is valid, from its own stream `loot/<level id>`, so adding loot never changes the terrain of a
