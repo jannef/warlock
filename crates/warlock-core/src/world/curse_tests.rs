@@ -154,10 +154,10 @@ fn the_cursed_room_is_data() {
 
 #[test]
 fn a_rise_is_refused_without_a_danger_or_with_a_bad_time_or_faction() {
-    let builtin = include_str!("../../../../assets/data/room_effects.toml");
+    let builtin = ContentFiles::builtin().table_text("room_effects");
     let load = |text: String| {
         let mut files = ContentFiles::builtin();
-        files.insert("data/room_effects.toml", &text);
+        files.replace_table("room_effects", &text);
         Content::load(&files)
     };
     assert!(load(builtin.to_string()).is_ok());

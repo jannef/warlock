@@ -258,7 +258,7 @@ impl Content {
     }
 
     /// A creature type's skills as data lists them (`skills = { listen = 30 }`): fixed values of
-    /// skills `data/skills.toml` has.
+    /// skills `data/skills/` has.
     pub(super) fn creature_skills(&self, data: &BTreeMap<String, u16>) -> Result<Skills, String> {
         let mut skills = Skills::default();
         for (name, &value) in data {
@@ -277,7 +277,7 @@ impl Content {
         if self.factions.is_empty() {
             return match &spec.faction {
                 Some(name) => Err(format!(
-                    "creature `{}`: unknown faction `{name}` (there is no data/factions.toml)",
+                    "creature `{}`: unknown faction `{name}` (there is no data/factions/)",
                     spec.id
                 )),
                 None => Ok(None),
@@ -345,7 +345,7 @@ impl Content {
             });
             if def.follows.is_some() && def.eases.is_none() && def.cured_by.is_empty() && !brought {
                 return Err(ContentError::new(
-                    "data/status.toml",
+                    "data/status/",
                     format!(
                         "status `{}`: follows: it never ends (it has no `eases` and no \
                          `cured_by`, and no resource brings it)",
@@ -357,14 +357,22 @@ impl Content {
         Ok(())
     }
 
+    /// Factions (optional: none, everyone neutral): a file per faction in `data/factions/`, in
+    /// path order (`NNN-<id>.toml`: the number keeps their order).
     pub(super) fn load_factions(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
-        let path = "data/factions.toml";
-        let Some(text) = files.get_optional(path) else {
+        if files.table("factions").next().is_none() {
             return Ok(());
-        };
-        let err = |m: String| ContentError::new(path, m);
-        let parsed: faction::FactionFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        self.factions = Factions::resolve(parsed.faction).map_err(err)?;
+        }
+        let specs = load_table(files, "factions", |f: faction::FactionFile| f.faction)?;
+        let mut seen: BTreeMap<&str, &str> = BTreeMap::new();
+        for (path, spec) in &specs {
+            if let Some(first) = seen.insert(&spec.id, path) {
+                return Err(duplicate_id("faction", &spec.id, path, first));
+            }
+        }
+        let specs = specs.into_iter().map(|(_, spec)| spec).collect();
+        self.factions =
+            Factions::resolve(specs).map_err(|m| ContentError::new("data/factions/", m))?;
         Ok(())
     }
 

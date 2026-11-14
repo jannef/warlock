@@ -258,7 +258,7 @@ pub struct Endless {
 }
 
 /// A branch's (or a range of its depths') `room_effects` table: each field left out falls back
-/// to the branch's table, then to the shared `room_effects.toml`.
+/// to the branch's table, then to the shared `room_effects/`.
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct RoomOddsSpec {
@@ -374,9 +374,8 @@ impl RoomOddsSpec {
     /// The odds, the shared ones filling in what the table leaves out.
     fn resolve(self, rooms: &RoomEffects) -> Result<RoomOdds, String> {
         let shared = RoomOdds::shared(rooms);
-        let id = |e: &str| {
-            (rooms.id(e)).ok_or_else(|| format!("unknown effect `{e}` (room_effects.toml)"))
-        };
+        let id =
+            |e: &str| (rooms.id(e)).ok_or_else(|| format!("unknown effect `{e}` (room_effects/)"));
         let mut favoured = Vec::new();
         for (name, &share) in self.favoured.iter().flatten() {
             favoured.push((id(name)?, share));

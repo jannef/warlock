@@ -1,0 +1,8 @@
+# The restless dead of the barrows: skeletons, zombies, ghouls, wights. They hate the living,
+# the player, the kobolds, the goblins, and the giants alike.
+# Only the player is fought on the floor: the rest of that hatred is lore.
+[[faction]]
+id = "undead"
+name = "undead"
+hostile = ["player"]
+gear = { bronze = 40, iron = 15 }

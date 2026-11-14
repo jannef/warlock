@@ -230,13 +230,15 @@ fn a_bad_spring_is_refused() {
     assert!(err.message.contains("unknown disease"), "{}", err.message);
     // `offers` names one thing, not two.
     let mut files = ContentFiles::builtin();
-    let effects = include_str!("../../../../assets/data/room_effects.toml").to_string();
+    let effects = ContentFiles::builtin()
+        .table_text("room_effects")
+        .to_string();
     let both = effects.replace(
         "offers = { drink = \"spring\" }",
         "offers = { drink = \"spring\", pray = \"forgotten_altar\" }",
     );
     assert_ne!(both, effects);
-    files.insert("data/room_effects.toml", &both);
+    files.replace_table("room_effects", &both);
     let err = Content::load(&files).unwrap_err();
     assert!(err.message.contains("names one thing"), "{}", err.message);
 }

@@ -572,7 +572,7 @@ mod tests {
         }
     }
 
-    /// Only a status with a light (its own in data/status.toml, or its spell circle's in
+    /// Only a status with a light (its own in data/status/, or its spell circle's in
     /// data/circles.toml) says it sheds one, and a circle's is named as the circle's.
     #[test]
     fn only_statuses_with_a_light_shed_one() {

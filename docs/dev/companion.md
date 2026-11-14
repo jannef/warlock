@@ -299,7 +299,7 @@ the cost a wait's). `Content::sic_range` is `Ability::reach` for the aiming mode
   so they see what the beast senses and the gate rarely bites.) Lost, it is the ordinary hunt: what
   is near the last cell, then "looks back at you". `set_order` clears the quarry, so any order, and
   the hunt's own end, end it.
-- **Savage** (`data/status.toml`): degrees 3, `refresh`, `eases` 60, `cost` 67 (half again as fast;
+- **Savage** (`data/status/`): degrees 3, `refresh`, `eases` 60, `cost` 67 (half again as fast;
   allies never disturb a rest, so `World::out_of_view_for` stays exact), `auto_critical`
   (`StatusDef::auto_critical`). `World::savage_blow`, a hook in `fight.rs::resolve` after
   `pack_blow`, sets `Profile::sure_critical` while the attacker suffers one, the read

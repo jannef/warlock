@@ -1,4 +1,4 @@
-//! Factions (`assets/data/factions.toml`, spec §7): who is hostile to whom.
+//! Factions (`assets/data/factions/`, spec §7): who is hostile to whom.
 //!
 //! Every creature type belongs to a faction, and the player to the faction [`PLAYER_FACTION`].
 //! Relations are pairwise and symmetric: if faction A lists B as `hostile`, A and B are hostile
@@ -34,7 +34,7 @@ pub enum Stance {
     Neutral,
 }
 
-/// A faction as written in `data/factions.toml`.
+/// A faction as written in `data/factions/`.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct FactionSpec {
@@ -70,6 +70,7 @@ pub(super) struct FactionSpec {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct FactionFile {
+    #[serde(default)]
     pub faction: Vec<FactionSpec>,
 }
 
@@ -116,7 +117,7 @@ pub struct Factions {
 }
 
 impl Factions {
-    /// Resolves the factions of `data/factions.toml`: unique ids, known hostile and provoked ids,
+    /// Resolves the factions of `data/factions/`: unique ids, known hostile and provoked ids,
     /// and a [`PLAYER_FACTION`].
     pub(super) fn resolve(specs: Vec<FactionSpec>) -> Result<Self, String> {
         let mut ids = BTreeMap::new();
@@ -353,7 +354,8 @@ hostile_to_all = true
 
     #[test]
     fn the_shipped_loosed_are_hostile_to_every_other_faction_but_the_gates() {
-        let f = resolve(include_str!("../../../../assets/data/factions.toml")).expect("valid");
+        let f = resolve(&crate::content::ContentFiles::builtin().table_text("factions"))
+            .expect("valid");
         let loosed = f.id("loosed").expect("the loosed are shipped");
         assert!(f.def(loosed).hostile_to_others);
         for (i, other) in f.defs().iter().enumerate() {

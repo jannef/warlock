@@ -1,0 +1,9 @@
+# Hound's bay's cooldown: an hour before the howl comes again.
+[[status]]
+id = "hoarse"
+name = "Hoarse"
+max = 1
+stacking = "refresh"
+eases = 3600
+start = "Your throat is raw from the howl."
+end = "Your voice is your own again."

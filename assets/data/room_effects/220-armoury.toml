@@ -1,0 +1,14 @@
+# An armoury (#487, animated objects A5): racks of old arms along the walls, and among them hollow
+# armour and blades that sleep until something wakes them; deep down, a panoply in full kit. Its
+# sleepers are its own (the armoury's population, four dangers deeper than the floor), whatever
+# the branch's population.
+[[effect]]
+id = "armoury"
+name = "armoury"
+mark = "R"
+enter = "Racks of old arms line the walls. Not everything here is hanging up."
+weight = 4
+needs_danger = true
+min_cells = 16
+dressing = { terrain = "weapon_rack", per_cells = 8, most = 6 }
+swarm = { per_cells = 6, min = 2, max = 8, wake = 200, cry = 40, loot_level = 1, themes = { kind = 20 }, population = ["animated_blade", "animated_armour", "animated_panoply"], danger = 4 }

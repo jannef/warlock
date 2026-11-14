@@ -1,0 +1,14 @@
+# A scriptorium (spec §7 "Special rooms"): shelves at its middle, a few scrolls on its floor, and
+# Decipher script's training marks at twice the chance inside (a check to read a scroll and a
+# grimoire read to its end are certain anywhere, a scroll read and used up half the time).
+[[effect]]
+id = "scriptorium"
+name = "scriptorium"
+mark = "r"
+near = "You smell dust and old vellum."
+enter = "Shelves of rotting scrolls line the walls."
+weight = 5
+min_cells = 9
+feature = "shelves"
+loot = { class = "scrolls", count = [2, 4] }
+train = { decipher_script = 200 }

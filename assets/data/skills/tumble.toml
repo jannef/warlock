@@ -1,0 +1,8 @@
+[[skill]]
+id = "tumble"
+name = "Tumble"
+description = "Rolling, diving, and twisting out of harm's way."
+kind = "passive"
+mark = [{ on = "dodge", chance = 40 }]
+# Dodge +1 at 20, 40, 60, 80, and 100, then +1 for every 25 past 100.
+benefit = [{ effect = "dodge", steps = [20, 40, 60, 80, 100], every = 25 }]

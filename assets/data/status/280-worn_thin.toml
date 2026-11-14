@@ -1,0 +1,13 @@
+# A reprieve's price (the priest's Miracle, the witch's Hag's bargain, spec §8 "Class abilities"):
+# a day at the edge of death, hit points and mana back half as fast.
+[[status]]
+id = "worn_thin"
+name = "Worn thin"
+seen = "worn"
+max = 1
+stacking = "refresh"
+eases = 86400
+regen = 50
+mana_regen = 50
+start = "You feel worn thin."
+end = "You feel whole again."

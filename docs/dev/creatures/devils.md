@@ -26,7 +26,7 @@ Waiting for mechanics (#448's follow-ups): several attacks a turn, flight, the i
 invisibility, creature spells, animated chains, thorns, summoning, auras, infernal wounds, a
 `large` size, a place in a population.
 
-Presence (#1128, `world/aura.rs`): the barbed devil innate `barbed_hide` (status.toml: `retaliates` `1d6` piercing, "The barbed hide stabs you."); fear auras on the bone devil (radius 2, Willpower 17) and the pit fiend (radius 3, 22, and innate `fire_cloaked`); the ice devil's cold aura (`sluggish` 2, radius 2, Toughness 20, cold). `content::aura_roster_tests` lists every row.
+Presence (#1128, `world/aura.rs`): the barbed devil innate `barbed_hide` (status/: `retaliates` `1d6` piercing, "The barbed hide stabs you."); fear auras on the bone devil (radius 2, Willpower 17) and the pit fiend (radius 3, 22, and innate `fire_cloaked`); the ice devil's cold aura (`sluggish` 2, radius 2, Toughness 20, cold). `content::aura_roster_tests` lists every row.
 Theft (docs/design/monster-dread.md §5.6, #1130; `docs/dev/creatures.md` "Theft and the
 blink"): the imp `steals = { what = "small", chance = 30, cooldown = 60 }`, a coin purse at a
 time; its poison kept, its invisibility D8's. It is not dread (a trait, design §6).

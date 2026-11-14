@@ -1,0 +1,5 @@
+# Diseases and drains (#382: the touch of some undead takes points off a stat for good, unless
+# a check holds), and the checks that hold them off.
+[[system]]
+id = "diseases"
+name = "Diseases, drains, and checks"

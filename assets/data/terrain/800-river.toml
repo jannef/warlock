@@ -1,0 +1,11 @@
+[[terrain]]
+id = "river"
+name = "river"
+glyph = "~"
+fg = "#4f94e6"
+bg = "#081a32"
+walkable = false
+landscape = "river"
+# Flowing, at map scale: the ripples run downstream along the legend arrows.
+anim = { kind = "flow", speed = 0.35, glint = 0.3 }
+stains = false

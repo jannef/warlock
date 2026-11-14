@@ -62,7 +62,7 @@ pedlar's offer: "The pedlar's offer" below). Keep it current with the code, as C
   bog body; `giant rats` are the `rat` type; the footpads' night bowmen and the orcs' night wargs
   are separate night rows (a group row has no conditions); the vale and the woods also cover the
   open ground and the copses of the regions the design left without a table.
-- `assets/data/skills.toml`: Spot's and Survival's `lookout` (and `Use::Lookout` marks on both),
+- `assets/data/skills/`: Spot's and Survival's `lookout` (and `Use::Lookout` marks on both),
   Stealth's `stalk`, Survival's `evade` (`skills::Effect::{Lookout, Stalk, Evade}`, read only in
   `world/encounter.rs`). Alert (`talents/alert.toml`) is read once more there (its `notice`) and
   its `systems` gain `awareness`.

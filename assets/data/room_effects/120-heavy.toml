@@ -1,0 +1,7 @@
+[[effect]]
+id = "heavy"
+name = "heavy hall"
+mark = "w"
+enter = "Your pack drags at you, as if the stones pulled it down."
+weight = 4
+burden = 50

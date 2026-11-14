@@ -1,0 +1,21 @@
+# Poison works slowly: a hit point every two minutes for each degree, easing a degree every two
+# minutes, so a stronger dose lasts longer; strong poison weakens. A sick head gathers mana at
+# half the pace.
+[[status]]
+id = "burning"
+name = "Burning"
+seen = "burning"
+max = 3
+stacking = "add"
+tick = 10
+damage = 1
+damage_type = "fire"
+eases = 30
+# Fire stops every regeneration while it burns, a troll's too (the dread design §5.9).
+regen = 0
+light = "ember"
+quenched = true
+start = "You are burning!"
+end = "The flames go out."
+dies = "burns to death"
+death = "Burnt to death"

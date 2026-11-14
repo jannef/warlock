@@ -1,0 +1,13 @@
+# A forgotten altar (spec §7 "Special rooms"): ADOM's pool with another flavour. Pray beside it;
+# its glow's colour is its hidden side. data/outcomes/forgotten_altar.toml has what a prayer draws.
+[[effect]]
+id = "altar"
+name = "altar room"
+mark = "a"
+enter = "An old altar stands here, its god long forgotten."
+near = "A faint glow rises from an altar ahead."
+weight = 8
+min_cells = 9
+feature = "forgotten_altar"
+sides = { good = "altar_good", evil = "altar_evil" }
+offers = { pray = "forgotten_altar" }

@@ -16,12 +16,12 @@
 #                 grows. Nothing of the user's level is read
 #   noise         { sound, loudness }: the noise it makes (a burst's centre, else the user)
 #   kind          what it does, each on existing code, with only its own fields:
-#                 dig       (a line) every wall on it whose hardness (terrain.toml) is below
+#                 dig       (a line) every wall on it whose hardness (terrain/) is below
 #                           `power` gives way, as dug through; the first that does not, a door,
 #                           or the level's edge stops it
 #                 teleport  (a bolt) the creature it hits is moved to a free cell of the level,
 #                           as by a teleport trap; an attack on it, as a blow is
 #                 status    (a burst) everyone in it but the user suffers `status` (an id of
-#                           status.toml) at `severity` (default 1; past its max, its max); with
+#                           status/) at `severity` (default 1; past its max, its max); with
 #                           `up_to_level = N` only creatures whose level is at most
 #                           N, the others shrug it off

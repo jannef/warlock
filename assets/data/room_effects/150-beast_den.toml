@@ -1,0 +1,13 @@
+# A beast den: a teeming den of animals and fen things only (the factions wildlife, vermin, and
+# marsh, hostile or not), drawn only in a branch whose population holds one. Its hoard is what
+# they dragged in: bones and fresh corpses of the branch's creatures (`loot_level` unused).
+[[effect]]
+id = "beast_den"
+name = "beast den"
+mark = "n"
+near = "You smell musk and old blood."
+enter = "Heavy shapes breathe in the dark around you."
+weight = 5
+needs_danger = true
+min_cells = 16
+swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60, loot_level = 0, themes = { kind = 10, faction = 20 }, factions = ["wildlife", "vermin", "marsh"], hoard = "corpses" }

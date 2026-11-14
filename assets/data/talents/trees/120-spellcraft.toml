@@ -1,0 +1,7 @@
+# Spells (the magic design, docs/design/magic.md §10): learning and casting them. Quick study
+# (#396), Overreach, and School focus (#400); Wand mastery comes with wands (#398), Channeler
+# with rods (#399).
+[[tree]]
+id = "spellcraft"
+name = "Spellcraft"
+description = "Learning spells and casting them."

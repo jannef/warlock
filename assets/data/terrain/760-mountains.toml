@@ -1,0 +1,8 @@
+[[terrain]]
+id = "mountains"
+name = "mountain range"
+glyph = "▲"
+fg = "#c6c2cc"
+bg = "#1c1b21"
+walkable = false
+transparent = false

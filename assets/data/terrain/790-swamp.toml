@@ -1,0 +1,9 @@
+[[terrain]]
+id = "swamp"
+name = "swamp"
+glyph = "≈"
+fg = "#7a9a52"
+bg = "#0b1209"
+travel_minutes = 150
+local = "marsh"
+landscape = "swamp"

@@ -1,0 +1,22 @@
+[[terrain]]
+id = "door_open"
+name = "open door"
+glyph = "'"
+fg = "#c08040"
+bg = "#0d0d10"
+closes_to = "door_closed"
+# Shutting it is louder still.
+toggle_noise = 70
+
+[[terrain.particles]]
+on = "toggle"
+glyphs = "·.,"
+colors = ["#8a806c", "#4a4438"]
+count = 5
+life = 0.7
+velocity = [0.0, 0.2]
+spread = [0.9, 0.4]
+gravity = 0.4
+area = [0.35, 0.4]
+scale = 0.7
+fade = 0.6

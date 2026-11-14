@@ -1,0 +1,10 @@
+# Holy radiance: a faint light about the paladin (the light is the ability's), until they put it
+# out again from the abilities menu.
+[[status]]
+id = "radiant"
+name = "Radiant"
+seen = "shining"
+max = 1
+stacking = "refresh"
+start = "A soft light shines about you."
+end = "Your light fades."

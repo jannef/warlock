@@ -182,7 +182,7 @@ impl<'a> PerceptionView<'a> {
         self.snapshot.gear.iter().filter(move |g| g.actor == actor)
     }
 
-    /// The status effects that show on seen creature `actor` (`seen` in `data/status.toml`:
+    /// The status effects that show on seen creature `actor` (`seen` in `data/status/`:
     /// bleeding), the most important first; none for creatures not in view and the player.
     pub fn effects_of(&self, actor: ActorId) -> impl Iterator<Item = StatusId> + 'a {
         (self.snapshot.effects.iter())

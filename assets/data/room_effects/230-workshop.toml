@@ -1,0 +1,12 @@
+# A workshop (#487): benches along the walls, and the household things of a house's work lying
+# about them, asleep until they are not. Its sleepers are its own (the workshop's population).
+[[effect]]
+id = "workshop"
+name = "workshop"
+mark = "W"
+enter = "Benches line the walls, littered with tools and pots. Something shifts on one of them."
+weight = 4
+needs_danger = true
+min_cells = 16
+dressing = { terrain = "workbench", per_cells = 10, most = 4 }
+swarm = { per_cells = 5, min = 3, max = 10, wake = 200, cry = 30, loot_level = 0, themes = { kind = 20 }, population = ["animated_bellows", "animated_broom", "animated_bucket", "animated_chair", "animated_coat_stand", "animated_cooking_pot", "animated_kettle", "animated_ladle", "animated_stool", "animated_warming_pan"] }

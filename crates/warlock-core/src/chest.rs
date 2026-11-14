@@ -1,6 +1,6 @@
 //! Chests (spec §8 "Chests"; docs/design/chests-and-treasure.md §3): a chest is a **fixture of
 //! a cell**, as a door is: one of three terrains (shut, open, smashed; their `chest` field in
-//! `data/terrain.toml`) plus a [`Chest`] on the cell in `LevelState::chests`: its level and what
+//! `data/terrain/`) plus a [`Chest`] on the cell in `LevelState::chests`: its level and what
 //! it holds. Its lock lies in the level's `locks`, as a door's does, so keys, Pick lock, and
 //! Knock work on it as on a door.
 //!
@@ -52,7 +52,7 @@ impl ChestState {
     /// Every state, in data order.
     pub const ALL: &[ChestState] = &[ChestState::Shut, ChestState::Open, ChestState::Smashed];
 
-    /// Its id, as `data/terrain.toml` and the JSON dump write it.
+    /// Its id, as `data/terrain/` and the JSON dump write it.
     pub const fn id(self) -> &'static str {
         match self {
             ChestState::Shut => "shut",

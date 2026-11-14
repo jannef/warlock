@@ -1,0 +1,26 @@
+[[terrain]]
+id = "brazier"
+name = "brazier"
+glyph = "Ω"
+fg = "#ffa040"
+bg = "#0d0d10"
+walkable = false
+light = "brazier"
+glow = 0.6
+haze = 1.0
+stains = false
+
+# Sparks rising from the coals.
+[[terrain.particles]]
+glyphs = "'`.·"
+colors = ["#ffeab0", "#ffa040", "#c04010", "#501408"]
+rate = 3
+life = 0.9
+velocity = [0.0, -1.4]
+spread = [0.4, 0.4]
+gravity = 0.5
+offset = [0.0, -0.35]
+area = [0.25, 0.05]
+sway = 0.12
+scale = 0.6
+glow = 0.6

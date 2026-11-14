@@ -1,5 +1,5 @@
 # Terror: a burst of dread; creatures of a level up to 20 flee from them a
-# few turns (status.toml's Frightened).
+# few turns (status/'s Frightened).
 [[rod_effect]]
 id = "terror"
 name = "Terror"

@@ -1,0 +1,46 @@
+# Running water (rivers, streams): ripples move downstream along each cell's flow (the legend
+# arrows), at `speed` cell widths per second times the cell's flow speed.
+[[terrain]]
+id = "running_water"
+name = "running water"
+glyph = "~"
+fg = "#62a2e6"
+bg = "#0b1e36"
+# Wading, as in still water (the current does not push yet).
+move_cost = 200
+step_noise = 200
+bounce = "#a8c8ff"
+anim = { kind = "flow", speed = 0.5, glint = 0.4 }
+# The current keeps it open until a hard frost, and then it freezes slowly.
+freeze = { below = -6, rate = 40, plunge = "1d3", damage_type = "cold" }
+stains = false
+
+[[terrain.particles]]
+on = "step"
+glyphs = "'`,."
+colors = ["#b8dcff", "#4f8fe0"]
+count = 5
+life = 0.45
+velocity = [0.0, -2.6]
+spread = [2.4, 0.8]
+gravity = 10.0
+offset = [0.0, -0.1]
+area = [0.35, 0.1]
+scale = 0.6
+fade = 0.4
+
+# Flecks of foam where the current runs into a bank, a rock, or a pool (turned with the flow:
+# y is downstream), spreading sideways along it.
+[[terrain.particles]]
+on = "obstacle"
+glyphs = "·.,"
+colors = ["#d8ecff", "#6a9cd0"]
+rate = 0.6
+life = 1.4
+velocity = [0.0, -0.05]
+spread = [0.3, 0.05]
+offset = [0.0, 0.3]
+area = [0.4, 0.08]
+sway = 0.08
+scale = 0.5
+fade = 0.6

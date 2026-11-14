@@ -57,9 +57,9 @@ blocks = ["pick_lock"]
 fn files(eager: bool) -> ContentFiles {
     let mut files = ContentFiles::builtin();
     files.insert("levels/hall.toml", HALL);
-    let (_, statuses) = files.table("status").next().expect("data/status.toml");
+    let statuses = files.table_text("status");
     let statuses = format!("{statuses}{SHAKING}");
-    files.insert("data/status.toml", &statuses);
+    files.replace_table("status", &statuses);
     for (name, extra) in [
         ("hall", "start_level = \"hall\"\nhp = 1000\n"),
         (
@@ -79,13 +79,11 @@ fn files(eager: bool) -> ContentFiles {
         );
     }
     if eager {
-        let text = include_str!("../../../../assets/data/skills.toml");
-        let eager = text.replace(
+        files.replace_in_table(
+            "skills",
             "mark = [{ on = \"pick\", chance = 20 }]",
             "mark = [{ on = \"pick\", chance = 100 }]",
         );
-        assert_ne!(eager, text, "Open lock earns marks on a try");
-        files.insert("data/skills.toml", &eager);
     }
     files
 }

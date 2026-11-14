@@ -1,0 +1,10 @@
+# An ember beetle's acid blood (its `innate`, `world/aura.rs`; the dread design §5.8): it spatters
+# whoever strikes it in melee. Refreshed each turn its bearer takes; never shown on it, since its
+# kind always has it.
+[[status]]
+id = "acid_blood"
+name = "Acid blood"
+max = 1
+stacking = "refresh"
+eases = 60
+retaliates = { damage = "1d3", damage_type = "acid" }

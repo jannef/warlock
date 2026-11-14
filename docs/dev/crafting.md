@@ -9,7 +9,7 @@ forge, P5), the forging wizard, and salvage. Material stock (the piece) is in
 
 ## Who works what: professions and stock
 
-- **The skills** (`data/skills.toml`): Metalcraft, Woodcraft, and Jewelcraft are the professions
+- **The skills** (`data/skills/`): Metalcraft, Woodcraft, and Jewelcraft are the professions
   that work materials today; Alchemy is a profession that works no material (it brews from
   herbs, "Brewing" below), Enchanting a profession that binds magic into what is carried
   (Willpower, its recipes built in: docs/dev/enchanting.md "The recipes"), and Herbalism and
@@ -343,7 +343,7 @@ lump spent; not listed for the untrained).
 ## Stations and the makeshift anvil: `works_as`, Field forge
 
 A recipe's `station` is a terrain beside the maker. A terrain may serve as another's station:
-`TerrainDef::works_as` (`works_as = "anvil"` in `data/terrain.toml`, resolved at load; a terrain
+`TerrainDef::works_as` (`works_as = "anvil"` in `data/terrain/`, resolved at load; a terrain
 that works as one that works as another is refused). It is read in one place,
 `Content::works_as(terrain)` (its `works_as`, else itself), which both station tests ask:
 `world/craft.rs::station_beside` (every recipe's `lack`, so `start_making` and the screen; the
@@ -575,7 +575,7 @@ is. The flaming arrows' oil the same. Each essence's source is a tag's material 
 (`data/drops/{fire,ice,lightning,air,water,earth}.toml`, `bodiless`; `fire-thing.toml`'s essence
 of fire at 25 %; `docs/dev/creatures.md`); `brew_tests.rs` checks every essence a brew takes drops
 from some creature and every flask input is stocked by a generated shop. Alchemy in
-`data/skills.toml` gains the `craft` curve (Metalcraft's) and the `craft` mark (100 %);
+`data/skills/` gains the `craft` curve (Metalcraft's) and the `craft` mark (100 %);
 `data/recipes.toml`'s Alchemy row names `stat = "intelligence"`, `verb = "Brew"`, and its
 `failed` and `fumbled` lines. In `world/craft_make.rs`:
 

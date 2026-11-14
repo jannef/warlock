@@ -1,0 +1,8 @@
+[[terrain]]
+id = "dirt_road"
+name = "dirt road"
+glyph = "."
+fg = "#dcc596"
+bg = "#4a3b20"
+bounce = "#e0c8a0"
+step_noise = 90

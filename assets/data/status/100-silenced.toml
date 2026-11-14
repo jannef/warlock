@@ -1,0 +1,12 @@
+# Silenced, a silent vault's: no spell is cast, no scroll read, and no voice thrown while it
+# lasts, creatures' spells too; ten seconds after leaving.
+[[status]]
+id = "silenced"
+name = "Silenced"
+seen = "silenced"
+max = 1
+stacking = "refresh"
+eases = 10
+blocks = ["cast", "read", "song", "throw_voice"]
+start = "The silence closes around you."
+end = "Sound returns."

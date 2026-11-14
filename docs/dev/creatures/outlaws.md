@@ -4,7 +4,7 @@ The Weyfarers' Gilde's wanted criminals and their hired blades (#424, guild G4;
 `docs/design/adventurers-guild.md` §8). Content only, on the fields of `docs/dev/creatures.md`,
 plus one naming rule (below).
 
-- **Faction** `outlaws` (`data/factions.toml`, after the cult): hostile to the player only, and
+- **Faction** `outlaws` (`data/factions/`, after the cult): hostile to the player only, and
   listed as hostile by no faction, so a lair's inhabitants never fight their master or the
   footpads. Every type of it carries the `outlaw` tag (`data/creatures/README.toml`).
 - **Types**, all the Ascmearc's own (`campaigns/ascmearc/data/creatures/`, human, evil, open
@@ -38,6 +38,6 @@ plus one naming rule (below).
   lair population, a lit den where outlaws and lair types wait 40 turns unhurt, the powers
   working for their owners, the proper names, the note); `world/bestiary_tests.rs`'s `WAVES`.
 
-Gear materials (#1191): the faction's `gear` in `data/factions.toml`: outlaws favour iron (25 %), the village smith's, each its share of the draws for an item whose construction list holds it, the usual draw the rest (`docs/dev/objects.md` "Materials and variants").
+Gear materials (#1191): the faction's `gear` in `data/factions/`: outlaws favour iron (25 %), the village smith's, each its share of the draws for an item whose construction list holds it, the usual draw the rest (`docs/dev/objects.md` "Materials and variants").
 
 **Material drops** (#1341; `data/drops/`, docs/dev/objects.md "Material drops"): `campaigns/ascmearc/data/drops/outlaw.toml` (the tag is the campaign's): iron 1 (20 %), leather 1 (30 %).

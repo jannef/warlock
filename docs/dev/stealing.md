@@ -44,7 +44,7 @@ is the Steal skill's use: `Action::Steal(Dir)` (replay text `steal:DIR`, cost `s
 - **Shop goods** are never stolen with Steal: the shop's own rules (`docs/dev/shops.md`) cover
   taking from its floor. Stealing from a keeper takes from its pack (its purse); a sale it then
   cannot pay for does not happen (`deal`).
-- **Wiki**: the Steal benefit's table comes from `data/skills.toml` (`xtask/src/wiki/skills.rs`),
+- **Wiki**: the Steal benefit's table comes from `data/skills/` (`xtask/src/wiki/skills.rs`),
   the odds by edge from `check::contest_ways` (`stealing()`, `generated/stealing.md`), the
   ability's row from `Ability::every`, the cost from `data/actions.toml`; the page text is
   `wiki/src/skill-uses.md` ("Stealing").

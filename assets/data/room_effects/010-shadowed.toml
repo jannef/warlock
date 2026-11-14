@@ -1,0 +1,7 @@
+[[effect]]
+id = "shadowed"
+name = "shadowed room"
+mark = "s"
+enter = "The light seems to drain away here."
+weight = 10
+light = 30

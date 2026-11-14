@@ -1,0 +1,18 @@
+[[skill]]
+id = "balance"
+name = "Balance"
+description = "Sure footing under a heavy load or on bad ground."
+kind = "passive"
+mark = [
+    { on = "burdened", chance = 5 },
+    { on = "rough_step", chance = 10 },
+    { on = "staggered", chance = 20 },
+]
+# Burdened ×1.25 becomes ×1.10 at 100 (Strained ×1.5, ×1.2). Footing: percent of what rough
+# ground (bush, reeds, rubble, ice; not water) adds to a step that is spared. Steady ease:
+# percent of Staggered's extra cost (150) that is spared (`world/footing.rs`).
+benefit = [
+    { effect = "burden", curve = [[0, 0], [100, 60], [200, 80]] },
+    { effect = "footing", curve = [[0, 0], [100, 60], [200, 100]] },
+    { effect = "steady_ease", curve = [[0, 0], [100, 50], [200, 75]] },
+]

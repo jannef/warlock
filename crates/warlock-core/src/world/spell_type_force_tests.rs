@@ -49,9 +49,9 @@ const CLOUT: &str = "[[spell]]\nid = \"ray_of_frost\"\nname = \"Clout\"\ndescrip
 fn files() -> ContentFiles {
     let mut files = hall_files();
     files.insert("levels/hall.toml", HALL);
-    let terrain = include_str!("../../../../assets/data/terrain.toml");
+    let terrain = ContentFiles::builtin().table_text("terrain");
     let terrain = format!("{terrain}{STOUT}");
-    files.insert("data/terrain.toml", &terrain);
+    files.replace_table("terrain", &terrain);
     files.insert("data/spells/frost.toml", CRACK);
     files.insert("data/spells/ray_of_frost.toml", CLOUT);
     files

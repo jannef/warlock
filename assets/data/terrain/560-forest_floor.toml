@@ -1,0 +1,13 @@
+# More outdoor ground for the local areas of the overworld (each overworld terrain names
+# its own with `local`; grass is above).
+
+[[terrain]]
+id = "forest_floor"
+plants = true
+name = "forest floor"
+glyph = "."
+fg = "#9c8c5a"
+bg = "#2a2314"
+bounce = "#c8b48c"
+# Moss and needles, with a twig now and then.
+step_noise = 80

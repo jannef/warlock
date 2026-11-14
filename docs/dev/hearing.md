@@ -56,7 +56,7 @@ skill with the `hearing` effect, listed as it in its place) sends `Action::Liste
 refused with no time without the skill or a closed door (a terrain with `opens_to`) that way.
 Else it sets `WorldState::listening` (`noise::Listening { at, keener }`, `keener` = the
 `hearing` effect plus `EXTRA_KEEN` 2; never saved, cleared as `World::apply` ends), marks
-`Use::Listen` (100 % in `skills.toml`), and spends a wait's time. While it is set, `noise::hearers`
+`Use::Listen` (100 % in `skills/`), and spends a wait's time. While it is set, `noise::hearers`
 lowers the player's threshold by `keener` for the sound that reaches them by the door cell (the
 field's loudness there less one step), and `World::hear` tells every sound of the turn, news or
 not, or "You hear nothing beyond the door." Tests: `skills_tests.rs`.

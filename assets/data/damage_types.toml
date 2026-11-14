@@ -1,8 +1,8 @@
 # Damage types (spec §8 "Damage types"): what kind of harm a blow, a missile, a trap, a spell, or
 # a fall does. Weapons (objects/*.toml `damage_type`, one id or two: a sword does the better of
 # slashing and piercing against its target), creatures' natural attacks, traps (traps.toml),
-# scrolls (`read.damage_type`), the poison status (status.toml), and water that freezes (the
-# plunge, terrain.toml) name theirs; creatures and gear resist kinds in percent (`resist`), and
+# scrolls (`read.damage_type`), the poison status (status/), and water that freezes (the
+# plunge, terrain/) name theirs; creatures and gear resist kinds in percent (`resist`), and
 # armour may stand better or worse against a physical kind (`protects`).
 #
 # The list is ordered: the game numbers the types in file order (saves record them), so a new

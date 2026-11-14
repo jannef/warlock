@@ -1,0 +1,12 @@
+# Seeing (See invisible's, and the potion of seeing's): five minutes in which the player sees the
+# invisible, and the shadowy in the dark (`sees_unseen`).
+[[status]]
+id = "seeing"
+name = "Seeing"
+seen = "keen-eyed"
+max = 1
+stacking = "refresh"
+eases = 300
+sees_unseen = true
+start = "Your eyes sharpen to what hides from them."
+end = "Your eyes lose their edge."

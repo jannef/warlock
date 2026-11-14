@@ -3,7 +3,7 @@
 use super::{
     Breakable, Content, ContentError, ContentFiles, CreatureId, DungeonDef, Landscape, LightId,
     LightPreset, TerrainDef, TerrainId, VisionProfile, campaign, danger, dungeon, duplicate_id,
-    terrain, validate::check_effects,
+    load_table, terrain, validate::check_effects,
 };
 use crate::noise::MAX_LOUDNESS;
 use serde::Deserialize;
@@ -11,30 +11,38 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
 impl Content {
+    /// Terrain (required): a file per terrain type in `data/terrain/`, in path order
+    /// (`NNN-<id>.toml`: the number keeps their order, and their ids are indices in it). An error
+    /// about one type names its file, one about the whole set the directory.
     pub(super) fn load_terrain(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
-        let path = "data/terrain.toml";
+        let path = "data/terrain/";
         let err = |m: String| ContentError::new(path, m);
-        let parsed: TerrainFile =
-            toml::from_str(files.get(path)?).map_err(|e| err(e.to_string()))?;
-        for (i, spec) in parsed.terrain.iter().enumerate() {
-            let id = TerrainId(u16::try_from(i).map_err(|_| err("too many terrain types".into()))?);
-            if self.terrain_ids.insert(spec.id.clone(), id).is_some() {
-                return Err(err(format!("duplicate terrain id `{}`", spec.id)));
-            }
+        let specs = load_table(files, "terrain", |f: TerrainFile| f.terrain)?;
+        if specs.is_empty() {
+            return Err(err("no terrain types: the table is missing".into()));
         }
-        let resolve = |name: &Option<String>| -> Result<Option<TerrainId>, ContentError> {
-            name.as_ref()
-                .map(|n| {
-                    self.terrain_ids
-                        .get(n)
-                        .copied()
-                        .ok_or_else(|| err(format!("unknown terrain `{n}`")))
-                })
-                .transpose()
-        };
-        let mut defs = Vec::with_capacity(parsed.terrain.len());
-        for spec in &parsed.terrain {
-            let light = self.resolve_light(path, spec.light.as_deref())?;
+        let mut seen: BTreeMap<&str, &str> = BTreeMap::new();
+        for (i, (file, spec)) in specs.iter().enumerate() {
+            let id = TerrainId(u16::try_from(i).map_err(|_| err("too many terrain types".into()))?);
+            if let Some(first) = seen.insert(&spec.id, file) {
+                return Err(duplicate_id("terrain", &spec.id, file, first));
+            }
+            self.terrain_ids.insert(spec.id.clone(), id);
+        }
+        let resolve =
+            |file: &str, name: &Option<String>| -> Result<Option<TerrainId>, ContentError> {
+                name.as_ref()
+                    .map(|n| {
+                        self.terrain_ids.get(n).copied().ok_or_else(|| {
+                            ContentError::new(file, format!("unknown terrain `{n}`"))
+                        })
+                    })
+                    .transpose()
+            };
+        let mut defs = Vec::with_capacity(specs.len());
+        for &(file, ref spec) in &specs {
+            let err = |m: String| ContentError::new(file, m);
+            let light = self.resolve_light(file, spec.light.as_deref())?;
             let height = spec.height.unwrap_or(u8::from(!spec.transparent));
             check_terrain_noise(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
             check_terrain_ice(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
@@ -43,7 +51,7 @@ impl Content {
                 (None, None) => None,
                 (Some(hardness), Some(_)) => Some(Breakable {
                     hardness,
-                    becomes: resolve(&spec.becomes)?.expect("given"),
+                    becomes: resolve(file, &spec.becomes)?.expect("given"),
                 }),
                 _ => {
                     return Err(err(format!(
@@ -53,7 +61,7 @@ impl Content {
                 }
             };
             check_effects(
-                path,
+                file,
                 "terrain",
                 &spec.id,
                 spec.anim.as_ref(),
@@ -74,11 +82,11 @@ impl Content {
                 transparent: spec.transparent,
                 move_cost: spec.move_cost,
                 travel_minutes: spec.travel_minutes,
-                local: resolve(&spec.local)?,
+                local: resolve(file, &spec.local)?,
                 landscape: spec.landscape,
-                opens_to: resolve(&spec.opens_to)?,
-                closes_to: resolve(&spec.closes_to)?,
-                kicked_in: match (resolve(&spec.breaks_to)?, spec.sturdiness) {
+                opens_to: resolve(file, &spec.opens_to)?,
+                closes_to: resolve(file, &spec.closes_to)?,
+                kicked_in: match (resolve(file, &spec.breaks_to)?, spec.sturdiness) {
                     (Some(to), Some(sturdiness)) => Some((to, sturdiness)),
                     _ => None,
                 },
@@ -92,7 +100,7 @@ impl Content {
                 roofed: spec.roofed,
                 stains: spec.stains,
                 stone: spec.stone,
-                works_as: resolve(&spec.works_as)?,
+                works_as: resolve(file, &spec.works_as)?,
                 plants: spec.plants,
                 step_noise: spec.step_noise,
                 toggle_noise: spec.toggle_noise,
@@ -108,7 +116,7 @@ impl Content {
                             None => None,
                             Some(name) => Some(self.damage_type_id(name).ok_or_else(|| {
                                 ContentError::new(
-                                    path,
+                                    file,
                                     format!(
                                         "terrain `{}`: `freeze`: unknown damage type `{name}`",
                                         spec.id
@@ -121,7 +129,7 @@ impl Content {
                 },
                 ice: spec.ice,
                 breaks,
-                face: resolve(&spec.face)?,
+                face: resolve(file, &spec.face)?,
                 anim: spec.anim.clone(),
                 glow: spec.glow,
                 haze: spec.haze,
@@ -437,6 +445,7 @@ impl Content {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct TerrainFile {
+    #[serde(default)]
     terrain: Vec<terrain::TerrainSpec>,
 }
 

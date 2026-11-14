@@ -438,7 +438,7 @@ fn also(content: &Content, status: usize, def: &StatusDef) -> Vec<String> {
             1 => "on your cell and the cells beside you".to_string(),
             r => format!("{r} cells around you"),
         };
-        // A status with no light of its own in data/status.toml sheds its spell circle's
+        // A status with no light of its own in data/status/ sheds its spell circle's
         // (data/circles.toml; the loader fills `StatusDef::light` with it): say which.
         let circle = (content.circles().rows().iter())
             .find(|row| usize::from(row.status.0) == status && row.light == light);

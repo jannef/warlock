@@ -1,0 +1,13 @@
+[[terrain]]
+id = "granite"
+name = "granite"
+stone = true
+glyph = "#"
+fg = "#d4c8d0"
+bg = "#302c34"
+walkable = false
+transparent = false
+bounce = "#e0d4d8"
+# Half an hour with a pick-axe, and no fireball breaks it.
+hardness = 3000
+becomes = "rubble"

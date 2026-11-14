@@ -58,7 +58,7 @@
 #             carry         + N kg carrying limit
 #             stealth       footsteps N% quieter
 #             light         the wearer carries the light of a preset (lights.toml)
-#             skill         + to the value of the affix's `skill` (an id in skills.toml) for
+#             skill         + to the value of the affix's `skill` (an id in skills/) for
 #                           what that skill gives, trained or not
 #           Attack effects (to_hit through durability) on a weapon, a missile weapon, or
 #           ammunition change the attacks made with it (local); on anything else every attack
@@ -86,7 +86,7 @@
 #
 # Suffixes: mostly utility and stats, speed, criticals, and regeneration.
 #
-# Skill suffixes (spec §8 "Skills"): `effect = "skill"` with the `skill` (an id in skills.toml)
+# Skill suffixes (spec §8 "Skills"): `effect = "skill"` with the `skill` (an id in skills/)
 # whose value it raises for what the skill gives, trained or not (untrained, from 0).
 # The skills whose benefit is gated on being trained at all (Spot, Open lock, Disable device,
 # Heal, Steal, Survival's foraging: `Skills::trains_effect`) give the untrained nothing, so their

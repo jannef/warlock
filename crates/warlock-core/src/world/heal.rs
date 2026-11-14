@@ -3,7 +3,7 @@
 //! [`crate::action::Action::Heal`] (`heal`, `heal:ID`, `heal:ID:DIR`). What may be treated is
 //! [`crate::heal`]; here is the try.
 //!
-//! - **Who**: an actor trained in a skill with the `heal` effect (Heal, `data/skills.toml`):
+//! - **Who**: an actor trained in a skill with the `heal` effect (Heal, `data/skills/`):
 //!   the abilities menu lists the Heal ability for them ([`Ability::Heal`]). Anyone else is told
 //!   "You know nothing of healing." and no time passes.
 //! - **The patient**: the player, or with a direction the player's ally that way

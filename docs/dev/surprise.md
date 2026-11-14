@@ -15,10 +15,10 @@ Keep it current with the code, as CLAUDE.md says.
   one reader of what has no vitals: incorporeal, `vitals = false` (`CreatureDef::vitals`,
   default true), an animated object, or a `no_vitals` tag (Anatomist, which found vitals in
   some, was cut in #787); everything has vitals without the file.
-- `assets/data/skills.toml`: `sneak_attack` (after Search; `sneak_dice`, `surprise`; marks on
+- `assets/data/skills/`: `sneak_attack` (after Search; `sneak_dice`, `surprise`; marks on
   `sneak_attack`) and `initiative` (after Heal; `initiative`, `surprise_ease`; marks on
   `surprise`). The classes' lines and the drow's `optional_skills` (#682).
-- `assets/data/status.toml`: `surprised` (after Light-footed; `per_action`, `max = 1`, `refresh`,
+- `assets/data/status/`: `surprised` (after Light-footed; `per_action`, `max = 1`, `refresh`,
   `cost = 150`, `seen = "surprised"`, its `start` and `end` lines).
 - `world/surprise.rs`, every rule of it:
   - `World::unaware(id, other)` (moved from `ambush.rs` with `sees_now`): the one definition,
@@ -71,7 +71,7 @@ Keep it current with the code, as CLAUDE.md says.
   `no_criticals`), `no_vital_spot` (Vital strike's and an
   exploit's "It has no vital spot.", a `news` line after the blow's).
 - `world/thief.rs`, the thief's actives and passive on surprise (#684): Lurk (`lurking` in
-  `status.toml`, after Surprised: `per_action`, `max = 1`, `refresh`, "You wait in ambush.",
+  `status/`, after Surprised: `per_action`, `max = 1`, `refresh`, "You wait in ambush.",
   no `end`), Vanishing act (`sneak_kill_status`); Exploit (`Technique::sneak`) is
   `world/openings.rs`'s (`docs/dev/openings.md`). The hooks are
   the rows marked #684 below.

@@ -109,7 +109,7 @@ Each milestone ships a playable build.
   corpses dropped by every creature that dies, rotting, and doing what their creature's
   `on_eat` says; starting food and a pantry in the showcase.
 
-- **M25 Special rooms** — ADOM-like special rooms (data, `data/room_effects.toml`): a
+- **M25 Special rooms** — ADOM-like special rooms (data, `data/room_effects/`): a
   shadowed room, an echoing hall, a hushed chamber, a sanctuary, and a flooded room, in about one
   generated level in two or three and in areas hand-made levels mark (the hub's stairs nook is a
   sanctuary); one query for the rules (`World::effects_at`), a first-entry message, and look

@@ -1,0 +1,17 @@
+[[skill]]
+id = "survival"
+name = "Survival"
+description = "Living off the land and finding the easiest way through the wild."
+kind = "passive"
+mark = [{ on = "travel", chance = 10 }, { on = "lookout", chance = 10 }, { on = "forage", chance = 25 }]
+# 20% quicker journeys at 100, at most. Foraging in the wild (spec §8 "Foraging", forage.toml;
+# the Forage ability): trained at all, you can forage; +15 percent to finding food at 100, +30 at
+# 200. On the overworld (spec §7 "Overworld encounters", encounters.toml): the lookout for a party,
+# +4 at 100, +6 at 200; slipping away from one, +8 at 100, +12 at 200.
+benefit = [
+    { effect = "travel", curve = [[0, 0], [100, 20]] },
+    { effect = "forage", curve = [[0, 0], [100, 15], [200, 30]] },
+    { effect = "lookout", curve = [[0, 0], [100, 4], [200, 6]] },
+    { effect = "evade", curve = [[0, 0], [100, 8], [200, 12]] },
+    { effect = "freshness", curve = [[0, 15], [100, 35], [200, 50]] },
+]

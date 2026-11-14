@@ -40,7 +40,7 @@
 # run starts on, the overworld, and its local areas give none. Neither draws anything at random.
 #
 # Levels (the [levels] table; spec §8 "Talents"): every talent_every-th level (3: levels 3, 6,
-# 9, ...) brings a talent pick (talents.toml), chosen on the spot: nothing is banked. 0, or no
+# 9, ...) brings a talent pick (talents/), chosen on the spot: nothing is banked. 0, or no
 # table: never. A character the player chose (New run, `--character`) takes creation_talents
 # picks at creation (a class may add more: classes/), on the creation Talents step or at random.
 # class_max is the highest level a class reaches unless its file says otherwise (classes/

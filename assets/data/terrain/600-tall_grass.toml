@@ -1,0 +1,11 @@
+# What the local area generators grow and strew on the ground (mapgen/local; spec §3).
+
+[[terrain]]
+id = "tall_grass"
+plants = true
+name = "tall grass"
+glyph = '"'
+fg = "#a4c462"
+bg = "#22401a"
+bounce = "#b4dc8c"
+step_noise = 110

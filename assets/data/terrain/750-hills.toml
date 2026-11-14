@@ -1,0 +1,9 @@
+[[terrain]]
+id = "hills"
+name = "hills"
+glyph = "^"
+fg = "#bc9a62"
+bg = "#17110a"
+travel_minutes = 120
+local = "rocky_ground"
+landscape = "hills"

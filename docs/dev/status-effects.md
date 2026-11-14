@@ -18,7 +18,7 @@ damage_type }` (Brand's `branded_blade`): `Effects::blows`, docs/dev/equipment.m
 it stands on, so no plunge (`fall_in`) ever comes of it.
 
 Status effects and healing (spec §8 "Status effects", "Healing"; M24, #138; **diseases, #139,
-build on this**): statuses are data, `data/status.toml` (`content/status.rs`: `StatusDef` with
+build on this**): statuses are data, `data/status/` (`content/status.rs`: `StatusDef` with
 `seen`, `max`, `stacking`, `tick`/`damage`, `eases`, `regen`, `penalty`, `wound`, `cured_by`,
 and the words `start`/`end`/`dies`/`death`; `Healing { resting }`; `OnHit` on a creature's
 natural attack, `NaturalAttack::on_hit`; `Content::status`/`status_id`/`status_ids`/`healing`;

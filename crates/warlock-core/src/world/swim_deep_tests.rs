@@ -150,14 +150,12 @@ fn the_terrain_loads_as_the_issue_has_it_and_a_walkable_one_is_refused() {
     let rules = content.swim().expect("data/swim.toml");
     assert_eq!((rules.difficulty, rules.per_burden, rules.cold), (11, 2, 1));
 
-    let text = include_str!("../../../../assets/data/terrain.toml");
-    let bad = text.replace(
+    let mut files = files();
+    files.replace_in_table(
+        "terrain",
         "walkable = false\nswim = true\n",
         "swim = true\nwalkable = true\n",
     );
-    assert_ne!(text, bad);
-    let mut files = files();
-    files.insert("data/terrain.toml", &bad);
     let error = Content::load(&files).expect_err("refused").to_string();
     assert!(error.contains("deep water"), "{error}");
 }
@@ -309,18 +307,17 @@ fn a_step_in_the_water_draws_only_its_check_and_a_wait_asks_none() {
 
 #[test]
 fn marks_fall_on_steps_in_the_water_and_never_on_wade() {
-    let text = include_str!("../../../../assets/data/skills.toml");
-    let eager = text.replace(
+    let mut files = files();
+    files.replace_in_table(
+        "skills",
         "{ on = \"stroke\", chance = 25 }",
         "{ on = \"stroke\", chance = 100 }",
     );
-    assert_ne!(text, eager);
-    let wade = eager.replace(
+    files.replace_in_table(
+        "skills",
         "{ on = \"wade\", chance = 10 }",
         "{ on = \"wade\", chance = 100 }",
     );
-    let mut files = files();
-    files.insert("data/skills.toml", &wade);
     let content = Arc::new(Content::load(&files).expect("eager content"));
     let mut w = World::new(content, "mere", Some(3)).expect("world");
     let kobold = (w.state.actors.keys().copied()).find(|id| *id != w.state.player);

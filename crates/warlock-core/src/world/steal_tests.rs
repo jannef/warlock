@@ -40,12 +40,11 @@ fn files(eager: bool) -> ContentFiles {
         "name = \"Den\"\nstart_level = \"den\"\n",
     );
     if eager {
-        let text = include_str!("../../../../assets/data/skills.toml");
-        let text = text.replace(
+        files.replace_in_table(
+            "skills",
             "mark = [{ on = \"steal\", chance = 50 }]",
             "mark = [{ on = \"steal\", chance = 100 }]",
         );
-        files.insert("data/skills.toml", &text);
     }
     files
 }

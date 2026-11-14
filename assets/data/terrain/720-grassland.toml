@@ -1,0 +1,9 @@
+[[terrain]]
+id = "grassland"
+name = "grassland"
+glyph = '"'
+fg = "#6cb84e"
+bg = "#0b1709"
+travel_minutes = 50
+local = "grass"
+landscape = "grassland"

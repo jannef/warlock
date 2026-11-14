@@ -1,0 +1,14 @@
+# Walled, Shield wall's (a weapon active, #564): the shield set and the bearer behind it, Shield
+# +3 to Defence on top of the shield's own, every attack a quarter slower; five degrees, a degree
+# a turn.
+[[status]]
+id = "walled"
+name = "Walled"
+seen = "behind its shield"
+max = 5
+stacking = "refresh"
+eases = 6
+combat = { shield = 3 }
+attack_cost = 125
+start = "You set your shield and stand behind it."
+end = "You lower your shield."

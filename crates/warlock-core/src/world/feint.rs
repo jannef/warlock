@@ -1,7 +1,7 @@
 //! Feinting (spec §8 "Skills": Bluff; #1016): Bluff's use, [`crate::Action::Feint`]
 //! (`feint:DIR`), chosen from the abilities menu ([`crate::ability::Ability::Feint`]).
 //!
-//! The player, trained in a skill with the `feint` benefit (`data/skills.toml`: Bluff), lies with
+//! The player, trained in a skill with the `feint` benefit (`data/skills/`: Bluff), lies with
 //! their body to a hostile creature they see next to them. It takes the `feint` action's time and
 //! may mark Bluff ([`Use::Feint`], the training stream), whatever comes of it.
 //!

@@ -183,7 +183,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the band holds on a hit: its slam's), and `loot = { items, loot_level, magic, rare, gold = {
   dice, each }, gems }` (dice; `rare` counts in `magic`; what a generated chest holds, §8 "Magic
   items" "Chest loot"). `[smash] destroyed` (percent of each stack destroyed when a
-  chest is kicked open or blown apart: 50). The chest terrains are `data/terrain.toml`'s with a
+  chest is kicked open or blown apart: 50). The chest terrains are `data/terrain/`'s with a
   `chest` field (`"shut"`, `"open"`, `"smashed"`, one terrain each; a shut one not walkable,
   the others walkable; none a door, stairs, or breakable wall; a shut one may have a
   `toggle_noise`, its creak).
@@ -201,9 +201,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   long searching for a while lasts at most, 1 to 100; 10), and `secret_door` (a secret door's
   difficulty where its level gives none, 1 to 50; 14).
 - **Stealing** (`data/steal.toml`, optional; without it nobody steals; §8 "Stealing"): `caught`,
-  the faction a creature that catches the player stealing joins (an id in `data/factions.toml`,
+  the faction a creature that catches the player stealing joins (an id in `data/factions/`,
   hostile to the player: `outraged`). Who can steal is the skills' business (the `steal`
-  benefit, `data/skills.toml`); a shopkeeper that catches the player is outraged by its shop's
+  benefit, `data/skills/`); a shopkeeper that catches the player is outraged by its shop's
   rules (`data/shops.toml`'s `outraged`).
 - **Surprise** (`data/surprise.toml`, optional; without it nobody is surprised; §8 "Surprise and
   sneak attacks"): `[surprise]` `status` (the status a failed initiative check brings,
@@ -473,7 +473,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   jewellery; wood poor for armour. A material worse in a fight than the base item's own (to hit
   or damage lower on what strikes or is shot, Protection lower on armour with some) but dearer
   weighs at most 10 (`VERY_RARE`) for that item before its fit, never for jewellery. A creature's
-  faction may favour materials (`data/factions.toml` `gear = { bone = 55, iron = 15 }`): for
+  faction may favour materials (`data/factions/` `gear = { bone = 55, iron = 15 }`): for
   gear and drops whose list holds one, each takes its percent of the draw first, the usual draw
   the rest (orcs bone and iron, goblins bronze, the undead bronze, duergar iron and steel,
   kobolds flint, bone, and copper); a favourite never adds a material the item cannot be made
@@ -613,7 +613,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `max_dex`,
   `weight`, `dodge`, `deflection`, `natural`, `max_hp`, `regeneration`, `max_mana`,
   `mana_regeneration`, a stat id, `move_speed`,
-  `carry`, `stealth`, `light`, `skill` with a `skill`, an id in `data/skills.toml`, whose value
+  `carry`, `stealth`, `light`, `skill` with a `skill`, an id in `data/skills/`, whose value
   it raises; without skills content, skill affixes are left out; `elemental` (adds 1dN damage of
   the affix's kind to every roll) and `resistance` (+N % resistance to it) with a
   `damage_type`, an id in `data/damage_types.toml`; without damage types they are left out; §8
@@ -640,7 +640,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Placed as `unique:ID` (no count) wherever objects are named, once in all content (the data
   author's promise: a load does not count placements); a legend's
   `wield`/`wear` name it the same way to wear the one carried.
-- **Talents** (`data/talents.toml`, the settings; `data/talents/`, one talent a file, read in
+- **Talents** (`data/talents/`, one talent a file, and its `trees/` and `systems/`, one a file, read in
   path order; optional, without them no level asks for a pick; M30, #229; §8 "Talents"):
   `[[tree]]`s (`id`, `name`, `description`, `class`) in display order, and `[[system]]`s (`id`,
   `name`), the list a talent's `systems` may name (the wiki's talents-by-system table). A `[[talent]]`: `id`,
@@ -666,7 +666,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `char` (the char it leaves where it burns, `{ light, heavy }` colours; fire's; §8 "Char"). Ids
   are indices (in the content fingerprint), so a new type is a new entry at the end of the list,
   at most 32. Built in: slashing, piercing, bludgeoning (`physical`, `unarmed`), fire, cold,
-  electricity, acid, poison, force, necrotic (the last two the spells', §8 "Spells"). The status effects (`data/status.toml`, §8 "Status effects") name
+  electricity, acid, poison, force, necrotic (the last two the spells', §8 "Spells"). The status effects (`data/status/`, §8 "Status effects") name
   the kinds that wound (`wound.from = ["slashing", "piercing"]`: bleeding; none named: any) and
   the kind a status is (`damage_type = "poison"`: poisoned).
 - **Resources** (`data/resources.toml`, optional; without it there are none; #225, §8
@@ -766,7 +766,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "aristocrat"`, fit `ring`, "on a finger"; #1404: born to wealth, they wear more), Feet, Missile weapon and Missiles (`ready`;
   "readied", "quivered"), Tool (`ready`, "in use"; M19); the rest `wear`, "being worn". The wiki
   shows them in a generated table with what fits each.
-- **Factions** (`data/factions.toml`, optional; without it everyone is neutral): `[[faction]]`
+- **Factions** (`data/factions/`, optional; without it everyone is neutral): `[[faction]]`
   with `id`, `name`, `hostile` (faction ids), and `animal` (default false; the vermin and the
   wildlife are animals: a Beast-friend player, §8 "Talents", stands neutral with their creatures
   until they attack one of a type, `World::stance` and the AI alike). Relations are pairwise and
@@ -774,7 +774,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   and itself too) is neutral. Validation: unique ids, known ids, no faction hostile to itself, a `player` faction
   (the player's), and every creature type but the player naming a known faction. The core API
   gives the stance (`Hostile` or `Neutral`) of two factions, creature types, or actors. The
-  factions are the entries of `assets/data/factions.toml`; the wiki's generated tables list them
+  factions are the entries of `assets/data/factions/`; the wiki's generated tables list them
   and who is hostile to whom, so adding a faction never edits this spec. Monsters do not fight
   each other but for two story feuds, the fey courts' war (Seelie and wrathful fey against the
   Unseelie) and the demons' Blood War with the devils: every other monster faction lists the

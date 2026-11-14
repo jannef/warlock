@@ -1,0 +1,16 @@
+[[skill]]
+id = "detect_traps"
+name = "Detect traps"
+description = "Finding hidden traps before they find you."
+kind = "passive"
+mark = [
+  { on = "find_trap", chance = 50 },
+  { on = "sprung", chance = 100 },
+  { on = "disarm", chance = 30 },
+  { on = "search", chance = 3 },
+]
+# Finding hidden traps (spec §8 "Searching"), on the floor, on doors, and on chests: in place of
+# Search when you search and of Spot in passing; trained at all, you notice traps in passing (else
+# only elves and kobolds do, and dwarves on stone); added to both checks, +8 at 100 (a trap of 14
+# found with 46 % of the turns of searching at Intelligence 10 becomes 93 %), +12 at 200.
+benefit = [{ effect = "detect_traps", curve = [[0, 0], [100, 8], [200, 12]] }]

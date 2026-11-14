@@ -1,0 +1,23 @@
+# Stiffening (a basilisk's gaze, spec §8 "Creature behavior": "Gazes"; the dread design §5.2):
+# the flesh turning to stone. Three warnings, a degree each, then at the fourth the bearer is
+# stone: dead, and a creature a statue holding what it carried (terrain/ `statue`). Two
+# minutes a degree to ease, so a basilisk looked at twice and fled from is a fright. Ended at
+# once by the scroll of restoration (`restoration`) and a temple's cure (`prayer`), eased a degree a try
+# by the Heal skill, and ended by Still mind's Stillness.
+[[status]]
+id = "stiffening"
+name = "Stiffening"
+seen = "stiffening"
+max = 4
+stacking = "add"
+eases = 120
+cost = 150
+penalty = { from = 2, dexterity = -4 }
+cured_by = ["restoration", "prayer"]
+treat = { difficulty = 10, per_degree = 3, made = "You work some of the stiffness out.", failed = "The flesh stays hard as stone." }
+stages = ["Your limbs stiffen.", "Your skin greys and hardens.", "You can barely move."]
+end = "Your limbs move freely again."
+kills_at_max = true
+statue = true
+dies = "turns to stone"
+death = "Turned to stone"

@@ -24,7 +24,7 @@
 #     strike     an attack roll (`to_hit`, `damage`) with `noun` against whoever stands on it
 #     burst      everyone within `radius` the blast reaches (walls stop it) takes `damage`, half
 #                beyond radius - 1; no roll to hit; presentation shows the `spell` effect. With a
-#                `blast` (0 to 10000), the walls it reaches whose hardness (terrain.toml) is
+#                `blast` (0 to 10000), the walls it reaches whose hardness (terrain/) is
 #                below that break into rubble (spec §8 "Digging"). With `heat = true` it melts
 #                all the ice it reaches, and whoever stood on it falls in; with `frost` (1 to
 #                1000 mm) the water it reaches freezes at once to at least that thick (spec §5

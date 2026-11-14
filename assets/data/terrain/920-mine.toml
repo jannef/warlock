@@ -1,0 +1,9 @@
+[[terrain]]
+id = "mine"
+name = "mine"
+glyph = ">"
+fg = "#d8a040"
+bg = "#1c1206"
+stairs = "down"
+glow = 0.2
+travel_minutes = 30

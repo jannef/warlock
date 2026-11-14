@@ -1,9 +1,9 @@
 # Reading a scroll one cannot simply read (#1024; spec §8 "Scrolls"; `world/decipher.rs`).
 #
-# Whoever is trained in Spellcraft, with a learning (skills.toml: `learn`, at least 1) of at least
+# Whoever is trained in Spellcraft, with a learning (skills/: `learn`, at least 1) of at least
 # the scroll's spell level, reads it at once, with no check; a scroll with no spell behind it
 # (restoration) counts as level 0. Everyone else rolls 2d12 + their Intelligence modifier + what
-# talents add to its checks + Decipher script's `decipher` points (skills.toml: +8 at 100, +12 at
+# talents add to its checks + Decipher script's `decipher` points (skills/: +8 at 100, +12 at
 # 200) against:
 #
 #   difficulty = base + the spell's level ÷ levels_per_point (rounded down)

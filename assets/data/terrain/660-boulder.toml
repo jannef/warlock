@@ -1,0 +1,9 @@
+[[terrain]]
+id = "boulder"
+name = "boulder"
+stone = true
+glyph = "●"
+fg = "#958c7e"
+bg = "#1e1c18"
+walkable = false
+transparent = false

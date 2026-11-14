@@ -1,0 +1,10 @@
+# A lure quest's binding (world/lure.rs, docs/dev/quests.md "Lure quests"): the crystal guardian
+# of Meyn Bew, bound to Gimmwīc's gem trade by Ysella the Binder, carries it for good (no
+# `eases`, nothing cures it). It does nothing by itself; its spell circle (data/circles.toml) shows
+# it, and the binding's boon is read from the quest.
+[[status]]
+id = "bound"
+name = "Bound"
+seen = "bound"
+max = 1
+stacking = "highest"

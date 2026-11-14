@@ -1,0 +1,7 @@
+# The hags (#451): the green hag, the sea hag, the annis hag, and the bheur hag, who keep to
+# themselves and run with no one's band. The bog hag is not among them: the fen's things serve her,
+# and she stays theirs (`marsh`). Hostile to the player only.
+[[faction]]
+id = "hags"
+name = "hags"
+hostile = ["player"]

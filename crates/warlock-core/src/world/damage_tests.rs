@@ -700,6 +700,7 @@ fn bad_typed_data_is_refused() {
     );
     assert!(err.contains("`damage_type` is for affixes"), "{err}");
     let mut files = ContentFiles::builtin();
+    files.flatten_table("status");
     files.edit_table("status", |t| {
         t.replace("from = [\"slashing\", \"piercing\"]", "from = [\"sonic\"]")
     });

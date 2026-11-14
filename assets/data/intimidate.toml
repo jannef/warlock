@@ -1,12 +1,12 @@
 # Intimidating (#868; spec §8 "Skills": Intimidate): a threat at one foe, the Intimidate skill's
 # use, chosen from the abilities menu (`a`, then a place you see).
 #
-# Whoever is trained in Intimidate (skills.toml: the skill with the `intimidate` benefit) can
+# Whoever is trained in Intimidate (skills/: the skill with the `intimidate` benefit) can
 # threaten a hostile creature they see within `range`, one with a heart to quail (not the bones,
 # the spirits, or the animated). It takes a turn (actions.toml `intimidate`) and is spoken aloud
 # (a voice, heard about you), and trains Intimidate, whatever comes of it. War cry's check
 # (talents/war_cry.toml): the foe rolls 2d12 + its Willpower modifier against `difficulty` + your
-# Strength modifier + what your Intimidate adds (skills.toml: +8 at 100). A foe that does not
+# Strength modifier + what your Intimidate adds (skills/: +8 at 100). A foe that does not
 # hear you or does not see you pays no heed; one that fails is `status` for the degrees below.
 #
 # Refused, taking no time: untrained, at nobody you see, out of range, at someone not hostile to

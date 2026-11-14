@@ -1,0 +1,12 @@
+# Glamour's (the spell types design §7 entry 23): Barkskin's cousin for the arcane, a seeming to
+# one side of where one stands. Up to three degrees, a minute each.
+[[status]]
+id = "glamoured"
+name = "Glamoured"
+seen = "glamoured"
+max = 3
+stacking = "refresh"
+eases = 60
+combat = { dodge = 3 }
+start = "You seem to stand a little to one side of yourself."
+end = "Your glamour fades."

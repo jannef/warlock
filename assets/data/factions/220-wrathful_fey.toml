@@ -1,0 +1,4 @@
+[[faction]]
+id = "wrathful_fey"
+name = "wrathful fey"
+hostile = ["player", "unseelie"]

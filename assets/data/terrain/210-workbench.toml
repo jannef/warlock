@@ -1,0 +1,8 @@
+[[terrain]]
+id = "workbench"
+name = "workbench"
+description = "A heavy bench scarred by tools, its vices rusted shut."
+glyph = "π"
+fg = "#9a7048"
+bg = "#0d0d10"
+walkable = false

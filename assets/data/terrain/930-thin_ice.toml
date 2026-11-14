@@ -1,0 +1,16 @@
+# Ice (spec §5 "Ice"): what water that froze looks like, by how thick the ice is. Water freezes
+# slowly in the cold and thaws in the warmth; the ice holds by its thickness squared (5 cm holds a
+# person with a pack). It is still: no waves, no glints. Walking on it is a careful step.
+
+# Thin ice: dark water shows through, with pale hairline cracks here and there (`variants`: one
+# per cell, a space for none). It holds a rat, not a person.
+[[terrain]]
+id = "thin_ice"
+name = "thin ice"
+glyph = "⁄"
+variants = "⁄  ∖   ·  ⁄    ∖  "
+fg = "#6c86a2"
+bg = "#0e2135"
+ice = 10
+move_cost = 120
+bounce = "#b4ccf0"

@@ -1,0 +1,6 @@
+# Stamina (#560, the combat progression design §4.5): the pool weapon actives pay from; the
+# warrior's Charge grants it at level 1 (anyone else has it from the first weapon active a rank
+# teaches), and Deep lungs and Steady breathing change it.
+[[system]]
+id = "stamina"
+name = "Stamina"

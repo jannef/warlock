@@ -6,7 +6,7 @@
 # creature coming into view, a message, or a blow stops it, and an attempt cut short does nothing
 # (the time is spent). One that runs its time rolls one check for each material of the item that
 # a profession works (stock.toml), in part order: 2d12 + the profession's stat modifier + the
-# talents' checks of that stat + the profession's `craft` points (skills.toml) against
+# talents' checks of that stat + the profession's `craft` points (skills/) against
 # `difficulty` + the material's `work` (materials/). A natural 2 always fails, a natural 24
 # always succeeds. A made check gives `yield` % of the material's grams back as stock (at least
 # one piece); a gem comes out whole. A failed check loses the material; a failed gem loses a cut

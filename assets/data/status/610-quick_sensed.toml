@@ -1,0 +1,11 @@
+# Sense the quick's (spec §8 "Spells"): the living about you, felt as heartbeats at rough places.
+[[status]]
+id = "quick_sensed"
+name = "Quick-sensed"
+seen = "listening"
+max = 3
+stacking = "refresh"
+eases = 60
+senses = { reach = 8, kind = "heartbeat" }
+start = "You feel the living about you."
+end = "The press of living things fades."

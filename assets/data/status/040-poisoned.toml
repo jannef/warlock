@@ -1,0 +1,20 @@
+[[status]]
+id = "poisoned"
+name = "Poisoned"
+max = 10
+stacking = "add"
+tick = 120
+damage = 1
+damage_type = "poison"
+eases = 120
+regen = 50
+mana_regen = 50
+penalty = { from = 4, strength = -1, dexterity = -1 }
+# Cured at once by an antidote (the potion, spec §8 "Potions").
+cured_by = ["antidote"]
+# Eased a degree with the Heal skill; a failed try may be made again at once.
+treat = { difficulty = 8, per_degree = 1, made = "You draw out some of the poison.", failed = "The poison will not come out." }
+start = "You feel sick."
+end = "The poison wears off."
+dies = "succumbs to poison"
+death = "Died of poison"

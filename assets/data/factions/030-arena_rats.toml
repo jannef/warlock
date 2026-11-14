@@ -1,0 +1,8 @@
+# The arena's rat pack (the showcase's arena level gives its rats this faction by a legend's
+# `faction` override): vermin that fight the kobold war band across the pit, so the arena keeps
+# its brawl now that the vermin and the kobolds leave each other be.
+[[faction]]
+id = "arena_rats"
+name = "warren rats"
+hostile = ["player", "kobolds"]
+animal = true

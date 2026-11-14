@@ -29,7 +29,7 @@ creatures of its side, with no ability in the abilities menu, no action, no key,
   another campaign's creature, the player, an empty pool, and a missing `summoning` status
   (`summon::STATUS`), one that ticks or never eases, or one too short for the cooldown. The
   numbers are the author's (#1205): a summoner with too little mana for its cost never summons.
-- **The cooldown is a status** (`data/status.toml` `summoning`: no tick, eases 6 s a degree, max
+- **The cooldown is a status** (`data/status/` `summoning`: no tick, eases 6 s a degree, max
   100, refresh, no `seen`): the house rule for ability limits (`ability.rs` module docs). It is
   saved with the actor's `effects`, as every status is; nothing counts uses.
 - **State**: `Actor::summoner: Option<ActorId>` (`serde(default, skip_serializing_if =

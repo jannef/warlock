@@ -61,6 +61,7 @@ fn bad_numbers_and_unknown_names_are_refused() {
         ),
     ] {
         let mut files = ContentFiles::builtin();
+        files.flatten_table("room_effects");
         files.edit_table("room_effects", |text| text.replace(from, to));
         let e = Content::load(&files).unwrap_err();
         assert!(e.message.contains(says), "{}", e.message);

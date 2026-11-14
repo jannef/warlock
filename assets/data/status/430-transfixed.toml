@@ -1,0 +1,13 @@
+# The Transfixing stare's (a Basilisk's birth sign gift): a creature held by the gaze, its next
+# actions twice as slow; a degree for each, eased away a turn's time (at the slowed pace) apiece.
+[[status]]
+id = "transfixed"
+name = "Transfixed"
+seen = "transfixed"
+max = 4
+stacking = "refresh"
+eases = 12
+cost = 200
+cured_by = ["clear_head"]
+start = "You are transfixed."
+end = "You shake off the stare."

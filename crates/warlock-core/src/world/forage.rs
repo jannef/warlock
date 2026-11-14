@@ -2,7 +2,7 @@
 //! Survival's use.
 //!
 //! - **Who**: an actor trained in a skill with the `forage` benefit (Survival,
-//!   `data/skills.toml`), [`crate::skills::Skills::trains_effect`], while `data/forage.toml`
+//!   `data/skills/`), [`crate::skills::Skills::trains_effect`], while `data/forage.toml`
 //!   exists. Anyone else is told "You do not know how to live off the land." and no time passes.
 //! - **Where** ([`forage_ground`]): on the overworld, by the landscape of the terrain underfoot;
 //!   in a local area (`local:x,y`), by the landscape of its overworld cell (its edge exit), so an

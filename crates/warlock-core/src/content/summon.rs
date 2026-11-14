@@ -16,7 +16,7 @@ use super::{Content, CreatureId, FactionId};
 use crate::dice::Dice;
 use serde::Deserialize;
 
-/// The cooldown status a summoning gives (`data/status.toml`).
+/// The cooldown status a summoning gives (`data/status/`).
 pub const STATUS: &str = "summoning";
 
 /// A summoning as written: `[creature.summon]` (`data/creatures/README.toml` has the fields).
@@ -139,7 +139,7 @@ pub(super) fn resolve(
     };
     let mana = spec.mana.unwrap_or(0);
     let status = (content.status_id(STATUS))
-        .ok_or_else(|| format!("summon: needs the `{STATUS}` status in data/status.toml"))?;
+        .ok_or_else(|| format!("summon: needs the `{STATUS}` status in data/status/"))?;
     let status_def = content.status(status);
     let eases = (status_def.eases)
         .filter(|_| status_def.tick.is_none())

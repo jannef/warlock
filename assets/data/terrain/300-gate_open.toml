@@ -1,0 +1,8 @@
+[[terrain]]
+id = "gate_open"
+name = "open gate"
+glyph = "'"
+fg = "#a07a4a"
+bg = "#22401a"
+closes_to = "gate_closed"
+toggle_noise = 30

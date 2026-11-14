@@ -5,7 +5,7 @@ endless branch"). The rules (the boss rows, the lair, the hidden stairs, made ag
 are in `docs/dev/mapgen.md` ("Layer bosses") and `crates/warlock-core/src/world/layer_boss.rs`;
 this file holds the roster.
 
-- **Faction** `layer_keepers` ("keepers of the layers", `assets/data/factions.toml`): hostile to
+- **Faction** `layer_keepers` ("keepers of the layers", `assets/data/factions/`): hostile to
   the player only, not animals (a Beast-friend calms none). What a boss calls up joins it. No
   roster test binds the faction: each boss is hand-tuned, not on #383's formulas.
 - **Campaign-owned**: `assets/campaigns/ascmearc/data/creatures/`, one file each, `unique = true`,

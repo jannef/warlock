@@ -3,12 +3,12 @@
 #
 # Salvaging a magic or rare item, identified or not (salvage.toml), first makes one check for each
 # of its affixes, in the item's order: 2d12 + `stat`'s modifier + the talents' checks of `stat` +
-# `skill`'s `craft` points (skills.toml) against `salvage_difficulty` + the affix's tier
+# `skill`'s `craft` points (skills/) against `salvage_difficulty` + the affix's tier
 # divided by `salvage_tier_step` (rounded down: a top tier, 12, is +4). A natural 2 always fails,
 # a natural 24 always succeeds. Each check made catches one crystal of the affix's colour.
 #
 # Fields:
-#   skill               the skill that enchants (skills.toml): its `craft` points add to every
+#   skill               the skill that enchants (skills/): its `craft` points add to every
 #                       enchanting check, its `enchant_level` is the reach, and salvage's affix
 #                       checks mark it
 #   stat                the stat of every enchanting check (the recipes' and salvage's affix checks)

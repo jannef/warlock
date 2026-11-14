@@ -1,0 +1,9 @@
+[[effect]]
+id = "hoard"
+name = "tempting hoard"
+mark = "T"
+near = "Something glitters ahead."
+enter = "Treasure lies here, unguarded."
+weight = 5
+needs_danger = true
+hoard = { items = 3, loot_level = 3, guardians = [2, 4], danger = 1 }
