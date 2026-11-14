@@ -15,7 +15,7 @@
 //! - **Death**: what it carried falls on the nearest walkable cell ([`World::landing`]).
 //!
 //! Sight needs no rule of its own: the player sees it when they see its cell, as every wall cell
-//! is seen (its face lit, or within darkvision; `perception.rs`), and creatures see one in a wall
+//! is seen (its face lit, or within darkvision; `perception/seeing.rs`), and creatures see one in a wall
 //! by their rule for opaque cells (`sight::sees`: within darkvision).
 //!
 //! Hook, not a rule yet: immunity to weapons that are not magical would go where a blow's profile

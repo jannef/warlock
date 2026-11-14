@@ -24,10 +24,10 @@ Your maximum mana is what your [race](races.md) and your [class](classes.md) giv
 [Presence](stats.md#stat-presence) add. High scores add to it and low ones take from it, but it
 never goes below zero.
 
-[Wizards](classes.md#wizard) and [witches](classes.md#witch) have the most, and
-[aristocrats](classes.md#aristocrat) a surprising amount. Every class gives at least 1, and
-[warriors](classes.md#warrior), [berserkers](classes.md#berserker), [thieves](classes.md#thief),
-[commoners](classes.md#commoner), and [craftspeople](classes.md#craftsperson) give no more than
+[Wizards](class-wizard.md) and [witches](class-witch.md) have the most, and
+[aristocrats](class-aristocrat.md) a surprising amount. Every class gives at least 1, and
+[warriors](class-warrior.md), [berserkers](class-berserker.md), [thieves](class-thief.md),
+[commoners](class-commoner.md), and [craftspeople](class-craftsperson.md) give no more than
 that. Only [elves](races.md#race-elf), [gnomes](races.md#race-gnome),
 [half-elves](races.md#race-half-elf), [halflings](races.md#race-halfling), and
 [humans](races.md#race-human) get any mana from their race.
@@ -37,7 +37,7 @@ that. Only [elves](races.md#race-elf), [gnomes](races.md#race-gnome),
 Each [level](experience.md#levels) up to 60 raises your maximum, and the mana you have now, by
 half your class's mana plus what the better of your Intelligence and Willpower adds (see
 [Experience](experience.md#levelling-up)). So a wizard keeps growing their mana after
-[hit points](hit-points.md#hit-points) stop at level 50, while a [warrior](classes.md#warrior)
+[hit points](hit-points.md#hit-points) stop at level 50, while a [warrior](class-warrior.md)
 with ordinary wits gains none.
 
 [Magic items](magic-items.md) that add to it ("+5 to maximum mana") raise your maximum, not what
@@ -122,7 +122,7 @@ You get nothing for a creature that dies of [poison](status-effects.md#status-po
 your summoned creature kills, nor for a kill farther off. Two such items add up, identified or not.
 A creature wearing one refills its own mana the same way when it kills.
 
-A [witch](classes.md#witch)'s [Malison](classes.md#talent-malison) (from level 18) pays her mana
+A [witch](class-witch.md)'s [Malison](class-witch.md#talent-malison) (from level 18) pays her mana
 for every death under one of her [hexes](status-effects.md#status-ill-wished), however it died,
 whoever killed it, and at any distance. She gets half the creature's level (rounded down, at least
 1), never above her maximum. This adds to what an item of Siphoning gives.

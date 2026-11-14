@@ -28,7 +28,7 @@ you get **+2** more. How far you beat it (the **margin**) sets the cut:
 {{#include generated/gem-cutting.md}}
 
 The "With Master's hand" columns are a craftsperson's from level 50: their cuts come 4 sooner
-(see [Master's hand](crafting.md#masters-hand)).
+(see [Master's hand](class-craftsperson.md#masters-hand)).
 
 The cut words are the gem's own: uncut, crude, fair, fine, exquisite, and flawless. The game
 never tells you the margin, only what came of it: "You rough it out, and lose more than you meant

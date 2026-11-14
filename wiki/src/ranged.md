@@ -20,7 +20,7 @@ stones (see [Ammunition](ammunition.md)).
 ## Shooting and throwing
 
 `t` uses whatever is in the Missile weapon slot and lets you aim with the cursor (see
-[Controls](controls.md#aiming), "Aiming"). Press `Enter`, or `t` again, to loose it.
+[Aiming](controls-prompts.md#aiming)). Press `Enter`, or `t` again, to loose it.
 
 - A **missile weapon** shoots one piece of ammunition from the Missiles slot.
 - A **throwing weapon** (a dagger, a spear, a rock) is thrown, one from the stack.

@@ -6,11 +6,14 @@ them fight, to the death (see [Combat](combat.md)).
 
 More about creatures:
 
+- [How creatures behave](creature-behaviour.md): their routines, how they hunt, and their pace.
 - [How creatures fight](creature-bodies.md): their attacks, hides and bodies, and the
   incorporeal and elemental kinds.
 - [Creatures in numbers](creature-numbers.md): their [stats](stats.md),
   [hit points](hit-points.md#hit-points), attacks, [speed](turns.md#speed), and senses, which the
   game never shows.
+- [Creatures' gear](creature-gear.md): the arms and armour they carry, and their condition.
+- [Greater and lesser creatures](creature-grades.md): why two of a kind are not the same fight.
 - [What creatures leave](creature-drops.md): the hides, bones, flint, and essences their bodies
   leave when they die.
 
@@ -58,162 +61,9 @@ of the table at the bottom of this page.
 If you attack a Seelie fey, it turns on you for good. It becomes one of the **wrathful fey**:
 hostile to you, and still at war with the Unseelie.
 
-To tell how a creature stands toward you, look at it ([look mode](controls.md#look-mode)). A
+To tell how a creature stands toward you, look at it ([look mode](controls-prompts.md#look-mode)). A
 hostile one is marked, as in "A giant rat (hostile, unhurt), on stone floor." A fey shows its
 court the same way: an Unseelie one is marked hostile, a Seelie one neutral.
-
-## What they do
-
-When nothing is about, a creature follows its **routine**. It either walks a fixed patrol route
-in a loop, one step at a time, or stays where it is.
-
-When a creature **[sees](sight.md#line-of-sight)** something hostile to it (you, or a creature of
-a hostile faction), it goes for the nearest one:
-
-- Creatures that fight **up close** come at it by the shortest way they can find, and attack once
-  they stand next to it.
-- Creatures that **[shoot](ranged.md#shooting-and-throwing)** or
-  **[cast spells](magic.md#the-spells)** need to be close enough, with a clear line: nothing solid
-  and nobody in between. If they have one, they attack from where they are. If not, they move to
-  the nearest place that gives them one. An archer spends one [arrow](ammunition.md) a shot. With
-  no arrows left, or no bow, it comes to fight up close ([Ranged combat](ranged.md)).
-- **Dragons** breathe their element over a long cone whenever their breath is ready and you stand
-  within reach with a clear line. Between breaths they come at you with claws and bite (see
-  [Breath](creature-powers.md#breath)).
-- A few creatures **lurk**: the [meenlock](creatures.md#creature-meenlock) and the
-  [barrow spider](creatures.md#creature-barrow-spider). A lurker that sees its target does not
-  come at it. It waits where it stands, well aware of the target, and attacks once the target
-  comes beside it. If it can shoot or cast, it does so from where it stands. Once it is hurt, it
-  hunts like any other creature. The table in
-  [Creatures in numbers](creature-numbers.md#surprise) says which creatures lurk.
-- A **rooted** creature never leaves the cell it stands on. It strikes whatever comes beside it,
-  unless it has nothing to strike with, and shoots, casts, or
-  [calls others](creature-powers.md#summoning) from where it is. Nothing
-  moves it: it never [makes way](npcs.md#getting-past) for you, no blow or spell drives it back,
-  no teleport takes it, and it never follows you on the [stairs](terrain.md#stairs).
-- When it loses sight of its target, it goes to where it last saw it. If someone it cannot see
-  stands on that spot, it goes next to it instead. If it finds no one there, or cannot get there,
-  it gives up.
-- When it **[hears](hearing.md#what-makes-noise)** something it cannot see, it goes to have a
-  look, as long as it has enemies at all. Wildlife does not bother. See [Hearing](hearing.md).
-- With nothing left to chase, it walks back to where it left its routine and carries on.
-- If it is beside you when you take the [stairs](terrain.md#stairs), it comes along.
-
-Creatures always behave the same way in the same situation. There is no chance in it, except
-whether you [slip past](skill-uses.md#slipping-past) one in the dark.
-
-They see by the same rules you do (see [Sight and memory](sight.md)). Each has its own eyes and
-sees by the same [light](light.md#what-light-is), clouds included. A creature without
-[darkvision](vision.md#the-four-types) does not see you standing in the dark, and lighting your
-[lantern](lantern.md) gets you noticed.
-
-Some creatures open closed [doors](doors.md#creatures-and-doors) in their way. That takes them a
-turn and makes [noise](hearing.md#what-makes-noise). The others cannot get past a closed door. A
-[locked door](doors.md#locked-doors) stops even the door-openers, unless they carry its
-[key](doors.md#keys) (see [Doors](doors.md)).
-
-Other creatures get in the way. A creature walks a little way round someone blocking it, or waits
-behind them.
-
-## Pace and levels
-
-- Creatures move at their **[own pace](turns.md#speed)**. Some are quicker than you and may act
-  more than once while you take one turn. Some are slower and now and then let one of your turns
-  pass without acting. A creature of your own pace acts once for each normal action of yours. The
-  game never tells you a creature's pace. You learn it by watching it move, or from its speed in
-  [Creatures in numbers](creature-numbers.md#pace-senses-and-size).
-- Their actions [cost](turns.md#what-actions-cost) time like yours. A step through water takes a
-  creature twice as long as a step on open ground, and some creatures' attacks cost more or less
-  than a normal action.
-- How often a creature acts follows game time, not your turns. While you wade through
-  [water](terrain.md#water) or [rest](resting.md), creatures act for as long as that took you.
-- Creatures act only on the level you are on. On other levels they stand still until you come
-  back, then carry on where they left off. They do not catch up on the time you were away.
-- You see a creature only while you see its cell, so creatures in the dark are hidden unless they
-  carry a [light](light.md#light-sources). You never remember where one was.
-- Creatures make [noise](hearing.md#what-makes-noise) as they walk, so you may hear one you cannot
-  see. [Bats](creatures.md#creature-bat) fly silently. Creatures
-  [hear](hearing.md#what-makes-noise) your steps, doors, and attacks too.
-- Some creatures carry [objects](objects.md) and [wear or wield](equipment.md#what-fits-where)
-  some of them. A [kobold](creatures.md#creature-kobold) may carry a spear, a
-  [kobold archer](creatures.md#creature-kobold-archer) a bow and arrows. You see what a creature
-  wears and wields ([look mode](controls.md#look-mode) tells you), but never what else it carries.
-  It fights with its gear ([Equipment](equipment.md)) and drops all of it when it dies.
-
-### Gear
-
-Creatures you meet in the dungeons come with gear of their own, and so do creatures that a place
-puts somewhere without a set kit. The gear follows the kind's table ("Gear" below). Each line of
-the table is rolled in turn by its chance, and gives one of the things it lists. Now and then a
-creature also gets a [magic](magic-items.md) piece, made as loot is, at the floor's item level.
-
-- A kind's **racial weapon** is its first line. It comes 90% of the time unless the table says
-  otherwise, and every kind with one is trained in its [weapon skill](weapon-skills.md).
-- An armed creature gets no flat bonus to hit. Its [ranks](weapon-skills.md#raising-a-weapon-skill) in
-  the weapon's skill (and in [Duelist](fighting-styles.md#style-duelist), for a one-handed weapon
-  with no shield) are the fewest that bring the weapon to a quarter of its level to hit (a
-  spellcaster's, to an eighth), as the creatures that fight with claws and teeth hit. No rank is
-  higher than a trained warrior of the creature's level holds (2 at level 1, 7 at 15 to 22, 10
-  from 42), so a heavy weapon (great blades, axes, polearms) may stay below and hit harder
-  instead.
-- Its ranks bring what ranks bring anyone: damage, speed, [Parry](combat.md#defence), and the
-  abilities they teach that work by themselves
-  ([Deep cut](weapon-skills.md#weapon-ability-deep-cut),
-  [Crushing blow](weapon-skills.md#weapon-ability-crushing-blow),
-  [Brace](weapon-skills.md#weapon-ability-brace),
-  [Riposte](fighting-styles.md#style-ability-riposte)).
-- What a creature could not carry (over its [carrying limit](burden.md#how-much-you-can-carry))
-  it goes without.
-- What it gets is made of a material by the creature's level, as drops are.
-- What falls when it dies is [unidentified](magic-items.md#unidentified-items), as any find is.
-
-#### Condition
-
-Each piece of arms or armour a creature gets is often worn out and now and then finer than most.
-It may be **damaged**, a point worse than a plain one, or **Fine**, **Marvellous**, or
-**Masterwork**, with one, two, or three improvements in what an improvement can better, as if
-worked at a [forge](altars-forges-springs.md#forges) (each counts as one attempt made on it). A
-damaged piece is called by what wore it out: *rusted* iron and steel, *corroded* bronze, silver,
-and other metals, and plainly *damaged* wood, leather, and cloth. The creature fights with it as
-it is, and it falls as it is. A stack of several (thrown weapons, ammunition), rings and amulets,
-a [unique](magic-items.md#unique-items) item, one [of Proof](materials.md#protected-items), anything a [quest](quests.md) may ask for, and a set
-kit a place gives a creature are always as made. The chances, by the creature's
-[tag](quests.md#sorts-of-creatures):
-
-{{#include generated/gear-condition.md}}
-
-Deeper down, gear is better made: the chances of Fine, Marvellous, and Masterwork in the
-[table of deeper finds](magic-items.md#deeper-finds) are added to these, and the chance of a
-damaged piece shrinks to make room.
-
-## Grades
-
-Two of the same creature need not be the same fight. When a creature comes into being, there is a
-one in six chance it is **greater** than its kind and a one in six chance it is **lesser**. The
-rest are ordinary.
-
-A greater creature has more [hit points](hit-points.md#hit-points), hits more surely and harder up
-close, and moves a little more [slowly](turns.md#speed). A lesser one is the reverse.
-
-[Look mode](controls.md#look-mode) tells you the grade with a word before the name: "a big
-[kobold](creatures.md#creature-kobold)", "a scrawny kobold", "an ancient zombie". Messages call it
-by its kind alone. Killing one is worth what its kind is worth in [experience](experience.md),
-whatever its grade.
-
-Some creatures are never graded:
-
-- unique creatures;
-- the peaceful and trading folk;
-- [animated objects](animated.md), except the blades ("a notched animated blade", "a keen" one);
-- [mimics](mimics.md);
-- your own [companion](companions.md#companions) or [familiar](familiars.md#familiars), which
-  [grow](companions.md#how-a-companion-grows) with you instead.
-
-{{#include generated/creature-grades.md}}
-
-The words for each:
-
-{{#include generated/creature-grade-words.md}}
 
 ## The creatures
 

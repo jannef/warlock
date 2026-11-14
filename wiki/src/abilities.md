@@ -18,14 +18,14 @@ left out.
   usable yet` for a [skill](skills.md) whose use is not in the game yet, or `you are winded` while a
   [status effect](status-effects.md#buffs-and-cooldowns) keeps you from it. One that works on
   something next to you is greyed out while there is nothing beside you to use it on: `no lock
-  beside you`, `no foe within reach` (see [Something beside you](controls.md#something-beside-you)).
+  beside you`, `no foe within reach` (see [Something beside you](controls-prompts.md#something-beside-you)).
 - **Listen at a door** and **Wedge a door** are left out of the menu unless a closed
   [door](doors.md) is next to you (for Wedge, one not wedged already).
 - The arrow keys move the `>` cursor, and the ability under it is described at the bottom.
 - A letter, or `Enter` on the `>` row, uses the ability. The menu closes and the ability asks for
   what it needs: a direction on the message line (only when more than one thing beside you could
   be meant), or a place with the aiming cursor (see
-  [Aiming](controls.md#aiming)). Then it takes its time like any other action. Choosing one you cannot use only
+  [Aiming](controls-prompts.md#aiming)). Then it takes its time like any other action. Choosing one you cannot use only
   tells you why.
 - A long list shows a page at a time. `>` and `<` turn the pages, and the letters start again at
   `a` on every page.
@@ -55,29 +55,29 @@ you never choose them, they work by themselves as you fight. They have their own
 [Weapon skills](weapon-skills.md#what-a-rank-teaches) and [Fighting styles](fighting-styles.md#what-a-rank-teaches).
 
 - **Throw your voice**: a voice sounds at a place you choose, one you see and that is not solid,
-  within 6 cells. You pick it with the [aiming](controls.md#aiming) cursor, as for a shot. It is as loud there as
+  within 6 cells. You pick it with the [aiming](controls-prompts.md#aiming) cursor, as for a shot. It is as loud there as
   someone talking, and it is made there, not where you stand. So [creatures](creatures.md) that hear it and cannot
-  see that spot go to have a look (see [Hearing](hearing.md#throwing-your-voice)). It takes a normal action. [Bards](classes.md#bard) learn it
+  see that spot go to have a look (see [Hearing](hearing.md#throwing-your-voice)). It takes a normal action. [Bards](class-bard.md) learn it
   at level 16 (see [Classes](classes.md)).
-- **Lurk**: the [thief](classes.md#thief)'s, from level 6. You wait in ambush, in the time of a wait, and are
+- **Lurk**: the [thief](class-thief.md)'s, from level 6. You wait in ambush, in the time of a wait, and are
   [Lurking](status-effects.md#status-lurking) until your next action. A hostile that steps up beside you meanwhile takes
   your blow at once, as a [free blow](stances.md#free-blows). Unless it was already hunting you, it is caught unawares:
   the blow is a [sneak attack](skills.md#skill-sneak-attack), it may be [Surprised](status-effects.md#status-surprised), and it is struck without its Dexterity
   and Dodge. You cannot lurk with a hostile you see already beside you ("Too late to lurk.", no
   time). It costs nothing and has no cooldown.
-- **Exploit**: the [thief](classes.md#thief)'s, from level 1. It spends every [opening](resources.md#resource-openings) you hold on a melee blow, in the time of
+- **Exploit**: the [thief](class-thief.md)'s, from level 1. It spends every [opening](resources.md#resource-openings) you hold on a melee blow, in the time of
   one, at the hostile in the direction you choose. It is a [sneak attack](skills.md#skill-sneak-attack) whatever the foe knows: the
   dice land if it hits, and 1d6 more for each opening spent. The foe is not [Surprised](status-effects.md#status-surprised) by it and keeps its whole Defence.
-  [Low blow](classes.md#talent-low-blow) (level 12) adds +1 to hit per opening and stuns the foe it hits. It is refused, costing nothing, with no
-  opening, nobody hostile there, a creature other than your [mark](resources.md#the-mark), or one you see without vitals (see [Exploit](resources.md#exploit)).
-- **Thrown exploit**: the [thief](classes.md#thief)'s, from level 18. The same blow as Exploit,
+  [Low blow](class-thief.md#talent-low-blow) (level 12) adds +1 to hit per opening and stuns the foe it hits. It is refused, costing nothing, with no
+  opening, nobody hostile there, a creature other than your [mark](openings.md#the-mark), or one you see without vitals (see [Exploit](openings.md#exploit)).
+- **Thrown exploit**: the [thief](class-thief.md)'s, from level 18. The same blow as Exploit,
   made by throwing a weapon at a hostile you see, in the time of a throw. Pick what to throw
   (a dagger, say; never a flask), then the target. It spends every opening you hold, and the
   weapon lands by the foe. It reaches as far as you can throw the weapon, but never more than 6
   cells, the farthest a [sneak attack](surprise.md#sneak-attacks) lands from a throw
   ([Long reach](talents.md#talent-long-reach) adds to that). It is refused, costing nothing, for
   Exploit's reasons, a target out of reach, or a wall or creature you see in the way (see
-  [Thrown exploit](resources.md#thrown-exploit)).
+  [Thrown exploit](openings.md#thrown-exploit)).
 - **Shield bash**: anyone can bash with a shield (see [Weapon skills](weapon-skills.md)), so it is always in the menu,
   and you can use it while you hold a shield. It strikes whoever stands in the direction you
   choose, in the time of a blow.
@@ -94,10 +94,10 @@ you never choose them, they work by themselves as you fight. They have their own
   it.
   - Some leave you [winded](status-effects.md#status-winded) for a while afterwards, and are greyed out until it passes.
   - Most are paid from a [resource](resources.md) instead, and are greyed out while you have too little.
-  - A [paladin](classes.md#paladin)'s holy gifts are never greyed out by [alignment](alignment.md), but they do nothing unless you are
+  - A [paladin](class-paladin.md)'s holy gifts are never greyed out by [alignment](alignment.md), but they do nothing unless you are
     Kind or better (see [Alignment](alignment.md)).
   - They have no key of their own yet: `X` uses the one you used last again.
-- **[Charge](abilities.md#ability-charge)**, the [warrior](classes.md#warrior)'s at level 1, rushes a foe you see.
+- **[Charge](abilities.md#ability-charge)**, the [warrior](class-warrior.md)'s at level 1, rushes a foe you see.
   Aim it like a shot, at the creature. You run along the straight line to it, stop in the cell
   before it, and strike it once, as an ordinary [melee attack](combat.md).
   - It costs 1 [stamina](resources.md#resource-stamina), plus 1 for every cell you run. It takes the time
@@ -108,18 +108,18 @@ you never choose them, they work by themselves as you fight. They have their own
     [shop](shops.md)'s door while you owe it. A refused
     charge takes no time and costs nothing.
   - Each cell you run into is entered as a step enters it: you are told what lies there, a
-    [zone](spellcasting.md#zones) does its work, and wading through a marsh may give you a
+    [zone](spell-rules.md#zones) does its work, and wading through a marsh may give you a
     [disease](diseases.md), as walking would.
   - Nobody you pass or leave behind gets a [free blow](stances.md#free-blows) at you on the way.
   - Someone you cannot see on the line stops you short, with no blow. A hidden trap goes off as
     you run over it and stops you there.
   - Charge also gives the warrior their stamina pool from level 1.
-  - With [Whirling charge](classes.md#talent-whirling-charge) (the warrior's at level 50), every
+  - With [Whirling charge](class-warrior.md#talent-whirling-charge) (the warrior's at level 50), every
     hostile beside a cell you run into takes a [free blow](stances.md#free-blows) as you pass, in
     the order you pass them. Each is struck once a charge. The foe you charge at gets only the
     charge's own blow at the end. The blows cost no time and no stamina, and a foe that falls
     does not stop you.
-- **[War cry](abilities.md#ability-war-cry)**, the [berserker](classes.md#berserker)'s at level 25, is paid in [rage](resources.md): 4 of it, plus the time of a wait.
+- **[War cry](abilities.md#ability-war-cry)**, the [berserker](class-berserker.md)'s at level 25, is paid in [rage](resources.md): 4 of it, plus the time of a wait.
   So it is greyed out with "you have not the rage for it" until you [rage](abilities.md#ability-rage). You roar as loud as a
   [howl](hearing.md), heard across the floor; it wakes sleepers and draws the curious.
   - Every hostile that hears you, sees you, and has [vitals](combat.md#criticals) (no skeletons, spirits, or animated
@@ -131,7 +131,7 @@ you never choose them, they work by themselves as you fight. They have their own
     holds on 12 or more, so it flees 38 % of the time. At Intimidate 100 it flees 90 %.
   - A roar with nobody near is still a roar: the turn, the rage, and the noise are spent.
   - Every cry trains Intimidate.
-- **[Inspire](abilities.md#ability-inspire)** and the **[Lullaby](abilities.md#ability-lullaby)**, the [bard](classes.md#bard)'s at levels 9 and 20, are songs: see [Songs](#songs) below.
+- **[Inspire](abilities.md#ability-inspire)** and the **[Lullaby](abilities.md#ability-lullaby)**, the [bard](class-bard.md)'s at levels 9 and 20, are songs: see [Songs](#songs) below.
 - **Allies** ([Come to heel](abilities.md#ability-heel), [Hold here](abilities.md#ability-hold), [Set on](abilities.md#ability-set-on)): once a creature fights on your side (a druid's call, a
   ranger's companion; see [Allies](allies.md)), the Allies group appears. Its three orders tell every ally of
   yours on the level what to do at once:
@@ -151,7 +151,7 @@ you never choose them, they work by themselves as you fight. They have their own
 
 ## Songs
 
-A [bard](classes.md#bard) sings two songs, both from the menu under Class: **[Inspire](abilities.md#ability-inspire)**, sung to yourself, and the
+A [bard](class-bard.md) sings two songs, both from the menu under Class: **[Inspire](abilities.md#ability-inspire)**, sung to yourself, and the
 **[Lullaby](abilities.md#ability-lullaby)**, sung against your foes.
 
 - **Price.** Each song costs one thing. Inspire costs 3 [inspiration](resources.md#resource-inspiration), and the Lullaby 6 [mana](mana.md#spending-it). With
@@ -171,7 +171,7 @@ A [bard](classes.md#bard) sings two songs, both from the menu under Class: **[In
   peaceful creatures only hear it. There is no level cut: a troll checks as a kobold does, only
   with more nerve. A song with nobody to hear it is still sung: its price and its time are spent,
   and the noise is made.
-- **[Virtuoso](classes.md#talent-virtuoso)** (the bard's at 30): every song costs nothing at all and brings one degree more.
+- **[Virtuoso](class-bard.md#talent-virtuoso)** (the bard's at 30): every song costs nothing at all and brings one degree more.
   Inspire also lifts you higher: [greatly inspired](status-effects.md#status-inspired-greatly) (+2 to hit and +2 [Dodge](combat.md#defence), 10 minutes a degree)
   instead of [inspired](status-effects.md#status-inspired) (+1 and +1, 5 minutes a degree).
 
@@ -189,7 +189,7 @@ everything three times as slowly, 12 seconds a degree.
 
 ## Keys of their own
 
-If you use an ability often, you can give it a key in the [Controls](controls.md#rebinding-keys) screen. None has a key by
+If you use an ability often, you can give it a key in the [Controls](controls-rebinding.md) screen. None has a key by
 default. The names there are:
 
 - [shield bash](abilities.md#ability-shield-bash): "Bash with your shield"

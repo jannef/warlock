@@ -820,8 +820,8 @@ P11 (#1356; `docs/design/recipes.md` §6 "Rings and amulets"), generic recipes:
   "You have no gem to hand." with no time.
 - No aspect, so never graded; a failure of metal on an item with no aspect says "The work goes
   wrong, and you save what you can of it." (the brittle blade's line is for arms and armour).
-- The wiki's table: generated `recipes-jewelcraft.md` (`recipes::recipes_jewelcraft`), under
-  `crafting.md`'s "The recipes"; the prose in `crafting.md#making-jewellery`. The first generic
+- The wiki's table: generated `recipes-jewelcraft.md` (`recipes::recipes_jewelcraft`), on
+  `jewellery.md` (Crafting's sub-page, #1600) with the prose. The first generic
   recipe with steps, `--screen craft-pick`'s, is the amber amulet.
 
 ## Salvage

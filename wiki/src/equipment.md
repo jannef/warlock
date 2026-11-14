@@ -10,7 +10,7 @@ You can wear and wield what you carry:
   [shield](objects.md#class-shields) or a light weapon in your [off
   hand](fighting-styles.md#two-weapons);
 - [gloves](objects.md#class-gloves), a [ring](objects.md#class-rings) on each hand, and
-  [boots](objects.md#class-boots) (an [aristocrat](classes.md#aristocrat) wears three more
+  [boots](objects.md#class-boots) (an [aristocrat](class-aristocrat.md) wears three more
   rings besides);
 - a [missile weapon](objects.md#class-missile-weapons) with its
   [missiles](objects.md#class-missiles) ready;
@@ -27,7 +27,7 @@ weight.
 ## The equipment screen
 
 Press `i`. The screen lists every slot with its letter and what is in it, or `—` when it is
-empty. An [aristocrat](classes.md#aristocrat) alone has three more ring slots, Extra ring 1 to 3,
+empty. An [aristocrat](class-aristocrat.md) alone has three more ring slots, Extra ring 1 to 3,
 right after the right ring, so their later slots have later letters (their Tool slot is `p`). A
 ring worn there works just as one on either hand. Below the slots it shows what you carry and what it weighs, as the
 [inventory](objects.md#your-pack) does:
@@ -154,7 +154,7 @@ stays on.
 ## Creatures
 
 [Creatures](creatures.md) wear and wield some of what they carry, and you can see it. [Look
-mode](controls.md#look-mode) tells you: "A kobold (hostile, unhurt), wielding a spear, on stone
+mode](controls-prompts.md#look-mode) tells you: "A kobold (hostile, unhurt), wielding a spear, on stone
 floor.", "A kobold shaman (hostile, unhurt), wearing a bone amulet, ...", "A kobold archer
 (hostile, unhurt), with a short bow and 20 arrows ready, ...". You cannot see anything else they
 carry. They fight with their gear as you do, and keep what they start with until they die. Then

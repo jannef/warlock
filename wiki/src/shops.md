@@ -37,7 +37,7 @@ Welcome to Ælfric's General Store!
 ```
 
 Everything lying on a shop's floor is for sale while its keeper trades with you. [Look
-mode](controls.md#look-mode), and the message when you step onto something, give the price: "a
+mode](controls-prompts.md#look-mode), and the message when you step onto something, give the price: "a
 dagger (for sale, 45 gold)".
 
 [Picking something up](objects.md#picking-up) does not buy it. It adds the price to what you
@@ -99,7 +99,7 @@ it buys. Several things move prices:
   less and get offered more.
 - Shopkeepers are good folk, so your [alignment](alignment.md) moves their prices too. A saint
   pays a little less, an evil character more.
-- A [merchant](classes.md#merchant)'s [Haggler](classes.md#talent-haggler) is the one [class
+- A [merchant](class-merchant.md)'s [Haggler](class-merchant.md#talent-haggler) is the one [class
   ability](classes.md#levels) that changes prices.
 
 None of this is ever shown as a number. You see only the prices. Shops sell and buy by [item

@@ -83,7 +83,7 @@ chasing you. The one in the march is **Ysella the Binder's**, in
   and stands in the corner by her counter. The quest is done: **1200 gold**, **4000
   [experience](experience.md)**, and an uncut sapphire.
 - While it stands bound in the town, every [Cut and Set](gem-cutting.md) and every ring or
-  amulet you [make with Jewelcraft](crafting.md#making-jewellery) in Gimmwīc gets **+2** to its
+  amulet you [make with Jewelcraft](jewellery.md) in Gimmwīc gets **+2** to its
   check.
 
 If you kill it before it is bound, nothing fails: a new one grows in its hollow, and it is there
@@ -130,7 +130,7 @@ The pool is one of:
   own hidden place on your map, but only the one drawn is marked. A choice may be kept back for
   when none of the others may be drawn.
 
-A [Beast-friend](talents.md#talent-beast-friend) (every [druid](classes.md#druid) is one) is never
+A [Beast-friend](talents.md#talent-beast-friend) (every [druid](class-druid.md) is one) is never
 sent to kill animals, the creatures of the [factions](creatures.md#factions) the talent calms: such a kind,
 a sort of creature with an animal among its kinds, and a choice asking for either are left out of
 the pool. Whether you are a Beast-friend counts as the quest is given, not after.

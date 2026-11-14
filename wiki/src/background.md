@@ -41,7 +41,7 @@ Each sentence fits the character it is told of. A line may ask for any of these:
 - what the story has already said (a foundling's leaving is not a quarrel with their parents).
 
 A whole chapter may be for some characters only. The companion is told to a
-[ranger](classes.md#ranger) and a [witch](classes.md#witch), who each begin with a beast. Everyone
+[ranger](class-ranger.md) and a [witch](class-witch.md), who each begin with a beast. Everyone
 else skips it, and their story is no shorter for it.
 
 ## What a story gives

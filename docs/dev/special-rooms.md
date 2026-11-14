@@ -514,7 +514,7 @@ empty, so other levels hash as before. The rules ask one question, `LevelState::
 `World::effects_at`), which returns a `Here { room, level }`; every reader folds it the same way
 (`Here::light`, `shade`, `glow`, `noise`, `regen`, `mana_regen`, `shunned`): percents multiply,
 glows add, flags OR. Readers: perception light and creature sight together (`room_shade` on every
-part of a cell's light, `room_glow` in the base light; change `perception.rs` and `sight.rs`
+part of a cell's light, `room_glow` in the base light; change `perception/lighting.rs` and `sight.rs`
 together, `special_rooms_keep_the_light_invariants` and `light_tests::check_invariants` check they
 agree), noise (`noise::noise`, `World::sound_at`), `World::healing_rate` and `World::mana_rate`
 (the room's pace through `World::room_pace`, where Old hand adds half again to a quickening),

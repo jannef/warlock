@@ -60,7 +60,7 @@ which the afternoon sun thins again. In [Deepwinter](time.md#the-calendar) and
 
 ## Walking on ice
 
-Ice looks like what it holds. [Look mode](controls.md#look-mode) names it:
+Ice looks like what it holds. [Look mode](controls-prompts.md#look-mode) names it:
 
 - **Thin ice**: dark water shows through, with pale hairline cracks. A [rat](creatures.md#creature-rat) can cross it, you
   cannot.
@@ -108,7 +108,7 @@ There is no going back once the ice cracks, but you lose nothing for good: only 
 ## Heat and frost
 
 Bursts of heat and frost change the ice at once (see [Traps](traps.md) and [spell
-types](spellcasting.md#spell-types)). A [fireball](traps.md#trap-fireball) melts the ice it
+types](spell-types.md)). A [fireball](traps.md#trap-fireball) melts the ice it
 reaches, and whoever stood on it falls in, unless they are
 [water-borne](status-effects.md#status-water-borne). A [frost trap](traps.md#trap-frost) freezes the
 [water](terrain.md#water) it reaches at once, into ice 10 cm thick that holds a laden person. A

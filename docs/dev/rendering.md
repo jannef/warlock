@@ -177,7 +177,7 @@ masks, kept for every level visited, so a terrain change on any level calls `ter
 (#1518; ice, transparent to transparent, writes directly), a `hollow` preset's leaving out its own cell, and the player's carried light from
 `WorldState::carried_light`, `world/lamp.rs`: a lantern ready in the Tool slot, by its object's
 `light` and the stack's mode, hooded its `hooded` preset; `bounce.rs`: one weak
-bounce; `sun.rs`: sunlight; `moon.rs`: moonlight and `Sky`) and is combined in `perception.rs`;
+bounce; `sun.rs`: sunlight; `moon.rs`: moonlight and `Sky`) and is combined in `perception/lighting.rs`;
 Σ contributions + base light == `light(p)` is a tested invariant. **Creature shadows**
 (`render/shadows.rs`, visual only): each visible creature shades every perceived source that
 lights its cell, except one on its own cell (its carried light). The source is shadowcast

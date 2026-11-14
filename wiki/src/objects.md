@@ -36,7 +36,7 @@ what kind of thing it is:
 | `"` | [amulet](#class-amulets) |
 
 Some glyphs are shared with terrain. Wildflowers are `*` too, and glowing fungus and tall grass
-are `"`. Color and [look mode](controls.md#look-mode) tell them apart.
+are `"`. Color and [look mode](controls-prompts.md#look-mode) tell them apart.
 
 ### Item classes
 
@@ -72,7 +72,7 @@ time you come to it: `There is an altar here.` A feature you cannot stand on, su
 statue](terrain.md#terrain-statue), is named when you come beside it, and not again while you
 walk around it. Whatever is written on it is read out after.
 
-[Look mode](controls.md#look-mode) (`l`) names what lies on any cell you see or remember: up to
+[Look mode](controls-prompts.md#look-mode) (`l`) names what lies on any cell you see or remember: up to
 three stacks by name ("a dagger and 12 arrows"), or a count for more ("17 objects").
 
 You see objects where you would see a [creature](creatures.md): on cells in your [line of

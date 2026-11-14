@@ -20,7 +20,7 @@ for the living who come near and leave everything else alone.
 
 **Household things.** An animated household thing *is* a real household object. An animated
 candlestick is a candlestick, of brass, iron, pewter, or (rarely) silver. Its colour on the map is
-its material's, and [look mode](controls.md#look-mode) names it: "an animated candlestick of
+its material's, and [look mode](controls-prompts.md#look-mode) names it: "an animated candlestick of
 silver (hostile, unhurt), rocking". A [clatter of cutlery](creatures.md#creature-animated-cutlery)
 is three to six pieces of cutlery at once.
 
@@ -106,7 +106,7 @@ A few have a trick of their own:
 - The [animated lantern](creatures.md#creature-animated-lantern)'s oil bursts as it dies, burning
   everyone beside it ([death throes](creature-powers.md#bursts)). Step back from a dying one.
 
-Blades, like most creatures, come in [grades](creatures.md#grades). One in six is **notched**,
+Blades, like most creatures, come in [grades](creature-grades.md). One in six is **notched**,
 weaker than its kind, and one in six is **keen**, stronger. Look mode says which. No other
 animated thing is graded.
 

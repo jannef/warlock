@@ -35,7 +35,7 @@ stream**). It reuses `blood::Stain` for storage. `world/sear.rs` applies it: `se
 `bleed.rs::spill`, before the blood check); all write `LevelState::scorch` via
 `LevelState::char` (terrain `stains`; never on the overworld). A damage type chars when it has a
 `char = { light, heavy }` (fire). Perception: `PerceptionView::scorch` by blood's exact rules (one
-`stained` closure in `perception.rs` computes both lists), `scorch_memory` in `remember`; the
+`stained` in `perception/mod.rs` computes both lists), `scorch_memory` in `remember`; the
 `scorch` dump layer. App: `ui/scorch.rs::charred` shifts fg toward the char and the ground toward
 a darker shade of it (`GROUND`: never lighter than the floor) before `blood::stained`, so blood
 lies over char; look mode puts `scorch::word` before the blood's word. No rule reads it;

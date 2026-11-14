@@ -17,7 +17,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 | `content/class.rs` | `ClassDef::abilities` (`[(level, talent id)]`), `bonus_talents` (`levels`, `trees`; none: any), `abilities_to`, `bonus_at`, `bonus_trees`, `check_table` (after the talents load, from `Content::check_class_tables`: the talents and trees named resolve). Rows are read by level, lowest first (`table_rows` sorts them; `abilities_to` takes them while their level is reached). A book without a class tree (fixtures) gives nothing and checks nothing. |
 | `world/skill_roll.rs` | The skill rolls (#230, `docs/dev/skills.md`): `roll_count`/`skill_roll` (the count's parts and a roll's dice, shared with the level-up screen, #543), `level_rolls`, `advance_skill` (`advance:SKILL`), `advance_auto` (`levelup:auto`'s rolls), `roll_skill` (the one roll both use), `mark_skill` (every mark added; the automatic roll at `[rolls] auto_at`, #1328, outside any `Due`). `World::due()` and `candidate()`. |
 | `world/experience.rs` | `grant_xp` scales every gain by `TalentMods::xp_percent` and calls `level_up`; the dev `xp:N` (`grant_xp_dev`). |
-| `perception.rs` | `due()`, `dues()` (every level's, for the level-up screen's sequence), `roll_count()`, `skill_roll(skill)` (the skill-roll step's numbers, #543), `bonus_trees()`, `own_talents()` (`OwnTalent`), `talents()` (`TalentView`: `held`, the needs with `met`, `openings`): what the level-up screen (`ui/level_up_screen.rs`), the Talents page (`ui/talents_screen.rs`), and the creation step (`ui/chargen_talents_screen.rs`) read (`docs/dev/screens.md`). |
+| `perception/view.rs`, `perception/truth.rs` | `due()`, `dues()` (every level's, for the level-up screen's sequence), `roll_count()`, `skill_roll(skill)` (the skill-roll step's numbers, #543), `bonus_trees()`, `own_talents()` (`OwnTalent`), `talents()` (`TalentView`: `held`, the needs with `met`, `openings`): what the level-up screen (`ui/level_up_screen.rs`), the Talents page (`ui/talents_screen.rs`), and the creation step (`ui/chargen_talents_screen.rs`) read (`docs/dev/screens.md`). |
 | `dump.rs` | layers `talents` (held, `Skill focus (stealth)`) and `progress` (dev: dues, `due level 3: 3 skill rolls, 1 talent`, `rolls a level 3 (class 2, race 1, intelligence 0, talents 0)`, `roll dice athletics 1d3, balance +2`, takeable ids with choices, discovered kills, `empathy broken rat`); JSON `talents`, `due` (`level`, `talents`, `rolls`) |
 | `action.rs` | `Talent { id, choice }` (`talent:hardy`, `talent:weapon_focus:long_blades`; ids keep their case), `Advance(skill)`, dev `LevelUpAuto` (`levelup:auto`), `GrantXp` (`xp:N`); all `Spent::NoTime` or refused. |
 | `rng.rs` | `Rng::levels(seed)`, the `levels` stream, kept in `WorldState::levels_rng: Option<Rng>` **from the first draw** (the stat checks of each level, `world/stat_training.rs`; skill rolls, `world/skill_roll.rs`), so runs that never drew hash as before. |
@@ -108,11 +108,11 @@ wiki's effect text appends "while raging".
 | `ally_mod` (`count`, `duration_percent`, `lasting`, `most`) | `World::cast_summon` (`world/summon_spell.rs`): more come, a longer `Ally::until`, none, each spell's `most` raised (docs/dev/allies.md "Summons") |
 | `summon_bias` (`tag`, `weight`) | `World::summon_draw` (`world/summon.rs`), from `cast_summon`: the pool's weights (no item or talent yet; the owner's Q9 of #828) |
 | `familiar` | `World::bring_familiar` (`world/familiar.rs`, from `World::begin`): a familiar as the run begins; `has_active` for Call familiar, `World::start_calling` (`docs/dev/familiar.md`) |
-| `shared_sight` | `Perception::compute` (`perception.rs`): the companion's second viewpoint, its eyes and nose (Hunter's bond, `docs/dev/companion.md`) |
-| `familiar_sight` | `Perception::compute` (`perception.rs`): the same viewpoint on the familiar, its nose at least `familiars.toml`'s `nose`; no buffs (Familiar's sight, `docs/dev/familiar.md`) |
+| `shared_sight` | `Perception::compute` (`perception/seeing.rs`): the companion's second viewpoint, its eyes and nose (Hunter's bond, `docs/dev/companion.md`) |
+| `familiar_sight` | `Perception::compute` (`perception/seeing.rs`): the same viewpoint on the familiar, its nose at least `familiars.toml`'s `nose`; no buffs (Familiar's sight, `docs/dev/familiar.md`) |
 | `shared_buffs` | `World::afflict` → `World::share_buff` (`world/bond.rs`): a buff lands on the player and their companion both (Hunter's bond) |
 | `fletcher` | `world/fletch.rs`: a `count = "fletch"` recipe's time, its check, and its count after the margin (Fletcher, the ranger's at level 1, #1021; "never brittle" gone with #1336) |
-| `sees_unaware` | `Perception::compute` (`perception.rs`): `SeenActor::unaware` from `surprise::creature_unaware` for each creature in view, false for all without it; read by look mode ("unaware of you") and `ui/glyphs.rs` (the unaware mark) (Stalker's eye, the ranger's at level 2) |
+| `sees_unaware` | `Perception::compute` (`perception/actors.rs`): `SeenActor::unaware` from `surprise::creature_unaware` for each creature in view, false for all without it; read by look mode ("unaware of you") and `ui/glyphs.rs` (the unaware mark) (Stalker's eye, the ranger's at level 2) |
 | `startled_blow` | `World::startle` → `World::hair_trigger` (`world/free_blow.rs`): a check made against a hostile attacker beside the holder is answered by `Cue::Startled`'s free blow before the attack is rolled; `resolve` (and `cast.rs::spell_attack`) stop when it fells the attacker (Hair trigger) |
 | `carry_percent` | `burden::load` (the limit before the affixes' kilograms, kept a multiple of 3) |
 | `travel_percent` | `World::step_price` on the overworld, after the survival skill |
@@ -249,7 +249,7 @@ Birth sign gifts, the Roc to the Barghest (#267), and their hooks:
 
 | Effect | Read by |
 |---|---|
-| `day_sight` | `perception.rs`, the overworld range by day (`night_sight` at night) |
+| `day_sight` | `perception/seeing.rs`, the overworld range by day (`night_sight` at night) |
 | `exact_footsteps` | `noise::perceive` (footsteps at their own cell, never `rough_place`) |
 | `stance_costs` | `World::set_stance`: a wait's price instead of no time |
 | `max_hp_percent` | `Actor::max_hp`, `lasting_max_hp` (`Actor::frail`, at least 1) |

@@ -1,6 +1,6 @@
 # Prayer
 
-The [priest](classes.md#priest) has one prayer, **[Orison](abilities.md#ability-orison)**, in the
+The [priest](class-priest.md) has one prayer, **[Orison](abilities.md#ability-orison)**, in the
 [abilities menu](abilities.md#the-abilities-menu). It comes at level 1 and deepens with the
 priest's [levels](experience.md#levels). It costs no [mana](mana.md#spending-it) and takes the
 [time of a spell](turns.md#what-actions-cost). It answers what ails you most, as far as your
@@ -33,9 +33,9 @@ answer you.
 
 {{#include generated/prayer-levels.md}}
 
-At level 60, the [Miracle](classes.md#talent-miracle) answers everything that ails you in one
+At level 60, the [Miracle](class-priest.md#talent-miracle) answers everything that ails you in one
 prayer. It also fills every [resource](resources.md) pool you hold
-([rage](resources.md#rage), [ki](resources.md#resource-ki), [focus](resources.md#resource-focus),
+([rage](rage.md), [ki](resources.md#resource-ki), [focus](resources.md#resource-focus),
 and the rest) to its most.
 
 ## Strain
@@ -85,7 +85,7 @@ struck from it would.
 Besides the prayer, the priest's table has three rites of holy and unholy ground.
 
 - [Consecrate](abilities.md#ability-consecrate) answers only a priest of Neutral or better.
-- Its dark twin, [Communion with the dark](classes.md#talent-communion), works only for a priest the
+- Its dark twin, [Communion with the dark](class-priest.md#talent-communion), works only for a priest the
   dark powers answer. In an unholy place their prayers add no strain at all, and the place's drain
   never touches them. The chance of a fizzle and its lock still go by the strain already there.
 - [Sanctuary](abilities.md#ability-sanctuary) works for either. The dark powers' ground reads
@@ -94,5 +94,5 @@ Besides the prayer, the priest's table has three rites of holy and unholy ground
 
 {{#include generated/prayer-rites.md}}
 
-See also: [the priest](classes.md#priest), [Healing](healing.md), and
+See also: [the priest](class-priest.md), [Healing](healing.md), and
 [Abilities](abilities.md).
