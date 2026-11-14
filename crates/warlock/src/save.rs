@@ -286,18 +286,14 @@ impl Plugin for SavePlugin {
 }
 
 /// The web build also saves when the page is hidden or closed. A hidden tab runs no frames, so a
-/// system cannot do it: a copy of the state (encoding is dearer, on big levels) and the
-/// character's summary are parked in `storage::web` when a run starts, every [`PARK_TURNS`]
-/// turns, and whenever the level changes, and the `visibilitychange`/`pagehide` listeners encode
-/// and write them as the character's files.
+/// system cannot do it: after each turn a copy of the state (cheap: 2 to 25 µs natively in
+/// release, the vast level the dearest, #1565; encoding is not, 0.2 to 10 ms) and the
+/// character's summary are parked in `storage::web`, and the `visibilitychange`/`pagehide`
+/// listeners encode and write them as the character's files, so hiding the page loses no turn.
 #[cfg(target_arch = "wasm32")]
 mod web_hooks {
     use super::*;
     use crate::storage::web;
-
-    /// Turns between two parked copies: the state is cloned whole, all its levels, so not on
-    /// every step of a held key (#1565). Hiding the page loses at most this many turns less one.
-    const PARK_TURNS: u64 = 10;
 
     pub fn build(app: &mut App) {
         if app.world().resource::<SaveStore>().writable().is_some() {
@@ -316,7 +312,7 @@ mod web_hooks {
         };
         let key = (
             game.save_id.clone(),
-            game.world.turn() / PARK_TURNS,
+            game.world.turn(),
             game.world.perception().level_name().to_string(),
         );
         if last.as_ref() != Some(&key) {
