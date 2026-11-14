@@ -39,8 +39,8 @@ pub(super) fn seen(
     // invisible.
     let dim = |p: Pos| !v.overworld && light.get(p).is_some_and(|l| v.eye.dim(*l));
     let concealed = world::unseen_by_player(state, content, &dim, &seeing.scented);
-    let draught =
-        (concealed.iter()).any(|c| c.shadowy && c.pos.chebyshev(viewer) <= world::DRAUGHT);
+    let near = content.tuning().unseen.draught;
+    let draught = (concealed.iter()).any(|c| c.shadowy && c.pos.chebyshev(viewer) <= near);
     let unseen = |a: &Actor| concealed.iter().any(|c| c.id == a.id);
     let disguises = disguises(v, sight);
     let hidden = |a: &Actor| disguises.iter().any(|d| d.pos == a.pos);

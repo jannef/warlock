@@ -44,8 +44,6 @@ use std::collections::{BTreeMap, BTreeSet};
 
 /// What the player is told when they plunge through the ice.
 const PLUNGE: &str = "The ice cracks beneath you and you plunge into the freezing water!";
-/// What a plunge's Swim check is against ([`World::keeps_afloat`]).
-const PLUNGE_DIFFICULTY: i32 = 11;
 
 /// What stepping onto a cell did to the ice there ([`World::tread`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -438,7 +436,8 @@ impl World {
     }
 
     /// The Swim check of a player who plunged in, trained in it (no draw otherwise): Toughness and
-    /// [`Effect::Swim`] against [`PLUNGE_DIFFICULTY`]. Whether it was made; a mark either way.
+    /// [`Effect::Swim`] against the `[plunge]` difficulty of
+    /// `data/rules/tuning.toml`. Whether it was made; a mark either way.
     fn keeps_afloat(&mut self) -> bool {
         let content = self.content.clone();
         let me = self.state.player();
@@ -447,7 +446,8 @@ impl World {
         }
         let modifier =
             me.check_modifier(&content, Stat::Toughness) + me.skill_effect(&content, Effect::Swim);
-        let made = crate::check::check(&mut self.state.rng, modifier, PLUNGE_DIFFICULTY);
+        let against = content.tuning().plunge.difficulty;
+        let made = crate::check::check(&mut self.state.rng, modifier, against);
         if self.trains(Use::Swim) {
             self.train(Use::Swim);
         }

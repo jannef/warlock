@@ -38,6 +38,7 @@ struct HungerFile {
     #[serde(default)]
     sickness: Option<String>,
     rotten: Rotten,
+    freshness: Freshness,
     corpses: Option<CorpseSpec>,
 }
 
@@ -117,6 +118,15 @@ pub struct SkillNews {
 pub struct Rotten {
     pub vomit: u8,
     pub harm: Dice,
+}
+
+/// Telling food's freshness by looking (`world/freshness.rs`): what rotted food adds to the
+/// chance, and the most the chance is, in percent.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Freshness {
+    pub rotten_ease: i32,
+    pub most: i32,
 }
 
 /// What something edible gives: its nutrition, and how many turns of eating it takes (each the
@@ -246,6 +256,8 @@ pub struct HungerDef {
     pub sickness: Option<String>,
     /// What eating rotten food does.
     pub rotten: Rotten,
+    /// Telling freshness by looking.
+    pub freshness: Freshness,
     /// `None`: creatures leave no corpses.
     pub corpses: Option<Corpses>,
 }
@@ -342,6 +354,9 @@ impl HungerDef {
             exertion.insert(kind, points);
         }
         let o = parsed.overeating;
+        if !(0..=100).contains(&parsed.freshness.most) {
+            return Err(err("[freshness]: `most` must be 0 to 100".into()));
+        }
         let corpses = (parsed.corpses)
             .map(|c| Corpses::resolve(c, sizes, &size_index))
             .transpose()
@@ -360,6 +375,7 @@ impl HungerDef {
             overeating: o,
             sickness: parsed.sickness,
             rotten: parsed.rotten,
+            freshness: parsed.freshness,
             corpses,
         })
     }

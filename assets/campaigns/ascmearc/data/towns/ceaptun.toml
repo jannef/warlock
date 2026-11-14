@@ -41,7 +41,7 @@ speech = { default = "patron", dwarf = "patron_dwarf", duergar = "patron_dwarf",
 # A merchant's business partner (#1407; world/invest.rs), for Invest (data/dialogue/partners.toml):
 # keeps the corner desk in Factor Wulfrun's office, invests the gold put with them, and says what
 # the stake is worth when spoken to. `bonus`: basis points more on every week's return for each
-# quest named completed (data/invest.toml has the rest): Wulfrun's Fire in the deep, the fire
+# quest named completed (data/rules/invest.toml has the rest): Wulfrun's Fire in the deep, the fire
 # drake slain and the mines reopened.
 [[town.servant]]
 talent = "invest"

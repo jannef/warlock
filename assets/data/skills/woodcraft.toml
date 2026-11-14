@@ -4,7 +4,7 @@ name = "Woodcraft"
 description = "Working wood: carving, carpentry, and the making of bows, arrows, and bolts."
 kind = "action"
 mark = [{ on = "craft", chance = 100 }, { on = "whittle", chance = 100 }, { on = "wedge", chance = 100 }, { on = "salvage", chance = 100 }]
-# Whittling (the Whittle recipe, for those trained, with a knife; temper.toml's rules, for wood):
+# Whittling (the Whittle recipe, for those trained, with a knife; rules/temper.toml's rules, for wood):
 # the same, added to the Dexterity check of an attempt.
 # Wedging (spec §8 "Doors"; the Wedge ability, for those trained): the same curve, added to the
 # sturdiness of a door wedged shut.

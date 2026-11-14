@@ -15,11 +15,16 @@ use crate::time::{self, GameTime};
 /// ([`World::reshaped`]) and where they stand.
 pub(super) type Sightline = ((u64, Pos), LineOfSight);
 
-/// How near, in steps (Chebyshev), a hostile creature in view must come to stop a long action
-/// ([`World::keep_at`], spec §8 "Rest"); one farther off may be seen and the action goes on.
-pub(super) const CLOSE: i32 = 5;
+impl World {
+    /// How near, in steps (Chebyshev), a hostile creature in view must come to stop a long
+    /// action ([`World::keep_at`], spec §8 "Rest"; `[long_action]` in `data/rules/tuning.toml`);
+    /// one farther off may be seen and the action goes on.
+    pub(super) fn stop_within(&self) -> i32 {
+        self.content.tuning().long_action.stop_within
+    }
+}
 
-/// A creature that stopped a long action by coming within [`CLOSE`] in view.
+/// A creature that stopped a long action by coming within [`World::stop_within`] in view.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct Came {
     pub id: ActorId,
@@ -98,15 +103,15 @@ impl World {
     /// Passes turn after turn of a long action (a rest, digging) through the normal pipeline
     /// while `more` says there is more to do: the player does `act` (which returns what it
     /// costs), the others act, perception. It stops after a turn in which a creature hostile to
-    /// the player ([`World::disturbs_rest`]) came within [`CLOSE`] in view (one not so the turn
-    /// before; one farther off may be seen and the action goes on), in which something attacked
-    /// the player or a shot or a spell came within [`CLOSE`] of them ([`World::stirs`]), or in
-    /// which a message was logged that stops a rest (an attack on the player, a hurt, hunger
-    /// worsening), and when the player dies. Turns that end before any such creature could come
-    /// within [`CLOSE`] ([`World::out_of_view_for`]), in which the player heard nothing, in
-    /// which nothing happened that perception would stop the action for ([`World::may_stop`]: a
-    /// hostile in view farther off may shoot or cast meanwhile), in which the weather the player
-    /// sees did not change, in
+    /// the player ([`World::disturbs_rest`]) came within [`World::stop_within`] in view (one not so
+    /// the turn before; one farther off may be seen and the action goes on), in which something
+    /// attacked the player or a shot or a spell came within [`World::stop_within`] of them
+    /// ([`World::stirs`]), or in which a message was logged that stops a rest (an attack on the
+    /// player, a hurt, hunger worsening), and when the player dies. Turns that end before any such
+    /// creature could come within [`World::stop_within`] ([`World::out_of_view_for`]), in which the
+    /// player heard nothing, in which nothing happened that perception would stop the action for
+    /// ([`World::may_stop`]: a hostile in view farther off may shoot or cast meanwhile), in which
+    /// the weather the player sees did not change, in
     /// which none of the player's diseases showed or went badly (news that stops a rest), and
     /// in which no trap went off (a teleport moves a creature farther than its steps) pass
     /// without perception, which cannot change the outcome; only the last turn's events are
@@ -204,14 +209,14 @@ impl World {
 
     /// Whether a turn of a long action with `event` in it (as it happened, before perception
     /// cuts it to what was seen) must be perceived, as perception may stop the action for it:
-    /// what [`World::stirs`] it, an attack or a death within [`CLOSE`] of the player
+    /// what [`World::stirs`] it, an attack or a death within [`World::stop_within`] of the player
     /// (`perceive_events` says others' farther off without stopping it), a wall blasted, a fall
     /// through ice, a drain, a trap's blow. Creatures moving, doors, and the rest (the player's
     /// own status effects, resources, and diseases are kept for the next perception) pass
     /// unseen.
     fn may_stop(&self, event: &Event) -> bool {
         let here = self.player_pos();
-        let close = |p: Pos| p.chebyshev(here) <= CLOSE;
+        let close = |p: Pos| p.chebyshev(here) <= self.stop_within();
         match event {
             Event::Attacked { from, to, .. } => self.stirs(event) || close(*from) || close(*to),
             Event::Died { at, .. } => close(*at),
@@ -226,11 +231,11 @@ impl World {
 
     /// Whether a perceived `event` stops a long action whatever was said of it: an attack on the
     /// player (a blow, a shot, a throw, a spell, missed or resisted too), or a shot or a spell
-    /// within [`CLOSE`] of them.
+    /// within [`World::stop_within`] of them.
     fn stirs(&self, event: &Event) -> bool {
         let player = self.state.player;
         let here = self.player_pos();
-        let close = |p: &Pos| p.chebyshev(here) <= CLOSE;
+        let close = |p: &Pos| p.chebyshev(here) <= self.stop_within();
         match event {
             Event::Attacked { target, .. } | Event::TrapStruck { target, .. } => *target == player,
             Event::Missile { path, .. } => path.iter().any(close),
@@ -240,9 +245,9 @@ impl World {
     }
 
     /// The creatures that disturb a rest ([`World::disturbs_rest`]) the player sees within
-    /// [`CLOSE`] now, in actor order: [`World::watched_in_view`] as a fresh perception would find
-    /// it, worked out by the rules of sight ([`sight::sees`], the perception's own) for their
-    /// cells alone. `None`
+    /// [`World::stop_within`] now, in actor order: [`World::watched_in_view`] as a fresh perception
+    /// would find it, worked out by the rules of sight ([`sight::sees`], the perception's own) for
+    /// their cells alone. `None`
     /// where the perception sees by more than line of sight and light: on the overworld, with
     /// Blood scent, with light-blind eyes; and where smoke lies (a line of sight kept across
     /// turns would not know it).
@@ -263,7 +268,7 @@ impl World {
         }
         let viewer = player.pos;
         let near: Vec<(ActorId, Pos)> = (state.actors.on_level(&level.id))
-            .filter(|a| a.pos.chebyshev(viewer) <= CLOSE)
+            .filter(|a| a.pos.chebyshev(viewer) <= self.stop_within())
             .filter(|a| self.disturbs_rest(a))
             .map(|a| (a.id, a.pos))
             .collect();

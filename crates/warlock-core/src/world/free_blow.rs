@@ -82,9 +82,6 @@ impl FreeBlows {
     }
 }
 
-/// The flurry's second blow's to-hit.
-pub(super) const FLURRY_TO_HIT: i32 = -2;
-
 fn is_false(b: &bool) -> bool {
     !*b
 }
@@ -472,7 +469,7 @@ impl World {
         }
         let me = &self.state.actors[&striker];
         let mut profile = me.melee(&self.content);
-        profile.to_hit += FLURRY_TO_HIT;
+        profile.to_hit += self.content.tuning().flurry.to_hit;
         Some(FreeBlow {
             by: striker,
             at: target,

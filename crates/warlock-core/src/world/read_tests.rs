@@ -30,7 +30,7 @@ fn hall(map: &str, hp: u16, ambient: u16) -> World {
     let mut files = ContentFiles::builtin();
     make_peace(&mut files);
     // Reads without the check (`decipher_tests.rs` has it): these are about what a read does.
-    files.remove("data/decipher.toml");
+    files.remove("data/rules/decipher.toml");
     files.insert("data/creatures/dummy.toml", DUMMY);
     files.insert(
         "levels/hall.toml",

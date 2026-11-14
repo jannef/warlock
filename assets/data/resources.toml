@@ -131,7 +131,7 @@ lacking = "you are short of breath"
 # the fervour that mounts in a fight. A blow of the holder's that hits and a blow that hits them
 # each build a point; it comes back a point every ten base turns besides, resting too, and sits
 # at 0 when spent. Smite and Lay on hands spend it (talents/), and a deed toward evil empties it
-# (smite.toml). Its maximum is 10, plus the Presence modifier, plus a point per 10 levels, at
+# (rules/smite.toml). Its maximum is 10, plus the Presence modifier, plus a point per 10 levels, at
 # least 6; it is granted at 5.
 [[resource]]
 id = "zeal"

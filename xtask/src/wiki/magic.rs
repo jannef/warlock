@@ -9,7 +9,6 @@ use warlock_core::content::{AffixDef, AffixKind, Content, ItemKind, MAX_ITEM_LEV
 use warlock_core::magic::describe;
 use warlock_core::magic::loot::TIER_WINDOW;
 use warlock_core::object::format_weight;
-use warlock_core::world::SIPHON_RANGE;
 
 /// The prefixes table.
 pub(super) fn prefixes(content: &Content) -> String {
@@ -145,12 +144,13 @@ fn affix_table(content: &Content, kind: AffixKind) -> String {
 fn effect_text(content: &Content, a: &AffixDef) -> String {
     if let Some(id) = a.resource {
         let pool = content.resource(id).name.to_lowercase();
+        let siphon = content.tuning().siphon.range;
         return match a.effect {
             ItemEffect::ResourceMax => format!("maximum {pool}"),
             ItemEffect::ResourceRate => format!("{pool} comes back faster"),
             ItemEffect::ActiveStamina => format!("weapon feats cost less {pool}"),
-            ItemEffect::ResourceOnKill => format!("{pool} on a kill within {SIPHON_RANGE} cells"),
-            other => effect_words(other),
+            ItemEffect::ResourceOnKill => format!("{pool} on a kill within {siphon} cells"),
+            other => effect_words(content, other),
         };
     }
     match (a.skill, a.damage_type) {
@@ -163,12 +163,13 @@ fn effect_text(content: &Content, a: &AffixDef) -> String {
             format!("adds a die of {} damage", content.damage_type(kind).name)
         }
         (_, Some(kind)) => format!("{} resistance", content.damage_type(kind).name),
-        (None, None) => effect_words(a.effect),
+        (None, None) => effect_words(content, a.effect),
     }
 }
 
 /// What an effect does, in words, without its value.
-fn effect_words(effect: ItemEffect) -> String {
+fn effect_words(content: &Content, effect: ItemEffect) -> String {
+    let siphon = content.tuning().siphon.range;
     match effect {
         ItemEffect::ToHit => "to hit".into(),
         ItemEffect::Damage => "damage, added to every roll".into(),
@@ -207,12 +208,12 @@ fn effect_words(effect: ItemEffect) -> String {
         ItemEffect::SpellReroll => "a spell die showing this or less is rolled again, once".into(),
         ItemEffect::SpellReach => "your spells' reach, in cells".into(),
         ItemEffect::SpellDuration => "your buffs and hexes last more degrees".into(),
-        ItemEffect::ManaOnKill => format!("mana on a kill within {SIPHON_RANGE} cells"),
+        ItemEffect::ManaOnKill => format!("mana on a kill within {siphon} cells"),
         ItemEffect::WandRungs => "the wands you use cast higher on their ladders, in rungs".into(),
         ItemEffect::ResourceMax => "a resource's maximum".into(),
         ItemEffect::ResourceRate => "a resource comes back faster".into(),
         ItemEffect::ActiveStamina => "weapon feats cost less of a resource".into(),
-        ItemEffect::ResourceOnKill => format!("a resource on a kill within {SIPHON_RANGE} cells"),
+        ItemEffect::ResourceOnKill => format!("a resource on a kill within {siphon} cells"),
         ItemEffect::Resistance => "resistance to a kind of damage, in percent".into(),
         ItemEffect::Stat(stat) => stat.name().into(),
         ItemEffect::MoveSpeed => "you move faster".into(),

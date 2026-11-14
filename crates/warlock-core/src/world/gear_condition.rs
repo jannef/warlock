@@ -13,8 +13,8 @@
 //!   creature's tribe (the first `[[tribe]]` whose tag it has, else `[default]`) with the
 //!   `[[depth]]` row of the level's item level added ([`crate::content::Odds::deeper`]); for an improved
 //!   piece then one draw per improvement for its [`Aspect`] among those its base item has, as the
-//!   anvil draws them. The improvements are capped at `temper.toml`'s `most`, and each counts as
-//!   one attempt made on it.
+//!   anvil draws them. The improvements are capped at `rules/temper.toml`'s `most`, and each counts
+//!   as one attempt made on it.
 //! - **The kind**: by its main part's material, among the kinds its material group lists
 //!   (`[kinds]`): the one the material withstands least (a tie: the first listed), never one it
 //!   always withstands (100). None left, or a group not listed: plainly "damaged". So iron and

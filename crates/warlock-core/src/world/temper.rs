@@ -1,7 +1,7 @@
 //! Working a metal item at an anvil (spec §7 "Special rooms"; `docs/design/skill-uses.md` §6.7
 //! M0): [`Action::Temper`], the Temper ability of the abilities menu's *Here* group, offered
 //! beside an anvil. One action does it all; the item's state and its pure rules are
-//! `magic/worked.rs`, the numbers `data/temper.toml`.
+//! `magic/worked.rs`, the numbers `data/rules/temper.toml`.
 //!
 //! - **Who**: one trained in Metalcraft, the skill of its recipe (`recipes/metalcraft/
 //!   temper.toml`; #1387). Refused, taking no time, untrained ("You are not trained in
@@ -34,8 +34,8 @@
 //!
 //! **Whittle** (`docs/design/skill-uses.md` W3; [`Action::Whittle`]) is the same work on wood, with
 //! a knife, anywhere: [`Craft::Whittle`] against [`Craft::Temper`], on the same rules, numbers
-//! (`data/temper.toml`), and item state, so one item has one state. The item's main part is of a
-//! wood (`group = "wood"`: bows, staves, clubs); the check is Dexterity's, with Woodcraft
+//! (`data/rules/temper.toml`), and item state, so one item has one state. The item's main part is
+//! of a wood (`group = "wood"`: bows, staves, clubs); the check is Dexterity's, with Woodcraft
 //! ([`Effect::Whittle`]), which it needs trained (`recipes/woodcraft/whittle.toml`); the mark
 //! is [`Use::Whittle`]; a knife must be carried at the start and at the end. Its list shows what [`workable_wood`] accepts.
 //!

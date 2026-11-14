@@ -182,7 +182,8 @@ pub(crate) struct Perception {
     /// Those on the level the player does not see for being unseen (`world/unseen.rs`), in
     /// actor id order.
     concealed: Vec<crate::world::Concealed>,
-    /// An unseen shadowy creature is within [`crate::world::DRAUGHT`] of the player: they feel
+    /// An unseen shadowy creature is within the `[unseen]` draught of `data/rules/tuning.toml`
+    /// of the player: they feel
     /// its cold.
     draught: bool,
     /// The zones on the cells the player sees (`world/zone.rs`), by position.

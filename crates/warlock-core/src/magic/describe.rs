@@ -866,7 +866,7 @@ pub fn make_lines(
             }
             done if done >= most => "It can be made no finer.".to_string(),
             done => {
-                // `most` is at most the grades' three (`data/temper.toml`).
+                // `most` is at most the grades' three (`data/rules/temper.toml`).
                 let (count, what) = match most - done {
                     1 => ("one", "improvement"),
                     2 => ("two", "improvements"),

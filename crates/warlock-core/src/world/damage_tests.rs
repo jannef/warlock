@@ -64,7 +64,7 @@ attack = { damage = "1d2", damage_type = "cold", name = "touch", verb = "chills"
 fn files() -> ContentFiles {
     let mut files = ContentFiles::builtin();
     // Reads without the check (`decipher_tests.rs` has it): these are about what a read does.
-    files.remove("data/decipher.toml");
+    files.remove("data/rules/decipher.toml");
     files.insert("data/creatures/salamander.toml", CREATURES);
     files.insert(
         "levels/dmgtest.toml",

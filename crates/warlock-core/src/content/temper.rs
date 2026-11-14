@@ -1,4 +1,4 @@
-//! The numbers of working an item at an anvil (`assets/data/temper.toml`, spec §7 "Special
+//! The numbers of working an item at an anvil (`assets/data/rules/temper.toml`, spec §7 "Special
 //! rooms"; the rules are `world/temper.rs`, the item's state `magic/worked.rs`).
 
 use super::ContentError;
@@ -54,7 +54,7 @@ impl TemperRules {
 }
 
 impl super::RulesFile for TemperRules {
-    const PATH: &'static str = "data/temper.toml";
+    const PATH: &'static str = "data/rules/temper.toml";
 
     fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
         Self::parse(path, text)

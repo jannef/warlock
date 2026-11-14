@@ -194,7 +194,7 @@ wiki's effect text appends "while raging".
 | `inner_light` | `LightCache::sources` (a carried source, `INNER` tag, always: the player and the creatures see by it alike) |
 | `patient_defence` (Patient defence, the ascetic's at 18, #849) | `World::patient_defence` (`world/ascetic.rs`), from `use_class`: a degree of its status (Poised) for a wait's price, the ki its talent's `resource`; `World::poised` switches the riposte on in `World::free_blows_of` and lets `World::riposte` answer a dodged blow (`Cue::Attacked { dodged }`, raised by `World::attack`); the Dodge is the status's `combat` |
 | the actives (`rage`, `veterans_wind`, `lay_on_hands`, `avatar`, `smite`, `quivering_palm`) | `world/class_ability.rs` (Rage: `world/rage.rs`; `rage { resource }`, `MartialMods::rage_status`); `Ability::Class` in `ability.rs` (`class_cooldown`: Rage's status and what it `follows`; `class_cost`: a talent's `resource`, Avatar's `hands_cost_percent` of Lay on hands') |
-| `smite { per_levels, sides, aim, unholy }` (the paladin's at 1, #910) | `world/smite.rs`: `World::smite(SmiteMode, dir)` (the one smite code: `SmiteMode::Plain`, `Branding`, `Wrathful`, `Banishing`; the rider by `World::smite_rider`) and `World::smite_profile` (the melee profile, `Smite::dice_at(level, unholy)` as its extra dice, `Content::unholy` reading `data/smite.toml`'s tags, the `aim` stat's modifier to hit); paid in zeal (its talent's `resource`), no cooldown |
+| `smite { per_levels, sides, aim, unholy }` (the paladin's at 1, #910) | `world/smite.rs`: `World::smite(SmiteMode, dir)` (the one smite code: `SmiteMode::Plain`, `Branding`, `Wrathful`, `Banishing`; the rider by `World::smite_rider`) and `World::smite_profile` (the melee profile, `Smite::dice_at(level, unholy)` as its extra dice, `Content::unholy` reading `data/rules/smite.toml`'s tags, the `aim` stat's modifier to hit); paid in zeal (its talent's `resource`), no cooldown |
 | `smite_mode { mode, status, severity, turns, check, difficulty }` (the paladin's Branding smite at 12 and Wrathful smite at 32, #911; Banishing smite at 50, #913) | `FaithMods::smite_modes` (`SmiteRider::Brand`, `SmiteRider::Fear`, `SmiteRider::Banish`; `FaithMods::smite_mode(active)`), each its own `ClassActive` (`BrandingSmite`, `WrathfulSmite`, `BanishingSmite`: aimed, `strikes`, `holy`); `world/smite.rs`: Smite's blow (the mode needs the Smite talent's `smite`), then `World::smite_rider` on a hit that did damage: `brand` afflicts its status (Branded, which sheds `item_glow` by its `light`: no new reader); `fear` asks the foe `check::check` of its `check` stat's modifier (and its talents' checks) against `difficulty` + the smiter's Smite `aim` modifier, and failing afflicts its status (one that `flees`, checked on load) at `turns` degrees, `by` the player; `banish` takes nothing more: `World::mode_profile` doubles the extra dice on an unholy foe with no `Actor::summoner` (no line unless it wounds and leaves it alive: "reels under holy wrath"), and on one with a summoner the rider says "is unmade" and `World::unmake` kills it (`World::dies`, then what `resolve` does for a kill: `train_kill`, `siphon`, `Trigger::Kill`), past `unstoppable` and whatever its hit points; paid in zeal (its talent's `resource`), spent by `use_class` after the refusals and the bands |
 | `holy_wrath { dice }` (Holy wrath, the paladin's at 40, #913; no bands) | `FaithMods::holy_wrath`; `World::holy_wrathed` (`world/smite.rs`), one line in `World::resolve` after `lore_blow`, so every melee blow, shot, throw, and free blow: on a hit, when `Content::unholy` says so of the target or the holder has `avatar` (`FaithMods::avatar`, read there too: Avatar alone is no wrath), one draw of the dice, `World::resisted` by the blow's kind, added to the blow's damage after its soak. No line |
 | `catch_missiles` (Diamond soul's catch, the ascetic's at 40, #851) | `World::caught_missile` (`world/ascetic.rs`), from `resolve` (`caught_shot`, a shot or throw) and `trap_strikes` (`caught_trap_shot`, a trap's missile): a hit on one with no weapon and no shield in hand spends its cost (Ki) by itself and is a miss; `World::caught` ends the flight on that cell (`fly`, `trap_shot`), where the missile falls (`MartialMods::catch_missiles`) |
@@ -411,9 +411,9 @@ hand-down: its `stipend_more` (`FortuneMods::stipend_gold_percent`, `stipend_cha
 ability Stipend's `stipend` effect (`FortuneMods::stipend`, level 1 of the class table) is read by
 `grow_stipend`, one line in `experience.rs::rise_from` after `level_up` (every level reached,
 a prestige class's too). The rule and its numbers: `docs/dev/npcs.md` "The aristocrat's servant",
-`data/stipend.toml`. The merchant's Invest (`invest`, `FortuneMods::invest`, #1407) gates the
+`data/rules/stipend.toml`. The merchant's Invest (`invest`, `FortuneMods::invest`, #1407) gates the
 business partner's deals (`world/invest.rs`); the partner is placed by the talent id, as the
-servant is: `docs/dev/npcs.md` "The merchant's business partner", `data/invest.toml`.
+servant is: `docs/dev/npcs.md` "The merchant's business partner", `data/rules/invest.toml`.
 
 **Crafts** (#1418; the craftsperson design `docs/design/craftsperson.md` §3, §4): the `crafts`
 tree, after `heritage`, holds the seven trades (Smith, Wright, Gemcutter, Brewster, Pitman,
@@ -450,11 +450,11 @@ picks); `creation_bonus_left` is the Talents step's title ("Choose a trade"). A 
 ordinary pick. The class's level 1 abilities, granted in `begin` before the picks are taken,
 are **Time served** (`trade_bonus { value = 6 }`: each trade `3d6+6`) and **Eye for the make**
 (`eye_for_make`, `CraftMods::eye_for_make`, read once, in `PerceptionView::describe_item`,
-which adds `magic::describe::make_lines`: what salvage would give at `salvage.toml`'s yield
+which adds `magic::describe::make_lines`: what salvage would give at `rules/salvage.toml`'s yield
 (`piece::break_up`, the materials a profession works), or that the item is protected
 (`world::protected_in`, the rules' `item_protected` over perception's quests, a unique or Proof only once identified, so nothing hidden leaks) or holds nothing
 worth saving; for arms and armour `temperable` or `whittleable`, the improvements left to
-`temper.toml`'s `most` or that it is damaged, never `attempts`; the main material's `work` in
+`rules/temper.toml`'s `most` or that it is damaged, never `attempts`; the main material's `work` in
 words. No draw, no state). A scenario's own character may name its picks (`talents` in its
 `character` table; docs/dev/character-creation.md). Tests: `world/craftsperson_tests.rs`.
 No talent reads the story's draw, and there is no `background` system (#774, #787).

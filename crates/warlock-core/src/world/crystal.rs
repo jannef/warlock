@@ -14,8 +14,8 @@
 //! - **Salvage's affix checks** ([`World::catch_magic`], called by `world/salvage.rs` before its
 //!   material checks): a magic or rare item, identified or not (it is destroyed at once, so
 //!   what its crystals tell matters to no one), makes one check per affix, in its order, two
-//!   gameplay draws each: 2d12 + the modifier of `data/enchanting.toml`'s `stat` (Willpower) +
-//!   the talents' checks of it + its `skill`'s (Enchanting's) [`Effect::Craft`] against
+//!   gameplay draws each: 2d12 + the modifier of `data/rules/enchanting.toml`'s `stat`
+//!   (Willpower) + the talents' checks of it + its `skill`'s (Enchanting's) [`Effect::Craft`] against
 //!   [`EnchantingRules::salvage_against`]; a natural 2 fails, a natural 24 succeeds. Each check
 //!   made is one crystal of the affix's colour ([`Crystals::colour_of_affix`]). Then a rare of
 //!   item level `[rare] salvage_level` or more draws once for `salvage_chance` %, and a made

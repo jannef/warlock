@@ -20,7 +20,7 @@
 //!   record, so no experience, guild rank, Invest bonus, or goodwill comes of it.
 //! - **Hand-in** (the same chat while one is open): the first stack carried of the work's object
 //!   that is Fine or better (one improvement at least; one not worn first) is taken and paid for,
-//!   `data/patron.toml`'s `pays` percent of its worth (`Stack::value`, the grade's multiplier
+//!   `data/rules/patron.toml`'s `pays` percent of its worth (`Stack::value`, the grade's multiplier
 //!   counted), `bonus` percent more for one bearing a maker's mark (`Worked::marked`, Maker's
 //!   mark), with `delivered`; Negotiation is marked (`Use::Deal`). Whose work it is, the
 //!   patron does not ask. Only plain ones carried: `plain`; none: a one-liner (the rotation),

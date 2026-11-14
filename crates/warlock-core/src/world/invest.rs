@@ -9,7 +9,7 @@
 //!   rotation), then what the stake is worth in whole gold (`worth`), or that there is none
 //!   (`idle`); it takes `chat`'s time and opens the dialogue screen on the partner's topics.
 //! - **The topics** ([`World::invest_topics`], one line in `talk.rs::topics`): `invest_<n>` for
-//!   each of `data/invest.toml`'s `steps` the player carries the gold for, and `invest_all`;
+//!   each of `data/rules/invest.toml`'s `steps` the player carries the gold for, and `invest_all`;
 //!   `withdraw_<n>` for each step the stake is worth, and `withdraw_all`. Asking one
 //!   ([`World::ask_invest`], one line in `talk.rs::ask`) takes `chat`'s time: the gold goes in
 //!   less the fee (`fees.invest` percent, rounded up), or comes out less its fee (`fees.withdraw`)

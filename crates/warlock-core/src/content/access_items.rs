@@ -4,7 +4,8 @@
 use super::{
     Affixes, ChestRules, Content, Gems, ItemClassDef, ItemClassId, MAX_ITEM_LEVEL, MaterialDef,
     MaterialId, ObjectDef, ObjectId, Part, PartDef, PartId, Reading, RecipeDef, RecipeId, Recipes,
-    ScrollLabelDef, SlotDef, SlotId, SpellId, Stock, TrapAvoid, TrapDef, TrapId, UniqueDef, part,
+    ScrollLabelDef, SlotDef, SlotId, SpellId, Stock, TrapAvoid, TrapDef, TrapDisarm, TrapHarm,
+    TrapId, UniqueDef, part,
 };
 
 impl Content {
@@ -132,6 +133,18 @@ impl Content {
     /// `[avoid]` in `data/traps.toml`, else [`TrapAvoid::default`]).
     pub fn trap_avoid(&self) -> &TrapAvoid {
         &self.trap_avoid
+    }
+
+    /// Disarming a known trap (spec §8 "Traps"; `[disarm]` in `data/traps.toml`, else
+    /// [`TrapDisarm::default`]).
+    pub fn trap_disarm(&self) -> &TrapDisarm {
+        &self.trap_disarm
+    }
+
+    /// What a trap's damage may be cut by (spec §8 "Traps"; `[harm]` in `data/traps.toml`, else
+    /// [`TrapHarm::default`]).
+    pub fn trap_harm(&self) -> &TrapHarm {
+        &self.trap_harm
     }
 
     /// Whether `object` is a knife, to fletch with (`data/fletch.toml`'s `knives`, a weapon

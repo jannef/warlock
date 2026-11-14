@@ -21,9 +21,9 @@
 //!   fights its holder (`World::held_back`, `lucky.rs`).
 //! - **Escape artist** (no action, no ability row: the check is part of the attempt, the owner's
 //!   rule, #1015): trained, the check against a hold reads the better of its stat and Dexterity
-//!   and adds [`SkillEffect::Escape`]. Bonds that are no hold carry `escape = DIFFICULTY` in data
-//!   (Webbed, Pinned) and only the trained struggle against them, with the same modifier and no
-//!   Knowledge: made, the status ends with its own `end` line and the action goes ahead at its
+//!   and adds [`SkillEffect::Escape`]. Bonds that are no hold carry `escape` as their difficulty in
+//!   data (Webbed, Pinned) and only the trained struggle against them, with the same modifier and
+//!   no Knowledge: made, the status ends with its own `end` line and the action goes ahead at its
 //!   price; failed, the action's price ("You struggle, but you are still caught in a web.").
 //!   Untrained, `refuse_blocked` refuses, no time, as it does a second status blocking the same
 //!   action, which asks on the next attempt. A marked status that only slows (`cost` above 100;

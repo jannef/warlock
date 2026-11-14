@@ -68,7 +68,7 @@ is `Action::Intimidate(Pos)` (replay text `intimidate:X,Y`, cost `intimidate`,
 in `world/intimidate.rs`: a single-target threat on War cry's check, sharing
 `World::threat_difficulty` (the one read of `intimidate` for the difficulty), `World::heard_by`
 (who would hear a noise, asked before it is made), and `World::cow` (the nerve check, the
-status, the message) with `World::war_cry`. Its numbers are data, `data/intimidate.toml`
+status, the message) with `World::war_cry`. Its numbers are data, `data/rules/intimidate.toml`
 (`content/intimidate.rs`, `IntimidateRules`: `range`, `difficulty`, `status` (Frightened, one
 that `flees`), and `degrees`, the ladder of `[points, degrees]` by what Intimidate adds, its
 points rising (the one load check beside resolution), read by `IntimidateRules::degrees_at`); without the file the skill stays "not usable yet". It is
@@ -77,7 +77,7 @@ marked once a threat, refused or not reached (no hearing, no sight) aside. Tests
 voice and the mark, the check, the ladder), `content/intimidate.rs` (parsing, refusals). Bluff's
 `feint` (#1016; `docs/design/skill-uses.md` §6.2 B1) is read in `World::feint` (`world/feint.rs`),
 Bluff's use: `Action::Feint(Dir)` (replay text `feint:DIR`, cost `feint`, `ActionKind::Feint`),
-`Ability::Feint`, data `data/feint.toml` (`content/feint.rs`, `FeintRules`: `difficulty`, `status`,
+`Ability::Feint`, data `data/rules/feint.toml` (`content/feint.rs`, `FeintRules`: `difficulty`, `status`,
 Surprised, `flat_footed` and `per_action` with `max = 1`; the loader only resolves it). The foe's nerve (its Willpower modifier
 and talents' checks, two gameplay draws, `check::check`) against `difficulty` + the player's Presence
 modifier + the points; failed, Surprised, caused by the player. No noise, no need of being heard
@@ -236,7 +236,7 @@ Mithril and adamantium are metals, so Temper works them as steel.
 `Craft` (`Temper` or `Whittle`) in `Tempering` choosing the material group (`metal` or `wood`), the
 stat and effect (Strength and `Effect::Temper`, or Dexterity and `Effect::Whittle`), the mark
 (`Use::Temper`, `Use::Whittle`), the turn price, and the message lines. Both share
-`data/temper.toml` and `magic/worked.rs`, so one item has one state. The Whittle recipe
+`data/rules/temper.toml` and `magic/worked.rs`, so one item has one state. The Whittle recipe
 (`data/recipes/woodcraft/whittle.toml`: `knife`; Woodcraft's, refused untrained with no time, "You
 are not trained in Woodcraft.", #1387) stands beside the arrows on Woodcraft's screen
 (`docs/dev/crafting.md`), opens the Whittle list over it (`ObjectList::Whittle`,
@@ -274,7 +274,7 @@ the step cannot go in unasked (presentation asks only of what the player knows,
 check of a step that starts in deep water, wherever it ends (**the dive itself asks none**: a
 "Dive in" that left you on the shore, cold, would make no sense; the issue left this open): two
 gameplay draws (the 2d12), `Use::Stroke` whatever came of it (a use of its own, as `swim` is 100 %
-for a plunge), then `Harm::Spared`. `data/swim.toml` has the numbers (`content/swim.rs`, optional:
+for a plunge), then `Harm::Spared`. `data/rules/swim.toml` has the numbers (`content/swim.rs`, optional:
 without it nobody swims); burden goes by `Load::penalty`, as every burden hook does. `dive_in` and
 `equip` put out the ready light (`douse_afloat`), so a second lantern, lit in the pack, cannot be
 made ready to cheat it. Prices: `wading_step` is true of `swim` terrain, so Wade, Swimmer

@@ -397,7 +397,7 @@ the cells beside the player, and the skills: presentation never decides availabi
   `piece::names`: "3 steel ingots"), inputs ("20 arrowheads", "an arrowhead for each made"), the
   station ("an anvil"), "a knife", "a bow ready" (`data/fletch.toml`'s word for what shoots the
   result), then the time in `Duration::spoken` ("about 10 minutes": Temper's and Whittle's
-  `data/temper.toml`, a generic recipe's `seconds`, the arrows' cut by Fletcher). A part with
+  `data/rules/temper.toml`, a generic recipe's `seconds`, the arrows' cut by Fletcher). A part with
   sources is its choices joined by "or" ("an arrowhead for each made or a bone shard or a block of
   flint"); a counted recipe's stock is priced for the batch at its most; wood free here is not
   said. Never a difficulty or odds.
@@ -504,7 +504,7 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
   Failed: each stock pick gives back `piece::count_for` of `yield` % of its grams (at most what
   it took), an input `count × yield / 100`, the gem all of it; "The blade comes out brittle and
   you break it up for the metal." Made: the gem is set, and an item whose base has an `Aspect`
-  takes `Grade::improvements()` (1, 2, 3; at most `temper.toml`'s `most`) improvements, each an
+  takes `Grade::improvements()` (1, 2, 3; at most `rules/temper.toml`'s `most`) improvements, each an
   aspect drawn evenly (one gameplay draw), with `attempts` equal to them: a crafted Fine item is a
   once-tempered one (Temper's difficulty `13 + 2`), and a crafted Masterwork is `finished`, so
   Temper refuses it ("It can be made no finer."). An item with no aspect (a ring) is plain
@@ -827,7 +827,7 @@ P11 (#1356; `docs/design/recipes.md` §6 "Rings and amulets"), generic recipes:
 ## Salvage
 
 `world/salvage.rs` (one module; one line each in `world/mod.rs`'s `Spent` and dispatch,
-`action/text.rs`, `ability.rs`'s matches, `buff.rs`), numbers in `data/salvage.toml`
+`action/text.rs`, `ability.rs`'s matches, `buff.rs`), numbers in `data/rules/salvage.toml`
 (`content/salvage.rs`, `Content::salvage`, optional: without it nobody salvages and the ability
 is not listed): `seconds = 600`, `difficulty = 12`, `yield = 50`.
 
@@ -881,7 +881,7 @@ The craftsperson's class ability at level 6 (#1420; the craftsperson design §7.
 where the rule already reads its number:
 
 - **`waste_not { salvage, failed }`** (`CraftMods::salvage_percent`, `failed_percent`, the most
-  held of each). `salvage`: `world::salvage_percent(content, actor)` is `data/salvage.toml`'s
+  held of each). `salvage`: `world::salvage_percent(content, actor)` is `data/rules/salvage.toml`'s
   `yield` or the holder's, whichever is more, read by `salvaged` for `piece::break_up` and by
   Eye for the make's line (`PerceptionView::describe_item`), so the description counts what the
   work would give. 75: a quarterstaff gives 8 billets for 5, chain mail 17 iron ingots for 11. A

@@ -12,7 +12,7 @@
 //! Tempered in `Actor::benefit`).
 //!
 //! **Fire breath** is a bolt cast with the scrolls' shared code ([`World::cast_bolt`]): from the
-//! player along the line toward the cell aimed at (within [`BREATH_RANGE`]) and on, as far as
+//! player along the line toward the cell aimed at (within its talent's `range`) and on, as far as
 //! its length or the first opaque cell, one gameplay roll of its damage for everyone on it; its
 //! noise is a spell's; then its cooldown. Refused, taking no time, without the pick, while the
 //! cooldown lasts, at the player's own cell, out of range, and on the overworld.
@@ -31,14 +31,11 @@
 use super::ai::Plan;
 use super::spell::Caster;
 use super::{ActorId, Spent, World};
+use crate::ability::Ability;
 use crate::action::{AttackKind, Event};
 use crate::content::{SignActive, Stance};
 use crate::geom::{Dir, Pos};
 use crate::noise::{self, Act};
-
-/// How far the cell Fire breath is aimed at may be, in cells (a disc, as ranges are); the bolt
-/// itself runs its own length along that line.
-pub const BREATH_RANGE: i32 = 8;
 
 impl World {
     /// Horn of plenty (`plenty`: hit points per level and the cooldown's degrees) on a Horn's
@@ -68,7 +65,12 @@ impl World {
         else {
             return Spent::Nothing;
         };
-        if !self.can_loose_here() || !self.within_reach(at, BREATH_RANGE, "breathe fire") {
+        // The cell aimed at is within the talent's `range`; the bolt runs its own length.
+        let range = Ability::Sign(SignActive::FireBreath).reach(&content);
+        let Some(range) = range else {
+            return Spent::Nothing;
+        };
+        if !self.can_loose_here() || !self.within_reach(at, range, "breathe fire") {
             return Spent::Nothing;
         }
         let price = self.price_of(player, SignActive::FireBreath.cost());

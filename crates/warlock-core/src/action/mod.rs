@@ -122,9 +122,9 @@ pub enum Action {
     Steal(Dir),
     /// Feint at the creature in a direction (spec §8 "Skills": Bluff; `world/feint.rs`): a
     /// hostile one the player sees, with a mind to fool, checks its Willpower against
-    /// `data/feint.toml`'s difficulty + the player's Presence modifier + Bluff's `feint` points,
-    /// and is Surprised if it fails. Takes the time of `feint`, whatever comes of it; refused (no
-    /// time) untrained, at no one seen, at one not hostile, or at one without a mind.
+    /// `data/rules/feint.toml`'s difficulty + the player's Presence modifier + Bluff's `feint`
+    /// points, and is Surprised if it fails. Takes the time of `feint`, whatever comes of it;
+    /// refused (no time) untrained, at no one seen, at one not hostile, or at one without a mind.
     Feint(Dir),
     /// Tame the beast in a direction (spec §8 "Allies": Tame; `world/tame.rs`): `[tame] turns`
     /// actions beside it (`data/companions.toml`), each the time of `tame`, then a Willpower
@@ -133,15 +133,15 @@ pub enum Action {
     /// seen them.
     Tame(Dir),
     /// Intimidate the creature on a cell the player sees within the `range` of
-    /// `data/intimidate.toml` (spec §8 "Skills": Intimidate; `world/intimidate.rs`): a hostile
-    /// one that hears and sees them checks its nerve, and failed, is frightened. Takes the time
-    /// of `intimidate`; refused (no time) untrained, at no one seen, out of reach, at one not
+    /// `data/rules/intimidate.toml` (spec §8 "Skills": Intimidate; `world/intimidate.rs`): a
+    /// hostile one that hears and sees them checks its nerve, and failed, is frightened. Takes the
+    /// time of `intimidate`; refused (no time) untrained, at no one seen, out of reach, at one not
     /// hostile, or at one with no vitals.
     Intimidate(Pos),
-    /// Throw the player's voice to a cell they see within [`crate::world::VOICE_RANGE`] (spec §5
-    /// "Hearing"): a voice sounds there, and creatures that hear it and do not see its cell go
-    /// and look. Takes the time of `throw_voice`; refused (no time) at a cell they do not see,
-    /// out of reach, solid, or their own.
+    /// Throw the player's voice to a cell they see within the `[throw_voice]` range of
+    /// `data/rules/tuning.toml` (spec §5 "Hearing"): a voice sounds there, and creatures that hear
+    /// it and do not see its cell go and look. Takes the time of `throw_voice`; refused (no time)
+    /// at a cell they do not see, out of reach, solid, or their own.
     ThrowVoice(Pos),
     /// Give every ally of the player's on the level an order (spec §8 "Allies";
     /// `world/ally.rs`): `order:follow` (Come to heel), `order:stay` (Hold here), `order:hunt:X,Y`
@@ -242,9 +242,9 @@ pub enum Action {
     },
     /// Make out the carried stack at this position, a scroll of a type not yet identified,
     /// without reading it (spec §8 "Scrolls"; the Decipher ability, Decipher script's use;
-    /// `world/decipher.rs`): `data/decipher.toml`'s time of turns of the `decipher` action, then
-    /// the reading's check; made, the type is learned. Interrupted, nothing comes of it. Refused
-    /// (no time) with a stack that is no scroll of a type not yet known.
+    /// `world/decipher.rs`): `data/rules/decipher.toml`'s time of turns of the `decipher` action,
+    /// then the reading's check; made, the type is learned. Interrupted, nothing comes of it.
+    /// Refused (no time) with a stack that is no scroll of a type not yet known.
     Decipher {
         item: usize,
     },
@@ -260,8 +260,8 @@ pub enum Action {
         item: usize,
     },
     /// Whittle the carried stack at this position with a knife, anywhere (the Whittle ability,
-    /// Woodcraft's second use): `temper.toml`'s rules for a weapon of wood, ten minutes of turns
-    /// of the `whittle` action, then a Dexterity check plus Woodcraft (`world/temper.rs`).
+    /// Woodcraft's second use): `rules/temper.toml`'s rules for a weapon of wood, ten minutes of
+    /// turns of the `whittle` action, then a Dexterity check plus Woodcraft (`world/temper.rs`).
     /// Refused (no time) without a knife carried, a stack with all its improvements, or one that
     /// is not a wooden weapon.
     Whittle {

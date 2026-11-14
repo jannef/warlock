@@ -416,7 +416,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     are Kind or better, the good side, and Consecrate Neutral or better): outside them it is still listed and used, and does nothing ("You call for holy
     wrath, but none answers."), taking the time of a cast and spending no cooldown, mana, or
     resource; putting Holy radiance out always works. **A sin empties zeal** (#910): a deed
-    that moves the player's score down empties the pool `data/smite.toml`'s `sin_empties` names
+    that moves the player's score down empties the pool `data/rules/smite.toml`'s `sin_empties` names
     (the paladin's zeal), if held, "Your zeal deserts you.", with the deed's own lines; it bars
     nothing, the pool fills again. Mana reads nothing of it, for now. Gods
     and prayer, holy and unholy damage and items, and artifacts that work only for some bands
@@ -513,7 +513,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     at its edge with no time, and is then known, so the question comes before they are in. Going
     in takes the step and no check, and puts out the ready light. **A step that starts in it**,
     wherever it ends, is a Swim check against 11 + 2 per burden level above Unburdened
-    (`data/swim.toml`): made, the step, priced by `step_price` (Wade, Swimmer, Strong swimmer,
+    (`data/rules/swim.toml`): made, the step, priced by `step_price` (Wade, Swimmer, Strong swimmer,
     Undertow); failed, the turn is spent, no move, and 1 cold hit point through `hurt` with
     `Harm::Spared` (never the last: no drowning; one who grows Strained in it swims on, harder).
     Two gameplay draws a step; `stroke` 25 %. Afloat, dropping and picking up ("It would sink."),
@@ -574,7 +574,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and see it ("Class abilities" below) and of the skill's own threat, marked by `intimidate`
     (100 %: a cry roared or a threat made, whatever came of it). The berserker trains it `2d4+4`,
     the half-orc `1d6+4`. Its use (#868) is the **Intimidate** ability (the abilities menu's
-    Skills group, in the skill's place, while `data/intimidate.toml` exists; no key): aimed at a
+    Skills group, in the skill's place, while `data/rules/intimidate.toml` exists; no key): aimed at a
     cell the player sees within the file's `range` (6), `intimidate:X,Y`, at a hostile creature
     with vitals there. It takes the `intimidate` action (a turn), is spoken aloud (a voice where
     the player stands, as loud as a mutter), and marks Intimidate, whatever comes of it. If the
@@ -590,7 +590,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Bluff** (#1016; `kind = "action"`): gives `feint` (+8 at 100, +12 at 200, at most 20) on the
     difficulty of a feint's Willpower check, marked by `feint` (50 %: a feint made, whatever came
     of it). Its use is the **Feint** ability (the abilities menu's Skills group, in the skill's
-    place, while `data/feint.toml` exists; no key): in a direction, `feint:DIR`, at a hostile
+    place, while `data/rules/feint.toml` exists; no key): in a direction, `feint:DIR`, at a hostile
     creature the player sees there, with a mind to fool. It takes the `feint` action (a turn). The
     foe rolls 2d12 + its Willpower modifier (+ its talents' Willpower checks; two gameplay draws)
     against the file's `difficulty` 10 + the player's Presence modifier + what Bluff adds. Failed,
@@ -685,11 +685,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   or a disease may be tried again and again, made or failed ("The poison will not come out."
   / "You can do no more for the filth fever."): time is the price. Refusals take no time and no
   draw: untrained ("You know nothing of healing."), or nothing to treat.
-- **Stealing** (`world/steal.rs`, data `data/steal.toml`, §7; #234, the progression design's
+- **Stealing** (`world/steal.rs`, data `data/rules/steal.toml`, §7; #234, the progression design's
   B7): the Steal skill's use, the abilities menu's **Steal** (`Ability::Steal`, in the skill's
   place among the Skills; a direction; `Action::Steal`, replay text `steal:DIR`; cost `steal`;
   a rebindable key, "Steal", unbound by default). Anyone trained in a skill with the `steal`
-  benefit has it, while `data/steal.toml` exists (without it nobody steals and the skill stays
+  benefit has it, while `data/rules/steal.toml` exists (without it nobody steals and the skill stays
   "not usable yet"); the thief's class trains Steal.
   - **Whom**: a creature on the cell in that direction that the player sees and that is not
     hostile to them (`World::stance`). Refused, taking no time: untrained ("You do not know how
@@ -711,7 +711,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (§8 "Alignment": stealing is evil, as leaving a shop owing is).
   - **Caught**: the victim turns on the player. A keeper of an open shop (§7 "Shops") is outraged
     as a robbed one is: "Grimbold catches you stealing. \"Stop, thief!\"", its shop trades no
-    more, and what the player owed it is stolen. Anyone else joins `data/steal.toml`'s `caught`
+    more, and what the player owed it is stolen. Anyone else joins `data/rules/steal.toml`'s `caught`
     faction (its `faction_override`, hostile to the player), so the AI and every stance follow:
     "The kobold catches you stealing and turns on you!".
   - **Shop goods** are not stolen this way: what lies in a shop stays the shop's rules' (picking
@@ -754,8 +754,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **The other batches** (`docs/dev/crafting.md` "Counted recipes"): Metalcraft's `arrowheads`
     (20 from an ingot of any metal at an anvil, of that metal), Woodcraft's `sling_stones` (10 from
     a block of stone, no knife) and `flaming_arrows` (10, an arrow each and a flask of oil).
-- **Whittling** (`world/temper.rs`, `Craft::Whittle`; #1028; design `skill-uses.md` W3): Temper's twin for wood on the same rules, so one item has one state (`magic/worked.rs`) and one set of numbers (`data/temper.toml`: ten minutes, `13 + 2 x attempts`, three improvements). **Whittle**, a recipe of Woodcraft's for those trained in it (#1387; beside the arrows on Woodcraft's profession screen, #1334; anywhere; `Action::Whittle { item }`, replay text `whittle:LETTER`; asks for an item, the Whittle list, what `workable_wood` accepts) takes a weapon, missile weapon, shield, or armour whose main part is of a material of `group = "wood"` (bows, crossbows, staves, clubs), not a spirit weapon. Refused, taking no time, untrained in Woodcraft ("You are not trained in Woodcraft."), without a knife carried ("You have no knife."; its row greyed "no knife"), with a stack of another material ("Only a weapon of wood can be whittled."), or at three improvements. The check is the natural roll plus Dexterity's modifier, `VigourMods::check(Dexterity)`, and Woodcraft's `whittle` points (`Effect::Whittle`, curve 0, 8 at 100, 12 at 200), as Temper's is Strength with Metalcraft. Woodcraft earns a mark per finished attempt (`Use::Whittle`, 100 %).
-- **Salvage** (`world/salvage.rs`, data `data/salvage.toml`; #1333; design `professions.md` §5; `docs/dev/crafting.md`): breaking an item into its materials, anywhere, with nothing. The abilities menu's **Salvage** (`Ability::Salvage`, Skills group, everyone's; `Action::Salvage { item }`, replay text `salvage:LETTER`; asks for an item) takes ten minutes (`seconds`, by `keep_at`; interrupted, nothing happens). Then one check per distinct material of the item (its resolved parts, gems included, in first-seen order) that a profession works (`data/stock.toml`: metal Metalcraft with Strength; wood, bone, hide, and sinew Woodcraft with Dexterity, and flint, stone, and obsidian by their own rows; jade, resin, and gems Jewelcraft with Dexterity; cloth and glass nothing): 2d12 + the stat's modifier + talents' checks of it + that skill's `craft` points (`Effect::Craft`, curve 0, 8 at 100, 12 at 200, read for that skill alone) against `difficulty` (12) + the material's `work`; a natural 2 fails, a natural 24 succeeds; untrained, the check is made the same. Made, the material comes back as stock, `yield` (50) % of its grams, at least one piece, or a gem whole with its size and cut; failed, it is lost, but a gem drops one cut (while above crude) or else one size (while above tiny), and shatters only on a natural 2 or with neither left to lose. The one item (one of a stack) is destroyed either way, its magic and improvements with it. Refused, with no time: worn or wielded, protected (quests, uniques, of Proof), unpaid, a spirit weapon, or nothing a profession works. Each profession rolled earns a mark (`Use::Salvage`, 100 %), that skill alone. No noise, no alignment. **Its magic** (#1428; design `docs/design/enchanting.md` §10; `world/crystal.rs`; `docs/dev/enchanting.md`): before the material checks, a magic or rare item, identified or not, makes one check per affix, 2d12 + Willpower's modifier + talents' Willpower checks + Enchanting's `craft` points against `data/enchanting.toml`'s 12 + the affix's tier ÷ 3; each made leaves a **magic crystal** of the affix's colour (`data/crystals.toml`: six colours, black, blue, white, red, green, gold, each with creature tags and affix families, every affix category in at least one), and a rare of item level 10 or more has a 3 % chance of a rare material (heart-crystal or soul-fetter, even odds); an unidentified item's lines name no affix; Enchanting is marked (`Use::Salvage`) when an affix was checked.
+- **Whittling** (`world/temper.rs`, `Craft::Whittle`; #1028; design `skill-uses.md` W3): Temper's twin for wood on the same rules, so one item has one state (`magic/worked.rs`) and one set of numbers (`data/rules/temper.toml`: ten minutes, `13 + 2 x attempts`, three improvements). **Whittle**, a recipe of Woodcraft's for those trained in it (#1387; beside the arrows on Woodcraft's profession screen, #1334; anywhere; `Action::Whittle { item }`, replay text `whittle:LETTER`; asks for an item, the Whittle list, what `workable_wood` accepts) takes a weapon, missile weapon, shield, or armour whose main part is of a material of `group = "wood"` (bows, crossbows, staves, clubs), not a spirit weapon. Refused, taking no time, untrained in Woodcraft ("You are not trained in Woodcraft."), without a knife carried ("You have no knife."; its row greyed "no knife"), with a stack of another material ("Only a weapon of wood can be whittled."), or at three improvements. The check is the natural roll plus Dexterity's modifier, `VigourMods::check(Dexterity)`, and Woodcraft's `whittle` points (`Effect::Whittle`, curve 0, 8 at 100, 12 at 200), as Temper's is Strength with Metalcraft. Woodcraft earns a mark per finished attempt (`Use::Whittle`, 100 %).
+- **Salvage** (`world/salvage.rs`, data `data/rules/salvage.toml`; #1333; design `professions.md` §5; `docs/dev/crafting.md`): breaking an item into its materials, anywhere, with nothing. The abilities menu's **Salvage** (`Ability::Salvage`, Skills group, everyone's; `Action::Salvage { item }`, replay text `salvage:LETTER`; asks for an item) takes ten minutes (`seconds`, by `keep_at`; interrupted, nothing happens). Then one check per distinct material of the item (its resolved parts, gems included, in first-seen order) that a profession works (`data/stock.toml`: metal Metalcraft with Strength; wood, bone, hide, and sinew Woodcraft with Dexterity, and flint, stone, and obsidian by their own rows; jade, resin, and gems Jewelcraft with Dexterity; cloth and glass nothing): 2d12 + the stat's modifier + talents' checks of it + that skill's `craft` points (`Effect::Craft`, curve 0, 8 at 100, 12 at 200, read for that skill alone) against `difficulty` (12) + the material's `work`; a natural 2 fails, a natural 24 succeeds; untrained, the check is made the same. Made, the material comes back as stock, `yield` (50) % of its grams, at least one piece, or a gem whole with its size and cut; failed, it is lost, but a gem drops one cut (while above crude) or else one size (while above tiny), and shatters only on a natural 2 or with neither left to lose. The one item (one of a stack) is destroyed either way, its magic and improvements with it. Refused, with no time: worn or wielded, protected (quests, uniques, of Proof), unpaid, a spirit weapon, or nothing a profession works. Each profession rolled earns a mark (`Use::Salvage`, 100 %), that skill alone. No noise, no alignment. **Its magic** (#1428; design `docs/design/enchanting.md` §10; `world/crystal.rs`; `docs/dev/enchanting.md`): before the material checks, a magic or rare item, identified or not, makes one check per affix, 2d12 + Willpower's modifier + talents' Willpower checks + Enchanting's `craft` points against `data/rules/enchanting.toml`'s 12 + the affix's tier ÷ 3; each made leaves a **magic crystal** of the affix's colour (`data/crystals.toml`: six colours, black, blue, white, red, green, gold, each with creature tags and affix families, every affix category in at least one), and a rare of item level 10 or more has a 3 % chance of a rare material (heart-crystal or soul-fetter, even odds); an unidentified item's lines name no affix; Enchanting is marked (`Use::Salvage`) when an affix was checked.
 - **Consuming a crystal** (#1428; design `docs/design/enchanting.md` §5; `world/crystal.rs`): a crystal is in the Consume list (`e`) beside food and potions and is consumed through `Action::Eat` (`eat:LETTER`, `eat:floor:LETTER`; `world/eat.rs` hands it on), hungry or not: one crystal, a turn of the `drink` action, no check: `[consume] mana` (6) to the maximum, never refused for a full pool; `[consume] marks` (12) Willpower marks (`StatUse::Consumed`, 100 % each); and `[shift] consume_crystal` (−20) of alignment, diminishing. The rare materials cannot be consumed.
 - - **Professions** (`content/recipe.rs`, `world/craft.rs`, `ui/profession_screen.rs`; #1334, design
   `docs/design/professions.md` §6, §8; `docs/dev/crafting.md`): a skill with a directory of
@@ -832,7 +832,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (Enchanting's `enchant_level`, 1 at 0 to 12 at 110), Kindle's and Imbue's the reach, Unbind's
     the item's own; the item takes it. The check, after the work's time (an interruption spends only
     time): 2d12 + Willpower's modifier + its talents' checks + Enchanting's `craft` points (+8 at
-    100, +12 at 200) against the difficulty + the item level ÷ 3 (`data/enchanting.toml`
+    100, +12 at 200) against the difficulty + the item level ÷ 3 (`data/rules/enchanting.toml`
     `level_step`). Made, the item is enchanted and identified ("The long sword takes the red
     crystal's glow. It is now a Sharp long sword."); failed, the crystal is spent and the item as it
     was ("The crystal goes dark in your hands."; Unbind's "... clings to its magic."); a natural 2
@@ -841,7 +841,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Seals** (#1432, design `enchanting.md` §9; `world/seal.rs`): after the crystals, up to three optional steps
     shut a family of the crystals' colours, named in words ("fire", "the critical"), out of the
     roll; each costs one more crystal of its colour, from the first crystal picked that holds it,
-    and half an hour (`data/enchanting.toml` `seal_seconds`), and is refused for a family not of the
+    and half an hour (`data/rules/enchanting.toml` `seal_seconds`), and is refused for a family not of the
     colour, sealed twice, or one the item has or could not take ("There is nothing to seal there.").
   - **Jewellery** (#1356, `recipes.md` §6): Jewelcraft's iron, silver, and gold rings (each of its
     own metal, a whole ingot however light the ring, an optional cut gem in the setting; from 0, 20,
@@ -1225,7 +1225,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     tables come with I1–I3 (#243–#245). Dumps mark them `Haggler (class)`;
     JSON `talents[].class`, `due.bonus`. **Saves change** (`Due::bonus`, `Magic::carried`).
   - **Stipend** (the aristocrat's class ability from level 1, #1405; `world/stipend.rs`,
-    `data/stipend.toml`): at every level the character reaches, a prestige class's too, their
+    `data/rules/stipend.toml`): at every level the character reaches, a prestige class's too, their
     family puts by gold (150 + 10d10, about 200) and, by 85 %, the find of one loot roll at that
     level as item level with the magic and rare rarities +100 % likelier, kept when magic or
     rare, a potion, a scroll, or a gem (38 % of level-ups, levels 2 to 60; a test keeps it within
@@ -1240,7 +1240,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Overloaded; with nothing put by, a flattering one-liner. If the servant dies, no one else
     brings it: the stipend grows on and is never handed over.
   - **Invest** (the merchant's class ability from level 1, #1407; `world/invest.rs`,
-    `data/invest.toml`): the merchant's **business partner**, a town's class helper for `invest`
+    `data/rules/invest.toml`): the merchant's **business partner**, a town's class helper for `invest`
     (Cēaptūn's second `[[town.servant]]`, placed by the servant's code, keyed by the class
     ability: in a merchant's run only, at the corner desk of Factor Wulfrun's office, of the
     character's race and speaking its register, npc dialogues with `[dialogue.partner]` words),
@@ -1260,7 +1260,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     about 16 % a year. If the partner dies, the stake is lost. Saved and hashed:
     `WorldState::fund` (`cents`, `week`), left out until something is first put in.
   - **Patron** (the craftsperson's class ability from level 12, #1421; the craftsperson design
-    §7.4; `world/patron.rs`, `data/patron.toml`): the craftsperson's **patron**, a town's class
+    §7.4; `world/patron.rs`, `data/rules/patron.toml`): the craftsperson's **patron**, a town's class
     helper for `patron` (Cēaptūn's third `[[town.servant]]`, a well-to-do burgher in the
     Gæsthūs, of the character's race and speaking its register, npc dialogues with
     `[dialogue.patron]` words), placed as the ability is given if the town is made by then, else
@@ -1560,7 +1560,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     points a level, for 6 zeal, §8 "Resources"; a cast; works for Kind or better), Smite (the
     paladin's at level 1, #910, `world/smite.rs`: a blow in a direction with 1d6 more per 10
     levels, at least 1d6, and a die more against the unholy, a creature type carrying a tag of
-    `data/smite.toml`'s `unholy` list: the undead and the fiends, never read by alignment; the
+    `data/rules/smite.toml`'s `unholy` list: the undead and the fiends, never read by alignment; the
     paladin's Presence modifier added to hit; a magic weapon's extra die folded into the bonus at
     its average; for 3 zeal, granted by the talent, no cooldown; works for Kind or better,
     unanswered it spends no zeal), the **modes of smiting** (the paladin's, #911,

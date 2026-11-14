@@ -23,8 +23,9 @@
 //!   player), a boon on someone near, a thunderclap's sound of the entry's loudness on the
 //!   caster's cell ([`World::sound_at`]), a zone around the caster (`zone.rs`; none on the
 //!   overworld), the spell's rank lost or the spell forgotten (`forget.rs`), and a Pit opened
-//!   beside the caster with a gate at its mouth (`pit.rs`; the gate alone where refused). "Near" is within [`NEAR`] cells in a clear line ([`World::clear_shot`]), in
-//!   actor-id order. A death of the player by their own miscast is [`Cause::Miscast`].
+//!   beside the caster with a gate at its mouth (`pit.rs`; the gate alone where refused). "Near" is
+//!   within `near` cells (`data/miscast.toml`) in a clear line ([`World::clear_shot`]), in actor-id
+//!   order. A death of the player by their own miscast is [`Cause::Miscast`].
 //! - **Protected entries** ([`crate::content::MiscastRules::protects`], those ending below
 //!   `safe_below`): their harm takes the caster to 1 hit point at the least, nothing at 1; the
 //!   loader keeps every effect that could kill or cost for good off them.
@@ -50,9 +51,6 @@ use crate::noise::SoundKind;
 use crate::skills::Effect;
 use crate::stats::Stat;
 use crate::text::capitalized;
-
-/// How far "near the caster" reaches for a swap and a boon.
-pub const NEAR: i32 = 6;
 
 /// What a cast was aimed at, so a miscast's echo goes the same way.
 #[derive(Clone, Copy, Debug)]
@@ -313,16 +311,20 @@ impl World {
         }
     }
 
-    /// Everyone but `caster` on its level within [`NEAR`] cells of it in a clear line, with
+    /// Everyone but `caster` on its level within `near` cells (`data/miscast.toml`) of it in a
+    /// clear line, with
     /// where they stand, in actor-id order.
     fn near_caster(&self, caster: ActorId) -> Vec<(ActorId, Pos)> {
         let Some(me) = self.state.actors.get(&caster) else {
             return Vec::new();
         };
+        let Some(near) = self.content.miscast_rules().map(|r| r.near) else {
+            return Vec::new();
+        };
         let (level, here) = (me.level.clone(), me.pos);
         (self.state.actors.values())
             .filter(|a| a.id != caster && a.level == level && a.hp > 0)
-            .filter(|a| a.pos.chebyshev(here) <= NEAR)
+            .filter(|a| a.pos.chebyshev(here) <= near)
             .filter(|a| self.clear_shot(here, a.pos, caster, a.id))
             .map(|a| (a.id, a.pos))
             .collect()

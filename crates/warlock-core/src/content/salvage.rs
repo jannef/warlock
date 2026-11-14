@@ -1,5 +1,5 @@
-//! The numbers of salvaging an item for its materials (`assets/data/salvage.toml`; the rules are
-//! `world/salvage.rs`, docs/dev/crafting.md). The file is optional: without it nobody salvages.
+//! The numbers of salvaging an item for its materials (`assets/data/rules/salvage.toml`; the rules
+//! are `world/salvage.rs`, docs/dev/crafting.md). The file is optional: without it nobody salvages.
 
 use super::ContentError;
 use serde::Deserialize;
@@ -33,7 +33,7 @@ impl SalvageRules {
 }
 
 impl super::RulesFile for SalvageRules {
-    const PATH: &'static str = "data/salvage.toml";
+    const PATH: &'static str = "data/rules/salvage.toml";
 
     fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
         Self::parse(path, text)

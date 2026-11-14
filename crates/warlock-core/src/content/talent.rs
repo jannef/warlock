@@ -707,6 +707,12 @@ impl TalentEffect {
                 cures.iter().try_for_each(|id| status(id))?;
                 status(cooldown)
             }
+            TalentEffect::Sign(SignEffect::Stare { range, .. })
+            | TalentEffect::Sign(SignEffect::FireBreath { range, .. })
+                if !(1..=40).contains(range) =>
+            {
+                Err(format!("`range` must be 1 to 40, not {range}"))
+            }
             TalentEffect::Sign(SignEffect::Stare {
                 status: id,
                 cooldown,

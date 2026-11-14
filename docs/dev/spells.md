@@ -308,7 +308,7 @@ cast path shares.
     faction; `MiscastRules::backfire_faction`, resolved at load), no ally, no summoner, no gear,
     on the level in play off the overworld; anything else, or any of these with nothing to
     land on, the fallback harm, `(level ÷ 3 + 1)d6` force, `(level ÷ 2 + 1)d6` with `full`). "Near"
-    (`near_caster`): actors on the caster's level within `world::MISCAST_NEAR` (6) cells with a
+    (`near_caster`): actors on the caster's level within `near` (`data/miscast.toml`, 6) cells with a
     `clear_shot`, in actor-id order. `noise` and `zone` act only when the caster stands on the
     current level. A player who dies of it: `Cause::Miscast(spell)`.
   - **Rank loss and forgetting** (#1289; `world/forget.rs`, tests `world/forget_tests.rs`; the
@@ -330,7 +330,7 @@ cast path shares.
     `docs/dev/mapgen.md` "The Pits" for the floors): on the caster's level, in play,
     `World::open_pit` draws the Pit's integer `S` (`rng.below(u32::MAX) + 1`, again while taken),
     records `WorldState::pits[S] = Pit { from: the level, sealed: false }`, turns the first plain
-    free cell within `pit::MOUTH_REACH` (3) of the caster (walkable; no one on it; no stairs,
+    free cell within `[pit] mouth_reach` (`data/rules/tuning.toml`, 3) of the caster (walkable; no one on it; no stairs,
     door, chest, statue, grave, light, trap, hidden location, place, or flow) into `stairs_down`
     (`set_terrain`) and pushes a `StairsLink` down to `hellegeat@S:1` named "the Pit", as
     `open_lair` opens a lair; then the gate comes to the first free cell around the caster but

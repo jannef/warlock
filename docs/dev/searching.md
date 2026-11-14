@@ -24,7 +24,7 @@ The thief is the one class that starts trained in Detect traps (its `2d6+10`, kn
 #684 took the Trapfinding class ability, beside Spot's and Search's), kobolds the one race (`1d4+2`, in place of their Search); others may get it only
 as #662's non-guaranteed class skills do, since level-up rolls advance trained skills only.
 
-**Data**: `data/search.toml` (`content/search.rs`: `SearchRules { passive_penalty, turns,
+**Data**: `data/rules/search.toml` (`content/search.rs`: `SearchRules { passive_penalty, turns,
 secret_door }`, `Content::search()`; optional, `SearchRules::default` without it), the Search,
 Spot, and Detect traps skills' benefits in `data/skills/` (`skills::Effect::Search`,
 `SearchReach`, `Spot`, `DetectTraps`; marks on `Use::Search`, `Use::Spot`, `Use::FindTrap`), races' `passive_search` (`PassiveSearch::{All,

@@ -1,6 +1,6 @@
 # A forge (spec §7 "Special rooms"): a cold forge with an anvil. Temper beside it: ten minutes'
 # work on metal arms or armour you carry, which may improve it or damage it, and mend a damaged
-# one or break it; Metalcraft helps. data/temper.toml has the numbers. Never spent.
+# one or break it; Metalcraft helps. data/rules/temper.toml has the numbers. Never spent.
 [[effect]]
 id = "forge"
 name = "forge"

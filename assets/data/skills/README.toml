@@ -81,13 +81,13 @@
 #                 (points added to the Strength a kick at a closed door is rolled against, at most
 #                 40), "slip" (points added to slipping past a creature that would see you by
 #                 darkvision alone, at most 20: surprise.toml [slip]), "steal" (points added to stealing from someone, at most 20; trained, a
-#                 skill with it lets you steal at all: steal.toml), "heal" (points added to
+#                 skill with it lets you steal at all: rules/steal.toml), "heal" (points added to
 #                 treating your bleeding, poison, or a disease, at most 20; trained, a skill with
 #                 it lets you treat them at all: the Heal ability), "pick" (points added to
 #                 picking a lock, at most 20; trained, a skill with it
 #                 lets you pick locks at all: the Pick lock ability), "feint" (points added to the difficulty of a
 #                 feint's Willpower check, at most 20; trained, a skill with it lets you feint at
-#                 all: feint.toml), "intimidate" (points added to
+#                 all: rules/feint.toml), "intimidate" (points added to
 #                 the difficulty of the Willpower check your war cry asks of those who hear and
 #                 see you, at most 20), "song_degrees" (degrees added to what your songs give,
 #                 up to the status's own most, at most 10), "song_craft" (points added to the

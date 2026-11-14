@@ -164,8 +164,8 @@ fn a_full_moon_lengthens_the_gifts_reaches() {
     assert_eq!(content.full_moon_reach(at(6, 0, 0)), 0, "a day past full");
     assert_eq!(PLAIN.full_moon_reach(full), 0, "no table, no flavour");
     let stare = Ability::Sign(SignActive::TransfixingStare);
-    assert_eq!(stare.reach_at(content, full), Some(STARE_RANGE + 2));
-    assert_eq!(stare.reach_at(content, at(5, 12, 0)), Some(STARE_RANGE));
+    assert_eq!(stare.reach_at(content, full), Some(6 + 2));
+    assert_eq!(stare.reach_at(content, at(5, 12, 0)), Some(6));
     // Only the gifts' reaches: Hound's nose's scent and Eyes of the heights' night sight are
     // marked, Blood scent and Moon-eyed are not.
     let hound = born(&BUILTIN, ("wood", "barghest"), 3, 2, full);
