@@ -32,6 +32,8 @@ pub struct PerceptionView<'a> {
     pub(crate) campaign: &'a str,
     /// The time on the clock, which the player knows.
     pub(crate) time: GameTime,
+    /// The turns taken so far, for the developer's status bar segment (#1666).
+    pub(crate) turn: u64,
     /// How the run ended, once the player has died.
     pub(crate) death: Option<&'a Death>,
     /// The player's experience total.
@@ -49,8 +51,8 @@ pub struct PerceptionView<'a> {
     pub(crate) snapshot: &'a Perception,
     /// The overworld encounter the player must answer, which they know.
     pub(crate) encounter: Option<&'a crate::world::Pending>,
-    /// The run's seed, for the freshness check (`world/health/freshness.rs`), which only draws a stream
-    /// of its own.
+    /// The run's seed, for the freshness check (`world/health/freshness.rs`), which only draws a
+    /// stream of its own, and the developer's status bar segment (#1557).
     pub(crate) seed: u64,
 }
 
@@ -167,6 +169,18 @@ impl<'a> PerceptionView<'a> {
     /// The time on the clock.
     pub fn time(&self) -> GameTime {
         self.time
+    }
+
+    /// The turns taken so far. Developer text only: the status bar shows it with the dev keys
+    /// on, never to a player (#1666).
+    pub fn turn(&self) -> u64 {
+        self.turn
+    }
+
+    /// The run's seed. Developer text only: the status bar shows it with the dev keys on, and
+    /// player text never mentions it (#1557).
+    pub fn seed(&self) -> u64 {
+        self.seed
     }
 
     /// The slots the player has, in display order: every slot but another class's own (the

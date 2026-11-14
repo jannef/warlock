@@ -20,6 +20,16 @@ cases! {
         screen: Some("character"),
         ..BASE
     },
+    // Every condition on the character in the Status row (#1695), wrapped, where the status
+    // bar beneath gives some up for room.
+    character_screen_conditions: Case {
+        name: "character-screen-conditions",
+        status_bar: true,
+        actions: "afflict:bleeding afflict:poisoned afflict:fortified afflict:owl_eyed \
+                  stance:aggressive wait",
+        screen: Some("character"),
+        ..BASE
+    },
     character_screen_lucky: Case {
         name: "character-screen-lucky",
         // Seed 440 gives Tamsin a lucky day (#269): the Deep One, the title after the name.
@@ -77,6 +87,17 @@ cases! {
         name: "status-surprised",
         status_bar: true,
         actions: "afflict:surprised",
+        ..BASE
+    },
+    // The whole status bar in a wide window, as a player sees it (#1666): the character's
+    // status, the time, the date, the moon, the weather, the temperature; no turn, position,
+    // light, vision, or seed (the developer segments).
+    status_bar_hud: Case {
+        name: "status-bar-hud",
+        scenario: "courtyard",
+        status_bar: true,
+        actions: "afflict:bleeding wait",
+        size: (200, 30),
         ..BASE
     },
     // A potion's boost (#567): Fortified by name in the Status row and the status bar, the

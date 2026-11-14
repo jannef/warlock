@@ -1,0 +1,27 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Weather: rain for 3 hours (dev).
+ It starts to rain.
+
+
+
+
+                     ┌────────────────────────────────────────────────────────┐
+                     │                                                        │
+                     │                      P A U S E D                       │
+                     │                      ═══════════                       │
+                     │  The 11th of Darkening, 1444, under a waxing gibbous   │
+                     │          moon, rain at 0 °C, the world waits.          │
+                     │                                                        │
+                     │ > Resume                                               │
+                     │   Settings                                             │
+                     │   Controls                                             │
+                     │   Save and quit to menu                                │
+                     │   Quit                                                 │
+                     │                                                        │
+                     │                                                        │
+                     │                                                        │
+                     │ ↑↓ select   Enter choose   Esc resume                  │
+                     └────────────────────────────────────────────────────────┘

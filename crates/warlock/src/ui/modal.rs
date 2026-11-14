@@ -143,7 +143,7 @@ impl ModalScreen for MainMenu {
         MainMenu::handle(self, press)
     }
     fn draw(&self, console: &mut Console, show: &Show<'_>) {
-        MainMenu::draw(self, console, show.notice)
+        MainMenu::draw(self, console, show.notice, show.settings.temperature)
     }
 }
 

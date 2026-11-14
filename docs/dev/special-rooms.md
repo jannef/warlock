@@ -654,7 +654,7 @@ A room's `temperature` sets its cells' temperature and nothing else (design §8,
 environment's. `Here::warmth` adds the effects' degrees (the room's and the level's);
 `WorldState::temperature_at(level, content, time, pos)` (`world/levels/ice.rs`) is the one place a
 cell's temperature is decided: `temperature_on` (the level's, outside every room) plus
-`LevelState::warmth_at`. Readers: perception (`PerceptionView::temperature`, the status bar's
+`LevelState::warmth_at`. Readers: perception (`PerceptionView::temperature`, the pause menu's
 number, at the player's cell), `World::temperature` (the player's cell; dump headers) and
 `World::temperature_at`, and the ice: `LevelState::advance_ice` groups cells by (water,
 thickness, warmth), open water by (water, warmth) for each warmth the level has

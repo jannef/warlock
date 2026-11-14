@@ -4,8 +4,9 @@ Under the open sky (outdoor areas and the [overworld](overworld.md)) there is we
 **overcast**, **rain**, or **heavy rain**. It is the same everywhere in the land at a time. In
 [dungeons](dungeons.md) you cannot tell what the weather is outside.
 
-The [status bar](the-screen.md#the-screen) shows the weather while you are under the sky, for
-example `14:32 · 12 Rainmoon, Year 1444 · ◑ First quarter · Rain`.
+The [pause menu](the-screen.md#menus) (`Esc`) tells the weather while you are under the sky, for
+example *The 12th of Rainmoon, 1444, under a waxing gibbous moon, rain at 9 °C, the world waits.*
+It calls clear weather *clear skies* and overcast *grey skies*.
 
 ## How the weather changes
 
@@ -64,7 +65,7 @@ When the weather changes while you are under the sky, the [message line](the-scr
 | Rain or heavy rain | Clear | "The rain stops and the sky clears." |
 | Overcast | Clear | "The sky clears." |
 
-Arriving under the sky says nothing; the status bar shows the weather.
+Arriving under the sky says nothing; the pause menu tells the weather.
 
 Rain starting, or growing heavier, wakes you: it stops a [rest](resting.md). Other news (clouds
 gathering or parting, the rain easing or stopping) is written to the message line but does not

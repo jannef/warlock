@@ -95,7 +95,7 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
   violet. One floor in twenty that draws a draining room is drained throughout instead.
 - **Sweltering chamber.** Hot air: 25 °C warmer than the level around it, with a faint red glow.
   The heat does nothing to you, but [ice](temperature.md#walking-on-ice) melts in it (see
-  [Temperature and ice](temperature.md)). The [status bar](the-screen.md#the-screen) shows the heat
+  [Temperature and ice](temperature.md)). The [pause menu](the-screen.md#menus) tells the heat
   as you step in.
 - **Frigid hall.** Bitter cold: 25 °C colder than the level around it, with a faint blue glow. Its
   [water](terrain.md#water) freezes even on a mild level, so a pool in it is usually solid

@@ -8,20 +8,20 @@ expression: "render(case, content.clone())"
 
 
 
-                        ┌──────────────────────────────────────────────────┐
-                        │                                                  │
-                        │                   P A U S E D                    │
-                        │                   ═══════════                    │
-                        │                 the world waits                  │
-                        │                                                  │
-                        │                                                  │
-                        │ > Resume                                         │
-                        │   Settings                                       │
-                        │   Controls                                       │
-                        │   Save and quit to menu                          │
-                        │   Quit                                           │
-                        │                                                  │
-                        │                                                  │
-                        │                                                  │
-                        │ ↑↓ select   Enter choose   Esc resume            │
-                        └──────────────────────────────────────────────────┘
+                     ┌────────────────────────────────────────────────────────┐
+                     │                                                        │
+                     │                      P A U S E D                       │
+                     │                      ═══════════                       │
+                     │  The 11th of Darkening, 1444, under a waxing gibbous   │
+                     │        moon, the air at 10 °C, the world waits.        │
+                     │                                                        │
+                     │ > Resume                                               │
+                     │   Settings                                             │
+                     │   Controls                                             │
+                     │   Save and quit to menu                                │
+                     │   Quit                                                 │
+                     │                                                        │
+                     │                                                        │
+                     │                                                        │
+                     │ ↑↓ select   Enter choose   Esc resume                  │
+                     └────────────────────────────────────────────────────────┘

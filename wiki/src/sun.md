@@ -59,7 +59,7 @@ of a month, so its phases fall on the same days every month.
 - **Full moon** on the night from the 15th to the 16th: the whole moon is lit.
 - It **wanes** through the second half, half lit again around the 23rd (the last quarter).
 
-The status bar shows the phase; see [Time and the calendar](time.md#the-moons-phase).
+The [pause menu](the-screen.md#menus) tells the phase; see [Time and the calendar](time.md#the-moons-phase).
 
 {{#include generated/moons.md}}
 

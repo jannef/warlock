@@ -224,7 +224,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     heights at night (+1 to +3); only the gifts' (`TalentMods::gift_reach` marks the `scent`
     and `night_sight` of `stars` talents: Blood scent is not lengthened). Inner
     light burns as `full_moon_light` (`ember_full`, radius 2) instead of its `ember`. Nothing
-    new is shown: the status bar shows the moon's phase already, the cooldown its status, and
+    new is shown: the pause menu tells the moon's phase already, the cooldown its status, and
     the wiki the numbers. The design's element seasons stay deferred.
   - **Sign prerequisites**: a talent may ask `animal = "roc"`, `element = "fire"`, or `lucky =
     true` ("to be born in the year of the Roc", "to be Fire-born", "to be born on a lucky
@@ -248,7 +248,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Eyes**: the player's vision profile is the race's (the dev vision switch still works).
   - **Light-blindness** (#255; a race's `light_blind = { glare, sight, to_hit }`, drow 250, 10,
     −1): while the light on the player's own cell, as their eyes perceive it (the light the
-    perception finds there, the status bar's `Light`), is at least `glare` bright, they are
+    perception finds there, the developer status bar's `Light`), is at least `glare` bright, they are
     **dazzled**: the perception shows nothing farther than `sight` cells (line of sight and
     light are unchanged within it; wall completion stops there too), and every attack they roll
     is `to_hit` worse (`World::glared`, in `resolve`, from the same light on their cell then).

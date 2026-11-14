@@ -114,6 +114,14 @@ cases! {
         screen: Some("pause"),
         ..BASE
     },
+    // Under the open sky the pause menu's line on the world tells the weather too (#1679).
+    pause_menu_outdoors: Case {
+        name: "pause-menu-outdoors",
+        scenario: "courtyard",
+        actions: "weather:rain wait",
+        screen: Some("pause"),
+        ..BASE
+    },
     help_screen: Case {
         name: "help-screen",
         actions: "wait",

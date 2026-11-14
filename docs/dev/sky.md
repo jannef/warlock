@@ -30,9 +30,8 @@ overworld sight): anything that dims the whole sky (weather's clouds) applies th
 `shines()` is a `SeenLight` with key `moon_key(index)` and `Emitter::Moon(moon)` after the sun in
 `light_sources()`, lit by `Sunlight::compute(shadow, light, ...)` like the sun;
 `Emitter::shadow_steps` gives the shadow line of either. `PerceptionView::sky()` has the moons.
-The status bar shows the phase (`MoonPhase`, glyph in `ui/mod.rs`) and the full date
-(`Calendar::full_date`); its segments give way by priority, the moon cut to its glyph first
-(`ui::fit_segments`). Tune moonlight with captures of the `courtyard` and `forest` scenarios after
+The pause menu tells the phase in words and the date (`ui/almanac.rs`: `MoonPhase`, the
+day as an ordinal, `Calendar::month_name`); the status bar shows neither. Tune moonlight with captures of the `courtyard` and `forest` scenarios after
 `skip:353h skip:30m` (full moon at midnight) and `--content-dir assets`, which reads `sky.toml`
 from disk without a rebuild. The wiki's moons and overworld-sight tables come from `sky.toml`
 (`Moon::brightest`); run `cargo xtask wiki` after changing it.

@@ -1,8 +1,7 @@
 # Temperature and ice
 
-The air has a temperature wherever you are, and the [status bar](the-screen.md#the-screen) always
-shows it, as `4 °C` (or in °F; see [Settings](settings.md)). Below freezing it is tinted a cool
-blue, and from 30 °C a warm orange. For now the cold does nothing to you; what it does is freeze
+The air has a temperature wherever you are, and the [pause menu](the-screen.md#menus) (`Esc`) tells
+it, as `4 °C` (or in °F; see [Settings](settings.md)). For now the cold does nothing to you; what it does is freeze
 water.
 
 ## Underground
@@ -13,7 +12,7 @@ below freezing.
 
 A [special room](special-rooms.md) may be hotter or colder than the level around it. A
 *[sweltering chamber](special-rooms.md#room-hot)* is 25 °C warmer, and a *[frigid
-hall](special-rooms.md#room-cold)* 25 °C colder. The status bar shows the temperature where you
+hall](special-rooms.md#room-cold)* 25 °C colder. The pause menu tells the temperature where you
 stand, so it changes as you step in. The [water](terrain.md#water) in such a room freezes or thaws
 by the room's temperature, so a frigid hall's pool can be frozen on a level where every other pool
 is open.

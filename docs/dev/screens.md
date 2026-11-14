@@ -250,7 +250,10 @@ to open, read keys for, or draw one:
   `blank_way` too. Heal's and Give's ways between two kept beasts stay their own (`tend_way`,
   `InputMode::GiveWay`).
 - Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Hints`,
-  `Panel`, main and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`,
+  `Panel`, main and pause menu; the pause menu's line on the world under its title is
+  `ui/almanac.rs`'s `Almanac`, read from the `PerceptionView` when the menu opens: the date, the
+  moon in words, the weather, the temperature in the settings' unit, ending ", the world waits.",
+  at most two centred lines, the moon then the weather giving way before a third), `ui/new_run_screen.rs`, `ui/settings_screen.rs`,
   `ui/controls_screen.rs` (commands grouped by `Context` under headings, notes on Esc and list
   letters, Reset all keys, Export keys…, Import keys…; Enter on a command opens its keys under
   it as a sub-list, `Row::Key` and `Row::AddKey` (#1324): Enter replaces the selected key or adds
@@ -280,8 +283,9 @@ to open, read keys for, or draw one:
   `ui/equipment_screen.rs` (`EquipmentScreen`: slots by letter, which always name slots, so its
   own key `i` closes it only when it names none (with 13 slots `i` always names one); `ItemScreen`: the stacks that fit one slot), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
   and sign (`birth_parts`/`fit_parts`, shared with the summary), the player's scores, hit points
-  and Defence total, the alignment band (`PerceptionView::own_alignment`), weight and burden
-  thresholds; the attacks beside the stats (`draw_attacks`, from `PerceptionView::own_attacks`:
+  and Defence total, the alignment band (`PerceptionView::own_alignment`), the Status row (every
+  condition the status bar can show, from the same `ui::conditions` it draws, wrapped, never
+  dropped, #1695), weight and burden thresholds; the attacks beside the stats (`draw_attacks`, from `PerceptionView::own_attacks`:
   two rows each, label and name, then `OwnAttack::summary` under the name); 80 wide),
   `ui/weapon_skills_screen.rs` (an info page: sections, ranks, and a faint ten-cell marks bar,
   the fighting styles in use marked `•`; two columns from 88 wide, else one that drops its gaps
@@ -460,5 +464,5 @@ add one, add a case to its group's `cases!` (`test_name: Case { name: "test-name
 `#[test]` a case, #1529, so one mismatch hides no other), run `cargo test -p warlock screen_snapshots`, then `cargo insta review` (or
 `INSTA_UPDATE=always`, then read the diff). The snapshot leaves out the status bar's row where
 it shows whole (`shown`, #1521: a HUD change rewrites only the cases about the bar, those with
-`status_bar: true`) and writes the game's version `[version]` (#1532). A changed screen shows as a text diff in the PR. New
+`status_bar: true`, which show the bar as a player sees it: a whole row is drawn again without the developer segments, the turn, position, light, vision, and seed, that the debug build adds, #1666) and writes the game's version `[version]` (#1532). A changed screen shows as a text diff in the PR. New
 screens get a case here, never a golden (CLAUDE.md "Golden screenshots").
