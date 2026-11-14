@@ -582,6 +582,7 @@ impl World {
 
     /// The ids of the entries a roll on the player's overworld cell could draw now: the
     /// matching tables' entries whose own `when` holds (dev; tests).
+    #[cfg(test)]
     pub fn encounter_entries_here(&self) -> Vec<String> {
         let content = self.content.clone();
         match self.here(self.player_pos()) {

@@ -270,6 +270,7 @@ fn the_wizard_steps_offer_what_fits_and_the_plan_names_the_item() {
     w.player_mut().inventory.push(billet);
     let view = w.perception();
     let steps = view.craft_steps(recipe(&w, "long_sword"));
+    #[allow(clippy::type_complexity)]
     let shown: Vec<(String, bool, Vec<(usize, u32, bool)>)> = (steps.iter())
         .map(|s| {
             let options = s

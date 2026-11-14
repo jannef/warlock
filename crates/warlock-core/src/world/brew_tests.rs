@@ -166,6 +166,7 @@ fn the_brews_are_the_designs_table_and_nothing_else() {
     let skill = content.skill_id("alchemy").expect("alchemy");
     let murky = content.object_id("murky_draught");
     let blunder = content.object_id("brewers_blunder");
+    #[allow(clippy::type_complexity)]
     let mut shown: Vec<(String, Vec<(String, u32)>, i32, u16)> = Vec::new();
     for (_, r) in content.recipes().of(skill) {
         let result = r.result.expect("a result");

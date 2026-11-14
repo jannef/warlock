@@ -116,7 +116,7 @@ Tests: `combat.rs` (soak distribution, draw order, criticals before the soak, pe
 Damage types (spec §8 "Damage types", #151): the data is `data/damage_types.toml`
 (`content/damage_type.rs`: `DamageTypeDef { id, name, physical, verb, you, unarmed }`,
 `DamageTypeId` an index in file order, in the content fingerprint; `Content::damage_types`,
-`damage_type`, `damage_type_id`, `unarmed_damage`, `is_physical`; the shared resolvers
+`damage_type`, `damage_type_id`, `unarmed_damage`; the shared resolvers
 `Content::resolve_kinds` (`damage_type`, one or two names → `Kinds`) and `resolve_per_kind`
 (`resist`/`protects` maps) are what objects, creatures, affixes, traps, scrolls, statuses, and
 terrain parse with). The model is `warlock-core/src/damage.rs`: `Damage { amount, kind:

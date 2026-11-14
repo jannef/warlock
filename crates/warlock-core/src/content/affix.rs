@@ -809,6 +809,7 @@ struct TierSpec {
 /// How the affix table resolves the ids it names. A table content has none of is `None`, and the
 /// affixes that would name one of its entries are left out: skill affixes without skills, typed
 /// ones without damage types, pooled ones without resources.
+#[allow(clippy::type_complexity)]
 pub(super) struct Lookups<'a> {
     /// Light preset ids (a light's tiers).
     pub light: &'a dyn Fn(&str) -> Option<LightId>,
