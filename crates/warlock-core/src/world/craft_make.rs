@@ -952,19 +952,10 @@ pub(crate) fn craft_plan(
     Ok(CraftPlan {
         verb,
         name,
-        uses: joined(&uses),
+        uses: crate::text::and_list(&uses),
         station: def.station.map(|t| content.terrain(t).name.clone()),
         time: format!("about {}", Duration::seconds(u64::from(seconds)).spoken()),
     })
-}
-
-/// `items` joined as a list is said: "a, b and c".
-fn joined(items: &[String]) -> String {
-    match items {
-        [] => String::new(),
-        [one] => one.clone(),
-        [rest @ .., last] => format!("{} and {last}", rest.join(", ")),
-    }
 }
 
 /// A recipe's work under way: which, with what (positions in step order), and how long.

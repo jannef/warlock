@@ -6,6 +6,7 @@ use super::text::{Term, anchored, article, capital, glyph, yes};
 use std::fmt::Write as _;
 use warlock_core::content::{BASE_TURN, Content, ItemClassId, ObjectDef, ObjectId, price};
 use warlock_core::object::format_weight;
+use warlock_core::text::and_list;
 
 /// The equipment slots in the order the screen lists them, with their letters, what goes in
 /// each, and how long putting a thing on there or taking it off takes. A class's own slot (the
@@ -199,12 +200,10 @@ pub(super) fn shops(content: &Content) -> String {
         let names: Vec<String> = (list.iter())
             .map(|&c| content.item_class(c).name.to_lowercase())
             .collect();
-        match names.as_slice() {
-            [] => "nothing".to_string(),
-            [one] => one.clone(),
-            [a, b] => format!("{a} and {b}"),
-            [rest @ .., last] => format!("{}, and {last}", rest.join(", ")),
+        if names.is_empty() {
+            return "nothing".to_string();
         }
+        and_list(&names)
     };
     for def in shops.defs() {
         // What a generated one always has, first: "scrolls of identify always".

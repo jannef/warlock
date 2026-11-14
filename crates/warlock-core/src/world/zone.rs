@@ -462,7 +462,7 @@ impl World {
         if id == self.state.player {
             self.say("You slip on the slick ground!");
         } else if self.perception.sees_actors_at(pos) {
-            let who = super::talk::capitalized(&self.called(&self.state.actors[&id]));
+            let who = crate::text::capitalized(&self.called(&self.state.actors[&id]));
             self.say(format!("{who} slips."));
         }
         self.afflict(id, staggered, 1, Some(zone.by), events);

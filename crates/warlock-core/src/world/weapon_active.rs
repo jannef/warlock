@@ -33,6 +33,7 @@ use crate::content::{
 };
 use crate::dice::{Dice, Roll};
 use crate::geom::{Dir, Pos};
+use crate::text::capitalized;
 
 /// The penetration an `ignore_protection` blow or shot has: more than any Protection, so none
 /// of it soaks (and no soak is drawn).
@@ -579,12 +580,4 @@ impl World {
 /// `dice` rolled twice: twice the dice, the bonus once (Mighty swing).
 fn twice(dice: Roll) -> Roll {
     dice.more(dice.groups().first().map_or(0, Dice::count))
-}
-
-/// `text` with its first letter in upper case.
-fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    chars
-        .next()
-        .map_or_else(String::new, |c| c.to_uppercase().chain(chars).collect())
 }

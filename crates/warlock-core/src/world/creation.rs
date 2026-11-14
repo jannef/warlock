@@ -17,9 +17,10 @@
 use super::talent::Due;
 use super::{World, WorldError};
 use crate::character::CharacterSpec;
-use crate::content::{Content, TalentId, article};
+use crate::content::{Content, TalentId};
 use crate::rng::Rng;
 use crate::talent;
+use crate::text::article;
 use std::sync::Arc;
 
 /// A creation pick as written: `id` or `id:choice`.

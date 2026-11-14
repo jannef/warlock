@@ -2,8 +2,7 @@
 //! something and how hard it is to break out, what comes out by danger, the veins, and each
 //! dungeon's ores.
 
-use super::combat::percent;
-use super::text::capital;
+use super::text::{capital, percent_of};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, MAX_LEVEL, Mined};
 
@@ -94,7 +93,7 @@ pub(super) fn mining_finds(content: &Content) -> String {
         for table in &tables {
             let total: u32 = table.iter().map(|(_, w)| w).sum();
             let share = match table.iter().find(|(r, _)| *r == i) {
-                Some(&(_, w)) => percent(w, total.max(1)),
+                Some(&(_, w)) => percent_of(w, total.max(1)),
                 None => "—".into(),
             };
             let _ = write!(out, " {share} |");
@@ -139,7 +138,7 @@ pub(super) fn mining_veins(content: &Content) -> String {
         for table in &tables {
             let total: u32 = table.iter().map(|(_, w)| w).sum();
             let share = match table.iter().find(|(r, _)| *r == i) {
-                Some(&(_, w)) => percent(w, total.max(1)),
+                Some(&(_, w)) => percent_of(w, total.max(1)),
                 None => "—".into(),
             };
             let _ = write!(out, " {share} |");

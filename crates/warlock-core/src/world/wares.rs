@@ -124,7 +124,7 @@ impl World {
         let magic = (describe::lines(stack, &self.content).into_iter())
             .filter(|l| matches!(l.kind, LineKind::Affix(_) | LineKind::Power))
             .map(|l| l.text);
-        std::iter::once(super::talk::capitalized(&lore.listed(stack)))
+        std::iter::once(crate::text::capitalized(&lore.listed(stack)))
             .chain(magic)
             .collect::<Vec<_>>()
             .join(". ")

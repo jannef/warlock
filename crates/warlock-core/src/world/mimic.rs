@@ -85,7 +85,7 @@ impl World {
             let def = self.content.creature(creature);
             let chest = (self.content.chests().band_of(def.level))
                 .map_or_else(|| "chest".to_string(), |b| b.name.clone());
-            let what = format!("{} {}", crate::content::article(&def.name), def.name);
+            let what = format!("{} {}", crate::text::article(&def.name), def.name);
             self.say(match how {
                 Reveal::Touch | Reveal::Knocked => format!("The {chest} lurches: it is {what}!"),
                 Reveal::Struck => format!("The {chest} shudders: it is {what}!"),

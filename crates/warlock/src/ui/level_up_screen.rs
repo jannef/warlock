@@ -21,7 +21,7 @@
 //! chosen. The talent steps stay words. It reads the perception snapshot.
 
 use super::character_screen::fit_joined;
-use super::menu::{Hints, Nav, Panel, Press};
+use super::menu::{Hints, Nav, Panel, Press, truncated};
 use super::paged_list::{PagedList, Row, draw_header};
 use super::screens::ScreenAction;
 use super::skills_screen::meter;
@@ -355,10 +355,7 @@ impl LevelUpScreen {
                 _ if self.choosing.is_some() => String::new(),
                 _ => entry.description.clone(),
             };
-            let detail: String = match detail.chars().count() > room && room > 1 {
-                true => detail.chars().take(room - 1).collect::<String>() + "…",
-                false => detail,
-            };
+            let detail = truncated(&detail, room);
             console.print(detail_x, y, detail.trim_end(), TEXT_DIM);
         }
         // Below the list: why the screen stays, else what the selected row is.

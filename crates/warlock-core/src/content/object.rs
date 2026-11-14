@@ -99,6 +99,7 @@ use crate::dice::Dice;
 use crate::door::Key;
 use crate::item_parts::ItemPart;
 use crate::object::Stack;
+use crate::text::article;
 use crate::time::Duration;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -662,14 +663,6 @@ pub fn counted(name: &str, plural: &str, count: u32) -> String {
         format!("{} {name}", article(name))
     } else {
         format!("{count} {plural}")
-    }
-}
-
-/// `a` or `an` for a noun, by its first letter.
-pub fn article(noun: &str) -> &'static str {
-    match noun.chars().next() {
-        Some(c) if "aeiouAEIOU".contains(c) => "an",
-        _ => "a",
     }
 }
 

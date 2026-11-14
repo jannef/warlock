@@ -4,13 +4,12 @@
 use crate::render::console::{Cell, Console};
 use warlock_core::Pos;
 use warlock_core::color::Rgb;
-use warlock_core::content::{
-    ActionKind, Content, ServiceKind, Stance, ZoneKind, and_list, is_proper,
-};
+use warlock_core::content::{ActionKind, Content, ServiceKind, Stance, ZoneKind, is_proper};
 use warlock_core::damage::ResistanceWord;
 use warlock_core::magic::Numbers;
 use warlock_core::object::{Stack, phrase, phrase_with};
 use warlock_core::perception::{CellView, PerceptionView, SeenActor};
+use warlock_core::text::{and_list, article, capitalized};
 use warlock_core::world::{ActorId, ActorKind};
 
 /// Cursor colors: dark glyph on a warm highlight, so it reads on any terrain and under any light.
@@ -198,7 +197,7 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     {
         let a_trap = with_article(trap);
         return match (view.cell(p), view.sound_at(p)) {
-            (CellView::Visible(t), _) => format!("{}, on {}.", capitalize(&a_trap), ground(t)),
+            (CellView::Visible(t), _) => format!("{}, on {}.", capitalized(&a_trap), ground(t)),
             (CellView::Remembered(t), Some(heard)) => format!(
                 "{} here, where you remember {a_trap} on {}.",
                 heard.you_hear(),
@@ -313,7 +312,11 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                         };
                         format!(
                             "{} {name}{} ({stance}{health}{effects}){}{gear}, on {}{here}.",
-                            if actor.ally { "Your" } else { article(&name) },
+                            if actor.ally {
+                                "Your".to_string()
+                            } else {
+                                capitalized(article(&name))
+                            },
                             made_of(content, actor).0,
                             waits(content, actor),
                             terrain(t)
@@ -321,8 +324,8 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                     }
                 }
             }
-            (None, Some(things)) => format!("{}, on {}.", capitalize(things), terrain(t)),
-            (None, None) => format!("{}.", capitalize(&with_article(&terrain(t)))),
+            (None, Some(things)) => format!("{}, on {}.", capitalized(things), terrain(t)),
+            (None, None) => format!("{}.", capitalized(&with_article(&terrain(t)))),
         },
         (CellView::Remembered(t), Some(heard)) => {
             format!("{heard} here, where you remember {}.", memory(t))
@@ -362,11 +365,10 @@ fn services(content: &Content, actor: &SeenActor) -> String {
             verbs.push(verb);
         }
     }
-    match verbs.as_slice() {
-        [] => String::new(),
-        [one] => format!(", who {one} for gold"),
-        [rest @ .., last] => format!(", who {} and {last} for gold", rest.join(", ")),
+    if verbs.is_empty() {
+        return String::new();
     }
+    format!(", who {} for gold", and_list(&verbs))
 }
 
 /// ", who waits" after a seen creature's name when its dialogue's only topics are callings'
@@ -429,23 +431,8 @@ fn gear(view: &PerceptionView<'_>, actor: ActorId) -> String {
         .collect()
 }
 
-fn article(noun: &str) -> &'static str {
-    match noun.chars().next() {
-        Some(c) if "aeiouAEIOU".contains(c) => "An",
-        _ => "A",
-    }
-}
-
 fn with_article(noun: &str) -> String {
-    format!("{} {noun}", article(noun).to_lowercase())
-}
-
-fn capitalize(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
-    }
+    format!("{} {noun}", article(noun))
 }
 
 /// Draws the cursor at console cell `(x, y)`, showing what the player perceives there.
@@ -1455,6 +1442,6 @@ map = '''
     fn articles() {
         assert_eq!(with_article("open door"), "an open door");
         assert_eq!(with_article("stone wall"), "a stone wall");
-        assert_eq!(capitalize("an altar"), "An altar");
+        assert_eq!(capitalized("an altar"), "An altar");
     }
 }

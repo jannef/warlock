@@ -178,7 +178,7 @@ impl World {
                 // A pool with words of its own says them (Rage's "You have not the rage for
                 // it.").
                 Unavailable::Short(resource) => match &content.resource(resource).lacking {
-                    Some(words) => format!("{}.", super::talk::capitalized(words)),
+                    Some(words) => format!("{}.", crate::text::capitalized(words)),
                     None => format!(
                         "You have too little {}.",
                         content.resource(resource).name.to_lowercase()

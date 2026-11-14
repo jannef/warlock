@@ -26,8 +26,9 @@
 //!   nothing. Said with the news, after the blow's own words.
 
 use super::{ActorId, World};
-use crate::content::{CORPSE_SHARE, CreatureId, CreatureSpawn, HALF_SHARE, and_list, counted};
+use crate::content::{CORPSE_SHARE, CreatureId, CreatureSpawn, HALF_SHARE, counted};
 use crate::content::{the, the_start};
+use crate::text::{and_list, capitalized};
 use serde::{Deserialize, Serialize};
 
 /// What a creature was made of (docs/design/monster-dread.md §5.5), for its kill's credit.
@@ -165,7 +166,7 @@ impl World {
         let verb = if one { "crawls" } else { "crawl" };
         Some(format!(
             "{} {verb} out of {}!",
-            capital(&list),
+            capitalized(&list),
             the(&def.name)
         ))
     }
@@ -181,14 +182,5 @@ impl World {
         };
         let percent = u16::from(percent) * u16::from(share) / 100;
         (u8::try_from(percent).unwrap_or(u8::MAX), false)
-    }
-}
-
-/// `text` with its first letter upper-case.
-fn capital(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
     }
 }

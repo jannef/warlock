@@ -3,7 +3,7 @@
 //! (portable or the platform's folders), and an Open folder action for each (spec §7). The
 //! same facts as `warlock --paths`, from `paths.rs`.
 
-use super::menu::{Hints, Nav, Panel, Press, wrap};
+use super::menu::{Hints, Nav, Panel, Press, truncated_head, wrap};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::Bindings;
@@ -105,7 +105,7 @@ impl FilesScreen {
             console.print(x + 2, y, e.label, color);
             console.print(x + 14, y, e.what, TEXT_DIM);
             let place = match &e.dir {
-                Some(dir) => shorten(&dir.display().to_string(), w - 4),
+                Some(dir) => truncated_head(&dir.display().to_string(), (w - 4).max(0) as usize),
                 None => "(not stored)".into(),
             };
             console.print(x + 2, y + 1, &place, color);
@@ -146,15 +146,6 @@ fn fit(text: &str, width: i32) -> Vec<String> {
 }
 
 /// `text` cut to `width` cells, keeping its end (the interesting part of a path).
-fn shorten(text: &str, width: i32) -> String {
-    let (len, width) = (text.chars().count(), width.max(2) as usize);
-    if len <= width {
-        return text.to_string();
-    }
-    let tail: String = text.chars().skip(len - (width - 1)).collect();
-    format!("…{tail}")
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -242,7 +233,7 @@ mod tests {
 
     #[test]
     fn long_paths_keep_their_end() {
-        assert_eq!(shorten("/a/b", 10), "/a/b");
-        assert_eq!(shorten("/very/long/path/here", 8), "…th/here");
+        assert_eq!(truncated_head("/a/b", 10), "/a/b");
+        assert_eq!(truncated_head("/very/long/path/here", 8), "…th/here");
     }
 }

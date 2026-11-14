@@ -20,7 +20,7 @@
 //! command by context, including Esc, and closes on `?` or Esc. The list is drawn by one piece
 //! of code for both, so help always matches the bindings.
 
-use super::menu::{Hints, Nav, Panel, Press, wrap};
+use super::menu::{Hints, Nav, Panel, Press, truncated, wrap};
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, Context, KeyBinding, KeyCommand};
 use crate::render::console::Console;
@@ -485,13 +485,13 @@ impl ControlsScreen {
                     console.print(panel.inner_x(), y, ABILITY_KEYS_TITLE, ACCENT);
                 }
                 Row::Command(command) => {
-                    let value = fit(&key_list(bindings, *command), value_w);
+                    let value = truncated(&key_list(bindings, *command), value_w);
                     panel.row(console, y, selected, &command.name(), &value, label_w);
                 }
                 Row::Key(command, at) => {
                     let value = match bindings.keys_of(*command).get(*at) {
                         _ if selected && capturing => "press a key...".to_string(),
-                        Some(key) => fit(&key.display(), value_w),
+                        Some(key) => truncated(&key.display(), value_w),
                         None => String::new(),
                     };
                     let label = format!("  Key {}", at + 1);
@@ -649,14 +649,6 @@ fn remove_message(
 }
 
 /// `text` cut to `width` cells, ending in `…` when cut.
-fn fit(text: &str, width: usize) -> String {
-    if text.chars().count() <= width {
-        return text.to_string();
-    }
-    let kept: String = text.chars().take(width.saturating_sub(1)).collect();
-    format!("{kept}…")
-}
-
 /// A command's keys, primary first, separated by spaces.
 fn key_list(bindings: &Bindings, command: KeyCommand) -> String {
     let keys: Vec<String> = bindings

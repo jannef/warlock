@@ -587,6 +587,33 @@ pub(super) fn wrap(text: &str, width: i32) -> Vec<String> {
     lines
 }
 
+/// `text` cut to `width` cells, its end given up for a `…` when it is longer.
+pub(super) fn truncated(text: &str, width: usize) -> String {
+    if text.chars().count() <= width {
+        return text.to_string();
+    }
+    match width {
+        0 => String::new(),
+        _ => text.chars().take(width - 1).chain(['…']).collect(),
+    }
+}
+
+/// `text` cut to `width` cells, its start given up for a `…` when it is longer (a path, whose
+/// end matters most).
+pub(super) fn truncated_head(text: &str, width: usize) -> String {
+    let len = text.chars().count();
+    if len <= width {
+        return text.to_string();
+    }
+    match width {
+        0 => String::new(),
+        _ => ['…']
+            .into_iter()
+            .chain(text.chars().skip(len - (width - 1)))
+            .collect(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

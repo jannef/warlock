@@ -100,13 +100,13 @@ pub fn reach_words(shape: Shape, reach: Reach) -> Vec<String> {
 /// `Your 1s are rolled again.`, `Your 1s and 2s are rolled again.`; `None` for none.
 pub fn reroll_words(most: u32) -> Option<String> {
     let faces: Vec<String> = (1..=most).map(|n| format!("{n}s")).collect();
-    let list = match faces.as_slice() {
-        [] => return None,
-        [one] => one.clone(),
-        [first, second] => format!("{first} and {second}"),
-        [rest @ .., last] => format!("{}, and {last}", rest.join(", ")),
-    };
-    Some(format!("Your {list} are rolled again."))
+    if faces.is_empty() {
+        return None;
+    }
+    Some(format!(
+        "Your {} are rolled again.",
+        crate::text::and_list(&faces)
+    ))
 }
 
 #[cfg(test)]

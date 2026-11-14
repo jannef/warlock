@@ -25,9 +25,10 @@ use super::Content;
 use super::creature::CreatureId;
 use super::dialogue::{ID_SHAPE, is_id};
 use super::item_class::ItemClassId;
-use super::object::{ObjectId, article};
+use super::object::ObjectId;
 use super::quest::{Goal, KillTarget, QuestDef, QuestKind, QuestTexts, Reveal, RevealSpec};
 use super::tag::TAG_TARGET;
+use crate::text::{article, capitalized};
 use serde::{Deserialize, Serialize};
 
 /// What a rolled quest drew as it was given (saved in its record): a creature type's, a tag's
@@ -607,14 +608,5 @@ pub fn one_of(name: &str, unique: bool) -> String {
         (true, Some(c)) if c.is_uppercase() => name.to_string(),
         (true, _) => format!("the {name}"),
         (false, _) => format!("{} {name}", article(name)),
-    }
-}
-
-/// `text` with its first letter upper-case.
-fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
     }
 }

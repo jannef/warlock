@@ -1,6 +1,7 @@
 //! Dungeons and danger levels (spec §7 "Dungeon branches", "Danger levels"): every branch's
 //! floors with their danger, who lives there, and how they come back.
 
+use super::text::percent;
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use warlock_core::content::danger::{self, Odds, StrayPool, TOO_WEAK};
@@ -333,17 +334,6 @@ pub(super) fn neutral_weight(content: &Content) -> String {
     out
 }
 
-/// A chance in percent, to four decimals without trailing zeros: `5`, `0.2375`.
-fn percent(p: f64) -> String {
-    let text = format!("{p:.4}");
-    let text = text.trim_end_matches('0').trim_end_matches('.');
-    if text == "0" && p > 0.0 {
-        "under 0.0001".into()
-    } else {
-        text.into()
-    }
-}
-
 /// The default odds of a draw (`data/dungeons.toml`'s `[defaults]`): strays, out-of-depth
 /// draws, and how far deeper those go, each as a share of all draws.
 pub(super) fn draw_odds(content: &Content) -> String {
@@ -362,7 +352,7 @@ pub(super) fn draw_odds(content: &Content) -> String {
     let _ = writeln!(out, "| a stray, from the generic list | {stray}% |");
     let _ = writeln!(
         out,
-        "| [dread](#dread), among the dread kinds alone | 1 in {dread_one_in} ({}%) |",
+        "| [dread](#dread), among the dread kinds alone | 1 in {dread_one_in} ({}) |",
         percent(100.0 / f64::from(dread_one_in.max(1)))
     );
     let _ = writeln!(out, "| out of depth, all told | {out_of_depth}% |");
@@ -376,7 +366,7 @@ pub(super) fn draw_odds(content: &Content) -> String {
         }
         let _ = writeln!(
             out,
-            "| {} deeper than the danger | {}% |",
+            "| {} deeper than the danger | {} |",
             step + 1,
             percent(chance * 100.0)
         );
@@ -385,7 +375,7 @@ pub(super) fn draw_odds(content: &Content) -> String {
         let rest = ood * more.powi((shown + 1).into());
         let _ = writeln!(
             out,
-            "| {} to {} deeper (the most) | {}% |",
+            "| {} to {} deeper (the most) | {} |",
             shown + 2,
             deeper_cap + 1,
             percent(rest * 100.0)
@@ -396,7 +386,7 @@ pub(super) fn draw_odds(content: &Content) -> String {
 
 /// One in `n` in words with its percent: `1 in 100 (1%)`.
 fn one_in(n: u16) -> String {
-    format!("1 in {n} ({}%)", percent(100.0 / f64::from(n.max(1))))
+    format!("1 in {n} ({})", percent(100.0 / f64::from(n.max(1))))
 }
 
 /// How often a draw is dread, place by place (docs/design/monster-dread.md §8): every branch with

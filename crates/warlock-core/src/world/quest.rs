@@ -28,7 +28,6 @@
 //! Progress the player's action made is said at once ("Quest updated: 2 / 3 giant rats."). The
 //! quest log reads [`PerceptionView::quests`]: the player knows their quests.
 
-use super::talk::capitalized;
 use super::{ActorId, Deed, Spent, TopicView, World};
 use crate::action::{Event, Positions};
 use crate::content::StatUse;
@@ -40,6 +39,7 @@ use crate::object::{self, Stack};
 use crate::perception::PerceptionView;
 use crate::rng::Rng;
 use crate::talent::TalentMods;
+use crate::text::capitalized;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
@@ -444,7 +444,7 @@ fn rolled_asks(content: &Content, def: &QuestDef, rolled: &Rolled) -> String {
     let n = def.count();
     let some = |one: &str, many: &str| {
         if n == 1 {
-            format!("{} {one}", crate::content::article(one))
+            format!("{} {one}", crate::text::article(one))
         } else {
             format!("{n} {many}")
         }
@@ -457,7 +457,7 @@ fn rolled_asks(content: &Content, def: &QuestDef, rolled: &Rolled) -> String {
                 "Kill {} of one type drawn at random from the populations of {} (of those \
                  open when it is given; no uniques, and no animals for a Beast-friend).",
                 some("creature", "creatures"),
-                crate::content::and_list(&names)
+                crate::text::and_list(&names)
             )
         }
         Rolled::Pick(Pick::Tags(tags)) => {
@@ -469,7 +469,7 @@ fn rolled_asks(content: &Content, def: &QuestDef, rolled: &Rolled) -> String {
                 "Kill {} of one kind drawn at random from {} (for a Beast-friend, none \
                  with an animal among them).",
                 some("creature", "creatures"),
-                crate::content::and_list(&plurals)
+                crate::text::and_list(&plurals)
             )
         }
         Rolled::Pick(Pick::Objects { class, loot }) => {
@@ -506,10 +506,7 @@ fn rolled_asks(content: &Content, def: &QuestDef, rolled: &Rolled) -> String {
                     [one] => one.clone(),
                     _ => {
                         let names: Vec<&str> = names.iter().map(String::as_str).collect();
-                        format!(
-                            "one of {}, drawn at random",
-                            crate::content::and_list(&names)
-                        )
+                        format!("one of {}, drawn at random", crate::text::and_list(&names))
                     }
                 }
             };

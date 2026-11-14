@@ -506,7 +506,7 @@ pub struct RoomEffectDef {
 impl RoomEffectDef {
     /// Its name with an article: "an echoing hall", "a sanctuary".
     pub fn with_article(&self) -> String {
-        format!("{} {}", super::article(&self.name), self.name)
+        format!("{} {}", crate::text::article(&self.name), self.name)
     }
 
     /// `light` as this room leaves it: all of it but in a room that keeps only part of it.

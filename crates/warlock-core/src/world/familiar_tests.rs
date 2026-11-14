@@ -223,7 +223,7 @@ fn a_witch_begins_with_a_named_familiar_and_a_warrior_without() {
     let head = format!(
         "{}, {} {} (grade {})",
         data.name,
-        crate::content::article(&kind.name),
+        crate::text::article(&kind.name),
         kind.name,
         data.grade
     );

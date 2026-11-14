@@ -138,10 +138,8 @@ impl World {
 /// a glowcap", "a, b, c, and d".
 fn found(stacks: &[Stack], content: &Content) -> String {
     let names: Vec<String> = stacks.iter().map(|s| s.describe(content)).collect();
-    match names.as_slice() {
-        [] => "nothing".into(),
-        [one] => one.clone(),
-        [a, b] => format!("{a} and {b}"),
-        [rest @ .., last] => format!("{}, and {last}", rest.join(", ")),
+    if names.is_empty() {
+        return "nothing".into();
     }
+    crate::text::and_list(&names)
 }

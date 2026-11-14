@@ -53,7 +53,7 @@ impl NameScreen {
         let who = spec.map_or(String::new(), |spec| {
             let race = (spec.race(content)).map_or(spec.race.clone(), |r| r.name.clone());
             let class = (spec.class(content)).map_or(spec.class.clone(), |c| c.name.clone());
-            let article = warlock_core::content::article(&race);
+            let article = warlock_core::text::article(&race);
             format!("{article} {} {}", race.to_lowercase(), class.to_lowercase())
         });
         Self {

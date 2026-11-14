@@ -39,14 +39,7 @@ use crate::damage::Damage;
 use crate::dice::{Dice, Roll};
 use crate::geom::Pos;
 use crate::talent::TalentMods;
-
-/// `text` with its first letter in upper case.
-fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    chars
-        .next()
-        .map_or_else(String::new, |c| c.to_uppercase().chain(chars).collect())
-}
+use crate::text::capitalized;
 
 /// What an event a trigger fires on was ([`World::weapon_trigger`]): the other end of it (the
 /// one struck, or the attacker), the kind of attack, the skills concerned, and the blow, if one.

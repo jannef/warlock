@@ -14,6 +14,7 @@ use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
 use warlock_core::perception::PerceptionView;
+use warlock_core::text::capitalized;
 use warlock_core::world::QuestView;
 
 /// Width of the panel: the dialogue screen's.
@@ -156,15 +157,6 @@ impl QuestScreen {
 /// The info pages' tab line on the panel's bottom border.
 fn info_tabs_line(console: &mut Console, panel: &Panel, bindings: &Bindings) {
     super::info_tabs::draw_tabs(console, panel, bindings, ScreenName::Quests);
-}
-
-/// `text` with its first letter in upper case.
-fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
-    }
 }
 
 #[cfg(test)]
