@@ -225,3 +225,19 @@ impl FromStr for Layer {
 pub fn parse_layers(text: &str) -> Result<Vec<Layer>, String> {
     text.split(',').map(|l| l.trim().parse()).collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// `docs/dev/cli.md` lists every dump layer by hand (#1667).
+    #[test]
+    fn every_layer_is_in_the_cli_doc() {
+        let missing =
+            crate::test_support::missing_from_cli_doc(Layer::ALL.iter().map(|l| l.name()));
+        assert!(
+            missing.is_empty(),
+            "docs/dev/cli.md lacks the dump layers {missing:?}"
+        );
+    }
+}

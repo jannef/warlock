@@ -14,7 +14,7 @@ effects B5 (#707). Keep it current with the code, as CLAUDE.md says.
 | `background.rs` | The roll, pure: `Witness` (what conditions read) and `Witness::fits`, `tell(content, seed, &witness) -> Story { told, effects }`, `Rolled` (an effect with its dice rolled), `Told { chapter, line }` (saved), `retell` and `lines` (the text again from the content, slots filled), `missing` (log lines for ids the content lost). Tests: `background_tests.rs`. |
 | `world/character/background.rs` | `World::tell_background` (from `start_run`), `apply_story` (one arm per effect kind), `story_gold`, `story_item`. Tests: `world/character/background_tests.rs`. |
 | `rng.rs` | `Rng::background(seed, spec, chapter)`: `background/<race>,<gender>,<class>/<chapter>`. |
-| `dump.rs` | The `story` layer, JSON `story` and `character.story`, the `actors` layer's `story …`. |
+| `dump/story.rs`, `dump/json.rs` | The `story` layer, JSON `story` and `character.story`, the `actors` layer's `story …`. |
 | `crates/warlock/src/ui/chargen_screen.rs` | The summary's dim line under the kit, `FATE`: "Fate will have its say when you set out." (only with content that tells stories). |
 
 ## The data

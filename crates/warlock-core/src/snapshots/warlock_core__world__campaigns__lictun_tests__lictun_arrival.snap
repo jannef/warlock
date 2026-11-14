@@ -1,5 +1,5 @@
 ---
-source: crates/warlock-core/src/world/lictun_tests.rs
+source: crates/warlock-core/src/world/campaigns/lictun_tests.rs
 expression: rows
 ---
 ....... .................................

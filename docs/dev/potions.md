@@ -224,7 +224,7 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
   diseases talent already has.
 
 #787 cut Quick study of the body, the witch's Cauldron-wise, and Nose for draughts, with their
-effect kinds (`potion_marks_percent`, `potion_heals`, `potion_smell`) and `World::smell_potions`.
+effect kinds (`potion_marks_percent`, `potion_heals`, `potion_smell`) and the rule that smelled potions.
 
 ## UI
 

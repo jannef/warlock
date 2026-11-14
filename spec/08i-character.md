@@ -509,7 +509,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     there, allies too, and a swimmer swaps with no one). A step into it from anything else is
     refused with no time for the untrained ("You cannot swim.") and for one Strained or worse
     ("You would sink."), and otherwise **always asks first**, in the one dialog, with no setting to
-    turn it off (the owner; `input::deep_water_dialog`; "Dive in", "Stay back" selected first and
+    turn it off (the owner; `ui::step_dialogs::deep_water_dialog`; "Dive in", "Stay back" selected first and
     Esc's, no time; core `move:DIR` needs no dialog). Water the player does not know of stops them
     at its edge with no time, and is then known, so the question comes before they are in. Going
     in takes the step and no check, and puts out the ready light. **A step that starts in it**,

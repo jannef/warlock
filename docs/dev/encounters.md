@@ -244,6 +244,6 @@ pedlar's topics and his way marked, the villagers' npc, a `draw`'s members, the 
 and days conditions; #1017: exactly the six entries flagged, a bard's replay on the road); `content/encounter_tests.rs::draws_npcs_and_quest_variants_are_checked`;
 the wiki's `xtask/src/wiki/encounters.rs` (`wiki/src/encounters.md`: rates, checks, odds,
 ladders, positions, the Ascmearc's tables); `magic/tests.rs::skill_reader` names `encounter.rs` for the three benefits. The app:
-`ui/screen_snapshots.rs::encounters_as_text` (`encounter-drop`, with Esc and `1` pressed over it,
+`ui/screen_snapshots/play.rs::encounters_as_text` (`encounter-drop`, with Esc and `1` pressed over it,
 `encounter-met`, `encounter-peaceful`, `encounter-wildlife`, `encounter-talk-past` (a bard), on a fixture table, the dialog as a
 load opens it) and `an_encounter_row_answers_it`; `dialog_screen.rs`'s required dialog.

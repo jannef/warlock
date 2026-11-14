@@ -153,7 +153,7 @@ cast path shares.
     piece's less its own Mage-wrought `spell_ease`, never below 0: `Actor::worn_spell_cost`) / 100³,
     rounded to the nearest once, at least 1), then `MagicMods::spell_mana_with`:
     `spell_mana_percent` (Archmage −50, Empower −10) plus School focus's cost for a spell of
-    its tag (`TalentMods::focus(spell.tags)`) and the rank's `mana_off` (the `cost` field of
+    its tag (`MagicMods::spell_mods(tags)`) and the rank's `mana_off` (the `cost` field of
     `rank_mods`, negative), rounded down, at least 1 (`Actor::spell_base`,
     what `World::spend_mana` is given), then `Actor::mana_cost` (Frugal caster and the worn
     `mana_cost`, of Thrift, summed, at most 50 % off) inside

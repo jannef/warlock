@@ -653,7 +653,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   data: the cave beetle and ember beetle 3, the stone troll 5, the mud golem 5, the balor and the
   pit fiend 10 (bosses held to the bony line), a hag who casts half a hide's, every living troll
   at least 2 (the tribe's hide); the animated objects keep their own table. Data only, nothing
-  saved; `content::creature_body_tests` checks every type. The player's answer is penetration
+  saved, and no test holds the types to it (#1237). The player's answer is penetration
   (the war hammer, the stiletto, crossbow bolts) and criticals, soaked once after they multiply;
   **Armour-breaker** (Might, needs axes, maces, or polearms 7; the `protection` system): its
   confirmed criticals ignore 2 more Protection (`critical_penetration`), and Sunder and Gap shot

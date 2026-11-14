@@ -18,8 +18,8 @@ hit points a level gives) is `docs/dev/experience.md`.
 | `world/character/skill_roll.rs` | The skill rolls (#230, `docs/dev/skills.md`): `roll_count`/`skill_roll` (the count's parts and a roll's dice, shared with the level-up screen, #543), `level_rolls`, `advance_skill` (`advance:SKILL`), `advance_auto` (`levelup:auto`'s rolls), `roll_skill` (the one roll both use), `mark_skill` (every mark added; the automatic roll at `[rolls] auto_at`, #1328, outside any `Due`). `World::due()` and `candidate()`. |
 | `world/character/experience.rs` | `grant_xp` scales every gain by `GrowthMods::xp_percent` and calls `level_up`; the dev `xp:N` (`grant_xp_dev`). |
 | `perception/view.rs`, `perception/truth.rs` | `due()`, `dues()` (every level's, for the level-up screen's sequence), `roll_count()`, `skill_roll(skill)` (the skill-roll step's numbers, #543), `bonus_trees()`, `own_talents()` (`OwnTalent`), `talents()` (`TalentView`: `held`, the needs with `met`, `openings`): what the level-up screen (`ui/level_up_screen.rs`), the Talents page (`ui/talents_screen.rs`), and the creation step (`ui/chargen_talents_screen.rs`) read (`docs/dev/screens.md`). |
-| `dump.rs` | layers `talents` (held, `Skill focus (stealth)`) and `progress` (dev: dues, `due level 3: 3 skill rolls, 1 talent`, `rolls a level 3 (class 2, race 1, intelligence 0, talents 0)`, `roll dice athletics 1d3, balance +2`, takeable ids with choices, discovered kills, `empathy broken rat`); JSON `talents`, `due` (`level`, `talents`, `rolls`) |
-| `action.rs` | `Talent { id, choice }` (`talent:hardy`, `talent:weapon_focus:long_blades`; ids keep their case), `Advance(skill)`, dev `LevelUpAuto` (`levelup:auto`), `GrantXp` (`xp:N`); all `Spent::NoTime` or refused. |
+| `dump/` | layers `talents` (held, `Skill focus (stealth)`) and `progress` (dev: dues, `due level 3: 3 skill rolls, 1 talent`, `rolls a level 3 (class 2, race 1, intelligence 0, talents 0)`, `roll dice athletics 1d3, balance +2`, takeable ids with choices, discovered kills, `empathy broken rat`); JSON `talents`, `due` (`level`, `talents`, `rolls`) |
+| `action/mod.rs` | `Talent { id, choice }` (`talent:hardy`, `talent:weapon_focus:long_blades`; ids keep their case), `Advance(skill)`, dev `LevelUpAuto` (`levelup:auto`), `GrantXp` (`xp:N`); all `Spent::NoTime` or refused. |
 | `rng.rs` | `Rng::levels(seed)`, the `levels` stream, kept in `WorldState::levels_rng: Option<Rng>` **from the first draw** (the stat checks of each level, `world/character/stat_training.rs`; skill rolls, `world/character/skill_roll.rs`), so runs that never drew hash as before. |
 | `xtask/src/wiki/talents.rs` | `talents-origins.md`, `talents-body.md`, `talents-fighting.md`, `talents-exploring.md`, `talents-mind.md` (the trees with the rules, by tree group: `PAGES`, each the table of a wiki page under Talents, #1668), `talents-by-system.md` (each system's talents, class abilities beside them); `effect_text`, the rule of one effect, shared with the class tables. |
 | `content/class.rs` (#243) | `ClassActive`, the actives (id = the ability's id, aim, cost); `strip_tables` (tests that load talents of their own). |
@@ -513,7 +513,7 @@ No other talent eases burden: the Roc's sign has no pick of that kind (its born 
 the dwarf no racial one; the commoner's 1 is Pack mule, the thief's 25 Pack mule and Porter, and
 the merchant's 6 Deep pockets (coins weightless, no kilograms) and Pack mule. There are no
 `carry_kg` or `step_slowdown_percent` effects. Roc's strength and Supple stay birth-sign gifts
-(a sign grants only `granted` talents of the `stars` tree, `horoscope::check`, so they cannot
+(a sign grants only `granted` talents of the `stars` tree, `horoscope::check_talents`, so they cannot
 name the line). A table
 that gives a step the character already took gives a pick in its place (`class::held_already`).
 Tests: `talent_wits_tests.rs` (each step's limit, penalty, price, and Defence; the chain).

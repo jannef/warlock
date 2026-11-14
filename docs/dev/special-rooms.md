@@ -415,7 +415,7 @@ drawn, `bestow`: `Talents::take`, `class::hand_out`, and pushed to
 likewise); `rarity` (`magic`/`rare`, only with `loot`) is the relic's floor, the `LootGrade`
 `loot::roll_with` takes. `Actor::boons` (saved, left out while empty) is read by
 `stars::grant`, which passes its ids to `Talents::regrant` beside the race's and the sign's
-(the flaws, being granted, are dropped and put back there) and `Talents::hold`s the rest.
+(the flaws, being granted, are dropped and put back there) and `Talents::take`s the rest.
 `World::lose_level` takes the experience to `threshold_for(level - 1)`, the level's
 `level_hp` (up to `hp_level`), the talents' `hp_at`/`mana_at` growth, Hardened's, and
 `level_mana` (up to `mana_level`) off the bases (hit points never below 1), drops `Due`s of
@@ -756,7 +756,7 @@ eight neighbours a walkable cell of the room and no door), so a sound rim runs r
 every door and a way across always exists (a cave chamber's open edge counts as its rim); a room
 too narrow for a middle gets no cracks, and the draws are the same as before, so only the
 cracked cells of generated levels change. The
-design's `Arrival::Fell` is not needed: `travel` already takes the arrival cell. Nothing is
+design's fell arrival is not needed: `travel` already takes the arrival cell. Nothing is
 saved beyond the level change; the cracked floor stays.
 
 ## What the player is told

@@ -248,7 +248,7 @@ rules' refusal is `world::whittle_lack`). Tests: `world/crafting/whittle_tests.r
 branch, on a step `World::rough_step` (`world/levels/footing.rs`) calls rough: off the overworld,
 `move_cost` above 100, not `wading_step`; the same `surcharge_spared`. `Use::RoughStep` is marked by
 `World::train_rough_step` after `wade` in the step (`world/levels/travel.rs`). `Effect::SteadyEase` is read
-in `World::status_cost` (`world/combat/surprise.rs`) for the status `footing::STAGGERED` (`"staggered"`),
+in `World::status_cost` (`world/combat/surprise.rs`) for the status `content/required.rs::STAGGERED` (`"staggered"`),
 beside Initiative's ease of Surprised; `Use::Staggered` is marked in `spend_actions`
 (`world/combat/weapon_ability.rs`) for the player's action that eases Staggered (not the one that gave it).
 Tests `world/levels/footing_tests.rs`.

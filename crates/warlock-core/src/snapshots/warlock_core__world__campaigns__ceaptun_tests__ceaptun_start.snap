@@ -1,5 +1,5 @@
 ---
-source: crates/warlock-core/src/world/ceaptun_tests.rs
+source: crates/warlock-core/src/world/campaigns/ceaptun_tests.rs
 expression: rows
 ---
                                             ♣♣♣♣♣

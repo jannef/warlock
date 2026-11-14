@@ -110,6 +110,9 @@ jobs:
       # The vast level is generated (CLAUDE.md): the committed file must match the generator.
       - name: The vast level is fresh
         run: cargo xtask gen-vast --check
+      # Every code path CLAUDE.md, spec/, and docs/dev/ name must exist (#1667).
+      - name: The docs name code that exists
+        run: cargo xtask docs-check
       # The player wiki (wiki/, mdBook): its tables are generated here from the game data (they are
       # not committed), the book must build, and every link in it must lead to a page and anchor.
       - name: Install mdBook

@@ -26,8 +26,8 @@ issue how it interacts with mana**, and hooks in at the one place below.
   one); `Start::mana` is race plus class. `mana_level` in `data/experience.toml` (default 0).
   `[healing] mana_resting` (default 200), statuses' `mana_regen` (default 100) and
   `mana_damage` (default 0, needs a `tick`), diseases' `mana_regen` (optional, like `regen`),
-  room effects' `mana_regen` (default 100). Affix effects `ItemEffect::MaxMana` (`max_mana`,
-  1 to 100) and `ItemEffect::ManaRegeneration` (`mana_regeneration`, percent 1 to 300); the
+  room effects' `mana_regen` (default 100). Affix effects `content::affix::Effect::MaxMana` (`max_mana`,
+  1 to 100) and `Effect::ManaRegeneration` (`mana_regeneration`, percent 1 to 300); the
   built-in affixes Mystic and of Clarity.
 - **Hooks** (`world/magic/mana.rs`, each the one place):
   - `World::mana_rate(id)`: the pace in percent, the twin of `World::healing_rate`: min of

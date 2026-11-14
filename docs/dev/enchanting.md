@@ -216,7 +216,7 @@ reach `enchant_level` (`Effect::EnchantLevel`, `[[0, 1], [110, 12], [200, 12]]`,
   loader refuses an `enchant` kind on another `use` or missing on `enchant`, a kind twice,
   `crystals` above 3 or on another `use`, a kind that rolls (all but Unbind) with none, and
   Unbind with any. Imbue's file gives 3.
-- **The rules** (`world/crafting/enchant.rs`; `Spent::Enchant(Enchanting)`, dispatched by one line each
+- **The rules** (`world/crafting/enchant.rs`; `Task::Enchant(Enchanting)` in `world/crafting/work.rs`, dispatched by one line each
   from `World::start_craft`, `craft::lack`, `craft::takes`, `craft_make::craft_steps`, and
   `craft_plan`): `craft:kindle:ITEM,CRYSTAL`, `craft:quicken:ITEM,CRYSTAL`, `craft:recast:ITEM,CRYSTAL`,
   `craft:imbue:ITEM,C1,C2,C3`, `craft:ennoble:ITEM,CRYSTAL`, `craft:unbind:ITEM`.

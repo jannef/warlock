@@ -78,7 +78,7 @@ doors (`opens_doors`), traps, ice, and footsteps are the creature's own rules, u
 
 ## Orders
 
-`Action::Order(Command)` (`action.rs`; `Command::{Heel, Hold, SetOn(Pos)}`; replay text
+`Action::Order(Command)` (`action/mod.rs`; `Command::{Heel, Hold, SetOn(Pos)}`; replay text
 `order:follow`, `order:stay`, `order:hunt:X,Y`) → `World::order`: every ally of the player's on
 the level (not the retinue) takes the order (*Follow*; *Stay* at its own cell; *Hunt* at the
 cell), **no time** (`Spent::NoTime`), a voice's noise where the player stands
