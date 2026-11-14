@@ -1,52 +1,59 @@
-# Līctūn, "the corpse-yard" (#1258): Cēaptūn's churchyard, beside the road that runs south from
-# the town, four cells out (the Ascmearc's overworld, g, at 19, 32). A hand-made outdoor level
-# (sky, sun, weather), entered from that cell, arriving on the road outside the gate (@). It has
-# no stairs: like any outdoor area it is left by walking off its edge (or with `<` when no enemy
-# is about), back to its overworld cell (spec §7 "Leaving an outdoor area"). No danger: nothing
-# comes, and nobody here but the sexton.
+# Līctūn, "the corpse-yard" (#1258, #1682): Cēaptūn's churchyard, beside the road that runs south
+# from the town, four cells out (the Ascmearc's overworld, g, at 19, 32). A hand-made outdoor
+# level (sky, sun, weather), entered from that cell, arriving on the road outside the gate (@).
+# Like any outdoor area it is left by walking off its edge (or with `<` when no enemy is about),
+# back to its overworld cell (spec §7 "Leaving an outdoor area"). No danger: nothing comes, and
+# nobody here but the sexton.
 #
-# A drystone wall round the yard, the lych-gate on the road; inside, fifty gravestones in four
-# rows of twelve on the grass and two beside the chapel, a yew in each corner, flowers on the
-# newer graves. The path runs from the gate to the chapel in the middle: stone, a door between
-# two sconces, stools for pews, and the altar between two lamps. Old Dudda the sexton (K) walks
-# his rounds of the stones.
+# A drystone wall round the yard, the lych-gate on the road; a yew in each corner. The path runs
+# from the gate to the chapel in the middle: stone, a door between two sconces, stools for pews,
+# the altar between two lamps, and a back door onto a flagged path that ends in a slab among the
+# flowers. Ten old graves of Cēaptūn's own stand by the chapel (1-0); forty plots kept for graves
+# lie in four rows of ten, two north of the chapel and two south. Old Dudda the sexton (K) walks
+# his rounds between them.
 #
-# The stones (spec §7 "Graves"; `world/fixtures/graves.rs`): each gravestone cell gets an inscription as
-# the yard is made, from the `[graves]` words at the end: one stone in ten names one of the
-# graveyard's fallen (every character who has died, as the game's graveyard file remembers them),
-# the rest the town's own dead, a name and a byname of Cēaptūn's folk and plausible years before
-# the year the yard is first seen. Look mode reads them.
+# The burial ground (spec §7 "Graves"; `docs/dev/graves.md`): the top of the chain `lictun`, its
+# crypts below (`lictun_crypt_01`, ...). Every one of the graveyard's dead but the petrified gets a
+# plot, the oldest death first; once all forty are filled the slab at the end of the flagged path
+# (v) opens as the stairs down to the first crypt.
 name = "Līctūn"
 kind = "outdoor"
-arrival = "Līctūn, Cēaptūn's churchyard: rows of stones in the grass, and a little chapel."
+arrival = "Līctūn, Cēaptūn's churchyard: rows of plots in the grass, and a little chapel."
 item_level = 1
 map = '''
-.,............................................
-.,..#########################################.
-.,..#.......................................#.
-.,..#..G..G..G..G..G..G..G..G..G..G..G..G...#.
-.,..#.......................................#.
-.,..#..G..G..G..G..G..G..G..G..G..G..G..G...#.
-.,..#.......................................#.
-.,..#...K...................................#.
-.,..#.Y.............WWWWWWWWWWW...........Y.#.
-.,..#...............WpppppppppW.............#.
-.,..#.....*.........WpsspsspppW...G...*.....#.
-.,..#...............tppppppplpW.............#.
-.,@:':::::::::::::::+ppppppp_pW.............#.
-.,..#...............tppppppplpW.............#.
-.,..#.....*.........WpsspsspppW...G...*.....#.
-.,..#...............WpppppppppW.............#.
-.,..#.Y.............WWWWWWWWWWW...........Y.#.
-.,..#.......................................#.
-.,..#.......................................#.
-.,..#..G..G..G..G..G..G..G..G..G..G..G..G...#.
-.,..#.......................................#.
-.,..#..G..G..G..G..G..G..G..G..G..G..G..G...#.
-.,..#.......................................#.
-.,..#########################################.
-.,............................................
+.,..................................................
+.,..###############################################.
+.,..#.Y.........................................Y.#.
+.,..#.............................................#.
+.,..#....P...P...P...P...P...P...P...P...P...P....#.
+.,..#.............................................#.
+.,..#....P...P...P...P...P...P...P...P...P...P....#.
+.,..#................1..2..3..4...................#.
+.,..#...K.........................................#.
+.,..#..............WWWWWWWWWWWWW..................#.
+.,..#.......*......WpppppppppppW...........*......#.
+.,..#..............WpsspsspsplpW...*.*............#.
+.,..#..............tpppppppppppW.......9..........#.
+.,@:'::::::::::::::+ppppppppp_p+::::v.............#.
+.,..#..............tpppppppppppW.......0..........#.
+.,..#..............WpsspsspsplpW...*.*............#.
+.,..#.......*......WpppppppppppW...........*......#.
+.,..#..............WWWWWWWWWWWWW..................#.
+.,..#.............................................#.
+.,..#................5..6..7..8...................#.
+.,..#....P...P...P...P...P...P...P...P...P...P....#.
+.,..#.............................................#.
+.,..#....P...P...P...P...P...P...P...P...P...P....#.
+.,..#.............................................#.
+.,..#.Y.........................................Y.#.
+.,..###############################################.
+.,..................................................
 '''
+
+[burial]
+chain = "lictun"
+depth = 0
+epitaph = "Here lies {name}, {death}."
 
 [legend]
 "." = "grass"
@@ -55,7 +62,7 @@ map = '''
 "*" = "flowers"
 "#" = "drystone_wall"
 "'" = "gate_open"
-"G" = "gravestone"
+"P" = "grave_plot"
 "Y" = "tree"
 "W" = "wall"
 "p" = "plank_floor"
@@ -65,32 +72,18 @@ map = '''
 "_" = "altar"
 "+" = "door_closed"
 "@" = { terrain = "dirt_road", spawn = "player" }
+# The way down to the first crypt: a flagstone until every plot is filled.
+"v" = { terrain = "flagstones", burial_stairs = "stairs_down" }
 # Old Dudda, the sexton, on his rounds of the stones (campaigns/ascmearc/data/dialogue/lictun.toml).
-"K" = { terrain = "grass", creature = "sexton", npc = "dudda", route = "E30 S11 W30 N11" }
-
-# What the stones say (spec §7 "Graves"): a given name and a byname of Cēaptūn's folk (Old and
-# Middle English, as the town's commoners are named), an epitaph with their years, and the words
-# for one of the graveyard's fallen.
-[graves]
-names = [
-    "Ælfric", "Æthelwine", "Beornwulf", "Brihtwold", "Cēolmund", "Dunstan", "Eadric", "Godwine",
-    "Hereward", "Leofwine", "Ordgar", "Osmund", "Sigeric", "Wulfgar", "Wulfstan", "Ælfgifu",
-    "Æthelgyth", "Beorhtgifu", "Cēolwynn", "Ēadburh", "Eadgyth", "Ealhswith", "Leofrun",
-    "Mildred", "Osgifu", "Wulfwynn", "Wynburh",
-]
-bynames = [
-    "Wudu", "atte Welle", "atte Mylne", "atte Brigge", "Hwīta", "Read", "Lang", "Lytel", "Crump",
-    "Smyth", "Webbe", "Bacere", "Fugelere", "Fiscere", "Cartere", "Hunta", "Cēapmann", "Swān",
-]
-epitaphs = [
-    "Here lies {name}, {born}–{died}.",
-    "Here lieth {name}, {born}–{died}. God rest them.",
-    "Pray for the soul of {name}, {born}–{died}.",
-    "Here resteth {name}, {born}–{died}. Gone home.",
-    "{name}, {born}–{died}. Much missed.",
-    "{name}, {born}–{died}. The fen fever took them.",
-    "In memory of {name}, {born}–{died}. Gone under the hill.",
-]
-fallen = "Here lies {name}, {death}."
-died = [1, 150]
-age = [1, 80]
+"K" = { terrain = "grass", creature = "sexton", npc = "dudda", route = "E36 S10 W36 N10" }
+# Cēaptūn's own dead, by the chapel: one entry each, the words as they are cut.
+"1" = { terrain = "gravestone", epitaph = "Here lies Ælfric atte Welle, reeve of Cēaptūn, 1361–1419. He kept the peace and the tally both." }
+"2" = { terrain = "gravestone", epitaph = "Here lieth Eadgyth Webbe, 1372–1430. Her cloth went as far as Holtwīc." }
+"3" = { terrain = "gravestone", epitaph = "Pray for the soul of Brother Cēolmund, priest of this chapel, 1338–1401." }
+"4" = { terrain = "gravestone", epitaph = "Wulfstan Smyth, 1389–1427. The anvil is quiet." }
+"5" = { terrain = "gravestone", epitaph = "Here resteth Mildred Bacere, 1366–1433. Her loaves were the best in the march." }
+"6" = { terrain = "gravestone", epitaph = "Leofwine Hunta, 1402–1424. He went up to the pass and was not found. This stone keeps his name." }
+"7" = { terrain = "gravestone", epitaph = "Here lies Wynburh, wife of Godwine, 1380–1412, and her child, unnamed." }
+"8" = { terrain = "gravestone", epitaph = "Osmund Fiscere, 1350–1421. The river took him at the ford." }
+"9" = { terrain = "gravestone", epitaph = "Here lies Dunstan Swān, sexton of this yard, 1330–1404. He dug for all of them. — D." }
+"0" = { terrain = "gravestone", epitaph = "In memory of Hereward Lang, soldier, 1395–1439. Gone under the hill." }

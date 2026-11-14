@@ -30,6 +30,7 @@ fn fallen(name: &str, race: &str) -> Fallen {
         race: race.into(),
         petrified: true,
         death: "Turned to stone".into(),
+        ..Fallen::default()
     }
 }
 

@@ -1,0 +1,12 @@
+# Candles on a stand or a ledge (#1682, Līctūn's crypts): a small, calm light.
+[[terrain]]
+id = "candles"
+name = "candlestick"
+description = "Candles burning low on an iron stand."
+glyph = "ı"
+fg = "#ffe2a8"
+bg = "#14130f"
+walkable = false
+light = "candle"
+glow = 0.3
+stains = false

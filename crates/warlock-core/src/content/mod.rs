@@ -24,6 +24,9 @@ mod aura;
 mod aura_roster_tests;
 mod background;
 mod breath;
+mod burial;
+#[cfg(test)]
+mod burial_tests;
 mod burst;
 mod calendar;
 mod calling;
@@ -234,6 +237,7 @@ pub use background::{
     Points, Tier as StoryTier, Tiers, When,
 };
 pub use breath::Breath;
+pub use burial::{Burial, BurialStairs, DEFAULT_EPITAPH};
 pub use burst::{BurstWhen, CreatureBurst};
 pub use calendar::Calendar;
 pub use calling::CallingDef;
@@ -304,8 +308,8 @@ pub use learning::{Band, Mishap, MishapEffect, StudyRules, drawn_among};
 pub use leaving::{Laid, Leaving};
 pub(crate) use level::validate_route;
 pub use level::{
-    CreatureSpawn, EdgeExit, Graves, HiddenLocation, LevelKind, LevelTemplate, Place, Region,
-    StairsLink, parse_route,
+    CreatureSpawn, EdgeExit, HiddenLocation, LevelKind, LevelTemplate, Place, Region, StairsLink,
+    parse_route,
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, Stability};
 pub use material::{
@@ -675,6 +679,9 @@ pub struct Content {
     levels: BTreeMap<String, LevelTemplate>,
     /// The campaign of each hand-made level: `None` for one outside every campaign.
     level_campaigns: BTreeMap<String, Option<String>>,
+    /// The burial chains (spec §7 "Graves"; `burial.rs`), each its levels from the churchyard
+    /// down, by the chain's id.
+    burial_chains: BTreeMap<String, Vec<String>>,
     scenarios: BTreeMap<String, ScenarioDef>,
     dungeons: BTreeMap<String, DungeonDef>,
     /// The default odds of a draw (spec §7 "Danger levels"), `data/dungeons.toml`'s
@@ -1133,6 +1140,10 @@ impl Content {
             content.levels.insert(id.to_string(), level);
         }
         overworld::link_edge_exits(&mut content.levels);
+        let paths: BTreeMap<String, String> = (content.levels.keys())
+            .map(|id| (id.clone(), content.level_file(id)))
+            .collect();
+        content.burial_chains = burial::link_chains(&mut content.levels, |id| paths[id].clone())?;
         content.load_kits()?;
         content.load_background(files)?;
         // The companion's data names creatures, races, and the story's chapter.
@@ -1172,6 +1183,12 @@ impl Content {
             // Its range first: the level parser would refuse a bad one without saying why.
             let danger = vault::parse_danger(path, text)?.unwrap_or_default();
             let template = level::parse_level(path, id, text, &content, &default_legend)?;
+            if template.burial.is_some() {
+                return Err(ContentError::new(
+                    path,
+                    "`[burial]`: only a level is a burial ground",
+                ));
+            }
             let mut vault =
                 Vault::new(template, &content).map_err(|m| ContentError::new(path, m))?;
             vault.campaign = campaign::of_path(path).map(str::to_string);

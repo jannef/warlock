@@ -40,6 +40,9 @@ pub struct Fallen {
     /// Their race, by id (`dwarf`); one this content lacks is named by its id.
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub race: String,
+    /// Their class, by id (`warrior`); one this content lacks is named by its id.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub class: String,
     /// Whether they were turned to stone: only these name statues.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub petrified: bool,
@@ -57,6 +60,22 @@ impl Fallen {
             self.name.clone()
         } else {
             format!("{} the {race}", self.name)
+        }
+    }
+
+    /// "Brakka the dwarf warrior" (race and class in lower case, as a grave names them),
+    /// either left out where unknown.
+    pub fn grave_words(&self, content: &Content) -> String {
+        let race = (content.race(&self.race)).map_or(self.race.clone(), |r| r.name.to_lowercase());
+        let class =
+            (content.class(&self.class)).map_or(self.class.clone(), |c| c.name.to_lowercase());
+        let what: Vec<&str> = [race.as_str(), class.as_str()]
+            .into_iter()
+            .filter(|s| !s.is_empty())
+            .collect();
+        match what[..] {
+            [] => self.name.clone(),
+            _ => format!("{} the {}", self.name, what.join(" ")),
         }
     }
 }

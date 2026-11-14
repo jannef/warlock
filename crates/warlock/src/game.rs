@@ -141,7 +141,9 @@ impl Game {
                 if let Some(note) = replay.version_note() {
                     eprintln!("warlock: warning: {}: {note}", path.display());
                 }
-                let (world, divergence, outcome, before) = play_replay(&replay, content)
+                // The dead lie in its graves as in a run's (`graveyard.rs`), out of the hashes.
+                let dead = crate::graveyard::GraveyardStore::from_args(args).dead(&content);
+                let (world, divergence, outcome, before) = play_replay(&replay, content, dead)
                     .map_err(|e| format!("{}: {e}", path.display()))?;
                 if let Some(divergence) = divergence {
                     eprintln!("warlock: warning: {}: {divergence}", path.display());
@@ -265,13 +267,16 @@ fn unread_from(read: &MessageLog, log: &[&Message]) -> usize {
 fn play_replay(
     replay: &Replay,
     content: Arc<Content>,
+    dead: Vec<warlock_core::world::Fallen>,
 ) -> Result<(World, Option<Divergence>, Outcome, MessageLog), WorldError> {
+    let mut start = replay.start(content)?;
+    start.set_graveyard(dead);
     let mut head = replay.clone();
     let Some(last) = head.steps.pop() else {
-        let (world, divergence) = replay.play(content)?;
+        let (world, divergence) = replay.play_from(start);
         return Ok((world, divergence, Outcome::default(), MessageLog::default()));
     };
-    let (mut world, mut divergence) = head.play(content)?;
+    let (mut world, mut divergence) = head.play_from(start);
     let before = world.messages().clone();
     let outcome = world.apply(&last.action);
     let actual = world.state_hash();
@@ -414,7 +419,7 @@ mod tests {
             replay.push(&action, &world);
         }
         let (played, divergence, outcome, _) =
-            play_replay(&replay, content.clone()).expect("replay plays");
+            play_replay(&replay, content.clone(), Vec::new()).expect("replay plays");
         assert_eq!(divergence, None);
         assert_eq!(played.state_hash(), world.state_hash());
         assert!(matches!(
@@ -423,10 +428,12 @@ mod tests {
         ));
 
         replay.steps.last_mut().expect("two steps").hash ^= 1;
-        let (_, divergence, ..) = play_replay(&replay, content.clone()).expect("replay plays");
+        let (_, divergence, ..) =
+            play_replay(&replay, content.clone(), Vec::new()).expect("replay plays");
         assert_eq!(divergence.map(|d| d.step), Some(1));
         replay.steps.clear();
-        let (_, _, outcome, _) = play_replay(&replay, content).expect("empty replay plays");
+        let (_, _, outcome, _) =
+            play_replay(&replay, content, Vec::new()).expect("empty replay plays");
         assert_eq!(outcome, Outcome::default());
     }
 

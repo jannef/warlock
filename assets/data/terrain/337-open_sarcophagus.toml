@@ -1,0 +1,12 @@
+# A stone coffin standing open (spec §7 "Graves"; #1682, Līctūn's crypts): solid, seen past, and
+# empty. One of the run's dead laid there lids it (`burial`), the same in every rule.
+[[terrain]]
+id = "open_sarcophagus"
+name = "open sarcophagus"
+description = "A stone coffin with its lid leant beside it. It is empty."
+stone = true
+walkable = false
+glyph = "□"
+fg = "#8a8274"
+bg = "#14130f"
+burial = "sarcophagus"

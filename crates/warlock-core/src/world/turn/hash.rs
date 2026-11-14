@@ -13,6 +13,23 @@ impl Drop for Hashing {
     }
 }
 
+/// Serializes the levels (`WorldState::levels`): while hashing, each as it would be with no
+/// graveyard (`LevelState::unburied`, `fixtures/graves.rs`), so the run's dead stay out of the hash.
+pub(crate) fn levels<S: serde::Serializer>(
+    levels: &std::collections::BTreeMap<String, crate::world::LevelState>,
+    s: S,
+) -> Result<S::Ok, S::Error> {
+    use serde::ser::SerializeMap;
+    if !HASHING.with(std::cell::Cell::get) {
+        return s.collect_map(levels);
+    }
+    let mut map = s.serialize_map(Some(levels.len()))?;
+    for (id, level) in levels {
+        map.serialize_entry(id, &*level.unburied())?;
+    }
+    map.end()
+}
+
 const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
 const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
 

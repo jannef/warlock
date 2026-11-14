@@ -286,6 +286,9 @@ pub struct WorldState {
     /// The game clock.
     pub(crate) time: GameTime,
     pub(crate) current_level: String,
+    /// The levels visited, by id; the state hash sees each as with no graveyard
+    /// (`turn/hash.rs::levels`, `fixtures/graves.rs`).
+    #[serde(serialize_with = "turn::hash::levels")]
     pub(crate) levels: BTreeMap<String, LevelState>,
     pub(crate) actors: Actors,
     pub(crate) player: ActorId,

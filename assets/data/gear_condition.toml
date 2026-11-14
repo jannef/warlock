@@ -1,4 +1,4 @@
-# The condition creature gear spawns in (spec §8 "Creature gear"; world/items/gear_condition.rs, the
+# The condition creature gear spawns in (spec §8 "Creature gear"; gear/condition.rs, the
 # item's state magic/worked.rs). Every piece of arms or armour a creature's gear table rolls (not a
 # stack of several, ammunition, rings, or what is protected: a unique, of Proof, or what a quest
 # may ask for) draws one condition: damaged (a point worse, its improvements none, its word the

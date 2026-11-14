@@ -226,7 +226,7 @@ pub(super) fn generate(
             ice: Default::default(),
             // Local areas have no danger.
             spawning: None,
-            graves: None,
+            burial: None,
         };
         if reach::validate(&template, content).is_ok() {
             // Ruins may hold loot (spec §8 "Magic items"); the land holds none of its own.

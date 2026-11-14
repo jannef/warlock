@@ -153,12 +153,8 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
             } = &part.source
                 && (input.is_some() || *optional)
             {
-                if let Some(o) = input {
-                    of = format!("{} or {of}", content.object(*o).plural);
-                }
-                if *optional {
-                    of.push_str(" or none");
-                }
+                let input = input.map(|o| content.object(o).plural.as_str());
+                of = source_words(input, &of, *optional);
                 chosen.push(format!("{name}: {of}"));
                 continue;
             }
@@ -420,6 +416,18 @@ fn materials(
             })
             .collect(),
     }
+}
+
+/// A part's sources in words: the input's stacks, the stock, and "none" if it may be left off.
+fn source_words(input: Option<&str>, of: &str, optional: bool) -> String {
+    let mut words: Vec<&str> = input.into_iter().collect();
+    if !of.is_empty() {
+        words.push(of);
+    }
+    if optional {
+        words.push("none");
+    }
+    words.join(" or ")
 }
 
 /// What a part may be of, in words: a group whose every material on the part's list is there
@@ -822,4 +830,22 @@ pub(super) fn gem_setting(content: &Content) -> String {
         recipe.from,
     );
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::source_words;
+
+    #[test]
+    fn sources_join_without_a_dangling_or() {
+        assert_eq!(
+            source_words(Some("lumps of ore"), "", false),
+            "lumps of ore"
+        );
+        assert_eq!(
+            source_words(Some("arrowheads"), "bone", true),
+            "arrowheads or bone or none"
+        );
+        assert_eq!(source_words(None, "bone", true), "bone or none");
+    }
 }

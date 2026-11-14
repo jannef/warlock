@@ -69,11 +69,6 @@ to_hit = -2
 two_handed = 2
 shield = 1
 
-# Gravestones: one stone in `fallen_one_in` names one of the fallen of past runs, while any is
-# left. Above 0.
-[graves]
-fallen_one_in = 10
-
 # Reading a scroll: talents cut a read's price to no less than `least_percent`. 1 to
 # 100.
 [read]
