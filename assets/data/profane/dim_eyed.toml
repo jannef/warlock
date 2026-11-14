@@ -1,0 +1,12 @@
+[[gift]]
+id = "dim_eyed"
+name = "Dim-eyed"
+kind = "bane"
+tier = "greater"
+weight = 8
+description = "A film over your eyes: you need more light to see by."
+line = "A film settles over your eyes."
+effects = [{ kind = "threshold_percent", value = 40 }]
+# Written here, on the later of each pair (docs/design/profane-gifts.md §6.5): made symmetric at
+# load.
+excludes = ["barrow_eyed", "mere_eyed"]

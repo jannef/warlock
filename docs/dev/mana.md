@@ -17,7 +17,10 @@ issue how it interacts with mana**, and hooks in at the one place below.
   normal pace, like `Actor::regen`), saved and hashed, each left out of the JSON while 0, so an
   actor without mana saves and hashes as before mana existed. `Actor::max_mana(content)` (the
   effective stats, plus `max_mana` affixes through `Mods::worn`) and `lasting_max_mana` (the
-  raised stats: what a status takes off comes back), beside `max_hp` and `lasting_max_hp`.
+  raised stats: what a status takes off comes back), beside `max_hp` and `lasting_max_hp`. Both,
+  and `is_whole`, end in `Actor::mana_scaled`, the one hook of the talent effect
+  `max_mana_percent` (`MagicMods::max_mana_percent`; Fell-minded's +25, #1628): the pool this
+  percent more, never below 0, as `max_hp_percent` is for hit points.
 - **Data**: `mana` on races, classes, creature types (`CreatureDef::base_mana`; the player
   creature may not set it), and scenarios without a character (`ScenarioDef::mana`, refused with
   one); `Start::mana` is race plus class. `mana_level` in `data/experience.toml` (default 0).

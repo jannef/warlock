@@ -1,6 +1,5 @@
 # Campaign-owned: Gnægan's signature gift (docs/design/profane-gifts.md §5), given sure by its
 # corpse's `on_eat.gives` and never drawn (`only`, weight 0). Its tier groups it in the wiki.
-# Its `kin_to { tag = "vermin" }` comes with the body phase (P5, #1628).
 [[gift]]
 id = "rat_kings_court"
 name = "Rat-king's court"
@@ -8,9 +7,10 @@ kind = "mixed"
 tier = "lesser"
 weight = 0
 only = "gnaegan"
-description = "The rats' king is in you now: sickness and poison take you less, but many mouths must be fed."
+description = "The rats' king is in you now: vermin leave you be until you strike one of their kind, sickness and poison take you less, but many mouths must be fed."
 line = "The squealing in your head dies down to a murmur, and you find you understand it."
 effects = [
+    { kind = "kin_to", tag = "vermin" },
     { kind = "disease_checks", value = 4 },
     { kind = "resist", damage = "poison", value = 25 },
     { kind = "hunger_percent", value = 20 },

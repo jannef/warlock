@@ -136,6 +136,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
       effective (§8 "Damage types"), never immunity. Hate-wyrm's heart gives Fire breath, the
       Wyvern pick's active, stronger: one who holds both breathes the stronger, and one whose
       sign gives none finds it in the abilities menu's Profane group.
+      The drawn gifts change the body (#1628): some bar an equipment slot (Horned's head,
+      Hoofed's feet, Clawed's hands: §7 "Equipment slots") or open one (Many-fingered's extra
+      ring), give bare hands claws that make bleeding (Clawed), another race's eyes (Deep-eyed:
+      darkvision eyes), kin among creatures of a tag (Rat-king's court: vermin are neutral until
+      one of their type is struck, as Beast-friend's animals are), or a quarter more maximum
+      mana (Fell-minded).
   - **Eating rotten food** of any kind (by its age when the last turn of the meal is done; gone
     food not yet removed counts as rotten): "Ugh! The loaf of bread was rotten.", one draw with
     `[rotten] vomit` (50 %) to vomit, else it makes them sick, exposes them to the diseases

@@ -36,12 +36,15 @@ pub enum SensesEffect {
     InnerLight { light: String },
     /// It places every sound it hears where it was made (Tracker).
     ExactSounds,
+    /// Its eyes are vision profile `profile` (an id in `data/vision.toml`), not its race's
+    /// (Deep-eyed; [`crate::world::WorldState::eyes`]); the first such talent's.
+    Vision { profile: String },
 }
 
 impl SensesEffect {
     /// The `kind`s of the data that are effects of the area, one a variant (`TalentEffect`'s
     /// deserializer hands these to [`SensesEffect`]).
-    pub const KINDS: [&'static str; 10] = [
+    pub const KINDS: [&'static str; 11] = [
         "darkvision",
         "day_sight",
         "exact_footsteps",
@@ -52,6 +55,7 @@ impl SensesEffect {
         "night_sight",
         "scent",
         "threshold_percent",
+        "vision",
     ];
 }
 
@@ -80,6 +84,9 @@ pub struct SensesMods {
     pub inner_light: Option<LightId>,
     /// It places every sound it hears exactly (Tracker).
     pub exact_sounds: bool,
+    /// The vision profile its eyes are, if not its race's (an index into
+    /// `Content::vision_profiles`).
+    pub vision: Option<usize>,
 }
 
 impl SensesMods {
@@ -104,6 +111,9 @@ impl SensesMods {
                 self.inner_light = content.light_id(&light).or(self.inner_light);
             }
             SensesEffect::ExactSounds => self.exact_sounds = true,
+            SensesEffect::Vision { profile } => {
+                self.vision = self.vision.or(content.vision_index(&profile));
+            }
         }
     }
 }

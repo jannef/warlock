@@ -156,6 +156,7 @@ above.
 | Flask, throwing a potion | `potions.md#flasks` |
 | Equipment, slots, wielding and wearing | `equipment.md#what-fits-where` |
 | The equipment screen | `equipment.md#the-equipment-screen` |
+| Barred and opened slots (a gift that bars or opens an equipment slot) | `equipment.md#barred-and-opened-slots` |
 | Magic item, rarity | `magic-items.md`, `magic-items.md#rarity` |
 | Loot, item level | `magic-items.md#finding-them` |
 | Looking at an item, its description | `magic-items.md#looking-at-an-item` |

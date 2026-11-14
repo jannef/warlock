@@ -38,16 +38,20 @@ pub enum BeastEffect {
     /// Creatures of animal factions are neutral to it until it attacks one of that type
     /// (Beast-friend).
     BeastFriend,
+    /// Creatures whose type carries tag `tag` are neutral to it until it attacks one of that
+    /// type: Beast-friend's rule by tag (Rat-king's court's vermin; `world/beast_friend.rs`).
+    KinTo { tag: String },
 }
 
 impl BeastEffect {
     /// The `kind`s of the data that are beast effects, one a variant (`TalentEffect`'s
     /// deserializer hands these to [`BeastEffect`]).
-    pub const KINDS: [&'static str; 9] = [
+    pub const KINDS: [&'static str; 10] = [
         "beast_friend",
         "companion",
         "familiar",
         "familiar_sight",
+        "kin_to",
         "pack_tactics",
         "shared_buffs",
         "shared_sight",
@@ -78,21 +82,28 @@ pub struct BeastMods {
     pub shares_favoured_prey: bool,
     /// Creatures of animal factions are neutral to it until it attacks one of their type.
     pub beast_friend: bool,
+    /// The tags whose creatures are neutral to it until it attacks one of their type (`kin_to`).
+    pub kin_tags: Vec<String>,
 }
 
 impl BeastMods {
     /// Adds what `effect` does.
     pub(crate) fn add(&mut self, effect: &BeastEffect) {
-        match *effect {
+        match effect {
             BeastEffect::Companion => self.companion = true,
             BeastEffect::Familiar => self.familiar = true,
-            BeastEffect::Tame { bonus } => self.tame += bonus,
+            BeastEffect::Tame { bonus } => self.tame += *bonus,
             BeastEffect::SharedSight => self.shared_sight = true,
             BeastEffect::FamiliarSight => self.familiar_sight = true,
             BeastEffect::SharedBuffs => self.shared_buffs = true,
-            BeastEffect::PackTactics { to_hit } => self.pack_tactics += to_hit,
+            BeastEffect::PackTactics { to_hit } => self.pack_tactics += *to_hit,
             BeastEffect::SharesFavouredPrey => self.shares_favoured_prey = true,
             BeastEffect::BeastFriend => self.beast_friend = true,
+            BeastEffect::KinTo { tag } => {
+                if !self.kin_tags.contains(tag) {
+                    self.kin_tags.push(tag.clone());
+                }
+            }
         }
     }
 }
@@ -110,6 +121,7 @@ mod tests {
             let fields = match kind {
                 "tame" => "bonus = 1",
                 "pack_tactics" => "to_hit = 1",
+                "kin_to" => "tag = \"vermin\"",
                 _ => "",
             };
             let effect: BeastEffect = toml::from_str(&format!("kind = \"{kind}\"\n{fields}"))
@@ -126,9 +138,10 @@ mod tests {
                 | BeastEffect::SharedBuffs
                 | BeastEffect::PackTactics { .. }
                 | BeastEffect::SharesFavouredPrey
-                | BeastEffect::BeastFriend => {}
+                | BeastEffect::BeastFriend
+                | BeastEffect::KinTo { .. } => {}
             }
         }
-        assert_eq!(seen.len(), 9, "one kind a variant");
+        assert_eq!(seen.len(), 10, "one kind a variant");
     }
 }

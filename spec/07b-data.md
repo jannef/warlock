@@ -761,6 +761,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   object takes every hand slot, and a light weapon fits every one), and `class` (default none: a
   class id; only a character of that class has the slot, nobody else sees, fills, or is given
   it, and creatures never: `Content::slots_for`; a known class, checked once the classes load).
+  A talent may open a class's slot to its holder (`opens_slot`: the profane gift Many-fingered's
+  first extra ring; what is worn there falls when the talent goes) or bar any slot but a hand or
+  a `ready` one (`bars_slot`: Horned's head; putting anything there is refused with the talent's
+  words and no time, the equipment screen shows `— (horns)`, and what was worn there falls to the
+  player's cell as the talent takes; docs/dev/equipment.md "Barred and opened slots").
   The built-in slots, ADOM's: Head, Neck, Body (`body_armor`),
   Cloak, Main hand and Off hand (`wield`, hands; "wielded", "in off hand"), Hands, Left ring
   and Right ring ("on left hand", "on right hand"), the aristocrat's Extra ring 1 to 3 (`class =

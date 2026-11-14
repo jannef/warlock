@@ -6,7 +6,9 @@
 //! `xtask/src/wiki/talents/offence.rs`, and its one read.
 
 use super::TalentMods;
-use crate::content::{Benefit, Content, DamageTypeId, FreeBlowTrigger, Role, StatusId};
+use crate::content::{
+    Affliction, Benefit, Content, DamageTypeId, FreeBlowTrigger, OnHit, Role, StatusId,
+};
 use crate::damage::Kinds;
 use crate::world::FreeBlows;
 use serde::Deserialize;
@@ -95,6 +97,15 @@ pub enum OffenceEffect {
     /// Its blows with no weapon in hand (and its kicks) roll one die of this many sides instead
     /// of bare hands' dice (Martial arts); the biggest counts.
     UnarmedDie { sides: u8 },
+    /// Its blows with no weapon in hand carry an `on_hit`: `severity` degrees of `status` (an
+    /// id in `data/status/`) by `chance` percent (1 to 100), as a creature's natural attack's
+    /// (Clawed's bleeding; `Actor::melee`, applied in `World::after_blow`). Several are several
+    /// entries.
+    UnarmedOnHit {
+        status: String,
+        chance: u8,
+        severity: u16,
+    },
     /// The readied missile weapon shoots this many cells farther; with `skill` (a weapon skill
     /// id), only a launcher of that skill (Slinger's slings).
     LauncherRange {
@@ -156,7 +167,7 @@ pub enum OffenceEffect {
 impl OffenceEffect {
     /// The `kind`s of the data that are effects of the area, one a variant (`TalentEffect`'s
     /// deserializer hands these to [`OffenceEffect`]).
-    pub const KINDS: [&'static str; 31] = [
+    pub const KINDS: [&'static str; 32] = [
         "ability_ranks",
         "attack_price_percent",
         "best_skill_threat",
@@ -184,6 +195,7 @@ impl OffenceEffect {
         "two_handed_crit",
         "two_handed_price",
         "unarmed_die",
+        "unarmed_on_hit",
         "weapon",
         "weapon_energy_percent",
         "weapon_marks",
@@ -263,6 +275,8 @@ pub struct OffenceMods {
     pub two_handed_crit: u8,
     /// The sides of the one die its blows with nothing in hand and its kicks roll, if any.
     pub unarmed_die: Option<u8>,
+    /// What its blows with nothing in hand may cause besides their damage, one entry each.
+    pub unarmed_on_hit: Vec<OnHit>,
     /// Damage more against a creature suffering a status: `(status, value)`.
     pub status_damage: Vec<(StatusId, i32)>,
     /// To hit and damage against its favoured prey (Favoured prey, Master hunter).
@@ -405,6 +419,22 @@ impl OffenceMods {
             }
             OffenceEffect::UnarmedDie { sides } => {
                 self.unarmed_die = Some(self.unarmed_die.map_or(sides, |s| s.max(sides)));
+            }
+            OffenceEffect::UnarmedOnHit {
+                status,
+                chance,
+                severity,
+            } => {
+                if let Some(status) = content.status_id(&status) {
+                    self.unarmed_on_hit.push(OnHit {
+                        what: Affliction::Status {
+                            status,
+                            severity,
+                            check: None,
+                        },
+                        chance,
+                    });
+                }
             }
             OffenceEffect::FavouredPrey { to_hit, damage } => {
                 self.favoured_prey.0 += to_hit;

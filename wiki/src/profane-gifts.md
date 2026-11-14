@@ -82,6 +82,26 @@ Some gifts change what happens to the others:
 There is no cure. No temple, potion, scroll, or prayer removes a profane gift. Only a later
 gift that replaces or undoes it takes it away.
 
+## Gifts that change your body
+
+Some gifts change more than your numbers:
+
+- **Slots.** Horns, hooves, and claws bar the helm, boot, and glove slots; a sixth finger opens
+  a ring slot. What no longer fits falls to the floor as the gift takes (see [Barred and opened
+  slots](equipment.md#barred-and-opened-slots)).
+- **Claws.** [Clawed](#talent-clawed) bare hands hit harder and can make a foe
+  [bleed](status-effects.md#bleeding). With a weapon in your hand the claws do nothing.
+- **Eyes.** [Deep-eyed](#talent-deep-eyed) gives you the eyes of the
+  [darkvision](vision.md#the-four-types) type, whatever your race, and sees farther into the dark
+  besides. [Barrow-eyed](#talent-barrow-eyed) and [Mere-eyed](#talent-mere-eyed) are its lesser
+  forms, and [Dim-eyed](#talent-dim-eyed) never comes with any of them.
+- **Kin.** [Rat-king's court](#talent-rat-kings-court) makes vermin neutral to you, as
+  [Beast-friend](talents.md#talent-beast-friend) does animals, until you attack one: from then on
+  that kind of creature is hostile again, for good. No [drawn
+  quest](quests.md#drawn-quests) asks you to kill a kind it keeps neutral.
+- **Mana.** [Fell-minded](#talent-fell-minded) gives you a quarter more
+  [mana](mana.md#how-much-mana-you-have) at most, on top of what its Intelligence adds.
+
 ## The gift table
 
 {{#include generated/profane-gifts.md}}

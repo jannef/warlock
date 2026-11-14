@@ -40,6 +40,11 @@ impl World {
             self.say("You carry no such thing.");
             return Spent::Nothing;
         };
+        // A slot the body bars (Horned's head): its own words, no time (`body_slots.rs`).
+        if let Some(words) = self.barred_words(slot) {
+            self.say(words);
+            return Spent::Nothing;
+        }
         let what = self.lore().describe(&stack);
         if !content.fits(stack.object, slot) {
             let does = if stack.count > 1 { "do" } else { "does" };
@@ -99,14 +104,6 @@ impl World {
         }
         self.fade_spirit();
         self.price_for(&kinds)
-    }
-
-    /// The player's slot `id`: none for an id no slot has, or a slot of another class's (the
-    /// aristocrat's extra rings, for anyone else).
-    fn own_slot(&self, id: &str) -> Option<SlotId> {
-        let slot = self.content.slot_id(id)?;
-        let class = self.state.character.as_ref().map(|c| c.spec.class.as_str());
-        self.content.slot(slot).belongs_to(class).then_some(slot)
     }
 
     /// Takes off what is in slot `slot` (an id).

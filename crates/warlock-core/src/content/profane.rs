@@ -527,4 +527,46 @@ mod tests {
             .is_ok()
         );
     }
+
+    /// The body's effects (#1628): a bar never on a grip, an opening only of a class's slot,
+    /// slots, tags, and profiles that exist, a chance of 1 to 100.
+    #[test]
+    fn the_loader_refuses_a_bad_body_effect() {
+        let refused = |effect: &str, says: &str| {
+            let text = gift("a", &format!("effects = [{effect}]\n"));
+            let e = load(&[("a", &text)]).expect_err(says);
+            assert!(e.contains(says), "{e}");
+        };
+        let bars = |slot: &str| {
+            format!("{{ kind = \"bars_slot\", slot = \"{slot}\", mark = \"m\", refused = \"r\" }}")
+        };
+        for grip in [
+            "main_hand",
+            "off_hand",
+            "missile_weapon",
+            "missiles",
+            "tool",
+        ] {
+            refused(&bars(grip), "never bars a hand");
+        }
+        refused(&bars("tail"), "no such slot");
+        refused(
+            "{ kind = \"opens_slot\", slot = \"head\" }",
+            "only a slot gated to a class",
+        );
+        refused(
+            "{ kind = \"kin_to\", tag = \"no-such-tag\" }",
+            "no creature carries tag",
+        );
+        refused(
+            "{ kind = \"vision\", profile = \"x_ray\" }",
+            "unknown vision profile",
+        );
+        refused(
+            "{ kind = \"unarmed_on_hit\", status = \"bleeding\", chance = 0, severity = 1 }",
+            "not 1 to 100",
+        );
+        let head = gift("a", &format!("effects = [{}]\n", bars("head")));
+        assert!(load(&[("a", &head)]).is_ok());
+    }
 }

@@ -1,0 +1,13 @@
+[[gift]]
+id = "clawed"
+name = "Clawed"
+kind = "mixed"
+tier = "greater"
+weight = 8
+description = "Claws: no gloves fit, but your bare hands tear, and the wounds they leave bleed."
+line = "Your nails thicken into claws."
+effects = [
+    { kind = "bars_slot", slot = "hands", mark = "claws", refused = "Your claws tear through anything you try to pull on." },
+    { kind = "unarmed_die", sides = 8 },
+    { kind = "unarmed_on_hit", status = "bleeding", chance = 25, severity = 1 },
+]
