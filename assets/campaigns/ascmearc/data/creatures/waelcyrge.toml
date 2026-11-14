@@ -34,6 +34,7 @@ disarms = { chance = 20, difficulty = 28 }
 skills = { initiative = 160, spot = 90 }
 natural = { defence = 9, protection = 10, name = "feathers" }
 resist = { cold = 25, electricity = 25, necrotic = 50 }
+everlasting = true
 on_eat = { message = "Lean and bitter, the meat of a carrion bird.", vomit = 50, train = { dexterity = 200 } }
 blood = "#8a1a2a"
 # Her spear twice in one attack: a thrust, and the stroke back.

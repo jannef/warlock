@@ -183,7 +183,8 @@ impl World {
     /// What `actor`, a creature just dead, leaves in place of its body if a Soulglass blow
     /// killed it (module docs): its colour's crystals, perhaps a rare material, and the line
     /// saying so where the player sees its cell. `None` when no `crystal` spell struck it, or
-    /// its kind leaves no corpse, is an animated thing, or has no colour: it dies as it would.
+    /// its kind leaves no corpse, an everlasting one (it always leaves its corpse), is an
+    /// animated thing, or has no colour: it dies as it would.
     pub(super) fn crystallise(&mut self, actor: &Actor) -> Option<(Vec<Stack>, Option<String>)> {
         if self.glassing != Some(actor.id) {
             return None;
@@ -191,7 +192,8 @@ impl World {
         let content = self.content.clone();
         let crystals = content.crystals()?;
         let def = content.creature(actor.creature);
-        if content.corpse_of(actor.creature).is_none() || def.animated.is_some() {
+        if content.corpse_of(actor.creature).is_none() || def.everlasting || def.animated.is_some()
+        {
             return None;
         }
         let colour = crystals.colour_of(&content, actor.creature)?;

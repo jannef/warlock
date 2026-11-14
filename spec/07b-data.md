@@ -112,7 +112,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
   bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
   "Hunger"): `corpse` (default true: it leaves a corpse when it dies; with `data/hunger.toml`),
-  and `on_eat`, what eating its fresh corpse does besides feeding, never shown before the player
+  `everlasting` (default false: its corpse never rots and its death always lays it, never glass
+  or a statue; only on a `unique` that leaves a corpse, §8 "Hunger"), and `on_eat`, what eating its fresh corpse does besides feeding, never shown before the player
   tries (`{ message = "...", vomit = 25, stat = { toughness = 5 }, heal = "1d4", harm = "1d2",
   satiation = 500 }`: the message said once it is eaten, a percent chance it comes back up, a
   percent chance per stat to raise it by 1 up to its potential, dice of hit points healed, dice

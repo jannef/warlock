@@ -67,6 +67,11 @@ corpse has rotted away."). A corpse does not show how old it is, so remember whe
 Eating a rotten one is as bad an idea as eating any rotten food: "Ugh! The kobold corpse was
 rotten."
 
+The corpses of the [keepers of Grundlēas](dungeon-guide.md#the-keepers-of-the-layers) never rot.
+Each keeper always leaves its corpse where it fell: [Soulglass](magic.md#spell-soulglass) does not
+turn it to glass, and turned to stone it still leaves its corpse, not a statue. Most are far too
+heavy to carry, but the corpse waits in the lair for as long as you stay on that floor.
+
 A corpse is good for more than a meal. [Necromancy](spellcasting.md#spell-types) has three uses
 for a corpse of any age, and each one uses it up. [Charnel burst](magic.md#spell-charnel-burst)
 blows it apart, [Grave feast](magic.md#spell-grave-feast) draws out what life is left, and

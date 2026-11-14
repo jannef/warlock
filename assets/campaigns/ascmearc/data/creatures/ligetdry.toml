@@ -39,6 +39,7 @@ base_hp = 200
 skills = { concentration = 190, spellcraft = 195, spot = 60 }
 natural = { defence = 5, protection = 6, name = "skin" }
 resist = { electricity = 100 }
+everlasting = true
 on_eat = { message = "Your hair stands on end, and your teeth ache.", vomit = 40 }
 [creature.attack]
 damage = "3d8"
