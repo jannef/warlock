@@ -1,0 +1,17 @@
+# Campaign-owned: Stānēoten's signature gift (docs/design/profane-gifts.md §5), given sure by its
+# corpse's `on_eat.gives` and never drawn (`only`, weight 0). Its tier groups it in the wiki.
+[[gift]]
+id = "hurlers_arm"
+name = "Hurler's arm"
+kind = "mixed"
+tier = "greater"
+weight = 0
+only = "staneoten"
+description = "The last giant's strength, and his slowness: you are far stronger, carry more, and throw farther, but you move more slowly."
+line = "It sits in you like a stone. Your arms thicken; your feet grow heavy."
+effects = [
+    { kind = "stat", stat = "strength", value = 3 },
+    { kind = "carry_percent", value = 50 },
+    { kind = "throw_range", value = 3 },
+    { kind = "speed_percent", value = -10 },
+]

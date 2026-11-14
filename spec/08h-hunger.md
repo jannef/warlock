@@ -125,8 +125,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
       you.") and gives it, each before the next is drawn; then the deed `eat_profane` (−300, the
       largest single sin) moves the score, its band's note said; then it feeds. There is no
       confirmation, and nothing marks the corpse profane. An interrupted meal does nothing.
-      Gnægan the Rat King's (one lesser roll) is the only one so far: Rat-king's court (+4 to
-      disease checks, poison resistance 25 %, hunger 20 % faster).
+      Every keeper of Grundlēas leaves one (#1627; a keeper without `gives` and `profane` is a
+      content error), the rolls rising with depth (1, 1, 1, 2, 2, 2, 2, 3, 3, 3; deeper, the
+      greater and dire tiers). Each signature is the keeper's own (docs/design/profane-gifts.md
+      §5): Gnægan's Rat-king's court, Āttorcoppe's Spinner's blood, Hrīmwyrm's Rime-blooded,
+      Wēalāf's Barrow-king's will, Grundwyrgen's Mere-wife's hide, Līgetdrȳ's Storm-wright's
+      marrow (its corpse also teaches Decipher script, up to 60), Stānēoten's Hurler's arm,
+      Nihtscinna's Hollow of the night, Wælcyrge's Chooser's quickness, Nīðdraca's Hate-wyrm's
+      heart. Stat gifts are score and potential (never marks); a resistance of 100 is 75
+      effective (§8 "Damage types"), never immunity. Hate-wyrm's heart gives Fire breath, the
+      Wyvern pick's active, stronger: one who holds both breathes the stronger, and one whose
+      sign gives none finds it in the abilities menu's Profane group.
   - **Eating rotten food** of any kind (by its age when the last turn of the meal is done; gone
     food not yet removed counts as rotten): "Ugh! The loaf of bread was rotten.", one draw with
     `[rotten] vomit` (50 %) to vomit, else it makes them sick, exposes them to the diseases

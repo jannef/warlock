@@ -34,7 +34,8 @@ skills = { sneak_attack = 40, initiative = 50, spot = 40 }
 natural = { defence = 3, protection = 3, name = "chitin" }
 immune = ["poison"]
 everlasting = true
-on_eat = { message = "Bitter beyond bearing, and your mouth goes numb.", vomit = 80, harm = "2d4" }
+# A profane corpse (docs/design/profane-gifts.md §4): its signature, sure, and one draw.
+on_eat = { message = "Bitter beyond bearing, and your mouth goes numb.", gives = "spinners_blood", profane = { rolls = 1, tiers = { lesser = 80, greater = 20 } } }
 blood = "#4a6a2a"
 [creature.attack]
 damage = "3d8"

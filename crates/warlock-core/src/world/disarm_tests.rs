@@ -258,6 +258,7 @@ fn the_abilities_menu_lists_disarming_for_the_trained_only() {
     let abilities = w.perception().abilities();
     assert!(abilities.contains(&OwnAbility {
         ability: Ability::Disarm,
+        source: crate::ability::Source::Skill,
         unavailable: None,
     }));
     let id = disable_device(&w);

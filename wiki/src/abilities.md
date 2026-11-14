@@ -10,8 +10,9 @@ The basic commands keep their keys (see [Controls](controls.md)): moving, openin
 ## The abilities menu
 
 `a` opens the abilities menu. It lists your abilities with a letter each, in groups by where they
-come from: Racial, Class, Talents, Skills, Weapon skills, Items. A group you have nothing in is
-left out.
+come from: Racial, Birth sign, Profane, Class, Spells, Talents, Skills, Weapon skills, Items, Here,
+Allies. A group you have nothing in is left out. Profane holds what a [profane gift](profane-gifts.md)
+gave you and your birth sign did not (Hate-wyrm's heart's Fire breath).
 
 - Beside each ability is what it asks for once you choose it, such as `in a direction`.
 - An ability you cannot use right now is greyed out, with the reason: `you hold no shield`, `not

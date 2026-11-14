@@ -579,7 +579,7 @@ impl<'a> PerceptionView<'a> {
         let companion_here = (self.snapshot.allies.iter())
             .any(|a| a.here && matches!(a.source, crate::world::AllySource::Companion(_)));
         let beside = |ability| self.ways(crate::beside::Beside::Use(ability));
-        (Ability::of(self.player, self.content).into_iter())
+        let mut own = (Ability::of(self.player, self.content).into_iter())
             .chain(here)
             .chain(orders)
             // Listen and Wedge only beside a closed door (the owner, #1327).
@@ -597,12 +597,16 @@ impl<'a> PerceptionView<'a> {
                 let target = crate::beside::Beside::Use(ability).target(self.content);
                 OwnAbility {
                     ability,
+                    source: ability.source_for(self.player, self.content),
                     unavailable: unavailable.or(target
                         .filter(|_| no_target)
                         .map(crate::ability::Unavailable::NoTarget)),
                 }
             })
-            .collect()
+            .collect::<Vec<_>>();
+        // A profane gift's row moves to its own group (stable: the order within each kept).
+        own.sort_by_key(|o| o.source);
+        own
     }
 
     /// Why the player cannot use `ability` now, before what is beside them is asked

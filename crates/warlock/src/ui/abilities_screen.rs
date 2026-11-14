@@ -123,7 +123,7 @@ impl AbilitiesScreen {
                         state: state.to_string(),
                         available: own.unavailable.is_none(),
                     };
-                    (a.source(), entry)
+                    (own.source, entry)
                 })
                 .collect()
         });

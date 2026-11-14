@@ -40,7 +40,8 @@ endless branch's boss without `corpse` and `everlasting`. Tests: `world/everlast
 `layer_boss_tests.rs`.
 **Profane corpses** (#1626, the profane gifts' P3, docs/dev/profane-gifts.md): an `on_eat`
 with `gives` (the signature gift's id) and `profane` (`ProfaneRolls`: `rolls`, `tiers` by
-`GiftTier`) is a layer boss's. `load_creatures` asks for both together and `everlasting`, refuses
+`GiftTier`) is a layer boss's: all ten of Grundlēas's have one (P4, #1627; `content/layer_boss.rs` refuses an
+endless branch's keeper without `gives` and `profane`). `load_creatures` asks for both together and `everlasting`, refuses
 `vomit` on one (it always takes), and the tier odds must sum to 100 (`ProfaneRolls::check`);
 `profane::check_signatures` (after `load_hunger`) ties `gives` to the gift's `only`. `eat_fresh`
 runs the usual steps (message, gifts, skills, heal, harm), then `World::profane_meal`

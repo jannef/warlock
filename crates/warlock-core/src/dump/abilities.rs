@@ -13,7 +13,7 @@ pub(super) fn ability_rows(view: &PerceptionView<'_>) -> Vec<String> {
                 Some(why) => why.reason(content),
                 None => aim_word(a.aim(content)).into(),
             };
-            let source = a.source().id().replace('_', " ");
+            let source = own.source.id().replace('_', " ");
             format!("{} ({source}): {state}", view.ability_name(a))
         })
         .collect()
@@ -66,7 +66,7 @@ pub(super) fn abilities_json(view: &PerceptionView<'_>) -> Value {
             let a = own.ability;
             json!({
                 "id": a.id(content),
-                "source": a.source().id(),
+                "source": own.source.id(),
                 "aim": aim_word(a.aim(content)),
                 "unavailable": own.unavailable.map(|why| why.id(content)),
             })

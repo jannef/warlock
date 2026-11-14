@@ -187,6 +187,9 @@ pub enum Source {
     Race,
     /// The character's birth sign (spec §8 "Birth sign"): its active gifts.
     Sign,
+    /// A profane gift (`docs/dev/profane-gifts.md`): a sign's active a gift gives and no sign
+    /// talent of theirs does (Hate-wyrm's heart's Fire breath; [`Ability::source_for`]).
+    Profane,
     /// The character's class (spec §8 "Class abilities"): its actives, and throwing one's voice
     /// (everyone's until the class tables give it to the bard alone).
     Class,
@@ -212,6 +215,7 @@ impl Source {
     pub const ALL: &[Source] = &[
         Source::Race,
         Source::Sign,
+        Source::Profane,
         Source::Class,
         Source::Spell,
         Source::Talent,
@@ -227,6 +231,7 @@ impl Source {
         match self {
             Source::Race => "Racial",
             Source::Sign => "Birth sign",
+            Source::Profane => "Profane",
             Source::Class => "Class",
             Source::Spell => "Spells",
             Source::Talent => "Talents",
@@ -243,6 +248,7 @@ impl Source {
         match self {
             Source::Race => "race",
             Source::Sign => "sign",
+            Source::Profane => "profane",
             Source::Class => "class",
             Source::Spell => "spell",
             Source::Talent => "talent",
@@ -853,6 +859,34 @@ impl Ability {
         }
     }
 
+    /// Where it comes from for `actor`: [`Ability::source`], but a sign's active that only a
+    /// profane gift of theirs gives is [`Source::Profane`] (a sign talent that gives it too keeps
+    /// it the sign's).
+    pub fn source_for(self, actor: &Actor, content: &Content) -> Source {
+        let Ability::Sign(active) = self else {
+            return self.source();
+        };
+        let book = content.talents();
+        let (mut sign, mut profane) = (false, false);
+        for taken in actor.talents.iter() {
+            let Some(id) = book.id(&taken.id) else {
+                continue;
+            };
+            if (book.get(id).effects.iter()).any(|e| e.sign_active() == Some(active)) {
+                if content.profane().gift(id).is_some() {
+                    profane = true;
+                } else {
+                    sign = true;
+                }
+            }
+        }
+        if profane && !sign {
+            Source::Profane
+        } else {
+            Source::Sign
+        }
+    }
+
     /// What it asks for before it is used (a spell: by its shape in `content`).
     pub fn aim(self, content: &Content) -> Aim {
         match self {
@@ -1409,6 +1443,8 @@ fn short_of(actor: &Actor, cost: ResourceCost) -> Option<Unavailable> {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct OwnAbility {
     pub ability: Ability,
+    /// Its group in the menu: [`Ability::source_for`] the player.
+    pub source: Source,
     /// Why it cannot be used now; `None` when it can.
     pub unavailable: Option<Unavailable>,
 }
@@ -1428,6 +1464,7 @@ mod tests {
             [
                 "Racial",
                 "Birth sign",
+                "Profane",
                 "Class",
                 "Spells",
                 "Talents",

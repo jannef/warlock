@@ -40,7 +40,9 @@ skills = { concentration = 190, spellcraft = 195, spot = 60 }
 natural = { defence = 5, protection = 6, name = "skin" }
 immune = ["electricity"]
 everlasting = true
-on_eat = { message = "Your hair stands on end, and your teeth ache.", vomit = 40 }
+# A profane corpse (docs/design/profane-gifts.md §4): its signature, sure, and two draws; and a
+# caster's Decipher script.
+on_eat = { message = "It crackles on the tongue.", skills = { decipher_script = { gives = 10, up_to = 60 } }, gives = "storm_wrights_marrow", profane = { rolls = 2, tiers = { lesser = 20, greater = 55, dire = 25 } } }
 [creature.attack]
 damage = "3d8"
 damage_type = "bludgeoning"
