@@ -8,7 +8,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::replay::Replay;
-use crate::test_support::{CONTENT, run as act, texts};
+use crate::test_support::{CONTENT, last_text as last, run as act, texts};
 
 /// The partner's desk in Wulfrun's office, and the cell west of it.
 const DESK: Pos = Pos::new(75, 23);
@@ -19,10 +19,6 @@ fn run(character: &str) -> World {
     let spec: CharacterSpec = character.parse().expect("a character");
     World::start_run(CONTENT.clone(), "ceaptun", None, Some(&spec), None, true)
         .expect("a run in Cēaptūn")
-}
-
-fn last(world: &World) -> String {
-    texts(world).last().cloned().unwrap_or_default()
 }
 
 /// What the partner said last.

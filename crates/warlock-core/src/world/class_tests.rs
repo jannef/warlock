@@ -13,7 +13,7 @@ use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::rng::Rng;
 use crate::stats::{PerStat, Stat, Stats};
-use crate::test_support::{CONTENT as BUILTIN, said};
+use crate::test_support::{CONTENT as BUILTIN, last, said};
 
 /// A human of `class` in the showcase.
 fn world(class: &str) -> World {
@@ -25,10 +25,6 @@ fn run(world: &mut World, actions: &str) {
     for action in parse_actions(actions).expect("actions") {
         world.apply(&action);
     }
-}
-
-fn last(world: &World) -> String {
-    said(world).last().cloned().unwrap_or_default()
 }
 
 /// Grants the XP that takes the player to `level`, spending every choice due on the way

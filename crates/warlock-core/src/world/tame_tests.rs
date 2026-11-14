@@ -11,7 +11,7 @@ use crate::geom::Dir;
 use crate::replay::Replay;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::Stat;
-use crate::test_support::{builtin, texts};
+use crate::test_support::{builtin, last_text as last, texts};
 use std::sync::Arc;
 
 /// A lit nook: the player below a beast walled in on three sides, so it cannot wander off.
@@ -70,10 +70,6 @@ fn beast(w: &World) -> ActorId {
         .find(|a| a.pos == at && a.id != w.state.player)
         .map(|a| a.id)
         .expect("the beast")
-}
-
-fn last(w: &World) -> String {
-    texts(w).last().cloned().unwrap_or_default()
 }
 
 fn tame(w: &mut World) -> Outcome {

@@ -6,7 +6,7 @@ use crate::action::{Command, parse_actions};
 use crate::content::{ContentFiles, Stance};
 use crate::noise::SoundKind;
 use crate::replay::Replay;
-use crate::test_support::{builtin, run, said};
+use crate::test_support::{builtin, last as last_said, run, said};
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -213,10 +213,6 @@ fn world_of(hall: &str, allies: Option<&str>) -> World {
 
 fn world() -> World {
     world_of(HALL, Some(ALLIES))
-}
-
-fn last_said(w: &World) -> String {
-    said(w).last().cloned().unwrap_or_default()
 }
 
 fn allies(w: &World) -> Vec<&Actor> {

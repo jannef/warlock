@@ -6,7 +6,7 @@
 
 use super::*;
 use crate::content::ContentFiles;
-use crate::test_support::{run, said};
+use crate::test_support::{last as last_said, run, said};
 
 /// Two rats for five minutes, three of them at once.
 const RATS: &str = r#"
@@ -119,10 +119,6 @@ fn world_on(scenario: &str) -> World {
     }
     w.player_mut().mana = 300;
     w
-}
-
-fn last_said(w: &World) -> String {
-    said(w).last().cloned().unwrap_or_default()
 }
 
 /// The player's summons (not a scenario character's companion: the showcase's Osric is a ranger).

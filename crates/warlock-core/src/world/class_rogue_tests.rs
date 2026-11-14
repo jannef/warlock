@@ -14,7 +14,7 @@ use crate::noise::{self, Act};
 use crate::replay::Replay;
 use crate::skills::Effect;
 use crate::stats::{PerStat, Stats};
-use crate::test_support::{CONTENT as BUILTIN, run, said};
+use crate::test_support::{CONTENT as BUILTIN, last, run, said};
 
 /// A human of `class` in the showcase (seed 7), with their kit, born under no sign, every score
 /// 14.
@@ -42,10 +42,6 @@ fn world(class: &str) -> World {
     let max = w.state.player().max_hp(w.content());
     w.player_mut().hp = max;
     w
-}
-
-fn last(world: &World) -> String {
-    said(world).last().cloned().unwrap_or_default()
 }
 
 /// Grants the XP that takes the player to `level` and spends every choice it brings.

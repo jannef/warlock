@@ -11,7 +11,7 @@ use crate::content::{ContentFiles, Factor, StatusId, Trap};
 use crate::damage::Damage;
 use crate::equipment::Equipment;
 use crate::stats::{PerStat, Stat, Stats};
-use crate::test_support::{CONTENT as BUILTIN, run, said};
+use crate::test_support::{CONTENT as BUILTIN, last, run, said};
 
 /// A human warrior in the showcase, every score 14.
 fn world() -> World {
@@ -20,10 +20,6 @@ fn world() -> World {
         World::with_character(BUILTIN.clone(), "showcase", Some(7), Some(&spec)).expect("world");
     set_scores(&mut w, 14);
     w
-}
-
-fn last(world: &World) -> String {
-    said(world).last().cloned().unwrap_or_default()
 }
 
 fn set_scores(world: &mut World, score: u8) {

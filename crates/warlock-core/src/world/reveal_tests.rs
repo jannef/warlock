@@ -10,7 +10,7 @@ use crate::action::parse_actions;
 use crate::content::{ContentFiles, RevealWhen};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
-use crate::test_support::{builtin, run as act, texts};
+use crate::test_support::{builtin, last_text as last, run as act, texts};
 
 const OVERWORLD: &str = include_str!("../../../../assets/campaigns/showcase/levels/overworld.toml");
 const QUESTS: &str =
@@ -82,10 +82,6 @@ fn put_player(world: &mut World, at: Pos) {
     let id = world.state.player;
     world.state.actors.get_mut(&id).expect("player").pos = at;
     world.perceive(&mut Vec::new());
-}
-
-fn last(world: &World) -> String {
-    texts(world).pop().unwrap_or_default()
 }
 
 fn glyph(world: &World, layer: Layer, at: Pos) -> char {

@@ -7,7 +7,7 @@ use crate::ability::{Ability, Unavailable};
 use crate::character::{CharacterSpec, RememberedFamiliar};
 use crate::content::{ClassActive, Content, ContentFiles};
 use crate::perception::Perception;
-use crate::test_support::{run, said};
+use crate::test_support::{last, run, said};
 use crate::time::Duration;
 use std::sync::{Arc, LazyLock};
 
@@ -115,10 +115,6 @@ fn start(content: &Arc<Content>, scenario: &str, character: &str, seed: u64) -> 
 
 fn witch(scenario: &str, seed: u64) -> World {
     start(&CONTENT, scenario, "human,female,witch", seed)
-}
-
-fn last(w: &World) -> String {
-    said(w).pop().unwrap_or_default()
 }
 
 /// The familiar is gone, as if it had died, and the player knows it.
