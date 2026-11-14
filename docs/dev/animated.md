@@ -151,7 +151,7 @@ thing has none and shows `fg` alone (still the `shown_by` piece's colour). The m
 horizontal bands (`docs/dev/rendering.md`, "Colour bands"), and a JSON dump's seen actor carries
 them as `bands`, top first.
 
-`SeenActor::shape` (`perception.rs::shape`): an animated creature's body's glyph, its colour
+`SeenActor::shape` (`perception/actors.rs::shape`): an animated creature's body's glyph, its colour
 (`Stack::fg`: the drawn material's), and its main material. `SeenActor::glyph`/`fg` read it,
 else the type's; the map (`ui/glyphs.rs`), the look cursor, and the `view` dump use them, and a
 JSON dump's seen actors carry `glyph` and `fg`. Look mode (`ui/look.rs::made_of`) adds the

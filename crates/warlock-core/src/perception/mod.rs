@@ -88,6 +88,7 @@
 //! `truth.rs` those that read ground truth (with its review note), and `shop.rs` shops.
 
 mod actors;
+mod lighting;
 mod own;
 mod seeing;
 mod seen;
@@ -105,27 +106,21 @@ pub use seen::{
 pub use shop::{Sale, ShopView};
 pub use view::PerceptionView;
 
-use actors::shape;
-use seeing::bond_view;
+use seeing::{Los, Seeing};
 use seen::allies_of;
 
 use crate::blood::Stain;
-use crate::content::{Content, LevelKind, Stance, StatusId, TerrainId, VisionProfile, ZoneKind};
-use crate::daylight::{self, DayPhase};
-use crate::fov::{compute_fov, radius2};
+use crate::content::{
+    Content, LevelKind, StatusId, TerrainDef, TerrainId, VisionProfile, ZoneKind,
+};
 use crate::geom::{Dir, Pos};
 use crate::grid::Window;
-use crate::light::{
-    Area, BOUNCE_STEPS, Bounce, Light, LightCache, SUN_KEY, Sky, Sunlight, falloff, lit_in_sight,
-    moon_key, wall_faces,
-};
+use crate::light::{Light, LightCache, Sky};
 use crate::noise::{self, PerceivedSound};
-use crate::sight;
+use crate::talent::TalentMods;
 use crate::temperature::Temperature;
 use crate::weather::Weather;
-use crate::world::mirrors::image_id;
-use crate::world::surprise::creature_unaware;
-use crate::world::{self, Actor, ActorId, ActorKind, LevelState, WorldState};
+use crate::world::{ActorId, LevelState, WorldState};
 use std::collections::BTreeMap;
 
 /// Maximum sight distance, however bright the light.
@@ -216,560 +211,164 @@ struct Disguise {
     level: u8,
 }
 
+/// What every step of [`Perception::compute`] reads: the world, the player's level and cell,
+/// their talents and eyes, and the sky over them.
+struct Viewing<'a> {
+    state: &'a WorldState,
+    content: &'a Content,
+    level: &'a LevelState,
+    viewer: Pos,
+    talents: &'a TalentMods,
+    /// The player's eyes: their vision profile as their talents change it.
+    eye: VisionProfile,
+    /// The sun, the moons, and the sky over a level under the open sky.
+    sky: Option<Sky>,
+    /// Whether the level is the overworld, seen at map scale (the module docs).
+    overworld: bool,
+}
+
+impl Viewing<'_> {
+    fn is_opaque(&self, p: Pos) -> bool {
+        self.level.is_opaque(self.content, p)
+    }
+
+    /// The terrain at `p`, if on the level.
+    fn terrain(&self, p: Pos) -> Option<&TerrainDef> {
+        self.level.terrain.get(p).map(|t| self.content.terrain(*t))
+    }
+
+    /// Whether `p` is under the open sky (no roof).
+    fn exposed(&self, p: Pos) -> bool {
+        self.terrain(p).is_some_and(|t| !t.roofed)
+    }
+
+    /// A shadowed room keeps only part of every bit of a cell's light: its base light and each
+    /// source's contribution alike, so they still add up to the whole.
+    fn shade(&self, p: Pos, light: Light) -> Light {
+        self.level.shade(self.content, p, light, self.state.time)
+    }
+}
+
+/// The zones on the cells the player sees, by position: smoke is seen where sight stops at it,
+/// though what is in it is not.
+fn zones_seen(v: &Viewing, los: &Los, seeing: &Seeing) -> BTreeMap<Pos, ZoneKind> {
+    let (level, now) = (v.level, v.state.time);
+    if level.zones.is_empty() {
+        return BTreeMap::new();
+    }
+    let smoke = (los.cells.iter()).filter(|&&p| level.smoky(p, now));
+    (seeing.visible_cells.iter().chain(smoke))
+        .filter_map(|&p| Some((p, level.zone_at(p, now)?.kind())))
+        .collect()
+}
+
+/// The cells of `stains` (blood or char) the player sees: on an open cell in sight; on a wall,
+/// where a stained face is seen.
+fn stained(v: &Viewing, seeing: &Seeing, stains: &BTreeMap<Pos, Stain>) -> Vec<Pos> {
+    let sight = &seeing.sight;
+    (stains.iter())
+        .filter(|(p, stain)| {
+            let p = **p;
+            if !v.is_opaque(p) {
+                return sight.get(p) == Some(&Sight::Seen);
+            }
+            let faces = |d: Dir| stain.faces == 0 || stain.on_face(d);
+            sight.get(p).is_some_and(|s| *s != Sight::Hidden)
+                && Dir::ALL.into_iter().filter(|d| faces(*d)).any(|d| {
+                    let q = p.step(d);
+                    sight.get(q) == Some(&Sight::Seen) && !v.is_opaque(q)
+                })
+        })
+        .map(|(p, _)| *p)
+        .collect()
+}
+
+/// Sounds the player heard whose source they do not see, placed roughly.
+fn heard(
+    v: &Viewing,
+    seeing: &Seeing,
+    concealed: &[crate::world::Concealed],
+) -> Vec<PerceivedSound> {
+    let (content, talents, viewer) = (v.content, v.talents, v.viewer);
+    let player = v.state.player();
+    let Some(threshold) = player.hearing(content) else {
+        return Vec::new();
+    };
+    let hidden = |p: Pos| {
+        p != viewer
+            && (seeing.sight.get(p) == Some(&Sight::Hidden) || concealed.iter().any(|c| c.pos == p))
+    };
+    // Watchful (spec §8 "Birth sign"): footsteps placed exactly; the ranger's Tracker: every
+    // sound.
+    let exact = match (talents.exact_sounds, talents.exact_footsteps) {
+        (true, _) => noise::Exact::All,
+        (false, true) => noise::Exact::Footsteps,
+        (false, false) => noise::Exact::No,
+    };
+    let heard = (&player.heard[..], threshold, exact);
+    noise::perceive(v.level, content, heard, v.state.turn, hidden)
+}
+
 impl Perception {
     /// Computes what the player perceives on their current level: line of sight, light, and
     /// visibility. Light masks come from (and are added to) `lights`.
+    ///
+    /// The steps, in order: line of sight (`seeing.rs`), light on the cells in it
+    /// (`lighting.rs`), the cells seen by that light, light on the wall faces seen, the walls
+    /// seen by it, then the creatures seen (`actors.rs`), and the zones, blood, char, and sounds.
     pub(crate) fn compute(state: &WorldState, content: &Content, lights: &mut LightCache) -> Self {
-        let viewer = state.player().pos;
         let level = state.current();
-        let (width, height) = (level.width(), level.height());
         let talents = state.player().talent_mods(content);
-        let eyes = state.eyes(content);
-        let eye = &eyes;
-        let is_opaque = |p: Pos| level.is_opaque(content, p);
-        let sky = state.sky(content);
-        // On the overworld, daylight (and moonlight, and rain) sets how far one sees; light does
-        // not matter.
-        let overworld = level.kind == LevelKind::Overworld;
-        let range = match &sky {
-            Some(sky) if overworld => {
-                let range = daylight::sight_under(state.time, sky, content.climate());
-                // Moon-eyed (spec §8 "Talents"): farther at night; Eyes of the heights (spec §8
-                // "Birth sign"): farther by day too.
-                // A full moon lengthens a gift's (spec §8 "Birth sign", the flavour).
-                let moon = if talents.gift_reach.night_sight {
-                    content.full_moon_reach(state.time)
-                } else {
-                    0
-                };
-                match daylight::phase(state.time) {
-                    DayPhase::Night => range + talents.night_sight + moon,
-                    DayPhase::Day => range + talents.day_sight,
-                    DayPhase::Twilight => range,
-                }
-            }
-            _ => VIEW_RADIUS,
+        let v = Viewing {
+            state,
+            content,
+            level,
+            viewer: state.player().pos,
+            talents: &talents,
+            eye: state.eyes(content),
+            sky: state.sky(content),
+            // On the overworld, daylight (and moonlight, and rain) sets how far one sees; light
+            // does not matter.
+            overworld: level.kind == LevelKind::Overworld,
         };
-
-        // Line of sight. The per-turn grids store only the box of cells in view (`Window`): on
-        // the vast level a whole grid is 120,000 cells.
-        let (lo, hi) = (
-            Pos::new(viewer.x - range, viewer.y - range),
-            Pos::new(viewer.x + range, viewer.y + range),
-        );
-        let mut los = Window::new(width, height, lo, hi, false);
-        let mut los_cells = Vec::new();
-        // Smoke stops sight as a wall does, but is no wall (`world/zone.rs`).
-        let stops = level.sight_stops(content, viewer, state.time);
-        compute_fov(viewer, range, stops, |p| {
-            if let Some(seen) = los.get_mut(p)
-                && !*seen
-            {
-                *seen = true;
-                los_cells.push(p);
-            }
-        });
-        // Hunter's bond, Familiar's sight: the beast's line of sight is lit as the player's is
-        // (`lit_los`; without either the same as the player's).
-        let bond = bond_view(state, content, &talents);
-        let both = bond.as_ref().map(|bond| {
-            let (mut lit_los, mut lit_cells) = (los.clone(), los_cells.clone());
-            let (r, at) = (bond.los.radius(), bond.beast.pos);
-            lit_los.cover(Pos::new(at.x - r, at.y - r), Pos::new(at.x + r, at.y + r));
-            for p in bond.los.cells() {
-                if let Some(seen) = lit_los.get_mut(p)
-                    && !*seen
-                {
-                    *seen = true;
-                    lit_cells.push(p);
-                }
-            }
-            (lit_los, lit_cells)
-        });
-        let (lit_los, lit_cells) = both.as_ref().map_or((&los, &los_cells), |(g, c)| (g, c));
-        let light_reach = bond.as_ref().map_or(VIEW_RADIUS, |bond| {
-            let apart = bond.beast.pos.dist2(viewer).isqrt() + 1;
-            VIEW_RADIUS.max(apart + bond.los.radius())
-        });
-
-        // Sources that can light a cell in view, or a surface whose bounce light reaches one (a
-        // bounce step moves at most √2 < 2 cells; wall faces are within a cell of view).
-        let near = lights.near(state, content, viewer, light_reach + 1 + 2 * BOUNCE_STEPS);
-        // Direct light is needed on everything in sight and within bounce reach of it.
-        let area = Area::around(lit_cells.iter().copied(), BOUNCE_STEPS, width, height);
-
-        // Under the open sky: the sun and each moon that shines where no taller terrain shades a
-        // cell, the sky everywhere (none of them under a roof).
-        let terrain = |p: Pos| level.terrain.get(p).map(|t| content.terrain(*t));
-        let exposed = |p: Pos| terrain(p).is_some_and(|t| !t.roofed);
-        let mut bodies: Vec<(u64, Emitter, [i16; 2], Light)> = Vec::new();
-        if let Some(sky) = &sky {
-            if sky.sun.is_up() {
-                let sun = sky.sun;
-                bodies.push((SUN_KEY, Emitter::Sun(sun), sun.shadow, sun.light));
-            }
-            for moon in sky.moons.iter().filter(|m| m.shines()) {
-                let emitter = Emitter::Moon(*moon);
-                bodies.push((moon_key(moon.index), emitter, moon.shadow, moon.light));
-            }
-        }
-        let beams: Vec<(u64, Emitter, Sunlight)> = match area {
-            Some(area) => (bodies.into_iter())
-                .map(|(key, emitter, shadow, light)| {
-                    let height = |p: Pos| terrain(p).map_or(0, |t| t.height);
-                    let tallest = content.tallest_terrain();
-                    let cells =
-                        Sunlight::compute(shadow, light, area, tallest, height, exposed, is_opaque);
-                    (key, emitter, cells)
-                })
-                .collect(),
-            None => Vec::new(),
-        };
-        let glow = sky.as_ref().map_or(Light::DARK, |s| eye.perceive(s.glow()));
-
-        // Base light on cells in line of sight: ambient, sky, and bounce (on transparent cells;
-        // RGB only, so every eye perceives all of it). The overworld never gets darker than its
-        // faint night light (moonlight comes on top).
-        let night = match &sky {
-            Some(sky) if overworld => daylight::overworld_night(sky.sun.sky),
-            _ => Light::DARK,
-        };
-        let ambient = eye.perceive(level.ambient.saturating_add(night));
-        let bounce = area.map(|area| {
-            let tint = |p: Pos| {
-                let rgb = terrain(p).map(|t| t.bounce);
-                rgb.map_or([0; 3], |c| [c.r, c.g, c.b])
-            };
-            let masks = (near.iter())
-                .filter(|(_, mask)| mask.overlaps(area.min, area.max))
-                .map(|(_, mask)| mask.cells.as_slice());
-            let beams = beams.iter().map(|(_, _, s)| s.cells.as_slice());
-            Bounce::compute(area, masks.chain(beams), is_opaque, tint)
-        });
-        // Steady light on a transparent cell beyond the ambient light: sky, bounce, and a special
-        // room's glow (a sanctuary's).
-        let indirect = |p: Pos| {
-            let bounce = bounce.as_ref().map_or(Light::DARK, |b| b.at(p));
-            let bounce = bounce.saturating_add(eye.perceive(level.room_glow(content, p)));
-            if !glow.is_dark() && exposed(p) {
-                bounce.saturating_add(glow)
-            } else {
-                bounce
-            }
-        };
-        // A shadowed room keeps only part of every bit of a cell's light: its base light and each
-        // source's contribution alike, so they still add up to the whole.
-        let shade = |p: Pos, light: Light| level.shade(content, p, light, state.time);
-        // What is in view and a cell round it (wall completion, wall faces); a write beyond
-        // (a creature smelt out of sight) grows the box.
-        let (seen_min, seen_max) = Area::around(lit_cells.iter().copied(), 1, width, height)
-            .map_or((viewer, viewer), |a| (a.min, a.max));
-        let mut base = Window::new(width, height, seen_min, seen_max, Light::DARK);
-        for &p in lit_cells {
-            base[p] = shade(p, ambient.saturating_add(indirect(p)));
-        }
-
-        // Light on cells in line of sight: base light plus every source reaching them, the sun
-        // and the moons last.
-        let mut light = base.clone();
-        let mut lit: Vec<_> = near
-            .into_iter()
-            .map(|(source, mask)| {
-                let emitter = Emitter::Point {
-                    pos: source.pos,
-                    preset: source.preset,
-                };
-                let cells = lit_in_sight(
-                    &mask.cells,
-                    |q| lit_los.get(q) == Some(&true),
-                    |q, l| shade(q, eye.perceive(l)),
-                );
-                (source.key, emitter, cells)
-            })
-            .collect();
-        for (key, emitter, beam) in &beams {
-            let cells = lit_in_sight(
-                &beam.cells,
-                |q| lit_los.get(q) == Some(&true),
-                |q, l| shade(q, eye.perceive(l)),
-            );
-            lit.push((*key, *emitter, cells));
-        }
-        for (_, _, cells) in &lit {
-            for &(p, c) in cells {
-                light[p] = light[p].saturating_add(c);
-            }
-        }
-
-        // Light-blind eyes in glare: strong light on the viewer's own cell dazzles them, and
-        // they see nothing farther than their race says.
-        let dazzled = (state.race_of(content, state.player()))
-            .and_then(|race| race.light_blind)
-            .filter(|blind| blind.dazzled_by(light[viewer]));
-        let reach2 = radius2(dazzled.map_or(range, |blind| range.min(blind.sight)));
-        let sees =
-            |light: Light, dist2: i32| dist2 <= reach2 && (overworld || eye.sees(light, dist2));
-
-        // Transparent cells: visible with enough light or within darkvision; the viewer's own
-        // cell always.
-        let mut sight = Window::new(width, height, seen_min, seen_max, Sight::Hidden);
-        let mut visible_cells = Vec::new();
-        let mut seen = Vec::new();
-        let smoke_hides = |p: Pos| level.smoke_hides(viewer, p, state.time);
-        for &p in los_cells.iter().filter(|p| !is_opaque(**p)) {
-            let by_eye = sees(light[p], p.dist2(viewer)) && !smoke_hides(p);
-            if by_eye || p == viewer {
-                sight[p] = Sight::Seen;
-                visible_cells.push(p);
-            }
-            if by_eye {
-                seen.push(p);
-            }
-        }
-        // Blood scent (spec §8 "Talents"): creatures suffering a status, in line of sight within
-        // its radius, however dark their cells.
-        let mut scented = Vec::new();
-        if !overworld && !talents.scent.is_empty() {
-            // A full moon lengthens a gift's (Hound's nose; spec §8 "Birth sign").
-            let moon = if talents.gift_reach.scent.is_empty() {
-                0
-            } else {
-                content.full_moon_reach(state.time)
-            };
-            let reach = |status: StatusId, radius: i32| {
-                radius
-                    + if talents.gift_reach.scent.contains(&status) {
-                        moon
-                    } else {
-                        0
-                    }
-            };
-            let smelt = (state.actors.values())
-                .filter(|a| a.level == level.id && a.kind == ActorKind::Creature)
-                .filter(|a| los.get(a.pos) == Some(&true) && !is_opaque(a.pos))
-                .filter(|a| {
-                    (talents.scent.iter()).any(|&(status, radius)| {
-                        a.effects.has(status)
-                            && a.pos.dist2(viewer) <= radius2(reach(status, radius))
-                    })
-                });
-            for a in smelt {
-                scented.push(a.id);
-                if sight[a.pos] == Sight::Hidden {
-                    sight[a.pos] = Sight::Seen;
-                    visible_cells.push(a.pos);
-                }
-            }
-        }
-
-        // The beast's viewpoint: what it sees by its eyes, and the hostiles its nose finds.
-        let mut bond_seen = Vec::new();
-        if let Some(bond) = &bond {
-            for p in bond.los.cells().filter(|p| !is_opaque(*p)) {
-                if sight.get(p) != Some(&Sight::Hidden) {
-                    continue;
-                }
-                if sight::sees_by(state, content, lights, &bond.los, &bond.eye, p).is_some() {
-                    sight[p] = Sight::Seen;
-                    visible_cells.push(p);
-                    bond_seen.push(p);
-                }
-            }
-            let hostile = |s: &WorldState, c: &Content, _: &Actor, a: &Actor| {
-                world::stance_between(s, c, s.player(), a) == Stance::Hostile
-            };
-            let smelt = bond.nose.map_or_else(Vec::new, |nose| {
-                world::smelt_within(state, content, bond.beast, nose, &hostile)
-            });
-            for (_, p) in smelt {
-                if sight.get(p) == Some(&Sight::Hidden) {
-                    sight[p] = Sight::Seen;
-                    visible_cells.push(p);
-                }
-            }
-        }
-
-        // Wall completion: opaque cells bounding a transparent cell seen by eye (the companion's
-        // too, within its own sight).
-        for q in seen {
-            for w in Dir::ALL.map(|d| q.step(d)) {
-                if sight.get(w) == Some(&Sight::Hidden) && is_opaque(w) && w.dist2(viewer) <= reach2
-                {
-                    sight[w] = if los[w] { Sight::Seen } else { Sight::Edge };
-                    visible_cells.push(w);
-                }
-            }
-        }
-        for q in bond_seen {
-            for w in Dir::ALL.map(|d| q.step(d)) {
-                if sight.get(w) == Some(&Sight::Hidden) && is_opaque(w) {
-                    sight[w] = if lit_los[w] { Sight::Seen } else { Sight::Edge };
-                    visible_cells.push(w);
-                }
-            }
-        }
-
-        // Wall faces: opaque cells in line of sight or completed take the brightest sky and bounce
-        // light of their visible transparent neighbors, then each source's light at their own
-        // distance (the sun's or a moon's where it reaches them) if they face a visible cell it
-        // lights.
-        let is_seen = |q: Pos| sight.get(q) == Some(&Sight::Seen);
-        let is_face = |w: Pos| {
-            is_opaque(w) && (lit_los.get(w) == Some(&true) || sight.get(w) == Some(&Sight::Edge))
-        };
-        for &w in lit_cells.iter().chain(&visible_cells) {
-            if is_face(w) {
-                let from_neighbors = Dir::ALL
-                    .map(|d| w.step(d))
-                    .into_iter()
-                    .filter(|q| is_seen(*q) && !is_opaque(*q))
-                    .fold(Light::DARK, |acc, q| acc.max(indirect(q)));
-                base[w] = shade(w, ambient.saturating_add(from_neighbors));
-                light[w] = base[w];
-            }
-        }
-        let light_at = |key: u64, emitter: Emitter, w: Pos| {
-            let light = match emitter {
-                Emitter::Point { pos, preset } => {
-                    let preset = content.light(preset);
-                    falloff(preset.color, preset.radius.max(0), w.dist2(pos))
-                }
-                Emitter::Sun(_) | Emitter::Moon(_) => (beams.iter())
-                    .find(|(k, _, _)| *k == key)
-                    .map_or(Light::DARK, |(_, _, beam)| beam.at(w)),
-            };
-            shade(w, eye.perceive(light))
-        };
-        let lit: Vec<_> = lit
-            .into_iter()
-            .map(|(key, emitter, cells)| {
-                let faces = wall_faces(&cells, |w| light_at(key, emitter, w), is_seen, is_face);
-                (key, emitter, cells, faces)
-            })
-            .collect();
-        for (_, _, _, faces) in &lit {
-            for &(p, c) in faces {
-                light[p] = light[p].saturating_add(c);
-            }
-        }
-
-        // Other opaque cells in line of sight: visible by their face light or darkvision.
-        for &p in &los_cells {
-            if sight[p] == Sight::Hidden && is_opaque(p) && sees(light[p], p.dist2(viewer)) {
-                sight[p] = Sight::Seen;
-                visible_cells.push(p);
-            }
-        }
-
-        let is_visible = |p: Pos| sight.get(p).is_some_and(|s| *s != Sight::Hidden);
-        let sources = lit
-            .into_iter()
-            .filter_map(|(key, emitter, cells, faces)| {
-                let contributions: Vec<_> = cells
-                    .into_iter()
-                    .chain(faces)
-                    .filter(|(p, _)| is_visible(*p))
-                    .collect();
-                (!contributions.is_empty()).then_some(SeenLight {
-                    key,
-                    emitter,
-                    contributions,
-                })
-            })
-            .collect();
-
-        // The unseen (`world/unseen.rs`): the shadowy on cells dim to the player's eyes, and the
-        // invisible.
-        let dim = |p: Pos| !overworld && light.get(p).is_some_and(|l| eye.dim(*l));
-        let concealed = world::unseen_by_player(state, content, &dim, &scented);
-        let draught =
-            (concealed.iter()).any(|c| c.shadowy && c.pos.chebyshev(viewer) <= world::DRAUGHT);
-        let unseen = |a: &Actor| concealed.iter().any(|c| c.id == a.id);
-
-        // A disguised mimic is a shut chest (`world/mimic.rs`), but to Chest-wise within its
-        // reach where the player sees it.
-        let reach = talents.sees_mimics;
-        let shut = content.chest_terrain(crate::chest::ChestState::Shut);
-        let zones: BTreeMap<Pos, ZoneKind> = if level.zones.is_empty() {
-            BTreeMap::new()
-        } else {
-            // Smoke is seen where sight stops at it, though what is in it is not.
-            let smoke = (los_cells.iter()).filter(|&&p| level.smoky(p, state.time));
-            (visible_cells.iter().chain(smoke))
-                .filter_map(|&p| Some((p, level.zone_at(p, state.time)?.kind())))
-                .collect()
-        };
-        let disguises: Vec<Disguise> = (state.actors.values())
-            .filter(|a| a.level == level.id && a.effects.hides(content))
-            .filter(|a| {
-                !(sight.get(a.pos) == Some(&Sight::Seen) && a.pos.chebyshev(viewer) <= reach)
-            })
-            .filter_map(|a| {
-                Some(Disguise {
-                    pos: a.pos,
-                    terrain: shut?,
-                    level: content.creature(a.creature).level,
-                })
-            })
-            .collect();
-        let hidden = |a: &Actor| disguises.iter().any(|d| d.pos == a.pos);
-        let seen: Vec<&Actor> = state
-            .actors
-            .values()
-            .filter(|a| a.level == level.id && sight.get(a.pos) == Some(&Sight::Seen))
-            // The retinue is with the player, not on the map (`world/ally.rs`).
-            .filter(|a| !a.in_retinue())
-            .filter(|a| !hidden(a) && !unseen(a))
-            .collect();
-        // Averted eyes (`world/avert.rs`): a hostile whose gaze is marked `averted`, seen.
-        let looker = state.player().faction(content);
-        let averted = (seen.iter()).any(|a| {
-            a.id != state.player
-                && (content.creature(a.creature).gaze.as_ref()).is_some_and(|g| g.averted)
-                && content.stance_of(a.faction(content), looker) == Stance::Hostile
-        });
-        let mut actors: Vec<SeenActor> = (seen.iter())
-            .map(|a| SeenActor {
-                id: a.id,
-                kind: a.kind,
-                creature: a.creature,
-                dialogue: content.dialogue_of(a.creature, a.npc.as_deref()),
-                faction: a.faction(content),
-                pos: a.pos,
-                health: a.health(content),
-                shape: shape(a, content),
-                unaware: false,
-                marked: a.id != state.player && state.player().mark == Some(a.id),
-                ally: a.master() == Some(state.player),
-                companion: a.master() == Some(state.player) && a.kept().is_some(),
-                grade: a.graded(),
-            })
-            .collect();
-        // Stalker's eye: which of them have not noticed the player.
-        if talents.sees_unaware {
-            for seen in &mut actors {
-                seen.unaware = (seen.kind == ActorKind::Creature)
-                    && creature_unaware(state, content, lights, seen.id, state.player);
-            }
-        }
-        // A hall of mirrors' images of those seen (`world/mirrors.rs`), where the player sees
-        // their cells, each shown as what it reflects under an id of its own.
-        let images: Vec<(ActorId, ActorId, Pos)> = (state.images(content, level).into_iter())
-            .filter(|i| sight.get(i.pos) == Some(&Sight::Seen))
-            .filter(|i| seen.iter().any(|a| a.id == i.of))
-            .map(|i| (i.of, image_id(i.of, i.index, state.turn), i.pos))
-            .collect();
-        for &(of, id, pos) in &images {
-            if let Some(real) = actors.iter().find(|a| a.id == of).copied() {
-                actors.push(SeenActor { id, pos, ..real });
-            }
-        }
-        let shown = |a: &Actor| {
-            std::iter::once(a.id)
-                .chain(images.iter().filter(|i| i.0 == a.id).map(|i| i.1))
-                .collect::<Vec<_>>()
-        };
-        // What creatures wear and wield is in plain sight; the rest of what they carry is not.
-        let gear = (seen.iter())
-            .filter(|a| a.kind == ActorKind::Creature)
-            .flat_map(|a| {
-                shown(a).into_iter().flat_map(move |id| {
-                    (a.equipment.items().into_iter()).filter_map(move |(slot, item)| {
-                        let stack = a.inventory.get(item)?.clone();
-                        Some(SeenGear {
-                            actor: id,
-                            slot,
-                            stack,
-                        })
-                    })
-                })
-            })
-            .collect();
-        // So do the statuses that show, such as bleeding; others (poison) do not, nor those its
-        // kind always has (`world/aura.rs`: a salamander is always cloaked in flame).
-        let effects = (seen.iter())
-            .filter(|a| a.kind == ActorKind::Creature)
-            .flat_map(|a| {
-                let innate = &content.creature(a.creature).innate;
-                shown(a).into_iter().flat_map(move |id| {
-                    (a.effects.iter())
-                        .filter(|e| content.status(e.status).seen.is_some())
-                        .filter(|e| !innate.contains(&e.status))
-                        .map(move |e| (id, e.status))
-                })
-            })
-            .collect();
-        actors.sort_by_key(|a| a.id);
-        let images = images.into_iter().map(|(_, _, p)| p).collect();
-
+        let los = seeing::line_of_sight(&v);
+        let mut lighting = lighting::light(&v, &los, lights);
+        let mut seeing = Seeing::see(&v, &los, &lighting.light, lights);
+        lighting.light_faces(&v, &los, &seeing);
+        seeing.see_walls(&v, &los, &lighting.light);
+        let sources = lighting.sources(&seeing);
+        let seen = actors::seen(&v, &seeing, &lighting.light, lights);
+        let zones = zones_seen(&v, &los, &seeing);
         // Blood and char: on an open cell in sight; on a wall, where a stained face is seen.
-        let stained = |stains: &BTreeMap<Pos, Stain>| -> Vec<Pos> {
-            (stains.iter())
-                .filter(|(p, stain)| {
-                    let p = **p;
-                    if !is_opaque(p) {
-                        return sight.get(p) == Some(&Sight::Seen);
-                    }
-                    let faces = |d: Dir| stain.faces == 0 || stain.on_face(d);
-                    sight.get(p).is_some_and(|s| *s != Sight::Hidden)
-                        && Dir::ALL.into_iter().filter(|d| faces(*d)).any(|d| {
-                            let q = p.step(d);
-                            sight.get(q) == Some(&Sight::Seen) && !is_opaque(q)
-                        })
-                })
-                .map(|(p, _)| *p)
-                .collect()
-        };
-        let blood = stained(&level.blood);
-        let scorch = stained(&level.scorch);
-
-        // Sounds the player heard whose source they do not see, placed roughly.
-        let player = state.player();
-        let sounds = match player.hearing(content) {
-            Some(threshold) => {
-                let hidden = |p: Pos| {
-                    p != viewer
-                        && (sight.get(p) == Some(&Sight::Hidden)
-                            || concealed.iter().any(|c| c.pos == p))
-                };
-                // Watchful (spec §8 "Birth sign"): footsteps placed exactly; the ranger's
-                // Tracker: every sound.
-                let exact = match (talents.exact_sounds, talents.exact_footsteps) {
-                    (true, _) => noise::Exact::All,
-                    (false, true) => noise::Exact::Footsteps,
-                    (false, false) => noise::Exact::No,
-                };
-                let heard = (&player.heard[..], threshold, exact);
-                noise::perceive(level, content, heard, state.turn, hidden)
-            }
-            None => Vec::new(),
-        };
+        let blood = stained(&v, &seeing, &level.blood);
+        let scorch = stained(&v, &seeing, &level.scorch);
+        let sounds = heard(&v, &seeing, &seen.concealed);
         // The player feels the air where they stand: fixed underground, the weather's under the
         // open sky, and what a hot or a cold room adds.
-        let temperature = state.temperature_at(level, content, state.time, player.pos);
+        let temperature = state.temperature_at(level, content, state.time, v.viewer);
         Self {
-            viewer,
-            eye: eyes,
-            ambient,
-            sky,
+            viewer: v.viewer,
+            eye: v.eye,
+            ambient: lighting.ambient,
+            sky: v.sky,
             temperature,
-            base,
-            sight,
-            visible_cells,
-            light,
+            base: lighting.base,
+            sight: seeing.sight,
+            visible_cells: seeing.visible_cells,
+            light: lighting.light,
             sources,
-            actors,
-            gear,
-            effects,
+            actors: seen.actors,
+            gear: seen.gear,
+            effects: seen.effects,
             sounds,
             blood,
             scorch,
-            images,
-            dazzled: dazzled.is_some(),
-            averted,
-            disguises,
-            concealed,
-            draught,
+            images: seen.images,
+            dazzled: seeing.dazzled,
+            averted: seen.averted,
+            disguises: seen.disguises,
+            concealed: seen.concealed,
+            draught: seen.draught,
             zones,
             allies: allies_of(state, content),
             ally_ailments: crate::heal::of_allies(&crate::world::allies_beside(state), content),

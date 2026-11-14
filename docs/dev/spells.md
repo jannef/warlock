@@ -977,15 +977,15 @@ Balefire, Reek, Mirk, Slick, and Fume (scroll only) lay one, and so do the flask
   rest and a stride) and in `schedule.rs::run_turn` as the player's next turn begins (`fire`,
   `fouled`); `zone_tread` in `ice.rs::after_tread`, every step's one hook (`fire` onto, `slick` onto
   or off); `LevelState::darkened` in `LightCache::sources` and `LevelState::shade` in the light pass,
-  the player's (`perception.rs`) and a creature's (`sight.rs::light`) alike (`dark`); the fire's cells
+  the player's (`perception/lighting.rs`) and a creature's (`sight.rs::light`) alike (`dark`); the fire's cells
   are sources in `LightCache::sources`, each keyed by `zone_key`, a light of the fire type's
   `fire.light`. A stride stops short of a zone's cell (`stride.rs`), so a coarse turn never crosses one
   unburnt. Bounce light is not cut: light landing on a dark cell may still bounce faintly beside it.
   `smoke` (the potions wave 2 design §9.2, #1225): `LevelState::sight_stops(content, viewer, now)`
-  is the closure every viewer's line of sight is computed with (the player's `perception.rs`, the
+  is the closure every viewer's line of sight is computed with (the player's `perception/seeing.rs`, the
   bonded beast's, a creature's in `ai.rs` and `surprise.rs`, the missiles' in `perceive.rs`): opaque
   terrain or smoke, and every cell for a viewer standing in smoke. `LevelState::smoke_hides` (a
-  smoke cell not beside the viewer) keeps it from being seen in `perception.rs`'s transparent pass
+  smoke cell not beside the viewer) keeps it from being seen in `perception/seeing.rs`'s transparent pass
   and in `sight.rs::sees_by`. `is_opaque` itself is unchanged: light, missiles, bursts, and
   zones pass. Rest's kept line of sight (`rest.rs::watched_in_sight`) steps aside while smoke lies.
   Creatures tagged `eyeless` are no different here: they see by the same rules.

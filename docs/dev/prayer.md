@@ -17,7 +17,7 @@ hallowed ground: `docs/dev/special-rooms.md` "Hallowed ground".
 | `world/orison.rs` | `Strain` (saved in `Progress::prayer`), `Actor::prayer_face`, `Actor::prayer_title`, `World::orison` (the one arm in `class_ability.rs::use_class`), the problems (`ails`), the fixes (`answer_prayer`, which calls the dark face's twists), `World::prayer_state` (dev). |
 | `world/dark_face.rs` | The dark face's twists: `nearest_seen`, `pass_on_diseases`, `pass_on_poison`, `turn_hexes_back`; Communion: `World::communes` (the talent, its band, the Dark face) and `communing_here` (and an unholy effect where the player stands). |
 | `world/rooms.rs` | `World::dwell`, the room status's one place: an unholy effect's status skips an actor that `communes`. |
-| `perception.rs` | `PerceptionView::ability_name` / `ability_description`: the prayer by its highest tier's title as the face gives it, and that talent's description (the abilities menu, the `abilities` dump). |
+| `perception/truth.rs` | `PerceptionView::ability_name` / `ability_description`: the prayer by its highest tier's title as the face gives it, and that talent's description (the abilities menu, the `abilities` dump). |
 
 ## Data
 

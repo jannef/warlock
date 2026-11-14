@@ -4,7 +4,7 @@
 //! - **Innate statuses** ([`wear_innate`]): an actor is made with its type's `innate` statuses,
 //!   and as each turn of its starts they are put back (a degree, the status's own stacking; one
 //!   that refreshes starts its wear over), so a cure or the clock never takes them for long.
-//!   Perception leaves them out of the look line (`perception.rs`): the kind always has them.
+//!   Perception leaves them out of the look line (`perception/actors.rs`): the kind always has them.
 //! - **The aura** ([`World::aura_turn`]): as a creature's turn starts, after its innate statuses
 //!   and before it decides, unless its cooldown status (`aura`) is on: every hostile within the
 //!   aura's radius (the fov's round radius) that it reaches, by line of sight from the bearer (no
