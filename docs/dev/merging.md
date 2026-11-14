@@ -38,7 +38,7 @@ Take one side and regenerate; never resolve hunks in these by hand:
 | `assets/campaigns/showcase/levels/vast.toml` | take either side, `cargo xtask gen-vast` (`--check` must pass) |
 | `THIRD_PARTY_LICENSES.html` | take either side, `cargo xtask licenses` after `Cargo.lock` is settled |
 | `Cargo.lock` | take `main`'s, then `cargo build --workspace` re-resolves your additions |
-| `tests/golden/*.png` | take `main`'s, then `WGPU_BACKEND=vulkan cargo xtask golden --update` in the cloud sandbox (lavapipe, as CI; CLAUDE.md "Golden screenshots"), never on macOS |
+| `tests/golden/*.png` | take `main`'s, then `WGPU_BACKEND=vulkan cargo xtask golden --update` in the cloud sandbox (lavapipe, as CI; `docs/dev/golden.md`), never on macOS |
 | `assets/keymaps/default.toml` | take either side, `WARLOCK_UPDATE_KEYMAPS=1 cargo test -p warlock keymap` (only a changed default key makes it stale) |
 
 **Reading an insta diff.** `INSTA_UPDATE=always cargo test -p warlock-core` rewrites the `.snap`
@@ -89,8 +89,9 @@ conflict every time; two that insert at different places merge cleanly. So:
   (`action.rs`, `content/mod.rs`, `dump.rs`, `input.rs`, `settings/keys.rs`), and its own tests
   file (`world/feature_tests.rs`).
 - **Docs follow the same rule**: a feature edits its own `docs/dev/<topic>.md` and the `spec/`
-  files of the sections it touches (bullets next to the related ones); CLAUDE.md only for a new
-  command or flag; the wiki gets its page and tables; `README.md` is not touched by feature work.
+  files of the sections it touches (bullets next to the related ones); `docs/dev/cli.md` for a new
+  flag, `--screen` name, scenario, dump layer, or action (by its group); CLAUDE.md only for a new
+  command; the wiki gets its page and tables; `README.md` is not touched by feature work.
 
 ## Roster and content PRs and hot docs
 

@@ -1,5 +1,7 @@
 //! `cargo xtask licenses [--check]`: regenerates `THIRD_PARTY_LICENSES.html` with `cargo-about`
 //! (config `about.toml`, template `about.hbs`), or checks that the committed file is current.
+//! CI's `deny` job runs the same `cargo about` call and comparison in shell, without building
+//! xtask (#1579): keep the two alike.
 
 use std::path::PathBuf;
 use std::process::Command;

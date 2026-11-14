@@ -10,11 +10,12 @@ and glyph-based effects — while every character stays crisp and readable.
 
 ![The light hall: colored crystals, pillar shadows, smooth falloff](docs/screenshots/m3-light-hall.png)
 
-This is the engine and framework phase: creatures hunt you, fight, shoot, and die, death is
-permanent, and you grow by experience levels and by skills that improve with use. You walk a
-hand-made showcase world where each room demonstrates one capability, an arena, an ADOM-like
-overworld with day and night and weather, outdoor areas generated from it, a vast lit cavern, and
-procedurally generated dungeon levels. The wiki's [What's in the
+You play the Ascmearc, the first campaign: you come through the pass of Beorggeat into the ash
+march, where no road leads home. Its overworld has day and night, moons, and weather, and its
+wilds are generated as you walk them; its towns and villages have shops, people to talk to, and
+quests; its dungeons, hand-made and generated, go deep. Creatures hunt you, fight, shoot, and die,
+death is permanent, and you grow by experience levels, talents, and skills that improve with use.
+The wiki's [What's in the
 game](https://jannef.github.io/warlock/wiki/features.html) walks through every feature, with
 screenshots; its [Controls](https://jannef.github.io/warlock/wiki/controls.html) page lists the
 keys (in the game, `?` shows your own bindings).
@@ -35,7 +36,7 @@ cargo run --release -p warlock
 To play a locked release from source, install it with `cargo install` (a tag picks the version):
 
 ```sh
-cargo install --git https://github.com/jannef/warlock --tag v0.16.0 --locked --no-default-features warlock
+cargo install --git https://github.com/jannef/warlock --tag v0.17.0 --locked --no-default-features warlock
 ```
 
 - `--locked` uses the release's `Cargo.lock`. `--no-default-features` leaves out the test world,
@@ -54,7 +55,8 @@ cargo install --git https://github.com/jannef/warlock --tag v0.16.0 --locked --n
 - What we are building: [`specification.md`](specification.md) (the index; the sections are in
   [`spec/`](spec/))
 - How to build, test, verify, and contribute: [`CLAUDE.md`](CLAUDE.md); notes per subsystem in
-  [`docs/dev/`](docs/dev/), the merging playbook in [`docs/dev/merging.md`](docs/dev/merging.md)
+  [`docs/dev/`](docs/dev/), the merging playbook in [`docs/dev/merging.md`](docs/dev/merging.md), the command-line reference
+  (flags, dump layers, action text) in [`docs/dev/cli.md`](docs/dev/cli.md)
 
 ```sh
 cargo test --workspace                                   # tests

@@ -492,7 +492,8 @@ impl LevelState {
     }
 
     /// Whether every terrain, light, object, room effect, and trap id is valid for `content`,
-    /// and the special rooms are well formed and apart (a guard for loaded saves).
+    /// the memory is the terrain's size (#1585), and the special rooms are well formed and apart
+    /// (a guard for loaded saves).
     pub(crate) fn ids_valid_for(&self, content: &Content) -> bool {
         let effects = content.room_effects().defs().len();
         let rooms_ok = self.rooms.iter().enumerate().all(|(i, r)| {
@@ -510,7 +511,9 @@ impl LevelState {
         let mut trap_kinds =
             (self.traps.values().map(|t| t.kind)).chain(self.trap_memory.values().copied());
         let water = |t: &TerrainId| known(t) && content.terrain(*t).freeze.is_some();
-        self.terrain.cells().iter().all(known)
+        let sized = (self.memory.width(), self.memory.height()) == (self.width(), self.height());
+        sized
+            && self.terrain.cells().iter().all(known)
             && self.memory.cells().iter().flatten().all(known)
             && self.lights.values().all(|l| usize::from(l.0) < lights)
             && self.fires.values().all(|f| usize::from(f.light.0) < lights)

@@ -3,12 +3,45 @@
 use crate::geom::Pos;
 use serde::{Deserialize, Serialize};
 
-/// A dense, row-major grid of `T` with fixed dimensions.
+/// A dense, row-major grid of `T` with fixed dimensions. Read back (a save), its cells must
+/// fill its dimensions, or it is an error, never a grid that panics when indexed (#1585).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(try_from = "RawGrid<T>")]
 pub struct Grid<T> {
     width: i32,
     height: i32,
     cells: Vec<T>,
+}
+
+/// A grid as written, before its size is checked.
+#[derive(Deserialize)]
+struct RawGrid<T> {
+    width: i32,
+    height: i32,
+    cells: Vec<T>,
+}
+
+impl<T> TryFrom<RawGrid<T>> for Grid<T> {
+    type Error = String;
+
+    fn try_from(raw: RawGrid<T>) -> Result<Self, String> {
+        let RawGrid {
+            width,
+            height,
+            cells,
+        } = raw;
+        let fits = width >= 0
+            && height >= 0
+            && Some(cells.len()) == (width as usize).checked_mul(height as usize);
+        if !fits {
+            return Err(format!("a {width}×{height} grid has {} cells", cells.len()));
+        }
+        Ok(Self {
+            width,
+            height,
+            cells,
+        })
+    }
 }
 
 impl<T: Clone> Grid<T> {
@@ -135,6 +168,17 @@ mod tests {
         assert_eq!(g.get(Pos::new(2, 1)), Some(&7));
         assert_eq!(g.get(Pos::new(-1, 0)), None);
         assert_eq!(g[Pos::new(2, 1)], 7);
+    }
+
+    #[test]
+    fn a_grid_read_back_must_fill_its_size() {
+        let g = Grid::from_vec(2, 2, vec![1u8, 2, 3, 4]);
+        let json = serde_json::to_string(&g).expect("writes");
+        assert_eq!(serde_json::from_str::<Grid<u8>>(&json).expect("reads"), g);
+        let short = r#"{"width":2,"height":2,"cells":[1,2,3]}"#;
+        assert!(serde_json::from_str::<Grid<u8>>(short).is_err());
+        let negative = r#"{"width":-1,"height":2,"cells":[]}"#;
+        assert!(serde_json::from_str::<Grid<u8>>(negative).is_err());
     }
 
     #[test]
