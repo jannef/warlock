@@ -238,3 +238,7 @@ mod tests;
 #[cfg(test)]
 #[path = "signature_tests.rs"]
 mod signature_tests;
+
+#[cfg(test)]
+#[path = "gift_table_tests.rs"]
+mod gift_table_tests;

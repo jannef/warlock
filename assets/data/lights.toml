@@ -209,6 +209,15 @@ radius = 2
 stability.intensity = { amount = 0.04, speed = 0.4 }
 stability.hue = { degrees = 3, speed = 0.2 }
 
+# Ember glow: the dim red light of glowing veins (the profane gift Ember-veined, data/profane/),
+# always about its bearer: enough for ordinary eyes to make out the cells beside them, and for
+# anything about to see them by. It pulses faintly, as blood does.
+[[light]]
+id = "ember_glow"
+color = [170, 60, 35, 0]
+radius = 2
+stability.intensity = { amount = 0.03, speed = 0.3 }
+
 # Glowing magic items (affixes.toml: Radiant, of Light): their wearer carries a faint, cool,
 # steady light (magic, so it never flickers). Dimmer than a lantern: enough to see by up close.
 [[light]]

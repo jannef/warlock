@@ -50,6 +50,37 @@ pub(super) fn wading(content: &Content, terrain: &TerrainDef) -> bool {
 pub(crate) const RISEN: &str = "risen";
 /// What it records once it has risen the second time Second rising allows.
 pub(crate) const RISEN_TWICE: &str = "risen_twice";
+/// What it records once it has risen by a profane gift (Twice-born, docs/dev/profane-gifts.md):
+/// a once of its own, so a Phoenix who is Twice-born rises once by each.
+pub(crate) const PROFANE_RISEN: &str = "profane_risen";
+
+/// Who gives `actor` the rising from the ashes: a talent of theirs that is no profane gift (the
+/// Phoenix's sign), and a profane gift (Twice-born).
+fn rising_sources(actor: &super::Actor, content: &Content) -> (bool, bool) {
+    let book = content.talents();
+    let (mut sign, mut profane) = (false, false);
+    for taken in actor.talents.iter() {
+        let Some(id) = book.id(&taken.id) else {
+            continue;
+        };
+        let rises = (book.get(id).effects.iter()).any(|e| {
+            matches!(
+                e,
+                crate::content::TalentEffect::Vigour(
+                    crate::talent::VigourEffect::RiseFromAshes { .. }
+                )
+            )
+        });
+        if rises {
+            if content.profane().gift(id).is_some() {
+                profane = true;
+            } else {
+                sign = true;
+            }
+        }
+    }
+    (sign, profane)
+}
 
 impl World {
     /// The player, about to die of a hit, a trap, or a status, rises from the ashes instead if
@@ -64,14 +95,18 @@ impl World {
         let Some(rise) = mods.vigour.rise else {
             return false;
         };
-        // Once in a life; Second rising (a Phoenix's pick) allows one more.
-        let flag = match (
-            self.state.progress.happened(RISEN),
-            mods.vigour.second_rising,
-        ) {
-            (false, _) => RISEN,
-            (true, true) if !self.state.progress.happened(RISEN_TWICE) => RISEN_TWICE,
-            (true, _) => return false,
+        // Once in a life by the sign; Second rising (a Phoenix's pick) allows one more; a
+        // profane gift (Twice-born) one of its own, after the sign's.
+        let (sign, profane) = rising_sources(self.state.player(), &content);
+        let happened = |flag: &str| self.state.progress.happened(flag);
+        let flag = if sign && !happened(RISEN) {
+            RISEN
+        } else if sign && mods.vigour.second_rising && !happened(RISEN_TWICE) {
+            RISEN_TWICE
+        } else if profane && !happened(PROFANE_RISEN) {
+            PROFANE_RISEN
+        } else {
+            return false;
         };
         self.state.progress.once.insert(flag.to_string());
         self.say("You burst into flame and rise from your ashes!");

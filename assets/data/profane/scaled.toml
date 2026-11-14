@@ -1,0 +1,15 @@
+[[gift]]
+id = "scaled"
+name = "Scaled"
+kind = "boon"
+tier = "greater"
+weight = 10
+description = "Small grey scales: blows land softer, and blades find it hard to bite."
+line = "Your skin hardens into small grey scales."
+effects = [
+    { kind = "natural", value = 2 },
+    { kind = "resist", damage = "slashing", value = 10 },
+]
+# Written here, on the later of each pair (docs/design/profane-gifts.md §6.5): made symmetric at
+# load. The design's `thin_skinned` is `paper_skinned` (docs/dev/profane-gifts.md).
+excludes = ["paper_skinned", "glass_boned", "hollowed"]

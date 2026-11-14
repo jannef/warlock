@@ -1,0 +1,13 @@
+[[gift]]
+id = "twice_born"
+name = "Twice-born"
+kind = "boon"
+tier = "dire"
+weight = 6
+description = "Once, what would kill you does not: you rise from your ashes in a burst of flame, weak for a day after; one born under the Phoenix rises once more than the stars allow. Starving and choking still kill."
+line = "Something in you will not stay dead."
+# The Phoenix's rising (../talents/rise_from_ashes.toml), with its numbers, under a once of its
+# own (`world/stars.rs`: `profane_risen`, after `risen` and `risen_twice`).
+effects = [
+    { kind = "rise_from_ashes", hp_percent = 33, status = "ashen", spell = "phoenix_fire", radius = 1, damage = "1d6", damage_type = "fire" },
+]

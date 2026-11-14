@@ -9,9 +9,9 @@
 //!
 //! A **signature** gift (`only`, weight 0) is one creature's own, given sure by its corpse's
 //! `on_eat.gives` and never drawn; [`check_signatures`] ties the two together once creatures have
-//! loaded. A profane corpse's draws are its `on_eat.profane` ([`ProfaneRolls`]). The check of
-//! §6.5 that needs the whole table in place (each tier holding a gift of each kind) comes with
-//! P6.
+//! loaded. A profane corpse's draws are its `on_eat.profane` ([`ProfaneRolls`]). The whole
+//! table is checked too ([`check_coverage`]): each tier holds a drawn gift of each kind, so no
+//! roll is ever sure of its kind.
 
 use super::talent::{Needs, TalentBook, TalentDef, TalentEffect, TalentId};
 use super::{Content, ContentError};
@@ -32,6 +32,8 @@ pub enum GiftKind {
 }
 
 impl GiftKind {
+    pub const ALL: [GiftKind; 3] = [GiftKind::Boon, GiftKind::Mixed, GiftKind::Bane];
+
     /// The id in data and dumps: `boon`, `mixed`, `bane`.
     pub const fn id(self) -> &'static str {
         match self {
@@ -342,7 +344,24 @@ pub(super) fn parse<'a>(
         gift.undoes = undoes;
     }
     check_acyclic(&table, &specs)?;
+    check_coverage(&table)?;
     Ok(table)
+}
+
+/// Each tier holds at least one drawn gift of each kind (docs/design/profane-gifts.md §6.5): a
+/// boon, a mixed gift, and a bane, so every roll is a gamble.
+fn check_coverage(table: &ProfaneTable) -> Result<(), ContentError> {
+    for tier in GiftTier::ALL {
+        for kind in GiftKind::ALL {
+            if !(table.iter()).any(|g| g.drawn() && g.tier == tier && g.kind == kind) {
+                return Err(ContentError::new(
+                    "data/profane/",
+                    format!("the {} tier holds no drawn {} gift", tier.id(), kind.id()),
+                ));
+            }
+        }
+    }
+    Ok(())
 }
 
 /// Ties the signatures to their corpses, once creatures have loaded: a creature's `on_eat.gives`
@@ -431,10 +450,30 @@ fn check_acyclic(table: &ProfaneTable, specs: &[(&str, GiftSpec)]) -> Result<(),
 
 #[cfg(test)]
 mod tests {
+    use super::{GiftKind, GiftTier};
     use crate::content::{Content, ContentFiles};
 
-    /// The built-in content with `data/profane/` replaced by `gifts`.
+    /// The built-in content with `data/profane/` replaced by `gifts` and a plain gift of each
+    /// tier and kind (the coverage the loader asks of a whole table).
     fn load(gifts: &[(&str, &str)]) -> Result<Content, String> {
+        let mut cover = Vec::new();
+        for tier in GiftTier::ALL {
+            for kind in GiftKind::ALL {
+                let id = format!("cover_{}_{}", tier.id(), kind.id());
+                let text = gift(&id, "")
+                    .replace("\"boon\"", &format!("\"{}\"", kind.id()))
+                    .replace("\"lesser\"", &format!("\"{}\"", tier.id()));
+                cover.push((id, text));
+            }
+        }
+        let cover = cover.iter().map(|(i, t)| (i.as_str(), t.as_str()));
+        load_bare(cover.chain(gifts.iter().copied()))
+    }
+
+    /// The built-in content with `data/profane/` replaced by `gifts` alone.
+    fn load_bare<'a>(
+        gifts: impl IntoIterator<Item = (&'a str, &'a str)>,
+    ) -> Result<Content, String> {
         let mut files = ContentFiles::builtin();
         files.remove("data/profane/");
         for (name, text) in gifts {
@@ -457,9 +496,9 @@ mod tests {
         let id = |name: &str| book.id(name).expect(name);
         let profane = content.profane();
         let thick = profane.gift(id("thick_blooded")).expect("a gift");
-        assert_eq!(thick.excludes, vec![id("paper_skinned")]);
+        assert_eq!(thick.excludes, vec![id("glass_boned"), id("paper_skinned")]);
         let thin = profane.gift(id("paper_skinned")).expect("a gift");
-        assert_eq!(thin.excludes, vec![id("thick_blooded")]);
+        assert_eq!(thin.excludes, vec![id("thick_blooded"), id("scaled")]);
         let def = book.get(id("paper_skinned"));
         assert!(def.granted && def.flaw);
         assert_eq!(book.tree(def.tree).id, "profane");
@@ -525,6 +564,60 @@ mod tests {
                 ("b", &gift("b", ""))
             ])
             .is_ok()
+        );
+    }
+
+    /// The whole table (P6, #1629): forty drawn gifts, 14 lesser, 12 greater, 14 dire, every
+    /// tier holding each kind, the excludes symmetric, and the signatures never drawn.
+    #[test]
+    fn the_full_table_loads_with_every_tier_and_kind() {
+        let content = crate::test_support::builtin();
+        let table = content.profane();
+        let drawn: Vec<_> = table.iter().filter(|g| g.drawn()).collect();
+        assert_eq!(drawn.len(), 40);
+        let count = |tier: GiftTier| drawn.iter().filter(|g| g.tier == tier).count();
+        assert_eq!(GiftTier::ALL.map(count), [14, 12, 14]);
+        for tier in GiftTier::ALL {
+            for kind in GiftKind::ALL {
+                assert!(
+                    drawn.iter().any(|g| g.tier == tier && g.kind == kind),
+                    "{tier:?} {kind:?}"
+                );
+            }
+        }
+        assert_eq!(table.iter().filter(|g| !g.drawn()).count(), 10);
+        for gift in table.iter() {
+            for other in &gift.excludes {
+                let other = table.gift(*other).expect("a gift");
+                assert!(
+                    other.excludes.contains(&gift.talent),
+                    "{} {}",
+                    gift.id,
+                    other.id
+                );
+            }
+        }
+        // The relations of §6.1–§6.3, each written once.
+        let book = content.talents();
+        let id = |name: &str| book.id(name).expect(name);
+        let of = |name: &str| table.gift(id(name)).expect(name);
+        let mut scaled = of("scaled").excludes.clone();
+        scaled.sort();
+        let mut want = vec![id("paper_skinned"), id("glass_boned"), id("hollowed")];
+        want.sort();
+        assert_eq!(scaled, want);
+        assert!(of("thick_blooded").excludes.contains(&id("glass_boned")));
+        assert_eq!(of("wyrm_blooded").replaces, vec![id("ember_veined")]);
+        assert_eq!(of("palsied").undoes, vec![id("adder_quick")]);
+    }
+
+    #[test]
+    fn the_loader_refuses_a_tier_without_each_kind() {
+        let lone = gift("a", "");
+        let e = load_bare([("a", lone.as_str())]).expect_err("a lone lesser boon");
+        assert!(
+            e.contains("the lesser tier holds no drawn mixed gift"),
+            "{e}"
         );
     }
 

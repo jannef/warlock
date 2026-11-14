@@ -194,7 +194,8 @@ impl CharacterScreen {
         });
         let birth = (view.character()).map_or(Vec::new(), |c| birth_parts(c, content, view.time()));
         let stars = (view.own_talents().into_iter())
-            .filter(|t| t.granted && !t.race && !t.boon && !t.story)
+            // The sign's gifts only: a profane gift is no star's (the Talents page lists those).
+            .filter(|t| t.granted && !t.race && !t.boon && !t.story && t.profane.is_none())
             .map(|t| match t.spent {
                 true => format!("{} (spent)", t.name),
                 false => t.name,

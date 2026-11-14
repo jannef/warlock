@@ -820,7 +820,7 @@ pub use spell::cone_cells;
 pub use spell_rung::CastBy;
 pub use spell_words::{SpellRoll, reach_words, reroll_words, roll_words};
 pub use spirit_weapon::{gift as spirit_gift, pierces_all, shapes as weapon_shapes};
-pub(crate) use stars::{RISEN, RISEN_TWICE};
+pub(crate) use stars::{PROFANE_RISEN, RISEN, RISEN_TWICE};
 pub use statue::Statue;
 pub(crate) use swim::shore_refusal;
 pub use talent::Due;

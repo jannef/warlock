@@ -1,0 +1,13 @@
+[[gift]]
+id = "venom_toothed"
+name = "Venom-toothed"
+kind = "mixed"
+tier = "greater"
+weight = 8
+description = "Venomous teeth: your bare-handed blows may poison, and poison troubles you less, but your bitter mouth puts people off."
+line = "Your eye-teeth lengthen, and your mouth tastes bitter."
+effects = [
+    { kind = "unarmed_on_hit", status = "poisoned", chance = 30, severity = 2 },
+    { kind = "resist", damage = "poison", value = 50 },
+    { kind = "stat", stat = "presence", value = -1 },
+]

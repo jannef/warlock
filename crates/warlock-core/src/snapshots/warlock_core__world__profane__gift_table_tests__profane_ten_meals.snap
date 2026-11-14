@@ -1,0 +1,15 @@
+---
+source: crates/warlock-core/src/world/gift_table_tests.rs
+expression: "rows.join(\"\\n\")"
+---
+gnaegan: profane 2 held; pool lesser 12/14, greater 12/12, dire 14/14
+attorcoppe: profane 4 held; pool lesser 11/14, greater 12/12, dire 14/14
+hrimwyrm: profane 6 held; pool lesser 10/14, greater 12/12, dire 14/14
+wealaf: profane 9 held; pool lesser 8/14, greater 10/12, dire 13/14
+grundwyrgen: profane 12 held; pool lesser 8/14, greater 8/12, dire 13/14
+ligetdry: profane 14 held; pool lesser 8/14, greater 8/12, dire 12/14
+staneoten: profane 17 held; pool lesser 7/14, greater 6/12, dire 11/14
+nihtscinna: profane 21 held; pool lesser 7/14, greater 5/12, dire 9/14
+waelcyrge: profane 25 held; pool lesser 7/14, greater 5/12, dire 6/14
+nithdraca: profane 29 held; pool lesser 7/14, greater 5/12, dire 3/14
+held: rat_kings_court, hoofed, spinners_blood, midden_gut, rime_blooded, craven, barrow_kings_will, dim_eyed, mere_wifes_hide, blood_nosed, marked_by_the_deep, storm_wrights_marrow, wyrm_blooded, hill_thewed, hurlers_arm, glass_boned, venom_toothed, hollow_of_the_night, fell_minded, stone_sinewed, slow_blooded, choosers_quickness, unquiet, stone_eyed, twice_born, hate_wyrms_heart, hollowed, wyrms_hunger, withered
