@@ -1,7 +1,7 @@
 //! Holy wrath, Banishing smite, and Avatar's wrath (`world/smite.rs`; spec §8 "Class abilities";
 //! the paladin design P4, #913).
 
-use super::class_active_tests::{at_normal_speed, beside, last, reach, run, world};
+use super::class_active_tests::{at_normal_speed, beside, reach, world};
 use super::smite::SmiteMode;
 use super::*;
 use crate::ability::Ability;
@@ -9,7 +9,7 @@ use crate::action::{Action, parse_actions};
 use crate::combat::{Blow, Strike};
 use crate::content::{ClassActive, ResourceId};
 use crate::replay::Replay;
-use crate::test_support::builtin;
+use crate::test_support::{builtin, last, run};
 
 const HIT: Blow = Blow {
     strike: Strike::Hit { critical: false },

@@ -2,13 +2,13 @@
 //! `crate::beside`): the ways to its legal targets as the player knows them, and what the input
 //! does with none, one, or several.
 
-use super::class_active_tests::{run, world};
+use super::class_active_tests::world;
 use super::intimidate_tests::foe_at;
 use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::beside::{Beside, Target, Way};
 use crate::content::Trap;
-use crate::test_support::builtin;
+use crate::test_support::{builtin, run};
 
 const TRAP: &str = "arrow";
 

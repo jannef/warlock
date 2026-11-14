@@ -3,12 +3,12 @@
 //! it, and a save without it.
 
 use super::alignment::Deed;
-use super::class_active_tests::{at_normal_speed, beside, last, reach, run, world};
+use super::class_active_tests::{at_normal_speed, beside, reach, world};
 use super::*;
 use crate::content::{Build, ResourceId};
 use crate::replay::Replay;
 use crate::stats::Stat;
-use crate::test_support::builtin;
+use crate::test_support::{builtin, last, run};
 
 fn zeal(w: &World) -> ResourceId {
     w.content().resource_id("zeal").expect("zeal")

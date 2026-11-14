@@ -5,7 +5,7 @@
 //! grants Inspiration and spends three of it (the songs themselves are `song_tests.rs`'s), and
 //! Virtuoso's song costs nothing.
 
-use super::class_active_tests::{at_normal_speed, beside, last, reach, run, suffers, world};
+use super::class_active_tests::{at_normal_speed, beside, reach, suffers, world};
 use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
@@ -15,7 +15,7 @@ use crate::equipment::{free_slot, slots_taken};
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stats, modifier};
-use crate::test_support::builtin;
+use crate::test_support::{builtin, last, run};
 
 fn resource(w: &World, id: &str) -> ResourceId {
     w.content().resource_id(id).expect(id)

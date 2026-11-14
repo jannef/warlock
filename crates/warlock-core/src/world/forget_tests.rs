@@ -4,11 +4,12 @@
 //! experience; `amnesia` takes one more, `blank` every spell; a creature loses nothing; the
 //! protected half may lose ranks but never forget.
 
-use super::caster_tests::{kobold, said, sp};
-use super::learn_tests::{given, kitted, run, set_decipher};
+use super::caster_tests::{kobold, sp};
+use super::learn_tests::{given, kitted, set_decipher};
 use super::miscast::Aim;
 use super::*;
 use crate::content::{ContentFiles, Miscast};
+use crate::test_support::{run, said};
 
 /// The built-in entry `id`.
 fn entry(w: &World, id: &str) -> Miscast {

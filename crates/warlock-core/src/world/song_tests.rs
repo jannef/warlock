@@ -2,7 +2,7 @@
 //! and refused without it, its degrees by Music, the noise, the overworld and Silenced refused,
 //! Virtuoso on every song, Music's marks, and a replay.
 
-use super::class_active_tests::{last, reach, run};
+use super::class_active_tests::reach;
 use super::vitals_tests::train;
 use super::*;
 use crate::ability::{Ability, Unavailable};
@@ -12,7 +12,7 @@ use crate::content::{ClassActive, ResourceId};
 use crate::noise::{self, Act, SONG_NOISE, SoundKind};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stats};
-use crate::test_support::builtin;
+use crate::test_support::{builtin, last, run};
 
 /// A human bard in `scenario` (seed 7), with their kit, born under no sign, every score 14.
 fn bard_in(scenario: &str) -> World {

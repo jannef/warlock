@@ -3,12 +3,11 @@
 //! floor; two Pits apart; the first floor's `<` to the mouth after a climb; the orphan rule; the
 //! dev scenario.
 
-use super::caster_tests::said;
 use super::miscast::Aim;
 use super::*;
 use crate::action::{Action, parse_actions};
 use crate::content::Miscast;
-use crate::test_support::CONTENT;
+use crate::test_support::{CONTENT, said};
 
 fn start(scenario: &str, seed: u64) -> World {
     World::new(CONTENT.clone(), scenario, Some(seed)).expect("world")

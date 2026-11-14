@@ -3,12 +3,13 @@
 //! follows up by the style's chance, the banes (to hit, slowness, spell failure) shrink with
 //! the rank to nothing at 9, the style stays hidden until its first marks, and its talents.
 
-use super::caster_tests::{kobold, reach, said, world_with};
+use super::caster_tests::{kobold, reach, world_with};
 use super::*;
 use crate::action::{AttackKind, Event};
 use crate::content::{Grip, ObjectId};
 use crate::dump::{self, Layer};
 use crate::equipment::{self, Equipment};
+use crate::test_support::said;
 use crate::weapon_skills::WeaponSkills;
 
 fn builtin() -> Arc<Content> {

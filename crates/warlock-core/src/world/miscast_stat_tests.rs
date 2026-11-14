@@ -1,13 +1,13 @@
 //! Miscasts' stat losses (#1290, the miscasts design §5.2): `stat_damage` below 71, which mends
 //! a point a day, and the drain's `times` from 71, each its own draw and check.
 
-use super::caster_tests::{said, world_with};
+use super::caster_tests::world_with;
 use super::miscast::Aim;
 use super::*;
 use crate::action::Rest;
 use crate::content::{ContentFiles, Miscast, MishapEffect};
 use crate::stats::Stat;
-use crate::test_support::builtin;
+use crate::test_support::{builtin, said};
 use crate::time::{DAY, Duration};
 
 /// A wizard who knows Spark, with the built-in content.

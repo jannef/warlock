@@ -4,13 +4,13 @@
 //! the miscasts design (#1288): the rank eases the check, the miss carries the total, and the
 //! protected half cannot kill.
 
-use super::caster_tests::{kobold, said, world_with};
+use super::caster_tests::{kobold, world_with};
 use super::miscast::{Aim, entry_for};
 use super::*;
 use crate::check;
 use crate::content::{ContentFiles, Miscast, MishapEffect, ZoneKind};
 use crate::dice::Dice;
-use crate::test_support::{CONTENT as BUILTIN, builtin};
+use crate::test_support::{CONTENT as BUILTIN, builtin, said};
 
 /// The built-in content with `data/miscast.toml`'s `base` set to `base` (−1000: only the 1 and
 /// 1 fails; 1000: every cast fails, by far), and, with `only`, the table cut to that one entry

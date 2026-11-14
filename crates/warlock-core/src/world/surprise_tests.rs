@@ -9,7 +9,7 @@ use crate::action::parse_actions;
 use crate::combat::{Category, Defence, Target};
 use crate::content::{ActionKind, ContentFiles};
 use crate::replay::Replay;
-pub(super) use crate::test_support::texts;
+use crate::test_support::texts;
 
 /// A hall split by a wall: the player in the west part, a goblin at `k` beside them, another
 /// at `K` behind the wall, a hidden alarm trap at `^` and a known one at `!`.

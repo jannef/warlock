@@ -5,10 +5,11 @@
 
 use super::cast_tests::cast_at;
 use super::caster_tests::{kobold, reach, world_with};
-use super::surprise_tests::{Rules, goblin, lull, surprised_status, texts, world};
+use super::surprise_tests::{Rules, goblin, lull, surprised_status, world};
 use super::*;
 use crate::action::{AttackKind, Caught};
 use crate::content::ContentFiles;
+use crate::test_support::texts;
 
 /// What the player is told when they step east into the goblin beside them: their attack's
 /// lines and whatever follows in that turn.

@@ -1,7 +1,7 @@
 //! The ascetic's ki tricks (spec §8 "Class abilities"; the ki tricks design §6.2, §9): each
 //! refused before its ki is spent, the spend, and what it gives.
 
-use super::class_active_tests::{at_normal_speed, beside, last, reach, run, suffers, world};
+use super::class_active_tests::{at_normal_speed, beside, reach, suffers, world};
 use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::{AttackKind, parse_actions};
@@ -10,7 +10,7 @@ use crate::combat::{Category, Strike};
 use crate::content::{ClassActive, ContentFiles, ResourceId};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
-use crate::test_support::builtin;
+use crate::test_support::{builtin, last, run};
 
 fn ki(w: &World) -> ResourceId {
     w.content().resource_id("ki").expect("ki")

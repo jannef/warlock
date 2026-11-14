@@ -1,10 +1,10 @@
 //! The frenzy stance (spec §8 "Stances"; #680): rage puts a berserker in it and holds them
 //! there, every end of the rage leaves them aggressive, and nothing else ever gives it.
 
-use super::class_active_tests::{last, run, world};
+use super::class_active_tests::world;
 use super::*;
 use crate::content::CombatStance::{self, *};
-use crate::test_support::builtin;
+use crate::test_support::{builtin, last, run};
 
 fn stance(w: &World) -> CombatStance {
     w.perception().own_stance()

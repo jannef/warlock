@@ -3,7 +3,7 @@
 //! Willpower against 13 plus Music's craft, and the failed are Drowsy; friends and the peaceful
 //! draw nothing; sung to an empty room all the same.
 
-use super::class_active_tests::{last, reach, run, suffers};
+use super::class_active_tests::{reach, suffers};
 use super::vitals_tests::train;
 use super::war_cry_tests::foe_at;
 use super::*;
@@ -16,7 +16,7 @@ use crate::noise::Act;
 use crate::replay::Replay;
 use crate::skills::Effect;
 use crate::stats::{PerStat, Stats};
-use crate::test_support::builtin;
+use crate::test_support::{builtin, last, run};
 
 const LULLABY: Ability = Ability::Class(ClassActive::Lullaby);
 
