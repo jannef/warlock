@@ -103,6 +103,14 @@ name = "Class abilities"
 description = "What a class teaches as its levels come."
 class = true
 
+# The profane gifts (docs/design/profane-gifts.md; #1471): what eating a layer boss's corpse
+# changes in the body for good. Its talents are the gifts of `profane/`, each granted, never
+# picked (no free talent: never offered). Listed last.
+[[tree]]
+id = "profane"
+name = "Profane"
+description = "What the flesh you ate made of you."
+
 # The list of systems a talent may name in its `systems` (the wiki's talents-by-system matrix;
 # docs/design/progression.md §8). Systems are broad: a system of the game (combat,
 # stealth, magic, light, hunger, ...), never a sub-feature. A single special room effect, a

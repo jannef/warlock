@@ -112,6 +112,7 @@ mod plural;
 mod potion;
 mod prayer;
 mod prestige;
+mod profane;
 mod quest;
 mod quest_roll;
 mod race;
@@ -309,6 +310,7 @@ pub use plural::Plurals;
 pub use potion::{Draught, Drink, Flask, Splash};
 pub use prayer::{Face, FaceWords, Faced, PrayerRules, PrayerUse, UseDef};
 pub use prestige::{PrestigeDef, Table};
+pub use profane::{GiftDef, GiftKind, GiftTier, ProfaneTable};
 pub use quest::{
     Binding, Boon, GOLD, Goal, KillTarget, QuestDef, QuestId, QuestKind, QuestTexts, Reveal,
     RevealWhen, Reward, SkillReward, Waits,
@@ -893,6 +895,9 @@ pub struct Content {
     /// Talents (`data/talents.toml` and `data/talents/`, spec §8 "Talents"); none without the
     /// files.
     talents: TalentBook,
+    /// The profane gifts (`data/profane/`, docs/design/profane-gifts.md), talents of the
+    /// `profane` tree too; none without the files or the talents.
+    profane: ProfaneTable,
     /// Special rooms' effects (`data/room_effects.toml`).
     room_effects: RoomEffects,
     /// What a place's ability draws (`data/outcomes/`, spec §7 "Special rooms"), by id.
@@ -1050,6 +1055,7 @@ impl Content {
             spells: Vec::new(),
             hex_statuses: Vec::new(),
             talents: TalentBook::default(),
+            profane: ProfaneTable::default(),
             affixes: Affixes::default(),
             stances: Stances::default(),
             scroll_labels: None,
@@ -1222,6 +1228,9 @@ impl Content {
         if files.table("talents").next().is_some() {
             content.talents = talent::parse(files.table("talents"), &content)?;
         }
+        let mut book = std::mem::take(&mut content.talents);
+        content.profane = profane::parse(files.table("profane"), &mut book, &content)?;
+        content.talents = book;
         content.check_class_tables()?;
         // Weapon abilities (the combat progression design §4) name weapon skills, statuses,
         // damage types, and the talent table's systems.
@@ -4372,6 +4381,11 @@ impl Content {
     /// the files.
     pub fn talents(&self) -> &TalentBook {
         &self.talents
+    }
+
+    /// The profane gifts (`data/profane/`): none without the files or the talents.
+    pub fn profane(&self) -> &ProfaneTable {
+        &self.profane
     }
 
     /// The skill ladder: the die a level-up roll throws by the skill's marks (`[ladder]` in

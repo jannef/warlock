@@ -204,6 +204,9 @@ pub struct OwnTalent {
     pub boon: bool,
     /// The background story gave it (spec §8 "Background story"): "(story)", "(story, flaw)".
     pub story: bool,
+    /// A profane gift, of this kind (docs/design/profane-gifts.md §11): "(profane)", "(profane,
+    /// bane)" in the dump; never an altar's or a story's.
+    pub profane: Option<crate::content::GiftKind>,
 }
 
 /// How fresh food smells to those who can tell (spec §8 "Birth sign": Hound's nose): a word,
@@ -2556,6 +2559,7 @@ impl<'a> PerceptionView<'a> {
                         let choice = taken.choice.as_deref();
                         crate::background::gave(self.content, self.campaign, c, &taken.id, choice)
                     });
+                let profane = self.content.profane().gift(id).map(|g| g.kind);
                 Some(OwnTalent {
                     id,
                     name: def.name_for(self.content, taken.choice.as_deref()),
@@ -2567,8 +2571,9 @@ impl<'a> PerceptionView<'a> {
                     flaw: def.flaw,
                     class: class.contains(&id),
                     spent: def.effects.iter().any(&spent),
-                    boon: boon && !story,
+                    boon: boon && !story && profane.is_none(),
                     story,
+                    profane,
                 })
             })
             .collect()

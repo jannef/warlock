@@ -8,7 +8,7 @@ use crate::ability::Aim;
 use crate::action::{letter, position_text};
 use crate::blood::{self, Stain};
 use crate::character::Gender;
-use crate::content::{Content, SpecialRoom, WeaponSkillId};
+use crate::content::{Content, GiftKind, GiftTier, SpecialRoom, WeaponSkillId};
 use crate::equipment;
 use crate::geom::Pos;
 use crate::hunger::Hunger;
@@ -1158,12 +1158,15 @@ fn attacks_json(view: &PerceptionView<'_>) -> Value {
 
 /// The player's talents in the order taken, one a line: its name for its choice; a race's and a
 /// birth sign's gifts first, marked `(race)` and `(sign)`, the sign's flaw `(sign, flaw)`; a forgotten altar's
-/// `(altar)` and `(altar, flaw)`; the background story's `(story)` and `(story, flaw)`.
+/// `(altar)` and `(altar, flaw)`; the background story's `(story)` and `(story, flaw)`; a profane
+/// gift's `(profane)` and a profane bane's `(profane, bane)`.
 fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
     (view.own_talents().iter())
         .map(|t| {
             let name = &t.name;
             match (t.granted, t.flaw, t.class) {
+                _ if t.profane == Some(GiftKind::Bane) => format!("{name} (profane, bane)"),
+                _ if t.profane.is_some() => format!("{name} (profane)"),
                 _ if t.story && t.flaw => format!("{name} (story, flaw)"),
                 _ if t.story => format!("{name} (story)"),
                 _ if t.boon && t.flaw => format!("{name} (altar, flaw)"),
@@ -1177,6 +1180,24 @@ fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
             }
         })
         .collect()
+}
+
+/// `profane 3 held; pool lesser 9/14, greater 12/12, dire 14/14` (`progress`, dev-only;
+/// docs/design/profane-gifts.md §11).
+fn profane_row(world: &World) -> String {
+    let content = world.content();
+    let player = world.state().player();
+    let held = (player.talents.iter())
+        .filter_map(|t| content.talents().id(&t.id))
+        .filter(|&t| content.profane().gift(t).is_some())
+        .count();
+    let pools: Vec<String> = (GiftTier::ALL.iter())
+        .map(|&tier| {
+            let (open, all) = world.gift_pool(tier);
+            format!("{} {open}/{all}", tier.id())
+        })
+        .collect();
+    format!("profane {held} held; pool {}", pools.join(", "))
 }
 
 /// The player's progression (dev): the choices due, the talents they may take now with the
@@ -1329,6 +1350,10 @@ fn progress_rows(world: &World) -> Vec<String> {
         .collect();
     if !marked.is_empty() {
         rows.push(format!("stat marks {}", marked.join(", ")));
+    }
+    // The profane gifts held and each tier's pool: the gifts a draw may give now of all it holds.
+    if !world.content().profane().is_empty() {
+        rows.push(profane_row(world));
     }
     // The rung each known spell's roll is cast at (the spell scaling design §11): of its
     // ladder's length, with the score that reached it and the rungs from outside the stats.
@@ -2233,14 +2258,19 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         .collect();
     let talents: Vec<Value> = (view.own_talents().iter())
         .map(|t| {
-            json!({
+            let mut talent = json!({
                 "id": content.talents().get(t.id).id,
                 "name": t.name,
                 "choice": t.choice,
                 "granted": t.granted,
                 "flaw": t.flaw,
                 "class": t.class,
-            })
+            });
+            // A profane gift's kind (docs/design/profane-gifts.md §11), left out otherwise.
+            if let Some(kind) = t.profane {
+                talent["profane"] = json!(kind.id());
+            }
+            talent
         })
         .collect();
     let mut out = json!({

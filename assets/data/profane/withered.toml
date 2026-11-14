@@ -1,0 +1,11 @@
+[[gift]]
+id = "withered"
+name = "Withered"
+kind = "bane"
+tier = "dire"
+weight = 10
+description = "Your flesh has wasted: you are frailer than you were."
+line = "The flesh wastes on your frame."
+instead = "The withering takes your oak heart, and nothing more."
+effects = [{ kind = "stat", stat = "toughness", value = -3 }]
+undoes = ["oak_hearted"]

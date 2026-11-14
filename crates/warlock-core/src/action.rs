@@ -429,6 +429,13 @@ pub enum Action {
     /// (`world/lure.rs`). For replays, tests, and captures that skip the walk. Takes no game
     /// time; recorded in replays.
     Lure(String),
+    /// Dev command: the player is given profane gift `ID` (an id in `data/profane/`) as a draw
+    /// would give it, its relations applied (`world/profane.rs`); refused for one a draw would
+    /// not offer. For tests and captures. Takes no game time; recorded in replays.
+    Profane(String),
+    /// Dev command: profane gift `ID` is taken from the player (`World::rescind`). Takes no game
+    /// time; recorded in replays.
+    Rescind(String),
     /// Dev command: active rolled quest `quest`, with no progress yet, draws `target` instead
     /// (spec §8 "Quests": a target its pool may hold, or a variant's id), its kills counted
     /// from now and a variant's reveal made. For replays, tests, and captures. Takes no game
@@ -1105,6 +1112,8 @@ impl fmt::Display for Action {
             Action::Infect(id) => write!(f, "infect:{id}"),
             Action::Reveal(id) => write!(f, "reveal:{id}"),
             Action::Lure(id) => write!(f, "lure:{id}"),
+            Action::Profane(id) => write!(f, "gift:{id}"),
+            Action::Rescind(id) => write!(f, "rescind:{id}"),
             Action::QuestRoll { quest, target } => write!(f, "quest_roll:{quest}:{target}"),
             Action::Freeze { at, radius } => write!(f, "freeze:{},{},{radius}", at.x, at.y),
             Action::Thaw { at, radius } => write!(f, "thaw:{},{},{radius}", at.x, at.y),
@@ -1679,6 +1688,18 @@ impl FromStr for Action {
                 Some(id) if !id.is_empty() && !id.contains(':') => Ok(Action::Lure(id.to_string())),
                 _ => Err("`lure` needs a lure quest's id, e.g. `lure:crystal_guardian`".into()),
             },
+            "gift" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() && !id.contains(':') => {
+                    Ok(Action::Profane(id.to_string()))
+                }
+                _ => Err("`gift` needs a profane gift's id, e.g. `gift:oak_hearted`".into()),
+            },
+            "rescind" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() && !id.contains(':') => {
+                    Ok(Action::Rescind(id.to_string()))
+                }
+                _ => Err("`rescind` needs a profane gift's id, e.g. `rescind:oak_hearted`".into()),
+            },
             // A tag's target keeps its own colon (`quest_roll:hunt:tag:goblin`).
             "quest_roll" => match arg.and_then(|a| a.split_once(':')) {
                 Some((quest, target))
@@ -1946,6 +1967,8 @@ mod tests {
             Action::Infect("Odd_Case".into()),
             Action::Reveal("old_barrow".into()),
             Action::Lure("crystal_guardian".into()),
+            Action::Profane("oak_hearted".into()),
+            Action::Rescind("oak_hearted".into()),
             Action::Talent {
                 id: "hardy".into(),
                 choice: None,

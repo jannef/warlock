@@ -237,6 +237,7 @@ mod perceive;
 mod pit;
 mod potion;
 mod pray;
+mod profane;
 mod quest;
 mod quest_roll;
 mod quick_leave;
@@ -1740,6 +1741,8 @@ impl World {
             Action::Infect(id) => return self.infect_dev(id),
             Action::Reveal(id) => return self.reveal_dev(id),
             Action::Lure(id) => return self.lure_dev(id),
+            Action::Profane(id) => return self.gift_dev(id),
+            Action::Rescind(id) => return self.rescind_dev(id),
             Action::QuestRoll { quest, target } => return self.quest_roll_dev(quest, target),
             Action::LevelUpAuto => return self.level_up_auto(),
             Action::GrantXp(xp) => return self.grant_xp_dev(*xp),

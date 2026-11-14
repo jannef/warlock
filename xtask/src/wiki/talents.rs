@@ -58,7 +58,8 @@ pub(super) fn talents(content: &Content) -> String {
     let book = content.talents();
     let mut out = String::new();
     for (i, tree) in (0u8..).zip(&book.trees) {
-        if tree.class || book.tree_id(STARS) == Some(TreeId(i)) {
+        // The profane gifts are no picks, and nothing gives them in play yet (#1625).
+        if tree.class || book.tree_id(STARS) == Some(TreeId(i)) || tree.id == "profane" {
             continue;
         }
         let _ = writeln!(out, "### {}\n\n{}\n", tree.name, tree.description);
