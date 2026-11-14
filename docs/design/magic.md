@@ -1,5 +1,7 @@
 # Warlock — Magic: spells learned from scrolls, tiers 0 to 9, wands and rods
 
+**Built; this file is history.** Current behaviour is in spec §8 "Spells", "Scrolls", "Wands", and "Rods", and `docs/dev/spells.md`.
+
 Design document for the owner's review (2026-10-26). Written against `origin/main` at 88dbb0e5, the approved progression design (`docs/design/progression.md`), and the mana system as built (`docs/dev/mana.md`). Nothing here is implemented; §13 cuts it into issues. Numbers are first guesses, kept in data, to be tuned by play (§12 lists what to check first).
 
 ## Contents

@@ -42,6 +42,14 @@ impl StealRules {
     }
 }
 
+impl super::RulesFile for StealRules {
+    const PATH: &'static str = "data/steal.toml";
+
+    fn parse(path: &str, text: &str, content: &super::Content) -> Result<Self, ContentError> {
+        Self::parse(path, text, &content.factions)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::content::{Content, ContentFiles};

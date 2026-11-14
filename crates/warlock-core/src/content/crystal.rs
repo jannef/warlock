@@ -140,6 +140,14 @@ impl EnchantingRules {
     }
 }
 
+impl super::RulesFile for EnchantingRules {
+    const PATH: &'static str = "data/enchanting.toml";
+
+    fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
+        Self::parse(path, text, content)
+    }
+}
+
 impl Crystals {
     /// The colour with id `id`.
     pub fn colour(&self, id: &str) -> Option<&CrystalColour> {
@@ -296,6 +304,14 @@ impl Crystals {
             consume_mana: spec.consume.mana,
             consume_marks: spec.consume.marks,
         })
+    }
+}
+
+impl super::RulesFile for Crystals {
+    const PATH: &'static str = "data/crystals.toml";
+
+    fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
+        Self::parse(path, text, content)
     }
 }
 

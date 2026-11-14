@@ -12,6 +12,13 @@ runs and which quota pays for it.
 
 Both stop at a pushed branch or an open PR and never merge; the integrator merges as usual.
 
+**`rules.md` is the one copy of what every brief shares**, local and cloud: the owner's house
+rules, golden screenshots, the steps of building and of finishing a PR, and the local agents'
+disk and background-shell rules. Each brief keeps only its role, its spawn fields, and its
+environment, and tells the agent to read `rules.md` from the repository. Change a shared rule
+there, once. The cloud agents read it from the checkout at run time, so a change to `rules.md`
+needs no `ant apply`; a change to an `agent.md` still does (below).
+
 ## Choosing local or cloud (the integrator decides)
 
 For each job, pick **one** place to run it; never both, and never a cloud run "to double-check"

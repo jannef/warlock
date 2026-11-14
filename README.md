@@ -41,7 +41,7 @@ cargo install --git https://github.com/jannef/warlock --tag v0.17.0 --locked --n
 
 - `--locked` uses the release's `Cargo.lock`. `--no-default-features` leaves out the test world,
   as the release builds do. Add `warlock-cli` after `warlock` for the headless tool too.
-- It needs a Rust toolchain of at least 1.97 (`rust-version`); outside the repository,
+- It needs a Rust toolchain of at least 1.99 (`rust-version`); outside the repository,
   `rust-toolchain.toml` does not apply.
 - The result is a bare binary in `~/.cargo/bin`, not a macOS `.app`; a local build has no
   quarantine flag, so Gatekeeper does not block it.

@@ -252,6 +252,14 @@ impl EncounterRules {
     }
 }
 
+impl super::RulesFile for EncounterRules {
+    const PATH: &'static str = "data/encounters.toml";
+
+    fn parse(path: &str, text: &str, _content: &Content) -> Result<Self, ContentError> {
+        Self::parse(path, text)
+    }
+}
+
 /// The meetings' tables of the rules file.
 struct MeetingsFile {
     rate: BTreeMap<String, u32>,

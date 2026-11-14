@@ -7,8 +7,11 @@
 //! is a pure function of the content (no draws), so the ids, their order, and the fingerprint
 //! are the same on every load.
 
-use super::creature::CreatureSpec;
+use super::burst::BurstSpec;
+use super::creature::{CreatureSpec, Hide, NaturalAttackSpec, NaturalAttacks};
+use super::damage_type::TypeNames;
 use super::starter;
+use super::status::OnHitSpec;
 use super::{Content, ContentError, ContentFiles, CreatureId, ItemClassId, ObjectId, SlotId};
 use crate::stats::Stat;
 use serde::Deserialize;
@@ -269,7 +272,7 @@ pub struct BodySpec {
     pub speed: Option<u32>,
     pub attack: BodyAttack,
     #[serde(default)]
-    pub on_hit: Vec<toml::Value>,
+    pub(super) on_hit: Vec<OnHitSpec>,
     pub name: Option<String>,
     pub plural: Option<String>,
     pub count: Option<[u32; 2]>,
@@ -277,7 +280,7 @@ pub struct BodySpec {
     pub dies: Option<String>,
     pub light: Option<String>,
     /// Its burst, as a creature file's `[creature.burst]` (the lantern's death throes).
-    pub burst: Option<toml::Value>,
+    pub(super) burst: Option<BurstSpec>,
 }
 
 /// A household body, its object resolved.
@@ -471,51 +474,31 @@ impl Animated {
     fn member(&self, t: usize, level: u8, content: &Content) -> Result<CreatureSpec, String> {
         let tier = &self.tiers[t];
         let numbers = Numbers::at(level, tier);
-        let mut table = self.common(tier, &numbers, level, content);
-        let s = |v: &str| toml::Value::String(v.to_string());
-        let int = |v: i64| toml::Value::Integer(v);
-        table.insert("id".into(), s(&format!("{}_{level}", tier.family)));
-        table.insert(
-            "name".into(),
-            s(tier.creature.as_deref().unwrap_or_default()),
-        );
-        table.insert("glyph".into(), s(&tier.glyph.unwrap_or('?').to_string()));
-        table.insert("fg".into(), s(tier.fg.as_deref().unwrap_or_default()));
+        let mut spec = self.common(tier, &numbers, level, content);
+        spec.id = format!("{}_{level}", tier.family);
+        spec.name = tier.creature.clone().unwrap_or_default();
+        spec.glyph = tier.glyph.unwrap_or('?');
+        spec.fg = tier.fg.as_deref().unwrap_or_default().parse()?;
         if let Some(speed) = tier.speed {
-            table.insert("speed".into(), int(i64::from(speed.at(level))));
+            let speed = speed.at(level);
+            spec.speed = u32::try_from(speed).map_err(|_| format!("speed {speed} is below 0"))?;
         }
-        if let Some(rarity) = &tier.rarity {
-            table.insert("rarity".into(), s(rarity));
-        }
+        spec.rarity.clone_from(&tier.rarity);
         if let Some(defence) = tier.defence.map(|d| d.at(level)).filter(|&d| d > 0) {
-            let mut hide = toml::Table::new();
-            hide.insert("defence".into(), int(i64::from(defence)));
-            hide.insert("name".into(), s(tier.hide.as_deref().unwrap_or("edge")));
-            table.insert("natural".into(), toml::Value::Table(hide));
+            let name = tier.hide.clone().unwrap_or_else(|| "edge".into());
+            spec.natural = Some(Hide {
+                defence,
+                protection: 0,
+                name,
+            });
         }
-        let resist = (tier.resist.iter())
-            .map(|(k, &v)| (k.clone(), int(i64::from(v))))
-            .collect();
-        table.insert("resist".into(), toml::Value::Table(resist));
-        table.insert("dies".into(), s(&tier.dies));
-        if tier.opens_doors {
-            table.insert("opens_doors".into(), toml::Value::Boolean(true));
-        }
-        if let Some(words) = &tier.grade_words {
-            let words = words.iter().map(|w| s(w)).collect();
-            table.insert("grade_words".into(), toml::Value::Array(words));
-        }
+        spec.resist.clone_from(&tier.resist);
+        spec.dies = Some(tier.dies.clone());
+        spec.opens_doors = tier.opens_doors;
+        spec.grade_words.clone_from(&tier.grade_words);
         if let Some(blow) = &tier.attack {
-            let mut attack = toml::Table::new();
-            attack.insert("damage".into(), s(numbers.dice));
-            attack.insert("damage_type".into(), s(&blow.damage_type));
-            attack.insert("name".into(), s(&blow.name));
-            attack.insert("verb".into(), s(&blow.verb));
-            table.insert("attack".into(), toml::Value::Table(attack));
+            spec.attack = Some(natural_attack(numbers.dice, blow, Vec::new())?);
         }
-        let mut spec: CreatureSpec = toml::Value::Table(table)
-            .try_into()
-            .map_err(|e: toml::de::Error| e.to_string())?;
         spec.animated = Some(AnimatedDef {
             tier: t,
             family: CreatureId(0),
@@ -528,37 +511,28 @@ impl Animated {
     /// What every generated type of `tier` at `level` holds: its weight, size, faction, tags,
     /// senses, footsteps, stats, hit points, level, experience, no corpse and no blood, and its
     /// immunities.
-    fn common(&self, tier: &Tier, numbers: &Numbers, level: u8, content: &Content) -> toml::Table {
-        let mut t = toml::Table::new();
-        let s = |v: &str| toml::Value::String(v.to_string());
-        let int = |v: i64| toml::Value::Integer(v);
-        // It weighs what it is made of, which it carries: of its own, nothing to speak of.
-        t.insert("weight".into(), int(1));
-        t.insert("size".into(), s(&tier.size));
-        t.insert("faction".into(), s(&self.creature.faction));
-        let tags = (self.creature.tags.iter()).map(|x| s(x)).collect();
-        t.insert("tags".into(), toml::Value::Array(tags));
-        t.insert("vision".into(), s(&self.creature.vision));
-        t.insert("sight".into(), int(i64::from(self.creature.sight)));
-        t.insert("hearing".into(), int(i64::from(self.creature.hearing)));
-        t.insert("footsteps".into(), int(i64::from(tier.footsteps)));
-        let mut stats = toml::Table::new();
-        for (stat, score) in &numbers.stats {
-            stats.insert(stat.id().into(), int(i64::from(*score)));
+    fn common(&self, tier: &Tier, numbers: &Numbers, level: u8, content: &Content) -> CreatureSpec {
+        CreatureSpec {
+            // It weighs what it is made of, which it carries: of its own, nothing to speak of.
+            weight: 1,
+            size: Some(tier.size.clone()),
+            faction: Some(self.creature.faction.clone()),
+            tags: self.creature.tags.clone(),
+            vision: self.creature.vision.clone(),
+            sight: self.creature.sight,
+            hearing: Some(self.creature.hearing),
+            footsteps: tier.footsteps,
+            stats: numbers.stats.clone(),
+            base_hp: numbers.base_hp,
+            level,
+            xp: content.experience().guideline().xp(level),
+            corpse: false,
+            blood: Some("none".into()),
+            immune: self.creature.immune.clone(),
+            // Graded only where its tier names the words (the blades).
+            grades: tier.grade_words.is_some(),
+            ..CreatureSpec::default()
         }
-        t.insert("stats".into(), toml::Value::Table(stats));
-        t.insert("base_hp".into(), int(i64::from(numbers.base_hp)));
-        t.insert("level".into(), int(i64::from(level)));
-        let xp = content.experience().guideline().xp(level);
-        t.insert("xp".into(), int(i64::from(xp)));
-        t.insert("corpse".into(), toml::Value::Boolean(false));
-        t.insert("blood".into(), s("none"));
-        let immune = (self.creature.immune.iter()).map(|x| s(x)).collect();
-        t.insert("immune".into(), toml::Value::Array(immune));
-        // Graded only where its tier names the words (the blades).
-        let graded = tier.grade_words.is_some();
-        t.insert("grades".into(), toml::Value::Boolean(graded));
-        t
     }
 
     /// The family `tier` belongs to, by its index; `None` for the tier of bodies.
@@ -582,60 +556,34 @@ impl Animated {
             (material.group.as_deref()).and_then(|g| self.groups.iter().find(|x| x.id == g));
         let level = body.spec.level;
         let numbers = Numbers::at(level, tier);
-        let mut t = self.common(tier, &numbers, level, content);
-        let s = |v: &str| toml::Value::String(v.to_string());
-        let int = |v: i64| toml::Value::Integer(v);
-        t.insert("id".into(), s(&format!("{ID_PREFIX}{}", body.spec.id)));
-        let name = (body.spec.name.clone()).unwrap_or_else(|| format!("animated {}", object.name));
-        t.insert("name".into(), s(&name));
-        if let Some(plural) = &body.spec.plural {
-            t.insert("plural".into(), s(plural));
-        }
-        t.insert("glyph".into(), s(&object.glyph.to_string()));
-        t.insert("fg".into(), s(&object.fg.to_string()));
+        let mut spec = self.common(tier, &numbers, level, content);
+        spec.id = format!("{ID_PREFIX}{}", body.spec.id);
+        spec.name = (body.spec.name.clone()).unwrap_or_else(|| format!("animated {}", object.name));
+        spec.plural.clone_from(&body.spec.plural);
+        spec.glyph = object.glyph;
+        spec.fg = object.fg;
         if let Some(speed) = body.spec.speed {
-            t.insert("speed".into(), int(i64::from(speed)));
+            spec.speed = speed;
         }
-        if let Some(rarity) = &body.spec.rarity {
-            t.insert("rarity".into(), s(rarity));
-        }
-        let mut attack = toml::Table::new();
-        attack.insert("damage".into(), s(numbers.dice));
-        attack.insert("damage_type".into(), s(&body.spec.attack.damage_type));
-        attack.insert("name".into(), s(&body.spec.attack.name));
-        attack.insert("verb".into(), s(&body.spec.attack.verb));
-        if !body.spec.on_hit.is_empty() {
-            attack.insert(
-                "on_hit".into(),
-                toml::Value::Array(body.spec.on_hit.clone()),
-            );
-        }
-        t.insert("attack".into(), toml::Value::Table(attack));
+        spec.rarity.clone_from(&body.spec.rarity);
+        let blow = natural_attack(numbers.dice, &body.spec.attack, body.spec.on_hit.clone())?;
+        spec.attack = Some(blow);
         if let Some(group) = group {
             if group.protection > 0 {
-                let mut hide = toml::Table::new();
-                hide.insert("protection".into(), int(i64::from(group.protection)));
-                hide.insert("name".into(), s(&material.name));
-                t.insert("natural".into(), toml::Value::Table(hide));
+                spec.natural = Some(Hide {
+                    defence: 0,
+                    protection: group.protection,
+                    name: material.name.clone(),
+                });
             }
-            let resist = (group.resist.iter())
-                .map(|(k, &v)| (k.clone(), int(i64::from(v))))
-                .collect();
-            t.insert("resist".into(), toml::Value::Table(resist));
+            spec.resist.clone_from(&group.resist);
         }
-        if let Some(light) = &body.spec.light {
-            t.insert("light".into(), s(light));
-        }
-        if let Some(burst) = &body.spec.burst {
-            t.insert("burst".into(), burst.clone());
-        }
+        spec.light.clone_from(&body.spec.light);
+        spec.burst.clone_from(&body.spec.burst);
         let dies = (body.spec.dies.as_deref())
             .or(group.map(|g| g.dies.as_str()))
             .unwrap_or(&tier.dies);
-        t.insert("dies".into(), s(dies));
-        let mut spec: CreatureSpec = toml::Value::Table(t)
-            .try_into()
-            .map_err(|e: toml::de::Error| e.to_string())?;
+        spec.dies = Some(dies.to_string());
         spec.animated = Some(AnimatedDef {
             tier: body.tier,
             family: CreatureId(0),
@@ -649,6 +597,24 @@ impl Animated {
     pub fn body_of(&self, def: Option<&AnimatedDef>) -> Option<&Body> {
         def.and_then(|a| self.bodies.get(a.body?))
     }
+}
+
+/// A generated type's one blow: `blow`'s name, verb, and damage type at `dice`, with `on_hit`.
+fn natural_attack(
+    dice: &str,
+    blow: &BodyAttack,
+    on_hit: Vec<OnHitSpec>,
+) -> Result<NaturalAttacks, String> {
+    Ok(NaturalAttacks(vec![NaturalAttackSpec {
+        damage: dice.parse()?,
+        damage_type: Some(TypeNames::One(blow.damage_type.clone())),
+        name: blow.name.clone(),
+        verb: blow.verb.clone(),
+        threat: None,
+        crit: None,
+        to_hit: 0,
+        on_hit,
+    }]))
 }
 
 /// The slot lines of family `tier`, resolved, after checking what a family must have: a

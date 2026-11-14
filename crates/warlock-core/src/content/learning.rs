@@ -143,6 +143,14 @@ impl StudyRules {
     }
 }
 
+impl super::RulesFile for StudyRules {
+    const PATH: &'static str = "data/study.toml";
+
+    fn parse(path: &str, text: &str, _content: &Content) -> Result<Self, ContentError> {
+        Self::parse(path, text)
+    }
+}
+
 /// How bad a mishap is: by the overreach of the failed study, or a lucky one beside any.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
 #[serde(rename_all = "snake_case")]

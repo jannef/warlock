@@ -1,5 +1,7 @@
 # Warlock — Special rooms, second wave: teeming dens, cursed rooms, draining rooms, forgotten altars, hot and cold rooms, and thirteen more
 
+**Built; this file is history.** Current behaviour is in spec §7 "Special rooms" and `docs/dev/special-rooms.md`.
+
 Design document for the owner's review (2026-10-26). Written against `origin/main` at 1c0ce120 and revised with the owner's decisions (§13). Nothing here is implemented; §12 cuts it into issues. Everything builds on the existing room-effect system (`assets/data/room_effects.toml`, spec §7 "Special rooms"): an effect is data, a room carries it, and the rules ask one question about a cell. The developer notes move to a new topic file, `docs/dev/special-rooms.md` (R1, §12).
 
 ## Contents

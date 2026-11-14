@@ -1,5 +1,7 @@
 # Warlock — Recipes: the inventory for every item base, quality, gem cutting, herbs, and drops
 
+**Built; this file is history.** Current behaviour is in spec §8 "Professions" and `docs/dev/crafting.md`.
+
 Design document (2026-11-11; #1339, the P0b of the professions epic #1337), a follow-up to `docs/design/professions.md` (#1330, merged as #1342). Written against `origin/main` at 8e6fc152e (version 0.16.0). Nothing here is implemented; §11 maps it onto implementation issues, one PR each, against #1332–#1336, #1340, and #1341. It extends the professions design and takes its interim answers on #1337 as decided (the integrator's comment of 2026-11-11: the 500 g unit, hide to Woodcraft, universal Temper/Whittle/Fletch, a failed gem drops a cut or a size, half the stock back on a failure, Fine at 6 and Marvellous at 12, recipes by skill value, salvage anywhere, brittle arrows by heads alone, Mining later, Scribe a class active, the anvil's walk-in dialog, shops trading materials from P2). Where this document departs from `professions.md`, §2 says so and why; every departure follows the owner's comments on #1339 (primitive materials skip the smith) or the interim answers.
 
 Every number below is data and hidden in the game; the wiki states it (the owner's rule: the game is vague, the wiki is accurate). Numbers are a first pass; balance beyond it is out of scope. The aim throughout is the owner's: a solo game, short chains, few intermediates, no grinding, time as the only penalty.

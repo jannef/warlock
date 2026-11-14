@@ -118,6 +118,14 @@ impl ForageRules {
     }
 }
 
+impl super::RulesFile for ForageRules {
+    const PATH: &'static str = "data/forage.toml";
+
+    fn parse(path: &str, text: &str, content: &super::Content) -> Result<Self, ContentError> {
+        Self::parse(path, text, content)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::content::{Content, ContentFiles, Landscape};
