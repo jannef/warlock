@@ -10,7 +10,7 @@
 //! 26 to a page, with a cursor on one to choose; messages are no choices, take as many lines as
 //! they wrap to, and scroll from the newest up.
 
-use super::menu::{Hints, Nav, Panel, Press};
+use super::menu::{HINTS, Nav, Panel, Press};
 use super::more;
 use super::screens::ScreenAction;
 use super::{TEXT, TEXT_DIM, message_key};
@@ -119,7 +119,7 @@ impl MessagesScreen {
         if first + shown < lines.len() {
             console.print(panel.x + panel.w - 2, panel.y + panel.h - 3, "↓", TEXT_DIM);
         }
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         let close = match bindings.key_name(KeyCommand::Messages) {
             Some(key) => format!("{key} or Esc close"),
             None => "Esc close".to_string(),

@@ -926,7 +926,7 @@ impl ScreenStack {
                 }
                 screen.handle(press)
             }
-            Some(Screen::Dialog(screen)) => screen.handle(press, bindings),
+            Some(Screen::Dialog(screen)) => screen.handle(press),
         };
         if action == ScreenAction::Stay {
             return action;
@@ -958,40 +958,40 @@ impl ScreenStack {
     pub fn draw(&self, console: &mut Console, settings: &Settings, bindings: &Bindings) {
         match self.screens.last() {
             None => {}
-            Some(Screen::Menu(menu)) => menu.draw(console, self.notice.as_deref(), bindings),
-            Some(Screen::Characters(screen)) => screen.draw(console, settings.clock, bindings),
-            Some(Screen::Graveyard(screen)) => screen.draw(console, settings.clock, bindings),
-            Some(Screen::NewRun(screen)) => screen.draw(console, bindings),
-            Some(Screen::Choice(screen)) => screen.draw(console, bindings),
-            Some(Screen::ChargenTalents(screen)) => screen.draw(console, bindings),
-            Some(Screen::Sign(screen)) => screen.draw(console, bindings),
-            Some(Screen::Name(screen)) => screen.draw(console, bindings),
-            Some(Screen::Summary(screen)) => screen.draw(console, bindings),
-            Some(Screen::Settings(screen)) => screen.draw(console, settings, bindings),
-            Some(Screen::Files(screen)) => screen.draw(console, bindings),
+            Some(Screen::Menu(menu)) => menu.draw(console, self.notice.as_deref()),
+            Some(Screen::Characters(screen)) => screen.draw(console, settings.clock),
+            Some(Screen::Graveyard(screen)) => screen.draw(console, settings.clock),
+            Some(Screen::NewRun(screen)) => screen.draw(console),
+            Some(Screen::Choice(screen)) => screen.draw(console),
+            Some(Screen::ChargenTalents(screen)) => screen.draw(console),
+            Some(Screen::Sign(screen)) => screen.draw(console),
+            Some(Screen::Name(screen)) => screen.draw(console),
+            Some(Screen::Summary(screen)) => screen.draw(console),
+            Some(Screen::Settings(screen)) => screen.draw(console, settings),
+            Some(Screen::Files(screen)) => screen.draw(console),
             Some(Screen::Controls(screen)) => screen.draw(console, bindings),
             Some(Screen::Objects(screen)) => screen.draw(console, bindings),
-            Some(Screen::Equipment(screen)) => screen.draw(console, bindings),
-            Some(Screen::EquipItem(screen)) => screen.draw(console, bindings),
+            Some(Screen::Equipment(screen)) => screen.draw(console),
+            Some(Screen::EquipItem(screen)) => screen.draw(console),
             Some(Screen::Describe(screen)) => screen.draw(console, bindings),
             Some(Screen::Character(screen)) => screen.draw(console, bindings),
             Some(Screen::Skills(screen)) => screen.draw(console, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.draw(console, bindings),
-            Some(Screen::Magic(screen)) => screen.draw(console, bindings),
+            Some(Screen::Magic(screen)) => screen.draw(console),
             Some(Screen::Quests(screen)) => screen.draw(console, bindings),
             Some(Screen::Talents(screen)) => screen.draw(console, bindings),
-            Some(Screen::Story(screen)) => screen.draw(console, bindings),
+            Some(Screen::Story(screen)) => screen.draw(console),
             Some(Screen::Messages(screen)) => screen.draw(console, bindings),
             Some(Screen::Abilities(screen)) => screen.draw(console, bindings),
-            Some(Screen::Shape(screen)) => screen.draw(console, bindings),
-            Some(Screen::Scribe(screen)) => screen.draw(console, bindings),
-            Some(Screen::Rig(screen)) => screen.draw(console, bindings),
-            Some(Screen::Profession(screen)) => screen.draw(console, bindings),
-            Some(Screen::CraftPick(screen)) => screen.draw(console, bindings),
-            Some(Screen::Dialogue(screen)) => screen.draw(console, bindings),
-            Some(Screen::Death(screen)) => screen.draw(console, settings.clock, bindings),
-            Some(Screen::LevelUp(screen)) => screen.draw(console, bindings),
-            Some(Screen::Dialog(screen)) => screen.draw(console, bindings),
+            Some(Screen::Shape(screen)) => screen.draw(console),
+            Some(Screen::Scribe(screen)) => screen.draw(console),
+            Some(Screen::Rig(screen)) => screen.draw(console),
+            Some(Screen::Profession(screen)) => screen.draw(console),
+            Some(Screen::CraftPick(screen)) => screen.draw(console),
+            Some(Screen::Dialogue(screen)) => screen.draw(console),
+            Some(Screen::Death(screen)) => screen.draw(console, settings.clock),
+            Some(Screen::LevelUp(screen)) => screen.draw(console),
+            Some(Screen::Dialog(screen)) => screen.draw(console),
         }
     }
 
@@ -1703,6 +1703,43 @@ mod tests {
     }
 
     #[test]
+    fn a_second_step_in_one_frame_waits_for_the_first() {
+        // Two below the arrow trap at the west end of the trap hall's proving row.
+        let content = content();
+        let mut world = warlock_core::World::new(content.clone(), "traps", None).expect("run");
+        let walk = "move:NW*14 move:W*7 move:N";
+        for action in warlock_core::action::parse_actions(walk).expect("actions") {
+            world.apply(&action);
+        }
+        assert_eq!(world.player_pos(), Pos::new(16, 4));
+        let mut app = app_with(content, Some(Game::from_world(world, "tamsin-1".into())));
+        fn apply(mut actions: MessageReader<PlayerAction>, mut game: ResMut<Game>) {
+            crate::game::apply_queued(actions.read(), &mut game);
+        }
+        app.add_systems(Update, apply.after(count_actions));
+        let at = |app: &App| app.world().resource::<Game>().world.player_pos();
+        // A held key's repeat on a slow frame: both steps are read before either is applied, so
+        // the second was asked about from the cell before (#1538). Applied, it asks again from
+        // where the first left the player, and stops short of the trap; the next press asks.
+        let repeat = KeyboardInput {
+            repeat: true,
+            ..key(NORTH.0, NORTH.1)
+        };
+        app.world_mut().write_message(key(NORTH.0, NORTH.1));
+        app.world_mut().write_message(repeat);
+        app.update();
+        assert_eq!(at(&app), Pos::new(16, 3), "one step, not onto the trap");
+        assert!(names(&app).is_empty());
+        frame(&mut app, &[NORTH]);
+        assert_eq!(at(&app), Pos::new(16, 3));
+        assert_eq!(
+            names(&app),
+            [ScreenName::Dialog],
+            "really step onto the trap?"
+        );
+    }
+
+    #[test]
     fn presses_go_to_the_top_screen_only() {
         let mut app = app(true);
         // Presses in the frame after Esc already go to the pause menu: Down, Enter opens
@@ -2288,7 +2325,7 @@ mod tests {
             console.resize(80, 30);
             stack.screens[0..1].iter().for_each(|s| {
                 if let Screen::Equipment(screen) = s {
-                    screen.draw(&mut console, &Bindings::default());
+                    screen.draw(&mut console);
                 }
             });
             (0..30)

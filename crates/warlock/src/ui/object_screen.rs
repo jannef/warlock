@@ -42,7 +42,7 @@
 //! which way first).
 
 use super::character_screen::{fit_joined, thresholds};
-use super::menu::{Hints, Nav, Panel, Press, wrap};
+use super::menu::{HINTS, Nav, Panel, Press, wrap};
 use super::paged_list::{PagedList, Row, draw_header};
 use super::screens::ScreenAction;
 use super::target::AimKind;
@@ -784,7 +784,7 @@ impl ObjectScreen {
         let panel = Panel::new(console, self.title(), self.list.width(), count + extra);
         // The drop mode turns no pages: marks would be lost.
         if read_only {
-            super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Inventory);
+            super::info_tabs::draw_tabs(console, &panel, super::ScreenName::Inventory);
         }
         self.entries.draw_label(console, &panel);
         let visible = (panel.h - extra).max(1) as usize;
@@ -845,7 +845,7 @@ impl ObjectScreen {
     /// The footer: the letters of the page shown, what they do, the page keys while there are
     /// pages, and how to leave, keys as bound.
     fn footer(&self, bindings: &Bindings) -> String {
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         // `a-c` for the page's letters (`a` for one); none for an empty list.
         let letters = (self.entries.last_letter()).map(|last| match last {
             'a' => "a".to_string(),

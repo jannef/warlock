@@ -11,7 +11,7 @@
 //! the perception snapshot when it opens; no game time passes while it is open, so it cannot go
 //! stale.
 
-use super::menu::{Hints, Nav, Panel, Press};
+use super::menu::{HINTS, Nav, Panel, Press};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, KeyCommand};
@@ -175,7 +175,7 @@ impl WeaponSkillsScreen {
         let body = tallest(&columns).max(1) as i32;
         let width = super::info_tabs::panel_width(if two { WIDTH_TWO } else { WIDTH });
         let panel = Panel::new(console, " Weapon skills ", width, body + around);
-        super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::WeaponSkills);
+        super::info_tabs::draw_tabs(console, &panel, super::ScreenName::WeaponSkills);
         let room = (panel.h - around).max(0);
         let most = (body - room).max(0) as usize;
         self.most.store(most, Ordering::Relaxed);
@@ -203,11 +203,11 @@ impl WeaponSkillsScreen {
             None => "Esc close".to_string(),
         };
         // The spells' skills and the caster styles are on the Magic page.
-        if let Some(magic) = super::info_tabs::hint(super::ScreenName::Magic, bindings) {
+        if let Some(magic) = super::info_tabs::hint(super::ScreenName::Magic) {
             close = format!("{magic}   {close}");
         }
         let footer = if most > 0 {
-            format!("{} scroll   {close}", Hints::of(bindings).up_down())
+            format!("{} scroll   {close}", HINTS.up_down())
         } else {
             close
         };
