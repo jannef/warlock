@@ -21,7 +21,7 @@ use crate::noise::SoundKind;
 use crate::stats::Stat;
 use serde::Deserialize;
 
-/// The cooldown status an aura gives its bearer (`data/status.toml`).
+/// The cooldown status an aura gives its bearer (`data/status/`).
 pub const STATUS: &str = "aura";
 /// An aura's touches without `every`: two turns apart.
 pub const DEFAULT_EVERY: u32 = 12;
@@ -150,7 +150,7 @@ fn aura(content: &Content, spec: &AuraSpec) -> Result<Aura, String> {
     };
     let every = spec.every.unwrap_or(DEFAULT_EVERY);
     let cooldown = (content.status_id(STATUS))
-        .ok_or_else(|| format!("needs the `{STATUS}` status in status.toml"))?;
+        .ok_or_else(|| format!("needs the `{STATUS}` status in status/"))?;
     let eases = content.status(cooldown).eases.unwrap_or(1).max(1);
     let degrees = u16::try_from(every.div_ceil(eases)).unwrap_or(u16::MAX);
     if degrees > content.status(cooldown).max {

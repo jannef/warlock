@@ -30,10 +30,10 @@ fn a_file_no_loader_reads_is_refused() {
 #[test]
 fn a_required_id_missing_from_its_table_is_refused() {
     let mut files = ContentFiles::builtin();
-    let terrain = (files.get_optional("data/terrain.toml").expect("terrain")).to_string();
+    let terrain = files.table_text("terrain");
     let renamed = terrain.replace("id = \"makeshift_anvil\"", "id = \"field_anvil\"");
     assert_ne!(renamed, terrain);
-    files.insert("data/terrain.toml", &renamed);
+    files.replace_table("terrain", &renamed);
     let err = load_err(&files);
     assert!(
         err.contains("the terrain `makeshift_anvil` is missing"),

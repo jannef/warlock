@@ -1,0 +1,10 @@
+# A burial mound with a way in: pale against the downs (a cave mouth is darker).
+[[terrain]]
+id = "barrow"
+name = "barrow"
+glyph = "∩"
+fg = "#e4e8d4"
+bg = "#1a1c12"
+stairs = "down"
+glow = 0.2
+travel_minutes = 30

@@ -1,0 +1,9 @@
+# Second wind's cooldown (the Second wind talent): a quarter of an hour before the next.
+[[status]]
+id = "winded"
+name = "Winded"
+max = 1
+stacking = "refresh"
+eases = 900
+start = "You are winded."
+end = "You have your breath back."

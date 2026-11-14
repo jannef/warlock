@@ -95,6 +95,57 @@ impl ContentFiles {
         }
     }
 
+    /// Replaces `from` with `to` in every file of table `name` (tests: a built-in entry changed,
+    /// whichever file holds it). Panics when no file holds `from`, so a test never edits nothing.
+    #[cfg(test)]
+    pub(crate) fn replace_in_table(&mut self, name: &str, from: &str, to: &str) {
+        let mut found = false;
+        self.edit_table(name, |text| {
+            found |= text.contains(from);
+            text.replace(from, to)
+        });
+        assert!(found, "no file of table `{name}` holds {from:?}");
+    }
+
+    /// Adds every built-in file of table `name` (tests: a fixture set with the shipped skills).
+    #[cfg(test)]
+    pub(crate) fn insert_builtin_table(&mut self, name: &str) {
+        let builtin = Self::builtin();
+        for (path, text) in builtin.table_unread(name) {
+            self.insert(path, text);
+        }
+    }
+
+    /// The files of table `name` as one text, in the table's order (tests: a fixture built from
+    /// a shipped table, for [`ContentFiles::replace_table`]).
+    #[cfg(test)]
+    pub(crate) fn table_text(&self, name: &str) -> String {
+        let mut out = String::new();
+        for (_, text) in self.table_unread(name) {
+            out.push_str(text);
+            if !out.ends_with('\n') {
+                out.push('\n');
+            }
+        }
+        out
+    }
+
+    /// Puts `text` in place of the whole shared table `name`: `data/<name>.toml` holds it all,
+    /// `data/<name>/` is gone (tests).
+    #[cfg(test)]
+    pub(crate) fn replace_table(&mut self, name: &str, text: &str) {
+        self.remove(&format!("data/{name}/"));
+        self.insert(&format!("data/{name}.toml"), text);
+    }
+
+    /// Puts the shared table `name` whole into `data/<name>.toml`, in its order (tests that edit
+    /// it as one text with [`ContentFiles::edit_table`]: an entry appended at its end).
+    #[cfg(test)]
+    pub(crate) fn flatten_table(&mut self, name: &str) {
+        let text = self.table_text(name);
+        self.replace_table(name, &text);
+    }
+
     pub(super) fn get(&self, path: &str) -> Result<&str, ContentError> {
         self.get_optional(path)
             .ok_or_else(|| ContentError::new(path, "file is missing"))

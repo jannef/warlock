@@ -1,0 +1,10 @@
+# A collapsed floor's (spec §7 "Special rooms"): stone split and sagging over the level below.
+# A step onto it may give way under the player.
+[[terrain]]
+id = "cracked_floor"
+name = "cracked floor"
+stone = true
+glyph = ":"
+fg = "#6e665c"
+bg = "#0b0a09"
+step_noise = 110

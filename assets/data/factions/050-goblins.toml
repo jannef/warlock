@@ -1,0 +1,7 @@
+# The goblin tribes of the barrows (Cealdhlāw): they raid the kobolds' warrens and eat the vermin.
+# The raids are lore, not fought on the floor.
+[[faction]]
+id = "goblins"
+name = "goblins"
+hostile = ["player"]
+gear = { bone = 10, bronze = 30, copper = 10 }

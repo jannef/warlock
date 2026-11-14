@@ -1,0 +1,9 @@
+# Fire breath's cooldown (a birth sign's gift, two degrees), five minutes a degree.
+[[status]]
+id = "drained"
+name = "Drained"
+max = 2
+stacking = "refresh"
+eases = 300
+start = "You feel drained."
+end = "Your strength of spirit returns."

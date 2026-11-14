@@ -523,7 +523,7 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
         let then = if text.is_empty() { "" } else { "; then " };
         let _ = write!(
             text,
-            "{then}[{what}](spellcasting.md#zones) for {} turns ({} seconds)",
+            "{then}[{what}](spell-rules.md#zones) for {} turns ({} seconds)",
             zone.turns,
             u32::from(zone.turns) * 6
         );

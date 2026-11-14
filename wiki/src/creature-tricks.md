@@ -94,7 +94,7 @@ below. Each life remembers which it has seen.
 Casters cast real [spells](magic.md), the very ones you may learn. They are rolled at the
 caster's own [stats](stats.md) as yours are at yours, with the same
 [reach and dice](spellcasting.md#how-a-spell-grows), the same [areas](spellcasting.md#shapes),
-[spell types](spellcasting.md#spell-types), and [resistances](damage-types.md#armour-and-resistance).
+[spell types](spell-types.md), and [resistances](damage-types.md#armour-and-resistance).
 A spell that rolls to hit adds a quarter of the caster's level to the roll, as its blows do.
 
 Each cast costs the [mana](mana.md#how-much-mana-you-have) below from the caster's pool, which comes back as

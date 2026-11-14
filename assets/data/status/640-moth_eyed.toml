@@ -1,0 +1,10 @@
+[[status]]
+id = "moth_eyed"
+name = "Moth-eyed"
+seen = "moth-eyed"
+max = 1
+stacking = "refresh"
+eases = 1800
+vision = "uv_sight"
+start = "Strange colours bloom at the edge of sight."
+end = "The strange colours fade from your sight."

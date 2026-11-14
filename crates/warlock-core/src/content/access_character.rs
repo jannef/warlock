@@ -139,7 +139,7 @@ impl Content {
         &self.experience
     }
 
-    /// The skills of `data/skills.toml`, in file order (by [`SkillId`]; none without the file).
+    /// The skills of `data/skills/`, in file order (by [`SkillId`]; none without the file).
     pub fn skills(&self) -> &[SkillDef] {
         &self.skills.list
     }
@@ -184,7 +184,7 @@ impl Content {
             .map(|(i, a)| (WeaponAbilityId(i as u16), a))
     }
 
-    /// The talents (`data/talents.toml` and `data/talents/`, spec §8 "Talents"): none without
+    /// The talents (`data/talents/`, its trees and systems too, spec §8 "Talents"): none without
     /// the files.
     pub fn talents(&self) -> &TalentBook {
         &self.talents

@@ -825,7 +825,7 @@ None takes game time unless said.
   effect, and only says so in the message log.
 - `identify[:LETTERS]` identifies magic items and labelled scrolls' types; without letters
   everything carried (F8 records it).
-- `afflict:STATUS` gives one degree more of `STATUS`, an id in `assets/data/status.toml`, e.g.
+- `afflict:STATUS` gives one degree more of `STATUS`, an id in `assets/data/status/`, e.g.
   `afflict:poisoned*4 afflict:bleeding` (not `diseased`: that comes of a disease; nor `raging`:
   that comes of `resource:rage`).
 - `drain:N` the player spends N mana (1 or more) through `World::spend_mana` (as an ability

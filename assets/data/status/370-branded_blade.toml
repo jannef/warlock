@@ -1,0 +1,13 @@
+# Brand's: the held weapon burns, and its fire is a blow's, which reads no spell type's rule. Up
+# to three degrees, a minute each, as Fire cloak's.
+[[status]]
+id = "branded_blade"
+name = "Burning blade"
+seen = "bearing a burning blade"
+max = 6
+stacking = "refresh"
+eases = 60
+light = "ember"
+blows = { damage = "1d4", damage_type = "fire" }
+start = "Fire runs along your weapon."
+end = "The fire on your weapon dies."

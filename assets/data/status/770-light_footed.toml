@@ -1,0 +1,8 @@
+[[status]]
+id = "light_footed"
+name = "Light-footed"
+seen = "light-footed"
+max = 1
+stacking = "refresh"
+cost = 50
+per_action = true

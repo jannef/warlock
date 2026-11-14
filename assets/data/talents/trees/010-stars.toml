@@ -1,0 +1,6 @@
+# The birth signs' gifts and flaws (horoscope.toml's `grants`), granted at birth and never on a
+# pick list; the sign-limited picks join it later. Listed first: what you were born with.
+[[tree]]
+id = "stars"
+name = "Stars"
+description = "What you were born under."

@@ -1,5 +1,5 @@
-//! Talents (spec §8 "Talents"; `assets/data/talents.toml` for the settings, one file per talent
-//! under `assets/data/talents/`): what a character may pick as they level up. A talent has a
+//! Talents (spec §8 "Talents"; one file per talent
+//! under `assets/data/talents/`, one per tree and system under its `trees/` and `systems/`): what a character may pick as they level up. A talent has a
 //! tree, prerequisites ([`Needs`]) that must all hold when it is chosen, and typed effects ([`TalentEffect`]) summed by [`crate::talent::TalentMods`] and
 //! read where the rules already read what magic items do. A talent may name the systems it
 //! touches from the list in the settings file (the wiki's matrix reads them). The loader checks
@@ -60,7 +60,7 @@ pub enum Choice {
     WeaponSkill,
     /// A fighting style.
     Style,
-    /// A skill (an id in `data/skills.toml`), trained or not.
+    /// A skill (an id in `data/skills/`), trained or not.
     Skill,
     /// An element: a damage type (an id in `data/damage_types.toml`).
     Element,
@@ -256,7 +256,7 @@ pub enum TalentEffect {
     ThresholdPercent { value: i32 },
     /// Its darkvision reaches this many cells farther (from none: this far).
     Darkvision { value: i32 },
-    /// It sees creatures suffering `status` (an id in `data/status.toml`) in its line of sight
+    /// It sees creatures suffering `status` (an id in `data/status/`) in its line of sight
     /// within `radius` cells however dark it is (Blood scent).
     Scent { status: String, radius: i32 },
     /// Its overworld sight at night reaches this many cells farther.
@@ -312,7 +312,7 @@ pub enum TalentEffect {
     /// Wading (water, marsh) costs a plain step, and never gives a disease.
     Swimmer,
     /// A step onto any of `terrains` costs what a step onto `like` does (ids in
-    /// `data/terrain.toml`; Swimmer, Trailblazer).
+    /// `data/terrain/`; Swimmer, Trailblazer).
     TerrainAs { terrains: Vec<String>, like: String },
     /// A plunge through ice into the water never hurts it (Swimmer).
     PlungeProof,
@@ -369,7 +369,7 @@ pub enum TalentEffect {
         #[serde(default)]
         news: Option<String>,
     },
-    /// Handed out once, as the talent is taken or given: every skill of `skills.toml` the holder
+    /// Handed out once, as the talent is taken or given: every skill of `skills/` the holder
     /// is not trained in, but those `except` names, is trained at `dice`, rolled from the
     /// `levels` stream, whatever skills the content holds (Jack of all trades;
     /// `world/jack.rs`). `news` is said when a class table gives it.
@@ -645,7 +645,7 @@ pub enum TalentEffect {
     /// Resting heals this percent faster on top of resting's own pace (Fast healer).
     RestingPercent { value: i32 },
     /// The active Second wind: `per_level` hit points per character level back at once, at
-    /// least `at_least`, then the `cooldown` status (an id in `data/status.toml`), while which
+    /// least `at_least`, then the `cooldown` status (an id in `data/status/`), while which
     /// it cannot be used again.
     SecondWind {
         per_level: u8,
@@ -2219,7 +2219,7 @@ fn resolve_needs(
         let stat = Stat::from_id(&name).ok_or_else(|| format!("needs an unknown stat `{name}`"))?;
         stats[stat] = score;
     }
-    // Content without skills (no `data/skills.toml`) has nothing to measure a skill need by:
+    // Content without skills (no `data/skills/`) has nothing to measure a skill need by:
     // it is left out, as skill affixes are; weapon skills likewise.
     let mut skills = Vec::new();
     for (name, value) in spec.skills {
@@ -2356,7 +2356,7 @@ pub(super) fn parse<'a>(
         systems.extend(parsed.system.into_iter().map(|s| (file, s)));
         pending.extend(parsed.talent.into_iter().map(|spec| Pending { file, spec }));
     }
-    let first_file = first_file.unwrap_or("data/talents.toml");
+    let first_file = first_file.unwrap_or("data/talents/");
     let mut book = TalentBook {
         trees: Vec::new(),
         systems: Vec::new(),
@@ -2419,7 +2419,7 @@ pub(super) fn parse<'a>(
         for name in &spec.systems {
             let id = (book.system_id(name)).ok_or_else(|| {
                 err(format!(
-                    "names a system `{name}` that is not in the list (data/talents.toml)"
+                    "names a system `{name}` that is not in the list (data/talents/systems/)"
                 ))
             })?;
             systems.push(id);

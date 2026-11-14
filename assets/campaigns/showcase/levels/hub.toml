@@ -141,7 +141,7 @@ map = '''
 # The old hermit, by the stairs.
 "H" = { terrain = "floor", creature = "hermit" }
 
-# Special rooms (data/room_effects.toml): the stairs nook, walls and door included, is a sanctuary.
+# Special rooms (data/room_effects/): the stairs nook, walls and door included, is a sanctuary.
 [[room]]
 effect = "sanctuary"
 area = [71, 11, 79, 20]

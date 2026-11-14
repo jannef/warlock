@@ -1,0 +1,9 @@
+# The grey dwarves of the deep delf (Fyrdelf): miners, warriors, smiths. They hate the living who
+# come down their shafts, the goblins' kin (the trolls of the deep among them), the giants and
+# their ogres, and the dead the fires made; the fire things they leave be.
+# The grudges are lore, not fought on the floor.
+[[faction]]
+id = "duergar"
+name = "duergar"
+hostile = ["player"]
+gear = { iron = 30, steel = 20 }

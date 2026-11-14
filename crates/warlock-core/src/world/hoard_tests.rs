@@ -105,7 +105,7 @@ fn the_tempting_hoard_is_data() {
 
 #[test]
 fn a_hoard_needs_a_danger_and_a_range_of_guardians() {
-    let shipped = include_str!("../../../../assets/data/room_effects.toml");
+    let shipped = ContentFiles::builtin().table_text("room_effects");
     let line = "hoard = { items = 3, loot_level = 3, guardians = [2, 4], danger = 1 }";
     assert!(shipped.contains(line));
     let without_danger = shipped.replace(&format!("needs_danger = true\n{line}"), line);
@@ -125,7 +125,7 @@ fn a_hoard_needs_a_danger_and_a_range_of_guardians() {
         ),
     ] {
         let mut files = ContentFiles::builtin();
-        files.insert("data/room_effects.toml", &text);
+        files.replace_table("room_effects", &text);
         assert!(Content::load(&files).is_err(), "{what} is refused");
     }
 }

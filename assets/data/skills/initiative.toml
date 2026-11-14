@@ -1,0 +1,16 @@
+[[skill]]
+id = "initiative"
+name = "Initiative"
+description = "Keeping your wits when something falls on you unseen."
+kind = "passive"
+# The initiative check (#682; spec §8 "Surprise and sneak attacks", surprise.toml): a Dexterity
+# check against 13 plus the attacker's craft, made when an attack finds you unaware or a hidden
+# trap springs under you. Marked by "surprise" (such a check made, whatever comes of it). Effect
+# "initiative": points added to the check, +8 at 100, +12 at 200 (at most 20). Effect
+# "surprise_ease": failed, your next action costs half again as much, less this percent of the
+# extra: half of it at 100, three quarters at 200 (with Cool head's, at most all of it).
+mark = [{ on = "surprise", chance = 100 }]
+benefit = [
+    { effect = "initiative", curve = [[0, 0], [100, 8], [200, 12]] },
+    { effect = "surprise_ease", curve = [[0, 0], [100, 50], [200, 75]] },
+]

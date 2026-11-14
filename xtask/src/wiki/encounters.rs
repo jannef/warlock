@@ -494,7 +494,7 @@ mod tests {
         let talked = tables.matches("[talked past]").count();
         assert_eq!(talked, 6, "the flagged entries: {tables}");
         assert!(
-            tables.contains("only for a [bard](classes.md#bard) of level"),
+            tables.contains("only for a [bard](class-bard.md) of level"),
             "the Strange Spirit's calling: {tables}"
         );
     }

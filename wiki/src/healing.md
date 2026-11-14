@@ -15,9 +15,9 @@ and disease is in the second section.
 - **Cast a spell.** [Mend](magic.md#spell-mend), [Cure wounds](magic.md#spell-cure-wounds), and
   [Benison](magic.md#spell-benison) bring some back, and [Renewal](magic.md#spell-renewal) makes
   you heal four times as fast. On the undead they
-  [harm instead](spellcasting.md#healing-harms-the-undead).
-- **Pray.** A [priest](classes.md#priest)'s prayer mends [wounds](prayer.md#prayer-wounds) (see
-  [Prayer](prayer.md)), and a [paladin](classes.md#paladin)'s
+  [harm instead](spell-rules.md#healing-harms-the-undead).
+- **Pray.** A [priest](class-priest.md)'s prayer mends [wounds](prayer.md#prayer-wounds) (see
+  [Prayer](prayer.md)), and a [paladin](class-paladin.md)'s
   [Lay on hands](abilities.md#ability-lay-on-hands) heals with zeal.
 - **Catch your breath.** The [Second wind](abilities.md#ability-second-wind) talent gives hit
   points back at once.

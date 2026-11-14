@@ -1,0 +1,11 @@
+[[effect]]
+id = "draining"
+name = "draining room"
+mark = "d"
+enter = "You feel your power seeping out of you."
+weight = 6
+level_chance = 5
+pervade = "Something here drinks at your power."
+glow = [10, 6, 24, 8]
+status = "ebbing"
+unholy = true

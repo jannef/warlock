@@ -1,0 +1,7 @@
+# The kobold war band: they hunt the player and the vermin alike. The vermin feud is lore, not
+# fought on the floor: a kobold and a rat on the same floor leave each other be.
+[[faction]]
+id = "kobolds"
+name = "kobolds"
+hostile = ["player"]
+gear = { bone = 15, copper = 10, flint = 15 }

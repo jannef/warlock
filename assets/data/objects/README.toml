@@ -154,7 +154,7 @@
 #
 # Digging (spec §8 "Digging"; ready a tool in the Tool slot, then use it with `U`):
 #   dig        a digging tool's power: each turn of digging does power × (Strength +
-#              10) / 20 work against a wall's hardness (terrain.toml), so a pick-axe (10) does 10
+#              10) / 20 work against a wall's hardness (terrain/), so a pick-axe (10) does 10
 #              at Strength 10. A tool goes in a `slot` (the Tool slot)
 #
 # Presentation only (no rule reads them):
@@ -162,7 +162,7 @@
 #              its own glyph, upright)
 #   spins      it tumbles as it flies (a thrown dagger)
 #   glow       how much its glyph glows where it lies (0 to 1)
-#   [[object.particles]] emitters (terrain.toml has the fields): `ambient` while it lies in view
+#   [[object.particles]] emitters (terrain/ has the fields): `ambient` while it lies in view
 #              on top of its pile, `flight` while it flies
 #
 # Food (spec §8 "Hunger"; eat with `E`):
@@ -173,7 +173,7 @@
 #              and `lasts` (longer than it keeps; then it has rotted
 #              away); never on things worn, wielded, shot, thrown, or burned
 #   cures      a remedy (food only): what eating it cures, means that statuses and diseases name
-#              in their `cured_by` (status.toml, diseases.toml): `cures = ["remove_disease"]`
+#              in their `cured_by` (status/, diseases.toml): `cures = ["remove_disease"]`
 #              ends every disease at once, shown or not (spec §8 "Diseases")
 # Scrolls (spec §8 "Scrolls"; read with `r`):
 #   [object.read]  what reading it does (never on things worn, wielded, eaten, shot, or thrown);

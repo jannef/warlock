@@ -207,7 +207,7 @@ impl DrinkSpec {
             let name =
                 name.ok_or_else(|| format!("`drink`: a {} names its `status`", self.kind))?;
             (content.status_id(name))
-                .ok_or_else(|| format!("`drink`: no status `{name}` in data/status.toml"))
+                .ok_or_else(|| format!("`drink`: no status `{name}` in data/status/"))
         };
         let severity = |_: StatusId| {
             (self.severity).ok_or_else(|| format!("`drink`: a {} needs `severity`", self.kind))
@@ -301,7 +301,7 @@ impl DrinkSpec {
                 let name = (self.status.clone())
                     .ok_or_else(|| "`drink`: a harm names its `status`".to_string())?;
                 let status = (content.status_id(&name))
-                    .ok_or_else(|| format!("`drink`: no status `{name}` in data/status.toml"))?;
+                    .ok_or_else(|| format!("`drink`: no status `{name}` in data/status/"))?;
                 Draught::Harm {
                     dice: dice(self.dice)?,
                     status,

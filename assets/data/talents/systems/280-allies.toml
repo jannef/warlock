@@ -1,0 +1,5 @@
+# Allies (docs/design/druid-and-summons.md §4, §10): creatures on the player's side, their orders,
+# their following, and their fights. Beast-bond; the druid's calls carry the tag too (D1).
+[[system]]
+id = "allies"
+name = "Allies: summons and companions, their orders and their fights"

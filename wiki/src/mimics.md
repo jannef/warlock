@@ -3,7 +3,7 @@
 Not every [chest](chests.md) is a chest. Now and then a coffer, a hutch, or a strongbox standing
 on the floor is a **mimic**: a thing that sits in the dark looking like a chest until something
 touches it, and grows bigger the longer it sits. It looks exactly like a real chest of its kind,
-both in sight and in memory, and [look mode](controls.md#look-mode) describes it in the same
+both in sight and in memory, and [look mode](controls-prompts.md#look-mode) describes it in the same
 words.
 
 Each chest laid on a floor has a small chance, set by its band, of being a mimic. There is never
@@ -34,8 +34,8 @@ creature takes any notice of it. It is found out when:
   notice everything (trained in [Spot](skills.md#skill-spot), or an [elf](races.md#race-elf)).
   "You notice the coffer breathing: a young mimic!"
 
-Until it is found out it has seen no one, so a [thief's](classes.md#thief)
-[sneak attack](classes.md#talent-sneak-attack) lands on it. Once found out it is an ordinary
+Until it is found out it has seen no one, so a [thief's](class-thief.md)
+[sneak attack](class-thief.md#talent-sneak-attack) lands on it. Once found out it is an ordinary
 [hostile](creatures.md#factions) creature of the vermin, and it never disguises itself again. It
 is [slow](turns.md#speed) (speed 800), so you can walk away from it.
 

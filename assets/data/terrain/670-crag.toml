@@ -1,0 +1,10 @@
+[[terrain]]
+id = "crag"
+name = "rock outcrop"
+stone = true
+glyph = "▲"
+fg = "#aaa294"
+bg = "#28251f"
+walkable = false
+transparent = false
+height = 2

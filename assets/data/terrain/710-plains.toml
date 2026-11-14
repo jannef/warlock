@@ -1,0 +1,11 @@
+# The overworld (spec §3): the land at large, at map scale. A step takes `travel_minutes`.
+
+[[terrain]]
+id = "plains"
+name = "plains"
+glyph = "."
+fg = "#b4a660"
+bg = "#100f09"
+travel_minutes = 45
+local = "dry_grass"
+landscape = "plains"

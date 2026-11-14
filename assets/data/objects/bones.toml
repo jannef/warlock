@@ -1,4 +1,4 @@
-# What a beast den's sleepers left of their meals (room_effects.toml `hoard = "corpses"`): junk,
+# What a beast den's sleepers left of their meals (room_effects/ `hoard = "corpses"`): junk,
 # never loot, worth nothing.
 [[object]]
 id = "bones"

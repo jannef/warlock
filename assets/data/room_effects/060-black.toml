@@ -1,0 +1,7 @@
+[[effect]]
+id = "black"
+name = "black chamber"
+mark = "b"
+enter = "The dark here swallows your light."
+weight = 5
+light = 0

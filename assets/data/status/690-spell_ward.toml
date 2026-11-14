@@ -1,0 +1,12 @@
+# Battle caster's Spell guard (spec §8 "Fighting styles"): a spell that lands while its caster
+# fights in armour leaves a ward about them, a Defence point, until their next action.
+[[status]]
+id = "spell_ward"
+name = "Spell ward"
+seen = "warded"
+max = 1
+stacking = "refresh"
+per_action = true
+combat = { dodge = 1 }
+start = "A ward settles about you."
+end = "Your ward fades."

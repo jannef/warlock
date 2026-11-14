@@ -2,7 +2,7 @@
 //! an actor's ailments may be treated now. The treating itself (the check, what comes of it, the
 //! time) is `world/heal.rs`.
 //!
-//! An **ailment** is a status with a `treat` table (`data/status.toml`: bleeding, poisoned) or a
+//! An **ailment** is a status with a `treat` table (`data/status/`: bleeding, poisoned) or a
 //! disease that shows (`data/diseases.toml`). One may be treated now when:
 //!
 //! - a status with a `treat` table (bleeding, poison): always, while it lasts;

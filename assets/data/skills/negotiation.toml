@@ -1,0 +1,9 @@
+[[skill]]
+id = "negotiation"
+name = "Negotiation"
+description = "Haggling, striking a bargain, and knowing when to walk away."
+kind = "rules"
+mark = [{ on = "deal", chance = 25 }]
+# Haggling gets better prices in shops (shops.toml), 20 % at 100 (Appraise's until #666), and
+# at a healer's and a sage's (`service.rs`; a temple's price stays flat, #1031).
+benefit = [{ effect = "bargain", curve = [[0, 0], [100, 20], [200, 30]] }]

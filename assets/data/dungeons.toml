@@ -88,9 +88,9 @@
 #              unless the floor holds `cap` creatures hostile to the player
 #   room_effects  the branch's own special-room odds (spec §7 "Special rooms"), a table:
 #              `chance` (percent a room is special), `per_level` (at most this many a level),
-#              `favoured` (`{ id = share }`, ids in room_effects.toml, each its fixed percent of
+#              `favoured` (`{ id = share }`, ids in room_effects/, each its fixed percent of
 #              the draws) and `banned` (ids never drawn); each field defaults to
-#              room_effects.toml's, e.g. `room_effects = { chance = 25, favoured = { flooded = 40 } }`
+#              room_effects/'s, e.g. `room_effects = { chance = 25, favoured = { flooded = 40 } }`
 #   shops      the branch's own shop odds (spec §7 "Shops"), a table: `chance` (percent of its
 #              rooms levels with a shop), `kinds` (ids in shops.toml, picked
 #              uniformly; default every kind with `generated`), `names` (the keepers' names), `keeper` (the keepers' creature type;

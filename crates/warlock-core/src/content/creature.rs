@@ -194,7 +194,7 @@ pub(super) struct CreatureSpec {
     pub weight: u32,
     /// Its size (`data/sizes.toml`); none: medium.
     pub size: Option<String>,
-    /// The faction it belongs to (`data/factions.toml`).
+    /// The faction it belongs to (`data/factions/`).
     pub faction: Option<String>,
     /// Instead of `faction`: the factions one of its creatures may join, by weight
     /// (`{ seelie = 50, unseelie = 50 }`), each creature drawing its own when it is made (spec
@@ -556,7 +556,7 @@ pub struct OnEat {
     /// The chance in percent that it comes back up: the eater vomits, and it feeds nothing.
     #[serde(default)]
     pub vomit: u8,
-    /// What it teaches, per skill id in `data/skills.toml` (a caster's corpse, Decipher script).
+    /// What it teaches, per skill id in `data/skills/` (a caster's corpse, Decipher script).
     #[serde(default)]
     pub skills: BTreeMap<String, SkillGift>,
 }
@@ -633,7 +633,7 @@ impl CorpseGifts {
 
 /// A natural attack as written in content files: `attack = { damage = "1d4", name = "bite",
 /// verb = "bites" }`, with an optional `threat`, `crit`, and `to_hit` like a weapon's, and the
-/// status effects and diseases a hit may cause (`on_hit`, `data/status.toml`,
+/// status effects and diseases a hit may cause (`on_hit`, `data/status/`,
 /// `data/diseases.toml`).
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]

@@ -1,0 +1,12 @@
+# Leavings (docs/design/monster-dread.md §9, `content/leaving.rs`): what a creature leaves about
+# it, laid by the generator near where one is placed. Old webs, that catch no one, and floor
+# eaten into pits by acid.
+[[terrain]]
+id = "web"
+name = "old web"
+description = "Grey strands, thick as rope in places, hang from wall to floor."
+stone = true
+glyph = "\""
+fg = "#a8a8a0"
+bg = "#0d0d10"
+step_noise = 80

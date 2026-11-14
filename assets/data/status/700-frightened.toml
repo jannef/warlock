@@ -1,0 +1,15 @@
+# Hound's bay's (a Barghest's birth sign pick): a creature that heard the howl and is of a lower
+# level runs from the howler, a degree for each turn, a turn's time apiece. Fear's teeth
+# (docs/design/monster-dread.md §5.4): shaking hands, -3 to hit while it lasts, nothing more.
+[[status]]
+id = "frightened"
+name = "Frightened"
+seen = "frightened"
+max = 3
+stacking = "refresh"
+eases = 6
+flees = true
+combat = { to_hit = -3 }
+cured_by = ["clear_head"]
+start = "You are frightened."
+end = "You master your fear."

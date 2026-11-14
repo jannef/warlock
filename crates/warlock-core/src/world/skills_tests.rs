@@ -105,8 +105,8 @@ fn files(eager: bool) -> ContentFiles {
         );
     }
     if eager {
-        let text = include_str!("../../../../assets/data/skills.toml");
-        files.insert("data/skills.toml", &every_chance_certain(text));
+        files.flatten_table("skills");
+        files.edit_table("skills", every_chance_certain);
     }
     files
 }
@@ -784,13 +784,11 @@ fn athletics_adds_to_talents_and_leaves_prices_to_burden_and_haste() {
 #[test]
 fn athletics_never_takes_speed_past_the_cap() {
     let mut files = files(false);
-    let text = include_str!("../../../../assets/data/skills.toml");
-    let strong = text.replace(
+    files.replace_in_table(
+        "skills",
         "{ effect = \"speed\", curve = [[0, 0], [100, 5], [200, 10]] }",
         "{ effect = \"speed\", curve = [[0, 0], [100, 50]] }",
     );
-    assert_ne!(strong, text, "athletics gives speed");
-    files.insert("data/skills.toml", &strong);
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     let mut w = World::new(content.clone(), "yard", None).expect("world");
     set(&mut w, "athletics", Some(100));

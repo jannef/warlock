@@ -1,0 +1,7 @@
+[[terrain]]
+id = "chest_open"
+name = "open chest"
+chest = "open"
+glyph = "⊔"
+fg = "#9a7a48"
+bg = "#0d0d10"

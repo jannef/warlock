@@ -215,7 +215,7 @@ rate or animation.
     in deep winter), and so has a level with a hot or a cold room (a cold room's pool is frozen);
     other underground levels start with the ice their file lays.
   - **Looks**: a cell shows the thickest ice terrain its ice reaches (`ice` in
-    `data/terrain.toml`: thin ice from 1 cm, ice from 5 cm, thick ice from 15 cm), else the water
+    `data/terrain/`: thin ice from 1 cm, ice from 5 cm, thick ice from 15 cm), else the water
     beneath; the terrain grid holds that, so memory, sight, and look mode follow ("thin ice",
     "ice", "thick ice"). Ice is still: no waves, glints, or rain ripples. The player never learns
     a thickness, only how it looks.

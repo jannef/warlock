@@ -499,14 +499,14 @@ struct LegendFile {
 
 /// All loaded and cross-validated content.
 ///
-/// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
+/// `data/lights.toml`, `data/vision.toml`, `data/factions/`, `data/dungeons.toml`,
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials/`, `data/parts.toml`, `data/objects/`,
 /// `data/gems.toml`, `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
 /// `data/creature_rarities.toml`,
-/// `data/races.toml`, `data/names.toml`, `data/classes/`, `data/skills.toml`,
+/// `data/races.toml`, `data/names.toml`, `data/classes/`, `data/skills/`,
 /// `data/horoscope.toml`,
-/// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, `data/stances.toml`,
-/// `data/status.toml`, `data/resources.toml`, `data/diseases.toml`, `data/dialogue.toml`,
+/// `data/effects.toml`, `data/room_effects/`, `data/weapon_skills.toml`, `data/stances.toml`,
+/// `data/status/`, `data/resources.toml`, `data/diseases.toml`, `data/dialogue.toml`,
 /// `data/plurals.toml`, `data/quests.toml`,
 /// `data/traps.toml`, and `data/shops.toml` are optional (without effects, spell effects are not
 /// drawn; without traps or shops there are none). Without vision
@@ -726,13 +726,13 @@ pub struct Content {
     spells: Vec<SpellData>,
     /// The statuses `kind = "hex"` spells lay, in status order (computed from `spells`).
     hex_statuses: Vec<StatusId>,
-    /// Talents (`data/talents.toml` and `data/talents/`, spec §8 "Talents"); none without the
+    /// Talents (`data/talents/`, its trees and systems too, spec §8 "Talents"); none without the
     /// files.
     talents: TalentBook,
     /// The profane gifts (`data/profane/`, docs/design/profane-gifts.md), talents of the
     /// `profane` tree too; none without the files or the talents.
     profane: ProfaneTable,
-    /// Special rooms' effects (`data/room_effects.toml`).
+    /// Special rooms' effects (`data/room_effects/`).
     room_effects: RoomEffects,
     /// What a place's ability draws (`data/outcomes/`, spec §7 "Special rooms"), by id.
     outcomes: OutcomeTables,
@@ -751,7 +751,7 @@ pub struct Content {
     /// Unidentified potions' labels (`data/potion_labels.toml`, the scroll labels' format, a
     /// word and the type's colour): none, every potion known on sight.
     potion_labels: Option<ScrollLabelDef>,
-    /// In `data/status.toml` order: most important first.
+    /// In `data/status/` order: most important first.
     statuses: Vec<StatusDef>,
     /// Alternative resources (`data/resources.toml`, spec §8 "Resources"), in file order; none
     /// without the file.
@@ -815,7 +815,7 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.creature_rarities = creature_rarity::parse(path, text)?;
         }
-        content.skills = content.load_or_default(files)?;
+        content.skills = SkillBook::parse_table(files.table("skills"))?;
         let path = "data/damage_types.toml";
         if let Some(text) = files.get_optional(path) {
             content.damage_types = damage_type::parse(path, text)?;
@@ -942,8 +942,8 @@ impl Content {
         content.load_terrain(files)?;
         content.talents.check_terrain(&content)?;
         content.load_diseases(files)?;
-        let path = "data/room_effects.toml";
-        if let Some(text) = files.get_optional(path) {
+        let table: Vec<_> = files.table("room_effects").collect();
+        if !table.is_empty() {
             let terrain = |name: &str| {
                 let id = content.terrain_id(name)?;
                 Some((id, content.terrain(id)))
@@ -952,7 +952,7 @@ impl Content {
                 let id = content.status_id(name)?;
                 Some((id, content.status(id)))
             };
-            content.room_effects = RoomEffects::parse_with(path, text, terrain, status)?;
+            content.room_effects = RoomEffects::parse_table(table, terrain, status)?;
         }
         content.load_factions(files)?;
         content.room_effects.check_factions(&content.factions)?;

@@ -1,0 +1,17 @@
+# Latched: engulfing's weaker cousin (§5.7), a mouth fastened on: the giant leech's sucker, the
+# canoloth's tongue. A point of harm a tick, half as often; it blocks only the step.
+[[status]]
+id = "latched"
+name = "Latched"
+seen = "latched"
+max = 12
+stacking = "highest"
+eases = 6
+tick = 12
+damage = 1
+blocks = ["step"]
+hold = { check = "strength", difficulty = 14, turns = "2d4" }
+start = "Something latches onto you."
+end = "You tear it off."
+dies = "is drained dry"
+death = "Drained dry"

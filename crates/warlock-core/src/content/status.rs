@@ -1,4 +1,4 @@
-//! Status effects (`assets/data/status.toml`, spec §8 "Status effects"): what can ail an actor,
+//! Status effects (`assets/data/status/`, spec §8 "Status effects"): what can ail an actor,
 //! such as bleeding or poison, and the passive healing rules (`[healing]`).
 //!
 //! A status is data: its name, how strong it can get (`max` degrees of severity), how a new dose
@@ -423,8 +423,7 @@ impl Default for Healing {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct StatusFile {
-    #[serde(default)]
-    healing: Healing,
+    healing: Option<Healing>,
     #[serde(default)]
     status: Vec<StatusSpec>,
 }
@@ -722,9 +721,8 @@ impl StatusDef {
     }
 }
 
-/// Parses `data/status.toml`: the healing rules and the statuses in file order; `damage`
-/// resolves damage type ids (`damage_type`, a wound's `from`, `resist`), `light` light ids
-/// (`light`), `vision` vision profiles (`vision`, to their index).
+/// Parses one file's `text` as the whole status table (tests).
+#[cfg(test)]
 pub(super) fn parse(
     file: &str,
     text: &str,
@@ -732,34 +730,66 @@ pub(super) fn parse(
     light: impl Fn(&str) -> Option<LightId>,
     vision: impl Fn(&str) -> Option<usize>,
 ) -> Result<(Healing, Vec<StatusDef>), ContentError> {
-    let err = |m: String| ContentError::new(file, m);
-    let parsed: StatusFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+    parse_table([(file, text)], damage, light, vision)
+}
+
+/// Parses the status table (`data/status.toml`, the healing rules, then a file per status in
+/// `data/status/`; `ContentFiles::table`): the healing rules and the statuses in the table's
+/// order; `damage` resolves damage type ids (`damage_type`, a wound's `from`, `resist`), `light`
+/// light ids (`light`), `vision` vision profiles (`vision`, to their index). `[healing]` is set in
+/// at most one file.
+pub(super) fn parse_table<'a>(
+    files: impl IntoIterator<Item = (&'a str, &'a str)>,
+    damage: impl Fn(&str) -> Option<DamageTypeId>,
+    light: impl Fn(&str) -> Option<LightId>,
+    vision: impl Fn(&str) -> Option<usize>,
+) -> Result<(Healing, Vec<StatusDef>), ContentError> {
+    let mut healing: Option<(&str, Healing)> = None;
     let mut list: Vec<StatusDef> = Vec::new();
+    let mut paths: Vec<&str> = Vec::new();
     let mut follows = Vec::new();
-    for spec in parsed.status {
-        let id = spec.id.clone();
-        if list.iter().any(|s| s.id == id) {
-            return Err(err(format!("duplicate status id `{id}`")));
+    for (file, text) in files {
+        let err = |m: String| ContentError::new(file, m);
+        let parsed: StatusFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+        if let Some(h) = parsed.healing {
+            if let Some((first, _)) = healing {
+                return Err(err(format!("`[healing]` is set in {first} too")));
+            }
+            healing = Some((file, h));
         }
-        follows.push(spec.follows.clone());
-        let def = resolve(spec, (&damage, &light, &vision))
-            .map_err(|m| err(format!("status `{id}`: {m}")))?;
-        list.push(def);
+        for spec in parsed.status {
+            let id = spec.id.clone();
+            if let Some(at) = list.iter().position(|s| s.id == id) {
+                return Err(super::duplicate_id("status", &id, file, paths[at]));
+            }
+            follows.push(spec.follows.clone());
+            let def = resolve(spec, (&damage, &light, &vision))
+                .map_err(|m| err(format!("status `{id}`: {m}")))?;
+            list.push(def);
+            paths.push(file);
+        }
     }
-    resolve_follows(&mut list, &follows).map_err(err)?;
-    Ok((parsed.healing, list))
+    resolve_follows(&mut list, &follows)
+        .map_err(|(i, m)| ContentError::new(paths.get(i).copied().unwrap_or("data/status/"), m))?;
+    Ok((healing.map(|(_, h)| h).unwrap_or_default(), list))
 }
 
 /// Resolves each status's `follows` (`names`, in list order) to the status it names, which may
-/// come later in the file; none may lead back to itself, at once or down a chain.
-fn resolve_follows(list: &mut [StatusDef], names: &[Option<String>]) -> Result<(), String> {
+/// come later in the table; none may lead back to itself, at once or down a chain. An error
+/// comes with the index of the status it is about.
+fn resolve_follows(
+    list: &mut [StatusDef],
+    names: &[Option<String>],
+) -> Result<(), (usize, String)> {
     for (i, name) in names.iter().enumerate() {
         let Some(name) = name else {
             continue;
         };
-        let at = (list.iter().position(|s| s.id == *name))
-            .ok_or_else(|| format!("status `{}`: follows: unknown status `{name}`", list[i].id))?;
-        let id = u16::try_from(at).map_err(|_| "too many statuses".to_string())?;
+        let at = (list.iter().position(|s| s.id == *name)).ok_or_else(|| {
+            let m = format!("status `{}`: follows: unknown status `{name}`", list[i].id);
+            (i, m)
+        })?;
+        let id = u16::try_from(at).map_err(|_| (i, "too many statuses".to_string()))?;
         list[i].follows = Some(StatusId(id));
     }
     for (i, def) in list.iter().enumerate() {
@@ -770,9 +800,9 @@ fn resolve_follows(list: &mut [StatusDef], names: &[Option<String>]) -> Result<(
                 break;
             };
             if usize::from(status.0) == i {
-                return Err(format!(
-                    "status `{}`: follows: it leads back to itself",
-                    def.id
+                return Err((
+                    i,
+                    format!("status `{}`: follows: it leads back to itself", def.id),
                 ));
             }
             next = list[usize::from(status.0)].follows;

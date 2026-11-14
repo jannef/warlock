@@ -15,13 +15,11 @@ use crate::skills::{Effect, SkillId, Trained};
 fn content(eager: bool, chance: Option<u8>) -> Arc<Content> {
     let mut files = ContentFiles::builtin();
     if eager {
-        let text = include_str!("../../../../assets/data/skills.toml");
-        let eager = text.replace(
+        files.replace_in_table(
+            "skills",
             "{ on = \"forage\", chance = 25 }",
             "{ on = \"forage\", chance = 100 }",
         );
-        assert_ne!(eager, text, "Survival earns marks on a forage");
-        files.insert("data/skills.toml", &eager);
     }
     if let Some(chance) = chance {
         let text = include_str!("../../../../assets/data/forage.toml");

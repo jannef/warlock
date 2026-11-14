@@ -55,6 +55,6 @@ The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the r
 
 Gear condition (#1193, `data/gear_condition.toml`'s `troll` row): damaged 50 %, Fine 1 %, Marvellous 0.1 % (docs/dev/creatures.md, "Gear condition").
 
-Gear materials (#1191): the faction's `gear` in `data/factions.toml`: trolls favour bone (30 %) and hardwood (20 %), each its share of the draws for an item whose construction list holds it, the usual draw the rest (`docs/dev/objects.md` "Materials and variants").
+Gear materials (#1191): the faction's `gear` in `data/factions/`: trolls favour bone (30 %) and hardwood (20 %), each its share of the draws for an item whose construction list holds it, the usual draw the rest (`docs/dev/objects.md` "Materials and variants").
 
 **Material drops** (#1341; `data/drops/`, docs/dev/objects.md "Material drops"): `troll.toml`: bone 1d2 (50 %), hardened leather 1 (40 %), sinew 1 (30 %).

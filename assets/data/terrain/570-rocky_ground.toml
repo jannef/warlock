@@ -1,0 +1,8 @@
+[[terrain]]
+id = "rocky_ground"
+name = "rocky ground"
+stone = true
+glyph = "."
+fg = "#a89e8a"
+bg = "#2b2822"
+step_noise = 110

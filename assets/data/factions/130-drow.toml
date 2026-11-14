@@ -1,0 +1,10 @@
+# The drow (#519): the dark elves of the deep, from the house's warriors to its matron. They
+# hunt the player, the kobolds, the goblins and their kin, the orcs, and their rivals of the
+# deep roads, the duergar; the demons their priestesses call on, the spiders sacred to their
+# goddess (the vermin), and everyone else they leave be. Not an animal faction. The rivalries are lore, not fought on the
+# floor.
+[[faction]]
+id = "drow"
+name = "drow"
+hostile = ["player"]
+gear = { chitin = 15, obsidian = 10, silk = 30 }

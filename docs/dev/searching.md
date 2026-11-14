@@ -26,7 +26,7 @@ as #662's non-guaranteed class skills do, since level-up rolls advance trained s
 
 **Data**: `data/search.toml` (`content/search.rs`: `SearchRules { passive_penalty, turns,
 secret_door }`, `Content::search()`; optional, `SearchRules::default` without it), the Search,
-Spot, and Detect traps skills' benefits in `data/skills.toml` (`skills::Effect::Search`,
+Spot, and Detect traps skills' benefits in `data/skills/` (`skills::Effect::Search`,
 `SearchReach`, `Spot`, `DetectTraps`; marks on `Use::Search`, `Use::Spot`, `Use::FindTrap`), races' `passive_search` (`PassiveSearch::{All,
 Stone, Traps}`) and `search` bonus (`RaceDef`), terrain `stone`, traps' `difficulty` and `sign`
 (`TrapDef`), branches' `secret_doors` and `hidden_per_depth` (`DungeonDef::hidden_at`).

@@ -1,0 +1,8 @@
+[[effect]]
+id = "mirrors"
+name = "hall of mirrors"
+mark = "m"
+enter = "Your reflection stares back at you from every side."
+weight = 3
+max_cells = 80
+mirrors = { images = 2 }

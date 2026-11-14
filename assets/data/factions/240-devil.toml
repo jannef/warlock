@@ -1,0 +1,7 @@
+# The devils of the hells (#448): lemures, imps, and the greater devils up to the pit fiend.
+# They come for the player and leave everyone else be: devils bargain, they do not brawl with
+# every passer-by.
+[[faction]]
+id = "devil"
+name = "devils"
+hostile = ["player"]

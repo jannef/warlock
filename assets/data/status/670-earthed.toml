@@ -1,0 +1,10 @@
+[[status]]
+id = "earthed"
+name = "Earthed"
+seen = "earthed"
+max = 1
+stacking = "refresh"
+eases = 1800
+resist = { electricity = 50 }
+start = "You feel heavy and grounded."
+end = "You feel lighter, less grounded."

@@ -16,7 +16,7 @@
 #             weighs and is worth `unit` times what 500 g of steel would in its material, and
 #             salvage and recipes count by it (piece::count_for). A hide is 8: 1.4 kg of leather,
 #             three to a jerkin, not twenty
-#   skill     the skill (skills.toml) that works the group's materials: salvage and recipes
+#   skill     the skill (skills/) that works the group's materials: salvage and recipes
 #   stat      the stat its checks are made by
 #   verb      the verb of its menu rows and dialogs ("Forge", "Make", "Cut")
 #   skill, stat, and verb go together: a group no profession takes yet (cloth, glass) has none.

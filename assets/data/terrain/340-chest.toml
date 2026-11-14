@@ -1,0 +1,14 @@
+# Chests (spec §8 "Chests"; chests.toml): a fixture of the cell, as a door is. The chest on the
+# cell (`LevelState::chests`) has a level, whose band names it and colours it (its `fg` wins over
+# these); what it holds spills into the pile on the cell once it opens. Shut, it is in the way;
+# open or smashed, one stands in it as in a doorway, over what it held.
+[[terrain]]
+id = "chest"
+name = "chest"
+chest = "shut"
+glyph = "⊟"
+fg = "#9a7a48"
+bg = "#0d0d10"
+walkable = false
+# The lid creaks up.
+toggle_noise = 20

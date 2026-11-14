@@ -1,0 +1,22 @@
+# What is left of a chest kicked in or blown apart: splinters and bent bands.
+[[terrain]]
+id = "chest_smashed"
+name = "smashed chest"
+chest = "smashed"
+glyph = "⊠"
+fg = "#9a7a48"
+bg = "#0d0d10"
+
+# Splinters fly when it breaks.
+[[terrain.particles]]
+on = "toggle"
+glyphs = "'`,."
+colors = ["#a87a48", "#4a3018"]
+count = 5
+life = 0.5
+velocity = [0.0, -0.3]
+spread = [1.4, 0.6]
+gravity = 1.2
+area = [0.3, 0.35]
+scale = 0.7
+fade = 0.5

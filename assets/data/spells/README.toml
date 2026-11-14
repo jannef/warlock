@@ -44,7 +44,7 @@
 #   [spell.effect]  what a spell of another kind does:
 #     heal        a `heal` spell's base hit points: a roll, as `damage`
 #     status, severity  a `buff`'s status on the caster, a `hex`'s on its target, a `damage`
-#                 spell's on everyone it harms (a status of ../status.toml; severity default 1:
+#                 spell's on everyone it harms (a status of ../status/; severity default 1:
 #                 a buff's or a hex's base degrees; the status's `max` holds them). Only a
 #                 buff's status may hasten (creatures never step quicker than their type)
 #     cures, diseases   a `cleanse` ends these statuses, and with `diseases = true` every

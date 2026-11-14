@@ -1,0 +1,12 @@
+# A statue (spec §7, a vault's; terrain/ `announce`): a figure of stone, seen past, not walked through. Arriving beside
+# it says so; a vault may cut an inscription into it (its legend cell's `note`).
+[[terrain]]
+id = "statue"
+name = "worn statue"
+description = "Stone, old, and worn smooth where hands have touched it."
+announce = true
+stone = true
+walkable = false
+glyph = "Ω"
+fg = "#b8b0a0"
+bg = "#0d0d10"

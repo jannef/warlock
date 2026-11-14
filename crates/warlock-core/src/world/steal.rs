@@ -1,7 +1,7 @@
 //! Stealing (spec §8 "Stealing"; #234): the Steal skill's use, [`crate::Action::Steal`]
 //! (`steal:DIR`), chosen from the abilities menu ([`crate::ability::Ability::Steal`]).
 //!
-//! The player, trained in a skill with the `steal` benefit (`data/skills.toml`: Steal), tries to
+//! The player, trained in a skill with the `steal` benefit (`data/skills/`: Steal), tries to
 //! lift something from a creature next to them that they see and that is not hostile to them.
 //! It is a **contest** (spec §8 "Checks", [`check::contest`]): their Dexterity modifier plus what
 //! the Steal skill gives against the victim's Willpower modifier (both of the effective scores),

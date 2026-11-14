@@ -1,0 +1,13 @@
+# A greater treasure room (spec §7 "Special rooms"): walled up in the rock with no door and no
+# corridor, a fortune inside; the hint on every arrival until it is entered. Its one thin wall
+# sounds hollow to a searcher; a pick-axe or a blast opens it.
+[[effect]]
+id = "great_treasury"
+name = "greater treasure room"
+mark = "G"
+arrive = "Something tells you a fortune lies walled up on this level."
+enter = "The air is stale and heavy with the smell of old gold."
+weight = 2
+min_cells = 9
+sealed = "dig"
+treasure = { chests = "2d2", gold = { heaps = "2d4+2", dice = "4d6", each = 5 }, gems = "2d3" }

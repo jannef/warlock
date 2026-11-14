@@ -1,0 +1,20 @@
+# Wounds bleed: a hit point every 40 seconds for each degree, easing a degree a minute.
+[[status]]
+id = "bleeding"
+name = "Bleeding"
+seen = "bleeding"
+max = 5
+stacking = "add"
+tick = 40
+damage = 1
+eases = 60
+regen = 0
+wound = { big_hit = 1, critical = 2, from = ["slashing", "piercing"] }
+cured_by = ["bandage"]
+# Bound with the Heal skill: easy for a scratch, hard for a deep wound; try again as often as you
+# like, a quarter of a minute each.
+treat = { difficulty = 6, per_degree = 2, stops = true, made = "You bind the wound.", failed = "The blood still runs." }
+start = "You are bleeding."
+end = "The bleeding stops."
+dies = "bleeds to death"
+death = "Bled to death"

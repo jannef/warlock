@@ -19,9 +19,9 @@ const ROOM: &str = "#########\n#...@p..#\n#.......#\n#########\n";
 
 fn files() -> ContentFiles {
     let mut files = ContentFiles::builtin();
-    let (_, statuses) = files.table("status").next().expect("data/status.toml");
+    let statuses = files.table_text("status");
     let statuses = format!("{statuses}{SNARED}");
-    files.insert("data/status.toml", &statuses);
+    files.replace_table("status", &statuses);
     files.insert(
         "levels/escape.toml",
         &format!(
@@ -451,10 +451,10 @@ fn the_data_checks_refuse_a_bad_escape() {
         ),
     ] {
         let mut files = ContentFiles::builtin();
-        let (_, statuses) = files.table("status").next().expect("data/status.toml");
+        let statuses = files.table_text("status");
         let text =
             format!("{statuses}[[status]]\nid = \"zz_bad\"\nname = \"Bad\"\nmax = 3\n{fields}");
-        files.insert("data/status.toml", &text);
+        files.replace_table("status", &text);
         let error = Content::load(&files).expect_err(why).to_string();
         assert!(error.contains(why), "{why}: {error}");
     }

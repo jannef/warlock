@@ -307,7 +307,13 @@ pub(super) fn race_traits(content: &Content) -> String {
     out
 }
 
-/// The classes in the order New run offers them: their stat adjustments, then what they are.
+/// The page of class `id`, its level table and its rules (#1540): `class-berserker.md`.
+pub(super) fn class_page(id: &str) -> String {
+    format!("class-{}.md", id.replace('_', "-"))
+}
+
+/// The classes in the order New run offers them: their stat adjustments, then what they are,
+/// each linking to its page.
 pub(super) fn classes(content: &Content) -> String {
     // Two tables, the stats and the rest, so neither is too wide to read (#1586).
     let (names, align) = stat_columns();
@@ -333,7 +339,13 @@ pub(super) fn classes(content: &Content) -> String {
     }
     out.push('\n');
     for c in content.classes() {
-        let _ = writeln!(out, "- **{}**: {}", c.name, c.description);
+        let _ = writeln!(
+            out,
+            "- **[{}]({})**: {}",
+            c.name,
+            class_page(&c.id),
+            c.description
+        );
     }
     out
 }

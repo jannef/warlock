@@ -98,7 +98,7 @@ map = '''
 "K" = { terrain = "floor", creature = "deep_gnome_binder", npc = "ysella" }
 "O" = { terrain = "floor", hidden = { id = "meyn_bew", terrain = "crystal_portal", to = "meynbew:1", name = "Meyn Bew", opens = "Ysella sings one long note. The rock beside her rings, and opens on a ring of crystal light." } }
 
-# The Glimmering, walls and door included, is a sanctuary (data/room_effects.toml).
+# The Glimmering, walls and door included, is a sanctuary (data/room_effects/).
 [[room]]
 effect = "sanctuary"
 area = [37, 1, 54, 7]

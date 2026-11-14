@@ -1,0 +1,7 @@
+# The dead a spell raises and fails to hold (Rouse the dead's `berserk_faction`), and what a
+# backfired summon brings (miscast.toml's `backfire_faction`): friendly to nothing, each other
+# included.
+[[faction]]
+id = "berserk"
+name = "the berserk"
+hostile_to_all = true

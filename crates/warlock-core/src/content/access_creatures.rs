@@ -44,7 +44,7 @@ impl Content {
         (self.animated).body_of(self.creature(creature).animated.as_ref())
     }
 
-    /// The factions of `data/factions.toml` (empty without the file).
+    /// The factions of `data/factions/` (empty without the file).
     pub fn factions(&self) -> &Factions {
         &self.factions
     }

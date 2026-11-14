@@ -1,0 +1,10 @@
+[[terrain]]
+id = "fungus"
+plants = true
+name = "glowing fungus"
+glyph = '"'
+fg = "#70e8a8"
+bg = "#0d0d10"
+light = "fungus"
+bounce = "#90ffc0"
+glow = 0.25

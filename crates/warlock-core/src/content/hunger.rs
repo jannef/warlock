@@ -240,7 +240,7 @@ pub struct HungerDef {
     /// Extra points the player's exertions burn, by action (only [`EXERTIONS`]).
     pub exertion: BTreeMap<ActionKind, u32>,
     pub overeating: Overeating,
-    /// What harm from eating is (spec §8 "Status effects"): a status id in `data/status.toml`
+    /// What harm from eating is (spec §8 "Status effects"): a status id in `data/status/`
     /// (checked when content loads), `poisoned`; rotten food's `harm` and a creature's `on_eat`
     /// `harm` are degrees of it. `None`: nothing eaten harms.
     pub sickness: Option<String>,

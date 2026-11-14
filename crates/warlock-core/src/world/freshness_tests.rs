@@ -11,13 +11,11 @@ use crate::time::GameTime;
 fn content(eager: bool) -> Arc<Content> {
     let mut files = ContentFiles::builtin();
     if eager {
-        let text = include_str!("../../../../assets/data/skills.toml");
-        let eager = text.replace(
+        files.replace_in_table(
+            "skills",
             "{ on = \"judged\", chance = 10 }",
             "{ on = \"judged\", chance = 100 }",
         );
-        assert_ne!(eager, text, "Appraise earns marks on food judged");
-        files.insert("data/skills.toml", &eager);
     }
     Arc::new(Content::load(&files).expect("test content is valid"))
 }

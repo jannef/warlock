@@ -43,7 +43,7 @@ until their uses come. Their names there:
 - [Heal](skills.md#skill-heal): **[Heal](abilities.md#ability-heal)**
 - [Decipher script](skills.md#skill-decipher-script): **[Decipher](abilities.md#ability-decipher)** (see [Deciphering a scroll unread](scrolls.md#deciphering-a-scroll-unread))
 - [Survival](skills.md#skill-survival), though it is a passive skill: **[Forage](abilities.md#ability-forage)**
-- [Jewelcraft](skills.md#skill-jewelcraft): **[Jewelcraft…](abilities.md#ability-jewelcraft)**, its [profession](skill-uses.md#professions)'s recipes (Cut and Set, see [Gem cutting](gem-cutting.md); rings and amulets, see [Making jewellery](crafting.md#making-jewellery))
+- [Jewelcraft](skills.md#skill-jewelcraft): **[Jewelcraft…](abilities.md#ability-jewelcraft)**, its [profession](skill-uses.md#professions)'s recipes (Cut and Set, see [Gem cutting](gem-cutting.md); rings and amulets, see [Making jewellery](jewellery.md))
 - [Metalcraft](skills.md#skill-metalcraft): **[Metalcraft…](abilities.md#ability-metalcraft)**, its [profession](skill-uses.md#professions)'s recipes (Temper among them)
 - [Woodcraft](skills.md#skill-woodcraft): **[Woodcraft…](abilities.md#ability-woodcraft)**, its [profession](skill-uses.md#professions)'s recipes (arrows, bolts, sling stones, and Whittle among them), and **[Wedge a door](abilities.md#ability-wedge)** for those
   trained in it (see [Wedging a door](doors.md#wedging-a-door))
@@ -127,7 +127,7 @@ The passive skills help you more the higher they are:
   notice.
 - **[Detect traps](skills.md#skill-detect-traps)** does for hidden [traps](traps.md#finding-traps) what [Search](skills.md#skill-search) and [Spot](skills.md#skill-spot) do for everything else. It helps you find
   them when you search and lets you notice them in passing at all. The higher it is, the more of
-  them you find. [Thieves](classes.md#thief) and [kobolds](races.md#race-kobold) start trained in it.
+  them you find. [Thieves](class-thief.md) and [kobolds](races.md#race-kobold) start trained in it.
 - **[Open lock](skills.md#skill-open-lock)** lets you pick locks at all (the [Pick lock](abilities.md#ability-pick-lock) ability). The higher it is, the more
   often a try works (see [Doors](doors.md#picking-locks)).
 - **[Steal](skills.md#skill-steal)** lets you steal at all. The higher it is, the likelier your hand goes unnoticed (see
@@ -142,7 +142,7 @@ The passive skills help you more the higher they are:
   - It adds to your check against a [creature](creatures.md)'s [drain](stats.md#drained-stats), a [disease](diseases.md#how-a-disease-goes) its attack carries, or its hold
     when you struggle. It helps only against creatures whose level your [Knowledge](skills.md#skill-knowledge) stands above,
     and more the farther above (see the table below; at most 6).
-  - Standing above a creature's level by even 1 also tells you in [look mode](controls.md#look-mode) what its kind
+  - Standing above a creature's level by even 1 also tells you in [look mode](controls-prompts.md#look-mode) what its kind
     [resists, is immune to, and is vulnerable to](damage-types.md#armour-and-resistance), in words. That is lore about its kind, so it says
     nothing of what this one wears or has drunk, and it earns no marks.
   - It earns marks whenever you gain [discovery experience](experience.md#experience-for-something-new) (a first kill of a kind, a new place
@@ -166,7 +166,7 @@ The passive skills help you more the higher they are:
   check at 100, +12 at 200. When you are [surprised](status-effects.md#status-surprised) all the same, your next action loses less time:
   half the extra at 100, three quarters at 200. Every such check trains it.
 - **[Intimidate](skills.md#skill-intimidate)** lets you threaten one foe ([Intimidate](abilities.md#ability-intimidate) in the abilities menu; see
-  [Intimidating](skill-uses.md#intimidating)). It makes your threats and your [War cry](abilities.md#ability-war-cry) (the [berserker](classes.md#berserker)'s) harder to stand
+  [Intimidating](skill-uses.md#intimidating)). It makes your threats and your [War cry](abilities.md#ability-war-cry) (the [berserker](class-berserker.md)'s) harder to stand
   against: the Willpower check they ask is 8 harder at 100 and 12 at 200 (at most 20). A threat
   also frightens longer the more the skill adds. Every threat and every cry trains it, whatever
   comes of it.
@@ -178,7 +178,7 @@ The passive skills help you more the higher they are:
 
 [Skill focus](talents.md#talent-skill-focus) makes one skill you are trained in count 25 higher in the table below, the way a
 [magic item](magic-items.md)'s bonus does. It works past 100 too, since 100 only slows a skill's [growth](skills.md#improving-a-skill) and is no
-ceiling. It stacks with [Master of none](classes.md#talent-master-of-none) and any magic item. Your Skills screen still shows the value
+ceiling. It stacks with [Master of none](class-bard.md#talent-master-of-none) and any magic item. Your Skills screen still shows the value
 you trained. On most skills the +25 is worth 2 points of what the skill gives below 100, and 1
 past it. On [Stealth](skills.md#skill-stealth)'s quiet, it is 15 % less noise below 100 and 7 % past it.
 
@@ -195,7 +195,7 @@ never down. "—" means it gives nothing yet at that value.
 Each [race](races.md) trains one or two skills. Each [class](classes.md) trains a handful: a few of them well (`2d6+10`), the
 rest a little (`2d4+4`). A skill both your [race](races.md) and your [class](classes.md) train adds the two. [Humans](races.md#race-human) train no skill of
 their own, but they put extra work into one of their [class](classes.md)'s skills, picked at random. Every
-[commoner](classes.md#commoner) learned one trade growing up: one of the [professions](crafting.md), picked at
+[commoner](class-commoner.md) learned one trade growing up: one of the [professions](crafting.md), picked at
 random, which they always start with. The dice are
 rolled when your character is made, after your [stats](character.md#how-your-stats-add-up), so they never change a [stat](stats.md).
 
@@ -205,7 +205,7 @@ column, then its dice, rolled once when your character is made. So two character
 
 Your [race](races.md)'s skill and the [human](races.md#race-human)'s extra [class](classes.md) skill add to one of these as to any other. But a
 level-up roll on one of them is an ordinary roll: the [class](classes.md)'s +1 is only for the skills in its Trains
-column, and the same goes for the [commoner](classes.md#commoner)'s trade. A [race](races.md) may have such a skill too: a [drow](races.md#race-drow) may start with [Sneak attack](skills.md#skill-sneak-attack), whatever their class
+column, and the same goes for the [commoner](class-commoner.md)'s trade. A [race](races.md) may have such a skill too: a [drow](races.md#race-drow) may start with [Sneak attack](skills.md#skill-sneak-attack), whatever their class
 (rolled after the class's own).
 
 {{#include generated/skill-grants.md}}
@@ -270,7 +270,7 @@ improves."
 - A skill your **[class](classes.md) is known for** (its `2d6+10` skills) throws the die one step up the ladder. So does a **[trade](talents.md#crafts-a-craftspersons-trades)** of yours; a skill that is both still goes up one step, not two.
 - Any **other skill your [class](classes.md) trains**, or a skill **your [race](races.md) trains**, adds 1 to the roll.
 
-Both stack: a [halfling](races.md#race-halfling) [thief](classes.md#thief)'s [stealth](skills.md#skill-stealth) is both a class specialty and racial, so it rolls one step up and +1.
+Both stack: a [halfling](races.md#race-halfling) [thief](class-thief.md)'s [stealth](skills.md#skill-stealth) is both a class specialty and racial, so it rolls one step up and +1.
 
 The level-up screen shows these numbers before you choose. Beside each skill it shows the dice a
 roll on it adds (`1d3`, `+2`, `1d5+1`; `(1d3)/2` past 100). For the selected skill it explains how

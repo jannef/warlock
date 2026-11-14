@@ -1,0 +1,9 @@
+[[terrain]]
+id = "dungeon_entrance"
+name = "dungeon entrance"
+glyph = ">"
+fg = "#f0e6c8"
+bg = "#120e0c"
+stairs = "down"
+glow = 0.2
+travel_minutes = 30

@@ -144,7 +144,7 @@ fn world(map: &str, kind: &str, time: &str) -> World {
 pub(super) fn sky_world(map: &str, kind: &str, date: [u32; 3], time: &str, sky: &str) -> World {
     let mut files = ContentFiles::default();
     files.insert("data/sky.toml", sky);
-    files.insert("data/terrain.toml", TERRAIN);
+    files.replace_table("terrain", TERRAIN);
     files.insert("data/creatures.toml", CREATURES);
     files.insert("data/lights.toml", LIGHTS);
     files.insert("data/vision.toml", VISION);

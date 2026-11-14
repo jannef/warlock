@@ -1,0 +1,8 @@
+[[effect]]
+id = "cold"
+name = "frigid hall"
+mark = "c"
+enter = "Your breath mists in the bitter cold."
+weight = 5
+glow = [0, 8, 22, 0]
+temperature = -25

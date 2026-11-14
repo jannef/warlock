@@ -53,7 +53,7 @@ impl LoreNames {
     }
 
     /// The ids of these names: `class` resolves an item class, `skill` a skill. Content without
-    /// skills at all (`skills` false: no `data/skills.toml`) trains none, so `train` is dropped.
+    /// skills at all (`skills` false: no `data/skills/`) trains none, so `train` is dropped.
     #[allow(clippy::type_complexity)]
     pub(super) fn resolve(
         &self,

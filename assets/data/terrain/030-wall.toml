@@ -1,0 +1,12 @@
+[[terrain]]
+id = "wall"
+name = "stone wall"
+stone = true
+glyph = "#"
+fg = "#958c80"
+bg = "#262220"
+walkable = false
+transparent = false
+# Six minutes with a pick-axe; a fireball blows it apart.
+hardness = 600
+becomes = "rubble"

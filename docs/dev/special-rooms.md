@@ -150,7 +150,7 @@ branch's whole population and strays (no uniques, any faction: the prey), its co
 when the level is first entered: fresh then. `loot_level` is unused.
 
 Sleep (`world/den.rs`): a creature whose effects include a status with `sleeps` (Asleep:
-`data/status.toml`, `max = 1`, no `eases`, `seen = "asleep"`) — `World::asleep`:
+`data/status/`, `max = 1`, no `eases`, `seen = "asleep"`) — `World::asleep`:
 
 - `creature_turn` first asks `World::slumbers`: a sleeper's turn is a wait (× `stride::STRIDE`
   while the player rests), its `heard` cleared; it never reaches `coarse_turn` or `decide`.
@@ -429,7 +429,7 @@ out of the character screen's sign gifts; JSON adds `boon: true` only then.
 
 #413, the design's §9.3. Data: the `shrine` effect, the terrain `shrine_stone` (`∩`, no light of
 its own: a shrine is never neutral, so its side's light is always placed), the status
-`unwelcome` (`status.toml`, beside Silenced: `regen = 50`, `combat = { to_hit = -1 }`, `eases =
+`unwelcome` (`status/`, beside Silenced: `regen = 50`, `combat = { to_hit = -1 }`, `eases =
 30`). Generation (`mapgen/special.rs::place`): an effect with `shrine` draws its side with one
 `below(2)` (0 good, else evil) instead of the altar's `below(4)`; the feature and its light are
 the altar's code. A level file's shrine room takes its `side` as written (a neutral one ignores
@@ -452,7 +452,7 @@ south of its altars.
 on retrying). Data: the `forge` effect, the terrain `anvil` (`π`, no light, a `description`), the
 `temper` action cost (1000 a turn), `data/temper.toml` (`content::TemperRules`: `seconds = 600`,
 `difficulty = 13`, `per_attempt = 2`, `most = 3`, `most` at most `worked::GRADES`' length), and
-Metalcraft's `temper` benefit and mark (`data/skills.toml`; `skills::Effect::Temper`, `Use::Temper`,
+Metalcraft's `temper` benefit and mark (`data/skills/`; `skills::Effect::Temper`, `Use::Temper`,
 which is `StatUse::Forged` too). No outcome table, and no `spent`: the anvil is never spent.
 
 Temper is a recipe of Metalcraft's (#1334, `docs/dev/crafting.md`:
@@ -514,7 +514,7 @@ empty, so other levels hash as before. The rules ask one question, `LevelState::
 `World::effects_at`), which returns a `Here { room, level }`; every reader folds it the same way
 (`Here::light`, `shade`, `glow`, `noise`, `regen`, `mana_regen`, `shunned`): percents multiply,
 glows add, flags OR. Readers: perception light and creature sight together (`room_shade` on every
-part of a cell's light, `room_glow` in the base light; change `perception.rs` and `sight.rs`
+part of a cell's light, `room_glow` in the base light; change `perception/lighting.rs` and `sight.rs`
 together, `special_rooms_keep_the_light_invariants` and `light_tests::check_invariants` check they
 agree), noise (`noise::noise`, `World::sound_at`), `World::healing_rate` and `World::mana_rate`
 (the room's pace through `World::room_pace`, where Old hand adds half again to a quickening),
@@ -638,7 +638,7 @@ in a silent vault on arrival would get one spell off). A creature holding a stat
 
 ## The silent vault
 
-`silent` (design §9.1): `noise = 1` and `status = "silenced"`. Silenced (`data/status.toml`,
+`silent` (design §9.1): `noise = 1` and `status = "silenced"`. Silenced (`data/status/`,
 beside Ebbing) has no tick and `blocks = ["cast", "read", "throw_voice"]`, so the existing block
 rules do the work: `World::refuse_blocked` refuses the player's casts, scrolls, and thrown voice
 with no time, the abilities menu greys out what costs them (`Unavailable::While`), and
@@ -750,7 +750,7 @@ shop floor), a second gameplay draw picks one, "The floor gives way beneath you!
 `Event::LevelChanged`, "You fall to <name>.", `collapse.damage` through `World::hurt` with
 `Harm::Fall` (#523: it can kill; the player's death then has `Cause::Fall`, "Fell through a
 collapsed floor" on the death screen and in the JSON dump's `cause`), and, if they live,
-Staggered (`status.toml`) at one degree. The generator (`mapgen/special.rs::make`) lays an
+Staggered (`status/`) at one degree. The generator (`mapgen/special.rs::make`) lays an
 effect's `floor` that has a `collapse` only on the room's middle (`special::middle`: each of the
 eight neighbours a walkable cell of the room and no door), so a sound rim runs round it from
 every door and a way across always exists (a cave chamber's open edge counts as its rim); a room
@@ -764,7 +764,7 @@ saved beyond the level change; the cracked floor stays.
 `world/rooms.rs`: `glimpse_rooms` (in `perceive`, before `enter_room`) marks each room of which
 the player sees a cell `glimpsed` and says its `near` line, unless they are inside it;
 `enter_room` (`world/travel.rs`) says `enter` once per room and marks it entered and glimpsed;
-A feature of the ground (terrain with `announce`, `data/terrain.toml`: `altar`, `uv_rune`,
+A feature of the ground (terrain with `announce`, `data/terrain/`: `altar`, `uv_rune`,
 `statue`) is named by `world/feature.rs`: `World::announce_feature` says `There is an altar
 here.` (and the terrain's `description`, if any, then the note of the place on the cell,
 `LevelState::place`) when the player stands on another cell or level than at its last call
@@ -786,7 +786,7 @@ not name it. The `rooms` dev layer marks each room's plain ground, lists each ro
 
 ## Talents
 
-System `special_rooms` (`data/talents.toml`): Old delver and Old hand (delver, #775, #952) and Pious
+System `special_rooms` (`data/talents/systems/`): Old delver and Old hand (delver, #775, #952) and Pious
 (below). #787 cut Sense of place (`sense_of_place`) and Hush-foot (`wake_percent`) with their
 hooks. Old delver (Willpower 11 or Dexterity 12): `collapse_proof` (hook
 `World::collapse_step`, which then draws nothing), `room_status_immune` `ebbing` (hook

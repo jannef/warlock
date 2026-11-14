@@ -1,0 +1,6 @@
+# Spirits that walk the world and mean no one harm: the Ascmearc's Strange Spirit, met on the
+# roads (campaigns/ascmearc/data/creatures/strange_spirit.toml). Hostile to no one, and no one
+# hostile to them.
+[[faction]]
+id = "spirits"
+name = "spirits"

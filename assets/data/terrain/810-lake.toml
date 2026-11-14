@@ -1,0 +1,10 @@
+[[terrain]]
+id = "lake"
+name = "deep water"
+glyph = "~"
+fg = "#3a74c8"
+bg = "#061226"
+walkable = false
+landscape = "lake"
+anim = { kind = "wave", speed = 0.15, amount = 0.06 }
+stains = false

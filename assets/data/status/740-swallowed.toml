@@ -1,0 +1,16 @@
+# Swallowed: engulfing's worst, the nightworm's (§6), twice the harm of a tick.
+[[status]]
+id = "swallowed"
+name = "Swallowed"
+seen = "swallowed"
+max = 12
+stacking = "highest"
+eases = 6
+tick = 6
+damage = 4
+blocks = ["step", "shoot", "throw", "read"]
+hold = { check = "strength", difficulty = 14, turns = "2d4" }
+start = "It swallows you whole."
+end = "You cut your way out."
+dies = "is digested"
+death = "Swallowed whole"

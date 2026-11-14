@@ -1,4 +1,4 @@
-//! The three buff statuses with fields of their own (`data/status.toml`, the spell types design
+//! The three buff statuses with fields of their own (`data/status/`, the spell types design
 //! `docs/design/spell-types-and-new-spells.md` §7 entries 24 to 26): Fire cloak's `retaliates`,
 //! Water walking's `wades_free` and `ice_holds`, Brand's `blows`; and their spells' lights,
 //! class rows, and scrolls.

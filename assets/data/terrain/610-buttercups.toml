@@ -1,0 +1,9 @@
+[[terrain]]
+id = "buttercups"
+plants = true
+name = "buttercups"
+glyph = "*"
+fg = "#f2d653"
+bg = "#22401a"
+bounce = "#e8dca0"
+step_noise = 70

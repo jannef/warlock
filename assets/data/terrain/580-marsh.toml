@@ -1,0 +1,10 @@
+[[terrain]]
+id = "marsh"
+plants = true
+name = "marsh"
+glyph = '"'
+fg = "#628e6a"
+bg = "#17271b"
+# Wading through reeds and mud: slow and squelching.
+move_cost = 150
+step_noise = 150

@@ -21,7 +21,7 @@ within its tier), `description` (the Talents page's words), `line` (said as it t
 `ProfaneTable` (`Content::profane()`): a `GiftDef` per gift (`kind`, `tier`, `weight`, the lines,
 the relations as `TalentId`s, `not_for` race ids), found by its talent with
 `ProfaneTable::gift(TalentId)`. Each gift is also **a talent**: `TalentBook::add` registers a
-`TalentDef` of the `profane` tree (`data/talents.toml`, listed last; it has no free talent, so
+`TalentDef` of the `profane` tree (`data/talents/trees/170-profane.toml`, listed last; it has no free talent, so
 nothing ever offers it) with `granted = true`, `flaw = (kind == bane)`, no needs, no systems.
 So `TalentMods` reads its effects at their hooks as it reads any talent's, `may_take` refuses it
 as it refuses every granted talent, and the talent ids of `data/talents/` keep their numbers (the

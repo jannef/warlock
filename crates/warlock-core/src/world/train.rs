@@ -9,7 +9,7 @@
 //! drawn from the training stream ([`crate::rng::Rng::training`]); untrained skills get none.
 //! Nothing is said: the player senses the marks only as the Skills screen's meter. A special
 //! room may make a skill's marks come more often while the player is inside, or more than one
-//! at a time (a scriptorium's two for Decipher script, `train` in `data/room_effects.toml`).
+//! at a time (a scriptorium's two for Decipher script, `train` in `data/room_effects/`).
 //!
 //! Only the player trains for now; creatures keep the skills their type gives them.
 

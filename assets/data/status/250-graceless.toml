@@ -1,0 +1,10 @@
+# Horn's grace's cooldown (a Unicorn's birth sign gift): a day before the horn mends again, three
+# degrees of eight hours (Horn of plenty leaves one).
+[[status]]
+id = "graceless"
+name = "Graceless"
+max = 3
+stacking = "refresh"
+eases = 28800
+start = "Your horn's grace is spent."
+end = "Your horn's grace returns."

@@ -10,11 +10,11 @@ quivered, a [dwarf](races.md#race-dwarf)'s pick-axe ready in the Tool
 
 Kits are not fair, and are not meant to be.
 
-- The [aristocrat](classes.md#aristocrat) sets out with a fine rapier, an heirloom ring, furs, a
+- The [aristocrat](class-aristocrat.md) sets out with a fine rapier, an heirloom ring, furs, a
   [jewel](gems.md), and a heavy purse.
-- The [merchant](classes.md#merchant) has goods to sell and [gems](gems.md) to trade.
-- The [commoner](classes.md#commoner) has a stick, two turnips, and a heel of bread.
-- [Warriors](classes.md#warrior) and [paladins](classes.md#paladin) wear hardened leather and an
+- The [merchant](class-merchant.md) has goods to sell and [gems](gems.md) to trade.
+- The [commoner](class-commoner.md) has a stick, two turnips, and a heel of bread.
+- [Warriors](class-warrior.md) and [paladins](class-paladin.md) wear hardened leather and an
   iron helm, a paladin gauntlets besides.
 - Every [elf](races.md#race-elf) carries a bow of hardwood and [arrows](ammunition.md): a long war
   bow for elves, a short bow for [half-elves](races.md#race-half-elf).
@@ -53,17 +53,17 @@ jerkin and iron-shod boots, a kobold's patched smock and footwraps.
   weapon goes to your [off hand](fighting-styles.md#two-weapons) (see
   [Fighting styles](fighting-styles.md)). What finds no free slot stays in your
   [pack](objects.md#your-pack). Your class's things come first. So an elven
-  [ranger](classes.md#ranger) readies the ranger's short bow and carries the elven long bow.
+  [ranger](class-ranger.md) readies the ranger's short bow and carries the elven long bow.
 - **If the slot is free.** Some of a race's things, its clothes and shoes above all, come only if
   nothing else of the kit went there ("if the slot is free" in the tables). A dwarven
-  [paladin](classes.md#paladin) wears the order's gauntlets and helm and leaves the steel ones at
-  home, and a dwarven [wizard](classes.md#wizard) wears the robe and slippers, not the jerkin and
+  [paladin](class-paladin.md) wears the order's gauntlets and helm and leaves the steel ones at
+  home, and a dwarven [wizard](class-wizard.md) wears the robe and slippers, not the jerkin and
   the boots.
 - **It follows your training.** Some things come only with a [weapon skill](weapon-skills.md) or
   [fighting style](fighting-styles.md) your class trained you in. A
-  [berserker](classes.md#berserker) who learned [axes](weapon-skills.md#weapon-skill-axes) carries a
+  [berserker](class-berserker.md) who learned [axes](weapon-skills.md#weapon-skill-axes) carries a
   great axe, and one who learned [great blades](weapon-skills.md#weapon-skill-great-blades) a great
-  sword. A [thief](classes.md#thief) of [Twin Blades](fighting-styles.md#style-twin-blades) wields
+  sword. A [thief](class-thief.md) of [Twin Blades](fighting-styles.md#style-twin-blades) wields
   two daggers; a [Duelist](fighting-styles.md#style-duelist) wields one, with a stiletto up the
   sleeve.
 - **One of a few.** Where a kit says "one of", one of them is picked when your character is made,
@@ -73,13 +73,13 @@ jerkin and iron-shod boots, a kobold's patched smock and footwraps.
   learn what it does (see [Magic items](magic-items.md)). You can tell its
   [rarity](magic-items.md#rarity) at once.
 - **Random scrolls.** The casters set out with a few more [spell scrolls](scrolls.md), drawn at
-  random when your character is made: a [wizard](classes.md#wizard) or a
-  [witch](classes.md#witch) 1d3, a [priest](classes.md#priest), [druid](classes.md#druid), or
-  [ranger](classes.md#ranger) 1d2, a [bard](classes.md#bard) 1d4 (the table above says the same).
+  random when your character is made: a [wizard](class-wizard.md) or a
+  [witch](class-witch.md) 1d3, a [priest](class-priest.md), [druid](class-druid.md), or
+  [ranger](class-ranger.md) 1d2, a [bard](class-bard.md) 1d4 (the table above says the same).
   Each is the scroll of a spell of [spell level](magic.md#spell-levels) 0 to 9, every such spell as
   likely as any other, so two may be the same. Read one to cast its spell.
 - **Grimoires.** Every spell scroll your kit gives you, a fixed one or a random one, is that
-  spell's [grimoire](magic.md#learning-a-spell) instead one time in ten, scroll by scroll. Read it to learn the spell
+  spell's [grimoire](learning-spells.md#learning-a-spell) instead one time in ten, scroll by scroll. Read it to learn the spell
   for good.
 - **Scrolls and potions you know.** You know every scroll, [potion](potions.md), wand, and rod you
   set out with, whatever you start with, by its true name from the first turn ("a scroll of magic
@@ -87,8 +87,8 @@ jerkin and iron-shod boots, a kobold's patched smock and footwraps.
   kind you find, too.
 - **Food** is fresh when you set out (see [Food](food.md)).
 - **Weight.** Nobody starts [strained](burden.md#burden-levels) under their kit. An ordinary character
-  starts unburdened, except for wealth and armour. A weak [aristocrat](classes.md#aristocrat) may
-  stagger under that purse, a small [merchant](classes.md#merchant) under their wares, and a small
+  starts unburdened, except for wealth and armour. A weak [aristocrat](class-aristocrat.md) may
+  stagger under that purse, a small [merchant](class-merchant.md) under their wares, and a small
   or frail ([elf](races.md#race-elf), [drow](races.md#race-drow)) warrior or paladin under their
   armour; drop what you can spare. The weakest of any race or class
   may start burdened. See [Burden](burden.md).

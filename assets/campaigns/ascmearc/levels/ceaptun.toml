@@ -89,7 +89,7 @@ TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 "l" = { terrain = "plank_floor", light = "lamp" }
 "t" = "sconce"
 "B" = "brazier"
-# The smith's anvil, beside the Forge's fire: Temper is offered here (data/room_effects.toml, the forge's feature).
+# The smith's anvil, beside the Forge's fire: Temper is offered here (data/room_effects/, the forge's feature).
 "A" = "anvil"
 "↓" = { terrain = "running_water", flow = "S" }
 "@" = { terrain = "flagstones", spawn = "player" }
@@ -127,7 +127,7 @@ TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 "," = "dirt_road"
 "Y" = { terrain = "dirt_road", creature = "training_dummy" }
 
-# The Mynster, walls and door included, is a sanctuary (data/room_effects.toml).
+# The Mynster, walls and door included, is a sanctuary (data/room_effects/).
 [[room]]
 effect = "sanctuary"
 area = [19, 22, 33, 29]

@@ -1,0 +1,7 @@
+[[effect]]
+id = "hushed"
+name = "hushed chamber"
+mark = "h"
+enter = "A deep hush fills this room."
+weight = 8
+noise = 40

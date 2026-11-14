@@ -1,0 +1,11 @@
+# Locations: stairs down into other levels (the overworld's legend gives each its `to`).
+
+[[terrain]]
+id = "hall"
+name = "hall"
+glyph = "⌂"
+fg = "#f2d27a"
+bg = "#1e1608"
+stairs = "down"
+glow = 0.3
+travel_minutes = 30

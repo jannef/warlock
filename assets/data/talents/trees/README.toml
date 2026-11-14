@@ -1,0 +1,13 @@
+# The talent trees (spec §8 "Talents"; #229), in display order: a talent's `tree` names one;
+# `class = true` for the class abilities' tree. The talents themselves are one file each in the
+# directory above (see ../README.toml for their fields). A character picks a talent at every
+# talent_every-th level (experience.toml, [levels]); the pick is made on the spot, nothing is
+# banked, and there is no respec.
+#
+# The game shows a talent's `description` and its prerequisites in words; the wiki shows the
+# rules (cargo xtask wiki).
+#
+# Fields: id, name, description, class (default false).
+#
+# One file per tree, `NNN-<id>.toml`: the number keeps the display order (their ids are indices
+# in that order), in steps of 10 so a new one fits between two.

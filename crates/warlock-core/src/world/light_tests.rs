@@ -208,13 +208,13 @@ fn load_rooms(
     rooms: &str,
 ) -> World {
     let mut files = ContentFiles::default();
-    files.insert("data/terrain.toml", TERRAIN);
+    files.replace_table("terrain", TERRAIN);
     files.insert("data/creatures.toml", CREATURES);
     files.insert("data/lights.toml", LIGHTS);
     files.insert("data/vision.toml", VISION);
     files.insert("data/legend.toml", LEGEND);
     super::lamp_tests::with_lantern(&mut files);
-    files.insert("data/room_effects.toml", ROOM_EFFECTS);
+    files.replace_table("room_effects", ROOM_EFFECTS);
     let [r, g, b, uv] = ambient;
     files.insert(
         "levels/test.toml",
@@ -1002,7 +1002,7 @@ fn vast_world() -> World {
         map.push('\n');
     }
     let mut files = ContentFiles::default();
-    files.insert("data/terrain.toml", TERRAIN);
+    files.replace_table("terrain", TERRAIN);
     files.insert("data/creatures.toml", CREATURES);
     files.insert("data/lights.toml", LIGHTS);
     files.insert("data/vision.toml", VISION);

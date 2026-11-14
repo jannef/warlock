@@ -1,0 +1,10 @@
+[[status]]
+id = "chill_proof"
+name = "Chill-proof"
+seen = "chill-proof"
+max = 1
+stacking = "refresh"
+eases = 1800
+resist = { cold = 50 }
+start = "A glow spreads through you against the cold."
+end = "The glow against the cold fades."

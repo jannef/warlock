@@ -3,7 +3,7 @@
 //! from the abilities menu ([`crate::ability::Ability::Tame`]) and aimed in a direction.
 //!
 //! - **Who**: anyone trained in a skill with the `tame` benefit (Handle animal,
-//!   `data/skills.toml`), at any level, while `data/companions.toml` and `data/allies.toml`
+//!   `data/skills/`), at any level, while `data/companions.toml` and `data/allies.toml`
 //!   exist; else "You do not know how to tame beasts.". The player has **no companion** (one at
 //!   a time, and for good: "You already have a companion."; a summon is no companion and keeps
 //!   no one from taming).

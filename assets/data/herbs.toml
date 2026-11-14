@@ -6,15 +6,15 @@
 # A gather takes `seconds` of game time, in turns of the `gather` action (actions.toml); a
 # creature coming into view, a message, or a blow stops it, and a gather cut short finds nothing
 # (the time is spent). One that runs its time finds `count` herbs, plus one for each
-# `value_per_count` of the skill's trained value (skills.toml).
+# `value_per_count` of the skill's trained value (skills/).
 # Each herb is one draw by weight from the rows below, at the level's item level (a dungeon
 # level's depth; a hand-made level's `item_level`). The fungus is never picked over: gather again
 # at once, as often as you like. The time is the price.
 #
 # Fields:
-#   terrain          the terrain herbs are gathered from (terrain.toml)
+#   terrain          the terrain herbs are gathered from (terrain/)
 #   seconds          how long a gather takes, in seconds (at least 1)
-#   skill            the skill a gatherer must be trained in (skills.toml; Herbalism)
+#   skill            the skill a gatherer must be trained in (skills/; Herbalism)
 #   count            dice: how many herbs a gather finds, before the skill
 #   value_per_count  the skill's value that gives one more (above 0)
 #   [[herb]]         one row per herb, read as gems.toml's sizes are:

@@ -181,7 +181,7 @@ pub(super) fn parse<'a>(
     let tree = (book.tree_id(TREE)).ok_or_else(|| {
         ContentError::new(
             specs[0].0,
-            "gifts need the `profane` tree in data/talents.toml",
+            "gifts need the `profane` tree in data/talents/trees/",
         )
     })?;
     // Every gift a talent first, so a relation may name one defined after it.

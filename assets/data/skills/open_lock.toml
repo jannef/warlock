@@ -1,0 +1,10 @@
+[[skill]]
+id = "open_lock"
+name = "Open lock"
+description = "Picking locks without the key."
+kind = "action"
+mark = [{ on = "pick", chance = 20 }]
+# Picking a lock (spec §8 "Doors"; the Pick lock ability, a direction): added to the Dexterity
+# check against the lock's difficulty, +8 at 100 (a lock of 14 picked by Dexterity 10 with 46 % of
+# the tries becomes 93 %), +12 at 200. Trained at all, it lets you try.
+benefit = [{ effect = "pick", curve = [[0, 0], [100, 8], [200, 12]] }]

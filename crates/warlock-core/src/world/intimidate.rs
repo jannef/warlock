@@ -4,7 +4,7 @@
 //!
 //! War cry's check at one foe (`war_cry.rs`, whose [`World::threat_difficulty`],
 //! [`World::heard_by`], and [`World::cow`] it shares): the player, trained in a skill with the
-//! `intimidate` benefit (`data/skills.toml`: Intimidate), threatens the hostile creature they see
+//! `intimidate` benefit (`data/skills/`: Intimidate), threatens the hostile creature they see
 //! on a cell within the `range` of `data/intimidate.toml`. It is spoken aloud ([`Act::Mutter`]'s
 //! voice, where the player stands), takes the `intimidate` action's time, and marks Intimidate
 //! ([`Use::Intimidate`], the training stream), whatever comes of it.

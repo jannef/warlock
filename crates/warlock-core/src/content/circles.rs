@@ -152,7 +152,7 @@ pub(super) fn parse(
         if content.status(status).seen.is_none() {
             return Err(err(format!(
                 "status `{name}` is circled but has no `seen`: a circle shows only what others \
-                 see (data/status.toml)"
+                 see (data/status/)"
             )));
         }
         let Some(light) = lights[school_index(row.school)] else {
@@ -330,10 +330,10 @@ mod tests {
     #[test]
     fn a_circled_status_must_be_seen() {
         let mut files = ContentFiles::builtin();
-        let status = files.get("data/status.toml").unwrap().to_string();
+        let status = files.table_text("status");
         let seen = "seen = \"bark-skinned\"\n";
         assert!(status.contains(seen));
-        files.insert("data/status.toml", &status.replace(seen, ""));
+        files.replace_table("status", &status.replace(seen, ""));
         let err = Content::load(&files).unwrap_err();
         assert!(
             err.message

@@ -1,0 +1,5 @@
+# Deer, cave bats, and cave beetles: neutral to everyone.
+[[faction]]
+id = "wildlife"
+name = "wildlife"
+animal = true

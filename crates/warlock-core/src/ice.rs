@@ -4,7 +4,7 @@
 //! water in a harder frost) has an ice thickness, kept sparsely with the level
 //! ([`crate::world::LevelState`]: only cells with ice), in micrometres so that slow growth is not
 //! lost to rounding. The thickness decides what the cell looks like: the thickest ice terrain
-//! (`ice` in `data/terrain.toml`: thin ice from 10 mm, ice from 50 mm, thick ice from 150 mm)
+//! (`ice` in `data/terrain/`: thin ice from 10 mm, ice from 50 mm, thick ice from 150 mm)
 //! whose thickness it reaches, else the water beneath; walking on it is walking on that terrain.
 //!
 //! **Growth** follows Stefan's law: the square of the thickness grows with the frost, so ice

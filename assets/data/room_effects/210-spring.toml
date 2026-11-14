@@ -1,0 +1,11 @@
+# A healing spring: clear water in an old stone basin. Drink beside it, as often as one likes;
+# data/outcomes/spring.toml has what a drink draws, mostly good, sometimes foul.
+[[effect]]
+id = "spring"
+name = "spring"
+mark = "~"
+enter = "Clear water wells up in an old stone basin."
+weight = 4
+min_cells = 9
+feature = "spring"
+offers = { drink = "spring" }

@@ -15,7 +15,7 @@ since there is nothing to continue.
 - When you choose **Save and quit to menu** or **Quit** in the [pause menu](the-screen.md#menus)
   (`Esc`) and answer Yes. Quitting always asks first: `y`, or Enter on Yes, confirms; `n`, `Esc`,
   or Enter on No (the default) cancels. You can bind a "Save and quit" key in the
-  [Controls](controls.md#rebinding-keys) screen; it asks too.
+  [Controls](controls-rebinding.md) screen; it asks too.
 - Automatically every 50 [turns](time.md#what-takes-time).
 - Automatically when you change level.
 
@@ -63,7 +63,7 @@ To see the exact folders for your launch, and why they are there, run `warlock -
 
 To keep everything with the game, for a USB stick or a game folder you can copy, make an empty
 folder named **`warlock-data`** next to the game (on macOS, next to `Warlock.app`, not inside it).
-The game then keeps its [settings](settings.md), [key bindings](controls.md#rebinding-keys), saves, and logs in it:
+The game then keeps its [settings](settings.md), [key bindings](controls-rebinding.md), saves, and logs in it:
 
 | Inside `warlock-data` | What |
 |---|---|

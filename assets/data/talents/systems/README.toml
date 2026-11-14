@@ -1,0 +1,11 @@
+# The list of systems a talent may name in its `systems` (the wiki's talents-by-system matrix;
+# docs/design/progression.md §8). Systems are broad: a system of the game (combat,
+# stealth, magic, light, hunger, ...), never a sub-feature. A single special room effect, a
+# monster family's gimmick, a chest kind, or an info readout extends its parent system and is
+# no tag of its own (#773 folded Mimics into chests, Prayer into special rooms, Bounties and
+# Services into talk, Drains into diseases, and dropped Animated objects; #787 folded Weather
+# into travel, the outdoors, and dropped Background stories). A talent names a
+# system only when its effect reads that system's rules.
+#
+# One file per entry, `NNN-<id>.toml`: the number keeps the order the game reads them in
+# (their ids are indices in that order), in steps of 10 so a new one fits between two.

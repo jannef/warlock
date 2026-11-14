@@ -1,0 +1,7 @@
+# The living things of the great fen (Fennmynster): leeches, frogs, crocodiles, wisps, mud
+# golems, marsh trolls, and the bog hag they serve. Not animals as a faction (the trolls, the
+# wisps, and the hag are not), so a Beast-friend calms none of them.
+[[faction]]
+id = "marsh"
+name = "marsh things"
+hostile = ["player"]

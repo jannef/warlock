@@ -787,7 +787,7 @@ struct AffixSpec {
     category: String,
     bases: Vec<String>,
     weight: Option<u32>,
-    /// The skill an affix of effect `skill` adds to (an id in `data/skills.toml`).
+    /// The skill an affix of effect `skill` adds to (an id in `data/skills/`).
     skill: Option<String>,
     /// The damage type an affix of effect `elemental` adds or one of effect `resistance`
     /// resists (an id in `data/damage_types.toml`).
@@ -884,7 +884,7 @@ pub(super) fn parse<'a>(
     };
     let mut seen: BTreeMap<String, &str> = BTreeMap::new();
     for (file, kind, spec) in specs {
-        // Without skills (no `data/skills.toml`) skill affixes have nothing to raise: left out;
+        // Without skills (no `data/skills/`) skill affixes have nothing to raise: left out;
         // so are typed affixes without damage types (nothing to add or resist), and pooled ones
         // without resources (no pool to change).
         let effect = Effect::from_id(&spec.effect);

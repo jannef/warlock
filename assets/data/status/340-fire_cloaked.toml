@@ -1,0 +1,13 @@
+# Fire cloak's: flames that burn whoever strikes the wearer, and show them to everyone. Up to
+# three degrees: the caster's Presence lengthens it (a degree is a minute; spells.toml).
+[[status]]
+id = "fire_cloaked"
+name = "Fire-cloaked"
+seen = "cloaked in flame"
+max = 3
+stacking = "refresh"
+eases = 60
+light = "ember"
+retaliates = { damage = "1d6", damage_type = "fire" }
+start = "Flames wrap about you, and do not burn."
+end = "The flames about you die away."

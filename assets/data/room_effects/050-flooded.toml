@@ -1,0 +1,7 @@
+[[effect]]
+id = "flooded"
+name = "flooded room"
+mark = "f"
+enter = "The floor here is flooded."
+weight = 8
+floor = "shallow_water"

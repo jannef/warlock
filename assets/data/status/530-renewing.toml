@@ -1,0 +1,13 @@
+# Renewal's (the spell types design §7 entry 27): wounds close four times as fast. Up to three
+# degrees, two minutes each. A slowing status still slows (Bleeding's 0 stops it): the fastest
+# pace counts only when none slows (`Effects::regen`).
+[[status]]
+id = "renewing"
+name = "Renewing"
+seen = "renewing"
+max = 3
+stacking = "refresh"
+eases = 120
+regen = 400
+start = "Your flesh begins to knit."
+end = "Your flesh knits at its own pace again."

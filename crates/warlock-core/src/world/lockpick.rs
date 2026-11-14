@@ -1,6 +1,6 @@
 //! Picking locks (spec §8 "Doors"; the Pick lock ability, the Open lock skill's use, #233).
 //!
-//! - **Who**: an actor trained in a skill with the `pick` effect (Open lock, `data/skills.toml`),
+//! - **Who**: an actor trained in a skill with the `pick` effect (Open lock, `data/skills/`),
 //!   [`crate::skills::Skills::trains_effect`]: the abilities menu lists Pick lock for them
 //!   ([`crate::ability::Ability::PickLock`]). Anyone else is told "You do not know how to pick
 //!   locks." and no time passes.

@@ -1,0 +1,7 @@
+[[terrain]]
+id = "floor"
+name = "stone floor"
+stone = true
+glyph = "."
+fg = "#6a6a72"
+bg = "#0d0d10"

@@ -1,0 +1,10 @@
+[[status]]
+id = "owl_eyed"
+name = "Owl-eyed"
+seen = "owl-eyed"
+max = 1
+stacking = "refresh"
+eases = 1800
+vision = "darkvision"
+start = "Your eyes open wide to the dark."
+end = "Your eyes lose their hold on the dark."

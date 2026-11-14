@@ -1,0 +1,16 @@
+[[status]]
+id = "corroded"
+name = "Corroded"
+seen = "corroded"
+max = 3
+stacking = "add"
+tick = 6
+damage = 1
+damage_type = "acid"
+eases = 12
+# Acid stops every regeneration while it eats, a troll's too (the dread design §5.9).
+regen = 0
+start = "The acid keeps eating."
+end = "The acid is spent."
+dies = "is eaten away"
+death = "Eaten away by acid"

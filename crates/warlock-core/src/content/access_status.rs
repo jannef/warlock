@@ -92,7 +92,7 @@ impl Content {
         Ok(out)
     }
 
-    /// Status effects (`data/status.toml`), most important first; empty without the file.
+    /// Status effects (`data/status/`), most important first; empty without the file.
     pub fn status_defs(&self) -> &[StatusDef] {
         &self.statuses
     }

@@ -1,0 +1,10 @@
+[[status]]
+id = "hale"
+name = "Hale"
+seen = "hale"
+max = 2
+stacking = "highest"
+eases = 600
+penalty = { from = 1, toughness = 2, per_degree = true }
+start = "You feel hale."
+end = "The heartiness fades from you."

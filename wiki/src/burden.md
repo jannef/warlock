@@ -74,8 +74,8 @@ it a step at a time:
 - [Beast of burden](talents.md#talent-beast-of-burden) (Porter, level 12): a tenth more again,
   and being strained costs you only what being burdened costs others.
 
-Some classes are given the first steps: [commoners](classes.md#commoner) Pack mule at
-level 1, [merchants](classes.md#merchant) at 6, and [thieves](classes.md#thief)
+Some classes are given the first steps: [commoners](class-commoner.md) Pack mule at
+level 1, [merchants](class-merchant.md) at 6, and [thieves](class-thief.md)
 Pack mule and Porter at 25.
 
 [Creatures](creatures.md) carry by the same rules, using their own

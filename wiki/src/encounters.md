@@ -152,7 +152,7 @@ then.
 - While the [Gilde](guild.md#the-wanted) wants Black Wystan, his archers watch the roads of the
   vale and the downs.
 - A month into your stay, the orcs come down into Burnadenu.
-- By day, on the roads, in the vale, on the downs, and in the woods, a [bard](classes.md#bard) who
+- By day, on the roads, in the vale, on the downs, and in the woods, a [bard](class-bard.md) who
   has reached the class's last level may meet a [strange spirit](npcs.md#the-strange-spirit).
   Nobody else ever does (see [Prestige classes](prestige-classes.md#prestige-classes)).
 

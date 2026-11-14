@@ -1,6 +1,6 @@
 # The barrow wave (Cealdhlāw, docs/design/campaign.md §10.1). A gaunt eater of the dead, quick
 # and hungry; its claws are keen, and a critical with them leaves the wound bleeding hard (the
-# bleeding every slashing critical causes, status.toml).
+# bleeding every slashing critical causes, status/).
 [[creature]]
 id = "barrow_ghoul"
 level = 4

@@ -1,0 +1,21 @@
+# What is left of a door kicked in (spec §8 "Doors"): splinters in the doorway, open for good.
+[[terrain]]
+id = "door_broken"
+name = "broken door"
+glyph = ","
+fg = "#a0703a"
+bg = "#1a120a"
+
+# Splinters fly when it breaks.
+[[terrain.particles]]
+on = "toggle"
+glyphs = "'`,."
+colors = ["#a87a48", "#4a3018"]
+count = 5
+life = 0.5
+velocity = [0.0, -0.3]
+spread = [1.4, 0.6]
+gravity = 1.2
+area = [0.3, 0.35]
+scale = 0.7
+fade = 0.5

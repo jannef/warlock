@@ -1,0 +1,7 @@
+# The class abilities (spec §8 "Class abilities"): given by the classes' level tables
+# (classes/), never picked; `class = true` keeps them off every pick list.
+[[tree]]
+id = "class"
+name = "Class abilities"
+description = "What a class teaches as its levels come."
+class = true

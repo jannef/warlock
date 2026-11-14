@@ -10,7 +10,7 @@
 #             to dust."
 #   effect    what it does, by `kind`:
 #             nothing
-#             status     `status` (an id of status.toml) at `severity` (default 1)
+#             status     `status` (an id of status/) at `severity` (default 1)
 #             backfire   the scroll's own spell goes off on the reader: its burst around them, its
 #                        bolt through them (its damage at the scroll's own power)
 #             mana       `percent` of the mana left is lost

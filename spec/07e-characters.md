@@ -65,7 +65,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   axes 1, goblin short blades 1 and slings 1, drow short blades 1 and crossbows 1, kobold slings
   1 and spears 1, lizardfolk spears 1 and thrown 1, duergar crossbows 1 and maces 1, ratfolk
   daggers 1; humans none.
-- **Status effects** (`data/status.toml`, optional; without it nothing ails anyone and resting
+- **Status effects** (`data/status/`, optional; without it nothing ails anyone and resting
   heals twice as fast; §8 "Status effects", "Healing"): `[healing] resting` (how fast hit points
   come back while the player rests, in percent of the normal pace; 200) and
   `mana_resting` (the same for mana, §8 "Mana"; default 200), then the
@@ -128,7 +128,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   be eaten, food does not rot, and creatures leave no corpses): `burn_seconds` (game seconds per
   nutrition point burned at 100 % hunger, at least 1: 60), `start` (nutrition at the start of a
   run: 3600), `max` (the most there can be: 6500), `vomit_leaves` (the most left after
-  vomiting: 1000), `sickness` (the status id, `data/status.toml`, that harm from eating gives:
+  vomiting: 1000), `sickness` (the status id, `data/status/`, that harm from eating gives:
   `poisoned`; needed when anything eaten harms), `[states]` (the least nutrition of `bloated` 5500, `satiated` 4000, `not_hungry` 1440,
   `hungry` 720, `weak` 240, and `fainting` 0, strictly falling and below `max`; below
   `fainting` the player is Starving),
@@ -211,7 +211,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   class ability Consecrate done, §7 "Special rooms"; default 0)), and `[shops] favour` (how
   much better a good shopkeeper's prices are for each band, in percent, −50 to 50; a band not
   listed 0).
-- **Skills** (`data/skills.toml`, optional; without it nobody is trained in anything, and any
+- **Skills** (`data/skills/`, optional; without it nobody is trained in anything, and any
   `skills` elsewhere is an error; §8 "Skills"): `[[skill]]`s in the order the Skills screen lists
   them (alphabetical), each with `id`, `name`, a one-line `description`, `kind` (`passive`,
   `action`, or `rules`: what it is for; no rule reads it), `mark` (when it earns training marks:

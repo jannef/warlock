@@ -2,7 +2,7 @@
 # changes to the body that eating a layer boss's corpse draws. One file per gift, named by its
 # id (`midden_gut.toml`); a file holds one `[[gift]]`. This file holds only the notes below.
 #
-# Each gift is loaded as a talent of the `profane` tree (../talents.toml), granted (never picked)
+# Each gift is loaded as a talent of the `profane` tree (../talents/trees/170-profane.toml), granted (never picked)
 # and a flaw when it is a bane, so its id is unique against every talent and a save names it as
 # any talent. Every gift defines:
 #   id, name      its id (`gift:midden_gut`) and its name, as the game shows it

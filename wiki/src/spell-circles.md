@@ -6,7 +6,7 @@ below, or the same status from anywhere else: a [potion of quickness](potions.md
 hastes you just as [Haste](magic.md#spell-haste) does, and shows the same circle.
 
 A circle tells you no more than the [status bar](the-screen.md#the-screen) and
-[look mode](controls.md#look-mode) do. It shows which kinds of magic someone carries, never how
+[look mode](controls-prompts.md#look-mode) do. It shows which kinds of magic someone carries, never how
 strong they are or how long they will last.
 
 ## Reading a circle

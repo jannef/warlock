@@ -20,7 +20,7 @@ of what the stack is made of: its parts, a gem
 by its size and cut, `docs/dev/objects.md`; `Shops::trades`/`buys` take the stack, so a loose gem,
 whose object is worth 0, is traded by its gem; the general store buys gems and no shop stocks
 them). Every object has a `value` (required; test fixtures with their own objects need
-`value = 0`; fixtures that replace `factions.toml` but keep the built-in creatures need the
+`value = 0`; fixtures that replace `factions/` but keep the built-in creatures need the
 `merchants` and `outraged` factions, and fixtures that replace creatures or objects start from
 `ContentFiles::default()` or drop `data/shops.toml`). A shop is a `ShopPlan` in the template
 (level files: `[[shop]] kind keeper area post`, an optional `npc` the keeper is, whose

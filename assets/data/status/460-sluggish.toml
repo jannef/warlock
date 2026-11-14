@@ -1,0 +1,11 @@
+[[status]]
+id = "sluggish"
+name = "Sluggish"
+seen = "sluggish"
+max = 6
+stacking = "refresh"
+eases = 60
+cost = 150
+cured_by = ["clear_head"]
+start = "You feel sluggish."
+end = "You feel quick again."

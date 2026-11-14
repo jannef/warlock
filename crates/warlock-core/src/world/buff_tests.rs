@@ -64,7 +64,7 @@ const NEXT_TO_RAT: &str = "#######\n#@r...#\n#.....#\n#######\n";
 fn files(map: &str) -> ContentFiles {
     let mut files = ContentFiles::builtin();
     let statuses = format!("{}{STATUSES}", built_in_statuses(&files));
-    files.insert("data/status.toml", &statuses);
+    files.replace_table("status", &statuses);
     files.insert(
         "levels/buffs.toml",
         &format!(
@@ -80,9 +80,9 @@ fn files(map: &str) -> ContentFiles {
     files
 }
 
-/// The text of `data/status.toml` in `files`.
+/// The text of `data/status/` in `files`.
 fn built_in_statuses(files: &ContentFiles) -> String {
-    let (_, text) = files.table("status").next().expect("data/status.toml");
+    let text = files.table_text("status");
     text.to_string()
 }
 
@@ -414,7 +414,7 @@ fn nothing_may_follow_into_or_out_of_the_status_diseases_show_as() {
         (into, "status `feverish`: follows `diseased`"),
         (out, "`cured_by`, or `follows`"),
     ] {
-        files.insert("data/status.toml", &text);
+        files.replace_table("status", &text);
         let e = Content::load(&files).unwrap_err();
         assert!(e.message.contains(why), "{why}: {}", e.message);
     }

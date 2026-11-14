@@ -1,0 +1,10 @@
+[[terrain]]
+id = "timber_wall"
+name = "timber wall"
+glyph = "#"
+fg = "#a87c4c"
+bg = "#3a2814"
+walkable = false
+transparent = false
+roofed = true
+height = 2

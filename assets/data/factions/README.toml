@@ -1,0 +1,20 @@
+# Factions (spec §7): who fights whom. Every creature type in creatures.toml names its `faction`;
+# the player belongs to the faction "player".
+#
+# Fields: id, name, hostile (faction ids), animal (default false: its creatures are animals, which
+# a Beast-friend's talent makes neutral to them; spec §8 "Talents"), provoked (a faction id: one
+# of its creatures the player attacks joins that one, as the Seelie turn wrathful; default none:
+# it stays), gear (#1191: the materials its creatures favour for what they carry and drop, each
+# with its percent of the draws for an item that may be made of it, together at most 100, e.g.
+# `gear = { bone = 55, iron = 15 }`: an orc's spear is bone 55% of the time, iron 15%, and the
+# usual draw the rest; it never adds a material the item cannot be made of; spec §7
+# "Materials"). Relations are symmetric: if A
+# lists B as hostile, A and B are hostile to each other. Every pair not listed is neutral (a faction and itself too).
+# Hostile creatures attack each other on sight; neutral ones leave each other alone. Monsters do
+# not fight each other but for the two story feuds (the fey courts' war, the demons' Blood War
+# with the devils; the chests design §7): every other monster faction lists the player alone, and
+# the old raids and grudges stay in the comments as lore. The player
+# learns a creature's stance toward them from its type (look mode: "a giant rat (hostile)").
+#
+# One file per entity, `NNN-<id>.toml`: the number keeps the order the game reads them in
+# (their ids are indices in that order), in steps of 10 so a new one fits between two.
