@@ -59,10 +59,10 @@ jobs:
           echo "code=$code" >> "$GITHUB_OUTPUT"
           echo "web=$web" >> "$GITHUB_OUTPUT"
 
-  # The job's name is a required check of main's branch protection: keep it, although the smoke
-  # test and the goldens now run in `screens` beside it (#1583).
+  # The job's name is a required check of main's branch protection: renaming it means updating
+  # the protection in the same step.
   linux:
-    name: Linux (fmt, clippy, test, smoke)
+    name: Linux (fmt, clippy, test)
     needs: changes
     if: ${{ !cancelled() && !inputs.update_golden && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
