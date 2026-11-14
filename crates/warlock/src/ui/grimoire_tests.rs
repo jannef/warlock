@@ -4,9 +4,8 @@
 //! #1264) and the dialog asks about the deepening; one that cannot teach (no Decipher script)
 //! is read at once, which says why.
 
-use super::screen_snapshots::{BASE, Case, press_keys, start, text};
+use super::screen_snapshots::{BASE, Case, press_keys, shown, start};
 use crate::game::Game;
-use crate::render::console::Console;
 use bevy::prelude::App;
 use std::sync::Arc;
 use warlock_core::content::{Content, ContentFiles};
@@ -46,7 +45,7 @@ fn reading(class: &str, keys: &str) -> App {
 }
 
 fn screen(app: &App) -> String {
-    text(app.world().resource::<Console>())
+    shown(app)
 }
 
 fn last(app: &App) -> String {

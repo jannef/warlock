@@ -29,7 +29,12 @@ impl World {
         events: &mut Vec<Event>,
     ) {
         let player = self.state.player;
-        if !self.state.player().talent_mods(&self.content).shared_buffs
+        if !self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .beast
+            .shared_buffs
             || !is_buff(&self.content, status)
         {
             return;

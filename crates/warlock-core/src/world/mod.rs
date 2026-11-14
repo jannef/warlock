@@ -84,6 +84,7 @@
 //! (of Willpower, after every turn, for those who notice such things).
 
 mod actor;
+mod actors;
 mod ai;
 mod alignment;
 mod ally;
@@ -327,12 +328,14 @@ mod weapon_ability;
 mod weapon_active;
 mod wedge;
 mod witch;
+mod work;
 mod work_on;
 mod wriggle;
 mod zap;
 mod zone;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
+pub use actors::Actors;
 pub use alignment::Deed;
 pub use ally::{Ally, AllySource, MAX_DEV_ALLIES, Order};
 pub use attacks::{AttackSource, OwnAttack};
@@ -470,7 +473,7 @@ pub struct WorldState {
     pub(crate) time: GameTime,
     pub(crate) current_level: String,
     pub(crate) levels: BTreeMap<String, LevelState>,
-    pub(crate) actors: BTreeMap<ActorId, Actor>,
+    pub(crate) actors: Actors,
     pub(crate) player: ActorId,
     pub(crate) next_actor_id: u32,
     pub(crate) messages: MessageLog,
@@ -644,9 +647,7 @@ impl WorldState {
     /// Who stands on `p` of level `level`, if anyone: never an ally in the retinue, which stands
     /// in no one's way (`ally.rs`).
     fn actor_at(&self, level: &str, p: Pos) -> Option<&Actor> {
-        self.actors
-            .values()
-            .find(|a| a.level == level && a.pos == p && !a.in_retinue())
+        (self.actors.on_level(level)).find(|a| a.pos == p && !a.in_retinue())
     }
 
     fn check(&self) -> Result<(), WorldError> {
@@ -810,26 +811,8 @@ enum Spent {
     Forage(u32),
     /// Gathering herbs from the glowing fungus for this many seconds (see [`World::gather`]).
     Gather(u32),
-    /// Making out a labelled scroll (see [`World::decipher`]).
-    Decipher(decipher::Deciphering),
-    /// Tempering an item at a forge's anvil (see [`World::temper`]).
-    Temper(temper::Tempering),
-    /// Setting an ingot on a heap of stones (see [`World::field_forge`]).
-    FieldForge(field_forge::Forging),
-    /// Making a recipe (see [`World::make`]).
-    Craft(craft_make::Crafting),
-    /// Cutting a loose gem (see [`World::cut`]).
-    Cut(cut::GemWork),
-    /// Working an enchanting recipe on an item (see [`World::enchant`]).
-    Enchant(enchant::Enchanting),
-    /// Salvaging an item for its materials (see [`World::salvage`]).
-    Salvage(salvage::Salvaging),
-    /// Mending a damaged item in the field (see [`World::make_do`]).
-    MakeDo(make_do::Mending),
-    /// Rigging a trap beside the player (see [`World::rig`]).
-    Rig(rig::Rigging),
-    /// Setting a cut gem in an item (see [`World::set`]).
-    Set(set::Setting),
+    /// Long work: deciphering, a craft, salvage, a rig (see [`World::work`]).
+    Work(work::Work),
     /// Taming a beast beside the player (see [`World::tame`]).
     Tame(tame::Taming),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
@@ -1024,7 +1007,7 @@ impl World {
             time: def.start,
             current_level: start.id.clone(),
             levels: BTreeMap::new(),
-            actors: BTreeMap::new(),
+            actors: Actors::default(),
             player: ActorId(0),
             next_actor_id: 1,
             messages: MessageLog::default(),
@@ -1526,16 +1509,7 @@ impl World {
             Spent::Drink(draught) => self.drink(draught, &mut events),
             Spent::Forage(seconds) => self.forage(seconds, &mut events),
             Spent::Gather(seconds) => self.gather(seconds, &mut events),
-            Spent::Decipher(work) => self.decipher(work, &mut events),
-            Spent::Temper(work) => self.temper(work, &mut events),
-            Spent::FieldForge(work) => self.field_forge(work, &mut events),
-            Spent::Craft(work) => self.make(work, &mut events),
-            Spent::Cut(work) => self.cut(work, &mut events),
-            Spent::Enchant(work) => self.enchant(work, &mut events),
-            Spent::Salvage(work) => self.salvage(work, &mut events),
-            Spent::MakeDo(work) => self.make_do(work, &mut events),
-            Spent::Rig(work) => self.rig(work, &mut events),
-            Spent::Set(work) => self.set(work, &mut events),
+            Spent::Work(work) => self.work(work, &mut events),
             Spent::Tame(taming) => self.tame(taming, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
@@ -1552,6 +1526,11 @@ impl World {
             self.burden_news(burden);
             self.quest_news(&quests);
         }
+        // A level changed past `Actors::set_level` would leave the index behind (`actors.rs`).
+        debug_assert!(
+            self.state.actors.indexed(),
+            "the actors' level index is stale"
+        );
         Outcome {
             took_turn: self.state.turn != turn,
             elapsed: self.state.time.since(time),

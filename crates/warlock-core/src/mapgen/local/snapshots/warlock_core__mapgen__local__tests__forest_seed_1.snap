@@ -4,9 +4,7 @@ expression: "describe(&area(1, 25, 20))"
 ---
 Forest (local:25,20) 80x40
 edges -> overworld at (25, 20)
-deer at (74, 23) route N N E W E W S S
-boar at (60, 7) route E E W W E E W W
-0 placed lights, flow speeds {}
+flow speeds {}
 ..........PPPP.....PPP.bb.TTTTTTTTTTPPPTTTT......b,,,,,,,*******,,,,,,,,,,.TTTTT
 ,,,,,,,,,......,,,..PPP..bTTTTTTTTTTTTTTTTTTTTbTT.b,,,****,,,,,,,,,,,,,,,,.TTTTT
 ,,,,,,,,,,,,,,,,,,,,..T....b...TTTTTTTTTTTTTT....T.....,,,,,,,,,,,,,,.....TTTT.T
@@ -14,7 +12,7 @@ boar at (60, 7) route E E W W E E W W
 ,,,,,,,,,,,,,,,,,,,,.b.TTTTTTTTTTTTTTTTTTTTTTTTTPPPPPTTTTT...........bTTTT..T..T
 *,,,,,,,,,,,,,,,,...TTTTTTTTTTTTTTTTTTTTTTTTTTPPPPPPP...TT..T....,,,..TTT.......
 ..,,,,,,,,,,,,,,...bTTTTTTTTTTTTTTT.b..TTTTTTTPPPPP....TTTT.TTT..**,,....b...,,,
-,,,,,,,,,,,,,,,,,..T.TTTTTTTTTTTT....TTT.TT..bTPPPPPTTb....bd..T.....PPPPP...,,,
+,,,,,,,,,,,,,,,,,..T.TTTTTTTTTTTT....TTT.TT..bTPPPPPTTb....b...T.....PPPPP...,,,
 ,,,,,,,,,,,,,,,,,,...PPTTTTTTTTTPbT..b...........TTTT.%..b..T...TTTPPP..........
 ,,,,,,,,,,,,,***,,%b.PPPTTTTTTTTbb..b.TTTTT..b.....%.....bTbTTTTTTTPP.,,,,,.....
 ....,,,,,,,,,,,,,,..%.bbPPPPTTTTT...b.TTTTTTTT%TT..T.TTTTTTTTTTTTTTPP..,,,.....P
@@ -30,7 +28,7 @@ TTTT%,,,,,,,,,,,,,,,,...%%%TTTT*,,,,,,*,,,,,*,.TTT,TTTTTTTTPPPP..bPb..T...b.b.TP
 ,,,,,,*,,,,.%b.,,,,,,,,,,,,,,,,,,,,,,,,,@,,,,,,..TTT...TTTPPPPPP.PPPP.b.%%TTTTTP
 ,,,,,****,bPPPb.,,,,,,,,*,,***,,*,,,,,,,,,,,,,,,,.T.....T..PPPPPPPPTTT.T.b%.PP.T
 ,,,,,***,%TTTTT.,,,,,,,,,,,,**,,,,,,,,,,,,,,,,%,,T.b..Tb..PPPPPPPPTTTT.TTb.b....
-,,,..b..TbTTTT.Pb,,,,,,.,,,,,,,,,,,,,,,,,,,,,,PPPPPP.PPP....PPPPPPTTb..TTTdb.TTT
+,,,..b..TbTTTT.Pb,,,,,,.,,,,,,,,,,,,,,,,,,,,,,PPPPPP.PPP....PPPPPPTTb..TTT.b.TTT
 .TT...b...TTPP..Pb....PPT......,,,,,**,,,,,,,,,PPPPPPPPP.PPPP.........TTTTTT.TTT
 .TTTTb.b.b.TTT..P....b....b......,,,,**......PPPPPPPPPPPPPP..b..TTTTT.TTTTTTTTTT
 T.b..b...b..TT.b.bP...PP.b..TT.PPPPPTT.........%PPPPPPPPTT..Tb.TTTTTT...PPTTTTTT

@@ -2,7 +2,7 @@
 //! "Diseases").
 
 use super::order;
-use super::text::{Term, anchored, capital, link, percent_of, signed, stat_link, yes};
+use super::util::{Term, anchored, capital, link, percent_of, signed, stat_link, yes};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Affliction, Content, DiseaseDef, DiseaseId, StatusDef};

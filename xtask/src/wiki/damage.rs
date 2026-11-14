@@ -2,7 +2,7 @@
 //! stands against or resists. Never a creature's resistances: the player learns those by play.
 
 use super::order;
-use super::text::{Term, anchored, capital, yes};
+use super::util::{Term, anchored, capital, yes};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, DamageTypeId, Effect};
 

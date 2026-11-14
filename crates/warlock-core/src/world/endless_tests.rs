@@ -569,8 +569,8 @@ fn many_stair_uses_with_a_follower_keep_the_state_consistent() {
         } else {
             take_with(&mut w, dir, |w| {
                 let me = w.player_pos();
-                let a = w.state.actors.get_mut(&k).expect("k");
-                a.level = w.state.current_level.clone();
+                let here = w.state.current_level.clone();
+                w.state.actors.set_level(k, &here).expect("k");
                 let cell = Dir::ALL
                     .iter()
                     .map(|d| me.step(*d))

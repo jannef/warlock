@@ -2,7 +2,7 @@
 //! `data/temper.toml` and the 2d12 rules, and the grades of a worked item with their worth, from
 //! `magic/worked.rs`.
 
-use super::text::capital;
+use super::util::capital;
 use std::fmt::Write as _;
 use warlock_core::combat::{FUMBLE, HIGHEST};
 use warlock_core::content::Content;

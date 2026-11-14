@@ -1,8 +1,7 @@
 //! Objects: the objects, their item classes, shops, equipment slots, materials, and the pack.
 
-use super::actions::at_normal_pace;
 use super::order;
-use super::text::{Term, anchored, article, capital, glyph, yes};
+use super::util::{Term, anchored, article, at_normal_pace, capital, glyph, yes};
 use std::fmt::Write as _;
 use warlock_core::content::{BASE_TURN, Content, ItemClassId, ObjectDef, ObjectId, price};
 use warlock_core::object::format_weight;

@@ -1,7 +1,7 @@
 //! Hearing (spec §5 "Hearing"): how loud each noise is where it is made, how far it carries, and
 //! what muffles it, from the rules' constants and the content.
 
-use super::text::{article, capital};
+use super::util::{article, capital};
 use std::fmt::Write as _;
 use warlock_core::content::Content;
 use warlock_core::noise::{

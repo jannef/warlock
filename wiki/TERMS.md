@@ -70,7 +70,7 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 A term with a section of its own links to the section instead (Bleeding:
 `status-effects.md#bleeding`; Rage: `rage.md`; a class: `class-berserker.md`).
 The generators make these anchors with `text::anchored` and link rows with `text::link`
-(`xtask/src/wiki/text.rs`, the one helper); a new kind of row is a new `Term` there and a line
+(`xtask/src/wiki/util.rs`, the one helper); a new kind of row is a new `Term` there and a line
 above.
 
 ## Mechanics and keywords

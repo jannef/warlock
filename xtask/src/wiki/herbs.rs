@@ -2,7 +2,7 @@
 //! from the glowing fungus takes and finds, and each herb's share by depth and where it grows on
 //! the surface.
 
-use super::text::{Term, anchored, capital, percent_of};
+use super::util::{Term, anchored, capital, percent_of};
 use std::fmt::Write as _;
 use warlock_core::content::Content;
 

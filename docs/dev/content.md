@@ -158,5 +158,5 @@ generator all call them (#1543, #1548): `capitalized` (a first letter in capital
 the owner's choice for all game text), and `number_word` ("no", "one" to "twelve", digits
 beyond). The app keeps its wall-clock helpers in `crates/warlock/src/utc.rs` (`since_epoch`,
 `utc_parts`; #1571) and its cut-to-width helpers beside `wrap` in `ui/menu.rs` (`truncated`,
-`truncated_head`). The wiki generator writes every percentage through `xtask/src/wiki/text.rs`
+`truncated_head`). The wiki generator writes every percentage through `xtask/src/wiki/util.rs`
 (`percent`, `percent_of`: `12.5%`, no space, a tenth from 1% up; #1577).

@@ -129,8 +129,9 @@ fn arriving_on_another_level_on_an_altar_names_it() {
     let altars = times(&w, ALTAR);
     // Carried back up onto the top level's altar (as a fall or a teleport would).
     w.state.current_level = "test_top".into();
+    let id = w.state.player;
+    w.state.actors.set_level(id, "test_top");
     let player = w.player_mut();
-    player.level = "test_top".into();
     player.pos = Pos::new(3, 1);
     w.apply(&Action::Wait);
     assert_eq!(times(&w, ALTAR), altars + 1);
@@ -205,8 +206,9 @@ fn the_hunters_statue_on_fyrdelf_reads_its_inscription() {
         .find(|&p| w.state.actor_at(id, p).is_none())
         .expect("a free cell beside it");
     w.state.current_level = id.into();
+    let me = w.state.player;
+    w.state.actors.set_level(me, id);
     let player = w.player_mut();
-    player.level = id.into();
     player.pos = beside;
     w.apply(&Action::Wait);
     let said: Vec<&str> = (w.messages().iter())

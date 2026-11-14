@@ -2,7 +2,7 @@
 //! are set with them.
 
 use super::order;
-use super::text::{capital, percent_of};
+use super::util::{capital, percent_of, times};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, GemDef, ItemClassId, PartId};
 use warlock_core::item_parts::ItemPart;
@@ -35,16 +35,6 @@ pub(super) fn gems(content: &Content) -> String {
         );
     }
     out
-}
-
-/// A multiplier in percent as a factor: ×0.3, ×1, ×15.
-fn times(percent: u32) -> String {
-    let whole = percent / 100;
-    match percent % 100 {
-        0 => format!("×{whole}"),
-        r if r % 10 == 0 => format!("×{whole}.{}", r / 10),
-        r => format!("×{whole}.{r:02}"),
-    }
 }
 
 /// The gem sizes, smallest first: their worth, weight, and how often loot finds each, at the

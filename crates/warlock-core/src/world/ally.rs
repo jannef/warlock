@@ -215,8 +215,8 @@ impl World {
     /// The allies of `master` on the current level and acting (not the retinue), in id order.
     pub(super) fn allies_here(&self, master: ActorId) -> Vec<ActorId> {
         let level = &self.state.current_level;
-        (self.state.actors.values())
-            .filter(|a| a.master() == Some(master) && a.level == *level && !a.in_retinue())
+        (self.state.actors.on_level(level))
+            .filter(|a| a.master() == Some(master) && !a.in_retinue())
             .map(|a| a.id)
             .collect()
     }

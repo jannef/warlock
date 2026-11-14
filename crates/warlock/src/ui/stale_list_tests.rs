@@ -4,9 +4,8 @@
 //! its marks never tell a chance that is gone.
 
 use super::grimoire_tests::hall;
-use super::screen_snapshots::{BASE, Case, press_keys, start, text};
+use super::screen_snapshots::{BASE, Case, press_keys, shown, start};
 use crate::game::Game;
-use crate::render::console::Console;
 use bevy::prelude::App;
 
 /// The hall, the player a wizard (trained in Decipher script) carrying `carry`, nothing open yet.
@@ -27,7 +26,7 @@ fn said(app: &App) -> Vec<String> {
 }
 
 fn screen(app: &App) -> String {
-    text(app.world().resource::<Console>())
+    shown(app)
 }
 
 fn begun(app: &App) -> usize {

@@ -4,7 +4,7 @@
 //! starting ranks of races and classes, as data writes them.
 
 use super::order;
-use super::text::{Term, anchored, capital, link, thousands};
+use super::util::{Term, anchored, capital, link, thousands};
 use std::fmt::Write as _;
 use warlock_core::content::{
     Benefit, ClassDef, Content, Grip, MAX_RANK, MOST_PERCENT, Role, TwoShields, TwoWeapons,
@@ -190,7 +190,7 @@ fn rolls(v: i32) -> String {
 }
 
 fn percent(v: i32) -> String {
-    super::text::percent(f64::from(v))
+    super::util::percent(f64::from(v))
 }
 
 fn cells(v: i32) -> String {
