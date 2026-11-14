@@ -7,7 +7,6 @@ use warlock_core::content::{Bolt, Burst, BurstIce, Content, RigTakes, TrapEffect
 use warlock_core::skills::Effect;
 use warlock_core::stats::modifier;
 use warlock_core::time::Duration;
-use warlock_core::world::SPRINGS_SHORT_BY;
 use warlock_core::world::takes_words;
 
 /// The traps (spec §8 "Traps"): what each does, its damage dice, how often it goes off, and what
@@ -188,12 +187,13 @@ pub(super) fn disarming(content: &Content) -> String {
     );
     let mut traps: Vec<_> = content.trap_defs().iter().collect();
     traps.sort_by(|a, b| a.name.cmp(&b.name));
+    let springs = content.trap_disarm().springs_short_by;
     for t in traps {
         let difficulty = i32::from(t.difficulty);
         let _ = write!(out, "| {} | {difficulty} |", capital(&t.name));
         for m in modifiers {
             let made = check::ways(m, difficulty);
-            let set_off = check::ways_short_by(m, difficulty, SPRINGS_SHORT_BY);
+            let set_off = check::ways_short_by(m, difficulty, springs);
             let _ = write!(
                 out,
                 " {} disarmed, {} set off |",

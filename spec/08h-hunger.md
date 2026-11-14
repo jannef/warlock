@@ -142,6 +142,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
       darkvision eyes), kin among creatures of a tag (Rat-king's court: vermin are neutral until
       one of their type is struck, as Beast-friend's animals are), or a quarter more maximum
       mana (Fell-minded).
+      The whole table (#1629; docs/design/profane-gifts.md §6.1–§6.3): forty drawn gifts, 14
+      lesser, 12 greater, 14 dire, every tier holding a boon, a mixed gift, and a bane (a content
+      error otherwise). Wing-shouldered bars the cloak slot; Ember-veined sheds a dim red light
+      always (`ember_glow`), which Wyrm-blooded replaces; Palsied undoes Adder-quick; Scaled is
+      never held with Paper-skinned, Glass-boned, or Hollowed; Stone-eyed gives the Basilisk's
+      Transfixing stare. **Twice-born** is the Phoenix's rising (§8 "Birth sign") under a once of
+      its own (`profane_risen`), taken after the sign's: a Phoenix who is Twice-born rises once
+      by each.
   - **Eating rotten food** of any kind (by its age when the last turn of the meal is done; gone
     food not yet removed counts as rotten): "Ugh! The loaf of bread was rotten.", one draw with
     `[rotten] vomit` (50 %) to vomit, else it makes them sick, exposes them to the diseases

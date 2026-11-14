@@ -1,6 +1,6 @@
 //! Salvage: breaking an item into the materials it is made of (docs/design/professions.md §5;
 //! docs/dev/crafting.md): [`Action::Salvage`], the Salvage ability of the abilities menu's
-//! Skills group, had by everyone; the numbers are `data/salvage.toml`.
+//! Skills group, had by everyone; the numbers are `data/rules/salvage.toml`.
 //!
 //! - **Where, with what**: anywhere, with nothing.
 //! - **What**: a stack carried with at least one part of a material a profession works
@@ -56,7 +56,7 @@ pub fn salvageable(content: &Content, stack: &Stack) -> bool {
             .any(|p| content.stock().profession_of(content, p.material).is_some())
 }
 
-/// The percent of a made material's grams salvage gives `actor` back: `data/salvage.toml`'s
+/// The percent of a made material's grams salvage gives `actor` back: `data/rules/salvage.toml`'s
 /// `yield`, or the holder's Waste not where that is more (`CraftMods::salvage_percent`; the
 /// craftsperson design §7.3). The one read, for the work and for Eye for the make's line.
 pub fn salvage_percent(content: &Content, actor: &super::Actor) -> u8 {

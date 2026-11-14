@@ -24,7 +24,7 @@ rules of [Crafting](crafting.md). The burgher who buys their best work is on
 ### Trades
 
 A craftsperson learns no craft from the class
-itself. Instead they pick two [trades](talents.md#crafts-a-craftspersons-trades) as a new
+itself. Instead they pick two [trades](talents-origins.md#crafts-a-craftspersons-trades) as a new
 character, before their other [talents](talents.md): the Talents step asks "Choose a trade"
 first. Each trade trains its craft skill at `3d6`, and
 [Time served](#talent-time-served) adds 6 to that, so a trade starts at 9 to 24.

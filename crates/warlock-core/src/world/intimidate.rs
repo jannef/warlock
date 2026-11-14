@@ -5,9 +5,9 @@
 //! War cry's check at one foe (`war_cry.rs`, whose [`World::threat_difficulty`],
 //! [`World::heard_by`], and [`World::cow`] it shares): the player, trained in a skill with the
 //! `intimidate` benefit (`data/skills/`: Intimidate), threatens the hostile creature they see
-//! on a cell within the `range` of `data/intimidate.toml`. It is spoken aloud ([`Act::Mutter`]'s
-//! voice, where the player stands), takes the `intimidate` action's time, and marks Intimidate
-//! ([`Use::Intimidate`], the training stream), whatever comes of it.
+//! on a cell within the `range` of `data/rules/intimidate.toml`. It is spoken aloud
+//! ([`Act::Mutter`]'s voice, where the player stands), takes the `intimidate` action's time, and
+//! marks Intimidate ([`Use::Intimidate`], the training stream), whatever comes of it.
 //!
 //! If the foe **hears** the voice (asked before it is made) and **sees** the player now
 //! ([`World::sees_now`]), it checks its nerve, two gameplay draws: its Willpower modifier

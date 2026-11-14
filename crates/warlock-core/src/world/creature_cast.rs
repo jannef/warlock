@@ -286,10 +286,11 @@ impl World {
         }
     }
 
-    /// Whether actor `id` stands within [`super::rest::CLOSE`] of the player.
+    /// Whether actor `id` stands within [`World::stop_within`] of the player.
     fn near_player(&self, id: ActorId) -> bool {
         let here = self.player_pos();
-        (self.state.actors.get(&id)).is_some_and(|a| a.pos.chebyshev(here) <= super::rest::CLOSE)
+        let close = self.stop_within();
+        (self.state.actors.get(&id)).is_some_and(|a| a.pos.chebyshev(here) <= close)
     }
 
     /// What the player is told of creature `id` casting `def` on `on`, if they see it.

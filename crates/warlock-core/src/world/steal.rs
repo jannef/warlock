@@ -16,7 +16,7 @@
 //!   the one place a theft that took something has its consequences beyond the goods.
 //! - **Caught**: the victim turns on the player. A keeper of an open shop is outraged as a robbed
 //!   one is ([`World::caught_stealing`] in `shop.rs`); anyone else joins the faction
-//!   `data/steal.toml` names (its `faction_override`, as a robbed keeper's), hostile to the
+//!   `data/rules/steal.toml` names (its `faction_override`, as a robbed keeper's), hostile to the
 //!   player, so the AI and every stance follow with nothing new.
 //!
 //! Refused, taking no time: untrained ("You do not know how to steal."), with no one seen there,

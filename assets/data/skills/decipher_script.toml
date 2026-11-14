@@ -10,7 +10,7 @@ mark = [
   { on = "read", chance = 50 },
   { on = "study", chance = 100 },
 ]
-# How those who cannot simply read a scroll read it (spec §8 "Scrolls", `data/decipher.toml`):
+# How those who cannot simply read a scroll read it (spec §8 "Scrolls", `data/rules/decipher.toml`):
 # `decipher` points on the check, +8 at 100, +12 at 200.
 # Learning a spell from a grimoire (spec §8 "Spells": "Learning"; #1270): `learn` is the spell
 # level up to which a grimoire teaches for certain, 10 at 60, 30 at the soft cap, the last spell

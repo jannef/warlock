@@ -32,7 +32,7 @@ use crate::item_list::ItemList;
 use crate::skills::{Effect, SkillId};
 use crate::talent::SongCost;
 use crate::talent::{MagicEffect, VigourEffect};
-use crate::world::{Actor, BREATH_RANGE, LevelState, STARE_RANGE, VOICE_RANGE};
+use crate::world::{Actor, LevelState};
 use std::borrow::Cow;
 
 /// An ability, as the abilities menu lists it.
@@ -84,8 +84,8 @@ pub enum Ability {
     Wedge,
     /// Feint at a foe next to you (spec §8 "Skills": Bluff; #1016): [`Action::Feint`], Bluff's
     /// use (the skill with the `feint` benefit, listed as this in its place while
-    /// `data/feint.toml` exists). Had by whoever is trained in it; usable whenever they have it
-    /// (the rules refuse, taking no time, where there is no foe with a mind to fool).
+    /// `data/rules/feint.toml` exists). Had by whoever is trained in it; usable whenever they have
+    /// it (the rules refuse, taking no time, where there is no foe with a mind to fool).
     Feint,
     /// Tame a beast next to you (spec §8 "Allies": Tame; `world/tame.rs`): [`Action::Tame`],
     /// Handle animal's use (the skill with the `tame` benefit, listed as this in its place while
@@ -96,8 +96,8 @@ pub enum Ability {
     Tame,
     /// Threaten a foe you see (spec §8 "Skills": Intimidate; #868): [`Action::Intimidate`] at
     /// its cell, the Intimidate skill's use (the skill with the `intimidate` benefit, listed as
-    /// this in its place while `data/intimidate.toml` exists). Had by whoever is trained in it;
-    /// usable whenever they have it (the rules refuse, taking no time, without a foe there).
+    /// this in its place while `data/rules/intimidate.toml` exists). Had by whoever is trained in
+    /// it; usable whenever they have it (the rules refuse, taking no time, without a foe there).
     Intimidate,
     /// A profession (spec §8 "Skills"; docs/design/professions.md §8): a skill with a directory
     /// of recipes (`data/recipes/<skill>/`), listed in that skill's place as "Metalcraft…". Had
@@ -106,7 +106,7 @@ pub enum Ability {
     Profession(SkillId),
     /// Break an item into its materials, anywhere (docs/dev/crafting.md; `world/salvage.rs`):
     /// [`Action::Salvage`], every profession's at once, listed after the skills' own uses while
-    /// `data/salvage.toml` exists. Everyone has it; it asks which item ([`Aim::Item`]).
+    /// `data/rules/salvage.toml` exists. Everyone has it; it asks which item ([`Aim::Item`]).
     Salvage,
     /// Forage for food in the wild (spec §8 "Foraging"): [`Action::Forage`], Survival's use (the
     /// skill with the `forage` benefit, listed as this in its place, while `data/forage.toml`
@@ -122,7 +122,7 @@ pub enum Ability {
     /// Make out a scroll without reading it (spec §8 "Scrolls", "Skills": Decipher script;
     /// `world/decipher.rs`): [`Action::Decipher`] on a scroll of a type not yet identified, the
     /// skill's use (the skill with the `decipher` effect, listed as this in its place while
-    /// `data/decipher.toml` exists). Had by whoever is trained in it; unavailable
+    /// `data/rules/decipher.toml` exists). Had by whoever is trained in it; unavailable
     /// ([`Unavailable::NoUnknownScroll`], the perception knows) while the pack holds none. It
     /// asks which scroll ([`Aim::Item`]).
     Decipher,
@@ -514,15 +514,15 @@ impl Ability {
 
     /// The ability that is the use of skill `def`, once that use is in the game: Disable device's
     /// (the disarm effect's) is [`Ability::Disarm`], Open lock's (the pick effect's)
-    /// [`Ability::PickLock`], the Steal skill's (the `steal` benefit, with `data/steal.toml`)
-    /// [`Ability::Steal`], Bluff's (the `feint` benefit, with `data/feint.toml`)
+    /// [`Ability::PickLock`], the Steal skill's (the `steal` benefit, with `data/rules/steal.toml`)
+    /// [`Ability::Steal`], Bluff's (the `feint` benefit, with `data/rules/feint.toml`)
     /// [`Ability::Feint`], Heal's (the heal effect's) [`Ability::Heal`], Handle animal's (the
     /// `tame` benefit, with `data/companions.toml` and `data/allies.toml`) [`Ability::Tame`],
     /// Intimidate's (the
-    /// `intimidate` benefit, with `data/intimidate.toml`) [`Ability::Intimidate`], Survival's (the
-    /// `forage` benefit, with `data/forage.toml`) [`Ability::Forage`], Decipher script's (the `decipher`
-    /// benefit, with `data/decipher.toml`) [`Ability::Decipher`]. `None` for a skill whose
-    /// use is to come, or that has none.
+    /// `intimidate` benefit, with `data/rules/intimidate.toml`) [`Ability::Intimidate`], Survival's
+    /// (the `forage` benefit, with `data/forage.toml`) [`Ability::Forage`], Decipher script's (the
+    /// `decipher` benefit, with `data/rules/decipher.toml`) [`Ability::Decipher`]. `None` for a
+    /// skill whose use is to come, or that has none.
     fn use_of(def: &SkillDef, content: &Content) -> Option<Ability> {
         let gives = |effect| def.benefits.iter().any(|b| b.effect == effect);
         (gives(Effect::Disarm).then_some(Ability::Disarm))
@@ -971,55 +971,25 @@ impl Ability {
         }
     }
 
-    /// How far a cell it aims at may be, in cells (a disc, as ranges are); `None` for one that
-    /// aims at no cell.
-    pub const fn range(self) -> Option<i32> {
-        match self {
-            Ability::ThrowVoice => Some(VOICE_RANGE),
-            Ability::Sign(SignActive::TransfixingStare) => Some(STARE_RANGE),
-            Ability::Sign(SignActive::FireBreath) => Some(BREATH_RANGE),
-            Ability::Sign(SignActive::HornsGrace)
-            | Ability::Sign(SignActive::Blaze)
-            | Ability::Sign(SignActive::HoundsBay)
-            | Ability::Class(_)
-            | Ability::Spell(_)
-            | Ability::Skill(_)
-            | Ability::Disarm
-            | Ability::Listen
-            | Ability::PickLock
-            | Ability::Steal
-            | Ability::Wedge
-            | Ability::Feint
-            | Ability::Tame
-            | Ability::Intimidate
-            | Ability::Forage
-            | Ability::Profession(_)
-            | Ability::Salvage
-            | Ability::Decipher
-            | Ability::Heal
-            | Ability::SecondWind
-            | Ability::BloodMagic
-            | Ability::ShieldBash
-            | Ability::Weapon(..)
-            | Ability::Pray
-            | Ability::Drink
-            | Ability::Gather
-            | Ability::Heel
-            | Ability::Hold
-            | Ability::SetOn
-            | Ability::Give => None,
-        }
-    }
-
-    /// How far a cell it aims at may be, in cells, with what `content` says of it: a spell's
-    /// is its data's base ([`crate::content::SpellData::base_range`]; a caster's own is
-    /// [`Actor::spell_reach`]); every other ability's is [`Ability::range`].
+    /// How far a cell it aims at may be, in cells (a disc, as ranges are), with what `content`
+    /// says of it; `None` for one that aims at no cell. A spell's is its data's base
+    /// ([`crate::content::SpellData::base_range`]; a caster's own is [`Actor::spell_reach`]); a
+    /// birth sign's active's is its talent effect's `range`
+    /// ([`crate::talent::SignEffect::range`]); throwing one's voice reads `data/rules/tuning.toml`.
     pub fn reach(self, content: &Content) -> Option<i32> {
         match self {
             Ability::Spell(spell) => content.spell_of(spell).and_then(|s| s.base_range()),
             Ability::Intimidate => content.intimidate().map(|r| r.range),
             Ability::Class(ClassActive::Sic) => content.sic_range(),
-            other => other.range(),
+            Ability::ThrowVoice => Some(content.tuning().throw_voice.range),
+            Ability::Sign(active) => (content.talents().iter())
+                .flat_map(|(_, talent)| &talent.effects)
+                .find(|effect| effect.sign_active() == Some(active))
+                .and_then(|effect| match effect {
+                    TalentEffect::Sign(sign) => sign.range(),
+                    _ => None,
+                }),
+            _ => None,
         }
     }
 
@@ -1625,7 +1595,7 @@ mod tests {
             Ability::Skill(SkillId(0)).action(&content, Some(Dir::E)),
             None
         );
-        assert_eq!(bash.range(), None);
+        assert_eq!(bash.reach(&content), None);
         assert_eq!(bash.action_at(&content, Pos::new(3, 4)), None);
     }
 
@@ -1638,7 +1608,7 @@ mod tests {
             (Aim::Cell, Source::Class)
         );
         assert_eq!(voice.cost(), Some(ActionKind::ThrowVoice));
-        assert_eq!(voice.range(), Some(VOICE_RANGE));
+        assert_eq!(voice.reach(&content), Some(6));
         assert_eq!(voice.action(&content, None), None, "not without a cell");
         let at = Pos::new(3, 4);
         assert_eq!(voice.action_at(&content, at), Some(Action::ThrowVoice(at)));

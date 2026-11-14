@@ -6,7 +6,7 @@ kind of magic a spell is. You do not train a school, and it has no ranks.
 
 A spell's school matters for:
 
-- *[Keen mind](talents.md#talent-keen-mind)* and *[School focus](talents.md#talent-school-focus)*,
+- *[Keen mind](talents-mind.md#talent-keen-mind)* and *[School focus](talents-mind.md#talent-school-focus)*,
   which you take for one school (or one element) and which help only its spells;
 - your class's affinity with each school, which makes its spells easier or harder to
   [learn](learning-spells.md#your-learning);
@@ -88,7 +88,7 @@ is the item's.
   spells cost no more does not count as such armour: in it you cast as a Sniper or a Toucher.
 
 A touch reaches only the creature beside you. Nothing makes it reach farther: not
-[School focus](talents.md#talent-school-focus), not a style, not an item.
+[School focus](talents-mind.md#talent-school-focus), not a style, not an item.
 
 The [wizard](class-wizard.md) and the [druid](class-druid.md) start in Sniper, the
 [witch](class-witch.md) and the [priest](class-priest.md) in Toucher, and the

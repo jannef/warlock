@@ -127,7 +127,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   a pit on a chest, or a trap on an open or smashed chest is a content error; vaults hold no
   chests yet.
 - **Secret doors in level files** (#140, §8 "Searching"): a legend entry on a closed door makes
-  it secret with `secret = true` (difficulty `data/search.toml`'s `secret_door`) or `secret = N`
+  it secret with `secret = true` (difficulty `data/rules/search.toml`'s `secret_door`) or `secret = N`
   (difficulty N). The cell then shows the wall around it (of its solid neighbors north,
   east, south, and west that are no door, the most common) until the player finds it. A secret
   on anything but an unlocked closed door, or one with no wall beside it, is a content error.

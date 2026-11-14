@@ -30,8 +30,8 @@ pub(crate) fn make(content: &Content, rng: &mut Rng, level: u8, stack: &mut Stac
     }
 }
 
-/// `stack` given `improved` improvements (at most `temper.toml`'s `most`), each one attempt, in
-/// aspects drawn as the anvil draws them; nothing for none.
+/// `stack` given `improved` improvements (at most `rules/temper.toml`'s `most`), each one attempt,
+/// in aspects drawn as the anvil draws them; nothing for none.
 pub(crate) fn improve(content: &Content, rng: &mut Rng, improved: u8, stack: &mut Stack) {
     let among = aspects(content.object(stack.object));
     let most = improved.min(content.temper().most);

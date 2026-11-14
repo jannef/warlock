@@ -32,7 +32,7 @@ fn world() -> World {
 fn hall(map: &str, pack: &str) -> World {
     let mut files = ContentFiles::builtin();
     // Reads without the check (`decipher_tests.rs` has it): these are about what a read does.
-    files.remove("data/decipher.toml");
+    files.remove("data/rules/decipher.toml");
     files.insert(
         "data/creatures/dummy.toml",
         "[[creature]]\nid = \"dummy\"\nname = \"training dummy\"\nglyph = \"D\"\n\

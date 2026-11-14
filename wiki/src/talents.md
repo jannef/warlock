@@ -8,13 +8,13 @@ most ask something of you first.
 
 A new character picks **two talents at creation**, on the Talents step after the
 [class](classes.md). The **[bard](class-bard.md)**, the lucky class, picks one more, and so does a
-**[human](races.md#race-human)** (their racial [Versatile](talents.md#talent-versatile), below). A
+**[human](races.md#race-human)** (their racial [Versatile](talents-origins.md#talent-versatile), below). A
 human bard picks four.
 
 The list shows the talents your character so far may take. Its scores, [skills](skills.md),
 [class abilities](classes.md#levels), and [birth sign](horoscope.md#what-a-sign-does) all
-count. Marking one may open another that needs it ([Healthy](talents.md#talent-healthy), then
-[Fast healer](talents.md#talent-fast-healer)). The **Random** row lets chance pick them. A
+count. Marking one may open another that needs it ([Healthy](talents-body.md#talent-healthy), then
+[Fast healer](talents-body.md#talent-fast-healer)). The **Random** row lets chance pick them. A
 character started without picks (from the command line) gets those same random picks. The
 [character](character.md) screen counts your talents.
 
@@ -23,7 +23,7 @@ character started without picks (from the command line) gets those same random p
 Every third **[level](experience.md#levels)** brings a talent: levels 3, 6, 9, and so on, twenty by
 level 60 (see [Experience](experience.md)). You make the pick **the moment the level comes**.
 Nothing is banked for later, and until you have chosen you can do nothing else ("You must choose a
-talent first."). A [human](races.md#race-human)'s [Versatile](talents.md#talent-versatile) brings a
+talent first."). A [human](races.md#race-human)'s [Versatile](talents-origins.md#talent-versatile) brings a
 second talent at level 30. A kill that brings two [levels](experience.md#levels) at once brings both
 picks, lowest level first. You cannot change your mind afterwards: a talent, once learned, is yours
 for good.
@@ -43,8 +43,8 @@ walks through the level's choices in order:
 2. a bonus talent;
 3. the level's talent, listing only the talents you may take now, by tree.
 
-A talent with a choice ([Weapon focus](talents.md#talent-weapon-focus),
-[Skill focus](talents.md#talent-skill-focus)) asks for it next. The screen can't be closed until
+A talent with a choice ([Weapon focus](talents-fighting.md#talent-weapon-focus),
+[Skill focus](talents-mind.md#talent-skill-focus)) asks for it next. The screen can't be closed until
 everything is chosen. Two levels at once are one sequence, the lower level's choices first.
 
 The **Talents page** (`G`, or page 8 of the [information pages](the-screen.md#info-pages)) lists
@@ -55,19 +55,19 @@ you already meet stand out from those you don't, so you can plan a build there.
 its levels come (see [Classes](classes.md#levels)); you never pick them. If your class gives one you
 already learned, it is not given again, and that level gives you a talent pick in its place. Some are
 talents anyone may pick (the [aristocrat](class-aristocrat.md)'s
-[Riposte](talents.md#talent-riposte), the [commoner](class-commoner.md)'s
-[Second wind](talents.md#talent-second-wind)).
+[Riposte](talents-body.md#talent-riposte), the [commoner](class-commoner.md)'s
+[Second wind](talents-body.md#talent-second-wind)).
 
 ## Choices and prerequisites
 
 - A talent is picked once.
 - A talent with a **choice** is picked for that choice: a [weapon skill](weapon-skills.md), a
   [fighting style](fighting-styles.md), a [skill](skills.md), or an element. The same talent may be
-  picked again for another choice. [Weapon focus](talents.md#talent-weapon-focus) with
+  picked again for another choice. [Weapon focus](talents-fighting.md#talent-weapon-focus) with
   [long blades](weapon-skills.md#weapon-skill-long-blades) and Weapon focus with
   [bows](weapon-skills.md#weapon-skill-bows) are two talents. A weapon skill you choose must be one
   you attack with, a fighting style is chosen as a style, and a skill
-  ([Skill focus](talents.md#talent-skill-focus)) must be one you are trained in.
+  ([Skill focus](talents-mind.md#talent-skill-focus)) must be one you are trained in.
 - **Prerequisites** must all hold when you pick, and are never checked again. A
   [Strength](stats.md#stat-strength) lowered by [disease](diseases.md#how-a-disease-goes) later does
   not take a talent away.
@@ -100,106 +100,44 @@ whole tree is on the [Horoscope](horoscope.md#what-a-sign-does) page.
 The **Class abilities** are what your class teaches as its levels come. Nobody picks them either.
 Each is in its class's level table on the [Classes](classes.md#levels) page.
 
-The tables [below](#what-a-talent-does) hold every tree you can pick from.
-
-## Heritage: only at character creation
-
-The **Heritage** tree holds what your family gave you. Its talents are offered **only at
-[character creation](character.md)** (the Talents step, or a random pick there), never at a level.
-The Talents page shows them with "to be a new character", which no later level meets. What they
-give comes at once, on top of your [starting kit](starting-kit.md).
-
-- **[Family wealth](talents.md#talent-family-wealth)** gives you nine times the
-  [gold coins](shops.md#money) you start with more: your [class](classes.md)'s purse, and any a
-  start of the world adds. That is at least 180 and at most 450 more. It also gives two or three
-  loose [gems](gems.md), as found at [item level](magic-items.md#finding-them) 2. Coins weigh 10 g
-  each, so the weakest of the small peoples ([halflings](races.md#race-halfling),
-  [gnomes](races.md#race-gnome), [goblins](races.md#race-goblin), [kobolds](races.md#race-kobold),
-  [ratfolk](races.md#race-ratfolk)) may set out [Burdened](burden.md#burden-levels).
-  An [aristocrat](class-aristocrat.md) is born to it: their class gives it at level 1, so they
-  never pick it, and they may pick Father's sword straight away.
-- **[Father's sword](talents.md#talent-fathers-sword)** (needs Family wealth) is your people's
-  heirloom weapon: not always a sword, but always a weapon. It is [magic](magic-items.md), with 2 to
-  4 [affixes](affixes.md#prefixes) rolled at item level 6. Two make it magic; more make it
-  [rare](magic-items.md#rarity) and give it a name. It is a [Masterwork](altars-forges-springs.md#forges) piece, so it can bear all
-  four ([Capacity](magic-items.md#capacity)). You
-  [know what it does](magic-items.md#unidentified-items) from the start. It is readied in its own
-  [slot](equipment.md#what-fits-where) if your kit left that free: the main hand, or the
-  [missile weapon](ranged.md#getting-ready) slot for a sling or a bow. Otherwise it waits in your
-  pack beside the kit's own weapon.
-
-{{#include generated/talents-heirlooms.md}}
-
-## Crafts: a craftsperson's trades
-
-The **Crafts** tree holds the trades: one for each [profession](crafting.md#which-skill-makes-what) skill.
-Only a [craftsperson](class-craftsperson.md) may take one, and only at
-[character creation](character.md). No other class is offered them, and no later level is. A
-craftsperson's first two picks are always trades: the class gives them two
-[bonus picks](class-craftsperson.md#trades) at creation for them, on top of the usual ones. They may spend an
-ordinary pick on a trade too, so a human craftsperson may set out with three.
-
-A trade is never one your [race](races.md) already gives everyone. A
-[dwarf](races.md#race-dwarf) is born to [Metalcraft](skills.md#skill-metalcraft) and
-[Mining](skills.md#skill-mining), so Smith and Pitman are closed to them. The Talents page says
-so: "you need not to be a dwarf or a duergar". A skill a race gives only by chance (a human's
-extra class skill, say) does not count.
-
-Taking a trade does three things:
-
-- It **trains the skill** at `3d6` (3 to 18), rolled once as you take it, plus 6 from the
-  craftsperson's [Time served](class-craftsperson.md#talent-time-served). If you have the skill already,
-  the roll adds to it.
-- It gives you the **tools of the trade**, on top of your [starting kit](starting-kit.md). A
-  pick-axe is readied in the Tool [slot](equipment.md#what-fits-where) if your kit left it free,
-  and carried otherwise. A scroll is known by its name from the start.
-- The skill **grows faster**: a [skill roll](skills.md#improving-a-skill) on it throws the
-  die one step up the ladder, as on a skill your [class](classes.md) is known for. A skill that is
-  both rolls one step up, not two.
-
-{{#include generated/crafts-trades.md}}
-
-## Racial talents
-
-The **Racial** tree holds what each people is good at. Every talent in it asks for its
-[race](races.md), and some for a score, a level, or a [weapon skill](weapon-skills.md) besides. So
-only an [elf](races.md#race-elf) may take [Elven accuracy](talents.md#talent-elven-accuracy), and
-only a [dwarf](races.md#race-dwarf) [Stone sense](talents.md#talent-stone-sense). They are picked
-like any other talent.
-
-[Humans](races.md#race-human) have no gift of their own, so they are given
-**[Versatile](talents.md#talent-versatile)** from the start instead: one more talent at creation and
-one more at level 30. Like the gifts of the stars it is never on a pick list, and the
-[character](character.md) screen's Talents page marks it as your race's.
+The trees you can pick from are listed [below](#what-a-talent-does).
 
 ## What a talent does
 
-In the game a talent is described in words; the tables below state the rule exactly. Most talents
+In the game a talent is described in words; the tables on the tree pages state the rule
+exactly. Most talents
 simply change a rule for good. Where a talent scales ("one hit point per four levels"), what it gave
 earlier grows as you level: a talent taken at level 3 still matters at level 50.
 
-An **active** talent ([Second wind](talents.md#talent-second-wind)) is something you do. It appears
+An **active** talent ([Second wind](talents-body.md#talent-second-wind)) is something you do. It appears
 in the [abilities menu](abilities.md) under Talents. After use it leaves a status
 ([Winded](status-list.md#status-winded)) during which it cannot be used again.
-[Blood magic](talents.md#talent-blood-magic) is active too, with no waiting time: it costs
+[Blood magic](talents-mind.md#talent-blood-magic) is active too, with no waiting time: it costs
 [hit points](hit-points.md#hit-points) instead (see [Mana](mana.md#spending-it)).
 
 Some talents need a word more:
 
 - Five talents work on a [class](classes.md)'s [resources](resources.md#talents-on-resources), and
-  only that class can take them: [Battle trance](talents.md#talent-battle-trance),
-  [Inner calm](talents.md#talent-inner-calm), [Steady hand](talents.md#talent-steady-hand),
-  [Patient blade](talents.md#talent-patient-blade), and [Zealot](talents.md#talent-zealot). One that
+  only that class can take them: [Battle trance](talents-body.md#talent-battle-trance),
+  [Inner calm](talents-body.md#talent-inner-calm), [Steady hand](talents-fighting.md#talent-steady-hand),
+  [Patient blade](talents-exploring.md#talent-patient-blade), and [Zealot](talents-body.md#talent-zealot). One that
   needs the [lantern's hood](lantern.md#the-hood) (Hooded light) is still to come.
-- [Skill focus](talents.md#talent-skill-focus) adds 25 to the [skill](skills.md) you choose for
+- [Skill focus](talents-mind.md#talent-skill-focus) adds 25 to the [skill](skills.md) you choose for
   [what it gives](skill-benefits.md), past 100 too. The value you trained stays as it was.
-- [Treasure hunter](talents.md#talent-treasure-hunter) changes loot as it is made. A level you have
+- [Treasure hunter](talents-mind.md#talent-treasure-hunter) changes loot as it is made. A level you have
   already been to keeps what lies there, and the levels themselves never change.
-- [Breaker](talents.md#talent-breaker)'s kick drives a foe one cell straight back when it hits, if
+- [Breaker](talents-body.md#talent-breaker)'s kick drives a foe one cell straight back when it hits, if
   that cell is free. A wall, a creature, a [trap](traps.md), or [ice](temperature.md) behind the foe
   holds it where it is.
 
-{{#include generated/talents.md}}
+The trees you can pick from are on five pages, by what they are about:
+
+- [Heritage, trades, and racial talents](talents-origins.md): Heritage and Crafts, taken only at
+  character creation, and the Racial tree of each people's gifts.
+- [Body talents](talents-body.md): Vigour, Might, Finesse, and Grit.
+- [Fighting talents](talents-fighting.md): Weaponcraft and Guard.
+- [Exploring talents](talents-exploring.md): Shadow, Wayfarer, and Delver.
+- [Mind talents](talents-mind.md): Scholar and Spellcraft.
 
 ## Talents by system
 

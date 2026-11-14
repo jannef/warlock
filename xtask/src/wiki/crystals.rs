@@ -1,7 +1,7 @@
 //! Magic crystals (docs/design/enchanting.md §5, §10): the colours with their natures, the
 //! creatures whose nature each is, and the families an enchanter may roll with it; and the
 //! numbers of consuming one and of catching them in salvage. From `data/crystals.toml` and
-//! `data/enchanting.toml`.
+//! `data/rules/enchanting.toml`.
 
 use super::util::{Term, anchored, capital};
 use std::fmt::Write as _;

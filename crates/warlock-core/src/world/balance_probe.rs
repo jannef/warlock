@@ -819,7 +819,7 @@ fn ki_of(w: &World, id: ActorId) -> Option<Ki> {
     assert!(me.weapon_item(&content).is_none(), "bare-handed");
     let single = side_of(&w, id);
     let mut second = me.melee(&content);
-    second.to_hit += super::free_blow::FLURRY_TO_HIT;
+    second.to_hit += content.tuning().flurry.to_hit;
     let every = match content.resource(ki).over_time {
         Some(crate::content::OverTime::Regenerates { every }) => f64::from(every),
         _ => f64::INFINITY,

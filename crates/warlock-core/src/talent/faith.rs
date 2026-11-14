@@ -28,8 +28,8 @@ pub enum FaithEffect {
     Avatar { hands_cost_percent: u8 },
     /// The class active Smite: a melee blow in a direction with one die of `sides` more damage
     /// per `per_levels` character levels (at least one), `unholy` dice more against an unholy
-    /// foe (`data/smite.toml`), and the smiter's modifier in `aim` added to hit (what it costs
-    /// is the talent's `resource`: Zeal; `world/smite.rs`).
+    /// foe (`data/rules/smite.toml`), and the smiter's modifier in `aim` added to hit (what it
+    /// costs is the talent's `resource`: Zeal; `world/smite.rs`).
     Smite {
         per_levels: u8,
         sides: u8,

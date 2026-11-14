@@ -40,9 +40,30 @@ A material with no weapon figures cannot be a weapon's working part, so there is
 sword. One with no armour figure cannot be armour, so there is no flint mail.
 
 Materials come in **groups**: metal, wood, bone (with horn, ivory, chitin, and dragonbone),
-stone, hide, cloth, glass, and resin (amber).
+stone, hide, cloth, glass, and resin (amber). The precious ones are marked.
 
 {{#include generated/materials.md}}
+
+### As arms and armour
+
+What a weapon's blade or head of each material does, and how much of an armour's Protection and
+a shield's Defence it keeps. A material not listed here can be neither.
+
+{{#include generated/material-arms.md}}
+
+### Wear
+
+The chance an item of each material withstands acid, rust, and fire (see
+[Item damage](#item-damage), below).
+
+{{#include generated/material-wear.md}}
+
+### Working it
+
+The **work** each material adds to the difficulty of [crafting](crafting.md) with it, its
+**binding**, and the objects made of it, in part or whole.
+
+{{#include generated/material-work.md}}
 
 ## Item damage
 
@@ -68,7 +89,7 @@ Any [resistance](damage-types.md) to acid halves the chance of acid. Rust has no
 resist.
 
 What is reached then **withstands** it by its main material's chance, in the **Withstands acid**,
-**Withstands rust**, and **Withstands fire** columns above:
+**Withstands rust**, and **Withstands fire** columns of the [wear table](#wear):
 
 - Withstood, nothing happens. The first time for each kind you are told so: *The acid runs off
   your mithril chain mail shirt.*

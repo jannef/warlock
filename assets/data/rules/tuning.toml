@@ -1,0 +1,91 @@
+# Tuning (#1541): the numbers of rules that have no data file of their own, one table per rule
+# (`content/tuning.rs`). A rule with a file of its own keeps its numbers there (rules/swim.toml,
+# traps.toml, hunger.toml, miscast.toml, the talents' effects). Every key is required; each is
+# checked against its bounds when the game loads. Ranges are discs (Euclidean, as a spell's);
+# reaches and distances are steps (Chebyshev).
+
+# Wriggling past a creature in the way: 2d12 + Dexterity's modifier + what Escape artist gives,
+# against `difficulty` + the creature's Willpower modifier. 0 to 40.
+[wriggle]
+difficulty = 11
+
+# A step onto or off slick ground (a slick zone): a Dexterity check against `difficulty`; failed,
+# Staggered. 0 to 40.
+[slick]
+difficulty = 12
+
+# Plunging through the ice (spec §5 "Ice"): one trained in Swim makes a Toughness check plus Swim
+# against `difficulty`; made, the plunge's harm is halved. 0 to 40.
+[plunge]
+difficulty = 11
+
+# Throwing one's voice (the bard's): to a cell they see within `range`. 1 to 40.
+[throw_voice]
+range = 6
+
+# The on-kill affixes (mana or a resource on a kill): the slain within `range` of the slayer.
+# 1 to 40.
+[siphon]
+range = 3
+
+# The Pit spell (and a miscast's pit): its mouth opens within `mouth_reach` steps of the caster.
+# 1 to 40.
+[pit]
+mouth_reach = 3
+
+# The quick leave (spec §7 "Leaving an outdoor area"): refused while a hostile creature is seen,
+# or unseen within `reach` steps. 0 to 40.
+[quick_leave]
+reach = 10
+
+# A long action (a rest, a run, a dig) stops when a hostile creature in view comes
+# within `stop_within` steps. 0 to 40.
+[long_action]
+stop_within = 5
+
+# A creature that comes to a level (spec §7 "Danger levels") appears at least `away` steps from
+# the player. 0 to 40.
+[spawn]
+away = 8
+
+# The unseen: a blow at a creature the player does not see is at `to_hit`
+# (-20 to 0); an unseen shadowy creature within `draught` steps is felt as a cold draught (0 to
+# 40).
+[unseen]
+to_hit = -4
+draught = 2
+
+# Averted eyes (against a gaze): every attack at `to_hit`. -20 to 0.
+[averted]
+to_hit = -4
+
+# A flurry's second blow: at `to_hit`. -20 to 0.
+[flurry]
+to_hit = -2
+
+# Holding on to a weapon a blow would knock away: what the grip adds, both hands on the hilt
+# (`two_handed`) or a shield on the other arm (`shield`). 0 to 20.
+[knock_away]
+two_handed = 2
+shield = 1
+
+# Reading a scroll: talents cut a read's price to no less than `least_percent`. 1 to
+# 100.
+[read]
+least_percent = 25
+
+# A weapon active: talents cut its time to no less than
+# `least_percent`. 1 to 100.
+[weapon_active]
+least_percent = 50
+
+# Listening at a door (the Listen ability): the hearing threshold falls by Listen's `hearing` and
+# `keener` besides. 0 to 20.
+[listen]
+keener = 2
+
+# A potion drunk is kept (not used up) with a chance in percent: a talent's (Thrifty drinker) plus
+# the worn items' (of the Alchemist), held to `most` unless the talent's alone is above it. 0 to
+# 100.
+[potion_kept]
+most = 50

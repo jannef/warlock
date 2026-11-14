@@ -383,7 +383,7 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `Ability::Sign(SignActive)` (`Source::Sign`, the menu's Birth sign group between Racial and
   Class) are the birth sign's actives (`docs/dev/character-creation.md`): listed while some talent
   has one, had by whoever's `TalentMods` has it, `While(cooldown)`; their action is
-  `Action::Gift` (`use:horns_grace`, `use:transfixing_stare:X,Y`, a cell at `STARE_RANGE`).
+  `Action::Gift` (`use:horns_grace`, `use:transfixing_stare:X,Y`, a cell within the stare's `range`).
   A row a profane gift gives and no sign talent of the player's does (Hate-wyrm's heart's Fire
   breath) is `Source::Profane` instead, the menu's Profane group right after Birth sign:
   `Ability::source_for(actor)` decides, `OwnAbility::source` carries it, and the menu, the

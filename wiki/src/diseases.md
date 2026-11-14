@@ -48,7 +48,7 @@ Most diseases are fought with **[Toughness](stats.md#stat-toughness)**;
 Some things add to every check, both when you catch a disease and when you fight it off:
 
 - [Ratfolk](races.md#race-ratfolk) add 4 (see [Races](races.md#the-evil-races)).
-- Talents such as [Strong constitution](talents.md#talent-strong-constitution) add theirs (see
+- Talents such as [Strong constitution](talents-body.md#talent-strong-constitution) add theirs (see
   [Talents](talents.md)).
 - Magic that guards your health adds its bonus (see [Magic items](magic-items.md)).
 

@@ -83,7 +83,7 @@ Press `k` and a direction to kick. A kick takes a normal action (6 seconds).
   Strength 9 breaks it three kicks in ten, Strength 15 one in two, and Strength 30 every time.
   Your [Athletics](skills.md#skill-athletics) skill adds to your Strength for this (see
   [Skills](skills.md)), and kicking doors trains it. The
-  [Lockbreaker](talents.md#talent-lockbreaker) talent adds 6 (see [Talents](talents.md)), and magic
+  [Lockbreaker](talents-exploring.md#talent-lockbreaker) talent adds 6 (see [Talents](talents.md)), and magic
   boots that kick harder add their number (see [Magic items](magic-items.md)), for doors and
   [chests](chests.md) alike. Kicking a door takes its 6 seconds whatever your
   [stance](stances.md#stances).

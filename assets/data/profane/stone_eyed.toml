@@ -1,0 +1,15 @@
+[[gift]]
+id = "stone_eyed"
+name = "Stone-eyed"
+kind = "mixed"
+tier = "dire"
+weight = 6
+description = "Eyes grey as slate: your stare can hold a foe fast, but people look away from you and drive harder bargains."
+line = "Your eyes go grey as slate, and people look away."
+# The Basilisk's Transfixing stare (../talents/transfixing_stare.toml), its numbers: with the
+# sign's, one stare.
+effects = [
+    { kind = "stare", range = 6, status = "transfixed", severity = 2, cooldown = "spent_eyed", degrees = 2 },
+    { kind = "distrusted" },
+    { kind = "skill", skill = "negotiation", value = -20 },
+]

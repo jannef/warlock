@@ -1,0 +1,13 @@
+[[gift]]
+id = "ember_veined"
+name = "Ember-veined"
+kind = "mixed"
+tier = "greater"
+weight = 8
+description = "Your veins glow: fire troubles you less, and you shed a dim red light that lets you see, and be seen."
+line = "Your veins glow faintly under the skin."
+undone = "The glow under your skin goes out."
+effects = [
+    { kind = "resist", damage = "fire", value = 50 },
+    { kind = "inner_light", light = "ember_glow" },
+]

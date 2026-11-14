@@ -13,17 +13,17 @@ use std::collections::BTreeMap;
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum FortuneEffect {
     /// Each level reached adds to the family's stipend, which its servant hands over (Stipend:
-    /// `data/stipend.toml`, `world/stipend.rs`).
+    /// `data/rules/stipend.toml`, `world/stipend.rs`).
     Stipend,
     /// The stipend's gold is `gold` percent more, its loot roll made by `chance` percent more
     /// (percentage points), and its magic and rare rarities `magic` percent more likely (Landed
     /// noble).
     StipendMore { gold: i32, chance: i32, magic: i32 },
-    /// A business partner in town invests the gold put with them (Invest: `data/invest.toml`,
+    /// A business partner in town invests the gold put with them (Invest: `data/rules/invest.toml`,
     /// `world/invest.rs`).
     Invest,
     /// A patron in town commissions graded work from its trades and advances the stock (Patron:
-    /// `data/patron.toml`, `world/patron.rs`).
+    /// `data/rules/patron.toml`, `world/patron.rs`).
     Patron,
     /// Loot it finds (what generated levels hold, what creatures drop) rolls magic and rare this
     /// percent more often: their rarity weights (Treasure hunter).

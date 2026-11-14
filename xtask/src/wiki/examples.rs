@@ -401,7 +401,7 @@ fn skills_a_thief_disarms_an_arrow_trap() {
             pct(made)
         ),
     );
-    let short = warlock_core::world::SPRINGS_SHORT_BY;
+    let short = content.trap_disarm().springs_short_by;
     let springs = check::ways_short_by(modifier, difficulty, short);
     says(
         &block,

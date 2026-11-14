@@ -1,4 +1,4 @@
-//! The merchant's investment (`assets/data/invest.toml`, spec §8 "Class abilities": Invest;
+//! The merchant's investment (`assets/data/rules/invest.toml`, spec §8 "Class abilities": Invest;
 //! #1407): the fees on putting gold in and taking it out, the weekly return and its bonuses, and
 //! the amounts the business partner's topics offer (`world/invest.rs`).
 //!
@@ -62,7 +62,7 @@ struct BonusSpec {
 }
 
 impl InvestRules {
-    /// Parses `data/invest.toml`: the fees below 100 %, and the steps rising and above 0.
+    /// Parses `data/rules/invest.toml`: the fees below 100 %, and the steps rising and above 0.
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: InvestFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -91,7 +91,7 @@ impl InvestRules {
 }
 
 impl super::RulesFile for InvestRules {
-    const PATH: &'static str = "data/invest.toml";
+    const PATH: &'static str = "data/rules/invest.toml";
 
     fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
         Self::parse(path, text)
@@ -103,7 +103,7 @@ mod tests {
     use super::InvestRules;
     use crate::content::{Content, ContentFiles};
 
-    const PATH: &str = "data/invest.toml";
+    const PATH: &str = "data/rules/invest.toml";
 
     #[test]
     fn the_fees_round_up() {

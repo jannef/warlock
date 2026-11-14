@@ -81,7 +81,7 @@ nothing of alignment.
 
 **A sin empties zeal** (#910, the paladin design §4.3): `World::shift_alignment`, after the score
 moves, calls `sin_empties_zeal` when the player's score went down (a deed toward evil that
-moved it: a diminished one that moved 0 empties nothing). It sets the pool `data/smite.toml`'s
+moved it: a diminished one that moved 0 empties nothing). It sets the pool `data/rules/smite.toml`'s
 `sin_empties` names (zeal) to 0, if held and above 0, and notes "Your zeal deserts you." with
 the deed's own lines. One `if`; without the file nothing happens. The only reading of the score
 in the smiting rules (`smite_tests.rs::a_sin_empties_zeal`).

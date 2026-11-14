@@ -21,7 +21,7 @@ fn content(base: i32, only: Option<&str>) -> Arc<Content> {
         "data/miscast.toml",
         &format!(
             "stat = \"intelligence\"\nbase = {base}\nper_level = 1\narmour_percent = 10\n\
-             rank_ease = 1\ndie = \"2d12\"\nper_margin = 5\nsafe_below = 71\n"
+             rank_ease = 1\ndie = \"2d12\"\nper_margin = 5\nsafe_below = 71\nnear = 6\n"
         ),
     );
     if let Some(only) = only {

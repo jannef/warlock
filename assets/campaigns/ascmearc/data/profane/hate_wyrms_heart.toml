@@ -16,5 +16,5 @@ effects = [
     { kind = "resist", damage = "cold", value = -25 },
     { kind = "stat", stat = "strength", value = 2 },
     { kind = "stat", stat = "toughness", value = 2 },
-    { kind = "fire_breath", length = 10, damage = "12d8", damage_type = "fire", spell = "fire_breath", cooldown = "drained", degrees = 1 },
+    { kind = "fire_breath", range = 8, length = 10, damage = "12d8", damage_type = "fire", spell = "fire_breath", cooldown = "drained", degrees = 1 },
 ]

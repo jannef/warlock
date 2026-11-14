@@ -420,7 +420,7 @@ impl World {
 
     /// How long from now no creature on the current level that disturbs a rest
     /// ([`World::disturbs_rest`], one hostile to the player) could come within
-    /// [`super::rest::CLOSE`] of them, so a rest need not look after turns that end by then and
+    /// [`World::stop_within`] of them, so a rest need not look after turns that end by then and
     /// in which the player heard nothing and nothing happened but creatures moving (spec §8
     /// "Rest"). Only one that close stops a rest, and every step costs at least the level's
     /// cheapest step: before its first step that could bring it that close, it needs the energy
@@ -444,6 +444,7 @@ impl World {
             })
         };
         let player = self.player_pos();
+        let close = self.stop_within();
         // While the player rests, an idle creature may take a whole stride at once.
         let ahead = if self.resting {
             super::stride::STRIDE
@@ -455,8 +456,7 @@ impl World {
             .values()
             .filter(|a| a.level == level.id && self.disturbs_rest(a))
             .map(|a| {
-                let steps =
-                    i64::from((a.pos.chebyshev(player) - super::rest::CLOSE - 1 - ahead).max(0));
+                let steps = i64::from((a.pos.chebyshev(player) - close - 1 - ahead).max(0));
                 let cheapest = cheapest(self.cost_of(a.id, ActionKind::Step));
                 let short = steps.saturating_mul(cheapest).saturating_sub(a.energy);
                 let speed = a.speed(&self.content);

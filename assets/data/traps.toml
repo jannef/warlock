@@ -59,6 +59,17 @@ per_point = 10
 min = 15
 max = 90
 
+# Disarming a known trap (the Disarm ability, Disable device's use): a Dexterity check plus Disable
+# device against the trap's `difficulty`. Failed by `springs_short_by` or more, it goes off at
+# you; failed by less, the turn is spent and you may try again. 1 or more.
+[disarm]
+springs_short_by = 5
+
+# What Trap sense and things of Wariness cut from a trap's damage together, at most, in percent
+# (0 to 100; below 100, a trap always hurts).
+[harm]
+most_cut = 75
+
 [[trap]]
 id = "arrow"
 name = "arrow trap"

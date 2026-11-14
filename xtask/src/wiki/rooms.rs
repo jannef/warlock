@@ -172,7 +172,7 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 "Every step of yours onto its cracked floor has a {}% chance ({}% while you are \
                  Burdened or worse) to give way: you fall to the level below, landing somewhere \
                  open on it (never behind a locked door, never in a shop), take {} damage (it can \
-                 kill you), and are Staggered. Creatures never fall ([Old delver](talents.md#talent-old-delver): \
+                 kill you), and are Staggered. Creatures never fall ([Old delver](talents-exploring.md#talent-old-delver): \
                  you never do).",
                 c.chance,
                 (u32::from(c.chance) * 2).min(100),
@@ -193,7 +193,7 @@ pub(super) fn special_rooms(content: &Content) -> String {
                  you lift inside seals it: every door of it shuts (unless something is in the \
                  doorway) and locks with a lock of the level's depth that only a skeleton key \
                  opens, and {least} to {most} creatures hostile to you of the level's danger + \
-                 {} come on its edge, out of your sight where they can ([Old hand](talents.md#talent-old-hand): the \
+                 {} come on its edge, out of your sight where they can ([Old hand](talents-exploring.md#talent-old-hand): the \
                  second stack). It seals once.",
                 h.items, h.loot_level, h.danger
             ));

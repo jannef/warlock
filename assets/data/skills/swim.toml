@@ -6,7 +6,7 @@ kind = "rules"
 mark = [{ on = "wade", chance = 10 }, { on = "swim", chance = 100 }, { on = "stroke", chance = 25 }]
 # Percent of what wading adds to a step that is spared, under Swimmer's and Undertow's all of it;
 # and points added to the Swim check of a plunge through the ice (made: half its hit points) and
-# of a step in deep water (made: the step; data/swim.toml).
+# of a step in deep water (made: the step; data/rules/swim.toml).
 benefit = [
     { effect = "wade", curve = [[0, 0], [100, 60], [200, 100]] },
     { effect = "swim", curve = [[0, 0], [100, 8], [200, 12]] },

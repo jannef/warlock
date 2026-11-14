@@ -30,7 +30,7 @@ The rules are `world/read.rs`: `Action::Read { item, target: Option<ReadTarget> 
 `read:b:12,5` a cell, `read:b:c` a stack; `ReadTarget::{Cell, Item}`), one arm in
 `player_acts`, priced `ActionKind::Read` (`read` in `data/actions.toml`; `read_price` scales it
 by `MagicMods::read_percent`, Scroll savant's and Scroll adept's halves, never below
-`READ_FLOOR`, a quarter) before the scroll is
+`[read] least_percent` of `data/rules/tuning.toml`, a quarter) before the scroll is
 used up (`use_up`, which follows the equipment's letters; it reports the Read stat use and
 `Use::Read`, Decipher script's 50 % mark, #1270: all reading trains it). Refusals take no time
 and keep the scroll. A read is a cast (`World::read_cast`, below): a damage spell checks `can_loose_here`
@@ -66,7 +66,7 @@ calls `deciphers` with the scroll's spell and level (`Reading::Cast`, else none 
 `learn_scroll`s the type without using the scroll up. The UI list is `ObjectList::Decipher`.
 
 **Making out a scroll** (#1024, `world/decipher.rs`, `content/decipher.rs`,
-`data/decipher.toml`; the skill uses design §6.6): `World::deciphers(spell, level)` stands between a
+`data/rules/decipher.toml`; the skill uses design §6.6): `World::deciphers(spell, level)` stands between a
 reading's refusals and its `use_up`. A spell the player knows (`Actor::knows_spell`, a scroll they
 wrote too): true, no draw, and `Use::Decipher` still marks (a trained skill only). Else trained in Decipher script (the skill of learning, #1270) with `Actor::learning` at
 least `level`: true, no draw, no mark, no words. Otherwise a `check::check` of the Intelligence modifier +
@@ -89,7 +89,7 @@ it needs the spell known, the blank, and the mana, as before, and its scroll is 
 which reads by this rule for its writer too (the spell is known, so it reads at once, whatever their learning).
 The dev `identify` and F8 are not reads. Wands, rods, and spells cast for mana never ask. The file
 is optional (`Content::decipher`): without it every scroll simply reads; fixtures whose tests are
-about what a read does remove it (`files.remove("data/decipher.toml")`) rather than draw a check.
+about what a read does remove it (`files.remove("data/rules/decipher.toml")`) rather than draw a check.
 Tests: `world/decipher_tests.rs`.
 
 **The scroll of restoration** (#887, the priest design §11) is the one scroll with no spell

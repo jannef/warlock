@@ -59,7 +59,7 @@ Common to all:
 - **Its voice**: a `cry` every 90 s on average, loudness `40 + L` (at most 100): a wail, a howl,
   a scream, or (the iron gate) a banging, so it is heard through the walls.
 - **Never timed out**: a gate stands until it is killed. What it called stays when it dies.
-- **Tags** `summoner`, `fiend` (so a paladin's smite finds it unholy, `data/smite.toml`), and
+- **Tags** `summoner`, `fiend` (so a paladin's smite finds it unholy, `data/rules/smite.toml`), and
   `gate`.
 
 The miscast rows' words are the design's §8 lines.

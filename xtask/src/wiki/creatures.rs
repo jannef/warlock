@@ -44,8 +44,7 @@ pub(super) fn creatures(content: &Content) -> String {
 /// [`creatures`]' table of the types of campaign `campaign` (`None`: the shared types).
 fn creature_table(content: &Content, campaign: Option<&str>) -> String {
     let mut out = String::from(
-        "| Creature | Glyph | Faction | Toward you | Attacks | Opens doors | Carries a light | \
-         Drops magic | Crystal | Gear |\n|---|:---:|---|---|---|:---:|:---:|:---:|:---:|---|\n",
+        "| Creature | Glyph | Faction | Toward you | Attacks |\n|---|:---:|---|---|---|\n",
     );
     let player = content.creature_id("player");
     let theirs = (listed(content).into_iter()).filter(|(_, c)| c.campaign.as_deref() == campaign);
@@ -85,6 +84,49 @@ fn creature_table(content: &Content, campaign: Option<&str>) -> String {
         if (c.burst.as_ref()).is_some_and(|b| b.when == BurstWhen::Dies) {
             attacks.push_str(", bursts when it dies");
         }
+        let _ = writeln!(
+            out,
+            "| {} | {} | {faction} | {stance} | {attacks} |",
+            anchored(Term::Creature, &c.id, &capital(&c.name)),
+            glyph(c.glyph),
+        );
+    }
+    out
+}
+
+/// What each creature does with doors and light, how often it drops a magic item, the colour of
+/// crystal its nature is, and the gear it may spawn with (#1668: apart from [`creatures`]). By
+/// name: the shared types, then each campaign's own under its name.
+pub(super) fn creature_carries(content: &Content) -> String {
+    let mut out = carries_table(content, None);
+    for campaign in order::campaigns(content) {
+        let own = carries_table(content, Some(&campaign.id));
+        if own.lines().count() > 2 {
+            let _ = write!(out, "\n**{}**:\n\n{own}", campaign.name);
+        }
+    }
+    out
+}
+
+/// [`creature_carries`]' table of the types of campaign `campaign` (`None`: the shared types).
+fn carries_table(content: &Content, campaign: Option<&str>) -> String {
+    let mut out = String::from(
+        "| Creature | Doors and light | Drops magic | Crystal | Gear |\n\
+         |---|---|:---:|:---:|---|\n",
+    );
+    let theirs = (listed(content).into_iter()).filter(|(_, c)| c.campaign.as_deref() == campaign);
+    for (id, c) in theirs {
+        let mut habits = Vec::new();
+        if c.opens_doors {
+            habits.push("opens doors");
+        }
+        if c.light.is_some() {
+            habits.push("carries a light");
+        }
+        let habits = match habits.is_empty() {
+            true => "-".to_string(),
+            false => habits.join(", "),
+        };
         // The chance it drops a magic or rare item where it dies.
         let drops = match c.loot {
             0 => "-".to_string(),
@@ -97,11 +139,8 @@ fn creature_table(content: &Content, campaign: Option<&str>) -> String {
             .map_or_else(|| "-".into(), |k| link(Term::Crystal, &k.id, &k.name));
         let _ = writeln!(
             out,
-            "| {} | {} | {faction} | {stance} | {attacks} | {} | {} | {drops} | {crystal} | {} |",
-            anchored(Term::Creature, &c.id, &capital(&c.name)),
-            glyph(c.glyph),
-            yes(c.opens_doors),
-            yes(c.light.is_some()),
+            "| {} | {habits} | {drops} | {crystal} | {} |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
             gear(content, c)
         );
     }
@@ -394,33 +433,45 @@ fn score(score: u8) -> String {
     format!("{score} ({})", signed(modifier))
 }
 
-/// Each creature's level, the experience a kill is worth at that level, its six scores with
-/// their modifiers, the potentials above them, and its trained skills and weapon skills.
+/// Each creature's six scores with their modifiers, and the potential where it is above the
+/// score (`13 (+1), potential 15`): a grid along the stats (#1668); its level and skills are
+/// [`creature_levels`].
 pub(super) fn creature_stats(content: &Content) -> String {
     let stats: String = Stat::ALL
         .iter()
         .map(|s| format!(" {} |", s.abbrev()))
         .collect();
     let mut out = format!(
-        "{}| Creature | Level | XP | Rarity |{stats} Potentials | Skills | Weapon skills |\n\
-         |---|:---:|---:|---|{}---|---|---|\n",
+        "{}| Creature |{stats}\n|---|{}\n",
         super::util::stat_key(),
         ":---:|".repeat(Stat::COUNT)
     );
     for (_, c) in listed(content) {
         let scores: String = (Stat::ALL.iter())
-            .map(|&s| format!(" {} |", score(c.stats.score(s))))
+            .map(|&s| {
+                let potential = c.stats.potential(s);
+                match potential > c.stats.score(s) {
+                    true => format!(" {}, potential {potential} |", score(c.stats.score(s))),
+                    false => format!(" {} |", score(c.stats.score(s))),
+                }
+            })
             .collect();
-        let higher: Vec<String> = (Stat::ALL.iter())
-            .filter(|&&s| c.stats.potential(s) > c.stats.score(s))
-            .map(|&s| format!("{} {}", s.abbrev(), c.stats.potential(s)))
-            .collect();
-        let potentials = if higher.is_empty() {
-            "as its scores".to_string()
-        } else {
-            higher.join(", ")
-        };
-        let skills: Vec<String> = (c.skills.iter())
+        let _ = writeln!(
+            out,
+            "| {} |{scores}",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+        );
+    }
+    by_family(content, &out)
+}
+
+/// Each creature's level, the experience a kill is worth at that level, its rarity, and its
+/// trained skills and weapon skills.
+pub(super) fn creature_levels(content: &Content) -> String {
+    let mut out =
+        String::from("| Creature | Level | XP | Rarity | Skills |\n|---|:---:|---:|---|---|\n");
+    for (_, c) in listed(content) {
+        let mut skills: Vec<String> = (c.skills.iter())
             .map(|(id, t)| format!("{} {}", content.skill(id).name, t.value))
             .collect();
         let table = content.weapon_skills();
@@ -428,15 +479,17 @@ pub(super) fn creature_stats(content: &Content) -> String {
             .filter(|(_, t)| t.rank > 0)
             .map(|(id, t)| format!("{} {}", table.skill(id).name, t.rank))
             .collect();
+        if !weapon_skills.is_empty() {
+            skills.push(format!("weapon skills: {}", weapon_skills.join(", ")));
+        }
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} |{scores} {potentials} | {} | {} |",
+            "| {} | {} | {} | {} | {} |",
             link(Term::Creature, &c.id, &capital(&c.name)),
             c.level,
             xp_cell(c),
             rarity_cell(content, c),
             dash(&skills),
-            dash(&weapon_skills)
         );
     }
     by_family(content, &out)
@@ -1221,14 +1274,11 @@ pub(super) fn creature_grade_words(content: &Content) -> String {
 }
 
 /// Each creature's speed and how long a normal action takes it, how far and with which eyes it
-/// sees, how faint a sound it hears (its listen skill included), how loud its steps are, its
-/// nose as a companion (spec §8 "Allies") and whether it may be tamed, what it weighs, its size,
-/// and its carrying limit (spec §8 "Burden").
+/// sees, how faint a sound it hears (its listen skill included), and how loud its steps are; its
+/// body is [`creature_size`] (#1668).
 pub(super) fn creature_senses(content: &Content) -> String {
     let mut out = String::from(
-        "| Creature | Speed | A normal action takes | Sight | Vision | Hearing | Footsteps | Nose \
-         | Tameable | Weight | Size | Carrying limit |\n\
-         |---|---:|---:|---:|---|:---:|:---:|:---:|:---:|---:|---|---:|\n",
+        "| Creature | Speed | Sight | Hearing | Footsteps |\n|---|---:|---|:---:|:---:|\n",
     );
     for (id, c) in listed(content) {
         let actor = bare(content, id);
@@ -1239,25 +1289,40 @@ pub(super) fn creature_senses(content: &Content) -> String {
             0 => "silent".to_string(),
             n => n.to_string(),
         };
+        let _ = writeln!(
+            out,
+            "| {} | {} ({}) | {} cells, {} | {hearing} | {footsteps} |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+            c.speed,
+            at_speed(price(NORMAL_COST, BASE_TURN), c.speed),
+            c.sight,
+            content.vision_profiles()[c.vision].name,
+        );
+    }
+    by_family(content, &out)
+}
+
+/// Each creature's weight, its size, its carrying limit (spec §8 "Burden"), and whether it may
+/// be tamed, with its nose as a companion (spec §8 "Allies").
+pub(super) fn creature_size(content: &Content) -> String {
+    let mut out = String::from(
+        "| Creature | Weight | Size | Carrying limit | Tameable |\n|---|---:|---|---:|---|\n",
+    );
+    for (_, c) in listed(content) {
         let size = content.size(c.size);
         let limit = burden::limit(
             c.stats.score(Stat::Strength),
             c.stats.score(Stat::Toughness),
             size.carry,
         );
-        let nose = match c.nose {
-            Some(n) => format!("{n} cells"),
-            None => "-".to_string(),
+        let tameable = match c.nose {
+            Some(n) => format!("{}, nose {n} cells", yes(c.tameable)),
+            None => yes(c.tameable).to_string(),
         };
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} cells | {} | {hearing} | {footsteps} | {nose} | {} | {} | {} | {} |",
+            "| {} | {} | {} | {} | {tameable} |",
             link(Term::Creature, &c.id, &capital(&c.name)),
-            c.speed,
-            at_speed(price(NORMAL_COST, BASE_TURN), c.speed),
-            c.sight,
-            content.vision_profiles()[c.vision].name,
-            yes(c.tameable),
             format_weight(u64::from(c.weight)),
             size.name,
             format_weight(limit)

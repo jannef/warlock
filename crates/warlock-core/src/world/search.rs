@@ -20,9 +20,9 @@
 //! - **Noticing in passing**: after every turn the player takes, each hidden feature on the cells
 //!   around them gets the **passive** check: the Willpower modifier, plus what the Spot skill
 //!   gives (for a hidden trap, Detect traps in its place), plus the race's `search`, less the
-//!   passive penalty (`data/search.toml`). Elves notice everything so, dwarves what lies on stone
-//!   and kobolds traps (`passive_search`), anyone trained in Spot everything but traps, anyone
-//!   trained in Detect traps traps; everyone else notices nothing in passing.
+//!   passive penalty (`data/rules/search.toml`). Elves notice everything so, dwarves what lies on
+//!   stone and kobolds traps (`passive_search`), anyone trained in Spot everything but traps,
+//!   anyone trained in Detect traps traps; everyone else notices nothing in passing.
 //!
 //! Every check is rolled afresh: nothing is remembered of a failed one, so the next turn may
 //! find what this one missed (no limit on trying again: the owner's rule). Checks draw from the

@@ -60,7 +60,7 @@ to the player by default (the owner's decision; #196 for later reveals), except 
 (#1031): `Effect::Freshness` on Appraise and Survival, summed, a percent chance per hour and food
 (`world/freshness.rs::judged`, a pure function of the seed, the player, the food, and the hour, its own stream
 `freshness/<object>/<made>/<hour>`, so no gameplay stream moves and looking is read-only), plus 25 points
-once rotten, at most 95; `PerceptionView::judge` gives `fresh`/`old`/`rotten` (gone food as rotten) for
+once rotten, at most 95 (`[freshness]` in `data/hunger.toml`); `PerceptionView::judge` gives `fresh`/`old`/`rotten` (gone food as rotten) for
 the eat list's marks and look mode's pile (visible cells only); eating food so told reports `Use::Judged`
 (Appraise, 10 %; `World::train_judged`). Tests: `world/freshness_tests.rs`. Joining stacks keep the oldest
 age (`object::join`), so neither packs nor piles split by age. `world/rot.rs` applies it:

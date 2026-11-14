@@ -1,5 +1,5 @@
-//! Intimidating (`assets/data/intimidate.toml`, spec §8 "Skills": Intimidate; #868): the numbers
-//! of the Intimidate skill's use, a threat at one foe.
+//! Intimidating (`assets/data/rules/intimidate.toml`, spec §8 "Skills": Intimidate; #868): the
+//! numbers of the Intimidate skill's use, a threat at one foe.
 //!
 //! The rule itself lives in `world/intimidate.rs`, on War cry's check (`world/war_cry.rs`): who
 //! can (anyone trained in a skill with the `intimidate` benefit, `data/skills/`), at whom (a
@@ -37,7 +37,7 @@ struct IntimidateFile {
 }
 
 impl IntimidateRules {
-    /// Parses `data/intimidate.toml`: the status must be known, and the ladder's points rise
+    /// Parses `data/rules/intimidate.toml`: the status must be known, and the ladder's points rise
     /// ([`Self::degrees_at`] reads the rungs in order).
     pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
@@ -68,7 +68,7 @@ impl IntimidateRules {
 }
 
 impl super::RulesFile for IntimidateRules {
-    const PATH: &'static str = "data/intimidate.toml";
+    const PATH: &'static str = "data/rules/intimidate.toml";
 
     fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         Self::parse(path, text, content)
@@ -79,7 +79,7 @@ impl super::RulesFile for IntimidateRules {
 mod tests {
     use crate::content::{Content, ContentFiles};
 
-    const PATH: &str = "data/intimidate.toml";
+    const PATH: &str = "data/rules/intimidate.toml";
 
     #[test]
     fn the_ladder_rises_from_one_degree_to_war_crys_three() {

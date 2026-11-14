@@ -1,0 +1,13 @@
+[[gift]]
+id = "tailed"
+name = "Tailed"
+kind = "mixed"
+tier = "lesser"
+weight = 6
+description = "A tail: you are harder to hit and swim well, but it drags and rustles behind you."
+line = "Something new keeps your balance."
+effects = [
+    { kind = "dodge", value = 1 },
+    { kind = "swimmer" },
+    { kind = "footsteps_percent", value = 15 },
+]

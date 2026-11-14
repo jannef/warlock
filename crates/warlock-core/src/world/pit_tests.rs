@@ -94,7 +94,7 @@ fn a_portal_opens_a_pit_with_its_gate_at_the_mouth() {
     let opened = mouths(&w);
     assert_eq!(opened.len(), 1, "one mouth");
     let (at, s) = opened[0];
-    assert!(at.chebyshev(here) <= pit::MOUTH_REACH);
+    assert!(at.chebyshev(here) <= w.content().tuning().pit.mouth_reach);
     let stairs = w.state.current().terrain.get(at).copied().expect("cell");
     assert_eq!(CONTENT.terrain(stairs).stairs, Some(StairsDir::Down));
     assert_eq!(

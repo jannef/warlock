@@ -1,0 +1,10 @@
+[[gift]]
+id = "hill_thewed"
+name = "Hill-thewed"
+kind = "boon"
+tier = "greater"
+weight = 10
+description = "Broad shoulders: you are stronger than you were."
+line = "Your shoulders broaden."
+# No undoer (docs/design/profane-gifts.md §6.2): Strength is what the signatures pile on.
+effects = [{ kind = "stat", stat = "strength", value = 2 }]

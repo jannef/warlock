@@ -76,7 +76,7 @@ you never choose them, they work by themselves as you fight. They have their own
   (a dagger, say; never a flask), then the target. It spends every opening you hold, and the
   weapon lands by the foe. It reaches as far as you can throw the weapon, but never more than 6
   cells, the farthest a [sneak attack](surprise.md#sneak-attacks) lands from a throw
-  ([Long reach](talents.md#talent-long-reach) adds to that). It is refused, costing nothing, for
+  ([Long reach](talents-fighting.md#talent-long-reach) adds to that). It is refused, costing nothing, for
   Exploit's reasons, a target out of reach, or a wall or creature you see in the way (see
   [Thrown exploit](openings.md#thrown-exploit)).
 - **Shield bash**: anyone can bash with a shield (see [Weapon skills](weapon-skills.md)), so it is always in the menu,

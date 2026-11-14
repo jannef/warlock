@@ -67,7 +67,7 @@ pub(super) fn chest_breaking(content: &Content) -> String {
         "| How it opens | Each stack inside breaks | Spared |\n|---|:---:|---|\n\
          | Opened (a key, Pick lock, Knock then open, or unlocked) | never | everything |\n\
          | Kicked open | {destroyed}% | coins and loose gems |\n\
-         | Kicked open, with [Lockbreaker](talents.md#talent-lockbreaker) | {with_deft}% | coins and loose gems |\n\
+         | Kicked open, with [Lockbreaker](talents-exploring.md#talent-lockbreaker) | {with_deft}% | coins and loose gems |\n\
          | Blown apart by a blast | {destroyed}% | nothing |\n"
     )
 }

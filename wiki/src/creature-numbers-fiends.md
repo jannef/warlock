@@ -6,6 +6,8 @@ creature behaves on [Creatures](creatures.md#the-creatures).
 
 ## Stats and skills
 
+{{#include generated/creature-levels.md:fiends}}
+
 {{#include generated/creature-stats.md:fiends}}
 
 ## Hit points, Defence, and resistances
@@ -19,5 +21,7 @@ creature behaves on [Creatures](creatures.md#the-creatures).
 ## Pace, senses, and size
 
 {{#include generated/creature-senses.md:fiends}}
+
+{{#include generated/creature-size.md:fiends}}
 
 See also: [Hellegeat](pits.md) and [Miscasts](miscasts.md).

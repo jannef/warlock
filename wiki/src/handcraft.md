@@ -6,7 +6,7 @@ comes out is under [Crafting](crafting.md#how-well-it-comes-out).
 
 **You need:**
 - **Skill:** Woodcraft. [Rangers](class-ranger.md) start with it, a
-  [craftsperson](class-craftsperson.md#trades) may take the [Wright](talents.md#talent-wright)
+  [craftsperson](class-craftsperson.md#trades) may take the [Wright](talents-origins.md#talent-wright)
   trade, and a [commoner](class-commoner.md) may have it as their trade (others:
   [Which skills you start with](skills.md#which-skills-you-start-with)). No one teaches it.
 - **Tools:** a knife in your pack.

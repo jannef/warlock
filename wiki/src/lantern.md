@@ -47,7 +47,7 @@ around you, but not the cell you stand on.
   darkvision, and any other light that falls on you (a torch, daylight) shows you as usual.
 
 There is no fuel yet: the lantern burns as long as you leave it lit. The
-**[Lamplighter](talents.md#talent-lamplighter)** [talent](talents.md) makes it burn brighter and
+**[Lamplighter](talents-exploring.md#talent-lamplighter)** [talent](talents.md) makes it burn brighter and
 reach a cell farther, so you are also seen from a little farther away. Hooded, it gives the same
 hooded light as before.
 

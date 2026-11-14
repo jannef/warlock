@@ -16,7 +16,7 @@ than 6. For example, Presence 12 holds 11 at level 1, and Presence 16 holds 16 a
   [Retribution](class-paladin.md#talent-retribution) (level 25) spends 4 for every blow it answers. So
   wrath and mercy are paid from the one pool.
 - The blow that hits you builds its point first, so 3 zeal is enough for Retribution to answer it.
-  With [Zealot](talents.md#talent-zealot) you need 2, and every blow that hits you builds 2.
+  With [Zealot](talents-body.md#talent-zealot) you need 2, and every blow that hits you builds 2.
 - A holy gift that does not answer (because you are not Kind or better, see
   [Alignment](alignment.md)) spends none.
 - **A deed that moves you toward evil** (see [Alignment](alignment.md)) empties the pool at once:
@@ -24,7 +24,7 @@ than 6. For example, Presence 12 holds 11 at level 1, and Presence 16 holds 16 a
 
 ## The talent on it
 
-**[Zealot](talents.md#talent-zealot)** (Grit; whoever holds [Smite](class-paladin.md#talent-smite), so
+**[Zealot](talents-body.md#talent-zealot)** (Grit; whoever holds [Smite](class-paladin.md#talent-smite), so
 the [paladin](class-paladin.md), level 6): every blow that hits you builds 2
 [zeal](resources.md#resource-zeal) instead of 1. A blow you give still builds 1, and the pool holds no more.
 

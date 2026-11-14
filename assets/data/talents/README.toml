@@ -452,7 +452,7 @@
 #                                 lands on every foe
 #   smite { per_levels, sides, aim, unholy }   the active Smite: a blow in a direction with one
 #                                 die of `sides` more per `per_levels` levels (at least one),
-#                                 `unholy` dice more on a creature smite.toml calls unholy, and
+#                                 `unholy` dice more on a creature rules/smite.toml calls unholy, and
 #                                 the `aim` stat's modifier added to hit (its cost is the
 #                                 talent's `resource`: zeal)
 #   smite_mode { mode, status, severity, turns, check, difficulty }   a mode of smiting, its own
@@ -706,19 +706,20 @@
 #                                 shaken off, then `degrees` (default 1) of the cooldown status
 #   horn_of_plenty { per_level, degrees }   Horn's grace also gives back per_level hit points
 #                                 per character level, and leaves `degrees` of its cooldown
-#   stare { status, severity, cooldown, degrees }   the active Transfixing stare, aimed at a
-#                                 cell (`use:transfixing_stare:12,5`): a hostile there within 6
-#                                 cells that the player sees and that sees them suffers
-#                                 `severity` degrees of `status`, then `degrees` (default 1) of
-#                                 the cooldown status
+#   stare { range, status, severity, cooldown, degrees }   the active Transfixing stare, aimed
+#                                 at a cell (`use:transfixing_stare:12,5`): a hostile there
+#                                 within `range` cells (1 to 40; more under a full moon) that
+#                                 the player sees and that sees them suffers `severity` degrees
+#                                 of `status`, then `degrees` (default 1) of the cooldown status
 #   petrifying_gaze { severity, degrees }   the stare leaves those degrees of its status and of
 #                                 its cooldown instead
 #   wildfire { radius, damage }   Blaze bursts out to radius (1 to 3) for damage instead
-#   fire_breath { length, damage, damage_type, spell, cooldown, degrees }   the active Fire
-#                                 breath, aimed at a cell within 8 (`use:fire_breath:12,5`): a
-#                                 bolt (`spell`, a bolt effect) along the line toward it, length
-#                                 cells (1 to 8), damage dice of damage_type to everyone on it;
-#                                 then `degrees` of the cooldown status
+#   fire_breath { range, length, damage, damage_type, spell, cooldown, degrees }   the active
+#                                 Fire breath, aimed at a cell within `range` (1 to 40;
+#                                 `use:fire_breath:12,5`): a bolt (`spell`, a bolt effect) along
+#                                 the line toward it, length cells (1 to 8), damage dice of
+#                                 damage_type to everyone on it; then `degrees` of the cooldown
+#                                 status
 #   hounds_bay { status, severity, cooldown }   the active Hound's bay (`use:hounds_bay`): a
 #                                 howl; every hostile that hears it, of a lower level than the
 #                                 player, suffers `severity` degrees of `status` (one that

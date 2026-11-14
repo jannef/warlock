@@ -3,11 +3,11 @@
 //!
 //! The player stops at a closed door next to them for a turn. During it their hearing threshold
 //! for a sound that reaches them by way of that door is lower by what Listen gives (its
-//! `hearing` effect, one per 10 points) and [`EXTRA_KEEN`] besides (`noise::hearers`, which reads
-//! [`crate::noise::Listening`]). What is heard comes as ever: sound markers in the perception,
-//! and every sound of the turn told in words, or that nothing was heard. Every listen marks
-//! Listen, whatever is heard. Refused, taking no time, without the skill or a closed door that
-//! way.
+//! `hearing` effect, one per 10 points) and the `[listen]` `keener` of `data/rules/tuning.toml`
+//! besides (`noise::hearers`, which reads [`crate::noise::Listening`]). What is heard comes as
+//! ever: sound markers in the perception, and every sound of the turn told in words, or that
+//! nothing was heard. Every listen marks Listen, whatever is heard. Refused, taking no time,
+//! without the skill or a closed door that way.
 
 use super::{Spent, World};
 use crate::ability::Ability;
@@ -15,9 +15,6 @@ use crate::content::ActionKind;
 use crate::geom::Dir;
 use crate::noise::Listening;
 use crate::skills::{Effect, Use};
-
-/// What a listen at a door adds to the hearing threshold's fall, besides the skill's.
-pub const EXTRA_KEEN: u16 = 2;
 
 impl World {
     /// The player listens at the door in `dir` (module docs).
@@ -41,7 +38,8 @@ impl World {
             .state
             .player()
             .skill_effect(&self.content, Effect::Hearing);
-        let keener = u16::try_from(skill.max(0)).unwrap_or(u16::MAX) + EXTRA_KEEN;
+        let more = self.content.tuning().listen.keener;
+        let keener = u16::try_from(skill.max(0)).unwrap_or(u16::MAX) + more;
         self.state.listening = Some(Listening { at, keener });
         if self.trains(Use::Listen) {
             self.train(Use::Listen);

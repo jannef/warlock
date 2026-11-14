@@ -53,6 +53,11 @@
 
 - [Experience and levelling up](experience.md)
 - [Talents](talents.md)
+  - [Heritage, trades, and racial talents](talents-origins.md)
+  - [Body talents](talents-body.md)
+  - [Fighting talents](talents-fighting.md)
+  - [Exploring talents](talents-exploring.md)
+  - [Mind talents](talents-mind.md)
 - [Skills](skills.md)
   - [What skills give](skill-benefits.md)
   - [Using your skills](skill-uses.md)

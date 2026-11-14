@@ -1,10 +1,9 @@
 //! What stops a rest (spec §8 "Rest", `rest.rs`, #1216): a hostile coming within
-//! [`super::rest::CLOSE`] in view, an attack on the player (a shot or a spell, missed or
+//! [`World::stop_within`] in view, an attack on the player (a shot or a spell, missed or
 //! resisted too), a message that stops a rest (hunger worsening); never a hostile farther off
 //! in view, nor a neutral creature however close. Long actions through `keep_at` (eating,
 //! digging) follow the same rule.
 
-use super::rest::CLOSE;
 use super::*;
 use crate::action::{AttackKind, Event, Rest, parse_actions};
 use crate::combat::Strike;
@@ -86,7 +85,7 @@ fn sees(w: &World, id: ActorId) -> bool {
 fn a_hostile_in_view_farther_off_than_close_does_not_stop_a_rest() {
     let mut w = world(PEN, "kobold");
     let kobold = of(&w, "kobold");
-    assert!(sees(&w, kobold) && dist(&w, kobold) > CLOSE);
+    assert!(sees(&w, kobold) && dist(&w, kobold) > w.stop_within());
     let out = w.apply(&Action::Rest(Rest::For(Duration::hours(1))));
     assert_eq!(out.elapsed, Duration::hours(1), "{}", last(&w));
     assert_eq!(last(&w), "You rest for 1 hour.");
@@ -95,11 +94,11 @@ fn a_hostile_in_view_farther_off_than_close_does_not_stop_a_rest() {
 
 #[test]
 fn a_hostile_coming_close_stops_a_rest_on_that_very_turn() {
-    // Waiting turn by turn: the first turn it stands within CLOSE.
+    // Waiting turn by turn: the first turn it stands that close.
     let mut waited = world(OPEN, "deer");
     let kobold = of(&waited, "kobold");
-    assert!(sees(&waited, kobold) && dist(&waited, kobold) > CLOSE);
-    while dist(&waited, kobold) > CLOSE {
+    assert!(sees(&waited, kobold) && dist(&waited, kobold) > waited.stop_within());
+    while dist(&waited, kobold) > waited.stop_within() {
         waited.apply(&Action::Wait);
         assert!(waited.turn() < 100, "it never came");
     }
@@ -174,7 +173,10 @@ fn rest_stops_at_the_first_attack(
         // Without arrows (its gear is rolled) an archer never shoots.
         let Some(first) = first else { continue };
         attacks += 1;
-        assert!(dist(&waited, caster) > CLOSE, "seed {seed}: from afar");
+        assert!(
+            dist(&waited, caster) > waited.stop_within(),
+            "seed {seed}: from afar"
+        );
         let mut rested = fresh.clone();
         rested.apply(&Action::Rest(Rest::For(Duration::hours(1))));
         assert_eq!(

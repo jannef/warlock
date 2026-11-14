@@ -1,0 +1,14 @@
+[[gift]]
+id = "wing_shouldered"
+name = "Wing-shouldered"
+kind = "mixed"
+tier = "dire"
+weight = 8
+description = "Leathery stubs on your shoulders: no cloak fits, and you are frailer, but you are quicker, in a fight and on the road."
+line = "Two leathery stubs push out of your shoulder-blades, too small to fly on."
+effects = [
+    { kind = "bars_slot", slot = "cloak", mark = "wings", refused = "Your wings are in the way." },
+    { kind = "speed_percent", value = 10 },
+    { kind = "travel_percent", value = 25 },
+    { kind = "stat", stat = "toughness", value = -1 },
+]

@@ -25,7 +25,7 @@ impl Content {
         self.study.as_ref()
     }
 
-    /// The check of reading a scroll (`data/decipher.toml`, spec §8 "Scrolls"): none without
+    /// The check of reading a scroll (`data/rules/decipher.toml`, spec §8 "Scrolls"): none without
     /// it, and then every scroll simply reads.
     pub fn decipher(&self) -> Option<&DecipherRules> {
         self.decipher.as_ref()
@@ -37,8 +37,8 @@ impl Content {
         self.crystals.as_ref()
     }
 
-    /// Enchanting's numbers (`data/enchanting.toml`): none without it, and then salvage makes no
-    /// affix checks.
+    /// Enchanting's numbers (`data/rules/enchanting.toml`): none without it, and then salvage makes
+    /// no affix checks.
     pub fn enchanting(&self) -> Option<&EnchantingRules> {
         self.enchanting.as_ref()
     }

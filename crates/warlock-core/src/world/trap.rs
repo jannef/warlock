@@ -59,10 +59,6 @@ use std::collections::BTreeSet;
 /// How far past its victim a trap's missile flies on, at most, when it misses.
 const OVERSHOOT: usize = 8;
 
-/// The most a trap's damage is cut, in percent, by Trap sense and of Wariness together: a trap
-/// always hurts (spec §8 "Traps").
-pub(crate) const TRAP_DAMAGE_CUT: i32 = 75;
-
 impl World {
     /// Actor `victim` has just stepped onto `at`: a trap there goes off ([`World::spring_trap`]),
     /// unless it is on a door or a chest, which only opening or kicking it sets off (spec §8
@@ -309,7 +305,8 @@ impl World {
     /// kill earns no one anything, but a rigged trap's is its rigger's, the player's, unless it
     /// is the rigger it kills), and if it lives the statuses its wound causes. The target's
     /// talents and what it wears scale the damage first (Trap sense: half; of Wariness: its percent
-    /// less; together at most [`TRAP_DAMAGE_CUT`] off; rounded down, at least 1).
+    /// less; together at most the `[harm]` `most_cut` of `data/traps.toml`
+    /// off; rounded down, at least 1).
     fn trap_deals(
         &mut self,
         trap: TrapId,
@@ -322,10 +319,11 @@ impl World {
             return;
         }
         // Trap sense's percent and what the target wears (of Wariness: less), together never
-        // more than `TRAP_DAMAGE_CUT` off: a trap always hurts.
+        // more than `most_cut` off: a trap always hurts.
+        let most = self.content.trap_harm().most_cut;
         let percent = (self.state.actors.get(&target)).map_or(0, |a| {
             let worn = a.mods(&self.content).get(Effect::TrapDamage);
-            (a.talent_mods(&self.content).delving.trap_damage_percent - worn).max(-TRAP_DAMAGE_CUT)
+            (a.talent_mods(&self.content).delving.trap_damage_percent - worn).max(-most)
         });
         if percent != 0 {
             let scaled = TalentMods::scaled(u64::try_from(blow.damage).unwrap_or(0), percent);

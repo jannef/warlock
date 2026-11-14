@@ -24,7 +24,7 @@ holds a laden person, and puts out the fires there.
 **Lightning seeks the nearest path.** When a ray, a bolt, a touch, or a line of electricity harms a
 creature, one time in four it strikes once more. It hits the nearest creature beside that one that
 has not been struck yet (ties go to the one that came into the world first), at the same roll.
-Neither a roll to hit nor [Evasion](talents.md#talent-evasion) saves anyone from it. That creature
+Neither a roll to hit nor [Evasion](talents-body.md#talent-evasion) saves anyone from it. That creature
 may arc on again, and so on. It is not choosy: [Spark](magic.md#the-spells) at a rat beside you may
 jump back into you, or into your [ally](allies.md).
 
@@ -43,7 +43,7 @@ long as nothing that blocks sight stands between. After those, a jump happens on
 usual. A chain ends when no creature that has not been struck is within reach of the last one, or
 when the last one took no harm.
 
-**[Conductor](talents.md#talent-conductor)** makes every arc of your electricity spells happen, and
+**[Conductor](talents-mind.md#talent-conductor)** makes every arc of your electricity spells happen, and
 you resist electricity 25 %. It spares you nothing; it only makes your own lightning bite less.
 
 **A ray, a bolt, or a touch** does to one cell what a burst does to all of its cells: to the cell

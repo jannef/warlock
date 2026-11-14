@@ -277,7 +277,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   kind ("Read it at what?", "Read it on what?"), the player's own cell ("You cannot aim at
   yourself."), out of reach ("That is out of range."), a spell on the overworld, or a stack
   there is nothing to learn about ("You already know what a dagger is.").
-  - **Making out a scroll** (`world/decipher.rs`, data `data/decipher.toml`; #1024, the skill
+  - **Making out a scroll** (`world/decipher.rs`, data `data/rules/decipher.toml`; #1024, the skill
     uses design §6.6, the owner's rule: Decipher script is how non-casters use scrolls, by a
     check; one with enough learning (Decipher script's, #1270) bypasses it; this overrides the no-caster-level
     design's line that reading works for anyone). Once nothing refuses the reading and before the

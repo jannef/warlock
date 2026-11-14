@@ -105,9 +105,9 @@ no talking out of being caught anywhere (B2), and "be careful what to flag".
   `Choice::Bluff`, id `bluff`, "Talk your way past", between Evade and Fight, only for an entry
   with `talk_past = true`, only in `Outcome::Met` (face to face: never the drop, a known party
   met is as any party of the entry), and only to a player trained in a skill with the `feint`
-  benefit (Bluff; `Ability::Feint`'s test) while `data/feint.toml` loads.
+  benefit (Bluff; `Ability::Feint`'s test) while `data/rules/feint.toml` loads.
 - **The check** (gameplay stream, two draws): the lead type's (`World::lead_of`) Willpower
-  modifier against `feint.toml`'s `difficulty` + the player's Presence modifier + their talents'
+  modifier against `rules/feint.toml`'s `difficulty` + the player's Presence modifier + their talents'
   Presence checks + Bluff's `feint` points (a feint's contest, at the party's lead). The lead
   failed: "You talk your way past.", the party lets the player go as `pass` does (nothing made),
   and the try takes a `chat` action's price. Made: "They are not fooled.", the fight opens as

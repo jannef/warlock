@@ -79,12 +79,14 @@ pub(super) fn recipes_woodcraft(content: &Content) -> String {
     recipes_of(content, "woodcraft")
 }
 
-/// Every generic recipe of profession `skill`, by the skill it is listed from and its name: what
-/// it makes and how many, what is chosen (each part and what it may be of), the stock it takes in
-/// its base material (else steel, the piece's own, else the first it may be of, once a group; a
-/// batch's at its most for an untrained maker), what else it uses up, the ornament, what it needs
-/// (a station, a knife, a launcher), the time, the difficulty, and the chance it comes out made
-/// (not failed; a batch whole) at three skill values with an average stat (modifier 0).
+/// Every generic recipe of profession `skill`, by the skill it is listed from and its name, in
+/// two tables (#1668). The first: what it makes and how many, what is chosen (each part and what
+/// it may be of, and whether a gem may be set), the stock it takes in its base material (else
+/// steel, the piece's own, else the first it may be of, once a group; a batch's at its most for
+/// an untrained maker) and what else it uses up, and what it needs (a station, a knife, a
+/// launcher). The second: the skill it is listed from, the time, the difficulty, and the chance
+/// it comes out made (not failed; a batch whole) at three skill values with an average stat
+/// (modifier 0).
 pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
     let Some(skill_id) = content.skill_id(skill) else {
         return String::new();
@@ -93,9 +95,11 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
     let skill_def = content.skill(skill_id);
     let craft = (skill_def.benefits.iter()).find(|b| b.effect == Effect::Craft);
     let at = ODDS_AT.map(|v| format!("{v}"));
-    let mut out = format!(
-        "| Recipe | Listed from | Makes | Chosen | Stock | Uses up | Ornament | Needs | Time | \
-         Difficulty | Made at {} {} |\n|---|:---:|:---:|---|---|---|:---:|---|---|:---:|:---:|\n",
+    let mut out =
+        String::from("| Recipe | Makes | Chosen | Takes | Needs |\n|---|:---:|---|---|---|\n");
+    let mut work_rows = format!(
+        "| Recipe | Listed from | Time | Difficulty | Made at {} {} |\n\
+         |---|:---:|---|:---:|:---:|\n",
         skill_def.name,
         at.join(" / ")
     );
@@ -239,21 +243,38 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
                 format!("{:.0}%", made_chance(content, bonus - r.difficulty - work))
             })
             .collect();
+        if r.ornament {
+            chosen.push("a gem may be set".to_string());
+        }
+        // What it takes: the stock, then what else it uses up.
+        let mut takes = or_dash(&stock, "; ");
+        if !uses.is_empty() {
+            takes = match stock.is_empty() {
+                true => format!("uses up {}", uses.join(", ")),
+                false => format!("{takes}; uses up {}", uses.join(", ")),
+            };
+        }
         let _ = writeln!(
             out,
-            "| {} | {} | {makes} | {} | {} | {} | {} | {} | {} ({} s) | {difficulty} | {} |",
+            "| {} | {makes} | {} | {takes} | {} |",
             anchored(Term::Recipe, &r.id, &r.name),
-            r.from,
             or_dash(&chosen, "; "),
-            or_dash(&stock, "; "),
-            or_dash(&uses, ", "),
-            if r.ornament { "yes" } else { "no" },
             or_dash(&needs, ", "),
+        );
+        let _ = writeln!(
+            work_rows,
+            "| {} | {} | {} ({} s) | {difficulty} | {} |",
+            r.name,
+            r.from,
             Duration::seconds(u64::from(r.seconds)).spoken(),
             r.seconds,
             odds.join(" / "),
         );
     }
+    let _ = write!(
+        out,
+        "\nThe skill each is listed from, how long it takes, and how hard it is:\n\n{work_rows}"
+    );
     out.push_str(
         "\nStock is counted in pieces of the base material (an ingot is 500 g of steel). Another \
          material takes as many pieces of its own: a mithril ingot is lighter, and so is the \

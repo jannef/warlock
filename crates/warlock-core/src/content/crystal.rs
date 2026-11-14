@@ -1,5 +1,6 @@
 //! Magic crystals (`assets/data/crystals.toml`) and Enchanting's numbers
-//! (`assets/data/enchanting.toml`): docs/design/enchanting.md §5, §9, §10; docs/dev/enchanting.md.
+//! (`assets/data/rules/enchanting.toml`): docs/design/enchanting.md §5, §9, §10;
+//! docs/dev/enchanting.md.
 //!
 //! Six colours, in file order, each a crystal object, the creature tags whose nature it is, and
 //! the affix categories (families) an enchanter may roll with it. The order is the rule: a
@@ -16,7 +17,7 @@
 //! to both.
 //!
 //! Both files are optional: without `crystals.toml` no crystal is caught or consumed; without
-//! `enchanting.toml` salvage makes no affix checks.
+//! `rules/enchanting.toml` salvage makes no affix checks.
 
 use super::creature::CreatureId;
 use super::{Content, ContentError, ObjectId};
@@ -80,7 +81,7 @@ pub struct Crystals {
     pub consume_marks: u16,
 }
 
-/// Enchanting's numbers (`data/enchanting.toml`).
+/// Enchanting's numbers (`data/rules/enchanting.toml`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct EnchantingRules {
     /// The skill that enchants: its `craft` points add to every check, its `enchant_level` is
@@ -98,7 +99,7 @@ pub struct EnchantingRules {
     pub seal_seconds: u32,
 }
 
-/// `data/enchanting.toml` as written.
+/// `data/rules/enchanting.toml` as written.
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct RulesFile {
@@ -111,8 +112,8 @@ struct RulesFile {
 }
 
 impl EnchantingRules {
-    /// Parses `data/enchanting.toml` against the loaded skills: a known `skill`, and steps of at
-    /// least 1.
+    /// Parses `data/rules/enchanting.toml` against the loaded skills: a known `skill`, and steps of
+    /// at least 1.
     pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let spec: RulesFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -141,7 +142,7 @@ impl EnchantingRules {
 }
 
 impl super::RulesFile for EnchantingRules {
-    const PATH: &'static str = "data/enchanting.toml";
+    const PATH: &'static str = "data/rules/enchanting.toml";
 
     fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         Self::parse(path, text, content)
