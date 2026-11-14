@@ -229,3 +229,7 @@ impl World {
 #[cfg(test)]
 #[path = "profane_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "signature_tests.rs"]
+mod signature_tests;

@@ -1,6 +1,6 @@
 //! The checks of a branch's bosses (spec §7 "The endless branch", "The Pits";
 //! `world/layer_boss.rs`, `world/pit.rs`): an endless branch's layer bosses, each a unique type
-//! that leaves an everlasting corpse, and a portal branch's warden, of any type (every Pit has its own); each lair a dungeon vault of
+//! that leaves an everlasting, profane corpse, and a portal branch's warden, of any type (every Pit has its own); each lair a dungeon vault of
 //! the branch's campaign (or shared) that places its boss once, stamps nowhere else (it is
 //! pinned), and marks the hidden stairs, `>`, exactly where the floor leads down (a Pit's last
 //! floor leads nowhere, and its lair has none); no other vault has a `>`.
@@ -21,6 +21,15 @@ impl Content {
             if def.portal.is_none() && !(creature.corpse && creature.everlasting) {
                 return Err(format!(
                     "layer boss `{id}` must leave an everlasting corpse (`corpse` and `everlasting`)"
+                ));
+            }
+            // ... and a profane one: its signature gift and its draws (§5, §7.1).
+            let profane = (creature.on_eat.as_ref())
+                .is_some_and(|e| e.gives.is_some() && e.profane.is_some());
+            if def.portal.is_none() && !profane {
+                return Err(format!(
+                    "layer boss `{id}` must leave a profane corpse (`on_eat` with `gives` and \
+                     `profane`)"
                 ));
             }
             let name = &boss.vault;

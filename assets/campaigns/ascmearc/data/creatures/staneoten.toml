@@ -34,7 +34,8 @@ weapon_skills = { thrown = 6 }
 natural = { defence = 2, protection = 7, name = "hide" }
 resist = { cold = 25, electricity = 25 }
 everlasting = true
-on_eat = { message = "Like chewing the hill itself; it sits in you like a stone.", vomit = 30, train = { strength = 200 } }
+# A profane corpse (docs/design/profane-gifts.md §4): its signature, sure, and two draws.
+on_eat = { message = "Like chewing the hill itself.", gives = "hurlers_arm", profane = { rolls = 2, tiers = { lesser = 10, greater = 50, dire = 40 } } }
 blood = "#7a3a1a"
 [creature.attack]
 damage = "6d10"

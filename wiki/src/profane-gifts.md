@@ -5,9 +5,10 @@ your body for good. You get the keeper's own gift for certain, then one or more 
 random from a table of good, bad, and mixed changes, and the meal pulls you hard toward evil.
 Nothing takes a profane gift away again except another gift.
 
-So far only the corpse of [Gnægan the Rat King](creatures.md#creature-gnaegan), the keeper of the
-tenth floor, gives profane gifts. The other keepers' corpses are eaten like any other
-[corpse](food.md#corpses) for now.
+Every keeper's corpse gives profane gifts, from [Gnægan the Rat King](creatures.md#creature-gnaegan)
+on the tenth floor to [Nīðdraca the Hate-Wyrm](creatures.md#creature-nithdraca) on the hundredth.
+The deeper the keeper, the more gifts its meal draws, and the more of them come from the greater and dire
+tiers.
 
 ## Eating a keeper's corpse
 
@@ -40,6 +41,17 @@ column is how many gifts the meal draws; the last three columns are each roll's 
 tier of the table.
 
 {{#include generated/profane-corpses.md}}
+
+A gift's resistance adds to the rest of yours, with no cap on the total, but at most 75 % of it
+ever counts (see [resistance](damage-types.md#armour-and-resistance)). So a signature's 100 % is
+75 % with 25 to spare: [Rime-blooded](#talent-rime-blooded) keeps you at 75 % to cold even beside a 25 % weakness to it.
+No gift makes you immune. Eat both wyrms and their gifts add up: 100 − 25 = 75 % to fire and to
+cold alike, all of it counting.
+
+[Hate-wyrm's heart](#talent-hate-wyrms-heart) lets you breathe fire, as the Wyvern's [Fire breath](horoscope.md#talent-fire-breath)
+does but far stronger. It is used from the [abilities menu](abilities.md#the-abilities-menu), listed under Profane. If your sign
+already gave you Fire breath you still have one breath, listed under your birth sign: the
+stronger one, whichever came first.
 
 ## How a gift is drawn
 

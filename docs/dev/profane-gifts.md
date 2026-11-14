@@ -7,8 +7,8 @@ out the phases). Keep this file current with the code, as CLAUDE.md says.
 What is in so far: the everlasting corpses (P1, `docs/dev/hunger.md`), the gift machinery
 (P2, #1625): the data, the tree, bestowing and rescinding, the dumps, the Talents page; and
 Gnægan's meal (P3, #1626): the signatures' `only`, a profane corpse's `gives` and `profane`, the
-draw, and the deed. Gnægan is the one profane corpse so far; the other nine bosses' signatures
-come with P4 (#1627). The spec (§8 "Hunger") and the wiki (`wiki/src/profane-gifts.md`) say what
+draw, and the deed; and the other nine signatures (P4, #1627): every layer boss of Grundlēas
+leaves a profane corpse. The spec (§8 "Hunger") and the wiki (`wiki/src/profane-gifts.md`) say what
 eating one does.
 
 ## Data: `data/profane/`
@@ -52,8 +52,28 @@ the file's path: Rat-king's court is
 `assets/campaigns/ascmearc/data/profane/rat_kings_court.toml`, since shared data names shared
 creatures only), and refuses a `replaces` or `undoes` naming one.
 
-Not yet on: the campaign check that every endless boss has `gives` and `profane` (P4), the tier
-coverage check (P6). Rat-king's court lacks its `kin_to { tag = "vermin" }` until P5.
+The ten signatures live in `assets/campaigns/ascmearc/data/profane/`, one file each, beside their
+bosses' `on_eat` in `data/creatures/` (rolls and tier odds per boss: design §7.1, 1/1/1/2/2/2/2/3/3/3
+from Gnægan to Nīðdraca). Where a boss's old corpse gave `train` marks its signature gives `stat`
+points instead; the tags' default marks (`[corpses.by_tag]`: giant, hag, caster, vermin) still
+come with the corpse, as for Gnægan. Līgetdrȳ's corpse teaches Decipher script (`skills`, up to
+60) beside its gift. The campaign check (`content/layer_boss.rs::pin_lairs`): every keeper of an
+endless branch leaves a corpse that is `everlasting` and profane (`gives` and `profane`); a
+portal branch's warden is exempt.
+
+The signatures' resistances are written against #1620: 100 in the total is 75 effective with 25
+to spare (Rime-blooded's cold under Hate-wyrm's heart's −25 is still 75), the wyrms'
+vulnerabilities stay (D8), and no gift makes the player immune.
+
+**Sign actives from a gift.** Hate-wyrm's heart carries the Wyvern pick's `fire_breath` effect,
+larger (12d8 over 10 cells, the `drained` cooldown at 1 degree). `SignMods::add` keeps one breath,
+the one with the larger mean damage (`Roll::mean_x2`), whichever was taken first, and one stare,
+the larger `severity`. The abilities menu lists such an active under `Source::Profane` ("profane")
+when no non-gift talent of the player's gives it (`Ability::source_for`, `OwnAbility::source`),
+else under the birth sign.
+
+Not yet on: the tier coverage check (P6). Rat-king's court lacks its `kin_to { tag = "vermin" }`
+until P5.
 
 ## In the world: `world/profane.rs`
 
@@ -104,6 +124,9 @@ load, as any unknown talent does.
 `content/profane.rs` (the tree, the symmetric excludes, the loader's refusals) and
 `world/eat_tests.rs` (Gnægan's meal in §4's order, an interrupted meal, the fallbacks, the empty
 table, the deed in full and diminished, a paladin's zeal, the loader's profane-corpse and
-signature refusals), `world/profane_tests.rs` (bestow; rescind reversing `stat` exactly; Withered at the floor;
+signature refusals), `world/signature_tests.rs` (each of the nine corpses: its gift, its stats, its resistance totals;
+Līgetdrȳ's Decipher script; the two wyrms summed and capped; one breath, the larger; the
+`Fire breath (profane)` row), `world/layer_boss_tests.rs` (every keeper's profane corpse, the
+campaign check), `world/profane_tests.rs` (bestow; rescind reversing `stat` exactly; Withered at the floor;
 `replaces`; `undoes` with and without the boon; `excludes` both ways; `not_for`; a save; the
 `progress` row).

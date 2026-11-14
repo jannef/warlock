@@ -1,0 +1,19 @@
+# Campaign-owned: Hrīmwyrm's signature gift (docs/design/profane-gifts.md §5), given sure by its
+# corpse's `on_eat.gives` and never drawn (`only`, weight 0). Its tier groups it in the wiki.
+# Its fire vulnerability stays (§14, D8); with Hate-wyrm's heart the two wyrms sum.
+[[gift]]
+id = "rime_blooded"
+name = "Rime-blooded"
+kind = "mixed"
+tier = "lesser"
+weight = 0
+only = "hrimwyrm"
+description = "The cold under the world is in your veins: cold and freezing water hardly touch you, and you are stronger and tougher, but fire bites deeper."
+line = "The wyrm's flesh is cold as the deep, and the cold stays."
+effects = [
+    { kind = "resist", damage = "cold", value = 100 },
+    { kind = "resist", damage = "fire", value = -25 },
+    { kind = "plunge_proof" },
+    { kind = "stat", stat = "strength", value = 1 },
+    { kind = "stat", stat = "toughness", value = 1 },
+]

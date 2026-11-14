@@ -195,6 +195,7 @@ fn the_player_perceives_only_their_own_trained_skills() {
         skill_abilities(&w),
         [OwnAbility {
             ability: Ability::Skill(skill(&w, "knowledge")),
+            source: crate::ability::Source::Skill,
             unavailable: Some(Unavailable::NotYet),
         }]
     );

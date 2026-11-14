@@ -1,0 +1,17 @@
+# Campaign-owned: Grundwyrgen's signature gift (docs/design/profane-gifts.md §5), given sure by
+# its corpse's `on_eat.gives` and never drawn (`only`, weight 0). Its tier groups it in the wiki.
+[[gift]]
+id = "mere_wifes_hide"
+name = "Mere-wife's hide"
+kind = "boon"
+tier = "greater"
+weight = 0
+only = "grundwyrgen"
+description = "A hide that turns blades: your skin is thick and grey, you are stronger, you swim as the mere-folk do, and no grip holds you long."
+line = "Your skin thickens and greys, and the water no longer feels cold."
+effects = [
+    { kind = "natural", value = 2 },
+    { kind = "stat", stat = "strength", value = 2 },
+    { kind = "swimmer" },
+    { kind = "status_eases", status = "held", value = 100 },
+]

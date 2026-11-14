@@ -423,6 +423,7 @@ fn a_shield_bash_is_a_blow_with_the_shield_that_trains_shield_bashing() {
     use crate::ability::{Ability, OwnAbility, Unavailable};
     let bash = |unavailable| OwnAbility {
         ability: Ability::ShieldBash,
+        source: crate::ability::Source::WeaponSkill,
         unavailable,
     };
     let listed = |w: &World| {

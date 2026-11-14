@@ -259,6 +259,7 @@ fn blocked_actions_are_refused_and_abilities_that_cost_them_greyed_out() {
         bash(&w),
         OwnAbility {
             ability: Ability::ShieldBash,
+            source: crate::ability::Source::WeaponSkill,
             unavailable: Some(Unavailable::While(fumbling)),
         }
     );

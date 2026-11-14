@@ -1,0 +1,17 @@
+# Campaign-owned: Wēalāf's signature gift (docs/design/profane-gifts.md §5), given sure by its
+# corpse's `on_eat.gives` and never drawn (`only`, weight 0). Its tier groups it in the wiki.
+[[gift]]
+id = "barrow_kings_will"
+name = "Barrow-king's will"
+kind = "mixed"
+tier = "greater"
+weight = 0
+only = "wealaf"
+description = "A will that outlasted a kingdom: your will is stronger, and the grave's cold touch and what drains the living take you less, but your wounds knit slowly."
+line = "Your heart slows, and does not mind."
+effects = [
+    { kind = "stat", stat = "willpower", value = 2 },
+    { kind = "resist", damage = "necrotic", value = 50 },
+    { kind = "drain_checks", value = 4 },
+    { kind = "healing_percent", value = -25 },
+]

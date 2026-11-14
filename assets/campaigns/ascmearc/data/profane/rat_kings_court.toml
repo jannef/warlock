@@ -1,6 +1,6 @@
 # Campaign-owned: Gnægan's signature gift (docs/design/profane-gifts.md §5), given sure by its
 # corpse's `on_eat.gives` and never drawn (`only`, weight 0). Its tier groups it in the wiki.
-# Its `kin_to { tag = "vermin" }` comes with the body phase (P5, #1627).
+# Its `kin_to { tag = "vermin" }` comes with the body phase (P5, #1628).
 [[gift]]
 id = "rat_kings_court"
 name = "Rat-king's court"

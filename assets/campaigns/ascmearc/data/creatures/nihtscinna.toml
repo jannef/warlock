@@ -37,7 +37,8 @@ incorporeal = { wall_defence = 10 }
 resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50 }
 immune = ["necrotic", "poison"]
 everlasting = true
-on_eat = { message = "A husk of shadow that weighs next to nothing: it tastes of dust and the dark.", vomit = 40 }
+# A profane corpse (docs/design/profane-gifts.md §4): its signature, sure, and three draws.
+on_eat = { message = "A husk of shadow that weighs next to nothing.", gives = "hollow_of_the_night", profane = { rolls = 3, tiers = { greater = 50, dire = 50 } } }
 blood = "none"
 [creature.attack]
 damage = "6d8"
