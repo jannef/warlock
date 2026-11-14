@@ -9,6 +9,7 @@
 //! Like every screen it is a plain state machine, testable without a window. What the list
 //! shows comes from the saves' summaries (`save::Summary`), read when the screen opens.
 
+use super::cursor;
 use super::dialog_screen::Dialog;
 use super::menu::{Hints, Nav, Panel, Press};
 use super::screens::{MenuChoice, ScreenAction};
@@ -131,8 +132,8 @@ impl CharactersScreen {
         let count = self.characters.len();
         match press.nav {
             Nav::Back => return ScreenAction::Close,
-            Nav::Up if count > 0 => self.selected = (self.selected + count - 1) % count,
-            Nav::Down if count > 0 => self.selected = (self.selected + 1) % count,
+            Nav::Up => self.selected = cursor::up(self.selected, count),
+            Nav::Down => self.selected = cursor::down(self.selected, count),
             Nav::Enter => {
                 // A save of another version cannot be continued: the details say so.
                 if let Some(character) = self.characters.get(self.selected)

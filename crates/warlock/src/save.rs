@@ -20,7 +20,7 @@ pub use characters::{SavedCharacter, Summary, now, played_text};
 use crate::cli::Args;
 use crate::game::{Game, SimSet};
 use crate::paths::{SAVES_DIR, SNAPSHOTS_DIR};
-use crate::storage::Backend;
+use crate::storage::{self, Backend, Folder};
 use bevy::prelude::*;
 use bevy::window::ExitSystems;
 use std::sync::Arc;
@@ -87,7 +87,7 @@ impl SaveStore {
             args.save_dir
                 .clone()
                 .map(Backend::Dir)
-                .or_else(default_backend)
+                .or_else(|| storage::default_backend(Folder::Data, "progress will not be saved"))
         };
         Self {
             backend,
@@ -245,22 +245,6 @@ impl SaveStore {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-fn default_backend() -> Option<Backend> {
-    crate::paths::locations().data.dir.clone().map(Backend::Dir)
-}
-
-/// Browser storage, unless the browser refuses it (some privacy modes): then saving is off.
-#[cfg(target_arch = "wasm32")]
-fn default_backend() -> Option<Backend> {
-    if crate::storage::web::available() {
-        Some(Backend::Browser)
-    } else {
-        warn!("browser storage is unavailable; progress will not be saved");
-        None
-    }
-}
-
 /// Asks the save systems to act. Written by input.
 #[derive(Message, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SaveCommand {
@@ -302,13 +286,18 @@ impl Plugin for SavePlugin {
 }
 
 /// The web build also saves when the page is hidden or closed. A hidden tab runs no frames, so a
-/// system cannot do it: after each turn a copy of the state (cheap; encoding is not, on big
-/// levels) and the character's summary are parked in `storage::web`, and the
-/// `visibilitychange`/`pagehide` listeners encode and write them as the character's files.
+/// system cannot do it: a copy of the state (encoding is dearer, on big levels) and the
+/// character's summary are parked in `storage::web` when a run starts, every [`PARK_TURNS`]
+/// turns, and whenever the level changes, and the `visibilitychange`/`pagehide` listeners encode
+/// and write them as the character's files.
 #[cfg(target_arch = "wasm32")]
 mod web_hooks {
     use super::*;
     use crate::storage::web;
+
+    /// Turns between two parked copies: the state is cloned whole, all its levels, so not on
+    /// every step of a held key (#1565). Hiding the page loses at most this many turns less one.
+    const PARK_TURNS: u64 = 10;
 
     pub fn build(app: &mut App) {
         if app.world().resource::<SaveStore>().writable().is_some() {
@@ -327,7 +316,7 @@ mod web_hooks {
         };
         let key = (
             game.save_id.clone(),
-            game.world.turn(),
+            game.world.turn() / PARK_TURNS,
             game.world.perception().level_name().to_string(),
         );
         if last.as_ref() != Some(&key) {

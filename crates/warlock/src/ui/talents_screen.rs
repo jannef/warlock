@@ -10,6 +10,7 @@
 //! Read-only: ↑↓ choose (the list scrolls); Esc, Enter, or its own key closes it. Read from the
 //! perception snapshot when it opens.
 
+use super::cursor;
 use super::menu::{Hints, Nav, Panel, Press, wrap};
 use super::screens::{ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
@@ -140,8 +141,8 @@ impl TalentsScreen {
         match press.nav {
             _ if own_key => return ScreenAction::Close,
             Nav::Back | Nav::Enter => return ScreenAction::Close,
-            Nav::Up => self.selected = (self.selected + n - 1) % n,
-            Nav::Down => self.selected = (self.selected + 1) % n,
+            Nav::Up => self.selected = cursor::up(self.selected, n),
+            Nav::Down => self.selected = cursor::down(self.selected, n),
             _ => {}
         }
         ScreenAction::Stay

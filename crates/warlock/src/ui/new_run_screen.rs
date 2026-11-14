@@ -10,6 +10,7 @@
 //! mentions it (#256).
 
 use super::chargen_screen::ScenarioPick;
+use super::cursor;
 use super::menu::{Hints, Nav, Panel, Press, wrap};
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{TEXT, TEXT_DIM};
@@ -145,8 +146,8 @@ impl NewRunScreen {
         }
         match press.nav {
             Nav::Back => return ScreenAction::Close,
-            Nav::Up if count > 0 => self.selected = (self.selected + count - 1) % count,
-            Nav::Down if count > 0 => self.selected = (self.selected + 1) % count,
+            Nav::Up => self.selected = cursor::up(self.selected, count),
+            Nav::Down => self.selected = cursor::down(self.selected, count),
             Nav::Erase => {
                 if let Seed::Field(seed) = &mut self.seed {
                     seed.pop();

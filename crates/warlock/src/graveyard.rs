@@ -18,7 +18,7 @@
 //!   (`warlock_core::world::Fallen`).
 
 use crate::cli::Args;
-use crate::storage::Backend;
+use crate::storage::{self, Backend, Folder};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use warlock_core::World;
@@ -184,7 +184,7 @@ impl GraveyardStore {
         let backend = match &args.config_dir {
             Some(dir) => Some(Backend::Dir(dir.clone())),
             None if dev_tool => None,
-            None => default_backend(),
+            None => storage::default_backend(Folder::Config, "no graveyard will be kept"),
         };
         Self { backend }
     }
@@ -241,21 +241,6 @@ impl GraveyardStore {
             .map(|()| true)
             .map_err(|e| format!("cannot write {}: {e}", backend.describe(FILE_NAME)))
     }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn default_backend() -> Option<Backend> {
-    crate::paths::locations()
-        .config
-        .dir
-        .clone()
-        .map(Backend::Dir)
-}
-
-/// Browser storage; without it (some privacy modes) no graveyard is kept.
-#[cfg(target_arch = "wasm32")]
-fn default_backend() -> Option<Backend> {
-    crate::storage::web::available().then_some(Backend::Browser)
 }
 
 #[cfg(test)]

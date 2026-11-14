@@ -10,10 +10,14 @@ Storage backends (`crates/warlock/src/storage.rs`): `Backend::Dir` (native files
 browser's from the keys under `warlock/<dir>/`, `storage::files_in`, tested natively).
 `SaveStore` and `SettingsStore` hold an `Option<Backend>`; new persistent files go through it, never
 `std::fs` directly. On the web the page-hide save cannot ask the world for a save (a hidden tab runs
-no frames), so `save.rs::web_hooks` keeps a clone of the state and the character's summary after
-every turn (`storage::web::Pending`: encoding is milliseconds on the vast level) and the
-`visibilitychange`/`pagehide` listeners encode and write them as that character's files.
-Unavailable storage means no saving plus a log warning; failed writes (quota) are messages, never
+no frames), so `save.rs::web_hooks` keeps a clone of the state and the character's summary when
+a run starts, every `PARK_TURNS` (10) turns, and on every level change, as autosave does
+(`storage::web::Pending`: encoding is milliseconds on the vast level; the clone is of every
+level, so not on every step, #1565), and the `visibilitychange`/`pagehide` listeners encode and
+write them as that character's files: hiding the page loses at most nine turns. Every store finds
+its default place through `storage::default_backend(Folder, lost)` (the config or data folder
+natively, browser storage on the web). Unavailable storage means no saving plus a log warning
+naming what is lost; failed writes (quota) are messages, never
 panics. Only the `web-sys` features in `crates/warlock/Cargo.toml` are enabled (size).
 
 **Saves are pinned to the game version that wrote them** (#840; owner, 2026-11-02: "we do not

@@ -19,6 +19,7 @@
 //! Like every screen these are plain state machines, testable without a window.
 
 use super::character_screen::{birth_parts, fit_joined, fit_parts};
+use super::cursor;
 use super::menu::{Hints, Nav, Panel, Press, wrap};
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
@@ -349,8 +350,8 @@ impl ChoiceScreen {
         let rows = self.choices.len() + 1;
         match press.nav {
             Nav::Back => return ScreenAction::Close,
-            Nav::Up => self.selected = (self.selected + rows - 1) % rows,
-            Nav::Down => self.selected = (self.selected + 1) % rows,
+            Nav::Up => self.selected = cursor::up(self.selected, rows),
+            Nav::Down => self.selected = cursor::down(self.selected, rows),
             Nav::Enter if self.choices.is_empty() => {}
             Nav::Enter => {
                 if self.selected == self.choices.len() {
@@ -641,8 +642,8 @@ impl SummaryScreen {
         let rows = SUMMARY_ROWS.len();
         match press.nav {
             Nav::Back => return ScreenAction::Close,
-            Nav::Up => self.selected = (self.selected + rows - 1) % rows,
-            Nav::Down => self.selected = (self.selected + 1) % rows,
+            Nav::Up => self.selected = cursor::up(self.selected, rows),
+            Nav::Down => self.selected = cursor::down(self.selected, rows),
             Nav::Enter => match SUMMARY_ROWS[self.selected].1 {
                 Row::Step(step) => return ScreenAction::Return(step.screen()),
                 Row::Sign => return ScreenAction::Return(ScreenName::Sign),

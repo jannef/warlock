@@ -10,6 +10,7 @@
 //! stale.
 
 use super::character_screen::fit_joined;
+use super::cursor;
 use super::menu::{Hints, Nav, Panel, Press};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM};
@@ -69,8 +70,8 @@ impl SkillsScreen {
         match press.nav {
             _ if own_key => return ScreenAction::Close,
             Nav::Back | Nav::Enter => return ScreenAction::Close,
-            Nav::Up => self.selected = (self.selected + n - 1) % n,
-            Nav::Down => self.selected = (self.selected + 1) % n,
+            Nav::Up => self.selected = cursor::up(self.selected, n),
+            Nav::Down => self.selected = cursor::down(self.selected, n),
             _ => {}
         }
         ScreenAction::Stay

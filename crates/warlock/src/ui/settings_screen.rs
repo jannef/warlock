@@ -2,6 +2,7 @@
 //! palette (spec §4.7), the clock, and the temperature unit (°C or °F, spec §6). Changes apply
 //! live, because the screen edits the [`Settings`] resource that rendering reads.
 
+use super::cursor;
 use super::menu::{Hints, Nav, Panel, Press};
 use super::screens::{ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
@@ -141,8 +142,8 @@ impl SettingsScreen {
         };
         match press.nav {
             Nav::Back => return ScreenAction::Close,
-            Nav::Up => self.selected = (self.selected + ROWS.len() - 1) % ROWS.len(),
-            Nav::Down => self.selected = (self.selected + 1) % ROWS.len(),
+            Nav::Up => self.selected = cursor::up(self.selected, ROWS.len()),
+            Nav::Down => self.selected = cursor::down(self.selected, ROWS.len()),
             Nav::Left | Nav::Right => match row {
                 Row::FontSize => {
                     let px = settings.font_px as i32 + step;

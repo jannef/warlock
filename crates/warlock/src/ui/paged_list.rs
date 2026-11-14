@@ -17,6 +17,7 @@
 //! page may take is known only when drawing (the console's size): screens pass it in with
 //! [`PagedList::set_room`] before laying out, and key presses read the last one.
 
+use super::cursor;
 use super::menu::{Hints, Nav, Panel};
 use super::{TEXT, TEXT_DIM};
 use crate::render::console::Console;
@@ -122,10 +123,10 @@ impl<T, K: Copy + Ord> PagedList<T, K> {
     /// Moves the cursor (Up and Down, wrapping around the list) or turns the page (the list
     /// page keys) for `nav`; returns whether `nav` was one of those.
     pub fn navigate(&mut self, nav: Nav) -> bool {
-        let n = self.items.len().max(1);
+        let n = self.items.len();
         match nav {
-            Nav::Up => self.cursor = (self.cursor + n - 1) % n,
-            Nav::Down => self.cursor = (self.cursor + 1) % n,
+            Nav::Up => self.cursor = cursor::up(self.cursor, n),
+            Nav::Down => self.cursor = cursor::down(self.cursor, n),
             Nav::NextPage => self.turn(true),
             Nav::PrevPage => self.turn(false),
             _ => return false,

@@ -8,6 +8,7 @@
 //! [`ScreenAction`], so it is testable without a window. Selection is always shown by text (a `>`
 //! marker), never by color alone.
 
+use super::cursor;
 use super::dialog_screen::Dialog;
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{ACCENT, PANEL_BG, TEXT, TEXT_DIM};
@@ -389,8 +390,8 @@ impl MainMenu {
         let items = self.items();
         self.selected = self.selected.min(items.len() - 1);
         match press.nav {
-            Nav::Up => self.selected = (self.selected + items.len() - 1) % items.len(),
-            Nav::Down => self.selected = (self.selected + 1) % items.len(),
+            Nav::Up => self.selected = cursor::up(self.selected, items.len()),
+            Nav::Down => self.selected = cursor::down(self.selected, items.len()),
             Nav::Back if self.pause => return ScreenAction::Close,
             Nav::Enter => {
                 return match items[self.selected] {

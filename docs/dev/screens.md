@@ -180,7 +180,8 @@ to open, read keys for, or draw one:
   where room, not the 26 letters, is what pages the list, the screen's margin and gaps give way
   first) and at most 26 items; letters run down a page from `a` and restart on every page
   (`at_letter`), a class split across pages repeats its header, and the frame shows `Page 2/3`
-  (`draw_label`). The list's cursor picks the page shown; Up/Down move it across pages, and the
+  (`draw_label`). The list's cursor picks the page shown; Up/Down move it across pages (wrapping
+  round at the ends, `ui/cursor.rs`, the step every screen's list takes), and the
   `Context::Menu` commands `NextListPage` (`>`, PageDown) and `PrevListPage` (`<`, PageUp),
   `Nav::NextPage`/`PrevPage`, turn the page (cursor to its first item; no wrapping). Drawing knows
   the console, presses do not: `route_keys` keeps `ScreenStack::console` current and the stack
