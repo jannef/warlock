@@ -99,7 +99,7 @@ use crate::daylight::{self, DayPhase};
 use crate::equipment::Equipment;
 use crate::fov::{compute_fov, radius2};
 use crate::geom::{Dir, Pos};
-use crate::grid::Grid;
+use crate::grid::Window;
 use crate::hunger::Hunger;
 use crate::light::{
     Area, BOUNCE_STEPS, Bounce, Light, LightCache, Moon, SUN_KEY, ShadowSteps, Sky, Sun, Sunlight,
@@ -528,12 +528,12 @@ pub(crate) struct Perception {
     /// The temperature of the air where the player is (spec §5 "Temperature").
     temperature: Temperature,
     /// Ambient plus sky plus bounce light; meaningful on visible cells only.
-    base: Grid<Light>,
-    sight: Grid<Sight>,
+    base: Window<Light>,
+    sight: Window<Sight>,
     /// Visible cells in the order they were found.
     visible_cells: Vec<Pos>,
     /// Perceived light; meaningful on visible cells only.
-    light: Grid<Light>,
+    light: Window<Light>,
     sources: Vec<SeenLight>,
     actors: Vec<SeenActor>,
     /// What the seen creatures (not the player) wear and wield, by actor, in slot order.
@@ -669,8 +669,13 @@ impl Perception {
             _ => VIEW_RADIUS,
         };
 
-        // Line of sight.
-        let mut los = Grid::new(width, height, false);
+        // Line of sight. The per-turn grids store only the box of cells in view (`Window`): on
+        // the vast level a whole grid is 120,000 cells.
+        let (lo, hi) = (
+            Pos::new(viewer.x - range, viewer.y - range),
+            Pos::new(viewer.x + range, viewer.y + range),
+        );
+        let mut los = Window::new(width, height, lo, hi, false);
         let mut los_cells = Vec::new();
         // Smoke stops sight as a wall does, but is no wall (`world/zone.rs`).
         let stops = level.sight_stops(content, viewer, state.time);
@@ -687,6 +692,8 @@ impl Perception {
         let bond = bond_view(state, content, &talents);
         let both = bond.as_ref().map(|bond| {
             let (mut lit_los, mut lit_cells) = (los.clone(), los_cells.clone());
+            let (r, at) = (bond.los.radius(), bond.beast.pos);
+            lit_los.cover(Pos::new(at.x - r, at.y - r), Pos::new(at.x + r, at.y + r));
             for p in bond.los.cells() {
                 if let Some(seen) = lit_los.get_mut(p)
                     && !*seen
@@ -771,7 +778,11 @@ impl Perception {
         // A shadowed room keeps only part of every bit of a cell's light: its base light and each
         // source's contribution alike, so they still add up to the whole.
         let shade = |p: Pos, light: Light| level.shade(content, p, light, state.time);
-        let mut base = Grid::new(width, height, Light::DARK);
+        // What is in view and a cell round it (wall completion, wall faces); a write beyond
+        // (a creature smelt out of sight) grows the box.
+        let (seen_min, seen_max) = Area::around(lit_cells.iter().copied(), 1, width, height)
+            .map_or((viewer, viewer), |a| (a.min, a.max));
+        let mut base = Window::new(width, height, seen_min, seen_max, Light::DARK);
         for &p in lit_cells {
             base[p] = shade(p, ambient.saturating_add(indirect(p)));
         }
@@ -786,12 +797,20 @@ impl Perception {
                     pos: source.pos,
                     preset: source.preset,
                 };
-                let cells = lit_in_sight(&mask.cells, lit_los, |q, l| shade(q, eye.perceive(l)));
+                let cells = lit_in_sight(
+                    &mask.cells,
+                    |q| lit_los.get(q) == Some(&true),
+                    |q, l| shade(q, eye.perceive(l)),
+                );
                 (source.key, emitter, cells)
             })
             .collect();
         for (key, emitter, beam) in &beams {
-            let cells = lit_in_sight(&beam.cells, lit_los, |q, l| shade(q, eye.perceive(l)));
+            let cells = lit_in_sight(
+                &beam.cells,
+                |q| lit_los.get(q) == Some(&true),
+                |q, l| shade(q, eye.perceive(l)),
+            );
             lit.push((*key, *emitter, cells));
         }
         for (_, _, cells) in &lit {
@@ -811,7 +830,7 @@ impl Perception {
 
         // Transparent cells: visible with enough light or within darkvision; the viewer's own
         // cell always.
-        let mut sight = Grid::new(width, height, Sight::Hidden);
+        let mut sight = Window::new(width, height, seen_min, seen_max, Sight::Hidden);
         let mut visible_cells = Vec::new();
         let mut seen = Vec::new();
         let smoke_hides = |p: Pos| level.smoke_hides(viewer, p, state.time);
