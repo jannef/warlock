@@ -199,7 +199,7 @@ fn a_full_moon_lets_hounds_nose_smell_blood_two_cells_farther() {
     // Blood scent is no gift: the moon does not lengthen it.
     w.player_mut().talents = Default::default();
     give(&mut w, "blood_scent");
-    let reach = w.state.player().talent_mods(&CONTENT).scent[0].1;
+    let reach = w.state.player().talent_mods(&CONTENT).senses.scent[0].1;
     if reach < 7 {
         assert!(!sees(&w, rat), "Blood scent's {reach} cells");
     }

@@ -183,10 +183,9 @@ pub(super) fn draw_indicator(console: &mut Console, overlays: DevOverlays) {
 mod tests {
     use super::*;
     use std::sync::Arc;
-    use warlock_core::content::Content;
 
     fn showcase() -> World {
-        let content = Arc::new(Content::builtin().expect("builtin content"));
+        let content = Arc::new(warlock_assets::content().expect("builtin content"));
         World::new(content, "showcase", None).expect("world")
     }
 

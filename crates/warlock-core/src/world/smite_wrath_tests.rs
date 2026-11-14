@@ -51,7 +51,7 @@ fn the_paladin_gains_holy_wrath_at_40_and_banishing_at_50() {
     let holds = |w: &World| {
         let mods = w.state.player().talent_mods(w.content());
         let banish = mods.has_active(ClassActive::BanishingSmite);
-        (mods.holy_wrath.is_some(), banish)
+        (mods.faith.holy_wrath.is_some(), banish)
     };
     reach(&mut w, 39);
     assert_eq!(holds(&w), (false, false));

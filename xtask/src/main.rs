@@ -266,7 +266,7 @@ fn web() -> Result<(), String> {
 }
 
 /// Fails when a release artifact embeds the test world: its `campaign.toml`'s path is a key of
-/// the embedded content table (`warlock-core/build.rs`) whenever the `showcase` feature is on.
+/// the embedded content table (`warlock-assets/build.rs`) whenever the `showcase` feature is on.
 fn no_test_world(artifact: &Path) -> Result<(), String> {
     const MARKER: &[u8] = b"campaigns/showcase/campaign.toml";
     let bytes =

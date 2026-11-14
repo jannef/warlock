@@ -13,7 +13,7 @@ impl World {
     /// `use:knock:DIR`: the lock in `dir` springs open, its mana spent; refused, with no time,
     /// where nothing locked stands.
     pub(super) fn knock(&mut self, dir: Dir) -> Spent {
-        let Some(knock) = self.state.player().talent_mods(&self.content).knock else {
+        let Some(knock) = self.state.player().talent_mods(&self.content).magic.knock else {
             return Spent::Nothing;
         };
         let at = self.player_pos().step(dir);

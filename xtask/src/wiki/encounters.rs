@@ -11,6 +11,7 @@ use warlock_core::content::{
 use warlock_core::daylight::DayPhase;
 use warlock_core::dice::Dice;
 use warlock_core::skills::Effect;
+use warlock_core::talent::DelvingEffect;
 
 /// The landscapes a step rolls on, in the order the pages list them: safest first.
 const LANDSCAPES: [Landscape; 7] = [
@@ -92,7 +93,7 @@ pub(super) fn checks(content: &Content) -> String {
     let alert: Vec<String> = (content.talents().iter())
         .flat_map(|(_, t)| t.effects.iter().map(move |e| (t, e)))
         .filter_map(|(t, e)| match e {
-            TalentEffect::Notice { value } => Some(format!(
+            TalentEffect::Delving(DelvingEffect::Notice { value }) => Some(format!(
                 "{} ({})",
                 super::talents::talent_link(content, &t.id, &t.name),
                 signed(*value)
@@ -457,7 +458,7 @@ mod tests {
 
     #[test]
     fn the_tables_read_the_data() {
-        let content = Content::builtin().expect("content");
+        let content = warlock_assets::content().expect("content");
         let rates = rates(&content);
         assert!(rates.contains("| Road | 1% | 1.5% | 2% |"), "{rates}");
         assert!(rates.contains("(20 min): 0.33%"), "{rates}");

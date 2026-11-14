@@ -162,11 +162,10 @@ mod tests {
     use super::*;
     use std::sync::Arc;
     use warlock_core::World;
-    use warlock_core::content::Content;
 
     #[test]
     fn a_letter_calls_its_shape() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let world = World::new(content, "showcase", None).expect("world");
         let mut screen = ShapeScreen::new(Some(&world.perception()));
         screen.fit(100, 60);

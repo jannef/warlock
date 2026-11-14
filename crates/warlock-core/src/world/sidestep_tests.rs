@@ -37,7 +37,10 @@ fn world(map: &str, stats: &str) -> World {
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     let w = World::new(content, "sidestep_hall", None).expect("world");
     let talents = w.state.player().talent_mods(w.content());
-    assert!(!talents.sure_step && !talents.pit_proof, "no Light step");
+    assert!(
+        !talents.delving.sure_step && !talents.delving.pit_proof,
+        "no Light step"
+    );
     w
 }
 

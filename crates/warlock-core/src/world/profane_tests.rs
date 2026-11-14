@@ -48,7 +48,7 @@ fn a_gift_is_bestowed_with_its_lines_and_held_as_a_boon() {
     assert!(holds(&w, "thick_blooded"));
     assert!(said(&w, "Your blood runs slow and dark."));
     assert!(said(&w, "You are Thick-blooded."));
-    assert!(w.state.player().talent_mods(&w.content).clotting);
+    assert!(w.state.player().talent_mods(&w.content).vigour.clotting);
     // Held already: refused.
     let before = w.state.player().boons.len();
     give(&mut w, "thick_blooded");
@@ -64,11 +64,11 @@ fn a_gift_is_bestowed_with_its_lines_and_held_as_a_boon() {
 fn the_kept_talent_sum_follows_a_gift_bestowed_and_rescinded() {
     let mut w = world("human,male,warrior");
     // The sum is read (and kept) before the gift, so a stale one would show here.
-    assert!(!w.state.player().talent_mods(&w.content).clotting);
+    assert!(!w.state.player().talent_mods(&w.content).vigour.clotting);
     give(&mut w, "thick_blooded");
-    assert!(w.state.player().talent_mods(&w.content).clotting);
+    assert!(w.state.player().talent_mods(&w.content).vigour.clotting);
     assert!(w.rescind(gift(&w, "thick_blooded")));
-    assert!(!w.state.player().talent_mods(&w.content).clotting);
+    assert!(!w.state.player().talent_mods(&w.content).vigour.clotting);
 }
 
 #[test]

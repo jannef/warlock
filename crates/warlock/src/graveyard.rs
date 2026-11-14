@@ -260,7 +260,6 @@ mod tests {
     use super::*;
     use std::sync::Arc;
     use warlock_core::Action;
-    use warlock_core::content::Content;
 
     /// An entry as version 0.11 wrote it (#1137), with a field from a later version and one of
     /// its own missing: it must read under every version after.
@@ -404,7 +403,7 @@ version = "0.14.0"
         assert!(text.starts_with(FIXTURE_0_11), "{text}");
         assert_eq!(store.read().len(), 5);
         // All the dead go to the run, the petrified marked, each with how they died in words.
-        let content = Content::builtin().expect("content");
+        let content = warlock_assets::content().expect("content");
         let dead = store.dead(&content);
         assert_eq!(dead.len(), 5);
         let petrified: Vec<&str> = (dead.iter())
@@ -418,7 +417,7 @@ version = "0.14.0"
 
     #[test]
     fn a_death_is_written_with_its_cause() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let spec = "dwarf,female,warrior".parse().expect("spec");
         let mut w = World::start_run(content, "showcase", None, Some(&spec), Some("Brakka"), true)
             .expect("world");

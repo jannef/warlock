@@ -10,6 +10,7 @@ use warlock_core::content::{
 };
 use warlock_core::skills::Effect;
 use warlock_core::stats::Stat;
+use warlock_core::talent::{FaithEffect, MagicEffect, SongEffect, StealthEffect};
 
 /// Every ability, grouped as the menu groups them (by where they come from) and by name within a
 /// group: who has it, what it asks for, what it does, how long it takes at a normal pace, and the
@@ -29,7 +30,7 @@ pub(super) fn abilities(content: &Content) -> String {
                 let id = content.spell_of(spell).map_or("", |s| s.id.as_str());
                 let who = table_holders(
                     content,
-                    |e| matches!(e, TalentEffect::Spell { spell } if spell == id),
+                    |e| matches!(e, TalentEffect::Magic(MagicEffect::Spell { spell }) if spell == id),
                 );
                 let who = if who.is_empty() {
                     "whoever learns it from a scroll".to_string()
@@ -71,7 +72,7 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::BloodMagic => "everyone with the Blood magic talent".into(),
             Ability::ShieldBash => "everyone (usable with a shield in hand)".into(),
             Ability::ThrowVoice => {
-                table_holders(content, |e| matches!(e, TalentEffect::ThrowVoice))
+                table_holders(content, |e| matches!(e, TalentEffect::Stealth(StealthEffect::ThrowVoice)))
             }
             Ability::Pray => {
                 "everyone beside a forgotten altar not yet spent (a prayer takes a minute)".into()
@@ -101,7 +102,9 @@ pub(super) fn abilities(content: &Content) -> String {
                 let time = (book.id("consecrate").into_iter())
                     .flat_map(|t| book.get(t).effects.iter())
                     .find_map(|e| match e {
-                        TalentEffect::Consecrate { time, .. } => Some(time.clone()),
+                        TalentEffect::Faith(FaithEffect::Consecrate { time, .. }) => {
+                            Some(time.clone())
+                        }
                         _ => None,
                     })
                     .unwrap_or_default();
@@ -113,7 +116,9 @@ pub(super) fn abilities(content: &Content) -> String {
                 let time = (book.id("sanctuary").into_iter())
                     .flat_map(|t| book.get(t).effects.iter())
                     .find_map(|e| match e {
-                        TalentEffect::Sanctuary { time, .. } => Some(time.clone()),
+                        TalentEffect::Faith(FaithEffect::Sanctuary { time, .. }) => {
+                            Some(time.clone())
+                        }
                         _ => None,
                     })
                     .unwrap_or_default();
@@ -408,7 +413,7 @@ pub(super) fn songs(content: &Content) -> String {
     let mut rows: Vec<(String, String)> = Vec::new();
     for (_, def) in content.talents().iter() {
         for effect in &def.effects {
-            let TalentEffect::Song {
+            let TalentEffect::Song(SongEffect::Song {
                 id,
                 on,
                 status,
@@ -418,13 +423,13 @@ pub(super) fn songs(content: &Content) -> String {
                 mana,
                 check,
                 difficulty,
-            } = effect
+            }) = effect
             else {
                 continue;
             };
             let who = table_holders(
                 content,
-                |e| matches!(e, TalentEffect::Song { id: other, .. } if other == id),
+                |e| matches!(e, TalentEffect::Song(SongEffect::Song { id: other, .. }) if other == id),
             );
             let paid = match resource {
                 Some(r) => {
@@ -519,12 +524,12 @@ pub(super) fn song_odds(content: &Content) -> String {
     let mut songs: Vec<(&str, Stat, i32)> = Vec::new();
     for (_, def) in content.talents().iter() {
         for effect in &def.effects {
-            if let TalentEffect::Song {
+            if let TalentEffect::Song(SongEffect::Song {
                 on: SongOn::Hearers,
                 check: Some(stat),
                 difficulty,
                 ..
-            } = effect
+            }) = effect
             {
                 songs.push((def.name.as_str(), *stat, *difficulty));
             }
@@ -581,7 +586,7 @@ mod tests {
 
     #[test]
     fn the_song_tables_read_the_data() {
-        let content = Content::builtin().expect("content");
+        let content = warlock_assets::content().expect("content");
         let songs = songs(&content);
         assert!(
             songs.contains("[Inspire](abilities.md#ability-inspire)"),

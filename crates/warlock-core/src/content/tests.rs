@@ -1,6 +1,5 @@
 use super::*;
 use crate::geom::{Dir, Pos};
-use std::path::Path;
 
 #[test]
 fn builtin_content_loads() {
@@ -229,9 +228,9 @@ fn a_duplicate_id_across_table_files_names_both_files() {
     assert_eq!(content.object_id("nail"), Some(ObjectId(0)));
 }
 
-/// `from_dir` reads subdirectories like `build.rs` embeds them (one walk, `walk.rs`): the
-/// same paths, outside `campaigns/`, `data/`, and `vaults/` nothing, the built-in set being
-/// exactly what is on disk under `assets/` (with the `showcase` feature or without).
+/// `from_dir` reads subdirectories like `warlock-assets` embeds them (one walk, `walk.rs`):
+/// the same paths, outside `campaigns/`, `data/`, and `vaults/` nothing, the test world only
+/// with `showcase` (the embedded copy is checked against the disk in `warlock-assets`).
 #[test]
 fn from_dir_reads_nested_directories_like_the_build() {
     let root = std::env::temp_dir().join(format!("warlock-content-{}", std::process::id()));
@@ -243,7 +242,11 @@ fn from_dir_reads_nested_directories_like_the_build() {
     std::fs::write(deep.join("bat.toml"), "b = 2\n").expect("write");
     std::fs::write(deep.join("notes.txt"), "not content\n").expect("write");
     std::fs::write(root.join("levels/hub.toml"), "c = 3\n").expect("write");
-    let files = ContentFiles::from_dir(&root).expect("readable");
+    let showcase = root.join("campaigns/showcase");
+    std::fs::create_dir_all(&showcase).expect("temp dir");
+    std::fs::write(showcase.join("campaign.toml"), "d = 4\n").expect("write");
+    let with_showcase = ContentFiles::from_dir(&root, true).expect("readable");
+    let files = ContentFiles::from_dir(&root, false).expect("readable");
     std::fs::remove_dir_all(&root).expect("cleanup");
     let paths: Vec<&str> = files.files.keys().map(String::as_str).collect();
     assert_eq!(
@@ -262,9 +265,12 @@ fn from_dir_reads_nested_directories_like_the_build() {
             ("data/creatures/rat.toml", "a = 1\n"),
         ]
     );
-    let assets = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets");
-    let on_disk = ContentFiles::from_dir(&assets).expect("assets");
-    assert_eq!(on_disk.files, ContentFiles::builtin().files);
+    assert!(
+        with_showcase
+            .files
+            .contains_key("campaigns/showcase/campaign.toml")
+    );
+    assert_eq!(with_showcase.files.len(), files.files.len() + 1);
 }
 
 #[test]

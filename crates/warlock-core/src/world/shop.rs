@@ -228,7 +228,7 @@ pub fn favour(content: &Content, shops: &Shops, actor: &super::Actor) -> i32 {
 pub fn haggling(content: &Content, shops: &Shops, actor: &super::Actor) -> i32 {
     let presence = actor.stats.modifier(Stat::Presence) * i32::from(shops.presence);
     let bargain = actor.skill_effect(content, Effect::Bargain);
-    presence + bargain + actor.talent_mods(content).favour_percent
+    presence + bargain + actor.talent_mods(content).fortune.favour_percent
 }
 
 /// How many of `object` `stacks` hold.

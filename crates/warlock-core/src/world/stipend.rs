@@ -1,6 +1,6 @@
 //! The aristocrat's stipend and servant (spec §8 "Class abilities": Stipend; #1405).
 //!
-//! A character with the Stipend class ability (`TalentMods::stipend`, the aristocrat's from
+//! A character with the Stipend class ability (`FortuneMods::stipend`, the aristocrat's from
 //! level 1) has their family put something by at every level they reach, a prestige class's
 //! too ([`World::grow_stipend`], one line in `experience.rs::rise_from`): the gold of
 //! `data/stipend.toml` (`each` plus its dice, Landed noble's percent more), and one loot roll
@@ -72,14 +72,14 @@ pub(crate) fn of_level(
     let mut rng = Rng::stream(seed, &format!("stipend/{level}"));
     let rolled = u32::try_from(rules.dice.roll(&mut rng).max(0)).unwrap_or(0);
     let gold = u64::from(rules.each + rolled)
-        * u64::try_from(100 + mods.stipend_gold_percent).unwrap_or(0)
+        * u64::try_from(100 + mods.fortune.stipend_gold_percent).unwrap_or(0)
         / 100;
     let luck = Luck {
-        magic: rules.magic + mods.stipend_magic_percent,
+        magic: rules.magic + mods.fortune.stipend_magic_percent,
         gems: rules.gems,
     };
     let item_level = level.clamp(1, MAX_ITEM_LEVEL);
-    let chance = u32::try_from(i64::from(rules.chance) + i64::from(mods.stipend_chance))
+    let chance = u32::try_from(i64::from(rules.chance) + i64::from(mods.fortune.stipend_chance))
         .unwrap_or(0)
         .min(100);
     let find = (rng.chance(chance))
@@ -166,7 +166,7 @@ impl World {
     pub(super) fn grow_stipend(&mut self, before: u8, after: u8) {
         let content = self.content.clone();
         let mods = self.state.player().talent_mods(&content).into_owned();
-        if !mods.stipend || content.stipend().is_none() {
+        if !mods.fortune.stipend || content.stipend().is_none() {
             return;
         }
         for level in before + 1..=after {

@@ -267,10 +267,9 @@ mod tests {
     use super::*;
     use std::sync::Arc;
     use warlock_core::World;
-    use warlock_core::content::Content;
 
     fn world(scenario: &str) -> World {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         // The scenario's craftsperson: the forge's smith, trained in Metalcraft and Woodcraft by
         // his trades, whose recipes are the trained's alone (#1387).
         World::new(content, scenario, None).expect("world")

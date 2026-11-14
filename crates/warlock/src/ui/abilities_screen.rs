@@ -348,7 +348,6 @@ mod tests {
     use std::sync::Arc;
     use warlock_core::World;
     use warlock_core::action::parse_actions;
-    use warlock_core::content::Content;
 
     /// The showcase's thief, with the storeroom's small shield in hand if `shield`.
     fn thief(shield: bool) -> World {
@@ -359,7 +358,7 @@ mod tests {
 
     /// The showcase's thief after `walk`.
     fn thief_after(walk: &str) -> World {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut world = World::new(content, "showcase", None).expect("world");
         for action in parse_actions(walk).expect("actions") {
             world.apply(&action);

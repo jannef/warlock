@@ -198,12 +198,12 @@ fn bands(settings: Option<&RecipeSettings>) -> (i32, i32, i32, u32) {
 
 /// What a failed recipe gives back to `player`, in percent of its stock and object inputs:
 /// `data/recipes.toml`'s `yield`, or the holder's Waste not where that is more
-/// (`TalentMods::failed_percent`; the craftsperson design §7.3), at most all of it. The one read,
+/// (`CraftMods::failed_percent`; the craftsperson design §7.3), at most all of it. The one read,
 /// by [`resolve`] and [`taken`] as they set each [`Spend::back`].
 fn failed_percent(content: &Content, player: &Actor) -> u32 {
     let percent = bands(content.recipes().settings.as_ref()).3;
     percent
-        .max(player.talent_mods(content).failed_percent)
+        .max(player.talent_mods(content).craft.failed_percent)
         .min(100)
 }
 
@@ -1170,7 +1170,13 @@ impl World {
             let metal = (main.and_then(|m| content.material(m).group.as_deref())) == Some("metal");
             // Arms and armour come out brittle; a ring (no aspect) just goes wrong.
             let arms = !aspects(content.object(made.object)).is_empty();
-            let all = self.state.player().talent_mods(&content).failed_percent >= 100;
+            let all = self
+                .state
+                .player()
+                .talent_mods(&content)
+                .craft
+                .failed_percent
+                >= 100;
             self.say(match (metal && arms, all) {
                 (true, false) => "The blade comes out brittle and you break it up for the metal.",
                 (true, true) => {
@@ -1198,7 +1204,7 @@ impl World {
         // A master's work bears their mark (Maker's mark, the one read): arms, armour, and
         // jewellery, whatever the grade.
         let def = content.object(made.object);
-        if def.kind.is_some() && self.state.player().talent_mods(&content).makers_mark {
+        if def.kind.is_some() && self.state.player().talent_mods(&content).craft.makers_mark {
             let mut worked = made.worked().cloned().unwrap_or_default();
             worked.mark();
             made.set_worked(worked);

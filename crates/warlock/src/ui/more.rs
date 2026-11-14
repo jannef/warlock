@@ -208,11 +208,10 @@ mod tests {
     use std::sync::Arc;
     use warlock_core::World;
     use warlock_core::action::parse_actions;
-    use warlock_core::content::Content;
 
     /// A showcase run after `walk` (all of it read), then `then` applied as the player's turn.
     fn game(walk: &str, then: &str) -> Game {
-        let content = Arc::new(Content::builtin().expect("built-in content loads"));
+        let content = Arc::new(warlock_assets::content().expect("built-in content loads"));
         let mut world = World::new(content, "showcase", None).expect("scenario starts");
         for action in parse_actions(walk).expect("actions") {
             world.apply(&action);

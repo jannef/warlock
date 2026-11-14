@@ -35,7 +35,7 @@ impl World {
         // Then their talents (Lean) and what they wear (of Sustenance: hunger comes slower): a
         // signed percent of that pace, at least 1.
         let player = self.state.player();
-        let percent = player.talent_mods(&self.content).hunger_percent
+        let percent = player.talent_mods(&self.content).hunger.hunger_percent
             - player.mods(&self.content).get(Effect::Hunger);
         let pace = TalentMods::scaled(u64::from(race), percent);
         u16::try_from(pace).unwrap_or(u16::MAX).max(1)
@@ -113,7 +113,7 @@ impl World {
             return;
         };
         let points = def.exertion(kind);
-        if points == 0 || self.state.player().talent_mods(&content).no_exertion {
+        if points == 0 || self.state.player().talent_mods(&content).hunger.no_exertion {
             return;
         }
         let percent = self.hunger_percent();
@@ -136,7 +136,13 @@ impl World {
         if def.faint.chance == 0 || !self.player_hunger().is_some_and(Hunger::faints) {
             return 0;
         }
-        if self.state.player().talent_mods(&content).no_hunger_weakness {
+        if self
+            .state
+            .player()
+            .talent_mods(&content)
+            .hunger
+            .no_hunger_weakness
+        {
             return 0;
         }
         if !self.state.rng.chance(u32::from(def.faint.chance)) {

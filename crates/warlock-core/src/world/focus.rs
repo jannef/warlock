@@ -33,8 +33,8 @@ impl World {
     /// cost in its resource, that is spent and the shot takes its saving less (at least 1);
     /// otherwise `price` as it is. The one place Rapid shot reads.
     pub(super) fn rapid_shot(&mut self, id: ActorId, price: i64, events: &mut Vec<Event>) -> i64 {
-        let Some(rapid) =
-            (self.state.actors.get(&id)).and_then(|a| a.talent_mods(&self.content).rapid_shot)
+        let Some(rapid) = (self.state.actors.get(&id))
+            .and_then(|a| a.talent_mods(&self.content).martial.rapid_shot)
         else {
             return price;
         };

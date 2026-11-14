@@ -130,7 +130,7 @@ cases! {
 /// quest's prerequisite (the barrow's heart, deep in Cealdhlāw) so a short walk reaches her.
 #[test]
 fn quest_refused_as_too_early() {
-    let mut files = warlock_core::content::ContentFiles::builtin();
+    let mut files = warlock_assets::files();
     let path = "campaigns/ascmearc/data/quests/wulfrun.toml";
     let quests = include_str!("../../../../../assets/campaigns/ascmearc/data/quests/wulfrun.toml");
     let lifted = quests.replacen("requires = \"barrow_heart\"\n", "", 1);
@@ -152,7 +152,7 @@ fn quest_refused_as_too_early() {
 /// (`world/strange_spirit_tests.rs`): the level-up it brings would cover this screen.
 #[test]
 fn the_oath_topic() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = Arc::new(warlock_assets::content().expect("content"));
     let case = Case {
         name: "dialogue-calling-topic",
         character: Some("human,male,bard"),

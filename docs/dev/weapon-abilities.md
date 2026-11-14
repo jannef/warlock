@@ -45,7 +45,7 @@ Readers: `Content::weapon_abilities`, `weapon_ability(id)`, `weapon_ability_id(n
 ## Who has one
 
 `Actor::ability_rank(content, skill)` is the rank abilities read: the actor's own, raised by a
-`weapon` talent's `ranks` (Stylist, Fencing; `TalentMods::weapon_benefit`, as benefits read it)
+`weapon` talent's `ranks` (Stylist, Fencing; `OffenceMods::weapon_benefit`, as benefits read it)
 and by `ability_ranks` (Early mastery); an untrained skill stays 0. `Actor::weapon_abilities`
 lists what the ranks teach, each once, with the skill it is listed under (the first of its
 skills, in skill order, whose rank teaches it), in skill order, rank, path order: the menu's
@@ -140,7 +140,7 @@ its `energy.action`, not `cast`: Raging blocks spells, not actives). `Ability::a
 triggered, `FiresByItself`; not `Actor::holds_for` (the abilities a blow's, or for a shot the
 missile weapon's, `attack_skills` teach, as `abilities_through` reads them: Shield wall is Sword and Board's
 and Two Shields', so it asks for a shield in hand through the style's grip), `NotSoHeld`; its cooldown, `While`;
-short of `Actor::weapon_stamina` (its stamina less `TalentMods::weapon_stamina`, Drillmaster,
+short of `Actor::weapon_stamina` (its stamina less `OffenceMods::weapon_stamina`, Drillmaster,
 and `ability_stamina`, Armour-breaker's Sunder and Gap shot, and the worn `active_stamina` for
 stamina, of Ease's, global: whatever piece holds it, B1 #630; at least 1; the early return is
 "no talents and nothing worn"), `Short(stamina)`; a

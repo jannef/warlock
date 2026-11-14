@@ -79,7 +79,7 @@ impl World {
                 Stat::ALL[i]
             }
         };
-        let extra = actor.talent_mods(&content).drain_checks;
+        let extra = actor.talent_mods(&content).vigour.drain_checks;
         if self.resists(target, by, drain.check, drain.difficulty, extra) {
             events.push(Event::Drained {
                 actor: target,

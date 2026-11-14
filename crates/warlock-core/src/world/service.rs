@@ -34,11 +34,11 @@
 //! its percent off that, rounded up: only 100% off makes it free, and a free service changes no
 //! hands and trains nothing. Every service paid trains Negotiation ([`Use::Deal`]). Pious halves
 //! a cure's or a mending's price (rounded up) first, and with Pious a cure also mends a point of each
-//! damaged stat ([`TalentMods::services`], the one hook). Lore and Connoisseur do not move an
+//! damaged stat ([`FaithMods::services`], the one hook). Lore and Connoisseur do not move an
 //! identification's price. No stream is drawn, and nothing new is saved: a service changes only what is
 //! saved already (the pack, the diseases, the stat damage, the scores and drained points).
 //!
-//! [`TalentMods::services`]: crate::talent::TalentMods::services
+//! [`FaithMods::services`]: crate::talent::FaithMods::services
 
 use super::actor::undrained;
 use super::goodwill::discounted;
@@ -68,7 +68,14 @@ impl World {
     /// [`World::service_price`] before the goodwill.
     fn haggled_price(&self, service: &Service) -> u32 {
         let healing = matches!(service.does, ServiceKind::Cure | ServiceKind::Mend);
-        let price = if healing && self.state.player().talent_mods(&self.content).services {
+        let price = if healing
+            && self
+                .state
+                .player()
+                .talent_mods(&self.content)
+                .faith
+                .services
+        {
             service.price.div_ceil(2)
         } else {
             service.price
@@ -167,7 +174,12 @@ impl World {
         match service.does {
             ServiceKind::Cure => {
                 self.cure(player, PRAYER, events);
-                let pilgrim = self.state.player().talent_mods(&self.content).services;
+                let pilgrim = self
+                    .state
+                    .player()
+                    .talent_mods(&self.content)
+                    .faith
+                    .services;
                 if let Some(actor) = self.state.actors.get_mut(&player)
                     && pilgrim
                     && !actor.diseases.shows()

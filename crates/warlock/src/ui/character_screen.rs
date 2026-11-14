@@ -590,7 +590,7 @@ mod tests {
     use warlock_core::{Action, Dir, Positions, World};
 
     fn showcase() -> World {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         World::new(content, "showcase", None).expect("world")
     }
 
@@ -680,7 +680,7 @@ mod tests {
 
     #[test]
     fn names_the_guild_rank_in_its_metals_colour() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut world = World::new(content.clone(), "ceaptun", None).expect("Cēaptūn");
         assert!(!drawn(&world, 80, 30).join("\n").contains("Guild"));
         // To Wat One-Eye in the Gildhalle, and the first link of his chain.
@@ -816,7 +816,7 @@ mod tests {
 
     #[test]
     fn shows_the_chosen_character_and_nothing_without_one() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let spec = "half_orc,other,witch".parse().expect("a character");
         let world =
             World::with_character(content.clone(), "showcase", None, Some(&spec)).expect("world");
@@ -830,7 +830,7 @@ mod tests {
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert(
             "scenarios/plain.toml",
             "name = \"P\"\nstart_level = \"hub\"\n",

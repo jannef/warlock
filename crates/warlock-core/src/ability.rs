@@ -31,6 +31,7 @@ use crate::geom::{Dir, Pos};
 use crate::item_list::ItemList;
 use crate::skills::{Effect, SkillId};
 use crate::talent::SongCost;
+use crate::talent::{MagicEffect, VigourEffect};
 use crate::world::{Actor, BREATH_RANGE, LevelState, STARE_RANGE, VOICE_RANGE};
 use std::borrow::Cow;
 
@@ -449,10 +450,10 @@ impl Ability {
         // Talents: the active ones the talent table has.
         let wind = (content.talents().iter())
             .flat_map(|(_, def)| &def.effects)
-            .any(|e| matches!(e, TalentEffect::SecondWind { .. }));
+            .any(|e| matches!(e, TalentEffect::Vigour(VigourEffect::SecondWind { .. })));
         let blood = (content.talents().iter())
             .flat_map(|(_, def)| &def.effects)
-            .any(|e| matches!(e, TalentEffect::BloodMagic { .. }));
+            .any(|e| matches!(e, TalentEffect::Magic(MagicEffect::BloodMagic { .. })));
         let talents = (wind.then_some(Ability::SecondWind))
             .into_iter()
             .chain(blood.then_some(Ability::BloodMagic));
@@ -605,24 +606,24 @@ impl Ability {
     /// shield bash, everyone.
     pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
         match self {
-            Ability::Sign(active) => actor.talent_mods(content).has_sign_active(active),
+            Ability::Sign(active) => actor.talent_mods(content).sign.has_sign_active(active),
             Ability::Class(active) => actor.talent_mods(content).has_active(active),
             Ability::Spell(spell) => actor.knows_spell(content, spell),
             Ability::Skill(id) => actor.skills.get(id).is_some(),
             Ability::Disarm => {
                 actor.skills.trains_effect(content, Effect::Disarm)
-                    || actor.talent_mods(content).disarm
+                    || actor.talent_mods(content).delving.disarm
             }
             Ability::Listen => actor.skills.trains_effect(content, Effect::Hearing),
             Ability::Wedge => actor.skills.trains_effect(content, Effect::Wedge),
             // A talent with the `pick_lock` or `steal` effect gives them without the skills.
             Ability::PickLock => {
                 actor.skills.trains_effect(content, Effect::Pick)
-                    || actor.talent_mods(content).pick_lock
+                    || actor.talent_mods(content).stealth.pick_lock
             }
             Ability::Steal => {
                 actor.skills.trains_effect(content, Effect::Steal)
-                    || actor.talent_mods(content).steal
+                    || actor.talent_mods(content).stealth.steal
             }
             Ability::Forage => actor.skills.trains_effect(content, Effect::Forage),
             Ability::Decipher => actor.skills.trains_effect(content, Effect::Decipher),
@@ -630,9 +631,9 @@ impl Ability {
             Ability::Heal => actor.skills.trains_effect(content, Effect::Heal),
             Ability::Intimidate => actor.skills.trains_effect(content, Effect::Intimidate),
             Ability::Feint => actor.skills.trains_effect(content, Effect::Feint),
-            Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
-            Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
-            Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
+            Ability::SecondWind => actor.talent_mods(content).vigour.second_wind.is_some(),
+            Ability::BloodMagic => actor.talent_mods(content).magic.blood_magic.is_some(),
+            Ability::ThrowVoice => actor.talent_mods(content).stealth.throw_voice,
             Ability::Profession(skill) => actor.skills.get(skill).is_some(),
             Ability::ShieldBash | Ability::Salvage => true,
             Ability::Weapon(skill, id) => actor.weapon_abilities(content).contains(&(skill, id)),
@@ -1156,7 +1157,7 @@ impl Ability {
                         // (Inspire's inspiration), or its mana, which a status that blocks
                         // casting (Raging) keeps from being spent.
                         let song = (active.sings())
-                            .then(|| actor.talent_mods(content).song(active))
+                            .then(|| actor.talent_mods(content).song.song(active))
                             .flatten();
                         let (pool, mana) = match song.and_then(|s| s.cost) {
                             Some(SongCost::Resource(cost)) => (Some(cost), 0),
@@ -1168,17 +1169,17 @@ impl Ability {
                         }
                         // Consecrate costs its mana.
                         let consecrate = (active == ClassActive::Consecrate)
-                            .then(|| actor.talent_mods(content).consecrate)
+                            .then(|| actor.talent_mods(content).faith.consecrate)
                             .flatten();
                         let mana = mana + consecrate.map_or(0, |c| c.mana);
                         // Sanctuary costs its mana.
                         let sanctuary = (active == ClassActive::Sanctuary)
-                            .then(|| actor.talent_mods(content).sanctuary)
+                            .then(|| actor.talent_mods(content).faith.sanctuary)
                             .flatten();
                         let mana = mana + sanctuary.map_or(0, |s| s.mana);
                         // Knock costs its mana.
                         let knock = (active == ClassActive::Knock)
-                            .then(|| actor.talent_mods(content).knock)
+                            .then(|| actor.talent_mods(content).magic.knock)
                             .flatten();
                         let mana = mana + knock.map_or(0, |k| k.mana);
                         let cost = actor.mana_cost(content, mana);
@@ -1204,7 +1205,7 @@ impl Ability {
             }
             // Its mana is asked by [`spell_unavailable`].
             Ability::Spell(_) => None,
-            Ability::Sign(active) => (actor.talent_mods(content).sign_cooldown(active))
+            Ability::Sign(active) => (actor.talent_mods(content).sign.sign_cooldown(active))
                 .filter(|&cooldown| actor.effects.has(cooldown))
                 .map(Unavailable::While),
             Ability::Skill(_) => Some(Unavailable::NotYet),
@@ -1237,7 +1238,7 @@ impl Ability {
             | Ability::Hold
             | Ability::SetOn
             | Ability::Give => None,
-            Ability::SecondWind => (actor.talent_mods(content).second_wind)
+            Ability::SecondWind => (actor.talent_mods(content).vigour.second_wind)
                 .map(|w| w.cooldown)
                 .filter(|&cooldown| actor.effects.has(cooldown))
                 .map(Unavailable::While),
@@ -1258,11 +1259,16 @@ impl Ability {
 fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Option<StatusId> {
     let mods = actor.talent_mods(content);
     let cooldowns: Vec<StatusId> = match active {
-        ClassActive::Rage => (mods.rage_status(content).into_iter())
+        ClassActive::Rage => (mods.martial.rage_status(content).into_iter())
             .flat_map(|s| [Some(s), content.status(s).follows])
             .flatten()
             .collect(),
-        ClassActive::VeteransWind => mods.veterans_wind.map(|w| w.cooldown).into_iter().collect(),
+        ClassActive::VeteransWind => mods
+            .martial
+            .veterans_wind
+            .map(|w| w.cooldown)
+            .into_iter()
+            .collect(),
         // Volley costs Focus, Exploit Openings, Stunning strike and Quivering
         // palm Ki, and the smites and Lay on hands Zeal instead
         // (their talents' `resource`, [`short_of`]), as War cry Rage; Lurk only its time.
@@ -1308,7 +1314,7 @@ fn still(actor: &Actor, content: &Content, active: ClassActive) -> Option<Unavai
         return None;
     }
     let mods = actor.talent_mods(content);
-    let ends = mods.stillness.as_ref()?;
+    let ends = mods.martial.stillness.as_ref()?;
     (!ends.iter().any(|&s| actor.effects.has(s))).then_some(Unavailable::Still)
 }
 
@@ -1380,7 +1386,7 @@ pub(crate) fn class_cost(
 ) -> Option<ResourceCost> {
     let mut cost = content.class_active(active)?.resource?;
     if active == ClassActive::LayOnHands
-        && let Some(percent) = actor.talent_mods(content).avatar
+        && let Some(percent) = actor.talent_mods(content).faith.avatar
     {
         let share = crate::content::percent_of(i64::from(cost.amount), u32::from(percent));
         cost.amount = u16::try_from(share).unwrap_or(cost.amount).max(1);

@@ -131,6 +131,7 @@ impl World {
             .state
             .player()
             .talent_mods(&self.content)
+            .delving
             .spawn_every_percent;
         let percent = u64::try_from(100 + slower.max(0)).unwrap_or(100);
         let every = spawning.every.as_seconds().saturating_mul(percent) / 100;

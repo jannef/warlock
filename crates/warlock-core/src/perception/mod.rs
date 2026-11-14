@@ -300,7 +300,7 @@ fn heard(
     };
     // Watchful (spec §8 "Birth sign"): footsteps placed exactly; the ranger's Tracker: every
     // sound.
-    let exact = match (talents.exact_sounds, talents.exact_footsteps) {
+    let exact = match (talents.senses.exact_sounds, talents.senses.exact_footsteps) {
         (true, _) => noise::Exact::All,
         (false, true) => noise::Exact::Footsteps,
         (false, false) => noise::Exact::No,

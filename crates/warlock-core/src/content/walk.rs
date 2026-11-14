@@ -1,5 +1,5 @@
-//! The one walk of a content directory (#1560): `build.rs` embeds what it finds under `assets/`
-//! (it includes this file with `#[path]`, so it uses `std` alone), and
+//! The one walk of a content directory (#1560): `warlock-assets`' `build.rs` embeds what it finds
+//! under `assets/` (it includes this file with `#[path]`, so it uses `std` alone), and
 //! [`super::ContentFiles::from_dir`] reads the same set from any directory at run time.
 
 use std::path::{Path, PathBuf};

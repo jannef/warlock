@@ -209,9 +209,21 @@ fn step_of_the_wind_comes_at_level_six_with_fleets_quicker_steps() {
         "Fleet is folded in"
     );
     let mods = w.state.player().talent_mods(w.content());
-    assert_eq!(mods.step_percent(false, false, false), -10, "unarmoured");
-    assert_eq!(mods.step_percent(true, false, false), 0, "armoured");
-    assert_eq!(mods.step_percent(false, false, true), 0, "with a shield");
+    assert_eq!(
+        mods.movement.step_percent(false, false, false),
+        -10,
+        "unarmoured"
+    );
+    assert_eq!(
+        mods.movement.step_percent(true, false, false),
+        0,
+        "armoured"
+    );
+    assert_eq!(
+        mods.movement.step_percent(false, false, true),
+        0,
+        "with a shield"
+    );
 }
 
 #[test]
@@ -317,7 +329,7 @@ fn stillness_comes_with_still_mind_at_level_twenty_five() {
     run(&mut w, "afflict:stunned");
     assert_eq!(own(&w, STILL), Some(None), "ready with a stun to end");
     let mods = w.state.player().talent_mods(w.content());
-    let ends: Vec<&str> = (mods.stillness.as_ref().expect("stillness").iter())
+    let ends: Vec<&str> = (mods.martial.stillness.as_ref().expect("stillness").iter())
         .map(|&s| w.content().status(s).id.as_str())
         .collect();
     assert_eq!(ends, STILLED);
@@ -477,10 +489,10 @@ fn diamond_soul_plucks_a_shot_from_the_air_for_a_point_of_ki() {
     let mut w = ascetic(40);
     let mods = w.state.player().talent_mods(w.content());
     assert!(
-        mods.catch_missiles.is_some(),
+        mods.martial.catch_missiles.is_some(),
         "the catch comes with Diamond soul"
     );
-    assert_eq!(mods.deflection, 2, "beside its Deflection");
+    assert_eq!(mods.defence.deflection, 2, "beside its Deflection");
     set_ki(&mut w, 10);
     let (here, hp) = (w.player_pos(), w.state.player().hp);
     let strikes = shot_at(&mut w, 5);

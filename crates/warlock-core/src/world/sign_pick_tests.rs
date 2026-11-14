@@ -221,7 +221,7 @@ fn another_head_heals_while_starving_and_twice_as_fast_resting() {
     }
     assert_eq!(plain.healing_rate(id), 0, "starving, no healing");
     assert_eq!(heads.healing_rate(id), fed, "the heads grow back");
-    assert_eq!(mods(&heads).resting_percent, 100);
+    assert_eq!(mods(&heads).vigour.resting_percent, 100);
 }
 
 #[test]
@@ -344,14 +344,20 @@ fn the_hoard_adds_to_its_gift() {
     let griffin = mods(&born("griffin", "fire"));
     let hoard = mods(&with("griffin", "fire", "dragon_hoard"));
     assert_eq!(
-        (hoard.loot_magic_percent, hoard.gem_find_percent),
         (
-            griffin.loot_magic_percent * 3 / 2,
-            griffin.gem_find_percent * 3 / 2
+            hoard.fortune.loot_magic_percent,
+            hoard.fortune.gem_find_percent
+        ),
+        (
+            griffin.fortune.loot_magic_percent * 3 / 2,
+            griffin.fortune.gem_find_percent * 3 / 2
         ),
         "Hoard sense's odds half again"
     );
-    assert_eq!(hoard.favour_percent, griffin.favour_percent + 10);
+    assert_eq!(
+        hoard.fortune.favour_percent,
+        griffin.fortune.favour_percent + 10
+    );
 }
 
 #[test]
@@ -482,7 +488,7 @@ fn deep_roots_eats_rot_unharmed_drawing_nothing() {
     let mut plain = born("hydra", "wood");
     plain.eat_rotten(100, bread, &mut events);
     assert!(said(&plain, "Ugh! The loaf of bread was rotten."));
-    assert_eq!(mods(&rooted).dodge, mods(&plain).dodge + 1);
+    assert_eq!(mods(&rooted).defence.dodge, mods(&plain).defence.dodge + 1);
 }
 
 #[test]
@@ -509,8 +515,11 @@ fn wildfire_blazes_farther() {
 fn bedrock_soaks_and_spares_pits_undertow_wades() {
     let earth = mods(&born("hydra", "earth"));
     let bedrock = mods(&with("hydra", "earth", "bedrock"));
-    assert_eq!(bedrock.protection.len(), earth.protection.len() + 1);
-    assert!(bedrock.pit_proof && !earth.pit_proof);
+    assert_eq!(
+        bedrock.defence.protection.len(),
+        earth.defence.protection.len() + 1
+    );
+    assert!(bedrock.delving.pit_proof && !earth.delving.pit_proof);
     let plain = born("manticore", "water");
     let under = with("manticore", "water", "undertow");
     let water = BUILTIN.terrain(BUILTIN.terrain_id("water").expect("water"));
@@ -519,7 +528,7 @@ fn bedrock_soaks_and_spares_pits_undertow_wades() {
     let dry = plain.step_price(id, floor, false);
     assert!(plain.step_price(id, water, false) > dry);
     assert_eq!(under.step_price(id, water, false), dry);
-    assert!(mods(&under).plunge_proof && !mods(&under).swimmer);
+    assert!(mods(&under).movement.plunge_proof && !mods(&under).movement.swimmer);
 }
 
 #[test]

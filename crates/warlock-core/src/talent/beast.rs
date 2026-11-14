@@ -1,7 +1,7 @@
 //! The beast talents (spec §8 "Allies"): what a talent does with the holder's companion, its
 //! familiar, and beasts. [`BeastEffect`] is the data (a talent's `[[effect]]` of one of
-//! [`BeastEffect::KINDS`]), [`BeastMods`] the sum every rule reads (`TalentMods::beast`). The
-//! first area split out of [`crate::content::TalentEffect`] and [`crate::talent::TalentMods`]
+//! [`BeastEffect::KINDS`]), [`BeastMods`] the sum every rule reads (`TalentMods::beast`). One
+//! of the areas of [`crate::content::TalentEffect`] and [`crate::talent::TalentMods`]
 //! (#1495): a new beast effect is a variant here, its field and its arm in [`BeastMods::add`]
 //! here, its wiki text in `xtask/src/wiki/talents/beast.rs`, and its one read.
 

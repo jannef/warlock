@@ -655,7 +655,7 @@ mod tests {
         let aim = InputMode::Aim(Aim::start(
             AimKind::Fire,
             &warlock_core::World::new(
-                std::sync::Arc::new(warlock_core::content::Content::builtin().unwrap()),
+                std::sync::Arc::new(warlock_assets::content().unwrap()),
                 "showcase",
                 None,
             )

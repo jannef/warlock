@@ -101,7 +101,7 @@ impl World {
         });
         let mut came: Vec<(CreatureId, u32)> = Vec::new();
         for &at in cells.iter().take(count) {
-            let creature = self.summon_draw(&call.pool, &mods.summon_bias);
+            let creature = self.summon_draw(&call.pool, &mods.ally.summon_bias);
             let source = AllySource::Summoned {
                 spell: Some(cast.spell),
             };

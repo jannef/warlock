@@ -727,8 +727,8 @@ impl World {
     /// its Parry counts too (spec §8 "Ranged combat").
     fn target_shot(&self, id: ActorId, missile: bool, close: bool) -> Target {
         let mut target = self.target_of(id);
-        let deflects =
-            (self.state.actors.get(&id)).map_or(0, |a| a.talent_mods(&self.content).missile_dodge);
+        let deflects = (self.state.actors.get(&id))
+            .map_or(0, |a| a.talent_mods(&self.content).defence.missile_dodge);
         if missile && deflects != 0 {
             target.defence = target.defence.plus(Category::Dodge, deflects);
         }
@@ -877,8 +877,9 @@ impl World {
         let struck = self.misled(attacker, struck);
         let level = self.level_of(target);
         // A talent may roll a fumble again (a birth sign's Winner's luck).
-        let lucky = (self.state.actors.get(&attacker))
-            .is_some_and(|a| !a.talents.is_empty() && a.talent_mods(&self.content).reroll_fumble);
+        let lucky = (self.state.actors.get(&attacker)).is_some_and(|a| {
+            !a.talents.is_empty() && a.talent_mods(&self.content).offence.reroll_fumble
+        });
         // What a hit causes besides its damage (a unique weapon's Inflict power).
         let made = profile.as_ref().map_or_else(Vec::new, |p| p.on_hit.clone());
         let rng = &mut self.state.rng;
@@ -1042,7 +1043,9 @@ impl World {
         let marks = rules.earned(success, level, me.weapon_skills.rank(skill));
         let marks = (marks * percent + 50) / 100;
         // Weapon drill (spec §8 "Class abilities"): more marks in a role's skills.
-        let marks = (me.talent_mods(&content)).marks(table.skill(skill).role, marks);
+        let marks = (me.talent_mods(&content))
+            .offence
+            .marks(table.skill(skill).role, marks);
         if marks > 0 {
             let old = me.weapon_skills.clone();
             if me.weapon_skills.train(table, skill, marks) {
@@ -1127,8 +1130,8 @@ impl World {
         // below 1; what is not a hit (a status, starving) is not eased.
         let damage = match harm {
             Harm::Actor(_) | Harm::Trap(_) | Harm::Place if damage > 1 => {
-                let pain =
-                    (self.state.actors.get(&id)).map_or(0, |a| a.talent_mods(&self.content).pain);
+                let pain = (self.state.actors.get(&id))
+                    .map_or(0, |a| a.talent_mods(&self.content).defence.pain);
                 (damage - pain).max(1)
             }
             _ => damage,
@@ -1448,7 +1451,13 @@ impl World {
             events,
         );
         // Breaker: the foe reels a cell back, once the free blows of the attack are done.
-        if self.state.player().talent_mods(&self.content).kick_back {
+        if self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .offence
+            .kick_back
+        {
             self.knock_back(target, dir, struck, None, events);
         }
     }

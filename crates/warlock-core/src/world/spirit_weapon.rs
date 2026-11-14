@@ -27,6 +27,7 @@ use crate::action::Positions;
 use crate::combat::{FUMBLE, Profile};
 use crate::content::{ActionKind, ClassActive, Content, ObjectId, TalentEffect};
 use crate::object::{self, Stack};
+use crate::talent::MartialEffect;
 use crate::talent::TalentMods;
 
 /// The shapes a spirit weapon may be called in: every object of the `melee_weapons` class with
@@ -59,12 +60,12 @@ pub fn gift(content: &Content) -> Option<(i32, u8, bool, &str)> {
     (content.talents().iter())
         .flat_map(|(_, t)| &t.effects)
         .find_map(|e| match e {
-            TalentEffect::SpiritWeapon {
+            TalentEffect::Martial(MartialEffect::SpiritWeapon {
                 to_hit,
                 threat,
                 ignores_protection,
                 phrase,
-            } => Some((*to_hit, *threat, *ignores_protection, phrase.as_str())),
+            }) => Some((*to_hit, *threat, *ignores_protection, phrase.as_str())),
             _ => None,
         })
 }
@@ -73,7 +74,7 @@ pub fn gift(content: &Content) -> Option<(i32, u8, bool, &str)> {
 /// striker has the talent: to hit, the threat lowered (never below the lowest roll that can hit),
 /// and every point of Protection ignored.
 pub(super) fn gifts(talents: &TalentMods, stack: &Stack, profile: &mut Profile) {
-    let Some(gift) = talents.spirit_weapon.filter(|_| stack.is_spirit()) else {
+    let Some(gift) = talents.martial.spirit_weapon.filter(|_| stack.is_spirit()) else {
         return;
     };
     profile.to_hit += gift.to_hit;

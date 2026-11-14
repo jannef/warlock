@@ -179,6 +179,7 @@ impl World {
                 .state
                 .player()
                 .talent_mods(&self.content)
+                .delving
                 .smash_destroy_percent;
             percent = percent * (100 + cut).max(0) / 100;
         }
@@ -220,7 +221,13 @@ impl World {
         if level.chests.is_empty() || self.state.player().talents.is_empty() {
             return;
         }
-        if !self.state.player().talent_mods(&self.content).chest_wise {
+        if !self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .delving
+            .chest_wise
+        {
             return;
         }
         let spotted: Vec<Pos> = (level.chests.keys())

@@ -246,7 +246,7 @@ The lucky days' gifts (#269): Scourge and Warden of the gate are data only (`fre
 `World::rise_from_ashes` (`world/stars.rs`, the Phoenix's `rise_from_ashes` kind; the once is
 `Progress::once`'s `RISEN`, saved and hashed with `Progress`, left out while empty) through
 `World::reborn_whole` (`world/lucky.rs`). Drowning grip is `grip { status = "held" }`
-(`TalentMods::grip`): `World::grip`, one line at the end of `World::resolve`, holds the target of
+(`OffenceMods::grip`): `World::grip`, one line at the end of `World::resolve`, holds the target of
 a melee hit (a status caused by the holder) and lets go of every other it held (a miss lets go
 of the target too); `World::let_go` runs in `player_moves` after the step and in `travel`. Held
 `blocks = ["step"]`, the first status a creature suffers that blocks anything: `creature_steps`
@@ -288,8 +288,8 @@ case `eat-screen-smell` (seed 21, a Barghest).
 
 The element gifts (#268): Kindled is `lantern_light` (Lamplighter's preset; the two do not
 stack), Forge-born `weapon_marks` without a `role` (every weapon skill and style, read in
-`TalentMods::marks`), Tidal `mana_regen_percent` (`World::mana_rate`). Blaze is Fire's **sign active**, the third after #266's: `TalentEffect::Blaze` makes the talent
-one (`Content::sign_active`), `TalentMods::blaze`; it is used as `Action::Gift` (`use:blaze`,
+`OffenceMods::marks`), Tidal `mana_regen_percent` (`World::mana_rate`). Blaze is Fire's **sign active**, the third after #266's: `SignEffect::Blaze` makes the talent
+one (`Content::sign_active`), `SignMods::blaze`; it is used as `Action::Gift` (`use:blaze`,
 priced in `buff.rs` by its `cast` cost) and dispatched by `World::use_gift` in `world/gifts.rs`.
 Its rule is `world/element_gifts.rs` (`blaze`, `kindle`): the burst's cells from
 `spell::burst_cells`, one gameplay roll, `World::spell_hurts` for each creature but the player,
@@ -330,7 +330,7 @@ birthday and its eve, so other days' rests are unchanged); `World::perceive` cal
 loaded world has just perceived its moment), and `World::with_character` adds the line when a
 run begins on the birthday; `World::gift_cooldown` replaces the five sign actives' `afflict` of
 their cooldowns (birth month: fewer degrees, the last part worn; the actor's own easing pace,
-`TalentMods::eases_every`, counted); `Content::full_moon_reach(time)` (via
+`VigourMods::eases_every`, counted); `Content::full_moon_reach(time)` (via
 `content/horoscope.rs::full_moon_up`) is read by perception's scent and overworld night sight
 (only for the reaches `TalentMods::gift_reach` marks: `scent` and `night_sight` effects of
 `stars` talents, noted in `Talents::mods`) and by `Ability::reach_at` (the stare, its rule

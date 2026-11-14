@@ -3,7 +3,7 @@
 //! holds (`data/rod_effects/`, [`crate::content::RodEffect`]):
 //!
 //! - **Mana**: each use costs the user the rod's `mana`, cut by Channeler
-//!   (`TalentMods::rod_cost`, [`Actor::rod_base`]) and then spent through
+//!   (`MagicMods::rod_cost`, [`Actor::rod_base`]) and then spent through
 //!   [`World::spend_mana`] (Frugal caster's cut, a Willpower training mark), so the rod never
 //!   runs out but its user does. Refused, taking no time, without the mana or while a status
 //!   blocks casting (Raging).
@@ -49,9 +49,11 @@ impl Actor {
     }
 
     /// What a use of `rod` costs it before [`World::spend_mana`]'s cut: the rod's `mana` with
-    /// Channeler's (`TalentMods::rod_cost`).
+    /// Channeler's (`MagicMods::rod_cost`).
     pub fn rod_base(&self, content: &Content, rod: &Rod) -> i32 {
-        self.talent_mods(content).rod_cost(i32::from(rod.mana))
+        self.talent_mods(content)
+            .magic
+            .rod_cost(i32::from(rod.mana))
     }
 
     /// How far `effect` reaches in its hands: [`RodEffect::reach`] by its effective stats.

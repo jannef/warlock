@@ -1,13 +1,14 @@
 [workspace]
 resolver = "3"
 members = [
+  "crates/warlock-assets",
   "crates/warlock-core",
   "crates/warlock-cli",
   "crates/warlock",
   "crates/workspace-hack",
   "xtask",
 ]
-default-members = ["crates/warlock-core", "crates/warlock-cli", "crates/warlock"]
+default-members = ["crates/warlock-assets", "crates/warlock-core", "crates/warlock-cli", "crates/warlock"]
 
 [workspace.package]
 version = "0.17.0"
@@ -19,8 +20,9 @@ authors = ["Janne Lê Forsell <janne@jannef.com>"]
 repository = "https://github.com/jannef/warlock"
 
 [workspace.dependencies]
-# Each member turns the test world on through its own `showcase` feature (docs/dev/campaign.md).
-warlock-core = { path = "crates/warlock-core", default-features = false }
+# Each binary turns the test world on through its own `showcase` feature (docs/dev/campaign.md).
+warlock-assets = { path = "crates/warlock-assets", default-features = false }
+warlock-core = { path = "crates/warlock-core" }
 workspace-hack = { path = "crates/workspace-hack" }
 # The leaf features the game uses (#1590): `default_app` and `2d_bevy_render` would add bevy_state,
 # bevy_text, bevy_animation, and the gizmos, none of which it uses (glyphs are drawn with

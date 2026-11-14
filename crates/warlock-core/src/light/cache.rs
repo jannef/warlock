@@ -285,7 +285,7 @@ impl LevelLights {
             // radiance), and the light it always sheds (spec §8 "Birth sign": Inner light).
             if !actor.talents.is_empty() {
                 let talents = actor.talent_mods(content);
-                if let Some((status, preset)) = talents.radiance
+                if let Some((status, preset)) = talents.faith.radiance
                     && actor.effects.has(status)
                 {
                     sources.push(Source {
@@ -294,7 +294,7 @@ impl LevelLights {
                         preset,
                     });
                 }
-                if let Some(preset) = talents.inner_light {
+                if let Some(preset) = talents.senses.inner_light {
                     // A full moon brightens it (spec §8 "Birth sign", the flavour).
                     let moon = (content.flavour())
                         .and_then(|f| f.inner_light_at(state.time, content.moons()));

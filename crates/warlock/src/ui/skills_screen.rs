@@ -139,10 +139,9 @@ mod tests {
     use crate::input::KeyBinding;
     use std::sync::Arc;
     use warlock_core::World;
-    use warlock_core::content::Content;
 
     fn showcase() -> World {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         World::new(content, "showcase", None).expect("world")
     }
 

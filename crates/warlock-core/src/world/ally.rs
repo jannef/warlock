@@ -345,7 +345,7 @@ impl World {
         if master.talents.is_empty() {
             return None;
         }
-        Some(master.talent_mods(&self.content).ally)
+        Some(master.talent_mods(&self.content).ally.clone())
     }
 
     /// `profile` with what an ally's master gives its blows (Beast-bond's to-hit); as it was for

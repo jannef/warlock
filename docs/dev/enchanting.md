@@ -107,7 +107,7 @@ and are plain.
 
 The item description (`magic/describe.rs::appraised_for`, through `Appraisal::capacity`) adds one
 line after the affixes, before a unique's power and lore, only for a holder of Eye for the make
-(the craftsperson's talent, `TalentMods::eye_for_make`) or a character trained in Appraise (any
+(the craftsperson's talent, `CraftMods::eye_for_make`) or a character trained in Appraise (any
 value above 0); `PerceptionView::appraisal` is the one read: `It can bear two enchantments.` for a plain item
 or one whose magic is unidentified (the count of its affixes stays hidden), `It bears one
 enchantment and could bear one more.`, `It bears all it can.`, `It bears more than its make should
@@ -187,7 +187,7 @@ crystals). The rare materials are no crystals: the list leaves them out, and `ea
 checks (so its draws come first; nothing changes until all are drawn). A magic or rare item,
 **identified or not** (it is gone at once, so what its crystals' colours tell matters to no one;
 the owner, 2026-11-13): one check per affix in the item's order, `combat::roll_natural` (two gameplay draws) +
-`stat`'s modifier (Willpower) + `TalentMods::check(stat)` + `skill_effect_of(skill, Craft)`
+`stat`'s modifier (Willpower) + `VigourMods::check(stat)` + `skill_effect_of(skill, Craft)`
 (0 until E4 gives Enchanting its `craft` curve) against `salvage_against(affix)`, `check::makes`.
 Made: one crystal of `colour_of_affix` ("You catch its Flaming magic in a red crystal.", "You
 catch its magic of the Bear in a red crystal."); failed: "Its Flaming magic goes out unread.".
@@ -254,7 +254,7 @@ reach `enchant_level` (`Effect::EnchantLevel`, `[[0, 1], [110, 12], [200, 12]]`,
 - **The check** (`World::enchanted`, after the work driver ran the recipe's `seconds`, Quick hands' share
   of them, `mastery::craft_seconds`, as the plan and the row say; an interruption
   spends nothing but the time): `combat::roll_natural` (two gameplay draws) + `stat`'s modifier
-  (`data/enchanting.toml`, Willpower) + `TalentMods::check(stat)` + `skill_effect_of(recipe's
+  (`data/enchanting.toml`, Willpower) + `VigourMods::check(stat)` + `skill_effect_of(recipe's
   skill, Craft)` against
   `difficulty` + level ÷ `level_step`; `enchant_band`: a natural 2 `Warped`, a natural 24 or a
   margin of 0 or more `Made`, else `Failed`.

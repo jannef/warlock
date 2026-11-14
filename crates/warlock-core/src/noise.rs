@@ -340,7 +340,7 @@ pub fn noise(
         if actor.talents.is_empty() {
             return Some(plain);
         }
-        let percent = actor.talent_mods(content).attack_noise_percent;
+        let percent = actor.talent_mods(content).stealth.attack_noise_percent;
         let loudness = TalentMods::scaled(u64::from(plain.loudness), percent) as u16;
         return (loudness > 0).then_some(Noise { loudness, ..plain });
     }
@@ -363,14 +363,16 @@ pub fn noise(
     let talents = actor.talent_mods(content);
     let loudness = match act {
         // Hide in plain sight: no footsteps at all while Unburdened.
-        Act::Step(_) if talents.silent_unburdened && burden == Burden::Unburdened => 0,
+        Act::Step(_) if talents.stealth.silent_unburdened && burden == Burden::Unburdened => 0,
         Act::Step(_) => {
             let quieter = actor.mods(content).get(ItemEffect::Stealth);
             let loudness = crate::magic::mods::less(u64::from(loudness), quieter);
-            TalentMods::scaled(loudness, talents.footsteps_percent) as u32
+            TalentMods::scaled(loudness, talents.stealth.footsteps_percent) as u32
         }
-        Act::OpenDoor(_) | Act::CloseDoor(_) if talents.silent_doors => 0,
-        Act::Kick(_) => TalentMods::scaled(u64::from(loudness), talents.kick_noise_percent) as u32,
+        Act::OpenDoor(_) | Act::CloseDoor(_) if talents.stealth.silent_doors => 0,
+        Act::Kick(_) => {
+            TalentMods::scaled(u64::from(loudness), talents.delving.kick_noise_percent) as u32
+        }
         _ => loudness,
     } as u16;
     (loudness > 0).then_some(Noise { loudness, ..plain })
@@ -419,7 +421,7 @@ pub fn plain_noise(
         }
         Act::Mutter => (SoundKind::Voice, actor.pos, u32::from(VOICE_NOISE)),
         Act::Cackle => {
-            let cackle = actor.talent_mods(content).cackle;
+            let cackle = actor.talent_mods(content).magic.cackle;
             let loudness = cackle.map_or(VOICE_NOISE, |c| c.noise);
             (SoundKind::Voice, actor.pos, u32::from(loudness))
         }

@@ -126,13 +126,13 @@ impl World {
         let content = self.content.clone();
         let player = self.state.player();
         let talents = player.talent_mods(&content);
-        if !talents.sure_step && !talents.pit_proof {
+        if !talents.delving.sure_step && !talents.delving.pit_proof {
             return false;
         }
         let def = content.trap(kind);
         let pit = matches!(def.effect, TrapEffect::Pit { .. });
-        let light = (talents.pit_proof && pit)
-            || (talents.sure_step && {
+        let light = (talents.delving.pit_proof && pit)
+            || (talents.delving.sure_step && {
                 let dexterity = player.check_modifier(&content, Stat::Dexterity);
                 check(&mut self.state.rng, dexterity, i32::from(def.difficulty))
             });
@@ -325,7 +325,7 @@ impl World {
         // more than `TRAP_DAMAGE_CUT` off: a trap always hurts.
         let percent = (self.state.actors.get(&target)).map_or(0, |a| {
             let worn = a.mods(&self.content).get(Effect::TrapDamage);
-            (a.talent_mods(&self.content).trap_damage_percent - worn).max(-TRAP_DAMAGE_CUT)
+            (a.talent_mods(&self.content).delving.trap_damage_percent - worn).max(-TRAP_DAMAGE_CUT)
         });
         if percent != 0 {
             let scaled = TalentMods::scaled(u64::try_from(blow.damage).unwrap_or(0), percent);

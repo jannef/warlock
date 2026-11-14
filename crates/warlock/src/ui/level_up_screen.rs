@@ -485,11 +485,10 @@ mod tests {
     use std::sync::Arc;
     use warlock_core::World;
     use warlock_core::action::parse_actions;
-    use warlock_core::content::Content;
 
     /// A human warrior of the showcase brought to level 3 (skill rolls and a talent due).
     fn levelled() -> World {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let spec = "human,male,warrior".parse().expect("a character");
         let mut world =
             World::start_run(content, "showcase", Some(1), Some(&spec), None, true).expect("world");

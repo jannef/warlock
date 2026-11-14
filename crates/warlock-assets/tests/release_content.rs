@@ -1,15 +1,14 @@
 //! A release build's content (`--no-default-features`, #331): the test world is not in it, and
 //! New run lists exactly the campaigns' starts. Run by CI's release-configuration job
-//! (`cargo test --no-default-features -p warlock-core --test release_content`): an integration
-//! test, so that job links this one small harness rather than the crate's whole test build
-//! (#1593). A default build compiles it empty.
+//! (`cargo test --no-default-features -p warlock-assets --test release_content`): the content the
+//! binaries embed, in one small harness (#1593, #1587). A default build compiles it empty.
 #![cfg(not(feature = "showcase"))]
 
-use warlock_core::content::{CampaignKind, Content};
+use warlock_core::content::CampaignKind;
 
 #[test]
 fn release_content() {
-    let content = Content::builtin().expect("a release build's content loads");
+    let content = warlock_assets::content().expect("a release build's content loads");
     for c in content.campaigns() {
         assert_eq!(c.kind, CampaignKind::Campaign, "test campaign `{}`", c.id);
     }

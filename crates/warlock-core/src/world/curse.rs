@@ -120,7 +120,14 @@ impl World {
         {
             return None;
         }
-        if by_player && self.state.player().talent_mods(&content).grave_warden {
+        if by_player
+            && self
+                .state
+                .player()
+                .talent_mods(&content)
+                .delving
+                .grave_warden
+        {
             return None;
         }
         let campaign = self.state.campaign.clone();

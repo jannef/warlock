@@ -137,7 +137,7 @@ mod talk;
 
 /// The built-in content, loaded once for every case.
 static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+    LazyLock::new(|| Arc::new(warlock_assets::content().expect("content")));
 
 /// The snapshot of one of the [`cases!`].
 fn check(case: &Case) {

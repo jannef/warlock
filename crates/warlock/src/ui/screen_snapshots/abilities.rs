@@ -357,7 +357,7 @@ cases! {
 /// fastening once the way is told (the owner, #907 Q4).
 #[test]
 fn giving_with_two_kept_beasts_beside() {
-    let mut files = warlock_core::content::ContentFiles::builtin();
+    let mut files = warlock_assets::files();
     let witch = include_str!("../../../../../assets/data/classes/10-witch.toml");
     let trained = witch
         .replacen("handle_animal = { chance = 25, dice = \"2d4\" }, ", "", 1)

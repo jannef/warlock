@@ -113,12 +113,12 @@ cast path shares.
   reroll, riders, cells, radius_cells, degrees, cost, time, to_hit, threat }` (the last three
   the ranks' alone, #1264: no talent writes them), `SpellMods::add` (riders of a status
   merged, `merge_rider`). `SpellMod { mods, when }` is one source with its tag filter
-  (`fits(tags)`: any tag, or every spell without one). Talents: `TalentEffect::SpellMod(SpellModSpec)`
+  (`fits(tags)`: any tag, or every spell without one). Talents: `MagicEffect::SpellMod(SpellModSpec)`
   (`{ kind = "spell_mod", rungs = 1 }`), checked by `SpellModSpec::check` (something to do, the
   rider's status known and its severity 1 to `MAX_SEVERITY`, `when` tags known schools, kinds,
   shapes, or damage types, `cost` a percent, and on a talent chosen for a school or an element
-  no `when`: the choice is its filter), resolved into `TalentMods::spell`
-  (`TalentMods::spell_mods(tags)` sums them). Items: `Effect::{SpellRungs, SpellBonus,
+  no `when`: the choice is its filter), resolved into `MagicMods::spell`
+  (`MagicMods::spell_mods(tags)` sums them). Items: `Effect::{SpellRungs, SpellBonus,
   SpellSides, SpellDice, SpellReroll, WandRungs}` and `SpellReach` (cells), `SpellDuration`
   (degrees), worn, unidentified too, with no tag filter (no shipped affix needs one; one is a
   field on the affix when it does). `Actor::spell_mods(content, spell)` is the one sum of
@@ -151,7 +151,7 @@ cast path shares.
     `shape_cost(shape, its own radius)` × the resolution's `cost` ×
     (100 + `Actor::armour_spell_cost`, the summed `spell_cost_percent` of what is worn, each
     piece's less its own Mage-wrought `spell_ease`, never below 0: `Actor::worn_spell_cost`) / 100³,
-    rounded to the nearest once, at least 1), then `TalentMods::spell_mana_with`:
+    rounded to the nearest once, at least 1), then `MagicMods::spell_mana_with`:
     `spell_mana_percent` (Archmage −50, Empower −10) plus School focus's cost for a spell of
     its tag (`TalentMods::focus(spell.tags)`) and the rank's `mana_off` (the `cost` field of
     `rank_mods`, negative), rounded down, at least 1 (`Actor::spell_base`,
@@ -273,7 +273,7 @@ cast path shares.
     kind's match, split out so the echo reuses it), inside the held lines of a far cast. A
     scroll's (`read_cast`), a wand's (`wand_cast`), and a flask's casts never reach it.
   - **The check** (`Actor::cast_bonus`, `Actor::cast_difficulty`, `check::roll`): the stat's
-    modifier + `TalentMods::check(stat)` + `skill_effect(Effect::Cast)`, against
+    modifier + `VigourMods::check(stat)` + `skill_effect(Effect::Cast)`, against
     `MiscastRules::difficulty(level, armour_spell_cost, rank)`, `rank` the caster's
     `Actor::spell_rank` (1 for a spell it does not hold: a creature's), less `rank_ease` a rank
     above the first. A natural 2 always fails (`check::makes`), by `difficulty − 2 − bonus` or 0.
@@ -315,7 +315,7 @@ cast path shares.
     design §5.1): `World::miscast_rank_loss` sets the spell cast `ranks` lower, never below 1
     (`set_spell_rank`; a spell at 1 is untouched). `World::miscast_forget` forgets the spell cast
     (`Actor::forget_spell`, the second writer of `Actor::spells`: a learned spell's entry
-    removed, a class's spell (`TalentMods::has_spell`) written at **rank 0**, which
+    removed, a class's spell (`MagicMods::has_spell`) written at **rank 0**, which
     `knows_spell` and `spell_rank` read as not known, so it leaves `known_spells`, the Magic
     page, the abilities menu, and casting); `spells = N` forgets `N − 1` more, each one
     `rng.below` over the rest of `known_spells` (menu order); `all` every spell known. A
@@ -419,8 +419,8 @@ cast path shares.
     data id (`use:ID[:X,Y]`: any `use:ID` that is no birth sign or class active, parsed without
     content; an unknown one is refused by the rules, "You have no such ability."). The
     `Ability` methods that need a spell's shape or id take the content (`aim`, `action`,
-    `action_at`), as does the aiming mode's `Aim::action`. `TalentEffect::Spell { spell }` holds
-    the id string (checked against `data/spells/` at load, resolved in `TalentMods::spells`).
+    `action_at`), as does the aiming mode's `Aim::action`. `MagicEffect::Spell { spell }` holds
+    the id string (checked against `data/spells/` at load, resolved in `MagicMods::spells`).
     `Content::spells_by_level` is the menu's order (spell level, then path), `Ability::every`'s
     too.
   - **The list** (33 spells, by spell level, the spell scaling design §5.8; Water walking 5, Brand
@@ -593,7 +593,7 @@ cast path shares.
     Without the file there are none.
   - **Known spells**: `Actor::spells` (`BTreeSet<SpellId>`, saved by index, left out while
     empty, so actors without hash as before; saves change) holds the learned ones;
-    `Actor::knows_spell` is that or a class ability's `spell` effect (`TalentMods::has_spell`);
+    `Actor::knows_spell` is that or a class ability's `spell` effect (`MagicMods::has_spell`);
     `Actor::known_spells` lists both in menu order; `Ability::Spell(s).had_by` asks
     `knows_spell`. `Content::spell_of(SpellId)` is a spell's data whoever has it;
     `Content::class_spell` stays "a class ability gives it".
@@ -617,7 +617,7 @@ cast path shares.
     refusals (no time) as the spec lists them: a spell known at its last rank ("You know all
     there is of Frost."), no mana, untrained; `study_turns(rules, level, percent)` turns (`turns_base + turns_per_level ×
     level`, Quick study's
-    `TalentMods::study_percent`), times the rank sought for a deepening; interrupted (`Ended::Came`/`Said`): "…you stop reading.",
+    `MagicMods::study_percent`), times the rank sought for a deepening; interrupted (`Ended::Came`/`Said`): "…you stop reading.",
     time lost (design §14 q1, the default). Done: the grimoire is found again by object
     (positions may shift; gone, nothing), the `study` use is trained, the odds are taken now,
     then the check. The grimoire is kept either way (#1260: read again after a failure, no
@@ -643,7 +643,7 @@ cast path shares.
     list marks no grimoire, which is then read at once and refused), `start_study` refuses with
     `UNTRAINED` after the other refusals and before any time. The dev `progress` layer prints `learning 36 (Decipher script 108)` (the trained value,
     before what items and talents add) or `cannot learn: not trained in Decipher script`. Study is no
-    ability, so the `abilities` layer and `Unavailable` have no row for it. A class's granted spells (`TalentMods::has_spell`) never read this.
+    ability, so the `abilities` layer and `Unavailable` have no row for it. A class's granted spells (`MagicMods::has_spell`) never read this.
     Starting Decipher script is the class files' (`docs/dev/character-creation.md`): every class
     that casts starts trained in it (#1270: the druid and the witch 2d6+10, raised from 2d4+4 for
     the wizard and the priest; the paladin and the ranger 2d4+4; the ascetic and the aristocrat
@@ -658,8 +658,8 @@ cast path shares.
     which makes it a check at any learning with
     the overreach counted as at least 0; else `(bonus, difficulty)`: Intelligence
     modifier + `skill_effect(Effect::Study)` + the class's affinity with the school +
-    `TalentMods::study_bonus`, against `StudyRules::difficulty(overreach′, known levels)`, where
-    overreach′ is the overreach × (100 + `TalentMods::study_overreach_percent`) / 100, rounded
+    `MagicMods::study_bonus`, against `StudyRules::difficulty(overreach′, known levels)`, where
+    overreach′ is the overreach × (100 + `MagicMods::study_overreach_percent`) / 100, rounded
     down (Overreach's −33), and the known levels `Actor::known_levels`, the sum of the levels
     of the spells known, then + `study_difficulty`; the mishap's band reads the plain overreach;
     `Odds::ways()` of 144 (`check::ways`). `StudyRules::words` turns ways into "certain",
@@ -691,7 +691,7 @@ cast path shares.
     `study-affinities.md`, `mishaps.md`) on `wiki/src/magic.md`'s "Learning spells from
     grimoires"; the grimoires' weight and value in the objects table.
   - **Talents**: Quick study (`quick_study`, the new Spellcraft tree's first talent:
-    `TalentEffect::Study { bonus, percent, overreach_percent }`, +2 and −50 %), systems
+    `MagicEffect::Study { bonus, percent, overreach_percent }`, +2 and −50 %), systems
     `spells` and `scrolls`; Overreach is the same effect's `overreach_percent` (S1).
 - **Wands** (#398; design §9; `content/wand.rs`, `world/zap.rs`, tests `world/zap_tests.rs`):
   - **Data**: `[object.wand]` (`WandSpec` → `Wand { spell, charges, min_rung, max_rung }` on
@@ -777,7 +777,7 @@ cast path shares.
   - **Use**: `World::fire` hands a rod in a `ready` slot (`Actor::rod_item`, after a wand) to
     `World::use_rod`: refused (no time, no mana) on the overworld, at oneself, a burst out of
     reach (`within_reach`), while a status blocks `cast`, and without the mana; then
-    `World::spend_mana(player, Actor::rod_base)` (`rod_base` = `TalentMods::rod_cost`, Channeler's
+    `World::spend_mana(player, Actor::rod_base)` (`rod_base` = `MagicMods::rod_cost`, Channeler's
     percent, rounded, at least 1; `spend_mana` applies Frugal caster and trains Willpower;
     `Actor::rod_cost` is both, what is shown), "You zap the pewter rod." and the type learned
     through `learn_scroll` ("It is a rod of digging."), then the effect at the user's
@@ -1054,7 +1054,7 @@ What every spell of a damage type does beyond its damage (the design:
     needs a line clear of what is opaque (the design says only "within 2 cells"; a chain through
     a wall would strike what no one could see). `arcs` is refused at load off those four shapes
     and on a type with no `arc`.
-  - `TalentEffect::SpellType { arc_chance, when }` (`TalentMods::arc_chance`, the highest): read
+  - `MagicEffect::SpellType { arc_chance, when }` (`MagicMods::arc_chance`, the highest): read
     in `spell_type_spreads`, by the caster's talents. Conductor's.
 - **`World::lay_fire`** (`spell_type.rs`): the one laying of a fire on a walkable cell, longest
   wins; Blaze's `kindle` calls it, and a burning missile's `come_down` keeps its own (it adds to a

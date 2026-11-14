@@ -24,6 +24,7 @@ use crate::combat::{Blow, Profile};
 use crate::content::{ActionKind, ClassActive};
 use crate::damage::Damage;
 use crate::geom::Dir;
+use crate::talent::FaithEffect;
 use crate::talent::SmiteRider;
 
 /// The modes of smiting: the plain smite, and the smites with a rider.
@@ -66,7 +67,7 @@ impl World {
         };
         let me = self.state.player();
         let rider = match mode.active() {
-            Some(active) => match me.talent_mods(&content).smite_mode(active) {
+            Some(active) => match me.talent_mods(&content).faith.smite_mode(active) {
                 Some(rider) => Some(rider),
                 None => return Spent::Nothing,
             },
@@ -119,7 +120,7 @@ impl World {
                 difficulty,
             } => {
                 let me = self.state.player();
-                let aim = (me.talent_mods(&content).smite)
+                let aim = (me.talent_mods(&content).faith.smite)
                     .and_then(|s| s.aim)
                     .map_or(0, |stat| me.effective_stats(&content).modifier(stat));
                 let nerve = them.check_modifier(&content, check);
@@ -207,10 +208,10 @@ impl World {
             return blow;
         }
         let mods = by.talent_mods(&self.content);
-        let Some(dice) = mods.holy_wrath else {
+        let Some(dice) = mods.faith.holy_wrath else {
             return blow;
         };
-        if mods.avatar.is_none() && !self.content.unholy(them.creature) {
+        if mods.faith.avatar.is_none() && !self.content.unholy(them.creature) {
             return blow;
         }
         let amount = dice.roll(&mut self.state.rng).max(0);
@@ -233,7 +234,7 @@ impl World {
     pub(super) fn smite_profile(&self, target: ActorId) -> Option<Profile> {
         let content = &self.content;
         let me = self.state.player();
-        let smite = me.talent_mods(content).smite?;
+        let smite = me.talent_mods(content).faith.smite?;
         let mut profile = me.melee(content);
         if let Some(stat) = smite.aim {
             profile.to_hit += me.effective_stats(content).modifier(stat);
@@ -268,7 +269,7 @@ impl World {
         }
         let content = self.content.clone();
         let (me, them) = (self.state.player(), self.state.actors.get(&attacker)?);
-        let cost = me.talent_mods(&content).retribution?;
+        let cost = me.talent_mods(&content).faith.retribution?;
         let beside = me.level == them.level && me.pos.chebyshev(them.pos) == 1;
         let hostile = self.stance(player, attacker) == crate::content::Stance::Hostile;
         if !beside || !hostile || self.off_guard(player) {
@@ -278,8 +279,12 @@ impl World {
         let bands = (content.talents().iter())
             .map(|(_, def)| def)
             .find(|def| {
-                (def.effects.iter())
-                    .any(|e| matches!(e, crate::content::TalentEffect::Retribution { .. }))
+                (def.effects.iter()).any(|e| {
+                    matches!(
+                        e,
+                        crate::content::TalentEffect::Faith(FaithEffect::Retribution { .. })
+                    )
+                })
             })
             .and_then(|def| def.alignment);
         if let (Some(bands), Some(_)) = (bands, content.alignment())

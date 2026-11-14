@@ -5469,9 +5469,17 @@ dependencies = [
  "insta",
  "serde",
  "toml",
+ "warlock-assets",
  "warlock-core",
  "wasm-bindgen",
  "web-sys",
+]
+
+[[package]]
+name = "warlock-assets"
+version = "0.17.0"
+dependencies = [
+ "warlock-core",
 ]
 
 [[package]]
@@ -5480,6 +5488,7 @@ version = "0.17.0"
 dependencies = [
  "clap",
  "serde_json",
+ "warlock-assets",
  "warlock-core",
  "workspace-hack",
 ]
@@ -6388,6 +6397,7 @@ dependencies = [
  "serde",
  "serde_json",
  "toml",
+ "warlock-assets",
  "warlock-core",
  "workspace-hack",
 ]

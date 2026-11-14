@@ -416,7 +416,7 @@ mod tests {
 
     /// The forge with its stock picked up, beside the anvil.
     fn world() -> World {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut world = World::new(content, "forge", None).expect("world");
         for action in warlock_core::action::parse_actions("move:E pickup").expect("parses") {
             world.apply(&action);
@@ -475,7 +475,7 @@ mod tests {
 
     /// A wizard trained in Enchanting with a long sword and four red crystals picked up.
     fn enchanter() -> World {
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.edit_table("classes", |text| {
             text.replace(
                 "enchanting = { chance = 30,",

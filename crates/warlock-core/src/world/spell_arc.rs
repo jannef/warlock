@@ -66,8 +66,8 @@ impl World {
             def.shape,
             Shape::Ray | Shape::Bolt | Shape::Touch | Shape::Line
         );
-        let own =
-            (self.state.actors.get(&by)).map_or(0, |a| a.talent_mods(&content).arc_chance(kind));
+        let own = (self.state.actors.get(&by))
+            .map_or(0, |a| a.talent_mods(&content).magic.arc_chance(kind));
         let chance = rule.arc.filter(|_| single).map(|c| c.max(own));
         if chance.is_none() && !rule.conducts {
             return;

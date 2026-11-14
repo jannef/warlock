@@ -10,7 +10,7 @@
 use super::{Spent, World};
 use crate::content::{GiftDef, GiftTier, TalentEffect, TalentId};
 use crate::stats::DRAIN_FLOOR;
-use crate::talent::Taken;
+use crate::talent::{Taken, VigourEffect};
 
 impl World {
     /// Whether a draw may give the player `gift` (§7.2's pool): not held, not excluded by a gift
@@ -118,7 +118,7 @@ impl World {
         let content = self.content.clone();
         let id = self.state.player;
         for effect in effects {
-            let &TalentEffect::Stat { stat, value } = effect else {
+            let &TalentEffect::Vigour(VigourEffect::Stat { stat, value }) = effect else {
                 continue;
             };
             let by = value * sign;

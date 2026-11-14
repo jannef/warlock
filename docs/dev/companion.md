@@ -223,7 +223,7 @@ The ranger's level 18 (`assets/data/talents/pack_tactics.toml`: tree `class`, `g
   the companion on the current level and not in the retinue. The player's `Melee` attacks and the
   companion's at it get `+pack_tactics` to hit; `Ranged`, `Thrown`, and `Spell` never;
 - **the shared prey**: the companion's attacks (any kind) at a creature of `Quests::prey()` (by
-  `family_key`, as `ambush.rs::favoured`) carry the player's `TalentMods::favoured_prey`, to hit
+  `family_key`, as `ambush.rs::favoured`) carry the player's `OffenceMods::favoured_prey`, to hit
   and damage (Favoured prey's +1/+2, Master hunter's adding +1/+2). The player's own prey bonus
   stays `favoured`'s.
 
@@ -280,8 +280,8 @@ table's row.
 
 The ranger's level 40 (`assets/data/talents/sic.toml`: tree `class`, `granted`, effect `sic` with
 `status = "savage"`, `blows = 3`, `range = 10`, `resource = { id = "focus", cost = 5 }`, systems
-`combat`, `resources`, `allies`). `TalentEffect::Sic` (checked: a known status with
-`auto_critical` and no tick, `blows` 1 to its `max`, `range` 1 to 20) → `TalentMods::sic`;
+`combat`, `resources`, `allies`). `AllyEffect::Sic` (checked: a known status with
+`auto_critical` and no tick, `blows` 1 to its `max`, `range` 1 to 20) → `AllyMods::sic`;
 `ClassActive::Sic` (`aims_cell`, so `Aim::Cell` and `use:sic:12,5`, through `World::use_class_at`;
 the cost a wait's). `Content::sic_range` is `Ability::reach` for the aiming mode. The code is
 `world/sic.rs`:

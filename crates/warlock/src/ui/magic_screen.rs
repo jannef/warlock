@@ -248,13 +248,12 @@ mod tests {
     use warlock_core::World;
     use warlock_core::action::parse_actions;
     use warlock_core::character::CharacterSpec;
-    use warlock_core::content::Content;
 
     /// A wizard of level 18: four spells.
     const LEVELLED: &str = "xp:200000 levelup:auto";
 
     fn world(scenario: &str, character: &str, actions: &str) -> World {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let spec: CharacterSpec = character.parse().expect("character");
         let mut world =
             World::start_run(content, scenario, None, Some(&spec), None, true).expect("world");

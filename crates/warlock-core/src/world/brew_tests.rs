@@ -395,7 +395,7 @@ fn intelligence_is_the_brews_stat() {
     let me = w.state.player();
     let want = me.effective_stats(&w.content).modifier(Stat::Intelligence)
         + me.skill_effect_of(&w.content, alchemy(&w), crate::skills::Effect::Craft)
-        + me.talent_mods(&w.content).check(Stat::Intelligence);
+        + me.talent_mods(&w.content).vigour.check(Stat::Intelligence);
     assert_eq!(w.craft_modifier(def, None), want);
     assert_eq!(
         me.skill_effect_of(&w.content, alchemy(&w), crate::skills::Effect::Craft),

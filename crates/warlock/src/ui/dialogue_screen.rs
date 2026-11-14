@@ -263,7 +263,6 @@ mod tests {
     use std::sync::Arc;
     use warlock_core::World;
     use warlock_core::action::parse_actions;
-    use warlock_core::content::Content;
 
     fn text(console: &Console) -> String {
         (0..console.rows() as i32)
@@ -278,7 +277,7 @@ mod tests {
 
     /// The showcase, next to the old hermit in the stairs nook, having chatted with him.
     fn at_the_hermit() -> (World, Outcome) {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut world = World::new(content, "showcase", None).expect("run");
         let walk = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:SE*3";
         for action in parse_actions(walk).expect("actions") {

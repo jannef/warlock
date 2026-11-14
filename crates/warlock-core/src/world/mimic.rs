@@ -46,8 +46,9 @@ impl World {
         let mimic = (by.and_then(|b| self.state.actors.get(&b)))
             .is_some_and(|b| self.content.has_tag(b.creature, "mimic"));
         mimic
-            && (self.state.actors.get(&id))
-                .is_some_and(|a| !a.talents.is_empty() && a.talent_mods(&self.content).slick)
+            && (self.state.actors.get(&id)).is_some_and(|a| {
+                !a.talents.is_empty() && a.talent_mods(&self.content).delving.slick
+            })
     }
 
     /// The disguised mimic at `p` on the current level, if one stands there.

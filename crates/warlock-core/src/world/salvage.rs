@@ -57,11 +57,11 @@ pub fn salvageable(content: &Content, stack: &Stack) -> bool {
 }
 
 /// The percent of a made material's grams salvage gives `actor` back: `data/salvage.toml`'s
-/// `yield`, or the holder's Waste not where that is more (`TalentMods::salvage_percent`; the
+/// `yield`, or the holder's Waste not where that is more (`CraftMods::salvage_percent`; the
 /// craftsperson design §7.3). The one read, for the work and for Eye for the make's line.
 pub fn salvage_percent(content: &Content, actor: &super::Actor) -> u8 {
     let percent = content.salvage().map_or(0, |s| s.percent);
-    percent.max(actor.talent_mods(content).salvage_percent)
+    percent.max(actor.talent_mods(content).craft.salvage_percent)
 }
 
 /// What a failed check leaves of a gem cut as `cutting`: one cut rougher while it is above the

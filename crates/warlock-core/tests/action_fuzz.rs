@@ -6,14 +6,20 @@
 //! `cargo test -p warlock-core --test action_fuzz` runs a small fixed set (the same every run,
 //! for CI); `-- --ignored` runs many more cases from a random start.
 
-#![cfg(feature = "showcase")]
-
 use proptest::prelude::*;
 use proptest::test_runner::{Config, RngAlgorithm, TestRng, TestRunner};
 use std::sync::Arc;
 use warlock_core::action::Action;
-use warlock_core::content::Content;
+use warlock_core::content::{Content, ContentFiles};
 use warlock_core::world::World;
+
+/// The content under the workspace's `assets/`, the test world included (the core embeds none:
+/// #1587).
+fn builtin() -> Content {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets");
+    let files = ContentFiles::from_dir(&root, true).expect("read assets/");
+    Content::load(&files).expect("the content under assets/ loads")
+}
 
 /// The scenarios fuzzed: the hub, a fight, a generated dungeon floor, and the overworld.
 const SCENARIOS: [&str; 4] = ["showcase", "arena", "depths", "world"];
@@ -289,7 +295,7 @@ const VERBS: usize = 78;
 /// the fuzz applies actions, not parse errors.
 #[test]
 fn the_words_parse() {
-    let content = Content::builtin().expect("the built-in content loads");
+    let content = builtin();
     let vocab = Vocab::of(&content);
     let mut words = 0;
     let mut parsed = 0;
@@ -332,7 +338,7 @@ fn play(
 }
 
 fn fuzz(scenario: &str, runner: &mut TestRunner, steps: usize) {
-    let content = Arc::new(Content::builtin().expect("the built-in content loads"));
+    let content = Arc::new(builtin());
     let vocab = Vocab::of(&content);
     // A third more draws are steps, past the verbs: the player gets about, not only refused.
     let word = (

@@ -594,7 +594,7 @@ fn ranger(scenario: &str, seed: u64) -> World {
 fn fletcher_is_half_the_time_twice_the_count_and_a_better_check() {
     let r = ranger("showcase", 5);
     assert!(r.state.player().talents.has("fletcher"), "a ranger's");
-    let numbers = (r.state.player().talent_mods(&r.content).fletcher).expect("the effect");
+    let numbers = (r.state.player().talent_mods(&r.content).craft.fletcher).expect("the effect");
     assert_eq!(
         (numbers.check, numbers.count_times, numbers.time_percent),
         (4, 2, 50)

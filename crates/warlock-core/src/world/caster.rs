@@ -19,6 +19,7 @@ impl World {
             .player()
             .talent_mods(&self.content)
             .into_owned()
+            .vigour
             .reprieve
         else {
             return false;
@@ -52,7 +53,7 @@ impl World {
         if by.talents.is_empty() {
             return blow;
         }
-        let more: i32 = (by.talent_mods(&self.content).status_damage.iter())
+        let more: i32 = (by.talent_mods(&self.content).offence.status_damage.iter())
             .filter(|(status, _)| on.effects.has(*status))
             .map(|(_, v)| v)
             .sum();

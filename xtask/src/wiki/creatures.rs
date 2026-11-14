@@ -1338,7 +1338,7 @@ mod tests {
 
     #[test]
     fn the_tags_name_their_creatures() {
-        let content = Content::builtin().expect("content");
+        let content = warlock_assets::content().expect("content");
         let table = creature_tags(&content);
         assert!(
             table.contains(
@@ -1358,7 +1358,7 @@ mod tests {
     /// Every family of the numbers' pages has creatures, and every creature is in one (#1550).
     #[test]
     fn every_family_has_its_creatures() {
-        let content = Content::builtin().expect("content");
+        let content = warlock_assets::content().expect("content");
         let stats = creature_stats(&content);
         for (i, (title, _, _)) in FAMILIES.iter().enumerate() {
             let n = (listed(&content).into_iter()).filter(|&(id, _)| family(&content, id) == i);

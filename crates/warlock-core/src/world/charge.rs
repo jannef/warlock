@@ -46,7 +46,7 @@ impl World {
     pub(super) fn charge(&mut self, at: Pos, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
-        let Some(per_cell) = self.state.player().talent_mods(&content).charge else {
+        let Some(per_cell) = self.state.player().talent_mods(&content).martial.charge else {
             return Spent::Nothing;
         };
         let Some((target, path)) = self.charge_path(at) else {
@@ -64,7 +64,12 @@ impl World {
             self.spend_resource(player, cost.resource, amount, events);
         }
         self.say("You charge!");
-        let whirling = self.state.player().talent_mods(&content).whirling_charge;
+        let whirling = self
+            .state
+            .player()
+            .talent_mods(&content)
+            .martial
+            .whirling_charge;
         let mut struck = Vec::new();
         let mut time = 0;
         let mut from = self.player_pos();

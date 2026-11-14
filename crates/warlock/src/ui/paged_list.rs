@@ -282,7 +282,7 @@ mod tests {
     use crate::ui::menu::HINTS;
 
     fn content() -> Content {
-        Content::builtin().expect("content")
+        warlock_assets::content().expect("content")
     }
 
     fn class(c: &Content, id: &str) -> ItemClassId {

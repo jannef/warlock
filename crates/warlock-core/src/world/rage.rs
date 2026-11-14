@@ -15,7 +15,7 @@ impl World {
     /// for the time of a wait.
     pub(super) fn rage(&mut self, events: &mut Vec<Event>) -> Spent {
         let player = self.state.player;
-        let Some(resource) = self.state.player().talent_mods(&self.content).rage else {
+        let Some(resource) = self.state.player().talent_mods(&self.content).martial.rage else {
             return Spent::Nothing;
         };
         self.grant_resource_with_status(player, resource, Some(player), events);
@@ -39,10 +39,11 @@ impl World {
             return false;
         }
         let mods = actor.talent_mods(&self.content);
-        let (Some(rage), Some(unstoppable)) = (mods.rage, &mods.unstoppable) else {
+        let (Some(rage), Some(unstoppable)) = (mods.martial.rage, &mods.martial.unstoppable) else {
             return false;
         };
-        let raging = (mods.rage_status(&self.content)).is_some_and(|s| actor.effects.has(s));
+        let raging =
+            (mods.martial.rage_status(&self.content)).is_some_and(|s| actor.effects.has(s));
         if !raging || !self.spend_resource(id, rage, unstoppable.cost, events) {
             return false;
         }

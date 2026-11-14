@@ -258,7 +258,7 @@ mod tests {
     use crate::graveyard::{by_experience, parse};
 
     fn content() -> Content {
-        Content::builtin().expect("content")
+        warlock_assets::content().expect("content")
     }
 
     const FALLEN: &str = r#"

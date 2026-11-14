@@ -57,7 +57,7 @@ impl World {
         let mut rate = u32::from(statuses.min(actor.diseases.mana_regen(&self.content)));
         if self.resting && id == self.state.player {
             // Resting's pace, and half again with Meditation (spec §8 "Talents").
-            let faster = actor.talent_mods(&self.content).mana_resting_percent;
+            let faster = actor.talent_mods(&self.content).magic.mana_resting_percent;
             let resting = u32::from(self.content.healing().mana_resting);
             let resting = resting * u32::try_from((100 + faster).max(0)).unwrap_or(0) / 100;
             rate = rate * resting / 100;
@@ -73,7 +73,7 @@ impl World {
             .get(ItemEffect::ManaRegeneration)
             .max(0);
         // Talents (spec §8 "Birth sign": Tidal) add their percent to the affixes'.
-        let faster = faster + actor.talent_mods(&self.content).mana_regen_percent;
+        let faster = faster + actor.talent_mods(&self.content).magic.mana_regen_percent;
         // Concentration (spec §8 "Skills") adds its percent to theirs.
         let faster = faster + actor.mind(&self.content, Effect::ManaRegen);
         rate * u32::try_from((100 + faster).max(0)).unwrap_or(0) / 100
@@ -177,7 +177,7 @@ impl World {
         let content = self.content.clone();
         let player = self.state.player;
         let me = self.state.player();
-        let Some(blood) = me.talent_mods(&content).blood_magic else {
+        let Some(blood) = me.talent_mods(&content).magic.blood_magic else {
             self.say("You know no blood magic.");
             return Spent::Nothing;
         };
@@ -200,14 +200,14 @@ impl World {
 
 impl Actor {
     /// What an ability whose cost is `base` mana costs this actor, its talents' and its magic
-    /// items' changes made ([`crate::talent::TalentMods::mana_cost`]: Frugal caster's percent
+    /// items' changes made ([`crate::talent::MagicMods::mana_cost`]: Frugal caster's percent
     /// and the worn `mana_cost`, of Thrift's, summed before the one rounding, at most
     /// [`crate::talent::MAX_MANA_CUT`] off). What a check of whether it has the mana compares
     /// with, and what [`World::spend_mana`] takes: spells, rods, Inspire, a summoner's cost, the
     /// dev drain.
     pub fn mana_cost(&self, content: &Content, base: i32) -> i32 {
         let worn = self.mods(content).get(crate::content::Effect::ManaCost);
-        self.talent_mods(content).mana_cost(base, worn)
+        self.talent_mods(content).magic.mana_cost(base, worn)
     }
 }
 

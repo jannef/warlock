@@ -158,11 +158,18 @@ fn the_ranger_gains_it_at_level_40_as_the_design_prices_it() {
             .state
             .player()
             .talent_mods(&BUILTIN)
+            .ally
             .sic
             .is_none()
     );
     let w = ranger();
-    let sic = w.state.player().talent_mods(&BUILTIN).sic.expect("Sic 'em");
+    let sic = w
+        .state
+        .player()
+        .talent_mods(&BUILTIN)
+        .ally
+        .sic
+        .expect("Sic 'em");
     assert_eq!((sic.blows, sic.range), (3, 10));
 }
 

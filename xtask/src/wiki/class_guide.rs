@@ -12,6 +12,7 @@ use super::util::stat_link;
 use std::fmt::Write as _;
 use warlock_core::content::{ClassDef, Content, TalentEffect};
 use warlock_core::stats::Stat;
+use warlock_core::talent::MagicEffect;
 
 /// The four kinds of class, in the wiki's order.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -178,7 +179,7 @@ fn spells(content: &Content, class: &ClassDef) -> String {
     for (level, talent) in &class.abilities {
         let Some(id) = book.id(talent) else { continue };
         for effect in &book.get(id).effects {
-            if matches!(effect, TalentEffect::Spell { .. }) {
+            if matches!(effect, TalentEffect::Magic(MagicEffect::Spell { .. })) {
                 levels.push(*level);
             }
         }

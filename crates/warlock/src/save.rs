@@ -453,7 +453,7 @@ mod tests {
     use warlock_core::{Action, Dir};
 
     fn content() -> Arc<Content> {
-        Arc::new(Content::builtin().expect("content"))
+        Arc::new(warlock_assets::content().expect("content"))
     }
 
     fn store(name: &str) -> SaveStore {

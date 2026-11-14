@@ -8,6 +8,7 @@ use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Content, CreatureDef, CreatureId, TalentEffect};
 use warlock_core::skills::Effect;
+use warlock_core::talent::StealthEffect;
 
 /// A skill's benefit of `effect`, with the skill's id and name, if any skill gives it.
 fn benefit(
@@ -45,7 +46,7 @@ pub(super) fn surprise_rules(content: &Content) -> String {
     };
     let status = content.status(rules.status);
     let reach = talents_with(content, |e| match e {
-        TalentEffect::SneakReach { value } => Some(*value),
+        TalentEffect::Stealth(StealthEffect::SneakReach { value }) => Some(*value),
         _ => None,
     });
     let mut out = String::from("| Rule | Number |\n|---|---|\n");
@@ -212,7 +213,7 @@ mod tests {
 
     #[test]
     fn the_ladders_and_odds_read_the_data() {
-        let content = Content::builtin().expect("content");
+        let content = warlock_assets::content().expect("content");
         let ladders = surprise_ladders(&content);
         assert!(
             ladders.contains("| 100 | 5d6 | +8 | +8 | 50% | 125% | +8 |"),

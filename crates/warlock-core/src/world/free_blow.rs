@@ -194,7 +194,7 @@ impl World {
         // Its own switches (class abilities), those its talents turn on, and those its weapon
         // abilities do with what it holds (`weapon_ability.rs`).
         let blows = (actor.free_blows)
-            .either(actor.talent_mods(&self.content).free_blows)
+            .either(actor.talent_mods(&self.content).offence.free_blows)
             .either(self.ability_switches(actor).free_blows);
         // Lurking, a hostile stepping up beside it takes its blow (`thief.rs`).
         let blows = FreeBlows {
@@ -346,7 +346,7 @@ impl World {
         if self.free_blows_of(actor).gatekeeper {
             return Some((1, 1));
         }
-        let one_in = actor.talent_mods(&self.content).gatekeeper_one_in?;
+        let one_in = actor.talent_mods(&self.content).offence.gatekeeper_one_in?;
         if self.off_guard(actor.id) {
             return None;
         }
@@ -465,7 +465,7 @@ impl World {
         if !self.free_blows_of(me).flurry || me.weapon_item(&self.content).is_some() {
             return None;
         }
-        if let Some(cost) = me.talent_mods(&self.content).flurry_cost
+        if let Some(cost) = me.talent_mods(&self.content).martial.flurry_cost
             && !self.spend_resource(striker, cost.resource, cost.amount, events)
         {
             return None;
@@ -507,7 +507,7 @@ impl World {
         }
         let (me, them) = (&self.state.actors[&striker], &self.state.actors[&attacker]);
         let beside = me.level == them.level && me.pos.chebyshev(them.pos) == 1;
-        let ready = !me.talents.is_empty() && me.talent_mods(&self.content).startled_blow;
+        let ready = !me.talents.is_empty() && me.talent_mods(&self.content).offence.startled_blow;
         (beside && ready && self.stance(striker, attacker) == Stance::Hostile).then(|| FreeBlow {
             by: striker,
             at: attacker,
