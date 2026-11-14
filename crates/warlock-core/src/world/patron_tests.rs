@@ -7,13 +7,11 @@ use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::magic::worked::Quality;
+use crate::test_support::CONTENT;
 
 /// The patron's corner of the Gæsthūs, and the cell west of it.
 const CORNER: Pos = Pos::new(50, 23);
 const BESIDE: Pos = Pos::new(49, 23);
-
-static CONTENT: std::sync::LazyLock<Arc<Content>> =
-    std::sync::LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 /// A run in Cēaptūn as `character`, with its kit.
 fn run(character: &str) -> World {

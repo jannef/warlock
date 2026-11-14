@@ -9,11 +9,9 @@ use crate::combat::Category;
 use crate::content::{Content, ContentFiles, Stance};
 use crate::geom::Dir;
 use crate::replay::Replay;
+use crate::test_support::CONTENT as BUILTIN;
 use crate::world::{Order, stance_between};
-use std::sync::{Arc, LazyLock};
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+use std::sync::Arc;
 
 fn spec(text: &str) -> CharacterSpec {
     text.parse().expect("a character")

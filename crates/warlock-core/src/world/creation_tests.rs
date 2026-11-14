@@ -4,10 +4,7 @@
 use super::*;
 use crate::character::CharacterSpec;
 use crate::replay::Replay;
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+use crate::test_support::CONTENT;
 
 fn spec(text: &str) -> CharacterSpec {
     text.parse().expect("a character")

@@ -9,10 +9,7 @@ use crate::combat::Category;
 use crate::content::{ContentFiles, Role};
 use crate::stats::{PerStat, Stats};
 use crate::talent;
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+use crate::test_support::CONTENT;
 
 fn spec(text: &str) -> CharacterSpec {
     text.parse().expect("a character")

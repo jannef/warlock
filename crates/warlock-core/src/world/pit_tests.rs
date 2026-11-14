@@ -7,11 +7,8 @@ use super::caster_tests::said;
 use super::miscast::Aim;
 use super::*;
 use crate::action::{Action, parse_actions};
-use crate::content::{Content, Miscast};
-use std::sync::{Arc, LazyLock};
-
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+use crate::content::Miscast;
+use crate::test_support::CONTENT;
 
 fn start(scenario: &str, seed: u64) -> World {
     World::new(CONTENT.clone(), scenario, Some(seed)).expect("world")

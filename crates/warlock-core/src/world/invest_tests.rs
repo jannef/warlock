@@ -8,13 +8,11 @@ use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::replay::Replay;
+use crate::test_support::CONTENT;
 
 /// The partner's desk in Wulfrun's office, and the cell west of it.
 const DESK: Pos = Pos::new(75, 23);
 const BESIDE: Pos = Pos::new(74, 23);
-
-static CONTENT: std::sync::LazyLock<Arc<Content>> =
-    std::sync::LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 /// A run in Cēaptūn as `character`, with its kit.
 fn run(character: &str) -> World {

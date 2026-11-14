@@ -9,10 +9,7 @@ use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::talent::TalentMods;
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::CONTENT as BUILTIN;
 
 /// An elf wizard in the showcase, every score 14.
 fn world() -> World {

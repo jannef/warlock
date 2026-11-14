@@ -10,10 +10,7 @@ use super::*;
 use crate::check;
 use crate::content::{ContentFiles, Miscast, MishapEffect, ZoneKind};
 use crate::dice::Dice;
-use std::sync::LazyLock;
-
-/// The built-in content, loaded once: [`miscast`] runs for every cast of the long loops.
-static BUILTIN: LazyLock<Content> = LazyLock::new(|| Content::builtin().expect("content"));
+use crate::test_support::CONTENT as BUILTIN;
 
 /// The built-in content with `data/miscast.toml`'s `base` set to `base` (−1000: only the 1 and
 /// 1 fails; 1000: every cast fails, by far), and, with `only`, the table cut to that one entry

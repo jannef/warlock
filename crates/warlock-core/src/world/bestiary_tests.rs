@@ -2,12 +2,10 @@
 //! their data says, with the factions they fight in and the gear they carry. Each wave adds its
 //! types to [`WAVES`].
 
-use crate::content::{Content, Stance};
+use crate::content::Stance;
 use crate::gear;
 use crate::rng::Rng;
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Content> = LazyLock::new(|| Content::builtin().expect("content"));
+use crate::test_support::CONTENT;
 
 /// Each wave's types, with the campaign that owns each (`None`: shared, `data/creatures/`).
 const WAVES: &[(&str, Option<&str>)] = &[

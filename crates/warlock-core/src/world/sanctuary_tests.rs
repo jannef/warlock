@@ -12,10 +12,7 @@ use crate::content::{ClassActive, ContentFiles, Factor};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stats};
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::CONTENT as BUILTIN;
 
 /// A human priest of `level` (every score 14), Neutral, on `scenario`'s start.
 fn priest_on(scenario: &str, level: u8) -> World {

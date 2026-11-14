@@ -4,6 +4,7 @@
 //! to-hit, damage, threat, Defence, and cost, starting ranks come from race and class, and all of
 //! it is saved and replayed.
 
+use crate::test_support::CONTENT as BUILTIN;
 /// The test creatures name no level: level 1 (spec §8 "Experience").
 const UNLEVELLED: u32 = 1;
 use super::*;
@@ -14,7 +15,6 @@ use crate::content::{ContentFiles, WeaponSkillId};
 use crate::equipment;
 use crate::replay::Replay;
 use crate::weapon_skills::{Training, WeaponSkills};
-use std::sync::LazyLock;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -680,9 +680,6 @@ fn creatures_fight_with_the_ranks_their_type_gives() {
     let spears = builtin.weapon_skills().id("spears").expect("spears");
     assert_eq!(builtin.creature(kobold).weapon_skills.rank(spears), 1);
 }
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
 
 fn ranks_of(character: &str, seed: u64) -> WeaponSkills {
     let spec: CharacterSpec = character.parse().expect("a character");

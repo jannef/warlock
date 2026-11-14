@@ -5,13 +5,8 @@
 
 use super::*;
 use crate::action::parse_actions;
-use crate::content::ContentFiles;
 use crate::equipment::Equipment;
-
-/// The shipped content.
-fn content() -> Arc<Content> {
-    Arc::new(Content::load(&ContentFiles::builtin()).expect("content"))
-}
+use crate::test_support::builtin as content;
 
 /// The showcase's summoning hall, its goblin wizard stripped of whatever gear it rolled.
 fn hall(content: &Arc<Content>) -> (World, ActorId) {

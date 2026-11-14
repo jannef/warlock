@@ -10,10 +10,7 @@ use super::quick_leave::QUICK_LEAVE_REFUSED;
 use super::*;
 use crate::action::parse_actions;
 use crate::content::Stance;
-
-fn content() -> Arc<Content> {
-    Arc::new(Content::load(&crate::content::ContentFiles::builtin()).expect("builtin content"))
-}
+use crate::test_support::builtin as content;
 
 /// A run in the forest's local area, the player on a free, walkable cell of its west edge.
 fn at_the_edge() -> World {

@@ -11,11 +11,8 @@ use crate::alignment::Score;
 use crate::content::ClassActive;
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
+use crate::test_support::CONTENT as BUILTIN;
 use crate::time::Duration;
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 /// A human priest of `level` (every score 14), Neutral, at full hit points and mana, Not
 /// hungry, and with no strain.

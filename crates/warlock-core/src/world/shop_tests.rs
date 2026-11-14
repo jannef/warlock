@@ -9,6 +9,7 @@ use crate::object::Stack;
 use crate::perception::Sale;
 use crate::replay::Replay;
 use crate::stats::{Stat, Stats};
+use crate::test_support::builtin as content;
 
 /// From the courtyard's start: east along the path, the purse in the gazebo (a), the scroll of
 /// light beside it (b), then along the flagstones to the hut, opening its door, and in.
@@ -21,10 +22,6 @@ const POST: Pos = Pos::new(54, 13);
 /// Goods on the shop floor.
 const DAGGER: Pos = Pos::new(56, 13);
 const SWORD: Pos = Pos::new(58, 13);
-
-fn content() -> Arc<Content> {
-    Arc::new(Content::builtin().expect("built-in content"))
-}
 
 fn courtyard() -> World {
     World::new(content(), "courtyard", None).expect("courtyard")

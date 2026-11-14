@@ -10,7 +10,7 @@ use crate::combat::{Blow, Strike};
 use crate::content::{Affliction, ContentFiles, Drain};
 use crate::replay::Replay;
 use crate::stats::{DRAIN_FLOOR, PerStat, Stat, Stats};
-use std::sync::LazyLock;
+use crate::test_support::CONTENT as BUILTIN;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -310,9 +310,6 @@ fn a_random_drain_draws_its_stat_first() {
     }
     assert!(picked.len() >= 4, "{picked:?}");
 }
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 #[test]
 fn the_pale_drinker_drains_strength_against_willpower() {

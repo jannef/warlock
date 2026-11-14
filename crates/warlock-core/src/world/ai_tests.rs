@@ -6,6 +6,7 @@ use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::content::{ContentFiles, Stance};
 use crate::replay::Replay;
+use crate::test_support::builtin;
 use std::sync::LazyLock;
 
 const TERRAIN: &str = r##"
@@ -1014,12 +1015,6 @@ fn something_unseen_attacks_you_in_the_dark() {
 
 // ---------------------------------------------------------------------------------------------
 // The built-in arena and sky-lit levels.
-
-fn builtin() -> Arc<Content> {
-    static BUILTIN: LazyLock<Arc<Content>> =
-        LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
-    BUILTIN.clone()
-}
 
 #[test]
 fn creature_sight_matches_the_players_under_the_sun_and_the_moon() {

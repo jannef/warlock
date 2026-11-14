@@ -7,11 +7,7 @@ use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::content::WeaponSkillId;
 use crate::object::Stack;
-use std::sync::LazyLock;
-
-/// Built-in content, made once.
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+use crate::test_support::CONTENT;
 
 /// The dummy at the west end of the shooting lane, and one of the three below it.
 const LANE: Pos = Pos::new(73, 17);

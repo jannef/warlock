@@ -9,11 +9,9 @@ use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, StatDeed, TrapId};
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::CONTENT as BUILTIN;
 use crate::time::DAWN;
 use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 /// The built-in content with every training and deed chance at 100, so marks come without a
 /// draw.

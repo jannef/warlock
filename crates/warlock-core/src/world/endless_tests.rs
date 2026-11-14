@@ -4,15 +4,12 @@
 use super::*;
 use crate::action::{Action, parse_actions};
 use crate::character::CharacterSpec;
-use crate::content::{Content, Generator};
+use crate::content::Generator;
 use crate::dump::{self, Layer};
 use crate::mapgen;
 use crate::replay::Replay;
+use crate::test_support::CONTENT;
 use proptest::prelude::*;
-use std::sync::{Arc, LazyLock};
-
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
 
 const BRANCH: &str = "grundleas";
 

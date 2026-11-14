@@ -3,11 +3,8 @@
 
 use super::*;
 use crate::content::CreatureId;
+use crate::test_support::CONTENT;
 use crate::world::{ActorKind, World};
-use std::sync::{Arc, LazyLock};
-
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 fn spawn(content: &Content, creature: &str) -> CreatureSpawn {
     CreatureSpawn {

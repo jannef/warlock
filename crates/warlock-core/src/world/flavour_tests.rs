@@ -9,11 +9,9 @@ use crate::ability::Ability;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Sign, SignActive};
+use crate::test_support::CONTENT as BUILTIN;
 use crate::time::{Duration, GameTime};
 use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 /// The built-in content files with the horoscope's `[flavour]` table replaced by `table`.
 fn with_flavour(table: &str) -> ContentFiles {

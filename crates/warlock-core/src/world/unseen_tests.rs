@@ -9,10 +9,8 @@ use crate::content::{Content, ContentFiles, Invisible};
 use crate::geom::Pos;
 use crate::noise::SoundKind;
 use crate::perception::Perception;
-use std::sync::{Arc, LazyLock};
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+use crate::test_support::CONTENT as BUILTIN;
+use std::sync::Arc;
 
 /// A room, the player at its west end, then a second room behind a wall (no way between them
 /// but a corridor round the south): `s` a shadow, `d` a duergar warrior, `i` an invisible

@@ -11,10 +11,7 @@ use crate::content::{ContentFiles, Factor, StatusId, Trap};
 use crate::damage::Damage;
 use crate::equipment::Equipment;
 use crate::stats::{PerStat, Stat, Stats};
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::CONTENT as BUILTIN;
 
 /// A human warrior in the showcase, every score 14.
 fn world() -> World {

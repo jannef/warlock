@@ -11,10 +11,7 @@ use crate::content::{Build, ClassActive, Factor, StatusId, percent_of};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stat, Stats};
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::CONTENT as BUILTIN;
 
 /// A human of `class` in the showcase (seed 7), with their kit, every score 14.
 /// A human of `class` in the showcase, born under no sign, so a sign's gifts (Rise from the

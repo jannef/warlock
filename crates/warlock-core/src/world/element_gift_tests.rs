@@ -9,10 +9,7 @@ use crate::character::CharacterSpec;
 use crate::content::{Role, Sign, SignActive};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::CONTENT as BUILTIN;
 
 const BLAZE: Action = Action::Gift(SignActive::Blaze, None);
 

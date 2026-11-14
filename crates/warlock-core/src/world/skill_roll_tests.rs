@@ -10,10 +10,7 @@ use crate::content::Factor;
 use crate::replay::Replay;
 use crate::skills::Trained;
 use crate::stats::{PerStat, Stat, Stats};
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::CONTENT as BUILTIN;
 
 fn world(character: &str) -> World {
     let spec: CharacterSpec = character.parse().expect("a character");

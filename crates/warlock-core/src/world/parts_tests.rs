@@ -8,10 +8,7 @@ use super::*;
 use crate::content::{ContentFiles, ObjectId, Part};
 use crate::magic::describe::lines;
 use crate::magic::{Magic, Rarity};
-
-fn content() -> Arc<Content> {
-    Arc::new(Content::builtin().expect("built-in content"))
-}
+use crate::test_support::builtin as content;
 
 fn object(content: &Content, id: &str) -> ObjectId {
     content

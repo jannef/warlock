@@ -6,14 +6,11 @@ use super::*;
 use crate::action::{Event, parse_actions};
 use crate::character::CharacterSpec;
 use crate::combat::Strike;
-use crate::content::{ActionKind, Content, CreatureSpawn, StatusId};
+use crate::content::{ActionKind, CreatureSpawn, StatusId};
 use crate::geom::Pos;
 use crate::perception::Perception;
 use crate::replay::Replay;
-use std::sync::{Arc, LazyLock};
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::CONTENT as BUILTIN;
 
 const ME: Pos = Pos::new(7, 15);
 

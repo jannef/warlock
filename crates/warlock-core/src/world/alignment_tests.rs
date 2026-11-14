@@ -9,6 +9,7 @@ use crate::alignment::{Alignment, Band, Score};
 use crate::content::{ClassActive, ContentFiles, Sign};
 use crate::object::Stack;
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -254,10 +255,6 @@ fn files_with(map: &str) -> ContentFiles {
 fn yard(map: &str) -> World {
     let content = Content::load(&files_with(map)).expect("test content is valid");
     World::new(Arc::new(content), "yard", None).expect("world")
-}
-
-fn builtin() -> Arc<Content> {
-    Arc::new(Content::builtin().expect("built-in content"))
 }
 
 fn run(w: &mut World, actions: &str) {

@@ -8,10 +8,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, Drop, DropFrom, DropGoods, PER_MILLE};
 use crate::object::Stack;
-
-fn builtin() -> Arc<Content> {
-    Arc::new(Content::builtin().expect("content"))
-}
+use crate::test_support::builtin;
 
 fn rows<'c>(content: &'c Content, id: &str) -> &'c [Drop] {
     let c = content.creature_id(id).unwrap_or_else(|| panic!("{id}"));

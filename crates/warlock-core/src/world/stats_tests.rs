@@ -5,10 +5,7 @@ use super::*;
 use crate::content::ContentFiles;
 use crate::save;
 use crate::stats::{Stat, Stats};
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+use crate::test_support::CONTENT;
 
 fn showcase() -> World {
     World::new(CONTENT.clone(), "showcase", None).expect("world")

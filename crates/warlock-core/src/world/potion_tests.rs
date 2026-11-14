@@ -6,6 +6,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
+use crate::test_support::CONTENT as BUILTIN;
 
 /// Every potion type, by id.
 const POTIONS: &[&str] = &[
@@ -271,9 +272,6 @@ fn the_witch_knows_her_kit_potion() {
         .expect("a potion in her kit");
     assert!(w.lore().label(potion.object).is_none());
 }
-
-static BUILTIN: std::sync::LazyLock<Arc<Content>> =
-    std::sync::LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 #[test]
 fn thrifty_drinker_keeps_potions_by_its_chance_and_draws_only_when_held() {

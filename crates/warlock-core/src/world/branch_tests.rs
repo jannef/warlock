@@ -4,11 +4,8 @@
 use super::*;
 use crate::grid::Grid;
 use crate::replay::Replay;
+use crate::test_support::CONTENT;
 use std::collections::VecDeque;
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
 
 fn depths(seed: u64) -> World {
     World::new(CONTENT.clone(), "depths", Some(seed)).expect("world")

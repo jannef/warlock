@@ -13,10 +13,7 @@ use crate::equipment;
 use crate::geom::Pos;
 use crate::stats::{PerStat, Stats};
 use crate::talent::{Candidate, Refusal, may_take};
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::CONTENT as BUILTIN;
 
 /// The fourteen picks with the sign each asks for (`(animal, element)`, one of them set).
 const PICKS: [(&str, Option<&str>, Option<&str>); 14] = [

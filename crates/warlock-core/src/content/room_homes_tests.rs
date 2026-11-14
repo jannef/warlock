@@ -2,10 +2,8 @@
 //! objects A5: the armoury and the workshop): parsed and resolved against the
 //! creatures.
 
-use super::{Content, RoomEffectId, RoomEffects};
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Content> = LazyLock::new(|| Content::builtin().expect("content"));
+use super::{RoomEffectId, RoomEffects};
+use crate::test_support::CONTENT;
 
 const DEN: &str = "swarm = { per_cells = 4, min = 1, max = 4, wake = 200, cry = 0, loot_level = 0";
 

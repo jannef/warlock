@@ -10,11 +10,8 @@ use crate::fov::radius2;
 use crate::light::Sun;
 use crate::perception::Emitter;
 use crate::replay::Replay;
+use crate::test_support::CONTENT;
 use crate::weather::{Clouds, Weather, weather_at};
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
 
 /// From the showcase start to the courtyard, up the stairs nook's `<`.
 const TO_COURTYARD: &str =

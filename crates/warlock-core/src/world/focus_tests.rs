@@ -8,10 +8,7 @@ use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{ClassActive, Factor, ResourceId, percent_of};
 use crate::replay::Replay;
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::CONTENT as BUILTIN;
 
 /// A human ranger in the showcase (seed 7), with their kit, at `level` with every choice spent.
 fn ranger(level: u8) -> World {

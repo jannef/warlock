@@ -8,10 +8,7 @@ use crate::check::check;
 use crate::content::{Affliction, Drain};
 use crate::skills::SkillId;
 use crate::stats::{PerStat, Stat, Stats};
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::CONTENT as BUILTIN;
 
 fn knowledge() -> SkillId {
     BUILTIN.skill_id("knowledge").expect("knowledge")

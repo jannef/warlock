@@ -8,11 +8,9 @@ use crate::action::{AttackKind, parse_actions};
 use crate::character::CharacterSpec;
 use crate::content::{Content, ContentFiles, Stance};
 use crate::perception::Perception;
+use crate::test_support::CONTENT as BUILTIN;
 use crate::world::stance_between;
 use std::sync::{Arc, LazyLock};
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
 
 /// The builtin content with a lit hall of two kobolds, stairs down to a quiet floor.
 static HALL: LazyLock<Arc<Content>> = LazyLock::new(|| {

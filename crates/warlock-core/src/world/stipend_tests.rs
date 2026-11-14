@@ -8,12 +8,10 @@ use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::replay::Replay;
 use crate::talent::TalentMods;
+use crate::test_support::CONTENT;
 
 /// Beside the servant's cell (40, 27) in the Gæsthūs, east of it.
 const BESIDE: Pos = Pos::new(41, 27);
-
-static CONTENT: std::sync::LazyLock<Arc<Content>> =
-    std::sync::LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 /// A run in Cēaptūn as `character` with the creation picks `talents`, the rest filled with
 /// the first offered of another tree.

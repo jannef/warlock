@@ -4,10 +4,9 @@
 use super::*;
 use crate::character::{CharacterSpec, Start};
 use crate::content::{ContentFiles, StoryTier, When};
+use crate::test_support::CONTENT;
 use std::collections::BTreeMap;
 use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Content> = LazyLock::new(|| Content::builtin().expect("built-in content"));
 
 fn start(content: &Content, character: &str, seed: u64) -> Start {
     let spec: CharacterSpec = character.parse().expect("a character");

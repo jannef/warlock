@@ -12,6 +12,7 @@ use crate::content::{ContentFiles, Factor};
 use crate::magic::worked::Quality;
 use crate::object::Stack;
 use crate::skills::{SkillId, Trained};
+use crate::test_support::CONTENT;
 use std::sync::LazyLock;
 
 /// A forge with its anvil at (5, 2), the player beside it at (4, 3).
@@ -44,9 +45,6 @@ static FIXTURE: LazyLock<Arc<Content>> = LazyLock::new(|| {
     );
     Arc::new(Content::load(&files).expect("fixture content is valid"))
 });
-
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 /// The forge, the player carrying nothing, trained in Metalcraft and Jewelcraft at 50, holding
 /// Maker's mark when `marks`.

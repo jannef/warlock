@@ -11,14 +11,11 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::{LevelKind, Stance};
 use crate::replay::Replay;
+use crate::test_support::builtin as content;
 
 /// The town's square, where the dev scenario starts, and its cell on the overworld.
 const SQUARE: Pos = Pos::new(46, 17);
 const TOWN_CELL: Pos = Pos::new(18, 28);
-
-fn content() -> Arc<Content> {
-    Arc::new(Content::load(&crate::content::ContentFiles::builtin()).expect("builtin content"))
-}
 
 fn town() -> World {
     let mut w = World::new(content(), "ceaptun", None).expect("a run in Cēaptūn");

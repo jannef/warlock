@@ -14,10 +14,7 @@ use crate::noise::{self, Act};
 use crate::replay::Replay;
 use crate::skills::Effect;
 use crate::stats::{PerStat, Stats};
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::CONTENT as BUILTIN;
 
 /// A human of `class` in the showcase (seed 7), with their kit, born under no sign, every score
 /// 14.

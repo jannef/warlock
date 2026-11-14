@@ -14,6 +14,7 @@ use crate::item_parts::ItemPart;
 use crate::magic::describe::lines;
 use crate::magic::{Affix, LootGrade, Magic, Mods, Rarity, loot};
 use crate::object::Stack;
+use crate::test_support::builtin;
 use crate::variant::Source;
 
 // A lit room: the player beside a bronze long sword, and a pile of a tin chain mail shirt on a
@@ -697,10 +698,6 @@ fn loot_rolls_variants_from_its_list_deterministically() {
             assert!(name.contains(&content.material(main).name), "{name}");
         }
     }
-}
-
-fn builtin() -> Arc<Content> {
-    Arc::new(Content::builtin().expect("built-in content"))
 }
 
 /// One of `id` made of `material` (its own when that is its base item's), from the built-in

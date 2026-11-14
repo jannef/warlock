@@ -6,10 +6,7 @@
 use super::*;
 use crate::action::parse_actions;
 use crate::content::SpellPurpose;
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("built-in content")));
+use crate::test_support::CONTENT;
 
 fn circles() -> World {
     World::new(CONTENT.clone(), "circles", None).expect("the circles hall")

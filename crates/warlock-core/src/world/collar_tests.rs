@@ -11,10 +11,8 @@ use crate::geom::{Dir, Pos};
 use crate::magic::{Affix, Magic, Rarity};
 use crate::object::Stack;
 use crate::replay::Replay;
-use std::sync::{Arc, LazyLock};
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+use crate::test_support::CONTENT as BUILTIN;
+use std::sync::Arc;
 
 /// A kitted run of `spec` in the courtyard.
 fn kitted(spec: &str) -> World {
