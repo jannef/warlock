@@ -1,0 +1,28 @@
+# The `#[ignore]`d tests of warlock-core, weekly (#1537): the long seed sweeps the default run
+# shortens (#1514), and the tools run by hand (the balance probe, the light stress benchmark, the
+# tuning printouts). They are not run on pull requests; here they run so they cannot rot: each
+# must finish without a panic. Run it by hand from Actions > Ignored tests > Run workflow, or
+# locally with `cargo test -p warlock-core -- --ignored`.
+name: Ignored tests
+
+on:
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  ignored:
+    name: warlock-core --ignored
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install pinned toolchain
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: Ignored tests
+        run: cargo test --package warlock-core --locked -- --ignored

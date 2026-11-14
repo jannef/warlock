@@ -50,6 +50,11 @@ old one, a changed pick by index); accept it only when you can say why, and say 
 snapshot you cannot explain is a bug until proven otherwise. Never accept a snapshot to make a
 test pass.
 
+**Orphan snapshots.** A renamed or removed snapshot test leaves its `.snap` file behind. CI fails
+on one (#1537): its test run records every snapshot file a test reads
+(`INSTA_SNAPSHOT_REFERENCES_FILE`), and `.github/scripts/orphan-snapshots.sh` rejects a committed
+`.snap` not among them. Delete the orphan (or `cargo insta test --unreferenced=delete`).
+
 ## Hot registries: insert by group, never append
 
 Every list a feature extends is edited by every feature. Two PRs that both append at the end

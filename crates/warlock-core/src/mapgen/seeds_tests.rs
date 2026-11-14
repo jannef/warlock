@@ -47,14 +47,31 @@ fn fyrdelf_bottom_generates_for_seed_zero() {
     assert!(level.creatures.iter().any(|c| c.creature == drake));
 }
 
+// The default run sweeps a few dozen seeds; the long sweeps below are `#[ignore]`d and run weekly
+// (the `Ignored tests` workflow) and by hand (#1514).
+
 #[test]
-fn every_bottom_floor_generates_for_hundreds_of_seeds() {
-    let failed = failures(&levels(true), 0..300);
+fn every_bottom_floor_generates_for_dozens_of_seeds() {
+    let failed = failures(&levels(true), 0..60);
     assert!(failed.is_empty(), "{}", failed.join("\n"));
 }
 
 #[test]
+fn every_floor_generates_for_a_score_of_seeds() {
+    let failed = failures(&levels(false), 0..20);
+    assert!(failed.is_empty(), "{}", failed.join("\n"));
+}
+
+#[test]
+#[ignore = "the long sweep: run weekly and by hand (#1514)"]
+fn every_bottom_floor_generates_for_hundreds_of_seeds() {
+    let failed = failures(&levels(true), 60..300);
+    assert!(failed.is_empty(), "{}", failed.join("\n"));
+}
+
+#[test]
+#[ignore = "the long sweep: run weekly and by hand (#1514)"]
 fn every_floor_generates_for_many_seeds() {
-    let failed = failures(&levels(false), 0..100);
+    let failed = failures(&levels(false), 20..100);
     assert!(failed.is_empty(), "{}", failed.join("\n"));
 }

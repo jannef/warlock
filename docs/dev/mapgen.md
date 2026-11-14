@@ -69,8 +69,9 @@ next attempt's stream tries again; then the random vault as before. Caves first 
 rock is left big enough (#582: `caves::make_room` fills the spot, vault and ring, that takes the
 least of the cave with rock, a random one of those, then keeps the largest cave again); without it
 Fyrdelf 12, Wulfeshol 4, and Wyrtholm 4 failed all 16 attempts for a few seeds in a hundred.
-`mapgen/seeds_tests.rs` generates every branch's bottom floor for 300 seeds and every floor for
-100, and requires each to succeed. `vault::shuffled` leaves
+`mapgen/seeds_tests.rs` generates every branch's bottom floor for 60 seeds and every floor for
+20, and requires each to succeed; the long sweeps (bottom floors to 300 seeds, every floor to
+100) are `#[ignore]`d and run weekly by the `Ignored tests` workflow (#1514, #1537). `vault::shuffled` leaves
 pinned vaults out, so a branch without named vaults draws exactly what it did (no extra draws;
 the Depths' snapshots are unchanged). Fyrdelf names the foreman's cabin on 1 to 4 and the
 drake's hoard on 12 (`mapgen/fyrdelf_tests.rs`, with the branch's first-level snapshot);
@@ -169,8 +170,9 @@ direction of its own (a stair's `<`/`>` means up or down, a door or wall none). 
 row order too. Tests: `content/vault_turn_tests.rs` (a quarter turn against the same vault drawn by
 hand; every turn of every vault passes `Vault::new` again), `mapgen/vault_turn_tests.rs` (Flooded
 cell and Guard post on real floors, pinned vaults, the draw), `ruins_are_outdoor_vaults_stamped_some_way_round`,
-and `mapgen/vault_stamp_tests.rs` (#1072): every shared dungeon vault stamps at least once in 300
-seeds of a rooms branch (Bānfeld) and a cave branch (Wulfeshol), some way round, only on a floor
+and `mapgen/vault_stamp_tests.rs` (#1072; the full sweep `#[ignore]`d and run weekly, the
+default run checking every stamp of 40 seeds and 8 deep ones, #1514): every shared dungeon vault
+stamps at least once in 600 seeds of a rooms branch (Bānfeld) and a cave branch (Wulfeshol), some way round, only on a floor
 whose danger its `danger` holds (both branches run 6 to 9, so a vault of danger 8 and deeper
 meets only their bottom floors); a vault whose `danger` leaves out any of 6 to 9 is also looked
 for, in 100 seeds, on Grundlēas's rooms floors and Fyrdelf's caves of dangers 9 to 16 (#1077), if
