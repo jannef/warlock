@@ -41,7 +41,6 @@
 //! [`TalentMods::services`]: crate::talent::TalentMods::services
 
 use super::actor::undrained;
-use super::ally::capital;
 use super::goodwill::discounted;
 use super::shop::{count_of, haggling};
 use super::{ActorId, Spent, World};
@@ -49,6 +48,7 @@ use crate::action::Event;
 use crate::content::{ActionKind, DialogueId, MAX_FAVOUR, Service, ServiceKind};
 use crate::skills::SkillId;
 use crate::skills::Use;
+use crate::text::capitalized;
 
 /// The means a temple's cure names in `cured_by`.
 pub const PRAYER: &str = "prayer";
@@ -195,7 +195,7 @@ impl World {
         };
         self.player_mut().skills.add(skill, i32::from(train.value));
         let name = self.content.skill(skill).name.to_lowercase();
-        let who = capital(&self.called(&self.state.actors[&teacher]));
+        let who = capitalized(&self.called(&self.state.actors[&teacher]));
         self.say(format!("{who} trains you in {name}."));
     }
 

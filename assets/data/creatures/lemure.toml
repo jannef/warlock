@@ -20,6 +20,7 @@ weight = 60000
 stats = { strength = 15, dexterity = 5, toughness = 17, intelligence = 2, willpower = 18, presence = 2 }
 base_hp = 17
 attack = { damage = "1d8", damage_type = "slashing", name = "claws", verb = "claws", to_hit = 1 }
-resist = { fire = 100, poison = 50 }
+resist = { poison = 50 }
+immune = ["fire"]
 corpse = false
 blood = "#4a1010"

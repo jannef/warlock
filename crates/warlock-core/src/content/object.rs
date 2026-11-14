@@ -99,6 +99,7 @@ use crate::dice::Dice;
 use crate::door::Key;
 use crate::item_parts::ItemPart;
 use crate::object::Stack;
+use crate::text::article;
 use crate::time::Duration;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -665,14 +666,6 @@ pub fn counted(name: &str, plural: &str, count: u32) -> String {
     }
 }
 
-/// `a` or `an` for a noun, by its first letter.
-pub fn article(noun: &str) -> &'static str {
-    match noun.chars().next() {
-        Some(c) if "aeiouAEIOU".contains(c) => "an",
-        _ => "a",
-    }
-}
-
 impl ObjectSpec {
     /// Whether it is a scroll of a spell (its `read` of kind `spell`): what a grimoire is
     /// generated for ([`super::grimoire`]).
@@ -686,6 +679,7 @@ impl ObjectSpec {
     /// object, its name as written (its notable parts are added once content knows them all:
     /// [`part::names`]), and the id of what it is `lit` as, which names another object and is
     /// resolved once every object is known.
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn resolve(
         self,
         file: &str,

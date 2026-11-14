@@ -22,7 +22,7 @@ stats = { strength = 19, dexterity = 15, toughness = 25, intelligence = 18, will
 base_hp = 48
 natural = { protection = 1, name = "dead flesh" }
 attack = { damage = "3d8", damage_type = "bludgeoning", name = "slam", verb = "slams", to_hit = 4 }
-resist = { poison = 100 }
+immune = ["poison"]
 weapon_skills = { long_blades = 6, duelist = 2 }
 on_eat = { message = "Grave meat.", vomit = 80, harm = "1d4" }
 blood = "#3a2a2a"

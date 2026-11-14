@@ -269,6 +269,7 @@ pub(super) fn bodies(p: &Probe, rng: &mut Rng, out: &mut String) {
     for &level in &LEVELS[2..] {
         let w = p.window(level, -2, 2);
         let s = p.of("warrior", level, Gear::Plain, true);
+        #[allow(clippy::type_complexity)]
         let lines: [Option<fn(u8) -> i32>; 5] =
             [None, Some(|_| 0), Some(hide), Some(bony), Some(armoured)];
         let cells: Vec<String> = lines

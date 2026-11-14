@@ -14,11 +14,10 @@
 //! snapshot when it opens; no game time passes while it is open, so it cannot go stale.
 
 use super::abilities_screen::{needs, spell_head};
-use super::menu::{Hints, Nav, Panel, Press};
+use super::menu::{HINTS, Nav, Panel, Press};
 use super::screens::ScreenAction;
 use super::weapon_skills_screen::{BAR, IN_USE, draw_bar};
 use super::{ACCENT, TEXT, TEXT_DIM};
-use crate::input::Bindings;
 use crate::render::console::Console;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use warlock_core::ability::Ability;
@@ -96,7 +95,7 @@ impl MagicScreen {
         ScreenAction::Stay
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         // Rows: frame, margin, the rows, a gap, the footer, frame. In a console too short for
         // them all, the gaps between sections, the margin, and the gap above the footer give
         // way; then the rows scroll.
@@ -108,7 +107,7 @@ impl MagicScreen {
         let body = rows.len().max(1) as i32;
         let width = super::info_tabs::panel_width(WIDTH);
         let panel = Panel::new(console, " Magic ", width, body + around);
-        super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Magic);
+        super::info_tabs::draw_tabs(console, &panel, super::ScreenName::Magic);
         let room = (panel.h - around).max(0);
         let most = (body - room).max(0) as usize;
         self.most.store(most, Ordering::Relaxed);
@@ -127,7 +126,7 @@ impl MagicScreen {
             console.print(edge, top + room - 1, "↓", TEXT_DIM);
         }
         let footer = if most > 0 {
-            format!("{} scroll   Esc close", Hints::of(bindings).up_down())
+            format!("{} scroll   Esc close", HINTS.up_down())
         } else {
             "Esc close".to_string()
         };
@@ -268,7 +267,7 @@ mod tests {
     fn drawn(screen: &MagicScreen, cols: u32, rows: u32) -> Vec<String> {
         let mut console = Console::default();
         console.resize(cols, rows);
-        screen.draw(&mut console, &Bindings::default());
+        screen.draw(&mut console);
         (0..console.rows() as i32)
             .map(|y| {
                 (0..console.cols() as i32)

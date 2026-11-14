@@ -10,10 +10,9 @@
 //! shows comes from the saves' summaries (`save::Summary`), read when the screen opens.
 
 use super::dialog_screen::Dialog;
-use super::menu::{Hints, Nav, Panel, Press};
+use super::menu::{HINTS, Nav, Panel, Press};
 use super::screens::{MenuChoice, ScreenAction};
 use super::{TEXT, TEXT_DIM};
-use crate::input::Bindings;
 use crate::render::console::Console;
 use crate::save::{SavedCharacter, Summary, played_text};
 use crate::settings::Clock;
@@ -151,7 +150,7 @@ impl CharactersScreen {
         ScreenAction::Stay
     }
 
-    pub fn draw(&self, console: &mut Console, clock: Clock, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console, clock: Clock) {
         // Rows: margin, the list, a gap, where and when, a gap, the dead and a gap if any have
         // died, the footer, the frame.
         let rows = self.characters.len().max(1) as i32;
@@ -227,7 +226,7 @@ impl CharactersScreen {
         {
             console.print(x + 2, bottom, &line, TEXT_DIM);
         }
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         let footer = format!(
             "{} choose   {} play   {} delete   Esc back",
             keys.up_down(),
@@ -273,7 +272,7 @@ mod tests {
     fn drawn(screen: &CharactersScreen) -> String {
         let mut console = Console::default();
         console.resize(80, 24);
-        screen.draw(&mut console, Clock::H24, &Bindings::default());
+        screen.draw(&mut console, Clock::H24);
         (0..console.rows() as i32)
             .map(|y| {
                 (0..console.cols() as i32)

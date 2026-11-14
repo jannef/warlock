@@ -202,7 +202,7 @@ impl World {
                 &content.creature(rising.from).name,
                 &content.creature(rising.into).name,
             );
-            let article = crate::content::article(risen);
+            let article = crate::text::article(risen);
             self.say(format!(
                 "{}'s corpse rises as {article} {risen}!",
                 crate::content::the_start(dead)

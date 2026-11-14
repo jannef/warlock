@@ -30,12 +30,32 @@ pub(super) fn thousands(n: u32) -> String {
     out
 }
 
-/// A name for a player-facing table, first letter capitalized.
-pub(super) fn capital(name: &str) -> String {
-    let mut chars = name.chars();
-    chars
-        .next()
-        .map_or_else(String::new, |c| c.to_uppercase().chain(chars).collect())
+/// A name for a player-facing table, first letter capitalized: the game's own helper.
+pub(super) use warlock_core::text::capitalized as capital;
+
+/// A percentage, `p` in percent, as every table writes one: `0%`, `25%`, `12.5%`, `0.35%`; a
+/// tenth from 1% up and two significant digits below, trailing zeros left out, and `under
+/// 0.0001%` for a chance that rounds to nothing.
+pub(super) fn percent(p: f64) -> String {
+    if p <= 0.0 {
+        return "0%".into();
+    }
+    if p < 0.0001 {
+        return "under 0.0001%".into();
+    }
+    let decimals = if p >= 1.0 {
+        1
+    } else {
+        (-p.log10()).floor() as usize + 2
+    };
+    let text = format!("{p:.decimals$}");
+    let text = text.trim_end_matches('0').trim_end_matches('.');
+    format!("{text}%")
+}
+
+/// `part` of `of` as a [`percent`].
+pub(super) fn percent_of(part: u32, of: u32) -> String {
+    percent(f64::from(part) * 100.0 / f64::from(of))
 }
 
 /// Free text for a table cell: command-line flags (`--seed`) as code, so they keep both hyphens,
@@ -50,13 +70,8 @@ pub(super) fn table_text(text: &str) -> String {
         .join(" ")
 }
 
-/// `a` or `an` for a noun.
-pub(super) fn article(noun: &str) -> &'static str {
-    match noun.chars().next() {
-        Some(c) if "aeiouAEIOU".contains(c) => "an",
-        _ => "a",
-    }
-}
+/// `a` or `an` for a noun: the game's own helper.
+pub(super) use warlock_core::text::article;
 
 /// A signed number with a real minus sign: `+1`, `−1`.
 pub(super) fn signed(n: i32) -> String {
@@ -198,4 +213,13 @@ pub(super) fn damage_link(content: &Content, kind: DamageTypeId) -> String {
 /// A stat's name linked to its row: `[Toughness](stats.md#stat-toughness)`.
 pub(super) fn stat_link(stat: Stat) -> String {
     link(Term::Stat, stat.name(), stat.name())
+}
+
+/// The line above a table whose columns are the stats' abbreviations (#1574), so a reader meets
+/// "To" and "Pr" spelled out: "**St** Strength, **Dx** Dexterity, …", and a blank line.
+pub(super) fn stat_key() -> String {
+    let names: Vec<String> = (Stat::ALL.iter())
+        .map(|&s| format!("**{}** {}", s.abbrev(), stat_link(s)))
+        .collect();
+    format!("Stats: {}.\n\n", names.join(", "))
 }

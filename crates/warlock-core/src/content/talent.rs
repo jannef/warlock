@@ -15,16 +15,9 @@ use crate::alignment::Requirement;
 use crate::dice::Dice;
 use crate::skills::SkillId;
 use crate::stats::{PerStat, Stat};
+use crate::text::article;
 use serde::Deserialize;
 use std::collections::BTreeMap;
-
-/// `a` or `an` for a noun.
-fn article(noun: &str) -> &'static str {
-    match noun.chars().next() {
-        Some(c) if "aeiouAEIOU".contains(c) => "an",
-        _ => "a",
-    }
-}
 
 /// A talent, an index into the book (file order). Saves name talents by id, never by this.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -1361,6 +1354,7 @@ impl TalentEffect {
 
     /// Whether it is a passive that works only within its talent's `alignment` bands (Communion
     /// with the dark, Retribution; `docs/dev/alignment.md`), as a holy active's gift does.
+    #[cfg(test)]
     pub fn band_gated(&self) -> bool {
         matches!(
             self,
@@ -1736,14 +1730,14 @@ impl Need {
                 let races: Vec<String> = (content.races().teaching(*skill))
                     .map(|r| format!("{} {}", article(&r.name), r.name.to_lowercase()))
                     .collect();
-                format!("not to be {}", crate::talent::list_with(&races, "or"))
+                format!("not to be {}", crate::text::or_list(&races))
             }
             Need::Eyes(ids) => {
                 let names: Vec<String> = (ids.iter())
                     .map(|id| content.vision(id).map_or(id.as_str(), |v| v.name.as_str()))
                     .map(str::to_lowercase)
                     .collect();
-                format!("{} eyes", crate::talent::list_with(&names, "or"))
+                format!("{} eyes", crate::text::or_list(&names))
             }
             Need::Animal(id) => {
                 let name = (content.horoscope())
@@ -2089,6 +2083,7 @@ struct EffectSpec {
 
 /// `effects` split into the plain ones and those under a status, each checked; a `while` on
 /// content without statuses has nothing to check it by, and its effect does nothing.
+#[allow(clippy::type_complexity)]
 fn split_effects(
     specs: Vec<EffectSpec>,
     content: &Content,
@@ -2823,5 +2818,44 @@ systems = ["hit_points"]
             "{} talents",
             content.talents().len()
         );
+    }
+
+    /// Every effect kind of [`TalentEffect`] is documented in `data/talents/README.toml`, the
+    /// content's schema notes (#1535): a comment line `#   kind ...` names it. The kinds are
+    /// read from this file's source, the enum's variants in snake case as serde names them.
+    #[test]
+    fn readme_documents_every_effect_kind() {
+        let source = include_str!("talent.rs");
+        let readme = include_str!("../../../../assets/data/talents/README.toml");
+        let start = source.find("pub enum TalentEffect {").expect("the enum");
+        let body = &source[start..];
+        let body = &body[..body.find("\n}\n").expect("the enum's end")];
+        let kinds: Vec<String> = (body.lines())
+            .filter_map(|l| l.strip_prefix("    "))
+            .filter(|l| l.starts_with(|c: char| c.is_ascii_uppercase()))
+            .map(|l| {
+                let name = l.split(|c: char| !c.is_ascii_alphanumeric()).next();
+                let mut snake = String::new();
+                for (i, c) in name.unwrap_or_default().chars().enumerate() {
+                    if c.is_ascii_uppercase() && i > 0 {
+                        snake.push('_');
+                    }
+                    snake.push(c.to_ascii_lowercase());
+                }
+                snake
+            })
+            .collect();
+        assert!(kinds.len() > 200, "{} kinds read", kinds.len());
+        // An entry's head runs to the first double space: `kind { fields }`, or several kinds
+        // that share their words, `pick_lock, steal, throw_voice`.
+        let named = |kind: &str| {
+            (readme.lines())
+                .filter_map(|l| l.strip_prefix("#   "))
+                .filter_map(|rest| rest.split("  ").next())
+                .flat_map(|head| head.split(", "))
+                .any(|head| head.split(' ').next() == Some(kind))
+        };
+        let missing: Vec<&String> = kinds.iter().filter(|k| !named(k)).collect();
+        assert!(missing.is_empty(), "undocumented effect kinds: {missing:?}");
     }
 }

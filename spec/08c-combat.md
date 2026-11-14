@@ -114,9 +114,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     fire, of Warmth cold, of the Adder poison, of the Storm electricity, of Glass acid, of the
     Anvil force, of the Living necrotic; the physical kinds have none, Protection being their
     resistance) and the talents it
-    has (Elemental ward, §8 "Talents", counts as gear does), summed and capped
-    at **75** (`MAX_RESISTANCE`) above and −100 below; **100 is immunity**, and only a creature's
-    own 100 is immune: gear never makes anyone immune. After the soak, each kind of a blow is
+    has (Elemental ward, §8 "Talents", counts as gear does), and its statuses', summed with no
+    cap: the total may stand at 200, or below −100. What counts is the **effective** resistance,
+    the total clamped at **75** (`MAX_RESISTANCE`) above and −100 below at the point of use
+    (`damage::effective`, through `Resistances::get`, which every reader calls; #1620): 200 fire
+    counts as 75, and so does 200 less 100. **Immunity is no resistance**: a creature type's
+    `immune` list names the damage types that never hurt it (`immune = ["poison"]`, and a spell
+    type's `immune_tags`), which no cap, gear, or vulnerability touches; nothing else makes
+    anyone immune, and a resistance of 100 from any source counts as 75. After the soak, each kind of a blow is
     resisted on its own (`damage::resist`: the amount less the percentage, rounded to the nearest,
     half up, so a 1-point hit at 50 % still hurts and at 75 % does not; a vulnerability adds); a
     hit left with nothing is `Strike::Resisted` ("Your torch does the salamander no harm.", "The

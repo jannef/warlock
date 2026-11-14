@@ -547,7 +547,7 @@ impl QuestDef {
             .filter(|&c| content.family(c) == c)
             .map(|c| content.creature(c).plural.as_str())
             .collect();
-        super::and_list(&plurals)
+        crate::text::and_list(&plurals)
     }
 
     /// Everyone it names: the giver, whoever it is handed in to, and an escort.

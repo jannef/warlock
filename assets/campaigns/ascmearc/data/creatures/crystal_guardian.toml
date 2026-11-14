@@ -35,7 +35,8 @@ weight = 1400000
 stats = { strength = 27, dexterity = 14, toughness = 28, intelligence = 18, willpower = 26, presence = 22 }
 base_hp = 330
 natural = { defence = 1, protection = 8, name = "crystal body" }
-resist = { slashing = 25, piercing = 50, electricity = 100, poison = 100 }
+resist = { slashing = 25, piercing = 50 }
+immune = ["electricity", "poison"]
 corpse = false
 blood = "none"
 [creature.attack]

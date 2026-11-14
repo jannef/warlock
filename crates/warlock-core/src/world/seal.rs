@@ -140,11 +140,7 @@ pub(super) fn words(content: &Content, categories: &[String]) -> String {
     let words: Vec<&str> = (categories.iter())
         .map(|c| (table.and_then(|t| t.family_word(c))).unwrap_or(c.as_str()))
         .collect();
-    match words.as_slice() {
-        [] => String::new(),
-        [one] => (*one).to_string(),
-        [rest @ .., last] => format!("{} and {last}", rest.join(", ")),
-    }
+    crate::text::and_list(&words)
 }
 
 /// A seal step's label: "seal", "second seal", "third seal".

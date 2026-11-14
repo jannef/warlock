@@ -22,7 +22,7 @@ size = "small"
 stats = { strength = 22, dexterity = 23, toughness = 23, intelligence = 25, willpower = 29, presence = 25 }
 base_hp = 46
 natural = { defence = 2, protection = 6, name = "bone" }
-resist = { poison = 100 }
+immune = ["poison"]
 corpse = false
 blood = "none"
 cry = { kind = "scream", loudness = 120, every = 60 }

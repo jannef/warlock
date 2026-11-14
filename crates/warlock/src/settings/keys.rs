@@ -3,13 +3,14 @@
 //! A key is written as the character it produces (`"k"`, `">"`) or as a physical key name
 //! (`"ArrowUp"`, `"Numpad8"`, `"Enter"`, `"F5"`), a play command's perhaps after modifiers
 //! (`"Ctrl+r"`, `"Alt+ArrowUp"`, `"Super+s"`; `settings::mods`). Commands have stable ids (`"move_n"`,
-//! `"wait"`, `"menu_up"`), unique across contexts.
+//! `"wait"`, `"back"`), unique across contexts.
 //!
 //! No lockout (#159): Esc cannot be bound (it always backs out, cancels, and opens the pause
-//! menu), and the [`VITAL`] commands, which reach the controls screen and its Reset all keys,
-//! never lose their last key.
+//! menu), and the keys that reach the controls screen and its Reset all keys (the menu keys,
+//! Enter among them) are fixed (`settings::fixed`, #1533).
 
 use crate::input::{Bindings, Context, KeyBinding, KeyCommand};
+use crate::settings::fixed;
 use crate::settings::mods::{self, Mods, Platform};
 use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::*;
@@ -18,7 +19,9 @@ use warlock_core::Dir;
 
 /// The commands the player may rebind, in the order the controls screen lists them within each
 /// context (it groups them by context). `Cancel` (Esc) is fixed so a rebinding can always be
-/// cancelled and every screen backed out of.
+/// cancelled and every screen backed out of; so are the keys of menus, text fields, the dialog,
+/// the info pages, the rest prompt, and aiming, but for their back-style commands
+/// (`settings::fixed`).
 /// A slice, not a fixed-size array, so features adding commands don't collide on the length.
 pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::Move(Dir::N),
@@ -55,9 +58,6 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::Talents,
     KeyCommand::Messages,
     KeyCommand::Rest,
-    KeyCommand::RestHour,
-    KeyCommand::RestDawn,
-    KeyCommand::RestDusk,
     KeyCommand::MoreNext,
     KeyCommand::MoreSkip,
     KeyCommand::Eat,
@@ -75,40 +75,13 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::PickLock,
     KeyCommand::Steal,
     KeyCommand::Pay,
-    KeyCommand::NextTarget,
     KeyCommand::PrevTarget,
-    KeyCommand::Loose,
     KeyCommand::UseTool,
     KeyCommand::Chat,
     KeyCommand::Help,
     KeyCommand::Quit,
-    KeyCommand::MenuUp,
-    KeyCommand::MenuDown,
-    KeyCommand::MenuLeft,
-    KeyCommand::MenuRight,
-    KeyCommand::Confirm,
     KeyCommand::Back,
-    KeyCommand::Erase,
-    KeyCommand::Mark,
-    KeyCommand::MarkAll,
-    KeyCommand::NextListPage,
-    KeyCommand::PrevListPage,
-    KeyCommand::TextConfirm,
-    KeyCommand::TextErase,
-    KeyCommand::TextRandom,
     KeyCommand::TextBack,
-    KeyCommand::Yes,
-    KeyCommand::No,
-    KeyCommand::Page(1),
-    KeyCommand::Page(2),
-    KeyCommand::Page(3),
-    KeyCommand::Page(4),
-    KeyCommand::Page(5),
-    KeyCommand::Page(6),
-    KeyCommand::Page(7),
-    KeyCommand::Page(8),
-    KeyCommand::Page(9),
-    KeyCommand::NextPage,
     KeyCommand::PrevPage,
     KeyCommand::RevealMap,
     KeyCommand::CycleVision,
@@ -118,17 +91,6 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::NextWeather,
     KeyCommand::IdentifyAll,
     KeyCommand::LoadSnapshot,
-];
-
-/// The commands that reach the controls screen (and its Reset all keys) from anywhere, and the
-/// one that gets a new character past its name: they never lose their last key, so no binding,
-/// settings file, or keymap can lock the player out. Esc, which always backs out, is the rest of
-/// the way there.
-pub const VITAL: &[KeyCommand] = &[
-    KeyCommand::MenuUp,
-    KeyCommand::MenuDown,
-    KeyCommand::Confirm,
-    KeyCommand::TextConfirm,
 ];
 
 /// The abilities' own keys: play commands that each use one ability, as the abilities menu (`a`)
@@ -144,8 +106,47 @@ pub const ABILITY_KEYS: &[KeyCommand] = &[
 ];
 
 /// Ids of commands that were removed: an old settings or keymap file may still list them, and
-/// they are dropped without a warning. Add an id here when a command is deleted.
-pub const RETIRED: &[&str] = &["fire", "hood_lantern", "lantern"];
+/// they are dropped without a warning. Add an id here when a command is deleted. The menu, text
+/// field, dialog, info page, rest prompt, and aiming keys became fixed in #1533.
+pub const RETIRED: &[&str] = &[
+    "confirm",
+    "erase",
+    "fire",
+    "hood_lantern",
+    "lantern",
+    "loose",
+    "mark",
+    "mark_all",
+    "menu_down",
+    "menu_left",
+    "menu_right",
+    "menu_up",
+    "next_list_page",
+    "next_page",
+    "next_target",
+    "no",
+    "page_1",
+    "page_2",
+    "page_3",
+    "page_4",
+    "page_5",
+    "page_6",
+    "page_7",
+    "page_8",
+    "page_9",
+    "prev_list_page",
+    "rest_dawn",
+    "rest_dusk",
+    "rest_hour",
+    "text_confirm",
+    "text_erase",
+    "text_random",
+    "yes",
+];
+
+/// The keymap file's context tables that were removed with their commands (#1533): an old file
+/// may still have them, and they are skipped without a warning.
+pub const RETIRED_CONTEXTS: &[&str] = &["dialog", "prompt"];
 
 /// Ids of commands merged into another: an old settings or keymap file's keys for one go to the
 /// command that took it over, after that command's own (Search into Wait/search, #1326).
@@ -188,11 +189,6 @@ fn fold_into(table: &mut toml::Table) {
         }
     }
 }
-
-/// The settings ids of [`KeyCommand::Page`] 1 to 9.
-const PAGE_IDS: [&str; 9] = [
-    "page_1", "page_2", "page_3", "page_4", "page_5", "page_6", "page_7", "page_8", "page_9",
-];
 
 /// Rebindable commands with no key by default: abilities (`warlock_core::ability`), which the
 /// abilities menu (#156) lists instead of a key each; save and quit, which the pause menu does;
@@ -298,9 +294,6 @@ impl KeyCommand {
             Talents => "talents",
             Messages => "messages",
             Rest => "rest",
-            RestHour => "rest_hour",
-            RestDawn => "rest_dawn",
-            RestDusk => "rest_dusk",
             MoreNext => "more_next",
             MoreSkip => "more_skip",
             Eat => "eat",
@@ -317,33 +310,14 @@ impl KeyCommand {
             Disarm => "disarm",
             PickLock => "pick_lock",
             Steal => "steal",
-            NextTarget => "next_target",
             PrevTarget => "prev_target",
-            Loose => "loose",
             UseTool => "use_tool",
             Chat => "chat",
             Pay => "pay",
-            MenuUp => "menu_up",
-            MenuDown => "menu_down",
-            MenuLeft => "menu_left",
-            MenuRight => "menu_right",
-            Confirm => "confirm",
             Back => "back",
-            Erase => "erase",
-            Mark => "mark",
-            MarkAll => "mark_all",
-            NextListPage => "next_list_page",
-            PrevListPage => "prev_list_page",
-            TextConfirm => "text_confirm",
             TextBack => "text_back",
-            TextErase => "text_erase",
-            TextRandom => "text_random",
-            Yes => "yes",
-            No => "no",
             Help => "help",
             Quit => "quit",
-            Page(n) => PAGE_IDS.get(usize::from(n).checked_sub(1)?)?,
-            NextPage => "next_page",
             PrevPage => "prev_page",
             RevealMap => "dev_reveal_map",
             CycleVision => "dev_next_vision",
@@ -366,7 +340,6 @@ impl KeyCommand {
         match self {
             KeyCommand::Move(dir) => format!("Move {}", direction_name(dir)),
             KeyCommand::Run(dir) => format!("Run {}", direction_name(dir)),
-            KeyCommand::Page(n) => format!("Info page {n}"),
             other => other.label().to_string(),
         }
     }
@@ -424,15 +397,16 @@ impl KeyBinding {
     }
 
     /// Why this key may not be a key of `command` here, if it may not
-    /// (`settings::mods::refusal`).
+    /// (`settings::mods::refusal`), or it is fixed where `command` is read
+    /// (`settings::fixed::refusal`).
     pub fn refused_for(&self, command: KeyCommand) -> Option<String> {
         mods::refusal(self, command, Platform::current())
+            .or_else(|| fixed::refusal(self, command.context()))
     }
 }
 
 /// Why a key could not be bound: it belongs to a fixed command (one the player cannot rebind,
-/// such as Cancel, which opens the pause menu and backs out of screens), or it is the last key of
-/// a [`VITAL`] command, which would be locked out.
+/// such as Cancel, which opens the pause menu and backs out of screens).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Conflict {
     pub key: KeyBinding,
@@ -481,30 +455,9 @@ impl Bindings {
         self.keys_of(command).first().map(|k| k.display())
     }
 
-    /// Whether `owner` may not give up `key`: a fixed command's, or a vital command's last.
-    pub(super) fn keeps(&self, owner: KeyCommand, key: &KeyBinding) -> bool {
-        let last = self.keys_of(owner) == [key];
-        !REBINDABLE.contains(&owner) || (VITAL.contains(&owner) && last)
-    }
-
-    /// Gives every [`VITAL`] command left without a key its default keys back, taken from
-    /// whoever holds them unless that is another vital command's last key. The last guard
-    /// against a lockout, after a settings file or a keymap is read.
-    pub(crate) fn ensure_vital(&mut self) {
-        for &command in VITAL {
-            if !self.keys_of(command).is_empty() {
-                continue;
-            }
-            let defaults = Bindings::default();
-            for key in defaults.keys_of(command) {
-                match self.owner_in(command.context(), key) {
-                    Some(owner) if self.keeps(owner, key) => continue,
-                    Some(owner) => self.0.retain(|(k, c)| !(*c == owner && k == key)),
-                    None => {}
-                }
-                self.0.push((key.clone(), command));
-            }
-        }
+    /// Whether `owner` may not give up `key`: a fixed command's (Esc).
+    pub(super) fn keeps(&self, owner: KeyCommand) -> bool {
+        !REBINDABLE.contains(&owner)
     }
 
     /// Every key bound to two different commands of one context: `(key, first, second)`.
@@ -535,8 +488,8 @@ impl Bindings {
     /// after its last key for `None` (or an `at` past them). A key the command already has
     /// trades places with the one replaced (an added one stays where it is). A key another
     /// command of the same context uses is taken from it ([`Bound::Moved`]), unless that command
-    /// is fixed (not in [`REBINDABLE`]) or it is a vital command's last key: those are never
-    /// touched, so the player cannot lock themselves out.
+    /// is fixed (not in [`REBINDABLE`]): that is never touched, so the player cannot lock
+    /// themselves out.
     pub fn bind_at(
         &mut self,
         command: KeyCommand,
@@ -547,7 +500,7 @@ impl Bindings {
         if let Some(owner) = self.owner_in(command.context(), &key)
             && owner != command
         {
-            if self.keeps(owner, &key) {
+            if self.keeps(owner) {
                 return Err(Conflict { key, owner });
             }
             self.0.retain(|(k, c)| !(*c == owner && *k == key));
@@ -578,15 +531,14 @@ impl Bindings {
     }
 
     /// Takes key number `at` (from 0, the primary) from `command`, and returns it; `None` when it
-    /// has no such key. Refused with [`Conflict`] for a fixed command's key or a [`VITAL`]
-    /// command's last.
+    /// has no such key. Refused with [`Conflict`] for a fixed command's key.
     pub fn remove_key(
         &mut self,
         command: KeyCommand,
         at: usize,
     ) -> Option<Result<KeyBinding, Conflict>> {
         let key = self.keys_of(command).get(at).map(|k| (*k).clone())?;
-        if self.keeps(command, &key) {
+        if self.keeps(command) {
             return Some(Err(Conflict {
                 key,
                 owner: command,
@@ -608,8 +560,7 @@ impl Bindings {
         self.0.splice(at..at, entries);
     }
 
-    /// Restores the default keys of `command`, except keys another command now uses. A vital
-    /// command that would be left without a key keeps the keys it has.
+    /// Restores the default keys of `command`, except keys another command now uses.
     pub fn reset_command(&mut self, command: KeyCommand) {
         let defaults: Vec<KeyBinding> = Bindings::default()
             .0
@@ -622,9 +573,6 @@ impl Bindings {
             })
             .map(|(k, _)| k)
             .collect();
-        if defaults.is_empty() && VITAL.contains(&command) {
-            return;
-        }
         self.set_keys(command, defaults);
     }
 
@@ -683,11 +631,7 @@ impl Bindings {
                 }
             }
             if keys.is_empty() {
-                if items.is_empty() && VITAL.contains(&command) {
-                    warnings.push(format!(
-                        "bindings.{id}: needed to reach the controls; using the defaults"
-                    ));
-                } else if items.is_empty() {
+                if items.is_empty() {
                     // Left without a key on purpose (its key was moved to another command).
                     bindings.set_keys(command, Vec::new());
                     emptied.push(command);
@@ -732,7 +676,6 @@ impl Bindings {
                 bindings.reset_command(command);
             }
         }
-        bindings.ensure_vital();
         bindings
     }
 }
@@ -828,24 +771,6 @@ mod tests {
     }
 
     #[test]
-    fn a_vital_commands_last_key_is_never_removed() {
-        let mut b = Bindings::default();
-        let confirm = KeyCommand::Confirm;
-        while b.keys_of(confirm).len() > 1 {
-            assert!(matches!(b.remove_key(confirm, 0), Some(Ok(_))));
-        }
-        let last = b.keys_of(confirm)[0].clone();
-        assert_eq!(
-            b.remove_key(confirm, 0),
-            Some(Err(Conflict {
-                key: last,
-                owner: confirm
-            }))
-        );
-        assert_eq!(b.keys_of(confirm).len(), 1);
-    }
-
-    #[test]
     fn binding_a_used_key_moves_it_and_can_leave_the_old_command_keyless() {
         let mut b = Bindings::default();
         let kick = b.keys_of(KeyCommand::Kick)[0].clone();
@@ -885,20 +810,18 @@ mod tests {
     #[test]
     fn moving_a_key_leaves_other_contexts_alone() {
         let mut b = Bindings::default();
-        // `1` is Page 1 on the info screens; in play it is free.
+        // `q` goes to Back on the screens; in play it is Quests' still.
+        b.bind_primary(KeyCommand::Back, ch("q")).unwrap();
         assert_eq!(
-            b.owner_in(Context::Pages, &ch("1")),
-            Some(KeyCommand::Page(1))
+            b.bind_primary(KeyCommand::Wait, ch("q")).unwrap(),
+            Bound::Moved {
+                key: ch("q"),
+                from: KeyCommand::Quests,
+                keyless: true
+            }
         );
-        assert_eq!(
-            b.bind_primary(KeyCommand::Wait, ch("1")).unwrap(),
-            Bound::Free
-        );
-        assert_eq!(
-            b.owner_in(Context::Pages, &ch("1")),
-            Some(KeyCommand::Page(1))
-        );
-        assert_eq!(b.owner(&ch("1")), Some(KeyCommand::Wait));
+        assert_eq!(b.owner_in(Context::Menu, &ch("q")), Some(KeyCommand::Back));
+        assert_eq!(b.owner(&ch("q")), Some(KeyCommand::Wait));
     }
 
     #[test]
@@ -1091,17 +1014,13 @@ mod tests {
     }
 
     #[test]
-    fn the_vital_commands_never_lose_their_last_key() {
-        // Binding every key to every command, one after another, never leaves a vital command
-        // without a key, and Esc stays Cancel's.
+    fn no_binding_takes_esc_and_reset_all_keys_undoes_everything() {
+        // Binding every key to every command, one after another, never takes Esc from Cancel.
         let keys = some_keys();
         let mut b = Bindings::default();
         for &command in REBINDABLE {
             for key in &keys {
                 let _ = b.bind_primary(command, key.clone());
-                for &vital in VITAL {
-                    assert!(!b.keys_of(vital).is_empty(), "{vital:?} after {command:?}");
-                }
             }
         }
         let esc = KeyBinding::Code(KeyCode::Escape);
@@ -1113,70 +1032,41 @@ mod tests {
     }
 
     #[test]
-    fn a_vital_commands_last_key_is_refused_with_its_owner() {
+    fn a_back_style_command_never_takes_a_fixed_key() {
         let mut b = Bindings::default();
         let enter = KeyBinding::Code(KeyCode::Enter);
-        // Choose has Enter and NumEnter: Enter may move to Erase, then NumEnter may not.
-        assert!(matches!(
-            b.bind_primary(KeyCommand::Erase, enter.clone()),
-            Ok(Bound::Moved { keyless: false, .. })
-        ));
-        let numpad = KeyBinding::Code(KeyCode::NumpadEnter);
-        assert_eq!(
-            b.bind_primary(KeyCommand::Mark, numpad.clone()),
-            Err(Conflict {
-                key: numpad.clone(),
-                owner: KeyCommand::Confirm
-            })
-        );
-        // Resetting a vital command whose default keys are all taken keeps the keys it has.
-        b.bind_primary(KeyCommand::Confirm, ch("x")).unwrap();
-        assert_eq!(b.keys_of(KeyCommand::Confirm), vec![&ch("x")]);
-        b.bind_primary(KeyCommand::Mark, numpad).unwrap();
-        b.reset_command(KeyCommand::Confirm);
-        assert_eq!(b.keys_of(KeyCommand::Confirm), vec![&ch("x")]);
+        let why = enter.refused_for(KeyCommand::Back);
+        assert_eq!(why.as_deref(), Some("Enter is fixed in menus and screens"));
+        let tab = KeyBinding::Code(KeyCode::Tab);
+        assert!(tab.refused_for(KeyCommand::PrevTarget).is_some());
+        assert!(tab.refused_for(KeyCommand::PrevPage).is_some());
+        assert!(tab.refused_for(KeyCommand::TextBack).is_some());
+        // A play key may be anything free in play.
+        assert!(enter.refused_for(KeyCommand::Wait).is_none());
+        b.bind_primary(KeyCommand::Back, ch("q")).unwrap();
+        assert_eq!(b.keys_of(KeyCommand::Back), vec![&ch("q")]);
     }
 
     #[test]
-    fn a_settings_file_cannot_lock_the_player_out() {
+    fn an_old_settings_file_with_the_fixed_commands_loads_quietly() {
+        // Written before #1533 made these keys fixed: dropped without a word, and nothing else
+        // changes.
         let table: toml::Table = toml::from_str(
             r#"
             menu_up = []
             confirm = ["Escape"]
             mark = ["ArrowDown", "j"]
-            menu_down = ["ArrowDown"]
+            yes = ["j"]
+            page_1 = ["w"]
+            loose = ["f"]
+            rest_hour = ["F1"]
+            text_confirm = []
             "#,
         )
         .unwrap();
         let mut warnings = Vec::new();
         let b = Bindings::from_table(&table, &mut warnings);
-        for &vital in VITAL {
-            assert!(!b.keys_of(vital).is_empty(), "{vital:?}");
-        }
-        assert_eq!(b.keys_of(KeyCommand::MenuUp).len(), 2, "its defaults");
-        assert_eq!(
-            b.keys_of(KeyCommand::Confirm)[0],
-            &KeyBinding::Code(KeyCode::Enter)
-        );
-        assert!(b.conflicts().is_empty());
-        for needle in ["bindings.menu_up", "bindings.confirm"] {
-            assert!(warnings.iter().any(|w| w.contains(needle)), "{needle}");
-        }
-    }
-
-    #[test]
-    fn ensure_vital_takes_defaults_back_from_other_commands() {
-        let mut b = Bindings::default();
-        // Menu down without a key, one of its keys held by Mark (as a hand-edited file might
-        // leave it).
-        b.0.retain(|(_, c)| *c != KeyCommand::MenuDown);
-        b.0.push((KeyBinding::Code(KeyCode::ArrowDown), KeyCommand::Mark));
-        b.ensure_vital();
-        assert_eq!(b.keys_of(KeyCommand::MenuDown).len(), 2);
-        assert_eq!(
-            b.keys_of(KeyCommand::Mark),
-            vec![&KeyBinding::Code(KeyCode::Space)]
-        );
-        assert!(b.conflicts().is_empty());
+        assert!(warnings.is_empty(), "{warnings:?}");
+        assert_eq!(b.to_map(), Bindings::default().to_map());
     }
 }

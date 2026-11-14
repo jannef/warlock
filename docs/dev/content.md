@@ -3,7 +3,7 @@
 Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
 rules it implements are in spec/07a-levels.md and spec/07b-data.md. Keep it current with the code, as CLAUDE.md says.
 
-Content (`assets/campaigns`, `assets/data`, `assets/vaults`, and for test fixtures
+Content (`assets/campaigns`, `assets/data`, `assets/vaults`; test fixtures may also insert
 `levels/` and `scenarios/` at the top) is TOML, embedded into `warlock-core` at build time by
 `build.rs` (the test world, `campaigns/showcase/`, only with the `showcase` feature: never in a
 release; `docs/dev/campaign.md`). A world's levels, scenarios, branches, quests, dialogue, and own creature types live
@@ -72,8 +72,10 @@ variants always edited together, named after the family (`objects/arrows.toml`: 
 flaming arrow, and the burning arrow it flies as). Each directory's `README.toml` is comments
 only (the field documentation and notes for authors; a file of comments defines nothing, the
 loaders take a missing array as empty). `build.rs` embeds and `ContentFiles::from_dir` reads
-`assets/{campaigns,data,levels,scenarios,vaults}` recursively, both in sorted path order, and a
-table loader reads `ContentFiles::table(name)`: `data/<name>.toml` first, if there is one (a
+`{campaigns,data,vaults}` recursively through one walk, `content/walk.rs` (build.rs includes it
+with `#[path]`), both in sorted path order and both leaving `campaigns/showcase/` out without
+the `showcase` feature (so `--content-dir assets` on a release build has no test world either;
+#1560), and a table loader reads `ContentFiles::table(name)`: `data/<name>.toml` first, if there is one (a
 whole table in one file is still accepted, so test fixtures that insert it keep working), then
 `data/<name>/**/*.toml` in path order, then each campaign's `data/<name>/**/*.toml`
 (`ContentFiles::campaign_order`: playable campaigns, then test ones). `quests`, `dialogue`, and
@@ -100,3 +102,39 @@ materials, and affixes by name), the shop stock a generated shop draws from
 (`mapgen/shop.rs`) and the bases and affixes loot rolls from (`magic/loot.rs`) are sorted by id
 before the draw, and "shoots arrows" names `Content::ammunition(kind)`, the first ammunition of
 the kind by id. A new list over one of these tables gets a sort key too.
+
+## The loader's whole-set checks
+
+`Content::load` checks the set of files it was given, whichever it is (the built-in copy,
+`--content-dir`, or files a test or, later, a mod lays over it), so none of these depends on the
+embedded copy:
+
+- **Every file is read** (#1530). `ContentFiles` records each path a loader looks up
+  (`get`, `get_optional`, `table`, `in_dir`); after the load, a file nobody read is an error
+  ("no loader reads this file"), `README.toml` files excepted. A misnamed file
+  (`data/feints.toml`) or directory (`data/town/`) is a load error, not a feature quietly off.
+  A new loader reads its files through those accessors; `ContentFiles::edit_table` reads
+  without counting.
+- **The ids the engine names** (#1546) are listed once in `content/required.rs` (the creature
+  `player`; the statuses `staggered`, `bleeding`, `poisoned`, `webbed`; the effect
+  `frost_burst`; the terrain `stairs_down`, `rubble`, `makeshift_anvil`; the object `bones`;
+  the slot `neck`) and resolved at load into `Content::ids()`. Each is required while its table
+  or the feature using it is loaded (`staggered` while a room effect collapses, the other
+  statuses while there is a prayer, the creature while there are creatures, the effect while
+  there are effects, `bones` while a room is a teeming den, the Pit's terrain while a branch
+  has a `portal`, the anvil while a talent gives Field forge, the neck while companions
+  or familiars are), else `None`: rules code reads `content.ids().staggered`, never the string.
+  A new id the engine names goes into that list.
+- **`data/gear_condition.toml`'s keys** (#1556): each `[kinds]` key is some material's `group`,
+  and each `[[tribe]]`'s `tag` some creature's.
+
+## Words
+
+The small text helpers live once, in `warlock_core::text`, and core, the app, and the wiki
+generator all call them (#1543, #1548): `capitalized` (a first letter in capitals), `article`
+(`a` or `an`, lower case), `and_list` and `or_list` (a list with the Oxford comma, "a, b, and c",
+the owner's choice for all game text), and `number_word` ("no", "one" to "twelve", digits
+beyond). The app keeps its wall-clock helpers in `crates/warlock/src/utc.rs` (`since_epoch`,
+`utc_parts`; #1571) and its cut-to-width helpers beside `wrap` in `ui/menu.rs` (`truncated`,
+`truncated_head`). The wiki generator writes every percentage through `xtask/src/wiki/text.rs`
+(`percent`, `percent_of`: `12.5%`, no space, a tenth from 1% up; #1577).

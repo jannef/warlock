@@ -256,9 +256,9 @@ Spell damage is rolled dice, as written in the spell's row. What makes it grow i
 your talents and items. Your [talents](talents.md) and [magic items](magic-items.md) each add in
 their own way, listed in their own row:
 
-- **A rung.** *[Empower](talents.md#talent-empower)* (a [wizard](classes.md#wizard)'s, at level 32)
+- **A rung.** *[Empower](classes.md#talent-empower)* (a [wizard](classes.md#wizard)'s, at level 32)
   takes your spells a rung up their damage and healing ladders, and
-  *[Archmage](talents.md#talent-archmage)* (at 60) two. Spells already on the last rung stay
+  *[Archmage](classes.md#talent-archmage)* (at 60) two. Spells already on the last rung stay
   there.
 - **Bigger dice.** *[Keen mind](talents.md#talent-keen-mind)*, taken for a school of magic or an
   element, makes those spells roll dice a size bigger for you: a d6 becomes a d7, a d8 a d9.
@@ -281,7 +281,7 @@ then the extra effects. A [critical](combat.md#criticals) rolls the dice twice, 
 
 A **[spell scroll](scrolls.md#spell-scrolls)** you read casts at the rung its row gives, whatever
 your stats. The [scroll of fireball](scrolls.md#scroll-of-fireball)'s is 1, so 6d6.
-*[Scroll adept](talents.md#talent-scroll-adept)* makes it a rung higher. A
+*[Scroll adept](classes.md#talent-scroll-adept)* makes it a rung higher. A
 **[wand](wands-and-rods.md#wands)** casts at a rung of its own, a rung higher with
 *[Wand mastery](talents.md#talent-wand-mastery)*, and higher again with items *of Wands*. Your
 other talents and items work on scrolls and wands as on your own casts, and their reach and degrees

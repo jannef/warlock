@@ -28,6 +28,7 @@ use warlock_core::content::{Content, possessive};
 use warlock_core::object::{Weight, format_weight};
 use warlock_core::perception::{PerceptionView, Progress};
 use warlock_core::stats::{PerStat, Stat};
+use warlock_core::text::capitalized;
 use warlock_core::time::GameTime;
 
 /// Width of the stat name column: the longest name and a space.
@@ -204,7 +205,7 @@ impl CharacterScreen {
             format!(
                 "{}, {} {kind}",
                 data.name,
-                warlock_core::content::article(kind)
+                warlock_core::text::article(kind)
             )
         });
         let kept = kept.collect();
@@ -313,7 +314,7 @@ impl CharacterScreen {
             + self.resistances.len() as i32;
         let h = Stat::COUNT as i32 + 16 + identity_rows + thresholds.len() as i32 + status_rows;
         let panel = Panel::new(console, " Character ", WIDTH, h);
-        super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Character);
+        super::info_tabs::draw_tabs(console, &panel, super::ScreenName::Character);
         let x = panel.inner_x();
         // Rows from the footer's down would draw over it, or the frame, of a panel cut short.
         let fits = |y: i32| y < panel.y + panel.h - 2;
@@ -578,14 +579,6 @@ pub fn thresholds(load: &Load, width: i32) -> Vec<String> {
         part.push(',');
     }
     fit_joined(&parts, " ", width)
-}
-
-/// `name` with its first letter in upper case.
-fn capitalized(name: &str) -> String {
-    let mut chars = name.chars();
-    chars
-        .next()
-        .map_or_else(String::new, |c| c.to_uppercase().chain(chars).collect())
 }
 
 #[cfg(test)]

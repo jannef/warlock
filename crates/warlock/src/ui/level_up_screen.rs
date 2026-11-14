@@ -21,12 +21,11 @@
 //! chosen. The talent steps stay words. It reads the perception snapshot.
 
 use super::character_screen::fit_joined;
-use super::menu::{Hints, Nav, Panel, Press};
+use super::menu::{HINTS, Nav, Panel, Press, truncated};
 use super::paged_list::{PagedList, Row, draw_header};
 use super::screens::ScreenAction;
 use super::skills_screen::meter;
 use super::{ACCENT, TEXT, TEXT_DIM};
-use crate::input::Bindings;
 use crate::render::console::Console;
 use warlock_core::Action;
 use warlock_core::content::TreeId;
@@ -312,7 +311,7 @@ impl LevelUpScreen {
         }
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         self.fit(console.cols(), console.rows());
         let list = self.list();
         let count = list.tallest().max(1) as i32;
@@ -355,10 +354,7 @@ impl LevelUpScreen {
                 _ if self.choosing.is_some() => String::new(),
                 _ => entry.description.clone(),
             };
-            let detail: String = match detail.chars().count() > room && room > 1 {
-                true => detail.chars().take(room - 1).collect::<String>() + "…",
-                false => detail,
-            };
+            let detail = truncated(&detail, room);
             console.print(detail_x, y, detail.trim_end(), TEXT_DIM);
         }
         // Below the list: why the screen stays, else what the selected row is.
@@ -385,13 +381,13 @@ impl LevelUpScreen {
                 console.print(x, y, line, color);
             }
         }
-        panel.footer(console, &self.footer(bindings));
+        panel.footer(console, &self.footer());
     }
 
     /// The footer: the letters of the page shown and Enter, the page keys while there are
     /// pages, the levels still to come, and Esc's meaning on a talent's choices.
-    fn footer(&self, bindings: &Bindings) -> String {
-        let keys = Hints::of(bindings);
+    fn footer(&self) -> String {
+        let keys = HINTS;
         let list = self.list();
         let verb = match (self.step, &self.choosing) {
             (Step::Rolls, _) => "roll",
@@ -506,7 +502,7 @@ mod tests {
     fn text(screen: &LevelUpScreen) -> String {
         let mut console = Console::default();
         console.resize(80, 40);
-        screen.draw(&mut console, &Bindings::default());
+        screen.draw(&mut console);
         (0..console.rows() as i32)
             .map(|y| {
                 (0..console.cols() as i32)

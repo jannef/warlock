@@ -29,7 +29,9 @@
 //! move_n = ["k", "Numpad8", "ArrowUp"]
 //! ```
 
+pub mod bindings;
 pub mod clock;
+pub mod fixed;
 pub mod keymap;
 pub mod keys;
 pub mod mods;
@@ -756,7 +758,7 @@ mod tests {
         };
         let mut bindings = Bindings::default();
         let w = KeyBinding::from_text("w").unwrap();
-        bindings.bind_primary(KeyCommand::MenuUp, w).unwrap();
+        bindings.bind_primary(KeyCommand::Back, w).unwrap();
         let settings = Settings {
             font_px: 20,
             ..Settings::default()

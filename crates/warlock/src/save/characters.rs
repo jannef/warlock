@@ -161,34 +161,15 @@ pub fn fresh_id(name: &str, taken: impl Fn(&str) -> bool) -> String {
 
 /// Seconds since 1970 (UTC), now.
 pub fn now() -> u64 {
-    #[cfg(target_arch = "wasm32")]
-    {
-        (web_sys::js_sys::Date::now() / 1000.0) as u64
-    }
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_or(0, |d| d.as_secs())
-    }
+    crate::utc::since_epoch().as_secs()
 }
 
 /// `secs` (since 1970, UTC) as the list shows when a character was last played:
 /// `2026-10-20 14:32 UTC`, the time of day as `clock` writes it.
 pub fn played_text(secs: u64, clock: Clock) -> String {
-    let (days, rem) = ((secs / 86_400) as i64, secs % 86_400);
-    // Civil-from-days (Howard Hinnant).
-    let z = days + 719_468;
-    let era = z.div_euclid(146_097);
-    let doe = z.rem_euclid(146_097);
-    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let day = doy - (153 * mp + 2) / 5 + 1;
-    let month = if mp < 10 { mp + 3 } else { mp - 9 };
-    let year = yoe + era * 400 + i64::from(month <= 2);
-    let time = clock.format_hm((rem / 3600) as u32, (rem % 3600 / 60) as u32);
-    format!("{year:04}-{month:02}-{day:02} {time} UTC")
+    let t = crate::utc::utc_parts(secs);
+    let time = clock.format_hm(t.hour, t.minute);
+    format!("{:04}-{:02}-{:02} {time} UTC", t.year, t.month, t.day)
 }
 
 #[cfg(test)]

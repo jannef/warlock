@@ -75,6 +75,7 @@ mod sounds;
 mod spells;
 #[cfg(test)]
 mod stale_list_tests;
+pub(crate) mod step_dialogs;
 mod story_screen;
 mod talents_screen;
 mod target;
@@ -83,7 +84,7 @@ mod weapon_skills_screen;
 mod zone_tint;
 
 pub use dialog_screen::Dialog;
-pub use menu::{Press, quit_dialog};
+pub use menu::{Edit, Nav, Press, quit_dialog};
 pub use object_screen::IdentifyBy;
 pub use screens::{MenuChoice, ScreenAction, ScreenName, ScreenStack, Screens};
 
@@ -224,6 +225,7 @@ fn draw(
     bindings: Res<Bindings>,
     overlays: Res<DevOverlays>,
     grid: Res<MapGrid>,
+    args: Res<crate::cli::Args>,
     mut drawn: Local<Option<(bool, Option<IVec2>)>>,
     mut console: ResMut<Console>,
 ) {
@@ -252,13 +254,16 @@ fn draw(
             *overlays,
             &bindings,
             &settings,
+            crate::input::dev_keys(&args),
         );
     }
     stack.draw(&mut console, &settings, &bindings);
 }
 
 /// The gameplay UI: message line (or the current prompt), status bar (the time on the
-/// settings' clock, the temperature in their unit), dev indicator, and the look cursor.
+/// settings' clock, the temperature in their unit; the seed only where the dev keys are on,
+/// `dev`), dev indicator, and the look cursor.
+#[allow(clippy::too_many_arguments)]
 fn draw_game(
     console: &mut Console,
     game: &Game,
@@ -267,12 +272,13 @@ fn draw_game(
     overlays: DevOverlays,
     bindings: &Bindings,
     settings: &Settings,
+    dev: bool,
 ) {
     let rows = console.rows() as i32;
     draw_messages(console, game, mode, bindings, settings.effects.blood);
     let hint = controls_hint(bindings);
     let (clock, unit) = (settings.clock, settings.temperature);
-    draw_status(console, game, rows - 1, (clock, unit), &hint);
+    draw_status(console, game, rows - 1, (clock, unit, dev), &hint);
     dev::draw_indicator(console, overlays);
     let cursor = match mode {
         InputMode::Look(p) => Some(p),
@@ -568,7 +574,7 @@ fn draw_messages(
         return;
     }
     if mode == InputMode::Rest {
-        console.print(1, 0, &rest_prompt(bindings), ACCENT);
+        console.print(1, 0, &rest_prompt(), ACCENT);
         return;
     }
     if let InputMode::Aim(aim) = mode {
@@ -579,19 +585,13 @@ fn draw_messages(
             about = format!("{about} {status}");
         }
         console.print(1, 0, &about, TEXT);
-        let key = |command| {
-            (bindings.keys_of(command).first()).map_or_else(|| "?".to_string(), |k| k.display())
-        };
-        let (confirm, missile) = match aim.kind {
-            AimKind::Fire => {
-                let ammo = view.ready_to_fire().map(|(_, item, _)| item);
-                (KeyCommand::Missile, ammo)
-            }
-            AimKind::Throw(item) | AimKind::Zap(item) | AimKind::ThrownExploit(item) => {
-                (KeyCommand::Missile, Some(item))
-            }
-            AimKind::Read(item) => (KeyCommand::Read, Some(item)),
-            AimKind::Ability(_) => (KeyCommand::Loose, None),
+        let missile = match aim.kind {
+            AimKind::Fire => view.ready_to_fire().map(|(_, item, _)| item),
+            AimKind::Throw(item)
+            | AimKind::Zap(item)
+            | AimKind::ThrownExploit(item)
+            | AimKind::Read(item) => Some(item),
+            AimKind::Ability(_) => None,
         };
         let content = view.content();
         let ready = match aim.kind {
@@ -608,8 +608,8 @@ fn draw_messages(
                 }
             }),
         };
-        let next = key(KeyCommand::NextTarget);
-        let prompt = aim.prompt(&ready, (&key(KeyCommand::Loose), &key(confirm), &next));
+        let confirm = (bindings.key_name(aim.kind.confirm())).unwrap_or_else(|| "?".to_string());
+        let prompt = aim.prompt(&ready, &confirm);
         console.print(1, 1, &prompt, ACCENT);
         return;
     }
@@ -647,27 +647,19 @@ fn message_key(bindings: &Bindings, id: &str) -> String {
     })
 }
 
-/// The rest prompt, naming each choice's key as bound ([`crate::input::REST_CHOICES`]):
-/// `Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to cancel)` with the default keys, the
-/// key in parentheses where a word starts with it, else after the words (`hour (F1)`). A choice
-/// without a key is left out.
-fn rest_prompt(bindings: &Bindings) -> String {
-    let choices: Vec<String> = crate::input::REST_CHOICES
-        .iter()
-        .filter_map(|(command, _, words)| {
-            let key = bindings.key_name(*command)?;
-            let starts = std::iter::once(0).chain(words.match_indices(' ').map(|(i, _)| i + 1));
-            let single = key.chars().count() == 1;
-            let start = starts
-                .filter(|_| single)
-                .find(|&at| words[at..].starts_with(&key));
-            Some(match start {
+/// The rest prompt, naming each choice's fixed key (`settings::fixed::REST`) where a word starts
+/// with it: `Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to cancel)`.
+fn rest_prompt() -> String {
+    let choices: Vec<String> = (crate::settings::fixed::REST.iter())
+        .map(|(key, _, words)| {
+            let mut starts = std::iter::once(0).chain(words.match_indices(' ').map(|(i, _)| i + 1));
+            match starts.find(|&at| words[at..].starts_with(key)) {
                 Some(at) => {
                     let rest = &words[at + key.len()..];
                     format!("{}({key}){rest}", &words[..at])
                 }
                 None => format!("{words} ({key})"),
-            })
+            }
         })
         .collect();
     format!("Rest: {}? (Esc to cancel)", choices.join(", "))
@@ -686,7 +678,7 @@ fn draw_status(
     console: &mut Console,
     game: &Game,
     y: i32,
-    (clock, unit): (Clock, TemperatureUnit),
+    (clock, unit, dev): (Clock, TemperatureUnit, bool),
     hint: &str,
 ) {
     let cols = console.cols() as i32;
@@ -701,7 +693,7 @@ fn draw_status(
             bg: PANEL_BG,
         },
     );
-    let segments = status_segments(&game.world, clock, unit);
+    let segments = status_segments(&game.world, clock, unit, dev);
     // The controls hint matters most to new players, so it keeps its place unless the window is
     // very narrow; status segments give way around it.
     let hint_w = hint.chars().count() as i32;
@@ -759,8 +751,9 @@ fn segment_x(line: &str, text: &str) -> Option<i32> {
 }
 
 /// The status bar's segments for `world`, in display order, the time on `clock` and the
-/// temperature in `unit`.
-fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Segment> {
+/// temperature in `unit`. The seed shows only where the dev keys are on (`dev`): a player is
+/// never told of it (#1557).
+fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit, dev: bool) -> Vec<Segment> {
     let view = world.perception();
     let pos = world.player_pos();
     let time = world.time();
@@ -836,7 +829,7 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
         Some(Segment::new(10, format!("{},{}", pos.x, pos.y))),
         Some(Segment::new(7, format!("Light {light}"))),
         Some(Segment::new(8, format!("{} vision", view.vision().name))),
-        Some(Segment::new(11, format!("Seed {}", world.seed()))),
+        dev.then(|| Segment::new(11, format!("Seed {}", world.seed()))),
     ];
     (head.into_iter())
         .chain(resources)
@@ -998,7 +991,7 @@ mod tests {
     fn the_status_bar_shows_the_burden_after_the_hit_points_and_mana_and_keeps_it_late() {
         let mut world = hoard();
         let texts = |w: &World| -> Vec<String> {
-            status_segments(w, Clock::H24, TemperatureUnit::Celsius)
+            status_segments(w, Clock::H24, TemperatureUnit::Celsius, true)
                 .into_iter()
                 .map(|s| s.text)
                 .collect()
@@ -1008,7 +1001,7 @@ mod tests {
             "unburdened: nothing"
         );
         world.apply(&Action::PickUp(Positions::default()));
-        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
+        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true);
         assert_eq!(segments[1].text, "HP 10/10");
         assert_eq!(
             segments[2].text, "MP 0/0",
@@ -1047,10 +1040,11 @@ mod tests {
         );
         let content = Arc::new(Content::load(&files).expect("valid"));
         let world = World::new(content, "stare", None).expect("world");
-        let texts: Vec<String> = status_segments(&world, Clock::H24, TemperatureUnit::Celsius)
-            .into_iter()
-            .map(|s| s.text)
-            .collect();
+        let texts: Vec<String> =
+            status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true)
+                .into_iter()
+                .map(|s| s.text)
+                .collect();
         assert!(texts.contains(&"Averted".to_string()), "{texts:?}");
     }
 
@@ -1079,7 +1073,7 @@ mod tests {
             World::with_character(content, "glare", None, Some(&spec)).expect("world")
         };
         let texts = |w: &World| -> Vec<String> {
-            status_segments(w, Clock::H24, TemperatureUnit::Celsius)
+            status_segments(w, Clock::H24, TemperatureUnit::Celsius, true)
                 .into_iter()
                 .map(|s| s.text)
                 .collect()
@@ -1113,7 +1107,7 @@ mod tests {
             World::new(content, "hoard", None).expect("world")
         };
         let texts = |w: &World| -> Vec<String> {
-            status_segments(w, Clock::H24, TemperatureUnit::Celsius)
+            status_segments(w, Clock::H24, TemperatureUnit::Celsius, true)
                 .into_iter()
                 .map(|s| s.text)
                 .collect()
@@ -1139,7 +1133,7 @@ mod tests {
         }
         let mut world = world_starting_at(1000);
         world.apply(&Action::PickUp(Positions::default()));
-        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
+        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true);
         assert_eq!(
             texts(&world)[..5],
             ["Hoard", "HP 10/10", "MP 0/0", "Hungry", "Burdened"]
@@ -1157,7 +1151,7 @@ mod tests {
         assert_eq!(fit_segments(&segments, 10), "Hungry");
         // A well-fed word gives way as it did: before the mana, and the level's name goes last.
         let fed = world_starting_at(5000);
-        let segments = status_segments(&fed, Clock::H24, TemperatureUnit::Celsius);
+        let segments = status_segments(&fed, Clock::H24, TemperatureUnit::Celsius, true);
         assert_eq!(fit_segments(&segments, 36), "Hoard  ·  HP 10/10  ·  MP 0/0");
         assert_eq!(fit_segments(&segments, 10), "Hoard");
     }
@@ -1182,7 +1176,7 @@ mod tests {
         let mut world = hoard();
         world.apply(&Action::Afflict("poisoned".into()));
         world.apply(&Action::Afflict("bleeding".into()));
-        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
+        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true);
         let texts: Vec<&str> = segments.iter().map(|s| s.text.as_str()).collect();
         assert_eq!(
             texts[..5],
@@ -1202,7 +1196,7 @@ mod tests {
         let mut world = hoard();
         world.apply(&Action::Infect("the_shakes".into()));
         let texts = |w: &World| -> Vec<String> {
-            status_segments(w, Clock::H24, TemperatureUnit::Celsius)
+            status_segments(w, Clock::H24, TemperatureUnit::Celsius, true)
                 .into_iter()
                 .map(|s| s.text)
                 .collect()
@@ -1239,7 +1233,7 @@ mod tests {
         let content = Arc::new(Content::load(&files).expect("valid"));
         let mut world = World::new(content, "cell", None).expect("world");
         world.apply(&Action::Drain(7));
-        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
+        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true);
         assert_eq!(segments[2].text, "MP 5/12");
     }
 
@@ -1249,15 +1243,16 @@ mod tests {
         world.apply(&Action::Resource("rage".into()));
         world.apply(&Action::Resource("focus".into()));
         world.apply(&Action::Wait);
-        let texts: Vec<String> = status_segments(&world, Clock::H24, TemperatureUnit::Celsius)
-            .into_iter()
-            .map(|s| s.text)
-            .collect();
+        let texts: Vec<String> =
+            status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true)
+                .into_iter()
+                .map(|s| s.text)
+                .collect();
         // Rage shows its value alone, focus its maximum too.
         assert_eq!(texts[2..5], ["MP 0/0", "Rage 11", "Focus 10/10"]);
         // Raging (the rage brings it) raises Toughness, and the maximum with it.
         let line = "Hoard  ·  HP 10/12  ·  MP 0/0  ·  Rage 11  ·  Focus 10/10";
-        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
+        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true);
         assert_eq!(
             fit_segments(&segments, line.chars().count() - 1),
             "Hoard  ·  HP 10/12  ·  MP 0/0  ·  Rage 11",
@@ -1269,14 +1264,14 @@ mod tests {
     fn the_status_bar_names_a_stance_that_is_not_neutral() {
         let mut world = hoard();
         let texts = |w: &World| -> Vec<String> {
-            status_segments(w, Clock::H24, TemperatureUnit::Celsius)
+            status_segments(w, Clock::H24, TemperatureUnit::Celsius, true)
                 .into_iter()
                 .map(|s| s.text)
                 .collect()
         };
         assert!(!texts(&world).iter().any(|t| t.contains("Neutral")));
         world.apply(&Action::SetStance(CombatStance::Defensive));
-        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
+        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true);
         let at = |t: &str| segments.iter().position(|s| s.text == t);
         assert_eq!(
             at("Defensive"),
@@ -1365,7 +1360,7 @@ mod tests {
     fn the_status_bar_shows_the_weather_only_under_the_open_sky() {
         let content = Arc::new(Content::builtin().expect("content"));
         let texts = |world: &World| -> Vec<String> {
-            status_segments(world, Clock::H24, TemperatureUnit::Celsius)
+            status_segments(world, Clock::H24, TemperatureUnit::Celsius, true)
                 .into_iter()
                 .map(|s| s.text)
                 .collect()
@@ -1378,7 +1373,7 @@ mod tests {
         world.apply(&Action::SetWeather(
             warlock_core::weather::Weather::HeavyRain,
         ));
-        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
+        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true);
         let at = |text: &str| segments.iter().position(|s| s.text.contains(text));
         let (weather, moon, date) = (at("Heavy rain"), at("Waxing gibbous"), at("Darkening"));
         assert_eq!(weather, moon.map(|m| m + 1), "shown after the moon");
@@ -1397,19 +1392,31 @@ mod tests {
     }
 
     #[test]
+    fn the_seed_shows_only_with_the_dev_keys() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let hub = World::new(content, "showcase", None).expect("starts");
+        let seed = |dev| {
+            (status_segments(&hub, Clock::H24, TemperatureUnit::Celsius, dev).iter())
+                .any(|s| s.text.starts_with("Seed "))
+        };
+        assert!(seed(true));
+        assert!(!seed(false), "a player is never told of the seed (#1557)");
+    }
+
+    #[test]
     fn the_status_bar_always_shows_the_temperature_in_the_chosen_unit() {
         let content = Arc::new(Content::builtin().expect("content"));
         // Underground too: the hub is 10 °C, after the moon (there is no weather there).
         let hub = World::new(content.clone(), "showcase", None).expect("starts");
-        let segments = status_segments(&hub, Clock::H24, TemperatureUnit::Celsius);
+        let segments = status_segments(&hub, Clock::H24, TemperatureUnit::Celsius, true);
         let at = |segments: &[Segment], text: &str| segments.iter().position(|s| s.text == text);
         let moon = segments.iter().position(|s| s.text.contains("gibbous"));
         assert_eq!(at(&segments, "10 °C"), moon.map(|m| m + 1));
-        let fahrenheit = status_segments(&hub, Clock::H24, TemperatureUnit::Fahrenheit);
+        let fahrenheit = status_segments(&hub, Clock::H24, TemperatureUnit::Fahrenheit, true);
         assert!(at(&fahrenheit, "50 °F").is_some());
         // Outdoors, the weather's, right after the weather.
         let yard = World::new(content, "courtyard", None).expect("starts");
-        let segments = status_segments(&yard, Clock::H24, TemperatureUnit::Celsius);
+        let segments = status_segments(&yard, Clock::H24, TemperatureUnit::Celsius, true);
         let shown = TemperatureUnit::Celsius.show(yard.perception().temperature());
         let weather = segments.iter().position(|s| s.text == "Clear");
         assert_eq!(at(&segments, &shown), weather.map(|w| w + 1));
@@ -1451,7 +1458,7 @@ mod tests {
     fn the_twelve_hour_clock_is_longer_but_the_status_bar_still_fits() {
         let content = Arc::new(Content::builtin().expect("content"));
         let world = World::new(content, "showcase", None).expect("starts");
-        let segments = status_segments(&world, Clock::H12, TemperatureUnit::Celsius);
+        let segments = status_segments(&world, Clock::H12, TemperatureUnit::Celsius, true);
         let time = (segments.iter())
             .map(|s| &s.text)
             .find(|t| t.ends_with(" AM") || t.ends_with(" PM"))
@@ -1470,7 +1477,7 @@ mod tests {
     fn the_status_bar_shows_hit_points_and_keeps_them_late() {
         let content = Arc::new(Content::builtin().expect("content"));
         let world = World::new(content, "showcase", None).expect("starts");
-        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
+        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true);
         assert_eq!(segments[1].text, "HP 18/18", "right after the level");
         // Narrow: everything but the level gives way first, the time included.
         let line = fit_segments(&segments, 25);
@@ -1483,18 +1490,10 @@ mod tests {
     fn prompts_name_the_keys_as_bound() {
         let mut b = Bindings::default();
         assert_eq!(
-            rest_prompt(&b),
+            rest_prompt(),
             "Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to cancel)"
         );
         assert_eq!(controls_hint(&b), "? controls");
-        let key = |text: &str| crate::input::KeyBinding::from_text(text).unwrap();
-        b.bind_primary(KeyCommand::RestHour, key("F1")).unwrap();
-        b.bind_primary(KeyCommand::RestDusk, key("i")).unwrap();
-        b.bind_primary(KeyCommand::RestDawn, key("u")).unwrap();
-        assert_eq!(
-            rest_prompt(&b),
-            "Rest: hour (F1), (u)ntil dawn, until nightfall (i)? (Esc to cancel)"
-        );
         b.0.retain(|(_, c)| *c != KeyCommand::Help);
         assert_eq!(controls_hint(&b), "Esc menu");
     }

@@ -29,7 +29,8 @@ stats = { strength = 30, dexterity = 24, toughness = 34, intelligence = 40, will
 base_hp = 70
 skills = { concentration = 178, spellcraft = 183 }
 natural = { defence = 4, protection = 5, name = "wrappings" }
-resist = { fire = -50, poison = 100 }
+resist = { fire = -50 }
+immune = ["poison"]
 on_eat = { message = "Dust, resin, and the gold of a vanished kingdom.", vomit = 80, harm = "1d4", train = { intelligence = 0, willpower = 0 } }
 blood = "#5a4a30"
 [creature.attack]

@@ -23,13 +23,13 @@
 
 use super::cast::Cast;
 use super::spell::burst_cells;
-use super::talk::capitalized;
 use super::{Actor, ActorId, World};
 use crate::action::{Event, SpellShape};
 use crate::content::{Content, OnlyTerrain, SpellData};
 use crate::fov::radius2;
 use crate::geom::{Dir, Pos};
 use crate::noise::Heard;
+use crate::text::capitalized;
 use crate::weather::{Override, Weather};
 use std::collections::BTreeSet;
 

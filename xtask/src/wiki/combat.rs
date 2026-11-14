@@ -4,11 +4,12 @@
 use super::actions::at_normal_pace;
 use super::objects::goes_on;
 use super::order;
-use super::text::{Term, anchored, capital, signed};
+use super::text::{Term, anchored, capital, percent_of, signed};
 use std::fmt::Write as _;
 use warlock_core::combat;
 use warlock_core::content::{ActionKind, BASE_TURN, Content, price};
 use warlock_core::geom::Pos;
+use warlock_core::text::and_list;
 
 /// The natural rolls of a threat range: `22–24`, or `24` alone.
 pub(super) fn threat_range(threat: u8) -> String {
@@ -16,16 +17,6 @@ pub(super) fn threat_range(threat: u8) -> String {
         combat::HIGHEST.to_string()
     } else {
         format!("{threat}–{}", combat::HIGHEST)
-    }
-}
-
-/// `part` of `of` as a percentage, one decimal below 10 %, whole above.
-pub(super) fn percent(part: u32, of: u32) -> String {
-    let p = f64::from(part) * 100.0 / f64::from(of);
-    if p < 10.0 && p.fract() != 0.0 {
-        format!("{p:.1}%")
-    } else {
-        format!("{p:.0}%")
     }
 }
 
@@ -95,7 +86,7 @@ pub(super) fn light_weapons(content: &Content) -> String {
     match the.as_slice() {
         [] => "No weapon is light.\n".into(),
         [one] => format!("The one light weapon is {one}.\n"),
-        [rest @ .., last] => format!("The light weapons are {}, and {last}.\n", rest.join(", ")),
+        many => format!("The light weapons are {}.\n", and_list(many)),
     }
 }
 
@@ -110,7 +101,7 @@ pub(super) fn finesse_weapons(content: &Content) -> String {
     match the.as_slice() {
         [] => "No weapon is a finesse weapon.\n".into(),
         [one] => format!("The one finesse weapon is {one}.\n"),
-        [rest @ .., last] => format!("The finesse weapons are {}, and {last}.\n", rest.join(", ")),
+        many => format!("The finesse weapons are {}.\n", and_list(many)),
     }
 }
 
@@ -327,10 +318,10 @@ pub(super) fn piercing(content: &Content) -> String {
     match the.as_slice() {
         [] => "Nothing pierces armour.\n".into(),
         [one] => format!("Only {one} pierces armour, {ignores}.\n"),
-        [one, two] => format!("{} and {two} pierce armour, {ignores}.\n", capital(one)),
-        [rest @ .., last] => format!(
-            "{}, and {last} pierce armour, each {ignores}.\n",
-            capital(&rest.join(", "))
+        [_, _] => format!("{} pierce armour, {ignores}.\n", capital(&and_list(&the))),
+        many => format!(
+            "{} pierce armour, each {ignores}.\n",
+            capital(&and_list(many))
         ),
     }
 }
@@ -517,7 +508,7 @@ pub(super) fn hit_chances(_content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {needed} | {} |",
-            percent(combat::hit_ways(0, needed), 144)
+            percent_of(combat::hit_ways(0, needed), 144)
         );
     }
     out
@@ -542,8 +533,8 @@ pub(super) fn threats(_content: &Content) -> String {
             out,
             "| {} | {} | {} | {dnd} |",
             threat_range(threat as u8),
-            percent(threatens, 144),
-            percent(confirmed, 144 * 144),
+            percent_of(threatens, 144),
+            percent_of(confirmed, 144 * 144),
         );
     }
     out

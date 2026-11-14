@@ -40,7 +40,6 @@
 //! [`Crystals::colour_of_affix`]: crate::content::Crystals::colour_of_affix
 
 use super::alignment::Deed;
-use super::ally::capital;
 use super::{Actor, Spent, World};
 use crate::action::{Meal, Positions};
 use crate::combat;
@@ -48,6 +47,7 @@ use crate::content::{ActionKind, AffixKind, StatUse};
 use crate::object::Stack;
 use crate::skills::Effect;
 use crate::stats::Stat;
+use crate::text::capitalized;
 
 /// What salvage's affix checks caught: the lines to say, in order, the stacks caught, and
 /// whether any check was made (Enchanting's mark).
@@ -150,7 +150,7 @@ impl World {
             let colour = crystals.colour_of_affix(&content, &affix.id);
             match colour.filter(|_| made) {
                 Some(colour) => {
-                    let a = crate::content::article(&colour.name);
+                    let a = crate::text::article(&colour.name);
                     let name = &colour.name;
                     caught
                         .lines
@@ -161,7 +161,7 @@ impl World {
                         None => caught.stacks.push(crystal),
                     }
                 }
-                None => (caught.lines).push(format!("{} goes out unread.", capital(&named))),
+                None => (caught.lines).push(format!("{} goes out unread.", capitalized(&named))),
             }
         }
         let rare = &crystals.rare;

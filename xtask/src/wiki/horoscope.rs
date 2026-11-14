@@ -1,23 +1,60 @@
 //! The birth signs' gifts (spec §8 "Birth sign"): what each animal, element, and lucky day gives,
 //! with the exact rules the game says only in words, and how likely a lucky day is by race.
 
-use super::talents::{effects_text, needs_text};
-use super::text::{signed, table_text};
+use super::talents::{effects_text, needs_text, talent_link};
+use super::text::{Term, anchored, signed, table_text};
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 use warlock_core::character::BirthDate;
 use warlock_core::content::{Content, Horoscope, Need, TalentDef};
 use warlock_core::time::{DAYS_PER_MONTH, MONTHS_PER_YEAR};
 
+/// Where a gift of the stars is defined on the horoscope page (#1554): the first of the
+/// animals' gifts, the elements', the picks, and the lucky days' that holds it. Its name is
+/// anchored there; the others link to it.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Home {
+    Animal,
+    Element,
+    Pick,
+    Lucky,
+}
+
+fn home(content: &Content, id: &str) -> Option<Home> {
+    let h = content.horoscope()?;
+    let has = |grants: &[String]| grants.iter().any(|g| g == id);
+    if h.animals.iter().any(|a| has(&a.grants)) {
+        Some(Home::Animal)
+    } else if h.elements.iter().any(|e| has(&e.grants)) {
+        Some(Home::Element)
+    } else if (content.talents().id(id)).is_some_and(|t| !content.talents().get(t).granted) {
+        Some(Home::Pick)
+    } else if h.lucky.iter().any(|l| has(&l.grants)) {
+        Some(Home::Lucky)
+    } else {
+        None
+    }
+}
+
+/// A gift's name: anchored where it is defined, else a link to it.
+fn gift_name(content: &Content, def: &TalentDef, table: Home) -> String {
+    if home(content, &def.id) == Some(table) {
+        anchored(Term::Talent, &def.id, &def.name)
+    } else {
+        talent_link(content, &def.id, &def.name)
+    }
+}
+
 /// The gifts of `grants` (talent ids), one a line in a cell: "**Fleet-footed**: speed +5 %", a flaw
 /// marked; "—" for none.
-fn gifts(content: &Content, grants: &[String]) -> String {
+fn gifts(content: &Content, grants: &[String], table: Home) -> String {
     let book = content.talents();
     let parts: Vec<String> = (grants.iter())
         .filter_map(|id| book.id(id).map(|t| book.get(t)))
         .map(|def| {
             let flaw = if def.flaw { " (flaw)" } else { "" };
-            format!("**{}**{flaw}: {}", def.name, effects_text(content, def))
+            let name = gift_name(content, def, table);
+            format!("**{name}**{flaw}: {}", effects_text(content, def))
         })
         .collect();
     if parts.is_empty() {
@@ -45,7 +82,7 @@ pub(super) fn animals(content: &Content) -> String {
             "| {} | {} | {} | {nudge} |",
             i + 1,
             a.name,
-            gifts(content, &a.grants)
+            gifts(content, &a.grants, Home::Animal)
         );
     }
     out
@@ -58,7 +95,12 @@ pub(super) fn elements(content: &Content) -> String {
     };
     let mut out = String::from("| Element | Gifts |\n|---|---|\n");
     for e in &h.elements {
-        let _ = writeln!(out, "| {} | {} |", e.name, gifts(content, &e.grants));
+        let _ = writeln!(
+            out,
+            "| {} | {} |",
+            e.name,
+            gifts(content, &e.grants, Home::Element)
+        );
     }
     out
 }
@@ -99,7 +141,7 @@ pub(super) fn talents(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {name} | {} | {} | {} |",
-            def.name,
+            gift_name(content, def, Home::Pick),
             needs_text(content, def),
             effects_text(content, def)
         );
@@ -211,7 +253,7 @@ pub(super) fn lucky(content: &Content) -> String {
             h.name(&sign),
             l.day,
             table_text(&l.title),
-            gifts(content, &l.grants),
+            gifts(content, &l.grants, Home::Lucky),
             years.join(", ")
         );
     }

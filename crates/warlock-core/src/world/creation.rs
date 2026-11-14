@@ -17,9 +17,10 @@
 use super::talent::Due;
 use super::{World, WorldError};
 use crate::character::CharacterSpec;
-use crate::content::{Content, TalentId, article};
+use crate::content::{Content, TalentId};
 use crate::rng::Rng;
 use crate::talent;
+use crate::text::article;
 use std::sync::Arc;
 
 /// A creation pick as written: `id` or `id:choice`.
@@ -101,6 +102,7 @@ impl World {
     /// that may fill the next, tree by tree, with the choices each may be taken for: while a
     /// bonus pick is left, those of the class's creation trees alone (the craftsperson's trades
     /// come first). An error (in words) when a pick of `picks` cannot be taken.
+    #[allow(clippy::type_complexity)]
     pub fn creation_offers(
         &self,
         picks: &[String],

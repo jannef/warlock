@@ -240,7 +240,7 @@ pub(super) fn taming(content: &Content) -> String {
         let _ = write!(out, "| {} | {difficulty} |", beast(content, id));
         for edge in TAME_EDGES {
             let ways = warlock_core::check::ways(edge, difficulty);
-            let _ = write!(out, " {} |", super::combat::percent(ways, 144));
+            let _ = write!(out, " {} |", super::text::percent_of(ways, 144));
         }
         out.push('\n');
     }

@@ -50,6 +50,11 @@ old one, a changed pick by index); accept it only when you can say why, and say 
 snapshot you cannot explain is a bug until proven otherwise. Never accept a snapshot to make a
 test pass.
 
+**Orphan snapshots.** A renamed or removed snapshot test leaves its `.snap` file behind. CI fails
+on one (#1537): its test run records every snapshot file a test reads
+(`INSTA_SNAPSHOT_REFERENCES_FILE`), and `.github/scripts/orphan-snapshots.sh` rejects a committed
+`.snap` not among them. Delete the orphan (or `cargo insta test --unreferenced=delete`).
+
 ## One build of warlock-core
 
 Cargo resolves features per command, so `cargo test --workspace`, `cargo run -p warlock`,
@@ -107,7 +112,7 @@ conflict every time; two that insert at different places merge cleanly. So:
   per-release save bump's business, not the PR's.
 - **A feature's dispatch lives in its own module**: one match arm in `world/mod.rs::player_acts`
   calling `self.feature(..)` in `world/feature.rs`, one line each in the other hot files
-  (`action.rs`, `content/mod.rs`, `dump.rs`, `input.rs`, `settings/keys.rs`), and its own tests
+  (`action.rs`, `content/mod.rs`, `dump.rs`, `input/play.rs`, `settings/keys.rs`), and its own tests
   file (`world/feature_tests.rs`).
 - **Docs follow the same rule**: a feature edits its own `docs/dev/<topic>.md` and the `spec/`
   files of the sections it touches (bullets next to the related ones); `docs/dev/cli.md` for a new
@@ -144,6 +149,35 @@ table) say "saves change" in the PR: development builds share a version, so thei
 promised across builds, and a save a build cannot read is renamed `<id>.sav.bad`, never lost.
 The release that bumps the workspace version also sets `version` in the fixture summaries under
 `tests/golden/saved-characters/saves/` (all but Osric's, another version's on purpose).
+
+## Random streams: keep the gameplay stream still
+
+`state.rng`, the `gameplay` stream (`rng.rs`), is shared by about two hundred draw sites in
+ninety modules. A draw added to it or taken from it shifts every later roll of the run, so one
+feature's change breaks the replays, insta snapshots, and golden walks of unrelated features,
+and every PR in flight that touches them conflicts. The policy (#1523):
+
+- **A self-contained new feature draws from a keyed stream of its own**, never `state.rng`: a
+  constructor in `rng.rs` (`Rng::grade`, `Rng::court`) when the stream is kept or shared, a
+  labelled `Rng::stream(seed, "feature/<key>")` made where it is used when it is not
+  (`appraise/<hour>`, `wares/<actor id>`), or a keyed draw with no generator at all
+  (`weather::draw(seed, label, k)`, as one-liners and mutters do). Key it by what makes the draw
+  unique (an actor, a level, the moment), so two draws never share a value by accident. A
+  stream kept in `WorldState` (`ruin`, `encounters`) is made on its first draw, so a run that
+  never draws from it hashes as before.
+- **Add the stream to the table at the top of `rng.rs`** in the same PR, in its group.
+- **High-churn users of `gameplay` move out as they are touched**: the outcome tables
+  (`world/outcome.rs`), eating (`world/eat.rs`), miscasts. Each move is a PR of its own, or a
+  commit its PR names, that says the run's rolls change; never move a draw between streams as a
+  side effect of another change.
+- Rules that are part of the core loop (to-hit, damage, checks, the AI) stay on `gameplay`.
+
+**The state hash's format.** `World::state_hash` (`world/hash.rs`) is FNV-1a over the
+`serde_json` encoding of `WorldState`, streamed into the hasher. It therefore also depends on
+`serde_json`'s output and on `rand_chacha`'s serde format for every kept stream (`rng.rs`): a
+dependency bump that changes either changes every replay's recorded hashes with no rule change.
+Such a bump says so in its PR and re-creates the test replays (`warlock-cli replay --create`,
+then `--verify`); old replay files then warn on load, as any divergence does.
 
 ## Design documents
 

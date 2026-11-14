@@ -490,12 +490,15 @@ mod tests {
         assert_eq!(b.lookup(&up, Mods::NONE), Some(KeyCommand::Move(Dir::N)));
         assert_eq!(b.lookup(&up, mods("Shift+")), Some(KeyCommand::Look));
         // A physical key with no Shift binding of its own still answers with Shift held: Tab
-        // is Next target while aiming, which Shift reverses.
+        // is Next target while aiming (fixed), which Shift reverses.
         let tab = input(KeyCode::Tab, Key::Tab);
-        assert_eq!(
-            b.lookup_in(Context::Aim, &tab, mods("Shift+")),
-            Some(KeyCommand::NextTarget)
+        let next = crate::settings::fixed::read(
+            &tab,
+            mods("Shift+"),
+            |_| None,
+            crate::settings::fixed::aim,
         );
+        assert_eq!(next, Some(crate::settings::fixed::AimKey::NextTarget));
         // Alt with an arrow is another key: Run (#1385).
         assert_eq!(b.lookup(&up, mods("Alt+")), Some(KeyCommand::Run(Dir::N)));
         assert_eq!(b.lookup(&up, mods("Ctrl+Alt+")), None);
@@ -590,10 +593,10 @@ mod tests {
         assert_eq!(refused("Ctrl+w", Platform::Desktop), None);
         assert_eq!(refused("Alt+F4", Platform::Mac), None);
         // Only play commands take modifiers.
-        let menu = refusal(&key("Ctrl+j"), KeyCommand::MenuDown, Platform::Desktop);
-        assert!(menu.is_some_and(|why| why.starts_with("Down takes plain keys only")));
+        let menu = refusal(&key("Ctrl+q"), KeyCommand::Back, Platform::Desktop);
+        assert!(menu.is_some_and(|why| why.starts_with("Back (Esc always works) takes plain")));
         assert_eq!(
-            refusal(&key("j"), KeyCommand::MenuDown, Platform::Desktop),
+            refusal(&key("q"), KeyCommand::Back, Platform::Desktop),
             None
         );
     }

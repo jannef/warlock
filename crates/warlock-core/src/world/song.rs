@@ -113,7 +113,7 @@ impl World {
         let will =
             them.effective_stats(&content).modifier(stat) + them.talent_mods(&content).check(stat);
         let seen = self.perception.sees_actors_at(them.pos);
-        let who = super::talk::capitalized(&self.called(them));
+        let who = crate::text::capitalized(&self.called(them));
         let falls = !check::check(&mut self.state.rng, will, difficulty);
         if falls {
             let player = self.state.player;

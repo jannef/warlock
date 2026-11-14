@@ -37,7 +37,7 @@ use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::content::{
     ActionKind, Content, DialogueId, InputKind, MaterialId, ObjectId, PartSource, PatronWords,
-    QuestKind, RecipeCount, RecipeDef, RecipeId, article,
+    QuestKind, RecipeCount, RecipeDef, RecipeId,
 };
 use crate::dice::Dice;
 use crate::magic::worked;
@@ -45,6 +45,7 @@ use crate::object::Stack;
 use crate::perception::PerceptionView;
 use crate::rng::Rng;
 use crate::skills::Use;
+use crate::text::article;
 use serde::{Deserialize, Serialize};
 
 /// The player's commissions from their patron.
@@ -258,8 +259,8 @@ impl World {
                     Some(item) => {
                         let (taken, stack) = self.hand_over_one(item, ActionKind::Chat);
                         spent = taken;
-                        let marked = stack.worked().is_some_and(|w| w.marked());
-                        let gold = rules.paid(stack.value(&content), marked);
+                        // A maker's mark is in the worth, paid for once (#1489).
+                        let gold = rules.paid(stack.value(&content));
                         let gold = u32::try_from(gold).unwrap_or(u32::MAX);
                         let what = self.lore().describe(&stack);
                         self.say(format!("You hand over {what}."));

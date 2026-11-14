@@ -3,7 +3,7 @@
 //! priest's levels with its titles, and the priest's rites beside it (Consecrate, Communion with
 //! the dark, Sanctuary). Every number here is hidden in the game.
 
-use super::text::{Term, anchored, link};
+use super::text::{Term, anchored, capital, link};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, PrayerRules, PrayerUse, TalentDef, TalentEffect};
 use warlock_core::time::Duration;
@@ -23,7 +23,7 @@ pub(super) fn prayer_strain(content: &Content) -> String {
     let mut out = String::from("| | |\n|---|---|\n");
     let _ = writeln!(
         out,
-        "| Strain a prayer adds | {}, answered or fizzled alike (none in an unholy place for a priest who [communes with the dark](talents.md#talent-communion)) |",
+        "| Strain a prayer adds | {}, answered or fizzled alike (none in an unholy place for a priest who [communes with the dark](classes.md#talent-communion)) |",
         rules.strain
     );
     let _ = writeln!(
@@ -106,7 +106,7 @@ pub(super) fn prayer_uses(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {i} | {} | {ails} | {holy}: \"{}\" | {dark}: \"{}\" | {} |",
-            anchored(Term::PrayerUse, u.id.id(), &capitalised(u.id.id())),
+            anchored(Term::PrayerUse, u.id.id(), &capital(u.id.id())),
             u.words.holy,
             u.words.dark,
             gained_at(content, u.id),
@@ -181,14 +181,6 @@ fn use_text(content: &Content, rules: &PrayerRules, id: PrayerUse) -> (String, S
     }
 }
 
-/// `disease` → `Disease`.
-fn capitalised(id: &str) -> String {
-    let mut c = id.chars();
-    c.next()
-        .map(|f| f.to_uppercase().chain(c).collect())
-        .unwrap_or_default()
-}
-
 /// Where a use is first given: `level 12 ([Prayer](...))` per class whose table gives it.
 fn gained_at(content: &Content, id: PrayerUse) -> String {
     let mut at: Vec<String> = Vec::new();
@@ -201,7 +193,7 @@ fn gained_at(content: &Content, id: PrayerUse) -> String {
             if gives {
                 at.push(format!(
                     "level {level} ({}, {})",
-                    link(Term::Talent, &def.id, &def.name),
+                    super::talents::talent_link(content, &def.id, &def.name),
                     class.name.to_lowercase()
                 ));
                 break;
@@ -282,7 +274,7 @@ pub(super) fn prayer_levels(content: &Content) -> String {
             let _ = writeln!(
                 out,
                 "| {level} | {} | {} | {holy} | {dark} | {answers} |",
-                link(Term::Talent, &def.id, &def.name),
+                super::talents::talent_link(content, &def.id, &def.name),
                 adds.join(", ")
             );
         }
@@ -314,7 +306,7 @@ pub(super) fn prayer_rites(content: &Content) -> String {
                         ),
                     ),
                     TalentEffect::Communion => (
-                        link(Term::Talent, &def.id, &def.name),
+                        super::talents::talent_link(content, &def.id, &def.name),
                         "a passive: standing in a [cursed](special-rooms.md#room-cursed), [draining](special-rooms.md#room-draining), or [haunted](special-rooms.md#room-haunted) room, or on a level such a curse lies over, your prayers add no strain and the place's [Ebbing](status-effects.md#status-ebbing) never touches you; only while the dark powers answer you".into(),
                     ),
                     TalentEffect::Sanctuary {

@@ -28,10 +28,11 @@ use super::shoot::Flight;
 use super::{Actor, ActorId, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::Strike;
-use crate::content::{ActionKind, Content, DamageTypeId, ObjectId, Throw, article};
+use crate::content::{ActionKind, Content, DamageTypeId, ObjectId, Throw};
 use crate::fov::radius2;
 use crate::geom::Pos;
 use crate::noise::Act;
+use crate::text::article;
 
 impl World {
     /// Whether creature `id` throws at actor `target`, standing at `at`, now: it has a throw,

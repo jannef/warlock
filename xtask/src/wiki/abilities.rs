@@ -2,8 +2,7 @@
 //! registry (`warlock_core::ability`).
 
 use super::actions::at_normal_pace;
-use super::combat::percent;
-use super::text::{Term, anchored, link};
+use super::text::{Term, anchored, link, percent_of};
 use std::fmt::Write as _;
 use warlock_core::ability::{Ability, Aim, Source};
 use warlock_core::check;
@@ -459,7 +458,7 @@ pub(super) fn song_odds(content: &Content) -> String {
             let _ = write!(out, "| {sign}{} |", i32::abs(edge));
             for v in &values {
                 let ways = check::ways(edge, difficulty + craft(*v));
-                let _ = write!(out, " {} |", percent(ways, 144));
+                let _ = write!(out, " {} |", percent_of(ways, 144));
             }
             out.push('\n');
         }
@@ -503,6 +502,6 @@ mod tests {
         assert!(music.contains("| 100 | +2 | +4 |"), "{music}");
         let odds = song_odds(&content);
         assert!(odds.contains("Music 100 (17)"), "{odds}");
-        assert!(odds.contains("| +0 | 54% | 25% |"), "{odds}");
+        assert!(odds.contains("| +0 | 54.2% | 25% |"), "{odds}");
     }
 }

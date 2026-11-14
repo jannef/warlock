@@ -1,7 +1,6 @@
 //! Traps (spec §8 "Traps").
 
-use super::combat::percent;
-use super::text::{Term, anchored, article, capital, signed};
+use super::text::{Term, anchored, article, capital, percent_of, signed};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Bolt, Burst, BurstIce, Content, RigTakes, TrapEffect, TrapNoise};
@@ -198,8 +197,8 @@ pub(super) fn disarming(content: &Content) -> String {
             let _ = write!(
                 out,
                 " {} disarmed, {} set off |",
-                percent(made, 144),
-                percent(set_off, 144)
+                percent_of(made, 144),
+                percent_of(set_off, 144)
             );
         }
         out.push('\n');

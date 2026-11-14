@@ -9,7 +9,6 @@
 //! [`Action::Gift`]: crate::action::Action::Gift
 
 use super::fight::Harm;
-use super::talk::capitalized;
 use super::{ActorId, Spent, World};
 use crate::ability::{Ability, Unavailable};
 use crate::action::{AttackKind, Event};
@@ -18,6 +17,7 @@ use crate::content::{ActionKind, SignActive, Stance};
 use crate::damage::{Damage, Rider};
 use crate::geom::Pos;
 use crate::status::Effect;
+use crate::text::capitalized;
 use serde::{Deserialize, Serialize};
 
 /// How far the Transfixing stare reaches, in cells (a disc, as ranges are).

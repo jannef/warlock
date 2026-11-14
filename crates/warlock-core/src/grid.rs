@@ -156,6 +156,114 @@ impl<T> std::ops::IndexMut<Pos> for Grid<T> {
     }
 }
 
+/// A `width × height` grid that stores only a box of its cells: every cell outside the box
+/// holds `fill`. It reads as a [`Grid`] of the whole would (`get` is `None` only off the grid),
+/// and a write outside the box grows the box to take it in. For per-turn grids of a level of
+/// which only a view's worth is touched (`Perception::compute`), so a turn does not fill and
+/// copy the whole level's worth of cells.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct Window<T> {
+    width: i32,
+    height: i32,
+    /// The box's corners, inclusive; empty while `min.x > max.x`.
+    min: Pos,
+    max: Pos,
+    cells: Vec<T>,
+    fill: T,
+}
+
+impl<T: Copy> Window<T> {
+    /// A `width × height` grid of `fill`, storing the box `min..=max` (clipped to the grid).
+    pub fn new(width: i32, height: i32, min: Pos, max: Pos, fill: T) -> Self {
+        let mut window = Self {
+            width,
+            height,
+            min: Pos::new(0, 0),
+            max: Pos::new(-1, -1),
+            cells: Vec::new(),
+            fill,
+        };
+        window.cover(min, max);
+        window
+    }
+
+    fn in_bounds(&self, p: Pos) -> bool {
+        p.x >= 0 && p.y >= 0 && p.x < self.width && p.y < self.height
+    }
+
+    /// The index of `p` in the box's cells, if the box holds it.
+    fn slot(&self, p: Pos) -> Option<usize> {
+        (p.x >= self.min.x && p.y >= self.min.y && p.x <= self.max.x && p.y <= self.max.y).then(
+            || ((p.y - self.min.y) * (self.max.x - self.min.x + 1) + (p.x - self.min.x)) as usize,
+        )
+    }
+
+    /// Grows the box to hold `min..=max` too (clipped to the grid), keeping every cell's value.
+    pub fn cover(&mut self, min: Pos, max: Pos) {
+        let min = Pos::new(min.x.max(0), min.y.max(0));
+        let max = Pos::new(max.x.min(self.width - 1), max.y.min(self.height - 1));
+        if min.x > max.x || min.y > max.y {
+            return;
+        }
+        let (new_min, new_max) = if self.min.x > self.max.x {
+            (min, max)
+        } else {
+            (
+                Pos::new(self.min.x.min(min.x), self.min.y.min(min.y)),
+                Pos::new(self.max.x.max(max.x), self.max.y.max(max.y)),
+            )
+        };
+        if (new_min, new_max) == (self.min, self.max) {
+            return;
+        }
+        let side = new_max.x - new_min.x + 1;
+        let mut cells = vec![self.fill; (side * (new_max.y - new_min.y + 1)) as usize];
+        if self.min.x <= self.max.x {
+            let old = self.max.x - self.min.x + 1;
+            for y in self.min.y..=self.max.y {
+                let from = ((y - self.min.y) * old) as usize;
+                let to = ((y - new_min.y) * side + (self.min.x - new_min.x)) as usize;
+                cells[to..to + old as usize]
+                    .copy_from_slice(&self.cells[from..from + old as usize]);
+            }
+        }
+        (self.min, self.max, self.cells) = (new_min, new_max, cells);
+    }
+
+    pub fn get(&self, p: Pos) -> Option<&T> {
+        self.in_bounds(p)
+            .then(|| self.slot(p).map_or(&self.fill, |i| &self.cells[i]))
+    }
+
+    /// The cell at `p`, the box grown to hold it; `None` off the grid.
+    pub fn get_mut(&mut self, p: Pos) -> Option<&mut T> {
+        if !self.in_bounds(p) {
+            return None;
+        }
+        self.cover(p, p);
+        let i = self.slot(p).expect("the box holds a covered cell");
+        Some(&mut self.cells[i])
+    }
+}
+
+impl<T: Copy> std::ops::Index<Pos> for Window<T> {
+    type Output = T;
+
+    /// # Panics
+    /// If `p` is off the grid.
+    fn index(&self, p: Pos) -> &T {
+        self.get(p).expect("grid position out of bounds")
+    }
+}
+
+impl<T: Copy> std::ops::IndexMut<Pos> for Window<T> {
+    /// # Panics
+    /// If `p` is off the grid.
+    fn index_mut(&mut self, p: Pos) -> &mut T {
+        self.get_mut(p).expect("grid position out of bounds")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -186,5 +294,25 @@ mod tests {
         let g = Grid::from_vec(2, 2, vec![1, 2, 3, 4]);
         let order: Vec<_> = g.iter().map(|(p, v)| (p.x, p.y, *v)).collect();
         assert_eq!(order, vec![(0, 0, 1), (1, 0, 2), (0, 1, 3), (1, 1, 4)]);
+    }
+
+    #[test]
+    fn window_reads_as_a_whole_grid_and_grows_on_write() {
+        let mut w = Window::new(10, 8, Pos::new(2, 2), Pos::new(4, 3), 0u8);
+        assert_eq!(w.get(Pos::new(0, 0)), Some(&0));
+        assert_eq!(w.get(Pos::new(10, 0)), None);
+        w[Pos::new(3, 2)] = 5;
+        w[Pos::new(9, 7)] = 6;
+        w[Pos::new(0, 0)] = 7;
+        assert_eq!(
+            (w[Pos::new(3, 2)], w[Pos::new(9, 7)], w[Pos::new(0, 0)]),
+            (5, 6, 7)
+        );
+        assert_eq!(w[Pos::new(5, 5)], 0);
+        assert!(w.get_mut(Pos::new(-1, 3)).is_none());
+        let mut empty = Window::new(4, 4, Pos::new(9, 9), Pos::new(12, 12), false);
+        assert_eq!(empty.get(Pos::new(1, 1)), Some(&false));
+        empty[Pos::new(1, 1)] = true;
+        assert_eq!(empty.get(Pos::new(1, 1)), Some(&true));
     }
 }

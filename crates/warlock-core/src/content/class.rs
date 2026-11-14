@@ -17,7 +17,6 @@
 //! the order (adventurers first, then everyday folk) and a new class picks its place.
 
 use super::kit::{Kit, KitLineSpec, RandomScrolls, RandomScrollsSpec};
-use super::object::article;
 use super::race::RaceDef;
 use super::skill::{OptionalSkill, OptionalSpec};
 use super::weapon_skill::Ranked;
@@ -29,6 +28,7 @@ use crate::character::Gender;
 use crate::dice::Dice;
 use crate::skills::{self, SkillId};
 use crate::stats::{PerStat, Stat, adjustments};
+use crate::text::article;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 

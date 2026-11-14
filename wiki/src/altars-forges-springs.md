@@ -116,7 +116,7 @@ like no other and never stacks; from a stack, one is worked at a time. The anvil
 ### The makeshift anvil
 
 A [craftsperson](classes.md#field-forge) of level 32 can build an anvil anywhere with
-[Field forge](talents.md#talent-field-forge). Choose it in the
+[Field forge](classes.md#talent-field-forge). Choose it in the
 [abilities menu](abilities.md#the-abilities-menu) and pick a cell beside you. You need one
 [ingot](crafting.md) of any metal. The cell must be open floor with nothing on it: no one standing
 there, nothing lying there, no trap you know of, and no door, chest, stairs, grave, water, ice,

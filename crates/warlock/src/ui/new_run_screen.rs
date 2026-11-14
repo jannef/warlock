@@ -10,10 +10,9 @@
 //! mentions it (#256).
 
 use super::chargen_screen::ScenarioPick;
-use super::menu::{Hints, Nav, Panel, Press, wrap};
+use super::menu::{HINTS, Nav, Panel, Press, wrap};
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{TEXT, TEXT_DIM};
-use crate::input::Bindings;
 use crate::render::console::Console;
 use warlock_core::character::CharacterSpec;
 use warlock_core::content::{CampaignKind, Content};
@@ -170,7 +169,7 @@ impl NewRunScreen {
         ScreenAction::Stay
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         let field = match &self.seed {
             Seed::Field(text) => Some(text),
             Seed::Fresh(_) => None,
@@ -230,7 +229,7 @@ impl NewRunScreen {
                 TEXT_DIM,
             );
         }
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         let next = if self.creates_characters {
             "next"
         } else {
@@ -304,9 +303,7 @@ pub fn fresh_seed() -> u64 {
     #[cfg(not(target_arch = "wasm32"))]
     let noise = {
         use std::hash::BuildHasher;
-        let nanos = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_or(0, |d| d.as_nanos() as u64);
+        let nanos = crate::utc::since_epoch().as_nanos() as u64;
         nanos ^ std::collections::hash_map::RandomState::new().hash_one(nanos)
     };
     mix(noise) >> 32
@@ -332,7 +329,7 @@ mod tests {
     fn drawn(screen: &NewRunScreen) -> String {
         let mut console = Console::default();
         console.resize(80, 34);
-        screen.draw(&mut console, &Bindings::default());
+        screen.draw(&mut console);
         (0..console.rows() as i32)
             .map(|y| {
                 (0..console.cols() as i32)

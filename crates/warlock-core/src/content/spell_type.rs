@@ -5,7 +5,6 @@
 
 use super::spell::BurstIce;
 use super::{Content, ContentError, DamageTypeId, LightId, StatusId};
-use crate::damage::IMMUNE;
 use crate::ice;
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -164,8 +163,8 @@ pub(super) fn parse(
     Ok(types)
 }
 
-/// Every creature type of a tag a type's `immune_tags` names is immune to that type: on its
-/// `resist` line, so all that reads one knows (the blow, the status's dose, the Knowledge skill,
+/// Every creature type of a tag a type's `immune_tags` names is immune to that type: among its
+/// `immune_kinds`, so all that reads them knows (the blow, the status's dose, the Knowledge skill,
 /// the description, the wiki) and no creature file need say it. Once the creature types are in.
 pub(super) fn lay_immunities(content: &mut Content) {
     let rules: Vec<(DamageTypeId, Vec<String>)> = (content.spell_rules.iter())
@@ -175,9 +174,9 @@ pub(super) fn lay_immunities(content: &mut Content) {
         .collect();
     for (kind, tags) in rules {
         for def in &mut content.creatures {
-            if tags.iter().any(|tag| def.tags.contains(tag)) {
-                def.resist.retain(|&(k, _)| k != kind);
-                def.resist.push((kind, IMMUNE));
+            if tags.iter().any(|tag| def.tags.contains(tag)) && !def.immune_kinds.contains(&kind) {
+                def.immune_kinds.push(kind);
+                def.immune_kinds.sort();
             }
         }
     }

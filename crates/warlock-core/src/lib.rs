@@ -61,6 +61,7 @@ pub mod stats;
 pub mod status;
 pub mod talent;
 pub mod temperature;
+pub mod text;
 pub mod time;
 pub mod variant;
 pub mod weapon_skills;

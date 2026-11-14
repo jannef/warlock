@@ -312,12 +312,3 @@ fn named_monsters_go_by_their_proper_names() {
     let footpad = &w.state.actors[&of_type(&w, "footpad")];
     assert_eq!(w.called(footpad), "the footpad");
 }
-
-#[test]
-fn brother_osricks_file_keeps_the_note_on_his_spells() {
-    let file = include_str!("../../../../assets/campaigns/ascmearc/data/creatures/osrick.toml");
-    let note = "# TODO(creature spells): Brother Osrick is a necromancer who fights with a mace only because\n\
-                # creatures cannot cast yet. Once creature spellcasters exist, give him spells (raising the dead,\n\
-                # a curse, cold): docs/design/adventurers-guild.md §15.\n";
-    assert!(file.starts_with(note), "the note opens his file");
-}

@@ -218,7 +218,7 @@ fn the_dead_rise_after_two_minutes_as_undead_of_their_level() {
     );
     let line = format!(
         "The giant rat's corpse rises as {} {}!",
-        crate::content::article(&into.name),
+        crate::text::article(&into.name),
         into.name
     );
     assert!(said(&w, &line), "{:?}", w.messages());

@@ -278,9 +278,11 @@ reach `enchant_level` (`Effect::EnchantLevel`, `[[0, 1], [110, 12], [200, 12]]`,
   dark in your hands."; `World::spend_crystals`: one from each pick, a stack picked twice gives
   two), the item as it was;
   Unbind's "The Sharp long sword clings to its magic." **Warped** (a natural 2): the crystal is
-  spent and `World::harm_item(item, ItemHarm::Enchant)` ("warped", withstood by no material; an
-  item of Proof is spared as protected): "The long sword warps under your hands.", or, warped
-  already, destroyed ("... warps and falls apart.").
+  spent and `World::harm_item(item, ItemHarm::Enchant)` on one of the item set apart
+  (`set_apart`: of a stack of arrows, one alone warps, #1487; "warped", withstood by no material;
+  an item of Proof is spared as protected: "The work goes wrong, but no harm is done."): "The
+  long sword warps under your hands.", or, warped already, destroyed ("... warps and falls
+  apart.").
 - **`roll_affix_within`** (`magic/loot.rs`): `roll_affix` is its call with every family; the
   candidates (`candidates`, sorted by affix id) are narrowed to the categories `families` holds.
   `rolls_within` says whether there is any, drawing nothing.

@@ -1,5 +1,8 @@
 //! Warlock game binary.
 
+// Bevy systems routinely take many parameters and complex query types.
+#![allow(clippy::too_many_arguments, clippy::type_complexity)]
+
 mod capture;
 mod cli;
 mod game;
@@ -14,6 +17,7 @@ mod save;
 mod settings;
 mod storage;
 mod ui;
+mod utc;
 mod viewport;
 
 use bevy::app::ScheduleRunnerPlugin;

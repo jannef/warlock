@@ -6,6 +6,7 @@
 //! `world/seal.rs`): a seal's cost and time, and where the rare materials come from, with their
 //! chances, from `data/enchanting.toml` and `data/crystals.toml`.
 
+use super::text::capital;
 use std::fmt::Write as _;
 use warlock_core::combat::HIGHEST;
 use warlock_core::content::{Content, EnchantKind, RecipeUse};
@@ -158,12 +159,4 @@ pub(super) fn enchanting_seals(content: &Content) -> String {
         materials.join(" or "),
     );
     out
-}
-
-/// `text` with its first letter in capitals.
-fn capital(text: &str) -> String {
-    let mut chars = text.chars();
-    chars
-        .next()
-        .map_or_else(String::new, |c| c.to_uppercase().chain(chars).collect())
 }
