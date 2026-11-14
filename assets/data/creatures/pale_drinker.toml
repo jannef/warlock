@@ -20,7 +20,8 @@ hearing = 12
 weight = 1000
 stats = { strength = 10, dexterity = 15, toughness = 12, intelligence = 8, willpower = 16, presence = 12 }
 base_hp = 12
-resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50 }
+immune = ["poison"]
 corpse = false
 blood = "none"
 

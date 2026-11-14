@@ -36,7 +36,6 @@ pub(super) struct Circled {
     current: bool,
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(super) fn emit(
     game: Res<Game>,
     grid: Res<MapGrid>,

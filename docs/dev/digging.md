@@ -14,7 +14,7 @@ instead, `Action::UseTool`, `world/lamp.rs`, #643) needs `Actor::dig_tool` and t
 in Mining (#1391: the skill `data/mining.toml` names, no rule without that file; untrained,
 `dig::UNTRAINED`, "You do not know how to mine: that takes the Mining skill."). Both are one
 function, `dig::dig_refusal(actor, content)`, read by `start_dig` and by
-`PerceptionView::dig_refusal`, so `u` (`input.rs`) asks for no direction where the rules would
+`PerceptionView::dig_refusal`, so `u` (`input/play.rs`) asks for no direction where the rules would
 refuse and sends `dig:N` for the words instead; creatures never dig, so it is the player's rule
 only. Tests that dig train the player at Mining 0 (`World::learn_mining`, a `#[cfg(test)]` helper
 in `dig_tests.rs`: 0 adds no speed, so the times of before hold); a teacher sells it
@@ -30,7 +30,7 @@ Explosions call `World::blast(center, radius, blast, events)` (a burst trap with
 after its damage: the fireball's 1000): every breakable wall in the burst
 (line of sight from the center, computed before anything breaks) with hardness below the blast
 breaks (`Breach::Blast`; `perceive_events` says "The wall collapses!" for those the player sees).
-Perception sees and remembers the rubble like any terrain; `PerceptionView::ready_to_dig` and
+Perception sees and remembers the rubble like any terrain; `PerceptionView::dig_refusal` and
 `is_dug` (a visible wall with progress: look mode's "partly dug") are all presentation gets. The
 app bursts the new terrain's `toggle` particles (rubble's dust) on `WallBroken`, like a door's.
 Creatures do not dig. Times are in the wiki's generated `digging.md` tables.

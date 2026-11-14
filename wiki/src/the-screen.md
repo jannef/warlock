@@ -29,7 +29,7 @@ Below the map, the **status bar** shows, from left to right:
 - The [turn](time.md#what-takes-time) count and your position (column, row).
 - `Light`: how brightly your own cell is [lit](light.md#what-light-is), where 255 is full light (see
   [Light](light.md)).
-- Your [vision type](vision.md#the-four-types) and the run's seed.
+- Your [vision type](vision.md#the-four-types).
 
 At its right end, `? controls` reminds you where the keys are. It names the key as you bound it
 (`Esc menu` when the controls have no key), and so does the welcome line at the start of a new
@@ -38,7 +38,7 @@ run.
 When the window is too narrow for everything, the status bar leaves out the least important parts
 first:
 
-1. the seed, your position, your vision, the light at your feet, and the turn count;
+1. your position, your vision, the light at your feet, and the turn count;
 2. then the moon's [phase](sun.md#phases), first shortened to its picture, then dropped;
 3. then the temperature, the region, the year of the date, and then the date.
 
@@ -116,9 +116,9 @@ back to where you opened the first one.
 The number keys do nothing during play. On a screen that is a step of a page, such as choosing
 what goes in a slot, they keep their own meaning. Every page except the Magic page also has its
 own key (`@`, `I`, `i`, `A`) that opens and closes it; you reach the Magic page by its number
-from another page. All these keys can be rebound in the Controls screen, as "Info page 1" to
-"Info page 9", "Next info page", and "Previous info page". They are separate from the play keys,
-so `Tab` can be both "next target" while aiming and "next info page" on an info screen.
+from another page. The digits and `Tab` are fixed; only "Previous info page" can be given a key
+in the Controls screen. They are separate from the play keys, so `Tab` can be both "next target"
+while aiming and "next info page" on an info screen.
 
 ## Death
 

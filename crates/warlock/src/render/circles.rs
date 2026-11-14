@@ -78,9 +78,9 @@ pub const LINE_GLOW_SIGMA: f32 = 0.045;
 /// Seconds between one glint of a glyph and its next, for its first and its second glint (the
 /// glow atlas's blue and alpha), and how sharp a glint is: the share of its beat it shows grows
 /// smaller as this grows (`motion` on; none without it). The shader's (the tests check them).
-#[allow(dead_code)]
+#[cfg(test)]
 pub const GLINT_PERIODS: [f32; 2] = [5.3, 7.1];
-#[allow(dead_code)]
+#[cfg(test)]
 pub const GLINT_SHARP: f32 = 24.0;
 
 /// A glint's phase (0 to 1): of the actor's `seed` and the glint `g` (0 or 1), so two actors'

@@ -250,7 +250,8 @@ impl World {
 
     /// Works turn after turn until the setting is done or something stops it (module docs): its
     /// last turn cut short to end exactly when its time is up.
-    pub(super) fn set(&mut self, work: Setting, events: &mut Vec<Event>) {
+    pub(super) fn set(&mut self, mut work: Setting, events: &mut Vec<Event>) {
+        let on = self.work_on(&[Some(work.item), Some(work.gem)]);
         let until = self.state.time + Duration::seconds(u64::from(work.seconds));
         let turn = self.price_of(self.state.player, ActionKind::Craft);
         let ended = self.keep_at(
@@ -260,7 +261,13 @@ impl World {
         );
         match ended {
             Ended::Died => {}
-            _ if self.state.time >= until => self.gem_set(work),
+            _ if self.state.time >= until => match self.worked_on(&on).as_deref() {
+                Some(&[Some(item), Some(gem)]) => {
+                    (work.item, work.gem) = (item, gem);
+                    self.gem_set(work);
+                }
+                _ => self.say("You have nothing left to work on."),
+            },
             Ended::Came(came) => {
                 let text = format!("{}; you put down your work.", self.came_line(came));
                 self.say(text);

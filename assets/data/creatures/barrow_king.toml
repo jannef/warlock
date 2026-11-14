@@ -30,7 +30,7 @@ stats = { strength = 25, dexterity = 20, toughness = 29, intelligence = 31, will
 base_hp = 52
 skills = { concentration = 136, spellcraft = 141 }
 natural = { defence = 3, protection = 4, name = "dead flesh" }
-resist = { poison = 100 }
+immune = ["poison"]
 weapon_skills = { long_blades = 7, duelist = 1 }
 corpse = false
 blood = "none"

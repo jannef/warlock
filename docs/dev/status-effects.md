@@ -260,5 +260,5 @@ disease is treated against its own `difficulty`: made, `streak + 1` while that s
 `disease_turn` uses too), else `left` raised to the disease's interval (within
 `longest_wait`, so `is_valid_for` holds). The ability is
 `Ability::Heal` (`Aim::Ailment`, `Unavailable::NothingToTreat`); the game's choice of what to
-treat is the one dialog (`input.rs::treat_dialog`). Tests: `world/heal_tests.rs`, the parse
+treat is the one dialog (`ui/step_dialogs.rs::treat_dialog`). Tests: `world/heal_tests.rs`, the parse
 cases in `content/status.rs`.

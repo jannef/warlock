@@ -197,7 +197,8 @@ default. The names there are:
 
 The key uses the ability just as the menu would, asking for a direction or a place if it needs
 one. Without a shield, the bash key says so at once and takes no time. `a` ("Abilities") and `X`
-("Use the last ability again") can be rebound like every key.
+("Use the last ability again") can be rebound like every key. Either of them also uses an ability
+that is being aimed at a place, as `Enter` does.
 
 See also: [Using your skills](skill-uses.md), [Classes](classes.md#levels), and
 [Resources](resources.md).

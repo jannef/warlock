@@ -1,8 +1,9 @@
 //! Damage types in the world (spec §8 "Damage types"): a blow does the kind that is better
 //! against its target and is said with its verb, Protection stands by kind and never against an
-//! element, resistances add up across what a creature is and wears (capped short of immunity),
-//! added damage rides along unsoaked, only cuts and stabs bleed, poison meets its resistance as a
-//! dose, the plunge is cold, spells and traps are typed, and fights with resistances replay.
+//! element, resistances add up across what a creature is and wears (at most 75 counting, immunity
+//! apart), added damage rides along unsoaked, only cuts and stabs bleed, poison meets its
+//! resistance as a dose, the plunge is cold, spells and traps are typed, and fights with
+//! resistances replay.
 
 use super::*;
 use crate::action::{AttackKind, Event};
@@ -38,7 +39,7 @@ hearing = 20
 weight = 9000
 base_hp = 200
 stats = { strength = 1 }
-resist = { fire = 100, poison = 100 }
+immune = ["fire", "poison"]
 attack = { damage = "1d2", damage_type = "fire", name = "lick", verb = "scorches" }
 
 [[creature]]
@@ -308,7 +309,7 @@ fn protection_stands_by_kind_and_never_against_an_element() {
 }
 
 #[test]
-fn resistances_add_up_across_what_one_is_and_wears_and_cap_short_of_immunity() {
+fn resistances_add_up_across_what_one_is_and_wears_and_count_capped_short_of_immunity() {
     let mut w = world();
     let player = w.state.player;
     let cold = kind("cold");
@@ -336,7 +337,11 @@ fn resistances_add_up_across_what_one_is_and_wears_and_cap_short_of_immunity() {
             ),
         ],
     );
-    assert_eq!(w.resistances_of(player).get(Some(cold)), MAX_RESISTANCE);
+    // The total is kept uncapped (#1620); what counts stops at 75.
+    let worn = w.resistances_of(player);
+    assert!(worn.total(Some(cold)) > MAX_RESISTANCE, "{worn:?}");
+    assert_eq!(worn.get(Some(cold)), MAX_RESISTANCE);
+    assert_eq!(w.resisted(player, Damage::new(20, Some(cold))), 5);
     // Only what a creature is makes it immune: the salamander, whatever it wears or lacks.
     let salamander = actor_of(&w, "salamander");
     assert_eq!(w.resistances_of(salamander).get(Some(kind("fire"))), IMMUNE);

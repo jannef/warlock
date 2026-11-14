@@ -84,6 +84,11 @@ jobs:
       # re-parses the shared content, so the step took 21 min against about 13.5 (#1612).
       - name: Test
         run: cargo test --workspace --locked
+        env:
+          # insta lists every snapshot file a test reads here, for the orphan check (#1537).
+          INSTA_SNAPSHOT_REFERENCES_FILE: ${{ runner.temp }}/insta-references.txt
+      - name: No orphan snapshot files
+        run: .github/scripts/orphan-snapshots.sh "$RUNNER_TEMP/insta-references.txt"
 
   # The steps that need the game and xtask built but not the tests: beside `linux`, not after it.
   screens:

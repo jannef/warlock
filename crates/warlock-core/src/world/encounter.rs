@@ -464,16 +464,11 @@ impl World {
             .flat_map(|t| &t.entries)
             .filter(|e| self.when_holds(&e.when, here))
             .collect();
-        let total: u32 = entries.iter().map(|e| e.weight).sum();
-        if total == 0 {
+        // The stream is made on its first draw: none while nothing weighs anything.
+        if entries.iter().all(|e| e.weight == 0) {
             return;
         }
-        let mut r = self.encounters_rng().below(total);
-        let Some(entry) = entries.into_iter().find(|e| {
-            let hit = r < e.weight;
-            r = r.saturating_sub(e.weight);
-            hit
-        }) else {
+        let Some(&entry) = self.encounters_rng().weighted(&entries, |e| e.weight) else {
             return;
         };
         let side = self.arrival_side();
@@ -582,6 +577,7 @@ impl World {
 
     /// The ids of the entries a roll on the player's overworld cell could draw now: the
     /// matching tables' entries whose own `when` holds (dev; tests).
+    #[cfg(test)]
     pub fn encounter_entries_here(&self) -> Vec<String> {
         let content = self.content.clone();
         match self.here(self.player_pos()) {
@@ -662,7 +658,7 @@ impl World {
         let Some(spawning) = (content.dungeon(&draw.pool)).and_then(|b| b.spawning.as_ref()) else {
             return Vec::new();
         };
-        let player = content.creature_id("player");
+        let player = content.ids().player;
         let fit = |list: Vec<crate::content::danger::Candidate>| -> Vec<_> {
             (list.into_iter())
                 .filter(|&(c, ..)| !content.creature(c).unique)

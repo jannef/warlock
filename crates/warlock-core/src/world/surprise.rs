@@ -349,7 +349,7 @@ impl World {
         let ease = if self.surprise_status() == Some(status) {
             actor.talent_mods(&self.content).surprise_ease
                 + actor.skill_effect(&self.content, Effect::SurpriseEase)
-        } else if self.content.status_id(super::footing::STAGGERED) == Some(status) {
+        } else if self.content.ids().staggered == Some(status) {
             actor.skill_effect(&self.content, Effect::SteadyEase)
         } else {
             return cost;

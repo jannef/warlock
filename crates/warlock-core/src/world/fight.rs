@@ -1506,6 +1506,7 @@ impl World {
     /// off hand's weapon, or not (a blow, a kick), drawing on (and training) `skills`, said in
     /// the `words` of the kind of damage it did, with its noise if `noisy` (the first blow of
     /// an attack): see [`World::player_attacks`]. Returns the blow.
+    #[allow(clippy::type_complexity)]
     pub(super) fn player_strikes(
         &mut self,
         target: ActorId,

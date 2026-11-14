@@ -150,7 +150,7 @@ impl Craft {
 
 /// What is said of a failed attempt the item withstands (`item_damage.rs`: a protected item, or
 /// one of a `proof` material).
-const WITHSTOOD: &str = "The work goes wrong, but no harm is done.";
+pub(super) const WITHSTOOD: &str = "The work goes wrong, but no harm is done.";
 
 /// Whether `stack` is of a kind an anvil works at all: a weapon, a missile weapon, armour, or a
 /// shield (not ammunition, rings, or amulets).
@@ -330,7 +330,8 @@ impl World {
 
     /// Works turn after turn until the attempt is done or something stops it (module docs): its
     /// last turn cut short to end exactly when its time is up.
-    pub(super) fn temper(&mut self, work: Tempering, events: &mut Vec<Event>) {
+    pub(super) fn temper(&mut self, mut work: Tempering, events: &mut Vec<Event>) {
+        let on = self.work_on(&[Some(work.item)]);
         let until = self.state.time + Duration::seconds(u64::from(work.seconds));
         let turn = self.price_of(self.state.player, work.craft.kind());
         let ended = self.keep_at(
@@ -340,7 +341,13 @@ impl World {
         );
         match ended {
             Ended::Died => {}
-            _ if self.state.time >= until => self.tempered(work),
+            _ if self.state.time >= until => match self.worked_on_one(&on) {
+                Some(item) => {
+                    work.item = item;
+                    self.tempered(work);
+                }
+                None => self.say("You have nothing left to work on."),
+            },
             Ended::Came(came) => {
                 let text = format!(
                     "{}; you put down the {}.",

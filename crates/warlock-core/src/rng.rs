@@ -3,28 +3,96 @@
 //! Every stream is a ChaCha8 generator (`rand_chacha`; its output is specified, so it is identical
 //! on every platform) seeded from a 64-bit key: FNV-1a over the run seed and a stream label.
 //!
+//! **Which stream a new draw takes** (`docs/dev/merging.md`, "Random streams"): `gameplay` is
+//! shared by every rule that rolls in play, so a draw added to it or taken from it shifts every
+//! later roll of the run (replays, insta snapshots, and golden walks of unrelated features). A
+//! self-contained new feature draws from a keyed stream of its own instead: a constructor here
+//! (`Rng::grade`), a labelled [`Rng::stream`] made where it is used and never kept
+//! (`appraise/<hour>`), or a keyed draw with no generator at all (`weather::draw`). High-churn
+//! users of `gameplay` (outcome tables, eating) move to their own streams as they are touched,
+//! each move in a PR of its own that says the run's rolls change.
+//!
+//! Generation, per level (none kept; derived on demand, so a level depends only on the run seed
+//! and its id, never on the order levels are visited or on gameplay):
+//!
+//! | Stream | Label |
+//! |---|---|
+//! | Map | `map/<level id>` (retry *k*: `map/<level id>/<k>`) |
+//! | An endless branch's floor seed | key `endless/<floors made>` (a seed, not a stream) |
+//! | Rooms floor or caves on an endless floor | `floor_kind/<level id>` |
+//! | A vault's phases | `vault_phases/<vault id>` |
+//! | Deep water in a cave | `deep_water/<level id>` |
+//! | Ore veins | `veins/<level id>` |
+//! | Hidden traps | `traps/<level id>` |
+//! | Secret doors | `secrets/<level id>` |
+//! | Loot | `loot/<level id>` |
+//! | A wand's rung in a level's, a fixed kit's, or a pack's objects | `objects/<level id>`, `objects/actor/<id>`, `objects/pack` |
+//! | Vault monsters | `vault_monsters/<level id>` |
+//! | Initial population (and its leavings) | `population/<level id>` |
+//! | A teeming den's sleepers and hoards | `swarm/<level id>` |
+//! | Vault chests | `vault_chests/<level id>` |
+//! | Chests | `chests/<level id>` |
+//! | Treasure rooms | `treasure/<level id>` |
+//! | Creatures' gear | `gear/<level id>` |
+//! | Animated creatures' bodies | `animated/<level id>` |
+//! | Gravestones (and which fallen they name) | `graves/<level id>`, `graves/<level id>/fallen` |
+//! | Which petrified dead name its statues | `statue-names/<level id>` |
+//!
+//! Per actor or object (derived on demand, never kept):
+//!
+//! | Stream | Label |
+//! |---|---|
+//! | What a creature drops when it dies | `drop/<actor id>` |
+//! | The materials a dead creature leaves | `materials/<actor id>` |
+//! | A creature's gear, placed in play | `gear/<actor id>` |
+//! | An animated creature's body, placed in play | `animated/<actor id>` |
+//! | A creature's court (a fey's faction) | `court/<actor id>` |
+//! | A creature's grade | `grade/<actor id>` |
+//! | Gear's condition | `condition/<key>` |
+//! | A beast's name | `companion/name/<actor id>` |
+//! | A trader's wares | `wares/<actor id>` |
+//!
+//! Kept in [`crate::WorldState`] (saves continue them):
+//!
 //! | Stream | Label | Kept |
 //! |---|---|---|
-//! | Map generation, per level | `map/<level id>` (retry *k*: `map/<level id>/<k>`) | never; derived on demand |
-//! | Hidden traps, per generated level | `traps/<level id>` | never |
-//! | A generated level's loot | `loot/<level id>` | never; derived on demand |
-//! | A generated level's chests and what they hold | `chests/<level id>` | never; derived on demand |
-//! | What a creature drops when it dies | `drop/<actor id>` | never; derived on demand |
+//! | Gameplay | `gameplay` | always |
+//! | Training marks' chances (skills) | `training` | always |
+//! | What level-ups roll (skill rolls, stat checks) | `levels` | from the first draw |
+//! | What an area spell ruins | `ruin` | from the first draw |
+//! | Overworld encounters | `encounters` | from the first draw |
 //! | What comes to a level with a danger (spec §7 "Danger levels") | `spawn/<level id>` | in the level's state, from its making |
-//! | A generated level's creatures' gear | `gear/<level id>` | never; derived on demand |
-//! | A creature's gear, placed in play | `gear/<actor id>` | never; derived on demand |
-//! | Gameplay | `gameplay` | in [`crate::WorldState`], so saves continue it |
-//! | Training marks' chances (skills) | `training` | in [`crate::WorldState`] |
-//! | What level-ups roll (skill rolls, stat checks) | `levels` | in [`crate::WorldState`], from the first draw |
-//! | The stat gender "other" raises | `character/gender` | never; derived on demand |
-//! | A new character's age and birthday | `character/birth/<race>` | never |
-//! | A new character's dice | `character/rolls/<race>,<gender>,<class>` | never |
-//! | A chosen character's background story, per chapter | `background/<race>,<gender>,<class>/<chapter>` | never |
 //!
-//! A level's map therefore depends only on the run seed and its id, never on the order in which
-//! levels are visited or on gameplay; a new character only on the run seed and the choices
-//! (`crate::character`). Visual randomness in the app uses its own generator and never
-//! touches these streams. All helpers are integer-only: no floating point decides anything.
+//! In play, keyed by the moment (made where used, never kept):
+//!
+//! | Stream | Label |
+//! |---|---|
+//! | A rolled quest's draw | `quest/<quest id>` |
+//! | Appraising | `appraise/<hour>` |
+//! | A gatekeeper's free blow | `gatekeeper/<keeper>/<mover>/<seconds>` |
+//! | Whether food is told stale | `freshness/<object>/<died>/<hour>` |
+//! | An investment's week | `invest/<week>` |
+//! | An aristocrat's stipend | `stipend/<level>` |
+//! | A patron's gift | `patron/<taken>` |
+//! | Scroll labels | `identification` |
+//! | Weather, one-liners' order, mutters | keyed draws (`weather::draw`): `weather`, `weather/start`, `line…`, `mutter…` |
+//!
+//! A new character (derived on demand, never kept; only the run seed and the choices):
+//!
+//! | Stream | Label |
+//! |---|---|
+//! | The stat gender "other" raises | `character/gender` |
+//! | Age and birthday | `character/birth/<race>` |
+//! | Dice | `character/rolls/<race>,<gender>,<class>` |
+//! | Name | `character/name/<race>,<gender>/<draw>` |
+//! | Weapon skills, styles, optional skills, a skill choice | `character/weapon-skills/<spec>`, `character/styles/<spec>`, `character/optional-skills/<spec>`, `character/skill-choice/<spec>` |
+//! | Random talents | `character/talents/<spec>` |
+//! | Starting kit, family wealth, father's sword, trade | `character/kit/<spec>`, `character/family-wealth/<spec>`, `character/fathers-sword/<spec>`, `character/trade/<spec>/<skill>` |
+//! | Starting companion, familiar | `companion/<spec>`, `familiar/<spec>` |
+//! | Background story, per chapter | `background/<race>,<gender>,<class>/<chapter>` |
+//!
+//! Visual randomness in the app uses its own generator and never touches these streams. All
+//! helpers are integer-only: no floating point decides anything.
 
 use crate::world::fnv1a;
 use rand_chacha::ChaCha8Rng;
@@ -247,6 +315,24 @@ impl Rng {
         (!items.is_empty()).then(|| &items[self.index(items.len())])
     }
 
+    /// One of `items` drawn by `weight`, the one weighted draw of the core: a single
+    /// `below(total)` of the summed weights, then a walk to the item it falls in. `None`, with no
+    /// draw made, when they weigh nothing in all or their sum overflows a `u32` (the loaders
+    /// refuse such tables: [`weight_sum`]).
+    pub fn weighted<'a, T>(&mut self, items: &'a [T], weight: impl Fn(&T) -> u32) -> Option<&'a T> {
+        let total = weight_sum(items.iter().map(&weight))?;
+        if total == 0 {
+            return None;
+        }
+        let mut left = self.below(total);
+        items.iter().find(|item| {
+            let w = weight(item);
+            let here = left < w;
+            left = left.saturating_sub(w);
+            here
+        })
+    }
+
     /// Fisher–Yates shuffle.
     pub fn shuffle<T>(&mut self, items: &mut [T]) {
         for i in (1..items.len()).rev() {
@@ -255,6 +341,15 @@ impl Rng {
         }
     }
 }
+
+/// The sum of `weights`, or `None` when it overflows a `u32`: what [`Rng::weighted`] draws
+/// below, and what a loader checks a table of weights with (an overflow is a content error).
+pub fn weight_sum(weights: impl IntoIterator<Item = u32>) -> Option<u32> {
+    weights.into_iter().try_fold(0u32, u32::checked_add)
+}
+
+/// A loader's words for a table whose weights overflow ([`weight_sum`]).
+pub const WEIGHTS_OVERFLOW: &str = "the weights add up to more than 4294967295";
 
 /// The 64-bit key of stream `label` in the run with `run_seed`: FNV-1a over the seed's
 /// little-endian bytes, a `0xff` separator, and the label's UTF-8 bytes.
@@ -306,6 +401,37 @@ mod tests {
         assert_ne!(a[0], retry.next_u32());
         assert_ne!(a[0], other_seed.next_u32());
         assert_ne!(Rng::gameplay(7), Rng::map(7, "gameplay", 0));
+    }
+
+    /// The weighted draw is one `below(total)` and a walk, as the hand-written draws it replaced
+    /// were (#1594): the same pick from the same stream; nothing weighing anything, or a sum past
+    /// a `u32`, draws nothing.
+    #[test]
+    fn weighted_draws_once_by_weight() {
+        let items = [("a", 3), ("b", 0), ("c", 5), ("d", 2)];
+        for seed in 0..200 {
+            let mut walk = Rng::gameplay(seed);
+            let mut left = walk.below(10);
+            let want = items.iter().find(|&&(_, w)| {
+                let here = left < w;
+                left = left.saturating_sub(w);
+                here
+            });
+            let mut rng = Rng::gameplay(seed);
+            assert_eq!(rng.weighted(&items, |&(_, w)| w), want);
+            assert_eq!(rng, walk, "one draw, as the walk's");
+        }
+        let untouched = Rng::gameplay(1);
+        let mut rng = untouched.clone();
+        assert_eq!(rng.weighted(&[("a", 0), ("b", 0)], |&(_, w)| w), None);
+        assert_eq!(
+            rng.weighted(&[("a", u32::MAX), ("b", 1)], |&(_, w)| w),
+            None
+        );
+        assert_eq!(rng.weighted::<(&str, u32)>(&[], |&(_, w)| w), None);
+        assert_eq!(rng, untouched);
+        assert_eq!(weight_sum([u32::MAX, 0]), Some(u32::MAX));
+        assert_eq!(weight_sum([u32::MAX, 1]), None);
     }
 
     /// Pins the algorithm: if this changes, every seed produces a different run.

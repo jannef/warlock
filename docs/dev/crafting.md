@@ -349,7 +349,7 @@ that works as one that works as another is refused). It is read in one place,
 `world/craft.rs::station_beside` (every recipe's `lack`, so `start_making` and the screen; the
 "You set to work on the dagger at the makeshift anvil." line names the cell's own terrain) and
 `Content::offer` (what a feature offers, so Temper's `anvil_beside`, `anvil_needs`, and the
-walk-in, `input.rs::step_screen`, need no change). Mining finds nothing in a terrain that works as
+walk-in, `ui/step_dialogs.rs::step_screen`, need no change). Mining finds nothing in a terrain that works as
 a station (`world/mine.rs`).
 
 The one such terrain is `makeshift_anvil`, which the craftsperson's **Field forge** (level 32,
@@ -377,7 +377,7 @@ a recipe directory, before `Ability::use_of` and `Ability::Skill`, so a professi
 usable yet" row (Jewelcraft's went with Cut). `had_by`: trained in the skill (#1387: no recipe is
 open to the untrained). The former `Ability::Temper`, `Ability::Whittle`, and `Ability::Fletch`
 are gone; `Offer::Temper` stays: the anvil is the Temper recipe's station, and walking into it
-(`input.rs::step_screen`, after `step_dialog` asks nothing) opens Metalcraft's profession screen,
+(`ui/step_dialogs.rs::step_screen`, after `step_dialog` asks nothing) opens Metalcraft's profession screen,
 `ScreenName::Profession(skill)` of Temper's recipe's skill, at once, with no dialog and no time,
 for one who has that row (the owner, #1387). Untrained, the step goes to the rules:
 `travel.rs::player_moves` refuses it, taking no time, with `World::anvil_needs`' "You need
@@ -486,13 +486,16 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
 - **The work** (`World::make`): `keep_at` for the recipe's `seconds` (`fletch::fletcher_seconds`:
   Fletcher's share for the arrows) in `ActionKind::Craft` turns, watched on the overworld as a
   forage is (`Watch::Forage`); stopped early, "...; you put down your work." and nothing is spent. Done (`crafted`),
-  the plan is resolved again from the pack ("You have nothing left to work with."), then the
+  the picks are found again and the plan is resolved again from the pack ("You have nothing
+  left to work with."; "Long work's stacks found again" below), then the
   check: two gameplay draws (`combat::roll_natural`), `craft_modifier` = the profession's stat
   modifier (the recipe's profession's `stat`, above: Strength for Metalcraft, Dexterity for
   Woodcraft's, a row's own where it names one) +
   `Actor::skill_effect_of(skill, Effect::Craft)` (that skill's benefit alone, the items' skill
   bonus counted; Metalcraft's `craft` curve is Temper's, +8 at 100, +12 at 200) +
-  `TalentMods::check(stat)` (+ Fletcher's `check` for a `count = "fletch"` recipe), against
+  `TalentMods::check(stat)` (+ Fletcher's `check` for a `count = "fletch"` recipe) +
+  `World::binding_boon(skill)` (a bound lure's boon: Jewelcraft's rings and amulets in Gimmwīc,
+  #1490), against
   `difficulty` + the main material's `work`. A graded recipe (a count of 1) goes on to its grade;
   a counted one to "Counted recipes" below.
 - **The grade** (`grade(settings, natural, margin)`, `Grade`): below 0 `Failed`, from `fine`
@@ -513,6 +516,19 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
   have the `craft` benefit (salvage reads it too), and Metalcraft, Woodcraft, Jewelcraft (for
   Cut), and Alchemy the `craft` mark (Woodcraft's from P5b); `skill_effect_of` keeps one profession's benefit
   from counting for another's recipe.
+
+## Long work's stacks found again
+
+Every long work on stacks of the pack (`craft_make.rs` `make`, Temper and Whittle, Cut, Set,
+salvage, Make do and mend, Decipher, the enchanting recipes) names them by position as it
+begins, and a stack gone while it works (food rotting away, which does not stop it) shifts every
+later one (#1564). So each keeps a copy of its stacks as its time begins (`World::work_on`,
+`world/work_on.rs`; only the enchanting picks that are positions, `Enchanting::in_pack`) and finds
+those very stacks when it ends (`World::worked_on`: at the old position if still there, else the
+first stack equal to it); any gone or changed ends the work on nothing ("You have nothing left to
+work on.", Decipher's "...to make out.", a recipe's "...to work with."). Tests: the
+`a_stack_gone_ahead_of_the_work_never_turns_it_on_the_next` cases in `salvage_tests.rs` and
+`enchant_tests.rs` (a loaf rotting away ahead of the item).
 
 ## Brewing
 
@@ -954,7 +970,8 @@ The craftsperson's passive at level 60 (#1426; the craftsperson design §7.10): 
   most any `makers_mark` effect says, cached at load), so a marked item keeps its worth whoever
   carries it.
 - **Kept**: `Worked::damage` and `repair`, Temper, and Make do and mend never touch the flag.
-- **Read elsewhere**: the patron's `bonus` (`world/patron.rs`, `PatronRules::paid`), the capacity
+- **Read elsewhere**: the patron's pay through the worth alone (`world/patron.rs`,
+  `PatronRules::paid`; no bonus of its own on top, #1489), the capacity
   (+1, `magic/capacity.rs`), the description's line (`magic/describe.rs::mark_line`: "It bears
   {name}'s mark." with the character's name from `PerceptionView::describe_item`, "It bears its
   maker's mark." from the nameless `lines`), the dev dump's ` (marked)`.
@@ -977,7 +994,7 @@ fixtures of every new field and the old shape unchanged, each check's refusal, t
 file's bands and refusals), `world/craft_tests.rs` (rows by training and place, each reason,
 `craft:` refused with no time, the abilities menu's rows, Jewelcraft's rows), `world/cut_tests.rs` (Cutting a gem), `ability.rs`'s registry test (the
 profession rows in their skills' places, no Temper, Whittle, or Fletch row; `world/fletch_tests.rs`
-for the counted recipes), `input.rs`'s
+for the counted recipes), `ui/step_dialogs.rs`'s
 walk-in test (the anvil still asks, opening the Temper list), `ui/profession_screen.rs` (a
 built-in row's action, a greyed row), `world/set_tests.rs` (Setting a gem, Jewellery), and the
 text snapshots `profession-*` and `set-pick-*` in

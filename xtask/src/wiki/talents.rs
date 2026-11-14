@@ -1078,10 +1078,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             .to_string(),
         TalentEffect::MakersMark { worth_percent } => format!(
             "the arms, armour, and jewellery you [make](crafting.md#the-recipes) bear your \
-             mark, whatever their grade: each is worth {worth_percent}% more, \
-             [your patron](patron.md) pays {}% more for one, and it holds one \
-             [enchantment](magic-items.md#capacity) more",
-            content.patron().map_or(0, |p| p.bonus)
+             mark, whatever their grade: each is worth {worth_percent}% more (and \
+             [your patron](patron.md) pays for that worth), and it holds one \
+             [enchantment](magic-items.md#capacity) more"
         ),
         TalentEffect::CraftTimePercent { value } => format!(
             "every craft takes {value}% of its time: [recipes](crafting.md#the-recipes) \

@@ -21,7 +21,8 @@ hearing = 8
 weight = 40000
 stats = { strength = 17, dexterity = 6, toughness = 21, intelligence = 2, willpower = 20, presence = 2 }
 base_hp = 38
-resist = { fire = -50, poison = 100 }
+resist = { fire = -50 }
+immune = ["poison"]
 on_eat = { message = "Dust and resin.", vomit = 80, harm = "1d4" }
 blood = "#5a4a30"
 [creature.attack]

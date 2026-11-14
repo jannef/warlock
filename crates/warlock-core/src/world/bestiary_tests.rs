@@ -547,7 +547,11 @@ fn the_fen_dead_and_the_mud_shrug_off_blows() {
     for kind in ["slashing", "piercing", "bludgeoning"] {
         assert_eq!(resist("ghost", kind), 50, "{kind}");
     }
-    assert_eq!(resist("drowned", "poison"), 100);
+    let immune = |id: &str, kind: &str| {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        (def.immune_kinds).contains(&CONTENT.damage_type_id(kind).expect(kind))
+    };
+    assert!(immune("drowned", "poison"));
     let hide = |id: &str| def(id).natural.as_ref().map(|h| (h.defence, h.protection));
     assert_eq!(hide("mud_golem"), Some((0, 5)));
     // Scales are a bony body: level 6 ÷ 6 (#563).
@@ -609,9 +613,13 @@ fn the_fire_things_shrug_off_fire_and_the_cold_cracks_them() {
             .map_or(0, |(_, r)| *r)
     };
     assert_eq!(resist("ember_beetle", "fire"), 50);
-    assert_eq!(resist("fire_salamander", "fire"), 100);
-    assert_eq!(resist("cinder_elemental", "fire"), 100);
-    assert_eq!(resist("fire_drake", "fire"), 100);
+    let immune = |id: &str, kind: &str| {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        (def.immune_kinds).contains(&CONTENT.damage_type_id(kind).expect(kind))
+    };
+    for id in ["fire_salamander", "cinder_elemental", "fire_drake"] {
+        assert!(immune(id, "fire"), "{id}");
+    }
     assert!(resist("magma_crawler", "cold") < 0);
     assert!(resist("troll", "fire") < 0);
     assert_eq!(resist("ash_wraith", "cold"), 50);

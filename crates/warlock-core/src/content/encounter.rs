@@ -12,6 +12,7 @@
 use super::{Content, ContentError, CreatureId, Landscape};
 use crate::daylight::DayPhase;
 use crate::dice::Dice;
+use crate::rng::{WEIGHTS_OVERFLOW, weight_sum};
 use crate::weather::Weather;
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -532,6 +533,13 @@ pub(super) fn parse<'a>(
             {
                 return Err(err(format!("`replaces`: no other table `{r}`")));
             }
+        }
+        // A draw may take in every table of the campaign at once.
+        let all = (tables.iter())
+            .filter(|o| o.campaign == t.campaign)
+            .flat_map(|o| &o.entries);
+        if weight_sum(all.map(|e| e.weight)).is_none() {
+            return Err(err(WEIGHTS_OVERFLOW.into()));
         }
         for e in &t.entries {
             let twice = (tables.iter())

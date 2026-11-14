@@ -26,7 +26,8 @@ base_hp = 112
 # A hit may knock the player's weapon from their hand (#1166; the swordsman he was in life).
 disarms = { chance = 15, difficulty = 21 }
 natural = { defence = 3, protection = 0, name = "dead flesh" }
-resist = { cold = 50, poison = 100 }
+resist = { cold = 50 }
+immune = ["poison"]
 weapon_skills = { long_blades = 6, great_blades = 10 }
 on_eat = { message = "Grave-cold meat, kept in black iron.", vomit = 80, harm = "1d4" }
 blood = "#202838"

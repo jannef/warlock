@@ -162,7 +162,7 @@ executable's folder; on macOS next to the `.app`, never inside it), then the pla
 (`directories`, app name "warlock"; macOS `~/Library/Application Support/warlock`). Portable
 layout `warlock-data/{config,data,logs}`; `Locations::prepare` creates it and warns (never
 fails) when it is unwritable. `resolve` is pure over `Inputs` and tested without a filesystem; new
-files go in the folder `Locations` gives (`keymaps_dir()` for key map files; `saves_dir()` and
+files go in the folder `Locations` gives (`saves_dir()` and
 `snapshots_dir()`, from `paths::SAVES_DIR` and `SNAPSHOTS_DIR`, which the save store names its files
 under). `warlock --paths`
 prints the report and exits; `warlock --move-data native|portable [DIR] [--dry-run]`

@@ -29,7 +29,8 @@ stats = { strength = 26, dexterity = 22, toughness = 30, intelligence = 32, will
 base_hp = 58
 skills = { concentration = 148, spellcraft = 153 }
 natural = { defence = 3, protection = 4, name = "fur" }
-resist = { acid = 100, poison = 100, fire = 50, cold = 50, electricity = 50 }
+resist = { fire = 50, cold = 50, electricity = 50 }
+immune = ["acid", "poison"]
 corpse = false
 blood = "#3a2a10"
 [creature.attack]

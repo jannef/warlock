@@ -686,6 +686,7 @@ impl ObjectSpec {
     /// object, its name as written (its notable parts are added once content knows them all:
     /// [`part::names`]), and the id of what it is `lit` as, which names another object and is
     /// resolved once every object is known.
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn resolve(
         self,
         file: &str,

@@ -157,7 +157,9 @@ at the anvil: first the stock, then a gem if the piece takes one.
   nothing.
 
 Rings and amulets are never Fine or better: they come out plain, however well you do. A failure
-gives back half the stock (at least one piece) and keeps the gem.
+gives back half the stock (at least one piece) and keeps the gem. In
+[Gimmwīc](ascmearc.md#gimmwīc), once the [crystal guardian](quests.md#lures) stands bound there,
+Jewelcraft's checks get **+2** (not a bone amulet's: that is Woodcraft).
 
 ## The recipes
 
@@ -321,8 +323,8 @@ Brakka's mark." Its name does not change.
 - **Worth:** a marked piece is worth **half again** (+50 %, rounded down), on top of its grade. A
   marked Fine steel long sword is worth three times a plain one. A marked piece that is later
   damaged is worth half of that.
-- **The patron** pays **50 % more** for a marked piece than for the same piece unmarked, on top of
-  its higher worth ([The patron](patron.md#delivering)).
+- **The patron** pays for that higher worth: a marked piece fetches half again what the same
+  piece unmarked does ([The patron](patron.md#delivering)).
 - **Enchantments:** a marked piece can bear **one more** ([Capacity](magic-items.md#capacity)).
 
 The mark stays for good: tempering, damage, and mending never take it away.

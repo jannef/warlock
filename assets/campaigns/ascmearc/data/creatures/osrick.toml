@@ -1,7 +1,3 @@
-# TODO(creature spells): Brother Osrick is a necromancer who fights with a mace only because
-# creatures cannot cast yet. Once creature spellcasters exist, give him spells (raising the dead,
-# a curse, cold): docs/design/adventurers-guild.md §15.
-#
 # Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
 # may name.
 #

@@ -25,7 +25,8 @@ base_hp = 64
 skills = { sneak_attack = 120, initiative = 60 }
 natural = { defence = 6, protection = 0, name = "insubstantial form" }
 incorporeal = { wall_defence = 6 }
-resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50 }
+immune = ["poison"]
 corpse = false
 blood = "none"
 [creature.attack]

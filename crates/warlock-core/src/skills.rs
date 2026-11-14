@@ -1038,15 +1038,6 @@ impl Skills {
             .any(|(id, _)| (content.skill(id).benefits.iter()).any(|b| b.effect == effect))
     }
 
-    /// The highest trained value among the skills that give `effect`; 0 untrained.
-    pub fn value_of_effect(&self, content: &Content, effect: Effect) -> u16 {
-        (self.iter())
-            .filter(|(id, _)| (content.skill(*id).benefits.iter()).any(|b| b.effect == effect))
-            .map(|(_, t)| t.value)
-            .max()
-            .unwrap_or(0)
-    }
-
     /// What its skills give of `effect` with `bonus` added to some skills' values (what magic
     /// items add, spec §8 "Magic items"; `Actor::skill_effect`): a skill with a bonus gives as if
     /// its value were that much higher, and so does an untrained one, from 0. Values stay

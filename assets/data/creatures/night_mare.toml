@@ -24,7 +24,8 @@ stats = { strength = 29, dexterity = 25, toughness = 29, intelligence = 30, will
 base_hp = 74
 natural = { defence = 6, protection = 0, name = "insubstantial form" }
 incorporeal = { wall_defence = 6 }
-resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50 }
+immune = ["poison"]
 corpse = false
 blood = "none"
 [creature.attack]
