@@ -10,6 +10,7 @@
 
 use crate::action::Event;
 use crate::geom::Pos;
+use crate::rng::draw;
 use crate::text::capitalized;
 use crate::world::{ActorId, World};
 
@@ -21,7 +22,10 @@ impl World {
         let chance = level.effects_at(&self.content, at).warp();
         let standing =
             (self.state.actors.get(&who)).is_some_and(|a| a.pos == at && a.level == level.id);
-        if chance == 0 || !standing || !self.state.rng.chance(u32::from(chance)) {
+        if chance == 0
+            || !standing
+            || !draw!(self, "warp/{}", self.state.actors.key(who)).chance(u32::from(chance))
+        {
             return;
         }
         let seen = self.perception.sees_actors_at(at);

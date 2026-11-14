@@ -10,6 +10,7 @@ use crate::content::{Affliction, ContentFiles, Drain};
 use crate::replay::Replay;
 use crate::stats::{DRAIN_FLOOR, PerStat, Stat, Stats};
 use crate::test_support::{CONTENT as BUILTIN, run, said};
+use crate::test_support::{draws, peek};
 use crate::world::*;
 
 const TERRAIN: &str = r##"
@@ -141,8 +142,9 @@ fn a_failed_check_takes_points_for_good_and_a_made_one_nothing() {
     for seed in 1..=400 {
         let mut w = world_on(BESIDE, VICTIM, seed);
         let (player, drinker) = (w.player_id(), ActorId(1));
-        let mut expected = w.state.rng.clone();
+        let mut expected = peek(&w, "drain/resist/player");
         let resisted = check(&mut expected, crate::stats::modifier(1), 40);
+        let expected = draws(&w) + 1;
         let mut events = Vec::new();
         w.after_blow(
             drinker,
@@ -154,7 +156,7 @@ fn a_failed_check_takes_points_for_good_and_a_made_one_nothing() {
             ),
             &mut events,
         );
-        assert_eq!(w.state.rng, expected, "the check's two draws, at 100 %");
+        assert_eq!(draws(&w), expected, "the check's one draw, at 100 %");
         let me = w.state.player();
         let stat = (!resisted).then_some(Stat::Strength);
         assert_eq!(
@@ -277,9 +279,13 @@ fn a_random_drain_draws_its_stat_first() {
             seed,
         );
         let (player, leech) = (w.player_id(), ActorId(1));
-        let mut expected = w.state.rng.clone();
-        let stat = Stat::ALL[expected.below(Stat::COUNT as u32) as usize];
-        let resisted = check(&mut expected, crate::stats::modifier(1), 40);
+        let stat = Stat::ALL[peek(&w, "drain/stat/player").below(Stat::COUNT as u32) as usize];
+        let resisted = check(
+            &mut peek(&w, "drain/resist/player"),
+            crate::stats::modifier(1),
+            40,
+        );
+        let expected = draws(&w) + 2;
         let before = w.state.player().stats.score(stat);
         w.after_blow(
             leech,
@@ -291,7 +297,7 @@ fn a_random_drain_draws_its_stat_first() {
             ),
             &mut Vec::new(),
         );
-        assert_eq!(w.state.rng, expected);
+        assert_eq!(draws(&w), expected);
         let after = w.state.player().stats.score(stat);
         if !resisted && before > DRAIN_FLOOR {
             assert_eq!(after, before.saturating_sub(5).max(DRAIN_FLOOR), "{stat:?}");
@@ -332,7 +338,7 @@ fn talents_raise_the_check_against_a_drain() {
             }
             let bonus = me.talent_mods(&BUILTIN);
             let modifier = bonus.vigour.drain_checks + bonus.vigour.check(Stat::Willpower);
-            let mut expected = w.state.rng.clone();
+            let mut expected = peek(&w, "drain/resist/player");
             let resisted = check(&mut expected, modifier, drain.difficulty);
             let mut events = Vec::new();
             w.drain(player, drain, None, &mut events);

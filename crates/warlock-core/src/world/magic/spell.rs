@@ -31,6 +31,7 @@ use crate::fov::radius2;
 use crate::geom::Pos;
 use crate::ice::Shock;
 use crate::noise::{self, Noise};
+use crate::rng::draw;
 use crate::sight::LineOfSight;
 use crate::talent::TalentMods;
 use crate::world::combat::fight::Harm;
@@ -49,6 +50,18 @@ pub(in crate::world) enum Caster {
     /// A place (spec §7 "Special rooms": a forgotten altar blowing apart): its kills earn no one
     /// anything, as a trap's.
     Place,
+}
+
+impl World {
+    /// The key a spell's `caster` draws by (`rng.rs`, "Keys"): an actor's key, `trap/<trap id>`,
+    /// or `place`.
+    pub(in crate::world) fn caster_key(&self, caster: Caster) -> String {
+        match caster {
+            Caster::Actor(id) => self.state.actors.key(id).into_owned(),
+            Caster::Trap(trap) => format!("trap/{}", trap.0),
+            Caster::Place => "place".to_string(),
+        }
+    }
 }
 
 /// Whom a burst strikes, and how hard: those of the tags `only` (Rebuke's; none: everyone), but
@@ -290,7 +303,8 @@ impl World {
                 cells: cells.clone(),
             });
         }
-        let roll = burst.damage.roll(&mut self.state.rng, burst.reroll);
+        let mut rng = draw!(self, "spell/burst/{}", self.caster_key(caster));
+        let roll = burst.damage.roll(&mut rng, burst.reroll);
         let inner = radius2(radius - 1);
         let level = self.state.current_level.clone();
         let reached: BTreeSet<Pos> = cells.iter().copied().collect();
@@ -373,7 +387,8 @@ impl World {
                 cells: path.to_vec(),
             });
         }
-        let roll = bolt.damage.roll(&mut self.state.rng, bolt.reroll);
+        let mut rng = draw!(self, "spell/bolt/{}", self.caster_key(caster));
+        let roll = bolt.damage.roll(&mut rng, bolt.reroll);
         let level = self.state.current_level.clone();
         let mut caught = Vec::new();
         for p in path {
@@ -415,7 +430,8 @@ impl World {
                 cells: cells.clone(),
             });
         }
-        let roll = roll.roll(&mut self.state.rng, reroll);
+        let mut rng = draw!(self, "spell/cone/{}", self.caster_key(caster));
+        let roll = roll.roll(&mut rng, reroll);
         let level = self.state.current_level.clone();
         let caught: Vec<ActorId> = (self.state.actors.values())
             .filter(|a| a.level == level && cells.contains(&a.pos))

@@ -41,6 +41,7 @@
 use crate::action::{DiseaseNews, Event, Meal, Positions};
 use crate::content::{ActionKind, ObjectId, the, the_start};
 use crate::object::{self, Stack};
+use crate::rng::draw;
 use crate::stats::Stat;
 use crate::talent::TalentMods;
 use crate::time::GameTime;
@@ -247,14 +248,16 @@ impl World {
             .talent_mods(&self.content)
             .hunger
             .corpse_harmless;
-        if !harmless && on_eat.vomit > 0 && self.state.rng.chance(u32::from(on_eat.vomit)) {
+        // What the corpse does to them: one stream (`eat/corpse/player`).
+        let mut rng = draw!(self, "eat/corpse/player");
+        if !harmless && on_eat.vomit > 0 && rng.chance(u32::from(on_eat.vomit)) {
             self.vomit();
             return;
         }
         self.corpse_gifts(&on_eat);
         self.corpse_skills(&on_eat);
         if let Some(heal) = on_eat.heal {
-            let points = heal.roll(&mut self.state.rng);
+            let points = heal.roll(&mut rng);
             let max = self.state.player().max_hp(&self.content);
             let player = self.player_mut();
             if points > 0 && player.hp < max {
@@ -263,7 +266,7 @@ impl World {
             }
         }
         if let Some(harm) = on_eat.harm.filter(|_| !harmless) {
-            let degrees = harm.roll(&mut self.state.rng);
+            let degrees = harm.roll(&mut rng);
             self.sicken(degrees, events);
         }
         // A layer boss's: its signature, its draws, the deed (`world/character/profane.rs`).
@@ -295,7 +298,7 @@ impl World {
             let chance = on_eat.widen.get(&stat).copied().unwrap_or(0);
             let chance = TalentMods::scaled(u64::from(chance), more).min(100) as u32;
             if chance > 0
-                && self.state.rng.chance(chance)
+                && draw!(self, "eat/widen/player").chance(chance)
                 && self.player_mut().stats.widen(stat, 1) > 0
             {
                 self.say(format!(
@@ -371,7 +374,9 @@ impl World {
             .talent_mods(&content)
             .hunger
             .iron_stomach;
-        if !iron && rotten.vomit > 0 && self.state.rng.chance(u32::from(rotten.vomit)) {
+        // What the rot does to them: one stream (`eat/rotten/player`).
+        let mut rng = draw!(self, "eat/rotten/player");
+        if !iron && rotten.vomit > 0 && rng.chance(u32::from(rotten.vomit)) {
             self.vomit();
             return;
         }
@@ -381,7 +386,7 @@ impl World {
             self.feed(nutrition, what);
             return;
         }
-        let degrees = rotten.harm.roll(&mut self.state.rng);
+        let degrees = rotten.harm.roll(&mut rng);
         // Iron stomach halves it, and a talent that eats rot better (a birth sign's Evergreen)
         // lessens it, rounded down.
         let degrees = if iron { degrees / 2 } else { degrees };
@@ -419,8 +424,9 @@ impl World {
             })
             .map(|(_, dice)| *dice)
             .collect();
+        let mut rng = draw!(self, "eat/heals/player");
         for dice in matched {
-            let points = dice.roll(&mut self.state.rng).max(0);
+            let points = dice.roll(&mut rng).max(0);
             let max = self.state.player().max_hp(&self.content);
             let me = self.player_mut();
             if points > 0 && me.hp < max {
@@ -509,7 +515,8 @@ impl World {
         }
         if nutrition.saturating_add(points) > def.max {
             let o = def.overeating;
-            if o.choke > 0 && self.state.rng.chance(u32::from(o.choke)) {
+            let mut rng = draw!(self, "eat/overeat/player");
+            if o.choke > 0 && rng.chance(u32::from(o.choke)) {
                 self.die_of(Cause::Choked(what), self.state.time);
                 return;
             }
@@ -519,7 +526,7 @@ impl World {
                 .talent_mods(&content)
                 .hunger
                 .iron_stomach;
-            if !iron && o.vomit > 0 && self.state.rng.chance(u32::from(o.vomit)) {
+            if !iron && o.vomit > 0 && rng.chance(u32::from(o.vomit)) {
                 self.vomit();
                 return;
             }

@@ -9,6 +9,7 @@
 
 use crate::action::{Outcome, parse_actions};
 use crate::content::Content;
+use crate::rng::Rng;
 use crate::world::World;
 use std::sync::{Arc, LazyLock};
 
@@ -56,6 +57,43 @@ pub(crate) fn last_text(world: &World) -> String {
 /// Whether any message's raw text is exactly `text`.
 pub(crate) fn said_text(world: &World, text: &str) -> bool {
     world.messages().iter().any(|m| m.text == text)
+}
+
+/// Sets `world`'s run seed to the first one (from 0) under which the next keyed draw of `label`
+/// (`rng.rs`, "Keys": the label without its moment, `fight/strike/player/<key>`) at the world's
+/// clock satisfies `wanted`: a test rigs a check's outcome with it. Panics after 10 000 seeds.
+pub(crate) fn rig(world: &mut World, label: &str, mut wanted: impl FnMut(&mut Rng) -> bool) {
+    let state = world.state_mut();
+    let second = state.time.seconds();
+    let seed = (0..10_000u64)
+        .find(|&seed| wanted(&mut state.draws.peek(seed, second, label)))
+        .unwrap_or_else(|| panic!("no seed rigs `{label}`"));
+    state.seed = seed;
+}
+
+/// The stream the next keyed draw of `label` in `world` would take, at its clock (`Draws::peek`):
+/// a test mirrors a rule's roll with it.
+pub(crate) fn peek(world: &World, label: &str) -> Rng {
+    let state = world.state();
+    state.draws.peek(state.seed, state.time.seconds(), label)
+}
+
+/// Makes every creature of `world` neither greater nor lesser (`grade` 0, at full hit points): a
+/// test that reads a creature's hit points or speed is the same under any key.
+pub(crate) fn ungrade(world: &mut World) {
+    let content = world.content().clone();
+    let player = world.state().player;
+    for actor in world.state_mut().actors.values_mut() {
+        if actor.id != player {
+            actor.grade = 0;
+            actor.hp = actor.max_hp(&content);
+        }
+    }
+}
+
+/// How many keyed draws `world` has made (`rng.rs`, "Keys"): a test sees a rule draw nothing.
+pub(crate) fn draws(world: &World) -> u64 {
+    world.state().draws.total()
 }
 
 /// `docs/dev/cli.md`, the command-line reference (#1667).

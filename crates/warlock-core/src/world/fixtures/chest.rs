@@ -31,6 +31,7 @@ use crate::door::kick_breaks;
 use crate::geom::Pos;
 use crate::noise::Act;
 use crate::object::{Stack, add_to_pile, phrase};
+use crate::rng::draw;
 use crate::skills::Use;
 use crate::text::capitalized;
 use crate::world::{ActorId, Spent, World};
@@ -146,7 +147,11 @@ impl World {
             .map_or(STURDINESS, |b| b.sturdiness);
         // As a door's kick ([`World::kick_force`]).
         let force = self.kick_force();
-        let broken = kick_breaks(force, sturdiness, &mut self.state.rng);
+        let broken = kick_breaks(
+            force,
+            sturdiness,
+            &mut draw!(self, "chest/kick/{},{}", p.x, p.y),
+        );
         if self.trains(Use::Kick) {
             self.train(Use::Kick);
         }
@@ -189,7 +194,8 @@ impl World {
             class.id == "coins" || class.id == "gems"
         };
         let percent = percent.clamp(0, 100) as u32;
-        let (kept, lost) = destroyed(holds, how, percent, spared, &mut self.state.rng);
+        let mut rng = draw!(self, "chest/destroyed/{},{}", p.x, p.y);
+        let (kept, lost) = destroyed(holds, how, percent, spared, &mut rng);
         if let Some(smashed) = self.content.chest_terrain(ChestState::Smashed) {
             self.set_terrain(p, smashed);
         }

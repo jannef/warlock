@@ -34,6 +34,7 @@ use crate::action::Event;
 use crate::check;
 use crate::content::{ActionKind, Stance};
 use crate::geom::Dir;
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::text::capitalized;
@@ -200,7 +201,11 @@ impl World {
             true
         });
         let (modifier, difficulty) = self.tame_odds(beast, fed);
-        let made = check::check(&mut self.state.rng, modifier, difficulty);
+        let made = check::check(
+            &mut draw!(self, "tame/{}", self.state.actors.key(beast)),
+            modifier,
+            difficulty,
+        );
         if self.trains(Use::Handle) {
             self.train(Use::Handle);
         }

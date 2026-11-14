@@ -16,6 +16,7 @@ use crate::content::ActionKind;
 use crate::door::kick_breaks;
 use crate::geom::{Dir, Pos};
 use crate::noise::Act;
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::world::{ActorId, Spent, World};
@@ -80,7 +81,7 @@ impl World {
             kick_breaks(
                 strength,
                 sturdiness.saturating_add(wedge),
-                &mut self.state.rng,
+                &mut draw!(self, "wedge/kick/{},{}", to.x, to.y),
             )
             .then_some(into)
         });

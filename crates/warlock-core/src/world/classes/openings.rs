@@ -32,6 +32,7 @@ use crate::content::{ActionKind, ClassActive, Stance};
 use crate::fov::radius2;
 use crate::geom::{Dir, Pos};
 use crate::perception::CellView;
+use crate::rng::draw;
 use crate::world::combat::shoot::Loose;
 use crate::world::{ActorId, Spent, World};
 
@@ -314,8 +315,9 @@ impl World {
             return blow;
         };
         let mut extra = 0;
+        let mut rng = draw!(self, "openings/exploit/player");
         for _ in 0..n {
-            extra += dice.roll(&mut self.state.rng).max(0);
+            extra += dice.roll(&mut rng).max(0);
         }
         Blow {
             damage: blow.damage + extra,

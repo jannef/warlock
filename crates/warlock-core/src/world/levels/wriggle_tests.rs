@@ -110,9 +110,11 @@ fn it_can_fail_and_it_can_succeed() {
             true => stuck += 1,
             false => past += 1,
         }
-        // Put them back as they were.
+        // Put them back as they were, the keeper's mind too (displaced, it is off its post).
         w.player_mut().pos = start;
-        w.state.actors.get_mut(&id).expect("shopkeeper").pos = post;
+        let keeper = w.state.actors.get_mut(&id).expect("shopkeeper");
+        keeper.pos = post;
+        keeper.mind = Default::default();
     }
     assert!(stuck > 0 && past > 0, "{stuck} stuck, {past} past");
 }

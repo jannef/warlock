@@ -25,6 +25,7 @@ use crate::combat::Strike;
 use crate::content::{ARC_REACH, DamageTypeId, Shape, SpellData};
 use crate::damage::Damage;
 use crate::geom::Pos;
+use crate::rng::draw;
 use crate::world::{ActorId, World};
 use std::collections::BTreeSet;
 
@@ -179,7 +180,9 @@ impl World {
             spread.jumps -= 1;
             true
         } else {
-            chance >= 100 || self.state.rng.below(100) < u32::from(chance)
+            chance >= 100
+                || draw!(self, "spell_arc/jump/{}", self.state.actors.key(spread.by)).below(100)
+                    < u32::from(chance)
         };
         if goes {
             self.spread_strike(id, (from, true), spread, made);

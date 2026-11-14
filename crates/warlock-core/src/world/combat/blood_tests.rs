@@ -48,7 +48,9 @@ static CONTENT: LazyLock<Arc<Content>> =
     LazyLock::new(|| Arc::new(Content::load(&files()).expect("test content is valid")));
 
 fn world() -> World {
-    World::new(CONTENT.clone(), "bloodtest", None).expect("world")
+    let mut w = World::new(CONTENT.clone(), "bloodtest", None).expect("world");
+    crate::test_support::ungrade(&mut w);
+    w
 }
 
 /// The actor of creature type `id`.
@@ -271,7 +273,7 @@ fn blood_never_changes_what_happens() {
         wash(&mut clean);
     }
     let (a, b) = (bloody.state(), clean.state());
-    assert_eq!(a.rng, b.rng, "the gameplay stream is untouched");
+    assert_eq!(a.draws, b.draws, "the draws are untouched");
     assert_eq!(a.actors, b.actors);
     assert_eq!(a.messages, b.messages);
     assert_eq!(a.current().objects, b.current().objects);

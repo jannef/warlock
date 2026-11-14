@@ -14,6 +14,7 @@ use crate::action::Event;
 use crate::burden::Burden;
 use crate::content::{Content, StairsDir};
 use crate::geom::{Dir, Pos};
+use crate::rng::draw;
 use crate::world::combat::fight::Harm;
 use crate::world::{LevelState, World};
 use std::collections::BTreeSet;
@@ -46,7 +47,9 @@ impl World {
         }
         let burdened = self.load_of(self.state.player).penalty() >= Burden::Burdened;
         let chance = u32::from(collapse.chance) * if burdened { 2 } else { 1 };
-        if !self.state.rng.chance(chance.min(100)) {
+        // Whether it gives way, where they land, and the fall: one stream (`collapse/player`).
+        let mut rng = draw!(self, "collapse/player");
+        if !rng.chance(chance.min(100)) {
             return false;
         }
         let from = self.state.current_level.clone();
@@ -57,10 +60,7 @@ impl World {
         if cells.is_empty() {
             return false;
         }
-        let pick = self
-            .state
-            .rng
-            .below(u32::try_from(cells.len()).unwrap_or(u32::MAX));
+        let pick = rng.below(u32::try_from(cells.len()).unwrap_or(u32::MAX));
         let to = cells[pick as usize];
         self.say("The floor gives way beneath you!");
         if self.travel(&below, Some(to)).is_err() {
@@ -73,7 +73,7 @@ impl World {
         let name = self.state.current().name.clone();
         self.say(format!("You fall to {name}."));
         let id = self.state.player;
-        let damage = collapse.damage.roll(&mut self.state.rng).max(0);
+        let damage = collapse.damage.roll(&mut rng).max(0);
         if self.hurt(id, damage, Harm::Fall, events) {
             return true;
         }

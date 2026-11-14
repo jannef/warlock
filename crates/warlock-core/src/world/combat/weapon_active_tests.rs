@@ -659,7 +659,7 @@ fn false_lead_rolls_without_parry_and_shield() {
         give(&mut w, "wt_knife");
         ranks(&mut w, &[("long_blades", 1), ("duelist", 7)]);
         let mut hits = 0;
-        for _ in 0..12 {
+        for _ in 0..60 {
             let outcome = use_(&mut w, if lead { "use:false_lead:E" } else { "move:E" });
             hits += (strikes(&outcome, AttackKind::Melee).first())
                 .is_some_and(|s| s.is_some_and(|s| s.is_hit())) as u32;

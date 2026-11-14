@@ -13,6 +13,7 @@ use crate::action::Event;
 use crate::combat::Category;
 use crate::content::TrapEffect;
 use crate::geom::Pos;
+use crate::rng::draw;
 use crate::skills::Use;
 use crate::world::World;
 
@@ -45,7 +46,7 @@ impl World {
             return false;
         };
         let chance = self.content.trap_avoid().chance(self.trap_dodge());
-        if !self.state.rng.chance(chance) {
+        if !draw!(self, "sidestep/player").chance(chance) {
             return false;
         }
         let def = self.content.trap(kind);

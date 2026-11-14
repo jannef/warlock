@@ -125,7 +125,7 @@ fn a_rest_inside_is_haunted_on_the_hour_and_stops() {
 fn what_comes_comes_out_of_view_where_it_can() {
     for seed in 0..8u64 {
         let mut w = world();
-        w.state.rng = crate::rng::Rng::stream(seed, "haunt");
+        w.state.seed = seed;
         stand(&mut w, INSIDE);
         let began = GameTime::from_seconds(3599);
         w.state.time = GameTime::from_seconds(3600);

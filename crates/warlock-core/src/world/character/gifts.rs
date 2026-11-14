@@ -14,6 +14,7 @@ use crate::combat::{Profile, Strike};
 use crate::content::{ActionKind, SignActive, Stance};
 use crate::damage::{Damage, Rider};
 use crate::geom::Pos;
+use crate::rng::draw;
 use crate::status::Effect;
 use crate::text::capitalized;
 use crate::world::combat::fight::Harm;
@@ -255,7 +256,13 @@ impl World {
             if !self.state.actors.contains_key(&attacker) || self.state.death.is_some() {
                 return;
             }
-            let damage = Damage::new(rider.dice.roll(&mut self.state.rng), Some(rider.kind));
+            let mut rng = draw!(
+                self,
+                "gifts/retaliate/{}/{}",
+                self.state.actors.key(target),
+                self.state.actors.key(attacker)
+            );
+            let damage = Damage::new(rider.dice.roll(&mut rng), Some(rider.kind));
             let hit = Strike::Hit { critical: false };
             let mut made = Vec::new();
             self.spell_strikes(target, attacker, (from, false), (damage, hit), &mut made);

@@ -83,6 +83,7 @@ use crate::item_parts::{self, ItemPart};
 use crate::magic::Worked;
 use crate::magic::worked::aspects;
 use crate::object::Stack;
+use crate::rng::draw;
 use crate::scroll_label::Lore;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
@@ -1078,7 +1079,7 @@ impl World {
             return;
         };
         let modifier = self.craft_modifier(def, resolved.main);
-        let natural = combat::roll_natural(&mut self.state.rng);
+        let natural = combat::roll_natural(&mut draw!(self, "craft/check/player"));
         let work_of = resolved.main.map_or(0, |m| content.material(m).work);
         let margin = natural + modifier - (def.difficulty + work_of);
         match resolved.batch {
@@ -1113,8 +1114,10 @@ impl World {
         let share = fletch::share(&content, me, def);
         let times = fletch::count_times(&content, me, def);
         let count = match def.result.as_ref().map(|r| r.count) {
-            Some(RecipeCount::Fletch) => fletch::fletch_count(&mut self.state.rng, &content, share),
-            Some(RecipeCount::Dice(dice)) => dice.roll(&mut self.state.rng),
+            Some(RecipeCount::Fletch) => {
+                fletch::fletch_count(&mut draw!(self, "craft/count/player"), &content, share)
+            }
+            Some(RecipeCount::Dice(dice)) => dice.roll(&mut draw!(self, "craft/count/player")),
             None => 1,
         };
         let settings = content.recipes().settings.as_ref();
@@ -1193,8 +1196,9 @@ impl World {
             Grade::Plain
         } else {
             let mut worked = Worked::default();
+            let mut rng = draw!(self, "craft/aspects/player");
             for _ in 0..most {
-                let i = self.state.rng.index(among.len());
+                let i = rng.index(among.len());
                 worked.improve(among[i]);
                 worked.attempted();
             }

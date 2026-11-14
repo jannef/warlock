@@ -53,6 +53,7 @@ use crate::content::{
     ObjectId, SpellId, StudyRules,
 };
 use crate::geom::Dir;
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::world::{Actor, Cause, Ended, Spent, World};
@@ -294,7 +295,9 @@ impl World {
         let odds = self.player_study_odds(lesson.spell);
         let learned = match odds.and_then(|o| o.check) {
             None => true,
-            Some((bonus, difficulty)) => check::check(&mut self.state.rng, bonus, difficulty),
+            Some((bonus, difficulty)) => {
+                check::check(&mut draw!(self, "learn/study/player"), bonus, difficulty)
+            }
         };
         if let Some(rank) = lesson.rank {
             if learned {
@@ -355,7 +358,8 @@ impl World {
     pub(super) fn draw_mishap(&mut self, band: Band) -> Option<Mishap> {
         let content = self.content.clone();
         let among: Vec<&Mishap> = crate::content::drawn_among(content.mishaps(), band).collect();
-        (self.state.rng.weighted(&among, |m| u32::from(m.weight))).map(|&m| m.clone())
+        (draw!(self, "learn/mishap/player").weighted(&among, |m| u32::from(m.weight)))
+            .map(|&m| m.clone())
     }
 
     /// What `mishap` does to the player who failed to learn `lesson`'s spell (module docs).
@@ -380,7 +384,8 @@ impl World {
                     .filter(|&s| self.state.player().stat_marks[s] > 0)
                     .collect();
                 if !marked.is_empty() {
-                    let i = self.state.rng.below(marked.len() as u32) as usize;
+                    let i =
+                        draw!(self, "learn/lose_mark/player").below(marked.len() as u32) as usize;
                     let marks = &mut self.player_mut().stat_marks[marked[i]];
                     *marks -= 1;
                 }

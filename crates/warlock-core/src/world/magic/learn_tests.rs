@@ -274,7 +274,7 @@ fn mishaps_are_drawn_by_band_beside_the_lucky_ones() {
         }
     }
     assert_eq!(
-        w.state.rng,
+        w.state.draws,
         {
             let mut again = world();
             for band in [Band::Slight, Band::Bad, Band::Terrible] {
@@ -282,7 +282,7 @@ fn mishaps_are_drawn_by_band_beside_the_lucky_ones() {
                     again.draw_mishap(band);
                 }
             }
-            again.state.rng
+            again.state.draws
         },
         "one draw each, deterministic"
     );

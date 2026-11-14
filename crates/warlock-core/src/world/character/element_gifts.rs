@@ -20,6 +20,7 @@ use crate::content::SignActive;
 use crate::damage::Damage;
 use crate::geom::Pos;
 use crate::ice::Shock;
+use crate::rng::draw;
 use crate::world::magic::spell::{Caster, burst_cells};
 use crate::world::{ActorId, Spent, World};
 use std::collections::BTreeSet;
@@ -55,7 +56,9 @@ impl World {
             },
             cells: cells.clone(),
         }];
-        let roll = blaze.damage.roll(&mut self.state.rng);
+        let roll = blaze
+            .damage
+            .roll(&mut draw!(self, "element_gifts/blaze/player"));
         let reached: BTreeSet<Pos> = cells.iter().copied().collect();
         let on = self.state.current_level.clone();
         let caught: Vec<ActorId> = (self.state.actors.values())

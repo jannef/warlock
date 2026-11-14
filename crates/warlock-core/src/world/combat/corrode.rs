@@ -32,6 +32,7 @@
 use super::item_damage::Harmed;
 use crate::action::AttackKind;
 use crate::content::{CorrodesWhat, ItemHarm, ObjectId};
+use crate::rng::draw;
 use crate::world::{ActorId, World};
 
 /// The chance in percent that harm of `chance` reaches the gear of one who resists its damage
@@ -105,14 +106,15 @@ impl World {
         };
         let resistance = (self.content.damage_type_id(harm.kind.id()))
             .map_or(0, |t| self.resistances_of(player).get(Some(t)));
-        if !self.state.rng.chance(chance(harm.chance, resistance)) {
+        let mut rng = draw!(self, "corrode/{}", self.state.actors.key(bearer));
+        if !rng.chance(chance(harm.chance, resistance)) {
             return;
         }
         let exposed = self.exposed(what, with);
         if exposed.is_empty() {
             return;
         }
-        let item = exposed[self.state.rng.index(exposed.len())];
+        let item = exposed[rng.index(exposed.len())];
         self.gear_harmed(item, harm.kind, what);
     }
 

@@ -400,6 +400,7 @@ pub(super) fn bare(content: &Content, id: CreatureId) -> Actor {
     let def = content.creature(id);
     let saved = serde_json::json!({
         "id": ActorId(0),
+        "key": "wiki",
         "kind": ActorKind::Creature,
         "creature": id,
         "level": "",

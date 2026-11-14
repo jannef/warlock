@@ -6,6 +6,7 @@ use crate::action::{Action, AttackKind, Event, parse_actions};
 use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
 use crate::stats::{PerStat, Stats};
+use crate::test_support::draws;
 use crate::world::magic::cast::Reach;
 use crate::world::*;
 
@@ -160,22 +161,22 @@ fn an_arc_jumps_one_time_in_four_by_the_draw() {
 fn with_no_one_beside_it_an_arc_makes_no_draw_and_with_one_it_makes_one() {
     let mut w = hall(1);
     kobold(&mut w, 6, 3);
-    let before = w.state.rng.clone();
+    let before = draws(&w);
     cast(&mut w, "zz_zap", cell(6, 3));
-    assert_eq!(w.state.rng, before, "no one to jump to");
+    assert_eq!(draws(&w), before + 1, "the cast's roll; no one to jump to");
     let mut w = hall(1);
     kobold(&mut w, 6, 3);
     w.player_mut().talents.take("conductor", None);
     kobold(&mut w, 6, 4);
-    let before = w.state.rng.clone();
+    let before = draws(&w);
     cast(&mut w, "zz_zap", cell(6, 3));
-    assert_eq!(w.state.rng, before, "a chance of 100 draws nothing");
+    assert_eq!(draws(&w), before + 1, "a chance of 100 draws nothing");
     let mut w = hall(1);
     kobold(&mut w, 6, 3);
     kobold(&mut w, 6, 4);
-    let before = w.state.rng.clone();
+    let before = draws(&w);
     cast(&mut w, "zz_zap", cell(6, 3));
-    assert_ne!(w.state.rng, before, "the type's chance draws");
+    assert_eq!(draws(&w), before + 2, "the type's chance draws");
 }
 
 #[test]
@@ -377,7 +378,11 @@ fn ice_is_not_water_and_parts_a_pond() {
     }
     assert_eq!(w.water_body(cell(8, 2)).len(), 3);
     assert!(w.water_body(cell(9, 3)).is_empty(), "ice");
-    assert_eq!(cast(&mut w, "zz_zap", cell(8, 2)), [target]);
+    // The one on the ice stands beside the target, within an arc's plain reach: that arc's
+    // chance is rigged to fail, so only the water could carry the cast on, and ice is no water.
+    crate::test_support::rig(&mut w, "spell_arc/jump/player", |rng| rng.below(100) == 99);
+    let struck = cast(&mut w, "zz_zap", cell(8, 2));
+    assert_eq!(struck, [target]);
     assert_eq!(lost(&w, far), 0, "on the other side of the ice");
     assert_eq!(lost(&w, on_ice), 0, "on the ice");
 }

@@ -15,7 +15,7 @@ modifiers: `melee`, `ranged`, `thrown`); both hold their damage as a `dice::Roll
 (`dice/roll.rs`: `Dice` groups of more than one size plus one bonus, `3d6+1d10`; a weapon's,
 natural attack's, or trap's `Dice` converts with `From<Dice>` where its `Attack` is built and
 rolls the very draws it would, `roll(rng, 0)`); `strike` resolves one with a fixed order of draws from
-the gameplay stream; `max_hp`, `regen_seconds`, `Health` words). `world/combat/fight.rs` applies them:
+the blow's keyed stream (`fight/strike/<attacker>/<target>`); `max_hp`, `regen_seconds`, `Health` words). `world/combat/fight.rs` applies them:
 `World::attack` (picks the profile: melee weapon / natural attack / bare hands, the readied
 launcher for a shot, none for a spell) → `attack_with(attacker, target, kind, Option<Profile>)`
 (**the entry point for ranged combat, #117**) → `Event::Attacked { .., strike }`, noise, damage

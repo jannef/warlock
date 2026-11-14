@@ -7,6 +7,7 @@ use crate::ability::Ability;
 use crate::rng::Rng;
 use crate::skills::{Effect, Trained};
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::draws;
 use crate::test_support::{builtin, last};
 use crate::world::classes::class_active_tests::world;
 use crate::world::*;
@@ -65,7 +66,7 @@ fn outcome(presence: u8, bluff: u16, will: u8, seed: u64) -> bool {
     let mut w = liar("thief", presence, Some(bluff));
     let kobold = kobold_beside(&mut w, will);
     w.state.actors.get_mut(&kobold).expect("there").energy = -100_000;
-    w.state.rng = Rng::gameplay(seed);
+    w.state.seed = seed;
     assert!(feint(&mut w).took_turn);
     let made = fooled(&w, kobold);
     let word = if made {
@@ -117,12 +118,12 @@ fn refusals_take_no_time_and_no_draw() {
     let mut w = liar("thief", 30, Some(10));
     let at = beside(&w);
     let refused = |w: &mut World, why: &str| {
-        let (time, rng, training) = (w.state.time, w.state.rng.clone(), w.state.training.clone());
+        let (time, rng, training) = (w.state.time, draws(w), w.state.training.clone());
         let out = feint(w);
         assert!(!out.took_turn, "{why}");
         assert_eq!(
-            (w.state.time, &w.state.rng, &w.state.training),
-            (time, &rng, &training),
+            (w.state.time, draws(w), &w.state.training),
+            (time, rng, &training),
             "{why}"
         );
         assert_eq!(last(w), why);
@@ -184,11 +185,10 @@ fn a_feint_takes_a_turn_whatever_comes_of_it_and_draws_two_dice() {
     w.state.actors.get_mut(&kobold).expect("there").energy = -100_000;
     let mut waited = w.clone();
     waited.apply(&Action::Wait);
-    let mut expected = w.state.rng.clone();
+    let expected = draws(&w) + 1;
     assert!(feint(&mut w).took_turn);
     assert_eq!(w.state.time, waited.state.time, "a turn, as a wait");
-    crate::combat::roll_natural(&mut expected);
-    assert_eq!(w.state.rng, expected, "the check's two gameplay draws");
+    assert_eq!(draws(&w), expected, "the check's one draw");
 }
 
 #[test]
@@ -198,7 +198,7 @@ fn the_next_blow_finds_it_flat_footed_though_it_acted_between() {
     let player = w.state.player;
     train(&mut w, "sneak_attack", Some(100));
     let kobold = kobold_beside(&mut w, 3);
-    w.state.rng = Rng::gameplay(1);
+    w.state.seed = 1;
     w.perceive(&mut Vec::new());
     // Noticed: this is a fight, so nothing here is by the foe being unaware.
     w.state
@@ -255,17 +255,12 @@ fn a_feint_may_mark_bluff_on_the_training_stream_whatever_came_of_it() {
         let kobold = kobold_beside(&mut w, 30);
         w.state.actors.get_mut(&kobold).expect("there").energy = -100_000;
         w.state.training = Rng::training(seed);
-        let gameplay = w.state.rng.clone();
+        let gameplay = draws(&w);
         assert!(feint(&mut w).took_turn);
         let skill = w.content().skill_id("bluff").expect("bluff");
         let marks = (w.state.player().skills.get(skill)).map_or(0, |t| t.marks);
         assert_ne!(w.state.training, Rng::training(seed), "a training draw");
-        let mut expected = gameplay;
-        crate::combat::roll_natural(&mut expected);
-        assert_eq!(
-            w.state.rng, expected,
-            "marks draw nothing from the gameplay"
-        );
+        assert_eq!(draws(&w), gameplay + 1, "marks draw nothing but the check");
         marks
     };
     let marks: u32 = (0..200).map(marks_of).sum();
@@ -315,7 +310,7 @@ fn feint_openings(held: u16, mark: Option<Dir>, made: bool) -> (World, ActorId) 
             Some(_) => Some(other),
             None => None,
         };
-        w.state.rng = Rng::gameplay(seed);
+        w.state.seed = seed;
         assert!(feint(&mut w).took_turn);
         if fooled(&w, kobold) == made {
             return (w, kobold);

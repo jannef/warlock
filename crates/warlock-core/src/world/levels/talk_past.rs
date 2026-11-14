@@ -18,6 +18,7 @@
 use super::encounter::{Choice, How, Opening, Outcome, Pending};
 use crate::check;
 use crate::content::{ActionKind, Content, EncounterEntry};
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::world::{Actor, Spent, World};
@@ -56,7 +57,7 @@ impl World {
             + me.skill_effect(&content, Effect::Feint);
         let lead = self.lead_of(entry, &pending.members, pending.cell);
         let nerve = lead.map_or(0, |c| content.creature(c).stats.modifier(Stat::Willpower));
-        let fooled = !check::check(&mut self.state.rng, nerve, difficulty);
+        let fooled = !check::check(&mut draw!(self, "talk_past/player"), nerve, difficulty);
         if self.trains(Use::Bluffed) {
             self.train(Use::Bluffed);
         }

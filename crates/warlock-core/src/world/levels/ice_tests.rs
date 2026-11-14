@@ -9,6 +9,7 @@ use crate::ice::{self, Shock};
 use crate::perception::CellView;
 use crate::replay::Replay;
 use crate::temperature::{self, Temperature};
+use crate::test_support::draws;
 use crate::test_support::{run, texts};
 use crate::world::*;
 use std::sync::LazyLock;
@@ -312,16 +313,16 @@ fn ice_holds_by_weight_carried_things_included() {
     let mut light = world("pond");
     carry_rocks(&mut light, player, 10); // 78 kg
     run(&mut light, to_thick);
-    let rng = light.state.rng.clone();
+    let rng = draws(&light);
     run(&mut light, "move:W");
     assert_eq!(light.player_pos(), ICE);
-    assert_eq!(light.state.rng, rng, "safe ice draws nothing");
+    assert_eq!(draws(&light), rng, "safe ice draws nothing");
     let mut heavy = world("pond");
     carry_rocks(&mut heavy, player, 30); // 94 kg: a 7 % chance
     run(&mut heavy, to_thick);
-    let rng = heavy.state.rng.clone();
+    let rng = draws(&heavy);
     run(&mut heavy, "move:W");
-    assert_ne!(heavy.state.rng, rng, "risky ice draws");
+    assert_ne!(draws(&heavy), rng, "risky ice draws");
     assert!(said(&heavy, PLUNGE) || said(&heavy, "The ice creaks under your weight."));
 }
 

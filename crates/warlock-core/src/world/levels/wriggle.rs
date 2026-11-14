@@ -16,6 +16,7 @@
 //! time is spent.
 
 use crate::check::check;
+use crate::rng::draw;
 use crate::skills::Effect as SkillEffect;
 use crate::stats::Stat;
 use crate::world::people::talk::Refusal;
@@ -56,7 +57,7 @@ impl World {
             false => "something".to_string(),
         };
         let past = check(
-            &mut self.state.rng,
+            &mut draw!(self, "wriggle/{}", them.key),
             modifier,
             content.tuning().wriggle.difficulty.saturating_add(nerve),
         );

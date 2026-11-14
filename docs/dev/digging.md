@@ -48,7 +48,7 @@ loaded after the branches, so their `ores` are checked against its ore rows). `W
 `World::mine(at, wall)` once, after its "crumbles" line, when the wall it dug at no longer stands
 (the one line in `dig.rs`). `mine` gives nothing off a branch floor (`Content::branch_level`),
 for a statue (`TerrainDef::statue`), or to one untrained in the file's `skill` (Mining; no draws
-then). Draws, all `state.rng`, in this order: the band's `chance` (`MiningRules::band`: the
+then). Draws, all on the strike's keyed stream `mine/player`, in this order: the band's `chance` (`MiningRules::band`: the
 hardest band not harder than the wall's `hardness`), the check (`combat::roll_natural`: stat
 modifier + `skill_effect_of(Mining, Effect::Craft)` (Mining's new `craft` curve, +8 at 100, +12 at
 200) + `VigourMods::check(stat)` against the band's `difficulty`; natural 2 fails, 24 makes), the

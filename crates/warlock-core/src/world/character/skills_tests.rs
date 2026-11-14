@@ -8,6 +8,7 @@ use crate::noise::{self, Act, Noise, SoundKind};
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{MAX_VALUE, SkillId, Trained};
+use crate::test_support::draws;
 use crate::test_support::said_text as said;
 use crate::world::*;
 
@@ -518,6 +519,9 @@ fn a_sound_heard_again_while_waiting_or_searching_trains_listen() {
 fn a_hidden_trap_going_off_trains_detect_traps() {
     let mut w = eager("snares");
     set(&mut w, "detect_traps", Some(0));
+    crate::test_support::rig(&mut w, "search/passive/3,1", |rng| {
+        crate::combat::roll_natural(rng) == 2
+    });
     w.apply(&Action::Move(Dir::E));
     assert_eq!(marks(&w, "detect_traps"), Some(0));
     w.apply(&Action::Move(Dir::E));
@@ -660,12 +664,12 @@ fn training_draws_from_its_own_stream_and_marks_gather() {
     // The built-in chances: stealth gets a mark 15% of the time.
     let mut w = world("yard");
     set(&mut w, "stealth", Some(0));
-    let gameplay = w.state.rng.clone();
+    let gameplay = draws(&w);
     let training = w.state.training.clone();
     for _ in 0..200 {
         w.train(crate::skills::Use::Sneak);
     }
-    assert_eq!(w.state.rng, gameplay, "the gameplay stream is untouched");
+    assert_eq!(draws(&w), gameplay, "the gameplay stream is untouched");
     assert_ne!(w.state.training, training);
     // About 30 marks, gathered for the next level-up roll; no points.
     let trained = w
@@ -722,6 +726,7 @@ fn speed(w: &World) -> u32 {
 #[test]
 fn athletics_makes_the_player_quicker_by_its_curve() {
     let mut w = world("yard");
+    crate::test_support::ungrade(&mut w);
     // +5 % at 100, +10 % at 200, straight between, rounded down, level after.
     for (athletics, quick) in [
         (None, 1000),
@@ -860,7 +865,7 @@ fn a_plain_miss_at_the_player_is_a_dodge_one_time_in_four() {
         .map(|a| *a.0)
         .find(|&id| id != player)
         .unwrap_or(player);
-    let gameplay = w.state.rng.clone();
+    let gameplay = draws(&w);
     let plain = Some(Blow::missed(None));
     let mut dodges = 0;
     for _ in 0..400 {
@@ -874,7 +879,7 @@ fn a_plain_miss_at_the_player_is_a_dodge_one_time_in_four() {
         }
     }
     assert!((60..=140).contains(&dodges), "{dodges}");
-    assert_eq!(w.state.rng, gameplay, "the gameplay stream is untouched");
+    assert_eq!(draws(&w), gameplay, "the gameplay stream is untouched");
     // Misses by a category, and blows at others, draw nothing and change nothing.
     let training = w.state.training.clone();
     let armour = Some(Blow::missed(Some(Category::Armour)));

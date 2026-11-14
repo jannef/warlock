@@ -26,7 +26,7 @@ be asked about: quests, #148, add their topics there and answer them in `ask`; s
 the topics with `TopicView::price`), `rotation` (each
 line once a round in a per-speaker shuffled order, never twice in a row; `Actor::talk` counts what
 was said; with `Actor::npc` saved and hashed), mutters (`World::mutter` after each `creature_turn`, a hash roll that never
-draws on the gameplay stream; `Act::Mutter` noise; `say_mutters` logs what the player heard, with
+draws on its keyed stream; `Act::Mutter` noise; `say_mutters` logs what the player heard, with
 the words, only as notes that never stop a rest), and making way: moving into a creature that is
 not hostile swaps places (`swap_places`; the creature lands on the player's old cell as any
 step lands: `World::tread` on ice and `World::spring_trap`, what that costs it on top taken off

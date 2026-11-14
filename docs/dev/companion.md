@@ -86,8 +86,8 @@ the player); the menu greys the row with `Unavailable::HaveCompanion` (the perce
 keep_at's own interruptions, hit points falling (compared turn by turn, so regeneration hides no
 blow), or `taming_holds` going false. The last turn's action is `tame_check` (before that turn's
 creatures and perception, so both know what came of it): the food (one of the first food
-stack, `first_food`; an interrupted try eats none), `tame_odds`, `check::check` on the gameplay
-stream (two draws), the mark (`Use::Handle`, made or failed), `wake`, and `World::adopt`
+stack, `first_food`; an interrupted try eats none), `tame_odds`, `check::check` on its keyed
+stream `tame/<beast key>` (two draws), the mark (`Use::Handle`, made or failed), `wake`, and `World::adopt`
 (`companion.rs`: the player's faction as `faction_override`, `Mind` cleared, `Ally` with
 `Companion(CompanionData)`, the grade and the risen hit points, the name's one draw on its own
 stream) or the snap. Failed and hostile, the beast's `Mind::last_seen` is set, which is what

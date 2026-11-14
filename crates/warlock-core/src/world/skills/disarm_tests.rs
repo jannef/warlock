@@ -9,9 +9,9 @@ use crate::action::parse_actions;
 use crate::check::{self, Checked};
 use crate::content::ContentFiles;
 use crate::replay::Replay;
-use crate::rng::Rng;
 use crate::skills::{Effect, SkillId};
 use crate::stats::Stat;
+use crate::test_support::draws;
 use crate::test_support::{run, said as texts};
 use crate::time::Duration;
 use crate::world::*;
@@ -65,16 +65,14 @@ fn last(world: &World) -> String {
     texts(world).last().cloned().unwrap_or_default()
 }
 
-/// Sets the gameplay stream to the first whose next check at disarming the trap at `at` comes
-/// out as `want` says.
+/// Rigs the seed so that the next check at disarming the trap at `at` comes out as `want` says.
 fn rig(world: &mut World, at: Pos, want: impl Fn(Checked) -> bool) {
     let kind = world.state.current().traps[&at].kind;
     let difficulty = world.difficulty_of(Hidden::Trap(kind));
     let modifier = world.disarm_modifier();
-    let seed = (0..10_000)
-        .find(|&s| want(check::roll(&mut Rng::gameplay(s), modifier, difficulty)))
-        .expect("a stream that comes out so");
-    world.state.rng = Rng::gameplay(seed);
+    crate::test_support::rig(world, "disarm/player", |rng| {
+        want(check::roll(rng, modifier, difficulty))
+    });
 }
 
 fn sprung(out: &Outcome) -> bool {
@@ -192,20 +190,17 @@ fn the_untrained_and_traps_nobody_knows_of_are_refused_for_free() {
     assert!(!out[0].took_turn);
     assert_eq!(out[0].elapsed, Duration::ZERO);
     assert_eq!(last(&w), "You do not know how to disarm traps.");
-    assert_eq!(w.state.rng, before.rng, "no draw");
+    assert_eq!(draws(&w), before.draws.total(), "no draw");
     assert_eq!(w.state.current().traps, before.current().traps);
     // A hidden trap is refused as an empty cell or a wall is: it gives nothing away.
     let mut w = world("#####\n#@h.#\n#####\n", THIEF);
-    let (rng, training) = (w.state.rng.clone(), w.state.training.clone());
+    let (rng, training) = (draws(&w), w.state.training.clone());
     for dir in ["E", "W", "N"] {
         let out = run(&mut w, &format!("disarm:{dir}"));
         assert!(!out[0].took_turn, "{dir}");
         assert!(last(&w).starts_with("You know of no trap there."), "{dir}");
     }
-    assert_eq!(
-        (w.state.rng.clone(), w.state.training.clone()),
-        (rng, training)
-    );
+    assert_eq!((draws(&w), w.state.training.clone()), (rng, training));
     assert!(!w.state.current().traps[&EAST].known, "still hidden");
 }
 
@@ -230,11 +225,10 @@ fn the_try_is_dexterity_and_disable_device_against_the_traps_difficulty() {
         w.difficulty_of(Hidden::Trap(arrow)),
         i32::from(content.trap(arrow).difficulty)
     );
-    // One check: two draws of the gameplay stream.
-    let mut expected = w.state.rng.clone();
-    crate::combat::roll_natural(&mut expected);
+    // One check: one draw.
+    let expected = draws(&w) + 1;
     run(&mut w, "disarm:E");
-    assert_eq!(w.state.rng, expected);
+    assert_eq!(draws(&w), expected);
 }
 
 #[test]

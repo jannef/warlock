@@ -8,6 +8,7 @@ use super::caster_tests::{kobold, sp};
 use super::learn_tests::{given, kitted, set_decipher};
 use super::miscast::Aim;
 use crate::content::{ContentFiles, Miscast};
+use crate::test_support::draws;
 use crate::test_support::{run, said};
 use crate::world::*;
 
@@ -139,12 +140,13 @@ fn amnesia_takes_one_more_and_blank_takes_every_spell() {
     let after = w.state.player().known_spells(&w.content);
     assert_eq!(after.len(), known - 2);
     assert!(!after.contains(&sp("spark")), "the spell cast first");
-    befall(&mut w, player, "frost", "blank");
+    let left = w.content.spell(after[0]).id.clone();
+    befall(&mut w, player, &left, "blank");
     assert!(w.state.player().known_spells(&w.content).is_empty());
     // The same amnesia, from the same state and seed, takes the same second spell.
     let draw = |seed| {
         let mut w = kitted("wizard");
-        w.state.rng = crate::rng::Rng::gameplay(seed);
+        w.state.seed = seed;
         for s in ["spark", "frost", "fireball"] {
             w.player_mut().spells.insert(sp(s), 1);
         }
@@ -174,13 +176,13 @@ fn the_player_is_told_what_was_lost_by_name() {
 fn a_creatures_ranks_and_spells_are_its_kinds() {
     let mut w = kitted("wizard");
     let k = kobold(&mut w, 2, 1000);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     let before = w.state.actors[&k].clone();
     for id in ["stumble", "falter", "forgetting", "amnesia", "blank"] {
         befall(&mut w, k, "spark", id);
     }
     assert_eq!(w.state.actors[&k].spells, before.spells);
-    assert_eq!(w.state.rng, rng, "no draw");
+    assert_eq!(draws(&w), rng, "no draw");
 }
 
 #[test]

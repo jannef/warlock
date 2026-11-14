@@ -21,6 +21,7 @@ use crate::content::{CreatureSpawn, SpecialRoom, Stance, TrapNoise, Treasure};
 use crate::door::Lock;
 use crate::geom::{Dir, Pos};
 use crate::noise::{KICK_NOISE, SoundKind};
+use crate::rng::draw;
 use crate::world::{ActorId, World, levels::travel};
 
 /// What the player is told when a hoard's doors slam shut.
@@ -124,12 +125,18 @@ impl World {
             .collect();
         let mut inner: Vec<Pos> = (cells.into_iter()).filter(|p| !edge.contains(p)).collect();
         let [least, most] = hoard.guardians;
-        let rng = &mut self.state.rng;
+        // The guardians: one stream of the room's (`hoard/guard/<level>/<room>`).
+        let mut rng = draw!(
+            self,
+            "hoard/guard/{}/{},{}",
+            self.state.current_level,
+            room.min.x,
+            room.min.y
+        );
         let count = rng.range(i32::from(least), i32::from(most));
         let mut came = Vec::new();
         for _ in 0..count {
-            let rng = &mut self.state.rng;
-            let Some(creature) = danger::draw(rng, &own, &generic, danger, &odds) else {
+            let Some(creature) = danger::draw(&mut rng, &own, &generic, danger, &odds) else {
                 break;
             };
             let from = [&mut unseen, &mut seen, &mut inner]

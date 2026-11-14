@@ -30,6 +30,7 @@ use crate::action::Event;
 use crate::content::{CreatureId, CreatureSpawn, LevelKind, SpellPurpose, Stance};
 use crate::damage::Damage;
 use crate::dice::Dice;
+use crate::rng::draw;
 use crate::text::{and_list, capitalized};
 use crate::world::combat::fight::Harm;
 use crate::world::{ActorId, World};
@@ -65,7 +66,8 @@ impl World {
             },
             SpellPurpose::Heal => match (roll, self.nearest_hostile(caster)) {
                 (Some(roll), Some(on)) => {
-                    let back = roll.roll(&mut self.state.rng, reroll).max(0);
+                    let mut rng = draw!(self, "backfire/heal/{}", self.state.actors.key(caster));
+                    let back = roll.roll(&mut rng, reroll).max(0);
                     self.rebound_heal(caster, on, back);
                     true
                 }
@@ -161,10 +163,11 @@ impl World {
         let bias = me.talent_mods(&content).ally.summon_bias.clone();
         let faction = content.miscast_rules().and_then(|r| r.backfire_faction);
         let cells = self.summon_cells(caster, call.spread);
+        let mut rng = draw!(self, "backfire/call/{}", self.state.actors.key(caster));
         let rolled = if full {
-            (cast.roll).map_or(1, |r| r.roll(&mut self.state.rng, cast.reroll))
+            (cast.roll).map_or(1, |r| r.roll(&mut rng, cast.reroll))
         } else {
-            call.count.roll(&mut self.state.rng, 0)
+            call.count.roll(&mut rng, 0)
         };
         let count = usize::try_from(rolled.max(1))
             .unwrap_or(1)
@@ -175,7 +178,7 @@ impl World {
         }
         let mut came: Vec<(CreatureId, u32)> = Vec::new();
         for &pos in cells.iter().take(count) {
-            let creature = self.summon_draw(&call.pool, &bias);
+            let creature = self.summon_draw(caster, &call.pool, &bias);
             let spawn = CreatureSpawn {
                 creature,
                 faction,
@@ -222,7 +225,8 @@ impl World {
     /// The fallback harm (module docs): force dice by spell level `level`.
     fn backfire_harm(&mut self, caster: ActorId, level: u8, full: bool, events: &mut Vec<Event>) {
         let dice = Dice::of(fallback_dice(level, full), 6);
-        let amount = dice.roll(&mut self.state.rng).max(1);
+        let mut rng = draw!(self, "backfire/harm/{}", self.state.actors.key(caster));
+        let amount = dice.roll(&mut rng).max(1);
         let force = self.content.damage_type_id("force");
         let amount = self.resisted(caster, Damage::new(amount, force));
         if amount > 0 {

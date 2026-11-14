@@ -8,6 +8,7 @@ use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, StatusId};
 use crate::dice::Dice;
 use crate::stats::{PerStat, Stats};
+use crate::test_support::draws;
 use crate::test_support::{builtin, said_text as said};
 use crate::world::magic::caster_tests::{kobold_at, sp};
 use crate::world::*;
@@ -99,10 +100,10 @@ fn the_cloak_burns_whoever_lands_a_blow_in_melee_and_only_them() {
     // Without the status, nothing and no draw.
     let mut plain = showcase(1);
     let (player, kobold) = (plain.state.player, kobold_at(&mut plain, (1, 0), 50));
-    let rng = plain.state.rng.clone();
+    let rng = draws(&plain);
     plain.barbed(kobold, player, AttackKind::Melee, &mut Vec::new());
     assert_eq!(plain.state.actors[&kobold].hp, 50);
-    assert_eq!(plain.state.rng, rng);
+    assert_eq!(draws(&plain), rng);
 }
 
 /// How many of 400 strikers burn, by `seed`.

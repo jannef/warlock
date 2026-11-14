@@ -2,11 +2,11 @@
 //! the player tries, what it adds up to, what it costs, its marks, and a pit's shorter climb.
 
 use crate::ability::Ability;
-use crate::check::check;
 use crate::content::{ContentFiles, StatusId};
 use crate::geom::{Dir, Pos};
 use crate::skills::{Effect as SkillEffect, SkillId, Trained};
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::draws;
 use crate::time::Duration;
 use crate::world::*;
 
@@ -149,11 +149,11 @@ fn untrained_webbed_and_pinned_are_refused_for_no_time_and_no_draw() {
     for id in ["webbed", "pinned"] {
         let mut w = world();
         suffer(&mut w, id, 3);
-        let (rng, start, turn) = (w.state.rng.clone(), w.player_pos(), w.state.turn);
+        let (rng, start, turn) = (draws(&w), w.player_pos(), w.state.turn);
         let out = w.apply(&Action::Move(Dir::W));
         assert!(!out.took_turn, "{id}");
         assert_eq!(w.player_pos(), start);
-        assert_eq!(w.state.rng, rng, "{id}");
+        assert_eq!(draws(&w), rng, "{id}");
         let name = w.content().status(status(&w, id)).name.to_lowercase();
         assert!(
             said(&w, turn).contains(&format!("You cannot move while {name}.")),
@@ -309,16 +309,16 @@ fn no_check_for_a_status_with_no_mark_nor_for_the_untrained_slowed() {
     let mut w = world();
     train(&mut w, "escape_artist", 100);
     suffer(&mut w, "staggered", 1);
-    let gameplay = w.state.rng.clone();
+    let gameplay = draws(&w);
     assert_eq!(w.struggle(&Action::Move(Dir::W), &mut Vec::new()), None);
-    assert_eq!(w.state.rng, gameplay);
+    assert_eq!(draws(&w), gameplay);
     assert_eq!(marks(&w, "escape_artist"), 0);
 
     let mut w = world();
     suffer(&mut w, "zz_snared", 1);
-    let gameplay = w.state.rng.clone();
+    let gameplay = draws(&w);
     assert_eq!(w.struggle(&Action::Move(Dir::W), &mut Vec::new()), None);
-    assert_eq!(w.state.rng, gameplay);
+    assert_eq!(draws(&w), gameplay);
     assert!(
         w.state
             .player()
@@ -333,9 +333,9 @@ fn what_bonds_do_not_stop_is_no_struggle() {
     let mut w = world();
     train(&mut w, "escape_artist", 100);
     suffer(&mut w, "webbed", 3);
-    let gameplay = w.state.rng.clone();
+    let gameplay = draws(&w);
     assert_eq!(w.struggle(&Action::Wait, &mut Vec::new()), None);
-    assert_eq!(w.state.rng, gameplay);
+    assert_eq!(draws(&w), gameplay);
     assert_eq!(marks(&w, "escape_artist"), 0);
 }
 
@@ -348,11 +348,10 @@ fn a_check_is_two_draws_of_the_gameplay_stream_and_a_mark_whatever_came_of_it() 
     let (mut made, mut failed) = (false, false);
     while !(made && failed) {
         suffer(&mut w, "webbed", 3);
-        let mut gameplay = w.state.rng.clone();
-        check(&mut gameplay, 0, 13);
+        let gameplay = draws(&w) + 1;
         let training = w.state.training.clone();
         let spent = w.struggle(&Action::Move(Dir::W), &mut Vec::new());
-        assert_eq!(w.state.rng, gameplay);
+        assert_eq!(draws(&w), gameplay);
         assert_ne!(w.state.training, training, "the stats' chances draw");
         checks += 1;
         assert_eq!(marks(&w, "escape_artist"), checks);

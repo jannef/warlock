@@ -8,6 +8,7 @@ use crate::combat::{Blow, Strike};
 use crate::content::{Affliction, ContentFiles, OnHit, Power, StatusId};
 use crate::magic::describe::{self, LineKind};
 use crate::magic::{Affix, Rarity};
+use crate::test_support::draws;
 use crate::test_support::{last as last_message, run};
 use crate::world::*;
 
@@ -298,8 +299,9 @@ fn high_toby_frightens_at_its_chance_from_the_fixed_stream() {
     assert_eq!(profile.on_hit, [frightens]);
     let landed: Vec<bool> = (0..40)
         .map(|_| {
-            let mut expected = w.state.rng.clone();
-            let lands = expected.chance(25);
+            let label = format!("status/rider/player/{}", w.state.actors.key(foe));
+            let lands = crate::test_support::peek(&w, &label).chance(25);
+            let expected = draws(&w) + 1;
             let actor = w.state.actors.get_mut(&foe).expect("rat");
             actor.effects.remove(frightened);
             let made = profile.on_hit.clone();
@@ -310,7 +312,7 @@ fn high_toby_frightens_at_its_chance_from_the_fixed_stream() {
                 (&HIT, &made),
                 &mut Vec::new(),
             );
-            assert_eq!(w.state.rng, expected, "one draw of the gameplay stream");
+            assert_eq!(draws(&w), expected, "one draw");
             assert_eq!(severity(&w, foe, "frightened").is_some(), lands);
             lands
         })

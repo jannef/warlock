@@ -7,6 +7,7 @@ use crate::kit::Pack;
 use crate::magic::{LootGrade, loot};
 use crate::object::weight_of;
 use crate::rng::Rng;
+use crate::test_support::draws;
 use crate::world::*;
 use std::sync::{Arc, LazyLock};
 
@@ -365,7 +366,7 @@ fn a_hand_made_levels_creatures_roll_from_their_own_stream_unless_given_a_kit() 
             continue;
         }
         kobolds += 1;
-        let key = actor.id.0.to_string();
+        let key = actor.key.clone();
         let mut rng = Rng::gear(traps.state.seed, &key);
         let mut pack = gear::roll(&builtin, &mut rng, kobold, item_level);
         let mut condition = crate::gear::condition::stream(traps.state.seed, &key);
@@ -381,7 +382,7 @@ fn a_hand_made_levels_creatures_roll_from_their_own_stream_unless_given_a_kit() 
     plain.edit_table("creatures", without_gear);
     let plain = Arc::new(Content::load(&plain).expect("valid"));
     let bare = World::new(plain, "traps", None).expect("traps");
-    assert_eq!(bare.state.rng, traps.state.rng);
+    assert_eq!(draws(&bare), draws(&traps));
     // A legend entry with a fixed kit keeps it: the arena's spearman, the den's dagger.
     let arena = World::new(builtin.clone(), "arena", None).expect("arena");
     for actor in arena.state.actors.values() {

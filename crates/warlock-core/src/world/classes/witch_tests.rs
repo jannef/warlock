@@ -8,6 +8,7 @@ use super::war_cry_tests::foe_at;
 use crate::ability::{Ability, Unavailable};
 use crate::content::{ClassActive, StatusId};
 use crate::noise::{self, Act, SoundKind};
+use crate::test_support::draws;
 use crate::test_support::{last, run};
 use crate::world::*;
 
@@ -116,11 +117,11 @@ fn a_hex_grows_a_degree_and_one_at_its_max_starts_afresh() {
     let orc = kobold(&mut w, 2, 0);
     hex(&mut w, orc, "ill_wished", 2, Some(player), 30);
     hex(&mut w, orc, "webbed", 6, Some(player), 4);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     let mut events = Vec::new();
     let spent = w.cackle(&mut events);
     assert!(matches!(spent, Spent::Turn(_)));
-    assert_eq!(w.state.rng, rng, "no draws");
+    assert_eq!(draws(&w), rng, "no draws");
     assert_eq!(
         on(&w, orc, "ill_wished"),
         Some((3, 0)),
@@ -190,11 +191,11 @@ fn refused_with_no_time_without_it_without_a_hex_or_silenced() {
     let mut w = witch();
     let foe = kobold(&mut w, 2, 0);
     hex(&mut w, foe, "ill_wished", 1, None, 0);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     let out = cackle(&mut w);
     assert!(!out.took_turn);
     assert_eq!(w.state.time, time);
-    assert_eq!(w.state.rng, rng);
+    assert_eq!(draws(&w), rng);
     assert_eq!(last(&w), "No one you see is under your hex.");
     assert!(
         !(w.state.actors[&foe].heard.iter()).any(|h| h.kind == SoundKind::Voice),

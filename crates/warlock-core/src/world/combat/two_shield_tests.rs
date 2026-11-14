@@ -7,6 +7,7 @@ use crate::action::{AttackKind, Event};
 use crate::content::{Grip, ObjectId};
 use crate::dump::{self, Layer};
 use crate::equipment::{self, Equipment};
+use crate::test_support::draws;
 use crate::test_support::said;
 use crate::weapon_skills::WeaponSkills;
 use crate::world::magic::caster_tests::{kobold, reach, world_with};
@@ -219,10 +220,10 @@ fn spells_fail_by_the_banes_chance_costing_mana_and_time_until_rank_nine() {
 fn a_spell_without_two_shields_draws_nothing_more() {
     let mut w = world_with(builtin(), "priest");
     reach(&mut w, 3);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     let mut events = Vec::new();
     w.cast_spell("blessing", None, &mut events);
-    assert_eq!(w.state.rng, rng);
+    assert_eq!(draws(&w), rng);
 }
 
 #[test]

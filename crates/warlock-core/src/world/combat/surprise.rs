@@ -29,6 +29,7 @@ use crate::combat::{Category, Target};
 use crate::content::{Content, StatusId, the_start};
 use crate::fov::radius2;
 use crate::light::LightCache;
+use crate::rng::draw;
 use crate::sight::{self, LineOfSight};
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
@@ -253,7 +254,17 @@ impl World {
             + talents.stealth.initiative_bonus
             + me.skill_effect(content, Effect::Initiative);
         let difficulty = difficulty + by.map_or(0, |by| self.craft(by));
-        let made = !helpless && check::check(&mut self.state.rng, modifier, difficulty);
+        let made = !helpless
+            && check::check(
+                &mut draw!(
+                    self,
+                    "surprise/initiative/{}/{}",
+                    me.key,
+                    self.state.actors.key(target)
+                ),
+                modifier,
+                difficulty,
+            );
         if !made {
             self.afflict(target, status, 1, by, events);
         }

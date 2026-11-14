@@ -107,13 +107,13 @@ mod tests {
         assert_eq!(ways(-50, 40), 1);
         assert_eq!(ways(50, 1), 143);
         // One check is two draws: the same as an attack roll.
-        let mut a = Rng::gameplay(7);
+        let mut a = Rng::stream(7, "check-test");
         let mut b = a.clone();
         let natural = combat::roll_natural(&mut b);
         assert_eq!(check(&mut a, 0, 13), natural >= 13);
         assert_eq!(a, b);
         // Over many rolls, it succeeds as often as its ways say.
-        let mut rng = Rng::gameplay(1);
+        let mut rng = Rng::stream(1, "check-test");
         let made = (0..14_400).filter(|_| check(&mut rng, 1, 15)).count();
         let expected = 100 * ways(1, 15) as usize;
         assert!(made.abs_diff(expected) < 400, "{made} of 14400, {expected}");
@@ -134,14 +134,14 @@ mod tests {
         assert_eq!(contest_ways(-50, 50), CONTEST_WAYS / 144);
         assert_eq!(contest_ways(50, -50), CONTEST_WAYS - CONTEST_WAYS / 144);
         // Four draws: the other side's natural roll, then the check's.
-        let mut a = Rng::gameplay(3);
+        let mut a = Rng::stream(3, "check-test");
         let mut b = a.clone();
         let theirs = combat::roll_natural(&mut b);
         let mine = combat::roll_natural(&mut b);
         assert_eq!(contest(&mut a, 1, 2), makes(mine, 1, theirs + 2));
         assert_eq!(a, b);
         // Over many rolls, it is won as often as its ways say.
-        let mut rng = Rng::gameplay(5);
+        let mut rng = Rng::stream(5, "check-test");
         let won = (0..20_736).filter(|_| contest(&mut rng, 2, 0)).count();
         let expected = contest_ways(2, 0) as usize;
         assert!(won.abs_diff(expected) < 500, "{won} of 20736, {expected}");
@@ -151,7 +151,7 @@ mod tests {
     fn a_roll_says_how_far_short_it_fell() {
         // The same two draws as a check, and the same result.
         for seed in 0..200 {
-            let mut a = Rng::gameplay(seed);
+            let mut a = Rng::stream(seed, "check-test");
             let mut b = a.clone();
             let natural = combat::roll_natural(&mut b.clone());
             let made = check(&mut b, 2, 15);

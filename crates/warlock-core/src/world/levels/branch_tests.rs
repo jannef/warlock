@@ -4,6 +4,7 @@
 use crate::grid::Grid;
 use crate::replay::Replay;
 use crate::test_support::CONTENT;
+use crate::test_support::draws;
 use crate::world::*;
 use std::collections::VecDeque;
 
@@ -206,7 +207,7 @@ fn saves_round_trip_on_generated_levels_and_continue_identically() {
     take(&mut a, StairsDir::Down, &mut log);
     let mut b = crate::save::decode(&crate::save::encode(&a), CONTENT.clone()).expect("decodes");
     assert_eq!(a.state(), b.state());
-    assert_eq!(a.state.rng, b.state.rng, "the gameplay stream is saved");
+    assert_eq!(draws(&a), draws(&b), "the gameplay stream is saved");
     // Generating the next level after loading gives the same level as without the save.
     let mut more = Vec::new();
     take(&mut a, StairsDir::Down, &mut more);

@@ -30,7 +30,7 @@ pub(crate) fn levels<S: serde::Serializer>(
     map.end()
 }
 
-const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
+pub(crate) const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
 const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
 
 /// An FNV-1a hasher as an [`std::io::Write`], so a serializer streams into it with no buffer.
@@ -38,7 +38,7 @@ struct Fnv(u64);
 
 impl std::io::Write for Fnv {
     fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
-        self.0 = fold(self.0, bytes);
+        self.0 = fnv1a_fold(self.0, bytes);
         Ok(bytes.len())
     }
 
@@ -47,7 +47,8 @@ impl std::io::Write for Fnv {
     }
 }
 
-fn fold(hash: u64, bytes: &[u8]) -> u64 {
+/// FNV-1a 64-bit continued from `hash` over `bytes` (`rng.rs` writes stream keys with it).
+pub(crate) fn fnv1a_fold(hash: u64, bytes: &[u8]) -> u64 {
     bytes.iter().fold(hash, |hash, &b| {
         (hash ^ u64::from(b)).wrapping_mul(FNV_PRIME)
     })
@@ -56,7 +57,7 @@ fn fold(hash: u64, bytes: &[u8]) -> u64 {
 /// FNV-1a 64-bit. Unlike `std::hash::DefaultHasher` it is specified, so hashes are identical
 /// across platforms and Rust versions.
 pub(crate) fn fnv1a(bytes: &[u8]) -> u64 {
-    fold(FNV_OFFSET, bytes)
+    fnv1a_fold(FNV_OFFSET, bytes)
 }
 
 impl WorldState {

@@ -33,6 +33,7 @@ use crate::fov::compute_fov;
 use crate::geom::Pos;
 use crate::ice::{self, Ice, Shock};
 use crate::object;
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::temperature::{self, Temperature};
@@ -324,7 +325,7 @@ impl World {
             0 => false,
             100.. => true,
             chance => {
-                let broke = self.state.rng.chance(chance);
+                let broke = draw!(self, "ice/tread/{}", self.state.actors.key(id)).chance(chance);
                 if !broke && id == self.state.player {
                     self.say("The ice creaks under your weight.");
                 }
@@ -424,7 +425,14 @@ impl World {
         let freeze = water
             .and_then(|w| self.content.terrain(w).freeze)
             .filter(|_| !proof);
-        let mut damage = freeze.map_or(0, |f| f.plunge.roll(&mut self.state.rng).max(0));
+        // The plunge's dice, drawn only where the water freezes.
+        let mut damage = match freeze {
+            Some(f) => {
+                let mut rng = draw!(self, "ice/plunge/{}", self.state.actors.key(id));
+                f.plunge.roll(&mut rng).max(0)
+            }
+            None => 0,
+        };
         if freeze.is_some() && id == self.state.player && self.keeps_afloat() {
             damage /= 2;
         }
@@ -447,7 +455,7 @@ impl World {
         let modifier =
             me.check_modifier(&content, Stat::Toughness) + me.skill_effect(&content, Effect::Swim);
         let against = content.tuning().plunge.difficulty;
-        let made = crate::check::check(&mut self.state.rng, modifier, against);
+        let made = crate::check::check(&mut draw!(self, "ice/afloat/player"), modifier, against);
         if self.trains(Use::Swim) {
             self.train(Use::Swim);
         }

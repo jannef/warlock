@@ -9,10 +9,10 @@ use crate::check;
 use crate::content::ContentFiles;
 use crate::fov::radius2;
 use crate::replay::Replay;
-use crate::rng::Rng;
 use crate::sight::LineOfSight;
 use crate::skills::Effect;
 use crate::stats::Stat;
+use crate::test_support::draws;
 use crate::world::*;
 
 /// A dark corridor: the player at the west end, a kobold at `k`.
@@ -103,19 +103,15 @@ fn sides(w: &World, id: ActorId) -> (i32, i32) {
     )
 }
 
-/// Gives `w` a generator whose next contest for creature `id` comes out `made`; returns it
-/// after the contest's four draws.
-fn rig(w: &mut World, id: ActorId, made: bool) -> Rng {
+/// Rigs `w`'s seed so that its next contest for creature `id` comes out `made`; returns the
+/// draws there will have been after the contest's one.
+fn rig(w: &mut World, id: ActorId, made: bool) -> u64 {
     let (modifier, against) = sides(w, id);
-    for seed in 0.. {
-        let mut rng = Rng::gameplay(seed);
-        let start = rng.clone();
-        if check::contest(&mut rng, modifier, against) == made {
-            w.state.rng = start;
-            return rng;
-        }
-    }
-    unreachable!()
+    let label = format!("slip/player/{}", w.state.actors.key(id));
+    crate::test_support::rig(w, &label, |rng| {
+        check::contest(rng, modifier, against) == made
+    });
+    draws(w) + 1
 }
 
 /// What creature `id`'s look ([`super::slip::looks_at`]) says of `other` now.
@@ -146,13 +142,13 @@ fn a_dark_approach_rolls_once_and_made_the_creature_does_not_see() {
     let after = rig(&mut w, k, true);
     let turn = w.state.turn;
     assert!(!look(&mut w, k, player), "slipped past");
-    assert_eq!(w.state.rng, after, "the contest's four draws");
+    assert_eq!(draws(&w), after, "the contest's one draw");
     assert_eq!(mind(&w, k).missed, Some(turn));
     assert!(w.slipped_past(k, player));
     assert!(w.unaware(k, player));
     // Looks again: still blind, no draw.
     assert!(!look(&mut w, k, player));
-    assert_eq!(w.state.rng, after);
+    assert_eq!(draws(&w), after);
     // Its turns pass, it does not hunt.
     for _ in 0..3 {
         w.apply(&Action::Wait);
@@ -175,9 +171,9 @@ fn a_lost_contest_is_seen_and_rolls_no_more_while_it_hunts() {
     assert!(mind(&w, k).last_seen.is_some(), "it hunts");
     assert!(!w.unaware(k, player));
     // Hunting, it sees by darkvision as ever: no second roll.
-    let before = w.state.rng.clone();
+    let before = draws(&w);
     assert!(look(&mut w, k, player));
-    assert_eq!(w.state.rng, before);
+    assert_eq!(draws(&w), before);
 }
 
 #[test]
@@ -186,27 +182,27 @@ fn nothing_rolls_out_of_the_moment() {
     let mut w = world(120, Slip::Shipped);
     let (player, k) = (w.state.player, kobold(&w));
     put(&mut w, 7);
-    let before = w.state.rng.clone();
+    let before = draws(&w);
     assert!(look(&mut w, k, player));
-    assert_eq!(w.state.rng, before, "lit");
+    assert_eq!(draws(&w), before, "lit");
     // Beyond its darkvision in the dark: not seen, no roll.
     let mut w = world(0, Slip::Shipped);
     put(&mut w, 4);
-    let before = w.state.rng.clone();
+    let before = draws(&w);
     assert!(!look(&mut w, k, player));
-    assert_eq!(w.state.rng, before, "dark, out of reach");
+    assert_eq!(draws(&w), before, "dark, out of reach");
     // Eyes without darkvision: not seen, no roll.
     let mut w = world_with(0, Slip::Shipped, "normal");
     put(&mut w, 7);
-    let before = w.state.rng.clone();
+    let before = draws(&w);
     assert!(!look(&mut w, k, player));
-    assert_eq!(w.state.rng, before, "no darkvision");
+    assert_eq!(draws(&w), before, "no darkvision");
     // Slipping past switched off: seen by darkvision, no roll.
     let mut w = world(0, Slip::Off);
     put(&mut w, 7);
-    let before = w.state.rng.clone();
+    let before = draws(&w);
     assert!(look(&mut w, k, player));
-    assert_eq!(w.state.rng, before, "off");
+    assert_eq!(draws(&w), before, "off");
     assert_eq!(mind(&w, k).missed, None);
 }
 
@@ -220,12 +216,13 @@ fn another_hostile_never_rolls() {
     w.state.next_actor_id += 1;
     let mut goblin = w.state.actors[&k].clone();
     goblin.id = id;
+    goblin.key = format!("test/{}", id.0);
     goblin.creature = w.content.creature_id("goblin").expect("goblin");
     goblin.pos = Pos::new(9, 2);
     w.state.actors.insert(id, goblin);
-    let before = w.state.rng.clone();
+    let before = draws(&w);
     assert!(look(&mut w, k, id));
-    assert_eq!(w.state.rng, before);
+    assert_eq!(draws(&w), before);
     assert_eq!(mind(&w, k).missed, None);
 }
 
@@ -264,9 +261,9 @@ fn light_its_eyes_see_by_ends_it() {
     put(&mut w, 7);
     let turn = w.state.turn;
     w.state.actors.get_mut(&k).expect("kobold").mind.missed = Some(turn);
-    let before = w.state.rng.clone();
+    let before = draws(&w);
     assert!(look(&mut w, k, player), "seen in the light");
-    assert_eq!(w.state.rng, before);
+    assert_eq!(draws(&w), before);
     assert_eq!(mind(&w, k).missed, None);
 }
 
@@ -290,9 +287,9 @@ fn it_lapses_after_its_turns() {
     assert!(w.slipped_past(k, player), "the last turn of it");
     w.state.turn += 1;
     assert!(!w.slipped_past(k, player), "lapsed");
-    let before = w.state.rng.clone();
+    let before = draws(&w);
     w.slip_lapses(k);
-    assert_eq!(w.state.rng, before, "no draw");
+    assert_eq!(draws(&w), before, "no draw");
     assert_eq!(mind(&w, k).missed, None);
     assert!(
         mind(&w, k).last_seen.is_some(),
@@ -356,7 +353,7 @@ fn no_draws_where_nobody_slips_past() {
     for action in &actions {
         on.apply(action);
         off.apply(action);
-        assert_eq!(on.state.rng, off.state.rng, "{action}");
+        assert_eq!(draws(&on), draws(&off), "{action}");
     }
     assert_eq!(on.state.hash(), off.state.hash());
 }

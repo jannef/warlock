@@ -8,7 +8,6 @@ use crate::ability::Ability;
 use crate::content::ContentFiles;
 use crate::magic::{Affix, Aspect, Effect, Magic, Mods, Numbers, Rarity, Worked, may_roll};
 use crate::object::{Stack, add_to_inventory};
-use crate::rng::Rng;
 use crate::test_support::said_text as said;
 use crate::world::*;
 
@@ -92,7 +91,7 @@ fn a_failed_attempt_never_harms_a_sword_of_proof() {
     let saved = w.state.clone();
     let failed = (0..200).find(|&n| {
         w.state = saved.clone();
-        w.state.rng = Rng::stream(n, "temper_tests_proof");
+        w.state.seed = n;
         w.apply(&Action::Temper { item: 0 });
         said(&w, "The work goes wrong, but no harm is done.")
     });
@@ -112,7 +111,7 @@ fn a_failed_attempt_never_harms_adamantium_but_it_may_fail_to_improve() {
     let saved = w.state.clone();
     let failed = (0..500).find(|&n| {
         w.state = saved.clone();
-        w.state.rng = Rng::stream(n, "temper_tests_adamantium");
+        w.state.seed = n;
         w.apply(&Action::Temper { item: 0 });
         said(&w, "The work goes wrong, but no harm is done.")
     });
@@ -174,7 +173,7 @@ fn attempt(w: &mut World, came: Came) {
     let before = w.state.player().inventory[0].worked().cloned();
     for n in 0..500 {
         w.state = saved.clone();
-        w.state.rng = Rng::stream(n, "temper_tests");
+        w.state.seed = n;
         w.apply(&Action::Temper { item: 0 });
         let made = match (before.as_ref().is_some_and(|b| b.damaged), worked_after(w)) {
             // Damaged: gone, or the damage gone.
@@ -374,7 +373,7 @@ fn many_attempts_behind_it_only_a_natural_24_will_do() {
     let mut made = 0;
     for n in 0..40 {
         w.state = saved.clone();
-        w.state.rng = Rng::stream(n, "temper_tests");
+        w.state.seed = n;
         w.apply(&Action::Temper { item: 0 });
         let after = worked_after(&w).expect("worked");
         assert_eq!(after.attempts, 201);
@@ -474,7 +473,7 @@ fn harmed(
     let saved = w.state.clone();
     for n in 0..500 {
         w.state = saved.clone();
-        w.state.rng = Rng::stream(n, "temper_tests_harm");
+        w.state.seed = n;
         let came = w.harm_item(0, harm);
         if came != crate::world::combat::item_damage::Harmed::Withstood {
             return came;

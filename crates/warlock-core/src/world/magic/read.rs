@@ -33,6 +33,7 @@ use crate::content::StatUse;
 use crate::content::{ActionKind, Reading, percent_of};
 use crate::geom::Pos;
 use crate::object::Stack;
+use crate::rng::draw;
 use crate::skills::Use;
 use crate::world::combat::fight::{
     End, Guard, Words, attack_message, death_message, driven_message,
@@ -277,7 +278,7 @@ impl World {
             .talent_mods(&self.content)
             .magic
             .scroll_kept;
-        if keep > 0 && self.state.rng.chance(u32::from(keep)) {
+        if keep > 0 && draw!(self, "read/kept/player").chance(u32::from(keep)) {
             return Some((one, true));
         }
         let player = self.player_mut();

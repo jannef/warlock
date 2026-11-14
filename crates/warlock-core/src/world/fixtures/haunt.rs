@@ -16,6 +16,7 @@
 
 use crate::content::CreatureSpawn;
 use crate::geom::Pos;
+use crate::rng::draw;
 use crate::time::GameTime;
 use crate::world::{World, fixtures::curse, levels::travel};
 
@@ -57,11 +58,17 @@ impl World {
             return;
         }
         let campaign = self.state.campaign.clone();
-        let rng = &mut self.state.rng;
-        let Some(creature) = curse::rises_as(&content, rng, faction, &campaign, danger) else {
+        let mut rng = draw!(
+            self,
+            "haunt/{}/{},{}",
+            self.state.current_level,
+            room.min.x,
+            room.min.y
+        );
+        let Some(creature) = curse::rises_as(&content, &mut rng, faction, &campaign, danger) else {
             return;
         };
-        let pos = cells[self.state.rng.index(cells.len())];
+        let pos = cells[rng.index(cells.len())];
         let spawn = CreatureSpawn {
             creature,
             faction: None,

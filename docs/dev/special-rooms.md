@@ -225,7 +225,7 @@ adds the branch's depth), and each makes a slam through `sound_at` (`Banging`, `
 maker: sleepers and creatures hear it as a trap's noise); "The doors slam shut!" (`hoard::SLAM`)
 when any. No `Event::DoorClosed` is sent (the pick-up has no event list; the screen follows the
 terrain). Then `guard`: on a level with a danger rule (`Content::spawning`) and a danger,
-`rng.range(least, most)` guardians from the **gameplay** stream, each `danger::draw` at the
+`rng.range(least, most)` guardians from the room's keyed stream `hoard/guard/<level>/<room>`, each `danger::draw` at the
 danger + `hoard.danger` over the branch's population and generic list (`Content::candidates`,
 hostile to the player, not unique), placed by `travel::make_creature` (`rolls_gear: true`, awake,
 no route) on a cell from `guard_cells`: the room's walkable cells with no actor, door, or stairs,
@@ -373,7 +373,7 @@ Prayer (`world/fixtures/pray.rs`): `Ability::Pray` (`Source::Place`, *Here*; had
 beside the player; `Spent::Pray`), `World::pray`: `keep_at` until the table's `seconds` have
 passed (each turn the `pray` price, the last cut to `price_until`), a broken prayer says so and
 nothing else; done, `prayer_answered`: `Deed::Prayed(side)`, `leaned_kinds(table, side, band,
-devout)` (`world/fixtures/outcome.rs`), `draw_outcome` (kind, then outcome, gameplay stream),
+devout)` (`world/fixtures/outcome.rs`), `draw_outcome` (kind, then outcome, keyed stream),
 `befall`, then, while the altar's cell is still the feature and the player lives, the exhaustion
 draw (`exhaust` above 0 only): `set_terrain(spent)` with the placed light removed.
 
@@ -528,7 +528,7 @@ dim its own transient light.
 line in `fight.rs::creature_dies` right after `leave_corpse` (so at the corpse's cell, after an
 incorporeal creature's landing): with `Here::rise` at the cell (the room's, else the level's), a
 dead type not of the rise's faction, with `corpse` and a corpse object, and not the player's kill
-under Old delver (`DelvingMods::grave_warden`), `rises_as` draws the type from the gameplay
+under Old delver (`DelvingMods::grave_warden`), `rises_as` draws the type from the dead's keyed stream (`curse/rises/<dead>`)
 stream (`rise_candidates`: the faction's non-unique types, shared or the run's campaign's, of the
 nearest level to the dead's, the lower on a tie, in id order; one `below(n)` draw, none for a
 single candidate) and pushes a `Rising { at, pos, from, into }` on the dead's level
@@ -562,7 +562,7 @@ end of `schedule.rs::run_turn` (after `rise_tick`; `began` is the time the turn 
 the player's cell, when the turn passed a full multiple of `every` on the clock (`began / every !=
 now / every`, in seconds: stateless, so nothing is saved and rests strung together are haunted
 alike; a 59-minute rest crossing the hour is haunted too), and on a level with a danger: the type
-is `curse::rises_as` with the level's danger as the dead's level (one gameplay draw, none for a
+is `curse::rises_as` with the level's danger as the dead's level (one keyed draw, none for a
 single candidate), the cell one `rng.index` among `World::guard_cells` (the hoard's: the room's
 free walkable cells, no door or stairs) the last perception does not see, else among all of
 them. The creature is made with no gear (`travel::make_creature`), its `mind.last_seen` set to
@@ -708,7 +708,7 @@ image (the player's: one they see; a creature's: any) does not stop at the aimed
 rays (`cast.rs`, `spell.rs`) already fly to the first real actor, so they need nothing.
 `World::aim_at` (one line each in `shoot.rs::creature_shoots` and `hurl.rs::creature_hurls`):
 a creature outside the hall shooting or throwing at the player inside picks the player or one of
-their images with `rng.below(images + 1)` from the gameplay stream; inside the hall, or at a
+their images with `rng.below(images + 1)` from a keyed stream of the target's (`mirrors/<target>`); inside the hall, or at a
 creature, it aims true (no draw, so other fights keep their rolls). Creatures' sight and AI read
 ground truth and never see images.
 
@@ -724,7 +724,7 @@ large: a dev can tell, the game screen cannot).
 `talk.rs::swap_places`) and in `World::step_willingly` when a known trap is sidestepped. When the
 effects at `at` warp (`Here::warp`: the chance either effect leaves, 1 - (1 - a)(1 - b)) and the
 stepper still stands there (a teleport trap may have moved it, a trap may have killed it), one
-gameplay draw decides; a warp is `World::teleport`, the teleport trap's own move (a free cell
+keyed draw decides; a warp is `World::teleport`, the teleport trap's own move (a free cell
 picked by a hash of the seed, level, turn, actor, and cell; `Event::ActorMoved`), said with the
 trap's lines through `World::say` ("You are wrenched elsewhere."; "The giant rat vanishes!" when
 the player sees the cell). No draw is made on any other cell, so levels without one replay as
@@ -740,12 +740,12 @@ only the player's moves, so creatures never fall and draw nothing. It returns at
 nothing, unless `Here::collapse` (the room's only, never a pervading effect) holds at `at`, the
 player still stands there, the cell is the room's laid `floor` (cracked floor; a room's other
 cells never give way), the level has a down staircase whose `to` is set (`level_below`), and
-the player lacks Old delver (`DelvingMods::collapse_proof`). Then one gameplay draw at
+the player lacks Old delver (`DelvingMods::collapse_proof`). Then one keyed draw at
 `chance`, doubled while `load_of(player).penalty() >= Burdened` (capped at 100). On a fall:
 `World::visit` makes the level below (as stairs would, with the visit's luck and level),
 `landing` lists its cells (a flood fill from `start`, else the first staircase, through
 walkable cells and doors without a lock; then walkable, no door, stairs, trap, ice, actor, or
-shop floor), a second gameplay draw picks one, "The floor gives way beneath you!",
+shop floor), a second keyed draw picks one, "The floor gives way beneath you!",
 `World::travel(below, Some(cell))` (arrival lines, pervading line, `settle_in`, as stairs), an
 `Event::LevelChanged`, "You fall to <name>.", `collapse.damage` through `World::hurt` with
 `Harm::Fall` (#523: it can kill; the player's death then has `Cause::Fall`, "Fell through a

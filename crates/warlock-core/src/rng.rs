@@ -1,16 +1,39 @@
 //! Deterministic random streams (spec §8 Determinism).
 //!
 //! Every stream is a ChaCha8 generator (`rand_chacha`; its output is specified, so it is identical
-//! on every platform) seeded from a 64-bit key: FNV-1a over the run seed and a stream label.
+//! on every platform) seeded from a 64-bit key: FNV-1a over the run seed and a stream label
+//! ([`stream_key`]). Nothing else makes a key: no stream is drawn from another, so a stream
+//! depends only on the run seed and its own label, never on the order streams are made or
+//! first used, and adding one moves no other.
 //!
-//! **Which stream a new draw takes** (`docs/dev/merging.md`, "Random streams"): `gameplay` is
-//! shared by every rule that rolls in play, so a draw added to it or taken from it shifts every
-//! later roll of the run (replays, insta snapshots, and golden walks of unrelated features). A
-//! self-contained new feature draws from a keyed stream of its own instead: a constructor here
-//! (`Rng::grade`), a labelled [`Rng::stream`] made where it is used and never kept
-//! (`appraise/<hour>`), or a keyed draw with no generator at all (`weather::draw`). High-churn
-//! users of `gameplay` (outcome tables, eating) move to their own streams as they are touched,
-//! each move in a PR of its own that says the run's rolls change.
+//! # Keys (#1662)
+//!
+//! There is no shared gameplay stream: every rule that rolls in play draws from a stream of its
+//! own, keyed by what it decides, so a draw added to or taken from one rule never moves another's
+//! rolls (replays, insta snapshots, and golden walks of unrelated features stay as they were).
+//! A key is **unique** (no two decisions share one) and **stable** (it names *what* is decided,
+//! never how many things came before it). Three forms:
+//!
+//! - **A moment's draw**, [`crate::draw!`]: `draw!(self, "<rule>/<decision>/<actor key>")` in a
+//!   `World` method. Its label names the rule and whom it concerns; the key is the label, the
+//!   second of game time, and how many draws of that label the second has seen already
+//!   (`<label>@<second>#<n>`, counted by [`Draws`], kept in the state). So the key is unique
+//!   (the counter) and stable (the counter is scoped to the one label: another rule's draw in the
+//!   same second is another label). Several related dice of one decision (a check and the
+//!   degrees it inflicts) come from the one stream; distinct decisions take distinct labels.
+//! - **A one-shot stream of an entity**, `Rng::stream(seed, "drop/<actor key>")`: for a decision
+//!   an entity meets once (what it drops as it dies, its grade as it is made), keyed by the
+//!   entity alone. The entity's key must be unique by construction.
+//! - **A kept stream of a subsystem** (`training`, `levels`, `ruin`, `encounters`, a level's
+//!   `spawn/<level id>`): sequential within one subsystem, kept in the state. Only that
+//!   subsystem's own draws move it.
+//!
+//! **Actor keys** ([`crate::actor::Actor::key`]): `player`, or for a creature the level it was
+//! made on, its cell there, the second, and a counter of the creatures made on that cell in that
+//! second (`depths:1/12,5@3600#0`), given as it is made (`world/levels/travel.rs::make_creature`).
+//! A generated level's creature is keyed by where its population stream put it, a spawned one by
+//! where and when it came: never by `ActorId`, the global creation counter, which renumbers
+//! every later creature when one more or fewer is made earlier.
 //!
 //! Generation, per level (none kept; derived on demand, so a level depends only on the run seed
 //! and its id, never on the order levels are visited or on gameplay):
@@ -26,7 +49,7 @@
 //! | Hidden traps | `traps/<level id>` |
 //! | Secret doors | `secrets/<level id>` |
 //! | Loot | `loot/<level id>` |
-//! | A wand's rung in a level's, a fixed kit's, or a pack's objects | `objects/<level id>`, `objects/actor/<id>`, `objects/pack` |
+//! | A wand's rung in a level's, a fixed kit's, or a pack's objects | `objects/<level id>`, `objects/actor/<actor key>`, `objects/pack` |
 //! | Vault monsters | `vault_monsters/<level id>` |
 //! | Initial population (and its leavings) | `population/<level id>` |
 //! | A teeming den's sleepers and hoards | `swarm/<level id>` |
@@ -37,39 +60,40 @@
 //! | Animated creatures' bodies | `animated/<level id>` |
 //! | Gravestones (and which fallen they name) | `graves/<level id>`, `graves/<level id>/fallen` |
 //! | Which petrified dead name its statues | `statue-names/<level id>` |
+//! | A Pit's seed | `pit/<integer>` (a seed, not a stream) |
 //!
-//! Per actor or object (derived on demand, never kept):
+//! Per actor or object (derived on demand, never kept; `<actor key>` as above):
 //!
 //! | Stream | Label |
 //! |---|---|
-//! | What a creature drops when it dies | `drop/<actor id>` |
-//! | The materials a dead creature leaves | `materials/<actor id>` |
-//! | A creature's gear, placed in play | `gear/<actor id>` |
-//! | An animated creature's body, placed in play | `animated/<actor id>` |
-//! | A creature's court (a fey's faction) | `court/<actor id>` |
-//! | A creature's grade | `grade/<actor id>` |
-//! | Gear's condition | `condition/<key>` |
-//! | A beast's name | `companion/name/<actor id>` |
-//! | A trader's wares | `wares/<actor id>` |
+//! | What a creature drops when it dies | `drop/<actor key>` |
+//! | The materials a dead creature leaves | `materials/<actor key>` |
+//! | A creature's gear, placed in play | `gear/<actor key>` |
+//! | An animated creature's body, placed in play | `animated/<actor key>` |
+//! | A creature's court (a fey's faction) | `court/<actor key>` |
+//! | A creature's grade | `grade/<actor key>` |
+//! | Gear's condition | `condition/<key>` (the gear stream's key) |
+//! | A beast's name | `companion/name/<actor key>` |
+//! | A trader's wares | `wares/<actor key>` |
 //!
 //! Kept in [`crate::WorldState`] (saves continue them):
 //!
 //! | Stream | Label | Kept |
 //! |---|---|---|
-//! | Gameplay | `gameplay` | always |
 //! | Training marks' chances (skills) | `training` | always |
 //! | What level-ups roll (skill rolls, stat checks) | `levels` | from the first draw |
 //! | What an area spell ruins | `ruin` | from the first draw |
 //! | Overworld encounters | `encounters` | from the first draw |
 //! | What comes to a level with a danger (spec §7 "Danger levels") | `spawn/<level id>` | in the level's state, from its making |
+//! | The moment's draws made this second ([`Draws`]) | (counts, not a stream) | always |
 //!
 //! In play, keyed by the moment (made where used, never kept):
 //!
 //! | Stream | Label |
 //! |---|---|
+//! | Every rule's roll in play | `<rule>/<decision>/<actor key>@<second>#<n>` ([`crate::draw!`]; the labels are listed at their sites, `docs/dev/merging.md` "Random streams") |
 //! | A rolled quest's draw | `quest/<quest id>` |
 //! | Appraising | `appraise/<hour>` |
-//! | A gatekeeper's free blow | `gatekeeper/<keeper>/<mover>/<seconds>` |
 //! | Whether food is told stale | `freshness/<object>/<died>/<hour>` |
 //! | An investment's week | `invest/<week>` |
 //! | An aristocrat's stipend | `stipend/<level>` |
@@ -94,10 +118,12 @@
 //! Visual randomness in the app uses its own generator and never touches these streams. All
 //! helpers are integer-only: no floating point decides anything.
 
-use crate::world::fnv1a;
+use crate::world::{FNV_OFFSET, fnv1a, fnv1a_fold};
 use rand_chacha::ChaCha8Rng;
 use rand_core::{Rng as _, SeedableRng};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
+use std::fmt::{self, Write as _};
 
 /// A deterministic random stream. Serializes as ChaCha's abstract state (seed, stream, position).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -107,16 +133,16 @@ pub struct Rng(ChaCha8Rng);
 impl Rng {
     /// The stream `label` of the run with `run_seed`.
     pub fn stream(run_seed: u64, label: &str) -> Self {
-        Self(ChaCha8Rng::seed_from_u64(stream_key(run_seed, label)))
+        Self::from_key(stream_key(run_seed, label))
     }
 
-    /// The gameplay stream of a run.
-    pub fn gameplay(run_seed: u64) -> Self {
-        Self::stream(run_seed, "gameplay")
+    /// The stream of `key`, a [`stream_key`].
+    fn from_key(key: u64) -> Self {
+        Self(ChaCha8Rng::seed_from_u64(key))
     }
 
     /// The training stream of a run: the chances of skills' training marks (spec §8 "Skills"),
-    /// kept apart from the gameplay stream so training never changes a fight's rolls.
+    /// kept apart from every rule's draws so training never changes a fight's rolls.
     pub fn training(run_seed: u64) -> Self {
         Self::stream(run_seed, "training")
     }
@@ -354,12 +380,136 @@ pub const WEIGHTS_OVERFLOW: &str = "the weights add up to more than 4294967295";
 /// The 64-bit key of stream `label` in the run with `run_seed`: FNV-1a over the seed's
 /// little-endian bytes, a `0xff` separator, and the label's UTF-8 bytes.
 pub fn stream_key(run_seed: u64, label: &str) -> u64 {
-    let mut bytes = Vec::with_capacity(9 + label.len());
-    bytes.extend_from_slice(&run_seed.to_le_bytes());
-    bytes.push(0xff);
-    bytes.extend_from_slice(label.as_bytes());
-    fnv1a(&bytes)
+    let mut key = Key::new(run_seed);
+    key.bytes(label.as_bytes());
+    key.0
 }
+
+/// A stream key as it is written (the module docs, "Keys"): FNV-1a over the run seed, the
+/// separator, then whatever is written to it, so a label formatted into it is never allocated.
+/// The same text written in any pieces gives [`stream_key`]'s value.
+struct Key(u64);
+
+impl Key {
+    fn new(run_seed: u64) -> Self {
+        let mut key = Self(FNV_OFFSET);
+        key.bytes(&run_seed.to_le_bytes());
+        key.bytes(&[0xff]);
+        key
+    }
+
+    fn bytes(&mut self, bytes: &[u8]) {
+        self.0 = fnv1a_fold(self.0, bytes);
+    }
+}
+
+impl fmt::Write for Key {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.bytes(s.as_bytes());
+        Ok(())
+    }
+}
+
+/// The moment's draws of a run (the module docs, "Keys"): how many times each label has been
+/// drawn in the current second of game time, so the n-th draw of a label in a second takes the
+/// key `<label>@<second>#<n>` and no two draws share one. Kept in the world state (saves
+/// continue it); it forgets a second as the next begins.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Draws {
+    /// The second the counts are of.
+    second: u64,
+    /// By the label's [`stream_key`], how many draws of it the second has seen.
+    counts: BTreeMap<u64, u32>,
+    /// How many draws the run has made in all (tests read it to see that a rule drew nothing).
+    total: u64,
+}
+
+impl Draws {
+    /// Whether nothing was drawn and no actor keyed yet (a save leaves it out then).
+    pub fn is_empty(&self) -> bool {
+        self.total == 0 && self.counts.is_empty()
+    }
+
+    /// How many draws the run has made in all.
+    pub fn total(&self) -> u64 {
+        self.total
+    }
+
+    /// The stream the next draw of `label` at `second` would take ([`Draws::keyed`]), without
+    /// counting it: what a test rigs a seed by.
+    pub fn peek(&self, run_seed: u64, second: u64, label: &str) -> Rng {
+        let mut key = Key::new(run_seed);
+        key.bytes(label.as_bytes());
+        let n = match self.second == second {
+            true => self.counts.get(&key.0).copied().unwrap_or(0),
+            false => 0,
+        };
+        write!(key, "@{second}#{n}").expect("hashing never fails");
+        Rng::from_key(key.0)
+    }
+
+    /// Counts a draw of the label whose key is `label` at `second`: how many came before it in
+    /// that second.
+    fn count(&mut self, second: u64, label: u64) -> u32 {
+        self.total += 1;
+        self.tick(second, label)
+    }
+
+    /// How many times the key `label` was ticked in `second` before this one (a draw's count, an
+    /// actor key's).
+    fn tick(&mut self, second: u64, label: u64) -> u32 {
+        if self.second != second {
+            self.second = second;
+            self.counts.clear();
+        }
+        let n = self.counts.entry(label).or_insert(0);
+        let before = *n;
+        *n += 1;
+        before
+    }
+
+    /// The stream of the moment's draw `label` at `second` of the run with `run_seed`: the
+    /// stream `<label>@<second>#<n>`, `n` the draws of that label the second saw before this one.
+    /// [`crate::rng::draw!`] calls it with the world's seed, clock, and counts.
+    pub fn keyed(&mut self, run_seed: u64, second: u64, label: fmt::Arguments<'_>) -> Rng {
+        let mut key = Key::new(run_seed);
+        key.write_fmt(label).expect("hashing never fails");
+        let n = self.count(second, key.0);
+        write!(key, "@{second}#{n}").expect("hashing never fails");
+        Rng::from_key(key.0)
+    }
+
+    /// The key of the actor made on `level` at `pos` in `second`: the level, the cell, the
+    /// second, and how many were made on that cell in that second before it (the module docs,
+    /// "Actor keys"), `depths:1/12,5@3600#0`.
+    pub fn actor_key(
+        &mut self,
+        run_seed: u64,
+        second: u64,
+        level: &str,
+        pos: crate::Pos,
+    ) -> String {
+        let mut key = Key::new(run_seed);
+        write!(key, "actor/{level}/{},{}", pos.x, pos.y).expect("hashing never fails");
+        let n = self.tick(second, key.0);
+        format!("{level}/{},{}@{second}#{n}", pos.x, pos.y)
+    }
+}
+
+/// A moment's draw in a `World` method (the module docs, "Keys"):
+/// `draw!(self, "<rule>/<decision>/{}", key)` is the stream `<label>@<second>#<n>` of the run,
+/// `n` counted by the state's [`Draws`]. The label's arguments may read the world
+/// (`self.state.actors[&id].key`): only the seed, the clock, and the counts are touched.
+macro_rules! draw {
+    ($world:expr, $($label:tt)*) => {
+        $world.state.draws.keyed(
+            $world.state.seed,
+            $world.state.time.seconds(),
+            ::core::format_args!($($label)*),
+        )
+    };
+}
+pub(crate) use draw;
 
 /// Parses a `--seed` value: a decimal number is used as is; any other text (a word or phrase) is
 /// hashed with FNV-1a 64 over its UTF-8 bytes, so `--seed warlock` always means the same run.
@@ -400,7 +550,7 @@ mod tests {
         assert_ne!(a[0], other_level.next_u32());
         assert_ne!(a[0], retry.next_u32());
         assert_ne!(a[0], other_seed.next_u32());
-        assert_ne!(Rng::gameplay(7), Rng::map(7, "gameplay", 0));
+        assert_ne!(Rng::stream(7, "gameplay"), Rng::map(7, "gameplay", 0));
     }
 
     /// The weighted draw is one `below(total)` and a walk, as the hand-written draws it replaced
@@ -410,18 +560,18 @@ mod tests {
     fn weighted_draws_once_by_weight() {
         let items = [("a", 3), ("b", 0), ("c", 5), ("d", 2)];
         for seed in 0..200 {
-            let mut walk = Rng::gameplay(seed);
+            let mut walk = Rng::stream(seed, "gameplay");
             let mut left = walk.below(10);
             let want = items.iter().find(|&&(_, w)| {
                 let here = left < w;
                 left = left.saturating_sub(w);
                 here
             });
-            let mut rng = Rng::gameplay(seed);
+            let mut rng = Rng::stream(seed, "gameplay");
             assert_eq!(rng.weighted(&items, |&(_, w)| w), want);
             assert_eq!(rng, walk, "one draw, as the walk's");
         }
-        let untouched = Rng::gameplay(1);
+        let untouched = Rng::stream(1, "gameplay");
         let mut rng = untouched.clone();
         assert_eq!(rng.weighted(&[("a", 0), ("b", 0)], |&(_, w)| w), None);
         assert_eq!(
@@ -438,7 +588,7 @@ mod tests {
     #[test]
     fn output_is_pinned() {
         assert_eq!(stream_key(1, "gameplay"), 0x6a1b_986d_d3b2_e6a1);
-        let mut r = Rng::gameplay(1);
+        let mut r = Rng::stream(1, "gameplay");
         let first: Vec<u32> = (0..3).map(|_| r.next_u32()).collect();
         assert_eq!(first, [2_610_789_080, 3_370_076_174, 2_717_488_749]);
     }
@@ -456,7 +606,7 @@ mod tests {
 
     #[test]
     fn serde_round_trip_continues_the_stream() {
-        let mut r = Rng::gameplay(3);
+        let mut r = Rng::stream(3, "gameplay");
         for _ in 0..5 {
             r.next_u32();
         }
@@ -466,6 +616,49 @@ mod tests {
         assert_eq!(back.next_u32(), r.next_u32());
         let via_value: Rng = serde_json::from_value(serde_json::to_value(&r).unwrap()).unwrap();
         assert_eq!(via_value, r);
+    }
+
+    /// A moment's draws: the same label in one second counts up and gives distinct streams, the
+    /// next second starts over, a peek is the next draw, and the counts survive a save.
+    #[test]
+    fn keyed_draws_count_within_a_second_and_round_trip() {
+        let mut draws = Draws::default();
+        assert!(draws.is_empty());
+        let first = draws.keyed(7, 100, format_args!("fight/strike/player/{}", "k"));
+        let second = draws.keyed(7, 100, format_args!("fight/strike/player/{}", "k"));
+        assert_ne!(first, second, "the same label twice in a second: two keys");
+        assert_eq!(first, Rng::stream(7, "fight/strike/player/k@100#0"));
+        assert_eq!(second, Rng::stream(7, "fight/strike/player/k@100#1"));
+        let other = draws.keyed(7, 100, format_args!("fight/bash/player"));
+        assert_eq!(
+            other,
+            Rng::stream(7, "fight/bash/player@100#0"),
+            "its own count"
+        );
+        assert_eq!(
+            draws.peek(7, 100, "fight/strike/player/k"),
+            Rng::stream(7, "fight/strike/player/k@100#2")
+        );
+        assert_eq!(
+            draws.peek(7, 101, "fight/strike/player/k"),
+            Rng::stream(7, "fight/strike/player/k@101#0")
+        );
+        let later = draws.keyed(7, 101, format_args!("fight/strike/player/k"));
+        assert_eq!(later, Rng::stream(7, "fight/strike/player/k@101#0"));
+        assert_eq!(draws.total(), 4);
+        let key = draws.actor_key(7, 101, "depths:1", crate::Pos::new(12, 5));
+        assert_eq!(key, "depths:1/12,5@101#0");
+        assert_eq!(
+            draws.actor_key(7, 101, "depths:1", crate::Pos::new(12, 5)),
+            "depths:1/12,5@101#1"
+        );
+        assert_eq!(draws.total(), 4, "an actor's key is no draw");
+        let json = serde_json::to_string(&draws).unwrap();
+        let back: Draws = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, draws);
+        let via_value: Draws =
+            serde_json::from_value(serde_json::to_value(&draws).unwrap()).unwrap();
+        assert_eq!(via_value, draws);
     }
 
     proptest! {

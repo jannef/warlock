@@ -59,7 +59,7 @@ the packs of those on it, with its stage; `--state`: the raw `died`); food never
 to the player by default (the owner's decision; #196 for later reveals), except in words to a trained eye
 (#1031): `Effect::Freshness` on Appraise and Survival, summed, a percent chance per hour and food
 (`world/health/freshness.rs::judged`, a pure function of the seed, the player, the food, and the hour, its own stream
-`freshness/<object>/<made>/<hour>`, so no gameplay stream moves and looking is read-only), plus 25 points
+`freshness/<object>/<made>/<hour>`, so no keyed draw is made and looking is read-only), plus 25 points
 once rotten, at most 95 (`[freshness]` in `data/hunger.toml`); `PerceptionView::judge` gives `fresh`/`old`/`rotten` (gone food as rotten) for
 the eat list's marks and look mode's pile (visible cells only); eating food so told reports `Use::Judged`
 (Appraise, 10 %; `World::train_judged`). Tests: `world/health/freshness_tests.rs`. Joining stacks keep the oldest
@@ -96,7 +96,7 @@ draw. Eating (`world/health/eat.rs`): `Action::Eat(Meal::Pack|Floor)` (a potion 
 last turn) → `finish` (take one, with its age; then rotten food of any kind (`eat_rotten`:
 `[rotten]`, sickness, `expose_to(player, "rotten_food")`) / fresh corpse `on_eat` (`eat_fresh`: message, vomit, then `corpse_gifts`: per stat in
 display order the `train` marks added to `Actor::stat_marks` (sure, no draw; "Something of its
-strength passes into you." at `LOUD_MARKS`, 30, or more) and a gameplay draw per `widen` stat
+strength passes into you." at `LOUD_MARKS`, 30, or more) and a keyed draw per `widen` stat
 for `Stats::widen(stat, 1)` ("You feel you could grow stronger yet." when it rose), both scaled
 by `corpse_stats_percent`; then `corpse_skills`: per `on_eat.skills` entry (`SkillGift
 { gives, up_to }`, `SkillGift::apply`, no draw, not scaled by talents) an untrained skill is

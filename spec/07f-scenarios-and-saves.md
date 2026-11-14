@@ -58,8 +58,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ids), because ids are indices; a save made with different content is rejected. Generated levels
   are saved with the run like visited hand-made ones (terrain, memory, stairs, lights, kind,
   arrival point,
-  edge exit, piles of objects and the piles as remembered), together with the gameplay random
-  stream, the game clock, every actor's scheduler energy (§8 "Speed"), the direction of the last
+  edge exit, piles of objects and the piles as remembered), together with the moment's draws
+  (§8 "Determinism"), the game clock, every actor's scheduler energy (§8 "Speed"), the direction of the last
   overworld step (saves without the step load with none), what each actor heard and has not yet
   acted on, the sounds the player perceived lately (§5 "Hearing"; saves without them load with
   none), what every actor carries, and what each creature has in mind (where it last saw a

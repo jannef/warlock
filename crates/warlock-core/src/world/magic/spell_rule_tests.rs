@@ -226,6 +226,9 @@ fn a_thunderclap_needs_no_aim_and_strikes_and_stuns_all_in_it_the_caster_too() {
     let east = stander(&mut w, cell(3, 3), "kobold");
     let south = stander(&mut w, cell(2, 4), "kobold");
     let far = stander(&mut w, cell(5, 3), "kobold");
+    // Hardy enough to live through their own thunder.
+    let me = w.player_mut();
+    (me.hp_base, me.hp) = (1000, 1000);
     let before = w.state.player().hp;
     see(&mut w);
     let stunned = status(&w, "stunned");

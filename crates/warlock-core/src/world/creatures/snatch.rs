@@ -27,6 +27,7 @@
 use crate::action::{AttackKind, Event, Positions};
 use crate::content::{SMALL_LOOT, Takes};
 use crate::object;
+use crate::rng::draw;
 use crate::world::{ActorId, World};
 
 impl World {
@@ -69,7 +70,8 @@ impl World {
         if me.effects.has(steals.status) || !self.state.actors.contains_key(&victim) {
             return;
         }
-        if !self.state.rng.chance(u32::from(steals.chance)) {
+        let mut rng = draw!(self, "snatch/{}/{}", me.key, self.state.actors.key(victim));
+        if !rng.chance(u32::from(steals.chance)) {
             return;
         }
         let small: Vec<_> = (SMALL_LOOT.iter())
@@ -86,7 +88,7 @@ impl World {
         let pick = match loose.len() {
             0 => return,
             1 => loose[0],
-            n => loose[self.state.rng.index(n)],
+            n => loose[rng.index(n)],
         };
         let me = self.player_mut();
         let stack = me.inventory.remove(pick);

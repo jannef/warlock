@@ -29,6 +29,7 @@
 use super::cast::Cast;
 use crate::action::Event;
 use crate::content::{CreatureId, LevelKind, SpellId};
+use crate::rng::draw;
 use crate::text::{and_list, capitalized};
 use crate::time::Duration;
 use crate::world::allies::ally::{AllySource, few};
@@ -83,10 +84,8 @@ impl World {
         for id in mine.drain(..give_way) {
             self.gives_way(id, events);
         }
-        let rolled = cast
-            .roll
-            .map_or(1, |r| r.roll(&mut self.state.rng, cast.reroll))
-            + mods.ally.count;
+        let mut rng = draw!(self, "summon_spell/count/player");
+        let rolled = cast.roll.map_or(1, |r| r.roll(&mut rng, cast.reroll)) + mods.ally.count;
         let cells = self.summon_cells(player, call.spread);
         let room = global.saturating_sub(self.allies_here(player).len());
         let count = usize::try_from(rolled.max(1))
@@ -101,7 +100,7 @@ impl World {
         });
         let mut came: Vec<(CreatureId, u32)> = Vec::new();
         for &at in cells.iter().take(count) {
-            let creature = self.summon_draw(&call.pool, &mods.ally.summon_bias);
+            let creature = self.summon_draw(player, &call.pool, &mods.ally.summon_bias);
             let source = AllySource::Summoned {
                 spell: Some(cast.spell),
             };

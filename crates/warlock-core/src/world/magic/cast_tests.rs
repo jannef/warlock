@@ -10,6 +10,7 @@ use crate::test_support::{last, run};
 use crate::world::*;
 
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::draws;
 
 /// The built-in content with the wizard's Arcane bolt (level 6) as `body` says: its shape,
 /// resolution, and dice.
@@ -291,12 +292,12 @@ fn willpower_climbs_the_reach_ladder_to_its_last_rung() {
 fn a_spell_without_a_roll_draws_nothing() {
     let mut w = world_with(Arc::new(super::caster_tests::quiet()), "priest");
     reach(&mut w, 3);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     let mut events = Vec::new();
     let spent = w.cast_spell("blessing", None, &mut events);
     assert!(matches!(spent, Spent::Turn(_)));
     assert!(w.state.player().effects.iter().next().is_some(), "blessed");
-    assert_eq!(w.state.rng, rng, "the cast itself drew nothing");
+    assert_eq!(draws(&w), rng, "the cast itself drew nothing");
 }
 
 /// Sets the player's scores in `scores` (every other 10, so its modifier is 0).
@@ -354,7 +355,9 @@ fn a_cast_at_every_rung_draws_the_dice_of_that_rung() {
         scores(&mut w, &[(Stat::Intelligence, score)]);
         let roll: crate::dice::Roll = own_roll(&w).parse().expect("a roll");
         for _ in 0..20 {
-            let mut rng = w.state.rng.clone();
+            let label = format!("cast/auto/player/{}", w.state.actors.key(target));
+            let mut rng = crate::test_support::peek(&w, &label);
+            let before = draws(&w);
             let (_, hurt) = cast_at(&mut w, (2, 0), (target, (2, 0)));
             // Less a hit point the kobold may have mended as the turn passed.
             let rolled = roll.roll(&mut rng, 0);
@@ -363,7 +366,8 @@ fn a_cast_at_every_rung_draws_the_dice_of_that_rung() {
                 "Intelligence {score}: {hurt}"
             );
             assert_eq!(
-                w.state.rng, rng,
+                draws(&w),
+                before + 1,
                 "nothing more drawn at Intelligence {score}"
             );
         }
@@ -408,15 +412,17 @@ fn a_reroll_draws_once_more_per_die_it_sends_back_and_never_twice() {
     let roll: crate::dice::Roll = own_roll(&w).parse().expect("a roll");
     let (mut ones, mut low) = (0, 0);
     for _ in 0..300 {
-        let mut rng = w.state.rng.clone();
+        let label = format!("cast/auto/player/{}", w.state.actors.key(target));
+        let mut rng = crate::test_support::peek(&w, &label);
         let mut plain = rng.clone();
+        let before = draws(&w);
         let (_, hurt) = cast_at(&mut w, (2, 0), (target, (2, 0)));
         let rolled = roll.roll(&mut rng, 1);
         assert!(
             (rolled - 1..=rolled).contains(&hurt),
             "Sure hand rerolls the 1s: {hurt}"
         );
-        assert_eq!(w.state.rng, rng, "nothing more drawn");
+        assert_eq!(draws(&w), before + 1, "nothing more drawn");
         // The same stream without the reroll: three draws, of which any 1 is sent back.
         let dice: Vec<i32> = (0..3).map(|_| plain.range(1, 6)).collect();
         ones += dice.iter().filter(|&&d| d == 1).count();

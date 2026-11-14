@@ -333,7 +333,7 @@ fn a_panoply_is_composed_from_the_actors_own_stream() {
     let actor = &a.state.actors[&panoply];
     assert_eq!(actor.inventory, b.state.actors[&panoply].inventory);
     let content = a.content();
-    let mut rng = crate::animated::stream(a.state.seed, &panoply.0.to_string());
+    let mut rng = crate::animated::stream(a.state.seed, &actor.key);
     let pack = crate::animated::compose_slots(content, &mut rng, actor.creature);
     assert_eq!(
         (pack.items, pack.equipment),

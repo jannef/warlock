@@ -25,6 +25,7 @@ use crate::action::Event;
 use crate::check;
 use crate::content::{ActionKind, Stance, StatusId};
 use crate::noise::{self, Act};
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::world::{ActorId, Spent, World};
@@ -103,7 +104,11 @@ impl World {
         let nerve = them.check_modifier(&content, Stat::Willpower);
         let seen = self.perception.sees_actors_at(them.pos);
         let who = crate::text::capitalized(&self.called(them));
-        let quails = !check::check(&mut self.state.rng, nerve, difficulty);
+        let quails = !check::check(
+            &mut draw!(self, "war_cry/cow/{}", them.key),
+            nerve,
+            difficulty,
+        );
         if quails {
             let player = self.state.player;
             self.afflict(id, status, degrees, Some(player), events);

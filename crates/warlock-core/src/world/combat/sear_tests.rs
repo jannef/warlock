@@ -197,7 +197,7 @@ fn char_never_changes_what_happens() {
     }
     let (a, b) = (sooty.state(), clean.state());
     assert!(!a.current().scorch.is_empty(), "it burned");
-    assert_eq!(a.rng, b.rng, "the gameplay stream is untouched");
+    assert_eq!(a.draws, b.draws, "the draws are untouched");
     let without = |s: &WorldState| {
         let mut s = s.clone();
         for level in s.levels.values_mut() {

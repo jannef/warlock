@@ -47,6 +47,7 @@ use crate::damage::Damage;
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
 use crate::perception::VIEW_RADIUS;
+use crate::rng::draw;
 use crate::skills::{Effect as SkillEffect, Use};
 use crate::stats::Stat;
 use crate::talent::TalentMods;
@@ -130,7 +131,11 @@ impl World {
         let light = (talents.delving.pit_proof && pit)
             || (talents.delving.sure_step && {
                 let dexterity = player.check_modifier(&content, Stat::Dexterity);
-                check(&mut self.state.rng, dexterity, i32::from(def.difficulty))
+                check(
+                    &mut draw!(self, "trap/sure_step/player"),
+                    dexterity,
+                    i32::from(def.difficulty),
+                )
             });
         if light {
             self.know_trap(at);
@@ -214,7 +219,8 @@ impl World {
                     return 0;
                 }
                 let climb = self.climb_price(victim);
-                let fall = Damage::new(damage.roll(&mut self.state.rng, 0), *of);
+                let mut rng = draw!(self, "trap/pit/{}", self.state.actors.key(victim));
+                let fall = Damage::new(damage.roll(&mut rng, 0), *of);
                 let from = self.state.actors.get(&victim).map_or(at, |a| a.pos);
                 self.trap_hurts(kind, victim, (from, false), fall, events);
                 if victim == self.state.player {
@@ -264,7 +270,8 @@ impl World {
     ) -> Option<Blow> {
         let to = self.state.actors.get(&target)?.pos;
         let struck = self.target_against(target, source.1);
-        let blow = combat::strike(profile, &struck, &mut self.state.rng);
+        let mut rng = draw!(self, "trap/strike/{}", self.state.actors.key(target));
+        let blow = combat::strike(profile, &struck, &mut rng);
         // Diamond soul's catch (`ascetic.rs`): a trap's missile too.
         let blow = self.caught_trap_shot(trap, target, source.1, blow, events);
         events.push(Event::TrapStruck {
@@ -381,7 +388,10 @@ impl World {
         }
         let end = path.last().copied().unwrap_or(target);
         let breaks = content.object(object).breaks;
-        let broke = struck && breaks > 0 && self.state.rng.chance(u32::from(breaks));
+        let broke = struck
+            && breaks > 0
+            && draw!(self, "trap/shot_breaks/{}", self.state.actors.key(victim))
+                .chance(u32::from(breaks));
         if !broke && self.state.current().is_walkable(&content, end) {
             self.come_down(end, Stack::one(object));
         }

@@ -118,10 +118,7 @@ fn steps_outside_draw_nothing() {
             w.apply(&action);
         }
     }
-    assert_eq!(
-        plain.state.rng.below(1 << 30),
-        unstable.state.rng.below(1 << 30)
-    );
+    assert_eq!(plain.state.draws, unstable.state.draws);
 }
 
 #[test]

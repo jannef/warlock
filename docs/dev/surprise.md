@@ -54,7 +54,7 @@ Keep it current with the code, as CLAUDE.md says.
     the Initiative skill's `surprise_ease`, together capped at all of it, every other status's
     as its data says.
 - `world/combat/slip.rs`, slipping past (#683): `looks_at` (the look of `ai.rs::nearest_hostile_in_sight`,
-  the one moment: the contest's four gameplay draws for a creature hunting no one that would
+  the one moment: the contest's four keyed draws for a creature hunting no one that would
   see the player by darkvision alone, `sight::sees_by` and `sight::lit_for`; a lit look ends a
   slip), `World::slipped_past` (`Mind::missed` within `lasts_turns`), `end_slip` (clears it and,
   if the creature's eyes reach the player, sets `last_seen`: it sees them at once, no new roll),
@@ -65,7 +65,7 @@ Keep it current with the code, as CLAUDE.md says.
   `sneak_dice` d6s `and` the talents' `ambush`), `World::sneaks(attacker, target, unaware,
   missile)` (dice, unaware or `off_guard`: Surprised, Stunned; vitals for the attacker, a missile within
   `missile_reach` + `sneak_reach`, Chebyshev; no draw), `sneak_threat` (Master thief; never raises a threat an exploit lowered),
-  `ambushed` (the dice on a hit, gameplay stream; `Build::SneakAttack`, a marked pool only on
+  `ambushed` (the dice on a hit, keyed stream; `Build::SneakAttack`, a marked pool only on
   the attacker's mark, `mark.rs::builds_on`; the player's
   `Use::SneakAttack`, training stream), `has_vitals` and `vitals` (the struck side's
   `no_criticals`), `no_vital_spot` (Vital strike's and an
@@ -168,7 +168,7 @@ as any unnoticed creature's does. A blow the player lands on one shows it for th
 ## Invariants
 
 - One definition of unaware, one place anyone is surprised, one place the dear action is priced.
-- The check is two gameplay draws, only when an attack finds its target unaware or a hidden trap
+- The check is two keyed draws, only when an attack finds its target unaware or a hidden trap
   springs on someone awake; `unaware`, `flat_footed`, and the free-blow and cost hooks draw
   nothing, so a fight in plain sight draws as before (`no_draws_while_nothing_is_unaware`).
 - `Mind::noticed` is the player's half of awareness on the creature: saved and hashed (left out
@@ -185,7 +185,7 @@ as any unnoticed creature's does. A blow the player lands on one shows it for th
 - Hair trigger draws only as the blow it is, after the check's two draws and before the
   attack's; one per surprise because the check notices the attacker.
 
-- One moment anyone slips past: `looks_at`, four gameplay draws only there, only when the
+- One moment anyone slips past: `looks_at`, four keyed draws only there, only when the
   creature hunts no one, the player is in its darkvision and dark to its eyes, and no slip is
   set. `Mind::missed` is saved and hashed (left out while `None`; `Mind::is_calm` ignores it).
 

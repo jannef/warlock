@@ -2,8 +2,9 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You set to work on the Fine long sword at the anvil. The metal cracks under the hammer. This is a
- damaged long sword!
+ You set to work on the Fine long sword at the anvil. The metal rings true. This is a Marvellous
+ long sword!
+
 
 
 
@@ -15,8 +16,7 @@ expression: "render(case, content.clone())"
 
            ┌─ Make do and mend ─────────────────────────────────────────────────────────┐
            │                                                                            │
-           │ Melee weapons                                                              │
-           │ > a - ) a damaged long sword (+0 hit, 1d9-1)                       1.8 kg  │
+           │   You carry nothing damaged to mend.                                       │
            │                                                                            │
-           │ a or Enter mend   Esc cancel                                               │
+           │ Enter mend   Esc cancel                                                    │
            └────────────────────────────────────────────────────────────────────────────┘

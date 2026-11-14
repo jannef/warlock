@@ -28,6 +28,7 @@ use crate::content::{Content, OnlyTerrain, SpellData};
 use crate::fov::radius2;
 use crate::geom::{Dir, Pos};
 use crate::noise::Heard;
+use crate::rng::draw;
 use crate::text::capitalized;
 use crate::weather::{Override, Weather};
 use crate::world::{Actor, ActorId, World};
@@ -116,7 +117,9 @@ impl World {
             self.say(text.clone());
         }
         self.sound_at(cast.def.look.noise, here);
-        let back = heal.roll(&mut self.state.rng, cast.reroll).max(0);
+        let back = heal
+            .roll(&mut draw!(self, "spell_rule/heal_all/player"), cast.reroll)
+            .max(0);
         for id in hurt {
             self.spell_heals(id, back);
             self.spell_landed(cast, id, back > 0);
@@ -226,7 +229,7 @@ impl World {
         }
         self.sound_at(cast.def.look.noise, here);
         let n = u32::try_from(cells.len()).unwrap_or(u32::MAX);
-        let to = cells[self.state.rng.below(n) as usize];
+        let to = cells[draw!(self, "spell_rule/blink/player").below(n) as usize];
         self.teleport_to(player, (here, to), events);
         let me = self.player_mut();
         let ended: Vec<_> = (blink.ends.iter())

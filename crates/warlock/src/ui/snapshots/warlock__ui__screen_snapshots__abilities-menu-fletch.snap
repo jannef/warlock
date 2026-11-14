@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  Beald, your hound, pads at your heel.
- You set to work on the brittle arrows. You make 6 brittle arrows.
+ You set to work on the brittle arrows. You make 8 brittle arrows.
 
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │

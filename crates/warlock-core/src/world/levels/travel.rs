@@ -664,20 +664,28 @@ pub(in crate::world) fn make_creature(
 ) -> ActorId {
     let actor_id = ActorId(state.next_actor_id);
     state.next_actor_id += 1;
+    // Its key for keyed draws: where and when it was made (`rng.rs`, "Actor keys").
+    let key = (state.draws).actor_key(state.seed, state.time.seconds(), id, spawn.pos);
     let def = content.creature(spawn.creature);
     // A unique type comes once a run, however it came (spec §7 "Danger levels").
     if def.unique {
         state.progress.uniques.insert(def.id.clone());
     }
-    let (carry, equipment) = placed_gear(content, state.seed, id, actor_id, spawn);
+    let (carry, equipment) = placed_gear(content, state.seed, id, &key, spawn);
     // An animated thing is made of its body or its pieces (spec §8 "Animated objects").
-    let mut rng = crate::animated::stream(state.seed, &actor_id.0.to_string());
+    let mut rng = crate::animated::stream(state.seed, &key);
     let (carry, equipment) =
         crate::animated::kit(content, &mut rng, spawn.creature, (carry, equipment));
     let weapon_skills = crate::animated::weapon_skills(content, spawn.creature, &carry, &equipment)
         .unwrap_or_else(|| def.weapon_skills.clone());
+    // Its court and grade, each one draw on its own stream of the actor's key.
+    let faction_override = (spawn.faction).or_else(|| {
+        crate::world::creatures::court::join(content, state.seed, &key, spawn.creature)
+    });
+    let grade = crate::grade::draw(content, state.seed, &key, spawn);
     let mut actor = Actor {
         id: actor_id,
+        key,
         kind: ActorKind::Creature,
         creature: spawn.creature,
         level: id.to_string(),
@@ -705,10 +713,8 @@ pub(in crate::world) fn make_creature(
         damage: Default::default(),
         drained: Default::default(),
         weapon_skills,
-        faction_override: (spawn.faction).or_else(|| {
-            crate::world::creatures::court::join(content, state.seed, actor_id, spawn.creature)
-        }),
-        grade: crate::grade::draw(content, state.seed, actor_id, spawn),
+        faction_override,
+        grade,
         summoner: None,
         split_from: None,
         ally: None,
@@ -750,7 +756,7 @@ pub(in crate::world) fn make_creature(
     }
     crate::rot::made_at(&mut actor.inventory, content, state.time);
     // A wand in a fixed kit draws its rung now (one rolled with its gear has one already).
-    let mut rng = crate::rng::Rng::objects(state.seed, &format!("actor/{}", actor_id.0));
+    let mut rng = crate::rng::Rng::objects(state.seed, &format!("actor/{}", actor.key));
     for stack in &mut actor.inventory {
         stack.draw_wand_rung(content, &mut rng);
     }
@@ -758,22 +764,21 @@ pub(in crate::world) fn make_creature(
     actor_id
 }
 
-/// What creature `spawn`, placed on level `level` as actor `id`, carries and of that wears and
-/// wields: its fixed kit (or the gear its generated level rolled), or else its type's gear,
-/// rolled now from `gear/<actor id>` at the level's item level (spec §8 "Creature gear").
+/// What creature `spawn`, placed on level `level` as the actor keyed `key`, carries and of that
+/// wears and wields: its fixed kit (or the gear its generated level rolled), or else its type's
+/// gear, rolled now from `gear/<actor key>` at the level's item level (spec §8 "Creature gear").
 fn placed_gear(
     content: &Content,
     seed: u64,
     level: &str,
-    id: ActorId,
+    key: &str,
     spawn: &CreatureSpawn,
 ) -> (Vec<Stack>, Equipment) {
     if !spawn.rolls_gear {
         return (spawn.carry.clone(), spawn.equipment.clone());
     }
-    let key = id.0.to_string();
-    let mut rng = crate::rng::Rng::gear(seed, &key);
-    let mut condition = crate::gear::condition::stream(seed, &key);
+    let mut rng = crate::rng::Rng::gear(seed, key);
+    let mut condition = crate::gear::condition::stream(seed, key);
     let item_level = content.item_level(level);
     let pack = crate::gear::equip(
         content,

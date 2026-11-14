@@ -347,7 +347,12 @@ fn a_smash_destroys_about_half_and_lockbreaker_a_quarter() {
             w.player_mut().talents.take("lockbreaker", None);
         }
         fill(&mut w, COFFER, 200);
-        w.apply(&Action::Kick(Dir::N));
+        for _ in 0..40 {
+            if terrain(&w, COFFER) == "chest_smashed" {
+                break;
+            }
+            w.apply(&Action::Kick(Dir::N));
+        }
         assert_eq!(terrain(&w, COFFER), "chest_smashed");
         let kept = lying(&w, COFFER, "dagger");
         assert!(

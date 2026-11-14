@@ -109,6 +109,7 @@ fn heard_at(map: &str, from: (i32, i32), loudness: u16, to: (i32, i32)) -> u16 {
 fn actor(content: &Content, creature: &str) -> Actor {
     Actor {
         id: ActorId(1),
+        key: "test".into(),
         kind: ActorKind::Creature,
         creature: content.creature_id(creature).expect("creature"),
         level: "t".into(),

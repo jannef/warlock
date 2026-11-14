@@ -488,7 +488,7 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
   forage is (`Watch::Forage`); stopped early, "...; you put down your work." and nothing is spent. Done (`crafted`),
   the picks are found again and the plan is resolved again from the pack ("You have nothing
   left to work with."; "Long work's stacks found again" below), then the
-  check: two gameplay draws (`combat::roll_natural`), `craft_modifier` = the profession's stat
+  check: two keyed draws (`combat::roll_natural`), `craft_modifier` = the profession's stat
   modifier (the recipe's profession's `stat`, above: Strength for Metalcraft, Dexterity for
   Woodcraft's, a row's own where it names one) +
   `Actor::skill_effect_of(skill, Effect::Craft)` (that skill's benefit alone, the items' skill
@@ -505,7 +505,7 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
   it took), an input `count × yield / 100`, the gem all of it; "The blade comes out brittle and
   you break it up for the metal." Made: the gem is set, and an item whose base has an `Aspect`
   takes `Grade::improvements()` (1, 2, 3; at most `rules/temper.toml`'s `most`) improvements, each an
-  aspect drawn evenly (one gameplay draw), with `attempts` equal to them: a crafted Fine item is a
+  aspect drawn evenly (one keyed draw), with `attempts` equal to them: a crafted Fine item is a
   once-tempered one (Temper's difficulty `13 + 2`), and a crafted Masterwork is `finished`, so
   Temper refuses it ("It can be made no finer."). An item with no aspect (a ring) is plain
   whatever the margin. The item is identified, joins the pack (`add_to_inventory`, over the limit
@@ -627,7 +627,7 @@ stones, the flaming arrows. No grades:
   wood covers up to 11 arrows, one bone shard a whole batch), and the plan asks for that; the
   wizard's row says what the batch at its most takes of the stack, and is pickable with one
   made's worth.
-- **The count** (`make_batch`, after the check): the dice rolled (a gameplay draw a die), or
+- **The count** (`make_batch`, after the check): the dice rolled (a keyed draw a die), or
   `fletch::fletch_count` (`fletch.toml`'s dice, at least 1, plus the recipe skill's trained
   value over `value_per_count`); then `batch_made(settings, natural, margin, count)`: all of it
   from a margin of 0, half rounded up within `half_within`, one within `one_within`, else none; a
@@ -733,7 +733,7 @@ gem), dispatched from `World::start_craft` by one arm to `World::start_cut`; its
   shop goods (`may_loose`). An uncut tiny gem may be cut.
 - **Time**: the recipe's `seconds` (30 minutes) by `keep_at`; stopped early, "...; you put down
   your work." and the gem is untouched.
-- **The check**: two gameplay draws (`combat::roll_natural`), plus the gem's profession's stat
+- **The check**: two keyed draws (`combat::roll_natural`), plus the gem's profession's stat
   modifier (`stock.toml`: Dexterity), `VigourMods::check(stat)`, and
   `skill_effect_of(recipe skill, Effect::Craft)`, against `difficulty` + the gem's `work`.
   `cut_band(gems, cut_step, natural, margin)` (`CutBand`): a natural 2 `Shattered`; below 0
@@ -844,7 +844,7 @@ is not listed): `seconds = 600`, `difficulty = 12`, `yield = 50`.
   ("...; you leave off your work.").
 - **The checks**, at the end, re-checking the stack first: one per distinct material among
   `Stack::parts(content)` (resolved, gems included) that `profession_of` maps, in first-seen
-  order; each two gameplay draws (`combat::roll_natural`), all drawn before anything changes:
+  order; each two keyed draws (`combat::roll_natural`), all drawn before anything changes:
   natural + the stat's modifier + `VigourMods::check(stat)` + `skill_effect_of(skill, Craft)`
   against `difficulty + work`, `check::makes` (a natural 2 fails, a 24 succeeds). Untrained, the
   check is made the same.
@@ -922,7 +922,7 @@ stack), and `world/classes/class_ability.rs`'s bare `use` ("Use it on what?").
   (`may_loose`).
 - **Time**: `seconds` by `keep_at` in `craft` turns; interrupted, nothing happens and the time is
   spent ("...; you put down your work.").
-- **The check**, at the end, the stack checked again: natural (two gameplay draws) + the main
+- **The check**, at the end, the stack checked again: natural (two keyed draws) + the main
   material's profession's stat modifier + `VigourMods::check(stat)` + `skill_effect_of(skill,
   Craft)` against `difficulty + work` (`check::makes`); untrained, the stat alone, as Salvage's.
 - **Made**: one item set apart (`World::set_apart`) and `Worked::repair`: `damaged` and `by`

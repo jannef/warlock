@@ -6,8 +6,8 @@
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, TrapAvoid};
 use crate::replay::Replay;
-use crate::rng::Rng;
 use crate::skills::{SkillId, Use};
+use crate::test_support::draws;
 use crate::test_support::last;
 use crate::world::*;
 
@@ -65,13 +65,10 @@ fn chance(world: &World) -> u32 {
     world.content().trap_avoid().chance(world.trap_dodge())
 }
 
-/// Sets the gameplay stream to the first whose next draw avoids (`avoid`) or misses at `chance`.
+/// Rigs the seed so that the next sidestep's draw avoids (`avoid`) or misses at `chance`.
 fn rig(world: &mut World, avoid: bool) {
     let chance = chance(world);
-    let seed = (0..10_000)
-        .find(|&s| Rng::gameplay(s).chance(chance) == avoid)
-        .expect("a stream that comes out so");
-    world.state.rng = Rng::gameplay(seed);
+    crate::test_support::rig(world, "sidestep/player", |rng| rng.chance(chance) == avoid);
 }
 
 /// How many of `tries` fresh worlds (`map`, `stats`; one built, then copied), each on its own
@@ -81,7 +78,7 @@ fn avoided(map: &str, stats: &str, tries: u64) -> u64 {
     (0..tries)
         .filter(|&s| {
             let mut w = fresh.clone();
-            w.state.rng = Rng::gameplay(s);
+            w.state.seed = s;
             !sprung(&step(&mut w))
         })
         .count() as u64
@@ -151,7 +148,7 @@ fn a_pit_is_stepped_over_lightly() {
 fn a_hidden_trap_always_goes_off() {
     for s in 0..40 {
         let mut w = world("#####\n#@h.#\n#####\n", AGILE);
-        w.state.rng = Rng::gameplay(s);
+        w.state.seed = s;
         assert!(sprung(&step(&mut w)), "stream {s}");
     }
 }
@@ -199,9 +196,9 @@ fn a_step_not_chosen_and_a_doors_trap_get_no_chance() {
     assert!(events.iter().any(|e| matches!(e, Event::TrapSprung { .. })));
     // Through an open door with a known trap: nothing goes off, nothing is drawn.
     let mut w = world("#####\n#@o.#\n#####\n", AGILE);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     assert!(!sprung(&step(&mut w)));
-    assert_eq!(w.state.rng, rng);
+    assert_eq!(draws(&w), rng);
 }
 
 #[test]

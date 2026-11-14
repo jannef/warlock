@@ -27,6 +27,7 @@ use crate::content::{ActionKind, Content};
 use crate::geom::{Dir, Pos};
 use crate::magic::loot::pick_weighted;
 use crate::object::{self, Stack};
+use crate::rng::draw;
 use crate::skills::{SkillId, Use};
 use crate::time::Duration;
 use crate::world::turn::rest::Ended;
@@ -104,13 +105,14 @@ impl World {
         };
         let me = self.state.player();
         let value = me.skills.value(rules.skill).unwrap_or(0);
-        let dice = rules.count.roll(&mut self.state.rng).max(1);
+        let mut rng = draw!(self, "gather/player");
+        let dice = rules.count.roll(&mut rng).max(1);
         let count = dice + i32::from(value / rules.value_per_count);
         let table = rules.at(content.item_level(&self.state.current_level));
         // Each herb found, joined to a stack of its kind, in the order first found.
         let mut stacks: Vec<Stack> = Vec::new();
         for _ in 0..count {
-            let Some(&herb) = pick_weighted(&mut self.state.rng, &table) else {
+            let Some(&herb) = pick_weighted(&mut rng, &table) else {
                 break;
             };
             match stacks.iter_mut().find(|s| s.object == herb) {

@@ -17,7 +17,7 @@
 use crate::combat::Profile;
 use crate::content::{Content, CreatureDef, CreatureSpawn};
 use crate::rng::Rng;
-use crate::world::{Actor, ActorId};
+use crate::world::Actor;
 
 /// One in this many creatures that may be graded comes lesser, and one in as many greater.
 pub const ONE_IN: u32 = 6;
@@ -53,14 +53,14 @@ pub(crate) fn words(own: Option<[String; 2]>, tags: &[String]) -> [String; 2] {
     })
 }
 
-/// The grade of the creature `spawn` places as actor `id` in the run of `seed`: −1 lesser, +1
-/// greater, 0 neither, one in [`ONE_IN`] each; always 0 for a type with no grades or a unique
-/// character. One draw on `grade/<actor id>`, and nothing else.
-pub fn draw(content: &Content, seed: u64, id: ActorId, spawn: &CreatureSpawn) -> i8 {
+/// The grade of the creature `spawn` places as the actor keyed `key` in the run of `seed`: −1
+/// lesser, +1 greater, 0 neither, one in [`ONE_IN`] each; always 0 for a type with no grades or
+/// a unique character. One draw on `grade/<actor key>`, and nothing else.
+pub fn draw(content: &Content, seed: u64, key: &str, spawn: &CreatureSpawn) -> i8 {
     if !content.creature(spawn.creature).grades || spawn.npc.is_some() {
         return 0;
     }
-    match Rng::grade(seed, &id.0.to_string()).below(ONE_IN) {
+    match Rng::grade(seed, key).below(ONE_IN) {
         0 => -1,
         n if n == ONE_IN - 1 => 1,
         _ => 0,

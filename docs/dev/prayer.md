@@ -46,7 +46,7 @@ list is never answered. A prayer effect: `tier` 1–5 with a
    drained point.
 3. The strain is lazy: `Strain::now = value − elapsed / decay` (never below 0). Locked (a fizzle
    locked it and `now > 0`) → a fizzle with no draw. Else the chance is `now × fizzle_per_100 /
-   100` (at most 100); above 0 it is **one draw** of the gameplay stream (`rng.chance`), at 0 none.
+   100` (at most 100); above 0 it is **one draw** of its keyed stream (`rng.chance`), at 0 none.
    Either way the strain becomes `now + strain` at the current time, `locked` = fizzled.
 4. Fizzled: the face's `fizzle` line (the same locked or unlucky), a cast's time
    (`price_of(Cast)`). Answered: the face's `pray` line, then the first `answers` problems (all

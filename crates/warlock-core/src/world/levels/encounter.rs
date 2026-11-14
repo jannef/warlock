@@ -32,6 +32,7 @@ use crate::content::{
 use crate::daylight::{self, DayPhase};
 use crate::geom::{Dir, Pos};
 use crate::rng::Rng;
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::text::capitalized;
@@ -824,8 +825,9 @@ impl World {
             + theirs_dark
             + rain
             - if lit { c.light } else { 0 };
-        let saw = check::check(&mut self.state.rng, mine, mine_against);
-        let seen = check::check(&mut self.state.rng, theirs, theirs_against);
+        let mut rng = draw!(self, "encounter/lookouts/player");
+        let saw = check::check(&mut rng, mine, mine_against);
+        let seen = check::check(&mut rng, theirs, theirs_against);
         if self.trains(Use::Lookout) {
             self.train(Use::Lookout);
         }
@@ -867,7 +869,7 @@ impl World {
             + ears
             + talents.delving.notice.unwrap_or(0);
         let against = c.difficulty + lead.skills.effect(&content, Effect::Stalk) + rain;
-        let woke = check::check(&mut self.state.rng, mine, against);
+        let woke = check::check(&mut draw!(self, "encounter/sleepers/player"), mine, against);
         if self.trains(Use::Hear) {
             self.train(Use::Hear);
         }
@@ -987,7 +989,7 @@ impl World {
                 .unwrap_or(i32::MAX);
         let aware = if unaware { 0 } else { e.aware };
         let made = check::check(
-            &mut self.state.rng,
+            &mut draw!(self, "encounter/evade/player"),
             modifier,
             e.difficulty + pursuit + aware,
         );

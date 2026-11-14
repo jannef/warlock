@@ -72,7 +72,12 @@ pub(in crate::world) fn looks_at(
         + player.skill_effect(content, Effect::Slip);
     let against = me.effective_stats(content).modifier(Stat::Willpower)
         + me.skill_effect(content, Effect::Spot);
-    let made = check::contest(&mut state.rng, modifier, against);
+    let mut rng = state.draws.keyed(
+        state.seed,
+        state.time.seconds(),
+        format_args!("slip/{}/{}", player.key, me.key),
+    );
+    let made = check::contest(&mut rng, modifier, against);
     if made {
         let turn = state.turn;
         if let Some(me) = state.actors.get_mut(&id) {

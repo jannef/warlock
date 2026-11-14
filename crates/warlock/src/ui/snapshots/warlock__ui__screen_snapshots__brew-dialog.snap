@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You gather a sprig of moonwort.
- You search the glowing fungus for herbs. You gather a sprig of moonwort and a glowcap.
+ You gather a glowcap.
+ You search the glowing fungus for herbs. You gather a sprig of comfrey and a glowcap.
 
 
 

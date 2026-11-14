@@ -7,6 +7,7 @@ use crate::action::Action;
 use crate::content::ZoneKind;
 use crate::light::Light;
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::draws;
 use crate::test_support::run;
 use crate::world::*;
 
@@ -262,6 +263,8 @@ fn eyes_that_need_light_lose_sight_of_who_stands_in_the_mirk_and_darkvision_does
     let me = w.player_pos();
     run(&mut w, &format!("zone:dark@{},{},0", me.x, me.y));
     assert!(!sees(&mut w, far), "blind to one in the dark");
+    // Hunting the player already: no slipping past it in the dark (`slip.rs`).
+    w.state.actors.get_mut(&near).expect("there").mind.last_seen = Some(me);
     assert!(sees(&mut w, near), "within its darkvision");
 }
 
@@ -291,9 +294,9 @@ fn slicks_check_falls_by_the_seed_and_by_dexterity() {
 #[test]
 fn a_step_off_slick_ground_may_trip_too_but_walking_clear_draws_nothing() {
     let mut w = hall(5);
-    let plain = w.state.rng.clone();
+    let plain = draws(&w);
     run(&mut w, "zone:slick@15,3,0");
-    assert_eq!(w.state.rng, plain, "laying draws nothing");
+    assert_eq!(draws(&w), plain, "laying draws nothing");
     let mut seen = false;
     for seed in 0..200 {
         let mut w = hall(seed);

@@ -52,8 +52,8 @@ cases! {
     death_screen: Case {
         name: "death-screen",
         scenario: "arena",
-        // Pip's birth sign has gifts (#265): seed 4 is one where the fight still ends in his death.
-        seed: Some(4),
+        // Pip's birth sign has gifts (#265): seed 3 is one where the fight still ends in his death.
+        seed: Some(3),
         actions: "use_tool wait*27",
         ..BASE
     },
@@ -61,7 +61,7 @@ cases! {
     death_screen_graveyard: Case {
         name: "death-screen-graveyard",
         scenario: "arena",
-        seed: Some(4),
+        seed: Some(3),
         actions: "use_tool wait*27",
         graveyard: Some(GRAVEYARD),
         ..BASE

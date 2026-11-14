@@ -14,6 +14,7 @@ use crate::noise::Act;
 use crate::replay::Replay;
 use crate::skills::Effect;
 use crate::stats::{PerStat, Stats};
+use crate::test_support::draws;
 use crate::test_support::{builtin, last, run};
 use crate::world::combat::vitals_tests::train;
 use crate::world::*;
@@ -103,12 +104,12 @@ fn the_lullaby_comes_at_20_and_wants_mana() {
 fn sung_to_an_empty_room_it_spends_its_mana_and_its_time() {
     let mut w = singer();
     let mut chatted = w.clone();
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     let out = sing(&mut w);
     assert!(out.took_turn);
     assert_eq!(w.state.player().mana, 14, "six mana");
     assert_eq!(last(&w), "You sing a lullaby.");
-    assert_eq!(w.state.rng, rng, "nobody to check: no draw");
+    assert_eq!(draws(&w), rng, "nobody to check: no draw");
     // The time of a song (Inspire's).
     chatted.player_mut().mana = 20;
     let inspiration = w.content().resource_id("inspiration").expect("inspiration");
@@ -169,15 +170,17 @@ fn the_check_is_willpower_against_13_and_musics_craft_two_draws_a_hearer() {
         };
         assert_eq!(craft, expected_craft, "Music {music}");
         let will = crate::stats::modifier(i32::from(score));
-        let mut rng = w.state.rng.clone();
+        let label = format!("song/lull/{}", w.state.actors.key(kobold));
+        let mut rng = (w.state.draws).peek(w.state.seed, w.state.time.seconds(), &label);
         let made = check::check(&mut rng, will, 13 + craft);
+        let before = draws(&w);
         sing(&mut w);
         assert_eq!(
             suffers(&w, kobold, "drowsy"),
             !made,
             "Music {music}, Wp {score}"
         );
-        assert_eq!(w.state.rng, rng, "two draws for the one hearer");
+        assert_eq!(draws(&w), before + 1, "one draw for the one hearer");
     }
 }
 
@@ -221,9 +224,9 @@ fn the_peaceful_hear_it_and_draw_nothing() {
         .faction_override = Some(peaceful);
     assert_ne!(w.stance(w.state.player, friend), Stance::Hostile);
     w.perceive(&mut Vec::new());
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     sing(&mut w);
-    assert_eq!(w.state.rng, rng, "no draw");
+    assert_eq!(draws(&w), rng, "no draw");
     assert!(!suffers(&w, friend, "drowsy"));
 }
 

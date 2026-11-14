@@ -28,6 +28,7 @@
 use crate::action::{DiseaseNews, Event};
 use crate::content::{ActionKind, Content, Face, PrayerRules, PrayerUse, TalentEffect};
 use crate::hunger::Hunger;
+use crate::rng::draw;
 use crate::talent::FaithEffect;
 use crate::time::GameTime;
 use crate::world::Actor;
@@ -145,7 +146,7 @@ impl World {
         let now = strain.map_or(0, |s| s.now(rules, time));
         let locked = strain.is_some_and(|s| s.locked_at(rules, time));
         let chance = rules.fizzle_chance(now);
-        let fizzled = locked || (chance > 0 && self.state.rng.chance(chance));
+        let fizzled = locked || (chance > 0 && draw!(self, "orison/fizzle/player").chance(chance));
         let added = if self.communing_here() {
             0
         } else {

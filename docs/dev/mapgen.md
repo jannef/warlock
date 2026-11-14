@@ -5,7 +5,9 @@ rules it implements are in spec/07c-generation.md and spec/07d-shops-and-rooms.m
 rooms are in `docs/dev/special-rooms.md`. Keep it current with the code, as CLAUDE.md says.
 
 Procedural generation (spec §7, §8) lives in `warlock-core`: `rng.rs` (ChaCha8 streams derived
-from the run seed: `map/<level id>` per generated level, `gameplay` kept in `WorldState`;
+from the run seed: `map/<level id>` per generated level; in play every rule draws by a key of its
+own, `<rule>/<decision>/<actor key>@<second>#<n>` (`rng::draw!`, "Keys" in `rng.rs`: no shared
+keyed stream, #1662);
 `parse_seed` for `--seed`; `Rng::weighted` the one weighted draw, a single `below(total)` and a
 walk, `None` with no draw when nothing weighs anything or the sum overflows a `u32`, which the
 loaders of drawn tables refuse with `rng::weight_sum`; `magic::loot::pick_weighted` is it over

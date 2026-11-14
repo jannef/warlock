@@ -7,6 +7,7 @@ use crate::ability::{Ability, Unavailable};
 use crate::character::{CharacterSpec, RememberedFamiliar};
 use crate::content::{ClassActive, Content, ContentFiles};
 use crate::perception::Perception;
+use crate::test_support::draws;
 use crate::test_support::{last, run, said};
 use crate::time::Duration;
 use std::sync::{Arc, LazyLock};
@@ -291,7 +292,7 @@ fn the_familiar_she_lost_comes_back_the_same_at_her_grade_now() {
     };
     run(&mut w, "xp:20000 levelup:auto");
     lose_familiar(&mut w);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     run(&mut w, "use:call_familiar");
     let new = w.familiar().unwrap_or_else(|| panic!("{:?}", said(&w)));
     assert_ne!(new, id);
@@ -303,7 +304,7 @@ fn the_familiar_she_lost_comes_back_the_same_at_her_grade_now() {
     assert_eq!(i32::from(data.grade), i32::from(w.player_level()));
     assert_eq!(actor.hp, actor.max_hp(w.content()));
     assert_eq!(actor.pos.chebyshev(w.player_pos()), 1, "at her feet");
-    assert_eq!(w.state.rng, rng, "no draw on the gameplay stream");
+    assert_eq!(draws(&w), rng, "no draw on the gameplay stream");
     let kind = &w.content().creature(kind).name;
     let messages = said(&w);
     assert_eq!(

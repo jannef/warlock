@@ -15,6 +15,7 @@ use crate::action::AttackKind;
 use crate::content::ActionKind;
 use crate::content::Content;
 use crate::geom::Pos;
+use crate::rng::draw;
 use crate::world::{ActorId, ActorKind, LevelState, World, WorldState, fnv1a};
 use std::collections::BTreeSet;
 
@@ -143,7 +144,9 @@ impl World {
         if images.is_empty() {
             return at;
         }
-        match self.state.rng.below(images.len() as u32 + 1) as usize {
+        match draw!(self, "mirrors/{}", self.state.actors.key(target))
+            .below(images.len() as u32 + 1) as usize
+        {
             0 => at,
             k => images[k - 1],
         }

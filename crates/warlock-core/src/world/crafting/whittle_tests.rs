@@ -8,7 +8,6 @@ use crate::ability::{Ability, Unavailable};
 use crate::content::ContentFiles;
 use crate::magic::{Aspect, Worked};
 use crate::object::Stack;
-use crate::rng::Rng;
 use crate::test_support::said_text as said;
 use crate::world::*;
 
@@ -71,7 +70,7 @@ fn worked_after(w: &World) -> Option<Worked> {
 /// Whether an attempt of `action` on stack 0, on fate's draw `n`, came out made.
 fn made_on(w: &World, action: &Action, n: u64) -> bool {
     let mut w = w.clone();
-    w.state.rng = Rng::stream(n, "whittle_tests");
+    w.state.seed = n;
     w.apply(action);
     match worked_after(&w) {
         None => false,
@@ -192,7 +191,7 @@ fn an_attempt_takes_ten_minutes_names_the_item_and_marks_woodcraft() {
     let made = (0..500)
         .find(|&n| made_on(&w, &action, n))
         .expect("some draw is made");
-    w.state.rng = Rng::stream(made, "whittle_tests");
+    w.state.seed = made;
     let start = w.state.time;
     w.apply(&action);
     assert!(said(
@@ -226,7 +225,7 @@ fn the_table_is_the_anvils_row_by_row() {
         (0..500)
             .find(|&n| {
                 let mut v = w.clone();
-                v.state.rng = Rng::stream(n, "whittle_tests");
+                v.state.seed = n;
                 v.apply(&action);
                 let after = worked_after(&v);
                 let damaged = after.as_ref().is_some_and(|a| a.damaged);
@@ -235,7 +234,7 @@ fn the_table_is_the_anvils_row_by_row() {
             .expect("a draw")
     };
     let step = |w: &mut World, made: bool| {
-        w.state.rng = Rng::stream(find(w, made), "whittle_tests");
+        w.state.seed = find(w, made);
         w.apply(&action);
     };
     step(&mut w, true);
@@ -248,11 +247,11 @@ fn the_table_is_the_anvils_row_by_row() {
     assert_eq!(w.state.time, before, "refused, no time");
     // A failure damages it and takes all three.
     let mut failed = w.clone();
-    failed.state.rng = Rng::stream(0, "whittle_tests");
+    failed.state.seed = 0;
     let mut damage = None;
     for n in 0..500 {
         let mut v = failed.clone();
-        v.state.rng = Rng::stream(n, "whittle_tests");
+        v.state.seed = n;
         // Three improvements are refused: take one away to try again.
         let mut s = v.state.player().inventory[0]
             .worked()
@@ -286,7 +285,7 @@ fn the_table_is_the_anvils_row_by_row() {
     });
     let gone = (0..500).find(|&n| {
         let mut v = again.clone();
-        v.state.rng = Rng::stream(n, "whittle_tests");
+        v.state.seed = n;
         v.apply(&action);
         v.state.player().inventory.len() == again.state.player().inventory.len() - 1
     });

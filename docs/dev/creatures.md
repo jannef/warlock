@@ -51,7 +51,7 @@ Auras, innate statuses, and cries (#1128, design `docs/design/monster-dread.md` 
 returns, before `decide`; it puts the innate statuses back first) and `cry` beside `mutter` once
 the plan is done; `travel.rs::make_creature` calls `aura::wear_innate`, and `perception/actors.rs`
 leaves a type's innate statuses out of the seen effects. The aura's cooldown is the `aura`
-status; its draws (a check's two per target) and the cry's one are the gameplay stream's, on
+status; its draws (a check's two per target, `aura/resist/<target>/<creature>`) and the cry's one (`aura/cry/<creature>`) are keyed streams of their own, on
 the bearer's turn. `content::aura_roster_tests` holds the bearers' rows; the tribe files say
 whose is whose.
 
@@ -135,7 +135,7 @@ messages built in `World::perceive_events` (unseen ends are "something"). The ap
 creature leaves is `fight.rs::creature_dies`: its gear, then its body's stock and its corpse, or a
 statue (`statue.rs`), or, struck dead by a `crystal` spell (Soulglass), its colour's crystals in
 place of both (`World::crystallise`, `docs/dev/enchanting.md` "Soulglass"). No creature
-behavior may use randomness (combat rolls are the rules', from the gameplay stream); tie-breaks
+behavior may use randomness (combat rolls are the rules', from their keyed streams); tie-breaks
 are by distance, direction order, and actor id.
 
 Dragons and several natural attacks (spec §8 "Creature behavior": "Dragons", "Several natural
@@ -258,7 +258,7 @@ guard in `ai.rs::fight`'s `close_in` on `Route::Wait | Route::Unreachable`, `Pla
 `World::creature_blinks`): a cell beside the target within `range` of the blinker and in its
 line of sight that the teleport trap would land on (`trap.rs::may_land`), not shunned, drawn
 with `index(n)` in row order; `teleport_to`, the cooldown, a step's price. The two draws come
-after the AI decided, on the gameplay stream. **Words**: "The pixie snatches 40 gold coins
+after the AI decided, on its keyed stream. **Words**: "The pixie snatches 40 gold coins
 from you!" ("Something" unseen); "The blink dog is suddenly beside you." where the player sees
 it land, nothing unseen. **Wiki**: `creature_thieves` and `creature_blinks`
 (`creature-thieves.md`, `creature-blinks.md`, "Thieves" and "Blinkers" in

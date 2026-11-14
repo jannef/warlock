@@ -25,6 +25,7 @@ use crate::content::{ActionKind, Role};
 use crate::door::kick_breaks;
 use crate::geom::{Dir, Pos};
 use crate::noise::Act;
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::world::{ActorId, AttackSkills, Spent, World};
@@ -181,7 +182,8 @@ impl World {
         let force = self.kick_force();
         let wedge = self.wedge_at(p);
         let broken = def.kicked_in.and_then(|(to, sturdiness)| {
-            kick_breaks(force, sturdiness.saturating_add(wedge), &mut self.state.rng).then_some(to)
+            let mut rng = draw!(self, "door/kick/{},{}", p.x, p.y);
+            kick_breaks(force, sturdiness.saturating_add(wedge), &mut rng).then_some(to)
         });
         if self.trains(Use::Kick) {
             self.train(Use::Kick);

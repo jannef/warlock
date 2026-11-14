@@ -32,6 +32,7 @@ use crate::check;
 use crate::content::{Content, Grip};
 use crate::geom::Pos;
 use crate::object;
+use crate::rng::draw;
 use crate::stats::Stat;
 use crate::world::{ActorId, World};
 
@@ -94,7 +95,9 @@ impl World {
         }) else {
             return;
         };
-        if !self.state.rng.chance(u32::from(blow.chance)) {
+        // The blow's chance, the hold, and the landing: one stream (`knock_away/player`).
+        let mut rng = draw!(self, "knock_away/player");
+        if !rng.chance(u32::from(blow.chance)) {
             return;
         }
         let landings = self.knock_landings();
@@ -103,12 +106,12 @@ impl World {
         }
         let weapon = self.state.player().inventory[item].object;
         let modifier = hold(&content, self.state.player(), weapon);
-        if check::check(&mut self.state.rng, modifier, blow.difficulty) {
+        if check::check(&mut rng, modifier, blow.difficulty) {
             return;
         }
         let at = match landings.len() {
             1 => landings[0],
-            n => landings[self.state.rng.index(n)],
+            n => landings[rng.index(n)],
         };
         let who = if self.perception.sees_actors_at(pos) {
             crate::content::the_start(&name)

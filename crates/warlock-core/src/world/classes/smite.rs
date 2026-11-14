@@ -23,6 +23,7 @@ use crate::combat::{Blow, Profile};
 use crate::content::{ActionKind, ClassActive};
 use crate::damage::Damage;
 use crate::geom::Dir;
+use crate::rng::draw;
 use crate::talent::FaithEffect;
 use crate::talent::SmiteRider;
 use crate::world::{ActorId, Spent, World};
@@ -130,13 +131,14 @@ impl World {
                     .map_or(0, |stat| me.effective_stats(&content).modifier(stat));
                 let nerve = them.check_modifier(&content, check);
                 let who = crate::text::capitalized(&name);
-                if crate::check::check(&mut self.state.rng, nerve, difficulty + aim) {
+                let mut rng = draw!(self, "smite/fear/{}", them.key);
+                if crate::check::check(&mut rng, nerve, difficulty + aim) {
                     if seen {
                         self.say(format!("{who}'s will holds."));
                     }
                     return;
                 }
-                let degrees = u16::try_from(turns.roll(&mut self.state.rng).max(1)).unwrap_or(1);
+                let degrees = u16::try_from(turns.roll(&mut rng).max(1)).unwrap_or(1);
                 self.afflict(target, status, degrees, Some(player), events);
                 if seen {
                     self.say(format!("{who} quails!"));
@@ -224,7 +226,9 @@ impl World {
         if mods.faith.avatar.is_none() && !self.content.unholy(them.creature) {
             return blow;
         }
-        let amount = dice.roll(&mut self.state.rng).max(0);
+        let amount = dice
+            .roll(&mut draw!(self, "smite/wrath/{}", them.key))
+            .max(0);
         let amount = self.resisted(
             target,
             Damage {

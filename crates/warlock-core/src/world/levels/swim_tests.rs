@@ -5,6 +5,7 @@ use crate::check::check;
 use crate::content::ContentFiles;
 use crate::skills::{Effect, SkillId, Trained, Use};
 use crate::stats::Stat;
+use crate::test_support::{draws, peek};
 use crate::world::*;
 use std::sync::{Arc, LazyLock};
 
@@ -215,13 +216,14 @@ fn the_plunge_is_halved_when_the_check_is_made() {
                 .modifier(Stat::Toughness)
         };
         let hp = w.state.player().hp;
-        let mut expected = w.state.rng.clone();
-        let rolled = plunge.roll(&mut expected);
-        let kept_up = check(&mut expected, modifier, 11);
+        let before = draws(&w);
+        let rolled = plunge.roll(&mut peek(&w, "ice/plunge/player"));
+        let kept_up = check(&mut peek(&w, "ice/afloat/player"), modifier, 11);
         w.fall_in(player, THIN, &mut Vec::new());
         assert_eq!(
-            w.state.rng, expected,
-            "seed {seed}: the roll, then two draws"
+            draws(&w),
+            before + 2,
+            "seed {seed}: the roll, then the check"
         );
         let lost = hp - w.state.player().hp;
         assert_eq!(
@@ -253,11 +255,11 @@ fn the_untrained_get_no_check_and_no_draw() {
     let water = w.content().terrain_id("water").expect("water");
     let plunge = w.content().terrain(water).freeze.expect("freezes").plunge;
     let hp = w.state.player().hp;
-    let mut expected = w.state.rng.clone();
-    let rolled = plunge.roll(&mut expected);
+    let before = draws(&w);
+    let rolled = plunge.roll(&mut peek(&w, "ice/plunge/player"));
     let training = w.state.training.clone();
     w.fall_in(player, THIN, &mut Vec::new());
-    assert_eq!(w.state.rng, expected);
+    assert_eq!(draws(&w), before + 1);
     assert_eq!(w.state.training, training);
     assert_eq!(hp - w.state.player().hp, rolled);
     assert!(!kept(&w));
@@ -270,10 +272,10 @@ fn one_a_plunge_cannot_harm_asks_no_check() {
     w.player_mut().talents.take("swimmer", None);
     assert!(w.player_mut().talent_mods(&CONTENT).movement.plunge_proof);
     let player = w.player_id();
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     let hp = w.state.player().hp;
     w.fall_in(player, THIN, &mut Vec::new());
-    assert_eq!(w.state.rng, rng);
+    assert_eq!(draws(&w), rng);
     assert_eq!(w.state.player().hp, hp);
     assert!(!kept(&w));
     assert_eq!(marks(&w), Some(0));

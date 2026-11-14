@@ -12,7 +12,6 @@ use crate::check::{self, Checked};
 use crate::content::ContentFiles;
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
-use crate::rng::Rng;
 use crate::skills::{SkillId, Trained};
 use crate::test_support::{run, said_text as said};
 use crate::world::skills::search::Hidden;
@@ -266,16 +265,14 @@ fn pick_lock_springs_the_trap() {
     assert_eq!(terrain(&w, SPEAR), "chest_open");
 }
 
-/// Sets the gameplay stream to the first whose next check at disarming the trap at `at` comes
-/// out as `want` says.
+/// Rigs the seed so that the next check at disarming the trap at `at` comes out as `want` says.
 fn rig(w: &mut World, at: Pos, want: impl Fn(Checked) -> bool) {
     let kind = w.state.current().traps[&at].kind;
     let difficulty = w.difficulty_of(Hidden::Trap(kind));
     let modifier = w.disarm_modifier();
-    let seed = (0..10_000)
-        .find(|&s| want(check::roll(&mut Rng::gameplay(s), modifier, difficulty)))
-        .expect("a stream that comes out so");
-    w.state.rng = Rng::gameplay(seed);
+    crate::test_support::rig(w, "disarm/player", |rng| {
+        want(check::roll(rng, modifier, difficulty))
+    });
 }
 
 #[test]
@@ -329,6 +326,11 @@ fn searching_finds_a_chests_trap_by_the_chests_sign() {
 #[test]
 fn chest_wise_sees_a_chests_trap() {
     let mut w = world("tchests");
+    crate::test_support::rig(
+        &mut w,
+        &format!("search/passive/{},{}", ARROW.x, ARROW.y),
+        |rng| check::roll(rng, 0, 0) == Checked::Failed { by: 0 },
+    );
     w.apply(&Action::Wait);
     assert!(
         !w.state.current().traps[&ARROW].known,

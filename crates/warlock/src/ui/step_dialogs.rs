@@ -534,13 +534,20 @@ mod tests {
         use warlock_core::World;
         use warlock_core::action::parse_actions;
         let content = Arc::new(warlock_assets::content().unwrap());
-        let mut world = World::new(content, "traps", None).expect("the trap hall");
         // Below the west closet's door, which shows its arrow trap: walking into the door opens
-        // it (and sets the trap off) without asking, as `o` does.
-        for action in parse_actions("move:NW*14 move:W*21").unwrap() {
-            world.apply(&action);
-        }
-        assert_eq!(world.player_pos(), Pos::new(2, 5));
+        // it (and sets the trap off) without asking, as `o` does. A run whose kobolds keep out
+        // of the walk's way.
+        let world = (0..40u64)
+            .map(|seed| {
+                let mut world =
+                    World::new(content.clone(), "traps", Some(seed)).expect("the trap hall");
+                for action in parse_actions("move:NW*14 move:W*21").unwrap() {
+                    world.apply(&action);
+                }
+                world
+            })
+            .find(|world| world.player_pos() == Pos::new(2, 5))
+            .expect("a clear walk");
         let view = world.perception();
         assert!(view.trap(Pos::new(2, 4)).is_some());
         assert!(trap_dialog(&view, Dir::N).is_none());
