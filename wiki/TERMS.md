@@ -178,6 +178,7 @@ above.
 | Race | `races.md` (a race: its row) |
 | Evil races | `races.md#the-evil-races` |
 | Class, class levels | `classes.md`, `classes.md#levels` (a class: its page, `class-ID.md`, as `class-berserker.md`) |
+| A class's role and difficulty, choosing a class, the at-a-glance table | `classes.md#at-a-glance`, `first-run.md#choosing-a-class` |
 | Which classes a race and gender may take, classes not offered | `classes.md#who-may-take-which` (a race's row: `classes.md#limits-drow`) |
 | Starting kit | `starting-kit.md` |
 | Background story, its chapters, how rare | `background.md`, `background.md#how-rare` |
@@ -250,6 +251,7 @@ above.
 | The level curve to 100, the XP of every level | `experience.md#levels` |
 | Experience for discoveries | `experience.md#experience-for-something-new` |
 | A level-up, what a level gives | `experience.md#levelling-up` |
+| Levelling up: every choice a level brings (the level-up screen) | `experience.md#when-you-level-up` |
 | **Fighting** | |
 | To hit, the 2d12 roll | `combat.md#hitting` |
 | Finesse weapon | `combat.md#finesse-weapons` |
@@ -342,6 +344,8 @@ above.
 | Sorts of creatures (a quest's), drawn quests | `quests.md#sorts-of-creatures`, `quests.md#drawn-quests` |
 | The Weyfarers' Gilde, bounties, ranks | `guild.md`, `guild.md#the-wanted`, `guild.md#ranks` |
 | **The game** | |
+| Getting started, a first run, the keys you need first | `first-run.md` |
+| A task (how do I ...) | `how-do-i.md` |
 | Controls, keys, rebinding | `controls.md`, `controls-rebinding.md` |
 | Look mode | `controls-prompts.md#look-mode` |
 | Aiming | `controls-prompts.md#aiming` |

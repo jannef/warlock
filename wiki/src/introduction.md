@@ -35,23 +35,12 @@ attacks, and senses ([Creatures in numbers](creature-numbers.md)).
 
 ## Where to start
 
-The sidebar is in the order you meet things in play. Its parts:
-
-- **Getting started**: [What's in the game](features.md) is the overview, with screenshots.
-  [Controls](controls.md) lists the keys and explains the screen (in the game, `?` shows the
-  up-to-date list). [Settings](settings.md) covers font size, colors, and effects.
-- **Making a character**: [Your character](character.md), [Races](races.md),
-  [Classes](classes.md), [Horoscope](horoscope.md), and [Stats](stats.md) explain who you are.
-- **Growing stronger**: [Experience and levelling up](experience.md), [Talents](talents.md),
-  [Skills](skills.md), and [Abilities](abilities.md).
-- **Fighting and surviving**: [Combat](combat.md) explains how fights go, and how you die.
-  [Healing](healing.md) gathers every way to get your health back.
-- **Magic and prayer**, **Items**, and **Making things**: [Magic](magic.md),
-  [Objects and your pack](objects.md), [Crafting](crafting.md), and what grows from them.
-- **The world** and **Creatures**: [The Ascmearc](ascmearc.md) is the world you play in;
-  [Dungeons and danger](dungeons.md) and [Creatures](creatures.md) say what waits there.
-- **How the world works**: the reference at the end. [Time](time.md), [Light](light.md),
-  [Sight](sight.md), [Hearing](hearing.md), [Weather](weather.md), and the rest, exactly.
+- **New to the game?** Read [Your first run](first-run.md). [How do I...?](how-do-i.md) links the
+  answers to the questions players ask most.
+- **Choosing a build?** [Your character](character.md), [Classes](classes.md), and
+  [Talents](talents.md) are where to start.
+- **Looking something up?** The sidebar is in the order you meet things in play, from making a
+  character to the reference at the end, [How the world works](time.md).
 
 ## Starting a run
 

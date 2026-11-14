@@ -22,6 +22,25 @@ The first eleven classes are adventurers. The last four are everyday folk: an
 [craftsperson](class-craftsperson.md), and a [merchant](class-merchant.md). They were never
 trained for this, and it mostly shows. A new run offers all four.
 
+## At a glance
+
+New to the game? The [warrior](class-warrior.md), the [berserker](class-berserker.md), and the
+[paladin](class-paladin.md) are the easiest to start with: plenty of hit points, armour or rage,
+and a plain way to fight. The everyday folk are the hardest, and two of them are a joke on purpose.
+
+The role says how the class fights, and the difficulty how forgiving it is while you learn the
+game. The key stats are the ones the class rolls dice to raise. Hit points and mana are what the
+class adds to yours at the start; each level adds half of that again, plus what your stats add
+(see [Levelling up](experience.md#levelling-up)). The spells given are those
+the class's level table hands you, and from which level.
+
+{{#include generated/classes-glance.md}}
+
+Each class's page starts with the same card, then how to play it, its level table, and what its
+abilities do.
+
+## Stats, hit points, and weapons
+
 The first table is what each class adds to your starting stats. The second gives its hit points
 and the weapon skills and fighting styles it starts you in. A short description of each class
 follows, linking to its own page: its level table, what each ability does, and its spells and

@@ -312,8 +312,8 @@ pub(super) fn class_page(id: &str) -> String {
     format!("class-{}.md", id.replace('_', "-"))
 }
 
-/// The classes in the order New run offers them: their stat adjustments, then what they are,
-/// each linking to its page.
+/// The classes in the wiki's order (fighters, casters, skulkers, everyday folk: #1536): their
+/// stat adjustments, then what they are, each linking to its page.
 pub(super) fn classes(content: &Content) -> String {
     // Two tables, the stats and the rest, so neither is too wide to read (#1586).
     let (names, align) = stat_columns();
@@ -321,13 +321,14 @@ pub(super) fn classes(content: &Content) -> String {
         "{}| Class |{names}\n|---|{align}\n",
         super::util::stat_key()
     );
-    for c in content.classes() {
+    let classes = super::class_guide::ordered(content);
+    for c in &classes {
         let _ = writeln!(out, "| {} |{}", c.name, stat_cells(&c.stats));
     }
     out.push_str(
         "\n| Class | Hit points | Weapon skills | Fighting styles |\n|---|:---:|---|---|\n",
     );
-    for c in content.classes() {
+    for c in &classes {
         let _ = writeln!(
             out,
             "| {} | {} | {} | {} |",
@@ -338,7 +339,7 @@ pub(super) fn classes(content: &Content) -> String {
         );
     }
     out.push('\n');
-    for c in content.classes() {
+    for c in &classes {
         let _ = writeln!(
             out,
             "- **[{}]({})**: {}",

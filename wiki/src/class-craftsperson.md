@@ -1,12 +1,27 @@
 # Craftsperson
 
+{{#include generated/class-card.md:craftsperson}}
+
+See also: [The patron](patron.md) and [Crafting](crafting.md).
+
+## How to play
+
+You make things. Pick two [trades](#trades) as a new character; each trains a
+[craft skill](crafting.md) and comes with its tools. Make, mend, and
+[salvage](salvage.md) your own gear, and from level 12 a [patron](patron.md) in Cēaptūn buys your
+best work. You are a poor fighter, so start with the easy dungeons and let your work arm you.
+
+## Levels
+
 {{#include generated/class-levels.md:craftsperson}}
+
+## Abilities
 
 A craftsperson works their trades better than anyone, and their class abilities change the
 rules of [Crafting](crafting.md). The burgher who buys their best work is on
 [The patron](patron.md).
 
-## Trades
+### Trades
 
 A craftsperson learns no craft from the class
 itself. Instead they pick two [trades](talents.md#crafts-a-craftspersons-trades) as a new
@@ -17,7 +32,7 @@ Each also comes with the tools of the trade. A craftsperson may spend an ordinar
 third trade too. Their skills grow fast: three [skill rolls](skills.md#improving-a-skill) a level,
 and a roll on a trade throws the die one step up.
 
-## Eye for the make
+### Eye for the make
 
 Eye for the make works whenever you look at an item's
 description. It adds a line on what [salvage](salvage.md) would give of it if every
@@ -30,7 +45,7 @@ you how many [enchantments the item can bear](magic-items.md#capacity). It never
 odds, or how often a smith has worked the piece before. With
 [Waste not](#waste-not) it counts the three quarters salvage then gives back.
 
-## Waste not
+### Waste not
 
 From level 6 a craftsperson has **Waste not**: nothing is lost in their hands but time.
 
@@ -44,14 +59,14 @@ From level 6 a craftsperson has **Waste not**: nothing is lost in their hands bu
   was, and a damaged item is never destroyed. The attempt still counts, so the next one is as hard
   as it would have been.
 
-## Patron
+### Patron
 
 The patron ([Patron](#talent-patron), from level 12) is a
 well-to-do burgher at the Gæsthūs in Cēaptūn who commissions Fine work from the craftsperson's
 trades, one piece at a time, hands over the stock for it, and pays its full worth on delivery.
 See [The patron](patron.md).
 
-## Make do and mend
+### Make do and mend
 
 Make do and mend (from level 18) mends a
 [damaged](materials.md#item-damage) thing you carry, anywhere, with no anvil and no tools. Choose
@@ -73,18 +88,18 @@ It never destroys anything. You cannot mend something you wear or wield (take it
 material no craft works, like cloth or glass. If you are trained in the craft, the check may earn
 it a [training mark](skills.md#improving-a-skill).
 
-## Trapwright
+### Trapwright
 
 Trapwright (from level 25) rigs a trap on the cell beside you: a
 tripwire from arrows, stakes from a billet of wood, or a pitfall dug with your pick. A creature
 your trap kills is your kill. See [Rigging traps](traps.md#rigging-traps).
 
-## Field forge
+### Field forge
 
 Field forge (from level 32) makes an anvil wherever you are: a
 [makeshift anvil](altars-forges-springs.md#the-makeshift-anvil) from one ingot and an hour's work.
 
-## Quick hands
+### Quick hands
 
 From level 40 a craftsperson has **Quick hands**: every craft takes half its time. That is every
 [recipe](crafting.md#the-recipes) (an [enchanting](enchanting.md) too), a temper at [the anvil](altars-forges-springs.md#forges), a
@@ -96,7 +111,7 @@ the two together make them in a quarter of the time. Gathering herbs, foraging, 
 deciphering are not crafts and take as long as ever. The times the game shows are the halved
 ones.
 
-## Master's hand
+### Master's hand
 
 From level 50 a craftsperson has **Master's hand**: when a check is made, **4** is added to its
 margin before the grade or the cut is read. A failed check still fails, and a natural 2 still
@@ -106,7 +121,7 @@ comes 4 sooner. The grade tables above and the cut tables under
 [Gem cutting](gem-cutting.md#how-well-it-comes-out) have a "With Master's hand" column. Setting
 a gem, batches, and brews have no grade and are unchanged.
 
-## Maker's mark
+### Maker's mark
 
 From level 60 what a craftsperson makes bears their **mark**. Every weapon, piece of armour,
 shield, tool, ring, and amulet they [make](crafting.md#the-recipes) is marked, whatever its

@@ -1,6 +1,23 @@
 # Thief
 
+{{#include generated/class-card.md:thief}}
+
+See also: [Openings](openings.md).
+
+## How to play
+
+You fight best before the foe knows you are there. Hit a creature that has not noticed you and
+your blow is a [sneak attack](surprise.md#sneak-attacks); each sneak attack that hits gives you an
+[opening](openings.md) in that one foe's guard. Spend them all on
+[Exploit](abilities.md#ability-exploit) (`a`), one deep blow. Keep to one foe at a time: attacking
+another loses your openings. Your blades are light and your hit points few, so sneak
+([Stealth](skills.md#skill-stealth)) and strike first.
+
+## Levels
+
 {{#include generated/class-levels.md:thief}}
+
+## Abilities
 
 The thief's [sneak attacks](#talent-sneak-attack) build
 [openings](openings.md). [Exploit](abilities.md#ability-exploit), theirs from

@@ -1,6 +1,23 @@
 # Witch
 
+{{#include generated/class-card.md:witch}}
+
+See also: [Familiars](familiars.md), the witch's familiar in full.
+
+## How to play
+
+You have almost no hit points of your own, so keep your distance. Lay
+[Evil eye](#talent-evil-eye) on a foe and strike with [Grave breath](#talent-grave-breath), from
+the [abilities menu](abilities.md#the-abilities-menu) (`a`). Your [familiar](familiars.md), with you
+from the first turn, goes for what you have hexed, and its touch lays your evil eye.
+[Rest](resting.md) to get your [mana](mana.md) back. From level 6 [Cackle](#talent-cackle) makes
+your hexes last longer for no mana.
+
+## Levels
+
 {{#include generated/class-levels.md:witch}}
+
+## Abilities
 
 **The witch's familiar** ([Familiar](#talent-familiar), from level 1) is a small beast at
 her heel. Its [touch](familiars.md#the-touch) lays her [evil eye](magic.md#spell-evil-eye), and it

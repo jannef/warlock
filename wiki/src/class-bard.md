@@ -1,6 +1,23 @@
 # Bard
 
+{{#include generated/class-card.md:bard}}
+
+See also: [Inspiration](inspiration.md) and [Songs](abilities.md#songs).
+
+## How to play
+
+You can do a little of everything, and nothing best. You start with a blade, a lute, the spell
+[Mend](#talent-mend), and four
+[skill rolls](skills.md#improving-a-skill) a level. Your hit points are few, so pick your fights.
+[Travelled hands](#talent-travelled-hands) at level 3 makes you a beginner with every weapon, and
+your [songs](abilities.md#songs) come at 9 and 20. Your levels stop at 30, so plan on a
+[prestige class](prestige-classes.md) beyond it.
+
+## Levels
+
 {{#include generated/class-levels.md:bard}}
+
+## Abilities
 
 The bard's [inspire](abilities.md#ability-inspire) spends
 [inspiration](inspiration.md).

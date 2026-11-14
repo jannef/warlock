@@ -1,6 +1,22 @@
 # Ascetic
 
+{{#include generated/class-card.md:ascetic}}
+
+See also: [Ki](ki.md).
+
+## How to play
+
+You fight with bare hands and kicks, in light clothes. [Martial arts](#talent-martial-arts) makes
+your bare blows roll 1d6 and gives you [ki](ki.md), and [Flurry](#talent-flurry) spends a point of
+it on a second blow with every attack. Ki comes back by itself, a point every 18 seconds. Keep your
+hands empty, and wear no body armour or shield: much of what your levels bring works only so.
+You are hard to pin down but not hard to hurt, so do not let a crowd surround you.
+
+## Levels
+
 {{#include generated/class-levels.md:ascetic}}
+
+## Abilities
 
 The ascetic's [flurry](#talent-flurry),
 [stunning strike](abilities.md#ability-stunning-strike), and

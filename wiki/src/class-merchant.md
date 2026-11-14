@@ -1,6 +1,19 @@
 # Merchant
 
+{{#include generated/class-card.md:merchant}}
+
+## How to play
+
+You are weak in a fight, but you have gold: 120 coins, two gems, and a scroll of identify to
+start, and better prices in every [shop](shops.md) ([Haggler](#talent-haggler)). Put your gold
+with your business partner in Cēaptūn ([Invest](#invest)) and it grows week by week. Spend the
+rest on the best arms and armour you can buy, and fight carefully.
+
+## Levels
+
 {{#include generated/class-levels.md:merchant}}
+
+## Abilities
 
 <a id="invest"></a>**The merchant's investment** ([Invest](#talent-invest), from level 1)
 works like a fund. The merchant has a business partner at the corner desk of Factor Wulfrun's

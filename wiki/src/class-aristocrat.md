@@ -1,6 +1,20 @@
 # Aristocrat
 
+{{#include generated/class-card.md:aristocrat}}
+
+## How to play
+
+You were never meant for this: few hit points, weak arms, and a rapier you barely know. What
+you have is money: plenty of gold at the start, a magic ring, a gem, and a
+[stipend](#stipend) from home that waits for you in Cēaptūn at every level. Talk to your servant
+at the Gæsthūs to collect it, and spend it on the best arms, armour, and
+[potions](potions.md) the [shops](shops.md) sell.
+
+## Levels
+
 {{#include generated/class-levels.md:aristocrat}}
+
+## Abilities
 
 <a id="stipend"></a>**The aristocrat's stipend** ([Stipend](#talent-stipend), from level
 1) is money from home. Every time the aristocrat gains a [level](experience.md), their family puts
