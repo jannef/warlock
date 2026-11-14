@@ -70,3 +70,5 @@ Some effects look like light but never change what you can see:
 
 Each of these except creature shadows has its own switch in the [settings](settings.md), and
 [reduced effects](settings.md) turns them all off. Creature shadows are always drawn.
+
+See also: [Sight and memory](sight.md), [Vision types](vision.md), and [Your lantern](lantern.md).

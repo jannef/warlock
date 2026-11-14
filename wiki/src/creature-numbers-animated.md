@@ -19,3 +19,5 @@ column means is on [Creatures in numbers](creature-numbers.md), and how each cre
 ## Pace, senses, and size
 
 {{#include generated/creature-senses.md:animated}}
+
+See also: [Animated objects](animated.md) and [Mimics](mimics.md).

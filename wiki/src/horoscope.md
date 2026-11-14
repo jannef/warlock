@@ -77,7 +77,7 @@ Some gifts are things you do rather than rules that hold. You use them from the
 [abilities menu](abilities.md#the-abilities-menu) (`a`), under *Birth sign*:
 
 - Fire's *[Blaze](abilities.md#ability-blaze)*. Afterwards you are
-  *[Burnt out](status-effects.md#status-burnt-out)* for a while, and cannot use it again until that
+  *[Burnt out](status-list.md#status-burnt-out)* for a while, and cannot use it again until that
   passes.
 - The Unicorn's **[Horn's grace](abilities.md#ability-horns-grace)** and the Basilisk's
   **[Transfixing stare](abilities.md#ability-transfixing-stare)**. Each then rests for a while (a
@@ -178,3 +178,5 @@ get a year older on every birthday, and the [character screen](the-screen.md#cha
 age on the day you look.
 
 {{#include generated/horoscope.md}}
+
+See also: [Your character](character.md), [Your story](background.md), and [Talents](talents.md).

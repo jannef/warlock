@@ -238,3 +238,5 @@ what spending the mana trains. There is no roll: a scroll begun and finished is 
   always has scrolls of identify among its goods, and so does Ælfric's in Cēaptūn.
 - **Blank scrolls** turn up as loot and as general-store stock just as other scrolls do, from
   item level 1 (frequency 30).
+
+See also: [Magic](magic.md), [Learning spells](learning-spells.md), and [Potions](potions.md).

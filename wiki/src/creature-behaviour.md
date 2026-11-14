@@ -77,3 +77,6 @@ behind them.
   [kobold archer](creatures.md#creature-kobold-archer) a bow and arrows. You see what a creature
   wears and wields ([look mode](controls-prompts.md#look-mode) tells you), but never what else it carries.
   It fights with its gear ([Equipment](equipment.md)) and drops all of it when it dies.
+
+See also: [How creatures fight](creature-bodies.md), [Sight and memory](sight.md), and
+[Surprise and sneak attacks](surprise.md).

@@ -8,3 +8,5 @@ Only [Inspire](abilities.md#ability-inspire) spends it: 3 inspiration and nothin
 less you cannot sing it. (The [lullaby](abilities.md#ability-lullaby) is paid in
 [mana](mana.md#spending-it); see [Songs](abilities.md#songs).) A
 [virtuoso](class-bard.md#talent-virtuoso)'s inspire spends none.
+
+See also: [Resources](resources.md) and [Talents](talents.md).

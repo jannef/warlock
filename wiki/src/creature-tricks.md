@@ -45,13 +45,13 @@ within two cells.
 
 **Invisible** creatures are not there to you in any light, at any distance. The invisible stalker
 is always invisible. The rest are invisible while they are
-[Invisible](status-effects.md#status-invisible). They give themselves that status at the start of
+[Invisible](status-list.md#status-invisible). They give themselves that status at the start of
 their turn whenever the time below has passed since the last time, at no cost, and then go on
 with their turn. While invisible a creature sheds no light of its own.
 
 What shows them after all:
 
-- [Seeing](status-effects.md#status-seeing), from the spell
+- [Seeing](status-list.md#status-seeing), from the spell
   [See invisible](magic.md#spell-see-invisible) or the potion of seeing;
 - [Blood scent](talents.md#talent-blood-scent), on one it scents;
 - your companion's [nose](companions.md#companions);
@@ -78,7 +78,7 @@ statues are of nobodies of the floor's own kind, hold nothing, and can be dug an
 statue.
 
 A basilisk's statues may bear the names of your own past characters who were
-[turned to stone](status-effects.md#status-stiffening): "a statue of Brakka the dwarf". Every
+[turned to stone](status-list.md#status-stiffening): "a statue of Brakka the dwarf". Every
 character who dies goes into the graveyard, a file kept beside the settings that no new version
 of the game invalidates. Its petrified characters are named on statues, the most recent first,
 and never twice on one floor. All of them may be named on gravestones in
@@ -99,7 +99,7 @@ A spell that rolls to hit adds a quarter of the caster's level to the roll, as i
 
 Each cast costs the [mana](mana.md#how-much-mana-you-have) below from the caster's pool, which comes back as
 slowly as anyone's. So a caster casts a handful of spells and then fights with whatever it holds.
-One that cannot cast ([silenced](status-effects.md#status-silenced)) fights the same way.
+One that cannot cast ([silenced](status-list.md#status-silenced)) fights the same way.
 
 A caster casts the first spell on its list that it has the mana for and that would do something
 from where it stands:
@@ -137,10 +137,13 @@ your distance and shoot.
 
 **Always on.** What a creature **always has** comes back every turn it takes, and is never shown
 when you look at it. A fire salamander is always
-[cloaked in flame](status-effects.md#status-fire-cloaked), and whoever strikes it burns.
+[cloaked in flame](status-list.md#status-fire-cloaked), and whoever strikes it burns.
 
 **Cries.** A **cry** is a sound a creature makes now and then where it stands, on a turn it does
 not fight. Each turn the chance is 6 in the number of seconds given. It is heard by the rules of
 [hearing](hearing.md) like any sound, so you hear the hound before you see it.
 
 {{#include generated/creature-auras.md}}
+
+See also: [Creature powers](creature-powers.md), [Creatures](creatures.md), and
+[Creatures in numbers](creature-numbers.md).

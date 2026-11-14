@@ -145,3 +145,5 @@ at every rank. Only your own casts gain: a [scroll](scrolls.md#spell-scrolls) yo
 [wand](wands-and-rods.md#wands) you use casts at rank 1, and so do creatures.
 
 {{#include generated/spell-ranks.md}}
+
+See also: [Magic](magic.md), [Mana](mana.md), and [Skills](skills.md).

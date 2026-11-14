@@ -43,7 +43,7 @@ Its dark twin is **[Communion with the dark](#talent-communion)** (the priest's 
 [cursed](special-rooms.md#room-cursed), [draining](special-rooms.md#room-draining), or
 [haunted](special-rooms.md#room-haunted) room, or on a level such a curse lies over, your prayers
 add no [strain](prayer.md#strain), and the place's drain
-([Ebbing](status-effects.md#status-ebbing)) never touches you.
+([Ebbing](status-list.md#status-ebbing)) never touches you.
 
 The priest's **[Sanctuary](abilities.md#ability-sanctuary)** (level 50) costs 30
 [mana](mana.md#spending-it) and a minute's kneeling. It hallows the ground about the priest for an

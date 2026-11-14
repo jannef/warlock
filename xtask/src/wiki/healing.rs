@@ -184,9 +184,9 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
     let creatures = causing(content, |what| status_detail(def, status, what)).len();
     let attacks = match creatures {
         0 => None,
-        1 => Some("[a creature's attack](status-effects.md#who-causes-it)".to_string()),
+        1 => Some("[a creature's attack](status-list.md#who-causes-it)".to_string()),
         n => Some(format!(
-            "[the attacks of {n} creatures](status-effects.md#who-causes-it)"
+            "[the attacks of {n} creatures](status-list.md#who-causes-it)"
         )),
     };
     let mut causes = Vec::new();

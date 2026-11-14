@@ -47,3 +47,6 @@ The hardwood quarterstaff with its ruby gives 5 hardwood billets when the Woodcr
 made, and the ruby when the Jewelcraft check is made.
 
 {{#include generated/salvage.md}}
+
+See also: [Crafting](crafting.md), [Enchanting](enchanting.md), and
+[Forging at the anvil](forging.md).

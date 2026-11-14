@@ -146,3 +146,6 @@ temple's [cure](npcs.md#services)) or a remedy cures it. A spring never runs dry
 you like, and take the risk each time.
 
 {{#include generated/spring-outcomes.md}}
+
+See also: [Special rooms](special-rooms.md), [Prayer](prayer.md), and
+[Forging at the anvil](forging.md).

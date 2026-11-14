@@ -160,3 +160,5 @@ witch's start.
 [The Ascmearc](ascmearc.md)'s own chapter: how you came over the pass.
 
 {{#include generated/background-road.md}}
+
+See also: [Horoscope](horoscope.md), [Starting kit](starting-kit.md), and [Talents](talents.md).

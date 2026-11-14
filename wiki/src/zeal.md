@@ -27,3 +27,5 @@ than 6. For example, Presence 12 holds 11 at level 1, and Presence 16 holds 16 a
 **[Zealot](talents.md#talent-zealot)** (Grit; whoever holds [Smite](class-paladin.md#talent-smite), so
 the [paladin](class-paladin.md), level 6): every blow that hits you builds 2
 [zeal](resources.md#resource-zeal) instead of 1. A blow you give still builds 1, and the pool holds no more.
+
+See also: [Alignment](alignment.md) and [Abilities](abilities.md).

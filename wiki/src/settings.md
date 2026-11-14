@@ -56,3 +56,5 @@ On the desktop your settings, [key bindings](controls-rebinding.md) included, ar
 the file `settings.toml` in the game's configuration folder. In the browser they are kept with the
 page (see [Saving](saving.md#where-saves-are-kept)). A damaged settings file does no harm: the game
 uses the default for anything it cannot read.
+
+See also: [Controls](controls.md), [The screen](the-screen.md), and [Light](light.md).

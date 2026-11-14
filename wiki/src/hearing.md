@@ -12,7 +12,7 @@ around you hear too.
 - **[Doors](doors.md).** Opening a door makes noise, and closing one is louder still. Kicking a
   door is louder than either. The bang comes from the door itself and is heard on both sides,
   whether the door holds or breaks (see [Doors](doors.md)).
-- **Stealth.** The [stealth](skills.md#what-skills-give) skill makes your footsteps and the doors
+- **Stealth.** The [stealth](skill-benefits.md) skill makes your footsteps and the doors
   you open and close quieter, the more the higher it is. Your attacks are as loud as ever.
 - **Fighting.** Attacks are noisy. You may hear fighting, a
   [bowstring](ranged.md#shooting-and-throwing), or chanting (a [spell](magic.md#the-spells)) where
@@ -33,7 +33,7 @@ around you hear too.
 - **Songs.** A [bard](class-bard.md)'s song ([inspire](abilities.md#ability-inspire), the
   [lullaby](abilities.md#ability-lullaby)) is sung aloud, a voice louder than muttering, heard where
   the bard stands. Creatures that hear it and cannot see the singer come to look.
-  [Stealth](skills.md#what-skills-give) does not quiet it.
+  [Stealth](skill-benefits.md) does not quiet it.
 - **A cackle.** A [witch](class-witch.md)'s [cackle](abilities.md#ability-cackle) is a voice
   louder than muttering (60), heard where she stands. Those who hear it come to look. Stealth does
   not quiet it either.
@@ -59,10 +59,10 @@ The [overworld](overworld.md#travel) is silent: its steps are journeys, not foot
 
 The game only ever tells you that a sound is faint, clear, or loud. Behind that, every noise has
 a **loudness** where it is made. The table says how far you hear each one in the open, with the
-hearing you start with; the [listen](skills.md#what-skills-give) skill makes your hearing keener.
+hearing you start with; the [listen](skill-benefits.md) skill makes your hearing keener.
 
 A load makes your footsteps louder (above, and [Burden](burden.md)),
-[stealth](skills.md#what-skills-give) takes its share off your steps and doors, and a special room
+[stealth](skill-benefits.md) takes its share off your steps and doors, and a special room
 multiplies everything made in it. Creatures' footsteps and hearing are on [Creatures in numbers](creature-numbers.md#pace-senses-and-size).
 
 {{#include generated/noises.md}}
@@ -136,7 +136,7 @@ such as footsteps you have been hearing for a few turns, does not.
 ## Creatures hear you
 
 Your footsteps, the [doors](doors.md) you open and close, and your [attacks](combat.md#hitting)
-reach the creatures around you by the same rules. The [listen](skills.md#what-skills-give) skill
+reach the creatures around you by the same rules. The [listen](skill-benefits.md) skill
 lets you, or a creature, hear fainter sounds. A creature with enemies that hears something it
 cannot see goes to have a look. Walk softly, and mind the doors. See [Creatures](creatures.md).
 
@@ -156,3 +156,6 @@ You made the voice, so you do not hear it, but the map marks where it sounded wi
 ring until your next turn. It takes a [normal action](turns.md#what-actions-cost) (6 seconds at a
 normal pace). It is refused, taking no time, on yourself, out of reach, at a place you do not see,
 and on the [overworld](overworld.md#travel), which is silent.
+
+See also: [What skills give](skill-benefits.md), [How creatures behave](creature-behaviour.md), and
+[Sight and memory](sight.md).

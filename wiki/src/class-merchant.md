@@ -2,6 +2,8 @@
 
 {{#include generated/class-card.md:merchant}}
 
+See also: [Shops](shops.md) and [People and talk](npcs.md).
+
 ## How to play
 
 You are weak in a fight, but you have gold: 120 coins, two gems, and a scroll of identify to

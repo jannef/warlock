@@ -100,3 +100,6 @@ line](the-screen.md#messages).
 - Saves from before each character had its own (a single `run.sav`) are left where they are and
   not read.
 - The [status bar](the-screen.md#the-screen) shows the run's **seed**: give it when you report a problem with a run.
+
+See also: [Your character](character.md), [Hit points and death](hit-points.md), and
+[Settings](settings.md).

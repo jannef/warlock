@@ -49,7 +49,7 @@ trap springing beside you does not.
   you, you strike it at once, before its attack is rolled.
 - **Failed**: "You are taken by surprise!" (or, for your attack, "You hit the unsuspecting
   kobold."). The target is
-  [Surprised](status-effects.md#status-surprised) until it next acts (after a
+  [Surprised](status-list.md#status-surprised) until it next acts (after a
   [feint](skill-uses.md#feinting), for one action more). While Surprised:
   - it stays flat-footed, with no Dexterity and no Dodge in its Defence;
   - it makes no free blow: no riposte, no blow at a foe stepping up or away, no
@@ -67,7 +67,7 @@ succeeds.
 ### Stunned
 
 The ascetic's [Stunning strike](class-ascetic.md#talent-stunning-strike) leaves a foe it wounds
-[Stunned](status-effects.md#status-stunned) until it next acts. Stunned is flat-footed just like
+[Stunned](status-list.md#status-stunned) until it next acts. Stunned is flat-footed just like
 Surprised: no Dexterity and no Dodge in Defence, no free blow, and
 [sneak dice](#sneak-attacks) land on it. Its next action also takes half as long again, but
 neither [Initiative](skills.md#skill-initiative) nor [Cool head](talents.md#talent-cool-head)
@@ -82,8 +82,8 @@ target by how it caught it, in the attack's own line, hit or miss:
 |---|---|
 | asleep | "You hit the sleeping kobold." |
 | unaware of you, and failed its [initiative check](#caught-unawares) (or a mimic in disguise) | "You hit the unsuspecting kobold." |
-| already [Surprised](status-effects.md#status-surprised) | "You hit the surprised kobold." |
-| [Stunned](status-effects.md#status-stunned) | "You miss the stunned kobold." |
+| already [Surprised](status-list.md#status-surprised) | "You hit the surprised kobold." |
+| [Stunned](status-list.md#status-stunned) | "You miss the stunned kobold." |
 
 These are exactly the times your [sneak dice](#sneak-attacks) can land, except one: an unaware
 target that makes its check whirls to face you ("The kobold whirls to face you."), and that line
@@ -148,3 +148,5 @@ attacks once you come beside it. If it can shoot or cast, it does that from wher
 it is hurt, it hunts like any other.
 
 {{#include generated/creature-surprise.md}}
+
+See also: [the thief](class-thief.md), [Openings](openings.md), and [Hearing](hearing.md).

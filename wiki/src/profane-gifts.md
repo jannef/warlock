@@ -117,3 +117,6 @@ falls to 700, still Good, and an Evil one at −500 only to −650.
 A [paladin](class-paladin.md)'s [zeal](zeal.md) empties at the meal, as it does at any sin. Once
 you fall below Kind, a priest's holy gifts stop working (see
 [What it changes](alignment.md#what-it-changes)).
+
+See also: [Food and corpses](food.md), [The dungeons one by one](dungeon-guide.md), and
+[Talents](talents.md).

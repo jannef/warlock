@@ -85,3 +85,6 @@ does (`I` is your pack). On this screen every letter names a slot. A slot's lett
 what you carry that fits there. Picking an item puts it on, swapping out what was there; picking
 what is already there takes it off. Each change takes its time. You stay on the equipment screen
 until you press `Esc`. See [Equipment](equipment.md).
+
+See also: [Controls](controls.md), [Prompts and aiming](controls-prompts.md), and
+[Objects and your pack](objects.md).

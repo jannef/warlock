@@ -116,3 +116,6 @@ After that, a [load](burden.md) multiplies the time of everything you do (see
 ([Hunger](hunger.md)). Everyone's speed:
 
 {{#include generated/speeds.md}}
+
+See also: [Time and the calendar](time.md), [Terrain](terrain.md), and
+[How creatures behave](creature-behaviour.md).

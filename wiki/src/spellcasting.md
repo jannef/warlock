@@ -125,3 +125,6 @@ Two kinds of damage only magic does, **[force](damage-types.md#damage-force)** a
 
 The spells you cast are yours. What they kill earns you its [experience](experience.md), and a spell
 of your own that catches you can kill you.
+
+See also: [Magic](magic.md), [Spell types](spell-types.md), and
+[Spells with a rule of their own](spell-rules.md).

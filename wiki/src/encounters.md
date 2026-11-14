@@ -160,3 +160,5 @@ then.
 
 "Drawn from the folk" of a [dungeon](dungeons.md#who-lives-there-and-how-many) means whoever you
 would meet on its floors at that danger, strays included.
+
+See also: [Surprise and sneak attacks](surprise.md) and [Using your skills](skill-uses.md).

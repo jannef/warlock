@@ -100,3 +100,5 @@ you remember everything you have seen ([Sight and memory](sight.md)). Dust rises
 **[Fyrdelf](dungeon-guide.md#fyrdelf)**, the fire diggings under the hills of Ascdūn
 ([The Ascmearc](ascmearc.md)), is a mine and the place to try digging. Its foreman's cabin keeps a
 spare [pick-axe](#digging) behind a plank wall.
+
+See also: [Terrain](terrain.md), [Mining](mining.md), and [Searching](searching.md).

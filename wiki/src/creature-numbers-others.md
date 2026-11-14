@@ -19,3 +19,5 @@ each creature behaves on [Creatures](creatures.md#the-creatures).
 ## Pace, senses, and size
 
 {{#include generated/creature-senses.md:others}}
+
+See also: [People and talk](npcs.md) and [Encounters on the way](encounters.md).

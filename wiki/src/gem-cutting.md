@@ -87,3 +87,5 @@ check, and it is never lost.
 
 Every cut or setting you finish may train [Jewelcraft](skills.md#improving-a-skill), whatever came of
 it.
+
+See also: [Gems](gems.md), [Making jewellery](jewellery.md), and [Crafting](crafting.md).

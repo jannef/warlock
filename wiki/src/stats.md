@@ -234,3 +234,5 @@ and the [paladin](class-paladin.md)'s **[Divine grace](class-paladin.md#talent-d
 The creatures that drain:
 
 {{#include generated/drain-attacks.md}}
+
+See also: [Combat](combat.md), [Skills](skills.md), and [Your character](character.md).

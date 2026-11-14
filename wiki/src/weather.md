@@ -78,3 +78,6 @@ Drops are lit like everything else, so you hardly see them at night except in th
 [lantern](lantern.md). The Weather switch in the [settings](settings.md), and [reduced
 effects](settings.md), turn the falling rain off. The darker light stays, since it is part of what
 you see.
+
+See also: [Sun and moon](sun.md), [Temperature and ice](temperature.md), and
+[The overworld](overworld.md).

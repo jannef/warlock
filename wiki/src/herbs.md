@@ -37,3 +37,6 @@ says where a [forage](skill-uses.md#foraging) may find it with Herbalism; glowca
 grow only in the dark.
 
 {{#include generated/herbs.md}}
+
+See also: [Brewing potions](recipes-alchemy.md), [Potions](potions.md), and
+[What skills give](skill-benefits.md).
