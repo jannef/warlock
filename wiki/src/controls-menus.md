@@ -13,7 +13,7 @@ On every menu and screen these keys are fixed: you cannot rebind them.
 | Left / right (change a setting) | Left / Right, numpad `4` / `6`, or `h` / `l` |
 | Choose | `Enter` or numpad `Enter` |
 | Back | `Esc`, always |
-| Remove a key or reset a command's keys (Controls), delete a saved [character](saving.md#when-the-game-saves) (Characters) | `Delete` or `Backspace` |
+| Remove a key or reset a command's keys (Controls), delete a saved [character](saving.md#your-characters-and-the-graveyard) (Characters) | `Delete` or `Backspace` |
 | Mark a [stack](objects.md#piles), mark everything ([picking up](objects.md#picking-up), [dropping](objects.md#dropping)) | `Space`, `,` |
 | Next / previous page of a list of items | `>` or `PageDown` / `<` or `PageUp` |
 

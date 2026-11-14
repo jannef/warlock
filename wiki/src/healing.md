@@ -31,16 +31,18 @@ Each of these slows or stops your healing until it ends, and each ends by itself
 (see [Status effects](status-effects.md) and [Diseases](diseases.md)). To end one sooner:
 
 - **[Bleeding](status-effects.md#bleeding)**: bind the wound with the
-  [Heal](skill-uses.md#treating-yourself) skill, or drink a greater healing potion or one of full
-  healing.
+  [Heal](skill-uses.md#treating-yourself) skill, drink a greater healing potion or one of full
+  healing, or a priest's prayer for [wounds](prayer.md#prayer-wounds).
 - **[Poison](status-effects.md#poisoned)**: a [potion of antidote](potions.md#potion-of-antidote)
-  or of full healing, the Heal skill (it draws out some of a dose), or a priest's prayer against
-  [poison](prayer.md#prayer-poison).
+  or of full healing, the spell [Remove disease](magic.md#spell-remove-disease), the Heal skill (it
+  draws out some of a dose), or a priest's prayer against [poison](prayer.md#prayer-poison).
 - **[Disease](diseases.md#curing-a-disease)**: an angelica root, a
-  [potion of cure disease](potions.md#potion-of-cure-disease), a temple's cure (see
+  [potion of cure disease](potions.md#potion-of-cure-disease), Remove disease, a temple's cure (see
   [Services](npcs.md#services)), or a priest's prayer against [disease](prayer.md#prayer-disease).
   The Heal skill eases one but never cures it.
 - **Stunned, frightened, or drowsy**: a [potion of clear head](potions.md#potion-of-clear-head).
+- **Everything else**: the "How it ends" column of the
+  [status tables](status-effects.md#every-status-effect) lists every way to end each one.
 
 Those born in the year of the Unicorn have [Horn's grace](abilities.md#ability-horns-grace), which
 ends bleeding and poison and shakes off a disease.
@@ -59,12 +61,12 @@ starving (see [Hunger](hunger.md)) change the pace:
 
 When several things change the pace at once:
 
-- If several [status effects](status-effects.md#how-they-work) slow your healing, only the slowest counts.
+- If several status effects slow your healing, only the slowest counts.
 - An effect that speeds healing up ([Renewal](magic.md#spell-renewal)'s, four times the pace) counts
   only while nothing slows it.
 - A [disease](diseases.md#how-a-disease-goes) that slows healing more than being
   [Diseased](status-effects.md#status-diseased) does counts too (see [Diseases](diseases.md)).
-- [Resting](resting.md#how-resting-works) makes up for some of it. Resting while
+- Resting makes up for some of it. Resting while
   [poisoned](status-effects.md#poisoned) heals at the usual pace.
 - While you [bleed](status-effects.md#bleeding) or starve, nothing heals you, resting or not.
 - In a [sanctuary](special-rooms.md#room-sanctuary) (a [special room](special-rooms.md)), wounds heal
@@ -91,4 +93,4 @@ When several things change the pace at once:
 
 Your [mana](mana.md) comes back in the same way, paced by your [Willpower](stats.md#stat-willpower).
 
-See also [Status effects](status-effects.md) and [Hit points](hit-points.md#hit-points).
+See also [Status effects](status-effects.md) and Hit points.

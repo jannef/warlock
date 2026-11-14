@@ -32,13 +32,17 @@ dodge (it misses by your Dexterity or Dodge) or parry. Used again while poised, 
 action more. It works with any grip, a staff too.
 
 **[Stillness](abilities.md#ability-stillness)** (level 25, with
-[still mind](#talent-still-mind)) costs 2 ki and takes no time at all. It ends at once
-whichever of these you suffer, so you act this very turn: [held](status-effects.md#status-held),
-[pinned](status-effects.md#status-pinned), [staggered](status-effects.md#status-staggered),
-[stunned](status-effects.md#status-stunned), [surprised](status-effects.md#status-surprised),
-[transfixed](status-effects.md#status-transfixed), [frightened](status-effects.md#status-frightened),
-[drowsy](status-effects.md#status-drowsy), and [webbed](status-effects.md#status-webbed). With none
-of them on you it is refused and costs nothing. Any grip will do.
+[still mind](#talent-still-mind)):
+
+- **Cost:** 2 ki, and no time at all. Any grip will do.
+- **Effect:** it ends at once whichever of these you suffer, so you act this very turn:
+  [held](status-effects.md#status-held), [pinned](status-effects.md#status-pinned),
+  [staggered](status-effects.md#status-staggered), [stunned](status-effects.md#status-stunned),
+  [surprised](status-effects.md#status-surprised),
+  [transfixed](status-effects.md#status-transfixed),
+  [frightened](status-effects.md#status-frightened), [drowsy](status-effects.md#status-drowsy),
+  and [webbed](status-effects.md#status-webbed).
+- **Refused:** with none of them on you, for no ki.
 
 **[Diamond soul](#talent-diamond-soul)** (level 40) adds +2
 [Deflection](combat.md#defence). While you hold no weapon and no shield, it also lets you pluck from

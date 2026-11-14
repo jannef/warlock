@@ -12,13 +12,13 @@ the [days](time.md#days), the [moon](sun.md#moonlight), and the
 [weather](weather.md#how-the-weather-changes) change. You [hear](hearing.md) what you cannot
 see. You [talk to the people](npcs.md#chatting) you meet. You pick up and carry
 [objects](objects.md), [wear](equipment.md#what-fits-where) them, and
-[wield](equipment.md#what-fits-where) them.
+wield them.
 
 [Creatures](creatures.md) go about their business, notice you, and fight each other and you.
 Blows and arrows are rolled against your [Defence](combat.md#defence). They hurt, they kill, and
 [death](hit-points.md#death) is final. Spells work the same way, whether a creature casts them or
 you do; they cost [mana](mana.md#how-much-mana-you-have) (see [Magic](magic.md)). How well you fight depends on
-your [stats](stats.md), your weapon, and your [armour](equipment.md#what-fits-where).
+your [stats](stats.md), your weapon, and your armour.
 
 **The numbers here are exact.** The game keeps many numbers to itself and tells you in words
 instead: a creature looks "badly wounded", you "feel more skilled", boots make you "move
@@ -30,7 +30,7 @@ attacks, and senses ([Creatures in numbers](creature-numbers.md)).
 
 - **Play in your browser:** <https://jannef.github.io/warlock/> (needs a browser with WebGPU)
 - **Download for Windows, macOS, and Linux:** <https://github.com/jannef/warlock/releases>
-- **Build a version from source:** `cargo install --git https://github.com/jannef/warlock --tag v0.16.0 --locked --no-default-features warlock` (details in the [README](https://github.com/jannef/warlock#install-a-specific-version-from-source))
+- **Build a version from source:** {{#include generated/install.md:install}} (details in the [README](https://github.com/jannef/warlock#install-a-specific-version-from-source))
 - **Source and issues:** <https://github.com/jannef/warlock>
 
 ## Where to start
@@ -70,7 +70,7 @@ they match the version of the game this wiki was published with.
 **The Ascmearc**, "the ash march", is the first world. You come down into it through
 **[Beorggeat](ascmearc.md#the-places)**, a pass in the mountains on its western edge. Snow closes
 the pass behind you, so there is no way back. The road runs east to
-**[Cēaptūn](ascmearc.md#the-places)**, a market town an easy morning's walk away (see [The
+**Cēaptūn**, a market town an easy morning's walk away (see [The
 Ascmearc](ascmearc.md)).
 
 Apart from the land and its places, this wiki does not describe levels or walk you through them.

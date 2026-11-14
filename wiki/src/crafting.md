@@ -1,24 +1,31 @@
 # Crafting
 
-Three [skills](skills.md) are crafts that work materials: [Metalcraft](skills.md#skill-metalcraft),
-[Woodcraft](skills.md#skill-woodcraft), and [Jewelcraft](skills.md#skill-jewelcraft). Each works
-some [materials](materials.md#materials), and its checks use one [stat](stats.md). Everyone can
-take things apart for their materials: **[salvage](salvage.md)**. A smith trained in Metalcraft can also [forge](forging.md)
-weapons, armour, and tools at an anvil from metal **stock**: ingots of steel, iron, mithril, and the rest, which you
-can buy, find, or get by salvaging. Someone trained in Woodcraft can make knives, spears, clubs,
-staves, bows, crossbows, slings, a lute, and a pipe [by hand](handcraft.md), with a knife, from billets of wood,
-shards of bone and horn, hides, sinew, and blocks of flint or stone, and armour, shields, and
-clothes from hides. The recipes are on the [Metalcraft…](abilities.md#ability-metalcraft) and
-[Woodcraft…](abilities.md#ability-woodcraft) lists in the
-[abilities menu](abilities.md#the-abilities-menu) (see [Professions](skill-uses.md#professions)).
-An alchemist brews potions from herbs: see [Brewing potions](recipes-alchemy.md). An enchanter
-binds magic from crystals into what they carry: see [Enchanting](enchanting.md).
+Five [skills](skills.md) make things. Each has its own list in the
+[abilities menu](abilities.md#the-abilities-menu) (see [Professions](skill-uses.md#professions)),
+and its checks use one [stat](stats.md):
+
+- **[Metalcraft](skills.md#skill-metalcraft)** (Strength): [forge](forging.md) weapons, armour,
+  and tools at an anvil from metal stock, and temper metal at the
+  [anvil](altars-forges-springs.md#forges).
+- **[Woodcraft](skills.md#skill-woodcraft)** (Dexterity): make knives, spears, clubs, staves,
+  bows, crossbows, slings, arrows, hide armour, and clothes [by hand](handcraft.md), with a
+  knife.
+- **[Jewelcraft](skills.md#skill-jewelcraft)** (Dexterity): [cut and set gems](gem-cutting.md),
+  and make [rings and amulets](jewellery.md).
+- **[Alchemy](skills.md#skill-alchemy)** (Intelligence): [brew potions](recipes-alchemy.md) from
+  herbs.
+- **[Enchanting](skills.md#skill-enchanting)** (Willpower): [bind magic](enchanting.md) from
+  crystals into what you carry.
+
+Anyone, trained or not, can take things apart for their materials: **[salvage](salvage.md)**.
+
+Metal **stock** is ingots of steel, iron, mithril, and the rest, which you can buy, find, or get
+by salvaging. Woodcraft works billets of wood, shards of bone and horn, hides, sinew, and blocks
+of flint or stone.
+
 A recipe counts a potion, flask, or scroll you carry only once you know what it is
 ([unknown potions](potions.md#unknown-potions), [unknown scrolls](scrolls.md#unknown-scrolls)):
 an unknown one is no use to it.
-One trained in Jewelcraft can cut loose gems and set them (see [Gem cutting](gem-cutting.md)),
-and make rings and amulets (see [Making jewellery](jewellery.md)) on the
-[Jewelcraft…](abilities.md#ability-jewelcraft) list.
 
 ## Which skill makes what
 
@@ -29,7 +36,7 @@ Each material group is worked by one skill, with one stat:
 Flint, stone, and obsidian are the exceptions: they are knapped by hand, so
 [Woodcraft](skills.md#skill-woodcraft) works them, with Dexterity, not Jewelcraft.
 
-Cloth and glass have no craft yet. Nothing made of them can be saved.
+Cloth and glass have no craft yet. Nothing made of them can be salvaged.
 
 Some materials are harder to work than others. A material's **work** is added to the difficulty
 of every check that works it:
@@ -38,7 +45,7 @@ of every check that works it:
 
 Each craft skill gives **craft** points to its own checks: +8 at 100, +12 at 200 (see
 [what skills give](skills.md#what-skills-give)). They count only for the materials that skill
-works. Metalcraft never helps you save wood, even if you know both.
+works. Metalcraft never helps you salvage wood, even if you know both.
 
 ## The recipes
 

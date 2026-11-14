@@ -44,6 +44,7 @@ mod hearing;
 mod herbs;
 mod horoscope;
 mod hunger;
+mod install;
 mod kits;
 mod learning;
 mod links;
@@ -156,6 +157,7 @@ type Table = fn(&Content) -> String;
 /// topic (a new module for a new topic) plus one line here, next to its topic: never at the end.
 fn generate(content: &Content) -> Vec<(String, String)> {
     let tables: &[(&str, Table)] = &[
+        ("install.md", install::install),
         ("calendar.md", calendar::months),
         ("actions.md", actions::action_costs),
         ("speeds.md", actions::speeds),
@@ -1703,12 +1705,13 @@ mod tests {
                 "| Costs a hit point every 40 seconds, faster the worse it is; hit points do not \
                  come back; shows on others as \"bleeding\" | ",
                 "| Big hits and confirmed criticals; the attacks of 11 creatures; ",
-                "| A degree a minute; cured at once by bandage |",
+                "| A degree a minute; ended at once by potion of full healing, potion of greater \
+                 healing, a priest's prayer, the Heal skill (binds it), ",
             ],
         );
         for row in [
             "half as fast | The attacks of 27 creatures; eating rotten food | A degree every 2 \
-             minutes; cured at once by antidote |",
+             minutes; ended at once by potion of antidote, potion of full healing, ",
             "Strength \u{2212}1, Dexterity \u{2212}1 when strong",
         ] {
             assert!(statuses.contains(row), "{row} in {statuses}");

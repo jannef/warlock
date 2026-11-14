@@ -3,11 +3,13 @@
 Where each mechanic and keyword of the player wiki is explained, for linking (#691). It lives
 beside `wiki/src/`, not in it: it is a tool for page authors, not a page of the book.
 
-**The rule** (CLAUDE.md, "Wiki"): new or edited wiki prose links every mechanic or keyword it
-mentions to the section that explains it, with a relative link: `[Staggered](status-effects.md#status-staggered)`.
-Link every mention in running prose, but not in headings, code, quotes of in-game text, or a
-page's own subject on its own page (there, link the first mention in a section only when the
-link would go elsewhere than the heading it sits under), and not twice in one short sentence.
+**The rule** (CLAUDE.md, "Wiki"; the owner, #1609): new or edited wiki prose links each mechanic
+or keyword to the section that explains it, with a relative link: `[Staggered](status-effects.md#status-staggered)`.
+Link a term once per section, at its first mention there; later mentions in the same section stay
+plain text, so the links that answer the reader's next question stand out. Never link in
+headings, code, or quotes of in-game text, nor a page's own subject on its own page (there, link
+the first mention in a section only when the link would go elsewhere than the heading it sits
+under), nor a term in a table on the term's own page.
 Inflected forms link too: `[bleeds](status-effects.md#bleeding)`, `[Dwarves](races.md#race-dwarf)`.
 A term with no explaining section gets a short definition where its topic is, and a line here.
 
@@ -352,3 +354,4 @@ above.
 | Main menu, pause menu | `the-screen.md#menus` |
 | Settings, reduced effects, palettes | `settings.md`, `settings.md#palettes` |
 | Saving, autosave | `saving.md#when-the-game-saves` |
+| The saved characters, the graveyard | `saving.md#your-characters-and-the-graveyard` |

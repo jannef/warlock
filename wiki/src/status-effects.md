@@ -50,11 +50,16 @@ These four come up in most fights. None of them costs hit points; each costs you
 - **Drowsy.** Everything you do takes three times as long. The bard's
   [lullaby](abilities.md#ability-lullaby) and some creatures cause it. It eases a degree every 12
   seconds.
-- **Surprised.** You were [caught unawares](surprise.md#caught-unawares) and failed the initiative
+- **Surprised.** You were caught unawares and failed the initiative
   check. You are flat-footed, and your next action takes half again as long.
 
-A [potion of clear head](potions.md#potion-of-clear-head) cures stunned, frightened, and drowsy at
-once.
+**Getting rid of them:** they wear off by themselves, most within a few turns. Sooner:
+
+- a [potion of clear head](potions.md#potion-of-clear-head) ends stunned, frightened, and drowsy
+  at once (and staggered, transfixed, and sluggish);
+- a [priest](class-priest.md)'s [prayer of release](prayer.md#prayer-release) ends frightened and
+  drowsy;
+- an [ascetic](class-ascetic.md)'s [Stillness](abilities.md#ability-stillness) ends all four.
 
 ## Bleeding
 
@@ -72,6 +77,15 @@ points do not come back at all. The bleeding eases by itself and stops after a w
 bleeding stops." If you are trained in **[Heal](skills.md#skill-heal)**, you can bind the wound and
 stop it sooner, trying as often as it takes (see
 [Treating yourself](skill-uses.md#treating-yourself)).
+
+**Getting rid of it:** it stops by itself in time. Sooner:
+
+- bind the wound with the Heal skill;
+- drink a [potion of greater healing](potions.md#potion-of-greater-healing) or of
+  [full healing](potions.md#potion-of-full-healing);
+- a [priest](class-priest.md)'s prayer for [wounds](prayer.md#prayer-wounds);
+- [Horn's grace](abilities.md#ability-horns-grace), if you were born in the year of the Unicorn;
+- now and then, an answer at a [forgotten altar](altars-forges-springs.md#forgotten-altars).
 
 Creatures bleed the same way, and you can see it: [look mode](controls-prompts.md#look-mode) says "A giant
 rat (hostile, wounded, bleeding)". A creature can bleed to death after a fight: "The giant rat
@@ -92,8 +106,9 @@ each degree burns out in half a minute: "The flames go out." What resists
 Anything burning gives off a small light, so it cannot hide in the dark, and look mode names it:
 "A kobold (hostile, burning)".
 
-A step into [water](terrain.md#water), or a fall through ice into it, puts the flames out at once.
-So does a [cold spell](spell-types.md) that harms you.
+**Getting rid of it:** it burns out in half a minute a degree. A step into
+[water](terrain.md#water), or a fall through ice into it, puts the flames out at once. So does a
+cold spell that harms you.
 
 ## Corroded
 
@@ -101,6 +116,8 @@ Every [acid spell](spell-types.md) that harms something leaves it Corroded: "The
 keeps eating." A degree costs a hit point every six seconds and is spent in twelve, so it does two
 more hit points per cast: "The acid is spent." What resists [acid](damage-types.md#damage-acid)
 takes less. Look mode names it. It never eats armour.
+
+**Getting rid of it:** nothing ends it sooner; it is spent in twelve seconds a degree.
 
 ## Poisoned
 
@@ -118,9 +135,16 @@ everything they do, from [hitting](combat.md#hitting) and [Defence](combat.md#de
 you can [carry](burden.md#how-much-you-can-carry). The [character screen](the-screen.md#character)
 shows them lowered.
 
-Poison wears off by itself: "The poison wears off." If you are trained in
-**[Heal](skills.md#skill-heal)**, you may try to draw out some of a dose (see
-[Treating yourself](skill-uses.md#treating-yourself)).
+**Getting rid of it:** poison wears off by itself: "The poison wears off." Sooner:
+
+- drink a [potion of antidote](potions.md#potion-of-antidote) or of
+  [full healing](potions.md#potion-of-full-healing);
+- cast [Remove disease](magic.md#spell-remove-disease);
+- a [priest](class-priest.md)'s prayer against [poison](prayer.md#prayer-poison);
+- [Horn's grace](abilities.md#ability-horns-grace), if you were born in the year of the Unicorn;
+- if you are trained in [Heal](skills.md#skill-heal), draw out some of a dose (see
+  [Treating yourself](skill-uses.md#treating-yourself));
+- now and then, an answer at a [forgotten altar](altars-forges-springs.md#forgotten-altars).
 
 You cannot tell whether a creature is poisoned by looking at it.
 
@@ -177,7 +201,7 @@ A status effect can help or hinder in other ways while it lasts. The "What it do
   [Toughness](stats.md#stat-toughness) let you [heal](healing.md#how-fast-you-heal) to more hit points,
   those extra hit points go again when it ends.
 - **Fighting.** It may add to your [to-hit](combat.md#hitting) and [damage](combat.md#damage), or
-  to your [Dodge](combat.md#defence) and [Parry](combat.md#defence), as a
+  to your [Dodge](combat.md#defence) and Parry, as a
   [combat stance](stances.md#stances) does, on top of your stance. Creatures can suffer these too.
 - **Blows.** It may add damage of some [kind](damage-types.md) to your melee blows with either
   hand, as a [Flaming](affixes.md#prefixes) sword does. [Brand](magic.md#spell-brand) adds 1d4
@@ -202,7 +226,7 @@ A status effect can help or hinder in other ways while it lasts. The "What it do
   lets you see in the dark as [darkvision](vision.md#the-four-types) does, in each respect where it
   is better than your own sight.
 - **Resistance.** It may make you [resist](damage-types.md#armour-and-resistance) a kind of
-  [damage](damage-types.md). This counts like armour's resistance: together with what you wear it
+  damage. This counts like armour's resistance: together with what you wear it
   never goes past 75%, and never gives immunity.
 
 The [potions](potions.md) that last a while give:
@@ -222,7 +246,7 @@ shake it off. Each goes up to three degrees, as many as the singer's [Music](ski
 gives the song.
 
 A **hex** is a status that a [hex spell](spellcasting.md#shapes) lays: [Hexed](#status-ill-wished),
-[Weakened](#status-weakened), [Sluggish](#status-sluggish), [Drowsy](#status-drowsy), and
+[Weakened](#status-weakened), [Sluggish](#status-sluggish), Drowsy, and
 [Webbed](#status-webbed). A [witch](class-witch.md) can feed her hexes:
 
 - Her [cackle](abilities.md#ability-cackle) makes each hex she laid on a creature she sees grow a
@@ -233,13 +257,13 @@ A **hex** is a status that a [hex spell](spellcasting.md#shapes) lays: [Hexed](#
   her hexes on it, and a creature that dies under one of her hexes pays her mana.
 
 A **cooldown** is a status effect that only waits to wear off. While you are, say,
-[winded](#status-winded), the [ability](abilities.md) that winded you cannot be used again
+[winded](#status-winded), the ability that winded you cannot be used again
 (`you are winded`). Time is the only price: nothing counts how often you use an ability.
 
-**[Raging](#status-raging)** comes with the berserker's [rage](rage.md), one of the
+**Raging** comes with the berserker's rage, one of the
 [class abilities](class-berserker.md). While the rage lasts you are stronger and tougher but
 less clever, and cannot read or spend [mana](mana.md#spending-it). When it runs out you are
-**[Exhausted](#status-exhausted)** for two and a half minutes: a little weaker, and with no rage
+**Exhausted** for two and a half minutes: a little weaker, and with no rage
 until it passes.
 
 ## In the message line
@@ -252,7 +276,7 @@ stops." and "The poison wears off." show in the message line but let you rest on
 The tables give every status effect in four groups, with the exact paces. **What it does** is
 what it costs and changes while it lasts, and how you see it on others. **Caused by** is where it
 comes from; the creatures whose attacks cause it are listed in [Who causes it](#who-causes-it).
-**How it ends** is how it wears off, and what cures it at once.
+**How it ends** is how it wears off, and every way to end it at once.
 
 ### Harmful
 

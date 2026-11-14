@@ -4,6 +4,14 @@ Someone trained in [Woodcraft](skills.md#skill-woodcraft) makes weapons, bows, a
 clothes anywhere, with a knife, from wood, bone, horn, hides, sinew, and stone. How well a piece
 comes out is under [Crafting](crafting.md#how-well-it-comes-out).
 
+**You need:**
+- **Skill:** Woodcraft. [Rangers](class-ranger.md) start with it, a
+  [craftsperson](class-craftsperson.md#trades) may take the [Wright](talents.md#talent-wright)
+  trade, and a [commoner](class-commoner.md) may have it as their trade (others:
+  [Which skills you start with](skills.md#which-skills-you-start-with)). No one teaches it.
+- **Tools:** a knife in your pack.
+- **Place:** anywhere.
+
 ## Making a weapon by hand
 
 Some weapons need no forge. With [Woodcraft](skills.md#skill-woodcraft) and a knife in your pack,

@@ -20,10 +20,12 @@ demon, devil, or yugoloth. What a creature has done, or which side it is on, pla
 hostile bear takes your smite as well as a ghoul does; only the ghoul takes the unholy die.
 
 **The smites** are each a row of the [abilities menu](abilities.md). Each is a melee blow with what
-you wield at the [hostile](creatures.md#factions) in a direction, priced as the attack. It adds
-[Presence](stats.md#stat-presence)'s modifier to hit, and 1d6 more [damage](combat.md) per 10 levels
-(at least 1d6), and one die more against the unholy. With nobody hostile there it is refused, for
-no time and no zeal. A miss still spends its zeal.
+you wield at the [hostile](creatures.md#factions) in a direction:
+
+- **Cost:** its zeal (the table below), and the time of the attack. A miss still spends its zeal.
+- **Effect:** your [Presence](stats.md#stat-presence) modifier is added to hit, and 1d6 more
+  [damage](combat.md) per 10 levels (at least 1d6), with one die more against the unholy.
+- **Refused:** with nobody hostile there, for no time and no zeal.
 
 | Level | Smite | Zeal | What it does |
 |---:|---|---:|---|

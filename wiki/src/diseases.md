@@ -120,7 +120,17 @@ from your flesh." It feeds you a little, too. [Shops](shops.md) that sell food s
 store or a provisioner, found in the dungeons), and Ælfric's General Store in
 [Cēaptūn](ascmearc.md#the-places) has one.
 
-A [potion of cure disease](potions.md#potion-of-cure-disease) ends every disease at once.
+A [potion of cure disease](potions.md#potion-of-cure-disease) ends every disease at once, and so
+does the spell [Remove disease](magic.md#spell-remove-disease).
+
+A [priest](class-priest.md)'s prayer against [disease](prayer.md#prayer-disease) (from level 12)
+ends every disease, the brewing ones too.
+
+[Horn's grace](abilities.md#ability-horns-grace), the gift of those born in the year of the
+Unicorn, shakes off one disease that shows.
+
+Now and then a [forgotten altar](altars-forges-springs.md#forgotten-altars) answers a prayer by
+cleansing you of every disease.
 
 A temple's **cure** does the same for gold, for every disease. A temple's **mending** gives back
 the [stat damage](#stat-damage) at once, and the points the undead drained (see

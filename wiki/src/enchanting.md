@@ -7,21 +7,33 @@ hour's quiet work with the thing in your lap. The magic comes from
 [magic crystals](crystals.md), and the colour of a crystal decides what kind of magic it can
 give.
 
+**You need:**
+- **Skill:** Enchanting. A
+  [craftsperson](class-craftsperson.md#trades) may take the
+  [Spellwright](talents.md#talent-spellwright) trade; [wizards](class-wizard.md),
+  [witches](class-witch.md), and [aristocrats](class-aristocrat.md) may start with it
+  ([Which skills you start with](skills.md#which-skills-you-start-with)). No one teaches it.
+- **Stock:** magic crystals.
+- **Place:** anywhere, with no tools.
+
 ## Enchanting an item
 
 - **Kindle** makes a plain item magic, with one [affix](affixes.md#prefixes) (a prefix or a
   [suffix](affixes.md#suffixes)). It takes one crystal.
-- **Quicken** gives a magic item of one affix the other kind: a suffix beside its prefix, or a
-  prefix beside its suffix. It takes one crystal, and the item must have room for one more
-  (its [capacity](magic-items.md#capacity)). On a rare item it adds one affix more, of either
-  kind, if the item has room, and it takes a [heart-crystal](#the-rare-materials) too.
+- **Quicken** adds a suffix to a magic item with only a prefix, or a prefix to one with only a
+  suffix.
+  - **Cost:** one crystal.
+  - **Needs:** room for one more affix on the item (its
+    [capacity](magic-items.md#capacity)).
+  - **On a rare item:** it adds one more affix of either kind, if the item has room, and takes a
+    [heart-crystal](#the-rare-materials) too.
 - **Recast** rolls a magic item's affixes anew: as many as it had, of the same kinds (a prefix
   for its prefix, a suffix for its suffix), all of the crystal's colour. It takes one crystal.
   It does not work on a rare item: unbind it, then imbue it. With a
-  [soul-fetter](#the-rare-materials) you keep one affix you choose, and only the rest are rolled.
+  soul-fetter you keep one affix you choose, and only the rest are rolled.
 - **Imbue** makes a plain item [rare](magic-items.md#rarity), with a name and three to six
   affixes, as many as a found rare item rolls but never more than the item's
-  [capacity](magic-items.md#capacity). It takes **three crystals**, and the order you choose them
+  capacity. It takes **three crystals**, and the order you choose them
   in matters: the first affix is of the first crystal's colour, the second of the second's, the
   third of the third's, and any more of any of the three. The item must hold three affixes at
   least ("It would not hold so much.").
@@ -32,8 +44,7 @@ give.
 
 Each recipe works one item you carry. You must take it off first if you wear or wield it, and
 you must know what its magic is ([identify](magic-items.md#unidentified-items) it first). A
-[unique item](magic-items.md#unique-items) or something a quest asks for will not take your
-will. Arrows, bolts, and other [ammunition](ammunition.md) are worked a whole stack at once, for
+[unique item](magic-items.md#unique-items) or something a quest asks for cannot be enchanted. Arrows, bolts, and other [ammunition](ammunition.md) are worked a whole stack at once, for
 the same crystals as one item. Imbue's three crystals may all come from one stack.
 
 {{#include generated/recipes-enchanting.md}}
@@ -101,6 +112,20 @@ your work and nothing is spent.
   rest are as they were.
 
 Every finished work, made or not, can [train](skills.md#improving-a-skill) Enchanting.
+
+> **Example: kindling a long sword.** A [wizard](class-wizard.md) with Willpower 14 and
+> Enchanting 20 kindles a plain long sword found on a dungeon's sixth floor (item level 6) with
+> a red crystal.
+>
+> - **The roll's item level:** the greater of the sword's 6 and her reach at Enchanting 20, 3:
+>   **6**.
+> - **The difficulty:** Kindle's 11, plus 6 ÷ 3 = 2: **13**.
+> - **What she adds:** +2 for Willpower 14 (modifiers), +1 craft bonus
+>   from Enchanting 20: **+3**. The dice must reach 10: **75%**.
+> - **A natural 2** (1 roll in 144, 0.7%) warps the sword.
+>
+> A sword of item level 3 or less would roll at her reach, 3: difficulty 12, the dice need 9,
+> 80.6%, but its magic would be weaker.
 
 See also: [Magic crystals](crystals.md), [Magic items](magic-items.md), and
 [Prefixes and suffixes](affixes.md).
