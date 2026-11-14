@@ -10,8 +10,8 @@ scenario, dump layer, or action is added here in the same PR, by its group, neve
 
 Where the lists come from: `--scenario` names are the files of `assets/campaigns/*/scenarios/`,
 `--screen` names are `ui/screens.rs::ScreenName` (clap lists them: `cargo run -p warlock --
---help`), dump layers are `dump.rs::Layer`, and action verbs are `action.rs`'s parser
-(`Action::from_str`).
+--help`), dump layers are `dump/layer.rs::Layer`, and action verbs are `action/text.rs`'s `VERBS` table
+(read by `Action::from_str`).
 
 ## `cargo xtask` commands in detail
 

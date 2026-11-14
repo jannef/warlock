@@ -401,7 +401,7 @@ seen creature's line, `Harm::Place`), and `becomes` (the placed light removed, `
 
 Nothing new is saved but `SpecialRoom::side` (left out while `None`): the terrain is the record
 of a spent or blown altar. The `rooms` dev layer adds `, side good` and `, spent`/`, destroyed`
-(`dump.rs::feature_state`). The showcase's `shrine` scenario has a good, a neutral, and an evil
+(`dump/truth.rs::feature_state`). The showcase's `shrine` scenario has a good, a neutral, and an evil
 altar side by side. Talent: Pious (system `special_rooms`, which holds prayer
 since #773; `devout`, `TalentMods::devout`; hook `leaned_kinds`).
 

@@ -813,7 +813,7 @@ P11 (#1356; `docs/design/recipes.md` §6 "Rings and amulets"), generic recipes:
 ## Salvage
 
 `world/salvage.rs` (one module; one line each in `world/mod.rs`'s `Spent` and dispatch,
-`action.rs`, `ability.rs`'s matches, `buff.rs`), numbers in `data/salvage.toml`
+`action/text.rs`, `ability.rs`'s matches, `buff.rs`), numbers in `data/salvage.toml`
 (`content/salvage.rs`, `Content::salvage`, optional: without it nobody salvages and the ability
 is not listed): `seconds = 600`, `difficulty = 12`, `yield = 50`.
 
