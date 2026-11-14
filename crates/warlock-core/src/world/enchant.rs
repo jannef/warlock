@@ -48,7 +48,6 @@
 //!
 //! [`Action::Craft`]: crate::action::Action::Craft
 
-use super::ally::capital;
 use super::craft::RecipeLack;
 use super::craft_make::{CraftOption, CraftPlan, CraftStep, CraftStepKind, MAX_PICKS};
 use super::item_damage::Harmed;
@@ -69,6 +68,7 @@ use crate::rng::Rng;
 use crate::scroll_label::Lore;
 use crate::skills::{Effect, MAX_ENCHANT_LEVEL, Use};
 use crate::stats::Stat;
+use crate::text::capitalized;
 use crate::time::Duration;
 
 /// What the check comes to.
@@ -566,16 +566,6 @@ fn the(lore: Lore<'_>, stack: &Stack) -> String {
     }
 }
 
-/// `words` listed: "a", "a and b", "a, b, and c".
-fn listed(words: &[String]) -> String {
-    match words {
-        [] => String::new(),
-        [one] => one.clone(),
-        [first, second] => format!("{first} and {second}"),
-        [rest @ .., last] => format!("{}, and {last}", rest.join(", ")),
-    }
-}
-
 /// What the work `resolved` uses, in words, in order (the order of the crystals matters to
 /// Imbue): "a red crystal", "a red crystal, a red crystal, and a blue crystal", then the seals'
 /// crystals, the heart-crystal, the soul-fetter with what it keeps, and what the seals shut out:
@@ -600,7 +590,7 @@ fn uses_words(content: &Content, lore: Lore<'_>, player: &Actor, resolved: &Reso
             1 => format!("one more {}", lore.title(&pack[at].single())),
             n => format!(
                 "{} more {}",
-                number_word(n as usize),
+                crate::text::number_word(n as usize),
                 lore.names(&pack[at]).1
             ),
         });
@@ -618,7 +608,7 @@ fn uses_words(content: &Content, lore: Lore<'_>, player: &Actor, resolved: &Reso
             lore.describe(&pack[at].single())
         ));
     }
-    let mut text = listed(&words);
+    let mut text = crate::text::and_list(&words);
     if !resolved.seals.is_empty() {
         let shut = seal::words(content, &resolved.seals);
         text = match text.is_empty() {
@@ -652,16 +642,6 @@ pub(super) fn plan(
             .spoken()
         ),
     })
-}
-
-/// "three": a small count in a word, as the work's line says it.
-fn number_word(n: usize) -> String {
-    match n {
-        1 => "one".into(),
-        2 => "two".into(),
-        3 => "three".into(),
-        n => n.to_string(),
-    }
 }
 
 /// An enchanting under way: the recipe, the picks (in step order), how long.
@@ -826,27 +806,27 @@ impl World {
                     }
                     (EnchantKind::Imbue, _) => format!(
                         "{} drinks the {} crystals and wakes as {title}.",
-                        capital(&thing),
-                        number_word(crystals.len())
+                        capitalized(&thing),
+                        crate::text::number_word(crystals.len())
                     ),
                     (EnchantKind::Ennoble, Some(stone)) => format!(
                         "{} takes the {stone}'s glow and wakes as {title}.",
-                        capital(&thing)
+                        capitalized(&thing)
                     ),
                     (EnchantKind::Quicken, Some(stone)) if resolved.heart.is_some() => format!(
                         "{} takes the {stone}'s glow and the heart-crystal's, and holds more.",
-                        capital(&thing)
+                        capitalized(&thing)
                     ),
                     (_, Some(stone)) => format!(
                         "{} takes the {stone}'s glow. It is now {name}.",
-                        capital(&thing)
+                        capitalized(&thing)
                     ),
                 };
                 self.say(text);
             }
             EnchantBand::Failed => match kind {
                 EnchantKind::Unbind => {
-                    self.say(format!("{} clings to its magic.", capital(&thing)))
+                    self.say(format!("{} clings to its magic.", capitalized(&thing)))
                 }
                 _ => {
                     self.say(dark);
@@ -865,10 +845,10 @@ impl World {
                 match self.harm_item(at, ItemHarm::Enchant) {
                     Harmed::Withstood => self.say(WITHSTOOD),
                     Harmed::Damaged => {
-                        self.say(format!("{} warps under your hands.", capital(&thing)))
+                        self.say(format!("{} warps under your hands.", capitalized(&thing)))
                     }
                     Harmed::Destroyed => {
-                        self.say(format!("{} warps and falls apart.", capital(&thing)));
+                        self.say(format!("{} warps and falls apart.", capitalized(&thing)));
                         for c in &mut crystals {
                             if *c > at {
                                 *c -= 1;

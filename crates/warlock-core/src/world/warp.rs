@@ -8,10 +8,10 @@
 //! last, so a trap that already moved the stepper leaves nothing to warp. An incorporeal
 //! creature passing through presses no trap and is never warped either.
 
-use super::talk::capitalized;
 use super::{ActorId, World};
 use crate::action::Event;
 use crate::geom::Pos;
+use crate::text::capitalized;
 
 impl World {
     /// Actor `who` has just stepped onto `at`: in an unstable room it may be moved elsewhere on

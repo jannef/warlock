@@ -1,9 +1,8 @@
 //! Gems (spec §7 "Gems"): the ten gems, their sizes and cuts, how loot finds them, and where items
 //! are set with them.
 
-use super::combat::percent;
 use super::order;
-use super::text::capital;
+use super::text::{capital, percent_of};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, GemDef, ItemClassId, PartId};
 use warlock_core::item_parts::ItemPart;
@@ -25,7 +24,7 @@ pub(super) fn gems(content: &Content) -> String {
     for (name, gem) in all {
         let found = match gem.rarity {
             0 => "never".to_string(),
-            r => percent(r, total.max(1)),
+            r => percent_of(r, total.max(1)),
         };
         let _ = writeln!(
             out,
@@ -72,8 +71,8 @@ pub(super) fn sizes(content: &Content) -> String {
             capital(&size.name),
             times(size.value),
             size.weight,
-            percent(shallow[i].1, sum(&shallow)),
-            percent(deep[i].1, sum(&deep)),
+            percent_of(shallow[i].1, sum(&shallow)),
+            percent_of(deep[i].1, sum(&deep)),
         );
     }
     out
@@ -103,8 +102,8 @@ pub(super) fn cuts(content: &Content) -> String {
             "| {}{note} | {} | {} | {} |",
             capital(&cut.name),
             times(cut.value),
-            percent(shallow[i].1, sum(&shallow)),
-            percent(deep[i].1, sum(&deep)),
+            percent_of(shallow[i].1, sum(&shallow)),
+            percent_of(deep[i].1, sum(&deep)),
         );
     }
     out

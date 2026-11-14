@@ -2,8 +2,7 @@
 //! from the glowing fungus takes and finds, and each herb's share by depth and where it grows on
 //! the surface.
 
-use super::combat::percent;
-use super::text::{Term, anchored, capital};
+use super::text::{Term, anchored, capital, percent_of};
 use std::fmt::Write as _;
 use warlock_core::content::Content;
 
@@ -54,7 +53,7 @@ pub(super) fn herbs(content: &Content) -> String {
                 .map_or(0, |e| e.1);
             let share = match mine {
                 0 => "—".to_string(),
-                w => percent(w, total.max(1)),
+                w => percent_of(w, total.max(1)),
             };
             let _ = write!(out, " {share} |");
         }

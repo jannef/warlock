@@ -19,7 +19,7 @@
 //! Like every screen these are plain state machines, testable without a window.
 
 use super::character_screen::{birth_parts, fit_joined, fit_parts};
-use super::menu::{HINTS, Nav, Panel, Press, wrap};
+use super::menu::{HINTS, Nav, Panel, Press, truncated, wrap};
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::render::console::Console;
@@ -707,7 +707,7 @@ impl SummaryScreen {
                 };
                 // The value starts 12 cells in and is padded by two spaces on each side; a
                 // longer one is cut to stay inside the frame.
-                let value = clipped(value, inner - 14);
+                let value = truncated(value, (inner - 14).max(0) as usize);
                 panel.row(console, y, i == self.selected, label, &value, 6);
             }
             y += 1;
@@ -806,15 +806,6 @@ impl SummaryScreen {
 }
 
 /// `text` cut to `width` cells, an ellipsis marking the cut: `Weapon focus (daggers and k…`.
-fn clipped(text: &str, width: i32) -> String {
-    let width = width.max(1) as usize;
-    if text.chars().count() <= width {
-        return text.to_string();
-    }
-    let head: String = text.chars().take(width - 1).collect();
-    format!("{head}…")
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

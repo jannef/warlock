@@ -15,16 +15,9 @@ use crate::alignment::Requirement;
 use crate::dice::Dice;
 use crate::skills::SkillId;
 use crate::stats::{PerStat, Stat};
+use crate::text::article;
 use serde::Deserialize;
 use std::collections::BTreeMap;
-
-/// `a` or `an` for a noun.
-fn article(noun: &str) -> &'static str {
-    match noun.chars().next() {
-        Some(c) if "aeiouAEIOU".contains(c) => "an",
-        _ => "a",
-    }
-}
 
 /// A talent, an index into the book (file order). Saves name talents by id, never by this.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -1737,14 +1730,14 @@ impl Need {
                 let races: Vec<String> = (content.races().teaching(*skill))
                     .map(|r| format!("{} {}", article(&r.name), r.name.to_lowercase()))
                     .collect();
-                format!("not to be {}", crate::talent::list_with(&races, "or"))
+                format!("not to be {}", crate::text::or_list(&races))
             }
             Need::Eyes(ids) => {
                 let names: Vec<String> = (ids.iter())
                     .map(|id| content.vision(id).map_or(id.as_str(), |v| v.name.as_str()))
                     .map(str::to_lowercase)
                     .collect();
-                format!("{} eyes", crate::talent::list_with(&names, "or"))
+                format!("{} eyes", crate::text::or_list(&names))
             }
             Need::Animal(id) => {
                 let name = (content.horoscope())

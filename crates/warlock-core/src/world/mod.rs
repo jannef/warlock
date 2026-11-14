@@ -1766,14 +1766,6 @@ impl World {
     }
 }
 
-/// `A` or `An` for a noun.
-fn article(noun: &str) -> &'static str {
-    match noun.chars().next() {
-        Some(c) if "aeiouAEIOU".contains(c) => "An",
-        _ => "A",
-    }
-}
-
 #[cfg(test)]
 mod affix_draught_tests;
 #[cfg(test)]

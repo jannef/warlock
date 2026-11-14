@@ -3,7 +3,7 @@
 //! hard its scroll is to learn.
 
 use super::spells::grows_with;
-use super::text::{Term, link};
+use super::text::{Term, capital, link};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, SpellData, SpellPurpose};
 
@@ -223,12 +223,4 @@ pub(super) fn charm_spells(content: &Content) -> String {
         );
     }
     out
-}
-
-/// `word` with its first letter upper-case.
-fn capital(word: &str) -> String {
-    let mut chars = word.chars();
-    chars.next().map_or_else(String::new, |c| {
-        c.to_uppercase().collect::<String>() + chars.as_str()
-    })
 }

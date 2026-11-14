@@ -3,8 +3,7 @@
 //! stats for good. The game says
 //! none of these numbers; the wiki states them exactly.
 
-use super::combat::percent;
-use super::text::capital;
+use super::text::{capital, percent_of};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Affliction, Content, ODDS_SCALE};
@@ -132,15 +131,9 @@ pub(super) fn stat_odds(content: &Content) -> String {
     out
 }
 
-/// A chance out of [`ODDS_SCALE`] in words of percent: `0 %`, `under 1 %`, `11 %`, `99.8 %`.
+/// A chance out of [`ODDS_SCALE`] as a percentage: `0%`, `0.5%`, `11%`, `99.8%`.
 fn odds_percent(odds: u32) -> String {
-    let p = 100.0 * f64::from(odds) / f64::from(ODDS_SCALE);
-    match p {
-        0.0 => "0 %".to_string(),
-        p if p < 1.0 => "under 1 %".to_string(),
-        p if p > 99.0 => format!("{p:.1} %"),
-        p => format!("{p:.0} %"),
-    }
+    percent_of(odds, ODDS_SCALE)
 }
 
 /// The marks a day [`stat_pace`] lists.
@@ -231,7 +224,7 @@ pub(super) fn drain_attacks(content: &Content) -> String {
                 .map(|&s| {
                     let modifier = stats::modifier(i32::from(s));
                     let ways = check::ways(modifier, drain.difficulty);
-                    format!(" {} |", percent(ways, 144))
+                    format!(" {} |", percent_of(ways, 144))
                 })
                 .collect();
             let _ = writeln!(

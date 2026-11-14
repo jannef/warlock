@@ -690,7 +690,7 @@ mod tests {
                 assert!(table.contains(&format!("| `{}` |", line.id)), "{}", line.id);
             }
         }
-        assert!(text("tiers").contains("| Uncommon | 12 % | 64 % | 0.96 | +1 to +3 | yes |"));
+        assert!(text("tiers").contains("| Uncommon | 12% | 64% | 0.96 | +1 to +3 | yes |"));
         assert!(text("childhood").contains("[Strength](stats.md#stat-strength) +1 (worth +2)"));
         assert!(
             text("parents").contains("| with [Family wealth](talents.md#talent-family-wealth) |")
@@ -798,8 +798,8 @@ mod tests {
             "stat-prices.md",
             "| 14 | 160 | 320 | 640 | 1120 | 1760 | 2560 | 3520 | 75 |",
         );
-        has("stat-odds.md", "| the price | 50 % |");
-        has("stat-odds.md", "| under a quarter | 0 % |");
+        has("stat-odds.md", "| the price | 50% |");
+        has("stat-odds.md", "| under a quarter | 0% |");
         has("stat-pace.md", "| 1 | 49 | 62 | 80 | 198 |");
         // The deeds that cost marks, and the drop by score.
         has(
@@ -842,7 +842,7 @@ mod tests {
         // diseases table), and what fresh corpses do.
         has(
             "disease-checks.md",
-            "| Filth fever | Toughness | 13 | 31% | 38% | 46% | 54% |",
+            "| Filth fever | Toughness | 13 | 31.2% | 38.2% | 45.8% | 54.2% |",
         );
         has(
             "corpse-effects.md",
@@ -952,7 +952,8 @@ mod tests {
             text("overworld-sight.md").contains("| Night, a half moon high in the sky | 3 cells |")
         );
         assert!(
-            text("vision.md").contains("| Darkvision | 40 of 255 (16% of full light) | 5 cells |")
+            text("vision.md")
+                .contains("| Darkvision | 40 of 255 (15.7% of full light) | 5 cells |")
         );
         assert!(text("terrain-overworld.md").contains("| Road | `·` | 20 minutes |"));
         assert!(text("terrain-local.md").contains("| Still water | `~` | yes | no | 12 seconds |"));
@@ -968,7 +969,7 @@ mod tests {
         assert!(text("keys.md").contains("| Iron key | `(` | locks named `pantry` |"));
         let picking = text("lock-picking.md");
         assert!(
-            picking.contains("| A lock of the usual difficulty | 14 | 46% | 62% |"),
+            picking.contains("| A lock of the usual difficulty | 14 | 45.8% | 61.8% |"),
             "{picking}"
         );
         assert!(
@@ -1060,7 +1061,7 @@ mod tests {
         assert!(fighting.contains("| Tower shield | Defence 3 | Defence 6 |"));
         // Gems: their worth and how often they are found, the sizes and cuts, and ornaments.
         assert!(text("gems.md").contains("| Diamond | `#e8f4ff` | 400 gold | 1.9% |"));
-        assert!(text("gem-sizes.md").contains("| Small (plain) | ×1 | 1 g | 33% |"));
+        assert!(text("gem-sizes.md").contains("| Small (plain) | ×1 | 1 g | 33.3% |"));
         assert!(text("gem-cuts.md").contains("| Uncut (never set in an item) | ×0.25 | 45% |"));
         let ornaments = text("ornaments.md");
         assert!(ornaments.contains("| Rings | as its setting, in its gem's colour | 35% |"));
@@ -1293,8 +1294,8 @@ mod tests {
         let disarm = text("trap-disarm.md");
         assert!(
             disarm.contains(
-                "| Arrow trap | 14 | 46% disarmed, 25% set off | 62% disarmed, 15% set off | 98% \
-                 disarmed, 0% set off |"
+                "| Arrow trap | 14 | 45.8% disarmed, 25% set off | 61.8% disarmed, 14.6% set off | \
+                 97.9% disarmed, 0% set off |"
             ),
             "{disarm}"
         );
@@ -1373,8 +1374,8 @@ mod tests {
         );
         assert!(
             foraging.contains(
-                "| forest | 40% | `1d3` | handful of berries 27%, handful of hazelnuts 27%, \
-                 mushroom 27%, angelica root 9.1%, apple 9.1% |"
+                "| forest | 40% | `1d3` | handful of berries 27.3%, handful of hazelnuts 27.3%, \
+                 mushroom 27.3%, angelica root 9.1%, apple 9.1% |"
             ),
             "{foraging}"
         );
@@ -1404,17 +1405,20 @@ mod tests {
         // Treating oneself: the difficulty and odds of each ailment.
         let heal = text("heal-targets.md");
         assert!(
-            heal.contains("| Bleeding (1 degree) | 8 | 85% | 99% | it stops |"),
+            heal.contains("| Bleeding (1 degree) | 8 | 85.4% | 99.3% | it stops |"),
             "{heal}"
         );
         assert!(heal.contains("| Grave rot | 15 |"), "{heal}");
         // Stealing: the odds by the thief's edge, a contest of even dice.
         let slipping = text("slipping-past.md");
         assert!(slipping.contains("for 60 turns at most"), "{slipping}");
-        assert!(slipping.contains("| +0 | 53% | 47% |"), "{slipping}");
+        assert!(slipping.contains("| +0 | 52.8% | 47.2% |"), "{slipping}");
         let stealing = text("stealing.md");
-        assert!(stealing.contains("| +0 | 53% | 47% |"), "{stealing}");
-        assert!(stealing.contains("| \u{2212}6 | 22% | 78% |"), "{stealing}");
+        assert!(stealing.contains("| +0 | 52.8% | 47.2% |"), "{stealing}");
+        assert!(
+            stealing.contains("| \u{2212}6 | 22.1% | 77.9% |"),
+            "{stealing}"
+        );
         // Intimidating: the ladder of degrees, from a little skill to War cry's three.
         let intimidating = text("intimidating.md");
         assert!(
@@ -1432,7 +1436,9 @@ mod tests {
         // Searching: the hidden things' chances for an average character, deeper down, and who
         // notices in passing.
         let features = text("search-features.md");
-        assert!(features.contains("| Secret door | A seam in the wall | 46% | over 99% | 19% |"));
+        assert!(
+            features.contains("| Secret door | A seam in the wall | 45.8% | over 99% | 19.4% |")
+        );
         assert!(
             features.contains("| Alarm trap | A tripwire |"),
             "{features}"
@@ -1443,7 +1449,7 @@ mod tests {
             "{depths}"
         );
         assert!(
-            depths.contains("| The Depths 8 | 1 to 2 | 6.9% | 51% | 0.7% |"),
+            depths.contains("| The Depths 8 | 1 to 2 | 6.9% | 51% | 0.69% |"),
             "{depths}"
         );
         let races = text("search-races.md");
@@ -1627,7 +1633,7 @@ mod tests {
             "{}",
             text("threats.md")
         );
-        assert!(text("threats.md").contains("| 19–24 | 15% | 11% | 18–20 |"));
+        assert!(text("threats.md").contains("| 19–24 | 14.6% | 10.9% | 18–20 |"));
         assert!(text("regeneration.md").contains("| 10 | 4 minutes |"));
         assert!(text("regeneration.md").contains("| 3 | 5 minutes and 24 seconds |"));
         assert!(text("regeneration.md").contains("| 25 or more | 1 minute |"));
@@ -1729,7 +1735,7 @@ mod tests {
             "| Filth fever | ",
             &[
                 "the giant rat's bite (1%)",
-                "| Toughness, 54% | 1d3 days | Every day | 1d3 Dexterity, 1d3 Toughness | Two checks \
+                "| Toughness, 54.2% | 1d3 days | Every day | 1d3 Dexterity, 1d3 Toughness | Two checks \
                  won in a row | no | Half as fast |",
             ],
         );
@@ -1748,7 +1754,7 @@ mod tests {
             "| Mummy rot | ",
             &[
                 "mummy's fist (20%)",
-                "| Toughness, 31% | 1d3 days | Every 3 days | 1d4 Toughness | Never by itself | no |",
+                "| Toughness, 31.2% | 1d3 days | Every 3 days | 1d4 Toughness | Never by itself | no |",
             ],
         );
         row_has(
@@ -1761,7 +1767,7 @@ mod tests {
             ],
         );
         assert!(diseases.contains("| Never by itself | yes |"));
-        assert!(diseases.contains("| Brain fever | — | Willpower, 54% |"));
+        assert!(diseases.contains("| Brain fever | — | Willpower, 54.2% |"));
         assert!(healing.contains("| Diseased with marsh ague | a quarter as fast |"));
         // The races' potentials have their own table.
         assert!(!text("races.md").contains("otential"));

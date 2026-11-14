@@ -38,6 +38,7 @@ use crate::object;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::temperature::{self, Temperature};
+use crate::text::capitalized;
 use crate::time::GameTime;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -580,14 +581,5 @@ impl World {
         ));
         self.shock(at, radius, crate::ice::Shock::Heat, events);
         Spent::NoTime
-    }
-}
-
-/// `text` with its first letter in upper case.
-fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
     }
 }

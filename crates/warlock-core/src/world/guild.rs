@@ -68,8 +68,8 @@ impl World {
                 let title = &guild.ranks[rank].title;
                 self.say(format!(
                     "{} names you {} {title} of {}.",
-                    super::talk::capitalized(&content.speaker_called(guild.master)),
-                    crate::content::article(title),
+                    crate::text::capitalized(&content.speaker_called(guild.master)),
+                    crate::text::article(title),
                     guild.name,
                 ));
                 self.train_stat(crate::content::StatUse::Promoted);

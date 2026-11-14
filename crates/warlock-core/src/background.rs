@@ -27,6 +27,7 @@ use crate::skills::SkillId;
 use crate::skills::Skills;
 use crate::stats::Stat;
 use crate::talent::Talents;
+use crate::text::capitalized;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -337,21 +338,13 @@ fn fill(text: &str, character: &Character, words: &BTreeMap<String, String>) -> 
         };
         let capital = slot.starts_with(|c: char| c.is_uppercase());
         out.push_str(&match capital {
-            true => capitalised(&word),
+            true => capitalized(&word),
             false => word,
         });
         rest = &after[close + 1..];
     }
     out.push_str(rest);
     out
-}
-
-fn capitalised(word: &str) -> String {
-    let mut chars = word.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
-    }
 }
 
 /// The built-in content without background stories (tests of what a story would add to: the

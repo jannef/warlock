@@ -15,7 +15,8 @@
 //! sword (magic)", "Grim Bite, a Masterwork long sword".
 
 use super::{AffixKind, Magic, Rarity};
-use crate::content::{Content, article, counted};
+use crate::content::{Content, counted};
+use crate::text::article;
 
 /// `count` of an item called `names` (singular and plural, as it is made) with `magic` in
 /// words, as the player knows it: with `known` false (not identified) only its rarity shows;

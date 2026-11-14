@@ -1,8 +1,7 @@
 //! Doors (spec §8 "Doors"): kicking them in, the keys, and picking locks.
 
-use super::combat::percent;
 use super::order;
-use super::text::{capital, glyph};
+use super::text::{capital, glyph, percent_of};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::Content;
@@ -62,7 +61,7 @@ pub(super) fn lock_picking(content: &Content) -> String {
     for (lock, difficulty) in rows {
         let _ = write!(out, "| {lock} | {difficulty} |");
         for plus in PICK_BONUSES {
-            let _ = write!(out, " {} |", percent(check::ways(plus, difficulty), 144));
+            let _ = write!(out, " {} |", percent_of(check::ways(plus, difficulty), 144));
         }
         out.push('\n');
     }

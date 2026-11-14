@@ -190,7 +190,7 @@ fn rolls(v: i32) -> String {
 }
 
 fn percent(v: i32) -> String {
-    format!("{v}%")
+    super::text::percent(f64::from(v))
 }
 
 fn cells(v: i32) -> String {

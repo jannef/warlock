@@ -35,6 +35,7 @@ use crate::geom::{Dir, Pos};
 use crate::rng::Rng;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::text::capitalized;
 use crate::weather::Weather;
 use serde::{Deserialize, Serialize};
 
@@ -245,14 +246,6 @@ pub struct EncounterView {
     pub choices: Vec<(String, Choice)>,
 }
 
-/// The first letter in upper case.
-fn capital(text: &str) -> String {
-    let mut chars = text.chars();
-    chars.next().map_or_else(String::new, |c| {
-        c.to_uppercase().chain(chars).collect::<String>()
-    })
-}
-
 /// "Ahead" as the way there is: on the road, on the trail, or across the land.
 fn ahead(landscape: Option<Landscape>) -> &'static str {
     match landscape {
@@ -324,7 +317,7 @@ pub(crate) fn view(
     };
     EncounterView {
         name: name.to_string(),
-        title: capital(name),
+        title: capitalized(name),
         text,
         choices: (choices.iter())
             .map(|&c| (pending.outcome.label(c).to_string(), c))

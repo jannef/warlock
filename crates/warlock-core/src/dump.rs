@@ -8,7 +8,7 @@ use crate::ability::Aim;
 use crate::action::{letter, position_text};
 use crate::blood::{self, Stain};
 use crate::character::Gender;
-use crate::content::{Content, SpecialRoom, WeaponSkillId, article};
+use crate::content::{Content, SpecialRoom, WeaponSkillId};
 use crate::equipment;
 use crate::geom::Pos;
 use crate::hunger::Hunger;
@@ -17,6 +17,7 @@ use crate::noise::{PerceivedSound, SoundKind, Volume};
 use crate::object::{Stack, format_weight};
 use crate::perception::{CellView, PerceivedLight, PerceptionView};
 use crate::stats::Stat;
+use crate::text::article;
 use crate::weather::Weather;
 use crate::world::{CallingStatus, Cause, LevelState, World};
 use serde_json::{Value, json};
@@ -1194,7 +1195,7 @@ fn calling_rows(world: &World) -> Vec<String> {
                     .map_or("nobody".to_string(), |k| {
                         format!(
                             "{} {}",
-                            crate::content::article(&k.name),
+                            crate::text::article(&k.name),
                             k.name.to_lowercase()
                         )
                     });

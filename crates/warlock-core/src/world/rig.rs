@@ -35,13 +35,12 @@ use super::rest::Ended;
 use super::{Actor, Spent, World};
 use crate::action::Event;
 use crate::combat;
-use crate::content::{
-    ActionKind, ClassActive, Content, LevelKind, RigDef, RigId, RigTakes, Trap, article,
-};
+use crate::content::{ActionKind, ClassActive, Content, LevelKind, RigDef, RigId, RigTakes, Trap};
 use crate::geom::{Dir, Pos};
 use crate::perception::PerceptionView;
 use crate::skills::Effect;
 use crate::stats::Stat;
+use crate::text::article;
 use crate::time::Duration;
 
 /// A rig under way: which, on which cell, and for how long.

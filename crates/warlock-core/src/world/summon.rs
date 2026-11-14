@@ -22,10 +22,11 @@
 
 use super::{ActorId, World};
 use crate::action::{AttackKind, Event};
-use crate::content::{ActionKind, CreatureId, CreatureSpawn, and_list, counted, the_start};
+use crate::content::{ActionKind, CreatureId, CreatureSpawn, counted, the_start};
 use crate::geom::Pos;
 use crate::noise::Act;
 use crate::sight::LineOfSight;
+use crate::text::{and_list, capitalized};
 
 impl World {
     /// Whether creature `id` summons now, at a hostile it sees at `at` (module docs).
@@ -200,17 +201,8 @@ impl World {
         } else {
             let one = seen.len() == 1 && seen[0].1 == 1;
             let verb = if one { "appears" } else { "appear" };
-            format!("{} {verb}!", capital(&list))
+            format!("{} {verb}!", capitalized(&list))
         };
         self.say(line);
-    }
-}
-
-/// `text` with its first letter upper-case.
-fn capital(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
     }
 }

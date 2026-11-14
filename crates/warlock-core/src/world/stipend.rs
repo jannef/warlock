@@ -283,11 +283,9 @@ impl World {
     /// Every stack of `stacks` named, however many: "412 gold coins, a potion, and a ruby".
     pub(super) fn listed(&self, stacks: &[Stack]) -> String {
         let names: Vec<String> = stacks.iter().map(|s| self.lore().describe(s)).collect();
-        match names.as_slice() {
-            [] => "nothing".into(),
-            [one] => one.clone(),
-            [a, b] => format!("{a} and {b}"),
-            [rest @ .., last] => format!("{}, and {last}", rest.join(", ")),
+        if names.is_empty() {
+            return "nothing".into();
         }
+        crate::text::and_list(&names)
     }
 }
