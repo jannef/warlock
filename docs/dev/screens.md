@@ -446,9 +446,14 @@ place of golden screenshots. Each `Case` starts a run the way a golden entry doe
 console `size`). It runs the real systems headlessly (`open_startup_screens`, `route_keys`,
 `apply_choice`, `refresh`, `converse`, `on_death`, `more::wait`, `draw`) and snapshots the UI
 console with `insta` (`ui/snapshots/`, one file per case). The map layer and colors aren't part
-of it: map content is `warlock-cli dump`. To add one, add a case under its group in `cases!`
-(`test_name: Case { name: "test-name", .. }`: one `#[test]` a case, #1529, so one mismatch
-hides no other), run `cargo test -p warlock screen_snapshots`, then `cargo insta review` (or
+of it: map content is `warlock-cli dump`. The harness is `screen_snapshots.rs`; the cases
+are in `ui/screen_snapshots/`, a file per group of screens (`menus`, `creation`, `pages`,
+`abilities`, `crafting`, `progression`, `items`, `magic_items`, `talk`, `shops`, and `play`
+for the map view's prompts), so UI PRs touch different files (#1504). Every snapshot is
+asserted in the harness (`check`, `check_with` for a case on content of its own), so its file
+keeps the name `warlock__ui__screen_snapshots__<name>.snap` whichever group holds the case. To
+add one, add a case to its group's `cases!` (`test_name: Case { name: "test-name", .. }`: one
+`#[test]` a case, #1529, so one mismatch hides no other), run `cargo test -p warlock screen_snapshots`, then `cargo insta review` (or
 `INSTA_UPDATE=always`, then read the diff). The snapshot leaves out the status bar's row where
 it shows whole (`shown`, #1521: a HUD change rewrites only the cases about the bar, those with
 `status_bar: true`) and writes the game's version `[version]` (#1532). A changed screen shows as a text diff in the PR. New
