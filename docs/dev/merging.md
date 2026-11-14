@@ -87,10 +87,10 @@ Every list a feature extends is edited by every feature. Two PRs that both appen
 conflict every time; two that insert at different places merge cleanly. So:
 
 - **New entries go where they belong** (alphabetically, or by the group the list is in), never at
-  the end: `Action` and its replay text syntax (`action.rs`: the enum, `parse`, `Display`,
-  `FromStr`), `ActionKind::ALL` and `data/actions.toml`, `KeyCommand` and `REBINDABLE`
+  the end: `Action` and its replay text syntax (`action/mod.rs`: the enum; `action/text.rs`: the
+  `VERBS` table and `Display`), `ActionKind::ALL` and `data/actions.toml`, `KeyCommand` and `REBINDABLE`
   (`settings/keys.rs`: the controls screen shows that order, so a new command goes next to its
-  group), the dump layers (`dump.rs`), the settings rows (`ui/settings_screen.rs`), the
+  group), the dump layers (`dump/layer.rs`, `dump/mod.rs::layer_rows`), the settings rows (`ui/settings_screen.rs`), the
   `Content` fields and `Content::load` steps, the `mod` lists (`world/mod.rs` is alphabetical),
   the wiki's `generate()` list (`xtask/src/wiki/mod.rs`) and `wiki/src/SUMMARY.md` (pages by
   topic), `tests/golden/manifest/*.toml` (the feature's own file), the content fingerprint
