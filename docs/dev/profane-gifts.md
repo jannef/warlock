@@ -4,10 +4,12 @@ Developer notes for the profane gifts: the permanent changes to the body that ea
 boss's corpse draws (#1471). The design is `docs/design/profane-gifts.md` (approved; its §13 lays
 out the phases). Keep this file current with the code, as CLAUDE.md says.
 
-What is in so far: the everlasting corpses (P1, `docs/dev/hunger.md`) and the gift machinery
-(P2, #1625): the data, the tree, bestowing and rescinding, the dumps, the Talents page. Nothing
-gives a gift in play yet: no meal draws one until P3 (#1626), so neither the spec nor the wiki
-says anything of them.
+What is in so far: the everlasting corpses (P1, `docs/dev/hunger.md`), the gift machinery
+(P2, #1625): the data, the tree, bestowing and rescinding, the dumps, the Talents page; and
+Gnægan's meal (P3, #1626): the signatures' `only`, a profane corpse's `gives` and `profane`, the
+draw, and the deed. Gnægan is the one profane corpse so far; the other nine bosses' signatures
+come with P4 (#1627). The spec (§8 "Hunger") and the wiki (`wiki/src/profane-gifts.md`) say what
+eating one does.
 
 ## Data: `data/profane/`
 
@@ -15,7 +17,7 @@ One file per gift, `[[gift]]` (`assets/data/profane/README.toml` lists the field
 `kind` (`boon`, `mixed`, `bane`), `tier` (`lesser`, `greater`, `dire`), `weight` (1 to 100,
 within its tier), `description` (the Talents page's words), `line` (said as it takes), `effects`
 (talent effects, `TalentEffect`), and optionally `undone`, `instead`, `excludes`, `replaces`,
-`undoes`, `not_for`.
+`undoes`, `not_for`, and `only` (a signature).
 
 `content/profane.rs` (`profane::parse`, called right after the talent table) reads them into
 `ProfaneTable` (`Content::profane()`): a `GiftDef` per gift (`kind`, `tier`, `weight`, the lines,
@@ -42,7 +44,16 @@ The design's `thin_skinned` is `paper_skinned` (Paper-skinned) here: `thin_skinn
 Unicorn sign's flaw already, and a gift's id must be no talent's. The later phases'
 `excludes` name `paper_skinned`.
 
-Not yet on: the signatures' `only` and the campaign check (P3/P4), the tier coverage check (P6).
+**Signatures** (§5): a gift with `only = "<creature>"` weighs 0 (`GiftDef::drawn` is false: no
+draw and no pool counts it) and is that creature's corpse's `on_eat.gives`, sure.
+`profane::check_signatures` (after `load_hunger`, when creatures and their `on_eat` are in) ties
+the two both ways, keeps a campaign's signature in its own campaign (`GiftDef::campaign`, from
+the file's path: Rat-king's court is
+`assets/campaigns/ascmearc/data/profane/rat_kings_court.toml`, since shared data names shared
+creatures only), and refuses a `replaces` or `undoes` naming one.
+
+Not yet on: the campaign check that every endless boss has `gives` and `profane` (P4), the tier
+coverage check (P6). Rat-king's court lacks its `kin_to { tag = "vermin" }` until P5.
 
 ## In the world: `world/profane.rs`
 
@@ -61,6 +72,15 @@ Not yet on: the signatures' `only` and the campaign check (P3/P4), the tier cove
   its hit points); a fall is `Stats::lessen` never below `DRAIN_FLOOR`, as the altar's wrath, stat
   damage kept within the score, hit points and mana kept within their maxima, never below 1 hit
   point. So rescinding Oak-hearted gives back exactly what it gave; Withered stops at the floor.
+- `World::profane_meal(on_eat)` (§4): for an `on_eat` with `gives` and `profane`, from
+  `eat.rs::eat_fresh` after the usual corpse steps and before it feeds: the signature
+  (`bestow_gift`), then `profane.rolls` draws, each given before the next is drawn, then
+  `player_did(Deed::EatProfane)` (`eat_profane`, −300 in `data/alignment.toml`; the band's note
+  and a paladin's emptied zeal through `shift_alignment`).
+- `World::draw_gift(rolls)` (§7.2), on `state.rng`: the tier by `rolls.tiers` (one weighted draw),
+  then one of the tier's drawn gifts the player `may_take_gift` by `weight` (another); an empty
+  tier gives way up, then down (lesser → greater → dire; dire → greater → lesser); all empty is
+  `None`, and the meal says "Nothing more of it will take in you.".
 - A forgotten altar's Forsaken never draws a profane bane (`bestow_flaw` skips the gifts).
 
 Saves: a gift rides in `Actor::boons` with no new field; `stars::grant` puts it back on every
@@ -82,6 +102,8 @@ load, as any unknown talent does.
 ## Tests
 
 `content/profane.rs` (the tree, the symmetric excludes, the loader's refusals) and
-`world/profane_tests.rs` (bestow; rescind reversing `stat` exactly; Withered at the floor;
+`world/eat_tests.rs` (Gnægan's meal in §4's order, an interrupted meal, the fallbacks, the empty
+table, the deed in full and diminished, a paladin's zeal, the loader's profane-corpse and
+signature refusals), `world/profane_tests.rs` (bestow; rescind reversing `stat` exactly; Withered at the floor;
 `replaces`; `undoes` with and without the boon; `excludes` both ways; `not_for`; a save; the
 `progress` row).

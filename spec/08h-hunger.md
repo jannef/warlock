@@ -113,6 +113,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
       of Grundlēas (§7 "The endless branch") are everlasting, and the campaign check refuses an
       endless branch's layer boss without `corpse` and `everlasting`. Nothing in the game names
       the rule.
+    - **Profane corpses** (#1626; docs/design/profane-gifts.md §4, §7, §9;
+      docs/dev/profane-gifts.md): a layer boss's `on_eat` names its **signature gift** (`gives`, a
+      profane gift whose `only` is that creature: weight 0, never drawn) and its draws on the gift
+      table (`profane = { rolls, tiers = { lesser, greater, dire } }`, the tiers' odds summing
+      to 100); both or neither, only on an everlasting creature, and never with `vomit`. Eating
+      one, after its message and what any fresh corpse does: the signature is given (its line,
+      then "You are Rat-king's court."), then each roll draws a gift on the gameplay stream (a
+      tier by the odds; then, among that tier's drawn gifts the eater may take, one by weight; an
+      empty tier gives way to the next up, then down; all empty: "Nothing more of it will take in
+      you.") and gives it, each before the next is drawn; then the deed `eat_profane` (−300, the
+      largest single sin) moves the score, its band's note said; then it feeds. There is no
+      confirmation, and nothing marks the corpse profane. An interrupted meal does nothing.
+      Gnægan the Rat King's (one lesser roll) is the only one so far: Rat-king's court (+4 to
+      disease checks, poison resistance 25 %, hunger 20 % faster).
   - **Eating rotten food** of any kind (by its age when the last turn of the meal is done; gone
     food not yet removed counts as rotten): "Ugh! The loaf of bread was rotten.", one draw with
     `[rotten] vomit` (50 %) to vomit, else it makes them sick, exposes them to the diseases

@@ -533,7 +533,8 @@ impl Default for CreatureSpec {
 /// (`[corpses.by_tag]`, `data/hunger.toml`), then its own over them (0 switches a tag's gift
 /// off), zeros left out. `skills` teaches skills (`skills = { decipher_script = { gives = 5,
 /// up_to = 30 } }`, [`SkillGift`]); its skill ids are checked when content loads
-/// (`Content::resolve_corpse_gifts`).
+/// (`Content::resolve_corpse_gifts`). A **profane corpse** (a layer boss's) has `gives` and
+/// `profane` too, both or neither, and is `everlasting`, and never comes back up (no `vomit`).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct OnEat {
@@ -559,6 +560,11 @@ pub struct OnEat {
     /// What it teaches, per skill id in `data/skills/` (a caster's corpse, Decipher script).
     #[serde(default)]
     pub skills: BTreeMap<String, SkillGift>,
+    /// A profane corpse's signature gift, sure: a gift id in `data/profane/` whose `only` is
+    /// this creature (docs/design/profane-gifts.md §5; `docs/dev/profane-gifts.md`).
+    pub gives: Option<String>,
+    /// A profane corpse's draws on the gift table (§7.1).
+    pub profane: Option<super::ProfaneRolls>,
 }
 
 /// What a corpse teaches of one skill: an eater untrained in it learns it at `gives`; a

@@ -16,11 +16,13 @@ const STARS: &str = "stars";
 
 /// The page a talent's row is on (#1554): a birth sign's gift on the horoscope page, a class
 /// ability in its first class's level table, on that class's page (else its first prestige
-/// class's), any other on the talents page.
+/// class's), a profane gift on the profane gifts page, any other on the talents page.
 fn talent_page(content: &Content, def: &TalentDef) -> String {
     let book = content.talents();
     if book.tree_id(STARS) == Some(def.tree) {
         "horoscope.md".into()
+    } else if book.tree(def.tree).id == "profane" {
+        "profane-gifts.md".into()
     } else if book.tree(def.tree).class {
         match home_table(content, &def.id) {
             Some(Table::Prestige(_)) => "prestige-classes.md".into(),
@@ -61,7 +63,7 @@ pub(super) fn talents(content: &Content) -> String {
     let book = content.talents();
     let mut out = String::new();
     for (i, tree) in (0u8..).zip(&book.trees) {
-        // The profane gifts are no picks, and nothing gives them in play yet (#1625).
+        // The profane gifts are no picks: they have their own page (`profane.rs`).
         if tree.class || book.tree_id(STARS) == Some(TreeId(i)) || tree.id == "profane" {
             continue;
         }

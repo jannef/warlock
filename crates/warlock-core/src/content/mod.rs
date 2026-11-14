@@ -328,7 +328,7 @@ pub use plural::Plurals;
 pub use potion::{Draught, Drink, Flask, Splash};
 pub use prayer::{Face, FaceWords, Faced, PrayerRules, PrayerUse, UseDef};
 pub use prestige::{PrestigeDef, Table};
-pub use profane::{GiftDef, GiftKind, GiftTier, ProfaneTable};
+pub use profane::{GiftDef, GiftKind, GiftTier, ProfaneRolls, ProfaneTable};
 pub use quest::{
     Binding, Boon, GOLD, Goal, KillTarget, QuestDef, QuestId, QuestKind, QuestTexts, Reveal,
     RevealWhen, Reward, SkillReward, Waits,
@@ -1046,6 +1046,7 @@ impl Content {
         content.stat_training = content.load_or_default(files)?;
         content.dialogues = dialogue::parse(files.table("dialogue"), &content)?;
         content.load_hunger(files)?;
+        profane::check_signatures(&content)?;
         // Outcome tables (spec §7 "Special rooms") last of the rules' data: they name terrain,
         // statuses, objects, damage types, and spell effects; then the rooms that offer them.
         content.outcomes = OutcomeTables::parse(files.table("outcomes"), &content)?;

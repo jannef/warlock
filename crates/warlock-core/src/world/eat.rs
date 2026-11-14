@@ -27,8 +27,9 @@
 //! the pile; "Something of its strength passes into you." for 30 or more) and a chance to widen
 //! the potential by 1 ("You feel you could grow stronger yet."), the skills it teaches (an
 //! untrained one learned, a trained one raised up to the corpse's cap; a caster's corpse,
-//! Decipher script), healing, harm, and extra
-//! nutrition; a rotten one has lost all of that. A corpse never raises a score itself: the
+//! Decipher script), healing, harm, a profane corpse's gifts and deed (a layer boss's:
+//! [`World::profane_meal`], `world/profane.rs`), and extra nutrition; a rotten one has lost all
+//! of that. A corpse never raises a score itself: the
 //! marks wait for the checks (`world/stat_training.rs`). The player learns what a corpse does
 //! only by eating it.
 //!
@@ -264,6 +265,8 @@ impl World {
             let degrees = harm.roll(&mut self.state.rng);
             self.sicken(degrees, events);
         }
+        // A layer boss's: its signature, its draws, the deed (`world/profane.rs`).
+        self.profane_meal(&on_eat);
         self.feed(nutrition.saturating_add(on_eat.satiation).max(0), what);
     }
 

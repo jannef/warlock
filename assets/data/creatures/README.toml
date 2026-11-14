@@ -352,7 +352,12 @@
 #             sickness: hunger.toml's `sickness`, poison), satiation = 500 (nutrition beyond its
 #             size's; less if negative) }. `train` and `widen` lay over its tags' defaults
 #             (hunger.toml's `[corpses.by_tag]`) per stat; 0 switches a tag's gift off. A
-#             rotten corpse does none of it
+#             rotten corpse does none of it. A profane corpse (a layer boss's,
+#             docs/dev/profane-gifts.md) adds gives = "rat_kings_court" (its signature gift,
+#             sure: a gift of ../profane/ whose `only` is this creature) and profane = { rolls =
+#             1, tiers = { lesser = 100 } } (draws on the gift table, the tiers' odds in percent
+#             summing to 100), both or neither, only on an `everlasting` creature, never with
+#             `vomit`
 #
 # Blood (spec §8 "Blood"; presentation only, no rule reads it): blood, the colour of the stains it
 # leaves when hurt badly or killed ("#rrggbb"; default dark red, "#6e0e0c"), or "none" for a

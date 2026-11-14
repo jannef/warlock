@@ -62,6 +62,7 @@ mod outcomes;
 mod overworld;
 mod potions;
 mod prayer;
+mod profane;
 mod recipes;
 mod resources;
 mod rooms;
@@ -440,6 +441,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("food.md", hunger::food),
         ("corpses.md", hunger::corpses),
         ("corpse-effects.md", hunger::corpse_effects),
+        ("profane-corpses.md", profane::profane_corpses),
+        ("profane-gifts.md", profane::profane_gifts),
         ("digging.md", digging::digging),
         ("digging-strength.md", digging::digging_strength),
         ("mining-walls.md", mining::mining_walls),

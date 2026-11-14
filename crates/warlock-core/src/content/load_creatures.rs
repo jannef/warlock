@@ -244,6 +244,22 @@ impl Content {
                     spec.id
                 )));
             }
+            // A profane corpse (docs/design/profane-gifts.md §4): its signature and its draws
+            // together, everlasting, and it always takes.
+            if let Some(on_eat) =
+                (spec.on_eat.as_ref()).filter(|e| e.gives.is_some() || e.profane.is_some())
+            {
+                let err = |m: &str| err(format!("creature `{}`: on_eat: {m}", spec.id));
+                if on_eat.gives.is_none() || on_eat.profane.is_none() || !spec.everlasting {
+                    return Err(err("`gives`, `profane`, and `everlasting` go together"));
+                }
+                if on_eat.vomit > 0 {
+                    return Err(err("a profane corpse never comes back up (no `vomit`)"));
+                }
+                if let Some(rolls) = &on_eat.profane {
+                    rolls.check().map_err(|m| err(&m))?;
+                }
+            }
             let mut def = spec.resolve(resolved);
             def.campaign = campaign::of_path(path).map(str::to_string);
             self.creatures.push(def);

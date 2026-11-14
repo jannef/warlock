@@ -46,7 +46,7 @@ checked only when races exist): eating such a corpse is kin to a character of th
 only the player's kills, a status they caused included), `shop.rs` (`provoke`: attacking a keeper
 who trades; `shop_step`: theft; `pay`: paying a debt; `favour`: `keeper_favour`), `eat.rs::finish`
 (`ate_corpse`, rotten or not), `quest.rs` (`complete`: the quest's `alignment`; `quest_topics`
-asks `offers`), `talk.rs` (`chat`: `cold_greeting` before the greeting and the lines). `steal.rs::got_away_with` (a theft that took something): `player_did(Deed::Theft)`. `consecrate.rs::consecrated` (Consecrate done): `player_did(Deed::Consecrated)`. Nothing else
+asks `offers`), `talk.rs` (`chat`: `cold_greeting` before the greeting and the lines). `steal.rs::got_away_with` (a theft that took something): `player_did(Deed::Theft)`. `consecrate.rs::consecrated` (Consecrate done): `player_did(Deed::Consecrated)`. `profane.rs::profane_meal` (a layer boss's corpse eaten, after its gifts): `player_did(Deed::EatProfane)`, `eat_profane` (−300, the largest single sin; docs/dev/profane-gifts.md). Nothing else
 moves a score: a new deed is a `Deed` variant, a `[shift]` field, and one call where it happens.
 
 **Readers.** Presentation reads `PerceptionView::own_alignment()` (the band, `None` without
@@ -91,7 +91,7 @@ in the smiting rules (`smite_tests.rs::a_sin_empties_zeal`).
 evil starting Good under the worst animal (#317: the class's 550 is set for it), each deed, diminishing in play, notes
 after the deed that do not count as said, cold greetings, quest gating (`requires_alignment`
 only: a scorning giver still offers a good quest) and shifts, a good keeper's
-prices, eating kin, a paladin's start inside their gifts' bands under any star, save and
+prices, eating kin (the profane meal's deed, full and diminished, and the zeal it empties: `eat_tests.rs`), a paladin's start inside their gifts' bands under any star, save and
 replay), `class_active_tests.rs` and `curse_tests.rs` (the holy gifts unanswered outside their
 bands: their time, nothing spent, no effect; Holy radiance put out after a fall),
 `dark_face_tests.rs` (Communion doing nothing for a priest the holy powers answer). The wiki's tables are

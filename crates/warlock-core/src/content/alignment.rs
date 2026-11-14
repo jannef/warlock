@@ -77,6 +77,9 @@ pub struct Shifts {
     pub pay_debt: i32,
     /// Eating the corpse of one of your own race, or of a peaceful creature who talks.
     pub eat_kin: i32,
+    /// Eating a profane corpse (a layer boss's, docs/design/profane-gifts.md §9).
+    #[serde(default)]
+    pub eat_profane: i32,
     /// Consecrating an unholy place (Consecrate).
     #[serde(default)]
     pub consecrate: i32,
@@ -158,6 +161,7 @@ impl AlignmentRules {
             s.theft,
             s.pay_debt,
             s.eat_kin,
+            s.eat_profane,
             s.consecrate,
             s.consume_crystal,
         ];

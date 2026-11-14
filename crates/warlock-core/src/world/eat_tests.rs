@@ -315,3 +315,243 @@ fn skill_gifts_without_words_are_refused() {
     let e = refused(files);
     assert!(e.contains("unknown skill `decypher_script`"), "{e}");
 }
+
+// Profane corpses (docs/design/profane-gifts.md §4, §7.2, §9; `world/profane.rs::profane_meal`):
+// Gnægan's meal, the draw, and the pull toward evil.
+
+/// A giant rat out of sight that walks into view while the player eats.
+const LAIR: &str = r##"
+name = "Lair"
+ambient = [200, 200, 200, 0]
+map = '''
+#########
+#@......#
+#####.###
+#####.###
+#####1###
+#########
+'''
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"1" = { terrain = "floor", creature = "rat", route = "N3 S3" }
+"##;
+
+/// A run in the pantry (or `level`) as `character`, their score set to `score`.
+fn eater(level: &str, character: &str, score: i32) -> World {
+    let mut files = ContentFiles::builtin();
+    files.insert("levels/pantry.toml", PANTRY);
+    files.insert("levels/lair.toml", LAIR);
+    for name in ["pantry", "lair"] {
+        files.insert(
+            &format!("scenarios/{name}.toml"),
+            &format!("name = \"{name}\"\nstart_level = \"{name}\"\nhp = 1000\n"),
+        );
+    }
+    let content = Arc::new(Content::load(&files).expect("test content is valid"));
+    let spec: crate::character::CharacterSpec = character.parse().expect("a character");
+    let mut w = World::start_run(content, level, Some(7), Some(&spec), None, true).expect("world");
+    set_score(&mut w, score);
+    w
+}
+
+fn set_score(w: &mut World, value: i32) {
+    let player = w.state.player;
+    w.state.actors.get_mut(&player).expect("player").alignment =
+        Some(crate::alignment::Score::new(value));
+}
+
+fn score(w: &World) -> i32 {
+    w.state.player().alignment.expect("a score").value()
+}
+
+/// The profane gifts the player holds, by id.
+fn gifts(w: &World) -> Vec<String> {
+    let book = w.content.talents();
+    (w.state.player().boons.iter())
+        .filter(|b| {
+            book.id(&b.id)
+                .is_some_and(|t| w.content.profane().gift(t).is_some())
+        })
+        .map(|b| b.id.clone())
+        .collect()
+}
+
+fn at(w: &World, text: &str) -> usize {
+    let all: Vec<&str> = w.messages().iter().map(|m| m.text.as_str()).collect();
+    (all.iter().position(|m| *m == text)).unwrap_or_else(|| panic!("{text:?} in {all:?}"))
+}
+
+#[test]
+fn gnaegans_meal_gives_its_signature_then_a_lesser_draw_then_the_deed() {
+    let mut w = eater("pantry", "human,male,warrior", 0);
+    eat(&mut w, "gnaegan", 0);
+    let held = gifts(&w);
+    assert_eq!(held.len(), 2, "{held:?}");
+    assert_eq!(held[0], "rat_kings_court");
+    let book = w.content.talents();
+    let drawn = (w.content.profane())
+        .gift(book.id(&held[1]).expect("a talent"))
+        .expect("a gift");
+    assert_eq!(drawn.tier, crate::content::GiftTier::Lesser, "lesser = 100");
+    let name = &book.get(drawn.talent).name;
+    // §4's order: the corpse's words, the signature, the draw, then the band's note.
+    let order = [
+        at(&w, "It is rats, many rats, and none of them fresh."),
+        at(
+            &w,
+            "The squealing in your head dies down to a murmur, and you find you understand it.",
+        ),
+        at(&w, "You are Rat-king's court."),
+        at(&w, &drawn.line),
+        at(&w, &format!("You are {name}.")),
+        at(&w, "You feel your heart harden."),
+    ];
+    assert!(order.is_sorted(), "{order:?}");
+    // The deed: −300, in full from Neutral 0 (against no lean), into Callous.
+    assert_eq!(score(&w), -300);
+    // It always takes: no vomiting, and the signature's effects are read at their hooks.
+    assert!(!said(&w, "You vomit!"));
+    let mods = w.state.player().talent_mods(&w.content);
+    let thick = if held[1] == "thick_blooded" { 2 } else { 0 };
+    assert_eq!(mods.disease_checks, 4 + thick);
+}
+
+#[test]
+fn an_interrupted_profane_meal_does_nothing() {
+    let mut w = eater("lair", "human,male,warrior", 0);
+    eat(&mut w, "gnaegan", 0);
+    assert!(said(&w, "A giant rat comes into view; you stop eating."));
+    assert!(gifts(&w).is_empty());
+    assert_eq!(score(&w), 0);
+    let here = w.player_pos();
+    let corpse = w.content().object_id("gnaegan_corpse").expect("a corpse");
+    let pile = w.state.current().objects_at(here);
+    assert!(pile.iter().any(|s| s.object == corpse));
+}
+
+/// Gives the player every gift of `tier` a draw could give, until none is left.
+fn give_all(w: &mut World, tier: crate::content::GiftTier) {
+    let all: Vec<_> = (w.content.profane().iter())
+        .filter(|g| g.tier == tier && g.drawn())
+        .map(|g| g.talent)
+        .collect();
+    for t in all {
+        let content = w.content.clone();
+        if content
+            .profane()
+            .gift(t)
+            .is_some_and(|g| w.may_take_gift(g))
+        {
+            w.bestow_gift(t);
+        }
+    }
+    assert_eq!(w.gift_pool(tier).0, 0, "{tier:?} emptied");
+}
+
+fn rolls(tier: crate::content::GiftTier) -> crate::content::ProfaneRolls {
+    crate::content::ProfaneRolls {
+        rolls: 1,
+        tiers: [(tier, 100)].into(),
+    }
+}
+
+fn tier_of(w: &World, t: crate::content::TalentId) -> crate::content::GiftTier {
+    w.content.profane().gift(t).expect("a gift").tier
+}
+
+#[test]
+fn a_draw_falls_back_up_then_down_and_an_empty_table_gives_nothing() {
+    use crate::content::GiftTier;
+    let mut w = eater("pantry", "human,male,warrior", 0);
+    // The lesser tier emptied: a lesser roll draws a greater gift (up first).
+    give_all(&mut w, GiftTier::Lesser);
+    let t = w.draw_gift(&rolls(GiftTier::Lesser)).expect("a gift");
+    assert_eq!(tier_of(&w, t), GiftTier::Greater);
+    // The greater emptied too: up again, to the dire.
+    give_all(&mut w, GiftTier::Greater);
+    let t = w.draw_gift(&rolls(GiftTier::Lesser)).expect("a gift");
+    assert_eq!(tier_of(&w, t), GiftTier::Dire);
+    // Every tier emptied (the dire first: Withered would undo Oak-hearted): nothing.
+    let mut w = eater("pantry", "human,male,warrior", 0);
+    for tier in [GiftTier::Dire, GiftTier::Greater, GiftTier::Lesser] {
+        give_all(&mut w, tier);
+    }
+    for tier in GiftTier::ALL {
+        assert_eq!(w.draw_gift(&rolls(tier)), None, "{tier:?}");
+    }
+    // A meal with the table empty says so, and its signature and deed still take.
+    eat(&mut w, "gnaegan", 0);
+    assert!(said(&w, "Nothing more of it will take in you."));
+    assert!(gifts(&w).iter().any(|g| g == "rat_kings_court"));
+    assert_eq!(score(&w), -300);
+}
+
+#[test]
+fn a_dire_roll_falls_to_the_greater_before_the_lesser() {
+    use crate::content::GiftTier;
+    let mut w = eater("pantry", "human,male,warrior", 0);
+    give_all(&mut w, GiftTier::Dire);
+    let t = w.draw_gift(&rolls(GiftTier::Dire)).expect("a gift");
+    assert_eq!(tier_of(&w, t), GiftTier::Greater);
+}
+
+#[test]
+fn the_profane_deed_counts_in_full_against_the_lean_and_less_with_it() {
+    // A saint: against their lean, in full.
+    let mut w = eater("pantry", "human,male,warrior", 1000);
+    eat(&mut w, "gnaegan", 0);
+    assert_eq!(score(&w), 700);
+    // The evil: with their lean, by the share of the way left (300 × 500 ⁄ 1000).
+    let mut w = eater("pantry", "human,male,warrior", -500);
+    eat(&mut w, "gnaegan", 0);
+    assert_eq!(score(&w), -650);
+}
+
+#[test]
+fn a_paladins_zeal_deserts_them_at_the_meal() {
+    let mut w = eater("pantry", "human,male,paladin", 500);
+    let zeal = w.content().resource_id("zeal").expect("zeal");
+    w.player_mut().resources.set(zeal, 4);
+    eat(&mut w, "gnaegan", 0);
+    let held = w.state.player().resources.get(zeal).map(|p| p.value);
+    assert_eq!(held, Some(0));
+    assert!(said(&w, "Your zeal deserts you."));
+}
+
+#[test]
+fn the_loader_ties_a_profane_corpse_together() {
+    let gnaegan = "gives = \"rat_kings_court\", profane = { rolls = 1, tiers = { lesser = 100 } }";
+    let refused = |to: &str, says: &str| {
+        let mut files = ContentFiles::builtin();
+        files.replace_in_table("creatures", gnaegan, to);
+        let e = Content::load(&files).expect_err(says).to_string();
+        assert!(e.contains(says), "{e}");
+    };
+    refused(&format!("{gnaegan}, vomit = 10"), "never comes back up");
+    refused("gives = \"rat_kings_court\"", "go together");
+    refused(
+        "profane = { rolls = 1, tiers = { lesser = 100 } }",
+        "go together",
+    );
+    refused(
+        "gives = \"rat_kings_court\", profane = { rolls = 1, tiers = { lesser = 60, greater = 30 } }",
+        "sum to 90",
+    );
+    refused(
+        "gives = \"rat_kings_court\", profane = { rolls = 0, tiers = { lesser = 100 } }",
+        "at least one roll",
+    );
+    refused(
+        "gives = \"hungering\", profane = { rolls = 1, tiers = { lesser = 100 } }",
+        "whose `only` is not it",
+    );
+    // A signature's `only` names a creature whose corpse gives it, and weighs 0.
+    let mut files = ContentFiles::builtin();
+    files.replace_in_table("profane", "only = \"gnaegan\"", "only = \"rat\"");
+    let e = Content::load(&files).expect_err("refused").to_string();
+    assert!(e.contains("whose `only` is not it"), "{e}");
+    let mut files = ContentFiles::builtin();
+    files.replace_in_table("profane", "weight = 0\nonly", "weight = 5\nonly");
+    let e = Content::load(&files).expect_err("refused").to_string();
+    assert!(e.contains("weighs 0"), "{e}");
+}
