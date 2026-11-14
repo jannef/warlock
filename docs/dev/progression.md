@@ -233,7 +233,7 @@ wiki's effect text appends "while raging".
 | `trained_skills` | `Actor::skill_effect` (a bonus for every trained skill, as `skill`'s) |
 | `missile_dodge` | `World::target_against` (from `resolve` for shots and throws, `trap_strikes` for trap missiles) |
 | `spell_damage_percent` | `World::evaded` in `spell_hurts` (bursts and bolts, before resistances) |
-| `read_percent`, `scroll_kept` | `read.rs`: `read_price`; `use_up` (one gameplay draw a read, only with the talent; "The writing does not fade from the scroll.") |
+| `read_percent`, `scroll_kept` | `read.rs`: `read_price`; `use_up` (one keyed draw a read, only with the talent; "The writing does not fade from the scroll.") |
 | `spares_self` | `World::cast_burst` (the caster is never caught); `PerceptionView::bursts_spare_me`, so `Aim::catches_reader` asks nothing |
 | `loot_magic_percent` | `magic::loot::roll_with` (`roll_rarity`: the weights of the rarities above the find's least grade); `mapgen::generate_with` from `level_template` (the player's luck as a level is first made), `World::loot_of` (drops). The same draws, so maps never change |
 | `skill_rolls` | `World::level_rolls` |
@@ -466,7 +466,7 @@ left and what may come next; `random_creation` runs `take_random` on a clone. Te
 
 ## Determinism and saves
 
-Picks are replayed actions; prerequisites read stored scores. Talents draw from the gameplay
+Picks are replayed actions; prerequisites read stored scores. Talents draw from keyed streams
 stream only where their condition arises (Light step's check, Ambusher's die on a hit at an
 unaware creature), and some draw less (Swimmer's plunge, Nature's ward's wading, Iron stomach),
 so a run without them draws as before. The hash covers `Actor::talents`, `Progress::due`,

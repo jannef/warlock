@@ -37,6 +37,7 @@ use crate::combat;
 use crate::content::{ActionKind, ClassActive, Content, LevelKind, RigDef, RigId, RigTakes, Trap};
 use crate::geom::{Dir, Pos};
 use crate::perception::PerceptionView;
+use crate::rng::draw;
 use crate::skills::Effect;
 use crate::stats::Stat;
 use crate::text::article;
@@ -353,7 +354,7 @@ impl World {
         let me = self.state.player();
         let modifier = me.check_modifier(&content, Stat::Dexterity)
             + me.skill_effect_of(&content, rules.skill, Effect::Craft);
-        let natural = combat::roll_natural(&mut self.state.rng);
+        let natural = combat::roll_natural(&mut draw!(self, "rig/player"));
         let snaps = natural == 2;
         if !snaps && !crate::check::makes(natural, modifier, rules.difficulty) {
             self.say("The rig will not hold.");

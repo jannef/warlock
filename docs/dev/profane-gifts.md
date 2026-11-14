@@ -139,7 +139,7 @@ today; an aristocrat's own extra ring stays when Many-fingered goes).
   (`bestow_gift`), then `profane.rolls` draws, each given before the next is drawn, then
   `player_did(Deed::EatProfane)` (`eat_profane`, −300 in `data/alignment.toml`; the band's note
   and a paladin's emptied zeal through `shift_alignment`).
-- `World::draw_gift(rolls)` (§7.2), on `state.rng`: the tier by `rolls.tiers` (one weighted draw),
+- `World::draw_gift(rolls)` (§7.2), on its keyed stream `profane/gift/player`: the tier by `rolls.tiers` (one weighted draw),
   then one of the tier's drawn gifts the player `may_take_gift` by `weight` (another); an empty
   tier gives way up, then down (lesser → greater → dire; dire → greater → lesser); all empty is
   `None`, and the meal says "Nothing more of it will take in you.".

@@ -10,6 +10,7 @@ use crate::content::{ClassActive, ContentFiles, Factor};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stats};
+use crate::test_support::draws;
 use crate::test_support::{CONTENT as BUILTIN, run, said};
 use crate::world::magic::caster_tests::reach;
 use crate::world::*;
@@ -94,7 +95,7 @@ fn the_rite_hallows_the_ground_for_its_mana_and_a_minute() {
     let ability = Ability::Class(ClassActive::Sanctuary);
     assert!(ability.had_by(w.state.player(), w.content()));
     assert!(!ability.had_by(priest_on("showcase", 49).state.player(), w.content()));
-    let (mana, time, rng) = (w.state.player().mana, w.state.time, w.state.rng.clone());
+    let (mana, time, rng) = (w.state.player().mana, w.state.time, draws(&w));
     let cost = w.state.player().mana_cost(w.content(), 30);
     run(&mut w, "use:sanctuary");
     let told = said(&w);
@@ -110,7 +111,7 @@ fn the_rite_hallows_the_ground_for_its_mana_and_a_minute() {
         cost > 0 && left < mana && left >= mana - cost,
         "its mana spent: {left}"
     );
-    assert_eq!(w.state.rng, rng, "no draw");
+    assert_eq!(draws(&w), rng, "no draw");
     let here = w.player_pos();
     let hallows = w.hallows();
     assert_eq!(hallows.len(), 1);

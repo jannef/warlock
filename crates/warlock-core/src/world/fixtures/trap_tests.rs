@@ -4,6 +4,7 @@
 use crate::action::{MissileEnd, SpellShape, parse_actions};
 use crate::content::{ContentFiles, TrapId};
 use crate::replay::Replay;
+use crate::test_support::draws;
 use crate::test_support::{builtin, run, said as texts};
 use crate::world::*;
 
@@ -538,8 +539,18 @@ fn lightning_runs_until_a_wall_strikes_everyone_on_it_and_runs_out() {
             .iter()
             .any(|e| matches!(e, Event::TrapSprung { .. }))
     };
-    let outs = run(&mut w, "move:W move:E move:W move:E");
-    assert!(sprung(&outs[1]) && !sprung(&outs[3]));
+    // Known now, it may be sidestepped: step on it until it springs again.
+    let mut again = false;
+    for _ in 0..40 {
+        let outs = run(&mut w, "move:W move:E");
+        if sprung(&outs[1]) {
+            again = true;
+            break;
+        }
+    }
+    assert!(again, "the second charge");
+    let outs = run(&mut w, "move:W move:E");
+    assert!(!sprung(&outs[1]), "spent");
     assert!(w.ground_truth().0.trap_at(Pos::new(2, 1)).is_none());
 
     // Without a direction, the bolt runs along the longest clear line.
@@ -589,9 +600,9 @@ fn an_alarm_rings_and_draws_creatures_that_hear_it() {
 fn a_teleport_moves_to_a_free_cell_picked_by_a_hash() {
     let map = "##########\n#@x......#\n#........#\n##########\n";
     let to = |w: &mut World| {
-        let rng = w.state.rng.clone();
+        let rng = draws(w);
         let out = w.apply(&Action::Move(Dir::E));
-        assert_eq!(w.state.rng, rng, "not the gameplay random stream");
+        assert_eq!(draws(w), rng, "not the gameplay random stream");
         assert!(out.events.iter().any(|e| matches!(
             e,
             Event::ActorMoved { from, .. } if *from == Pos::new(2, 1)

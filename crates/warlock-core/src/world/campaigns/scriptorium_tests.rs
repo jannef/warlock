@@ -122,6 +122,9 @@ fn a_check_inside_marks_decipher_script_twice_and_a_study_too() {
     run(&mut w, "identify");
     trained(&mut w);
     place(&mut w, INSIDE);
+    crate::test_support::rig(&mut w, "decipher/player", |rng| {
+        crate::combat::roll_natural(rng) == 2
+    });
     run(&mut w, "read:c:20,3");
     assert_eq!(
         marks(&w, "decipher_script"),

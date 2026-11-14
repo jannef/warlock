@@ -238,7 +238,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and is read in one place each:
     - **Inflict** (`{ inflict = STATUS, chance, severity }`): a hit with it that leaves its
       target alive causes `severity` degrees of the status by `chance` percent (one draw of the
-      gameplay stream below 100, none at 100), read where a natural attack's `on_hit` is
+      keyed stream below 100, none at 100), read where a natural attack's `on_hit` is
       (`World::after_blow`), through the attack's profile (`Profile::on_hit`, from
       `Mods::local` of the weapon that hit: the main hand's, the off hand's for its blows, a
       launcher's for its shots, a thrown weapon's; never a kick or a shield bash). The target's
@@ -287,7 +287,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     scroll with no spell behind it (restoration) counts as level 0. **Otherwise a check**, never
     a refusal: 2d12 + the Intelligence modifier + talents' additions to its checks + Decipher
     script's `decipher` benefit (curve 0, +8 at 100, +12 at 200; 0 for one without the skill, whatever they wear that raises it), against `base` (10) + the spell level ÷ `levels_per_point` (5).
-    Two gameplay draws, only when it is asked. **Made**, the scroll reads as anywhere in this
+    Two keyed draws, only when it is asked. **Made**, the scroll reads as anywhere in this
     section (Scroll adept, Scroll savant, an unknown type identified). **Failed**, "The writing
     swims before your eyes.": a read's price, the scroll kept, a label still unknown, no cast, no
     Scroll savant draw, no Read training; try again. **Marks**: `Use::Decipher` 100 % per check
@@ -419,7 +419,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     one rung and none for anything but a wand), from the stream its maker already draws from:
     loot's (`magic::loot::make_from`, so drops, chests, and hoards), a starting kit's (`character/kit/...`), a
     generated shop's stock (the shop's), a creature's gear (`gear/...`), an outcome's objects
-    (`gameplay`), and, for the wands a level gives as it is first made (a level
+    (`outcome/objects/<cell>`), and, for the wands a level gives as it is first made (a level
     file's pile or chest, a vault's), a fixed creature kit's, and a scenario's pack, the
     `objects/<level id>`, `objects/actor/<id>`, and `objects/pack` streams. It is kept on the
     stack (`Stack`'s `wand_rung`: saved and hashed, left out of the save for everything but a
@@ -504,7 +504,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Sluggish, Stunned, Staggered, and Transfixed; `diseases = true` ends
   every disease), `mana` (`dice` mana back, never past the maximum), `elixir` (#568: its `stat`
   +`points` (1) for good, each a trained rise, the potential then lifted to the score where it
-  was below (a trained rise alone never moves it, §8 "Stats"), then the potential +a roll of `potential`, "1d2", one gameplay draw; hit points
+  was below (a trained rise alone never moves it, §8 "Stats"), then the potential +a roll of `potential`, "1d2", one keyed draw; hit points
   follow a Toughness rise at once, the maximum mana and the carrying limits follow the score;
   "You feel stronger.", with ", and that you could be stronger yet." when the potential rose by
   2), `harm` (`dice` degrees of its `status`, Poisoned: sickness, as rotten food gives), and,
@@ -529,7 +529,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   A **gamble** (kind `gamble`, the potions wave 2 design §4.3) names an `outcomes` table of
   `data/outcomes/` (§7 "Special rooms"; checked to exist once the tables load): drunk, one
   outcome is drawn from it as a healing spring's drink draws (the kind by the table's weights,
-  then one of its outcomes by weight: two gameplay draws; a potion has no side, nothing leans,
+  then one of its outcomes by weight: two keyed draws; a potion has no side, nothing leans,
   nothing is spent) and befalls the drinker where they stand, its own line said instead of the
   statuses'. Two outcome effects serve the gambles: `status` may be a list (`status = [{ id =
   "renewing", degrees = 3 }, { id = "poisoned", degrees = 2 }]`, each given), and `drain_stat =
@@ -652,7 +652,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     silver family's kind one), the vial of acid (Acid splash, acid that eats the player's
     armour; drunk, Corroded 2).
   - **Talents** (system `potions`): Thrifty drinker (Delver, from level 6): a potion is not used
-    up one time in four (one gameplay draw a drink, none while the chance is 0); worn
+    up one time in four (one keyed draw a drink, none while the chance is 0); worn
     `potion_kept` affixes add their percent to it, the sum at most 50 (a talent's own chance
     above 50 stands); Lasting draughts (Vigour, Toughness 13; #567): boost and vision statuses
     last half again (`status_lasts`, each degree half again as long to ease). #787 cut Nose for

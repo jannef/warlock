@@ -82,7 +82,9 @@ fn the_draw_follows_the_weights_over_many() {
     let share = |creature, seed| {
         let n = 4000;
         let hits = (0..n)
-            .filter(|&i| super::court::join(content, seed, ActorId(i), creature) == Some(unseelie))
+            .filter(|&i| {
+                super::court::join(content, seed, &i.to_string(), creature) == Some(unseelie)
+            })
             .count();
         hits as f64 / f64::from(n) * 100.0
     };
@@ -94,7 +96,7 @@ fn the_draw_follows_the_weights_over_many() {
     }
     // A type of one faction draws nothing.
     let rat = content.creature_id("rat").expect("rat");
-    assert_eq!(super::court::join(content, 1, ActorId(5), rat), None);
+    assert_eq!(super::court::join(content, 1, "5", rat), None);
 }
 
 #[test]

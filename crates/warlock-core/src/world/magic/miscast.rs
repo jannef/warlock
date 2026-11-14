@@ -45,6 +45,7 @@ use crate::damage::Damage;
 use crate::dice::{Dice, Roll};
 use crate::geom::{Dir, Pos};
 use crate::noise::SoundKind;
+use crate::rng::draw;
 use crate::skills::Effect;
 use crate::stats::Stat;
 use crate::text::capitalized;
@@ -132,19 +133,33 @@ impl World {
         let Some(difficulty) = me.cast_difficulty(&content, (cast.spell, cast.def)) else {
             return;
         };
-        let Checked::Failed { by } = check::roll(&mut self.state.rng, bonus, difficulty) else {
+        let Checked::Failed { by } = check::roll(
+            &mut draw!(self, "miscast/check/{}", me.key),
+            bonus,
+            difficulty,
+        ) else {
             return;
         };
-        let total = self.miscast_total(rules.die, rules.per_margin * by, ward);
+        let total = self.miscast_total(caster, rules.die, rules.per_margin * by, ward);
         let Some(entry) = entry_for(content.miscasts(), total).cloned() else {
             return;
         };
         self.miscast(caster, cast, aim, &entry, events);
     }
 
-    /// The table's total: the die + `margin` − `ward`, at least 1.
-    pub(super) fn miscast_total(&mut self, die: Dice, margin: i32, ward: i32) -> i32 {
-        let rolled = die.roll(&mut self.state.rng);
+    /// The table's total for `caster`'s miscast: the die + `margin` − `ward`, at least 1.
+    pub(super) fn miscast_total(
+        &mut self,
+        caster: ActorId,
+        die: Dice,
+        margin: i32,
+        ward: i32,
+    ) -> i32 {
+        let rolled = die.roll(&mut draw!(
+            self,
+            "miscast/total/{}",
+            self.state.actors.key(caster)
+        ));
         rolled.saturating_add(margin).saturating_sub(ward).max(1)
     }
 
@@ -210,7 +225,8 @@ impl World {
                     .filter(|&s| me.stat_marks[s] > 0)
                     .collect();
                 if !marked.is_empty() {
-                    let i = self.state.rng.below(marked.len() as u32) as usize;
+                    let i = draw!(self, "miscast/lose_mark/{}", me.key).below(marked.len() as u32)
+                        as usize;
                     if let Some(me) = self.state.actors.get_mut(&caster) {
                         me.stat_marks[marked[i]] -= 1;
                     }
@@ -245,7 +261,13 @@ impl World {
             MishapEffect::Summon { creature } => self.miscast_summon(here, creature, None),
             MishapEffect::Portal { gate } if in_play => self.open_pit(here, gate),
             MishapEffect::Harm { dice, damage } => {
-                let amount = dice.roll(&mut self.state.rng).max(1);
+                let amount = dice
+                    .roll(&mut draw!(
+                        self,
+                        "miscast/harm/{}",
+                        self.state.actors.key(caster)
+                    ))
+                    .max(1);
                 let kind = damage.or(cast.def.damage_type);
                 let mut amount = self.resisted(caster, Damage::new(amount, kind));
                 if protected && let Some(me) = self.state.actors.get(&caster) {
@@ -271,7 +293,8 @@ impl World {
                 let mut near = self.near_caster(caster);
                 near.retain(|&(id, _)| (caster == player || id != player) && !self.is_rooted(id));
                 if !near.is_empty() && !self.is_rooted(caster) {
-                    let i = self.state.rng.below(near.len() as u32) as usize;
+                    let i = draw!(self, "miscast/swap/{}", self.state.actors.key(caster))
+                        .below(near.len() as u32) as usize;
                     let (other, there) = near[i];
                     self.teleport_to(caster, (here, there), events);
                     self.teleport_to(other, (there, here), events);
@@ -280,7 +303,8 @@ impl World {
             MishapEffect::Boon { status, severity } => {
                 let mut near: Vec<ActorId> = vec![caster];
                 near.extend(self.near_caster(caster).into_iter().map(|(id, _)| id));
-                let i = self.state.rng.below(near.len() as u32) as usize;
+                let i = draw!(self, "miscast/boon/{}", self.state.actors.key(caster))
+                    .below(near.len() as u32) as usize;
                 self.afflict(near[i], status, severity, None, events);
             }
             MishapEffect::Noise { loudness } if in_play => {
@@ -337,7 +361,10 @@ impl World {
     fn miscast_stat_damage(&mut self, caster: ActorId, stat: Option<Stat>, points: u8) {
         let stat = match stat {
             Some(stat) => stat,
-            None => Stat::ALL[self.state.rng.below(Stat::COUNT as u32) as usize],
+            None => {
+                Stat::ALL[draw!(self, "miscast/stat/{}", self.state.actors.key(caster))
+                    .below(Stat::COUNT as u32) as usize]
+            }
         };
         let content = self.content.clone();
         let Some(me) = self.state.actors.get_mut(&caster) else {

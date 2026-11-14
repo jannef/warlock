@@ -308,13 +308,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     only glass.", a melee blow's time, no step); a missile the player aims at an image they see
     (a creature at any image) flies on through its cell instead of coming down there; bolts
     always fly to the first real creature. A creature outside the hall shooting or throwing at
-    the player inside aims at the player or one of their images, each alike (a gameplay draw);
+    the player inside aims at the player or one of their images, each alike (a keyed draw);
     creatures inside know the hall and aim true, and creatures never see images at all (their
     sight and AI read ground truth). Never over a whole level. The `actors` dev layer lists each
     actor's images (`; images (x, y) (x, y)`); `view` shows them as the player does.
   - **An unstable room** (`warp`, #411): every step onto a cell inside, the player's or a
     creature's (a move, a step made way for, a known trap sidestepped; never an incorporeal
-    creature passing through), has `warp` percent (one draw of the gameplay stream, made only on
+    creature passing through), has `warp` percent (one draw of its keyed stream, made only on
     such a cell, after any trap there has gone off and only if it left the stepper there) to
     move the stepper to a free cell of the level exactly as a teleport trap does (§8 "Traps":
     walkable, no one there, no trap, no ice, picked by a hash). The trap's lines say it: "You
@@ -328,12 +328,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     ring of sound floor runs from every door round the room (#523; a room too narrow to have a
     middle gets no cracks at all). A hand-made level draws its own. Every step of the **player** onto a cracked cell of it (a
     move; the room's cells without cracks never give way) has `collapse.chance` percent (15,
-    doubled while Burdened or worse; one draw of the gameplay stream, made only on such a cell,
+    doubled while Burdened or worse; one draw of its keyed stream, made only on such a cell,
     after any trap and warp there, and only while the level has a way down that leads
     somewhere) to give way: "The floor gives way beneath you!" The player falls to the level
     that way leads to (generated as usual on a first visit, as by the stairs; the step's time
-    is all it costs), "You fall to <level>.", landing on a random cell of it (a second gameplay
-    draw) that is walkable, no door, stairs, trap, or ice, where no one stands, outside every
+    is all it costs), "You fall to <level>.", landing on a random cell of it (a second
+    draw of the collapse's stream) that is walkable, no door, stairs, trap, or ice, where no one stands, outside every
     shop, and reachable from where the level is entered without passing a locked door (so never
     inside a vault behind one, nor behind a secret door, which is wall until found). They take
     `collapse.damage` (2d6), which can kill them (#523: there is always a sound way round, so
@@ -353,7 +353,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     one stays broken) and locks with a lock of the floor's level (no id: only a skeleton key
     fits; picked against the usual difficulty plus the branch's per depth, or kicked, §8
     "Doors"), each slamming as loud as a kick (banging, 100), and "The doors slam shut!" is
-    said when any did; then `guardians` creatures (least to most, one gameplay draw) come, each
+    said when any did; then `guardians` creatures (least to most, one keyed draw) come, each
     drawn by the level's danger + `danger` from the branch's population and strays by the draw
     of §7 "Danger levels" (hostile to the player, never unique), awake, with gear rolled as a
     creature that comes, on a walkable free cell of the room on its **edge** (next to a cell
@@ -434,7 +434,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a creature that dies on a cell whose effects raise the dead (the room's, else the whole
     level's), is not of the rise's `faction`, and leaves a corpse is marked to rise, whoever
     killed it (a creature's kill too; never the player, who leaves no corpse to rise): at the
-    death one gameplay draw picks what it rises as, alike among the types of the faction that
+    death one keyed draw picks what it rises as, alike among the types of the faction that
     are not unique and are shared or the run's campaign's own, of the dead's level, else of the
     nearest level that has one (the lower on a tie; with a single candidate nothing is drawn).
     The rising (`LevelState::risings`: when, where, what died, what it rises as; saved, hashed,
@@ -456,7 +456,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a full multiple of `every` on the clock (every full hour of the day: counted by the clock,
     not from the rest's start, so nothing is saved and short rests strung together are haunted
     alike), one creature of the haunt's faction comes inside, on a level with a danger only:
-    its type drawn from the gameplay stream as a cursed room's dead rise, with the level's
+    its type drawn from its keyed stream as a cursed room's dead rise, with the level's
     danger for the dead's level (the nearest level when none has it); its cell drawn among the
     free cells of the room (walkable, no door or stairs) the player's last perception does not
     see, else among all of them. It carries nothing, goes for where the player lies (its
@@ -504,7 +504,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       alignment, and never spends the altar; the time is spent.
     - **The answer**: the deed first (`Deed::Prayed(side)`: `[shift] prayed_good` 5 at a good
       altar, `prayed_evil` −10 at an evil one, nothing at a neutral one; §8 "Alignment"), then one
-      gameplay draw of the table's `kinds` (boon 35, nothing 30, bane 35), leaned by the side
+      keyed draw of the table's `kinds` (boon 35, nothing 30, bane 35), leaned by the side
       against the player's band's side: agreement (good and good, evil and evil) moves `lean`
       (15) from bane to boon, opposition from boon to bane, a neutral altar or a neutral player
       nothing (Pious, §8 "Talents": an agreeing lean doubled, an opposed one none); then one
@@ -545,7 +545,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       the burst spell code: everyone in it is hurt, the player too, and it can kill ("The altar's
       fire burns you."); the explosion noise (150); ice melts. Then the altar's cell becomes
       `rubble` and its light is gone.
-    - **Exhaustion**: after a completed prayer, unless the altar is gone, one gameplay draw of
+    - **Exhaustion**: after a completed prayer, unless the altar is gone, one keyed draw of
       the table's `exhaust` (50 %, the same whatever the prayer gave): the altar is **spent**, its
       cell `spent_altar` (dark, no light, no glow) and its placed light gone ("The altar's glow
       gutters and dies."); Pray is offered there no more. Nothing new is saved: the terrain
@@ -586,7 +586,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       and removes no affix; they stay through all of it and go only with the item. A stack of
       several is worked one at a time. What survives is identified and says what it is ("This is
       ...!"), and every finished attempt marks Metalcraft. The anvil is never spent. Every draw is
-      from the gameplay stream.
+      from its keyed stream.
     - **The item**: `Stack::worked` (`Worked { improved, attempts, damaged, by }`, `by` what damaged it, saved, none on an
       item never worked); a worked item is like no other and never stacks. Names, ahead of the rest,
       whatever is identified: 1 Fine, 2 Marvellous, 3 Masterwork ("a Marvellous Sharp long sword of
@@ -613,7 +613,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       (`data/actions.toml`, 1000) through the rest's machinery: a creature coming into view, a
       message, or a blow breaks it off ("You stop drinking.", or "A kobold comes into view; you
       stop drinking."), which gives nothing; the time is spent.
-    - **The answer**: one gameplay draw by the table's kinds (a spring has no side: no lean),
+    - **The answer**: one keyed draw by the table's kinds (a spring has no side: no lean),
       then one by weight among that kind's outcomes (`data/outcomes/spring.toml`, the wiki's
       "Healing springs"): Refreshed (55 %; 2d8 hit points back, "The water is cold and good."),
       nothing (25 %; "It tastes of stone."), Fouled (15 %; marsh ague caught, which a prayer

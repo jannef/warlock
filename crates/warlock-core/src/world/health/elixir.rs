@@ -18,6 +18,7 @@
 //! [`Stats::widen`]: crate::stats::Stats::widen
 
 use crate::dice::Dice;
+use crate::rng::draw;
 use crate::stats::Stat;
 use crate::world::World;
 
@@ -35,11 +36,12 @@ fn news(stat: Stat, rose: bool, widened: bool) -> String {
 
 impl World {
     /// The player drank an elixir of `stat` (module docs): `points` trained rises, then the
-    /// potential raised by a roll of `potential` (a gameplay draw), and the hit points a
+    /// potential raised by a roll of `potential` (one draw, `elixir/player`), and the hit points a
     /// Toughness rise brings.
     pub(super) fn drink_elixir(&mut self, stat: Stat, points: u8, potential: Dice) {
         let content = self.content.clone();
-        let roll = u8::try_from(potential.roll(&mut self.state.rng).max(0)).unwrap_or(u8::MAX);
+        let roll = u8::try_from(potential.roll(&mut draw!(self, "elixir/player")).max(0))
+            .unwrap_or(u8::MAX);
         let me = self.player_mut();
         let before = me.max_hp(&content);
         let rose = (0..points).filter(|_| me.stats.train(stat)).count() > 0;

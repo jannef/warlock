@@ -198,27 +198,73 @@ The release that bumps the workspace version touches no test file: the fixture s
 `tests/golden/saved-characters/saves/` say `@VERSION@` (all but Osric's, another version's on
 purpose), and the screen snapshots write the version `[version]` (#1532).
 
-## Random streams: keep the gameplay stream still
+## Random streams: every rule draws by its own key
 
-`state.rng`, the `gameplay` stream (`rng.rs`), is shared by about two hundred draw sites in
-ninety modules. A draw added to it or taken from it shifts every later roll of the run, so one
-feature's change breaks the replays, insta snapshots, and golden walks of unrelated features,
-and every PR in flight that touches them conflicts. The policy (#1523):
+There is no shared gameplay stream (#1662). Every rule that rolls in play draws from a stream of
+its own, keyed by what it decides, so a draw added to or taken from one rule never moves
+another's rolls: the replays, insta snapshots, and golden walks of unrelated features stay as
+they were, and PRs in flight no longer conflict over them. The scheme is `rng.rs`'s module docs
+("Keys"); the rules:
 
-- **A self-contained new feature draws from a keyed stream of its own**, never `state.rng`: a
-  constructor in `rng.rs` (`Rng::grade`, `Rng::court`) when the stream is kept or shared, a
-  labelled `Rng::stream(seed, "feature/<key>")` made where it is used when it is not
-  (`appraise/<hour>`, `wares/<actor id>`), or a keyed draw with no generator at all
-  (`weather::draw(seed, label, k)`, as one-liners and mutters do). Key it by what makes the draw
-  unique (an actor, a level, the moment), so two draws never share a value by accident. A
-  stream kept in `WorldState` (`ruin`, `encounters`) is made on its first draw, so a run that
-  never draws from it hashes as before.
-- **Add the stream to the table at the top of `rng.rs`** in the same PR, in its group.
-- **High-churn users of `gameplay` move out as they are touched**: the outcome tables
-  (`world/fixtures/outcome.rs`), eating (`world/health/eat.rs`), miscasts. Each move is a PR of its own, or a
-  commit its PR names, that says the run's rolls change; never move a draw between streams as a
-  side effect of another change.
-- Rules that are part of the core loop (to-hit, damage, checks, the AI) stay on `gameplay`.
+- **A moment's draw** is `draw!(self, "<rule>/<decision>/<actor key>")` in a `World` method
+  (`crate::rng::draw`): the label names the rule and whom it concerns, and the key is the label,
+  the second of game time, and how many draws of that label the second has seen
+  (`<label>@<second>#<n>`, counted by `WorldState::draws`, a `rng::Draws`). Several dice of one
+  decision (a check and the degrees it inflicts) come from the one stream; distinct decisions
+  take distinct labels, so no rule's draw counts against another's. An actor is named by its
+  `Actor::key` (`self.state.actors.key(id)`, `player` for the player), never its `ActorId`
+  (`rng.rs`, "Actor keys": the id is the global creation counter, which renumbers every later
+  creature when one more or fewer is made earlier).
+- **A one-shot decision of an entity** (what a creature drops as it dies, its grade as it is
+  made, a trader's wares) is `Rng::stream(seed, "<rule>/<actor key>")`, or a constructor in
+  `rng.rs` when the stream is shared by several callers (`Rng::grade`, `Rng::court`). Its key
+  must be unique by construction: the entity's key, a level's id, a quest's id.
+- **A kept stream of a subsystem** (`training`, `levels`, `ruin`, `encounters`, a level's
+  `spawn/<level id>`) is sequential within that subsystem and kept in the state; only its own
+  draws move it. Add no new kept stream unless the rolls must continue across the run in order.
+- **Unique and stable.** A key names *what* is decided, never how many things came before it:
+  level id, cell, actor key, the moment, an attempt number. Two decisions never share a key
+  (include enough context, or let `draw!`'s counter settle repeats in one second). A PR that adds
+  or changes keys says why each is unique and stable.
+- **Every label is written at its site**, so `grep 'draw!(' crates/warlock-core/src` lists them
+  all; the table at the top of `rng.rs` lists the one-shot and kept streams. Add a new one-shot
+  or kept stream to that table in the same PR, in its group.
+- **The guard**: `WorldState` has no shared stream to draw from, so a new draw must name a key;
+  `Rng::stream` in a `World` method is reviewed for the uniqueness and stability above.
+
+## Random streams: every rule draws by its own key
+
+There is no shared gameplay stream (#1662). Every rule that rolls in play draws from a stream of
+its own, keyed by what it decides, so a draw added to or taken from one rule never moves
+another's rolls: the replays, insta snapshots, and golden walks of unrelated features stay as
+they were, and PRs in flight no longer conflict over them. The scheme is `rng.rs`'s module docs
+("Keys"); the rules:
+
+- **A moment's draw** is `draw!(self, "<rule>/<decision>/<actor key>")` in a `World` method
+  (`crate::rng::draw`): the label names the rule and whom it concerns, and the key is the label,
+  the second of game time, and how many draws of that label the second has seen
+  (`<label>@<second>#<n>`, counted by `WorldState::draws`, a `rng::Draws`). Several dice of one
+  decision (a check and the degrees it inflicts) come from the one stream; distinct decisions
+  take distinct labels, so no rule's draw counts against another's. An actor is named by its
+  `Actor::key` (`self.state.actors.key(id)`, `player` for the player), never its `ActorId`
+  (`rng.rs`, "Actor keys": the id is the global creation counter, which renumbers every later
+  creature when one more or fewer is made earlier).
+- **A one-shot decision of an entity** (what a creature drops as it dies, its grade as it is
+  made, a trader's wares) is `Rng::stream(seed, "<rule>/<actor key>")`, or a constructor in
+  `rng.rs` when the stream is shared by several callers (`Rng::grade`, `Rng::court`). Its key
+  must be unique by construction: the entity's key, a level's id, a quest's id.
+- **A kept stream of a subsystem** (`training`, `levels`, `ruin`, `encounters`, a level's
+  `spawn/<level id>`) is sequential within that subsystem and kept in the state; only its own
+  draws move it. Add no new kept stream unless the rolls must continue across the run in order.
+- **Unique and stable.** A key names *what* is decided, never how many things came before it:
+  level id, cell, actor key, the moment, an attempt number. Two decisions never share a key
+  (include enough context, or let `draw!`'s counter settle repeats in one second). A PR that adds
+  or changes keys says why each is unique and stable.
+- **Every label is written at its site**, so `grep 'draw!(' crates/warlock-core/src` lists them
+  all; the table at the top of `rng.rs` lists the one-shot and kept streams. Add a new one-shot
+  or kept stream to that table in the same PR, in its group.
+- **The guard**: `WorldState` has no shared stream to draw from, so a new draw must name a key;
+  `Rng::stream` in a `World` method is reviewed for the uniqueness and stability above.
 
 **The state hash's format.** `World::state_hash` (`world/turn/hash.rs`) is FNV-1a over the
 `serde_json` encoding of `WorldState`, streamed into the hasher. It therefore also depends on

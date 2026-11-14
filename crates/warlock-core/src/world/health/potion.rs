@@ -38,6 +38,7 @@ use crate::content::{
     ActionKind, Cleansing, Content, Draught, Effect, LevelKind, StatUse, StatusId,
 };
 use crate::object::Stack;
+use crate::rng::draw;
 use crate::world::{Actor, Spent, World};
 
 impl Actor {
@@ -89,7 +90,7 @@ impl World {
         }
         match &drink.does {
             Draught::Heal { dice, cures } => {
-                let points = dice.roll(&mut self.state.rng).max(0);
+                let points = dice.roll(&mut draw!(self, "potion/heal/player")).max(0);
                 let max = self.state.player().max_hp(&content);
                 let me = self.player_mut();
                 let before = me.hp;
@@ -124,7 +125,7 @@ impl World {
                 }
             }
             Draught::Mana { dice } => {
-                let points = dice.roll(&mut self.state.rng).max(0);
+                let points = dice.roll(&mut draw!(self, "potion/mana/player")).max(0);
                 let max = self.state.player().max_mana(&content);
                 let me = self.player_mut();
                 let before = me.mana;
@@ -142,7 +143,7 @@ impl World {
                 potential,
             } => self.drink_elixir(stat, points, potential),
             Draught::Harm { dice, status } => {
-                let degrees = dice.roll(&mut self.state.rng);
+                let degrees = dice.roll(&mut draw!(self, "potion/harm/player"));
                 self.say("It tastes foul!");
                 if let Ok(degrees @ 1..) = u16::try_from(degrees) {
                     let player = self.state.player;
@@ -240,10 +241,10 @@ impl World {
 
     /// Takes one potion from where `meal` says: from the pack (the last empties its stack, and
     /// what was worn follows its letters) or the pile underfoot. Returns it, and whether it was
-    /// kept instead ([`Actor::potion_kept`]; a draw of the gameplay stream only above 0).
+    /// kept instead ([`Actor::potion_kept`]; a draw, `potion/kept/player`, only above 0).
     fn take_draught(&mut self, meal: Meal) -> (Stack, bool) {
         let keep = self.state.player().potion_kept(&self.content);
-        let kept = keep > 0 && self.state.rng.chance(u32::from(keep));
+        let kept = keep > 0 && draw!(self, "potion/kept/player").chance(u32::from(keep));
         match meal {
             Meal::Pack(i) => {
                 let player = self.player_mut();

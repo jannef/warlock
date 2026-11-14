@@ -8,6 +8,7 @@ use crate::content::{Affliction, Drain};
 use crate::skills::SkillId;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::draws;
 use crate::world::*;
 
 fn knowledge() -> SkillId {
@@ -93,13 +94,14 @@ fn knowledge_raises_the_check_against_a_creatures_drain_only() {
             let talents = w.state.player().talent_mods(&BUILTIN);
             let base = talents.vigour.check(Stat::Willpower) + talents.vigour.drain_checks;
             let bonus = if by_creature { 6 } else { 0 };
-            let mut expected = w.state.rng.clone();
+            let mut expected = crate::test_support::peek(&w, "drain/resist/player");
             let resisted = check(&mut expected, base + bonus, drain.difficulty);
+            let expected = draws(&w) + 1;
             let by = by_creature.then_some(creature);
             w.drain(player, drain, by, &mut Vec::new());
             let kept = w.state.player().stats.score(Stat::Strength) == 10;
             assert_eq!(kept, resisted, "seed {seed}");
-            assert_eq!(w.state.rng, expected, "the check's two draws only");
+            assert_eq!(draws(&w), expected, "the check's one draw only");
             held += usize::from(resisted);
         }
         held
@@ -125,9 +127,9 @@ fn resisting_marks_knowledge_and_creatures_get_nothing() {
         assert_eq!(w.resisting(creature, Some(player)), 0);
         assert_eq!(w.resisting(player, None), 0);
         assert_eq!(w.state.training, training);
-        let rng = w.state.rng.clone();
+        let rng = draws(&w);
         assert_eq!(w.resisting(player, Some(creature)), 6);
-        assert_eq!(w.state.rng, rng, "never the gameplay stream");
+        assert_eq!(draws(&w), rng, "never the gameplay stream");
         marked += w
             .state
             .player()

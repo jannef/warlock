@@ -30,6 +30,7 @@ use crate::check::check;
 use crate::content::{ActionKind, DiseaseId, StatusId};
 use crate::geom::Dir;
 use crate::heal::{self, Ailment};
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::world::{Actor, ActorId, Spent, World, WorldState};
@@ -97,7 +98,7 @@ impl World {
         };
         let player = self.state.player;
         let price = self.price_of(player, ActionKind::Heal);
-        let made = check(&mut self.state.rng, modifier, difficulty);
+        let made = check(&mut draw!(self, "heal/player"), modifier, difficulty);
         if self.trains(Use::Heal) {
             self.train(Use::Heal);
         }

@@ -27,6 +27,7 @@ use crate::content::{Content, ItemHarm, ObjectId};
 use crate::magic::Worked;
 use crate::magic::worked::{proof, protected};
 use crate::object::Stack;
+use crate::rng::draw;
 use crate::world::World;
 use crate::world::fixtures::outcome::remove_stacks;
 use std::collections::BTreeSet;
@@ -56,7 +57,7 @@ impl World {
         match chance {
             0 => false,
             100.. => true,
-            chance => self.state.rng.chance(u32::from(chance)),
+            chance => draw!(self, "item_damage/withstands/player").chance(u32::from(chance)),
         }
     }
 

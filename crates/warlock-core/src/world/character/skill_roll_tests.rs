@@ -9,6 +9,7 @@ use crate::content::Factor;
 use crate::replay::Replay;
 use crate::skills::Trained;
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::draws;
 use crate::test_support::{CONTENT as BUILTIN, last, run};
 use crate::world::*;
 
@@ -240,14 +241,14 @@ fn a_roll_spends_half_the_marks_and_draws_from_the_levels_stream_only() {
     let mut w = world("human,male,warrior");
     reach(&mut w, 2);
     set(&mut w, "athletics", 20, 50);
-    let gameplay = w.state.rng.clone();
+    let gameplay = draws(&w);
     let training = w.state.training.clone();
     let levels = w.state.levels_rng.clone();
     run(&mut w, "advance:athletics");
     assert_eq!(trained(&w, "athletics").map(|t| t.marks), Some(25));
     run(&mut w, "advance:athletics");
     assert_eq!(trained(&w, "athletics").map(|t| t.marks), Some(12));
-    assert_eq!(w.state.rng, gameplay, "the gameplay stream is untouched");
+    assert_eq!(draws(&w), gameplay, "the gameplay stream is untouched");
     assert_eq!(w.state.training, training, "and the training stream");
     assert_ne!(
         w.state.levels_rng, levels,
@@ -292,7 +293,7 @@ fn marks_reaching_the_threshold_roll_once_and_spend_half() {
     assert_eq!(auto_at, 100, "the data's threshold");
     set(&mut w, "stealth", 20, auto_at - 2);
     let id = skill(&w, "stealth");
-    let gameplay = w.state.rng.clone();
+    let gameplay = draws(&w);
     assert!(w.mark_skill(id, 1));
     assert_eq!(
         trained(&w, "stealth"),
@@ -307,7 +308,7 @@ fn marks_reaching_the_threshold_roll_once_and_spend_half() {
     assert_eq!(after.marks, auto_at / 2, "the roll spent half");
     assert!(after.value > 20, "and raised the value");
     assert_eq!(last(&w), "Your stealth improves.");
-    assert_eq!(w.state.rng, gameplay, "the gameplay stream is untouched");
+    assert_eq!(draws(&w), gameplay, "the gameplay stream is untouched");
     // One more mark does not fire it again.
     let value = after.value;
     assert!(w.mark_skill(id, 1));

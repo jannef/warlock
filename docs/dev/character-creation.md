@@ -292,7 +292,7 @@ stack), Forge-born `weapon_marks` without a `role` (every weapon skill and style
 one (`Content::sign_active`), `SignMods::blaze`; it is used as `Action::Gift` (`use:blaze`,
 priced in `buff.rs` by its `cast` cost) and dispatched by `World::use_gift` in `world/character/gifts.rs`.
 Its rule is `world/character/element_gifts.rs` (`blaze`, `kindle`): the burst's cells from
-`spell::burst_cells`, one gameplay roll, `World::spell_hurts` for each creature but the player,
+`spell::burst_cells`, one roll on `stars/burst/player`, `World::spell_hurts` for each creature but the player,
 `World::shock(Heat)`, a `LevelState::fires` entry on each walkable cell but the player's, said
 with `read.rs::say_spell` ("The blaze burns the kobold."), then the `burnt_out` status (12 h).
 Its look is `blaze` in `data/effects.toml`. Tests: `world/character/element_gift_tests.rs` (the grants,

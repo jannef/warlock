@@ -193,9 +193,13 @@ fn strong_constitution_and_fever_proof_are_read_by_disease_checks() {
     // A disease that needs two good checks in a row goes after one with Fever-proof: a
     // character this tough wins every check but a natural 2.
     set_scores(&mut w, 40);
+    let fever = w.content().disease_id("filth_fever").expect("filth fever");
+    let incubation = w.content().disease(fever).incubation;
+    crate::test_support::rig(&mut w, "disease/incubation/player", |rng| {
+        incubation.roll(rng) <= 1
+    });
     run(&mut w, "infect:filth_fever");
     let player = w.state.player;
-    let fever = w.content().disease_id("filth_fever").expect("filth fever");
     let needs = w.content().disease(fever).recovery;
     assert!(needs >= 2, "filth fever needs {needs}");
     for _ in 0..40 {

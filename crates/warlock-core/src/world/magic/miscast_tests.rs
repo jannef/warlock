@@ -105,11 +105,11 @@ fn the_one_and_one_always_fails_and_rolls_at_least_the_die() {
     let (mut w, _) = wizard(content(-1000, None));
     let die: Dice = "2d12".parse().expect("dice");
     for _ in 0..200 {
-        let total = w.miscast_total(die, 0, 0);
+        let total = w.miscast_total(w.state.player, die, 0, 0);
         assert!((2..=24).contains(&total), "{total}");
     }
     // Ward never takes it below 1.
-    assert_eq!(w.miscast_total(die, 0, 10_000), 1);
+    assert_eq!(w.miscast_total(w.state.player, die, 0, 10_000), 1);
 }
 
 #[test]
@@ -119,13 +119,13 @@ fn the_miss_carries_the_total() {
     assert_eq!(rules.per_margin, 5);
     // A miss of 10 lands from 52 to 74: the edge of the protected half.
     for _ in 0..200 {
-        let total = w.miscast_total(rules.die, rules.per_margin * 10, 0);
+        let total = w.miscast_total(w.state.player, rules.die, rules.per_margin * 10, 0);
         assert!((52..=74).contains(&total), "{total}");
     }
     // A near miss stays in the first dozen rows, whatever the die.
     let table = w.content.miscasts().to_vec();
     for _ in 0..200 {
-        let total = w.miscast_total(rules.die, 0, 0);
+        let total = w.miscast_total(w.state.player, rules.die, 0, 0);
         let hit = entry_for(&table, total).expect("an entry");
         assert!(rules.protects(hit) && hit.to.is_some_and(|to| to <= 24));
     }

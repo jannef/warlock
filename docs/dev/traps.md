@@ -19,7 +19,7 @@ unknown one for the player) that sprang then `startle`s its victim alone (docs/d
 `Content::trap_avoid()` (`content::TrapAvoid`, `[avoid]` in `data/traps.toml`: `base` +
 `per_point` × dodge within `min`..`max`) at `World::trap_dodge` (the Dexterity plus Dodge
 categories of `defence_of`, so armour, burden, talents, magic, stance, and statuses all count),
-one `rng.chance` draw of the gameplay stream; avoided, the trap is left untouched, the player told,
+one `rng.chance` draw of its keyed stream; avoided, the trap is left untouched, the player told,
 and `Use::Dodge` reported for marks; else `step_onto_trap` as before (with the Light step talent's
 own check, `steps_lightly`). Tests: `world/skills/sidestep_tests.rs`; the wiki's `trap-avoid.md` table
 (`xtask/src/wiki/traps.rs::avoiding`) reads `TrapAvoid::chance`. **Trapped doors** (spec §8 "Trapped
@@ -75,9 +75,9 @@ then calls `World::blast` (walls, `docs/dev/digging.md`), and one with `ice`
 (`content::BurstIce`, from `heat = true` or `frost = MM` in data) `World::shock` with
 `Shock::Heat` (the fireball melts the ice, and whoever stood on it falls in) or `World::frost`
 (the frost trap freezes the water), `docs/dev/temperature.md`. A teleport's destination is an
-FNV-1a hash, never the gameplay stream. Where a teleport may land is `World::lands_on` (walkable, no
+FNV-1a hash, no keyed draw. Where a teleport may land is `World::lands_on` (walkable, no
 trap, no ice) with no one there (`World::may_land`), shared with the blink dog's blink
-(`world/creatures/blink.rs`, #1130), whose cell beside its target is a gameplay draw. A rest (and every long action through `World::keep_at`)
+(`world/creatures/blink.rs`, #1130), whose cell beside its target is a keyed draw. A rest (and every long action through `World::keep_at`)
 perceives every turn in which a trap went off (`World::sprung`), besides those in which the player
 heard something.
 
@@ -87,7 +87,7 @@ maps it for statuses that block) → `World::disarm`, one arm in `player_acts`. 
 time, no draw) a player without the ability (`Ability::Disarm.had_by`: trained in the skill with
 `skills::Effect::Disarm`, Disable device) and a cell without a **known** trap (hidden or none:
 the same message, so a try leaks nothing). Otherwise it prices the action first (the trap may
-kill), rolls `check::roll` (`Checked::Made` / `Failed { by }`, two gameplay draws) with
+kill), rolls `check::roll` (`Checked::Made` / `Failed { by }`, two keyed draws) with
 `disarm_modifier` (effective Dexterity modifier plus `Actor::skill_effect(Effect::Disarm)`)
 against `World::difficulty_of(Hidden::Trap(kind))` (search's: the trap's `difficulty` plus the
 branch's depth), reports `Use::Disarm` for marks, and then removes the trap and its

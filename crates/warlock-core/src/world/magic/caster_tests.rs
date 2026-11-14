@@ -122,6 +122,7 @@ pub(in crate::world) fn kobold_at(world: &mut World, (dx, dy): (i32, i32), hp: i
     let def = content.creature(creature);
     let actor = Actor {
         id,
+        key: format!("test/{}", id.0),
         creature,
         pos: at,
         patrol: None,
@@ -269,7 +270,7 @@ fn a_starting_caster_breathes_a_short_fan_that_needs_no_hit_roll() {
     for (class, spell) in [("wizard", "burning_hands"), ("witch", "grave_breath")] {
         for seed in 0..12 {
             let mut w = world(class);
-            w.state.rng = crate::rng::Rng::gameplay(seed);
+            w.state.seed = seed;
             let id = w.content().spell_id(spell).expect("the spell");
             assert!(w.state.player().knows_spell(w.content(), id), "{class}");
             let mine = kobold_at(&mut w, (1, 0), 100);
@@ -595,7 +596,7 @@ fn bolts_and_bursts_strike_as_scrolls_do_and_cost_mana() {
     let at = Pos::new(here.x + 2, here.y);
     w.apply(&Action::Cast("arcane_bolt".into(), Some(at)));
     let hurt = 500 - w.state.actors[&target].hp;
-    assert!((4..=24).contains(&hurt), "4d6: {hurt}");
+    assert!((6..=36).contains(&hurt), "6d6 at level 18: {hurt}");
     assert_eq!(w.state.player().mana, 29, "level 6 × 1.8 for a line");
     assert!(
         said(&w).iter().any(|m| m.contains("arcane bolt")),

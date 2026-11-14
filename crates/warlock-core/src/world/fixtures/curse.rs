@@ -15,6 +15,7 @@ use crate::content::{Content, CreatureId, CreatureSpawn, FactionId};
 use crate::geom::Pos;
 use crate::noise::Act;
 use crate::rng::Rng;
+use crate::rng::draw;
 use crate::time::GameTime;
 use crate::world::{World, levels::travel};
 use serde::{Deserialize, Serialize};
@@ -135,7 +136,8 @@ impl World {
             return None;
         }
         let campaign = self.state.campaign.clone();
-        let into = rises_as(&content, &mut self.state.rng, faction, &campaign, def.level)?;
+        let mut rng = draw!(self, "curse/rises/{}", dead.key);
+        let into = rises_as(&content, &mut rng, faction, &campaign, def.level)?;
         let rising = Rising {
             at: self.state.time + rise.after,
             pos: dead.pos,

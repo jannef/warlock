@@ -30,6 +30,7 @@ use crate::check;
 use crate::content::{ActionKind, Stance};
 use crate::geom::Dir;
 use crate::object::{self, Stack};
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::text::capitalized;
@@ -80,7 +81,8 @@ impl World {
             + thief.skill_effect(&content, Effect::Steal);
         let against =
             (self.state.actors[&victim].effective_stats(&content)).modifier(Stat::Willpower);
-        if check::contest(&mut self.state.rng, modifier, against) {
+        let mut rng = draw!(self, "steal/{}", self.state.actors.key(victim));
+        if check::contest(&mut rng, modifier, against) {
             self.lift(victim);
         } else {
             if !self.caught_stealing(victim) {
@@ -113,7 +115,7 @@ impl World {
                 return;
             }
             1 => loose[0],
-            n => loose[self.state.rng.index(n)],
+            n => loose[draw!(self, "steal/lift/{}", actor.key).index(n)],
         };
         let Some(actor) = self.state.actors.get_mut(&victim) else {
             return;

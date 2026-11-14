@@ -31,7 +31,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     **training marks** into a signed pile per stat (`Actor::stat_marks`, `PerStat<i32>`, saved
     and hashed, left out of the JSON while all zero; creatures earn none). The pile is the
     whole state: no daily counter, no decay, no cap. Each `[[training.use]]` rule (`stat`, `on`, `chance` 1 to 100) gives its stat
-    a mark on its use, one draw of the **training** stream per rule below 100, never gameplay;
+    a mark on its use, one draw of the **training** stream per rule below 100, never a rule's keyed stream;
     marks never decay and have no cap (saturating at `i32::MAX`). A use may give several marks at
     once (`World::train_stat_times`, a potion's `marks`): one draw per mark below 100, none at
     100. A use that names its own stat (`drank`, `elixir`: the potion's) has rules without a

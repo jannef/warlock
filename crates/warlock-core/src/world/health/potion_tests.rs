@@ -4,6 +4,7 @@
 
 use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
+use crate::test_support::draws;
 use crate::test_support::{CONTENT as BUILTIN, run, said};
 use crate::world::*;
 
@@ -266,9 +267,9 @@ fn the_witch_knows_her_kit_potion() {
 fn thrifty_drinker_keeps_potions_by_its_chance_and_draws_only_when_held() {
     // Without the talent, a cure (no dice) draws nothing from the gameplay stream.
     let mut w = world("[\"potion_of_antidote*3\"]");
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     run(&mut w, "eat:a");
-    assert_eq!(w.state.rng, rng);
+    assert_eq!(draws(&w), rng);
     assert_eq!(count(&w, "potion_of_antidote"), 2);
     // With it, at a sure chance, the potion is kept.
     let sure = "[[talent]]\nid = \"thrifty_drinker\"\nname = \"Thrifty drinker\"\n\

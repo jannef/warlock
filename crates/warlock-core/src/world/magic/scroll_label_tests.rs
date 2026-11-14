@@ -133,7 +133,15 @@ fn reading_a_scroll_identifies_its_type_for_good() {
 
 #[test]
 fn the_scroll_of_identify_identifies_a_scroll_type_and_itself() {
-    let mut w = world(1);
+    // A run whose reading is made (a natural 24): the labels are the seed's, so it is picked
+    // rather than rigged.
+    let mut w = (1..1000)
+        .map(world)
+        .find(|w| {
+            let mut rng = crate::test_support::peek(w, "decipher/player");
+            crate::combat::roll_natural(&mut rng) == 24
+        })
+        .expect("a seed that reads");
     let ident = label(&w, "scroll_of_identify");
     let before = w.state_hash();
     run(&mut w, "read:c:b");

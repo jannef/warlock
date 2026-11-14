@@ -25,6 +25,7 @@ use crate::action::Event;
 use crate::alignment::Alignment;
 use crate::content::{ActionKind, Offer};
 use crate::geom::{Dir, Pos};
+use crate::rng::draw;
 use crate::time::Duration;
 use crate::world::character::alignment::Deed;
 use crate::world::turn::rest::Ended;
@@ -119,7 +120,7 @@ impl World {
         }
         if let Some(spent) = table.spent
             && table.exhaust > 0
-            && self.state.rng.chance(u32::from(table.exhaust))
+            && draw!(self, "pray/exhaust/{},{}", altar.x, altar.y).chance(u32::from(table.exhaust))
         {
             self.state.current_mut().lights.remove(&altar);
             self.set_terrain(altar, spent);

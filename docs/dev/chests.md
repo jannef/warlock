@@ -63,7 +63,7 @@ what they held (`statue_gone`).
 - An open or smashed chest keeps its (empty) entry, so it is named by its band; the entry's
   level never changes, so a remembered chest's band leaks nothing.
 - Draws: the kick's break (one) and the destruction (one a stack rolled, in the order held) are
-  the gameplay stream, as are a sprung trap's own rolls; a blast blowing a chest apart compares
+  keyed streams of their own (`chest/kick/<cell>`, `chest/destroyed/<cell>`), as are a sprung trap's own rolls; a blast blowing a chest apart compares
   numbers and draws only the destruction. Chest-wise draws nothing. Nothing else about chests
   in play draws (generation: below).
 - A chest's trap lies in `LevelState::traps` on the shut chest's cell and nowhere else: it is

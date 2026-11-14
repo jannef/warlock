@@ -332,7 +332,9 @@ fn content() -> Arc<Content> {
 }
 
 fn world(scenario: &str) -> World {
-    World::new(content(), scenario, None).expect("world")
+    let mut w = World::new(content(), scenario, None).expect("world");
+    crate::test_support::ungrade(&mut w);
+    w
 }
 
 fn as_character(scenario: &str, spec: &str) -> World {

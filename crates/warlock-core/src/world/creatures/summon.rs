@@ -24,6 +24,7 @@ use crate::action::{AttackKind, Event};
 use crate::content::{ActionKind, CreatureId, CreatureSpawn, counted, the_start};
 use crate::geom::Pos;
 use crate::noise::Act;
+use crate::rng::{Rng, draw};
 use crate::sight::LineOfSight;
 use crate::text::{and_list, capitalized};
 use crate::world::{ActorId, World};
@@ -84,15 +85,17 @@ impl World {
     /// draw is one `below(total)`; a total of 0 falls back to the plain draw.
     pub(in crate::world) fn summon_draw(
         &mut self,
+        by: ActorId,
         pool: &[CreatureId],
         bias: &[(String, u32)],
     ) -> CreatureId {
-        let plain = |w: &mut World| {
+        let mut rng = draw!(self, "summon/draw/{}", self.state.actors.key(by));
+        let plain = |rng: &mut Rng| {
             let len = u32::try_from(pool.len()).unwrap_or(u32::MAX);
-            pool[w.state.rng.below(len) as usize]
+            pool[rng.below(len) as usize]
         };
         if bias.is_empty() {
-            return plain(self);
+            return plain(&mut rng);
         }
         let weights: Vec<u32> = (pool.iter())
             .map(|&c| {
@@ -103,12 +106,12 @@ impl World {
             })
             .collect();
         if weights.iter().all(|&w| w == 1) {
-            return plain(self);
+            return plain(&mut rng);
         }
         let weighted: Vec<(CreatureId, u32)> = pool.iter().copied().zip(weights).collect();
-        match self.state.rng.weighted(&weighted, |&(_, w)| w) {
+        match rng.weighted(&weighted, |&(_, w)| w) {
             Some(&(creature, _)) => creature,
-            None => plain(self),
+            None => plain(&mut rng),
         }
     }
 
@@ -138,7 +141,9 @@ impl World {
             Some(side) => Some(side),
         };
         let pos = me.pos;
-        let rolled = summon.count.roll(&mut self.state.rng);
+        let rolled = summon
+            .count
+            .roll(&mut draw!(self, "summon/count/{}", me.key));
         let count = usize::try_from(rolled.max(1)).unwrap_or(1);
         // Never more live at once than `most`.
         let room = usize::from(summon.most).saturating_sub(self.live_summons(id));
@@ -146,7 +151,7 @@ impl World {
         let level = self.state.current_level.clone();
         let mut came: Vec<(CreatureId, Pos)> = Vec::new();
         for &at in cells.iter().take(count) {
-            let creature = self.summon_draw(&summon.pool, &[]);
+            let creature = self.summon_draw(id, &summon.pool, &[]);
             let own = content.creature(creature).faction;
             let spawn = CreatureSpawn {
                 creature,

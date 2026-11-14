@@ -41,13 +41,13 @@ creatures of its side, with no ability in the abilities menu, no action, no key,
   `docs/dev/allies.md`: the free cells within `spread`, in its line
   of sight (`LineOfSight` to `radius_for(2·spread²)`), walkable, no actor, not `World::shuns`;
   sorted by Chebyshev distance, squared distance, y, x), `creature_summons` (`spend_mana`,
-  `afflict` the status, `make_noise(Act::Attack(Spell))`, `count.roll` on `state.rng`, capped
+  `afflict` the status, `make_noise(Act::Attack(Spell))`, `count.roll` on `summon/count/<actor key>`, capped
   by `most − live`, one `rng.below(pool.len())` per creature, `travel::make_creature` with
   `rolls_gear` and the summoner's `faction_override` if it has one, else the summoning's `faction`,
   else the summoner's, as `faction` when it differs
   from the type's, then
   `summoner` set and `World::spawned` bumped), and `say_summoning` (the words from the last
-  turn's `perception.sees_actors_at`). The draws come from the gameplay stream, after the AI
+  turn's `perception.sees_actors_at`). The draws come from its keyed stream, after the AI
   decided without drawing.
 - **Rooted summoners** (#1294, `world/creatures/rooted.rs`, docs/dev/creatures.md "Rooted"): a type with
   `rooted = true` and no `mana` (a breeder's rule: its cooldown and `most` its only limits) is

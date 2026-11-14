@@ -144,6 +144,7 @@ fn underfoot(w: &World) -> Vec<Stack> {
 }
 
 use crate::content::ObjectId;
+use crate::test_support::draws;
 
 #[test]
 fn a_new_run_starts_not_hungry_and_the_clock_burns_nutrition() {
@@ -271,9 +272,9 @@ fn fainting_costs_turns_and_is_deterministic() {
     assert_eq!(a.state_hash(), b.state_hash(), "the same draws");
     // Not hungry enough, nobody faints, and nothing is drawn.
     let mut fed = world_in(&content_with(&[("chance = 5", "chance = 100")]), "pantry");
-    let rng = fed.state.rng.clone();
+    let rng = draws(&fed);
     run(&mut fed, "wait*5");
-    assert_eq!(fed.state.rng, rng);
+    assert_eq!(draws(&fed), rng);
 }
 
 #[test]
@@ -289,11 +290,11 @@ fn long_fast_is_never_weakened_by_hunger_nor_faints() {
     assert_eq!(hunger(&w), Hunger::Fainting);
     assert_eq!(w.perception().own_scores(), fed);
     // A faint certain for anyone else: none comes, and nothing is drawn.
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     let outs = run(&mut w, "wait*5");
     assert!(!said(&w, "You faint from hunger."));
     assert!(outs.iter().all(|o| o.elapsed == Duration::seconds(6)));
-    assert_eq!(w.state.rng, rng);
+    assert_eq!(draws(&w), rng);
 }
 
 #[test]

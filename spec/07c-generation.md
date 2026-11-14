@@ -275,7 +275,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the run began; a matching table may replace others. One entry is drawn by weight from the
   matching tables' entries whose own conditions hold: a group of counted types, or a `draw` of
   a branch's population at a danger (`danger::draw`, its odds, uniques and types not hostile to
-  the player left out). A hostile entry rolls two lookouts (2d12 checks on the gameplay stream:
+  the player left out). A hostile entry rolls two lookouts (2d12 checks on its keyed stream:
   the player's Willpower modifier + Spot's and Survival's lookout + Alert's notice against the
   difficulty + the leader's stalk + cover + the dark + rain; the leader's Willpower modifier +
   its lookout against the difficulty + the player's stalk + cover + the dark for eyes without

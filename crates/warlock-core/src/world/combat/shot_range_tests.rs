@@ -8,7 +8,6 @@ use super::shoot::Flight;
 use super::weapon_ability_tests::{at, give, ranks, world};
 use crate::action::AttackKind;
 use crate::combat::{Category, Profile, Strike};
-use crate::rng::Rng;
 use crate::world::*;
 
 /// How many shots a comparison makes, each from a seed of its own.
@@ -57,7 +56,14 @@ fn strikes(
     (0..SHOTS)
         .map(|seed| {
             let mut w = w.clone();
-            w.state.rng = Rng::stream(seed, "shot-range-test");
+            w.state.seed = seed;
+            // The comparison is across setups: every creature draws by the one key.
+            let player = w.state.player;
+            for actor in w.state.actors.values_mut() {
+                if actor.id != player {
+                    actor.key = "other".into();
+                }
+            }
             let mut events = Vec::new();
             let shot = flight(&w, kind, to_hit);
             w.fly(shooter, target, shot, &mut events);

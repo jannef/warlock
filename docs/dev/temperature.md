@@ -34,11 +34,11 @@ skips, journeys) and a year away is cheap. It runs on the current level as the c
 (`run_turn`) and as perception begins, and for a new sky-exposed level over `ice::PRE_ROLL` (30
 days) on instantiation (and for a new level with a hot or a cold room). Stepping onto ice goes through `World::tread` (player and creatures
 alike, and one who makes way for the player onto their old cell, `talk.rs::swap_places`; weight
-from `Actor::weight`, `ice::gives_way`: no draw up to what it holds, a gameplay draw up to twice
+from `Actor::weight`, `ice::gives_way`: no draw up to what it holds, a keyed draw up to twice
 that), then `tread_price` (the `climb` action from water onto ice) and `after_tread` (the plunge:
 `freeze.plunge` dice through `hurt` with `Harm::Spared`, never the last hit point,
 `Event::FellThroughIce`). `World::fall_in` is the one place of a plunge, walked or by a burst: a
-player trained in Swim then makes a check (`World::keeps_afloat`, two gameplay draws after the
+player trained in Swim then makes a check (`World::keeps_afloat`, two keyed draws after the
 plunge's dice: Toughness's modifier, `Effect::Swim`, and the talents' Toughness checks against
 `[plunge] difficulty` of `data/rules/tuning.toml`, 11), which halves the dice's hit points, rounded down, before resistance, and
 marks `Use::Swim` whatever came of it; no check and no draw for one untrained or with the talents' `plunge_proof`. A status's

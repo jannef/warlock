@@ -25,6 +25,7 @@
 use crate::action::Event;
 use crate::content::{ActionKind, Gaze, the, the_start};
 use crate::geom::Pos;
+use crate::rng::draw;
 use crate::world::combat::fight::End;
 use crate::world::{ActorId, World};
 
@@ -79,7 +80,7 @@ impl World {
             return price;
         }
         let averted = player && self.averted(target);
-        let caught = self.caught(gaze, averted);
+        let caught = self.caught(id, gaze, averted);
         if player {
             let line = match (caught, averted && gaze.averted) {
                 (true, _) => format!("{gazer}'s eyes find yours."),
@@ -123,10 +124,10 @@ impl World {
         }
     }
 
-    /// Whether `gaze` catches the eyes it met: its chance, a glance's share of it against
-    /// `averted` eyes, one draw below 100.
-    fn caught(&mut self, gaze: &Gaze, averted: bool) -> bool {
+    /// Whether actor `id`'s `gaze` catches the eyes it met: its chance, a glance's share of it
+    /// against `averted` eyes, one draw below 100.
+    fn caught(&mut self, id: ActorId, gaze: &Gaze, averted: bool) -> bool {
         let chance = gaze.chance_against(averted);
-        chance >= 100 || self.state.rng.chance(u32::from(chance))
+        chance >= 100 || draw!(self, "gaze/{}", self.state.actors.key(id)).chance(u32::from(chance))
     }
 }

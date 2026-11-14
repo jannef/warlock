@@ -25,6 +25,7 @@ use crate::content::Content;
 use crate::damage::Damage;
 use crate::geom::Pos;
 use crate::object::LightMode;
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::world::combat::fight::Harm;
@@ -109,7 +110,7 @@ impl World {
             me.check_modifier(&content, Stat::Toughness) + me.skill_effect(&content, Effect::Swim);
         let burden = burden_above(self.load_of(player).penalty());
         let difficulty = rules.difficulty + rules.per_burden * burden;
-        let made = crate::check::check(&mut self.state.rng, modifier, difficulty);
+        let made = crate::check::check(&mut draw!(self, "swim/player"), modifier, difficulty);
         if self.trains(Use::Stroke) {
             self.train(Use::Stroke);
         }

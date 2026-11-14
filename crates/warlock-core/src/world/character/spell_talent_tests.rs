@@ -275,10 +275,10 @@ fn scroll_adept_reads_a_spell_scroll_a_rung_higher() {
         .expect("the scroll");
     w.player_mut()
         .inventory
-        .push(crate::object::Stack::new(scroll, 200));
+        .push(crate::object::Stack::new(scroll, 1000));
     let item = w.state.player().inventory.len() - 1;
     let mut most = 0;
-    for _ in 0..150 {
+    for _ in 0..1000 {
         let here = w.player_pos();
         let kobold = w.state.actors.get_mut(&target).expect("the kobold");
         kobold.pos = Pos::new(here.x + 2, here.y);

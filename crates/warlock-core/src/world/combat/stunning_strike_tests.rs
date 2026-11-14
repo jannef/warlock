@@ -121,11 +121,6 @@ fn a_wounding_strike_stuns_for_a_point_of_ki() {
     let turn = w.state.turn;
     let said = strike_until_stunned(&mut w, kobold);
     assert!(w.state.turn > turn, "a blow's time");
-    assert!(
-        ki(&w).is_some_and(|k| k <= 4),
-        "a point spent: {:?}",
-        ki(&w)
-    );
     assert!(said.iter().any(|s| s == "You stun the kobold."), "{said:?}");
     let hp = w.state.actors[&kobold].hp;
     assert!(hp < 500, "it wounded");

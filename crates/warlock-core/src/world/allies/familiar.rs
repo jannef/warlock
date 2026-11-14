@@ -34,6 +34,7 @@ use crate::character::{CharacterSpec, RememberedFamiliar};
 use crate::content::{ActionKind, Content, CreatureId, LevelKind, Stacking};
 use crate::geom::Pos;
 use crate::rng::Rng;
+use crate::rng::draw;
 use crate::world::turn::rest::Ended;
 use crate::world::{Actor, ActorId, AllySource, CompanionData, Spent, World, WorldState};
 use std::cell::Cell;
@@ -243,7 +244,8 @@ impl World {
             let tables = character.class_levels(&content, total);
             let level = tables.first().map_or(total, |&(_, level)| level);
             let race = &character.spec.race;
-            calling_draw(&content, &mut self.state.rng, race, level)
+            let mut rng = draw!(self, "familiar/calling/player");
+            calling_draw(&content, &mut rng, race, level)
         });
         let (Some(creature), Some(at)) = (drawn, self.familiar_cell()) else {
             self.say("Nothing comes.");

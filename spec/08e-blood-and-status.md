@@ -39,7 +39,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Deterministic, gameplay-neutral**: stains are level state (`LevelState::blood`, sparse by
     cell: amount, colour, when spilled, stained wall faces), saved and covered by the state hash.
     Where drops land is a hash of the turn, the moment, the two actors, and
-    the cells, never the gameplay random stream: a fight goes exactly the same with or without
+    the cells, never a keyed stream of its own: a fight goes exactly the same with or without
     blood.
   - **What the player perceives** (`PerceptionView::blood`): a stain on an open cell they see;
     one on a wall only when they see a stained face (a visible open cell next to the wall on
@@ -67,8 +67,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     fire is black.
   - **Deterministic, gameplay-neutral**: `LevelState::scorch` (sparse by cell, blood's `Stain`:
     amount, colour, when, faces), saved and covered by the state hash; how much lands where is a
-    hash of the turn, the moment, and the cell the fire centres on, never the gameplay random
-    stream: a fight goes exactly the same with or without char.
+    hash of the turn, the moment, and the cell the fire centres on, no keyed draw
+    at all: a fight goes exactly the same with or without char.
   - **What the player perceives** (`PerceptionView::scorch`): by blood's rules exactly (an open
     cell in sight, a wall's face seen; remembered as last seen, `LevelState::scorch_memory`).
     Look mode names it before the blood and the terrain: scorched, blackened, or charred by
@@ -176,7 +176,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       action, no time, as any blocking status does. A marked status that only slows (none in the
       data today) takes the same check as the action is tried: made, it ends and the action costs
       its plain price; failed, the action goes ahead slowed, at no extra cost. Two draws of the
-      gameplay stream a check; each marks `escape` (100 %) and `struggled`;
+      keyed stream a check; each marks `escape` (100 %) and `struggled`;
     - **be followed** (`follows = "exhausted"`): as it ends, worn off or cured, the status it names
       begins at one degree, caused by whoever caused the one that ended (Raging, then Exhausted:
       the ending's message, then the beginning's). A chain never leads back to where it began, a
@@ -627,7 +627,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     or a mishap spreads nothing. The menu, the `spells` dump,
     and a wand's description say the rule after the roll (`4d6 fire, burns one in four`, the
     type's `words`). The aiming mode previews nothing. Determinism: one `below(100)` per living
-    creature harmed, only for a `chance` below 100, from the gameplay stream, in the order they
+    creature harmed, only for a `chance` below 100, from its keyed stream, in the order they
     were struck; then the spread's draws, in the order it strikes.
   - **No cap** (decision 16): nothing checks a spell's strength when the content loads, and
     nothing holds a roll when it is cast: the rungs, the hooks, and a critical add what they
@@ -742,7 +742,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       name (#1292); a
       creature's miscast is told by its entry's `seen` line when the player sees it. A death of the player by their own miscast
       is `Cause::Miscast` ("Killed by their own miscast fireball"). Determinism: the check's two
-      draws, the die's, then the effect's own, all on the gameplay stream; none without
+      draws, the die's, then the effect's own, all on its keyed stream; none without
       `data/miscast.toml`.
   - **Learning, the number** (`Actor::learning`, `world/magic/learn.rs`; derived, never stored;
     `docs/design/no-caster-level.md`, #987): what a grimoire teaches for certain comes from the
@@ -829,7 +829,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       whatever comes of it. Spending mana on a spell is practice for Spellcraft (its `cast`
       mark, 25 %, as Concentration's); reading a scroll to cast it marks Decipher script (the
       `read` use, 50 %) and Intelligence.
-    - **Determinism**: the check's two gameplay draws only when there is a check, the mishap's
+    - **Determinism**: the check's two keyed draws only when there is a check, the mishap's
       one only on a failure, then its effect's own.
     - **Shown**: the chance in words only (`StudyRules::words`: "certain", "easy" from 96 of 144
       ways, "a struggle" from 36, "far beyond you"): the read list marks each grimoire the
@@ -1020,7 +1020,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Mighty rage, Unstoppable, Rapid shot, Volley, Improved sneak attack, and Master thief carry
     it too. **Saves change** (a new id group in the fingerprint).
 - **Checks** (`warlock-core/src/check.rs`; M24, #139): a stat put to the test, rolled like an
-  attack: 2d12 (the natural roll, `combat::roll_natural`, two draws of the gameplay stream) plus
+  attack: 2d12 (the natural roll, `combat::roll_natural`, two draws of its keyed stream) plus
   the modifier of the stat tested (the effective score's) succeeds at the **difficulty** or
   more; a natural 2 always fails and a natural 24 always succeeds (`check::check`,
   `check::ways` for the odds: against 13 at +0, 78 of 144). Diseases are resisted and fought off

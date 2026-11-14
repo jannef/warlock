@@ -45,7 +45,7 @@ heat, and a failed temper alike (`world/combat/item_damage.rs`, #1170; docs/dev/
 A reward's `skills` (#1329, `Reward::skills`, a `SkillReward` each: Grave goods teaches Heal)
 are applied in `complete_saying` after the items, by `World::teach_skills`: a skill the player is
 untrained in is trained at `start` (`Skills::add`, rolled on `levels_rng`, the stream background
-and level rolls use, never the gameplay one), a trained one gets `marks` training marks at once,
+and level rolls use, never a keyed one), a trained one gets `marks` training marks at once,
 after the reward's words, through `World::mark_skill(id, by)` (`world/character/skill_roll.rs`, the one hook
 every mark of the player's goes through), so marks reaching `[rolls] auto_at` roll the skill at
 once (#1328; Grave goods' 100 marks roll a trained Heal once); never both. The words are the

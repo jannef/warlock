@@ -37,6 +37,7 @@ use crate::content::{ActionKind, Content, ForageGround, Landscape, LevelKind, pa
 use crate::geom::Pos;
 use crate::magic::loot::pick_weighted;
 use crate::object::{self, Stack};
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::time::Duration;
 use crate::world::levels::encounter::Watch;
@@ -128,13 +129,14 @@ impl World {
         };
         let bonus = self.state.player().skill_effect(&content, Effect::Forage);
         let chance = (i32::from(ground.chance) + bonus).clamp(0, 100);
-        let found = self.state.rng.chance(chance.unsigned_abs());
+        let mut rng = draw!(self, "forage/food/player");
+        let found = rng.chance(chance.unsigned_abs());
         let find = found
-            .then(|| pick_weighted(&mut self.state.rng, &ground.finds).copied())
+            .then(|| pick_weighted(&mut rng, &ground.finds).copied())
             .flatten();
         match find {
             Some(object) => {
-                let count = ground.count.roll(&mut self.state.rng).max(1);
+                let count = ground.count.roll(&mut rng).max(1);
                 let mut stacks = [Stack::new(object, count.unsigned_abs())];
                 crate::rot::made_at(&mut stacks, &content, self.state.time);
                 let text = format!("You gather {}.", object::phrase(&stacks, self.lore()));
@@ -159,10 +161,11 @@ impl World {
             return;
         }
         let chance = me.skill_effect(&content, Effect::Herbs).clamp(0, 100);
-        if !self.state.rng.chance(chance.unsigned_abs()) {
+        let mut rng = draw!(self, "forage/herbs/player");
+        if !rng.chance(chance.unsigned_abs()) {
             return;
         }
-        let Some(&herb) = pick_weighted(&mut self.state.rng, &ground.herbs) else {
+        let Some(&herb) = pick_weighted(&mut rng, &ground.herbs) else {
             return;
         };
         let mut stacks = [Stack::new(herb, 1)];

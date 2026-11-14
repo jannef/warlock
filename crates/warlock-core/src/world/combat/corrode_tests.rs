@@ -109,7 +109,10 @@ fn the_draw_takes_any_piece_and_its_material_decides() {
         ],
     );
     let hezrou = beside(&mut w, "hezrou", 500);
-    hit_until(&mut w, (hezrou, player), |w| damaged(w, at[1]));
+    let runs_off = "The acid runs off your adamantium chain mail shirt.";
+    hit_until(&mut w, (hezrou, player), |w| {
+        damaged(w, at[1]) && count(w, runs_off) >= 1
+    });
     assert!(!damaged(&w, at[0]), "adamantium withstands acid");
     assert_eq!(
         count(&w, "The acid runs off your adamantium chain mail shirt."),

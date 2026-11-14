@@ -44,6 +44,7 @@ use crate::content::{BurstIce, Content, LightId, Shape, SpellId, ZoneKind};
 use crate::damage::Damage;
 use crate::geom::Pos;
 use crate::light::Light;
+use crate::rng::draw;
 use crate::stats::Stat;
 use crate::time::{Duration, GameTime};
 use crate::world::{ActorId, Cause, LevelState, Spent, World};
@@ -206,7 +207,10 @@ impl World {
             return;
         };
         let harm = match (zone.kind, cast.roll) {
-            (ZoneKind::Fire, Some(roll)) => roll.roll(&mut self.state.rng, cast.reroll),
+            (ZoneKind::Fire, Some(roll)) => roll.roll(
+                &mut draw!(self, "zone/fire/{}", self.state.actors.key(cast.by)),
+                cast.reroll,
+            ),
             _ => 0,
         };
         let lasts = u64::from(zone.turns) * TURN_SECONDS;
@@ -466,7 +470,7 @@ impl World {
         let modifier = actor.check_modifier(&content, Stat::Dexterity);
         let pos = actor.pos;
         if check::check(
-            &mut self.state.rng,
+            &mut draw!(self, "zone/trip/{}", actor.key),
             modifier,
             content.tuning().slick.difficulty,
         ) {

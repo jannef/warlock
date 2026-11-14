@@ -65,6 +65,7 @@ use crate::damage::{self, Damage, Protection, Resistances};
 use crate::geom::Dir;
 use crate::noise::Act;
 use crate::object;
+use crate::rng::draw;
 use crate::skills::Use;
 use crate::text::{article, capitalized};
 use crate::time::GameTime;
@@ -647,7 +648,7 @@ impl World {
     /// The blow after the first of actor `attacker`'s melee attack on `target` (spec §8
     /// "Fighting styles"), if any, and what it is made with: with a weapon in each hand the off
     /// hand's ([`Actor::off_hand_blow`]); with a weapon and a shield, after a `first` that hit, a
-    /// shield bash by the style's `bash` chance (one draw from the gameplay stream, only when
+    /// shield bash by the style's `bash` chance (one draw, `fight/bash/<attacker>`, only when
     /// the chance is above 0). None once the target is gone.
     fn off_hand_or_bash(
         &mut self,
@@ -673,7 +674,9 @@ impl World {
         }
         let (shield, profile) = me.bash(&content)?;
         let chance = me.attack_benefit(&content, AttackKind::Melee, None).bash;
-        (hit && chance > 0 && self.state.rng.chance(u32::from(chance))).then_some((shield, profile))
+        let bashes =
+            hit && chance > 0 && draw!(self, "fight/bash/{}", me.key).chance(u32::from(chance));
+        bashes.then_some((shield, profile))
     }
 
     /// The Defence of actor `id`, its burden capping its Dexterity (spec §8 "Burden"), and the
@@ -892,8 +895,17 @@ impl World {
         });
         // What a hit causes besides its damage (a unique weapon's Inflict power).
         let made = profile.as_ref().map_or_else(Vec::new, |p| p.on_hit.clone());
-        let rng = &mut self.state.rng;
-        let blow = profile.map(|profile| combat::strike_with(&profile, &struck, rng, lucky));
+        // The blow's dice: the strike's own stream (`fight/strike/<attacker>/<target>`); an
+        // intent (no profile) draws nothing.
+        let blow = profile.map(|profile| {
+            let mut rng = draw!(
+                self,
+                "fight/strike/{}/{}",
+                self.state.actors.key(attacker),
+                self.state.actors.key(target)
+            );
+            combat::strike_with(&profile, &struck, &mut rng, lucky)
+        });
         let blow = blow.map(|b| self.ambushed((attacker, target), unseen, b));
         let blow = blow.map(|b| self.exploited((attacker, target), unseen, b));
         let blow = blow.map(|b| self.lore_blow(attacker, target, b));

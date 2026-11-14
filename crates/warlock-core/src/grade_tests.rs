@@ -31,7 +31,7 @@ fn arena() -> World {
 fn one_in_six_is_greater_and_one_in_six_lesser() {
     let kobold = spawn(&CONTENT, "kobold");
     let grades: Vec<i8> = (0..6000)
-        .map(|i| draw(&CONTENT, 11, ActorId(i), &kobold))
+        .map(|i| draw(&CONTENT, 11, &i.to_string(), &kobold))
         .collect();
     let count = |g| grades.iter().filter(|&&x| x == g).count();
     for g in [-1, 1] {
@@ -44,11 +44,11 @@ fn one_in_six_is_greater_and_one_in_six_lesser() {
     assert_eq!(count(-1) + count(0) + count(1), 6000);
     // The same run and actor draw the same; another run may not.
     let again: Vec<i8> = (0..6000)
-        .map(|i| draw(&CONTENT, 11, ActorId(i), &kobold))
+        .map(|i| draw(&CONTENT, 11, &i.to_string(), &kobold))
         .collect();
     assert_eq!(grades, again);
     let other: Vec<i8> = (0..6000)
-        .map(|i| draw(&CONTENT, 12, ActorId(i), &kobold))
+        .map(|i| draw(&CONTENT, 12, &i.to_string(), &kobold))
         .collect();
     assert_ne!(grades, other);
 }
@@ -59,8 +59,8 @@ fn a_unique_character_and_a_type_without_grades_are_never_graded() {
     named.npc = Some("someone".into());
     let villager = spawn(&CONTENT, "villager");
     for i in 0..600 {
-        assert_eq!(draw(&CONTENT, 3, ActorId(i), &named), 0);
-        assert_eq!(draw(&CONTENT, 3, ActorId(i), &villager), 0);
+        assert_eq!(draw(&CONTENT, 3, &i.to_string(), &named), 0);
+        assert_eq!(draw(&CONTENT, 3, &i.to_string(), &villager), 0);
     }
 }
 

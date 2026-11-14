@@ -13,6 +13,7 @@ use crate::noise::{self, Act};
 use crate::replay::Replay;
 use crate::skills::Effect;
 use crate::stats::{PerStat, Stats};
+use crate::test_support::draws;
 use crate::test_support::{CONTENT as BUILTIN, last, run, said};
 use crate::world::*;
 
@@ -90,6 +91,7 @@ fn beside(world: &mut World, creature: &str, hp: i32, dir: Dir) -> ActorId {
     let def = content.creature(creature);
     let actor = Actor {
         id,
+        key: format!("test/{}", id.0),
         creature,
         pos: at,
         patrol: None,
@@ -412,9 +414,9 @@ fn sneak_attacks_add_up_and_master_thief_threatens_sooner() {
         damage: 2,
         kind: None,
     };
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     assert_eq!(w.ambushed((player, player), false, hit), hit);
-    assert_eq!(w.state.rng, rng);
+    assert_eq!(draws(&w), rng);
     let n = skill(&w) + 2;
     let damage = w.ambushed((player, player), true, hit).damage;
     assert!((2 + n..=2 + 6 * n).contains(&damage), "{damage} for {n}d6");

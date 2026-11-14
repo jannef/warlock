@@ -236,7 +236,7 @@ the item's id (saved, hashed; `skip_serializing_if` none, so other items' saves 
 - **Adding a power**: a `Power` variant, its parse in `unique::power`, its one read, and its
   words in `xtask/src/wiki/uniques.rs` (`power_text`); the item's own words are its `phrase`.
 - **Tests**: `world/creatures/unique_tests.rs` (the table, hiding until identified, placement,
-  Widowmaker's poison on every hit, High Toby's fear by its chance on the gameplay stream, the
+  Widowmaker's poison on every hit, High Toby's fear by its chance on its keyed stream, the
   Bedes' darkvision on and off and under the dev override, the Turncoat's ward, a save); the
   item description's text snapshots `unique-description` and `unique-description-unidentified`
   (the quarry's Stonebiter, the test world's unique). Tests that strip statuses or skills

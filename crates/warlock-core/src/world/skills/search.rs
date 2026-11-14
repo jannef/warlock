@@ -44,6 +44,7 @@ use crate::check::check;
 use crate::content::StatUse;
 use crate::content::{ActionKind, PassiveSearch, RaceDef, TrapId};
 use crate::geom::Pos;
+use crate::rng::draw;
 use crate::sight::LineOfSight;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
@@ -278,7 +279,11 @@ impl World {
         for (at, hidden) in hidden {
             let difficulty = self.finding(hidden);
             let modifier = self.search_modifier(Look::Active, hidden) + self.stone_find(at);
-            if check(&mut self.state.rng, modifier, difficulty) {
+            if check(
+                &mut draw!(self, "search/active/{},{}", at.x, at.y),
+                modifier,
+                difficulty,
+            ) {
                 self.reveal(at, hidden);
                 found = true;
                 self.train_stat(StatUse::Found);
@@ -309,7 +314,11 @@ impl World {
             }
             let difficulty = self.finding(hidden);
             let modifier = self.search_modifier(Look::Passive, hidden) + self.stone_find(at);
-            if check(&mut self.state.rng, modifier, difficulty) {
+            if check(
+                &mut draw!(self, "search/passive/{},{}", at.x, at.y),
+                modifier,
+                difficulty,
+            ) {
                 self.reveal(at, hidden);
                 // A trap trains Detect traps (and the stats as any noticing does), the rest Spot.
                 if matches!(hidden, Hidden::Trap(_)) {

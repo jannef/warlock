@@ -6,6 +6,7 @@
 
 use crate::combat::{Blow, Strike};
 use crate::damage::Damage;
+use crate::test_support::draws;
 use crate::test_support::run;
 use crate::world::classes::class_active_tests::{reach, world};
 use crate::world::classes::war_cry_tests::foe_at;
@@ -185,11 +186,11 @@ fn any_cause_pays_and_no_draw_is_made() {
         w.player_mut().mana = 0;
         let (by, of) = cause(other);
         let of = of.map(|s| w.content().status_id(s).expect("a status"));
-        let rng = w.state.rng.clone();
+        let rng = draws(&w);
         let when = w.state.time;
         w.dies(target, by, of, when, &mut Vec::new());
         assert_eq!(w.state.player().mana, 1);
-        assert_eq!(w.state.rng, rng, "no draws");
+        assert_eq!(draws(&w), rng, "no draws");
     }
 }
 

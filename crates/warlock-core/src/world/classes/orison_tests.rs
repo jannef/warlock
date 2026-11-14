@@ -9,6 +9,7 @@ use crate::alignment::Score;
 use crate::content::ClassActive;
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
+use crate::test_support::draws;
 use crate::test_support::{CONTENT as BUILTIN, last, run, said};
 use crate::time::Duration;
 use crate::world::magic::caster_tests::{reach, world_with};
@@ -72,7 +73,7 @@ fn the_orison_closes_wounds_for_a_casts_time() {
     assert!(ability.had_by(w.state.player(), w.content()));
     hurt(&mut w);
     run(&mut w, "afflict:bleeding*2");
-    let (turn, time, rng) = (w.state.turn, w.state.time, w.state.rng.clone());
+    let (turn, time, rng) = (w.state.turn, w.state.time, draws(&w));
     run(&mut w, "use:orison");
     assert!(full_hp(&w));
     assert!(!has(&w, "bleeding"));
@@ -88,7 +89,7 @@ fn the_orison_closes_wounds_for_a_casts_time() {
     );
     assert_eq!(w.state.turn, turn + 1, "one action");
     assert!(w.state.time > time, "it takes time");
-    assert_eq!(w.state.rng, rng, "no strain yet: no draw");
+    assert_eq!(draws(&w), rng, "no strain yet: no draw");
     let s = strain(&w).expect("strained");
     assert_eq!((s.value, s.locked), (100, false));
 }
@@ -257,7 +258,7 @@ fn a_strained_prayer_fizzles_by_its_chance_and_locks() {
     for strain_found in [100u16, 500] {
         for seed in 0..12u64 {
             let mut w = priest(1);
-            w.state.rng = crate::rng::Rng::stream(seed, "orison");
+            w.state.seed = seed;
             hurt(&mut w);
             let at = w.state.time;
             w.state.progress.prayer = Some(Strain {
@@ -265,10 +266,11 @@ fn a_strained_prayer_fizzles_by_its_chance_and_locks() {
                 at,
                 locked: false,
             });
-            let mut mirror = w.state.rng.clone();
+            let mut mirror = crate::test_support::peek(&w, "orison/fizzle/player");
             let fizzles = mirror.below(100) < u32::from(strain_found) / 10;
+            let before = draws(&w);
             run(&mut w, "use:orison");
-            assert_eq!(w.state.rng, mirror, "one draw");
+            assert_eq!(draws(&w), before + 1, "one draw");
             let s = strain(&w).expect("strained");
             assert_eq!(s.value, strain_found + 100);
             assert_eq!((s.locked, !full_hp(&w)), (fizzles, fizzles));
@@ -289,19 +291,19 @@ fn a_locked_prayer_fizzles_without_a_draw_until_the_strain_is_gone() {
         at,
         locked: true,
     });
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     run(&mut w, "use:orison");
     assert_eq!(last(&w), "You pray, but nothing answers.");
-    assert_eq!(w.state.rng, rng, "locked: no draw");
+    assert_eq!(draws(&w), rng, "locked: no draw");
     assert!(!full_hp(&w));
     let s = strain(&w).expect("strained");
     assert_eq!((s.value, s.locked), (120, true));
     // Two hours later the strain has passed and the lock with it.
     w.state.time += Duration::seconds(120 * 60);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     run(&mut w, "use:orison");
     assert!(full_hp(&w), "answered");
-    assert_eq!(w.state.rng, rng, "no strain: no draw");
+    assert_eq!(draws(&w), rng, "no strain: no draw");
     assert_eq!(strain(&w).map(|s| s.locked), Some(false));
 }
 

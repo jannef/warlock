@@ -9,7 +9,7 @@ and training-mark hooks; `Benefit` growth by `steps` or a `curve`; `Ladder` and 
 skill rolls' data; `Skills::mark` adds a mark, `Skills::roll` applies a roll and spends the
 marks), `content/skill.rs` (`data/skills.toml`: the skills, `[ladder]`, `[rolls]`; adding a skill
 is one entry), `world/character/train.rs` (marks for the player only, each through `World::mark_skill` in `world/character/skill_roll.rs`, the one hook (a quest's `skills` reward marks there too, docs/dev/quests.md), drawn from the `training` stream in
-`WorldState`, never the gameplay stream; nothing said), and `world/character/skill_roll.rs` (#230: the
+`WorldState`, no keyed draw; nothing said), and `world/character/skill_roll.rs` (#230: the
 level-up rolls, below).
 
 **Growth is skill rolls only** (design `docs/design/progression.md` §5): a level's, and the
@@ -79,7 +79,7 @@ voice and the mark, the check, the ladder), `content/intimidate.rs` (parsing, re
 Bluff's use: `Action::Feint(Dir)` (replay text `feint:DIR`, cost `feint`, `ActionKind::Feint`),
 `Ability::Feint`, data `data/rules/feint.toml` (`content/feint.rs`, `FeintRules`: `difficulty`, `status`,
 Surprised, `flat_footed` and `per_action` with `max = 1`; the loader only resolves it). The foe's nerve (its Willpower modifier
-and talents' checks, two gameplay draws, `check::check`) against `difficulty` + the player's Presence
+and talents' checks, two keyed draws, `check::check`) against `difficulty` + the player's Presence
 modifier + the points; failed, Surprised, caused by the player. No noise, no need of being heard
 or seen. Marked by `Use::Feint` at 50 %, on the training stream, whatever came of it. Surprised
 would end with the foe's next action, which falls between the feint and the blow, so `World::feint`
@@ -175,7 +175,7 @@ saved and hashed by that index. Their first effects (#1343, one hook each):
 - **Herbalism**'s `herbs` (`Effect::Herbs`, 25 / 60 / 80 % at 0 / 100 / 200) is read in
   `world/skills/forage.rs::forage_herbs`: on a forage that found something, trained in it, on ground with
   a `herbs` list (`forage.toml`, `ForageGround::herbs`: angelica root and the brewing herbs where
-  they grow, #1340), one more gameplay draw for the chance and one for which, one of it
+  they grow, #1340), one more keyed draw for the chance and one for which, one of it
   into the pack. Nobody else draws, so a forage without Herbalism draws as before. Marks on
   `forage`, 25 %.
 - **Herbalism**'s use is **Gather** (#1340, `world/skills/gather.rs`, `content/herbs.rs`,
@@ -273,7 +273,7 @@ the step cannot go in unasked (presentation asks only of what the player knows,
 `PerceptionView::dives_at`); then `shore_refusal`, shared with `dives_at`. `stroke_fails` is the
 check of a step that starts in deep water, wherever it ends (**the dive itself asks none**: a
 "Dive in" that left you on the shore, cold, would make no sense; the issue left this open): two
-gameplay draws (the 2d12), `Use::Stroke` whatever came of it (a use of its own, as `swim` is 100 %
+keyed draws (the 2d12), `Use::Stroke` whatever came of it (a use of its own, as `swim` is 100 %
 for a plunge), then `Harm::Spared`. `data/rules/swim.toml` has the numbers (`content/swim.rs`, optional:
 without it nobody swims); burden goes by `Load::penalty`, as every burden hook does. `dive_in` and
 `equip` put out the ready light (`douse_afloat`), so a second lantern, lit in the pack, cannot be
@@ -296,7 +296,7 @@ weighted food `finds`. `world::forage_ground(content, level, pos)` is the one pl
 where: the overworld by the terrain underfoot's `landscape`, a `local:x,y` area by its edge
 exit's overworld cell, never on water or ice (`LevelState::water_at`); the rule and the
 abilities menu (`PerceptionView::abilities`: `Unavailable::NotHere`, "not usable here") both
-ask it. Draws: the chance (one gameplay draw), the find (`magic::loot::pick_weighted`, one), and
+ask it. Draws: the chance (one keyed draw), the find (`magic::loot::pick_weighted`, one), and
 the count's dice; the food is made then (`rot::made_at`) and joins the pack; then
 `train(Use::Forage)`. Nothing is stored, so saves change only by content (the new
 `ActionKind`, the new food objects). The wiki's table is `generated/foraging.md`
@@ -335,6 +335,6 @@ it, `Use::Climb` per climb out (Escape artist 100 %, Athletics 50 % and no effec
 
 A blow at the player that comes back `Strike::Missed { by: None }` becomes a dodge one time in
 four (`World::plain_miss_dodged`, `world/character/train.rs`, called in `fight.rs` after `caught_shot`):
-one `chance(25)` on the training stream, so the gameplay stream does not move. Misses by a
+one `chance(25)` on the training stream, so no keyed draw is made. Misses by a
 category stay as they are; blows between creatures or from the player draw nothing
 (`docs/design/skill-uses.md` Tu1). `balance_probe/training.rs` uses the same function.

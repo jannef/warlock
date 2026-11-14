@@ -164,7 +164,7 @@ fn the_first_stack_lifted_seals_the_room() {
 fn guardians_come_at_the_edges_out_of_view_where_they_can() {
     for seed in 0..8 {
         let mut w = world();
-        w.state.rng = crate::rng::Rng::stream(seed, "gameplay");
+        w.state.seed = seed;
         w.player_mut().pos = A;
         w.perceive(&mut Vec::new());
         let seen: Vec<Pos> = (room(&w).cells().into_iter())

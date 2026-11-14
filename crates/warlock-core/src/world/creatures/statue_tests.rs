@@ -176,7 +176,7 @@ fn a_statue_is_dug_through_and_falls_to_rubble_and_what_it_held() {
 
 #[test]
 fn kicks_mostly_bruise_but_earn_strength_marks_and_one_breaks_it() {
-    let mut w = world("stats = { strength = 18 }");
+    let mut w = world("stats = { strength = 12 }");
     let at = stone_the_kobold(&mut w);
     let marks = w.state.player().stat_marks[Stat::Strength];
     let mut kicks = 0;

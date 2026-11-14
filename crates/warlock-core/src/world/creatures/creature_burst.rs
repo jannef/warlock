@@ -37,6 +37,7 @@ use crate::content::{Burst, BurstWhen, CreatureId, TrapNoise, the_start};
 use crate::geom::Pos;
 use crate::noise::SoundKind;
 use crate::object;
+use crate::rng::draw;
 use crate::world::magic::spell::{Caster, Reach, burst_cells};
 use crate::world::{ActorId, World};
 
@@ -158,7 +159,16 @@ impl World {
                 if !self.state.actors.contains_key(&target) || self.state.death.is_some() {
                     break;
                 }
-                if rider.chance >= 100 || self.state.rng.below(100) < u32::from(rider.chance) {
+                if rider.chance >= 100
+                    || draw!(
+                        self,
+                        "creature_burst/rider/{}/{}",
+                        self.state.actors.key(id),
+                        self.state.actors.key(target)
+                    )
+                    .below(100)
+                        < u32::from(rider.chance)
+                {
                     self.afflict(target, rider.status, rider.severity, Some(id), events);
                 }
             }

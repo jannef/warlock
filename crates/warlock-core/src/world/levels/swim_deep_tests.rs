@@ -4,6 +4,7 @@ use crate::burden::Burden;
 use crate::content::ContentFiles;
 use crate::object::{LightMode, Stack};
 use crate::skills::{SkillId, Trained};
+use crate::test_support::draws;
 use crate::world::*;
 use std::sync::{Arc, LazyLock};
 
@@ -115,11 +116,11 @@ fn last(w: &World) -> &str {
 /// `action` is refused with `said`: no time, no draw, nothing changed.
 #[track_caller]
 fn refused(w: &mut World, action: Action, said: &str) {
-    let (time, rng, at) = (w.state.time, w.state.rng.clone(), w.player_pos());
+    let (time, rng, at) = (w.state.time, draws(w), w.player_pos());
     let out = w.apply(&action);
     assert!(!out.took_turn, "{said}");
     assert_eq!(w.state.time, time, "{said}");
-    assert_eq!(w.state.rng, rng, "{said}");
+    assert_eq!(draws(w), rng, "{said}");
     assert_eq!(w.player_pos(), at, "{said}");
     assert_eq!(last(w), said);
 }
@@ -293,10 +294,9 @@ fn each_level_of_burden_makes_a_stroke_harder_and_a_strained_swimmer_can_still_s
 fn a_step_in_the_water_draws_only_its_check_and_a_wait_asks_none() {
     for seed in 0..20 {
         let mut w = in_water(seed);
-        let mut expected = w.state.rng.clone();
-        let _ = crate::check::check(&mut expected, 0, 0);
+        let expected = draws(&w) + 1;
         w.stroke_fails(&mut Vec::new());
-        assert_eq!(w.state.rng, expected, "seed {seed}");
+        assert_eq!(draws(&w), expected, "seed {seed}");
     }
     let mut w = in_water(7);
     let hp = w.state.player().hp;

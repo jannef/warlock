@@ -17,6 +17,7 @@ use crate::action::AttackKind;
 use crate::content::{DummyTraining, WeaponSkillId};
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
+use crate::rng::draw;
 use crate::world::{ActorId, World};
 
 /// Said once a skill or style reaches the rank past which a dummy teaches nothing.
@@ -76,7 +77,8 @@ impl World {
         let Some(lands) = lands else {
             return;
         };
-        if breaks > 0 && training.breaks > 0 && self.state.rng.chance(training.breaks) {
+        let mut rng = draw!(self, "dummy/catch/{}", self.state.actors.key(dummy));
+        if breaks > 0 && training.breaks > 0 && rng.chance(training.breaks) {
             return;
         }
         let level = self.state.current();
@@ -87,7 +89,7 @@ impl World {
             .collect();
         let cell = match free.len() {
             0 => at,
-            n => free[self.state.rng.index(n)],
+            n => free[rng.index(n)],
         };
         self.come_down(cell, lands);
     }

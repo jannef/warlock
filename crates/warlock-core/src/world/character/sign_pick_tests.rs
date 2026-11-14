@@ -12,6 +12,7 @@ use crate::equipment;
 use crate::geom::Pos;
 use crate::stats::{PerStat, Stats};
 use crate::talent::{Candidate, Refusal, may_take};
+use crate::test_support::draws;
 use crate::test_support::{CONTENT as BUILTIN, last, run};
 use crate::world::*;
 
@@ -96,6 +97,7 @@ fn foe_at(w: &mut World, at: Pos, hp: i32) -> ActorId {
     let def = content.creature(creature);
     let actor = Actor {
         id,
+        key: format!("test/{}", id.0),
         creature,
         pos: at,
         patrol: None,
@@ -464,10 +466,10 @@ fn deep_roots_eats_rot_unharmed_drawing_nothing() {
     let content = BUILTIN.clone();
     let bread = content.object_id("bread").expect("bread");
     let mut rooted = with("hydra", "wood", "deep_roots");
-    let rng = rooted.state.rng.clone();
+    let rng = draws(&rooted);
     let mut events = Vec::new();
     rooted.eat_rotten(100, bread, &mut events);
-    assert_eq!(rooted.state.rng, rng, "no draw");
+    assert_eq!(draws(&rooted), rng, "no draw");
     assert_eq!(
         last(&rooted),
         "The loaf of bread was rotten, but your stomach does not mind."

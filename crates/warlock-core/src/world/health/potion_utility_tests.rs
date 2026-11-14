@@ -5,6 +5,7 @@
 
 use crate::content::ContentFiles;
 use crate::stats::Stat;
+use crate::test_support::draws;
 use crate::test_support::{run, said};
 use crate::world::*;
 
@@ -111,7 +112,7 @@ fn restoration_mends_damage_restores_drains_and_ends_stiffening() {
 fn blinking_moves_the_drinker_to_a_free_cell_without_a_draw() {
     let mut w = world("[\"potion_of_blinking\"]");
     let here = w.player_pos();
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     let out = run(&mut w, "eat:a");
     assert!(out[0].took_turn);
     let there = w.player_pos();
@@ -123,7 +124,7 @@ fn blinking_moves_the_drinker_to_a_free_cell_without_a_draw() {
             .any(|m| m == "In a blink, you are elsewhere.")
     );
     assert_eq!(w.state.player().stat_marks, Default::default(), "no marks");
-    assert_eq!(w.state.rng, rng, "the blink draws nothing");
+    assert_eq!(draws(&w), rng, "the blink draws nothing");
     // The same run blinks to the same cell.
     let mut again = world("[\"potion_of_blinking\"]");
     run(&mut again, "eat:a");

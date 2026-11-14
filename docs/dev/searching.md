@@ -67,7 +67,7 @@ notice that the door is trapped: an arrow trap."); so is a shut chest's ("You no
 coffer is trapped: an arrow trap.", docs/dev/chests.md). Doors and chests are no `stone`, so
 dwarves do not notice their traps in passing.
 
-**Invariants**: checks draw from the gameplay stream (`crate::check`, two draws each) only for
+**Invariants**: checks draw from keyed streams of their own (`search/active/<cell>`, `search/passive/<cell>`; `crate::check`, two draws each) only for
 hidden features in reach, so runs without any nearby keep their hashes; no memory of failed
 checks and no cooldown (the owner's rule: no anti-farming limits); presentation never sees a
 difficulty, a modifier, or a roll. Waiting is searching (#1326): `Action::Wait` (action text `wait`, kept as a spelling) is

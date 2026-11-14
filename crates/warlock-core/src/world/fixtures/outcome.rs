@@ -24,6 +24,7 @@ use crate::geom::{Dir, Pos};
 use crate::hunger::Hunger;
 use crate::magic::loot::{self, LootGrade};
 use crate::object::{Stack, add_to_pile};
+use crate::rng::draw;
 use crate::stats::Stat;
 use crate::variant::Source;
 use crate::world::combat::fight::Harm;
@@ -61,7 +62,7 @@ impl World {
         kinds: [u32; 3],
     ) -> Option<&'t OutcomeDef> {
         let kinds: Vec<(OutcomeKind, u32)> = OutcomeKind::ALL.into_iter().zip(kinds).collect();
-        let &(kind, _) = self.state.rng.weighted(&kinds, |&(_, w)| w)?;
+        let &(kind, _) = draw!(self, "outcome/kind/player").weighted(&kinds, |&(_, w)| w)?;
         self.draw_in(table, kind)
     }
 
@@ -72,7 +73,9 @@ impl World {
         kind: OutcomeKind,
     ) -> Option<&'t OutcomeDef> {
         let outcomes: Vec<&OutcomeDef> = table.of(kind).collect();
-        self.state.rng.weighted(&outcomes, |o| o.weight).copied()
+        draw!(self, "outcome/in/player")
+            .weighted(&outcomes, |o| o.weight)
+            .copied()
     }
 
     /// `outcome` befalls the player at the place whose feature is on `feature` (module docs).
@@ -86,7 +89,7 @@ impl World {
             0 => None,
             1 => outcome.messages.first().cloned(),
             n => {
-                let i = self.state.rng.index(n);
+                let i = draw!(self, "outcome/line/player").index(n);
                 outcome.messages.get(i).cloned()
             }
         };
@@ -148,7 +151,7 @@ impl World {
             done = true;
         }
         if let Some(drain) = effect.drain {
-            let amount = drain.roll(&mut self.state.rng);
+            let amount = drain.roll(&mut draw!(self, "outcome/drain/player"));
             crate::world::magic::mana::drain(self.player_mut(), amount);
             done = true;
         }
@@ -177,7 +180,7 @@ impl World {
             let unknown = self.unidentified();
             if !unknown.is_empty() {
                 found(self);
-                let i = unknown[self.state.rng.index(unknown.len())];
+                let i = unknown[draw!(self, "outcome/identify/player").index(unknown.len())];
                 self.identify(i);
                 done = true;
             }
@@ -212,7 +215,7 @@ impl World {
         if effect.disease {
             let all: Vec<_> = self.content.disease_ids().map(|(id, _)| id).collect();
             if !all.is_empty() {
-                let disease = all[self.state.rng.index(all.len())];
+                let disease = all[draw!(self, "outcome/disease/player").index(all.len())];
                 self.infect(me, disease, None);
             }
             done = true;
@@ -222,8 +225,9 @@ impl World {
             done = true;
         }
         if let Some(wither) = effect.wither {
-            let stat = Stat::ALL[self.state.rng.index(Stat::ALL.len())];
-            let points = wither.roll(&mut self.state.rng);
+            let mut rng = draw!(self, "outcome/wither/player");
+            let stat = Stat::ALL[rng.index(Stat::ALL.len())];
+            let points = wither.roll(&mut rng);
             let actor = self.player_mut();
             let score = actor.stats.score(stat);
             actor.damage.take(stat, points, score);
@@ -297,7 +301,7 @@ impl World {
     fn restore_hp(&mut self, heal: Amount) {
         let content = self.content.clone();
         let roll = match heal {
-            Amount::Dice(d) => d.roll(&mut self.state.rng),
+            Amount::Dice(d) => d.roll(&mut draw!(self, "outcome/restore_hp/player")),
             Amount::Half => self.state.player().max_hp(&content) / 2,
             Amount::Full => i32::MAX,
         };
@@ -310,7 +314,7 @@ impl World {
     fn restore_mana(&mut self, mana: Amount) {
         let content = self.content.clone();
         let roll = match mana {
-            Amount::Dice(d) => d.roll(&mut self.state.rng),
+            Amount::Dice(d) => d.roll(&mut draw!(self, "outcome/restore_mana/player")),
             Amount::Half => self.state.player().max_mana(&content) / 2,
             Amount::Full => i32::MAX,
         };
@@ -397,14 +401,15 @@ impl World {
     /// One of `effect.objects`, by weight, at the feature's foot.
     fn leave_objects(&mut self, effect: &OutcomeEffect, feature: Pos) {
         // The loader keeps the weights above 0 in all and within a `u32`.
-        let Some(&(object, count, _)) = self.state.rng.weighted(&effect.objects, |o| o.2) else {
+        let mut rng = draw!(self, "outcome/objects/{},{}", feature.x, feature.y);
+        let Some(&(object, count, _)) = rng.weighted(&effect.objects, |o| o.2) else {
             return;
         };
-        let n = u32::try_from(count.roll(&mut self.state.rng).max(1)).unwrap_or(1);
+        let n = u32::try_from(count.roll(&mut rng).max(1)).unwrap_or(1);
         let at = self.foot_of(feature);
         let mut stack = Stack::new(object, n);
         let content = self.content.clone();
-        stack.draw_wand_rung(&content, &mut self.state.rng);
+        stack.draw_wand_rung(&content, &mut rng);
         self.lay(at, stack);
     }
 
@@ -416,8 +421,8 @@ impl World {
             .item_level(&self.state.current_level)
             .saturating_add(bonus);
         let luck = loot::Luck::of(&self.state.player().talent_mods(&content));
-        let rng = &mut self.state.rng;
-        let item = loot::roll_with(&content, rng, level, grade, Source::Loot, luck);
+        let mut rng = draw!(self, "outcome/loot/{},{}", feature.x, feature.y);
+        let item = loot::roll_with(&content, &mut rng, level, grade, Source::Loot, luck);
         if let Some(stack) = item {
             let at = self.foot_of(feature);
             self.lay(at, stack);
@@ -454,7 +459,7 @@ impl World {
             return false;
         }
         found(self);
-        let i = known[self.state.rng.index(known.len())];
+        let i = known[draw!(self, "outcome/forget/player").index(known.len())];
         if let Some(stack) = self.player_mut().inventory.get_mut(i) {
             stack.forget();
         }
@@ -463,7 +468,10 @@ impl World {
 
     /// What of `harm`'s roll reaches the player, less what they resist.
     fn harm_taken(&mut self, harm: Harmful) -> i32 {
-        let roll = harm.damage.roll(&mut self.state.rng).max(0);
+        let roll = harm
+            .damage
+            .roll(&mut draw!(self, "outcome/harm/player"))
+            .max(0);
         self.resisted(self.state.player, Damage::new(roll, harm.kind))
     }
 
@@ -552,10 +560,10 @@ impl World {
         .filter(|&(c, ..)| hostile(&self.content, c))
         .collect();
         let odds = (self.content.draw_odds_at(&id)).unwrap_or(spawning.odds);
-        let count = summon.count.roll(&mut self.state.rng).max(1);
+        let mut rng = draw!(self, "outcome/summon/{},{}", feature.x, feature.y);
+        let count = summon.count.roll(&mut rng).max(1);
         for _ in 0..count {
-            let rng = &mut self.state.rng;
-            let drawn = danger::draw(rng, &own, &generic, danger, &odds);
+            let drawn = danger::draw(&mut rng, &own, &generic, danger, &odds);
             // Too deep for the branch's population: its deepest type.
             let creature = drawn.or_else(|| {
                 (own.iter().chain(&generic))
@@ -622,7 +630,8 @@ impl World {
                     .filter(|&p| !self.perception.sees_actors_at(p))
                     .collect();
                 let pool = if hidden.is_empty() { edge } else { hidden };
-                let i = self.state.rng.index(pool.len());
+                let i = draw!(self, "outcome/summon_cell/{},{}", feature.x, feature.y)
+                    .index(pool.len());
                 pool.get(i).copied()
             }
         }

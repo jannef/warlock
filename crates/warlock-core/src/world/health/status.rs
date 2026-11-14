@@ -48,6 +48,7 @@ use crate::combat::{self, Blow, Strike};
 use crate::content::Effect as ItemEffect;
 use crate::content::{Affliction, Content, DiseaseId, OnHit, StatusId};
 use crate::hunger::Hunger;
+use crate::rng::draw;
 use crate::stats::Stat;
 use crate::status::{Added, Effect};
 use crate::time::{Duration, GameTime};
@@ -134,7 +135,7 @@ impl World {
             }
         };
         // A hold lasts its turns, drawn (`hold.rs`).
-        let severity = self.hold_turns(status, severity);
+        let severity = self.hold_turns(id, status, severity);
         let def = self.content.status(status);
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return;
@@ -262,7 +263,14 @@ impl World {
         hit: OnHit,
         events: &mut Vec<Event>,
     ) {
-        let lands = hit.chance >= 100 || self.state.rng.chance(u32::from(hit.chance));
+        let lands = hit.chance >= 100
+            || draw!(
+                self,
+                "status/rider/{}/{}",
+                self.state.actors.key(attacker),
+                self.state.actors.key(target)
+            )
+            .chance(u32::from(hit.chance));
         if !lands {
             return;
         }

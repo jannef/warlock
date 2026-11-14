@@ -178,7 +178,7 @@ swords and wool rings, the factions' favourites within the list, and rolled skel
 `deny_unknown_fields`), its chance to withstand that kind of
 `ItemHarm` (`Acid`, `Rust`, `Fire`, and `Work`, a failed temper or whittle, which no material
 withstands). A material without it withstands nothing. `world/combat/item_damage.rs` is the one path: `World::withstands(at, harm)`
-(the one check every source makes; 0 and 100 draw nothing, else one gameplay draw; a protected
+(the one check every source makes; 0 and 100 draw nothing, else one keyed draw; a protected
 item withstands everything first, drawing nothing) and `World::harm_item(at, harm) -> Harmed::{Withstood, Damaged,
 Destroyed}`: withstood, nothing; else an undamaged item is damaged (`Worked::damage(harm)`, its
 `by` kept for the word: "corroded", "rusted", "scorched", "damaged"), one damaged already

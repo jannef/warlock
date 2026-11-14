@@ -54,6 +54,7 @@ use crate::magic::Worked;
 use crate::magic::worked::proof;
 use crate::magic::worked::{arms, aspects};
 use crate::object::Stack;
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::world::combat::item_damage::Harmed;
@@ -361,7 +362,7 @@ impl World {
         let me = self.state.player();
         let modifier =
             me.check_modifier(&content, craft.stat()) + me.skill_effect(&content, craft.effect());
-        let natural = combat::roll_natural(&mut self.state.rng);
+        let natural = combat::roll_natural(&mut draw!(self, "temper/check/player"));
         let against = content.temper().against(worked.attempts);
         let made = check_made(natural, modifier, against);
         worked.attempted();
@@ -419,7 +420,7 @@ impl World {
         } else {
             let object = self.state.player().inventory[at].object;
             let among = aspects(self.content.object(object));
-            let i = self.state.rng.index(among.len());
+            let i = draw!(self, "temper/aspect/player").index(among.len());
             worked.improve(among[i]);
             good
         };

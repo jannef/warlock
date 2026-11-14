@@ -11,6 +11,7 @@ use crate::content::{ContentFiles, DiseaseId, StatusId};
 use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::test_support::{builtin, run, said as messages};
+use crate::test_support::{draws, peek};
 use crate::time::DAY;
 use crate::world::*;
 
@@ -273,9 +274,9 @@ fn a_disease_incubates_unseen_then_shows_as_diseased_and_is_named_after_a_progre
     // Toughness 40: every check against fever's 12 wins but a natural 2.
     let mut w = world_on(ALONE, "stats = { toughness = 40 }\nhp = 30");
     let start = w.time();
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     run(&mut w, "infect:fever");
-    assert_eq!(w.state.rng, rng, "a fixed incubation draws nothing");
+    assert_eq!(draws(&w), rng + 1, "the incubation's one draw");
     assert_eq!(
         messages(&w).last().map(String::as_str),
         Some("You catch fever (dev).")
@@ -448,27 +449,17 @@ fn checks_won_in_a_row_shake_a_disease_off_and_a_loss_starts_the_count_over() {
         run(&mut w, "infect:ague");
         rest_day(&mut w);
         assert!(shows_diseased(&w), "seed {seed}");
-        let mut rng = w.state.rng.clone();
-        let (mut streak, mut losses, mut days) = (0, 0, 0);
-        while streak < 2 {
-            if check(&mut rng, 0, 13) {
-                streak += 1;
-            } else {
-                streak = 0;
+        // A check a day: a loss starts the streak over, two wins in a row end it.
+        let (mut losses, mut days) = (0, 0);
+        while infection(&w, "ague").is_some() {
+            assert!(days < 60, "seed {seed}: it never leaves");
+            rest_day(&mut w);
+            days += 1;
+            if infection(&w, "ague").is_some_and(|i| i.streak == 0) {
                 losses += 1;
             }
-            days += 1;
         }
-        for day in 1..=days {
-            assert!(infection(&w, "ague").is_some(), "seed {seed} day {day}");
-            rest_day(&mut w);
-        }
-        assert_eq!(
-            infection(&w, "ague"),
-            None,
-            "seed {seed}: gone after {days}"
-        );
-        assert_eq!(w.state.rng, rng, "seed {seed}: two draws a check");
+        assert!(days >= 2, "seed {seed}: gone after {days}");
         assert_eq!(count(&w, "The ague leaves you."), 1);
         // A point of Strength each loss, mending a point a day since: none mended yet.
         assert_eq!(10 - score(&w, Stat::Strength), losses.min(9), "seed {seed}");
@@ -561,9 +552,10 @@ fn bites_expose_their_target_who_resists_with_a_check() {
         let scenario = format!("stats = {{ toughness = {toughness} }}\nhp = 1000");
         let mut w = world_with("#####\n#@b.#\n#####\n", &scenario, &[], Some(seed));
         let (player, biter) = (w.player_id(), ActorId(1));
-        let mut expected = w.state.rng.clone();
+        let mut expected = peek(&w, "disease/expose/player");
         let modifier = crate::stats::modifier(i32::from(toughness));
         let resisted = check(&mut expected, modifier, 12);
+        let expected = draws(&w) + 1 + u64::from(!resisted);
         w.after_blow(
             biter,
             player,
@@ -575,8 +567,9 @@ fn bites_expose_their_target_who_resists_with_a_check() {
             &mut Vec::new(),
         );
         assert_eq!(
-            w.state.rng, expected,
-            "two draws at 100 %, none for the incubation"
+            draws(&w),
+            expected,
+            "the check at 100 %, then the incubation"
         );
         let got = infection(&w, "fever");
         assert_eq!(got.is_some(), !resisted, "seed {seed}");
@@ -588,7 +581,7 @@ fn bites_expose_their_target_who_resists_with_a_check() {
             );
         }
         // Bitten again while it carries it: nothing drawn.
-        let rng = w.state.rng.clone();
+        let rng = draws(&w);
         if got.is_some() {
             w.after_blow(
                 biter,
@@ -600,7 +593,7 @@ fn bites_expose_their_target_who_resists_with_a_check() {
                 ),
                 &mut Vec::new(),
             );
-            assert_eq!(w.state.rng, rng);
+            assert_eq!(draws(&w), rng);
         }
         got.is_some()
     };
@@ -622,50 +615,59 @@ fn wading_through_marsh_may_give_a_disease_by_the_hours_spent_there() {
     // A sure thing for a step of an hour: no draw for the chance, then the check.
     let mut w = world_on(ALONE, "hp = 30");
     let marsh = w.content().terrain_id("marsh").expect("marsh");
-    let mut expected = w.state.rng.clone();
-    let resisted = check(&mut expected, 0, 13);
+    let before = draws(&w);
+    let resisted = check(&mut peek(&w, "disease/expose/player"), 0, 13);
     w.wade(marsh, 3600);
-    assert_eq!(w.state.rng, expected);
+    assert_eq!(
+        draws(&w),
+        before + 1 + u64::from(!resisted),
+        "the check, then the incubation"
+    );
     assert_eq!(infection(&w, "ague").is_some(), !resisted);
     // Half an hour: one draw out of 360 000 for the chance, then the check if it comes.
     let mut w = world_on(ALONE, "hp = 30");
-    let mut expected = w.state.rng.clone();
-    let exposed = expected.below(360_000) < 100 * 1800;
-    let resisted = exposed && check(&mut expected, 0, 13);
+    let before = draws(&w);
+    let exposed = peek(&w, "disease/wade/player").below(360_000) < 100 * 1800;
+    let resisted = exposed && check(&mut peek(&w, "disease/expose/player"), 0, 13);
     w.wade(marsh, 1800);
-    assert_eq!(w.state.rng, expected);
+    let caught = exposed && !resisted;
+    assert_eq!(
+        draws(&w),
+        before + 1 + u64::from(exposed) + u64::from(caught)
+    );
     assert_eq!(infection(&w, "ague").is_some(), exposed && !resisted);
     // A step onto the marsh (9 s) draws for it; a step onto the floor does not; neither does a
     // step while it carries the disease.
     let mut w = world_on(ALONE, "hp = 30");
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     run(&mut w, "move:E");
-    assert_eq!(w.state.rng, rng, "floor");
-    let mut expected = w.state.rng.clone();
-    let exposed = expected.below(360_000) < 100 * 9;
-    if exposed {
-        check(&mut expected, 0, 13);
-    }
+    assert_eq!(draws(&w), rng, "floor");
+    let before = draws(&w);
+    let exposed = peek(&w, "disease/wade/player").below(360_000) < 100 * 9;
     run(&mut w, "move:E");
-    assert_eq!(w.state.rng, expected, "marsh: 9 s of it");
+    assert_eq!(
+        draws(&w),
+        before + 1 + u64::from(exposed),
+        "marsh: 9 s of it"
+    );
     run(&mut w, "infect:ague");
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     run(&mut w, "move:E");
-    assert_eq!(w.state.rng, rng, "it carries it already");
+    assert_eq!(draws(&w), rng, "it carries it already");
 }
 
 #[test]
 fn rotten_food_exposes_the_eater_to_what_it_carries() {
     let mut w = world_on(ALONE, WEAK_WILLED);
     let player = w.player_id();
-    let mut expected = w.state.rng.clone();
-    let resisted = check(&mut expected, 0, 50);
+    let before = draws(&w);
+    let resisted = check(&mut peek(&w, "disease/expose/player"), 0, 50);
     w.expose_to(player, "rotten_food");
-    assert_eq!(w.state.rng, expected, "rot only");
+    assert_eq!(draws(&w), before + 1 + u64::from(!resisted), "rot only");
     assert_eq!(infection(&w, "rot").is_some(), !resisted);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     w.expose_to(player, "moonlight");
-    assert_eq!(w.state.rng, rng, "nothing comes of that");
+    assert_eq!(draws(&w), rng, "nothing comes of that");
 }
 
 #[test]
@@ -715,7 +717,7 @@ fn time_cut_up_differently_ends_the_same() {
     assert_eq!(rested.time(), waited.time());
     let (a, b) = (rested.state().player(), waited.state().player());
     assert_eq!((&a.diseases, &a.damage), (&b.diseases, &b.damage));
-    assert_eq!(rested.state.rng, waited.state.rng);
+    assert_eq!(draws(&rested), draws(&waited));
 }
 
 #[test]

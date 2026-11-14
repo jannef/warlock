@@ -592,7 +592,7 @@ fn a_spawn_rolls_its_gear_from_its_own_stream() {
             continue;
         };
         let actor = &w.state.actors[&id];
-        let key = id.0.to_string();
+        let key = actor.key.clone();
         let mut rng = crate::rng::Rng::gear(w.state.seed, &key);
         let mut pack = crate::gear::roll(&w.content, &mut rng, actor.creature, 1);
         let mut condition = crate::gear::condition::stream(w.state.seed, &key);

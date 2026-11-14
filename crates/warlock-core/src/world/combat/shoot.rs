@@ -39,6 +39,7 @@ use crate::magic::Mods;
 use crate::magic::mods::less;
 use crate::noise::Act;
 use crate::object::{self, Stack};
+use crate::rng::draw;
 use crate::world::{ActorId, Fire, Spent, World};
 
 /// A missile about to be loosed: a shot or a throw (`kind`), from inventory stack `item`, what
@@ -470,8 +471,10 @@ impl World {
         }
         self.caught = false;
         let end = path.last().copied().unwrap_or(from);
-        let broke =
-            dummy.is_none() && struck && flight.breaks > 0 && self.state.rng.chance(flight.breaks);
+        let broke = dummy.is_none()
+            && struck
+            && flight.breaks > 0
+            && draw!(self, "shoot/breaks/{}", self.state.actors.key(shooter)).chance(flight.breaks);
         if let Some((target, cell)) = dummy {
             self.dummy_catches(target, cell, (flight.lands, flight.breaks));
         } else if let Some(lands) = flight.lands

@@ -29,6 +29,7 @@ use super::work::{Job, Task};
 use crate::action::Event;
 use crate::combat;
 use crate::object::Stack;
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::world::{Actor, Spent, World};
 
@@ -130,7 +131,7 @@ impl World {
         let modifier =
             me.check_modifier(&content, stat) + me.skill_effect_of(&content, skill, Effect::Craft);
         let against = rules.difficulty + content.material(material).work;
-        let natural = combat::roll_natural(&mut self.state.rng);
+        let natural = combat::roll_natural(&mut draw!(self, "make_do/player"));
         if crate::check::makes(natural, modifier, against) {
             let at = self.set_apart(item);
             let stack = &mut self.player_mut().inventory[at];

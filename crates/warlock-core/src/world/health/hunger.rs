@@ -21,6 +21,7 @@
 
 use crate::content::{ActionKind, Effect};
 use crate::hunger::Hunger;
+use crate::rng::draw;
 use crate::talent::TalentMods;
 use crate::time::GameTime;
 use crate::world::{ActorId, Cause, Death, World};
@@ -145,7 +146,7 @@ impl World {
         {
             return 0;
         }
-        if !self.state.rng.chance(u32::from(def.faint.chance)) {
+        if !draw!(self, "hunger/faint/player").chance(u32::from(def.faint.chance)) {
             return 0;
         }
         self.say("You faint from hunger.");

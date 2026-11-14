@@ -296,7 +296,7 @@ fn forsaken_marks_with_a_flaw_kept_through_a_save() {
 fn a_relic_is_rare_and_lies_at_the_altars_foot() {
     for seed in 0..20 {
         let mut w = world();
-        w.state.rng = crate::rng::Rng::gameplay(seed);
+        w.state.seed = seed;
         befall(&mut w, "relic");
         let level = w.state.current();
         let piles: Vec<_> = level.objects.iter().collect();

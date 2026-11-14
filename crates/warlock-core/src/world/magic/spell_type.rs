@@ -26,6 +26,7 @@ use crate::combat::{self, Blow, Strike};
 use crate::content::{ActionKind, DamageTypeId, LightId, ZoneKind};
 use crate::geom::{Dir, Pos};
 use crate::ice::Shock;
+use crate::rng::draw;
 use crate::sight::LineOfSight;
 use crate::time::Duration;
 use crate::world::turn::level::Fire;
@@ -54,7 +55,15 @@ impl World {
                 continue;
             }
             if let Some(rider) = rule.rider
-                && (rider.chance >= 100 || self.state.rng.below(100) < u32::from(rider.chance))
+                && (rider.chance >= 100
+                    || draw!(
+                        self,
+                        "spell_type/rider/{}/{}",
+                        self.state.actors.key(by),
+                        self.state.actors.key(id)
+                    )
+                    .below(100)
+                        < u32::from(rider.chance))
             {
                 self.afflict(id, rider.status, rider.severity, Some(by), events);
             }

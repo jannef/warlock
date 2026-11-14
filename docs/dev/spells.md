@@ -406,7 +406,7 @@ cast path shares.
     no `burst_center`), `World::spill_corpse` (a kill's spatter by the corpse's creature).
   - **Grave feast** (`cast_feast`, ahead of `cast_heal`): `effect.mana`, a roll to 500, on a heal.
     The caster's own: nobody on the cell is touched. Refused beyond a touch and when neither pool has
-    room. The heal's roll, then the mana's, on the gameplay stream.
+    room. The heal's roll, then the mana's, on its keyed stream.
   - **Rouse the dead** (`cast_rise`, ahead of `cast_summon`; `docs/dev/allies.md` "The risen"):
     `effect.rise = { most, minutes, hit_points, berserk, berserk_faction, berserk_message }`,
     refusals in this order: no allies data, the overworld, no corpse, a `unique`'s, no free cell, the
@@ -716,7 +716,7 @@ cast path shares.
     from the maker's own stream: `magic::loot::make_from` (last, after the ornament and
     material: loot, drops, chests, hoards, room loot, kits' and gear's magic lines), `kit::roll`'s
     plain lines, `gear::make`, `mapgen/shop.rs`'s stock, `World::leave_objects` (outcomes,
-    `gameplay`), and as a fallback for wands that come from content without one: a level's piles
+    `outcome/objects/<cell>`), and as a fallback for wands that come from content without one: a level's piles
     and chests in `instantiate_level` (`Rng::objects(seed, level id)`, piles in cell order,
     then chests), a creature's inventory in `make_creature` (`objects/actor/<id>`), and the
     scenario's pack in `World::begin` (`objects/pack`). `wand_rung(content)` (rules, dev; a
@@ -925,7 +925,7 @@ What an area spell does to the items lying in it (#1100; spec §8 "Spells", "Rui
 - **Draws**: one `chance(percent)` per item, cells in position order, each pile top first, from
   `WorldState::ruin_rng` (`Rng::ruin`, the `ruin` stream), made on the first draw like
   `levels_rng`: a run whose spells never reached a pile the table touches hashes as before, and
-  the gameplay stream never moves for it.
+  its keyed stream never moves for it.
 - **Told**: for the cells `Perception::sees_actors_at` (the snapshot before the cast), one `say`
   per kind of goods lost (`Stack::same_goods` and the row's words), in the order first lost:
   "The scroll labelled ZUNBAR burns up." (`Lore::title`), "3 potions of healing freeze and

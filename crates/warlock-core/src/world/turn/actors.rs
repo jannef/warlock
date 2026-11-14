@@ -60,6 +60,15 @@ impl Actors {
         (self.by_level.get(level).into_iter().flatten()).map(|id| &self.map[id])
     }
 
+    /// The key of actor `id` for keyed draws ([`Actor::key`]; `rng.rs`, "Actor keys"), or
+    /// `#<id>` for one no longer here (a fallen actor's last draws).
+    pub fn key(&self, id: ActorId) -> std::borrow::Cow<'_, str> {
+        match self.map.get(&id) {
+            Some(actor) => std::borrow::Cow::Borrowed(actor.key.as_str()),
+            None => std::borrow::Cow::Owned(format!("#{}", id.0)),
+        }
+    }
+
     /// Actor `id`, to change. Never its level: [`Actors::set_level`] moves it.
     pub fn get_mut(&mut self, id: &ActorId) -> Option<&mut Actor> {
         self.map.get_mut(id)

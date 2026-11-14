@@ -8,6 +8,7 @@ use crate::object::Stack;
 use crate::perception::Sale;
 use crate::replay::Replay;
 use crate::stats::{Stat, Stats};
+use crate::test_support::draws;
 use crate::test_support::{builtin as content, last_text as last};
 use crate::world::*;
 
@@ -701,12 +702,12 @@ fn a_shops_keeper_is_immune_to_wriggling_past() {
         w.state.actors.get_mut(&keeper).expect("keeper").pos =
             if dir == "move:W" { DOOR } else { POST };
         for _ in 0..30 {
-            let rng = (w.state.rng.clone(), w.state.training.clone());
+            let rng = (draws(&w), w.state.training.clone());
             let out = apply(&mut w, dir);
             assert!(!out.took_turn, "{dir}");
             assert_eq!(last(&w), "Grimbold doesn't budge.");
             assert_eq!(w.player_pos(), FRONT);
-            assert_eq!((w.state.rng.clone(), w.state.training.clone()), rng);
+            assert_eq!((draws(&w), w.state.training.clone()), rng);
             assert_eq!(shop(&w).status, ShopStatus::Open, "no theft");
             assert_eq!(shop(&w).unpaid.len(), 1, "still owed");
         }

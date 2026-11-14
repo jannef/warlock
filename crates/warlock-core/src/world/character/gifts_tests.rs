@@ -53,6 +53,7 @@ fn foe_at(w: &mut World, at: Pos) -> ActorId {
     let def = content.creature(creature);
     let actor = Actor {
         id,
+        key: format!("test/{}", id.0),
         creature,
         pos: at,
         patrol: None,
