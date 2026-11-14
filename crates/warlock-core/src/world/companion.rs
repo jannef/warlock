@@ -94,7 +94,7 @@ impl Actor {
 /// of the rares, else one of the race's list (`None` without the data or a list for the race).
 /// Two draws on `companion/<spec>`, and nothing else.
 pub fn draw(content: &Content, seed: u64, spec: &CharacterSpec) -> Option<CreatureId> {
-    let rules = content.companions()?;
+    let rules = &content.companions()?.start;
     let list = rules.list_of(&spec.race)?;
     let mut rng = Rng::stream(seed, &format!("companion/{spec}"));
     let rare = rng.below(1000) < rules.rare_per_mille;
@@ -157,7 +157,7 @@ impl World {
         let Some(character) = self.state.character.clone() else {
             return;
         };
-        if !self.state.player().talent_mods(&content).companion {
+        if !self.state.player().talent_mods(&content).beast.companion {
             return;
         }
         let Some(rules) = content.companions() else {

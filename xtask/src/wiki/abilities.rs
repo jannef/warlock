@@ -1,8 +1,7 @@
 //! Abilities (spec §6 "Abilities"): every ability the abilities menu can list, from the one
 //! registry (`warlock_core::ability`).
 
-use super::actions::at_normal_pace;
-use super::text::{Term, anchored, link, percent_of};
+use super::util::{Term, anchored, at_normal_pace, link, percent_of};
 use std::fmt::Write as _;
 use warlock_core::ability::{Ability, Aim, Source};
 use warlock_core::check;

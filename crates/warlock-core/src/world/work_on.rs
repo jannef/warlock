@@ -1,9 +1,9 @@
 //! What long work on the pack works on (#1564): salvage, Temper and Whittle, Cut, Set, Make do
 //! and mend, Decipher, the enchanting recipes, and a recipe's making name their stacks by pack
 //! position as they begin, and a stack gone meanwhile (food rotting away, which does not stop
-//! the work) shifts every later one. So each work keeps a copy of its stacks when its time
-//! begins ([`World::work_on`]) and finds those very stacks again when it ends
-//! ([`World::worked_on`]): at the old position if they are still there, else wherever they went
+//! the work) shifts every later one. So the work driver (`work.rs`) keeps a copy of each work's
+//! stacks when its time begins ([`World::work_on`]) and finds those very stacks again when it
+//! ends ([`World::worked_on`]): at the old position if they are still there, else wherever they went
 //! (an unidentified magic item's time carried, and its identification by carrying, aside); a
 //! stack gone from the pack (or changed) ends the work on nothing ("You have nothing left to
 //! work on."), never on whatever came to stand where it was.
@@ -45,11 +45,6 @@ impl World {
                 Some((_, None)) => None,
             })
             .collect()
-    }
-
-    /// Where the one stack of `on` is now ([`World::worked_on`]).
-    pub(super) fn worked_on_one(&self, on: &WorkOn) -> Option<usize> {
-        self.worked_on(on)?.first().copied().flatten()
     }
 }
 

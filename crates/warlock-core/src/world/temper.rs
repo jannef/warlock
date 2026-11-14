@@ -12,7 +12,7 @@
 //! - **What**: a weapon, launcher, armour, or shield whose main part is of a metal, and not a
 //!   spirit weapon ([`temperable`]). Refused otherwise, taking no time, and so is an item with
 //!   all its improvements ([`workable`] is what the list offers).
-//! - **Time**: `seconds` (ten minutes), in turns of the `temper` action ([`World::keep_at`], the
+//! - **Time**: `seconds` (ten minutes), in turns of the `temper` action ([`World::work`], the
 //!   rest's machinery): a creature coming into view, a message, or a blow stops it, and an
 //!   interrupted attempt does nothing to the item and counts for nothing, but the time is spent.
 //! - **The check**: done, one Strength check (two gameplay draws, the natural roll): the natural
@@ -46,19 +46,18 @@
 
 use super::item_damage::{Harmed, proof};
 use super::loot::Identified;
-use super::rest::Ended;
+use super::work::{Job, Task};
 use super::{Actor, Spent, World};
 use crate::ability::Unavailable;
 use crate::action::Event;
 use crate::combat;
-use crate::content::{ActionKind, Content, ItemHarm, ItemKind, Offer, RecipeUse, TerrainId};
+use crate::content::{ActionKind, Content, ItemHarm, Offer, RecipeUse, TerrainId};
 use crate::geom::{Dir, Pos};
 use crate::magic::Worked;
-use crate::magic::worked::aspects;
+use crate::magic::worked::{arms, aspects};
 use crate::object::Stack;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
-use crate::time::Duration;
 
 /// What an attempt is made with: a hammer at an anvil on metal, or a knife on wood.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -152,14 +151,6 @@ impl Craft {
 /// one of a `proof` material).
 pub(super) const WITHSTOOD: &str = "The work goes wrong, but no harm is done.";
 
-/// Whether `stack` is of a kind an anvil works at all: a weapon, a missile weapon, armour, or a
-/// shield (not ammunition, rings, or amulets).
-pub(super) fn arms(content: &Content, stack: &Stack) -> bool {
-    content.object(stack.object).kind.is_some_and(|k| {
-        matches!(k, ItemKind::Weapon | ItemKind::Launcher | ItemKind::Shield) || k.is_armour()
-    })
-}
-
 /// Whether `stack` is of the craft's material, by its main part, and of this world: a spirit
 /// weapon is not.
 fn of_material(content: &Content, stack: &Stack, craft: Craft) -> bool {
@@ -216,12 +207,33 @@ pub(super) fn check_made(natural: i32, modifier: i32, against: i32) -> bool {
     crate::check::makes(natural, modifier, against)
 }
 
-/// An attempt under way: what it is made with, the stack worked, and how long it takes.
+/// An attempt under way: what it is made with and the stack worked.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct Tempering {
     craft: Craft,
     item: usize,
-    seconds: u32,
+}
+
+impl Job for Tempering {
+    fn kind(&self) -> ActionKind {
+        self.craft.kind()
+    }
+
+    fn on(&self, _: &Content) -> Vec<Option<usize>> {
+        vec![Some(self.item)]
+    }
+
+    fn found(&mut self, now: &[Option<usize>]) {
+        self.item = super::work::one(now);
+    }
+
+    fn leave(&self) -> String {
+        format!("you put down the {}", self.craft.tool())
+    }
+
+    fn done(&self, w: &mut World, _: &mut Vec<Event>) {
+        w.tempered(*self);
+    }
 }
 
 impl World {
@@ -289,11 +301,11 @@ impl World {
         }
         let name = self.lore().title(stack);
         self.say(format!("You set to work on the {name} at the anvil."));
-        Spent::Temper(Tempering {
+        let work = Tempering {
             craft: Craft::Temper,
             item,
-            seconds: self.craft_seconds(self.content.temper().seconds),
-        })
+        };
+        self.craft_work(Task::Temper(work), self.content.temper().seconds)
     }
 
     /// The player begins to whittle the stack at `item`; refused, taking no time, untrained in
@@ -321,45 +333,11 @@ impl World {
         }
         let name = self.lore().title(stack);
         self.say(format!("You set to whittling the {name} with your knife."));
-        Spent::Temper(Tempering {
+        let work = Tempering {
             craft: Craft::Whittle,
             item,
-            seconds: self.craft_seconds(self.content.temper().seconds),
-        })
-    }
-
-    /// Works turn after turn until the attempt is done or something stops it (module docs): its
-    /// last turn cut short to end exactly when its time is up.
-    pub(super) fn temper(&mut self, mut work: Tempering, events: &mut Vec<Event>) {
-        let on = self.work_on(&[Some(work.item)]);
-        let until = self.state.time + Duration::seconds(u64::from(work.seconds));
-        let turn = self.price_of(self.state.player, work.craft.kind());
-        let ended = self.keep_at(
-            events,
-            |w| w.state.time < until,
-            |w, _| turn.min(w.price_until(until)),
-        );
-        match ended {
-            Ended::Died => {}
-            _ if self.state.time >= until => match self.worked_on_one(&on) {
-                Some(item) => {
-                    work.item = item;
-                    self.tempered(work);
-                }
-                None => self.say("You have nothing left to work on."),
-            },
-            Ended::Came(came) => {
-                let text = format!(
-                    "{}; you put down the {}.",
-                    self.came_line(came),
-                    work.craft.tool()
-                );
-                self.say(text);
-            }
-            Ended::Said | Ended::Done => {
-                self.say(format!("You put down the {}.", work.craft.tool()));
-            }
-        }
+        };
+        self.craft_work(Task::Temper(work), self.content.temper().seconds)
     }
 
     /// The attempt of `work` is done: the check, what comes of it, the item identified, the mark
@@ -380,9 +358,8 @@ impl World {
         }
         let mut worked = stack.worked().cloned().unwrap_or_default();
         let me = self.state.player();
-        let modifier = me.effective_stats(&content).modifier(craft.stat())
-            + me.skill_effect(&content, craft.effect())
-            + me.talent_mods(&content).check(craft.stat());
+        let modifier =
+            me.check_modifier(&content, craft.stat()) + me.skill_effect(&content, craft.effect());
         let natural = combat::roll_natural(&mut self.state.rng);
         let against = content.temper().against(worked.attempts);
         let made = check_made(natural, modifier, against);

@@ -2,7 +2,7 @@
 //! who notices them in passing. Chances for an average character (Intelligence and Willpower 10,
 //! untrained, no racial bonus), never a difficulty or a modifier.
 
-use super::text::{capital, percent_of};
+use super::util::{capital, percent_of};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Content, Generator, PassiveSearch};

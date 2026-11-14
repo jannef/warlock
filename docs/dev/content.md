@@ -60,6 +60,28 @@ true` with `walkable = false`; the loader refuses `swim` on anything walkable, s
 a door, stairs, chest, breaking wall, light, or overworld terrain (`docs/dev/skills.md`).
 `data/swim.toml` holds a swim's numbers.
 
+## The loader's modules (`content/`)
+
+`content/mod.rs` holds the module list and re-exports, `ContentError`, the `Content` struct
+(`#[derive(Default)]`: an empty set, but for sizes and creature rarities, which `Content::load`
+seeds), and `Content::load`, which reads every file in its order (a table before what names it).
+The rest is split by topic (#1519): `files.rs` (`ContentFiles`), the per-table loaders in
+`load_world.rs`, `load_creatures.rs`, `load_items.rs`, and `load_status.rs`, the cross-checks in
+`validate.rs`, `fingerprint_for` in `fingerprint.rs`, the accessors in `access_world.rs`,
+`access_creatures.rs`, `access_items.rs`, `access_character.rs`, `access_magic.rs`,
+`access_status.rs`, and `access_rules.rs`, and the loader's tests in `tests.rs`.
+
+A **small rules file** (one optional `data/x.toml` read whole into one value: `data/steal.toml`,
+`data/swim.toml`, ...) implements the `RulesFile` trait beside its own `parse`, in its own module:
+its `PATH` and a `parse(path, text, &Content)` that passes on what its `parse` needs. Adding one
+takes its type's impl, a `Content` field, an accessor, and one line in `Content::load`:
+`content.x = content.load_optional(files)?` (an `Option`, `None` without the file) or
+`content.load_or_default(files)?` (the type's default without it).
+
+Creature types made in code (the animated objects, the mimics) are `CreatureSpec` values built
+with `..CreatureSpec::default()` (#1552), whose `Default` is serde's field defaults (a test in
+`content/creature.rs` holds them together), and go through `load_creatures` like a file's.
+
 ## Content directories
 
 The tables that grow entry by entry are directories, so two PRs adding an entity never touch

@@ -464,8 +464,7 @@ impl World {
         if content.incorporeal(actor.creature).is_some() {
             return;
         }
-        let modifier = actor.effective_stats(&content).modifier(Stat::Dexterity)
-            + actor.talent_mods(&content).check(Stat::Dexterity);
+        let modifier = actor.check_modifier(&content, Stat::Dexterity);
         let pos = actor.pos;
         if check::check(&mut self.state.rng, modifier, SLICK_DIFFICULTY) {
             return;

@@ -53,6 +53,14 @@ impl TemperRules {
     }
 }
 
+impl super::RulesFile for TemperRules {
+    const PATH: &'static str = "data/temper.toml";
+
+    fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
+        Self::parse(path, text)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

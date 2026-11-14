@@ -110,8 +110,7 @@ impl World {
         let Some(them) = self.state.actors.get(&id) else {
             return;
         };
-        let will =
-            them.effective_stats(&content).modifier(stat) + them.talent_mods(&content).check(stat);
+        let will = them.check_modifier(&content, stat);
         let seen = self.perception.sees_actors_at(them.pos);
         let who = crate::text::capitalized(&self.called(them));
         let falls = !check::check(&mut self.state.rng, will, difficulty);

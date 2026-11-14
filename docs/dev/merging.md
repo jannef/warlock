@@ -55,16 +55,42 @@ on one (#1537): its test run records every snapshot file a test reads
 (`INSTA_SNAPSHOT_REFERENCES_FILE`), and `.github/scripts/orphan-snapshots.sh` rejects a committed
 `.snap` not among them. Delete the orphan (or `cargo insta test --unreferenced=delete`).
 
+## One build of warlock-core
+
+Cargo resolves features per command, so `cargo test --workspace`, `cargo run -p warlock`,
+`cargo run -p warlock-cli`, and `cargo xtask` each see their own tree. A crate whose features
+differ anywhere below it gets another fingerprint, so before #1572 warlock-core (300k lines) was
+built once per tree: twice in a CI job, and again on every switch between the tests, the CLI,
+and xtask after an edit to core. Four things keep the trees equal below warlock-core:
+
+- `showcase` in `warlock` and `warlock-cli`, and xtask's dependency, name warlock-core's
+  `default` beside `showcase`, as `cargo test --workspace` turns it on;
+- the workspace's `serde` (`alloc`) and `flate2` (default features) carry what the game's tree
+  adds;
+- `crates/workspace-hack` (no code; a dependency of `warlock-cli` and xtask) pins the rest the
+  game's tree and the tests' dev-dependencies add below warlock-core, the proc macros' host
+  crates (`syn` 2 and 3, `proc-macro2`) as build dependencies;
+- `[profile.dev.build-override] debug = false`: without it, Cargo builds a host crate the game
+  also uses at runtime (`unicode-ident`) with debug info, and without it in a tree that does not.
+
+After a Bevy or dependency update, check it: after `cargo test --workspace --no-run`, each of
+`cargo build -p xtask`, `-p warlock-cli`, and `-p warlock` compiles no warlock-core. Where one
+does, compare the trees: `cargo tree -p <member> -e normal,build -f '{p} {f}'`, or, for
+everything Cargo hashes (features, profile, host or target), `RUSTC_BOOTSTRAP=1 cargo build -p
+<member> --unit-graph -Z unstable-options`; the difference goes into
+`crates/workspace-hack/Cargo.toml`. `--no-default-features` builds (the release, the web build)
+and release builds are other trees by design.
+
 ## Hot registries: insert by group, never append
 
 Every list a feature extends is edited by every feature. Two PRs that both append at the end
 conflict every time; two that insert at different places merge cleanly. So:
 
 - **New entries go where they belong** (alphabetically, or by the group the list is in), never at
-  the end: `Action` and its replay text syntax (`action.rs`: the enum, `parse`, `Display`,
-  `FromStr`), `ActionKind::ALL` and `data/actions.toml`, `KeyCommand` and `REBINDABLE`
+  the end: `Action` and its replay text syntax (`action/mod.rs`: the enum; `action/text.rs`: the
+  `VERBS` table and `Display`), `ActionKind::ALL` and `data/actions.toml`, `KeyCommand` and `REBINDABLE`
   (`settings/keys.rs`: the controls screen shows that order, so a new command goes next to its
-  group), the dump layers (`dump.rs`), the settings rows (`ui/settings_screen.rs`), the
+  group), the dump layers (`dump/layer.rs`, `dump/mod.rs::layer_rows`), the settings rows (`ui/settings_screen.rs`), the
   `Content` fields and `Content::load` steps, the `mod` lists (`world/mod.rs` is alphabetical),
   the wiki's `generate()` list (`xtask/src/wiki/mod.rs`) and `wiki/src/SUMMARY.md` (pages by
   topic), `tests/golden/manifest/*.toml` (the feature's own file), the content fingerprint
@@ -92,6 +118,35 @@ conflict every time; two that insert at different places merge cleanly. So:
   files of the sections it touches (bullets next to the related ones); `docs/dev/cli.md` for a new
   flag, `--screen` name, scenario, dump layer, or action (by its group); CLAUDE.md only for a new
   command; the wiki gets its page and tables; `README.md` is not touched by feature work.
+
+## One home per fact
+
+A fact written in several places drifts: the copies come to disagree, and no merge conflict
+says so. It also makes every feature PR edit four to six files, which then become the hot files
+of the next merge. So each kind of fact has **one home**; everywhere else links to it (spec §8
+"Professions", `docs/dev/crafting.md` "Making a recipe") instead of restating it.
+
+| Kind of fact | Its one home | Elsewhere |
+|---|---|---|
+| Player-visible rules: what the game does | `spec/`, the section's bullet | link "§N Name" |
+| Numbers kept in data | the data file under `assets/` | the wiki's generated tables show them (`xtask/src/wiki/`); never retyped in prose |
+| Modules, functions, invariants, tests | `docs/dev/<topic>.md` | link the topic and its heading |
+| Flags, `--scenario` and `--screen` names, dump layers, action text, replay files | `docs/dev/cli.md` | CLAUDE.md and spec §9 link |
+| Explanation for players | `wiki/` | |
+| Why it was decided, and when it changed | git log, PRs, issues, `docs/design/` | the homes above state the current fact only |
+| How agents work | CLAUDE.md (short), this playbook, `ops/agents/rules.md` (the briefs' shared rules) | each brief links `rules.md` |
+
+- **A PR edits the home of each fact it changes**, and turns any copy of that fact it comes
+  across into a link. The existing copies are folded into links as their topics are next
+  touched, not in a sweep.
+- **The homes state what is true now**, not its history: no "since #N", "was X, now Y", "no
+  longer", or "until #N". An issue link belongs where the reason matters (at most one per
+  section is a good guide); the history itself lives in the PRs and issues.
+- **A built design is history.** Once its issues are closed, a `docs/design/` file gets a
+  header line naming the spec sections and `docs/dev/` topics that now describe it (see
+  "Design documents" below), and agents read those instead.
+- Whether `spec/` keeps implementation paths and issue numbers is the owner's open question
+  (#1539): leave the ones there until it is decided.
 
 ## Roster and content PRs and hot docs
 
@@ -121,8 +176,9 @@ mapping, `merged` table, or lenient read for old saves; `#[serde(default)]` on a
 fine. Feature PRs that change `WorldState` or the content fingerprint (any new id in an indexed
 table) say "saves change" in the PR: development builds share a version, so their saves are not
 promised across builds, and a save a build cannot read is renamed `<id>.sav.bad`, never lost.
-The release that bumps the workspace version also sets `version` in the fixture summaries under
-`tests/golden/saved-characters/saves/` (all but Osric's, another version's on purpose).
+The release that bumps the workspace version touches no test file: the fixture summaries under
+`tests/golden/saved-characters/saves/` say `@VERSION@` (all but Osric's, another version's on
+purpose), and the screen snapshots write the version `[version]` (#1532).
 
 ## Random streams: keep the gameplay stream still
 
@@ -166,6 +222,11 @@ issue body, or one with many choices to review) is a **draft PR that adds
   to the section it implements. The spec stays the source of truth for what is built: when a
   feature lands, its spec section and `docs/dev/` topic describe it, and the design document
   stays as the record of why.
+- **When its last implementation issue closes**, the design gets one header line under its
+  title, and is otherwise left as approved: "**Built; this file is history.** Current behaviour
+  is in spec §N "Name" and `docs/dev/<topic>.md`." Agents read those, not the design; a number
+  in a built design may since have moved. `docs/design/README.md` lists the built and the
+  unbuilt designs; the slices' progress is the issues', not the README's.
 - CI's `changes` job sees a PR that touches only `docs/design/` and skips the build. The
   required checks report as skipped, which counts as passing. Touching any other file builds as
   usual, so keep design PRs to their document.
@@ -175,5 +236,6 @@ issue body, or one with many choices to review) is a **draft PR that adds
 ## Agents and context
 
 The local subagents' briefs live in `ops/agents/local/` (`feature.md`, `finisher.md`), so they
-survive a wiped `/tmp`. A feature agent stops when its PR is open: it never waits for CI and is
+survive a wiped `/tmp`; what they share with the cloud briefs is in `ops/agents/rules.md`, the one
+copy (`ops/agents/README.md`). A feature agent stops when its PR is open: it never waits for CI and is
 never resumed. Agents keep contexts small: read files in parts, grep, filter test output.

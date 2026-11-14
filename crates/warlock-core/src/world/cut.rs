@@ -7,7 +7,7 @@
 //!   smallest size and below the finest cut. Refused, taking no time: a tiny cut gem ("There is
 //!   nothing left to cut."), a gem of the finest cut ("It could not be finer."), anything else
 //!   ("That is no loose gem."), a protected one, and unpaid shop goods (`may_loose`).
-//! - **Time**: the recipe's `seconds`, in turns of the `craft` action ([`World::keep_at`], as
+//! - **Time**: the recipe's `seconds`, in turns of the `craft` action ([`World::work`], as
 //!   Temper): interrupted, nothing happens to the gem, but the time is spent.
 //! - **The check**: done, two gameplay draws (the natural roll), plus the gem's profession's stat
 //!   modifier (`data/stock.toml`: Dexterity), its talents' checks of that stat, and the recipe
@@ -25,16 +25,15 @@
 //! [`Action::Craft`]: crate::action::Action::Craft
 //! [`Actor::skill_effect_of`]: super::Actor::skill_effect_of
 
-use super::rest::Ended;
+use super::work::{Job, Task};
 use super::{Spent, World};
 use crate::action::Event;
 use crate::combat;
-use crate::content::{ActionKind, Content, CutId, Cutting, Gems, RecipeId};
+use crate::content::{Content, CutId, Cutting, Gems, RecipeId};
 use crate::item_parts::ItemPart;
 use crate::object::{self, Stack};
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
-use crate::time::Duration;
 
 /// What the check comes to, before the gem's own state is weighed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -111,12 +110,25 @@ fn refusal(gems: &Gems, cutting: Cutting) -> Option<&'static str> {
     (cutting.size.0 == 0).then_some("There is nothing left to cut.")
 }
 
-/// A cut under way: the recipe, the gem's position, and how long it takes.
+/// A cut under way: the recipe and the gem's position.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct GemWork {
     recipe: RecipeId,
     item: usize,
-    seconds: u32,
+}
+
+impl Job for GemWork {
+    fn on(&self, _: &Content) -> Vec<Option<usize>> {
+        vec![Some(self.item)]
+    }
+
+    fn found(&mut self, now: &[Option<usize>]) {
+        self.item = super::work::one(now);
+    }
+
+    fn done(&self, w: &mut World, _: &mut Vec<Event>) {
+        w.gem_cut(*self);
+    }
 }
 
 impl World {
@@ -162,39 +174,7 @@ impl World {
         }
         let name = self.lore().title(&self.state.player().inventory[item]);
         self.say(format!("You set to cutting the {name}."));
-        Spent::Cut(GemWork {
-            recipe: id,
-            item,
-            seconds: self.craft_seconds(def.seconds),
-        })
-    }
-
-    /// Works turn after turn until the cut is done or something stops it (module docs): its last
-    /// turn cut short to end exactly when its time is up.
-    pub(super) fn cut(&mut self, mut work: GemWork, events: &mut Vec<Event>) {
-        let on = self.work_on(&[Some(work.item)]);
-        let until = self.state.time + Duration::seconds(u64::from(work.seconds));
-        let turn = self.price_of(self.state.player, ActionKind::Craft);
-        let ended = self.keep_at(
-            events,
-            |w| w.state.time < until,
-            |w, _| turn.min(w.price_until(until)),
-        );
-        match ended {
-            Ended::Died => {}
-            _ if self.state.time >= until => match self.worked_on_one(&on) {
-                Some(item) => {
-                    work.item = item;
-                    self.gem_cut(work);
-                }
-                None => self.say("You have nothing left to work on."),
-            },
-            Ended::Came(came) => {
-                let text = format!("{}; you put down your work.", self.came_line(came));
-                self.say(text);
-            }
-            Ended::Said | Ended::Done => self.say("You put down your work."),
-        }
+        self.craft_work(Task::Cut(GemWork { recipe: id, item }), def.seconds)
     }
 
     /// The cut of `work` is done: the check, the gem's new state, the mark (module docs).
@@ -213,8 +193,7 @@ impl World {
         };
         let stat = (self.profession_of(gem)).map_or(Stat::Dexterity, |(_, stat)| stat);
         let me = self.state.player();
-        let modifier = me.effective_stats(&content).modifier(stat)
-            + me.talent_mods(&content).check(stat)
+        let modifier = me.check_modifier(&content, stat)
             + me.skill_effect_of(&content, def.skill, Effect::Craft)
             + self.binding_boon(def.skill);
         let against = def.difficulty + content.material(gem).work;

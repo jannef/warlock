@@ -21,6 +21,8 @@
 use super::creature::CreatureId;
 use super::{Content, ContentError, ObjectId};
 use crate::magic::Affix;
+use crate::skills::SkillId;
+use crate::stats::Stat;
 use serde::Deserialize;
 
 /// One colour of crystal.
@@ -48,7 +50,9 @@ pub struct RareMaterials {
     pub level: u8,
     /// The percent chance it does.
     pub chance: u8,
-    /// The one a dragon always gives.
+    /// The creature tag whose every bearer gives [`RareMaterials::dragon`] to Soulglass.
+    pub tag: String,
+    /// The one a creature tagged [`RareMaterials::tag`] always gives (a dragon).
     pub dragon: ObjectId,
     /// The one Quicken takes beside its crystal to add to a rare (a heart-crystal).
     pub heart: ObjectId,
@@ -77,9 +81,13 @@ pub struct Crystals {
 }
 
 /// Enchanting's numbers (`data/enchanting.toml`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct EnchantingRules {
+    /// The skill that enchants: its `craft` points add to every check, its `enchant_level` is
+    /// the reach, and salvage's affix checks mark it.
+    pub skill: SkillId,
+    /// The stat of every enchanting check, salvage's affix checks too.
+    pub stat: Stat,
     /// What a salvaged affix's check must reach, before its tier.
     pub salvage_difficulty: i32,
     /// The tiers that add one to that check's difficulty.
@@ -90,22 +98,53 @@ pub struct EnchantingRules {
     pub seal_seconds: u32,
 }
 
+/// `data/enchanting.toml` as written.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RulesFile {
+    skill: String,
+    stat: Stat,
+    salvage_difficulty: i32,
+    salvage_tier_step: u8,
+    level_step: u8,
+    seal_seconds: u32,
+}
+
 impl EnchantingRules {
-    pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
+    /// Parses `data/enchanting.toml` against the loaded skills: a known `skill`, and steps of at
+    /// least 1.
+    pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
-        let rules: Self = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        if rules.salvage_tier_step == 0 || rules.level_step == 0 {
+        let spec: RulesFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+        let skill = (content.skill_id(&spec.skill))
+            .ok_or_else(|| err(format!("unknown skill `{}`", spec.skill)))?;
+        if spec.salvage_tier_step == 0 || spec.level_step == 0 {
             return Err(err(
                 "`salvage_tier_step` and `level_step` must be at least 1".into(),
             ));
         }
-        Ok(rules)
+        Ok(EnchantingRules {
+            skill,
+            stat: spec.stat,
+            salvage_difficulty: spec.salvage_difficulty,
+            salvage_tier_step: spec.salvage_tier_step,
+            level_step: spec.level_step,
+            seal_seconds: spec.seal_seconds,
+        })
     }
 
     /// What the salvage check of `affix` must reach: the difficulty plus a point per
     /// `salvage_tier_step` tiers.
     pub fn salvage_against(&self, affix: &Affix) -> i32 {
         self.salvage_difficulty + i32::from(affix.tier / self.salvage_tier_step)
+    }
+}
+
+impl super::RulesFile for EnchantingRules {
+    const PATH: &'static str = "data/enchanting.toml";
+
+    fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
+        Self::parse(path, text, content)
     }
 }
 
@@ -232,6 +271,9 @@ impl Crystals {
             return Err(err("[rare] a rare material is no crystal".into()));
         }
         let dragon = object(&r.dragon)?;
+        if let Err(m) = super::tag::check(&r.tag) {
+            return Err(err(format!("[rare] `tag`: {m}")));
+        }
         let (heart, fetter) = (object(&r.heart)?, object(&r.fetter)?);
         if !materials.contains(&heart) || !materials.contains(&fetter) || heart == fetter {
             return Err(err(
@@ -252,6 +294,7 @@ impl Crystals {
                 materials,
                 level: r.level,
                 chance: r.chance,
+                tag: r.tag,
                 dragon,
                 heart,
                 fetter,
@@ -261,6 +304,14 @@ impl Crystals {
             consume_mana: spec.consume.mana,
             consume_marks: spec.consume.marks,
         })
+    }
+}
+
+impl super::RulesFile for Crystals {
+    const PATH: &'static str = "data/crystals.toml";
+
+    fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
+        Self::parse(path, text, content)
     }
 }
 
@@ -306,6 +357,7 @@ struct RareSpec {
     materials: Vec<String>,
     level: u8,
     chance: u8,
+    tag: String,
     dragon: String,
     heart: String,
     fetter: String,

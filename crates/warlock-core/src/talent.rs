@@ -28,6 +28,10 @@ use crate::text::and_list;
 use crate::weapon_skills::WeaponSkills;
 use crate::world::{Actor, FreeBlows};
 use serde::{Deserialize, Serialize};
+use std::sync::{Arc, OnceLock};
+
+mod beast;
+pub use beast::{BeastEffect, BeastMods};
 
 /// The most percent off a mana cost talents and magic items give together (spec §8 "Mana"):
 /// Frugal caster's fifth and of Thrift's percents summed, held here, as speeds are held at
@@ -43,10 +47,62 @@ pub struct Taken {
     pub choice: Option<String>,
 }
 
-/// The talents an actor holds, in the order taken.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+/// The talents an actor holds, in the order taken, with what they do summed and kept
+/// ([`Talents::mods_cached`]): derived, never saved or hashed, and dropped by every change.
+#[derive(Clone, Default, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct Talents(Vec<Taken>);
+pub struct Talents(Vec<Taken>, #[serde(skip)] ModsCache);
+
+impl PartialEq for Talents {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl Eq for Talents {}
+
+impl std::fmt::Debug for Talents {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("Talents").field(&self.0).finish()
+    }
+}
+
+/// What [`Talents::mods`] summed, kept for the content it was summed with (#1495: the player's
+/// were summed again on each of some 300 reads a turn). Set on the first read after a change;
+/// every `&mut` method of [`Talents`] empties it, so a talent taken or given is never missed.
+/// Statuses are not in it: the `while` effects are summed afresh while one of theirs is held.
+#[derive(Clone, Default)]
+struct ModsCache(OnceLock<Kept>);
+
+/// What [`Talents::mods_cached`] hands out: the kept sum, shared ([`std::ops::Deref`] to read
+/// it), or an owned copy for a rule that changes it ([`SharedMods::into_owned`]).
+#[derive(Clone, Debug, Default)]
+pub struct SharedMods(Arc<TalentMods>);
+
+impl std::ops::Deref for SharedMods {
+    type Target = TalentMods;
+
+    fn deref(&self) -> &TalentMods {
+        &self.0
+    }
+}
+
+impl SharedMods {
+    /// The sum to own: moved out when nothing else shares it, else copied.
+    pub fn into_owned(self) -> TalentMods {
+        Arc::unwrap_or_clone(self.0)
+    }
+}
+
+#[derive(Clone)]
+struct Kept {
+    /// The content summed with, by address: another content sums afresh.
+    content: usize,
+    /// Every talent's effects but those under a status.
+    mods: Arc<TalentMods>,
+    /// The statuses the held talents' `while` effects count under.
+    whiles: Vec<StatusId>,
+}
 
 impl Talents {
     pub fn is_empty(&self) -> bool {
@@ -65,6 +121,7 @@ impl Talents {
     /// Lets go of talent `id`, every choice of it (tests: a pick made only to spend a level).
     #[cfg(test)]
     pub(crate) fn forget(&mut self, id: &str) {
+        self.1 = ModsCache::default();
         self.0.retain(|t| t.id != id);
     }
 
@@ -89,6 +146,7 @@ impl Talents {
 
     /// Takes talent `id` for `choice`, if it is not held already.
     pub(crate) fn take(&mut self, id: &str, choice: Option<&str>) {
+        self.1 = ModsCache::default();
         if !self.holds(id, choice) {
             self.0.push(Taken {
                 id: id.to_string(),
@@ -103,6 +161,7 @@ impl Talents {
     /// chosen; a race's likewise). Picked talents keep their order after them; ids the content
     /// lacks are skipped.
     pub(crate) fn regrant(&mut self, content: &Content, ids: &[&str]) {
+        self.1 = ModsCache::default();
         let book = content.talents();
         let is_granted = |id: &str| {
             (book.id(id)).is_some_and(|t| {
@@ -123,6 +182,40 @@ impl Talents {
     /// the one place the condition is read, so no rule knows it exists. Talents the content no
     /// longer has do nothing.
     pub fn mods(&self, content: &Content, effects: &Effects) -> TalentMods {
+        self.sum(content, Some(effects))
+    }
+
+    /// [`Talents::mods`], kept until the talents change: the same sum, shared. While a status
+    /// that one of their `while` effects counts under is held, summed afresh (rarely: a raging
+    /// berserker's), so the effects add up in the very order [`Talents::mods`] adds them.
+    pub fn mods_cached(&self, content: &Content, effects: &Effects) -> SharedMods {
+        let address = std::ptr::from_ref(content) as usize;
+        let kept = self.1.0.get_or_init(|| Kept {
+            content: address,
+            mods: Arc::new(self.sum(content, None)),
+            whiles: self.whiles(content),
+        });
+        if kept.content != address || kept.whiles.iter().any(|s| effects.has(*s)) {
+            return SharedMods(Arc::new(self.mods(content, effects)));
+        }
+        SharedMods(kept.mods.clone())
+    }
+
+    /// The statuses the `while` effects of the talents held count under.
+    fn whiles(&self, content: &Content) -> Vec<StatusId> {
+        let book = content.talents();
+        let mut whiles: Vec<StatusId> = (self.0.iter())
+            .filter_map(|taken| book.id(&taken.id))
+            .flat_map(|id| book.get(id).effects_while.iter().map(|(s, _)| *s))
+            .collect();
+        whiles.sort_unstable();
+        whiles.dedup();
+        whiles
+    }
+
+    /// What every talent held does, summed, with the `while` effects whose status `effects`
+    /// holds (none without `effects`).
+    fn sum(&self, content: &Content, effects: Option<&Effects>) -> TalentMods {
         let mut mods = TalentMods::default();
         if self.0.is_empty() {
             return mods;
@@ -142,7 +235,7 @@ impl Talents {
                 mods.add(content, effect.clone(), taken.choice.as_deref());
             }
             for (status, effect) in &def.effects_while {
-                if effects.has(*status) {
+                if effects.is_some_and(|e| e.has(*status)) {
                     mods.add(content, effect.clone(), taken.choice.as_deref());
                 }
             }
@@ -268,23 +361,8 @@ pub struct TalentMods {
     pub sneak_kill_status: Option<StatusId>,
     /// It sees which creatures in view have not noticed it (Stalker's eye).
     pub sees_unaware: bool,
-    /// An animal companion from the first turn (Animal companion; `world/companion.rs`).
-    pub companion: bool,
-    /// A familiar from the first turn (Familiar; `world/familiar.rs`).
-    pub familiar: bool,
-    /// Added to its taming checks (Animal companion's edge; the Tame skill ability reads it).
-    pub tame: i32,
-    /// It sees what its companion sees (Hunter's bond; `Perception::compute`).
-    pub shared_sight: bool,
-    /// It sees what its familiar sees (Familiar's sight; `Perception::compute`).
-    pub familiar_sight: bool,
-    /// Its buffs and its companion's are shared (Hunter's bond; `world/bond.rs`).
-    pub shared_buffs: bool,
-    /// To hit on its melee blows and its companion's at a creature beside them both (Pack
-    /// tactics; `world/pack.rs`).
-    pub pack_tactics: i32,
-    /// Its companion's attacks carry its Favoured prey (Pack tactics; `world/pack.rs`).
-    pub shares_favoured_prey: bool,
+    /// What its beast talents do: its companion, its familiar, beasts (`talent/beast.rs`).
+    pub beast: BeastMods,
     /// An initiative check it makes against a hostile attacker beside it strikes back (Hair
     /// trigger).
     pub startled_blow: bool,
@@ -308,8 +386,6 @@ pub struct TalentMods {
     pub climb_percent: i32,
     /// Wading never gives it a disease.
     pub wading_proof: bool,
-    /// Creatures of animal factions are neutral to it until it attacks one of their type.
-    pub beast_friend: bool,
     /// Each level reached adds to the family's stipend (Stipend, `world/stipend.rs`).
     pub stipend: bool,
     /// Percent more gold the stipend grows by (Landed noble).
@@ -1265,7 +1341,7 @@ impl TalentMods {
             A::Rig => self.rigs,
             A::SpiritWeapon => self.spirit_weapon.is_some(),
             A::Inspire | A::Lullaby => self.songs.iter().any(|s| s.active == active),
-            A::CallFamiliar => self.familiar,
+            A::CallFamiliar => self.beast.familiar,
             A::Consecrate => self.consecrate.is_some(),
             A::Sanctuary => self.sanctuary.is_some(),
             A::Knock => self.knock.is_some(),
@@ -1476,7 +1552,7 @@ impl TalentMods {
             TalentEffect::SurpriseDifficulty { value } => self.surprise_difficulty += value,
             TalentEffect::SneakReach { value } => self.sneak_reach += value,
             TalentEffect::SeesUnaware => self.sees_unaware = true,
-            TalentEffect::Companion => self.companion = true,
+            TalentEffect::Beast(effect) => self.beast.add(&effect),
             TalentEffect::Fletcher {
                 check,
                 count_times,
@@ -1488,13 +1564,6 @@ impl TalentMods {
                     time_percent,
                 });
             }
-            TalentEffect::Familiar => self.familiar = true,
-            TalentEffect::Tame { bonus } => self.tame += bonus,
-            TalentEffect::SharedSight => self.shared_sight = true,
-            TalentEffect::FamiliarSight => self.familiar_sight = true,
-            TalentEffect::SharedBuffs => self.shared_buffs = true,
-            TalentEffect::PackTactics { to_hit } => self.pack_tactics += to_hit,
-            TalentEffect::SharesFavouredPrey => self.shares_favoured_prey = true,
             TalentEffect::StartledBlow => self.startled_blow = true,
             TalentEffect::SneakKillStatus { status } => {
                 self.sneak_kill_status = content.status_id(&status).or(self.sneak_kill_status);
@@ -1514,7 +1583,6 @@ impl TalentMods {
             TalentEffect::LightOnIce => self.light_on_ice = true,
             TalentEffect::ClimbPercent { value } => self.climb_percent += value,
             TalentEffect::WadingProof => self.wading_proof = true,
-            TalentEffect::BeastFriend => self.beast_friend = true,
             TalentEffect::Stipend => self.stipend = true,
             TalentEffect::StipendMore {
                 gold,
@@ -2702,6 +2770,39 @@ pub fn offers(content: &Content, who: &Candidate<'_>) -> Vec<(TalentId, Vec<Opti
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The kept sum is the sum made afresh: after a talent is taken, given, or let go, and
+    /// while a `while` effect's status is held and after it ends.
+    #[test]
+    fn the_kept_sum_is_the_sum() {
+        let content = Content::builtin().expect("content");
+        let raging = content.status_id("raging").expect("raging");
+        let calm = Effects::default();
+        let mut rage = Effects::default();
+        rage.add(raging, content.status(raging), 1, None);
+        let same = |t: &Talents, effects: &Effects| {
+            assert_eq!(*t.mods_cached(&content, effects), t.mods(&content, effects));
+        };
+        let mut talents = Talents::default();
+        same(&talents, &calm);
+        talents.take("hardy", None);
+        same(&talents, &calm);
+        talents.take("battle_scarred", None);
+        same(&talents, &calm);
+        same(&talents, &rage);
+        assert_ne!(
+            talents.mods(&content, &calm),
+            talents.mods(&content, &rage),
+            "the rage counts"
+        );
+        same(&talents, &calm);
+        talents.regrant(&content, &["hardy"]);
+        same(&talents, &calm);
+        talents.forget("battle_scarred");
+        same(&talents, &calm);
+        talents.forget("hardy");
+        assert_eq!(*talents.mods_cached(&content, &calm), TalentMods::default());
+    }
 
     #[test]
     fn hit_points_by_level_grow_with_the_level_and_never_under_the_floor() {

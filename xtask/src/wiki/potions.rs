@@ -1,6 +1,6 @@
 //! Potions (spec §8 "Potions").
 
-use super::text::{Term, anchored, capital, damage_link, link};
+use super::util::{Term, anchored, capital, damage_link, link};
 use std::fmt::Write as _;
 use warlock_core::combat::IMPROVISED_RANGE;
 use warlock_core::content::{Content, Draught, ObjectDef, SpellPurpose, StatusId};

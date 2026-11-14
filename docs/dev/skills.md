@@ -101,8 +101,8 @@ whatever it does; Music is `kind = "rules"` (no abilities-menu row). Tests:
 skill and Master of none's every one, `Skills::effect_with`), never
 `Skills::effect` directly. Each effect is read in one place: Dodge in
 `Actor::defence`, quiet in `noise::noise`, hearing in `Actor::hearing`, burden in
-`World::burdened` (`Burden::slow_eased`), travel in `World::step_price`, bargain (Negotiation
-since #666) in `world/shop.rs`, identify (Appraise; trained at all, below) in
+`World::burdened` (`Burden::slow_eased`), travel in `World::step_price`, bargain (Negotiation,
+#666) in `world/shop.rs`, identify (Appraise; trained at all, below) in
 `world/appraise.rs`, kick (athletics: Strength for kicking a door in) in `World::kick_door`, speed
 (athletics, #548: percent quicker, added to the talents' `speed_percent`, the skills never
 taking the sum past `MAX_SPEED`) in `Actor::speed`, pick
@@ -115,18 +115,33 @@ hidden traps, whose checks read it in place of Search and Spot, `Skills::trains_
 `world/slip.rs` (docs/dev/surprise.md), steal in `world/steal.rs` (trained at all lets the player steal,
 `docs/dev/stealing.md`), heal in `world/heal.rs` (trained at all gives the Heal ability, on oneself or an ally beside one;
 `docs/dev/status-effects.md` "Treating oneself"), forage (Survival: percent added to a forage's chance; trained at all,
-the Forage ability) in `world/forage.rs`, study (Decipher script since #1270: points off the study check) in
+the Forage ability) in `world/forage.rs`, study (Decipher script, #1270: points off the study check) in
 `world/learn.rs::study_odds` and learn (Decipher script: the spell level a scroll teaches for certain, at least 1, and reads with no check; trained at all lets
 the player learn from a scroll) in `Actor::learning` (docs/dev/spells.md "Learning"; their use `Use::Study`, reported
-when a study ends, is also `StatUse::Study`), decipher (Decipher script: points on the check of reading a scroll, read by anyone, but untrained it is 0: the skill does nothing without the skill, whatever raises it) in `World::deciphers`, `world/decipher.rs` (docs/dev/scrolls.md "Making out a scroll"; its use `Use::Decipher`, reported per check, trains no stat, as a made read's Intelligence mark comes of `use_up`). All reading trains Decipher script (#1270): `Use::Decipher` 100 %, `Use::Read` 50 % (a scroll read and used up, reported in `read.rs::use_up` beside its Intelligence mark; no stat of its own), and `Use::Study` 100 % (a grimoire read to its end). Spellcraft keeps only its `cast` mark (25 %) and has no benefit: nothing reads it until a rule does; each use
+when a study ends, is also `StatUse::Study`), decipher (Decipher script: points on the check of
+reading a scroll, read by anyone, but untrained it is 0: the skill does nothing without the skill,
+whatever raises it) in `World::deciphers`, `world/decipher.rs` (docs/dev/scrolls.md "Making out a
+scroll"; its use `Use::Decipher`, reported per check, trains no stat, as a made read's Intelligence
+mark comes of `use_up`). All reading trains Decipher script (#1270): `Use::Decipher` 100 %,
+`Use::Read` 50 % (a scroll read and used up, reported in `read.rs::use_up` beside its Intelligence
+mark; no stat of its own), and `Use::Study` 100 % (a grimoire read to its end). Spellcraft keeps
+only its `cast` mark (25 %) and has no benefit: nothing reads it until a rule does; each use
 is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`,
 `kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, both for `find_trap` (a
 trap found), `World::disarm` for
 `disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, `World::heal` for `heal`, `World::forage_done` for `forage` (a forage that ran its time), `World::order` and `fight.rs::dies` for `handle` (an order given to one's allies, an ally's kill: Handle animal's marks, docs/dev/allies.md), `world/tame.rs::tame_check` for `handle` too (a try at taming), and the `tame` benefit read in `tame_odds` (trained at all, the Tame ability; docs/dev/companion.md "Taming"), `World::pay` and
 `World::trade` (a sale) in `world/shop.rs` for `deal`, `World::appraise` for `appraise`, `world/temper.rs::tempered` for `temper`, `world/craft_make.rs::crafted` for `craft` (a recipe's work that ran its time), and `World::sidesteps` for a known trap avoided,
-`dodge`, besides `fight.rs::resolve`). Listen at a door (#1026) is `Use::Listen`, 100 % per `listen:DIR` (`world/listen.rs`, `hearing.md`). Marks from plain play (#1014, `docs/design/skill-uses.md` 6.8, 6.9, 6.11): `Use::Sight` (Spot) in `surprise.rs::mark_noticed`, the first sighting of a creature that has not noticed the player; `Use::Sprung` (Detect traps) in `trap.rs::train_from_sprung`, a hidden trap going off under the player, or (half the time, a training-stream draw) under a creature they see; `Use::Overhear` (Listen) in `perceive.rs::hear`, a sound that is no news heard while resting or waiting (`World::waiting` is set around the player's wait); Detect traps also marks on `disarm` and, with Spot, on `search`, as data. Concentration's `mana_regen` and `max_mana` (trained only, `Actor::mind`) are read in
+`dodge`, besides `fight.rs::resolve`). Listen at a door (#1026) is `Use::Listen`, 100 % per
+`listen:DIR` (`world/listen.rs`, `hearing.md`). Marks from plain play (#1014,
+`docs/design/skill-uses.md` 6.8, 6.9, 6.11): `Use::Sight` (Spot) in `surprise.rs::mark_noticed`, the
+first sighting of a creature that has not noticed the player; `Use::Sprung` (Detect traps) in
+`trap.rs::train_from_sprung`, a hidden trap going off under the player, or (half the time, a
+training-stream draw) under a creature they see; `Use::Overhear` (Listen) in `perceive.rs::hear`, a
+sound that is no news heard while resting or waiting (`World::waiting` is set around the player's
+wait); Detect traps also marks on `disarm` and, with Spot, on `search`, as data. Concentration's
+`mana_regen` and `max_mana` (trained only, `Actor::mind`) are read in
 `World::mana_rate` and `Actor::max_mana` (`world/concentration.rs`, docs/dev/mana.md), its `cast`
-use reported by `World::spend_mana` (Spellcraft's `cast` mark, 25 %, rides the same use, #989; since #1270 its only mark). Spellcraft's `cast` (points on the Spellcraft check every cast with one's own mana makes) and `ward` (points off a miscast's total) are read in `world/miscast.rs` (`Actor::cast_bonus`, `Actor::miscast_ward`; #1271, docs/dev/spells.md "Miscasts"), by anyone: an untrained caster has none of them and checks all the same. Knowledge's `resist` (#667) is read
+use reported by `World::spend_mana` (Spellcraft's `cast` mark, its only one, 25 %, rides the same use, #989, #1270). Spellcraft's `cast` (points on the Spellcraft check every cast with one's own mana makes) and `ward` (points off a miscast's total) are read in `world/miscast.rs` (`Actor::cast_bonus`, `Actor::miscast_ward`; #1271, docs/dev/spells.md "Miscasts"), by anyone: an untrained caster has none of them and checks all the same. Knowledge's `resist` (#667) is read
 in `world/knowledge.rs` (`World::resisting`, `resist_bonus`) through `Actor::skill_effect_above`
 (`Skills::effect_above`: each benefit read at the value less the creature's level, nothing at or
 below it), called for the modifier of the player's check against a creature's drain
@@ -207,7 +222,7 @@ directory is `Ability::Profession` instead, before any use (Metalcraft, Woodcraf
 (`Ability::every` adds it right after the skills while some skill gives `Effect::Wedge`; see
 `docs/dev/doors.md` "Wedging").
 
-**Fletching** (spec §8 "Fletching", #1021) is no action of its own since #1336: arrows and bolts
+**Fletching** (spec §8 "Fletching", #1021) is no action of its own (#1336): arrows and bolts
 are Woodcraft's recipes (`recipes/woodcraft/arrows.toml`, `bolts.toml`, `count = "fletch"`), made
 as any generic recipe is; `data/fletch.toml` keeps the count, the knives, and the launchers' words,
 and the ranger's Fletcher is read there. All of it is in `docs/dev/crafting.md` "Arrows and bolts".
@@ -216,7 +231,17 @@ A damaged item (Temper's failure, or acid, rust, or heat: `world/item_damage.rs`
 mended (`Mods::add_worked`: its Protection if it gives some, else its Defence, else its damage).
 Mithril and adamantium are metals, so Temper works them as steel.
 
-**Whittling** (#1028, design W3): `Action::Whittle { item }` (replay text `whittle:LETTER`, cost `whittle` a turn, `ActionKind::Whittle`) is Temper's twin for wood: `world/temper.rs` keeps both, a `Craft` (`Temper` or `Whittle`) in `Tempering` choosing the material group (`metal` or `wood`), the stat and effect (Strength and `Effect::Temper`, or Dexterity and `Effect::Whittle`), the mark (`Use::Temper`, `Use::Whittle`), the turn price, and the message lines. Both share `data/temper.toml` and `magic/worked.rs`, so one item has one state. The Whittle recipe (`data/recipes/woodcraft/whittle.toml`: `knife`; Woodcraft's, refused untrained with no time, "You are not trained in Woodcraft.", #1387) stands beside the arrows on Woodcraft's screen (`docs/dev/crafting.md`), opens the Whittle list over it (`ObjectList::Whittle`, `ScreenName::Whittle`, the list `world::workable_wood`), and is greyed "no knife" without one (the rules' refusal is `world::whittle_lack`). Tests: `world/whittle_tests.rs`.
+**Whittling** (#1028, design W3): `Action::Whittle { item }` (replay text `whittle:LETTER`, cost
+`whittle` a turn, `ActionKind::Whittle`) is Temper's twin for wood: `world/temper.rs` keeps both, a
+`Craft` (`Temper` or `Whittle`) in `Tempering` choosing the material group (`metal` or `wood`), the
+stat and effect (Strength and `Effect::Temper`, or Dexterity and `Effect::Whittle`), the mark
+(`Use::Temper`, `Use::Whittle`), the turn price, and the message lines. Both share
+`data/temper.toml` and `magic/worked.rs`, so one item has one state. The Whittle recipe
+(`data/recipes/woodcraft/whittle.toml`: `knife`; Woodcraft's, refused untrained with no time, "You
+are not trained in Woodcraft.", #1387) stands beside the arrows on Woodcraft's screen
+(`docs/dev/crafting.md`), opens the Whittle list over it (`ObjectList::Whittle`,
+`ScreenName::Whittle`, the list `world::workable_wood`), and is greyed "no knife" without one (the
+rules' refusal is `world::whittle_lack`). Tests: `world/whittle_tests.rs`.
 
 **Balance** (spec §8 "Skills", #1029, `docs/design/skill-uses.md` §6.13): besides `burden`,
 `Effect::Footing` is read in `World::step_price` (`world/schedule.rs`) in the `else` of the wading
@@ -241,7 +266,7 @@ an item's Swim bonus alone asks no check. Tests `world/swim_tests.rs`.
 **Deep water** (spec §8 "Skills": Swim, #1019; design §6.4 S2) is `world/swim.rs`, one line each
 in `player_moves`, the refused actions (`pick_up_objects`, `drop_objects`, `start_rest`, the
 search dispatch, `start_dig`, lighting in `use_tool`), and `equip`. The terrain's `swim = true`
-with `walkable = false` (`content/mod.rs` checks the pair) is why nothing else needs to know of it:
+with `walkable = false` (`content/load_world.rs` checks the pair) is why nothing else needs to know of it:
 paths, travel, spawning, teleports, blinks, and landings treat it as impassable. `at_the_shore`
 stops a step from anything else: water not in the level's memory is written there, with no time, so
 the step cannot go in unasked (presentation asks only of what the player knows,

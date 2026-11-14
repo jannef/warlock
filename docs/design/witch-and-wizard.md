@@ -1,5 +1,7 @@
 # Warlock — The witch and the wizard: how they differ beyond their spell lists
 
+**Built; this file is history.** Current behaviour is in spec §8 "The casters' class tables, and their spells" and `docs/dev/progression.md`.
+
 Design document for the owner's review (2026-11-02, #826). Written against `origin/main` at
 f3846261 (Encounters E5). Nothing here is implemented; §12 cuts it into issues. It builds on
 what is there: the class tables (`assets/data/classes/09-wizard.toml`, `10-witch.toml`,

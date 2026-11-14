@@ -22,7 +22,7 @@
 //!   it, and [`World::start_making`] refuses with its reason, taking no time. None on an
 //!   optional part makes the recipe's `brittle` object, of the other parts' chosen materials.
 //! - **The work**: the recipe's `seconds` (Fletcher's share of it for the arrows), in turns of
-//!   [`ActionKind::Craft`] ([`World::keep_at`]; on the overworld watched as a forage is); an
+//!   [`ActionKind::Craft`] ([`World::work`]; on the overworld watched as a forage is); an
 //!   interruption costs only the time. Done, the picks are found again (`work_on.rs`) and the
 //!   plan made again from the pack ("You have nothing left to work with." if either fails), then
 //!   one check (two gameplay draws, the natural roll): the profession's stat modifier, what the
@@ -73,13 +73,13 @@ use super::craft::{
 };
 use super::encounter::Watch;
 use super::fletch;
-use super::rest::Ended;
+use super::work::{Job, Task, Work};
 use super::{Actor, LevelState, Spent, World};
 use crate::action::Event;
 use crate::combat;
 use crate::content::{
-    ActionKind, Content, InputKind, MaterialId, ObjectId, PartSource, RecipeCount, RecipeDef,
-    RecipeId, RecipeInput, RecipeSettings, RecipeUse, counted,
+    Content, InputKind, MaterialId, ObjectId, PartSource, RecipeCount, RecipeDef, RecipeId,
+    RecipeInput, RecipeSettings, RecipeUse, counted,
 };
 use crate::item_parts::{self, ItemPart};
 use crate::magic::Worked;
@@ -959,18 +959,40 @@ pub(crate) fn craft_plan(
     })
 }
 
-/// A recipe's work under way: which, with what (positions in step order), and how long.
+/// A recipe's work under way: which, and with what (positions in step order).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct Crafting {
     recipe: RecipeId,
     picks: [Option<usize>; MAX_PICKS],
     len: u8,
-    seconds: u32,
 }
 
 impl Crafting {
     fn picks(&self) -> &[Option<usize>] {
         &self.picks[..usize::from(self.len)]
+    }
+}
+
+impl Job for Crafting {
+    // Who comes upon one at work on the overworld (`encounter.rs`), as a forager.
+    fn watch(&self) -> Option<Watch> {
+        Some(Watch::Forage)
+    }
+
+    fn on(&self, _: &Content) -> Vec<Option<usize>> {
+        self.picks().to_vec()
+    }
+
+    fn found(&mut self, now: &[Option<usize>]) {
+        self.picks[..now.len()].copy_from_slice(now);
+    }
+
+    fn nothing_left(&self) -> &'static str {
+        "You have nothing left to work with."
+    }
+
+    fn done(&self, w: &mut World, _: &mut Vec<Event>) {
+        w.crafted(*self);
     }
 }
 
@@ -1025,45 +1047,13 @@ impl World {
             Some(station) => format!("You set to work on the {name} at the {station}."),
             None => format!("You set to work on the {name}."),
         });
-        Spent::Craft(Crafting {
+        let work = Crafting {
             recipe: id,
             picks: held,
             len: picks.len() as u8,
-            seconds,
-        })
-    }
-
-    /// Works turn after turn until the work is done or something stops it (module docs): its
-    /// last turn cut short to end exactly when its time is up.
-    pub(super) fn make(&mut self, mut work: Crafting, events: &mut Vec<Event>) {
-        let on = self.work_on(work.picks());
-        let until = self.state.time + Duration::seconds(u64::from(work.seconds));
-        let turn = self.price_of(self.state.player, ActionKind::Craft);
-        let ended = self.keep_at(
-            events,
-            |w| w.state.time < until,
-            |w, _| {
-                let price = turn.min(w.price_until(until));
-                // Who comes upon one at work on the overworld (`encounter.rs`), as a forager.
-                w.watch_roll(Watch::Forage, price);
-                price
-            },
-        );
-        match ended {
-            Ended::Died => {}
-            _ if self.state.time >= until => match self.worked_on(&on) {
-                Some(now) => {
-                    work.picks[..now.len()].copy_from_slice(&now);
-                    self.crafted(work);
-                }
-                None => self.say("You have nothing left to work with."),
-            },
-            Ended::Came(came) => {
-                let text = format!("{}; you put down your work.", self.came_line(came));
-                self.say(text);
-            }
-            Ended::Said | Ended::Done => self.say("You put down your work."),
-        }
+        };
+        // Quick hands' share is in the fletcher's seconds.
+        Work::spent(Task::Craft(work), seconds)
     }
 
     /// The modifier of the player's check for recipe `def` (the module docs).
@@ -1071,9 +1061,8 @@ impl World {
         let content = &self.content;
         let stat = profession_stat(content, def, main);
         let me = self.state.player();
-        me.effective_stats(content).modifier(stat)
+        me.check_modifier(content, stat)
             + me.skill_effect_of(content, def.skill, Effect::Craft)
-            + me.talent_mods(content).check(stat)
             + fletch::fletcher_check(content, me, def)
             + self.binding_boon(def.skill)
     }

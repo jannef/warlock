@@ -26,10 +26,12 @@
 //!   (Enchanting's [`Effect::EnchantLevel`], 1 to 12); Kindle's and Imbue's are the reach,
 //!   Unbind's the item's own. The item takes the roll's level.
 //! - **Time**: the recipe's `seconds` and each seal's `seal_seconds` (Quick hands' share of
-//!   them, `mastery::craft_seconds`), in turns of the `craft` action ([`World::keep_at`]):
+//!   them, `mastery::craft_seconds`), in turns of the `craft` action (the work driver,
+//!   [`World::work`]):
 //!   interrupted, nothing is spent, but the time is. No grade, so Master's hand has nothing to ease.
-//! - **The check**: two gameplay draws (the natural roll), plus Willpower's modifier, its talents'
-//!   checks, and Enchanting's [`Effect::Craft`], against the recipe's `difficulty` + the roll's
+//! - **The check**: two gameplay draws (the natural roll), plus the modifier of
+//!   `data/enchanting.toml`'s `stat` (Willpower), its talents' checks, and the recipe's skill's
+//!   [`Effect::Craft`], against the recipe's `difficulty` + the roll's
 //!   item level ÷ `level_step` (`data/enchanting.toml`; [`enchant_band`]). Made (or a natural
 //!   24): Kindle draws the kind (`[magic]`'s prefix and suffix weights among the kinds that can
 //!   roll), then the affix, tier, and value; Quicken the affix of the kind the item lacks;
@@ -51,15 +53,15 @@
 use super::craft::RecipeLack;
 use super::craft_make::{CraftOption, CraftPlan, CraftStep, CraftStepKind, MAX_PICKS};
 use super::item_damage::Harmed;
-use super::rest::Ended;
 use super::seal;
 use super::temper::WITHSTOOD;
+use super::work::{Job, Task};
 use super::{Actor, LevelState, Spent, World};
 use crate::action::Event;
 use crate::combat;
 use crate::content::{
-    ActionKind, AffixKind, Content, EnchantKind, ItemHarm, MAX_PER_KIND, ObjectDef, Rarity,
-    RecipeDef, RecipeId, RecipeUse,
+    AffixKind, Content, EnchantKind, ItemHarm, MAX_PER_KIND, ObjectDef, Rarity, RecipeDef,
+    RecipeId, RecipeUse,
 };
 use crate::magic::loot::{pick_weighted, rare_name, rare_split, roll_affix_within, rolls_within};
 use crate::magic::{Affix, Magic, capacity};
@@ -548,7 +550,7 @@ fn place(content: &Content, affixes: &mut Vec<Affix>, affix: Affix, kind: AffixK
 
 /// `player`'s reach: the item level their Enchanting rolls at, 1 to 12.
 fn reach(content: &Content, player: &Actor) -> u8 {
-    let skill = content.skill_id("enchanting");
+    let skill = content.enchanting().map(|r| r.skill);
     let value = skill.map_or(1, |s| {
         player.skill_effect_of(content, s, Effect::EnchantLevel)
     });
@@ -644,13 +646,29 @@ pub(super) fn plan(
     })
 }
 
-/// An enchanting under way: the recipe, the picks (in step order), how long.
+/// An enchanting under way: the recipe and the picks (in step order).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct Enchanting {
     recipe: RecipeId,
     picks: [Option<usize>; MAX_PICKS],
     len: u8,
-    seconds: u32,
+}
+
+impl Job for Enchanting {
+    fn on(&self, content: &Content) -> Vec<Option<usize>> {
+        self.in_pack(content)
+    }
+
+    /// The seals and the kept affix, no pack positions, stay as they were.
+    fn found(&mut self, now: &[Option<usize>]) {
+        for (pick, at) in self.picks.iter_mut().zip(now) {
+            *pick = at.or(*pick);
+        }
+    }
+
+    fn done(&self, w: &mut World, _: &mut Vec<Event>) {
+        w.enchanted(*self);
+    }
 }
 
 impl Enchanting {
@@ -706,42 +724,12 @@ impl World {
         let mut held = [None; MAX_PICKS];
         held[..picks.len()].copy_from_slice(picks);
         let seconds = work_seconds(&content, def, resolved.seals.len());
-        Spent::Enchant(Enchanting {
+        let work = Enchanting {
             recipe: id,
             picks: held,
             len: picks.len() as u8,
-            seconds: self.craft_seconds(seconds),
-        })
-    }
-
-    /// Works turn after turn until the enchanting is done or something stops it (module docs):
-    /// its last turn cut short to end exactly when its time is up.
-    pub(super) fn enchant(&mut self, mut work: Enchanting, events: &mut Vec<Event>) {
-        let on = self.work_on(&work.in_pack(&self.content));
-        let until = self.state.time + Duration::seconds(u64::from(work.seconds));
-        let turn = self.price_of(self.state.player, ActionKind::Craft);
-        let ended = self.keep_at(
-            events,
-            |w| w.state.time < until,
-            |w, _| turn.min(w.price_until(until)),
-        );
-        match ended {
-            Ended::Died => {}
-            _ if self.state.time >= until => match self.worked_on(&on) {
-                Some(now) => {
-                    for (pick, at) in work.picks.iter_mut().zip(now) {
-                        *pick = at.or(*pick);
-                    }
-                    self.enchanted(work);
-                }
-                None => self.say("You have nothing left to work on."),
-            },
-            Ended::Came(came) => {
-                let text = format!("{}; you put down your work.", self.came_line(came));
-                self.say(text);
-            }
-            Ended::Said | Ended::Done => self.say("You put down your work."),
-        }
+        };
+        self.craft_work(Task::Enchant(work), seconds)
     }
 
     /// The enchanting of `work` is done: the check, what comes of it, the mark.
@@ -754,8 +742,8 @@ impl World {
             return;
         };
         let me = self.state.player();
-        let modifier = me.effective_stats(&content).modifier(Stat::Willpower)
-            + me.talent_mods(&content).check(Stat::Willpower)
+        let stat = content.enchanting().map_or(Stat::Willpower, |r| r.stat);
+        let modifier = me.check_modifier(&content, stat)
             + me.skill_effect_of(&content, def.skill, Effect::Craft);
         let step = content.enchanting().map_or(3, |r| r.level_step.max(1));
         let against = def.difficulty + i32::from(resolved.level / step);

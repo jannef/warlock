@@ -358,6 +358,14 @@ impl Shops {
     }
 }
 
+impl super::RulesFile for Shops {
+    const PATH: &'static str = "data/shops.toml";
+
+    fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
+        Self::parse(path, text, content)
+    }
+}
+
 /// The shopkeeper template: a creature type (not the player), what it carries, and what of that
 /// it wields and wears.
 fn keeper(spec: &KeeperSpec, content: &Content) -> Result<Keeper, String> {

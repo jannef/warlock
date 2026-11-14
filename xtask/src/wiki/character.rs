@@ -1,7 +1,7 @@
 //! Character creation (spec §8 "Character creation"): stats, genders, races, classes, and the
 //! horoscope, with adjustments as written in data.
 
-use super::text::{Term, anchored, damage_link, signed, table_text};
+use super::util::{Term, anchored, damage_link, signed, table_text};
 use super::weapon_skills;
 use std::fmt::Write as _;
 use warlock_core::character::Gender;
@@ -156,7 +156,7 @@ pub(super) fn stat_uses(content: &Content) -> String {
 pub(super) fn potentials(content: &Content) -> String {
     let (names, align) = stat_columns();
     let races = content.races();
-    let mut out = format!("{}| Race |{names}\n|---|{align}\n", super::text::stat_key());
+    let mut out = format!("{}| Race |{names}\n|---|{align}\n", super::util::stat_key());
     let (lo, hi) = (i32::from(*SCORES.start()), i32::from(*SCORES.end()));
     let base = i32::from(races.base_potential);
     for r in &races.list {
@@ -219,7 +219,7 @@ fn stat_cells(by: &PerStat<Dice>) -> String {
 pub(super) fn races(content: &Content) -> String {
     // Two tables, the stats and the rest, so neither is too wide to read (#1586).
     let (names, align) = stat_columns();
-    let mut out = format!("{}| Race |{names}\n|---|{align}\n", super::text::stat_key());
+    let mut out = format!("{}| Race |{names}\n|---|{align}\n", super::util::stat_key());
     for r in &content.races().list {
         let _ = writeln!(
             out,
@@ -313,7 +313,7 @@ pub(super) fn classes(content: &Content) -> String {
     let (names, align) = stat_columns();
     let mut out = format!(
         "{}| Class |{names}\n|---|{align}\n",
-        super::text::stat_key()
+        super::util::stat_key()
     );
     for c in content.classes() {
         let _ = writeln!(out, "| {} |{}", c.name, stat_cells(&c.stats));
@@ -441,7 +441,7 @@ pub(super) fn horoscope(content: &Content) -> String {
     let (names, align) = stat_columns();
     let mut out = format!(
         "## Animals\n\n{}| | Animal |{names} Those born under it |\n|---:|---|{align}---|\n",
-        super::text::stat_key()
+        super::util::stat_key()
     );
     for (i, a) in h.animals.iter().enumerate() {
         let _ = writeln!(

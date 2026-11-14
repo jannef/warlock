@@ -69,9 +69,7 @@ impl Actor {
         let Some(rules) = content.miscast_rules() else {
             return 0;
         };
-        self.effective_stats(content).modifier(rules.stat)
-            + self.talent_mods(content).check(rules.stat)
-            + self.skill_effect(content, Effect::Cast)
+        self.check_modifier(content, rules.stat) + self.skill_effect(content, Effect::Cast)
     }
 
     /// The difficulty of its Spellcraft check on a cast of `spell` (`def`), at its rank in it,

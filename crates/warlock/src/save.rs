@@ -418,6 +418,34 @@ fn reload_on_exit(mut exits: MessageReader<AppExit>) {
     }
 }
 
+/// The saved characters' fixture (`tests/golden/saved-characters`) as the tests read it: copied
+/// once into a folder of this process's own, with `@VERSION@` in its summaries written as this
+/// version, so a release bumps nothing in it (#1532; Osric's names another version on purpose).
+#[cfg(test)]
+pub(crate) fn saved_characters_fixture() -> std::path::PathBuf {
+    static DIR: std::sync::OnceLock<std::path::PathBuf> = std::sync::OnceLock::new();
+    (DIR.get_or_init(|| {
+        let from = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/golden/saved-characters/saves");
+        let root =
+            std::env::temp_dir().join(format!("warlock-saved-characters-{}", std::process::id()));
+        let to = root.join("saves");
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&to).expect("the fixture's copy");
+        for entry in std::fs::read_dir(&from).expect("the fixture") {
+            let path = entry.expect("a fixture file").path();
+            let mut bytes = std::fs::read(&path).expect("a fixture file");
+            if path.extension().is_some_and(|e| e == "toml") {
+                let text = String::from_utf8(bytes).expect("a summary is text");
+                bytes = (text.replace("@VERSION@", warlock_core::GAME_VERSION)).into_bytes();
+            }
+            std::fs::write(to.join(path.file_name().expect("a name")), bytes).expect("a copy");
+        }
+        root
+    }))
+    .clone()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -686,15 +714,13 @@ mod tests {
         assert_eq!(ids(&s), ["osric-1", "brakka-1"], "still listed");
     }
 
-    /// The fixture the screen snapshots list (`tests/golden/saved-characters`): its characters
-    /// are this version's, but Osric, another's. When the workspace version is bumped, set the
-    /// others' `version` to it.
+    /// The fixture the screen snapshots list (`tests/golden/saved-characters`), as the tests
+    /// read it ([`super::saved_characters_fixture`]): its characters are this version's, but
+    /// Osric, another's.
     #[test]
     fn the_listed_fixture_is_of_this_version() {
-        let fixture = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../tests/golden/saved-characters");
         let s = SaveStore {
-            backend: Some(Backend::Dir(fixture)),
+            backend: Some(Backend::Dir(super::saved_characters_fixture())),
             read_only: true,
             dev: false,
         };
@@ -709,8 +735,7 @@ mod tests {
                 ("tamsin-1".to_string(), true),
                 ("brakka-1".to_string(), true),
             ],
-            "set the fixture summaries' `version` to {}",
-            warlock_core::GAME_VERSION
+            "the summaries but Osric's say `version = \"@VERSION@\"`"
         );
     }
 

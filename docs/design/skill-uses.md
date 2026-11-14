@@ -1,5 +1,7 @@
 # Warlock — Skill uses: what each skill does, how it trains, and what the gaps need
 
+**Built; this file is history.** Current behaviour is in spec §8 "Skills" and `docs/dev/skills.md`.
+
 Design document, revised after the owner's approval of draft PR #984 (#973; §8 records the decisions). The investigation (§1 to §5) was written 2026-11-05 against `origin/main` at 24dc95dc, and checked again at d562ceb5 for this revision. An investigation first: nothing here is implemented, and no rule or data changed. Every effect and every mark below was checked in the code, not read off the skill's description: the reading function and the firing hook are named with file and line (the line numbers of §1 to §5 are those of 24dc95dc; §6 names functions and files). Where a number was measured, §5 says how. What could not be established is marked *(not established)*.
 
 **The owner's request** (#973): *"investigate whether we have enough ways to train skills, identify which skills have no uses yet, and propose uses for skills."*

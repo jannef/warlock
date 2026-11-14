@@ -3,14 +3,9 @@
 //! size applied), and the rows of each tag's file as written.
 
 use super::order;
-use super::text::{Term, capital, link, percent};
+use super::util::{Term, capital, link, per_mille};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, Drop, DropFrom, DropGoods, TagDrops};
-
-/// A per mille chance as a percentage, without trailing zeros.
-fn per_mille(n: u16) -> String {
-    percent(f64::from(n) / 10.0)
-}
 
 /// What a row gives, by the name the game shows it by: "leather hide", "essence of fire".
 fn goods(content: &Content, row: &Drop) -> String {
@@ -26,7 +21,7 @@ fn row_text(content: &Content, row: &Drop) -> String {
     let count = row.count.to_string();
     // A fixed count reads as a plain number: "1", not "+1".
     let count = count.trim_start_matches('+');
-    let (what, chance) = (goods(content, row), per_mille(row.chance));
+    let (what, chance) = (goods(content, row), per_mille(u32::from(row.chance)));
     format!("{what} ({count}, {chance})")
 }
 

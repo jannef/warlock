@@ -294,11 +294,20 @@ fn a_witch_comes_into_her_familiars_sight_at_25() {
     let mut w = World::start_run(content, "showcase", Some(7), Some(&spec), None, true).unwrap();
     assert!(w.familiar().is_some());
     crate::world::caster_tests::reach(&mut w, 24);
-    assert!(!w.state.player().talent_mods(&w.content).familiar_sight);
+    assert!(
+        !w.state
+            .player()
+            .talent_mods(&w.content)
+            .beast
+            .familiar_sight
+    );
     crate::world::caster_tests::reach(&mut w, 25);
     let mods = w.state.player().talent_mods(&w.content);
-    assert!(mods.familiar_sight);
-    assert!(!mods.shared_sight && !mods.shared_buffs, "the sight alone");
+    assert!(mods.beast.familiar_sight);
+    assert!(
+        !mods.beast.shared_sight && !mods.beast.shared_buffs,
+        "the sight alone"
+    );
 }
 
 #[test]

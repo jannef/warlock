@@ -10,8 +10,8 @@ scenario, dump layer, or action is added here in the same PR, by its group, neve
 
 Where the lists come from: `--scenario` names are the files of `assets/campaigns/*/scenarios/`,
 `--screen` names are `ui/screens.rs::ScreenName` (clap lists them: `cargo run -p warlock --
---help`), dump layers are `dump.rs::Layer`, and action verbs are `action.rs`'s parser
-(`Action::from_str`).
+--help`), dump layers are `dump/layer.rs::Layer`, and action verbs are `action/text.rs`'s `VERBS` table
+(read by `Action::from_str`).
 
 ## `cargo xtask` commands in detail
 
@@ -54,14 +54,17 @@ The one-line table is in CLAUDE.md ("Commands"); this is what each row does.
 - **Frame-time benchmark**, `cargo xtask bench-frames [WxH]`: release, offscreen; the hub, again
   with the Flicker switch off (`steady`), the vast level, and fifty spell circles with the switch
   on and off, `xtask/src/bench_circles.rs`; method and results in `docs/perf.md`.
-- **Turn-time benchmark**, `cargo xtask bench-turns`: re-runs itself in release. Budgets: hub
+- **Turn-time benchmark**, `cargo xtask bench-turns [ROW...]`: re-runs itself in release (rows
+  named by label run alone, `bench-turns l-1 long`). Budgets: hub
   5 ms, vast 16 ms, generated depths level 5 ms, sunlit courtyard at dawn 5 ms, overworld 5 ms,
   generated forest area at dawn 5 ms, courtyard and forest area at full-moon midnight 5 ms, arena
   5 ms, a generated 120×60 cave floor at full population (a fixture branch of danger 8 with a
   teeming den, `delf`), the same floor with all but its kobolds shedding a spell circle's light
   (`d-hex`; its rest is shown, not judged: `bench.rs::UNJUDGED_REST`), and the same floor of
   animated panoplies at danger 40 (`panop`) 16 ms per turn, and that floor with a high-level
-  ranger and their companion beside them (`d-pet`, 16 ms); a dusk-to-dawn rest 500 ms (on `delf`
+  ranger and their companion beside them (`d-pet`, 16 ms), and the deepest floor of a 40-floor
+  cave branch, fresh (`l-1`) and after visiting the other 39 (`long`: a long run, #1507), 16 ms
+  (their rests shown, not judged); a dusk-to-dawn rest 500 ms (on `delf`
   too: far creatures take coarse turns while the player rests, `docs/dev/creatures.md`), also
   beside the arena's fight going on unseen until one side is dead (a walk that gets the player
   killed starts over, untimed), and rested on to dawn when rain wakes the player.

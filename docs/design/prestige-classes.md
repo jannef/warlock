@@ -1,5 +1,7 @@
 # Warlock — Prestige classes: the oath, the Strange Spirit, the Hunter, and the curve to 100
 
+**Built; this file is history.** Current behaviour is in spec §7 "Prestige classes and callings" and `docs/dev/experience.md`.
+
 Design document for the owner's review (2026-11-02; issue #819, the bard's second and **third**
 rounds on PR #835). Written against `origin/main` at 38c5085d (Allies A1–A3 and the summon spell
 kind, #837; saves pinned to the game version that wrote them, #840; the Monk renamed Ascetic and

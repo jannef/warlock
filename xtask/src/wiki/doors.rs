@@ -1,7 +1,7 @@
 //! Doors (spec §8 "Doors"): kicking them in, the keys, and picking locks.
 
 use super::order;
-use super::text::{capital, glyph, percent_of};
+use super::util::{capital, glyph, percent_of};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::Content;

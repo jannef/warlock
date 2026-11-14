@@ -1,5 +1,7 @@
 # Warlock — Overworld encounters: ambush, ambushed, evade, fight; the encounter tables
 
+**Built; this file is history.** Current behaviour is in spec §7 "Overworld encounters" and `docs/dev/encounters.md`.
+
 Design document for the owner's review (2026-11-01, #793). Written against `origin/main` at
 db88ffa3 (spell circles C3). Nothing here is implemented; §12 cuts it into issues. It builds on
 what is there: the overworld and its generated local areas (`docs/dev/overworld.md`,

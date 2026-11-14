@@ -28,13 +28,3 @@ expression: "render(case, content.clone())"
 │                                                                                                             │
 │ Esc close                                                                                                   │
 └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Magic · 7 Quests · 8 Talents · 9 Story ─┘
-
-
-
-
-
-
-
-
-
- The Hub  ·  HP 30/30  ·  MP 0/0  ·  Sta 13/13  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444        ? controls

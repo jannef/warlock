@@ -1116,7 +1116,7 @@ impl<'a> PerceptionView<'a> {
             .is_some_and(|f| self.content.factions().def(f).animal);
         if animal
             && actor.kind == ActorKind::Creature
-            && self.player.talent_mods(self.content).beast_friend
+            && self.player.talent_mods(self.content).beast.beast_friend
             && !(self.progress.empathy_broken).contains(&self.content.creature(actor.creature).id)
         {
             return Stance::Neutral;

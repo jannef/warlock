@@ -1,5 +1,7 @@
 # Warlock — Professions: crafting skills, salvage, and recipe menus
 
+**Built; this file is history.** Current behaviour is in spec §8 "Salvage" and "Professions", and `docs/dev/crafting.md`.
+
 Design document for the owner's review (2026-11-11; #1330, the P0 of the professions epic #1337). Written against `origin/main` at b566b9609 (version 0.16.0). Nothing here is implemented; §12 maps it onto the phase issues #1331–#1336 so each can be refined from the section it builds. It builds on what is there: objects, parts, instance parts, gems, and pieces (`docs/dev/objects.md`), Temper and Whittle (`world/temper.rs`, `magic/worked.rs`, `data/temper.toml`), Fletch (`world/fletch.rs`, `data/fletch.toml`), skills (`docs/dev/skills.md`, `data/skills.toml`), the one abilities menu (`ability.rs`), and the screen stack (`docs/dev/screens.md`). Every number below is data and hidden in the game; the wiki states it (the owner's rule: the game is vague, the wiki is accurate). Numbers are a first pass; balance beyond it is out of scope.
 
 ## Contents

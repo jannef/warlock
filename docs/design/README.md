@@ -8,25 +8,25 @@ What is built is described by the spec (`specification.md`, `spec/`) and `docs/d
 documents record what was decided and why. The process is in `docs/dev/merging.md`, "Design
 documents".
 
-## Approved, implementing
+**A built design is history.** Its first lines say "Built; this file is history" and name the
+spec sections and `docs/dev/` topics that describe the game now: read those, not the design.
+Numbers in a built design may have moved since (for example, `spell-scaling.md` placed Magister
+at 45, `witch-and-wizard.md` moved it to 40, and #1263 later removed it with the school skills).
+How far a design's slices have come is tracked in its issues, not here.
 
-- `spell-scaling.md` (#730): spell levels 0 to 70 for tiers, a ladder of the caster's stats in
-  every spell's own file, six named hooks for talents and items, caster level for learning
-  only, school skills, and a Magic page. The owner's decisions are its §16; its plan is §15,
-  twelve slices S0 to S11 tracked in #759 (S0 #747, S1 #748, S2 #749 built; the rest in
-  progress). Where it revises `magic.md`, it wins. Its §8.6 placed Magister at level 45;
-  `witch-and-wizard.md` §6.2 moved it to 40 (Z1, #906).
-- `witch-and-wizard.md` (#826): the witch's hex loop (Cackle at 6, Malison at 18: W1, W2) and
-  the wizard's preparation (Scribe at 12, Magister to 40: Z1, #906).
+## Approved, being built
 
-- `witch-familiar.md` (#907): the witch's familiar, a kept beast whose touch is her evil eye. §16 the
-  owner's round overrides §15's defaults. F1 is #929, F2 Call familiar #930, F3 the story's lines #931.
+- `profane-gifts.md` (#1471): the layer bosses' corpses and the gift table.
 
 ## Built
 
-- `magic.md` (#392): built by #393 to #401 (unidentified scrolls, the spell data and tiers, the
-  one cast path, learning, the first spell list, wands, rods, the Spellcraft talents, and the
-  cross-checking pass). The spec's §8 "Spells", "Scrolls", "Wands", and "Rods" and
-  `docs/dev/spells.md` describe what was built; its §14 questions were answered with the
-  design's defaults (`docs/dev/spells.md`, "Choices"), and its §12 checks were run in #401
-  (`docs/dev/spells.md`, "Balance"). The document itself stays as approved.
+`adventurers-guild.md`, `affixes-systems.md`, `animated-objects.md`, `background-story.md`,
+`bard-jack-of-all-trades.md`, `berserker.md`, `buff-circles.md`, `campaign.md`,
+`chests-and-treasure.md`, `combat-progression.md`, `craftsperson.md`, `druid-and-summons.md`,
+`enchanting.md`, `generic-vaults.md`, `horoscope.md`, `ki-tricks.md`, `magic.md`,
+`miscasts-review.md`, `monster-dread.md`, `no-caster-level.md`, `overworld-encounters.md`,
+`paladin-smites.md`, `potions-wave-2.md`, `prestige-classes.md`, `priest.md`, `professions.md`,
+`progression.md`, `ranger-companion.md`, `recipes.md`, `skill-uses.md`, `special-rooms.md`,
+`spell-scaling.md`, `spell-types-and-new-spells.md`, `stat-training.md`,
+`surprise-and-sneak-attacks.md`, `talent-ranks.md`, `thief-openings.md`, `witch-and-wizard.md`,
+`witch-familiar.md`.

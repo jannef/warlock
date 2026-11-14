@@ -10,7 +10,7 @@
 //!   or wielded ("Take it off first."), one whose main material no profession works ("You know
 //!   no craft that would mend it."), one protected from harm ([`World::item_protected`]: "You
 //!   dare not work on it."), and unpaid shop goods (`may_loose`).
-//! - **Time**: `seconds` (ten minutes), in turns of the `craft` action ([`World::keep_at`], as
+//! - **Time**: `seconds` (ten minutes), in turns of the `craft` action ([`World::work`], as
 //!   Salvage): interrupted, nothing happens to the item, but the time is spent.
 //! - **The check**: done, the stack found again, one check (two gameplay draws): the natural
 //!   roll plus the modifier of the stat of the profession that works its main material, the
@@ -25,14 +25,12 @@
 //!   costs only the time.
 //! - **Marks**: [`Use::Craft`] on that profession alone, if trained, whatever came of it.
 
-use super::rest::Ended;
+use super::work::{Job, Task};
 use super::{Actor, Spent, World};
 use crate::action::Event;
 use crate::combat;
-use crate::content::ActionKind;
 use crate::object::Stack;
 use crate::skills::{Effect, Use};
-use crate::time::Duration;
 
 /// Whether `stack` is damaged, so that a mend has something to do. Worn, protected, unpaid, and
 /// unworkable stacks are the rules' to refuse.
@@ -46,11 +44,24 @@ pub(crate) fn mends_any(actor: &Actor) -> bool {
     (actor.inventory.iter().enumerate()).any(|(i, s)| mendable(s) && !actor.equipment.holds(i))
 }
 
-/// A mend under way: the stack mended and how long it takes.
+/// A mend under way: the stack mended.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct Mending {
     item: usize,
-    seconds: u32,
+}
+
+impl Job for Mending {
+    fn on(&self, _: &crate::content::Content) -> Vec<Option<usize>> {
+        vec![Some(self.item)]
+    }
+
+    fn found(&mut self, now: &[Option<usize>]) {
+        self.item = super::work::one(now);
+    }
+
+    fn done(&self, w: &mut World, _: &mut Vec<Event>) {
+        w.mended(self.item);
+    }
 }
 
 impl World {
@@ -85,35 +96,7 @@ impl World {
         let stack = &self.state.player().inventory[item];
         let name = self.lore().title(stack);
         self.say(format!("You set to mending the {name}."));
-        Spent::MakeDo(Mending {
-            item,
-            seconds: self.craft_seconds(rules.seconds),
-        })
-    }
-
-    /// Works turn after turn until the mend is done or something stops it (module docs): its
-    /// last turn cut short to end exactly when its time is up.
-    pub(super) fn make_do(&mut self, work: Mending, events: &mut Vec<Event>) {
-        let on = self.work_on(&[Some(work.item)]);
-        let until = self.state.time + Duration::seconds(u64::from(work.seconds));
-        let turn = self.price_of(self.state.player, ActionKind::Craft);
-        let ended = self.keep_at(
-            events,
-            |w| w.state.time < until,
-            |w, _| turn.min(w.price_until(until)),
-        );
-        match ended {
-            Ended::Died => {}
-            _ if self.state.time >= until => match self.worked_on_one(&on) {
-                Some(item) => self.mended(item),
-                None => self.say("You have nothing left to work on."),
-            },
-            Ended::Came(came) => {
-                let text = format!("{}; you put down your work.", self.came_line(came));
-                self.say(text);
-            }
-            Ended::Said | Ended::Done => self.say("You put down your work."),
-        }
+        self.craft_work(Task::MakeDo(Mending { item }), rules.seconds)
     }
 
     /// The material of `stack`'s main part and the profession that works it, with its stat.
@@ -144,9 +127,8 @@ impl World {
             self.say("You have nothing left to work on.");
             return;
         };
-        let modifier = me.effective_stats(&content).modifier(stat)
-            + me.talent_mods(&content).check(stat)
-            + me.skill_effect_of(&content, skill, Effect::Craft);
+        let modifier =
+            me.check_modifier(&content, stat) + me.skill_effect_of(&content, skill, Effect::Craft);
         let against = rules.difficulty + content.material(material).work;
         let natural = combat::roll_natural(&mut self.state.rng);
         if crate::check::makes(natural, modifier, against) {

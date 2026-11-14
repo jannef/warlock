@@ -68,9 +68,8 @@ impl World {
         let Some(band) = rules.band(breaks.hardness).copied() else {
             return;
         };
-        let modifier = me.effective_stats(&content).modifier(rules.stat)
-            + me.skill_effect_of(&content, rules.skill, Effect::Craft)
-            + me.talent_mods(&content).check(rules.stat);
+        let modifier = me.check_modifier(&content, rules.stat)
+            + me.skill_effect_of(&content, rules.skill, Effect::Craft);
         let vein = rules.vein_of(wall);
         if vein.is_none() && !self.state.rng.chance(u32::from(band.chance)) {
             return;

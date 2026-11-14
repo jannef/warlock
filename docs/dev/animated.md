@@ -26,8 +26,9 @@ reads it as it reads a kobold, and the guideline and roster tests cover it with 
   (the object's class, a body's level against its tier's, the percents) is the author's (#1205). Every other check is the creature table's own, since the generated spec goes through
   `load_creatures` like a file's.
 - **Generation** (`Animated::specs`): one `CreatureSpec` per body, `animated_<id>` (`ID_PREFIX`),
-  built as a TOML table and deserialized, so a generated type is checked exactly as a written
-  one. Its name is "animated " and the object's (or the body's `name`), glyph and colour the
+  built as a `CreatureSpec` value (`..CreatureSpec::default()`, serde's defaults field by field,
+  #1552) and loaded through `load_creatures`, so a generated type is checked exactly as a written
+  one. A body's `on_hit` and `burst` parse with its file. Its name is "animated " and the object's (or the body's `name`), glyph and colour the
   object's, weight 1 g (it weighs what its body weighs, which it carries), size and footsteps
   the tier's, faction, tags, senses, and `immune` the `[creature]` table's, `corpse = false`,
   `blood = "none"`. Numbers by `Numbers::at(level, tier)`: the undead roster's formulas (#383),

@@ -77,12 +77,10 @@ impl World {
     /// (ratfolk shrug diseases off).
     pub(super) fn disease_modifier(&self, actor: &Actor, stat: Stat) -> i32 {
         let race = self.state.race_of(&self.content, actor);
-        let modifier = actor.effective_stats(&self.content).modifier(stat);
         let talents = actor.talent_mods(&self.content);
-        modifier
+        (actor.check_modifier(&self.content, stat))
             .saturating_add(talents.disease_checks)
             .saturating_add(actor.mods(&self.content).get(Effect::DiseaseCheck))
-            .saturating_add(talents.check(stat))
             .saturating_add(race.map_or(0, |r| r.disease_check))
     }
 

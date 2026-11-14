@@ -3,7 +3,7 @@
 //! metal.
 
 use super::order;
-use super::text::{capital, percent, signed, yes};
+use super::util::{capital, percent, signed, times, yes};
 use std::fmt::Write as _;
 use warlock_core::content::{
     Content, Fit, MaterialDef, MaterialId, ObjectDef, PartRole, VERY_RARE,
@@ -25,16 +25,6 @@ fn by_group(content: &Content) -> Vec<(MaterialId, &MaterialDef)> {
         (group, m.name.to_lowercase())
     });
     all
-}
-
-/// A percentage of steel's as a factor: ×0.8, ×20.
-fn times(percent: u32) -> String {
-    let whole = percent / 100;
-    match percent % 100 {
-        0 => format!("×{whole}"),
-        r if r % 10 == 0 => format!("×{whole}.{}", r / 10),
-        r => format!("×{whole}.{r:02}"),
-    }
 }
 
 /// How often a weight is, in words (materials/README.toml): very common 800, common 300,

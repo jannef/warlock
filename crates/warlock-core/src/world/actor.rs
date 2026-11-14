@@ -24,7 +24,7 @@ use crate::resource::Pools;
 use crate::skills::{Effect, SkillId, Skills};
 use crate::stats::{PerStat, Stat, StatDamage, Stats};
 use crate::status::Effects;
-use crate::talent::{TalentMods, Talents};
+use crate::talent::{SharedMods, TalentMods, Talents};
 use crate::time::GameTime;
 use crate::weapon_skills::WeaponSkills;
 use serde::{Deserialize, Serialize};
@@ -410,14 +410,15 @@ impl Actor {
     }
 
     /// What its talents do to it (spec §8 "Talents"; [`Talents::mods`]), the one aggregation
-    /// the rules read, beside [`Actor::mods`]. Without talents (most creatures), nothing, and
-    /// nothing to sum or copy: the rules read it many times a turn.
-    pub fn talent_mods(&self, content: &Content) -> Cow<'static, TalentMods> {
-        static NONE: LazyLock<TalentMods> = LazyLock::new(TalentMods::default);
+    /// the rules read, beside [`Actor::mods`]. Without talents (most creatures), nothing; with
+    /// them, the sum its talents keep until they change ([`Talents::mods_cached`]): the rules
+    /// read it many times a turn, so it is summed once, not on every read.
+    pub fn talent_mods(&self, content: &Content) -> SharedMods {
+        static NONE: LazyLock<SharedMods> = LazyLock::new(SharedMods::default);
         if self.talents.is_empty() {
-            Cow::Borrowed(&NONE)
+            NONE.clone()
         } else {
-            Cow::Owned(self.talents.mods(content, &self.effects))
+            self.talents.mods_cached(content, &self.effects)
         }
     }
 
@@ -453,6 +454,14 @@ impl Actor {
     /// below 1. Every rule that reads a score reads these.
     pub fn effective_stats(&self, content: &Content) -> Stats {
         self.stats_with(content, &self.mods(content))
+    }
+
+    /// What it adds to a check of `stat` (#1551): the modifier of its effective score and
+    /// what its talents add to every check of the stat (Iron will). Each check adds its own
+    /// terms (a skill, a resistance) to this.
+    pub fn check_modifier(&self, content: &Content, stat: Stat) -> i32 {
+        (self.effective_stats(content).modifier(stat))
+            .saturating_add(self.talent_mods(content).check(stat))
     }
 
     /// Its own scores raised by what it wears and wields, before what its status effects,

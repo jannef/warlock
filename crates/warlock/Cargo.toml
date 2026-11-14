@@ -42,7 +42,9 @@ insta.workspace = true
 # dev command, test, and benchmark; release builds and `cargo xtask web` turn it off with
 # `--no-default-features` (docs/dev/campaign.md, "The test world in release builds").
 default = ["showcase"]
-showcase = ["warlock-core/showcase"]
+# `default` too: `cargo test --workspace` turns on warlock-core's own default, and the same
+# features give the same build of it (#1572).
+showcase = ["warlock-core/default", "warlock-core/showcase"]
 
 [lints]
 workspace = true

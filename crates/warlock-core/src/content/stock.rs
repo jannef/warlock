@@ -239,6 +239,14 @@ impl Stock {
     }
 }
 
+impl super::RulesFile for Stock {
+    const PATH: &'static str = "data/stock.toml";
+
+    fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
+        Self::parse(path, text, content)
+    }
+}
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct StockFile {

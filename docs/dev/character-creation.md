@@ -196,7 +196,7 @@ the loader, an unknown id refused) go into `Actor::spells` in `World::begin`, fo
 character and a chosen one alike, on top of the class's: known from the start as a spell learned from a grimoire
 is (saved and hashed as `Actor::spells` always is). Only the test world's `circles` uses it, and
 it is the one built-in scenario with no `character` (it gives the eyes, stats, hit points, and
-300 mana itself; `world/character_tests.rs` and `content/mod.rs`'s scenario test name it). The heritage talents (Family wealth's gold and gems, Father's sword's
+300 mana itself; `world/character_tests.rs` and `content/tests.rs`'s scenario test name it). The heritage talents (Family wealth's gold and gems, Father's sword's
 heirloom; #697) come on top as they are taken, after the pack (`world/heirloom.rs`,
 docs/dev/progression.md "Creation picks"): the summary's kit list does not name them. The
 aristocrat's Family wealth is its class's at level 1 (#1404): `World::begin` hands it down

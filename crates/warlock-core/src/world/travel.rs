@@ -4,6 +4,7 @@
 //! there, special rooms entered, and terrain changing under the light. `world/mod.rs` has only
 //! the dispatch lines.
 
+use super::enter::Entry;
 use super::spawn::Spawner;
 use super::talk::Refusal;
 use super::wriggle::Wriggled;
@@ -22,7 +23,6 @@ use crate::geom::{Dir, Pos};
 use crate::magic::loot::Luck;
 use crate::mapgen::local::arrival;
 use crate::object::Stack;
-use crate::skills::Use;
 use std::borrow::Cow;
 
 impl World {
@@ -223,76 +223,17 @@ impl World {
             // Turned back with nowhere to go: the step's time, spent at the door.
             return Spent::Turn(step);
         }
-        if let Some(actor) = self.state.actors.get_mut(&player) {
-            actor.pos = to;
-        }
-        // Moving, they let go of whatever they held (Drowning grip, `lucky.rs`).
-        self.let_go(player, None);
-        self.dive_in(from, to);
-        events.push(Event::ActorMoved {
-            actor: player,
+        // Everything a step onto a cell does (`enter.rs`).
+        let entry = Entry {
             from,
             to,
-        });
-        self.after_tread(player, (from, to), footing, events);
-        self.make_step_noise(player, to, fleeing);
-        // Wading through a marsh may give a disease, by how long the step takes.
-        let speed = self.state.player().speed(&self.content);
-        self.wade(
-            onto,
-            u64::try_from(step).unwrap_or(0) / u64::from(speed.max(1)),
-        );
-        self.train_wade(onto, footing);
-        self.train_rough_step(onto);
-        if let Some((other, seen)) = swap {
-            self.swap_places(other, to, from, seen, events);
-        }
-        // A journey on the overworld trains survival.
-        if overworld && self.trains(Use::Travel) {
-            self.train(Use::Travel);
-        }
-        // Entering a shop the keeper greets the player; leaving it owing is theft.
-        self.shop_step(from, to);
-        let level = self.state.current();
-        if let Some(stairs) = level.stairs_at(to) {
-            // A location goes by its name, even while it leads nowhere yet.
-            let named =
-                (stairs.name.clone()).or_else(|| Some(self.place_name(stairs.to.as_ref()?)));
-            let text = match (level.kind, stairs.dir, named) {
-                (LevelKind::Overworld, StairsDir::Down, Some(name)) => {
-                    format!("The way into {name} is here.")
-                }
-                (_, StairsDir::Down, _) => "There is a staircase down here.".into(),
-                (_, StairsDir::Up, _) => "There is a staircase up here.".into(),
-            };
-            self.say(text);
-        }
-        // A feature of the ground there ("There is an altar here."), before what lies on it.
-        self.announce_feature();
-        // Goods for sale say their price (spec §7 "Shops").
-        let text = match self.state.current().objects_at(to) {
-            [] => None,
-            [one] => Some(match self.asking_price(to, one) {
-                Some(price) => format!(
-                    "You see here {} (for sale, {price} gold).",
-                    self.lore().describe(one)
-                ),
-                None => format!("You see here {}.", self.lore().describe(one)),
-            }),
-            _ => Some("There are several objects here.".to_string()),
+            footing,
+            fleeing,
+            price: step,
+            willing,
+            swap,
         };
-        if let Some(text) = text {
-            self.say(text);
-        }
-        // A trap there goes off (spec §8 "Traps"), unless the player knew of it and stepped
-        // past it of their own will (`sidestep.rs`); a pit costs the next action too.
-        let climb = if willing {
-            self.step_willingly(to, events)
-        } else {
-            self.step_onto_trap(to, player, events)
-        };
-        // A collapsed floor may give way under them (`collapse.rs`).
-        self.collapse_step(to, events);
+        let climb = self.enter_cell(entry, events);
         // Stepping up beside a hostile that braces or shoots point-blank (weapon abilities,
         // `weapon_ability.rs`), they are met as they come, as a creature is (`free_blow.rs`).
         if self.state.death.is_none() {
@@ -464,8 +405,8 @@ impl World {
             .ok_or_else(|| WorldError::NoPlayerStart(to.to_string()))?;
         let arrival = self.free_cell_near(to, arrival);
         let player = self.state.player;
+        self.state.actors.set_level(player, to);
         if let Some(actor) = self.state.actors.get_mut(&player) {
-            actor.level = to.to_string();
             actor.pos = arrival;
         }
         self.state.current_level = to.to_string();
@@ -498,6 +439,16 @@ impl World {
             self.say(line);
         }
         let _ = self.settle_in();
+        Ok(())
+    }
+
+    /// Moves the player to level `to` as [`World::travel`] does, with no stairs, no time, and
+    /// no word: the benches' way to fill a run with visited levels (`cargo xtask bench-turns`,
+    /// its `long` row), never an action of the rules.
+    #[doc(hidden)]
+    pub fn dev_travel(&mut self, to: &str) -> Result<(), WorldError> {
+        self.travel(to, None)?;
+        self.perceive(&mut Vec::new());
         Ok(())
     }
 
@@ -589,9 +540,10 @@ impl World {
     /// The one way an actor changes level but the player (`World::follow_along`,
     /// `World::followers_arrive`); each says what else it keeps of its mind.
     pub(super) fn cross_to(&mut self, id: ActorId, to: &str, pos: Pos) {
-        if let Some(a) = self.state.actors.get_mut(&id) {
+        if let Some(from) = self.state.actors.set_level(id, to)
+            && let Some(a) = self.state.actors.get_mut(&id)
+        {
             // A vault's monster pool stands outside its level's cap; on another level it counts.
-            let from = std::mem::replace(&mut a.level, to.to_string());
             a.pos = pos;
             a.heard.clear();
             if let Some(s) = (self.state.levels.get_mut(&from)).and_then(|l| l.spawner.as_mut()) {
@@ -811,12 +763,15 @@ fn placed_gear(
     }
     let key = id.0.to_string();
     let mut rng = crate::rng::Rng::gear(seed, &key);
-    let item_level = content.item_level(level);
-    let mut pack = crate::gear::roll(content, &mut rng, spawn.creature, item_level);
     let mut condition = super::gear_condition::stream(seed, &key);
-    let creature = (spawn.creature, item_level);
-    super::gear_condition::apply(content, &mut condition, creature, &mut pack);
-    crate::gear::finish(content, &mut rng, &mut pack);
+    let item_level = content.item_level(level);
+    let pack = crate::gear::equip(
+        content,
+        &mut rng,
+        &mut condition,
+        spawn.creature,
+        item_level,
+    );
     (pack.items, pack.equipment)
 }
 

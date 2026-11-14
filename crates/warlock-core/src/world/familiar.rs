@@ -52,7 +52,7 @@ impl Actor {
 /// rares, else one of the race's list (`None` without the data or a list for the race). Two
 /// draws on `familiar/<spec>`, and nothing else.
 pub fn draw(content: &Content, seed: u64, spec: &CharacterSpec) -> Option<CreatureId> {
-    let rules = content.familiars()?;
+    let rules = &content.familiars()?.start;
     let list = rules.list_of(&spec.race)?;
     let mut rng = Rng::stream(seed, &format!("familiar/{spec}"));
     let rare = rng.below(1000) < rules.rare_per_mille;
@@ -66,10 +66,10 @@ pub fn draw(content: &Content, seed: u64, spec: &CharacterSpec) -> Option<Creatu
 /// `bargain_level` on (`None` without the data or a list for the race). Two draws on `rng`.
 pub fn calling_draw(content: &Content, rng: &mut Rng, race: &str, level: u8) -> Option<CreatureId> {
     let rules = content.familiars()?;
-    let list = rules.list_of(race)?;
-    let rare = rng.below(1000) < rules.rare_per_mille;
+    let list = rules.start.list_of(race)?;
+    let rare = rng.below(1000) < rules.start.rare_per_mille;
     let mut pool = if rare {
-        rules.rare.clone()
+        rules.start.rare.clone()
     } else {
         list.to_vec()
     };
@@ -111,7 +111,7 @@ impl World {
         let Some(character) = self.state.character.clone() else {
             return;
         };
-        if !self.state.player().talent_mods(&content).familiar {
+        if !self.state.player().talent_mods(&content).beast.familiar {
             return;
         }
         let Some(creature) = draw(&content, self.state.seed, &character.spec) else {

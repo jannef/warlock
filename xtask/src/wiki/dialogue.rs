@@ -1,6 +1,6 @@
 //! Dialogue and quests: who talks and who gives quests.
 
-use super::text::{capital, yes};
+use super::util::{capital, yes};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, Dialogue, Reward, Speaker};
 use warlock_core::world::quest_asks;
