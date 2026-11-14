@@ -27,6 +27,7 @@ use crate::status::Effects;
 use crate::weapon_skills::WeaponSkills;
 use crate::world::{Actor, FreeBlows};
 use serde::{Deserialize, Serialize};
+use std::sync::{Arc, OnceLock};
 
 /// The most percent off a mana cost talents and magic items give together (spec §8 "Mana"):
 /// Frugal caster's fifth and of Thrift's percents summed, held here, as speeds are held at
@@ -42,10 +43,62 @@ pub struct Taken {
     pub choice: Option<String>,
 }
 
-/// The talents an actor holds, in the order taken.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+/// The talents an actor holds, in the order taken, with what they do summed and kept
+/// ([`Talents::mods_cached`]): derived, never saved or hashed, and dropped by every change.
+#[derive(Clone, Default, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct Talents(Vec<Taken>);
+pub struct Talents(Vec<Taken>, #[serde(skip)] ModsCache);
+
+impl PartialEq for Talents {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl Eq for Talents {}
+
+impl std::fmt::Debug for Talents {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("Talents").field(&self.0).finish()
+    }
+}
+
+/// What [`Talents::mods`] summed, kept for the content it was summed with (#1495: the player's
+/// were summed again on each of some 300 reads a turn). Set on the first read after a change;
+/// every `&mut` method of [`Talents`] empties it, so a talent taken or given is never missed.
+/// Statuses are not in it: the `while` effects are summed afresh while one of theirs is held.
+#[derive(Clone, Default)]
+struct ModsCache(OnceLock<Kept>);
+
+/// What [`Talents::mods_cached`] hands out: the kept sum, shared ([`std::ops::Deref`] to read
+/// it), or an owned copy for a rule that changes it ([`SharedMods::into_owned`]).
+#[derive(Clone, Debug, Default)]
+pub struct SharedMods(Arc<TalentMods>);
+
+impl std::ops::Deref for SharedMods {
+    type Target = TalentMods;
+
+    fn deref(&self) -> &TalentMods {
+        &self.0
+    }
+}
+
+impl SharedMods {
+    /// The sum to own: moved out when nothing else shares it, else copied.
+    pub fn into_owned(self) -> TalentMods {
+        Arc::unwrap_or_clone(self.0)
+    }
+}
+
+#[derive(Clone)]
+struct Kept {
+    /// The content summed with, by address: another content sums afresh.
+    content: usize,
+    /// Every talent's effects but those under a status.
+    mods: Arc<TalentMods>,
+    /// The statuses the held talents' `while` effects count under.
+    whiles: Vec<StatusId>,
+}
 
 impl Talents {
     pub fn is_empty(&self) -> bool {
@@ -64,6 +117,7 @@ impl Talents {
     /// Lets go of talent `id`, every choice of it (tests: a pick made only to spend a level).
     #[cfg(test)]
     pub(crate) fn forget(&mut self, id: &str) {
+        self.1 = ModsCache::default();
         self.0.retain(|t| t.id != id);
     }
 
@@ -88,6 +142,7 @@ impl Talents {
 
     /// Takes talent `id` for `choice`, if it is not held already.
     pub(crate) fn take(&mut self, id: &str, choice: Option<&str>) {
+        self.1 = ModsCache::default();
         if !self.holds(id, choice) {
             self.0.push(Taken {
                 id: id.to_string(),
@@ -102,6 +157,7 @@ impl Talents {
     /// chosen; a race's likewise). Picked talents keep their order after them; ids the content
     /// lacks are skipped.
     pub(crate) fn regrant(&mut self, content: &Content, ids: &[&str]) {
+        self.1 = ModsCache::default();
         let book = content.talents();
         let is_granted = |id: &str| {
             (book.id(id)).is_some_and(|t| {
@@ -122,6 +178,40 @@ impl Talents {
     /// the one place the condition is read, so no rule knows it exists. Talents the content no
     /// longer has do nothing.
     pub fn mods(&self, content: &Content, effects: &Effects) -> TalentMods {
+        self.sum(content, Some(effects))
+    }
+
+    /// [`Talents::mods`], kept until the talents change: the same sum, shared. While a status
+    /// that one of their `while` effects counts under is held, summed afresh (rarely: a raging
+    /// berserker's), so the effects add up in the very order [`Talents::mods`] adds them.
+    pub fn mods_cached(&self, content: &Content, effects: &Effects) -> SharedMods {
+        let address = std::ptr::from_ref(content) as usize;
+        let kept = self.1.0.get_or_init(|| Kept {
+            content: address,
+            mods: Arc::new(self.sum(content, None)),
+            whiles: self.whiles(content),
+        });
+        if kept.content != address || kept.whiles.iter().any(|s| effects.has(*s)) {
+            return SharedMods(Arc::new(self.mods(content, effects)));
+        }
+        SharedMods(kept.mods.clone())
+    }
+
+    /// The statuses the `while` effects of the talents held count under.
+    fn whiles(&self, content: &Content) -> Vec<StatusId> {
+        let book = content.talents();
+        let mut whiles: Vec<StatusId> = (self.0.iter())
+            .filter_map(|taken| book.id(&taken.id))
+            .flat_map(|id| book.get(id).effects_while.iter().map(|(s, _)| *s))
+            .collect();
+        whiles.sort_unstable();
+        whiles.dedup();
+        whiles
+    }
+
+    /// What every talent held does, summed, with the `while` effects whose status `effects`
+    /// holds (none without `effects`).
+    fn sum(&self, content: &Content, effects: Option<&Effects>) -> TalentMods {
         let mut mods = TalentMods::default();
         if self.0.is_empty() {
             return mods;
@@ -141,7 +231,7 @@ impl Talents {
                 mods.add(content, effect.clone(), taken.choice.as_deref());
             }
             for (status, effect) in &def.effects_while {
-                if effects.has(*status) {
+                if effects.is_some_and(|e| e.has(*status)) {
                     mods.add(content, effect.clone(), taken.choice.as_deref());
                 }
             }
