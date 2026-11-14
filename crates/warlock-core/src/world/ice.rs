@@ -556,6 +556,9 @@ impl World {
     /// The dev action `freeze:x,y,r` ([`crate::action::Action::Freeze`]): a frost burst at `at`
     /// within `radius`, said and shown. Takes no time.
     pub(super) fn freeze_dev(&mut self, at: Pos, radius: i32, events: &mut Vec<Event>) -> Spent {
+        if self.off_level_dev(at) {
+            return Spent::Nothing;
+        }
         let froze = self.frost(at, radius, crate::ice::FROST);
         self.say(format!(
             "Frost seizes the water around {},{} ({froze} cells, dev).",
@@ -568,6 +571,9 @@ impl World {
     /// The dev action `thaw:x,y,r` ([`crate::action::Action::Thaw`]): a burst of heat at `at`
     /// within `radius`, said. Takes no time.
     pub(super) fn thaw_dev(&mut self, at: Pos, radius: i32, events: &mut Vec<Event>) -> Spent {
+        if self.off_level_dev(at) {
+            return Spent::Nothing;
+        }
         self.say(format!(
             "Heat melts the ice around {},{} (dev).",
             at.x, at.y
