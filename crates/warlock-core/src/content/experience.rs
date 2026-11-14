@@ -492,6 +492,14 @@ impl Experience {
     }
 }
 
+impl super::RulesFile for Experience {
+    const PATH: &'static str = "data/experience.toml";
+
+    fn parse(path: &str, text: &str, _content: &Content) -> Result<Self, ContentError> {
+        Self::parse(path, text)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

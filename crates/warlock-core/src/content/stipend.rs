@@ -77,6 +77,14 @@ impl StipendRules {
     }
 }
 
+impl super::RulesFile for StipendRules {
+    const PATH: &'static str = "data/stipend.toml";
+
+    fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
+        Self::parse(path, text, content)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::content::{Content, ContentFiles};

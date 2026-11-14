@@ -475,6 +475,18 @@ fn duplicate_id(kind: &str, id: &str, path: &str, first: &str) -> ContentError {
     ContentError::new(path, format!("duplicate {kind} id `{id}`{also}"))
 }
 
+/// A small rules file (#1519): one optional file, `PATH`, read whole into one value with what is
+/// loaded before it at hand. Its type implements this beside its own `parse`, and
+/// [`Content::load`] reads it with one line, [`Content::load_optional`] or
+/// [`Content::load_or_default`].
+trait RulesFile: Sized {
+    /// Where it is in the content set: `data/steal.toml`.
+    const PATH: &'static str;
+
+    /// Parses the file's `text`; `path` names it in an error.
+    fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError>;
+}
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct LegendFile {
@@ -512,7 +524,7 @@ struct LegendFile {
 /// without quests,
 /// nobody asks anything of the player; without `data/hunger.toml` nobody hungers, nothing is
 /// eaten, food does not rot, and creatures leave no corpses.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
     terrain_ids: BTreeMap<String, TerrainId>,
@@ -770,150 +782,22 @@ impl Content {
 
     pub fn load(files: &ContentFiles) -> Result<Self, ContentError> {
         files.read.borrow_mut().clear();
+        // Without their files, everything is medium and every type common.
         let mut content = Content {
-            terrain: Vec::new(),
-            terrain_ids: BTreeMap::new(),
-            ice: Vec::new(),
-            creatures: Vec::new(),
-            creature_ids: BTreeMap::new(),
-            animated: Animated::default(),
-            mimics: mimic::Mimics::default(),
-            damage_types: Vec::new(),
-            materials: Vec::new(),
-            material_ids: BTreeMap::new(),
-            parts: Vec::new(),
-            item_classes: Vec::new(),
-            objects: Vec::new(),
-            object_ids: BTreeMap::new(),
-            grimoires: grimoire::Grimoires::default(),
-            gems: None,
-            stock: Stock::default(),
-            recipes: Recipes::default(),
-            uniques: Uniques::default(),
-            slots: Vec::new(),
-            chests: ChestRules::default(),
-            traps: Vec::new(),
-            trap_ids: BTreeMap::new(),
-            trap_avoid: TrapAvoid::default(),
-            search: SearchRules::default(),
-            temper: TemperRules::default(),
-            gear_condition: GearConditions::default(),
-            drops: Vec::new(),
-            encounters: EncounterRules::default(),
-            steal: None,
-            surprise: None,
-            smite: None,
-            encounter_tables: Vec::new(),
-            fletch: None,
-            salvage: None,
-            rigs: None,
-            forage: None,
-            herbs: None,
-            mining: None,
-            feint: None,
-            stipend: None,
-            invest: None,
-            patron: None,
-            intimidate: None,
-            ruin: RuinRules::default(),
-            decipher: None,
-            crystals: None,
-            enchanting: None,
-            swim: None,
-            ranged: RangedRules::default(),
-            prayer: None,
-            allies: None,
-            companions: None,
-            familiars: None,
-            stat_training: StatTraining::default(),
-            factions: Factions::default(),
-            lights: Vec::new(),
-            light_ids: BTreeMap::new(),
-            visions: Vec::new(),
-            vision_ids: BTreeMap::new(),
             sizes: vec![SizeDef::medium()],
             creature_rarities: vec![CreatureRarity::common()],
-            campaigns: Vec::new(),
-            levels: BTreeMap::new(),
-            level_campaigns: BTreeMap::new(),
-            scenarios: BTreeMap::new(),
-            dungeons: BTreeMap::new(),
-            draw_odds: None,
-            vaults: Vec::new(),
-            calendar: Calendar::default(),
-            moons: Vec::new(),
-            climate: Climate::default(),
-            actions: ActionCosts::default(),
-            skills: SkillBook::default(),
-            races: Races::default(),
-            names: Names::default(),
-            classes: Vec::new(),
-            prestige: Vec::new(),
-            alignment: None,
-            experience: Experience::default(),
-            horoscope: None,
-            background: None,
-            effects: Vec::new(),
-            circles: CircleStatuses::default(),
-            hunger: None,
-            corpses: Vec::new(),
-            weapon_skills: WeaponSkillTable::default(),
-            room_effects: RoomEffects::default(),
-            outcomes: OutcomeTables::default(),
-            spell_rules: None,
-            study: None,
-            mishaps: Vec::new(),
-            miscast: None,
-            miscasts: Vec::new(),
-            rod_effects: Vec::new(),
-            weapon_abilities: Vec::new(),
-            spells: Vec::new(),
-            hex_statuses: Vec::new(),
-            talents: TalentBook::default(),
-            affixes: Affixes::default(),
-            stances: Stances::default(),
-            scroll_labels: None,
-            wand_labels: None,
-            rod_labels: None,
-            potion_labels: None,
-            statuses: Vec::new(),
-            resources: Vec::new(),
-            status_ids: BTreeMap::new(),
-            healing: Healing::default(),
-            diseases: Vec::new(),
-            disease_ids: BTreeMap::new(),
-            disease_status: None,
-            dialogues: Vec::new(),
-            plurals: Plurals::default(),
-            quests: Vec::new(),
-            guilds: Vec::new(),
-            towns: Vec::new(),
-            callings: Vec::new(),
-            shops: None,
-            ids: RequiredIds::default(),
+            ..Content::default()
         };
         content.campaigns = campaign::parse(files)?;
         content.load_plurals(files)?;
-        let path = "data/calendar.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.calendar = Calendar::parse(path, text)?;
-        }
+        content.calendar = content.load_or_default(files)?;
         let path = "data/sky.toml";
         if let Some(text) = files.get_optional(path) {
             content.moons = sky::parse(path, text)?;
         }
-        let path = "data/weather.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.climate = Climate::parse(path, text)?;
-        }
-        let path = "data/actions.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.actions = ActionCosts::parse(path, text)?;
-        }
-        let path = "data/weapon_skills.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.weapon_skills = WeaponSkillTable::parse(path, text)?;
-        }
+        content.climate = content.load_or_default(files)?;
+        content.actions = content.load_or_default(files)?;
+        content.weapon_skills = content.load_or_default(files)?;
         content.load_lights(files)?;
         content.load_vision(files)?;
         let path = "data/sizes.toml";
@@ -924,10 +808,7 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.creature_rarities = creature_rarity::parse(path, text)?;
         }
-        let path = "data/skills.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.skills = SkillBook::parse(path, text)?;
-        }
+        content.skills = content.load_or_default(files)?;
         let path = "data/damage_types.toml";
         if let Some(text) = files.get_optional(path) {
             content.damage_types = damage_type::parse(path, text)?;
@@ -948,10 +829,7 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.potion_labels = Some(ScrollLabelDef::parse(path, text)?);
         }
-        let path = "data/stances.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.stances = Stances::parse(path, text)?;
-        }
+        content.stances = content.load_or_default(files)?;
         let path = "data/races.toml";
         if let Some(text) = files.get_optional(path) {
             let has_vision = |id: &str| content.vision(id).is_some();
@@ -983,14 +861,8 @@ impl Content {
             let table = files.table("prestige");
             content.prestige = PrestigeDef::parse(table, skill_id, is_class)?;
         }
-        let path = "data/alignment.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.alignment = Some(AlignmentRules::parse(path, text)?);
-        }
-        let path = "data/experience.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.experience = Experience::parse(path, text)?;
-        }
+        content.alignment = content.load_optional(files)?;
+        content.experience = content.load_or_default(files)?;
         // Each class's highest level: its own, else the experience file's default.
         let (default, highest) = (
             content.experience.class_max(),
@@ -1077,20 +949,14 @@ impl Content {
         // Objects before creatures: an animated type is generated from its body's object.
         content.load_objects(files)?;
         // Stock after objects and skills: its rows name material groups and skills.
-        let path = "data/stock.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.stock = Stock::parse(path, text, &content)?;
-        }
+        content.stock = content.load_or_default(files)?;
         let ids = &content.material_ids;
         (content.factions)
             .resolve_gear(|name| ids.get(name).copied())
             .map_err(|m| ContentError::new("data/factions.toml", m))?;
         content.animated = Animated::parse(files, &content)?;
         // Chests before creatures: a mimic's band is its chest's, and its hold the band's.
-        let path = "data/chests.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.chests = ChestRules::parse(path, text)?;
-        }
+        content.chests = content.load_or_default(files)?;
         content.mimics = mimic::Mimics::parse(files, &content)?;
         content.load_creatures(files)?;
         spell_type::lay_immunities(&mut content);
@@ -1115,10 +981,7 @@ impl Content {
         // Summon spells' pools, once every creature type is known.
         spell_def::resolve_summons(&mut content)?;
         spell_def::check_only_tags(&content).map_err(|m| ContentError::new("data/spells", m))?;
-        let path = "data/shops.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.shops = Some(Shops::parse(path, text, &content)?);
-        }
+        content.shops = content.load_optional(files)?;
         let path = "data/effects.toml";
         if let Some(text) = files.get_optional(path) {
             content.effects = effect::parse(path, text)?;
@@ -1141,114 +1004,36 @@ impl Content {
             (content.traps, content.trap_ids, content.trap_avoid) = (traps, ids, avoid);
         }
         // Learning spells (spec §8 "Spells"): mishaps name statuses and creatures.
-        let path = "data/study.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.study = Some(StudyRules::parse(path, text)?);
-        }
+        content.study = content.load_optional(files)?;
         content.mishaps = learning::parse(files.table("mishaps"), &content)?;
         // Miscasts (spec §8 "Spells": "Miscasts"): the table names statuses, creatures, and damage
         // types.
-        let path = "data/miscast.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.miscast = Some(MiscastRules::parse(path, text, &content.factions)?);
-        }
+        content.miscast = content.load_optional(files)?;
         content.miscasts = miscast::parse(files.table("miscasts"), &content)?;
-        let path = "data/decipher.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.decipher = Some(DecipherRules::parse(path, text)?);
-        }
-        let path = "data/encounters.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.encounters = EncounterRules::parse(path, text)?;
-        }
-        let path = "data/search.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.search = SearchRules::parse(path, text)?;
-        }
-        let path = "data/temper.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.temper = TemperRules::parse(path, text)?;
-        }
-        let path = "data/gear_condition.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.gear_condition = GearConditions::parse(path, text, &content)?;
-        }
-        let path = "data/steal.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.steal = Some(StealRules::parse(path, text, &content.factions)?);
-        }
-        let path = "data/surprise.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.surprise = Some(SurpriseRules::parse(path, text, &content)?);
-        }
-        let path = "data/smite.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.smite = Some(SmiteRules::parse(path, text, &content)?);
-        }
-        let path = "data/fletch.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.fletch = Some(FletchRules::parse(path, text, &content)?);
-        }
-        let path = "data/salvage.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.salvage = Some(SalvageRules::parse(path, text)?);
-        }
-        let path = "data/rigs.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.rigs = Some(RigRules::parse(path, text, &content)?);
-        }
-        let path = "data/forage.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.forage = Some(ForageRules::parse(path, text, &content)?);
-        }
-        let path = "data/herbs.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.herbs = Some(HerbRules::parse(path, text, &content)?);
-        }
-        let path = "data/feint.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.feint = Some(FeintRules::parse(path, text, &content)?);
-        }
-        let path = "data/stipend.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.stipend = Some(StipendRules::parse(path, text, &content)?);
-        }
-        let path = "data/invest.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.invest = Some(InvestRules::parse(path, text)?);
-        }
-        let path = "data/patron.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.patron = Some(PatronRules::parse(path, text)?);
-        }
-        let path = "data/intimidate.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.intimidate = Some(IntimidateRules::parse(path, text, &content)?);
-        }
-        let path = "data/ruin.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.ruin = RuinRules::parse(path, text, &content)?;
-        }
-        let path = "data/swim.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.swim = Some(SwimRules::parse(path, text, &content)?);
-        }
-        let path = "data/ranged.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.ranged = RangedRules::parse(path, text)?;
-        }
-        let path = "data/prayer.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.prayer = Some(PrayerRules::parse(path, text, &content)?);
-        }
-        let path = "data/allies.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.allies = Some(AllyRules::parse(path, text)?);
-        }
-        let path = "data/stats.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.stat_training = StatTraining::parse(path, text)?;
-        }
+        content.decipher = content.load_optional(files)?;
+        content.encounters = content.load_or_default(files)?;
+        content.search = content.load_or_default(files)?;
+        content.temper = content.load_or_default(files)?;
+        content.gear_condition = content.load_or_default(files)?;
+        content.steal = content.load_optional(files)?;
+        content.surprise = content.load_optional(files)?;
+        content.smite = content.load_optional(files)?;
+        content.fletch = content.load_optional(files)?;
+        content.salvage = content.load_optional(files)?;
+        content.rigs = content.load_optional(files)?;
+        content.forage = content.load_optional(files)?;
+        content.herbs = content.load_optional(files)?;
+        content.feint = content.load_optional(files)?;
+        content.stipend = content.load_optional(files)?;
+        content.invest = content.load_optional(files)?;
+        content.patron = content.load_optional(files)?;
+        content.intimidate = content.load_optional(files)?;
+        content.ruin = content.load_or_default(files)?;
+        content.swim = content.load_optional(files)?;
+        content.ranged = content.load_or_default(files)?;
+        content.prayer = content.load_optional(files)?;
+        content.allies = content.load_optional(files)?;
+        content.stat_training = content.load_or_default(files)?;
         content.dialogues = dialogue::parse(files.table("dialogue"), &content)?;
         content.load_hunger(files)?;
         // Outcome tables (spec §7 "Special rooms") last of the rules' data: they name terrain,
@@ -1324,24 +1109,12 @@ impl Content {
         content.load_kits()?;
         content.load_background(files)?;
         // The companion's data names creatures, races, and the story's chapter.
-        let path = "data/companions.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.companions = Some(CompanionRules::parse(path, text, &content)?);
-        }
+        content.companions = content.load_optional(files)?;
         // The familiar's names creatures, races, and a hex spell.
-        let path = "data/familiars.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.familiars = Some(FamiliarRules::parse(path, text, &content)?);
-        }
+        content.familiars = content.load_optional(files)?;
         // The crystals name objects, creature tags, and affix categories.
-        let path = "data/crystals.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.crystals = Some(Crystals::parse(path, text, &content)?);
-        }
-        let path = "data/enchanting.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.enchanting = Some(EnchantingRules::parse(path, text)?);
-        }
+        content.crystals = content.load_optional(files)?;
+        content.enchanting = content.load_optional(files)?;
         let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         for (path, id, text) in files.in_dir("scenarios") {
             if let Some(first) = seen.insert(id.to_string(), path) {
@@ -1416,6 +1189,21 @@ impl Content {
         content.check_campaigns()?;
         files.check_all_read()?;
         Ok(content)
+    }
+
+    /// Rules file `T`, `None` without its file.
+    fn load_optional<T: RulesFile>(&self, files: &ContentFiles) -> Result<Option<T>, ContentError> {
+        (files.get_optional(T::PATH))
+            .map(|text| T::parse(T::PATH, text, self))
+            .transpose()
+    }
+
+    /// Rules file `T`, its default without its file.
+    fn load_or_default<T: RulesFile + Default>(
+        &self,
+        files: &ContentFiles,
+    ) -> Result<T, ContentError> {
+        Ok(self.load_optional(files)?.unwrap_or_default())
     }
 
     /// The plural dictionary: `data/plurals.toml`, then each campaign's `data/plurals.toml`, in

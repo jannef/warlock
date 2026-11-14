@@ -126,6 +126,14 @@ impl ChestRules {
     }
 }
 
+impl super::RulesFile for ChestRules {
+    const PATH: &'static str = "data/chests.toml";
+
+    fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
+        Self::parse(path, text)
+    }
+}
+
 impl ChestBand {
     /// Checks band number `i` of `all`: its id not used twice ([`ChestRules::band`] would find
     /// the first) and its `from` above the band before it ([`ChestRules::band_index`] reads them
