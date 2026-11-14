@@ -315,10 +315,10 @@ fn low_blow_stuns_the_foe_and_gives_one_to_hit_an_opening() {
     let mut w = thief();
     let content = w.content().clone();
     let stunned = content.status_id("stunned").expect("stunned");
-    let ladder = w.state.player().talent_mods(&content).exploit;
+    let ladder = w.state.player().talent_mods(&content).stealth.exploit;
     assert_eq!((ladder.to_hit, ladder.status), (0, None), "not before 12");
     reach(&mut w, 12);
-    let ladder = w.state.player().talent_mods(&content).exploit;
+    let ladder = w.state.player().talent_mods(&content).stealth.exploit;
     assert_eq!((ladder.to_hit, ladder.status), (1, Some(stunned)));
     let kobold = beside(&mut w, "kobold", 5000, Dir::E);
     for _ in 0..40 {
@@ -405,10 +405,22 @@ const HIT: Blow = Blow {
 fn improved_sneak_attack_makes_the_ladders_dice_two_d6_an_opening_at_32() {
     let mut w = thief();
     reach(&mut w, 31);
-    let one = w.state.player().talent_mods(w.content()).exploit.dice;
+    let one = w
+        .state
+        .player()
+        .talent_mods(w.content())
+        .stealth
+        .exploit
+        .dice;
     assert_eq!(one.map(|d| d.to_string()), Some("1d6".into()), "before 32");
     reach(&mut w, 32);
-    let two = w.state.player().talent_mods(w.content()).exploit.dice;
+    let two = w
+        .state
+        .player()
+        .talent_mods(w.content())
+        .stealth
+        .exploit
+        .dice;
     assert_eq!(two.map(|d| d.to_string()), Some("2d6".into()), "from 32");
     for n in 1..=5u16 {
         for _ in 0..20 {
@@ -423,12 +435,12 @@ fn improved_sneak_attack_makes_the_ladders_dice_two_d6_an_opening_at_32() {
 fn master_thief_lowers_an_exploits_threat_four_an_opening_and_is_sure_from_five() {
     let mut w = thief();
     reach(&mut w, 59);
-    let ladder = w.state.player().talent_mods(w.content()).exploit;
+    let ladder = w.state.player().talent_mods(w.content()).stealth.exploit;
     assert_eq!((ladder.threat, ladder.sure_at), (0, None), "not before 60");
     let melee = w.state.player().melee(w.content());
     assert_eq!(w.exploit_profile(3, melee.clone()).threat, melee.threat);
     reach(&mut w, 60);
-    let ladder = w.state.player().talent_mods(w.content()).exploit;
+    let ladder = w.state.player().talent_mods(w.content()).stealth.exploit;
     assert_eq!((ladder.threat, ladder.sure_at), (4, Some(5)));
     let melee = w.state.player().melee(w.content());
     for n in 0..=8u16 {

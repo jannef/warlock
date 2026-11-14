@@ -354,7 +354,7 @@ a station (`world/mine.rs`).
 
 The one such terrain is `makeshift_anvil`, which the craftsperson's **Field forge** (level 32,
 `ClassActive::FieldForge`, `data/talents/field_forge.toml`'s `field_forge { seconds = 3600 }`,
-`TalentMods::field_forge`) makes, in `world/field_forge.rs`: `use:field_forge:E`, aimed in a
+`CraftMods::field_forge`) makes, in `world/field_forge.rs`: `use:field_forge:E`, aimed in a
 direction (`Aim::Direction`; the abilities menu's way is `beside::Target::Ground`, open ground the
 player knows: `world::open_ground` on the known terrain, nobody seen, no known trap, nothing
 lying there). The rules: the overworld refused (the menu: `Unavailable::NotHere`); the first
@@ -493,7 +493,7 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
   Woodcraft's, a row's own where it names one) +
   `Actor::skill_effect_of(skill, Effect::Craft)` (that skill's benefit alone, the items' skill
   bonus counted; Metalcraft's `craft` curve is Temper's, +8 at 100, +12 at 200) +
-  `TalentMods::check(stat)` (+ Fletcher's `check` for a `count = "fletch"` recipe) +
+  `VigourMods::check(stat)` (+ Fletcher's `check` for a `count = "fletch"` recipe) +
   `World::binding_boon(skill)` (a bound lure's boon: Jewelcraft's rings and amulets in Gimmwīc,
   #1490), against
   `difficulty` + the main material's `work`. A graded recipe (a count of 1) goes on to its grade;
@@ -676,7 +676,7 @@ what only they read:
 - **The launcher** (`fletch::shoots`): a missile weapon ready whose `launches` is the result's
   `ammo`; `fletch.toml`'s `[[makes]]` gives its word ("no bow ready", "a crossbow ready").
 - **The count**: `fletch.toml`'s `count` (`1d4`) + Woodcraft's trained value ÷ `value_per_count`
-  (25), Fletcher ×2, half the time, +4 on the check (`TalentMods::fletcher`; headless arrows are
+  (25), Fletcher ×2, half the time, +4 on the check (`CraftMods::fletcher`; headless arrows are
   brittle whatever the skill). `fletch.toml` holds `count`,
   `value_per_count`, `knives`, `[[makes]] { launches, launcher }` (`content/fletch.rs`); the time,
   difficulty, bands, and brittle objects are the recipes' and `data/recipes.toml`'s.
@@ -734,7 +734,7 @@ gem), dispatched from `World::start_craft` by one arm to `World::start_cut`; its
 - **Time**: the recipe's `seconds` (30 minutes) by `keep_at`; stopped early, "...; you put down
   your work." and the gem is untouched.
 - **The check**: two gameplay draws (`combat::roll_natural`), plus the gem's profession's stat
-  modifier (`stock.toml`: Dexterity), `TalentMods::check(stat)`, and
+  modifier (`stock.toml`: Dexterity), `VigourMods::check(stat)`, and
   `skill_effect_of(recipe skill, Effect::Craft)`, against `difficulty` + the gem's `work`.
   `cut_band(gems, cut_step, natural, margin)` (`CutBand`): a natural 2 `Shattered`; below 0
   `Failed`; else the roughest true cut (crude) plus `margin / cut_step`, capped at the finest; a
@@ -845,7 +845,7 @@ is not listed): `seconds = 600`, `difficulty = 12`, `yield = 50`.
 - **The checks**, at the end, re-checking the stack first: one per distinct material among
   `Stack::parts(content)` (resolved, gems included) that `profession_of` maps, in first-seen
   order; each two gameplay draws (`combat::roll_natural`), all drawn before anything changes:
-  natural + the stat's modifier + `TalentMods::check(stat)` + `skill_effect_of(skill, Craft)`
+  natural + the stat's modifier + `VigourMods::check(stat)` + `skill_effect_of(skill, Craft)`
   against `difficulty + work`, `check::makes` (a natural 2 fails, a 24 succeeds). Untrained, the
   check is made the same.
 - **The outcome**: one item is set apart (`World::set_apart`, Temper's) and removed
@@ -880,7 +880,7 @@ The craftsperson's class ability at level 6 (#1420; the craftsperson design §7.
 `data/talents/waste_not.toml`): "nothing lost but time", two effects and three reads, each
 where the rule already reads its number:
 
-- **`waste_not { salvage, failed }`** (`TalentMods::salvage_percent`, `failed_percent`, the most
+- **`waste_not { salvage, failed }`** (`CraftMods::salvage_percent`, `failed_percent`, the most
   held of each). `salvage`: `world::salvage_percent(content, actor)` is `data/salvage.toml`'s
   `yield` or the holder's, whichever is more, read by `salvaged` for `piece::break_up` and by
   Eye for the make's line (`PerceptionView::describe_item`), so the description counts what the
@@ -893,7 +893,7 @@ where the rule already reads its number:
   never spent). A brew with a `failure` object still spends its inputs (`back` 0 before the
   percent is asked). The metal-arms line ends ", every ounce."; another failure says "The work
   goes wrong, but you save every scrap of it."
-- **`temper_safe`** (`TalentMods::temper_safe`): `temper.rs::work_out`'s failure arm, before item
+- **`temper_safe`** (`CraftMods::temper_safe`): `temper.rs::work_out`'s failure arm, before item
   damage is asked: the item keeps its `Worked` as it was, the attempt counted (`attempts` + 1, so
   the next is harder), and nothing is drawn; a damaged item is never destroyed. Temper and Whittle
   alike, a natural 2 too ("The work goes wrong, but you know when to stop before the steel
@@ -905,7 +905,7 @@ Tests: `world/waste_not_tests.rs` (level 6, each read with and without the talen
 
 `world/make_do.rs` (#1422; the craftsperson design §7.5): the craftsperson's class active at
 level 18, the talent `make_do_and_mend` with `{ kind = "make_do", seconds = 600, difficulty = 10
-}` (`TalentEffect::MakeDo`, `TalentMods::make_do`). One line each in `world/mod.rs`'s `Spent`
+}` (`CraftEffect::MakeDo`, `CraftMods::make_do`). One line each in `world/mod.rs`'s `Spent`
 (`Spent::MakeDo`) and dispatch, `world/merchants_eye.rs`'s `use_class_on` (the class actives on a
 stack), and `world/class_ability.rs`'s bare `use` ("Use it on what?").
 
@@ -923,7 +923,7 @@ stack), and `world/class_ability.rs`'s bare `use` ("Use it on what?").
 - **Time**: `seconds` by `keep_at` in `craft` turns; interrupted, nothing happens and the time is
   spent ("...; you put down your work.").
 - **The check**, at the end, the stack checked again: natural (two gameplay draws) + the main
-  material's profession's stat modifier + `TalentMods::check(stat)` + `skill_effect_of(skill,
+  material's profession's stat modifier + `VigourMods::check(stat)` + `skill_effect_of(skill,
   Craft)` against `difficulty + work` (`check::makes`); untrained, the stat alone, as Salvage's.
 - **Made**: one item set apart (`World::set_apart`) and `Worked::repair`: `damaged` and `by`
   cleared, the improvements lost stay lost, `attempts` untouched; nothing re-identified. "You make
@@ -943,7 +943,7 @@ stack), and `world/class_ability.rs`'s bare `use` ("Use it on what?").
 levels 40 and 50, each one read.
 
 - **Quick hands** (`data/talents/quick_hands.toml`, `{ kind = "craft_time_percent", value = 50
-  }`, `TalentEffect::CraftTimePercent`, `TalentMods::craft_time_percent`, the least held):
+  }`, `CraftEffect::CraftTimePercent`, `CraftMods::craft_time_percent`, the least held):
   `mastery::craft_seconds(content, actor, base)` (and `World::craft_seconds(base)` for the
   player) is the time of every craft, at least a second. Every craft's `start_*` asks it for the
   seconds the work driver runs (`World::craft_work`, "The work driver" above): `fletch::fletcher_seconds` (every recipe's time, read there
@@ -955,7 +955,7 @@ levels 40 and 50, each one read.
   the time shown is the time spent. Not crafts, unchanged: Gather, Forage, Scribe, Decipher. A
   new craft starts with `craft_work` and its data's seconds.
 - **Master's hand** (`data/talents/masters_hand.toml`, `{ kind = "grade_ease", value = 4 }`,
-  `TalentEffect::GradeEase`, `TalentMods::grade_ease`, summed): `mastery::graded_margin(content,
+  `CraftEffect::GradeEase`, `CraftMods::grade_ease`, summed): `mastery::graded_margin(content,
   actor, margin)` adds it to a made check's margin (0 or more), never a failure's, so whether the
   work is made never changes. Two reads: `craft_make.rs::make_out` before `grade` (Fine from 2,
   Marvellous from 8, Masterwork from 16) and `cut.rs`'s check before `cut_band` (each cut a step
@@ -971,8 +971,8 @@ levels 40 and 50, each one read.
 ## Maker's mark
 
 The craftsperson's passive at level 60 (#1426; the craftsperson design §7.10): the talent
-`makers_mark` with `{ kind = "makers_mark", worth_percent = 50 }` (`TalentEffect::MakersMark`,
-`TalentMods::makers_mark`, `worth_percent` 0 refused at load).
+`makers_mark` with `{ kind = "makers_mark", worth_percent = 50 }` (`CraftEffect::MakersMark`,
+`CraftMods::makers_mark`, `worth_percent` 0 refused at load).
 
 - **The one read**: `world/craft_make.rs::make_out`, after the grade's improvements are drawn: a
   holder's made item whose object has a `kind` (arms, armour, a tool, jewellery) is built with

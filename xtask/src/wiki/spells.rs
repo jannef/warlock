@@ -8,6 +8,7 @@ use warlock_core::content::{
     BurstIce, Content, MAX_SPELL_RANK, Resolution, RodDoes, RodShape, RuinOf, Shape, SpellData,
     SpellMods, SpellPurpose, TalentEffect, ZoneKind,
 };
+use warlock_core::talent::MagicEffect;
 
 /// What each shape multiplies the base cost by; a burst by radius.
 pub(super) fn shapes(content: &Content) -> String {
@@ -362,7 +363,7 @@ pub(super) fn class_spells(content: &Content) -> String {
                 continue;
             };
             for effect in &book.get(id).effects {
-                let TalentEffect::Spell { spell } = effect else {
+                let TalentEffect::Magic(MagicEffect::Spell { spell }) = effect else {
                     continue;
                 };
                 if let Some(s) = content.spell_id(spell).map(|s| content.spell(s)) {

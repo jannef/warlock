@@ -34,7 +34,7 @@ impl World {
             return struck;
         }
         let content = &self.content;
-        let dodge = t.talent_mods(content).small_target;
+        let dodge = t.talent_mods(content).defence.small_target;
         if dodge == 0 || self.state.size_of(content, a) <= self.state.size_of(content, t) {
             return struck;
         }

@@ -36,7 +36,7 @@ fn status(w: &World, id: &str) -> StatusId {
 
 fn rider(w: &World, active: ClassActive) -> SmiteRider {
     let mods = w.state.player().talent_mods(w.content());
-    mods.smite_mode(active).expect("the mode")
+    mods.faith.smite_mode(active).expect("the mode")
 }
 
 fn said_since(w: &World, from: usize) -> Vec<String> {

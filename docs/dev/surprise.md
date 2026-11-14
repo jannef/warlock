@@ -50,7 +50,7 @@ Keep it current with the code, as CLAUDE.md says.
   - `World::flat_footed(target, unaware, struck)`: `Target::without([Dexterity, Dodge])` when
     unaware (with the rules) or `off_guard`.
   - `World::surprised(id)`, and `World::status_cost(id, status)`: a status's `cost` percent as
-    its sufferer pays it; Surprised's extra eased by `TalentMods::surprise_ease` (Cool head) and
+    its sufferer pays it; Surprised's extra eased by `StealthMods::surprise_ease` (Cool head) and
     the Initiative skill's `surprise_ease`, together capped at all of it, every other status's
     as its data says.
 - `world/slip.rs`, slipping past (#683): `looks_at` (the look of `ai.rs::nearest_hostile_in_sight`,

@@ -135,7 +135,13 @@ impl World {
     /// talents' `trap_ease` (spec §8 "Class abilities"; disarming is not eased).
     pub(super) fn finding(&self, hidden: Hidden) -> i32 {
         let ease = match hidden {
-            Hidden::Trap(_) => self.state.player().talent_mods(&self.content).trap_ease,
+            Hidden::Trap(_) => {
+                self.state
+                    .player()
+                    .talent_mods(&self.content)
+                    .delving
+                    .trap_ease
+            }
             Hidden::Door(_) | Hidden::Mimic(_) | Hidden::Hollow => 0,
         };
         self.difficulty_of(hidden) - ease
@@ -163,16 +169,17 @@ impl World {
             Look::Active => {
                 player.check_modifier(content, Stat::Intelligence)
                     + skill(player.skill_effect(content, Effect::Search))
-                    + talents.searching
+                    + talents.delving.searching
             }
             Look::Passive => {
                 player.check_modifier(content, Stat::Willpower)
                     + skill(player.skill_effect(content, Effect::Spot))
-                    + talents.notice.unwrap_or(0)
+                    + talents.delving.notice.unwrap_or(0)
                     - content.search().passive_penalty
             }
         };
-        own.saturating_add(talents.search).saturating_add(race)
+        own.saturating_add(talents.delving.search)
+            .saturating_add(race)
     }
 
     /// Whether the player notices `hidden`, the hidden feature at `at`, in passing at all:
@@ -187,11 +194,11 @@ impl World {
             Hidden::Trap(_) => Effect::DetectTraps,
             Hidden::Door(_) | Hidden::Mimic(_) | Hidden::Hollow => Effect::Spot,
         };
-        if player.skills.trains_effect(content, skill) || talents.notice.is_some() {
+        if player.skills.trains_effect(content, skill) || talents.delving.notice.is_some() {
             return true;
         }
         let race = self.player_race().and_then(|r| r.passive_search);
-        let stone = talents.stone_sense.then_some(PassiveSearch::Stone);
+        let stone = talents.delving.stone_sense.then_some(PassiveSearch::Stone);
         match race.or(stone) {
             Some(PassiveSearch::All) => true,
             // A mimic is no stonework: only those who notice everything notice it.
@@ -210,7 +217,12 @@ impl World {
     /// What the player's talents add to finding what is hidden at `at` for its being on stone
     /// (Stone sense, a dwarf's): both looks, searching and in passing.
     pub(super) fn stone_find(&self, at: Pos) -> i32 {
-        let bonus = self.state.player().talent_mods(&self.content).stone_find;
+        let bonus = self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .delving
+            .stone_find;
         if bonus != 0 && self.on_stone(at) {
             bonus
         } else {
@@ -260,7 +272,7 @@ impl World {
         let player = self.state.player();
         let reach = 1
             + player.skill_effect(&self.content, Effect::SearchReach)
-            + player.talent_mods(&self.content).search_reach;
+            + player.talent_mods(&self.content).delving.search_reach;
         let hidden = self.hidden_near(reach);
         let mut found = false;
         for (at, hidden) in hidden {

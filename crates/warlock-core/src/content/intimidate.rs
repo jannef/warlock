@@ -94,7 +94,10 @@ mod tests {
             .into_iter())
         .flat_map(|def| def.effects.iter())
         .find_map(|e| match e {
-            crate::content::TalentEffect::WarCry { severity, .. } => Some(*severity),
+            crate::content::TalentEffect::Martial(crate::talent::MartialEffect::WarCry {
+                severity,
+                ..
+            }) => Some(*severity),
             _ => None,
         });
         assert_eq!(cry, Some(3));

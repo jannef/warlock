@@ -51,7 +51,7 @@ impl Actor {
     /// What writing a scroll of `spell` asks of it before Frugal caster: the spell's mana
     /// ([`Actor::spell_base`]) times its Scribe's `mana_times`; `None` without Scribe.
     pub fn scribe_base(&self, content: &Content, spell: &SpellData) -> Option<i32> {
-        let times = self.talent_mods(content).scribe?;
+        let times = self.talent_mods(content).magic.scribe?;
         Some(
             self.spell_base(content, spell)
                 .saturating_mul(i32::from(times)),

@@ -197,7 +197,13 @@ impl World {
     fn veterans_wind(&mut self, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
-        let Some(wind) = self.state.player().talent_mods(&content).veterans_wind else {
+        let Some(wind) = self
+            .state
+            .player()
+            .talent_mods(&content)
+            .martial
+            .veterans_wind
+        else {
             return Spent::Nothing;
         };
         let back = wind.hp_at(self.player_level());
@@ -214,13 +220,13 @@ impl World {
         let content = self.content.clone();
         let player = self.state.player;
         let mods = self.state.player().talent_mods(&content);
-        let Some(hands) = mods.lay_on_hands else {
+        let Some(hands) = mods.faith.lay_on_hands else {
             return Spent::Nothing;
         };
         if !self.answered(ClassActive::LayOnHands) {
             return self.unanswered(ClassActive::LayOnHands);
         }
-        if mods.avatar.is_some() {
+        if mods.faith.avatar.is_some() {
             let me = self.state.player();
             let max = me.max_hp(&content);
             let harms: Vec<Effect> = (me.effects.iter())
@@ -248,7 +254,13 @@ impl World {
     /// a `cast`. Putting it out always works.
     fn holy_radiance(&mut self, events: &mut Vec<Event>) -> Spent {
         let player = self.state.player;
-        let Some((status, _)) = self.state.player().talent_mods(&self.content).radiance else {
+        let Some((status, _)) = self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .faith
+            .radiance
+        else {
             return Spent::Nothing;
         };
         let lit = self.state.player().effects.get(status).copied();
@@ -273,6 +285,7 @@ impl World {
             .state
             .player()
             .talent_mods(&self.content)
+            .martial
             .quivering_palm
         else {
             return Spent::Nothing;

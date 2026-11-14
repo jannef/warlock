@@ -42,6 +42,7 @@
 use super::{ActionKind, Content, ContentError, StatusId, WeaponSkillId, duplicate_id};
 use crate::combat::Category;
 use crate::dice::Dice;
+use crate::talent::OffenceEffect;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -477,7 +478,9 @@ fn check_talents(all: &[WeaponAbility], content: &Content) -> Result<(), Content
     }
     for (_, def) in content.talents().iter() {
         for effect in &def.effects {
-            let super::TalentEffect::WeaponStamina { abilities, .. } = effect else {
+            let super::TalentEffect::Offence(OffenceEffect::WeaponStamina { abilities, .. }) =
+                effect
+            else {
                 continue;
             };
             for name in abilities {

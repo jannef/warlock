@@ -226,8 +226,16 @@ fn the_forge_born_earn_marks_half_again_as_fast_in_every_skill() {
         Role::Style,
     ] {
         let drill = if role == Role::Melee { 25 } else { 0 };
-        assert_eq!(mods(&metal).marks(role, 100), 150 + drill, "{role:?}");
-        assert_eq!(mods(&wood).marks(role, 100), 100 + drill, "{role:?}");
+        assert_eq!(
+            mods(&metal).offence.marks(role, 100),
+            150 + drill,
+            "{role:?}"
+        );
+        assert_eq!(
+            mods(&wood).offence.marks(role, 100),
+            100 + drill,
+            "{role:?}"
+        );
     }
 }
 

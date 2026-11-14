@@ -246,7 +246,13 @@ impl World {
     /// ([`READ_FLOOR`]: both together), at least 1.
     fn read_price(&self) -> i64 {
         let price = self.price_of(self.state.player, ActionKind::Read);
-        match self.state.player().talent_mods(&self.content).read_percent {
+        match self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .magic
+            .read_percent
+        {
             0 => price,
             more => {
                 let percent = u32::try_from((100 + more).max(READ_FLOOR)).unwrap_or(0);
@@ -264,7 +270,12 @@ impl World {
         self.train_stat(StatUse::Read);
         self.train(Use::Read);
         let one = self.state.player().inventory.get(item)?.single();
-        let keep = self.state.player().talent_mods(&self.content).scroll_kept;
+        let keep = self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .magic
+            .scroll_kept;
         if keep > 0 && self.state.rng.chance(u32::from(keep)) {
             return Some((one, true));
         }

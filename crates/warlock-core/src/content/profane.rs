@@ -12,7 +12,9 @@
 
 use super::talent::{Needs, TalentBook, TalentDef, TalentEffect, TalentId};
 use super::{Content, ContentError};
-use crate::talent::BeastEffect;
+use crate::talent::{
+    BeastEffect, GrowthEffect, MagicEffect, OffenceEffect, ResourceEffect, VigourEffect,
+};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -148,16 +150,16 @@ fn forbidden(effect: &TalentEffect) -> bool {
     effect.is_handed_down()
         || matches!(
             effect,
-            TalentEffect::MaxHpPerLevels { .. }
-                | TalentEffect::MaxManaPerLevels { .. }
-                | TalentEffect::WeaponRanks { .. }
-                | TalentEffect::WeaponMarks { .. }
-                | TalentEffect::ExtraPick { .. }
-                | TalentEffect::SkillRolls { .. }
-                | TalentEffect::TakeUpSkills { .. }
-                | TalentEffect::GrantsResource { .. }
+            TalentEffect::Vigour(VigourEffect::MaxHpPerLevels { .. })
+                | TalentEffect::Magic(MagicEffect::MaxManaPerLevels { .. })
+                | TalentEffect::Growth(GrowthEffect::WeaponRanks { .. })
+                | TalentEffect::Offence(OffenceEffect::WeaponMarks { .. })
+                | TalentEffect::Growth(GrowthEffect::ExtraPick { .. })
+                | TalentEffect::Growth(GrowthEffect::SkillRolls { .. })
+                | TalentEffect::Growth(GrowthEffect::TakeUpSkills { .. })
+                | TalentEffect::Resource(ResourceEffect::GrantsResource { .. })
                 | TalentEffect::Beast(BeastEffect::Companion | BeastEffect::Familiar)
-                | TalentEffect::XpPercent { .. }
+                | TalentEffect::Growth(GrowthEffect::XpPercent { .. })
         )
 }
 

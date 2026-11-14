@@ -26,6 +26,7 @@ use crate::item_parts::ItemPart;
 use crate::magic::loot;
 use crate::object::{self, Stack};
 use crate::rng::Rng;
+use crate::talent::{CraftEffect, FortuneEffect};
 
 impl World {
     /// Hands out what `effects` (a rank just taken) give once: gold, gems, an heirloom.
@@ -37,12 +38,12 @@ impl World {
         let seed = self.state.seed;
         for effect in effects {
             match effect {
-                TalentEffect::StartingGold {
+                TalentEffect::Fortune(FortuneEffect::StartingGold {
                     percent,
                     at_least,
                     at_most,
-                } => self.inherit_gold(&content, percent, at_least, at_most),
-                TalentEffect::StartingGems { min, max, level } => {
+                }) => self.inherit_gold(&content, percent, at_least, at_most),
+                TalentEffect::Fortune(FortuneEffect::StartingGems { min, max, level }) => {
                     let mut rng = Rng::stream(seed, &format!("character/family-wealth/{spec}"));
                     let count = rng.range(i32::from(min), i32::from(max));
                     for _ in 0..count {
@@ -51,14 +52,14 @@ impl World {
                         }
                     }
                 }
-                TalentEffect::Heirloom {
+                TalentEffect::Fortune(FortuneEffect::Heirloom {
                     weapons,
                     fallback,
                     min,
                     max,
                     level,
                     quality,
-                } => {
+                }) => {
                     let race = self.state.character.as_ref().map(|c| c.spec.race.clone());
                     let weapon = (race.and_then(|r| weapons.get(&r).cloned())).unwrap_or(fallback);
                     let Some(object) = content.object_id(&weapon) else {
@@ -71,7 +72,7 @@ impl World {
                     stack.identify();
                     self.wield_heirloom(&content, stack);
                 }
-                TalentEffect::Trade { skill, dice, tools } => {
+                TalentEffect::Craft(CraftEffect::Trade { skill, dice, tools }) => {
                     self.learn_trade(&content, &spec, &skill, dice, &tools)
                 }
                 _ => {}

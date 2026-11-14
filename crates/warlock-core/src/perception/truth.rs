@@ -259,8 +259,10 @@ impl<'a> PerceptionView<'a> {
             (None, None) => self.content.item_level(&self.level.id),
         };
         let band = self.content.chests().band_index(level)?;
-        let wise =
-            || !self.player.talents.is_empty() && self.player.talent_mods(self.content).chest_wise;
+        let wise = || {
+            !self.player.talents.is_empty()
+                && self.player.talent_mods(self.content).delving.chest_wise
+        };
         let locked = (state == ChestState::Shut && self.snapshot.is_visible(p) && wise())
             .then(|| self.level.locks.contains_key(&p));
         Some(ChestLook {
@@ -367,8 +369,8 @@ impl<'a> PerceptionView<'a> {
         let appraise = self.content.skill_id("appraise");
         let trained = appraise.and_then(|s| self.player.skills.value(s));
         crate::magic::describe::Appraisal {
-            gems: talents.gem_worth,
-            capacity: talents.eye_for_make || trained.is_some_and(|v| v > 0),
+            gems: talents.fortune.gem_worth,
+            capacity: talents.craft.eye_for_make || trained.is_some_and(|v| v > 0),
         }
     }
 
@@ -383,10 +385,15 @@ impl<'a> PerceptionView<'a> {
         let maker = self.character.map(|c| c.name.as_str());
         let mut lines =
             describe::appraised_for(stack, self.lore, self.appraisal(), Some(self.player), maker);
-        if self.player.talent_mods(self.content).eye_for_make {
+        if self.player.talent_mods(self.content).craft.eye_for_make {
             let percent = crate::world::salvage_percent(self.content, self.player);
             let protected = crate::world::protected_in(self.content, self.quests, stack);
-            let mends = self.player.talent_mods(self.content).make_do.is_some();
+            let mends = self
+                .player
+                .talent_mods(self.content)
+                .craft
+                .make_do
+                .is_some();
             let make = describe::make_lines(stack, self.lore, percent, protected, mends);
             let at = (lines.iter())
                 .rposition(|l| !matches!(l.kind, LineKind::Power | LineKind::Lore))
@@ -942,7 +949,7 @@ impl<'a> PerceptionView<'a> {
     /// level-up screen shows them); `None` for a skill the player is not trained in.
     pub fn skill_roll(&self, skill: SkillId) -> Option<SkillRoll> {
         let trained = self.player.skills.get(skill)?;
-        let trades = self.player.talent_mods(self.content).trades.clone();
+        let trades = self.player.talent_mods(self.content).craft.trades.clone();
         Some(world::skill_roll(
             self.content,
             self.character,
@@ -955,7 +962,7 @@ impl<'a> PerceptionView<'a> {
     /// Whether the player's own bursts spare them (spec §8 "Talents": Scroll savant), so a
     /// scroll read close needs no warning.
     pub fn bursts_spare_me(&self) -> bool {
-        self.player.talent_mods(self.content).spares_self
+        self.player.talent_mods(self.content).magic.spares_self
     }
 
     /// The player as prerequisites see them.
@@ -980,10 +987,14 @@ impl<'a> PerceptionView<'a> {
         // The rising is spent once it is used up: the first with no Second rising, else both.
         let risen = self.progress.happened(crate::world::RISEN);
         let twice = self.progress.happened(crate::world::RISEN_TWICE);
-        let second = (self.player.talent_mods(self.content)).second_rising;
+        let second = (self.player.talent_mods(self.content)).vigour.second_rising;
         let spent = |e: &crate::content::TalentEffect| match e {
-            crate::content::TalentEffect::RiseFromAshes { .. } => risen && (!second || twice),
-            crate::content::TalentEffect::SecondRising => twice,
+            crate::content::TalentEffect::Vigour(crate::talent::VigourEffect::RiseFromAshes {
+                ..
+            }) => risen && (!second || twice),
+            crate::content::TalentEffect::Vigour(crate::talent::VigourEffect::SecondRising) => {
+                twice
+            }
             _ => false,
         };
         (self.player.talents.iter())
@@ -1152,7 +1163,8 @@ impl<'a> PerceptionView<'a> {
     /// How fresh `stack` smells to the player, if it is food and they can tell by smell (spec §8
     /// "Birth sign": Hound's nose); `None` otherwise.
     pub fn smell(&self, stack: &Stack) -> Option<Freshness> {
-        if self.player.talents.is_empty() || !self.player.talent_mods(self.content).smell_rot {
+        if self.player.talents.is_empty() || !self.player.talent_mods(self.content).hunger.smell_rot
+        {
             return None;
         }
         Some(match crate::rot::stage(self.content, stack, self.time)? {

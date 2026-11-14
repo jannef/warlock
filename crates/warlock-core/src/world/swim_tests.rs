@@ -268,7 +268,7 @@ fn one_a_plunge_cannot_harm_asks_no_check() {
     let mut w = world(3);
     set_swim(&mut w, Some(100));
     w.player_mut().talents.take("swimmer", None);
-    assert!(w.player_mut().talent_mods(&CONTENT).plunge_proof);
+    assert!(w.player_mut().talent_mods(&CONTENT).movement.plunge_proof);
     let player = w.player_id();
     let rng = w.state.rng.clone();
     let hp = w.state.player().hp;

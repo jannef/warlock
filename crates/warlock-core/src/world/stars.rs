@@ -61,11 +61,14 @@ impl World {
         let content = self.content.clone();
         let player = self.state.player;
         let mods = self.state.player().talent_mods(&content).into_owned();
-        let Some(rise) = mods.rise else {
+        let Some(rise) = mods.vigour.rise else {
             return false;
         };
         // Once in a life; Second rising (a Phoenix's pick) allows one more.
-        let flag = match (self.state.progress.happened(RISEN), mods.second_rising) {
+        let flag = match (
+            self.state.progress.happened(RISEN),
+            mods.vigour.second_rising,
+        ) {
             (false, _) => RISEN,
             (true, true) if !self.state.progress.happened(RISEN_TWICE) => RISEN_TWICE,
             (true, _) => return false,

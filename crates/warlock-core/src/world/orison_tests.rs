@@ -119,7 +119,7 @@ fn each_use_comes_at_its_level() {
     run(&mut w, "use:orison");
     assert_eq!(hunger(&w), crate::hunger::Hunger::Satiated);
     assert_eq!(last(&w), "You feel fed.");
-    assert!(w.state.player().talent_mods(w.content()).purify);
+    assert!(w.state.player().talent_mods(w.content()).hunger.purify);
     // Release at 18, not at 12.
     let mut w = priest(12);
     run(&mut w, "afflict:webbed use:orison");

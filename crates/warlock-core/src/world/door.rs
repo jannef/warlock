@@ -169,7 +169,7 @@ impl World {
         let me = self.state.player();
         let strength = me.effective_stats(&self.content).score(Stat::Strength);
         let athletics = me.skill_effect(&self.content, Effect::Kick);
-        let mighty = me.talent_mods(&self.content).door_kick
+        let mighty = me.talent_mods(&self.content).delving.door_kick
             + me.mods(&self.content).get(ItemEffect::DoorKick);
         u8::try_from((i32::from(strength) + athletics + mighty).max(0)).unwrap_or(u8::MAX)
     }

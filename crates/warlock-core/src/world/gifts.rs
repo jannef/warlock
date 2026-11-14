@@ -86,10 +86,10 @@ impl World {
         let player = self.state.player;
         let me = self.state.player();
         let mods = me.talent_mods(&content).into_owned();
-        let Some(grace) = mods.horns_grace else {
+        let Some(grace) = mods.sign.horns_grace else {
             return Spent::Nothing;
         };
-        let (heal, degrees) = self.horn_of_plenty(mods.horn_of_plenty, grace.degrees);
+        let (heal, degrees) = self.horn_of_plenty(mods.sign.horn_of_plenty, grace.degrees);
         let me = self.state.player();
         let ended: Vec<Effect> = (me.effects.iter())
             .filter(|e| grace.cures.contains(&e.status))
@@ -127,11 +127,12 @@ impl World {
         let ability = Ability::Sign(SignActive::TransfixingStare);
         let player = self.state.player;
         let mods = self.state.player().talent_mods(&content);
-        let Some(stare) = mods.stare else {
+        let Some(stare) = mods.sign.stare else {
             return Spent::Nothing;
         };
         // Petrifying gaze (`sign_picks.rs`): held longer, rested sooner.
         let (severity, degrees) = mods
+            .sign
             .petrifying_gaze
             .unwrap_or((stare.severity, stare.degrees));
         // A full moon lengthens it (spec §8 "Birth sign", the flavour).
@@ -180,7 +181,7 @@ impl World {
             return profile;
         }
         let mods = me.talent_mods(&self.content);
-        let max = mods.streak;
+        let max = mods.offence.streak;
         if max == 0 {
             return profile;
         }
@@ -190,7 +191,10 @@ impl World {
         profile.to_hit += i32::from(before.min(max));
         // Relentless fury: every so many blows before it bite +1 harder, as far as the streak
         // counts.
-        if let Some(more) = before.min(max).checked_div(mods.streak_damage_every) {
+        if let Some(more) = before
+            .min(max)
+            .checked_div(mods.offence.streak_damage_every)
+        {
             profile.bonus += i32::from(more);
         }
         me.streak = Some(Streak {
@@ -217,7 +221,7 @@ impl World {
         self.retaliate(attacker, target, events);
         let barbs = (self.state.actors.get(&target))
             .filter(|a| !a.talents.is_empty())
-            .map_or(0, |a| a.talent_mods(&self.content).barbs);
+            .map_or(0, |a| a.talent_mods(&self.content).defence.barbs);
         let Some(at) = self.state.actors.get(&attacker).map(|a| a.pos) else {
             return;
         };
@@ -288,7 +292,7 @@ impl World {
         let percent = if me.talents.is_empty() {
             0
         } else {
-            me.talent_mods(&self.content).slip_percent
+            me.talent_mods(&self.content).defence.slip_percent
         };
         if percent == 0 {
             return price;

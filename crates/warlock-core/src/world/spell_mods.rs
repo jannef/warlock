@@ -2,7 +2,7 @@
 //! the spell scaling design §7.1): the six hooks' [`SpellMods`] (`content/spell_mod.rs`), summed
 //! once a cast from two sources, the first filtered by the spell's tags:
 //!
-//! - its **talents**' `spell_mod` effects ([`crate::talent::TalentMods::spell_mods`]: Empower,
+//! - its **talents**' `spell_mod` effects ([`crate::talent::MagicMods::spell_mods`]: Empower,
 //!   Archmage, Keen mind, School focus, Scroll adept, Wand mastery, Sure hand, Brimming);
 //! - its **worn items**' spell effects, unidentified too (#629): `spell_rungs`, `spell_bonus`
 //!   (Potent), `spell_sides`, `spell_dice`, `spell_reroll`, `wand_rungs` (of Wands), and
@@ -18,6 +18,7 @@
 
 use super::{Actor, CastBy};
 use crate::content::{Content, Effect as ItemEffect, SpellData, SpellMods};
+use crate::talent::MagicEffect;
 
 impl Actor {
     /// What its talents, worn items, and rank do to a cast of `spell` of its own (module
@@ -29,7 +30,7 @@ impl Actor {
     /// [`Actor::spell_mods`] for a cast as `by`: its rank counts for an own cast only.
     pub fn spell_mods_by(&self, content: &Content, spell: &SpellData, by: CastBy) -> SpellMods {
         let tags = spell.tags(content);
-        let mut mods = self.talent_mods(content).spell_mods(&tags);
+        let mut mods = self.talent_mods(content).magic.spell_mods(&tags);
         mods.add(&self.worn_spell_mods(content));
         if by == CastBy::Own {
             mods.add(&self.rank_mods(content, spell));
@@ -68,7 +69,7 @@ impl Actor {
             let def = book.get(id);
             let mut rungs = 0;
             for effect in &def.effects {
-                if let crate::content::TalentEffect::SpellMod(spec) = effect {
+                if let crate::content::TalentEffect::Magic(MagicEffect::SpellMod(spec)) = effect {
                     let one = spec.resolve(content, taken.choice.as_deref());
                     if one.fits(&tags) {
                         rungs += one.mods.rungs;

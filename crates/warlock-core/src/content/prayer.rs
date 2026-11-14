@@ -4,7 +4,7 @@
 //! statuses the release use ends, and the uses in their priority order with their words.
 //!
 //! The rule itself lives in `world/orison.rs`; which uses a priest has, how many answers a
-//! prayer gives, and the titles are the prayer talents' (`TalentEffect::Prayer`). The uses are a
+//! prayer gives, and the titles are the prayer talents' (`FaithEffect::Prayer`). The uses are a
 //! closed list in code ([`PrayerUse`]): the file gives each one's place in the order and its
 //! words, once each.
 //!

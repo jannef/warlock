@@ -245,7 +245,7 @@ impl World {
             me.kind == ActorKind::Creature && (self.asleep(target) || self.disguised(target));
         let talents = me.talent_mods(content);
         let modifier = me.check_modifier(content, Stat::Dexterity)
-            + talents.initiative_bonus
+            + talents.stealth.initiative_bonus
             + me.skill_effect(content, Effect::Initiative);
         let difficulty = difficulty + by.map_or(0, |by| self.craft(by));
         let made = !helpless && check::check(&mut self.state.rng, modifier, difficulty);
@@ -330,7 +330,7 @@ impl World {
     fn craft(&self, id: ActorId) -> i32 {
         (self.state.actors.get(&id)).map_or(0, |a| {
             a.skill_effect(&self.content, Effect::Surprise)
-                + a.talent_mods(&self.content).surprise_difficulty
+                + a.talent_mods(&self.content).stealth.surprise_difficulty
         })
     }
 
@@ -346,7 +346,7 @@ impl World {
             return cost;
         };
         let ease = if self.surprise_status() == Some(status) {
-            actor.talent_mods(&self.content).surprise_ease
+            actor.talent_mods(&self.content).stealth.surprise_ease
                 + actor.skill_effect(&self.content, Effect::SurpriseEase)
         } else if self.content.ids().staggered == Some(status) {
             actor.skill_effect(&self.content, Effect::SteadyEase)

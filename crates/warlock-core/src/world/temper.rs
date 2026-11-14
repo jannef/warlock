@@ -25,7 +25,7 @@
 //!   item damaged, or a damaged one destroyed. No material's `resists` withstands a failure: it
 //!   is the craft's own blunder, not the world's; but a `proof` one (adamantium) is never
 //!   damaged by anything, so it only fails to improve ("no harm is done"). In hands that spoil
-//!   nothing (Waste not's `temper_safe`, `TalentMods::temper_safe`) a failure, a natural 2 too,
+//!   nothing (Waste not's `temper_safe`, `CraftMods::temper_safe`) a failure, a natural 2 too,
 //!   leaves the item as it was, the attempt counted; on a `proof` item proof comes first and its
 //!   line is said. Neither draws from the rng. A stack of several is worked one at a time: the one
 //!   worked is set apart at the end of the pack, and being worked it joins nothing again. Then the item, if it survived,
@@ -386,7 +386,15 @@ impl World {
     fn work_out(&mut self, craft: Craft, at: usize, mut worked: Worked, made: bool) -> bool {
         let [good, bad, mended, ended, spared] = craft.lines();
         let is_proof = proof(&self.content, &self.state.player().inventory[at]);
-        if !made && !is_proof && self.state.player().talent_mods(&self.content).temper_safe {
+        if !made
+            && !is_proof
+            && self
+                .state
+                .player()
+                .talent_mods(&self.content)
+                .craft
+                .temper_safe
+        {
             // Waste not: the item as it was, the attempt counted (a natural 2 the same); a proof
             // item withstands below instead, with its own line.
             self.player_mut().inventory[at].set_worked(worked);

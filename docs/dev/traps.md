@@ -102,7 +102,7 @@ refusals, the modifier, marks, the menu, saves and replays), `check.rs`, `abilit
 
 **Rigging** (spec §8 "Traps": "Rigging traps", #1423; the craftsperson design §7.6) is
 `world/rig.rs`: the craftsperson's Trapwright (`data/talents/trapwright.toml`, `effects = [{
-kind = "rigs" }]` → `TalentMods::rigs` → `ClassActive::Rig`, id `trapwright`, `Aim::Rig`).
+kind = "rigs" }]` → `CraftMods::rigs` → `ClassActive::Rig`, id `trapwright`, `Aim::Rig`).
 The rigs are `data/rigs.toml` (`content/rig.rs`: `RigRules { difficulty, skill, rigs }`,
 `RigDef { trap, seconds, takes: RigTakes::{Ammo, Stock, DigTool}, knife, wall, made, snaps }`,
 `RigId` its index; optional, and without it `Ability::unavailable` says `NotYet`; the loader
@@ -120,7 +120,7 @@ cell as the player knows it, the wall in a straight line within `wall` cells, th
 `rig::lack`) → `Spent::Rig(Rigging)` → `World::rig` (`keep_at` in `craft` turns, the last cut
 to the rig's time) → `World::rigged` (a hidden trap there is found, someone there blocks, the
 inputs found again, `combat::roll_natural` + Dexterity + `skill_effect_of(skill, Craft)` +
-`TalentMods::check(Dexterity)` against `difficulty` by `check::makes`; made or a natural 2: the
+`VigourMods::check(Dexterity)` against `difficulty` by `check::makes`; made or a natural 2: the
 inputs spent, `Trap { known, charges, rigged: true }` placed and in `trap_memory`; a natural 2
 then `spring_trap(at, player)`, a pit's climb as a `run_turn`; then `perceive`). **The kill**:
 `Trap::rigged` (saved, skipped while false) makes `spring_trap` set `World::rigger` (not saved)

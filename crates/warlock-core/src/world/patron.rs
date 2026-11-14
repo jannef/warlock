@@ -1,7 +1,7 @@
 //! The craftsperson's patron (spec §8 "Class abilities": Patron; #1421, the craftsperson design
 //! §7.4).
 //!
-//! A character with the Patron class ability (`TalentMods::patron`, the craftsperson's from
+//! A character with the Patron class ability (`FortuneMods::patron`, the craftsperson's from
 //! level 12) has a patron in town: a town's class helper for `patron` (`content/town.rs`),
 //! placed with the aristocrat's servant's code (`stipend.rs`: as the town is made, or as the
 //! ability is given if it is made already), of the player's race and speaking its register,

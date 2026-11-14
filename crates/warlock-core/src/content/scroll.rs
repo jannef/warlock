@@ -19,6 +19,7 @@
 //! ```
 
 use super::{Content, SpellId};
+use crate::talent::HungerEffect;
 use serde::Deserialize;
 
 /// What kind of reading data names.
@@ -158,10 +159,10 @@ pub(super) fn check_spells(content: &Content) -> Result<(), String> {
     // The meals the talents name are objects (loaded after the talents).
     for (_, def) in content.talents().iter() {
         for effect in &def.effects {
-            if let super::TalentEffect::MealHeals {
+            if let super::TalentEffect::Hunger(HungerEffect::MealHeals {
                 object: Some(object),
                 ..
-            } = effect
+            }) = effect
                 && !content.object_defs().is_empty()
                 && content.object_id(object).is_none()
             {

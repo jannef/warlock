@@ -10,6 +10,7 @@ use super::{
 use crate::skills::Ladder;
 use crate::skills::RollRules;
 use crate::skills::SkillId;
+use crate::talent::{AllyEffect, MagicEffect, MartialEffect};
 
 impl Content {
     /// The combat stances of `data/stances.toml` (all plain without the file).
@@ -91,7 +92,7 @@ impl Content {
     pub fn charge_cost(&self) -> Option<(u16, u16)> {
         let def = self.class_active(ClassActive::Charge)?;
         let per_cell = def.effects.iter().find_map(|e| match e {
-            TalentEffect::Charge { per_cell } => Some(*per_cell),
+            TalentEffect::Martial(MartialEffect::Charge { per_cell }) => Some(*per_cell),
             _ => None,
         })?;
         Some((def.resource.map_or(0, |r| r.amount), per_cell))
@@ -100,7 +101,7 @@ impl Content {
     /// How far Sic 'em reaches (`world/sic.rs`), as its talent says.
     pub fn sic_range(&self) -> Option<i32> {
         (self.class_active(ClassActive::Sic)?.effects.iter()).find_map(|e| match e {
-            TalentEffect::Sic { range, .. } => Some(*range),
+            TalentEffect::Ally(AllyEffect::Sic { range, .. }) => Some(*range),
             _ => None,
         })
     }
@@ -124,7 +125,9 @@ impl Content {
             return false;
         };
         (self.talents.iter()).any(|(_, def)| {
-            (def.effects.iter()).any(|e| matches!(e, TalentEffect::Spell { spell: s } if s == name))
+            (def.effects.iter()).any(
+                |e| matches!(e, TalentEffect::Magic(MagicEffect::Spell { spell: s }) if s == name),
+            )
         })
     }
 

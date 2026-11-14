@@ -42,6 +42,7 @@ impl World {
             .state
             .player()
             .talent_mods(&self.content)
+            .martial
             .patient_defence
         else {
             return Spent::Nothing;
@@ -54,7 +55,7 @@ impl World {
     /// on ([`World::free_blows_of`]) and answers a blow it dodged as well as one it parried.
     pub(super) fn poised(&self, actor: &Actor) -> bool {
         !actor.talents.is_empty()
-            && (actor.talent_mods(&self.content).patient_defence)
+            && (actor.talent_mods(&self.content).martial.patient_defence)
                 .is_some_and(|s| actor.effects.has(s))
     }
 }
@@ -67,7 +68,7 @@ impl World {
     pub(super) fn may_wind_step(&mut self) -> bool {
         let content = self.content.clone();
         let me = self.state.player();
-        let Some(status) = me.talent_mods(&content).wind_step else {
+        let Some(status) = me.talent_mods(&content).martial.wind_step else {
             return false;
         };
         if me.effects.has(status) {
@@ -82,7 +83,13 @@ impl World {
     /// priced action is, `status.rs`): this took no time, so the player's next action eases it.
     pub(super) fn wind_step(&mut self, events: &mut Vec<Event>) -> Spent {
         let player = self.state.player;
-        let Some(status) = self.state.player().talent_mods(&self.content).wind_step else {
+        let Some(status) = self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .martial
+            .wind_step
+        else {
             return Spent::Nothing;
         };
         self.afflict(player, status, 1, Some(player), events);
@@ -112,7 +119,7 @@ impl World {
         if me.talents.is_empty() {
             return false;
         }
-        let Some(cost) = me.talent_mods(&self.content).catch_missiles else {
+        let Some(cost) = me.talent_mods(&self.content).martial.catch_missiles else {
             return false;
         };
         if me.weapon_item(&self.content).is_some() || me.shield_item(&self.content).is_some() {
@@ -183,6 +190,7 @@ impl World {
             .state
             .player()
             .talent_mods(&self.content)
+            .martial
             .stunning_strike
         else {
             return Spent::Nothing;
@@ -240,7 +248,14 @@ impl World {
     pub(super) fn stillness(&mut self, events: &mut Vec<Event>) -> Spent {
         let player = self.state.player;
         let content = self.content.clone();
-        let Some(ends) = self.state.player().talent_mods(&content).stillness.clone() else {
+        let Some(ends) = self
+            .state
+            .player()
+            .talent_mods(&content)
+            .martial
+            .stillness
+            .clone()
+        else {
             return Spent::Nothing;
         };
         self.say("You still your mind.");

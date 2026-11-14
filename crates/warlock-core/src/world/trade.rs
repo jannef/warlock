@@ -1,11 +1,11 @@
 //! The Crafts trades (spec §8 "Talents"; the craftsperson design §3): Smith, Wright, Gemcutter,
 //! Brewster, Pitman, Wortcunner, and Spellwright, each a `trade` hand-out
-//! ([`TalentEffect::Trade`](crate::content::TalentEffect::Trade)), taken as a creation pick by a
+//! ([`CraftEffect::Trade`](crate::talent::CraftEffect::Trade)), taken as a creation pick by a
 //! craftsperson alone (`needs = { creation = true, class = "craftsperson", race_lacks = "..." }`).
 //!
 //! Handed down once, as the talent is taken ([`World::learn_trade`], from `World::hand_down`):
 //!
-//! - **The skill**: its dice, plus the holder's `TalentMods::trade_bonus` (Time served), added
+//! - **The skill**: its dice, plus the holder's `CraftMods::trade_bonus` (Time served), added
 //!   to the skill with `Skills::add`, as a race's or a story's grant is (two grants of a skill
 //!   sum).
 //! - **The tools of the trade**: kit lines (`content/kit.rs`), each line's alternative drawn as
@@ -15,7 +15,7 @@
 //!
 //! Both draw from the stream `character/trade/<race>,<gender>,<class>/<skill>`, its own, so no
 //! other roll of the run moves. The skill stays a trade of the holder's
-//! (`TalentMods::trades`): a level-up roll on it throws the die one step up
+//! (`CraftMods::trades`): a level-up roll on it throws the die one step up
 //! (`world/skill_roll.rs`).
 
 use super::World;
@@ -40,7 +40,7 @@ impl World {
         };
         let seed = self.state.seed;
         let mut rng = Rng::stream(seed, &format!("character/trade/{spec}/{skill}"));
-        let bonus = self.state.player().talent_mods(content).trade_bonus;
+        let bonus = self.state.player().talent_mods(content).craft.trade_bonus;
         let rolled = dice.roll(&mut rng) + bonus;
         self.player_mut().skills.add(id, rolled);
         // The loader checked the lines (`check_trades`).

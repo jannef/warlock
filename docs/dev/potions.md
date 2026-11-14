@@ -215,11 +215,11 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
 
 ## Talents (system `potions`)
 
-- **Thrifty drinker** (`potion_kept { chance }`, `TalentMods::potion_kept`): read in
+- **Thrifty drinker** (`potion_kept { chance }`, `MagicMods::potion_kept`): read in
   `Actor::potion_kept` with the worn `potion_kept` affixes (#633; the sum held to `MAX_KEPT`,
   50, unless the talent alone is above it), which `take_draught` reads; one draw only above 0.
 - **Lasting draughts** (Vigour, Toughness 13; #567): `status_lasts` (50) on the six boosts and
-  three visions, `TalentMods::status_lasts`, read in `TalentMods::eases_every` (each degree
+  three visions, `VigourMods::status_lasts`, read in `VigourMods::eases_every` (each degree
   takes half again as long to ease). The design called it "Strong constitution", a name a
   diseases talent already has.
 

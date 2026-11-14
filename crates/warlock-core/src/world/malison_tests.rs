@@ -68,7 +68,7 @@ fn the_witch_gains_it_at_eighteen() {
 fn its_bite_names_every_hex_status() {
     let w = witch();
     let mods = w.state.player().talent_mods(w.content());
-    let bitten: Vec<StatusId> = (mods.status_damage.iter())
+    let bitten: Vec<StatusId> = (mods.offence.status_damage.iter())
         .filter(|(_, v)| *v == 3)
         .map(|(s, _)| *s)
         .collect();
@@ -81,7 +81,7 @@ fn its_bite_names_every_hex_status() {
         bitten, hexes,
         "a row of `malison.toml` for each hex a spell lays"
     );
-    assert_eq!(mods.hex_tithe, Some(2));
+    assert_eq!(mods.magic.hex_tithe, Some(2));
 }
 
 #[test]

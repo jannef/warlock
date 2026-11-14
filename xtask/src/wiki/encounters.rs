@@ -11,6 +11,7 @@ use warlock_core::content::{
 use warlock_core::daylight::DayPhase;
 use warlock_core::dice::Dice;
 use warlock_core::skills::Effect;
+use warlock_core::talent::DelvingEffect;
 
 /// The landscapes a step rolls on, in the order the pages list them: safest first.
 const LANDSCAPES: [Landscape; 7] = [
@@ -92,7 +93,7 @@ pub(super) fn checks(content: &Content) -> String {
     let alert: Vec<String> = (content.talents().iter())
         .flat_map(|(_, t)| t.effects.iter().map(move |e| (t, e)))
         .filter_map(|(t, e)| match e {
-            TalentEffect::Notice { value } => Some(format!(
+            TalentEffect::Delving(DelvingEffect::Notice { value }) => Some(format!(
                 "{} ({})",
                 super::talents::talent_link(content, &t.id, &t.name),
                 signed(*value)

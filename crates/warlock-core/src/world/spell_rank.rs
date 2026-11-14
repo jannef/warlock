@@ -55,7 +55,7 @@ impl Actor {
         if !self.knows_spell(content, spell) {
             return;
         }
-        if self.talent_mods(content).has_spell(spell) {
+        if self.talent_mods(content).magic.has_spell(spell) {
             self.spells.insert(spell, 0);
         } else {
             self.spells.remove(&spell);

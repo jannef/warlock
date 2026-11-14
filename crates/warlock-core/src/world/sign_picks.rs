@@ -63,6 +63,7 @@ impl World {
             .player()
             .talent_mods(&content)
             .into_owned()
+            .sign
             .fire_breath
         else {
             return Spent::Nothing;
@@ -92,7 +93,7 @@ impl World {
     pub(super) fn hounds_bay(&mut self, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
-        let Some(bay) = self.state.player().talent_mods(&content).hounds_bay else {
+        let Some(bay) = self.state.player().talent_mods(&content).sign.hounds_bay else {
             return Spent::Nothing;
         };
         if !self.can_loose_here() {

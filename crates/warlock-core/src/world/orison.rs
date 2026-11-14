@@ -29,6 +29,7 @@ use super::{Spent, World};
 use crate::action::{DiseaseNews, Event};
 use crate::content::{ActionKind, Content, Face, PrayerRules, PrayerUse, TalentEffect};
 use crate::hunger::Hunger;
+use crate::talent::FaithEffect;
 use crate::time::GameTime;
 use crate::world::Actor;
 use serde::{Deserialize, Serialize};
@@ -70,15 +71,15 @@ impl Actor {
     /// Its prayer's name and description in the abilities menu: the highest tier's title as its
     /// face gives it, and that tier's talent's description; `None` without a prayer.
     pub fn prayer_title<'c>(&self, content: &'c Content) -> Option<(&'c str, &'c str)> {
-        let tier = (self.talent_mods(content).prayer.as_ref()).map(|p| p.tier)?;
+        let tier = (self.talent_mods(content).faith.prayer.as_ref()).map(|p| p.tier)?;
         let face = self.prayer_face(content);
         (content.talents().iter()).find_map(|(_, def)| {
             def.effects.iter().find_map(|e| match e {
-                TalentEffect::Prayer {
+                TalentEffect::Faith(FaithEffect::Prayer {
                     tier: Some(t),
                     title: Some(title),
                     ..
-                } if *t == tier => Some((title.of(face), def.description.as_str())),
+                }) if *t == tier => Some((title.of(face), def.description.as_str())),
                 _ => None,
             })
         })
@@ -102,7 +103,7 @@ impl World {
     pub fn prayer_state(&self) -> Option<PrayerState> {
         let rules = self.content.prayer()?;
         let me = self.state.player();
-        let prayer = me.talent_mods(&self.content).prayer.clone()?;
+        let prayer = me.talent_mods(&self.content).faith.prayer.clone()?;
         let strain = self.state.progress.prayer;
         let time = self.state.time;
         Some(PrayerState {
@@ -122,7 +123,7 @@ impl World {
         let content = self.content.clone();
         let player = self.state.player;
         let me = self.state.player();
-        let Some(prayer) = me.talent_mods(&content).prayer.clone() else {
+        let Some(prayer) = me.talent_mods(&content).faith.prayer.clone() else {
             return Spent::Nothing;
         };
         let face = me.prayer_face(&content);

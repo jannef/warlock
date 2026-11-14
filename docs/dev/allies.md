@@ -181,7 +181,7 @@ own refusals (unknown, silenced, too little mana):
 4. The count: the cast's roll (its rung, the dice hooks, rerolls) + `ally_mod`'s `count`, at
    least 1, held to the spell's room, the global cap's, and the free cells (recomputed after the
    giving way).
-5. Each: `World::summon_draw(pool, &TalentMods::summon_bias)` (`world/summon.rs`, shared with
+5. Each: `World::summon_draw(pool, &AllyMods::summon_bias)` (`world/summon.rs`, shared with
    the enemy summoner, which passes no bias: one `below(pool.len())` as before), then
    `make_ally` on the next cell, `AllySource::Summoned { spell: Some(id) }`, `until` = now + the
    cast's degrees (minutes) × (100 + `ally_mod`'s `duration_percent`) % (rounded down, at least
@@ -191,7 +191,7 @@ own refusals (unknown, silenced, too little mana):
    (`spell_landed`), a success as any cast; a self spell trains no style.
 
 **The draw's bias** (the owner's Q9: an item that guarantees fire, someday):
-`TalentEffect::SummonBias { tag, weight }` → `TalentMods::summon_bias` (in the order taken). An
+`AllyEffect::SummonBias { tag, weight }` → `AllyMods::summon_bias` (in the order taken). An
 entry whose type carries a bias's tag weighs that weight (several multiply), the rest 1; one
 `below(total)`; a total of 0, or every weight 1, falls back to the plain draw. No talent or item
 gives one yet; an item affix would feed the same list.
@@ -200,7 +200,7 @@ gives one yet; an item affix would feed the same list.
 nothing: `fight.rs::creature_dies` returns before `remains`, loot, the corpse, and a cursed
 room's rising; blood is spilled as any.
 
-`TalentEffect::AllyMod` gains `count`, `duration_percent`, `lasting`, `most` (`AllyMods`, summed;
+`AllyEffect::AllyMod` gains `count`, `duration_percent`, `lasting`, `most` (`AllyMods`, summed;
 `lasting` any), read only in `cast_summon`; the wiki's talent text says each.
 
 Tests: `world/summon_spell_tests.rs` on the built-in content's spell-circle hall with fixture
@@ -256,7 +256,7 @@ attacker is the player" has this one exception. An ally's own death pays no one.
 
 ## Beast-bond
 
-`TalentEffect::AllyMod { to_hit, protection }` (`content/talent.rs`: either may be left out, not
+`AllyEffect::AllyMod { to_hit, protection }` (`content/talent.rs`: either may be left out, not
 both; bonuses) → `TalentMods::ally: AllyMods { to_hit, protection }` (summed). Read through the
 **master's** mods, `World::ally_mods(id)`: `World::ally_blow` in `fight.rs::resolve` (after
 `favoured`) adds `to_hit` to an ally's attack profile; `World::ally_protection` in

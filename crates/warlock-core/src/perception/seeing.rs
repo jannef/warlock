@@ -118,8 +118,8 @@ fn range(v: &Viewing) -> i32 {
                 0
             };
             match daylight::phase(state.time) {
-                DayPhase::Night => range + talents.night_sight + moon,
-                DayPhase::Day => range + talents.day_sight,
+                DayPhase::Night => range + talents.senses.night_sight + moon,
+                DayPhase::Day => range + talents.senses.day_sight,
                 DayPhase::Twilight => range,
             }
         }
@@ -341,7 +341,7 @@ impl Seeing {
 /// in line of sight within its radius, in actor id order.
 fn scented(v: &Viewing, los: &Los) -> Vec<(ActorId, Pos)> {
     let (state, content, talents, viewer) = (v.state, v.content, v.talents, v.viewer);
-    if v.overworld || talents.scent.is_empty() {
+    if v.overworld || talents.senses.scent.is_empty() {
         return Vec::new();
     }
     // A full moon lengthens a gift's (Hound's nose; spec §8 "Birth sign").
@@ -362,7 +362,7 @@ fn scented(v: &Viewing, los: &Los) -> Vec<(ActorId, Pos)> {
         .filter(|a| a.level == v.level.id && a.kind == ActorKind::Creature)
         .filter(|a| los.grid.get(a.pos) == Some(&true) && !v.is_opaque(a.pos))
         .filter(|a| {
-            (talents.scent.iter()).any(|&(status, radius)| {
+            (talents.senses.scent.iter()).any(|&(status, radius)| {
                 a.effects.has(status) && a.pos.dist2(viewer) <= radius2(reach(status, radius))
             })
         })
