@@ -194,3 +194,6 @@ The dice of a death throe are half of what a damage spell of the creature's leve
 (2 + level ÷ 8)d6, rounded down. Unseen, a burst is heard as an explosion.
 
 {{#include generated/creature-bursts.md}}
+
+See also: [How creatures fight](creature-bodies.md), [Creature tricks](creature-tricks.md), and
+[Creatures in numbers](creature-numbers.md).

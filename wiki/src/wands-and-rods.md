@@ -88,3 +88,5 @@ and aim it. Rods lie in the dungeon and are sold in general stores.
 takes a fifth off what is left.
 
 {{#include generated/rods.md}}
+
+See also: [Magic items](magic-items.md), [Ranged combat](ranged.md), and [Scrolls](scrolls.md).

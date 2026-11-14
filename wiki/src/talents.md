@@ -213,3 +213,6 @@ say, stealth.
 resource coming back with time is the limit.
 
 {{#include generated/talents-by-system.md}}
+
+See also: [Experience and levelling up](experience.md), [Skills](skills.md), and
+[Weapon skills](weapon-skills.md).

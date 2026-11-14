@@ -36,6 +36,8 @@ which of these each one does:
   damage. This counts like armour's resistance: together with what you wear it
   never goes past 75%, and never gives immunity.
 
+## From potions and songs
+
 The [potions](potions.md) that last a while give:
 
 - boosts: [Fortified](status-list.md#status-fortified), [Nimble](status-list.md#status-nimble), [Hale](status-list.md#status-hale),
@@ -52,6 +54,8 @@ The bard's [songs](abilities.md#songs) give three more. [Inspired](status-list.m
 shake it off. Each goes up to three degrees, as many as the singer's [Music](skills.md#skill-music)
 gives the song.
 
+## Hexes
+
 A **hex** is a status that a [hex spell](spellcasting.md#shapes) lays: [Hexed](status-list.md#status-ill-wished),
 [Weakened](status-list.md#status-weakened), [Sluggish](status-list.md#status-sluggish), Drowsy, and
 [Webbed](status-list.md#status-webbed). A [witch](class-witch.md) can feed her hexes:
@@ -63,6 +67,8 @@ A **hex** is a status that a [hex spell](spellcasting.md#shapes) lays: [Hexed](s
 - Her [malison](class-witch.md#talent-malison) makes a creature take 3 more damage from her for each of
   her hexes on it, and a creature that dies under one of her hexes pays her mana.
 
+## Cooldowns
+
 A **cooldown** is a status effect that only waits to wear off. While you are, say,
 [winded](status-list.md#status-winded), the ability that winded you cannot be used again
 (`you are winded`). Time is the only price: nothing counts how often you use an ability.
@@ -73,3 +79,5 @@ less clever, and cannot read or spend [mana](mana.md#spending-it). When it runs 
 **Exhausted** for two and a half minutes: a little weaker, and with no rage
 until it passes.
 
+See also: [Status effects](status-effects.md), [Spell circles](spell-circles.md), and
+[Potions](potions.md).

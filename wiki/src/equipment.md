@@ -159,3 +159,6 @@ floor.", "A kobold shaman (hostile, unhurt), wearing a bone amulet, ...", "A kob
 (hostile, unhurt), with a short bow and 20 arrows ready, ...". You cannot see anything else they
 carry. They fight with their gear as you do, and keep what they start with until they die. Then
 all of it falls where they stood.
+
+See also: [Objects and your pack](objects.md), [Combat](combat.md), and
+[Magic items](magic-items.md).

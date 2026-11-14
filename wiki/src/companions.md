@@ -122,3 +122,5 @@ own: it never crosses to you.
 ## The companion's rules
 
 {{#include generated/companion-rules.md}}
+
+See also: [Allies](allies.md), [the ranger](class-ranger.md), and [Familiars](familiars.md).

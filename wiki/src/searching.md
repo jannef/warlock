@@ -79,3 +79,5 @@ Behind a [secret door](doors.md#secret-doors) there may be a room nobody has ent
 time.
 
 {{#include generated/search-depths.md}}
+
+See also: [Traps](traps.md), [Skills](skills.md), and [Chests](chests.md).

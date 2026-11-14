@@ -2,6 +2,8 @@
 
 {{#include generated/class-card.md:druid}}
 
+See also: [Magic](magic.md) and [Allies](allies.md).
+
 ## How to play
 
 You fight from the back with spells and a sling, and with the quarterstaff when something gets

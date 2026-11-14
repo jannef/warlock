@@ -114,3 +114,5 @@ reaches, and whoever stood on it falls in, unless they are
 [water](terrain.md#water) it reaches at once, into ice 10 cm thick that holds a laden person. A
 blast without heat would shatter thin ice, though there is no such blast yet. Someone who makes way
 for you, stepping onto ice you stood on, may break through it if they are heavier than you.
+
+See also: [Weather](weather.md) and [Damage types](damage-types.md).

@@ -19,3 +19,5 @@ creature behaves on [Creatures](creatures.md#the-creatures).
 ## Pace, senses, and size
 
 {{#include generated/creature-senses.md:fiends}}
+
+See also: [Hellegeat](pits.md) and [Miscasts](miscasts.md).

@@ -263,3 +263,5 @@ If you cannot see what is in your way, you only learn that "Something is in the 
 swapped places with something.
 
 Moving into a hostile creature attacks it instead; see [Combat](combat.md).
+
+See also: [Quests](quests.md), [The Ascmearc](ascmearc.md), and [The Weyfarers' Gilde](guild.md).

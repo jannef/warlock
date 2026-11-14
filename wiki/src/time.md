@@ -56,3 +56,5 @@ a long time at once.
 
 Actions that do not change the world, such as looking around, opening menus, and reading help, take
 no time. Refused actions, such as walking into a wall, take no time either.
+
+See also: [Sun and moon](sun.md) and [Weather](weather.md).

@@ -104,3 +104,5 @@ is scorched, under 65 blackened, then charred. Water, lava, and fire take no cha
 You see and remember char the way you see and remember blood, and look mode names it first:
 "A charred blood-stained stone floor." Blood on a charred floor is drawn over the char. Char is
 only for show, never changes a fight, and the Blood switch hides it too.
+
+See also: [Combat](combat.md), [Healing](healing.md), and [Status effects](status-effects.md).

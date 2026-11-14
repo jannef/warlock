@@ -156,3 +156,6 @@ You made the voice, so you do not hear it, but the map marks where it sounded wi
 ring until your next turn. It takes a [normal action](turns.md#what-actions-cost) (6 seconds at a
 normal pace). It is refused, taking no time, on yourself, out of reach, at a place you do not see,
 and on the [overworld](overworld.md#travel), which is silent.
+
+See also: [What skills give](skill-benefits.md), [How creatures behave](creature-behaviour.md), and
+[Sight and memory](sight.md).

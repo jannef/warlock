@@ -19,3 +19,5 @@ on [Creatures](creatures.md#the-creatures).
 ## Pace, senses, and size
 
 {{#include generated/creature-senses.md:giants}}
+
+See also: [Creature powers](creature-powers.md) and [The dungeons one by one](dungeon-guide.md).

@@ -80,3 +80,5 @@ a [flask](potions.md#flasks) of it.
 
 A [cold](spell-types.md) spell puts out the fire on each cell it reaches, and the rest of the zone
 burns on. A zone shows as a still tint over its cells, and look mode names it.
+
+See also: [How spells work](spellcasting.md) and [Healing](healing.md).

@@ -151,3 +151,6 @@ enter, and for a [closed door](doors.md), which you open by walking into it.
 very loud.
 
 {{#include generated/terrain-local.md}}
+
+See also: [Digging and walls](digging.md), [Temperature and ice](temperature.md), and
+[Sight and memory](sight.md).

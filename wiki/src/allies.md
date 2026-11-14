@@ -147,3 +147,5 @@ harm.
 ## The rules
 
 {{#include generated/ally-rules.md}}
+
+See also: [Companions](companions.md), [Familiars](familiars.md), and [Magic](magic.md).

@@ -93,3 +93,5 @@ Each race except the humans has [talents](talents.md#racial-talents) that only i
 Racial tree. Humans get Versatile instead: one more talent at creation and at level 30.
 
 {{#include generated/talents-racial.md}}
+
+See also: [Classes](classes.md), [Horoscope](horoscope.md), and [Stats](stats.md).

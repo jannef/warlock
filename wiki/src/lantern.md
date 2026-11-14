@@ -53,3 +53,5 @@ hooded light as before.
 
 With no light ready, `u` asks which way to dig if you have a [digging](digging.md#digging) tool
 ready. Otherwise it tells you that you have none, which takes no time.
+
+See also: [Equipment](equipment.md), [Sight and memory](sight.md), and [Sun and moon](sun.md).

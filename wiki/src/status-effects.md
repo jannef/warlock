@@ -198,3 +198,5 @@ Creatures of the other side are unwelcome there too, and you can see it on them 
 "You are bleeding." and "You feel sick." stop a [rest](resting.md), like any news. "The bleeding
 stops." and "The poison wears off." show in the message line but let you rest on.
 
+See also: [Every status effect](status-list.md), [Buffs and hexes](buffs.md), and
+[Healing](healing.md).

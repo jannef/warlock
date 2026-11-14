@@ -96,3 +96,6 @@ ability, then something to throw, then the target.
 **[Patient blade](talents.md#talent-patient-blade)** (Shadow; [thief](class-thief.md), level
 32): openings slip away half as fast, a point every 40 base turns instead of every 20. Killing
 your [mark](#the-mark) yourself gives two openings instead of one.
+
+See also: [Surprise and sneak attacks](surprise.md), [Resources](resources.md), and
+[Abilities](abilities.md).

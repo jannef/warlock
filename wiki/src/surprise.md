@@ -148,3 +148,5 @@ attacks once you come beside it. If it can shoot or cast, it does that from wher
 it is hurt, it hunts like any other.
 
 {{#include generated/creature-surprise.md}}
+
+See also: [the thief](class-thief.md), [Openings](openings.md), and [Hearing](hearing.md).

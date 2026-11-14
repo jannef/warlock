@@ -49,3 +49,5 @@ is [slow](turns.md#speed) (speed 800), so you can walk away from it.
 ## The bands
 
 {{#include generated/mimic-bands.md}}
+
+See also: [Chests](chests.md), [Animated objects](animated.md), and [Creatures](creatures.md).

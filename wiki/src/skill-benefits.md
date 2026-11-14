@@ -118,6 +118,8 @@ The passive skills help you more the higher they are:
   miscast milder (10 off the [miscast table](miscasts.md#the-miscast-table)'s total at 100, 20 at
   200). Untrained, you still cast, with nothing added.
 
+## The numbers
+
 [Skill focus](talents.md#talent-skill-focus) makes one skill you are trained in count 25 higher in the table below, the way a
 magic item's bonus does. It works past 100 too, since 100 only slows a skill's [growth](skills.md#improving-a-skill) and is no
 ceiling. It stacks with [Master of none](class-bard.md#talent-master-of-none) and any magic item. Your Skills screen still shows the value
@@ -131,3 +133,6 @@ never down. "—" means it gives nothing yet at that value.
 {{#include generated/skill-benefits.md}}
 
 {{#include generated/skill-resist.md}}
+
+See also: [Using your skills](skill-uses.md), [Abilities](abilities.md), and
+[Experience and levelling up](experience.md).

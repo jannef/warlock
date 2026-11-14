@@ -75,3 +75,5 @@ spell's own light is brighter and wins over it.
   drow in daylight just under their glare (250) can be dazzled by their own
   [Blessing](magic.md#spell-blessing).
 - A disguised [mimic](mimics.md) sheds no light: its disguise would glow.
+
+See also: [Buffs and hexes](buffs.md), [Settings](settings.md), and [Potions](potions.md).

@@ -99,3 +99,5 @@ These beasts can only be familiars. Here they are at her level, by the same
 If a companion and a familiar are both beside you, and one of them has something to treat, the
 [Heal](skills.md#skill-heal) ability first asks **which way**: a direction, or the wait key for
 yourself. With only one beside you it asks nothing.
+
+See also: [Allies](allies.md), [the witch](class-witch.md), and [Companions](companions.md).

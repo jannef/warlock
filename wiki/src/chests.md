@@ -185,3 +185,5 @@ With the [Chest-wise](talents.md#talent-chest-wise) talent ([Intelligence](stats
 chest you see is locked. [Look mode](controls-prompts.md#look-mode) calls it "a locked coffer" or "an
 unlocked coffer". A trapped chest gives itself away as soon as you see it, with no search and no
 chance of missing it: `You notice that the coffer is trapped: a fireball trap.`
+
+See also: [Doors](doors.md), [Traps](traps.md), and [Mimics](mimics.md).

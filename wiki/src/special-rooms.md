@@ -229,3 +229,5 @@ Only what happens inside counts. A sound made in an [echoing hall](special-rooms
 is [loud](hearing.md#how-loud) wherever it is heard, while one made outside and heard inside is not
 changed. Light outside a [shadowed room](special-rooms.md#room-shadowed) is as bright as ever, even
 right at its door.
+
+See also: [Dungeons and danger](dungeons.md) and [The dungeons one by one](dungeon-guide.md).

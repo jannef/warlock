@@ -64,3 +64,6 @@ salvaged.
 ## The Metalcraft recipes
 
 {{#include generated/recipes-metalcraft.md}}
+
+See also: [Crafting](crafting.md), [Making things by hand](handcraft.md), and
+[Materials](materials.md).

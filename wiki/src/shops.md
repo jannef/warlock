@@ -129,3 +129,6 @@ While you owe for something, you cannot [shoot or throw](ranged.md#shooting-and-
 
 When a shopkeeper dies, the shop is abandoned. What lies on its floor is free for the taking,
 and so is the keeper's purse.
+
+See also: [People and talk](npcs.md), [Objects and your pack](objects.md), and
+[the merchant](class-merchant.md).

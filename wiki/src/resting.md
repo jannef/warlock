@@ -92,3 +92,5 @@ faster the [tougher](stats.md#stat-toughness) you are, and **twice as fast while
 [Healing](healing.md)). [Bleeding](status-effects.md#bleeding) and
 [poison](status-list.md#status-poisoned) still cost hit points while you rest, and bleeding
 stops your healing until it stops.
+
+See also: [Time and the calendar](time.md) and [Weather](weather.md).

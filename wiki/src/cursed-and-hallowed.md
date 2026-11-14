@@ -78,3 +78,6 @@ Look at a cell of it and it reads "on hallowed ground". A priest answered by the
 [Prayer](prayer.md#the-holy-and-the-dark)) lays "dreaded ground" instead, which works the same. It
 gives no light. It cannot be laid on the overworld, in water, in a shop, or on ground already
 hallowed; trying spends no time or mana.
+
+See also: [Special rooms](special-rooms.md), [Altars and forges](altars-forges-springs.md), and
+[The dead and spirits](creature-numbers-dead.md).

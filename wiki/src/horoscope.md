@@ -178,3 +178,5 @@ get a year older on every birthday, and the [character screen](the-screen.md#cha
 age on the day you look.
 
 {{#include generated/horoscope.md}}
+
+See also: [Your character](character.md), [Your story](background.md), and [Talents](talents.md).

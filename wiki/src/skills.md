@@ -164,3 +164,6 @@ How many rolls a level gives: your class's, plus your race's, plus your [Intelli
 
 Only you train, for now. Creatures keep the skills they have. Your skills and their marks are saved
 with your run.
+
+See also: [What skills give](skill-benefits.md), [Using your skills](skill-uses.md), and
+[Weapon skills](weapon-skills.md).

@@ -154,3 +154,6 @@ all). So far only the [dretch](creatures.md#creature-dretch) and the
 places.
 
 {{#include generated/creatures.md}}
+
+See also: [How creatures behave](creature-behaviour.md), [How creatures fight](creature-bodies.md),
+and [Creature powers](creature-powers.md).

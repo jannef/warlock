@@ -105,3 +105,6 @@ In the game you find all this out by eating. Here it is in the order it happens,
 rolled on its own. A rotten corpse has lost all of it.
 
 {{#include generated/corpse-effects.md}}
+
+See also: [Hunger](hunger.md), [Diseases](diseases.md), and
+[What creatures leave](creature-drops.md).

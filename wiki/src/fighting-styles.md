@@ -141,3 +141,6 @@ Your [class](classes.md) starts you with a rank in a style or two. A [warrior](c
 either [Twin Blades](fighting-styles.md#style-twin-blades) or [Duelist](fighting-styles.md#style-duelist), and an [ascetic](class-ascetic.md) either [Brawler](fighting-styles.md#style-brawler) or [Staff Fighter](fighting-styles.md#style-staff-fighter); the dice decide. The
 [weapon skills screen](weapon-skills.md#seeing-your-skills) (`W`) lists your styles below your weapon skills, and marks the ones you
 fight in now with a `•`.
+
+See also: [Combat](combat.md), [Schools and caster styles](schools.md), and
+[Stances and stamina](stances.md).

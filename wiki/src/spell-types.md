@@ -99,3 +99,6 @@ Some things are never touched:
 you see go: "The scroll burns up.", "3 potions freeze and shatter."
 
 {{#include generated/spell-ruin.md}}
+
+See also: [Spells with a rule of their own](spell-rules.md), [Temperature and ice](temperature.md),
+and [Status effects](status-effects.md).

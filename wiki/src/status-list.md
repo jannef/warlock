@@ -38,3 +38,6 @@ Every creature whose attack, throw, or gaze can cause a status effect, with the 
 and how bad it makes it. A [Held](held.md) creature's grip is the difficulty of breaking free.
 
 {{#include generated/status-causes.md}}
+
+See also: [Status effects](status-effects.md), [Buffs and hexes](buffs.md), and
+[Diseases](diseases.md).

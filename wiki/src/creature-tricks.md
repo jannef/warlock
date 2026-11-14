@@ -144,3 +144,6 @@ not fight. Each turn the chance is 6 in the number of seconds given. It is heard
 [hearing](hearing.md) like any sound, so you hear the hound before you see it.
 
 {{#include generated/creature-auras.md}}
+
+See also: [Creature powers](creature-powers.md), [Creatures](creatures.md), and
+[Creatures in numbers](creature-numbers.md).

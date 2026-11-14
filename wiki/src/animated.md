@@ -243,3 +243,6 @@ half as much as the part, counted in pieces of that material (see [pieces](mater
 one at least.
 
 {{#include generated/animated-parts.md}}
+
+See also: [Creatures](creatures.md), [Animated things and mimics](creature-numbers-animated.md), and
+[Mimics](mimics.md).

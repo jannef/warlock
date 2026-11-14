@@ -67,3 +67,5 @@ throw](ranged.md#shooting-and-throwing) costs a few points (see the facts above)
   you are asked too.
 
 To eat, see [Food and corpses](food.md).
+
+See also: [Resting](resting.md), [Healing](healing.md), and [Burden](burden.md).

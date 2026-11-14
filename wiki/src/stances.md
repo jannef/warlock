@@ -100,3 +100,6 @@ cheaper:
 - [Drillmaster](class-warrior.md#talent-drillmaster) (the warrior's, at level 25) takes a point off every active's cost.
 - [Armour-breaker](talents.md#talent-armour-breaker) takes 2 off [Sunder's](weapon-skills.md#weapon-ability-sunder) and [Gap shot's](fighting-styles.md#style-ability-gap-shot) cost (never below 1).
 - [Practised technique](talents.md#talent-practised-technique) takes a quarter off their time (never below half the action's).
+
+See also: [Surprise and sneak attacks](surprise.md), [Abilities](abilities.md), and
+[Ranged combat](ranged.md).

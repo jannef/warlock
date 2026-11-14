@@ -59,3 +59,5 @@ block the way across the room. Each room comes only where its creatures can be m
 [danger](dungeons.md#who-lives-there-and-how-many): an armoury from danger 1, a workshop no deeper
 than danger 16. Animated things never stray, so outside the dungeons that keep them these rooms are
 where you find them (see [Animated objects](animated.md#where-they-are-found)).
+
+See also: [Surprise and sneak attacks](surprise.md) and [Hearing](hearing.md).

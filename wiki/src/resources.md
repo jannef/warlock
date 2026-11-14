@@ -99,3 +99,5 @@ as a pick from its trees. Each is on its resource's page:
 [Battle trance](rage.md#the-talent-on-it), [Inner calm](ki.md#the-talent-on-it),
 [Steady hand](focus.md#the-talent-on-it), [Patient blade](openings.md#the-talent-on-it), and
 [Zealot](zeal.md#the-talent-on-it).
+
+See also: [Classes](classes.md), [Mana](mana.md), and [Stances and stamina](stances.md).

@@ -160,3 +160,5 @@ which. Your race's and your class's ranks add up.
 
 Creatures have skills too: the [kobolds](creatures.md#creature-kobold) of the war band know their [spears](weapon-skills.md#weapon-skill-spears) and [bows](weapon-skills.md#weapon-skill-bows). They do not
 get better (yet).
+
+See also: [Fighting styles](fighting-styles.md), [Combat](combat.md), and [Abilities](abilities.md).

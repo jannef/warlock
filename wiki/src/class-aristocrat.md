@@ -2,6 +2,8 @@
 
 {{#include generated/class-card.md:aristocrat}}
 
+See also: [People and talk](npcs.md) and [Shops](shops.md).
+
 ## How to play
 
 You were never meant for this: few hit points, weak arms, and a rapier you barely know. What

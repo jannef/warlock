@@ -142,3 +142,6 @@ slip away with enemies about." and no time passes. Walk off the edge instead, wh
 
 Underground and on the overworld itself, `<` still needs [stairs](terrain.md#stairs). An outdoor
 place that no overworld cell leads into is left by its stairs.
+
+See also: [Encounters on the way](encounters.md), [The Ascmearc](ascmearc.md), and
+[Weather](weather.md).

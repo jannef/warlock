@@ -86,3 +86,5 @@ A rank is only a title: the town calls you by it, and nothing else changes. Ther
 ranks, each named after a metal dearer than the last. The later ones wait for jobs still to come.
 
 {{#include generated/guild-ranks.md}}
+
+See also: [Quests](quests.md), [Weapon skills](weapon-skills.md), and [The Ascmearc](ascmearc.md).

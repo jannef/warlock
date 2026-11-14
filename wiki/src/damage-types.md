@@ -98,3 +98,5 @@ also simply know: [look mode](controls-prompts.md#look-mode) describes a creatur
 
 [Starving](hunger.md#how-hungry-you-are), a [disease](diseases.md) eating at you, and the slow loss of blood from a wound have no kind.
 Nothing resists them.
+
+See also: [Combat](combat.md), [Spell types](spell-types.md), and [Materials](materials.md).

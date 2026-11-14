@@ -135,3 +135,5 @@ the unwary with no extra dice.
 - **Tameable** says whether it may be a companion at all.
 - It is [burdened](burden.md#burden-levels) past a third of its
   **[carrying limit](burden.md#how-much-you-can-carry)**, as you are (see [Burden](burden.md)).
+
+See also: [Creatures](creatures.md), [Stats](stats.md), and [Combat](combat.md).

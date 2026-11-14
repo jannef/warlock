@@ -44,3 +44,6 @@ The berserker's later levels add to it (see [Talents](talents.md)):
 **[Battle trance](talents.md#talent-battle-trance)** (Might; [berserker](class-berserker.md),
 level 6): your rage starts at 18 instead of 12 (never above its maximum), and wears off at two
 thirds of its pace: a point about every 9 seconds instead of every 6.
+
+See also: [Resources](resources.md), [Buffs and hexes](buffs.md), and
+[Stances and stamina](stances.md).

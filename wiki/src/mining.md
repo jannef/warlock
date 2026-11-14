@@ -73,3 +73,5 @@ A lump of ore is no use to a smith as it is. **Smelt** it at an anvil: Metalcraf
 recipe, for anyone trained in [Metalcraft](skills.md#skill-metalcraft), turns one lump into one
 ingot of its metal in ten minutes. The harder metals are harder to smelt, and a failed smelt
 loses the lump. The ingot is ready for the forge (see [Crafting](crafting.md)).
+
+See also: [Digging and walls](digging.md), [Forging at the anvil](forging.md), and [Gems](gems.md).

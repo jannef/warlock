@@ -232,3 +232,6 @@ from then on, even if you had never seen one.
 - [Lasting draughts](talents.md#talent-lasting-draughts) (Vigour, needs
   [Toughness](stats.md#stat-toughness) 13): boost and vision potions last half again as long:
   15 minutes a degree for a boost, 45 minutes for cat's, owl's, or moth's eyes.
+
+See also: [Brewing potions](recipes-alchemy.md), [Every status effect](status-list.md), and
+[Scrolls](scrolls.md).

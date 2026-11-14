@@ -216,3 +216,6 @@ mail turns a blade well and a point badly. [Fire](damage-types.md#damage-fire), 
 
 In the game you never see a creature's Protection, only how its armour turns your blows. The
 numbers are on [Creatures in numbers](creature-numbers.md#hit-points-defence-and-resistances).
+
+See also: [Stances and stamina](stances.md), [Ranged combat](ranged.md), and
+[Surprise and sneak attacks](surprise.md).

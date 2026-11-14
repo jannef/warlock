@@ -74,3 +74,6 @@ and the endings above. But each lasts **2d4 turns** at most, and costs hit point
 
 So the harm is heaviest at the start. Engulfed and Swallowed also stop you shooting, throwing, and
 reading. Your blows and your spells still work, so you can hack your way out of what holds you.
+
+See also: [Status effects](status-effects.md), [How creatures fight](creature-bodies.md), and
+[What skills give](skill-benefits.md).

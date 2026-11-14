@@ -212,3 +212,6 @@ destroyed, though the oldest now and then leave something they had caught up.
   [stagger](status-list.md#status-staggered) you.
 
 The exact numbers are on [Creatures in numbers](creature-numbers.md).
+
+See also: [Creature powers](creature-powers.md), [Creature tricks](creature-tricks.md), and
+[Held](held.md).
