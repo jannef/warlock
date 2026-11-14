@@ -608,7 +608,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     stood before the blast, with a `breaks_to`, no check, lock and trap gone, sprung at no one; a
     chest is any blast's already. **Poison**: Poisoned 1, certain (Blight's own line is 1). **Necrotic**:
     `bite`, before resistance: 150 % of the harm, rounded down, against a target below 50 % of its
-    maximum hit points; `immune_tags = ["undead"]`: laid on those creature types' `resist` at load,
+    maximum hit points; `immune_tags = ["undead"]`: laid on those creature types' immunities at load,
     so an immunity to the type from whatever harm. **Acid**: Corroded 1, certain; `corrodes`
     (the potions wave 2 design §9.3): when it harms the player, the first piece they wear (the
     body armour first) takes acid's item damage after the rider, the material's chance to

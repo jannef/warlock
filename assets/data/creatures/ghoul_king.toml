@@ -22,7 +22,7 @@ weight = 65000
 stats = { strength = 29, dexterity = 26, toughness = 29, intelligence = 28, willpower = 31, presence = 28 }
 base_hp = 55
 natural = { defence = 3, protection = 4, name = "dead flesh" }
-resist = { poison = 100 }
+immune = ["poison"]
 on_eat = { message = "Carrion fed on carrion fed on carrion.", vomit = 90, harm = "1d6" }
 blood = "#3a2020"
 [creature.attack]

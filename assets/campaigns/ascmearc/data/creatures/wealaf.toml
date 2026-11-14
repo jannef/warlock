@@ -32,7 +32,8 @@ stats = { strength = 30, dexterity = 18, toughness = 34, intelligence = 20, will
 base_hp = 190
 mana = 120
 natural = { defence = 3, protection = 3, name = "dead flesh" }
-resist = { poison = 100, cold = 50 }
+resist = { cold = 50 }
+immune = ["poison"]
 corpse = false
 blood = "none"
 [creature.attack]

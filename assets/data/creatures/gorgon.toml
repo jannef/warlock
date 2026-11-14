@@ -26,7 +26,8 @@ weight = 1000000
 stats = { strength = 30, dexterity = 10, toughness = 28, intelligence = 3, willpower = 18, presence = 10 }
 base_hp = 112
 natural = { defence = 3, protection = 4, name = "scales" }
-resist = { fire = 25, poison = 100 }
+resist = { fire = 25 }
+immune = ["poison"]
 on_eat = { message = "Gritty, like meat rolled in sand.", vomit = 40 }
 blood = "#4a4a50"
 # Its breath: a little poison, and stiffening for everyone it harms unless they make a Toughness

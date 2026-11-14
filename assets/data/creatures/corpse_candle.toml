@@ -25,6 +25,7 @@ stats = { strength = 8, dexterity = 14, toughness = 5, intelligence = 11, willpo
 base_hp = 1
 attack = { damage = "1d4", damage_type = "cold", name = "touch", verb = "touches" }
 incorporeal = { wall_defence = 2 }
-resist = { cold = 50, poison = 100 }
+resist = { cold = 50 }
+immune = ["poison"]
 corpse = false
 blood = "none"

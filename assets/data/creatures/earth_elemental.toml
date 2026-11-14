@@ -21,7 +21,8 @@ stats = { strength = 21, dexterity = 11, toughness = 22, intelligence = 2, willp
 base_hp = 87
 natural = { protection = 4, name = "stone body" }
 incorporeal = { wall_defence = 1 }
-resist = { slashing = 25, piercing = 50, electricity = 100, poison = 100 }
+resist = { slashing = 25, piercing = 50 }
+immune = ["electricity", "poison"]
 corpse = false
 blood = "none"
 [creature.attack]

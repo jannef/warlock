@@ -25,7 +25,8 @@ stats = { strength = 27, dexterity = 25, toughness = 28, intelligence = 26, will
 base_hp = 100
 loot = 19
 natural = { defence = 3, protection = 6, name = "scales" }
-resist = { fire = 50, cold = 25, electricity = 25, poison = 100 }
+resist = { fire = 50, cold = 25, electricity = 25 }
+immune = ["poison"]
 corpse = false
 blood = "#1a3a2a"
 attack = { damage = "3d10", damage_type = "slashing", name = "blades", verb = "slashes", to_hit = 10 }

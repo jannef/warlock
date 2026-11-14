@@ -26,7 +26,7 @@ weight = 60000
 stats = { strength = 29, dexterity = 26, toughness = 29, intelligence = 28, willpower = 32, presence = 28 }
 base_hp = 56
 natural = { defence = 3, protection = 4, name = "dead flesh" }
-resist = { poison = 100 }
+immune = ["poison"]
 on_eat = { message = "Cold, and thick as old wine.", vomit = 90, harm = "1d6" }
 blood = "#3a1a20"
 [creature.attack]

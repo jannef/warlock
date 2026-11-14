@@ -113,8 +113,8 @@
 #              (the flaming arrow; a shot adds the launcher's and the ammunition's), rolled after
 #              the weapon's own dice and never soaked by armour (the game's are of no physical
 #              kind); its dice never roll below 0
-#   resist     what it resists while worn or held, in percent per kind (-100 to 75):
-#              { cold = 20 }; every piece adds up, capped at 75
+#   resist     what it resists while worn or held, in percent per kind: { cold = 20 };
+#              every piece adds up with no cap, of which at most 75 counts (-100 at worst)
 #   protects   how its Protection stands against each physical kind, more or less than
 #              `protection`: { slashing = 1, piercing = -1 } (chain mail turns a blade well and
 #              a point badly); armour with protection only
