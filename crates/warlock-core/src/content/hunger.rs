@@ -123,17 +123,20 @@ pub struct Rotten {
 /// `eat` action); and its shelf life: how long after it was made it keeps (rotten from then on)
 /// and how long it lasts (rotted away by then). Food objects have it (`food` in
 /// `data/objects/`), corpses by their size (`data/hunger.toml`).
+///
+/// `None` is never: the corpse of an `everlasting` creature (`Content::load_hunger`), which
+/// stays fresh for ever. Data cannot say never: a shelf life read from a file is always some.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Food {
     pub nutrition: u32,
     pub turns: u32,
-    /// How long it stays good to eat: rotten from then on (old past half of it).
+    /// How long it stays good to eat: rotten from then on (old past half of it); `None`: for ever.
     #[serde(deserialize_with = "shelf_life")]
-    pub keeps: Duration,
-    /// How long it lasts before it has rotted away altogether.
+    pub keeps: Option<Duration>,
+    /// How long it lasts before it has rotted away altogether; `None`: for ever.
     #[serde(deserialize_with = "shelf_life")]
-    pub lasts: Duration,
+    pub lasts: Option<Duration>,
 }
 
 impl Food {
@@ -151,13 +154,18 @@ impl Food {
 
     /// How food of this shelf life is at `age` (spec §8 "Hunger"): old past half of what it
     /// keeps, rotten past it, gone once it has lasted.
+    /// Food that keeps for ever is always fresh.
     pub fn stage(&self, age: Duration) -> Stage {
-        if age >= self.lasts {
+        if self.lasts.is_some_and(|lasts| age >= lasts) {
             Stage::Gone
-        } else if age >= self.keeps {
-            Stage::Rotten
-        } else if age.as_seconds().saturating_mul(2) >= self.keeps.as_seconds() {
-            Stage::Old
+        } else if let Some(keeps) = self.keeps {
+            if age >= keeps {
+                Stage::Rotten
+            } else if age.as_seconds().saturating_mul(2) >= keeps.as_seconds() {
+                Stage::Old
+            } else {
+                Stage::Fresh
+            }
         } else {
             Stage::Fresh
         }
@@ -165,7 +173,7 @@ impl Food {
 }
 
 /// A shelf life in data: whole hours or days, `"8h"`, `"30d"`.
-fn shelf_life<'de, D: Deserializer<'de>>(d: D) -> Result<Duration, D::Error> {
+fn shelf_life<'de, D: Deserializer<'de>>(d: D) -> Result<Option<Duration>, D::Error> {
     let text = String::deserialize(d)?;
     let bad =
         || serde::de::Error::custom(format!("bad shelf life `{text}` (expected e.g. 8h, 30d)"));
@@ -179,7 +187,9 @@ fn shelf_life<'de, D: Deserializer<'de>>(d: D) -> Result<Duration, D::Error> {
         "d" => DAY,
         _ => return Err(bad()),
     };
-    n.checked_mul(scale).map(Duration::seconds).ok_or_else(bad)
+    n.checked_mul(scale)
+        .map(|s| Some(Duration::seconds(s)))
+        .ok_or_else(bad)
 }
 
 /// Corpses (spec §8 "Hunger"): what they are made of, and what each size of creature gives and
@@ -434,7 +444,7 @@ mod tests {
         for food in &corpses.sizes {
             assert_eq!(
                 (food.keeps, food.lasts),
-                (Duration::hours(8), Duration::hours(36))
+                (Some(Duration::hours(8)), Some(Duration::hours(36)))
             );
         }
     }
@@ -444,8 +454,8 @@ mod tests {
         let food = Food {
             nutrition: 800,
             turns: 3,
-            keeps: Duration::hours(5 * 24),
-            lasts: Duration::hours(10 * 24),
+            keeps: Some(Duration::hours(5 * 24)),
+            lasts: Some(Duration::hours(10 * 24)),
         };
         for (hours, stage) in [
             (0, Stage::Fresh),
@@ -461,11 +471,20 @@ mod tests {
         }
         // Old begins at half the keeping to the second (rounded up).
         let odd = Food {
-            keeps: Duration::seconds(3601),
+            keeps: Some(Duration::seconds(3601)),
             ..food
         };
         assert_eq!(odd.stage(Duration::seconds(1800)), Stage::Fresh);
         assert_eq!(odd.stage(Duration::seconds(1801)), Stage::Old);
+        // Food that keeps for ever (an everlasting corpse) is fresh at any age.
+        let never = Food {
+            keeps: None,
+            lasts: None,
+            ..food
+        };
+        for hours in [0, 60, 240, 30 * 24, u32::MAX as u64] {
+            assert_eq!(never.stage(Duration::hours(hours)), Stage::Fresh, "{hours}");
+        }
     }
 
     #[test]
@@ -478,9 +497,9 @@ mod tests {
         let f = food("8h", "30d").expect("valid");
         assert_eq!(
             (f.keeps, f.lasts),
-            (Duration::hours(8), Duration::hours(720))
+            (Some(Duration::hours(8)), Some(Duration::hours(720)))
         );
-        for bad in ["8", "h", "8m", "-8h", "8 h", "1.5d"] {
+        for bad in ["8", "h", "8m", "-8h", "8 h", "1.5d", "never"] {
             let e = food(bad, "30d").unwrap_err();
             assert!(e.contains("bad shelf life"), "{bad}: {e}");
         }
