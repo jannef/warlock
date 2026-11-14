@@ -948,6 +948,9 @@ impl World {
         // target's (the berserker's rage: hits taken before mitigation).
         if let Some(Strike::Hit { critical }) = blow.map(|b| b.strike) {
             self.gain_resource(attacker, Build::Hit);
+            if kind == AttackKind::Melee {
+                self.gain_resource(attacker, Build::MeleeHit);
+            }
             if critical {
                 self.gain_resource(attacker, Build::Critical);
             }
@@ -968,6 +971,10 @@ impl World {
                 self.train_kill((attacker, target), kind);
                 // Of Siphoning and of the Hunt: a kill of one's own close by (`siphon.rs`).
                 self.siphon(attacker, (target, to));
+                // A kill in melee (Battle rhythm's stamina).
+                if kind == AttackKind::Melee {
+                    self.gain_resource(attacker, Build::MeleeKill);
+                }
                 let fired = super::weapon_ability::Fired {
                     other: target,
                     kind,

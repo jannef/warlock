@@ -399,8 +399,8 @@
 #                                 would take the last hit point leaves it for `cost` of the rage
 #                                 (when that much is held; spent to nothing, the rage ends)
 #   veterans_wind { per_level, at_least, cooldown }   the active Veteran's wind (as second_wind)
-#   whirlwind                     the active Whirlwind: a blow at every hostile beside, for the
-#                                 price of one attack
+#   whirling_charge               Charge strikes every hostile beside a cell it passes, each once
+#                                 (a free blow; the one charged at not twice)
 #   lay_on_hands { per_level }    the active Lay on hands: hit points back by the level (its
 #                                 cost is the talent's `resource`: zeal)
 #   avatar { hands_cost_percent } Lay on hands heals fully, cures what ticks and every disease,

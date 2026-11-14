@@ -1470,9 +1470,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              no free blows, and a wall, a closed door, deep water, a known trap, or a creature \
              you see on the line refuses it"
         ),
-        TalentEffect::Whirlwind => {
-            "active (the time of a melee attack, one exertion): one blow at \
-             every hostile beside you, clockwise from the north"
+        TalentEffect::WhirlingCharge => {
+            "your Charge also strikes every hostile beside each cell you pass, in the order \
+             passed, each once and the one you charge at only its own blow: free blows, no \
+             time, no stamina; one that falls does not stop the charge"
                 .to_string()
         }
         TalentEffect::Smite {

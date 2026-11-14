@@ -33,7 +33,7 @@ abilities = [
     { level = 25, talent = "armour_drill" },
     { level = 25, talent = "drillmaster" },
     { level = 32, talent = "weapon_mastery" },
-    { level = 40, talent = "iron_stance" },
-    { level = 50, talent = "whirlwind" },
+    { level = 40, talent = "battle_rhythm" },
+    { level = 50, talent = "whirling_charge" },
     { level = 60, talent = "champion" },
 ]

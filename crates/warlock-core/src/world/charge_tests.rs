@@ -1,7 +1,8 @@
 //! The warrior's Charge in the world (#1466, `world/charge.rs`): the rush ends beside the
 //! target with a blow, it moves at least a cell, it costs a point and a point a cell, it
 //! provokes no free blows, its refusals take no time and spend nothing, and a warrior holds
-//! stamina from level 1.
+//! stamina from level 1; Whirling charge strikes the hostiles beside the way, and Battle rhythm
+//! gives stamina back for melee hits and kills (#1467).
 
 use super::*;
 use crate::action::AttackKind;
@@ -198,4 +199,137 @@ fn a_warrior_holds_stamina_from_level_1_and_charge_is_in_their_menu() {
     let ability = crate::ability::Ability::Class(crate::content::ClassActive::Charge);
     assert!(ability.had_by(w.state.player(), &content));
     assert_eq!(ability.aim(&content), crate::ability::Aim::Cell);
+}
+
+fn blows_at(outcome: &Outcome, by: ActorId, at: ActorId) -> usize {
+    (outcome.events.iter())
+        .filter(|e| {
+            matches!(e, Event::Attacked { attacker, target, .. } if *attacker == by && *target == at)
+        })
+        .count()
+}
+
+/// Hostile posts above and below the way, a friend beside it, the target at its end.
+const WHIRL: &str = "##########\n#..p.p...#\n#@......p#\n#...f.p..#\n##########\n";
+
+#[test]
+fn whirling_charge_strikes_each_hostile_beside_the_way_once_and_the_target_once() {
+    let mut w = world(WHIRL);
+    let player = w.player_id();
+    w.player_mut().talents.take("whirling_charge", None);
+    let passed = [at(&w, 3, 1), at(&w, 5, 1), at(&w, 6, 3)];
+    let (friend, target) = (at(&w, 4, 3), at(&w, 8, 2));
+    let outcome = use_(&mut w, "use:charge:8,2");
+    assert!(outcome.took_turn, "{:#?}", said(&w));
+    assert_eq!(w.state.player().pos, Pos::new(7, 2));
+    for post in passed {
+        assert_eq!(blows_at(&outcome, player, post), 1, "{:#?}", said(&w));
+    }
+    assert_eq!(blows_at(&outcome, player, friend), 0, "never a friend");
+    assert_eq!(
+        blows_at(&outcome, player, target),
+        1,
+        "the charge's own blow only"
+    );
+    // The blows come in the order the cells are passed, the target's last.
+    let order: Vec<ActorId> = (outcome.events.iter())
+        .filter_map(|e| match e {
+            Event::Attacked {
+                attacker, target, ..
+            } if *attacker == player => Some(*target),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(order, [passed[0], passed[1], passed[2], target]);
+    // Without the talent nobody beside the way is struck; free blows, the charge costs the
+    // same stamina and time with them.
+    let mut plain = world(WHIRL);
+    let without = use_(&mut plain, "use:charge:8,2");
+    assert_eq!(blows_by(&without, player), 1, "{:#?}", said(&plain));
+    assert_eq!(stamina(&w), stamina(&plain));
+    assert_eq!(w.state.turn, plain.state.turn);
+}
+
+#[test]
+fn a_foe_felled_on_the_way_does_not_stop_the_charge() {
+    let mut w = world("##########\n#..p.....#\n#@......p#\n#........#\n##########\n");
+    w.player_mut().talents.take("whirling_charge", None);
+    let passed = at(&w, 3, 1);
+    w.state.actors.get_mut(&passed).expect("the post").hp = 1;
+    let outcome = use_(&mut w, "use:charge:8,2");
+    assert!(outcome.took_turn, "{:#?}", said(&w));
+    assert!(!w.state.actors.contains_key(&passed), "{:#?}", said(&w));
+    assert_eq!(w.state.player().pos, Pos::new(7, 2), "on to the end");
+}
+
+/// Twin worlds, without and with Battle rhythm, the player out of breath beside a post of `hp`
+/// hit points; each strikes it once.
+fn rhythm_twins(hp: i32) -> [(World, Outcome); 2] {
+    [false, true].map(|rhythm| {
+        let mut w = world("######\n#@p..#\n######\n");
+        if rhythm {
+            w.player_mut().talents.take("battle_rhythm", None);
+        }
+        set_stamina(&mut w, 0);
+        let post = at(&w, 2, 1);
+        w.state.actors.get_mut(&post).expect("the post").hp = hp;
+        let outcome = w.apply(&Action::Move(Dir::E));
+        (w, outcome)
+    })
+}
+
+fn hit(outcome: &Outcome) -> bool {
+    (outcome.events.iter()).any(|e| {
+        matches!(
+            e,
+            Event::Attacked {
+                strike: Some(crate::combat::Strike::Hit { .. }),
+                ..
+            }
+        )
+    })
+}
+
+#[test]
+fn battle_rhythm_gives_a_point_a_melee_hit_and_two_a_kill() {
+    let [(plain, out), (rhythm, _)] = rhythm_twins(1000);
+    assert!(hit(&out), "the fixture's first blow hits");
+    assert_eq!(stamina(&rhythm), stamina(&plain) + 1, "{:#?}", said(&plain));
+    let [(plain, out), (rhythm, _)] = rhythm_twins(1);
+    assert!(hit(&out));
+    assert_eq!(
+        stamina(&rhythm),
+        stamina(&plain) + 2,
+        "a killing blow: two in all"
+    );
+    // Never past the pool's maximum.
+    let mut w = world("######\n#@p..#\n######\n");
+    let player = w.player_id();
+    w.player_mut().talents.take("battle_rhythm", None);
+    let id = w.content().resource_id(STAMINA).expect("stamina");
+    let max = (w.state.player()).resource_max(w.content(), id, 1);
+    set_stamina(&mut w, max - 1);
+    w.gain_resource(player, crate::content::Build::MeleeKill);
+    assert_eq!(stamina(&w), max);
+    // A hit of another kind builds nothing.
+    set_stamina(&mut w, 0);
+    w.gain_resource(player, crate::content::Build::Hit);
+    assert_eq!(stamina(&w), 0);
+    w.gain_resource(player, crate::content::Build::MeleeHit);
+    assert_eq!(stamina(&w), 1);
+}
+
+#[test]
+fn a_warrior_takes_battle_rhythm_at_40_and_whirling_charge_at_50() {
+    use super::class_active_tests::reach;
+    let mut w = super::class_active_tests::world("warrior");
+    reach(&mut w, 39);
+    let holds = |w: &World, id: &str| w.state.player().talents.holds(id, None);
+    assert!(!holds(&w, "battle_rhythm"));
+    reach(&mut w, 40);
+    assert!(holds(&w, "battle_rhythm"));
+    assert!(!holds(&w, "whirling_charge"));
+    reach(&mut w, 50);
+    assert!(holds(&w, "whirling_charge"));
+    assert!(w.state.player().talent_mods(w.content()).whirling_charge);
 }

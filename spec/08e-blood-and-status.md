@@ -855,7 +855,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     shows its maximum, how it changes over time (it **regenerates** toward its maximum or
     **decays** toward 0, a point every so many seconds, while resting too or not), whether it
     **ends at zero**, what the player is told then, what **builds** it (`kill`, `hit`,
-    `critical`, `struck`, `sneak_attack`, `feint`, `mark_kill`, each by an amount), whether its points are
+    `melee_hit`, `melee_kill`, `critical`, `struck`, `sneak_attack`, `feint`, `mark_kill`, each by an amount), whether its points are
     in one creature's guard (**marked**: Openings), and the **status** it brings, if
     any (Rage: Raging), which lasts exactly as long as the resource is held. Ids are in the
     content fingerprint.
@@ -865,8 +865,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     actor without any serializes as before.
   - **The only ways a resource changes**: `World::grant_resource` (held from now on at its start,
     or what it holds if that is more), `World::gain_resource(actor, event)` (called where the
-    event happens: a kill credited to the holder in `dies`, a blow of theirs that hits and one
-    that is a critical, and their being hit, in `resolve`; a sneak attack that hits in
+    event happens: a kill credited to the holder in `dies`, a blow of theirs that hits (and,
+    a melee one, `melee_hit` beside it) and one that is a critical, and their being hit, in
+    `resolve`; a melee blow of theirs that kills, at its kill point in `resolve` (`melee_kill`,
+    beside `dies`' `kill`: a bleed that kills later is no melee kill); a sneak attack that hits in
     `ambushed` (a marked pool only on its holder's mark), and the holder's kill of its own mark
     (`mark_kill`, in `dies` beside `kill`), and a feint the foe falls for (`feint`, in `feint`); each builds every resource held that builds on it, up to its maximum; one not
     held is not built), `World::spend_resource` (refused, nothing spent, when not held or short;
@@ -981,7 +983,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     holds 12 at level 1; it comes back a point every 12 s (2 base turns), resting too, and sits
     at 0. A berserker holds Rage and Stamina at once. Shown as `Sta 7/12`. Talents (the
     `stamina` system): **Deep lungs** (Vigour): +4 at most; **Steady breathing**
-    (Weaponcraft, a weapon skill at 5): back at 150 %. Anyone else is granted it, full, on the first weapon
+    (Weaponcraft, a weapon skill at 5): back at 150 %; **Battle rhythm** (the warrior's at 40,
+    #1467): a point back for each melee hit, two for a melee kill in all (the kill's one on the hit's one). Anyone else is granted it, full, on the first weapon
     rank that teaches an active (the third grant place, #564: `fight.rs::grant_stamina`, where
     every rank the player gains is said).
   - **Shown**: the player's own resources (`PerceptionView::own_resources`: each held, its value
