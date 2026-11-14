@@ -1,6 +1,6 @@
-//! The aristocrat's stipend (`assets/data/stipend.toml`, spec §8 "Class abilities": Stipend;
+//! The aristocrat's stipend (`assets/data/rules/stipend.toml`, spec §8 "Class abilities": Stipend;
 //! #1405): what each level-up of a character with the Stipend class ability adds to what their
-//! family holds for them, until their servant hands it over (`world/stipend.rs`).
+//! family holds for them, until their servant hands it over (`world/classes/stipend.rs`).
 //!
 //! Each level reached adds `gold.each` plus `gold.dice`, and, by `loot.chance` percent, one loot roll at
 //! the level as item level, with the magic and rare rarities `loot.magic` percent more likely
@@ -56,7 +56,7 @@ struct LootSpec {
 }
 
 impl StipendRules {
-    /// Parses `data/stipend.toml`: the classes kept must be known.
+    /// Parses `data/rules/stipend.toml`: the classes kept must be known.
     pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: StipendFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -78,7 +78,7 @@ impl StipendRules {
 }
 
 impl super::RulesFile for StipendRules {
-    const PATH: &'static str = "data/stipend.toml";
+    const PATH: &'static str = "data/rules/stipend.toml";
 
     fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         Self::parse(path, text, content)
@@ -89,11 +89,11 @@ impl super::RulesFile for StipendRules {
 mod tests {
     use crate::content::{Content, ContentFiles};
 
-    const PATH: &str = "data/stipend.toml";
+    const PATH: &str = "data/rules/stipend.toml";
 
     #[test]
     fn the_stipend_keeps_potions_scrolls_and_gems() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let rules = content.stipend().expect("the stipend is in the game");
         let kept: Vec<&str> = (rules.keep.iter())
             .map(|&c| content.item_class(c).id.as_str())

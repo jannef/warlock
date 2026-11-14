@@ -31,7 +31,7 @@
 //! [`LightBlind`](crate::content::LightBlind): drow) whose own cell is lit at least to its
 //! `glare` is dazzled: they see nothing farther than its `sight`.
 //!
-//! **The unseen** (`world/unseen.rs`): a shadowy creature on a cell dim to the player's eyes
+//! **The unseen** (`world/creatures/unseen.rs`): a shadowy creature on a cell dim to the player's eyes
 //! (not beside them) and an invisible one anywhere are left out of the actors, and their cells
 //! show no one ([`Perception::sees_actors_at`]), unless Seeing, Blood scent, the companion's nose,
 //! or a blow that just found it shows them; their cells count as hidden to the player's hearing,
@@ -174,29 +174,30 @@ pub(crate) struct Perception {
     /// Whether strong light dazzles the player's light-blind eyes (their race's `light_blind`).
     dazzled: bool,
     /// Whether the player averts their eyes from a gaze marked `averted` they see
-    /// (`world/avert.rs`): derived here, never saved.
+    /// (`world/creatures/avert.rs`): derived here, never saved.
     averted: bool,
-    /// The disguised mimics of the level (`world/mimic.rs`), by position: each is a shut chest to
+    /// The disguised mimics of the level (`world/creatures/mimic.rs`), by position: each is a shut chest to
     /// the player, never an actor, but those Chest-wise sees through.
     disguises: Vec<Disguise>,
-    /// Those on the level the player does not see for being unseen (`world/unseen.rs`), in
+    /// Those on the level the player does not see for being unseen (`world/creatures/unseen.rs`), in
     /// actor id order.
     concealed: Vec<crate::world::Concealed>,
-    /// An unseen shadowy creature is within [`crate::world::DRAUGHT`] of the player: they feel
+    /// An unseen shadowy creature is within the `[unseen]` draught of `data/rules/tuning.toml`
+    /// of the player: they feel
     /// its cold.
     draught: bool,
-    /// The zones on the cells the player sees (`world/zone.rs`), by position.
+    /// The zones on the cells the player sees (`world/magic/zone.rs`), by position.
     zones: BTreeMap<Pos, ZoneKind>,
-    /// The player's allies, wherever they are (`world/ally.rs`), in actor id order: the player
+    /// The player's allies, wherever they are (`world/allies/ally.rs`), in actor id order: the player
     /// knows their own.
     allies: Vec<AllyView>,
-    /// What the player may treat on their allies beside them (`world/heal.rs`): they know their
+    /// What the player may treat on their allies beside them (`world/health/heal.rs`): they know their
     /// own allies' hurts.
     ally_ailments: Vec<crate::heal::OwnAilment>,
-    /// The ways to the player's kept beasts and escorts beside them (`world/heal.rs`,
-    /// `world/escort.rs`), in direction order: those who take what the player gives.
+    /// The ways to the player's kept beasts and escorts beside them (`world/health/heal.rs`,
+    /// `world/people/escort.rs`), in direction order: those who take what the player gives.
     kept_beside: Vec<crate::geom::Dir>,
-    /// An escort of the player's stands beside them (`world/escort.rs`): the Give list holds
+    /// An escort of the player's stands beside them (`world/people/escort.rs`): the Give list holds
     /// anything one could put on.
     escort_beside: bool,
 }
@@ -392,7 +393,7 @@ impl Perception {
         self.sight.get(p) == Some(&Sight::Seen)
     }
 
-    /// Whether the player sees an image of a hall of mirrors at `p` (`world/mirrors.rs`): a
+    /// Whether the player sees an image of a hall of mirrors at `p` (`world/fixtures/mirrors.rs`): a
     /// step or a blow there meets only glass.
     pub(crate) fn shows_image_at(&self, p: Pos) -> bool {
         self.images.contains(&p)
@@ -403,7 +404,7 @@ impl Perception {
         self.dazzled
     }
 
-    /// Whether the player averts their eyes from a gaze marked `averted` (`world/avert.rs`).
+    /// Whether the player averts their eyes from a gaze marked `averted` (`world/creatures/avert.rs`).
     pub(crate) fn averted(&self) -> bool {
         self.averted
     }
@@ -425,7 +426,7 @@ impl Perception {
 
     /// Whether the player does not see `p`, a cell of the level that is not their own: where
     /// they may place a sound they hear ([`noise::rough_place`]). The cell of one unseen
-    /// (`world/unseen.rs`) is such a cell.
+    /// (`world/creatures/unseen.rs`) is such a cell.
     pub(crate) fn hides(&self, p: Pos) -> bool {
         p != self.viewer
             && (self.sight.get(p) == Some(&Sight::Hidden) || self.concealed_at(p).is_some())
@@ -436,7 +437,7 @@ impl Perception {
         self.concealed.iter().find(|c| c.pos == p)
     }
 
-    /// Whether actor `id` is one the player does not see for being unseen (`world/unseen.rs`).
+    /// Whether actor `id` is one the player does not see for being unseen (`world/creatures/unseen.rs`).
     pub(crate) fn conceals(&self, id: ActorId) -> bool {
         self.concealed.iter().any(|c| c.id == id)
     }

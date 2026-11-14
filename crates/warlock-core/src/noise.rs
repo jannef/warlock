@@ -36,7 +36,7 @@
 //! actor on its level when the loudness at its cell is at least that. It keeps what it heard
 //! ([`Heard`]: kind, where, how loud) in [`crate::world::Actor::heard`] until it next acts: a
 //! creature as its turn starts (the input the creature AI reads, #77), the player when the next
-//! turn starts passing. `World::spread_noise` (`world/den.rs`) keeps them, and wakes the sleepers a
+//! turn starts passing. `World::spread_noise` (`world/creatures/den.rs`) keeps them, and wakes the sleepers a
 //! noise is loud enough for (spec §7 "Special rooms": teeming dens).
 //!
 //! **The player** perceives heard sounds whose source they do not see through
@@ -101,7 +101,7 @@ pub enum SoundKind {
     Howl,
     /// A roar: a dragon's breath (spec §8 "Creature behavior": "Dragons").
     Roar,
-    /// A creature's cries (`world/aura.rs`): a buzzing (the chasme's drone).
+    /// A creature's cries (`world/creatures/aura.rs`): a buzzing (the chasme's drone).
     Buzzing,
     /// Giggling (the pixie, the nymph).
     Giggle,
@@ -227,19 +227,19 @@ pub enum Act {
     Dig,
     /// Mutters to itself, where it stands; or speaks a threat aloud (the player's Intimidate).
     Mutter,
-    /// Cackles, where it stands (the witch's Cackle, `world/witch.rs`): a voice, as loud as its
+    /// Cackles, where it stands (the witch's Cackle, `world/classes/witch.rs`): a voice, as loud as its
     /// talent's `noise`.
     Cackle,
     /// Throws its voice to this cell: a voice sounds there.
     ThrowVoice(Pos),
     /// Howls, where it stands (Hound's bay).
     Howl,
-    /// Roars, where it stands: a dragon's breath (`world/breath.rs`).
+    /// Roars, where it stands: a dragon's breath (`world/creatures/breath.rs`).
     Roar,
-    /// Cries, where it stands: its type's idle `cry` of this kind (`world/aura.rs`), as loud as
+    /// Cries, where it stands: its type's idle `cry` of this kind (`world/creatures/aura.rs`), as loud as
     /// the cry says.
     Cry(SoundKind),
-    /// Sings a song, where it stands (the bard's songs, `world/song.rs`): a voice.
+    /// Sings a song, where it stands (the bard's songs, `world/classes/song.rs`): a voice.
     Sing,
     /// Calls an order to its allies, where it stands (spec §8 "Allies"): a voice, as loud as
     /// `[orders] noise` of `data/allies.toml` says.
@@ -597,7 +597,7 @@ pub(crate) fn hearers(state: &WorldState, content: &Content, noise: Noise) -> Ve
         .collect()
 }
 
-/// A player listening at a closed door for a turn (`world/listen.rs`).
+/// A player listening at a closed door for a turn (`world/skills/listen.rs`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Listening {
     /// The door's cell.

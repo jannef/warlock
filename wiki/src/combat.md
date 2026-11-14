@@ -102,7 +102,7 @@ protects you. It comes in kinds:
 - **Natural**: a creature's hide, shell, or scales. You have none, unless your [race](races.md) or a
   [magic item](magic-items.md) gives you some. Lizardfolk's scales soak blows but do not turn them (see
   [Races](races.md#the-evil-races)).
-- **Dodge**: training and magic. The [tumble](skills.md#what-skills-give) skill adds to it, more the higher it is, and so do
+- **Dodge**: training and magic. The [tumble](skill-benefits.md) skill adds to it, more the higher it is, and so do
   magic items that make you nimble.
 - **Deflection**: magic items that turn blows aside.
 - **Wall**: the stone around an incorporeal creature standing inside a wall
@@ -174,12 +174,18 @@ A hit does the weapon's damage dice, at least 1:
 
 {{#include generated/weapons.md}}
 
+How each weapon is held, its [weapon skill](weapon-skills.md), how far it can be thrown, and the
+few extras: a parry bonus to your [Defence](#defence) while you hold it, and the Strength a bow
+needs.
+
+{{#include generated/weapon-handling.md}}
+
 Messages never give numbers. They say what kind of blow it was: "The kobold stabs you.", "You
 slash the giant rat hard!", "The giant rat bites the kobold.", "You cleave the kobold." (see
 [Damage types](damage-types.md)).
 
 A **big hit**, one that takes at least a third of the target's [hit points](hit-points.md#hit-points) at once, makes it
-[bleed](status-effects.md#bleeding). Some creatures' attacks can [poison](status-effects.md#status-poisoned) (see [Status effects](status-effects.md)). Some bites carry a
+[bleed](status-effects.md#bleeding). Some creatures' attacks can [poison](status-list.md#status-poisoned) (see [Status effects](status-effects.md)). Some bites carry a
 [disease](diseases.md).
 
 ## Protection
@@ -194,13 +200,13 @@ amount in between equally likely:
 - **Every piece adds up.** Body armour, helm, gloves, boots, and cloak each add their Protection
   (see the armour table above). So does the magic of *[Hardened](affixes.md#prefixes)* armour (see [Magic items](magic-items.md)).
   Some [talents](talents.md) add to it too, in any armour: [Bulwark](class-paladin.md#talent-bulwark) 2, and the [berserker's](class-berserker.md)
-  [Battle-scarred](class-berserker.md#talent-battle-scarred) 1, or 3 while [raging](status-effects.md#status-raging). The `Pv` on the character
+  [Battle-scarred](class-berserker.md#talent-battle-scarred) 1, or 3 while [raging](status-list.md#status-raging). The `Pv` on the character
   screen shows your Protection as it is now. A [shield](objects.md#class-shields) gives Defence only. Creatures have their
   own: a [cave beetle's](creatures.md#creature-beetle) shell turns aside much of what hits it.
 - **[Criticals](combat.md#criticals) punch through.** A confirmed critical rolls its damage twice (or more) first, and
   the Protection comes off only once.
 - **A hit can do nothing at all.** If Protection takes all of its damage, the blow glances off and
-  nothing else comes of it: no [blood](hit-points.md#blood), no [bleeding](status-effects.md#bleeding), no [poison](status-effects.md#status-poisoned). "Your sword glances off the
+  nothing else comes of it: no [blood](hit-points.md#blood), no [bleeding](status-effects.md#bleeding), no [poison](status-list.md#status-poisoned). "Your sword glances off the
   cave beetle's shell.", "The kobold's spear glances off your chain mail shirt." It still landed,
   so it trains your [weapon skill](weapon-skills.md) as a hit does.
 - **Some weapons pierce armour**, ignoring part of the Protection of whatever they hit. Their
@@ -216,3 +222,6 @@ mail turns a blade well and a point badly. [Fire](damage-types.md#damage-fire), 
 
 In the game you never see a creature's Protection, only how its armour turns your blows. The
 numbers are on [Creatures in numbers](creature-numbers.md#hit-points-defence-and-resistances).
+
+See also: [Stances and stamina](stances.md), [Ranged combat](ranged.md), and
+[Surprise and sneak attacks](surprise.md).

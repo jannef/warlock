@@ -255,7 +255,7 @@ pub(super) fn resolve_scrolls(
 
 impl Content {
     /// The kit lines `specs` resolved against the content's objects and weapon skills (a
-    /// Crafts trade's tools, `world/trade.rs`); the loader checked them (`check_trades`).
+    /// Crafts trade's tools, `world/crafting/trade.rs`); the loader checked them (`check_trades`).
     pub fn kit_lines(&self, specs: &[KitLineSpec]) -> Result<Kit, String> {
         resolve(specs, self)
     }
@@ -293,10 +293,7 @@ pub(super) fn resolve(specs: &[KitLineSpec], content: &Content) -> Result<Kit, S
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::LazyLock;
-
-    static CONTENT: LazyLock<Content> =
-        LazyLock::new(|| Content::builtin().expect("built-in content"));
+    use crate::test_support::CONTENT;
 
     #[derive(Deserialize)]
     struct Lines {

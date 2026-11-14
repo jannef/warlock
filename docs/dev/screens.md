@@ -317,8 +317,7 @@ to open, read keys for, or draw one:
   keeps, scrolled in lines from the newest at the bottom by `Nav::Up`/`Down` and a panel's height
   by `Nav::PrevPage`/`NextPage`; no info page, and no `PagedList`, whose rows are lettered single
   lines to choose from; the stack calls its `fit` before a press), `ui/dialogue_screen.rs`
-  (the speaker, their last line, numbered topics, and the fixed `s` Say row and its field where
-  `Conversation::words`; built from the last `Event::Talked`, so it never shows more than the
+  (the speaker, their last line, and numbered topics; built from the last `Event::Talked`, so it never shows more than the
   player was told), `ui/text_field.rs` (`TextField`: the game's one text field, the Name step's
   and the Say field's), `ui/abilities_screen.rs` (`AbilitiesScreen`, below),
   `ui/level_up_screen.rs` (`LevelUpScreen`: the first `Due`'s step, rolls, then a bonus pick of
@@ -383,7 +382,7 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `Ability::Sign(SignActive)` (`Source::Sign`, the menu's Birth sign group between Racial and
   Class) are the birth sign's actives (`docs/dev/character-creation.md`): listed while some talent
   has one, had by whoever's `TalentMods` has it, `While(cooldown)`; their action is
-  `Action::Gift` (`use:horns_grace`, `use:transfixing_stare:X,Y`, a cell at `STARE_RANGE`).
+  `Action::Gift` (`use:horns_grace`, `use:transfixing_stare:X,Y`, a cell within the stare's `range`).
   A row a profane gift gives and no sign talent of the player's does (Hate-wyrm's heart's Fire
   breath) is `Source::Profane` instead, the menu's Profane group right after Birth sign:
   `Ability::source_for(actor)` decides, `OwnAbility::source` carries it, and the menu, the

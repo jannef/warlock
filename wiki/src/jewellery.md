@@ -7,7 +7,7 @@ at the anvil: first the stock, then a gem if the piece takes one.
 **You need:**
 - **Skill:** Jewelcraft. [Gnomes](races.md#race-gnome) start with
   it, a [craftsperson](class-craftsperson.md#trades) may take the
-  [Gemcutter](talents.md#talent-gemcutter) trade, and a [commoner](class-commoner.md) may have it
+  [Gemcutter](talents-origins.md#talent-gemcutter) trade, and a [commoner](class-commoner.md) may have it
   as their trade (others: [Which skills you start with](skills.md#which-skills-you-start-with)). [Old Tregear](npcs.md#old-tregear) in Gimmwīc teaches it
   for 1500 gold.
 - **Stock:** ingots, blocks, or lumps of the piece's material, and a cut [gem](gems.md) for a
@@ -34,3 +34,5 @@ Jewelcraft's checks get **+2** (not a bone amulet's: that is Woodcraft).
 ## The Jewelcraft recipes
 
 {{#include generated/recipes-jewelcraft.md}}
+
+See also: [Crafting](crafting.md), [Gem cutting](gem-cutting.md), and [Enchanting](enchanting.md).

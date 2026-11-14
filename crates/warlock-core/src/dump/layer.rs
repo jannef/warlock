@@ -62,7 +62,7 @@ pub enum Layer {
     /// a direction`, `Steal (skill): not usable yet`).
     Abilities,
     /// Not a map: every profession's recipes as its screen lists them for the player (spec §8
-    /// "Skills"; `world/craft.rs`), a `Metalcraft:` line per profession they have, then one a
+    /// "Skills"; `world/crafting/craft.rs`), a `Metalcraft:` line per profession they have, then one a
     /// line with what each takes and why it cannot be made now (`Temper: a metal weapon or
     /// armour, an anvil, about 10 minutes (no anvil beside you)`).
     Recipes,
@@ -84,7 +84,7 @@ pub enum Layer {
     /// The player's companion as they know it (spec §8 "Allies"): its name, type, grade, cell
     /// (where seen), health in words, and order; `no companion` without one.
     Companion,
-    /// The player's familiar, as the companion layer says a companion (`world/familiar.rs`);
+    /// The player's familiar, as the companion layer says a companion (`world/allies/familiar.rs`);
     /// `no familiar` without one, `no familiar; Tibb, a cat, answers a calling` while the one
     /// she remembers is dead (`Character::familiar`).
     Familiar,
@@ -224,4 +224,20 @@ impl FromStr for Layer {
 /// Parses a comma-separated layer list such as `view,fov`.
 pub fn parse_layers(text: &str) -> Result<Vec<Layer>, String> {
     text.split(',').map(|l| l.trim().parse()).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// `docs/dev/cli.md` lists every dump layer by hand (#1667).
+    #[test]
+    fn every_layer_is_in_the_cli_doc() {
+        let missing =
+            crate::test_support::missing_from_cli_doc(Layer::ALL.iter().map(|l| l.name()));
+        assert!(
+            missing.is_empty(),
+            "docs/dev/cli.md lacks the dump layers {missing:?}"
+        );
+    }
 }

@@ -2,7 +2,7 @@
 //! attack, `[creature.throw]`, that needs no ammunition. A giant hurls boulders: what flies is an
 //! object (for its look only; it never lands), the attack is a natural attack's. A throw whose
 //! object is a flask (a bomber's, the potions wave 2 design §5) has no `damage`: the flask's
-//! splash is the attack (`world/hurl.rs`).
+//! splash is the attack (`world/combat/hurl.rs`).
 
 use super::creature::{NaturalAttack, NaturalAttackSpec};
 use super::damage_type::TypeNames;

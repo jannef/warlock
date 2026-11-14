@@ -33,7 +33,7 @@ look and whether they [bleed](status-effects.md#bleeding).
 just as they make you bleed. A badly wounded creature may
 [bleed to death](status-effects.md#bleeding) after the fight. Some attacks carry more: a
 [barrow spider](creatures.md#creature-barrow-spider)'s bite may
-[poison](status-effects.md#status-poisoned) whatever it bites (see
+[poison](status-list.md#status-poisoned) whatever it bites (see
 [Status effects](status-effects.md)), and once in a long while a
 [giant rat](creatures.md#creature-rat)'s gives it [filth fever](diseases.md#disease-filth-fever)
 (see [Diseases](diseases.md)).
@@ -112,7 +112,7 @@ duergar, and outlaws. What they wear is their [Protection](combat.md#protection)
 Hard bodies are what armour-piercing is for: the war hammer, the stiletto,
 [crossbow bolts](ammunition.md), and [criticals](combat.md#criticals). A critical's damage is
 multiplied first and the Protection taken off only once. The
-**[Armour-breaker](talents.md#talent-armour-breaker)** talent's criticals drive through 2 more.
+**[Armour-breaker](talents-body.md#talent-armour-breaker)** talent's criticals drive through 2 more.
 
 [Protection](combat.md#protection) by body and level, rounded down (each kind's own is in
 [Creatures in numbers](creature-numbers.md)):
@@ -194,21 +194,24 @@ destroyed, though the oldest now and then leave something they had caught up.
   hurt it, and [cold](damage-types.md#damage-cold) hurts it more.
 - **Earth** is slow, heavy, and hard to cut or pierce.
   [Electricity](damage-types.md#damage-electricity) cannot hurt it. Its blows may
-  [stagger](status-effects.md#status-staggered) you, and the eldest also
-  [grips and holds](status-effects.md#status-held). From the earth elemental up, it moves through
+  [stagger](status-list.md#status-staggered) you, and the eldest also
+  [grips and holds](status-list.md#status-held). From the earth elemental up, it moves through
   stone as an [incorporeal](#incorporeal-creatures) creature does, though the stone shelters it
   less.
 - **Air** is very [fast](turns.md#speed) and hard to hit. [Arrows](ammunition.md) blow aside from
-  it, and its blows may [stagger](status-effects.md#status-staggered) you.
+  it, and its blows may [stagger](status-list.md#status-staggered) you.
 - **Water** walks on the land. [Fire](damage-types.md#damage-fire) and arrows do it less harm,
   [electricity](damage-types.md#damage-electricity) more. Its blows may leave you
-  [sluggish](status-effects.md#status-sluggish), and the greater ones may
-  [hold](status-effects.md#status-held) you.
+  [sluggish](status-list.md#status-sluggish), and the greater ones may
+  [hold](status-list.md#status-held) you.
 - **Ice** is [slow](turns.md#speed). Its cold blows may leave you
-  [sluggish](status-effects.md#status-sluggish). [Cold](damage-types.md#damage-cold) cannot hurt
+  [sluggish](status-list.md#status-sluggish). [Cold](damage-types.md#damage-cold) cannot hurt
   it, and [fire](damage-types.md#damage-fire) hurts it more.
 - **Lightning** is [fast](turns.md#speed) and lit blue.
   [Electricity](damage-types.md#damage-electricity) cannot hurt it, and its shocks may
-  [stagger](status-effects.md#status-staggered) you.
+  [stagger](status-list.md#status-staggered) you.
 
 The exact numbers are on [Creatures in numbers](creature-numbers.md).
+
+See also: [Creature powers](creature-powers.md), [Creature tricks](creature-tricks.md), and
+[Held](held.md).

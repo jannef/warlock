@@ -1,4 +1,4 @@
-# A merchant's business partner (#1407; world/invest.rs): keeps a desk in Factor Wulfrun's office
+# A merchant's business partner (#1407; world/classes/invest.rs): keeps a desk in Factor Wulfrun's office
 # at Cēaptūn in a merchant's run only, of the merchant's own race (its words, by race, are in
 # data/dialogue/partners.toml; data/towns/ceaptun.toml places it). Peaceful; invests the gold the
 # merchant puts with it, and tells what the stake is worth when spoken to.

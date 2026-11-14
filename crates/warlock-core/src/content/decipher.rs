@@ -1,5 +1,5 @@
-//! Reading a scroll by a check (`assets/data/decipher.toml`, spec §8 "Scrolls"; #1024): its
-//! numbers. The rule itself lives in `world/decipher.rs`.
+//! Reading a scroll by a check (`assets/data/rules/decipher.toml`, spec §8 "Scrolls"; #1024): its
+//! numbers. The rule itself lives in `world/magic/decipher.rs`.
 //!
 //! The file is optional: without it every scroll simply reads.
 
@@ -19,7 +19,7 @@ pub struct DecipherRules {
 }
 
 impl DecipherRules {
-    /// Parses `data/decipher.toml`: `levels_per_point` must be positive.
+    /// Parses `data/rules/decipher.toml`: `levels_per_point` must be positive.
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: Self = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -39,7 +39,7 @@ impl DecipherRules {
 }
 
 impl super::RulesFile for DecipherRules {
-    const PATH: &'static str = "data/decipher.toml";
+    const PATH: &'static str = "data/rules/decipher.toml";
 
     fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
         Self::parse(path, text)

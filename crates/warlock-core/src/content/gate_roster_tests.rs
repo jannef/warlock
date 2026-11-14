@@ -3,7 +3,8 @@
 //! their fiends through `loosed`, met only through a miscast, each opened by the one miscast row
 //! of its id.
 
-use super::{Content, FactionId, MishapEffect, PLAYER_FACTION, Stance};
+use super::{FactionId, MishapEffect, PLAYER_FACTION, Stance};
+use crate::test_support::builtin;
 
 /// The gates by id with the fiends each lets through, as the design's table has them.
 const GATES: &[(&str, &[&str])] = &[
@@ -46,7 +47,7 @@ const GATES: &[(&str, &[&str])] = &[
 
 #[test]
 fn every_gate_is_a_rooted_summoner_of_loosed_fiends_at_no_cost() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let loosed = content.factions().id("loosed").expect("the loosed");
     let gates = content.factions().id("gates").expect("the gates");
     assert!(content.factions().def(gates).friendly_to_all);
@@ -89,7 +90,7 @@ fn every_gate_is_a_rooted_summoner_of_loosed_fiends_at_no_cost() {
 
 #[test]
 fn each_gate_is_opened_by_its_one_unprotected_miscast_row() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let safe_below = content
         .miscast_rules()
         .expect("the miscast rules")
@@ -107,7 +108,7 @@ fn each_gate_is_opened_by_its_one_unprotected_miscast_row() {
 
 #[test]
 fn the_gates_are_at_peace_with_every_faction_but_the_players() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let factions = content.factions();
     let gates = factions.id("gates").expect("the gates");
     let player = factions.id(PLAYER_FACTION).expect("the player's");

@@ -61,7 +61,7 @@ pub enum Target {
     Wall,
     /// The glowing fungus (Gather).
     Fungus,
-    /// Open ground with nothing on it (Field forge, `world/field_forge.rs`).
+    /// Open ground with nothing on it (Field forge, `world/crafting/field_forge.rs`).
     Ground,
 }
 

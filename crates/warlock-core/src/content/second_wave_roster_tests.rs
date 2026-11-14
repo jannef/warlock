@@ -6,6 +6,7 @@ use super::creature::CorrodesWhat;
 use super::status::Affliction;
 use super::{Combat, Content, CreatureDef};
 use crate::stats::Stat;
+use crate::test_support::builtin;
 
 fn def<'c>(content: &'c Content, id: &str) -> &'c CreatureDef {
     content.creature(content.creature_id(id).unwrap_or_else(|| panic!("{id}")))
@@ -22,7 +23,7 @@ fn stiffens(content: &Content, riders: &[super::status::OnHit]) -> bool {
 
 #[test]
 fn each_carries_its_gimmick() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     // The black pudding: a blade splits it, and its acid eats both ways.
     let pudding = def(&content, "black_pudding");
     let slashing = content.damage_type_id("slashing").expect("slashing");

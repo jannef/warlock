@@ -93,6 +93,7 @@ impl Content {
                 chest: spec.chest,
                 statue: spec.sturdiness.filter(|_| spec.statue),
                 grave: spec.grave,
+                burial: resolve(file, &spec.burial)?,
                 stairs: spec.stairs,
                 light,
                 bounce: spec.bounce,
@@ -137,6 +138,7 @@ impl Content {
             });
         }
         check_chests(&defs).map_err(err)?;
+        super::burial::check_terrain(&defs).map_err(err)?;
         if let Some(def) = (defs.iter()).find(|d| {
             d.works_as
                 .is_some_and(|t| defs[usize::from(t.0)].works_as.is_some())

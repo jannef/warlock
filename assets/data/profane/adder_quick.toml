@@ -1,0 +1,10 @@
+[[gift]]
+id = "adder_quick"
+name = "Adder-quick"
+kind = "boon"
+tier = "greater"
+weight = 10
+description = "Quick hands: you are nimbler than you were."
+line = "Your hands are quicker than your thoughts."
+undone = "Your hands slow, and their quickness drains away."
+effects = [{ kind = "stat", stat = "dexterity", value = 2 }]

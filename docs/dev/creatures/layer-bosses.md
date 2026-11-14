@@ -2,7 +2,7 @@
 
 The unique bosses that keep every tenth floor of Grundlēas, the endless branch (spec §7 "The
 endless branch"). The rules (the boss rows, the lair, the hidden stairs, made again until slain)
-are in `docs/dev/mapgen.md` ("Layer bosses") and `crates/warlock-core/src/world/layer_boss.rs`;
+are in `docs/dev/mapgen.md` ("Layer bosses") and `crates/warlock-core/src/world/levels/layer_boss.rs`;
 this file holds the roster.
 
 - **Faction** `layer_keepers` ("keepers of the layers", `assets/data/factions/`): hostile to
@@ -14,7 +14,7 @@ this file holds the roster.
 - **Proper names** in the Ascmearc's Old English register (`content::is_proper`: said without
   an article). XP is the guideline for the level, `xp_percent = 200`; `loot = 100`.
 - **Never on the stairs**: `Content::is_layer_boss` keeps a boss out of the stair followers
-  (`world/stair_followers.rs`), so a boss is never on two floors at once.
+  (`world/levels/stair_followers.rs`), so a boss is never on two floors at once.
 
 | Depth | Id | Name | Level | What sets the fight apart | Lair |
 |---|---|---|---|---|---|
@@ -34,7 +34,7 @@ be whatever level you deem suitable"): 81, 91, and 100, not 101, so the deepest 
 the player's own cap (`experience.toml`'s `max_level`, 100). Nothing had to be extended for them:
 a creature's level is a `u8` with no cap at load, the XP guideline (5 × level + 10) and
 `Experience::kill_xp` take any level, and the body rule is a formula by
-level. Tests: `world/layer_boss_tests.rs` (the content checks
+level. Tests: `world/levels/layer_boss_tests.rs` (the content checks
 among them; the depths list runs to 100), `summoner_roster_tests`
 (the four summoners carry `summoner` and another tribe's tag).
 
@@ -42,14 +42,14 @@ among them; the depths list runs to 100), `summoner_roster_tests`
 
 ## The Pits' warden (#1298)
 
-Every Pit (spec §7 "The Pits", `docs/dev/mapgen.md` "A Pit's warden", `world/pit.rs`) has its own
+Every Pit (spec §7 "The Pits", `docs/dev/mapgen.md` "A Pit's warden", `world/levels/pit.rs`) has its own
 warden on its fifth floor, so the type is **no unique** (`content/layer_boss.rs` asks `unique` only
 of an endless branch's bosses), and is shared (`assets/data/creatures/gatewarden.toml`, the lair
 `assets/vaults/wardens_hall.toml`, `dungeons = ["hellegeat"]`, pinned by the boss row). It is
 `stray = false` and in no population, so only the hall places it (`content/tests.rs`'s stray-list
 test counts a branch's boss as placed). Faction `layer_keepers`, not `loosed`: the Pit's folk keep
 their own factions and would fall on a `loosed` warden; the gates it summons take its faction
-(`world/summon.rs`), and so does what comes through them. Tags `fiend`, `summoner` (not `devil`:
+(`world/creatures/summon.rs`), and so does what comes through them. Tags `fiend`, `summoner` (not `devil`:
 the dark wizard's devil summons draw by tag). Named with no capital, "warden of the gate", so it
 takes an article.
 

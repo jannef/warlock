@@ -1,4 +1,4 @@
-# Only at character creation (#697): handed out once, as it is taken (world/heirloom.rs).
+# Only at character creation (#697): handed out once, as it is taken (world/character/heirloom.rs).
 [[talent]]
 id = "family_wealth"
 name = "Family wealth"

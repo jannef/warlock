@@ -2,7 +2,7 @@
 //! holds, and the [`Fallen`] it may be named for. Plain data, so both a hand-made or generated
 //! level's template (`content::LevelTemplate::statues`, laid by `mapgen/leavings.rs`) and the
 //! running level (`world::LevelState::statues`) hold it; the rules that lay, kick, and name
-//! statues are the world's (`world/statue.rs`, `world/graveyard.rs`).
+//! statues are the world's (`world/creatures/statue.rs`, `world/fixtures/graveyard.rs`).
 
 use crate::content::{Content, CreatureId};
 use crate::object::Stack;
@@ -17,7 +17,7 @@ pub struct Statue {
     /// What it held, top first: what the creature carried, then the pile it stood on.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub holds: Vec<Stack>,
-    /// The past character it is of, a name from the graveyard (`world/graveyard.rs`):
+    /// The past character it is of, a name from the graveyard (`world/fixtures/graveyard.rs`):
     /// decoration, read by no rule and left out of the state hash.
     #[serde(default, skip_serializing_if = "unhashed_option")]
     pub name: Option<Fallen>,
@@ -40,6 +40,9 @@ pub struct Fallen {
     /// Their race, by id (`dwarf`); one this content lacks is named by its id.
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub race: String,
+    /// Their class, by id (`warrior`); one this content lacks is named by its id.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub class: String,
     /// Whether they were turned to stone: only these name statues.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub petrified: bool,
@@ -57,6 +60,22 @@ impl Fallen {
             self.name.clone()
         } else {
             format!("{} the {race}", self.name)
+        }
+    }
+
+    /// "Brakka the dwarf warrior" (race and class in lower case, as a grave names them),
+    /// either left out where unknown.
+    pub fn grave_words(&self, content: &Content) -> String {
+        let race = (content.race(&self.race)).map_or(self.race.clone(), |r| r.name.to_lowercase());
+        let class =
+            (content.class(&self.class)).map_or(self.class.clone(), |c| c.name.to_lowercase());
+        let what: Vec<&str> = [race.as_str(), class.as_str()]
+            .into_iter()
+            .filter(|s| !s.is_empty())
+            .collect();
+        match what[..] {
+            [] => self.name.clone(),
+            _ => format!("{} the {}", self.name, what.join(" ")),
         }
     }
 }

@@ -1,0 +1,12 @@
+[[gift]]
+id = "craven"
+name = "Craven-hearted"
+kind = "bane"
+tier = "lesser"
+weight = 8
+description = "Something in you flinches: fear holds you longer, and your will gives way more easily."
+line = "Something in you flinches, and goes on flinching."
+effects = [
+    { kind = "status_lasts", status = "frightened", value = 100 },
+    { kind = "checks", stat = "willpower", value = -1 },
+]

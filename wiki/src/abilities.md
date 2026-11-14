@@ -17,7 +17,7 @@ gave you and your birth sign did not (Hate-wyrm's heart's Fire breath).
 - Beside each ability is what it asks for once you choose it, such as `in a direction`.
 - An ability you cannot use right now is greyed out, with the reason: `you hold no shield`, `not
   usable yet` for a [skill](skills.md) whose use is not in the game yet, or `you are winded` while a
-  [status effect](status-effects.md#buffs-and-cooldowns) keeps you from it. One that works on
+  [status effect](buffs.md) keeps you from it. One that works on
   something next to you is greyed out while there is nothing beside you to use it on: `no lock
   beside you`, `no foe within reach` (see [Something beside you](controls-prompts.md#something-beside-you)).
 - **Listen at a door** and **Wedge a door** are left out of the menu unless a closed
@@ -61,14 +61,14 @@ you never choose them, they work by themselves as you fight. They have their own
   see that spot go to have a look (see [Hearing](hearing.md#throwing-your-voice)). It takes a normal action. [Bards](class-bard.md) learn it
   at level 16 (see [Classes](classes.md)).
 - **Lurk**: the [thief](class-thief.md)'s, from level 6. You wait in ambush, in the time of a wait, and are
-  [Lurking](status-effects.md#status-lurking) until your next action. A hostile that steps up beside you meanwhile takes
+  [Lurking](status-list.md#status-lurking) until your next action. A hostile that steps up beside you meanwhile takes
   your blow at once, as a [free blow](stances.md#free-blows). Unless it was already hunting you, it is caught unawares:
-  the blow is a [sneak attack](skills.md#skill-sneak-attack), it may be [Surprised](status-effects.md#status-surprised), and it is struck without its Dexterity
+  the blow is a [sneak attack](skills.md#skill-sneak-attack), it may be [Surprised](status-list.md#status-surprised), and it is struck without its Dexterity
   and Dodge. You cannot lurk with a hostile you see already beside you ("Too late to lurk.", no
   time). It costs nothing and has no cooldown.
 - **Exploit**: the [thief](class-thief.md)'s, from level 1. It spends every [opening](resources.md#resource-openings) you hold on a melee blow, in the time of
   one, at the hostile in the direction you choose. It is a [sneak attack](skills.md#skill-sneak-attack) whatever the foe knows: the
-  dice land if it hits, and 1d6 more for each opening spent. The foe is not [Surprised](status-effects.md#status-surprised) by it and keeps its whole Defence.
+  dice land if it hits, and 1d6 more for each opening spent. The foe is not [Surprised](status-list.md#status-surprised) by it and keeps its whole Defence.
   [Low blow](class-thief.md#talent-low-blow) (level 12) adds +1 to hit per opening and stuns the foe it hits. It is refused, costing nothing, with no
   opening, nobody hostile there, a creature other than your [mark](openings.md#the-mark), or one you see without vitals (see [Exploit](openings.md#exploit)).
 - **Thrown exploit**: the [thief](class-thief.md)'s, from level 18. The same blow as Exploit,
@@ -76,7 +76,7 @@ you never choose them, they work by themselves as you fight. They have their own
   (a dagger, say; never a flask), then the target. It spends every opening you hold, and the
   weapon lands by the foe. It reaches as far as you can throw the weapon, but never more than 6
   cells, the farthest a [sneak attack](surprise.md#sneak-attacks) lands from a throw
-  ([Long reach](talents.md#talent-long-reach) adds to that). It is refused, costing nothing, for
+  ([Long reach](talents-fighting.md#talent-long-reach) adds to that). It is refused, costing nothing, for
   Exploit's reasons, a target out of reach, or a wall or creature you see in the way (see
   [Thrown exploit](openings.md#thrown-exploit)).
 - **Shield bash**: anyone can bash with a shield (see [Weapon skills](weapon-skills.md)), so it is always in the menu,
@@ -93,7 +93,7 @@ you never choose them, they work by themselves as you fight. They have their own
   [Step of the wind](abilities.md#ability-step-of-the-wind), [Stunning strike](abilities.md#ability-stunning-strike), [Patient defence](abilities.md#ability-patient-defence), [Stillness](abilities.md#ability-stillness), [Quivering palm](abilities.md#ability-quivering-palm), [Consecrate](abilities.md#ability-consecrate), [Orison](abilities.md#ability-orison), [Sanctuary](abilities.md#ability-sanctuary), [Knock](abilities.md#ability-knock)) come
   from your [class](classes.md)'s level table (see [Classes](classes.md#levels)). Each is under Class from the level that brings
   it.
-  - Some leave you [winded](status-effects.md#status-winded) for a while afterwards, and are greyed out until it passes.
+  - Some leave you [winded](status-list.md#status-winded) for a while afterwards, and are greyed out until it passes.
   - Most are paid from a [resource](resources.md) instead, and are greyed out while you have too little.
   - A [paladin](class-paladin.md)'s holy gifts are never greyed out by [alignment](alignment.md), but they do nothing unless you are
     Kind or better (see [Alignment](alignment.md)).
@@ -125,7 +125,7 @@ you never choose them, they work by themselves as you fight. They have their own
   [howl](hearing.md), heard across the floor; it wakes sleepers and draws the curious.
   - Every hostile that hears you, sees you, and has [vitals](combat.md#criticals) (no skeletons, spirits, or animated
     things) rolls 2d12 plus its Willpower modifier against 10 + your Strength modifier + your
-    [Intimidate](skills.md#skill-intimidate) bonus (+8 at 100, +12 at 200). If it falls short, it is [frightened](status-effects.md#status-frightened) three degrees and
+    [Intimidate](skills.md#skill-intimidate) bonus (+8 at 100, +12 at 200). If it falls short, it is [frightened](status-list.md#status-frightened) three degrees and
     runs from you for about three turns.
   - There is no level cut: a troll checks as a kobold does, only with more nerve. For example, a
     creature of Willpower 10 against a berserker of Strength 15 (+2), untrained in Intimidate,
@@ -160,7 +160,7 @@ A [bard](class-bard.md) sings two songs, both from the menu under Class: **[Insp
   it costs nothing.
 - **Sound.** A song takes as long as a chat (3 seconds at a [normal pace](turns.md#what-actions-cost)). It is [heard](hearing.md#what-makes-noise) as a voice of
   loudness 80 where you stand, so those who hear it and cannot see you come to look. You cannot
-  sing on the [overworld](overworld.md#travel), or while [silenced](status-effects.md#status-silenced). Trying takes no time.
+  sing on the [overworld](overworld.md#travel), or while [silenced](status-list.md#status-silenced). Trying takes no time.
 - **[Music](skills.md#skill-music) makes songs last longer.** Each song brings its status at one degree, and your Music
   adds degrees to every song, up to three, the most these statuses take. More degrees last longer;
   what a degree does stays the same. Sung again while it lasts, a song starts over at the degrees
@@ -173,17 +173,17 @@ A [bard](class-bard.md) sings two songs, both from the menu under Class: **[Insp
   with more nerve. A song with nobody to hear it is still sung: its price and its time are spent,
   and the noise is made.
 - **[Virtuoso](class-bard.md#talent-virtuoso)** (the bard's at 30): every song costs nothing at all and brings one degree more.
-  Inspire also lifts you higher: [greatly inspired](status-effects.md#status-inspired-greatly) (+2 to hit and +2 [Dodge](combat.md#defence), 10 minutes a degree)
-  instead of [inspired](status-effects.md#status-inspired) (+1 and +1, 5 minutes a degree).
+  Inspire also lifts you higher: [greatly inspired](status-list.md#status-inspired-greatly) (+2 to hit and +2 [Dodge](combat.md#defence), 10 minutes a degree)
+  instead of [inspired](status-list.md#status-inspired) (+1 and +1, 5 minutes a degree).
 
 {{#include generated/songs.md}}
 
-What Music adds to every song, by its value (see [Skills](skills.md#what-skills-give)):
+What Music adds to every song, by its value (see [Skills](skill-benefits.md)):
 
 {{#include generated/song-music.md}}
 
 The chance a hostile creature shakes a song off, by its edge (its modifier of the stat the song
-checks; see [Stats](stats.md)) and your Music, with the difficulty in brackets. A [drowsy](status-effects.md#status-drowsy) creature does
+checks; see [Stats](stats.md)) and your Music, with the difficulty in brackets. A [drowsy](status-list.md#status-drowsy) creature does
 everything three times as slowly, 12 seconds a degree.
 
 {{#include generated/song-odds.md}}

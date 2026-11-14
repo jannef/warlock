@@ -88,8 +88,8 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
   are hidden from normal eyes, and you from theirs.
 - **Draining room.** Something in it drinks at magic. Everyone inside who has
   [mana](mana.md#how-much-mana-you-have), you and creatures alike, is
-  [Ebbing](status-effects.md#status-ebbing) (see [Status effects](status-effects.md)) for as long
-  as they stay and half a minute after they leave. [Ebbing](status-effects.md#status-ebbing) drains
+  [Ebbing](status-list.md#status-ebbing) (see [Status effects](status-effects.md)) for as long
+  as they stay and half a minute after they leave. [Ebbing](status-list.md#status-ebbing) drains
   a point of [mana](mana.md#how-much-mana-you-have) every 20 seconds, and none comes back meanwhile, so a fight
   between [casters](magic.md) in a draining room soon becomes a brawl. It glows a faint cold
   violet. One floor in twenty that draws a draining room is drained throughout instead.
@@ -102,7 +102,7 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
   [ice](temperature.md#walking-on-ice). The cold does nothing to you.
 - **Silent vault.** A dead silence. Every [noise](hearing.md#what-makes-noise) made inside is a
   hundredth as loud, so a fight there is barely heard even next door (see [Hearing](hearing.md)).
-  Everyone inside, you and creatures alike, is [Silenced](status-effects.md#status-silenced) (see
+  Everyone inside, you and creatures alike, is [Silenced](status-list.md#status-silenced) (see
   [Status effects](status-effects.md)) for as long as they stay and ten seconds after they leave.
   No [spell](magic.md#the-spells) can be cast, no [scroll](scrolls.md) read, and no
   [voice](hearing.md#throwing-your-voice) thrown. A [wizard](class-wizard.md) and a
@@ -141,7 +141,7 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
   level below and land somewhere open on it, never behind a
   [locked door](doors.md#locked-doors) or in a [shop](shops.md). You take 2d6
   [damage](combat.md#damage), which can kill you, and are
-  [Staggered](status-effects.md#status-staggered). It is a quick way down, if you can take the
+  [Staggered](status-list.md#status-staggered). It is a quick way down, if you can take the
   bruises. Creatures never fall through.
 - **Treasure room.** Wealth nobody has touched in a long time. Inside lie one or two chests of the
   level's depth (see [Chests](chests.md)), two to five heaps of [gold](shops.md#money) coins (three
@@ -197,7 +197,7 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
   tells which: gold for good, red for evil. It cares only whether you are on its side (see
   [Alignment](alignment.md)).
   - Of its side, you [heal](healing.md#how-fast-you-heal) twice as fast inside ("You feel welcome here.").
-  - Of the other side, you are [Unwelcome](status-effects.md#status-unwelcome) (see
+  - Of the other side, you are [Unwelcome](status-list.md#status-unwelcome) (see
     [Status effects](status-effects.md)) for as long as you stay and half a minute after you
     leave. Wounds [heal](healing.md#how-fast-you-heal) at half the pace and your blows go a little astray
     ("Something here wants you gone.").
@@ -215,12 +215,12 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
   and reading a scroll earns one every time instead of half the time.
   Only rooms of 9 floor cells or more can be one.
 
-The [Old delver](talents.md#talent-old-delver) talent (Delver; [Willpower](stats.md#stat-willpower)
+The [Old delver](talents-exploring.md#talent-old-delver) talent (Delver; [Willpower](stats.md#stat-willpower)
 11 or [Dexterity](stats.md#stat-dexterity) 12) makes you at home in strange rooms. A
 [collapsed floor](special-rooms.md#room-collapsed) never gives way under you, the
-[Ebbing](status-effects.md#status-ebbing) of a [draining room](special-rooms.md#room-draining) never
+[Ebbing](status-list.md#status-ebbing) of a [draining room](special-rooms.md#room-draining) never
 takes you, and nothing you kill ever rises in a [cursed room](special-rooms.md#room-cursed). With
-[Old hand](talents.md#talent-old-hand) after it (level 10), a room that quickens healing or mana
+[Old hand](talents-exploring.md#talent-old-hand) after it (level 10), a room that quickens healing or mana
 quickens it half again more for you: a [sanctuary](special-rooms.md#room-sanctuary)'s three times
 as fast becomes four times. You can also lift one thing from a
 [tempting hoard](special-rooms.md#room-hoard) before it seals; the second seals it.
@@ -229,3 +229,5 @@ Only what happens inside counts. A sound made in an [echoing hall](special-rooms
 is [loud](hearing.md#how-loud) wherever it is heard, while one made outside and heard inside is not
 changed. Light outside a [shadowed room](special-rooms.md#room-shadowed) is as bright as ever, even
 right at its door.
+
+See also: [Dungeons and danger](dungeons.md) and [The dungeons one by one](dungeon-guide.md).

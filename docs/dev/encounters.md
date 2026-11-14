@@ -2,7 +2,7 @@
 
 Developer notes for working on this part of Warlock; the design is
 `docs/design/overworld-encounters.md` (its §15, the owner's decisions, overrides the rest), the
-slices #803 (E0, the edge rule: `world/edge_leave.rs`, `docs/dev/overworld.md`), #804 (E1, the
+slices #803 (E0, the edge rule: `world/levels/edge_leave.rs`, `docs/dev/overworld.md`), #804 (E1, the
 rules, this file), #805 (E2, the dialog), #806 (E3, the Ascmearc's tables, `draw`, `npc`, and
 `quest_variant`, the pedlar, the wiki page, the spec section), #807 (E4, resting and foraging roll too: "Camping and foraging" below), #808 (E5, the
 pedlar's offer: "The pedlar's offer" below). Keep it current with the code, as CLAUDE.md says.
@@ -64,10 +64,10 @@ pedlar's offer: "The pedlar's offer" below). Keep it current with the code, as C
   open ground and the copses of the regions the design left without a table.
 - `assets/data/skills/`: Spot's and Survival's `lookout` (and `Use::Lookout` marks on both),
   Stealth's `stalk`, Survival's `evade` (`skills::Effect::{Lookout, Stalk, Evade}`, read only in
-  `world/encounter.rs`). Alert (`talents/alert.toml`) is read once more there (its `notice`) and
+  `world/levels/encounter.rs`). Alert (`talents/alert.toml`) is read once more there (its `notice`) and
   its `systems` gain `awareness`.
-- `world/encounter.rs`: the rules (below), `Pending`, `Party`, `Choice`, `Outcome`, `Forced`,
-  `EncounterView`; `world/encounter_area.rs`: opening the area and the positions.
+- `world/levels/encounter.rs`: the rules (below), `Pending`, `Party`, `Choice`, `Outcome`, `Forced`,
+  `EncounterView`; `world/levels/encounter_area.rs`: opening the area and the positions.
 
 ## The flow
 
@@ -97,7 +97,7 @@ pedlar's offer: "The pedlar's offer" below). Keep it current with the code, as C
 
 ## Talking past (#1017)
 
-Bluff's overworld use (`docs/design/skill-uses.md` §6.2 B3; `world/talk_past.rs`). The owner:
+Bluff's overworld use (`docs/design/skill-uses.md` §6.2 B3; `world/levels/talk_past.rs`). The owner:
 no talking out of being caught anywhere (B2), and "be careful what to flag".
 
 - **Offered** (`talk_past::offered`, which the view, the dumps' `choices`, the dialog, and
@@ -105,9 +105,9 @@ no talking out of being caught anywhere (B2), and "be careful what to flag".
   `Choice::Bluff`, id `bluff`, "Talk your way past", between Evade and Fight, only for an entry
   with `talk_past = true`, only in `Outcome::Met` (face to face: never the drop, a known party
   met is as any party of the entry), and only to a player trained in a skill with the `feint`
-  benefit (Bluff; `Ability::Feint`'s test) while `data/feint.toml` loads.
+  benefit (Bluff; `Ability::Feint`'s test) while `data/rules/feint.toml` loads.
 - **The check** (gameplay stream, two draws): the lead type's (`World::lead_of`) Willpower
-  modifier against `feint.toml`'s `difficulty` + the player's Presence modifier + their talents'
+  modifier against `rules/feint.toml`'s `difficulty` + the player's Presence modifier + their talents'
   Presence checks + Bluff's `feint` points (a feint's contest, at the party's lead). The lead
   failed: "You talk your way past.", the party lets the player go as `pass` does (nothing made),
   and the try takes a `chat` action's price. Made: "They are not fooled.", the fight opens as
@@ -153,7 +153,7 @@ The design's §14 Q3 default, which the owner widened to foraging (§15 Q3).
 
 The owner's Q7 (§15): one item at a fixed price, take it or leave it, a favoured roll, and three
 uniques very rarely. No shop and no floor: a dialogue's `[dialogue.offer]` (`content/offer.rs`,
-`TradeOffer`; `Dialogue::offer`) asked for like a topic, done in `world/wares.rs`. The details
+`TradeOffer`; `Dialogue::offer`) asked for like a topic, done in `world/people/wares.rs`. The details
 (data, draws, price, saved state, the UI) are in `docs/dev/npcs.md` "A trader's offer"; the
 pedlar's numbers are in `campaigns/ascmearc/data/dialogue/road.toml` and the three uniques in
 `campaigns/ascmearc/data/uniques/` (`brosinga_mene`, `eorcanstan`, `grendles_grape`;
@@ -230,7 +230,7 @@ level's picks, which `refuse_due` asks first, show over it. The messages are the
 ## Tests
 
 `content/encounter_tests.rs` (the shipped file, the all-or-none tables, ranges, a fixture table,
-each refusal; #1017: `talk_past_is_only_for_a_hostile_group`); `world/encounter_tests.rs` (no draws without tables or while pending, a certain
+each refusal; #1017: `talk_past_is_only_for_a_hostile_group`); `world/levels/encounter_tests.rs` (no draws without tables or while pending, a certain
 roll, the choices by outcome, pass by makes nothing, the positions and awareness by outcome and
 their order from the edge, the ambushing party unaware and in debt, the ambushed player
 startled once, evade both ways, the known party, a save mid-question, replays through every
@@ -238,12 +238,12 @@ outcome, the dumps; #807: no draws resting without tables, a share, or the overw
 and never the drop for a sleeper, met and ambushed, a forage cut short, camping replays; #1017:
 talking past offered only when flagged, met, and trained, made and failed by chance, time, marks,
 a replay);
-`world/ascmearc_encounter_tests.rs` (#806: the regions and no level gates, every land cell
+`world/campaigns/ascmearc_encounter_tests.rs` (#806: the regions and no level gates, every land cell
 covered, the road's rate, a replay through a forced encounter of each outcome and kind, the
 pedlar's topics and his way marked, the villagers' npc, a `draw`'s members, the variant, quest,
 and days conditions; #1017: exactly the six entries flagged, a bard's replay on the road); `content/encounter_tests.rs::draws_npcs_and_quest_variants_are_checked`;
 the wiki's `xtask/src/wiki/encounters.rs` (`wiki/src/encounters.md`: rates, checks, odds,
 ladders, positions, the Ascmearc's tables); `magic/tests.rs::skill_reader` names `encounter.rs` for the three benefits. The app:
-`ui/screen_snapshots.rs::encounters_as_text` (`encounter-drop`, with Esc and `1` pressed over it,
+`ui/screen_snapshots/play.rs::encounters_as_text` (`encounter-drop`, with Esc and `1` pressed over it,
 `encounter-met`, `encounter-peaceful`, `encounter-wildlife`, `encounter-talk-past` (a bard), on a fixture table, the dialog as a
 load opens it) and `an_encounter_row_answers_it`; `dialog_screen.rs`'s required dialog.

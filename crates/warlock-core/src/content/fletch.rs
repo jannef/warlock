@@ -2,7 +2,7 @@
 //! bolts recipes (`recipes/woodcraft/arrows.toml`, `bolts.toml`, `count = "fletch"`) read beyond
 //! the recipe: the batch's count, what is a knife, and what each launcher is called.
 //!
-//! The rules live in `world/fletch.rs` and `world/craft_make.rs`. The file is optional: without
+//! The rules live in `world/crafting/fletch.rs` and `world/crafting/craft_make.rs`. The file is optional: without
 //! it no recipe has a knife or a launcher to hand, and `count = "fletch"` makes one.
 
 use super::{ContentError, WeaponSkillId};

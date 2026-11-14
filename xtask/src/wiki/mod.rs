@@ -35,6 +35,8 @@ mod drops;
 mod dungeons;
 mod enchanting;
 mod encounters;
+#[cfg(test)]
+mod examples;
 mod experience;
 mod familiars;
 mod gear_condition;
@@ -186,6 +188,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("vision.md", vision::vision),
         ("lights.md", vision::lights),
         ("creatures.md", creatures::creatures),
+        ("creature-carries.md", creatures::creature_carries),
         ("factions.md", creatures::factions),
         ("creature-tags.md", creatures::creature_tags),
         ("gear-condition.md", gear_condition::gear_condition),
@@ -193,6 +196,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("creature-drops.md", drops::creature_drops),
         ("drops-by-tag.md", drops::tag_drops),
         ("creature-stats.md", creatures::creature_stats),
+        ("creature-levels.md", creatures::creature_levels),
         ("creature-defences.md", creatures::creature_defences),
         ("creature-attacks.md", creatures::creature_attacks),
         ("creature-throws.md", creatures::creature_throws),
@@ -210,6 +214,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("creature-auras.md", creatures::creature_auras),
         ("creature-surprise.md", creatures::creature_surprise),
         ("creature-senses.md", creatures::creature_senses),
+        ("creature-size.md", creatures::creature_size),
         ("creature-grades.md", creatures::creature_grades),
         ("creature-grade-words.md", creatures::creature_grade_words),
         ("animated-tiers.md", animated::animated_tiers),
@@ -245,6 +250,9 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("shops.md", objects::shops),
         ("equipment.md", objects::equipment),
         ("materials.md", materials::materials),
+        ("material-arms.md", materials::material_arms),
+        ("material-wear.md", materials::material_wear),
+        ("material-work.md", materials::material_work),
         ("material-finds.md", materials::material_finds),
         ("material-odds.md", materials::material_odds),
         ("material-tribes.md", materials::material_tribes),
@@ -304,7 +312,11 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("alignment-gifts.md", alignment::alignment_gifts),
         ("alignment-shops.md", alignment::alignment_shops),
         ("talents-creation.md", talents::creation),
-        ("talents.md", talents::talents),
+        ("talents-origins.md", talents::talents_origins),
+        ("talents-body.md", talents::talents_body),
+        ("talents-fighting.md", talents::talents_fighting),
+        ("talents-exploring.md", talents::talents_exploring),
+        ("talents-mind.md", talents::talents_mind),
         ("talents-racial.md", talents::racial),
         ("talents-heirlooms.md", talents::heirlooms),
         ("crafts-trades.md", talents::trades),
@@ -347,6 +359,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("song-music.md", abilities::song_music),
         ("song-odds.md", abilities::song_odds),
         ("weapons.md", combat::weapons),
+        ("weapon-handling.md", combat::weapon_handling),
         ("finesse-weapons.md", combat::finesse_weapons),
         ("light-weapons.md", combat::light_weapons),
         ("launchers.md", combat::launchers),
@@ -526,7 +539,7 @@ mod tests {
         out
     }
 
-    fn unlink(text: &str) -> String {
+    pub(super) fn unlink(text: &str) -> String {
         let mut out = String::with_capacity(text.len());
         let mut rest = text;
         while let Some(open) = rest.find('[') {
@@ -716,7 +729,8 @@ mod tests {
         assert!(text("tiers").contains("| Uncommon | 12% | 64% | 0.96 | +1 to +3 | yes |"));
         assert!(text("childhood").contains("[Strength](stats.md#stat-strength) +1 (worth +2)"));
         assert!(
-            text("parents").contains("| with [Family wealth](talents.md#talent-family-wealth) |")
+            text("parents")
+                .contains("| with [Family wealth](talents-origins.md#talent-family-wealth) |")
         );
         assert!(!text("road").contains("the Hall"), "never the test world's");
     }
@@ -738,13 +752,14 @@ mod tests {
         // skill lowers its hearing from 5), and carrying limits.
         has(
             "creature-stats.md",
-            "| Giant rat | 1 | 5 | Common | 10 (+0) | 17 (+3) | 5 (\u{2212}3) | 1 (\u{2212}5) | 12 (+1) | \
-             4 (\u{2212}3) | as its scores | - | - |",
+            "| Giant rat | 10 (+0) | 17 (+3) | 5 (\u{2212}3) | 1 (\u{2212}5) | 12 (+1) | \
+             4 (\u{2212}3) |",
         );
-        has("creature-stats.md", "| Deer | 1 | 2 |");
+        has("creature-levels.md", "| Giant rat | 1 | 5 | Common | - |");
+        has("creature-levels.md", "| Deer | 1 | 2 |");
         // Rarity (#373): each type's tier, and the tiers' factors.
         has(
-            "creature-stats.md",
+            "creature-levels.md",
             "| Kobold shaman | 4 | 40 | Very rare |",
         );
         row_has(
@@ -752,7 +767,7 @@ mod tests {
             "| Very rare | 10% | ",
             &["bog hag", "cinder elemental"],
         );
-        has("creature-stats.md", "| Listen 30 | - |");
+        has("creature-levels.md", "| Listen 30 |");
         has(
             "creature-defences.md",
             "| Giant rat | 5 | 13 (Dexterity +3) | - | - |",
@@ -772,17 +787,19 @@ mod tests {
         );
         has(
             "creature-senses.md",
-            "| Cave bat | 2000 | 3 seconds | 8 cells | Darkvision | 3 | silent | - | yes | 500 g | Small |",
+            "| Cave bat | 2000 (3 seconds) | 8 cells, Darkvision | 3 | silent |",
         );
+        has("creature-size.md", "| Cave bat | 500 g | Small |");
         has(
             "creature-senses.md",
-            "| Deer | 1300 | 4.6 seconds | 12 cells | Normal | 2 | 50 | - | yes |",
+            "| Deer | 1300 (4.6 seconds) | 12 cells, Normal | 2 | 50 |",
         );
         // The companion's nose and the growth table through the rules (spec §8 "Allies").
         has(
             "creature-senses.md",
-            "| Hound | 1200 | 5 seconds | 10 cells | Low-light | 20 | 40 | 6 cells | yes |",
+            "| Hound | 1200 (5 seconds) | 10 cells, Low-light | 20 | 40 |",
         );
+        has("creature-size.md", "| yes, nose 6 cells |");
         has("companion-starts.md", "| Human | hound (1), boar (2) |");
         has("companion-growth.md", "| hound | 1 | 5 hp,");
         has(
@@ -1032,9 +1049,11 @@ mod tests {
             objects
                 .contains("| Gold and ruby amulet | `\"` | amulets | gold chain, ruby setting |")
         );
-        assert!(text("materials.md").contains(
-            "| Ruby | - | `#d3213b` | 100% | - | - | - | ×1 | yes | 100% | 100% | 100% | +4 | +0 | gold and ruby \
-             amulets, loose gems, and items set with one |"
+        assert!(text("materials.md").contains("| Ruby (precious) | - | `#d3213b` | 100% | ×1 |"));
+        assert!(!text("material-arms.md").contains("| Ruby |"));
+        assert!(text("material-wear.md").contains("| Ruby | 100% | 100% | 100% |"));
+        assert!(text("material-work.md").contains(
+            "| Ruby | +4 | +0 | gold and ruby amulets, loose gems, and items set with one |"
         ));
         // Material stock (#1332, #1349): the form word, the unit, and the profession by group
         // or by the material's own row.
@@ -1057,9 +1076,13 @@ mod tests {
         assert!(text("salvage.md").contains("Salvaging takes 600 seconds (10 minutes)."));
         // Materials (#193, #194): their properties on steel's scale, how often they are found,
         // what each item may be made of, and a long sword and chain mail in each metal.
-        assert!(text("materials.md").contains(
-            "| Bronze | metal | `#cd7f32` | 112% | +0 / −1 | 80% | 100% | ×0.8 | no | 40% | 80% | 80% | −1 | +0 | bronze keys, minster reliquaries |"
-        ));
+        assert!(text("materials.md").contains("| Bronze | metal | `#cd7f32` | 112% | ×0.8 |"));
+        assert!(text("material-arms.md").contains("| Bronze | +0 / −1 | 80% | 100% |"));
+        assert!(text("material-wear.md").contains("| Bronze | 40% | 80% | 80% |"));
+        assert!(
+            text("material-work.md")
+                .contains("| Bronze | −1 | +0 | bronze keys, minster reliquaries |")
+        );
         assert!(text("material-finds.md").contains(
             "| Steel | 300 (common) | +60 | 1 | 20 (rare) | +15 | good | good | good | good |"
         ));
@@ -1322,10 +1345,14 @@ mod tests {
             ),
             "{disarm}"
         );
-        assert!(text("materials.md").contains(
-            "| Steel | metal | `#a8b0b8` | 100% | +0 / +0 | 100% | 100% | ×1 | no | 20% | 10% | 95% | +0 | +0 | knives, \
-             stilettos, daggers, short swords, scimitars,"
-        ));
+        assert!(text("materials.md").contains("| Steel | metal | `#a8b0b8` | 100% | ×1 |"));
+        assert!(text("material-arms.md").contains("| Steel | +0 / +0 | 100% | 100% |"));
+        assert!(text("material-wear.md").contains("| Steel | 20% | 10% | 95% |"));
+        assert!(
+            text("material-work.md").contains(
+                "| Steel | +0 | +0 | knives, stilettos, daggers, short swords, scimitars,"
+            )
+        );
         assert!(text("pack.md").contains("| Your own weight | 70 kg |"));
         let burden = text("burden.md");
         for row in [
@@ -1572,26 +1599,30 @@ mod tests {
         assert!(text("hit-points.md").contains("| Dwarf | 6 |"));
         assert!(text("hit-points.md").contains("| Wizard | 0 |"));
         let weapons = text("weapons.md");
+        let handling = text("weapon-handling.md");
         assert!(
-            weapons.contains(
-                "| Dagger | 1d4 | 20–24 | ×2 | - | - | main hand or off hand | 5 cells | Daggers and \
-                 knives | 6 seconds |"
-            ),
+            weapons.contains("| Dagger | 1d4 | 20–24 | ×2 | 6 seconds |"),
             "{weapons}"
+        );
+        assert!(
+            handling
+                .contains("| Dagger | Daggers and knives | main hand or off hand | 5 cells | - |"),
+            "{handling}"
         );
         assert!(weapons.contains("| Spear | 1d8 | 22–24 | ×3 |"));
         assert!(
-            weapons
-                .contains("| Quarterstaff | 1d6 | 22–24 | ×2 | +1 | - | main hand (both hands) |")
+            handling.contains("| Quarterstaff | Staves | main hand (both hands) | - | parry +1 |")
         );
-        assert!(weapons.contains(
-            "| Short bow | 1d6 | 22–24 | ×3 | - | 10 | missile weapon, shoots | - | Bows | - |"
-        ));
-        assert!(weapons.contains("| Great sword | 2d6 |") && weapons.contains("| Great blades |"));
+        assert!(weapons.contains("| Short bow | 1d6 | 22–24 | ×3 | - |"));
+        assert!(
+            handling
+                .contains("| Short bow | Bows | missile weapon, shoots | - | needs Strength 10 |")
+        );
+        assert!(weapons.contains("| Great sword | 2d6 |") && handling.contains("| Great blades |"));
         assert!(weapons.contains("| 7.2 seconds |"));
         assert!(
             weapons.contains("| Rock | 1d3 |")
-                && weapons.contains("| 6 cells | Thrown weapons | - |")
+                && handling.contains("| Rock | Thrown weapons | missile weapon | 6 cells | - |")
         );
         // Magic items: rarity, bases, affixes with their tiers, and the words of rare names.
         assert!(text("magic-rarity.md").contains("| Rare | 0.5% |"));
@@ -1889,10 +1920,8 @@ mod tests {
         let at = |row: &str| classes.find(row).unwrap_or_else(|| panic!("{row}"));
         assert!(at("| Melee weapons |") < at("| Gems | Gems |"));
         assert!(at("| Gems | Gems |") < at("| Miscellaneous | Boulders, long-stemmed pipes"));
-        assert!(
-            text("creatures.md")
-                .contains("| Giant rat | `r` | Vermin | hostile | up close | no | no |")
-        );
+        assert!(text("creatures.md").contains("| Giant rat | `r` | Vermin | hostile | up close |"));
+        assert!(text("creature-carries.md").contains("| Giant rat | - | - |"));
         assert!(text("creatures.md").contains("| Deer | `d` | Wildlife | neutral | never |"));
         assert!(text("creatures.md").contains("shoots from afar"));
         // Monsters fight the player alone but for the story feuds and the arena's rats (#612).

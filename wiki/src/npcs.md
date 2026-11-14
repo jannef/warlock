@@ -125,7 +125,7 @@ Negotiation now and then.
 - With nothing to cure, mend, or identify, or a skill you already have, they tell you so, and you
   keep your gold. Without
   enough gold you are told "You cannot pay." Neither takes any time.
-- The **[Pious](talents.md#talent-pious)** talent ([Wayfarer](talents.md#wayfarer)) halves a
+- The **[Pious](talents-exploring.md#talent-pious)** talent ([Wayfarer](talents-exploring.md#wayfarer)) halves a
   temple's price for a cure or a mending (rounded up), and its cures also mend a point of each
   damaged [stat](stats.md#drained-stats) (see [Talents](talents.md)). Nothing moves the price of
   an identification.
@@ -175,7 +175,7 @@ smith, so the
 elsewhere, such as Holtwīc's, do not count. You are told when it rises: "Cēaptūn's folk think
 the better of you."
 
-- The goodwill comes off **last**, after [Pious](talents.md#talent-pious) and any haggling, and
+- The goodwill comes off **last**, after [Pious](talents-exploring.md#talent-pious) and any haggling, and
   the price is rounded up. One quest takes Sister Hild's 60-gold cure down to 57 gold.
 - It stops at **100% off**: after twenty quests the town's services are **free**. They are listed
   as `(free)`, you pay nothing, and a free service does not train
@@ -263,3 +263,5 @@ If you cannot see what is in your way, you only learn that "Something is in the 
 swapped places with something.
 
 Moving into a hostile creature attacks it instead; see [Combat](combat.md).
+
+See also: [Quests](quests.md), [The Ascmearc](ascmearc.md), and [The Weyfarers' Gilde](guild.md).

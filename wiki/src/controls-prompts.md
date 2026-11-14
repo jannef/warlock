@@ -127,3 +127,5 @@ is marked and the message line says "You do not see there."; beyond 6 cells it s
 range." `Enter` throws your voice there.
 
 See [Ranged combat](ranged.md).
+
+See also: [Controls](controls.md) and [Menus and lists](controls-menus.md).

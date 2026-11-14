@@ -18,3 +18,6 @@ up](objects.md#picking-up) again to join it back to the stack.
   combat](ranged.md)).
 - Ammunition has weight like anything else. A full quiver counts toward your
   [burden](burden.md) (see [Objects and your pack](objects.md)).
+
+See also: [Making things by hand](handcraft.md), [Weapon skills](weapon-skills.md), and
+[Fighting styles](fighting-styles.md).

@@ -11,14 +11,14 @@ list it. Their riders are existing mechanics only: the green hag's `transfixed` 
 (illusions and misery), the sea hag's `frightened` and a Toughness drain (her death gaze, `[creature.gaze]` since #1125:
 range 4, 35 %; docs/dev/creatures.md "Gazes"), the
 annis hag's `held` (her embrace, grip 18), the bheur hag's cold damage and `sluggish` (no hunger
-rider exists); `world/mana_tests.rs` drops the green and bheur hags with its own status file.
+rider exists); `world/magic/mana_tests.rs` drops the green and bheur hags with its own status file.
 Illusions, death gazes, blizzards, shapeshifting, covens, and water-dwelling (the sea hag walks
 the land only, #196) are follow-ups. They ship in no population (checked again in #531): only Fyrdelf's window (5–16)
 reaches the green hag's level, and a volcano is no place for her. They come only as strays (docs/dev/creatures.md).
 
 Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the green hag `curse_of_sloth`, `mesmerise`, `blight` (mana 45); the bheur hag `curse_of_sloth`, `rime`, `frost` (mana 70).
 
-Presence (#1128, `world/aura.rs`): the bheur hag's cold aura (`sluggish`, radius 2, Toughness 18, cold). Her hunger rider (design §5.12) is not built yet.
+Presence (#1128, `world/creatures/aura.rs`): the bheur hag's cold aura (`sluggish`, radius 2, Toughness 18, cold). Her hunger rider (design §5.12) is not built yet.
 
 ## Variance
 

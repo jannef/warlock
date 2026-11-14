@@ -6,6 +6,8 @@ column means is on [Creatures in numbers](creature-numbers.md), and how each cre
 
 ## Stats and skills
 
+{{#include generated/creature-levels.md:goblins}}
+
 {{#include generated/creature-stats.md:goblins}}
 
 ## Hit points, Defence, and resistances
@@ -19,3 +21,7 @@ column means is on [Creatures in numbers](creature-numbers.md), and how each cre
 ## Pace, senses, and size
 
 {{#include generated/creature-senses.md:goblins}}
+
+{{#include generated/creature-size.md:goblins}}
+
+See also: [Races](races.md) and [Creatures' gear](creature-gear.md).

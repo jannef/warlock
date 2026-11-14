@@ -54,7 +54,7 @@ pub const STAMINA: &str = "stamina";
 pub struct WeaponAbilityId(pub u16);
 
 /// The combat events triggered abilities fire on (the design §4.3), each raised at one line that
-/// already marks it (`world/weapon_ability.rs`). Closed: [`Trigger::ALL`] in the wiki's order.
+/// already marks it (`world/combat/weapon_ability.rs`). Closed: [`Trigger::ALL`] in the wiki's order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Trigger {
     /// A blow, shot, or throw of the actor's hits (soaked or resisted too: it landed).
@@ -66,7 +66,7 @@ pub enum Trigger {
     BigHit,
     /// A blow, shot, or throw of the actor's kills.
     Kill,
-    /// A sneak attack of the actor's hits: its sneak dice land (`world/ambush.rs`).
+    /// A sneak attack of the actor's hits: its sneak dice land (`world/combat/ambush.rs`).
     SneakAttack,
     /// The actor is hit.
     Struck,
@@ -160,7 +160,7 @@ impl Trigger {
     }
 }
 
-/// The free blow a `free_blow` effect switches on (`FreeBlows` in `world/free_blow.rs`).
+/// The free blow a `free_blow` effect switches on (`FreeBlows` in `world/combat/free_blow.rs`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FreeBlowKind {
     Riposte,
@@ -280,7 +280,7 @@ pub enum WeaponDoes {
     ParryMissiles,
     /// The blocked spell is cast back at its caster from the actor's cell, as the caster cast
     /// it, at most `per_turn` times a turn of the actor's; a reflected spell is never reflected
-    /// again (`world/reflect.rs`).
+    /// again (`world/combat/reflect.rs`).
     ReflectSpell { per_turn: u8 },
     /// (Active) a blow at the first hostile along the direction within `reach` cells, the cells
     /// between empty of actors and passable: Lunge.
@@ -793,7 +793,7 @@ fn effect(spec: EffectSpec, content: &Content) -> Result<WeaponDoes, String> {
             }
         }
         "knockback" => {
-            // A knockback pushes one cell (`world/weapon_active.rs` never reads `cells`).
+            // A knockback pushes one cell (`world/combat/weapon_active.rs` never reads `cells`).
             let cells = spec.cells.unwrap_or(1);
             if cells != 1 {
                 return Err("`cells` is 1".into());
@@ -832,7 +832,7 @@ mod tests {
 
     #[test]
     fn the_shipped_abilities_load() {
-        let content = Content::load(&ContentFiles::builtin()).expect("content");
+        let content = crate::test_support::builtin();
         let rend = (content.weapon_abilities().iter())
             .find(|a| a.id == "rend")
             .expect("rend");

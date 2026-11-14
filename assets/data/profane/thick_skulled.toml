@@ -1,0 +1,12 @@
+[[gift]]
+id = "thick_skulled"
+name = "Thick-skulled"
+kind = "mixed"
+tier = "lesser"
+weight = 6
+description = "A thick skull: blows land a little softer, and thoughts come a little slower."
+line = "Your skull thickens. Thoughts take the long way round."
+effects = [
+    { kind = "natural", value = 1 },
+    { kind = "stat", stat = "intelligence", value = -1 },
+]

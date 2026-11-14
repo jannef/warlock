@@ -27,7 +27,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   that depth. A branch level is generated on its first visit from its own random stream (§8) and
   then persists like a hand-made level. Its `<` leads to `depths:N-1` (on depth 1, back to the
   level it was first entered from), its `>` to `depths:N+1` (the deepest level has none).
-  **The endless branch** (`[dungeon.endless]` instead of `depth`, #1010; `world/endless.rs`) has
+  **The endless branch** (`[dungeon.endless]` instead of `depth`, #1010; `world/levels/endless.rs`) has
   no last floor and keeps no floor but the current one. Depth counts up from 1; each floor's danger
   is its depth (one more per floor, as other branches, and it keeps rising with no cap) but draws
   stop rising at the top of the branch's roster (the highest level it may draw), so a floor past
@@ -42,7 +42,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   cross as ever, and a companion or familiar always does; any other ally left behind is gone and the
   player is told. A unique creature on a discarded floor may come again. Only a floor deeper than
   any reached in the run pays the first arrival's experience. **Layer bosses** (#1118;
-  `world/layer_boss.rs`): a branch's `[[dungeon.endless.boss]]` rows (`depth`, `creature`, `vault`)
+  `world/levels/layer_boss.rs`): a branch's `[[dungeon.endless.boss]]` rows (`depth`, `creature`, `vault`)
   give a depth a unique boss of its own and its lair, a vault that places the boss and marks one
   `>`. A floor of that depth is made with the lair for certain and no other way down: the lair's
   `>` is plain floor, hidden (ground truth only), until the boss dies, at any hand, on that floor;
@@ -101,7 +101,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ("The stair crumbles to rubble behind you." if the player stands there) and its record is
   dropped, so the player is never sealed in and nothing of that Pit remains. The dev scenario
   `hellegeat` (the showcase's) starts on `hellegeat@1:1`, its record's mouth the hub.
-  **Ways up** (`below = "fyrdelf:12"`, #1117; `mapgen/way_up.rs`, `world/reveal.rs`): a bounded
+  **Ways up** (`below = "fyrdelf:12"`, #1117; `mapgen/way_up.rs`, `world/levels/reveal.rs`): a bounded
   branch whose `below` names a level of another bounded branch of its campaign is a way between
   that level and the overworld. Its deepest level's `>` leads to that level, which gains a `<` back
   up besides its own (placed on the roomy spot nearest, by walking, to the entrance of a vault the
@@ -132,7 +132,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   room. Its third floor names the kobolds' cache (a vault), so a chest neither locked nor trapped,
   filled at the floor's item level, is there for certain. Its `arrival`: "The cave smells of wet
   stone and rats."
-- **Danger levels** (#326; `content/danger.rs`, `world/spawn.rs`; the design is
+- **Danger levels** (#326; `content/danger.rs`, `world/creatures/spawn.rs`; the design is
   `docs/design/campaign.md` §9): every level has a danger, computed when asked
   (`World::danger`), never stored. A branch's `danger = 4` (or `{ base, per_depth, player }`;
   `base` 0 to 99, `per_depth` 0 to 5, default 1) gives its floor at depth *d*

@@ -1,0 +1,386 @@
+//! The Ascmearc's overworld (#332; docs/design/campaign.md §5): the campaign and its map, its
+//! regions, the start on Beorggeat (a closed way back) with its arrival line, the town five
+//! road cells east, the named locations, the two hidden entrances (nothing of them reaches
+//! perception before a reveal), the rivers crossed only at the bridge and the ford, the travel
+//! budget, and the legend's `name` and `note`.
+
+use crate::action::parse_actions;
+use crate::content::{CampaignKind, ContentFiles, LevelTemplate};
+use crate::dump::{self, Layer};
+use crate::replay::Replay;
+use crate::test_support::{run as act, texts};
+use crate::world::*;
+use std::collections::BinaryHeap;
+use std::sync::LazyLock;
+
+const LEVEL: &str = include_str!("../../../../../assets/campaigns/ascmearc/levels/ascmearc.toml");
+const PASS: Pos = Pos::new(12, 28);
+const TOWN: Pos = Pos::new(18, 28);
+const BARROW: Pos = Pos::new(34, 25);
+/// Holtwīc, the village at the north road's end (#1140).
+const VILLAGE: Pos = Pos::new(18, 17);
+/// Ælfhām's fairy mound, hidden in the wood beside the village (#1140; `holtwic_tests`).
+const MOUND: Pos = Pos::new(25, 13);
+/// Lytelscræf, the starter cave (#792): two cells from the pass, in sight of the start.
+const CAVE: Pos = Pos::new(14, 27);
+/// Līctūn, Cēaptūn's churchyard (#1258): beside the south road, four cells out of town.
+const YARD: Pos = Pos::new(19, 32);
+/// Grundlēas, the endless branch (#1010): open to anyone, far from the pass.
+const GROUNDLESS: Pos = Pos::new(52, 52);
+/// Dēopgang's way in, the south-west corner against Grægweall (#1434).
+const DEOPGANG: Pos = Pos::new(18, 57);
+const FENNMYNSTER: Pos = Pos::new(70, 48);
+const FYRDELF: Pos = Pos::new(97, 21);
+/// The four lairs of the wanted (the guild design §8), hidden on reserved sites.
+const LAIRS: [(&str, Pos); 4] = [
+    ("wyrtholm", Pos::new(88, 46)),
+    ("wulfeshol", Pos::new(18, 49)),
+    ("banfeld", Pos::new(42, 31)),
+    ("brocenburg", Pos::new(66, 12)),
+];
+
+/// Built-in content with nobody hungering (the journeys here take days).
+static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
+    let mut files = ContentFiles::builtin();
+    files.remove("data/hunger.toml");
+    Arc::new(Content::load(&files).expect("builtin content"))
+});
+
+fn overworld() -> &'static LevelTemplate {
+    CONTENT
+        .overworld_of("ascmearc")
+        .expect("the Ascmearc's overworld")
+}
+
+fn start() -> World {
+    World::new(CONTENT.clone(), "ascmearc", None).expect("a run of the Ascmearc")
+}
+
+fn put_player(world: &mut World, at: Pos) {
+    let id = world.state.player;
+    world.state.actors.get_mut(&id).expect("player").pos = at;
+    world.perceive(&mut Vec::new());
+}
+
+fn terrain_at(at: Pos) -> &'static str {
+    &CONTENT.terrain(overworld().terrain[at]).id
+}
+
+/// The quickest journey from `from` to every cell, in minutes at normal speed, without
+/// stepping onto terrain `except` (the overworld's travel times; 8 directions).
+fn journeys(from: Pos, except: &[&str]) -> BTreeMap<Pos, u32> {
+    let map = &overworld().terrain;
+    let minutes = |p: Pos| {
+        let t = CONTENT.terrain(map[p]);
+        (t.walkable && !except.contains(&t.id.as_str())).then_some(u32::from(t.travel_minutes?))
+    };
+    let mut best = BTreeMap::from([(from, 0)]);
+    let mut queue = BinaryHeap::from([(std::cmp::Reverse(0u32), from)]);
+    while let Some((std::cmp::Reverse(d), p)) = queue.pop() {
+        if best.get(&p).is_some_and(|b| *b < d) {
+            continue;
+        }
+        for dir in Dir::ALL {
+            let n = p.step(dir);
+            let Some(m) = map.in_bounds(n).then(|| minutes(n)).flatten() else {
+                continue;
+            };
+            if best.get(&n).is_none_or(|b| *b > d + m) {
+                best.insert(n, d + m);
+                queue.push((std::cmp::Reverse(d + m), n));
+            }
+        }
+    }
+    best
+}
+
+#[test]
+fn the_ascmearc_is_a_campaign_with_a_120_by_60_overworld() {
+    let campaign = (CONTENT.campaigns().iter())
+        .find(|c| c.id == "ascmearc")
+        .expect("the Ascmearc");
+    assert_eq!(campaign.kind, CampaignKind::Campaign);
+    assert_eq!(campaign.start, "ascmearc");
+    let map = overworld();
+    assert_eq!((map.terrain.width(), map.terrain.height()), (120, 60));
+    assert_eq!(map.name, "The Ascmearc");
+    let walkable = (map.terrain.cells().iter())
+        .filter(|t| CONTENT.terrain(**t).walkable)
+        .count();
+    assert!(
+        (4_500..=5_500).contains(&walkable),
+        "about a third mountains and sea: {walkable} walkable cells"
+    );
+}
+
+#[test]
+fn every_walkable_cell_has_a_region_and_every_region_land() {
+    let map = overworld();
+    let mut used = BTreeSet::new();
+    for y in 0..map.terrain.height() {
+        for x in 0..map.terrain.width() {
+            let p = Pos::new(x, y);
+            if CONTENT.terrain(map.terrain[p]).walkable {
+                used.insert(
+                    map.region_at(p)
+                        .unwrap_or_else(|| panic!("{p} has no region")),
+                );
+            }
+        }
+    }
+    let names: BTreeSet<&str> = map.regions.iter().map(|r| r.name.as_str()).collect();
+    assert_eq!(used, names, "every region names some land");
+    for (at, region) in [
+        (PASS, "Grægweall"),
+        (TOWN, "Cēapdenu"),
+        (BARROW, "Hlāwdūn"),
+        (FENNMYNSTER, "Micelfenn"),
+        (FYRDELF, "Ascdūn"),
+    ] {
+        assert_eq!(map.region_at(at), Some(region), "{at}");
+    }
+}
+
+#[test]
+fn a_run_starts_on_beorggeat_with_its_arrival_line() {
+    let w = start();
+    assert_eq!(w.player_pos(), PASS);
+    assert_eq!(w.perception().level_id(), "ascmearc");
+    assert_eq!(terrain_at(PASS), "mountain_pass");
+    assert_eq!(w.perception().region(), Some("Grægweall"));
+    let lines = texts(&w);
+    assert!(
+        lines[0].starts_with("Welcome to The Ascmearc."),
+        "{lines:?}"
+    );
+    assert_eq!(
+        lines[1],
+        "The pass opens on the Ascmearc. Far to the east, Fyrbeorg smokes."
+    );
+    let place = w.perception().place(PASS).expect("Beorggeat is named");
+    assert_eq!(place.name, "Beorggeat");
+    assert_eq!(
+        place.note.as_deref(),
+        Some("The way you came; snow has closed it behind you.")
+    );
+    // The starter cave is in sight from the first turn (#792).
+    assert!(w.perception().is_visible(CAVE));
+    assert_eq!(w.perception().leads_to(CAVE).as_deref(), Some("Lytelscræf"));
+}
+
+#[test]
+fn beorggeat_is_a_closed_way_back() {
+    let map = overworld();
+    assert!(map.stairs.iter().all(|s| s.pos != PASS), "no way out");
+    let open: Vec<Pos> = (Dir::ALL.iter())
+        .map(|d| PASS.step(*d))
+        .filter(|p| CONTENT.terrain(map.terrain[*p]).walkable)
+        .collect();
+    assert_eq!(
+        open,
+        [PASS.step(Dir::E)],
+        "the only way on is the road east"
+    );
+    let mut w = start();
+    let before = w.time();
+    act(&mut w, "descend move:W move:NW move:SW");
+    assert_eq!(w.player_pos(), PASS);
+    assert!(texts(&w).contains(&"There is nothing to explore here.".to_string()));
+    assert!(
+        w.time().seconds() - before.seconds() < 60,
+        "nothing but the usual time to try"
+    );
+}
+
+#[test]
+fn the_town_lies_five_road_cells_east_of_the_pass() {
+    for x in PASS.x + 1..TOWN.x {
+        assert_eq!(terrain_at(Pos::new(x, PASS.y)), "road", "({x}, 28)");
+    }
+    assert_eq!(terrain_at(TOWN), "town");
+    let mut w = start();
+    act(&mut w, "move:E*6");
+    assert_eq!(w.player_pos(), TOWN);
+    assert_eq!(texts(&w).last().unwrap(), "The way into Cēaptūn is here.");
+    assert_eq!(w.perception().leads_to(TOWN).as_deref(), Some("Cēaptūn"));
+    // It leads into the town (#336; `ceaptun_tests`).
+    act(&mut w, "descend");
+    assert_eq!(w.state.current_level, "ceaptun");
+}
+
+#[test]
+fn the_locations_are_named_and_six_cells_apart() {
+    let map = overworld();
+    let named: BTreeMap<Pos, (&str, &str)> = (map.stairs.iter())
+        .map(|s| {
+            let terrain = CONTENT.terrain(map.terrain[s.pos]).id.as_str();
+            (s.pos, (terrain, s.name.as_deref().expect("a name")))
+        })
+        .collect();
+    assert_eq!(
+        named,
+        BTreeMap::from([
+            (CAVE, ("cave_mouth", "Lytelscræf")),
+            (BARROW, ("barrow", "Cealdhlāw")),
+            (DEOPGANG, ("dungeon_entrance", "Dēopgang")),
+            (GROUNDLESS, ("dungeon_entrance", "Grundlēas")),
+            (TOWN, ("town", "Cēaptūn")),
+            (YARD, ("graveyard", "Līctūn")),
+            (VILLAGE, ("town", "Holtwīc"))
+        ])
+    );
+    assert_eq!(GROUNDLESS.chebyshev(PASS), 40, "not near the start");
+    let (at, fen) = CONTENT
+        .hidden_location("ascmearc", "fennmynster")
+        .expect("Fennmynster");
+    assert_eq!((at, terrain_at(at)), (FENNMYNSTER, "swamp"));
+    assert_eq!(
+        (CONTENT.terrain(fen.terrain).id.as_str(), fen.name.as_str()),
+        ("dungeon_entrance", "Fennmynster")
+    );
+    let (at, fyr) = CONTENT
+        .hidden_location("ascmearc", "fyrdelf")
+        .expect("Fyrdelf");
+    assert_eq!((at, terrain_at(at)), (FYRDELF, "hills"));
+    assert_eq!(
+        (CONTENT.terrain(fyr.terrain).id.as_str(), fyr.name.as_str()),
+        ("mine", "Fyrdelf")
+    );
+    let mut all = vec![PASS, TOWN, BARROW, FENNMYNSTER, FYRDELF, VILLAGE, MOUND];
+    for (id, at) in LAIRS {
+        let (pos, _) = CONTENT.hidden_location("ascmearc", id).expect(id);
+        assert_eq!(pos, at, "{id}");
+        all.push(at);
+    }
+    for (i, a) in all.iter().enumerate() {
+        for b in &all[i + 1..] {
+            assert!(a.chebyshev(*b) >= 6, "{a} and {b} are too close");
+        }
+    }
+    // The starter cave is the one put close on purpose: two cells from the pass, so the player
+    // sees it on their first look round, and clear of every other place.
+    assert_eq!(PASS.chebyshev(CAVE), 2);
+    for at in &all[1..] {
+        assert!(at.chebyshev(CAVE) >= 4, "{at} is too close to the cave");
+    }
+    // The churchyard is the other (#1258): four cells down the south road from the town, and
+    // farther from every other place.
+    assert_eq!(YARD.chebyshev(TOWN), 4);
+    for at in all.iter().chain([&CAVE]).filter(|at| **at != TOWN) {
+        assert!(
+            at.chebyshev(YARD) >= 5,
+            "{at} is too close to the churchyard"
+        );
+    }
+    // No road leads to a hidden dungeon.
+    for hidden in [FENNMYNSTER, FYRDELF]
+        .into_iter()
+        .chain(LAIRS.map(|(_, at)| at))
+    {
+        for d in Dir::ALL {
+            assert_ne!(terrain_at(hidden.step(d)), "road", "a road beside {hidden}");
+        }
+    }
+}
+
+#[test]
+fn the_rivers_are_crossed_only_at_the_bridge_and_the_ford() {
+    let all = journeys(PASS, &[]);
+    let walkable = (overworld().terrain.cells().iter())
+        .filter(|t| CONTENT.terrain(**t).walkable)
+        .count();
+    assert_eq!(all.len(), walkable, "all the land is one");
+    let dry = journeys(TOWN, &["bridge", "ford"]);
+    for beyond in [FENNMYNSTER, FYRDELF, Pos::new(62, 43), Pos::new(94, 28)] {
+        assert!(!dry.contains_key(&beyond), "{beyond} lies over a river");
+    }
+    assert!(dry.contains_key(&BARROW), "the barrow is on this side");
+}
+
+#[test]
+fn the_travel_budget_matches_the_design() {
+    let from_town = journeys(TOWN, &[]);
+    let hours = |p: Pos| f64::from(from_town[&p]) / 60.0;
+    assert!((1.5..3.0).contains(&hours(PASS)), "{}", hours(PASS));
+    assert!(
+        (6.0..12.0).contains(&hours(BARROW)),
+        "the barrow within a day: {}",
+        hours(BARROW)
+    );
+    for far in [FENNMYNSTER, FYRDELF] {
+        assert!(
+            (24.0..48.0).contains(&hours(far)),
+            "{far}: about a day and a half: {}",
+            hours(far)
+        );
+    }
+}
+
+#[test]
+fn nothing_of_the_hidden_dungeons_reaches_perception_or_the_dumps() {
+    let mut w = start();
+    let swamp = CONTENT.terrain(CONTENT.terrain_id("swamp").unwrap()).glyph;
+    put_player(&mut w, FENNMYNSTER.step(Dir::N).step(Dir::N));
+    assert!(w.perception().is_visible(FENNMYNSTER));
+    let rows = dump::layer_rows(&w, Layer::View);
+    let seen = rows[FENNMYNSTER.y as usize]
+        .chars()
+        .nth(FENNMYNSTER.x as usize);
+    assert_eq!(seen, Some(swamp));
+    let json = dump::json(&w, &[Layer::View, Layer::Memory, Layer::Locations], false).to_string();
+    let text = (dump::layer_rows(&w, Layer::Locations)).join("\n");
+    for leak in [
+        "ennmynster",
+        "yrdelf",
+        "yrtholm",
+        "ulfeshol",
+        "nfeld",
+        "rocenburg",
+        "lfhām",
+    ] {
+        assert!(!json.contains(leak), "{leak} in the JSON dump");
+        assert!(!text.contains(leak), "{leak} in the locations");
+    }
+    assert_eq!(w.perception().leads_to(FENNMYNSTER), None);
+    // The dev reveal marks it, and it leads down into its branch (#338).
+    act(&mut w, "reveal:fennmynster");
+    assert_eq!(
+        w.perception().leads_to(FENNMYNSTER).as_deref(),
+        Some("Fennmynster")
+    );
+    put_player(&mut w, FENNMYNSTER);
+    act(&mut w, "descend");
+    assert_eq!(w.perception().level_id(), "fennmynster:1");
+}
+
+#[test]
+fn a_run_of_the_ascmearc_replays_exactly() {
+    let mut w = start();
+    let mut replay = Replay::new(&w);
+    for action in parse_actions("move:E*6 move:S*3 wait reveal:fyrdelf").expect("actions") {
+        w.apply(&action);
+        replay.push(&action, &w);
+    }
+    let verified = Replay::from_json(&replay.to_json())
+        .expect("json")
+        .run(CONTENT.clone())
+        .expect("the replay verifies");
+    assert_eq!(verified.state_hash(), w.state_hash());
+}
+
+#[test]
+fn the_legend_names_places_and_a_note_needs_a_name() {
+    let pass = r#""P" = { terrain = "mountain_pass", spawn = "player", name = "Beorggeat", note = "The way you came; snow has closed it behind you." }"#;
+    assert!(LEVEL.contains(pass), "the pass's legend line");
+    let with = |line: &str| {
+        let mut files = ContentFiles::builtin();
+        files.insert(
+            "campaigns/ascmearc/levels/ascmearc.toml",
+            &LEVEL.replace(pass, line),
+        );
+        Content::load(&files).expect_err("refused").to_string()
+    };
+    let line = r#""P" = { terrain = "mountain_pass", spawn = "player", note = "A note." }"#;
+    let error = with(line);
+    assert!(error.contains("a `note` needs a `name`"), "{line}: {error}");
+}

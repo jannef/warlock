@@ -5,7 +5,7 @@ rules it implements are in spec/04-rendering.md. Keep it current with the code, 
 
 Stairs and locations (terrain with `stairs`) under a pile: `ui/mod.rs::draw_map` draws the
 terrain's glyph in the top object's colour (remembered cells dimmed as any), and the dump's
-`view`/`memory` layers (`dump.rs::perceived_glyph`) show the stairs' glyph; a known trap still wins
+`view`/`memory` layers (`dump/map.rs::perceived_glyph`) show the stairs' glyph; a known trap still wins
 over both (#983).
 
 Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebuffer pixels:
@@ -175,7 +175,7 @@ of the composite must become one of these conditions, or the map keeps stale lig
 `warlock-core/src/light/` (`mod.rs`: falloff and the wall-face rule; `cache.rs`: per-source shadow
 masks, kept for every level visited, so a terrain change on any level calls `terrain_changed`
 (#1518; ice, transparent to transparent, writes directly), a `hollow` preset's leaving out its own cell, and the player's carried light from
-`WorldState::carried_light`, `world/lamp.rs`: a lantern ready in the Tool slot, by its object's
+`WorldState::carried_light`, `world/items/lamp.rs`: a lantern ready in the Tool slot, by its object's
 `light` and the stack's mode, hooded its `hooded` preset; `bounce.rs`: one weak
 bounce; `sun.rs`: sunlight; `moon.rs`: moonlight and `Sky`) and is combined in `perception/lighting.rs`;
 Σ contributions + base light == `light(p)` is a tested invariant. **Creature shadows**
@@ -228,13 +228,18 @@ Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distor
   pixel-identical to no effects). `ScreenTints` draws a fading color over the map viewport:
   the level-change fade, and `flash()` for hit-style events.
 - **Rain** (`ui/rain.rs`, the `weather` switch): the weather's `drops`/`splash`/`ripples` emitters
-  (`data/weather.toml`) run as ambient emitters on every visible unroofed cell of the grid (plus
-  `BELOW` rows), keyed by level position; a particle is drawn only over a cell it rains on, at most
-  `MAX_PARTICLES` a frame. Drops are `│` sheared along their velocity (`FreeGlyph::slant`, pixels
+  (`data/weather.toml`) run as ambient emitters on every visible cell of the grid under the open
+  sky (plus `BELOW` rows): not roofed, and not a building's wall or door (a solid opaque cell or a
+  door beside a roofed cell the player has seen; freestanding walls and trees still get drops),
+  keyed by level position; a particle is drawn only while its middle is over a cell it rains on,
+  at most `MAX_PARTICLES` a frame. Rain glyphs are pushed with `FreeGlyphs::push_under_sky`: the
+  free-glyph shader clips them pixel by pixel against `FreeGlyphs::sky` (`SkyMask`, an `R8Unorm`
+  texel a cell, the same cells, its origin following the camera's slide each frame), so a streak
+  falling across a cell boundary never shows over a roof or a wall (#1691). Drops are `│` sheared along their velocity (`FreeGlyph::slant`, pixels
   across per pixel down, applied in `free_glyph::glyph_mesh`) and faint (`ParticleEmitter::opacity`).
 - **Spell effects** (spec §4.8 "Spell effects"): `Event::Spell { effect, origin, shape:
   SpellShape::{Burst { center, radius }, Bolt { path }}, cells }` in `warlock-core/src/action.rs`
-  (traps emit it; `perceive_events` cuts it with `world/spell.rs::perceive_spell` to the cells the
+  (traps emit it; `perceive_events` cuts it with `world/magic/spell.rs::perceive_spell` to the cells the
   player sees or has in line of sight). Data: `data/effects.toml` (`content/effect.rs`,
   `EffectDef`, `Content::effects()`/`effect(id)`; presentation only, not in the fingerprint; a
   test plays the same run with changed looks and checks the hashes). The dev action

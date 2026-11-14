@@ -5,6 +5,7 @@
 
 use super::*;
 use crate::rng::Rng;
+use crate::test_support::builtin;
 use std::collections::BTreeMap;
 
 const ITEMS: usize = 10_000;
@@ -32,7 +33,7 @@ fn chances<'c>(c: &'c Content, def: &ObjectDef, level: u8, kind: AffixKind) -> V
 
 #[test]
 fn shares_follow_the_weights_and_deep_finds_roll_deep_tiers() {
-    let c = Content::builtin().expect("built-in content");
+    let c = builtin();
     for level in LEVELS {
         let mut rng = Rng::stream(11, "shares");
         // By affix id: (picks seen, picks its weight's share expects).
@@ -98,7 +99,7 @@ fn shares_follow_the_weights_and_deep_finds_roll_deep_tiers() {
 /// down), or if any level's share is below the one before it. `cargo test -p warlock-core trim_shares -- --nocapture` prints it.
 #[test]
 fn trim_shares_hold_every_find_to_its_capacity() {
-    let c = Content::builtin().expect("built-in content");
+    let c = builtin();
     let mut classes: Vec<crate::content::ItemClassId> = (c.object_defs().iter())
         .filter(|o| o.frequency > 0 && o.kind.is_some())
         .map(|o| o.class)

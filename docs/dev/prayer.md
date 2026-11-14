@@ -14,9 +14,9 @@ hallowed ground: `docs/dev/special-rooms.md` "Hallowed ground".
 | `content/talent.rs` | `FaithEffect::Prayer { tier, title, uses, answers, all }`; `active()` maps only `tier = 1` to `ClassActive::Orison`, so `Content::class_active` finds the tier-1 talent. |
 | `talent.rs` | `FaithMods::prayer: Option<Prayer>`: `uses` (the union), `answers` (the largest, at least 1), `all` (any), `tier` and `title` (the highest tier's). `has_active(Orison)` asks for a tier. |
 | `content/class.rs` | `ClassActive::Orison` (`orison`, a `Cast`: Raging and Silenced block it through `Ability::unavailable`). |
-| `world/orison.rs` | `Strain` (saved in `Progress::prayer`), `Actor::prayer_face`, `Actor::prayer_title`, `World::orison` (the one arm in `class_ability.rs::use_class`), the problems (`ails`), the fixes (`answer_prayer`, which calls the dark face's twists), `World::prayer_state` (dev). |
-| `world/dark_face.rs` | The dark face's twists: `nearest_seen`, `pass_on_diseases`, `pass_on_poison`, `turn_hexes_back`; Communion: `World::communes` (the talent, its band, the Dark face) and `communing_here` (and an unholy effect where the player stands). |
-| `world/rooms.rs` | `World::dwell`, the room status's one place: an unholy effect's status skips an actor that `communes`. |
+| `world/classes/orison.rs` | `Strain` (saved in `Progress::prayer`), `Actor::prayer_face`, `Actor::prayer_title`, `World::orison` (the one arm in `class_ability.rs::use_class`), the problems (`ails`), the fixes (`answer_prayer`, which calls the dark face's twists), `World::prayer_state` (dev). |
+| `world/classes/dark_face.rs` | The dark face's twists: `nearest_seen`, `pass_on_diseases`, `pass_on_poison`, `turn_hexes_back`; Communion: `World::communes` (the talent, its band, the Dark face) and `communing_here` (and an unholy effect where the player stands). |
+| `world/fixtures/rooms.rs` | `World::dwell`, the room status's one place: an unholy effect's status skips an actor that `communes`. |
 | `perception/truth.rs` | `PerceptionView::ability_name` / `ability_description`: the prayer by its highest tier's title as the face gives it, and that talent's description (the abilities menu, the `abilities` dump). |
 
 ## Data
@@ -62,7 +62,7 @@ list is never answered. A prayer effect: `tier` 1–5 with a
 The face (`Actor::prayer_face`): the player's band within `holy` → Holy, else within `dark` →
 Dark, else Holy; Holy without alignment rules or the file.
 
-## The dark face (`world/dark_face.rs`)
+## The dark face (`world/classes/dark_face.rs`)
 
 The dark powers answer the same problems in the same order, each fix with a twist after it (no
 draw of its own but a passed-on disease's incubation, `World::infect`'s roll):
@@ -125,13 +125,13 @@ prayer_rows`): no roll, its title and what it answers.
 
 ## Tests
 
-`world/dark_face_tests.rs`: the plague passed to the nearest seen creature (brewing ones too),
+`world/classes/dark_face_tests.rs`: the plague passed to the nearest seen creature (brewing ones too),
 the holy face passing nothing on, the poison at its degrees and an immune skeleton taking none, a
 hex turned on its seen caster and not an unseen one, a holder webbed, the brim; Communion: no
 strain in a cursed room (and the strain for the holy face), no Ebbing in a draining one.
-`world/orison_tests.rs`: wounds at 1 for a cast's time and no draw; the free refusal; each use at
+`world/classes/orison_tests.rs`: wounds at 1 for a cast's time and no draw; the free refusal; each use at
 its level; the priority order; a brewing disease alone; two answers at 40, all and every pool at
 60; the strain's decay however cut; the fizzle chance with mirrored draws; the lock and its end;
 the faces' titles and words; a silenced priest; save and replay. `content/prayer.rs`: the file's
-order and numbers, a bad file refused, none optional. `world/caster_tests.rs`: the priest's table.
-`world/curse_tests.rs`: Consecrate answers Neutral (`min = "neutral"`, the design's Q3).
+order and numbers, a bad file refused, none optional. `world/magic/caster_tests.rs`: the priest's table.
+`world/fixtures/curse_tests.rs`: Consecrate answers Neutral (`min = "neutral"`, the design's Q3).

@@ -6,11 +6,12 @@ your [healing](healing.md), sometimes weaken you, and wear off on their own. The
 What ends bleeding, poison, and disease sooner is gathered on
 [Healing](healing.md#curing-bleeding-poison-and-disease).
 
-**[Diseased](#status-diseased)** is a status effect too. It shows while any [disease](diseases.md)
+**[Diseased](status-list.md#status-diseased)** is a status effect too. It shows while any [disease](diseases.md)
 has broken out, and lasts as long as the diseases do.
 
 Not every status effect harms. A [rage](rage.md) makes you stronger for a while, and some
-effects leave you spent once they are over (see [Buffs and cooldowns](#buffs-and-cooldowns)).
+effects leave you spent once they are over. What helpful effects, hexes, and cooldowns can do is
+on [Buffs, hexes, and cooldowns](buffs.md).
 
 You always know what ails you. The [status bar](the-screen.md#the-screen) names it right after your
 hit points (`HP 12/17 · Bleeding · Poisoned`), the [character screen](character.md) lists it, and
@@ -19,8 +20,8 @@ is or how long it will last: you just watch your hit points go.
 
 Being grabbed, engulfed, or swallowed has a page of its own: [Held](held.md).
 
-Every status effect is in the [tables at the end of this page](#every-status-effect), with its
-exact paces.
+Every status effect is in the tables on [Every status effect](status-list.md), with its exact
+paces and the creatures that cause it.
 
 ## How they work
 
@@ -157,7 +158,7 @@ below zero and does you no other harm. Once you are out of the room it passes: "
 ebbing."
 
 Creatures with mana ebb in the room just as you do, and you can see it on them ("ebbing").
-Creatures without mana are left alone. The talent *[Old delver](talents.md#talent-old-delver)*
+Creatures without mana are left alone. The talent *[Old delver](talents-exploring.md#talent-old-delver)*
 keeps it from ever taking you.
 
 ## Asleep
@@ -192,121 +193,10 @@ likely to hit (−1 [to hit](combat.md#hitting)). Once it passes: "You no longer
 
 Creatures of the other side are unwelcome there too, and you can see it on them ("unwelcome").
 
-## Buffs and cooldowns
-
-A status effect can help or hinder in other ways while it lasts. The "What it does" column of
-[the tables](#every-status-effect) says which of these each one does:
-
-- **Stats.** It may raise a score as well as lower one. If a higher
-  [Toughness](stats.md#stat-toughness) let you [heal](healing.md#how-fast-you-heal) to more hit points,
-  those extra hit points go again when it ends.
-- **Fighting.** It may add to your [to-hit](combat.md#hitting) and [damage](combat.md#damage), or
-  to your [Dodge](combat.md#defence) and Parry, as a
-  [combat stance](stances.md#stances) does, on top of your stance. Creatures can suffer these too.
-- **Blows.** It may add damage of some [kind](damage-types.md) to your melee blows with either
-  hand, as a [Flaming](affixes.md#prefixes) sword does. [Brand](magic.md#spell-brand) adds 1d4
-  [fire](damage-types.md#damage-fire) ([burning blade](#status-branded-blade)). A kick or a shield
-  bash does not carry it. No [spell type's rule](spell-types.md) applies to a blow, so
-  it never leaves anyone [burning](#burning).
-- **Striking back.** It may hurt whoever lands a melee blow on you, as a spell of that kind would.
-  [Fire cloak](magic.md#spell-fire-cloak) does 1d6 fire to the attacker
-  ([fire-cloaked](#status-fire-cloaked)), and one time in four leaves them burning. What it kills
-  counts as your kill.
-- **Water.** It may bear you up. [Water walking](magic.md#spell-water-walking)
-  ([water-borne](#status-water-borne)) makes [wading](terrain.md#water) cost no more than a step on
-  dry land. [Ice](temperature.md#walking-on-ice) never gives way under you, however thin: a burst
-  of heat or force leaves the ice you stand on, so you never [fall in](temperature.md#falling-in).
-- **Slowness.** It may make everything you do take longer: at 150%, half again as long.
-- **What you cannot do.** It may stop you doing something while it lasts. A
-  [raging](#status-raging) fighter cannot read ("You cannot read while raging."). Trying takes no
-  time, and an [ability](abilities.md) that would do it is greyed out: `you are raging`.
-- **What follows.** As some end, another begins: when a [rage](rage.md) subsides,
-  [exhaustion](#status-exhausted) follows.
-- **Eyes.** It may lend you other eyes. A [potion of owl's eyes](potions.md#potion-of-owls-eyes)
-  lets you see in the dark as [darkvision](vision.md#the-four-types) does, in each respect where it
-  is better than your own sight.
-- **Resistance.** It may make you [resist](damage-types.md#armour-and-resistance) a kind of
-  damage. This counts like armour's resistance: together with what you wear it
-  never goes past 75%, and never gives immunity.
-
-The [potions](potions.md) that last a while give:
-
-- boosts: [Fortified](#status-fortified), [Nimble](#status-nimble), [Hale](#status-hale),
-  [Keen](#status-keen), [Steadfast](#status-steadfast), and [Imposing](#status-imposing), each
-  a [stat](stats.md) +2 per degree;
-- vision: [Cat-eyed](#status-cat-eyed), [Owl-eyed](#status-owl-eyed), and
-  [Moth-eyed](#status-moth-eyed);
-- resistances: [Warmed](#status-warmed), [Chill-proof](#status-chill-proof),
-  [Earthed](#status-earthed), and [Proof against poison](#status-poison-proof).
-
-The bard's [songs](abilities.md#songs) give three more. [Inspired](#status-inspired) (and a
-[virtuoso](class-bard.md#talent-virtuoso)'s greater inspired) lifts the singer.
-[Drowsy](#status-drowsy), from the [lullaby](abilities.md#ability-lullaby), slows those who fail to
-shake it off. Each goes up to three degrees, as many as the singer's [Music](skills.md#skill-music)
-gives the song.
-
-A **hex** is a status that a [hex spell](spellcasting.md#shapes) lays: [Hexed](#status-ill-wished),
-[Weakened](#status-weakened), [Sluggish](#status-sluggish), Drowsy, and
-[Webbed](#status-webbed). A [witch](class-witch.md) can feed her hexes:
-
-- Her [cackle](abilities.md#ability-cackle) makes each hex she laid on a creature she sees grow a
-  degree, up to its maximum, and starts its degree's time again.
-- Her [familiar](familiars.md#the-touch)'s touch lays her Hexed on what it hits, and starts her
-  other hexes on it afresh.
-- Her [malison](class-witch.md#talent-malison) makes a creature take 3 more damage from her for each of
-  her hexes on it, and a creature that dies under one of her hexes pays her mana.
-
-A **cooldown** is a status effect that only waits to wear off. While you are, say,
-[winded](#status-winded), the ability that winded you cannot be used again
-(`you are winded`). Time is the only price: nothing counts how often you use an ability.
-
-**Raging** comes with the berserker's rage, one of the
-[class abilities](class-berserker.md). While the rage lasts you are stronger and tougher but
-less clever, and cannot read or spend [mana](mana.md#spending-it). When it runs out you are
-**Exhausted** for two and a half minutes: a little weaker, and with no rage
-until it passes.
-
 ## In the message line
 
 "You are bleeding." and "You feel sick." stop a [rest](resting.md), like any news. "The bleeding
 stops." and "The poison wears off." show in the message line but let you rest on.
 
-## Every status effect
-
-The tables give every status effect in four groups, with the exact paces. **What it does** is
-what it costs and changes while it lasts, and how you see it on others. **Caused by** is where it
-comes from; the creatures whose attacks cause it are listed in [Who causes it](#who-causes-it).
-**How it ends** is how it wears off, and every way to end it at once.
-
-### Harmful
-
-These cost [hit points](hit-points.md#hit-points) or [mana](mana.md) as time passes, and can kill.
-
-{{#include generated/status-effects.md:harmful}}
-
-### Hindering
-
-These cost nothing, but leave you weaker, slower, or unable to do something.
-
-{{#include generated/status-effects.md:hindering}}
-
-### Helpful
-
-These help whoever has them. Some cost something besides, as a rage does.
-
-{{#include generated/status-effects.md:helpful}}
-
-### Cooldowns and marks
-
-These do nothing by themselves. A cooldown only waits to wear off, and keeps the ability that
-caused it from being used again. A mark matters to something else: a light, a smite, a
-[spell circle](magic.md).
-
-{{#include generated/status-effects.md:cooldowns}}
-
-## Who causes it
-
-Every creature whose attack, throw, or gaze can cause a status effect, with the chance a hit has
-and how bad it makes it. A [Held](held.md) creature's grip is the difficulty of breaking free.
-
-{{#include generated/status-causes.md}}
+See also: [Every status effect](status-list.md), [Buffs and hexes](buffs.md), and
+[Healing](healing.md).

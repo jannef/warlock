@@ -149,7 +149,7 @@ fn quest_refused_as_too_early() {
 
 /// The hermit's oath (#1174): a calling's topic, offered to a bard whose class is full (the dev
 /// experience and level-ups bring the showcase's bard to 30). Asking it is the core's
-/// (`world/strange_spirit_tests.rs`): the level-up it brings would cover this screen.
+/// (`world/campaigns/strange_spirit_tests.rs`): the level-up it brings would cover this screen.
 #[test]
 fn the_oath_topic() {
     let content = Arc::new(warlock_assets::content().expect("content"));

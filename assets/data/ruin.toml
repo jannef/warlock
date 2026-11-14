@@ -1,13 +1,13 @@
 # What an area spell does to the things lying in it (spec §8 "Spells": "Ruin"; #1100): a
 # Fireball burns the scrolls on the floor it reaches, a blast of frost shatters the potions. The
-# rules are `world/ruin.rs`; this file is the table.
+# rules are `world/magic/ruin.rs`; this file is the table.
 #
 # Every cast of an area spell (a burst, a cone, or a line; a scroll's, a wand's, and a dragon's
 # breath too) with a damage type rolls once for every item of every stack lying on a floor cell it
 # reaches: each item is lost at the chance of the first row below of the spell's damage type
 # that matches the stack, so a stack may lose some of its items or all of them. A stack no row
 # matches is never touched, and neither is anything carried, worn, or in a chest, or anything
-# protected from all item damage (`world/item_damage.rs`, #1170): a unique item, an item of
+# protected from all item damage (`world/combat/item_damage.rs`, #1170): a unique item, an item of
 # Proof (`affixes/of_proof.toml`), and an object a quest asks to be brought or delivered
 # (`data/quests/`; a quest's reward only when another quest asks for it). Traps' and places'
 # bursts ruin nothing.

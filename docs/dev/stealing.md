@@ -6,13 +6,13 @@ spec/08i-character.md ("Stealing"). Keep it current with the code, as CLAUDE.md 
 Stealing (spec §8 "Stealing", #234; the progression design's B7, `docs/design/progression.md`)
 is the Steal skill's use: `Action::Steal(Dir)` (replay text `steal:DIR`, cost `steal` in
 `data/actions.toml`, `ActionKind::Steal`), dispatched by one arm in `World::player_acts` to
-`World::steal` in `world/steal.rs`; tests in `world/steal_tests.rs`.
+`World::steal` in `world/skills/steal.rs`; tests in `world/skills/steal_tests.rs`.
 
 - **Who**: anyone trained in a skill with the `steal` benefit (`skills::Effect::Steal`, read
   through `Actor::skill_effect`; `Skills::trains_effect` for "trained at all", as Spot is), or
   holding a talent with the `steal` effect (none since #684 took the thief's Light fingers;
   `Ability::had_by`), while
-  the content has `data/steal.toml` (`content/steal.rs`, `StealRules`, `Content::steal`;
+  the content has `data/rules/steal.toml` (`content/steal.rs`, `StealRules`, `Content::steal`;
   optional: without it nobody steals). The thief's class trains Steal.
 - **The ability**: `Ability::Steal` in `warlock_core::ability` (`Source::Skill`, `Aim::Direction`,
   cost `ActionKind::Steal`, no `Unavailable` of its own beyond a blocking status).
@@ -36,9 +36,9 @@ is the Steal skill's use: `Action::Steal(Dir)` (replay text `steal:DIR`, cost `s
   `train(Use::Steal)` (training stream). Nothing is stored beyond what changed hands and the
   override (saved and hashed as they already are), so saves change only by content (the new
   `ActionKind`, no new indexed id).
-- **The hook for alignment (#254)**: `World::got_away_with(victim, stack)` in `world/steal.rs`
+- **The hook for alignment (#254)**: `World::got_away_with(victim, stack)` in `world/skills/steal.rs`
   is the one place a theft that took something has consequences beyond the goods: it says "You
-  steal ... from ..." and calls `player_did(Deed::Theft)` (`world/alignment.rs`; `[shift] theft`
+  steal ... from ..." and calls `player_did(Deed::Theft)` (`world/character/alignment.rs`; `[shift] theft`
   in `data/alignment.toml`, −100 like leaving a shop owing). A caught attempt and empty pockets
   do not reach it.
 - **Shop goods** are never stolen with Steal: the shop's own rules (`docs/dev/shops.md`) cover
@@ -50,7 +50,7 @@ is the Steal skill's use: `Action::Steal(Dir)` (replay text `steal:DIR`, cost `s
   `wiki/src/skill-uses.md` ("Stealing").
 - **Stolen from** (docs/design/monster-dread.md §5.6, #1130): creatures with `steals` (the
   pixie, the nymph, the imp, the succubus, the incubus) take from the player's pack as they
-  fight, on a cooldown: `world/snatch.rs`, documented in `docs/dev/creatures.md` ("Theft and the
+  fight, on a cooldown: `world/creatures/snatch.rs`, documented in `docs/dev/creatures.md` ("Theft and the
   blink"). It picks the stack as `lift` does (loose stacks only, `index(n)` with two or more),
   in the other direction, with no contest and no deed. Steal does not take it back while the
   thief is hostile (refused, as at anyone hostile): what it took falls where it dies.

@@ -31,12 +31,13 @@ This page says what each table's columns mean.
 
 ## Stats and skills
 
-The table gives each creature's level and the [experience](experience.md) a kill is worth while
-you are at that level. You get less when your level is higher (see [Experience](experience.md)).
-It also gives the six [stats](stats.md), each with its [modifier](stats.md#modifiers) in brackets.
+The first table gives each creature's level and the [experience](experience.md) a kill is worth
+while you are at that level. You get less when your level is higher (see
+[Experience](experience.md)). It also gives its rarity and its skills.
 
-A creature's [potentials](stats.md#potentials) are how far each score could grow, but creatures do
-not train or grow yet. Skill values are on the scale of the [Skills](skills.md) page, and weapon
+The second gives the six [stats](stats.md), each with its [modifier](stats.md#modifiers) in
+brackets. Where a score could grow further, its [potential](stats.md#potentials) follows it, but
+creatures do not train or grow yet. Skill values are on the scale of the [Skills](skills.md) page, and weapon
 skill ranks on the scale of [Weapon skills](weapon-skills.md).
 
 ## Hit points, Defence, and resistances
@@ -101,7 +102,7 @@ and 950 to 1050 for the rank and file of a people (orcs, hobgoblins, drow, duerg
 
 ## Surprise
 
-These are the creatures with a craft for [surprise](status-effects.md#status-surprised).
+These are the creatures with a craft for [surprise](status-list.md#status-surprised).
 
 - Their **[sneak attack](skills.md#skill-sneak-attack)** adds its dice to a hit that finds you
   unaware or surprised. It also makes it harder for you to keep your wits: the difficulty column
@@ -123,15 +124,18 @@ the unwary with no extra dice.
 
 - **[Speed](turns.md#speed)** says how much time a creature's actions take. 1000 is yours, and
   twice that does everything in half the time (see
-  [Turns and movement](turns.md#creatures-act-at-their-own-pace)).
-- **[Sight](sight.md)** is how far it sees, by its [vision](vision.md), under the same
+  [Turns and movement](turns.md#creatures-act-at-their-own-pace)). In brackets is how long a
+  normal action takes it.
+- **[Sight](sight.md)** is how far it sees, with which [vision](vision.md), under the same
   [light](light.md#what-light-is) as you.
 - **[Hearing](hearing.md)** is the faintest sound it notices. Lower hears more, and its
   [listen skill](skills.md#skill-listen) is counted in.
 - **[Footsteps](hearing.md#what-makes-noise)** is how loud its steps are on normal ground. Other
   terrain makes them louder or softer (see [Hearing](hearing.md)).
-- **Nose** is how far it smells a foe when it is someone's
-  [companion](companions.md#companions), through the dark and a closed door.
-- **Tameable** says whether it may be a companion at all.
-- It is [burdened](burden.md#burden-levels) past a third of its
-  **[carrying limit](burden.md#how-much-you-can-carry)**, as you are (see [Burden](burden.md)).
+- The second table gives its weight, its size, and its
+  **[carrying limit](burden.md#how-much-you-can-carry)**. It is
+  [burdened](burden.md#burden-levels) past a third of that, as you are (see [Burden](burden.md)).
+- **Tameable** says whether it may be a [companion](companions.md#companions) at all, and its
+  **nose** how far it smells a foe when it is one, through the dark and a closed door.
+
+See also: [Creatures](creatures.md), [Stats](stats.md), and [Combat](combat.md).

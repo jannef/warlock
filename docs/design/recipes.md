@@ -386,7 +386,7 @@ Nothing else. Rejected: a bowstave (bow from billets straight), a haft (a part o
 
 ## 9. Material drops by creature tag (#1341)
 
-**Decision: dropped on death, data by tag, one file per tag, a stream of its own; no butchering.** When a creature dies, after its carried gear falls and `loot_of` rolls (`world/loot.rs`), `World::drops_of(actor)` rolls its material drops from `Rng::stream(seed, "materials/{id}")` (a new stream: the loot and gem streams never move, so replays and maps stand) and lays them on its cell. Why drops and not a skinning action: an action is a menu row, a time, a check, and a corpse state for the same hide, and the brief's default is the drop; a Survival "butcher" line can come later on the same table (`harvest = true` rows).
+**Decision: dropped on death, data by tag, one file per tag, a stream of its own; no butchering.** When a creature dies, after its carried gear falls and `loot_of` rolls (`world/items/loot.rs`), `World::drops_of(actor)` rolls its material drops from `Rng::stream(seed, "materials/{id}")` (a new stream: the loot and gem streams never move, so replays and maps stand) and lays them on its cell. Why drops and not a skinning action: an action is a menu row, a time, a check, and a corpse state for the same hide, and the brief's default is the drop; a Survival "butcher" line can come later on the same table (`harvest = true` rows).
 
 | Rule | Decision |
 |---|---|
@@ -471,9 +471,9 @@ Each one PR, refined from the section named; the order below respects the depend
 | 7 | **P7: bows, crossbows, the sling, the lute, the pipe** — Woodcraft with sinew and an iron input; the wiki | §6 Missile weapons, Miscellaneous | §6 | P5b, P2b | new |
 | 8 | **P8: hide gear by hand** — leather jerkin, studded leather, leather cap, gloves, boots, cloaks, the hide and wood clothing, the wooden and hide shields and helmets (Woodcraft) | §6 Shields, Body armour, Helmets, Cloaks, Clothing | §6 | P5b, P2b | new |
 | 9 | **P9: armoursmithing** — chain, scale, banded, plate, the metal shields and helmets, gauntlets, iron-shod boots, the lantern, pick-axe and mattock (Metalcraft; the stone pick by Woodcraft); the wiki | §6 | §6 | P5b | new |
-| 10 | **P10: Cut** — `use = "cut"`, `ObjectList::Cut`, `world/cut.rs` (the bands, the size loss, re-cutting, the shatter), Jewelcraft's profession row appears; `gem-cutting.md` | §5 | §5 | P4b, P1 (#1331) | new (the professions design's "Cut later") |
+| 10 | **P10: Cut** — `use = "cut"`, `ObjectList::Cut`, `world/crafting/cut.rs` (the bands, the size loss, re-cutting, the shatter), Jewelcraft's profession row appears; `gem-cutting.md` | §5 | §5 | P4b, P1 (#1331) | new (the professions design's "Cut later") |
 | 11 | **P11: Set and jewellery** — `use = "set"` (two picks, the chipped gem), the rings and amulets (Jewelcraft; the bone amulet Woodcraft's), the gold amulet's required gem | §5, §6 Rings and amulets | §5, §6 | P10, P5 | new |
-| 12 | **P12: Gather (#1340)** — `data/herbs.toml`, `Ability::Gather`, `Action::Gather`, `world/gather.rs`, `Use::Gather`; the herbs into `forage.toml`'s `herbs` lists; `herbs.md` | §8 | §8 | P2b, P1 | refines #1340 |
+| 12 | **P12: Gather (#1340)** — `data/herbs.toml`, `Ability::Gather`, `Action::Gather`, `world/skills/gather.rs`, `Use::Gather`; the herbs into `forage.toml`'s `herbs` lists; `herbs.md` | §8 | §8 | P2b, P1 | refines #1340 |
 | 13 | **P13: brewing** — Alchemy's profession row and the herb recipes of §6 (Intelligence, no station, `failure`/`fumble`), a potion identified when made; `recipes-alchemy.md` | §6 Potions | §6 | P12, P4b, P5 | new (the professions design's "Alchemy's brewing later") |
 | 14 | **P14: essences and the battle flasks** — the essence recipes of §6 (fire, frost, thunder, smoke, pitch fire, blasting flask, frost and earthing and sea legs) | §6 Potions | §6 | P13, P15 | new |
 

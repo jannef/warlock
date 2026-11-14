@@ -24,7 +24,7 @@ The thief is the one class that starts trained in Detect traps (its `2d6+10`, kn
 #684 took the Trapfinding class ability, beside Spot's and Search's), kobolds the one race (`1d4+2`, in place of their Search); others may get it only
 as #662's non-guaranteed class skills do, since level-up rolls advance trained skills only.
 
-**Data**: `data/search.toml` (`content/search.rs`: `SearchRules { passive_penalty, turns,
+**Data**: `data/rules/search.toml` (`content/search.rs`: `SearchRules { passive_penalty, turns,
 secret_door }`, `Content::search()`; optional, `SearchRules::default` without it), the Search,
 Spot, and Detect traps skills' benefits in `data/skills/` (`skills::Effect::Search`,
 `SearchReach`, `Spot`, `DetectTraps`; marks on `Use::Search`, `Use::Spot`, `Use::FindTrap`), races' `passive_search` (`PassiveSearch::{All,
@@ -47,7 +47,7 @@ only if `connect::validate` still passes: it treats secret cells as doors for re
 cell and as walls for reaching the stairs and the keys. The insta snapshots show them as `S`
 where the map had `+`.
 
-**The rules** are `world/search.rs`: `hidden_near(reach)` (the hidden features within reach,
+**The rules** are `world/skills/search.rs`: `hidden_near(reach)` (the hidden features within reach,
 never the player's own cell, in position order; beyond the adjacent cells only those in line of
 sight), `difficulty_of` (own difficulty + `hidden_at(depth)`), `search_modifier(Look, Hidden)` (the
 effective Intelligence or Willpower modifier, the skill effect through `Actor::skill_effect`,
@@ -82,7 +82,7 @@ app binds Num5 and `s` (`KeyCommand::Wait`, "Wait/search", `wait`) and Alt+Num5 
 abilities. `dump`'s `truth` layer and `warlock-cli gen` mark secret doors `S`; `truth` marks a
 standing breach `H`.
 
-**Tests**: `world/search_tests.rs` (looks, finding, waiting is searching (`waiting_is_searching`), draws, who notices, traps and the skill each
+**Tests**: `world/skills/search_tests.rs` (looks, finding, waiting is searching (`waiting_is_searching`), draws, who notices, traps and the skill each
 look reads (`traps_are_detect_traps_to_find_and_the_rest_spot_and_search`), long searches,
 rests, reach, `set_terrain`, depth, saves and replays, legend errors), `content/search.rs`,
 `mapgen/tests.rs` (`rooms_levels_hide_a_few_doors_of_their_own`, the secret checks in

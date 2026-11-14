@@ -36,6 +36,19 @@ The one-line table is in CLAUDE.md ("Commands"); this is what each row does.
 - **Regenerate the vast level**, `cargo xtask gen-vast`: writes
   `assets/campaigns/showcase/levels/vast.toml`; deterministic, never hand-edit. `--check` fails
   if the file differs from the generator output; run it after touching `xtask/src/vast.rs` (CI runs it).
+- **Check the docs' code paths**, `cargo xtask docs-check` (`xtask/src/docs_check.rs`, #1667):
+  every code name in an inline code span of CLAUDE.md, `spec/`, and `docs/dev/` (not
+  `docs/design/`, which is history) must name something in the sources under `crates/` and
+  `xtask/`: a file by its path's tail (`world/allies/familiar.rs`), with its items
+  (`ui/screens.rs::ScreenName`), a type's item (`World::state_hash`), a module's
+  (`ui::step_dialogs::trap_dialog`), `shoot_tests::a_shade_...` by the start of its name. It is a
+  grep: an item is found when it is a word of the file (outside `//` comments), so it catches a
+  file moved or gone and a name renamed or gone, not every stale detail; a bare file name
+  (`action.rs`) is found in any folder. Names from outside the workspace (`std`, Bevy) are
+  passed over, and `IGNORED` there lists the few intentional examples. CI runs it. The lists of
+  this file are held by tests too: every `--screen` value (`ui/screens.rs`), scenario
+  (`content/scenario.rs`), dump layer (`dump/layer.rs`), and action verb (`action/text.rs`'s
+  `VERBS`) must be written here as code.
 - **Third-party notices**, `cargo xtask licenses`: regenerates `THIRD_PARTY_LICENSES.html` with
   `cargo-about`, config `about.toml`/`about.hbs`; install: `cargo install cargo-about --locked
   --features cli`; `--check` fails when it is stale (CI runs the same `cargo about` call in shell,
@@ -178,7 +191,9 @@ On the main menu:
 
 - `main`, `new-run` (a release build, which skips New run, shows the race), `characters` (the
   saved characters; a capture reads them, never writes, from `--save-dir`, e.g.
-  `tests/golden/saved-characters`), and `graveyard` (the fallen, most experienced first; a
+  `tests/golden/saved-characters`, whose summaries say `@VERSION@` (#1649: the screen snapshots
+  write it as this version), so read straight from there they all list as another version's;
+  docs/dev/saves.md), and `graveyard` (the fallen, most experienced first; a
   capture reads `graveyard.toml` from `--config-dir`).
 - Character creation over New run and the steps before them, each on its preselection (the
   first scenario's character, the Ascmearc's, an empty name): `race`, `sign` (the birth sign's
@@ -263,9 +278,10 @@ No window, no Bevy; `--content-dir` works here too.
 
 - `dump` and `replay --create` take `--character dwarf,female,warrior` (starts as that
   character), `--name Brakka` (names them), `--talents healthy,lean` (picks their creation
-  talents), and `--fallen Brakka:dwarf:stone,Tamsin:elf` (gives the run the graveyard's dead,
-  `:stone` the petrified, to name statues (the petrified) and gravestones (all) from; out of the
-  state hash; docs/dev/saves.md "The graveyard").
+  talents), and `--fallen Brakka:dwarf:stone,Tamsin:elf:bard` (gives the run the graveyard's
+  dead, the most recent first, `NAME:RACE[:CLASS][:stone]`, `:stone` the petrified: statues are
+  named from the petrified, the rest laid in Līctūn's graves and crypts; out of the state hash;
+  docs/dev/saves.md "The graveyard", docs/dev/graves.md).
 - `gen` prints ground truth: `*` = light placed on floor, `&` = locked door, `S` = secret door;
   `^` = a trap, hidden ones too; a layer boss's lair prints its `hidden stairs` line; `⊟` = a
   chest, locked or trapped or not; `V` = an ore vein, hidden in the rock too; a special room's
@@ -320,7 +336,8 @@ and are **dev-only**.
   (unpaid, 45 gold) (450 g)`; then what they carry, their burden and its thresholds, and what
   they weigh, `carried 4.2 kg (unburdened: burdened over 14 kg, strained over 28 kg, overloaded
   over 42 kg), total weight 74.2 kg`.
-- `equipment`: the player's slots by letter, `c Body: a leather jerkin (b)`, `-` when empty.
+- `equipment`: the player's slots by letter, `c Body: a leather jerkin (b)`, `-` when empty,
+  `- (horns)` when a talent bars the slot (a profane gift; docs/dev/equipment.md).
 - `stats`: the player's name, race, gender, and class (`Name Brakka`, `Race Dwarf`, `Class
   Bard`; `Class Bard 30` at the class's cap; `Class Bard 30, Hunter 4` once called into a
   prestige class), age, birth date, and sign with a lucky day's title (`Age 27`, `Born 3
@@ -579,7 +596,7 @@ thaw:X,Y,R`
   rank 10 or a character not trained in Decipher script; docs/dev/spells.md "Learning").
 - `decipher:b` makes out the scroll in inventory stack `b`, of a type not yet identified,
   without reading it (the Decipher ability, Decipher script's use: ten minutes, then the reading
-  check of `world/decipher.rs`; made, the type is learned and the scroll kept, failed, the time
+  check of `world/magic/decipher.rs`; made, the type is learned and the scroll kept, failed, the time
   is gone and it may be tried again; refused, with no time, for a known scroll or a stack that is
   no scroll; docs/dev/scrolls.md).
 - `scribe:fireball` writes a scroll of a spell the player knows on the first blank scroll they
@@ -597,7 +614,7 @@ thaw:X,Y,R`
   inventory stack `c` there (any weapon is thrown whole, badly: `t` in the game sends `fire` for
   a launcher, else `throw` for what the Missile weapon slot holds; docs/dev/ranged-combat.md).
 - `feint:E` feints at the hostile creature east of the player (the Feint ability, Bluff's use,
-  for those trained in it: a turn, the foe's Willpower check against `data/feint.toml`'s
+  for those trained in it: a turn, the foe's Willpower check against `data/rules/feint.toml`'s
   difficulty + their Presence modifier + Bluff; failed, it is Surprised, and the player's next
   blow finds it flat-footed; refused, with no time, without the skill, a foe there, or one with
   no mind (`Content::has_vitals`); `use:false_lead:E` is the Duelist's weapon active, False lead;
@@ -605,7 +622,7 @@ thaw:X,Y,R`
 - `intimidate:X,Y` threatens the hostile creature on level cell (X, Y), one the player sees
   within 6 (the Intimidate ability, for those trained in it: War cry's check at one foe,
   Frightened for more degrees the better their Intimidate; refused, with no time, without the
-  skill or a hostile with vitals there; `data/intimidate.toml`, docs/dev/skills.md).
+  skill or a hostile with vitals there; `data/rules/intimidate.toml`, docs/dev/skills.md).
 
 ### Skills and places
 
@@ -702,17 +719,17 @@ All in docs/dev/crafting.md unless named.
   Temper recipe, Metalcraft's, on its profession screen, which walking into the anvil opens: ten
   minutes, then a Strength check plus Metalcraft, harder for every attempt ever made on the item:
   made, an improvement, up to three, or a damaged item repaired; failed, the item damaged, or a
-  damaged one destroyed; `data/temper.toml`; refused, with no time, untrained in Metalcraft, with
+  damaged one destroyed; `data/rules/temper.toml`; refused, with no time, untrained in Metalcraft, with
   no anvil beside them, a stack not of metal, or one with three improvements).
 - `whittle:c` whittles inventory stack `c`, a weapon of wood (a bow, a staff, a club), with a
   knife carried, anywhere (the Whittle recipe, Woodcraft's, beside the arrows on its profession
-  screen: Temper's rules and `data/temper.toml` for wood, a Dexterity check plus Woodcraft's
+  screen: Temper's rules and `data/rules/temper.toml` for wood, a Dexterity check plus Woodcraft's
   `whittle` points; refused, with no time, untrained in Woodcraft, without a knife, a stack not of
   wood, or one with three improvements; docs/dev/skills.md "Whittling").
 - `salvage:c` takes one of inventory stack `c` apart for its materials, anywhere, with nothing
   (the Salvage ability, every profession's, in the Skills group: ten minutes, then a check per
   material a profession works, by its skill's stat plus that skill's `craft` points against
-  `data/salvage.toml`'s difficulty plus the material's `work`; made, half its weight back as
+  `data/rules/salvage.toml`'s difficulty plus the material's `work`; made, half its weight back as
   stock, a gem whole; failed, lost, a gem a cut or a size less and shattered only on a natural 2;
   the item gone either way; refused, with no time, for a stack worn or wielded, protected,
   unpaid, a spirit weapon, or with nothing a profession works).
@@ -790,7 +807,7 @@ All in docs/dev/crafting.md unless named.
   with its choice) when a level's pick is due (every third level; until it is made every other
   action is refused).
 - `advance:stealth` spends one of a level's skill rolls (on a trained skill;
-  `world/skill_roll.rs`).
+  `world/character/skill_roll.rs`).
 
 ### Dev actions
 

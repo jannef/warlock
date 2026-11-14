@@ -260,10 +260,9 @@ mod tests {
     use crate::stats::{AVERAGE, SCORES, Stat};
     use crate::talent::FortuneEffect;
     use crate::world::World;
-    use std::sync::{Arc, LazyLock};
+    use std::sync::Arc;
 
-    static CONTENT: LazyLock<Arc<Content>> =
-        LazyLock::new(|| Arc::new(Content::builtin().expect("built-in content")));
+    use crate::test_support::CONTENT;
 
     fn start(content: &Content, character: &str, seed: u64) -> Start {
         let spec: CharacterSpec = character.parse().expect("a character");
@@ -960,7 +959,7 @@ mod tests {
     fn the_scenarios_pack_comes_on_top_or_alone() {
         // The world's ranger with a scenario's food on top.
         // Without background stories: the kit and the pack alone (a story's things come on top,
-        // `world/background_tests.rs`).
+        // `world/character/background_tests.rs`).
         let mut files = ContentFiles::builtin();
         files.remove("data/background.toml");
         let world = include_str!("../../../assets/campaigns/showcase/scenarios/world.toml");

@@ -1,7 +1,7 @@
 //! A creature type's gaze (spec §8 "Creature behavior": "Gazes", #1125, design
 //! `docs/design/monster-dread.md` §5.1): `[creature.gaze]`, a rider at sight and not at touch.
-//! The rules are `world/gaze.rs`; the forced Averted condition a gaze marked `averted` gives is
-//! `world/avert.rs`.
+//! The rules are `world/creatures/gaze.rs`; the forced Averted condition a gaze marked `averted` gives is
+//! `world/creatures/avert.rs`.
 //!
 //! Its riders are `on_hit` entries (`riders`, each a status with a severity or a drain with its
 //! check, by its own chance), never a disease or a hold: a look carries neither. The cooldown is
@@ -45,7 +45,7 @@ pub struct Gaze {
     /// The cooldown status, and the degrees of it a gaze gives.
     pub status: StatusId,
     pub degrees: u16,
-    /// Whether the player averts their eyes by reflex while they see it (`world/avert.rs`).
+    /// Whether the player averts their eyes by reflex while they see it (`world/creatures/avert.rs`).
     pub averted: bool,
     /// The share of `chance` it takes at against averted eyes, in percent (with `averted`).
     pub glance: u8,
@@ -163,7 +163,7 @@ mod tests {
 
     #[test]
     fn the_moved_riders_ride_the_gaze_and_no_blow() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let named = |hit: &OnHit| match hit.what {
             Affliction::Status { status, .. } => content.status(status).id.clone(),
             Affliction::Drain(d) => d.stat.map_or("random", |s| s.id()).to_string(),

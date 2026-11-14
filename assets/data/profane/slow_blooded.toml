@@ -1,0 +1,12 @@
+[[gift]]
+id = "slow_blooded"
+name = "Slow-blooded"
+kind = "bane"
+tier = "greater"
+weight = 10
+description = "Slow blood: your wounds close slowly, and you are slower on your feet."
+line = "Your wounds close slowly, and your feet drag."
+effects = [
+    { kind = "healing_percent", value = -33 },
+    { kind = "speed_percent", value = -5 },
+]

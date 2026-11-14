@@ -1,6 +1,6 @@
 //! Ore veins (#1390; `docs/dev/mapgen.md`, `docs/dev/digging.md`): now and then a branch's floor
 //! has a few wall sections of an ore, drawn in its colour, which always give it to a miner
-//! (`world/mine.rs`). `data/mining.toml`'s `[veins]` table says how often (`chance`, percent of
+//! (`world/crafting/mine.rs`). `data/mining.toml`'s `[veins]` table says how often (`chance`, percent of
 //! floors) and how many (`count`); an ore row's `vein` its colour and size. Which ore is drawn by
 //! the mining table's weights at the floor's danger, the branch's `ores` allow-list kept
 //! ([`crate::content::MiningRules::vein_table`]), so the precious ores lie deeper and mithril and

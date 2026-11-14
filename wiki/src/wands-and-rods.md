@@ -41,7 +41,7 @@ unknown until you [identify](magic-items.md#unidentified-items) that wand, with 
 [Merchant's eye](class-merchant.md#talent-merchants-eye). Wands lie in the dungeon and are sold in general
 stores.
 
-The *[Wand mastery](talents.md#talent-wand-mastery)* talent (Weaponcraft) moves every wand you use
+The *[Wand mastery](talents-fighting.md#talent-wand-mastery)* talent (Weaponcraft) moves every wand you use
 one rung up, and [magic items](affixes.md#suffixes) *of Wands* add their rungs too, never past
 the ladder's last rung. Once you know a wand, its description and the aiming line say what it does
 in your hands, with your talents and items counted ("Holds Fireball: 8d6 fire, radius 2").
@@ -59,7 +59,7 @@ rod's cost), so it never runs out while you have the [mana](mana.md#how-much-man
 
 Without enough mana a rod does nothing and takes no time ("You have not the mana to use it."). You
 cannot use one while something stops you casting, such as
-[raging](status-effects.md#status-raging). A use takes a cast's time.
+[raging](status-list.md#status-raging). A use takes a cast's time.
 
 A rod's row in the table says how far it reaches, how much further your
 [Willpower](stats.md#stat-willpower) takes it, and the strongest creature its sleep or terror
@@ -83,8 +83,10 @@ Rods are found unknown. Each kind has its own look for the whole game ("a pewter
 or identifying it, tells you what it is; from then on its cost and reach show when you look at it
 and aim it. Rods lie in the dungeon and are sold in general stores.
 
-*[Channeler](talents.md#talent-channeler)* (Spellcraft) makes every rod cost a quarter less mana
-(rounded to the nearest, at least 1). *[Frugal caster](talents.md#talent-frugal-caster)* then
+*[Channeler](talents-mind.md#talent-channeler)* (Spellcraft) makes every rod cost a quarter less mana
+(rounded to the nearest, at least 1). *[Frugal caster](talents-mind.md#talent-frugal-caster)* then
 takes a fifth off what is left.
 
 {{#include generated/rods.md}}
+
+See also: [Magic items](magic-items.md), [Ranged combat](ranged.md), and [Scrolls](scrolls.md).

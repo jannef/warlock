@@ -47,8 +47,8 @@ you wield at the [hostile](creatures.md#factions) in a direction:
 | Level | Smite | Zeal | What it does |
 |---:|---|---:|---|
 | 1 | [Smite](abilities.md#ability-smite) | 3 | The blow, and nothing more |
-| 12 | [Branding smite](abilities.md#ability-branding-smite) | 3 | The foe it wounds is [Branded](status-effects.md#status-branded) for five minutes: it sheds a faint light wherever it goes, so you can see it in the dark and it lights its fellows |
-| 32 | [Wrathful smite](abilities.md#ability-wrathful-smite) | 4 | The foe it wounds makes a [Willpower](stats.md#stat-willpower) [check](diseases.md#checks) against 13 plus your Presence modifier; failing, it is [Frightened](status-effects.md#status-frightened) of you for 2d3 turns and flees |
+| 12 | [Branding smite](abilities.md#ability-branding-smite) | 3 | The foe it wounds is [Branded](status-list.md#status-branded) for five minutes: it sheds a faint light wherever it goes, so you can see it in the dark and it lights its fellows |
+| 32 | [Wrathful smite](abilities.md#ability-wrathful-smite) | 4 | The foe it wounds makes a [Willpower](stats.md#stat-willpower) [check](diseases.md#checks) against 13 plus your Presence modifier; failing, it is [Frightened](status-list.md#status-frightened) of you for 2d3 turns and flees |
 | 50 | [Banishing smite](abilities.md#ability-banishing-smite) | 6 | A foe it wounds that was [summoned](creature-powers.md#summoning) is unmade, whatever its [hit points](hit-points.md#hit-points), your kill as any other; an unholy foe not summoned takes the smite's dice twice over; anyone else takes a plain smite |
 
 A smite's extra effect still spends its zeal when it has nothing to do, and a blow that does no
@@ -70,7 +70,7 @@ blow, shot, or throw of yours that hits the unholy, smites too, rolls 1d6 more o
 kind. It is [resisted](damage-types.md#armour-and-resistance) but never soaked by Protection. From
 [Avatar](#talent-avatar) on, it lands on every creature you hit.
 
-**[Zealot](talents.md#talent-zealot)** is the one talent pick on the pool, from level 6. Every blow
+**[Zealot](talents-body.md#talent-zealot)** is the one talent pick on the pool, from level 6. Every blow
 that hits you builds 2 zeal instead of 1, for a paladin who stands in the doorway and takes them.
 
 **Which side you are on.** [Lay on hands](abilities.md#ability-lay-on-hands), the smites, and

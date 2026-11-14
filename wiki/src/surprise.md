@@ -39,23 +39,23 @@ trap springing beside you does not.
 - The attack itself is struck **flat-footed**: the target's [Dexterity](stats.md#stat-dexterity)
   and its Dodge count for nothing in its [Defence](combat.md#defence).
 - Then comes the **initiative check**. The target rolls 2d12 plus its Dexterity modifier, plus
-  what [Wary](talents.md#talent-wary) and the [Initiative](skills.md#skill-initiative) skill add.
+  what [Wary](talents-exploring.md#talent-wary) and the [Initiative](skills.md#skill-initiative) skill add.
   It must reach 13 plus the attacker's **craft**. Craft is what the attacker's
   [Sneak attack](skills.md#skill-sneak-attack) skill adds, plus 2 for the thief's
   [Sneak attack](class-thief.md#talent-sneak-attack) talent. A trap has no craft. A sleeper or a mimic
   in disguise makes no check: it is always surprised.
 - **Made**: "You keep your wits about you." (or "The kobold whirls to face you."). Nothing more
-  happens. With [Hair trigger](talents.md#talent-hair-trigger), if the attacker is a hostile beside
+  happens. With [Hair trigger](talents-body.md#talent-hair-trigger), if the attacker is a hostile beside
   you, you strike it at once, before its attack is rolled.
 - **Failed**: "You are taken by surprise!" (or, for your attack, "You hit the unsuspecting
   kobold."). The target is
-  [Surprised](status-effects.md#status-surprised) until it next acts (after a
+  [Surprised](status-list.md#status-surprised) until it next acts (after a
   [feint](skill-uses.md#feinting), for one action more). While Surprised:
   - it stays flat-footed, with no Dexterity and no Dodge in its Defence;
   - it makes no free blow: no riposte, no blow at a foe stepping up or away, no
     [Point-blank shot](weapon-skills.md#weapon-ability-point-blank);
   - its next action takes half as long again. The [Initiative](skills.md#skill-initiative)
-    skill saves part of that extra time, and [Cool head](talents.md#talent-cool-head) saves all of
+    skill saves part of that extra time, and [Cool head](talents-body.md#talent-cool-head) saves all of
     it. That action ends the surprise: "You recover your wits."
 
 {{#include generated/surprise-check.md}}
@@ -67,10 +67,10 @@ succeeds.
 ### Stunned
 
 The ascetic's [Stunning strike](class-ascetic.md#talent-stunning-strike) leaves a foe it wounds
-[Stunned](status-effects.md#status-stunned) until it next acts. Stunned is flat-footed just like
+[Stunned](status-list.md#status-stunned) until it next acts. Stunned is flat-footed just like
 Surprised: no Dexterity and no Dodge in Defence, no free blow, and
 [sneak dice](#sneak-attacks) land on it. Its next action also takes half as long again, but
-neither [Initiative](skills.md#skill-initiative) nor [Cool head](talents.md#talent-cool-head)
+neither [Initiative](skills.md#skill-initiative) nor [Cool head](talents-body.md#talent-cool-head)
 saves any of that time. They help against surprise, not against a blow to the head.
 
 ### What the attack says
@@ -82,8 +82,8 @@ target by how it caught it, in the attack's own line, hit or miss:
 |---|---|
 | asleep | "You hit the sleeping kobold." |
 | unaware of you, and failed its [initiative check](#caught-unawares) (or a mimic in disguise) | "You hit the unsuspecting kobold." |
-| already [Surprised](status-effects.md#status-surprised) | "You hit the surprised kobold." |
-| [Stunned](status-effects.md#status-stunned) | "You miss the stunned kobold." |
+| already [Surprised](status-list.md#status-surprised) | "You hit the surprised kobold." |
+| [Stunned](status-list.md#status-stunned) | "You miss the stunned kobold." |
 
 These are exactly the times your [sneak dice](#sneak-attacks) can land, except one: an unaware
 target that makes its check whirls to face you ("The kobold whirls to face you."), and that line
@@ -95,13 +95,13 @@ are taken by surprise!" already tells it.
 
 If you have **sneak dice**, you add them to a hit on a target that is unaware of you, Surprised, or
 [Stunned](#stunned). The dice come from the [Sneak attack](skills.md#skill-sneak-attack) skill (1d6
-once you are trained at all) and from talents: [Ambusher](talents.md#talent-ambusher) and the
+once you are trained at all) and from talents: [Ambusher](talents-exploring.md#talent-ambusher) and the
 thief's [Improved sneak attack](class-thief.md#talent-improved-sneak-attack). They are added after
 [Protection](combat.md#protection), and a [critical](combat.md#criticals) never doubles them.
 [Master thief](class-thief.md#talent-master-thief) makes such a hit a critical threat 2 sooner.
 
 - A blow counts at any reach. A shot, a throw, or an attack spell counts only within a few cells
-  (see the table below; [Long reach](talents.md#talent-long-reach) adds to it).
+  (see the table below; [Long reach](talents-fighting.md#talent-long-reach) adds to it).
 - Usually only the first blow of a fight finds the foe unaware. A foe that failed its check is
   still Surprised for your next blow. One that made it is not.
 - The thief's [Lurk](class-thief.md#talent-lurk) waits in ambush: a hostile that steps up beside you
@@ -148,3 +148,5 @@ attacks once you come beside it. If it can shoot or cast, it does that from wher
 it is hurt, it hunts like any other.
 
 {{#include generated/creature-surprise.md}}
+
+See also: [the thief](class-thief.md), [Openings](openings.md), and [Hearing](hearing.md).

@@ -11,11 +11,11 @@
 //! `reply`, an optional `route`: the way it describes, marked on the player's overworld map
 //! as they ask, and an optional `calls`: a calling of its campaign, the topic offered only while
 //! the calling is open and asking it calling the player, with `departs` the speaker then leaving;
-//! `world/calling.rs`) asked about on the dialogue screen, optional `[[dialogue.service]]`s (`id`, `name`,
+//! `world/classes/calling.rs`) asked about on the dialogue screen, optional `[[dialogue.service]]`s (`id`, `name`,
 //! `price`, `does`, `reply`, `nothing`, and `train` for a training: a cure, a mending, an
 //! identification, or a skill taught for gold, asked for like a topic;
-//! `world/service.rs`), an optional `[dialogue.offer]` (one item at a fixed price, asked for
-//! like a topic; `content/offer.rs`, `world/wares.rs`), an optional `speaks_to` (the alignment
+//! `world/people/service.rs`), an optional `[dialogue.offer]` (one item at a fixed price, asked for
+//! like a topic; `content/offer.rs`, `world/people/wares.rs`), an optional `speaks_to` (the alignment
 //! bands it talks to at all) with its `silent` (what it does for anyone else), and an optional `mutter`: the percent chance per
 //! action that it mutters one of the mutter's `lines` (with a `verb`, "mutters" by default) while
 //! the player is near enough to hear it. `[[dialogue.after]]` (`quest`, `lines`): one-liners
@@ -104,12 +104,12 @@ pub struct Topic {
     pub reply: String,
     /// The way the speaker describes, as waypoints `[x, y]` on the campaign's overworld (spec §8
     /// "Dialogue", "Rumoured ways"): asking marks on the player's map what they would have seen
-    /// walking it by day ([`crate::world`]'s `world/rumour.rs`). Empty for most topics.
+    /// walking it by day ([`crate::world`]'s `world/people/rumour.rs`). Empty for most topics.
     #[serde(default)]
     pub route: Vec<[i32; 2]>,
     /// A calling of the dialogue's campaign, by its prestige class's id (spec §8 "Prestige
     /// classes"): the topic is offered only while the calling is open to the player, and asking
-    /// it calls them (`world/calling.rs`).
+    /// it calls them (`world/classes/calling.rs`).
     pub calls: Option<String>,
     /// The speaker leaves the level once it has answered (a creature's dialogue only).
     #[serde(default)]
@@ -143,7 +143,7 @@ pub enum ServiceKind {
     /// Mends every point of stat damage at once.
     Mend,
     /// Trains the player in the skill its `train` names, at that table's `value`: offered only
-    /// while they are untrained in it (`world/service.rs`, #1391).
+    /// while they are untrained in it (`world/people/service.rs`, #1391).
     TrainSkill,
 }
 
@@ -206,7 +206,7 @@ pub struct Mutter {
     pub lines: Vec<String>,
 }
 
-/// A family servant's words (`[dialogue.stipend]`, #1405; `world/stipend.rs`): the dialogue of
+/// A family servant's words (`[dialogue.stipend]`, #1405; `world/classes/stipend.rs`): the dialogue of
 /// an aristocrat's own servant, who hands over the stipend when chatted with. Its `lines` and
 /// `handover` may say `{address}`, which becomes the word for the player's gender.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
@@ -218,7 +218,7 @@ pub struct ServantWords {
     pub address: GenderWords,
 }
 
-/// A business partner's words (`[dialogue.partner]`, #1407; `world/invest.rs`): the dialogue of
+/// A business partner's words (`[dialogue.partner]`, #1407; `world/classes/invest.rs`): the dialogue of
 /// a merchant's partner, who invests the gold put with them. `{gold}` becomes an amount of gold,
 /// `{fee}` the fee taken from it.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
@@ -234,7 +234,7 @@ pub struct PartnerWords {
     pub withdrawn: String,
 }
 
-/// A patron's words (`[dialogue.patron]`, #1421; `world/patron.rs`): the dialogue of a
+/// A patron's words (`[dialogue.patron]`, #1421; `world/crafting/patron.rs`): the dialogue of a
 /// craftsperson's patron, who commissions graded work. `{work}` becomes the thing asked for with
 /// its article ("a long sword"), `{stock}` the stock advanced ("3 steel ingots"), `{gold}` what
 /// is paid, and `{address}` the word for the player's gender.
@@ -299,18 +299,18 @@ pub struct Dialogue {
     pub topics: Vec<Topic>,
     /// What the speaker sells as a service, listed after the topics.
     pub services: Vec<Service>,
-    /// The one item it offers for a fixed price, listed after the services (`world/wares.rs`).
+    /// The one item it offers for a fixed price, listed after the services (`world/people/wares.rs`).
     pub offer: Option<super::TradeOffer>,
     /// The alignment bands it talks to; `None`: everyone. Outside them it says `silent`.
     pub speaks_to: Option<crate::alignment::Requirement>,
     /// What it does for a character outside `speaks_to`: "The spirit looks through you."
     pub silent: Option<String>,
     pub mutter: Option<Mutter>,
-    /// A family servant's words: the speaker hands over the stipend (`world/stipend.rs`).
+    /// A family servant's words: the speaker hands over the stipend (`world/classes/stipend.rs`).
     pub stipend: Option<ServantWords>,
-    /// A business partner's words: the speaker invests for the player (`world/invest.rs`).
+    /// A business partner's words: the speaker invests for the player (`world/classes/invest.rs`).
     pub partner: Option<PartnerWords>,
-    /// A patron's words: the speaker commissions work from the player (`world/patron.rs`).
+    /// A patron's words: the speaker commissions work from the player (`world/crafting/patron.rs`).
     pub patron: Option<PatronWords>,
     /// The campaign whose `data/dialogue/` it is in; `None` for shared ones (the shopkeeper's)
     /// and those outside every campaign.

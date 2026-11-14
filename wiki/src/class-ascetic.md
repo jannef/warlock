@@ -32,16 +32,16 @@ attack is a single blow.
 
 **[Step of the wind](abilities.md#ability-step-of-the-wind)** (level 6) makes your steps 10 %
 quicker while you wear no body armour and carry no shield. For a point of ki, taking no time at
-all, it also leaves you [light-footed](status-effects.md#status-light-footed): your next action,
+all, it also leaves you [light-footed](status-list.md#status-light-footed): your next action,
 whatever it is (a step, a blow, a shot), takes half its [time](turns.md#what-actions-cost). It
 cannot be stacked. While you are light-footed already it is refused and costs nothing.
 
 **[Stunning strike](abilities.md#ability-stunning-strike)** (level 12) costs 1 ki. It is a blow of
-your bare hand that leaves a foe it wounds [stunned](status-effects.md#status-stunned): caught
+your bare hand that leaves a foe it wounds [stunned](status-list.md#status-stunned): caught
 [flat-footed](surprise.md#stunned) and slow to act. It cannot be used with a weapon in hand.
 
 **[Patient defence](abilities.md#ability-patient-defence)** (level 18) costs a point of ki and the
-[time](turns.md#what-actions-cost) of a wait. It leaves you [poised](status-effects.md#status-poised)
+[time](turns.md#what-actions-cost) of a wait. It leaves you [poised](status-list.md#status-poised)
 until your next action, whatever it is. While poised you have +4 [Dodge](combat.md#defence), and
 you answer at once with a blow of your own, a [riposte](stances.md#free-blows), every melee blow you
 dodge (it misses by your Dexterity or Dodge) or parry. Used again while poised, it holds for one
@@ -52,12 +52,12 @@ action more. It works with any grip, a staff too.
 
 - **Cost:** 2 ki, and no time at all. Any grip will do.
 - **Effect:** it ends at once whichever of these you suffer, so you act this very turn:
-  [held](status-effects.md#status-held), [pinned](status-effects.md#status-pinned),
-  [staggered](status-effects.md#status-staggered), [stunned](status-effects.md#status-stunned),
-  [surprised](status-effects.md#status-surprised),
-  [transfixed](status-effects.md#status-transfixed),
-  [frightened](status-effects.md#status-frightened), [drowsy](status-effects.md#status-drowsy),
-  and [webbed](status-effects.md#status-webbed).
+  [held](status-list.md#status-held), [pinned](status-list.md#status-pinned),
+  [staggered](status-list.md#status-staggered), [stunned](status-list.md#status-stunned),
+  [surprised](status-list.md#status-surprised),
+  [transfixed](status-list.md#status-transfixed),
+  [frightened](status-list.md#status-frightened), [drowsy](status-list.md#status-drowsy),
+  and [webbed](status-list.md#status-webbed).
 - **Refused:** with none of them on you, for no ki.
 
 **[Diamond soul](#talent-diamond-soul)** (level 40) adds +2

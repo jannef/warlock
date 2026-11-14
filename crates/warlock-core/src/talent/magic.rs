@@ -20,6 +20,9 @@ pub enum MagicEffect {
     /// the actor's base mana when the talent is taken and as each later level comes, as
     /// `max_hp_per_levels` does hit points (Deep well).
     MaxManaPerLevels { per_levels: u8, at_least: i32 },
+    /// Maximum mana this percent more (negative: less, never below 0; Fell-minded), in
+    /// [`crate::world::Actor::max_mana`], as `max_hp_percent` is for hit points.
+    MaxManaPercent { value: i32 },
     /// Resting brings mana back this percent faster on top of resting's own pace (Meditation).
     ManaRestingPercent { value: i32 },
     /// What abilities cost in mana, this percent more (negative: less; never below 1; Frugal
@@ -54,7 +57,7 @@ pub enum MagicEffect {
     SparesSelf,
     /// The class active Cackle: a voice `noise` loud; every hex of the player's on a creature
     /// they see grows `degrees` and starts its degree afresh, to its status's `max`
-    /// (`world/witch.rs`).
+    /// (`world/classes/witch.rs`).
     Cackle { degrees: u16, noise: u16 },
     /// A caster's spell (design §4.1 B2, spec §8 "Spells"): its holder has the spell ability
     /// `spell`, the spell of that id in `data/spells/` (a class ability's; each given once).
@@ -67,19 +70,19 @@ pub enum MagicEffect {
     SpellMod(crate::content::SpellModSpec),
     /// What it does to a spell type's own rule (`[types]` in `data/spells.toml`) for the damage
     /// types in `when`: `arc_chance`, the percent its spells of them arc at, read in
-    /// `world/spell_arc.rs` (Conductor).
+    /// `world/magic/spell_arc.rs` (Conductor).
     SpellType { arc_chance: u8, when: Vec<String> },
     /// Its spells cost this percent more mana (negative: less; Archmage, Empower), at least 1.
     SpellManaPercent { value: i32 },
     /// When a creature dies under a hex its holder laid (`Content::hex_statuses`), whoever
     /// killed it, the holder's mana rises by the dead creature's level divided by `per_levels`,
-    /// at least 1, never past its maximum (Malison; `world/malison.rs`).
+    /// at least 1, never past its maximum (Malison; `world/magic/malison.rs`).
     HexTithe { per_levels: u8 },
     /// The class active Knock: for `mana` mana, the lock of the locked door or chest in a
-    /// direction springs open (`world/knock.rs`; spec §8 "Chests").
+    /// direction springs open (`world/fixtures/knock.rs`; spec §8 "Chests").
     Knock { mana: i32 },
     /// The class active Scribe: a scroll of a spell the player knows written on a blank scroll,
-    /// for `mana_times` the spell's mana and a study's time (`world/scribe.rs`; spec §8
+    /// for `mana_times` the spell's mana and a study's time (`world/magic/scribe.rs`; spec §8
     /// "Scrolls").
     Scribe { mana_times: u8 },
 }
@@ -87,7 +90,7 @@ pub enum MagicEffect {
 impl MagicEffect {
     /// The `kind`s of the data that are effects of the area, one a variant (`TalentEffect`'s
     /// deserializer hands these to [`MagicEffect`]).
-    pub const KINDS: [&'static str; 19] = [
+    pub const KINDS: [&'static str; 20] = [
         "blood_magic",
         "cackle",
         "hex_tithe",
@@ -96,6 +99,7 @@ impl MagicEffect {
         "mana_regen_percent",
         "mana_resting_percent",
         "max_mana_per_levels",
+        "max_mana_percent",
         "potion_kept",
         "read_percent",
         "rod_cost_percent",
@@ -119,6 +123,8 @@ pub struct MagicMods {
     /// Mana by level, one entry per talent: `(per_levels, at_least)`
     /// ([`MagicMods::mana_at`]).
     pub mana_per_levels: Vec<(u8, i32)>,
+    /// Percent more maximum mana (negative: less).
+    pub max_mana_percent: i32,
     /// Percent faster resting brings mana back, on top of resting's own pace.
     pub mana_resting_percent: i32,
     /// Percent more abilities cost in mana (negative: less; [`MagicMods::mana_cost`]).
@@ -155,7 +161,7 @@ pub struct MagicMods {
     /// Percent more mana its spells cost (negative: less).
     pub spell_mana_percent: i32,
     /// Malison's tithe, if it has it: a creature dying under its hex gives it the creature's
-    /// level divided by this in mana, at least 1 (`world/malison.rs`).
+    /// level divided by this in mana, at least 1 (`world/magic/malison.rs`).
     pub hex_tithe: Option<u8>,
     /// The active Knock, if it has it.
     pub knock: Option<Knock>,
@@ -168,6 +174,7 @@ impl MagicMods {
     pub(crate) fn add(&mut self, content: &Content, effect: MagicEffect, choice: Option<&str>) {
         match effect {
             MagicEffect::ManaRegenPercent { value } => self.mana_regen_percent += value,
+            MagicEffect::MaxManaPercent { value } => self.max_mana_percent += value,
             MagicEffect::MaxManaPerLevels {
                 per_levels,
                 at_least,
@@ -283,7 +290,7 @@ impl MagicMods {
     }
 }
 
-/// The active Cackle (spec §8 "Class abilities"; `world/witch.rs`): how many degrees it adds
+/// The active Cackle (spec §8 "Class abilities"; `world/classes/witch.rs`): how many degrees it adds
 /// to each hex of its holder's in sight, and how loud it is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Cackle {

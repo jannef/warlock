@@ -59,3 +59,6 @@ file lists and moves keys the way rebinding does. It skips anything it does not 
 and is saved at once. From the command line, `warlock --export-keys FILE` and
 `warlock --import-keys FILE` do the same. The desktop downloads come with the default keys in such
 a file, `keymaps/default.toml`.
+
+See also: [Controls](controls.md), [Settings](settings.md), and
+[Menus and lists](controls-menus.md).

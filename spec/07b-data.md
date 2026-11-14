@@ -196,11 +196,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `fg`, `weight` (grams). A level legend's `mimic = true` beside `chest` places the member of the
   chest's level on the entry's walkable terrain (no chest terrain), carrying its `objects`; it
   refuses `locked`, `lock`, `trap`, `creature`, and `carry` beside it.
-- **Searching** (`data/search.toml`, optional; without it the numbers below; §8 "Searching"):
+- **Searching** (`data/rules/search.toml`, optional; without it the numbers below; §8 "Searching"):
   `passive_penalty` (what noticing in passing loses against searching, 0 to 20; 4), `turns` (how
   long searching for a while lasts at most, 1 to 100; 10), and `secret_door` (a secret door's
   difficulty where its level gives none, 1 to 50; 14).
-- **Stealing** (`data/steal.toml`, optional; without it nobody steals; §8 "Stealing"): `caught`,
+- **Stealing** (`data/rules/steal.toml`, optional; without it nobody steals; §8 "Stealing"): `caught`,
   the faction a creature that catches the player stealing joins (an id in `data/factions/`,
   hostile to the player: `outraged`). Who can steal is the skills' business (the `steal`
   benefit, `data/skills/`); a shopkeeper that catches the player is outraged by its shop's
@@ -402,7 +402,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   improve), spared by a spell's ruin, and never found damaged in creature gear; unlike a
   protected item it may still be salvaged or set. Noble metals, mithril,
   dragonscale, and the gems withstand nearly everything; iron and steel rust and corrode but
-  stand heat; wood and cloth burn; nothing but metal rusts; `world/item_damage.rs`). Protected
+  stand heat; wood and cloth burn; nothing but metal rusts; `world/combat/item_damage.rs`). Protected
   from all item damage, a spell's ruin of floor items too (#1170): a unique item, an item of the
   `proof` affix ("of Proof"), and an object a quest asks to be brought or delivered (a fixed
   quest's until it is done for good, a rolled quest's drawn object while active); a quest's
@@ -761,6 +761,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   object takes every hand slot, and a light weapon fits every one), and `class` (default none: a
   class id; only a character of that class has the slot, nobody else sees, fills, or is given
   it, and creatures never: `Content::slots_for`; a known class, checked once the classes load).
+  A talent may open a class's slot to its holder (`opens_slot`: the profane gift Many-fingered's
+  first extra ring; what is worn there falls when the talent goes) or bar any slot but a hand or
+  a `ready` one (`bars_slot`: Horned's head; putting anything there is refused with the talent's
+  words and no time, the equipment screen shows `— (horns)`, and what was worn there falls to the
+  player's cell as the talent takes; docs/dev/equipment.md "Barred and opened slots").
   The built-in slots, ADOM's: Head, Neck, Body (`body_armor`),
   Cloak, Main hand and Off hand (`wield`, hands; "wielded", "in off hand"), Hands, Left ring
   and Right ring ("on left hand", "on right hand"), the aristocrat's Extra ring 1 to 3 (`class =

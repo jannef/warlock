@@ -26,3 +26,6 @@ Some creatures are never graded:
 The words for each:
 
 {{#include generated/creature-grade-words.md}}
+
+See also: [Creatures in numbers](creature-numbers.md) and
+[How creatures behave](creature-behaviour.md).

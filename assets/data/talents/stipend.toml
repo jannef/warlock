@@ -1,6 +1,6 @@
 # The aristocrat's class ability from level 1 (spec §8 "Class abilities": Stipend; #1405): passive,
 # its numbers in ../stipend.toml, its servant a town's (a campaign's data/towns/), the rule in
-# world/stipend.rs.
+# world/classes/stipend.rs.
 [[talent]]
 id = "stipend"
 name = "Stipend"

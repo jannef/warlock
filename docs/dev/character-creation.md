@@ -90,7 +90,7 @@ and `class-screen-dwarf`; the wiki's `class-limits.md` (`xtask/src/wiki/characte
 **Races in the rules** (#255). `WorldState::race_of(content, actor)` is the one lookup of the
 player's race (`None` for a creature, or a run without a character); `load`, `size_of`, and every
 race trait go through it. The traits, each read in one place:
-- `natural` (`content::Hide`, as a creature's, checked by `Hide::check`): `Actor::hide(content,
+- `natural` (`content::Hide`, as a creature's): `Actor::hide(content,
   race)` is the race's hide, else the creature type's; `Actor::defence`, `protection`,
   `soaked_by`, and `target` take the race for it, and so does `fight::Guard::of` (the hide's name
   in messages). `World::defence_of`/`protection_of` pass it (the dump reads those).
@@ -101,14 +101,14 @@ race trait go through it. The traits, each read in one place:
   is the rule. `Perception::compute` reads it on the viewer's own cell (after the light, before
   visibility) and caps the visible reach at `sight` (wall completion too), keeping `dazzled` for
   `PerceptionView::dazzled` (the status bar's `Dazzled`, the dump header's `dazzled`, JSON
-  `dazzled`). `world/glare.rs`: `World::glared(attacker, profile)` (called once in
+  `dazzled`). `world/turn/glare.rs`: `World::glared(attacker, profile)` (called once in
   `fight::resolve`, so melee, missiles, and free blows) takes `to_hit` off while
   `sight::light` on the attacker's cell dazzles it; `World::glare_news(before)` (in `perceive`)
   notes when it begins and ends. Creatures never have a race, so never pay for the light.
-- `disease_check`: `World::disease_modifier(actor, stat)` (`world/disease.rs`), both checks.
-- `eats_rotten`: the top of `World::eat_rotten` (`world/eat.rs`).
+- `disease_check`: `World::disease_modifier(actor, stat)` (`world/health/disease.rs`), both checks.
+- `eats_rotten`: the top of `World::eat_rotten` (`world/health/eat.rs`).
 - `passive_search = "traps"` (`PassiveSearch::Traps`): `World::notices(at, hidden)`.
-Tests: `world/race_tests.rs` (test races beside the built-in ones, one trait each, and the evil
+Tests: `world/character/race_tests.rs` (test races beside the built-in ones, one trait each, and the evil
 races' starting bands); `content/race.rs` (parsing and refusals).
 
 **Names** (#218): `Character::name` (saved, hashed: saves change). `character::check_name` is the
@@ -190,14 +190,14 @@ place the starting pack is put together (the kit, if any, else the scenario's `w
 than a kit's flag): `World::begin` puts `kit::known_types(content, &pack.items)` into
 `WorldState::known_scrolls`, every type of the whole starting pack with a label
 (`kit::is_labelled`: a scroll, potion, wand, or rod), the kit's and a scenario's own pack alike
-(docs/dev/scrolls.md); a background story's items the same way (`world/background.rs::story_item`).
+(docs/dev/scrolls.md); a background story's items the same way (`world/character/background.rs::story_item`).
 Magic items stay unidentified. A scenario's `spells` (`ScenarioDef::spells`, `spells = ["haste"]`, resolved by
 the loader, an unknown id refused) go into `Actor::spells` in `World::begin`, for its own
 character and a chosen one alike, on top of the class's: known from the start as a spell learned from a grimoire
 is (saved and hashed as `Actor::spells` always is). Only the test world's `circles` uses it, and
 it is the one built-in scenario with no `character` (it gives the eyes, stats, hit points, and
-300 mana itself; `world/character_tests.rs` and `content/tests.rs`'s scenario test name it). The heritage talents (Family wealth's gold and gems, Father's sword's
-heirloom; #697) come on top as they are taken, after the pack (`world/heirloom.rs`,
+300 mana itself; `world/character/character_tests.rs` and `content/tests.rs`'s scenario test name it). The heritage talents (Family wealth's gold and gems, Father's sword's
+heirloom; #697) come on top as they are taken, after the pack (`world/character/heirloom.rs`,
 docs/dev/progression.md "Creation picks"): the summary's kit list does not name them. The
 aristocrat's Family wealth is its class's at level 1 (#1404): `World::begin` hands it down
 (`hand_down` on what `class::grant` gave, `TalentEffect::is_handed_down`) right after
@@ -243,9 +243,9 @@ fixture, grants nothing). `Content::lucky`, `Character::lucky`/`title`/`titled_n
 
 The lucky days' gifts (#269): Scourge and Warden of the gate are data only (`free_blow`
 `cleave`/`opportunist`, `protection`, `penalty_percent`). Reborn whole is `reborn_whole`, read in
-`World::rise_from_ashes` (`world/stars.rs`, the Phoenix's `rise_from_ashes` kind; the once is
+`World::rise_from_ashes` (`world/character/stars.rs`, the Phoenix's `rise_from_ashes` kind; the once is
 `Progress::once`'s `RISEN`, saved and hashed with `Progress`, left out while empty) through
-`World::reborn_whole` (`world/lucky.rs`). Drowning grip is `grip { status = "held" }`
+`World::reborn_whole` (`world/character/lucky.rs`). Drowning grip is `grip { status = "held" }`
 (`OffenceMods::grip`): `World::grip`, one line at the end of `World::resolve`, holds the target of
 a melee hit (a status caused by the holder) and lets go of every other it held (a miss lets go
 of the target too); `World::let_go` runs in `player_moves` after the step and in `travel`. Held
@@ -253,10 +253,10 @@ of the target too); `World::let_go` runs in `player_moves` after the step and in
 refuses every step (and door) while a status of the creature blocks `step`, and
 `World::held_back` turns the creature's plan to step or patrol into an attack on its holder if
 that one is hostile and beside it, else a wait. Nothing draws at random. Tests:
-`world/lucky_tests.rs`; the screen snapshots `character-screen-lucky` (showcase seed 440, the
+`world/character/lucky_tests.rs`; the screen snapshots `character-screen-lucky` (showcase seed 440, the
 Deep One) and `death-screen-lucky` (arena seed 142, the Iron Scourge).
 
-`world/stars.rs` puts the grants into `Actor::talents` (first, in grant order;
+`world/character/stars.rs` puts the grants into `Actor::talents` (first, in grant order;
 `Talents::regrant` drops every granted talent of the `stars` tree first) in `World::with_character_named` and again
 in `World::from_state`: they are **never a stored choice**, so a gift added to the data reaches a
 saved character and a removed one leaves it. They change hashes of runs whose sign has gifts, as
@@ -265,9 +265,9 @@ gifts' effects are `TalentEffect`s read at one hook each (`docs/dev/progression.
 also says what is wading (`wading`: terrain that freezes, or a disease's wading ground).
 
 The gifts from the Salamander to the Basilisk (#266) that are more than a read at a hook live in
-`world/gifts.rs`: the actives (`SignActive` in `content/horoscope.rs`, `Ability::Sign` under
+`world/character/gifts.rs`: the actives (`SignActive` in `content/horoscope.rs`, `Ability::Sign` under
 `Source::Sign`, `Action::Gift`, `World::use_gift`: Horn's grace, the Transfixing stare at
-`STARE_RANGE`, creature sight through `World::sees_now` in `ambush.rs`), Relentless's streak
+its effect's `range`, creature sight through `World::sees_now` in `ambush.rs`), Relentless's streak
 (`Streak { target, count, turn }` on `Actor::streak`, saved and hashed and left out of the JSON
 while `None`; a blow continues it at the same target while `turn <= streak.turn + 1`, the player's
 turn counter, so anything else in between starts it over), Barbed hide (`World::barbed`,
@@ -275,27 +275,27 @@ turn counter, so anything else in between starts it over), Barbed hide (`World::
 (`graceless`, `spent_eyed`, `transfixed` in `data/status/`). Most scenarios' characters are
 Water Basilisks, so their runs now notice in passing (Unblinking draws a check a turn near
 hidden things), list the stare first in the abilities menu, and are made way for by no one.
-Tests: `world/gifts_tests.rs`.
+Tests: `world/character/gifts_tests.rs`.
 
 The Roc to the Barghest (#267) add Eyes of the heights, Hoard sense, Watchful, Set in its ways,
 Old lore, Rise from the ashes, Inner light, Frail, Grasping arms, Of the deep, Ungainly ashore,
 Hound's nose, and Gatekeeper (their effect kinds and hooks: `docs/dev/progression.md`). Rise from
 the ashes is the one gift with state: `Progress::once` keeps `risen` (`stars::RISEN`); the rising
 itself is `World::rise_from_ashes` in `stars.rs`, with the `ashen` status, the `phoenix_fire`
-effect, and Inner light's `ember` light preset in data. Tests: `world/stars_roc_tests.rs`, the
-gatekeeper's in `world/free_blow_tests.rs`, Watchful's placing in `noise/tests.rs`, the screen
+effect, and Inner light's `ember` light preset in data. Tests: `world/character/stars_roc_tests.rs`, the
+gatekeeper's in `world/combat/free_blow_tests.rs`, Watchful's placing in `noise/tests.rs`, the screen
 case `eat-screen-smell` (seed 21, a Barghest).
 
 The element gifts (#268): Kindled is `lantern_light` (Lamplighter's preset; the two do not
 stack), Forge-born `weapon_marks` without a `role` (every weapon skill and style, read in
 `OffenceMods::marks`), Tidal `mana_regen_percent` (`World::mana_rate`). Blaze is Fire's **sign active**, the third after #266's: `SignEffect::Blaze` makes the talent
 one (`Content::sign_active`), `SignMods::blaze`; it is used as `Action::Gift` (`use:blaze`,
-priced in `buff.rs` by its `cast` cost) and dispatched by `World::use_gift` in `world/gifts.rs`.
-Its rule is `world/element_gifts.rs` (`blaze`, `kindle`): the burst's cells from
+priced in `buff.rs` by its `cast` cost) and dispatched by `World::use_gift` in `world/character/gifts.rs`.
+Its rule is `world/character/element_gifts.rs` (`blaze`, `kindle`): the burst's cells from
 `spell::burst_cells`, one gameplay roll, `World::spell_hurts` for each creature but the player,
 `World::shock(Heat)`, a `LevelState::fires` entry on each walkable cell but the player's, said
 with `read.rs::say_spell` ("The blaze burns the kobold."), then the `burnt_out` status (12 h).
-Its look is `blaze` in `data/effects.toml`. Tests: `world/element_gift_tests.rs` (the grants,
+Its look is `blaze` in `data/effects.toml`. Tests: `world/character/element_gift_tests.rs` (the grants,
 the burst and its cooldown, refusals, the dump row and action text, Kindled, Forge-born, Tidal,
 a replay and a save), the `abilities-menu-blaze` text snapshot.
 
@@ -303,27 +303,27 @@ The sign-limited picks (#270): fifteen non-granted talents of the `stars` tree, 
 and per element (but the Salamander's and the Sphinx's, cut in #774), each with an `animal` or `element` need (and most a level), offered by
 `talent::offers` like any talent (the level-up screen, the creation Talents step); the Talents
 page (`PerceptionView::talents`) leaves out those of other signs. Their rules are one read each
-at the hooks in `docs/dev/progression.md` ("Sign-limited picks"), and `world/sign_picks.rs` holds
+at the hooks in `docs/dev/progression.md` ("Sign-limited picks"), and `world/character/sign_picks.rs` holds
 what is more: the two new sign actives (`SignActive::FireBreath`, aimed at a cell within
-`BREATH_RANGE`, a bolt by `World::cast_bolt` along `read.rs::bolt_line`; `SignActive::HoundsBay`,
+its effect's `range`, a bolt by `World::cast_bolt` along `read.rs::bolt_line`; `SignActive::HoundsBay`,
 `Act::Howl` and `noise::hearers` for who hears it), `World::frightened` (the AI hook before
 `held_back`: a creature with a status that `flees` steps away from its `by`), and Horn of
 plenty's healing. Second rising is the second `Progress::once` flag, `risen_twice`
 (`stars::RISEN_TWICE`), read by `World::rise_from_ashes` and `OwnTalent::spent`. Graceless and
 Spent-eyed are now cooldowns of several degrees (3 × 8 h, 2 × 1 h; `horns_grace`/`stare` give
-`degrees`), so the picks shorten them by giving fewer. Tests: `world/sign_pick_tests.rs` (each
+`degrees`), so the picks shorten them by giving fewer. Tests: `world/character/sign_pick_tests.rs` (each
 pick offered only under its sign, every rule, the actives' refusals and cooldowns, the fear).
 
 The damage-type forms (#271): Flame-hardened (#266), Kindled, and Of the deep each carry a
 `resist` effect of 25 % (fire, fire, cold) beside their other effects, tagged `damage_types`;
 they sum in `Actor::resistances` with gear and Elemental ward under `Resistances::sum`'s cap
 (a Fire Wyvern resists fire 50 %). The design's burst halving never landed: damage types were
-in first. Test: `world/gifts_tests.rs::the_damage_type_forms_resist_fire_and_cold`.
+in first. Test: `world/character/gifts_tests.rs::the_damage_type_forms_resist_fire_and_cold`.
 
 The calendar and moon flavour (#273, design §7): `[flavour]` in `data/horoscope.toml` parses into
 `Horoscope::flavour` (`content/horoscope.rs::Flavour`, its light preset resolved after the
 lights load; `Content::flavour`). Without the table every read below is a no-op. The hooks:
-`World::healing_rate_at` (the birthday's percent, last; `world/flavour.rs::birthday_healing`)
+`World::healing_rate_at` (the birthday's percent, last; `world/character/flavour.rs::birthday_healing`)
 with `World::live` stopping at the birthday's midnights (`until_birthday_turns`, only on the
 birthday and its eve, so other days' rests are unchanged); `World::perceive` calls
 `birthday_news` with the time of the last perception (`World::perceived_at`, not saved: a
@@ -334,10 +334,10 @@ their cooldowns (birth month: fewer degrees, the last part worn; the actor's own
 `content/horoscope.rs::full_moon_up`) is read by perception's scent and overworld night sight
 (only for the reaches `TalentMods::gift_reach` marks: `scent` and `night_sight` effects of
 `stars` talents, noted in `Talents::mods`) and by `Ability::reach_at` (the stare, its rule
-in `world/gifts.rs` and the targeting mode); `LightCache::sources` swaps Inner light's preset
-for `Flavour::inner_light_at`. Tests: `world/flavour_tests.rs` (the birthday's pace and its
+in `world/character/gifts.rs` and the targeting mode); `LightCache::sources` swaps Inner light's preset
+for `Flavour::inner_light_at`. Tests: `world/character/flavour_tests.rs` (the birthday's pace and its
 exactness over splits, the note, the halved cooldown, the moon's reaches, the content checks),
-`world/land_talent_tests.rs::a_full_moon_lets_hounds_nose_smell_blood_two_cells_farther`.
+`world/character/land_talent_tests.rs::a_full_moon_lets_hounds_nose_smell_blood_two_cells_farther`.
 
 Shown: the reveal (`ui/sign_screen.rs`, `--screen sign`, after the race), the summary's Sign row,
 the character screen's dimmed Stars line (gift names, two lines at most) and the title after the
@@ -346,6 +346,6 @@ name (character and death screens), the `stats` dump's `Sign Wood Salamander, th
 The wiki's `horoscope-animals.md`, `horoscope-elements.md`, `horoscope-lucky.md`,
 `horoscope-talents.md` (the picks by sign)
 (`xtask/src/wiki/horoscope.rs`) state the rules exactly and the odds by race at the showcase's
-start. Tests: `world/stars_tests.rs` (grants per sign and day, the lucky days pinned, restore,
+start. Tests: `world/character/stars_tests.rs` (grants per sign and day, the lucky days pinned, restore,
 every hook, the prerequisites, content checks, the lucky capture's seed 440), the screen tests in
 `ui/sign_screen.rs`.

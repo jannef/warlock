@@ -5,7 +5,7 @@
 # grows in the rooms and glows in the dark, and what lives here is of the earth (its elementals,
 # and the stone-kin of the deep). Its first floor's `<` climbs back out through the portal. At
 # the bottom, the crystal hollow (vaults/crystal_hollow.toml), where the crystal guardian waits
-# for the quest that made it (world/lure.rs).
+# for the quest that made it (world/people/lure.rs).
 
 [[dungeon]]
 id = "meynbew"

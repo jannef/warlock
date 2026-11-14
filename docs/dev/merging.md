@@ -91,7 +91,7 @@ conflict every time; two that insert at different places merge cleanly. So:
   `VERBS` table and `Display`), `ActionKind::ALL` and `data/actions.toml`, `KeyCommand` and `REBINDABLE`
   (`settings/keys.rs`: the controls screen shows that order, so a new command goes next to its
   group), the dump layers (`dump/layer.rs`, `dump/mod.rs::layer_rows`), the settings rows (`ui/settings_screen.rs`), the
-  `Content` fields and `Content::load` steps, the `mod` lists (`world/mod.rs`: below),
+  `Content` fields and `Content::load` steps, the `mod` lists (`world/<group>/mod.rs`: below),
   the wiki's `generate()` list (`xtask/src/wiki/mod.rs`) and `wiki/src/SUMMARY.md` (pages by
   topic), `tests/golden/manifest/*.toml` (the feature's own file), the content fingerprint
   groups, and single-file data tables (`data/slots.toml`, `stats.rs`, `data/weapon_skills.toml`,
@@ -113,18 +113,25 @@ conflict every time; two that insert at different places merge cleanly. So:
   indices in path order, so two PRs adding files both change the ids after theirs: that is the
   per-release save bump's business, not the PR's.
 - **A feature's dispatch lives in its own module**: one match arm in `world/mod.rs::player_acts`
-  calling `self.feature(..)` in `world/feature.rs`, one line each in the other hot files
-  (`action.rs`, `content/mod.rs`, `dump.rs`, `input/play.rs`, `settings/keys.rs`), and its own tests
-  file (`world/feature_tests.rs`).
-- **`world/mod.rs`'s module lists are grouped by subsystem** (#1497), each group under a comment
-  naming it and its `docs/dev/` topics: the group's modules, then its test modules inside one
-  `cfg_if! { if #[cfg(test)] { ... } }` block, each list sorted by name. A new module is one line,
-  `mod feature;` in its group's list, and its tests one line, `mod feature_tests;` in the group's
-  `cfg_if!` block (no `#[cfg(test)]` of its own: the block gives it). Pick the group of the
-  feature's `docs/dev/` topic; a test of a campaign's places end to end goes in the last group. The
-  `cfg_if!` is a local macro shaped and named after the `cfg-if` crate's because rustfmt follows
-  `mod` declarations inside `cfg_if!` and no other macro: under any other name `cargo fmt` would
-  skip the test files. The groups are the folders #1496 will move `world/` into, one per PR.
+  calling `self.feature(..)` in `world/<group>/feature.rs`, one line each in the other hot files
+  (`action/mod.rs`, `content/mod.rs`, `dump/mod.rs`, `input/play.rs`, `settings/keys.rs`), and its own tests
+  file (`world/<group>/feature_tests.rs`).
+- **`world/` is one folder per subsystem** (#1497, #1496): `world/mod.rs` declares the groups,
+  each under a comment naming it and its `docs/dev/` topics (`turn`, `levels`, `combat`,
+  `health`, `magic`, `creatures`, `allies`, `character`, `classes`, `skills`, `items`, `crafting`,
+  `fixtures`, `people`, `campaigns`), and each folder's `mod.rs` lists its modules, then its test
+  modules inside one `cfg_if! { if #[cfg(test)] { ... } }` block, each list sorted by name. A new
+  module is one line, `mod feature;` in its folder's list, and its tests one line, `mod
+  feature_tests;` in the folder's `cfg_if!` block (no `#[cfg(test)]` of its own: the block gives
+  it). Pick the folder of the feature's `docs/dev/` topic; a test of a campaign's places end to end
+  goes in `campaigns/`. The `cfg_if!` is a local macro (defined in `world/mod.rs`, before the
+  folders) shaped and named after the `cfg-if` crate's because rustfmt follows `mod` declarations
+  inside `cfg_if!` and no other macro: under any other name `cargo fmt` would skip the test files.
+- **Visibility in `world/`**: an item starts at `pub(super)`, its folder only, and is widened to
+  `pub(in crate::world)` when another folder uses it (`pub(crate)` only for what code outside
+  `world/` reads); a folder's module is `pub(in crate::world) mod` the same way. A module names
+  the root's items as `crate::world::World` and another folder's as
+  `crate::world::combat::fight::...`; `super::` reaches only its own folder.
 - **Docs follow the same rule**: a feature edits its own `docs/dev/<topic>.md` and the `spec/`
   files of the sections it touches (bullets next to the related ones); `docs/dev/cli.md` for a new
   flag, `--screen` name, scenario, dump layer, or action (by its group); CLAUDE.md only for a new
@@ -140,7 +147,7 @@ of the next merge. So each kind of fact has **one home**; everywhere else links 
 | Kind of fact | Its one home | Elsewhere |
 |---|---|---|
 | Player-visible rules: what the game does | `spec/`, the section's bullet | link "§N Name" |
-| Numbers kept in data | the data file under `assets/` | the wiki's generated tables show them (`xtask/src/wiki/`); never retyped in prose |
+| Numbers kept in data, and every tuning number (`docs/dev/content.md` "Tuning numbers live in data") | the data file under `assets/` (the rule's own, a one-system rules file in `data/rules/`, else `data/rules/tuning.toml`), never a Rust `const` | the wiki's generated tables show them (`xtask/src/wiki/`); never retyped in prose |
 | Modules, functions, invariants, tests | `docs/dev/<topic>.md` | link the topic and its heading |
 | Flags, `--scenario` and `--screen` names, dump layers, action text, replay files | `docs/dev/cli.md` | CLAUDE.md and spec §9 link |
 | Explanation for players | `wiki/` | |
@@ -168,8 +175,8 @@ tag list is the one in `assets/data/creatures/README.toml`). Other hot spots see
 roster wave, and what to do in each:
 - `assets/data/factions/`: a new faction takes a free `NNN-` number by its group, never the last.
 - test fixtures and the factions list: `world/{equip,magic,object,read}_tests.rs` take their
-  at-peace factions from `world/fixture_factions.rs::peaceful_factions()` (the shipped
-  `factions/` without its grudges), so a new faction edits none of them. `world/mana_tests.rs`
+  at-peace factions from `world/creatures/fixture_factions.rs::peaceful_factions()` (the shipped
+  `factions/` without its grudges), so a new faction edits none of them. `world/magic/mana_tests.rs`
   keeps the shipped `status/` and replaces only the few statuses it needs
   (`status_text()`), so a creature's rider status needs no fixture edit.
 - the creatures README tag list: add a tag's line by group, only when something uses the tag.
@@ -208,12 +215,12 @@ and every PR in flight that touches them conflicts. The policy (#1523):
   never draws from it hashes as before.
 - **Add the stream to the table at the top of `rng.rs`** in the same PR, in its group.
 - **High-churn users of `gameplay` move out as they are touched**: the outcome tables
-  (`world/outcome.rs`), eating (`world/eat.rs`), miscasts. Each move is a PR of its own, or a
+  (`world/fixtures/outcome.rs`), eating (`world/health/eat.rs`), miscasts. Each move is a PR of its own, or a
   commit its PR names, that says the run's rolls change; never move a draw between streams as a
   side effect of another change.
 - Rules that are part of the core loop (to-hit, damage, checks, the AI) stay on `gameplay`.
 
-**The state hash's format.** `World::state_hash` (`world/hash.rs`) is FNV-1a over the
+**The state hash's format.** `World::state_hash` (`world/turn/hash.rs`) is FNV-1a over the
 `serde_json` encoding of `WorldState`, streamed into the hasher. It therefore also depends on
 `serde_json`'s output and on `rand_chacha`'s serde format for every kept stream (`rng.rs`): a
 dependency bump that changes either changes every replay's recorded hashes with no rule change.

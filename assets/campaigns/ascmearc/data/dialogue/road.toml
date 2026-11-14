@@ -40,7 +40,7 @@ id = "news"
 name = "News of the roads"
 reply = "News? Footpads on the downs road, goblins in the 'ills, an' summat nasty in the fen wot nobody'll name. The Gilde in Cēaptūn's payin' bounties, so I 'ear. Me, I just keep walkin' an' keep me wits about me. Best way."
 
-# His one offer (#808; spec §8 "Dialogue", "An offer"; world/wares.rs): one item at a fixed
+# His one offer (#808; spec §8 "Dialogue", "An offer"; world/people/wares.rs): one item at a fixed
 # price, take it or leave it. A favoured find, rare with four to six affixes at the player's
 # level plus four (random loot is rare one time in fifty, most often with three); one time in
 # fifty one of the three uniques (data/uniques/: the Brosinga Mene, the Eorcanstān, Grendles

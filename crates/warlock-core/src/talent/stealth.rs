@@ -21,7 +21,7 @@ pub enum StealthEffect {
     /// Protection (Ambusher).
     Ambush { dice: Dice },
     /// This much added to its initiative check when it is caught unawares (Wary;
-    /// `World::startle`, `world/surprise.rs`).
+    /// `World::startle`, `world/combat/surprise.rs`).
     InitiativeBonus { value: i32 },
     /// This percent of the extra cost of the action it takes Surprised is spared (Cool head:
     /// 100, none; `World::surprise_cost`).
@@ -33,7 +33,7 @@ pub enum StealthEffect {
     /// rules' `missile_reach` (Long reach; `World::sneaks`).
     SneakReach { value: i32 },
     /// A sneak attack of its that kills leaves it a degree of `status` (Vanishing act:
-    /// Light-footed; read in `World::resolve` where a sneak attack's blow kills, `world/thief.rs`).
+    /// Light-footed; read in `World::resolve` where a sneak attack's blow kills, `world/classes/thief.rs`).
     SneakKillStatus { status: String },
     /// The perception snapshot tells which creatures in view have not noticed it, and they are
     /// drawn with the unaware mark (Stalker's eye; `SeenActor::unaware`).
@@ -52,14 +52,14 @@ pub enum StealthEffect {
     /// lower (Master thief).
     AmbushThreat { value: u8 },
     /// The class active Lurk: a wait in ambush, a degree of `status` on it (Lurking: a hostile
-    /// stepping up beside it takes its blow at once; `world/thief.rs`).
+    /// stepping up beside it takes its blow at once; `world/classes/thief.rs`).
     Lurk { status: String },
     /// The class active Exploit: every opening held spent on a melee blow in a direction that
     /// is a sneak attack whatever the foe knows (its `resource` cost, the least it needs:
-    /// Openings; `world/openings.rs`).
+    /// Openings; `world/classes/openings.rs`).
     Exploit,
     /// The class active Thrown exploit: Exploit's blow as a throw at a creature on a cell (its
-    /// `resource` cost, the least it needs: Openings; `world/openings.rs`).
+    /// `resource` cost, the least it needs: Openings; `world/classes/openings.rs`).
     ThrownExploit,
     /// An exploit that hits does `dice` more damage per opening spent, after Protection, never
     /// multiplied (Exploit's own 1d6; dice of one size add up).
@@ -139,10 +139,10 @@ pub struct StealthMods {
     pub ambush_threat: u8,
     /// The active Lurk: the status it waits in ambush under (Lurking).
     pub lurk: Option<StatusId>,
-    /// The active Exploit (`world/openings.rs`): every opening held spent on a blow that is a
+    /// The active Exploit (`world/classes/openings.rs`): every opening held spent on a blow that is a
     /// sneak attack whatever the foe knows.
     pub exploit_active: bool,
-    /// The active Thrown exploit (`world/openings.rs`): Exploit's blow as a throw.
+    /// The active Thrown exploit (`world/classes/openings.rs`): Exploit's blow as a throw.
     pub thrown_exploit: bool,
     /// What an exploit adds per opening spent (Exploit's dice, Low blow's stun and to-hit).
     pub exploit: ExploitMods,
@@ -193,7 +193,7 @@ impl StealthMods {
 }
 
 /// What the thief's class talents add to an exploit, per opening spent (the openings design §6;
-/// `world/openings.rs::land_exploit`): dice of damage after Protection, never multiplied
+/// `world/classes/openings.rs::land_exploit`): dice of damage after Protection, never multiplied
 /// (`exploit_dice`, summed), to hit (`exploit_to_hit`), a status the foe struck is left a
 /// degree of (`exploit_status`), and a lower threat with a sure critical from `sure_at`
 /// openings (`exploit_threat`: Master thief's finisher, folded in).

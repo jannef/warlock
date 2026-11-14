@@ -56,7 +56,7 @@ pub(super) fn kept_json(view: &PerceptionView<'_>, kept: Kept) -> Value {
     })
 }
 
-/// What a companion wears as it reads (`an amber amulet`; `world/collar.rs`), or null.
+/// What a companion wears as it reads (`an amber amulet`; `world/allies/collar.rs`), or null.
 pub(super) fn wears(
     view: &PerceptionView<'_>,
     ally: &crate::perception::AllyView,

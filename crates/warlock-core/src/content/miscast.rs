@@ -1,7 +1,7 @@
 //! Miscasts as data (spec §8 "Spells": "Miscasts", #1271): the Spellcraft check every cast with
 //! one's own mana makes (`data/miscast.toml`, [`MiscastRules`]) and the one ordered table a
 //! failed check rolls on (`data/miscasts/`, one `[[miscast]]` file each, [`Miscast`]). The rules
-//! are `world/miscast.rs`.
+//! are `world/magic/miscast.rs`.
 //!
 //! ```toml
 //! # data/miscast.toml
@@ -32,7 +32,7 @@
 //!
 //! **Protected entries** (the miscasts design §4): an entry whose `to` is below `safe_below` can
 //! never kill its caster nor cost them anything they cannot get back. Its harm is capped at the
-//! caster's hit points less one (`world/miscast.rs`), and the loader refuses one whose effect is
+//! caster's hit points less one (`world/magic/miscast.rs`), and the loader refuses one whose effect is
 //! a `backfire`, a `drain`, a `forget`, a `summon`, a `portal`, a fire `zone`, or a status that
 //! ticks harm or mana (`check_protected`), so a campaign's table cannot break the promise either; a
 //! `rank_loss` is allowed, as it never takes a spell below rank 1. A stat loss there is
@@ -65,15 +65,17 @@ pub struct MiscastRules {
     pub per_margin: i32,
     /// An entry whose `to` is below this is protected (module docs).
     pub safe_below: i32,
-    /// The faction a backfired summon's creatures come in (`world/backfire.rs`), hostile to
+    /// "Near the caster" for a swap and a boon, in steps (Chebyshev), in a clear line.
+    pub near: i32,
+    /// The faction a backfired summon's creatures come in (`world/magic/backfire.rs`), hostile to
     /// everyone; `None`: their type's own.
     #[serde(skip)]
     pub backfire_faction: Option<FactionId>,
 }
 
 impl MiscastRules {
-    /// Parses `data/miscast.toml`: `armour_percent` positive, a die that rolls at least 1, a
-    /// `backfire_faction` that is a known faction.
+    /// Parses `data/miscast.toml`: `armour_percent` positive, a die that rolls at least 1, `near`
+    /// 1 to 40, a `backfire_faction` that is a known faction.
     pub(super) fn parse(file: &str, text: &str, factions: &Factions) -> Result<Self, ContentError> {
         let err = |m: &str| ContentError::new(file, m);
         let mut table: toml::Table = toml::from_str(text).map_err(|e| err(&e.to_string()))?;
@@ -92,6 +94,9 @@ impl MiscastRules {
         }
         if parsed.die.min() < 1 {
             return Err(err("`die` must roll at least 1"));
+        }
+        if !(1..=40).contains(&parsed.near) {
+            return Err(err("`near` must be 1 to 40"));
         }
         Ok(parsed)
     }
@@ -281,7 +286,7 @@ mod tests {
     #[test]
     fn the_rules_say_the_difficulty() {
         let text = "stat = \"intelligence\"\nbase = 8\nper_level = 1\narmour_percent = 10\n\
-            rank_ease = 1\ndie = \"2d12\"\nper_margin = 5\nsafe_below = 71\n";
+            rank_ease = 1\ndie = \"2d12\"\nper_margin = 5\nsafe_below = 71\nnear = 6\n";
         let none = Factions::default();
         let r = MiscastRules::parse("miscast.toml", text, &none).expect("valid");
         assert_eq!(r.backfire_faction, None, "left out: the type's own");
@@ -301,7 +306,7 @@ mod tests {
 
     #[test]
     fn the_backfire_faction_is_a_known_one() {
-        let c = Content::builtin().expect("content");
+        let c = crate::test_support::builtin();
         let rules = c.miscast_rules().expect("rules");
         let berserk = rules.backfire_faction.expect("the built-in names one");
         assert_eq!(c.factions().def(berserk).id, "berserk");

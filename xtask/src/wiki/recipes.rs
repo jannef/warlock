@@ -1,8 +1,8 @@
 //! The professions' recipes (spec §8 "Skills": professions; docs/dev/crafting.md): every generic
 //! recipe from `data/recipes/<skill>/`, a table a profession, the grades a made item comes out at,
-//! from `data/recipes.toml`'s bands and the 2d12 rules (`world/craft_make.rs::grade`), and gem
-//! cutting (`world/cut.rs`: the cut bands, a large uncut ruby's fates, the odds), and gem setting
-//! (`world/set.rs`: the odds).
+//! from `data/recipes.toml`'s bands and the 2d12 rules (`world/crafting/craft_make.rs::grade`), and gem
+//! cutting (`world/crafting/cut.rs`: the cut bands, a large uncut ruby's fates, the odds), and gem setting
+//! (`world/crafting/set.rs`: the odds).
 
 use super::util::{Term, anchored, capital, link};
 use std::fmt::Write as _;
@@ -27,7 +27,7 @@ const BONUSES: [(i32, &str); 4] = [
 ];
 
 /// What Master's hand adds to a made check's margin as it is graded (the craftsperson's level-50
-/// passive, `world/mastery.rs::graded_margin`): its `grade_ease`, 0 without the talent.
+/// passive, `world/crafting/mastery.rs::graded_margin`): its `grade_ease`, 0 without the talent.
 fn grade_ease(content: &Content) -> i32 {
     (content.talents().id("masters_hand"))
         .map(|id| content.talents().get(id))
@@ -79,12 +79,14 @@ pub(super) fn recipes_woodcraft(content: &Content) -> String {
     recipes_of(content, "woodcraft")
 }
 
-/// Every generic recipe of profession `skill`, by the skill it is listed from and its name: what
-/// it makes and how many, what is chosen (each part and what it may be of), the stock it takes in
-/// its base material (else steel, the piece's own, else the first it may be of, once a group; a
-/// batch's at its most for an untrained maker), what else it uses up, the ornament, what it needs
-/// (a station, a knife, a launcher), the time, the difficulty, and the chance it comes out made
-/// (not failed; a batch whole) at three skill values with an average stat (modifier 0).
+/// Every generic recipe of profession `skill`, by the skill it is listed from and its name, in
+/// two tables (#1668). The first: what it makes and how many, what is chosen (each part and what
+/// it may be of, and whether a gem may be set), the stock it takes in its base material (else
+/// steel, the piece's own, else the first it may be of, once a group; a batch's at its most for
+/// an untrained maker) and what else it uses up, and what it needs (a station, a knife, a
+/// launcher). The second: the skill it is listed from, the time, the difficulty, and the chance
+/// it comes out made (not failed; a batch whole) at three skill values with an average stat
+/// (modifier 0).
 pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
     let Some(skill_id) = content.skill_id(skill) else {
         return String::new();
@@ -93,9 +95,11 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
     let skill_def = content.skill(skill_id);
     let craft = (skill_def.benefits.iter()).find(|b| b.effect == Effect::Craft);
     let at = ODDS_AT.map(|v| format!("{v}"));
-    let mut out = format!(
-        "| Recipe | Listed from | Makes | Chosen | Stock | Uses up | Ornament | Needs | Time | \
-         Difficulty | Made at {} {} |\n|---|:---:|:---:|---|---|---|:---:|---|---|:---:|:---:|\n",
+    let mut out =
+        String::from("| Recipe | Makes | Chosen | Takes | Needs |\n|---|:---:|---|---|---|\n");
+    let mut work_rows = format!(
+        "| Recipe | Listed from | Time | Difficulty | Made at {} {} |\n\
+         |---|:---:|---|:---:|:---:|\n",
         skill_def.name,
         at.join(" / ")
     );
@@ -149,12 +153,8 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
             } = &part.source
                 && (input.is_some() || *optional)
             {
-                if let Some(o) = input {
-                    of = format!("{} or {of}", content.object(*o).plural);
-                }
-                if *optional {
-                    of.push_str(" or none");
-                }
+                let input = input.map(|o| content.object(o).plural.as_str());
+                of = source_words(input, &of, *optional);
                 chosen.push(format!("{name}: {of}"));
                 continue;
             }
@@ -239,21 +239,38 @@ pub(super) fn recipes_of(content: &Content, skill: &str) -> String {
                 format!("{:.0}%", made_chance(content, bonus - r.difficulty - work))
             })
             .collect();
+        if r.ornament {
+            chosen.push("a gem may be set".to_string());
+        }
+        // What it takes: the stock, then what else it uses up.
+        let mut takes = or_dash(&stock, "; ");
+        if !uses.is_empty() {
+            takes = match stock.is_empty() {
+                true => format!("uses up {}", uses.join(", ")),
+                false => format!("{takes}; uses up {}", uses.join(", ")),
+            };
+        }
         let _ = writeln!(
             out,
-            "| {} | {} | {makes} | {} | {} | {} | {} | {} | {} ({} s) | {difficulty} | {} |",
+            "| {} | {makes} | {} | {takes} | {} |",
             anchored(Term::Recipe, &r.id, &r.name),
-            r.from,
             or_dash(&chosen, "; "),
-            or_dash(&stock, "; "),
-            or_dash(&uses, ", "),
-            if r.ornament { "yes" } else { "no" },
             or_dash(&needs, ", "),
+        );
+        let _ = writeln!(
+            work_rows,
+            "| {} | {} | {} ({} s) | {difficulty} | {} |",
+            r.name,
+            r.from,
             Duration::seconds(u64::from(r.seconds)).spoken(),
             r.seconds,
             odds.join(" / "),
         );
     }
+    let _ = write!(
+        out,
+        "\nThe skill each is listed from, how long it takes, and how hard it is:\n\n{work_rows}"
+    );
     out.push_str(
         "\nStock is counted in pieces of the base material (an ingot is 500 g of steel). Another \
          material takes as many pieces of its own: a mithril ingot is lighter, and so is the \
@@ -399,6 +416,18 @@ fn materials(
             })
             .collect(),
     }
+}
+
+/// A part's sources in words: the input's stacks, the stock, and "none" if it may be left off.
+fn source_words(input: Option<&str>, of: &str, optional: bool) -> String {
+    let mut words: Vec<&str> = input.into_iter().collect();
+    if !of.is_empty() {
+        words.push(of);
+    }
+    if optional {
+        words.push("none");
+    }
+    words.join(" or ")
 }
 
 /// What a part may be of, in words: a group whose every material on the part's list is there
@@ -576,7 +605,7 @@ const CUT_BONUSES: [(i32, &str); 4] = [
     (16, "a master with a steady hand"),
 ];
 
-/// Gem cutting (Jewelcraft's Cut, `world/cut.rs`): the cut each margin reaches and what it does
+/// Gem cutting (Jewelcraft's Cut, `world/crafting/cut.rs`): the cut each margin reaches and what it does
 /// to the size, a large uncut ruby at each outcome with its worth, then the odds by bonus on a
 /// ruby and on a smokestone.
 pub(super) fn gem_cutting(content: &Content) -> String {
@@ -744,7 +773,7 @@ pub(super) fn gem_cutting(content: &Content) -> String {
     out
 }
 
-/// Gem setting (Jewelcraft's Set, `world/set.rs`): the odds of each outcome by the check's whole
+/// Gem setting (Jewelcraft's Set, `world/crafting/set.rs`): the odds of each outcome by the check's whole
 /// bonus, on the cutting tables' ruby and on the softest gem.
 pub(super) fn gem_setting(content: &Content) -> String {
     let Some(recipe) = content.recipes().of_use(RecipeUse::Set) else {
@@ -801,4 +830,22 @@ pub(super) fn gem_setting(content: &Content) -> String {
         recipe.from,
     );
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::source_words;
+
+    #[test]
+    fn sources_join_without_a_dangling_or() {
+        assert_eq!(
+            source_words(Some("lumps of ore"), "", false),
+            "lumps of ore"
+        );
+        assert_eq!(
+            source_words(Some("arrowheads"), "bone", true),
+            "arrowheads or bone or none"
+        );
+        assert_eq!(source_words(None, "bone", true), "bone or none");
+    }
 }

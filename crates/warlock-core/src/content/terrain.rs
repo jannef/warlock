@@ -37,7 +37,7 @@ pub(super) struct TerrainSpec {
     #[serde(default)]
     pub description: Option<String>,
     /// A special feature of the ground (an altar, a statue): arriving on it, or beside it if it
-    /// cannot be stood on, says so (`world/feature.rs`).
+    /// cannot be stood on, says so (`world/fixtures/feature.rs`).
     #[serde(default)]
     pub announce: bool,
     pub glyph: char,
@@ -76,14 +76,17 @@ pub(super) struct TerrainSpec {
     pub sturdiness: Option<u8>,
     /// A chest (spec §8 "Chests"): `"shut"`, `"open"`, or `"smashed"`; at most one terrain each.
     pub chest: Option<crate::chest::ChestState>,
-    /// The statue a stoned creature leaves (spec §8 "Statues"; `world/statue.rs`): at most one
+    /// The statue a stoned creature leaves (spec §8 "Statues"; `world/creatures/statue.rs`): at most one
     /// terrain, solid but seen past, breaking (`hardness`), with a `sturdiness`.
     #[serde(default)]
     pub statue: bool,
-    /// A gravestone (spec §7 "Graves"; `world/graves.rs`): its level's `graves` cut an
-    /// inscription in it, which look mode reads.
+    /// A grave (spec §7 "Graves"; `world/fixtures/graves.rs`): a gravestone, a sealed niche, a lidded
+    /// tomb, whose inscription look mode reads.
     #[serde(default)]
     pub grave: bool,
+    /// A place for one of the run's dead (spec §7 "Graves"; `content/burial.rs`): the grave
+    /// terrain it becomes when one is laid there.
+    pub burial: Option<String>,
     pub stairs: Option<StairsDir>,
     /// Light preset the terrain emits (torch sconce, glowing fungus, rune). Must be transparent.
     pub light: Option<String>,
@@ -210,7 +213,7 @@ pub struct TerrainDef {
     /// "Special rooms").
     pub description: Option<String>,
     /// A special feature of the ground (an altar, a faint rune, a statue; spec §6): arriving
-    /// on it, or beside it if it is not walkable, says so (`world/feature.rs`).
+    /// on it, or beside it if it is not walkable, says so (`world/fixtures/feature.rs`).
     pub announce: bool,
     pub glyph: char,
     /// Presentation-only: glyphs the map draws in place of `glyph`, one per cell
@@ -247,9 +250,13 @@ pub struct TerrainDef {
     /// kick breaks it against as digging would ([`crate::door::kick_breaks`]); what it held is
     /// per-cell state (`LevelState::statues`). `None`: no statue.
     pub statue: Option<u8>,
-    /// Presentation-only: a gravestone (spec §7 "Graves"), which its level's `graves` cut an
-    /// inscription in as the level is made (`world/graves.rs`).
+    /// Presentation-only: a grave (spec §7 "Graves"), whose inscription (its legend's
+    /// `epitaph`, or one of the run's dead laid there) look mode reads (`world/fixtures/graves.rs`).
     pub grave: bool,
+    /// Presentation-only: a place for one of the run's dead (spec §7 "Graves";
+    /// `content/burial.rs`), and the grave it becomes when one is laid there: the same in every
+    /// rule (checked at load).
+    pub burial: Option<TerrainId>,
     pub stairs: Option<StairsDir>,
     /// Light this terrain emits, if any.
     pub light: Option<LightId>,
@@ -293,7 +300,7 @@ pub struct TerrainDef {
     /// open ground into walls.
     pub face: Option<TerrainId>,
     /// Gameplay: deep water, which nothing walks but a trained swimmer may dive into
-    /// (`world/swim.rs`); `walkable` is false, which keeps it out of everything else.
+    /// (`world/levels/swim.rs`); `walkable` is false, which keeps it out of everything else.
     pub swim: bool,
     /// Gameplay: water that freezes, and how ([`crate::ice`]).
     pub freeze: Option<Freeze>,

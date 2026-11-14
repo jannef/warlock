@@ -5,7 +5,7 @@ The [ascetic](class-ascetic.md) gets ki, full, with
 [Willpower](stats.md#stat-willpower) [modifier](stats.md#modifiers), plus a point per 6
 [levels](experience.md#levels), and never less than 3. For example, Willpower 12 holds 5 at level
 1, Willpower 14 holds 10 at level 25, and Willpower 16 holds 17 at level 60.
-[Inner calm](talents.md#talent-inner-calm) adds 2.
+[Inner calm](talents-body.md#talent-inner-calm) adds 2.
 
 Ki comes back a point every 3 base turns (18 seconds), resting too.
 [Perfect self](class-ascetic.md#talent-perfect-self) (level 60) brings it back twice as fast, a point
@@ -24,5 +24,7 @@ every 9 seconds. What spends it:
 
 ## The talent on it
 
-**[Inner calm](talents.md#talent-inner-calm)** (Finesse; [ascetic](class-ascetic.md), level 18):
+**[Inner calm](talents-body.md#talent-inner-calm)** (Finesse; [ascetic](class-ascetic.md), level 18):
 ki holds 2 more and comes back half again as fast, a point every 12 seconds instead of every 18. Inner calm changes nothing until something gives the [ascetic](class-ascetic.md) [ki](resources.md#resource-ki).
+
+See also: [Abilities](abilities.md) and [Fighting styles](fighting-styles.md).

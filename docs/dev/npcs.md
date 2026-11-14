@@ -20,7 +20,7 @@ are checked as the quests load, `content/quest.rs::parse`; #1446: Kerensa's and 
 the bound crystal guardian). The loader checks only what resolves and what the code needs (#1205): ids once and
 without `:` or whitespace (`ask:E:ID`), at least one line to rotate and to mutter, `silent` with
 `speaks_to`; no length, count, or style limits (the dialogue screen asks topics past nine by the
-arrow keys and cuts what overflows). `world/talk.rs` is the one place talk happens: `World::chat` (`Action::Chat`, cost
+arrow keys and cuts what overflows). `world/people/talk.rs` is the one place talk happens: `World::chat` (`Action::Chat`, cost
 `chat`), `World::ask` (`Action::Ask`, no time), `World::topics` (the one source of what an NPC can
 be asked about: quests, #148, add their topics there and answer them in `ask`; services follow
 the topics with `TopicView::price`), `rotation` (each
@@ -35,8 +35,8 @@ its energy; it takes its old cell as its `Mind::post` and
 route) unless `World::refusal` says why not (the type's `budge`: `never`, or `off_post` while its
 mind is calm, ready for shopkeepers, #145; it cannot move; or it is two sizes or more larger:
 sizes are listed smallest first). A player trained in Escape artist is not refused for the
-`budge` (`World::wriggle`, `world/wriggle.rs`, #1032): an automatic check instead, Dexterity plus
-the `escape` points against 11 plus the creature's Willpower modifier; never a shop's keeper (`Shop::keeper`, the refusal stands untouched); tests `wriggle_tests.rs`. What an actor is called in messages comes from
+`budge` (`World::wriggle`, `world/levels/wriggle.rs`, #1032): an automatic check instead, Dexterity plus
+the `escape` points against 11 (`[wriggle]` in `data/rules/tuning.toml`) plus the creature's Willpower modifier; never a shop's keeper (`Shop::keeper`, the refusal stands untouched); tests `wriggle_tests.rs`. What an actor is called in messages comes from
 `World::called` ("the gardener"): named shopkeepers go there, and so do unique characters with a
 proper name (an npc dialogue's `name`, `Dialogue::name`, #336: "Sister Hild", no article; also
 `Content::speaker_name`/`speaker_called` for quest texts and the wiki). Presentation knows a seen
@@ -47,7 +47,7 @@ the name. An escort quest's character, chatted with while the quest is active, j
 greeting them (`World::escort_joins`, the one line in `chat`; `docs/dev/quests.md`). Creatures that talk and fight no one
 never stop a rest by coming into view (`World::disturbs_rest`).
 
-**Services** (#329, the campaign design §6.1; spec §8 "Dialogue"): `world/service.rs`.
+**Services** (#329, the campaign design §6.1; spec §8 "Dialogue"): `world/people/service.rs`.
 `World::ask` hands a topic id it is not a quest's to `World::ask_service` before the dialogue's
 topics; it checks there is something to do (`prayer_cures`: a status or disease, showing or not,
 whose `cured_by` lists `service::PRAYER`; or stat damage or drained points, with no disease showing for a mend),
@@ -62,10 +62,10 @@ or, for `identify` (#432), `World::identify` on each of `World::unidentified` (t
 lists such a service "(N gold each)" and, with things to pay for, asks first in the one dialog
 with the total (`DialogueScreen::pay_dialog`). The reply goes through `World::answer`, so the
 dialogue screen reopens on the service. Refusals take no time; a service done takes `chat`'s.
-Nothing is saved that was not before, and no stream is drawn. Tests: `world/service_tests.rs`
+Nothing is saved that was not before, and no stream is drawn. Tests: `world/people/service_tests.rs`
 (a fixture sister on the built-in content; prices, refusals, Pious, the replay and the save),
-`world/identify_service_tests.rs` (a fixture appraiser: the count, the refusals, magic and
-scroll types identified, the replay and the save), Wulfrun's in `world/ceaptun_tests.rs`,
+`world/people/identify_service_tests.rs` (a fixture appraiser: the count, the refusals, magic and
+scroll types identified, the replay and the save), Wulfrun's in `world/campaigns/ceaptun_tests.rs`,
 the screen's row in `ui/dialogue_screen.rs`; the wiki's table is `xtask/src/wiki/services.rs`.
 
 **Training** (#1391; the reusable kind for every teacher, #1394's smith next): `does =
@@ -86,26 +86,26 @@ npc` (`content/level.rs::parse_shops` sets `CreatureSpawn::npc` on the keeper it
 checking the npc has a dialogue), so he speaks his dialogue instead of the shopkeepers' while
 `World::called` still names him by the shop's `keeper`. Metalcraft for 2000 gold, at 5; he is in
 `data/towns/ceaptun.toml`'s `people`, so goodwill takes its share. Tests:
-`world/ceaptun_tests.rs` (`eadric_the_smith_teaches_metalcraft_for_two_thousand_gold`, short of
+`world/campaigns/ceaptun_tests.rs` (`eadric_the_smith_teaches_metalcraft_for_two_thousand_gold`, short of
 gold and goodwill), `ui/screen_snapshots.rs` (`dialogue-smith`).
 **Ceolred** (#1443; `npc = "ceolred"`, the same file, Cockney), Eadric's apprentice, is no teacher
 and no keeper: a `villager` placed by the level's legend (`P`, beside the smithy's fire) with
 `npc`, rotation lines and mutters only, one line per notable material in words, never numbers
 (hard or soft, light or heavy, rust, what a material's `binding` and `work` mean for magic and
 the anvil; lines at most 72 characters). He is not in `data/towns/ceaptun.toml`'s `people` (he
-gives no quests). Test: `world/ceaptun_tests.rs`
+gives no quests). Test: `world/campaigns/ceaptun_tests.rs`
 (`ceolred_the_apprentice_stands_in_the_smithy_at_peace_and_keeps_no_shop`).
 The third is **Old Tregear** (#1434; `npc = "tregear"`, `campaigns/ascmearc/data/dialogue/
 gimmwic.toml`, in the deep gnomes' Cornish), on Gimmwīc's cutting floor: Jewelcraft for 1500
 gold, at 5. Gimmwīc has no `data/towns/` entry, so no goodwill moves its prices.
-Tests: `world/train_service_tests.rs` (a fixture teacher: listed while untrained, bought, gone,
+Tests: `world/people/train_service_tests.rs` (a fixture teacher: listed while untrained, bought, gone,
 refusals, digging before and after, the replay and the save, the load checks),
 `mapgen/fyrdelf_tests.rs::alberich_keeps_his_delving_on_the_fifth_floor`.
 
 **Goodwill** (#1247; spec §8 "Dialogue": "Goodwill"): `content/town.rs` (`TownDef`, a
 campaign's `data/towns/`, one file per town: `id`, `name`, `people`, `goodwill` in percent,
 `told`; well-formedness only, #1205: a name in `people` that speaks no dialogue just matches
-nobody) and `world/goodwill.rs`. `Content::town_of(dialogue)` is the town whose `people` name
+nobody) and `world/people/goodwill.rs`. `Content::town_of(dialogue)` is the town whose `people` name
 the speaker (an npc id, or a creature id for a type's dialogue). `World::goodwill(town)` sums
 `QuestRecord::completed` over the quests whose `giver` is one of its people: derived, never
 saved, so the save and the state hash are unchanged. `World::goodwill_off(dialogue)` is that
@@ -114,11 +114,11 @@ haggled price last (`goodwill::discounted`: rounded up, so free only at 100%). `
 with a price of 0 hands nothing over and says and trains nothing; the dialogue screen lists
 such a service "(free)" and asks no pay dialog. `World::complete_saying` calls
 `tell_goodwill(giver)` after "Quest complete" (the one line in `quest.rs`). Tests:
-`world/goodwill_tests.rs` (Cēaptūn: the rounding, a quest done for the reeve, every completion
+`world/people/goodwill_tests.rs` (Cēaptūn: the rounding, a quest done for the reeve, every completion
 and the Gilde's counting but Holtwīc's not, the cap and a free cure), the screen's row in
 `ui/dialogue_screen.rs`; the wiki's table is `xtask/src/wiki/services.rs::towns`.
 
-**The aristocrat's servant** (#1405; spec §8 "Class abilities": Stipend): `world/stipend.rs`.
+**The aristocrat's servant** (#1405; spec §8 "Class abilities": Stipend): `world/classes/stipend.rs`.
 A town's class helpers, `[[town.servant]]` (`content/town.rs::TownServant`: `talent`, the class
 ability whose holder has them, `level`, `at`, `creature` by gender, `speech` npc ids by race id
 with a `default`; the loader checks the creatures, the `default`, and that each npc's
@@ -136,10 +136,10 @@ with the `handover` line, or says a one-liner (the rotation, `talk.said` counted
 replaced by the gender's word; it takes `chat`'s time and trains the chat. Handed over: gold
 coins then the finds into the pack, each stack that would leave the player Overloaded set down
 on their cell ("Too much to carry, set down at your feet: …"; `World::receive`, which the
-partner's withdrawals share). Tests: `world/stipend_tests.rs`.
+partner's withdrawals share). Tests: `world/classes/stipend_tests.rs`.
 
-**The merchant's business partner** (#1407; spec §8 "Class abilities": Invest): `world/invest.rs`,
-`content/invest.rs` (`data/invest.toml`: `fees`, `week` (`base` and `dice` in basis points),
+**The merchant's business partner** (#1407; spec §8 "Class abilities": Invest): `world/classes/invest.rs`,
+`content/invest.rs` (`data/rules/invest.toml`: `fees`, `week` (`base` and `dice` in basis points),
 `bonus.quest` per quest of the partner's town, `steps`; shared, so it names no campaign's quest).
 Cēaptūn's second class helper (`talent = "invest"`, `bonus = { fire_deep = 6 }`: a helper's own
 per-quest bonus, `TownServant::bonus`, quest ids checked) keeps the corner desk of
@@ -159,12 +159,12 @@ the time passed. `World::invest_bonus` is derived from the quest records (distin
 completed whose giver's town keeps a helper for a talent with `FortuneEffect::Invest`, plus
 the partner entry's `bonus`). `World::partner_dies` (one line in `fight.rs::dies`) zeroes the stake. The
 `progress` dump's row: `invest 98.24 gold, week 74260, bonus 0 bp`. Tests:
-`world/invest_tests.rs` (the class and the partner by race, the fees and topics, refusals, a long
+`world/classes/invest_tests.rs` (the class and the partner by race, the fees and topics, refusals, a long
 skip against week-by-week and a rest across a week's turn, the quests' bonus, the death, the
 yearly return by simulation, a save and a replay), `content/invest.rs`.
 
 **The craftsperson's patron** (#1421; spec §8 "Class abilities": Patron; the craftsperson design
-§7.4): `world/patron.rs`, `content/patron.rs` (`data/patron.toml`: `pays`, the percent of the
+§7.4): `world/crafting/patron.rs`, `content/patron.rs` (`data/rules/patron.toml`: `pays`, the percent of the
 work's worth paid, and `bonus`, more for a piece bearing the player's maker's mark, read once
 Maker's mark lands; shared). Cēaptūn's third class helper (`talent = "patron"`) lodges in the
 Gæsthūs's north-east corner (50, 23): `patron` (`campaigns/ascmearc/data/creatures/`), speaking
@@ -191,13 +191,13 @@ left out when the table gave stock; never a gem) through `World::receive`; an em
 (`PerceptionView::commission`, one line in `PerceptionView::quests`, after the active quests:
 `QuestKind::Commission`, never read from a file; no `QuestRecord`, so it counts as no quest).
 `World::patron_dies` (one line in `fight.rs::dies`) drops the open one. The `progress` dump's
-row: `patron 2 taken, open long_sword`. Tests: `world/patron_tests.rs`, `content/patron.rs`.
+row: `patron 2 taken, open long_sword`. Tests: `world/crafting/patron_tests.rs`, `content/patron.rs`.
 
 **A trader's offer** (#808, docs/design/overworld-encounters.md §15 Q7; spec §8 "Dialogue"):
 `content/offer.rs` (`TradeOffer`, a dialogue's `[dialogue.offer]`: `id`, `name`, `reply` said on
 a sale, `sold` said after, `level = { bonus, least }`, `affixes` as `[count, weight]` pairs,
 `price = { affix, unique }`, `uniques = { chance, items }` with the chance in basis points),
-`world/wares.rs`. Its id shares the topic namespace; load checks (only what resolves and what
+`world/people/wares.rs`. Its id shares the topic namespace; load checks (only what resolves and what
 the code needs, #1205): an id without `:` or whitespace, not a topic's or service's, the shops'
 currency, `least` at most `MAX_ITEM_LEVEL` (the draw clamps from it to the top), counts at most
 6 (an item's affixes), each unique known, of the dialogue's campaign or shared (no other content places them: the
@@ -220,14 +220,14 @@ dump layer shows `wares ITEM for N gold` / `wares sold (N gold)` and the player'
 offered`. The app: `DialogueScreen` opens the one dialog for a topic with a `ware`
 (`offer_dialog`: the speaker's name, "ITEM. N gold, take it or leave it.", "Buy it" sending the
 ask and "Leave it" closing it; short of gold, " You have only N." and "Leave it" alone).
-Leaving it is nothing. Tests: `world/wares_tests.rs` (determinism, the favoured roll's rarity,
+Leaving it is nothing. Tests: `world/people/wares_tests.rs` (determinism, the favoured roll's rarity,
 count, level, and price, buy, sold, can't pay, the uniques by a certain chance each once then a
 find, the three's slots, the load checks, a replay and a save),
 `ui/dialogue_screen.rs::an_offer_asks_buy_it_or_leave_it` (snapshots `offer-buy`,
 `offer-short`); the wiki's `npcs.md` "The pedlar's offer" and the uniques table's offer column
 (`xtask/src/wiki/uniques.rs::offered_by`).
 
-**Rumoured ways** (the owner's request of 2026-10-27; spec §8 "Dialogue"): `world/rumour.rs`.
+**Rumoured ways** (the owner's request of 2026-10-27; spec §8 "Dialogue"): `world/people/rumour.rs`.
 A topic's optional `route` (`Topic::route`, waypoints `[x, y]` on the campaign's overworld;
 `Topic::route_cells` joins them with `Pos::line_between`) is checked when content loads
 (`Content::check_topic_routes`, one line in `Content::load`: a campaign's dialogue with an
@@ -241,7 +241,7 @@ read or written (no objects, traps, or stairs links; no time; no stream; no new 
 Why waypoints and not a computed path: the way is the speaker's words, drawn by hand along the
 roads, and checking it is a load-time walk over its cells; a pathfinder would need its own costs
 and could drift off the road with any map edit. Godgifu's five topics carry routes from the town
-cell (18, 28). Tests: `world/rumour_tests.rs` (marks after the ask and not before, a corridor and
+cell (18, 28). Tests: `world/people/rumour_tests.rs` (marks after the ask and not before, a corridor and
 not the map, idempotent, no time, hidden locations stay hidden while Cealdhlāw shows, the
 `memory` and `locations` layers back on the map, a replay, the validation).
 
@@ -251,9 +251,9 @@ dialogue's campaign, or, outside every campaign, one outside every campaign:
 `Content::check_topic_callings`, one line in `Content::load` after the callings) and `departs`
 (a creature type's dialogue only, checked in `dialogue.rs`'s parse). `World::topics` lists such
 a topic only while `World::calling_open`; `World::ask` hands it to `World::ask_calling`
-(`world/calling.rs`), which says the reply (through `World::answer`, or as a message only when
+(`world/classes/calling.rs`), which says the reply (through `World::answer`, or as a message only when
 it departs, so the screen does not reopen on one gone), makes the call (`World::call`), then
-`World::departs` (`world/ally.rs`), and takes a chat's time; not open, it is "knows nothing
+`World::departs` (`world/allies/ally.rs`), and takes a chat's time; not open, it is "knows nothing
 about that" and no time. The level-up's news ("Welcome to level 31.") is said as the action
 ends, after the departure line. In content: the Strange Spirit's oath
 (`campaigns/ascmearc/data/dialogue/spirit.toml`, `calls = "hunter"`, `departs = true`, with
@@ -263,8 +263,8 @@ range); outside it `listens` says `silent` (so `chat` and `ask` refuse alike) an
 `World::topics` is empty. Look mode says ", who waits" after a creature whose dialogue's only
 topics are callings', with no service or offer (`ui/look.rs::waits`: "a strange spirit
 (unhurt), who waits"). Nothing new is saved; nothing is drawn. Tests:
-`world/strange_spirit_tests.rs` (the spirit's silence and its topic, the oath asked, a replay
-and a save, the hermit's topic offered to a full bard only), `world/calling_tests.rs`.
+`world/campaigns/strange_spirit_tests.rs` (the spirit's silence and its topic, the oath asked, a replay
+and a save, the hermit's topic offered to a full bard only), `world/classes/calling_tests.rs`.
 
 ## Speech by race and station (#1392)
 

@@ -1,0 +1,702 @@
+//! The campaign's creature waves (docs/design/campaign.md §10): the shipped types load where
+//! their data says, with the factions they fight in and the gear they carry. Each wave adds its
+//! types to [`WAVES`].
+
+use crate::content::Stance;
+use crate::gear;
+use crate::rng::Rng;
+use crate::test_support::CONTENT;
+
+/// Each wave's types, with the campaign that owns each (`None`: shared, `data/creatures/`).
+const WAVES: &[(&str, Option<&str>)] = &[
+    // The barrow wave (Cealdhlāw, #333).
+    ("grave_worm", None),
+    ("barrow_spider", None),
+    ("goblin", None),
+    ("goblin_archer", None),
+    ("skeleton", None),
+    ("zombie", None),
+    ("giant_centipede", None),
+    ("barrow_ghoul", None),
+    ("goblin_chief", None),
+    ("barrow_wight", Some("ascmearc")),
+    // The fen wave (Fennmynster, #334).
+    ("giant_leech", None),
+    ("giant_frog", None),
+    ("drowned", None),
+    ("crocodile", None),
+    ("cultist", Some("ascmearc")),
+    ("will_o_wisp", None),
+    ("ghost", None),
+    ("mud_golem", None),
+    ("cult_priest", Some("ascmearc")),
+    ("marsh_troll", None),
+    ("bog_hag", Some("ascmearc")),
+    // The delf wave (Fyrdelf, #335).
+    ("ember_beetle", None),
+    ("duergar_miner", None),
+    ("duergar_warrior", None),
+    ("ogre", None),
+    ("fire_salamander", None),
+    ("troll", None),
+    ("duergar_smith", None),
+    ("magma_crawler", None),
+    ("ash_wraith", None),
+    ("basilisk", None),
+    ("cinder_elemental", None),
+    ("fire_drake", Some("ascmearc")),
+    // The outlaws (the adventurers' guild, #424): footpads and the four wanted criminals.
+    ("footpad", Some("ascmearc")),
+    ("footpad_archer", Some("ascmearc")),
+    ("sallow", Some("ascmearc")),
+    ("wystan", Some("ascmearc")),
+    ("osrick", Some("ascmearc")),
+    ("herrick", Some("ascmearc")),
+    // The goblin tribe's second tier (#454): the hobgoblins, all shared.
+    ("hobgoblin", None),
+    ("hobgoblin_archer", None),
+    ("hobgoblin_legionnaire", None),
+    ("hobgoblin_warcaster", None),
+    ("hobgoblin_sergeant", None),
+    ("hobgoblin_captain", None),
+    ("hobgoblin_warlord", None),
+    // The troll tribe (#456): levels 15 to 42, all shared.
+    ("hill_troll", None),
+    ("forest_troll", None),
+    ("troll_shaman", None),
+    ("ice_troll", None),
+    ("stone_troll", None),
+    ("two_headed_troll", None),
+    ("fire_troll", None),
+    ("troll_chieftain", None),
+    ("elder_troll", None),
+    // The drow (#519): levels 14 to 50, all shared.
+    ("drow_warrior", None),
+    ("drow_crossbowman", None),
+    ("drow_stalker", None),
+    ("drow_mage", None),
+    ("drow_priestess", None),
+    ("drow_blademaster", None),
+    ("drow_assassin", None),
+    ("drow_arbalester", None),
+    ("drow_captain", None),
+    ("drow_archmage", None),
+    ("drow_high_priestess", None),
+    ("drow_matron", None),
+    // The duergar (#518): levels 8 to 40 beside the delf wave's three, all shared.
+    ("duergar_slinger", None),
+    ("duergar_crossbowman", None),
+    ("duergar_veteran", None),
+    ("duergar_priest", None),
+    ("duergar_hulk", None),
+    ("duergar_spider_rider", None),
+    ("duergar_mindbreaker", None),
+    ("duergar_thane", None),
+    ("duergar_king", None),
+    // The undead roster, batch 1 (#384): levels 1 to 10, all shared.
+    ("crawling_hand", None),
+    ("skeletal_rat", None),
+    ("kobold_zombie", None),
+    ("corpse_candle", None),
+    ("skeleton_archer", None),
+    ("skeletal_wolf", None),
+    ("poltergeist", None),
+    ("ghast", None),
+    ("skeleton_warrior", None),
+    ("shadow", None),
+    ("bog_body", None),
+    ("ogre_zombie", None),
+    ("mummy", None),
+    ("grave_hound", None),
+    // The undead roster, batch 2 (#385): levels 11 to 20, all shared.
+    ("wraith", None),
+    ("fen_ghoul", None),
+    ("draugr", None),
+    ("burning_skull", None),
+    ("barghest", None),
+    ("knocker", None),
+    ("spectre", None),
+    ("charred_dead", None),
+    ("duergar_skeleton", None),
+    ("vampire_spawn", None),
+    ("hand_of_glory", None),
+    ("gallows_dead", None),
+    ("rotting_troll", None),
+    ("gibbering_shade", None),
+    ("bone_wyvern", None),
+    ("revenant", None),
+    ("fetch", None),
+    ("mummy_priest", None),
+    // The undead roster, batch 3 (#386): levels 21 to 30, all shared.
+    ("bodach", None),
+    ("grave_knight", None),
+    ("charnel_heap", None),
+    ("banshee", None),
+    ("wight_lord", None),
+    ("vampire", None),
+    ("wormhost", None),
+    ("bone_drake", None),
+    ("dread_wraith", None),
+    ("headless_knight", None),
+    ("lich", None),
+    ("rotting_drake", None),
+    // The undead roster, batch 4 (#387): levels 31 to 40, all shared.
+    ("greater_shadow", None),
+    ("ghoul_lord", None),
+    ("black_shuck", None),
+    ("draugr_lord", None),
+    ("nosferatu", None),
+    ("mummy_lord", None),
+    ("screaming_skull", None),
+    ("church_grim", None),
+    ("white_lady", None),
+    ("bone_colossus", None),
+    // The mimics (#616): a generated family, one a level, shared.
+    ("mimic_1", None),
+    ("mimic_60", None),
+    // The undead roster, batch 5 (#388): levels 41 to 55, all shared.
+    ("wraith_lord", None),
+    ("barrow_king", None),
+    ("sluagh", None),
+    ("ghoul_king", None),
+    ("death_knight", None),
+    ("vampire_lord", None),
+    ("nightganger", None),
+    ("wormlord", None),
+    ("washer_at_the_ford", None),
+    ("night_mare", None),
+    ("bone_dragon", None),
+    ("drowned_king", None),
+    ("rotting_dragon", None),
+    ("ghost_lord", None),
+    ("archlich", None),
+    ("hound_of_the_hunt", None),
+    // The undead roster, batch 6 (#389): levels 56 to 70, all shared.
+    ("mummy_king", None),
+    ("wild_huntsman", None),
+    ("elder_vampire", None),
+    ("dread_lord", None),
+    ("deathshade", None),
+    ("nightwing", None),
+    ("dread_wyrm", None),
+    ("nightworm", None),
+    ("lich_drake", None),
+    ("ankou", None),
+    ("deathless_king", None),
+    ("charnel_titan", None),
+    ("ghost_dragon", None),
+    ("eldest_vampire", None),
+    ("demilich", None),
+];
+
+#[test]
+fn the_waves_load_where_they_belong() {
+    for &(id, campaign) in WAVES {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        assert_eq!(def.campaign.as_deref(), campaign, "{id}");
+    }
+}
+
+#[test]
+fn goblins_and_the_undead_hunt_the_player_and_leave_the_kobolds_and_each_other_be() {
+    let stance = |a: &str, b: &str| {
+        let id = |n: &str| CONTENT.creature_id(n).expect(n);
+        CONTENT.stance(id(a), id(b))
+    };
+    for (a, b, want) in [
+        ("goblin", "player", Stance::Hostile),
+        ("goblin", "kobold", Stance::Neutral),
+        ("goblin", "rat", Stance::Neutral),
+        ("goblin", "goblin_chief", Stance::Neutral),
+        // The hobgoblins (#454) are of the goblins' faction; the kobolds and the duergar are their
+        // foes only in lore (#612).
+        ("hobgoblin", "goblin", Stance::Neutral),
+        ("hobgoblin_captain", "ogre", Stance::Neutral),
+        ("hobgoblin", "kobold", Stance::Neutral),
+        ("hobgoblin_legionnaire", "duergar_warrior", Stance::Neutral),
+        ("skeleton", "player", Stance::Hostile),
+        ("zombie", "kobold", Stance::Neutral),
+        ("barrow_ghoul", "goblin", Stance::Neutral),
+        ("barrow_wight", "skeleton", Stance::Neutral),
+        // The undead leave the vermin of their barrows alone.
+        ("zombie", "grave_worm", Stance::Neutral),
+        ("barrow_spider", "player", Stance::Hostile),
+    ] {
+        assert_eq!(stance(a, b), want, "{a} and {b}");
+    }
+}
+
+#[test]
+fn the_barrow_dead_resist_by_their_nature() {
+    let resist = |id: &str, kind: &str| {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        let kind = CONTENT.damage_type_id(kind).expect(kind);
+        (def.resist.iter())
+            .find(|(k, _)| *k == kind)
+            .map_or(0, |(_, r)| *r)
+    };
+    assert_eq!(resist("skeleton", "piercing"), 50);
+    assert_eq!(resist("skeleton", "bludgeoning"), -50);
+    assert_eq!(resist("barrow_wight", "cold"), 50);
+    for id in ["skeleton", "barrow_wight"] {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        assert!(!def.corpse && def.blood.is_none(), "{id}");
+    }
+}
+
+/// Over many seeds, what each humanoid of the waves carries: its racial weapon (or another
+/// weapon) is wielded whenever carried, armour worn, and an archer with a bow holds arrows ready
+/// nearly always.
+#[test]
+fn the_barrow_humanoids_wield_their_weapons() {
+    for id in [
+        "goblin",
+        "goblin_archer",
+        "goblin_chief",
+        "skeleton",
+        "barrow_wight",
+        "skeleton_archer",
+        "skeleton_warrior",
+        "duergar_skeleton",
+        "grave_knight",
+        "wight_lord",
+        "headless_knight",
+        "draugr_lord",
+    ] {
+        let creature = CONTENT.creature_id(id).expect(id);
+        let mut armed = 0;
+        let mut quivers = 0;
+        for seed in 0..200 {
+            let pack = gear::roll(&CONTENT, &mut Rng::gear(seed, "test"), creature, 3);
+            let has =
+                |object: &str| (pack.items.iter()).any(|s| CONTENT.object(s.object).id == object);
+            if has("short_bow") && has("arrow") {
+                quivers += 1;
+            }
+            for (i, stack) in pack.items.iter().enumerate() {
+                let object = CONTENT.object(stack.object);
+                if object.slot.is_some() {
+                    assert!(
+                        pack.equipment.holds(i),
+                        "{id} {seed}: {} not held",
+                        object.id
+                    );
+                }
+                if object.attack.is_some() || object.launches.is_some() {
+                    armed += 1;
+                }
+            }
+        }
+        // The goblins' racial weapons come nine times in ten; the dead are armed less often.
+        let least = match id {
+            "skeleton" => 40,
+            "barrow_wight" => 90,
+            "skeleton_warrior" | "duergar_skeleton" | "wight_lord" => 140,
+            _ => 160,
+        };
+        assert!(armed >= least, "{id}: {armed} of 200 armed");
+        if id == "goblin_archer" || id == "skeleton_archer" {
+            assert!(quivers >= 150, "{quivers} of 200 with bow and arrows");
+        }
+    }
+}
+
+#[test]
+fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
+    use crate::content::Affliction;
+    use crate::stats::Stat;
+    // #383 "Mechanics values": wall Defence 2 + level ÷ 10, and the ghost 2.
+    for id in [
+        "ghost",
+        "corpse_candle",
+        "poltergeist",
+        "shadow",
+        "wraith",
+        "knocker",
+        "spectre",
+        "gibbering_shade",
+        "fetch",
+        "banshee",
+        "dread_wraith",
+        "greater_shadow",
+        "white_lady",
+        "wraith_lord",
+        "sluagh",
+        "washer_at_the_ford",
+        "night_mare",
+        "ghost_lord",
+        "deathshade",
+        "ankou",
+        "ghost_dragon",
+    ] {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        let wall = def.incorporeal.as_ref().map(|i| i.wall_defence);
+        assert_eq!(wall, Some(2 + i32::from(def.level) / 10), "{id}");
+    }
+    // Drains: difficulty 12 + level ÷ 5, checked by willpower but Toughness's by toughness.
+    for (id, stat, check, difficulty, want) in [
+        ("shadow", Stat::Strength, Stat::Willpower, 13, 10),
+        ("wraith", Stat::Toughness, Stat::Toughness, 14, 10),
+        // The spectre's rides its gaze (#1125): the gaze's chance.
+        ("spectre", Stat::Willpower, Stat::Willpower, 14, 40),
+        ("vampire_spawn", Stat::Toughness, Stat::Toughness, 15, 10),
+        (
+            "gibbering_shade",
+            Stat::Intelligence,
+            Stat::Willpower,
+            15,
+            10,
+        ),
+        ("bodach", Stat::Toughness, Stat::Toughness, 16, 5),
+        ("banshee", Stat::Presence, Stat::Willpower, 16, 10),
+        ("wight_lord", Stat::Toughness, Stat::Toughness, 16, 10),
+        ("vampire", Stat::Toughness, Stat::Toughness, 17, 15),
+        ("dread_wraith", Stat::Toughness, Stat::Toughness, 17, 15),
+        ("lich", Stat::Intelligence, Stat::Willpower, 18, 10),
+        ("greater_shadow", Stat::Strength, Stat::Willpower, 18, 15),
+        ("nosferatu", Stat::Toughness, Stat::Toughness, 19, 15),
+        ("white_lady", Stat::Presence, Stat::Willpower, 19, 10),
+    ] {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        let touch = def.attack.as_ref().expect("an attack");
+        let drain = (touch.on_hit.iter()).find_map(|h| match h.what {
+            Affliction::Drain(d) => Some((d, h.chance)),
+            _ => None,
+        });
+        let gazed = (def.gaze.iter()).find_map(|g| {
+            (g.riders.iter()).find_map(|h| match h.what {
+                Affliction::Drain(d) => Some((d, g.chance)),
+                _ => None,
+            })
+        });
+        let (drain, chance) = drain.or(gazed).unwrap_or_else(|| panic!("{id}: a drain"));
+        assert_eq!(drain.stat, Some(stat), "{id}");
+        assert_eq!(
+            (drain.points, drain.check, drain.difficulty, chance),
+            (1, check, difficulty, want),
+            "{id}"
+        );
+    }
+    // Batches 5 (#388) and 6 (#389): 2 points (3 for the apexes), difficulty 12 + level / 5.
+    for (id, stat, check, points, difficulty, want) in [
+        ("wraith_lord", Stat::Toughness, Stat::Toughness, 2, 20, 10),
+        ("barrow_king", Stat::Toughness, Stat::Toughness, 2, 20, 10),
+        ("vampire_lord", Stat::Toughness, Stat::Toughness, 2, 21, 15),
+        ("nightganger", Stat::Toughness, Stat::Toughness, 2, 21, 10),
+        (
+            "washer_at_the_ford",
+            Stat::Presence,
+            Stat::Willpower,
+            2,
+            21,
+            10,
+        ),
+        ("night_mare", Stat::Willpower, Stat::Willpower, 2, 21, 10),
+        ("ghost_lord", Stat::Willpower, Stat::Willpower, 2, 22, 10),
+        ("archlich", Stat::Intelligence, Stat::Willpower, 2, 22, 10),
+        ("elder_vampire", Stat::Toughness, Stat::Toughness, 2, 23, 15),
+        ("deathshade", Stat::Strength, Stat::Willpower, 2, 24, 15),
+        ("nightwing", Stat::Toughness, Stat::Toughness, 2, 24, 10),
+        ("nightworm", Stat::Toughness, Stat::Toughness, 2, 24, 15),
+        ("lich_drake", Stat::Intelligence, Stat::Willpower, 2, 24, 10),
+        ("ankou", Stat::Toughness, Stat::Toughness, 2, 25, 15),
+        (
+            "deathless_king",
+            Stat::Willpower,
+            Stat::Willpower,
+            2,
+            25,
+            15,
+        ),
+        ("ghost_dragon", Stat::Toughness, Stat::Toughness, 2, 25, 15),
+        (
+            "eldest_vampire",
+            Stat::Toughness,
+            Stat::Toughness,
+            3,
+            25,
+            15,
+        ),
+        ("demilich", Stat::Intelligence, Stat::Willpower, 3, 26, 15),
+    ] {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        let touch = def.attack.as_ref().expect("an attack");
+        let drain = (touch.on_hit.iter()).find_map(|h| match h.what {
+            Affliction::Drain(d) => Some((d, h.chance)),
+            _ => None,
+        });
+        let (drain, chance) = drain.unwrap_or_else(|| panic!("{id}: a drain"));
+        assert_eq!(drain.stat, Some(stat), "{id}");
+        assert_eq!(
+            (drain.points, drain.check, drain.difficulty, chance),
+            (points, check, difficulty, want),
+            "{id}"
+        );
+    }
+    // Holds (#431): the ghouls' claws, the gallows dead's tongue, and the lich's touch.
+    for (id, chance, difficulty) in [
+        ("ghast", 10, 15),
+        ("fen_ghoul", 10, 15),
+        ("gallows_dead", 20, 17),
+        ("lich", 15, 18),
+        ("ghoul_lord", 15, 18),
+        ("ghoul_king", 20, 20),
+        ("archlich", 20, 22),
+        ("nightworm", 15, 24),
+    ] {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        let attack = def.attack.as_ref().expect("an attack");
+        let hold = (attack.on_hit.iter()).find_map(|h| match h.what {
+            Affliction::Hold { difficulty, .. } => Some((h.chance, difficulty)),
+            _ => None,
+        });
+        assert_eq!(hold, Some((chance, Some(difficulty))), "{id}");
+    }
+}
+
+#[test]
+fn the_cult_and_the_marsh_hunt_the_player_and_leave_each_other_be() {
+    let stance = |a: &str, b: &str| {
+        let id = |n: &str| CONTENT.creature_id(n).expect(n);
+        CONTENT.stance(id(a), id(b))
+    };
+    for (a, b, want) in [
+        ("giant_leech", "player", Stance::Hostile),
+        ("crocodile", "player", Stance::Hostile),
+        ("bog_hag", "player", Stance::Hostile),
+        ("cultist", "player", Stance::Hostile),
+        ("cultist", "marsh_troll", Stance::Neutral),
+        ("cult_priest", "bog_hag", Stance::Neutral),
+        ("cultist", "cult_priest", Stance::Neutral),
+        ("cultist", "drowned", Stance::Neutral),
+        ("giant_frog", "bog_hag", Stance::Neutral),
+        ("will_o_wisp", "mud_golem", Stance::Neutral),
+        // The fen's dead are the barrows' kin: undead, hostile to the player alone (#612).
+        ("drowned", "goblin", Stance::Neutral),
+        ("ghost", "skeleton", Stance::Neutral),
+        ("ghost", "crocodile", Stance::Neutral),
+    ] {
+        assert_eq!(stance(a, b), want, "{a} and {b}");
+    }
+}
+
+#[test]
+fn the_duergar_hunt_the_player_and_leave_the_goblins_kin_and_the_fire_be() {
+    let stance = |a: &str, b: &str| {
+        let id = |n: &str| CONTENT.creature_id(n).expect(n);
+        CONTENT.stance(id(a), id(b))
+    };
+    for (a, b, want) in [
+        ("duergar_miner", "player", Stance::Hostile),
+        ("duergar_warrior", "ogre", Stance::Neutral),
+        ("duergar_smith", "troll", Stance::Neutral),
+        ("duergar_warrior", "ash_wraith", Stance::Neutral),
+        ("duergar_miner", "duergar_smith", Stance::Neutral),
+        ("duergar_warrior", "fire_salamander", Stance::Neutral),
+        ("duergar_miner", "kobold", Stance::Neutral),
+        ("fire_drake", "player", Stance::Hostile),
+        ("cinder_elemental", "ember_beetle", Stance::Neutral),
+        ("magma_crawler", "goblin", Stance::Neutral),
+        ("ogre", "player", Stance::Hostile),
+        ("basilisk", "player", Stance::Hostile),
+    ] {
+        assert_eq!(stance(a, b), want, "{a} and {b}");
+    }
+}
+
+#[test]
+fn the_trolls_hunt_the_player_and_leave_every_other_faction_be() {
+    let stance = |a: &str, b: &str| {
+        let id = |n: &str| CONTENT.creature_id(n).expect(n);
+        CONTENT.stance(id(a), id(b))
+    };
+    let troll = CONTENT.factions().id("troll");
+    for id in ["troll", "hill_troll", "troll_shaman", "elder_troll"] {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        assert_eq!(def.faction, troll, "{id} is of the troll tribe");
+    }
+    for (a, b, want) in [
+        ("troll", "player", Stance::Hostile),
+        ("hill_troll", "kobold", Stance::Neutral),
+        ("forest_troll", "rat", Stance::Neutral),
+        ("troll", "duergar_smith", Stance::Neutral),
+        ("ice_troll", "skeleton", Stance::Neutral),
+        ("troll", "rotting_troll", Stance::Neutral),
+        // Every other faction they leave be (#612): the goblins' kin, the fen, and the fire too.
+        ("troll", "goblin", Stance::Neutral),
+        ("hill_troll", "ogre", Stance::Neutral),
+        ("troll", "marsh_troll", Stance::Neutral),
+        ("fire_troll", "cinder_elemental", Stance::Neutral),
+        ("troll_chieftain", "troll_shaman", Stance::Neutral),
+    ] {
+        assert_eq!(stance(a, b), want, "{a} and {b}");
+    }
+}
+
+#[test]
+fn the_fen_dead_and_the_mud_shrug_off_blows() {
+    let def = |id: &str| CONTENT.creature(CONTENT.creature_id(id).expect(id));
+    let resist = |id: &str, kind: &str| {
+        let kind = CONTENT.damage_type_id(kind).expect(kind);
+        (def(id).resist.iter())
+            .find(|(k, _)| *k == kind)
+            .map_or(0, |(_, r)| *r)
+    };
+    for kind in ["slashing", "piercing", "bludgeoning"] {
+        assert_eq!(resist("ghost", kind), 50, "{kind}");
+    }
+    let immune = |id: &str, kind: &str| {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        (def.immune_kinds).contains(&CONTENT.damage_type_id(kind).expect(kind))
+    };
+    assert!(immune("drowned", "poison"));
+    let hide = |id: &str| def(id).natural.as_ref().map(|h| (h.defence, h.protection));
+    assert_eq!(hide("mud_golem"), Some((0, 5)));
+    // Scales are a bony body: level 6 ÷ 6 (#563).
+    assert_eq!(hide("crocodile"), Some((2, 1)));
+    for id in ["ghost", "mud_golem", "will_o_wisp"] {
+        assert!(!def(id).corpse && def(id).blood.is_none(), "{id}");
+    }
+    assert!(def("will_o_wisp").light.is_some());
+    // Only the bog hag comes once a run (of the fen's types).
+    for id in [
+        "giant_leech",
+        "giant_frog",
+        "drowned",
+        "crocodile",
+        "cultist",
+        "will_o_wisp",
+    ] {
+        assert!(!def(id).unique, "{id}");
+    }
+    assert!(def("bog_hag").unique);
+}
+
+/// Over many seeds, the cult's daggers and the hag's staff: wielded whenever carried, and about
+/// as often as their lines say; the cult's scrolls come now and then.
+#[test]
+fn the_cult_bears_its_daggers_and_the_hag_her_staff() {
+    for (id, weapon, least, scrolls_least) in [
+        ("cultist", "dagger", 160, 10),
+        ("cult_priest", "dagger", 160, 50),
+        ("bog_hag", "quarterstaff", 140, 0),
+    ] {
+        let creature = CONTENT.creature_id(id).expect(id);
+        let (mut armed, mut scrolls) = (0, 0);
+        for seed in 0..200 {
+            let pack = gear::roll(&CONTENT, &mut Rng::gear(seed, "test"), creature, 6);
+            for (i, stack) in pack.items.iter().enumerate() {
+                let object = CONTENT.object(stack.object);
+                if object.id == weapon {
+                    assert!(pack.equipment.holds(i), "{id} {seed}: {weapon} not held");
+                    armed += 1;
+                }
+                if object.id.starts_with("scroll_of_") {
+                    scrolls += 1;
+                }
+            }
+        }
+        assert!(armed >= least, "{id}: {armed} of 200 armed");
+        assert!(scrolls >= scrolls_least, "{id}: {scrolls} scrolls");
+    }
+}
+
+#[test]
+fn the_fire_things_shrug_off_fire_and_the_cold_cracks_them() {
+    let resist = |id: &str, kind: &str| {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        let kind = CONTENT.damage_type_id(kind).expect(kind);
+        (def.resist.iter())
+            .find(|(k, _)| *k == kind)
+            .map_or(0, |(_, r)| *r)
+    };
+    assert_eq!(resist("ember_beetle", "fire"), 50);
+    let immune = |id: &str, kind: &str| {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        (def.immune_kinds).contains(&CONTENT.damage_type_id(kind).expect(kind))
+    };
+    for id in ["fire_salamander", "cinder_elemental", "fire_drake"] {
+        assert!(immune(id, "fire"), "{id}");
+    }
+    assert!(resist("magma_crawler", "cold") < 0);
+    assert!(resist("troll", "fire") < 0);
+    assert_eq!(resist("ash_wraith", "cold"), 50);
+    for id in ["magma_crawler", "ash_wraith", "cinder_elemental"] {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        assert!(!def.corpse, "{id}");
+    }
+    let drake = CONTENT.creature(CONTENT.creature_id("fire_drake").expect("drake"));
+    assert!(drake.unique);
+}
+
+/// Over many seeds, the delf's humanoids: the warriors' axes and the smiths' hammers in hand
+/// nine times in ten or more, the ogres' mauls four in five, a miner's pick-axe held as a tool,
+/// and whatever they wear worn.
+#[test]
+fn the_delf_humanoids_wield_their_weapons() {
+    for (id, weapon, least) in [
+        ("duergar_miner", "pick_axe", 160),
+        ("duergar_warrior", "hand_axe", 160),
+        ("duergar_smith", "war_hammer", 175),
+        ("ogre", "maul", 140),
+    ] {
+        let creature = CONTENT.creature_id(id).expect(id);
+        let mut held = 0;
+        for seed in 0..200 {
+            let pack = gear::roll(&CONTENT, &mut Rng::gear(seed, "test"), creature, 10);
+            for (i, stack) in pack.items.iter().enumerate() {
+                let object = CONTENT.object(stack.object);
+                if object.slot.is_some() {
+                    assert!(
+                        pack.equipment.holds(i),
+                        "{id} {seed}: {} not held",
+                        object.id
+                    );
+                }
+                if object.id == weapon {
+                    held += 1;
+                }
+            }
+        }
+        assert!(held >= least, "{id}: {weapon} held {held} of 200");
+    }
+}
+
+/// The creatures of surprise (spec §8 "Surprise and sneak attacks", #686): the eight that
+/// sneak-attack, with their Initiative and, for the drow, a sharp eye for those who would slip
+/// past them; and the two that lurk, the only ones.
+#[test]
+fn the_sneak_attackers_carry_their_craft_and_two_lurk() {
+    let skill = |def: &crate::content::CreatureDef, id: &str| {
+        def.skills
+            .value(CONTENT.skill_id(id).expect(id))
+            .unwrap_or(0)
+    };
+    for (id, sneak, initiative, spot, lurks) in [
+        ("drow_assassin", 160, 100, 40, false),
+        ("drow_stalker", 75, 60, 50, false),
+        ("quickling", 40, 150, 0, false),
+        ("darkling", 30, 50, 0, false),
+        ("meenlock", 30, 30, 0, true),
+        ("redcap", 40, 40, 0, false),
+        ("sluagh", 120, 60, 0, false),
+        ("barrow_spider", 10, 20, 0, true),
+    ] {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        assert_eq!(skill(def, "sneak_attack"), sneak, "{id}");
+        assert_eq!(skill(def, "initiative"), initiative, "{id}");
+        assert_eq!(skill(def, "spot"), spot, "{id}");
+        assert_eq!(def.lurks, lurks, "{id}");
+    }
+    let mut lurkers: Vec<&str> = (CONTENT.creature_defs().iter())
+        .filter(|c| c.lurks)
+        .map(|c| c.id.as_str())
+        .collect();
+    lurkers.sort_unstable();
+    // Āttorcoppe, the second layer boss of Grundlēas (#1118), waits in her web-hall, and
+    // Nihtscinna, the eighth (#1122), in the walls of its warren.
+    assert_eq!(
+        lurkers,
+        ["attorcoppe", "barrow_spider", "meenlock", "nihtscinna"]
+    );
+}

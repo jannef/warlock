@@ -184,9 +184,9 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
     let creatures = causing(content, |what| status_detail(def, status, what)).len();
     let attacks = match creatures {
         0 => None,
-        1 => Some("[a creature's attack](status-effects.md#who-causes-it)".to_string()),
+        1 => Some("[a creature's attack](status-list.md#who-causes-it)".to_string()),
         n => Some(format!(
-            "[the attacks of {n} creatures](status-effects.md#who-causes-it)"
+            "[the attacks of {n} creatures](status-list.md#who-causes-it)"
         )),
     };
     let mut causes = Vec::new();
@@ -715,7 +715,7 @@ fn status_cures(content: &Content, status: usize, def: &StatusDef) -> Vec<String
             out.push(format!("eating {}", object.name));
         }
     }
-    // The means `world/restore.rs` and `world/service.rs` cure by (private there).
+    // The means `world/magic/restore.rs` and `world/people/service.rs` cure by (private there).
     if def.cured_by.iter().any(|c| c == "restoration") {
         out.push("the [scroll of restoration](scrolls.md#the-scroll-of-restoration)".into());
     }

@@ -77,12 +77,15 @@ for good, both score and potential. Some abilities are used from the
 [abilities menu](abilities.md); the rest simply work.
 
 A table may hand out an ordinary talent: the [ranger](class-ranger.md)'s and the
-[thief](class-thief.md)'s [Evasion](talents.md#talent-evasion), the [bard](class-bard.md)'s
-[Fast healer](talents.md#talent-fast-healer), the [druid](class-druid.md)'s
-[Beast-friend](talents.md#talent-beast-friend). If you took that talent already, the level gives
+[thief](class-thief.md)'s [Evasion](talents-body.md#talent-evasion), the [bard](class-bard.md)'s
+[Fast healer](talents-body.md#talent-fast-healer), the [druid](class-druid.md)'s
+[Beast-friend](talents-exploring.md#talent-beast-friend). If you took that talent already, the level gives
 you a talent pick in its place.
 
 Some classes give spells: the priest, druid, wizard, and witch a few, a bard, a paladin, or a
 ranger one or two (see [What your class gives](magic.md#what-your-class-gives) and
 [Casting a spell](spellcasting.md#casting-a-spell)). Some fight from a pool of their own, such as
 the berserker's rage or the thief's openings (see [Resources](resources.md)).
+
+See also: [Races](races.md), [Starting kit](starting-kit.md), and
+[Prestige classes](prestige-classes.md).

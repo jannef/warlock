@@ -110,10 +110,10 @@ lord 5 at 40, the elder and the eldest 6 at 45 and 50; the bite keeps its Toughn
 did the spectre's Willpower drain (range 4, 40 %), the white lady's, the night mare's, and the
 ghost lord's transfixion (range 5, 35 %; their touch keeps its drain), and the hand of glory's
 candle (range 3, 30 %). The washer at the ford keeps her fear on her touch, beside #1128's fear aura.
-`world/bestiary_tests.rs` reads the spectre's drain on its gaze.
+`world/creatures/bestiary_tests.rs` reads the spectre's drain on its gaze.
 The burning skull bursts when it dies (the dread design §5.3, #1127: `[creature.burst]`
-`when = "dies"`, `2d6` fire, radius 1; `world/creature_burst.rs`).
-Presence (#1128, `world/aura.rs`; design `docs/design/monster-dread.md` §5.4, §9): cold auras (`sluggish`, radius 2, Toughness, `damage_type = "cold"`) on the wraith, dread wraith, and wraith lord (1 to 3 degrees, difficulty 13, 16, 18); fear auras (`frightened` 2, radius 3, Willpower) on the washer at the ford (19), the deathshade (21), the archlich (20), and the demilich (22); the gibbering shade's silence (radius 3, no check, every 6 s); heard fear auras on the banshee (radius 6, loudness 100, 15, every 24 s, with a wail cry) and the screaming skull (radius 4, loudness 120, 17, with a scream cry). Cries: howls on the barghest, bodach, black shuck, church grim, and hound of the hunt (150, every 120 s); banging on the knocker and the poltergeist; a rattle on the charnel heap and the bone dragon. `content::aura_roster_tests` lists every row.
+`when = "dies"`, `2d6` fire, radius 1; `world/creatures/creature_burst.rs`).
+Presence (#1128, `world/creatures/aura.rs`; design `docs/design/monster-dread.md` §5.4, §9): cold auras (`sluggish`, radius 2, Toughness, `damage_type = "cold"`) on the wraith, dread wraith, and wraith lord (1 to 3 degrees, difficulty 13, 16, 18); fear auras (`frightened` 2, radius 3, Willpower) on the washer at the ford (19), the deathshade (21), the archlich (20), and the demilich (22); the gibbering shade's silence (radius 3, no check, every 6 s); heard fear auras on the banshee (radius 6, loudness 100, 15, every 24 s, with a wail cry) and the screaming skull (radius 4, loudness 120, 17, with a scream cry). Cries: howls on the barghest, bodach, black shuck, church grim, and hound of the hunt (150, every 120 s); banging on the knocker and the poltergeist; a rattle on the charnel heap and the bone dragon. `content::aura_roster_tests` lists every row.
 ## Dread gimmicks (docs/design/monster-dread.md §6)
 
 D5 (#1129): the **charnel heap** (22) splits under slashing and piercing (`splits = { on =
@@ -122,7 +122,7 @@ kept; slow); the **wormhost** (26) dies into grave worms (`dies_into`, `2d4` wit
 burrowing worms kept); the **wormlord** (47) dies into `3d6` within 2 and breeds them as it
 fights (`[creature.summon]` of grave worms, `1d2` every 30 s, `most = 6`, no mana, verb "sheds";
 tagged `summoner`); the **nightworm** (63) swallows (`swallowed`) in place of its hold. All four
-are dread at their tiers (D0). Tests: `world/split_tests.rs`.
+are dread at their tiers (D0). Tests: `world/creatures/split_tests.rs`.
 
 The shadowy (#1132, docs/dev/creatures.md "The unseen"): the shadow, the greater shadow,
 the deathshade, and the sluagh have `shadowy = true`: on a cell dim to the player's eyes they are

@@ -5,7 +5,7 @@ description = "Keeping your mind on the task, whatever happens around you: your 
 kind = "rules"
 # Spending mana (a spell, an ability paid in it) is practice (#668).
 mark = [{ on = "cast", chance = 25 }]
-# Trained only (`world/concentration.rs`): mana back that percent faster, added to the items'
+# Trained only (`world/magic/concentration.rs`): mana back that percent faster, added to the items'
 # and talents' percent (+5 % at 20, +40 % at 100); and points added to the maximum mana, never
 # more than a fifth of the pool without them (`mana::deeper`; +1 at 25, +5 at 100).
 benefit = [

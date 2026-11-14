@@ -38,11 +38,11 @@ and thrown; a pattern for writing the arrays, not a data concept);
 `rank_ten_holds_the_family_tables` holds every skill's and style's rank 10 to the design's table. `MAX_SAVING` is 60 (crossbows' `reload` at rank
 10); a saving past 100 % in all (crossbows 10 with Marksman 10) prices the reload at the floor,
 `Benefit::saving`'s 1. Tests:
-`content/weapon_skill.rs`, `weapon_skills.rs`, `world/weapon_skill_tests.rs`; the wiki's tables
+`content/weapon_skill.rs`, `weapon_skills.rs`, `world/combat/weapon_skill_tests.rs`; the wiki's tables
 are `xtask/src/wiki/weapon_skills.rs`. What ranks teach (weapon abilities, #561) is
 `docs/dev/weapon-abilities.md`: a rank risen says it (`World::ranks_news`, called by `practise`).
 
-Target dummies (spec §8 "Weapon skills": "Target dummies", #1199; `world/dummy.rs`, its module
+Target dummies (spec §8 "Weapon skills": "Target dummies", #1199; `world/combat/dummy.rs`, its module
 docs the summary): a creature type's `training` table (`content/dummy.rs`, `DummyTraining`:
 `percent`, `melee`, `ranged`, `breaks`; checked in `Content::load`) makes it a dummy, read by
 `World::dummy(id)`. It is a creature so every attack reaches it through `World::resolve` as it
@@ -54,7 +54,7 @@ which calls `World::practise_at` with the dummy's percent below its cap, `melee`
 but `AttackKind::Ranged`, and pushes `dummy::LEARNED_ALL` when a rank reaches the cap), and
 `World::fly` (`World::dummy_catches`, docs/dev/ranged-combat.md). The one placed: Cēaptūn's
 Gilde yard (`campaigns/ascmearc/data/creatures/training_dummy.toml`). Tests:
-`world/dummy_tests.rs`, `content/dummy.rs`.
+`world/combat/dummy_tests.rs`, `content/dummy.rs`.
 
 Fighting styles (spec §8 "Fighting styles"; M22, #135) are weapon skills of `Role::Style`: rows
 after the weapon skills in `data/weapon_skills.toml` with a `grip` (`content/weapon_skill.rs`:
@@ -85,10 +85,10 @@ attack `with` the off-hand weapon or the shield (`Actor::attack_skill` tells the
 `exert` stays once per action. Classes give `styles`/`style_choice`, rolled from
 `character/styles/...` after everything else. Presentation: `PerceptionView::own_styles_in_use`
 (the screen's `•`, the dump's `, in use`), never a benefit or penalty. Tests:
-`content/weapon_skill.rs` (`styles_are_checked`), `world/style_tests.rs`; wiki tables
+`content/weapon_skill.rs` (`styles_are_checked`), `world/combat/style_tests.rs`; wiki tables
 `styles.md`, `style-benefits.md` and the classes' column.
 
-Two shields (#611; `world/two_shields.rs`, its module docs the summary): `Grip::TwoShields`
+Two shields (#611; `world/combat/two_shields.rs`, its module docs the summary): `Grip::TwoShields`
 (`Actor::grip`: two held objects with `bash`), the `two_shields` style (`hidden = true`, no class
 gives it), and `[two_shields]` (`TwoShields`: `to_hit`, `slow`,
 `spell_failure`) eased by `Benefit::ease_bash`/`ease_slow`/`ease_spell` (checked per grip like
@@ -105,7 +105,7 @@ casts paid in mana only, before `perform`). Hidden: `WeaponSkills::shows` (no ma
 weapon skills screen, the `weapon_skills` dump layer and JSON, `PerceptionView::talents` (a
 talent needing a hidden skill the player has not trained), and `talent::may_take` (a hidden
 choice is a bad choice). No talent of its own: Anvil and hammer went in #965, and Loose straps
-and Craven's wall in #774. Tests: `world/two_shield_tests.rs`, `content/weapon_skill.rs`
+and Craven's wall in #774. Tests: `world/combat/two_shield_tests.rs`, `content/weapon_skill.rs`
 (the rank tables, the refusals), the screen's and the equipment screen's unit tests; wiki:
 the banes in `style-benefits.md` (`rank_table`'s bane columns).
 
@@ -115,7 +115,7 @@ roll) draw on no weapon skill (the schools' skills went with #1263, docs/dev/cas
 and a style of a caster grip (`Grip::RangedSpell`,
 `TouchSpell`, `ArmouredSpell`; `Grip::casts`; their styles name no weapons).
 `Actor::spell_skills(content, spell)` picks the style the spell
-is cast in (`world/cast_style.rs`'s `Actor::spell_grip`, docs/dev/caster-styles.md "How one
+is cast in (`world/magic/cast_style.rs`'s `Actor::spell_grip`, docs/dev/caster-styles.md "How one
 casts"): armoured first (`Actor::worn_spell_cost` above 0: anything worn with a
 `spell_cost_percent` not eased to 0 by its own Mage-wrought, #629), else for a spell that rolls
 to hit a touch's Toucher or any other shape's Sniper, none for a spell that rolls no attack
@@ -123,7 +123,7 @@ to hit a touch's Toucher or any other shape's Sniper, none for a spell that roll
 `Actor::attack_skill(Spell, _)` is `None`, `Actor::style(Spell, _)` stays `None`
 (`styles_in_use` marks Battle caster in such armour, never Sniper or Toucher). The one reader
 of the roll's benefit is
-`world/cast.rs::cast_single` (own casts paid in mana only; a scroll or a wand keeps the bare
+`world/magic/cast.rs::cast_single` (own casts paid in mana only; a scroll or a wand keeps the bare
 roll): `benefit_of(skills).at_distance(distance, table.spell_attacks())` (`[spell_attacks] far`,
 default 5: Sniper's `far_to_hit` and `far_threat` from there) goes into `Profile::with` after the
 spell's to-hit scales; `World::spell_practised` calls `resolve_triggers` with `AttackKind::Spell`
@@ -136,12 +136,12 @@ in, on every spell paid in mana, by its outcome, lands or not, along the `caster
 armour's percent) is read by `Actor::armour_spell_cost` whatever is cast. No `speed` for the
 caster grips (the loader refuses it: where one casts from never quickens a cast). `Benefit` fields of theirs: `far_to_hit`, `far_threat`, `cells` (Sniper's
 reach), `bonus` (Toucher's roll), `armour` (checked per grip like the others; `cells` and
-`bonus` join the cast's hooks after the talents' and items', `Actor::spell_mods_in_style`). Creatures' spells (`world/creature_cast.rs`) practise nothing and read no caster style, so no
+`bonus` join the cast's hooks after the talents' and items', `Actor::spell_mods_in_style`). Creatures' spells (`world/creatures/creature_cast.rs`) practise nothing and read no caster style, so no
 creature data gives ranks in them. Classes: wizard and druid Sniper 1, witch and priest
 Toucher 1, paladin Battle caster 1. Talents: none new;
 Stylist (a chosen style) may choose a caster style, raising it a rank. Tests:
 `content/weapon_skill.rs` (`the_caster_ladder_loads_and_is_checked`),
-`world/caster_style_tests.rs`.
+`world/magic/caster_style_tests.rs`.
 
 The schools of magic are no rows here, with no benefits, talents, or abilities of their own
 (#1263): a spell's school is only its category (docs/dev/caster-styles.md).

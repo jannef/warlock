@@ -55,7 +55,7 @@ you.
 
 Only some kinds can be tamed: see the Tameable column of
 [Creatures in numbers](creature-numbers.md#pace-senses-and-size). The beast must also not be your
-foe (wildlife, or an animal a [Beast-friend](talents.md#talent-beast-friend) has calmed), or must
+foe (wildlife, or an animal a [Beast-friend](talents-exploring.md#talent-beast-friend) has calmed), or must
 not have seen you (asleep, say).
 
 You crouch beside it for a while, holding out food if you carry any. If you are hurt, or it leaves
@@ -103,7 +103,7 @@ you across the overworld.
   them, and can aim at them. It finds no hidden [trap](traps.md) or [secret door](searching.md)
   for you, and smells nothing of a disguised [mimic](chests.md). Being dazzled leaves its view
   untouched.
-- **Shared buffs.** A [buff](status-effects.md#buffs-and-cooldowns) that lands on either of you
+- **Shared buffs.** A [buff](buffs.md) that lands on either of you
   lands on the other too, at the same strength, and each of you wears it off alone. This is any
   [status](status-effects.md) that a buff [spell](magic.md) lays or a [potion](potions.md) lends,
   whatever laid it ("Snel is bark-skinned too."). It reaches your companion on the overworld too. A
@@ -114,7 +114,7 @@ From level 40, **[Sic 'em](abilities.md#ability-sic)** sets your companion on a
 [focus](resources.md#resource-focus) and the [time](turns.md#what-actions-cost) of a wait. Your
 companion goes for that creature before any other, and follows it as long as it sees or smells it.
 
-It is also [Savage](status-effects.md#status-savage): half again as fast, and each of its next three
+It is also [Savage](status-list.md#status-savage): half again as fast, and each of its next three
 [hits](combat.md#hitting) is a critical with no confirmation roll. Each hit spends a degree;
 otherwise a degree wears off each minute. Give it another order and the chase is over. Savage is its
 own: it never crosses to you.
@@ -122,3 +122,5 @@ own: it never crosses to you.
 ## The companion's rules
 
 {{#include generated/companion-rules.md}}
+
+See also: [Allies](allies.md), [the ranger](class-ranger.md), and [Familiars](familiars.md).

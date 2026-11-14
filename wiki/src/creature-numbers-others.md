@@ -6,6 +6,8 @@ each creature behaves on [Creatures](creatures.md#the-creatures).
 
 ## Stats and skills
 
+{{#include generated/creature-levels.md:others}}
+
 {{#include generated/creature-stats.md:others}}
 
 ## Hit points, Defence, and resistances
@@ -19,3 +21,7 @@ each creature behaves on [Creatures](creatures.md#the-creatures).
 ## Pace, senses, and size
 
 {{#include generated/creature-senses.md:others}}
+
+{{#include generated/creature-size.md:others}}
+
+See also: [People and talk](npcs.md) and [Encounters on the way](encounters.md).

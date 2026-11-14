@@ -10,7 +10,7 @@
 //! only cells the snapshot shows or memory keeps. A new accessor that reads `self.level` or
 //! `self.player` goes in this file, so `view.rs` and `shop.rs` keep to the snapshot. Features
 //! that extend the view in their own modules and read ground truth too: `beside.rs` (`ways`),
-//! `world/rig.rs` (`rigged`, `rigs`), `world/patron.rs` (`commission`), and `world/quest.rs`
+//! `world/crafting/rig.rs` (`rigged`, `rigs`), `world/crafting/patron.rs` (`commission`), and `world/people/quest.rs`
 //! (`quests`).
 
 use super::{
@@ -97,7 +97,7 @@ impl<'a> PerceptionView<'a> {
         room.entered.then(|| self.content.room_effect(room.effect))
     }
 
-    /// Whether `p` is hallowed ground (Sanctuary, `world/sanctuary.rs`), and whether the dark
+    /// Whether `p` is hallowed ground (Sanctuary, `world/classes/sanctuary.rs`), and whether the dark
     /// powers laid it (`Some(true)`: dreaded ground): the player laid it, so they know it where
     /// they see or remember the cell.
     pub fn hallow(&self, p: Pos) -> Option<bool> {
@@ -107,7 +107,7 @@ impl<'a> PerceptionView<'a> {
         self.level.hallows_at(p, self.time).next().map(|h| h.dark)
     }
 
-    /// The zone on `p` as the player knows it (`world/zone.rs`): what lies there where they see
+    /// The zone on `p` as the player knows it (`world/magic/zone.rs`): what lies there where they see
     /// the cell, what they last saw there where they remember it, and nothing on a hidden cell.
     pub fn zone_at(&self, p: Pos) -> Option<ZoneKind> {
         match self.cell(p) {
@@ -172,7 +172,7 @@ impl<'a> PerceptionView<'a> {
 
     pub fn cell(&self, p: Pos) -> CellView {
         if self.snapshot.is_visible(p) {
-            // A disguised mimic shows a shut chest (`world/mimic.rs`).
+            // A disguised mimic shows a shut chest (`world/creatures/mimic.rs`).
             let shown = self.snapshot.disguise_at(p).map(|d| d.terrain);
             CellView::Visible(shown.unwrap_or(self.level.terrain[p]))
         } else {
@@ -284,7 +284,7 @@ impl<'a> PerceptionView<'a> {
         self.level.statues.get(&p).map(|s| s.of)
     }
 
-    /// What is cut in the gravestone at `p` (spec §7 "Graves"; `world/graves.rs`), where the
+    /// What is cut in the gravestone at `p` (spec §7 "Graves"; `world/fixtures/graves.rs`), where the
     /// player sees or remembers one: "Here lies Ælfric Wudu, 1381–1427." `None` elsewhere, or
     /// on a blank stone.
     pub fn epitaph(&self, p: Pos) -> Option<&'a str> {
@@ -300,7 +300,7 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// Whom the statue at `p` is of, where it bears a past character's name from the graveyard
-    /// (`world/graveyard.rs`): "Brakka the dwarf". `None` where they know no statue there, or
+    /// (`world/fixtures/graveyard.rs`): "Brakka the dwarf". `None` where they know no statue there, or
     /// it bears no name.
     pub fn statue_name(&self, p: Pos) -> Option<String> {
         self.statue_at(p)?;
@@ -622,28 +622,28 @@ impl<'a> PerceptionView<'a> {
             Ability::Heel | Ability::Hold | Ability::SetOn if !allies_here => {
                 Some(crate::ability::Unavailable::NoAllies)
             }
-            // Give needs the beast at hand (`world/collar.rs`).
+            // Give needs the beast at hand (`world/allies/collar.rs`).
             Ability::Give if self.snapshot.kept_beside.is_empty() => {
                 Some(crate::ability::Unavailable::NotBeside)
             }
-            // Decipher needs a scroll of an unidentified type (`world/decipher.rs`).
+            // Decipher needs a scroll of an unidentified type (`world/magic/decipher.rs`).
             Ability::Decipher
                 if !(self.player.inventory.iter())
                     .any(|stack| crate::world::undeciphered(self.content, &self.lore(), stack)) =>
             {
                 Some(crate::ability::Unavailable::NoUnknownScroll)
             }
-            // Make do and mend needs a damaged thing carried, not worn (`world/make_do.rs`).
+            // Make do and mend needs a damaged thing carried, not worn (`world/crafting/make_do.rs`).
             Ability::Class(crate::content::ClassActive::MakeDo)
                 if !crate::world::mends_any(self.player) =>
             {
                 Some(crate::ability::Unavailable::NothingToMend)
             }
-            // Sic 'em needs its beast on the level (`world/sic.rs`).
+            // Sic 'em needs its beast on the level (`world/allies/sic.rs`).
             Ability::Class(crate::content::ClassActive::Sic) if !companion_here => {
                 Some(crate::ability::Unavailable::NoCompanion)
             }
-            // Trapwright rigs on a level, never the overworld (`world/rig.rs`).
+            // Trapwright rigs on a level, never the overworld (`world/crafting/rig.rs`).
             Ability::Class(crate::content::ClassActive::Rig) => {
                 (ability.unavailable(self.player, self.content)).or_else(|| {
                     (self.level.kind() == crate::content::LevelKind::Overworld)
@@ -657,7 +657,7 @@ impl<'a> PerceptionView<'a> {
             Ability::Spell(spell) => {
                 crate::ability::spell_unavailable(self.player, self.content, spell)
             }
-            // An ally beside the player may need tending (`world/heal.rs`).
+            // An ally beside the player may need tending (`world/health/heal.rs`).
             Ability::Heal if !self.snapshot.ally_ailments.is_empty() => (ability
                 .unavailable(self.player, self.content))
             .filter(|&why| why != crate::ability::Unavailable::NothingToTreat),
@@ -665,7 +665,7 @@ impl<'a> PerceptionView<'a> {
             Ability::Class(crate::content::ClassActive::CallFamiliar) => self
                 .calling_barred()
                 .or_else(|| ability.unavailable(self.player, self.content)),
-            // Field forge sets an anvil on a level, never the overworld (`world/field_forge.rs`).
+            // Field forge sets an anvil on a level, never the overworld (`world/crafting/field_forge.rs`).
             Ability::Class(crate::content::ClassActive::FieldForge)
                 if self.level.kind() == crate::content::LevelKind::Overworld =>
             {
@@ -683,7 +683,7 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// The ways to the glowing fungus beside the player, in compass order (the Gather ability,
-    /// `world/gather.rs`): the menu gathers at once from the one, and asks the way when there
+    /// `world/skills/gather.rs`): the menu gathers at once from the one, and asks the way when there
     /// are more. The player sees what stands beside them.
     pub fn gather_ways(&self) -> Vec<crate::geom::Dir> {
         crate::world::fungus_ways(self.content, self.level, self.player.pos)
@@ -786,13 +786,13 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// The recipes of profession `skill` the player sees, in path order, each with what it takes
-    /// and why it cannot be made now (`world/craft.rs`): what the profession's screen lists.
+    /// and why it cannot be made now (`world/crafting/craft.rs`): what the profession's screen lists.
     pub fn recipes(&self, skill: crate::skills::SkillId) -> Vec<crate::world::RecipeRow> {
         crate::world::recipe_rows(self.content, self.lore, self.level, self.player, skill)
     }
 
     /// The choices of generic recipe `recipe`, in order, each with the stacks carried that it may
-    /// take (`world/craft_make.rs`): the forging wizard's steps. Empty for a recipe with none
+    /// take (`world/crafting/craft_make.rs`): the forging wizard's steps. Empty for a recipe with none
     /// (or one not made yet).
     pub fn craft_steps(&self, recipe: crate::content::RecipeId) -> Vec<crate::world::CraftStep> {
         crate::world::craft_steps(self.content, self.lore, self.level, self.player, recipe)
@@ -931,7 +931,7 @@ impl<'a> PerceptionView<'a> {
             .collect()
     }
 
-    /// The player's mark, the creature their openings are in (`world/mark.rs`), as they know it:
+    /// The player's mark, the creature their openings are in (`world/classes/mark.rs`), as they know it:
     /// "the kobold" while they see it, "an unseen foe" while they do not; `None` without one.
     /// Their own choice, so nothing hidden.
     pub fn own_mark(&self) -> Option<String> {
@@ -988,11 +988,16 @@ impl<'a> PerceptionView<'a> {
             .into_iter()
             .flat_map(|(table, own)| table.abilities_to(book, own))
             .collect();
-        // The rising is spent once it is used up: the first with no Second rising, else both.
+        // The rising is spent once it is used up: the first with no Second rising, else both; a
+        // profane gift's (Twice-born) once its own once is.
         let risen = self.progress.happened(crate::world::RISEN);
         let twice = self.progress.happened(crate::world::RISEN_TWICE);
+        let profane_risen = self.progress.happened(crate::world::PROFANE_RISEN);
         let second = (self.player.talent_mods(self.content)).vigour.second_rising;
-        let spent = |e: &crate::content::TalentEffect| match e {
+        let spent = |gift: bool, e: &crate::content::TalentEffect| match e {
+            crate::content::TalentEffect::Vigour(crate::talent::VigourEffect::RiseFromAshes {
+                ..
+            }) if gift => profane_risen,
             crate::content::TalentEffect::Vigour(crate::talent::VigourEffect::RiseFromAshes {
                 ..
             }) => risen && (!second || twice),
@@ -1023,7 +1028,7 @@ impl<'a> PerceptionView<'a> {
                     race: def.granted && Some(def.tree) == book.tree_id("racial"),
                     flaw: def.flaw,
                     class: class.contains(&id),
-                    spent: def.effects.iter().any(&spent),
+                    spent: def.effects.iter().any(|e| spent(profane.is_some(), e)),
                     boon: boon && !story && profane.is_none(),
                     story,
                     profane,
@@ -1126,14 +1131,10 @@ impl<'a> PerceptionView<'a> {
 
     /// How a seen creature stands toward the player: its faction's stance (spec §7 "Factions"),
     /// which the player knows from its type; neutral for an animal a Beast-friend has not
-    /// attacked one of (spec §8 "Talents"). Nothing else about factions is perceived.
+    /// attacked one of, or a kin of a `kin_to` talent's (spec §8 "Talents"). Nothing else about factions is perceived.
     pub fn stance(&self, actor: &SeenActor) -> Stance {
-        let animal = actor
-            .faction
-            .is_some_and(|f| self.content.factions().def(f).animal);
-        if animal
-            && actor.kind == ActorKind::Creature
-            && self.player.talent_mods(self.content).beast.beast_friend
+        if actor.kind == ActorKind::Creature
+            && crate::world::calms(self.content, self.player, actor.creature)
             && !(self.progress.empathy_broken).contains(&self.content.creature(actor.creature).id)
         {
             return Stance::Neutral;
@@ -1179,10 +1180,10 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// How fresh `stack`, a corpse or food the player has in front of them, looks to an eye
-    /// trained in Appraise or Survival (spec §8 "Hunger"; `world/freshness.rs`): `fresh`, `old`,
+    /// trained in Appraise or Survival (spec §8 "Hunger"; `world/health/freshness.rs`): `fresh`, `old`,
     /// or `rotten` when their check passes, `None` otherwise.
     pub fn judge(&self, stack: &Stack) -> Option<&'static str> {
-        let stage = crate::world::freshness::judged(
+        let stage = crate::world::health::freshness::judged(
             self.content,
             self.player,
             self.seed,
@@ -1225,7 +1226,7 @@ impl<'a> PerceptionView<'a> {
     /// Whether a step onto `to` would dive into deep water (spec §8 "Skills": Swim): from anything
     /// else, into water the player sees or remembers where no one they see is, and open to them:
     /// an untrained or a Strained player is refused by the rules, with no question to ask. Water
-    /// they do not know is never stepped into: the rules stop them at it first (`world/swim.rs`).
+    /// they do not know is never stepped into: the rules stop them at it first (`world/levels/swim.rs`).
     pub fn dives_at(&self, to: Pos) -> bool {
         let swim = |p: Pos| match self.cell(p) {
             CellView::Visible(t) | CellView::Remembered(t) => self.content.terrain(t).swim,

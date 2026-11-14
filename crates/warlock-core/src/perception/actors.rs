@@ -10,8 +10,8 @@ use crate::content::{Content, Stance, StatusId};
 use crate::geom::Pos;
 use crate::grid::Window;
 use crate::light::{Light, LightCache};
-use crate::world::mirrors::image_id;
-use crate::world::surprise::creature_unaware;
+use crate::world::combat::surprise::creature_unaware;
+use crate::world::fixtures::mirrors::image_id;
 use crate::world::{self, Actor, ActorId, ActorKind, Concealed};
 
 /// The creatures the player sees, and those hidden from them.
@@ -35,12 +35,12 @@ pub(super) fn seen(
 ) -> Seen {
     let (state, content, level, viewer) = (v.state, v.content, v.level, v.viewer);
     let sight = &seeing.sight;
-    // The unseen (`world/unseen.rs`): the shadowy on cells dim to the player's eyes, and the
+    // The unseen (`world/creatures/unseen.rs`): the shadowy on cells dim to the player's eyes, and the
     // invisible.
     let dim = |p: Pos| !v.overworld && light.get(p).is_some_and(|l| v.eye.dim(*l));
     let concealed = world::unseen_by_player(state, content, &dim, &seeing.scented);
-    let draught =
-        (concealed.iter()).any(|c| c.shadowy && c.pos.chebyshev(viewer) <= world::DRAUGHT);
+    let near = content.tuning().unseen.draught;
+    let draught = (concealed.iter()).any(|c| c.shadowy && c.pos.chebyshev(viewer) <= near);
     let unseen = |a: &Actor| concealed.iter().any(|c| c.id == a.id);
     let disguises = disguises(v, sight);
     let hidden = |a: &Actor| disguises.iter().any(|d| d.pos == a.pos);
@@ -48,11 +48,11 @@ pub(super) fn seen(
         .actors
         .values()
         .filter(|a| a.level == level.id && sight.get(a.pos) == Some(&Sight::Seen))
-        // The retinue is with the player, not on the map (`world/ally.rs`).
+        // The retinue is with the player, not on the map (`world/allies/ally.rs`).
         .filter(|a| !a.in_retinue())
         .filter(|a| !hidden(a) && !unseen(a))
         .collect();
-    // Averted eyes (`world/avert.rs`): a hostile whose gaze is marked `averted`, seen.
+    // Averted eyes (`world/creatures/avert.rs`): a hostile whose gaze is marked `averted`, seen.
     let looker = state.player().faction(content);
     let averted = (seen.iter()).any(|a| {
         a.id != state.player
@@ -83,7 +83,7 @@ pub(super) fn seen(
                 && creature_unaware(state, content, lights, seen.id, state.player);
         }
     }
-    // A hall of mirrors' images of those seen (`world/mirrors.rs`), where the player sees
+    // A hall of mirrors' images of those seen (`world/fixtures/mirrors.rs`), where the player sees
     // their cells, each shown as what it reflects under an id of its own.
     let images: Vec<Image> = (state.images(content, level).into_iter())
         .filter(|i| sight.get(i.pos) == Some(&Sight::Seen))
@@ -113,7 +113,7 @@ pub(super) fn seen(
 /// An image of a hall of mirrors: whom it reflects, its own id, and where it is.
 type Image = (ActorId, ActorId, Pos);
 
-/// The disguised mimics of the level: each a shut chest (`world/mimic.rs`), but to Chest-wise
+/// The disguised mimics of the level: each a shut chest (`world/creatures/mimic.rs`), but to Chest-wise
 /// within its reach where the player sees it.
 fn disguises(v: &Viewing, sight: &Window<Sight>) -> Vec<Disguise> {
     let (content, viewer) = (v.content, v.viewer);
@@ -159,7 +159,7 @@ fn gear(seen: &[&Actor], images: &[Image]) -> Vec<SeenGear> {
 }
 
 /// The statuses that show on the seen creatures, such as bleeding; others (poison) do not, nor
-/// those its kind always has (`world/aura.rs`: a salamander is always cloaked in flame).
+/// those its kind always has (`world/creatures/aura.rs`: a salamander is always cloaked in flame).
 fn effects(content: &Content, seen: &[&Actor], images: &[Image]) -> Vec<(ActorId, StatusId)> {
     (seen.iter())
         .filter(|a| a.kind == ActorKind::Creature)

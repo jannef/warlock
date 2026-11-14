@@ -131,7 +131,7 @@ of range.", and the scroll is not used.
   including you if you stand that close. When you aim so near that it might, a window asks
   first: `The fireball may catch you too. Read the scroll of fireball anyway?`, with **Read it**
   (`y`), **Aim again** (`n`), and **Don't read it** (`Esc`, chosen at first). With the
-  [talent](talents.md) [Scroll savant](talents.md#talent-scroll-savant) your own bursts never
+  [talent](talents.md) [Scroll savant](talents-mind.md#talent-scroll-savant) your own bursts never
   catch you, and nothing asks.
 
   A fireball blows apart the softer [walls](terrain.md#walls) it reaches and [melts
@@ -155,9 +155,9 @@ the thunder are heard like any noise (see [Hearing](hearing.md)). Spells cannot 
 ### Reading faster, and keeping the scroll
 
 Reading a scroll uses it up, but scholars do better (see [Talents](talents.md)). [Scroll
-savant](talents.md#talent-scroll-savant) reads in half the time, and together with the
+savant](talents-mind.md#talent-scroll-savant) reads in half the time, and together with the
 [wizard](class-wizard.md)'s Scroll adept in a quarter, but no less. With [Spell
-recall](talents.md#talent-spell-recall) on top, one read in four leaves the scroll as it was:
+recall](talents-mind.md#talent-spell-recall) on top, one read in four leaves the scroll as it was:
 "The writing does not fade from the scroll."
 
 ## The scroll of identify
@@ -206,13 +206,13 @@ school, each with what writing it costs you in [mana](mana.md#spending-it) and h
 Choose one, and you write its scroll on the first blank scroll you carry.
 
 - **The price** is three times the spell's mana. That is what casting it would cost you before
-  [Frugal caster](talents.md#talent-frugal-caster), with your armour, School focus, Empower, and
+  [Frugal caster](talents-mind.md#talent-frugal-caster), with your armour, School focus, Empower, and
   Archmage counted, and then the whole is cut by Frugal caster. Fireball's 26 becomes 78, Magic
   missile's 3 becomes 9, and Identify's 60 becomes 180.
 - **The time** is the time reading the spell's [grimoire](learning-spells.md#learning-a-spell) takes: 100 turns plus 20 for
   each spell level,
   or 10 minutes plus 2 a level at a normal pace. Magic missile takes 16 minutes and Fireball 32.
-  [Quick study](talents.md#talent-quick-study) does not shorten it.
+  [Quick study](talents-mind.md#talent-quick-study) does not shorten it.
 - **If you are interrupted** (a creature coming into view, anything said, a blow), you stop
   writing. The time is lost, but you keep the blank and the mana. The mana is spent and the
   blank used up only when the scroll is done: "You write a scroll of fireball."
@@ -238,3 +238,5 @@ what spending the mana trains. There is no roll: a scroll begun and finished is 
   always has scrolls of identify among its goods, and so does Ælfric's in Cēaptūn.
 - **Blank scrolls** turn up as loot and as general-store stock just as other scrolls do, from
   item level 1 (frequency 30).
+
+See also: [Magic](magic.md), [Learning spells](learning-spells.md), and [Potions](potions.md).

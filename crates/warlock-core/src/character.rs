@@ -138,7 +138,7 @@ pub struct CharacterSpec {
     pub class: String,
     /// The talents picked at creation (spec §8 "Talents"), in the order taken, each `id` or
     /// `id:choice` (`weapon_focus:long_blades`). Empty: none chosen, so a run that starts with
-    /// the character's kit takes the Random picks (`world/creation.rs`) and records them here.
+    /// the character's kit takes the Random picks (`world/character/creation.rs`) and records them here.
     /// Left out of the JSON while empty, so replays and saves from before creation picks load.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub talents: Vec<String>,
@@ -1262,7 +1262,7 @@ mod tests {
         // Gathering herbs names its skill.
         files.remove("data/herbs.toml");
         // Enchanting names its skill (#1493).
-        files.remove("data/enchanting.toml");
+        files.remove("data/rules/enchanting.toml");
         // Rigging names its skill (Woodcraft).
         files.remove("data/rigs.toml");
         // Skill affixes go with the skills, and the uniques that have them.

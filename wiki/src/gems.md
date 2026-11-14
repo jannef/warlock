@@ -78,3 +78,6 @@ with a gem is drawn in the gem's colour. Uncut gems are never set in an item.
 General stores buy gems (see [Shops](shops.md)), but no shop sells them. A store pays its share
 of the gem's worth, which depends on its kind, size, and cut. For a gem lying on its floor, it
 asks that much more.
+
+See also: [Gem cutting](gem-cutting.md), [Making jewellery](jewellery.md), and
+[Materials](materials.md).

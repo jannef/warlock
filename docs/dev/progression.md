@@ -11,29 +11,29 @@ hit points a level gives) is `docs/dev/experience.md`.
 |---|---|
 | `content/talent.rs` | `TalentBook` from `data/talents/trees/` and `data/talents/systems/` (one `[[tree]]` or `[[system]]` a file, `NNN-<id>.toml`, the number keeping their order) and `data/talents/*.toml` (one `[[talent]]` a file, `ContentFiles::table("talents")` order; `TalentId` an index, saves name talents by id so it is **not** in the content fingerprint). `TalentDef` (tree, `needs`, `effects`, `choice`, `systems`, `granted`), `Needs`/`Need` (the prerequisite kinds and their words: talents, stat scores, skill values, weapon-skill ranks, any skill of a role (`any_weapon_skill`), `chosen`, level, race, class, eyes (never an alignment band: alignment bars nothing, `docs/dev/alignment.md`), and `either`, any one of several, `Need::Either`), `TalentEffect` (the typed effects: one wrapper per area, its deserializer, `check`), `Choice::options`/`name` (`school`: a spell school or a non-physical damage type, #400). The load checks only that the table is well formed ("Loading" below). |
 | `talent.rs` | The runtime: `Talents` (`Vec<Taken { id, choice }>` on `Actor::talents`, `holds(id, choice)`, `has(id)`, saved and hashed, left out of the JSON while empty), `TalentMods` (every effect summed; `Talents::mods(content, effects)`, the effects under a status counted while the holder suffers it, / `Actor::talent_mods`, the sum kept on `Talents` until they change (`mods_cached`, a `SharedMods`; "The kept sum" below), one shared empty sum for an actor without talents; a field per area, each area in `talent/<area>.rs`, "Areas" below), `Candidate` (what prerequisites read: `Candidate::player`), `unmet`, `may_take` → `Refusal` (in words; `Held`, "You have Hardy already."), `openings`, `offers` (the pick list, tree by tree). |
-| `world/talent.rs` | `Due { level, talents }` in `Progress::due` (lowest level first); `World::level_up(from, to)` from `grant_xp` (a pick every `Experience::talent_every` levels, and the per-level hit points of talents held); `refuse_due` (the first line of `player_acts`: everything but `Talent`, `Advance`, `LevelUpAuto` is refused with "You have skill rolls to spend." or "You must choose a talent first."); `take_talent` (the first due with a pick, so a talent may come before the rolls), `level_up_auto` (dev); `settle_due` drops talent picks nothing can be spent on (`offers` empty and no roll left) and rolls when no skill is trained, asked again after each pick. `Due { level, talents, rolls, bonus }`: a level with rolls but no pick is due too; `bonus` are the class's bonus picks (a talent of the class's trees spends one before an ordinary pick; "You must choose a talent of Weaponcraft or Delver."), dropped like the others when nothing fits. |
-| `world/creation.rs` | Creation picks (#236; below): `creation_count`, `World::open_creation` (a level 1 `Due` from `begin`, for a run with the kit), `take_creation` (from `start_run`: the spec's picks, else `take_random` on the `character/talents/<spec>` stream; recorded in `CharacterSpec::talents`), `World::draft` / `creation_offers` / `random_creation` (character creation's Talents step), `chosen_with_talents` and `parse_talents` (`--talents`). `World::learn` (`world/talent.rs`) is `take_talent` without its words. |
-| `world/class.rs` | Class abilities (#246): `grant` gives the talents a class's level table names up to a level that the player lacks (`hand_out` for hit points by level, stat gifts, and `weapon_ranks`), at creation (`start_run`, level 1), as each level comes (`level_up`, with the news "You gain Fencing."), and on `from_state` (a grown table reaches saves; nothing is taken away); `bonus_trees`; `appraise_carried` (Lore, Arcane lore, Old lore, from `World::live` for the player). |
+| `world/character/talent.rs` | `Due { level, talents }` in `Progress::due` (lowest level first); `World::level_up(from, to)` from `grant_xp` (a pick every `Experience::talent_every` levels, and the per-level hit points of talents held); `refuse_due` (the first line of `player_acts`: everything but `Talent`, `Advance`, `LevelUpAuto` is refused with "You have skill rolls to spend." or "You must choose a talent first."); `take_talent` (the first due with a pick, so a talent may come before the rolls), `level_up_auto` (dev); `settle_due` drops talent picks nothing can be spent on (`offers` empty and no roll left) and rolls when no skill is trained, asked again after each pick. `Due { level, talents, rolls, bonus }`: a level with rolls but no pick is due too; `bonus` are the class's bonus picks (a talent of the class's trees spends one before an ordinary pick; "You must choose a talent of Weaponcraft or Delver."), dropped like the others when nothing fits. |
+| `world/character/creation.rs` | Creation picks (#236; below): `creation_count`, `World::open_creation` (a level 1 `Due` from `begin`, for a run with the kit), `take_creation` (from `start_run`: the spec's picks, else `take_random` on the `character/talents/<spec>` stream; recorded in `CharacterSpec::talents`), `World::draft` / `creation_offers` / `random_creation` (character creation's Talents step), `chosen_with_talents` and `parse_talents` (`--talents`). `World::learn` (`world/character/talent.rs`) is `take_talent` without its words. |
+| `world/classes/class.rs` | Class abilities (#246): `grant` gives the talents a class's level table names up to a level that the player lacks (`hand_out` for hit points by level, stat gifts, and `weapon_ranks`), at creation (`start_run`, level 1), as each level comes (`level_up`, with the news "You gain Fencing."), and on `from_state` (a grown table reaches saves; nothing is taken away); `bonus_trees`; `appraise_carried` (Lore, Arcane lore, Old lore, from `World::live` for the player). |
 | `content/class.rs` | `ClassDef::abilities` (`[(level, talent id)]`), `bonus_talents` (`levels`, `trees`; none: any), `abilities_to`, `bonus_at`, `bonus_trees`, `check_table` (after the talents load, from `Content::check_class_tables`: the talents and trees named resolve). Rows are read by level, lowest first (`table_rows` sorts them; `abilities_to` takes them while their level is reached). A book without a class tree (fixtures) gives nothing and checks nothing. |
-| `world/skill_roll.rs` | The skill rolls (#230, `docs/dev/skills.md`): `roll_count`/`skill_roll` (the count's parts and a roll's dice, shared with the level-up screen, #543), `level_rolls`, `advance_skill` (`advance:SKILL`), `advance_auto` (`levelup:auto`'s rolls), `roll_skill` (the one roll both use), `mark_skill` (every mark added; the automatic roll at `[rolls] auto_at`, #1328, outside any `Due`). `World::due()` and `candidate()`. |
-| `world/experience.rs` | `grant_xp` scales every gain by `GrowthMods::xp_percent` and calls `level_up`; the dev `xp:N` (`grant_xp_dev`). |
+| `world/character/skill_roll.rs` | The skill rolls (#230, `docs/dev/skills.md`): `roll_count`/`skill_roll` (the count's parts and a roll's dice, shared with the level-up screen, #543), `level_rolls`, `advance_skill` (`advance:SKILL`), `advance_auto` (`levelup:auto`'s rolls), `roll_skill` (the one roll both use), `mark_skill` (every mark added; the automatic roll at `[rolls] auto_at`, #1328, outside any `Due`). `World::due()` and `candidate()`. |
+| `world/character/experience.rs` | `grant_xp` scales every gain by `GrowthMods::xp_percent` and calls `level_up`; the dev `xp:N` (`grant_xp_dev`). |
 | `perception/view.rs`, `perception/truth.rs` | `due()`, `dues()` (every level's, for the level-up screen's sequence), `roll_count()`, `skill_roll(skill)` (the skill-roll step's numbers, #543), `bonus_trees()`, `own_talents()` (`OwnTalent`), `talents()` (`TalentView`: `held`, the needs with `met`, `openings`): what the level-up screen (`ui/level_up_screen.rs`), the Talents page (`ui/talents_screen.rs`), and the creation step (`ui/chargen_talents_screen.rs`) read (`docs/dev/screens.md`). |
-| `dump.rs` | layers `talents` (held, `Skill focus (stealth)`) and `progress` (dev: dues, `due level 3: 3 skill rolls, 1 talent`, `rolls a level 3 (class 2, race 1, intelligence 0, talents 0)`, `roll dice athletics 1d3, balance +2`, takeable ids with choices, discovered kills, `empathy broken rat`); JSON `talents`, `due` (`level`, `talents`, `rolls`) |
-| `action.rs` | `Talent { id, choice }` (`talent:hardy`, `talent:weapon_focus:long_blades`; ids keep their case), `Advance(skill)`, dev `LevelUpAuto` (`levelup:auto`), `GrantXp` (`xp:N`); all `Spent::NoTime` or refused. |
-| `rng.rs` | `Rng::levels(seed)`, the `levels` stream, kept in `WorldState::levels_rng: Option<Rng>` **from the first draw** (the stat checks of each level, `world/stat_training.rs`; skill rolls, `world/skill_roll.rs`), so runs that never drew hash as before. |
-| `xtask/src/wiki/talents.rs` | `talents.md` (trees with the rules), `talents-by-system.md` (each system's talents, class abilities beside them); `effect_text`, the rule of one effect, shared with the class tables. |
+| `dump/` | layers `talents` (held, `Skill focus (stealth)`) and `progress` (dev: dues, `due level 3: 3 skill rolls, 1 talent`, `rolls a level 3 (class 2, race 1, intelligence 0, talents 0)`, `roll dice athletics 1d3, balance +2`, takeable ids with choices, discovered kills, `empathy broken rat`); JSON `talents`, `due` (`level`, `talents`, `rolls`) |
+| `action/mod.rs` | `Talent { id, choice }` (`talent:hardy`, `talent:weapon_focus:long_blades`; ids keep their case), `Advance(skill)`, dev `LevelUpAuto` (`levelup:auto`), `GrantXp` (`xp:N`); all `Spent::NoTime` or refused. |
+| `rng.rs` | `Rng::levels(seed)`, the `levels` stream, kept in `WorldState::levels_rng: Option<Rng>` **from the first draw** (the stat checks of each level, `world/character/stat_training.rs`; skill rolls, `world/character/skill_roll.rs`), so runs that never drew hash as before. |
+| `xtask/src/wiki/talents.rs` | `talents-origins.md`, `talents-body.md`, `talents-fighting.md`, `talents-exploring.md`, `talents-mind.md` (the trees with the rules, by tree group: `PAGES`, each the table of a wiki page under Talents, #1668), `talents-by-system.md` (each system's talents, class abilities beside them); `effect_text`, the rule of one effect, shared with the class tables. |
 | `content/class.rs` (#243) | `ClassActive`, the actives (id = the ability's id, aim, cost); `strip_tables` (tests that load talents of their own). |
-| `world/caster.rs` | `cast_spell` (`Action::Cast`, `use:blessing`, `use:arcane_bolt:12,5`), `Actor::spell_cost`, the strike on the scrolls' shared code, `reprieve` (Hag's bargain, from `hurt`), `lore_blow` (Poison lore, Malison; from `resolve` and `spell_strikes`). |
-| `world/racial.rs` | The racial talents (#241): `grants` (a race's `talents`, `data/races.toml`, put in by `stars::grant` before the sign's gifts, through `Talents::regrant`, which now replaces every granted talent outside a class tree), `World::small_target` (Small target's Dodge, from `resolve` after `target_against`, when the attacker's `size_of` is larger). `content/race.rs::check_talents` (at load): a race grants only `granted` talents of the `racial` tree. |
-| `world/class_ability.rs` | `use_class` (`Action::Use`, `use:rage`, `use:smite:E`), `may_use_class`, and the actives but Volley and Rage (the songs are `world/song.rs`, #870; Smite is `world/smite.rs`, #910); Hardened's hit points are `level_up`'s. |
-| `world/rage.rs` | The berserker's Rage on the Rage resource (R1, #249): `World::rage` (`grant_resource_with_status`), `World::unstoppable` (from `hurt`). |
-| `world/volley.rs` | `use_class_at` (`Action::UseAt`, a class active aimed at a cell: `use:volley:12,5`) and the ranger's Volley (#244), on 6 Focus (#250). |
-| `world/charge.rs` | The warrior's Charge (#1466, `use:charge:12,5`): the way to a hostile the player sees checked whole before a step (`charge_path`: walkable, no deep water, ice, known trap, or seen creature; at least a cell; no way out of a shop's door owing, `World::owing_exit`, the test `turned_back` makes, #1488), then the steps without `step_away`/`step_up` (no free blows provoked), each priced by `step_price` and entered through `World::enter_cell` (`world/enter.rs`, #1615: what every step does on arriving, shared with `player_moves`), an unknown trap or someone unseen stopping it short, then `player_attacks`, free; 1 stamina (the talent's `resource`) + `per_cell` a cell, checked and spent by the charge itself (`Content::charge_cost` for the menu row). Whirling charge (`whirling_charge`, the warrior's at 50, #1467; `MartialMods::whirling_charge`): `World::whirl` after each step strikes every hostile beside the new cell but the target, each once a charge (`strike_free` with `Free::Cleave`: no time, no exertion, the mark untouched). Tests: `world/charge_tests.rs`. |
-| `world/spirit_weapon.rs` | `use_class_shape` (`Action::Shape`, a class active in a weapon's shape: `use:spirit_weapon:long_sword`) and the Hunter's Spirit weapon (#881): `shapes` (every `melee_weapons` object with an attack that a hand holds, by weapon skill then id), `World::call_weapon` (a `Stack::spirit` into the pack, wielded through `World::equip_saying`, one held faded first; priced by the swap: a wield plus what the hands held), `gifts` (read in `Actor::melee`/`off_hand_blow`), `World::fade_spirit` and `release_spirit` (the invariant, `docs/dev/equipment.md`), `gift` (the content's numbers and phrase, for the description). |
-| `world/scribe.rs` | `start_scribe` (`Action::Scribe`, `scribe:fireball`, its own action: a class active on a spell known) and the wizard's Scribe (#906): `Actor::scribe_base`/`scribe_cost` (`spell_base` × `mana_times`, then `mana_cost`), `scribe_turns` (a study's, no Quick study), `World::scribe` through `keep_at` (`Spent::Scribe(Writing)`), `finish_scribe` (the mana through `spend_mana`, one blank used up, `Content::scroll_of` made and `learn_scroll`, the `scribe` stat use); `docs/dev/scrolls.md` "Writing scrolls". |
-| `world/merchants_eye.rs` | `use_class_on` (`Action::UseOn`, a class active on a stack carried: `use:merchants_eye:c`) and the merchant's Merchant's eye (#816): `World::identify` on the stack for the time of a `read`; no mana, cooldown, check, or limit; refused, no time, for a stack not carried or already known. |
-| `world/focus.rs` | The ranger's Focus (R2, #250): `hold` (what a talent's `grants_resource` grants, from `class::hand_out` and `World::grant_class`), `World::rapid_shot` (from `shoot.rs::fire`). `docs/dev/resources.md`. |
-| `world/quest.rs` | `tally_kill` (every kill of the player's, by level and type; `Quests::prey`, `killed`): the design's B6. |
+| `world/magic/caster.rs` | `cast_spell` (`Action::Cast`, `use:blessing`, `use:arcane_bolt:12,5`), `Actor::spell_cost`, the strike on the scrolls' shared code, `reprieve` (Hag's bargain, from `hurt`), `lore_blow` (Poison lore, Malison; from `resolve` and `spell_strikes`). |
+| `world/character/racial.rs` | The racial talents (#241): `grants` (a race's `talents`, `data/races.toml`, put in by `stars::grant` before the sign's gifts, through `Talents::regrant`, which now replaces every granted talent outside a class tree), `World::small_target` (Small target's Dodge, from `resolve` after `target_against`, when the attacker's `size_of` is larger). `content/race.rs::check_talents` (at load): a race grants only `granted` talents of the `racial` tree. |
+| `world/classes/class_ability.rs` | `use_class` (`Action::Use`, `use:rage`, `use:smite:E`), `may_use_class`, and the actives but Volley and Rage (the songs are `world/classes/song.rs`, #870; Smite is `world/classes/smite.rs`, #910); Hardened's hit points are `level_up`'s. |
+| `world/classes/rage.rs` | The berserker's Rage on the Rage resource (R1, #249): `World::rage` (`grant_resource_with_status`), `World::unstoppable` (from `hurt`). |
+| `world/classes/volley.rs` | `use_class_at` (`Action::UseAt`, a class active aimed at a cell: `use:volley:12,5`) and the ranger's Volley (#244), on 6 Focus (#250). |
+| `world/classes/charge.rs` | The warrior's Charge (#1466, `use:charge:12,5`): the way to a hostile the player sees checked whole before a step (`charge_path`: walkable, no deep water, ice, known trap, or seen creature; at least a cell; no way out of a shop's door owing, `World::owing_exit`, the test `turned_back` makes, #1488), then the steps without `step_away`/`step_up` (no free blows provoked), each priced by `step_price` and entered through `World::enter_cell` (`world/levels/enter.rs`, #1615: what every step does on arriving, shared with `player_moves`), an unknown trap or someone unseen stopping it short, then `player_attacks`, free; 1 stamina (the talent's `resource`) + `per_cell` a cell, checked and spent by the charge itself (`Content::charge_cost` for the menu row). Whirling charge (`whirling_charge`, the warrior's at 50, #1467; `MartialMods::whirling_charge`): `World::whirl` after each step strikes every hostile beside the new cell but the target, each once a charge (`strike_free` with `Free::Cleave`: no time, no exertion, the mark untouched). Tests: `world/classes/charge_tests.rs`. |
+| `world/classes/spirit_weapon.rs` | `use_class_shape` (`Action::Shape`, a class active in a weapon's shape: `use:spirit_weapon:long_sword`) and the Hunter's Spirit weapon (#881): `shapes` (every `melee_weapons` object with an attack that a hand holds, by weapon skill then id), `World::call_weapon` (a `Stack::spirit` into the pack, wielded through `World::equip_saying`, one held faded first; priced by the swap: a wield plus what the hands held), `gifts` (read in `Actor::melee`/`off_hand_blow`), `World::fade_spirit` and `release_spirit` (the invariant, `docs/dev/equipment.md`), `gift` (the content's numbers and phrase, for the description). |
+| `world/magic/scribe.rs` | `start_scribe` (`Action::Scribe`, `scribe:fireball`, its own action: a class active on a spell known) and the wizard's Scribe (#906): `Actor::scribe_base`/`scribe_cost` (`spell_base` × `mana_times`, then `mana_cost`), `scribe_turns` (a study's, no Quick study), `World::scribe` through `keep_at` (`Spent::Scribe(Writing)`), `finish_scribe` (the mana through `spend_mana`, one blank used up, `Content::scroll_of` made and `learn_scroll`, the `scribe` stat use); `docs/dev/scrolls.md` "Writing scrolls". |
+| `world/classes/merchants_eye.rs` | `use_class_on` (`Action::UseOn`, a class active on a stack carried: `use:merchants_eye:c`) and the merchant's Merchant's eye (#816): `World::identify` on the stack for the time of a `read`; no mana, cooldown, check, or limit; refused, no time, for a stack not carried or already known. |
+| `world/classes/focus.rs` | The ranger's Focus (R2, #250): `hold` (what a talent's `grants_resource` grants, from `class::hand_out` and `World::grant_class`), `World::rapid_shot` (from `shoot.rs::fire`). `docs/dev/resources.md`. |
+| `world/people/quest.rs` | `tally_kill` (every kill of the player's, by level and type; `Quests::prey`, `killed`): the design's B6. |
 
 ## The hooks
 
@@ -63,8 +63,9 @@ investments, prices, gems, loot, what is handed down), `growth` (experience, pic
 skills), `craft` (trades, salvage, tempering, fletching, the craftsperson's actives), `sign`
 (the birth signs' actives), `faith` (altars, temples, smites, rites, prayer, Retribution),
 `martial` (the warrior's, berserker's, ascetic's, and hunter's actives), `resource`, `song`,
-`ally` (Beast-bond, the summon bias, Sic 'em: `AllyMods`, the sum an ally reads), and `beast`
-(companion, familiar, taming, the bond).
+`ally` (Beast-bond, the summon bias, Sic 'em: `AllyMods`, the sum an ally reads), `beast`
+(companion, familiar, taming, the bond, Beast-friend and `kin_to`), and `slots` (the equipment
+slots a body bars or opens, #1628).
 
 **The kept sum** (#1495): `Actor::talent_mods` is `Talents::mods_cached`, a `SharedMods`
 (`Arc` of the sum, `Deref` to read, `into_owned` to change a copy): the sum is made on the
@@ -93,10 +94,10 @@ wiki's effect text appends "while raging".
 | `max_dex` | `Actor::defence`: the burden's cap on Dexterity (only while burdened) |
 | `protection` | `Actor::protection`, with the creature type's natural Protection |
 | `threat`, `reroll_fumble` | `Actor::stanced` (every attack profile; never below 3), `World::resolve` → `combat::strike_with` |
-| `streak` | `World::resolve` → `World::relentless` (`world/gifts.rs`): +1 to hit a blow in the streak, to `max`, from `Actor::streak` (saved and hashed, left out while `None`) |
+| `streak` | `World::resolve` → `World::relentless` (`world/character/gifts.rs`): +1 to hit a blow in the streak, to `max`, from `Actor::streak` (saved and hashed, left out while `None`) |
 | `ease`, `poison_spares_scores` | `World::live` (`Effect::until_eases`/`until_eases_every`), `Actor::penalty` (`Effects::penalty_for`) |
 | `disease_checks` | `World::expose` and `disease_turn` |
-| `swimmer` | `World::step_price` (wading terrain: `world/stars.rs::wading`), `World::wade` |
+| `swimmer` | `World::step_price` (wading terrain: `world/character/stars.rs::wading`), `World::wade` |
 | `speed_percent` | `Actor::speed`, read by the scheduler, `price_until`, rest, and wading time |
 | `rot_harm_percent` | `eat.rs::eat_rotten` (rounded down; no sickness at 0) |
 | `stone_sense`, `search`, `search_reach` | `search.rs::notices`, `search_modifier` (both looks), `search_turn` |
@@ -105,38 +106,42 @@ wiki's effect text appends "while raging".
 | `max_hp_per_levels` | handed out, not read: `take_talent` adds its `hp_at(level)` to `hp_base` and `hp`, `level_up` each later level's growth, as levels' own hit points are (so `Actor::max_hp` needs no level) |
 | `healing_percent` | `World::healing_rate`, summed with the regeneration affixes |
 | `mana_regen_percent` | `World::mana_rate`, summed with the mana regeneration affixes (Tidal, Clear mind) |
+| `max_mana_percent` | `Actor::max_mana`, `lasting_max_mana`, `is_whole` (`Actor::mana_scaled`, never below 0; Fell-minded) |
 | `max_mana_per_levels` | handed out, not read: `class::hand_out` adds its `mana_at(level)` to `mana_base` and `mana`, `level_up` each later level's growth (Deep well; past `mana_level` too) |
 | `mana_resting_percent` | `World::mana_rate`, on resting's pace (Meditation) |
 | `mana_cost_percent` | `World::spend_mana` through `Actor::mana_cost` (`MagicMods::mana_cost`: rounded to the nearest, at least 1; Frugal caster) |
-| `blood_magic` | `world/mana.rs::blood_magic` (`Action::UseTalent`, `use:blood_magic`, `Ability::BloodMagic` under `Source::Talent`): hit points for mana, no cooldown |
+| `blood_magic` | `world/magic/mana.rs::blood_magic` (`Action::UseTalent`, `use:blood_magic`, `Ability::BloodMagic` under `Source::Talent`): hit points for mana, no cooldown |
 | `footsteps_percent`, `silent_doors` | `noise::noise` (after the stealth skill and affixes; a silent door is no noise at all) |
 | `hearing` | `Actor::hearing`, with the listen skill |
-| `threshold_percent`, `darkvision` | `WorldState::eyes` (`world/eyes.rs`, the design's B4): the base profile (`WorldState::vision`) as the talents change it; `Perception::compute` reads it, so the view's `vision()` is the effective eye (id and name the base's). Creatures keep their types' profiles |
+| `vision` | `WorldState::base_vision` (`world/turn/eyes.rs`): the first such talent's profile in place of the race's `WorldState::vision`, for `eyes`, the glare of light-blind eyes, and an overworld encounter's dark; the dev `vision:` override still wins (Deep-eyed) |
+| `threshold_percent`, `darkvision` | `WorldState::eyes` (`world/turn/eyes.rs`, the design's B4): the base profile (`WorldState::vision`) as the talents change it; `Perception::compute` reads it, so the view's `vision()` is the effective eye (id and name the base's). Creatures keep their types' profiles |
 | `scent` | `Perception::compute`: a creature suffering the status, in line of sight within the radius (not on the overworld), has its cell seen as darkvision would |
 | `night_sight` | `Perception::compute`: the overworld's sight radius at night (`daylight::phase`) |
-| `lantern_light` | `WorldState::carried_light` (`world/lamp.rs`, read by `LightCache::sources`): the preset of a lit (not hooded) lantern ready in the Tool slot (gameplay light: creatures see it too) |
-| `ambush` | `World::sneak_dice` (`world/ambush.rs`): added to the Sneak attack skill's dice; `World::resolve` → `World::ambushed` rolls them after the strike when it hit a target that `World::unaware` (`world/surprise.rs`) says has not seen the attacker, or one that is Surprised; drawn only then |
-| `initiative_bonus` | `World::startle` (`world/surprise.rs`): added to the initiative check (Wary) |
-| `surprise_ease` | `World::status_cost` (`world/surprise.rs`): the percent of Surprised's extra cost spared, with Initiative's capped at 100 (Cool head) |
-| `surprise_difficulty` | `World::startle`'s `craft` (`world/surprise.rs`): added to the difficulty of the check of those the holder catches unawares (the thief's Sneak attack) |
-| `sneak_reach` | `World::sneaks` (`world/ambush.rs`): cells beyond `missile_reach` a missile or attack spell still sneak-attacks (Long reach) |
-| `ally_mod` (`to_hit`, `protection`) | `World::ally_blow` (`fight.rs::resolve`) and `World::ally_protection` (`World::protection_of`), through an ally's *master's* mods (`world/ally.rs::ally_mods`; Beast-bond, docs/dev/allies.md) |
-| `ally_mod` (`count`, `duration_percent`, `lasting`, `most`) | `World::cast_summon` (`world/summon_spell.rs`): more come, a longer `Ally::until`, none, each spell's `most` raised (docs/dev/allies.md "Summons") |
-| `summon_bias` (`tag`, `weight`) | `World::summon_draw` (`world/summon.rs`), from `cast_summon`: the pool's weights (no item or talent yet; the owner's Q9 of #828) |
-| `familiar` | `World::bring_familiar` (`world/familiar.rs`, from `World::begin`): a familiar as the run begins; `has_active` for Call familiar, `World::start_calling` (`docs/dev/familiar.md`) |
+| `lantern_light` | `WorldState::carried_light` (`world/items/lamp.rs`, read by `LightCache::sources`): the preset of a lit (not hooded) lantern ready in the Tool slot (gameplay light: creatures see it too) |
+| `ambush` | `World::sneak_dice` (`world/combat/ambush.rs`): added to the Sneak attack skill's dice; `World::resolve` → `World::ambushed` rolls them after the strike when it hit a target that `World::unaware` (`world/combat/surprise.rs`) says has not seen the attacker, or one that is Surprised; drawn only then |
+| `initiative_bonus` | `World::startle` (`world/combat/surprise.rs`): added to the initiative check (Wary) |
+| `surprise_ease` | `World::status_cost` (`world/combat/surprise.rs`): the percent of Surprised's extra cost spared, with Initiative's capped at 100 (Cool head) |
+| `surprise_difficulty` | `World::startle`'s `craft` (`world/combat/surprise.rs`): added to the difficulty of the check of those the holder catches unawares (the thief's Sneak attack) |
+| `sneak_reach` | `World::sneaks` (`world/combat/ambush.rs`): cells beyond `missile_reach` a missile or attack spell still sneak-attacks (Long reach) |
+| `ally_mod` (`to_hit`, `protection`) | `World::ally_blow` (`fight.rs::resolve`) and `World::ally_protection` (`World::protection_of`), through an ally's *master's* mods (`world/allies/ally.rs::ally_mods`; Beast-bond, docs/dev/allies.md) |
+| `ally_mod` (`count`, `duration_percent`, `lasting`, `most`) | `World::cast_summon` (`world/magic/summon_spell.rs`): more come, a longer `Ally::until`, none, each spell's `most` raised (docs/dev/allies.md "Summons") |
+| `summon_bias` (`tag`, `weight`) | `World::summon_draw` (`world/creatures/summon.rs`), from `cast_summon`: the pool's weights (no item or talent yet; the owner's Q9 of #828) |
+| `familiar` | `World::bring_familiar` (`world/allies/familiar.rs`, from `World::begin`): a familiar as the run begins; `has_active` for Call familiar, `World::start_calling` (`docs/dev/familiar.md`) |
 | `shared_sight` | `Perception::compute` (`perception/seeing.rs`): the companion's second viewpoint, its eyes and nose (Hunter's bond, `docs/dev/companion.md`) |
 | `familiar_sight` | `Perception::compute` (`perception/seeing.rs`): the same viewpoint on the familiar, its nose at least `familiars.toml`'s `nose`; no buffs (Familiar's sight, `docs/dev/familiar.md`) |
-| `shared_buffs` | `World::afflict` → `World::share_buff` (`world/bond.rs`): a buff lands on the player and their companion both (Hunter's bond) |
-| `fletcher` | `world/fletch.rs`: a `count = "fletch"` recipe's time, its check, and its count after the margin (Fletcher, the ranger's at level 1, #1021; "never brittle" gone with #1336) |
+| `shared_buffs` | `World::afflict` → `World::share_buff` (`world/allies/bond.rs`): a buff lands on the player and their companion both (Hunter's bond) |
+| `fletcher` | `world/crafting/fletch.rs`: a `count = "fletch"` recipe's time, its check, and its count after the margin (Fletcher, the ranger's at level 1, #1021; "never brittle" gone with #1336) |
 | `sees_unaware` | `Perception::compute` (`perception/actors.rs`): `SeenActor::unaware` from `surprise::creature_unaware` for each creature in view, false for all without it; read by look mode ("unaware of you") and `ui/glyphs.rs` (the unaware mark) (Stalker's eye, the ranger's at level 2) |
-| `startled_blow` | `World::startle` → `World::hair_trigger` (`world/free_blow.rs`): a check made against a hostile attacker beside the holder is answered by `Cue::Startled`'s free blow before the attack is rolled; `resolve` (and `cast.rs::spell_attack`) stop when it fells the attacker (Hair trigger) |
+| `startled_blow` | `World::startle` → `World::hair_trigger` (`world/combat/free_blow.rs`): a check made against a hostile attacker beside the holder is answered by `Cue::Startled`'s free blow before the attack is rolled; `resolve` (and `cast.rs::spell_attack`) stop when it fells the attacker (Hair trigger) |
 | `carry_percent` | `burden::load` (the limit before the affixes' kilograms, kept a multiple of 3) |
 | `travel_percent` | `World::step_price` on the overworld, after the survival skill |
 | `terrain_as` | `World::step_price`: the terrain stepped onto is priced as the one it names (local and overworld alike; its ids checked once the terrain loads, `TalentBook::check_terrain`) |
 | `plunge_proof` | `World::fall_in`: no plunge damage and no draw for it (Water walking's status has `ice_holds` instead: the ice never gives way, `docs/dev/status-effects.md`) |
 | `light_on_ice`, `climb_percent` | `World::tread` (the load on the ice is the body's weight alone), `World::tread_price` (the climb's price) |
 | `wading_proof` | `World::wade`: no exposure, no draw |
-| `beast_friend` | `beast_friend::befriended` (`world/beast_friend.rs`), read by `World::stance`, `ai::nearest_hostile_in_sight`, and `PerceptionView::stance`; `World::resolve` (an attack by the player) records the type in `Progress::empathy_broken` |
+| `beast_friend` | `beast_friend::befriended` (`world/allies/beast_friend.rs`), read by `World::stance`, `ai::nearest_hostile_in_sight`, and `PerceptionView::stance`; `World::resolve` (an attack by the player) records the type in `Progress::empathy_broken` |
+| `kin_to` | Beast-friend's rule by creature tag (`BeastMods::kin_tags`): `beast_friend::calms` holds for a type carrying a tag held, so `befriended`, `PerceptionView::stance`, and a rolled quest's pool read it as they read Beast-friend; a struck type stays hostile (`empathy_broken`). The loader asks that a creature carries the tag (`check_kin`). Rat-king's court's vermin |
+| `bars_slot`, `opens_slot` | `world/items/body_slots.rs` (`docs/dev/equipment.md` "Barred and opened slots"): `has_slot`, `World::barred_words`, `PerceptionView::barred`, and `World::shed_unworn` as a gift takes or goes; checked against `data/slots.toml` once the objects load (`check_slots`) |
 | `hunger_percent`, `no_exertion` | `World::hunger_percent` (the race's pace scaled), `exert` |
 | `xp_percent` | `grant_xp` (every gain: kills, discovery, quests, dev) |
 | `notice` | `search.rs`: `notices` (as if trained in Spot) and `search_modifier(Look::Passive)` |
@@ -146,13 +151,13 @@ wiki's effect text appends "while raging".
 | `max_dex`, `deflection` | `Actor::defence` (each worn armour's cap; on top of magic items' Deflection) |
 | `protection` | `Actor::protection` through `talent_protection` (`DefenceMods::protection_with`: the piece worn with the most Protection counts as body armour; a shield in a hand slot) |
 | `stance_to_hit` | `Actor::stanced` (`DefenceMods::stance_to_hit`: a penalty only, rounded toward 0) |
-| `slip_percent` | `World::slipped` (`world/gifts.rs`), on the player's step price in `travel.rs`: some hostile beside, none beside the cell stepped to; whatever the stance |
+| `slip_percent` | `World::slipped` (`world/character/gifts.rs`), on the player's step price in `travel.rs`: some hostile beside, none beside the cell stepped to; whatever the stance |
 | `pain` | `World::hurt` for `Harm::Actor` and `Harm::Trap`, damage over 1 |
-| `barbs` | `World::resolve` → `World::barbed` (`world/gifts.rs`) after a melee blow that hurt and left the target alive: `hurt(attacker, barbs, Harm::Barbs)`, no roll, no noise, a death of it earns nothing |
+| `barbs` | `World::resolve` → `World::barbed` (`world/character/gifts.rs`) after a melee blow that hurt and left the target alive: `hurt(attacker, barbs, Harm::Barbs)`, no roll, no noise, a death of it earns nothing |
 | `resist` | `Actor::resistances`, as gear (`Resistances::sum` caps it); `damage` names the kind (Flame-hardened's and Kindled's fire, Of the deep's cold), else the choice |
 | `resting_percent` | `World::healing_rate`, on resting's pace (Fast healer) |
-| `second_wind` | `world/second_wind.rs` (`Action::UseTalent`, `use:second_wind`, `Ability::SecondWind` under `Source::Talent`): hit points back, then its `cooldown` status |
-| `horns_grace`, `stare` | `world/gifts.rs` (`Action::Gift`, `Ability::Sign(SignActive)` under `Source::Sign`): the birth sign's actives, then their `cooldown` statuses (`SignMods::sign_cooldown`) |
+| `second_wind` | `world/character/second_wind.rs` (`Action::UseTalent`, `use:second_wind`, `Ability::SecondWind` under `Source::Talent`): hit points back, then its `cooldown` status |
+| `horns_grace`, `stare` | `world/character/gifts.rs` (`Action::Gift`, `Ability::Sign(SignActive)` under `Source::Sign`): the birth sign's actives, then their `cooldown` statuses (`SignMods::sign_cooldown`) |
 | `iron_stomach` | `eat.rs`: `eat_rotten` (no vomiting, no draw for it; sickness halved) and `feed` (overeating never vomits) |
 | `status_eases` | `World::live`: the sufferer's easing pace, `VigourMods::eases_every` into `Effect::until_eases_every`/`advance_every` |
 | `no_penalty`, `penalty_percent` | `Actor::penalty` through `Effects::penalty_for` (`VigourMods::penalty`: lowerings only, toward 0) |
@@ -172,58 +177,59 @@ wiki's effect text appends "while raging".
 | `speed_percent` | `World::burdened`, the one place every price passes (`quicker`) |
 | `weapon` `crit`, `at_rank` | `OffenceMods::weapon_benefit` (the held rank passed in) |
 | `weapon_marks` | `World::practise` (`OffenceMods::marks`; no `role`: every skill, Forge-born) |
-| `blaze` | `world/element_gifts.rs` (`Action::Gift`, `Ability::Sign` under `Source::Sign`): the burst, the fires, then its `cooldown` status |
+| `blaze` | `world/character/element_gifts.rs` (`Action::Gift`, `Ability::Sign` under `Source::Sign`): the burst, the fires, then its `cooldown` status |
 | `two_handed_crit`, `unarmed_die` | `Actor::melee` (and `kick` for the die, the bigger of it and `kick_die`) |
+| `unarmed_on_hit` | `Actor::melee`: a bare-handed profile carries them as its `on_hit` (a natural attack's place), applied in `World::after_blow`'s rider loop; never a kick's (Clawed's bleeding) |
 | `stance_dodge` (Wild guard) | `Actor::defence`, the stance's Dodge (`DefenceMods::stance_dodge`) |
 | `step_percent` | `World::step_price` (`MovementMods::step_percent`: body armour, burden, shield) |
 | `disease_immune`, `checks` | `World::expose` (refused, nothing rolled), `disease_turn`, `search_modifier(Look::Passive)` (Willpower) |
 | `no_penalty_to`, `raise_percent` | `VigourMods::penalty(status, stat, by)` in `Effects::penalty_for` |
 | `free_blow` `flurry` | `World::second_blow` on `Cue::First` (`World::flurry`), after the off hand and the bash; two `cleave` sources make `great_cleave` |
 | `flurry_cost` | `World::flurry`: the second blow spends its cost (Ki) first, else none (`MartialMods::flurry_cost`; `docs/dev/resources.md`) |
-| `retribution { resource, cost }` (the paladin's at 25, #912; band-gated) | `World::retribution` (`world/smite.rs`), from `World::second_blow`'s `Cue::Attacked { hit }` arm before the riposte: a hostile beside the player whose melee attack hit them takes their smite (`smite_profile`) as `Free::Retribution`, its cost (zeal) spent first, else none (`FaithMods::retribution`; `docs/dev/combat.md`, `docs/dev/resources.md`) |
+| `retribution { resource, cost }` (the paladin's at 25, #912; band-gated) | `World::retribution` (`world/classes/smite.rs`), from `World::second_blow`'s `Cue::Attacked { hit }` arm before the riposte: a hostile beside the player whose melee attack hit them takes their smite (`smite_profile`) as `Free::Retribution`, its cost (zeal) spent first, else none (`FaithMods::retribution`; `docs/dev/combat.md`, `docs/dev/resources.md`) |
 | `hardened` | `World::level_up`, as the level comes (a level's hit points again, and `bonus` more, past `hp_level`) |
 | `resource_build` (Blood frenzy, Patient blade, Zealot, Battle rhythm: `melee_hit` and `melee_kill`, raised in `fight.rs::resolve` for a melee blow), `resource_max` (Mighty rage, Inner calm), `resource_start` (Battle trance), `resource_rate` (Battle trance, Inner calm, Steady hand, Patient blade) | `World::gain_resource` (beside the resource's own `builds`), `Actor::resource_max`, `Actor::resource_start` (`World::grant_resource`, `focus::hold`), `World::resource_rate` |
 | `unstoppable` | `World::unstoppable` (`hurt`, `Harm::Actor`: `cost` of the rage via `spend_resource`), `World::live` (the numb statuses tick nothing while Raging lasts) |
 | `radiance` | `LightCache::sources` (a carried source, `RADIANCE` tag, while its status lasts) |
 | `inner_light` | `LightCache::sources` (a carried source, `INNER` tag, always: the player and the creatures see by it alike) |
-| `patient_defence` (Patient defence, the ascetic's at 18, #849) | `World::patient_defence` (`world/ascetic.rs`), from `use_class`: a degree of its status (Poised) for a wait's price, the ki its talent's `resource`; `World::poised` switches the riposte on in `World::free_blows_of` and lets `World::riposte` answer a dodged blow (`Cue::Attacked { dodged }`, raised by `World::attack`); the Dodge is the status's `combat` |
-| the actives (`rage`, `veterans_wind`, `lay_on_hands`, `avatar`, `smite`, `quivering_palm`) | `world/class_ability.rs` (Rage: `world/rage.rs`; `rage { resource }`, `MartialMods::rage_status`); `Ability::Class` in `ability.rs` (`class_cooldown`: Rage's status and what it `follows`; `class_cost`: a talent's `resource`, Avatar's `hands_cost_percent` of Lay on hands') |
-| `smite { per_levels, sides, aim, unholy }` (the paladin's at 1, #910) | `world/smite.rs`: `World::smite(SmiteMode, dir)` (the one smite code: `SmiteMode::Plain`, `Branding`, `Wrathful`, `Banishing`; the rider by `World::smite_rider`) and `World::smite_profile` (the melee profile, `Smite::dice_at(level, unholy)` as its extra dice, `Content::unholy` reading `data/smite.toml`'s tags, the `aim` stat's modifier to hit); paid in zeal (its talent's `resource`), no cooldown |
-| `smite_mode { mode, status, severity, turns, check, difficulty }` (the paladin's Branding smite at 12 and Wrathful smite at 32, #911; Banishing smite at 50, #913) | `FaithMods::smite_modes` (`SmiteRider::Brand`, `SmiteRider::Fear`, `SmiteRider::Banish`; `FaithMods::smite_mode(active)`), each its own `ClassActive` (`BrandingSmite`, `WrathfulSmite`, `BanishingSmite`: aimed, `strikes`, `holy`); `world/smite.rs`: Smite's blow (the mode needs the Smite talent's `smite`), then `World::smite_rider` on a hit that did damage: `brand` afflicts its status (Branded, which sheds `item_glow` by its `light`: no new reader); `fear` asks the foe `check::check` of its `check` stat's modifier (and its talents' checks) against `difficulty` + the smiter's Smite `aim` modifier, and failing afflicts its status (one that `flees`, checked on load) at `turns` degrees, `by` the player; `banish` takes nothing more: `World::mode_profile` doubles the extra dice on an unholy foe with no `Actor::summoner` (no line unless it wounds and leaves it alive: "reels under holy wrath"), and on one with a summoner the rider says "is unmade" and `World::unmake` kills it (`World::dies`, then what `resolve` does for a kill: `train_kill`, `siphon`, `Trigger::Kill`), past `unstoppable` and whatever its hit points; paid in zeal (its talent's `resource`), spent by `use_class` after the refusals and the bands |
-| `holy_wrath { dice }` (Holy wrath, the paladin's at 40, #913; no bands) | `FaithMods::holy_wrath`; `World::holy_wrathed` (`world/smite.rs`), one line in `World::resolve` after `lore_blow`, so every melee blow, shot, throw, and free blow: on a hit, when `Content::unholy` says so of the target or the holder has `avatar` (`FaithMods::avatar`, read there too: Avatar alone is no wrath), one draw of the dice, `World::resisted` by the blow's kind, added to the blow's damage after its soak. No line |
-| `catch_missiles` (Diamond soul's catch, the ascetic's at 40, #851) | `World::caught_missile` (`world/ascetic.rs`), from `resolve` (`caught_shot`, a shot or throw) and `trap_strikes` (`caught_trap_shot`, a trap's missile): a hit on one with no weapon and no shield in hand spends its cost (Ki) by itself and is a miss; `World::caught` ends the flight on that cell (`fly`, `trap_shot`), where the missile falls (`MartialMods::catch_missiles`) |
-| `wind_step` (Step of the wind, the ascetic's at 6, #847) | `World::wind_step` (`world/ascetic.rs`), from `use_class`: a degree of its status (Light-footed), `Spent::NoTime`, the ki its talent's `resource`; `World::may_wind_step` refuses it before the spend while that status lasts |
-| `spell` (`{ kind = "spell", spell = "ID" }`, checked against `data/spells/`) | `MagicMods::spells` → `Ability::Spell`'s `had_by`; `world/cast.rs` |
-| `spell_mod` (`SpellModSpec`: `rungs`, `scroll_rungs`, `wand_rungs`, `reach_rungs`, `degree_rungs`, `sides`, `dice`, `bonus`, `reroll`, `rider`, `cells`, `radius_cells`, `degrees`, `cost`, `when`; a talent chosen for a school or an element keys on the choice) | `MagicMods::spell` → `Actor::spell_mods` (`world/spell_mods.rs`), read by `world/spell_rung.rs` and the cast path (the spell scaling design §7.1: Empower, Archmage, Keen mind, School focus, Scroll adept, Wand mastery, Sure hand, Brimming; `rider` has no shipped user since the spell types took Numbing cold's, `docs/dev/spells.md`); `cost` in `Actor::spell_base` |
-| `spell_type` (`arc_chance`, `when`: damage types; Conductor) | `MagicMods::arc_chance`, read in `world/spell_arc.rs::spell_type_spreads` (`docs/dev/spells.md` "Spell types") |
+| `patient_defence` (Patient defence, the ascetic's at 18, #849) | `World::patient_defence` (`world/classes/ascetic.rs`), from `use_class`: a degree of its status (Poised) for a wait's price, the ki its talent's `resource`; `World::poised` switches the riposte on in `World::free_blows_of` and lets `World::riposte` answer a dodged blow (`Cue::Attacked { dodged }`, raised by `World::attack`); the Dodge is the status's `combat` |
+| the actives (`rage`, `veterans_wind`, `lay_on_hands`, `avatar`, `smite`, `quivering_palm`) | `world/classes/class_ability.rs` (Rage: `world/classes/rage.rs`; `rage { resource }`, `MartialMods::rage_status`); `Ability::Class` in `ability.rs` (`class_cooldown`: Rage's status and what it `follows`; `class_cost`: a talent's `resource`, Avatar's `hands_cost_percent` of Lay on hands') |
+| `smite { per_levels, sides, aim, unholy }` (the paladin's at 1, #910) | `world/classes/smite.rs`: `World::smite(SmiteMode, dir)` (the one smite code: `SmiteMode::Plain`, `Branding`, `Wrathful`, `Banishing`; the rider by `World::smite_rider`) and `World::smite_profile` (the melee profile, `Smite::dice_at(level, unholy)` as its extra dice, `Content::unholy` reading `data/rules/smite.toml`'s tags, the `aim` stat's modifier to hit); paid in zeal (its talent's `resource`), no cooldown |
+| `smite_mode { mode, status, severity, turns, check, difficulty }` (the paladin's Branding smite at 12 and Wrathful smite at 32, #911; Banishing smite at 50, #913) | `FaithMods::smite_modes` (`SmiteRider::Brand`, `SmiteRider::Fear`, `SmiteRider::Banish`; `FaithMods::smite_mode(active)`), each its own `ClassActive` (`BrandingSmite`, `WrathfulSmite`, `BanishingSmite`: aimed, `strikes`, `holy`); `world/classes/smite.rs`: Smite's blow (the mode needs the Smite talent's `smite`), then `World::smite_rider` on a hit that did damage: `brand` afflicts its status (Branded, which sheds `item_glow` by its `light`: no new reader); `fear` asks the foe `check::check` of its `check` stat's modifier (and its talents' checks) against `difficulty` + the smiter's Smite `aim` modifier, and failing afflicts its status (one that `flees`, checked on load) at `turns` degrees, `by` the player; `banish` takes nothing more: `World::mode_profile` doubles the extra dice on an unholy foe with no `Actor::summoner` (no line unless it wounds and leaves it alive: "reels under holy wrath"), and on one with a summoner the rider says "is unmade" and `World::unmake` kills it (`World::dies`, then what `resolve` does for a kill: `train_kill`, `siphon`, `Trigger::Kill`), past `unstoppable` and whatever its hit points; paid in zeal (its talent's `resource`), spent by `use_class` after the refusals and the bands |
+| `holy_wrath { dice }` (Holy wrath, the paladin's at 40, #913; no bands) | `FaithMods::holy_wrath`; `World::holy_wrathed` (`world/classes/smite.rs`), one line in `World::resolve` after `lore_blow`, so every melee blow, shot, throw, and free blow: on a hit, when `Content::unholy` says so of the target or the holder has `avatar` (`FaithMods::avatar`, read there too: Avatar alone is no wrath), one draw of the dice, `World::resisted` by the blow's kind, added to the blow's damage after its soak. No line |
+| `catch_missiles` (Diamond soul's catch, the ascetic's at 40, #851) | `World::caught_missile` (`world/classes/ascetic.rs`), from `resolve` (`caught_shot`, a shot or throw) and `trap_strikes` (`caught_trap_shot`, a trap's missile): a hit on one with no weapon and no shield in hand spends its cost (Ki) by itself and is a miss; `World::caught` ends the flight on that cell (`fly`, `trap_shot`), where the missile falls (`MartialMods::catch_missiles`) |
+| `wind_step` (Step of the wind, the ascetic's at 6, #847) | `World::wind_step` (`world/classes/ascetic.rs`), from `use_class`: a degree of its status (Light-footed), `Spent::NoTime`, the ki its talent's `resource`; `World::may_wind_step` refuses it before the spend while that status lasts |
+| `spell` (`{ kind = "spell", spell = "ID" }`, checked against `data/spells/`) | `MagicMods::spells` → `Ability::Spell`'s `had_by`; `world/magic/cast.rs` |
+| `spell_mod` (`SpellModSpec`: `rungs`, `scroll_rungs`, `wand_rungs`, `reach_rungs`, `degree_rungs`, `sides`, `dice`, `bonus`, `reroll`, `rider`, `cells`, `radius_cells`, `degrees`, `cost`, `when`; a talent chosen for a school or an element keys on the choice) | `MagicMods::spell` → `Actor::spell_mods` (`world/magic/spell_mods.rs`), read by `world/magic/spell_rung.rs` and the cast path (the spell scaling design §7.1: Empower, Archmage, Keen mind, School focus, Scroll adept, Wand mastery, Sure hand, Brimming; `rider` has no shipped user since the spell types took Numbing cold's, `docs/dev/spells.md`); `cost` in `Actor::spell_base` |
+| `spell_type` (`arc_chance`, `when`: damage types; Conductor) | `MagicMods::arc_chance`, read in `world/magic/spell_arc.rs::spell_type_spreads` (`docs/dev/spells.md` "Spell types") |
 | `spell_mana_percent` | `Actor::spell_cost` (the cast and `Unavailable::NoMana`) |
 | `study` | `World::start_study` (time: reading a grimoire), `study_odds` (bonus; `overreach_percent`: Overreach's third off the overreach the check counts) |
 | `deflection_unarmoured` | `Actor::defence` (Deflection, no body armour: Mage armour) |
 | `purify`, `corpse_harmless`, `meal_heals` | `eat.rs`: `eat_rotten` (no sickness, no exposure, no draw), `eat_fresh` (no `on_eat` harm or vomiting, no draw), `meal_heals` from `finish` (an object, or a fresh corpse) |
 | `status_damage` | `World::resolve` and `World::spell_strikes` (before resistance) → `World::lore_blow` (a hit at a creature suffering the status: Poison lore, Malison) |
-| `hex_tithe` | `world/malison.rs` (`World::hex_tithe`, from `World::dies` before the creature leaves: a dying creature under a hex of the player's, `Content::hex_statuses()` with `Effect::by` the player, pays its level / `per_levels` in mana, at least 1, to `max_mana`; "The hex comes home." in `news`) |
+| `hex_tithe` | `world/magic/malison.rs` (`World::hex_tithe`, from `World::dies` before the creature leaves: a dying creature under a hex of the player's, `Content::hex_statuses()` with `Effect::by` the player, pays its level / `per_levels` in mana, at least 1, to `max_mana`; "The hex comes home." in `news`) |
 | `reprieve` | `World::hurt` → `World::reprieve` (after Rise from the ashes; `Progress::once`) |
-| `song`, `virtuoso` | `world/song.rs` (`World::sing`: `TalentMods::song`, Virtuoso's free and a degree greater; its one cost via `World::spend_resource` or `World::spend_mana`; `Act::Sing`; the status at `severity` plus Music's `Effect::SongDegrees`, on the singer or, `on = "hearers"`, on each hostile hearer who fails `check` against `difficulty` plus Music's `Effect::SongCraft`: `World::lull`, the Lullaby's); `Ability::unavailable` (`Unavailable::Short` or `NoMana` by its cost) |
-| `cackle` | `world/witch.rs` (`World::cackle`, from `use_class`: the time of a cast; `World::own_hexes_in_sight`, the player's hexes, `Content::hex_statuses()` with `Effect::by` the player, on the creatures `perception` sees; each re-`afflict`ed at its severity plus `degrees`; refused, no time, with none; `Act::Cackle` at the talent's `noise`) |
-| `charge` | `world/charge.rs` (`Action::UseAt`, `World::use_class_at`; `ClassActive::aims_cell`, `Aim::Cell`; `ClassActive::cost` is `Step`, so what blocks a step blocks it; the UI aims it on the line to the foe, `ui/target.rs`, and the menu row says its stamina, `Content::charge_cost`) |
-| `volley` | `world/volley.rs` (`Action::UseAt`, `World::use_class_at`; `ClassActive::aims_cell`, `Aim::Cell`; the UI aims it as a shot, `ui/target.rs`) |
-| `sic` | `world/sic.rs` (`Action::UseAt`, `World::use_class_at`; `ClassActive::aims_cell`, `Aim::Cell`; `Content::sic_range` the aiming mode's reach; `docs/dev/companion.md`) |
-| `spirit_weapon` | `world/spirit_weapon.rs` (`Action::Shape`, `World::use_class_shape`; `ClassActive::aims_shape`, `Aim::Shape`; the UI opens the shape list, `ui/shape_screen.rs`); the gifts in `Actor::melee` and `Actor::off_hand_blow` (`spirit_weapon::gifts`: `to_hit`, `threat` lower, `penetration = ALL_PROTECTION`); `magic::Numbers::of` and `describe::lines` (`spirit_gift`) |
-| `scribe` | `world/scribe.rs` (`Action::Scribe`, `World::start_scribe`; `ClassActive::aims_spell`, `Aim::Spell`; the UI opens the scribe list, `ui/scribe_screen.rs`, from `PerceptionView::scribes` and `blank_scrolls`); `Ability::unavailable` (a status blocking `cast` greys it) |
-| `merchants_eye` | `world/merchants_eye.rs` (`Action::UseOn`, `World::use_class_on`; `ClassActive::aims_item`, `Aim::Item`, `Ability::action_on`; the UI opens the identify list, `IdentifyBy::Class`) |
-| `favoured_prey` | `World::resolve` → `World::favoured` (`world/ambush.rs`), against `Quests::prey` |
+| `song`, `virtuoso` | `world/classes/song.rs` (`World::sing`: `TalentMods::song`, Virtuoso's free and a degree greater; its one cost via `World::spend_resource` or `World::spend_mana`; `Act::Sing`; the status at `severity` plus Music's `Effect::SongDegrees`, on the singer or, `on = "hearers"`, on each hostile hearer who fails `check` against `difficulty` plus Music's `Effect::SongCraft`: `World::lull`, the Lullaby's); `Ability::unavailable` (`Unavailable::Short` or `NoMana` by its cost) |
+| `cackle` | `world/classes/witch.rs` (`World::cackle`, from `use_class`: the time of a cast; `World::own_hexes_in_sight`, the player's hexes, `Content::hex_statuses()` with `Effect::by` the player, on the creatures `perception` sees; each re-`afflict`ed at its severity plus `degrees`; refused, no time, with none; `Act::Cackle` at the talent's `noise`) |
+| `charge` | `world/classes/charge.rs` (`Action::UseAt`, `World::use_class_at`; `ClassActive::aims_cell`, `Aim::Cell`; `ClassActive::cost` is `Step`, so what blocks a step blocks it; the UI aims it on the line to the foe, `ui/target.rs`, and the menu row says its stamina, `Content::charge_cost`) |
+| `volley` | `world/classes/volley.rs` (`Action::UseAt`, `World::use_class_at`; `ClassActive::aims_cell`, `Aim::Cell`; the UI aims it as a shot, `ui/target.rs`) |
+| `sic` | `world/allies/sic.rs` (`Action::UseAt`, `World::use_class_at`; `ClassActive::aims_cell`, `Aim::Cell`; `Content::sic_range` the aiming mode's reach; `docs/dev/companion.md`) |
+| `spirit_weapon` | `world/classes/spirit_weapon.rs` (`Action::Shape`, `World::use_class_shape`; `ClassActive::aims_shape`, `Aim::Shape`; the UI opens the shape list, `ui/shape_screen.rs`); the gifts in `Actor::melee` and `Actor::off_hand_blow` (`spirit_weapon::gifts`: `to_hit`, `threat` lower, `penetration = ALL_PROTECTION`); `magic::Numbers::of` and `describe::lines` (`spirit_gift`) |
+| `scribe` | `world/magic/scribe.rs` (`Action::Scribe`, `World::start_scribe`; `ClassActive::aims_spell`, `Aim::Spell`; the UI opens the scribe list, `ui/scribe_screen.rs`, from `PerceptionView::scribes` and `blank_scrolls`); `Ability::unavailable` (a status blocking `cast` greys it) |
+| `merchants_eye` | `world/classes/merchants_eye.rs` (`Action::UseOn`, `World::use_class_on`; `ClassActive::aims_item`, `Aim::Item`, `Ability::action_on`; the UI opens the identify list, `IdentifyBy::Class`) |
+| `favoured_prey` | `World::resolve` → `World::favoured` (`world/combat/ambush.rs`), against `Quests::prey` |
 | `ambush` (summed), `ambush_threat` | `World::resolve` → `World::sneaks` (before the strike), `sneak_threat`, `ambushed`; `Dice::and` adds the dice of the same sides |
 | `exact_sounds` | `Perception::compute` → `noise::perceive` (`noise::Exact::All`) |
 | `silent_unburdened`, `attack_noise_percent` | `noise::noise` (steps while Unburdened; attacks) |
 | `trap_ease` | `search.rs::finding` (searching and in passing; `difficulty_of`, which disarming reads, is unchanged) |
 | `pick_lock`, `steal`, `throw_voice` | `Ability::had_by` (and the actions' refusals: `lockpick.rs`, `steal.rs`, `voice.rs` ask it); no talent carries `pick_lock`, `steal`, or `trap_ease` (#684; the kinds stay) |
-| `lurk` | `world/thief.rs` (`World::lurk`, `use_class`; `thief_may` refuses "Too late to lurk."); the status switches the gatekeeper's free blow on in `World::free_blows_of`; `World::step_up` → `lie_in_wait` flags the blow (`Technique::lurk`), `resolve` → `lurked` makes its target unaware unless `Mind::last_seen` is set |
-| `stillness { name, statuses }` (Stillness, on the ascetic's Still mind at 25, #850) | `World::stillness` (`world/ascetic.rs`, its own section), from `use_class`: every listed status the player suffers is removed and `World::ended` says its `end` words, `Spent::NoTime`, two ki its talent's `resource`; `MartialMods::stillness: Option<Vec<StatusId>>`; `Unavailable::Still` (`ability.rs::still`) greys it and refuses it before the spend with none of them to end; `name` is the menu's (`TalentEffect::active_name`), as the talent's own is Still mind; each status id is checked at load |
-| `stunning_strike`, `quivering_palm` | `world/ascetic.rs` (`World::stunning_strike`; `World::palm_blow`, the one body of both blows, Quivering palm's caller in `class_ability.rs`); `use_class` refuses either with a weapon in hand (`ClassActive::bare_handed`) or nobody hostile there before the ki is spent; `MartialMods::stunning_strike`/`quivering_palm: Option<PalmBlow>` |
-| `exploit` | `world/openings.rs` (`World::exploit`, `use_class`; `thief_may` → `exploit_may` refuses "There is no one there.", off the mark, and "It has no vital spot." at a seen foe without vitals; `ability::class_cost` makes its cost every opening held); `Technique::sneak`, taken in `resolve` by `sneak_taken`, passes `sneaks` as unaware (no `startle`, no flat-footed); `docs/dev/openings.md` |
-| `thrown_exploit` | `world/openings.rs` (`World::use_class_throw`, `Action::UseThrow`, `use:thrown_exploit:c:12,5`; the thief's at 18): Exploit's blow as a throw, its ladder on the creature aimed at only (`Technique::at`); `docs/dev/openings.md` "The thrown exploit" |
+| `lurk` | `world/classes/thief.rs` (`World::lurk`, `use_class`; `thief_may` refuses "Too late to lurk."); the status switches the gatekeeper's free blow on in `World::free_blows_of`; `World::step_up` → `lie_in_wait` flags the blow (`Technique::lurk`), `resolve` → `lurked` makes its target unaware unless `Mind::last_seen` is set |
+| `stillness { name, statuses }` (Stillness, on the ascetic's Still mind at 25, #850) | `World::stillness` (`world/classes/ascetic.rs`, its own section), from `use_class`: every listed status the player suffers is removed and `World::ended` says its `end` words, `Spent::NoTime`, two ki its talent's `resource`; `MartialMods::stillness: Option<Vec<StatusId>>`; `Unavailable::Still` (`ability.rs::still`) greys it and refuses it before the spend with none of them to end; `name` is the menu's (`TalentEffect::active_name`), as the talent's own is Still mind; each status id is checked at load |
+| `stunning_strike`, `quivering_palm` | `world/classes/ascetic.rs` (`World::stunning_strike`; `World::palm_blow`, the one body of both blows, Quivering palm's caller in `class_ability.rs`); `use_class` refuses either with a weapon in hand (`ClassActive::bare_handed`) or nobody hostile there before the ki is spent; `MartialMods::stunning_strike`/`quivering_palm: Option<PalmBlow>` |
+| `exploit` | `world/classes/openings.rs` (`World::exploit`, `use_class`; `thief_may` → `exploit_may` refuses "There is no one there.", off the mark, and "It has no vital spot." at a seen foe without vitals; `ability::class_cost` makes its cost every opening held); `Technique::sneak`, taken in `resolve` by `sneak_taken`, passes `sneaks` as unaware (no `startle`, no flat-footed); `docs/dev/openings.md` |
+| `thrown_exploit` | `world/classes/openings.rs` (`World::use_class_throw`, `Action::UseThrow`, `use:thrown_exploit:c:12,5`; the thief's at 18): Exploit's blow as a throw, its ladder on the creature aimed at only (`Technique::at`); `docs/dev/openings.md` "The thrown exploit" |
 | `exploit_dice`, `exploit_to_hit`, `exploit_status` | `StealthMods::exploit: ExploitMods` (dice summed by `Dice::and`): `World::exploit` adds n × `to_hit` to the profile and leaves the foe a degree of `status` on a hit; `openings.rs::land_exploit` rolls n × `dice` after the sneak dice (Exploit 1d6; Low blow +1 and Stunned) |
-| `sneak_kill_status` | `World::resolve` → `World::vanishing_act` (`world/thief.rs`), where a sneak attack's blow kills |
+| `sneak_kill_status` | `World::resolve` → `World::vanishing_act` (`world/classes/thief.rs`), where a sneak attack's blow kills |
 | `trained_skills` | `Actor::skill_effect` (a bonus for every trained skill, as `skill`'s) |
 | `missile_dodge` | `World::target_against` (from `resolve` for shots and throws, `trap_strikes` for trap missiles) |
 | `spell_damage_percent` | `World::evaded` in `spell_hurts` (bursts and bolts, before resistances) |
@@ -236,10 +242,10 @@ wiki's effect text appends "while raging".
 | `stone_find` | `search.rs`: `World::stone_find(at)` added to the modifier of both looks for a hidden feature on a `stone` terrain cell |
 | `disease_interval_percent` | `World::disease_turn`: `Infection::left` set to the interval scaled (`TalentMods::scaled`, at least 1 s) |
 | `stout` | `burden::load` → `Load::stout`; `Load::penalty` gives Burdened while Strained (left out of the JSON while false) |
-| `small_target` | `World::small_target` (`world/racial.rs`) |
+| `small_target` | `World::small_target` (`world/character/racial.rs`) |
 | `launcher_range { skill }` | `Actor::launcher_range` through `OffenceMods::launcher_range_for` (the launcher's `skill` id) |
 | `weapon_ranks` | handed out, not read: `class::hand_out` (`raise_ranks`) raises every row of `skills` (none named: every weapon skill and style of the content but hidden styles, read from the table, never a list) held below `to` to it, `WeaponSkills::raise_to`; its `news` said by `grant_class` (Travelled hands, the bard's) |
-| `take_up_skills` | handed out, not read: `World::take_up_skills` (`world/jack.rs`, from `grant_class`, `take_talent`, and `bestow`) trains every skill of the content the player lacks, but `except`, at `dice` from `levels_rng` in file order; its `news` said by `grant_class` (Jack of all trades, the bard's) |
+| `take_up_skills` | handed out, not read: `World::take_up_skills` (`world/classes/jack.rs`, from `grant_class`, `take_talent`, and `bestow`) trains every skill of the content the player lacks, but `except`, at `dice` from `levels_rng` in file order; its `news` said by `grant_class` (Jack of all trades, the bard's) |
 | `ignore_burdened` | `burden::load` (`Load::ignores_burdened`, as a dwarf's) |
 | `no_bloating`, `corpse_stats_percent` | `eat.rs`: `feed` (nutrition stops one below Bloated, nothing overeats) and `corpse_gifts` (a corpse's `train` marks and `widen` chances scaled, the chance at most 100) |
 | `searching` | `search.rs::search_modifier` (searching only; Keen searcher; `search`, in both looks, is above) |
@@ -248,7 +254,7 @@ wiki's effect text appends "while raging".
 | `stat` | handed out, not read: `class::hand_out` raises score and potential (`Stats::gift`) at the pick or the grant; a Toughness gift raises `hp` with the maximum (Stubborn's +2, #1406; it gives nothing on Toughness checks) |
 | `weightless_coins` | `burden::load` (coins, item class `coins`, left out of the load) |
 | `quest_gold_percent` | `World::complete` (`quest.rs`) |
-| `favour_percent` | `world::shop::favour` (before the cap, `MAX_FAVOUR`) |
+| `favour_percent` | `world::people::shop::favour` (before the cap, `MAX_FAVOUR`) |
 | `gem_worth` | `PerceptionView::appraisal` → `magic::describe::appraised` (the describe screen) |
 | `identify_carried` | `World::appraise_carried` from `live`: `Magic::carried` counts the seconds (saved, left out while 0) |
 | `gem_find_percent` | `gem::find_with` (the gems' chance scaled, at most 100) through `magic::loot::Luck` (`Luck::of(talents)`: with `loot_magic_percent`, from `level_template` and `World::loot_of`) |
@@ -269,14 +275,14 @@ Birth sign gifts, the Roc to the Barghest (#267), and their hooks:
 | `exact_footsteps` | `noise::perceive` (footsteps at their own cell, never `rough_place`) |
 | `stance_costs` | `World::set_stance`: a wait's price instead of no time |
 | `max_hp_percent` | `Actor::max_hp`, `lasting_max_hp` (`Actor::frail`, at least 1) |
-| `rise_from_ashes` | `World::hurt` → `World::rise_from_ashes` (`world/stars.rs`): the player at 0 hit points of anything but `Harm::Starving` (choking never passes `hurt`), while `Progress::once` lacks `risen`; sets it, afflicts the status, hit points to the share (of the maximum with it), `Event::Spell` over `burst_cells`, one gameplay roll of the damage for every creature reached (`spell_hurts`), `shock(Heat)` |
+| `rise_from_ashes` | `World::hurt` → `World::rise_from_ashes` (`world/character/stars.rs`): the player at 0 hit points of anything but `Harm::Starving` (choking never passes `hurt`), while `Progress::once` lacks `risen`; sets it, afflicts the status, hit points to the share (of the maximum with it), `Event::Spell` over `burst_cells`, one gameplay roll of the damage for every creature reached (`spell_hurts`), `shock(Heat)` |
 | `smell_rot` | `PerceptionView::smell(stack)` (a `Freshness` word from `rot::stage`, never an age), the eat list's mark |
 | `free_blow` `gatekeeper` | `World::second_blow` on `Cue::Approaches` (`World::step_up` from `creature_steps`); with `one_in` (the Gatekeeper gift's 4) `OffenceMods::gatekeeper_one_in`, a chance the stance scales (`World::gatekeeper_odds`, `gatekeeper_draw`), else `FreeBlows::gatekeeper`, every time |
 
 `Progress::once` (saved, left out while empty) holds what may happen once in a life; the
 `talents` dump and `OwnTalent::spent` mark Rise from the ashes "(spent)" once it has.
 
-Sign-limited picks (#270; `world/sign_picks.rs`), and their hooks:
+Sign-limited picks (#270; `world/character/sign_picks.rs`), and their hooks:
 
 | Effect | Read by |
 |---|---|
@@ -310,7 +316,7 @@ they are held like any talent, saved with them, and read through `TalentMods`. T
 the talents' kinds and the class's own (the README of `data/talents/` lists them). The seven
 actives (`rage`, `veterans_wind`, `lay_on_hands`, `smite`, `radiance`,
 `quivering_palm`; since then the others in `ClassActive::ALL`, among them the berserker's
-`war_cry { status, severity, difficulty }`, #844, `world/war_cry.rs`, paid in rage by its
+`war_cry { status, severity, difficulty }`, #844, `world/classes/war_cry.rs`, paid in rage by its
 talent's `resource`) are effects that `TalentEffect::active` maps to a `ClassActive`;
 `Content::class_active` finds the talent that has one, whose name and description the abilities
 menu shows; a holy gift's talent may name the bands it works for (`alignment`; outside them it
@@ -344,7 +350,7 @@ spells are three (Mend, Blessing, Cure wounds): their rite is the prayer (#883).
 is a pickable Scholar talent (#952), not on the wizard's table.
 Their statuses: Blessed, Hexed (`ill_wished`), Weakened, Sluggish (`sluggish`, cost
 150), Worn thin (the reprieves'); new effects `arcane_bolt` and `blight` in `data/effects.toml`.
-Tests: `world/caster_tests.rs`.
+Tests: `world/magic/caster_tests.rs`.
 
 ## Loading
 
@@ -387,7 +393,7 @@ new character"; the wiki says "only at character creation") is met only at chara
 so only the creation picks offer it (the creation step, `--talents`, Random) and a level's pick
 refuses it in words. Family wealth and Father's sword (tree `heritage`, `no_free`) are the
 first; their effects (`starting_gold`, `starting_gems`, `heirloom`; `TalentEffect::is_handed_down`)
-are hand-outs, not `TalentMods`: `World::hand_down` (`world/heirloom.rs`, one line in `learn`, and
+are hand-outs, not `TalentMods`: `World::hand_down` (`world/character/heirloom.rs`, one line in `learn`, and
 one in `World::begin` for a class's level-1 talents: the aristocrat's Family wealth, #1404, so
 `may_take` refuses it as held and Father's sword is open to their first pick) gives them once, as
 the talent is taken or given, each from its own stream (`character/family-wealth/<spec>`,
@@ -396,18 +402,18 @@ heirloom is `loot::heirloom` (2 affixes: magic, prefix and suffix; more: rare, s
 as a rare item's), identified, and readied in its own slot only if that is free. Its weapons
 are checked once objects load (`talent::check_heirlooms`). `kit::tests::
 nobody_starts_strained_and_only_wealth_burdens` adds the heritage at its heaviest: never
-Strained, and Burdened only for the weakest of a small race. Tests: `world/heirloom_tests.rs`.
+Strained, and Burdened only for the weakest of a small race. Tests: `world/character/heirloom_tests.rs`.
 The background story (docs/dev/background.md) reads the talents held after the creation picks:
 its `only` lines force Family wealth's and Father's sword's chapters, so nothing is paid twice.
 Landed noble (#1405; `heritage`, `needs = { creation = true, class = "aristocrat" }`) is no
 hand-down: its `stipend_more` (`FortuneMods::stipend_gold_percent`, `stipend_chance`,
-`stipend_magic_percent`) is read by `world/stipend.rs::of_level`, as the aristocrat's class
+`stipend_magic_percent`) is read by `world/classes/stipend.rs::of_level`, as the aristocrat's class
 ability Stipend's `stipend` effect (`FortuneMods::stipend`, level 1 of the class table) is read by
 `grow_stipend`, one line in `experience.rs::rise_from` after `level_up` (every level reached,
 a prestige class's too). The rule and its numbers: `docs/dev/npcs.md` "The aristocrat's servant",
-`data/stipend.toml`. The merchant's Invest (`invest`, `FortuneMods::invest`, #1407) gates the
-business partner's deals (`world/invest.rs`); the partner is placed by the talent id, as the
-servant is: `docs/dev/npcs.md` "The merchant's business partner", `data/invest.toml`.
+`data/rules/stipend.toml`. The merchant's Invest (`invest`, `FortuneMods::invest`, #1407) gates the
+business partner's deals (`world/classes/invest.rs`); the partner is placed by the talent id, as the
+servant is: `docs/dev/npcs.md` "The merchant's business partner", `data/rules/invest.toml`.
 
 **Crafts** (#1418; the craftsperson design `docs/design/craftsperson.md` §3, §4): the `crafts`
 tree, after `heritage`, holds the seven trades (Smith, Wright, Gemcutter, Brewster, Pitman,
@@ -420,7 +426,7 @@ creation pick alone (`Need::Class`, `Need::Creation`), never a level's or a bonu
 (`Races::teaching`, file order): "not to be a dwarf or a duergar"; a `race_lacks` on a skill no
 race teaches everyone is dropped at load (`resolve_needs`), so it never shows empty. The effect
 is `trade { skill, dice, tools }` (`CraftEffect::Trade`, `is_handed_down`): `World::hand_down`
-calls `World::learn_trade` (`world/trade.rs`), which rolls `dice` plus `CraftMods::trade_bonus`
+calls `World::learn_trade` (`world/crafting/trade.rs`), which rolls `dice` plus `CraftMods::trade_bonus`
 (`trade_bonus { value }`, summed; Time served's, the craftsperson's at level 1) from the stream
 `character/trade/<spec>/<skill>` into `Skills::add`, then makes each tool line (`KitLineSpec`,
 `Content::kit_lines`; checked once objects load, `talent::check_trades`) from the same stream,
@@ -428,12 +434,12 @@ as a kit line is made, and puts it in the pack via `World::story_item` (readied 
 slot, its labelled type known). The sum keeps `CraftMods::trades: Vec<SkillId>`, read once in
 `world::skill_roll` (its `trades` argument): a roll on a trade is one step up the ladder, as a
 known-for skill's (`SkillRoll::known`; `SkillRoll::trade` when the step is the trade's, not the
-class's; never two steps). Tests: `world/trade_tests.rs`,
+class's; never two steps). Tests: `world/crafting/trade_tests.rs`,
 `content::talent::tests::a_trade_names_its_skill_and_tools_and_the_races_it_is_closed_to`.
 
 **The craftsperson's two** (#1419; the design §4, §5): the class file's `creation_bonus = {
 count = 2, trees = ["crafts"] }` (`ClassDef::creation_bonus`, `creation_trees`;
-`world/creation.rs::creation_bonus`) opens level 1's `Due` with `bonus: 2` beside
+`world/character/creation.rs::creation_bonus`) opens level 1's `Due` with `bonus: 2` beside
 `talents: creation_count` (`open_creation`), and `World::bonus_trees_at(1)` answers the class's
 creation trees (the level table's for every other level). The bonus machinery does the rest: a
 Crafts talent spends a bonus pick before an ordinary one (`learn`), `settle_due` drops a bonus
@@ -444,19 +450,19 @@ picks); `creation_bonus_left` is the Talents step's title ("Choose a trade"). A 
 ordinary pick. The class's level 1 abilities, granted in `begin` before the picks are taken,
 are **Time served** (`trade_bonus { value = 6 }`: each trade `3d6+6`) and **Eye for the make**
 (`eye_for_make`, `CraftMods::eye_for_make`, read once, in `PerceptionView::describe_item`,
-which adds `magic::describe::make_lines`: what salvage would give at `salvage.toml`'s yield
+which adds `magic::describe::make_lines`: what salvage would give at `rules/salvage.toml`'s yield
 (`piece::break_up`, the materials a profession works), or that the item is protected
 (`world::protected_in`, the rules' `item_protected` over perception's quests, a unique or Proof only once identified, so nothing hidden leaks) or holds nothing
 worth saving; for arms and armour `temperable` or `whittleable`, the improvements left to
-`temper.toml`'s `most` or that it is damaged, never `attempts`; the main material's `work` in
+`rules/temper.toml`'s `most` or that it is damaged, never `attempts`; the main material's `work` in
 words. No draw, no state). A scenario's own character may name its picks (`talents` in its
-`character` table; docs/dev/character-creation.md). Tests: `world/craftsperson_tests.rs`.
+`character` table; docs/dev/character-creation.md). Tests: `world/crafting/craftsperson_tests.rs`.
 No talent reads the story's draw, and there is no `background` system (#774, #787).
 
 The creation step reads a drafted run (`World::draft`: `begin` with the kit, the picks left
 due), cloned per question: `creation_offers(picks)` takes `picks` on a clone and returns what is
 left and what may come next; `random_creation` runs `take_random` on a clone. Tests:
-`world/creation_tests.rs`.
+`world/character/creation_tests.rs`.
 
 ## Determinism and saves
 
@@ -471,10 +477,10 @@ light ids after it). A run without talents content (fixtures) never has a pick d
 
 ## Tests
 
-`world/class_active_tests.rs` (the adventurers' tables: abilities by level, bonus picks, every
+`world/classes/class_active_tests.rs` (the adventurers' tables: abilities by level, bonus picks, every
 passive's rule, the actives and their cooldowns, the holy gifts unanswered outside their bands, replays);
 `content/talent.rs` (loading, the well-formedness refusals, choices' options), `talent.rs`
-(summing, ranks per choice, serialization), `world/talent_arms_tests.rs` (the Weaponcraft and Guard hooks, the role need's words), `world/damage_talent_tests.rs` (Elemental ward and Crusher), `world/land_talent_tests.rs` (the Shadow and Wayfarer hooks), `world/talent_tests.rs` (dues and refusals,
+(summing, ranks per choice, serialization), `world/character/talent_arms_tests.rs` (the Weaponcraft and Guard hooks, the role need's words), `world/character/damage_talent_tests.rs` (Elemental ward and Crusher), `world/character/land_talent_tests.rs` (the Shadow and Wayfarer hooks), `world/character/talent_tests.rs` (dues and refusals,
 prerequisites in words, Hardy's growth, several levels at once and `levelup:auto`,
 dropped picks, every hook, a free-blow talent, saves and replays, perception and dumps).
 
@@ -507,7 +513,7 @@ No other talent eases burden: the Roc's sign has no pick of that kind (its born 
 the dwarf no racial one; the commoner's 1 is Pack mule, the thief's 25 Pack mule and Porter, and
 the merchant's 6 Deep pockets (coins weightless, no kilograms) and Pack mule. There are no
 `carry_kg` or `step_slowdown_percent` effects. Roc's strength and Supple stay birth-sign gifts
-(a sign grants only `granted` talents of the `stars` tree, `horoscope::check`, so they cannot
+(a sign grants only `granted` talents of the `stars` tree, `horoscope::check_talents`, so they cannot
 name the line). A table
 that gives a step the character already took gives a pick in its place (`class::held_already`).
 Tests: `talent_wits_tests.rs` (each step's limit, penalty, price, and Defence; the chain).
@@ -518,10 +524,10 @@ The everyday folk (#246: aristocrat, commoner, craftsperson, merchant) have thei
 abilities each at 1, 6, 12, 18, 25, 32, 40, 50, 60 (34 class-tree talents, plus Riposte and
 Second wind, which their tables hand out), and bonus picks at 10, 20, 30, 45, 55; the
 craftsperson's table is its design's (#1415: Time served and Eye for the make at 1). The
-warrior, berserker, paladin, and ascetic (I1) have theirs, in `world/class_active_tests.rs`; the
-ranger, thief, and bard (I2, #244) theirs, in `world/class_rogue_tests.rs` (the kill tally and
+warrior, berserker, paladin, and ascetic (I1) have theirs, in `world/classes/class_active_tests.rs`; the
+ranger, thief, and bard (I2, #244) theirs, in `world/classes/class_rogue_tests.rs` (the kill tally and
 Favoured prey, every passive, Volley and Inspire, the abilities the thief's skills give, Lurk,
-Vanishing act (#684), the thief's table without Trained wind (#1463; Exploit is `world/openings_tests.rs`'s), and a save holding a talent the content dropped); the priest, druid, wizard, and witch (I3, #245) theirs, in `world/caster_tests.rs`. The I2 tables hand out two ordinary talents (Evasion,
+Vanishing act (#684), the thief's table without Trained wind (#1463; Exploit is `world/classes/openings_tests.rs`'s), and a save holding a talent the content dropped); the priest, druid, wizard, and witch (I3, #245) theirs, in `world/magic/caster_tests.rs`. The I2 tables hand out two ordinary talents (Evasion,
 Lore; and the bard's Fast healer and the druid's Beast-friend, #790), so a creation pick
 or a bonus pick may already have taken one; the table then gives a talent pick in its place at
 that level instead (`class::held_already`, counted into the
@@ -529,7 +535,7 @@ level's `Due` by `level_up`, with the news "You know Second wind already: choose
 place."; not on a restore, where a grown table only gives what is missing).
 `class_tests.rs::a_talent_already_picked_is_not_given_again_but_brings_a_pick_in_its_place`. The showcase's and the arena's own
 characters are thieves, the forest's and the world's rangers: their runs start with Sneak attack
-or Favoured prey. `world/class_tests.rs` covers the grants, bonus picks,
+or Favoured prey. `world/classes/class_tests.rs` covers the grants, bonus picks,
 restores, replays, and every hook; `content::class::tests` the table checks.
 
 A table row is `{ level = 25, talent = "x" }` (`ClassDef::abilities` and
@@ -549,7 +555,7 @@ bonus trees are the class of its level's (`World::bonus_trees_at`). A prestige c
 are class abilities too (`Content::check_class_tables` checks both tables) and are marked `(class)` in the dumps like a class's. One ships, the Hunter (`data/prestige/hunter.toml`,
 #881): the warrior's hit points, two rolls, Athletics and Survival known for, bonus picks at its 5,
 10, 15, 23, and 28 from Weaponcraft and Guard, and one row, Spirit weapon at its level 1; its door
-is a campaign's calling. The tests' Warden (`world/calling_tests.rs`) gives Fencing at its level 1
+is a campaign's calling. The tests' Warden (`world/classes/calling_tests.rs`) gives Fencing at its level 1
 and Riposte at 2.
 
 ## The trees so far
@@ -561,7 +567,7 @@ The statuses Winded (Second wind's cooldown) and Staggered (`cost = 150`, until 
 
 Scholar, Grit, and Delver (#240) ship whole; their five mana talents (Deep well, Clear mind,
 Meditation, Frugal caster, Blood magic) came with #242 (H6; `docs/dev/mana.md`,
-`world/mana_talent_tests.rs`), which took the `mana` system's `pending` off. `talent_wits_tests.rs` covers
+`world/character/mana_talent_tests.rs`), which took the `mana` system's `pending` off. `talent_wits_tests.rs` covers
 each rule. Skill focus is the talent with a `skill` choice (a skill the
 taker is trained in, `talent::may_take` refuses another as a `BadChoice`;
 `talent:skill_focus:athletics`, one pick per skill; `skill { value = 25 }`), Treasure hunter the
@@ -581,14 +587,14 @@ The `resources` system (#225, `docs/dev/resources.md`) is in the list: its five 
 at 150 %), and Patient blade (Shadow, thief 32: openings decay at 50 %, and the thief's kill of
 their mark builds one more, the `mark_kill` event, docs/dev/openings.md), and Zealot (Grit, who holds Smite from level 6: a
 blow taken builds a second zeal); the only class-limited picks (`needs = { class, level }`, Zealot's
-by `needs = { talents = { smite = 1 }, level = 6 }`, the paladin alone holding Smite, #891). `world/resource_talent_tests.rs` covers each rule and the
+by `needs = { talents = { smite = 1 }, level = 6 }`, the paladin alone holding Smite, #891). `world/character/resource_talent_tests.rs` covers each rule and the
 prerequisites. A talent of a resource the class has not been granted yet holds the change until
 it is (Martial arts grants ki at level 1, so Inner calm, at 18, always finds it). Wild guard (Might, berserker 6; #680) halves
 the frenzy stance's Dodge penalty (`stance_dodge`), the stance a berserker's rage holds them
-in (`world/frenzy.rs`); `world/frenzy_tests.rs` covers it.
+in (`world/combat/frenzy.rs`); `world/combat/frenzy_tests.rs` covers it.
 
 The damage-type talents (#248), Elemental ward (H2) and Crusher (H1), are the `damage_types`
-system's two, so it is not `pending`; `world/damage_talent_tests.rs` covers the ward
+system's two, so it is not `pending`; `world/character/damage_talent_tests.rs` covers the ward
 against damage and status doses, its words on the character screen, Crusher by weapon kind, and
 the bar. The witch's Blight (#245) needs no read of its own for its type: its burst names
 `damage_type = "poison"`, and its Poisoned goes through `World::afflict`, which meets poison
@@ -611,12 +617,12 @@ daily check at 06:00, #562, draws the training stream instead); the level-up scr
 each; `granted` talents (races' `versatile`, the birth signs') are computed into `Actor::talents`
 by whoever grants them and never offered (`may_take` refuses them); a race's and the sign's
 together, by `stars::grant`. The birth signs' are granted
-by `world/stars.rs` at the start and on every restore (`Talents::regrant`; #265,
+by `world/character/stars.rs` at the start and on every restore (`Talents::regrant`; #265,
 `docs/dev/character-creation.md`), in the first tree, Stars (`no_free`).
 
 **`Actor::boons`** holds the talents given for life outside every pick, with what
-they hand out (`World::bestow`, `world/boons.rs`): a forgotten altar's Chosen and Forsaken, and
-a background story's `talent` and `flaw` lines (#707, `world/background.rs`;
+they hand out (`World::bestow`, `world/fixtures/boons.rs`): a forgotten altar's Chosen and Forsaken, and
+a background story's `talent` and `flaw` lines (#707, `world/character/background.rs`;
 `docs/dev/background.md`). `stars::grant` puts them back on every restore beside the race's and
 the sign's grants. `OwnTalent::story` (a boon a told line names, `background::gave`) marks the
 story's "(story)" / "(story, flaw)"; `OwnTalent::boon` is the altar's (a boon the story did not

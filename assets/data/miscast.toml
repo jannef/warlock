@@ -1,4 +1,4 @@
-# Miscasts (#1271, #1288; spec §8 "Spells": "Miscasts"; `world/miscast.rs`; the miscasts design
+# Miscasts (#1271, #1288; spec §8 "Spells": "Miscasts"; `world/magic/miscast.rs`; the miscasts design
 # docs/design/miscasts-review.md): every spell cast with the caster's own mana, the player's or a
 # creature's, makes a Spellcraft check once it has gone off. Scrolls, wands, and flasks make none:
 # their magic is the item's.
@@ -32,7 +32,10 @@ rank_ease = 1
 die = "2d12"
 per_margin = 5
 safe_below = 71
-# A backfired summon (`backfire` on a call; `world/backfire.rs`) brings its creatures in this
+# "Near the caster", for a swap and a boon: within this many steps (Chebyshev) in a clear line.
+# 1 to 40.
+near = 6
+# A backfired summon (`backfire` on a call; `world/magic/backfire.rs`) brings its creatures in this
 # faction, not their own kind's: the berserk, hostile to everyone, the caster, the caster's foes,
 # and one another alike (#1311). Left out: their type's own faction.
 backfire_faction = "berserk"

@@ -34,7 +34,7 @@
 //!
 //! **Flasks** (the potions wave 2 design §3): a potion with an `[object.throw]` table is thrown
 //! at a cell and casts a spell where it shatters, as a scroll casts one where it is read
-//! (`world/flask.rs`):
+//! (`world/health/flask.rs`):
 //!
 //! ```toml
 //! [object.throw]
@@ -49,7 +49,7 @@
 //! The splash is meant for a hex or a damage spell a cell can hold: a burst (of any range: one
 //! about its caster is centred where the flask breaks), or a hex that is a ray or a bolt (it
 //! falls on whoever stands where the flask breaks). The loader checks only that the spell exists
-//! (the owner, #1205: the data author is trusted); `world/flask.rs` casts whatever it names as a
+//! (the owner, #1205: the data author is trusted); `world/health/flask.rs` casts whatever it names as a
 //! burst's damage or a hex's status or zone on the cells it reaches. A flask is meant to be a
 //! potion too, with a `drink` table.
 
@@ -449,7 +449,7 @@ pub struct ThrowSpec {
 impl ThrowSpec {
     /// Resolves it against the spells (loaded before objects): the spell id must name one. The
     /// rest is the data author's (the owner, #1205): a rung past a ladder's end casts at its
-    /// last, and a splash of any spell goes off as `world/flask.rs` says.
+    /// last, and a splash of any spell goes off as `world/health/flask.rs` says.
     pub(super) fn resolve(self, content: &Content) -> Result<Flask, String> {
         let spell = (content.spell_id(&self.spell))
             .ok_or_else(|| format!("`throw`: no spell `{}` in data/spells/", self.spell))?;

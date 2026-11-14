@@ -4,11 +4,11 @@
 
 Design document for the owner's review (2026-11-02, #821). Written against `origin/main` at
 f3846261 (encounters E5). Nothing here is implemented; §13 cuts it into issues. It builds on what
-is there: enemy summoning (`docs/dev/summoning.md`, `world/summon.rs`), the one cast path and
+is there: enemy summoning (`docs/dev/summoning.md`, `world/creatures/summon.rs`), the one cast path and
 the spell data (`docs/dev/spells.md`, `data/spells/*.toml`, the ladders), the creature AI and
-factions (`docs/dev/creatures.md`, `world/ai.rs`, `data/factions.toml`), statuses as the house
-rule for anything that lasts (`data/status.toml`), the energy scheduler (`world/schedule.rs`),
-level travel (`world/travel.rs::travel`), displacement (`world/talk.rs`), the one abilities menu
+factions (`docs/dev/creatures.md`, `world/creatures/ai.rs`, `data/factions.toml`), statuses as the house
+rule for anything that lasts (`data/status.toml`), the energy scheduler (`world/turn/schedule.rs`),
+level travel (`world/levels/travel.rs::travel`), displacement (`world/people/talk.rs`), the one abilities menu
 (`ability.rs`), the class tables (`docs/dev/progression.md` "Class tables") and the coverage
 policy (rules 1–9 of #776, binding here), and the class ability gaps report (draft PR #802).
 Every number is data and hidden in the game; the wiki states it (the owner's rule: the game is
@@ -79,12 +79,12 @@ is gained, grows, eats, or dies: that is #825's.
 
 | Part | Today | Used for |
 |---|---|---|
-| `world/summon.rs` | `summons_at`, `live_summons`, `summon_cells` (free cells within `spread`, in line of sight, nearest first), `creature_summons` (pay, status, noise, `count.roll` on the gameplay stream, `below(pool.len())` a creature, `make_creature` with the summoner's faction, `Actor::summoner`) | the spell kind's resolution (§5.2) calls `summon_cells` and the making with the player as summoner |
+| `world/creatures/summon.rs` | `summons_at`, `live_summons`, `summon_cells` (free cells within `spread`, in line of sight, nearest first), `creature_summons` (pay, status, noise, `count.roll` on the gameplay stream, `below(pool.len())` a creature, `make_creature` with the summoner's faction, `Actor::summoner`) | the spell kind's resolution (§5.2) calls `summon_cells` and the making with the player as summoner |
 | `Actor::summoner`, `Actor::faction_override` | who called it; the faction it was placed in when not its type's (`Actor::faction`) | an ally's `faction_override` is `player` (§4.2); `summoner` stays what it is |
 | `ai.rs::decide` | look (`nearest_hostile_in_sight`: hostiles by `content.stance_of(me.faction, a.faction)`, Beast-friend, mimics) → `fight` → `search_or_return` → patrol; `Mind { last_seen, noise, post, noticed, missed }`; `route` (A*, fixed tie-breaks) | the ally arm goes first in `decide` (§4.3); `route` moves it; `fight` attacks for it |
 | `World::stance(a, b)` | Beast-friend, then the factions' stance | an ally's target test is `stance(master, other) == Hostile` (§4.3) |
 | `World::travel` | moves the player alone; `free_cell_near`, `arrive_spawner`, arrival lines | the adjacent allies move after the player (§4.5) |
-| Displacement (`world/talk.rs`) | the player swaps places with a creature not hostile to them | the player walks through their pack; nothing new |
+| Displacement (`world/people/talk.rs`) | the player swaps places with a creature not hostile to them | the player walks through their pack; nothing new |
 | The scheduler | actors on the current level act by speed; other levels frozen | allies act as creatures do; the retinue is frozen as another level is |
 | Statuses | `eases` a degree, `max`, `start`/`end` lines; the status loop in `World::live` | `summoned`: degrees are minutes (§5.3); its end is the departure |
 | The one cast path | `kind` buff, heal, cleanse, hex, utility, damage; `[spell.effect]` by kind; the ladders (`damage`, `heal`, `range`, `length`, `radius`, `degrees`); `spell_degrees`; Lingering | a new kind `summon` with its effect table and the `count` ladder (§5.1, §7.2) |
@@ -135,7 +135,7 @@ their own looking is the AI's, §4.3). The ally's `Mind` works as any creature's
 
 ### 4.3 Its mind: the ally arm
 
-One arm at the top of `ai.rs::decide`, for an actor with `ally`, in a new `world/ally.rs`
+One arm at the top of `ai.rs::decide`, for an actor with `ally`, in a new `world/allies/ally.rs`
 (`World::ally_plan(id) -> Plan`), before the creature's own look. In order:
 
 | Step | Rule | Draws |
@@ -204,7 +204,7 @@ other level, the retinue steps out: each placed by `free_cell_near` around the p
 in id order, `retinue = false`, said "Your wolves follow you in."
 
 Resting on the overworld with a retinue is a rest as today (the retinue takes no turns); an
-**encounter** (`world/encounter.rs`) that opens a local area places the retinue beside the player
+**encounter** (`world/levels/encounter.rs`) that opens a local area places the retinue beside the player
 as any entry does, before the party's positions are taken (the party's cells avoid them). An
 ambush's cover cell holds one actor: the retinue stands in the cells about it.
 
@@ -574,8 +574,8 @@ The ranger's class abilities on these hooks are #825's; none is pre-empted here.
 
 | Slice | Issue | What it touches | Depends on |
 |---|---|---|---|
-| **A1 The ally core** | allies: the actor field, the side, the mind, the orders, following and the retinue, experience | `warlock-core`: `world/actor.rs` (`Ally`, `AllySource`, `Order`, `Actor::ally`), `content/ally.rs` (`data/allies.toml`), `world/ally.rs` (`ally_plan`, `allies_of`, `order`, `ally_departs`, `follow_along` from `travel`, the retinue, `ally_mods`), one arm in `ai.rs::decide`, one line in `talk.rs::disturbs_rest`, `Action::Order` and the replay text, the dev `ally:`, `Source::Ally` and the four `Ability` variants, `fight.rs::dies` → `earn_kill` for the master (and `tally_kill`, `favoured`, `gain_resource`), `PerceptionView::allies`/`stance`/`SeenActor::ally`, the dumps (§9.3), `TalentEffect::AllyMod` with `to_hit`/`protection`/`most` read, `[[system]] allies`, Beast-bond; `world/ally_tests.rs` (§8); `docs/dev/allies.md`, CLAUDE.md's lines | — |
-| **A2 Summons** | the spell kind | `content/spell_def.rs` (`kind = "summon"`, the effect table, the `count` ladder in `spell_ladder.rs`, the checks), `cast.rs::cast_summon` with `summon.rs`'s cells and making shared (`summon_for`), `data/status.toml` `summoned`, the departure on the status's end in `live`, no corpse for a slain summon in `creature_dies`, `count`/`duration_percent`/`lasting` read, `spell_words.rs`'s summon words, `summoning.md`'s sentence; `world/summon_spell_tests.rs` on a fixture pool | A1 |
+| **A1 The ally core** | allies: the actor field, the side, the mind, the orders, following and the retinue, experience | `warlock-core`: `world/turn/actor.rs` (`Ally`, `AllySource`, `Order`, `Actor::ally`), `content/ally.rs` (`data/allies.toml`), `world/allies/ally.rs` (`ally_plan`, `allies_of`, `order`, `ally_departs`, `follow_along` from `travel`, the retinue, `ally_mods`), one arm in `ai.rs::decide`, one line in `talk.rs::disturbs_rest`, `Action::Order` and the replay text, the dev `ally:`, `Source::Ally` and the four `Ability` variants, `fight.rs::dies` → `earn_kill` for the master (and `tally_kill`, `favoured`, `gain_resource`), `PerceptionView::allies`/`stance`/`SeenActor::ally`, the dumps (§9.3), `TalentEffect::AllyMod` with `to_hit`/`protection`/`most` read, `[[system]] allies`, Beast-bond; `world/allies/ally_tests.rs` (§8); `docs/dev/allies.md`, CLAUDE.md's lines | — |
+| **A2 Summons** | the spell kind | `content/spell_def.rs` (`kind = "summon"`, the effect table, the `count` ladder in `spell_ladder.rs`, the checks), `cast.rs::cast_summon` with `summon.rs`'s cells and making shared (`summon_for`), `data/status.toml` `summoned`, the departure on the status's end in `live`, no corpse for a slain summon in `creature_dies`, `count`/`duration_percent`/`lasting` read, `spell_words.rs`'s summon words, `summoning.md`'s sentence; `world/magic/summon_spell_tests.rs` on a fixture pool | A1 |
 | **A3 UI** | the Allies group, Set on's aim, the words, the mark | `crates/warlock`: `ui/abilities_screen.rs` (the group), `ui/target.rs` (`Aim::Cell` for Set on: nothing new if the aim reuses the shot's mode), `ui/glyphs.rs` (the ally mark as the unaware mark), `fight::attack_message`'s "your"; `screen_snapshots.rs` cases (§9.2) | A1 (A2 for the calls' rows) |
 | **D1 The druid** | the content | `data/creatures/wolf.toml`, `bear.toml` (+ `docs/dev/creatures/beasts.md`, the roster tests' rows), the three spells and their scrolls, `pack_leader.toml`, `lord_of_the_wild.toml`, the three spell talents, `04-druid.toml`'s table and affinity, `data/talents.toml`'s system (if A1 shipped it pending-free, nothing), the Ascmearc's wildlife row (optional), `caster_tests.rs` (the table to 60, `levelup:auto`), `balance_probe` a row (the druid's calls: pool over cost, the summons' hit points against the floor's), the wiki (§9.4), the spec, `spells.md` "The first list" gains them | A1, A2, A3 |
 | **R1** (#825) | the ranger's companion | on A1: `AllySource::Companion`'s data and rules | A1 |

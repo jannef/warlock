@@ -67,7 +67,7 @@ disease) and `dies` (the death line's verb, `CreatureDef::death_verb`).
   and `burst` go into its spec as a creature file's do (the attack's `on_hit`, the
   `[creature.burst]` table, passed through as TOML and checked by the creature loader). The
   rug's `on_hit` engulfs (`engulfed` at grip 12 and `damage = 1`, the hold's own harm a tick,
-  `world/hold.rs::hold_harms`), the bellows' staggers, the lantern bursts as it dies (`1d6` fire,
+  `world/health/hold.rs::hold_harms`), the bellows' staggers, the lantern bursts as it dies (`1d6` fire,
   radius 1). **Grades**: `Animated::common` writes `grades` into every generated spec, true only
   for a tier with `grade_words` (the blades' "notched"/"keen", written as the type's
   `grade_words`); `CreatureSpec` no longer forces generated types ungraded, so the tier's word
@@ -123,7 +123,7 @@ weapon skills.
 - **The wiki**: `order::creatures`, the experience table, and the tag table show a family once
   (its first member's row); `animated.rs` prints its per-level numbers and odds.
 
-## In play (`world/animated.rs`)
+## In play (`world/creatures/animated.rs`)
 
 - **Drops** (`World::remains`, called by `creature_dies` for what a creature leaves): an
   animated creature's body falls whole by `[drops] intact`, one draw on `drop/<actor id>` (its `loot` is 0, so
@@ -197,14 +197,14 @@ of their own: the `animated` system and its Salvager, Unbinder, and Appraiser's 
 ## Tests
 
 `content/animated_tests.rs` (ids, order, numbers, group effects, identity, every load the same,
-collisions and bad bodies), `world/animated_tests.rs` (the legend's body, composition and its
+collisions and bad bodies), `world/creatures/animated_tests.rs` (the legend's body, composition and its
 stream, material weights, the cutlery's count, immunities, stealing, the drop rule and
 broken bodies as their parts with the break line, a loose gem and a book's leather,
-saves and a replay), `world/animated_dread_tests.rs` (the rug's engulfing at a point a tick against no one's two,
+saves and a replay), `world/creatures/animated_dread_tests.rs` (the rug's engulfing at a point a tick against no one's two,
 letting go as it dies; the bellows' rider; the lantern's burst on the player beside it with its
-line; the blades' grades and words and no other animated type's), `world/animated_blade_tests.rs` (the family's ids and numbers, a
+line; the blades' grades and words and no other animated type's), `world/creatures/animated_blade_tests.rs` (the family's ids and numbers, a
 blade's weapon, rank, stream, odds, and fight, first kills, quests, and the tag objective
-counting the family once, saves), `world/animated_panoply_tests.rs` (the composites' ids and
+counting the family once, saves), `world/creatures/animated_panoply_tests.rs` (the composites' ids and
 numbers, slot lines by `from` and `count`, the two-handed rule, ranks, shape, stream, the
 inherited powers by `fight`: a Flaming sword, rings of the Bear and the Ox, a resistance, a
 glowing ring; populations, saves), `content/danger.rs` (a family candidate's weight and member,

@@ -49,7 +49,7 @@ pub(super) fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
     if !effects.is_empty() {
         rows.push(format!("Effects {}", effects.join(", ")));
     }
-    // Whose guard their openings are in (`world/mark.rs`), their own choice.
+    // Whose guard their openings are in (`world/classes/mark.rs`), their own choice.
     if let Some(mark) = view.own_mark() {
         rows.push(format!("Mark {mark}"));
     }
@@ -96,13 +96,15 @@ pub(super) fn skill_rows(view: &PerceptionView<'_>) -> Vec<String> {
 /// The player's talents in the order taken, one a line: its name for its choice; a race's and a
 /// birth sign's gifts first, marked `(race)` and `(sign)`, the sign's flaw `(sign, flaw)`; a forgotten altar's
 /// `(altar)` and `(altar, flaw)`; the background story's `(story)` and `(story, flaw)`; a profane
-/// gift's `(profane)` and a profane bane's `(profane, bane)`.
+/// gift's `(profane)`, a profane bane's `(profane, bane)`, and a rising used up `(sign, spent)`
+/// or `(profane, spent)` (Twice-born).
 pub(super) fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
     (view.own_talents().iter())
         .map(|t| {
             let name = &t.name;
             match (t.granted, t.flaw, t.class) {
                 _ if t.profane == Some(GiftKind::Bane) => format!("{name} (profane, bane)"),
+                _ if t.profane.is_some() && t.spent => format!("{name} (profane, spent)"),
                 _ if t.profane.is_some() => format!("{name} (profane)"),
                 _ if t.story && t.flaw => format!("{name} (story, flaw)"),
                 _ if t.story => format!("{name} (story)"),

@@ -29,6 +29,7 @@ fact"): a change edits the homes of the facts it changes.
 | Web smoke test | `cargo xtask web-smoke <chrome>` (drives headless Chromium through a new run and a reload; not run in CI) |
 | Regenerate the vast level | `cargo xtask gen-vast` (writes `assets/campaigns/showcase/levels/vast.toml`; deterministic, never hand-edit) |
 | Check the vast level is fresh | `cargo xtask gen-vast --check` (run it after touching `xtask/src/vast.rs`) |
+| Check the docs' code paths | `cargo xtask docs-check` (every source file, and item of a file, type, or module, named in CLAUDE.md, `spec/`, `docs/dev/` exists; CI runs it; docs/dev/cli.md) |
 | Third-party notices | `cargo xtask licenses` (regenerates `THIRD_PARTY_LICENSES.html`; `--check` in CI). **Run it after changing dependencies**; keep `about.toml`'s `accepted` in sync with `deny.toml`'s `allow` |
 | Player wiki tables | `cargo xtask wiki` (writes `wiki/src/generated/*.md`), `--build` (mdBook into `wiki/book/`), `--check-links` (CI runs it) |
 | Golden screenshots | `cargo xtask golden` (compare; authoritative on Linux only), `--local`, `--update` (see "Golden screenshots") |
@@ -85,6 +86,7 @@ file). Topics:
 - `docs/dev/content.md` — TOML content embedded by `warlock-assets` and handed to core, level files and legends (faction overrides, arrival lines, water flow)
 - `docs/dev/campaign.md` — campaigns: `assets/campaigns/<id>/`, `campaign.toml`, what is a campaign's and what is shared, the cross-campaign checks, a run's campaign, the fingerprint per campaign, New run's order and its skip in a release, the Characters screen's campaign
 - `docs/dev/saves.md` — storage backends (native files, browser `localStorage`), one save per character and the list of them, autosave, permadeath, where files live (`paths.rs`, portable mode)
+- `docs/dev/graves.md` — burial grounds: the run's dead laid in Līctūn's plots and crypts, the `[burial]` table and the legend marks (places, fixed graves, the way down, statue places) a crypt level needs, the chain, out of the state hash
 - `docs/dev/releases.md` — cutting a release, the web build and its size tuning, GitHub Pages, logs and crash reports
 - `docs/dev/settings.md` — `settings.toml`, effect switches, clock, palettes, rebindable key commands (`settings/keys.rs`), the `Game` resource
 - `docs/dev/screens.md` — the screen stack (open, input, draw, the dialog, info pages, the text field), prompts as input modes, the screen modules, key commands and the abilities menu
@@ -112,12 +114,12 @@ file). Topics:
 - `docs/dev/caster-styles.md` — the caster styles (Sniper, Toucher, Battle caster): the grip by the spell, their benefit in the hooks, `practise_cast` and the `Outcome`, the caster curve, the Magic page (the schools of magic are only spell categories since #1263)
 - `docs/dev/spells.md` — the spell data: spell levels (0 to 70), the cost table, the `[[spell]]` files and their checks (none on strength), tags, learning
 - `docs/dev/resources.md` — alternative resources: the data, `Actor::resources`, grant, gain, spend, and end, time in the status loop, ability costs, the dev grant
-- `docs/dev/openings.md` — the thief's openings: the mark (`Actor::mark`, `world/mark.rs`), chosen attacks and free blows, the builds (`mark_kill`), the clears, the refusal, what the player sees
+- `docs/dev/openings.md` — the thief's openings: the mark (`Actor::mark`, `world/classes/mark.rs`), chosen attacks and free blows, the builds (`mark_kill`), the clears, the refusal, what the player sees
 - `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn, blood by damage type, fire's char
 - `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight, spawning, gear (a stable index: roster PRs edit only their own `docs/dev/creatures/<tribe>.md`, e.g. `undead.md`, never this file)
 - `docs/dev/summoning.md` — creatures' summoning (enemy-only): the `summon` table, the cooldown status, who summoned whom, the AI hook, the words
 - `docs/dev/allies.md` — allies: `Actor::ally`, the side, the ally arm of the AI, the three orders, following across levels and the retinue, the clock, an ally's kill, Beast-bond, the dev `ally:`
-- `docs/dev/companion.md` — the animal companion: `AllySource::Companion(CompanionData)`, the starting beast by race and the rares (`data/companions.toml`), taming (`world/tame.rs`), the name, growth with the master's level (the hooks in `actor.rs`), always along, the nose, `CreatureDef::{tameable, nose}`, the story's chapter, the `companion` dump
+- `docs/dev/companion.md` — the animal companion: `AllySource::Companion(CompanionData)`, the starting beast by race and the rares (`data/companions.toml`), taming (`world/allies/tame.rs`), the name, growth with the master's level (the hooks in `actor.rs`), always along, the nose, `CreatureDef::{tameable, nose}`, the story's chapter, the `companion` dump
 - `docs/dev/familiar.md` — the witch's familiar: `AllySource::Familiar(CompanionData)` and `kept()`, the starting beast by race (`data/familiars.toml`), the touch, the harrying, the direction asked with two kept beasts beside, the `familiar` dump
 - `docs/dev/animated.md` — animated objects: creature types generated at load, their bodies and streams, drops, immunities, the look
 - `docs/dev/npcs.md` — unique characters, chat and ask, rotation lines and mutters, displacement
@@ -132,7 +134,7 @@ file). Topics:
 - `docs/dev/traps.md` — trap data, triggering, known traps, the dev trap actions
 - `docs/dev/searching.md` — secret doors, the active and passive checks, who notices, the secrets stream
 - `docs/dev/magic-items.md` — affixes, rarities, base items, loot, identification, the item description
-- `docs/dev/enchanting.md` — affix capacity (`magic/capacity.rs`, materials' `binding`), the trim as the last step of making any item (`loot::finished`, gear's after its condition), `quality` on hand-made items, the capacity line for the Appraise-trained, the recipes (Kindle, Quicken, Recast, Imbue, Ennoble, Unbind: `world/enchant.rs`, `roll_affix_within`, the reach)
+- `docs/dev/enchanting.md` — affix capacity (`magic/capacity.rs`, materials' `binding`), the trim as the last step of making any item (`loot::finished`, gear's after its condition), `quality` on hand-made items, the capacity line for the Appraise-trained, the recipes (Kindle, Quicken, Recast, Imbue, Ennoble, Unbind: `world/crafting/enchant.rs`, `roll_affix_within`, the reach)
 - `docs/dev/potions.md` — potions: the drink kinds, drinking through Consume, words and colours, sources, their talents
 - `docs/dev/prayer.md` — the priest's prayer: `data/prayer.toml`, the prayer talents and `FaithMods::prayer`, the face, the problems in priority order, the strain and its lock, the fixes, the dumps
 - `docs/dev/scrolls.md` — reading, spell scrolls on the traps' shared spell code, the scroll of identify, the read and identify lists
@@ -221,7 +223,7 @@ page. A table has at most 5 columns where practical: split a wide one by topic (
 from the rest), turn one round (a row per skill effect, its values as columns), and put rare
 fields in a detail table or a per-row cell. A grid of short numbers along one axis (odds by bonus,
 a value by level) may be wider. Stat abbreviations (`St`, `Dx`, ...) are spelled out above the
-table that uses them (`text::stat_key`), and no cell holds code or action text (`use:...`).
+table that uses them (`wiki/util.rs::stat_key`), and no cell holds code or action text (`use:...`).
 
 **The game is vague, the wiki is accurate** (the owner, 2026-10-20): in the game, hidden numbers
 stay hidden and effects are told in words (the perception rules above are unchanged), but the
@@ -231,8 +233,14 @@ away, and the wiki is also where facts are inspected during development.
 **Wiki prose links its terms once per section** (the owner, #1609): new or edited wiki prose
 links each mechanic or keyword at its first mention in a section to the section that explains it
 (`wiki/TERMS.md`, the term map, says where; generated tables anchor every row,
-`status-effects.md#status-staggered`), and not again in that section; CI checks the links
+`status-list.md#status-staggered`), and not again in that section; CI checks the links
 (`cargo xtask wiki --check-links`).
+
+**Worked examples are tested**: the hand-written `> **Example: ...**` boxes (Combat, Stats, Burden,
+Skills, Mana, Enchanting) are checked by `xtask/src/wiki/examples.rs` (`cargo test -p xtask`), which
+rebuilds each example's character through `warlock-core` and fails unless the box states the
+numbers the game computes. A tuning change that moves one fails there: fix the box. A new box gets
+a test there too.
 
 **A PR that changes gameplay mechanics or world facts updates the wiki in the same PR**, like the
 spec and this file: edit the page, and generate a table in `xtask/src/wiki/` if the fact lives
@@ -269,7 +277,8 @@ Known differences from older Bevy:
 
 A successful compile does not verify anything visual. Before opening a PR:
 1. `cargo fmt`, clippy with `-D warnings`, `cargo test --workspace`.
-2. Simulation changes: add or update unit, property, or snapshot tests in `warlock-core`
+2. Simulation changes: add or update unit, property, or snapshot tests in `warlock-core` (its
+   shared helpers, `crate::test_support`: the built-in content, `world`, `run`, the message readers)
    (`insta` snapshots live in `crates/warlock-core/src/snapshots/`, `src/dump/snapshots/`, `src/mapgen/snapshots/`, and
    `src/mapgen/local/snapshots/`, the screens' in `crates/warlock/src/ui/snapshots/`; review with `cargo insta review` or `INSTA_UPDATE=always`, and read the diff). Look at the
    result with `warlock-cli dump` (or `gen` for a generated level), and check determinism with

@@ -98,3 +98,5 @@ jerkin and iron-shod boots, a kobold's patched smock and footwraps.
 
 Every run you start from **New run** gives you your kit and nothing else. The
 [Ascmearc](ascmearc.md)'s start adds nothing on top. The summary lists it all before you start.
+
+See also: [Classes](classes.md), [Equipment](equipment.md), and [Objects and your pack](objects.md).

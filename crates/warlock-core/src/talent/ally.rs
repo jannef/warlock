@@ -12,8 +12,8 @@ use serde::Deserialize;
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum AllyEffect {
     /// What the holder's allies get (spec §8 "Allies": Beast-bond): to-hit on their attacks
-    /// and Protection, read through their master (`world/ally.rs`); and what the holder's summon
-    /// spells do (`world/summon_spell.rs`): `count` more come every call, a call lasts
+    /// and Protection, read through their master (`world/allies/ally.rs`); and what the holder's summon
+    /// spells do (`world/magic/summon_spell.rs`): `count` more come every call, a call lasts
     /// `duration_percent` longer, `lasting` calls stay until slain, `most` more of each call's
     /// are kept at once.
     AllyMod {
@@ -33,7 +33,7 @@ pub enum AllyEffect {
     /// The summon draw's bias (the owner's Q9 of #828): a creature of a summon spell's pool that
     /// carries `tag` is `weight` times as likely to come (0: it never comes while another may).
     SummonBias { tag: String, weight: u32 },
-    /// The class active Sic 'em (`world/sic.rs`): the companion is set on a creature the player
+    /// The class active Sic 'em (`world/allies/sic.rs`): the companion is set on a creature the player
     /// sees within `range`, and suffers `blows` degrees of `status`, one that makes its hits
     /// criticals (`auto_critical`; what it costs is the talent's `resource`).
     Sic {
@@ -50,7 +50,7 @@ impl AllyEffect {
 }
 
 /// What a talent gives the holder's allies (spec §8 "Allies"): read where an ally strikes and
-/// is struck (`world/ally.rs`), through its master's mods.
+/// is struck (`world/allies/ally.rs`), through its master's mods.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct AllyMods {
     /// Added to every ally's attacks.
@@ -66,9 +66,9 @@ pub struct AllyMods {
     /// More of each summon spell's calls kept at once (on its `most`).
     pub most: i32,
     /// The summon draw's bias: a pool creature carrying the tag weighs this many times as much
-    /// (`world/summon_spell.rs`), in the order taken.
+    /// (`world/magic/summon_spell.rs`), in the order taken.
     pub summon_bias: Vec<(String, u32)>,
-    /// The active Sic 'em, if it has it (`world/sic.rs`).
+    /// The active Sic 'em, if it has it (`world/allies/sic.rs`).
     pub sic: Option<Sic>,
 }
 
@@ -109,7 +109,7 @@ impl AllyMods {
     }
 }
 
-/// The active Sic 'em (spec §8 "Class abilities"; `world/sic.rs`): the companion is set on a
+/// The active Sic 'em (spec §8 "Class abilities"; `world/allies/sic.rs`): the companion is set on a
 /// creature the player sees within `range`, suffering `blows` degrees of `status`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Sic {

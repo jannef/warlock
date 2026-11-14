@@ -62,10 +62,10 @@ resist it. The physical kinds have neither prefix nor suffix: [Protection](comba
 
 Two [talents](talents.md) work on damage types:
 
-- **[Elemental ward](talents.md#talent-elemental-ward)** is taken for one element: [fire](damage-types.md#damage-fire), [cold](damage-types.md#damage-cold), [electricity](damage-types.md#damage-electricity), [acid](damage-types.md#damage-acid), [poison](damage-types.md#damage-poison),
+- **[Elemental ward](talents-fighting.md#talent-elemental-ward)** is taken for one element: [fire](damage-types.md#damage-fire), [cold](damage-types.md#damage-cold), [electricity](damage-types.md#damage-electricity), [acid](damage-types.md#damage-acid), [poison](damage-types.md#damage-poison),
   [force](damage-types.md#damage-force), or [necrotic](damage-types.md#damage-necrotic). It resists that element 25 % per rank, up to two ranks. It counts like gear,
   under the same 75 % cap. A ward against poison also shrinks each dose of poison.
-- **[Crusher](talents.md#talent-crusher)** lets your striking blows and kicks ignore 2 points of the target's [Protection](combat.md#protection). That
+- **[Crusher](talents-body.md#talent-crusher)** lets your striking blows and kicks ignore 2 points of the target's [Protection](combat.md#protection). That
   covers a mace, a club, a staff, bare hands, and a [shield bash](abilities.md#ability-shield-bash). Shots and throws are not
   blows.
 
@@ -88,7 +88,7 @@ also simply know: [look mode](controls-prompts.md#look-mode) describes a creatur
 
 - **[Bleeding](status-effects.md#bleeding)** comes only from cuts and stabs. A big hit or a critical with a club, a fall into a
   [pit](traps.md#trap-pit), or a [fireball](magic.md#spell-fireball) opens no wound (see [Status effects](status-effects.md)).
-- **[Poison](status-effects.md#status-poisoned)** is damage of its own kind. A creature immune to [poison](damage-types.md#damage-poison) is never [poisoned](status-effects.md#status-poisoned), and resisting
+- **[Poison](status-list.md#status-poisoned)** is damage of its own kind. A creature immune to [poison](damage-types.md#damage-poison) is never [poisoned](status-list.md#status-poisoned), and resisting
   poison shrinks each dose, whether from a rat's bite or bad food.
 - **[Fire](damage-types.md#damage-fire)** melts ice where it bursts, and **[cold](damage-types.md#damage-cold)** freezes water, as a [fireball](magic.md#spell-fireball) and a [frost](magic.md#spell-frost)
   burst do (see [Temperature and ice](temperature.md)). The plunge through broken ice is cold.
@@ -98,3 +98,5 @@ also simply know: [look mode](controls-prompts.md#look-mode) describes a creatur
 
 [Starving](hunger.md#how-hungry-you-are), a [disease](diseases.md) eating at you, and the slow loss of blood from a wound have no kind.
 Nothing resists them.
+
+See also: [Combat](combat.md), [Spell types](spell-types.md), and [Materials](materials.md).

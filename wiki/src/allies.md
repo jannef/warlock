@@ -12,7 +12,7 @@ The witch's beast, her [familiar](familiars.md#familiars), is a kept beast of it
 what every ally shares, and the summons.
 
 An ally is an ordinary creature of its kind, with its own eyes, speed, attacks, and hit points. It
-fights only what *you* are hostile to. With [Beast-friend](talents.md#talent-beast-friend), your
+fights only what *you* are hostile to. With [Beast-friend](talents-exploring.md#talent-beast-friend), your
 wolf leaves the rats alone as you do, and a shopkeeper or someone you are talking to is never its
 idea of a foe. It never blocks your way for long: you swap places with it as with anyone friendly.
 
@@ -140,10 +140,12 @@ Each call keeps one of its own beside you. From [Pack leader](class-druid.md#tal
 [Lord of the wild](class-druid.md#talent-lord-of-the-wild) (level 60) keeps three of each, and what you
 call stays until it is slain.
 
-[Beast-bond](talents.md#talent-beast-bond), a Wayfarer talent for those with some
+[Beast-bond](talents-exploring.md#talent-beast-bond), a Wayfarer talent for those with some
 [Handle animal](skills.md#skill-handle-animal), makes every ally of yours strike surer and take less
 harm.
 
 ## The rules
 
 {{#include generated/ally-rules.md}}
+
+See also: [Companions](companions.md), [Familiars](familiars.md), and [Magic](magic.md).

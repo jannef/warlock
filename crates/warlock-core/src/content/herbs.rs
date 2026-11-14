@@ -1,7 +1,7 @@
 //! Gathering herbs (`assets/data/herbs.toml`, spec §8 "Skills": Herbalism; #1340): what the
 //! glowing fungus gives, how long a gather takes, and how many herbs it finds.
 //!
-//! The rule itself lives in `world/gather.rs`. The file is optional: without it nobody gathers.
+//! The rule itself lives in `world/skills/gather.rs`. The file is optional: without it nobody gathers.
 
 use super::{ContentError, ObjectId, TerrainId};
 use crate::dice::Dice;
@@ -175,7 +175,7 @@ mod tests {
 
     #[test]
     fn deeper_fungus_gives_rarer_herbs() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         // Mandrake: none above level 6, about one draw in ten at item level 8 (Fyrdelf 8's
         // caves: 16 of 207, the design's weights).
         for level in 1..6 {

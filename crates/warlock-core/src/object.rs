@@ -79,7 +79,7 @@ pub struct Stack {
     light: LightMode,
     /// A weapon of spirit-stuff (spec §8 "Prestige classes": the Hunter's Spirit weapon), made
     /// only by `World::call_weapon` and only ever in a hand: it fades the moment it leaves one
-    /// (`world/spirit_weapon.rs`). Otherwise it is its base object in every rule.
+    /// (`world/classes/spirit_weapon.rs`). Otherwise it is its base object in every rule.
     #[serde(default, skip_serializing_if = "is_false")]
     spirit: bool,
     /// What an anvil's work has done to it (spec §7 "Special rooms": Temper; [`Worked`]); `None`
@@ -208,7 +208,7 @@ impl Stack {
     }
 
     /// It as the player knows it: without its magic while that is unidentified (what the
-    /// character screen's attacks are figured for, `world/attacks.rs`).
+    /// character screen's attacks are figured for, `world/combat/attacks.rs`).
     pub(crate) fn as_known(&self) -> Self {
         let mut known = self.clone();
         if !known.is_identified() {
@@ -222,7 +222,7 @@ impl Stack {
         self.magic.as_deref()
     }
 
-    /// Its magic made `magic`, or none (an enchanting recipe, `world/enchant.rs`).
+    /// Its magic made `magic`, or none (an enchanting recipe, `world/crafting/enchant.rs`).
     pub(crate) fn set_magic(&mut self, magic: Option<Magic>) {
         self.magic = magic.map(Box::new);
     }
@@ -237,7 +237,7 @@ impl Stack {
         self.worked.as_deref()
     }
 
-    /// Sets what an anvil's work has done to it (`world/temper.rs`).
+    /// Sets what an anvil's work has done to it (`world/crafting/temper.rs`).
     pub(crate) fn set_worked(&mut self, worked: Worked) {
         self.worked = Some(Box::new(worked));
     }

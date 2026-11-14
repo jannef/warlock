@@ -49,7 +49,7 @@ door, and creatures never try. Avoiding a trap counts as [dodging](combat.md#def
 [Tumble](skills.md#skill-tumble) and [Dexterity](stats.md#stat-dexterity). A door's trap is not
 stepped on: it goes off when the door opens (see [Trapped doors](#trapped-doors)).
 
-The [Light step](talents.md#talent-light-step) talent's chance comes on top. If you fail to avoid a
+The [Light step](talents-body.md#talent-light-step) talent's chance comes on top. If you fail to avoid a
 trap, it may still save you, and it works on hidden traps too (see [Talents](talents.md)).
 
 ## What traps do
@@ -97,7 +97,7 @@ The column is the danger the step starts at.
   [fireball](scrolls.md#scroll-of-fireball), [lightning](scrolls.md#scroll-of-lightning), or
   [frost](scrolls.md#scroll-of-frost) casts what the trap does, where you aim it.
 
-The [Trap sense](talents.md#talent-trap-sense) talent halves the [damage](combat.md#damage) a trap
+The [Trap sense](talents-exploring.md#talent-trap-sense) talent halves the [damage](combat.md#damage) a trap
 does to you, rounded down, at least 1 (see [Talents](talents.md)). Magic that wards off traps takes
 its percent off as well (see [Magic items](magic-items.md)), on a creature too. Together they never
 take more than **75%** off: a trap always hurts.
@@ -207,3 +207,5 @@ much of what it held with it. See [Chests](chests.md#trapped-chests).
   [rooms](special-rooms.md) hide their own: an offering before an [altar](special-rooms.md#room-altar)
   may not be unguarded.
 - **Cēaptūn** and the [overworld](overworld.md) have no traps.
+
+See also: [Searching](searching.md), [Doors](doors.md), and [Chests](chests.md).

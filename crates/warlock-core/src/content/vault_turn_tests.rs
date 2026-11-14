@@ -3,6 +3,7 @@
 use super::*;
 use crate::content::level::validate_route;
 use crate::content::{Content, ContentFiles};
+use crate::test_support::builtin;
 
 /// Everything a vault may hold that has a position or a direction: a patrol, a bolt trap with its
 /// way, running water, a light, loot and monster pools, a pile, and a named place.
@@ -80,7 +81,7 @@ fn a_position_and_a_direction_turn_alike() {
 
 #[test]
 fn the_eight_ways_are_all_different_and_come_back() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let guard = turning(&content, "guard_post");
     let shapes: Vec<_> = (Turn::ALL.iter())
         .map(|t| guard.turned(*t).template.terrain)
@@ -106,7 +107,7 @@ fn the_eight_ways_are_all_different_and_come_back() {
 /// and has every thing it holds on the cell it stood on, every patrol walkable.
 #[test]
 fn every_turn_of_every_vault_is_a_valid_vault() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for v in content.vaults() {
         let (w, h) = (v.width(), v.height());
         for turn in Turn::ALL {
@@ -170,7 +171,7 @@ fn every_turn_of_every_vault_is_a_valid_vault() {
 
 #[test]
 fn the_guard_post_turns_with_its_guard_key_and_store_room() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let guard = turning(&content, "guard_post");
     let (w, h) = (guard.width(), guard.height());
     for turn in Turn::ALL {
@@ -215,7 +216,7 @@ fn turns_is_for_a_vault_and_says_whether_it_may() {
 
 #[test]
 fn a_vault_a_branch_level_names_never_turns() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let pinned: Vec<&Vault> = content.vaults().iter().filter(|v| v.pinned).collect();
     assert!(!pinned.is_empty());
     assert!(pinned.iter().all(|v| !v.may_turn()), "pinned stay as drawn");

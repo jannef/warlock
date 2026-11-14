@@ -4,7 +4,7 @@ Part of the specification, the source of truth for what to build; the index is
 [`specification.md`](../specification.md). Update it together with the code and the
 developer notes (CLAUDE.md, `docs/dev/`).
 
-- **Blood** (`warlock-core/src/blood.rs`, the pattern; `world/bleed.rs`, applying it; M17):
+- **Blood** (`warlock-core/src/blood.rs`, the pattern; `world/combat/bleed.rs`, applying it; M17):
   big hits and kills stain the floor and the walls around the victim. Presentation state the
   rules keep, like the flow of water: no rule reads it.
   - **When**: a blow that kills leaves a pool on the victim's cell and spray around it; a big hit
@@ -49,7 +49,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     wall."): blood-spattered, blood-stained, or blood-soaked by amount, a wall spattered or
     smeared. The `blood` dump layer shows it as a digit, `1` a few drops to `9` soaked. Drawn
     subtly (§4.8 "Blood").
-- **Char** (`warlock-core/src/scorch.rs`, the pattern; `world/sear.rs`, applying it; #1255):
+- **Char** (`warlock-core/src/scorch.rs`, the pattern; `world/combat/sear.rs`, applying it; #1255):
   fire leaves scorch marks on the floor it burns and on the walls facing it, building up the more
   a cell burns. Blood's sibling, by its rules: presentation state no rule reads.
   - **Who chars**: a damage type with a `char` in `data/damage_types.toml` (`{ light, heavy }`
@@ -77,7 +77,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **With blood**: both are kept on a cell, neither erases the other; blood is drawn over the
     char.
 - **Status effects** (`warlock-core/src/status.rs`, the rules of one actor's effects;
-  `world/status.rs`, applying them; data `data/status/`, §7; M24, #138): what ails an actor.
+  `world/health/status.rs`, applying them; data `data/status/`, §7; M24, #138): what ails an actor.
   Diseases ("Diseases" below) build on it: they show as one status, Diseased.
   - **Effects**: an actor carries at most one effect of each status (`Actor::effects`, in status
     order), each with a **severity** in degrees (1 to the status's `max`), its progress toward
@@ -107,7 +107,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Fortified at two degrees is Strength +4; its value times `max` stays within −10 to 10), and the hit points a raised Toughness allows fall back as the status ends
     (`World::keep_hp_within_max`: above the lasting maximum, and above the maximum other statuses
     still raise, never).
-  - **Buffs, hexes, and cooldowns** (`world/buff.rs`, #227; design `docs/design/progression.md`
+  - **Buffs, hexes, and cooldowns** (`world/health/buff.rs`, #227; design `docs/design/progression.md`
     §4.1 B1): a status may also, while it lasts,
     - **strike back or burn** (the spell types design §7, Fire cloak and Brand): `retaliates = {
       damage, damage_type }` does those dice to whoever lands a melee blow on its sufferer, as a
@@ -148,7 +148,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       (`Unavailable::While(status)`: "you are raging"). A creature's plans consult it for
       steps only: one held fast (a status that blocks `step`: Held, §8 "Birth sign") does not
       step and attacks whoever holds it if they are beside it and hostile, else waits;
-    - **hold** (`hold = { check, difficulty, turns }`, #431; `world/hold.rs`): whoever caused it
+    - **hold** (`hold = { check, difficulty, turns }`, #431; `world/health/hold.rs`): whoever caused it
       (`Effect::by`, saved) holds the sufferer. A hold ends at once (as if worn off: "You are free
       to move.") when the holder is dead, on another level, not beside the held one, or itself
       suffers a status that blocks its steps or slows it (`cost` above 100); asked after the
@@ -251,7 +251,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     no status light.
   - **Dev**: the action `afflict:ID` gives the player one more degree of a status (no game
     time; recorded in replays), for trying statuses out and for captures.
-- **Healing** (`world/status.rs`): a hurt actor's progress toward its next hit point back
+- **Healing** (`world/health/status.rs`): a hurt actor's progress toward its next hit point back
   (`Actor::regen`, in hundredths of a second at the normal pace, saved) grows each second by its
   healing rate in percent: 100 normally, the slowest `regen` of its status effects (bleeding 0,
   poison 50, Diseased 50) and of the diseases that show (marsh ague 25), or, when none of them
@@ -262,7 +262,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   is dropped at full health. A Starving player gets none back (§8 "Hunger"). The regeneration
   affixes of what the actor wears and wields multiply the rate by (100 + their percent) / 100 (§8
   "Magic items"). `World::healing_rate` is the one place that decides the pace.
-- **Mana** (`warlock-core/src/mana.rs`, the pure rules; `world/mana.rs`, applying them; #223):
+- **Mana** (`warlock-core/src/mana.rs`, the pure rules; `world/magic/mana.rs`, applying them; #223):
   a second pool beside hit points, built the same way. Spells spend it ("Spells" below: the
   casters' class spells and those learned from scrolls), as do rods (§8 "Rods") and a summoner's summons (§8 "Creatures"); Blood magic
   refills it. Every
@@ -271,7 +271,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     creature type's `mana`, default 0; a scenario without a character gives the player's) plus
     what magic items add (`max_mana` affixes, §8 "Magic items") plus the modifiers of the three
     mental stats, Intelligence, Willpower, and Presence, the effective scores', at least 0, then
-    deepened by a trained **Concentration** (§8 "Skills"; `world/concentration.rs`): +1 at 25 to +5
+    deepened by a trained **Concentration** (§8 "Skills"; `world/magic/concentration.rs`): +1 at 25 to +5
     at 100 and +8 at 200 (`data/skills/`), never more than a fifth of the pool without it
     (rounded down, `mana::deeper`: a pool under 5 gains nothing), so it also follows the skill
     down when an item or a talent raising it comes off. Every actor starts with all of it. Each level gained up to the experience file's `mana_level` (60,
@@ -349,10 +349,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **On a kill** (the affixes design §4, decision 7; #632): the `mana_on_kill` of what the
     slayer wears and wields (of Siphoning) raises its mana by their sum, never past its
     maximum, when its own blow, shot, throw, or spell kills, and the slain stood within
-    `SIPHON_RANGE` (3) cells (Euclidean, as a radius: `dist2` within `radius2(3)`). A death by a
+    the `[siphon]` range (`data/rules/tuning.toml`: 3) cells (Euclidean, as a radius: `dist2` within `radius2(3)`). A death by a
     status tick (poison, bleeding), a trap, or anything else that is not the slayer's own attack
     gives nothing, and a summoned creature's kill is its own. Creatures' kills count the same
-    way. Read once, at the kill point of an attack (`World::siphon`, `world/siphon.rs`, called
+    way. Read once, at the kill point of an attack (`World::siphon`, `world/items/siphon.rs`, called
     from `fight.rs::resolve` and `spell.rs::spell_strikes`); no draw. The player is told
     "close by", never the three cells.
     Mana is part of the world state (saved, covered by the state hash; an actor without any
@@ -360,7 +360,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Spells** (the magic design, `docs/design/magic.md` §3 to §8, as the spell scaling design,
   `docs/design/spell-scaling.md`, revised it: levels for tiers, ladders and hooks for the cap
   and the lift, and learning by Decipher script (#1270), `docs/design/no-caster-level.md`; `content/spell_def.rs`,
-  `world/cast.rs`, `world/learn.rs`; #394, #395, #396, #397, #759): the
+  `world/magic/cast.rs`, `world/magic/learn.rs`; #394, #395, #396, #397, #759): the
   spell data, the one cast path, learning, and the first spell list. A spell's growth is
   written in its own file as ladders on the caster's stats and printed in the wiki as written;
   talents and items act on it through the hooks. The casters' spells (§8 "Class
@@ -397,7 +397,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (one heal roll for the caster and their allies in a burst about them, two casts' time); 14
     Rebuke (fire on the undead in a burst alone, friend or foe, and Frightened 3); 20 Cloudburst
     (an hour of rain under the open sky, putting out what burns there).
-    **Soulglass** (#1429; design `docs/design/enchanting.md` §6; `world/crystal.rs`): 11, a
+    **Soulglass** (#1429; design `docs/design/enchanting.md` §6; `world/crafting/crystal.rs`): 11, a
     necrotic ray with an attack roll, `3d6`, range 6, `[spell.effect] crystal`; the witch's at 16,
     anyone's from its grimoire. A creature it kills that leaves a corpse, is no animated thing,
     and has a colour (`data/crystals.toml`) leaves its colour's crystals (one, two from level 10,
@@ -473,7 +473,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     anyone trained in Decipher script learns it for certain). There is no
     table of levels, no ceiling, and no check on how much a spell of a level may do: its own
     data says it (decision 16).
-  - **Ranks** (#1264; `content/spell_rank.rs`, `world/spell_rank.rs`): every spell a character
+  - **Ranks** (#1264; `content/spell_rank.rs`, `world/magic/spell_rank.rs`): every spell a character
     knows has a **rank**, 1 to 10. A spell is known at rank 1 as it is learned, or as a class
     gives it. **Reading its grimoire again deepens it** to the next rank ("Learning" below:
     "Deepening"); casting trains no rank, and nothing else raises it. A miscast may take ranks
@@ -530,8 +530,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     base, so a low score never shrinks a spell. The cast rung is that plus the rungs from
     outside (the hooks), never past the last rung. The shipped ladders step reach
     and duration at Willpower 14 and 18 and Presence 14 and 18, and give every rolling spell a ladder (§12 of the design).
-  - **Hooks** (the spell scaling design §7.1; `content/spell_mod.rs`, `world/spell_mods.rs`,
-    `world/spell_rung.rs`): talents and items act on a spell through six named hooks, the
+  - **Hooks** (the spell scaling design §7.1; `content/spell_mod.rs`, `world/magic/spell_mods.rs`,
+    `world/magic/spell_rung.rs`): talents and items act on a spell through six named hooks, the
     fields of one `SpellMods`, summed once a cast from the caster's talents (`spell_mod`
     effects, filtered by the spell's tags: `when = ["cold"]`, or the choice of a talent chosen
     for a school or an element) and worn items (unidentified too): (1) **rung**, rungs higher
@@ -553,7 +553,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Wands), `spell_reach` (of Farcasting, cells), `spell_duration` (of Lingering, degrees).
     Derived at cast time; nothing saved.
   - **Zones** (`docs/design/spell-types-and-new-spells.md` §7 "Zones"; `[spell.effect] zone`, five
-    scroll-only spells, `world/zone.rs`): an area that lies on the floor for some of the player's
+    scroll-only spells, `world/magic/zone.rs`): an area that lies on the floor for some of the player's
     turns, on the cells of a burst or a line, never spreading, a new one replacing an old on shared
     cells, kept when the player leaves the level, none on the overworld. It takes the caster and
     their allies like anyone; its kills are the caster's. `fire` (Balefire; Pitch fire's pool,
@@ -570,7 +570,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     missiles, and spells pass; Gale clears it, rain does not. The player sees a zone as a still
     tint and in look mode's words, where they see or remember the cell; smoke also from outside
     it, on a known cell, where their sight stops at it.
-  - **Ruin** (#1100; `data/ruin.toml`, `world/ruin.rs`): an area spell (a burst, a cone, or a
+  - **Ruin** (#1100; `data/ruin.toml`, `world/magic/ruin.rs`): an area spell (a burst, a cone, or a
     line) with a damage type, cast by an actor (from mana, a scroll, or a wand; a dragon's breath
     too), may destroy the items lying on the floor cells it reaches: each item of each stack there
     is lost at the chance of the first row of the spell's type matching the stack's item class,
@@ -611,7 +611,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     so an immunity to the type from whatever harm. **Acid**: Corroded 1, certain; `corrodes`
     (the potions wave 2 design §9.3): when it harms the player, the first piece they wear (the
     body armour first) takes acid's item damage after the rider, the material's chance to
-    withstand it its only draw (`world/corrode.rs`); a creature's gear is never eaten.
+    withstand it its only draw (`world/combat/corrode.rs`); a creature's gear is never eaten.
     **Corroded** (`data/status/`): max 3, adding; 1 hit point of acid per 6 s, a degree easing
     per 12 s: two points a degree. **Electricity** spreads from
     every creature it harmed, at the cast's one roll, with no roll to hit and no Evasion, and
@@ -632,7 +632,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **No cap** (decision 16): nothing checks a spell's strength when the content loads, and
     nothing holds a roll when it is cast: the rungs, the hooks, and a critical add what they
     add.
-  - **Casting** (`World::cast_spell`, `world/cast.rs`; `Action::Cast`, `use:arcane_bolt:12,5`):
+  - **Casting** (`World::cast_spell`, `world/magic/cast.rs`; `Action::Cast`, `use:arcane_bolt:12,5`):
     - **Cost** (the one hook, `Actor::spell_cost`): `SpellRules::mana`: the spell's level, at
       least 1 (a known spell is cast at its level's mana, and the pool is the gate) × the shape's percent (a
       burst's at its own `radius`) × the resolution's `cost` percent × (100 + the summed
@@ -678,7 +678,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       die in group order and one more a die the reroll hook sends back, an area's one roll for
       all); a spell without a roll, and a rider, draw nothing; then the miscast's Spellcraft
       check (below). Nothing new is saved.
-    - **Miscasts** (#1271, #1288; `world/miscast.rs`, `content/miscast.rs`; `data/miscast.toml`,
+    - **Miscasts** (#1271, #1288; `world/magic/miscast.rs`, `content/miscast.rs`; `data/miscast.toml`,
       `data/miscasts/`; `docs/design/miscasts-review.md`): every spell cast with the caster's own mana, the player's and a
       creature's alike (creatures carry Spellcraft values), makes a **Spellcraft check** once
       it has gone off in full; a scroll, a wand, a flask, and a miscast's echo make none.
@@ -708,7 +708,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       around the caster, no harm), `rank_loss` (`ranks`: the spell cast known that many ranks
       lower, never below 1), `forget` (`spells = N`: the spell cast and `N − 1` more known
       spells drawn at random forgotten; `all = true`: every spell known; #1289,
-      `world/forget.rs`), `backfire`'s `full`: a damage spell bursts on its caster, a hex falls on them, a heal
+      `world/magic/forget.rs`), `backfire`'s `full`: a damage spell bursts on its caster, a hex falls on them, a heal
       mends the nearest hostile they see, a buff takes hold of it, a summon's creatures come
       berserk, hostile to everyone (the caster, the caster's foes, and one another, whatever
       their kind; `miscast.toml`'s `backfire_faction`), and anything else, or nothing to land on, is
@@ -719,7 +719,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       longer listed or cast, and is learned again only from its grimoire, exactly as the first
       time (a study at rank 1, its experience paid again; no guard against it, the owner). A
       creature's rank loss and forgetting do nothing (its spells are its kind's). The four pit rows (105–106, 113–114, 121–122,
-      127–128; #1297, `world/pit.rs`) are `portal`s (`gate`): stairs down into a Pit of its own
+      127–128; #1297, `world/levels/pit.rs`) are `portal`s (`gate`): stairs down into a Pit of its own
       (spec §7 "The Pits") open on the first plain free cell within 3 of the caster, and a rift,
       an abyssal gate, a dire gate, or the lords' gate stands at their head. The Pit's integer is
       drawn then, and the run records it with the level the mouth is on (`WorldState::pits`; the
@@ -744,7 +744,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       is `Cause::Miscast` ("Killed by their own miscast fireball"). Determinism: the check's two
       draws, the die's, then the effect's own, all on the gameplay stream; none without
       `data/miscast.toml`.
-  - **Learning, the number** (`Actor::learning`, `world/learn.rs`; derived, never stored;
+  - **Learning, the number** (`Actor::learning`, `world/magic/learn.rs`; derived, never stored;
     `docs/design/no-caster-level.md`, #987): what a grimoire teaches for certain comes from the
     Decipher script skill and nothing else (#1270; Spellcraft's before), its `learn` benefit (`data/skills/`: 0 to 10, 10 at 60,
     30 at the soft cap 100, 70, the last spell level, from 150) at the skill's value with what
@@ -764,7 +764,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     scroll out (and a scroll of a spell one knows, read), 100 %; any scroll read and used up,
     50 %; a grimoire read to its end, 100 %. **Casting trains Spellcraft** (its one mark, `cast`,
     25 %); Spellcraft has no benefit of its own (#1270) and waits for a rule.
-  - **Learning** (`world/learn.rs`, `content/learning.rs`, `content/grimoire.rs`; #396,
+  - **Learning** (`world/magic/learn.rs`, `content/learning.rs`, `content/grimoire.rs`; #396,
     grimoires #1260): a character knows a set of spells for good: those their class abilities
     give and those they learned (`Actor::spells`, saved by id, left out of the JSON while
     empty). Either kind is cast from the abilities menu's *Spells* group. Spells are learned
@@ -841,7 +841,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       fire, range 11, radius 2`) and JSON's `spells` (each with `level`, `rank`, `cost`,
       `roll`, `damage_type`, and `reach`); the dev `progress` layer's learning.
 - **Resources** (`warlock-core/src/resource.rs`, the pools and time's rules;
-  `content/resource.rs`, the data; `world/resource.rs`, applying them; #225): alternative
+  `content/resource.rs`, the data; `world/character/resource.rs`, applying them; #225): alternative
   resources, integer pools beside hit points and mana (which everyone has) that a character holds
   once something grants them. A character may hold any number at once; creatures hold none
   (their rage would never show). The class features of the progression design's §4.18 (the
@@ -917,19 +917,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     refused before it, spending nothing).
   - **Granted by talents**: a talent with the `grants_resource` effect (§7) holds its resource
     from the moment it is taken or given, at its start, and for good; a run restored gets any
-    such resource its talents grant and it lacks (`world/focus.rs::hold`).
+    such resource its talents grant and it lacks (`world/classes/focus.rs::hold`).
   - **Focus** (the ranger's; R2, #250): Rapid shot (level 12) grants it (10, full); it comes
     back a point a base turn but not while resting, and never ends. A shot loosed with `fire`
     while the ranger holds 2 spends them and takes 10 % less time (the whole price, reloading
     too; with less it is an ordinary shot, `World::rapid_shot`); Sic 'em (level 40) costs 5 and
     Volley (level 50) 6, neither with a cooldown.
-  - **Openings** (the thief's; R3, #251, `world/openings.rs`): Sneak attack (level 1; #682)
+  - **Openings** (the thief's; R3, #251, `world/classes/openings.rs`): Sneak attack (level 1; #682)
     grants them at 0 (`grants_resource`); each sneak attack that hits builds one (to 5), and so
-    does each feint the foe falls for (`feint`, #1462; `world/feint.rs`), one
+    does each feint the foe falls for (`feint`, #1462; `world/skills/feint.rs`), one
     slips away every 120 s (20 base turns), and at 0 they stay, held. Exploit spends every one
     held, growing with the thief's class talents (§8 "Class abilities"; Master thief's finisher
     is folded into it, a sure critical from five spent).
-    - **The mark** (#1461; `world/mark.rs`, `docs/dev/openings.md`; the openings design
+    - **The mark** (#1461; `world/classes/mark.rs`, `docs/dev/openings.md`; the openings design
       `docs/design/thief-openings.md` §3): the openings are in one creature's guard,
       `Actor::mark` (saved, hashed, left out while none). Every attack the thief **chooses** at a
       creature (a blow by moving or attacking, a kick, a bash, a class or weapon active's blow, a
@@ -993,7 +993,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the character screen under the stance; the dump header (`rage 11/20`), JSON dumps'
     `resources`, and the dev `actors` layer (every actor's, with progress). Never a creature's,
     and never the pace. The dev action `resource:ID` grants one (§9; "You gain Rage: 12 (dev).").
-  - **Rage** (the berserker's, R1; `world/rage.rs`): the Rage ability (a wait's time) grants the
+  - **Rage** (the berserker's, R1; `world/classes/rage.rs`): the Rage ability (a wait's time) grants the
     Rage resource (20 at most, starting at 12, a point lost every 6 s, resting too; it ends at
     zero) and with it Raging; the action's own wait costs the first point. Fighting feeds it
     (#842, `builds` in data): every blow, shot, or throw that hits the holder builds 1 (`Struck`,
@@ -1032,7 +1032,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   difficulty, a modifier, or a roll; they see what comes of it. Nothing limits retrying: the
   time a disease takes is its cost.
 - **Diseases** (`warlock-core/src/disease.rs`, the rules of one actor's infections;
-  `world/disease.rs`, applying them; data `data/diseases.toml`, §7; M24, #139), modelled on D&D
+  `world/health/disease.rs`, applying them; data `data/diseases.toml`, §7; M24, #139), modelled on D&D
   3.5's: the pathologies behind one umbrella status, **Diseased** (the file's `status`).
   - **Infections**: an actor carries at most one of each disease (`Actor::diseases`, in disease
     order), each with the seconds to its next turn (`Infection::left`), whether it shows, its

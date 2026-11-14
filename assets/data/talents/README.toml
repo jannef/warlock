@@ -105,6 +105,7 @@
 #   max_mana_per_levels { per_levels, at_least }   mana: one per that many character levels,
 #                                 at least at_least, handed out at the pick and as each later
 #                                 level comes (as max_hp_per_levels)
+#   max_mana_percent { value }    maximum mana that percent more (negative: less, never below 0)
 #   mana_resting_percent { value }   resting brings mana back that percent faster on top of
 #                                 resting's pace
 #   mana_cost_percent { value }   abilities cost that percent more mana (negative: less; never
@@ -119,6 +120,8 @@
 #   threshold_percent { value }   its eyes need that percent more light (negative: less)
 #   darkvision { value }          its darkvision reaches that many cells farther (from none:
 #                                 that far)
+#   vision { profile }            its eyes are that vision profile (an id in ../vision.toml),
+#                                 not its race's; the first such talent's
 #   scent { status, radius }      it sees creatures suffering that status (an id in
 #                                 ../status/) in its line of sight within radius cells
 #                                 (1 to 20), however dark
@@ -161,6 +164,14 @@
 #   wading_proof                  wading never gives it a disease
 #   beast_friend                  creatures of animal factions (../factions/) are neutral
 #                                 to it until it attacks one of that type
+#   kin_to { tag }                creatures whose type carries that tag (a creature's `tags`)
+#                                 are neutral to it until it attacks one of that type
+#   bars_slot { slot, mark, refused }   that equipment slot (an id in ../slots.toml, never a
+#                                 hand or a `ready` slot) cannot be used: putting anything there
+#                                 says `refused` and takes no time, the equipment screen shows
+#                                 `— (mark)`, and what is worn there falls as the talent takes
+#   opens_slot { slot }           that slot, gated to a class (../slots.toml), is its too; what
+#                                 is worn there falls when the talent goes
 #   stipend                       each level reached adds to its family's stipend, which its
 #                                 servant hands over (../stipend.toml, the aristocrat's)
 #   stipend_more { gold, chance, magic }  the stipend's gold that percent more, its loot roll
@@ -400,6 +411,10 @@
 #                                 much more (1 to 3, at most x5)
 #   unarmed_die { sides }         blows with nothing in hand and kicks roll one die of that many
 #                                 sides (the bigger of it and kick_die)
+#   unarmed_on_hit { status, chance, severity }   a blow with nothing in hand (not a kick)
+#                                 that hits causes severity degrees of status (an id in
+#                                 ../status/) by chance percent (1 to 100), as a natural attack's
+#                                 on_hit
 #   stance_costs                  changing its combat stance takes a wait's time (free otherwise)
 #   stance_dodge { stance, percent }   that stance's Dodge penalty that percent smaller
 #   step_percent { value, unarmoured, unburdened, no_shield }   steps cost that percent more
@@ -437,7 +452,7 @@
 #                                 lands on every foe
 #   smite { per_levels, sides, aim, unholy }   the active Smite: a blow in a direction with one
 #                                 die of `sides` more per `per_levels` levels (at least one),
-#                                 `unholy` dice more on a creature smite.toml calls unholy, and
+#                                 `unholy` dice more on a creature rules/smite.toml calls unholy, and
 #                                 the `aim` stat's modifier added to hit (its cost is the
 #                                 talent's `resource`: zeal)
 #   smite_mode { mode, status, severity, turns, check, difficulty }   a mode of smiting, its own
@@ -625,7 +640,7 @@
 #                                 the place's status never touches it, while the dark answers
 #                                 its prayers (docs/dev/prayer.md)
 #   sanctuary { mana, time, radius, lasts, regen }   the active Sanctuary (`use:sanctuary`;
-#                                 world/sanctuary.rs): kneels `time` (10s to 1h) for that mana
+#                                 world/classes/sanctuary.rs): kneels `time` (10s to 1h) for that mana
 #                                 (1 to 500), then the ground within `radius` (1 to 5) is
 #                                 hallowed for `lasts` (10m to 12h): no hostile steps onto it
 #                                 from outside, and those on it heal and regain mana at `regen`
@@ -691,19 +706,20 @@
 #                                 shaken off, then `degrees` (default 1) of the cooldown status
 #   horn_of_plenty { per_level, degrees }   Horn's grace also gives back per_level hit points
 #                                 per character level, and leaves `degrees` of its cooldown
-#   stare { status, severity, cooldown, degrees }   the active Transfixing stare, aimed at a
-#                                 cell (`use:transfixing_stare:12,5`): a hostile there within 6
-#                                 cells that the player sees and that sees them suffers
-#                                 `severity` degrees of `status`, then `degrees` (default 1) of
-#                                 the cooldown status
+#   stare { range, status, severity, cooldown, degrees }   the active Transfixing stare, aimed
+#                                 at a cell (`use:transfixing_stare:12,5`): a hostile there
+#                                 within `range` cells (1 to 40; more under a full moon) that
+#                                 the player sees and that sees them suffers `severity` degrees
+#                                 of `status`, then `degrees` (default 1) of the cooldown status
 #   petrifying_gaze { severity, degrees }   the stare leaves those degrees of its status and of
 #                                 its cooldown instead
 #   wildfire { radius, damage }   Blaze bursts out to radius (1 to 3) for damage instead
-#   fire_breath { length, damage, damage_type, spell, cooldown, degrees }   the active Fire
-#                                 breath, aimed at a cell within 8 (`use:fire_breath:12,5`): a
-#                                 bolt (`spell`, a bolt effect) along the line toward it, length
-#                                 cells (1 to 8), damage dice of damage_type to everyone on it;
-#                                 then `degrees` of the cooldown status
+#   fire_breath { range, length, damage, damage_type, spell, cooldown, degrees }   the active
+#                                 Fire breath, aimed at a cell within `range` (1 to 40;
+#                                 `use:fire_breath:12,5`): a bolt (`spell`, a bolt effect) along
+#                                 the line toward it, length cells (1 to 8), damage dice of
+#                                 damage_type to everyone on it; then `degrees` of the cooldown
+#                                 status
 #   hounds_bay { status, severity, cooldown }   the active Hound's bay (`use:hounds_bay`): a
 #                                 howl; every hostile that hears it, of a lower level than the
 #                                 player, suffers `severity` degrees of `status` (one that

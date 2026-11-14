@@ -1,0 +1,12 @@
+# Swimming in deep water (spec §8 "Skills": Swim; `world/levels/swim.rs`).
+#
+# Only one trained in Swim may dive in, and not Strained or worse. Every step that starts in deep
+# water is a check: 2d12 + Toughness's modifier + the talents' Toughness checks + what Swim gives,
+# against `difficulty` + `per_burden` for each level of burden above Unburdened. Made: the step.
+# Failed: the turn goes on treading water, with no move, and the cold takes `cold` hit points of
+# `damage_type`, never the last.
+
+difficulty = 11
+per_burden = 2
+cold = 1
+damage_type = "cold"

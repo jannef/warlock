@@ -28,9 +28,9 @@ hour's [calling](familiars.md#call-familiar). From level 30 that may be an
 **The witch's cackle** ([Cackle](abilities.md#ability-cackle), from level 6) keeps her hexes on. It
 costs no [mana](mana.md#spending-it) and takes the time of a spell. Every hex she laid herself on a
 creature she sees grows a degree, up to its maximum, and the time of its degree starts again. The
-hexes are [hexed](status-effects.md#status-ill-wished), [weakened](status-effects.md#status-weakened),
-[sluggish](status-effects.md#status-sluggish), [drowsy](status-effects.md#status-drowsy), and
-[webbed](status-effects.md#status-webbed). A hex already at its maximum only starts again.
+hexes are [hexed](status-list.md#status-ill-wished), [weakened](status-list.md#status-weakened),
+[sluggish](status-list.md#status-sluggish), [drowsy](status-list.md#status-drowsy), and
+[webbed](status-list.md#status-webbed). A hex already at its maximum only starts again.
 
 Another caster's hex and a creature out of sight are untouched. With no creature in sight under one
 of her hexes, she does not cackle at all, and no time is spent. The cackle is loud: a voice of

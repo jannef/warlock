@@ -87,7 +87,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     owes nothing) nor buys it (no offer; dropping or selling it keeps it, and the keeper says
     "Grimbold sniffs at a loaf of bread and says: \"Not at any price.\"", the one in-world hint of
     rot besides eating it). What is already on the bill stays priced as it was (the bill counts
-    by object, whatever the age). `World::spoilt` in `world/shop.rs` and `ShopView` in
+    by object, whatever the age). `World::spoilt` in `world/people/shop.rs` and `ShopView` in
     perception decide it with the same `rot::stage`.
   - **The way out**: a shop's `exits` are the cells around its floor that could be walked onto,
     or were doors, when the level was made: its door. A step onto one while owing anything is
@@ -295,7 +295,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and be stuck, and one overloaded inside (who picked something up there) can still step out
     to where they are not. It is saved as nothing new: the burden follows from where one stands.
     It never covers a whole level.
-  - **Halls of mirrors** (`mirrors`, #419; `world/mirrors.rs`): every actor inside the room has
+  - **Halls of mirrors** (`mirrors`, #419; `world/fixtures/mirrors.rs`): every actor inside the room has
     `images` (2) **images**, reflections on free floor of the room (walkable, no door, no one on
     it, no other image). Where they stand is no draw: a hash (FNV-1a) of the level, the turn, the
     actor, and the image's index picks among the free cells, hall by hall and actor by actor in
@@ -321,7 +321,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     are wrenched elsewhere." for the player, "The giant rat vanishes!" for a creature they saw
     go. Where it lands is never a step, so it is never warped again on landing. Nothing is
     saved. Its `max_cells` keeps it to small rooms; it never covers a whole level.
-  - **A collapsed floor** (`collapse`, #420; `world/collapse.rs`): the room's floor is
+  - **A collapsed floor** (`collapse`, #420; `world/fixtures/collapse.rs`): the room's floor is
     `cracked_floor` (a walkable terrain, "cracked floor", `:`), laid by the generator over the
     room's middle only: a cell cracks only when its eight neighbours are all walkable cells of
     the room and none is a door, so no cell next to a wall or a door cracks, nor a door, and a
@@ -343,7 +343,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     is a level change like the stairs'. Old delver (§8 "Talents") never falls. It never
     covers a whole level.
   - **A tempting hoard** (`hoard = { items = 3, loot_level = 3, guardians = [2, 4], danger = 1
-    }`, #415; `mapgen/hoard.rs`, `world/hoard.rs`). A generated floor's tempting hoard gets
+    }`, #415; `mapgen/hoard.rs`, `world/fixtures/hoard.rs`). A generated floor's tempting hoard gets
     `items` items (1 to 16), each rolled at the floor's item level + `loot_level` with the
     finder's luck and laid on a plain floor cell of the room drawn anew (no stairs, light, or
     trap), from the level's stream `swarm/<level id>` after its population; the floor's
@@ -366,7 +366,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Never over a whole level.
   - **A treasure room** (`secret_doors = "all"`, `treasure = { chests = "1d2", gold = { heaps =
     "1d4+1", dice = "3d6", each = 2 }, gems = "1d3" }`, `arrive`, #617; `mapgen/treasury.rs`,
-    `world/treasury.rs`; docs/design/chests-and-treasure.md §6). On a rooms level it is a room
+    `world/fixtures/treasury.rs`; docs/design/chests-and-treasure.md §6). On a rooms level it is a room
     of the generator with a door, no staircase, nothing lying in it, and no locked door; on a
     cave level a **box stamped into the rock** (its floor at least `min_cells`, one wider than
     square: 4 × 3 for 9; a ring of rock that becomes wall; one closed door in the ring facing
@@ -390,7 +390,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the room is entered. Never over a whole level.
   - **A greater treasure room** (`sealed = "dig"`, `treasure = { chests = "2d2", gold = { heaps
     = "2d4+2", dice = "4d6", each = 5 }, gems = "2d3" }`, `arrive`, #618; `mapgen/treasury.rs`,
-    `world/search.rs`; docs/design/chests-and-treasure.md §6.2, §6.3). **No door and no corridor,
+    `world/skills/search.rs`; docs/design/chests-and-treasure.md §6.2, §6.3). **No door and no corridor,
     ever** (the owner): on either generator a box stamped into the rock as a cave's treasure room
     is (4 × 3 for 9 floor cells; on a rooms level after the corridors are dug, in the rock they
     left, so none leads to it), drawn as any special room from the map stream, and eligible
@@ -416,7 +416,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     effect is refused). The `rooms` dev layer adds `, breach (x, y)`; `truth` draws a standing breach `H`.
     Never over a whole level.
   - **Shrines of a side** (`shrine = { regen = 200, status = "unwelcome", welcome, unwelcome
-    }`, #413; `world/shrine.rs`, design §9.3): the room has a hidden side, drawn at generation
+    }`, #413; `world/fixtures/shrine.rs`, design §9.3): the room has a hidden side, drawn at generation
     from the map stream as **good or evil, one to one** (one `below(2)`, in place of an altar's
     one-to-two-to-one draw; a level file's `[[room]]` must give `side = "good"` or `"evil"`), kept
     in `SpecialRoom::side` and shown only by its feature's light (the `shrine_stone`, `∩`, "shrine
@@ -430,7 +430,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     neither. The first entry's line says which: `welcome`, `unwelcome`, or the effect's `enter`.
     Nothing is said of the side in words, and nothing new is saved (the side is the altar's
     field). Never over a whole level (it has a feature).
-  - **Cursed rooms** (`rise = { faction = "undead", after = "2m" }`, #408; `world/curse.rs`):
+  - **Cursed rooms** (`rise = { faction = "undead", after = "2m" }`, #408; `world/fixtures/curse.rs`):
     a creature that dies on a cell whose effects raise the dead (the room's, else the whole
     level's), is not of the rise's `faction`, and leaves a corpse is marked to rise, whoever
     killed it (a creature's kill too; never the player, who leaves no corpse to rise): at the
@@ -450,7 +450,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     rising they see (it stops a rest, as any newcomer does); unseen, the risen groans (a voice
     at its cell). Old delver (§8 "Talents"): what the player kills never rises. The `actors`
     dev layer lists the pending risings (`rising rat at (11, 2) as skeleton at 08:15:00`).
-  - **Haunted rooms** (`haunt = { faction = "undead", every = "1h" }`, #417; `world/haunt.rs`):
+  - **Haunted rooms** (`haunt = { faction = "undead", every = "1h" }`, #417; `world/fixtures/haunt.rs`):
     while the player rests (only a rest, not digging, eating, or praying) inside a room whose
     effect haunts (never over a whole level), at the end of each turn of the rest that passes
     a full multiple of `every` on the clock (every full hour of the day: counted by the clock,
@@ -463,7 +463,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `last_seen`), and is a newcomer, so the rest looks up at once and stops as soon as it
     comes into view ("A zombie comes into view; you stop resting after ..."). `every` is 10
     minutes to a day. Consecrate lifts it.
-  - **Consecrate** (`unholy`, #408; `world/consecrate.rs`; the priest's at 9 and the paladin's
+  - **Consecrate** (`unholy`, #408; `world/classes/consecrate.rs`; the priest's at 9 and the paladin's
     at 12, §8 "Class abilities"): standing inside a special room whose effect is unholy (cursed,
     draining, haunted), or anywhere on a level an unholy effect covers whole, the player spends 15 mana
     and prays for a minute, turn after turn as a rest goes (anything that stops a rest stops it;
@@ -475,13 +475,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `data/alignment.toml`, 20). Elsewhere it is refused with no time ("There is nothing here
     to consecrate.").
   - **Communion with the dark** (the priest's at 9, §8 "Class abilities"; #884;
-    `world/dark_face.rs`): Consecrate's dark twin, a passive working only for a priest of
+    `world/classes/dark_face.rs`): Consecrate's dark twin, a passive working only for a priest of
     Callous or worse whom the dark powers answer (`World::communes`). Where an unholy effect
     lies at their cell (a room's or the level's), their prayers add no strain (the fizzle's
     chance and lock still read the strain there is), and the effect's status (the draining
     room's Ebbing) is never laid on them (`World::dwell`); a holy effect's status still is.
-  - **Forgotten altars and prayer** (`feature`, `sides`, `offers`, #406; `world/pray.rs`,
-    `world/outcome.rs`; the design's §7): ADOM's pool with another flavour, not its gods: no god
+  - **Forgotten altars and prayer** (`feature`, `sides`, `offers`, #406; `world/fixtures/pray.rs`,
+    `world/fixtures/outcome.rs`; the design's §7): ADOM's pool with another flavour, not its gods: no god
     to name or serve, no sacrifice, no conversion. A room whose effect has a `feature` gets that
     terrain at the free plain floor cell nearest the middle of its box (ties by cell order) that
     holds nothing else (no stamp, light, creature or patrol, trap, or object), is no door's
@@ -523,7 +523,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       (`data/outcomes/forgotten_altar.toml`, the wiki's "Forgotten altars") has six "nothing
       happens" lines and 40 boons and banes in three tiers (minor, moderate, great; weights
       within each kind sum to 100, the great tier 6 of each).
-    - **The great boons and banes** (#407; `world/boons.rs`): *Gift of the forgotten* (+1d3 to a
+    - **The great boons and banes** (#407; `world/fixtures/boons.rs`): *Gift of the forgotten* (+1d3 to a
       random stat's score and potential, for good), *Exalted* (experience to the next level's
       threshold, the level and its choices with it), *Chosen* (a talent the player may take and
       does not hold, drawn, given free and kept for life: `Actor::boons`, put back with
@@ -551,8 +551,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
       gutters and dies."); Pray is offered there no more. Nothing new is saved: the terrain
       grid is the record, and the `rooms` dev layer marks such a room `spent` (or `destroyed`).
       No other place offers prayer (the design's decision 14).
-  - **Forges and tempering** (`offers = { temper = true }`, #418, #1022; `world/temper.rs`,
-    `magic/worked.rs`, `data/temper.toml`; the owner's rule, `docs/design/skill-uses.md` §6.7 M0):
+  - **Forges and tempering** (`offers = { temper = true }`, #418, #1022; `world/crafting/temper.rs`,
+    `magic/worked.rs`, `data/rules/temper.toml`; the owner's rule, `docs/design/skill-uses.md` §6.7 M0):
     the forge's feature is an **anvil** (terrain `anvil`, `π`, cold, no light; look mode adds its
     description); Cēaptūn's smithy has one too, beside the smith's fire (#1023), free to use. **Temper** (`Action::Temper { item }`, `temper:LETTER` in action text) is a recipe
     of Metalcraft's, for those trained in it (§8 "Skills": professions; #1334, #1387), its row on
@@ -581,7 +581,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       a base item with its attempts ("You hammer the damage out."), whatever damaged it (acid,
       rust, heat, or a failure). Damaged and failed, **destroyed**, from the hand too, a unique
       also ("It shatters under the hammer!"). A failure is item damage (#1168, spec §7
-      "Materials" `resists`, `world/item_damage.rs`) of its own kind, which no material withstands:
+      "Materials" `resists`, `world/combat/item_damage.rs`) of its own kind, which no material withstands:
       it is the craft's blunder, not the world's. The anvil adds, raises,
       and removes no affix; they stay through all of it and go only with the item. A stack of
       several is worked one at a time. What survives is identified and says what it is ("This is
@@ -598,12 +598,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
       `makeshift_anvil` ("makeshift anvil", `π` a shade duller than the anvil's, not walkable,
       stone, `hardness` 300 becoming floor), with `works_as = "anvil"` (a terrain's optional
       station: `Content::works_as`, the one read). It is an anvil for everything: every recipe whose
-      station is the anvil (the station test `world/craft.rs::station_beside`), Temper, and the
+      station is the anvil (the station test `world/crafting/craft.rs::station_beside`), Temper, and the
       walk-in (`Content::offer` asks what it works as). It stays for good, a terrain of its level,
       saved with it; a pick clears it to floor, and Mining finds nothing in it.
 
   - **Healing springs** (`feature = "spring"`, `offers = { drink = "spring" }`, #416;
-    `world/drink.rs`, the design's §9.10): the spring is its own terrain, `spring` ("spring", a
+    `world/fixtures/drink.rs`, the design's §9.10): the spring is its own terrain, `spring` ("spring", a
     stone basin of water, `{`, not walkable; look mode adds its description), placed as an
     altar is.
     - **Drink** (`Action::Drink`, `drink` in action text) is offered in the abilities menu's
@@ -623,7 +623,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     - **No limit**: the table's `exhaust` is 0, so a spring never runs dry (the owner's
       no-anti-farming rule; the foul water is the price). Nothing is saved.
   - **A scriptorium** (`feature = "shelves"`, `loot = { class = "scrolls", count = [2, 4] }`,
-    `train = { decipher_script = 200 }`, #414; `mapgen/room_loot.rs`, `world/train.rs`). Its
+    `train = { decipher_script = 200 }`, #414; `mapgen/room_loot.rs`, `world/character/train.rs`). Its
     feature is `shelves` (stone, not walkable, `≡`, "shelves", a description look mode adds),
     placed as an altar is. A generated floor's scriptorium gets `count` items (least to most,
     one draw), each a base item of item class `class` that is loot at the floor's item level (by
@@ -650,7 +650,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     word.
   - **Teeming dens** (`swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60,
     loot_level = 1, themes = { kind = 10, faction = 20 } }`, #405; `mapgen/den.rs`,
-    `world/den.rs`). Nothing about a den is hand-made: a generated floor's den is filled after
+    `world/creatures/den.rs`). Nothing about a den is hand-made: a generated floor's den is filled after
     its population, from the level's own stream `swarm/<level id>` (so the rest of the level is
     the same with or without one). **Sleepers**: one per `per_cells` free plain floor cells of
     the room (no creature, stairs, light, or trap), `min` to `max` (1 to 64; never more than the

@@ -1,7 +1,7 @@
-//! Feinting (`assets/data/feint.toml`, spec §8 "Skills": Bluff; #1016): the numbers of Bluff's
-//! use, a lie in combat.
+//! Feinting (`assets/data/rules/feint.toml`, spec §8 "Skills": Bluff; #1016): the numbers of
+//! Bluff's use, a lie in combat.
 //!
-//! The rule itself lives in `world/feint.rs`: who can (anyone trained in a skill with the `feint`
+//! The rule itself lives in `world/skills/feint.rs`: who can (anyone trained in a skill with the `feint`
 //! benefit, `data/skills/`), at whom (a hostile creature they see next to them, with a mind),
 //! the check (its Willpower against `difficulty` + their Presence modifier + their Bluff), and
 //! the status a failed check leaves.
@@ -29,7 +29,7 @@ struct FeintFile {
 }
 
 impl FeintRules {
-    /// Parses `data/feint.toml`: the status must be known.
+    /// Parses `data/rules/feint.toml`: the status must be known.
     pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: FeintFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -43,7 +43,7 @@ impl FeintRules {
 }
 
 impl super::RulesFile for FeintRules {
-    const PATH: &'static str = "data/feint.toml";
+    const PATH: &'static str = "data/rules/feint.toml";
 
     fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         Self::parse(path, text, content)
@@ -54,11 +54,11 @@ impl super::RulesFile for FeintRules {
 mod tests {
     use crate::content::{Content, ContentFiles};
 
-    const PATH: &str = "data/feint.toml";
+    const PATH: &str = "data/rules/feint.toml";
 
     #[test]
     fn a_feint_leaves_a_foe_surprised() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let rules = content.feint().expect("feinting is in the game");
         assert_eq!(content.status(rules.status).id, "surprised");
     }

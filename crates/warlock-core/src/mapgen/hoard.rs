@@ -2,7 +2,7 @@
 //! special room whose effect has a `hoard` gets its items on the floor: `hoard.items` of them at
 //! the floor's item level + `hoard.loot_level`, with the finder's luck, each on a cell of the
 //! room's plain floor drawn anew (no stairs, light, or trap). Lifting them is what seals the room
-//! (`world/hoard.rs`).
+//! (`world/fixtures/hoard.rs`).
 //!
 //! The items come from the level's swarm stream [`Rng::swarm`] (`swarm/<level id>`), as a den's
 //! hoard does, drawn after its population, so the rest of the level is the same with or without a

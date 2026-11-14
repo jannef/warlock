@@ -21,7 +21,7 @@ creature takes any notice of it. It is found out when:
 
 - **You touch it.** Walking into it, opening it, [kicking](doors.md#kicking-a-door-open) it, or
   [picking its lock](doors.md#picking-locks) all count. It lurches ("The coffer lurches: it is a
-  young mimic!") and strikes you at once with a free blow that may [hold](status-effects.md#status-held)
+  young mimic!") and strikes you at once with a free blow that may [hold](status-list.md#status-held)
   you fast. Your action is not done and takes no time, so the next move is yours.
 - **You cast [Knock](abilities.md#ability-knock) on it.** It lurches, but no blow comes. The
   [mana](mana.md#how-much-mana-you-have) is spent.
@@ -41,7 +41,7 @@ is [slow](turns.md#speed) (speed 800), so you can walk away from it.
 
 ## Talents
 
-- **[Chest-wise](talents.md#talent-chest-wise)** (delver; [Intelligence](stats.md#stat-intelligence)
+- **[Chest-wise](talents-exploring.md#talent-chest-wise)** (delver; [Intelligence](stats.md#stat-intelligence)
   11 or [Detect traps](skills.md#skill-detect-traps) 15): within two cells you see a mimic for what
   it is. It shows as itself, not as a chest. It is still disguised, though: it waits, unaware,
   until something finds it out. A mimic's grip also never holds you.
@@ -49,3 +49,5 @@ is [slow](turns.md#speed) (speed 800), so you can walk away from it.
 ## The bands
 
 {{#include generated/mimic-bands.md}}
+
+See also: [Chests](chests.md), [Animated objects](animated.md), and [Creatures](creatures.md).

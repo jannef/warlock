@@ -26,3 +26,6 @@
 #   only          a signature: the creature whose corpse gives it, sure (its `on_eat.gives`
 #                 names it back); never drawn, weight 0, and in that creature's campaign's
 #                 `data/profane/` when the creature is a campaign's
+#
+# The whole table: each tier holds at least one drawn gift (no `only`) of each kind, a boon, a
+# mixed gift, and a bane, or the content does not load.

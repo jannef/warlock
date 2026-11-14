@@ -1,4 +1,4 @@
-# An aristocrat's own servant (#1405; world/stipend.rs): waits at Cēaptūn's Gæsthūs in an
+# An aristocrat's own servant (#1405; world/classes/stipend.rs): waits at Cēaptūn's Gæsthūs in an
 # aristocrat's run only, for an aristocrat of neither gender, of the aristocrat's own race (its words, by race, are in
 # data/dialogue/servants.toml; data/towns/ceaptun.toml places it). Peaceful; holds the family's
 # stipend and hands it over when spoken to.

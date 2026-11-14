@@ -180,13 +180,13 @@ pub(super) fn actor_rows(world: &World) -> Vec<String> {
                 Some(word) => format!("{court}; grade {word}"),
                 None => court,
             };
-            // Unseen (`world/unseen.rs`): `; invisible`, by its type or a status now; `; shadowy`.
+            // Unseen (`world/creatures/unseen.rs`): `; invisible`, by its type or a status now; `; shadowy`.
             let court = match (a.invisible(content), def.shadowy) {
                 (true, _) => format!("{court}; invisible"),
                 (false, true) => format!("{court}; shadowy"),
                 (false, false) => court,
             };
-            // Rooted (`world/rooted.rs`): `; rooted`, a creature that never moves from its cell.
+            // Rooted (`world/creatures/rooted.rs`): `; rooted`, a creature that never moves from its cell.
             let court = if def.rooted {
                 format!("{court}; rooted")
             } else {
@@ -197,7 +197,7 @@ pub(super) fn actor_rows(world: &World) -> Vec<String> {
                 Some(by) => format!("{court}; summoned by {by}"),
                 None => court,
             };
-            // Whose guard its openings are in (`world/mark.rs`).
+            // Whose guard its openings are in (`world/classes/mark.rs`).
             let court = match a.mark {
                 Some(mark) => format!("{court}; mark {mark}"),
                 None => court,
@@ -220,7 +220,7 @@ pub(super) fn actor_rows(world: &World) -> Vec<String> {
                     };
                     let retinue = if ally.retinue { "; retinue" } else { "" };
                     let source = ally.source.id();
-                    // A kept beast's name and grade (`world/companion.rs`, `familiar.rs`).
+                    // A kept beast's name and grade (`world/allies/companion.rs`, `familiar.rs`).
                     let named = match ally.source.data() {
                         Some(c) => format!("; named {}, grade {}", c.name, c.grade),
                         None => String::new(),
@@ -232,7 +232,7 @@ pub(super) fn actor_rows(world: &World) -> Vec<String> {
                 }
                 None => court,
             };
-            // Risen berserk, serving no one (`world/corpse_spell.rs`): its faction and its clock.
+            // Risen berserk, serving no one (`world/magic/corpse_spell.rs`): its faction and its clock.
             let court = match a.risen {
                 Some(until) => {
                     let faction = (a.faction(content))
@@ -250,7 +250,7 @@ pub(super) fn actor_rows(world: &World) -> Vec<String> {
                 Some(entry) => format!("{court}; of encounter {entry}"),
                 None => court,
             };
-            // A trader's offer, once made (`world/wares.rs`): the item and its price, or sold.
+            // A trader's offer, once made (`world/people/wares.rs`): the item and its price, or sold.
             let court = match world.state().wares.get(&a.id) {
                 Some(w) => match &w.item {
                     Some(item) => {
@@ -331,7 +331,7 @@ pub(super) fn actor_rows(world: &World) -> Vec<String> {
             } else {
                 format!("; resists {}", resists.join(" "))
             };
-            // Its reflections in a hall of mirrors (`world/mirrors.rs`), wherever the player is.
+            // Its reflections in a hall of mirrors (`world/fixtures/mirrors.rs`), wherever the player is.
             let mirrored: Vec<String> = (images.iter())
                 .filter(|i| i.of == a.id)
                 .map(|i| i.pos.to_string())

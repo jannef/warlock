@@ -8,12 +8,12 @@ skills only, a missing one is untrained and gives nothing; `Effect` and `Use`, t
 and training-mark hooks; `Benefit` growth by `steps` or a `curve`; `Ladder` and `RollRules`, the
 skill rolls' data; `Skills::mark` adds a mark, `Skills::roll` applies a roll and spends the
 marks), `content/skill.rs` (`data/skills.toml`: the skills, `[ladder]`, `[rolls]`; adding a skill
-is one entry), `world/train.rs` (marks for the player only, each through `World::mark_skill` in `world/skill_roll.rs`, the one hook (a quest's `skills` reward marks there too, docs/dev/quests.md), drawn from the `training` stream in
-`WorldState`, never the gameplay stream; nothing said), and `world/skill_roll.rs` (#230: the
+is one entry), `world/character/train.rs` (marks for the player only, each through `World::mark_skill` in `world/character/skill_roll.rs`, the one hook (a quest's `skills` reward marks there too, docs/dev/quests.md), drawn from the `training` stream in
+`WorldState`, never the gameplay stream; nothing said), and `world/character/skill_roll.rs` (#230: the
 level-up rolls, below).
 
 **Growth is skill rolls only** (design `docs/design/progression.md` §5): a level's, and the
-automatic one (#1328). Marks are a reservoir: `World::level_up` (`world/talent.rs`) puts `World::level_rolls()` rolls (class
+automatic one (#1328). Marks are a reservoir: `World::level_up` (`world/character/talent.rs`) puts `World::level_rolls()` rolls (class
 `rolls` + race `rolls` + `RollRules::for_intelligence` of the raised Intelligence; 0 when the
 player is trained in nothing) into each level's `Due::rolls`; `refuse_due` refuses everything
 else ("You have skill rolls to spend."); `advance:SKILL` (`World::advance_skill`) throws
@@ -27,15 +27,15 @@ marks, the practice die, the known-for step, the die, the `RollBonus` and why, `
 through `PerceptionView::skill_roll`/`roll_count` and by the dev `progress` dump (`rolls a
 level ...`, `roll dice athletics 1d3, ...`). `levelup:auto` spends rolls on the first trained skill
 (`advance_auto`). **Automatic rolls** (#1328): every mark is added through
-`World::mark_skill(id, by)` (`world/skill_roll.rs`; `World::train` calls it a mark at a time, and
+`World::mark_skill(id, by)` (`world/character/skill_roll.rs`; `World::train` calls it a mark at a time, and
 `World::teach_skills` with a quest reward's `marks` at once, after its words). Once the skill's marks reach `RollRules::auto_at` (`[rolls]
 auto_at`, 100; 0 turns it off) it rolls at once through `World::roll_skill`, the one path
 `advance_skill` uses too: the same dice, `levels_rng`, words, and spend, again while the spent
 marks are still at the threshold (a big gift). No `Due` is touched, and a pending level-up does
 not hold it back. The Skills screen's meter (`skills::progress`) is the ladder step in quarters.
 Tests: `skills.rs` (ladder, rolls, meter), `content/skill.rs`, `content/class.rs`
-(`known_for`, `rolls`), `world/skill_roll_tests.rs` (counts, refusals, dice and affinities,
-streams, saves and replays), `world/skills_tests.rs` (marks by use). Race and class grants are dice rolled in `character.rs` after every
+(`known_for`, `rolls`), `world/character/skill_roll_tests.rs` (counts, refusals, dice and affinities,
+streams, saves and replays), `world/character/skills_tests.rs` (marks by use). Race and class grants are dice rolled in `character.rs` after every
 other roll, so they never move a score. A class's **optional skills** (#662,
 `ClassDef::optional_skills`, `content::OptionalSkill { skill, chance, dice }`; the loader checks
 the ids)
@@ -46,7 +46,7 @@ before, and a replay needs no new field (the roll is a function of the seed and 
 that have them start with other skills on old seeds, so old replays' hashes change.
 `ClassDef::trains` (the level-up roll's +1) stays the guaranteed list. A background story's
 skill starts go through `Skills::add` too, after every roll (docs/dev/background.md), and so
-do a fresh caster corpse's (#1103, `on_eat.skills`, `World::corpse_skills` in `world/eat.rs`:
+do a fresh caster corpse's (#1103, `on_eat.skills`, `World::corpse_skills` in `world/health/eat.rs`:
 Decipher script learned at `gives` or raised by it up to `up_to`; docs/dev/hunger.md). A race's optional skills
 (#682, `RaceDef::optional_skills`: the drow's Sneak attack) share the type and the parser
 (`content/skill.rs::optional_skills`) and the stream: the
@@ -56,28 +56,28 @@ draws nothing more. Tests: `content/class.rs`, `content/race.rs` (parsing, refus
 `a_drow_may_start_with_sneak_attack_and_no_other_characters_skills_move`).
 Sneak attack's `sneak_dice` is read in `World::sneak_dice` and `surprise` (the craft) in
 `World::startle`'s `craft`; Initiative's `initiative` in `World::startle` and `surprise_ease` in
-`World::status_cost` (`world/ambush.rs`, `world/surprise.rs`; `docs/dev/surprise.md`). Their uses:
+`World::status_cost` (`world/combat/ambush.rs`, `world/combat/surprise.rs`; `docs/dev/surprise.md`). Their uses:
 `sneak_attack` (in `ambushed`, where the dice land; shared with the stats as
 `StatUse::SneakAttack`, a Dexterity mark) and `surprise` (in `startle`, the player's check made,
 whatever came of it). Intimidate's `intimidate` (#844) is read in `World::war_cry`
-(`world/war_cry.rs`), added to the difficulty of the Willpower check the cry asks of every hostile
+(`world/classes/war_cry.rs`), added to the difficulty of the Willpower check the cry asks of every hostile
 that hears and sees the player, and its use `intimidate` is marked there, once a cry, whatever
-came of it (`world/war_cry_tests.rs`). The skill's own use, the **Intimidate** ability (#868),
+came of it (`world/classes/war_cry_tests.rs`). The skill's own use, the **Intimidate** ability (#868),
 is `Action::Intimidate(Pos)` (replay text `intimidate:X,Y`, cost `intimidate`,
 `ActionKind::Intimidate`), dispatched by one arm in `World::player_acts` to `World::intimidate`
-in `world/intimidate.rs`: a single-target threat on War cry's check, sharing
+in `world/skills/intimidate.rs`: a single-target threat on War cry's check, sharing
 `World::threat_difficulty` (the one read of `intimidate` for the difficulty), `World::heard_by`
 (who would hear a noise, asked before it is made), and `World::cow` (the nerve check, the
-status, the message) with `World::war_cry`. Its numbers are data, `data/intimidate.toml`
+status, the message) with `World::war_cry`. Its numbers are data, `data/rules/intimidate.toml`
 (`content/intimidate.rs`, `IntimidateRules`: `range`, `difficulty`, `status` (Frightened, one
 that `flees`), and `degrees`, the ladder of `[points, degrees]` by what Intimidate adds, its
 points rising (the one load check beside resolution), read by `IntimidateRules::degrees_at`); without the file the skill stays "not usable yet". It is
 marked once a threat, refused or not reached (no hearing, no sight) aside. Tests:
-`world/intimidate_tests.rs` (the menu row, refusals with no time and no draw, the turn and the
+`world/skills/intimidate_tests.rs` (the menu row, refusals with no time and no draw, the turn and the
 voice and the mark, the check, the ladder), `content/intimidate.rs` (parsing, refusals). Bluff's
-`feint` (#1016; `docs/design/skill-uses.md` §6.2 B1) is read in `World::feint` (`world/feint.rs`),
+`feint` (#1016; `docs/design/skill-uses.md` §6.2 B1) is read in `World::feint` (`world/skills/feint.rs`),
 Bluff's use: `Action::Feint(Dir)` (replay text `feint:DIR`, cost `feint`, `ActionKind::Feint`),
-`Ability::Feint`, data `data/feint.toml` (`content/feint.rs`, `FeintRules`: `difficulty`, `status`,
+`Ability::Feint`, data `data/rules/feint.toml` (`content/feint.rs`, `FeintRules`: `difficulty`, `status`,
 Surprised, `flat_footed` and `per_action` with `max = 1`; the loader only resolves it). The foe's nerve (its Willpower modifier
 and talents' checks, two gameplay draws, `check::check`) against `difficulty` + the player's Presence
 modifier + the points; failed, Surprised, caused by the player. No noise, no need of being heard
@@ -91,36 +91,36 @@ check (a feint at a new foe empties the pool, and a failed one still moves the m
 builds `Build::Feint` (`feint`: Openings one). The ability's id is `feint`, as the
 Duelist's weapon active, False lead, is (`Ability::Weapon`, `use:false_lead:E`): the two rows are told apart by
 `Source`, and nothing looks an ability up by id. No caught-out check (the owner): `World::steal`
-and the shops read nothing of Bluff. Tests: `world/feint_tests.rs`, `content/feint.rs`. Music's
-`song_degrees` (#870) is read in `World::sing` (`world/song.rs`): the degrees a song adds to its
+and the shops read nothing of Bluff. Tests: `world/skills/feint_tests.rs`, `content/feint.rs`. Music's
+`song_degrees` (#870) is read in `World::sing` (`world/classes/song.rs`): the degrees a song adds to its
 status, capped by the status's `max`; `song_craft`, the difficulty a song on its hearers adds to
 their check, is read there too (the Lullaby's, #873). Its use `song` is marked once a song,
 whatever it does; Music is `kind = "rules"` (no abilities-menu row). Tests:
-`world/song_tests.rs`, `world/lullaby_tests.rs`. Rules read a benefit through `Actor::skill_effect`
+`world/classes/song_tests.rs`, `world/classes/lullaby_tests.rs`. Rules read a benefit through `Actor::skill_effect`
 (the actor's skills plus what magic items' skill affixes and talents add, Skill focus's chosen
 skill and Master of none's every one, `Skills::effect_with`), never
 `Skills::effect` directly. Each effect is read in one place: Dodge in
 `Actor::defence`, quiet in `noise::noise`, hearing in `Actor::hearing`, burden in
 `World::burdened` (`Burden::slow_eased`), travel in `World::step_price`, bargain (Negotiation,
-#666) in `world/shop.rs`, identify (Appraise; trained at all, below) in
-`world/appraise.rs`, kick (athletics: Strength for kicking a door in) in `World::kick_door`, speed
+#666) in `world/people/shop.rs`, identify (Appraise; trained at all, below) in
+`world/skills/appraise.rs`, kick (athletics: Strength for kicking a door in) in `World::kick_door`, speed
 (athletics, #548: percent quicker, added to the talents' `speed_percent`, the skills never
 taking the sum past `MAX_SPEED`) in `Actor::speed`, pick
 (Open lock: picking a lock, and trained at all, the Pick lock ability) in `World::pick_lock`,
-search, search reach, spot, and detect traps in `world/search.rs` (`search_modifier`,
+search, search reach, spot, and detect traps in `world/skills/search.rs` (`search_modifier`,
 `search_turn`; Spot trained at all lets the player notice in passing, Detect traps the same for
 hidden traps, whose checks read it in place of Search and Spot, `Skills::trains_effect`), disarm in
-`world/disarm.rs` (`disarm_modifier`; trained at all, Disable device gives the Disarm ability,
+`world/skills/disarm.rs` (`disarm_modifier`; trained at all, Disable device gives the Disarm ability,
 `Ability::had_by`), slip (Stealth: points added to slipping past a creature's darkvision) in
-`world/slip.rs` (docs/dev/surprise.md), steal in `world/steal.rs` (trained at all lets the player steal,
-`docs/dev/stealing.md`), heal in `world/heal.rs` (trained at all gives the Heal ability, on oneself or an ally beside one;
+`world/combat/slip.rs` (docs/dev/surprise.md), steal in `world/skills/steal.rs` (trained at all lets the player steal,
+`docs/dev/stealing.md`), heal in `world/health/heal.rs` (trained at all gives the Heal ability, on oneself or an ally beside one;
 `docs/dev/status-effects.md` "Treating oneself"), forage (Survival: percent added to a forage's chance; trained at all,
-the Forage ability) in `world/forage.rs`, study (Decipher script, #1270: points off the study check) in
-`world/learn.rs::study_odds` and learn (Decipher script: the spell level a scroll teaches for certain, at least 1, and reads with no check; trained at all lets
+the Forage ability) in `world/skills/forage.rs`, study (Decipher script, #1270: points off the study check) in
+`world/magic/learn.rs::study_odds` and learn (Decipher script: the spell level a scroll teaches for certain, at least 1, and reads with no check; trained at all lets
 the player learn from a scroll) in `Actor::learning` (docs/dev/spells.md "Learning"; their use `Use::Study`, reported
 when a study ends, is also `StatUse::Study`), decipher (Decipher script: points on the check of
 reading a scroll, read by anyone, but untrained it is 0: the skill does nothing without the skill,
-whatever raises it) in `World::deciphers`, `world/decipher.rs` (docs/dev/scrolls.md "Making out a
+whatever raises it) in `World::deciphers`, `world/magic/decipher.rs` (docs/dev/scrolls.md "Making out a
 scroll"; its use `Use::Decipher`, reported per check, trains no stat, as a made read's Intelligence
 mark comes of `use_up`). All reading trains Decipher script (#1270): `Use::Decipher` 100 %,
 `Use::Read` 50 % (a scroll read and used up, reported in `read.rs::use_up` beside its Intelligence
@@ -129,10 +129,10 @@ only its `cast` mark (25 %) and has no benefit: nothing reads it until a rule do
 is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`,
 `kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, both for `find_trap` (a
 trap found), `World::disarm` for
-`disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, `World::heal` for `heal`, `World::forage_done` for `forage` (a forage that ran its time), `World::order` and `fight.rs::dies` for `handle` (an order given to one's allies, an ally's kill: Handle animal's marks, docs/dev/allies.md), `world/tame.rs::tame_check` for `handle` too (a try at taming), and the `tame` benefit read in `tame_odds` (trained at all, the Tame ability; docs/dev/companion.md "Taming"), `World::pay` and
-`World::trade` (a sale) in `world/shop.rs` for `deal`, `World::appraise` for `appraise`, `world/temper.rs::tempered` for `temper`, `world/craft_make.rs::crafted` for `craft` (a recipe's work that ran its time), and `World::sidesteps` for a known trap avoided,
+`disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, `World::heal` for `heal`, `World::forage_done` for `forage` (a forage that ran its time), `World::order` and `fight.rs::dies` for `handle` (an order given to one's allies, an ally's kill: Handle animal's marks, docs/dev/allies.md), `world/allies/tame.rs::tame_check` for `handle` too (a try at taming), and the `tame` benefit read in `tame_odds` (trained at all, the Tame ability; docs/dev/companion.md "Taming"), `World::pay` and
+`World::trade` (a sale) in `world/people/shop.rs` for `deal`, `World::appraise` for `appraise`, `world/crafting/temper.rs::tempered` for `temper`, `world/crafting/craft_make.rs::crafted` for `craft` (a recipe's work that ran its time), and `World::sidesteps` for a known trap avoided,
 `dodge`, besides `fight.rs::resolve`). Listen at a door (#1026) is `Use::Listen`, 100 % per
-`listen:DIR` (`world/listen.rs`, `hearing.md`). Marks from plain play (#1014,
+`listen:DIR` (`world/skills/listen.rs`, `hearing.md`). Marks from plain play (#1014,
 `docs/design/skill-uses.md` 6.8, 6.9, 6.11): `Use::Sight` (Spot) in `surprise.rs::mark_noticed`, the
 first sighting of a creature that has not noticed the player; `Use::Sprung` (Detect traps) in
 `trap.rs::train_from_sprung`, a hidden trap going off under the player, or (half the time, a
@@ -140,25 +140,25 @@ training-stream draw) under a creature they see; `Use::Overhear` (Listen) in `pe
 sound that is no news heard while resting or waiting (`World::waiting` is set around the player's
 wait); Detect traps also marks on `disarm` and, with Spot, on `search`, as data. Concentration's
 `mana_regen` and `max_mana` (trained only, `Actor::mind`) are read in
-`World::mana_rate` and `Actor::max_mana` (`world/concentration.rs`, docs/dev/mana.md), its `cast`
-use reported by `World::spend_mana` (Spellcraft's `cast` mark, its only one, 25 %, rides the same use, #989, #1270). Spellcraft's `cast` (points on the Spellcraft check every cast with one's own mana makes) and `ward` (points off a miscast's total) are read in `world/miscast.rs` (`Actor::cast_bonus`, `Actor::miscast_ward`; #1271, docs/dev/spells.md "Miscasts"), by anyone: an untrained caster has none of them and checks all the same. Knowledge's `resist` (#667) is read
-in `world/knowledge.rs` (`World::resisting`, `resist_bonus`) through `Actor::skill_effect_above`
+`World::mana_rate` and `Actor::max_mana` (`world/magic/concentration.rs`, docs/dev/mana.md), its `cast`
+use reported by `World::spend_mana` (Spellcraft's `cast` mark, its only one, 25 %, rides the same use, #989, #1270). Spellcraft's `cast` (points on the Spellcraft check every cast with one's own mana makes) and `ward` (points off a miscast's total) are read in `world/magic/miscast.rs` (`Actor::cast_bonus`, `Actor::miscast_ward`; #1271, docs/dev/spells.md "Miscasts"), by anyone: an untrained caster has none of them and checks all the same. Knowledge's `resist` (#667) is read
+in `world/skills/knowledge.rs` (`World::resisting`, `resist_bonus`) through `Actor::skill_effect_above`
 (`Skills::effect_above`: each benefit read at the value less the creature's level, nothing at or
 below it), called for the modifier of the player's check against a creature's drain
 (`World::drain`, which takes the drainer), exposure to a disease its attack carries
 (`World::expose` with a `by`), and a struggle against its hold (`World::struggle`, the effect's
 `by`); the same call marks `Use::Resist` (training stream only), and `World::discovered` marks
-`Use::Discover` beside the first-kill and arrival XP (`world/experience.rs`). The player only, and
+`Use::Discover` beside the first-kill and arrival XP (`world/character/experience.rs`). The player only, and
 only against a creature: no bonus, no draw otherwise. The same skills standing above a creature's
 level at all (`Actor::skill_stands_above`, `Skills::stands_above`: one above is enough, though the
 curve gives nothing below 3) tell look mode what its kind resists (#1030): `PerceptionView::known_resistances`
-reads `Actor::known_resistances` (`world/knowledge.rs`), the type's `resist` in `ResistanceWord`s,
+reads `Actor::known_resistances` (`world/skills/knowledge.rs`), the type's `resist` in `ResistanceWord`s,
 never gear or statuses, no marks; JSON dumps carry it as a seen actor's `known`; `ui/look.rs::known`
-writes the line. Tests `world/knowledge_tests.rs`.
+writes the line. Tests `world/skills/knowledge_tests.rs`.
 Metalcraft's `temper` benefit is read in
-`world/temper.rs::tempered` (the Strength check of an attempt at an anvil, whose difficulty rises
+`world/crafting/temper.rs::tempered` (the Strength check of an attempt at an anvil, whose difficulty rises
 with every attempt on the item, docs/dev/special-rooms.md), its `craft` benefit in
-`world/craft_make.rs::craft_modifier` (the Strength check of a forged recipe, read of Metalcraft
+`world/crafting/craft_make.rs::craft_modifier` (the Strength check of a forged recipe, read of Metalcraft
 alone through `Actor::skill_effect_of`, docs/dev/crafting.md "Making a recipe"). Metalcraft and
 Woodcraft are
 **professions** (#1334, `docs/dev/crafting.md`): each has a recipe directory
@@ -169,16 +169,16 @@ and Mining**: kinds as `docs/design/professions.md` §9: Mining `rules`, Herbali
 others `action` (shown "not usable yet"). Skill ids are file order (alphabetical), and `Skills` is
 saved and hashed by that index. Their first effects (#1343, one hook each):
 - **Mining**'s `dig` (`Effect::Dig`, 25 % more work a turn at 100, 40 % at 200) is added to the
-  talents' and items' `dig_percent` in `world/dig.rs::dig_turn`; a wall the player digs through
+  talents' and items' `dig_percent` in `world/crafting/dig.rs::dig_turn`; a wall the player digs through
   marks `Use::Dug` (100 %) there too, after `break_wall` (not in it: a rod of digging and a blast
   break walls through it, and they are no dig).
 - **Herbalism**'s `herbs` (`Effect::Herbs`, 25 / 60 / 80 % at 0 / 100 / 200) is read in
-  `world/forage.rs::forage_herbs`: on a forage that found something, trained in it, on ground with
+  `world/skills/forage.rs::forage_herbs`: on a forage that found something, trained in it, on ground with
   a `herbs` list (`forage.toml`, `ForageGround::herbs`: angelica root and the brewing herbs where
   they grow, #1340), one more gameplay draw for the chance and one for which, one of it
   into the pack. Nobody else draws, so a forage without Herbalism draws as before. Marks on
   `forage`, 25 %.
-- **Herbalism**'s use is **Gather** (#1340, `world/gather.rs`, `content/herbs.rs`,
+- **Herbalism**'s use is **Gather** (#1340, `world/skills/gather.rs`, `content/herbs.rs`,
   `data/herbs.toml`): the glowing fungus offers it to anyone beside it (`Ability::Gather`, the
   abilities menu's *Here* group, offered by the fungus as a room's feature offers Pray, so the
   skill stays `passive`), but only one trained in the file's `skill` (Herbalism) may gather
@@ -188,7 +188,7 @@ saved and hashed by that index. Their first effects (#1343, one hook each):
   A gather finds `count` + the skill's trained value / `value_per_count`, each drawn by weight
   at the level's item level (`HerbRules::at`). Marks on `gather`, 100 %. The fungus never changes.
 - **Alchemy**'s `identify_potion` and **Enchanting**'s `identify_magic` (5 / 25 / 40 %) look in
-  `world/appraise.rs::appraise_hours` after Appraise's `identify`, from the same hour's stream:
+  `world/skills/appraise.rs::appraise_hours` after Appraise's `identify`, from the same hour's stream:
   Alchemy at the potions and flasks whose kind is unknown (`drink`), Enchanting at every other
   unknown thing that is no scroll (affixes, wands, rods). Each draws only when trained and with a
   candidate, so an appraiser alone draws as before. No marks until their crafts come.
@@ -202,8 +202,8 @@ saved and hashed by that index. Their first effects (#1343, one hook each):
   aristocrat 15 %. Story lines (`01-parents.toml`): `miners_child`, `jewellers_child`,
   `apothecarys_child`, `scholars_child`, and `wise_woman` gains Herbalism. The optional skills
   draw in skill id order, so a class with a new optional skill before an old one draws differently
-  from then on (state hashes of such characters change). Tests: `world/dig_tests.rs`,
-  `world/forage_tests.rs`, `world/appraise_tests.rs`.
+  from then on (state hashes of such characters change). Tests: `world/crafting/dig_tests.rs`,
+  `world/skills/forage_tests.rs`, `world/skills/appraise_tests.rs`.
 A new
 effect or use is a variant there plus its one hook. The player sees values only
 (`PerceptionView::own_skills`, the Skills screen `ui/skills_screen.rs`, `A`); never marks or
@@ -227,43 +227,43 @@ are Woodcraft's recipes (`recipes/woodcraft/arrows.toml`, `bolts.toml`, `count =
 as any generic recipe is; `data/fletch.toml` keeps the count, the knives, and the launchers' words,
 and the ranger's Fletcher is read there. All of it is in `docs/dev/crafting.md` "Arrows and bolts".
 
-A damaged item (Temper's failure, or acid, rust, or heat: `world/item_damage.rs`, #1131, #1168) is a point worse until
+A damaged item (Temper's failure, or acid, rust, or heat: `world/combat/item_damage.rs`, #1131, #1168) is a point worse until
 mended (`Mods::add_worked`: its Protection if it gives some, else its Defence, else its damage).
 Mithril and adamantium are metals, so Temper works them as steel.
 
 **Whittling** (#1028, design W3): `Action::Whittle { item }` (replay text `whittle:LETTER`, cost
-`whittle` a turn, `ActionKind::Whittle`) is Temper's twin for wood: `world/temper.rs` keeps both, a
+`whittle` a turn, `ActionKind::Whittle`) is Temper's twin for wood: `world/crafting/temper.rs` keeps both, a
 `Craft` (`Temper` or `Whittle`) in `Tempering` choosing the material group (`metal` or `wood`), the
 stat and effect (Strength and `Effect::Temper`, or Dexterity and `Effect::Whittle`), the mark
 (`Use::Temper`, `Use::Whittle`), the turn price, and the message lines. Both share
-`data/temper.toml` and `magic/worked.rs`, so one item has one state. The Whittle recipe
+`data/rules/temper.toml` and `magic/worked.rs`, so one item has one state. The Whittle recipe
 (`data/recipes/woodcraft/whittle.toml`: `knife`; Woodcraft's, refused untrained with no time, "You
 are not trained in Woodcraft.", #1387) stands beside the arrows on Woodcraft's screen
 (`docs/dev/crafting.md`), opens the Whittle list over it (`ObjectList::Whittle`,
 `ScreenName::Whittle`, the list `world::workable_wood`), and is greyed "no knife" without one (the
-rules' refusal is `world::whittle_lack`). Tests: `world/whittle_tests.rs`.
+rules' refusal is `world::whittle_lack`). Tests: `world/crafting/whittle_tests.rs`.
 
 **Balance** (spec §8 "Skills", #1029, `docs/design/skill-uses.md` §6.13): besides `burden`,
-`Effect::Footing` is read in `World::step_price` (`world/schedule.rs`) in the `else` of the wading
-branch, on a step `World::rough_step` (`world/footing.rs`) calls rough: off the overworld,
+`Effect::Footing` is read in `World::step_price` (`world/turn/schedule.rs`) in the `else` of the wading
+branch, on a step `World::rough_step` (`world/levels/footing.rs`) calls rough: off the overworld,
 `move_cost` above 100, not `wading_step`; the same `surcharge_spared`. `Use::RoughStep` is marked by
-`World::train_rough_step` after `wade` in the step (`world/travel.rs`). `Effect::SteadyEase` is read
-in `World::status_cost` (`world/surprise.rs`) for the status `footing::STAGGERED` (`"staggered"`),
+`World::train_rough_step` after `wade` in the step (`world/levels/travel.rs`). `Effect::SteadyEase` is read
+in `World::status_cost` (`world/combat/surprise.rs`) for the status `content/required.rs::STAGGERED` (`"staggered"`),
 beside Initiative's ease of Surprised; `Use::Staggered` is marked in `spend_actions`
-(`world/weapon_ability.rs`) for the player's action that eases Staggered (not the one that gave it).
-Tests `world/footing_tests.rs`.
+(`world/combat/weapon_ability.rs`) for the player's action that eases Staggered (not the one that gave it).
+Tests `world/levels/footing_tests.rs`.
 
 **Swim** (spec §8 "Skills", #1018, `docs/design/skill-uses.md` §6.4; `kind = "rules"`, no menu
-row): `Effect::Wade` is read in `World::step_price` (`world/schedule.rs`), on a step
+row): `Effect::Wade` is read in `World::step_price` (`world/turn/schedule.rs`), on a step
 `World::wading_step` calls wading (off the overworld, `move_cost` above 100, `stars::wading`): a
 percent of what the terrain adds over a plain step is spared (`surcharge_spared`, rounded up), 100
 for `swimmer` and `Actor::wades_free`, so Swim never goes past them. Its use `wade` is reported at the
-head of `World::wade` (`world/disease.rs`), before the talents' early return: a wader whom a
-talent spares still trains. `Effect::Swim` is read in `World::keeps_afloat` (`world/ice.rs`,
+head of `World::wade` (`world/health/disease.rs`), before the talents' early return: a wader whom a
+talent spares still trains. `Effect::Swim` is read in `World::keeps_afloat` (`world/levels/ice.rs`,
 `docs/dev/temperature.md`), which marks `swim` once a check; it is `Skills::trains_effect`-gated, so
-an item's Swim bonus alone asks no check. Tests `world/swim_tests.rs`.
+an item's Swim bonus alone asks no check. Tests `world/levels/swim_tests.rs`.
 
-**Deep water** (spec §8 "Skills": Swim, #1019; design §6.4 S2) is `world/swim.rs`, one line each
+**Deep water** (spec §8 "Skills": Swim, #1019; design §6.4 S2) is `world/levels/swim.rs`, one line each
 in `player_moves`, the refused actions (`pick_up_objects`, `drop_objects`, `start_rest`, the
 search dispatch, `start_dig`, lighting in `use_tool`), and `equip`. The terrain's `swim = true`
 with `walkable = false` (`content/load_world.rs` checks the pair) is why nothing else needs to know of it:
@@ -274,7 +274,7 @@ the step cannot go in unasked (presentation asks only of what the player knows,
 check of a step that starts in deep water, wherever it ends (**the dive itself asks none**: a
 "Dive in" that left you on the shore, cold, would make no sense; the issue left this open): two
 gameplay draws (the 2d12), `Use::Stroke` whatever came of it (a use of its own, as `swim` is 100 %
-for a plunge), then `Harm::Spared`. `data/swim.toml` has the numbers (`content/swim.rs`, optional:
+for a plunge), then `Harm::Spared`. `data/rules/swim.toml` has the numbers (`content/swim.rs`, optional:
 without it nobody swims); burden goes by `Load::penalty`, as every burden hook does. `dive_in` and
 `equip` put out the ready light (`douse_afloat`), so a second lantern, lit in the pack, cannot be
 made ready to cheat it. Prices: `wading_step` is true of `swim` terrain, so Wade, Swimmer
@@ -283,13 +283,13 @@ made ready to cheat it. Prices: `wading_step` is true of `swim` terrain, so Wade
 `SHORE_REACH` when the target is afloat with no ground in reach, so creatures wait on the nearest
 shore; only then does it search more than once. A swimmer swaps with no one (`Refusal::Water`). An
 Overloaded swimmer cannot step (`can_step_to`, as anywhere) and cannot drop: they can still throw
-things away, eat, or teleport, so it is no trap. Tests `world/swim_deep_tests.rs`; the showcase's
+things away, eat, or teleport, so it is no trap. Tests `world/levels/swim_deep_tests.rs`; the showcase's
 quarry pit holds a pool to try it in (the test world only; #1020 places it in the world).
 
 **Foraging** (spec §8 "Foraging", #547): `Action::Forage` (replay text `forage`, cost `forage`
 a turn, `ActionKind::Forage`), dispatched by one arm in `World::player_acts` to
-`World::start_forage` in `world/forage.rs` (`Spent::Forage(seconds)`, then `World::forage`, a
-`keep_at` loop like a prayer's; tests `world/forage_tests.rs`). Data `data/forage.toml`
+`World::start_forage` in `world/skills/forage.rs` (`Spent::Forage(seconds)`, then `World::forage`, a
+`keep_at` loop like a prayer's; tests `world/skills/forage_tests.rs`). Data `data/forage.toml`
 (`content/forage.rs`, `ForageRules`, `Content::forage`; optional: without it nobody forages):
 `seconds`, and a `[[ground]]` per `Landscape` (land only) with `chance`, `count` dice, and
 weighted food `finds`. `world::forage_ground(content, level, pos)` is the one place that says
@@ -301,7 +301,7 @@ the count's dice; the food is made then (`rot::made_at`) and joins the pack; the
 `train(Use::Forage)`. Nothing is stored, so saves change only by content (the new
 `ActionKind`, the new food objects). The wiki's table is `generated/foraging.md`
 (`xtask/src/wiki/skills.rs::foraging`).
-**Appraise** (spec §8 "Skills", #666; Negotiation took the shops' bargain): `world/appraise.rs`,
+**Appraise** (spec §8 "Skills", #666; Negotiation took the shops' bargain): `world/skills/appraise.rs`,
 `World::appraise_hours(start, seconds)`, called for the player from `World::live` (the status
 loop, so rests roll each hour they pass) and from `World::skip_time_dev` (`skip:`). It walks the
 whole game hours in `(start, start + seconds]`; it returns at once unless the player is trained
@@ -309,32 +309,32 @@ in a skill with `Effect::Identify` (`Skills::trains_effect`: an affix alone neve
 per hour, unless `World::unidentified` (the appraisal service's list) is non-empty. Each hour
 draws from its own stateless stream `Rng::stream(seed, "appraise/<hour>")`: `chance` of
 `skill_effect(Identify)` percent, then `index` for the stack. No state is saved, so how the time
-is cut never changes the outcome. `World::learn_item` (`world/loot.rs`) is `World::identify`
+is cut never changes the outcome. `World::learn_item` (`world/items/loot.rs`) is `World::identify`
 without its "This is ...!" line; Appraise says "You realise your X is Y." and reports
 `Use::Appraise`. Appraise also carries `Effect::Freshness` (with Survival's, #1031: the tell of how fresh
-food is, `world/freshness.rs`, docs/dev/hunger.md) and the mark `judged`. Tests: `world/appraise_tests.rs` (the split, prices, the line, untrained,
-cutting time, rest and skip, replays), `world/shop_tests.rs::deals_train_negotiation`.
+food is, `world/health/freshness.rs`, docs/dev/hunger.md) and the mark `judged`. Tests: `world/skills/appraise_tests.rs` (the split, prices, the line, untrained,
+cutting time, rest and skip, replays), `world/people/shop_tests.rs::deals_train_negotiation`.
 
 Overworld encounters (#804; `docs/dev/encounters.md`): Spot's and Survival's `lookout`,
-Stealth's `stalk`, and Survival's `evade` are read in `world/encounter.rs` only (the player's
+Stealth's `stalk`, and Survival's `evade` are read in `world/levels/encounter.rs` only (the player's
 through `Actor::skill_effect`, a party's lead type's through `Skills::effect`); `Use::Lookout`
 (Spot and Survival) is reported on every lookout there. A resting player's lookout (#807) reads
 Listen's `hearing` (with Keen ears, capped at `MAX_ENCOUNTER_BONUS`) instead and reports
 `Use::Hear`.
 
 Escape artist (#1015) has no action and no ability row. `Effect::Escape` is read in
-`World::slipping` (`world/hold.rs`, docs/dev/status-effects.md "Holds"), `Effect::Climb` (steps at
-50 and 100: halved, then skipped) in `World::climb_price` (`world/trap.rs`, the pit's one arm);
+`World::slipping` (`world/health/hold.rs`, docs/dev/status-effects.md "Holds"), `Effect::Climb` (steps at
+50 and 100: halved, then skipped) in `World::climb_price` (`world/fixtures/trap.rs`, the pit's one arm);
 both only for those trained (`trains_effect`). `Use::Escape` is marked per check whatever came of
 it, `Use::Climb` per climb out (Escape artist 100 %, Athletics 50 % and no effect). Tests:
-`world/escape_tests.rs`. `Effect::Escape` is also read by `World::wriggle` (`world/wriggle.rs`,
+`world/levels/escape_tests.rs`. `Effect::Escape` is also read by `World::wriggle` (`world/levels/wriggle.rs`,
 #1032: a step into a neutral creature that keeps its post, an automatic Dexterity check against
 11 plus its Willpower modifier, one more `Use::Wriggle` at 50 %; tests `wriggle_tests.rs`).
 
 ## Tumble: plain misses
 
 A blow at the player that comes back `Strike::Missed { by: None }` becomes a dodge one time in
-four (`World::plain_miss_dodged`, `world/train.rs`, called in `fight.rs` after `caught_shot`):
+four (`World::plain_miss_dodged`, `world/character/train.rs`, called in `fight.rs` after `caught_shot`):
 one `chance(25)` on the training stream, so the gameplay stream does not move. Misses by a
 category stay as they are; blows between creatures or from the player draw nothing
 (`docs/design/skill-uses.md` Tu1). `balance_probe/training.rs` uses the same function.

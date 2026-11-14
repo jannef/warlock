@@ -20,7 +20,7 @@ tags, in the delf's `fire` faction.
 | Ice | brute | frost mote 5, lesser ice elemental 11, ice elemental 21, greater 33, elder 48, rimethurse 66 | slow, a cold blow that leaves one `sluggish`, immune to cold, fire hurts it more |
 | Lightning | quick | spark mote 8, lesser lightning elemental 15, lightning elemental 23, greater 36, elder 52, thunderhead 70 | fast, a shock that `staggered`, immune to electricity; the `storm` light (`data/lights.toml`, added for it; the spark mote only a glow) |
 
-**Bursts** (the dread design §5.3, #1127; `world/creature_burst.rs`): the six motes are
+**Bursts** (the dread design §5.3, #1127; `world/creatures/creature_burst.rs`): the six motes are
 **vortices** (`[creature.burst]` with `when = "touches"`, radius 1, no `attack`, speed +200):
 stone mote `2d4` bludgeoning, ember mote `2d4` fire, dust devil `2d4` slashing, water mote `2d4`
 bludgeoning, frost mote `2d6` cold, spark mote `2d6` electricity. Every other rung but the earth
@@ -49,7 +49,7 @@ Every `elemental`-tagged type is written to the XP guideline and to the max HP a
 formulas for its role (the element's role, motes `Small`), with one element tag, poison and the
 element's own immunity, no corpse, and at least six rungs per element from level 10 or lower to
 50 or higher. Test content that lists its own factions
-(`world/{equip,magic,object,read}_tests.rs`) adds `elemental`, and `world/mana_tests.rs`'s own
+(`world/{equip,magic,object,read}_tests.rs`) adds `elemental`, and `world/magic/mana_tests.rs`'s own
 STATUS keeps `staggered` and `sluggish` for the elementals' riders.
 
 Population lines: Fyrdelf the lesser fire elemental and the earth elemental, Fennmynster the
@@ -61,7 +61,7 @@ and up (the ice elemental and every greater and elder one) ship in none: no dang
 them (Fyrdelf's runs 5 to 16, #534). Deferred (#453 "Follow-ups"): large size,
 water-bound behaviour, knockback, whirlwind, engulf, breath, elements at war, gem drops.
 
-Presence (#1128, `world/aura.rs`): the fire salamander is made with `fire_cloaked` and keeps it (innate: whoever strikes it burns; never shown in the look line).
+Presence (#1128, `world/creatures/aura.rs`): the fire salamander is made with `fire_cloaked` and keeps it (innate: whoever strikes it burns; never shown in the look line).
 
 The invisible stalker (#1132, docs/design/monster-dread.md §5.11): the air line's kin of level 22
 (uncommon, dread), `invisible = true` and `hunts = true` (docs/dev/creatures.md "The unseen"):

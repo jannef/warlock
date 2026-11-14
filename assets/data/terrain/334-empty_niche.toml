@@ -1,0 +1,13 @@
+# A niche cut in a crypt's wall (spec §7 "Graves"; #1682, Līctūn's crypts), long enough for a
+# body and empty. One of the run's dead laid there seals it (`burial`), the same in every rule.
+[[terrain]]
+id = "empty_niche"
+name = "empty niche"
+description = "A niche cut in the wall, long enough for a body. It is empty."
+stone = true
+walkable = false
+transparent = false
+glyph = "▯"
+fg = "#7a7266"
+bg = "#1c1a17"
+burial = "sealed_niche"

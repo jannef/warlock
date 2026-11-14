@@ -52,7 +52,7 @@ seventy careers to level 60). It prints the Markdown tables of the sections from
 "Ki" below, and those of "Stat training", and the same content always prints the same tables (fixed seeds and streams).
 After a PR that tunes combat data (weapon skills, creatures, classes, spells, stats, items), run
 it again and replace those sections, then revisit the tuning notes. The code is
-`crates/warlock-core/src/world/balance_probe.rs` (the measuring, with the method in its module
+`crates/warlock-core/src/world/combat/balance_probe.rs` (the measuring, with the method in its module
 docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/ranger.rs`
 (the ranger and their companion), `balance_probe/familiar.rs` (the witch's familiar),
 `balance_probe/caster_pace.rs` (the casters' caster style pace), `balance_probe/exploits.rs`
@@ -140,6 +140,10 @@ docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/r
 - **Not modelled**: triggered and active weapon abilities (Rend, Riposte, Sunder, ...), stances (but the rage table's),
   sneak attacks outside the table above, a talent build, potions, resistances against spells, healing between rounds,
   and fights against several monsters at once.
+- **Outside the probe**: the profane gifts (`docs/dev/profane-gifts.md`; design
+  `docs/design/profane-gifts.md` §12). Eating a keeper's corpse is optional and late, its draws
+  are a gamble by design, and a "with every signature" column is not worth the probe's time:
+  the design's §12 judges each keeper's gift against the depth it sits at instead.
 
 ## Players
 
@@ -1542,7 +1546,7 @@ on (#1165, `[trap.grows]` in `data/traps.toml`, the wiki's trap damage table). T
 danger 0 to 2, is held under the fewest hit points a level-1 character starts with: 6 in the test's draws (a kobold
 wizard, over every race and class), against the worst base going off of 4 (a fireball or a
 lightning bolt at 1d4, an arrow's or a spear's 1d2 doubled by a critical).
-`world/trap_rung_tests.rs::the_lowest_rung_never_kills_a_fresh_character` checks it, so a race,
+`world/fixtures/trap_rung_tests.rs::the_lowest_rung_never_kills_a_fresh_character` checks it, so a race,
 class, or talent that lowers starting hit points, or a stronger base, fails there first. The old
 dice (the fireball's 3d6, the lightning's 4d6) come at danger 10, and twice or more of them at
 30.

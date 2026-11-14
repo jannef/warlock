@@ -20,7 +20,7 @@ player feels it where they stand) read it. The status bar always shows it (`ui::
 priority 4, after the weather; cool tint below 0, warm from 30 °C), in the settings' unit.
 Nothing feels the cold yet.
 
-**Ice** (spec §5 "Ice", `ice.rs` the model, `world/ice.rs` the rules; M26): water terrain with a
+**Ice** (spec §5 "Ice", `ice.rs` the model, `world/levels/ice.rs` the rules; M26): water terrain with a
 `freeze` table grows ice; terrain with `ice = MM` is what ice of at least that thickness looks
 like (`Content::ice_terrain`, `ice_look`). Ice is kept per level, sparsely, in µm
 (`LevelState::ice`: `Ice { water, um }`), and the terrain grid shows its look (the water when
@@ -40,7 +40,7 @@ that), then `tread_price` (the `climb` action from water onto ice) and `after_tr
 `Event::FellThroughIce`). `World::fall_in` is the one place of a plunge, walked or by a burst: a
 player trained in Swim then makes a check (`World::keeps_afloat`, two gameplay draws after the
 plunge's dice: Toughness's modifier, `Effect::Swim`, and the talents' Toughness checks against
-`PLUNGE_DIFFICULTY`, 11), which halves the dice's hit points, rounded down, before resistance, and
+`[plunge] difficulty` of `data/rules/tuning.toml`, 11), which halves the dice's hit points, rounded down, before resistance, and
 marks `Use::Swim` whatever came of it; no check and no draw for one untrained or with the talents' `plunge_proof`. A status's
 `ice_holds` (Water walking's `water_borne`, `Actor::ice_holds`) keeps the ice whole under its
 bearer: `World::tread` holds them with no draw, however thin, and `World::shock` leaves the cell
@@ -49,8 +49,8 @@ they stand on. Bursts: `World::frost` (instant freeze; the frost trap, a burst w
 through `World::frost_look`) and `World::shock` (`Shock::Heat` melts: the fireball trap, a burst
 with `heat`; `Shock::Blast(um)` shatters thinner ice: a spell type with `shatter`, force, with a `blast`,
 `spell_type.rs::SHATTERS_UM` a point; dev
-`thaw:x,y,r`) are the hooks traps (`world/trap.rs`, `docs/dev/traps.md`) and spell types (`docs/dev/spells.md`, a single cell at radius 0) call. Saved and hashed. **Water bodies**: `World::water_body(cell)` (`world/spell_arc.rs`) is the open water (`LevelState::is_open_water`) connected to a cell over 8 neighbours, filled when electricity harms a creature standing in it (`docs/dev/spells.md`): ice looks like ice, so it is not water and it parts a pond; nothing is stored. Tests: `ice.rs`, `temperature.rs`,
-`world/ice_tests.rs` (growth/melt over rests, weight, falling in, climbing out, sinking objects,
+`thaw:x,y,r`) are the hooks traps (`world/fixtures/trap.rs`, `docs/dev/traps.md`) and spell types (`docs/dev/spells.md`, a single cell at radius 0) call. Saved and hashed. **Water bodies**: `World::water_body(cell)` (`world/magic/spell_arc.rs`) is the open water (`LevelState::is_open_water`) connected to a cell over 8 neighbours, filled when electricity harms a creature standing in it (`docs/dev/spells.md`): ice looks like ice, so it is not water and it parts a pond; nothing is stored. Tests: `ice.rs`, `temperature.rs`,
+`world/levels/ice_tests.rs` (growth/melt over rests, weight, falling in, climbing out, sinking objects,
 creatures, bursts, saves, replays, a year's catch-up). Tune the look with captures of the Frost
 Grotto (hub stairs nook, the `>` below the first) and the courtyard in winter (`skip:` into
 Deepwinter) with `--content-dir assets`. Terrain `variants` (presentation-only:

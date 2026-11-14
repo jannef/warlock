@@ -1,6 +1,7 @@
 //! The equipment screen (spec §6; `e`), as in ADOM: every slot the player has by its letter (`a`
 //! Head to `m` Tool, from `data/slots.toml`; an aristocrat's three extra ring slots too, after the
-//! hands' rings, to `p`) with what is in it, or `—`.
+//! hands' rings, to `p`; a slot a talent opens, Many-fingered's ring, the same way) with what is in
+//! it, or `—`; a slot a talent bars shows `— (horns)`, and its choice the talent's words.
 //!
 //! A slot's letter, or Enter on the `>` row, opens the choice of what goes there
 //! ([`ItemScreen`]): the inventory stacks that fit the slot, in the one paged list
@@ -101,6 +102,8 @@ struct SlotRow {
     /// What it holds was listed in a slot above (the second hand of a two-handed thing): its
     /// weight is not listed again.
     listed: bool,
+    /// The note of a talent that bars it ("horns": shown `— (horns)`), if one does.
+    barred: Option<String>,
 }
 
 #[derive(Debug)]
@@ -145,6 +148,7 @@ impl EquipmentScreen {
                     held: item,
                     both_hands: slots.len() > 1,
                     listed: slots.first().is_some_and(|&first| first != slot),
+                    barred: view.barred(slot),
                 }
             })
             .collect();
@@ -237,7 +241,11 @@ impl EquipmentScreen {
                     item.draw(console, (item_x, y), right, !row.listed, text);
                 }
                 None => {
-                    console.print(item_x + 2, y, "—", TEXT_DIM);
+                    let empty = match &row.barred {
+                        Some(mark) => format!("— ({mark})"),
+                        None => "—".into(),
+                    };
+                    console.print(item_x + 2, y, &empty, TEXT_DIM);
                 }
             }
         }
@@ -293,6 +301,9 @@ pub struct ItemScreen {
     /// Rows to make room for at least: as many as the equipment screen beneath has slots, so it
     /// covers that screen.
     rows: usize,
+    /// The words of a talent that bars the slot ("Your horns are in the way."), shown in place
+    /// of the list, which is empty.
+    barred: Option<String>,
 }
 
 impl ItemScreen {
@@ -305,6 +316,7 @@ impl ItemScreen {
             verbs: verbs(ActionKind::Wear),
             choices: PagedList::empty(),
             rows: 0,
+            barred: None,
         };
         let Some(view) = view else { return screen };
         let content = view.content();
@@ -318,6 +330,11 @@ impl ItemScreen {
         screen.slot = def.id.clone();
         screen.name = def.name.clone();
         screen.verbs = verbs(def.action);
+        // A slot the body bars takes nothing (`world/items/body_slots.rs`).
+        screen.barred = view.barred_words(slot);
+        if screen.barred.is_some() {
+            return screen;
+        }
         // What fits, and what the slot holds (a two-handed weapon in the off hand fits only
         // the main hand, but can be taken off from either).
         let choices = (view.inventory().iter().enumerate())
@@ -397,7 +414,7 @@ impl ItemScreen {
         let right = panel.x + panel.w - 3;
         let fits = |y: i32| y < panel.y + panel.h - 2;
         if self.choices.is_empty() && fits(panel.y + 2) {
-            let text = "You carry nothing that goes here.";
+            let text = (self.barred.as_deref()).unwrap_or("You carry nothing that goes here.");
             console.print(x + 2, panel.y + 2, text, TEXT_DIM);
         }
         for (row, y) in self.choices.rows().into_iter().zip(panel.y + 2..) {

@@ -133,7 +133,7 @@ fn summary(world: &World) -> String {
         .filter(|h| *h != Hunger::NotHungry)
         .map_or(String::new(), |h| format!(" hunger {}", h.id()));
     let dazzled = if view.dazzled() { " dazzled" } else { "" };
-    // Averted eyes (`world/avert.rs`), as the status bar shows them.
+    // Averted eyes (`world/creatures/avert.rs`), as the status bar shows them.
     let averted = if view.averted() { " averted" } else { "" };
     // The allies with the player: on the level or in the retinue (spec §8 "Allies").
     let allies = match view.allies_with() {
@@ -179,14 +179,12 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
 mod tests {
     use super::*;
     use crate::action::{Action, parse_actions};
-    use crate::content::Content;
-    use std::sync::Arc;
 
     /// Walks north out of the start room and through the first door, then along the corridor.
     const SHOWCASE_RUN: &str = "move:N move:N move:N move:N move:N move:N move:E move:E";
 
     fn showcase() -> World {
-        let content = Arc::new(Content::builtin().expect("builtin content"));
+        let content = crate::test_support::builtin();
         World::new(content, "showcase", None).expect("world")
     }
 
@@ -292,7 +290,7 @@ mod tests {
         );
         assert!(!Layer::Skills.is_dev_only());
         // A creature's skills show only in the dev layer: the arena's shaman's.
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = crate::test_support::builtin();
         let arena = World::new(content, "arena", None).expect("world");
         let actors = layer_rows(&arena, Layer::Actors);
         let shaman = actors.iter().find(|a| a.contains(" kobold_shaman at "));
@@ -348,7 +346,7 @@ mod tests {
             ]
         );
         // Other names the stat it raised.
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = crate::test_support::builtin();
         let other = "gnome,other,bard".parse().expect("a character");
         let gnome =
             World::with_character(content, "showcase", Some(3), Some(&other)).expect("world");

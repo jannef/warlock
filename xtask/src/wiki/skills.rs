@@ -429,8 +429,9 @@ pub(super) fn stealing(_content: &Content) -> String {
     out
 }
 
-/// How often a foe is fooled by the player's feint (spec §8 "Skills": Bluff; `data/feint.toml`),
-/// by the edge of their Presence modifier and what Bluff adds over its Willpower modifier.
+/// How often a foe is fooled by the player's feint (spec §8 "Skills": Bluff;
+/// `data/rules/feint.toml`), by the edge of their Presence modifier and what Bluff adds over its
+/// Willpower modifier.
 pub(super) fn feinting(content: &Content) -> String {
     let Some(rules) = content.feint() else {
         return "Nobody feints.\n".into();
@@ -457,7 +458,7 @@ pub(super) fn feinting(content: &Content) -> String {
 }
 
 /// How long a foe that fails to keep its nerve against the player's Intimidate flees (spec §8
-/// "Skills": Intimidate; `data/intimidate.toml`): each rung of the ladder, by the points
+/// "Skills": Intimidate; `data/rules/intimidate.toml`): each rung of the ladder, by the points
 /// Intimidate adds and the lowest value of the skill that adds them.
 pub(super) fn intimidating(content: &Content) -> String {
     let Some(rules) = content.intimidate() else {

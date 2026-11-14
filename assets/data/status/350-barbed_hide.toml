@@ -1,4 +1,4 @@
-# A barbed devil's hide (its `innate`, `world/aura.rs`): barbs that stab whoever strikes it in
+# A barbed devil's hide (its `innate`, `world/creatures/aura.rs`): barbs that stab whoever strikes it in
 # melee. Refreshed each turn its bearer takes; never shown on it, since its kind always has it.
 [[status]]
 id = "barbed_hide"

@@ -6,6 +6,8 @@ behaves on [Creatures](creatures.md#the-creatures).
 
 ## Stats and skills
 
+{{#include generated/creature-levels.md:beasts}}
+
 {{#include generated/creature-stats.md:beasts}}
 
 ## Hit points, Defence, and resistances
@@ -19,3 +21,7 @@ behaves on [Creatures](creatures.md#the-creatures).
 ## Pace, senses, and size
 
 {{#include generated/creature-senses.md:beasts}}
+
+{{#include generated/creature-size.md:beasts}}
+
+See also: [Companions](companions.md) and [Food and corpses](food.md).

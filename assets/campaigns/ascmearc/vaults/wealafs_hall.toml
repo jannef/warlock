@@ -4,7 +4,7 @@
 # king on his throne at the end, grave goods heaped about it, and the way down behind it.
 # Grundlēas's boss row for its fortieth floor names it, so it is stamped there, for certain,
 # until the king is slain, and nowhere else. Its `>` is the floor's only way down: laid as plain
-# floor, it opens when he dies (`world/layer_boss.rs`).
+# floor, it opens when he dies (`world/levels/layer_boss.rs`).
 name = "The unburied hall"
 dungeons = ["grundleas"]
 map = '''

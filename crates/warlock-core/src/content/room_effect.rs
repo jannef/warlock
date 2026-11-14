@@ -28,7 +28,7 @@
 //! collapsed floor; `World::collapse_step`, a fall to the level below).
 //!
 //! An effect may raise the dead killed inside ([`RoomEffectDef::rise`]: a cursed room;
-//! `world/curse.rs`), and Consecrate may lift an unholy one for good ([`RoomEffectDef::unholy`]).
+//! `world/fixtures/curse.rs`), and Consecrate may lift an unholy one for good ([`RoomEffectDef::unholy`]).
 //!
 //! An effect may lay items of one class on its floor ([`RoomEffectDef::loot`]: a scriptorium's
 //! scrolls) and train some skills faster inside ([`RoomEffectDef::train`]; `content/room_lore.rs`).
@@ -227,7 +227,7 @@ struct RiseSpec {
 }
 
 /// A cursed room's risings (`rise = { faction = "undead", after = "2m" }`, spec §7 "Special
-/// rooms"; `world/curse.rs`): a creature not of `faction` that dies inside and leaves a corpse
+/// rooms"; `world/fixtures/curse.rs`): a creature not of `faction` that dies inside and leaves a corpse
 /// rises from it as a creature of `faction` `after` its death.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Rise {
@@ -239,7 +239,7 @@ pub struct Rise {
 }
 
 /// A collapsed floor's numbers (`collapse = { chance = 15, damage = "2d6" }`, spec §7 "Special
-/// rooms"; `world/collapse.rs`): a step of the player onto a cell inside may give way, and they
+/// rooms"; `world/fixtures/collapse.rs`): a step of the player onto a cell inside may give way, and they
 /// fall to the level below.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -256,7 +256,7 @@ struct MirrorsSpec {
     images: u8,
 }
 
-/// A hall of mirrors' reflections (spec §7 "Special rooms"; `world/mirrors.rs`): every actor
+/// A hall of mirrors' reflections (spec §7 "Special rooms"; `world/fixtures/mirrors.rs`): every actor
 /// inside is shown to the player with this many images of it on free floor of the room.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Mirrors {
@@ -266,7 +266,7 @@ pub struct Mirrors {
 
 /// A tempting hoard's numbers (`hoard = { items = 3, ... }`, spec §7 "Special rooms"): the
 /// generator lays `items` items on the room's floor (`mapgen/hoard.rs`); the first lifted seals the
-/// room, locking its doors and bringing guardians (`world/hoard.rs`).
+/// room, locking its doors and bringing guardians (`world/fixtures/hoard.rs`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Treasure {
@@ -294,7 +294,7 @@ impl Treasure {
 
 /// A teeming den's numbers (`swarm = { per_cells = 4, ... }`, spec §7 "Special rooms"): the
 /// generator fills such a room with sleepers of the floor's danger and their hoard
-/// (`mapgen/den.rs`); they wake by noise, a blow, or a cry (`world/den.rs`).
+/// (`mapgen/den.rs`); they wake by noise, a blow, or a cry (`world/creatures/den.rs`).
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Swarm {
@@ -465,7 +465,7 @@ pub struct RoomEffectDef {
     pub sides: Option<[Option<LightId>; 3]>,
     /// What it offers beside its feature, and the outcome table that draws it (an id in
     /// `data/outcomes/`, checked once those are loaded; none for Temper, which has its own rules,
-    /// `data/temper.toml`).
+    /// `data/rules/temper.toml`).
     pub offers: Option<(Offer, Option<String>)>,
     /// The `sides` lights as data names them, until resolved.
     side_lights: BTreeMap<Alignment, String>,
@@ -473,13 +473,13 @@ pub struct RoomEffectDef {
     pub collapse: Option<Collapse>,
     /// The dead killed inside rise (a cursed room's).
     pub rise: Option<Rise>,
-    /// A rest inside is haunted (a haunted room's; `world/haunt.rs`).
+    /// A rest inside is haunted (a haunted room's; `world/fixtures/haunt.rs`).
     pub haunt: Option<super::room_haunt::Haunt>,
     /// Terrain generators stand along its walls (an armoury's racks).
     pub dressing: Option<Dressing>,
     /// Consecrate lifts it for good (a cursed and a draining room).
     pub unholy: bool,
-    /// A shrine of a side: how it treats those inside by their side (`world/shrine.rs`); its
+    /// A shrine of a side: how it treats those inside by their side (`world/fixtures/shrine.rs`); its
     /// side is drawn good or evil, one to one.
     pub shrine: Option<Shrine>,
     /// The items generators lay on its floor (a scriptorium's scrolls; `mapgen/room_loot.rs`).
@@ -498,7 +498,7 @@ pub struct RoomEffectDef {
     /// What generators lay inside a treasure room: chests, heaps of gold, gems.
     pub treasure: Option<Treasury>,
     /// Said on every arrival on a level with such a room the player has not entered yet (one
-    /// line per effect; `world/treasury.rs`).
+    /// line per effect; `world/fixtures/treasury.rs`).
     pub arrive: Option<String>,
 }
 
@@ -1296,7 +1296,7 @@ mod tests {
 
     #[test]
     fn a_status_parses_and_must_be_known() {
-        let content = crate::content::Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let lookup = |name: &str| {
             let id = content.status_id(name)?;
             Some((id, content.status(id)))

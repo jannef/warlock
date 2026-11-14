@@ -1,0 +1,61 @@
+# The Undercroft (#1682): the first crypt under Līctūn, Cēaptūn's churchyard, reached by the stairs
+# that open in the yard once its forty plots are filled (spec §7 "Graves"; `docs/dev/graves.md`).
+# Its stairs up (<) lead back to the yard. No danger, nobody here.
+#
+# A dusty nave runs east from the stairs, two wall torches at its foot. Off it open six family
+# vaults, three each side, each named on its arch (1-6): an open sarcophagus in the middle, three
+# empty niches in the back wall, a few candles. Between the vaults the nave's walls have alcoves
+# kept for statues (S). At the east end the apse holds the tomb of the man who raised the chapel
+# (F), an open sarcophagus each side of it, candles in the corners, and behind it the way down to
+# the next crypt (v), shut until every place here is filled.
+#
+# Places: 18 niches and 8 sarcophagi, 26 in all, filled in row order.
+name = "The Undercroft"
+arrival = "The undercroft under Līctūn's chapel: a dusty nave, and family vaults off it."
+temperature = 9
+ambient = [6, 6, 8, 0]
+item_level = 1
+map = '''
+#########################################################
+#########################################################
+#########N#N#N#######N#N#N#######N#N#N###################
+########i......#####i......#####i......##################
+########...O...#####...O...#####...O...##################
+########.......#####.......#####.......########i,,,,,,i##
+########.......#####.......#####.......########,,,O,,,,##
+####t######1#####S#####2#####S#####3#####S#####,,,,,,,,##
+##,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,##
+##<,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,F,,v,##
+##,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,##
+####t######4#####S#####5#####S#####6#####S#####,,,,,,,,##
+########.......#####.......#####.......########,,,O,,,,##
+########.......#####.......#####.......########i,,,,,,i##
+########...O...#####...O...#####...O...##################
+########......i#####......i#####......i##################
+#########N#N#N#######N#N#N#######N#N#N###################
+#########################################################
+#########################################################
+'''
+
+[burial]
+chain = "lictun"
+depth = 1
+epitaph = "Here lies {name}, {death}. Laid in the undercroft."
+
+[legend]
+"," = "dusty_floor"
+"N" = "empty_niche"
+"O" = "open_sarcophagus"
+"i" = "candles"
+"t" = "sconce"
+"<" = { terrain = "stairs_up", to = "lictun" }
+"S" = { terrain = "dusty_floor", statue_place = true }
+"v" = { terrain = "dusty_floor", burial_stairs = "stairs_down" }
+"F" = { terrain = "sarcophagus", epitaph = "Here lies Æthelwine Cēapmann, who raised the chapel above, 1281–1340. He built in stone, to stand." }
+# The vaults, by the families that first lay in them.
+"1" = { terrain = "dusty_floor", name = "the Webbe vault" }
+"2" = { terrain = "dusty_floor", name = "the reeves' vault" }
+"3" = { terrain = "dusty_floor", name = "the Smyth vault" }
+"4" = { terrain = "dusty_floor", name = "the Bacere vault" }
+"5" = { terrain = "dusty_floor", name = "the Hunta vault" }
+"6" = { terrain = "dusty_floor", name = "the Fiscere vault" }

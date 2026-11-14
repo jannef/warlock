@@ -248,7 +248,7 @@ pub struct ClassDef {
     /// Talent picks at creation beyond everyone's (spec §8 "Talents": the bard's one more).
     pub creation_talents: u8,
     /// Bonus talent picks at creation, from its own trees (the craftsperson's two trades):
-    /// level 1's `Due::bonus` (`world/creation.rs`).
+    /// level 1's `Due::bonus` (`world/character/creation.rs`).
     pub creation_bonus: Option<CreationBonus>,
     /// Starting ranks in weapon skills (spec §8 "Weapon skills"), in skill order: added to the
     /// race's.
@@ -581,7 +581,7 @@ impl ClassDef {
 }
 
 /// The class actives (spec §8 "Class abilities"): what a class ability with an active effect
-/// does when it is used from the abilities menu, each its own rule (`world/class_ability.rs`).
+/// does when it is used from the abilities menu, each its own rule (`world/classes/class_ability.rs`).
 /// The ability that has one is named by its id (`use:rage`, `use:smite:E`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -589,13 +589,13 @@ pub enum ClassActive {
     /// Fly into a rage: the rage's status (Raging), then what it `follows` into.
     Rage,
     /// A roar, for rage, that frightens the hostiles who hear and see you unless they keep
-    /// their nerve (the berserker's War cry, `world/war_cry.rs`).
+    /// their nerve (the berserker's War cry, `world/classes/war_cry.rs`).
     WarCry,
     /// Hit points back at once, then a cooldown (the warrior's Veteran's wind).
     VeteransWind,
     /// Hit points back by the level, then a cooldown (the paladin's Lay on hands).
     LayOnHands,
-    /// A blow of holy wrath in a direction with dice more damage, for zeal (`world/smite.rs`).
+    /// A blow of holy wrath in a direction with dice more damage, for zeal (`world/classes/smite.rs`).
     Smite,
     /// A smite whose foe sheds holy light a while, for zeal (the paladin's Branding smite).
     BrandingSmite,
@@ -608,7 +608,7 @@ pub enum ClassActive {
     HolyRadiance,
     /// A breath taken in the guard, for ki and a wait: Poised until the next action, Dodge up
     /// and a blow dodged or parried answered at once (the ascetic's Patient defence,
-    /// `world/ascetic.rs`).
+    /// `world/classes/ascetic.rs`).
     PatientDefence,
     /// An unarmed blow in a direction that leaves a wounded foe Stunned, for ki (the
     /// ascetic's Stunning strike).
@@ -616,68 +616,68 @@ pub enum ClassActive {
     /// An unarmed blow in a direction that leaves a wound bleeding, for ki.
     QuiveringPalm,
     /// Light on the feet for ki, taking no time: the next action at half its price (the
-    /// ascetic's Step of the wind, `world/ascetic.rs`).
+    /// ascetic's Step of the wind, `world/classes/ascetic.rs`).
     StepOfTheWind,
     /// What clouds the mind or holds the body ended at once, for ki, taking no time (the
-    /// ascetic's Stillness, on Still mind, `world/ascetic.rs`).
+    /// ascetic's Stillness, on Still mind, `world/classes/ascetic.rs`).
     Stillness,
     /// A rush to a hostile the player sees, ending beside it with a blow, provoking no free
-    /// blows on the way, for stamina by the distance (the warrior's Charge, `world/charge.rs`).
+    /// blows on the way, for stamina by the distance (the warrior's Charge, `world/classes/charge.rs`).
     Charge,
     /// Shots at a cell, several for the price of one, then a cooldown (the ranger's Volley).
     Volley,
     /// The companion set on a creature the player sees, savage, for focus (the ranger's Sic 'em,
-    /// `world/sic.rs`).
+    /// `world/allies/sic.rs`).
     Sic,
     /// A wait in ambush: a hostile stepping up beside you takes your blow at once (the
     /// thief's Lurk).
     Lurk,
     /// Every opening held spent on a blow in a direction that is a sneak attack whatever the
-    /// foe knows (the thief's Exploit, `world/openings.rs`).
+    /// foe knows (the thief's Exploit, `world/classes/openings.rs`).
     Exploit,
     /// Every opening held spent on a throw at a creature on a cell that is a sneak attack
-    /// whatever the foe knows (the thief's Thrown exploit, `world/openings.rs`).
+    /// whatever the foe knows (the thief's Thrown exploit, `world/classes/openings.rs`).
     ThrownExploit,
     /// A song that lifts the player's fighting a while, for inspiration (the bard's Inspire,
-    /// `world/song.rs`).
+    /// `world/classes/song.rs`).
     Inspire,
     /// A song that leaves the foes who hear it and cannot shake it off drowsy, for mana (the
-    /// bard's Lullaby, `world/song.rs`).
+    /// bard's Lullaby, `world/classes/song.rs`).
     Lullaby,
     /// A minute's prayer that lifts an unholy room's effect for good, for mana (the priest's and
     /// the paladin's Consecrate).
     Consecrate,
     /// A prayer that answers what ails the priest most, as far as their prayers reach, under a
-    /// hidden strain (the priest's Orison and the tiers after it, `world/orison.rs`).
+    /// hidden strain (the priest's Orison and the tiers after it, `world/classes/orison.rs`).
     Orison,
     /// A minute's kneeling rite that hallows the ground about the priest for an hour, for mana:
-    /// no foe sets foot in it and wounds and mind mend there faster (`world/sanctuary.rs`).
+    /// no foe sets foot in it and wounds and mind mend there faster (`world/classes/sanctuary.rs`).
     Sanctuary,
     /// A loud cackle that holds every hex of the witch's on the creatures she sees a degree
-    /// longer (the witch's Cackle, `world/witch.rs`).
+    /// longer (the witch's Cackle, `world/classes/witch.rs`).
     Cackle,
     /// An hour's sitting that brings a new familiar when the witch has none (the witch's Call
-    /// familiar, given by Familiar, `world/familiar.rs`).
+    /// familiar, given by Familiar, `world/allies/familiar.rs`).
     CallFamiliar,
     /// A word that springs the lock of a door or chest open, for mana (the wizard's Knock).
     Knock,
     /// A scroll of a spell the player knows written on a blank scroll, for three casts' worth of
-    /// mana and a study's time (the wizard's Scribe, `world/scribe.rs`).
+    /// mana and a study's time (the wizard's Scribe, `world/magic/scribe.rs`).
     Scribe,
     /// A careful look that tells a thing the player carries for what it is, as the scroll of
     /// identify would (the merchant's Merchant's eye).
     MerchantsEye,
     /// An ingot set on a heap of stones beside the player in an hour: a makeshift anvil, for
-    /// good (the craftsperson's Field forge, `world/field_forge.rs`).
+    /// good (the craftsperson's Field forge, `world/crafting/field_forge.rs`).
     FieldForge,
     /// A damaged thing the player carries mended in the field, without an anvil, by a check that
-    /// destroys nothing (the craftsperson's Make do and mend, `world/make_do.rs`).
+    /// destroys nothing (the craftsperson's Make do and mend, `world/crafting/make_do.rs`).
     MakeDo,
     /// A trap rigged on a cell beside the player, from the rig list then a direction (the
-    /// craftsperson's Trapwright, `world/rig.rs`, `rig:tripwire:E`).
+    /// craftsperson's Trapwright, `world/crafting/rig.rs`, `rig:tripwire:E`).
     Rig,
     /// A weapon of spirit-stuff called into the hand in the shape chosen, as a wield (the
-    /// Hunter's Spirit weapon, `world/spirit_weapon.rs`).
+    /// Hunter's Spirit weapon, `world/classes/spirit_weapon.rs`).
     SpiritWeapon,
 }
 
@@ -811,7 +811,7 @@ impl ClassActive {
         )
     }
 
-    /// Whether it is a song (`world/song.rs`): a talent's `song` effect names it, and it is
+    /// Whether it is a song (`world/classes/song.rs`): a talent's `song` effect names it, and it is
     /// sung aloud.
     pub const fn sings(self) -> bool {
         matches!(self, ClassActive::Inspire | ClassActive::Lullaby)
@@ -894,15 +894,15 @@ impl ClassActive {
             ClassActive::Charge => ActionKind::Step,
             ClassActive::Inspire | ClassActive::Lullaby => ActionKind::Song,
             ClassActive::MerchantsEye => ActionKind::Read,
-            // A turn of it; setting the block takes the talent's seconds (`world/field_forge.rs`).
+            // A turn of it; setting the block takes the talent's seconds (`world/crafting/field_forge.rs`).
             ClassActive::FieldForge => ActionKind::Craft,
-            // A turn of it; a mend takes its `seconds` of them (`world/make_do.rs`).
+            // A turn of it; a mend takes its `seconds` of them (`world/crafting/make_do.rs`).
             ClassActive::MakeDo => ActionKind::Craft,
-            // A turn of it; a rig takes its `seconds` of them (`world/rig.rs`).
+            // A turn of it; a rig takes its `seconds` of them (`world/crafting/rig.rs`).
             ClassActive::Rig => ActionKind::Craft,
-            // A turn of it; a scroll takes a study's turns (`world/scribe.rs`).
+            // A turn of it; a scroll takes a study's turns (`world/magic/scribe.rs`).
             ClassActive::Scribe => ActionKind::Scribe,
-            // A turn of it; the ritual takes `call_turns` of them (`world/familiar.rs`).
+            // A turn of it; the ritual takes `call_turns` of them (`world/allies/familiar.rs`).
             ClassActive::CallFamiliar => ActionKind::CallFamiliar,
             // A weapon taken in hand, as wielding one is.
             ClassActive::SpiritWeapon => ActionKind::Wield,

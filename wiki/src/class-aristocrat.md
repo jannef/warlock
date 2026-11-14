@@ -2,6 +2,8 @@
 
 {{#include generated/class-card.md:aristocrat}}
 
+See also: [People and talk](npcs.md) and [Shops](shops.md).
+
 ## How to play
 
 You were never meant for this: few hit points, weak arms, and a rapier you barely know. What
@@ -32,6 +34,6 @@ everything: the gold and the finds go into your pack, and whatever would leave y
 [overloaded](burden.md) is set down at your feet. With nothing waiting, they tell you how
 splendid you are. If the servant dies, no one else brings the stipend.
 
-[Landed noble](talents.md#talent-landed-noble), a talent only an aristocrat can take, and only as
+[Landed noble](talents-origins.md#talent-landed-noble), a talent only an aristocrat can take, and only as
 a new character, doubles the gold, makes the loot roll every time, and makes magic and rare items
 four times as likely as usual: about 47 % of level-ups then bring a find.

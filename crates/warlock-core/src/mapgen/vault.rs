@@ -106,7 +106,7 @@ pub(super) fn stamp(canvas: &mut Canvas, vault: &Vault, at: Pos) -> Vec<(Pos, Di
     for (p, place) in &template.places {
         canvas.places.insert(offset(*p), place.clone());
     }
-    // A lair's way down lies hidden as floor until its boss dies (`world/layer_boss.rs`).
+    // A lair's way down lies hidden as floor until its boss dies (`world/levels/layer_boss.rs`).
     if let Some((p, stairs)) = vault.down {
         canvas.set(offset(p), canvas.pal.floor);
         canvas.lair = Some((offset(p), stairs));

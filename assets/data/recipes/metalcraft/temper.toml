@@ -1,6 +1,6 @@
 # Temper (spec §7 "Special rooms"): a metal weapon or armour made finer at an anvil, by one trained
 # in Metalcraft.
-# The Temper list and `world/temper.rs`'s rules, unchanged (data/temper.toml).
+# The Temper list and `world/crafting/temper.rs`'s rules, unchanged (data/rules/temper.toml).
 [[recipe]]
 id = "temper"
 use = "temper"

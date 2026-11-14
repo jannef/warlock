@@ -33,7 +33,7 @@ The bard has two **[songs](abilities.md#songs)**:
 - **[Inspire](abilities.md#ability-inspire)** (level 9) lifts you. It is paid in
   [inspiration](inspiration.md).
 - The **[lullaby](abilities.md#ability-lullaby)** (level 20) makes [hostile](creatures.md#factions)
-  hearers [drowsy](status-effects.md#status-drowsy). It is paid in [mana](mana.md#spending-it).
+  hearers [drowsy](status-list.md#status-drowsy). It is paid in [mana](mana.md#spending-it).
 
 [Songs](abilities.md#songs) tells them in full: what they cost, how far they are heard, how
 [Music](skills.md#skill-music) lengthens them, and the odds of shaking the lullaby off. A

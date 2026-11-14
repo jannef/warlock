@@ -130,7 +130,7 @@ The pool is one of:
   own hidden place on your map, but only the one drawn is marked. A choice may be kept back for
   when none of the others may be drawn.
 
-A [Beast-friend](talents.md#talent-beast-friend) (every [druid](class-druid.md) is one) is never
+A [Beast-friend](talents-exploring.md#talent-beast-friend) (every [druid](class-druid.md) is one) is never
 sent to kill animals, the creatures of the [factions](creatures.md#factions) the talent calms: such a kind,
 a sort of creature with an animal among its kinds, and a choice asking for either are left out of
 the pool. Whether you are a Beast-friend counts as the quest is given, not after.
@@ -185,7 +185,7 @@ offered one after the other.
 
 - **[Reeve Leofric](creatures.md#creature-reeve)** sends you into
   [Cealdhlāw](dungeons.md#the-dungeons), the [barrow](dungeons.md#the-dungeons) east of town. He
-  sends a [Beast-friend](talents.md#talent-beast-friend) after the barrow's skeletal rats instead
+  sends a [Beast-friend](talents-exploring.md#talent-beast-friend) after the barrow's skeletal rats instead
   of the living ones.
 - **[Sister Hild](creatures.md#creature-sister)** at the Mynster wants back what the barrow and
   the drowned minster keep, and marks [Fennmynster](dungeon-guide.md#fennmynster) on your map.
@@ -207,3 +207,6 @@ first, the level you must have reached for it to be given, and the
 [hidden place](overworld.md#hidden-locations) it shows you.
 
 {{#include generated/quests.md}}
+
+See also: [The Weyfarers' Gilde](guild.md), [People and talk](npcs.md), and
+[Experience and levelling up](experience.md).

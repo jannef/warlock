@@ -1,7 +1,7 @@
 # The kobold war band's alchemist (the potions wave 2 design §7: a bomber): it hurls flasks of
 # oil from a few cells away, so a corridor goes slick under whoever comes down it (the kobold
 # trick), and fights with a spear (its racial weapon) once they are beside it. Its flasks never
-# run out (a creature's throw, `world/hurl.rs`); one or two are in its pack, and fall where it
+# run out (a creature's throw, `world/combat/hurl.rs`); one or two are in its pack, and fall where it
 # dies.
 [[creature]]
 id = "kobold_alchemist"

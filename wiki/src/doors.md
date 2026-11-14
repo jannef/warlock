@@ -83,7 +83,7 @@ Press `k` and a direction to kick. A kick takes a normal action (6 seconds).
   Strength 9 breaks it three kicks in ten, Strength 15 one in two, and Strength 30 every time.
   Your [Athletics](skills.md#skill-athletics) skill adds to your Strength for this (see
   [Skills](skills.md)), and kicking doors trains it. The
-  [Lockbreaker](talents.md#talent-lockbreaker) talent adds 6 (see [Talents](talents.md)), and magic
+  [Lockbreaker](talents-exploring.md#talent-lockbreaker) talent adds 6 (see [Talents](talents.md)), and magic
   boots that kick harder add their number (see [Magic items](magic-items.md)), for doors and
   [chests](chests.md) alike. Kicking a door takes its 6 seconds whatever your
   [stance](stances.md#stances).
@@ -162,3 +162,5 @@ through. No creature picks locks, and none kicks a door unless it is wedged (see
 - A guard post in a dungeon, with its guard and company, keeps its store room locked. The
   [kobold](creatures.md#creature-kobold) on guard carries the brass key, and a
   [skeleton key](#keys) lies in the store room.
+
+See also: [Chests](chests.md), [Traps](traps.md), and [Searching](searching.md).

@@ -7,7 +7,7 @@
 # quoting it: the river's gold he stole from the daughters who mocked him, the love he forswore
 # for it, the ring forged from it and the curse he laid on whoever takes it, the helm that hides
 # him, the folk who dug his hoard, the one-eyed thief and his fiery friend who tricked him out of
-# it. He teaches Mining for gold (`train_skill`, world/service.rs): offered only while the player
+# it. He teaches Mining for gold (`train_skill`, world/people/service.rs): offered only while the player
 # is untrained in it.
 [[dialogue]]
 npc = "alberich"

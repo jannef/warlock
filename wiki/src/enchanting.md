@@ -10,7 +10,7 @@ give.
 **You need:**
 - **Skill:** Enchanting. A
   [craftsperson](class-craftsperson.md#trades) may take the
-  [Spellwright](talents.md#talent-spellwright) trade; [wizards](class-wizard.md),
+  [Spellwright](talents-origins.md#talent-spellwright) trade; [wizards](class-wizard.md),
   [witches](class-witch.md), and [aristocrats](class-aristocrat.md) may start with it
   ([Which skills you start with](skills.md#which-skills-you-start-with)). No one teaches it.
 - **Stock:** magic crystals.
@@ -114,18 +114,18 @@ your work and nothing is spent.
 Every finished work, made or not, can [train](skills.md#improving-a-skill) Enchanting.
 
 > **Example: kindling a long sword.** A [wizard](class-wizard.md) with Willpower 14 and
-> Enchanting 20 kindles a plain long sword found on a dungeon's sixth floor (item level 6) with
-> a red crystal.
+> Enchanting 20 kindles a plain long sword with a red crystal.
 >
-> - **The roll's item level:** the greater of the sword's 6 and her reach at Enchanting 20, 3:
->   **6**.
-> - **The difficulty:** Kindle's 11, plus 6 ÷ 3 = 2: **13**.
+> - **The roll's item level:** a plain sword has none of its own, so Kindle rolls at her reach
+>   at Enchanting 20: **3**.
+> - **The difficulty:** Kindle's 11, plus 3 ÷ 3 = 1: **12**.
 > - **What she adds:** +2 for Willpower 14 (modifiers), +1 craft bonus
->   from Enchanting 20: **+3**. The dice must reach 10: **75%**.
+>   from Enchanting 20: **+3**. The dice must reach 9: **80.6%**.
 > - **A natural 2** (1 roll in 144, 0.7%) warps the sword.
 >
-> A sword of item level 3 or less would roll at her reach, 3: difficulty 12, the dice need 9,
-> 80.6%, but its magic would be weaker.
+> Quicken works on a magic sword, at the higher of its item level and her reach. A
+> sword from a dungeon's sixth floor, of item level 6, rolls at its own 6: Quicken's 13 plus 2,
+> difficulty 15, and the dice need 12, 61.8%.
 
 See also: [Magic crystals](crystals.md), [Magic items](magic-items.md), and
 [Prefixes and suffixes](affixes.md).

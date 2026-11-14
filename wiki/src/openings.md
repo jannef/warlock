@@ -41,7 +41,7 @@ direction, and you strike the hostile there with what you wield, in the time of 
 - **It spends every opening you hold**, from 1 to 5 (more with an item *of Guile*, see
   [Suffixes](affixes.md#suffixes); there is no cap). You choose how many by when you strike.
 - **It is a [sneak attack](surprise.md#sneak-attacks) whatever the foe knows.** The sneak attack
-  dice land if it hits. The foe is not [Surprised](status-effects.md#status-surprised) and keeps
+  dice land if it hits. The foe is not [Surprised](status-list.md#status-surprised) and keeps
   its whole Defence.
 - **Each opening spent adds 1d6 damage** on a hit, after the sneak dice. Like them, it comes after
   [Protection](combat.md#protection), and a [critical](combat.md#criticals) never doubles it.
@@ -59,7 +59,7 @@ The thief's class talents add to every exploit, per opening spent:
 
 {{#include generated/exploit-ladder.md}}
 
-A [stunned](status-effects.md#status-stunned) foe's next action costs half again as much, and
+A [stunned](status-list.md#status-stunned) foe's next action costs half again as much, and
 your next blow finds it flat-footed.
 
 So at level 12 an exploit of 4 openings is +4 to hit and does the blow, the sneak dice, and 4d6
@@ -82,7 +82,7 @@ ability, then something to throw, then the target.
   weapon in your hand.
 - **One of what you throw leaves your hand**, as any throw. It lands by the foe or breaks.
 - **Its reach** is the weapon's throw range, but never more than 6 cells (more with
-  [Long reach](talents.md#talent-long-reach)): past that the sneak dice would not land. A dagger
+  [Long reach](talents-fighting.md#talent-long-reach)): past that the sneak dice would not land. A dagger
   throws 5.
 - **It is refused**, taking no time and spending nothing, for everything Exploit refuses (no
   opening, no hostile you see there, a creature other than your mark, no vitals), for a flask
@@ -93,6 +93,9 @@ ability, then something to throw, then the target.
 
 ## The talent on it
 
-**[Patient blade](talents.md#talent-patient-blade)** (Shadow; [thief](class-thief.md), level
+**[Patient blade](talents-exploring.md#talent-patient-blade)** (Shadow; [thief](class-thief.md), level
 32): openings slip away half as fast, a point every 40 base turns instead of every 20. Killing
 your [mark](#the-mark) yourself gives two openings instead of one.
+
+See also: [Surprise and sneak attacks](surprise.md), [Resources](resources.md), and
+[Abilities](abilities.md).

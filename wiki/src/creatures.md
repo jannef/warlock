@@ -38,12 +38,12 @@ and your side alone.
 {{#include generated/factions.md}}
 
 **Animals.** The factions marked as animals above leave a character with the
-[Beast-friend](talents.md#talent-beast-friend) [talent](talents.md) alone, and that character
+[Beast-friend](talents-exploring.md#talent-beast-friend) [talent](talents.md) alone, and that character
 leaves them alone too. This lasts until the character attacks one. From then on, creatures of that
 type (all [giant rats](creatures.md#creature-rat), say) treat them as their faction normally
 would. A fiend in a beast's shape, such as the [hell hound](creatures.md#creature-hell-hound) or
 the [nightmare](creatures.md#creature-nightmare), is not an animal, and
-[Beast-friend](talents.md#talent-beast-friend) does not calm it.
+[Beast-friend](talents-exploring.md#talent-beast-friend) does not calm it.
 
 **The fey courts.** Each fey creature ([sprites](creatures.md#creature-sprite),
 [pixies](creatures.md#creature-pixie), [redcaps](creatures.md#creature-redcap),
@@ -67,10 +67,8 @@ court the same way: an Unseelie one is marked hostile, a Seelie one neutral.
 
 ## The creatures
 
-"Drops magic" in the table below is the chance that a creature drops a
-[magic or rare](magic-items.md#rarity) item where it dies, besides what it carried (see
-[Magic items](magic-items.md)). The item's [item level](affixes.md#base-items) is the
-creature's level, or the floor's if that is higher. The creatures' numbers are on
+Each creature's look, its faction, how it stands toward you, and how it fights are in the first
+table below; what it carries is [after it](#what-they-carry). The creatures' numbers are on
 [Creatures in numbers](creature-numbers.md).
 
 **The dead still to come.** Some of the dead below live in no dungeon yet. They wait in places
@@ -154,3 +152,16 @@ all). So far only the [dretch](creatures.md#creature-dretch) and the
 places.
 
 {{#include generated/creatures.md}}
+
+## What they carry
+
+Whether a creature opens doors and carries a light, its chance to drop a
+[magic or rare](magic-items.md#rarity) item where it dies, besides what it carried (see
+[Magic items](magic-items.md)), the colour of [crystal](crystals.md) its nature is, and the
+[gear](creature-gear.md) it may have. A dropped item's [item level](affixes.md#base-items) is the
+creature's level, or the floor's if that is higher.
+
+{{#include generated/creature-carries.md}}
+
+See also: [How creatures behave](creature-behaviour.md), [How creatures fight](creature-bodies.md),
+and [Creature powers](creature-powers.md).

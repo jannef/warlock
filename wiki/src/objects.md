@@ -169,3 +169,5 @@ carry or what they weigh, only what they wear and wield.
 ## The objects
 
 {{#include generated/objects.md}}
+
+See also: [Equipment](equipment.md), [Burden](burden.md), and [Shops](shops.md).

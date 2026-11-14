@@ -1,9 +1,9 @@
 //! The bearers of auras, innate statuses, and cries (design `docs/design/monster-dread.md` §6,
 //! #1128): each row of the sort as shipped, and nothing on a type the sort does not name.
 
-use super::Content;
 use crate::noise::SoundKind;
 use crate::stats::Stat;
+use crate::test_support::builtin;
 
 /// An aura row: the type, its status, its radius, whether it is heard, and its check's stat.
 type AuraRow = (&'static str, &'static str, i32, bool, Option<Stat>);
@@ -92,7 +92,7 @@ const CRIES: &[(&str, SoundKind)] = &[
 
 #[test]
 fn the_auras_keep_to_the_sort() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for def in &content.creatures {
         let row = AURAS.iter().find(|r| r.0 == def.id);
         assert_eq!(def.aura.is_some(), row.is_some(), "{}: an aura", def.id);
@@ -120,7 +120,7 @@ fn the_auras_keep_to_the_sort() {
 
 #[test]
 fn the_innate_statuses_and_the_cries_keep_to_the_sort() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for def in &content.creatures {
         let mut innate: Vec<&str> = (def.innate.iter())
             .map(|&s| content.status(s).id.as_str())

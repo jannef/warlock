@@ -1,6 +1,6 @@
 //! An item's make (#1436, #1494): Fine, Marvellous, or Masterwork as found or as a creature's
 //! gear spawns (`data/gear_condition.toml`). Loot's make ([`make`]) is a step of making a find
-//! ([`super::loot`]); creature gear's condition (`world/gear_condition.rs`) improves its pieces
+//! ([`super::loot`]); creature gear's condition (`gear/condition.rs`) improves its pieces
 //! the same way ([`improve`]).
 //!
 //! **Loot's make** ([`make`]): loot's arms and armour (floor loot, chests, hoards, dens, room
@@ -30,8 +30,8 @@ pub(crate) fn make(content: &Content, rng: &mut Rng, level: u8, stack: &mut Stac
     }
 }
 
-/// `stack` given `improved` improvements (at most `temper.toml`'s `most`), each one attempt, in
-/// aspects drawn as the anvil draws them; nothing for none.
+/// `stack` given `improved` improvements (at most `rules/temper.toml`'s `most`), each one attempt,
+/// in aspects drawn as the anvil draws them; nothing for none.
 pub(crate) fn improve(content: &Content, rng: &mut Rng, improved: u8, stack: &mut Stack) {
     let among = aspects(content.object(stack.object));
     let most = improved.min(content.temper().most);

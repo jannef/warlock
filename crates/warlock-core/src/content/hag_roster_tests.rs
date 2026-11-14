@@ -1,10 +1,10 @@
 //! The hags (#451): every hag carries the `hag` tag, the bog hag (of the `marsh`) too.
 
-use super::Content;
+use crate::test_support::builtin;
 
 #[test]
 fn every_hag_carries_the_hag_tag() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let tagged: Vec<String> = (content.tagged("hag"))
         .map(|c| content.creature(c).id.clone())
         .collect();

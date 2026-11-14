@@ -25,6 +25,7 @@ mod offence;
 mod resource;
 mod senses;
 mod sign;
+mod slots;
 mod song;
 mod stealth;
 mod vigour;
@@ -32,9 +33,26 @@ mod vigour;
 /// The tree of the birth signs' gifts: on the horoscope page, not the talents page (#1554).
 const STARS: &str = "stars";
 
+/// The pages the pickable trees are on (#1668: the talents page split by tree group), each with
+/// its trees in display order. Every pickable tree is on one (a test checks).
+const PAGES: [(&str, &[&str]); 5] = [
+    ("talents-origins.md", &["heritage", "crafts", "racial"]),
+    ("talents-body.md", &["vigour", "might", "finesse", "grit"]),
+    ("talents-fighting.md", &["weaponcraft", "guard"]),
+    ("talents-exploring.md", &["shadow", "wayfarer", "delver"]),
+    ("talents-mind.md", &["scholar", "spellcraft"]),
+];
+
+/// The page pickable tree `tree` (its id) is on, by [`PAGES`].
+fn tree_page(tree: &str) -> Option<&'static str> {
+    (PAGES.iter())
+        .find(|(_, trees)| trees.contains(&tree))
+        .map(|&(page, _)| page)
+}
+
 /// The page a talent's row is on (#1554): a birth sign's gift on the horoscope page, a class
 /// ability in its first class's level table, on that class's page (else its first prestige
-/// class's), a profane gift on the profane gifts page, any other on the talents page.
+/// class's), a profane gift on the profane gifts page, any other on its tree group's page.
 fn talent_page(content: &Content, def: &TalentDef) -> String {
     let book = content.talents();
     if book.tree_id(STARS) == Some(def.tree) {
@@ -48,7 +66,8 @@ fn talent_page(content: &Content, def: &TalentDef) -> String {
             None => "classes.md".into(),
         }
     } else {
-        "talents.md".into()
+        let tree = &book.tree(def.tree).id;
+        tree_page(tree).map_or_else(|| "talents.md".into(), String::from)
     }
 }
 
@@ -61,8 +80,8 @@ fn home_table<'c>(content: &'c Content, id: &str) -> Option<Table<'c>> {
         .find(teaches)
 }
 
-/// A link to the row that defines talent `id`, on whichever page it is (#1554): the talents
-/// page, the horoscope page, or a class's level table.
+/// A link to the row that defines talent `id`, on whichever page it is (#1554): its tree
+/// group's page, the horoscope page, or a class's level table.
 pub(super) fn talent_link(content: &Content, id: &str, name: &str) -> String {
     let anchor = link(Term::Talent, id, name);
     match content.talents().id(id) {
@@ -74,21 +93,49 @@ pub(super) fn talent_link(content: &Content, id: &str, name: &str) -> String {
     }
 }
 
-/// Every tree a talent may be picked from, in display order: a heading, its description, and its
+/// The trees of page `page` of [`PAGES`], in its order: a heading, its description, and its
 /// talents (name, what it needs, and what it does as the rule). The stars' gifts are on the
 /// horoscope page and the class abilities in the class tables (#1554).
-pub(super) fn talents(content: &Content) -> String {
+fn trees_of(content: &Content, page: &str) -> String {
     let book = content.talents();
+    let trees = (PAGES.iter())
+        .find(|(p, _)| *p == page)
+        .map_or(&[][..], |p| p.1);
     let mut out = String::new();
-    for (i, tree) in (0u8..).zip(&book.trees) {
-        // The profane gifts are no picks: they have their own page (`profane.rs`).
-        if tree.class || book.tree_id(STARS) == Some(TreeId(i)) || tree.id == "profane" {
+    for id in trees {
+        let Some(tree) = book.tree_id(id) else {
             continue;
-        }
-        let _ = writeln!(out, "### {}\n\n{}\n", tree.name, tree.description);
-        tree_table(content, TreeId(i), &mut out);
+        };
+        let def = book.tree(tree);
+        let _ = writeln!(out, "### {}\n\n{}\n", def.name, def.description);
+        tree_table(content, tree, &mut out);
     }
     out
+}
+
+/// The Heritage, Crafts, and Racial trees ([`trees_of`]).
+pub(super) fn talents_origins(content: &Content) -> String {
+    trees_of(content, "talents-origins.md")
+}
+
+/// The Vigour, Might, Finesse, and Grit trees ([`trees_of`]).
+pub(super) fn talents_body(content: &Content) -> String {
+    trees_of(content, "talents-body.md")
+}
+
+/// The Weaponcraft and Guard trees ([`trees_of`]).
+pub(super) fn talents_fighting(content: &Content) -> String {
+    trees_of(content, "talents-fighting.md")
+}
+
+/// The Shadow, Wayfarer, and Delver trees ([`trees_of`]).
+pub(super) fn talents_exploring(content: &Content) -> String {
+    trees_of(content, "talents-exploring.md")
+}
+
+/// The Scholar and Spellcraft trees ([`trees_of`]).
+pub(super) fn talents_mind(content: &Content) -> String {
+    trees_of(content, "talents-mind.md")
 }
 
 /// One tree's table: each talent with what it needs and what it does.
@@ -197,7 +244,7 @@ pub(super) fn trades(content: &Content) -> String {
             let _ = writeln!(
                 out,
                 "| {} | {} | {dice} | {} | {} |",
-                link(Term::Talent, &def.id, &def.name),
+                talent_link(content, &def.id, &def.name),
                 link(Term::Skill, skill, &content.skill(id).name),
                 tools_text(content, tools),
                 if closed.is_empty() {
@@ -719,6 +766,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::Senses(effect) => senses::text(content, effect),
         TalentEffect::Stealth(effect) => stealth::text(content, effect),
         TalentEffect::Movement(effect) => movement::text(content, effect),
+        TalentEffect::Slots(effect) => slots::text(content, effect),
         TalentEffect::Delving(effect) => delving::text(content, effect),
         TalentEffect::Fortune(effect) => fortune::text(content, effect),
         TalentEffect::Growth(effect) => growth::text(content, effect),
@@ -746,4 +794,28 @@ fn spell_text(content: &Content, def: &SpellData) -> String {
         def.level,
         super::spells::does(content, def)
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Every tree a talent may be picked from is on one of the tree groups' pages (#1668), so
+    /// none falls off the wiki when a tree is added.
+    #[test]
+    fn every_pickable_tree_has_a_page() {
+        let content = warlock_assets::content().expect("content");
+        let book = content.talents();
+        for tree in &book.trees {
+            if tree.class || tree.id == STARS || tree.id == "profane" {
+                continue;
+            }
+            assert!(tree_page(&tree.id).is_some(), "{} is on no page", tree.id);
+        }
+        for (_, trees) in PAGES {
+            for id in trees {
+                assert!(book.tree_id(id).is_some(), "{id} is no tree");
+            }
+        }
+    }
 }

@@ -3,10 +3,7 @@
 
 use super::*;
 use crate::content::{ContentFiles, Mined};
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Content> =
-    LazyLock::new(|| Content::load(&ContentFiles::builtin()).expect("builtin content"));
+use crate::test_support::CONTENT;
 
 /// The built-in content with veins on every floor (`[veins] chance` 100), or on none (0), and a
 /// one-floor rooms branch `mine` at `danger` with `ores` (a line of its file, or empty).

@@ -45,3 +45,6 @@ leaves your hands, and cannot be thrown (see [Spirit weapon](abilities.md#abilit
 Each world calls in its own way:
 
 {{#include generated/callings.md}}
+
+See also: [Classes](classes.md), [Experience and levelling up](experience.md), and
+[Talents](talents.md).

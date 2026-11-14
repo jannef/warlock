@@ -1,7 +1,7 @@
 # The cult's chymist (the potions wave 2 design §7: a bomber): a living man of the cult's kind
 # (faction "cult"), who brews foulness for its rites and hurls stinking flasks from a few cells
 # away, and fights with a dagger (his racial weapon) once his foe is beside him. His flasks never
-# run out (a creature's throw, `world/hurl.rs`); one or two are in his pack, and fall where he
+# run out (a creature's throw, `world/combat/hurl.rs`); one or two are in his pack, and fall where he
 # dies.
 [[creature]]
 id = "cult_chymist"

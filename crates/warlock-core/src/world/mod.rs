@@ -83,10 +83,11 @@
 //! like the floor until the player finds them, searching (a check of Intelligence) or in passing
 //! (of Willpower, after every turn, for those who notice such things).
 
-// The modules, by subsystem (docs/dev/merging.md, "Hot registries"): each group lists its modules,
-// then its test modules, each sorted by name. A new module is one line in its group's list.
+// The modules, one folder per subsystem (docs/dev/merging.md, "Hot registries"): each folder's
+// `mod.rs` lists its modules, then its test modules, each sorted by name. A new module is one line
+// in its folder's list.
 
-/// Gives every item inside `#[cfg(test)]`, so a test module is one line in its group. Shaped and
+/// Gives every item inside `#[cfg(test)]`, so a test module is one line in its folder. Shaped and
 /// named after the `cfg-if` crate's macro on purpose: rustfmt follows `mod` declarations inside a
 /// `cfg_if!` (and inside no other macro), so `cargo fmt` still reaches these files.
 macro_rules! cfg_if {
@@ -96,737 +97,135 @@ macro_rules! cfg_if {
 }
 
 // The run, the turn, and time (docs/dev/time.md, saves.md, rendering.md's perception).
-mod actor;
-mod actors;
-mod dev;
-mod eyes;
-mod glare;
-mod hash;
-mod hearing;
-mod level;
-mod perceive;
-mod rest;
-mod run;
-mod schedule;
-mod stride;
-mod voice;
-cfg_if! {
-    if #[cfg(test)] {
-        mod cost_tests;
-        mod hearing_tests;
-        mod light_tests;
-        mod moon_tests;
-        mod numbers_tests;
-        mod rest_close_tests;
-        mod run_tests;
-        mod speed_tests;
-        mod stamina_tests;
-        mod stride_tests;
-        mod sun_tests;
-        mod tests;
-        mod time_tests;
-        mod voice_tests;
-        mod weather_tests;
-    }
-}
+mod turn;
 
 // Travel, levels, and the overworld (docs/dev/overworld.md, encounters.md, mapgen.md,
 // temperature.md).
-mod edge_leave;
-mod encounter;
-mod encounter_area;
-mod endless;
-mod enter;
-mod footing;
-mod ice;
-mod layer_boss;
-mod pit;
-mod quick_leave;
-mod reveal;
-mod stair_followers;
-mod swim;
-mod talk_past;
-mod travel;
-mod wriggle;
-cfg_if! {
-    if #[cfg(test)] {
-        mod beside_tests;
-        mod branch_tests;
-        mod edge_leave_tests;
-        mod encounter_tests;
-        mod endless_tests;
-        mod escape_tests;
-        mod everlasting_tests;
-        mod footing_tests;
-        mod gate_tests;
-        mod ice_tests;
-        mod layer_boss_tests;
-        mod overworld_tests;
-        mod pit_tests;
-        mod quick_leave_tests;
-        mod reveal_tests;
-        mod room_temperature_tests;
-        mod stair_followers_tests;
-        mod swim_deep_tests;
-        mod swim_tests;
-        mod way_out_tests;
-        mod wriggle_tests;
-    }
-}
+mod levels;
 
 // Combat (docs/dev/combat.md, ranged-combat.md, weapon-skills.md, weapon-abilities.md, blood.md,
 // surprise.md).
-mod ambush;
-mod attacks;
-mod bleed;
-mod corrode;
-mod dummy;
-mod fight;
-mod free_blow;
-mod frenzy;
-mod hurl;
-mod item_damage;
-mod knock_away;
-mod lurk;
-mod natural;
-mod reflect;
-mod sear;
-mod shoot;
-mod slip;
-pub(crate) mod surprise;
-mod two_shields;
-mod weapon_ability;
-mod weapon_active;
-cfg_if! {
-    if #[cfg(test)] {
-        mod ambush_tests;
-        mod attacks_tests;
-        mod balance_probe;
-        mod blood_tests;
-        mod corrode_tests;
-        mod damage_tests;
-        mod dummy_tests;
-        mod fight_tests;
-        mod free_blow_tests;
-        mod frenzy_tests;
-        mod hurl_tests;
-        mod item_damage_tests;
-        mod knock_away_tests;
-        mod lurk_tests;
-        mod protection_tests;
-        mod sear_tests;
-        mod shoot_tests;
-        mod shot_range_tests;
-        mod silent_tests;
-        mod slip_tests;
-        mod stunning_strike_tests;
-        mod style_tests;
-        mod surprise_tests;
-        mod surprise_words_tests;
-        mod thrown_exploit_tests;
-        mod two_shield_tests;
-        mod vitals_tests;
-        mod weapon_ability_tests;
-        mod weapon_active_tests;
-        mod weapon_skill_tests;
-    }
-}
+pub(crate) mod combat;
 
 // Statuses, healing, hunger, and potions (docs/dev/status-effects.md, hunger.md, potions.md,
 // burden.md).
-mod buff;
-mod disease;
-mod drain;
-mod eat;
-mod elixir;
-mod flask;
-pub(crate) mod freshness;
-mod heal;
-mod heal_harm;
-mod hold;
-mod hunger;
-mod potion;
-mod regen;
-mod rot;
-mod status;
-cfg_if! {
-    if #[cfg(test)] {
-        mod buff_field_tests;
-        mod buff_tests;
-        mod burden_tests;
-        mod disease_tests;
-        mod drain_tests;
-        mod eat_tests;
-        mod elixir_tests;
-        mod flask_content_tests;
-        mod flask_fire_tests;
-        mod flask_tests;
-        mod freshness_tests;
-        mod heal_harm_tests;
-        mod heal_tests;
-        mod hold_tests;
-        mod hunger_tests;
-        mod potion_gamble_tests;
-        mod potion_status_tests;
-        mod potion_tests;
-        mod potion_utility_tests;
-        mod rot_tests;
-        mod smoke_tests;
-        mod status_tests;
-    }
-}
+pub(crate) mod health;
 
 // Magic: mana, spells, scrolls, wands (docs/dev/mana.md, spells.md, caster-styles.md, scrolls.md).
-mod backfire;
-mod cast;
-mod cast_style;
-mod caster;
-mod concentration;
-mod corpse_spell;
-mod decipher;
-mod forget;
-mod learn;
-mod malison;
-mod mana;
-mod miscast;
-mod read;
-mod restore;
-mod rod;
-mod ruin;
-mod scribe;
-mod spell;
-mod spell_arc;
-mod spell_mods;
-mod spell_rank;
-mod spell_rule;
-mod spell_rung;
-mod spell_type;
-mod spell_words;
-mod summon_spell;
-mod zap;
-mod zone;
-cfg_if! {
-    if #[cfg(test)] {
-        mod backfire_tests;
-        mod cast_tests;
-        mod caster_style_tests;
-        mod caster_tests;
-        mod circle_tests;
-        mod concentration_tests;
-        mod corpse_spell_tests;
-        mod decipher_tests;
-        mod forget_tests;
-        mod identify_spell_tests;
-        mod learn_tests;
-        mod magic_tests;
-        mod malison_tests;
-        mod mana_tests;
-        mod miscast_stat_tests;
-        mod miscast_tests;
-        mod necromancy_rank_tests;
-        mod read_tests;
-        mod rod_tests;
-        mod ruin_tests;
-        mod scribe_tests;
-        mod scroll_label_tests;
-        mod spell_arc_tests;
-        mod spell_data_tests;
-        mod spell_list_tests;
-        mod spell_rank_tests;
-        mod spell_rule_tests;
-        mod spell_type_force_tests;
-        mod spell_type_tests;
-        mod summon_spell_tests;
-        mod transmutation_rank_tests;
-        mod zap_tests;
-        mod zone_tests;
-    }
-}
+mod magic;
 
 // Creatures (docs/dev/creatures.md, summoning.md, animated.md).
-mod ai;
-mod animated;
-mod aura;
-mod avert;
-mod blink;
-mod breath;
-mod court;
-mod creature_burst;
-mod creature_cast;
-mod den;
-mod first_sight;
-mod gaze;
-mod incorporeal;
-mod mimic;
-mod path;
-mod rooted;
-mod snatch;
-mod spawn;
-mod split;
-mod statue;
-mod summon;
-mod unseen;
-cfg_if! {
-    if #[cfg(test)] {
-        mod ai_tests;
-        mod animated_blade_tests;
-        mod animated_dread_tests;
-        mod animated_panoply_tests;
-        mod animated_tests;
-        mod aura_tests;
-        mod beast_den_tests;
-        mod bestiary_tests;
-        mod breath_tests;
-        mod court_tests;
-        mod creature_burst_tests;
-        mod creature_cast_tests;
-        mod creature_flask_tests;
-        mod creature_magic_tests;
-        mod den_tests;
-        mod dwell_tests;
-        mod first_sight_tests;
-        mod fixture_factions;
-        mod gaze_tests;
-        mod incorporeal_tests;
-        mod mimic_tests;
-        mod retribution_tests;
-        mod rooted_tests;
-        mod spawn_tests;
-        mod split_tests;
-        mod statue_tests;
-        mod summon_tests;
-        mod tag_tests;
-        mod unique_tests;
-        mod unseen_tests;
-        mod variant_tests;
-    }
-}
+mod creatures;
 
 // Allies (docs/dev/allies.md, companion.md, familiar.md).
-mod ally;
-mod beast_friend;
-mod bond;
-mod charm;
-mod collar;
-mod companion;
-mod familiar;
-mod pack;
-mod sic;
-mod tame;
-cfg_if! {
-    if #[cfg(test)] {
-        mod ally_tests;
-        mod bond_tests;
-        mod charm_tests;
-        mod collar_tests;
-        mod pack_tests;
-        mod sic_tests;
-        mod tame_tests;
-    }
-}
+mod allies;
 
 // The character: creation, progression, stats (docs/dev/character-creation.md, background.md,
 // progression.md, experience.md, stats.md, skills.md, alignment.md, resources.md).
-mod alignment;
-mod background;
-mod creation;
-mod element_gifts;
-mod experience;
-mod flavour;
-mod gifts;
-mod heirloom;
-mod lucky;
-mod profane;
-mod racial;
-mod resource;
-mod second_wind;
-mod sign_picks;
-mod skill_roll;
-mod stars;
-mod stat_deeds;
-mod stat_training;
-mod talent;
-mod train;
-cfg_if! {
-    if #[cfg(test)] {
-        mod alignment_tests;
-        mod body_talent_tests;
-        mod character_tests;
-        mod creation_tests;
-        mod damage_talent_tests;
-        mod element_gift_tests;
-        mod experience_tests;
-        mod flavour_tests;
-        mod gifts_tests;
-        mod heirloom_tests;
-        mod land_talent_tests;
-        mod lucky_tests;
-        mod mana_talent_tests;
-        mod race_tests;
-        mod racial_tests;
-        mod resource_talent_tests;
-        mod resource_tests;
-        mod sign_pick_tests;
-        mod skill_roll_tests;
-        mod skills_tests;
-        mod spell_talent_tests;
-        mod stars_roc_tests;
-        mod stars_tests;
-        mod stat_deeds_tests;
-        mod stat_paths_tests;
-        mod stat_training_tests;
-        mod stats_tests;
-        mod talent_arms_tests;
-        mod talent_tests;
-        mod talent_wits_tests;
-        mod waste_not_tests;
-    }
-}
+mod character;
 
 // Classes and their abilities (docs/dev/progression.md, openings.md, prayer.md).
-mod ascetic;
-mod calling;
-mod charge;
-mod class;
-mod class_ability;
-mod consecrate;
-mod dark_face;
-mod focus;
-mod invest;
-mod jack;
-mod mark;
-mod merchants_eye;
-mod openings;
-mod orison;
-mod rage;
-mod sanctuary;
-mod smite;
-mod song;
-mod spirit_weapon;
-mod stipend;
-mod thief;
-mod volley;
-mod war_cry;
-mod witch;
-cfg_if! {
-    if #[cfg(test)] {
-        mod ascetic_tests;
-        mod calling_tests;
-        mod charge_tests;
-        mod class_active_tests;
-        mod class_rogue_tests;
-        mod class_tests;
-        mod dark_face_tests;
-        mod focus_tests;
-        mod invest_tests;
-        mod ki_tests;
-        mod lullaby_tests;
-        mod mark_tests;
-        mod merchants_eye_tests;
-        mod openings_tests;
-        mod orison_tests;
-        mod sanctuary_tests;
-        mod smite_mode_tests;
-        mod smite_tests;
-        mod smite_wrath_tests;
-        mod song_tests;
-        mod spirit_weapon_tests;
-        mod stipend_tests;
-        mod war_cry_tests;
-        mod witch_tests;
-    }
-}
+mod classes;
 
 // Skill uses (docs/dev/skills.md, searching.md, stealing.md, hearing.md).
-mod appraise;
-mod disarm;
-mod feint;
-mod forage;
-mod gather;
-mod intimidate;
-mod knowledge;
-mod listen;
-mod lockpick;
-mod search;
-mod sidestep;
-mod steal;
-mod wedge;
-cfg_if! {
-    if #[cfg(test)] {
-        mod appraise_tests;
-        mod disarm_tests;
-        mod feint_tests;
-        mod forage_tests;
-        mod gather_tests;
-        mod intimidate_tests;
-        mod knowledge_tests;
-        mod lockpick_tests;
-        mod search_tests;
-        mod sidestep_tests;
-        mod steal_tests;
-        mod theft_tests;
-        mod wedge_tests;
-    }
-}
+mod skills;
 
 // Objects, equipment, and magic items (docs/dev/objects.md, equipment.md, magic-items.md).
-mod carry;
-mod equip;
-pub(crate) mod gear_condition;
-mod lamp;
-mod loot;
-mod material_drops;
-mod siphon;
-mod stock;
-cfg_if! {
-    if #[cfg(test)] {
-        mod affix_draught_tests;
-        mod affix_spell_tests;
-        mod affix_stamina_tests;
-        mod affix_utility_tests;
-        mod equip_tests;
-        mod gear_condition_tests;
-        mod gear_tests;
-        mod gem_tests;
-        mod lamp_tests;
-        mod material_draw_tests;
-        mod material_drops_tests;
-        mod object_tests;
-        mod parts_tests;
-        mod siphon_tests;
-    }
-}
+pub(crate) mod items;
 
 // Crafting, enchanting, and digging (docs/dev/crafting.md, enchanting.md, digging.md).
-mod craft;
-mod craft_make;
-mod crystal;
-mod cut;
-mod dig;
-mod enchant;
-mod field_forge;
-mod fletch;
-mod make_do;
-mod mastery;
-mod mine;
-pub(crate) mod patron;
-mod rig;
-mod salvage;
-mod seal;
-mod set;
-mod temper;
-mod trade;
-mod work;
-mod work_on;
-cfg_if! {
-    if #[cfg(test)] {
-        mod brew_tests;
-        mod craft_armour_tests;
-        mod craft_bow_tests;
-        mod craft_hand_tests;
-        mod craft_hide_tests;
-        mod craft_make_tests;
-        mod craft_tests;
-        mod craftsperson_tests;
-        mod cut_tests;
-        mod dig_tests;
-        mod enchant_tests;
-        mod field_forge_tests;
-        mod fletch_tests;
-        mod make_do_tests;
-        mod makers_mark_tests;
-        mod mastery_tests;
-        mod mine_tests;
-        mod patron_tests;
-        mod rig_tests;
-        mod salvage_tests;
-        mod set_tests;
-        mod temper_tests;
-        mod trade_tests;
-        mod whittle_tests;
-    }
-}
+pub(crate) mod crafting;
 
 // Doors, chests, traps, and special rooms (docs/dev/doors.md, chests.md, traps.md,
 // special-rooms.md).
-mod boons;
-mod chest;
-mod collapse;
-mod curse;
-mod door;
-mod drink;
-mod feature;
-mod graves;
-mod graveyard;
-mod haunt;
-mod hoard;
-mod knock;
-pub(crate) mod mirrors;
-mod outcome;
-mod pray;
-mod rooms;
-mod shrine;
-mod trap;
-mod treasury;
-mod warp;
-cfg_if! {
-    if #[cfg(test)] {
-        mod chest_hall_tests;
-        mod chest_tests;
-        mod chest_trap_tests;
-        mod collapse_tests;
-        mod curse_tests;
-        mod door_tests;
-        mod door_trap_tests;
-        mod feature_tests;
-        mod graveyard_tests;
-        mod haunt_tests;
-        mod heavy_hall_tests;
-        mod hoard_tests;
-        mod mirrors_tests;
-        mod outcome_tests;
-        mod room_tests;
-        mod shrine_tests;
-        mod spring_tests;
-        mod trap_rung_tests;
-        mod trap_tests;
-        mod treasury_tests;
-        mod unstable_room_tests;
-    }
-}
+pub(crate) mod fixtures;
 
 // People: talk, quests, shops, guilds (docs/dev/npcs.md, quests.md, shops.md, guild.md).
-mod escort;
-mod escort_waits;
-mod goodwill;
-mod guild;
-mod lure;
-mod quest;
-mod quest_roll;
-mod rumour;
-mod service;
-mod shop;
-mod talk;
-mod wares;
-cfg_if! {
-    if #[cfg(test)] {
-        mod escort_tests;
-        mod goodwill_tests;
-        mod guild_tests;
-        mod guild_wanted_tests;
-        mod identify_service_tests;
-        mod outlaw_tests;
-        mod quest_roll_tests;
-        mod quest_tests;
-        mod rumour_tests;
-        mod service_haggle_tests;
-        mod service_tests;
-        mod shop_tests;
-        mod talk_tests;
-        mod train_service_tests;
-        mod wares_tests;
-    }
-}
+mod people;
 
 // The campaigns' places and people, end to end.
-cfg_if! {
-    if #[cfg(test)] {
-        mod ascmearc_encounter_tests;
-        mod ascmearc_tests;
-        mod ceaptun_quest_tests;
-        mod ceaptun_tests;
-        mod crystal_guardian_tests;
-        mod deep_gnome_tests;
-        mod druid_quest_tests;
-        mod gnome_letter_tests;
-        mod hellegeat_tests;
-        mod holtwic_tests;
-        mod lictun_tests;
-        mod pit_warden_tests;
-        mod scriptorium_tests;
-        mod strange_spirit_tests;
-        mod wynflaed_quest_tests;
-    }
-}
+mod campaigns;
 
-pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
-pub use actors::Actors;
-pub use alignment::Deed;
-pub use ally::{Ally, AllySource, MAX_DEV_ALLIES, Order};
-pub use attacks::{AttackSource, OwnAttack};
-pub use calling::CallingStatus;
-pub use cast::Reach;
-pub use collar::fits_neck;
-pub(crate) use companion::smelt_within;
-pub use companion::{CompanionData, draw as companion_draw, name_for as companion_name};
-pub(crate) use craft::recipe_rows;
-pub use craft::{RecipeLack, RecipeRow};
-pub use craft_make::{CraftOption, CraftPlan, CraftStep, CraftStepKind, Grade, grade};
-pub(crate) use craft_make::{craft_plan, craft_steps};
-pub use creation::{chosen_with_talents, creation_bonus, creation_count, parse_talents, pick_text};
-pub use curse::{Rising, rise_candidates, rises_as};
-pub use cut::{CutBand, cut_band, cut_outcome, cuttable};
-pub use decipher::undeciphered;
-pub use dig::{MAX_DIG, WORK_SCALE, dig_refusal, dig_work, digs_to_break};
-pub use disarm::SPRINGS_SHORT_BY;
-pub(crate) use enchant::craft_steps_given;
-pub use enchant::{EnchantBand, enchant_band};
-pub(crate) use encounter::view as encounter_view;
-pub use encounter::{
+pub use allies::ally::{Ally, AllySource, MAX_DEV_ALLIES, Order};
+pub(crate) use allies::beast_friend::calms;
+pub use allies::collar::fits_neck;
+pub(crate) use allies::companion::smelt_within;
+pub use allies::companion::{CompanionData, draw as companion_draw, name_for as companion_name};
+pub use allies::familiar::{draw as familiar_draw, name_for as familiar_name};
+pub use character::alignment::Deed;
+pub use character::creation::{
+    chosen_with_talents, creation_bonus, creation_count, parse_talents, pick_text,
+};
+pub use character::experience::{Discovered, Progress};
+pub use character::gifts::Streak;
+pub use character::skill_roll::{RollBonus, RollCount, SkillRoll, roll_count, skill_roll};
+pub(crate) use character::stars::{PROFANE_RISEN, RISEN, RISEN_TWICE};
+pub use character::talent::Due;
+pub use classes::calling::CallingStatus;
+pub use classes::orison::PrayerState;
+pub use classes::sanctuary::Hallow;
+pub use classes::spirit_weapon::{gift as spirit_gift, pierces_all, shapes as weapon_shapes};
+pub use combat::attacks::{AttackSource, OwnAttack};
+pub use combat::fight::{Cause, Death};
+pub use combat::free_blow::FreeBlows;
+pub(crate) use combat::item_damage::protected_in;
+pub(crate) use crafting::craft::recipe_rows;
+pub use crafting::craft::{RecipeLack, RecipeRow};
+pub use crafting::craft_make::{CraftOption, CraftPlan, CraftStep, CraftStepKind, Grade, grade};
+pub(crate) use crafting::craft_make::{craft_plan, craft_steps};
+pub use crafting::cut::{CutBand, cut_band, cut_outcome, cuttable};
+pub use crafting::dig::{MAX_DIG, WORK_SCALE, dig_refusal, dig_work, digs_to_break};
+pub(crate) use crafting::enchant::craft_steps_given;
+pub use crafting::enchant::{EnchantBand, enchant_band};
+pub(crate) use crafting::field_forge::open_ground;
+pub use crafting::make_do::mendable;
+pub(crate) use crafting::make_do::mends_any;
+pub(crate) use crafting::rig::rigged_rows;
+pub use crafting::rig::{RigRow, takes_words};
+pub use crafting::salvage::{chipped, salvage_percent, salvageable};
+pub use crafting::seal::MOST_SEALS;
+pub use crafting::set::{SetBand, set_band, settable};
+pub use crafting::temper::{temperable, whittleable, workable, workable_wood};
+pub use creatures::statue::Statue;
+pub(crate) use creatures::unseen::{Concealed, unseen_by_player};
+pub use fixtures::curse::{Rising, rise_candidates, rises_as};
+pub use fixtures::graveyard::Fallen;
+pub use fixtures::mirrors::Image;
+pub(crate) use health::heal::allies_beside;
+pub(crate) use items::body_slots::has_slot;
+pub use items::loot::Identified;
+pub(crate) use levels::encounter::view as encounter_view;
+pub use levels::encounter::{
     Choice as EncounterChoice, EncounterView, Forced as EncounterForced, KNOWN_LINE,
     Outcome as EncounterOutcome, PENDING_REFUSED, Party, Pending,
 };
-pub use escort::{escort_slot, fits_escort};
-pub use experience::{Discovered, Progress};
-pub use familiar::{draw as familiar_draw, name_for as familiar_name};
-pub(crate) use field_forge::open_ground;
-pub use fight::{Cause, Death};
-pub(crate) use forage::forage_ground;
-pub use free_blow::FreeBlows;
-pub(crate) use gather::{fungus_ways, unskilled};
-pub use gifts::{STARE_RANGE, Streak};
-pub use graveyard::Fallen;
-pub use guild::GuildRank;
-pub(crate) use hash::fnv1a;
-pub(crate) use heal::allies_beside;
-pub(crate) use item_damage::protected_in;
-pub use learn::{Odds, UNTRAINED, study_odds, study_turns};
-pub use level::{Fire, LevelState};
-pub use loot::Identified;
-pub use make_do::mendable;
-pub(crate) use make_do::mends_any;
-pub use mirrors::Image;
-pub use miscast::{NEAR as MISCAST_NEAR, entry_for as miscast_entry};
-pub use orison::PrayerState;
-pub use pit::Pit;
-pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
-use rest::Ended;
-pub(crate) use rig::rigged_rows;
-pub use rig::{RigRow, takes_words};
-pub use salvage::{chipped, salvage_percent, salvageable};
-pub use sanctuary::Hallow;
-pub use scribe::scribe_turns;
-pub use seal::MOST_SEALS;
-pub use set::{SetBand, set_band, settable};
-pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
-pub use sign_picks::BREATH_RANGE;
-pub use siphon::SIPHON_RANGE;
-pub use skill_roll::{RollBonus, RollCount, SkillRoll, roll_count, skill_roll};
-pub use spell::cone_cells;
-pub use spell_rung::CastBy;
-pub use spell_words::{SpellRoll, reach_words, reroll_words, roll_words};
-pub use spirit_weapon::{gift as spirit_gift, pierces_all, shapes as weapon_shapes};
-pub(crate) use stars::{RISEN, RISEN_TWICE};
-pub use statue::Statue;
-pub(crate) use swim::shore_refusal;
-pub use talent::Due;
-pub use talk::{Conversation, Talk, TopicView};
-pub(crate) use talk_past::offered as encounter_choices;
-pub use temper::{temperable, whittleable, workable, workable_wood};
-use travel::{enter_room, instantiate_level, level_template};
-pub(crate) use unseen::{Concealed, DRAUGHT, unseen_by_player};
-pub use voice::VOICE_RANGE;
-pub use zone::Zone;
+pub use levels::pit::Pit;
+pub(crate) use levels::swim::shore_refusal;
+pub(crate) use levels::talk_past::offered as encounter_choices;
+use levels::travel::{enter_room, instantiate_level, level_template};
+pub use magic::cast::Reach;
+pub use magic::decipher::undeciphered;
+pub use magic::learn::{Odds, UNTRAINED, study_odds, study_turns};
+pub use magic::miscast::entry_for as miscast_entry;
+pub use magic::scribe::scribe_turns;
+pub use magic::spell::cone_cells;
+pub use magic::spell_rung::CastBy;
+pub use magic::spell_words::{SpellRoll, reach_words, reroll_words, roll_words};
+pub use magic::zone::Zone;
+pub use people::escort::{escort_slot, fits_escort};
+pub use people::guild::GuildRank;
+pub use people::quest::{
+    QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants,
+};
+pub use people::shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
+pub use people::talk::{Conversation, Talk, TopicView};
+pub(crate) use skills::forage::forage_ground;
+pub(crate) use skills::gather::{fungus_ways, unskilled};
+pub use turn::actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
+pub use turn::actors::Actors;
+pub(crate) use turn::hash::fnv1a;
+pub use turn::level::{Fire, LevelState};
+use turn::rest::Ended;
 
 use crate::action::{Action, Event, Outcome, Rest};
 use crate::alignment::Score;
@@ -887,6 +286,9 @@ pub struct WorldState {
     /// The game clock.
     pub(crate) time: GameTime,
     pub(crate) current_level: String,
+    /// The levels visited, by id; the state hash sees each as with no graveyard
+    /// (`turn/hash.rs::levels`, `fixtures/graves.rs`).
+    #[serde(serialize_with = "turn::hash::levels")]
     pub(crate) levels: BTreeMap<String, LevelState>,
     pub(crate) actors: Actors,
     pub(crate) player: ActorId,
@@ -895,7 +297,7 @@ pub struct WorldState {
     /// The player's vision profile (an id in `data/vision.toml`).
     pub(crate) vision: String,
     /// Whether `vision` is the dev `vision:` override, which a unique item's Vision power never
-    /// betters (`world/eyes.rs`).
+    /// betters (`world/turn/eyes.rs`).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub(crate) vision_dev: bool,
     /// The player's character (spec §8 "Character creation"): race, gender, and class, the stat
@@ -912,42 +314,45 @@ pub struct WorldState {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) overworld_step: Option<Dir>,
     /// The closed door the player listens at during the turn being taken, and how much fainter
-    /// a sound they hear through it (`world/listen.rs`). Set by the action, cleared as it ends:
+    /// a sound they hear through it (`world/skills/listen.rs`). Set by the action, cleared as it ends:
     /// never in a save.
     #[serde(skip)]
     pub(crate) listening: Option<crate::noise::Listening>,
     /// The overworld encounters' random stream (spec §7 "Overworld encounters": the rate roll,
-    /// the entry, the party's dice), made on the first roll (`world/encounter.rs`).
+    /// the entry, the party's dice), made on the first roll (`world/levels/encounter.rs`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) encounters: Option<Rng>,
-    /// The encounter the player must answer before anything else (`world/encounter.rs`).
+    /// The encounter the player must answer before anything else (`world/levels/encounter.rs`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub(crate) encounter: Option<encounter::Pending>,
-    /// The endless branches' floors made and depths reached (`world/endless.rs`).
-    #[serde(default, skip_serializing_if = "endless::EndlessFloors::is_empty")]
-    pub(crate) endless: endless::EndlessFloors,
-    /// The Pits' records by their integers (`world/pit.rs`; left out while there are none).
+    pub(crate) encounter: Option<levels::encounter::Pending>,
+    /// The endless branches' floors made and depths reached (`world/levels/endless.rs`).
+    #[serde(
+        default,
+        skip_serializing_if = "levels::endless::EndlessFloors::is_empty"
+    )]
+    pub(crate) endless: levels::endless::EndlessFloors,
+    /// The Pits' records by their integers (`world/levels/pit.rs`; left out while there are none).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub(crate) pits: BTreeMap<u32, pit::Pit>,
-    /// The parties encounters made, by their areas (`world/encounter.rs`).
+    pub(crate) pits: BTreeMap<u32, levels::pit::Pit>,
+    /// The parties encounters made, by their areas (`world/levels/encounter.rs`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub(crate) parties: Vec<encounter::Party>,
-    /// What traders offer, by trader, once asked (`world/wares.rs`): the item and its price.
+    pub(crate) parties: Vec<levels::encounter::Party>,
+    /// What traders offer, by trader, once asked (`world/people/wares.rs`): the item and its price.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub(crate) wares: BTreeMap<ActorId, wares::Wares>,
-    /// The unique items traders' offers have made in the run (`world/wares.rs`): each once.
+    pub(crate) wares: BTreeMap<ActorId, people::wares::Wares>,
+    /// The unique items traders' offers have made in the run (`world/people/wares.rs`): each once.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub(crate) uniques_offered: BTreeSet<String>,
     /// What an aristocrat's family has put by for them, until their servant hands it over
-    /// (`world/stipend.rs`).
-    #[serde(default, skip_serializing_if = "stipend::Stipend::is_empty")]
-    pub(crate) stipend: stipend::Stipend,
-    /// A merchant's stake with their business partner (`world/invest.rs`).
-    #[serde(default, skip_serializing_if = "invest::Fund::is_empty")]
-    pub(crate) fund: invest::Fund,
-    /// A craftsperson's commissions from their patron (`world/patron.rs`).
-    #[serde(default, skip_serializing_if = "patron::Patron::is_empty")]
-    pub(crate) patron: patron::Patron,
+    /// (`world/classes/stipend.rs`).
+    #[serde(default, skip_serializing_if = "classes::stipend::Stipend::is_empty")]
+    pub(crate) stipend: classes::stipend::Stipend,
+    /// A merchant's stake with their business partner (`world/classes/invest.rs`).
+    #[serde(default, skip_serializing_if = "classes::invest::Fund::is_empty")]
+    pub(crate) fund: classes::invest::Fund,
+    /// A craftsperson's commissions from their patron (`world/crafting/patron.rs`).
+    #[serde(default, skip_serializing_if = "crafting::patron::Patron::is_empty")]
+    pub(crate) patron: crafting::patron::Patron,
     /// Sounds the player perceived lately: those like them are no news ([`noise::news`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) recent_sounds: Vec<Recent>,
@@ -965,7 +370,7 @@ pub struct WorldState {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) ruin_rng: Option<Rng>,
     /// When the daily stat check comes next (spec §8 "Stats": 06:00 game time;
-    /// `world/stat_training.rs`). `None` while the content has no training rules (so content
+    /// `world/character/stat_training.rs`). `None` while the content has no training rules (so content
     /// without them hashes as before).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) next_stat_check: Option<GameTime>,
@@ -993,8 +398,8 @@ pub struct WorldState {
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub(crate) known_scrolls: BTreeSet<ObjectId>,
     /// The petrified dead of past runs, the most recent first, as the app gave them when the run
-    /// began (`world/graveyard.rs`): statues' names, decoration out of the state hash.
-    #[serde(default, skip_serializing_if = "hash::unhashed_vec")]
+    /// began (`world/fixtures/graveyard.rs`): statues' names, decoration out of the state hash.
+    #[serde(default, skip_serializing_if = "turn::hash::unhashed_vec")]
     pub(crate) graveyard: Vec<Fallen>,
 }
 
@@ -1156,7 +561,7 @@ pub struct World {
     found: u64,
     /// Lines muttered during the current turn (not saved): said when perception runs, if the
     /// player heard them.
-    mutters: Vec<talk::Mutter>,
+    mutters: Vec<people::talk::Mutter>,
     /// Whether the player is resting ([`World::rest`]; not saved: a rest is one action): they
     /// heal faster.
     resting: bool,
@@ -1171,7 +576,7 @@ pub struct World {
     perceived_at: GameTime,
     /// Where the player stood at the last perception (`feature.rs`; not saved): arriving
     /// elsewhere names a feature of the ground there.
-    stood_on: feature::StoodOn,
+    stood_on: fixtures::feature::StoodOn,
     /// Whose action is under way (not saved): the player's outside the turn's schedule, a
     /// creature's during its turn, nobody's while time passes (`schedule.rs`).
     acting: Option<ActorId>,
@@ -1179,13 +584,13 @@ pub struct World {
     /// action does not ease them (`weapon_ability.rs`).
     fresh: Vec<(ActorId, StatusId)>,
     /// Spell reflection's counts a turn and the reflector chosen (not saved; `reflect.rs`).
-    reflection: reflect::Reflections,
+    reflection: combat::reflect::Reflections,
     /// The player's weapon active under way (not saved): what its attack does beyond a plain
     /// one, read where that is resolved (`weapon_active.rs`).
-    technique: weapon_active::Technique,
+    technique: combat::weapon_active::Technique,
     /// What an overworld encounter has under way within the action (not saved:
     /// `encounter.rs`).
-    encounter: encounter::Underway,
+    encounter: levels::encounter::Underway,
 }
 
 /// How much time an action took.
@@ -1203,15 +608,15 @@ enum Spent {
     /// Running in this direction (see [`World::run`]).
     Run(Dir),
     /// A meal (see [`World::dine`]).
-    Meal(eat::Dish),
+    Meal(health::eat::Dish),
     /// Digging into the wall at this cell (see [`World::dig`]).
     Dig(Pos),
     /// Searching for up to this many turns (see [`World::search`]).
     Search(u8),
     /// Studying a spell from a scroll (see [`World::study`]).
-    Study(learn::Lesson),
+    Study(magic::learn::Lesson),
     /// Writing a scroll of a spell (see [`World::scribe`]).
-    Scribe(scribe::Writing),
+    Scribe(magic::scribe::Writing),
     /// Calling a familiar for this many turns (see [`World::calling`]).
     Calling(u32),
     /// Praying to consecrate a place until this moment (see [`World::consecrate`]).
@@ -1219,17 +624,17 @@ enum Spent {
     /// Kneeling to hallow the ground until this moment (see [`World::sanctuary`]).
     Sanctuary(GameTime),
     /// Praying at a forgotten altar (see [`World::pray`]).
-    Pray(pray::Prayer),
+    Pray(fixtures::pray::Prayer),
     /// Drinking at a healing spring (see [`World::drink`]).
-    Drink(drink::Draught),
+    Drink(fixtures::drink::Draught),
     /// Foraging in the wild for this many seconds (see [`World::forage`]).
     Forage(u32),
     /// Gathering herbs from the glowing fungus for this many seconds (see [`World::gather`]).
     Gather(u32),
     /// Long work: deciphering, a craft, salvage, a rig (see [`World::work`]).
-    Work(work::Work),
+    Work(crafting::work::Work),
     /// Taming a beast beside the player (see [`World::tame`]).
-    Tame(tame::Taming),
+    Tame(allies::tame::Taming),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
     Skip(Duration),
 }
@@ -1276,7 +681,7 @@ impl World {
     /// character the player chose does (New run, `--character`, `--name`). Without it, with the
     /// scenario's pack alone, as a dev launch on the scenario's own character does (tests,
     /// golden walks, `--scenario` alone). A run without a character has no kit. A run with the
-    /// kit also takes the character's creation picks (`world/creation.rs`): the talents `character`
+    /// kit also takes the character's creation picks (`world/character/creation.rs`): the talents `character`
     /// names, else the Random picks, recorded in the character.
     pub fn start_run(
         content: Arc<Content>,
@@ -1317,7 +722,7 @@ impl World {
         Ok(world)
     }
 
-    /// [`World::start_run`] with the creation picks still due (`world/creation.rs`).
+    /// [`World::start_run`] with the creation picks still due (`world/character/creation.rs`).
     fn begin(
         content: Arc<Content>,
         scenario: &str,
@@ -1391,12 +796,12 @@ impl World {
             };
         let campaign = def.campaign.clone().unwrap_or_default();
         // A run that starts on a Pit's floor (a dev scenario) climbs out to its campaign's start.
-        let pit_from = pit::start_from(&content, &campaign, &def.start_level);
+        let pit_from = levels::pit::start_from(&content, &campaign, &def.start_level);
         let start = level_template(
             &content,
             (
                 &campaign,
-                endless::floor_seed(&content, seed, &def.start_level, 0),
+                levels::endless::floor_seed(&content, seed, &def.start_level, 0),
             ),
             &def.start_level,
             (pit_from.as_deref(), &Default::default()),
@@ -1439,9 +844,9 @@ impl World {
             parties: Vec::new(),
             wares: BTreeMap::new(),
             uniques_offered: BTreeSet::new(),
-            stipend: stipend::Stipend::default(),
-            fund: invest::Fund::default(),
-            patron: patron::Patron::default(),
+            stipend: classes::stipend::Stipend::default(),
+            fund: classes::invest::Fund::default(),
+            patron: crafting::patron::Patron::default(),
             recent_sounds: Vec::new(),
             weather_override: None,
             death: None,
@@ -1500,15 +905,15 @@ impl World {
             boons: Vec::new(),
             stat_marks: Default::default(),
         };
-        stars::grant(&content, state.character.as_ref(), &[], &mut player.talents);
+        character::stars::grant(&content, state.character.as_ref(), &[], &mut player.talents);
         // The class abilities of level 1 (spec §8 "Class abilities").
-        let given = class::grant(&content, state.character.as_ref(), &mut player, 1);
+        let given = classes::class::grant(&content, state.character.as_ref(), &mut player, 1);
         player.hp = player.max_hp(&content);
         player.mana = player.max_mana(&content);
         crate::rot::made_at(&mut player.inventory, &content, def.start);
         state.actors.insert(ActorId(0), player);
-        if let (Some(from), Some((s, _))) = (pit_from, pit::pit_of(&content, &start.id)) {
-            state.pits.insert(s, pit::Pit::new(from));
+        if let (Some(from), Some((s, _))) = (pit_from, levels::pit::pit_of(&content, &start.id)) {
+            state.pits.insert(s, levels::pit::Pit::new(from));
         }
         instantiate_level(&mut state, &content, &start);
         drop(start); // It may borrow `content`, which `assemble` takes.
@@ -1518,16 +923,16 @@ impl World {
         if let Some(line) = &def.arrival {
             state.messages.push(0, line.clone());
         }
-        if let Some(text) = rooms::pervade_line(&state, &content) {
+        if let Some(text) = fixtures::rooms::pervade_line(&state, &content) {
             state.messages.push(0, text);
         }
-        for text in treasury::arrive_lines(&state, &content) {
+        for text in fixtures::treasury::arrive_lines(&state, &content) {
             state.messages.push(0, text);
         }
         if let Some(text) = enter_room(&mut state, &content) {
             state.messages.push(0, text);
         }
-        for text in feature::feature_lines(&state, &content, None) {
+        for text in fixtures::feature::feature_lines(&state, &content, None) {
             state.messages.push(0, text);
         }
         let mut world = Self::assemble(content, state);
@@ -1559,7 +964,7 @@ impl World {
     }
 
     /// Restores a world from saved state. The player's sign's gifts are granted afresh
-    /// (`world/stars.rs`), as the content now has them.
+    /// (`world/character/stars.rs`), as the content now has them.
     pub fn from_state(content: Arc<Content>, mut state: WorldState) -> Result<Self, WorldError> {
         state.check()?;
         let Some(scenario) = content.scenario(&state.scenario) else {
@@ -1658,7 +1063,7 @@ impl World {
         // "Class abilities"); a birth sign's gifts first (spec §8 "Birth sign").
         if let Some(player) = state.actors.get_mut(&state.player) {
             let boons = std::mem::take(&mut player.boons);
-            stars::grant(
+            character::stars::grant(
                 &content,
                 state.character.as_ref(),
                 &boons,
@@ -1672,13 +1077,13 @@ impl World {
     }
 
     fn assemble(content: Arc<Content>, mut state: WorldState) -> Self {
-        stat_training::schedule(&mut state, &content);
+        character::stat_training::schedule(&mut state, &content);
         let mut lights = LightCache::default();
         let perception = Box::new(Perception::compute(&state, &content, &mut lights));
         perception.remember(state.current_mut());
         let time = state.time;
         let player = state.player;
-        let stood_on = feature::standing(&state);
+        let stood_on = fixtures::feature::standing(&state);
         let labels = Labels::draw(&content, state.seed);
         Self {
             content,
@@ -1708,7 +1113,7 @@ impl World {
             acting: Some(player),
             fresh: Vec::new(),
             reflection: Default::default(),
-            technique: weapon_active::Technique::default(),
+            technique: combat::weapon_active::Technique::default(),
             encounter: Default::default(),
         }
     }
@@ -1775,7 +1180,7 @@ impl World {
 
     /// How actors `a` and `b` stand toward each other: the stance of their factions (spec §7
     /// "Factions"): their types' unless a level placed them elsewhere; [`Stance::Neutral`] if either is unknown,
-    /// or if they are a Beast-friend and an animal they befriended ([`beast_friend::befriended`]).
+    /// or if they are a Beast-friend and an animal they befriended ([`allies::beast_friend::befriended`]).
     pub fn stance(&self, a: ActorId, b: ActorId) -> Stance {
         match (self.state.actors.get(&a), self.state.actors.get(&b)) {
             (Some(a), Some(b)) => stance_between(&self.state, &self.content, a, b),
@@ -2094,7 +1499,10 @@ impl World {
                 if self.content.spell_id(id).is_none()
                     && self.content.weapon_ability_id(id).is_some() =>
             {
-                let aim = at.map_or(weapon_active::Aimed::Nothing, weapon_active::Aimed::Cell);
+                let aim = at.map_or(
+                    combat::weapon_active::Aimed::Nothing,
+                    combat::weapon_active::Aimed::Cell,
+                );
                 return self.use_weapon(id, aim, events);
             }
             Action::Cast(spell, at) => {
@@ -2102,7 +1510,7 @@ impl World {
                 return self.cast_spell(spell, at, events);
             }
             Action::Act(id, dir) => {
-                return self.use_weapon(id, weapon_active::Aimed::Dir(*dir), events);
+                return self.use_weapon(id, combat::weapon_active::Aimed::Dir(*dir), events);
             }
             Action::CastOn(spell, on) => {
                 let on = Some(crate::action::ReadTarget::Item(*on));
@@ -2179,7 +1587,7 @@ pub(crate) fn stance_between(
     b: &Actor,
 ) -> Stance {
     // A faction friendly to nothing is hostile to its own, never to itself.
-    if a.id == b.id || beast_friend::befriended(state, content, a, b) {
+    if a.id == b.id || allies::beast_friend::befriended(state, content, a, b) {
         return Stance::Neutral;
     }
     content.stance_of(a.faction(content), b.faction(content))

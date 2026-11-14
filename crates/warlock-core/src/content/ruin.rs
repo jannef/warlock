@@ -3,7 +3,7 @@
 //! the material of its main part, or that material's group, the first row of the type that
 //! matches deciding.
 //!
-//! The rule itself lives in `world/ruin.rs`: which casts ruin, what is spared, the draws, and
+//! The rule itself lives in `world/magic/ruin.rs`: which casts ruin, what is spared, the draws, and
 //! what the player is told. The file is optional: without it nothing is ruined.
 
 use super::{Content, ContentError, DamageTypeId, ItemClassId, MaterialId};
@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn fire_burns_scrolls_and_spares_steel() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let fire = content.damage_type_id("fire").expect("fire");
         let scroll = content.object_id("scroll_of_fireball").expect("scroll");
         let sword = content.object_id("long_sword").expect("sword");

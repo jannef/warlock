@@ -7,7 +7,7 @@
 //!
 //! Nothing here is ever shown to the player: food does not show its stage (the rules and dev
 //! dumps read it). Without `data/hunger.toml` nothing can be eaten and food does not rot.
-//! Applying it is `world/rot.rs`.
+//! Applying it is `world/health/rot.rs`.
 //!
 //! [`Food::keeps`]: crate::content::Food::keeps
 //! [`Food::lasts`]: crate::content::Food::lasts

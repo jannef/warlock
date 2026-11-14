@@ -1,8 +1,8 @@
 # The craftsperson's class ability from level 60 (spec §8 "Class abilities": Maker's mark; the
-# craftsperson design §7.10): passive, one read: `world/craft_make.rs::make_out` builds the
+# craftsperson design §7.10): passive, one read: `world/crafting/craft_make.rs::make_out` builds the
 # holder's arms, armour, and jewellery marked (`Worked::marked`). The mark is then read where
 # each thing is: the worth (`Worked::value`, `worth_percent` more), the description
-# (`magic/describe.rs`), the patron's bonus (`data/patron.toml`), and the capacity
+# (`magic/describe.rs`), the patron's bonus (`data/rules/patron.toml`), and the capacity
 # (`magic/capacity.rs`, one enchantment more).
 [[talent]]
 id = "makers_mark"

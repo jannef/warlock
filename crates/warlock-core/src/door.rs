@@ -15,7 +15,7 @@
 //! **Picking** a lock (the Pick lock ability, the Open lock skill's use) opens it without a key: a
 //! Dexterity check plus what Open lock gives against the lock's **difficulty** ([`Lock::
 //! difficulty`]: its own, [`LOCK_DIFFICULTY`] unless the level gives it one, plus on a dungeon
-//! branch its `locks_per_depth` for each level below the first). Applied in `world/lockpick.rs`.
+//! branch its `locks_per_depth` for each level below the first). Applied in `world/skills/lockpick.rs`.
 //!
 //! **Kicking** a closed door (locked or not) breaks it with a chance of the kicker's Strength
 //! **score** in the door's `sturdiness` ([`kick_breaks`]): one draw of the gameplay stream,

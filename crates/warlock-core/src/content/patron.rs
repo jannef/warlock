@@ -1,6 +1,6 @@
-//! The craftsperson's patron (`assets/data/patron.toml`, spec §8 "Class abilities": Patron;
+//! The craftsperson's patron (`assets/data/rules/patron.toml`, spec §8 "Class abilities": Patron;
 //! #1421, the craftsperson design §7.4): what a patron pays for a commission delivered
-//! (`world/patron.rs`).
+//! (`world/crafting/patron.rs`).
 //!
 //! The file is optional: without it no one commissions work.
 
@@ -17,7 +17,7 @@ pub struct PatronRules {
 }
 
 impl PatronRules {
-    /// Parses `data/patron.toml`: it pays something.
+    /// Parses `data/rules/patron.toml`: it pays something.
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let rules: PatronRules = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -34,7 +34,7 @@ impl PatronRules {
 }
 
 impl super::RulesFile for PatronRules {
-    const PATH: &'static str = "data/patron.toml";
+    const PATH: &'static str = "data/rules/patron.toml";
 
     fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
         Self::parse(path, text)
@@ -45,11 +45,11 @@ impl super::RulesFile for PatronRules {
 mod tests {
     use crate::content::{Content, ContentFiles};
 
-    const PATH: &str = "data/patron.toml";
+    const PATH: &str = "data/rules/patron.toml";
 
     #[test]
     fn the_patron_pays_the_worth() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let rules = content.patron().expect("the patron is in the game");
         assert_eq!(rules.pays, 100);
         assert_eq!(rules.paid(160), 160);

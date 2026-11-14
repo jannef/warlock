@@ -93,3 +93,5 @@ More about the keys:
 - [Rebinding keys](controls-rebinding.md): changing your keys in Controls, and sharing them.
 - [Prompts, looking, and aiming](controls-prompts.md): the questions a command asks, look mode,
   and aiming a shot, a throw, or a spell.
+
+See also: [Settings](settings.md), [How do I...?](how-do-i.md), and [Your first run](first-run.md).

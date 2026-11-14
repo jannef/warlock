@@ -34,7 +34,7 @@ creatures of its side, with no ability in the abilities menu, no action, no key,
   saved with the actor's `effects`, as every status is; nothing counts uses.
 - **State**: `Actor::summoner: Option<ActorId>` (`serde(default, skip_serializing_if =
   "Option::is_none")`): who called it. Hashes are as before for an actor without one. `World::live_summons(id)` counts the actors that name `id`, on any level.
-- **Rules** (`world/summon.rs`, one line in `ai.rs::fight`, before throws, shots, and spells,
+- **Rules** (`world/creatures/summon.rs`, one line in `ai.rs::fight`, before throws, shots, and spells,
   and one arm in `creature_turn`): `World::summons_at` (the conditions: a hostile it sees within
   `range`, casting not blocked, the status off, `Actor::mana_cost` of the cost at hand, fewer
   than `most` alive, a free cell), `summon_cells(id, spread)` (shared with the dev `ally:` of
@@ -49,24 +49,24 @@ creatures of its side, with no ability in the abilities menu, no action, no key,
   `summoner` set and `World::spawned` bumped), and `say_summoning` (the words from the last
   turn's `perception.sees_actors_at`). The draws come from the gameplay stream, after the AI
   decided without drawing.
-- **Rooted summoners** (#1294, `world/rooted.rs`, docs/dev/creatures.md "Rooted"): a type with
+- **Rooted summoners** (#1294, `world/creatures/rooted.rs`, docs/dev/creatures.md "Rooted"): a type with
   `rooted = true` and no `mana` (a breeder's rule: its cooldown and `most` its only limits) is
   a gate: its turn is a summon when `summons_at` allows, else a wait, never a step. The
   miscast gates (docs/design/miscasts-review.md §6.2, #1295; `docs/dev/creatures/gates.md`)
-  are such; `world/rooted_tests.rs` has a fixture one. A rooted type with no natural attack and
+  are such; `world/creatures/rooted_tests.rs` has a fixture one. A rooted type with no natural attack and
   no weapon strikes no blow either (`World::rooted_plan`), so a gate only summons or waits.
 - **Experience**: nothing special: `World::creature_dies` pays a summoned creature's kill like
   any other's (first-kill bonus included).
 - **Banishing** (#913, `docs/dev/progression.md` "`smite_mode`"): the paladin's Banishing smite
   reads `Actor::summoner`: a hostile that has one, and a smite that wounds it, and it is unmade
-  (`World::unmake`, `world/smite.rs`: a kill like any other, whatever its hit points). A summoner
+  (`World::unmake`, `world/classes/smite.rs`: a kill like any other, whatever its hit points). A summoner
   already dead changes nothing: the record stands.
 - **Dumps**: the dev `actors` layer adds `; summoned by #N` to a summoned actor.
 - **Wiki**: `xtask/src/wiki/creatures.rs::creature_summons` (`creature-summons.md`, the
   "Summoning" section of `wiki/src/creature-powers.md`); the tag in `creature-tags.md`.
 - **Fixture**: the showcase's summoning hall (`levels/summoning_hall.toml`, scenario
   `summoners`), one summoner to a room behind a door.
-- **Tests**: `world/summon_tests.rs` (on a fixture content: the summoned around it on its side,
+- **Tests**: `world/creatures/summon_tests.rs` (on a fixture content: the summoned around it on its side,
   the mana paid and the status given, the message; the cooldown; no mana; the cap; Silence;
   walls; the tag pool; the load refusals; the save round trip; determinism; and on the shipped
   content, the goblin wizard in the summoning hall and a summoned kill paying XP),
@@ -76,7 +76,7 @@ creatures of its side, with no ability in the abilities menu, no action, no key,
 Adding a summoner: give the type `mana` (unless its summoning costs none), a `[creature.summon]`,
 and the tag `summoner` besides its own tribe's. **Breeders**
 (G5c): the wormlord sheds grave worms (`1d2` every 30 s, `most = 6`, no cost, verb "sheds");
-`world/split_tests.rs` checks it breeds to its cap, and a fixture type that breeds its own kind
+`world/creatures/split_tests.rs` checks it breeds to its cap, and a fixture type that breeds its own kind
 at no cost. What a creature lets out as it dies is no summoning: `dies_into`
 (`docs/dev/creatures.md` "Splitting and dying into"). The drow priestess (the drow roster) gets her
 table in a follow-up.

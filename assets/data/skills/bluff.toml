@@ -3,7 +3,7 @@ id = "bluff"
 name = "Bluff"
 description = "Lying with a straight face, feinting, and talking your way past."
 kind = "action"
-# Marked by "feint" (a feint at a foe, feint.toml, the skill's use, whatever comes of it) and by
+# Marked by "feint" (a feint at a foe, rules/feint.toml, the skill's use, whatever comes of it) and by
 # "talk_past" (a try at talking past a party met on the overworld, an encounter entry flagged
 # `talk_past`, whatever comes of it). Effect "feint": points added to the difficulty of the
 # Willpower check a feint asks, and of the one a party's leader makes when you talk past them,

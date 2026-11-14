@@ -1,0 +1,9 @@
+[[gift]]
+id = "devourer"
+name = "Devourer's belly"
+kind = "boon"
+tier = "lesser"
+weight = 10
+description = "You take more from what you eat: a corpse's strengths come to you more readily, and no meal makes you sluggish."
+line = "You find you want more."
+effects = [{ kind = "corpse_stats_percent", value = 100 }, { kind = "no_bloating" }]

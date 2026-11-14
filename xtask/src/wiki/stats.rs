@@ -190,17 +190,14 @@ pub(super) fn drained_stat(stat: Option<Stat>) -> String {
 }
 
 /// Every creature attack that drains (spec §8 "Stats": "Drain"): the stat and the points it
-/// takes, the chance a hit tries, the check that resists it and how often it is held by score,
-/// then the floor no drain goes below.
+/// takes, the chance a hit tries, and the check that resists it; then, by difficulty, how often
+/// that check is held by score (a grid, #1668); then the floor no drain goes below.
 pub(super) fn drain_attacks(content: &Content) -> String {
-    let scores: String = (RESIST_SCORES.iter())
-        .map(|s| format!(" Held at {s} |"))
-        .collect();
-    let mut out = format!(
-        "| Creature | Attack | Drains | Points | Chance a hit tries | Resisted with | Difficulty \
-         |{scores}\n|---|---|---|:---:|:---:|---|:---:|{}\n",
-        ":---:|".repeat(RESIST_SCORES.len())
+    let mut out = String::from(
+        "| Creature | Attack | Drains | Chance a hit tries | Resisted with |\n\
+         |---|---|---|:---:|---|\n",
     );
+    let mut difficulties = Vec::new();
     for (_, c) in super::order::creatures(content) {
         let Some(attack) = &c.attack else {
             continue;
@@ -209,25 +206,43 @@ pub(super) fn drain_attacks(content: &Content) -> String {
             let Affliction::Drain(drain) = hit.what else {
                 continue;
             };
-            let odds: String = (RESIST_SCORES.iter())
-                .map(|&s| {
-                    let modifier = stats::modifier(i32::from(s));
-                    let ways = check::ways(modifier, drain.difficulty);
-                    format!(" {} |", percent_of(ways, 144))
-                })
-                .collect();
+            difficulties.push(drain.difficulty);
+            let points = match drain.points {
+                1 => "1 point".to_string(),
+                n => format!("{n} points"),
+            };
             let _ = writeln!(
                 out,
-                "| {} | {} | {} | {} | {} % | {} | {} |{odds}",
+                "| {} | {} | {}, {points} | {} % | {} against {} |",
                 capital(&c.name),
                 attack.name,
                 drained_stat(drain.stat),
-                drain.points,
                 hit.chance,
                 drain.check.name(),
                 drain.difficulty
             );
         }
+    }
+    difficulties.sort_unstable();
+    difficulties.dedup();
+    let scores: String = (RESIST_SCORES.iter())
+        .map(|s| format!(" Held at {s} |"))
+        .collect();
+    let _ = write!(
+        out,
+        "\nHow often the check holds, by its difficulty and the score of the stat it is made \
+         with:\n\n| Difficulty |{scores}\n|:---:|{}\n",
+        ":---:|".repeat(RESIST_SCORES.len())
+    );
+    for difficulty in difficulties {
+        let odds: String = (RESIST_SCORES.iter())
+            .map(|&s| {
+                let modifier = stats::modifier(i32::from(s));
+                let ways = check::ways(modifier, difficulty);
+                format!(" {} |", percent_of(ways, 144))
+            })
+            .collect();
+        let _ = writeln!(out, "| {difficulty} |{odds}");
     }
     let _ = writeln!(
         out,

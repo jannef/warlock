@@ -160,3 +160,6 @@ With these keys on, the status bar also shows, at its end, the [turn](time.md#wh
 count, your position (column, row), how brightly your own cell is [lit](light.md#what-light-is)
 (`Light`, where 255 is full light), and your [vision type](vision.md#the-four-types). They give
 way first when the window is narrow.
+
+See also: [Controls](controls.md), [Menus and lists](controls-menus.md), and
+[Your character](character.md).

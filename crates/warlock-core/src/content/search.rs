@@ -1,5 +1,5 @@
-//! Searching (`assets/data/search.toml`, spec §8 "Searching"): the numbers of the one perception
-//! check every hidden feature is found with, and secret doors as levels place them.
+//! Searching (`assets/data/rules/search.toml`, spec §8 "Searching"): the numbers of the one
+//! perception check every hidden feature is found with, and secret doors as levels place them.
 //!
 //! Hidden features are secret doors and hidden traps. A **secret door** is a closed door that
 //! looks and acts like the wall around it until it is found: the level's terrain there is that
@@ -44,7 +44,7 @@ impl Default for SearchRules {
 }
 
 impl SearchRules {
-    /// Parses `data/search.toml`: `turns` within [`SEARCH_TURNS`].
+    /// Parses `data/rules/search.toml`: `turns` within [`SEARCH_TURNS`].
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let rules: Self = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -61,7 +61,7 @@ impl SearchRules {
 }
 
 impl super::RulesFile for SearchRules {
-    const PATH: &'static str = "data/search.toml";
+    const PATH: &'static str = "data/rules/search.toml";
 
     fn parse(path: &str, text: &str, _content: &Content) -> Result<Self, ContentError> {
         Self::parse(path, text)
@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     fn a_secret_door_looks_like_the_wall_around_it() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let id = |name: &str| content.terrain_id(name).expect(name);
         let (wall, granite, floor, door, void) = (
             id("wall"),

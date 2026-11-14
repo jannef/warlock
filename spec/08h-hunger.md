@@ -4,7 +4,7 @@ Part of the specification, the source of truth for what to build; the index is
 [`specification.md`](../specification.md). Update it together with the code and the
 developer notes (CLAUDE.md, `docs/dev/`).
 
-- **Hunger** (`warlock-core/src/hunger.rs`, the rules; `world/hunger.rs` and `world/eat.rs`,
+- **Hunger** (`warlock-core/src/hunger.rs`, the rules; `world/health/hunger.rs` and `world/health/eat.rs`,
   applying them; `data/hunger.toml`, §7; M23, #137), ADOM-like:
   - **Nutrition**: the player has a counter of nutrition points (`Actor::satiation`; creatures
     do not hunger). Game time burns it as the scheduler moves the clock, so long actions,
@@ -77,7 +77,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `vomit` (50 %) to vomit ("You vomit!": it feeds nothing, and the counter falls to at most
     `vomit_leaves`, 1000, Hungry), else "You have a hard time getting it all down." and what
     does not fit is lost.
-  - **Food rots** (`crate::rot`, the stages; `world/rot.rs`, applying them; #195): every food
+  - **Food rots** (`crate::rot`, the stages; `world/health/rot.rs`, applying them; #195): every food
     has a shelf life in data, `keeps` and `lasts` (§7 "Objects": a loaf of bread keeps 5 days
     and lasts 10, an apple 14 and 28, a food ration 30 and 60, dried meat and the angelica root
     longer; corpses by their creature's size, 8 and 36 hours), and every stack of food knows
@@ -136,6 +136,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
       effective (§8 "Damage types"), never immunity. Hate-wyrm's heart gives Fire breath, the
       Wyvern pick's active, stronger: one who holds both breathes the stronger, and one whose
       sign gives none finds it in the abilities menu's Profane group.
+      The drawn gifts change the body (#1628): some bar an equipment slot (Horned's head,
+      Hoofed's feet, Clawed's hands: §7 "Equipment slots") or open one (Many-fingered's extra
+      ring), give bare hands claws that make bleeding (Clawed), another race's eyes (Deep-eyed:
+      darkvision eyes), kin among creatures of a tag (Rat-king's court: vermin are neutral until
+      one of their type is struck, as Beast-friend's animals are), or a quarter more maximum
+      mana (Fell-minded).
+      The whole table (#1629; docs/design/profane-gifts.md §6.1–§6.3): forty drawn gifts, 14
+      lesser, 12 greater, 14 dire, every tier holding a boon, a mixed gift, and a bane (a content
+      error otherwise). Wing-shouldered bars the cloak slot; Ember-veined sheds a dim red light
+      always (`ember_glow`), which Wyrm-blooded replaces; Palsied undoes Adder-quick; Scaled is
+      never held with Paper-skinned, Glass-boned, or Hollowed; Stone-eyed gives the Basilisk's
+      Transfixing stare. **Twice-born** is the Phoenix's rising (§8 "Birth sign") under a once of
+      its own (`profane_risen`), taken after the sign's: a Phoenix who is Twice-born rises once
+      by each.
   - **Eating rotten food** of any kind (by its age when the last turn of the meal is done; gone
     food not yet removed counts as rotten): "Ugh! The loaf of bread was rotten.", one draw with
     `[rotten] vomit` (50 %) to vomit, else it makes them sick, exposes them to the diseases

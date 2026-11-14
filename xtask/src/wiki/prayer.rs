@@ -106,7 +106,7 @@ pub(super) fn prayer_uses(content: &Content) -> String {
 }
 
 /// What a use answers, and how each face answers it, in words. The rules' own text (the fixes
-/// are code, `world/orison.rs` and `world/dark_face.rs`), so every use has its arm.
+/// are code, `world/classes/orison.rs` and `world/classes/dark_face.rs`), so every use has its arm.
 fn use_text(content: &Content, rules: &PrayerRules, id: PrayerUse) -> (String, String, String) {
     let status = |id: &str, name: &str| match content.status_id(id) {
         Some(s) => link(Term::Status, &content.status(s).id, name),
@@ -303,7 +303,7 @@ pub(super) fn prayer_rites(content: &Content) -> String {
                     ),
                     TalentEffect::Faith(FaithEffect::Communion) => (
                         super::talents::talent_link(content, &def.id, &def.name),
-                        "a passive: standing in a [cursed](special-rooms.md#room-cursed), [draining](special-rooms.md#room-draining), or [haunted](special-rooms.md#room-haunted) room, or on a level such a curse lies over, your prayers add no strain and the place's [Ebbing](status-effects.md#status-ebbing) never touches you; only while the dark powers answer you".into(),
+                        "a passive: standing in a [cursed](special-rooms.md#room-cursed), [draining](special-rooms.md#room-draining), or [haunted](special-rooms.md#room-haunted) room, or on a level such a curse lies over, your prayers add no strain and the place's [Ebbing](status-list.md#status-ebbing) never touches you; only while the dark powers answer you".into(),
                     ),
                     TalentEffect::Faith(FaithEffect::Sanctuary {
                         mana,

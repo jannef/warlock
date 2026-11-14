@@ -69,7 +69,7 @@ Two Shields. After a bash that hits, the other shield may follow with a bash of 
 as the style rises.
 
 The style protects well (its Shield adds to your shields'), and it hits harder. From rank 4, a blow
-your shields turn [staggers](status-effects.md#status-staggered) its striker (*[Staggering block](fighting-styles.md#style-ability-staggering-block)*). But two shields are clumsy:
+your shields turn [staggers](status-list.md#status-staggered) its striker (*[Staggering block](fighting-styles.md#style-ability-staggering-block)*). But two shields are clumsy:
 
 - every bash is at a penalty to hit;
 - every attack takes longer;
@@ -118,19 +118,19 @@ The *active* ones are used from the menu for [stamina](stances.md#stamina) and t
 - **[Mighty swing](fighting-styles.md#style-ability-mighty-swing)** rolls the blow's damage dice twice, at −2 to hit. Its bonus and extra effects
   count once, and it is not a [critical](combat.md#criticals).
 - **[Shield rush](fighting-styles.md#style-ability-shield-rush)** (a [shield bash](abilities.md#ability-shield-bash)) and **[Hip throw](fighting-styles.md#style-ability-hip-throw)** (an unarmed blow) drive a foe they hit one cell
-  back, if that cell is free, and [stagger](status-effects.md#status-staggered) it. Against a wall or another creature, the foe stays
+  back, if that cell is free, and [stagger](status-list.md#status-staggered) it. Against a wall or another creature, the foe stays
   where it is and is not staggered, but the blow lands all the same.
 
 {{#include generated/style-abilities.md}}
 
 Two abilities that do the same thing never add up:
 
-- A [riposte](fighting-styles.md#style-ability-riposte) from [Duelist](fighting-styles.md#style-duelist) and one from a [talent](talents.md#talent-riposte) are one riposte.
-- [Staggered](status-effects.md#status-staggered) is never more than one slowed action, however many blows staggered the foe.
-- A new [pin](status-effects.md#status-pinned) keeps the longer of the two and never adds.
+- A [riposte](fighting-styles.md#style-ability-riposte) from [Duelist](fighting-styles.md#style-duelist) and one from a [talent](talents-body.md#talent-riposte) are one riposte.
+- [Staggered](status-list.md#status-staggered) is never more than one slowed action, however many blows staggered the foe.
+- A new [pin](status-list.md#status-pinned) keeps the longer of the two and never adds.
 - [Rend](fighting-styles.md#style-ability-rend) comes once per attack, when both blades hit and the foe lives. A [shield bash](abilities.md#ability-shield-bash) is not a second
   blade.
-- [Light-footed](status-effects.md#status-light-footed) lasts for your next action only.
+- [Light-footed](status-list.md#status-light-footed) lasts for your next action only.
 - [Spell reflection](fighting-styles.md#style-ability-spell-reflection) turns back at most one spell per turn of yours, and a spell turned back is never
   turned back again. So two shield-bearers cannot bat a bolt between them.
 
@@ -141,3 +141,6 @@ Your [class](classes.md) starts you with a rank in a style or two. A [warrior](c
 either [Twin Blades](fighting-styles.md#style-twin-blades) or [Duelist](fighting-styles.md#style-duelist), and an [ascetic](class-ascetic.md) either [Brawler](fighting-styles.md#style-brawler) or [Staff Fighter](fighting-styles.md#style-staff-fighter); the dice decide. The
 [weapon skills screen](weapon-skills.md#seeing-your-skills) (`W`) lists your styles below your weapon skills, and marks the ones you
 fight in now with a `•`.
+
+See also: [Combat](combat.md), [Schools and caster styles](schools.md), and
+[Stances and stamina](stances.md).

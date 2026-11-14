@@ -31,16 +31,16 @@ pub struct RecipeId(pub u16);
 /// A built-in recipe: the existing action its row runs, in place of the generic craft.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RecipeUse {
-    /// Temper a metal weapon or armour at an anvil (`world/temper.rs`).
+    /// Temper a metal weapon or armour at an anvil (`world/crafting/temper.rs`).
     Temper,
-    /// Whittle a wooden weapon with a knife (`world/temper.rs`).
+    /// Whittle a wooden weapon with a knife (`world/crafting/temper.rs`).
     Whittle,
-    /// Cut or re-cut a loose gem (Jewelcraft's, docs/design/recipes.md §5; `world/cut.rs`).
+    /// Cut or re-cut a loose gem (Jewelcraft's, docs/design/recipes.md §5; `world/crafting/cut.rs`).
     Cut,
-    /// Set a cut gem in an item (Jewelcraft's, §5; `world/set.rs`).
+    /// Set a cut gem in an item (Jewelcraft's, §5; `world/crafting/set.rs`).
     Set,
     /// One of Enchanting's works (`use = "enchant"` with its `enchant` kind;
-    /// docs/design/enchanting.md §8; `world/enchant.rs`).
+    /// docs/design/enchanting.md §8; `world/crafting/enchant.rs`).
     Enchant(EnchantKind),
 }
 
@@ -241,7 +241,7 @@ pub enum RecipeCount {
     Dice(Dice),
     /// Fletch's rule (`count = "fletch"`): `fletch.toml`'s count and Woodcraft's share, the
     /// margin scaling it by the counted bands; the ranger's Fletcher read with it (the arrows
-    /// and bolts, `world/craft_make.rs`).
+    /// and bolts, `world/crafting/craft_make.rs`).
     Fletch,
 }
 
@@ -305,7 +305,7 @@ pub struct ProfessionText {
     /// Its abilities-menu row's line ("Your recipes as a smith.").
     pub description: String,
     /// The check's stat, over the stock's profession's (Alchemy's Intelligence: herbs are no
-    /// stock); without one the stock's decides (`world/craft_make.rs::profession_stat`).
+    /// stock); without one the stock's decides (`world/crafting/craft_make.rs::profession_stat`).
     pub stat: Option<Stat>,
     /// The dialog's verb, the same way ("Brew").
     pub verb: Option<String>,

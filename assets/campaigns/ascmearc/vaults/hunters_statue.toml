@@ -3,7 +3,7 @@
 # and nothing else: the inscription is the treasure, the hint of the oath the Hunter's calling
 # asks (the strange spirit's words). Fyrdelf names it for its eleventh floor (`vaults` in its
 # `[[dungeon.levels]]`), so it is stamped there and nowhere else. The statue cell's `note` is
-# said when the player arrives beside it (`world/feature.rs`) and in look mode.
+# said when the player arrives beside it (`world/fixtures/feature.rs`) and in look mode.
 name = "Hunter's statue"
 map = '''
 ###¡###

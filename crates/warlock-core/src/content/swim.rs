@@ -1,5 +1,5 @@
-//! Swimming (`assets/data/swim.toml`, spec §8 "Skills": Swim; #1019): the numbers of a step in
-//! deep water. The rule itself lives in `world/swim.rs`.
+//! Swimming (`assets/data/rules/swim.toml`, spec §8 "Skills": Swim; #1019): the numbers of a step
+//! in deep water. The rule itself lives in `world/levels/swim.rs`.
 //!
 //! The file is optional: without it nobody swims, and deep water refuses everyone.
 
@@ -29,8 +29,8 @@ struct SwimFile {
 }
 
 impl SwimRules {
-    /// Parses `data/swim.toml`: `cold` must not be negative (harm would turn into healing), and
-    /// the damage type must exist.
+    /// Parses `data/rules/swim.toml`: `cold` must not be negative (harm would turn into healing),
+    /// and the damage type must exist.
     pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: SwimFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -49,7 +49,7 @@ impl SwimRules {
 }
 
 impl super::RulesFile for SwimRules {
-    const PATH: &'static str = "data/swim.toml";
+    const PATH: &'static str = "data/rules/swim.toml";
 
     fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         Self::parse(path, text, content)

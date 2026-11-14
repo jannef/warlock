@@ -4,12 +4,12 @@ Part of the specification, the source of truth for what to build; the index is
 [`specification.md`](../specification.md). Update it together with the code and the
 developer notes (CLAUDE.md, `docs/dev/`).
 
-- **Creature behavior** (`warlock-core/src/world/ai.rs`, inside `World::creature_turn`; M10):
+- **Creature behavior** (`warlock-core/src/world/creatures/ai.rs`, inside `World::creature_turn`; M10):
   quite deterministic, outplayable by design; no randomness but one contest. Each action, in
   order:
   1. **Look**: the hostile actors it sees (§5 "Creature sight"; hostile by faction, §7); the
      nearest is its target (squared distance; ties: the lower actor id). The player may slip
-     past it here (§8 "Surprise and sneak attacks", `world/slip.rs`): one that would first see
+     past it here (§8 "Surprise and sneak attacks", `world/combat/slip.rs`): one that would first see
      them by darkvision alone rolls a contest of their Stealth against its Spot, once, and won,
      does not see them by darkvision (nor their noise as one it sees) until the slip ends.
   2. **Fight**: a `melee` creature attacks a target next to it (diagonals too), else steps along
@@ -28,7 +28,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
      one. A `caster` ("Casters" below) casts whatever spell of its list goes from where it
      stands, else closes to where one would, and with none it can cast (out of mana, Silenced)
      shoots if it can, else fights as a `melee` one. A **lurker** (a type with `lurks = true`: the meenlock, the
-     barrow spider; `world/lurk.rs`) never steps toward the target it sees: it waits where it
+     barrow spider; `world/combat/lurk.rs`) never steps toward the target it sees: it waits where it
      stands, aware of it, attacking once the target is beside it (or shooting or casting when it
      can from where it stands), until it has been harmed (hit points below its maximum), when it
      fights as any creature. No draws; with no hostile in sight it searches and listens as usual.
@@ -67,7 +67,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ("Displacement" below). Creatures neither flee nor
   fight differently when hurt. What a creature has in mind (last seen, noise to look into, post)
   is part of the world state.
-- **Stair followers** (`warlock-core/src/world/stair_followers.rs`; #985): stairs are no free
+- **Stair followers** (`warlock-core/src/world/levels/stair_followers.rs`; #985): stairs are no free
   escape. A creature beside the player (Chebyshev distance 1) as they take a staircase, hostile
   to them and aware of them, comes along and arrives beside them; several are told in one line
   when the player saw them as they left ("The kobold follows you down the stairs.", "Three
@@ -88,7 +88,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   refused with enemies near (§7 "Leaving an outdoor area"); a fall (a collapsing floor), entering a
   local area from the overworld, and an encounter's area bring no one. Stealth counts only as
   far as a creature slipped past is unaware; no talent reads it.
-- **Incorporeal creatures** (`warlock-core/src/world/incorporeal.rs`; #381): a creature type
+- **Incorporeal creatures** (`warlock-core/src/world/creatures/incorporeal.rs`; #381): a creature type
   with `incorporeal = { wall_defence = N }` (N 0 to 20) passes through **solid** terrain (neither
   walkable nor transparent: walls, rock, trees, closed doors, locked or not) and may stand inside
   it, never on a level's edge; it slips through a closed door without opening it. Transparent
@@ -116,7 +116,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Not yet: immunity to weapons that are not magical (the hook is `World::resolve` in
   `fight.rs`); bolts and bursts stop at walls, so spells do not reach one inside. The example is
   the stone haunt (`stone_haunt`), which no level places yet.
-- **Summoning** (`warlock-core/src/world/summon.rs`, the rules; `content/summon.rs`, the data;
+- **Summoning** (`warlock-core/src/world/creatures/summon.rs`, the rules; `content/summon.rs`, the data;
   #520): an enemy-only creature ability; the player has none. A creature type's
   `[creature.summon]` names its pool (creature ids, each as likely, or a tag within a level
   window, uniques and itself left out; a shared type calls only shared types; a list may name
@@ -143,7 +143,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   goblins and a warg!", "something" when they see none of it); an unseen summoner's creatures
   only as they appear in sight ("A skeleton appears!"); nothing seen, nothing said. Sight is the
   last turn's perception, so a summoning in the turn a door opens may go unseen.
-- **Auras, innate statuses, and cries** (`warlock-core/src/world/aura.rs`, the rules;
+- **Auras, innate statuses, and cries** (`warlock-core/src/world/creatures/aura.rs`, the rules;
   `content/aura.rs`, the data; #1128, design `docs/design/monster-dread.md` §5.4, §9). A type's
   `[creature.aura]` (`status`, `severity`, `radius` 1 to 6, optional `check` and `difficulty`,
   `every` 6 to 600 s (default 12), `heard` with `loudness`, `damage_type`, `touch`, `unseen`):
@@ -157,7 +157,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   starts; the look line never shows them. A `cry = { kind, loudness, every }`: after a turn
   that was not a fight, a chance of 6 in `every` (one gameplay draw on its turn) of
   `Act::Cry(kind)`, a noise heard by the hearing rules ("You hear a hiss.", the sound layer).
-- **Splitting and dying into** (`warlock-core/src/world/split.rs`, the rules;
+- **Splitting and dying into** (`warlock-core/src/world/creatures/split.rs`, the rules;
   `content/split.rs`, the data; docs/design/monster-dread.md §5.5 G5a and G5b, #1129): an
   enemy-only creature gimmick. `splits = { on = ["slashing", "piercing"], least = 8 }`: a blow
   (melee or missile, anyone's) of a listed damage type that leaves the creature alive with at
@@ -176,7 +176,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   mode adds ", writhing" after a `dies_into` type's parentheses. Bearers: the charnel heap and
   the black pudding (split), the wormhost and wormlord (die into grave worms; the wormlord breeds
   them too), the hydra (dies into its heads, `hydra_head`, met only so).
-- **Dragons** (`warlock-core/src/world/breath.rs`, the rules; `content/breath.rs`, the data;
+- **Dragons** (`warlock-core/src/world/creatures/breath.rs`, the rules; `content/breath.rs`, the data;
   #1099): an enemy-only creature ability. A `combat = "dragon"` type has a `[creature.breath]`
   (and only a dragon has one): `damage` (dice), `damage_type` (its element, one type),
   `length` (the cone's, 2 to 12 cells), `cooldown` (6 to 600 s), `effect` (a burst effect drawn
@@ -196,7 +196,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   degree of Stiffening unless a Toughness check against 17 is made). Its blows and kills are the
   dragon's. The action costs a `cast`. Words: "The fire drake breathes fire!" when the player
   sees it, then each blow seen as a spell's ("The fire burns you."); unseen, the roar is heard.
-- **Gazes** (`warlock-core/src/world/gaze.rs`, the rules; `content/gaze.rs`, the data; #1125):
+- **Gazes** (`warlock-core/src/world/creatures/gaze.rs`, the rules; `content/gaze.rs`, the data; #1125):
   an enemy-only creature ability, a rider at sight and not at touch. A type's `[creature.gaze]`
   has a `range` (1 to 8 cells), `riders` (statuses with a severity, drains with their check, each
   by its own chance, as a blow's `on_hit`; never a disease or a hold), and optionally `chance`
@@ -226,7 +226,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   made; #1126). A status rider may carry a check as a drain does (`check` and `difficulty`): the
   target resists it with its effective modifier, what its talents add to that stat's checks
   (Iron will), and Knowledge, as a drain's check (`World::resists`).
-- **Bursts** (`warlock-core/src/world/creature_burst.rs`, the rules; `content/burst.rs`, the
+- **Bursts** (`warlock-core/src/world/creatures/creature_burst.rs`, the rules; `content/burst.rs`, the
   data; the dread design §5.3, #1127): a type's `[creature.burst]`: `damage` (dice),
   `damage_type`, `radius` (0 to 3), `when`, `effect` (a burst effect), optionally `noun` (what
   strikes: "flame"; default "burst"), `verb` (default "bursts", or "comes apart" for death
@@ -248,11 +248,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `(4 + L/4)d6` of their level; radius and rider by rung, `docs/dev/creatures/elementals.md`), the
   burning skull, the magma crawler, the animated lantern, and the balor. The earth line throws stones instead
   (`[creature.throw]`).
-- **Corroding gear** (`warlock-core/src/world/corrode.rs`; #1131, #1168, the dread design §5.8): a
+- **Corroding gear** (`warlock-core/src/world/combat/corrode.rs`; #1131, #1168, the dread design §5.8): a
   type's `corrodes = { chance, what, kind }` (chance 1 to 100; kind the item damage, `acid`,
   `rust`, or `fire`). `what = "armour"`: its melee hit that lands on the player rolls the
   chance; made, one piece the player wears (armour or a shield) is drawn and takes the harm
-  (`world/item_damage.rs`, spec §7 "Materials"): its main part's material withstands it by its
+  (`world/combat/item_damage.rs`, spec §7 "Materials"): its main part's material withstands it by its
   `resists` chance of the kind, else it is damaged (the anvil's state: improvements gone, a point
   worse until mended): "The acid eats at your chain mail shirt.", "Rust spreads over your chain
   mail shirt."; one damaged already is destroyed: "The acid eats your corroded chain mail shirt
@@ -265,14 +265,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   then one for the piece and one for the material's chance unless it is 0 or 100. The ember beetle (weapon, 25; its acid blood, the innate `acid_blood`,
   also strikes back at a melee blow for `1d3` acid), the hezrou (armour, 25), the dretch (armour,
   10), and the black pudding (both, 25) are acid; the rust monster (both, 50) is rust.
-- **Regeneration** (`world/regen.rs`; #1131, the dread design §5.9): a type's `regen` (percent of
+- **Regeneration** (`world/health/regen.rs`; #1131, the dread design §5.9): a type's `regen` (percent of
   the normal healing pace, 0 to 1000, default 100) counts among its statuses' paces in
   `Effects::regen`, so a status that slows healing slows it (Burning and Corroded have `regen =
   0`: fire and acid stop every healing, the player's too). The player who sees a creature with
   `regen` above 100 get a tenth of its hit points back in one passing of time is told "The
   troll's wounds close.". Only a brute of its level or a dread type regenerates (the roster
   test): every troll brute at 400; never the rotting troll.
-- **Theft** (`warlock-core/src/world/snatch.rs`, the rules; `content/theft.rs`, the data;
+- **Theft** (`warlock-core/src/world/creatures/snatch.rs`, the rules; `content/theft.rs`, the data;
   docs/design/monster-dread.md §5.6, #1130): an enemy-only creature ability. `steals = { what,
   chance, cooldown }` on a type with hands (`what` = `small`, coins, gems, potions, rings, and
   scrolls, or `any`; `chance` 1 to 100; `cooldown` 6 to 600 s): when one of its melee blows hits
@@ -284,7 +284,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   neither flees nor blinks away: it fights on, and what it took falls where it dies. Words:
   "The pixie snatches 40 gold coins from you!" ("Something" when unseen). The pixie, the imp,
   the succubus, and the incubus take what is small, the nymph anything.
-- **The blink** (`warlock-core/src/world/blink.rs`; `content/theft.rs`; #1130): `blinks =
+- **The blink** (`warlock-core/src/world/creatures/blink.rs`; `content/theft.rs`; #1130): `blinks =
   { range, cooldown }` (2 to 12 cells, 6 to 600 s), the blink dog's alone. In step 2, a melee
   fighter whose way to its target is blocked (its path held by someone, or none: a door it
   cannot open, a gap no paw crosses) while its cooldown status `blink` is off moves at once to a
@@ -292,7 +292,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   teleport could land (no trap, no ice), drawn among those cells; it takes `ceil(cooldown /
   eases)` degrees of `blink`, and the blink costs a step. It never blinks away. Words: "The
   blink dog is suddenly beside you." where the player sees it land; unseen, nothing.
-- **The disarming blow** (`warlock-core/src/world/knock_away.rs`; #1166): an enemy-only creature
+- **The disarming blow** (`warlock-core/src/world/combat/knock_away.rs`; #1166): an enemy-only creature
   ability, the duellists'. `disarms = { chance, difficulty }` on a type (`chance` 1 to 100,
   `difficulty` 2 to 40): when one of its melee blows hits the player and leaves them alive, with
   a weapon (a thing with an attack) in their main hand, the chance is drawn; made, and with an
@@ -304,7 +304,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Without an open cell, nothing happens. Words: "The drow blademaster knocks your scimitar from
   your hand!" ("Something" when unseen), then "It lands beside you.". The drow blademaster and
   captain, the death knight, the ultroloth, and Wælcyrge the Chooser.
-- **Casters** (`warlock-core/src/world/creature_cast.rs`, the rules;
+- **Casters** (`warlock-core/src/world/creatures/creature_cast.rs`, the rules;
   `content/creature_spells.rs`, the data; #1102): a `combat = "caster"` type has a `spells`
   list (ids in `data/spells/`, in the order it prefers them; only a caster has one), and only
   spells a creature can cast: harm (no zone, no corpse, no open sky), a hex laying a plain
@@ -331,7 +331,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   when the player sees it, then each blow as a spell's ("The spark shocks you."); unseen, its
   chanting is heard. Up to level 10 a caster knows only level-1 harm and hexes, heals, and buffs
   of level 3 or less, and is very rare.
-- **Several natural attacks** (`warlock-core/src/world/natural.rs`; #1099): a creature type may
+- **Several natural attacks** (`warlock-core/src/world/combat/natural.rs`; #1099): a creature type may
   list its natural attacks (`[[creature.attack]]`, a dragon's two claws and a bite) instead of
   one. Wielding no weapon, its melee attack strikes the first as its blow and then each of the
   rest in turn, every one rolled on its own against the target's Defence (`World::attack_with`,
@@ -340,7 +340,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   it is said in its own words ("The fire drake claws you."). A natural attack's `on_hit` rides
   on its own blow's profile (`Actor::melee`, `Actor::more_natural_blows`). Wielding a weapon,
   the weapon's blow stands in for the first and the rest are not struck.
-- **Allies** (`warlock-core/src/world/ally.rs`, the rules; `content/ally.rs` and
+- **Allies** (`warlock-core/src/world/allies/ally.rs`, the rules; `content/ally.rs` and
   `data/allies.toml`, the numbers; #836, design `docs/design/druid-and-summons.md` §4 and §14):
   creatures on the player's side, a summon (the druid's calls, #839) or a companion (the
   ranger's, #916, below). An ally is an ordinary creature of its type (stats, speed, eyes, attacks,
@@ -371,7 +371,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `[allies] most` (8) allies on one level. **Beast-bond** (Wayfarer; Handle animal 20): your
   allies strike +1 to hit and take Protection +1, read through you. The messages never say a
   number. The dev `ally:CREATURE[:N[:DURATION]]` makes allies for tests and captures.
-  **The risen** (`world/corpse_spell.rs`; #999): Rouse the dead stands a corpse's own creature type
+  **The risen** (`world/magic/corpse_spell.rs`; #999): Rouse the dead stands a corpse's own creature type
   (`ObjectDef::corpse`) on its cell or the nearest free one, at half its maximum hit points rounded
   up, with no gear, pack, `npc` id, or mimic's disguise. It serves as a summon does (`most` 2, ten
   minutes), and a second death leaves nothing. A `unique` type's corpse is refused. One time in ten
@@ -379,7 +379,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the faction `berserk`, `hostile_to_all` (hostile to every faction and to itself), by the plain
   AI, no ally, under no orders, counted toward neither `most` nor the cap nor a level's population,
   on the same clock (`Actor::risen`). Its kill pays as any of its type.
-  **The charmed** (`world/charm.rs`; #1003): Beguile, a hex with `[spell.effect] charm`, makes a
+  **The charmed** (`world/allies/charm.rs`; #1003): Beguile, a hex with `[spell.effect] charm`, makes a
   hostile creature the player sees within its range their ally (`AllySource::Charmed { spell,
   faction }`, `faction` the `faction_override` it had) for its degrees in minutes, following and
   under orders, on the player's faction: its own band turns on it, and its kills pay as an ally's.
@@ -391,7 +391,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   joins the retinue (the owner's Q12), and it was an ally when hostile stair followers were
   chosen, so it never follows either. It keeps its gear and, slain, leaves its corpse and pack.
 
-  **Summons** (`world/summon_spell.rs`; #837): a spell of `kind = "summon"`, cast on oneself,
+  **Summons** (`world/magic/summon_spell.rs`; #837): a spell of `kind = "summon"`, cast on oneself,
   calls `count` creatures of its pool (`[spell.effect] summon`; the count a roll, grown by its
   `count` ladder and the dice hooks) beside the caster within `spread`, nearest first, on the
   player's side with no gear, for `minutes` (its `degrees` ladder, Lingering), each drawn as an
@@ -407,7 +407,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   raise it. The beasts (`wolf`, `bear`) are wildlife, never strays. The messages call an ally
   the player sees "your": "Your wolf bites the kobold.", "Your wolf dies."; one whose time runs
   out goes in its type's words ("The wolf slips back into the dark."). **The animal companion**
-  (`warlock-core/src/world/companion.rs`, `content/companion.rs` and `data/companions.toml`;
+  (`warlock-core/src/world/allies/companion.rs`, `content/companion.rs` and `data/companions.toml`;
   #916, design `docs/design/ranger-companion.md`, `docs/dev/companion.md`): an ally that is the
   player's for good, `source = Companion(CompanionData { name, grade, .. })`, `until = None`; at most
   one at a time. The ranger's **Animal companion** (level 1) brings one as the run begins: a
@@ -436,7 +436,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   creature's: a companion is no summon). The player sees it in the status bar ("Snel: unhurt",
   "Snel: with you"), in look mode ("Snel, your hound (unhurt), …"), on the Character screen
   ("With    Snel, a hound"), and in the `companion` dump; the wiki states the lists, the odds,
-  and the growth table exactly. **Tame** (`world/tame.rs`; #917; the abilities menu, a skill
+  and the growth table exactly. **Tame** (`world/allies/tame.rs`; #917; the abilities menu, a skill
   ability of Handle animal, `tame:DIR`): anyone trained in Handle animal, at any level, without a
   companion ("You already have a companion."; a summon is no companion), may try a `tameable`
   beast they see next to them that is no one's ally and is not hostile to them (wildlife, or an
@@ -466,7 +466,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   its own (it eases by its own clock), whatever laid it (a spell, a scroll, a potion, a boon):
   a buff is a buff spell's status or one a potion lends; a hex, a harm, a cooldown never
   crosses, and the shared one does not cross back. "Snel is bark-skinned too."
-  **The collar** (`world/collar.rs`; #918): a kept beast wears one
+  **The collar** (`world/allies/collar.rs`; #918): a kept beast wears one
   thing, on its neck. The **Give** ability (the Allies group, listed while the player keeps a beast,
   greyed out "not beside you" with none beside them; `give:LETTER[:DIR]`) asks for a stack the
   player carries that fits a neck; one of it leaves the pack, taken off first if it was on the
@@ -480,14 +480,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   giving another or its death, when the collar is in its pile. Look mode says "Snel, your hound
   (unhurt), wearing a jade amulet, ...".
   **Sic 'em** (the ranger's level 40, #921; `use:sic:X,Y`,
-  `world/sic.rs`, 5 Focus, the time of a wait, no cooldown): aimed at a creature the player sees
+  `world/allies/sic.rs`, 5 Focus, the time of a wait, no cooldown): aimed at a creature the player sees
   within 10 cells that is hostile to them, it sets the companion on it ("Snel goes for the
   kobold's throat."; refused, no time, with no companion on the level or no such creature): a
   Hunt whose target is that creature before any nearer while the beast sees or smells it, its
   cell following it where the player sees that (a new order ends it), and **Savage** on the beast
   (3 degrees, half again as fast, a degree a minute): each blow that hits is a critical with no
   confirmation roll and spends a degree. It is neither a buff spell's status nor a potion's, so Hunter's bond's shared buffs never carry it. The ranger's companion design is complete (C1 to C6).
-  **The familiar** (`warlock-core/src/world/familiar.rs`,
+  **The familiar** (`warlock-core/src/world/allies/familiar.rs`,
   `content/familiar.rs` and `data/familiars.toml`; #929, design `docs/design/witch-familiar.md`,
   `docs/dev/familiar.md`): the witch's small beast, an ally with `source =
   Familiar(CompanionData)`, `until = None`, at most one at a time; with a companion it is one of
@@ -529,7 +529,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   companion she keeps lends her nothing. The companion chapter tells each beast of a race's list
   its own line (#931); a rare or a bargain's beast gets the chapter's plain line.
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
-  one is made of; `world/animated.rs`, the drops and the talents; #483, design
+  one is made of; `world/creatures/animated.rs`, the drops and the talents; #483, design
   `docs/design/animated-objects.md`): things a will set moving, each an **ordinary creature
   type generated when content loads**. The household tier (levels 1 to 8) is one type per body
   in `data/animated/` (`animated_candlestick`, "animated candlestick"), at the body's level: its
@@ -606,7 +606,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Their homes (#487) are two special rooms with populations of their own (§7 "Special rooms"):
   the **armoury** (blades, hollow armour, panoplies, among weapon racks) and the **workshop**
   (household things, among workbenches); the chromatic look of composites follows (#463).
-- **Mimics** (`warlock-core/src/content/mimic.rs`, the types; `world/mimic.rs`, the rules;
+- **Mimics** (`warlock-core/src/content/mimic.rs`, the types; `world/creatures/mimic.rs`, the rules;
   #616, `docs/design/chests-and-treasure.md` §5): a thing shaped as a chest. A **generated
   family** (`data/mimics.toml`, §7 "Data"), one creature type a level, `mimic_1` to `mimic_60`,
   numbered after the animated families and before the campaigns' types; a level's band (the last
@@ -653,7 +653,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   data: the cave beetle and ember beetle 3, the stone troll 5, the mud golem 5, the balor and the
   pit fiend 10 (bosses held to the bony line), a hag who casts half a hide's, every living troll
   at least 2 (the tribe's hide); the animated objects keep their own table. Data only, nothing
-  saved; `content::creature_body_tests` checks every type. The player's answer is penetration
+  saved, and no test holds the types to it (#1237). The player's answer is penetration
   (the war hammer, the stiletto, crossbow bolts) and criticals, soaked once after they multiply;
   **Armour-breaker** (Might, needs axes, maces, or polearms 7; the `protection` system): its
   confirmed criticals ignore 2 more Protection (`critical_penetration`), and Sunder and Gap shot
@@ -687,7 +687,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   between 800 and 1250 by the tribe's temperament (a people's rank-and-file at 950 to 1050, no
   tribe all at 1000), the dread at 600 or 700 or at 1400 and up. No talent (it extends the
   creatures).
-- **The unseen** (`warlock-core/src/world/unseen.rs`; #1132, `docs/design/monster-dread.md`
+- **The unseen** (`warlock-core/src/world/creatures/unseen.rs`; #1132, `docs/design/monster-dread.md`
   §5.10, §5.11): a **shadowy** type (`shadowy = true`: the shadow, the greater shadow, the
   deathshade, the darkling, the sluagh) on a cell **dim** to the player's eyes (perceived light
   under twice their profile's threshold, darkvision or not) is not in the player's perception
@@ -727,7 +727,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   unique item (`unique:ID`, §8 "Magic items"): the Ascmearc's four wanted criminals (the
   `outlaws` faction, hostile to the player only and to no one else, with the footpads and
   footpad archers; #424, the guild design §8) each wield or wear their own this way.
-  **Condition** (`world/gear_condition.rs`, `data/gear_condition.toml`; #1193): every rolled
+  **Condition** (`gear/condition.rs`, `data/gear_condition.toml`; #1193): every rolled
   piece of arms or armour (not a stack of several, ammunition, rings, or a protected item: a
   unique, of Proof, or anything a quest may ask for, §7 "Materials") draws a condition by the
   creature's tribe (its first tag with a `[[tribe]]` row, else `[default]`; per mille): damaged
@@ -745,7 +745,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ("Black Wystan"), said without an article wherever the game names a seen creature (combat,
   deaths, falls, waking, refusals, look mode: "Black Wystan (hostile, unhurt), ..."), as quest
   texts already do. Every other type's name is lower-case.
-- **Dialogue** (`warlock-core/src/content/dialogue.rs`, the data; `world/talk.rs`, the rules;
+- **Dialogue** (`warlock-core/src/content/dialogue.rs`, the data; `world/people/talk.rs`, the rules;
   M28, #146): NPCs are creatures with a dialogue (§7), by their type or by the unique `npc` id
   their level gave them (which wins). A unique character with a proper name (the dialogue's
   `name`, #336) is called by it: `Sister Hild says: "…"`, and in look mode "Sister Hild (unhurt),
@@ -769,7 +769,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (§6). Asking (`Action::Ask { dir, topic }`, replay text `ask:E:rooms`) takes no time and gets
     the topic's reply; an unknown topic is "The sage knows nothing about that." `World::topics`
     is the one place topics come from: quests ("Quests" below) add theirs there, first.
-  - **Callings** (`world/calling.rs`, `World::ask_calling`; #1174): a topic may `calls` a
+  - **Callings** (`world/classes/calling.rs`, `World::ask_calling`; #1174): a topic may `calls` a
     prestige class's calling (§8 "Prestige classes", one of the dialogue's campaign). It is
     offered (`World::topics`) only while the calling is open to the player; asked, the topic's
     reply is said, the calling made, and, with `departs`, the speaker sent away
@@ -787,7 +787,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     dialogue's only topics are callings', with no service or wares. A dialogue's `speaks_to`
     (an alignment range, §8 "Alignment") is the speaker's reaction to the player: outside it a
     chat or an ask gets only its `silent` line (a chat's time; an ask, none), with no topics.
-  - **Rumoured ways** (`world/rumour.rs`; the owner's request of 2026-10-27): a topic with a
+  - **Rumoured ways** (`world/people/rumour.rs`; the owner's request of 2026-10-27): a topic with a
     `route` (§7 "Dialogue") tells the way to a place. Asking it, every time, marks on the
     player's overworld map what walking the route by day would show: each cell in line of sight
     within the day's sight radius (9) of a cell of the route goes into the overworld's memory as
@@ -800,7 +800,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     asking again marks nothing more. No time beyond the ask's (none), no stream drawn, no state
     beyond the overworld's memory (saved as always). Built in: Godgifu's five topics in Cēaptūn
     (the barrows, the marsh, the mines, the volcano, the pass), each from the town's cell.
-  - **Services** (`world/service.rs`; the campaign design §6.1, #329): a dialogue's
+  - **Services** (`world/people/service.rs`; the campaign design §6.1, #329): a dialogue's
     `[[dialogue.service]]`s (`id`, `name`, `price` in gold, `does` = `cure`, `mend`, `identify`, or
     `train_skill`, `reply`, `nothing`, and a training's `train`) are sold for gold and asked for like topics (`ask:E:cure`): `World::topics` lists
     them after the topics with their price now (`TopicView::price`; the dialogue screen shows
@@ -837,7 +837,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     level's `[[shop]]` names him `npc = "eadric"`, §7 "Shops"), teaches Metalcraft for 2000 gold,
     at 5, one of the town's people, so its goodwill takes its share off; every recipe needs
     Metalcraft (§8 "Professions").
-  - **Goodwill** (`world/goodwill.rs`, `content/town.rs`; #1247): a campaign's `data/towns/`
+  - **Goodwill** (`world/people/goodwill.rs`, `content/town.rs`; #1247): a campaign's `data/towns/`
     `[[town]]`s (`id`, `name`, `people`: npc or creature ids, `goodwill`: percent, `told`) name a
     town's people. Every quest one of them gives that the player completes (each completion of a
     repeatable one) adds one to the town's goodwill, derived from the quest records (nothing new
@@ -849,7 +849,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Sister Hild's, Reeve Leofric's, Factor Wulfrun's, and Wat One-Eye's (the Gilde's) quests:
     twenty make its services free (Eadric the smith's teaching among them, though he gives no
     quest).
-  - **An offer** (`world/wares.rs`; #808, docs/design/overworld-encounters.md §15 Q7: the
+  - **An offer** (`world/people/wares.rs`; #808, docs/design/overworld-encounters.md §15 Q7: the
     pedlar): a dialogue's `[dialogue.offer]` is one item at a fixed price, take it or leave it,
     asked for like a topic (`ask:E:wares`) and listed after the services. It is made the first
     time the player chats with or asks the trader, from the stream `wares/<actor id>`: by
@@ -873,7 +873,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     name if they see it (`The bard sings: "Over the Wendle and under the moon..."`), else from
     where they place the sound (`You hear a voice to the north: "…"`, or, faint, `You faintly
     hear a voice to the north.`, without the words). Mutters are logged without stopping a rest.
-- **Quests** (`warlock-core/src/content/quest.rs`, the data; `world/quest.rs`, the rules; M28,
+- **Quests** (`warlock-core/src/content/quest.rs`, the data; `world/people/quest.rs`, the rules; M28,
   #148): simple, ADOM-like errands people give through their dialogue topics. No timers or
   branching outcomes; escorts are the one quest that walks with the player (below).
   - **Topics** (first among a speaker's, in file order): a quest a giver may offer (what it
@@ -916,7 +916,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the object. *Reach* is met once the player has been on the level, before taking the quest
     up too. *Deliver* is met while the player carries the item: dropping it (or losing it) blocks
     the quest until they pick it up again (it cannot be handed in without it).
-  - **Escort quests** (`world/escort.rs`, #1139): `type = "escort"`, `target` a level, `escort`
+  - **Escort quests** (`world/people/escort.rs`, #1139): `type = "escort"`, `target` a level, `escort`
     a unique character (an npc with a dialogue), `joins` their line. Chatted with while the quest
     is active, the escort says `joins` instead of a greeting and becomes the player's ally
     (`AllySource::Escort`: on the player's side, following, across levels and in the retinue as
@@ -934,11 +934,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     is dead.", and it is never offered again; nothing else is locked. The log's status while
     active: "Eadgyth follows you." or "Eadgyth is not with you." An escort no level can place
     (a generated floor: a vault holds no npc) is placed by the quest, `waits = { creature,
-    level, at }` (`world/escort_waits.rs`, #1141): a creature of that type, the escort, on the
+    level, at }` (`world/people/escort_waits.rs`, #1141): a creature of that type, the escort, on the
     named place `at` of that level (or the nearest free cell), as the quest is given or as the
     level is first made after; once only. The Ascmearc's first: Gammer Wynflæd's "Taken under
     the hill", Ælfrun on the moss bed at the bottom of Ælfhām, home to Holtwīc.
-  - **Lure quests** (`world/lure.rs`, #1446): `type = "lure"`, `target` a unique creature type,
+  - **Lure quests** (`world/people/lure.rs`, #1446): `type = "lure"`, `target` a unique creature type,
     `level` a hand-made level, `waits = { level, at }` its place, and `[quest.binding]`. While the
     quest is active and no creature of the type is anywhere, one is made on its place as the
     quest is given (if that level exists) and whenever the player arrives on that level: killed
@@ -975,7 +975,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     creatures. Every creature of the `undead` faction carries `undead` (a test sees to it), and
     every `combat = "caster"` type `caster`. Tags are never
     shown in the game; the wiki lists them.
-  - **Guilds** (`content/guild.rs`, the data; `world/guild.rs`, the ranks; #425, the guild
+  - **Guilds** (`content/guild.rs`, the data; `world/people/guild.rs`, the ranks; #425, the guild
     design §7.6): a guild (`data/guilds/`, a campaign's own) has a name, a master (who speaks
     for it), and ranks, lowest first, each a title named by a material and reached as a quest
     is *given* or *done*. The player's rank is the highest reached, **derived** from the quest
@@ -989,7 +989,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     have reached the Depths 3. Return to the old hermit."; a delivery's item picked up again:
     "Quest updated: take the sealed letter to the old hermit."); a quest whose goal is met as it
     is given says so after the giver's words. Rewards and the XP gained are the only numbers said.
-  - **Rolled quests** (`content/quest_roll.rs`, `world/quest_roll.rs`; #422, the guild design
+  - **Rolled quests** (`content/quest_roll.rs`, `world/people/quest_roll.rs`; #422, the guild design
     §5): a kill or bring quest may draw its target as it is given instead of naming it: a
     `pick` (`creatures` of branches' populations, no uniques, of the branches the player can
     enter; `tags`, one with a member in such a branch of the quest's campaign; `objects` of an
@@ -1036,7 +1036,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     hashed, each left out while empty, so runs without quests hash as before. Presentation reads
     `PerceptionView::quests()` (the log: name, giver, the offer, objective, the rolled target,
     status), never ground truth: the player knows their quests and what they were sent for.
-- **Displacement** (`world/talk.rs`; M28, #147): the player moving into a creature that is not
+- **Displacement** (`world/people/talk.rs`; M28, #147): the player moving into a creature that is not
   hostile to them (neutral or peaceful) swaps places with it: the player steps onto its cell (the
   step's time and noise) and it onto the player's (its footsteps), its own turn unaffected; "You
   swap places with the deer." ("…with something." if unseen). It lands there as any step lands:
@@ -1049,7 +1049,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   when it is two sizes or more larger than the player (sizes in `data/sizes.toml` order; none of
   the built-in sizes is): "The giant is too big to squeeze past." A refusal the player does not
   see the creature for is "Something is in the way."
-  **Wriggling past** (`world/wriggle.rs`, #1032): a player trained in Escape artist who is refused
+  **Wriggling past** (`world/levels/wriggle.rs`, #1032): a player trained in Escape artist who is refused
   because the creature keeps its post, never gives way, or is `off_post` (not for a creature that
   cannot move, one too big, or while swimming) is not refused: no action, no ability row, no key,
   the step itself is a check (as the check against bonds is, §8 "Status effects"). Their Dexterity

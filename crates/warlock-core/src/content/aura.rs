@@ -1,6 +1,6 @@
 //! A creature type's presence (design `docs/design/monster-dread.md` §5.4 G4, §9; #1128): its
 //! aura (`[creature.aura]`), the statuses it is made with (`innate`), and its cry (`cry`). The
-//! rules are `world/aura.rs`.
+//! rules are `world/creatures/aura.rs`.
 //!
 //! - **Aura**: a status every hostile within `radius` takes on the bearer's turn, once every
 //!   `every` seconds, unless it makes a check of `check` against `difficulty` (none: it always
@@ -119,7 +119,7 @@ pub(super) fn resolve(content: &Content, spec: &CreatureSpec) -> Result<Presence
     let cry = spec
         .cry
         .map(|c| {
-            // A cry's chance is a draw below `every` (`world/aura.rs`).
+            // A cry's chance is a draw below `every` (`world/creatures/aura.rs`).
             if c.every == 0 {
                 return Err("`every` is 0".into());
             }

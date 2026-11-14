@@ -34,10 +34,10 @@ you are there comes along. It arrives beside you and goes on hunting you, with t
 climb as you do, so at the same [pace](creature-behaviour.md#pace-and-levels) you get to act first. It does
 not come if it is:
 
-- [asleep](status-effects.md#status-asleep), [held](status-effects.md#status-held),
-  [webbed](status-effects.md#status-webbed), [pinned](status-effects.md#status-pinned),
-  [stunned](status-effects.md#status-stunned), [surprised](status-effects.md#status-surprised), or
-  [frightened](status-effects.md#status-frightened);
+- [asleep](status-list.md#status-asleep), [held](status-list.md#status-held),
+  [webbed](status-list.md#status-webbed), [pinned](status-list.md#status-pinned),
+  [stunned](status-list.md#status-stunned), [surprised](status-list.md#status-surprised), or
+  [frightened](status-list.md#status-frightened);
 - [slipped past](skill-uses.md#slipping-past) or otherwise unaware of you;
 - a [mimic](mimics.md), a creature that [lurks](creature-behaviour.md#what-they-do) and has not been hurt,
   one rooted to its place, a [shopkeeper](shops.md), or someone you can [talk](npcs.md) to by name;
@@ -94,7 +94,7 @@ Toughness checks, and Swim's points (the skills table's Swim check), against 11,
 level of [burden](burden.md) above Unburdened.
 
 - **Made**, you take the step. Its time gets wading's discounts ([Swim](skills.md#skill-swim) and
-  the [Swimmer](talents.md#talent-swimmer), [Strong swimmer](horoscope.md#talent-strong-swimmer), and
+  the [Swimmer](talents-exploring.md#talent-swimmer), [Strong swimmer](horoscope.md#talent-strong-swimmer), and
   [Undertow](horoscope.md#talent-undertow) talents).
 - **Failed**, you spend the turn treading water and do not move. The cold takes 1 hit point,
   resisted as any [cold](damage-types.md), but never your last: nobody drowns.
@@ -151,3 +151,6 @@ enter, and for a [closed door](doors.md), which you open by walking into it.
 very loud.
 
 {{#include generated/terrain-local.md}}
+
+See also: [Digging and walls](digging.md), [Temperature and ice](temperature.md), and
+[Sight and memory](sight.md).

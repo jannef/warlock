@@ -1,0 +1,11 @@
+# A lidded stone coffin (spec §7 "Graves"; #1682): a grave, its name cut in the lid, which look
+# mode reads.
+[[terrain]]
+id = "sarcophagus"
+name = "sarcophagus"
+stone = true
+grave = true
+walkable = false
+glyph = "■"
+fg = "#bab2a2"
+bg = "#14130f"

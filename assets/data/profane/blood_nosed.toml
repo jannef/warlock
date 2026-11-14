@@ -1,0 +1,12 @@
+[[gift]]
+id = "blood_nosed"
+name = "Blood-nosed"
+kind = "boon"
+tier = "greater"
+weight = 8
+description = "You smell blood from far off, wherever it runs, and hear more keenly."
+line = "You smell blood from across the hall."
+effects = [
+    { kind = "scent", status = "bleeding", radius = 8 },
+    { kind = "hearing", value = 2 },
+]

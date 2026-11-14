@@ -1,4 +1,4 @@
-# A merchant's business partner (#1407; world/invest.rs): keeps a desk in Factor Wulfrun's office
+# A merchant's business partner (#1407; world/classes/invest.rs): keeps a desk in Factor Wulfrun's office
 # at Cēaptūn in a merchant's run, of the merchant's own race, and speaks in that race's register
 # (docs/dev/npcs.md "Speech by race and station"; a partner in trade is a person of means, so a
 # human one speaks posh). data/towns/ceaptun.toml names the npc for each race. Each has

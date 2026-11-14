@@ -3,7 +3,7 @@
 # more than its capacity, split as a rare's; the first affix of the first crystal's families, the
 # second of the second's, the third of the third's, any more of all three; and a name. Failed,
 # the three crystals are spent and the item is as it was; a natural 2 warps it. The rules are
-# `world/enchant.rs`.
+# `world/crafting/enchant.rs`.
 [[recipe]]
 id = "imbue"
 use = "enchant"

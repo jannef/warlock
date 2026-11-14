@@ -4,7 +4,7 @@ Where each mechanic and keyword of the player wiki is explained, for linking (#6
 beside `wiki/src/`, not in it: it is a tool for page authors, not a page of the book.
 
 **The rule** (CLAUDE.md, "Wiki"; the owner, #1609): new or edited wiki prose links each mechanic
-or keyword to the section that explains it, with a relative link: `[Staggered](status-effects.md#status-staggered)`.
+or keyword to the section that explains it, with a relative link: `[Staggered](status-list.md#status-staggered)`.
 Link a term once per section, at its first mention there; later mentions in the same section stay
 plain text, so the links that answer the reader's next question stand out. Never link in
 headings, code, or quotes of in-game text, nor a page's own subject on its own page (there, link
@@ -31,14 +31,14 @@ the ones missed.
 Every row of these tables carries an anchor, made from the thing's id in the game's data
 (`_` becomes `-`; an id that already starts with the prefix keeps it once:
 `potion-of-healing`), so a link to it stays right when the data changes. To find one, look at the
-table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/book/status-effects.html`.
+table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/book/status-list.html`.
 
 | Term | Anchor | Example |
 |---|---|---|
-| A status effect (Staggered, Winded, Raging, Hasted, …) | `status-effects.md#status-ID` | `status-effects.md#status-staggered` |
+| A status effect (Staggered, Winded, Raging, Hasted, …) | `status-list.md#status-ID` | `status-list.md#status-staggered` |
 | A disease | `diseases.md#disease-ID` | `diseases.md#disease-filth-fever` |
 | A skill (Stealth, Open lock, Spot, …) | `skills.md#skill-ID` | `skills.md#skill-open-lock` |
-| A talent | `talents.md#talent-ID`; a birth sign's gift `horoscope.md#talent-ID`; a class ability `class-CLASS.md#talent-ID` (its first class's table, on that class's page; a prestige class's own, `prestige-classes.md#talent-ID`); a profane gift `profane-gifts.md#talent-ID` | `talents.md#talent-hardy`, `horoscope.md#talent-fleet-footed`, `class-berserker.md#talent-rage` |
+| A talent | its tree group's page, `talents-GROUP.md#talent-ID` (`origins`: Heritage, Crafts, Racial; `body`: Vigour, Might, Finesse, Grit; `fighting`: Weaponcraft, Guard; `exploring`: Shadow, Wayfarer, Delver; `mind`: Scholar, Spellcraft); a birth sign's gift `horoscope.md#talent-ID`; a class ability `class-CLASS.md#talent-ID` (its first class's table, on that class's page; a prestige class's own, `prestige-classes.md#talent-ID`); a profane gift `profane-gifts.md#talent-ID` | `talents-body.md#talent-hardy`, `horoscope.md#talent-fleet-footed`, `class-berserker.md#talent-rage` |
 | An ability in the abilities menu (class abilities, sign actives, spells, skill uses) | `abilities.md#ability-ID` | `abilities.md#ability-lay-on-hands` |
 | A spell | `magic.md#spell-ID` | `magic.md#spell-fireball` |
 | A damage type (fire, slashing, …) | `damage-types.md#damage-ID` | `damage-types.md#damage-fire` |
@@ -156,6 +156,7 @@ above.
 | Flask, throwing a potion | `potions.md#flasks` |
 | Equipment, slots, wielding and wearing | `equipment.md#what-fits-where` |
 | The equipment screen | `equipment.md#the-equipment-screen` |
+| Barred and opened slots (a gift that bars or opens an equipment slot) | `equipment.md#barred-and-opened-slots` |
 | Magic item, rarity | `magic-items.md`, `magic-items.md#rarity` |
 | Loot, item level | `magic-items.md#finding-them` |
 | Looking at an item, its description | `magic-items.md#looking-at-an-item` |
@@ -195,8 +196,8 @@ above.
 | The great cycle | `horoscope.md#the-great-cycle` |
 | Alignment, good, evil, band | `alignment.md`, `alignment.md#what-moves-you` |
 | Talent, prerequisites | `talents.md`, `talents.md#choices-and-prerequisites` (a talent: its row) |
-| Racial talents | `talents.md#racial-talents` |
-| Trade, Crafts, the tools of the trade (Smith, Wright, Gemcutter, Brewster, Pitman, Wortcunner, Spellwright) | `talents.md#crafts-a-craftspersons-trades` (a trade: its row) |
+| Racial talents | `talents-origins.md#racial-talents` |
+| Trade, Crafts, the tools of the trade (Smith, Wright, Gemcutter, Brewster, Pitman, Wortcunner, Spellwright) | `talents-origins.md#crafts-a-craftspersons-trades` (a trade: its row) |
 | The craftsperson's two trades at creation, Time served | `class-craftsperson.md#trades` |
 | Eye for the make, reading an item's make | `class-craftsperson.md#eye-for-the-make` |
 | Make do and mend, mending in the field | `class-craftsperson.md#make-do-and-mend` |
@@ -204,7 +205,7 @@ above.
 | Master's hand, grades and cuts sooner | `class-craftsperson.md#masters-hand` |
 | Quick hands, every craft in half the time | `class-craftsperson.md#quick-hands` |
 | Waste not, nothing lost in a craftsperson's hands | `class-craftsperson.md#waste-not` |
-| A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents.md#delver` |
+| A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents-exploring.md#delver` |
 | Class abilities | `classes.md#levels`, `abilities.md` |
 | The bard, a bard's cap at 30, Travelled hands, Jack of all trades | `class-bard.md` |
 | Songs (Inspire, the Lullaby), singing, a song's degrees, shaking a song off, Virtuoso | `abilities.md#songs` |
@@ -223,9 +224,9 @@ above.
 | Stat training, training marks of a stat | `stats.md#raising-your-stats` |
 | The daily check | `stats.md#the-checks` |
 | Drained stats, stat damage | `stats.md#drained-stats`, `diseases.md#stat-damage` |
-| Skills, trained and untrained | `skills.md`, `skills.md#what-skills-give` (a skill: its row) |
+| Skills, trained and untrained | `skills.md` (a skill: its row); what each gives: `skill-benefits.md` |
 | Skill rolls, skill marks | `skills.md#improving-a-skill` |
-| A skill's ladder (what it gives by value: Music's song degrees and difficulty, …) | `skills.md#what-skills-give` |
+| A skill's ladder (what it gives by value: Music's song degrees and difficulty, …) | `skill-benefits.md` |
 | Slipping past (a creature with darkvision, unlit) | `skill-uses.md#slipping-past` |
 | Stealing | `skill-uses.md#stealing` |
 | Feinting (a lie in combat, Bluff's use) | `skill-uses.md#feinting` |
@@ -284,7 +285,8 @@ above.
 | Two-weapon fighting, off hand | `fighting-styles.md#two-weapons` |
 | Damage type | `damage-types.md` (a type: its row) |
 | Status effect, severity, degrees | `status-effects.md#how-they-work` (a status: its row) |
-| Buffs and cooldowns | `status-effects.md#buffs-and-cooldowns` |
+| Buffs, hexes, and cooldowns | `buffs.md` |
+| Every status effect, who causes it | `status-list.md`, `status-list.md#who-causes-it` |
 | Disease, incubation, checks | `diseases.md#how-a-disease-goes`, `diseases.md#checks` |
 | Healing, healing paces | `healing.md#how-fast-you-heal` |
 | Getting your health back, every way; curing bleeding, poison, and disease | `healing.md#getting-your-health-back`, `healing.md#curing-bleeding-poison-and-disease` |

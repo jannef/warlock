@@ -13,17 +13,17 @@ use std::collections::BTreeMap;
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum FortuneEffect {
     /// Each level reached adds to the family's stipend, which its servant hands over (Stipend:
-    /// `data/stipend.toml`, `world/stipend.rs`).
+    /// `data/rules/stipend.toml`, `world/classes/stipend.rs`).
     Stipend,
     /// The stipend's gold is `gold` percent more, its loot roll made by `chance` percent more
     /// (percentage points), and its magic and rare rarities `magic` percent more likely (Landed
     /// noble).
     StipendMore { gold: i32, chance: i32, magic: i32 },
-    /// A business partner in town invests the gold put with them (Invest: `data/invest.toml`,
-    /// `world/invest.rs`).
+    /// A business partner in town invests the gold put with them (Invest: `data/rules/invest.toml`,
+    /// `world/classes/invest.rs`).
     Invest,
     /// A patron in town commissions graded work from its trades and advances the stock (Patron:
-    /// `data/patron.toml`, `world/patron.rs`).
+    /// `data/rules/patron.toml`, `world/crafting/patron.rs`).
     Patron,
     /// Loot it finds (what generated levels hold, what creatures drop) rolls magic and rare this
     /// percent more often: their rarity weights (Treasure hunter).
@@ -41,7 +41,7 @@ pub enum FortuneEffect {
     GemFindPercent { value: i32 },
     /// Handed out once, as it is taken (a talent only for character creation: Family wealth):
     /// gold coins, `percent` of those the character carries more, at least `at_least` and at
-    /// most `at_most` (`world/heirloom.rs`).
+    /// most `at_most` (`world/character/heirloom.rs`).
     StartingGold {
         percent: u32,
         at_least: u32,
@@ -69,7 +69,7 @@ pub enum FortuneEffect {
     /// No one makes way for it (Trusted by none), whatever else would have them.
     Distrusted,
     /// The class active Merchant's eye: a stack the player carries is identified, for the time of
-    /// a reading (`world/merchants_eye.rs`; spec §8 "Class abilities").
+    /// a reading (`world/classes/merchants_eye.rs`; spec §8 "Class abilities").
     MerchantsEye,
 }
 
@@ -99,7 +99,7 @@ impl FortuneEffect {
 /// rule each.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct FortuneMods {
-    /// Each level reached adds to the family's stipend (Stipend, `world/stipend.rs`).
+    /// Each level reached adds to the family's stipend (Stipend, `world/classes/stipend.rs`).
     pub stipend: bool,
     /// Percent more gold the stipend grows by (Landed noble).
     pub stipend_gold_percent: i32,
@@ -107,9 +107,9 @@ pub struct FortuneMods {
     pub stipend_chance: i32,
     /// Percent more likely magic and rare finds are in the stipend's loot roll (Landed noble).
     pub stipend_magic_percent: i32,
-    /// A business partner in town invests for it (Invest, `world/invest.rs`).
+    /// A business partner in town invests for it (Invest, `world/classes/invest.rs`).
     pub invest: bool,
-    /// A patron in town commissions work from it (Patron, `world/patron.rs`).
+    /// A patron in town commissions work from it (Patron, `world/crafting/patron.rs`).
     pub patron: bool,
     /// Percent more often loot it finds rolls magic and rare.
     pub loot_magic_percent: i32,

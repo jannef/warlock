@@ -27,7 +27,7 @@ from the moment the job is given.
 1. **A bounty**: kill one creature of a kind drawn from those that live in
    [Cealdhlāw](dungeons.md#the-dungeons), [Fennmynster](dungeon-guide.md#fennmynster), and
    [Fyrdelf](dungeon-guide.md#fyrdelf), never a named monster. Only the dungeons you can get into
-   when Wat gives it count, and a [Beast-friend](talents.md#talent-beast-friend) (a
+   when Wat gives it count, and a [Beast-friend](talents-exploring.md#talent-beast-friend) (a
    [druid](class-druid.md)) is never given an animal ([drawn quests](quests.md#drawn-quests)). Pays 40 [gold](shops.md#money) and 60 [experience](experience.md).
 2. **A score and five**: kill 25 creatures of one sort, drawn from
    [kobolds](creatures.md#creature-kobold), [goblins](creatures.md#creature-goblin), the undead,
@@ -86,3 +86,5 @@ A rank is only a title: the town calls you by it, and nothing else changes. Ther
 ranks, each named after a metal dearer than the last. The later ones wait for jobs still to come.
 
 {{#include generated/guild-ranks.md}}
+
+See also: [Quests](quests.md), [Weapon skills](weapon-skills.md), and [The Ascmearc](ascmearc.md).

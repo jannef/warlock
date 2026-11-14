@@ -1,0 +1,17 @@
+[[gift]]
+id = "deep_eyed"
+name = "Deep-eyed"
+kind = "boon"
+tier = "dire"
+weight = 8
+description = "You see as a dwarf does, whatever your race, and farther into the dark; and you see who has not seen you."
+line = "The dark is gone. There is only what is in it."
+effects = [
+    { kind = "vision", profile = "darkvision" },
+    { kind = "darkvision", value = 6 },
+    { kind = "sees_unaware" },
+]
+replaces = ["barrow_eyed", "mere_eyed"]
+# Written here, on the later of the two (docs/design/profane-gifts.md §6.5): made symmetric at
+# load.
+excludes = ["dim_eyed"]

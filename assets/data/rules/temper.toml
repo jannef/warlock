@@ -1,0 +1,13 @@
+# Working an item at an anvil (the Temper ability; spec §7 "Special rooms", world/crafting/temper.rs, the
+# item's state magic/worked.rs). An attempt takes `seconds` of the `temper` action (actions.toml).
+# Done, a 2d12 check, plus the Strength modifier, Metalcraft's `temper` points, and the talents'
+# Strength checks, against
+#
+#   difficulty + per_attempt × (every attempt ever made on the item, made or failed)
+#
+# Made, an item takes one improvement, up to `most` (Fine, Marvellous, Masterwork), and a damaged
+# one is repaired. Failed, an item is damaged and loses them all, and a damaged one is destroyed.
+seconds = 600
+difficulty = 13
+per_attempt = 2
+most = 3

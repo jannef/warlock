@@ -5,10 +5,10 @@ rules it implements are in spec/08d-traps-doors-digging.md. Keep it current with
 
 Doors (spec §8 "Doors"; M19, #130): the rules are `warlock-core/src/door.rs` (`Lock`, `Key`,
 `kick_breaks`/`break_chance`: `1d(sturdiness) ≤ Strength`, one gameplay draw), applied in
-`world/door.rs` (`open_door` unlocks with `Actor::key_for` and costs `unlock` + `open_door`,
+`world/fixtures/door.rs` (`open_door` unlocks with `Actor::key_for` and costs `unlock` + `open_door`,
 `swing_open`, `close_door`, `kick`/`kick_door`, the kick's Strength `World::kick_force`
 (effective Strength + athletics + talents' `door_kick` + worn `door_kick`, Hobnailed; a chest's
-kick reads it too, and a statue's: `world/statue.rs::kick_statue`, against the terrain's `statue`
+kick reads it too, and a statue's: `world/creatures/statue.rs::kick_statue`, against the terrain's `statue`
 sturdiness, the petrified statue's 200; broken, `break_wall`
 with `Breach::Kicked`; #1126); kicking a creature is `World::player_kicks`, an
 unarmed blow whatever is wielded: `Actor::kick` (bare hands with unarmed fighting's benefits and
@@ -25,7 +25,7 @@ lock whenever the cell stops being a closed door. Secret doors (`docs/dev/search
 per-cell state too (`secrets`, beside the wall they look like until found); a secret door is
 never locked, nor trapped. Trapped doors (`docs/dev/traps.md`): `swing_open` and `kick_door` set
 off a trap on the door at whoever opened or kicked it (`World::spring_trap`); `set_terrain` drops
-the trap with a door kicked in. **Picking locks** (#233) is `world/lockpick.rs`
+the trap with a door kicked in. **Picking locks** (#233) is `world/skills/lockpick.rs`
 (`World::pick_lock`, dispatched from `player_acts` for `Action::PickLock(dir)`, replay text
 `pick:DIR`, cost `pick_lock`): only for an actor trained in a skill with the `pick` effect
 (`Skills::trains_effect`: Open lock) or holding a talent with the `pick_lock` effect (none since
@@ -43,7 +43,7 @@ before. Level legends lock with `lock = "id"` or
 `breaks_to` + `sturdiness` (`TerrainDef::kicked_in`; digging and blasts break only terrain with a
 `hardness`, `TerrainDef::breaks`, never a door, with one exception: a spell type with `doors`, force,
 breaks the closed doors its `blast` reaches, `World::blast_doors`, no sturdiness check, lock and trap
-gone with `set_terrain`, sprung at no one; `docs/dev/spells.md` "Spell types"). The AI (`world/ai.rs`) paths through a locked door, and opens it, only
+gone with `set_terrain`, sprung at no one; `docs/dev/spells.md` "Spell types"). The AI (`world/creatures/ai.rs`) paths through a locked door, and opens it, only
 with a key (`Stepped::Unlocked`); `go_look` stops next to a spot no one can stand on (a door kicked
 at). Generated levels: `Needs::key` (the branch's `key` in `dungeons.toml`) makes `rooms.rs`'s
 `lock_rooms` lock up to two single-door rooms and drop the key in an unlocked room;
@@ -52,10 +52,10 @@ at). Generated levels: `Needs::key` (the branch's `key` in `dungeons.toml`) make
 must hold their own keys (`content/vault.rs`, `check_keys`). The app binds `k` (`KeyCommand::Kick`,
 a direction prompt like open/close, bash, and dig) and bursts the door terrain's `toggle` particles on
 `Event::DoorKicked`/`DoorBroken`.
-**Wedging** (#1027, design `docs/design/skill-uses.md` §6.5 W2) is `world/wedge.rs`: `Action::Wedge(dir)`
+**Wedging** (#1027, design `docs/design/skill-uses.md` §6.5 W2) is `world/skills/wedge.rs`: `Action::Wedge(dir)`
 (replay text `wedge:DIR`, priced as a wait, `ActionKind::Wait` as Listen is), `Ability::Wedge` (had by
 whoever is trained in a skill with `Effect::Wedge`: Woodcraft's second benefit in `skills/`, curve
-`[[0, 0], [100, 8], [200, 12]]`, mark `wedge` 100 %; tests `world/wedge_tests.rs`). A wedged door is
+`[[0, 0], [100, 8], [200, 12]]`, mark `wedge` 100 %; tests `world/skills/wedge_tests.rs`). A wedged door is
 `LevelState::wedged: BTreeMap<Pos, u8>` (the points; saved with `skip_serializing_if`, so levels
 without one hash as before; hashed through the state; ground truth only, so perception shows nothing),
 dropped by `World::set_terrain` whenever the cell stops being a closed door. The AI paths through a

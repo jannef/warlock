@@ -1,0 +1,28 @@
+# The merchant's investment (spec §8 "Class abilities": Invest; #1407; crates/warlock-core/src/
+# content/invest.rs, world/classes/invest.rs). A character with the Invest class ability (the merchant's,
+# from level 1) may put gold with their business partner (a campaign's town's `servant` entry
+# for `invest`, data/towns/) and take it out again. It works like a mutual fund: every game week
+# the stake rises or falls by a random return, wherever the player is.
+#
+# Fields:
+#   fees    invest: percent of the gold put in that the partner keeps; withdraw: percent of the
+#           gold taken out (each rounded up to a whole coin)
+#   week    the weekly return in basis points (hundredths of a percent): base plus the dice,
+#           whose mean is 0. 4d201-404 runs from -400 to +400 (±4 % a week), mostly within
+#           ±116 (one standard deviation, 1.16 %)
+#   bonus   quest: basis points more each week for each quest of the partner's town's people
+#           completed (each quest once). A campaign's partner adds its own (its town's
+#           `[[town.servant]]` entry's `bonus`: basis points more for each quest it names
+#           completed, on top of `quest` when it is the town's too; Cēaptūn's: Fire in the deep)
+#   steps   the amounts the partner's topics offer to put in and take out, besides all of it
+#
+# A year is 360 days, 51 3/7 weeks. At the base, 10 basis points a week, the stake grows by
+# 5.3 % a year on average (1.001^(360/7)), with a standard deviation of about 8.3 %: about three
+# years in ten lose money. Each of Cēaptūn's fourteen quests adds 1 (all of them: 24, 13 % a
+# year) and Fire in the deep, which reopens the mines, 6 more (everything: 30, 16 % a year, and
+# one year in thirty loses). world/classes/invest_tests.rs checks these by simulation.
+
+fees = { invest = 2, withdraw = 2 }
+week = { base = 10, dice = "4d201-404" }
+bonus = { quest = 1 }
+steps = [100, 1000]

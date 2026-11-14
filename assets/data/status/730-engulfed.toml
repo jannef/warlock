@@ -2,7 +2,7 @@
 # a greater water elemental's drowning wave closes over its victim: no step, no shot, no throw,
 # no reading, and every tick inside costs hit points (a tick every 6 s a degree, so the more
 # turns the hold has left the faster it hurts). A blow and a spell still go: hack your way out,
-# or break free with the struggle (the hold's rules, world/hold.rs). Size makes no difference.
+# or break free with the struggle (the hold's rules, world/health/hold.rs). Size makes no difference.
 [[status]]
 id = "engulfed"
 name = "Engulfed"

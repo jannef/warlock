@@ -12,9 +12,9 @@ effects B5 (#707). Keep it current with the code, as CLAUDE.md says.
 |---|---|
 | `content/background.rs` | The data: `Background { tiers, points, chapters }`, `Chapter` (with `ChapterWhen`, a chapter's own condition), `Line` (`StoryLine` outside), `When`, `Effect` (`StoryEffect`), `Marks`, `Tier` (`StoryTier`), `Tiers::of(roll, percent)`, `slots_of`; `Content::load_background` (after the kits: races, classes, skills, weapon skills, talents, objects, slots, the horoscope, and the campaigns are known) and every check. Tests: `content/background_tests.rs`. |
 | `background.rs` | The roll, pure: `Witness` (what conditions read) and `Witness::fits`, `tell(content, seed, &witness) -> Story { told, effects }`, `Rolled` (an effect with its dice rolled), `Told { chapter, line }` (saved), `retell` and `lines` (the text again from the content, slots filled), `missing` (log lines for ids the content lost). Tests: `background_tests.rs`. |
-| `world/background.rs` | `World::tell_background` (from `start_run`), `apply_story` (one arm per effect kind), `story_gold`, `story_item`. Tests: `world/background_tests.rs`. |
+| `world/character/background.rs` | `World::tell_background` (from `start_run`), `apply_story` (one arm per effect kind), `story_gold`, `story_item`. Tests: `world/character/background_tests.rs`. |
 | `rng.rs` | `Rng::background(seed, spec, chapter)`: `background/<race>,<gender>,<class>/<chapter>`. |
-| `dump.rs` | The `story` layer, JSON `story` and `character.story`, the `actors` layer's `story …`. |
+| `dump/story.rs`, `dump/json.rs` | The `story` layer, JSON `story` and `character.story`, the `actors` layer's `story …`. |
 | `crates/warlock/src/ui/chargen_screen.rs` | The summary's dim line under the kit, `FATE`: "Fate will have its say when you set out." (only with content that tells stories). |
 
 ## The data
@@ -145,7 +145,7 @@ dropped, or drawn again (the owner, 2026-10-29: no caps, no protection). The `on
 little stronger than the issue's wording ("an `only` line fitting narrows the pool"): it applies
 whatever tier was drawn, so the heritage talents always force their lines.
 
-## The effects (`world/background.rs`)
+## The effects (`world/character/background.rs`)
 
 | Kind | Applied by |
 |---|---|
@@ -155,7 +155,7 @@ whatever tier was drawn, so the heritage talents always force their lines.
 | skill | `Skills::add` (trained at the roll, or raised) |
 | weapon marks | `WeaponSkills::add_marks` (never a rank: stops one short of the next); `best` is the weapon skill (not a style) at the highest rank, ties by data order, none without a rank |
 | alignment | `Score::new(score + by)`: the start's fourth term, never `shift_alignment` |
-| talent, flaw | `World::bestow(id, choice)` (`world/boons.rs`, the body of the altar's Chosen and Forsaken with the id fixed, now `pub(super)`): `Talents::take`, `class::hand_out` (Hardy's hit points), `Actor::boons`, `stars::grant`'s order; no message (the story is shown, never told) |
+| talent, flaw | `World::bestow(id, choice)` (`world/fixtures/boons.rs`, the body of the altar's Chosen and Forsaken with the id fixed, now `pub(super)`): `Talents::take`, `class::hand_out` (Hardy's hit points), `Actor::boons`, `stars::grant`'s order; no message (the story is shown, never told) |
 
 ## Talents and flaws (B5, #707)
 
@@ -218,7 +218,7 @@ adds `story parents/plain_folk birth/hard_winter …` to the player's line.
 bonus, rolled, generated), every refusal. `background_tests.rs`: the tier odds over 20 000 seeds
 (every shared chapter's stream, within a tenth), no score below 1 over every race, gender, and
 class on a thousand stories, the fall to the plain line, the heritage talents' forcing, slots,
-defaults, pronouns, a missing line, each condition, determinism. `world/background_tests.rs`:
+defaults, pronouns, a missing line, each condition, determinism. `world/character/background_tests.rs`:
 each effect lands (fixture chapters of one forced line), gold down to none, the story after the
 picks (Hardy's Toughness), who has one (and unchanged hashes), a replay and a save keep it, an
 edited text reaches a save, a lost line is skipped and logged; B5's: a story talent

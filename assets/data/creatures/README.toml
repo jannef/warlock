@@ -174,12 +174,12 @@
 #   regen     how fast its wounds close, in percent of the normal pace (default 100, 0 to 1000;
 #             a troll's 400): counted with its statuses' paces, so Burning and Corroded stop it.
 #             Only a brute of its level or a dread type regenerates (the dread design §5.9)
-#   corrodes  its harm to gear (the dread design §5.8, world/corrode.rs):
+#   corrodes  its harm to gear (the dread design §5.8, world/combat/corrode.rs):
 #             { chance = 25, what = "armour", kind = "acid" } (a hit of its damages a piece the
 #             player wears) or what = "weapon" (the player's hit on it damages what struck) or
 #             what = "both" (each, the rust monster's); kind is the item damage, "acid", "rust",
 #             or "fire": the materials' `resists` of that kind withstand it, and a piece damaged
-#             already is destroyed (world/item_damage.rs)
+#             already is destroyed (world/combat/item_damage.rs)
 #   attack    its natural attack, used when it wields no weapon (without one: bare hands, 1d3):
 #             { damage = "1d4", damage_type = "piercing", name = "bite", verb = "bites" } and
 #             optionally threat, crit, and to_hit as for weapons (objects.toml); Strength adds
@@ -218,7 +218,7 @@
 #             at against averted eyes, percent; default 25). It gazes before it throws, whenever
 #             the cooldown is off, at a target with vitals; the eyes must meet both ways (the
 #             player sees it, or a creature by its own eyes), else the stare is only felt
-#   burst     a burst of its element (the dread design §5.3; world/creature_burst.rs):
+#   burst     a burst of its element (the dread design §5.3; world/creatures/creature_burst.rs):
 #             [creature.burst] with damage (dice, rolled once for everyone it reaches, each in
 #             full), damage_type, radius (0 to 3, around its own cell), when ("touches": a vortex,
 #             which bursts beside its target instead of attacking and dies of it, and needs no
@@ -268,7 +268,7 @@
 #             experience when killed. A type
 #             with a summoning carries the tag `summoner` (content::summoner_roster_tests)
 #   aura      a status it gives every hostile near it now and then (design monster-dread §5.4;
-#             world/aura.rs): [creature.aura] with status (status/; no hold), radius (1 to 6
+#             world/creatures/aura.rs): [creature.aura] with status (status/; no hold), radius (1 to 6
 #             cells), touch (the words of its first touch on the player who sees it, the bearer
 #             as {the}: "A chill comes off {the}."), and optionally severity (degrees, default
 #             1), check and difficulty (a stat and 1 to 40: made, it does not take; none: it
@@ -305,7 +305,7 @@
 #             `blink` status is off, moves at once to a free cell beside the target within range
 #             (2 to 12, Chebyshev) and in its own line of sight, and takes the status for
 #             cooldown seconds (6 to 600). It never blinks away
-#   disarms   a duellist's disarming blow (#1166; enemy-only; world/knock_away.rs):
+#   disarms   a duellist's disarming blow (#1166; enemy-only; world/combat/knock_away.rs):
 #             { chance = 15, difficulty = 18 }. A melee hit on the player that leaves them alive,
 #             with a weapon in their main hand and an open cell beside them, tries by its chance
 #             (1 to 100) to knock it away: the player's Dexterity check against the difficulty

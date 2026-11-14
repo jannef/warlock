@@ -74,6 +74,10 @@ fn trap_sign() -> String {
 pub(super) struct TrapFile {
     #[serde(default)]
     pub avoid: TrapAvoid,
+    #[serde(default)]
+    pub disarm: TrapDisarm,
+    #[serde(default)]
+    pub harm: TrapHarm,
     pub trap: Vec<TrapSpec>,
 }
 
@@ -120,6 +124,38 @@ impl TrapAvoid {
             ));
         }
         Ok(())
+    }
+}
+
+/// Disarming a known trap (`[disarm]` in `data/traps.toml`; `world/skills/disarm.rs`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TrapDisarm {
+    /// How far short of the trap's difficulty a failed try must fall to set it off.
+    pub springs_short_by: i32,
+}
+
+/// The numbers for traps files without the table (test fixtures): the shipped file's.
+impl Default for TrapDisarm {
+    fn default() -> Self {
+        Self {
+            springs_short_by: 5,
+        }
+    }
+}
+
+/// What a trap's damage may be cut by (`[harm]` in `data/traps.toml`; `world/fixtures/trap.rs`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TrapHarm {
+    /// The most Trap sense and things of Wariness cut together, in percent.
+    pub most_cut: i32,
+}
+
+/// The numbers for traps files without the table (test fixtures): the shipped file's.
+impl Default for TrapHarm {
+    fn default() -> Self {
+        Self { most_cut: 75 }
     }
 }
 
@@ -555,8 +591,13 @@ impl TrapSpec {
     }
 }
 
-/// What `data/traps.toml` holds: the trap types by id, and the chance of avoiding a known one.
-pub(super) type ParsedTraps = (Vec<TrapDef>, BTreeMap<String, TrapId>, TrapAvoid);
+/// What `data/traps.toml` holds: the trap types by id, and the rules of avoiding a known one,
+/// disarming one, and cutting its damage.
+pub(super) type ParsedTraps = (
+    Vec<TrapDef>,
+    BTreeMap<String, TrapId>,
+    (TrapAvoid, TrapDisarm, TrapHarm),
+);
 
 /// Parses `data/traps.toml` against `content`'s objects.
 pub(super) fn parse(
@@ -567,6 +608,12 @@ pub(super) fn parse(
     let err = |m: String| ContentError::new(path, m);
     let parsed: TrapFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
     parsed.avoid.check().map_err(err)?;
+    if parsed.disarm.springs_short_by < 1 {
+        return Err(err("[disarm]: springs_short_by must be at least 1".into()));
+    }
+    if !(0..=100).contains(&parsed.harm.most_cut) {
+        return Err(err("[harm]: most_cut must be 0 to 100".into()));
+    }
     let mut defs = Vec::with_capacity(parsed.trap.len());
     let mut ids = BTreeMap::new();
     for (i, spec) in parsed.trap.into_iter().enumerate() {
@@ -576,7 +623,7 @@ pub(super) fn parse(
         }
         defs.push(spec.resolve(content).map_err(err)?);
     }
-    Ok((defs, ids, parsed.avoid))
+    Ok((defs, ids, (parsed.avoid, parsed.disarm, parsed.harm)))
 }
 
 /// A trap lying on a level's cell (spec §8 "Traps"): ground truth, kept in the level state.
@@ -594,7 +641,7 @@ pub struct Trap {
     /// The way a bolt runs from it; `None`: along the longest clear line from it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dir: Option<Dir>,
-    /// Rigged by the player (the craftsperson's Trapwright, `world/rig.rs`): what it kills is
+    /// Rigged by the player (the craftsperson's Trapwright, `world/crafting/rig.rs`): what it kills is
     /// the player's kill.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub rigged: bool,

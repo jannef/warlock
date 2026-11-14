@@ -5,7 +5,7 @@
 //! switches its tags' rows off. The loader resolves every creature type's rows once
 //! ([`resolve`]): every tag file it carries in path order, then its own; a tag row only for a type
 //! that leaves a corpse unless its file is `bodiless`; each chance scaled by its size's `drops`
-//! (`sizes.toml`: a small one rolls at half). The roll is `world/material_drops.rs`.
+//! (`sizes.toml`: a small one rolls at half). The roll is `world/items/material_drops.rs`.
 
 use super::{Content, ContentError, CreatureId, MaterialId, ObjectId, PER_MILLE};
 use crate::dice::Dice;

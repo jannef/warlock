@@ -39,14 +39,14 @@ screen and its choice, look mode's piles, and the `inventory` dump layer use; me
 of a class with an `[[ornament]]` with a gem (`gem::ornament`), and last draws its material
 (`variant::draw`, step 8: by the materials' `rarity` at the item level; `loot::roll_from` takes
 a `variant::Source`, and creature drops pass `Source::Gear(creature level)`, at the item level
-`world/loot.rs::drop_level` gives them, below); its own parts are
+`world/items/loot.rs::drop_level` gives them, below); its own parts are
 the material first, then the gem. Creature drops try `gem::find` before the magic item
 (`docs/dev/objects.md`, "Gems" and "Materials and variants"). A wand made by `make_from` draws
 its rung last (`Stack::draw_wand_rung`, `Stack::wand_rung`, S5 #752: one draw, a wand's only;
 the other makers of wands and the fallback streams are docs/dev/spells.md "Wands").
-`world/loot.rs` has `World::identify` (the API the scroll of identify calls from its read action,
+`world/items/loot.rs` has `World::identify` (the API the scroll of identify calls from its read action,
 `docs/dev/scrolls.md`, the Identify spell, and the merchant's class active Merchant's eye,
-`world/merchants_eye.rs`, #816; it identifies a labelled scroll's or wand's type too, `World::learn_scroll`,
+`world/classes/merchants_eye.rs`, #816; it identifies a labelled scroll's or wand's type too, `World::learn_scroll`,
 and a wand's charges, `Stack::identify_charges`; wands and rods are docs/dev/spells.md "Wands" and "Rods"),
 creature drops (`drop/<actor id>` stream), and the hit-point clamp after equipment changes
 (to `Actor::lasting_max_hp`: a penalty's lower maximum passes). Stats raised by magic are
@@ -61,7 +61,7 @@ through `World::healing_rate` like every other pace change, the mana affixes (My
 item effect, local, on armour kinds: `ItemKind::is_armour`) through `Stack::protection`, which
 `Actor::protection` sums (docs/dev/combat.md); Proof (of Proof, `Effect::Proof`, #1170: an item
 effect, local, its one tier's value 1, weight 30, from item level 4, on every kind but
-ammunition, which breaks by its own rule) through `world/item_damage.rs::protected`, item
+ammunition, which breaks by its own rule) through `world/combat/item_damage.rs::protected`, item
 damage's one protection (docs/dev/objects.md "Protection"; it works unidentified, and the
 description names it once identified: "of Proof: nothing can damage it"); the typed effects (docs/dev/combat.md "Damage
 types"): `Effect::Elemental` (an attack effect, local on what attacks: `Mods::elemental` is one
@@ -70,7 +70,7 @@ rider per kind, `sharpen` adds them to the profile) and `Effect::Resistance` (gl
 each with the affix's `damage_type` (`AffixDef::damage_type`, part of its `Group`, so an item
 may hold one of each kind). Every element has a resistance suffix and all but force an
 elemental prefix (`magic/tests.rs`, #638), and each rider lands unsoaked
-(`world/damage_tests.rs`). **Categories** (#621): `AffixDef::category` (required in data) is the
+(`world/combat/damage_tests.rs`). **Categories** (#621): `AffixDef::category` (required in data) is the
 rule loot and `Magic::check` read: an item never has two affixes of one category
 (`loot::roll_affix` leaves out the categories already rolled; `Magic::check` refuses a repeat in a
 save, a legend's `[[item]]`, or a unique). The data gives every affix of one `Group` one
@@ -81,7 +81,7 @@ over many rare rolls at four item levels). Hard
 rule: presentation reads an item's affixes only through `Stack::known_magic` (none until
 identified; `Stack::magic` is crate-private), names only through `Stack::describe` /
 `title`, and numbers only through `magic::Numbers` (on the known stack), so unidentified affixes
-cannot leak; dev dumps use `describe_truth`. Tests: `world/numbers_tests.rs` (a +1 sword, an
+cannot leak; dev dumps use `describe_truth`. Tests: `world/turn/numbers_tests.rs` (a +1 sword, an
 unidentified armour's base numbers and its affixes once identified, a shield, a launcher's
 range, ammunition, a worn thing's to-hit). A new effect is a
 variant of `Effect` (id, local/global, `allowed_on`; `index()` and `all()` insert
@@ -90,7 +90,7 @@ phrase in `describe.rs`, and a wiki word and tier form in `xtask/src/wiki/magic.
 (`effect_words`, `tier_value`). Affixes are saved by id, so
 adding affixes keeps saves; their values and tiers are checked on load, strictly
 (`Magic::check`: each tier one the affix has, each value within its tier's range). The lenient
-read of #637 (`world/retier.rs`, `Magic::retier`, re-tiering a save's affixes after a ladder was
+read of #637 (re-tiering a save's affixes after a ladder was
 regraded) is gone with #840: saves are pinned to the version that wrote them
 (docs/dev/saves.md), so a regraded ladder needs nothing for saves.
 
@@ -120,17 +120,17 @@ items' bonus counts) in the module `skill_reader` names; the shops' bargain read
 `Skills::effect` past the items until C1 (`shop::favour`). **Damage is more than one category** (owner,
 #635), so a weapon may roll more than one damage affix: `physical_damage` (+damage: Sharp,
 Vicious), `extra_damage` (an extra die: Heavy and the suffix of Wounding), and one per element
-(`fire_damage`, ...); the one-per-category rule stands. **The spell hooks** (A1, #629; `world/affix_spell_tests.rs`): `mana_cost` in
+(`fire_damage`, ...); the one-per-category rule stands. **The spell hooks** (A1, #629; `world/items/affix_spell_tests.rs`): `mana_cost` in
 `Actor::mana_cost` (joins Frugal caster's percent, 50 off at most), `spell_ease` in
 `Actor::worn_spell_cost` (each piece less its own, never below 0: a fully eased piece leaves the
-armoured grip), `spell_to_hit` in `Actor::spell_to_hit` (`world/spell_rung.rs`), the spell
-hooks' items in `Actor::spell_mods` (`world/spell_mods.rs`, beside the talents': `spell_rungs`,
+armoured grip), `spell_to_hit` in `Actor::spell_to_hit` (`world/magic/spell_rung.rs`), the spell
+hooks' items in `Actor::spell_mods` (`world/magic/spell_mods.rs`, beside the talents': `spell_rungs`,
 `spell_bonus` (Potent, +1 / +2 / +3 at item levels 3 / 7 / 11), `spell_sides`, `spell_dice`,
 `spell_reroll`, `wand_rungs`, `spell_reach` as cells of range or length beside School focus's,
 `spell_duration` as degrees; no tag filter on an item yet), `spell_threat` in `Actor::spell_threat` (22 less it, never below `THREATS`' floor;
 an own cast only, `reflect::Shot::threat`). **The potion and wand hooks** (E2, #633;
-`world/affix_draught_tests.rs`): `potion_kept` in `Actor::potion_kept` (Thrifty drinker's chance
-plus the worn, held to `potion::MAX_KEPT` 50 unless the talent alone is above it; `take_draught`
+`world/items/affix_draught_tests.rs`): `potion_kept` in `Actor::potion_kept` (Thrifty drinker's chance
+plus the worn, held to `[potion_kept] most` 50 (`data/rules/tuning.toml`) unless the talent alone is above it; `take_draught`
 draws only above 0), `wand_rungs` (of Wands) in `Actor::spell_mods` (beside Wand mastery's). Each hook's tests bring fixture affix files
 (`ContentFiles::insert("data/affixes/zz_fixture.toml", ...)`, as `magic/tests.rs` does).
 `spell_ease` is an item effect (local: the piece's own `spell_cost_percent`), allowed on body
@@ -142,10 +142,10 @@ holds the id lookups, `None` for a table content lacks; the table is read after 
 sum by (effect, resource) in `Mods::pools`, read with `Mods::resource(effect, id)`, never into
 `Mods::get`. Their hooks (B1, #630; docs/dev/resources.md): `resource_max` in
 `Actor::resource_max` (the worn term, by pool), `resource_rate` in `World::resource_rate`, `active_stamina` (keyed on
-stamina, global) in `Actor::weapon_stamina`. **On a kill** (E1, #632; `world/siphon.rs`,
-`world/siphon_tests.rs`): `mana_on_kill` and `resource_on_kill` in `World::siphon`, called at
+stamina, global) in `Actor::weapon_stamina`. **On a kill** (E1, #632; `world/items/siphon.rs`,
+`world/items/siphon_tests.rs`): `mana_on_kill` and `resource_on_kill` in `World::siphon`, called at
 the kill point of an attack (`fight.rs::resolve`, `spell.rs::spell_strikes`), the slain within
-`SIPHON_RANGE` (3, a radius); never from `dies`, so a status tick's or a trap's death gives
+the `[siphon]` range of `data/rules/tuning.toml` (3, a radius); never from `dies`, so a status tick's or a trap's death gives
 nothing. **`Group`** is a struct `{ effect, skill, damage_type, resource }` (`Group::of` for an
 effect that names nothing else): one group per (effect, resource), so Tireless (stamina) and of
 Fury (rage) are two. **`ItemKind::Tool`** (`ALL` is a slice; the `tools`
@@ -171,18 +171,18 @@ draws. With classes: one draw among those that hold something at the item level 
 coins (`chest::purse`, the purse of a chest of that level), a loose gem (`gem::loose`; which
 classes these are comes from the currency's and the gem object's `class`, never `Luck::gems`), or
 the base and the rest of `roll_with`'s draws among the class's objects, with the finder's
-`Luck::magic`. Tests: `magic/pool_tests.rs`. The aristocrat's stipend (`world/stipend.rs`, #1405) rolls `roll_with` once a level-up, by `data/stipend.toml`'s chance, at the level, with its `Luck` from data (plus Landed noble's), on the stream `stipend/<level>`, keeping only magic and rare finds and the `keep` classes. **A drop's item level**
-(`world/loot.rs::drop_level`): the creature type's level, at least the floor's item level, at
-most `MAX_ITEM_LEVEL`; floor loot keeps the floor's (`world/magic_tests.rs`,
+`Luck::magic`. Tests: `magic/pool_tests.rs`. The aristocrat's stipend (`world/classes/stipend.rs`, #1405) rolls `roll_with` once a level-up, by `data/rules/stipend.toml`'s chance, at the level, with its `Luck` from data (plus Landed noble's), on the stream `stipend/<level>`, keeping only magic and rare finds and the `keep` classes. **A drop's item level**
+(`world/items/loot.rs::drop_level`): the creature type's level, at least the floor's item level, at
+most `MAX_ITEM_LEVEL`; floor loot keeps the floor's (`world/magic/magic_tests.rs`,
 `a_drop_rolls_at_the_creatures_level_at_least_the_floors`).
 
 **The utility hooks** (D1, #631): each worn effect joins its talent's term at the one line that
 reads it, through `Actor::mods` (so unidentified gear works, and a creature's gear wherever the
-rule reads a creature): `door_kick` in `World::kick_force` (`world/door.rs`, a door's kick and a
+rule reads a creature): `door_kick` in `World::kick_force` (`world/fixtures/door.rs`, a door's kick and a
 chest's), `dig_percent` in `dig_turn`, `hunger` in `World::hunger_percent` (subtracted: hunger
 comes slower; the pace at least 1), `trap_damage` in `trap_deals` (subtracted from Trap sense's
-percent, the sum at most `TRAP_DAMAGE_CUT` = 75 off), `disease_check` in
-`World::disease_modifier`. Tests on fixture affixes: `world/affix_utility_tests.rs`. The
+percent, the sum at most `[harm] most_cut` of `data/traps.toml` = 75 off), `disease_check` in
+`World::disease_modifier`. Tests on fixture affixes: `world/items/affix_utility_tests.rs`. The
 pick-axe is the one `tool` base item (`level = 3`, `frequency = 10`); `Numbers::of` shows a
 tool nothing, and `describe`'s base stats give any digging tool's power ("Digs at 10"). Delving,
 Featherweight, and of the Bear roll on tools (P1, #635), so loot finds a magic pick-axe; loot
@@ -207,7 +207,7 @@ the item's id (saved, hashed; `skip_serializing_if` none, so other items' saves 
   and kits keep a unique as it is (a `magic` chance never rerolls one). The
   Ascmearc's four are placed by their owners' gear lines (the criminals, #424,
   `docs/dev/creatures/outlaws.md`), so no other content names them: a test that needs a
-  placement defines a unique of its own (`world/unique_tests.rs`), and a test that drops the
+  placement defines a unique of its own (`world/creatures/unique_tests.rs`), and a test that drops the
   uniques table puts the base items in their place (`character.rs`'s `skill_free_content`). The
   wiki's table names who carries each (`xtask/src/wiki/uniques.rs`, from the gear lines).
 - **The pedlar's three** (#808): the Brosinga Mene (gold amulet), the Eorcanstān (gold ring),
@@ -235,7 +235,7 @@ the item's id (saved, hashed; `skip_serializing_if` none, so other items' saves 
   `(spirit)`.
 - **Adding a power**: a `Power` variant, its parse in `unique::power`, its one read, and its
   words in `xtask/src/wiki/uniques.rs` (`power_text`); the item's own words are its `phrase`.
-- **Tests**: `world/unique_tests.rs` (the table, hiding until identified, placement,
+- **Tests**: `world/creatures/unique_tests.rs` (the table, hiding until identified, placement,
   Widowmaker's poison on every hit, High Toby's fear by its chance on the gameplay stream, the
   Bedes' darkvision on and off and under the dev override, the Turncoat's ward, a save); the
   item description's text snapshots `unique-description` and `unique-description-unidentified`

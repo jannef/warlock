@@ -2,11 +2,13 @@
 
 {{#include generated/class-card.md:druid}}
 
+See also: [Magic](magic.md) and [Allies](allies.md).
+
 ## How to play
 
 You fight from the back with spells and a sling, and with the quarterstaff when something gets
 close. Cast [Spark](#talent-spark) from the [abilities menu](abilities.md#the-abilities-menu)
-(`a`), and [rest](resting.md) to get your [mana](mana.md) back. [Beast-friend](talents.md#talent-beast-friend)
+(`a`), and [rest](resting.md) to get your [mana](mana.md) back. [Beast-friend](talents-exploring.md#talent-beast-friend)
 keeps the animals of the wild from attacking you until you attack one of their kind. From level 6
 [Call of the wild](#talent-call-of-the-wild) brings a wolf to fight beside you, and from level 12
 [Call lightning](abilities.md#ability-call-lightning) strikes under the open sky.

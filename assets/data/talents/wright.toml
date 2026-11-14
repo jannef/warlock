@@ -1,6 +1,6 @@
 # A Crafts trade (the craftsperson design §3): a craftsperson's creation pick, never one the race
 # teaches everyone; trains Woodcraft at 3d6 and hands down the tools of the trade
-# (world/trade.rs). Four wood billets and a length of sinew: a short bow's worth.
+# (world/crafting/trade.rs). Four wood billets and a length of sinew: a short bow's worth.
 [[talent]]
 id = "wright"
 name = "Wright"

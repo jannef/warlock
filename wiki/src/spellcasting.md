@@ -56,7 +56,7 @@ Each spell has one of four resolutions:
   aim with, but none does yet. A spell scroll or a wand always aims with Dexterity.)
 - An **auto** spell always hits, for less damage.
 - An **area** spell hits everyone in its shape with no roll, for less again per target.
-  *[Evasion](talents.md#talent-evasion)* halves what it does.
+  *[Evasion](talents-body.md#talent-evasion)* halves what it does.
 - A **touch** spell rolls to hit at arm's length. It does the most damage, for less mana.
 
 Only attack and touch spells can be critical hits. Like a blow, they threaten a
@@ -90,15 +90,15 @@ their own way, listed in their own row:
   takes your spells a rung up their damage and healing ladders, and
   *[Archmage](class-wizard.md#talent-archmage)* (at 60) two. Spells already on the last rung stay
   there.
-- **Bigger dice.** *[Keen mind](talents.md#talent-keen-mind)*, taken for a school of magic or an
+- **Bigger dice.** *[Keen mind](talents-mind.md#talent-keen-mind)*, taken for a school of magic or an
   element, makes those spells roll dice a size bigger for you: a d6 becomes a d7, a d8 a d9.
-- **A die more.** *[Brimming](talents.md#talent-brimming)* rolls a die more on your damage and
+- **A die more.** *[Brimming](talents-mind.md#talent-brimming)* rolls a die more on your damage and
   healing spells, and they cost a tenth more [mana](mana.md#spending-it).
 - **A bonus.** *Potent* [magic items](affixes.md#prefixes) add 1 to 3 to every spell's roll,
   harm or healing (a Potent +2 ring makes 4d6 into 4d6+2).
-- **A die rolled again.** *[Sure hand](talents.md#talent-sure-hand)* rolls a spell die that shows a
+- **A die rolled again.** *[Sure hand](talents-mind.md#talent-sure-hand)* rolls a spell die that shows a
   1 once more, and that roll stands.
-- **Reach and degrees.** *[School focus](talents.md#talent-school-focus)*, taken for a school or an
+- **Reach and degrees.** *[School focus](talents-mind.md#talent-school-focus)*, taken for a school or an
   element, makes those spells reach a cell farther (range or length, not a burst's radius, and
   never a touch's) and cost 10 % less. [Magic items](affixes.md#suffixes) *of Farcasting* add their cells to every spell's
   reach but a touch's, and *of Lingering* their degrees to every blessing and hex.
@@ -113,7 +113,7 @@ A **[spell scroll](scrolls.md#spell-scrolls)** you read casts at the rung its ro
 your stats. The [scroll of fireball](scrolls.md#scroll-of-fireball)'s is 1, so 6d6.
 *[Scroll adept](class-wizard.md#talent-scroll-adept)* makes it a rung higher. A
 **[wand](wands-and-rods.md#wands)** casts at a rung of its own, a rung higher with
-*[Wand mastery](talents.md#talent-wand-mastery)*, and higher again with items *of Wands*. Your
+*[Wand mastery](talents-fighting.md#talent-wand-mastery)*, and higher again with items *of Wands*. Your
 other talents and items work on scrolls and wands as on your own casts, and their reach and degrees
 are yours.
 
@@ -125,3 +125,6 @@ Two kinds of damage only magic does, **[force](damage-types.md#damage-force)** a
 
 The spells you cast are yours. What they kill earns you its [experience](experience.md), and a spell
 of your own that catches you can kill you.
+
+See also: [Magic](magic.md), [Spell types](spell-types.md), and
+[Spells with a rule of their own](spell-rules.md).

@@ -1,7 +1,7 @@
-//! Stealing (`assets/data/steal.toml`, spec §8 "Stealing"): what becomes of a creature that
+//! Stealing (`assets/data/rules/steal.toml`, spec §8 "Stealing"): what becomes of a creature that
 //! catches the player stealing from it.
 //!
-//! The rule itself lives in `world/steal.rs`: who can steal (anyone trained in a skill with the
+//! The rule itself lives in `world/skills/steal.rs`: who can steal (anyone trained in a skill with the
 //! `steal` benefit, `data/skills/`), from whom (a creature next to them that is not hostile),
 //! the contest (their Dexterity and Steal against its Willpower, spec §8 "Checks"), and what is
 //! taken. A creature that catches them joins the faction named here and turns on them; a
@@ -28,7 +28,7 @@ struct StealFile {
 }
 
 impl StealRules {
-    /// Parses `data/steal.toml`: `caught` must be a known faction.
+    /// Parses `data/rules/steal.toml`: `caught` must be a known faction.
     pub(super) fn parse(
         file: &str,
         text: &str,
@@ -43,7 +43,7 @@ impl StealRules {
 }
 
 impl super::RulesFile for StealRules {
-    const PATH: &'static str = "data/steal.toml";
+    const PATH: &'static str = "data/rules/steal.toml";
 
     fn parse(path: &str, text: &str, content: &super::Content) -> Result<Self, ContentError> {
         Self::parse(path, text, &content.factions)
@@ -56,13 +56,13 @@ mod tests {
 
     #[test]
     fn a_caught_thief_faces_a_faction_hostile_to_them() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let rules = content.steal().expect("stealing is in the game");
         let factions = content.factions();
         assert_eq!(factions.def(rules.caught).id, "outraged");
         // An unknown faction is refused.
         let mut files = ContentFiles::builtin();
-        files.insert("data/steal.toml", "caught = \"nobody\"\n");
+        files.insert("data/rules/steal.toml", "caught = \"nobody\"\n");
         let err = Content::load(&files).expect_err("nobody");
         assert!(
             err.message.contains("unknown faction `nobody`"),
@@ -71,7 +71,7 @@ mod tests {
         );
         // Without the file nobody steals.
         let mut files = ContentFiles::builtin();
-        files.remove("data/steal.toml");
+        files.remove("data/rules/steal.toml");
         let content = Content::load(&files).expect("stealing is optional");
         assert!(content.steal().is_none());
     }

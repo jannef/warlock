@@ -12,8 +12,8 @@ use bevy::mesh::{Indices, MeshVertexAttribute, MeshVertexBufferLayoutRef, Vertex
 use bevy::prelude::*;
 use bevy::reflect::TypePath;
 use bevy::render::render_resource::{
-    AsBindGroup, PrimitiveTopology, RenderPipelineDescriptor, ShaderType,
-    SpecializedMeshPipelineError,
+    AsBindGroup, Extent3d, PrimitiveTopology, RenderPipelineDescriptor, ShaderType,
+    SpecializedMeshPipelineError, TextureDimension, TextureFormat,
 };
 use bevy::shader::ShaderRef;
 use bevy::sprite_render::{
@@ -36,6 +36,10 @@ const ATTRIBUTE_BANDS: [MeshVertexAttribute; 3] = [
 
 /// Glyph flag: read the 1:1 atlas (whole-pixel position, scale 1). Mirrors `CRISP` in the shader.
 const CRISP: u32 = 1;
+
+/// Glyph flag: drawn only over cells under the open sky ([`SkyMask`]), pixel by pixel. Mirrors
+/// `SKY` in the shader.
+const SKY: u32 = 2;
 
 pub struct FreeGlyphPlugin;
 
@@ -98,22 +102,44 @@ impl Bands {
     };
 }
 
+/// The cells under the open sky, for glyphs pushed with [`FreeGlyphs::push_under_sky`]: a
+/// falling raindrop is cut off pixel by pixel where it crosses into a roofed cell or a wall.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct SkyMask {
+    /// Framebuffer position (physical pixels) of the top-left corner of cell (0, 0).
+    pub origin: Vec2,
+    /// Cell size in physical pixels.
+    pub cell: Vec2,
+    /// Columns and rows of `open`.
+    pub size: UVec2,
+    /// Row-major: whether the cell is under the open sky. Everything outside is not.
+    pub open: Vec<bool>,
+}
+
 /// The glyphs to draw this frame, in order, and where they may appear.
 #[derive(Resource, Debug, Default)]
 pub struct FreeGlyphs {
-    glyphs: Vec<(FreeGlyph, Bands)>,
+    /// Each glyph with its bands and whether it is drawn only under the sky.
+    glyphs: Vec<(FreeGlyph, Bands, bool)>,
     /// Framebuffer rectangle outside of which nothing is drawn.
     pub clip: Rect,
+    /// Where glyphs pushed with [`FreeGlyphs::push_under_sky`] may appear (set by the rain).
+    pub sky: SkyMask,
 }
 
 impl FreeGlyphs {
     pub fn push(&mut self, glyph: FreeGlyph) {
-        self.glyphs.push((glyph, Bands::NONE));
+        self.glyphs.push((glyph, Bands::NONE, false));
     }
 
     /// Pushes `glyph` drawn in `bands`.
     pub fn push_banded(&mut self, glyph: FreeGlyph, bands: Bands) {
-        self.glyphs.push((glyph, bands));
+        self.glyphs.push((glyph, bands, false));
+    }
+
+    /// Pushes `glyph` drawn only over the cells of [`FreeGlyphs::sky`] under the open sky.
+    pub fn push_under_sky(&mut self, glyph: FreeGlyph) {
+        self.glyphs.push((glyph, Bands::NONE, true));
     }
 }
 
@@ -126,6 +152,9 @@ pub struct FreeGlyphParams {
     pub supersample: u32,
     /// The rows a capital letter covers, top and bottom: where colour bands lie.
     pub ink: Vec2,
+    /// [`SkyMask::origin`] and [`SkyMask::cell`].
+    pub sky_origin: Vec2,
+    pub sky_cell: Vec2,
 }
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
@@ -137,6 +166,9 @@ pub struct FreeGlyphMaterial {
     #[texture(2, sample_type = "float", filterable = true)]
     #[sampler(3)]
     pub smooth_atlas: Handle<Image>,
+    /// [`SkyMask::open`] as one `R8Unorm` texel a cell (255 open).
+    #[texture(4, sample_type = "float", filterable = false)]
+    pub sky: Handle<Image>,
 }
 
 impl Material2d for FreeGlyphMaterial {
@@ -183,19 +215,34 @@ fn shader() -> ShaderRef {
 struct LayerHandles {
     mesh: Handle<Mesh>,
     material: Handle<FreeGlyphMaterial>,
+    sky: Handle<Image>,
 }
 
 fn spawn_layer(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<FreeGlyphMaterial>>,
+    mut images: ResMut<Assets<Image>>,
     atlas: Res<GlyphAtlas>,
 ) {
     let mesh = meshes.add(glyph_mesh(&[], atlas.cell.as_vec2(), |_| 0));
+    // No cell is open until the rain says so.
+    let sky = images.add(Image::new_fill(
+        Extent3d {
+            width: 1,
+            height: 1,
+            depth_or_array_layers: 1,
+        },
+        TextureDimension::D2,
+        &[0],
+        TextureFormat::R8Unorm,
+        RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
+    ));
     let material = materials.add(FreeGlyphMaterial {
         params: FreeGlyphParams::default(),
         atlas: atlas.image.clone(),
         smooth_atlas: atlas.smooth.clone(),
+        sky: sky.clone(),
     });
     commands.spawn((
         Mesh2d(mesh.clone()),
@@ -204,7 +251,11 @@ fn spawn_layer(
         // Vertices are in framebuffer pixels, not world space, so culling would be wrong.
         NoFrustumCulling,
     ));
-    commands.insert_resource(LayerHandles { mesh, material });
+    commands.insert_resource(LayerHandles {
+        mesh,
+        material,
+        sky,
+    });
 }
 
 fn clear(mut free: ResMut<FreeGlyphs>) {
@@ -218,7 +269,9 @@ fn build_mesh(
     handles: Res<LayerHandles>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<FreeGlyphMaterial>>,
-    mut built: Local<Option<(Vec<(FreeGlyph, Bands)>, UVec2)>>,
+    mut images: ResMut<Assets<Image>>,
+    mut built: Local<Option<(Vec<(FreeGlyph, Bands, bool)>, UVec2)>>,
+    mut sky: Local<(UVec2, Vec<bool>)>,
 ) {
     let params = FreeGlyphParams {
         clip_min: free.clip.min,
@@ -227,7 +280,30 @@ fn build_mesh(
         atlas_columns: atlas.columns,
         supersample: atlas::SUPERSAMPLE,
         ink: atlas.cap,
+        sky_origin: free.sky.origin,
+        sky_cell: free.sky.cell.max(Vec2::ONE),
     };
+    if (sky.0 != free.sky.size || sky.1 != free.sky.open)
+        && let Some(mut image) = images.get_mut(&handles.sky)
+    {
+        *sky = (free.sky.size, free.sky.open.clone());
+        let size = Extent3d {
+            width: free.sky.size.x.max(1),
+            height: free.sky.size.y.max(1),
+            depth_or_array_layers: 1,
+        };
+        let mut data: Vec<u8> = free
+            .sky
+            .open
+            .iter()
+            .map(|&o| if o { 255 } else { 0 })
+            .collect();
+        data.resize((size.width * size.height) as usize, 0);
+        if image.texture_descriptor.size != size {
+            image.texture_descriptor.size = size;
+        }
+        image.data = Some(data);
+    }
     if let Some(material) = materials.get(&handles.material)
         && (material.params != params || material.atlas != atlas.image)
         && let Some(mut material) = materials.get_mut(&handles.material)
@@ -248,8 +324,8 @@ fn build_mesh(
 }
 
 /// One quad per glyph. An empty layer gets a single invisible quad, so the mesh is never empty.
-fn glyph_mesh(glyphs: &[(FreeGlyph, Bands)], cell: Vec2, slot: impl Fn(char) -> u16) -> Mesh {
-    const HIDDEN: (FreeGlyph, Bands) = (
+fn glyph_mesh(glyphs: &[(FreeGlyph, Bands, bool)], cell: Vec2, slot: impl Fn(char) -> u16) -> Mesh {
+    const HIDDEN: (FreeGlyph, Bands, bool) = (
         FreeGlyph {
             pos: Vec2::ZERO,
             ch: ' ',
@@ -259,6 +335,7 @@ fn glyph_mesh(glyphs: &[(FreeGlyph, Bands)], cell: Vec2, slot: impl Fn(char) -> 
             turn: 0.0,
         },
         Bands::NONE,
+        false,
     );
     let glyphs = if glyphs.is_empty() {
         &[HIDDEN][..]
@@ -274,14 +351,14 @@ fn glyph_mesh(glyphs: &[(FreeGlyph, Bands)], cell: Vec2, slot: impl Fn(char) -> 
         Vec::with_capacity(n * 6),
     );
     let mut bands: [Vec<[f32; 4]>; 3] = Default::default();
-    for (i, (g, b)) in glyphs.iter().enumerate() {
+    for (i, (g, b, under_sky)) in glyphs.iter().enumerate() {
         let size = cell * g.scale;
         let min = g.pos + (cell - size) * 0.5;
         let max = min + size;
         let middle = (min.y + max.y) * 0.5;
         let center = (min + max) * 0.5;
         let turn = Vec2::from_angle(g.turn);
-        let flags = if g.is_crisp() { CRISP } else { 0 };
+        let flags = if g.is_crisp() { CRISP } else { 0 } | if *under_sky { SKY } else { 0 };
         for (corner, local) in [
             (Vec2::new(min.x, min.y), Vec2::ZERO),
             (Vec2::new(max.x, min.y), Vec2::new(cell.x, 0.0)),
@@ -325,6 +402,7 @@ mod tests {
     fn shader_constants_match() {
         let src = include_str!("free_glyph.wesl");
         assert_eq!(crate::render::wesl_const(src, "CRISP"), CRISP as f32);
+        assert_eq!(crate::render::wesl_const(src, "SKY"), SKY as f32);
     }
 
     fn glyph(pos: Vec2, scale: f32) -> FreeGlyph {
@@ -357,7 +435,7 @@ mod tests {
             turn: std::f32::consts::FRAC_PI_2,
             ..glyph(Vec2::new(100.0, 40.0), 1.0)
         };
-        let mesh = glyph_mesh(&[(g, Bands::NONE)], cell, |_| 3);
+        let mesh = glyph_mesh(&[(g, Bands::NONE, false)], cell, |_| 3);
         let Some(VertexAttributeValues::Float32x3(p)) = mesh.attribute(Mesh::ATTRIBUTE_POSITION)
         else {
             panic!("positions are Float32x3");
@@ -373,7 +451,7 @@ mod tests {
     fn scaled_quads_grow_about_the_cell_center() {
         let cell = Vec2::new(10.0, 20.0);
         let mesh = glyph_mesh(
-            &[(glyph(Vec2::new(100.0, 40.0), 1.5), Bands::NONE)],
+            &[(glyph(Vec2::new(100.0, 40.0), 1.5), Bands::NONE, false)],
             cell,
             |_| 3,
         );
@@ -398,7 +476,7 @@ mod tests {
             ..glyph(Vec2::new(100.0, 40.0), 1.0)
         };
         assert!(!g.is_crisp());
-        let mesh = glyph_mesh(&[(g, Bands::NONE)], cell, |_| 3);
+        let mesh = glyph_mesh(&[(g, Bands::NONE, false)], cell, |_| 3);
         let Some(VertexAttributeValues::Float32x3(p)) = mesh.attribute(Mesh::ATTRIBUTE_POSITION)
         else {
             panic!("positions are Float32x3");
@@ -431,7 +509,7 @@ mod tests {
         };
         let plain = glyph(Vec2::ZERO, 1.0);
         let mesh = glyph_mesh(
-            &[(plain, Bands::NONE), (plain, bands)],
+            &[(plain, Bands::NONE, false), (plain, bands, false)],
             Vec2::new(10.0, 20.0),
             |_| 3,
         );

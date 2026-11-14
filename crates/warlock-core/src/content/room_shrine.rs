@@ -2,7 +2,7 @@
 //! "Special rooms", design §9.3): the room has a hidden side, good or evil, drawn at generation
 //! one to one (its feature shows it by its light, as a forgotten altar's), and it treats
 //! everyone inside by their own side: one who agrees heals faster, one opposed holds a status
-//! (Unwelcome), a neutral one is ignored. `world/shrine.rs` applies it.
+//! (Unwelcome), a neutral one is ignored. `world/fixtures/shrine.rs` applies it.
 
 use super::{StatusDef, StatusId};
 use crate::alignment::Alignment;

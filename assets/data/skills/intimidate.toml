@@ -4,10 +4,10 @@ name = "Intimidate"
 description = "Making others back down with a look or a threat."
 kind = "action"
 # War cry's (#844; spec §8 "Class abilities", the berserker's at 25): marked by "intimidate" (a
-# war cry roared or a foe threatened (intimidate.toml, the skill's use, #868), whatever comes of
+# war cry roared or a foe threatened (rules/intimidate.toml, the skill's use, #868), whatever comes of
 # it). Effect "intimidate": points added to the difficulty of
 # the Willpower check the cry and a threat ask of every hostile that hears and sees you, +8 at
 # 100, +12 at 200 (at most 20); a threat frightens for more degrees the more it adds (the ladder
-# in intimidate.toml). Being trained in it gives the Intimidate ability.
+# in rules/intimidate.toml). Being trained in it gives the Intimidate ability.
 mark = [{ on = "intimidate", chance = 100 }]
 benefit = [{ effect = "intimidate", curve = [[0, 0], [100, 8], [200, 12]] }]

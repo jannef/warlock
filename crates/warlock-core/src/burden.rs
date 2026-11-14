@@ -9,7 +9,7 @@
 //! **Levels**, by thirds of the limit ([`Burden`]): Unburdened up to a third, Burdened up to two
 //! thirds, Strained up to the limit, Overloaded beyond it. Each level costs the actor:
 //! - **time**: every action takes ×1.25 Burdened and ×1.5 Strained or Overloaded
-//!   ([`Burden::slow`], applied to every price in `world/schedule.rs`);
+//!   ([`Burden::slow`], applied to every price in `world/turn/schedule.rs`);
 //! - **Defence**: its Dexterity bonus is capped at +3 Burdened, +1 Strained, 0 Overloaded
 //!   ([`Burden::max_dex`]; worn armour's `max_dex` caps it too, and the lower cap wins);
 //! - **noise**: its footsteps are ×1.25 and ×1.5 as loud ([`Burden::footsteps`]);

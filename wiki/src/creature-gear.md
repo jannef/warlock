@@ -1,7 +1,7 @@
 # Creatures' gear
 
 Creatures you meet in the dungeons come with gear of their own, and so do creatures that a place
-puts somewhere without a set kit. The gear follows the "Gear" column of [the creatures' table](creatures.md#the-creatures). Each line of
+puts somewhere without a set kit. The gear follows the "Gear" column of [what creatures carry](creatures.md#what-they-carry). Each line of
 the table is rolled in turn by its chance, and gives one of the things it lists. Now and then a
 creature also gets a [magic](magic-items.md) piece, made as loot is, at the floor's item level.
 
@@ -43,3 +43,6 @@ kit a place gives a creature are always as made. The chances, by the creature's
 Deeper down, gear is better made: the chances of Fine, Marvellous, and Masterwork in the
 [table of deeper finds](magic-items.md#deeper-finds) are added to these, and the chance of a
 damaged piece shrinks to make room.
+
+See also: [Creatures](creatures.md), [What creatures leave](creature-drops.md), and
+[Equipment](equipment.md).

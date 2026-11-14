@@ -1,8 +1,9 @@
 //! A vault's monster pools (spec §7 "Level file format"): who comes, where, and what is refused.
-//! How they stand with the spawner's cap: `world/spawn_tests.rs`.
+//! How they stand with the spawner's cap: `world/creatures/spawn_tests.rs`.
 
 use super::*;
 use crate::content::{ContentFiles, Turn, danger};
+use crate::test_support::builtin;
 use std::collections::BTreeSet;
 
 /// A hall behind a door: twelve marked cells, its pool from `legend`.
@@ -234,7 +235,7 @@ fn only_a_dungeon_vault_draws_monsters() {
 
 #[test]
 fn the_guard_post_draws_two_of_the_floor_s_own_beside_its_guard() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let guard = (content.vaults().iter())
         .find(|v| v.id() == "guard_post")
         .expect("the guard post");

@@ -1,6 +1,6 @@
 # Cēaptūn, the market town (levels/ceaptun.toml; spec §8 "Dialogue": "Goodwill", #1247). Every
 # quest its people give that the player completes (the Weyfarers' Gilde's, Wat's, included) makes
-# their services 5% cheaper, on top of any other discount, up to free (world/goodwill.rs).
+# their services 5% cheaper, on top of any other discount, up to free (world/people/goodwill.rs).
 #
 # Fields: id, name, people (who speaks for the town: npc or creature ids, as a quest's `giver`
 # names them), goodwill (percent off their services per quest of theirs completed), told (said
@@ -12,7 +12,7 @@ people = ["eadric", "godgifu", "hild", "leofric", "wat", "wulfrun"]
 goodwill = 5
 told = "Cēaptūn's folk think the better of you."
 
-# Class helpers (`[[town.servant]]`, world/stipend.rs), each in the run of a character with the
+# Class helpers (`[[town.servant]]`, world/classes/stipend.rs), each in the run of a character with the
 # class ability `talent` only: the creature type for the player's gender (`creature`), of their
 # own race and speaking its register (`speech`: npc dialogues by race id, `default` for every
 # race not named), placed on cell `at` of level `level` as the town is first made.
@@ -27,7 +27,7 @@ at = [40, 27]
 creature = { male = "squire", female = "chambermaid", other = "servant" }
 speech = { default = "servant", dwarf = "servant_dwarf", duergar = "servant_dwarf", elf = "servant_elf", halfling = "servant_halfling", gnome = "servant_halfling", goblin = "servant_goblin", kobold = "servant_goblin", ratfolk = "servant_goblin", drow = "servant_drow", lizardfolk = "servant_lizardfolk" }
 
-# A craftsperson's patron (#1421; world/patron.rs), for Patron (data/dialogue/patrons.toml): a
+# A craftsperson's patron (#1421; world/crafting/patron.rs), for Patron (data/dialogue/patrons.toml): a
 # well-to-do burgher lodging in the Gæsthūs's north-east corner, who commissions graded work from
 # the craftsperson's trades, advances the stock, and pays in full. The class ability comes at
 # level 12, so the patron is placed as the ability is given if the town is made by then.
@@ -38,10 +38,10 @@ at = [50, 23]
 creature = { male = "patron", female = "patron", other = "patron" }
 speech = { default = "patron", dwarf = "patron_dwarf", duergar = "patron_dwarf", elf = "patron_elf", halfling = "patron_halfling", gnome = "patron_halfling", goblin = "patron_goblin", kobold = "patron_goblin", ratfolk = "patron_goblin", drow = "patron_drow", lizardfolk = "patron_lizardfolk" }
 
-# A merchant's business partner (#1407; world/invest.rs), for Invest (data/dialogue/partners.toml):
+# A merchant's business partner (#1407; world/classes/invest.rs), for Invest (data/dialogue/partners.toml):
 # keeps the corner desk in Factor Wulfrun's office, invests the gold put with them, and says what
 # the stake is worth when spoken to. `bonus`: basis points more on every week's return for each
-# quest named completed (data/invest.toml has the rest): Wulfrun's Fire in the deep, the fire
+# quest named completed (data/rules/invest.toml has the rest): Wulfrun's Fire in the deep, the fire
 # drake slain and the mines reopened.
 [[town.servant]]
 talent = "invest"

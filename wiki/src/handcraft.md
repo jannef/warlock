@@ -6,7 +6,7 @@ comes out is under [Crafting](crafting.md#how-well-it-comes-out).
 
 **You need:**
 - **Skill:** Woodcraft. [Rangers](class-ranger.md) start with it, a
-  [craftsperson](class-craftsperson.md#trades) may take the [Wright](talents.md#talent-wright)
+  [craftsperson](class-craftsperson.md#trades) may take the [Wright](talents-origins.md#talent-wright)
   trade, and a [commoner](class-commoner.md) may have it as their trade (others:
   [Which skills you start with](skills.md#which-skills-you-start-with)). No one teaches it.
 - **Tools:** a knife in your pack.
@@ -91,3 +91,6 @@ get half of the wood or the metal back (a single billet or ingot always comes ba
 ## The Woodcraft recipes
 
 {{#include generated/recipes-woodcraft.md}}
+
+See also: [Crafting](crafting.md), [Forging at the anvil](forging.md), and
+[Ammunition](ammunition.md).

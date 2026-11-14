@@ -1,6 +1,6 @@
 # The ranger's level 18 (#919; docs/design/ranger-companion.md §11.1): a creature beside both the
 # ranger and their companion is flanked, and the companion hunts the ranger's favoured prey as
-# the ranger does (`world/pack.rs`).
+# the ranger does (`world/allies/pack.rs`).
 [[talent]]
 id = "pack_tactics"
 name = "Pack tactics"

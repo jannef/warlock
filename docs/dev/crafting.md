@@ -16,20 +16,20 @@ forge, P5), the forging wizard, and salvage. Material stock (the piece) is in
   Mining are skills with no craft yet (#1331). Each of the three declares `{ effect = "craft", curve = [[0, 0], [100, 8], [200, 12]] }`
   (Temper's curve, read by salvage and by a recipe made) and a `salvage` mark rule at 100 %
   (Metalcraft, Woodcraft, and Jewelcraft also a `craft` mark, for a recipe made or a gem cut). Temper's and Whittle's own
-  effects (`Effect::Temper`, `Whittle`) are unchanged; Fletch's (`Effect::Fletch`, `Use::Fletch`)
+  effects (`Effect::Temper`, `Whittle`) are unchanged; Fletch's own effect and use
   went with the action in #1336: the arrows read Woodcraft's `craft`, the same curve.
 - **Who works what** is data, never code: `data/stock.toml`'s `[[group]]` rows name the skill,
   stat, and verb per material group, and `gems = { ... }` the gems' (no group). Today metal is
   Metalcraft (Strength); wood, bone, hide, and sinew are Woodcraft (Dexterity); stone, resin,
   and the gems are Jewelcraft (Dexterity), but `[[material]]` rows give flint, stone, and
   obsidian (knapped) to Woodcraft; cloth and glass have none. `World::profession_of(material)`
-  (`world/stock.rs`) is the one read. The stock itself (the `piece` object, by weight; the form
+  (`world/items/stock.rs`) is the one read. The stock itself (the `piece` object, by weight; the form
   words; `piece::count_for`; `MaterialDef::work`) is in `docs/dev/objects.md` "Stock".
 - **`Effect::Craft` is read per skill**: `Actor::skill_effect_of(content, skill, Effect::Craft)`
-  (`world/actor.rs`) reads the one named skill's curve at its value plus what affixes and talents
+  (`world/turn/actor.rs`) reads the one named skill's curve at its value plus what affixes and talents
   add to that skill (`Actor::skill_bonus`, as `skill_effect` counts them); it never sums another
   skill's craft, which `skill_effect` would (Metalcraft's and Woodcraft's `craft` together on one
-  check). The magic tests' exhaustive `skill_reader` names `world/salvage.rs` as its reader.
+  check). The magic tests' exhaustive `skill_reader` names `world/crafting/salvage.rs` as its reader.
 
 ## Recipes as data
 
@@ -196,7 +196,7 @@ so a hand knife may also be of ivory or dragonbone (both `bone`); jade is no wea
   group ("metal", "wood"), else "material".
 - **A failure** not of metal says "The work goes wrong, and you save what you can of it." (the
   metal's line stays).
-- Tests: `world/craft_hand_tests.rs` (the design's counts, the spear's steps, the haft refused
+- Tests: `world/crafting/craft_hand_tests.rs` (the design's counts, the spear's steps, the haft refused
   and greyed, the knife, skill, and station greyings, the profession's stat, verb, and mark, a
   bone javelin made and still thrown).
 
@@ -243,7 +243,7 @@ P9).
 - Hide parts on metal items (a long sword's grip, iron-shod boots' leather) stay free
   (recipes.md §12 item 13). Never yet: the padded coat, the wool cloak, every cloth garment
   (tailoring), the reed kilt.
-- Tests: `world/craft_hide_tests.rs` (each file's fields, the counts, a jerkin made from three
+- Tests: `world/crafting/craft_hide_tests.rs` (each file's fields, the counts, a jerkin made from three
   hides, cloaks of pelts and of a hide, graded gear and plain clothing, the knife and skill
   greyings, studded leather and hobnailed boots made with an iron ingot).
 
@@ -281,7 +281,7 @@ nothing that shoots is a smith's.
   -1 to wood's -2) and the wooden one plain "a composite bow". The lute and the pipe have no
   `Aspect`, so they come out plain whatever the margin; the bows, crossbows, and sling take the
   bands.
-- Tests: `world/craft_bow_tests.rs` (the design's counts, the rows' words, the sinew and metal
+- Tests: `world/crafting/craft_bow_tests.rs` (the design's counts, the rows' words, the sinew and metal
   steps, the greyings and refusals with no time, a long bow made with its sinew spent and no part
   of it, the ingot chosen spent, the composite bow's names, the plain lute).
 ## Armour and tools
@@ -323,7 +323,7 @@ P8's hide routes (#1353) and the stone tools take `<base>_by_hand`.
   The count is the same whatever the metal (a piece weighs by its material).
 - **Never made, so no file**: candles (wax has no profession), rope (cloth), the keys, household
   goods (salvage only).
-- Tests: `world/craft_armour_tests.rs` (the design's counts, mithril and bronze too, the rows'
+- Tests: `world/crafting/craft_armour_tests.rs` (the design's counts, mithril and bronze too, the rows'
   words, the lantern of iron or brass only, the anvil, the stone pick's knife and no anvil, plate
   beyond skill below 60, a graded suit against a plain lantern and pick-axe, a helm forged and
   marked, salvage's half).
@@ -337,7 +337,7 @@ the ingot the lump's metal (the input's material, as an arrow's head takes the a
 wizard's one step lists the ore stacks carried ("lumps of copper ore"). No new code: a graded
 recipe whose result has no aspect, so plain; a failure gives back `1 × yield / 100`, none, and
 says "The work goes wrong, and you save what you can of it." The ore comes from Mining
-(`docs/dev/digging.md` "Mining"). Tests: `world/mine_tests.rs` (copper ore to a copper ingot, one
+(`docs/dev/digging.md` "Mining"). Tests: `world/crafting/mine_tests.rs` (copper ore to a copper ingot, one
 lump spent; not listed for the untrained).
 
 ## Stations and the makeshift anvil: `works_as`, Field forge
@@ -346,15 +346,15 @@ A recipe's `station` is a terrain beside the maker. A terrain may serve as anoth
 `TerrainDef::works_as` (`works_as = "anvil"` in `data/terrain/`, resolved at load; a terrain
 that works as one that works as another is refused). It is read in one place,
 `Content::works_as(terrain)` (its `works_as`, else itself), which both station tests ask:
-`world/craft.rs::station_beside` (every recipe's `lack`, so `start_making` and the screen; the
+`world/crafting/craft.rs::station_beside` (every recipe's `lack`, so `start_making` and the screen; the
 "You set to work on the dagger at the makeshift anvil." line names the cell's own terrain) and
 `Content::offer` (what a feature offers, so Temper's `anvil_beside`, `anvil_needs`, and the
 walk-in, `ui/step_dialogs.rs::step_screen`, need no change). Mining finds nothing in a terrain that works as
-a station (`world/mine.rs`).
+a station (`world/crafting/mine.rs`).
 
 The one such terrain is `makeshift_anvil`, which the craftsperson's **Field forge** (level 32,
 `ClassActive::FieldForge`, `data/talents/field_forge.toml`'s `field_forge { seconds = 3600 }`,
-`CraftMods::field_forge`) makes, in `world/field_forge.rs`: `use:field_forge:E`, aimed in a
+`CraftMods::field_forge`) makes, in `world/crafting/field_forge.rs`: `use:field_forge:E`, aimed in a
 direction (`Aim::Direction`; the abilities menu's way is `beside::Target::Ground`, open ground the
 player knows: `world::open_ground` on the known terrain, nobody seen, no known trap, nothing
 lying there). The rules: the overworld refused (the menu: `Unavailable::NotHere`); the first
@@ -366,7 +366,7 @@ the work driver's `Task::FieldForge(Forging { at })`: `seconds` in `craft` turns
 gather; interrupted, nothing ("...; you leave the anvil unfinished."); done, the ingot and the
 cell are asked again, one ingot is spent, and `set_terrain(at, makeshift_anvil)`. No check, no
 draw, no mark. The terrain is saved with the level; a pick clears it (`hardness` 300, becoming
-floor). Tests: `world/field_forge_tests.rs`.
+floor). Tests: `world/crafting/field_forge_tests.rs`.
 
 ## The rows: `Ability::Profession`
 
@@ -388,7 +388,7 @@ its own row (a door, not a recipe). `input.rs::use_ability` opens
 
 ## What the screen reads: `PerceptionView::recipes`
 
-`world/craft.rs::recipe_rows` (through `PerceptionView::recipes(skill)`): the profession's
+`world/crafting/craft.rs::recipe_rows` (through `PerceptionView::recipes(skill)`): the profession's
 recipes in path order, every one for a player trained in the skill and none otherwise, each a `RecipeRow { id, name, takes, unavailable }`. Computed in core from the pack,
 the cells beside the player, and the skills: presentation never decides availability.
 
@@ -397,7 +397,7 @@ the cells beside the player, and the skills: presentation never decides availabi
   `piece::names`: "3 steel ingots"), inputs ("20 arrowheads", "an arrowhead for each made"), the
   station ("an anvil"), "a knife", "a bow ready" (`data/fletch.toml`'s word for what shoots the
   result), then the time in `Duration::spoken` ("about 10 minutes": Temper's and Whittle's
-  `data/temper.toml`, a generic recipe's `seconds`, the arrows' cut by Fletcher). A part with
+  `data/rules/temper.toml`, a generic recipe's `seconds`, the arrows' cut by Fletcher). A part with
   sources is its choices joined by "or" ("an arrowhead for each made or a bone shard or a block of
   flint"); a counted recipe's stock is priced for the batch at its most; wood free here is not
   said. Never a difficulty or odds.
@@ -434,7 +434,7 @@ reason is on the row). The list keys page; Esc closes. Every key is fixed and na
 `Action::Craft { recipe: String, picks: Vec<Option<usize>> }`, replay text `craft:ID[:POS,...]`
 (positions as `position_text`, `-` a skipped optional: `craft:long_sword:c,f`,
 `craft:dagger:a,-`), dispatched by one arm in `World::player_acts` to `World::start_craft`
-(`world/craft.rs`). An unknown recipe is refused ("You know no such recipe."), and so is a
+(`world/crafting/craft.rs`). An unknown recipe is refused ("You know no such recipe."), and so is a
 built-in one ("Temper is done from its own list.": its row runs `temper:` or `whittle:`), both
 taking no time; a generic one goes to `World::start_making` ("Making a recipe"
 below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
@@ -442,8 +442,8 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
 
 ## Making a recipe
 
-`world/craft_make.rs` (P5, #1335; `docs/design/recipes.md` §4, `professions.md` §7), tests in
-`world/craft_make_tests.rs`:
+`world/crafting/craft_make.rs` (P5, #1335; `docs/design/recipes.md` §4, `professions.md` §7), tests in
+`world/crafting/craft_make_tests.rs`:
 
 - **Steps** (`craft_steps`, `PerceptionView::craft_steps(recipe)`): one `CraftStep` per choice in
   the wizard's order: each chosen part in part order, a stock part (`"stock"`, or a table of
@@ -483,7 +483,7 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
   is beyond your skill."; no station: "There is no anvil here."; no knife; no launcher: "You
   have no bow ready."), then by the plan's reason. Then "You set to work on the long sword at the anvil." and the work driver's
   `Task::Craft(Crafting)` (`Copy`: the picks in a `[Option<usize>; MAX_PICKS]`).
-- **The work** (`world/work.rs`, "The work driver" below): `keep_at` for the recipe's `seconds` (`fletch::fletcher_seconds`:
+- **The work** (`world/crafting/work.rs`, "The work driver" below): `keep_at` for the recipe's `seconds` (`fletch::fletcher_seconds`:
   Fletcher's share for the arrows) in `ActionKind::Craft` turns, watched on the overworld as a
   forage is (`Watch::Forage`); stopped early, "...; you put down your work." and nothing is spent. Done (`crafted`),
   the picks are found again and the plan is resolved again from the pack ("You have nothing
@@ -504,7 +504,7 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
   Failed: each stock pick gives back `piece::count_for` of `yield` % of its grams (at most what
   it took), an input `count × yield / 100`, the gem all of it; "The blade comes out brittle and
   you break it up for the metal." Made: the gem is set, and an item whose base has an `Aspect`
-  takes `Grade::improvements()` (1, 2, 3; at most `temper.toml`'s `most`) improvements, each an
+  takes `Grade::improvements()` (1, 2, 3; at most `rules/temper.toml`'s `most`) improvements, each an
   aspect drawn evenly (one gameplay draw), with `attempts` equal to them: a crafted Fine item is a
   once-tempered one (Temper's difficulty `13 + 2`), and a crafted Masterwork is `finished`, so
   Temper refuses it ("It can be made no finer."). An item with no aspect (a ring) is plain
@@ -519,7 +519,7 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
 
 ## The work driver
 
-Every craft's long work, and Decipher's, goes through one driver (#1492; `world/work.rs`): its
+Every craft's long work, and Decipher's, goes through one driver (#1492; `world/crafting/work.rs`): its
 `start_*` checks what it checks and returns `Spent::Work(Work)`, a `Task` (one variant per kind:
 `Crafting`, `GemWork`, `Deciphering`, `Enchanting`, `Forging`, `Mending`, `Rigging`,
 `Salvaging`, `Setting`, `Tempering`) and its seconds (`World::craft_work(task, base)` takes
@@ -538,7 +538,7 @@ Every long work on stacks of the pack (`craft_make.rs` `make`, Temper and Whittl
 salvage, Make do and mend, Decipher, the enchanting recipes) names them by position as it
 begins, and a stack gone while it works (food rotting away, which does not stop it) shifts every
 later one (#1564). So the driver keeps a copy of its stacks as its time begins (`World::work_on`,
-`world/work_on.rs`; only the enchanting picks that are positions, `Enchanting::in_pack`) and finds
+`world/crafting/work_on.rs`; only the enchanting picks that are positions, `Enchanting::in_pack`) and finds
 those very stacks when it ends (`World::worked_on`: at the old position if still there, else the
 first stack equal to it); any gone or changed ends the work on nothing ("You have nothing left to
 work on.", Decipher's "...to make out.", a recipe's "...to work with."). Tests: the
@@ -577,7 +577,7 @@ of fire at 25 %; `docs/dev/creatures.md`); `brew_tests.rs` checks every essence 
 from some creature and every flask input is stocked by a generated shop. Alchemy in
 `data/skills/` gains the `craft` curve (Metalcraft's) and the `craft` mark (100 %);
 `data/recipes.toml`'s Alchemy row names `stat = "intelligence"`, `verb = "Brew"`, and its
-`failed` and `fumbled` lines. In `world/craft_make.rs`:
+`failed` and `fumbled` lines. In `world/crafting/craft_make.rs`:
 
 - **Nothing chosen** (`chooses_nothing`: no part, no ornament): `steps` is empty (not `None`), and
   `resolve` takes each object input from the pack (`taken`: the first stacks of the object,
@@ -602,7 +602,7 @@ from some creature and every flask input is stocked by a generated shop. Alchemy
   dialog asks "Brew a potion of healing? It uses 2 sprigs of moonwort, and takes about 20
   minutes." A row short of a herb is greyed by `RecipeLack::Input`, "not enough sprigs of
   moonwort".
-- **Tests**: `world/brew_tests.rs` (the table's rows and the never-brewed, nothing chosen and the
+- **Tests**: `world/crafting/brew_tests.rs` (the table's rows and the never-brewed, nothing chosen and the
   plan's words, the potion known and the mark, no grade at margin 20, the murky draught and the
   blunder with the herbs spent, the refusals with no time, Intelligence the stat, a replay of
   gathers and a brew; the essence rows: each made from its inputs, a flask of fire spending one
@@ -655,7 +655,7 @@ The shipped ones (`docs/design/recipes.md` §6 "Missiles"):
 Fletching (spec §8 "Fletching", #1021) is these two recipes (#1336), with no action, ability,
 or built-in recipe of its own. Fletching in a replay is `craft:arrows:HEAD,SHAFT` (or
 `craft:bolts:...`), `-` for no head: `craft:arrows:-,c`
-for brittle arrows from billet `c`, `craft:arrows:-` where wood is free. `world/fletch.rs` holds
+for brittle arrows from billet `c`, `craft:arrows:-` where wood is free. `world/crafting/fletch.rs` holds
 what only they read:
 
 - **The head** (`head = { input = "arrowhead", stock = ["bone", "stone"], optional = true }`): the
@@ -681,7 +681,7 @@ what only they read:
   `value_per_count`, `knives`, `[[makes]] { launches, launcher }` (`content/fletch.rs`); the time,
   difficulty, bands, and brittle objects are the recipes' and `data/recipes.toml`'s.
 
-Tests: `world/fletch_tests.rs` (the head step's order and None; an arrow from an arrowhead with
+Tests: `world/crafting/fletch_tests.rs` (the head step's order and None; an arrow from an arrowhead with
 both parts; a shard or block heading a batch, spent once; flint and bone arrows apart and flint's
 blows; brittle with no head, even for a master or a ranger; bolts for a crossbow; the knife, the
 launcher, and the wood asked for with no time; the rows' words; the bands; arrowheads at the
@@ -717,10 +717,10 @@ optional, Esc back keeping the pick, the dialog's words) and the text snapshots 
 
 ## Cutting a gem
 
-`world/cut.rs` (P10, #1355; `docs/design/recipes.md` §5), tests in `world/cut_tests.rs`. Cut is
+`world/crafting/cut.rs` (P10, #1355; `docs/design/recipes.md` §5), tests in `world/crafting/cut_tests.rs`. Cut is
 Jewelcraft's built-in recipe, run by `Action::Craft` itself (`craft:cut:LETTER`, one pick: the
 gem), dispatched from `World::start_craft` by one arm to `World::start_cut`; its turns are
-`ActionKind::Craft`, its work `Spent::Cut(cut::GemWork)`.
+`ActionKind::Craft`, its work `Task::Cut(cut::GemWork)` (`world/crafting/work.rs`).
 
 - **The list**: the profession screen's Cut row opens `ScreenName::Cut` (`--screen cut`;
   `ObjectList::Cut`, `world::cuttable`): every uncut loose gem, and every cut one above the
@@ -759,10 +759,10 @@ gem), dispatched from `World::start_craft` by one arm to `World::start_cut`; its
 
 ## Setting a gem
 
-`world/set.rs` (P11, #1356; `docs/design/recipes.md` §5), tests in `world/set_tests.rs`. Set is
+`world/crafting/set.rs` (P11, #1356; `docs/design/recipes.md` §5), tests in `world/crafting/set_tests.rs`. Set is
 Jewelcraft's built-in recipe, run by `Action::Craft` itself (`craft:set:ITEM,GEM`, two picks),
 dispatched from `World::start_craft` by one arm to `World::start_set`; its turns are
-`ActionKind::Craft`, its work `Spent::Set(set::Setting)`.
+`ActionKind::Craft`, its work `Task::Set(set::Setting)` (`world/crafting/work.rs`).
 
 - **The wizard**: the profession screen's Set row opens `ScreenName::CraftPick(set)`, the forging
   wizard. `craft_steps` and `craft_plan` hand a Set recipe to `set::steps` and `set::plan` (one
@@ -826,8 +826,8 @@ P11 (#1356; `docs/design/recipes.md` §6 "Rings and amulets"), generic recipes:
 
 ## Salvage
 
-`world/salvage.rs` (one module; one line each in `world/mod.rs`'s `Spent` and dispatch,
-`action/text.rs`, `ability.rs`'s matches, `buff.rs`), numbers in `data/salvage.toml`
+`world/crafting/salvage.rs` (one module; one line each in `world/mod.rs`'s `Spent` and dispatch,
+`action/text.rs`, `ability.rs`'s matches, `buff.rs`), numbers in `data/rules/salvage.toml`
 (`content/salvage.rs`, `Content::salvage`, optional: without it nobody salvages and the ability
 is not listed): `seconds = 600`, `difficulty = 12`, `yield = 50`.
 
@@ -861,14 +861,14 @@ is not listed): `seconds = 600`, `difficulty = 12`, `yield = 50`.
   unidentified item is never named. What is saved joins the pack ("You save X and Y.", or
   "Nothing is left worth keeping.").
 - **Magic** (docs/dev/enchanting.md "Salvage's affix checks"): before the material checks,
-  `World::catch_magic` (`world/crystal.rs`) makes one Enchanting check per affix of a magic or
+  `World::catch_magic` (`world/crafting/crystal.rs`) makes one Enchanting check per affix of a magic or
   rare item, identified or not (an unidentified one's lines name no affix), each made a crystal
   of the affix's colour, and a deep rare's chance of a rare material; the crystals join the saved
   list after the materials.
 - **Marks**: `Use::Salvage` on each distinct profession rolled, that skill alone
   (`World::train_skill`, a filter on `World::train`'s loop), and on Enchanting when an affix
   check was made; untrained skills get none. No noise, no alignment.
-- **Tests**: `world/salvage_tests.rs` (the owner's ruby-tipped hardwood quarterstaff over many
+- **Tests**: `world/crafting/salvage_tests.rs` (the owner's ruby-tipped hardwood quarterstaff over many
   fates: both, wood only, ruby only, neither, the shattering; the cut kept; `chipped`'s ladder;
   ten minutes; one of a stack; every refusal with no time, unpaid goods in Grimbold's shop; an
   interruption; the marks; `skill_effect_of` not summing; the ability; a replay),
@@ -881,7 +881,7 @@ The craftsperson's class ability at level 6 (#1420; the craftsperson design §7.
 where the rule already reads its number:
 
 - **`waste_not { salvage, failed }`** (`CraftMods::salvage_percent`, `failed_percent`, the most
-  held of each). `salvage`: `world::salvage_percent(content, actor)` is `data/salvage.toml`'s
+  held of each). `salvage`: `world::salvage_percent(content, actor)` is `data/rules/salvage.toml`'s
   `yield` or the holder's, whichever is more, read by `salvaged` for `piece::break_up` and by
   Eye for the make's line (`PerceptionView::describe_item`), so the description counts what the
   work would give. 75: a quarterstaff gives 8 billets for 5, chain mail 17 iron ingots for 11. A
@@ -899,15 +899,15 @@ where the rule already reads its number:
   alike, a natural 2 too ("The work goes wrong, but you know when to stop before the steel
   spoils." / "... the wood spoils.").
 
-Tests: `world/waste_not_tests.rs` (level 6, each read with and without the talent).
+Tests: `world/character/waste_not_tests.rs` (level 6, each read with and without the talent).
 
 ## Make do and mend
 
-`world/make_do.rs` (#1422; the craftsperson design §7.5): the craftsperson's class active at
+`world/crafting/make_do.rs` (#1422; the craftsperson design §7.5): the craftsperson's class active at
 level 18, the talent `make_do_and_mend` with `{ kind = "make_do", seconds = 600, difficulty = 10
-}` (`CraftEffect::MakeDo`, `CraftMods::make_do`). One line each in `world/mod.rs`'s `Spent`
-(`Spent::MakeDo`) and dispatch, `world/merchants_eye.rs`'s `use_class_on` (the class actives on a
-stack), and `world/class_ability.rs`'s bare `use` ("Use it on what?").
+}` (`CraftEffect::MakeDo`, `CraftMods::make_do`). One line each in `world/crafting/work.rs`'s `Task`
+(`Task::MakeDo`) and dispatch, `world/classes/merchants_eye.rs`'s `use_class_on` (the class actives on a
+stack), and `world/classes/class_ability.rs`'s bare `use` ("Use it on what?").
 
 - **The ability**: `ClassActive::MakeDo` (id `make_do_and_mend`, `aims_item`, `ActionKind::Craft`),
   the abilities menu's Class group; `Aim::Item` opens `ScreenName::MakeDo` (`--screen make-do`,
@@ -933,13 +933,13 @@ stack), and `world/class_ability.rs`'s bare `use` ("Use it on what?").
 - **Marks**: `Use::Craft` on that profession alone (`World::train_skill`), if trained.
 - **Eye for the make** says the damaged line with ", or your own hands" to a holder
   (`magic/describe.rs::make_lines`'s `mends`).
-- **Tests**: `world/make_do_tests.rs` (the level, the action text, every refusal with no time, the
+- **Tests**: `world/crafting/make_do_tests.rs` (the level, the action text, every refusal with no time, the
   row greyed and the wielded left out, made with the attempts kept, failed with nothing lost, Eye
   for the make's line, a replay), the `make-do-list` screen snapshot.
 
 ## Quick hands and Master's hand (the craftsperson's)
 
-`world/mastery.rs` (#1425; the craftsperson design §7.8, §7.9): the craftsperson's passives at
+`world/crafting/mastery.rs` (#1425; the craftsperson design §7.8, §7.9): the craftsperson's passives at
 levels 40 and 50, each one read.
 
 - **Quick hands** (`data/talents/quick_hands.toml`, `{ kind = "craft_time_percent", value = 50
@@ -964,7 +964,7 @@ levels 40 and 50, each one read.
 - **Wiki**: `xtask/src/wiki/recipes.rs` reads the talent's `grade_ease` (`grade_ease`): the
   grades' and the cuts' margin tables gain a "With Master's hand" column, and the odds tables a
   column of the graded outcomes with it.
-- **Tests**: `world/mastery_tests.rs` (the levels, the halved times of a recipe, Fletcher's share
+- **Tests**: `world/crafting/mastery_tests.rs` (the levels, the halved times of a recipe, Fletcher's share
   multiplied, Temper and Salvage run through, the eased margin and a failure kept, each grade and a
   cut four sooner).
 
@@ -974,7 +974,7 @@ The craftsperson's passive at level 60 (#1426; the craftsperson design §7.10): 
 `makers_mark` with `{ kind = "makers_mark", worth_percent = 50 }` (`CraftEffect::MakersMark`,
 `CraftMods::makers_mark`, `worth_percent` 0 refused at load).
 
-- **The one read**: `world/craft_make.rs::make_out`, after the grade's improvements are drawn: a
+- **The one read**: `world/crafting/craft_make.rs::make_out`, after the grade's improvements are drawn: a
   holder's made item whose object has a `kind` (arms, armour, a tool, jewellery) is built with
   `Worked::marked` (a plain one gets a `Worked` with nothing else on it), whatever the grade. A
   counted batch (`make_batch`), a brew's spoilt draught, and a kindless result (an ingot, a
@@ -984,14 +984,14 @@ The craftsperson's passive at level 60 (#1426; the craftsperson design §7.10): 
   most any `makers_mark` effect says, cached at load), so a marked item keeps its worth whoever
   carries it.
 - **Kept**: `Worked::damage` and `repair`, Temper, and Make do and mend never touch the flag.
-- **Read elsewhere**: the patron's pay through the worth alone (`world/patron.rs`,
+- **Read elsewhere**: the patron's pay through the worth alone (`world/crafting/patron.rs`,
   `PatronRules::paid`; no bonus of its own on top, #1489), the capacity
   (+1, `magic/capacity.rs`), the description's line (`magic/describe.rs::mark_line`: "It bears
   {name}'s mark." with the character's name from `PerceptionView::describe_item`, "It bears its
   maker's mark." from the nameless `lines`), the dev dump's ` (marked)`.
 - **Saves**: `Worked::marked` is new saved state, left out while false (saves pinned to the
   version).
-- **Tests**: `world/makers_mark_tests.rs` (the level, a made sword marked and worth half again, the
+- **Tests**: `world/crafting/makers_mark_tests.rs` (the level, a made sword marked and worth half again, the
   description, the capacity, a brew and an ingot unmarked, the patron's pay, no mark without the
   talent).
 
@@ -1005,11 +1005,11 @@ under a profession with none. The `abilities` layer lists `Metalcraft… (skill)
 
 `content/recipe_tests.rs` (the built-ins, a generic fixture of every field, the second half's
 fixtures of every new field and the old shape unchanged, each check's refusal, the settings
-file's bands and refusals), `world/craft_tests.rs` (rows by training and place, each reason,
-`craft:` refused with no time, the abilities menu's rows, Jewelcraft's rows), `world/cut_tests.rs` (Cutting a gem), `ability.rs`'s registry test (the
-profession rows in their skills' places, no Temper, Whittle, or Fletch row; `world/fletch_tests.rs`
+file's bands and refusals), `world/crafting/craft_tests.rs` (rows by training and place, each reason,
+`craft:` refused with no time, the abilities menu's rows, Jewelcraft's rows), `world/crafting/cut_tests.rs` (Cutting a gem), `ability.rs`'s registry test (the
+profession rows in their skills' places, no Temper, Whittle, or Fletch row; `world/crafting/fletch_tests.rs`
 for the counted recipes), `ui/step_dialogs.rs`'s
 walk-in test (the anvil still asks, opening the Temper list), `ui/profession_screen.rs` (a
-built-in row's action, a greyed row), `world/set_tests.rs` (Setting a gem, Jewellery), and the
+built-in row's action, a greyed row), `world/crafting/set_tests.rs` (Setting a gem, Jewellery), and the
 text snapshots `profession-*` and `set-pick-*` in
 `ui/screen_snapshots.rs`. The forge's tests are under "Making a recipe" and "The forging wizard".

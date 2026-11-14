@@ -1,7 +1,7 @@
 # The goblin war band's firebomber (the potions wave 2 design §7: a bomber): it hurls blasting
 # flasks from a few cells away, careless of whether its own kind stand where they burst, and
 # fights with a club (its racial weapon) once its foe is beside it. Its flasks never run out (a
-# creature's throw, `world/hurl.rs`); one or two are in its pack, and fall where it dies.
+# creature's throw, `world/combat/hurl.rs`); one or two are in its pack, and fall where it dies.
 [[creature]]
 id = "goblin_firebomber"
 level = 6

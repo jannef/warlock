@@ -1,0 +1,772 @@
+//! Spell effects in the rules (spec §4.8 "Spell effects"): the shapes they take, what the player
+//! perceives of one ([`Event::Spell`]), and the dev action that shows one
+//! (`effect:ID@X,Y[>X,Y]`).
+//!
+//! How an effect looks (`data/effects.toml`) is presentation: no rule reads it. The dev action
+//! reads only an effect's `shape` and `radius`, to make an event to show, and has no other
+//! consequence.
+//!
+//! **Perceived**: an effect is light itself, so the player sees its cells wherever they are in
+//! line of sight, in the dark too (like a burning missile). The event's cells are cut to those,
+//! a bolt's path to the stretch from the first of them to the last, and an origin the player
+//! does not see is replaced by where the effect comes into view (a burst's center, the first cell
+//! of a bolt's path seen); an event with no cell seen is dropped.
+//!
+//! **Casting** ([`World::cast_burst`], [`World::cast_bolt`], [`World::cast_cone`]): the one
+//! place a burst, a bolt, or a cone does what it does, for traps (spec §8 "Traps"), scrolls
+//! (spec §8 "Scrolls"), spells, and a dragon's breath alike: the
+//! effect's event, one roll of its damage for everyone it reaches (in ascending actor id order),
+//! then a burst's blast against walls and its heat or frost (its own, else its spell type's,
+//! `spell_type.rs`, for an actor's); an actor's ruins what lies on the floor it reached
+//! (`ruin.rs`). Only who cast it differs
+//! ([`Caster`]): a trap's blows are its own and its kills no one's; an actor's (the player
+//! reading a scroll) are theirs, and so are its kills, which earn them experience.
+
+use crate::action::{AttackKind, Event, SpellShape};
+use crate::combat::{Blow, Strike};
+use crate::content::{Bolt, Burst, BurstIce, DamageTypeId, EffectShape, TrapId, TrapNoise};
+use crate::damage::Damage;
+use crate::dice::Roll;
+use crate::fov::radius2;
+use crate::geom::Pos;
+use crate::ice::Shock;
+use crate::noise::{self, Noise};
+use crate::sight::LineOfSight;
+use crate::talent::TalentMods;
+use crate::world::combat::fight::Harm;
+use crate::world::{Actor, ActorId, Spent, World};
+use std::collections::BTreeSet;
+
+/// Who cast a spell, and so who deals its harm.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(in crate::world) enum Caster {
+    /// A trap that went off: its blows are [`Event::TrapStruck`], and its kills earn no one
+    /// anything.
+    Trap(TrapId),
+    /// An actor (the player reading a scroll): its blows are theirs ([`Event::Attacked`], a
+    /// spell, with no roll to hit), and so are its kills.
+    Actor(ActorId),
+    /// A place (spec §7 "Special rooms": a forgotten altar blowing apart): its kills earn no one
+    /// anything, as a trap's.
+    Place,
+}
+
+/// Whom a burst strikes, and how hard: those of the tags `only` (Rebuke's; none: everyone), but
+/// creatures of the type `spare`; half (at least 1) beyond radius − 1 unless `full`.
+#[derive(Clone, Copy, Debug)]
+pub(in crate::world) struct Reach<'a> {
+    pub only: &'a [String],
+    pub spare: Option<crate::content::CreatureId>,
+    pub full: bool,
+}
+
+/// The cells a burst around `center` of `radius` reaches: within the radius (rounded, like every
+/// radius) and in line of sight from the center, opaque cells left out. None if the center is
+/// opaque.
+pub(crate) fn burst_cells(center: Pos, radius: i32, opaque: impl Fn(Pos) -> bool) -> Vec<Pos> {
+    if opaque(center) {
+        return Vec::new();
+    }
+    let radius = radius.max(0);
+    let los = LineOfSight::compute(center, radius, &opaque);
+    let r2 = radius2(radius);
+    let mut cells = Vec::new();
+    for y in center.y - radius..=center.y + radius {
+        for x in center.x - radius..=center.x + radius {
+            let p = Pos::new(x, y);
+            if p.dist2(center) <= r2 && los.contains(p) && !opaque(p) {
+                cells.push(p);
+            }
+        }
+    }
+    cells
+}
+
+/// The cells a cone from `from` toward `toward` reaches, `length` cells long (spec §8
+/// "Spells"): within that distance (rounded, like every radius), in line of sight from `from`,
+/// not opaque, and within 45° either side of the way to `toward` (a quarter turn in all, by
+/// integers: the angle's cosine squared at least a half). Never `from` itself; none when
+/// `toward` is `from`. In row order.
+pub fn cone_cells(from: Pos, toward: Pos, length: i32, opaque: impl Fn(Pos) -> bool) -> Vec<Pos> {
+    let (dx, dy) = (i64::from(toward.x - from.x), i64::from(toward.y - from.y));
+    if (dx, dy) == (0, 0) {
+        return Vec::new();
+    }
+    let length = length.max(0);
+    let los = LineOfSight::compute(from, length, &opaque);
+    let r2 = radius2(length);
+    let way = dx * dx + dy * dy;
+    let mut cells = Vec::new();
+    for y in from.y - length..=from.y + length {
+        for x in from.x - length..=from.x + length {
+            let p = Pos::new(x, y);
+            let (vx, vy) = (i64::from(x - from.x), i64::from(y - from.y));
+            let dot = vx * dx + vy * dy;
+            let inside = dot > 0 && 2 * dot * dot >= (vx * vx + vy * vy) * way;
+            if p != from && inside && p.dist2(from) <= r2 && los.contains(p) && !opaque(p) {
+                cells.push(p);
+            }
+        }
+    }
+    cells
+}
+
+/// The cells a bolt from `from` toward `to` runs over: the straight line after `from` up to and
+/// including `to`, cut short before the first opaque cell.
+pub(crate) fn bolt_path(from: Pos, to: Pos, opaque: impl Fn(Pos) -> bool) -> Vec<Pos> {
+    if from == to {
+        return Vec::new();
+    }
+    (from.line_between(to).chain(std::iter::once(to)))
+        .take_while(|&p| !opaque(p))
+        .collect()
+}
+
+/// Cuts a spell event to what the player perceives of it (see the module docs): `seen` tells
+/// whether the player sees a cell or has it in line of sight. Returns whether anything of it is
+/// left to show.
+pub(crate) fn perceive_spell(event: &mut Event, seen: impl Fn(Pos) -> bool) -> bool {
+    let Event::Spell {
+        origin,
+        shape,
+        cells,
+        ..
+    } = event
+    else {
+        return true;
+    };
+    cells.retain(|&p| seen(p));
+    match shape {
+        SpellShape::Burst { center, .. } => {
+            if !seen(*origin) {
+                *origin = *center;
+            }
+        }
+        SpellShape::Bolt { path } => {
+            match (
+                path.iter().position(|&p| seen(p)),
+                path.iter().rposition(|&p| seen(p)),
+            ) {
+                (Some(first), Some(last)) => {
+                    path.truncate(last + 1);
+                    path.drain(..first);
+                    if first > 0 || !seen(*origin) {
+                        *origin = path[0];
+                    }
+                }
+                _ => path.clear(),
+            }
+        }
+    }
+    !cells.is_empty()
+}
+
+impl World {
+    /// The dev action `effect:ID@X,Y[>X,Y]` ([`crate::Action::Effect`]): shows effect `id` at
+    /// cell `at` (a burst around it), or from `at` toward `to` (a burst around `to`, flying there
+    /// from `at`; a bolt from `at` to `to`). It hurts no one and takes no time; only the message
+    /// log changes.
+    pub(in crate::world) fn show_effect(
+        &mut self,
+        id: &str,
+        at: Pos,
+        to: Option<Pos>,
+        events: &mut Vec<Event>,
+    ) -> Spent {
+        let Some(def) = self.content.effect(id) else {
+            self.say(format!("There is no effect `{id}`."));
+            return Spent::Nothing;
+        };
+        let level = self.state.current();
+        let content = &self.content;
+        let opaque = |p: Pos| level.is_opaque(content, p);
+        let (shape, cells) = match def.shape {
+            EffectShape::Burst => {
+                let center = to.unwrap_or(at);
+                let radius = def.radius;
+                let cells = burst_cells(center, radius, opaque);
+                (SpellShape::Burst { center, radius }, cells)
+            }
+            EffectShape::Bolt => {
+                let path = to.map_or_else(Vec::new, |to| bolt_path(at, to, opaque));
+                if path.is_empty() {
+                    self.say("A bolt needs a way to go: `effect:ID@X,Y>X,Y`, not into a wall.");
+                    return Spent::Nothing;
+                }
+                (SpellShape::Bolt { path: path.clone() }, path)
+            }
+        };
+        if cells.is_empty() {
+            self.say(format!("Effect `{id}` reaches no cell there."));
+            return Spent::Nothing;
+        }
+        self.say(format!("Effect: {id} (dev)."));
+        events.push(Event::Spell {
+            effect: id.to_string(),
+            origin: at,
+            shape,
+            cells,
+        });
+        Spent::NoTime
+    }
+
+    /// `noise` (a trap's going off, a scroll's spell) on cell `at` of the current level: no actor
+    /// made it, so everyone in earshot hears it. A special room scales it like every noise made
+    /// inside it.
+    pub(in crate::world) fn sound_at(&mut self, noise: Option<TrapNoise>, at: Pos) {
+        let Some(sound) = noise else {
+            return;
+        };
+        let percent = self.state.current().effects_at(&self.content, at).noise();
+        let loudness = u32::from(sound.loudness) * percent / 100;
+        let noise = Noise {
+            kind: sound.sound,
+            at,
+            loudness: loudness.min(u32::from(noise::MAX_LOUDNESS)) as u16,
+            maker: None,
+        };
+        if noise.loudness > 0 {
+            self.spread_noise(noise);
+        }
+    }
+
+    /// `burst` goes off around `center`, cast by `caster` from `origin` (a trap's own cell; the
+    /// reader of a scroll, from whom it flew): its effect ([`Event::Spell`] over the cells it
+    /// reaches, [`burst_cells`], its own cell never stopping it (a trap's on a shut door), so
+    /// what is drawn is what is hit), one roll of its damage for
+    /// everyone on them (but a caster its own burst spares, Scroll savant), half of it (at
+    /// least 1) beyond radius − 1; then the walls its blast
+    /// breaks ([`World::blast`]) and the doors it breaks (a spell's type's, [`World::blast_doors`]),
+    /// then the ice it melts or shatters ([`World::shock`]) or the water it
+    /// freezes ([`World::frost`]). What it rolled.
+    pub(in crate::world) fn cast_burst(
+        &mut self,
+        caster: Caster,
+        at: (Pos, Pos),
+        burst: &Burst,
+        events: &mut Vec<Event>,
+    ) -> i32 {
+        self.cast_burst_at(caster, at, (burst, &[]), events)
+    }
+
+    /// [`World::cast_burst`], striking only creatures of the tags `only` (Rebuke's; none:
+    /// everyone). The walls, the ice, and the fire are its all the same.
+    pub(in crate::world) fn cast_burst_at(
+        &mut self,
+        caster: Caster,
+        at: (Pos, Pos),
+        (burst, only): (&Burst, &[String]),
+        events: &mut Vec<Event>,
+    ) -> i32 {
+        let reach = Reach {
+            only,
+            spare: None,
+            full: false,
+        };
+        self.cast_burst_reaching(caster, at, (burst, reach), events)
+    }
+
+    /// [`World::cast_burst_at`], striking as `reach` says: a creature's burst
+    /// (`creature_burst.rs`) spares its own kind and strikes everyone in full.
+    pub(in crate::world) fn cast_burst_reaching(
+        &mut self,
+        caster: Caster,
+        (origin, center): (Pos, Pos),
+        (burst, reach): (&Burst, Reach<'_>),
+        events: &mut Vec<Event>,
+    ) -> i32 {
+        let only = reach.only;
+        let level = self.state.current();
+        let radius = burst.radius;
+        // Its own cell never stops it: a trap's on a shut door bursts out on both sides.
+        let opaque = |p: Pos| p != center && level.is_opaque(&self.content, p);
+        let cells = burst_cells(center, radius, opaque);
+        // A spell that shows no effect (`data/spells/` without one) is drawn as nothing.
+        if !burst.spell.is_empty() {
+            events.push(Event::Spell {
+                effect: burst.spell.clone(),
+                origin,
+                shape: SpellShape::Burst { center, radius },
+                cells: cells.clone(),
+            });
+        }
+        let roll = burst.damage.roll(&mut self.state.rng, burst.reroll);
+        let inner = radius2(radius - 1);
+        let level = self.state.current_level.clone();
+        let reached: BTreeSet<Pos> = cells.iter().copied().collect();
+        // Scroll savant (spec §8 "Talents"): a caster's own burst may spare it.
+        let spared = |a: &Actor| {
+            matches!(caster, Caster::Actor(id) if id == a.id)
+                && a.talent_mods(&self.content).magic.spares_self
+        };
+        let caught: Vec<(ActorId, Pos)> = (self.state.actors.values())
+            .filter(|a| a.level == level && reached.contains(&a.pos) && !spared(a))
+            .filter(|a| self.is_of_tags(a, only) && reach.spare != Some(a.creature))
+            .map(|a| (a.id, a.pos))
+            .collect();
+        for (id, p) in caught {
+            let edge = !reach.full && p.dist2(center) > inner;
+            let damage = if edge { (roll / 2).max(1) } else { roll };
+            let damage = Damage::new(damage, burst.kind);
+            self.spell_hurts(caster, id, (center, false), damage, events);
+        }
+        // What lies on the floor it reached may be lost (`ruin.rs`).
+        self.ruin_items(caster, burst.kind, &cells);
+        // Fire chars the floor it reached and the walls beside it (`sear.rs`).
+        self.sear_burst(burst.kind, (center, radius), &cells);
+        // A spell's type (`spell_type.rs`), a spell's own `heat` or `frost` standing in for its;
+        // a trap's or a place's burst is no spell.
+        let typed = matches!(caster, Caster::Actor(_)).then_some(burst.kind);
+        if burst.blast > 0 {
+            // The doors it reaches are found first: it never reaches through a wall it breaks.
+            let doors =
+                typed.map_or_else(Vec::new, |kind| self.doors_blasted(kind, center, radius));
+            self.blast(center, radius, burst.blast, events);
+            self.blast_doors(&doors, events);
+        }
+        let rule = typed.and_then(|kind| self.content.spell_type(kind));
+        let ice = burst.ice.or(rule.and_then(|r| r.ice));
+        self.burst_ice(center, radius, ice, events);
+        if let Some(kind) = typed {
+            self.spell_type_burst(kind, (center, radius), burst.blast, events);
+        }
+        roll
+    }
+
+    /// What a burst of `radius` around `center` does to the ice and water it reaches.
+    pub(super) fn burst_ice(
+        &mut self,
+        center: Pos,
+        radius: i32,
+        ice: Option<BurstIce>,
+        events: &mut Vec<Event>,
+    ) {
+        match ice {
+            Some(BurstIce::Melts) => {
+                self.shock(center, radius, Shock::Heat, events);
+            }
+            Some(BurstIce::Freezes(um)) => {
+                self.frost(center, radius, um);
+            }
+            None => {}
+        }
+    }
+
+    /// `bolt` runs from `origin` over `path` (its cells in order, as far as it reaches), cast by
+    /// `caster`: its effect ([`Event::Spell`], drawn along the cells after its origin: a trap's
+    /// own cell, first in its path, is struck but not drawn), and one roll of its damage for
+    /// everyone on the path. What it rolled.
+    pub(in crate::world) fn cast_bolt(
+        &mut self,
+        caster: Caster,
+        origin: Pos,
+        path: &[Pos],
+        bolt: &Bolt,
+        events: &mut Vec<Event>,
+    ) -> i32 {
+        let drawn: Vec<Pos> = path.iter().copied().filter(|&p| p != origin).collect();
+        if !drawn.is_empty() && !bolt.spell.is_empty() {
+            events.push(Event::Spell {
+                effect: bolt.spell.clone(),
+                origin,
+                shape: SpellShape::Bolt { path: drawn },
+                cells: path.to_vec(),
+            });
+        }
+        let roll = bolt.damage.roll(&mut self.state.rng, bolt.reroll);
+        let level = self.state.current_level.clone();
+        let mut caught = Vec::new();
+        for p in path {
+            caught.extend(self.state.actor_at(&level, *p).map(|a| a.id));
+        }
+        for id in caught {
+            let damage = Damage::new(roll, bolt.kind);
+            self.spell_hurts(caster, id, (origin, true), damage, events);
+        }
+        self.ruin_items(caster, bolt.kind, path);
+        roll
+    }
+
+    /// A cone cast by `caster` from `here` toward `at`, `length` cells long ([`cone_cells`]):
+    /// its `effect` ([`Event::Spell`], drawn as a burst around `here` over the cone's cells;
+    /// none for an empty id), then one roll of `roll` (with `reroll`) for everyone in it, in
+    /// ascending actor id order, doing damage of `kind` as an area's: no roll to hit, Evasion
+    /// halving it, resistances taking their share ([`World::spell_hurts`]). The one place a
+    /// cone strikes: Burning hands (`cast.rs`) and a dragon's breath (`breath.rs`). What it
+    /// rolled.
+    pub(in crate::world) fn cast_cone(
+        &mut self,
+        caster: Caster,
+        (here, at, length): (Pos, Pos, i32),
+        (effect, roll, reroll, kind): (&str, Roll, u32, Option<DamageTypeId>),
+        events: &mut Vec<Event>,
+    ) -> i32 {
+        let level = self.state.current();
+        let opaque = |p: Pos| level.is_opaque(&self.content, p);
+        let cells = cone_cells(here, at, length, opaque);
+        if !effect.is_empty() {
+            events.push(Event::Spell {
+                effect: effect.to_string(),
+                origin: here,
+                shape: SpellShape::Burst {
+                    center: here,
+                    radius: length,
+                },
+                cells: cells.clone(),
+            });
+        }
+        let roll = roll.roll(&mut self.state.rng, reroll);
+        let level = self.state.current_level.clone();
+        let caught: Vec<ActorId> = (self.state.actors.values())
+            .filter(|a| a.level == level && cells.contains(&a.pos))
+            .map(|a| a.id)
+            .collect();
+        for id in caught {
+            let damage = Damage::new(roll, kind);
+            self.spell_hurts(caster, id, (here, false), damage, events);
+        }
+        self.ruin_items(caster, kind, &cells);
+        self.sear_area(kind, here, (&cells, crate::scorch::AREA));
+        roll
+    }
+
+    /// What of a burst's or a bolt's `damage` reaches actor `id`: with Evasion (spec §8
+    /// "Talents") its share, rounded down (a spell that does nothing more is resisted).
+    pub(in crate::world) fn evaded(&self, id: ActorId, damage: Damage) -> Damage {
+        let percent = (self.state.actors.get(&id)).map_or(0, |a| {
+            a.talent_mods(&self.content).defence.spell_damage_percent
+        });
+        if percent == 0 {
+            return damage;
+        }
+        let amount = u64::try_from(damage.amount.max(0)).unwrap_or(0);
+        let amount = i32::try_from(TalentMods::scaled(amount, percent)).unwrap_or(i32::MAX);
+        Damage::new(amount, damage.kind)
+    }
+
+    /// `caster`'s spell does `damage` to `target` from `source` (a cell, and whether it flew
+    /// along a line from it), with no roll to hit, less what Evasion spares it ([`World::evaded`])
+    /// and what the target resists of its kind (spec §8 "Damage types"): a trap's blow
+    /// ([`World::trap_hurts`]), or an actor's, dealt
+    /// the way every blow is (spec §8 "Blood", "Status effects"): the event, a big hit's blood,
+    /// the damage, which may kill (a kill by the player earns its experience), and if it lives
+    /// the statuses its wound causes. A shopkeeper the player's spell reaches turns on them, as
+    /// one they strike does.
+    pub(in crate::world) fn spell_hurts(
+        &mut self,
+        caster: Caster,
+        target: ActorId,
+        source: (Pos, bool),
+        damage: Damage,
+        events: &mut Vec<Event>,
+    ) {
+        let damage = self.evaded(target, damage);
+        match caster {
+            Caster::Trap(trap) => self.trap_hurts(trap, target, source, damage, events),
+            Caster::Actor(by) => {
+                let hit = Strike::Hit { critical: false };
+                self.spell_strikes(by, target, source, (damage, hit), events);
+            }
+            Caster::Place => self.place_hurts(target, damage, events),
+        }
+    }
+
+    /// Actor `by`'s spell strikes `target` from `source` (a cell, and whether it flew along a
+    /// line from it) as `strike` says (a miss, or a hit, a critical one perhaps, of an attack
+    /// roll; a hit for a spell with no roll), doing `damage` less what the target resists of
+    /// its kind (spec §8 "Damage types"), dealt the way every blow is (spec §8 "Blood",
+    /// "Status effects"): the event, a big hit's blood, the damage, which may kill (a kill by
+    /// the player earns its experience), and if it lives the statuses its wound causes. A
+    /// shopkeeper the player's spell reaches turns on them, as one they strike does; a miss
+    /// provokes too. No Evasion here: [`World::spell_hurts`] takes it off an area's first. The
+    /// hit points it took (a Leech's share is of them).
+    pub(in crate::world) fn spell_strikes(
+        &mut self,
+        by: ActorId,
+        target: ActorId,
+        source: (Pos, bool),
+        (damage, strike): (Damage, Strike),
+        events: &mut Vec<Event>,
+    ) -> i32 {
+        let Some(to) = self.state.actors.get(&target).map(|a| a.pos) else {
+            return 0;
+        };
+        let from = self.state.actors.get(&by).map_or(source.0, |a| a.pos);
+        // Poison lore's and Malison's bite lands with a spell as with a blow, before resistance;
+        // so does its type's (`spell_type.rs`).
+        let damage = if damage.amount > 0 {
+            let blow = Blow {
+                strike,
+                ..Blow::plain(damage.amount, damage.kind)
+            };
+            let amount = self.lore_blow(by, target, blow).damage;
+            Damage::new(
+                self.spell_type_bite(target, amount, damage.kind),
+                damage.kind,
+            )
+        } else {
+            damage
+        };
+        let taken = if strike.is_hit() {
+            self.resisted(target, damage)
+        } else {
+            0
+        };
+        let mut blow = Blow::plain(taken, damage.kind);
+        blow.strike = strike;
+        if strike.is_hit() && damage.amount > 0 && taken <= 0 {
+            blow.strike = Strike::Resisted;
+        }
+        events.push(Event::Attacked {
+            attacker: by,
+            target,
+            kind: AttackKind::Spell,
+            from,
+            to,
+            strike: Some(blow.strike),
+            with: None,
+            damage: damage.kind,
+            natural: None,
+            caught: None,
+        });
+        if by == self.state.player && target != by {
+            self.provoke(target);
+            self.provoke_court(target);
+            // A harmful spell from hallowed ground breaks the peace (`sanctuary.rs`).
+            self.break_hallow();
+        }
+        if taken <= 0 {
+            return 0;
+        }
+        self.spill(by.0, target, source, blow);
+        if self.hurt(target, taken, Harm::Actor(by), events) {
+            // Of Siphoning and of the Hunt: a kill of one's own close by (`siphon.rs`).
+            self.siphon(by, (target, to));
+        } else {
+            self.wounded(target, &blow, Some(by), events);
+            self.spell_type_shove(target, (source.0, from), &blow, events);
+        }
+        taken
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::action::{Action, Outcome};
+    use crate::content::{Content, ContentFiles};
+    use std::sync::Arc;
+
+    /// A lit room (x 1 to 9, y 1 to 5) with a pillar at (6, 3), the player at (2, 3), and a dark
+    /// closet behind a wall to the east.
+    fn room() -> World {
+        let mut files = ContentFiles::builtin();
+        files.insert(
+            "levels/spells.toml",
+            "name = \"Spells\"\nambient = [255, 255, 255, 0]\nmap = '''\n\
+             ##############\n#.........#..#\n#.........#..#\n#.@...#...#..#\n\
+             #.........#..#\n#.........#..#\n##############\n'''\n\
+             [legend]\n\"@\" = { terrain = \"floor\", spawn = \"player\" }\n",
+        );
+        files.insert(
+            "scenarios/spells.toml",
+            "name = \"Spells\"\nstart_level = \"spells\"\n",
+        );
+        let content = Content::load(&files).expect("test content loads");
+        World::new(Arc::new(content), "spells", None).expect("scenario starts")
+    }
+
+    fn spell(outcome: &Outcome) -> (&str, Pos, &SpellShape, &[Pos]) {
+        match outcome.events.as_slice() {
+            [
+                Event::Spell {
+                    effect,
+                    origin,
+                    shape,
+                    cells,
+                },
+            ] => (effect.as_str(), *origin, shape, cells.as_slice()),
+            other => panic!("one spell event, not {other:?}"),
+        }
+    }
+
+    #[test]
+    fn bursts_reach_round_and_stop_at_walls() {
+        let open = |_: Pos| false;
+        let cells = burst_cells(Pos::new(0, 0), 2, open);
+        // r² + r = 6: a rounded ball of 21 cells.
+        assert_eq!(cells.len(), 21);
+        assert!(cells.contains(&Pos::new(2, 1)) && !cells.contains(&Pos::new(2, 2)));
+        assert_eq!(burst_cells(Pos::new(0, 0), 0, open), [Pos::new(0, 0)]);
+        // A wall at x = 1: nothing beyond it, the wall itself left out.
+        let wall = |p: Pos| p.x == 1;
+        let cells = burst_cells(Pos::new(0, 0), 2, wall);
+        assert!(cells.iter().all(|p| p.x <= 0), "{cells:?}");
+        assert!(burst_cells(Pos::new(1, 0), 2, wall).is_empty());
+    }
+
+    #[test]
+    fn bolts_run_to_their_end_or_a_wall() {
+        let open = |_: Pos| false;
+        let path = bolt_path(Pos::new(0, 0), Pos::new(4, 2), open);
+        assert_eq!(path.len(), 4);
+        assert_eq!(path.last(), Some(&Pos::new(4, 2)));
+        assert!(!path.contains(&Pos::new(0, 0)), "it leaves its origin");
+        let wall = |p: Pos| p.x == 3;
+        assert_eq!(
+            bolt_path(Pos::new(0, 0), Pos::new(6, 0), wall),
+            [Pos::new(1, 0), Pos::new(2, 0)]
+        );
+        assert!(bolt_path(Pos::new(2, 2), Pos::new(2, 2), open).is_empty());
+    }
+
+    #[test]
+    fn cones_fan_a_quarter_turn_toward_their_aim_and_stop_at_walls() {
+        let open = |_: Pos| false;
+        let o = Pos::new(0, 0);
+        let east = cone_cells(o, Pos::new(5, 0), 3, open);
+        for p in [
+            (1, 0),
+            (2, 0),
+            (3, 0),
+            (1, 1),
+            (1, -1),
+            (2, 2),
+            (2, -1),
+            (3, 1),
+        ] {
+            assert!(east.contains(&Pos::new(p.0, p.1)), "{p:?} in {east:?}");
+        }
+        for p in [(0, 0), (0, 1), (-1, 0), (1, 2), (4, 0), (3, 3)] {
+            assert!(!east.contains(&Pos::new(p.0, p.1)), "{p:?} not in {east:?}");
+        }
+        // Symmetric about its aim, and a diagonal one too.
+        assert!(east.iter().all(|p| east.contains(&Pos::new(p.x, -p.y))));
+        let diagonal = cone_cells(o, Pos::new(2, 2), 2, open);
+        assert!(diagonal.contains(&Pos::new(1, 1)) && diagonal.contains(&Pos::new(2, 0)));
+        assert!(!diagonal.contains(&Pos::new(-1, 1)));
+        assert!(cone_cells(o, o, 3, open).is_empty(), "no way to fan");
+        // A wall across x = 2: nothing at or beyond it.
+        let wall = |p: Pos| p.x == 2;
+        let cut = cone_cells(o, Pos::new(5, 0), 3, wall);
+        assert!(cut.iter().all(|p| p.x == 1), "{cut:?}");
+    }
+
+    #[test]
+    fn the_dev_action_shows_an_effect_and_changes_nothing_else() {
+        let mut world = room();
+        let (turn, time) = (world.turn(), world.time());
+        let action: Action = "effect:fireball@4,2".parse().expect("parses");
+        let out = world.apply(&action);
+        let (effect, origin, shape, cells) = spell(&out);
+        assert_eq!((effect, origin), ("fireball", Pos::new(4, 2)));
+        let radius = world.content().effect("fireball").expect("fireball").radius;
+        assert_eq!(
+            shape,
+            &SpellShape::Burst {
+                center: Pos::new(4, 2),
+                radius
+            }
+        );
+        assert!(cells.contains(&Pos::new(4, 2)) && cells.len() > 5);
+        assert!(!out.took_turn && out.elapsed.is_zero());
+        assert_eq!((world.turn(), world.time()), (turn, time));
+
+        // A bolt from the player east: it stops at the pillar.
+        let action: Action = "effect:lightning_bolt@2,3>9,3".parse().expect("parses");
+        let out = world.apply(&action);
+        let (_, origin, shape, cells) = spell(&out);
+        assert_eq!(origin, Pos::new(2, 3));
+        let path: Vec<Pos> = (3..=5).map(|x| Pos::new(x, 3)).collect();
+        assert_eq!(shape, &SpellShape::Bolt { path: path.clone() });
+        assert_eq!(cells, path);
+
+        // Unknown effects and bolts without a way are refused.
+        for bad in [
+            "effect:sparkle@4,2",
+            "effect:lightning_bolt@4,2",
+            "effect:lightning_bolt@2,3>2,3",
+            "effect:fireball@0,0",
+        ] {
+            let out = world.apply(&bad.parse().expect("parses"));
+            assert!(out.events.is_empty(), "{bad}");
+        }
+    }
+
+    #[test]
+    fn the_player_perceives_only_the_cells_in_line_of_sight() {
+        let mut world = room();
+        // A fireball on the far side of the east wall, in the closet: nothing to see.
+        let out = world.apply(&"effect:fireball@12,3".parse().expect("parses"));
+        assert!(out.events.is_empty());
+        // Behind the pillar from the player: the cells it hides are cut.
+        let out = world.apply(&"effect:fireball@8,3".parse().expect("parses"));
+        let (_, _, _, cells) = spell(&out);
+        let view = world.perception();
+        assert!(cells.iter().all(|&p| view.is_visible(p)), "{cells:?}");
+        assert!(!cells.contains(&Pos::new(7, 3)), "hidden by the pillar");
+        assert!(cells.contains(&Pos::new(8, 1)));
+        // A bolt from the closet's side of the wall is cut to what is seen; it comes into view
+        // where it is first seen.
+        let mut event = Event::Spell {
+            effect: "lightning_bolt".into(),
+            origin: Pos::new(0, 0),
+            shape: SpellShape::Bolt {
+                path: (1..=6).map(|x| Pos::new(x, 0)).collect(),
+            },
+            cells: (1..=6).map(|x| Pos::new(x, 0)).collect(),
+        };
+        let seen = |p: Pos| (3..=4).contains(&p.x);
+        assert!(perceive_spell(&mut event, seen));
+        let Event::Spell {
+            origin,
+            shape,
+            cells,
+            ..
+        } = &event
+        else {
+            unreachable!()
+        };
+        let stretch = vec![Pos::new(3, 0), Pos::new(4, 0)];
+        assert_eq!(
+            shape,
+            &SpellShape::Bolt {
+                path: stretch.clone()
+            }
+        );
+        assert_eq!((*origin, cells), (Pos::new(3, 0), &stretch));
+    }
+
+    #[test]
+    fn the_rules_never_read_how_effects_look() {
+        // The same run with every effect looking different plays out the same: same state, same
+        // events but for the effect's cells (the dev action's radius).
+        let mut files = ContentFiles::builtin();
+        let looks = include_str!("../../../../../assets/data/effects.toml");
+        let changed = looks
+            .replace("speed = 24", "speed = 3")
+            .replace("glyphs = \"▓▒░\"", "glyphs = \"*\"")
+            .replace("darken = { amount = 0.7", "darken = { amount = 0.1")
+            .replace("pixels = 4", "pixels = 0")
+            .replace("#fffff0", "#000000");
+        assert_ne!(looks, changed);
+        files.insert("data/effects.toml", &changed);
+        let other = Content::load(&files).expect("changed effects load");
+        let builtin = crate::test_support::builtin();
+        assert_eq!(
+            other.fingerprint_for("showcase"),
+            builtin.fingerprint_for("showcase"),
+            "saves stay valid"
+        );
+        let actions = crate::action::parse_actions(
+            "effect:fireball@20,18 wait move:N effect:lightning_bolt@19,17>40,17 wait*3",
+        )
+        .expect("actions parse");
+        let mut a = World::new(builtin, "arena", None).expect("arena");
+        let mut b = World::new(Arc::new(other), "arena", None).expect("arena");
+        for action in &actions {
+            assert_eq!(a.apply(action), b.apply(action), "{action}");
+            assert_eq!(a.state_hash(), b.state_hash(), "{action}");
+        }
+    }
+}

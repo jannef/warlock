@@ -24,6 +24,9 @@ mod aura;
 mod aura_roster_tests;
 mod background;
 mod breath;
+mod burial;
+#[cfg(test)]
+mod burial_tests;
 mod burst;
 mod calendar;
 mod calling;
@@ -206,6 +209,7 @@ mod theft;
 mod throw;
 mod town;
 mod trap;
+mod tuning;
 mod unique;
 mod unseen;
 mod validate;
@@ -233,6 +237,7 @@ pub use background::{
     Points, Tier as StoryTier, Tiers, When,
 };
 pub use breath::Breath;
+pub use burial::{Burial, BurialStairs, DEFAULT_EPITAPH};
 pub use burst::{BurstWhen, CreatureBurst};
 pub use calendar::Calendar;
 pub use calling::CallingDef;
@@ -303,8 +308,8 @@ pub use learning::{Band, Mishap, MishapEffect, StudyRules, drawn_among};
 pub use leaving::{Laid, Leaving};
 pub(crate) use level::validate_route;
 pub use level::{
-    CreatureSpawn, EdgeExit, Graves, HiddenLocation, LevelKind, LevelTemplate, Place, Region,
-    StairsLink, parse_route,
+    CreatureSpawn, EdgeExit, HiddenLocation, LevelKind, LevelTemplate, Place, Region, StairsLink,
+    parse_route,
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, Stability};
 pub use material::{
@@ -405,7 +410,8 @@ pub use terrain::{Breakable, Freeze, FreezeSpec, StairsDir, TerrainDef, TerrainI
 pub use theft::{Blinks, SMALL as SMALL_LOOT, Steals, Takes};
 pub use throw::Throw;
 pub use town::{TownDef, TownServant};
-pub use trap::{Trap, TrapAvoid, TrapDef, TrapEffect, TrapId, TrapNoise};
+pub use trap::{Trap, TrapAvoid, TrapDef, TrapDisarm, TrapEffect, TrapHarm, TrapId, TrapNoise};
+pub use tuning::Tuning;
 pub use unique::{Power, UNIQUE, UniqueDef, Uniques};
 pub use unseen::Invisible;
 pub use vault::{DangerRange, Vault};
@@ -484,7 +490,7 @@ fn duplicate_id(kind: &str, id: &str, path: &str, first: &str) -> ContentError {
 /// [`Content::load`] reads it with one line, [`Content::load_optional`] or
 /// [`Content::load_or_default`].
 trait RulesFile: Sized {
-    /// Where it is in the content set: `data/steal.toml`.
+    /// Where it is in the content set: `data/rules/steal.toml`.
     const PATH: &'static str;
 
     /// Parses the file's `text`; `path` names it in an error.
@@ -572,9 +578,15 @@ pub struct Content {
     trap_ids: BTreeMap<String, TrapId>,
     /// The chance of stepping onto a known trap unharmed (`[avoid]` in `data/traps.toml`).
     trap_avoid: TrapAvoid,
-    /// The numbers of searching for hidden features (`data/search.toml`, spec §8 "Searching").
+    /// Disarming a known trap (`[disarm]` in `data/traps.toml`).
+    trap_disarm: TrapDisarm,
+    /// What a trap's damage may be cut by (`[harm]` in `data/traps.toml`).
+    trap_harm: TrapHarm,
+    /// The numbers of searching for hidden features (`data/rules/search.toml`, spec §8
+    /// "Searching").
     search: SearchRules,
-    /// The numbers of working an item at an anvil (`data/temper.toml`, spec §7 "Special rooms").
+    /// The numbers of working an item at an anvil (`data/rules/temper.toml`, spec §7 "Special
+    /// rooms").
     temper: TemperRules,
     /// The condition creature gear spawns in (`data/gear_condition.toml`, spec §8 "Creature
     /// gear"); without the file, as made.
@@ -584,21 +596,21 @@ pub struct Content {
     drops: Vec<TagDrops>,
     /// The numbers of encounters (`data/encounters.toml`, spec §7 "Leaving an outdoor area").
     encounters: EncounterRules,
-    /// What becomes of a creature that catches the player stealing (`data/steal.toml`, spec §8
-    /// "Stealing"); none without the file.
+    /// What becomes of a creature that catches the player stealing (`data/rules/steal.toml`, spec
+    /// §8 "Stealing"); none without the file.
     steal: Option<StealRules>,
     /// The numbers of being caught unawares (`data/surprise.toml`, spec §8 "Surprise and sneak
     /// attacks"); none without the file, when nobody is surprised.
     surprise: Option<SurpriseRules>,
-    /// What holy wrath falls hardest on, and the pool a sin empties (`data/smite.toml`, spec §8
-    /// "Class abilities": "Smite"); none without the file, when nothing is unholy.
+    /// What holy wrath falls hardest on, and the pool a sin empties (`data/rules/smite.toml`, spec
+    /// §8 "Class abilities": "Smite"); none without the file, when nothing is unholy.
     smite: Option<SmiteRules>,
     /// The campaigns' encounter tables (`campaigns/<id>/data/encounters/`), by campaign and id.
     encounter_tables: Vec<EncounterTable>,
     /// How arrows and bolts are made (`data/fletch.toml`, spec §8 "Fletching"); without it
     /// nobody fletches.
     fletch: Option<FletchRules>,
-    /// The numbers of salvaging an item for its materials (`data/salvage.toml`); without it
+    /// The numbers of salvaging an item for its materials (`data/rules/salvage.toml`); without it
     /// nobody salvages.
     salvage: Option<SalvageRules>,
     /// The traps the craftsperson's Trapwright rigs (`data/rigs.toml`, spec §8 "Traps"); none
@@ -613,25 +625,25 @@ pub struct Content {
     /// What a wall a miner digs through gives (`data/mining.toml`, spec §8 "Digging"); none
     /// without the file, when nothing is mined.
     mining: Option<MiningRules>,
-    /// The numbers of feinting (`data/feint.toml`, spec §8 "Skills": Bluff); none without the
+    /// The numbers of feinting (`data/rules/feint.toml`, spec §8 "Skills": Bluff); none without the
     /// file, when nobody feints.
     feint: Option<FeintRules>,
-    /// What an aristocrat's stipend grows by with each level (`data/stipend.toml`, spec §8
+    /// What an aristocrat's stipend grows by with each level (`data/rules/stipend.toml`, spec §8
     /// "Class abilities": Stipend); none without the file, when it never grows.
     stipend: Option<StipendRules>,
-    /// What a merchant's investment pays and costs (`data/invest.toml`, spec §8 "Class
+    /// What a merchant's investment pays and costs (`data/rules/invest.toml`, spec §8 "Class
     /// abilities": Invest); none without the file, when no one invests.
     invest: Option<InvestRules>,
-    /// What a craftsperson's patron pays for a commission (`data/patron.toml`, spec §8 "Class
+    /// What a craftsperson's patron pays for a commission (`data/rules/patron.toml`, spec §8 "Class
     /// abilities": Patron); none without the file, when no one commissions work.
     patron: Option<PatronRules>,
-    /// The numbers of intimidating (`data/intimidate.toml`, spec §8 "Skills": Intimidate); none
-    /// without the file, when nobody intimidates.
+    /// The numbers of intimidating (`data/rules/intimidate.toml`, spec §8 "Skills": Intimidate);
+    /// none without the file, when nobody intimidates.
     intimidate: Option<IntimidateRules>,
     /// What area spells do to the items lying in them (`data/ruin.toml`, spec §8 "Spells":
     /// "Ruin"); empty without the file, when nothing is ruined.
     ruin: RuinRules,
-    /// The numbers of swimming in deep water (`data/swim.toml`, spec §8 "Skills": Swim); none
+    /// The numbers of swimming in deep water (`data/rules/swim.toml`, spec §8 "Skills": Swim); none
     /// without the file, when nobody swims.
     swim: Option<SwimRules>,
     /// The penalties of shots by distance (`data/ranged.toml`, spec §8 "Ranged combat"); none
@@ -651,6 +663,8 @@ pub struct Content {
     familiars: Option<FamiliarRules>,
     /// The rules of stat training (`data/stats.toml`, spec §8 "Stats").
     stat_training: StatTraining,
+    /// The tuning numbers of rules without a file of their own (`data/rules/tuning.toml`, #1541).
+    tuning: Tuning,
     factions: Factions,
     lights: Vec<LightPreset>,
     light_ids: BTreeMap<String, LightId>,
@@ -665,6 +679,9 @@ pub struct Content {
     levels: BTreeMap<String, LevelTemplate>,
     /// The campaign of each hand-made level: `None` for one outside every campaign.
     level_campaigns: BTreeMap<String, Option<String>>,
+    /// The burial chains (spec §7 "Graves"; `burial.rs`), each its levels from the churchyard
+    /// down, by the chain's id.
+    burial_chains: BTreeMap<String, Vec<String>>,
     scenarios: BTreeMap<String, ScenarioDef>,
     dungeons: BTreeMap<String, DungeonDef>,
     /// The default odds of a draw (spec §7 "Danger levels"), `data/dungeons.toml`'s
@@ -706,12 +723,13 @@ pub struct Content {
     spell_rules: Option<SpellRules>,
     /// The study check and its time (`data/study.toml`, spec §8 "Spells"); none without it.
     study: Option<StudyRules>,
-    /// The check of reading a scroll (`data/decipher.toml`, spec §8 "Scrolls"); none without it.
+    /// The check of reading a scroll (`data/rules/decipher.toml`, spec §8 "Scrolls"); none without
+    /// it.
     decipher: Option<DecipherRules>,
     /// The magic crystals' colours (`data/crystals.toml`, docs/dev/enchanting.md); none without
     /// it.
     crystals: Option<Crystals>,
-    /// Enchanting's numbers (`data/enchanting.toml`); none without it.
+    /// Enchanting's numbers (`data/rules/enchanting.toml`); none without it.
     enchanting: Option<EnchantingRules>,
     /// What a failed study may bring (`data/mishaps/`), in path order.
     mishaps: Vec<Mishap>,
@@ -1006,13 +1024,16 @@ impl Content {
         scroll::check_spells(&content).map_err(|m| ContentError::new("data/objects", m))?;
         talent::check_heirlooms(&content).map_err(|m| ContentError::new("data/talents", m))?;
         talent::check_trades(&content).map_err(|m| ContentError::new("data/talents", m))?;
+        talent::check_slots(&content).map_err(|m| ContentError::new("data/talents", m))?;
+        talent::check_kin(&content).map_err(|m| ContentError::new("data/talents", m))?;
         spell_def::check_effects(&content).map_err(|m| ContentError::new("data/spells", m))?;
         breath::check_effects(&content)?;
         burst::check_effects(&content)?;
         let path = "data/traps.toml";
         if let Some(text) = files.get_optional(path) {
-            let (traps, ids, avoid) = trap::parse(path, text, &content)?;
-            (content.traps, content.trap_ids, content.trap_avoid) = (traps, ids, avoid);
+            let (traps, ids, rules) = trap::parse(path, text, &content)?;
+            (content.traps, content.trap_ids) = (traps, ids);
+            (content.trap_avoid, content.trap_disarm, content.trap_harm) = rules;
         }
         // Learning spells (spec §8 "Spells"): mishaps name statuses and creatures.
         content.study = content.load_optional(files)?;
@@ -1045,6 +1066,7 @@ impl Content {
         content.prayer = content.load_optional(files)?;
         content.allies = content.load_optional(files)?;
         content.stat_training = content.load_or_default(files)?;
+        content.tuning = content.load_or_default(files)?;
         content.dialogues = dialogue::parse(files.table("dialogue"), &content)?;
         content.load_hunger(files)?;
         profane::check_signatures(&content)?;
@@ -1118,6 +1140,10 @@ impl Content {
             content.levels.insert(id.to_string(), level);
         }
         overworld::link_edge_exits(&mut content.levels);
+        let paths: BTreeMap<String, String> = (content.levels.keys())
+            .map(|id| (id.clone(), content.level_file(id)))
+            .collect();
+        content.burial_chains = burial::link_chains(&mut content.levels, |id| paths[id].clone())?;
         content.load_kits()?;
         content.load_background(files)?;
         // The companion's data names creatures, races, and the story's chapter.
@@ -1157,6 +1183,12 @@ impl Content {
             // Its range first: the level parser would refuse a bad one without saying why.
             let danger = vault::parse_danger(path, text)?.unwrap_or_default();
             let template = level::parse_level(path, id, text, &content, &default_legend)?;
+            if template.burial.is_some() {
+                return Err(ContentError::new(
+                    path,
+                    "`[burial]`: only a level is a burial ground",
+                ));
+            }
             let mut vault =
                 Vault::new(template, &content).map_err(|m| ContentError::new(path, m))?;
             vault.campaign = campaign::of_path(path).map(str::to_string);

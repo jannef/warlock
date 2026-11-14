@@ -1,0 +1,14 @@
+[[gift]]
+id = "palsied"
+name = "Palsied"
+kind = "bane"
+tier = "dire"
+weight = 10
+description = "Your hands shake: you are clumsier than you were, and slower to act when a fight begins."
+line = "Your hands shake, and do not stop."
+instead = "The palsy takes your quick hands, and nothing more."
+effects = [
+    { kind = "stat", stat = "dexterity", value = -3 },
+    { kind = "initiative_bonus", value = -4 },
+]
+undoes = ["adder_quick"]

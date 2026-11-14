@@ -59,10 +59,10 @@ jobs:
           echo "code=$code" >> "$GITHUB_OUTPUT"
           echo "web=$web" >> "$GITHUB_OUTPUT"
 
-  # The job's name is a required check of main's branch protection: keep it, although the smoke
-  # test and the goldens now run in `screens` beside it (#1583).
+  # The job's name is a required check of main's branch protection: renaming it means updating
+  # the protection in the same step.
   linux:
-    name: Linux (fmt, clippy, test, smoke)
+    name: Linux (fmt, clippy, test)
     needs: changes
     if: ${{ !cancelled() && !inputs.update_golden && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
@@ -110,6 +110,9 @@ jobs:
       # The vast level is generated (CLAUDE.md): the committed file must match the generator.
       - name: The vast level is fresh
         run: cargo xtask gen-vast --check
+      # Every code path CLAUDE.md, spec/, and docs/dev/ name must exist (#1667).
+      - name: The docs name code that exists
+        run: cargo xtask docs-check
       # The player wiki (wiki/, mdBook): its tables are generated here from the game data (they are
       # not committed), the book must build, and every link in it must lead to a page and anchor.
       - name: Install mdBook

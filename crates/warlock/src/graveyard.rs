@@ -14,7 +14,7 @@
 //! - **Read** for the main menu's Graveyard row and screen ([`by_experience`]), the Characters
 //!   screen's count, and, as a run begins, for the run's dead ([`GraveyardStore::dead`], the
 //!   most recent first, the petrified, `cause = "stone"`, marked), which the core keeps with
-//!   the run and names statues (the petrified) and gravestones (all) from
+//!   the run and names statues (the petrified) and Līctūn's graves (the rest) from
 //!   (`warlock_core::world::Fallen`).
 
 use crate::cli::Args;
@@ -223,8 +223,8 @@ impl GraveyardStore {
         }
     }
 
-    /// The dead, the most recent first, as the core names statues (the petrified) and
-    /// gravestones (all of them) from them (`World::set_graveyard`), each with how they died in
+    /// The dead, the most recent first, as the core names statues from (the petrified) and
+    /// lays the rest in Līctūn's graves (`World::set_graveyard`), each with how they died in
     /// the Graveyard screen's words.
     pub fn dead(&self, content: &Content) -> Vec<warlock_core::world::Fallen> {
         let mut all = self.read();
@@ -237,6 +237,7 @@ impl GraveyardStore {
                 death: crate::ui::graveyard_screen::death_words(&f, content),
                 name: f.name,
                 race: f.race,
+                class: f.class,
             })
             .collect()
     }

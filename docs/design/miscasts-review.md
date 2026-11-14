@@ -8,7 +8,7 @@ direction and a list of new entries; revision 2 adopted them and asked six more,
 answered those too (§1.1). This revision works the answers in: class spells can be forgotten and
 are relearned as any spell is (§5.1); the Pit is no longer one per run but **a Pit per portal,
 each made from one integer and forgotten floor by floor as Grundlēas is** (§7, rewritten against
-`world/endless.rs`, `mapgen::generate_for`, and `World::travel` as they are on `main` at
+`world/levels/endless.rs`, `mapgen::generate_for`, and `World::travel` as they are on `main` at
 1eb04a6b). Nothing here is implemented. Numbers come from an exact enumeration of the rules
 (2d12 × 2d12, §2.4); the review's findings that still hold are summarised in §1.2, not repeated.
 
@@ -609,7 +609,7 @@ the opening instead).
 (`def.endless.is_some() || def.portal.is_some()`), and the endless machinery does the rest as it
 stands: `World::forget_floors` drops every such floor but the current one after a level change
 (its actors, piles, chests, memory, lights, wares; a kept beast crosses, any other ally left is
-gone and said so, a unique may come again: `world/endless.rs`), and `EndlessFloors::made` and
+gone and said so, a unique may come again: `world/levels/endless.rs`), and `EndlessFloors::made` and
 `pays` key their `deepest` by the parsed branch, `hellegeat@S`, so **each Pit pays its five
 arrivals once** and a staircase walked up and down pays nothing twice. Climbing from floor 3 to
 floor 2 makes floor 2 again: the same map (the seed), its dead come back and its hoard re-rolls
@@ -636,7 +636,7 @@ him, or the hopeless case), so a run sees a handful at most.
 2. the free cell around the caster nearest the first free one becomes **stairs down**
    (`LevelState::terrain.set(stairs)` and `LevelState::stairs.push(StairsLink { Down, to:
    "hellegeat@S:1", name: Some("the Pit") })`: what `World::open_lair` does for a lair,
-   `world/layer_boss.rs`), saved with the level as every link is;
+   `world/levels/layer_boss.rs`), saved with the level as every link is;
 3. the `gate` comes to the next free cell (`miscast_summon`), `loosed`;
 4. said: "The floor splits, and a stair goes down into red dark. Something waits at its head."
 
@@ -890,7 +890,7 @@ Fourteen numbered pieces; PRs 1–4 and 11–12 touch no creature or level, PRs 
   data), a `the-pit.md` or a section of `magic.md` for Hellegeat as a world fact, `stances.md`
   (Defensive's −5 on the total), `scrolls.md` (Scribe makes no check). Terms linked
   (`wiki/TERMS.md`); `cargo xtask wiki --check-links`.
-- **Tests** (`world/miscast_tests.rs` and new files): the rank ease in the difficulty; the 2d12
+- **Tests** (`world/magic/miscast_tests.rs` and new files): the rank ease in the difficulty; the 2d12
   total and the margin's weight; the cap (a 1-hp caster takes nothing; a 5-hp one is left at
   1); the loader's whitelist (a protected `summon`, `drain`, `backfire`, ticking status, fire
   zone refused; `rank_loss` allowed); rank loss stopping at 1, forgetting removing a learned
@@ -909,7 +909,7 @@ Fourteen numbered pieces; PRs 1–4 and 11–12 touch no creature or level, PRs 
   the record dropped on the next arrival outside; `mapgen/hellegeat_tests.rs` (the warden's
   hall on floor 5 of ten instances, the first-floor snapshot of one); determinism by `replay
   --verify` for a run that miscasts into a Pit, climbs out, and opens another.
-- **The balance probe** (`world/balance_probe/miscasts.rs`): the wizard's rolls on Spellcraft
+- **The balance probe** (`world/combat/balance_probe/miscasts.rs`): the wizard's rolls on Spellcraft
   (or both careers), the band distribution per miscast as §2.4 prints it.
 
 ## 12. Open questions for the owner

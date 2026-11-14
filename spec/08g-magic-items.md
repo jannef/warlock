@@ -40,7 +40,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and a rare name do not, and their effects apply all the same while worn or wielded (as in
     ADOM and Path of Exile; so an attentive player may notice them: a stat on the character
     screen, a glow). Wearing or wielding an item for a while does not identify it. The core API
-    `World::identify(item)` (`world/loot.rs`; crate-internal, for actions: the scroll of identify,
+    `World::identify(item)` (`world/items/loot.rs`; crate-internal, for actions: the scroll of identify,
     #150, calls it from its read action, the Identify spell and the merchant's Merchant's eye too) identifies the player's inventory stack `item` and says
     "This is a Sharp long sword of the Bear!", returning `Identified::Now(name)`, `Known`
     (already identified, or normal), or `NoSuchItem`. Presentation reaches affixes only through
@@ -171,7 +171,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     fewer affixes, with none it is normal; then a wand's rung, then its make, and last the trim
     (below). Loot is found unidentified (its gems and material show).
   - **Deeper finds are better made** (#1436; `data/gear_condition.toml` `[[depth]]`,
-    `world/gear_condition.rs::make`): from item level 3 on, a row by item level gives loot's arms
+    `gear/condition.rs::make`): from item level 3 on, a row by item level gives loot's arms
     and armour (single pieces with something to better) a chance in per mille of Fine,
     Marvellous, or Masterwork (one draw from the loot stream after the wand's rung, then the
     aspects as the anvil draws them; none at item levels 1 and 2 or for anything else, so
@@ -268,7 +268,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Dev**: replay text `identify` / `identify:LETTERS` (`Action::Identify`, `F8` in dev
     builds: everything carried) identifies without time passing, recorded in replays.
 
-- **Scrolls** (`warlock-core/src/world/read.rs`, data `read` in `data/objects/` §7; M29, #150):
+- **Scrolls** (`warlock-core/src/world/magic/read.rs`, data `read` in `data/objects/` §7; M29, #150):
   objects (`?`, the scrolls class, stackable, with a value) whose `read` says what reading one
   does. They are **read** (`Action::Read { item, target }`, replay text `read:LETTER:X,Y` at a
   cell or `read:LETTER:LETTER` on an inventory stack; `r`, §6 "Read"), which takes the `read`
@@ -277,7 +277,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   kind ("Read it at what?", "Read it on what?"), the player's own cell ("You cannot aim at
   yourself."), out of reach ("That is out of range."), a spell on the overworld, or a stack
   there is nothing to learn about ("You already know what a dagger is.").
-  - **Making out a scroll** (`world/decipher.rs`, data `data/decipher.toml`; #1024, the skill
+  - **Making out a scroll** (`world/magic/decipher.rs`, data `data/rules/decipher.toml`; #1024, the skill
     uses design §6.6, the owner's rule: Decipher script is how non-casters use scrolls, by a
     check; one with enough learning (Decipher script's, #1270) bypasses it; this overrides the no-caster-level
     design's line that reading works for anyone). Once nothing refuses the reading and before the
@@ -356,7 +356,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     of mana through the one cast path (`read:b:c`); the grimoire of identify teaches it. It is the commonest scroll in loot (`frequency` 300 against the spell scrolls'
     20 to 60, by tier) and a regular general-store item.
   - **The scroll of restoration** (#887; the priest design §11) casts no spell (`read` of kind
-    `cleanse`, `mends` and `restores`; `world/restore.rs`): read on oneself (`read:b`; refused,
+    `cleanse`, `mends` and `restores`; `world/magic/restore.rs`): read on oneself (`read:b`; refused,
     no time, with a target), every point of the reader's stat damage mends and every point
     drains took comes back (§8 "Stats": "Drain"), as a temple's mending does (`StatDamage::mend_all`,
     `World::restore_drained`), a disease showing or not; each stat that comes back is said ("You
@@ -368,7 +368,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     nothing on it (the scrolls class, no `read`: never labelled, known on sight). Read, it is
     refused, takes no time, and keeps the scroll ("There is nothing written on it."). Loot and general-store stock as the scrolls are (item level 1,
     frequency 30, 15 gold).
-  - **Writing scrolls** (`world/scribe.rs`): the wizard's **Scribe** (§8 "Class abilities", at
+  - **Writing scrolls** (`world/magic/scribe.rs`): the wizard's **Scribe** (§8 "Class abilities", at
     12; `Action::Scribe`, replay text `scribe:SPELL`, `scribe:fireball`) writes a scroll of a
     spell the player knows on the first blank scroll they carry. The price is the talent's
     `mana_times` (3) times the spell's mana before Frugal caster (`Actor::spell_base`: the cost
@@ -393,7 +393,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     "Learning", #1270) and of reading a scroll; Spellcraft, which casting trains, helps neither.
     A spell scroll made at random is its grimoire one time in ten (§8 "Spells": "Learning").
 
-- **Wands** (`warlock-core/src/world/zap.rs`, data `wand` in `data/objects/` §7, `content/wand.rs`;
+- **Wands** (`warlock-core/src/world/magic/zap.rs`, data `wand` in `data/objects/` §7, `content/wand.rs`;
   the magic design §9; #398): objects (`-`, the wands class, one at a time) whose `[object.wand]`
   holds a spell of `data/spells/` (an aimed one), its `charges` (its own, required:
   the wand's, not its spell's), and the `rungs = { min, max }` a wand of the kind casts at
@@ -449,7 +449,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     hall's pile beside its arrival (a wand of magic missile and one of fireball).
   - **Talents**: Wand mastery (Weaponcraft, system `spells`): wands cast a rung higher
     (`spell_mod { wand_rungs = 1 }`).
-- **Rods** (`warlock-core/src/world/rod.rs`, data `rod` in `data/objects/` §7 and
+- **Rods** (`warlock-core/src/world/magic/rod.rs`, data `rod` in `data/objects/` §7 and
   `data/rod_effects/`, `content/rod.rs`; the magic design §9; #399): objects (`-`, the rods
   class, one at a time) whose `[object.rod]` holds an **effect no spell has** (`effect`, an id of
   `data/rod_effects/`) and the `mana` a use costs. A rod goes in the **missile weapon
@@ -494,7 +494,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     sleep).
   - **Talents**: Channeler (Spellcraft, from level 5, systems `spells` and `mana`): rods cost a
     quarter less mana, before Frugal caster.
-- **Potions** (`warlock-core/src/world/potion.rs`, data `drink` in `data/objects/` §7,
+- **Potions** (`warlock-core/src/world/health/potion.rs`, data `drink` in `data/objects/` §7,
   `content/potion.rs`; the combat progression design §10; #565): objects (`!`, the potions
   class, stackable) whose `[object.drink]` says what drinking one does by its `kind`, each
   through the one path that does it: `heal` (`dice` hit points back at once, never past the
@@ -612,7 +612,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and buy potions; never the elixirs, the gambles, the flasks of thunder, fire, and frost, pitch fire, or the blasting flask), the
     alchemist (§7 "Shops": potions only, healing always first), quest rewards, and the hub's
     pile.
-  - **Flasks** (the potions wave 2 design §3, §5; `world/flask.rs`, `[object.throw]` in
+  - **Flasks** (the potions wave 2 design §3, §5; `world/health/flask.rs`, `[object.throw]` in
     `content/potion.rs`; #1223): any potion may be thrown (`throw:c:X,Y`; the throw choice `T`
     lists potions beside throwing weapons). A **flask** is a potion with an `[object.throw]`
     table: `spell` (an id of `data/spells/`, the only thing the loader checks: the data author is

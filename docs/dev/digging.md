@@ -3,14 +3,14 @@
 Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
 rules it implements are in spec/08d-traps-doors-digging.md. Keep it current with the code, as CLAUDE.md says.
 
-Digging (spec §8 "Digging"; M19, #131) lives in `warlock-core/src/world/dig.rs`. Terrain that
+Digging (spec §8 "Digging"; M19, #131) lives in `warlock-core/src/world/crafting/dig.rs`. Terrain that
 breaks has `hardness` and `becomes` (`TerrainDef::breaks: Option<Breakable>`; the data breaks only
 solid terrain, into walkable, transparent, plain ground); `void` (solid rock) has a `face`
 (`wall`) it turns into when a cell next to it opens, as mapgen walls open ground. Cells on a
 level's edge never break (`LevelState::on_edge`, `breaks_at`). `Action::Dig(Dir)` (`dig:DIR`,
 key `u` = `KeyCommand::UseTool`, ADOM's use-tool key, a direction prompt; `a` is the
 abilities menu, #156; with a carried light ready in the Tool slot, a lantern, `u` turns it
-instead, `Action::UseTool`, `world/lamp.rs`, #643) needs `Actor::dig_tool` and the player trained
+instead, `Action::UseTool`, `world/items/lamp.rs`, #643) needs `Actor::dig_tool` and the player trained
 in Mining (#1391: the skill `data/mining.toml` names, no rule without that file; untrained,
 `dig::UNTRAINED`, "You do not know how to mine: that takes the Mining skill."). Both are one
 function, `dig::dig_refusal(actor, content)`, read by `start_dig` and by
@@ -36,13 +36,13 @@ app bursts the new terrain's `toggle` particles (rubble's dust) on `WallBroken`,
 Creatures do not dig. Times are in the wiki's generated `digging.md` tables.
 A blast also blows apart a shut chest whose band's hardness is below it (`World::blast`;
 `docs/dev/chests.md`); digging at a chest is refused, a chest having no `hardness` as terrain.
-A statue of the stoned (`petrified`, #1126, `world/statue.rs`) is a breaking wall of hardness 1500
+A statue of the stoned (`petrified`, #1126, `world/creatures/statue.rs`) is a breaking wall of hardness 1500
 (a quarter hour with a pick-axe; no fireball's blast of 1000 breaks it); whatever changes its
 terrain, `set_terrain` calls `World::statue_gone`, which spills what it held onto the rubble.
 
 ## Mining
 
-`world/mine.rs` (#1389; tests `world/mine_tests.rs`), the data `data/mining.toml`
+`world/crafting/mine.rs` (#1389; tests `world/crafting/mine_tests.rs`), the data `data/mining.toml`
 (`content/mining.rs`: `MiningRules`, `MiningBand`, `MiningFind`, `Mined`; `Content::mining()`,
 loaded after the branches, so their `ores` are checked against its ore rows). `World::dig` calls
 `World::mine(at, wall)` once, after its "crumbles" line, when the wall it dug at no longer stands
