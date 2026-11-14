@@ -1,7 +1,7 @@
 //! What the beast talents do, in the wiki's words (`warlock_core::talent::BeastEffect`, #1495):
 //! one arm a variant, beside the area's enum and sum in `warlock-core/src/talent/beast.rs`.
 
-use crate::wiki::text::signed;
+use crate::wiki::util::signed;
 use warlock_core::talent::BeastEffect;
 
 /// What `effect` does, as the talents' tables say it.
