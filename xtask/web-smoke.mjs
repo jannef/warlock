@@ -59,7 +59,7 @@ const stored = async () => (await send('Runtime.evaluate', {
 const before = JSON.parse(await stored());
 const failures = [];
 if (before[0].length !== 1) failures.push('the new character was not saved as the run started: ' + before[1]);
-for (let i = 0; i < 5; i++) await key('.', 'Period', 190);   // wait: five turns
+for (let i = 0; i < 5; i++) await key('s', 'KeyS', 83);   // wait (Wait/search, `s`): five turns
 await sleep(500);
 await send('Page.reload');
 await sleep(12000);
