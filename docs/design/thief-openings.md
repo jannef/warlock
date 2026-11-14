@@ -1,5 +1,7 @@
 # Warlock — The thief's Openings: the mark, the kill that carries, Feint, and Exploit
 
+**Built; this file is history.** Current behaviour is in spec §8 "The ranger's, thief's, and bard's tables" and `docs/dev/openings.md`.
+
 Design document (2026-11-13), **approved by the owner 2026-11-13** with the answers in §13. Written against `origin/main` at f5eae7338 (version 0.16.x). Nothing here is implemented; §12 maps it onto implementation issues, one PR each. It builds on what is there: the Openings pool and the resource machinery (`docs/dev/resources.md`, `data/resources.toml`, `world/resource.rs`), sneak attacks and surprise (`docs/dev/surprise.md`, `world/ambush.rs`, `world/surprise.rs`, `docs/design/surprise-and-sneak-attacks.md`), the thief's actives (`world/thief.rs`, `world/openings.rs`), Feint (`world/feint.rs`, `docs/dev/skills.md`), the class tables (`docs/dev/progression.md` "Class tables"), and the balance probe (`docs/balance.md` "Sneak attacks").
 
 Every number below is data and hidden in the game; the wiki states it (the owner's rule: the game is vague, the wiki is accurate). The aim: a thief's fight has a rhythm of its own from level 1, **work a foe, then cash in**, and the class's level-ups make the cashing-in bigger rather than adding unrelated buttons.

@@ -10,7 +10,8 @@ agents must do on top of it.
 ## Read first
 
 CLAUDE.md, then `docs/dev/merging.md` in full, then only the `docs/dev/` topic files and `spec/`
-sections the job touches. Keep the context small: read files in parts, grep, filter test output
+sections the job touches. A `docs/design/` file marked "Built; this file is history" is not
+current: read the spec sections and topics it names instead. Keep the context small: read files in parts, grep, filter test output
 to failures and the summary, never print whole diffs or logs.
 
 ## House rules (the owner's)

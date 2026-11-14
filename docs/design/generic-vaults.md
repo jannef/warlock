@@ -1,5 +1,7 @@
 # Warlock — Generic vaults, way more of them
 
+**Built; this file is history.** Current behaviour is in spec §7 "Vaults" and `docs/dev/mapgen.md`.
+
 Design document for the owner's review (#961, part of #957). First pass, 2026-11-05, written against `origin/main` at d562ceb5. Nothing here is implemented; §8 cuts it into issues. Every rule quoted below was read from the files named; anything not checked is marked *(unchecked)*. Second pass, 2026-11-05, after the owner's approval, checked against `origin/main` at 5b3326f9: the local areas' ruins come by a chance per landscape, not always (§1, §4), random orientation has landed with its real syntax (#959, §2), and what landed since (deep water #1019/#1020, zones #1000, stair followers #985, the endless branch #1010) is placed in §1 and §2; §9 records the decisions.
 
 **The owner's request** (#957, verbatim): the vaults are *"way too monotonous and appear way too often"*, and *"we need way way more of generic vaults"*; random contents rather than static piles, along the lines of *"20 monsters from dungeon monster pool"* or *"10 monsters from goblin tribe"*. And on proposals: dull and samey ones are rejected. So the standard this document holds every vault to: **a vault is a small situation with a decision in it**, not a room with loot and monsters in another shape. Each entry in the catalogue names its decision in one line; a vault with none was cut.
