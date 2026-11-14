@@ -321,6 +321,12 @@ mod tests {
     use super::*;
     use bevy::mesh::VertexAttributeValues;
 
+    #[test]
+    fn shader_constants_match() {
+        let src = include_str!("free_glyph.wesl");
+        assert_eq!(crate::render::wesl_const(src, "CRISP"), CRISP as f32);
+    }
+
     fn glyph(pos: Vec2, scale: f32) -> FreeGlyph {
         FreeGlyph {
             pos,

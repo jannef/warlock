@@ -700,6 +700,23 @@ mod tests {
     use warlock_core::content::Content;
 
     #[test]
+    fn shader_constants_match() {
+        let src = include_str!("lighting.wesl");
+        for (name, value) in [
+            ("MARGIN", MARGIN as f32),
+            ("LIT", f32::from(LIT)),
+            ("OPAQUE", f32::from(OPAQUE)),
+            ("TERRAIN_FLOOR", TERRAIN_FLOOR),
+            ("OVERBRIGHT", OVERBRIGHT),
+            ("GLOW", GLOW),
+        ] {
+            assert_eq!(crate::render::wesl_const(src, name), value, "{name}");
+        }
+        let luma = format!("vec3({}, {}, {})", LUMA.x, LUMA.y, LUMA.z);
+        assert!(src.contains(&luma), "LUMA");
+    }
+
+    #[test]
     fn gains_round_trip_through_a_byte() {
         assert_eq!(gain_byte(1.0), 128);
         for gain in [0.8, 0.93, 1.0, 1.07, 1.2] {

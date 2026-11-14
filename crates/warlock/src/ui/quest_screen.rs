@@ -8,6 +8,7 @@
 //! scrolls. It is read from the perception snapshot when it opens; no game time passes while it
 //! is open.
 
+use super::cursor;
 use super::menu::{HINTS, Nav, Panel, Press, wrap};
 use super::screens::{ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
@@ -46,8 +47,8 @@ impl QuestScreen {
         match press.nav {
             _ if own_key => return ScreenAction::Close,
             Nav::Back | Nav::Enter => return ScreenAction::Close,
-            Nav::Up => self.selected = (self.selected + n - 1) % n,
-            Nav::Down => self.selected = (self.selected + 1) % n,
+            Nav::Up => self.selected = cursor::up(self.selected, n),
+            Nav::Down => self.selected = cursor::down(self.selected, n),
             _ => {}
         }
         ScreenAction::Stay

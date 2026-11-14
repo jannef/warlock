@@ -12,6 +12,7 @@
 //! The safe option (Cancel, else Decline) is selected at first. Each option shows its shortcut
 //! keys. A held key's repeats never answer (`ScreenStack::handle`).
 
+use super::cursor;
 use super::menu::{HINTS, Nav, Panel, Press, wrap};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM};
@@ -184,11 +185,11 @@ impl DialogScreen {
             (_, Nav::Back) => pick(self.dialog.by_role(Role::Cancel)).or(Some(ScreenAction::Close)),
             (_, Nav::Enter) => pick(Some(self.selected)).or(Some(ScreenAction::Close)),
             (_, Nav::Up | Nav::Left) if count > 0 => {
-                self.selected = (self.selected + count - 1) % count;
+                self.selected = cursor::up(self.selected, count);
                 None
             }
             (_, Nav::Down | Nav::Right) if count > 0 => {
-                self.selected = (self.selected + 1) % count;
+                self.selected = cursor::down(self.selected, count);
                 None
             }
             _ => None,

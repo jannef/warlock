@@ -32,6 +32,7 @@ mod circle_tracks;
 mod circles;
 mod controls_screen;
 mod craft_pick_screen;
+mod cursor;
 mod death_screen;
 mod describe_screen;
 mod dev;
