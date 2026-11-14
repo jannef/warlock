@@ -16,8 +16,8 @@
 //! ([`LevelState::unburied`]): the places empty, the way down closed. So a replay verifies under
 //! any graveyard, unless it steps on or takes an opened way down. Saves keep them.
 
-use crate::world::{Fallen, LevelState, WorldState};
 use crate::content::{Burial, Content};
+use crate::world::{Fallen, LevelState, WorldState};
 use std::borrow::Cow;
 
 /// What a death without words reads as (an entry the app gave none).
