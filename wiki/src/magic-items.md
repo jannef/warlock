@@ -5,6 +5,9 @@ silver ring) with **prefixes** and **suffixes** that add to what it does, much a
 Exile. The lists and numbers below are not final and will change after playtesting. Every base item, prefix, and suffix is listed on
 [Prefixes and suffixes](affixes.md).
 
+**Making your own.** Those trained in Enchanting can make a plain item magic, or add to one, with
+magic crystals: see [Enchanting](enchanting.md).
+
 ## Rarity
 
 | Rarity | Affixes | Name | Shown in |
@@ -169,7 +172,7 @@ merely carried.
   and its weight.
 - Everything else is yours: [stats](stats.md), [hit points](hit-points.md#hit-points),
   [Dodge](combat.md#defence), [Deflection](combat.md#defence), and natural armour, how fast your
-  wounds [heal](healing.md#how-fast), how fast you [move](turns.md#speed), how much you can
+  wounds [heal](healing.md#how-fast-you-heal), how fast you [move](turns.md#speed), how much you can
   [carry](burden.md#how-much-you-can-carry), how quietly you [walk](hearing.md#what-makes-noise),
   [light](light.md#what-light-is), and [skills](skills.md). "+20 to Stealth" works as if your
   [Stealth](skills.md#skill-stealth) were 20 higher, even if you never trained it. The [Skills
@@ -190,7 +193,7 @@ Rules from elsewhere in the game carry over:
   **[Protection](combat.md#protection)** always adds up, piece by piece, and a
   [Hardened](classes.md#talent-hardened) piece of armour adds its magic to its own (see
   [Combat](combat.md#protection)).
-- **[Hit points](hit-points.md#hit-points)** and **[mana](mana.md#how-much)**: putting on
+- **[Hit points](hit-points.md#hit-points)** and **[mana](mana.md#how-much-mana-you-have)**: putting on
   something that adds to them raises your maximum, not what you have now. Taking it off lowers
   both, if need be (see [Mana](mana.md)).
 - **Healing**: magic that speeds healing adds on top of everything else that changes its pace
@@ -267,3 +270,6 @@ Its power works while it is worn or wielded, identified or not:
 - **Ward**: its wearer never suffers a [status](status-effects.md#how-they-work).
 
 {{#include generated/uniques.md}}
+
+See also: [Prefixes and suffixes](affixes.md), [Enchanting](enchanting.md), and
+[Equipment](equipment.md).

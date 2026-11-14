@@ -99,9 +99,11 @@ The character screen (`@`) shows:
 - what you weigh and carry, against what you can carry (see [Burden](burden.md)).
 
 `A`, there or anywhere in play, shows your [skills](skills.md). `W` shows your
-[ranks](weapon-skills.md#marks-and-ranks) in each [weapon skill](weapon-skills.md), which your race
+[ranks](weapon-skills.md#raising-a-weapon-skill) in each [weapon skill](weapon-skills.md), which your race
 and class start you with, and in each [fighting style](fighting-styles.md), which your class
 starts you with.
 
 Your race, gender, class, and sign never change once a run has started. You do get a year older on
 every birthday.
+
+See also: [Classes](classes.md), [Stats](stats.md), and [What's in the game](features.md).

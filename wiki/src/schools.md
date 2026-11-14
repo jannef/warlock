@@ -26,7 +26,7 @@ The **Magic page** is page `6` of the [info pages](the-screen.md#info-pages), be
 Open any info page and press `6`, or `Tab` to it. It has no key of its own in play. It is one
 column, which scrolls (↑↓) when the window is too small for it. From the top, it shows:
 
-- your [mana](mana.md#how-much), as the status bar does;
+- your [mana](mana.md#how-much-mana-you-have), as the status bar does;
 - the [caster styles](#caster-styles), each with your rank and a faint bar of your marks toward the
   next, with a `•` on Battle caster while your armour hinders casting ("• the style you cast in
   now"). They are shown to anyone who knows a spell or has trained a caster style;
@@ -52,7 +52,7 @@ of its own:
   never misses, a heal (a touch heal too), a buff, or a hex. It trains no style, and no style helps
   it.
 
-Every spell you cast with your own [mana](mana.md#how-much) trains the style it was cast in,
+Every spell you cast with your own [mana](mana.md#how-much-mana-you-have) trains the style it was cast in,
 whether it lands or not, just as every blow trains its style. It earns **marks** toward the next
 rank: more when it lands, more against a strong foe, and fewer as your rank rises. When you have
 enough marks you gain a rank.
@@ -67,7 +67,7 @@ hit point or more, a buff on you, a cure, an item identified.
 
 The marks are weighed by the strongest creature the spell struck at. When it struck at nobody (a
 buff, a bolt into an empty corridor), they are weighed by your own level. The marks and their
-weighing are the same as for [weapon skills](weapon-skills.md#marks-and-ranks), on a slower curve
+weighing are the same as for [weapon skills](weapon-skills.md#raising-a-weapon-skill), on a slower curve
 of their own (the Caster columns there). Nothing limits how often you may train. A spell read from
 a [scroll](scrolls.md) or used from a [wand](wands-and-rods.md#wands) trains no style: the magic
 is the item's.

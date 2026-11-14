@@ -12,7 +12,7 @@ either end. Changing stance takes no time, and you keep it until you change it, 
 The [status bar](the-screen.md#the-screen) names your stance when it is not neutral, and the [character screen](character.md) always
 does. The game never shows what a stance adds. You feel it in the fight.
 
-- **Aggressive**: you hit more often and harder, but are easier to hit. [Weapon skill marks](weapon-skills.md#marks-and-ranks) count
+- **Aggressive**: you hit more often and harder, but are easier to hit. [Weapon skill marks](weapon-skills.md#raising-a-weapon-skill) count
   for more, because you swing harder. Your [miscasts](miscasts.md#the-miscast-table) are worse:
   5 more on the total.
 - **Neutral**: no effect.
@@ -30,7 +30,7 @@ does. The game never shows what a stance adds. You feel it in the fight.
   stance, not the one you had before. The berserker's [Wild guard](talents.md#talent-wild-guard) talent halves its cost to
   your [Dodge](combat.md#defence).
 
-A stance changes how long every attack takes: a blow, a [shield bash](abilities.md#ability-shield-bash), a [kick](doors.md#kicking), a [shot](ranged.md#shooting-and-throwing), or a
+A stance changes how long every attack takes: a blow, a [shield bash](abilities.md#ability-shield-bash), a [kick](doors.md#kicking-a-door-open), a [shot](ranged.md#shooting-and-throwing), or a
 [throw](ranged.md#shooting-and-throwing). It does not change reloading or kicking a [door](doors.md). Each attack takes the time it would
 as you begin it, so a rank of skill it earns you makes the next attack quicker, not that one.
 

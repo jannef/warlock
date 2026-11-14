@@ -1,5 +1,8 @@
 # Resting
 
+Resting lets time pass quickly, and you heal twice as fast while you rest. Every other way to
+get your health back is on [Healing](healing.md).
+
 Press `b` to rest. The [message line](the-screen.md#messages) asks:
 
 ```
@@ -20,7 +23,7 @@ always means the next one, even if it is that time right now.
 Resting is a single action that waits turn after turn, each wait a normal action (6 seconds). It
 works the same on the [overworld](overworld.md#travel). [Creatures](creatures.md) keep acting and
 the world keeps changing. The last wait is cut short, so the rest ends exactly at its goal. A rest's waits do not
-[search](searching.md#searching-1), as a single wait does. A rest
+[search](searching.md#how-to-search), as a single wait does. A rest
 never lasts more than a day.
 
 While you rest, creatures away from you take their turns in larger steps, so a night's rest on a

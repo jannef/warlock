@@ -30,7 +30,7 @@ it (`Diseased  Filth fever`).
 - **Shaking it off.** Win two checks in a row and the disease is gone ("Your fever breaks."). A
   loss starts the count over.
 - **Some never go.** [Grave rot](#disease-grave-rot) does not go by itself, whatever your checks.
-  Only a [cure](#cures) ends it (below).
+  Only a [cure](#curing-a-disease) ends it (below).
 
 You can carry several diseases at once. Each runs its own course, and you are Diseased while any
 of them shows.
@@ -95,24 +95,24 @@ While you are [Diseased](status-effects.md#status-diseased), your
 Grave rot never goes by itself, and it can kill. When its damage takes your
 [Toughness](stats.md#stat-toughness) to nothing, you die, and the death screen says "Died of
 disease". Once you have caught it, you are racing the days to reach a [shop](shops.md) for a
-[cure](#cures).
+[cure](#curing-a-disease).
 
 ## Mummy rot
 
 The touch of a [mummy](creatures.md#creature-mummy) may give you mummy rot. Like grave rot, it
 never goes by itself, but it is slower: every few days it dries a little more
 [Toughness](stats.md#stat-toughness) out of you. It does not kill, but the Toughness it takes stays
-gone until a [cure](#cures) ends it.
+gone until a [cure](#curing-a-disease) ends it.
 
 ## Burrowing worms
 
 The fist of a [wormhost](creatures.md#creature-wormhost) may leave its green worms in you. They are
 quick: a day later they are burrowing, and every day they take
 [Toughness](stats.md#stat-toughness), wits, and blood. Win two checks in a row and you are rid of
-them. But they can kill, as [grave rot](#disease-grave-rot) can, so a [cure](#cures) is the safer
+them. But they can kill, as [grave rot](#disease-grave-rot) can, so a [cure](#curing-a-disease) is the safer
 way.
 
-## Cures
+## Curing a disease
 
 An **angelica root** (`%`) cures every disease you have the moment you eat it (`e`). That includes
 [grave rot](#disease-grave-rot), and even a disease that has not broken out yet: "The rot is gone

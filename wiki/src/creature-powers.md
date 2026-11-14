@@ -42,7 +42,7 @@ How many come is rolled each time. They are real creatures of the summoner's sid
 carry gear, drop it where they die, and give their full experience when you kill them. Killing
 the summoner does not send them away.
 
-Each summoning costs the summoner [mana](mana.md#how-much), and then it must wait a while before
+Each summoning costs the summoner [mana](mana.md#how-much-mana-you-have), and then it must wait a while before
 it can summon again. A few summoners, the breeders, pay no mana. A summoner never has more of its
 summoned alive at once than the last column says. Its mana comes back as anyone's does (see
 [Mana](mana.md)), so one that has spent itself summons again only much later. A summoner that

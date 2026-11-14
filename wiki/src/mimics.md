@@ -14,21 +14,21 @@ bands. A **[mimicling](creatures.md#creature-mimic-1)** passes for a coffer, a *
 a chest, and an **eldest mimic** for a gilded ark. It carries exactly what the chest would have
 held, and drops it all, whole, when it dies. Nothing in it is ever smashed or burnt.
 
-## Finding one out
+## Spotting a mimic
 
 A mimic does nothing until it is found out. It never moves, never wakes on its own, and no other
 creature takes any notice of it. It is found out when:
 
-- **You touch it.** Walking into it, opening it, [kicking](doors.md#kicking) it, or
+- **You touch it.** Walking into it, opening it, [kicking](doors.md#kicking-a-door-open) it, or
   [picking its lock](doors.md#picking-locks) all count. It lurches ("The coffer lurches: it is a
   young mimic!") and strikes you at once with a free blow that may [hold](status-effects.md#status-held)
   you fast. Your action is not done and takes no time, so the next move is yours.
 - **You cast [Knock](abilities.md#ability-knock) on it.** It lurches, but no blow comes. The
-  [mana](mana.md#how-much) is spent.
+  [mana](mana.md#how-much-mana-you-have) is spent.
 - **Anything strikes it**: a blow, an arrow or a thrown dagger (which stop at it), a
   [fireball](magic.md#spell-fireball), or a [trap's](traps.md#finding-traps) burst ("The coffer
   shudders: it is a young mimic!").
-- **You find it by [searching](searching.md#searching-1).** It is a hidden thing like a
+- **You find it by [searching](searching.md#how-to-search).** It is a hidden thing like a
   [secret door](doors.md#secret-doors), with a difficulty of 12 + level ÷ 5, plus the branch's
   addition per depth. You notice it [in passing](searching.md#noticing-in-passing) only if you
   notice everything (trained in [Spot](skills.md#skill-spot), or an [elf](races.md#race-elf)).

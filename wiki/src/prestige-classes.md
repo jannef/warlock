@@ -21,10 +21,10 @@ it.
   every level it can, all at once.
 - **Everything carries across.** Your class's abilities, talents, skills, hit points, and
   [mana](mana.md) stay as they were. Each level from then on is the prestige class's: its
-  [hit points](hit-points.md#hit-points), its mana, its [skill rolls](skills.md#getting-better) and
+  [hit points](hit-points.md#hit-points), its mana, its [skill rolls](skills.md#improving-a-skill) and
   the skills it is known for, its bonus [talents](talents.md), and its abilities, at its own
   levels. What a level gives by your total still holds: no hit points past 50 and no mana past 60
-  (see [What a level gives](experience.md#what-a-level-gives)). So does the experience your race
+  (see [Levelling up](experience.md#levelling-up)). So does the experience your race
   and first class need.
 
 {{#include generated/prestige-classes.md}}

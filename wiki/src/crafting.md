@@ -20,7 +20,7 @@ One trained in Jewelcraft can cut loose gems and set them (see [Gem cutting](gem
 and make rings and amulets (see [Making jewellery](#making-jewellery)) on the
 [Jewelcraft…](abilities.md#ability-jewelcraft) list.
 
-## Who works what
+## Which skill makes what
 
 Each material group is worked by one skill, with one stat:
 
@@ -260,7 +260,7 @@ You cannot salvage:
 - coins (they are never melted down),
 - something with nothing a craft works, like a scroll or food.
 
-Each skill you rolled earns a [training mark](skills.md#getting-better) if you are trained in it,
+Each skill you rolled earns a [training mark](skills.md#improving-a-skill) if you are trained in it,
 whatever came of the check. So does Enchanting, if any affix was checked.
 
 The hardwood quarterstaff with its ruby gives 5 hardwood billets when the Woodcraft check is
@@ -271,7 +271,8 @@ made, and the ruby when the Jewelcraft check is made.
 ## The craftsperson
 
 A [craftsperson](classes.md#craftsperson) works their trades better than anyone, and their class
-abilities change the rules above.
+abilities change the rules above. From level 12 a [patron](patron.md) in Cēaptūn buys their best
+work.
 
 ### Waste not
 
@@ -325,3 +326,6 @@ Brakka's mark." Its name does not change.
 - **Enchantments:** a marked piece can bear **one more** ([Capacity](magic-items.md#capacity)).
 
 The mark stays for good: tempering, damage, and mending never take it away.
+
+See also: [Enchanting](enchanting.md), [Gem cutting](gem-cutting.md), and
+[Mining](mining.md).

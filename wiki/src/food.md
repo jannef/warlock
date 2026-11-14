@@ -1,5 +1,8 @@
 # Food and corpses
 
+This page has what you eat: eating, food that spoils, and the corpse tables. How hunger works
+and what it does to you is on [Hunger](hunger.md).
+
 Food (`%`) keeps [hunger](hunger.md#how-hungry-you-are) away. Press `e` (the Eat command) to
 consume something. A list titled "Consume what?" shows what you can eat: first what lies where
 you stand ("lying here"), then the food you carry (see [Lists of
@@ -76,7 +79,7 @@ blows it apart, [Grave feast](magic.md#spell-grave-feast) draws out what life is
 
 Eating a fresh corpse may do more than feed you. Some taste terrible and may come back up. Some
 make you [sick](status-effects.md#poisoned). Some do you good, and many feed your body's
-[training](stats.md#training): a corpse gives **marks** toward a stat, just as using the stat
+[training](stats.md#raising-your-stats): a corpse gives **marks** toward a stat, just as using the stat
 does. A few corpses (giants', trolls', hags', ogres', and the fey's) have a small chance to
 widen how far that stat can grow, its [potential](stats.md#potentials).
 

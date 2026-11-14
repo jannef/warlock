@@ -14,12 +14,12 @@ use warlock_core::skills::Effect;
 use warlock_core::stats::Stat;
 
 /// Every ability, grouped as the menu groups them (by where they come from) and by name within a
-/// group: who has it, what it asks for, what it does, and how long it takes at a normal pace. A
-/// skill used as an action whose use is not in the game yet says so.
+/// group: who has it, what it asks for, what it does, how long it takes at a normal pace, and the
+/// section that explains it. A skill used as an action whose use is not in the game yet says so.
 pub(super) fn abilities(content: &Content) -> String {
     let mut out = String::from(
         "| Ability | In the menu under | Who has it | Asks for | What it does | Takes at a normal \
-         pace |\n|---|---|---|---|---|---:|\n",
+         pace | Read more |\n|---|---|---|---|---|---:|---|\n",
     );
     let mut every = Ability::every(content);
     every.sort_by_key(|a| (a.source(), a.name(content).to_string()));
@@ -181,13 +181,105 @@ pub(super) fn abilities(content: &Content) -> String {
         };
         let _ = writeln!(
             out,
-            "| {} | {} | {who} | {asks} | {} | {takes} |",
+            "| {} | {} | {who} | {asks} | {} | {takes} | {} |",
             anchored(Term::Ability, a.id(content), &a.name(content)),
             a.source().name(),
             a.description(content),
+            read_more(content, a),
         );
     }
     out
+}
+
+/// The section that explains ability `a`, as a link: a skill use's section, a class ability's
+/// class (or the page of its own a few have), a spell's row, a birth sign's gift.
+fn read_more(content: &Content, a: Ability) -> String {
+    let page = |name: &str, target: &str| format!("[{name}]({target})");
+    match a {
+        Ability::Sign(active) => content.sign_active(active).map_or_else(
+            || page("Horoscope", "horoscope.md#what-a-sign-does"),
+            // A birth sign's gift is anchored on the horoscope page (`horoscope.rs`).
+            |t| {
+                page(
+                    "Horoscope",
+                    &format!("horoscope.md#talent-{}", t.id.replace('_', "-")),
+                )
+            },
+        ),
+        Ability::Class(ClassActive::Exploit) => page("Exploit", "resources.md#exploit"),
+        Ability::Class(ClassActive::ThrownExploit) => {
+            page("Thrown exploit", "resources.md#thrown-exploit")
+        }
+        Ability::Class(ClassActive::Inspire | ClassActive::Lullaby) => page("Songs", "#songs"),
+        Ability::Class(ClassActive::Orison) => page("Prayer", "prayer.md"),
+        Ability::Class(ClassActive::CallFamiliar) => page("Familiars", "familiars.md"),
+        Ability::Class(ClassActive::FieldForge) => page(
+            "The makeshift anvil",
+            "altars-forges-springs.md#the-makeshift-anvil",
+        ),
+        Ability::Class(ClassActive::Rig) => page("Rigging traps", "traps.md#rigging-traps"),
+        Ability::Class(active) => class_of(content, active),
+        Ability::Spell(spell) => content.spell_of(spell).map_or_else(
+            || page("Magic", "magic.md"),
+            |s| link(Term::Spell, &s.id, "Magic"),
+        ),
+        Ability::Skill(skill) => link(Term::Skill, &content.skill(skill).id, "Skills"),
+        Ability::Disarm => page("Disarming traps", "traps.md#disarming-traps"),
+        Ability::Listen => page("Listening at a door", "hearing.md#listening-at-a-door"),
+        Ability::PickLock => page("Picking locks", "doors.md#picking-locks"),
+        Ability::Steal => page("Stealing", "skill-uses.md#stealing"),
+        Ability::Wedge => page("Wedging a door", "doors.md#wedging-a-door"),
+        Ability::Feint => page("Feinting", "skill-uses.md#feinting"),
+        Ability::Tame => page("Taming", "companions.md#taming"),
+        Ability::Intimidate => page("Intimidating", "skill-uses.md#intimidating"),
+        Ability::Decipher => page("Making out a scroll", "scrolls.md#making-out-a-scroll"),
+        Ability::Heal => page("Treating yourself", "skill-uses.md#treating-yourself"),
+        // A profession with a page of its own links it.
+        Ability::Profession(skill) => match content.skill(skill).id.as_str() {
+            "alchemy" => page("Brewing potions", "recipes-alchemy.md"),
+            "enchanting" => page("Enchanting", "enchanting.md"),
+            "jewelcraft" => page("Gem cutting", "gem-cutting.md"),
+            _ => page("Professions", "skill-uses.md#professions"),
+        },
+        Ability::Forage => page("Foraging", "skill-uses.md#foraging"),
+        Ability::SecondWind => link(Term::Talent, "second_wind", "Talents"),
+        Ability::BloodMagic => link(Term::Talent, "blood_magic", "Talents"),
+        Ability::ShieldBash => link(Term::WeaponSkill, "shield_bash", "Weapon skills"),
+        Ability::ThrowVoice => page("Throwing your voice", "hearing.md#throwing-your-voice"),
+        Ability::Pray => page(
+            "Forgotten altars",
+            "altars-forges-springs.md#forgotten-altars",
+        ),
+        Ability::Salvage => page("Salvage", "crafting.md#salvage"),
+        Ability::Drink => page(
+            "Healing springs",
+            "altars-forges-springs.md#healing-springs",
+        ),
+        Ability::Gather => page("Gathering", "herbs.md#gathering"),
+        Ability::Heel | Ability::Hold | Ability::SetOn => page("Orders", "allies.md#orders"),
+        Ability::Give => page("The collar", "companions.md#the-collar"),
+        Ability::Weapon(..) => page("Weapon skills", "weapon-skills.md#what-a-rank-teaches"),
+    }
+}
+
+/// The class whose table first gives class active `active`, linked to its section: a class's on
+/// the classes page, a prestige class's on the prestige classes page.
+fn class_of(content: &Content, active: ClassActive) -> String {
+    let book = content.talents();
+    let gives = |abilities: &[(u8, String)]| {
+        abilities.iter().any(|(_, talent)| {
+            (book.id(talent))
+                .is_some_and(|t| (book.get(t).effects.iter()).any(|e| e.active() == Some(active)))
+        })
+    };
+    let anchor = |name: &str| name.to_lowercase().replace(' ', "-");
+    if let Some(c) = (content.classes().iter()).find(|c| gives(&c.abilities)) {
+        return format!("[{}](classes.md#{})", c.name, anchor(&c.name));
+    }
+    if let Some(p) = (content.prestiges().iter()).find(|p| gives(&p.abilities)) {
+        return format!("[{}](prestige-classes.md#{})", p.name, anchor(&p.name));
+    }
+    "[Classes](classes.md#levels)".to_string()
 }
 
 /// How long a place's ability takes: the seconds of the outcome table the place that offers it
