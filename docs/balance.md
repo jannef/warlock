@@ -124,7 +124,8 @@ docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/r
   openings on the same monsters, aware of them: the foe keeps its Defence, the profile is
   `ExploitMods::profile` (Low blow's to-hit, Master thief's threat and sure critical, as
   `World::exploit_profile`), then the sneak attack's own lower threat, and a hit lands the sneak
-  dice and n × the ladder's dice. Beside it the openings a fight against one of those monsters
+  dice and n × the ladder's dice; from level 18 the thrown exploit of 3 (#1465) on the first
+  throwing weapon carried, the same ladder on its thrown profile. Beside it the openings a fight against one of those monsters
   yields under a feint-when-aware policy: the first blow (unaware) builds one on a hit, the
   thief then feints until the foe falls for it (its Willpower check, `feint.rs`'s difficulty),
   each feint made builds one and sets up a flat-footed sneak attack that builds one more on a
@@ -1003,19 +1004,19 @@ The thief's main-hand blow on the monsters of their level (trained stats), aware
 
 ## Exploits
 
-The thief's Exploit (plain gear, trained stats) on the monsters of their level with vitals, aware of them: the openings' blow keeps the foe's Defence and lands the sneak dice and n × the ladder's on a hit. The ladder (per opening spent) as the talents give it; then each cell: P(hit) % · damage, misses included, the median over the monsters within two levels that have vitals. Plain: the blow on the aware; Unaware: the first blow on a foe caught unawares (flat-footed).
+The thief's Exploit (plain gear, trained stats) on the monsters of their level with vitals, aware of them: the openings' blow keeps the foe's Defence and lands the sneak dice and n × the ladder's on a hit. The ladder (per opening spent) as the talents give it; then each cell: P(hit) % · damage, misses included, the median over the monsters within two levels that have vitals. Plain: the blow on the aware; Unaware: the first blow on a foe caught unawares (flat-footed); Thrown 3: the thrown exploit of three openings (from level 18) with the first throwing weapon carried (a dagger), within the sneak dice's reach.
 
-| L | ladder an opening | Plain | Unaware | Exploit 1 | Exploit 3 | Exploit 5 |
-|---|---|---|---|---|---|---|
-| 1 | 1d6 | 72 · 2.7 | 78 · 5.9 | 72 · 8.2 | 72 · 13.4 | 72 · 18.6 |
-| 5 | 1d6 | 78 · 3.8 | 87 · 10.3 | 78 · 12.0 | 78 · 17.3 | 78 · 23.0 |
-| 10 | 1d6 | 91 · 7.2 | 97 · 14.3 | 91 · 16.5 | 91 · 22.9 | 91 · 29.4 |
-| 15 | 1d6, +1 hit, stun | 98 · 9.7 | 99 · 20.4 | 99 · 23.5 | 99 · 30.8 | 99 · 37.8 |
-| 20 | 1d6, +1 hit, stun | 98 · 9.8 | 99 · 23.8 | 99 · 27.2 | 99 · 34.2 | 99 · 41.3 |
-| 30 | 1d6, +1 hit, stun | 99 · 12.9 | 99 · 30.3 | 99 · 33.7 | 99 · 40.7 | 99 · 47.7 |
-| 40 | 2d6, +1 hit, stun | 99 · 14.3 | 99 · 42.3 | 99 · 49.1 | 99 · 63.1 | 99 · 76.9 |
-| 50 | 2d6, +1 hit, stun | 99 · 15.8 | 99 · 43.5 | 99 · 50.6 | 99 · 64.4 | 99 · 78.5 |
-| 60 | 2d6, +1 hit, stun, threat −4, sure at 5 | 96 · 16.2 | 99 · 50.2 | 98 · 61.1 | 99 · 80.1 | 99 · 94.3 |
+| L | ladder an opening | Plain | Unaware | Exploit 1 | Exploit 3 | Exploit 5 | Thrown 3 |
+|---|---|---|---|---|---|---|---|
+| 1 | 1d6 | 72 · 2.7 | 78 · 5.9 | 72 · 8.2 | 72 · 13.4 | 72 · 18.6 | - |
+| 5 | 1d6 | 78 · 3.8 | 87 · 10.3 | 78 · 12.0 | 78 · 17.3 | 78 · 23.0 | - |
+| 10 | 1d6 | 91 · 7.2 | 97 · 14.3 | 91 · 16.5 | 91 · 22.9 | 91 · 29.4 | - |
+| 15 | 1d6, +1 hit, stun | 98 · 9.7 | 99 · 20.4 | 99 · 23.5 | 99 · 30.8 | 99 · 37.8 | - |
+| 20 | 1d6, +1 hit, stun | 98 · 9.8 | 99 · 23.9 | 99 · 27.3 | 99 · 34.2 | 99 · 41.2 | 96 · 30.2 |
+| 30 | 1d6, +1 hit, stun | 99 · 12.8 | 99 · 30.3 | 99 · 33.6 | 99 · 40.6 | 99 · 47.7 | 96 · 32.3 |
+| 40 | 2d6, +1 hit, stun | 99 · 14.5 | 99 · 42.3 | 99 · 48.9 | 99 · 63.0 | 99 · 77.0 | 89 · 50.7 |
+| 50 | 2d6, +1 hit, stun | 99 · 15.7 | 99 · 43.6 | 99 · 50.6 | 99 · 64.5 | 99 · 78.5 | 88 · 50.4 |
+| 60 | 2d6, +1 hit, stun, threat −4, sure at 5 | 96 · 16.2 | 99 · 50.2 | 98 · 61.2 | 99 · 80.3 | 99 · 94.2 | 72 · 47.7 |
 
 The openings a fight against one of those monsters yields (the inflow; Exploit's spending is not modelled), the thief feinting whenever the foe is aware and not yet fooled, then striking it flat-footed: the chance a feint fools it (its Willpower check against 10 + the thief's Presence modifier + Bluff), the first blow's opening (the chance it hits), the feints' openings with the sneak attack each fooling sets up, the mark's kill (1), the whole fight's, and its turns, the median over the monsters. A thief who cannot feint (untrained in Bluff) only strikes.
 

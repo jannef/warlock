@@ -104,6 +104,28 @@ more, and the foe is stunned. At level 32 the same exploit does 8d6 more. At lev
 critical doubles only the weapon's part: the sneak dice and the exploit's dice are never doubled.
 This was the master thief's finisher, which is now part of Exploit.
 
+### Thrown exploit
+
+From level 18 the [thief](classes.md#thief) can also exploit by throwing, for a mark that
+stepped back, blinked away, or a foe across the room after a kill. Choose the Thrown exploit
+ability, then something to throw, then the target.
+
+- **It is Exploit's blow, thrown.** It spends every opening, and it is a
+  [sneak attack](surprise.md#sneak-attacks) whatever the foe knows. Every addition in the table
+  above applies: the dice per opening, the stun and +1 to hit per opening, the lower threat and
+  the sure critical at 5. It uses the thrown weapon's attack and your Thrown rank, not the
+  weapon in your hand.
+- **One of what you throw leaves your hand**, as any throw. It lands by the foe or breaks.
+- **Its reach** is the weapon's throw range, but never more than 6 cells (more with
+  [Long reach](talents.md#talent-long-reach)): past that the sneak dice would not land. A dagger
+  throws 5.
+- **It is refused**, taking no time and spending nothing, for everything Exploit refuses (no
+  opening, no hostile you see there, a creature other than your mark, no vitals), for a flask
+  ("You cannot exploit an opening with …"), for a target too far ("That is out of reach."), and
+  for a wall or a creature you see between you and the target ("Something is in the way.").
+- **A creature you did not see in the way** takes the throw instead, as a plain throw: no sneak
+  dice and nothing per opening. The openings are spent all the same.
+
 **Ki.** The [ascetic](classes.md#ascetic) gets ki, full, with
 [martial arts](talents.md#talent-martial-arts) at level 1. The pool holds 4, plus your
 [Willpower](stats.md#stat-willpower) [modifier](stats.md#modifiers), plus a point per 6

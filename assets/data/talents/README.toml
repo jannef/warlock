@@ -511,6 +511,10 @@
 #                                 (`use:exploit:E`): every opening held spent on one blow that
 #                                 is a sneak attack whatever the foe knows (its `resource` cost,
 #                                 1, the least it needs; refused at a foe without vitals)
+#   thrown_exploit                the active Thrown exploit, a stack then a cell
+#                                 (`use:thrown_exploit:c:12,5`): Exploit's blow as a throw at
+#                                 the creature there, within the throw's range and the sneak
+#                                 dice's reach (its `resource` cost as Exploit's)
 #   exploit_dice { dice }         an exploit that hits does `dice` more damage per opening spent,
 #                                 after Protection, never multiplied (dice of the same sides add
 #                                 up: two 1d6 are 2d6)

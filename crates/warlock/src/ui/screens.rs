@@ -150,6 +150,9 @@ pub enum ScreenName {
     Drop,
     /// Choose what to throw (`t` in play, with no throwing weapon readied).
     Throw,
+    /// Choose what to throw in a thrown exploit (the thief's Thrown exploit): the throw list
+    /// less flasks, then the aiming mode.
+    ThrownExploit,
     /// Choose what to eat (`E` in play): food lying here, then food in the pack.
     Eat,
     /// Choose a scroll or grimoire to read (`r` in play): a spell scroll is aimed next, the
@@ -249,6 +252,7 @@ impl ScreenName {
                 | ScreenName::PickUp
                 | ScreenName::Drop
                 | ScreenName::Throw
+                | ScreenName::ThrownExploit
                 | ScreenName::Eat
                 | ScreenName::Read
                 | ScreenName::Identify
@@ -500,6 +504,7 @@ impl Screen {
             ScreenName::PickUp => objects(ObjectList::PickUp),
             ScreenName::Drop => Screen::Objects(ObjectScreen::dropping(run)),
             ScreenName::Throw => objects(ObjectList::Throw),
+            ScreenName::ThrownExploit => objects(ObjectList::ThrownExploit),
             ScreenName::Eat => objects(ObjectList::Eat),
             ScreenName::Read => objects(ObjectList::Read),
             ScreenName::Identify => objects(ObjectList::Identify(IdentifyBy::Scroll(
@@ -555,6 +560,7 @@ impl Screen {
                 ObjectList::Inventory => ScreenName::Inventory,
                 ObjectList::PickUp => ScreenName::PickUp,
                 ObjectList::Throw => ScreenName::Throw,
+                ObjectList::ThrownExploit => ScreenName::ThrownExploit,
                 ObjectList::Eat => ScreenName::Eat,
                 ObjectList::Read => ScreenName::Read,
                 ObjectList::Identify(_) => ScreenName::Identify,

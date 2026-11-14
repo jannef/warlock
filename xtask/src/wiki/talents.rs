@@ -381,7 +381,9 @@ pub(super) fn effects_text(content: &Content, def: &TalentDef) -> String {
     if let Some(cost) = def.resource {
         let name = content.resource(cost.resource).name.to_lowercase();
         // Exploit spends every one held; its cost is the least it needs.
-        if def.effects.contains(&TalentEffect::Exploit) {
+        if (def.effects.iter())
+            .any(|e| matches!(e, TalentEffect::Exploit | TalentEffect::ThrownExploit))
+        {
             parts.push(format!(
                 "spends all the {name} held (at least {})",
                 cost.amount
@@ -2039,6 +2041,14 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                                   is not surprised and keeps its Defence); refused with no \
                                   opening, at another than the creature your openings are in, \
                                   and at a thing you see without vitals"
+            .to_string(),
+        TalentEffect::ThrownExploit => "active (the time of a throw), something to throw and a \
+                                        creature you see: Exploit's blow as a throw, every \
+                                        opening you hold spent on a sneak attack whatever the \
+                                        foe knows, with every increment of an exploit; within \
+                                        the item's throw range and 6 cells (Long reach's \
+                                        farther), the line clear as far as you see; refused as \
+                                        Exploit is, and for a flask"
             .to_string(),
         TalentEffect::ExploitDice { dice } => format!(
             "an exploit that hits does +{dice} damage per opening spent, after Protection, never \

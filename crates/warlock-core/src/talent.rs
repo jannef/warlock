@@ -706,6 +706,8 @@ pub struct TalentMods {
     /// The active Exploit (`world/openings.rs`): every opening held spent on a blow that is a
     /// sneak attack whatever the foe knows.
     pub exploit_active: bool,
+    /// The active Thrown exploit (`world/openings.rs`): Exploit's blow as a throw.
+    pub thrown_exploit: bool,
     /// What an exploit adds per opening spent (Exploit's dice, Low blow's stun and to-hit).
     pub exploit: ExploitMods,
     /// The active Merchant's eye: a stack it carries identified, for the time of a reading.
@@ -1255,6 +1257,7 @@ impl TalentMods {
             A::Sic => self.sic.is_some(),
             A::Lurk => self.lurk.is_some(),
             A::Exploit => self.exploit_active,
+            A::ThrownExploit => self.thrown_exploit,
             A::MerchantsEye => self.merchants_eye,
             A::FieldForge => self.field_forge.is_some(),
             A::MakeDo => self.make_do.is_some(),
@@ -2170,6 +2173,7 @@ impl TalentMods {
                 self.lurk = content.status_id(&status).or(self.lurk);
             }
             TalentEffect::Exploit => self.exploit_active = true,
+            TalentEffect::ThrownExploit => self.thrown_exploit = true,
             TalentEffect::ExploitDice { dice } => {
                 self.exploit.dice = Some(self.exploit.dice.map_or(dice, |had| had.and(dice)));
             }

@@ -303,7 +303,8 @@ The [thief](classes.md#thief)'s [sneak attacks](talents.md#talent-sneak-attack) 
 level 1, spends every one they hold on a single sneak attack, deeper for each, and
 [Low blow](talents.md#talent-low-blow) at 12, [Improved sneak attack](talents.md#talent-improved-sneak-attack)
 at 32, and [Master thief](talents.md#talent-master-thief) at 60 add to it (see
-[Exploit](resources.md#exploit)). The thief has no
+[Exploit](resources.md#exploit)). From level 18 [Thrown exploit](resources.md#thrown-exploit)
+makes the same blow with a thrown weapon, at a foe up to 6 cells away. The thief has no
 [stamina](resources.md) until a [weapon rank](weapon-skills.md#marks-and-ranks) teaches an active
 ability.
 

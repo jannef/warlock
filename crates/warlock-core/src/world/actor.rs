@@ -1210,6 +1210,21 @@ impl Actor {
         Some(range + Mods::local(stack, content).get(ItemEffect::Range) + talents)
     }
 
+    /// How far it throws inventory stack `item` in a thrown exploit (`openings.rs`): its throw
+    /// range, no farther than its sneak dice land on a missile (the rules' `missile_reach` plus
+    /// Long reach's `sneak_reach`); `None` for what cannot be thrown so, a flask among them
+    /// (it shatters, with no point to put into a gap).
+    pub fn exploit_throw_range(&self, item: usize, content: &Content) -> Option<i32> {
+        let stack = self.inventory.get(item)?;
+        if content.object(stack.object).shatters() || stack.is_spirit() {
+            return None;
+        }
+        let range = self.throw_range(item, content)?;
+        let sneak = (content.surprise())
+            .map(|rules| rules.missile_reach + self.talent_mods(content).sneak_reach);
+        Some(sneak.map_or(range, |sneak| range.min(sneak)))
+    }
+
     /// The ammunition it has ready for its launcher: the first ready stack the launcher fires.
     pub fn ammunition(&self, content: &Content) -> Option<ObjectId> {
         self.ammunition_item(content)

@@ -1071,6 +1071,9 @@ pub enum TalentEffect {
     /// is a sneak attack whatever the foe knows (its `resource` cost, the least it needs:
     /// Openings; `world/openings.rs`).
     Exploit,
+    /// The class active Thrown exploit: Exploit's blow as a throw at a creature on a cell (its
+    /// `resource` cost, the least it needs: Openings; `world/openings.rs`).
+    ThrownExploit,
     /// An exploit that hits does `dice` more damage per opening spent, after Protection, never
     /// multiplied (Exploit's own 1d6; dice of one size add up).
     ExploitDice { dice: Dice },
@@ -1330,6 +1333,7 @@ impl TalentEffect {
             TalentEffect::Sic { .. } => A::Sic,
             TalentEffect::Lurk { .. } => A::Lurk,
             TalentEffect::Exploit => A::Exploit,
+            TalentEffect::ThrownExploit => A::ThrownExploit,
             TalentEffect::Song { id, .. } => return A::from_id(id).filter(|a| a.sings()),
             TalentEffect::Consecrate { .. } => A::Consecrate,
             TalentEffect::Sanctuary { .. } => A::Sanctuary,

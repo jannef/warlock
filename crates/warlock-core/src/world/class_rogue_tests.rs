@@ -459,6 +459,7 @@ fn the_thiefs_skills_give_disarm_pick_lock_and_steal_from_the_first_level() {
             "Lurk",
             "Low blow",
             "Evasion",
+            "Thrown exploit",
             "Pack mule",
             "Porter",
             "Improved sneak attack",

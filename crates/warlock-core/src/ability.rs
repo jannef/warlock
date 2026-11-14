@@ -273,6 +273,9 @@ pub enum Aim {
     /// the identify list; Decipher: the scrolls of a type not yet known;
     /// [`Ability::action_on`]).
     Item,
+    /// Something to throw, from the throw list less flasks, then a cell in the aiming mode (the
+    /// thief's Thrown exploit: [`Ability::action_throw`], `use:thrown_exploit:c:12,5`).
+    Throw,
     /// A weapon's shape, from the list of every one there is (the Hunter's Spirit weapon:
     /// [`crate::world::weapon_shapes`], `use:spirit_weapon:long_sword`).
     Shape,
@@ -860,6 +863,7 @@ impl Ability {
             Ability::Spell(_) => Aim::Nothing,
             Ability::Class(active) if active.aims_cell() => Aim::Cell,
             Ability::Class(active) if active.aims_item() => Aim::Item,
+            Ability::Class(active) if active.aims_throw() => Aim::Throw,
             Ability::Class(active) if active.aims_shape() => Aim::Shape,
             Ability::Class(active) if active.aims_rig() => Aim::Rig,
             Ability::Class(active) if active.aims_spell() => Aim::Spell,
@@ -1079,6 +1083,17 @@ impl Ability {
         }
     }
 
+    /// The action it is, throwing inventory stack `item` at level cell `at`, for one that asks
+    /// for something to throw and a cell (Thrown exploit); `None` for any other.
+    pub fn action_throw(self, item: usize, at: Pos) -> Option<Action> {
+        match self {
+            Ability::Class(active) if active.aims_throw() => {
+                Some(Action::UseThrow(active, item, at))
+            }
+            _ => None,
+        }
+    }
+
     /// The action it is, aimed at level cell `at`, for one that asks for a cell; `None` for any
     /// other.
     pub fn action_at(self, content: &Content, at: Pos) -> Option<Action> {
@@ -1261,6 +1276,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::Stillness
         | ClassActive::Lurk
         | ClassActive::Exploit
+        | ClassActive::ThrownExploit
         | ClassActive::Inspire
         | ClassActive::Lullaby
         | ClassActive::Consecrate
@@ -1350,8 +1366,9 @@ pub fn spell_unavailable(actor: &Actor, content: &Content, spell: SpellId) -> Op
 
 /// What class active `active` costs `actor` in an alternative resource (spec §8 "Resources"):
 /// its talent's `resource`, with Avatar's share of it for Lay on hands (`percent_of`, at least
-/// 1), and for Exploit every one held (its talent's cost the least it needs); `None` when it
-/// costs none. The one reading of the cost: `use_class` spends it.
+/// 1), and for Exploit and Thrown exploit every one held (its talent's cost the least it
+/// needs); `None` when it costs none. The one reading of the cost: `use_class` (and
+/// `use_class_throw`) spends it.
 pub(crate) fn class_cost(
     actor: &Actor,
     content: &Content,
@@ -1364,7 +1381,7 @@ pub(crate) fn class_cost(
         let share = crate::content::percent_of(i64::from(cost.amount), u32::from(percent));
         cost.amount = u16::try_from(share).unwrap_or(cost.amount).max(1);
     }
-    if active == ClassActive::Exploit {
+    if matches!(active, ClassActive::Exploit | ClassActive::ThrownExploit) {
         let held = actor.resources.get(cost.resource).map_or(0, |p| p.value);
         cost.amount = cost.amount.max(held);
     }

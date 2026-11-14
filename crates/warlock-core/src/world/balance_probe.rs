@@ -54,7 +54,8 @@
 //! - **Exploits** (#1464, `exploits.rs`): the thief's Exploit of 1, 3, and 5 openings on an
 //!   aware monster of their level with vitals, beside the plain and unaware blows, with the
 //!   ladder as `World::exploit_profile` and `World::land_exploit` make it
-//!   (`TalentMods::exploit`), and the openings a fight against one foe yields.
+//!   (`TalentMods::exploit`), the thrown exploit of 3 with the first throwing weapon carried,
+//!   and the openings a fight against one foe yields.
 //!
 //! - **Rage** (#842): the berserker, calm and raging (`rage_of`: the pool granted, Raging and
 //!   the stance it forces), and what feeds the pool a round: the foe's blows that `is_hit()`,
@@ -774,6 +775,9 @@ struct Snap {
     /// Its exploit's ladder, and the difficulty its feint sets a foe's Willpower (with Feint).
     exploit: crate::talent::ExploitMods,
     feint: Option<i32>,
+    /// The attack of the first throwing weapon it carries, thrown, once it has the thrown
+    /// exploit.
+    thrown: Option<Profile>,
     /// Raging, in plain gear (a class with the Rage ability).
     rage: Option<Rage>,
     /// Its ki, bare-handed in plain gear (a class whose Flurry spends ki).
@@ -1114,6 +1118,10 @@ fn career(
                 ambush_threat: mods.ambush_threat,
                 exploit: mods.exploit,
                 feint: exploits::feint_difficulty(&w2),
+                thrown: (0..me.inventory.len())
+                    .filter(|_| mods.thrown_exploit)
+                    .filter(|&i| content.object(me.inventory[i].object).is_thrown())
+                    .find_map(|i| me.thrown(i, content)),
                 rage: (gear == Gear::Plain)
                     .then(|| rage_of(&w2, player))
                     .flatten(),

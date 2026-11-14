@@ -1685,6 +1685,9 @@ impl World {
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
             Action::UseAt(active, at) => return self.use_class_at(*active, *at, events),
             Action::UseOn(active, item) => return self.use_class_on(*active, *item),
+            Action::UseThrow(active, item, at) => {
+                return self.use_class_throw(*active, *item, *at, events);
+            }
             Action::Shape(active, shape) => return self.use_class_shape(*active, shape),
             Action::Gift(active, at) => return self.use_gift(*active, *at, events),
             // A `use:ID` that names no spell but a weapon active is that active.
@@ -2331,6 +2334,8 @@ mod temper_tests;
 mod tests;
 #[cfg(test)]
 mod theft_tests;
+#[cfg(test)]
+mod thrown_exploit_tests;
 #[cfg(test)]
 mod time_tests;
 #[cfg(test)]

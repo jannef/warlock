@@ -63,6 +63,9 @@ pub enum AimKind {
     Fire,
     /// A throw of inventory stack `usize` (`t`).
     Throw(usize),
+    /// A thrown exploit with inventory stack `usize` (the thief's Thrown exploit, from the
+    /// abilities menu through its item list).
+    ThrownExploit(usize),
     /// Reading the spell scroll of inventory stack `usize` at a cell (`r`).
     Read(usize),
     /// Using the wand or rod of inventory stack `usize`, ready in the missile weapon slot (`t`;
@@ -141,7 +144,14 @@ impl Aim {
             .filter(|(_, stance)| *stance == Stance::Hostile)
             .map(|(p, _)| p)
             .find(in_range);
-        let at = (last.now(view).filter(in_range)).or(hostile).unwrap_or(me);
+        // A thrown exploit starts on the player's mark when they see it within reach.
+        let mark = (view.actors().iter())
+            .filter(|a| a.marked && matches!(kind, AimKind::ThrownExploit(_)))
+            .map(|a| a.pos)
+            .find(in_range);
+        let at = (mark.or_else(|| last.now(view).filter(in_range)))
+            .or(hostile)
+            .unwrap_or(me);
         Self { kind, at }
     }
 
@@ -184,6 +194,8 @@ impl Aim {
         match self.kind {
             AimKind::Fire => view.ready_to_fire().map(|(_, _, range)| range),
             AimKind::Throw(item) => view.throw_range(item),
+            // No farther than the sneak dice land (`Actor::exploit_throw_range`).
+            AimKind::ThrownExploit(item) => view.exploit_throw_range(item),
             // A scroll of a spell reaches as far as the player casts it.
             AimKind::Read(_) => view
                 .own_spell_reach(spell_of(view, self.kind)?)
@@ -210,6 +222,9 @@ impl Aim {
         Some(match self.kind {
             AimKind::Fire | AimKind::Zap(_) => Action::Fire(self.at),
             AimKind::Throw(item) => Action::Throw { item, at: self.at },
+            AimKind::ThrownExploit(item) => {
+                Action::UseThrow(ClassActive::ThrownExploit, item, self.at)
+            }
             AimKind::Read(item) => Action::Read {
                 item,
                 target: Some(ReadTarget::Cell(self.at)),
@@ -333,6 +348,7 @@ impl Aim {
         let (verb, does) = match self.kind {
             AimKind::Fire => ("Fire", "fires"),
             AimKind::Throw(_) => ("Throw", "throws"),
+            AimKind::ThrownExploit(_) => ("Exploit an opening with", "throws"),
             AimKind::Read(_) => ("Read", "reads"),
             AimKind::Zap(_) => ("Zap", "zaps"),
             // `ready` names the ability ("Throw your voice"), and only Enter uses it.

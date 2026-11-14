@@ -66,6 +66,9 @@ pub enum ObjectList {
     PickUp,
     /// The throwing weapons in the inventory: choose one to throw.
     Throw,
+    /// The throwing weapons in the inventory but flasks: choose one to throw in a thrown exploit
+    /// (the thief's Thrown exploit; `world/openings.rs`), then where.
+    ThrownExploit,
     /// Food lying here, then food in the pack: choose one to eat.
     Eat,
     /// The scrolls and grimoires in the pack: choose one to read.
@@ -110,6 +113,7 @@ impl ObjectList {
             ObjectList::Inventory => " Inventory ",
             ObjectList::PickUp => " Pick up ",
             ObjectList::Throw => " Throw ",
+            ObjectList::ThrownExploit => " Thrown exploit ",
             ObjectList::Eat => " Consume what? ",
             ObjectList::Read => " Read ",
             ObjectList::Identify(_) => " Identify ",
@@ -128,6 +132,7 @@ impl ObjectList {
             ObjectList::Inventory => "You are not carrying anything.",
             ObjectList::PickUp => "There is nothing here.",
             ObjectList::Throw => "You have nothing to throw.",
+            ObjectList::ThrownExploit => "You have nothing to throw into an opening.",
             ObjectList::Eat => "You have nothing to consume.",
             ObjectList::Read => "You have nothing to read.",
             ObjectList::Identify(_) => "You carry nothing unidentified.",
@@ -148,6 +153,7 @@ impl ObjectList {
             ObjectList::Inventory => super::info_tabs::panel_width(72),
             ObjectList::PickUp
             | ObjectList::Throw
+            | ObjectList::ThrownExploit
             | ObjectList::Eat
             | ObjectList::Read
             // Room for a name with its numbers and its marks (`a chain mail shirt (Dv +2,
@@ -168,6 +174,7 @@ impl ObjectList {
         matches!(
             self,
             ObjectList::Throw
+                | ObjectList::ThrownExploit
                 | ObjectList::Eat
                 | ObjectList::Read
                 | ObjectList::Identify(_)
@@ -294,6 +301,10 @@ impl ObjectScreen {
             ObjectList::Inventory => (0..pack.len()).map(Item::Pack).collect(),
             ObjectList::Throw => (0..pack.len())
                 .filter(|&i| view.is_throwing_weapon(i))
+                .map(Item::Pack)
+                .collect(),
+            ObjectList::ThrownExploit => (0..pack.len())
+                .filter(|&i| view.is_throwing_weapon(i) && view.exploit_throw_range(i).is_some())
                 .map(Item::Pack)
                 .collect(),
             ObjectList::Eat => ((0..pile.len())
@@ -563,6 +574,9 @@ impl ObjectScreen {
                 item: item.position(),
                 ally: None,
             }),
+            (ObjectList::ThrownExploit, item) => {
+                ScreenAction::Aim(AimKind::ThrownExploit(item.position()))
+            }
             (_, item) => ScreenAction::Aim(AimKind::Throw(item.position())),
         }
     }
@@ -667,6 +681,7 @@ impl ObjectScreen {
                     ObjectList::PickUp => Action::PickUp(chosen),
                     ObjectList::Inventory
                     | ObjectList::Throw
+                    | ObjectList::ThrownExploit
                     | ObjectList::Eat
                     | ObjectList::Read
                     | ObjectList::Identify(_)
@@ -872,7 +887,9 @@ impl ObjectScreen {
                 }
             },
             ObjectList::Eat => format!("{}   {page}Esc cancel", either("consume")),
-            ObjectList::Throw => format!("{}   {page}Esc cancel", either("choose")),
+            ObjectList::Throw | ObjectList::ThrownExploit => {
+                format!("{}   {page}Esc cancel", either("choose"))
+            }
             ObjectList::Read => format!("{}   {page}Esc cancel", either("read")),
             ObjectList::Identify(_) => format!("{}   {page}Esc cancel", either("identify")),
             ObjectList::Temper => format!("{}   {page}Esc cancel", either("temper")),

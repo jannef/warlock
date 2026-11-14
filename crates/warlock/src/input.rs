@@ -913,7 +913,7 @@ impl Gameplay<'_> {
                 // and a throw.
                 let (confirm, missile) = match aim.kind {
                     AimKind::Fire | AimKind::Zap(_) => (KeyCommand::Missile, true),
-                    AimKind::Throw(_) => (KeyCommand::Throw, true),
+                    AimKind::Throw(_) | AimKind::ThrownExploit(_) => (KeyCommand::Throw, true),
                     AimKind::Read(_) => (KeyCommand::Read, false),
                     // None of these uses an ability: its own key does (below), and Enter.
                     AimKind::Ability(_) => (KeyCommand::Loose, false),
@@ -1377,6 +1377,10 @@ impl Gameplay<'_> {
                     self.actions.write(PlayerAction(action));
                 }
             }
+            // The throw list less flasks asks what, then the aiming mode where (Thrown exploit).
+            (true, ability::Aim::Throw) => {
+                return Some(ScreenAction::Open(ScreenName::ThrownExploit));
+            }
             // The shape list asks which weapon (the Hunter's Spirit weapon).
             (true, ability::Aim::Shape) => return Some(ScreenAction::Open(ScreenName::Shape)),
             // The rig list asks which trap, then the way (the craftsperson's Trapwright).
@@ -1412,7 +1416,8 @@ impl Gameplay<'_> {
                 let here = view.viewer();
                 let action = (ability.action(&content, Some(view.blank_way())))
                     .or_else(|| ability.action_at(&content, here))
-                    .or_else(|| ability.action_on(&content, 0));
+                    .or_else(|| ability.action_on(&content, 0))
+                    .or_else(|| ability.action_throw(0, here));
                 if let Some(action) = action {
                     self.actions.write(PlayerAction(action));
                 }
