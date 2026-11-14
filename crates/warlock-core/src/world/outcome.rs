@@ -554,7 +554,7 @@ impl World {
             return;
         }
         let danger = base.saturating_add(summon.danger);
-        let player = self.content.creature_id("player");
+        let player = self.content.ids().player;
         let hostile = |content: &crate::content::Content, c| {
             !content.creature(c).unique
                 && player.is_some_and(|p| content.stance(c, p) == Stance::Hostile)

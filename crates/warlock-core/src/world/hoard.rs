@@ -98,7 +98,7 @@ impl World {
         if danger == 0 {
             return Vec::new();
         }
-        let player = self.content.creature_id("player");
+        let player = self.content.ids().player;
         let content = self.content.clone();
         let fit = |list: Vec<Candidate>| -> Vec<Candidate> {
             (list.into_iter())

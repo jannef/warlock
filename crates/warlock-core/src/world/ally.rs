@@ -293,8 +293,8 @@ impl World {
             self.say("This world knows no allies.");
             return Spent::Nothing;
         }
-        let Some(kind) = (self.content.creature_id(creature))
-            .filter(|&c| Some(c) != self.content.creature_id("player"))
+        let Some(kind) =
+            (self.content.creature_id(creature)).filter(|&c| Some(c) != self.content.ids().player)
         else {
             self.say(format!("There is no creature `{creature}`."));
             return Spent::Nothing;

@@ -1005,7 +1005,8 @@ impl World {
             .player_start
             .ok_or_else(|| WorldError::NoPlayerStart(start.id.clone()))?;
         let player_creature = content
-            .creature_id("player")
+            .ids()
+            .player
             .expect("content validation guarantees a player creature");
 
         let mut state = WorldState {

@@ -18,9 +18,6 @@ use crate::content::{Content, StairsDir};
 use crate::geom::{Dir, Pos};
 use std::collections::BTreeSet;
 
-/// The status a fall leaves the player in.
-const STAGGER: &str = "staggered";
-
 impl World {
     /// The player has just stepped onto `at`: on a collapsed floor it may give way under them
     /// (module docs). Returns whether they fell.
@@ -80,7 +77,7 @@ impl World {
         if self.hurt(id, damage, Harm::Fall, events) {
             return true;
         }
-        if let Some(stagger) = content.status_id(STAGGER) {
+        if let Some(stagger) = content.ids().staggered {
             self.afflict(id, stagger, 1, None, events);
         }
         true

@@ -662,7 +662,7 @@ impl World {
         let Some(spawning) = (content.dungeon(&draw.pool)).and_then(|b| b.spawning.as_ref()) else {
             return Vec::new();
         };
-        let player = content.creature_id("player");
+        let player = content.ids().player;
         let fit = |list: Vec<crate::content::danger::Candidate>| -> Vec<_> {
             (list.into_iter())
                 .filter(|&(c, ..)| !content.creature(c).unique)
