@@ -23,7 +23,7 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   `marks` are
   `(Stat, count)` in stat order. A `severity` past its status's max is that max
   (`Effects::add`).
-- Content checks (`content/mod.rs`): a drink's `cures` must be named in some status's or
+- Content checks (`content/potion.rs`, `content/load_items.rs`): a drink's `cures` must be named in some status's or
   disease's `cured_by` (with food's `cures`); potions of one `colour` share one `fg`;
   `data/potion_labels.toml` is parsed as the scroll labels are (two labels drawn alike are
   told apart by a number, `scroll_label::draw_into`). Poisoned's `cured_by` has `antidote` for the antidote; Frightened,

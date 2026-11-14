@@ -104,7 +104,7 @@ whose `>` leads there (`down_to`). No stairs are placed: the hand-made level car
 naming the deepest level (`Content::validate` refuses a bottom without one or of another
 campaign), so `World::travel` arrives on it, and back up on the deepest level's `>`. Dēopgang's
 bottom is Gimmwīc, the deep gnomes' town. Tests: `content/dungeon.rs` (parse and exclusions),
-`content/mod.rs` (the validate checks), `world/deep_gnome_tests.rs` (down to the town and back).
+`content/validate.rs` (the validate checks), `world/deep_gnome_tests.rs` (down to the town and back).
 
 **Meyn Bew** (#1446; `campaigns/ascmearc/data/dungeons/meynbew.toml`): a pocket of the plane of
 earth under Gimmwīc, entered only through the crystal portal Ysella the Binder's quest reveals

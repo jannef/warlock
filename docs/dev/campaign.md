@@ -28,7 +28,7 @@ builds' New run lists only its start, and the player wiki describes only it.
 content error), `name` (New run's heading), `description`, `start` (the scenario a new run
 starts, one of the campaign's own), and `kind`, `campaign` (default) or `test`.
 
-## Loading (`content/campaign.rs`, `content/mod.rs`)
+## Loading (`content/campaign.rs`, `content/files.rs`, `content/mod.rs`)
 
 - `build.rs` embeds and `ContentFiles::from_dir` reads `assets/campaigns/` with the rest.
 - `ContentFiles::campaign_order`: the campaign directories, those of kind `campaign` in path
