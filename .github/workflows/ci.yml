@@ -18,16 +18,22 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: 0
+  # Line tables only (file and line in backtraces, no variable info): smaller objects, quicker
+  # links, smaller caches (#1583).
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
 
 jobs:
   # Design documents pending the owner's approval are PRs that only touch docs/design/
   # (docs/dev/merging.md, "Design documents"). They don't build: the required jobs below are
   # skipped, and a skipped job counts as passing. Anything else, or a failure here, builds.
+  # `web` is false for a push to main that touches only prose (docs, the wiki, the spec, ops
+  # notes, Markdown): the web build has nothing new to build then (#1602).
   changes:
     name: What changed
     runs-on: ubuntu-latest
     outputs:
       code: ${{ steps.diff.outputs.code }}
+      web: ${{ steps.diff.outputs.web }}
     steps:
       - id: diff
         env:
@@ -35,16 +41,53 @@ jobs:
           EVENT: ${{ github.event_name }}
           REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
         run: |
           code=true
+          web=true
           if [ "$EVENT" = pull_request ]; then
             files=$(gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[].filename')
             if [ -n "$files" ] && ! grep -qv '^docs/design/' <<< "$files"; then code=false; fi
+          elif [ "$EVENT" = push ]; then
+            # The compare API lists at most 300 files; a bigger push builds.
+            if files=$(gh api "repos/$REPO/compare/$BEFORE...$AFTER" --jq 'if (.files | length) < 300 then .files[].filename else "many" end'); then
+              prose='^(docs/|wiki/|spec/|ops/)|\.md$'
+              if [ -n "$files" ] && ! grep -Eqv "$prose" <<< "$files"; then web=false; fi
+            fi
           fi
           echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "web=$web" >> "$GITHUB_OUTPUT"
 
+  # The job's name is a required check of main's branch protection: keep it, although the smoke
+  # test and the goldens now run in `screens` beside it (#1583).
   linux:
     name: Linux (fmt, clippy, test, smoke)
+    needs: changes
+    if: ${{ !cancelled() && !inputs.update_golden && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config libudev-dev libwayland-dev libxkbcommon-dev
+      - name: Install pinned toolchain
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: Format
+        run: cargo fmt --all --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      # Plain `cargo test`, not nextest: nextest runs every test in a process of its own, and each
+      # re-parses the shared content, so the step took 21 min against about 13.5 (#1612).
+      - name: Test
+        run: cargo test --workspace --locked
+
+  # The steps that need the game and xtask built but not the tests: beside `linux`, not after it.
+  screens:
+    name: Linux (wiki, smoke, golden)
     needs: changes
     if: ${{ !cancelled() && !inputs.update_golden && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
@@ -59,12 +102,9 @@ jobs:
       - name: Install pinned toolchain
         run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
-      - name: Format
-        run: cargo fmt --all --check
-      - name: Clippy
-        run: cargo clippy --workspace --all-targets --locked -- -D warnings
-      - name: Test
-        run: cargo test --workspace --locked
+      # The vast level is generated (CLAUDE.md): the committed file must match the generator.
+      - name: The vast level is fresh
+        run: cargo xtask gen-vast --check
       # The player wiki (wiki/, mdBook): its tables are generated here from the game data (they are
       # not committed), the book must build, and every link in it must lead to a page and anchor.
       - name: Install mdBook
@@ -125,8 +165,9 @@ jobs:
         run: cargo build --no-default-features --locked --package warlock --package warlock-cli
       - name: wasm32 check
         run: cargo check --no-default-features --locked --package warlock --package warlock-core --target wasm32-unknown-unknown
+      # An integration test: one small harness, not the crate's whole test build (#1593).
       - name: release_content
-        run: cargo test --no-default-features --locked --package warlock-core --package warlock release_content
+        run: cargo test --no-default-features --locked --package warlock-core --test release_content
       - name: The CLI refuses the showcase
         run: |
           if out=$(target/debug/warlock-cli dump --scenario showcase 2>&1); then
@@ -134,10 +175,12 @@ jobs:
           fi
           grep -q "unknown scenario" <<< "$out" || { echo "$out"; exit 1; }
 
-  # Builds the browser version on main only; PRs get the quicker wasm32 check above.
+  # Builds the browser version on main only, and not for a push of prose alone (`changes`); PRs
+  # get the quicker wasm32 check above.
   web:
     name: Web build (WebGPU)
-    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.update_golden)
+    needs: changes
+    if: ${{ !cancelled() && ((github.event_name == 'push' && needs.changes.outputs.web != 'false') || (github.event_name == 'workflow_dispatch' && !inputs.update_golden)) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -178,19 +221,24 @@ jobs:
       - uses: actions/checkout@v5
       - name: Install pinned toolchain
         run: rustup toolchain install
-      - uses: Swatinem/rust-cache@v2
-      # Both tools are built from crates.io (rust-cache keeps ~/.cargo/bin between runs):
-      # downloading their GitHub release archives failed for hours on 2026-11-08 (504s).
+      # Prebuilt and pinned (#1579): building them took two minutes a run. Neither tool compiles
+      # anything here, so the job keeps no cache.
       - name: Install cargo-deny and cargo-about
-        run: |
-          cargo deny --version 2>/dev/null | grep -q ' 0\.20\.2' || cargo install --locked --force cargo-deny@0.20.2
-          command -v cargo-about >/dev/null || cargo install --locked cargo-about --features cli
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny@0.20.2,cargo-about@0.9.2
       - name: cargo deny check
         run: cargo deny --all-features check
       # Third-party notices: fail when THIRD_PARTY_LICENSES.html is stale (run
-      # `cargo xtask licenses` after changing dependencies).
+      # `cargo xtask licenses` after changing dependencies). The same cargo-about call as
+      # `xtask/src/licenses.rs`, without building xtask; keep the two alike.
       - name: Third-party licenses are current
-        run: cargo xtask licenses --check
+        run: |
+          cargo about generate --workspace --locked --fail --config about.toml --output-file "$RUNNER_TEMP/licenses.html" about.hbs
+          if ! sed 's/\r$//' "$RUNNER_TEMP/licenses.html" | diff -q - THIRD_PARTY_LICENSES.html; then
+            echo "THIRD_PARTY_LICENSES.html is stale; run \`cargo xtask licenses\` and commit the result"
+            exit 1
+          fi
 
   # Manual only: Actions > CI > Run workflow with "update_golden" ticked (or
   # `gh workflow run ci.yml --ref <branch> -f update_golden=true`). Reference screenshots are
