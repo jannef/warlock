@@ -1,14 +1,14 @@
 # Companions
 
 A **companion** is a beast that is yours for good. It stays until it is slain, and there is no
-sending it away. You have at most one at a time. A [ranger](classes.md#ranger) starts with one;
+sending it away. You have at most one at a time. A [ranger](class-ranger.md) starts with one;
 anyone trained in [Handle animal](skills.md#skill-handle-animal) can [tame](#taming) one.
 
 A companion is an [ally](allies.md) like any other, with the same [orders](allies.md#orders), the
 same side, and the same share of its kills. The messages call it by its **name**, drawn when it
 becomes yours ("Snel bites the kobold.", "Snel comes to heel.", "Snel dies."). The
 [status bar](the-screen.md#the-screen) says how it fares ("Snel: unhurt", or "Snel: with you" while
-it travels with you on the overworld). [Look mode](controls.md#look-mode) names it ("Snel, your
+it travels with you on the overworld). [Look mode](controls-prompts.md#look-mode) names it ("Snel, your
 hound"), and the Character screen lists it under your class.
 
 A companion **always comes along**. Wherever it stands when you take the stairs or leave an area,
@@ -40,7 +40,7 @@ remains. Goods you have not paid for stay with you.
 
 ## Starting companions
 
-The [ranger](classes.md#ranger)'s **Animal companion** (level 1) puts a beast at their side from the
+The [ranger](class-ranger.md)'s **Animal companion** (level 1) puts a beast at their side from the
 first turn. It is one of their race's kinds, drawn by chance as the run begins, or rarely one of the
 rares that any race may begin with. The [story](background.md#the-companion) of how it came to be
 yours is told with the rest of your background.
@@ -85,14 +85,14 @@ the game computes it:
 
 {{#include generated/companion-growth.md}}
 
-From level 18 the ranger's **[Pack tactics](classes.md#talent-pack-tactics)** makes the two of you
+From level 18 the ranger's **[Pack tactics](class-ranger.md#talent-pack-tactics)** makes the two of you
 hunt as one. A creature beside you both is flanked: your melee attacks and your companion's at it
 get +2 [to hit](combat.md#hitting), and your companion shares your
-[favoured prey](classes.md#ranger) bonus.
+[favoured prey](class-ranger.md) bonus.
 
 ## Hunter's bond
 
-From level 25 the ranger's **[Hunter's bond](classes.md#talent-hunters-bond)** lets them share what
+From level 25 the ranger's **[Hunter's bond](class-ranger.md#talent-hunters-bond)** lets them share what
 their companion has. It works while the companion stands on the same level, not while it rides with
 you across the overworld.
 

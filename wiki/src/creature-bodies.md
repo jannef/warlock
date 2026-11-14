@@ -26,7 +26,7 @@ faint violet sparkle. This needs the matching [settings](settings.md) on.
 ### Wounds and death
 
 A creature that dies is gone, and what it carried lies where it fell. Creatures do not flee or
-fight differently when they are hurt, but [look mode](controls.md#look-mode) shows how hurt they
+fight differently when they are hurt, but [look mode](controls-prompts.md#look-mode) shows how hurt they
 look and whether they [bleed](status-effects.md#bleeding).
 
 [Big hits](combat.md#damage) and criticals make creatures [bleed](status-effects.md#bleeding),

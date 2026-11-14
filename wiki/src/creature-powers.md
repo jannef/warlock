@@ -143,7 +143,7 @@ Everyone in the cone is struck by one roll of its damage, with no roll [to hit](
 [resistance](damage-types.md#armour-and-resistance) takes its share. The dragon's own kind is
 immune to its element and takes nothing.
 
-The element does to those it harms what any [spell of it](spellcasting.md#spell-types) does: fire
+The element does to those it harms what any [spell of it](spell-types.md) does: fire
 sets one in four [burning](status-effects.md#status-burning). A breath may carry more, as a blow's
 added effects do. The [gorgon](creatures.md#creature-gorgon)'s grey vapour leaves those it harms
 [stiffening](status-effects.md#status-stiffening) unless they make the Toughness check (the *Then*
@@ -182,7 +182,7 @@ of them in full, with no roll [to hit](combat.md#hitting) and no halving at the 
 [resistance](damage-types.md#armour-and-resistance) takes its share. It strikes your
 [allies](allies.md) and other creatures as readily as you.
 
-A burst does to the floor what an area [spell](spellcasting.md#what-lies-in-its-way) of its
+A burst does to the floor what an area [spell](spell-types.md#what-lies-in-its-way) of its
 element does, so the scrolls under a dying fire elemental may burn. Its element does to the cells
 what such a spell's burst does: fire is left burning, water frozen. The spell types' added effects
 do not come with it, but the creature's own do, by the chance below, on those it harmed. A water

@@ -18,7 +18,7 @@ You learn where a trap is in one of three ways:
   see the blast of a fireball where you can see part of it.
 
 From then on the trap is **known**. It shows as `^` in its own colour, over anything lying on it,
-and you remember it like the terrain, even out of sight. [Look mode](controls.md#look-mode) names
+and you remember it like the terrain, even out of sight. [Look mode](controls-prompts.md#look-mode) names
 it: "A fireball trap, on stone floor.", or "A kobold (hostile, unhurt), on a pit on stone floor."
 Some places show you their traps from the start.
 
@@ -114,7 +114,7 @@ No trap lies on water that can [freeze](temperature.md#water-freezes), and a
 
 ## Disarming traps
 
-If you are trained in [Disable device](skills.md#skill-disable-device) ([thieves](classes.md#thief)
+If you are trained in [Disable device](skills.md#skill-disable-device) ([thieves](class-thief.md)
 are), you can try to take apart a trap you know of, on the floor or on a door. Stand next to it and
 choose [Disarm a trap](abilities.md#ability-disarm) in the [abilities menu](abilities.md) (`a`),
 then the direction. A trap you have not found cannot be disarmed. Trying where none is known only
@@ -146,8 +146,8 @@ remembers a failed try; time, and the risk, are the only price. Disarming earns 
 
 ## Rigging traps
 
-A [craftsperson](classes.md#craftsperson) of level 25 can rig traps of their own, with
-[Trapwright](classes.md#talent-trapwright). Choose it in the [abilities menu](abilities.md), pick a
+A [craftsperson](class-craftsperson.md) of level 25 can rig traps of their own, with
+[Trapwright](class-craftsperson.md#talent-trapwright). Choose it in the [abilities menu](abilities.md), pick a
 trap from the list, then the way: the trap goes on the cell beside you in that direction. The list
 greys out a trap you lack something for, and says what.
 

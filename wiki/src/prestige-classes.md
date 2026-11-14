@@ -1,7 +1,7 @@
 # Prestige classes
 
 A **prestige class** is a second table of levels for a class that stops short of the rest, as the
-[bard](classes.md#bard) does at 30. You reach it only by a **calling**: a deed found somewhere in
+[bard](class-bard.md) does at 30. You reach it only by a **calling**: a deed found somewhere in
 the world, never by experience alone. The game never names one, but the world leaves hints, such
 as a [statue](terrain.md#walls)'s inscription.
 

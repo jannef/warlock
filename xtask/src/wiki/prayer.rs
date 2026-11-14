@@ -23,7 +23,7 @@ pub(super) fn prayer_strain(content: &Content) -> String {
     let mut out = String::from("| | |\n|---|---|\n");
     let _ = writeln!(
         out,
-        "| Strain a prayer adds | {}, answered or fizzled alike (none in an unholy place for a priest who [communes with the dark](classes.md#talent-communion)) |",
+        "| Strain a prayer adds | {}, answered or fizzled alike (none in an unholy place for a priest who [communes with the dark](class-priest.md#talent-communion)) |",
         rules.strain
     );
     let _ = writeln!(

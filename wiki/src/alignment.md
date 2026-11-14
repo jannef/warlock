@@ -9,8 +9,8 @@ character creation name your **band** instead, one of seven words.
 
 ## Where you start
 
-Your [class](classes.md) sets where you start. [Paladins](classes.md#paladin) start Good,
-[thieves](classes.md#thief) and [witches](classes.md#witch) Callous, and everyone else Neutral.
+Your [class](classes.md) sets where you start. [Paladins](class-paladin.md) start Good,
+[thieves](class-thief.md) and [witches](class-witch.md) Callous, and everyone else Neutral.
 
 Your [race](races.md) leans you a little. [Elves](races.md#race-elf) and
 [halflings](races.md#race-halfling) lean a little toward good, and
@@ -19,8 +19,8 @@ their own. The evil races, though, start on the evil side:
 [goblins](races.md#race-goblin), [kobolds](races.md#race-kobold),
 [lizardfolk](races.md#race-lizardfolk), and [ratfolk](races.md#race-ratfolk) Callous,
 [drow](races.md#race-drow) and [duergar](races.md#race-duergar) Evil (see
-[Races](races.md#the-evil-races)). So a goblin [thief](classes.md#thief) starts Evil, and a drow
-[paladin](classes.md#paladin) Neutral.
+[Races](races.md#the-evil-races)). So a goblin [thief](class-thief.md) starts Evil, and a drow
+[paladin](class-paladin.md) Neutral.
 
 Then the [stars](horoscope.md) nudge you. The animal of your birth year adds to the score (the
 *Alignment* column on the [Horoscope](horoscope.md#what-a-sign-does) page):
@@ -34,8 +34,8 @@ Then the [stars](horoscope.md) nudge you. The animal of your birth year adds to 
 | the others | 0 |
 
 It is small, but near an edge it decides the band. An [elf](races.md#race-elf)
-[wizard](classes.md#wizard) born under the Unicorn starts Kind (+150). A
-[paladin](classes.md#paladin) starts Good under any animal unless their race is one of the evil
+[wizard](class-wizard.md) born under the Unicorn starts Kind (+150). A
+[paladin](class-paladin.md) starts Good under any animal unless their race is one of the evil
 ones. A [half-orc](races.md#race-half-orc) paladin born under the Manticore or the Basilisk starts
 at +400, just Good.
 
@@ -56,7 +56,7 @@ the other way, or from 0, moves it by its whole worth. The score never passes âˆ
 {{#include generated/alignment-deeds.md}}
 
 - **Killing.** It matters whether someone meant you harm. A [creature](creatures.md) is
-  [hostile](creatures.md#factions) to you if [look mode](controls.md#look-mode) says so. One that is
+  [hostile](creatures.md#factions) to you if [look mode](controls-prompts.md#look-mode) says so. One that is
   not, such as the peaceful folk of the hall, means you no harm. Beasts that do not talk
   ([deer](creatures.md#creature-deer), [rats](creatures.md#creature-rat), bats) may be hunted
   without a stain. Only your own kills count, and those of a wound you dealt.
@@ -67,7 +67,7 @@ the other way, or from 0, moves it by its whole worth. The score never passes âˆ
   meant you no harm, is very evil, fresh or rotten.
 - **[Quests](quests.md)** that help someone are a little good; a dark errand would be evil.
 - **Consecrating** a cursed, draining, or haunted place is good. That is the
-  [priest](classes.md#priest)'s and the [paladin](classes.md#paladin)'s
+  [priest](class-priest.md)'s and the [paladin](class-paladin.md)'s
   [Consecrate](abilities.md#ability-consecrate); see [Special rooms](special-rooms.md).
 
 {{#include generated/alignment-quests.md}}
@@ -93,7 +93,7 @@ are still used and take the time of a cast, but do nothing: no healing, no blow,
 consecration, and no cooldown, [zeal](resources.md#resource-zeal), or [mana](mana.md#spending-it)
 spent. Putting your holy light out always works.
 
-**Zeal.** Any deed that moves you toward evil empties a [paladin](classes.md#paladin)'s
+**Zeal.** Any deed that moves you toward evil empties a [paladin](class-paladin.md)'s
 [zeal](resources.md#resource-zeal) at once ("Your zeal deserts you."). It bars nothing: the pool
 fills again.
 

@@ -26,7 +26,7 @@ shield you hold. It does the shield's own [damage](combat.md#damage) plus your [
 time of a blow. You need a shield to bash with, and you bash only what is [hostile](creatures.md#factions) to you. A shield
 bash is an *ability*: choose it from the abilities menu (`a`, see [Abilities](abilities.md)), then pick a
 direction. It has no key of its own by default. You can give it one in the
-[Controls screen](controls.md#rebinding-keys) ("Bash with your shield").
+[Controls screen](controls-rebinding.md) ("Bash with your shield").
 
 Spells have their own page. The [caster styles](schools.md#caster-styles) are trained the same way,
 by casting, and a spell that rolls to hit aims with its caster style's rank. They are on the
@@ -146,16 +146,16 @@ teaches an active ("You learn to pace your breath."). Creatures use no actives.
 {{#include generated/weapon-abilities.md}}
 
 The [Early mastery](talents.md#talent-early-mastery) talent teaches every one of them a rank sooner. So do the talents that
-make you fight as someone more practised ([Stylist](talents.md#talent-stylist), [Fencing](classes.md#talent-fencing)). A status these abilities leave,
+make you fight as someone more practised ([Stylist](talents.md#talent-stylist), [Fencing](class-aristocrat.md#talent-fencing)). A status these abilities leave,
 such as [Bleeding](status-effects.md#bleeding) or [Staggered](status-effects.md#status-staggered), is a [status effect](status-effects.md) like any other: a [staggered](status-effects.md#status-staggered) foe's next
 action takes half again as long. A brace and a point-blank shot are [free blows](stances.md#free-blows), so they bring
 no free blows of their own.
 
 ## Where your skills come from
 
-You start with some skills from your [race](races.md) and your [class](classes.md). A [warrior](classes.md#warrior) knows [long blades](weapon-skills.md#weapon-skill-long-blades),
-a [ranger](classes.md#ranger) knows [bows](weapon-skills.md#weapon-skill-bows), and a [thief](classes.md#thief) knows [daggers](weapon-skills.md#weapon-skill-daggers). Some starting ranks are dice (`1d2` is one or two),
-rolled when you start. A [berserker](classes.md#berserker) has learned either [axes](weapon-skills.md#weapon-skill-axes) or great blades, and the dice decide
+You start with some skills from your [race](races.md) and your [class](classes.md). A [warrior](class-warrior.md) knows [long blades](weapon-skills.md#weapon-skill-long-blades),
+a [ranger](class-ranger.md) knows [bows](weapon-skills.md#weapon-skill-bows), and a [thief](class-thief.md) knows [daggers](weapon-skills.md#weapon-skill-daggers). Some starting ranks are dice (`1d2` is one or two),
+rolled when you start. A [berserker](class-berserker.md) has learned either [axes](weapon-skills.md#weapon-skill-axes) or great blades, and the dice decide
 which. Your race's and your class's ranks add up.
 
 Creatures have skills too: the [kobolds](creatures.md#creature-kobold) of the war band know their [spears](weapon-skills.md#weapon-skill-spears) and [bows](weapon-skills.md#weapon-skill-bows). They do not

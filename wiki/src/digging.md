@@ -55,7 +55,7 @@ happens, such as a [sound you hear](hearing.md#what-you-hear), an attack on you,
 [rain](weather.md) starting.
 
 **What you dug stays dug.** The wall keeps the work you put into it, and the next `u` toward it
-goes on from there ("You go on digging at the stone wall."). [Look mode](controls.md#look-mode)
+goes on from there ("You go on digging at the stone wall."). [Look mode](controls-prompts.md#look-mode)
 calls a wall you have started on "partly dug". A dig also stops after a day of work, if it ever
 runs that long.
 

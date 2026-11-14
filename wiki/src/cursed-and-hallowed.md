@@ -22,7 +22,7 @@ minutes and nothing rises. A [corpse](food.md#corpses) carried out of the room a
 elsewhere is not cursed again. A level you leave stays as it was until you come back, and whatever
 was due to rise meanwhile rises as you return.
 
-**Consecrate.** A [priest](classes.md#priest) (from level 9) or [paladin](classes.md#paladin) (from
+**Consecrate.** A [priest](class-priest.md) (from level 9) or [paladin](class-paladin.md) (from
 level 12) of [Neutral or better](alignment.md) can lift the curse. Standing inside a
 [cursed](special-rooms.md#room-cursed), a [draining](special-rooms.md#room-draining), or a
 [haunted](special-rooms.md#room-haunted) room, they spend 15 [mana](mana.md#how-much-mana-you-have) and pray for a
@@ -54,7 +54,7 @@ Rest outside the room, even just beside its door, and nothing comes.
 
 ## Hallowed ground
 
-Hallowed ground is not a room but a place a [priest](classes.md#priest) makes.
+Hallowed ground is not a room but a place a [priest](class-priest.md) makes.
 [Sanctuary](abilities.md#ability-sanctuary), the priest's ability at level 50, is a minute's
 kneeling for 30 [mana](mana.md#spending-it). Anything that would stop a
 [rest](resting.md#how-resting-works) stops it, and then nothing is hallowed and the mana is spent.

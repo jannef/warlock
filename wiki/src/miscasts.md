@@ -6,7 +6,7 @@ well, from a harmless shimmer to a blast that can kill you.
 
 **Can a miscast kill you?** Only when you cast a spell far beyond your
 [Spellcraft](skills.md#skill-spellcraft): about ten [spell levels](magic.md#spell-levels) more
-than your skill and the spell's [rank](magic.md#spell-ranks) carry. Below that, every miscast is
+than your skill and the spell's [rank](learning-spells.md#spell-ranks) carry. Below that, every miscast is
 [protected](#the-protected-half): it can hurt you, but it always leaves you alive.
 
 **What never miscasts.** [Scrolls](scrolls.md) and [wands](wands-and-rods.md#wands): their magic is
@@ -28,7 +28,7 @@ table below). Missing the check is a miscast.
 The difficulty is 8, and then:
 
 - **+1 for each [spell level](magic.md#spell-levels).**
-- **−1 for each [rank](magic.md#spell-ranks)** you hold in the spell above the first. A spell at
+- **−1 for each [rank](learning-spells.md#spell-ranks)** you hold in the spell above the first. A spell at
   rank 10 is as safe to cast as one nine levels lower. A creature's spells count as rank 1.
 - **+1 for every 10 %** that the [armour](objects.md#class-body-armour) you wear adds to a spell's
   [cost](magic.md#what-a-spell-costs), counted as the cost counts it.
@@ -42,21 +42,21 @@ gives what Spellcraft adds to your bonus, and what it takes off a miscast's tota
 
 {{#include generated/miscast-chances.md}}
 
-A new [wizard](classes.md#wizard) has a bonus of about 3, so about one cast in fourteen of a level-1
+A new [wizard](class-wizard.md) has a bonus of about 3, so about one cast in fourteen of a level-1
 spell goes wrong. A spell ten levels above that miscasts most of the time.
 
 Spellcraft is how you move the odds. A wizard who puts every [skill
 roll](skills.md#improving-a-skill) on Spellcraft has a bonus of about 20 at level 10 and 28 at level
 20. At level 10 only a roll of 1 and 1 goes wrong on any spell up to level 15, and at level 20 on
 any spell up to level 23. A spell twenty levels above them still goes wrong four casts in five,
-and one in five at [rank](magic.md#spell-ranks) 10. A wizard who puts no roll on it stays at
+and one in five at [rank](learning-spells.md#spell-ranks) 10. A wizard who puts no roll on it stays at
 about 5 to 8 all career.
 
-Classes that cast on the side start with little Spellcraft. A [ranger](classes.md#ranger) of
-level 6 casting Barkskin miscasts about one cast in four, and a new [bard](classes.md#bard)
+Classes that cast on the side start with little Spellcraft. A [ranger](class-ranger.md) of
+level 6 casting Barkskin miscasts about one cast in four, and a new [bard](class-bard.md)
 casting Mend about one in seven. That is intended. Their miscasts stay in the protected rows (see
 below), and a [skill roll](skills.md#improving-a-skill) or two on Spellcraft at a level-up moves the
-odds a long way. So does [deepening the spell](magic.md#spell-ranks): every rank above the first
+odds a long way. So does [deepening the spell](learning-spells.md#spell-ranks): every rank above the first
 counts as one point of bonus.
 
 Every cast trains Spellcraft the same, whether it miscasts or not.
@@ -126,13 +126,13 @@ worst every spell you know. A spell your [class](magic.md#what-your-class-gives)
 forgotten just the same. A forgotten spell is gone from the [Magic page](schools.md#the-magic-page)
 and the [abilities menu](abilities.md#the-abilities-menu), and you cannot cast it.
 
-The only way back is its [grimoire](magic.md#learning-a-spell), exactly as you
+The only way back is its [grimoire](learning-spells.md#learning-a-spell), exactly as you
 learned it the first time: the same reading, the same check, and the same experience. It comes
 back at rank 1, whatever rank you had.
 
 Lost **ranks** are milder, and can happen in the protected rows: the spell stays known, one or two
 ranks lower, never below rank 1. Read its grimoire again to
-[win the ranks back](magic.md#spell-ranks).
+[win the ranks back](learning-spells.md#spell-ranks).
 
 ## Gates
 
@@ -142,7 +142,7 @@ stronger the fiends behind it: a rift lets [dretches](creatures.md#creature-dret
 [quasits](creatures.md#creature-quasit) through, the lords' gate a
 [balor](creatures.md#creature-balor) or a [pit fiend](creatures.md#creature-pit-fiend).
 
-**What a gate does.** A gate is a [rooted](creatures.md#what-they-do) creature that never strikes a
+**What a gate does.** A gate is a [rooted](creature-behaviour.md#what-they-do) creature that never strikes a
 blow. Instead it [lets fiends through](creature-powers.md#summoning): one or two at a time, every
 minute or more, as long as it sees you or one of your [allies](allies.md) within 8 cells. It stops
 while four of its fiends are about (three for the arch-gate and the dire gate, two for the lords'

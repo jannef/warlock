@@ -71,10 +71,7 @@ pub(super) fn local_terrain(content: &Content) -> String {
             notes.push("roofed: no sun or sky light".into());
         }
         if t.plants {
-            notes.push(
-                "things grow on it ([Bramble](spellcasting.md#spells-with-a-rule-of-their-own))"
-                    .into(),
-            );
+            notes.push("things grow on it ([Bramble](spell-rules.md))".into());
         }
         if let Some(f) = t.freeze {
             notes.push(format!("freezes below {} °C", f.below));

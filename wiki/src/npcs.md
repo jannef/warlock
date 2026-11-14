@@ -65,7 +65,7 @@ Some people have work for you. Their [quests](quests.md) are topics too, listed 
 
 In the Ascmearc a **[strange spirit](creatures.md#creature-strange-spirit)** may be met by day on
 the roads, in the vales, on the downs, and in the woods (see [Encounters](encounters.md)). Only a
-[bard](classes.md#bard) who has reached level 30, the top of the class, and who has not yet been called into another, meets
+[bard](class-bard.md) who has reached level 30, the top of the class, and who has not yet been called into another, meets
 it.
 
 It is [peaceful](encounters.md): hail it and it stands where it is and waits. It speaks only to

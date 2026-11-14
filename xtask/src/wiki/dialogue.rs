@@ -185,7 +185,7 @@ pub(super) fn callings(content: &Content) -> String {
 }
 
 /// Who a calling (spec §8 "Prestige classes") is open to, and into what, by the prestige class
-/// `class` it opens, as the wiki says it: "a [bard](classes.md#bard) of level 30 or more, not
+/// `class` it opens, as the wiki says it: "a [bard](class-bard.md) of level 30 or more, not
 /// yet called, to be a Hunter". The calling of `campaign` (or of none) if there is one, else the
 /// first of that class.
 pub(super) fn calling_text(content: &Content, campaign: Option<&str>, class: &str) -> String {
@@ -199,7 +199,8 @@ pub(super) fn calling_text(content: &Content, campaign: Option<&str>, class: &st
     let from: Vec<String> = (calling.from.iter())
         .map(|f| {
             let name = content.class(f).map_or(f.as_str(), |c| c.name.as_str());
-            format!("[{}](classes.md#{f})", name.to_lowercase())
+            let page = super::character::class_page(f);
+            format!("[{}]({page})", name.to_lowercase())
         })
         .collect();
     let name = content.prestige(class).map_or(class, |p| p.name.as_str());

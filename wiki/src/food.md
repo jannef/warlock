@@ -75,7 +75,7 @@ Each keeper always leaves its corpse where it fell: [Soulglass](magic.md#spell-s
 turn it to glass, and turned to stone it still leaves its corpse, not a statue. Most are far too
 heavy to carry, but the corpse waits in the lair for as long as you stay on that floor.
 
-A corpse is good for more than a meal. [Necromancy](spellcasting.md#spell-types) has three uses
+A corpse is good for more than a meal. [Necromancy](spell-types.md) has three uses
 for a corpse of any age, and each one uses it up. [Charnel burst](magic.md#spell-charnel-burst)
 blows it apart, [Grave feast](magic.md#spell-grave-feast) draws out what life is left, and
 [Rouse the dead](allies.md#the-risen) stands it up again.

@@ -40,7 +40,7 @@ the one made for it.
 ## Picking locks
 
 If you are trained in the [Open lock](skills.md#skill-open-lock) skill
-([thieves](classes.md#thief) are), the [abilities menu](abilities.md#the-abilities-menu) (`a`) has
+([thieves](class-thief.md) are), the [abilities menu](abilities.md#the-abilities-menu) (`a`) has
 **Pick lock**. Choose it, then a direction, and you try the lock of the closed door there without a
 key.
 
@@ -72,7 +72,7 @@ How often a try works, by the lock's difficulty and what you add (your
 {{#include generated/lock-picking.md}}
 
 A force spell's blast breaks every shut door it reaches, locked or trapped, however sturdy (see
-[spell types](spellcasting.md#spell-types)).
+[spell types](spell-types.md)).
 
 ## Kicking a door open
 

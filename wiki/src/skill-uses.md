@@ -32,7 +32,7 @@ slip past you.
 
 ## Stealing
 
-If you are trained in **[Steal](skills.md#skill-steal)** ([thieves](classes.md#thief) are), **[Steal](abilities.md#ability-steal)** is in your [abilities menu](abilities.md). Choose it, then a
+If you are trained in **[Steal](skills.md#skill-steal)** ([thieves](class-thief.md) are), **[Steal](abilities.md#ability-steal)** is in your [abilities menu](abilities.md). Choose it, then a
 direction, and you try to lift something from whoever stands there. You can steal only from someone
 you see who is not hostile to you: a peaceful villager, a shopkeeper, a [creature](creatures.md) that leaves you
 alone. It takes a turn whatever happens.
@@ -75,9 +75,9 @@ modifier, plus what your Bluff adds (the benefits table).
   twice before you do has recovered by the time you strike.
 - Otherwise: "The kobold is not fooled." The turn is spent.
 
-For a [thief](classes.md#thief), a feint counts as an attack on that creature. A feint it falls
+For a [thief](class-thief.md), a feint counts as an attack on that creature. A feint it falls
 for gives one [opening](resources.md#resource-openings). Any feint, made or not, makes the
-creature your [mark](resources.md#the-mark): feinting at a new foe loses the openings you had.
+creature your [mark](openings.md#the-mark): feinting at a new foe loses the openings you had.
 
 {{#include generated/feinting.md}}
 
@@ -88,7 +88,7 @@ party on the road before it comes to a fight ([Talk your way past](encounters.md
 ## Intimidating
 
 If you are trained in **[Intimidate](skills.md#skill-intimidate)**, **[Intimidate](abilities.md#ability-intimidate)** is in your [abilities menu](abilities.md). Choose it, then a place
-you see (with the [aiming](controls.md#aiming) cursor), and you threaten whoever stands there. It must be a [creature](creatures.md)
+you see (with the [aiming](controls-prompts.md#aiming) cursor), and you threaten whoever stands there. It must be a [creature](creatures.md)
 hostile to you, within reach, with a heart that can quail. Skeletons, spirits, and animated things
 (those without [vitals](combat.md#criticals)) do not count. Otherwise the threat is refused and takes no time. A threat
 takes a turn and is spoken aloud: those around you [hear](hearing.md) a voice.
@@ -106,7 +106,7 @@ You may threaten as often as you like. Every threat trains Intimidate, whatever 
 
 ## Treating yourself
 
-If you are trained in **[Heal](skills.md#skill-heal)** ([priests](classes.md#priest), [witches](classes.md#witch), [druids](classes.md#druid), and [paladins](classes.md#paladin) are), **[Heal](abilities.md#ability-heal)** is in your
+If you are trained in **[Heal](skills.md#skill-heal)** ([priests](class-priest.md), [witches](class-witch.md), [druids](class-druid.md), and [paladins](class-paladin.md) are), **[Heal](abilities.md#ability-heal)** is in your
 [abilities menu](abilities.md), under Skills. It treats your **[bleeding](status-effects.md#bleeding)**, your **[poison](status-effects.md#poisoned)**, and a **[disease](diseases.md#how-a-disease-goes)** that shows. A
 disease you have caught but that has not shown yet is unknown to you, so you cannot treat it.
 
@@ -154,7 +154,7 @@ trained in it, you have no list and can make none of its recipes. Among them:
   [Forges](altars-forges-springs.md#forges)).
 - Woodcraft: **Arrows** and **Crossbow bolts** for your bow or crossbow (see
   [Fletching](#fletching)), **Sling stones** (see
-  [Crafting](crafting.md#batches-arrowheads-arrows-and-stones)), and **Whittle**, a wooden weapon
+  [Making things by hand](handcraft.md#batches-arrowheads-arrows-and-stones)), and **Whittle**, a wooden weapon
   made finer with a knife (see [Whittling](#whittling)).
 
 Those trained in Metalcraft also forge weapons at an anvil from metal stock, and those trained in
@@ -166,7 +166,7 @@ and hides (see
 its row, **[Jewelcraft…](abilities.md#ability-jewelcraft)**, holds **Cut**, which cuts a loose gem
 (see [Gem cutting](gem-cutting.md)), **Set**, which sets a cut gem in an item (see
 [Setting a gem](gem-cutting.md#setting-a-gem)), and rings and amulets (see
-[Making jewellery](crafting.md#making-jewellery)).
+[Making jewellery](jewellery.md)).
 
 Each row says what the recipe takes, such as "a metal weapon or armour, an anvil, about 10
 minutes". A recipe you cannot make now is greyed out with the reason: "no anvil beside you", "no
@@ -189,7 +189,7 @@ Without them the list greys the recipe out: "no knife", "no bow ready", "no wood
 
 You choose the head first:
 
-- **[Arrowheads](crafting.md#batches-arrowheads-arrows-and-stones)** a smith has forged: one for
+- **[Arrowheads](handcraft.md#batches-arrowheads-arrows-and-stones)** a smith has forged: one for
   each arrow, and the arrow takes the arrowhead's metal.
 - **A bone shard or a block of flint** (or obsidian, horn, ivory, and the like): one heads a whole
   batch, and the arrows take its material. Flint-headed arrows strike as flint does.
@@ -204,7 +204,7 @@ Woodcraft, and the result decides how much of the count you get. If you are trai
 Woodcraft, it earns a training mark for every finished batch. Fletch as often as you like: the
 time is the price.
 
-A [ranger](classes.md#ranger)'s [Fletcher](classes.md#talent-fletcher) makes this far quicker and
+A [ranger](class-ranger.md)'s [Fletcher](class-ranger.md#talent-fletcher) makes this far quicker and
 surer, and rangers start with a knife. But even a ranger's arrows need heads not to be brittle.
 
 {{#include generated/fletching.md}}
@@ -236,7 +236,7 @@ Woodcraft, it earns a training mark for every finished attempt.
 
 ## Foraging
 
-If you are trained in **[Survival](skills.md#skill-survival)** ([berserkers](classes.md#berserker), [druids](classes.md#druid), [rangers](classes.md#ranger), and [lizardfolk](races.md#race-lizardfolk) are), **[Forage](abilities.md#ability-forage)** is in your
+If you are trained in **[Survival](skills.md#skill-survival)** ([berserkers](class-berserker.md), [druids](class-druid.md), [rangers](class-ranger.md), and [lizardfolk](races.md#race-lizardfolk) are), **[Forage](abilities.md#ability-forage)** is in your
 [abilities menu](abilities.md). Choose it, and you spend a while searching the land around you for something to
 eat.
 

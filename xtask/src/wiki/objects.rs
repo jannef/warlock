@@ -49,7 +49,8 @@ pub(super) fn equipment(content: &Content) -> String {
                 let plural = content
                     .class(class)
                     .map_or(class.clone(), |c| format!("{}s", c.name.to_lowercase()));
-                format!("{} ([{plural}](classes.md#{class}) only)", def.name)
+                let page = super::character::class_page(class);
+                format!("{} ([{plural}]({page}) only)", def.name)
             }
             None => def.name.clone(),
         };

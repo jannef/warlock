@@ -130,7 +130,7 @@ each one's). The message says so: "The kobold hits you hard!" A confirmed critic
 Some things have **no vitals** to find, so they are **immune to criticals** and to
 [sneak attacks](skills.md#skill-sneak-attack). A threat on them is a plain hit, and
 [Vital strike](weapon-skills.md#weapon-ability-vital-strike) or a
-an [exploit](resources.md#exploit) of five at level 60 is only a plain blow ("It has no vital
+an [exploit](openings.md#exploit) of five at level 60 is only a plain blow ("It has no vital
 spot."). These are the [incorporeal](creature-bodies.md#incorporeal-creatures) (ghosts and wraiths),
 [animated objects](animated.md), and every [creature](creatures.md) tagged elemental, skeleton,
 spirit, or construct (the mud golem; [elementals](creature-bodies.md#elementals)). The fleshy undead
@@ -175,8 +175,8 @@ amount in between equally likely:
 
 - **Every piece adds up.** Body armour, helm, gloves, boots, and cloak each add their Protection
   (see the armour table above). So does the magic of *[Hardened](affixes.md#prefixes)* armour (see [Magic items](magic-items.md)).
-  Some [talents](talents.md) add to it too, in any armour: [Bulwark](classes.md#talent-bulwark) 2, and the [berserker's](classes.md#berserker)
-  [Battle-scarred](classes.md#talent-battle-scarred) 1, or 3 while [raging](status-effects.md#status-raging). The `Pv` on the character
+  Some [talents](talents.md) add to it too, in any armour: [Bulwark](class-paladin.md#talent-bulwark) 2, and the [berserker's](class-berserker.md)
+  [Battle-scarred](class-berserker.md#talent-battle-scarred) 1, or 3 while [raging](status-effects.md#status-raging). The `Pv` on the character
   screen shows your Protection as it is now. A [shield](objects.md#class-shields) gives [Defence](combat.md#defence) only. Creatures have their
   own: a [cave beetle's](creatures.md#creature-beetle) shell turns aside much of what hits it.
 - **[Criticals](combat.md#criticals) punch through.** A confirmed critical rolls its damage twice (or more) first, and

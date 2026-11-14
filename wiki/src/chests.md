@@ -8,7 +8,7 @@ Chests are never picked up and carried.
 
 Every chest has a level: the level of the place it stands in (the
 [dungeon floor](dungeons.md)'s depth). Its level gives its name, its colour, and how sturdy it is.
-[Look](controls.md#look-mode) at one (`l`) to see what it is: a **coffer** on the first floors, a
+[Look](controls-prompts.md#look-mode) at one (`l`) to see what it is: a **coffer** on the first floors, a
 **hutch** or a **banded chest** deeper, a **strongbox** deeper still. The old names are for old
 things:
 
@@ -88,7 +88,7 @@ Without a key:
 
 - **[Pick lock](abilities.md#ability-pick-lock)** works on a chest's lock exactly as on a door's
   (see [Doors](doors.md#picking-locks)): `You pick the lock and open the coffer.`
-- **[Knock](abilities.md#ability-knock)** is the [wizard](classes.md#wizard)'s word of unbinding,
+- **[Knock](abilities.md#ability-knock)** is the [wizard](class-wizard.md)'s word of unbinding,
   from level 4, for 5 [mana](mana.md#how-much-mana-you-have) and the time of a spell (see [Classes](classes.md)).
   Choose it in the [abilities menu](abilities.md#the-abilities-menu) (`a`) and a direction, and the
   lock there, of a chest or a door, springs open: `The lock springs open with a click.` Nothing
@@ -173,7 +173,7 @@ trap at no one: the trap is simply gone with the lid.
 [Searching](searching.md#how-to-search), helped by your [Detect traps](skills.md#skill-detect-traps)
 skill, finds a chest's trap like any [hidden trap](traps.md#finding-traps)
 (`You notice that the coffer is trapped: an arrow trap.`). Once you know it,
-[look mode](controls.md#look-mode) says so: "A coffer, trapped: an arrow trap." The chest keeps its
+[look mode](controls-prompts.md#look-mode) says so: "A coffer, trapped: an arrow trap." The chest keeps its
 own look on the map. A known trap on a chest can be **disarmed** like any other (see
 [Traps](traps.md#disarming-traps)), and the chest is then an ordinary shut chest.
 [Trap sense](talents.md#talent-trap-sense) halves a chest trap's blow, as any trap's.
@@ -182,6 +182,6 @@ own look on the map. A known trap on a chest can be **disarmed** like any other 
 
 With the [Chest-wise](talents.md#talent-chest-wise) talent ([Intelligence](stats.md#stat-intelligence)
 11 or [Detect traps](skills.md#skill-detect-traps) 15), you can tell at a glance whether a shut
-chest you see is locked. [Look mode](controls.md#look-mode) calls it "a locked coffer" or "an
+chest you see is locked. [Look mode](controls-prompts.md#look-mode) calls it "a locked coffer" or "an
 unlocked coffer". A trapped chest gives itself away as soon as you see it, with no search and no
 chance of missing it: `You notice that the coffer is trapped: a fireball trap.`

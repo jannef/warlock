@@ -45,7 +45,7 @@ Every item can bear only so many **enchantments** (affixes, [prefixes](affixes.m
   silver −2, tin and flint −1, steel and iron 0, gold and adamantium +1, mithril and dragonbone
   +2);
 - **+1** for a [gem](gems.md) set in it, **+2** for a flawless one;
-- **+1** for a craftsperson's [maker's mark](crafting.md#makers-mark).
+- **+1** for a craftsperson's [maker's mark](class-craftsperson.md#makers-mark).
 
 It is never less than one or more than six. Some examples:
 
@@ -76,7 +76,7 @@ The deeper you go, the better made the things you find, so they can bear more. F
 [item level](#finding-them) 3 on, every weapon, missile weapon, shield, and piece of armour you
 find (on the floor, in a chest or a hoard, in a den or a room) may be **Fine**, **Marvellous**, or
 **Masterwork**, never damaged. What creatures carry gets the same chances on top of its
-[own](creatures.md#gear). Rings, amulets, ammunition, and the
+[own](creature-gear.md). Rings, amulets, ammunition, and the
 [gear you start with](starting-kit.md) are not affected. Deeper finds are also set with a
 [gem](gems.md) more often, for the kinds of item that ever are:
 
@@ -106,7 +106,7 @@ magic, which works as before.
 
 The game tells you what an item can bear only if you are trained in
 [Appraise](skills.md#skill-appraise) or have the craftsperson's talent
-[Eye for the make](classes.md#eye-for-the-make): its description then says "It can bear two
+[Eye for the make](class-craftsperson.md#eye-for-the-make): its description then says "It can bear two
 enchantments.", or how many more it could bear.
 
 ## Finding them
@@ -144,7 +144,7 @@ Their magic works all the same while you wear or wield them. An unknown
 that glows lights your way. Wearing it for a while does not tell you what it is. These do:
 
 - a [scroll of identify](scrolls.md#the-scroll-of-identify);
-- a [merchant](classes.md#merchant)'s [Merchant's eye](classes.md#talent-merchants-eye), from
+- a [merchant](class-merchant.md)'s [Merchant's eye](class-merchant.md#talent-merchants-eye), from
   level 12: a careful look that takes as long as reading a scroll;
 - carrying the item for a day, if you were born to [Old lore](horoscope.md#talent-old-lore);
 - Factor Wulfrun in Cēaptūn, for 100 [gold](shops.md#money) per unidentified
@@ -191,7 +191,7 @@ Rules from elsewhere in the game carry over:
 - **[Defence](combat.md#defence)**: among Armour, Shield, Parry, Deflection, and natural armour,
   only the best counts. Dodge adds up (see [Combat](combat.md)).
   **[Protection](combat.md#protection)** always adds up, piece by piece, and a
-  [Hardened](classes.md#talent-hardened) piece of armour adds its magic to its own (see
+  [Hardened](class-berserker.md#talent-hardened) piece of armour adds its magic to its own (see
   [Combat](combat.md#protection)).
 - **[Hit points](hit-points.md#hit-points)** and **[mana](mana.md#how-much-mana-you-have)**: putting on
   something that adds to them raises your maximum, not what you have now. Taking it off lowers

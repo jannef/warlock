@@ -12,13 +12,13 @@ Your **hit points** are your [Toughness](stats.md#stat-toughness) plus what your
 
 {{#include generated/hit-points.md}}
 
-A [dwarf](races.md#race-dwarf) [berserker](classes.md#berserker) with Toughness 16 has 6 + 8 + 16 = 30 hit points. An [elf](races.md#race-elf) [wizard](classes.md#wizard) with Toughness
+A [dwarf](races.md#race-dwarf) [berserker](class-berserker.md) with Toughness 16 has 6 + 8 + 16 = 30 hit points. An [elf](races.md#race-elf) [wizard](class-wizard.md) with Toughness
 8 has 10. You start every run unhurt. The [status bar](the-screen.md#the-screen) shows your hit points (`HP 18/24`), and so
 does the character screen.
 
 Creatures have hit points too, but the game never shows their numbers. They are listed on
 [Creatures in numbers](creature-numbers.md#hit-points-defence-and-resistances).
-[Look mode](controls.md#look-mode) tells you how hurt a creature looks:
+[Look mode](controls-prompts.md#look-mode) tells you how hurt a creature looks:
 
 - unhurt
 - lightly wounded: more than two thirds left
@@ -78,7 +78,7 @@ red and dries darker and browner over a few hours. The cave beetle bleeds a gree
 Water, lava, and fire take no stains.
 
 You see blood wherever you see the floor. On a wall you see it only from the splattered side. You
-remember blood as you last saw it, and [look mode](controls.md#look-mode) mentions it: "on blood-stained stone floor".
+remember blood as you last saw it, and [look mode](controls-prompts.md#look-mode) mentions it: "on blood-stained stone floor".
 
 Blood is only for show. It never changes a fight, and the Blood switch in the
 [settings](settings.md) hides it.
@@ -91,7 +91,7 @@ brown soot, then blackened, then charred through.
 - A [fireball](magic.md#spell-fireball) or a fire flask chars every floor cell its blast reaches: 20, half that at the
   blast's edge.
 - A cone of fire, such as [Burning hands](magic.md#spell-burning-hands) or a dragon's breath, chars every cell it covers: 20.
-- A [fire zone](spellcasting.md#zones) chars the cells it burns on: 24 as it is laid.
+- A [fire zone](spell-rules.md#zones) chars the cells it burns on: 24 as it is laid.
 - A creature burned by fire chars the cell it stands on: 3, plus a third of the blood the blow
   would have spilled.
 - Walls beside a burning cell take 75 % of that cell's char on the side facing it (half that
