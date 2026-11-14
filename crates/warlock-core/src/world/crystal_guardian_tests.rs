@@ -257,6 +257,10 @@ fn the_bound_guardian_steadies_jewelcraft_in_the_town_only() {
     let jewelcraft = w.content().skill_id("jewelcraft").expect("the skill");
     let metalcraft = w.content().skill_id("metalcraft").expect("the skill");
     assert_eq!(w.binding_boon(jewelcraft), 0, "none before the binding");
+    // A ring's check, a recipe made rather than cut or set, takes the boon too (#1490).
+    let content = w.content().clone();
+    let ring = content.recipe(content.recipes().id("gold_ring").expect("the ring"));
+    let unbound = w.craft_modifier(ring, None);
     put_player(&mut w, PORTAL);
     act(&mut w, "descend");
     let up = stairs(&w, "meynbew:1", StairsDir::Up);
@@ -267,6 +271,11 @@ fn the_bound_guardian_steadies_jewelcraft_in_the_town_only() {
     assert_eq!(stage(&w), Some(Stage::Done));
     assert_eq!(w.binding_boon(jewelcraft), 2);
     assert_eq!(w.binding_boon(metalcraft), 0, "Jewelcraft's alone");
+    assert_eq!(
+        w.craft_modifier(ring, None),
+        unbound + 2,
+        "a ring's check too"
+    );
     // Away from the town, nothing; killed, nothing, and the quest stays done. (The reward's
     // experience brings a level's picks, which refuse every other action until made.)
     act(&mut w, "levelup:auto");

@@ -167,8 +167,9 @@ take_stairs` → `World::lure_home` after `followers_arrive` (the creature, unbo
 with the player and the giver: `words`, `bind` (faction, stance, mind, `post`, the status through
 `afflict_one`), `complete_saying(giver, q, None)`); `fight.rs::creature_dies` →
 `World::lured_dies` (unbound while active: the `shatters` line; the quest stays active, nothing
-fails, the next arrival on the `waits` level makes it anew); `cut.rs` and `set.rs` add
-`World::binding_boon(skill)` to the check (a bound one on the player's level). It travels only by
+fails, the next arrival on the `waits` level makes it anew); `cut.rs`, `set.rs`, and
+`craft_make.rs::craft_modifier` (every made recipe of the skill: Jewelcraft's rings and amulets,
+#1490) add `World::binding_boon(skill)` to the check (a bound one on the player's level). It travels only by
 the stairs' own rule (`stair_followers.rs`: hostile and beside the player), so it is never lost to
 a level change it cannot make: left behind, it stays on its floor until fetched. `progress` is
 (0, 1); the log's status "The crystal guardian is not yet bound in Gimmwīc."; the objective

@@ -112,6 +112,7 @@ impl World {
 
     /// Pores over the scroll turn after turn until the time is up or something stops it.
     pub(super) fn decipher(&mut self, work: Deciphering, events: &mut Vec<Event>) {
+        let on = self.work_on(&[Some(work.item)]);
         let until = self.state.time + Duration::seconds(u64::from(work.seconds));
         let turn = self.price_of(self.state.player, ActionKind::Decipher);
         let ended = self.keep_at(
@@ -121,7 +122,10 @@ impl World {
         );
         match ended {
             Ended::Died => {}
-            _ if self.state.time >= until => self.deciphered(work.item),
+            _ if self.state.time >= until => match self.worked_on_one(&on) {
+                Some(item) => self.deciphered(item),
+                None => self.say("You have nothing left to make out."),
+            },
             Ended::Came(came) => {
                 let text = format!("{}; you put the scroll away.", self.came_line(came));
                 self.say(text);

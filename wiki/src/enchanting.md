@@ -97,6 +97,7 @@ your work and nothing is spent.
   item is as it was. A failed Unbind leaves the magic where it was.
 - **A natural 2**: the crystals are spent and the item **warps**: it is
   [damaged](materials.md#item-damage), as a failed temper damages it, and an item already damaged
-  falls apart. An item of Proof is spared.
+  falls apart. An item of Proof is spared. Of a stack of arrows or bolts, only one warps; the
+  rest are as they were.
 
 Every finished work, made or not, can [train](skills.md#getting-better) Enchanting.

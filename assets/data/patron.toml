@@ -9,9 +9,7 @@
 # there is no cap and no wait between them.
 #
 # Fields:
-#   pays   percent of the delivered item's worth paid (its grade's ×2, ×3, ×5 counted)
-#   bonus  percent more for a piece that bears the player's maker's mark (Maker's mark, the
-#          craftsperson design §7.10; read once maker's marks exist)
+#   pays   percent of the delivered item's worth paid (its grade's ×2, ×3, ×5 counted, and a
+#          maker's mark's half again: the mark is paid for once, in the worth; #1489)
 
 pays = 100
-bonus = 50
