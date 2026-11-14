@@ -16,6 +16,13 @@
 //!
 //! Letter and symbol commands bind by *logical* key (the character the keyboard layout produces),
 //! so `<`, `>`, and `?` work on any layout. Arrows and the numpad bind by physical key code.
+//!
+//! The key tables are `settings::bindings`; what a step asks first is `ui::step_dialogs`. A
+//! press in play goes to its input mode's handler: [`play`] in plain play, [`prompts`] for the
+//! rest.
+
+mod play;
+mod prompts;
 
 use crate::cli::Args;
 use crate::game::{Game, PlayerAction, SimSet};
@@ -28,7 +35,7 @@ use crate::settings::mods::{self, Mods};
 use crate::ui::step_dialogs::{burst_dialog, sale_dialog, step_dialog, step_screen, treat_dialog};
 use crate::ui::{
     Aim, AimKind, DevOverlays, Dialog, IdentifyBy, LastTarget, MenuChoice, Press, ScreenAction,
-    ScreenName, Screens, more, quit_dialog,
+    ScreenName, Screens,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::input::ButtonState;
@@ -36,11 +43,9 @@ use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use warlock_core::ability::{self, Ability};
 use warlock_core::beside::{Beside, Way};
-use warlock_core::content::{ClassActive, RigId, VisionProfile};
+use warlock_core::content::{ClassActive, RigId};
 use warlock_core::perception::PerceptionView;
-use warlock_core::time::Duration;
-use warlock_core::weather::Weather;
-use warlock_core::{Action, Dir, Pos, Positions};
+use warlock_core::{Action, Dir, Pos};
 
 /// Whether the developer keys work in this launch: always in debug builds, with `--dev` in
 /// release builds (spec §9). Their bindings are in every table; only where this is false are
@@ -76,6 +81,9 @@ pub enum InputMode {
     /// (`ui::more`).
     More(usize),
 }
+
+/// What a press did in its input mode: the mode next, and what it asks of the screens.
+type Pressed = (InputMode, Option<ScreenAction>);
 
 /// Whether `action`, a step or a run's first step, would ask first from where the player stands
 /// in `view`: a dialog ([`step_dialog`]) or a screen ([`step_screen`]). A step queued behind
@@ -249,7 +257,6 @@ impl Gameplay<'_> {
         {
             return done;
         }
-        let game = self.game.as_ref()?;
         let mods = self.mods();
         let command = command_in(*self.mode, key, mods, bindings, dev_keys(&self.args))?;
         // Held keys repeat only for movement and waiting (searching), and the aiming cursor's
@@ -258,364 +265,17 @@ impl Gameplay<'_> {
         if key.repeat && !moves {
             return None;
         }
-        let mut open: Option<ScreenAction> = None;
-        let next = match (*self.mode, command) {
-            // `--more--`: the next page of this turn's messages, then play once the last shows;
-            // skipping goes to play at once (the last page shows). Nothing else acts meanwhile.
-            (InputMode::More(page), KeyCommand::MoreNext) => {
-                let cols = self.console.as_ref().map_or(0, |c| c.cols());
-                more::advance(page, more::stops(game, cols, bindings))
-            }
-            (InputMode::More(_), KeyCommand::MoreSkip | KeyCommand::Cancel) => InputMode::Normal,
-            (InputMode::More(page), _) => InputMode::More(page),
-            (InputMode::Aim(aim), KeyCommand::Move(dir)) => {
-                InputMode::Aim(aim.step(dir, &game.world.perception()))
-            }
-            (InputMode::Aim(aim), KeyCommand::PrevTarget) => {
-                InputMode::Aim(aim.cycle(&game.world.perception(), self.shift()))
-            }
-            // The key that started the aim confirms it, as Enter does (the owner, #1533).
-            (InputMode::Aim(aim), _) if aim.confirmed_by(command) => return self.release(aim),
-            (InputMode::Aim(_), KeyCommand::Cancel | KeyCommand::Look) => InputMode::Normal,
-            (InputMode::Aim(aim), _) => InputMode::Aim(aim),
-            (InputMode::Normal, KeyCommand::Missile) => {
-                let view = game.world.perception();
-                if let Some(item) = view.ready_wand().or(view.ready_rod()) {
-                    InputMode::Aim(Aim::start(AimKind::Zap(item), &view, &self.last))
-                } else if view.ready_to_fire().is_some() {
-                    InputMode::Aim(Aim::start(AimKind::Fire, &view, &self.last))
-                } else if let Some(item) = view.ready_to_throw() {
-                    InputMode::Aim(Aim::start(AimKind::Throw(item), &view, &self.last))
-                } else {
-                    // Nothing ready (or no ammunition): the rules say so, and take no time.
-                    let here = view.viewer();
-                    self.actions.write(PlayerAction(Action::Fire(here)));
-                    InputMode::Normal
-                }
-            }
-            (InputMode::Normal, KeyCommand::Throw) => {
-                open = Some(ScreenAction::Open(ScreenName::Throw));
-                InputMode::Normal
-            }
-            (InputMode::Look(_), KeyCommand::Look | KeyCommand::Cancel) => InputMode::Normal,
-            (InputMode::Look(at), KeyCommand::Move(dir)) => {
-                let view = game.world.perception();
-                let to = at.step(dir);
-                InputMode::Look(Pos::new(
-                    to.x.clamp(0, view.width() - 1),
-                    to.y.clamp(0, view.height() - 1),
-                ))
-            }
-            (InputMode::Look(at), _) => InputMode::Look(at),
-            (InputMode::Normal, KeyCommand::Look) => InputMode::Look(game.world.player_pos()),
-            // Heal with two kept beasts beside the player asked which way first (`tend_way`):
-            // the one there, or, at the wait key, the player themselves.
-            (InputMode::Ability(Ability::Heal), KeyCommand::Move(dir)) => {
-                open = self.tend(Some(dir));
-                InputMode::Normal
-            }
-            (InputMode::Ability(Ability::Heal), KeyCommand::Wait) => {
-                open = self.tend(None);
-                InputMode::Normal
-            }
-            (InputMode::Ability(ability), KeyCommand::Move(dir)) => {
-                let content = game.world.content().clone();
-                if let Some(action) = ability.action(&content, Some(dir)) {
-                    self.actions.write(PlayerAction(action));
-                }
-                InputMode::Normal
-            }
-            (InputMode::Ability(_), _) => InputMode::Normal,
-            (InputMode::GiveWay(item), KeyCommand::Move(dir)) => {
-                self.actions.write(PlayerAction(Action::Give {
-                    item,
-                    ally: Some(dir),
-                }));
-                InputMode::Normal
-            }
-            (InputMode::GiveWay(_), _) => InputMode::Normal,
-            (InputMode::RigWay(rig), KeyCommand::Move(dir)) => {
-                let content = game.world.content();
-                if let Some(rules) = content.rigs() {
-                    self.actions.write(PlayerAction(Action::Rig {
-                        rig: rules.rig(rig).id.clone(),
-                        dir: Some(dir),
-                    }));
-                }
-                InputMode::Normal
-            }
-            (InputMode::RigWay(_), _) => InputMode::Normal,
-            (InputMode::Direction(cmd), KeyCommand::Move(dir)) => {
-                let action = match cmd {
-                    KeyCommand::Open => Action::Open(dir),
-                    KeyCommand::Kick => Action::Kick(dir),
-                    KeyCommand::UseTool => Action::Dig(dir),
-                    KeyCommand::Chat => Action::Chat(dir),
-                    _ => Action::Close(dir),
-                };
-                self.actions.write(PlayerAction(action));
-                InputMode::Normal
-            }
-            (InputMode::Direction(_), _) => InputMode::Normal,
+        let (next, open) = match *self.mode {
+            InputMode::Normal => self.play(command, key.repeat, last)?,
+            InputMode::More(page) => (self.more(page, command, bindings)?, None),
+            InputMode::Aim(aim) => self.aiming(aim, command)?,
+            InputMode::Look(at) => (self.looking(at, command)?, None),
+            InputMode::Ability(ability) => self.ability_way(ability, command)?,
+            InputMode::GiveWay(item) => (self.give_way(item, command), None),
+            InputMode::RigWay(rig) => (self.rig_way(rig, command)?, None),
+            InputMode::Direction(cmd) => (self.direction(cmd, command), None),
             // Any other command (Esc, or `R` again) cancels the rest prompt.
-            (InputMode::Rest, _) => InputMode::Normal,
-            (InputMode::Normal, KeyCommand::Rest) => InputMode::Rest,
-            (InputMode::Normal, KeyCommand::Move(dir)) => {
-                // Diving into deep water (spec §8 "Skills": Swim), leaving a shop owing anything
-                // (spec §7 "Shops"), stepping onto a known trap (spec §8 "Traps"), setting out on
-                // the overworld Fainting or Starving (spec §8 "Hunger"), or walking into something
-                // that offers an action (spec §7 "Special rooms") asks first, in the dialog: one
-                // dialog a step, the first that applies. The dive comes first because it always
-                // asks (the owner's rule), and any other dialog's "go on" would step in unasked;
-                // its own "Dive in" is a plain move, which the rules still judge (the keeper turns
-                // back one who owes). A held key stops there (repeats never open the dialog).
-                // Walking into an anvil opens Metalcraft's screen for the trained (#1387).
-                let view = game.world.perception();
-                let screen = step_dialog(&view, dir)
-                    .map(ScreenAction::from)
-                    .or_else(|| step_screen(&view, dir).map(ScreenAction::Open));
-                match screen {
-                    Some(screen) if !key.repeat => open = Some(screen),
-                    Some(_) => {}
-                    None => {
-                        self.actions.write(PlayerAction(Action::Move(dir)));
-                    }
-                }
-                InputMode::Normal
-            }
-            // A run's first step asks what a step would (#1325): the dialog's answer is a plain
-            // step; with nothing to ask, the run.
-            (InputMode::Normal, KeyCommand::Run(dir)) => {
-                let view = game.world.perception();
-                let screen = step_dialog(&view, dir)
-                    .map(ScreenAction::from)
-                    .or_else(|| step_screen(&view, dir).map(ScreenAction::Open));
-                match screen {
-                    Some(screen) => open = Some(screen),
-                    None => {
-                        self.actions.write(PlayerAction(Action::Run(dir)));
-                    }
-                }
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Pay) => {
-                self.actions.write(PlayerAction(Action::Pay(None)));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Wait) => {
-                self.actions.write(PlayerAction(Action::Wait));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::SearchLong) => {
-                let turns = game.world.content().search().turns;
-                self.actions.write(PlayerAction(Action::Search(turns)));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Descend) => {
-                self.actions.write(PlayerAction(Action::Descend));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Ascend) => {
-                self.actions.write(PlayerAction(Action::Ascend));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::PickUp) => {
-                // One stack is picked up at once; several are chosen from on a screen. With
-                // nothing here, the core says so.
-                let view = game.world.perception();
-                let letters = match view.objects(view.viewer()).len() {
-                    0 => Some(Positions::default()),
-                    1 => Some(Positions::of([0])),
-                    _ => None,
-                };
-                match letters {
-                    Some(letters) => {
-                        self.actions.write(PlayerAction(Action::PickUp(letters)));
-                    }
-                    None => open = Some(ScreenAction::Open(ScreenName::PickUp)),
-                }
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Drop) => {
-                if game.world.perception().inventory().is_empty() {
-                    self.actions
-                        .write(PlayerAction(Action::Drop(Positions::default())));
-                } else {
-                    open = Some(ScreenAction::Open(ScreenName::Drop));
-                }
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Inventory) => {
-                open = Some(ScreenAction::Open(ScreenName::Inventory));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Equipment) => {
-                open = Some(ScreenAction::Open(ScreenName::Equipment));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Character) => {
-                open = Some(ScreenAction::Open(ScreenName::Character));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Skills) => {
-                open = Some(ScreenAction::Open(ScreenName::Skills));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::MoreAggressive | KeyCommand::MoreDefensive) => {
-                let now = game.world.perception().own_stance();
-                let next = if command == KeyCommand::MoreAggressive {
-                    now.more_aggressive()
-                } else {
-                    now.more_defensive()
-                };
-                self.actions.write(PlayerAction(Action::SetStance(next)));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::WeaponSkills) => {
-                open = Some(ScreenAction::Open(ScreenName::WeaponSkills));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Talents) => {
-                open = Some(ScreenAction::Open(ScreenName::Talents));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Eat) => {
-                open = Some(ScreenAction::Open(ScreenName::Eat));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Read) => {
-                open = Some(ScreenAction::Open(ScreenName::Read));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Quests) => {
-                open = Some(ScreenAction::Open(ScreenName::Quests));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Messages) => {
-                open = Some(ScreenAction::Open(ScreenName::Messages));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::CycleVision) => {
-                let view = game.world.perception();
-                let next = next_vision(view.content().vision_profiles(), &view.vision().id);
-                self.actions.write(PlayerAction(Action::SetVision(next)));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::SkipHour) => {
-                self.actions
-                    .write(PlayerAction(Action::SkipTime(Duration::hours(1))));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::NextWeather) => {
-                let now = game.world.perception().weather();
-                self.actions
-                    .write(PlayerAction(Action::SetWeather(next_weather(now))));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::IdentifyAll) => {
-                self.actions
-                    .write(PlayerAction(Action::Identify(Positions::default())));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::RevealMap) => {
-                self.overlays.reveal = !self.overlays.reveal;
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::LightValues) => {
-                self.overlays.light_values = !self.overlays.light_values;
-                InputMode::Normal
-            }
-            // Kick asks always: any way may be kicked.
-            (InputMode::Normal, KeyCommand::Kick) => InputMode::Direction(command),
-            (InputMode::Normal, KeyCommand::Open) => {
-                self.beside(Beside::Open, InputMode::Direction(command))
-            }
-            (InputMode::Normal, KeyCommand::Close) => {
-                self.beside(Beside::Close, InputMode::Direction(command))
-            }
-            (InputMode::Normal, KeyCommand::Abilities) => {
-                open = Some(ScreenAction::Open(ScreenName::Abilities));
-                InputMode::Normal
-            }
-            // The ability used last, again; with none yet, the menu to choose one.
-            (InputMode::Normal, KeyCommand::RepeatAbility) => {
-                open = Some(last.map_or(
-                    ScreenAction::Open(ScreenName::Abilities),
-                    ScreenAction::UseAbility,
-                ));
-                InputMode::Normal
-            }
-            // An ability's own key (unbound by default) uses it as the menu does.
-            (InputMode::Normal, KeyCommand::Bash) => {
-                open = Some(ScreenAction::UseAbility(Ability::ShieldBash));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::ThrowVoice) => {
-                open = Some(ScreenAction::UseAbility(Ability::ThrowVoice));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Disarm) => {
-                open = Some(ScreenAction::UseAbility(Ability::Disarm));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::PickLock) => {
-                open = Some(ScreenAction::UseAbility(Ability::PickLock));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Steal) => {
-                open = Some(ScreenAction::UseAbility(Ability::Steal));
-                InputMode::Normal
-            }
-            // The one creature in view next to the player, at once; among several, ask which way.
-            (InputMode::Normal, KeyCommand::Chat) => {
-                self.beside(Beside::Chat, InputMode::Direction(command))
-            }
-            (InputMode::Normal, KeyCommand::UseTool) => {
-                let view = game.world.perception();
-                if view.ready_light().is_some() {
-                    // A light ready (a lantern): its next mode, at once.
-                    self.actions.write(PlayerAction(Action::UseTool));
-                    InputMode::Normal
-                } else if view.dig_refusal().is_none() {
-                    self.beside(Beside::Dig, InputMode::Direction(command))
-                } else {
-                    // Nothing to dig with, or untrained in Mining: the rules say so ("You have no
-                    // digging tool ready.").
-                    self.actions.write(PlayerAction(Action::Dig(Dir::N)));
-                    InputMode::Normal
-                }
-            }
-            (InputMode::Normal, KeyCommand::Help) => {
-                open = Some(ScreenAction::Open(ScreenName::Help));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Cancel) => {
-                open = Some(ScreenAction::Open(ScreenName::Pause));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Quit) => {
-                open = Some(quit_dialog(true).into());
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Snapshot) => {
-                self.saves.write(SaveCommand::Snapshot);
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::LoadSnapshot) => {
-                self.saves.write(SaveCommand::LoadSnapshot);
-                InputMode::Normal
-            }
-            // Other contexts' commands (aiming's, `--more--`'s, the screens'): `command_in`
-            // never finds them here.
-            (
-                InputMode::Normal,
-                KeyCommand::PrevTarget
-                | KeyCommand::MoreNext
-                | KeyCommand::MoreSkip
-                | KeyCommand::Back
-                | KeyCommand::TextBack
-                | KeyCommand::PrevPage,
-            ) => InputMode::Normal,
+            InputMode::Rest => (InputMode::Normal, None),
         };
         if *self.mode != next {
             *self.mode = next;
@@ -948,20 +608,6 @@ pub(crate) fn tend_way(ways: &[Dir], ailments: &[warlock_core::heal::OwnAilment]
             .any(|a| matches!(a.action, Action::Heal { ally: Some(d), .. } if ways.contains(&d)))
 }
 
-/// The id of the profile after `current` in `profiles`, wrapping around.
-/// The weather after `now` (clear when it is not known, underground), wrapping around.
-fn next_weather(now: Option<Weather>) -> Weather {
-    let i = now.map_or(0, |w| (w.index() + 1) % Weather::ALL.len());
-    Weather::ALL[i]
-}
-
-fn next_vision(profiles: &[VisionProfile], current: &str) -> String {
-    let i = profiles.iter().position(|p| p.id == current).unwrap_or(0);
-    profiles
-        .get((i + 1) % profiles.len().max(1))
-        .map_or_else(|| current.to_string(), |p| p.id.clone())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1047,22 +693,5 @@ mod tests {
             Some(KeyCommand::RevealMap)
         );
         assert_eq!(read(InputMode::Rest, &f2, true), None);
-    }
-
-    #[test]
-    fn weather_cycles_from_clear_to_heavy_rain() {
-        assert_eq!(next_weather(None), Weather::Clear);
-        assert_eq!(next_weather(Some(Weather::Clear)), Weather::Overcast);
-        assert_eq!(next_weather(Some(Weather::Rain)), Weather::HeavyRain);
-        assert_eq!(next_weather(Some(Weather::HeavyRain)), Weather::Clear);
-    }
-
-    #[test]
-    fn vision_cycles_through_profiles() {
-        let content = warlock_core::content::Content::builtin().unwrap();
-        let profiles = content.vision_profiles();
-        assert_eq!(next_vision(profiles, "normal"), "low_light");
-        let last = &profiles[profiles.len() - 1].id;
-        assert_eq!(next_vision(profiles, last), "normal");
     }
 }

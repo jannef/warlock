@@ -12,7 +12,7 @@ use warlock_core::{Action, Dir, Positions};
 
 /// The dialog a step in `dir` asks first, if any: diving into deep water, leaving a shop owing,
 /// stepping onto a known trap, setting out hungry on the overworld, or an offer (see the
-/// movement arm of `press`).
+/// movement arm of `Gameplay::play`, `input/play.rs`).
 pub(crate) fn step_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
     (deep_water_dialog(view, dir))
         .or_else(|| leaving_dialog(view, dir))

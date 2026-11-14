@@ -66,7 +66,7 @@ way on (exactly one group, one or two cells wide; wider is a room). The first st
 corridor when `way_on` has one there: the run follows it (the way's steppable cell nearest the
 heading, orthogonal on a tie) and stops at an intersection, a dead end, or a room; else it holds
 its direction until the next cell is not `steppable`. A first step that is not `steppable` is a
-plain `Move` (`start_running`); the client asks the step's dialogs first (`input.rs::step_dialog`).
+plain `Move` (`start_running`); the client asks the step's dialogs first (`ui/step_dialogs.rs::step_dialog`).
 A creature coming close says "{came}; you stop running."; a run's end trains no Willpower
 (`World::running`). Tests: `world/run_tests.rs`.
 

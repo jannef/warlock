@@ -809,7 +809,7 @@ cast path shares.
     wands' from the same stream; `Lore::label_def` picks a rod's. Nothing is saved on a rod's
     stack (no charges); a known rod type is in `WorldState::known_scrolls`, as a wand's.
   - **Presentation**: `PerceptionView::ready_rod`, `own_rod(item)` (cost and reach, once the
-    type is known); the aiming mode's `AimKind::Zap` covers rods (`input.rs` starts it on a
+    type is known); the aiming mode's `AimKind::Zap` covers rods (`input/play.rs` starts it on a
     ready wand, else a ready rod; `Aim::range` is the rod's reach); `describe::appraised`'s rod
     lines ("Holds Digging: ...", "Costs 6 mana a use, before your talents; it never runs out").
     Snapshots `rod-description`, `rod-aim`.
