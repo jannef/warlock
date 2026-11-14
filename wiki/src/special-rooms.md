@@ -2,7 +2,7 @@
 
 Now and then a room of the dungeon is not like the others. A **special room** changes the rules
 while you are inside it: the [light](light.md#what-light-is), the
-[noise](hearing.md#what-makes-noise) you make, how fast you [heal](healing.md#how-fast), who dares
+[noise](hearing.md#what-makes-noise) you make, how fast you [heal](healing.md#how-fast-you-heal), who dares
 to follow you in, or the floor under your feet.
 
 This page lists every kind. Some have pages of their own: [Teeming dens](teeming-dens.md), full of
@@ -76,8 +76,8 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
 - **Hushed chamber.** The opposite: [noise](hearing.md#what-makes-noise) made inside barely
   carries. A good place to sneak through, or to fight without drawing a crowd.
 - **Sanctuary.** A place of peace with a faint warm glow, enough to see by. You
-  [heal](healing.md#how-fast) much faster while you stand in it (see
-  [Hit points and death](hit-points.md#getting-better)). Creatures [hostile](creatures.md#factions) to you will
+  [heal](healing.md#how-fast-you-heal) much faster while you stand in it (see
+  [Hit points and death](hit-points.md#getting-hit-points-back)). Creatures [hostile](creatures.md#factions) to you will
   not step in; they stay outside, waiting. They can still strike at you across the threshold if
   you stand in the doorway, and shoot at you from outside. Creatures that are not hostile to you
   come and go as they please.
@@ -87,10 +87,10 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
   inside is lit at all. Only [darkvision](vision.md#the-four-types) sees in it, so creatures inside
   are hidden from normal eyes, and you from theirs.
 - **Draining room.** Something in it drinks at magic. Everyone inside who has
-  [mana](mana.md#how-much), you and creatures alike, is
+  [mana](mana.md#how-much-mana-you-have), you and creatures alike, is
   [Ebbing](status-effects.md#status-ebbing) (see [Status effects](status-effects.md)) for as long
   as they stay and half a minute after they leave. [Ebbing](status-effects.md#status-ebbing) drains
-  a point of [mana](mana.md#how-much) every 20 seconds, and none comes back meanwhile, so a fight
+  a point of [mana](mana.md#how-much-mana-you-have) every 20 seconds, and none comes back meanwhile, so a fight
   between [casters](magic.md) in a draining room soon becomes a brawl. It glows a faint cold
   violet. One floor in twenty that draws a draining room is drained throughout instead.
 - **Sweltering chamber.** Hot air: 25 °C warmer than the level around it, with a faint red glow.
@@ -110,8 +110,8 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
   [thief](classes.md#thief) walks through unheard.
 - **Heavy hall.** The stones pull at whatever you carry. Inside, your
   [carrying limit](burden.md#how-much-you-can-carry) is half what it is anywhere else, so a load
-  that was light makes you [burdened](burden.md#burden-1), and armour that only burdened you
-  [strains](burden.md#burden-1) you (see [Burden](burden.md)). Creatures carry less inside too. If
+  that was light makes you [burdened](burden.md#burden-levels), and armour that only burdened you
+  [strains](burden.md#burden-levels) you (see [Burden](burden.md)). Creatures carry less inside too. If
   what you carry would overload you inside, you cannot go in ("You carry too much to go in
   there."). If you overload yourself inside by picking something up, you can still step back out.
 - **Teeming den.** A room full of sleeping [creatures](creatures.md) and the things they have
@@ -137,7 +137,7 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
   door to another.
 
   Every step you take onto the cracked stone has a 15 % chance to give way, 30 % while you are
-  [burdened](burden.md#burden-1) or worse ("The floor gives way beneath you!"). You fall to the
+  [burdened](burden.md#burden-levels) or worse ("The floor gives way beneath you!"). You fall to the
   level below and land somewhere open on it, never behind a
   [locked door](doors.md#locked-doors) or in a [shop](shops.md). You take 2d6
   [damage](combat.md#damage), which can kill you, and are
@@ -148,7 +148,7 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
   six-sided dice times two coins: 6 to 36 coins a heap), and one to three loose [gems](gems.md).
 
   Every door of it is a [secret door](doors.md#secret-doors), so you must
-  [search](searching.md#searching-1) the walls to find the way in, or [dig](digging.md#digging) in.
+  [search](searching.md#how-to-search) the walls to find the way in, or [dig](digging.md#digging) in.
   In a cavern it is a box cut into the rock with one hidden door. Nothing guards it and nothing
   seals it: its only dangers are its chests' [traps](traps.md#finding-traps) and the time it takes
   to find. Each time you arrive on its level until you have been inside, *something tells you
@@ -177,7 +177,7 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
   the room's edges, where you cannot see them if there is such a place. The
   [locks](doors.md#locked-doors) are of the level's depth, and no key but a
   [skeleton key](doors.md#keys) fits. [Pick](doors.md#picking-locks) them,
-  [kick](doors.md#kicking) the doors in, or fight. A cave chamber has no doors, so there only the
+  [kick](doors.md#kicking-a-door-open) the doors in, or fight. A cave chamber has no doors, so there only the
   guardians come. A room seals once.
 - **Cursed room.** The dead do not rest in it: see [Cursed rooms](cursed-and-hallowed.md#cursed-rooms) below. Only on a
   level with a danger. One floor in twenty that draws a cursed room is cursed throughout instead.
@@ -196,10 +196,10 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
   a hidden side, but only **[good or evil](alignment.md)**, either as likely, and its stone's light
   tells which: gold for good, red for evil. It cares only whether you are on its side (see
   [Alignment](alignment.md)).
-  - Of its side, you [heal](healing.md#how-fast) twice as fast inside ("You feel welcome here.").
+  - Of its side, you [heal](healing.md#how-fast-you-heal) twice as fast inside ("You feel welcome here.").
   - Of the other side, you are [Unwelcome](status-effects.md#status-unwelcome) (see
     [Status effects](status-effects.md)) for as long as you stay and half a minute after you
-    leave. Wounds [heal](healing.md#how-fast) at half the pace and your blows go a little astray
+    leave. Wounds [heal](healing.md#how-fast-you-heal) at half the pace and your blows go a little astray
     ("Something here wants you gone.").
   - A neutral character is ignored ("An old shrine. It ignores you.").
 
@@ -208,10 +208,10 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
 - **Scriptorium.** Shelves of rotting scrolls stand in the middle of the room (shown as `≡`), and
   you may smell the dust and old vellum before you see it. Two to four [scrolls](scrolls.md) lie on
   its floor, unread, of the kinds the level would give anyway. Inside, the chance of a
-  [training mark](skills.md#getting-better) in
+  [training mark](skills.md#improving-a-skill) in
   [Decipher script](skills.md#skill-decipher-script) is doubled:
   [making out a scroll](scrolls.md#making-out-a-scroll) or reading a
-  [grimoire](magic.md#learning-spells-from-grimoires) through earns two marks here instead of one,
+  [grimoire](magic.md#learning-a-spell) through earns two marks here instead of one,
   and reading a scroll earns one every time instead of half the time.
   Only rooms of 9 floor cells or more can be one.
 

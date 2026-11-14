@@ -100,4 +100,4 @@ fills again.
 {{#include generated/alignment-gifts.md}}
 
 You cannot see whether [creatures](creatures.md) are good, neutral, or evil; you learn it from how
-they behave. [Magic](magic.md) ([mana](mana.md#how-much)) does not care where you stand.
+they behave. [Magic](magic.md) ([mana](mana.md#how-much-mana-you-have)) does not care where you stand.

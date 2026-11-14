@@ -16,8 +16,8 @@ to close it again. You cannot close a door while something stands or lies in the
 
 Opening and closing doors makes noise (see [Hearing](hearing.md)). Some creatures open doors too,
 but none closes them (see [Creatures](creatures.md)). Some doors are
-[locked](doors.md#locked-doors). Every closed door can be [kicked](doors.md#kicking) in with `k`,
-leaving a [broken door](doors.md#kicking) (`,`) that stays open for good. See [Doors](doors.md).
+[locked](doors.md#locked-doors). Every closed door can be [kicked](doors.md#kicking-a-door-open) in with `k`,
+leaving a [broken door](doors.md#kicking-a-door-open) (`,`) that stays open for good. See [Doors](doors.md).
 
 The game remembers a door as you last saw it. One you saw open stays drawn open until you see it
 closed.

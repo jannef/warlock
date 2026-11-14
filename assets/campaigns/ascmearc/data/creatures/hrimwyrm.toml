@@ -33,6 +33,7 @@ base_hp = 160
 natural = { defence = 3, protection = 5, name = "scales" }
 resist = { fire = -25 }
 immune = ["cold"]
+everlasting = true
 on_eat = { message = "The wyrm's flesh is cold as the deep, and leaves you harder.", vomit = 20, train = { strength = 150, toughness = 150 } }
 blood = "#8ab0d0"
 # Its breath: about a third of a level-31 fighter's hit points to everyone in a cone ten cells

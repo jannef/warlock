@@ -49,3 +49,6 @@ waiting. The road to town and the hours at the anvil are the only price.
 If you never deliver, nothing happens: the patron waits, and the stock is yours to keep, sell,
 or [salvage](crafting.md#salvage). If the patron dies, the commission is off, and no one takes
 their place.
+
+See also: [the craftsperson](classes.md#craftsperson), [Crafting](crafting.md), and
+[Shops](shops.md).

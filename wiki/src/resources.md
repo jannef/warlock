@@ -182,7 +182,7 @@ than 6. For example, Presence 12 holds 11 at level 1, and Presence 16 holds 16 a
 **Stamina** is the fighter's breath: the pool that active weapon abilities are paid from (see
 [Combat](stances.md#stamina)), and the [warrior's](classes.md#warrior)
 [Charge](classes.md#talent-charge). A warrior holds it, full, from level 1 (Charge gives it).
-Anyone else gets it, full, from the first [weapon rank](weapon-skills.md#marks-and-ranks) that
+Anyone else gets it, full, from the first [weapon rank](weapon-skills.md#raising-a-weapon-skill) that
 teaches an active ability.
 
 The pool holds 10, plus your [Toughness](stats.md#stat-toughness) [modifier](stats.md#modifiers),
@@ -204,7 +204,7 @@ identified or not. It can give:
 - for stamina, every active weapon ability **costing** so many points less. This adds to
   [Drillmaster](classes.md#talent-drillmaster)'s discount, and a cost never goes below 1;
 - so many more points on a **kill** (*of the Hunt*), never above the maximum. This follows the same
-  rule as [mana](mana.md#how-much) *of Siphoning*: only your own blow, shot, or
+  rule as [mana](mana.md#how-much-mana-you-have) *of Siphoning*: only your own blow, shot, or
   [spell](magic.md#the-spells) counts, with the one you killed within 3 cells of you (see
   [Mana on a kill](mana.md#mana-on-a-kill)). It comes on top of what a pool builds on any kill by
   its own rule (inspiration's point).
@@ -218,7 +218,7 @@ which pool:
 - **Stamina:** every [warrior](classes.md#warrior), [berserker](classes.md#berserker),
   [paladin](classes.md#paladin), [ranger](classes.md#ranger), [ascetic](classes.md#ascetic),
   [thief](classes.md#thief), and [bard](classes.md#bard), and anyone else once a
-  [weapon rank](weapon-skills.md#marks-and-ranks) teaches an active ability.
+  [weapon rank](weapon-skills.md#raising-a-weapon-skill) teaches an active ability.
 - **Rage:** a [raging](status-effects.md#status-raging) [berserker](classes.md#berserker), only while
   the rage lasts.
 - **Focus:** a [ranger](classes.md#ranger) from level 12.

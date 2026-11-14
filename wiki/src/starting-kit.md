@@ -79,14 +79,14 @@ jerkin and iron-shod boots, a kobold's patched smock and footwraps.
   Each is the scroll of a spell of [spell level](magic.md#spell-levels) 0 to 9, every such spell as
   likely as any other, so two may be the same. Read one to cast its spell.
 - **Grimoires.** Every spell scroll your kit gives you, a fixed one or a random one, is that
-  spell's [grimoire](magic.md#learning-spells-from-grimoires) instead one time in ten, scroll by scroll. Read it to learn the spell
+  spell's [grimoire](magic.md#learning-a-spell) instead one time in ten, scroll by scroll. Read it to learn the spell
   for good.
 - **Scrolls and potions you know.** You know every scroll, [potion](potions.md), wand, and rod you
   set out with, whatever you start with, by its true name from the first turn ("a scroll of magic
   missile", never an [unknown label](scrolls.md#unknown-scrolls)). So you know every other of its
   kind you find, too.
 - **Food** is fresh when you set out (see [Food](food.md)).
-- **Weight.** Nobody starts [strained](burden.md#burden-1) under their kit. An ordinary character
+- **Weight.** Nobody starts [strained](burden.md#burden-levels) under their kit. An ordinary character
   starts unburdened, except for wealth and armour. A weak [aristocrat](classes.md#aristocrat) may
   stagger under that purse, a small [merchant](classes.md#merchant) under their wares, and a small
   or frail ([elf](races.md#race-elf), [drow](races.md#race-drow)) warrior or paladin under their

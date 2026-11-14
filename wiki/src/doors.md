@@ -15,7 +15,7 @@ The door is locked.
 ```
 
 Trying takes no time. To get through, you need its [key](#keys), a thief's touch
-([picking the lock](#picking-locks)), or a strong leg ([kicking it in](#kicking)).
+([picking the lock](#picking-locks)), or a strong leg ([kicking it in](#kicking-a-door-open)).
 
 ## Keys
 
@@ -61,7 +61,7 @@ key.
 - **A trapped door** sets its trap off at you as you open it, picked or not (see
   [Traps](traps.md#trapped-doors)). A failed try sets nothing off.
 - Every try may earn [Open lock](skills.md#skill-open-lock) a
-  [training mark](skills.md#getting-better). Trying a door that is not locked, or anything else,
+  [training mark](skills.md#improving-a-skill). Trying a door that is not locked, or anything else,
   takes no time: `That door is not locked.`, `There is no lock there.` Without the skill:
   `You do not know how to pick locks.`
 
@@ -74,7 +74,7 @@ How often a try works, by the lock's difficulty and what you add (your
 A force spell's blast breaks every shut door it reaches, locked or trapped, however sturdy (see
 [spell types](spellcasting.md#spell-types)).
 
-## Kicking
+## Kicking a door open
 
 Press `k` and a direction to kick. A kick takes a normal action (6 seconds).
 
@@ -130,12 +130,12 @@ and the door stays wedged until it is opened or broken.
 - **You open it as usual**: `You pull the wedge free and open the door.` The wedge is not an item.
 - A wedge that is refused takes no time and says why: you lack Woodcraft, there is no closed door
   that way, or the door is already wedged.
-- Every wedge earns [Woodcraft](skills.md#skill-woodcraft) a [training mark](skills.md#getting-better).
+- Every wedge earns [Woodcraft](skills.md#skill-woodcraft) a [training mark](skills.md#improving-a-skill).
 
 ## Secret doors
 
 Some doors are **secret**. They look like the wall around them, and are that wall to you, until
-you find them by [searching](searching.md#searching-1) or
+you find them by [searching](searching.md#how-to-search) or
 [in passing](searching.md#noticing-in-passing) (see [Searching](searching.md)). A secret door is
 never [locked](#locked-doors). Once found, it is a closed door like any other, and you
 [remember](sight.md#memory) it.

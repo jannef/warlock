@@ -34,7 +34,7 @@ swims before your eyes.". The [turn](time.md#what-takes-time) is spent, you keep
 [label](#unknown-scrolls) stays unknown, and nothing else happens. You may try again at once.
 
 Every check, made or failed, earns those trained in Decipher script a [training
-mark](skills.md#getting-better) in it, or two in a [scriptorium](special-rooms.md). Every scroll
+mark](skills.md#improving-a-skill) in it, or two in a [scriptorium](special-rooms.md). Every scroll
 you read and use up, check or not, earns one more half the time. Reading a scroll trains no
 [Spellcraft](skills.md#skill-spellcraft): only casting does.
 
@@ -51,7 +51,7 @@ After the ten minutes you make the same check as for reading, with the same rule
 spell you know, or one within your [learning](magic.md#learning), is made out at once. If you make it,
 you learn the kind: every scroll of that kind shows by its name from now on, and you keep this
 one, unread. If you fail, the ten minutes are gone and the scroll stays a label. You may try
-again. Every check earns a [training mark](skills.md#getting-better) in Decipher script, just as
+again. Every check earns a [training mark](skills.md#improving-a-skill) in Decipher script, just as
 reading does.
 
 ## Unknown scrolls
@@ -81,7 +81,7 @@ You learn what a kind of scroll is, for good, in any of these ways:
   caster's random ones.
 
 Knowing what a scroll is does not teach you its spell. No scroll does: the spell's
-[grimoire](magic.md#learning-spells-from-grimoires) teaches it. A scroll that cannot be read, such as a sealed
+[grimoire](magic.md#learning-a-spell) teaches it. A scroll that cannot be read, such as a sealed
 letter, has no label and is known on sight. A [shop](shops.md#prices) charges its true price for
 an unknown scroll.
 
@@ -174,7 +174,7 @@ writing swims, you keep the scroll and learn nothing about what you chose.
 
 Reading it casts the spell **[Identify](magic.md#spell-identify)** for you, free of
 [mana](mana.md#spending-it). The grimoire of identify teaches the spell for good (see
-[Magic](magic.md#learning-spells-from-grimoires)). Cast for [mana](mana.md#how-much), Identify is
+[Magic](magic.md#learning-a-spell)). Cast for [mana](mana.md#how-much-mana-you-have), Identify is
 dear at 60 mana, so only an experienced caster can afford it (see [Magic](magic.md#what-a-spell-costs)).
 
 The scroll of identify is the most common scroll. It turns up more often than any other in
@@ -191,7 +191,7 @@ Hild's mending in Cēaptūn does (see [Services](npcs.md#services)), but whereve
 
 It works even with a [disease](diseases.md) still on you, though the disease may damage the stat
 again. With nothing to restore, it is not read ("There is nothing to restore."), and you keep it.
-As no spell is behind it, it has no [grimoire](magic.md#learning-spells-from-grimoires).
+As no spell is behind it, it has no [grimoire](magic.md#learning-a-spell).
 It is rare, found from [item level](affixes.md#base-items) 8, and dear (see the table above).
 
 ## Writing scrolls
@@ -209,7 +209,7 @@ Choose one, and you write its scroll on the first blank scroll you carry.
   [Frugal caster](talents.md#talent-frugal-caster), with your armour, School focus, Empower, and
   Archmage counted, and then the whole is cut by Frugal caster. Fireball's 26 becomes 78, Magic
   missile's 3 becomes 9, and Identify's 60 becomes 180.
-- **The time** is the time reading the spell's [grimoire](magic.md#learning-spells-from-grimoires) takes: 100 turns plus 20 for
+- **The time** is the time reading the spell's [grimoire](magic.md#learning-a-spell) takes: 100 turns plus 20 for
   each spell level,
   or 10 minutes plus 2 a level at a normal pace. Magic missile takes 16 minutes and Fireball 32.
   [Quick study](talents.md#talent-quick-study) does not shorten it.
@@ -225,7 +225,7 @@ Choose one, and you write its scroll on the first blank scroll you carry.
   scroll ("You have nothing to write on."), while raging, or with too little mana ("You lack the
   mana to write it."). Light and place do not matter.
 
-Each scroll written always trains [Intelligence](stats.md#training), as reading a grimoire does, besides
+Each scroll written always trains [Intelligence](stats.md#raising-your-stats), as reading a grimoire does, besides
 what spending the mana trains. There is no roll: a scroll begun and finished is a scroll made.
 
 ## Where scrolls are

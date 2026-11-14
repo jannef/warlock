@@ -369,6 +369,10 @@ pub(super) struct CreatureSpec {
     /// Whether it leaves a corpse when it dies (spec §8 "Hunger"; with `data/hunger.toml`).
     #[serde(default = "yes")]
     pub corpse: bool,
+    /// Whether its corpse never rots (docs/design/profane-gifts.md §3): a unique's alone, and
+    /// only one that leaves a corpse; it always leaves it, never glass or a statue.
+    #[serde(default)]
+    pub everlasting: bool,
     /// What eating its corpse does, beyond feeding the eater.
     pub on_eat: Option<OnEat>,
     /// The colour of its blood (`"#rrggbb"`), or `"none"` for a bloodless creature; none:
@@ -792,6 +796,7 @@ impl CreatureSpec {
             corrodes: self.corrodes,
             disarms: self.disarms,
             corpse: self.corpse,
+            everlasting: self.everlasting,
             on_eat: self.on_eat,
             blood: r.blood,
             immune: r.immune,
@@ -1054,6 +1059,10 @@ pub struct CreatureDef {
     /// Gameplay: whether it leaves a corpse when it dies (spec §8 "Hunger"; only with
     /// `data/hunger.toml`, which says how corpses rot and feed).
     pub corpse: bool,
+    /// Gameplay: whether its corpse never rots (its `Food` keeps and lasts for ever) and its
+    /// death always lays it: no crystal spell turns it to glass, no petrifying death to stone.
+    /// A unique's alone, with `corpse` (the loader's check).
+    pub everlasting: bool,
     /// Gameplay: what eating its fresh corpse does, beyond feeding the eater. Hidden from the
     /// player until they try.
     pub on_eat: Option<OnEat>,

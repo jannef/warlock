@@ -328,8 +328,47 @@ fn a_vault_with_stairs_must_be_a_lair_and_a_lair_must_have_them() {
         env!("CARGO_MANIFEST_DIR")
     ))
     .expect("the king")
-    .replace("unique = true\n", "");
+    .replace("unique = true\n", "")
+    .replace("everlasting = true\n", "");
     files.insert(path, &rat_king);
     let err = Content::load(&files).expect_err("refused").to_string();
     assert!(err.contains("is not `unique`"), "{err}");
+}
+
+/// Content with the Rat King's file edited: each `from` (which must be there) replaced by `to`.
+fn rat_king_with(edits: &[(&str, &str)]) -> Result<Content, String> {
+    let path = "campaigns/ascmearc/data/creatures/gnaegan.toml";
+    let mut text = std::fs::read_to_string(format!(
+        "{}/../../assets/{path}",
+        env!("CARGO_MANIFEST_DIR")
+    ))
+    .expect("the king");
+    for (from, to) in edits {
+        assert!(text.contains(from), "{from}");
+        text = text.replacen(from, to, 1);
+    }
+    let mut files = ContentFiles::builtin();
+    files.insert(path, &text);
+    Content::load(&files).map_err(|e| e.to_string())
+}
+
+#[test]
+fn everlasting_is_a_uniques_with_a_corpse_and_every_keeper_has_it() {
+    let refused = "`everlasting` is for a unique creature that leaves a corpse";
+    // On a creature that is no unique.
+    let err = rat_king_with(&[("unique = true\n", "")]).expect_err("refused");
+    assert!(err.contains(refused), "{err}");
+    // On one that leaves no corpse.
+    let err = rat_king_with(&[("on_eat = {", "corpse = false\n#on_eat = {")]).expect_err("refused");
+    assert!(err.contains(refused), "{err}");
+    // An endless branch's keeper without it, or without a corpse.
+    let keeper = "layer boss `gnaegan` must leave an everlasting corpse";
+    let err = rat_king_with(&[("everlasting = true\n", "")]).expect_err("refused");
+    assert!(err.contains(keeper), "{err}");
+    let err = rat_king_with(&[
+        ("everlasting = true\n", "corpse = false\n"),
+        ("on_eat = {", "#on_eat = {"),
+    ])
+    .expect_err("refused");
+    assert!(err.contains(keeper), "{err}");
 }

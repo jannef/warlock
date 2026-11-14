@@ -149,7 +149,7 @@ creature also gets a [magic](magic-items.md) piece, made as loot is, at the floo
 
 - A kind's **racial weapon** is its first line. It comes 90% of the time unless the table says
   otherwise, and every kind with one is trained in its [weapon skill](weapon-skills.md).
-- An armed creature gets no flat bonus to hit. Its [ranks](weapon-skills.md#marks-and-ranks) in
+- An armed creature gets no flat bonus to hit. Its [ranks](weapon-skills.md#raising-a-weapon-skill) in
   the weapon's skill (and in [Duelist](fighting-styles.md#style-duelist), for a one-handed weapon
   with no shield) are the fewest that bring the weapon to a quarter of its level to hit (a
   spellcaster's, to an eighth), as the creatures that fight with claws and teeth hit. No rank is
@@ -207,7 +207,7 @@ Some creatures are never graded:
 - [animated objects](animated.md), except the blades ("a notched animated blade", "a keen" one);
 - [mimics](mimics.md);
 - your own [companion](companions.md#companions) or [familiar](familiars.md#familiars), which
-  [grow](companions.md#growth) with you instead.
+  [grow](companions.md#how-a-companion-grows) with you instead.
 
 {{#include generated/creature-grades.md}}
 

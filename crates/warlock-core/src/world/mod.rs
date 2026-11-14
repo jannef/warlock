@@ -1954,6 +1954,8 @@ mod escape_tests;
 #[cfg(test)]
 mod escort_tests;
 #[cfg(test)]
+mod everlasting_tests;
+#[cfg(test)]
 mod experience_tests;
 #[cfg(test)]
 mod feature_tests;

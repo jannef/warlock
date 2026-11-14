@@ -2021,6 +2021,13 @@ impl Content {
                     spec.id
                 )));
             }
+            // An everlasting corpse is a unique's, and there must be one to keep.
+            if spec.everlasting && (!spec.corpse || !spec.unique || spec.id == "player") {
+                return Err(err(format!(
+                    "creature `{}`: `everlasting` is for a unique creature that leaves a corpse",
+                    spec.id
+                )));
+            }
             let mut def = spec.resolve(resolved);
             def.campaign = campaign::of_path(path).map(str::to_string);
             self.creatures.push(def);
@@ -2562,7 +2569,12 @@ impl Content {
                         .map_err(|_| err("too many objects".into()))?,
                 );
                 let creature_id = CreatureId(i as u16);
-                let food = corpses.sizes[creature.size];
+                let mut food = corpses.sizes[creature.size];
+                if creature.everlasting {
+                    // It never rots: the one way to a shelf life of never.
+                    food.keeps = None;
+                    food.lasts = None;
+                }
                 let def = ObjectDef::corpse_of(creature_id, creature, class, material, food);
                 if self.object_ids.insert(def.id.clone(), id).is_some() {
                     return Err(err(format!(
