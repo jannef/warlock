@@ -175,7 +175,7 @@ Presentation: `r` is `KeyCommand::Read` (id `read`, next to Eat), opening `Scree
 `ScreenAction::Aim(AimKind::Read(item))`: the aiming mode (`ui/target.rs`) with the scroll's
 `range`, its line (`Aim::line`: a bolt's line is blocked only by what is solid) and the read
 key confirming; `Aim::catches_reader` predicts, from perception only, whether a burst may catch
-the player, and `input::burst_dialog` then asks in the one dialog (Read it / Aim again / Don't
+the player, and `ui::step_dialogs::burst_dialog` then asks in the one dialog (Read it / Aim again / Don't
 read it). The scroll of identify answers `ScreenAction::Replace(ScreenName::Identify)` after
 noting the scroll (`ObjectScreen::looked`; `Screens::replace` reads it before closing), and the
 identify list (`ObjectList::Identify(IdentifyBy::Scroll(scroll))`, the unidentified stacks) acts

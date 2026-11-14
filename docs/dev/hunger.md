@@ -109,7 +109,7 @@ the actions queued behind it that frame (as it drops a step behind another that 
 from where the first left the player, `input::asks_first`, #1538: the frame's presses are all read
 before any is applied, so input asked about it from the cell before) (it takes the `ResMut` so a frame without actions leaves the
 `Game` unchanged: `on_level_up` and `refresh` run on change). A replay's last step sets no stop.
-`input::hunger_dialog` asks before an overworld step while Fainting or Starving
+`ui::step_dialogs::hunger_dialog` asks before an overworld step while Fainting or Starving
 (`PerceptionView::level_kind`, the state alone); text cases `hunger-*` in `screen_snapshots.rs`.
 There is no multi-step movement to end (no run or travel command, on the overworld or anywhere): a
 held key's repeats are the only walking.

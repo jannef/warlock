@@ -29,6 +29,7 @@
 //! move_n = ["k", "Numpad8", "ArrowUp"]
 //! ```
 
+pub mod bindings;
 pub mod clock;
 pub mod fixed;
 pub mod keymap;
