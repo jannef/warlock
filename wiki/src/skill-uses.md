@@ -4,7 +4,7 @@ Some [skills](skills.md) do more than add to a roll: they let you do something. 
 uses: slipping past a creature in the dark, stealing, feinting, threatening, treating wounds and
 poison, making arrows, whittling a better bow, and foraging for food. Most are used from the
 [abilities menu](abilities.md) (`a`). Where a section says "the benefits table", it means the table under
-[What skills give](skills.md#what-skills-give).
+[What skills give](skill-benefits.md).
 
 ## Slipping past
 
@@ -69,7 +69,7 @@ Otherwise the feint is refused and takes no time. A feint takes a turn.
 The foe rolls 2d12 plus its [Willpower](stats.md#stat-willpower) [modifier](stats.md#modifiers) against the difficulty below, plus your [Presence](stats.md#stat-presence)
 modifier, plus what your Bluff adds (the benefits table).
 
-- If it falls short: "The kobold falls for it." It is [surprised](status-effects.md#status-surprised), and its next action does not end
+- If it falls short: "The kobold falls for it." It is [surprised](status-list.md#status-surprised), and its next action does not end
   that. So your next blow finds it [flat-footed](surprise.md), with [sneak dice](surprise.md) if you have them. Its second
   action, like its first, costs it extra time, and ends the surprise. A foe quick enough to act
   twice before you do has recovered by the time you strike.
@@ -95,7 +95,7 @@ takes a turn and is spoken aloud: those around you [hear](hearing.md) a voice.
 
 It is the [War cry](abilities.md#ability-war-cry)'s check, at one foe. If the foe hears you and sees you, it rolls 2d12 plus its
 [Willpower](stats.md#stat-willpower) [modifier](stats.md#modifiers) against the difficulty below, plus your [Strength](stats.md#stat-strength) modifier, plus what your
-Intimidate adds (the benefits table). If it falls short, it is [frightened](status-effects.md#status-frightened) and runs from you, a few
+Intimidate adds (the benefits table). If it falls short, it is [frightened](status-list.md#status-frightened) and runs from you, a few
 moments per degree. How many degrees depends on your skill: a little Intimidate frightens a foe for
 a moment, a great deal frightens it as long as a war cry does. A foe that does not hear or see you
 pays you no heed, and the turn is spent all the same.

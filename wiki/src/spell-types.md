@@ -17,7 +17,7 @@ A fire burst melts the ice on the cells it reaches, and whoever stands on that i
 light for a minute. That fire does nothing else, and it never spreads.
 
 **Cold slows the blood.** Every creature a cold spell harms is also
-[Sluggish](status-effects.md#status-sluggish), and anything burning on it goes out. A miss does
+[Sluggish](status-list.md#status-sluggish), and anything burning on it goes out. A miss does
 nothing. A cold burst freezes the [water](terrain.md#water) on the cells it reaches into ice that
 holds a laden person, and puts out the fires there.
 
@@ -55,7 +55,7 @@ cone does not do it at all.
 [hit points](hit-points.md#hit-points), or lands a [critical](combat.md#criticals), knocks it a cell
 away. It is pushed away from the centre of a burst, or otherwise away from you (and away from you
 too if it is the one at the burst's centre). A cell that is not free stops the push, and so does
-[being held or webbed](status-effects.md#status-held). You do not move when you are at the centre of
+[being held or webbed](status-list.md#status-held). You do not move when you are at the centre of
 your own burst, though you take the harm.
 
 A force burst with a blast breaks the [shut doors](doors.md) it reaches, however sturdy, locked or

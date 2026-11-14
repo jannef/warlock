@@ -19,12 +19,12 @@ unless the creature's attack says otherwise.
 
 If you are trained in [Escape artist](skills.md#skill-escape-artist), you slip bonds without being
 asked. There is nothing to choose: no [ability](abilities.md) and no key. When
-[Held](status-effects.md#status-held), [Webbed](status-effects.md#status-webbed), or [Pinned](status-effects.md#status-pinned) stops what you try, the
+[Held](status-list.md#status-held), [Webbed](status-list.md#status-webbed), or [Pinned](status-list.md#status-pinned) stops what you try, the
 check is part of the attempt.
 
 The check is 2d12, rolled like an [attack](combat.md#hitting), plus the better of your
 [Strength](stats.md#stat-strength) and [Dexterity](stats.md#stat-dexterity), plus what
-[the skill](skills.md#what-skills-give) gives (and [Knowledge](skills.md#skill-knowledge), against
+[the skill](skill-benefits.md) gives (and [Knowledge](skills.md#skill-knowledge), against
 a creature holding you). You need the grip, or 13 for a web or a pin.
 
 - Made: the status ends, and the action goes ahead in its usual time.
@@ -32,22 +32,22 @@ a creature holding you). You need the grip, or 13 for a web or a pin.
   more than the wait you would have had.
 
 If two bonds stop you, the other one gets its check on your next attempt, and this step is refused
-at no cost. A [pin](status-effects.md#status-pinned) eases a degree with each action, a failed struggle included.
+at no cost. A [pin](status-list.md#status-pinned) eases a degree with each action, a failed struggle included.
 
 Without the skill, a hold is still a struggle of Strength alone. A web or a pin simply refuses the
 step, at no cost, until it passes.
 
 Being slowed in mind or body is not a bond, and the skill does nothing for it:
-[Staggered](status-effects.md#status-staggered), [Stunned](status-effects.md#status-stunned), [Surprised](status-effects.md#status-surprised),
-[Transfixed](status-effects.md#status-transfixed), [Sluggish](status-effects.md#status-sluggish), and [Drowsy](status-effects.md#status-drowsy).
+[Staggered](status-list.md#status-staggered), [Stunned](status-list.md#status-stunned), [Surprised](status-list.md#status-surprised),
+[Transfixed](status-list.md#status-transfixed), [Sluggish](status-list.md#status-sluggish), and [Drowsy](status-list.md#status-drowsy).
 
 ## When a hold ends
 
 A hold also ends by itself ("You are free to move."):
 
 - when the holder dies, is knocked away, or ends up anywhere but beside you;
-- when the holder is held or slowed itself ([staggered](status-effects.md#status-staggered),
-  [transfixed](status-effects.md#status-transfixed), [sluggish](status-effects.md#status-sluggish));
+- when the holder is held or slowed itself ([staggered](status-list.md#status-staggered),
+  [transfixed](status-list.md#status-transfixed), [sluggish](status-list.md#status-sluggish));
 - after **3d4 turns** at most. Another hit rolls the turns again and keeps the longer of the two.
 
 A creature caught in your own [Drowning grip](horoscope.md#talent-drowning-grip) (a
@@ -60,10 +60,10 @@ Worse holds hurt while they last:
 
 - The [charnel heap](creatures.md#creature-charnel-heap), the greater water elementals, and the
   [animated rug](creatures.md#creature-animated-rug) close over you
-  ([Engulfed](status-effects.md#status-engulfed): "It closes over you.").
-- The [nightworm](creatures.md#creature-nightworm) swallows you whole ([Swallowed](status-effects.md#status-swallowed)).
+  ([Engulfed](status-list.md#status-engulfed): "It closes over you.").
+- The [nightworm](creatures.md#creature-nightworm) swallows you whole ([Swallowed](status-list.md#status-swallowed)).
 - A [giant leech](creatures.md#creature-giant-leech) or a [canoloth](creatures.md#creature-canoloth)'s
-  tongue fastens on you ([Latched](status-effects.md#status-latched)).
+  tongue fastens on you ([Latched](status-list.md#status-latched)).
 
 Each is a hold like any other, with the struggle, the grip (14 unless the attack says otherwise),
 and the endings above. But each lasts **2d4 turns** at most, and costs hit points as it ticks:

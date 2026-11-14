@@ -101,7 +101,7 @@ and 950 to 1050 for the rank and file of a people (orcs, hobgoblins, drow, duerg
 
 ## Surprise
 
-These are the creatures with a craft for [surprise](status-effects.md#status-surprised).
+These are the creatures with a craft for [surprise](status-list.md#status-surprised).
 
 - Their **[sneak attack](skills.md#skill-sneak-attack)** adds its dice to a hit that finds you
   unaware or surprised. It also makes it harder for you to keep your wits: the difficulty column

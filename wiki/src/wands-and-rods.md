@@ -59,7 +59,7 @@ rod's cost), so it never runs out while you have the [mana](mana.md#how-much-man
 
 Without enough mana a rod does nothing and takes no time ("You have not the mana to use it."). You
 cannot use one while something stops you casting, such as
-[raging](status-effects.md#status-raging). A use takes a cast's time.
+[raging](status-list.md#status-raging). A use takes a cast's time.
 
 A rod's row in the table says how far it reaches, how much further your
 [Willpower](stats.md#stat-willpower) takes it, and the strongest creature its sleep or terror

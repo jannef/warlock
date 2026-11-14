@@ -41,7 +41,7 @@ direction, and you strike the hostile there with what you wield, in the time of 
 - **It spends every opening you hold**, from 1 to 5 (more with an item *of Guile*, see
   [Suffixes](affixes.md#suffixes); there is no cap). You choose how many by when you strike.
 - **It is a [sneak attack](surprise.md#sneak-attacks) whatever the foe knows.** The sneak attack
-  dice land if it hits. The foe is not [Surprised](status-effects.md#status-surprised) and keeps
+  dice land if it hits. The foe is not [Surprised](status-list.md#status-surprised) and keeps
   its whole Defence.
 - **Each opening spent adds 1d6 damage** on a hit, after the sneak dice. Like them, it comes after
   [Protection](combat.md#protection), and a [critical](combat.md#criticals) never doubles it.
@@ -59,7 +59,7 @@ The thief's class talents add to every exploit, per opening spent:
 
 {{#include generated/exploit-ladder.md}}
 
-A [stunned](status-effects.md#status-stunned) foe's next action costs half again as much, and
+A [stunned](status-list.md#status-stunned) foe's next action costs half again as much, and
 your next blow finds it flat-footed.
 
 So at level 12 an exploit of 4 openings is +4 to hit and does the blow, the sneak dice, and 4d6

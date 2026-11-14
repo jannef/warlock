@@ -6,8 +6,8 @@ priest's [levels](experience.md#levels). It costs no [mana](mana.md#spending-it)
 [time of a spell](turns.md#what-actions-cost). It answers what ails you most, as far as your
 prayers reach. Pray too often and nothing answers for a while.
 
-You cannot pray while [raging](status-effects.md#status-raging) or
-[silenced](status-effects.md#status-silenced). A prayer with nothing to answer is refused ("You
+You cannot pray while [raging](status-list.md#status-raging) or
+[silenced](status-list.md#status-silenced). A prayer with nothing to answer is refused ("You
 have nothing to pray for.") and costs nothing: no time and no strain. A [disease](diseases.md) still
 brewing in you does not count yet, so a prayer tells you nothing of one.
 
@@ -68,11 +68,11 @@ has a twist (the table above gives each):
 - The diseases they take from you, the brewing ones too, are caught by the nearest
   [creature](creatures.md) you see, as if it had failed to resist them. A creature immune to disease
   catches none.
-- The [poison](status-effects.md#status-poisoned) they take is laid on that creature, at the same
+- The [poison](status-list.md#status-poisoned) they take is laid on that creature, at the same
   degrees. A creature immune or resistant to [poison](damage-types.md#damage-poison) takes less or
   none.
 - A hex or hold they release is laid back on whoever laid it on you, if you see them, at the
-  degrees it had. Whoever held you is caught [in a web](status-effects.md#status-webbed) instead.
+  degrees it had. Whoever held you is caught [in a web](status-list.md#status-webbed) instead.
 - They feed you to the brim, one short of [Bloated](hunger.md#how-hungry-you-are). The holy powers
   feed you to [Satiated](hunger.md#how-hungry-you-are).
 

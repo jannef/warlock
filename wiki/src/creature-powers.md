@@ -46,7 +46,7 @@ Each summoning costs the summoner [mana](mana.md#how-much-mana-you-have), and th
 it can summon again. A few summoners, the breeders, pay no mana. A summoner never has more of its
 summoned alive at once than the last column says. Its mana comes back as anyone's does (see
 [Mana](mana.md)), so one that has spent itself summons again only much later. A summoner that
-cannot cast ([silenced](status-effects.md#status-silenced)) cannot summon.
+cannot cast ([silenced](status-list.md#status-silenced)) cannot summon.
 
 A breeder calls up its own brood while it fights, as the
 [wormlord](creatures.md#creature-wormlord) calls its grave worms. Kill it first, or the fight gets
@@ -59,8 +59,8 @@ You cannot summon this way.
 ## Gazes
 
 Some creatures harm with a look. A [vampire](creatures.md#creature-vampire)'s stare holds you
-[transfixed](status-effects.md#status-transfixed). A [sea hag](creatures.md#creature-sea-hag)'s
-leaves you [frightened](status-effects.md#status-frightened) and
+[transfixed](status-list.md#status-transfixed). A [sea hag](creatures.md#creature-sea-hag)'s
+leaves you [frightened](status-list.md#status-frightened) and
 [drains](stats.md#drained-stats) your Toughness. A [spectre](creatures.md#creature-spectre)'s
 drains your will.
 
@@ -87,7 +87,7 @@ half-blind: −4 to [hit](combat.md#hitting), your [Dodge](combat.md#defence) ha
 in that column. Darkness, a wall, or a door between you ends the averting, as it ends the gaze.
 
 The [basilisk](creatures.md#creature-basilisk)'s is the one forced gaze, and the deadliest. A
-glance it catches gives you a degree of [Stiffening](status-effects.md#status-stiffening) unless
+glance it catches gives you a degree of [Stiffening](status-list.md#status-stiffening) unless
 you make a [Toughness](stats.md#stat-toughness) check against 15. Each degree is told (your limbs
 stiffen, your skin greys, you can barely move), and the fourth turns you to stone, which is death.
 
@@ -144,9 +144,9 @@ Everyone in the cone is struck by one roll of its damage, with no roll [to hit](
 immune to its element and takes nothing.
 
 The element does to those it harms what any [spell of it](spell-types.md) does: fire
-sets one in four [burning](status-effects.md#status-burning). A breath may carry more, as a blow's
+sets one in four [burning](status-list.md#status-burning). A breath may carry more, as a blow's
 added effects do. The [gorgon](creatures.md#creature-gorgon)'s grey vapour leaves those it harms
-[stiffening](status-effects.md#status-stiffening) unless they make the Toughness check (the *Then*
+[stiffening](status-list.md#status-stiffening) unless they make the Toughness check (the *Then*
 column).
 
 After breathing, the dragon cannot breathe again for the time below. Meanwhile it fights up close
@@ -186,7 +186,7 @@ A burst does to the floor what an area [spell](spell-types.md#what-lies-in-its-w
 element does, so the scrolls under a dying fire elemental may burn. Its element does to the cells
 what such a spell's burst does: fire is left burning, water frozen. The spell types' added effects
 do not come with it, but the creature's own do, by the chance below, on those it harmed. A water
-elemental's wave puts out the [burning](status-effects.md#status-burning) of everyone it reaches
+elemental's wave puts out the [burning](status-list.md#status-burning) of everyone it reaches
 and the fires there. An air elemental's gust blows what lies loose on its cells a cell farther
 out.
 

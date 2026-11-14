@@ -77,7 +77,7 @@ Some gifts are things you do rather than rules that hold. You use them from the
 [abilities menu](abilities.md#the-abilities-menu) (`a`), under *Birth sign*:
 
 - Fire's *[Blaze](abilities.md#ability-blaze)*. Afterwards you are
-  *[Burnt out](status-effects.md#status-burnt-out)* for a while, and cannot use it again until that
+  *[Burnt out](status-list.md#status-burnt-out)* for a while, and cannot use it again until that
   passes.
 - The Unicorn's **[Horn's grace](abilities.md#ability-horns-grace)** and the Basilisk's
   **[Transfixing stare](abilities.md#ability-transfixing-stare)**. Each then rests for a while (a

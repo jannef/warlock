@@ -9,7 +9,7 @@ Drinking takes one [turn](time.md#what-takes-time), uses the potion up, and work
 drink the potion of healing. You feel your wounds close." You can drink a potion lying on the
 floor without picking it up (in a [shop](shops.md#buying), that means you have bought it). You
 can drink whether or not you are [hungry](hunger.md#how-hungry-you-are), and even while
-[raging](status-effects.md#status-raging).
+[raging](status-list.md#status-raging).
 
 {{#include generated/potions.md}}
 
@@ -29,18 +29,18 @@ Some potions work **for a while** instead of at once:
   by 50 % for half an hour. It counts the way armour's resistance does, so together with what
   you wear it never reaches immunity: 75 % at most.
 - A **helpful draught** lends you a [status effect](status-effects.md) a spell could also give:
-  the potion of barkskin [Barkskin](status-effects.md#status-barkskin) and the potion of glamour
-  [Glamoured](status-effects.md#status-glamoured) (both harder to hit, two minutes), the potion
-  of renewal [Renewing](status-effects.md#status-renewing) (wounds close faster, four minutes),
-  the potion of the quick [Quick-sensed](status-effects.md#status-quick-sensed) (you feel the
+  the potion of barkskin [Barkskin](status-list.md#status-barkskin) and the potion of glamour
+  [Glamoured](status-list.md#status-glamoured) (both harder to hit, two minutes), the potion
+  of renewal [Renewing](status-list.md#status-renewing) (wounds close faster, four minutes),
+  the potion of the quick [Quick-sensed](status-list.md#status-quick-sensed) (you feel the
   living about you, three minutes), the potion of the unseen
-  [Invisible](status-effects.md#status-invisible) (two minutes), and the potion of sea legs
-  [Water-borne](status-effects.md#status-water-borne) (you walk on water, six minutes). A
+  [Invisible](status-list.md#status-invisible) (two minutes), and the potion of sea legs
+  [Water-borne](status-list.md#status-water-borne) (you walk on water, six minutes). A
   second one of the same kind starts its time over.
 
 Each of these shows by name on the [status bar](the-screen.md#the-screen) and the [character
-screen](the-screen.md#character): [Fortified](status-effects.md#status-fortified),
-[Owl-eyed](status-effects.md#status-owl-eyed), [Warmed](status-effects.md#status-warmed), and so
+screen](the-screen.md#character): [Fortified](status-list.md#status-fortified),
+[Owl-eyed](status-list.md#status-owl-eyed), [Warmed](status-list.md#status-warmed), and so
 on (see [Status effects](status-effects.md)). If you drink a second boost of the same stat while
 one lasts, you keep the stronger of the two, and the time does not start over. A second vision
 or resistance potion of the same kind starts its half hour over.
@@ -58,16 +58,16 @@ Four potions do one useful thing at once:
 - The **potion of restoration** does what the [scroll of
   restoration](scrolls.md#the-scroll-of-restoration) does: every point of [stat
   damage](diseases.md#stat-damage) is mended, every [drained](stats.md#drained-stats) point comes
-  back, and [Stiffening](status-effects.md#status-stiffening) ends. Unlike the scroll, it is
+  back, and [Stiffening](status-list.md#status-stiffening) ends. Unlike the scroll, it is
   drunk even when there is nothing to restore ("You feel whole.").
 - The **potion of blinking** moves you at once to a random free cell of the level, as a
   [teleport trap](traps.md#trap-teleport) does: anywhere, in sight or not, near danger or far
   from it. On the [overworld](overworld.md) it does nothing.
 - The **potion of clear head** ends at once what clouds the mind or numbs the body:
-  [Frightened](status-effects.md#status-frightened), [Drowsy](status-effects.md#status-drowsy),
-  [Sluggish](status-effects.md#status-sluggish), [Stunned](status-effects.md#status-stunned),
-  [Staggered](status-effects.md#status-staggered), and
-  [Transfixed](status-effects.md#status-transfixed).
+  [Frightened](status-list.md#status-frightened), [Drowsy](status-list.md#status-drowsy),
+  [Sluggish](status-list.md#status-sluggish), [Stunned](status-list.md#status-stunned),
+  [Staggered](status-list.md#status-staggered), and
+  [Transfixed](status-list.md#status-transfixed).
 
 ### Gambles
 
@@ -79,8 +79,8 @@ draught; the game only tells you what happens, in words.
 - The **draught of chance** mostly heals you, clears your head, or lends you a stat
   [boost](#potions-that-last), but it may sicken you or make you drowsy.
 - The **vial of troll's blood** always does two things at once: your wounds close faster
-  ([Renewing](status-effects.md#status-renewing)) and you are
-  [Poisoned](status-effects.md#status-poisoned).
+  ([Renewing](status-list.md#status-renewing)) and you are
+  [Poisoned](status-list.md#status-poisoned).
 - The **brewer's blunder** is a coin toss: a greater boost of one stat for a while, or a point
   of one stat [drained](stats.md#drained-stats) for good. A potion of restoration gives a
   drained point back.
@@ -106,13 +106,13 @@ has a hue, and a potion with several effects mixes their hues.
 | [Vision](vision.md#the-four-types) | violet |
 | [Speed](turns.md#speed) | yellow |
 | [Resistance](damage-types.md#armour-and-resistance) | teal |
-| Wards ([Barkskin](status-effects.md#status-barkskin), [Glamoured](status-effects.md#status-glamoured)) | bronze |
-| [Renewal](status-effects.md#status-renewing) | rose |
-| The unseen and the unplaced ([Quick-sensed](status-effects.md#status-quick-sensed), [Invisible](status-effects.md#status-invisible), [blinking](#utility-potions)) | opal |
-| Utility ([Water-borne](status-effects.md#status-water-borne), [sustenance](#utility-potions)) | sky blue |
+| Wards ([Barkskin](status-list.md#status-barkskin), [Glamoured](status-list.md#status-glamoured)) | bronze |
+| [Renewal](status-list.md#status-renewing) | rose |
+| The unseen and the unplaced ([Quick-sensed](status-list.md#status-quick-sensed), [Invisible](status-list.md#status-invisible), [blinking](#utility-potions)) | opal |
+| Utility ([Water-borne](status-list.md#status-water-borne), [sustenance](#utility-potions)) | sky blue |
 | [Restoration](#utility-potions) | mint |
 | Smoke ([Fume](spell-rules.md#zones)) | ash grey |
-| Light ([Lit](status-effects.md#status-lit), a [Flare](spell-rules.md)) | silver |
+| Light ([Lit](status-list.md#status-lit), a [Flare](spell-rules.md)) | silver |
 | [Acid](damage-types.md#damage-acid) | lime |
 | [Gambles](#gambles) | iridescent |
 | [Elixirs](#elixirs) (a [stat](stats.md) for good) | gold |
@@ -183,7 +183,7 @@ gives each flask's spell, its numbers, and its range in cells.
 - **What it does**: the spell works as if you had cast it, but your [stats](stats.md) and talents
   do not change it: a flask is always as strong as the table says. Its harm and its kills are
   yours, [experience](experience.md) too. A burst that harms can catch you if you throw it too
-  close, and the game asks first. A flask that lays a [Drowsy](status-effects.md#status-drowsy)
+  close, and the game asks first. A flask that lays a [Drowsy](status-list.md#status-drowsy)
   cloud or another [status](status-effects.md) spares you. Throwing a flask takes a throw's time
   and trains no [weapon skill](weapon-skills.md).
 - **Learning it**: if you see the cell where an unknown flask breaks, you learn what it was ("It
@@ -201,14 +201,14 @@ gives each flask's spell, its numbers, and its range in cells.
 - **Drinking a flask** is a poor idea: the sleeping draught makes you drowsy, as the table says.
 - **A flask of holy water** is a kind one: thrown, it casts [Rebuke](magic.md#spell-rebuke),
   which sears and frightens only the undead and harms nothing living; drunk, it washes a hex off
-  ([Hexed](status-effects.md#status-ill-wished) and [Branded](status-effects.md#status-branded)
+  ([Hexed](status-list.md#status-ill-wished) and [Branded](status-list.md#status-branded)
   end at once).
 - **Thunder and blasting**: a flask of thunder goes off as [Thunderclap](magic.md#spell-thunderclap),
   heard over the whole level ([Hearing](hearing.md#what-makes-noise)); a blasting flask as
   [Shatter](magic.md#spell-shatter), which breaks shut doors and chests. A general store or a
   provisioner never sells either: only an alchemist does.
 - **A flask of brilliance** is the kind one among the drinkable: drunk, it makes you shed light about you a while
-  ([Lit](status-effects.md#status-lit)).
+  ([Lit](status-list.md#status-lit)).
 
 ## Where to find them
 

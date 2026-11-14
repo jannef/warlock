@@ -31,8 +31,8 @@ Creatures have hit points too, but the game never shows their numbers. They are 
 ### Getting hit points back
 
 Hit points come back with time. They come back faster the tougher you are, and twice as fast while
-you [rest](resting.md#how-resting-works). They come back slower, or not at all, while you [bleed](status-effects.md#bleeding), are [poisoned](status-effects.md#status-poisoned), or are
-[diseased](status-effects.md#status-diseased). The details are on [Healing](healing.md).
+you [rest](resting.md#how-resting-works). They come back slower, or not at all, while you [bleed](status-effects.md#bleeding), are [poisoned](status-list.md#status-poisoned), or are
+[diseased](status-list.md#status-diseased). The details are on [Healing](healing.md).
 
 A [disease](diseases.md) that lowers your [Toughness](stats.md#stat-toughness) lowers your maximum hit points too (see
 Diseases). Creatures heal the same way while you are on their level. In a

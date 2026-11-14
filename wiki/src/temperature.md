@@ -77,7 +77,7 @@ Up to what the ice holds, it holds you. Beyond that it may give way, the more li
 weigh, and at twice what it holds it surely does. When it held only by luck, it creaks under your
 weight as a warning. A heavily laden [dwarf](races.md#race-dwarf) falls in where a lightly packed
 [elf](races.md#race-elf) crosses. Any ice holds someone
-[water-borne](status-effects.md#status-water-borne) ([Water walking](magic.md#spell-water-walking)),
+[water-borne](status-list.md#status-water-borne) ([Water walking](magic.md#spell-water-walking)),
 however thin.
 
 {{#include generated/ice.md}}
@@ -110,7 +110,7 @@ There is no going back once the ice cracks, but you lose nothing for good: only 
 Bursts of heat and frost change the ice at once (see [Traps](traps.md) and [spell
 types](spell-types.md)). A [fireball](traps.md#trap-fireball) melts the ice it
 reaches, and whoever stood on it falls in, unless they are
-[water-borne](status-effects.md#status-water-borne). A [frost trap](traps.md#trap-frost) freezes the
+[water-borne](status-list.md#status-water-borne). A [frost trap](traps.md#trap-frost) freezes the
 [water](terrain.md#water) it reaches at once, into ice 10 cm thick that holds a laden person. A
 blast without heat would shatter thin ice, though there is no such blast yet. Someone who makes way
 for you, stepping onto ice you stood on, may break through it if they are heavier than you.

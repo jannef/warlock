@@ -180,7 +180,7 @@ earlier grows as you level: a talent taken at level 3 still matters at level 50.
 
 An **active** talent ([Second wind](talents.md#talent-second-wind)) is something you do. It appears
 in the [abilities menu](abilities.md) under Talents. After use it leaves a status
-([Winded](status-effects.md#status-winded)) during which it cannot be used again.
+([Winded](status-list.md#status-winded)) during which it cannot be used again.
 [Blood magic](talents.md#talent-blood-magic) is active too, with no waiting time: it costs
 [hit points](hit-points.md#hit-points) instead (see [Mana](mana.md#spending-it)).
 
@@ -192,7 +192,7 @@ Some talents need a word more:
   [Patient blade](talents.md#talent-patient-blade), and [Zealot](talents.md#talent-zealot). One that
   needs the [lantern's hood](lantern.md#the-hood) (Hooded light) is still to come.
 - [Skill focus](talents.md#talent-skill-focus) adds 25 to the [skill](skills.md) you choose for
-  [what it gives](skills.md#what-skills-give), past 100 too. The value you trained stays as it was.
+  [what it gives](skill-benefits.md), past 100 too. The value you trained stays as it was.
 - [Treasure hunter](talents.md#talent-treasure-hunter) changes loot as it is made. A level you have
   already been to keeps what lies there, and the levels themselves never change.
 - [Breaker](talents.md#talent-breaker)'s kick drives a foe one cell straight back when it hits, if

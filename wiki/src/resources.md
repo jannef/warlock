@@ -52,7 +52,7 @@ level 1). It comes back a point every 2 base turns (12 seconds), resting too, an
 spent.
 
 A [berserker](class-berserker.md) holds rage and stamina at once.
-[Raging](status-effects.md#status-raging) blocks spells, but not active weapon abilities.
+[Raging](status-list.md#status-raging) blocks spells, but not active weapon abilities.
 
 ## Magic items on resources
 
@@ -80,7 +80,7 @@ which pool:
   [paladin](class-paladin.md), [ranger](class-ranger.md), [ascetic](class-ascetic.md),
   [thief](class-thief.md), and [bard](class-bard.md), and anyone else once a
   [weapon rank](weapon-skills.md#raising-a-weapon-skill) teaches an active ability.
-- **Rage:** a [raging](status-effects.md#status-raging) [berserker](class-berserker.md), only while
+- **Rage:** a [raging](status-list.md#status-raging) [berserker](class-berserker.md), only while
   the rage lasts.
 - **Focus:** a [ranger](class-ranger.md) from level 12.
 - **Ki:** an [ascetic](class-ascetic.md) from level 1.

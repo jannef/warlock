@@ -2,7 +2,7 @@
 
 A [berserker](class-berserker.md)'s **Rage** [ability](abilities.md#ability-rage) (from the
 abilities menu, taking a wait's time) gives them 12 rage. They are
-**[Raging](status-effects.md#status-raging)** (see [Status effects](status-effects.md)) for as long
+**[Raging](status-list.md#status-raging)** (see [Status effects](status-effects.md)) for as long
 as they hold any: [Strength](stats.md#stat-strength) +2 and [Toughness](stats.md#stat-toughness)
 +2, [Intelligence](stats.md#stat-intelligence) −2, and they can neither read nor spend
 [mana](mana.md#spending-it).
@@ -20,7 +20,7 @@ A blow of yours that merely [lands](combat.md#hitting) builds nothing. Rage hold
 long fight does not store up a long rage after it.
 
 When rage reaches 0, the rage ends, its bar with it. The berserker is then
-[Exhausted](status-effects.md#status-exhausted) for two and a half minutes (150 seconds), and can
+[Exhausted](status-list.md#status-exhausted) for two and a half minutes (150 seconds), and can
 have no rage until that passes. Anything else that ends being Raging ends the rage too.
 
 The berserker's later levels add to it (see [Talents](talents.md)):
@@ -35,7 +35,7 @@ The berserker's later levels add to it (see [Talents](talents.md)):
 - **[Mighty rage](class-berserker.md#talent-mighty-rage)** (level 50): Raging gives Strength +4 and
   Toughness +4, rage holds up to 30, and the exhaustion lasts 75 seconds.
 - **[Unstoppable](class-berserker.md#talent-unstoppable)** (level 60): while raging,
-  [bleeding](status-effects.md#status-bleeding) and [poison](status-effects.md#status-poisoned) cost
+  [bleeding](status-list.md#status-bleeding) and [poison](status-list.md#status-poisoned) cost
   no hit points. A blow that would take your last [hit point](hit-points.md#hit-points) leaves it to
   you for 10 rage, as often as you have that much. Spending the last of the rage this way ends it.
 

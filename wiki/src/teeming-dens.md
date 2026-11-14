@@ -28,7 +28,7 @@ never wake by themselves, however long you wait or rest nearby. They wake when:
 - a [noise](hearing.md#what-makes-noise) is loud enough where they lie: your footsteps, a door, a
   fight, a kick, [digging](digging.md#digging);
 - something hurts them: a blow, a missile, a [spell](magic.md#the-spells), even
-  [poison](status-effects.md#status-poisoned);
+  [poison](status-list.md#status-poisoned);
 - a neighbour wakes. Every sleeper that wakes cries out at once ("Cry" is its loudness). The cry
   may wake those near it, and their cries the next, until the whole den is up.
 

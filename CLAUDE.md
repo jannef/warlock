@@ -231,7 +231,7 @@ away, and the wiki is also where facts are inspected during development.
 **Wiki prose links its terms once per section** (the owner, #1609): new or edited wiki prose
 links each mechanic or keyword at its first mention in a section to the section that explains it
 (`wiki/TERMS.md`, the term map, says where; generated tables anchor every row,
-`status-effects.md#status-staggered`), and not again in that section; CI checks the links
+`status-list.md#status-staggered`), and not again in that section; CI checks the links
 (`cargo xtask wiki --check-links`).
 
 **A PR that changes gameplay mechanics or world facts updates the wiki in the same PR**, like the
