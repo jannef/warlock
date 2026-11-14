@@ -18,7 +18,7 @@
 //!
 //! The Decipher ability (#1025, design §6.6 D2; [`Action::Decipher`], `decipher:b`): the same
 //! check on a scroll of a type not yet identified ([`undeciphered`]), without reading it.
-//! `data/decipher.toml`'s `seconds` of turns of the `decipher` action ([`World::keep_at`], as a
+//! `data/decipher.toml`'s `seconds` of turns of the `decipher` action ([`World::work`], as a
 //! forage); a creature coming into view or a blow stops it and nothing comes of it. Done, the
 //! check is [`World::deciphers`] with the scroll's spell and level; made, the type is learned
 //! (every scroll of it shows by its name from now on) and the scroll is kept, unread. Failed,
@@ -28,7 +28,7 @@
 //! Only reading asks. Studying a scroll has its own check (`learn.rs`), writing one reads
 //! nothing (`scribe.rs`), and casting a spell one knows needs no scroll.
 
-use super::rest::Ended;
+use super::work::{Job, Task, Work};
 use super::{Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, Content, Reading, SpellId};
@@ -36,7 +36,6 @@ use crate::object::Stack;
 use crate::scroll_label::Lore;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
-use crate::time::Duration;
 
 /// What the player is told when they fail to make a scroll out.
 const SWIMS: &str = "The writing swims before your eyes.";
@@ -74,11 +73,36 @@ impl World {
     }
 }
 
-/// One try at making out a scroll: which stack of the pack, for how long.
+/// One try at making out a scroll: which stack of the pack.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Deciphering {
     pub item: usize,
-    pub seconds: u32,
+}
+
+impl Job for Deciphering {
+    fn kind(&self) -> ActionKind {
+        ActionKind::Decipher
+    }
+
+    fn on(&self, _: &Content) -> Vec<Option<usize>> {
+        vec![Some(self.item)]
+    }
+
+    fn found(&mut self, now: &[Option<usize>]) {
+        self.item = super::work::one(now);
+    }
+
+    fn leave(&self) -> String {
+        "you put the scroll away".into()
+    }
+
+    fn nothing_left(&self) -> &'static str {
+        "You have nothing left to make out."
+    }
+
+    fn done(&self, w: &mut World, _: &mut Vec<Event>) {
+        w.deciphered(self.item);
+    }
 }
 
 /// Whether `stack` is a scroll of a type the player has not identified (the Decipher ability's
@@ -104,34 +128,8 @@ impl World {
             return Spent::Nothing;
         }
         self.say("You pore over the writing.");
-        Spent::Decipher(Deciphering {
-            item,
-            seconds: rules.seconds,
-        })
-    }
-
-    /// Pores over the scroll turn after turn until the time is up or something stops it.
-    pub(super) fn decipher(&mut self, work: Deciphering, events: &mut Vec<Event>) {
-        let on = self.work_on(&[Some(work.item)]);
-        let until = self.state.time + Duration::seconds(u64::from(work.seconds));
-        let turn = self.price_of(self.state.player, ActionKind::Decipher);
-        let ended = self.keep_at(
-            events,
-            |w| w.state.time < until,
-            |w, _| turn.min(w.price_until(until)),
-        );
-        match ended {
-            Ended::Died => {}
-            _ if self.state.time >= until => match self.worked_on_one(&on) {
-                Some(item) => self.deciphered(item),
-                None => self.say("You have nothing left to make out."),
-            },
-            Ended::Came(came) => {
-                let text = format!("{}; you put the scroll away.", self.came_line(came));
-                self.say(text);
-            }
-            Ended::Said | Ended::Done => self.say("You put the scroll away."),
-        }
+        // No Quick hands: making out is no craft.
+        Work::spent(Task::Decipher(Deciphering { item }), rules.seconds)
     }
 
     /// The time is up: the check, and the type learned if it was made.

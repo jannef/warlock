@@ -7,7 +7,7 @@
 //!   object's own `ornament`, else its class's `[[ornament]]` row in `data/gems.toml`) is unset:
 //!   no part of a gem's material in that place ([`settable`]; a gold amulet's ruby is set
 //!   already); and a cut loose gem (never an uncut one).
-//! - **Time**: the recipe's `seconds`, in turns of the `craft` action ([`World::keep_at`], as
+//! - **Time**: the recipe's `seconds`, in turns of the `craft` action ([`World::work`], as
 //!   Cut): interrupted, nothing happens to either, but the time is spent.
 //! - **The check**: Cut's: two gameplay draws (the natural roll), plus the gem's profession's stat
 //!   modifier (`data/stock.toml`: Dexterity), its talents' checks of that stat, and the recipe
@@ -24,11 +24,11 @@
 
 use super::craft::RecipeLack;
 use super::craft_make::{CraftOption, CraftPlan, CraftStep, CraftStepKind, cut_gem};
-use super::rest::Ended;
+use super::work::{Job, Task};
 use super::{Actor, Spent, World};
 use crate::action::Event;
 use crate::combat;
-use crate::content::{ActionKind, Content, Cutting, MaterialId, PartId, RecipeDef, RecipeId};
+use crate::content::{Content, Cutting, MaterialId, PartId, RecipeDef, RecipeId};
 pub use crate::gem::ornament_part;
 use crate::item_parts::{self, ItemPart};
 use crate::object::{self, Stack};
@@ -199,13 +199,28 @@ pub(super) fn plan(
     })
 }
 
-/// A setting under way: the recipe, the item's and the gem's positions, and how long it takes.
+/// A setting under way: the recipe, the item's and the gem's positions.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct Setting {
     recipe: RecipeId,
     item: usize,
     gem: usize,
-    seconds: u32,
+}
+
+impl Job for Setting {
+    fn on(&self, _: &Content) -> Vec<Option<usize>> {
+        vec![Some(self.item), Some(self.gem)]
+    }
+
+    fn found(&mut self, now: &[Option<usize>]) {
+        if let &[Some(item), Some(gem)] = now {
+            (self.item, self.gem) = (item, gem);
+        }
+    }
+
+    fn done(&self, w: &mut World, _: &mut Vec<Event>) {
+        w.gem_set(*self);
+    }
 }
 
 impl World {
@@ -240,40 +255,12 @@ impl World {
             self.lore().title(&pack[item]),
         );
         self.say(format!("You begin to set the {stone} in the {thing}."));
-        Spent::Set(Setting {
+        let work = Setting {
             recipe: id,
             item,
             gem,
-            seconds: self.craft_seconds(def.seconds),
-        })
-    }
-
-    /// Works turn after turn until the setting is done or something stops it (module docs): its
-    /// last turn cut short to end exactly when its time is up.
-    pub(super) fn set(&mut self, mut work: Setting, events: &mut Vec<Event>) {
-        let on = self.work_on(&[Some(work.item), Some(work.gem)]);
-        let until = self.state.time + Duration::seconds(u64::from(work.seconds));
-        let turn = self.price_of(self.state.player, ActionKind::Craft);
-        let ended = self.keep_at(
-            events,
-            |w| w.state.time < until,
-            |w, _| turn.min(w.price_until(until)),
-        );
-        match ended {
-            Ended::Died => {}
-            _ if self.state.time >= until => match self.worked_on(&on).as_deref() {
-                Some(&[Some(item), Some(gem)]) => {
-                    (work.item, work.gem) = (item, gem);
-                    self.gem_set(work);
-                }
-                _ => self.say("You have nothing left to work on."),
-            },
-            Ended::Came(came) => {
-                let text = format!("{}; you put down your work.", self.came_line(came));
-                self.say(text);
-            }
-            Ended::Said | Ended::Done => self.say("You put down your work."),
-        }
+        };
+        self.craft_work(Task::Set(work), def.seconds)
     }
 
     /// The setting of `work` is done: the check, the item and the gem after it, the mark.
@@ -354,11 +341,6 @@ pub(super) fn set_out_for_test(w: &mut World, item: usize, gem: usize, band: Set
     let (_, _, material, cutting, made) =
         resolve(&content, w.state.player(), &picks).expect("the picks hold");
     let recipe = content.recipes().id("set").expect("set");
-    let work = Setting {
-        recipe,
-        item,
-        gem,
-        seconds: 0,
-    };
+    let work = Setting { recipe, item, gem };
     w.set_out(work, material, cutting, made, band);
 }

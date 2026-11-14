@@ -12,7 +12,7 @@
 //!   ([`RigDef::wall`]: a shot comes from a slit in the nearest wall, `trap.rs`), and what the
 //!   rig takes not carried ([`lack`]).
 //! - **The work**: the rig's `seconds` (Quick hands' share of them, `mastery::craft_seconds`;
-//!   the rig list shows the same), in turns of the `craft` action ([`World::keep_at`], as a
+//!   the rig list shows the same), in turns of the `craft` action ([`World::work`], as a
 //!   temper): a creature coming into view, a message, or a blow stops it, and then nothing is
 //!   rigged and nothing spent, the time gone.
 //! - **The end** ([`World::rigged`]): the cell and the inputs asked again (someone unseen in the
@@ -31,7 +31,7 @@
 //! Determinism: the check's two draws come from the gameplay stream at the end; nothing else
 //! draws.
 
-use super::rest::Ended;
+use super::work::{Job, Task};
 use super::{Actor, Spent, World};
 use crate::action::Event;
 use crate::combat;
@@ -44,12 +44,21 @@ use crate::skills::Effect;
 use crate::stats::Stat;
 use crate::time::Duration;
 
-/// A rig under way: which, on which cell, and for how long.
+/// A rig under way: which, and on which cell.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct Rigging {
     rig: RigId,
     at: Pos,
-    seconds: u32,
+}
+
+impl Job for Rigging {
+    fn leave(&self) -> String {
+        "you leave the trap unfinished".into()
+    }
+
+    fn done(&self, w: &mut World, events: &mut Vec<Event>) {
+        w.rigged(*self, events);
+    }
 }
 
 /// A rig as the rig list shows it: its name, what it takes in words, how long it takes, and why
@@ -310,32 +319,7 @@ impl World {
         }
         let name = def.name.to_lowercase();
         self.say(format!("You set to work on {} {name}.", article(&name)));
-        Spent::Rig(Rigging {
-            rig,
-            at,
-            seconds: self.craft_seconds(def.seconds),
-        })
-    }
-
-    /// Works turn after turn until the rig is done or something stops it (module docs): its
-    /// last turn cut short to end exactly when its time is up.
-    pub(super) fn rig(&mut self, work: Rigging, events: &mut Vec<Event>) {
-        let until = self.state.time + Duration::seconds(u64::from(work.seconds));
-        let turn = self.price_of(self.state.player, ActionKind::Craft);
-        let ended = self.keep_at(
-            events,
-            |w| w.state.time < until,
-            |w, _| turn.min(w.price_until(until)),
-        );
-        match ended {
-            Ended::Died => {}
-            _ if self.state.time >= until => self.rigged(work, events),
-            Ended::Came(came) => {
-                let text = format!("{}; you leave the trap unfinished.", self.came_line(came));
-                self.say(text);
-            }
-            Ended::Said | Ended::Done => self.say("You leave the trap unfinished."),
-        }
+        self.craft_work(Task::Rig(Rigging { rig, at }), def.seconds)
     }
 
     /// The work of `work` is done: the cell and the inputs again, the check, and what comes of

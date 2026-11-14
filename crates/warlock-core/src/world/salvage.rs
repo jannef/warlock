@@ -8,7 +8,7 @@
 //!   Refused, taking no time: one worn or wielded ("Take it off first."), one protected from
 //!   harm ([`World::item_protected`]: a quest's, a unique, of Proof; "It will not come apart."),
 //!   unpaid shop goods (`may_loose`), and one with nothing a profession works.
-//! - **Time**: `seconds` (ten minutes), in turns of the `salvage` action ([`World::keep_at`], as
+//! - **Time**: `seconds` (ten minutes), in turns of the `salvage` action ([`World::work`], as
 //!   Temper): interrupted, nothing happens to the item, but the time is spent.
 //! - **The checks**: done, one check for each distinct material among the item's resolved parts
 //!   ([`Stack::parts`], gems included) that a profession works, in first-seen order: two gameplay
@@ -34,7 +34,7 @@
 //! [`Action::Salvage`]: crate::action::Action::Salvage
 //! [`Actor::skill_effect_of`]: super::Actor::skill_effect_of
 
-use super::rest::Ended;
+use super::work::{Job, Task};
 use super::{Spent, World};
 use crate::action::Event;
 use crate::combat;
@@ -43,7 +43,6 @@ use crate::item_parts::ItemPart;
 use crate::object::{self, Stack};
 use crate::skills::{Effect, SkillId, Use};
 use crate::stats::Stat;
-use crate::time::Duration;
 
 /// Whether `stack` has anything to salvage: not a spirit weapon, with a part of a material some
 /// profession works, and not money (coins are never melted down: gold ingots come from salvaged
@@ -82,11 +81,32 @@ pub fn chipped(gems: &Gems, cutting: Cutting) -> Option<Cutting> {
     })
 }
 
-/// An attempt under way: the stack taken apart and how long it takes.
+/// An attempt under way: the stack taken apart.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct Salvaging {
     item: usize,
-    seconds: u32,
+}
+
+impl Job for Salvaging {
+    fn kind(&self) -> ActionKind {
+        ActionKind::Salvage
+    }
+
+    fn on(&self, _: &Content) -> Vec<Option<usize>> {
+        vec![Some(self.item)]
+    }
+
+    fn found(&mut self, now: &[Option<usize>]) {
+        self.item = super::work::one(now);
+    }
+
+    fn leave(&self) -> String {
+        "you leave off your work".into()
+    }
+
+    fn done(&self, w: &mut World, _: &mut Vec<Event>) {
+        w.salvaged(self.item);
+    }
 }
 
 /// One material's check: the material, the profession, whether it was made, and the natural
@@ -126,35 +146,7 @@ impl World {
         let stack = &self.state.player().inventory[item];
         let name = self.lore().title(stack);
         self.say(format!("You set to taking the {name} apart."));
-        Spent::Salvage(Salvaging {
-            item,
-            seconds: self.craft_seconds(rules.seconds),
-        })
-    }
-
-    /// Works turn after turn until the attempt is done or something stops it (module docs): its
-    /// last turn cut short to end exactly when its time is up.
-    pub(super) fn salvage(&mut self, work: Salvaging, events: &mut Vec<Event>) {
-        let on = self.work_on(&[Some(work.item)]);
-        let until = self.state.time + Duration::seconds(u64::from(work.seconds));
-        let turn = self.price_of(self.state.player, ActionKind::Salvage);
-        let ended = self.keep_at(
-            events,
-            |w| w.state.time < until,
-            |w, _| turn.min(w.price_until(until)),
-        );
-        match ended {
-            Ended::Died => {}
-            _ if self.state.time >= until => match self.worked_on_one(&on) {
-                Some(item) => self.salvaged(item),
-                None => self.say("You have nothing left to work on."),
-            },
-            Ended::Came(came) => {
-                let text = format!("{}; you leave off your work.", self.came_line(came));
-                self.say(text);
-            }
-            Ended::Said | Ended::Done => self.say("You leave off your work."),
-        }
+        self.craft_work(Task::Salvage(Salvaging { item }), rules.seconds)
     }
 
     /// The attempt on the stack at `item` is done: the checks, the stock, the item gone, the
@@ -258,7 +250,8 @@ impl World {
             }
         }
         let mut practised: Vec<SkillId> = Vec::new();
-        if let Some(enchanting) = (content.skill_id("enchanting")).filter(|_| caught.checked) {
+        if let Some(enchanting) = (content.enchanting().map(|r| r.skill)).filter(|_| caught.checked)
+        {
             practised.push(enchanting);
             self.train_skill(Use::Salvage, enchanting);
         }

@@ -14,8 +14,8 @@
 //! - **Salvage's affix checks** ([`World::catch_magic`], called by `world/salvage.rs` before its
 //!   material checks): a magic or rare item, identified or not (it is destroyed at once, so
 //!   what its crystals tell matters to no one), makes one check per affix, in its order, two
-//!   gameplay draws each: 2d12 + Willpower's modifier + the talents' Willpower checks +
-//!   Enchanting's [`Effect::Craft`] against `data/enchanting.toml`'s
+//!   gameplay draws each: 2d12 + the modifier of `data/enchanting.toml`'s `stat` (Willpower) +
+//!   the talents' checks of it + its `skill`'s (Enchanting's) [`Effect::Craft`] against
 //!   [`EnchantingRules::salvage_against`]; a natural 2 fails, a natural 24 succeeds. Each check
 //!   made is one crystal of the affix's colour ([`Crystals::colour_of_affix`]). Then a rare of
 //!   item level `[rare] salvage_level` or more draws once for `salvage_chance` %, and a made
@@ -47,7 +47,6 @@ use crate::combat;
 use crate::content::{ActionKind, AffixKind, StatUse};
 use crate::object::Stack;
 use crate::skills::Effect;
-use crate::stats::Stat;
 
 /// What salvage's affix checks caught: the lines to say, in order, the stacks caught, and
 /// whether any check was made (Enchanting's mark).
@@ -130,10 +129,9 @@ impl World {
             return caught;
         };
         let me = self.state.player();
-        let enchanting = content.skill_id("enchanting");
-        let modifier = me.effective_stats(&content).modifier(Stat::Willpower)
-            + me.talent_mods(&content).check(Stat::Willpower)
-            + enchanting.map_or(0, |s| me.skill_effect_of(&content, s, Effect::Craft));
+        let modifier = me.effective_stats(&content).modifier(rules.stat)
+            + me.talent_mods(&content).check(rules.stat)
+            + me.skill_effect_of(&content, rules.skill, Effect::Craft);
         for affix in &magic.affixes {
             let Some(def) = content.affixes().get(&affix.id) else {
                 continue;
@@ -196,10 +194,10 @@ impl World {
         }
         let colour = crystals.colour_of(&content, actor.creature)?;
         let mut left = vec![Stack::new(colour.object, crystals.yield_at(def.level))];
-        // The rare material: a dragon's always, else one chance draw from `level` on and an
-        // even pick between the two (a second draw).
+        // The rare material: a dragon's (`[rare] tag`) always, else one chance draw from `level`
+        // on and an even pick between the two (a second draw).
         let rare = &crystals.rare;
-        if def.tags.iter().any(|t| t == "dragon") {
+        if def.tags.contains(&rare.tag) {
             left.push(Stack::new(rare.dragon, 1));
         } else if def.level >= rare.level && self.state.rng.chance(u32::from(rare.chance)) {
             let pick = self.state.rng.index(rare.materials.len());

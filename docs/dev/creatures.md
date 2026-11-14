@@ -492,14 +492,14 @@ generated floor (rolled by `gear::arm` after it) and a spawn in play (rolled by
 `make_creature`). What falls is unidentified (Scavenger, which told it, was cut by #816). Tests: `world/gear_tests.rs`; the mapgen
 snapshots print each spawn's gear.
 
-Gear condition (#1193): right after each `gear::roll` (one line in `gear::arm`, one in
-`placed_gear`), `world/gear_condition.rs::apply` draws each piece's state ([`Worked`], the
+Gear condition (#1193): right after `gear::roll` in `gear::equip` (gear's last steps, written
+once for `gear::arm` and `placed_gear`, #1494), `world/gear_condition.rs::apply` draws each piece's state ([`Worked`], the
 smith's: damaged with `by` for its word, or one to three improvements, each an attempt) from its
 own stream, `condition/<key>` with the gear stream's key, so the gear's draws and the rest of the
 level do not move. One draw below 1000 per piece against the creature's tribe's odds
 (`data/gear_condition.toml`, `content/gear_condition.rs`: `[default]`, `[[tribe]]` by creature
 tag, first match in file order), then one per improvement for its aspect. Only single pieces of
-arms or armour an anvil or knife could work (`temper::arms`, aspects), never protected ones
+arms or armour an anvil or knife could work (`magic::worked::arms`, aspects), never protected ones
 (`item_damage::protected`, with every object any quest may ask for, fixed or rolled: gear is made
 before a quest is given). The kind is by the main part's material group (`[kinds]`, metal: rust
 and acid): the one the material withstands least, never one at 100; else `ItemHarm::Work`

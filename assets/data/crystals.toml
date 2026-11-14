@@ -25,7 +25,8 @@
 # [rare]      the rare materials (heart_crystal.toml, soul_fetter.toml):
 #   materials        the two objects, drawn at even odds where one is given
 #   level, chance    Soulglass on a creature of `level` or more: a `chance` % draw for one
-#   dragon           the one a creature tagged `dragon` always gives
+#   tag              the creature tag (a dragon's) whose every bearer gives `dragon`
+#   dragon           the one a creature tagged `tag` always gives, never a chance draw
 #   heart            the one Quicken takes beside its crystal to add an affix to a rare
 #                    (world/enchant.rs)
 #   fetter           the one Recast takes to keep the affix chosen while the rest roll anew
@@ -378,6 +379,7 @@ levels = [10, 20]
 materials = ["heart_crystal", "soul_fetter"]
 level = 15
 chance = 10
+tag = "dragon"
 dragon = "heart_crystal"
 heart = "heart_crystal"
 fetter = "soul_fetter"

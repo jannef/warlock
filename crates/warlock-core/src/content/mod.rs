@@ -1520,7 +1520,7 @@ impl Content {
         }
         let path = "data/enchanting.toml";
         if let Some(text) = files.get_optional(path) {
-            content.enchanting = Some(EnchantingRules::parse(path, text)?);
+            content.enchanting = Some(EnchantingRules::parse(path, text, &content)?);
         }
         let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         for (path, id, text) in files.in_dir("scenarios") {
