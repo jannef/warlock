@@ -4,7 +4,15 @@
 //! role wants (a roll on a heal or a damage spell, reach on an aimed one, a longer stay on a
 //! call).
 
-use warlock_core::content::{Content, MAX_SPELL_RANK, SpellData};
+use warlock_core::content::{Content, ContentFiles, MAX_SPELL_RANK, SpellData};
+
+/// The content under the workspace's `assets/`, the test world included (the core embeds none:
+/// #1587).
+fn builtin() -> Content {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets");
+    let files = ContentFiles::from_dir(&root, true).expect("read assets/");
+    Content::load(&files).expect("the content under assets/ loads")
+}
 
 const SPELLS: [&str; 21] = [
     // Abjuration.
@@ -39,7 +47,7 @@ fn spell<'a>(content: &'a Content, id: &str) -> &'a SpellData {
 
 #[test]
 fn every_rank_from_two_to_ten_adds_something() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for id in SPELLS {
         let ranks: Vec<u8> = spell(&content, id)
             .ranks
@@ -53,7 +61,7 @@ fn every_rank_from_two_to_ten_adds_something() {
 
 #[test]
 fn no_degree_a_rank_adds_is_lost_to_the_status_most() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for id in SPELLS {
         let data = spell(&content, id);
         let Some((status, base)) = data.effect.status else {
@@ -68,7 +76,7 @@ fn no_degree_a_rank_adds_is_lost_to_the_status_most() {
 
 #[test]
 fn rank_ten_gains_what_the_spell_is_for_and_is_never_free() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for id in SPELLS {
         let data = spell(&content, id);
         let ten = data.ranks.at(MAX_SPELL_RANK);

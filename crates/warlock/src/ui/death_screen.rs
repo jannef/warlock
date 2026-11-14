@@ -162,7 +162,7 @@ mod tests {
     #[test]
     fn a_death_by_a_status_effect_says_so() {
         // One hit point (Toughness 1), and a bad wound.
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert(
             "scenarios/frail.toml",
             "name = \"Frail\"\nstart_level = \"hub\"\nstats = { toughness = 1 }\n",
@@ -186,7 +186,7 @@ mod tests {
 
     #[test]
     fn it_says_who_died_where_when_and_by_what() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         // Waiting with the lantern lit in the arena's dark corner until the kobolds' archer
         // kills Pip unseen: the first seed it happens with (the fight goes by Pip's birth sign
         // too).
@@ -242,7 +242,7 @@ mod tests {
     #[test]
     fn it_says_when_hunger_killed_the_player() {
         // Starting with nothing to eat, never fainting, starving a hit point a second.
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         let hunger = include_str!("../../../../assets/data/hunger.toml")
             .replace("start = 3600", "start = 0")
             .replace("chance = 5", "chance = 0")

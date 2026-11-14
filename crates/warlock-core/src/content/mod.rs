@@ -777,8 +777,9 @@ pub struct Content {
 }
 
 impl Content {
-    /// Loads the built-in content.
-    pub fn builtin() -> Result<Self, ContentError> {
+    /// Loads the content under `assets/` (tests; the binaries load `warlock-assets`' copy).
+    #[cfg(test)]
+    pub(crate) fn builtin() -> Result<Self, ContentError> {
         Self::load(&ContentFiles::builtin())
     }
 

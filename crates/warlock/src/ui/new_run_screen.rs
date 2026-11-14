@@ -324,7 +324,7 @@ mod tests {
 
     /// The developer builds' screen, with the seed field.
     fn screen() -> NewRunScreen {
-        NewRunScreen::new(&Content::builtin().expect("content"), None)
+        NewRunScreen::new(&warlock_assets::content().expect("content"), None)
     }
 
     fn drawn(screen: &NewRunScreen) -> String {
@@ -396,7 +396,7 @@ mod tests {
 
     #[test]
     fn release_builds_have_a_fresh_seed_and_never_mention_it() {
-        let content = Content::builtin().expect("content");
+        let content = warlock_assets::content().expect("content");
         let mut s = NewRunScreen::new(&content, Some(9_876_543_210));
         // Typed characters set no seed: letters are left to navigation.
         for ch in "42".chars() {
@@ -419,8 +419,7 @@ mod tests {
     /// Ascmearc is left out, so the fixture is the only playable campaign.)
     #[test]
     fn a_campaign_comes_first_and_the_test_world_only_in_developer_builds() {
-        use warlock_core::content::ContentFiles;
-        let mut files = ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.remove("campaigns/ascmearc/");
         let ash = "campaigns/ashland";
         files.insert(
@@ -465,8 +464,7 @@ mod tests {
 
     #[test]
     fn without_races_or_classes_enter_starts_the_scenario() {
-        use warlock_core::content::ContentFiles;
-        let mut files = ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.remove("data/races.toml");
         files.remove("data/names.toml");
         files.remove("data/classes/");

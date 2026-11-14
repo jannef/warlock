@@ -391,9 +391,7 @@ mod tests {
 
     #[test]
     fn glyphs_are_lit_where_they_are_or_at_home() {
-        let content = std::sync::Arc::new(
-            warlock_core::content::Content::builtin().expect("builtin content"),
-        );
+        let content = std::sync::Arc::new(warlock_assets::content().expect("builtin content"));
         let world = warlock_core::World::new(content, "showcase", None).expect("world");
         let view = world.perception();
         let mut light = VisualLight::default();

@@ -212,7 +212,7 @@ mod tests {
 
     #[test]
     fn the_ladders_and_odds_read_the_data() {
-        let content = Content::builtin().expect("content");
+        let content = warlock_assets::content().expect("content");
         let ladders = surprise_ladders(&content);
         assert!(
             ladders.contains("| 100 | 5d6 | +8 | +8 | 50% | 125% | +8 |"),

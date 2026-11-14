@@ -6,10 +6,6 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::path::Path;
 
-mod builtin {
-    include!(concat!(env!("OUT_DIR"), "/builtin_assets.rs"));
-}
-
 /// Raw content files keyed by path relative to the assets root, e.g. `data/creatures/rat.toml`.
 #[derive(Clone, Debug, Default)]
 pub struct ContentFiles {
@@ -20,25 +16,37 @@ pub struct ContentFiles {
 }
 
 impl ContentFiles {
-    /// The content compiled into the binary from `assets/`.
-    pub fn builtin() -> Self {
-        let mut files = Self::default();
-        for (path, text) in builtin::FILES {
-            files.insert(path, text);
+    /// The content under the workspace's `assets/`, the test world included, read from disk once
+    /// per test binary (#1587): the core embeds no content, so a data edit never rebuilds it or
+    /// its tests. The binaries take the embedded copy from `warlock-assets`.
+    #[cfg(test)]
+    pub(crate) fn builtin() -> Self {
+        static ASSETS: std::sync::OnceLock<BTreeMap<String, String>> = std::sync::OnceLock::new();
+        let files = ASSETS.get_or_init(|| {
+            let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets");
+            Self::from_dir(&root, true).expect("read assets/").files
+        });
+        Self {
+            files: files.clone(),
+            read: RefCell::default(),
         }
-        files
     }
 
     /// Reads the `campaigns/`, `data/`, and `vaults/` TOML files under `root`, subdirectories
-    /// included (`data/creatures/kobold.toml`): the same set, under the same paths, as `build.rs`
-    /// embeds from `assets/` (one walk, `content/walk.rs`), the test world left out without the
-    /// `showcase` feature.
-    pub fn from_dir(root: &Path) -> std::io::Result<Self> {
+    /// included (`data/creatures/kobold.toml`): the same set, under the same paths, as
+    /// `warlock-assets` embeds from `assets/` (one walk, `content/walk.rs`), the test world,
+    /// `campaigns/showcase/`, left out unless `showcase`.
+    pub fn from_dir(root: &Path, showcase: bool) -> std::io::Result<Self> {
         let mut files = Self::default();
-        for (rel, path) in walk::walk(root, cfg!(feature = "showcase"), &mut |_| {})? {
+        for (rel, path) in walk::walk(root, showcase, &mut |_| {})? {
             files.insert(&rel, &std::fs::read_to_string(&path)?);
         }
         Ok(files)
+    }
+
+    /// Every file's path, in path order.
+    pub fn paths(&self) -> impl Iterator<Item = &str> {
+        self.files.keys().map(String::as_str)
     }
 
     pub fn insert(&mut self, path: &str, text: &str) {

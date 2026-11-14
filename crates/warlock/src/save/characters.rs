@@ -176,7 +176,6 @@ pub fn played_text(secs: u64, clock: Clock) -> String {
 mod tests {
     use super::*;
     use std::sync::Arc;
-    use warlock_core::content::Content;
 
     #[test]
     fn slugs_keep_letters_and_digits() {
@@ -197,7 +196,7 @@ mod tests {
 
     #[test]
     fn summaries_round_trip_and_describe_the_run() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let world = World::new(content, "showcase", None).expect("world");
         let summary = Summary::of(&world, 1_781_654_400);
         assert_eq!(summary.name, "Tamsin");
@@ -212,7 +211,7 @@ mod tests {
 
     #[test]
     fn a_run_on_the_endless_branch_is_summarised_by_its_floor() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let world = World::new(content, "grundleas", Some(1)).expect("world");
         let summary = Summary::of(&world, 1_781_654_400);
         assert_eq!(summary.place, "Grundlēas 1");

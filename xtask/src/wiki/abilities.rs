@@ -581,7 +581,7 @@ mod tests {
 
     #[test]
     fn the_song_tables_read_the_data() {
-        let content = Content::builtin().expect("content");
+        let content = warlock_assets::content().expect("content");
         let songs = songs(&content);
         assert!(
             songs.contains("[Inspire](abilities.md#ability-inspire)"),

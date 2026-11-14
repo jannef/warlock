@@ -813,7 +813,7 @@ mod tests {
     use std::sync::LazyLock;
 
     static CONTENT: LazyLock<Content> =
-        LazyLock::new(|| Content::builtin().expect("builtin content"));
+        LazyLock::new(|| warlock_assets::content().expect("builtin content"));
 
     fn draft(seed: u64) -> Draft {
         let showcase = CONTENT.scenario("showcase").expect("showcase");
@@ -1171,7 +1171,7 @@ mod tests {
         }
         // The scores shown are the ones the run starts with.
         let spec: CharacterSpec = "dwarf,female,warrior".parse().expect("a character");
-        let content = std::sync::Arc::new(Content::builtin().expect("content"));
+        let content = std::sync::Arc::new(warlock_assets::content().expect("content"));
         let world = warlock_core::World::with_character(content, "showcase", Some(1), Some(&spec))
             .expect("world");
         let view = world.perception();

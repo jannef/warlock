@@ -528,12 +528,12 @@ pub(super) fn draw_cell_fx(
 mod tests {
     use super::*;
     use std::sync::Arc;
-    use warlock_core::content::{Content, ContentFiles};
+    use warlock_core::content::Content;
     use warlock_core::{Action, AttackKind, Dir, World};
 
     /// A lit room with a brazier and water, and a door to a side room with the same.
     fn room() -> World {
-        let mut files = ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert(
             "levels/fx.toml",
             "name = \"Fx\"\nambient = [255, 255, 255, 0]\nmap = '''\n\
@@ -575,7 +575,7 @@ mod tests {
 
     #[test]
     fn running_water_foams_where_its_flow_runs_into_something_else() {
-        let mut files = ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert(
             "levels/foam.toml",
             "name = \"Foam\"\nambient = [255, 255, 255, 0]\nmap = '''\n\
@@ -640,7 +640,7 @@ mod tests {
 
     #[test]
     fn perceived_attacks_set_off_sparkles_and_shots_fly_as_missiles() {
-        let content = Arc::new(Content::builtin().expect("builtin content"));
+        let content = Arc::new(warlock_assets::content().expect("builtin content"));
         let mut world = World::new(content, "arena", None).expect("arena");
         let mut seen = Vec::new();
         let mut missiles = 0;

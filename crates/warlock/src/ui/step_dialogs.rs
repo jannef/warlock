@@ -254,7 +254,7 @@ mod tests {
 
     #[test]
     fn leaving_a_shop_owing_and_selling_open_dialogs() {
-        let content = std::sync::Arc::new(warlock_core::content::Content::builtin().unwrap());
+        let content = std::sync::Arc::new(warlock_assets::content().unwrap());
         let mut world = warlock_core::World::new(content, "courtyard", None).expect("run");
         let walk = |world: &mut warlock_core::World, actions: &str| {
             for action in warlock_core::action::parse_actions(actions).expect("actions") {
@@ -340,7 +340,7 @@ mod tests {
         use std::sync::Arc;
         use warlock_core::World;
         use warlock_core::action::parse_actions;
-        let content = Arc::new(warlock_core::content::Content::builtin().unwrap());
+        let content = Arc::new(warlock_assets::content().unwrap());
         let mut world = World::new(content, "traps", None).expect("the trap hall");
         // Below the arrow trap at the west end of the proving row.
         for action in parse_actions("move:NW*14 move:W*7 move:N*2").unwrap() {
@@ -362,7 +362,7 @@ mod tests {
     /// A run of `scenario` that starts with `nutrition`, or if that is below 0 (no run starts so
     /// hungry), has just begun to starve.
     fn hungry_world(scenario: &str, nutrition: i32) -> warlock_core::World {
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         let hunger = include_str!("../../../../assets/data/hunger.toml")
             .replace("start = 3600", &format!("start = {}", nutrition.max(0)));
         files.insert("data/hunger.toml", &hunger);
@@ -414,7 +414,7 @@ mod tests {
 
     /// A run of `scenario` after `walk`.
     fn walked_to(scenario: &str, walk: &str) -> warlock_core::World {
-        let content = std::sync::Arc::new(warlock_core::content::Content::builtin().unwrap());
+        let content = std::sync::Arc::new(warlock_assets::content().unwrap());
         let mut world = warlock_core::World::new(content, scenario, None).expect("a run");
         for action in warlock_core::action::parse_actions(walk).unwrap() {
             world.apply(&action);
@@ -478,7 +478,7 @@ mod tests {
         );
         assert_eq!(step_screen(&view, Dir::S), None, "plain floor");
         // Untrained, no screen: the step goes to the rules, which say what it needs.
-        let content = std::sync::Arc::new(warlock_core::content::Content::builtin().unwrap());
+        let content = std::sync::Arc::new(warlock_assets::content().unwrap());
         let thief: warlock_core::character::CharacterSpec = "human,male,thief".parse().unwrap();
         let mut world =
             warlock_core::World::with_character(content, "forge", None, Some(&thief)).unwrap();
@@ -510,7 +510,7 @@ mod tests {
     /// The spring's cell beside the player, in the dark: they neither see nor remember it.
     #[test]
     fn what_the_player_does_not_know_never_asks() {
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert(
             "levels/dark_spring.toml",
             "name = \"Dark\"\nambient = [0, 0, 0, 0]\nmap = '''\n#####\n#@S.#\n#####\n'''\n\
@@ -533,7 +533,7 @@ mod tests {
         use std::sync::Arc;
         use warlock_core::World;
         use warlock_core::action::parse_actions;
-        let content = Arc::new(warlock_core::content::Content::builtin().unwrap());
+        let content = Arc::new(warlock_assets::content().unwrap());
         let mut world = World::new(content, "traps", None).expect("the trap hall");
         // Below the west closet's door, which shows its arrow trap: walking into the door opens
         // it (and sets the trap off) without asking, as `o` does.

@@ -1927,7 +1927,7 @@ cases! {
 
 /// The built-in content, loaded once for every case.
 static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+    LazyLock::new(|| Arc::new(warlock_assets::content().expect("content")));
 
 /// The snapshot of one of the [`cases!`].
 fn check(case: &Case) {
@@ -1940,7 +1940,7 @@ fn check(case: &Case) {
 /// quest's prerequisite (the barrow's heart, deep in Cealdhlāw) so a short walk reaches her.
 #[test]
 fn quest_refused_as_too_early() {
-    let mut files = warlock_core::content::ContentFiles::builtin();
+    let mut files = warlock_assets::files();
     let path = "campaigns/ascmearc/data/quests/wulfrun.toml";
     let quests = include_str!("../../../../assets/campaigns/ascmearc/data/quests/wulfrun.toml");
     let lifted = quests.replacen("requires = \"barrow_heart\"\n", "", 1);
@@ -1962,7 +1962,7 @@ fn quest_refused_as_too_early() {
 /// (`world/strange_spirit_tests.rs`): the level-up it brings would cover this screen.
 #[test]
 fn the_oath_topic() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = Arc::new(warlock_assets::content().expect("content"));
     let case = Case {
         name: "dialogue-calling-topic",
         character: Some("human,male,bard"),
@@ -1977,7 +1977,7 @@ fn the_oath_topic() {
 /// hint's row, in words; the rotting drake above it says nothing more.
 #[test]
 fn looking_with_knowledge() {
-    let mut files = warlock_core::content::ContentFiles::builtin();
+    let mut files = warlock_assets::files();
     files.insert(
         "levels/look_lore.toml",
         "name = \"Lore\"\nambient = [255, 255, 255, 0]\nmap = '''\n\
@@ -2012,7 +2012,7 @@ fn looking_with_knowledge() {
 /// fastening once the way is told (the owner, #907 Q4).
 #[test]
 fn giving_with_two_kept_beasts_beside() {
-    let mut files = warlock_core::content::ContentFiles::builtin();
+    let mut files = warlock_assets::files();
     let witch = include_str!("../../../../assets/data/classes/10-witch.toml");
     let trained = witch
         .replacen("handle_animal = { chance = 25, dice = \"2d4\" }, ", "", 1)
@@ -2059,7 +2059,7 @@ fn giving_with_two_kept_beasts_beside() {
 /// A run on the overworld beside the Hall that starts with `nutrition` (spec §8 "Hunger"), or if
 /// that is below 0 (no run starts so hungry), has just begun to starve.
 fn on_the_road(nutrition: i32) -> (Case, Arc<Content>) {
-    let mut files = warlock_core::content::ContentFiles::builtin();
+    let mut files = warlock_assets::files();
     let hunger = include_str!("../../../../assets/data/hunger.toml")
         .replace("start = 3600", &format!("start = {}", nutrition.max(0)));
     files.insert("data/hunger.toml", &hunger);
@@ -2113,7 +2113,7 @@ const OFFERS: [(&str, &str, &str); 2] = [
 /// #975: the question a step into each asks.
 #[test]
 fn walking_into_what_offers_an_action_as_text() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = Arc::new(warlock_assets::content().expect("content"));
     for (name, scenario, actions) in OFFERS {
         let case = Case {
             name,
@@ -2130,7 +2130,7 @@ fn walking_into_what_offers_an_action_as_text() {
 /// shown its screen; a thief, untrained, is told what it takes.
 #[test]
 fn walking_into_an_anvil_as_text() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = Arc::new(warlock_assets::content().expect("content"));
     for (name, character) in [
         ("anvil-opens-metalcraft", None),
         ("anvil-untrained", Some("human,male,thief")),
@@ -2150,7 +2150,7 @@ fn walking_into_an_anvil_as_text() {
 /// #1019: a step into deep water asks, always, in the one dialog. Stay back is selected first.
 #[test]
 fn diving_into_deep_water_as_text() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = Arc::new(warlock_assets::content().expect("content"));
     let case = Case {
         name: "deep-water-dialog",
         scenario: "quarry",
@@ -2312,7 +2312,7 @@ weight = 1
 stance = "peaceful"
 group = [{ creature = "hermit", count = "1" }]
 "#;
-    let mut files = warlock_core::content::ContentFiles::builtin();
+    let mut files = warlock_assets::files();
     files.insert("campaigns/showcase/data/encounters/test.toml", TABLE);
     Arc::new(Content::load(&files).expect("content"))
 }

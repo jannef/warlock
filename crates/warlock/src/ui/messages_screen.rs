@@ -150,7 +150,7 @@ mod tests {
     use crate::input::KeyBinding;
     use bevy::input::keyboard::KeyCode;
     use std::sync::Arc;
-    use warlock_core::content::Content;
+
     use warlock_core::{Action, World};
 
     fn press(nav: Nav) -> Press {
@@ -180,7 +180,7 @@ mod tests {
     /// A showcase run with many messages: the welcome, then a door opened and closed again and
     /// again (each a message of its own, as they alternate).
     fn chatty() -> World {
-        let content = Arc::new(Content::builtin().expect("built-in content loads"));
+        let content = Arc::new(warlock_assets::content().expect("built-in content loads"));
         let mut world = World::new(content, "showcase", None).expect("scenario starts");
         for action in ["move:N", "move:N", "move:N"] {
             world.apply(&action.parse::<Action>().expect("parses"));

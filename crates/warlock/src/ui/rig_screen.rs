@@ -143,11 +143,10 @@ mod tests {
     use std::sync::Arc;
     use warlock_core::World;
     use warlock_core::character::CharacterSpec;
-    use warlock_core::content::Content;
 
     #[test]
     fn a_letter_picks_its_rig_and_a_lacking_one_stays() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let spec: CharacterSpec = "human,female,craftsperson".parse().expect("a character");
         let mut world =
             World::with_character(content, "showcase", None, Some(&spec)).expect("world");

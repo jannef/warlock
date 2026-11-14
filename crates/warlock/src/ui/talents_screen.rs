@@ -253,7 +253,6 @@ mod tests {
     use super::*;
     use std::sync::Arc;
     use warlock_core::World;
-    use warlock_core::content::Content;
 
     fn text(screen: &TalentsScreen, rows: u32) -> String {
         let mut console = Console::default();
@@ -271,7 +270,7 @@ mod tests {
 
     #[test]
     fn lists_the_players_talents_then_the_others_with_their_needs() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let spec = "dwarf,male,warrior".parse::<warlock_core::character::CharacterSpec>();
         let spec = spec
             .expect("a character")

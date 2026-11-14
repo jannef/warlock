@@ -156,7 +156,7 @@ mod tests {
     use crate::ui::menu::Nav;
 
     fn content() -> Content {
-        Content::builtin().expect("content")
+        warlock_assets::content().expect("content")
     }
 
     fn draft(content: &Content) -> Draft {

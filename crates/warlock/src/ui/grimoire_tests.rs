@@ -8,12 +8,12 @@ use super::screen_snapshots::{BASE, Case, press_keys, shown, start};
 use crate::game::Game;
 use bevy::prelude::App;
 use std::sync::Arc;
-use warlock_core::content::{Content, ContentFiles};
+use warlock_core::content::Content;
 
 /// A quiet lit hall, the player a human woman of `class` with `carry` in the pack (as a
 /// scenario's `carry`).
 pub(super) fn hall(carry: &str, class: &str) -> Arc<Content> {
-    let mut files = ContentFiles::builtin();
+    let mut files = warlock_assets::files();
     files.insert(
         "levels/hall.toml",
         "name = \"Hall\"\nambient = [255, 255, 255, 0]\nmap = '''\n#######\n#.....#\n#..@..#\n\
