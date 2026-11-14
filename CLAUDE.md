@@ -262,7 +262,7 @@ Known differences from older Bevy:
 A successful compile does not verify anything visual. Before opening a PR:
 1. `cargo fmt`, clippy with `-D warnings`, `cargo test --workspace`.
 2. Simulation changes: add or update unit, property, or snapshot tests in `warlock-core`
-   (`insta` snapshots live in `crates/warlock-core/src/snapshots/`, `src/mapgen/snapshots/`, and
+   (`insta` snapshots live in `crates/warlock-core/src/snapshots/`, `src/dump/snapshots/`, `src/mapgen/snapshots/`, and
    `src/mapgen/local/snapshots/`, the screens' in `crates/warlock/src/ui/snapshots/`; review with `cargo insta review` or `INSTA_UPDATE=always`, and read the diff). Look at the
    result with `warlock-cli dump` (or `gen` for a generated level), and check determinism with
    `replay --create` then `replay --verify`.
