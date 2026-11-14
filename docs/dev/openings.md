@@ -3,8 +3,9 @@
 The Openings pool (`data/resources.toml`, `docs/dev/resources.md` "Openings") remembers whose
 guard its points are in: the **mark**. Design: `docs/design/thief-openings.md` (#1449); this
 file covers phases O1 (#1461: the mark, the kill that carries, and the builds), O2 (#1462:
-a feint builds), and O3 (#1463: Exploit at level 1, Low blow its first increment, Trained wind
-off the thief's table). Spec §8 "Resources", "Class abilities", and "Surprise and sneak
+a feint builds), O3 (#1463: Exploit at level 1, Low blow its first increment, Trained wind
+off the thief's table), O4 (#1464: the ladder's top, the finisher folded into Exploit, the
+balance probe), and O5 (#1465: Thrown exploit at level 18). Spec §8 "Resources", "Class abilities", and "Surprise and sneak
 attacks".
 
 ## Data
@@ -119,7 +120,7 @@ cap on n beyond the pool's maximum (Of Guile's eight openings are 8 × the dice 
 | 32 | Improved sneak attack (keeps `ambush 2d6`) | a second `exploit_dice` 1d6: 2d6 an opening |
 | 60 | Master thief (keeps `ambush_threat 2`) | threat 4 lower, never below 2 (`exploit_threat`); with five or more spent a critical whenever it hits, no confirmation (`sure_at = 5`: the finisher, folded in; `ClassActive::MasterThief` and `use:master_thief` are gone, O4 #1464) |
 
-Trained wind is off the thief's table (a save holding it keeps it); the pool comes with the first
+Trained wind is gone from the content (O3); the pool comes with the first
 active weapon rank (`fight.rs::grant_stamina`).
 
 ## What the player sees

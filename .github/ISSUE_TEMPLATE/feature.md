@@ -30,5 +30,5 @@ only the GPU can show it, CLAUDE.md "Golden screenshots"); `cargo xtask wiki`. -
 
 ## Docs
 
-<!-- The spec section, the docs/dev/ topic, CLAUDE.md if commands change, and the wiki page
+<!-- The spec section, the docs/dev/ topic, docs/dev/cli.md if flags, dump layers, or actions change, CLAUDE.md if commands change, and the wiki page
 (a generated table when the fact lives in data). -->

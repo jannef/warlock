@@ -180,7 +180,7 @@ read it). The scroll of identify answers `ScreenAction::Replace(ScreenName::Iden
 noting the scroll (`ObjectScreen::looked`; `Screens::replace` reads it before closing), and the
 identify list (`ObjectList::Identify(IdentifyBy::Scroll(scroll))`, the unidentified stacks) acts
 `Action::Read { item: scroll, target: Item(i) }`; cast from the abilities menu, Identify opens the
-same list (`IdentifyBy::Spell`, `Screens::open_identify_spell`), which acts
+same list (`IdentifyBy::Spell`, `Screens::open_identify(IdentifyBy::Spell)`), which acts
 `Action::CastOn("identify", i)`. When the cast told something new (`World::identify` gave `Identified::Now`) `cast_identify` also sends `Event::Identified { item }` (the stack's position after the scroll was used up), and `screens::show_identified` opens that stack's description screen once the action is done. Appraise, Merchant's eye, decipher, and the dev `identify` send none. Spell visuals are the traps' (`ui/spells.rs`
 draws `Event::Spell`; a burst's origin is the reader, so it flies there first).
 

@@ -59,7 +59,7 @@ wiki's effect text appends "while raging".
 | `protection` | `Actor::protection`, with the creature type's natural Protection |
 | `threat`, `reroll_fumble` | `Actor::stanced` (every attack profile; never below 3), `World::resolve` → `combat::strike_with` |
 | `streak` | `World::resolve` → `World::relentless` (`world/gifts.rs`): +1 to hit a blow in the streak, to `max`, from `Actor::streak` (saved and hashed, left out while `None`) |
-| `ease`, `poison_spares_scores` | `World::live` (`Effect::until_eases_at`/`advance_at`), `Actor::penalty` (`Effects::penalty_unless`) |
+| `ease`, `poison_spares_scores` | `World::live` (`Effect::until_eases`/`until_eases_every`), `Actor::penalty` (`Effects::penalty_for`) |
 | `disease_checks` | `World::expose` and `disease_turn` |
 | `swimmer` | `World::step_price` (wading terrain: `world/stars.rs::wading`), `World::wade` |
 | `speed_percent` | `Actor::speed`, read by the scheduler, `price_until`, rest, and wading time |
