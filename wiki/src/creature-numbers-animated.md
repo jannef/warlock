@@ -6,6 +6,8 @@ column means is on [Creatures in numbers](creature-numbers.md), and how each cre
 
 ## Stats and skills
 
+{{#include generated/creature-levels.md:animated}}
+
 {{#include generated/creature-stats.md:animated}}
 
 ## Hit points, Defence, and resistances
@@ -19,5 +21,7 @@ column means is on [Creatures in numbers](creature-numbers.md), and how each cre
 ## Pace, senses, and size
 
 {{#include generated/creature-senses.md:animated}}
+
+{{#include generated/creature-size.md:animated}}
 
 See also: [Animated objects](animated.md) and [Mimics](mimics.md).

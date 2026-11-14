@@ -139,7 +139,7 @@ fans out a quarter turn wide from the dragon toward you, like
 [Burning hands](magic.md#spell-burning-hands) but far longer.
 
 Everyone in the cone is struck by one roll of its damage, with no roll [to hit](combat.md#hitting).
-[Evasion](talents.md#talent-evasion) halves it, and
+[Evasion](talents-body.md#talent-evasion) halves it, and
 [resistance](damage-types.md#armour-and-resistance) takes its share. The dragon's own kind is
 immune to its element and takes nothing.
 
@@ -178,7 +178,7 @@ pound what is.
 **How a burst strikes.** A burst is centred on the creature's own cell. It reaches everyone within
 its radius and in its line, except creatures of its own kind. One roll of its damage strikes each
 of them in full, with no roll [to hit](combat.md#hitting) and no halving at the edge.
-[Evasion](talents.md#talent-evasion) halves it, and
+[Evasion](talents-body.md#talent-evasion) halves it, and
 [resistance](damage-types.md#armour-and-resistance) takes its share. It strikes your
 [allies](allies.md) and other creatures as readily as you.
 

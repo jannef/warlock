@@ -226,10 +226,10 @@ from then on, even if you had never seen one.
 
 ## Talents
 
-- [Thrifty drinker](talents.md#talent-thrifty-drinker) (Delver): one potion in four is not used
+- [Thrifty drinker](talents-exploring.md#talent-thrifty-drinker) (Delver): one potion in four is not used
   up, elixirs included. Items that keep potions add their percent to the talent's chance, up to
   50 % in all.
-- [Lasting draughts](talents.md#talent-lasting-draughts) (Vigour, needs
+- [Lasting draughts](talents-body.md#talent-lasting-draughts) (Vigour, needs
   [Toughness](stats.md#stat-toughness) 13): boost and vision potions last half again as long:
   15 minutes a degree for a boost, 45 minutes for cat's, owl's, or moth's eyes.
 

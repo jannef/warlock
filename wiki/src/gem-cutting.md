@@ -10,7 +10,7 @@ something comes into view, you stop, the gem is untouched, and the time is lost.
 **You need:**
 - **Skill:** Jewelcraft. [Gnomes](races.md#race-gnome) start with
   it, a [craftsperson](class-craftsperson.md#trades) may take the
-  [Gemcutter](talents.md#talent-gemcutter) trade, and a [commoner](class-commoner.md) may have it
+  [Gemcutter](talents-origins.md#talent-gemcutter) trade, and a [commoner](class-commoner.md) may have it
   as their trade (others: [Which skills you start with](skills.md#which-skills-you-start-with)). [Old Tregear](npcs.md#old-tregear) in Gimmwīc teaches it
   for 1500 gold.
 - **Stock:** a loose gem you carry.

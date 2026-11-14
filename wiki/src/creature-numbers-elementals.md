@@ -7,6 +7,8 @@ numbers](creature-numbers.md), and how each creature behaves on
 
 ## Stats and skills
 
+{{#include generated/creature-levels.md:elementals}}
+
 {{#include generated/creature-stats.md:elementals}}
 
 ## Hit points, Defence, and resistances
@@ -20,5 +22,7 @@ numbers](creature-numbers.md), and how each creature behaves on
 ## Pace, senses, and size
 
 {{#include generated/creature-senses.md:elementals}}
+
+{{#include generated/creature-size.md:elementals}}
 
 See also: [How creatures fight](creature-bodies.md) and [Damage types](damage-types.md).

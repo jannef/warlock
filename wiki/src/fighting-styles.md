@@ -125,7 +125,7 @@ The *active* ones are used from the menu for [stamina](stances.md#stamina) and t
 
 Two abilities that do the same thing never add up:
 
-- A [riposte](fighting-styles.md#style-ability-riposte) from [Duelist](fighting-styles.md#style-duelist) and one from a [talent](talents.md#talent-riposte) are one riposte.
+- A [riposte](fighting-styles.md#style-ability-riposte) from [Duelist](fighting-styles.md#style-duelist) and one from a [talent](talents-body.md#talent-riposte) are one riposte.
 - [Staggered](status-list.md#status-staggered) is never more than one slowed action, however many blows staggered the foe.
 - A new [pin](status-list.md#status-pinned) keeps the longer of the two and never adds.
 - [Rend](fighting-styles.md#style-ability-rend) comes once per attack, when both blades hit and the foe lives. A [shield bash](abilities.md#ability-shield-bash) is not a second

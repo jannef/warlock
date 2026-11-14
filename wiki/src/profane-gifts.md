@@ -123,7 +123,7 @@ Some gifts change more than your numbers:
   besides. [Barrow-eyed](#talent-barrow-eyed) and [Mere-eyed](#talent-mere-eyed) are its lesser
   forms, and [Dim-eyed](#talent-dim-eyed) never comes with any of them.
 - **Kin.** [Rat-king's court](#talent-rat-kings-court) makes vermin neutral to you, as
-  [Beast-friend](talents.md#talent-beast-friend) does animals, until you attack one: from then on
+  [Beast-friend](talents-exploring.md#talent-beast-friend) does animals, until you attack one: from then on
   that kind of creature is hostile again, for good. No [drawn
   quest](quests.md#drawn-quests) asks you to kill a kind it keeps neutral.
 - **Mana.** [Fell-minded](#talent-fell-minded) gives you a quarter more

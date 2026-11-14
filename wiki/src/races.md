@@ -89,7 +89,7 @@ Each race's gifts and flaws beyond its stats, exactly:
 
 ## Racial talents
 
-Each race except the humans has [talents](talents.md#racial-talents) that only it may pick, in the
+Each race except the humans has [talents](talents-origins.md#racial-talents) that only it may pick, in the
 Racial tree. Humans get Versatile instead: one more talent at creation and at level 30.
 
 {{#include generated/talents-racial.md}}

@@ -61,7 +61,7 @@ identified or not. It can give:
 
 - a larger **maximum**, by so many points;
 - a faster **pace**, by so many percent, added to what talents add.
-  [Steady breathing](talents.md#talent-steady-breathing)'s 50 % and an item's 30 % make 180 %;
+  [Steady breathing](talents-fighting.md#talent-steady-breathing)'s 50 % and an item's 30 % make 180 %;
 - for stamina, every active weapon ability **costing** so many points less. This adds to
   [Drillmaster](class-warrior.md#talent-drillmaster)'s discount, and a cost never goes below 1;
 - so many more points on a **kill** (*of the Hunt*), never above the maximum. This follows the same

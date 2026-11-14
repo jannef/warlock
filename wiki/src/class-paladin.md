@@ -70,7 +70,7 @@ blow, shot, or throw of yours that hits the unholy, smites too, rolls 1d6 more o
 kind. It is [resisted](damage-types.md#armour-and-resistance) but never soaked by Protection. From
 [Avatar](#talent-avatar) on, it lands on every creature you hit.
 
-**[Zealot](talents.md#talent-zealot)** is the one talent pick on the pool, from level 6. Every blow
+**[Zealot](talents-body.md#talent-zealot)** is the one talent pick on the pool, from level 6. Every blow
 that hits you builds 2 zeal instead of 1, for a paladin who stands in the doorway and takes them.
 
 **Which side you are on.** [Lay on hands](abilities.md#ability-lay-on-hands), the smites, and

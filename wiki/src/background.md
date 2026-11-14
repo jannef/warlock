@@ -59,7 +59,7 @@ A sentence may give or take:
 - **Marks** in a [weapon skill](weapon-skills.md#raising-a-weapon-skill), never a rank.
 - **A nudge** to your starting [alignment](alignment.md).
 - **A [talent](talents.md#choices-and-prerequisites)**, for life, whatever it would ask of you (the
-  flux sentence gives [Hardy](talents.md#talent-hardy)). It is never one you hold already: a
+  flux sentence gives [Hardy](talents-body.md#talent-hardy)). It is never one you hold already: a
   sentence that would give one is not told to you. If your class's table names that talent later,
   it gives you a [talent pick](talents.md) in its place at that level. The Talents page marks it
   "(story)".
@@ -70,10 +70,10 @@ Nothing limits what a story gives or takes in all. A kind story may give a lot, 
 a lot, and nothing protects you from either. The game tells you the story in words only; your
 scores, your pack, and your skills show what it did.
 
-The [heritage talents](talents.md#heritage-only-at-character-creation) are not paid twice. With
-[Family wealth](talents.md#talent-family-wealth), your parents are always the old money the talent
+The [heritage talents](talents-origins.md#heritage-only-at-character-creation) are not paid twice. With
+[Family wealth](talents-origins.md#talent-family-wealth), your parents are always the old money the talent
 gave you, and the story gives no more gold for it. With
-[Father's sword](talents.md#talent-fathers-sword), the story tells of the blade you carry, and gives
+[Father's sword](talents-origins.md#talent-fathers-sword), the story tells of the blade you carry, and gives
 no other heirloom.
 
 ## How rare

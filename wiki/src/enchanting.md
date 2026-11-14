@@ -10,7 +10,7 @@ give.
 **You need:**
 - **Skill:** Enchanting. A
   [craftsperson](class-craftsperson.md#trades) may take the
-  [Spellwright](talents.md#talent-spellwright) trade; [wizards](class-wizard.md),
+  [Spellwright](talents-origins.md#talent-spellwright) trade; [wizards](class-wizard.md),
   [witches](class-witch.md), and [aristocrats](class-aristocrat.md) may start with it
   ([Which skills you start with](skills.md#which-skills-you-start-with)). No one teaches it.
 - **Stock:** magic crystals.

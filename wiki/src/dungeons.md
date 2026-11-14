@@ -126,7 +126,7 @@ A newcomer appears somewhere you cannot see, never within 8 steps of you. It nev
 [long rest](resting.md#how-resting-works) below lets it refill. A floor you are not on is frozen:
 nothing comes while you are away, and the clock starts again when you come back.
 
-The [Delver](talents.md#delver) tree's [Quiet delver](talents.md#talent-quiet-delver) talent puts
+The [Delver](talents-exploring.md#delver) tree's [Quiet delver](talents-exploring.md#talent-quiet-delver) talent puts
 off each next arrival twice as long.
 
 ## The dungeons

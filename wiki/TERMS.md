@@ -38,7 +38,7 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A status effect (Staggered, Winded, Raging, Hasted, …) | `status-list.md#status-ID` | `status-list.md#status-staggered` |
 | A disease | `diseases.md#disease-ID` | `diseases.md#disease-filth-fever` |
 | A skill (Stealth, Open lock, Spot, …) | `skills.md#skill-ID` | `skills.md#skill-open-lock` |
-| A talent | `talents.md#talent-ID`; a birth sign's gift `horoscope.md#talent-ID`; a class ability `class-CLASS.md#talent-ID` (its first class's table, on that class's page; a prestige class's own, `prestige-classes.md#talent-ID`); a profane gift `profane-gifts.md#talent-ID` | `talents.md#talent-hardy`, `horoscope.md#talent-fleet-footed`, `class-berserker.md#talent-rage` |
+| A talent | its tree group's page, `talents-GROUP.md#talent-ID` (`origins`: Heritage, Crafts, Racial; `body`: Vigour, Might, Finesse, Grit; `fighting`: Weaponcraft, Guard; `exploring`: Shadow, Wayfarer, Delver; `mind`: Scholar, Spellcraft); a birth sign's gift `horoscope.md#talent-ID`; a class ability `class-CLASS.md#talent-ID` (its first class's table, on that class's page; a prestige class's own, `prestige-classes.md#talent-ID`); a profane gift `profane-gifts.md#talent-ID` | `talents-body.md#talent-hardy`, `horoscope.md#talent-fleet-footed`, `class-berserker.md#talent-rage` |
 | An ability in the abilities menu (class abilities, sign actives, spells, skill uses) | `abilities.md#ability-ID` | `abilities.md#ability-lay-on-hands` |
 | A spell | `magic.md#spell-ID` | `magic.md#spell-fireball` |
 | A damage type (fire, slashing, …) | `damage-types.md#damage-ID` | `damage-types.md#damage-fire` |
@@ -196,8 +196,8 @@ above.
 | The great cycle | `horoscope.md#the-great-cycle` |
 | Alignment, good, evil, band | `alignment.md`, `alignment.md#what-moves-you` |
 | Talent, prerequisites | `talents.md`, `talents.md#choices-and-prerequisites` (a talent: its row) |
-| Racial talents | `talents.md#racial-talents` |
-| Trade, Crafts, the tools of the trade (Smith, Wright, Gemcutter, Brewster, Pitman, Wortcunner, Spellwright) | `talents.md#crafts-a-craftspersons-trades` (a trade: its row) |
+| Racial talents | `talents-origins.md#racial-talents` |
+| Trade, Crafts, the tools of the trade (Smith, Wright, Gemcutter, Brewster, Pitman, Wortcunner, Spellwright) | `talents-origins.md#crafts-a-craftspersons-trades` (a trade: its row) |
 | The craftsperson's two trades at creation, Time served | `class-craftsperson.md#trades` |
 | Eye for the make, reading an item's make | `class-craftsperson.md#eye-for-the-make` |
 | Make do and mend, mending in the field | `class-craftsperson.md#make-do-and-mend` |
@@ -205,7 +205,7 @@ above.
 | Master's hand, grades and cuts sooner | `class-craftsperson.md#masters-hand` |
 | Quick hands, every craft in half the time | `class-craftsperson.md#quick-hands` |
 | Waste not, nothing lost in a craftsperson's hands | `class-craftsperson.md#waste-not` |
-| A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents.md#delver` |
+| A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents-exploring.md#delver` |
 | Class abilities | `classes.md#levels`, `abilities.md` |
 | The bard, a bard's cap at 30, Travelled hands, Jack of all trades | `class-bard.md` |
 | Songs (Inspire, the Lullaby), singing, a song's degrees, shaking a song off, Virtuoso | `abilities.md#songs` |

@@ -134,7 +134,7 @@ teaches an active ("You learn to pace your breath."). Creatures use no actives.
 
 - **[Lunge](weapon-skills.md#weapon-ability-lunge)** strikes the first foe within 2 cells in the direction. The cell between must be empty
   and passable (a closed [door](doors.md) blocks), and nothing on it is sprung. A foe struck across the empty
-  cell brings no free blows (no [riposte](talents.md#talent-riposte), no [cleave](talents.md#talent-cleave)).
+  cell brings no free blows (no [riposte](talents-body.md#talent-riposte), no [cleave](talents-body.md#talent-cleave)).
 - **[Piercing shot](weapon-skills.md#weapon-ability-piercing-shot)**: a hit flies on along its line and attacks the next one there, whoever it
   is, once.
 - **[Sunder](weapon-skills.md#weapon-ability-sunder)** and **[Gap shot](fighting-styles.md#style-ability-gap-shot)** ignore all [Protection](combat.md#protection). Against a foe with none, they cost the same
@@ -145,8 +145,8 @@ teaches an active ("You learn to pace your breath."). Creatures use no actives.
 
 {{#include generated/weapon-abilities.md}}
 
-The [Early mastery](talents.md#talent-early-mastery) talent teaches every one of them a rank sooner. So do the talents that
-make you fight as someone more practised ([Stylist](talents.md#talent-stylist), [Fencing](class-aristocrat.md#talent-fencing)). A status these abilities leave,
+The [Early mastery](talents-fighting.md#talent-early-mastery) talent teaches every one of them a rank sooner. So do the talents that
+make you fight as someone more practised ([Stylist](talents-fighting.md#talent-stylist), [Fencing](class-aristocrat.md#talent-fencing)). A status these abilities leave,
 such as [Bleeding](status-effects.md#bleeding) or [Staggered](status-list.md#status-staggered), is a [status effect](status-effects.md) like any other: a [staggered](status-list.md#status-staggered) foe's next
 action takes half again as long. A brace and a point-blank shot are [free blows](stances.md#free-blows), so they bring
 no free blows of their own.

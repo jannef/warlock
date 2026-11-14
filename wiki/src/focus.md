@@ -7,7 +7,7 @@ while you hold 2 focus spends them and takes 10 % less time. A [volley](class-ra
 
 ## The talent on it
 
-**[Steady hand](talents.md#talent-steady-hand)** (Weaponcraft; [ranger](class-ranger.md), level
+**[Steady hand](talents-fighting.md#talent-steady-hand)** (Weaponcraft; [ranger](class-ranger.md), level
 12): focus comes back half again as fast, a point every 4 seconds instead of every 6. It still
 does not come back while you rest.
 

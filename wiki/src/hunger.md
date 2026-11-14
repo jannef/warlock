@@ -37,7 +37,7 @@ Some [races](races.md) need more food than others:
 
 {{#include generated/hunger-races.md}}
 
-The [Lean](talents.md#talent-lean) talent makes you hungry more slowly (see
+The [Lean](talents-body.md#talent-lean) talent makes you hungry more slowly (see
 [Talents](talents.md)). So does magic that sustains you: its percent comes off how fast your
 stomach empties, on top of the race's and the talent's (see [Magic items](magic-items.md)).
 However much of it you wear, you still get a little hungry.
@@ -63,7 +63,7 @@ throw](ranged.md#shooting-and-throwing) costs a few points (see the facts above)
 - **A journey asks first.** A step on the [overworld](overworld.md#travel) takes much longer
   than a step anywhere else. While you are `Fainting` or `Starving`, every step there asks
   whether to go on. Staying takes no time, and `Esc` stays. The question depends on how hungry
-  you are, not on whether this step would kill you. With [Long fast](talents.md#talent-long-fast)
+  you are, not on whether this step would kill you. With [Long fast](talents-body.md#talent-long-fast)
   you are asked too.
 
 To eat, see [Food and corpses](food.md).

@@ -43,11 +43,11 @@ level too high (the **overreach**) makes it harder:
 
 - You roll 2d12 plus your bonus, and must reach the difficulty.
 - The difficulty is 12, plus 1 per level of overreach
-  (*[Overreach](talents.md#talent-overreach)* counts a third fewer levels, rounded down), plus a
+  (*[Overreach](talents-mind.md#talent-overreach)* counts a third fewer levels, rounded down), plus a
   point for every 20 levels of the spells you already know, added together.
 - Your bonus is your [Intelligence](stats.md#stat-intelligence) [modifier](stats.md#modifiers), a
   tenth of your *[Decipher script](skills.md#skill-decipher-script)* (at most +20), your class's affinity with
-  the spell's school, and *[Quick study](talents.md#talent-quick-study)*'s +2.
+  the spell's school, and *[Quick study](talents-mind.md#talent-quick-study)*'s +2.
 - A natural 24 always succeeds, and a natural 2 always fails.
 
 A few spells are harder to learn than their level says. Their own difficulty is added to the check,

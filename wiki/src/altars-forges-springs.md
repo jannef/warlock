@@ -29,7 +29,7 @@ but its glow does: gold, grey, or red. The side tilts the odds against your own
 [alignment](alignment.md). At an altar of your own side the boons come more often; at one of the
 other side, the banes. A neutral altar, or a neutral you, leans neither way. Praying also moves
 your [alignment](alignment.md#what-moves-you) a little: toward good at a good altar, and further
-toward evil at an evil one. The [Pious](talents.md#talent-pious) talent (Wayfarer) doubles the lean
+toward evil at an evil one. The [Pious](talents-exploring.md#talent-pious) talent (Wayfarer) doubles the lean
 of an altar of your side and takes away an opposed one's.
 
 After each completed prayer there is an even chance the altar is

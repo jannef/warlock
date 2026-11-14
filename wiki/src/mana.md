@@ -41,7 +41,7 @@ half your class's mana plus what the better of your Intelligence and Willpower a
 with ordinary wits gains none.
 
 [Magic items](magic-items.md) that add to it ("+5 to maximum mana") raise your maximum, not what
-you have now. The talent *[Deep well](talents.md#talent-deep-well)* raises both: by 1 for every 4
+you have now. The talent *[Deep well](talents-mind.md#talent-deep-well)* raises both: by 1 for every 4
 character levels, at least 2, when you take it and again as each later
 level comes (see [Talents](talents.md)).
 
@@ -85,10 +85,10 @@ When several things change the pace at once:
   - [magic items](magic-items.md) that speed it ("mana comes back 50% faster");
   - being born under [Water](horoscope.md#elements), whose gift
     *[Tidal](horoscope.md#talent-tidal)* makes mana come back 25 % faster (see [Horoscope](horoscope.md));
-  - the talent *[Clear mind](talents.md#talent-clear-mind)*, 25 % faster;
+  - the talent *[Clear mind](talents-mind.md#talent-clear-mind)*, 25 % faster;
   - trained *[Concentration](skills.md#skill-concentration)*: 5 % faster at 20, 40 % at 100, 60 %
     at 200 (see [Skills](skills.md)).
-- The talent *[Meditation](talents.md#talent-meditation)* makes resting bring mana back half again
+- The talent *[Meditation](talents-mind.md#talent-meditation)* makes resting bring mana back half again
   as fast (resting's pace times 1.5).
 
 Nothing else changes it: not your [burden](burden.md), not the [cold](temperature.md), and not
@@ -100,7 +100,7 @@ Anything that costs mana is refused when you have too little, and then spends no
 any mana trains your [Willpower](stats.md#stat-willpower): each time is a chance at a training mark
 (see [Stats](stats.md#raising-your-stats)).
 
-The talent *[Frugal caster](talents.md#talent-frugal-caster)* makes abilities cost a fifth less
+The talent *[Frugal caster](talents-mind.md#talent-frugal-caster)* makes abilities cost a fifth less
 mana, rounded to the nearest point and never below 1: 5 becomes 4, 6 becomes 5, 10 becomes 8.
 [Magic items](magic-items.md) *of Thrift* make abilities cheaper in the same way, by their percent.
 
@@ -113,7 +113,7 @@ This cut comes last, after everything else that changes the cost of a spell or a
 [What a spell costs](magic.md#what-a-spell-costs)). It applies to every ability that costs mana:
 spells, [rods](wands-and-rods.md#rods), and summoning.
 
-The talent *[Blood magic](talents.md#talent-blood-magic)* gives you an ability (in the
+The talent *[Blood magic](talents-mind.md#talent-blood-magic)* gives you an ability (in the
 [abilities menu](abilities.md#the-abilities-menu)) that turns 5 of your hit points into 3 mana at
 once. It takes as long as a wait. It never takes your last hit point, so with 5 or fewer it refuses.
 It never brings your mana above your maximum, and does nothing while your mana is full. It is not

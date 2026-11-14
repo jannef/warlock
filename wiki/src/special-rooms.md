@@ -215,12 +215,12 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
   and reading a scroll earns one every time instead of half the time.
   Only rooms of 9 floor cells or more can be one.
 
-The [Old delver](talents.md#talent-old-delver) talent (Delver; [Willpower](stats.md#stat-willpower)
+The [Old delver](talents-exploring.md#talent-old-delver) talent (Delver; [Willpower](stats.md#stat-willpower)
 11 or [Dexterity](stats.md#stat-dexterity) 12) makes you at home in strange rooms. A
 [collapsed floor](special-rooms.md#room-collapsed) never gives way under you, the
 [Ebbing](status-list.md#status-ebbing) of a [draining room](special-rooms.md#room-draining) never
 takes you, and nothing you kill ever rises in a [cursed room](special-rooms.md#room-cursed). With
-[Old hand](talents.md#talent-old-hand) after it (level 10), a room that quickens healing or mana
+[Old hand](talents-exploring.md#talent-old-hand) after it (level 10), a room that quickens healing or mana
 quickens it half again more for you: a [sanctuary](special-rooms.md#room-sanctuary)'s three times
 as fast becomes four times. You can also lift one thing from a
 [tempting hoard](special-rooms.md#room-hoard) before it seals; the second seals it.

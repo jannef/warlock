@@ -8,7 +8,7 @@ has bottles. You can brew anywhere.
 
 **You need:**
 - **Skill:** Alchemy. [Witches](class-witch.md) start with it, a
-  [craftsperson](class-craftsperson.md#trades) may take the [Brewster](talents.md#talent-brewster)
+  [craftsperson](class-craftsperson.md#trades) may take the [Brewster](talents-origins.md#talent-brewster)
   trade, and a [commoner](class-commoner.md) may have it as their trade (others:
   [Which skills you start with](skills.md#which-skills-you-start-with)). No one teaches it.
 - **Stock:** herbs, and for some brews an essence or a flask.

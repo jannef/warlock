@@ -45,7 +45,7 @@ pub(super) fn text(effect: &BeastEffect) -> String {
             .into(),
         BeastEffect::KinTo { tag } => format!(
             "creatures tagged *{}* are neutral to you until you attack one of that type, as \
-             [Beast-friend](talents.md#talent-beast-friend)'s animals are",
+             [Beast-friend](talents-exploring.md#talent-beast-friend)'s animals are",
             tag.replace('-', " ")
         ),
     }
