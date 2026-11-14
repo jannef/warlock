@@ -5,10 +5,7 @@
 use super::special::draw;
 use super::*;
 use crate::content::ContentFiles;
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Content> =
-    LazyLock::new(|| Content::load(&ContentFiles::builtin()).expect("builtin content"));
+use crate::test_support::CONTENT;
 
 /// The built-in content with one more feature, `extra` (an `[[effect]]` body after its id, name,
 /// mark, and enter line), at the end of `room_effects.toml`, and the shared `chance` at `chance`.

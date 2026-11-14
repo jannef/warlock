@@ -615,7 +615,7 @@ mod tests {
     }
 
     fn one(effect: &str, band: &str) -> Result<Vec<Mishap>, ContentError> {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let text = format!(
             "[[mishap]]\nid = \"x\"\nband = \"{band}\"\nweight = 1\nmessage = \"Oops.\"\n\
              effect = {effect}\n"

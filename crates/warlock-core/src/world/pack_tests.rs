@@ -6,12 +6,9 @@ use super::*;
 use crate::action::AttackKind;
 use crate::character::CharacterSpec;
 use crate::combat::Profile;
-use crate::content::{Content, CreatureSpawn};
+use crate::content::CreatureSpawn;
 use crate::geom::Pos;
-use std::sync::{Arc, LazyLock};
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::CONTENT as BUILTIN;
 
 /// A kitted human ranger in the showcase (seed 7), with their companion beside them.
 fn ranger() -> World {

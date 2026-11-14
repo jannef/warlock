@@ -10,6 +10,7 @@ use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
+use crate::test_support::{last_text as last_message, said_text as said};
 
 /// A cave with fungus at (5, 2), the player beside it at (4, 3), and at `k` a kobold (also
 /// beside it), when asked for; `f` is a second fungus, there only with `two`.
@@ -68,14 +69,6 @@ fn train(w: &mut World, value: Option<u16>) {
         all.push((id, Trained { value, marks: 0 }));
     }
     *skills = all.into_iter().collect();
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
-}
-
-fn last_message(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
 }
 
 fn here(w: &World) -> Vec<Ability> {

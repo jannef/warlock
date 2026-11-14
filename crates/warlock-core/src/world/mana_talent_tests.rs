@@ -5,14 +5,10 @@
 use super::talent::Due;
 use super::*;
 use crate::ability::{Ability, Source};
-use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::talent::TalentMods;
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::{CONTENT as BUILTIN, last, run};
 
 /// An elf wizard in the showcase, every score 14.
 fn world() -> World {
@@ -21,16 +17,6 @@ fn world() -> World {
         World::with_character(BUILTIN.clone(), "showcase", Some(7), Some(&spec)).expect("world");
     w.player_mut().stats = Stats::new(PerStat::splat(14), PerStat::splat(40));
     w
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.display())
 }
 
 /// The player gains experience until they are at character `level`.

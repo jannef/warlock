@@ -6,6 +6,7 @@ use super::*;
 use crate::light::Light;
 use crate::perception::{CellView, Emitter, PerceptionView, SeenLight};
 use crate::replay::Replay;
+use crate::test_support::builtin;
 use proptest::prelude::*;
 use std::collections::BTreeSet;
 
@@ -251,7 +252,7 @@ fn creatures_are_seen_by_the_full_moon_but_not_the_new() {
 #[test]
 fn moonlight_is_deterministic_and_replays_verify() {
     // The built-in courtyard on the night of the full moon.
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = builtin();
     let actions = crate::action::parse_actions(
         "skip:113h skip:30m move:E move:E move:SE rest:1h move:E skip:3h move:W rest:dawn",
     )

@@ -2,6 +2,7 @@
 //! into a Pit (stairs, a hidden location, a quest), and its folk stay in it.
 
 use super::{Content, ContentFiles};
+use crate::test_support::builtin;
 
 /// The built-in content with `edit` made to file `path`.
 fn edited(path: &str, edit: impl FnOnce(&str) -> String) -> Result<Content, String> {
@@ -55,7 +56,7 @@ fn no_quest_leads_into_a_pit() {
 
 #[test]
 fn a_pits_folk_stay_in_it() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let hellegeat = content.dungeon("hellegeat").expect("Hellegeat");
     let spawning = hellegeat.spawning.as_ref().expect("a danger");
     let erinyes = content.creature_id("erinyes").expect("the erinyes");

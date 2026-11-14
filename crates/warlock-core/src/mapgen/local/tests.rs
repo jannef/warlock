@@ -2,13 +2,10 @@ use super::*;
 use crate::content::{Turn, Vault, local_area_id};
 use crate::grid::Grid;
 use crate::rng::parse_seed;
+use crate::test_support::CONTENT;
 use proptest::prelude::*;
 use std::collections::{BTreeSet, VecDeque};
 use std::fmt::Write as _;
-use std::sync::{Arc, LazyLock};
-
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
 
 fn area(seed: u64, x: i32, y: i32) -> LevelTemplate {
     generate(

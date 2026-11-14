@@ -9,6 +9,7 @@ use crate::content::ContentFiles;
 use crate::dump::{self, Layer};
 use crate::object::Stack;
 use crate::replay::Replay;
+use crate::test_support::{run as act, texts};
 use std::sync::LazyLock;
 
 const HILD: Pos = Pos::new(27, 25);
@@ -25,16 +26,6 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
 
 fn town() -> World {
     World::new(CONTENT.clone(), "ceaptun", None).expect("a run in Cēaptūn")
-}
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 /// Puts the player west of `npc`, so they talk to the east.
@@ -121,7 +112,7 @@ fn the_lost_shaft_waits_for_the_barrows_heart_and_reveals_fyrdelf() {
     up_to(&mut w, 4);
     act(&mut w, "ask:E:quest-lost_shaft");
     assert!(
-        said(&w)
+        texts(&w)
             .last()
             .unwrap()
             .starts_with("Factor Wulfrun says: \"The old diggings? Oh, I think not, not yet.")
@@ -145,7 +136,7 @@ fn the_lost_shaft_waits_for_the_barrows_heart_and_reveals_fyrdelf() {
     act(&mut w, "ask:E:quest-lost_shaft");
     assert!(w.state.revealed.contains("fyrdelf"));
     assert_eq!(
-        said(&w).last().unwrap(),
+        texts(&w).last().unwrap(),
         "Factor Wulfrun marks Fyrdelf on your map."
     );
     let log = &w.perception().quests()[0];
@@ -179,7 +170,7 @@ fn the_fen_minster_is_marked_as_sister_hild_sends_the_player() {
 
     act(&mut w, "ask:E:quest-fen_minster");
     assert!(w.state.revealed.contains("fennmynster"));
-    let lines = said(&w);
+    let lines = texts(&w);
     let n = lines.len();
     assert!(lines[n - 2].contains("Here, let me show you"));
     assert_eq!(lines[n - 1], "Sister Hild marks Fennmynster on your map.");
@@ -192,7 +183,7 @@ fn the_fen_minster_is_marked_as_sister_hild_sends_the_player() {
     );
     // Asking again reminds, and marks nothing twice.
     act(&mut w, "ask:E:quest-fen_minster");
-    assert!(!said(&w).last().unwrap().contains("marks"));
+    assert!(!texts(&w).last().unwrap().contains("marks"));
 }
 
 /// Hands Sister Hild the chalice for Grave goods (#1329).
@@ -216,7 +207,7 @@ fn grave_goods_trains_heal_in_one_untrained() {
     assert!((1..=4).contains(&value), "1d4: {value}");
     assert_eq!(w.state.player().skills.get(heal).expect("heal").marks, 0);
     assert_ne!(w.state.levels_rng, levels, "rolled on the levels stream");
-    let log = said(&w);
+    let log = texts(&w);
     assert!(
         log.contains(&"Sister Hild shows you how to dress a wound.".to_string()),
         "{log:?}"
@@ -239,7 +230,7 @@ fn grave_goods_gives_a_trained_healer_a_hundred_marks() {
     assert!(trained.value > 30, "the automatic roll raised Heal");
     assert_eq!(trained.marks, 101 - rules.spent(101));
     assert!(trained.marks < rules.auto_at, "one roll, not two");
-    let log = said(&w);
+    let log = texts(&w);
     let learn = log.iter().position(|m| m == "You learn more of healing.");
     let improves = log.iter().position(|m| m == "Your heal improves.");
     assert!(learn.is_some() && learn < improves, "{log:?}");
@@ -291,7 +282,7 @@ fn the_branches_say_their_arrival_lines_on_their_first_level() {
         assert_eq!(CONTENT.arrival(level), Some(line));
         let mut w = town();
         w.travel(level, None).expect("travels");
-        assert_eq!(said(&w).last().map(String::as_str), Some(line));
+        assert_eq!(texts(&w).last().map(String::as_str), Some(line));
     }
     assert_eq!(CONTENT.arrival("cealdhlaw:2"), None, "the first level only");
     assert_eq!(

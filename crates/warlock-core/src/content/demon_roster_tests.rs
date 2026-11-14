@@ -1,10 +1,10 @@
 //! The demon roster (#449): the demons' stance toward the others.
 
-use super::Content;
+use crate::test_support::builtin;
 
 #[test]
 fn the_demons_hunt_the_player_and_the_devils_and_leave_the_rest_be() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let id = |n: &str| content.creature_id(n).expect(n);
     use super::Stance::{Hostile, Neutral};
     for (other, want) in [

@@ -8,13 +8,11 @@ use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::replay::Replay;
+use crate::test_support::{CONTENT, last_text as last, run as act, texts};
 
 /// The partner's desk in Wulfrun's office, and the cell west of it.
 const DESK: Pos = Pos::new(75, 23);
 const BESIDE: Pos = Pos::new(74, 23);
-
-static CONTENT: std::sync::LazyLock<Arc<Content>> =
-    std::sync::LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 /// A run in Cēaptūn as `character`, with its kit.
 fn run(character: &str) -> World {
@@ -23,23 +21,9 @@ fn run(character: &str) -> World {
         .expect("a run in Cēaptūn")
 }
 
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
-}
-
-fn last(world: &World) -> String {
-    said(world).last().cloned().unwrap_or_default()
-}
-
 /// What the partner said last.
 fn spoke(world: &World) -> String {
-    (said(world).into_iter().rev())
+    (texts(world).into_iter().rev())
         .find(|m| m.starts_with("Your business partner says: "))
         .unwrap_or_default()
 }
@@ -137,7 +121,7 @@ fn chatting_tells_the_worth_and_lists_the_deals() {
     assert_eq!(gold(&w), carried - 1000);
     // 2 % kept: 980 working.
     assert_eq!(w.state.fund.cents, 98_000);
-    assert!(said(&w).iter().any(|m| m == "You hand over 1000 gold."));
+    assert!(texts(&w).iter().any(|m| m == "You hand over 1000 gold."));
     assert!(
         spoke(&w).contains("1000 gold, less 20 for the paperwork"),
         "{}",
@@ -165,7 +149,7 @@ fn chatting_tells_the_worth_and_lists_the_deals() {
     assert_eq!(gold(&w), before + 960);
     assert_eq!(w.state.fund.cents, 0);
     assert!(spoke(&w).contains("980 gold out, less 20"), "{}", spoke(&w));
-    assert!(said(&w).iter().any(|m| m == "You receive 960 gold coins."));
+    assert!(texts(&w).iter().any(|m| m == "You receive 960 gold coins."));
 }
 
 #[test]
@@ -272,7 +256,7 @@ fn the_stake_dies_with_the_partner() {
     w.dies(id, None, None, when, &mut Vec::new());
     assert!(partner(&w).is_none());
     assert_eq!(w.state.fund.cents, 0);
-    assert!(said(&w).iter().any(|m| m.contains("your stake is lost")));
+    assert!(texts(&w).iter().any(|m| m.contains("your stake is lost")));
 }
 
 /// The expected yearly return of `data/invest.toml` with `bonus` basis points, over many

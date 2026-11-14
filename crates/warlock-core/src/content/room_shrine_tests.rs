@@ -2,6 +2,7 @@
 //! status resolved, and refused without `sides` or with an unknown status.
 
 use super::{Content, RoomEffectId, RoomEffects};
+use crate::test_support::builtin;
 
 const SHRINE: &str = "[[effect]]\nid = \"shrine\"\nname = \"shrine\"\nmark = \"i\"\n\
                       enter = \"Ignored.\"\nfeature = \"shrine_stone\"\n";
@@ -33,7 +34,7 @@ fn shrine(sides: bool, fields: &str) -> String {
 
 #[test]
 fn a_shrine_parses_with_its_status() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let effects = parse(
         &content,
         &shrine(true, "regen = 200, status = \"unwelcome\""),
@@ -53,7 +54,7 @@ fn a_shrine_parses_with_its_status() {
 
 #[test]
 fn a_bad_shrine_is_refused() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for (sides, fields, why) in [
         (
             false,

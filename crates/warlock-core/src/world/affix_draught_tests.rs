@@ -6,9 +6,9 @@
 
 use super::potion::{KEPT, MAX_KEPT};
 use super::*;
-use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::magic::{Affix, Magic, Rarity};
+use crate::test_support::run;
 
 /// Fixture affixes, one per effect, with ranges wide enough for every test.
 const AFFIXES: &str = r#"
@@ -55,12 +55,6 @@ fn world(sure: bool) -> World {
     );
     let content = Arc::new(Content::load(&files).expect("the fixture content loads"));
     World::new(content, "draught_hall", Some(7)).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 /// The player puts on one `object` with the affix `id` at `value` in `slot`, unidentified

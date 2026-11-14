@@ -10,6 +10,7 @@ use crate::action::parse_actions;
 use crate::content::{ContentFiles, EntryStance, Landscape, local_area_id};
 use crate::daylight::{self, DayPhase};
 use crate::replay::Replay;
+use crate::test_support::run as act;
 use std::sync::LazyLock;
 
 /// The road one cell east of Cēaptūn, in Cēapdenu: seven steps east of the pass.
@@ -25,12 +26,6 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
 
 fn start() -> World {
     World::new(CONTENT.clone(), "ascmearc", None).expect("a run of the Ascmearc")
-}
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn said(world: &World, text: &str) -> bool {

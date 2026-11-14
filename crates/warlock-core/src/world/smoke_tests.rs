@@ -5,9 +5,9 @@
 use super::caster_tests::{kobold_at, sp};
 use super::spell_type_tests::{cast, cell, files, start};
 use super::*;
-use crate::action::parse_actions;
 use crate::content::ZoneKind;
 use crate::stats::{PerStat, Stats};
+use crate::test_support::run;
 
 fn hall(seed: u64) -> World {
     let mut w = start(Arc::new(Content::load(&files()).expect("content")), seed);
@@ -15,12 +15,6 @@ fn hall(seed: u64) -> World {
         w.player_mut().spells.insert(sp(spell), 1);
     }
     w
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 /// A kobold `(dx, dy)` from the player that stands and takes it.

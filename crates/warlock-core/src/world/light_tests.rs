@@ -5,6 +5,7 @@ use crate::content::ContentFiles;
 use crate::light::{BOUNCE, Light, falloff};
 use crate::object::LightMode;
 use crate::perception::{CellView, Emitter, PerceptionView};
+use crate::test_support::builtin;
 use proptest::prelude::*;
 use std::collections::BTreeSet;
 
@@ -901,7 +902,7 @@ fn only_lights_near_the_player_get_masks() {
 
 #[test]
 fn showcase_start_room_is_lit_and_readable() {
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = builtin();
     let w = World::new(content, "showcase", None).expect("showcase");
     let view = w.perception();
     assert_eq!(view.vision().id, "normal");
@@ -919,7 +920,7 @@ fn showcase_start_room_is_lit_and_readable() {
 
 #[test]
 fn showcase_darkness_chamber_needs_special_eyes() {
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = builtin();
     let w = World::new(content, "showcase", None).expect("showcase");
     // Inside the inner sanctum, next to the rune at (37, 5) and fungus at (40, 4).
     let rune = Pos::new(37, 5);
@@ -1046,7 +1047,7 @@ fn time_turns(mut world: World, turns: usize) -> (f64, f64) {
 #[test]
 #[ignore = "timing; run manually in release mode"]
 fn turn_cost() {
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = builtin();
     let hub = World::new(content, "showcase", None).expect("showcase");
     let (avg, max) = time_turns(hub, 300);
     println!("hub  80×21:   avg {avg:.3} ms, max {max:.3} ms per turn");
@@ -1187,7 +1188,7 @@ proptest! {
     fn light_invariants_hold_during_random_play(
         steps in prop::collection::vec(0usize..13, 1..40),
     ) {
-        let content = Arc::new(Content::builtin().expect("builtin content"));
+        let content = builtin();
         let mut w = World::new(content, "showcase", None).expect("showcase");
         let profiles = ["normal", "low_light", "darkvision", "uv_sight"];
         for step in steps {

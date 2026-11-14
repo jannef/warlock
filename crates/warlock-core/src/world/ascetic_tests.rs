@@ -1,7 +1,7 @@
 //! The ascetic's ki tricks (spec §8 "Class abilities"; the ki tricks design §6.2, §9): each
 //! refused before its ki is spent, the spend, and what it gives.
 
-use super::class_active_tests::{at_normal_speed, beside, last, reach, run, suffers, world};
+use super::class_active_tests::{at_normal_speed, beside, reach, suffers, world};
 use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::{AttackKind, parse_actions};
@@ -10,6 +10,7 @@ use crate::combat::{Category, Strike};
 use crate::content::{ClassActive, ContentFiles, ResourceId};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
+use crate::test_support::{builtin, last, run};
 
 fn ki(w: &World) -> ResourceId {
     w.content().resource_id("ki").expect("ki")
@@ -170,7 +171,7 @@ fn poised_a_dodged_or_parried_blow_is_answered_at_once() {
 
 #[test]
 fn patient_defence_replays() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let spec: CharacterSpec = "human,male,ascetic".parse().expect("a character");
     let mut w =
         World::start_run(content, "showcase", Some(7), Some(&spec), None, true).expect("world");
@@ -266,7 +267,7 @@ fn step_of_the_wind_takes_no_time_and_halves_the_next_action_once() {
 
 #[test]
 fn step_of_the_wind_replays() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let spec: CharacterSpec = "human,male,ascetic".parse().expect("a character");
     let mut w =
         World::start_run(content, "showcase", Some(7), Some(&spec), None, true).expect("world");
@@ -413,7 +414,7 @@ fn stillness_names_only_statuses_the_content_has() {
 
 #[test]
 fn stillness_replays() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let spec: CharacterSpec = "human,male,ascetic".parse().expect("a character");
     let mut w =
         World::start_run(content, "showcase", Some(7), Some(&spec), None, true).expect("world");
@@ -585,7 +586,7 @@ fn diamond_soul_catches_a_traps_arrow_too() {
 
 #[test]
 fn the_catch_replays_in_the_trap_hall() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let spec: CharacterSpec = "human,male,ascetic".parse().expect("a character");
     let mut w = World::start_run(content, "traps", None, Some(&spec), None, true).expect("world");
     let mut replay = Replay::new(&w);

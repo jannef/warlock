@@ -7,6 +7,7 @@ use super::*;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, TrapEffect};
 use crate::dice::Roll;
+use crate::test_support::builtin;
 
 /// A lit hall: the player beside the west wall, a trapped closed door east of them.
 const HALL: &str = "\
@@ -66,7 +67,7 @@ fn losses(w: &mut World, id: &str, times: usize) -> Vec<i32> {
 /// (and at 0, a level without a danger), each rung from its danger to the next's.
 #[test]
 fn each_trap_deals_its_rung_by_danger_band() {
-    let content = Content::builtin().expect("builtin content");
+    let content = builtin();
     let table: [(&str, [&str; 7]); 6] = [
         ("arrow", ["1d2", "1d4", "1d6", "2d4", "2d6", "3d6", "4d6"]),
         ("spear", ["1d2", "1d5", "1d8", "2d6", "2d8", "3d8", "4d8"]),

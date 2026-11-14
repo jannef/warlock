@@ -9,6 +9,7 @@ use super::*;
 use crate::action::{AttackKind, Event, parse_actions};
 use crate::combat::Strike;
 use crate::content::ContentFiles;
+use crate::test_support::said;
 use std::sync::LazyLock;
 
 const LEGEND: &str = r##"
@@ -73,10 +74,6 @@ fn run(w: &mut World, actions: &str) -> Vec<Event> {
         events.extend(w.apply(&action).events);
     }
     events
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 /// The actors of creature type `kind`, in id order.

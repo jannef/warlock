@@ -6,6 +6,7 @@ use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::content::ContentFiles;
 use crate::replay::Replay;
+use crate::test_support::{run, said};
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -192,18 +193,6 @@ fn files(map: &str) -> ContentFiles {
 fn world(map: &str) -> World {
     let content = Arc::new(Content::load(&files(map)).expect("test content is valid"));
     World::new(content, "range", None).expect("world")
-}
-
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    parse_actions(actions)
-        .expect("actions")
-        .iter()
-        .map(|a| world.apply(a))
-        .collect()
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 /// The flights of the outcomes' missiles, as the player saw them: their paths.

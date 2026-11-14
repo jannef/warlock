@@ -4,9 +4,9 @@
 //! an unholy place and no Ebbing in a draining one, and nothing for the holy face.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::alignment::Score;
 use crate::content::ContentFiles;
+use crate::test_support::{builtin, run, said_text as said};
 
 /// A lit hall: the player at (1, 1), a peaceful kobold beside them at `k` (2, 1), another at `j`
 /// (8, 1), and a peaceful skeleton (immune to poison) at `s` (5, 3); a wall at x 14 hides the
@@ -67,16 +67,6 @@ fn world(room: Option<&str>) -> World {
     me.mana_base = 20;
     me.mana = 20;
     w
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 fn at(w: &World, p: Pos) -> ActorId {
@@ -260,7 +250,7 @@ fn communion_keeps_a_draining_room_off() {
 
 #[test]
 fn communion_is_a_band_gated_passive() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let book = content.talents();
     let def = book.get(book.id("communion").expect("communion"));
     assert!(def.alignment.is_some());

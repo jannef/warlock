@@ -7,19 +7,10 @@ use super::*;
 use crate::action::parse_actions;
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
+use crate::test_support::{builtin, run as act, texts};
 
 /// Ūtgang's way in on the Ascmearc, on the volcano's south foot.
 const UTGANG: Pos = Pos::new(103, 17);
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
-}
 
 fn locations(world: &World) -> String {
     dump::layer_rows(world, Layer::Locations).join("\n")
@@ -27,7 +18,7 @@ fn locations(world: &World) -> String {
 
 #[test]
 fn the_way_in_is_hidden_until_the_player_climbs_out_of_it() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let (at, hidden) = content
         .hidden_location("ascmearc", "utgang")
         .expect("hidden");
@@ -37,7 +28,7 @@ fn the_way_in_is_hidden_until_the_player_climbs_out_of_it() {
     let overworld = content.overworld_of("ascmearc").expect("the overworld");
     assert_eq!(overworld.terrain[UTGANG], hills);
 
-    let mut w = World::new(Arc::new(content), "utgang", None).expect("a run");
+    let mut w = World::new(content, "utgang", None).expect("a run");
     let mut replay = Replay::new(&w);
     assert_eq!(w.perception().level_id(), "utgang:1");
     assert!(!w.state.revealed.contains("utgang"));
@@ -47,7 +38,7 @@ fn the_way_in_is_hidden_until_the_player_climbs_out_of_it() {
     assert_eq!(w.perception().level_id(), "ascmearc");
     assert_eq!(w.player_pos(), UTGANG, "out on the way in");
     assert!(w.state.revealed.contains("utgang"));
-    let lines = said(&w);
+    let lines = texts(&w);
     assert!(
         lines.iter().any(|l| l == "You mark Ūtgang on your map."),
         "{lines:?}"
@@ -63,12 +54,12 @@ fn the_way_in_is_hidden_until_the_player_climbs_out_of_it() {
     w.apply(&action);
     replay.push(&action, &w);
     assert_eq!(w.perception().level_id(), "utgang:1");
-    let before = said(&w).len();
+    let before = texts(&w).len();
     let action = parse_actions("ascend").expect("actions").remove(0);
     w.apply(&action);
     replay.push(&action, &w);
     assert_eq!(w.player_pos(), UTGANG);
-    assert!(!said(&w)[before..].iter().any(|l| l.contains("mark")));
+    assert!(!texts(&w)[before..].iter().any(|l| l.contains("mark")));
     let verified = Replay::from_json(&replay.to_json())
         .expect("json")
         .run(w.content().clone())
@@ -78,7 +69,7 @@ fn the_way_in_is_hidden_until_the_player_climbs_out_of_it() {
 
 #[test]
 fn arriving_on_the_overworld_any_other_way_reveals_nothing() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     // Out of Fyrdelf, by its own way in.
     let mut w = World::new(content.clone(), "ascmearc", None).expect("a run");
     act(&mut w, "reveal:fyrdelf");

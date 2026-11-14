@@ -7,6 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::combat::Category;
 use crate::content::ContentFiles;
+use crate::test_support::{last as last_message, run};
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -182,12 +183,6 @@ fn world(map: &str, dark: bool) -> World {
     World::new(content, "crypt", Some(1)).expect("world")
 }
 
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| world.apply(a))
-        .collect()
-}
-
 /// The first creature of type `id` on the level.
 fn first(world: &World, id: &str) -> ActorId {
     let creature = world.content.creature_id(id).expect(id);
@@ -204,10 +199,6 @@ fn pos(world: &World, id: ActorId) -> Pos {
 fn terrain_at(world: &World, p: Pos) -> String {
     let level = world.state.current();
     world.content.terrain(level.terrain[p]).id.clone()
-}
-
-fn last_message(world: &World) -> String {
-    (world.messages().iter().last()).map_or_else(String::new, |m| m.display())
 }
 
 #[test]

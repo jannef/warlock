@@ -132,7 +132,7 @@ mod tests {
 
     #[test]
     fn the_wild_gives_food_by_landscape() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let rules = content.forage().expect("foraging is in the game");
         assert_eq!(rules.seconds, 600);
         // Every land landscape has a row; roads and water none.

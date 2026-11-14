@@ -10,6 +10,7 @@ use crate::object::Stack;
 use crate::skills::Use;
 use crate::stats::{PerStat, Stat};
 use crate::temperature::Temperature;
+use crate::test_support::builtin;
 use std::sync::LazyLock;
 
 /// The built-in `data/stats.toml` with every chance at 100.
@@ -141,7 +142,7 @@ fn every_new_use_has_its_rules_by_stat_in_the_data() {
         assert!(!used.describe().is_empty());
     }
     // Being hurt is a little less sure than it was (decision 13): 15 %.
-    let builtin = Content::builtin().expect("content");
+    let builtin = builtin();
     let hurt: Vec<_> = (builtin.stat_training().rules(StatUse::Hurt))
         .map(|r| r.chance)
         .collect();

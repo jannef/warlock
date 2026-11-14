@@ -9,6 +9,7 @@ use crate::alignment::{Alignment, Band, Score};
 use crate::content::{ClassActive, ContentFiles, Sign};
 use crate::object::Stack;
 use crate::replay::Replay;
+use crate::test_support::{builtin, last_text as last, run};
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -256,16 +257,6 @@ fn yard(map: &str) -> World {
     World::new(Arc::new(content), "yard", None).expect("world")
 }
 
-fn builtin() -> Arc<Content> {
-    Arc::new(Content::builtin().expect("built-in content"))
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
-}
-
 fn score(w: &World) -> i32 {
     w.state
         .player()
@@ -294,10 +285,6 @@ fn band(w: &World) -> Band {
 
 fn said(w: &World, text: &str) -> bool {
     w.messages().iter().any(|m| m.text.contains(text))
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or(String::new(), |m| m.text.clone())
 }
 
 /// Kicks whoever stands in `dir` until they are dead (they have one hit point).

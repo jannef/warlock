@@ -8,6 +8,7 @@ use super::*;
 use crate::content::ContentFiles;
 use crate::object::Stack;
 use crate::skills::{SkillId, Trained};
+use crate::test_support::last_text as said;
 use std::sync::LazyLock;
 
 /// A forge with its anvil at (5, 2), the player beside it at (4, 3).
@@ -70,12 +71,6 @@ fn world(talents: &[&str]) -> World {
 
 fn one(w: &World, id: &str) -> Stack {
     Stack::one(w.content.object_id(id).expect(id))
-}
-
-fn said(w: &World) -> String {
-    (w.messages().iter().last())
-        .map(|m| m.text.clone())
-        .unwrap_or_default()
 }
 
 /// The seconds `action` takes from the same state (whatever comes of it).

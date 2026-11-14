@@ -782,7 +782,7 @@ mod tests {
             "duergar_trader",
             "shopkeeper",
         ];
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let guideline = content.experience().guideline();
         assert_eq!(
             guideline,

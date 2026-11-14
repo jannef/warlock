@@ -12,6 +12,7 @@ use crate::content::{ContentFiles, DamageTypeId};
 use crate::damage::{Damage, IMMUNE, MAX_RESISTANCE, ResistanceWord};
 use crate::magic::{Affix, Magic, Rarity};
 use crate::object::Stack;
+use crate::test_support::said;
 use std::sync::LazyLock;
 
 /// A lit room beside the built-in content: the player (`@`) between a salamander (`s`, immune
@@ -138,13 +139,9 @@ fn magic(id: &str, affix: &str, tier: u8, value: i32, identified: bool) -> Stack
     Stack::with_magic(object, 1, magic)
 }
 
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
-}
-
 #[test]
 fn the_built_in_content_types_every_source_of_damage() {
-    let c = Content::builtin().expect("content");
+    let c = crate::test_support::builtin();
     assert_eq!(c.unarmed_damage(), c.damage_type_id("bludgeoning"));
     for o in c.object_defs() {
         if let Some(attack) = &o.attack {

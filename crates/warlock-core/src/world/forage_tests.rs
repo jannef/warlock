@@ -9,6 +9,7 @@ use crate::action::parse_actions;
 use crate::content::{ContentFiles, Landscape};
 use crate::replay::Replay;
 use crate::skills::{Effect, SkillId, Trained};
+use crate::test_support::last_text as last_message;
 
 /// The built-in content, with Survival earning a mark on every forage when `eager`, and every
 /// ground's chance `chance` percent when given.
@@ -59,10 +60,6 @@ fn train(w: &mut World, value: Option<u16>) {
         all.push((id, Trained { value, marks: 0 }));
     }
     *skills = all.into_iter().collect();
-}
-
-fn last_message(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
 }
 
 fn forage_in_menu(w: &World) -> Option<Option<Unavailable>> {

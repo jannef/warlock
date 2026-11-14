@@ -11,6 +11,7 @@ use crate::action::parse_actions;
 use crate::content::{ContentFiles, TrapId};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
+use crate::test_support::{builtin, run as act, texts};
 
 /// Godgifu, in the Gæsthūs: she gives the test quests.
 const GODGIFU: Pos = Pos::new(46, 26);
@@ -79,16 +80,6 @@ fn town(seed: u64) -> World {
     w
 }
 
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
-}
-
 fn roll(world: &World, id: &str) -> Option<crate::content::Roll> {
     world.quests().record(id).and_then(|r| r.roll.clone())
 }
@@ -130,7 +121,7 @@ fn a_roll_is_drawn_as_the_quest_is_given_and_never_again() {
     // Its words are filled; the log has the first breadcrumb and where.
     let name = w.content().creature(c).name.clone();
     let plural = w.content().creature(c).plural.clone();
-    let offer = said(&w)
+    let offer = texts(&w)
         .into_iter()
         .rev()
         .find(|m| m.contains("says:"))
@@ -282,7 +273,7 @@ fn a_variant_reveals_its_own_location_and_no_other() {
             "Fennmynster"
         };
         assert_eq!(
-            said(&w).last().unwrap(),
+            texts(&w).last().unwrap(),
             &format!("Godgifu marks {name} on your map.")
         );
         // The variant's own words, or the quest's, filled.
@@ -298,7 +289,7 @@ fn a_variant_reveals_its_own_location_and_no_other() {
                 "Godgifu wants you to kill a giant leech. In the fen."
             );
             assert!(
-                said(&w)
+                texts(&w)
                     .iter()
                     .any(|m| m.contains("The leeches of the fen. Go."))
             );
@@ -329,7 +320,7 @@ fn the_dev_roll_replaces_a_roll_without_progress() {
     assert_eq!(w.quests(), &before, "refused: not given yet");
     act(&mut w, "ask:E:quest-wanted");
     act(&mut w, "quest_roll:wanted:nobody");
-    assert!(said(&w).last().unwrap().contains("cannot draw"));
+    assert!(texts(&w).last().unwrap().contains("cannot draw"));
     act(&mut w, "quest_roll:wanted:fyr");
     assert_eq!(
         roll(&w, "wanted").and_then(|r| r.variant).as_deref(),
@@ -452,7 +443,7 @@ fn wulfruns_drake_dead_first_meets_the_quest_as_it_is_given() {
     w.perceive(&mut Vec::new());
     act(&mut w, "ask:E:quest-fire_deep");
     assert_eq!(
-        said(&w).last().unwrap(),
+        texts(&w).last().unwrap(),
         "Quest updated: 1 / 1 fire drake. Return to Factor Wulfrun."
     );
     assert_eq!(logged(&w, "fire_deep").status, "Return to Factor Wulfrun.");
@@ -546,7 +537,7 @@ fn picks_variants_and_placeholders_are_checked_at_load() {
 
 #[test]
 fn sworn_foe_hits_its_kind_surer_and_harder() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let mut w = World::new(content.clone(), "arena", None).expect("run");
     let player = w.state.player;
     let first = |w: &World, name: &str| {

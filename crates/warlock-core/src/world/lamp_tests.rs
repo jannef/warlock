@@ -5,18 +5,11 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::object::LightMode;
+use crate::test_support::{builtin, last as last_message};
 
 fn showcase() -> World {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     World::new(content, "showcase", None).expect("showcase")
-}
-
-fn last_message(w: &World) -> String {
-    w.messages()
-        .iter()
-        .last()
-        .map(|m| m.display())
-        .unwrap_or_default()
 }
 
 /// Gives fixture content a lantern a scenario can ready (`wield = ["lantern"]`): a Tool slot,

@@ -357,7 +357,7 @@ fn the_pick_axe_is_a_tool_rolled_magic_from_item_level_3() {
 
 #[test]
 fn hand_placed_and_kit_pick_axes_stay_normal() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = crate::test_support::builtin();
     let w = World::new(content.clone(), "quarry", None).expect("the quarry");
     let pick = content.object_id("pick_axe").expect("pick");
     let (level, _) = w.ground_truth();
@@ -379,7 +379,7 @@ fn hand_placed_and_kit_pick_axes_stay_normal() {
 /// find too, as plain loot finds it plain (#635).
 #[test]
 fn loot_finds_the_pick_axe_plain_and_magic() {
-    let builtin = Content::builtin().expect("content");
+    let builtin = crate::test_support::builtin();
     let pick = builtin.object_id("pick_axe").expect("pick");
     let roll = |seed: u64, grade| {
         let mut rng = Rng::stream(seed, "affix_utility");

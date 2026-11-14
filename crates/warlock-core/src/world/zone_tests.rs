@@ -4,10 +4,11 @@
 use super::caster_tests::{kobold_at, sp};
 use super::spell_type_tests::{HALL_CONTENT, cast, cell, files, start, status};
 use super::*;
-use crate::action::{Action, parse_actions};
+use crate::action::Action;
 use crate::content::ZoneKind;
 use crate::light::Light;
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::run;
 
 fn hall(seed: u64) -> World {
     let mut w = start(HALL_CONTENT.clone(), seed);
@@ -21,12 +22,6 @@ fn hall(seed: u64) -> World {
 fn on_dry_floor(w: &mut World) -> Pos {
     w.player_mut().pos = cell(9, 3);
     cell(9, 3)
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn zone_kind(w: &World, p: Pos) -> Option<ZoneKind> {

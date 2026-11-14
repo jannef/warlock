@@ -2,11 +2,12 @@
 //! type's `factions` are checked when content loads.
 
 use super::Content;
+use crate::test_support::builtin;
 
 #[test]
 fn the_courts_stand_as_planned() {
     use super::Stance::{Hostile, Neutral};
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let f = content.factions();
     let id = |n: &str| f.id(n).unwrap_or_else(|| panic!("faction {n}"));
     let (player, seelie, unseelie, wrathful) = (

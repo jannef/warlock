@@ -5,11 +5,9 @@
 use super::*;
 use crate::content::{ContentFiles, CreatureId, Stance, danger};
 use crate::rng::Rng;
+use crate::test_support::CONTENT;
 use std::collections::BTreeMap;
 use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Content> =
-    LazyLock::new(|| Content::load(&ContentFiles::builtin()).expect("builtin"));
 
 /// The built-in content with neutral animals at their whole weight.
 static BEFORE: LazyLock<Content> = LazyLock::new(|| {

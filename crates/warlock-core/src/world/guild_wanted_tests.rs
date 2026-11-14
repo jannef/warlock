@@ -7,6 +7,7 @@ use super::*;
 use crate::action::{Action, parse_actions};
 use crate::content::{ContentFiles, StairsDir};
 use crate::grid::Grid;
+use crate::test_support::{run as act, texts};
 use std::collections::{BTreeSet, VecDeque};
 use std::sync::LazyLock;
 
@@ -74,16 +75,6 @@ fn town(seed: Option<u64>) -> World {
     w
 }
 
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
-}
-
 /// Puts the player north of Wat, so they talk to the south.
 fn beside_wat(world: &mut World) {
     let id = world.state.player;
@@ -118,7 +109,7 @@ fn the_wanted_follows_the_scroll_and_reveals_the_drawn_lair_and_no_other() {
             "seed {seed}"
         );
         assert_eq!(
-            said(&w).last().map(String::as_str),
+            texts(&w).last().map(String::as_str),
             Some(format!("Wat One-Eye marks {lair_name} on your map.").as_str())
         );
         let log = (w.perception().quests().into_iter())
@@ -203,7 +194,7 @@ fn apply(world: &mut World, action: Action, log: &mut Vec<Action>) {
         "the player died on {} after {} actions: {:?}\n{}",
         world.state.current_level,
         log.len(),
-        said(world).iter().rev().take(8).collect::<Vec<_>>(),
+        texts(world).iter().rev().take(8).collect::<Vec<_>>(),
         crate::dump::layer_rows(world, crate::dump::Layer::Actors).join("\n")
     );
 }
@@ -231,7 +222,7 @@ fn take(world: &mut World, dir: StairsDir, log: &mut Vec<Action>) {
         StairsDir::Down => Action::Descend,
         StairsDir::Up => Action::Ascend,
     };
-    assert!(world.apply(&action).took_turn, "{:?}", said(world).last());
+    assert!(world.apply(&action).took_turn, "{:?}", texts(world).last());
     log.push(action);
 }
 
@@ -300,7 +291,7 @@ fn black_wystan_hunted_down_makes_the_player_an_iron_and_replays_exactly() {
     beside_wat(&mut w);
     let start = w.state_hash();
     let log = hunt(&mut w);
-    let lines = said(&w);
+    let lines = texts(&w);
     assert!(
         lines.contains(&"Quest complete: Wanted.".to_string()),
         "{lines:?}"

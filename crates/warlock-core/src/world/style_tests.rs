@@ -11,8 +11,8 @@ use crate::combat::Category;
 use crate::content::{ContentFiles, Grip, ObjectId, WeaponSkillId};
 use crate::equipment;
 use crate::replay::Replay;
+use crate::test_support::CONTENT as BUILTIN;
 use crate::weapon_skills::{Training, WeaponSkills};
-use std::sync::LazyLock;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -723,9 +723,6 @@ fn sword_and_board_follows_a_hit_with_a_shield_bash() {
     assert!(bashes > 0 && bashes < hits, "{bashes} of {hits}");
     assert!(training(&w, "shield_bash") != Training::default());
 }
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
 
 #[test]
 fn starting_styles_come_from_the_class_and_move_no_other_roll() {

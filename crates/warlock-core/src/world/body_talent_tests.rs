@@ -4,17 +4,14 @@
 
 use super::*;
 use crate::ability::{Ability, Unavailable};
-use crate::action::{AttackKind, parse_actions};
+use crate::action::AttackKind;
 use crate::character::CharacterSpec;
 use crate::combat::{Blow, Category, Strike};
 use crate::content::{ContentFiles, Factor, StatusId, Trap};
 use crate::damage::Damage;
 use crate::equipment::Equipment;
 use crate::stats::{PerStat, Stat, Stats};
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::{CONTENT as BUILTIN, last, run, said};
 
 /// A human warrior in the showcase, every score 14.
 fn world() -> World {
@@ -23,20 +20,6 @@ fn world() -> World {
         World::with_character(BUILTIN.clone(), "showcase", Some(7), Some(&spec)).expect("world");
     set_scores(&mut w, 14);
     w
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
-}
-
-fn last(world: &World) -> String {
-    said(world).last().cloned().unwrap_or_default()
 }
 
 fn set_scores(world: &mut World, score: u8) {

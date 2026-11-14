@@ -8,6 +8,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::{CombatStance, ContentFiles, Goal, QuestKind};
 use crate::replay::Replay;
+use crate::test_support::{run as act, texts};
 use std::sync::LazyLock;
 
 const WYNFLAED: Pos = Pos::new(54, 13);
@@ -28,18 +29,8 @@ fn village() -> World {
     World::new(CONTENT.clone(), "holtwic", None).expect("a run in Holtwīc")
 }
 
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
-}
-
 fn heard(world: &World, start: &str) -> bool {
-    said(world).iter().any(|m| m.starts_with(start))
+    texts(world).iter().any(|m| m.starts_with(start))
 }
 
 fn put_player(world: &mut World, at: Pos) {

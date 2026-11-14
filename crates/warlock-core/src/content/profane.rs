@@ -452,7 +452,7 @@ mod tests {
 
     #[test]
     fn the_gifts_are_talents_of_the_profane_tree_and_excludes_is_symmetric() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let book = content.talents();
         let id = |name: &str| book.id(name).expect(name);
         let profane = content.profane();

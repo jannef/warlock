@@ -9,6 +9,7 @@ use crate::content::{ContentFiles, TrapAvoid};
 use crate::replay::Replay;
 use crate::rng::Rng;
 use crate::skills::{SkillId, Use};
+use crate::test_support::last;
 
 /// A lit hall on the built-in content, the player at `@` with `stats` (a scenario's TOML, no
 /// character: no talents): `a` a known arrow trap, `h` a hidden one, `p` a known pit, `o` an
@@ -57,10 +58,6 @@ fn step(world: &mut World) -> Outcome {
 
 fn sprung(out: &Outcome) -> bool {
     (out.events.iter()).any(|e| matches!(e, Event::TrapSprung { .. }))
-}
-
-fn last(world: &World) -> String {
-    (world.messages().iter().last()).map_or_else(String::new, |m| m.display())
 }
 
 /// The player's chance now of avoiding a known trap.

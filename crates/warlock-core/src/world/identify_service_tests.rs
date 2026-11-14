@@ -7,6 +7,7 @@ use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::magic::{Affix, Magic, Rarity};
 use crate::replay::Replay;
+use crate::test_support::{run, texts};
 
 /// The appraiser's words and service, added to the built-in dialogue.
 const APPRAISER: &str = r##"
@@ -67,19 +68,9 @@ fn world(gold: u32, carry: &[&str]) -> World {
 /// Three fireball scrolls and two lightning scrolls: two unidentified stacks.
 const SCROLLS: &[&str] = &["scroll_of_fireball*3", "scroll_of_lightning*2"];
 
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
-}
-
 fn gold(w: &World) -> u32 {
     let coin = w.content().object_id("gold_coin").expect("gold");
     super::shop::count_of(&w.state().player().inventory, coin)
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 /// The player carries an unidentified iron ring of the Bear.
@@ -142,7 +133,7 @@ fn everything_is_identified_for_the_total_and_it_takes_a_chats_time() {
         .object_id("scroll_of_fireball")
         .expect("fireball");
     assert!(w.lore().is_identified(fireball), "the type, from now on");
-    let said = said(&w);
+    let said = texts(&w);
     let names = [
         "This is 3 scrolls of fireball!",
         "This is 2 scrolls of lightning!",
@@ -174,7 +165,7 @@ fn nothing_to_identify_or_too_little_gold_is_refused_for_nothing() {
     assert!(!out.took_turn && out.elapsed.is_zero());
     assert_eq!(gold(&w), 500);
     assert_eq!(
-        said(&w).last().map(String::as_str),
+        texts(&w).last().map(String::as_str),
         Some("The old hermit says: \"You know all you carry.\"")
     );
     assert_eq!(w.topics(ActorId(1))[0].items, Some(0));
@@ -184,17 +175,23 @@ fn nothing_to_identify_or_too_little_gold_is_refused_for_nothing() {
     assert!(!out.took_turn && out.elapsed.is_zero());
     assert_eq!(gold(&w), 150);
     assert_eq!(w.unidentified().len(), 2, "nothing identified");
-    assert_eq!(said(&w).last().map(String::as_str), Some("You cannot pay."));
+    assert_eq!(
+        texts(&w).last().map(String::as_str),
+        Some("You cannot pay.")
+    );
     // No gold at all.
     let mut w = world(0, SCROLLS);
     run(&mut w, "ask:E:identify");
-    assert_eq!(said(&w).last().map(String::as_str), Some("You cannot pay."));
+    assert_eq!(
+        texts(&w).last().map(String::as_str),
+        Some("You cannot pay.")
+    );
     // Once everything is known, the next asking is free and refused.
     let mut w = world(200, SCROLLS);
     run(&mut w, "ask:E:identify ask:E:identify");
     assert_eq!(gold(&w), 0);
     assert_eq!(
-        said(&w).last().map(String::as_str),
+        texts(&w).last().map(String::as_str),
         Some("The old hermit says: \"You know all you carry.\"")
     );
 }

@@ -263,7 +263,7 @@ mod tests {
 
     #[test]
     fn the_builtin_file_orders_the_uses_as_the_owner_listed() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let rules = content.prayer().expect("the prayer is in the game");
         let order: Vec<&str> = rules.uses.iter().map(|u| u.id.id()).collect();
         assert_eq!(

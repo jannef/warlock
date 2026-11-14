@@ -3,12 +3,13 @@
 //! destroyed, the weapon form, the once-only line of a piece withstanding it, acid resistance,
 //! rust; a troll's pace and what stops it.
 
-use super::class_active_tests::{beside, last, world};
+use super::class_active_tests::{beside, world};
 use super::corrode::chance;
 use super::*;
 use crate::action::AttackKind;
 use crate::item_parts::ItemPart;
 use crate::object::Stack;
+use crate::test_support::last;
 
 #[test]
 fn acid_resistance_halves_the_chance() {

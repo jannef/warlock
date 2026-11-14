@@ -3,6 +3,7 @@
 //! rarity it had, but for the moves listed here.
 
 use super::Content;
+use crate::test_support::builtin;
 use std::collections::BTreeSet;
 
 /// Every dread type and its rarity tier (§6's rows marked dread; §8.3's moves applied).
@@ -83,7 +84,7 @@ fn rarity(content: &Content, id: &str) -> String {
 
 #[test]
 fn the_dread_types_are_the_sorts_at_their_tiers() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let flagged: BTreeSet<&str> = (content.creature_defs().iter())
         .filter(|c| c.dread)
         .map(|c| c.id.as_str())
@@ -97,7 +98,7 @@ fn the_dread_types_are_the_sorts_at_their_tiers() {
 
 #[test]
 fn the_sorts_other_tier_moves_hold_and_leave_them_unflagged() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for &(id, tier) in MOVED {
         assert_eq!(rarity(&content, id), tier, "{id}: rarity");
         let def = content.creature(content.creature_id(id).expect(id));
@@ -108,7 +109,7 @@ fn the_sorts_other_tier_moves_hold_and_leave_them_unflagged() {
 #[test]
 fn no_unique_is_dread() {
     // A unique (the layer keepers, the demilich) is placed by its own rules, never dread-drawn.
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for def in content.creature_defs() {
         assert!(
             !(def.unique && def.dread),
@@ -121,7 +122,7 @@ fn no_unique_is_dread() {
 #[test]
 fn every_dread_type_has_a_first_sight_line_and_nothing_else_does() {
     // §9 channel 4: every dread type gets one; the traits do not.
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for def in content.creature_defs() {
         assert_eq!(
             def.first_sight.is_some(),
@@ -135,7 +136,7 @@ fn every_dread_type_has_a_first_sight_line_and_nothing_else_does() {
 #[test]
 fn leavings_sit_on_the_types_they_suit() {
     use super::Leaving;
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let leaves = |id: &str| {
         let def = content.creature(content.creature_id(id).expect(id));
         def.leavings.clone()

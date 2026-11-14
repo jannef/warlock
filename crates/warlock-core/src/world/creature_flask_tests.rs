@@ -7,6 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, ZoneKind};
 use crate::replay::Replay;
+use crate::test_support::{builtin, run, said as texts};
 
 /// A lit hall of `map` (`@` the player, `k` a kobold alchemist, `g` a goblin firebomber, `c` a
 /// cult chymist), the player with plenty of hit points.
@@ -28,16 +29,6 @@ fn hall(map: &str) -> World {
     );
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     World::new(content, "hall", None).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
-}
-
-fn texts(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn first_of(w: &World, creature: &str) -> ActorId {
@@ -122,7 +113,7 @@ fn a_bomber_beside_its_foe_fights_in_melee() {
 
 #[test]
 fn the_three_bombers_throw_flasks_and_carry_them() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for (bomber, flask) in [
         ("kobold_alchemist", "flask_of_oil"),
         ("goblin_firebomber", "flask_of_fire"),

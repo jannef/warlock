@@ -2,9 +2,9 @@
 //! else's doing, and still strikes and summons from where it stands.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::geom::Dir;
+use crate::test_support::run;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -173,12 +173,6 @@ fn world(map: &str) -> World {
     );
     let content = Arc::new(Content::load(&files).expect("valid content"));
     World::new(content, "hall", None).expect("world")
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 /// The first actor of creature type `kind`.

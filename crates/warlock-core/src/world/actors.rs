@@ -131,12 +131,11 @@ fn index(map: &BTreeMap<ActorId, Actor>) -> BTreeMap<String, BTreeSet<ActorId>> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::content::Content;
+
     use crate::world::World;
-    use std::sync::Arc;
 
     fn actors() -> Actors {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = crate::test_support::builtin();
         World::new(content, "showcase", None)
             .expect("world")
             .state

@@ -263,7 +263,7 @@ fn blood_never_changes_what_happens() {
     // roll, blow, death, message, and step is the same; only the stains differ. (Whether a
     // creature has blood is a rule's: Bleeding never takes on the bloodless, `spell_data_tests`;
     // what is spilt never is.)
-    let builtin = Arc::new(Content::builtin().expect("builtin"));
+    let builtin = crate::test_support::builtin();
     let mut bloody = World::new(builtin.clone(), "arena", None).expect("arena");
     let mut clean = World::new(builtin, "arena", None).expect("arena");
     for action in parse_actions("wait*40").expect("waits") {

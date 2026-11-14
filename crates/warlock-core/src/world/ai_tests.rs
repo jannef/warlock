@@ -6,6 +6,7 @@ use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::content::{ContentFiles, Stance};
 use crate::replay::Replay;
+use crate::test_support::{builtin, run, said as messages};
 use std::sync::LazyLock;
 
 const TERRAIN: &str = r##"
@@ -291,20 +292,8 @@ fn world(scenario: &str) -> World {
     World::new(CONTENT.clone(), scenario, None).expect("world")
 }
 
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    parse_actions(actions)
-        .expect("actions")
-        .iter()
-        .map(|a| world.apply(a))
-        .collect()
-}
-
 fn pos(world: &World, id: ActorId) -> Pos {
     world.state().actors[&id].pos
-}
-
-fn messages(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 fn last_message(world: &World) -> String {
@@ -347,7 +336,7 @@ const PLAYER: ActorId = ActorId(0);
 
 #[test]
 fn builtin_factions_set_who_fights_whom() {
-    let content = Content::builtin().expect("builtin content");
+    let content = builtin();
     let id = |name: &str| content.creature_id(name).expect(name);
     let stance = |a, b| content.stance(id(a), id(b));
     let hostile = [
@@ -1015,12 +1004,6 @@ fn something_unseen_attacks_you_in_the_dark() {
 // ---------------------------------------------------------------------------------------------
 // The built-in arena and sky-lit levels.
 
-fn builtin() -> Arc<Content> {
-    static BUILTIN: LazyLock<Arc<Content>> =
-        LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
-    BUILTIN.clone()
-}
-
 #[test]
 fn creature_sight_matches_the_players_under_the_sun_and_the_moon() {
     for (scenario, actions) in [
@@ -1162,7 +1145,7 @@ fn the_override_is_seen_saved_and_checked() {
 
 #[test]
 fn the_showcase_is_safe_and_the_arena_is_not() {
-    let content = Content::builtin().expect("builtin content");
+    let content = builtin();
     let player = content.creature_id("player").expect("player");
     let hostile = |level: &str| {
         let template = content.level(level).expect("level");

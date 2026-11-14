@@ -58,7 +58,7 @@ mod tests {
 
     #[test]
     fn a_feint_leaves_a_foe_surprised() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let rules = content.feint().expect("feinting is in the game");
         assert_eq!(content.status(rules.status).id, "surprised");
     }

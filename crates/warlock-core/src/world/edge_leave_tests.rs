@@ -10,10 +10,7 @@ use super::quick_leave::QUICK_LEAVE_REFUSED;
 use super::*;
 use crate::action::parse_actions;
 use crate::content::Stance;
-
-fn content() -> Arc<Content> {
-    Arc::new(Content::load(&crate::content::ContentFiles::builtin()).expect("builtin content"))
-}
+use crate::test_support::{builtin as content, last_text as last};
 
 /// A run in the forest's local area, the player on a free, walkable cell of its west edge.
 fn at_the_edge() -> World {
@@ -46,10 +43,6 @@ fn at_the_edge() -> World {
 fn act(world: &mut World, actions: &str) -> Vec<bool> {
     let actions = parse_actions(actions).expect("actions");
     actions.iter().map(|a| world.apply(a).took_turn).collect()
-}
-
-fn last(world: &World) -> String {
-    (world.messages().iter().last()).map_or(String::new(), |m| m.text.clone())
 }
 
 #[test]

@@ -7,6 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, Rarity};
 use crate::replay::Replay;
+use crate::test_support::run as act;
 use std::sync::LazyLock;
 
 const ROAD: Pos = Pos::new(19, 28);
@@ -37,12 +38,6 @@ static CERTAIN: LazyLock<Arc<Content>> = LazyLock::new(|| {
     files.insert(DIALOGUE, &text);
     Arc::new(Content::load(&files).expect("certain uniques"))
 });
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
 
 fn said(world: &World, text: &str) -> bool {
     world.messages().iter().any(|m| m.text.contains(text))

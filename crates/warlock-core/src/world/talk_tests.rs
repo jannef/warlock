@@ -7,6 +7,7 @@ use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::noise::SoundKind;
 use crate::replay::Replay;
+use crate::test_support::{builtin, last_text as last_message, run, texts};
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -376,25 +377,6 @@ fn content() -> Arc<Content> {
 
 fn world(scenario: &str) -> World {
     World::new(content(), scenario, None).expect("world")
-}
-
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| world.apply(a))
-        .collect()
-}
-
-fn texts(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
-}
-
-fn last_message(world: &World) -> String {
-    world
-        .messages()
-        .iter()
-        .last()
-        .map(|m| m.text.clone())
-        .unwrap_or_default()
 }
 
 fn pos(world: &World, id: u32) -> Pos {
@@ -819,7 +801,7 @@ fn dialogue_data_is_validated() {
 
 #[test]
 fn the_showcase_people_talk() {
-    let content = Arc::new(Content::builtin().expect("builtin"));
+    let content = builtin();
     for creature in ["gardener", "bard", "hermit"] {
         let id = content.creature_id(creature).expect(creature);
         let dialogue = content.dialogue_of(id, None).expect("a dialogue");

@@ -5,6 +5,7 @@
 use super::*;
 use crate::action::Rest;
 use crate::content::ContentFiles;
+use crate::test_support::builtin;
 use crate::time::Duration;
 
 /// A hall with an altar (`A`, in an echoing room), a faint rune (`R`), an altar with a chalice
@@ -191,7 +192,7 @@ fn a_statue_is_named_with_its_note_on_arriving_beside_it_once() {
 /// its inscription: the vault's note is stamped into the level's state, and look mode reads it.
 #[test]
 fn the_hunters_statue_on_fyrdelf_reads_its_inscription() {
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = builtin();
     let mut w = World::new(Arc::clone(&content), "fyrdelf", Some(1)).expect("world");
     let id = "fyrdelf:11";
     let template =

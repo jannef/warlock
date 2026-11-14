@@ -5,8 +5,8 @@
 
 use super::fixture_factions::make_peace;
 use super::*;
-use crate::action::parse_actions;
 use crate::content::{ContentFiles, ZoneKind};
+use crate::test_support::{builtin, run, said as texts};
 
 // A training dummy takes a lot and never fights back; a dead one is undead.
 const DUMMIES: &str = "[[creature]]\nid = \"dummy\"\nname = \"training dummy\"\nglyph = \"D\"\n\
@@ -48,16 +48,6 @@ fn hall(map: &str) -> World {
 /// The hall every throw is made in: the dummy six cells east of the player.
 const ROW: &str = "############\n#@.....D...#\n############\n";
 
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
-}
-
-fn texts(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
-}
-
 fn at(w: &World, p: Pos) -> ActorId {
     (w.state.actors.values())
         .find(|a| a.pos == p)
@@ -93,7 +83,7 @@ fn thrown(letter: char) -> (World, ActorId) {
 
 #[test]
 fn every_flask_is_a_potion_with_a_splash_and_a_label() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for (id, spell) in [
         ("flask_of_oil", "slick"),
         ("stinking_flask", "reek"),

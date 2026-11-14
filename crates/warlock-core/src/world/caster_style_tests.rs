@@ -5,11 +5,12 @@
 //! ranks do to a rolling spell's roll, the critical held by nothing, Battle caster's armour and
 //! Spell guard, the style marked in use, and the classes' starting ranks.
 
-use super::caster_tests::{kobold, reach, run, said, sp, world_with};
+use super::caster_tests::{kobold, reach, sp, world_with};
 use super::*;
 use crate::action::Event;
 use crate::combat::Strike;
 use crate::content::{Role, WeaponSkillId};
+use crate::test_support::{run, said};
 use crate::weapon_skills::WeaponSkills;
 
 /// The built-in content with the wizard's Arcane bolt (level 6) as `body` says: its shape,

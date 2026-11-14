@@ -8,6 +8,7 @@ use super::*;
 use crate::action::{SpellShape, parse_actions};
 use crate::content::ContentFiles;
 use crate::replay::Replay;
+use crate::test_support::{builtin, run, said as texts};
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -286,16 +287,6 @@ fn world(map: &str) -> World {
     world_with(map, "")
 }
 
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| world.apply(a))
-        .collect()
-}
-
-fn texts(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
-}
-
 /// Who set off a trap at `at` in `out`, in order.
 fn sprung_at(out: &[Outcome], at: Pos) -> Vec<ActorId> {
     (out.iter().flat_map(|o| &o.events))
@@ -533,7 +524,7 @@ fn searching_finds_a_doors_trap() {
 /// the arrow goes off as the player opens the west door.
 #[test]
 fn the_trap_halls_closets_have_trapped_doors() {
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = builtin();
     let mut w = World::new(content, "traps", None).expect("the trap hall");
     // The kobold's rounds are timed at its kind's own pace (`grade.rs` would change it).
     for actor in w.state.actors.values_mut() {

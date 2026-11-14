@@ -8,6 +8,7 @@ use crate::action::{Event, parse_actions};
 use crate::combat::{Category, Defence};
 use crate::content::ContentFiles;
 use crate::stats::Stat;
+use crate::test_support::said;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -209,10 +210,6 @@ fn first_of<'w>(w: &'w World, kind: &str) -> &'w Actor {
     (w.state.actors.values())
         .find(|a| a.creature == id)
         .expect("the creature")
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn degrees(w: &World, id: ActorId, status: &str) -> u16 {

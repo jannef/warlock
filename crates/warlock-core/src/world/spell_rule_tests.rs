@@ -3,13 +3,14 @@
 //! Bramble on living ground, Gale's order of pushes and the zones it clears, Cloudburst's hour,
 //! Sense the quick's heartbeats.
 
-use super::caster_tests::{kobold_at, run, said, sp};
+use super::caster_tests::{kobold_at, sp};
 use super::spell_type_tests::{cell, start, status};
 use super::*;
 use crate::action::{Action, Event};
 use crate::content::ZoneKind;
 use crate::noise::SoundKind;
 use crate::stats::{PerStat, Stats};
+use crate::test_support::{run, said};
 
 /// A lit hall: the player at (2, 3), a kobold (1, 1) in a room walled off to the north (cells 1 to
 /// 3, y 1), a meadow at x 15 to 18, y 3 to 5, and a shut door at the east end of the player's row.

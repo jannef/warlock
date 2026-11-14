@@ -1,6 +1,6 @@
 //! The orc tribe (#455): their stance toward the tribes they raid, and their weapons.
 
-use super::Content;
+use crate::test_support::builtin;
 
 /// Every orc type, and whether it is a beast (the wargs).
 const ORCS: &[(&str, bool)] = &[
@@ -22,7 +22,7 @@ const ORCS: &[(&str, bool)] = &[
 #[test]
 fn the_orcs_hunt_the_player_and_leave_the_tribes_they_raid_be() {
     use super::Stance;
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let stance = |a: &str, b: &str| {
         let id = |n: &str| content.creature_id(n).expect(n);
         content.stance(id(a), id(b))
@@ -47,7 +47,7 @@ fn the_orcs_hunt_the_player_and_leave_the_tribes_they_raid_be() {
 fn the_orcs_are_shared_and_wield_their_weapons() {
     use crate::gear;
     use crate::rng::Rng;
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for &(id, beast) in ORCS {
         let creature = content.creature_id(id).expect(id);
         assert_eq!(content.creature(creature).campaign, None, "{id}: shared");

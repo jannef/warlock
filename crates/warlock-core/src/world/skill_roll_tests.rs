@@ -10,26 +10,11 @@ use crate::content::Factor;
 use crate::replay::Replay;
 use crate::skills::Trained;
 use crate::stats::{PerStat, Stat, Stats};
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::{CONTENT as BUILTIN, last, run};
 
 fn world(character: &str) -> World {
     let spec: CharacterSpec = character.parse().expect("a character");
     World::with_character(BUILTIN.clone(), "showcase", Some(7), Some(&spec)).expect("world")
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn last(world: &World) -> String {
-    (world.messages().iter().next_back())
-        .map(|m| m.display())
-        .unwrap_or_default()
 }
 
 /// Every score of the player 10, but Intelligence `intelligence`.

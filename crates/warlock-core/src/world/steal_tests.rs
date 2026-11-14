@@ -10,6 +10,7 @@ use crate::content::ContentFiles;
 use crate::geom::Dir;
 use crate::replay::Replay;
 use crate::stats::{Stat, Stats};
+use crate::test_support::last_text as last;
 
 // A lit den: the player between a gardener (west), who carries nothing, and a peaceful kobold
 // (east) with a short sword in hand and coins and apples in its pack.
@@ -78,10 +79,6 @@ fn apply(w: &mut World, actions: &str) -> Outcome {
         last = w.apply(&action);
     }
     last
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or(String::new(), |m| m.text.clone())
 }
 
 fn said(w: &World, text: &str) -> bool {

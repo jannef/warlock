@@ -6,6 +6,7 @@ use super::*;
 use crate::burden::{self, Burden};
 use crate::content::ContentFiles;
 use crate::object::Stack;
+use crate::test_support::{builtin, run, said_text as said};
 
 /// A hall, 30 wide, with a heavy hall over x 10 to 19.
 const HALL: &str = "\
@@ -38,16 +39,6 @@ fn world() -> World {
     World::new(content, "test_heavy", None).expect("world")
 }
 
-fn run(w: &mut World, text: &str) {
-    for action in crate::action::parse_actions(text).expect("actions") {
-        w.apply(&action);
-    }
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
-}
-
 fn load(w: &World) -> burden::Load {
     w.actor_load(w.state.player).expect("the player")
 }
@@ -66,7 +57,7 @@ fn carry(w: &mut World, percent: u64) {
 
 #[test]
 fn the_heavy_hall_is_data() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let effects = content.room_effects();
     let heavy = effects.get(effects.id("heavy").expect("heavy"));
     assert_eq!(

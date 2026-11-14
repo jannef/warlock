@@ -313,7 +313,7 @@ fn generated_levels_roll_gear_from_their_own_stream_and_nothing_else_moves() {
     let plain = Content::load(&plain).expect("valid without gear");
     let kobold = plain.creature_id("kobold").expect("kobold");
     assert!(plain.creature(kobold).gear.is_empty());
-    let builtin = Content::builtin().expect("built-in");
+    let builtin = crate::test_support::builtin();
     let mut armed = 0;
     for seed in 0..6 {
         for depth in 1..=4 {
@@ -354,7 +354,7 @@ fn generated_levels_roll_gear_from_their_own_stream_and_nothing_else_moves() {
 
 #[test]
 fn a_hand_made_levels_creatures_roll_from_their_own_stream_unless_given_a_kit() {
-    let builtin = Arc::new(Content::builtin().expect("built-in"));
+    let builtin = crate::test_support::builtin();
     let traps = World::new(builtin.clone(), "traps", None).expect("traps");
     let level = traps.state.current_level.clone();
     let item_level = builtin.item_level(&level);
@@ -426,7 +426,7 @@ fn what_a_kill_drops_falls_unidentified() {
 #[test]
 fn an_armed_kobold_aims_by_its_spear_and_its_rank() {
     // #1169: no flat to-hit; the spear's skill rank brings the blow to `L/4` (to `L/4 + 1`).
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = crate::test_support::builtin();
     let arena = World::new(content.clone(), "arena", None).expect("arena");
     let kobold = content.creature_id("kobold").expect("kobold");
     let k = (arena.state.actors.values())

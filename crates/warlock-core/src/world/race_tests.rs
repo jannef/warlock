@@ -4,9 +4,9 @@
 //! eye for traps notices them in passing.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::combat::Category;
 use crate::content::ContentFiles;
+use crate::test_support::run;
 use std::sync::LazyLock;
 
 /// Test races beside the built-in ones, each with one gift.
@@ -144,12 +144,6 @@ fn seeded(scenario: &str, race: &str, seed: u64) -> World {
     let mut state = w.state().clone();
     state.character.as_mut().expect("a character").sign = None;
     World::from_state(CONTENT.clone(), state).expect("restores")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn said(w: &World, text: &str) -> bool {

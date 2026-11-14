@@ -118,7 +118,7 @@ mod tests {
 
     #[test]
     fn every_object_has_its_class_and_kinds_agree() {
-        let c = crate::content::Content::builtin().expect("content");
+        let c = crate::test_support::builtin();
         let class_of = |id: &str| &c.item_class(c.object(c.object_id(id).expect(id)).class).id;
         assert_eq!(class_of("dagger"), "melee_weapons");
         assert_eq!(class_of("sling_stone"), "missiles");

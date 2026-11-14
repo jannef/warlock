@@ -1,14 +1,14 @@
 //! The summoners (#520): every type with a summoning carries the `summoner` tag and one of
 //! another tribe, and every `summoner` summons; every one but a rooted gate (#1295) has mana.
 
-use super::Content;
+use crate::test_support::builtin;
 
 /// The summoners of #520 by id.
 const ROSTER: &[&str] = &["goblin_wizard", "necromancer", "dark_wizard"];
 
 #[test]
 fn every_summoner_summons_and_belongs_to_another_tribe() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let tagged: Vec<_> = content.tagged("summoner").collect();
     assert!(tagged.len() >= ROSTER.len());
     for (i, def) in content.creatures.iter().enumerate() {

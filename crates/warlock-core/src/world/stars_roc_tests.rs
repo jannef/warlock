@@ -11,11 +11,8 @@ use crate::perception::Freshness;
 use crate::rng::Rng;
 use crate::stats::{PerStat, Stats};
 use crate::talent::{OffenceEffect, VigourEffect};
+use crate::test_support::{CONTENT as BUILTIN, said};
 use crate::time::Duration;
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 /// A human warrior in `scenario` born under the `element` `animal` (`None`: under no sign), the
 /// run restored with that birth, so the gifts are granted as a load grants them.
@@ -43,10 +40,6 @@ fn unborn() -> World {
 
 fn mods(w: &World) -> crate::talent::TalentMods {
     w.state.player().talent_mods(w.content()).into_owned()
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 /// The gifts held, by id, in grant order (a class's abilities left out).

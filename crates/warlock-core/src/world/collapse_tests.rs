@@ -7,6 +7,7 @@ use super::*;
 use crate::burden::Burden;
 use crate::content::ContentFiles;
 use crate::object::Stack;
+use crate::test_support::{builtin, said_text as said};
 
 /// A hall with a collapsed floor over x 10 to 19 (`:` its cracked floor, `.` one plain cell of
 /// it) and a way down to the cellar.
@@ -73,10 +74,6 @@ fn world() -> World {
     world_with(", to = \"test_cellar\"", false)
 }
 
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
-}
-
 /// Puts the player back on the top level at `at`, whole.
 fn back(w: &mut World, at: Pos) {
     w.state.current_level = "test_top".into();
@@ -102,7 +99,7 @@ fn falls(w: &mut World, at: Pos, times: u32) -> u32 {
 
 #[test]
 fn the_collapsed_floor_is_data() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let effects = content.room_effects();
     let def = effects.get(effects.id("collapsed").expect("collapsed"));
     assert_eq!(

@@ -8,6 +8,7 @@ use super::*;
 use crate::action::{Action, parse_actions};
 use crate::content::{ContentFiles, LevelKind, local_area_id};
 use crate::replay::Replay;
+use crate::test_support::{builtin, last_text as last, run as act};
 
 const TABLE: &str = r#"
 [[table]]
@@ -81,20 +82,6 @@ fn world(certain: bool) -> World {
     World::new(content(certain), "world", None).expect("world")
 }
 
-fn act(w: &mut World, actions: &str) {
-    for a in parse_actions(actions).expect("actions") {
-        w.apply(&a);
-    }
-}
-
-fn last(w: &World) -> String {
-    w.messages()
-        .iter()
-        .last()
-        .map(|m| m.text.clone())
-        .unwrap_or_default()
-}
-
 fn said(w: &World, text: &str) -> bool {
     w.messages().iter().any(|m| m.text.contains(text))
 }
@@ -109,12 +96,7 @@ fn party(w: &World) -> Vec<ActorId> {
 #[test]
 fn no_draws_without_an_encounter() {
     // No tables: nothing is drawn on any step, from any stream.
-    let mut plain = World::new(
-        Arc::new(Content::load(&ContentFiles::builtin()).expect("builtin")),
-        "world",
-        None,
-    )
-    .expect("world");
+    let mut plain = World::new(builtin(), "world", None).expect("world");
     let rng = plain.state.rng.clone();
     act(&mut plain, "move:E*3 move:S*2");
     assert!(plain.state.encounters.is_none(), "no stream is made");
@@ -432,12 +414,7 @@ fn camp(rest: u32, seed: u64) -> World {
 
 #[test]
 fn resting_without_tables_a_share_or_the_overworld_draws_nothing() {
-    let mut plain = World::new(
-        Arc::new(Content::load(&ContentFiles::builtin()).expect("builtin")),
-        "world",
-        None,
-    )
-    .expect("world");
+    let mut plain = World::new(builtin(), "world", None).expect("world");
     act(&mut plain, "rest:8h");
     assert!(plain.state.encounters.is_none(), "no tables: no stream");
     // No share of the rate for a rest: none drawn either.

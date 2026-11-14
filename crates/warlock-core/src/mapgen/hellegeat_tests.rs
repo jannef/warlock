@@ -4,9 +4,7 @@
 //! fiends.
 
 use super::*;
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Content> = LazyLock::new(|| Content::builtin().expect("builtin content"));
+use crate::test_support::CONTENT;
 
 fn floor(pit: u32, depth: u32) -> String {
     format!("hellegeat@{pit}:{depth}")

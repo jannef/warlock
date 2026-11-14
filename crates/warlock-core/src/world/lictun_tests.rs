@@ -9,6 +9,7 @@ use crate::action::parse_actions;
 use crate::content::{ContentFiles, Stance};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
+use crate::test_support::{run as act, texts};
 use std::sync::LazyLock;
 
 /// Cēaptūn's cell, where the south road starts.
@@ -27,16 +28,6 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
     files.remove_encounter_tables();
     Arc::new(Content::load(&files).expect("builtin content"))
 });
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
-}
 
 /// A run of the Ascmearc in the yard, given `graveyard` as the run begins.
 fn yard(graveyard: Vec<Fallen>) -> World {
@@ -90,12 +81,12 @@ fn the_yard_is_beside_the_south_road_and_left_by_its_edge() {
     let mut w = World::new(CONTENT.clone(), "ascmearc", None).expect("the Ascmearc");
     act(&mut w, WALK);
     assert_eq!(w.player_pos(), YARD_CELL);
-    assert_eq!(said(&w).last().unwrap(), "The way into Līctūn is here.");
+    assert_eq!(texts(&w).last().unwrap(), "The way into Līctūn is here.");
     act(&mut w, "descend");
     assert_eq!(w.state.current_level, "lictun");
     assert_eq!(w.player_pos(), START, "on the road outside the gate");
     assert!(
-        said(&w)
+        texts(&w)
             .iter()
             .any(|l| l.starts_with("Līctūn, Cēaptūn's churchyard"))
     );
@@ -140,12 +131,12 @@ fn nobody_but_the_sexton_and_nothing_comes() {
     let to = (Dir::ALL.into_iter())
         .find(|d| beside.step(*d) == at)
         .expect("a way to him");
-    let before = said(&w).len();
+    let before = texts(&w).len();
     act(&mut w, &format!("chat:{to}"));
     assert!(
-        said(&w)[before].starts_with("Old Dudda says: \""),
+        texts(&w)[before].starts_with("Old Dudda says: \""),
         "{:?}",
-        said(&w)
+        texts(&w)
     );
 }
 

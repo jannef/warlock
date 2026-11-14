@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn the_stipend_keeps_potions_scrolls_and_gems() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let rules = content.stipend().expect("the stipend is in the game");
         let kept: Vec<&str> = (rules.keep.iter())
             .map(|&c| content.item_class(c).id.as_str())

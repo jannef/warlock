@@ -279,7 +279,7 @@ mod tests {
 
     #[test]
     fn builtin_overworld_cells_have_local_areas_but_locations_do_not() {
-        let content = Content::builtin().expect("builtin content");
+        let content = crate::test_support::builtin();
         let overworld = content.overworld_of("showcase").expect("an overworld");
         let mut explorable = 0;
         for y in 0..overworld.terrain.height() {

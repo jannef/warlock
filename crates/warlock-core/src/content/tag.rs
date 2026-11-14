@@ -83,7 +83,7 @@ mod tests {
 
     #[test]
     fn the_builtin_tags_and_their_members() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let members = |tag: &str| -> Vec<String> {
             (content.tagged(tag))
                 .map(|c| content.creature(c).id.clone())
@@ -147,7 +147,7 @@ mod tests {
     /// the `undead` tag.
     #[test]
     fn every_undead_carries_the_undead_tag() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let undead = content.factions().id("undead").expect("undead faction");
         for (i, def) in content.creature_defs().iter().enumerate() {
             if def.faction == Some(undead) {

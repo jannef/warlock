@@ -12,6 +12,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stats};
+use crate::test_support::{last_text as last, run as apply, said_text as said, texts};
 use std::sync::LazyLock;
 
 const ROOM: &str = "\
@@ -135,18 +136,6 @@ fn kinds(w: &World, magic: &Magic) -> Vec<AffixKind> {
         .collect()
 }
 
-fn texts(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.text.clone()).collect()
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
-}
-
 fn pack(w: &World) -> Vec<String> {
     (w.state.player().inventory.iter())
         .map(|s| w.lore().describe(s))
@@ -155,12 +144,6 @@ fn pack(w: &World) -> Vec<String> {
 
 fn recipe(w: &World, id: &str) -> RecipeId {
     w.content.recipes().id(id).expect(id)
-}
-
-fn apply(w: &mut World, text: &str) {
-    for action in parse_actions(text).expect("parses") {
-        w.apply(&action);
-    }
 }
 
 /// The families of colour `colour`.

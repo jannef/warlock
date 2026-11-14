@@ -2,12 +2,13 @@
 //! foe, on War cry's check; its degrees by the ladder of `data/intimidate.toml`; its refusals,
 //! with no time and no draw; a turn and a voice; each threat a mark of Intimidate.
 
-use super::class_active_tests::{last, run, suffers, world};
+use super::class_active_tests::{suffers, world};
 use super::*;
 use crate::ability::Ability;
 use crate::noise::SoundKind;
 use crate::skills::{Effect, Trained};
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::{last, run};
 
 /// A creature of type `creature` placed at `at`, every score `score`, awake and hostile; its id.
 pub(super) fn foe_at(w: &mut World, creature: &str, at: Pos, score: u8) -> ActorId {

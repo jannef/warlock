@@ -49,7 +49,7 @@ mod tests {
 
     #[test]
     fn the_patron_pays_the_worth() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let rules = content.patron().expect("the patron is in the game");
         assert_eq!(rules.pays, 100);
         assert_eq!(rules.paid(160), 160);

@@ -7,12 +7,13 @@
 //! their own, as `world/unique_tests.rs` brings its own unique.
 
 use super::cast_tests::{cast_at, scores};
-use super::caster_tests::{kobold, reach, run, sp, world_with};
+use super::caster_tests::{kobold, reach, sp, world_with};
 use super::*;
 use crate::combat::{DEFAULT_THREAT, Strike, THREATS};
 use crate::content::{ContentFiles, Grip};
 use crate::magic::{Affix, Magic, Rarity};
 use crate::stats::Stat;
+use crate::test_support::run;
 
 /// Fixture affixes, one per spellcasting effect, with ranges wide enough for every test.
 const AFFIXES: &str = r#"

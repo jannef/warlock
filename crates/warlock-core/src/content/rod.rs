@@ -278,7 +278,7 @@ mod tests {
 
     #[test]
     fn the_shipped_effects_load_and_reach_grows_with_willpower() {
-        let content = Content::load(&ContentFiles::builtin()).expect("content");
+        let content = crate::test_support::builtin();
         let ids: Vec<&str> = content
             .rod_effects()
             .iter()

@@ -2,9 +2,7 @@
 
 use super::*;
 use crate::content::ContentFiles;
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Content> = LazyLock::new(|| Content::builtin().expect("built-in content"));
+use crate::test_support::CONTENT;
 
 /// A chapter file of paragraph 4 with a plain line and `lines`.
 fn chapter(id: &str, lines: &str) -> String {

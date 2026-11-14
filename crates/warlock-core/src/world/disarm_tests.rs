@@ -13,6 +13,7 @@ use crate::replay::Replay;
 use crate::rng::Rng;
 use crate::skills::{Effect, SkillId};
 use crate::stats::Stat;
+use crate::test_support::{run, said as texts};
 use crate::time::Duration;
 
 /// A lit hall on the built-in content, the player at `@` as `character` (`RACE,GENDER,CLASS`):
@@ -51,16 +52,6 @@ const THIEF: &str = "human,female,thief";
 
 /// The player at (1, 1) with the trap (or door) east of them at (2, 1).
 const EAST: Pos = Pos::new(2, 1);
-
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| world.apply(a))
-        .collect()
-}
-
-fn texts(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
-}
 
 fn last(world: &World) -> String {
     texts(world).last().cloned().unwrap_or_default()

@@ -5,9 +5,10 @@
 use super::*;
 use crate::action::Positions;
 use crate::magic::{Affix, Magic, Numbers, Rarity, describe};
+use crate::test_support::builtin;
 
 fn world() -> World {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     World::new(content, "showcase", None).expect("world")
 }
 

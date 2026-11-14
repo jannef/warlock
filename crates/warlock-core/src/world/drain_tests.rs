@@ -10,7 +10,7 @@ use crate::combat::{Blow, Strike};
 use crate::content::{Affliction, ContentFiles, Drain};
 use crate::replay::Replay;
 use crate::stats::{DRAIN_FLOOR, PerStat, Stat, Stats};
-use std::sync::LazyLock;
+use crate::test_support::{CONTENT as BUILTIN, run, said};
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -113,16 +113,6 @@ fn content(map: &str, scenario: &str) -> Arc<Content> {
 
 fn world_on(map: &str, scenario: &str, seed: u64) -> World {
     World::new(content(map, scenario), "crypt", Some(seed)).expect("world")
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 const HIT: Blow = Blow {
@@ -310,9 +300,6 @@ fn a_random_drain_draws_its_stat_first() {
     }
     assert!(picked.len() >= 4, "{picked:?}");
 }
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 #[test]
 fn the_pale_drinker_drains_strength_against_willpower() {

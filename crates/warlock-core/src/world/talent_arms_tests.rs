@@ -6,17 +6,13 @@
 
 use super::fight::Harm;
 use super::*;
-use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::combat::Category;
 use crate::content::{Benefit, CombatStance, Factor, MAX_RANK, WeaponSkillId};
 use crate::equipment::{free_slot, slots_taken};
 use crate::object::Stack;
 use crate::stats::{PerStat, Stats};
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::{CONTENT as BUILTIN, last, run};
 
 /// A human warrior in the showcase, every score 14.
 fn world() -> World {
@@ -25,16 +21,6 @@ fn world() -> World {
         World::with_character(BUILTIN.clone(), "showcase", Some(7), Some(&spec)).expect("world");
     w.player_mut().stats = Stats::new(PerStat::splat(14), PerStat::splat(14));
     w
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn last(world: &World) -> String {
-    (world.messages().iter().last()).map_or_else(String::new, |m| m.display())
 }
 
 /// Grants the XP that takes the player to `level`.

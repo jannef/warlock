@@ -3,9 +3,9 @@
 //! determinism.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::{ContentFiles, LevelTemplate};
 use crate::perception::Perception;
+use crate::test_support::{builtin, run, said};
 use crate::time::{Duration, GameTime};
 use std::collections::BTreeSet;
 
@@ -119,16 +119,6 @@ fn haunt(seed: u64) -> World {
     World::new(content(), "haunt", Some(seed)).expect("world")
 }
 
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
-}
-
 /// The creatures on the player's level but the player.
 fn others(world: &World) -> BTreeSet<ActorId> {
     let level = &world.state.current_level;
@@ -201,7 +191,7 @@ fn only_levels_with_a_danger_keep_a_spawner() {
     let w = haunt(1);
     assert!(w.state.current().spawner.is_some());
     // The builtin worlds: no level has one, so their states are as they were.
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = builtin();
     let mut d = World::new(content, "depths", Some(3)).expect("world");
     run(&mut d, "rest:24h spawn");
     assert!(d.state.levels.values().all(|l| l.spawner.is_none()));
@@ -669,7 +659,7 @@ fn the_spawner_rolls_for_dread_at_the_levels_own_odds() {
 
 #[test]
 fn draw_odds_take_the_most_specific_dread_one_in() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let at = |id: &str| content.draw_odds_at(id).expect(id).dread_one_in;
     // The default, a branch's own, its depths' own (data/dungeons/*.toml).
     assert_eq!(at("fyrdelf:1"), 100);

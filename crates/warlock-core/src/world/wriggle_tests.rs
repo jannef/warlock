@@ -7,6 +7,7 @@ use crate::content::ContentFiles;
 use crate::geom::{Dir, Pos};
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::last_text as last;
 
 /// The player and a shopkeeper keeping its post east of them.
 const ROOM: &str = "#########\n#.@s....#\n#.......#\n#########\n";
@@ -50,10 +51,6 @@ fn train(w: &mut World, value: u16) {
 
 fn marks(w: &World) -> u32 {
     (w.state.player().skills.get(skill(w))).map_or(0, |t| t.marks)
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
 }
 
 #[test]

@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     fn a_secret_door_looks_like_the_wall_around_it() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let id = |name: &str| content.terrain_id(name).expect(name);
         let (wall, granite, floor, door, void) = (
             id("wall"),

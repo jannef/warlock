@@ -10,6 +10,7 @@ use crate::fov::radius2;
 use crate::grid::Grid;
 use crate::perception::Emitter;
 use crate::replay::Replay;
+use crate::test_support::last_text as last_message;
 use std::collections::VecDeque;
 use std::sync::LazyLock;
 
@@ -66,15 +67,6 @@ fn overworld_files(map: &str) -> ContentFiles {
         "name = \"Forest\"\nstart_level = \"overworld\"\n",
     );
     files
-}
-
-fn last_message(world: &World) -> String {
-    world
-        .messages()
-        .iter()
-        .last()
-        .map(|m| m.text.clone())
-        .unwrap_or_default()
 }
 
 fn terrain_id(world: &World) -> String {

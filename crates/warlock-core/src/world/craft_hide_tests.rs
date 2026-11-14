@@ -9,6 +9,7 @@ use super::*;
 use crate::content::{ContentFiles, RecipeId};
 use crate::object::Stack;
 use crate::skills::{SkillId, Trained};
+use crate::test_support::{last_text as said, run as apply};
 
 /// The built-in content with a bare room. The player (a craftsperson) carries nothing and has
 /// Woodcraft at 50.
@@ -62,18 +63,8 @@ fn carry(w: &mut World, object: &str) {
     w.player_mut().inventory.push(Stack::one(id));
 }
 
-fn said(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
-}
-
 fn recipe(w: &World, id: &str) -> RecipeId {
     w.content.recipes().id(id).expect(id)
-}
-
-fn apply(w: &mut World, text: &str) {
-    for action in crate::action::parse_actions(text).expect("parses") {
-        w.apply(&action);
-    }
 }
 
 fn row_lack(w: &World, id: &str) -> Option<RecipeLack> {

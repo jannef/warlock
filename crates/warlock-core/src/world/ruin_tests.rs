@@ -2,12 +2,13 @@
 //! it by `data/ruin.toml`; quest objects, uniques, and what is carried are spared; the draws are
 //! the ruin stream's alone.
 
-use super::caster_tests::{reach, said, sp, world_with};
+use super::caster_tests::{reach, sp, world_with};
 use super::spell::Caster;
 use super::*;
 use crate::content::{Burst, ContentFiles, DamageTypeId};
 use crate::magic::{Magic, Rarity};
 use crate::object::Stack;
+use crate::test_support::{builtin, said};
 
 fn kind(w: &World, id: &str) -> DamageTypeId {
     w.content().damage_type_id(id).expect("a damage type")
@@ -60,7 +61,7 @@ fn blow(w: &mut World, caster: Caster, at: Pos, burst: &Burst) {
 }
 
 fn wizard() -> World {
-    world_with(Arc::new(Content::builtin().expect("content")), "wizard")
+    world_with(builtin(), "wizard")
 }
 
 #[test]

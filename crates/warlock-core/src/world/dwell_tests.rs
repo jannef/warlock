@@ -5,6 +5,7 @@
 use super::*;
 use crate::action::Rest;
 use crate::content::{ContentFiles, StatusId};
+use crate::test_support::said_text as said;
 use crate::time::Duration;
 
 /// A hall, 25 wide: the west part plain, the east part (x 14 on, walls included) a draining
@@ -69,10 +70,6 @@ fn wait(w: &mut World, turns: u32) {
     for _ in 0..turns {
         w.apply(&Action::Wait);
     }
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 #[test]

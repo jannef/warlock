@@ -63,6 +63,8 @@ pub mod statue;
 pub mod status;
 pub mod talent;
 pub mod temperature;
+#[cfg(test)]
+pub(crate) mod test_support;
 pub mod text;
 pub mod time;
 mod unhashed;

@@ -4,12 +4,11 @@
 //! a little more.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, StairsDir};
 use crate::replay::Replay;
 use crate::stats::Stat;
-use std::sync::LazyLock;
+use crate::test_support::{CONTENT as BUILTIN, run, said};
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -187,16 +186,6 @@ fn content_with(map: &str, creatures: &str) -> Result<Arc<Content>, crate::conte
         "name = \"Xp\"\nstart_level = \"xp\"\nhp = 8\nstats = { strength = 30 }\n",
     );
     Content::load(&files).map(Arc::new)
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 fn pups_left(world: &World) -> usize {
@@ -405,9 +394,6 @@ fn several_levels_come_at_once_and_hit_points_grow_up_to_the_cap() {
     assert_eq!(w.player_level(), 60);
     assert_eq!(w.perception().own_experience().next, None);
 }
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
 
 /// The showcase as `character`.
 fn showcase_as(character: &str) -> World {

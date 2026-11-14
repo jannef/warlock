@@ -1,9 +1,10 @@
 use super::*;
 use crate::geom::{Dir, Pos};
+use crate::test_support::builtin;
 
 #[test]
 fn builtin_content_loads() {
-    let content = Content::builtin().expect("built-in content must be valid");
+    let content = builtin();
     assert!(content.scenario("showcase").is_some());
     assert!(content.level("hub").is_some());
     assert!(content.terrain_id("wall").is_some());
@@ -370,7 +371,7 @@ const LIGHTS: &str = "[[light]]\nid = \"torch\"\ncolor = [300, 200, 100, 0]\nrad
 
 #[test]
 fn builtin_skills_and_who_trains_them() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let ids: Vec<&str> = content.skills().iter().map(|s| s.id.as_str()).collect();
     assert_eq!(
         ids,
@@ -520,7 +521,7 @@ fn creature_skills_must_exist_and_the_player_lists_none() {
 fn every_drawn_creature_has_a_rarity() {
     // Spec §7 "Danger levels": the shipped tiers, commonest first, and every type that a
     // population draws names one; the more dangerous and rewarding, the rarer.
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let tiers: Vec<(&str, u16)> = (content.creature_rarities().iter())
         .map(|r| (r.id.as_str(), r.factor))
         .collect();
@@ -559,7 +560,7 @@ fn every_drawn_creature_has_a_rarity() {
 /// object outside the populations.
 #[test]
 fn the_generic_list_is_every_hostile_type_without_uniques_or_people() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let generic = |branch: &str| -> BTreeSet<&str> {
         let s = content.dungeon(branch).and_then(|d| d.spawning.as_ref());
         (s.expect(branch).generic.iter())
@@ -638,7 +639,7 @@ fn the_generic_list_is_every_hostile_type_without_uniques_or_people() {
 /// only what the campaign's populations name, uniques left out.
 #[test]
 fn a_lair_draws_its_strays_from_the_populations_only() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let spawning =
         |branch: &str| (content.dungeon(branch).and_then(|d| d.spawning.as_ref())).expect(branch);
     let mut lives = BTreeSet::new();
@@ -665,7 +666,7 @@ fn a_lair_draws_its_strays_from_the_populations_only() {
 /// campaign knows may come to a level-1 floor, even a type no population names.
 #[test]
 fn a_first_floor_draw_gone_far_out_of_depth_brings_a_type_of_no_population() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let barrow = (content
         .dungeon("cealdhlaw")
         .and_then(|d| d.spawning.as_ref()))
@@ -697,7 +698,7 @@ fn a_first_floor_draw_gone_far_out_of_depth_brings_a_type_of_no_population() {
 
 #[test]
 fn builtin_races_and_classes_load_in_the_order_offered() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let races: Vec<&str> = (content.races().list.iter())
         .map(|r| r.id.as_str())
         .collect();

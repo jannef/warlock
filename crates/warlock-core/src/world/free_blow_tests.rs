@@ -8,6 +8,7 @@ use super::*;
 use crate::action::AttackKind;
 use crate::content::ContentFiles;
 use crate::equipment;
+use crate::test_support::said;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -259,10 +260,6 @@ fn strikes(outcome: &Outcome) -> Vec<(ActorId, ActorId, Option<crate::combat::St
             _ => None,
         })
         .collect()
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 /// Rats east, south-east, and south of the player, and a gardener south-west.

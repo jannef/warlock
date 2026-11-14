@@ -253,7 +253,7 @@ mod tests {
 
     #[test]
     fn the_shipped_table_loads_and_a_type_without_an_entry_has_no_rule() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let of = |id: &str| content.spell_type(content.damage_type_id(id));
         let fire = of("fire").expect("fire");
         assert_eq!(fire.rider.expect("a rider").chance, 25);

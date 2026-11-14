@@ -4,15 +4,12 @@
 //! its blows, the self-buff step, the wisp's light, the stalker's hunt, and the roster rows.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::{Content, ContentFiles, Invisible};
 use crate::geom::Pos;
 use crate::noise::SoundKind;
 use crate::perception::Perception;
-use std::sync::{Arc, LazyLock};
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+use crate::test_support::{CONTENT as BUILTIN, run, said};
+use std::sync::Arc;
 
 /// A room, the player at its west end, then a second room behind a wall (no way between them
 /// but a corridor round the south): `s` a shadow, `d` a duergar warrior, `i` an invisible
@@ -75,12 +72,6 @@ fn only_creature(w: &World) -> ActorId {
     found[0]
 }
 
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
-}
-
 fn put(w: &mut World, id: ActorId, at: Pos) {
     w.state.actors.get_mut(&id).expect("the actor").pos = at;
 }
@@ -105,10 +96,6 @@ fn afflict(w: &mut World, actor: ActorId, id: &str) {
     let status = status(w, id);
     let mut events = Vec::new();
     w.afflict(actor, status, 1, None, &mut events);
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 /// It neither moves nor acts: perception alone is under test.

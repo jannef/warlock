@@ -12,6 +12,7 @@ use crate::magic::{Aspect, Worked};
 use crate::object::Stack;
 use crate::rng::Rng;
 use crate::skills::{SkillId, Trained};
+use crate::test_support::{builtin, said_text as said};
 use std::sync::LazyLock;
 
 /// A forge with its anvil at (5, 2), the player beside it at (4, 3).
@@ -76,10 +77,6 @@ fn one(w: &World, id: &str) -> Stack {
     Stack::one(w.content.object_id(id).expect(id))
 }
 
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
-}
-
 fn pack(w: &World) -> Vec<String> {
     (w.state.player().inventory.iter())
         .map(|s| w.lore().describe(s))
@@ -97,7 +94,7 @@ fn pieces(w: &World, id: &str, percent: u8) -> u32 {
 #[test]
 fn the_craftsperson_takes_waste_not_at_level_six() {
     let spec: CharacterSpec = "human,male,craftsperson".parse().expect("a character");
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let mut w =
         World::with_character(content.clone(), "showcase", Some(7), Some(&spec)).expect("world");
     let factor = Factor::of(&content, w.state.character.as_ref().map(|c| &c.spec));
