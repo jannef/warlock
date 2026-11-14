@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use std::path::PathBuf;
 use std::sync::Arc;
 use warlock_core::character::CharacterSpec;
-use warlock_core::content::{Content, ContentFiles};
+use warlock_core::content::Content;
 use warlock_core::hunger::Hunger;
 use warlock_core::messages::{Message, MessageLog};
 use warlock_core::replay::{Divergence, Replay};
@@ -20,9 +20,9 @@ pub struct GameContent(pub Arc<Content>);
 /// Loads the content named by the command line (the built-in copy unless `--content-dir`).
 pub fn load_content(args: &Args) -> Result<Arc<Content>, String> {
     let files = match &args.content_dir {
-        Some(dir) => ContentFiles::from_dir(dir)
+        Some(dir) => warlock_assets::from_dir(dir)
             .map_err(|e| format!("cannot read content from {}: {e}", dir.display()))?,
-        None => ContentFiles::builtin(),
+        None => warlock_assets::files(),
     };
     Content::load(&files)
         .map(Arc::new)
@@ -389,7 +389,7 @@ mod tests {
 
     #[test]
     fn a_new_run_starts_with_news_and_each_action_marks_what_was_read() {
-        let content = Arc::new(Content::builtin().expect("built-in content loads"));
+        let content = Arc::new(warlock_assets::content().expect("built-in content loads"));
         let store = SaveStore::from_args(&Args::parse_from(["warlock", "--capture", "x.png"]));
         let mut game = Game::new_run(content, &store, "showcase", None, None, None).expect("run");
         assert!(texts(&game.unread())[0].starts_with("Welcome to Showcase."));
@@ -406,7 +406,7 @@ mod tests {
 
     #[test]
     fn replays_keep_the_last_steps_events() {
-        let content = Arc::new(Content::builtin().expect("built-in content loads"));
+        let content = Arc::new(warlock_assets::content().expect("built-in content loads"));
         let mut world = World::new(content.clone(), "showcase", None).expect("scenario starts");
         let mut replay = Replay::new(&world);
         for action in [Action::Move(Dir::N), Action::Move(Dir::N)] {
@@ -434,7 +434,7 @@ mod tests {
     /// `--character` start; never a capture, a replay, or a resumed character.
     #[test]
     fn only_a_run_made_in_a_window_has_its_story_due() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let dir = std::env::temp_dir().join(format!("warlock-story-{}", std::process::id()));
         let saves = dir.to_string_lossy().into_owned();
         let start = |extra: &[&str]| {

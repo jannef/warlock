@@ -965,7 +965,7 @@ fn fit_segments(segments: &[Segment], width: usize) -> String {
 /// mails (22 kg).
 #[cfg(test)]
 pub(crate) fn hoard() -> World {
-    let mut files = warlock_core::content::ContentFiles::builtin();
+    let mut files = warlock_assets::files();
     files.insert(
         "levels/hoard.toml",
         "name = \"Hoard\"\nmap = '''\n#####\n#@..#\n#####\n'''\n[legend]\n\
@@ -986,7 +986,7 @@ mod tests {
     use crate::render::console::CellAnim;
     use std::sync::Arc;
     use warlock_core::content::CombatStance;
-    use warlock_core::content::{Content, ContentFiles};
+    use warlock_core::content::Content;
     use warlock_core::{Action, Dir, Positions, World};
 
     #[test]
@@ -1022,7 +1022,7 @@ mod tests {
 
     #[test]
     fn the_status_bar_says_averted_while_an_averted_gaze_is_in_sight() {
-        let mut files = ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert(
             "data/creatures/starer.toml",
             "[[creature]]\nid = \"starer\"\nname = \"starer\"\nglyph = \"S\"\nfg = \"#40a040\"\n\
@@ -1053,7 +1053,7 @@ mod tests {
     #[test]
     fn the_status_bar_says_dazzled_while_strong_light_dazzles_light_blind_eyes() {
         let world_as = |race: &str| {
-            let mut files = ContentFiles::builtin();
+            let mut files = warlock_assets::files();
             files.edit_table("races", |text| {
                 format!(
                     "{text}\n[[race]]\nid = \"blind\"\nname = \"Blind\"\ndescription = \"Blind.\"\n\
@@ -1091,7 +1091,7 @@ mod tests {
     #[test]
     fn the_status_bar_shows_hunger_unless_not_hungry_and_keeps_it_later_than_the_burden() {
         let world_starting_at = |nutrition: i32| {
-            let mut files = ContentFiles::builtin();
+            let mut files = warlock_assets::files();
             let hunger = include_str!("../../../../assets/data/hunger.toml")
                 .replace("start = 3600", &format!("start = {nutrition}"));
             files.insert("data/hunger.toml", &hunger);
@@ -1222,7 +1222,7 @@ mod tests {
 
     #[test]
     fn the_status_bar_shows_the_mana_left_after_the_hit_points() {
-        let mut files = ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert(
             "levels/cell.toml",
             "name = \"Cell\"\nmap = '''\n###\n#@#\n###\n'''\n[legend]\n\
@@ -1297,7 +1297,7 @@ mod tests {
 
     #[test]
     fn the_status_bar_shows_the_moon_phase() {
-        let content = Content::builtin().expect("builtin content");
+        let content = warlock_assets::content().expect("builtin content");
         let at = |day| GameTime::from_calendar(1, 4, day, 0, 0).expect("valid");
         let moons = content.moons();
         let text = |moons: &[MoonDef], day| moon_status(moons, at(day)).map(|(text, _)| text);
@@ -1360,7 +1360,7 @@ mod tests {
 
     #[test]
     fn the_status_bar_shows_the_weather_only_under_the_open_sky() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let texts = |world: &World| -> Vec<String> {
             status_segments(world, Clock::H24, TemperatureUnit::Celsius, true)
                 .into_iter()
@@ -1395,7 +1395,7 @@ mod tests {
 
     #[test]
     fn the_seed_shows_only_with_the_dev_keys() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let hub = World::new(content, "showcase", None).expect("starts");
         let seed = |dev| {
             (status_segments(&hub, Clock::H24, TemperatureUnit::Celsius, dev).iter())
@@ -1407,7 +1407,7 @@ mod tests {
 
     #[test]
     fn the_status_bar_always_shows_the_temperature_in_the_chosen_unit() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         // Underground too: the hub is 10 °C, after the moon (there is no weather there).
         let hub = World::new(content.clone(), "showcase", None).expect("starts");
         let segments = status_segments(&hub, Clock::H24, TemperatureUnit::Celsius, true);
@@ -1458,7 +1458,7 @@ mod tests {
 
     #[test]
     fn the_twelve_hour_clock_is_longer_but_the_status_bar_still_fits() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let world = World::new(content, "showcase", None).expect("starts");
         let segments = status_segments(&world, Clock::H12, TemperatureUnit::Celsius, true);
         let time = (segments.iter())
@@ -1477,7 +1477,7 @@ mod tests {
 
     #[test]
     fn the_status_bar_shows_hit_points_and_keeps_them_late() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let world = World::new(content, "showcase", None).expect("starts");
         let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true);
         assert_eq!(segments[1].text, "HP 18/18", "right after the level");
@@ -1502,7 +1502,7 @@ mod tests {
 
     #[test]
     fn the_welcome_line_names_the_help_key_as_bound() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let world = World::new(content, "showcase", None).expect("starts");
         let welcome = world.messages().iter().next().expect("a welcome");
         let shown = |b: &Bindings| welcome.display_with(|id| message_key(b, id));
@@ -1547,7 +1547,7 @@ mod tests {
 
     /// Water and an altar on both sides of a door; the player looks, then closes the door.
     fn pool_world() -> World {
-        let mut files = ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert(
             "levels/pool.toml",
             "name = \"Pool\"\nambient = [255, 255, 255, 0]\nmap = '''\n#######\n#~@+~_#\n#######\n'''\n\
@@ -1612,7 +1612,7 @@ mod tests {
     /// remembered (dimmed); bare stairs keep their own colour.
     #[test]
     fn stairs_keep_their_glyph_over_a_pile() {
-        let mut files = ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert(
             "levels/stairs.toml",
             "name = \"Stairs\"\nambient = [255, 255, 255, 0]\nmap = '''\n#########\n#>>@+>>.#\n#########\n'''\n\

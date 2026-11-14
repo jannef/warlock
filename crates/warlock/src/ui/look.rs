@@ -483,13 +483,13 @@ mod tests {
     use warlock_core::{Action, Dir, World};
 
     fn world() -> World {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         World::new(content, "showcase", None).expect("world")
     }
 
     #[test]
     fn a_companion_is_seen_wearing_its_collar() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let spec = "human,male,ranger".parse().expect("a character");
         let mut w = World::start_run(content, "showcase", None, Some(&spec), None, true)
             .expect("a ranger's run");
@@ -520,7 +520,7 @@ mod tests {
 
     #[test]
     fn named_places_say_their_name_and_note() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut w = World::new(content, "ascmearc", None).expect("the Ascmearc");
         let pass = w.player_pos();
         assert_eq!(
@@ -544,7 +544,7 @@ mod tests {
     #[test]
     fn a_gravestone_reads_its_inscription() {
         // Līctūn, Cēaptūn's churchyard (spec §7 "Graves"): four cells down the south road.
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut w = World::new(content, "ascmearc", None).expect("the Ascmearc");
         let walk = [(Dir::E, 6), (Dir::S, 4), (Dir::E, 1)];
         for (dir, n) in walk {
@@ -565,7 +565,7 @@ mod tests {
     #[test]
     fn leavings_are_named_for_what_they_are() {
         // Webs, acid-pitted floor, and torn cloth (`content/leaving.rs`), never what left them.
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert(
             "levels/leavings.toml",
             "name = \"Leavings\"\nambient = [255, 255, 255, 0]\nmap = '''\n#######\n#@wac.#\n\
@@ -588,7 +588,7 @@ mod tests {
 
     #[test]
     fn a_forgotten_altar_says_what_it_is_and_a_spent_one_too() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut w = World::new(content, "shrine", None).expect("the shrine");
         let walk = "move:N open:N move:N*3";
         for action in warlock_core::action::parse_actions(walk).expect("actions") {
@@ -616,7 +616,7 @@ mod tests {
     /// (spec §8 "Chests").
     #[test]
     fn a_chest_goes_by_its_band() {
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert(
             "levels/look_chests.toml",
             "name = \"Chests\"\nambient = [255, 255, 255, 0]\nitem_level = 9\nmap = '''\n\
@@ -656,7 +656,7 @@ mod tests {
     /// hold the level's edge (`knowledge_tests.rs`).
     #[test]
     fn knowledge_says_what_a_creature_resists_in_words() {
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert(
             "levels/look_lore.toml",
             "name = \"Lore\"\nambient = [255, 255, 255, 0]\nmap = '''\n\
@@ -696,7 +696,7 @@ mod tests {
 
     #[test]
     fn a_disguised_mimic_looks_like_a_chest() {
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert(
             "levels/look_mimic.toml",
             "name = \"Mimic\"\nambient = [255, 255, 255, 0]\nmap = '''\n\
@@ -728,7 +728,7 @@ mod tests {
 
     #[test]
     fn people_are_named_with_the_services_they_sell() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut w = World::new(content, "ceaptun", None).expect("Cēaptūn");
         let walk = "move:SW*4 move:W*15 open:SW move:SW move:S*2";
         for action in warlock_core::action::parse_actions(walk).expect("actions") {
@@ -745,7 +745,7 @@ mod tests {
     /// docs/design/prestige-classes.md §7); the encounter is forced, whoever the player is.
     #[test]
     fn one_with_words_and_nothing_to_ask_waits() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut w = World::new(content.clone(), "ascmearc", None).expect("the Ascmearc");
         let walk = "move:E*7 skip:4h meet:strange_spirit_roads encounter:hail";
         for action in warlock_core::action::parse_actions(walk).expect("actions") {
@@ -766,7 +766,7 @@ mod tests {
 
     #[test]
     fn a_zone_says_what_lies_on_the_ground() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut w = World::new(content, "showcase", None).expect("the hub");
         let me = w.player_pos();
         let spot = warlock_core::geom::Pos::new(me.x + 1, me.y);
@@ -782,7 +782,7 @@ mod tests {
 
     #[test]
     fn hallowed_ground_says_so() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let spec: warlock_core::character::CharacterSpec =
             "human,female,priest".parse().expect("a character");
         let mut w = World::start_run(
@@ -979,7 +979,7 @@ mod tests {
 
     #[test]
     fn hostile_creatures_are_marked_as_such() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut w = World::new(content, "arena", None).expect("arena");
         w.apply(&Action::Wait);
         let view = w.perception();
@@ -1005,7 +1005,7 @@ mod tests {
 
     #[test]
     fn a_greater_or_lesser_creature_is_named_with_its_grade() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut w = World::new(content, "arena", None).expect("arena");
         w.apply(&Action::Wait);
         let view = w.perception();
@@ -1028,7 +1028,7 @@ mod tests {
 
     #[test]
     fn creatures_look_as_hurt_as_they_are_in_words() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut w = World::new(content, "arena", None).expect("arena");
         // The brawl at the fire pit goes on until someone in view is hurt.
         let hurt = (0..60).find_map(|_| {
@@ -1050,7 +1050,7 @@ mod tests {
 
     #[test]
     fn a_bleeding_creature_looks_it() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut w = World::new(content, "arena", None).expect("arena");
         // The brawl at the fire pit wounds someone in view before long.
         let bleeding = (0..60).find_map(|_| {
@@ -1066,7 +1066,7 @@ mod tests {
 
     #[test]
     fn blood_is_named_before_the_terrain_unless_hidden() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut w = World::new(content, "arena", None).expect("arena");
         for _ in 0..40 {
             w.apply(&Action::Wait);
@@ -1086,7 +1086,7 @@ mod tests {
 
     #[test]
     fn creatures_are_seen_with_what_they_wield_and_wear() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut w = World::new(content, "arena", None).expect("arena");
         // The war band comes into the torchlight of the fire pit, all of it still standing.
         for _ in 0..8 {
@@ -1134,7 +1134,7 @@ mod tests {
 
     #[test]
     fn known_traps_are_named_as_part_of_the_ground() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut w = World::new(content, "traps", None).expect("the trap hall");
         // A hidden trap (the fireball in the crossing) is just floor.
         assert_eq!(
@@ -1171,7 +1171,7 @@ map = '''
 "c" = { terrain = "floor", creature = "animated_candlestick", animated = { material = "silver" } }
 "r" = { terrain = "floor", creature = "animated_rug" }
 "##;
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert("levels/hall.toml", hall);
         files.insert(
             "scenarios/hall.toml",
@@ -1205,7 +1205,7 @@ map = '''
 "w" = { terrain = "floor", creature = "wormhost" }
 "h" = { terrain = "floor", creature = "charnel_heap" }
 "##;
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert("levels/hall.toml", hall);
         files.insert(
             "scenarios/hall.toml",
@@ -1245,7 +1245,7 @@ breach = [3, 1]
 [legend]
 "@" = { terrain = "floor", spawn = "player" }
 "##;
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert("levels/hall.toml", hall);
         files.insert(
             "scenarios/hall.toml",
@@ -1285,7 +1285,7 @@ map = '''
 "a" = { terrain = "floor", creature = "animated_armour_12" }
 "p" = { terrain = "floor", creature = "animated_panoply_70" }
 "##;
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert("levels/hall.toml", hall);
         files.insert(
             "scenarios/hall.toml",
@@ -1306,7 +1306,7 @@ map = '''
 
     #[test]
     fn an_ally_is_yours() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut w = World::new(content, "showcase", None).expect("showcase");
         for action in warlock_core::action::parse_actions("ally:dire_warg").expect("actions") {
             w.apply(&action);
@@ -1336,7 +1336,7 @@ map = '''
 "@" = { terrain = "floor", spawn = "player" }
 "d" = { terrain = "floor", creature = "deer" }
 "##;
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert("levels/hall.toml", hall);
         files.insert(
             "scenarios/hall.toml",
@@ -1383,7 +1383,7 @@ map = '''
 "@" = { terrain = "floor", spawn = "player" }
 "d" = { terrain = "floor", creature = "deer" }
 "##;
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert("levels/hall.toml", hall);
         files.insert(
             "scenarios/hall.toml",
@@ -1424,7 +1424,7 @@ map = '''
 "b" = { terrain = "floor", creature = "animated_blade_8" }
 "c" = { terrain = "floor", creature = "animated_blade_19" }
 "##;
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert("levels/hall.toml", hall);
         files.insert(
             "scenarios/hall.toml",

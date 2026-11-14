@@ -266,10 +266,10 @@ mod tests {
     use crate::input::KeyBinding;
     use std::sync::Arc;
     use warlock_core::World;
-    use warlock_core::content::{Content, MAX_RANK};
+    use warlock_core::content::MAX_RANK;
 
     fn showcase() -> World {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         World::new(content, "showcase", None).expect("world")
     }
 
@@ -362,7 +362,7 @@ mod tests {
 
     #[test]
     fn the_bar_fills_with_marks_and_is_gone_at_the_last_rank() {
-        let content = Content::builtin().expect("content");
+        let content = warlock_assets::content().expect("content");
         let table = content.weapon_skills();
         let (daggers, bows) = (
             table.id("daggers").expect("daggers"),

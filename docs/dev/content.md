@@ -4,9 +4,18 @@ Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185)
 rules it implements are in spec/07a-levels.md and spec/07b-data.md. Keep it current with the code, as CLAUDE.md says.
 
 Content (`assets/campaigns`, `assets/data`, `assets/vaults`; test fixtures may also insert
-`levels/` and `scenarios/` at the top) is TOML, embedded into `warlock-core` at build time by
-`build.rs` (the test world, `campaigns/showcase/`, only with the `showcase` feature: never in a
-release; `docs/dev/campaign.md`). A world's levels, scenarios, branches, quests, dialogue, and own creature types live
+`levels/` and `scenarios/` at the top) is TOML. `warlock-core` embeds none of it: it takes the
+files as input, a `ContentFiles`, and `Content::load` builds the rules' tables from them (#1587).
+The small crate `crates/warlock-assets` embeds `assets/` at build time with its `build.rs` (the
+test world, `campaigns/showcase/`, only with its `showcase` feature: never in a release;
+`docs/dev/campaign.md`), and the binaries (the game, the CLI, xtask) load it with
+`warlock_assets::files()` (or `content()`), or a directory with `warlock_assets::from_dir`
+(`--content-dir`). So a data edit rebuilds that crate and the binaries above it, never the core;
+warlock-core's own tests read `assets/` from disk instead (`ContentFiles::builtin` and
+`Content::builtin`, test-only, once per test binary), and its integration tests do the same with
+`ContentFiles::from_dir`. Extra files laid over a set (mods, later: #196) go in with
+`ContentFiles::insert` before the load, which checks the whole set ("The loader's whole-set
+checks" below). A world's levels, scenarios, branches, quests, dialogue, and own creature types live
 in its campaign, `assets/campaigns/<id>/` (`docs/dev/campaign.md`). Level maps are ASCII with a
 legend; see `assets/campaigns/showcase/levels/hub.toml` and spec §7. A legend entry with a `creature` may set `faction = "peaceful"` (any id in
 `data/factions/`) to override its type's faction for that spawn (`Actor::faction_override`; read it with
@@ -100,11 +109,13 @@ entry takes a free number where it belongs; skills were already by id, so they a
 variants always edited together, named after the family (`objects/arrows.toml`: the arrow, the
 flaming arrow, and the burning arrow it flies as). Each directory's `README.toml` is comments
 only (the field documentation and notes for authors; a file of comments defines nothing, the
-loaders take a missing array as empty). `build.rs` embeds and `ContentFiles::from_dir` reads
-`{campaigns,data,vaults}` recursively through one walk, `content/walk.rs` (build.rs includes it
-with `#[path]`), both in sorted path order and both leaving `campaigns/showcase/` out without
-the `showcase` feature (so `--content-dir assets` on a release build has no test world either;
-#1560), and a table loader reads `ContentFiles::table(name)`: `data/<name>.toml` first, if there is one (a
+loaders take a missing array as empty). `warlock-assets`' `build.rs` embeds and
+`ContentFiles::from_dir` reads `{campaigns,data,vaults}` recursively through one walk,
+core's `content/walk.rs` (the build script includes it with `#[path]`), both in sorted path order
+and both leaving `campaigns/showcase/` out without the `showcase` feature (`from_dir` takes it as
+an argument, `warlock_assets::from_dir` passes the build's, so `--content-dir assets` on a release
+build has no test world either; #1560; `the_embedded_copy_is_the_assets_directory` checks the
+embedded set against the disk), and a table loader reads `ContentFiles::table(name)`: `data/<name>.toml` first, if there is one (a
 whole table in one file is still accepted, so test fixtures that insert it keep working), then
 `data/<name>/**/*.toml` in path order, then each campaign's `data/<name>/**/*.toml`
 (`ContentFiles::campaign_order`: playable campaigns, then test ones). `quests`, `dialogue`, and

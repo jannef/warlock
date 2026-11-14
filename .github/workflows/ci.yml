@@ -172,7 +172,7 @@ jobs:
         run: cargo check --no-default-features --locked --package warlock --package warlock-core --target wasm32-unknown-unknown
       # An integration test: one small harness, not the crate's whole test build (#1593).
       - name: release_content
-        run: cargo test --no-default-features --locked --package warlock-core --test release_content
+        run: cargo test --no-default-features --locked --package warlock-assets --test release_content
       - name: The CLI refuses the showcase
         run: |
           if out=$(target/debug/warlock-cli dump --scenario showcase 2>&1); then

@@ -174,14 +174,14 @@ impl Default for Row {
 mod tests {
     use super::*;
     use std::sync::Arc;
-    use warlock_core::content::Content;
+
     use warlock_core::{Action, Positions, World};
 
     /// The showcase, the lantern put down, standing on the storeroom's magic arms with them picked up: a the magic ring
     /// (unidentified), b the rare bow (unidentified), c the rare helm, d the magic sword, its
     /// pommel an emerald.
     fn armed() -> World {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut world = World::new(content, "showcase", None).expect("world");
         let walk = "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*5 pickup \
                     move:E pickup";
@@ -212,7 +212,7 @@ mod tests {
     #[test]
     fn an_eye_for_gems_shows_what_they_are_worth() {
         // A gnome who took Gem lore picks up the same arms.
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let spec = "gnome,male,merchant"
             .parse::<warlock_core::character::CharacterSpec>()
             .expect("a character")

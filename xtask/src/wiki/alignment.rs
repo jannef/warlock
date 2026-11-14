@@ -234,7 +234,7 @@ mod tests {
         assert_eq!(worth(5), "a little good");
         assert_eq!(worth(-100), "strongly evil");
         assert_eq!(worth(-200), "very strongly evil");
-        let content = Content::builtin().expect("content");
+        let content = warlock_assets::content().expect("content");
         let start = alignment_start(&content);
         // Drow and duergar first (by name): a paladin of either starts Neutral, a dwarf Good.
         assert!(

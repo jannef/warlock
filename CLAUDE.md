@@ -67,7 +67,8 @@ then read the PNG.
 ## Architecture (spec §8)
 
 ```
-crates/warlock-core   plain Rust, no Bevy, deterministic simulation
+crates/warlock-core   plain Rust, no Bevy, deterministic simulation; takes its content as input
+crates/warlock-assets the content under assets/ embedded for the binaries (#1587)
 crates/warlock-cli    headless dev tool on top of core (no Bevy)
 crates/warlock        Bevy app: rendering, input, UI, effects, platform
 crates/workspace-hack no code: pins features so every member shares one warlock-core build (docs/dev/merging.md)
@@ -81,7 +82,7 @@ tests. **Read the ones your task touches before changing code, and update them w
 file). Topics:
 
 - `docs/dev/cli.md` — the CLI reference: game flags, `--scenario` and `--screen` names, `warlock-cli`, the `cargo xtask` rows in detail, replay files, dump layers, action text syntax
-- `docs/dev/content.md` — TOML content embedded by `build.rs`, level files and legends (faction overrides, arrival lines, water flow)
+- `docs/dev/content.md` — TOML content embedded by `warlock-assets` and handed to core, level files and legends (faction overrides, arrival lines, water flow)
 - `docs/dev/campaign.md` — campaigns: `assets/campaigns/<id>/`, `campaign.toml`, what is a campaign's and what is shared, the cross-campaign checks, a run's campaign, the fingerprint per campaign, New run's order and its skip in a release, the Characters screen's campaign
 - `docs/dev/saves.md` — storage backends (native files, browser `localStorage`), one save per character and the list of them, autosave, permadeath, where files live (`paths.rs`, portable mode)
 - `docs/dev/releases.md` — cutting a release, the web build and its size tuning, GitHub Pages, logs and crash reports

@@ -358,7 +358,7 @@ mod tests {
     #[test]
     fn every_content_glyph_is_in_the_font() {
         let font = Font::load().unwrap();
-        let content = warlock_core::content::Content::builtin().unwrap();
+        let content = warlock_assets::content().unwrap();
         let glyphs = content.glyphs();
         let set = glyph_set(glyphs.iter().copied());
         let atlas = rasterize(&font.0, 18.0, &set, 1);

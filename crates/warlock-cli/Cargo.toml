@@ -12,6 +12,7 @@ repository.workspace = true
 [dependencies]
 clap.workspace = true
 serde_json.workspace = true
+warlock-assets.workspace = true
 warlock-core.workspace = true
 workspace-hack.workspace = true
 
@@ -20,9 +21,7 @@ workspace-hack.workspace = true
 # dev command, test, and benchmark; release builds and `cargo xtask web` turn it off with
 # `--no-default-features` (docs/dev/campaign.md, "The test world in release builds").
 default = ["showcase"]
-# `default` too: `cargo test --workspace` turns on warlock-core's own default, and the same
-# features give the same build of it (#1572).
-showcase = ["warlock-core/default", "warlock-core/showcase"]
+showcase = ["warlock-assets/showcase"]
 
 [lints]
 workspace = true

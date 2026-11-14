@@ -458,7 +458,7 @@ mod tests {
 
     #[test]
     fn the_tables_read_the_data() {
-        let content = Content::builtin().expect("content");
+        let content = warlock_assets::content().expect("content");
         let rates = rates(&content);
         assert!(rates.contains("| Road | 1% | 1.5% | 2% |"), "{rates}");
         assert!(rates.contains("(20 min): 0.33%"), "{rates}");

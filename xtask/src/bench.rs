@@ -13,7 +13,7 @@
 
 use std::sync::Arc;
 use std::time::Instant;
-use warlock_core::content::{Content, ContentFiles};
+use warlock_core::content::Content;
 use warlock_core::time::{DAWN, DUSK, Duration};
 use warlock_core::{Action, Dir, Rest, World};
 
@@ -149,7 +149,7 @@ const CASES: [(&str, &str, f64, u64); 15] = [
 
 /// The builtin content with the bench's cave branch and its scenario.
 fn content() -> Result<Content, String> {
-    let mut files = ContentFiles::builtin();
+    let mut files = warlock_assets::files();
     let dungeons = format!(
         "{}{DELF_BRANCH}{HEXED_BRANCH}{PANOPLY_BRANCH}{LONG_BRANCH}",
         include_str!("../../assets/data/dungeons.toml")

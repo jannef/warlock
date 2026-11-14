@@ -326,7 +326,7 @@ mod tests {
 
     #[test]
     fn vision_cycles_through_profiles() {
-        let content = warlock_core::content::Content::builtin().unwrap();
+        let content = warlock_assets::content().unwrap();
         let profiles = content.vision_profiles();
         assert_eq!(next_vision(profiles, "normal"), "low_light");
         let last = &profiles[profiles.len() - 1].id;

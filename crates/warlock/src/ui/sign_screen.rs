@@ -224,7 +224,7 @@ mod tests {
     use std::sync::LazyLock;
 
     static CONTENT: LazyLock<Content> =
-        LazyLock::new(|| Content::builtin().expect("builtin content"));
+        LazyLock::new(|| warlock_assets::content().expect("builtin content"));
 
     /// New run on the showcase with `seed`, the race `race` chosen.
     fn draft(seed: u64, race: &str) -> Draft {

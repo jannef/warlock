@@ -425,7 +425,7 @@ mod tests {
     use warlock_core::character::CharacterSpec;
 
     fn content() -> Arc<Content> {
-        Arc::new(Content::builtin().expect("content"))
+        Arc::new(warlock_assets::content().expect("content"))
     }
 
     fn draft(content: &Content, character: &str) -> Draft {

@@ -410,10 +410,9 @@ pub fn ray_tail(since: f32, tail: f32) -> f32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use warlock_core::content::Content;
 
     fn builtin(id: &str) -> EffectDef {
-        let content = Content::builtin().expect("builtin content");
+        let content = warlock_assets::content().expect("builtin content");
         content.effect(id).expect("builtin effect").clone()
     }
 

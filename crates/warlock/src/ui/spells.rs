@@ -723,7 +723,7 @@ mod tests {
     use warlock_core::World;
 
     fn arena() -> World {
-        let content = Arc::new(Content::builtin().expect("builtin content"));
+        let content = Arc::new(warlock_assets::content().expect("builtin content"));
         World::new(content, "arena", None).expect("arena")
     }
 
