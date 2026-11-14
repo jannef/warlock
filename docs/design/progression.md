@@ -82,7 +82,7 @@ Design document for the owner's review (2026-10-20). Written against `origin/mai
 
 ### 3.1 What exists, and what changes
 
-| Today (`data/experience.toml`, `content/experience.rs`, `world/experience.rs`) | Proposed |
+| Today (`data/experience.toml`, `content/experience.rs`, `world/character/experience.rs`) | Proposed |
 |---|---|
 | `max_level = 50` | **60** |
 | `threshold(n) = linear·(n−1) + quadratic·(n−1)²` (10, 10: 24 500 at 50) | a curve written in **kills of your own level**, `k(n) = 213·m/(m+5) + 2.85·m`, times the creature XP guideline, summed (2 863 615 at 60; 3 000 kills to 20, 15 000 to 60) |
@@ -513,7 +513,7 @@ Everything else in the tables stays mana, a status, or a passive. Creatures get 
 
 ### 5.1 Today, and the ADOM reference
 
-Skills grow today only from **training marks** (`world/train.rs`: a chance per meaningful use, drawn from the `training` stream; `need(value) = marks + value / per`, ×3 past the soft cap 100), a rule the spec marks **provisional** pending exactly this decision. ADOM: skills train "passively as the PC successfully uses them, and actively on level-up"; a level-up gives a number of increases (3 at least, plus one per 5 points of Learning over 10, more for humans and bards), and each skill rolls its own die from a ladder (+1, 1d3, 1d5, 2d4, 3d3, 3d4, 3d5, 4d4, 4d5) whose step is **raised by successful use and degrades every ten points of advancement**. The owner wants this shape: marks decide how many and how large the dice are, a roll consumes marks and shrinks the dice, the class decides the count, humans get one more, high Intelligence more, and classes and races favour some skills.
+Skills grow today only from **training marks** (`world/character/train.rs`: a chance per meaningful use, drawn from the `training` stream; `need(value) = marks + value / per`, ×3 past the soft cap 100), a rule the spec marks **provisional** pending exactly this decision. ADOM: skills train "passively as the PC successfully uses them, and actively on level-up"; a level-up gives a number of increases (3 at least, plus one per 5 points of Learning over 10, more for humans and bards), and each skill rolls its own die from a ladder (+1, 1d3, 1d5, 2d4, 3d3, 3d4, 3d5, 4d4, 4d5) whose step is **raised by successful use and degrades every ten points of advancement**. The owner wants this shape: marks decide how many and how large the dice are, a roll consumes marks and shrinks the dice, the class decides the count, humans get one more, high Intelligence more, and classes and races favour some skills.
 
 ### 5.2 The rule: marks are a reservoir, spent as dice at level-up
 
@@ -528,7 +528,7 @@ Skills grow today only from **training marks** (`world/train.rs`: a chance per m
 | **Affinities** | a skill the class is **known for** (`known_for`, its `2d6+10` list) rolls its die **one step up the ladder**; a skill the class trains besides, or the **race** trains, adds **+1** to the roll (both stack: a halfling thief's Stealth is known-for and racial: one step up and +1) | `known_for`, `skills` on the class and the race; an optional explicit `affinity` table for later tuning |
 | **A skill with no marks** | still rolls (`+1`), so a trained skill never stands still, as in ADOM | |
 | **Where rolls go** | any **trained** skill, chosen by the player, all of them before the screen closes (no banking, §9.2); nothing stops every roll going into one skill, the shrinking dice are the only brake | `Action::Advance(skill)` |
-| **Earning marks** | unchanged (`mark` rules in `skills.toml`, the `training` stream); the Studious talent raises their chance | `world/train.rs` |
+| **Earning marks** | unchanged (`mark` rules in `skills.toml`, the `training` stream); the Studious talent raises their chance | `world/character/train.rs` |
 | **What is said** | "Your stealth improves." (never the die or the marks) | the level-up screen |
 | **Randomness** | the dice draw from the new **`levels` stream** in the world state (like `training`); each `advance:SKILL` is an action recorded in the replay | `WorldState::levels_rng` |
 
@@ -1036,7 +1036,7 @@ One aggregation, read where the affixes already are: `Talents::mods(content) -> 
 | **`World::level_up`** (new, in `world/level_up.rs`, from `grant_xp`) | hands out the level's hit points and mana, class entries, due rolls and talents, and runs the six stat checks (`levels` stream), level by level |
 | the mana PR's hooks (`Actor::max_mana`, `World::mana_rate`, the ability's spend) | `deep_well`, `clear_mind`, `meditation`, `frugal_caster`, `blood_magic`; the casters' costs; `arcane_mastery`, `archmage`, `virtuoso` |
 
-New modules: `content/talent.rs` (defs, prerequisites, effects, the systems list, the coverage test), `talents.rs` (the runtime: `Talents`, `TalentMods`, `may_take`), `content/class.rs` (grows the level table and abilities), `content/stat_training.rs` (`data/stats.toml`), `world/level_up.rs` (the hand-out, `Action::Talent`, `Advance`, the due-choice refusal, the stat checks, messages), `world/experience.rs` (the curve in kills, the factor, discovery), `ability.rs` (`Source::Talent`, class actives, `Unavailable::While`), `ui/level_up_screen.rs`, `ui/talents_screen.rs`, `ui/chargen_screen.rs` (the step), `xtask/src/wiki/{talents,classes,stats}.rs`, and `warlock-cli` dump layers `talents` (the player's, with ranks and choices) and `progress` (due choices, discovered, stat marks; dev).
+New modules: `content/talent.rs` (defs, prerequisites, effects, the systems list, the coverage test), `talents.rs` (the runtime: `Talents`, `TalentMods`, `may_take`), `content/class.rs` (grows the level table and abilities), `content/stat_training.rs` (`data/stats.toml`), `world/level_up.rs` (the hand-out, `Action::Talent`, `Advance`, the due-choice refusal, the stat checks, messages), `world/character/experience.rs` (the curve in kills, the factor, discovery), `ability.rs` (`Source::Talent`, class actives, `Unavailable::While`), `ui/level_up_screen.rs`, `ui/talents_screen.rs`, `ui/chargen_screen.rs` (the step), `xtask/src/wiki/{talents,classes,stats}.rs`, and `warlock-cli` dump layers `talents` (the player's, with ranks and choices) and `progress` (due choices, discovered, stat marks; dev).
 
 ### 10.4 Determinism
 

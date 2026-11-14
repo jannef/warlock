@@ -162,7 +162,7 @@ check), the cooldown status is given to the gazer, and the turn is spent (a gaze
   sight they are **Averted**, a condition derived each turn from the perception snapshot as
   Dazzled is (no action, no toggle, no actor flag, nothing saved; the status bar shows
   "Averted"), and they fight half-blind: **−4 to hit**, no free blows, Dodge halved
-  (`world/avert.rs`: one read in the attack and free-blow paths). The gaze still looks for the
+  (`world/creatures/avert.rs`: one read in the attack and free-blow paths). The gaze still looks for the
   glance the player cannot help: against averted eyes it takes at **a quarter of its chance**
   (`glance = 25` on the gaze, percent, data), then the Toughness check as usual; so a basilisk
   fought face to face is a fight at −4 that may still end in stone, and one walked away from is
@@ -473,7 +473,7 @@ fighting at the cell): the player may strike back at the mark. **Hearing is unto
 invisibility is sight only, so an invisible duergar's hobnails are heard as any duergar's, and
 Listen, the `sound` layer, and keen ears are the counterplay the trope is about. **Striking at
 the unseen**: a move into a cell that holds an unseen creature becomes an attack at **−4** (the
-Averted penalty reused: `world/avert.rs`'s one number), "You strike at something.", and a hit
+Averted penalty reused: `world/creatures/avert.rs`'s one number), "You strike at something.", and a hit
 reveals it for that turn ("Your sword bites something unseen."); a creature that strikes at an
 unseen player (the player under the same status, from a scroll or ring later) does the same.
 
@@ -541,7 +541,7 @@ the difficulty keeps it; failed, the weapon lies on a random open cell beside th
 weapon fades. Counterplay: a two-handed grip, Duelist ranks, Dexterity, a wall at the back (no
 open cell, no disarm), and a spare weapon in the pack. Holders, the duellists: the drow
 blademaster and captain, the death knight, the ultroloth, Wælcyrge the Chooser; never a beast or
-the mindless. Rules `world/knock_away.rs`; no talent (a gimmick).
+the mindless. Rules `world/combat/knock_away.rs`; no talent (a gimmick).
 
 ## 6. The sort: every creature type, bulk or dread
 
@@ -903,7 +903,7 @@ tests, the dumps, a replay created and verified, the wiki tables, the tribe file
 | Slice | What | Size |
 |---|---|---|
 | **D0** | Fear's teeth (`combat` on `frightened`, data; the probe's thief column checked); the `dread` flag and `dread_one_in` (in `[defaults]`, per branch, and per level, the most specific winning; the roll in the monster draw, `candidates`, for the population and the spawner alike); the sort's tier moves (§8.3), data; the existing dungeons' deeper and more dangerous levels given a lower `dread_one_in` of their own (the owner: "sprinkle dread chance"), listed in the PR; the roster tests' rarity and dread rows | small; first |
-| **D1** | The gaze (`[creature.gaze]`, the hook in the AI's fight step before throws, the cooldown status, the "you see it" read from the snapshot for the player and `sight::sees` for creatures, the unseen-stare line); the forced Averted condition (`averted` and `glance` on the gaze, `world/avert.rs`'s derived read, the status bar, the dumps); the vampires', hags', spirits', and ultroloth's riders moved onto the gaze | medium |
+| **D1** | The gaze (`[creature.gaze]`, the hook in the AI's fight step before throws, the cooldown status, the "you see it" read from the snapshot for the player and `sight::sees` for creatures, the unseen-stare line); the forced Averted condition (`averted` and `glance` on the gaze, `world/creatures/avert.rs`'s derived read, the status bar, the dumps); the vampires', hags', spirits', and ultroloth's riders moved onto the gaze | medium |
 | **D2** | Stiffening (the status with `kills_at_max`, `stages`, `treat`; the scroll of restoration's line; the death line); the statue fixture (a cell fixture as a chest is; digging breaks it; kicking it, hard, with the marks); the basilisk's gaze with `averted` | medium |
 | **D3** | The burst (`[creature.burst]`, `touches` and `dies`, through the area code with #1100's floor ruin; the vortex AI arm); the six motes as vortices (data, speed, tier); every elemental line's death throes by §5.3's table and the earth line's stones (data: `[creature.throw]`); the burning skull, magma crawler, and balor's death throes | medium |
 | **D4** | Auras (`[creature.aura]`, sight and `heard`, the check, `every`); innate statuses (`innate`); cries (`cry`, `Act::Cry`, the new `SoundKind`s, the `sound` layer); the wraiths, banshee, hezrou, chasme, gibbering shade, bone and ice devils, satyr, the howling hounds, the salamander, barbed devil, balor, pit fiend, archlich and demilich | medium |

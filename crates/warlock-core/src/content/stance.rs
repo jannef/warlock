@@ -5,7 +5,7 @@
 //!
 //! The file has at most one entry for each [`CombatStance`]; a stance it leaves out (and every
 //! stance without the file) is plain (no effect at all). The frenzy is never chosen: only a berserker's rage puts them in it,
-//! and its end puts them in the aggressive stance (`world/frenzy.rs`).
+//! and its end puts them in the aggressive stance (`world/combat/frenzy.rs`).
 
 use super::ContentError;
 use crate::combat::{Category, Profile};
@@ -26,7 +26,7 @@ pub enum CombatStance {
     Neutral,
     Defensive,
     Coward,
-    /// A raging berserker's, and only theirs (`world/frenzy.rs`).
+    /// A raging berserker's, and only theirs (`world/combat/frenzy.rs`).
     Frenzy,
 }
 
@@ -159,11 +159,11 @@ pub struct StanceDef {
     #[serde(default = "hundred")]
     pub weapon_mark: u32,
     /// The chance of a gatekeeper's blow by chance (the Gatekeeper gift) counts this much
-    /// (percent), at most always (`world/free_blow.rs::gatekeeper_odds`).
+    /// (percent), at most always (`world/combat/free_blow.rs::gatekeeper_odds`).
     #[serde(default = "hundred")]
     pub gatekeeper: u32,
     /// Taken off a miscast's total on the miscast table (spec §8 "Spells": "Miscasts";
-    /// `world/miscast.rs`): a calm stance softens a miscast, a wild one worsens it.
+    /// `world/magic/miscast.rs`): a calm stance softens a miscast, a wild one worsens it.
     #[serde(default)]
     pub miscast: i32,
 }

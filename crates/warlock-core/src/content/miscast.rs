@@ -1,7 +1,7 @@
 //! Miscasts as data (spec §8 "Spells": "Miscasts", #1271): the Spellcraft check every cast with
 //! one's own mana makes (`data/miscast.toml`, [`MiscastRules`]) and the one ordered table a
 //! failed check rolls on (`data/miscasts/`, one `[[miscast]]` file each, [`Miscast`]). The rules
-//! are `world/miscast.rs`.
+//! are `world/magic/miscast.rs`.
 //!
 //! ```toml
 //! # data/miscast.toml
@@ -32,7 +32,7 @@
 //!
 //! **Protected entries** (the miscasts design §4): an entry whose `to` is below `safe_below` can
 //! never kill its caster nor cost them anything they cannot get back. Its harm is capped at the
-//! caster's hit points less one (`world/miscast.rs`), and the loader refuses one whose effect is
+//! caster's hit points less one (`world/magic/miscast.rs`), and the loader refuses one whose effect is
 //! a `backfire`, a `drain`, a `forget`, a `summon`, a `portal`, a fire `zone`, or a status that
 //! ticks harm or mana (`check_protected`), so a campaign's table cannot break the promise either; a
 //! `rank_loss` is allowed, as it never takes a spell below rank 1. A stat loss there is
@@ -67,7 +67,7 @@ pub struct MiscastRules {
     pub safe_below: i32,
     /// "Near the caster" for a swap and a boon, in steps (Chebyshev), in a clear line.
     pub near: i32,
-    /// The faction a backfired summon's creatures come in (`world/backfire.rs`), hostile to
+    /// The faction a backfired summon's creatures come in (`world/magic/backfire.rs`), hostile to
     /// everyone; `None`: their type's own.
     #[serde(skip)]
     pub backfire_faction: Option<FactionId>,

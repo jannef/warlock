@@ -4,7 +4,7 @@ Part of the specification, the source of truth for what to build; the index is
 [`specification.md`](../specification.md). Update it together with the code and the
 developer notes (CLAUDE.md, `docs/dev/`).
 
-- **Combat** (`warlock-core/src/combat.rs`, the rules; `world/fight.rs`, applying them; M16),
+- **Combat** (`warlock-core/src/combat.rs`, the rules; `world/combat/fight.rs`, applying them; M16),
   after D&D 3rd edition with 2d12 and ADOM-like hit points. Every roll comes from the gameplay
   random stream.
   - **Hitting**: an attack hits when 2d12 (its *natural* roll, 2 to 24, average 13) plus its
@@ -219,7 +219,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`PerceptionView::own_effects`), and those that show on seen creatures
     (`PerceptionView::effects_of`); never a severity or a timer.
 - **Experience** (`warlock-core/src/content/experience.rs`, the rules from
-  `assets/data/experience.toml`; `world/experience.rs`, applying them; M21, #133). Creature types
+  `assets/data/experience.toml`; `world/character/experience.rs`, applying them; M21, #133). Creature types
   have a `level` (1 to 99) and an `xp` value (§7). The player has an experience total
   (`WorldState::experience`, saved; zero is not serialized) and their level follows from it and
   their character (M30, #226; the design is `docs/design/progression.md` §3). **The curve is
@@ -314,7 +314,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Dodge, +1 Parry; coward -4 to hit, -3 damage, +4 Dodge, attacks ×1.25, fleeing steps ×0.85
   and half as loud; frenzy +2 to hit, +4 damage, -6 Dodge, fleeing steps ×1.5, marks ×1.25;
   the Gatekeeper's chance ×2 aggressive, ×½ defensive, ×¼ coward, ×4 (always) frenzy.
-  **Frenzy** (`world/frenzy.rs`) is never chosen: `World::set_stance` refuses it ("Only
+  **Frenzy** (`world/combat/frenzy.rs`) is never chosen: `World::set_stance` refuses it ("Only
   rage brings the frenzy.", `Spent::Nothing`), and refuses every stance while the player rages
   ("Your rage holds you in the frenzy."), so `stance:frenzy` and `+`/`-` (which
   stay put on it) never change it. The one rule, `frenzy::settle`: an actor suffering the
@@ -328,7 +328,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   penalty. The player perceives it (`PerceptionView::own_stance`): the status bar shows
   it when it is not neutral, the character screen always (§6); the wiki's Combat page has the
   generated table.
-- **Free blows** (`world/free_blow.rs`; #228, design `docs/design/progression.md` §4.1 B3): blows
+- **Free blows** (`world/combat/free_blow.rs`; #228, design `docs/design/progression.md` §4.1 B3): blows
   beyond an attack's first, all decided by `World::second_blow` on a `Cue`, so there is one
   place for every extra blow. The second blow of an attack (the off hand's, Sword and Board's
   bash, §8 "Fighting styles") is one; the others are free blows, switched on per actor
@@ -343,7 +343,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     reads naturally). One per attack; with **great cleave** (`great_cleave`, which cleaves as
     `cleave` does) each cleave that kills gives another, so at most once per hostile around.
   - **Retribution** (the paladin's at 25, #912, `docs/design/paladin-smites.md` §6.4;
-    `world/smite.rs::retribution`): when a hostile's melee attack on the player is over and at
+    `world/classes/smite.rs::retribution`): when a hostile's melee attack on the player is over and at
     least one of its blows hit, the attacker stands beside them and lives, they hold the talent
     and its 4 zeal (§8 "Resources"; the blow taken has built its point already), are Kind or
     better (unanswered: nothing, no line), and are not flat-footed, the zeal is spent and their
@@ -394,7 +394,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Determinism**: deciding a free blow draws nothing (only the second blow's bash chance
     draws); a free blow draws only as the blow it is, so fights without free blows switched on,
     or whose triggers do not fire, keep their draws and hashes.
-- **Surprise and sneak attacks** (`world/surprise.rs`, `data/surprise.toml`; #681, design
+- **Surprise and sneak attacks** (`world/combat/surprise.rs`, `data/surprise.toml`; #681, design
   `docs/design/surprise-and-sneak-attacks.md` §3–§5; `docs/dev/surprise.md`): being caught
   unawares, both ways round, the Sneak attack and Initiative skills (#682), slipping past
   (#683), the thief's Lurk, Exploit (#1463), and Vanishing act (#684, §8i "The ranger's, thief's, and bard's tables"), the two weapon
@@ -413,7 +413,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     someone it lost sight of is aware. An attack that catches the player unawares counts as
     noticing its attacker, so an unseen attacker surprises the player with its first blow only
     until the memory lapses (a creature struck from the dark stays unaware: each shot surprises).
-  - **Slipping past** (`world/slip.rs`, `[slip]` in `data/surprise.toml`; #683): the one moment,
+  - **Slipping past** (`world/combat/slip.rs`, `[slip]` in `data/surprise.toml`; #683): the one moment,
     in the creature's look (§8 "Creature behavior"): a creature hunting no one (`Mind::last_seen`
     unset) that would see the **player** by its darkvision alone (their cell in its darkvision but
     too dark for its eyes' threshold: `sight::sees_by` says darkvision settled it, `sight::lit_for`
@@ -453,7 +453,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (the ascetic's Stunning strike, §8 "Character") take: the Defence strip, the free blows, and
     the sneak dice read the field (`World::off_guard`), never the id; Cool head's ease is
     Surprised's alone.
-  - **Sneak attacks** (`world/ambush.rs`): an attack on a target unaware of the attacker or
+  - **Sneak attacks** (`world/combat/ambush.rs`): an attack on a target unaware of the attacker or
     flat-footed (Surprised, Stunned), by an attacker with **sneak dice** (`World::sneak_dice`: the Sneak attack skill's
     `sneak_dice` d6s, 1d6 trained at all, +1d6 at 25, 50, 75, and 100, then every 50; and its
     talents' `ambush` dice on top, Ambusher, Improved sneak attack, `Dice::and`), adds them on a
@@ -465,7 +465,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     attack (`sneak_attack`, 50 %) and Dexterity (`sneak_attack`, 20 %) on the training stream.
     A sneak attack that hits builds the attacker's resources (`sneak_attack`; the thief's
     openings only on their mark, or with none standing: §8 "Resources", "The mark",
-    `world/mark.rs`). A sneak attack that hits raises the `sneak_attack` weapon-ability trigger (§8i "Weapon
+    `world/classes/mark.rs`). A sneak attack that hits raises the `sneak_attack` weapon-ability trigger (§8i "Weapon
     abilities": Knife in the dark, Hunter's shot) with the attack's skills, after its `hit`
     triggers (`World::sneak_trigger`); none without the dice. The thief's actives (#684): a
     Lurk's blow on a hostile that steps up beside them and was not hunting them counts as
@@ -500,7 +500,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     awake; a fight that begins in plain sight draws as before; a threat on a thing without vitals
     draws one fewer (no confirmation). Without `data/surprise.toml` nobody is surprised and the
     player is never unaware.
-- **Ranged combat** (`warlock-core/src/world/shoot.rs`; M16): shots and throws.
+- **Ranged combat** (`warlock-core/src/world/combat/shoot.rs`; M16): shots and throws.
   - **Loosing**: the player fires (`Action::Fire(cell)`, `fire:X,Y`) with the missile weapon in a
     `ready` slot and the ammunition it shoots in a `ready` slot, or throws (`Action::Throw { item,
     at }`, `throw:LETTER:X,Y`) one of an inventory stack that is a throwing weapon (wielded or
@@ -562,7 +562,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     reaches nobody says itself ("You shoot a flaming arrow.", "You throw a dagger."). A creature's
     shots are said like its blows ("The kobold archer shoots you.", "You dodge the kobold
     archer's arrow.").
-  - **Creatures' throws** (`warlock-core/src/world/hurl.rs`, #457): a creature type's natural
+  - **Creatures' throws** (`warlock-core/src/world/combat/hurl.rs`, #457): a creature type's natural
     ranged attack, `[creature.throw]` (`object`, `damage`, `damage_type`, `range` 2 to 20,
     `verb`; optional `name`, `cost`, `to_hit`, `threat`, `crit`, `on_hit`; `content::Throw`),
     needing no ammunition: the giants' boulders, the earth elementals' stones. A creature with one

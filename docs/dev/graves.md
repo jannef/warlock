@@ -2,7 +2,7 @@
 
 The run's dead (the graveyard, `docs/dev/saves.md` "The graveyard") laid to rest in a chain of
 hand-made levels: Līctūn, Cēaptūn's churchyard, then crypt after crypt below it (spec §7
-"Graves"; #1258, #1682). The petrified are statues instead (`world/graveyard.rs`, spec §8
+"Graves"; #1258, #1682). The petrified are statues instead (`world/fixtures/graveyard.rs`, spec §8
 "Statues").
 
 ## Modules
@@ -10,8 +10,8 @@ hand-made levels: Līctūn, Cēaptūn's churchyard, then crypt after crypt below
 | Module | What it does |
 |---|---|
 | `content/burial.rs` | `[burial]` and the legend's marks parsed into `LevelTemplate::burial` (`Burial`), the terrain check, the chains linked (`link_chains`), `Content::burial_chain`, `Content::burial_of` |
-| `world/graves.rs` | `bury`: a level's places filled and its way down opened as the level is made and again on `World::set_graveyard`; `LevelState::unburied`, the level as the state hash sees it |
-| `world/hash.rs::levels` | serializes `WorldState::levels` through `unburied` while hashing |
+| `world/fixtures/graves.rs` | `bury`: a level's places filled and its way down opened as the level is made and again on `World::set_graveyard`; `LevelState::unburied`, the level as the state hash sees it |
+| `world/turn/hash.rs::levels` | serializes `WorldState::levels` through `unburied` while hashing |
 | `statue.rs::Fallen` | one of the dead: `name`, `race`, `class`, `petrified`, `death`; `grave_words` ("Brakka the dwarf warrior") |
 | `perception/truth.rs::epitaph` | what look mode reads on a grave the player sees or remembers |
 
@@ -68,7 +68,7 @@ fixed graves by the chapel), `lictun_crypt_01` (The Undercroft, 26 places), `lic
 
 ## Burial
 
-`world/graves.rs::bury(state, content, level)`, from `travel.rs::instantiate_level` and
+`world/fixtures/graves.rs::bury(state, content, level)`, from `travel.rs::instantiate_level` and
 `World::set_graveyard` (for the levels made already):
 
 1. Undo what an earlier burial did (`buried`: each changed cell's former terrain; the opened
@@ -93,7 +93,7 @@ it steps on an opened way down (the message log says so) or takes it. Saves keep
 
 ## Tests
 
-`world/lictun_tests.rs`: the way in and out, the sexton, the chain and the crypts' shape (quiet,
+`world/campaigns/lictun_tests.rs`: the way in and out, the sexton, the chain and the crypts' shape (quiet,
 10 to 40 places, statue places, stairs up), the ten fixed graves and forty plots, the dead laid
 oldest first without the petrified, the way down opening when full (not one short), the crypts
 filled in turn down to the deepest (whose way down stays shut), the hash under any graveyard, a

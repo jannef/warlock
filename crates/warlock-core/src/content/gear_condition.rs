@@ -3,7 +3,7 @@
 //! Masterwork, by default and by tribe (a creature tag), and what damaged gear of each material
 //! group is called; and by item level (`[[depth]]`, #1436), the better make every source's arms
 //! and armour take deeper, and the more often loot is set with a gem. The rule itself is
-//! `crate::world::gear_condition`. Without the file every piece spawns as made.
+//! `crate::world::items::gear_condition`. Without the file every piece spawns as made.
 
 use super::{Content, ContentError, ItemHarm};
 use serde::Deserialize;

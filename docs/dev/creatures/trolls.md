@@ -17,7 +17,7 @@ Every living troll (brute, standard, quick, caster) is written to the formulas (
 guideline, ±35 % of max HP and dice average).
 
 **Regeneration** (#1131, the dread design §5.9): the brutes carry `regen = 400` (four times the
-pace, `world/regen.rs`; Burning and Corroded stop it, `regen = 0` on both statuses), and only
+pace, `world/health/regen.rs`; Burning and Corroded stop it, `regen = 0` on both statuses), and only
 they: the owner's rule ("regenerating sack of potatoes is just free weapon marks!"), pinned by
 `only_a_brute_regenerates` (a type with `regen` above 100 is a brute of `ROLES` or `dread`) and by
 `the_trolls_keep_to_the_tribe` (a troll regenerates if and only if it is a brute). So the marsh
@@ -43,7 +43,7 @@ magic; claws that frighten), and the elder troll 42 (very rare, huge, claws that
 stagger). The marsh troll stays a marsh thing and the rotting troll undead; both carry the
 `troll` tag.
 
-The two-headed troll is the first type with an `attack_cost` (700; `world/cost_tests.rs` names
+The two-headed troll is the first type with an `attack_cost` (700; `world/turn/cost_tests.rs` names
 it). Only the hill troll joined a population (Fyrdelf, beside the troll). Follow-ups: the stone
 troll and sunlight, a `large` size.
 

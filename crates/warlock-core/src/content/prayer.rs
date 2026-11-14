@@ -3,7 +3,7 @@
 //! passes, the chance a strained prayer fizzles, the bands each face of the prayer answers, the
 //! statuses the release use ends, and the uses in their priority order with their words.
 //!
-//! The rule itself lives in `world/orison.rs`; which uses a priest has, how many answers a
+//! The rule itself lives in `world/classes/orison.rs`; which uses a priest has, how many answers a
 //! prayer gives, and the titles are the prayer talents' (`FaithEffect::Prayer`). The uses are a
 //! closed list in code ([`PrayerUse`]): the file gives each one's place in the order and its
 //! words, once each.
@@ -16,7 +16,7 @@ use crate::time::Duration;
 use serde::{Deserialize, Serialize};
 
 /// What a prayer can answer: each a problem the priest may have and its one fix
-/// (`world/orison.rs`). The order here is the code's; the priority is the file's.
+/// (`world/classes/orison.rs`). The order here is the code's; the priority is the file's.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum PrayerUse {

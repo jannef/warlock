@@ -223,7 +223,7 @@ impl Mods {
             _ => Effect::Armour,
         };
         self.values[defence.index()] += worked.count(Aspect::Defence);
-        // Damaged (a failed attempt, or acid: `world/corrode.rs`), it is a point worse until
+        // Damaged (a failed attempt, or acid: `world/combat/corrode.rs`), it is a point worse until
         // mended: its Protection if it gives some, else its Defence, else its damage.
         if worked.damaged {
             let worse = if def.protection != 0 {

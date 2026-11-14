@@ -118,11 +118,11 @@ pub(super) fn progress_rows(world: &World) -> Vec<String> {
             roll.target, roll.count
         ));
     }
-    // What an aristocrat's family has put by, waiting with their servant (`world/stipend.rs`).
+    // What an aristocrat's family has put by, waiting with their servant (`world/classes/stipend.rs`).
     rows.extend(world.stipend_row());
-    // A merchant's stake with their partner (`world/invest.rs`).
+    // A merchant's stake with their partner (`world/classes/invest.rs`).
     rows.extend(world.invest_row());
-    // A craftsperson's commissions from their patron (`world/patron.rs`).
+    // A craftsperson's commissions from their patron (`world/crafting/patron.rs`).
     rows.extend(world.patron_row());
     let slain: Vec<&str> = world.quests().slain().collect();
     if !slain.is_empty() {

@@ -92,7 +92,7 @@ struct SchoolRow {
 struct StatusRow {
     status: String,
     school: School,
-    /// For a status no spell lays (a lure quest's binding, `world/lure.rs`): whether it is a
+    /// For a status no spell lays (a lure quest's binding, `world/people/lure.rs`): whether it is a
     /// `"buff"` or a `"hex"`. A spell's status takes its spell's kind and names none.
     kind: Option<RowKind>,
 }

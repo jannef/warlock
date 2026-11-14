@@ -82,9 +82,9 @@ fn full_regen() -> u16 {
 }
 
 /// A creature's harm to gear (`corrodes = { chance = 25, what = "armour", kind = "acid" }`;
-/// spec §8 "Creature gimmicks", `world/corrode.rs`): the chance in percent (1 to 100) that a
+/// spec §8 "Creature gimmicks", `world/combat/corrode.rs`): the chance in percent (1 to 100) that a
 /// blow damages gear, whose, and by what kind of item damage (acid, rust, or fire; the
-/// material's `resists` of that kind withstands it, `world/item_damage.rs`).
+/// material's `resists` of that kind withstands it, `world/combat/item_damage.rs`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Corrodes {
@@ -94,7 +94,7 @@ pub struct Corrodes {
 }
 
 /// A creature's disarming blow (`disarms = { chance = 15, difficulty = 18 }`; #1166,
-/// `world/knock_away.rs`): the chance in percent (1 to 100) that a melee hit of its on the player
+/// `world/combat/knock_away.rs`): the chance in percent (1 to 100) that a melee hit of its on the player
 /// tries to knock the weapon from their main hand, and the difficulty of the Dexterity check
 /// that keeps it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
@@ -145,7 +145,7 @@ fn yes() -> bool {
 pub struct CreatureId(pub u16);
 
 /// How a creature fights (spec §8 "Creature behavior"): up close, shooting with the missile
-/// weapon it has ready, casting the spells of its list (`world/creature_cast.rs`), or
+/// weapon it has ready, casting the spells of its list (`world/creatures/creature_cast.rs`), or
 /// breathing its element when its breath is ready and fighting up close while it is not.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -159,7 +159,7 @@ pub enum Combat {
     /// fire, while it has the mana; else fights as a melee creature.
     Caster,
     /// Breathes its `[creature.breath]` at a hostile within the cone's reach whenever it is
-    /// ready (`world/breath.rs`), else closes in and attacks from an adjacent cell.
+    /// ready (`world/creatures/breath.rs`), else closes in and attacks from an adjacent cell.
     Dragon,
 }
 
@@ -361,9 +361,9 @@ pub(super) struct CreatureSpec {
     /// `immune`, #1620). Never its number; Knowledge tells it in words (#1030).
     #[serde(default)]
     pub resist: BTreeMap<String, i32>,
-    /// Its acid (spec §8 "Creature gimmicks"; `world/corrode.rs`): what of a foe's gear it eats.
+    /// Its acid (spec §8 "Creature gimmicks"; `world/combat/corrode.rs`): what of a foe's gear it eats.
     pub corrodes: Option<Corrodes>,
-    /// Its disarming blow (#1166; `world/knock_away.rs`): a hit that may knock the player's
+    /// Its disarming blow (#1166; `world/combat/knock_away.rs`): a hit that may knock the player's
     /// weapon from their hand.
     pub disarms: Option<Disarms>,
     /// Whether it leaves a corpse when it dies (spec §8 "Hunger"; with `data/hunger.toml`).
@@ -392,7 +392,7 @@ pub(super) struct CreatureSpec {
     #[serde(default)]
     pub tameable: bool,
     /// What it teaches as a target dummy (spec §8 "Weapon skills": "Target dummies"), which
-    /// makes it one: it never acts, never dies, and earns no one anything (`world/dummy.rs`).
+    /// makes it one: it never acts, never dies, and earns no one anything (`world/combat/dummy.rs`).
     pub training: Option<super::DummyTraining>,
     /// Its nose: it smells a hostile within this many cells, however dark and through a closed
     /// door (a companion's and a familiar's read it).
@@ -973,7 +973,7 @@ pub struct CreatureDef {
     /// [`super::Content::stance`]); its creatures each carry their own.
     pub faction: Option<FactionId>,
     /// The factions each of its creatures draws one of when it is made, by weight, in id order
-    /// (spec §7 "Factions"; `world/court.rs`); empty for a type of one faction.
+    /// (spec §7 "Factions"; `world/creatures/court.rs`); empty for a type of one faction.
     pub factions: Vec<(FactionId, u32)>,
     /// Its tags, as written (spec §8 "Quests"): a kill quest's `tag:goblin` counts every type
     /// that carries `goblin`. Rules only; the player never sees them.
@@ -994,7 +994,7 @@ pub struct CreatureDef {
     /// How far its attacks reach, in cells: 1 for melee.
     pub range: i32,
     /// Gameplay: a `caster`'s spells, in the order it prefers them (spec §8 "Creature
-    /// behavior": "Casters"; `world/creature_cast.rs`); empty for every other type. Rules
+    /// behavior": "Casters"; `world/creatures/creature_cast.rs`); empty for every other type. Rules
     /// only (the wiki states them).
     pub spells: Vec<super::SpellId>,
     /// Whether it opens closed doors in its way.
@@ -1003,7 +1003,7 @@ pub struct CreatureDef {
     /// waits for where it stands until the hostile is beside it or it has been harmed. Rules only.
     pub lurks: bool,
     /// Gameplay: whether it hunts the player by scent: with no hostile in sight it goes to the
-    /// player's cell, wherever they are on its level, and never idles (`world/unseen.rs`).
+    /// player's cell, wherever they are on its level, and never idles (`world/creatures/unseen.rs`).
     /// Rules only.
     pub hunts: bool,
     /// Gameplay: whether it is shadowy (docs/dev/creatures.md "The unseen"): on a cell dim to
@@ -1016,7 +1016,7 @@ pub struct CreatureDef {
     /// Gameplay: whether the player may swap places with it when it is not hostile (spec §8
     /// "Displacement").
     pub budge: Budge,
-    /// Gameplay: whether it is rooted (docs/dev/creatures.md "Rooted", `world/rooted.rs`): it
+    /// Gameplay: whether it is rooted (docs/dev/creatures.md "Rooted", `world/creatures/rooted.rs`): it
     /// never steps, never gives way, is never driven, swapped, or teleported, and never follows
     /// on stairs; it still strikes, shoots, casts, and summons from where it stands.
     pub rooted: bool,
@@ -1074,13 +1074,13 @@ pub struct CreatureDef {
     /// dressings the generator lays near one it places. The player sees them, not what they mean.
     pub leavings: Vec<super::Leaving>,
     /// Presentation: the line said the first time in a run the player sees one
-    /// (`world/first_sight.rs`); `None`: none.
+    /// (`world/creatures/first_sight.rs`); `None`: none.
     pub first_sight: Option<String>,
     /// Gameplay: the chance in percent that it drops a magic or rare item where it dies.
     pub loot: u8,
     /// Gameplay: the crafting stock its body leaves where it dies, its rows resolved
     /// (`content/drops.rs`: its tags' and its own, its size applied); rolled by
-    /// `world/material_drops.rs`. Rules only (the wiki states them).
+    /// `world/items/material_drops.rs`. Rules only (the wiki states them).
     pub drops: Vec<super::Drop>,
     /// Its own drop rows as written, resolved with its tags' by `content::drops::resolve`.
     pub(super) drop_spec: super::drops::OwnDrops,
@@ -1096,10 +1096,10 @@ pub struct CreatureDef {
     /// wiki states it).
     pub breath: Option<Breath>,
     /// Gameplay: its gaze (spec §8 "Creature behavior": "Gazes"): the riders a look gives a
-    /// hostile within its range that sees it, when the cooldown is off (`world/gaze.rs`).
+    /// hostile within its range that sees it, when the cooldown is off (`world/creatures/gaze.rs`).
     /// Rules only (the wiki states it).
     pub gaze: Option<Gaze>,
-    /// Gameplay: its burst (the dread design §5.3, `world/creature_burst.rs`): the burst of its
+    /// Gameplay: its burst (the dread design §5.3, `world/creatures/creature_burst.rs`): the burst of its
     /// element it goes off in beside its target instead of attacking (a vortex), or where it
     /// dies (death throes). Rules only (the wiki states it).
     pub burst: Option<CreatureBurst>,
@@ -1112,15 +1112,15 @@ pub struct CreatureDef {
     pub summon: Option<Summon>,
     /// Its summoning as written, resolved by `Content::load_summons`.
     pub(super) summon_spec: Option<SummonSpec>,
-    /// Gameplay: its aura (`world/aura.rs`), the status it gives the hostiles near it; `None`:
+    /// Gameplay: its aura (`world/creatures/aura.rs`), the status it gives the hostiles near it; `None`:
     /// none. Rules only (the wiki states it).
     pub aura: Option<Aura>,
     /// Gameplay: the statuses it is made with and that are refreshed each turn it takes
-    /// (`world/aura.rs`); never shown in the look line.
+    /// (`world/creatures/aura.rs`); never shown in the look line.
     pub innate: Vec<StatusId>,
-    /// Gameplay: its idle cry (`world/aura.rs`), a sound now and then; `None`: none.
+    /// Gameplay: its idle cry (`world/creatures/aura.rs`), a sound now and then; `None`: none.
     pub cry: Option<Cry>,
-    /// Gameplay: its splitting (`content/split.rs`, `world/split.rs`): a blow of a listed kind
+    /// Gameplay: its splitting (`content/split.rs`, `world/creatures/split.rs`): a blow of a listed kind
     /// that leaves it with at least twice `least` hit points cuts it in two; `None`: never.
     pub splits: Option<Splits>,
     /// Gameplay: what crawls out of its corpse when it dies (`content/split.rs`); `None`:
@@ -1128,11 +1128,11 @@ pub struct CreatureDef {
     pub dies_into: Option<DiesInto>,
     /// Its `splits` and `dies_into` as written, resolved by `Content::load_splits`.
     pub(super) split_spec: (Option<SplitsSpec>, Option<DiesIntoSpec>),
-    /// Gameplay: its theft (docs/design/monster-dread.md §5.6, `world/snatch.rs`): a melee hit
+    /// Gameplay: its theft (docs/design/monster-dread.md §5.6, `world/creatures/snatch.rs`): a melee hit
     /// on the player, with the cooldown off, may take a stack from their pack; `None`: it
     /// steals nothing. Rules only (the wiki states it).
     pub steals: Option<Steals>,
-    /// Gameplay: its blink (docs/design/monster-dread.md §5.6, `world/blink.rs`): with its path
+    /// Gameplay: its blink (docs/design/monster-dread.md §5.6, `world/creatures/blink.rs`): with its path
     /// to its target blocked, it moves to a free cell beside the target in its line of sight;
     /// `None`: it walks. Rules only (the wiki states it).
     pub blinks: Option<Blinks>,
@@ -1149,15 +1149,15 @@ pub struct CreatureDef {
     /// Gameplay: what it resists, in percent per damage type (spec §8 "Damage types"), negative
     /// a vulnerability; added to every other source, of which at most 75 counts
     /// (`damage::effective`). The player learns it by play, or in words by Knowledge
-    /// (`world/knowledge.rs`).
+    /// (`world/skills/knowledge.rs`).
     pub resist: Vec<(DamageTypeId, i32)>,
     /// Gameplay: the damage types it is immune to (its `immune` ids that name one, and the
     /// spell types' `immune_tags`, `spell_type::lay_immunities`): nothing of them hurts it,
     /// whatever its resistances add up to (#1620). Known to the player as resistances are.
     pub immune_kinds: Vec<DamageTypeId>,
-    /// Gameplay: its acid, eating at a foe's gear (`world/corrode.rs`).
+    /// Gameplay: its acid, eating at a foe's gear (`world/combat/corrode.rs`).
     pub corrodes: Option<Corrodes>,
-    /// Gameplay: its disarming blow (`world/knock_away.rs`): a melee hit on the player may
+    /// Gameplay: its disarming blow (`world/combat/knock_away.rs`): a melee hit on the player may
     /// knock their main-hand weapon onto a cell beside them. Rules only (the wiki states it).
     pub disarms: Option<Disarms>,
     /// Gameplay: whether it leaves a corpse when it dies (spec §8 "Hunger"; only with
@@ -1181,9 +1181,9 @@ pub struct CreatureDef {
     /// Presentation-only: the verb of its death line ("splinters"); `None`: "dies".
     pub dies: Option<String>,
     /// Gameplay: whether it may be tamed and kept as a companion (spec §8 "Allies"; the ranger's
-    /// starting beast is drawn from the `tameable` types; `world/companion.rs`).
+    /// starting beast is drawn from the `tameable` types; `world/allies/companion.rs`).
     pub tameable: bool,
-    /// Gameplay: what it teaches as a target dummy, which makes it one (`world/dummy.rs`).
+    /// Gameplay: what it teaches as a target dummy, which makes it one (`world/combat/dummy.rs`).
     pub training: Option<super::DummyTraining>,
     /// Gameplay: whether one of it may be made greater or lesser than its kind (spec §8
     /// "Grades"; [`crate::grade`]): false for a unique, a mimic, an animated type whose tier

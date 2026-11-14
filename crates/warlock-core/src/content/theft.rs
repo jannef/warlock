@@ -1,7 +1,7 @@
 //! A creature type's theft and blink (docs/design/monster-dread.md §5.6, G6; #1130): `steals =
 //! { what, chance, cooldown }`, a hit that may snatch a stack from the player's pack, and `blinks
 //! = { range, cooldown }`, a step through nothing to the player's side when its path is blocked.
-//! Enemy-only. The rules are `world/snatch.rs` and `world/blink.rs`.
+//! Enemy-only. The rules are `world/creatures/snatch.rs` and `world/creatures/blink.rs`.
 //!
 //! Each cooldown is a status (the house rule for ability limits, `ability.rs`): [`STEAL_STATUS`]
 //! and [`BLINK_STATUS`], given `ceil(cooldown / eases)` degrees, as a summoning's (`summon.rs`).

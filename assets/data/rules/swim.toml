@@ -1,4 +1,4 @@
-# Swimming in deep water (spec §8 "Skills": Swim; `world/swim.rs`).
+# Swimming in deep water (spec §8 "Skills": Swim; `world/levels/swim.rs`).
 #
 # Only one trained in Swim may dive in, and not Strained or worse. Every step that starts in deep
 # water is a check: 2d12 + Toughness's modifier + the talents' Toughness checks + what Swim gives,

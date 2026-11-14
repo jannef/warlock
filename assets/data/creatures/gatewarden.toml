@@ -3,7 +3,7 @@
 # Pit has its own, so the type is no unique, and like the gates it is in no population and never
 # strays. Only its hall, the Warden's hall on a Pit's fifth floor, places it. A devil's body, horned
 # and winged, with a whip that drags its victim close, and it opens gates of its own on its
-# cooldown. Its death seals its Pit, and that Pit only (`world/pit.rs`): the mouth closes behind
+# cooldown. Its death seals its Pit, and that Pit only (`world/levels/pit.rs`): the mouth closes behind
 # the player once they are out.
 #
 # Its faction: the keepers of the layers, who hunt the player and no one else, as Grundlēas's

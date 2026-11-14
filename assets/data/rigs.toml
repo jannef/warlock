@@ -1,6 +1,6 @@
 # Rigs (spec §8 "Traps": "Rigging traps"; the craftsperson design §7.6; docs/dev/traps.md): the
 # traps the craftsperson's Trapwright rigs on a cell beside them, from the abilities menu's Class
-# group through the rig list and a direction (`rig:tripwire:E`; the rules are `world/rig.rs`).
+# group through the rig list and a direction (`rig:tripwire:E`; the rules are `world/crafting/rig.rs`).
 # The file is optional: without it Trapwright is "not usable yet".
 #
 # The cell is beside the rigger on a level (never the overworld): walkable floor with nobody on

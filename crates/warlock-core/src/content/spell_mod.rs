@@ -1,7 +1,7 @@
 //! What talents and items do to a spell (spec §8 "Spells": "Hooks"; the spell scaling design
 //! `docs/design/spell-scaling.md` §7.1): six named hooks, the fields of one [`SpellMods`], summed
 //! once a cast from the caster's talents and worn items, each source filtered by the spell's tags
-//! (`world/spell_mods.rs`, `Actor::spell_mods`), and read by the cast path in one order: the
+//! (`world/magic/spell_mods.rs`, `Actor::spell_mods`), and read by the cast path in one order: the
 //! rung, then the dice, then the roll, then the harm, then the riders; the reach and the degrees
 //! beside. Nothing clamps what they do but the engine's own limits (decision 16).
 //!

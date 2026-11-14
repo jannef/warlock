@@ -208,7 +208,7 @@ fn effect_text(content: &Content, effect: MishapEffect, protected: bool) -> Stri
     }
 }
 
-/// What a backfire does by the spell's kind (`world/backfire.rs`), at its base or `full`.
+/// What a backfire does by the spell's kind (`world/magic/backfire.rs`), at its base or `full`.
 fn backfire_words(full: bool) -> String {
     let dice = if full {
         "level ÷ 2 + 1"

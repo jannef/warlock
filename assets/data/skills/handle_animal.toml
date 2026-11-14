@@ -5,7 +5,7 @@ description = "Calming, leading, and training beasts."
 kind = "action"
 # Its marks (spec §8 "Allies"): an order given to one's allies, an ally's kill, and a try at
 # taming a beast, whatever comes of it. Effect "tame": points added to the Willpower check that
-# tames a beast (world/tame.rs, the difficulty in companions.toml [tame]), +10 at 100, +20 at
+# tames a beast (world/allies/tame.rs, the difficulty in companions.toml [tame]), +10 at 100, +20 at
 # 200 (at most 20). Being trained in it gives the Tame ability.
 mark = [{ on = "handle", chance = 50 }]
 benefit = [{ effect = "tame", curve = [[0, 0], [100, 10], [200, 20]] }]

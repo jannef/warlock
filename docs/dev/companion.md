@@ -14,7 +14,7 @@ Keep it current with the code, as CLAUDE.md says.
 
 ## What a companion is
 
-An ally of the core (`Actor::ally`, `world/ally.rs`) with `source =
+An ally of the core (`Actor::ally`, `world/allies/ally.rs`) with `source =
 AllySource::Companion(CompanionData)` and `until = None`:
 
 ```rust
@@ -30,7 +30,7 @@ pub struct CompanionData {
 (`Actor::companion()` its data). A character has at most one: Animal companion makes none with
 one at hand, and Tame is refused with one. Nothing is kept on `WorldState`: the companion is
 derived from the actors, saved and hashed with its actor as every ally is. The code is
-`world/companion.rs`; the data `assets/data/companions.toml` → `content/companion.rs::CompanionRules`
+`world/allies/companion.rs`; the data `assets/data/companions.toml` → `content/companion.rs::CompanionRules`
 (`Content::companions()`, `None` without the file: then no companion can be made, and fixtures
 without it hash as before). Its `[start]` (the lists by race and the rares) is
 `content/race_beasts.rs::RaceBeasts` (`CompanionRules::start`), shared with the familiar's
@@ -77,7 +77,7 @@ chapter for every beast a start may draw
 
 `Ability::Tame` (`Source::Skill`, `Aim::Direction`; Handle animal's use, listed in its place,
 `Ability::use_of`, while `companions.toml` and `allies.toml` exist; had by whoever is trained in
-a skill with the `tame` benefit) → `Action::Tame(dir)` (`tame:DIR`) → `world/tame.rs`, whose
+a skill with the `tame` benefit) → `Action::Tame(dir)` (`tame:DIR`) → `world/allies/tame.rs`, whose
 module docs are the rules. `start_tame` refuses without time or a draw (untrained, a companion
 already, no beast seen there, one that is an ally or not `tameable`, one hostile that has seen
 the player); the menu greys the row with `Unavailable::HaveCompanion` (the perception's
@@ -93,7 +93,7 @@ stream (two draws), the mark (`Use::Handle`, made or failed), `wake`, and `World
 stream) or the snap. Failed and hostile, the beast's `Mind::last_seen` is set, which is what
 `creature_unaware` reads (the design said `noticed`; that field is when the player last perceived the creature, and
 does not refuse a try), so it may not be tried again until it loses the player. No state beyond
-the actors; no cooldown (time is the price). Tests: `world/tame_tests.rs`; the odds in the wiki,
+the actors; no cooldown (time is the price). Tests: `world/allies/tame_tests.rs`; the odds in the wiki,
 `xtask/src/wiki/companions.rs::taming` (`companion-taming.md`).
 
 ## Creature types: `tameable` and `nose`
@@ -123,7 +123,7 @@ them nothing. The rule is the companion's, whoever its master (the owner's §20:
 master).
 
 The hooks read `Actor::grade_above(content)` (`above` = grade − the type's level, never below 0;
-0 for anyone that is not a companion) in `world/companion.rs`'s `impl Actor`, each called from
+0 for anyone that is not a companion) in `world/allies/companion.rs`'s `impl Actor`, each called from
 one place in `actor.rs`:
 
 | Hook | Where | Rule |
@@ -158,7 +158,7 @@ nose, `World::scented` remembers it in `CompanionData::scent` and says "Snel gro
 once per thing scented, when the player sees the beast and not what it smells (a summon with a
 nose, the dev `ally:hound`, hunts in silence: it has no memory for the growl). A door it cannot
 open keeps it from what it smells: it waits for the ranger to open it. Nothing here draws from
-any stream. The same nose shows the player the unseen (`world/unseen.rs::unseen_by_player`, by
+any stream. The same nose shows the player the unseen (`world/creatures/unseen.rs::unseen_by_player`, by
 `smelt_within`): an invisible or shadowy creature within the companion's `nose` is in the
 player's perception, wherever the companion stands on the level (not in the retinue), with or
 without Hunter's bond.
@@ -186,7 +186,7 @@ without one. Details in `docs/dev/background.md`.
 
 (An escort, `docs/dev/allies.md` "Escorts", takes Give too: anything that fits one of its slots.)
 
-`world/collar.rs`, `Action::Give { item, ally }`, `give:LETTER[:DIR]`, `Ability::Give`
+`world/allies/collar.rs`, `Action::Give { item, ally }`, `give:LETTER[:DIR]`, `Ability::Give`
 (`Source::Ally`, `Aim::Item`; the last row of the Allies group, listed while the player keeps a
 beast, a companion or a familiar, `Ability::orders(any, kept)`; unavailable `NotBeside`, from the
 snapshot's `kept_beside`). One of the stack goes from the player's pack to the end of the beast's
@@ -217,7 +217,7 @@ The ranger's level 18 (`assets/data/talents/pack_tactics.toml`: tree `class`, `g
 `pack_tactics` with `to_hit = 2` and `shares_favoured_prey`, systems `combat` and `allies`).
 `BeastEffect::PackTactics { to_hit }` (checked 1 to 10) → `BeastMods::pack_tactics`;
 `BeastEffect::SharesFavouredPrey` → `BeastMods::shares_favoured_prey`. One hook,
-`World::pack_blow` in `world/pack.rs`, called in `fight.rs::resolve` after `ally_blow` (Beast-bond):
+`World::pack_blow` in `world/allies/pack.rs`, called in `fight.rs::resolve` after `ally_blow` (Beast-bond):
 
 - **flanked**: the target stands beside (Chebyshev 1) both the player and `World::companion()`,
   the companion on the current level and not in the retinue. The player's `Melee` attacks and the
@@ -228,7 +228,7 @@ The ranger's level 18 (`assets/data/talents/pack_tactics.toml`: tree `class`, `g
   stays `favoured`'s.
 
 Only the player's talents are read (a companion is the player's). Nothing is said and nothing is
-saved: the flank is read from where everyone stands at the blow. Tests: `world/pack_tests.rs` (the table's
+saved: the flank is read from where everyone stands at the blow. Tests: `world/allies/pack_tests.rs` (the table's
 row and the mods; flanking both ways, diagonals, not for shots, throws, spells, or the kobold's
 blows; one side only or the retinue, nothing; the shared prey with and without Master hunter,
 flanked too, and another type nothing).
@@ -262,7 +262,7 @@ the dumps read them with no other change. Hidden traps and secret doors stay hid
 the player's own), the pass runs after the dazzle cut so a dazzled player keeps the companion's
 view, and it draws nothing and changes nothing (perception is a pure read of the state).
 
-**Shared buffs** (`BeastEffect::SharedBuffs` → `BeastMods::shared_buffs`), `world/bond.rs`, one
+**Shared buffs** (`BeastEffect::SharedBuffs` → `BeastMods::shared_buffs`), `world/allies/bond.rs`, one
 hook: `World::afflict`, the one door of every status (`status-effects.md`), calls `afflict_one`
 and then `share_buff`. With the talent, a **buff** (`bond::is_buff`: a status of a buff spell, a
 `circles` row that is not a hex, or one a potion lends, `Draught::lends`) on the player lands on
@@ -271,7 +271,7 @@ and then `share_buff`. With the talent, a **buff** (`bond::is_buff`: a status of
 clock. A hex, a harm, a cooldown, Winded, Raging never cross. "Snel is bark-skinned too." when it
 begins on the companion (the status's `seen` word). Nothing drawn.
 
-Tests: `world/bond_tests.rs` (the sight is exactly the eyes plus the nose; a hostile behind a
+Tests: `world/allies/bond_tests.rs` (the sight is exactly the eyes plus the nose; a hostile behind a
 closed door, and not behind a wall; memory; dazzle; the retinue lends no eyes; a buff both ways
 and a hex never; a buff reaches a companion in the retinue). `class_rogue_tests.rs` pins the
 table's row.
@@ -284,7 +284,7 @@ The ranger's level 40 (`assets/data/talents/sic.toml`: tree `class`, `granted`, 
 `auto_critical` and no tick, `blows` 1 to its `max`, `range` 1 to 20) → `AllyMods::sic`;
 `ClassActive::Sic` (`aims_cell`, so `Aim::Cell` and `use:sic:12,5`, through `World::use_class_at`;
 the cost a wait's). `Content::sic_range` is `Ability::reach` for the aiming mode. The code is
-`world/sic.rs`:
+`world/allies/sic.rs`:
 
 - **Refused**, no time, nothing spent: short of focus (`may_use_class`); no companion on the level
   or it is in the retinue ("You have no companion here."; the menu's `Unavailable::NoCompanion`,
@@ -311,7 +311,7 @@ the cost a wait's). `Content::sic_range` is `Ability::reach` for the aiming mode
 what a buff spell's circle row or a potion lends, and Savage is neither (nor does `circles.toml`
 list it). It reads only on the companion's blows and is the price of Focus.
 
-Tests: `world/sic_tests.rs` (the table's row and data; the set-on, its focus and time; the
+Tests: `world/allies/sic_tests.rs` (the table's row and data; the set-on, its focus and time; the
 refusals; a neutral creature; the menu; every hit a critical and a degree, gone at three; speed;
 easing by the minute; the quarry before a nearer foe, the cell following only where seen, the nose
 through a door; a new order and a dead quarry; no crossing; a save and a replay).
@@ -347,7 +347,7 @@ screen snapshot built on a ranger run; no non-ranger run's hash moved.
 
 ## Tests
 
-Taming's are `world/tame_tests.rs`. `world/companion_tests.rs`: the draw over every shipped race and 400 seeds (its list or the
+Taming's are `world/allies/tame_tests.rs`. `world/allies/companion_tests.rs`: the draw over every shipped race and 400 seeds (its list or the
 rares, the rare odds, determinism, the names); a kitted ranger's beast (named, whole, for good,
 on the player's side, said, its `only` line told, the dumps) and a warrior's none; the
 scenarios' rangers (Maren's beside her, Osric's in the retinue), a restored run making no

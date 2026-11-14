@@ -22,19 +22,19 @@ pub const STAGGERED: &str = "staggered";
 /// while there is a prayer).
 pub const BLEEDING: &str = "bleeding";
 pub const POISONED: &str = "poisoned";
-/// The status the dark face's webs leave (the prayer's face, `world/dark_face.rs`).
+/// The status the dark face's webs leave (the prayer's face, `world/classes/dark_face.rs`).
 pub const WEBBED: &str = "webbed";
 /// The spell effect drawn for the dev frost burst (`data/effects.toml`).
 pub const FROST_BURST: &str = "frost_burst";
-/// The terrain of a Pit's mouth, and of one sealed (`world/pit.rs`).
+/// The terrain of a Pit's mouth, and of one sealed (`world/levels/pit.rs`).
 pub const STAIRS_DOWN: &str = "stairs_down";
 pub const RUBBLE: &str = "rubble";
-/// The terrain a field forge makes (`world/field_forge.rs`).
+/// The terrain a field forge makes (`world/crafting/field_forge.rs`).
 pub const MAKESHIFT_ANVIL: &str = "makeshift_anvil";
 /// The object strewn about a den's hoard (`mapgen/den.rs`): required while a room effect is a
 /// teeming den.
 pub const BONES: &str = "bones";
-/// The slot a kept beast wears things in (`world/collar.rs`).
+/// The slot a kept beast wears things in (`world/allies/collar.rs`).
 pub const NECK: &str = "neck";
 
 /// The ids of the list above, resolved; `None` only where the table or feature is not loaded.

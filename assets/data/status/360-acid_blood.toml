@@ -1,4 +1,4 @@
-# An ember beetle's acid blood (its `innate`, `world/aura.rs`; the dread design §5.8): it spatters
+# An ember beetle's acid blood (its `innate`, `world/creatures/aura.rs`; the dread design §5.8): it spatters
 # whoever strikes it in melee. Refreshed each turn its bearer takes; never shown on it, since its
 # kind always has it.
 [[status]]

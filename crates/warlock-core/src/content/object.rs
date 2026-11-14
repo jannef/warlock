@@ -646,7 +646,7 @@ impl ObjectDef {
     }
 
     /// Whether it shatters where it is thrown: a potion or a flask (a flask casting its splash
-    /// there, any other spilling uselessly; `world/flask.rs`).
+    /// there, any other spilling uselessly; `world/health/flask.rs`).
     pub fn shatters(&self) -> bool {
         self.drink.is_some() || self.flask.is_some()
     }

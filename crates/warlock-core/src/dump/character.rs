@@ -49,7 +49,7 @@ pub(super) fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
     if !effects.is_empty() {
         rows.push(format!("Effects {}", effects.join(", ")));
     }
-    // Whose guard their openings are in (`world/mark.rs`), their own choice.
+    // Whose guard their openings are in (`world/classes/mark.rs`), their own choice.
     if let Some(mark) = view.own_mark() {
         rows.push(format!("Mark {mark}"));
     }

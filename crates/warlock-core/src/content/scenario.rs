@@ -45,7 +45,7 @@ pub struct ScenarioDef {
     pub character_name: Option<String>,
     /// The talents the scenario's own character picks at creation (`character = { ..,
     /// talents = ["smith", "gemcutter"] }`): taken as a run of it starts, with or without the
-    /// starting kit, in order, before any Random picks (`world/creation.rs`). Filled in by the
+    /// starting kit, in order, before any Random picks (`world/character/creation.rs`). Filled in by the
     /// loader; empty for none.
     #[serde(skip)]
     pub character_talents: Vec<String>,

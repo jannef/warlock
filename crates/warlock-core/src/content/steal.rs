@@ -1,7 +1,7 @@
 //! Stealing (`assets/data/rules/steal.toml`, spec §8 "Stealing"): what becomes of a creature that
 //! catches the player stealing from it.
 //!
-//! The rule itself lives in `world/steal.rs`: who can steal (anyone trained in a skill with the
+//! The rule itself lives in `world/skills/steal.rs`: who can steal (anyone trained in a skill with the
 //! `steal` benefit, `data/skills/`), from whom (a creature next to them that is not hostile),
 //! the contest (their Dexterity and Steal against its Willpower, spec §8 "Checks"), and what is
 //! taken. A creature that catches them joins the faction named here and turns on them; a

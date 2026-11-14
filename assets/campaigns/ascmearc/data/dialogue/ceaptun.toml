@@ -214,7 +214,7 @@ nothing = "You know everything you carry already. I shan't charge you for tellin
 
 # Eadric the smith, the keeper of the smithy on the square (levels/ceaptun.toml's `[[shop]]`
 # names him with `npc = "eadric"`, so he speaks these words and not the shopkeepers'; #1394). A
-# town tradesman, in Cockney. He teaches Metalcraft for gold (`train_skill`, world/service.rs):
+# town tradesman, in Cockney. He teaches Metalcraft for gold (`train_skill`, world/people/service.rs):
 # offered only while the player is untrained in it, and cheaper with the town's goodwill.
 [[dialogue]]
 npc = "eadric"

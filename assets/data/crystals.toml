@@ -1,8 +1,8 @@
 # Magic crystals (docs/design/enchanting.md §5, §9, §10; docs/dev/enchanting.md; the loader is
 # content/crystal.rs): six colours, one object each, no grades. A crystal is caught from a magic
 # item's affix when it is salvaged (rules/salvage.toml, rules/enchanting.toml) or left by a creature the
-# Soulglass spell kills (spells/soulglass.toml, world/crystal.rs), and is what the Enchanting
-# recipes bind (world/enchant.rs). Anyone may consume one for mana ([consume]).
+# Soulglass spell kills (spells/soulglass.toml, world/crafting/crystal.rs), and is what the Enchanting
+# recipes bind (world/crafting/enchant.rs). Anyone may consume one for mana ([consume]).
 #
 # [[colour]]  the colours, in order; the order is the rule: a creature's colour is the first
 #             colour one of whose tags it carries, and an affix's colour is the first colour whose
@@ -28,13 +28,13 @@
 #   tag              the creature tag (a dragon's) whose every bearer gives `dragon`
 #   dragon           the one a creature tagged `tag` always gives, never a chance draw
 #   heart            the one Quicken takes beside its crystal to add an affix to a rare
-#                    (world/enchant.rs)
+#                    (world/crafting/enchant.rs)
 #   fetter           the one Recast takes to keep the affix chosen while the rest roll anew
 #   salvage_level    salvaging a rare (identified or not) of this item level or more: after its affixes'
 #   salvage_chance   checks, a `salvage_chance` % draw for one
 #
 # [consume]   consuming a crystal (from the Consume list, `e`, beside food and potions;
-#             world/crystal.rs):
+#             world/crafting/crystal.rs):
 #   mana      the mana it gives, never past the maximum (flat, whatever the colour)
 #   marks     the Willpower training marks it gives (stats.toml's `consumed` use, each with
 #             that rule's chance): a tenth of a point's price at an average score (120 at 10)

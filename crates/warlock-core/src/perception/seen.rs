@@ -47,14 +47,14 @@ pub struct SeenActor {
     /// for everyone otherwise (spec §8 "Surprise and sneak attacks": the unaware mark).
     #[serde(skip)]
     pub unaware: bool,
-    /// It is the player's mark, the creature their openings are in (`world/mark.rs`): their
+    /// It is the player's mark, the creature their openings are in (`world/classes/mark.rs`): their
     /// own choice, so they know it.
     #[serde(skip)]
     pub marked: bool,
     /// It is an ally of the player's (spec §8 "Allies"), which they know by sight.
     #[serde(skip)]
     pub ally: bool,
-    /// It is the player's kept beast, a companion or a familiar (`world/companion.rs`,
+    /// It is the player's kept beast, a companion or a familiar (`world/allies/companion.rs`,
     /// `familiar.rs`): its name is in [`PerceptionView::allies`] under its id.
     #[serde(skip)]
     pub companion: bool,
@@ -81,7 +81,7 @@ pub struct AllyView {
     pub retinue: bool,
     /// On the level the player is on, acting.
     pub here: bool,
-    /// What it wears (a companion's collar, `world/collar.rs`), which the player knows wherever
+    /// What it wears (a companion's collar, `world/allies/collar.rs`), which the player knows wherever
     /// it is: they fastened it.
     pub wears: Vec<Stack>,
 }

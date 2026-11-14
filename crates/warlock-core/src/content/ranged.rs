@@ -1,7 +1,7 @@
 //! Shots by distance (`assets/data/ranged.toml`, spec §8 "Ranged combat"; #956): the to-hit
 //! penalties of a shot at long range and at an adjacent target.
 //!
-//! The rule itself lives in `world/shoot.rs` (`World::fly`) and is worked out as each creature on
+//! The rule itself lives in `world/combat/shoot.rs` (`World::fly`) and is worked out as each creature on
 //! the line is attacked, so it saves nothing. The file is optional: without it a shot is as
 //! accurate at any distance.
 

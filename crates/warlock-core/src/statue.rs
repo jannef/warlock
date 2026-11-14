@@ -2,7 +2,7 @@
 //! holds, and the [`Fallen`] it may be named for. Plain data, so both a hand-made or generated
 //! level's template (`content::LevelTemplate::statues`, laid by `mapgen/leavings.rs`) and the
 //! running level (`world::LevelState::statues`) hold it; the rules that lay, kick, and name
-//! statues are the world's (`world/statue.rs`, `world/graveyard.rs`).
+//! statues are the world's (`world/creatures/statue.rs`, `world/fixtures/graveyard.rs`).
 
 use crate::content::{Content, CreatureId};
 use crate::object::Stack;
@@ -17,7 +17,7 @@ pub struct Statue {
     /// What it held, top first: what the creature carried, then the pile it stood on.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub holds: Vec<Stack>,
-    /// The past character it is of, a name from the graveyard (`world/graveyard.rs`):
+    /// The past character it is of, a name from the graveyard (`world/fixtures/graveyard.rs`):
     /// decoration, read by no rule and left out of the state hash.
     #[serde(default, skip_serializing_if = "unhashed_option")]
     pub name: Option<Fallen>,

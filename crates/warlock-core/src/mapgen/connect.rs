@@ -200,7 +200,7 @@ pub(super) fn validate(level: &LevelTemplate, content: &Content) -> Result<(), I
     {
         return Err(Invalid::Unreachable(p));
     }
-    // A lair's hidden way down is as good as stairs (`world/layer_boss.rs`).
+    // A lair's hidden way down is as good as stairs (`world/levels/layer_boss.rs`).
     let ways = (level.stairs.iter().map(|s| s.pos)).chain(level.hidden.keys().copied());
     if let Some(p) = ways.clone().find(|p| !reached[*p]) {
         return Err(Invalid::Unreachable(p));

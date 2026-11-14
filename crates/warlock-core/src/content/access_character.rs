@@ -87,7 +87,7 @@ impl Content {
             .find(|def| def.effects.iter().any(|e| e.active() == Some(active)))
     }
 
-    /// What the warrior's Charge costs (`world/charge.rs`), as its talent says: the stamina
+    /// What the warrior's Charge costs (`world/classes/charge.rs`), as its talent says: the stamina
     /// every charge costs, and what each cell moved costs on top.
     pub fn charge_cost(&self) -> Option<(u16, u16)> {
         let def = self.class_active(ClassActive::Charge)?;
@@ -98,7 +98,7 @@ impl Content {
         Some((def.resource.map_or(0, |r| r.amount), per_cell))
     }
 
-    /// How far Sic 'em reaches (`world/sic.rs`), as its talent says.
+    /// How far Sic 'em reaches (`world/allies/sic.rs`), as its talent says.
     pub fn sic_range(&self) -> Option<i32> {
         (self.class_active(ClassActive::Sic)?.effects.iter()).find_map(|e| match e {
             TalentEffect::Ally(AllyEffect::Sic { range, .. }) => Some(*range),

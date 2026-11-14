@@ -1,7 +1,7 @@
 //! Gathering herbs (`assets/data/herbs.toml`, spec §8 "Skills": Herbalism; #1340): what the
 //! glowing fungus gives, how long a gather takes, and how many herbs it finds.
 //!
-//! The rule itself lives in `world/gather.rs`. The file is optional: without it nobody gathers.
+//! The rule itself lives in `world/skills/gather.rs`. The file is optional: without it nobody gathers.
 
 use super::{ContentError, ObjectId, TerrainId};
 use crate::dice::Dice;

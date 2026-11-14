@@ -1,5 +1,5 @@
 //! Swimming (`assets/data/rules/swim.toml`, spec §8 "Skills": Swim; #1019): the numbers of a step
-//! in deep water. The rule itself lives in `world/swim.rs`.
+//! in deep water. The rule itself lives in `world/levels/swim.rs`.
 //!
 //! The file is optional: without it nobody swims, and deep water refuses everyone.
 

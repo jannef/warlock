@@ -1,7 +1,7 @@
 //! Learning spells as data (spec §8 "Spells", the magic design §4, the spell scaling design
 //! §5.4): the study check and its
 //! time (`data/study.toml`, [`StudyRules`]) and the mishaps a failed study draws
-//! (`data/mishaps/`, one `[[mishap]]` file each, [`Mishap`]). The rules are `world/learn.rs`.
+//! (`data/mishaps/`, one `[[mishap]]` file each, [`Mishap`]). The rules are `world/magic/learn.rs`.
 //!
 //! ```toml
 //! # data/study.toml
@@ -250,7 +250,7 @@ pub enum MishapEffect {
         turns: u16,
     },
     /// Stairs down into a Pit of its own beside the caster, with `gate` at their head (a
-    /// miscast's only; `world/pit.rs`).
+    /// miscast's only; `world/levels/pit.rs`).
     Portal {
         gate: CreatureId,
     },

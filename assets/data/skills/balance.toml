@@ -10,7 +10,7 @@ mark = [
 ]
 # Burdened ×1.25 becomes ×1.10 at 100 (Strained ×1.5, ×1.2). Footing: percent of what rough
 # ground (bush, reeds, rubble, ice; not water) adds to a step that is spared. Steady ease:
-# percent of Staggered's extra cost (150) that is spared (`world/footing.rs`).
+# percent of Staggered's extra cost (150) that is spared (`world/levels/footing.rs`).
 benefit = [
     { effect = "burden", curve = [[0, 0], [100, 60], [200, 80]] },
     { effect = "footing", curve = [[0, 0], [100, 60], [200, 100]] },

@@ -1,5 +1,5 @@
 //! Mana (spec §8 "Mana"): the second pool beside hit points, built the same way. These are the
-//! pure rules; `world/mana.rs` applies them to actors, and `world/status.rs` regenerates it as
+//! pure rules; `world/magic/mana.rs` applies them to actors, and `world/health/status.rs` regenerates it as
 //! time passes.
 //!
 //! - **The maximum**: what race and class give (a creature: its type's `mana`; a scenario

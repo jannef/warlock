@@ -8,7 +8,7 @@
 //! **entrances**: doors on the edge, never on a corner. Generators join every entrance to the rest
 //! of the level. A vault has no stairs and no player start. The one exception is a layer boss's lair (spec §7 "The endless branch"): one `>`, its
 //! [`Vault::down`], which the stamp lays as plain floor and the level keeps hidden until the boss
-//! dies (`world/layer_boss.rs`); only a vault an endless branch's boss row names may have it.
+//! dies (`world/levels/layer_boss.rs`); only a vault an endless branch's boss row names may have it.
 //! Its author places the keys to its locks (spec §8 "Doors"). A legend's `loot` is
 //! rolled when it is stamped: a grade, or a pool of item classes (`magic/loot.rs`, [`LootPool`]),
 //! at the floor's item level. A legend's `monsters` draws creatures at the floor's danger

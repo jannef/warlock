@@ -1,5 +1,5 @@
 //! The numbers of working an item at an anvil (`assets/data/rules/temper.toml`, spec §7 "Special
-//! rooms"; the rules are `world/temper.rs`, the item's state `magic/worked.rs`).
+//! rooms"; the rules are `world/crafting/temper.rs`, the item's state `magic/worked.rs`).
 
 use super::ContentError;
 use crate::magic::worked::GRADES;

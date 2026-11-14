@@ -1,0 +1,964 @@
+//! Skills in the world (spec §8 "Skills"): what trained skills give (tumble, stealth, listen,
+//! balance, survival), that untrained ones give nothing and are never perceived, training marks
+//! on use, saves, and replays.
+
+use crate::action::parse_actions;
+use crate::content::ContentFiles;
+use crate::noise::{self, Act, Noise, SoundKind};
+use crate::object::Stack;
+use crate::replay::Replay;
+use crate::skills::{MAX_VALUE, SkillId, Trained};
+use crate::test_support::said_text as said;
+use crate::world::*;
+
+/// A lit yard: the player in a corner, a peaceful rat standing in the far one.
+const YARD: &str = r##"
+name = "Yard"
+ambient = [255, 255, 255, 0]
+map = '''
+################
+#@.............#
+#..............#
+#..............#
+#.............r#
+################
+'''
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"r" = { terrain = "floor", creature = "rat", faction = "peaceful" }
+"##;
+
+/// A lit pit: the player beside a hostile rat.
+const PIT: &str = r##"
+name = "Pit"
+ambient = [255, 255, 255, 0]
+map = '''
+#####
+#@r.#
+#####
+'''
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"r" = { terrain = "floor", creature = "rat" }
+"##;
+
+/// A dark room: a peaceful rat paces near the player, who cannot see it.
+const DARK: &str = r##"
+name = "Dark"
+map = '''
+##########
+#@.......#
+#........#
+#...r....#
+##########
+'''
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"r" = { terrain = "floor", creature = "rat", faction = "peaceful", route = "E2 W2" }
+"##;
+
+/// A lit corridor: the player, a hidden arrow trap two cells east, and a peaceful rat standing on
+/// another hidden one beyond.
+const SNARES: &str = r##"
+name = "Snares"
+ambient = [255, 255, 255, 0]
+map = '''
+#########
+#@.a..R.#
+#########
+'''
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"a" = { terrain = "floor", trap = "arrow" }
+"R" = { terrain = "floor", creature = "rat", faction = "peaceful", trap = "arrow" }
+"##;
+
+/// A corridor with a closed door east of the player and a floor beyond it.
+const DOORWAY: &str = r##"
+name = "Doorway"
+ambient = [255, 255, 255, 0]
+map = '''
+#######
+#@+...#
+#######
+'''
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"+" = { terrain = "door_closed" }
+"##;
+
+/// The built-in content plus the test levels, each with a scenario of its name whose player has
+/// no character (average stats, untrained in everything); with `eager`, every mark rule's chance
+/// is 100.
+fn files(eager: bool) -> ContentFiles {
+    let mut files = ContentFiles::builtin();
+    for (name, level) in [
+        ("yard", YARD),
+        ("pit", PIT),
+        ("dark", DARK),
+        ("snares", SNARES),
+        ("doorway", DOORWAY),
+    ] {
+        files.insert(&format!("levels/{name}.toml"), level);
+        files.insert(
+            &format!("scenarios/{name}.toml"),
+            &format!("name = \"{name}\"\nstart_level = \"{name}\"\n"),
+        );
+    }
+    if eager {
+        files.flatten_table("skills");
+        files.edit_table("skills", every_chance_certain);
+    }
+    files
+}
+
+/// `text` with every `chance = N` made `chance = 100`.
+fn every_chance_certain(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(at) = rest.find("chance = ") {
+        let (before, after) = rest.split_at(at + "chance = ".len());
+        out.push_str(before);
+        out.push_str("100");
+        rest = after.trim_start_matches(|c: char| c.is_ascii_digit());
+    }
+    out.push_str(rest);
+    out
+}
+
+fn content(eager: bool) -> Arc<Content> {
+    Arc::new(Content::load(&files(eager)).expect("test content is valid"))
+}
+
+fn world(scenario: &str) -> World {
+    World::new(content(false), scenario, None).expect("world")
+}
+
+fn eager(scenario: &str) -> World {
+    World::new(content(true), scenario, None).expect("world")
+}
+
+fn skill(w: &World, id: &str) -> SkillId {
+    w.content().skill_id(id).expect("a skill")
+}
+
+/// The player trained in skill `id` at `value` (untrained with `None`).
+fn set(w: &mut World, id: &str, value: Option<u16>) {
+    let id = skill(w, id);
+    let player = w.state.player;
+    let skills = &mut w.state.actors.get_mut(&player).expect("player").skills;
+    let mut all: Vec<(SkillId, Trained)> = skills.iter().filter(|(s, _)| *s != id).collect();
+    if let Some(value) = value {
+        all.push((id, Trained { value, marks: 0 }));
+    }
+    *skills = all.into_iter().collect();
+}
+
+fn value(w: &World, id: &str) -> Option<u16> {
+    w.state.player().skills.value(skill(w, id))
+}
+
+/// The training marks the player's skill `id` has gathered; `None` if untrained.
+fn marks(w: &World, id: &str) -> Option<u32> {
+    (w.state.player().skills.get(skill(w, id))).map(|t| t.marks)
+}
+
+#[test]
+fn the_player_perceives_only_their_own_trained_skills() {
+    let mut w = world("yard");
+    assert!(
+        w.perception().own_skills().is_empty(),
+        "untrained in everything"
+    );
+    set(&mut w, "stealth", Some(0));
+    set(&mut w, "tumble", Some(42));
+    let own: Vec<(String, u16)> = (w.perception().own_skills().iter())
+        .map(|s| (w.content().skill(s.skill).id.clone(), s.value))
+        .collect();
+    // Trained at 0 is shown (it is not untrained); in skill order.
+    assert_eq!(own, [("stealth".into(), 0), ("tumble".into(), 42)]);
+    // For the abilities menu: passive skills have no active use; a skill used as an action is
+    // an ability, not available yet (no use exists), listed before the shield bash; one whose
+    // use exists is that ability (Open lock: Pick lock).
+    use crate::ability::{Ability, OwnAbility, Unavailable};
+    let skill_abilities = |w: &World| -> Vec<OwnAbility> {
+        (w.perception().abilities().into_iter())
+            .filter(|a| matches!(a.ability, Ability::Skill(_)))
+            .collect()
+    };
+    assert!(skill_abilities(&w).is_empty());
+    set(&mut w, "knowledge", Some(18));
+    assert_eq!(
+        skill_abilities(&w),
+        [OwnAbility {
+            ability: Ability::Skill(skill(&w, "knowledge")),
+            source: crate::ability::Source::Skill,
+            unavailable: Some(Unavailable::NotYet),
+        }]
+    );
+    set(&mut w, "open_lock", Some(18));
+    assert_eq!(
+        skill_abilities(&w).len(),
+        1,
+        "Open lock is no skill ability"
+    );
+    let own: Vec<Ability> = (w.perception().abilities().into_iter())
+        .map(|a| a.ability)
+        .collect();
+    assert_eq!(
+        own,
+        [
+            Ability::Skill(skill(&w, "knowledge")),
+            Ability::PickLock,
+            Ability::Salvage,
+            Ability::ShieldBash
+        ]
+    );
+    // A creature's skills are never perceived: the arena's shaman has some, the player none of
+    // its.
+    let arena = World::new(content(false), "arena", None).expect("world");
+    let shaman = (arena.state.actors.values())
+        .find(|a| arena.content().creature(a.creature).id == "kobold_shaman")
+        .expect("a shaman");
+    assert!(!shaman.skills.is_empty());
+    let mine: Vec<SkillId> = (arena.perception().own_skills().iter())
+        .map(|s| s.skill)
+        .collect();
+    let thief: Vec<SkillId> = arena
+        .state
+        .player()
+        .skills
+        .iter()
+        .map(|(id, _)| id)
+        .collect();
+    assert_eq!(
+        mine, thief,
+        "the arena's halfling thief's own, nothing else"
+    );
+}
+
+#[test]
+fn tumble_adds_dodge_to_defence() {
+    let mut w = world("yard");
+    assert_eq!(
+        w.perception().own_defence(),
+        10,
+        "average Dexterity, nothing worn"
+    );
+    for (tumble, defence) in [
+        (None, 10),
+        (Some(0), 10),
+        (Some(19), 10),
+        (Some(20), 11),
+        (Some(60), 13),
+        (Some(100), 15),
+        (Some(125), 16),
+        (Some(150), 17),
+    ] {
+        set(&mut w, "tumble", tumble);
+        assert_eq!(w.perception().own_defence(), defence, "tumble {tumble:?}");
+    }
+    let defence = w.defence_of(w.state.player);
+    assert_eq!(defence.bonus(crate::combat::Category::Dodge), 7);
+}
+
+#[test]
+fn stealth_makes_steps_and_doors_quieter() {
+    let mut w = world("yard");
+    let loud = |w: &World, act| {
+        let state = &w.state;
+        noise::noise(
+            &w.content,
+            state.current(),
+            state.player(),
+            Burden::Unburdened,
+            act,
+        )
+        .map_or(0, |n| n.loudness)
+    };
+    let step = Act::Step(Pos::new(2, 1));
+    let door = Act::OpenDoor(Pos::new(0, 0));
+    let fight = Act::Attack(crate::action::AttackKind::Melee);
+    // The player's footsteps are 60 on stone floor; a wall makes no door noise, so a door's
+    // 60 is checked through the closed door's own terrain below.
+    for (stealth, steps) in [(None, 60), (Some(0), 60), (Some(50), 42), (Some(100), 24)] {
+        set(&mut w, "stealth", stealth);
+        assert_eq!(loud(&w, step), steps, "stealth {stealth:?}");
+        assert_eq!(loud(&w, fight), 60, "attacks are as loud as ever");
+        assert_eq!(loud(&w, door), 0);
+    }
+    set(&mut w, "stealth", Some(150));
+    assert_eq!(loud(&w, step), 15, "75% quieter far past 100");
+    // Without stealth the step is as loud as ever: the plain noise.
+    let state = &w.state;
+    let plain = noise::plain_noise(
+        &w.content,
+        state.current(),
+        state.player(),
+        Burden::Unburdened,
+        step,
+    );
+    assert_eq!(plain.map(|n| n.loudness), Some(60));
+    // A door: the hub's closed doors open with 60.
+    let mut hub = World::new(content(false), "showcase", None).expect("world");
+    let player = hub.state.player;
+    hub.state.actors.get_mut(&player).expect("player").skills = Default::default();
+    let closed = (0..hub.state.current().height())
+        .flat_map(|y| (0..hub.state.current().width()).map(move |x| Pos::new(x, y)))
+        .find(|&p| {
+            let t = hub.state.current().terrain[p];
+            hub.content.terrain(t).is_closed_door()
+        })
+        .expect("a closed door");
+    assert_eq!(loud(&hub, Act::OpenDoor(closed)), 60);
+    set(&mut hub, "stealth", Some(100));
+    assert_eq!(loud(&hub, Act::OpenDoor(closed)), 24);
+}
+
+#[test]
+fn listen_lowers_the_hearing_threshold() {
+    let mut w = world("yard");
+    let threshold = |w: &World| w.state.player().hearing(&w.content);
+    for (listen, heard) in [
+        (None, 10),
+        (Some(9), 10),
+        (Some(10), 9),
+        (Some(50), 5),
+        (Some(MAX_VALUE), 1),
+    ] {
+        set(&mut w, "listen", listen);
+        assert_eq!(threshold(&w), Some(heard), "listen {listen:?}");
+    }
+    // A sound 6 loud where the player stands: unheard by plain ears, heard with listen 50.
+    let rat = (w.state.actors.values())
+        .find(|a| a.kind == ActorKind::Creature)
+        .expect("rat")
+        .id;
+    let faint = Noise {
+        kind: SoundKind::Footsteps,
+        at: Pos::new(1, 1),
+        loudness: 6,
+        maker: Some(rat),
+    };
+    set(&mut w, "listen", None);
+    w.spread_noise(faint);
+    assert!(w.state.player().heard.is_empty());
+    set(&mut w, "listen", Some(50));
+    w.spread_noise(faint);
+    assert_eq!(w.state.player().heard.len(), 1);
+    // The deer lists listen 30: it hears 3 fainter than its type's 5.
+    let content = content(false);
+    let deer = content.creature_id("deer").expect("deer");
+    assert_eq!(content.creature(deer).hearing, Some(5));
+    let mut actor = w.state.player().clone();
+    actor.creature = deer;
+    actor.skills = content.creature(deer).skills.clone();
+    assert_eq!(actor.hearing(&content), Some(2));
+}
+
+#[test]
+fn balance_eases_the_burdens_slowdown() {
+    let mut w = world("yard");
+    let player = w.state.player;
+    let mail = w.content.object_id("chain_mail").expect("chain mail");
+    // Two chain mail shirts: 22 kg on St 10 To 10, Burdened (over 15 kg).
+    w.state.actors.get_mut(&player).expect("player").inventory = vec![Stack::one(mail); 2];
+    assert_eq!(w.load_of(player).burden(), Burden::Burdened);
+    for (balance, price) in [
+        (None, 7500),
+        (Some(0), 7500),
+        (Some(50), 7050),
+        (Some(100), 6600),
+    ] {
+        set(&mut w, "balance", balance);
+        assert_eq!(
+            w.price_of(player, ActionKind::Wait),
+            price,
+            "balance {balance:?}"
+        );
+    }
+    // Strained (a third shirt and a fourth: 44 kg): ×1.5, and ×1.2 at balance 100.
+    w.state.actors.get_mut(&player).expect("player").inventory = vec![Stack::one(mail); 4];
+    assert_eq!(w.load_of(player).burden(), Burden::Strained);
+    set(&mut w, "balance", None);
+    assert_eq!(w.price_of(player, ActionKind::Wait), 9000);
+    set(&mut w, "balance", Some(100));
+    assert_eq!(w.price_of(player, ActionKind::Wait), 7200);
+    // Unburdened, balance changes nothing.
+    w.state
+        .actors
+        .get_mut(&player)
+        .expect("player")
+        .inventory
+        .clear();
+    assert_eq!(w.price_of(player, ActionKind::Wait), 6000);
+}
+
+#[test]
+fn survival_shortens_journeys_on_the_overworld_only() {
+    let mut w = World::new(content(false), "world", None).expect("world");
+    assert!(
+        value(&w, "survival").is_some(),
+        "the world's ranger knows survival"
+    );
+    let player = w.state.player;
+    let road = w.content.terrain_id("road").expect("road");
+    let road = w.content.terrain(road).clone();
+    for (survival, minutes) in [(None, 20 * 60), (Some(50), 18 * 60), (Some(100), 16 * 60)] {
+        set(&mut w, "survival", survival);
+        let price = w.step_price(player, &road, false);
+        assert_eq!(price, i64::from(minutes) * 1000, "survival {survival:?}");
+    }
+    // Nothing off the overworld.
+    let mut yard = world("yard");
+    set(&mut yard, "survival", Some(100));
+    let floor = yard.content.terrain_id("floor").expect("floor");
+    let floor = yard.content.terrain(floor).clone();
+    assert_eq!(yard.step_price(yard.state.player, &floor, false), 6000);
+}
+
+#[test]
+fn sneaking_within_earshot_trains_stealth_and_untrained_skills_never_train() {
+    let mut w = eager("yard");
+    // Untrained: no marks, ever.
+    w.state.actors.get_mut(&w.state.player).expect("player").pos = Pos::new(11, 4);
+    w.apply(&Action::Move(Dir::E));
+    assert_eq!(value(&w, "stealth"), None);
+    // Trained, far from the rat (12 cells; a step carries 6): nothing to sneak past.
+    let mut w = eager("yard");
+    set(&mut w, "stealth", Some(0));
+    w.apply(&Action::Move(Dir::E));
+    assert_eq!(marks(&w, "stealth"), Some(0));
+    // Within earshot: a mark, which raises nothing by itself and is not said.
+    w.state.actors.get_mut(&w.state.player).expect("player").pos = Pos::new(10, 4);
+    w.apply(&Action::Move(Dir::E));
+    assert_eq!(marks(&w, "stealth"), Some(1));
+    assert_eq!(
+        value(&w, "stealth"),
+        Some(0),
+        "marks wait for a level-up roll"
+    );
+    assert!(!said(&w, "Your stealth improves."));
+    // Waiting is no sneaking.
+    w.apply(&Action::Wait);
+    assert_eq!(marks(&w, "stealth"), Some(1));
+}
+
+#[test]
+fn hearing_something_new_trains_listen() {
+    let mut w = eager("dark");
+    set(&mut w, "listen", Some(5));
+    let mut heard = 0;
+    for _ in 0..6 {
+        w.apply(&Action::Wait);
+        heard += usize::from(!w.perception().sounds().is_empty());
+    }
+    assert!(heard > 0, "the pacing rat is heard");
+    assert!(marks(&w, "listen") > Some(0), "{:?}", marks(&w, "listen"));
+    assert_eq!(value(&w, "listen"), Some(5));
+}
+
+#[test]
+fn sounds_that_are_no_news_train_listen_only_at_rest() {
+    let mut w = eager("dark");
+    set(&mut w, "listen", Some(5));
+    // A rest with no sound trains nothing.
+    let mut quiet = eager("yard");
+    set(&mut quiet, "listen", Some(5));
+    quiet.apply(&Action::Rest(crate::action::Rest::For(Duration::minutes(
+        5,
+    ))));
+    assert_eq!(marks(&quiet, "listen"), Some(0));
+    // A sound heard again (no news) while waiting marks it; walking, it does not.
+    let mut heard = false;
+    for _ in 0..60 {
+        w.apply(&Action::Wait);
+        if !w.perception().sounds().is_empty() {
+            heard = true;
+            break;
+        }
+    }
+    assert!(heard, "the pacing rat is heard");
+    // Heard on this perception already: the sound is no news now.
+    let before = marks(&w, "listen").expect("trained");
+    w.waiting = true;
+    w.hear();
+    assert_eq!(marks(&w, "listen"), Some(before + 1), "waiting: a mark");
+    w.waiting = false;
+    w.hear();
+    assert_eq!(marks(&w, "listen"), Some(before + 1), "not waiting: none");
+    let mut untrained = eager("dark");
+    untrained.waiting = true;
+    untrained.hear();
+    assert_eq!(marks(&untrained, "listen"), None);
+}
+
+#[test]
+fn a_sound_heard_again_while_waiting_or_searching_trains_listen() {
+    // Through `apply` (#1326): a wait and a search are one action, and a turn of it is waiting.
+    for action in [Action::Wait, Action::Search(1)] {
+        let mut w = eager("dark");
+        set(&mut w, "listen", Some(5));
+        let mut overheard = false;
+        for _ in 0..60 {
+            let (before, said) = (marks(&w, "listen"), w.messages().len());
+            w.apply(&action);
+            // A sound heard that is no news is not said: only Overhear marks Listen then.
+            if !w.perception().sounds().is_empty() && w.messages().len() == said {
+                assert!(marks(&w, "listen") > before, "{action}: overheard, a mark");
+                overheard = true;
+                break;
+            }
+        }
+        assert!(overheard, "{action}: the pacing rat is heard again");
+    }
+}
+
+#[test]
+fn a_hidden_trap_going_off_trains_detect_traps() {
+    let mut w = eager("snares");
+    set(&mut w, "detect_traps", Some(0));
+    w.apply(&Action::Move(Dir::E));
+    assert_eq!(marks(&w, "detect_traps"), Some(0));
+    w.apply(&Action::Move(Dir::E));
+    assert!(
+        marks(&w, "detect_traps") >= Some(1),
+        "the trap under the player"
+    );
+    // Untrained, nothing is marked.
+    let mut w = eager("snares");
+    w.apply(&Action::Move(Dir::E));
+    w.apply(&Action::Move(Dir::E));
+    assert_eq!(marks(&w, "detect_traps"), None);
+}
+
+/// A turn passing without a search (a wait is one, #1326): a rest of one turn.
+fn turn_of_rest() -> Action {
+    Action::Rest(crate::action::Rest::For(Duration::seconds(6)))
+}
+
+#[test]
+fn a_hidden_trap_under_a_creature_the_player_sees_trains_detect_traps_half_the_time() {
+    let mut total = 0;
+    for n in 0..60 {
+        let mut w = eager("snares");
+        set(&mut w, "detect_traps", Some(0));
+        w.apply(&turn_of_rest());
+        w.state.training = crate::rng::Rng::training(n);
+        let rat = *w
+            .state
+            .actors
+            .iter()
+            .find(|(id, _)| **id != w.state.player)
+            .expect("rat")
+            .0;
+        let at = w.state.actors[&rat].pos;
+        w.spring_trap(at, rat, &mut Vec::new());
+        total += marks(&w, "detect_traps").expect("trained");
+    }
+    assert!((15..=45).contains(&total), "{total} of 60");
+}
+
+#[test]
+fn disarming_and_searching_train_detect_traps_and_searching_trains_spot() {
+    let mut w = eager("snares");
+    set(&mut w, "detect_traps", Some(0));
+    set(&mut w, "spot", Some(0));
+    w.apply(&Action::Search(1));
+    assert!(marks(&w, "detect_traps") >= Some(1));
+    assert!(marks(&w, "spot") >= Some(1));
+}
+
+#[test]
+fn first_sighting_of_an_unaware_creature_trains_spot_once() {
+    let mut w = eager("yard");
+    set(&mut w, "spot", Some(0));
+    let rat = *w
+        .state
+        .actors
+        .iter()
+        .find(|(id, _)| **id != w.state.player)
+        .expect("rat")
+        .0;
+    let asleep = w.content.sleep_status().expect("asleep");
+    let def = w.content.status(asleep).clone();
+    (w.state.actors.get_mut(&rat).expect("rat").effects).add(asleep, &def, 1, None);
+    w.apply(&turn_of_rest());
+    assert_eq!(marks(&w, "spot"), Some(1), "seen, and asleep");
+    w.apply(&turn_of_rest());
+    assert_eq!(marks(&w, "spot"), Some(1), "once, not each turn");
+}
+
+#[test]
+fn dodging_attacks_trains_tumble() {
+    let mut w = eager("pit");
+    // Defence 31 against a giant rat: it misses but for a natural 24, and the misses that would
+    // have hit an unarmoured, motionless target are dodges.
+    set(&mut w, "tumble", Some(500));
+    for _ in 0..10 {
+        w.apply(&Action::Wait);
+    }
+    assert!(marks(&w, "tumble") > Some(0), "{:?}", marks(&w, "tumble"));
+    // The dodges are said too.
+    assert!(said(&w, "You dodge the giant rat's bite."));
+}
+
+#[test]
+fn acting_under_a_load_trains_balance() {
+    let mut w = eager("yard");
+    set(&mut w, "balance", Some(0));
+    let player = w.state.player;
+    let mail = w.content.object_id("chain_mail").expect("chain mail");
+    let pack = vec![Stack::one(mail); 2];
+    w.state.actors.get_mut(&player).expect("player").inventory = pack.clone();
+    w.apply(&Action::Wait);
+    assert_eq!(marks(&w, "balance"), Some(0), "waiting trains nothing");
+    w.apply(&Action::Move(Dir::E));
+    assert_eq!(marks(&w, "balance"), Some(1));
+    // Unburdened, steps train nothing.
+    w.state
+        .actors
+        .get_mut(&player)
+        .expect("player")
+        .inventory
+        .clear();
+    w.apply(&Action::Move(Dir::E));
+    assert_eq!(marks(&w, "balance"), Some(1));
+    // A dwarf's Burdened costs nothing, so it trains nothing either.
+    let spec: CharacterSpec = "dwarf,male,ascetic".parse().expect("a character");
+    let mut dwarf = World::with_character(content(true), "yard", None, Some(&spec)).expect("world");
+    assert!(value(&dwarf, "balance").is_some(), "ascetics know balance");
+    let player = dwarf.state.player;
+    dwarf
+        .state
+        .actors
+        .get_mut(&player)
+        .expect("player")
+        .inventory = pack;
+    assert_eq!(dwarf.load_of(player).burden(), Burden::Burdened);
+    dwarf.apply(&Action::Move(Dir::E));
+    assert_eq!(marks(&dwarf, "balance"), Some(0));
+}
+
+#[test]
+fn journeys_train_survival() {
+    let mut w = World::new(content(true), "world", None).expect("world");
+    assert!(value(&w, "survival").is_some(), "the ranger knows survival");
+    // Along the road and back.
+    let mut moved = 0;
+    for dir in [Dir::E, Dir::W, Dir::N, Dir::S] {
+        let before = w.player_pos();
+        w.apply(&Action::Move(dir));
+        moved += usize::from(w.player_pos() != before);
+    }
+    assert!(moved > 0);
+    assert_eq!(marks(&w, "survival"), Some(moved as u32));
+}
+
+#[test]
+fn training_draws_from_its_own_stream_and_marks_gather() {
+    // The built-in chances: stealth gets a mark 15% of the time.
+    let mut w = world("yard");
+    set(&mut w, "stealth", Some(0));
+    let gameplay = w.state.rng.clone();
+    let training = w.state.training.clone();
+    for _ in 0..200 {
+        w.train(crate::skills::Use::Sneak);
+    }
+    assert_eq!(w.state.rng, gameplay, "the gameplay stream is untouched");
+    assert_ne!(w.state.training, training);
+    // About 30 marks, gathered for the next level-up roll; no points.
+    let trained = w
+        .state
+        .player()
+        .skills
+        .get(skill(&w, "stealth"))
+        .expect("trained");
+    assert!((15..=45).contains(&trained.marks), "{trained:?}");
+    assert_eq!(trained.value, 0);
+    // Uses no skill (nor stat) trains on change nothing.
+    let before = w.state.clone();
+    w.train(crate::skills::Use::Hear);
+    assert_eq!(w.state, before);
+}
+
+#[test]
+fn skills_and_marks_survive_a_save_and_replays_reproduce_training() {
+    let content = content(true);
+    // The scenario's player knows nothing; a character knows its race's and class's skills.
+    let plain = World::new(content.clone(), "yard", None).expect("world");
+    assert!(plain.state.player().skills.is_empty());
+    let spec: CharacterSpec = "halfling,female,thief".parse().expect("a character");
+    let mut a = World::with_character(content.clone(), "yard", None, Some(&spec)).expect("world");
+    let mut replay = Replay::new(&a);
+    let actions = "move:E*9 move:S*3 move:E*2 wait move:W";
+    for action in parse_actions(actions).expect("actions") {
+        a.apply(&action);
+        replay.push(&action, &a);
+    }
+    let stealth = marks(&a, "stealth").expect("a thief knows stealth");
+    assert!(stealth > 0, "{stealth}");
+    let played = replay.run(content.clone()).expect("the replay verifies");
+    assert_eq!(played.state(), a.state());
+    let bytes = crate::save::encode(&a);
+    let b = crate::save::decode(&bytes, content.clone()).expect("loads");
+    assert_eq!(b.state(), a.state());
+    assert_eq!(b.state_hash(), a.state_hash());
+    assert_eq!(b.perception().own_skills(), a.perception().own_skills());
+    // A state that names a skill the content does not have is refused, not trusted.
+    let mut odd = a.state().clone();
+    let player = odd.player;
+    let unknown = SkillId(content.skills().len() as u8);
+    (odd.actors.get_mut(&player).expect("player").skills).add(unknown, 5);
+    let err = World::from_state(content, odd).unwrap_err();
+    assert!(err.to_string().contains("knows skills"), "{err}");
+}
+
+/// The player's speed (hidden in the game).
+fn speed(w: &World) -> u32 {
+    w.state.player().speed(&w.content)
+}
+
+#[test]
+fn athletics_makes_the_player_quicker_by_its_curve() {
+    let mut w = world("yard");
+    // +5 % at 100, +10 % at 200, straight between, rounded down, level after.
+    for (athletics, quick) in [
+        (None, 1000),
+        (Some(0), 1000),
+        (Some(50), 1020),
+        (Some(100), 1050),
+        (Some(150), 1070),
+        (Some(200), 1100),
+        (Some(MAX_VALUE), 1100),
+    ] {
+        set(&mut w, "athletics", athletics);
+        assert_eq!(speed(&w), quick, "athletics {athletics:?}");
+    }
+    // Creatures train no athletics: the rat keeps its type's speed.
+    let rat = (w.state.actors.iter())
+        .find(|(id, _)| **id != w.state.player)
+        .map(|(_, a)| a.clone())
+        .expect("the rat");
+    assert_eq!(
+        rat.speed(&w.content),
+        w.content.creature(rat.creature).speed
+    );
+}
+
+#[test]
+fn athletics_adds_to_talents_and_leaves_prices_to_burden_and_haste() {
+    let mut w = world("yard");
+    let player = w.state.player;
+    set(&mut w, "athletics", Some(100));
+    // Speed only: an action costs the same energy, gained quicker.
+    assert_eq!(w.price_of(player, ActionKind::Wait), 6000);
+    // Fleet-footed's +5 % and athletics' +5 % add up; Ponderous's −5 % takes it back.
+    w.player_mut().talents.take("fleet_footed", None);
+    assert_eq!(speed(&w), 1100);
+    w.player_mut().talents.take("ponderous", None);
+    assert_eq!(speed(&w), 1050);
+    // Hasted makes prices cheaper, athletics or not, and leaves the speed alone.
+    let hasted = w.content.status_id("hasted").expect("hasted");
+    let plain = w.price_of(player, ActionKind::Wait);
+    w.afflict(player, hasted, 1, None, &mut Vec::new());
+    assert_eq!(speed(&w), 1050);
+    let quickened = w.price_of(player, ActionKind::Wait);
+    assert!(quickened < plain, "{quickened} < {plain}");
+    set(&mut w, "athletics", None);
+    assert_eq!(w.price_of(player, ActionKind::Wait), quickened);
+    // The burden slows prices on its own, athletics or not.
+    let mut w = world("yard");
+    let mail = w.content.object_id("chain_mail").expect("chain mail");
+    w.player_mut().inventory = vec![Stack::one(mail); 2];
+    assert_eq!(w.load_of(player).burden(), Burden::Burdened);
+    for athletics in [None, Some(200)] {
+        set(&mut w, "athletics", athletics);
+        assert_eq!(w.price_of(player, ActionKind::Wait), 7500);
+    }
+    assert_eq!(speed(&w), 1100);
+}
+
+#[test]
+fn athletics_never_takes_speed_past_the_cap() {
+    let mut files = files(false);
+    files.replace_in_table(
+        "skills",
+        "{ effect = \"speed\", curve = [[0, 0], [100, 5], [200, 10]] }",
+        "{ effect = \"speed\", curve = [[0, 0], [100, 50]] }",
+    );
+    let content = Arc::new(Content::load(&files).expect("test content is valid"));
+    let mut w = World::new(content.clone(), "yard", None).expect("world");
+    set(&mut w, "athletics", Some(100));
+    assert_eq!(speed(&w), 1500);
+    // Fleet-footed's +5 % would take it to 55 %: the cap, 50 %, holds.
+    w.player_mut().talents.take("fleet_footed", None);
+    assert_eq!(
+        i64::from(speed(&w)),
+        1000 + 10 * i64::from(crate::content::MAX_SPEED)
+    );
+    // Below the cap with Ponderous: 50 − 5.
+    let mut w = World::new(content, "yard", None).expect("world");
+    set(&mut w, "athletics", Some(100));
+    w.player_mut().talents.take("ponderous", None);
+    assert_eq!(speed(&w), 1450);
+}
+
+#[test]
+fn the_same_walk_takes_less_time_with_athletics() {
+    let walk = |athletics: Option<u16>| {
+        let mut w = world("yard");
+        set(&mut w, "athletics", athletics);
+        let start = w.state.time;
+        for _ in 0..12 {
+            w.apply(&Action::Move(Dir::E));
+        }
+        assert_eq!(w.player_pos().x, 13, "the walk is done");
+        w.state.time.since(start).as_seconds()
+    };
+    // Twelve steps of 6 s; at speed 1100, 12 × 6000 / 1100 = 65.5 s, up to the next second.
+    assert_eq!(walk(None), 72);
+    assert_eq!(walk(Some(200)), 66);
+}
+
+#[test]
+fn burdened_acts_and_journeys_train_athletics() {
+    let mut w = eager("yard");
+    set(&mut w, "athletics", Some(0));
+    let mail = w.content.object_id("chain_mail").expect("chain mail");
+    w.player_mut().inventory = vec![Stack::one(mail); 2];
+    w.apply(&Action::Move(Dir::E));
+    assert_eq!(marks(&w, "athletics"), Some(1));
+    w.player_mut().inventory.clear();
+    w.apply(&Action::Move(Dir::E));
+    assert_eq!(
+        marks(&w, "athletics"),
+        Some(1),
+        "an easy step trains nothing"
+    );
+    let mut w = World::new(content(true), "world", None).expect("world");
+    set(&mut w, "athletics", Some(0));
+    let mut moved = 0;
+    for dir in [Dir::E, Dir::W, Dir::N, Dir::S] {
+        let before = w.player_pos();
+        w.apply(&Action::Move(dir));
+        moved += u32::from(w.player_pos() != before);
+    }
+    assert!(moved > 0);
+    assert_eq!(marks(&w, "athletics"), Some(moved));
+}
+
+#[test]
+fn a_plain_miss_at_the_player_is_a_dodge_one_time_in_four() {
+    use crate::combat::{Blow, Category, Strike};
+    let mut w = world("yard");
+    let player = w.state.player;
+    let foe = w
+        .state
+        .actors
+        .iter()
+        .map(|a| *a.0)
+        .find(|&id| id != player)
+        .unwrap_or(player);
+    let gameplay = w.state.rng.clone();
+    let plain = Some(Blow::missed(None));
+    let mut dodges = 0;
+    for _ in 0..400 {
+        let out = w.plain_miss_dodged(foe, player, plain).expect("a blow");
+        match out.strike {
+            Strike::Missed {
+                by: Some(Category::Dodge),
+            } => dodges += 1,
+            Strike::Missed { by: None } => {}
+            s => panic!("{s:?}"),
+        }
+    }
+    assert!((60..=140).contains(&dodges), "{dodges}");
+    assert_eq!(w.state.rng, gameplay, "the gameplay stream is untouched");
+    // Misses by a category, and blows at others, draw nothing and change nothing.
+    let training = w.state.training.clone();
+    let armour = Some(Blow::missed(Some(Category::Armour)));
+    assert_eq!(w.plain_miss_dodged(foe, player, armour), armour);
+    assert_eq!(w.plain_miss_dodged(player, foe, plain), plain);
+    assert_eq!(w.plain_miss_dodged(foe, player, None), None);
+    assert_eq!(w.state.training, training);
+}
+
+#[test]
+fn spending_mana_marks_spellcraft_only_when_trained() {
+    let mut w = world("showcase");
+    set(&mut w, "spellcraft", Some(20));
+    for _ in 0..80 {
+        w.player_mut().mana = 50;
+        assert!(w.spend_mana(w.player_id(), 1));
+    }
+    let got = marks(&w, "spellcraft").expect("trained");
+    assert!(
+        (5..=40).contains(&got),
+        "{got} marks from 80 spends at 25 %"
+    );
+
+    let mut w = world("showcase");
+    set(&mut w, "spellcraft", None);
+    w.player_mut().mana = 50;
+    assert!(w.spend_mana(w.player_id(), 1));
+    assert_eq!(marks(&w, "spellcraft"), None);
+}
+
+/// A sound made beyond the doorway's door at `loudness` (nobody's), heard or not by the player.
+fn made_beyond_door(w: &mut World, loudness: u16) -> usize {
+    w.player_mut().heard.clear();
+    w.spread_noise(Noise {
+        kind: SoundKind::Footsteps,
+        at: Pos::new(4, 1),
+        loudness,
+        maker: None,
+    });
+    w.state.player().heard.len()
+}
+
+#[test]
+fn listening_at_a_door_hears_through_it_what_plain_ears_miss() {
+    let mut w = world("doorway");
+    set(&mut w, "listen", Some(50));
+    // The player's threshold is 5 with Listen 50; at their cell this sound is 2 loud.
+    assert_eq!(made_beyond_door(&mut w, 62), 0, "plain ears");
+    w.state.listening = Some(crate::noise::Listening {
+        at: Pos::new(2, 1),
+        keener: 5 + w.content().tuning().listen.keener,
+    });
+    assert_eq!(made_beyond_door(&mut w, 62), 1, "ears to the door");
+    // Too faint even so.
+    assert_eq!(made_beyond_door(&mut w, 55), 0);
+    // Only what comes by the door is helped: a sound made on the player's side is unchanged.
+    w.state.listening = Some(crate::noise::Listening {
+        at: Pos::new(2, 1),
+        keener: 20,
+    });
+    w.player_mut().heard.clear();
+    w.spread_noise(Noise {
+        kind: SoundKind::Footsteps,
+        at: Pos::new(1, 1),
+        loudness: 0,
+        maker: None,
+    });
+    assert!(w.state.player().heard.is_empty());
+}
+
+#[test]
+fn a_listen_is_a_turn_that_marks_listen_and_leaves_the_ears_as_they_were() {
+    let mut w = eager("doorway");
+    set(&mut w, "listen", Some(5));
+    let out = w.apply(&parse_actions("listen:E").expect("parses")[0]);
+    assert!(out.took_turn);
+    assert!(said(&w, "You hear nothing beyond the door."));
+    assert_eq!(marks(&w, "listen"), Some(1), "a mark for the listen");
+    assert!(w.state.listening.is_none(), "back to plain ears");
+    // No door that way, or no skill: refused, no time.
+    for (skilled, dir) in [(true, "listen:N"), (false, "listen:E")] {
+        let mut w = eager("doorway");
+        set(&mut w, "listen", skilled.then_some(5));
+        let out = w.apply(&parse_actions(dir).expect("parses")[0]);
+        assert!(!out.took_turn, "{dir} skilled {skilled}");
+    }
+}

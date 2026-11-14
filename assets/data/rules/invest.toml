@@ -1,5 +1,5 @@
 # The merchant's investment (spec §8 "Class abilities": Invest; #1407; crates/warlock-core/src/
-# content/invest.rs, world/invest.rs). A character with the Invest class ability (the merchant's,
+# content/invest.rs, world/classes/invest.rs). A character with the Invest class ability (the merchant's,
 # from level 1) may put gold with their business partner (a campaign's town's `servant` entry
 # for `invest`, data/towns/) and take it out again. It works like a mutual fund: every game week
 # the stake rises or falls by a random return, wherever the player is.
@@ -20,7 +20,7 @@
 # 5.3 % a year on average (1.001^(360/7)), with a standard deviation of about 8.3 %: about three
 # years in ten lose money. Each of Cēaptūn's fourteen quests adds 1 (all of them: 24, 13 % a
 # year) and Fire in the deep, which reopens the mines, 6 more (everything: 30, 16 % a year, and
-# one year in thirty loses). world/invest_tests.rs checks these by simulation.
+# one year in thirty loses). world/classes/invest_tests.rs checks these by simulation.
 
 fees = { invest = 2, withdraw = 2 }
 week = { base = 10, dice = "4d201-404" }

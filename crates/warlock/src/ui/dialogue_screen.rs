@@ -75,8 +75,8 @@ impl DialogueScreen {
         };
         let topics: Vec<(String, String)> = (talk.topics.iter())
             .map(|t| match (t.price, t.items) {
-                // A service (`world/service.rs`) with its price, per thing or once; free for
-                // a town's goodwill (`world/goodwill.rs`).
+                // A service (`world/people/service.rs`) with its price, per thing or once; free for
+                // a town's goodwill (`world/people/goodwill.rs`).
                 (Some(0), _) => (t.id.clone(), format!("{} (free)", t.name)),
                 (Some(price), Some(_)) => (t.id.clone(), format!("{} ({price} gold each)", t.name)),
                 (Some(price), None) => (t.id.clone(), format!("{} ({price} gold)", t.name)),
@@ -180,7 +180,7 @@ impl DialogueScreen {
         }
     }
 
-    /// The dialog a trader's offer opens (`world/wares.rs`): the item in words and its fixed
+    /// The dialog a trader's offer opens (`world/people/wares.rs`): the item in words and its fixed
     /// price, "Buy it" (`ask`) or "Leave it"; without the gold, only leaving it.
     fn offer_dialog(&self, price: u32, ware: &str, ask: Action) -> Dialog {
         let text = format!("{ware}. {price} gold, take it or leave it.");
@@ -329,7 +329,7 @@ mod tests {
         );
     }
 
-    /// A service a town's goodwill made free (`world/goodwill.rs`) says so, and an appraisal at
+    /// A service a town's goodwill made free (`world/people/goodwill.rs`) says so, and an appraisal at
     /// no price asks straight away, with nothing to pay for.
     #[test]
     fn a_free_service_says_so_and_asks_at_once() {

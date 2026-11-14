@@ -2,7 +2,7 @@
 # Cealdhlāw chain. The road east, the first delve, the barrow's heart, and its wight.
 
 # A Beast-friend (the druid's talent) is never sent after the rats, which it calms: they draw the
-# fallback, the barrow's dead rats, raised bones and nothing else (`world/quest_roll.rs`, #1189).
+# fallback, the barrow's dead rats, raised bones and nothing else (`world/people/quest_roll.rs`, #1189).
 [[quest]]
 id = "barrow_rats"
 name = "Rats in the barrows"

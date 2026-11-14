@@ -402,7 +402,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   improve), spared by a spell's ruin, and never found damaged in creature gear; unlike a
   protected item it may still be salvaged or set. Noble metals, mithril,
   dragonscale, and the gems withstand nearly everything; iron and steel rust and corrode but
-  stand heat; wood and cloth burn; nothing but metal rusts; `world/item_damage.rs`). Protected
+  stand heat; wood and cloth burn; nothing but metal rusts; `world/combat/item_damage.rs`). Protected
   from all item damage, a spell's ruin of floor items too (#1170): a unique item, an item of the
   `proof` affix ("of Proof"), and an object a quest asks to be brought or delivered (a fixed
   quest's until it is done for good, a rolled quest's drawn object while active); a quest's

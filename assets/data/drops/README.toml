@@ -1,5 +1,5 @@
 # Material drops (spec §7 "Material drops"; the design: docs/design/recipes.md §9, §10;
-# content/drops.rs, world/material_drops.rs): the crafting stock a creature's body leaves where
+# content/drops.rs, world/items/material_drops.rs): the crafting stock a creature's body leaves where
 # it dies, after what it carried falls and its `loot` rolls. One file per creature tag, named by
 # the tag (`beast.toml`); a tag with nothing bodily to take (spirit, demon, fey, caster, ...) has
 # no file. The loader refuses a file whose tag no creature carries (a typo would drop nothing), so

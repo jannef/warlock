@@ -27,7 +27,7 @@ pub enum MartialEffect {
     /// The class active War cry: a roar as loud as a howl; every hostile that hears it, sees the
     /// player, and has vitals rolls Willpower against `difficulty` + the player's Strength
     /// modifier + their Intimidate; failed, it suffers `severity` degrees of `status` (one that
-    /// `flees`; `world/war_cry.rs`).
+    /// `flees`; `world/classes/war_cry.rs`).
     WarCry {
         status: String,
         severity: u16,
@@ -36,17 +36,17 @@ pub enum MartialEffect {
     /// While raging: the statuses named tick nothing, and a blow that would take the last hit
     /// point leaves it for `cost` of the rage, when that much is held (Unstoppable).
     Unstoppable { statuses: Vec<String>, cost: u16 },
-    /// The class active Charge (the warrior's, `world/charge.rs`): a rush along the line to a
+    /// The class active Charge (the warrior's, `world/classes/charge.rs`): a rush along the line to a
     /// hostile the player sees, ending beside it with a blow, provoking no free blows on the
     /// way: it costs the talent's `resource` (Stamina) and `per_cell` more for every cell
     /// moved.
     Charge { per_cell: u16 },
     /// Charge also strikes every hostile beside a cell it passes, each once, a free blow (the
-    /// warrior's Whirling charge, `world/charge.rs`); the one charged at gets only its own.
+    /// warrior's Whirling charge, `world/classes/charge.rs`); the one charged at gets only its own.
     WhirlingCharge,
     /// The class active Patient defence: a wait, then a degree of `status` (Poised: Dodge up
     /// and the riposte switched on until the next action; what it costs is the talent's
-    /// `resource`: Ki; `world/ascetic.rs`).
+    /// `resource`: Ki; `world/classes/ascetic.rs`).
     PatientDefence { status: String },
     /// The class active Quivering palm: an unarmed blow in a direction; a hit that wounds
     /// leaves the target `severity` degrees of `status` (what it costs is the talent's
@@ -57,11 +57,11 @@ pub enum MartialEffect {
     /// costs is the talent's `resource`: Ki). Quivering palm's blow with another status.
     StunningStrike { status: String, severity: u16 },
     /// The class active Step of the wind: a degree of `status` (Light-footed) on the player,
-    /// taking no time (what it costs is the talent's `resource`: Ki; `world/ascetic.rs`).
+    /// taking no time (what it costs is the talent's `resource`: Ki; `world/classes/ascetic.rs`).
     WindStep { status: String },
     /// The class active Stillness (the ascetic's, on Still mind, #850): every status of
     /// `statuses` the player suffers ends at once, taking no time (what it costs is the talent's
-    /// `resource`: Ki; `world/ascetic.rs`). `name` is the abilities menu's, as the talent that
+    /// `resource`: Ki; `world/classes/ascetic.rs`). `name` is the abilities menu's, as the talent that
     /// carries it has a passive name of its own.
     Stillness { name: String, statuses: Vec<String> },
     /// A shot it looses while it holds `cost` of `resource` spends them and takes `saving`
@@ -76,13 +76,13 @@ pub enum MartialEffect {
     FlurryCost { resource: String, cost: u16 },
     /// A missile (a shot, a throw, a trap's) that would hit it while its hands hold no weapon
     /// and no shield spends `cost` of `resource` by itself and misses; holding less, it hits
-    /// (Diamond soul's catch, on Ki; `world/ascetic.rs`).
+    /// (Diamond soul's catch, on Ki; `world/classes/ascetic.rs`).
     CatchMissiles { resource: String, cost: u16 },
     /// The class active Volley: `shots` shots at a cell for the price of one (what it costs is
     /// the talent's `resource`, if anything).
     Volley { shots: u8 },
     /// The class active Spirit weapon: a melee weapon of spirit-stuff called into the hand in a
-    /// shape chosen (`world/spirit_weapon.rs`; spec §8 "Prestige classes"), which strikes
+    /// shape chosen (`world/classes/spirit_weapon.rs`; spec §8 "Prestige classes"), which strikes
     /// `to_hit` surer, threatens `threat` lower, and ignores all Protection if
     /// `ignores_protection`; `phrase` is its description's power line.
     SpiritWeapon {
@@ -131,10 +131,10 @@ pub struct MartialMods {
     /// While raging, the statuses that tick nothing, and what of the rage holding on to the
     /// last hit point costs; `None` without Unstoppable.
     pub unstoppable: Option<Unstoppable>,
-    /// The active Charge (`world/charge.rs`): what each cell moved costs on top of its
+    /// The active Charge (`world/classes/charge.rs`): what each cell moved costs on top of its
     /// talent's `resource`, if it has it.
     pub charge: Option<u16>,
-    /// Whirling charge: Charge strikes the hostiles beside its way (`world/charge.rs`).
+    /// Whirling charge: Charge strikes the hostiles beside its way (`world/classes/charge.rs`).
     pub whirling_charge: bool,
     /// The active Patient defence, if it has it: the status it gives (Poised).
     pub patient_defence: Option<StatusId>,
@@ -152,7 +152,7 @@ pub struct MartialMods {
     pub rapid_shot: Option<RapidShot>,
     /// What each second blow of its flurry costs, if anything (Flurry, on Ki).
     pub flurry_cost: Option<ResourceCost>,
-    /// What a missile caught costs, if it catches them (Diamond soul, on Ki; `world/ascetic.rs`).
+    /// What a missile caught costs, if it catches them (Diamond soul, on Ki; `world/classes/ascetic.rs`).
     pub catch_missiles: Option<ResourceCost>,
     /// The active Volley, if it has it.
     pub volley: Option<Volley>,
@@ -299,7 +299,7 @@ pub struct WarCry {
     pub difficulty: i32,
 }
 
-/// The active Spirit weapon (spec §8 "Prestige classes"; `world/spirit_weapon.rs`): what a
+/// The active Spirit weapon (spec §8 "Prestige classes"; `world/classes/spirit_weapon.rs`): what a
 /// spirit weapon in the hand gives, more to hit, a threat lower, and Protection ignored.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SpiritWeapon {

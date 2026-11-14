@@ -52,7 +52,7 @@ pub struct Wand {
 impl WandSpec {
     /// Resolves it against the spells (loaded before objects): an aimed spell (a wand is
     /// aimed as a missile weapon is) and its `rungs` (by default the whole of the spell's damage or
-    /// heal ladder; the cast clamps a rung to the ladder, `world/spell_rung.rs`).
+    /// heal ladder; the cast clamps a rung to the ladder, `world/magic/spell_rung.rs`).
     pub(super) fn resolve(self, content: &Content) -> Result<Wand, String> {
         let spell = (content.spell_id(&self.spell))
             .ok_or_else(|| format!("`wand`: no spell `{}` in data/spells/", self.spell))?;

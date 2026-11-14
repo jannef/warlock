@@ -65,7 +65,7 @@ perceived, and all 80 acted every turn (about 1 ms a turn, as the walk's).
 
 Coarse turns while resting (#349, 2026-10-25, same machine, load average 6 to 7): far creatures
 take their turns in strides of up to 20 steps while the player rests (spec §8 "Coarse turns
-while resting", `world/stride.rs`), busy ones far away at 20 times the price, and a rest's turn
+while resting", `world/turn/stride.rs`), busy ones far away at 20 times the price, and a rest's turn
 past the out-of-view stretch is looked at by the rules of sight for the watched creatures' cells
 alone instead of a whole perception when nothing but movement happened. With them, and with
 three changes that make every turn cheaper (`Actor::talent_mods` borrows a shared empty

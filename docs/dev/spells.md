@@ -34,8 +34,8 @@ cast path shares.
 - **Ladders and hooks** (S2, #749; the spell scaling design §4, §6, §7, decisions 2 to 8, 12, 14
   to 16): a spell's growth is written in its own file as **ladders** (`[spell.grows]`,
   `content/spell_ladder.rs`), and talents and items act on it through **six named hooks**
-  (`content/spell_mod.rs`'s `SpellMods`, summed by `Actor::spell_mods`, `world/spell_mods.rs`;
-  read by `world/spell_rung.rs` and the cast path). Nothing of the caster's level grows a
+  (`content/spell_mod.rs`'s `SpellMods`, summed by `Actor::spell_mods`, `world/magic/spell_mods.rs`;
+  read by `world/magic/spell_rung.rs` and the cast path). Nothing of the caster's level grows a
   spell: there are no dice by the caster's level, no lift, and no `[spell.scales]` or
   `max_range`/`max_length`/`max_radius` keys.
 - **Data**:
@@ -78,7 +78,7 @@ cast path shares.
   whole numbers. **No check reads how much a rung does** (decision 16; #1205 took out the
   rest: rungs that never weaken, the engine's limits, at most 8 rungs). Casting clamps reach
   to the engine's limits (`MAX_REACH` 20, a cone `MAX_CONE` 5, a radius the burst table's
-  length; `world/spell_rung.rs`). The wand's and the
+  length; `world/magic/spell_rung.rs`). The wand's and the
   scroll's `rungs` are checked against the roll ladder's length where they load
   (`content/wand.rs`, `content/scroll.rs`).
 - **Other checks** (`spell_def::resolve`; #1205: only what the code needs, ids that resolve,
@@ -108,7 +108,7 @@ cast path shares.
   ladder's roll at a rung, before any hook; the wiki's scroll and wand columns), `tags`,
   `aimed`, `base_range`, `trained_stats` (its ladders' stats, Intelligence when its roll has
   none: what a cast trains).
-- **The hooks** (`content/spell_mod.rs`, `world/spell_mods.rs`; the spell scaling design §7.1):
+- **The hooks** (`content/spell_mod.rs`, `world/magic/spell_mods.rs`; the spell scaling design §7.1):
   `SpellMods { rungs, scroll_rungs, wand_rungs, reach_rungs, degree_rungs, sides, dice, bonus,
   reroll, riders, cells, radius_cells, degrees, cost, time, to_hit, threat }` (the last three
   the ranks' alone, #1264: no talent writes them), `SpellMods::add` (riders of a status
@@ -130,7 +130,7 @@ cast path shares.
   focus's percent, summed into `spell_mana_percent` in `Actor::spell_base` (the decision of this
   slice: the design's §7.2 writes School focus as a `spell_mod` with a cost, so the struct
   carries it rather than a seventh effect kind).
-- **The rung** (`world/spell_rung.rs`): `CastBy::{Own, Scroll(rungs), Wand(rungs)}` (`pub`, for
+- **The rung** (`world/magic/spell_rung.rs`): `CastBy::{Own, Scroll(rungs), Wand(rungs)}` (`pub`, for
   the menu's S4); `Actor::spell_rung(content, spell, by, mods)`: an own cast `climb`s (the
   rungs the effective score reaches, `Actor::effective_stats`, plus `mods.rungs`); a scroll's
   or a wand's is its own rungs plus `scroll_rungs` or `wand_rungs`, no stats; never below 0 nor
@@ -145,7 +145,7 @@ cast path shares.
   `spell_threat(content, spell)` (22 less Baleful's and the rank's `threat`, never below
   `combat::THREATS`' floor). The dev `progress` layer's `fireball rung
   2/4 (In 16; +1 Empower)` (`Actor::spell_rung_sources`).
-- **The one cast path** (`world/cast.rs`, `World::cast_spell` from `Action::Cast`; decisions the
+- **The one cast path** (`world/magic/cast.rs`, `World::cast_spell` from `Action::Cast`; decisions the
   design left open are under "Choices" below):
   - **Cost**, the one hook `Actor::spell_cost(content, spell)` (decisions 1 and 10): `SpellRules::mana` (`max(floor, level)`, or the spell's own `mana`, ×
     `shape_cost(shape, its own radius)` × the resolution's `cost` ×
@@ -193,7 +193,7 @@ cast path shares.
     damage, crit included, is then resisted in `spell_strikes`, nothing holding it). The
     `benefit` (#571) is the caster style's (`Actor::spell_skills`: no weapon skill, #1263,
     docs/dev/caster-styles.md; the style the spell is cast in, decided
-    once a cast, `world/cast_style.rs`: Battle caster in armour that hinders casting, else
+    once a cast, `world/magic/cast_style.rs`: Battle caster in armour that hinders casting, else
     Toucher for a touch, Sniper for a ray or a bolt (#1251); `Benefit::at_distance` adds Sniper's
     far benefits from `[spell_attacks] far`), for a cast paid in mana of a spell that
     `rolls_to_hit` only; then `World::spell_practised` fires their triggered abilities
@@ -203,7 +203,7 @@ cast path shares.
     hurt, the wound. `cast_single` settles the caster's side once (`reflect::Shot`: dice,
     to-hit, effect, spell skills) and strikes through `spell_attack(by, target, source, shot)`, the one place a
     single target's roll is made.
-  - **Spell reflection** (#566, `world/reflect.rs`): an attack or touch roll whose miss
+  - **Spell reflection** (#566, `world/combat/reflect.rs`): an attack or touch roll whose miss
     `Defence::why_missed` put down to the target's **Shield** raises the `spell_blocked`
     trigger for the target (`World::spell_blocked`, through `weapon_trigger`). A
     `reflect_spell` effect (Spell reflection, Sword and Board 10) marks the reflector while its
@@ -215,7 +215,7 @@ cast path shares.
     the reflector, and no one practises it (the `Shot` goes back without spell skills: no
     benefit, marks, or triggers). The reflected flight never raises the trigger (the mark): no ping-pong. A
     death by it is put down to the spell, as a death by one's own spell is. A caster's rays and
-    bolts (`world/creature_cast.rs`, through `cast_single`) are reflected the same way.
+    bolts (`world/creatures/creature_cast.rs`, through `cast_single`) are reflected the same way.
   - **Geometry**: `spell::cone_cells(from, toward, length, opaque)` (exported as
     `warlock_core::world::cone_cells` for the aiming mode): cells within the rounded radius, in
     line of sight from `from`, not opaque, `dot > 0` and `2·dot² ≥ |v|²·|d|²` (45° either side),
@@ -229,7 +229,7 @@ cast path shares.
     ascending actor id. A buff, hex, cleanse, or rider draws nothing.
   - **Saves**: costs and reaches are derived, never saved; a spell is a `SpellId` (an index,
     in the content fingerprint, #397).
-- **Creatures' casts** (#1102, `world/creature_cast.rs`, docs/dev/creatures.md "Casters"): a
+- **Creatures' casts** (#1102, `world/creatures/creature_cast.rs`, docs/dev/creatures.md "Casters"): a
   `combat = "caster"` creature casts its type's `spells` through the same pieces: `Cast::by_creature`
   (reach, roll, degrees at its stats, `Pay::Creature`, `CastBy::Own`), its mana spent first with
   `Actor::spell_base` through `World::spend_mana`, then the shared strikes (`cast_burst_at`,
@@ -238,8 +238,8 @@ cast path shares.
   for creatures (refused at load, `content/creature_spells.rs`): zones, corpses, the open sky,
   pushes, charms, ground- or tag-bound hexes, heals not by touch, summons, cleansings, and
   utilities.
-- **Miscasts** (#1271, #1288; `world/miscast.rs`, `content/miscast.rs`, tests
-  `world/miscast_tests.rs`; spec §8 "Spells": "Casting"; the design
+- **Miscasts** (#1271, #1288; `world/magic/miscast.rs`, `content/miscast.rs`, tests
+  `world/magic/miscast_tests.rs`; spec §8 "Spells": "Casting"; the design
   `docs/design/miscasts-review.md`, of which #1288 is §10 PR 1):
   - **Data**: `data/miscast.toml` (`MiscastRules`: `stat`, `base`, `per_level`, `armour_percent`,
     `rank_ease`, `die` (a `Dice`, `"2d12"`), `per_margin`, `safe_below`; optional: without it
@@ -279,7 +279,7 @@ cast path shares.
     above the first. A natural 2 always fails (`check::makes`), by `difficulty − 2 − bonus` or 0.
   - **The total** (`World::miscast_total`): `die.roll`, + `per_margin × by` −
     `Actor::miscast_ward` (`ward` + the stance's `miscast`), at least 1; `miscast_entry`
-    (`world::miscast::entry_for`) finds the entry covering it.
+    (`world::magic::miscast::entry_for`) finds the entry covering it.
   - **The entry** (`World::miscast`, any caster): the message (the player's, or `seen` with
     `{who}` when the player sees the creature), then the effect: `afflict`, the mana cut,
     `teleport`, a stat mark off or on, `drain` (`times` over), `stat_damage`
@@ -296,7 +296,7 @@ cast path shares.
     (the caster or someone near), `noise` (`World::sound_at` of a `SoundKind::Thunder` at the
     loudness, on the caster's cell), `zone` (`World::lay_zone_around`, `zone.rs`: the dev
     zone's cells, `burst` in line of sight, by the caster, no harm, none on the overworld),
-    `rank_loss` and `forget` (`world/forget.rs`, below), and
+    `rank_loss` and `forget` (`world/magic/forget.rs`, below), and
     `backfire` (`backfire.rs`, #1291: at the spell's base roll, or with `full` the cast's own;
     a damage spell as a burst around the caster; a hex on the caster at the cast's degrees; a
     heal mends the nearest actor hostile to the caster that it sees (`nearest_hostile`:
@@ -311,7 +311,7 @@ cast path shares.
     (`near_caster`): actors on the caster's level within `near` (`data/miscast.toml`, 6) cells with a
     `clear_shot`, in actor-id order. `noise` and `zone` act only when the caster stands on the
     current level. A player who dies of it: `Cause::Miscast(spell)`.
-  - **Rank loss and forgetting** (#1289; `world/forget.rs`, tests `world/forget_tests.rs`; the
+  - **Rank loss and forgetting** (#1289; `world/magic/forget.rs`, tests `world/magic/forget_tests.rs`; the
     design §5.1): `World::miscast_rank_loss` sets the spell cast `ranks` lower, never below 1
     (`set_spell_rank`; a spell at 1 is untouched). `World::miscast_forget` forgets the spell cast
     (`Actor::forget_spell`, the second writer of `Actor::spells`: a learned spell's entry
@@ -326,7 +326,7 @@ cast path shares.
     (all). The player is told after the entry's line what was lost by name ("You know Fireball
     less well than you did.", "You have forgotten Fireball and Haste."; #1292), nothing more
     when nothing was (a spell at rank 1), so the entries' lines say only how it felt.
-  - **The portal** (#1297; `world/pit.rs`, tests `world/pit_tests.rs`; the design §7.2–§7.3;
+  - **The portal** (#1297; `world/levels/pit.rs`, tests `world/levels/pit_tests.rs`; the design §7.2–§7.3;
     `docs/dev/mapgen.md` "The Pits" for the floors): on the caster's level, in play,
     `World::open_pit` draws the Pit's integer `S` (`rng.below(u32::MAX) + 1`, again while taken),
     records `WorldState::pits[S] = Pit { from: the level, sealed: false }`, turns the first plain
@@ -391,7 +391,7 @@ cast path shares.
   - A ray/bolt flies to the first creature on its line; a hex (`ray`, `auto`) keeps the
     placeholder's rule, the creature seen at the cell aimed at.
 - **Spells aimed at a corpse** (#999; the spell types design §7 entries 2, 29, 30;
-  `world/corpse_spell.rs`, tests `world/corpse_spell_tests.rs`): `[spell.effect] corpse =
+  `world/magic/corpse_spell.rs`, tests `world/magic/corpse_spell_tests.rs`): `[spell.effect] corpse =
   "consumed" | "kept"` (`CorpseUse`) on a burst of harm, a touch that heals, or a `self` summon with
   `rise` (`spell_def::corpse_fits`, refused otherwise). `SpellData::aims_corpse`, so `aimed()` holds
   whatever the shape; `Aim::Corpse` ("a corpse you see"; `Ability::action_at` as a cell's);
@@ -413,7 +413,7 @@ cast path shares.
     cap. Then one `below(100)` against `berserk`, whatever it is. `Grows::degrees` and
     `base_degrees` read `rise.minutes`. `count` and `roll()` are none: one corpse, one creature. No
     alignment deed, no caster level.
-- **The first list** (#397; design §7, §8; tests `world/spell_list_tests.rs`):
+- **The first list** (#397; design §7, §8; tests `world/magic/spell_list_tests.rs`):
   - **Spells are data**: `SpellId` (an index in path order) is the one spell type.
     `Action::Cast(String, _)` names the spell by its
     data id (`use:ID[:X,Y]`: any `use:ID` that is no birth sign or class active, parsed without
@@ -443,7 +443,7 @@ cast path shares.
     rest batching stays exact), `barkskin` (Dodge +2). Their effects: `frost_ray` (a ray, #1249) and `spark` (a bolt);
     Flay and Leech use `pale_ray`.
   - **The data-only fourteen** (#998; the spell types design §7 entries 5, 7 to 10, 12, 13, 17,
-    19, 20, 22, 23, 27, 28; tests `world/spell_data_tests.rs` and the content tables in
+    19, 20, 22, 23, 27, 28; tests `world/magic/spell_data_tests.rs` and the content tables in
     `content/spell_def.rs`): 4 Nightsight (buff, `cat_eyed`, one degree so no ladder; its ranks add three, the status's `max` 4, #1268); 5 Acid
     arrow (bolt, attack, acid; its own bolt look `acid_arrow` in `data/effects.toml`), Mesmerise
     (ray hex, `transfixed`); 8 Flay (ray, auto, necrotic 1d4, Bleeding 2 to 4 by Presence),
@@ -469,7 +469,7 @@ cast path shares.
     (Q13), a hybrid (bard, paladin, ranger) up to five (the bard's: Mend, Mesmerise,
     Thunderclap, Bind, Sense the quick), of any level or kind: spells are not class-specific
     (the spell types design's Decisions), so Thunderclap, a damage spell, is the bard's.
-  - **Identify** (#592; tests `world/identify_spell_tests.rs`): divination, `utility`, `self`,
+  - **Identify** (#592; tests `world/magic/identify_spell_tests.rs`): divination, `utility`, `self`,
     `[spell.effect] identify = true` (`SpellEffect::identify`, `SpellData::aims_item`; only a
     `utility` spell on `self` may have it, and a `utility` spell needs it). It asks for a stack,
     not a cell: `Action::CastOn(id, item)` (`use:identify:c`; a spell's aim without a comma is a
@@ -518,7 +518,7 @@ cast path shares.
     of low level"): it slows rather than stops, so any creature may be caught.
 - **Presentation**: `own_spell_cost(spell)` and
   `own_spell_reach(spell)` (the menu's mana and the description's reach, the aiming mode's
-  reach), `own_spell_roll(spell)` (a `SpellRoll`, `world/spell_words.rs`: `Actor::spell_roll`
+  reach), `own_spell_roll(spell)` (a `SpellRoll`, `world/magic/spell_words.rs`: `Actor::spell_roll`
   for an own cast, its damage type or "healed", and the text, `4d6 fire`; the menu's row and the
   dump `spells` layer's `Fireball (level 11, 26 mana): 4d6 fire, range 11, radius 2`; a test
   holds it to `Actor::spell_roll`), and `own_spell_reroll(spell)` (Sure hand's faces, the
@@ -535,8 +535,8 @@ cast path shares.
   no "your spell grows" line anywhere: the menu shows the new dice when it next opens; the
   aiming mode by shape
   (`ui/target.rs`: `cast_spell`, `Aim::spell_line`; a cone's dots are its cells).
-- **Ranks** (#1264; `content/spell_rank.rs`, `world/spell_rank.rs`, tests
-  `world/spell_rank_tests.rs` and `content/spell_rank.rs`): every known spell has a rank, 1 to
+- **Ranks** (#1264; `content/spell_rank.rs`, `world/magic/spell_rank.rs`, tests
+  `world/magic/spell_rank_tests.rs` and `content/spell_rank.rs`): every known spell has a rank, 1 to
   `MAX_SPELL_RANK` (10), kept in `Actor::spells: BTreeMap<SpellId, u8>` beside the spell and
   saved (JSON `"spells":{"12":3}`, by index; a spell a class grants is not there until a
   reading deepens it: `Actor::spell_rank` reads 1 for any known spell not in the map, `None`
@@ -572,8 +572,8 @@ cast path shares.
     rank by rank, and the rank-10 sum in words, `rank_words`) and `deepening.md`
     (`learning.rs::deepening`: the time and the difficulty per rank) on `wiki/src/magic.md`
     "Spell ranks".
-- **Learning** (#396, grimoires #1260; `world/learn.rs`, `content/learning.rs`,
-  `content/grimoire.rs`, tests `world/learn_tests.rs` and `content/learning.rs`):
+- **Learning** (#396, grimoires #1260; `world/magic/learn.rs`, `content/learning.rs`,
+  `content/grimoire.rs`, tests `world/magic/learn_tests.rs` and `content/learning.rs`):
   - **Grimoires** (`content/grimoire.rs`, `data/grimoires.toml`): spells are learned from
     grimoires, never from scrolls. `grimoire::specs` generates, as objects load, a
     `grimoire_of_X` for every object whose `read` is of kind `spell` (`ObjectSpec::casts_spell`):
@@ -693,12 +693,12 @@ cast path shares.
   - **Talents**: Quick study (`quick_study`, the new Spellcraft tree's first talent:
     `MagicEffect::Study { bonus, percent, overreach_percent }`, +2 and −50 %), systems
     `spells` and `scrolls`; Overreach is the same effect's `overreach_percent` (S1).
-- **Wands** (#398; design §9; `content/wand.rs`, `world/zap.rs`, tests `world/zap_tests.rs`):
+- **Wands** (#398; design §9; `content/wand.rs`, `world/magic/zap.rs`, tests `world/magic/zap_tests.rs`):
   - **Data**: `[object.wand]` (`WandSpec` → `Wand { spell, charges, min_rung, max_rung }` on
     `ObjectDef::wand`): an aimed spell (`SpellData::aimed`), `charges` (required: the
     wand's own),
     `rungs = { min, max }` (S2: default `min` 0, `max` the spell's roll ladder's length; a rung
-    past the ladder casts at its last, `world/spell_rung.rs::rung_of`). The
+    past the ladder casts at its last, `world/magic/spell_rung.rs::rung_of`). The
     five wands that roll ship with `rungs = { min = 0, max = 2 }`, Sleep and Web with none (no
     roll ladder). A wand has a `slot`, is not `stackable`, and has no attack, `launches`, range,
     food, `read`, or `kind`; it may have `level` and `frequency` (loot). Class `wands`
@@ -757,7 +757,7 @@ cast path shares.
   - **Wiki**: `xtask/src/wiki/spells.rs` `wands.md` (wand, spell, spell level, charges, its
     strength, the rolls at the range's ends, `roll_at(min_rung)` to `roll_at(max_rung)`, item
     level, frequency, value) on `wiki/src/wands-and-rods.md`'s "Wands".
-- **Rods** (#399; design §9; `content/rod.rs`, `world/rod.rs`, tests `world/rod_tests.rs` and
+- **Rods** (#399; design §9; `content/rod.rs`, `world/magic/rod.rs`, tests `world/magic/rod_tests.rs` and
   `content/rod.rs`):
   - **Effects** (the registry, distinct from spells): `data/rod_effects/` (`RodEffect`, one
     `[[rod_effect]]` a file, its `README.toml` the format; `Content::rod_effects`, an index is
@@ -804,7 +804,7 @@ cast path shares.
     an unknown rod still costs its mana when used; teleport other provokes as a blow does, the
     status bursts do not (as an area hex); a use takes the `cast` action's time.
 - **Talents** (#400; design §10; the spell scaling design §7.2; tests
-  `world/spell_talent_tests.rs`): the `spells` system in `data/talents/systems/`, held to the bar.
+  `world/character/spell_talent_tests.rs`): the `spells` system in `data/talents/systems/`, held to the bar.
   The Spellcraft tree: Quick study (#396), Overreach (level 6, `study { overreach_percent = -33
   }`), School focus (`choice = "school"`, `Choice::School`: the seven schools then the
   non-physical damage types; `spell_mod { cost = -10, cells = 1 }`, one pick per choice, foci on
@@ -842,7 +842,7 @@ cast path shares.
      pool, and an area (Fireball, 26 mana) four. Passes: spells cost real mana. No spell
      above tier 3 exists yet, so a caster past level 18 reached no higher ceiling.
   5. **The probe** (the spell scaling design §12.4, S7, #754; `docs/balance.md` "Spells" and
-     "Caster style pace"; `world/balance_probe.rs`, `balance_probe/caster_pace.rs`): the trained
+     "Caster style pace"; `world/combat/balance_probe.rs`, `balance_probe/caster_pace.rs`): the trained
      wizard's, priest's, and witch's roll of every spell that rolls, `Actor::spell_roll` in
      plain gear (`| Spell (level, res) | L | rung | style rank | roll | hexed | mana / pool |`,
      the roll beside its style-rank-0 roll, a reroll's mean exact), at the caster-style rank
@@ -871,33 +871,33 @@ cast path shares.
   area), the cost by level, shape, resolution, and armour, the 26 shipped spells at §5.8's
   levels, costs, and base rolls, and every shipped ladder as §12 writes it),
   `content/spell_ladder.rs` (the grammar, `rung_at`, the refusals), `content/learning.rs` (the
-  study rules in levels, the bands at 6 and 15), `world/zap_tests.rs` (a wand without `charges`,
+  study rules in levels, the bands at 6 and 15), `world/magic/zap_tests.rs` (a wand without `charges`,
   with `caster_level`, or with `rungs` past its ladder refused; a zap at the stack's own rung,
   Wand mastery a rung more; the draw even over the range, once, the same for the same seed; a
   non-wand drawing nothing and saving as before; a wand saved without a rung read as 0; the
   rung shown with the type and not before), `content/fingerprint.rs` (spells in the
-  fingerprint), `content/experience.rs` (`mana_level` 60), `world/mana_tests.rs` (mana to
+  fingerprint), `content/experience.rs` (`mana_level` 60), `world/magic/mana_tests.rs` (mana to
   level 60),
-  `world/cast_tests.rs` (an attack can miss and critical with nothing holding it, auto and area
+  `world/magic/cast_tests.rs` (an attack can miss and critical with nothing holding it, auto and area
   never critical, Empower's rung, Evasion halving an area only, line against bolt, the cone,
   touch, armour, Willpower's reach ladder at 13, 14, 17, 18, no draws without a roll; S2: the
   rung by score and by stat damage, a cast at every rung drawing that rung's dice and nothing
   more, a rung's boundary changing the roll and nothing else, Sure hand's reroll drawing once
-  more per die and never twice, `aim` by Intelligence), `world/affix_spell_tests.rs` (the Magus, Potent's
+  more per die and never twice, `aim` by Intelligence), `world/items/affix_spell_tests.rs` (the Magus, Potent's
   bonus, Lingering, Farcasting past the ladder, Baleful, the old Potent read),
-  `world/affix_draught_tests.rs` (of Wands' rungs beside Wand mastery, never past the ladder),
-  `world/weapon_ability_tests.rs` (reflection carries the caster's climbed roll),
-  `world/caster_tests.rs` (the casters' tables and spells), `world/spell_talent_tests.rs`
+  `world/items/affix_draught_tests.rs` (of Wands' rungs beside Wand mastery, never past the ladder),
+  `world/combat/weapon_ability_tests.rs` (reflection carries the caster's climbed roll),
+  `world/magic/caster_tests.rs` (the casters' tables and spells), `world/character/spell_talent_tests.rs`
   (#400: Overreach on the study check and never on mana, School focus by tag, Arcane
   training, every combination of the spell talents casting; S2: Empower and Archmage to the
   ladder's last rung and the other hooks after, Keen mind on its school only, Brimming's die
   and cost, Sure hand's hook, Scroll adept's scroll rung past the scroll's
-  own roll), `world/learn_tests.rs` (study turns by level and Quick study, certain at or below the
-  learning, the difficulty by levels and known levels, the dumps), `world/spell_list_tests.rs` (#397:
+  own roll), `world/magic/learn_tests.rs` (study turns by level and Quick study, certain at or below the
+  learning, the difficulty by levels and known levels, the dumps), `world/magic/spell_list_tests.rs` (#397:
   scrolls of spells read, the area hexes, Haste, one scroll a spell, the scrolls' loot by spell
   level, the classes' guaranteed spells, mana for every class),
   `magic/tests.rs` (`spell_scrolls_drop_by_level`),
-  `world/spell.rs` (cone geometry),
+  `world/magic/spell.rs` (cone geometry),
   `ui/target.rs` (aiming by shape).
 
 ## Ruin
@@ -910,13 +910,13 @@ What an area spell does to the items lying in it (#1100; spec §8 "Spells", "Rui
   `group`, a `percent` (0 spares what it matches), and `says` (one item, several). Within a type the
   first row that matches decides (`RuinRules::row`). The wiki's table is
   `xtask/src/wiki/spells.rs::ruin` (`generated/spell-ruin.md`, on the magic page).
-- **Hook**: `World::ruin_items` (`world/ruin.rs`), one line after the damage in each of the shared
-  area functions of `world/spell.rs`: `cast_burst_at` (bursts: spells, scrolls, wands, a study
+- **Hook**: `World::ruin_items` (`world/magic/ruin.rs`), one line after the damage in each of the shared
+  area functions of `world/magic/spell.rs`: `cast_burst_at` (bursts: spells, scrolls, wands, a study
   mishap; through `cast_burst_reaching`, which a creature's burst calls directly with its own
   `Reach`: its kind spared, no halving at the edge, `creature_burst.rs`), `cast_bolt` (lines; a
   birth sign's Fire breath too), `cast_cone` (cones and a dragon's breath, `breath.rs`). `Caster::Actor` only: a trap's or a place's burst ruins nothing; a spell
   with no damage type returns at once.
-- **Spared**: what item damage's one protection spares (`item_damage::protected`,
+- **Spared**: what item damage's one protection spares (`magic::worked::protected`,
   `docs/dev/objects.md` "Protection"; #1170): a unique, an item of Proof, and
   `World::quest_objects` (every fixed quest's `hand_in` object, bring or deliver, until the quest
   is completed and not repeatable, and an active rolled quest's drawn one). A reward is spared
@@ -932,12 +932,12 @@ What an area spell does to the items lying in it (#1100; spec §8 "Spells", "Rui
   shatter." (`Lore::describe`). Said directly, so the lines come before the cast's blows, which
   `say_spell` reports after. The pile is set with `LevelState::set_pile` (an emptied one goes), and
   the remembered pile follows when the cell is next seen.
-- **Tests**: `world/ruin_tests.rs` (the table at a fixed seed, the words, quest objects and
+- **Tests**: `world/magic/ruin_tests.rs` (the table at a fixed seed, the words, quest objects and
   uniques, carried things, traps, the stream), `content/ruin.rs` (the file's checks).
 
 ## Zones
 
-An area that lies on the floor for a time (`world/zone.rs`; the design's §7 "Zones", #1000).
+An area that lies on the floor for a time (`world/magic/zone.rs`; the design's §7 "Zones", #1000).
 Balefire, Reek, Mirk, Slick, and Fume (scroll only) lay one, and so do the flasks of Reek, Mirk, and Slick
 (stinking, darkness, oil: `docs/dev/potions.md`), with `[spell.effect] zone = { kind, turns }`
 (`SpellZone`, `ZoneKind` in `content/spell_def.rs`, checked at load: a zone lies on a burst's
@@ -983,7 +983,7 @@ or a line's cells).
   rider's chance per creature harmed; nothing else, and a level with no zone only reads an empty list.
 - **Dev**: `zone:KIND@X,Y,R` (`zone_dev`: by the player, ten turns, a fire's harm 4, no time); the
   `truth` layer has a line a zone, JSON `--state` a `zones` list.
-- **Tests**: `world/zone_tests.rs`, `world/smoke_tests.rs` (smoke, Fume, Gale, Flare),
+- **Tests**: `world/magic/zone_tests.rs`, `world/health/smoke_tests.rs` (smoke, Fume, Gale, Flare),
   `ui/look.rs` (the words' snapshot), `ui/zone_tint.rs`.
 
 ## Spell types
@@ -996,20 +996,20 @@ What every spell of a damage type does beyond its damage (the design:
   for a type without an entry). `spell_type::parse` runs apart from `SpellRules::parse`, which
   skips the table, because it needs the statuses and lights loaded. A new rule is a field on
   `TypeSpec` and `SpellType`, a hook, and a row in the table of `xtask/src/wiki/spells.rs::types`.
-- **Hooks** (`world/spell_type.rs`, one line at each place on the cast path):
+- **Hooks** (`world/magic/spell_type.rs`, one line at each place on the cast path):
   - `spell_type_lands` in `cast.rs::spell_lands`, after the cast's own status and riders: the
     `rider`, then `ends`. It walks the `harmed` list: `Strike::Hit`, not the `reached` list its
     own status falls on, which counts `Strike::Resisted` (one that resisted it all takes no burn
     and makes no draw). A scroll's, a wand's, a reflected, and a mishap's cast all pass here
     (`learn.rs::backfire_spell` goes through `spell_lands` for it, so the scroll's own status
     falls on the reader too).
-  - `cast_burst` (`world/spell.rs`) for `Caster::Actor` only: the ice (`burst.ice`, a spell's own
+  - `cast_burst` (`world/magic/spell.rs`) for `Caster::Actor` only: the ice (`burst.ice`, a spell's own
     `heat` or `frost`, or else the type's), then `spell_type_burst` (`shatter`, `douses`, `fire`).
     With a `blast`, `doors_blasted` lists the shut doors before `World::blast`, so a blast never
     reaches a door through a wall it breaks, and `blast_doors` breaks them after it. `shatter` reads
     the burst's `blast` × `SHATTERS_UM` (100 µm a point: Shatter's 1000 is ice under 10 cm, what
     bears a person; `blast` as µm would be a 1 mm skin that bears no one).
-  - `spell_type_bite` in `spell_strikes` (`world/spell.rs`), after Poison lore's bite and before
+  - `spell_type_bite` in `spell_strikes` (`world/magic/spell.rs`), after Poison lore's bite and before
     `resisted`: `bite` reads the target's hit points now.
   - `spell_type_shove` in `spell_strikes`, after `wounded`, on one who lives: `combat::big_hit` on
     the hit points taken, or a confirmed critical. Away from `source.0` (a burst's centre, a ray's
@@ -1034,7 +1034,7 @@ What every spell of a damage type does beyond its damage (the design:
     flies its whole range: no bridge could be built), else the last it reached. A line's arm in
     `cast_damage` calls it on the line's last cell: not `cast_bolt`, which Fire breath shares. A
     cone has no world rule.
-  - `spell_type_spreads` (`world/spell_arc.rs`) in `cast_damage`, once, after the shape's arm and
+  - `spell_type_spreads` (`world/magic/spell_arc.rs`) in `cast_damage`, once, after the shape's arm and
     before `spell_lands`, so `say_spell`, the riders, and the marks read every strike alike. Each
     arm hands back what it rolled (`cast_burst`, `cast_bolt`, `cast_cone`, `cast_single`,
     `spell_attack`), and each spread strike is `spell_strikes` at that number: no dice, no roll to
@@ -1072,12 +1072,12 @@ What every spell of a damage type does beyond its damage (the design:
   in `spell_lands`' order; before those, one per creature harmed with someone to arc to, past the
   certain jumps and below a chance of 100, in the order struck; the rest draw nothing. **Saves**: nothing new: a status is data, a fire
   is `LevelState::fires`, a broken door terrain.
-- **Tests**: `world/spell_type_tests.rs` (the draw by seed, the fire-immune, the light, water, the
+- **Tests**: `world/magic/spell_type_tests.rs` (the draw by seed, the fire-immune, the light, water, the
   numbing on hit and miss, cold ending Burning, a ray's one cell, a burst by its type, a spell's
   own field, the fire left and doused, a place's burst reading nothing, the rider hook, the words,
-  a mishap), `world/spell_arc_tests.rs` (the arc's draw by seed, the jump back at the caster and an
+  a mishap), `world/magic/spell_arc_tests.rs` (the arc's draw by seed, the jump back at the caster and an
   ally, a chain's jumps and end, the wall, the pond in id order, Conductor, ice, a burst, the
-  `arcs` load checks), `world/spell_type_force_tests.rs` (a big hit and a small, a critical, the held, a
+  `arcs` load checks), `world/magic/spell_type_force_tests.rs` (a big hit and a small, a critical, the held, a
   burst outward and its centre, the report's order, doors locked and trapped, chests, Fireball's
   doors, thin ice and a plunge, poison and Blight's two, the bite's edge, the undead in the dump,
   Corroded's ticks), `content/spell_type.rs` (the load checks).
@@ -1088,7 +1088,7 @@ Ten spells with one rule each (#1001; the design `docs/design/spell-types-and-ne
 entries 4, 6, 11, 18, 21, 31, 32, 33, 35, 36; §8 for their class rows and scrolls). Every one has
 its scroll (`objects/scroll_of_<id>.toml`) and a class row (`talents/<id>.toml`, granted: wizard 6
 Blink, 9 Shatter; priest 18 Rebuke, 24 Benison; druid 9 Bramble, 20 Gale, 30 Cloudburst; witch 24
-Leech; bard 12 Thunderclap, 20 Sense the quick). The rules live in `world/spell_rule.rs`, each
+Leech; bard 12 Thunderclap, 20 Sense the quick). The rules live in `world/magic/spell_rule.rs`, each
 behind one line of `cast.rs`; the fields in `[spell.effect]` (`spell_def::effect`, which now takes
 the shape too and refuses each field off its kind and shape).
 
@@ -1105,7 +1105,7 @@ the shape too and refuses each field off its kind and shape).
   (`Ally::master`, not in the retinue) in the burst who is hurt, in actor id order, each through
   `World::spell_heals` (the touch heal's tail, said); every undead in it, friend or foe, is seared
   (below). Refused, no mana, no time, when none is hurt and no undead is there.
-- **Healing harms the undead** (#1278, `world/heal_harm.rs`): `SpellData::heals_wounds` (kind
+- **Healing harms the undead** (#1278, `world/health/heal_harm.rs`): `SpellData::heals_wounds` (kind
   `heal`, not `aims_corpse`: Mend, Cure wounds, Benison; Grave feast drains, it does not heal)
   decides a healing spell from its effect, no data field. On an actor whose creature carries the
   `undead` tag (`heal_harm::UNDEAD`, `World::is_undead`) the heal is `heal_harm::harm_of(def)`:
@@ -1181,7 +1181,7 @@ the shape too and refuses each field off its kind and shape).
 - **Determinism**: Blink's one draw, Benison's one roll, Leech's none (its strike's); the rest draw
   nothing. **Saves**: `weather::Override` gains `since` (when it was given), read by `Override::at`
   in place of `until` less three hours.
-- **Tests**: `world/spell_rule_tests.rs` (the leech's half and its cap, the undead's nothing, the
+- **Tests**: `world/magic/spell_rule_tests.rs` (the leech's half and its cap, the undead's nothing, the
   words; the blink's draw by seed, never onto a creature, out of held, webbed, and pinned, nowhere
   to go; the clap on all in it, the caster too, no aim; the heal on allies only, refused; the
   rebuke on an undead ally and foe and not the living; the bramble sparing stone; the gale's order,

@@ -6,7 +6,7 @@ General conventions: `docs/dev/creatures.md`.
 never with `faction`) instead of `faction` (`CreatureDef::factions`, checked in
 `Content::creature_factions`; `CreatureDef::faction` is then the heaviest, ties the first by id,
 for type-level answers: the wiki, `Content::stance`). Each creature of it joins one when it is
-made: `world/court.rs::join`, one call in `travel::make_creature` (so spawns, populations, level
+made: `world/creatures/court.rs::join`, one call in `travel::make_creature` (so spawns, populations, level
 files, and vaults alike), unless the spawn names a `faction` of its own (a level legend's wins).
 Stream `court/<actor id>` (`Rng::court`), drawn only for such a type, so no other stream moves.
 The pick is `Actor::faction_override` (saved and hashed when set; no new save field).
@@ -31,7 +31,7 @@ meenlock 10/90, quickling and yeth hound 25/75; lean Seelie: dryad and nymph 90/
 80/20; the rest even. Levels, roles, and court weights follow
 #383's formulas (XP `5L + 10`; max HP and dice within ±35 %); `content/fey_roster_tests.rs` checks the courts. Riders are existing statuses only
 (poisoned, transfixed, frightened, held); the redcap has no bleeding rider (`mana_tests`' status
-fixture lacks Bleeding). Tests of the mechanism: `world/court_tests.rs` (weights over many draws,
+fixture lacks Bleeding). Tests of the mechanism: `world/creatures/court_tests.rs` (weights over many draws,
 per-seed determinism, save and load, a level's faction winning, look mode's stance, a struck
 Seelie fey).
 
@@ -47,18 +47,18 @@ Surprise (#686, spec §8 "Surprise and sneak attacks"): four of the Unseelie's k
 by their `skills`: the quickling `sneak_attack = 40` (2d6) with `initiative = 150` (it cuts
 before it is seen, and is nearly never caught off guard), the darkling 30 (2d6) and 50, the
 redcap 40 (2d6) and 40, the meenlock 30 (2d6) and 30. The meenlock **lurks** (`lurks = true`,
-`world/lurk.rs`): a hostile it sees, it waits for where it stands until it comes beside it or
+`world/combat/lurk.rs`): a hostile it sees, it waits for where it stands until it comes beside it or
 the meenlock is hurt. `bestiary_tests::the_sneak_attackers_carry_their_craft_and_two_lurk` checks the numbers.
 
 Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the pixie `evil_eye`, `spark` (mana 1); the dryad `barkskin`, `bind`, `acid_arrow` (mana 30); the nymph `mesmerise`, `magic_missile` (mana 25).
 
-Presence (#1128, `world/aura.rs`): the satyr's pipes (`drowsy`, heard, radius 3, loudness 60, Willpower 13, every 18 s); the yeth hound's fear aura (radius 2, 16) and howl; giggling cries on the pixie and the nymph. `content::aura_roster_tests` lists every row.
+Presence (#1128, `world/creatures/aura.rs`): the satyr's pipes (`drowsy`, heard, radius 3, loudness 60, Willpower 13, every 18 s); the yeth hound's fear aura (radius 2, 16) and howl; giggling cries on the pixie and the nymph. `content::aura_roster_tests` lists every row.
 Theft and the blink (docs/design/monster-dread.md §5.6, #1130; the mechanism is
 `docs/dev/creatures.md` "Theft and the blink"): the pixie (`steals` `small`; its touch gives
 `drowsy`, its dust, in place of transfixing) and the nymph (`steals` `any`) each take a stack a
 minute at most (`chance = 30`, `cooldown = 60`); the blink dog `blinks = { range = 6, cooldown =
 30 }`. The test world's `thieves` scenario (`levels/thieves_hall.toml`) has all three.
-`world/theft_tests.rs` checks the rows.
+`world/skills/theft_tests.rs` checks the rows.
 
 The darkling (#1132, docs/dev/creatures.md "The unseen"): `shadowy = true`, unseen in the
 dim but beside the player, its sneak attack kept.

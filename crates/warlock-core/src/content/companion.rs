@@ -1,7 +1,7 @@
 //! The animal companion's data (`assets/data/companions.toml`; spec §8 "Allies": "The animal
 //! companion"; docs/design/ranger-companion.md §12.1; `docs/dev/companion.md`): the starting
 //! beasts by race and the rares, the taming numbers, the growth table, and the names. The rules
-//! live in `world/companion.rs`; the ally core's constants are `allies.toml`. The file is
+//! live in `world/allies/companion.rs`; the ally core's constants are `allies.toml`. The file is
 //! optional: without it no companion can be made, and nothing here is read.
 
 use super::race_beasts::{self, RaceBeasts, StartSpec};
@@ -34,7 +34,7 @@ pub struct TameRules {
     pub food: i32,
 }
 
-/// How a companion grows with its master (`world/companion.rs`, the hooks in `world/actor.rs`).
+/// How a companion grows with its master (`world/allies/companion.rs`, the hooks in `world/turn/actor.rs`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Growth {
     /// The grade in percent of the master's level, never below the type's own level.

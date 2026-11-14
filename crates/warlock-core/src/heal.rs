@@ -1,6 +1,6 @@
 //! What the Heal skill treats (spec §8 "Skills": the Heal ability, #549): the rules of which of
 //! an actor's ailments may be treated now. The treating itself (the check, what comes of it, the
-//! time) is `world/heal.rs`.
+//! time) is `world/health/heal.rs`.
 //!
 //! An **ailment** is a status with a `treat` table (`data/status/`: bleeding, poisoned) or a
 //! disease that shows (`data/diseases.toml`). One may be treated now when:
@@ -114,7 +114,7 @@ pub fn own(actor: &Actor, content: &Content) -> Vec<OwnAilment> {
 /// direction order), each ally's in [`treatable`]'s order: "Your wolf's bleeding", and the way
 /// to it after when two allies beside them go by the same name ("Your wolf's bleeding (east)").
 pub fn of_allies(allies: &[(Dir, &Actor)], content: &Content) -> Vec<OwnAilment> {
-    // A kept beast by its name ("Snel's bleeding"; `world/companion.rs`), the rest "Your wolf's".
+    // A kept beast by its name ("Snel's bleeding"; `world/allies/companion.rs`), the rest "Your wolf's".
     let named = |ally: &Actor| match ally.kept() {
         Some(data) => data.name.clone(),
         None => format!("Your {}", content.creature(ally.creature).name),

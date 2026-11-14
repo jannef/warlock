@@ -21,7 +21,7 @@ plus one naming rule (below).
     50), `herrick` (Sergeant Herrick; a great axe, magic at 50 %, wears `unique:turncoat`, whose
     Ward keeps Frightened off him). Each unique is placed by its owner's gear line at chance 100
     (the one placement in all content: a test that needs a placement of its own defines a test
-    unique, `world/unique_tests.rs`). `osrick.toml` opens with the design's TODO note on his
+    unique, `world/creatures/unique_tests.rs`). `osrick.toml` opens with the design's TODO note on his
     spells (§8.2, §15); `outlaw_tests` checks it is there.
 - **Where**: the four lairs (#426, `docs/dev/guild.md`): pinned vaults on each lair branch's
   fourth floor place the criminals (and two footpads in Wulfeshol's hoard); the lairs'
@@ -34,9 +34,9 @@ plus one naming rule (below).
   quarrel" refusals, `World::called`, `World::creature_called`), and look mode names it as it
   names an npc ("Black Wystan (hostile, unhurt), ..."). The quest texts already did
   (`content::one_of`). A corpse still takes the type's name ("Black Wystan corpse").
-- **Tests**: `world/outlaw_tests.rs` (faction and tags, the gear rolls, stances against every
+- **Tests**: `world/people/outlaw_tests.rs` (faction and tags, the gear rolls, stances against every
   lair population, a lit den where outlaws and lair types wait 40 turns unhurt, the powers
-  working for their owners, the proper names, the note); `world/bestiary_tests.rs`'s `WAVES`.
+  working for their owners, the proper names, the note); `world/creatures/bestiary_tests.rs`'s `WAVES`.
 
 Gear materials (#1191): the faction's `gear` in `data/factions/`: outlaws favour iron (25 %), the village smith's, each its share of the draws for an item whose construction list holds it, the usual draw the rest (`docs/dev/objects.md` "Materials and variants").
 

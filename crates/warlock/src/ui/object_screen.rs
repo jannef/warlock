@@ -68,7 +68,7 @@ pub enum ObjectList {
     /// The throwing weapons in the inventory: choose one to throw.
     Throw,
     /// The throwing weapons in the inventory but flasks: choose one to throw in a thrown exploit
-    /// (the thief's Thrown exploit; `world/openings.rs`), then where.
+    /// (the thief's Thrown exploit; `world/classes/openings.rs`), then where.
     ThrownExploit,
     /// Food lying here, then food in the pack: choose one to eat.
     Eat,
@@ -82,18 +82,18 @@ pub enum ObjectList {
     /// The wooden weapons in the pack: choose one to whittle with a knife (the Whittle ability).
     Whittle,
     /// What in the pack, not worn or wielded, has a material a profession works: choose one to
-    /// take apart (the Salvage ability; `world/salvage.rs`).
+    /// take apart (the Salvage ability; `world/crafting/salvage.rs`).
     Salvage,
     /// What in the pack is damaged, not worn or wielded: choose one to mend in the field (the
-    /// craftsperson's Make do and mend; `world/make_do.rs`).
+    /// craftsperson's Make do and mend; `world/crafting/make_do.rs`).
     MakeDo,
     /// The loose gems in the pack that may be cut: choose one to cut (Jewelcraft's Cut recipe;
-    /// `world/cut.rs`).
+    /// `world/crafting/cut.rs`).
     Cut,
     /// The scrolls in the pack of a type not yet identified: choose one to make out, unread
-    /// (the Decipher ability; `world/decipher.rs`).
+    /// (the Decipher ability; `world/magic/decipher.rs`).
     Decipher,
-    /// What fits a neck, for a kept beast of the player's (the Give ability; `world/collar.rs`).
+    /// What fits a neck, for a kept beast of the player's (the Give ability; `world/allies/collar.rs`).
     Give,
 }
 

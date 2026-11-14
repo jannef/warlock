@@ -86,7 +86,7 @@ impl PerceptionView<'_> {
     }
 
     /// What may be consumed: food, potions (drunk from the eat list), and magic crystals
-    /// (`world/crystal.rs`).
+    /// (`world/crafting/crystal.rs`).
     fn edible(&self, stack: &Stack) -> bool {
         let def = self.content().object(stack.object);
         def.food.is_some() || def.drink.is_some() || self.is_crystal(stack)

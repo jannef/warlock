@@ -1,6 +1,6 @@
 //! The aristocrat's stipend (`assets/data/rules/stipend.toml`, spec §8 "Class abilities": Stipend;
 //! #1405): what each level-up of a character with the Stipend class ability adds to what their
-//! family holds for them, until their servant hands it over (`world/stipend.rs`).
+//! family holds for them, until their servant hands it over (`world/classes/stipend.rs`).
 //!
 //! Each level reached adds `gold.each` plus `gold.dice`, and, by `loot.chance` percent, one loot roll at
 //! the level as item level, with the magic and rare rarities `loot.magic` percent more likely

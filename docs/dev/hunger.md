@@ -36,7 +36,7 @@ always reads `Some`, so an object file cannot ask for never): `Food::stage` is F
 `rot::gone_at` is `None`, so `rot_pack`, `rot_away`, `until_rots`, and `freshness::judged` (all
 through `rot::stage`/`gone_at`) leave it be; `crystallise` skips it and `fight.rs`'s `stoned` is
 false for it, so its death always lays the corpse. `content/layer_boss.rs::pin_lairs` refuses an
-endless branch's boss without `corpse` and `everlasting`. Tests: `world/everlasting_tests.rs`, the glass in `soulglass_tests.rs`, the refusals in
+endless branch's boss without `corpse` and `everlasting`. Tests: `world/levels/everlasting_tests.rs`, the glass in `soulglass_tests.rs`, the refusals in
 `layer_boss_tests.rs`.
 **Profane corpses** (#1626, the profane gifts' P3, docs/dev/profane-gifts.md): an `on_eat`
 with `gives` (the signature gift's id) and `profane` (`ProfaneRolls`: `rolls`, `tiers` by
@@ -45,36 +45,36 @@ endless branch's keeper without `gives` and `profane`). `load_creatures` asks fo
 `vomit` on one (it always takes), and the tier odds must sum to 100 (`ProfaneRolls::check`);
 `profane::check_signatures` (after `load_hunger`) ties `gives` to the gift's `only`. `eat_fresh`
 runs the usual steps (message, gifts, skills, heal, harm), then `World::profane_meal`
-(`world/profane.rs`: the signature, the draws, the deed), then feeds. All of it is in `finish`,
+(`world/character/profane.rs`: the signature, the draws, the deed), then feeds. All of it is in `finish`,
 so an interrupted meal changes nothing. Tests: `eat_tests.rs`.
 **Rot** (#195): every food stack carries `Stack::died` (when
 it was made; a corpse, when its creature died; crate-private: presentation cannot read any
 food's age), and `Stack::is_valid_for` checks food knows it and nothing else does. Food that
 comes into the world from content is made then (`rot::made_at`: in `instantiate_level` for
 piles and creatures' packs, in `World::with_character` for the starting pack, and for quest
-gifts, and for foraged food, `world/forage.rs`); a test stack made with `Stack::new` knows no age and never rots. The stage is pure
+gifts, and for foraged food, `world/skills/forage.rs`); a test stack made with `Stack::new` knows no age and never rots. The stage is pure
 (`crate::rot`: `Stage` Fresh/Old/Rotten/Gone, `Food::stage(age)`, `rot::stage`, `gone_at`; all
 `None` without hunger.toml) and is shown only in dev dumps (`actors`: food on the level and in
 the packs of those on it, with its stage; `--state`: the raw `died`); food never shows its stage
 to the player by default (the owner's decision; #196 for later reveals), except in words to a trained eye
 (#1031): `Effect::Freshness` on Appraise and Survival, summed, a percent chance per hour and food
-(`world/freshness.rs::judged`, a pure function of the seed, the player, the food, and the hour, its own stream
+(`world/health/freshness.rs::judged`, a pure function of the seed, the player, the food, and the hour, its own stream
 `freshness/<object>/<made>/<hour>`, so no gameplay stream moves and looking is read-only), plus 25 points
 once rotten, at most 95 (`[freshness]` in `data/hunger.toml`); `PerceptionView::judge` gives `fresh`/`old`/`rotten` (gone food as rotten) for
 the eat list's marks and look mode's pile (visible cells only); eating food so told reports `Use::Judged`
-(Appraise, 10 %; `World::train_judged`). Tests: `world/freshness_tests.rs`. Joining stacks keep the oldest
-age (`object::join`), so neither packs nor piles split by age. `world/rot.rs` applies it:
+(Appraise, 10 %; `World::train_judged`). Tests: `world/health/freshness_tests.rs`. Joining stacks keep the oldest
+age (`object::join`), so neither packs nor piles split by age. `world/health/rot.rs` applies it:
 `World::rot_pack(id, now)` (pack food gone by `now` leaves, the equipment following, the player
 told by a `note`) runs in `World::live` at its start (food that rotted while the actor was
 frozen) and as the last thing at each moment, `rot::until_rots` ending a step at the next
 rotting, so splitting time never changes the result; `World::rot_away` (from `perceive`) drops
 rotted food from the current level's piles. Rotten food is worth nothing in shops
-(`World::spoilt` in `world/shop.rs`, `ShopView::spoilt` in perception; `docs/dev/shops.md`).
-Rot tests (`world/rot_tests.rs`) burn a point of nutrition a day (`burn_seconds = 86400`) so
-rests of weeks do not starve the player. Hunger joins the status framework (`world/status.rs`) rather than running
+(`World::spoilt` in `world/people/shop.rs`, `ShopView::spoilt` in perception; `docs/dev/shops.md`).
+Rot tests (`world/health/rot_tests.rs`) burn a point of nutrition a day (`burn_seconds = 86400`) so
+rests of weeks do not starve the player. Hunger joins the status framework (`world/health/status.rs`) rather than running
 beside it: the player's nutrition burns inside `World::live` (status effects' event loop, called
 through `pass_time` by `run_turn`), each change of state and each hit point lost to starving a
-moment of its own (`World::until_hungrier`, `World::digest(id, seconds)` in `world/hunger.rs`),
+moment of its own (`World::until_hungrier`, `World::digest(id, seconds)` in `world/health/hunger.rs`),
 so splitting time never changes the result and the player starves to death at the exact moment;
 `World::healing_rate` (the one pace) gives a Starving player none, and so does
 `World::mana_rate` (`docs/dev/mana.md`); a race that `eats_rotten`
@@ -90,7 +90,7 @@ effects' `penalty`, `Stats::adjusted_by`), which combat profiles, `Actor::defenc
 `burden::load`, and `own_scores` read; never `actor.stats` directly in a rule that hunger
 should touch. Long fast (`HungerMods::no_hunger_weakness`, #775's rework) is read in those two
 places only: `Actor::penalty` leaves Weak's stats out, and `World::faint` returns before its
-draw. Eating (`world/eat.rs`): `Action::Eat(Meal::Pack|Floor)` (a potion goes to
+draw. Eating (`world/health/eat.rs`): `Action::Eat(Meal::Pack|Floor)` (a potion goes to
 `World::drink_potion` instead, before any hunger check: docs/dev/potions.md) → `Spent::Meal(Dish)` →
 `dine` (turns of `eat` through `World::keep_at`, stopping like a rest; the food stays until the
 last turn) → `finish` (take one, with its age; then rotten food of any kind (`eat_rotten`:
@@ -104,7 +104,7 @@ learned at `gives` and a trained one rises by it up to `up_to`, through `Skills:
 in `[corpses.skills]`'s `learn`/`rise` words (`SkillNews`), nothing past the cap; the loader
 (`OnEat::check`: `gives` 1 to `up_to`, `up_to` at most `MAX_VALUE`; `resolve_corpse_gifts`:
 `[corpses.skills]` names known skills, a creature only skills with words there) checks it;
-then heal, harm, feed; tests in `world/eat_tests.rs`) / plain food,
+then heal, harm, feed; tests in `world/health/eat_tests.rs`) / plain food,
 `feed` with overeating, `vomit`, hunger and burden news). Saved and hashed (`Actor::satiation`,
 `Stack::died`, `Death::cause`).
 `creature_dies` calls `leave_corpse` (corpse on top); `perceive` calls `rot_away` (the current
@@ -133,7 +133,7 @@ before any is applied, so input asked about it from the cell before) (it takes t
 There is no multi-step movement to end (no run or travel command, on the overworld or anywhere): a
 held key's repeats are the only walking.
 
-**A corpse's other uses**: the spells aimed at one (`world/corpse_spell.rs`, `docs/dev/spells.md`
+**A corpse's other uses**: the spells aimed at one (`world/magic/corpse_spell.rs`, `docs/dev/spells.md`
 "Spells aimed at a corpse") use up the top-most corpse of a pile the player sees, and read neither
 `Stack::died` nor its stage. A cursed room's rising looks for its corpse when it is due
-(`world/curse.rs`): one used by a spell does not rise.
+(`world/fixtures/curse.rs`): one used by a spell does not rise.

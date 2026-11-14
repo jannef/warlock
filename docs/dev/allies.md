@@ -11,7 +11,7 @@ calls" below), and the ranger's companion (#916, `docs/dev/companion.md`) on
 
 ## What an ally is
 
-An ally is an ordinary creature `Actor` with `Actor::ally: Option<Ally>` set (`world/ally.rs`;
+An ally is an ordinary creature `Actor` with `Actor::ally: Option<Ally>` set (`world/allies/ally.rs`;
 `serde(default, skip_serializing_if = "Option::is_none")`, so every other actor saves and hashes
 as before, old saves load, and `World::state_hash` covers it as every field):
 
@@ -50,7 +50,7 @@ author's (#1205).
 
 ## Its mind
 
-`World::ally_plan(id)` (`world/ally.rs`) is the one arm at the top of `ai.rs::decide`, taken
+`World::ally_plan(id)` (`world/allies/ally.rs`) is the one arm at the top of `ai.rs::decide`, taken
 for any actor with `ally`, after `slip_lapses`; `creature_turn`'s `frightened` and `held_back`
 still wrap it. In order:
 
@@ -164,7 +164,7 @@ minutes (`SpellData::base_degrees()`: a status's severity, else a summon's minut
 `degrees` lengthen it). The menu and the `spells` dump say the count as `2 called` (JSON
 `damage_type` `"called"`).
 
-`World::cast_summon` (`world/summon_spell.rs`; the `Summon` arm of `cast.rs::perform`, which
+`World::cast_summon` (`world/magic/summon_spell.rs`; the `Summon` arm of `cast.rs::perform`, which
 made `Cast`'s needed fields, `pay_cast`, and `spell_landed` `pub(super)`), after the cast path's
 own refusals (unknown, silenced, too little mana):
 
@@ -181,7 +181,7 @@ own refusals (unknown, silenced, too little mana):
 4. The count: the cast's roll (its rung, the dice hooks, rerolls) + `ally_mod`'s `count`, at
    least 1, held to the spell's room, the global cap's, and the free cells (recomputed after the
    giving way).
-5. Each: `World::summon_draw(pool, &AllyMods::summon_bias)` (`world/summon.rs`, shared with
+5. Each: `World::summon_draw(pool, &AllyMods::summon_bias)` (`world/creatures/summon.rs`, shared with
    the enemy summoner, which passes no bias: one `below(pool.len())` as before), then
    `make_ally` on the next cell, `AllySource::Summoned { spell: Some(id) }`, `until` = now + the
    cast's degrees (minutes) × (100 + `ally_mod`'s `duration_percent`) % (rounded down, at least
@@ -203,7 +203,7 @@ room's rising; blood is spilled as any.
 `AllyEffect::AllyMod` gains `count`, `duration_percent`, `lasting`, `most` (`AllyMods`, summed;
 `lasting` any), read only in `cast_summon`; the wiki's talent text says each.
 
-Tests: `world/summon_spell_tests.rs` on the built-in content's spell-circle hall with fixture
+Tests: `world/magic/summon_spell_tests.rs` on the built-in content's spell-circle hall with fixture
 spells (rats; a rat or a bat) and talents: the call beside the caster on their side with its
 `until`, the words and the noise; the oldest giving way past `most`; the clock; the refusals
 (the global cap, with and without one giving way; the overworld) costing nothing; `ally_mod`'s
@@ -235,8 +235,8 @@ kobold.", "The kobold claws your wolf.", "Your wolf dies." (`perceive_events`' e
 player's own blow at one, `fight.rs`; a throw's, `hurl.rs`); a companion is `End::Named`, "Snel
 bites the kobold."; unseen it is "something" as ever.
 
-Tests: `world/caster_tests.rs` (the table to 60 by `levelup:auto`, the calls one of each and
-the raises, the fight words and the departure), `content/spell_def.rs`'s shipped-spell table, `world/spell_list_tests.rs` (the calls counted
+Tests: `world/magic/caster_tests.rs` (the table to 60 by `levelup:auto`, the calls one of each and
+the raises, the fight words and the departure), `content/spell_def.rs`'s shipped-spell table, `world/magic/spell_list_tests.rs` (the calls counted
 apart from a full caster's four to six spells). The balance probe's "Summons" table
 (`balance_probe/summons.rs`, `docs/balance.md`).
 
@@ -248,7 +248,7 @@ player's class's `ally_share`, else `[xp] ally_percent`, else 100 without the fi
 the master's class, never the ally's source) of what the player's own blow pays (the first-kill bonus and the level scaling included; `earn_kill` is
 the test-only 100 % form), `tally_kill` (the quest log and Favoured prey's record), `judge_kill`
 (alignment), `gain_resource(master, Build::Kill)`, and a Handle animal mark, all in full.
-**Tending**: the Heal ability treats an ally beside the player (`world/heal.rs::allies_beside`,
+**Tending**: the Heal ability treats an ally beside the player (`world/health/heal.rs::allies_beside`,
 `heal::of_allies`, the snapshot's `ally_ailments`; `heal:ID:DIR`; `docs/dev/status-effects.md`). `creature_dies`
 takes `credited` for its by-player rules (a cursed room's rising). A death of a status an ally
 caused (`Effect::by`) credits the same way. `docs/dev/experience.md`'s "award only where the
@@ -297,7 +297,7 @@ All read from the perception snapshot; nothing in core.
   a proper-named one "(your ally, unhurt)".
 - **The ally mark**: `ui/glyphs.rs::ally_mark`, a short faint sage underline beneath the glyph
   (`docs/dev/rendering.md`; spec §4.2).
-- The words of orders, arrivals, departures, and fights are core's (`world/ally.rs`,
+- The words of orders, arrivals, departures, and fights are core's (`world/allies/ally.rs`,
   `fight::attack_message`); the app shows them as any message.
 - Tests: the screen snapshots `abilities-menu-allies`, `abilities-menu-allies-none` (an ally in
   the retinue on the overworld), `set-on-aim`, `come-to-heel`; `look.rs::an_ally_is_yours`;
@@ -305,7 +305,7 @@ All read from the perception snapshot; nothing in core.
 
 ## Tests
 
-`world/ally_tests.rs` (a fixture of a wolf, a kobold, a deer, two levels, the shipped
+`world/allies/ally_tests.rs` (a fixture of a wolf, a kobold, a deer, two levels, the shipped
 `allies.toml` and `experience.toml`; the shipped content for the retinue, Beast-bond, and the
 Handle animal marks): the dev action and its refusals (the cap), following within heel, the
 master's stance (the kobold slain, the deer untouched), an ally's kill paying the master what
@@ -322,7 +322,7 @@ snapshots are untouched: no scenario makes an ally.
 
 ## The risen
 
-Rouse the dead (`world/corpse_spell.rs`, `docs/dev/spells.md` "Spells aimed at a corpse"): a summon
+Rouse the dead (`world/magic/corpse_spell.rs`, `docs/dev/spells.md` "Spells aimed at a corpse"): a summon
 spell with `effect.rise` in place of `effect.summon`. A serving one is made by `World::make_ally`
 with `AllySource::Summoned { spell }`, so it follows, takes orders, pays kills, and leaves nothing,
 as a call does; `calls_of` and `gives_way` (`summon_spell.rs`) are its `most`, `[allies] most` its
@@ -335,7 +335,7 @@ toward neither `most` nor the cap, nor toward `hostiles_here` (a level's populat
 
 ## Escorts
 
-An escort quest's character (#1139, `world/escort.rs`, `docs/dev/quests.md`): `AllySource::Escort
+An escort quest's character (#1139, `world/people/escort.rs`, `docs/dev/quests.md`): `AllySource::Escort
 { quest, faction }` (dump id `escort`), set in place as a charm is (no `make_ally`, no cap):
 `faction_override` the player's (the old one kept), `stance` `CombatStance::Coward`, order
 *Follow*, `until` none. Everything else is the ally core's: it follows, crosses, rides in the
@@ -352,12 +352,12 @@ time, for what fits no slot or a spirit weapon). The snapshot's `kept_beside` co
 `Ability::orders`' `kept` is true with an escort. Home (`escorts_home`): `escort_released` puts
 the faction back, the neutral stance, a fresh `Mind` with its post where it stands; then the
 quest's `thanks` and the giver's `done` (`docs/dev/quests.md`). An escort a quest makes on a
-level (`waits`, `world/escort_waits.rs`) is an ordinary creature of its type until it joins. Tests:
-`world/escort_tests.rs`.
+level (`waits`, `world/people/escort_waits.rs`) is an ordinary creature of its type until it joins. Tests:
+`world/people/escort_tests.rs`.
 
 ## Charmed
 
-Beguile (#1003; the spell types design §7 entry 34; `world/charm.rs`): a `hex` ray or bolt with
+Beguile (#1003; the spell types design §7 entry 34; `world/allies/charm.rs`): a `hex` ray or bolt with
 `[spell.effect] charm = { minutes, mindless, message, ends }` (`SpellEffect::charm:
 Option<SpellCharm>`; no `status`, `push`, or `zone` beside it; `minutes`,
 the base its `degrees` ladder grows, `SpellData::base_degrees`).
@@ -389,7 +389,7 @@ the base its `degrees` ladder grows, `SpellData::base_degrees`).
 
 A slain charmed creature is the creature it is: corpse, gear, and pack fall (`creature_dies`
 skips only `Summoned`). Saves: the variant (`docs/dev/saves.md`). Tests:
-`world/charm_tests.rs` (the side and the band, the kill credit, the end where it stands, the end
+`world/allies/charm_tests.rs` (the side and the band, the kill credit, the end where it stands, the end
 on the stairs with neither ally nor follower crossing, the faction put back, the refusals, the
 dumps, a save and a replay's hashes). Content: `assets/data/spells/beguile.toml`, its scroll,
 the witch's level-44 row (`talents/beguile.toml`); the wiki's "The charmed"

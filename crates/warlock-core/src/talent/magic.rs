@@ -57,7 +57,7 @@ pub enum MagicEffect {
     SparesSelf,
     /// The class active Cackle: a voice `noise` loud; every hex of the player's on a creature
     /// they see grows `degrees` and starts its degree afresh, to its status's `max`
-    /// (`world/witch.rs`).
+    /// (`world/classes/witch.rs`).
     Cackle { degrees: u16, noise: u16 },
     /// A caster's spell (design §4.1 B2, spec §8 "Spells"): its holder has the spell ability
     /// `spell`, the spell of that id in `data/spells/` (a class ability's; each given once).
@@ -70,19 +70,19 @@ pub enum MagicEffect {
     SpellMod(crate::content::SpellModSpec),
     /// What it does to a spell type's own rule (`[types]` in `data/spells.toml`) for the damage
     /// types in `when`: `arc_chance`, the percent its spells of them arc at, read in
-    /// `world/spell_arc.rs` (Conductor).
+    /// `world/magic/spell_arc.rs` (Conductor).
     SpellType { arc_chance: u8, when: Vec<String> },
     /// Its spells cost this percent more mana (negative: less; Archmage, Empower), at least 1.
     SpellManaPercent { value: i32 },
     /// When a creature dies under a hex its holder laid (`Content::hex_statuses`), whoever
     /// killed it, the holder's mana rises by the dead creature's level divided by `per_levels`,
-    /// at least 1, never past its maximum (Malison; `world/malison.rs`).
+    /// at least 1, never past its maximum (Malison; `world/magic/malison.rs`).
     HexTithe { per_levels: u8 },
     /// The class active Knock: for `mana` mana, the lock of the locked door or chest in a
-    /// direction springs open (`world/knock.rs`; spec §8 "Chests").
+    /// direction springs open (`world/fixtures/knock.rs`; spec §8 "Chests").
     Knock { mana: i32 },
     /// The class active Scribe: a scroll of a spell the player knows written on a blank scroll,
-    /// for `mana_times` the spell's mana and a study's time (`world/scribe.rs`; spec §8
+    /// for `mana_times` the spell's mana and a study's time (`world/magic/scribe.rs`; spec §8
     /// "Scrolls").
     Scribe { mana_times: u8 },
 }
@@ -161,7 +161,7 @@ pub struct MagicMods {
     /// Percent more mana its spells cost (negative: less).
     pub spell_mana_percent: i32,
     /// Malison's tithe, if it has it: a creature dying under its hex gives it the creature's
-    /// level divided by this in mana, at least 1 (`world/malison.rs`).
+    /// level divided by this in mana, at least 1 (`world/magic/malison.rs`).
     pub hex_tithe: Option<u8>,
     /// The active Knock, if it has it.
     pub knock: Option<Knock>,
@@ -290,7 +290,7 @@ impl MagicMods {
     }
 }
 
-/// The active Cackle (spec §8 "Class abilities"; `world/witch.rs`): how many degrees it adds
+/// The active Cackle (spec §8 "Class abilities"; `world/classes/witch.rs`): how many degrees it adds
 /// to each hex of its holder's in sight, and how loud it is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Cackle {

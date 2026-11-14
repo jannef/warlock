@@ -62,7 +62,7 @@ about it (`[[dialogue.after]]`).
 
 ## Tests
 
-`world/deep_gnome_tests.rs`: the town's people are all of the tag, none hostile, and the four
+`world/campaigns/deep_gnome_tests.rs`: the town's people are all of the tag, none hostile, and the four
 named ones are there; Dēopgang 11's `>` leads to the town and back.
-`world/crystal_guardian_tests.rs`: the lure quest, the portal, the guardian's following, the
+`world/campaigns/crystal_guardian_tests.rs`: the lure quest, the portal, the guardian's following, the
 binding, the boon, and its re-forming.

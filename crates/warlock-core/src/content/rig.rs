@@ -2,7 +2,7 @@
 //! §7.6): the traps the craftsperson's Trapwright rigs on a cell beside them, what each takes,
 //! how long it takes, and how often the trap it places goes off.
 //!
-//! The rule itself lives in `world/rig.rs`. The file is optional: without it Trapwright is "not
+//! The rule itself lives in `world/crafting/rig.rs`. The file is optional: without it Trapwright is "not
 //! usable yet" (`Unavailable::NotYet`).
 
 use super::{Content, ContentError, TrapId};

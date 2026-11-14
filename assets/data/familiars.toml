@@ -10,10 +10,10 @@
 names = ["Tibb", "Fancie", "Dandy", "Tyffin", "Pigin", "Tittey", "Suckin", "Robbin", "Jarmara", "Holt", "Newes", "Elemauzer", "Pyewacket", "Greedigut", "Sathan"]
 
 # The hex spell whose status a familiar's blow lays on what it hits, at the degrees its master
-# would cast it now, with its master as the giver (`world/familiar.rs::familiar_touch`).
+# would cast it now, with its master as the giver (`world/allies/familiar.rs::familiar_touch`).
 touch = "evil_eye"
 
-# Call familiar (the witch's, `world/familiar.rs`): the ritual of an hour, this many turns of the
+# Call familiar (the witch's, `world/allies/familiar.rs`): the ritual of an hour, this many turns of the
 # `call_familiar` action (actions.toml), for nothing but the hour (the owner, #907 Q5).
 call_turns = 600
 

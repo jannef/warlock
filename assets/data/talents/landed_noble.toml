@@ -1,5 +1,5 @@
 # Only at character creation, and only for an aristocrat (#1405, the owner): a larger stipend
-# (../stipend.toml, world/stipend.rs): twice the gold, a loot roll at every level-up, and magic
+# (../stipend.toml, world/classes/stipend.rs): twice the gold, a loot roll at every level-up, and magic
 # and rare finds in it far likelier.
 [[talent]]
 id = "landed_noble"

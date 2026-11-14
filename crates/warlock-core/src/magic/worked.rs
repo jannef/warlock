@@ -1,27 +1,29 @@
 //! What an anvil's work has done to one item (spec §7 "Special rooms": Temper; the rules are
-//! `world/temper.rs`): the state a [`Stack`](crate::object::Stack) keeps, and its pure rules.
+//! `world/crafting/temper.rs`): the state a [`Stack`](crate::object::Stack) keeps, and its pure rules.
 //!
 //! An item is improved up to three times, each time in an [`Aspect`] its base item has, and the
 //! same one may come twice: **Fine**, **Marvellous**, **Masterwork**. A failure leaves it
 //! **damaged**, which takes all its improvements and makes it a point worse until it is mended:
 //! its Protection if it gives some, else its Defence, else its damage ([`super::Mods::local`]).
-//! Acid, rust, and heat damage an item the same way (`world/item_damage.rs`), and the state
+//! Acid, rust, and heat damage an item the same way (`world/combat/item_damage.rs`), and the state
 //! keeps the kind for its word ("rusted", "corroded", "scorched"; a failed attempt's is
 //! "damaged"). A damaged item is repaired or destroyed. Every attempt counts for the item's
 //! whole life and is never shown in the game. Affixes are another matter ([`super::Magic`]): the
 //! work never touches them.
 //!
-//! A craftsperson's work may also bear their **mark** (Maker's mark, `world/craft_make.rs`):
+//! A craftsperson's work may also bear their **mark** (Maker's mark, `world/crafting/craft_make.rs`):
 //! saved with the rest, never lost to damage or repair, worth more ([`Worked::value`]), and
-//! read by the patron (`world/patron.rs`) and the capacity (`super::capacity`). A plain marked
+//! read by the patron (`world/crafting/patron.rs`) and the capacity (`super::capacity`). A plain marked
 //! item carries a `Worked` with nothing else on it.
 //!
 //! The numbers are read in two places: to hit, plus damage, Defence, and Protection through
 //! [`super::Mods::local`], the dice through [`Stack::attack`](crate::object::Stack::attack).
 
-use crate::content::{Content, ItemHarm, ItemKind, ObjectDef};
+use super::Mods;
+use crate::content::{Content, Effect, ItemHarm, ItemKind, ObjectDef, ObjectId};
 use crate::object::Stack;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
 
 /// The make a hand-made item is given in data (`quality = "masterwork"` on a unique, a level's
 /// `[[item]]`, the heirloom; docs/design/enchanting.md §4), as the forge's grades give it.
@@ -239,6 +241,21 @@ impl Worked {
             && (self.damaged || self.by.is_none())
             && self.improved.iter().all(|a| a.of(def))
     }
+}
+
+/// Whether `stack`'s main part is of a `proof` material, never damaged by anything
+/// (`world/combat/item_damage.rs`): adamantium.
+pub(crate) fn proof(content: &Content, stack: &Stack) -> bool {
+    (stack.parts(content).first()).is_some_and(|p| content.material(p.material).proof)
+}
+
+/// Whether `stack` is protected from item damage (`world/combat/item_damage.rs`), `quest` the
+/// quests' objects (`World::quest_objects`, gathered once for many stacks): a unique, of Proof,
+/// or a quest's.
+pub(crate) fn protected(content: &Content, quest: &BTreeSet<ObjectId>, stack: &Stack) -> bool {
+    stack.magic().is_some_and(|m| m.unique.is_some())
+        || Mods::local(stack, content).get(Effect::Proof) > 0
+        || quest.contains(&stack.object)
 }
 
 #[cfg(test)]

@@ -1,7 +1,7 @@
 # The witch's level 1 (#929; docs/design/witch-familiar.md §7.1): a small beast of the old craft
 # at her heel from the first turn (`familiar`, `World::bring_familiar`), drawn from her race's
 # list in familiars.toml or rarely the rares; its blow lays her evil eye with her as the giver,
-# and it goes for what she has hexed (`world/familiar.rs`).
+# and it goes for what she has hexed (`world/allies/familiar.rs`).
 [[talent]]
 id = "familiar"
 name = "Familiar"

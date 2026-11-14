@@ -15,7 +15,7 @@ use serde::Deserialize;
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum FaithEffect {
     /// Temple services cost it half, and a cure also mends a point of each damaged stat
-    /// (Pious; `world/service.rs`).
+    /// (Pious; `world/people/service.rs`).
     Pilgrim,
     /// At a forgotten altar of the actor's own side the side's lean counts double, and an
     /// opposed one leans as a neutral one (Pious; the prayer draw, `World::lean`).
@@ -29,7 +29,7 @@ pub enum FaithEffect {
     /// The class active Smite: a melee blow in a direction with one die of `sides` more damage
     /// per `per_levels` character levels (at least one), `unholy` dice more against an unholy
     /// foe (`data/rules/smite.toml`), and the smiter's modifier in `aim` added to hit (what it
-    /// costs is the talent's `resource`: Zeal; `world/smite.rs`).
+    /// costs is the talent's `resource`: Zeal; `world/classes/smite.rs`).
     Smite {
         per_levels: u8,
         sides: u8,
@@ -38,14 +38,14 @@ pub enum FaithEffect {
         #[serde(default)]
         unholy: u8,
     },
-    /// A mode of smiting (the paladin's; `world/smite.rs`, docs/design/paladin-smites.md §6):
+    /// A mode of smiting (the paladin's; `world/classes/smite.rs`, docs/design/paladin-smites.md §6):
     /// the class active of its `mode` (Branding smite, Wrathful smite), the Smite talent's blow
     /// with a rider on a hit that did damage (what it costs is the talent's `resource`: Zeal).
     /// `brand`: the foe suffers `severity` degrees of `status`. `fear`: the foe makes a `check`
     /// of that stat against `difficulty` plus the smiter's Smite `aim` modifier, and failing
     /// suffers `status` (one that flees) at `turns` degrees, caused by the smiter. `banish`
     /// takes nothing more: a summoned foe is unmade, and an unholy one takes the smite's dice
-    /// twice (the rule's, `world/smite.rs`).
+    /// twice (the rule's, `world/classes/smite.rs`).
     SmiteMode {
         mode: SmiteRiderKind,
         #[serde(default)]
@@ -61,25 +61,25 @@ pub enum FaithEffect {
     },
     /// Every blow, shot, or throw that hits an unholy target (`Content::unholy`; with Avatar any
     /// target) rolls `dice` more, after the blow's own damage, of its kind, resisted but never
-    /// soaked (the paladin's Holy wrath, `world/smite.rs`).
+    /// soaked (the paladin's Holy wrath, `world/classes/smite.rs`).
     HolyWrath { dice: Dice },
     /// The class active Holy radiance: a toggle; while it suffers `status` it sheds light
     /// `light` (an id in `data/lights.toml`).
     Radiance { status: String, light: String },
     /// A hostile's melee attack beside it that lands a blow on it is answered by its smite at
     /// once, free, spending `cost` of `resource`; with less, nothing (Retribution, the
-    /// paladin's at 25, on zeal; `world/smite.rs`).
+    /// paladin's at 25, on zeal; `world/classes/smite.rs`).
     Retribution { resource: String, cost: u16 },
     /// The class active Consecrate: `time` (a duration) of prayer, for `mana` mana, lifts an
-    /// unholy special room (or a whole level's unholy effect) for good (`world/consecrate.rs`).
+    /// unholy special room (or a whole level's unholy effect) for good (`world/classes/consecrate.rs`).
     Consecrate { mana: i32, time: String },
-    /// Communion with the dark (the priest design §6.3, `world/dark_face.rs`): standing in an
+    /// Communion with the dark (the priest design §6.3, `world/classes/dark_face.rs`): standing in an
     /// unholy place, its prayers add no strain and the place's status never touches it. A
     /// band-gated passive: outside its talent's `alignment` it does nothing.
     Communion,
     /// The class active Sanctuary: `time` (a duration) of a kneeling rite, for `mana` mana,
     /// hallows the ground within `radius` of the player for `lasts`: no hostile sets foot in it,
-    /// and those in it heal and regain mana `regen` percent as fast (`world/sanctuary.rs`).
+    /// and those in it heal and regain mana `regen` percent as fast (`world/classes/sanctuary.rs`).
     Sanctuary {
         mana: i32,
         time: String,
@@ -87,7 +87,7 @@ pub enum FaithEffect {
         lasts: String,
         regen: u16,
     },
-    /// The priest's prayer (the class active Orison, `world/orison.rs`; `data/prayer.toml`):
+    /// The priest's prayer (the class active Orison, `world/classes/orison.rs`; `data/prayer.toml`):
     /// a prayer talent of `tier` (1 to 5, its `title` for each face) or a use added between
     /// them; `uses` it may answer, `answers` problems a prayer (the largest held), `all` every
     /// problem and every pool at once. The tier-1 talent carries the ability.
@@ -142,10 +142,10 @@ pub struct FaithMods {
     pub avatar: Option<u8>,
     /// The active Smite, if it has it.
     pub smite: Option<Smite>,
-    /// The modes of smiting it has (Branding smite, Wrathful smite; `world/smite.rs`): each
+    /// The modes of smiting it has (Branding smite, Wrathful smite; `world/classes/smite.rs`): each
     /// the Smite blow with its rider.
     pub smite_modes: Vec<SmiteRider>,
-    /// Holy wrath's dice (`world/smite.rs`), if it has it.
+    /// Holy wrath's dice (`world/classes/smite.rs`), if it has it.
     pub holy_wrath: Option<Dice>,
     /// The active Holy radiance: its status and the light it sheds while it lasts.
     pub radiance: Option<(StatusId, LightId)>,
@@ -159,7 +159,7 @@ pub struct FaithMods {
     pub communion: bool,
     /// The active Sanctuary, if it has it.
     pub sanctuary: Option<Sanctuary>,
-    /// The priest's prayer, its talents summed (`world/orison.rs`), if it has any.
+    /// The priest's prayer, its talents summed (`world/classes/orison.rs`), if it has any.
     pub prayer: Option<Prayer>,
 }
 
@@ -285,7 +285,7 @@ impl FaithMods {
     }
 }
 
-/// The priest's prayer (spec §8 "Class abilities"; `world/orison.rs`): what its prayer talents
+/// The priest's prayer (spec §8 "Class abilities"; `world/classes/orison.rs`): what its prayer talents
 /// sum to: the uses (their union), the answers a prayer gives (the largest; at least 1), every
 /// problem at once (any), and the highest tier with its titles.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -316,7 +316,7 @@ pub struct Consecrate {
     pub time: crate::time::Duration,
 }
 
-/// The active Sanctuary (spec §8 "Class abilities", §7 "Special rooms"; `world/sanctuary.rs`):
+/// The active Sanctuary (spec §8 "Class abilities", §7 "Special rooms"; `world/classes/sanctuary.rs`):
 /// its mana, how long the rite takes, and the hallow it lays: its radius, how long it lasts,
 /// and the healing and mana pace inside it, in percent.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -335,7 +335,7 @@ pub struct LayOnHands {
     pub per_level: u8,
 }
 
-/// The active Smite (spec §8 "Class abilities"; `world/smite.rs`): paid for by its talent's
+/// The active Smite (spec §8 "Class abilities"; `world/classes/smite.rs`): paid for by its talent's
 /// `resource` (Zeal).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Smite {
@@ -347,7 +347,7 @@ pub struct Smite {
     pub unholy: u8,
 }
 
-/// A mode of smiting's rider (`FaithEffect::SmiteMode`; `world/smite.rs`), on a hit that did
+/// A mode of smiting's rider (`FaithEffect::SmiteMode`; `world/classes/smite.rs`), on a hit that did
 /// damage.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SmiteRider {

@@ -1,0 +1,94 @@
+//! The ranger's Volley (spec §8 "Class abilities"; #244): a class active aimed at a cell
+//! ([`crate::action::Action::UseAt`], `use:volley:12,5`). The readied missile weapon shoots its
+//! `shots` at the cell, one after another, for the price of one shot and one exertion; each is
+//! a shot as `fire` looses it (its own flight, attack, and missile). It stops early when the
+//! ammunition runs out or the player falls. It costs Focus (its talent's `resource`; R2,
+//! `world/classes/focus.rs`), spent as it is loosed. Refused, taking no time and spending nothing, as a
+//! shot is (nothing ready, out of range, on the overworld) and as a class active is (short of
+//! focus among them).
+
+use crate::action::{AttackKind, Event};
+use crate::content::{ActionKind, ClassActive};
+use crate::geom::Pos;
+use crate::world::combat::shoot::Loose;
+use crate::world::{Spent, World};
+
+impl World {
+    /// `use:ID:X,Y`: the player uses class active `active` at level cell `at`. Refused, taking
+    /// no time, without it, while it is unavailable, or for one that aims at no cell.
+    pub(in crate::world) fn use_class_at(
+        &mut self,
+        active: ClassActive,
+        at: Pos,
+        events: &mut Vec<Event>,
+    ) -> Spent {
+        if !active.aims_cell() {
+            self.say(format!("`{}` aims at no place.", active.id()));
+            return Spent::Nothing;
+        }
+        if !self.may_use_class(active) {
+            return Spent::Nothing;
+        }
+        match active {
+            ClassActive::Volley => self.volley(at, events),
+            ClassActive::Sic => self.sic(at, events),
+            ClassActive::Charge => self.charge(at, events),
+            _ => Spent::Nothing,
+        }
+    }
+
+    /// Volley: the readied missile weapon's shots at `at`, then the cooldown.
+    fn volley(&mut self, at: Pos, events: &mut Vec<Event>) -> Spent {
+        let content = self.content.clone();
+        let player = self.state.player;
+        let Some(volley) = self.state.player().talent_mods(&content).martial.volley else {
+            return Spent::Nothing;
+        };
+        if !self.can_loose_here() {
+            return Spent::Nothing;
+        }
+        let me = self.state.player();
+        let Some((launcher, _)) = me.launcher(&content) else {
+            self.say("You have no missile weapon ready.");
+            return Spent::Nothing;
+        };
+        let range = me.launcher_range(&content).unwrap_or(1);
+        match me.ammunition_item(&content) {
+            Some(item) if self.may_loose(item) => {}
+            Some(_) => return Spent::Nothing,
+            None => {
+                self.say("You have nothing ready to shoot.");
+                return Spent::Nothing;
+            }
+        }
+        if !self.within_reach(at, range, "shoot") {
+            return Spent::Nothing;
+        }
+        // Priced as the first shot begins; the rest come free. Its focus goes now.
+        let price = self.shot_price(player, launcher);
+        if let Some(cost) = (content.class_active(ClassActive::Volley)).and_then(|a| a.resource) {
+            self.spend_resource(player, cost.resource, cost.amount, events);
+        }
+        self.say("You loose a volley!");
+        self.choose_at_cell(at, false);
+        for _ in 0..volley.shots {
+            if self.state.death.is_some() {
+                break;
+            }
+            let me = self.state.player();
+            let (Some(item), Some(profile)) = (me.ammunition_item(&content), me.ranged(&content))
+            else {
+                break;
+            };
+            let loose = Loose {
+                kind: AttackKind::Ranged,
+                item,
+                profile,
+                range,
+            };
+            self.player_looses(at, loose, events);
+        }
+        self.exert(ActionKind::Shoot);
+        Spent::Turn(price)
+    }
+}

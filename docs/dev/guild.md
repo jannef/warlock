@@ -16,13 +16,13 @@ at the top of `campaigns/ascmearc/data/guilds/weyfarers.toml`.
 
 ## Ranks
 
-`world/guild.rs`. A rank is **derived** from the quest records, never saved, and nothing reads
+`world/people/guild.rs`. A rank is **derived** from the quest records, never saved, and nothing reads
 it as a rule: `GuildDef::rank(given, done)` is the last rank whose quest is given (on the log,
 active or done) or done (completed at least once); `Quests::guild_rank`/`guild_ranks` apply it
 to the player's records, and `PerceptionView::own_guilds` gives the presentation `GuildRank`s
 (the guild and the rank's index: `title()`, `GuildDef::color` for the material's colour).
 
-The promotion message has one hook: `World::give` and `World::complete` (`world/quest.rs`) take
+The promotion message has one hook: `World::give` and `World::complete` (`world/people/quest.rs`) take
 `guild_standing()` before they change the record and call `promote(&before)` at their end, which
 says "<Master> names you a <Title> of <guild name>." for each guild whose rank rose. Asking again
 (a reminder) changes nothing, so it is said once.
@@ -51,14 +51,14 @@ danger 6 to 9, no shops, each naming its criminal's pinned vault for floor 4
 vault's legend creature, so a lair holds them once and nowhere else does); their hidden ways in
 are legend entries `4` to `7` of `levels/ascmearc.toml` (`docs/dev/overworld.md`). Tests:
 `mapgen/lairs_tests.rs` (the branches, the vaults on every seed, a snapshot of each bottom floor,
-each way in found once revealed), `world/guild_wanted_tests.rs` (the draw reveals its own lair
+each way in found once revealed), `world/people/guild_wanted_tests.rs` (the draw reveals its own lair
 and no other, over 24 seeds every criminal comes up; the dev roll; a run given the wanted that
 walks to Wulfeshol, fights down its four floors, kills Black Wystan, finds High Toby where he
 fell, walks home, hands it in, is made an Iron, and replays to the same hash).
 
 ## Tests
 
-`world/guild_tests.rs` (Wat at his post and reached from the square, his topics one link at a
+`world/people/guild_tests.rs` (Wat at his post and reached from the square, his topics one link at a
 time and none gated for a Wicked character, Tin as link 1 is given and said once, Pewter as
 link 2 is done, the scroll handed in and the unpaid one still billed, a replay, the load
 checks), `ui/character_screen.rs` (the row and the metal's colour), the text snapshots

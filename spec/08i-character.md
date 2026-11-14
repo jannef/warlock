@@ -46,7 +46,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     ("Talents" below): named by the animal's and the element's `grants`, given at birth, never on
     a pick list (`granted = true`), a flaw (`flaw = true`) shown with "but", dimmed, and never a
     prerequisite. They are computed from the sign and the birth day whenever a run starts or is
-    restored (`world/stars.rs`), never stored as a choice, so a gift added to the data reaches a
+    restored (`world/character/stars.rs`), never stored as a choice, so a gift added to the data reaches a
     saved character; they come first among the talents held, in grant order (the animal's, the
     element's, a lucky day's), and work like any talent, through `TalentMods` at the one rule
     each names. The gifts whose rules exist so far: Fleet-footed and Ponderous (speed ±5 %), Slight and
@@ -83,7 +83,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     +25 %, added to the affixes' percent in `World::mana_rate`).
     The rest of the design's gifts land with their rules and are listed in `grants` only then.
   - **Background story** (#702, B1 of `docs/design/background-story.md`; `background.rs`,
-    `content/background.rs`, `world/background.rs`): a chosen character (a run that starts with
+    `content/background.rs`, `world/character/background.rs`): a chosen character (a run that starts with
     the kit: New run, `--character`, `--name`, `--talents`, a replay with `kit`) is told a youth
     in **chapters** of one line each, Parents, Birth, Childhood, Youth, The trial, Fortune,
     Leaving, and The road (the campaign's own; a campaign without one tells seven), shown as
@@ -204,7 +204,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     game never says lucky days exist until a character is born on one. The birth draws are
     unchanged, so existing seeds keep their dates and signs.
   - **Calendar and moon flavour** (#273; design §7; `[flavour]` in `data/horoscope.toml`, and
-    none of it without the table; `world/flavour.rs`): pure functions of the game time, the
+    none of it without the table; `world/character/flavour.rs`): pure functions of the game time, the
     birth date, and the moons, drawing nothing. **The birthday** (the birth month and day):
     from midnight to midnight the player heals `birthday_healing` percent as fast (125), the
     last factor of `World::healing_rate_at`; both midnights are moments of `World::live`, so
@@ -373,7 +373,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     seed, and the start date, a run is reproduced by its scenario, seed, character, name, and
     kit. `World::new` starts as the scenario's character, `World::with_character` as a given
     one, `World::with_character_named` named, `World::start_run` with or without the kit.
-- **Alignment** (`warlock-core/src/alignment.rs`, `content/alignment.rs`, `world/alignment.rs`;
+- **Alignment** (`warlock-core/src/alignment.rs`, `content/alignment.rs`, `world/character/alignment.rs`;
   #254): good against evil, as ADOM has law against chaos.
   - **The score**: the player has a hidden integer score from −1000 (as evil as can be) to 1000
     (as good), saved and hashed, never shown as a number. They know it as one of seven
@@ -428,8 +428,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     killing peaceful creatures costs no further alignment; `shift_alignment` skipping
     `Deed::KilledPeaceful`), and *The middle way* (while Neutral: +1 Dodge and +2 on checks;
     `Actor::defence`, `check`).
-- **Skills** (`warlock-core/src/skills.rs`, `content/skill.rs`, `world/train.rs`,
-  `world/skill_roll.rs`; M20, #132; level-up rolls M30, #230), ADOM-like:
+- **Skills** (`warlock-core/src/skills.rs`, `content/skill.rs`, `world/character/train.rs`,
+  `world/character/skill_roll.rs`; M20, #132; level-up rolls M30, #230), ADOM-like:
   - **Trained or untrained**: every actor has a set of trained skills, each with a **value**
     (`Actor::skills`). A skill not in it is **untrained**: it does not exist for that actor, is
     never shown, earns no marks, and gives nothing; rules that read a skill get "untrained",
@@ -553,7 +553,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     counted. Creatures resisting each other get nothing; a check no creature asked for (a scroll's
     backlash, rotten food, wading) neither. It is marked by `discover` (100 %) and `resist` (25 %).
     Nothing is said when it helps; the Skills screen's description says it in words; the wiki
-    has the curve. One hook, `World::resisting` (`world/knowledge.rs`). Look mode (§6) says what
+    has the curve. One hook, `World::resisting` (`world/skills/knowledge.rs`). Look mode (§6) says what
     a seen creature's kind resists, is immune to, and is vulnerable to, in the words of the
     character screen's resistances and never a number, once the skill's value stands above its
     level at all, with the same bonuses counted (#1030; `PerceptionView::known_resistances`): the
@@ -580,7 +580,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     with vitals there. It takes the `intimidate` action (a turn), is spoken aloud (a voice where
     the player stands, as loud as a mutter), and marks Intimidate, whatever comes of it. If the
     foe hears the voice (asked before it is made) and sees the player now, it rolls War cry's
-    check (`world/war_cry.rs`, shared: two gameplay draws, its Willpower modifier against the
+    check (`world/classes/war_cry.rs`, shared: two gameplay draws, its Willpower modifier against the
     file's `difficulty` 10 + the player's Strength modifier + their Intimidate); failed, it is
     Frightened, caused by the player, at the degrees the file's ladder gives for the points
     Intimidate adds (`degrees = [[0, 1], [3, 2], [6, 3]]`: one degree below 3 points, value 38;
@@ -619,7 +619,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Appraise and Negotiation** (#666, the owner 2026-10-28): the shops' prices are
     Negotiation's (`bargain`, 20 % at 100, 30 % at 200; §7 "Shops"), marked by deals (`deal`,
     25 %). Appraise (passive) tells things: on every whole game hour the clock passes
-    (`world/appraise.rs`, called from the status loop's `live`, so a rest rolls each hour it
+    (`world/skills/appraise.rs`, called from the status loop's `live`, so a rest rolls each hour it
     passes, and from the dev `skip`), a player trained in a skill with the `identify` benefit
     who carries or wears something they do not fully know (what the scroll of identify and an
     appraisal would tell: unidentified magic, a scroll of an unknown type, a wand's unknown
@@ -657,7 +657,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     commoner (Mining), ranger (Herbalism), wizard (Alchemy, Enchanting), druid (Alchemy), witch
     (Enchanting), and aristocrat (Enchanting); and a story line each. Alberich of Fyrdelf
     teaches Mining for gold, and Eadric, Cēaptūn's smith, Metalcraft (§8 "Dialogue": "Training").
-- **Treating oneself** (`heal.rs`, `world/heal.rs`; #549, the owner 2026-10-27): the Heal
+- **Treating oneself** (`heal.rs`, `world/health/heal.rs`; #549, the owner 2026-10-27): the Heal
   skill's use, the abilities menu's **Heal** (`Ability::Heal`, in the skill's place among the
   Skills; `Action::Heal`, replay text `heal`, `heal:ID`, or `heal:ID:DIR`; cost `heal`, 2500: a
   quarter of a minute; no key of its own). Anyone trained in a skill with the `heal` effect has
@@ -686,7 +686,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   or a disease may be tried again and again, made or failed ("The poison will not come out."
   / "You can do no more for the filth fever."): time is the price. Refusals take no time and no
   draw: untrained ("You know nothing of healing."), or nothing to treat.
-- **Stealing** (`world/steal.rs`, data `data/rules/steal.toml`, §7; #234, the progression design's
+- **Stealing** (`world/skills/steal.rs`, data `data/rules/steal.toml`, §7; #234, the progression design's
   B7): the Steal skill's use, the abilities menu's **Steal** (`Ability::Steal`, in the skill's
   place among the Skills; a direction; `Action::Steal`, replay text `steal:DIR`; cost `steal`;
   a rebindable key, "Steal", unbound by default). Anyone trained in a skill with the `steal`
@@ -720,7 +720,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     from a keeper takes from its pack: its purse.
   - No limit on trying again (the owner's rule): a victim that caught the player stays angry,
     and that is the price. Presentation shows only what comes of it, never a modifier or a roll.
-- **Fletching** (`world/fletch.rs`, `world/craft_make.rs`, data `data/fletch.toml` and the
+- **Fletching** (`world/crafting/fletch.rs`, `world/crafting/craft_make.rs`, data `data/fletch.toml` and the
   recipes `recipes/woodcraft/arrows.toml`, `bolts.toml`; #1021, #1336; the owner: "Do not require
   small blade in hand, just in inventory is fine"): **Arrows** and **Crossbow bolts**, Woodcraft
   recipes for those trained in Woodcraft, on its profession screen, made as any generic recipe is
@@ -755,10 +755,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **The other batches** (`docs/dev/crafting.md` "Counted recipes"): Metalcraft's `arrowheads`
     (20 from an ingot of any metal at an anvil, of that metal), Woodcraft's `sling_stones` (10 from
     a block of stone, no knife) and `flaming_arrows` (10, an arrow each and a flask of oil).
-- **Whittling** (`world/temper.rs`, `Craft::Whittle`; #1028; design `skill-uses.md` W3): Temper's twin for wood on the same rules, so one item has one state (`magic/worked.rs`) and one set of numbers (`data/rules/temper.toml`: ten minutes, `13 + 2 x attempts`, three improvements). **Whittle**, a recipe of Woodcraft's for those trained in it (#1387; beside the arrows on Woodcraft's profession screen, #1334; anywhere; `Action::Whittle { item }`, replay text `whittle:LETTER`; asks for an item, the Whittle list, what `workable_wood` accepts) takes a weapon, missile weapon, shield, or armour whose main part is of a material of `group = "wood"` (bows, crossbows, staves, clubs), not a spirit weapon. Refused, taking no time, untrained in Woodcraft ("You are not trained in Woodcraft."), without a knife carried ("You have no knife."; its row greyed "no knife"), with a stack of another material ("Only a weapon of wood can be whittled."), or at three improvements. The check is the natural roll plus Dexterity's modifier, `VigourMods::check(Dexterity)`, and Woodcraft's `whittle` points (`Effect::Whittle`, curve 0, 8 at 100, 12 at 200), as Temper's is Strength with Metalcraft. Woodcraft earns a mark per finished attempt (`Use::Whittle`, 100 %).
-- **Salvage** (`world/salvage.rs`, data `data/rules/salvage.toml`; #1333; design `professions.md` §5; `docs/dev/crafting.md`): breaking an item into its materials, anywhere, with nothing. The abilities menu's **Salvage** (`Ability::Salvage`, Skills group, everyone's; `Action::Salvage { item }`, replay text `salvage:LETTER`; asks for an item) takes ten minutes (`seconds`, by `keep_at`; interrupted, nothing happens). Then one check per distinct material of the item (its resolved parts, gems included, in first-seen order) that a profession works (`data/stock.toml`: metal Metalcraft with Strength; wood, bone, hide, and sinew Woodcraft with Dexterity, and flint, stone, and obsidian by their own rows; jade, resin, and gems Jewelcraft with Dexterity; cloth and glass nothing): 2d12 + the stat's modifier + talents' checks of it + that skill's `craft` points (`Effect::Craft`, curve 0, 8 at 100, 12 at 200, read for that skill alone) against `difficulty` (12) + the material's `work`; a natural 2 fails, a natural 24 succeeds; untrained, the check is made the same. Made, the material comes back as stock, `yield` (50) % of its grams, at least one piece, or a gem whole with its size and cut; failed, it is lost, but a gem drops one cut (while above crude) or else one size (while above tiny), and shatters only on a natural 2 or with neither left to lose. The one item (one of a stack) is destroyed either way, its magic and improvements with it. Refused, with no time: worn or wielded, protected (quests, uniques, of Proof), unpaid, a spirit weapon, or nothing a profession works. Each profession rolled earns a mark (`Use::Salvage`, 100 %), that skill alone. No noise, no alignment. **Its magic** (#1428; design `docs/design/enchanting.md` §10; `world/crystal.rs`; `docs/dev/enchanting.md`): before the material checks, a magic or rare item, identified or not, makes one check per affix, 2d12 + Willpower's modifier + talents' Willpower checks + Enchanting's `craft` points against `data/rules/enchanting.toml`'s 12 + the affix's tier ÷ 3; each made leaves a **magic crystal** of the affix's colour (`data/crystals.toml`: six colours, black, blue, white, red, green, gold, each with creature tags and affix families, every affix category in at least one), and a rare of item level 10 or more has a 3 % chance of a rare material (heart-crystal or soul-fetter, even odds); an unidentified item's lines name no affix; Enchanting is marked (`Use::Salvage`) when an affix was checked.
-- **Consuming a crystal** (#1428; design `docs/design/enchanting.md` §5; `world/crystal.rs`): a crystal is in the Consume list (`e`) beside food and potions and is consumed through `Action::Eat` (`eat:LETTER`, `eat:floor:LETTER`; `world/eat.rs` hands it on), hungry or not: one crystal, a turn of the `drink` action, no check: `[consume] mana` (6) to the maximum, never refused for a full pool; `[consume] marks` (12) Willpower marks (`StatUse::Consumed`, 100 % each); and `[shift] consume_crystal` (−20) of alignment, diminishing. The rare materials cannot be consumed.
-- - **Professions** (`content/recipe.rs`, `world/craft.rs`, `ui/profession_screen.rs`; #1334, design
+- **Whittling** (`world/crafting/temper.rs`, `Craft::Whittle`; #1028; design `skill-uses.md` W3): Temper's twin for wood on the same rules, so one item has one state (`magic/worked.rs`) and one set of numbers (`data/rules/temper.toml`: ten minutes, `13 + 2 x attempts`, three improvements). **Whittle**, a recipe of Woodcraft's for those trained in it (#1387; beside the arrows on Woodcraft's profession screen, #1334; anywhere; `Action::Whittle { item }`, replay text `whittle:LETTER`; asks for an item, the Whittle list, what `workable_wood` accepts) takes a weapon, missile weapon, shield, or armour whose main part is of a material of `group = "wood"` (bows, crossbows, staves, clubs), not a spirit weapon. Refused, taking no time, untrained in Woodcraft ("You are not trained in Woodcraft."), without a knife carried ("You have no knife."; its row greyed "no knife"), with a stack of another material ("Only a weapon of wood can be whittled."), or at three improvements. The check is the natural roll plus Dexterity's modifier, `VigourMods::check(Dexterity)`, and Woodcraft's `whittle` points (`Effect::Whittle`, curve 0, 8 at 100, 12 at 200), as Temper's is Strength with Metalcraft. Woodcraft earns a mark per finished attempt (`Use::Whittle`, 100 %).
+- **Salvage** (`world/crafting/salvage.rs`, data `data/rules/salvage.toml`; #1333; design `professions.md` §5; `docs/dev/crafting.md`): breaking an item into its materials, anywhere, with nothing. The abilities menu's **Salvage** (`Ability::Salvage`, Skills group, everyone's; `Action::Salvage { item }`, replay text `salvage:LETTER`; asks for an item) takes ten minutes (`seconds`, by `keep_at`; interrupted, nothing happens). Then one check per distinct material of the item (its resolved parts, gems included, in first-seen order) that a profession works (`data/stock.toml`: metal Metalcraft with Strength; wood, bone, hide, and sinew Woodcraft with Dexterity, and flint, stone, and obsidian by their own rows; jade, resin, and gems Jewelcraft with Dexterity; cloth and glass nothing): 2d12 + the stat's modifier + talents' checks of it + that skill's `craft` points (`Effect::Craft`, curve 0, 8 at 100, 12 at 200, read for that skill alone) against `difficulty` (12) + the material's `work`; a natural 2 fails, a natural 24 succeeds; untrained, the check is made the same. Made, the material comes back as stock, `yield` (50) % of its grams, at least one piece, or a gem whole with its size and cut; failed, it is lost, but a gem drops one cut (while above crude) or else one size (while above tiny), and shatters only on a natural 2 or with neither left to lose. The one item (one of a stack) is destroyed either way, its magic and improvements with it. Refused, with no time: worn or wielded, protected (quests, uniques, of Proof), unpaid, a spirit weapon, or nothing a profession works. Each profession rolled earns a mark (`Use::Salvage`, 100 %), that skill alone. No noise, no alignment. **Its magic** (#1428; design `docs/design/enchanting.md` §10; `world/crafting/crystal.rs`; `docs/dev/enchanting.md`): before the material checks, a magic or rare item, identified or not, makes one check per affix, 2d12 + Willpower's modifier + talents' Willpower checks + Enchanting's `craft` points against `data/rules/enchanting.toml`'s 12 + the affix's tier ÷ 3; each made leaves a **magic crystal** of the affix's colour (`data/crystals.toml`: six colours, black, blue, white, red, green, gold, each with creature tags and affix families, every affix category in at least one), and a rare of item level 10 or more has a 3 % chance of a rare material (heart-crystal or soul-fetter, even odds); an unidentified item's lines name no affix; Enchanting is marked (`Use::Salvage`) when an affix was checked.
+- **Consuming a crystal** (#1428; design `docs/design/enchanting.md` §5; `world/crafting/crystal.rs`): a crystal is in the Consume list (`e`) beside food and potions and is consumed through `Action::Eat` (`eat:LETTER`, `eat:floor:LETTER`; `world/health/eat.rs` hands it on), hungry or not: one crystal, a turn of the `drink` action, no check: `[consume] mana` (6) to the maximum, never refused for a full pool; `[consume] marks` (12) Willpower marks (`StatUse::Consumed`, 100 % each); and `[shift] consume_crystal` (−20) of alignment, diminishing. The rare materials cannot be consumed.
+- - **Professions** (`content/recipe.rs`, `world/crafting/craft.rs`, `ui/profession_screen.rs`; #1334, design
   `docs/design/professions.md` §6, §8; `docs/dev/crafting.md`): a skill with a directory of
   **recipes** (`data/recipes/<skill>/<id>.toml`, one a file) is a profession: Alchemy, Enchanting,
   Jewelcraft, Metalcraft, and Woodcraft. Its row in the abilities menu ("Metalcraft…", in the
@@ -779,7 +779,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   yield 50 %, the landscapes where wood is free), used by the phases that make such recipes.
   Jewelcraft's built-ins `use = "cut"` and `use = "set"` give their check's `difficulty` and
   `seconds` in their files.
-  - **Cut** (`world/cut.rs`, `data/recipes/jewelcraft/cut.toml`; #1355, design
+  - **Cut** (`world/crafting/cut.rs`, `data/recipes/jewelcraft/cut.toml`; #1355, design
     `docs/design/recipes.md` §5; for those trained in Jewelcraft): `craft:cut:LETTER` on a loose gem
     from the Cut list (any uncut gem; a cut one above tiny and below flawless), half an hour (an
     interruption spends only time), then one check: 2d12 plus the Dexterity modifier, Jewelcraft's
@@ -793,7 +793,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     flawless one ("It could not be finer."), anything not a loose gem. The gem is said as names do
     ("It is now a medium crude ruby."), never the margin. Jewelcraft earns a mark per finished cut
     (`Use::Craft`, 100 %).
-  - **Set** (`world/set.rs`, `data/recipes/jewelcraft/set.toml`; #1356, design
+  - **Set** (`world/crafting/set.rs`, `data/recipes/jewelcraft/set.toml`; #1356, design
     `docs/design/recipes.md` §5; from Jewelcraft 10): `craft:set:ITEM,GEM`, the forging wizard's two
     steps (an item carried, not worn or wielded, whose ornament part (its object's `ornament`, else
     its class's `[[ornament]]` in `gems.toml`) holds no gem yet; then a cut loose gem, never an
@@ -807,7 +807,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     protected item or gem, unpaid shop goods. Jewelcraft earns a mark per finished setting. The
     forge's gem is unchanged: one chosen in the forging wizard is set with the work, with no check,
     and kept on a failure.
-  - **Enchanting** (`world/enchant.rs`, `data/recipes/enchanting/`; #1430, design
+  - **Enchanting** (`world/crafting/enchant.rs`, `data/recipes/enchanting/`; #1430, design
     `docs/design/enchanting.md` §7, §8; `docs/dev/enchanting.md`): built-in recipes `use =
     "enchant"` with an `enchant` kind and the `crystals` they take, worked anywhere with no station
     or tool, by the forging wizard's steps (the item, then a crystal for each) and the one dialog
@@ -839,7 +839,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     was ("The crystal goes dark in your hands."; Unbind's "... clings to its magic."); a natural 2
     spends it and warps the item (item damage `enchant`, "warped"; of Proof, spared). Enchanting
     earns a mark per finished work (`Use::Craft`, 100 %).
-  - **Seals** (#1432, design `enchanting.md` §9; `world/seal.rs`): after the crystals, up to three optional steps
+  - **Seals** (#1432, design `enchanting.md` §9; `world/crafting/seal.rs`): after the crystals, up to three optional steps
     shut a family of the crystals' colours, named in words ("fire", "the critical"), out of the
     roll; each costs one more crystal of its colour, from the first crystal picked that holds it,
     and half an hour (`data/rules/enchanting.toml` `seal_seconds`), and is refused for a family not of the
@@ -854,7 +854,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and amulets have no aspect, so they come out plain whatever the margin, and a failure says "The
     work goes wrong, and you save what you can of it."
   - **Making a recipe**: `Action::Craft` (`craft:ID[:POS,...]`, `-` a skipped optional) makes a
-    generic recipe (`world/craft_make.rs`; #1335, design `docs/design/recipes.md` §4, §6): the
+    generic recipe (`world/crafting/craft_make.rs`; #1335, design `docs/design/recipes.md` §4, §6): the
     forge's seven swords (knife, dagger, short sword, scimitar, long sword, rapier, great sword;
     Metalcraft, at an anvil, from Metalcraft 0 to 40), each from the metal stock for its blade (as
     many pieces as the blade's share of the weight, whatever the metal) and an optional cut gem for
@@ -938,7 +938,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     natural 2 makes its `fumble`, a **brewer's blunder**, each said by the profession's line in
     `data/recipes.toml` and known for what it is. Alchemy earns a mark per finished brew
     (`Use::Craft`, 100 %).
-- **Foraging** (`world/forage.rs`, data `data/forage.toml`, §7; #547; the owner, 2026-10-27:
+- **Foraging** (`world/skills/forage.rs`, data `data/forage.toml`, §7; #547; the owner, 2026-10-27:
   "survival can be used on wilderness map, some chance to gather food items"): Survival's use,
   the abilities menu's **Forage** (`Ability::Forage`, in the skill's place among the Skills;
   nothing to aim; `Action::Forage`, replay text `forage`; no key of its own). Anyone trained in a
@@ -970,7 +970,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     time is the price). Presentation shows the outcome only, never the chance.
   - **Food** found is ordinary food (§8 "Hunger"): berries, mushrooms, and hazelnuts (new), and
     apples and angelica roots.
-- **Gathering herbs** (`world/gather.rs`, `data/herbs.toml`; #1340, design `recipes.md` §8): the
+- **Gathering herbs** (`world/skills/gather.rs`, `data/herbs.toml`; #1340, design `recipes.md` §8): the
   dungeon's glowing fungus (terrain `fungus`, the file's `terrain`) is gathered for herbs, the
   inputs of Alchemy. The abilities menu's **Gather** (`Ability::Gather`, the *Here* group, as
   Pray and Drink: listed only beside fungus; `Action::Gather(Dir)`, replay text `gather:DIR`;
@@ -996,7 +996,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     change), so it may be gathered again at once; time is the only cost. Fungus is placed by
     the caves generator's patches and hand-made levels; the rooms generator places none.
 - **Talents** (`warlock-core/src/talent.rs`, the runtime; `content/talent.rs`, the data;
-  `world/talent.rs`, the picks; M30, #229; design `docs/design/progression.md` §7, §10): knacks
+  `world/character/talent.rs`, the picks; M30, #229; design `docs/design/progression.md` §7, §10): knacks
   a character picks as they level, each a typed effect read where the rules already read what
   magic items do.
   - **Data** (§7): `data/talents/trees/` and `data/talents/systems/` (one a file: the `[[tree]]`s
@@ -1019,7 +1019,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     nothing can be spent on (no talent the player may take: a run without talents, every
     talent they qualify for held, with no skill roll left that might open one) is dropped, so a
     level never waits for the impossible.
-  - **Creation picks** (`world/creation.rs`; #236): a character the player chose (a run with
+  - **Creation picks** (`world/character/creation.rs`; #236): a character the player chose (a run with
     its starting kit: New run, `--character`, `--name`, `--talents`) picks `[levels]
     creation_talents` talents (2) at creation and its class's `creation_talents` more (the bard,
     the lucky class: 1). They are a choice due at level 1 while the run is made, spent at once
@@ -1039,7 +1039,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (Healthy, then Fast healer). Character creation's Talents step (§6 "New run") reads the run
     drafted (`World::draft`, `creation_offers`, `random_creation`). The humans' extra pick is
     their racial Versatile's (#241): a human picks 3, a human bard 4.
-  - **Heritage** (`world/heirloom.rs`; #697): talents offered only at creation (`needs = {
+  - **Heritage** (`world/character/heirloom.rs`; #697): talents offered only at creation (`needs = {
     creation = true }`, `Need::Creation`: "to be a new character", met at character level 1
     only, so never a level's pick), in the `heritage` tree (`no_free`). What they give is handed
     out once, as they are taken (`World::hand_down`, from `World::learn`), on top of the kit:
@@ -1057,7 +1057,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`stipend_more`: its gold +100 %, its loot roll made by 15 points more, always, its magic odds
     +200 %: 47 % of level-ups bring a find). The weakest of a small race may start Burdened with
     them, never Strained. No talent acts on the background story's draw (#787).
-  - **Crafts** (`world/trade.rs`; #1418, the craftsperson design §3, §4): the trades, one per
+  - **Crafts** (`world/crafting/trade.rs`; #1418, the craftsperson design §3, §4): the trades, one per
     profession skill: **Smith** (Metalcraft), **Wright** (Woodcraft), **Gemcutter**
     (Jewelcraft), **Brewster** (Alchemy), **Pitman** (Mining), **Wortcunner** (Herbalism), and
     **Spellwright** (Enchanting). Only a craftsperson's creation picks offer them (`needs = {
@@ -1197,10 +1197,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the material's work; made, the damage is gone, its lost improvements still lost and the
     attempts at the anvil as they were; failed, nothing happens, never a thing destroyed;
     refused, no time, for one worn, protected, unpaid, or of a material no profession works;
-    greyed "nothing to mend" with none; `world/make_do.rs`), Trapwright (at 25, #1423: a trap
+    greyed "nothing to mend" with none; `world/crafting/make_do.rs`), Trapwright (at 25, #1423: a trap
     rigged on a cell beside them, the rig list then a direction, `rig:tripwire:E`; its kills are
     theirs; §8 "Traps": "Rigging traps"), Field forge
-    (#1424, at 32: an active aimed in a direction, `use:field_forge:E`, `world/field_forge.rs`:
+    (#1424, at 32: an active aimed in a direction, `use:field_forge:E`, `world/crafting/field_forge.rs`:
     one ingot of any metal carried is set on open ground beside the player, walkable floor with
     nobody, nothing, and no known trap on it, no door, chest, stairs, grave, water, ice, fungus,
     or shop floor, never the overworld, in an hour of `craft` turns through `keep_at`; no check;
@@ -1208,9 +1208,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     good (§7 "Special rooms": Forges); refused, no time, without an ingot ("You have no ingot to
     set."), on the overworld, or on other ground), Quick hands (#1425, at 40: every craft,
     recipes, Temper, Whittle, Cut, Set, Salvage, Make do and mend, Field forge, and a rig, takes half
-    its time, after Fletcher's share for arrows; `world/mastery.rs::craft_seconds`), Master's
+    its time, after Fletcher's share for arrows; `world/crafting/mastery.rs::craft_seconds`), Master's
     hand (#1425, at 50: 4 added to a made check's margin as its grade or a gem's cut is read,
-    never to whether it is made; `world/mastery.rs::graded_margin`), and Maker's mark (#1426, at
+    never to whether it is made; `world/crafting/mastery.rs::graded_margin`), and Maker's mark (#1426, at
     60, passive: every item with a kind (arms, armour, a tool, jewellery; never an ingot, a
     batch, or a brew) the holder makes bears their mark, whatever its grade, `Worked::marked`,
     saved and never lost; a marked item is worth 50 % more on top of its grade, the patron pays
@@ -1225,7 +1225,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Trade routes, Credit, Magnate, Golden tongue), and left their levels empty. The adventurers'
     tables come with I1–I3 (#243–#245). Dumps mark them `Haggler (class)`;
     JSON `talents[].class`, `due.bonus`. **Saves change** (`Due::bonus`, `Magic::carried`).
-  - **Stipend** (the aristocrat's class ability from level 1, #1405; `world/stipend.rs`,
+  - **Stipend** (the aristocrat's class ability from level 1, #1405; `world/classes/stipend.rs`,
     `data/rules/stipend.toml`): at every level the character reaches, a prestige class's too, their
     family puts by gold (150 + 10d10, about 200) and, by 85 %, the find of one loot roll at that
     level as item level with the magic and rare rarities +100 % likelier, kept when magic or
@@ -1240,7 +1240,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `handover` line: into the pack, or set down at the feet what would leave the character
     Overloaded; with nothing put by, a flattering one-liner. If the servant dies, no one else
     brings it: the stipend grows on and is never handed over.
-  - **Invest** (the merchant's class ability from level 1, #1407; `world/invest.rs`,
+  - **Invest** (the merchant's class ability from level 1, #1407; `world/classes/invest.rs`,
     `data/rules/invest.toml`): the merchant's **business partner**, a town's class helper for `invest`
     (Cēaptūn's second `[[town.servant]]`, placed by the servant's code, keyed by the class
     ability: in a merchant's run only, at the corner desk of Factor Wulfrun's office, of the
@@ -1261,7 +1261,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     about 16 % a year. If the partner dies, the stake is lost. Saved and hashed:
     `WorldState::fund` (`cents`, `week`), left out until something is first put in.
   - **Patron** (the craftsperson's class ability from level 12, #1421; the craftsperson design
-    §7.4; `world/patron.rs`, `data/rules/patron.toml`): the craftsperson's **patron**, a town's class
+    §7.4; `world/crafting/patron.rs`, `data/rules/patron.toml`): the craftsperson's **patron**, a town's class
     helper for `patron` (Cēaptūn's third `[[town.servant]]`, a well-to-do burgher in the
     Gæsthūs, of the character's race and speaking its register, npc dialogues with
     `[dialogue.patron]` words), placed as the ability is given if the town is made by then, else
@@ -1305,7 +1305,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `from` the base classes, each named by one calling of a campaign, `level` (each one's cap in
     the shipped data), `message`; one outside every campaign is a fixture's and any run's). It is
     **open** (`World::calling_open`) to a character of a `from` class at that level with no
-    prestige class yet; `World::call` (`world/calling.rs`, the one place a prestige class is
+    prestige class yet; `World::call` (`world/classes/calling.rs`, the one place a prestige class is
     given) sets `Character::prestige` (saved, hashed, left out while none; never cleared),
     says the `message`, and gives **exactly the XP the next level costs** if the bank is short
     (`add_xp`'s rule, never `grant_xp`'s scaling; a full bank is spent as it is and gives every
@@ -1324,7 +1324,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     open` / `level 30 not met` / `not for a thief` / `called hunter at 30`, JSON
     `character.prestige`, `character.classes`, and with `--state` `callings`.
     `data/prestige/README.toml` has the format; the tests' fixture is the Warden, called from a
-    bard capped at 12 (`world/calling_tests.rs`). No new `[[system]]` and no talent: a prestige
+    bard capped at 12 (`world/classes/calling_tests.rs`). No new `[[system]]` and no talent: a prestige
     class is a class. **Saves change** (`Character::prestige`).
   - **The Hunter** (#881, H1 of the design, §9): `data/prestige/hunter.toml`, 30 levels, `hp = 7`
     (the warrior's), two rolls, known for Athletics and Survival, bonus picks at its own 5, 10,
@@ -1332,7 +1332,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     owner: "regular martial progression with no abilities above level 1 for now"). Its door is a
     campaign's calling (the Strange Spirit's, C1). Spirit weapon (`talents/spirit_weapon.toml`,
     effect `spirit_weapon { to_hit = 3, threat = 2, ignores_protection = true, phrase }`;
-    `world/spirit_weapon.rs`) is a class active asking for a **shape** (`Aim::Shape`, the shape
+    `world/classes/spirit_weapon.rs`) is a class active asking for a **shape** (`Aim::Shape`, the shape
     list: every `melee_weapons` object with an attack a hand holds, 22, grouped by weapon skill,
     each as a plain one is listed; `use:spirit_weapon:long_sword`, `Action::Shape`; refused, no
     time, without it or for an id that is no shape's). It makes a `Stack::spirit` of that base
@@ -1414,7 +1414,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     cell farther, not while hooded, in `WorldState::carried_light`, so creatures see it too); `ambush` (Ambusher: +1d6 after Protection on
     a hit, any attack, at a target that has not seen the attacker (`World::unaware`, §8
     "Surprise and sneak attacks") or is Surprised; the die is drawn only then,
-    `world/ambush.rs`); `terrain_as` (a step onto these terrains costs one onto
+    `world/combat/ambush.rs`); `terrain_as` (a step onto these terrains costs one onto
     another, `World::step_price`: Swimmer, still, running, and shallow water as floor);
     `plunge_proof` (Swimmer: a plunge through ice does no harm and draws
     nothing); `beast_friend` (Beast-friend: creatures of `animal` factions are
@@ -1451,7 +1451,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     #788; also `talk`): `devout` (at a forgotten altar of the player's own side the side's lean counts
     twice, at one of the other side not at all, `leaned_kinds`) and `pilgrim` (temple services
     cost half, rounded up, and a cure also mends a point of each damaged stat,
-    `world/service.rs`).
+    `world/people/service.rs`).
     The `spells` system (the magic design §10, #400) came with the **Spellcraft** tree: Quick
     study (free, #396: study +2, study time −50 %), Overreach (level 6,
     `study { overreach_percent = -33 }`, the spell scaling design §7.2: a spell's levels over
@@ -1507,7 +1507,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `talents` and dev `progress` layers; JSON `talents`, `due`. Never a rule's number: the
     wiki's Talents page states them.
 - **The adventurers' class tables, and the class actives** (`content/class.rs`: `ClassActive`;
-  `world/class_ability.rs`; M30, #243; design `docs/design/progression.md` §4.2–4.5): the
+  `world/classes/class_ability.rs`; M30, #243; design `docs/design/progression.md` §4.2–4.5): the
   warrior, berserker, paladin, and ascetic have level tables as the everyday folk do (the
   "Class abilities" bullet above): `abilities` rows naming talents of the class tree
   (`data/talents/`, `granted`) and `bonus_talents`.
@@ -1528,7 +1528,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     gift outside its bands is used and does nothing, §8 "Alignment"): Rage (the Rage resource and with it Raging:
     St +2, To +2, In −2, no reading or casting, while the rage lasts, §8 "Resources"; then
     Exhausted 150 s; no rage while either lasts; a wait's time), War cry (the berserker's at
-    25, #844, `world/war_cry.rs`: 4 rage, the talent's `resource`, and a wait's time; a roar as
+    25, #844, `world/classes/war_cry.rs`: 4 rage, the talent's `resource`, and a wait's time; a roar as
     loud as a howl, `Act::Howl`, heard across the floor, waking dens; every hostile that hears
     it, sees the player now, and has vitals rolls its Willpower modifier against 10 + the
     player's Strength modifier + their Intimidate, two gameplay draws apiece in actor-id order,
@@ -1537,7 +1537,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     sees. Its one refusal is the rage: not held, or less than 4, "You have not the rage for
     it.", no time; a roar with nobody to hear it still spends the turn, the rage, and the noise;
     each cry marks Intimidate),
-    Charge (the warrior's at 1, #1466, `world/charge.rs`: `use:charge:X,Y`, aimed in the
+    Charge (the warrior's at 1, #1466, `world/classes/charge.rs`: `use:charge:X,Y`, aimed in the
     targeting mode at a hostile the player sees; they rush along the straight line to it,
     `Pos::line_between`, the line a missile flies, and end in the last cell before it, then strike
     it once, an ordinary melee attack with what follows one; at least a cell gained, so refused
@@ -1559,7 +1559,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     does not stop the charge),
     Veteran's wind (1 hit point a level back, at least 10, then Winded; a wait), Lay on hands (2 hit
     points a level, for 6 zeal, §8 "Resources"; a cast; works for Kind or better), Smite (the
-    paladin's at level 1, #910, `world/smite.rs`: a blow in a direction with 1d6 more per 10
+    paladin's at level 1, #910, `world/classes/smite.rs`: a blow in a direction with 1d6 more per 10
     levels, at least 1d6, and a die more against the unholy, a creature type carrying a tag of
     `data/rules/smite.toml`'s `unholy` list: the undead and the fiends, never read by alignment; the
     paladin's Presence modifier added to hit; a magic weapon's extra die folded into the bonus at
@@ -1586,13 +1586,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     ascetic's at 6, #847: for a point of Ki and **no time**, a degree of Light-footed, so the next
     action, whatever it is, costs half its price and ends it; refused, no time or ki, while
     Light-footed already, "You are already light on your feet."; any grip), Stunning strike (the ascetic's at 12,
-    #848, `world/ascetic.rs`: a bare-handed blow in a direction at a melee attack's price,
+    #848, `world/classes/ascetic.rs`: a bare-handed blow in a direction at a melee attack's price,
     refused with a weapon in hand or nobody hostile there before anything is spent; a hit that
     does damage leaves the foe **Stunned**, "You stun the kobold.": `per_action`, one degree,
     `refresh`, `cost = 150`, `flat_footed`, §8 "Surprise and sneak attacks"; for 1 Ki and no
     cooldown), Quivering palm (the same blow, `World::palm_blow`, one body for both; a hit that
     does damage leaves three degrees of Bleeding; for 5 Ki, §8 "Resources", and no cooldown),
-    Stillness (Still mind's active, the ascetic's at 25, #850, `world/ascetic.rs`: for 2 Ki and
+    Stillness (Still mind's active, the ascetic's at 25, #850, `world/classes/ascetic.rs`: for 2 Ki and
     **no time**, every status of its list the ascetic suffers ends at once, each with its own end
     words after "You still your mind.": Held, Pinned, Staggered, Stunned, Surprised, Transfixed,
     Frightened, Drowsy, Webbed, the list data on the effect, each id checked at load; refused, no
@@ -1658,7 +1658,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Patient defence, Stillness, Diamond soul's catch, and Quivering palm spend (R4, #252; #846, #847,
     #848, #849, #850, #851).
 - **The casters' class tables, and their spells** (`content/spell_def.rs`: `SpellId`;
-  `data/spells/`; `world/cast.rs`, `world/caster.rs`; M30, #245, #395; design §4.9–4.12, §3.7):
+  `data/spells/`; `world/magic/cast.rs`, `world/magic/caster.rs`; M30, #245, #395; design §4.9–4.12, §3.7):
   the priest, druid, wizard,
   and witch have level tables as the others do (bonus picks at 10, 20, 30, 45, 55: priest Vigour
   or Grit, druid Wayfarer or Vigour, wizard Scholar, witch Scholar or Grit).
@@ -1808,7 +1808,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     each song costs one thing), the time of a `song` (500, a chat's); no cooldown, the cost is the
     price: greyed out "not enough inspiration", `Unavailable::Short`, while short; "You have
     too little inspiration." if used).
-    **Songs** (`world/song.rs::sing`, the one place a song is sung; the `song` talent effect
+    **Songs** (`world/classes/song.rs::sing`, the one place a song is sung; the `song` talent effect
     `{ id, on, status, severity, resource, cost | mana, check, difficulty }`, an active that
     `ClassActive::sings`): paid in their one cost, heard (`Act::Sing`, a voice of `SONG_NOISE`
     80 where the singer stands: those who hear it come to look), then the status, `severity`
@@ -1873,20 +1873,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     race's kind, or rarely a rare one, at their side from the first turn, that grows with their
     level and always comes along, §8 "Allies": "The animal companion"; `BeastEffect::Companion`
     read by `World::bring_companion`; and `tame = 2`, `BeastMods::tame`, the ranger's edge at
-    taming, read by the Tame skill ability, `world/tame.rs`), Pack tactics (the ranger's level
+    taming, read by the Tame skill ability, `world/allies/tame.rs`), Pack tactics (the ranger's level
     18, #919: a creature beside both the ranger and their companion is flanked, the ranger's
     melee blows and the companion's at it +2 to hit, never a shot, a throw, or a spell; and the
     companion's attacks at the favoured prey carry the ranger's Favoured prey, Master hunter's
     half too; `TalentEffect::{PackTactics, SharesFavouredPrey}`, one hook in `World::resolve`,
-    `world/pack.rs`), Favoured prey (+1 to hit, +2 damage against `Quests::prey`, any
+    `world/allies/pack.rs`), Favoured prey (+1 to hit, +2 damage against `Quests::prey`, any
     attack, in `World::resolve`), Stalker's eye (the ranger's at 2, #788: it sees which
     creatures in view have not noticed it, `sees_unaware`, above), Tracker (hears 3 fainter; every sound it hears placed at its
     own cell, `noise::Exact::All`), Rapid shot (grants Focus, §8 "Resources"; a shot loosed
     with `fire` while the ranger holds 2 focus spends them and takes 10 % less time, the whole
-    shot's price; with less it is an ordinary shot; `world/focus.rs`), Hunter's bond (the
+    shot's price; with less it is an ordinary shot; `world/classes/focus.rs`), Hunter's bond (the
     ranger's at 25, #920: shared sight and shared buffs with the companion, §8 "Allies";
     `BeastEffect::SharedSight` read in `Perception::compute`, `BeastEffect::SharedBuffs` in
-    `World::afflict`, `world/bond.rs`), Master hunter (bows and crossbows threat +1; Favoured
+    `World::afflict`, `world/allies/bond.rs`), Master hunter (bows and crossbows threat +1; Favoured
     prey +1 and +2 more); Sneak attack (#682: the class passive beside the Sneak attack skill,
     whose dice the thief trains, `2d6+10` and known for: it grants the Openings pool from level
     1, and those the thief catches unawares make their initiative check 2 harder,
@@ -1894,10 +1894,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     burden line's first two steps, #1198), Improved sneak attack (+2d6 on top of the skill's: dice of the same sides
     add up), Vanishing act (40, #684: a sneak attack of the thief's that kills leaves them
     Light-footed, a degree, `sneak_kill_status`, read in `World::resolve` where a sneak
-    attack's blow kills; `world/thief.rs`), Hide in plain sight (no footsteps while Unburdened;
+    attack's blow kills; `world/classes/thief.rs`), Hide in plain sight (no footsteps while Unburdened;
     attacks half as loud), Master thief (an attack on an unaware creature threatens a critical
     2 lower, never below 3 nor above what an exploit's ladder made it; and Exploit's top
-    increment, `exploit_threat`, above; `world/openings.rs`); Travelled hands
+    increment, `exploit_threat`, above; `world/classes/openings.rs`); Travelled hands
     (the bard's at 3, in Blessing's place, #871: a hand-out once, `weapon_ranks { to = 1 }`:
     every weapon skill and fighting style the bard holds at rank 0, whatever rows the content
     has, but the hidden styles, rises to rank 1 by
@@ -1907,7 +1907,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     as fast), Jack of all trades (12, #872: a hand-out once,
     `take_up_skills { dice = "1d4+1", except = ["sneak_attack"] }`: every skill of the content
     the bard is not trained in, but Sneak attack, trained at 1d4+1 from the `levels` stream in
-    file order, `world/jack.rs`, "You find you know a little of everything."), Master of none (25: `trained_skills`, every
+    file order, `world/classes/jack.rs`, "You find you know a little of everything."), Master of none (25: `trained_skills`, every
     trained skill counts 5 higher, as a skill bonus in `Actor::skill_effect`), Virtuoso (30, #874: every song costs nothing and gives a
     degree more; Inspire gives Inspired greatly, to hit +2 and Dodge +2 for 10 minutes, for
     nothing: neither mana nor inspiration).
@@ -1950,7 +1950,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     times what it first asked; rank 1 ten casts that land on a foe of the rank's level or more,
     rank 4 150, rank 10 7470; docs/balance.md "Caster style pace"). Marks
     past the need count toward the next rank (one rank at a time); rank 10 earns no more.
-  - **Target dummies** (#1199; `world/dummy.rs`): a creature type with a `training` table
+  - **Target dummies** (#1199; `world/combat/dummy.rs`): a creature type with a `training` table
     (`{ percent, melee, ranged, breaks }`, §7) is a dummy, the straw men in the Weyfarers' Gilde's
     yard in Cēaptūn (§3). It never acts and never dies (its hit points never drop), so it gives
     no experience, kill, loot, or quest credit; it is of the peaceful folk, but the player
@@ -1997,7 +1997,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `actors` dev layer shows every actor's). Ranks and marks are part of the world state
     (saved, hashed).
 - **Fighting styles** (#135; `content/weapon_skill.rs`: `Role::Style`, `Grip`, `Style`,
-  `TwoWeapons`; `world/actor.rs`: `Actor::grip`, `style`, `styles_in_use`, `attack_skills`
+  `TwoWeapons`; `world/turn/actor.rs`: `Actor::grip`, `style`, `styles_in_use`, `attack_skills`
   (`AttackSkills`: an attack's weapon skill and style), `attack_benefit`, `off_hand`,
   `off_hand_blow`), after AD&D 2e's *Complete Fighter's Handbook*: how weapons are
   held and used, as skills with the weapon skills' ranks (0 to 10), marks, curves, and
@@ -2012,7 +2012,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     style is how the hands are used).
     A style may name the weapon skills it is fought with; the style of a grip that names none
     takes every other weapon (`WeaponSkillTable::style_for`), so one configuration is always at
-    most one style. **The spell decides the caster style** (#571, #1251; `world/cast_style.rs`):
+    most one style. **The spell decides the caster style** (#571, #1251; `world/magic/cast_style.rs`):
     any spell cast in **armour that hinders casting** (anything worn with a
     `spell_cost_percent`, §8 "Spells") is cast as a Battle caster (`armoured_spell`); out of such
     armour, a spell that **rolls to hit** (a damage spell resolved by the attack roll) is cast as a
@@ -2089,7 +2089,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     still stands is followed, by the style's `bash` chance (one gameplay draw, only when the
     chance is above 0), by a shield bash at it, free and silent, drawing on and training shield
     bashing and the style.
-  - **Two shields** (#611; `world/two_shields.rs`, docs/dev/weapon-skills.md): any shield fits
+  - **Two shields** (#611; `world/combat/two_shields.rs`, docs/dev/weapon-skills.md): any shield fits
     either hand (`Content::fits_properly`: an object with `bash`, like a light weapon; a shield
     is put in its own off hand first, `equipment::free_slot`). With a shield in each hand every
     plain melee attack (the player's move into a hostile, a creature's blow) is a shield bash with
@@ -2115,7 +2115,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (§6) and in the `weapon_skills` dump layer (`Duelist 1 (0%), in use`; JSON `styles_in_use`).
     Never a benefit, a penalty, a chance, or a creature's ranks.
 - **Weapon abilities** (#561; the combat progression design §4, §6;
-  `content/weapon_ability.rs`, `world/weapon_ability.rs`, docs/dev/weapon-abilities.md): what a
+  `content/weapon_ability.rs`, `world/combat/weapon_ability.rs`, docs/dev/weapon-abilities.md): what a
   rank in a weapon skill or a style teaches, one `[[weapon_ability]]` a file in
   `data/weapon_abilities/` (§7; a campaign's may add more), naming its skills (weapon skills or
   styles, never both kinds) and the rank (1 to 10, per file, so each group and style sets its own).
@@ -2176,7 +2176,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     orc staggers from your shield.", Spell reflection "Your shield turns the scorching ray back
     at the shaman." ("The champion's shield turns your scorching ray back at you."), a free blow or shot as one is. Never a rank threshold, a
     chance, or a creature's abilities. The dev action `rank:SKILL:N` sets a rank (§6, replays).
-  - **Actives** (#564; the design §4.5, §4.6; `world/weapon_active.rs`): used from the abilities
+  - **Actives** (#564; the design §4.5, §4.6; `world/combat/weapon_active.rs`): used from the abilities
     menu (`Ability::Weapon`, `Source::WeaponSkill`; never a key of their own), aimed as `aim`
     says (`nothing`, `direction`, `cell`, the existing `Aim`s), as `use:lunge:E`
     (`Action::Act`; the direction in upper case, as a stack's letter is in lower case) or

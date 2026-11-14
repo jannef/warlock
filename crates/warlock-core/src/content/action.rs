@@ -5,7 +5,7 @@
 //! speed: `cost / 1000 × 1000 / speed × base`, the base being [`BASE_TURN`] (6 s) for every
 //! action but a step on the overworld, whose base is the terrain's `travel_minutes`. A normal
 //! action takes a creature of normal speed 6 seconds, one of cost 1400 8.4 seconds, and a
-//! normal action at speed 1111 about 5.4 seconds. The scheduler (`world/schedule.rs`) turns a
+//! normal action at speed 1111 about 5.4 seconds. The scheduler (`world/turn/schedule.rs`) turns a
 //! cost into an energy [`price`].
 //!
 //! The file maps action ids to costs (`wait = 1000`); an action it leaves out costs 1000, and so
@@ -118,7 +118,7 @@ pub enum ActionKind {
     Whittle,
     /// A turn of making a recipe (a profession's, spec §8 "Skills"): the work takes many.
     Craft,
-    /// A turn of salvaging an item for its materials (`world/salvage.rs`): an attempt takes
+    /// A turn of salvaging an item for its materials (`world/crafting/salvage.rs`): an attempt takes
     /// many.
     Salvage,
     /// Trying to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.
@@ -128,7 +128,7 @@ pub enum ActionKind {
     Heal,
     /// Chatting with a creature (spec §8 "Dialogue"): a short action.
     Chat,
-    /// Singing a song (spec §8 "Class abilities", the bard's songs; `world/song.rs`): Inspire.
+    /// Singing a song (spec §8 "Class abilities", the bard's songs; `world/classes/song.rs`): Inspire.
     Song,
     /// Trying to steal from a creature (spec §8 "Stealing"), whatever comes of it.
     Steal,

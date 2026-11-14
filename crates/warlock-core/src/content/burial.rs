@@ -4,7 +4,7 @@
 //!
 //! - its **places**: every cell of a terrain with `burial` (an empty plot, an empty niche, an open
 //!   sarcophagus), in row order, which becomes that terrain (a gravestone, a sealed niche, a
-//!   lidded sarcophagus) when one of the run's dead is laid there (`world/graves.rs`);
+//!   lidded sarcophagus) when one of the run's dead is laid there (`world/fixtures/graves.rs`);
 //! - its fixed graves: a `grave` terrain cell with an `epitaph` (one of the town's own dead);
 //! - its **way down**: one cell with `burial_stairs = "stairs_down"`, its own terrain until the
 //!   level is full, then those stairs to the next level of the chain;
@@ -189,7 +189,7 @@ fn plain(def: &TerrainDef) -> bool {
 
 /// The terrain table's burial places (`burial`): each becomes a grave (`grave`) that is in
 /// every rule the same as the place, so the run's dead change nothing but what is drawn and
-/// read (the state hash leaves them out, `world/graves.rs`).
+/// read (the state hash leaves them out, `world/fixtures/graves.rs`).
 pub(super) fn check_terrain(defs: &[TerrainDef]) -> Result<(), String> {
     for place in defs {
         let Some(to) = place.burial else { continue };

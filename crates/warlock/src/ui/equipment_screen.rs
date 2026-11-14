@@ -330,7 +330,7 @@ impl ItemScreen {
         screen.slot = def.id.clone();
         screen.name = def.name.clone();
         screen.verbs = verbs(def.action);
-        // A slot the body bars takes nothing (`world/body_slots.rs`).
+        // A slot the body bars takes nothing (`world/items/body_slots.rs`).
         screen.barred = view.barred_words(slot);
         if screen.barred.is_some() {
             return screen;

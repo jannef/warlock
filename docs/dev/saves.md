@@ -38,27 +38,27 @@ naming something the content does not have (a talent, a story line, an affix val
 tier, ...) is refused by `World::from_state`'s checks, never dropped or mapped.
 `#[serde(default)]` on new fields stays (harmless, and it keeps replays readable). What a run remembers once and for all lives in `Progress` and is saved with it: the first kills
 that paid, the uniques met, and the creature types whose first-sight line was said
-(`Progress::sighted`, `world/first_sight.rs`). Between two
+(`Progress::sighted`, `world/creatures/first_sight.rs`). Between two
 releases every development build shares the version, so there the content fingerprint and the
 decoder are what refuse a save a build cannot read (a renamed `.sav.bad`, as below); saves are
 not promised across development builds.
 
-An aristocrat's stipend (`world/stipend.rs`, #1405) is `WorldState::stipend` (`Stipend`: the
+An aristocrat's stipend (`world/classes/stipend.rs`, #1405) is `WorldState::stipend` (`Stipend`: the
 gold and the finds put by, each left out while empty, the whole left out while both are), saved
 and hashed; its servant is an actor like any other (its `npc` names its dialogue). A merchant's
-stake (`world/invest.rs`, #1407) is `WorldState::fund` (`Fund`: `cents`, hundredths of a coin,
+stake (`world/classes/invest.rs`, #1407) is `WorldState::fund` (`Fund`: `cents`, hundredths of a coin,
 and `week`, the last week whose return it took; left out until something is first put in), saved
 and hashed; the business partner is an actor like the servant.
 
-A charmed ally (`world/charm.rs`, `docs/dev/allies.md` "Charmed") saves its charm in its
+A charmed ally (`world/allies/charm.rs`, `docs/dev/allies.md` "Charmed") saves its charm in its
 `Actor::ally`: `AllySource::Charmed { spell, faction }`, the `faction_override` it had (left out
 while `None`) put back when the charm ends, and `Ally::until`. A save of this build with one
 does not load in a build before it (the variant is new), as the version pin already says.
 
 A save holds only the current floor of an endless branch (`docs/dev/mapgen.md`,
-`world/endless.rs`): `WorldState::endless` is a count of floors made and the deepest depth by
+`world/levels/endless.rs`): `WorldState::endless` is a count of floors made and the deepest depth by
 branch, left out while empty, so its size does not grow with depth. A Pit (spec §7 "The Pits",
-`world/pit.rs`) is kept the same way: `WorldState::pits` holds a record per Pit by its integer
+`world/levels/pit.rs`) is kept the same way: `WorldState::pits` holds a record per Pit by its integer
 (`Pit { from, sealed }`: the mouth's level and the warden's death; left out while empty), the
 mouth is a `StairsLink` saved with its level as every link is, and the only Pit floor in the
 save is the current one.
@@ -153,7 +153,7 @@ kobold in Fyrdelf 3, The Ascmearc"); kept in `WorldState::graveyard` so a resume
 list it began with. Statues are named from the petrified (`docs/dev/mapgen.md`), and the rest
 are laid in Līctūn's graves and crypts (`docs/dev/graves.md`; `set_graveyard` lays them again on
 the levels made already). The list, `Statue::name`, `LevelState::graves`, and
-`LevelState::buried` are left out of the state hash (`world/hash.rs::unhashed_vec`/
+`LevelState::buried` are left out of the state hash (`world/turn/hash.rs::unhashed_vec`/
 `unhashed_option`/`unhashed_map`, skipped while `WorldState::hash` serializes, and
 `hash.rs::levels`), so a replay verifies under any graveyard; saves keep them.
 `warlock-cli --fallen NAME:RACE[:CLASS][:stone],...` gives a dev run one.

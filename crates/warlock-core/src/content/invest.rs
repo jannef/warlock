@@ -1,6 +1,6 @@
 //! The merchant's investment (`assets/data/rules/invest.toml`, spec §8 "Class abilities": Invest;
 //! #1407): the fees on putting gold in and taking it out, the weekly return and its bonuses, and
-//! the amounts the business partner's topics offer (`world/invest.rs`).
+//! the amounts the business partner's topics offer (`world/classes/invest.rs`).
 //!
 //! Every game week the stake changes by `week.base` plus `week.dice` basis points (hundredths of
 //! a percent), plus `bonus.quest` for each quest of the partner's town's people completed and the

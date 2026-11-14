@@ -19,7 +19,7 @@ Alignment is good against evil, ADOM's law and chaos turned. Three modules:
   `rise`/`fall` lines (`news(from, to)`), `[shift]` (`Shifts`, `ByAlignment` for the kills), and
   `[shops] favour` by band. Without the file the player has no score, everyone counts as Neutral,
   and nothing moves.
-- `world/alignment.rs`, the rules: `Deed` (what moved a score; the hook the talents will read),
+- `world/character/alignment.rs`, the rules: `Deed` (what moved a score; the hook the talents will read),
   `World::shift_alignment(actor, amount, cause)` (**the one place a score changes**; an actor
   without a score, every creature, is left alone; a band crossed queues its line in
   `World::notes`, said by `say_news` after the deed's own messages and the news, as notes that
@@ -62,7 +62,7 @@ paladin's class `alignment` of 550 is only where they start).
 A holy gift (`ClassActive::holy`: Lay on hands, Smite and its modes, Holy radiance, Consecrate) may name the
 bands it works for, `alignment = { min = "kind" }` on its talent (Consecrate's `neutral`, the
 priest design's Q3; `TalentDef::alignment`, checked
-on load: only a holy active's talent or a band-gated passive's may have one). Its function in `world/class_ability.rs`
+on load: only a holy active's talent or a band-gated passive's may have one). Its function in `world/classes/class_ability.rs`
 (`consecrate.rs` for Consecrate, `smite.rs` for Smite) asks `World::answered(active)` after its free refusals (nobody
 there, nothing to consecrate); one paid in a resource (Smite and Lay on hands, zeal) is asked by
 `use_class` before the cost is spent; outside the bands `World::unanswered(active)` says the gift's line
@@ -70,10 +70,10 @@ there, nothing to consecrate); one paid in a resource (Smite and Lay on hands, z
 mana, or resource. Putting Holy radiance out always works. Without alignment rules every gift
 works. A **band-gated passive** (`TalentEffect::band_gated`: Communion with the dark, the
 priest's 9, `alignment = { max = "callous" }`) is read the same way, by band at the moment of
-use: `World::communes` (`world/dark_face.rs`) asks the talent's bands (and the Dark prayer face)
+use: `World::communes` (`world/classes/dark_face.rs`) asks the talent's bands (and the Dark prayer face)
 where it would act, and outside them the passive does nothing, saying nothing
 (`docs/dev/prayer.md`). Retribution (the paladin's at 25, `alignment = { min = "kind" }`, #912) is
-the other: `World::retribution` (`world/smite.rs`) asks its talent's bands at each blow it would
+the other: `World::retribution` (`world/classes/smite.rs`) asks its talent's bands at each blow it would
 answer, and outside them answers none, saying nothing and spending no zeal. The alignment talents proposed in the spec (Righteous fury, Hardened heart, The middle
 way) would work the same way, by band at the moment of use, hooking into `attack_with` (the
 target's `nature`), `shift_alignment` (by `cause`), and `Actor::defence`/`check`. Mana reads
@@ -87,7 +87,7 @@ the deed's own lines. One `if`; without the file nothing happens. The only readi
 in the smiting rules (`smite_tests.rs::a_sin_empties_zeal`).
 
 **Tests.** `alignment.rs` (diminishing, bands, scorn, requirements, loading), `content/alignment.rs`
-(the built-in bands cover the scale, news, bad files), `world/alignment_tests.rs` (starting bands, the birth animal's nudge, a paladin of a race not
+(the built-in bands cover the scale, news, bad files), `world/character/alignment_tests.rs` (starting bands, the birth animal's nudge, a paladin of a race not
 evil starting Good under the worst animal (#317: the class's 550 is set for it), each deed, diminishing in play, notes
 after the deed that do not count as said, cold greetings, quest gating (`requires_alignment`
 only: a scorning giver still offers a good quest) and shifts, a good keeper's

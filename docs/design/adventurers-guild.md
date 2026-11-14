@@ -178,7 +178,7 @@ The owner's rule (decision 4) for **every quest**, the guild's and the existing 
 ### 5.4 Saves
 
 ```rust
-pub struct QuestRecord {               // world/quest.rs, existing fields unchanged
+pub struct QuestRecord {               // world/people/quest.rs, existing fields unchanged
     ...
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub roll: Option<Roll>,
@@ -455,7 +455,7 @@ Two talents meet the bar (`min_talents = 2`). **Class abilities**: none (`min_cl
 | `spec/07b-data.md` | `tribes`, `uniques`, `guilds` (the rank titles); the quest fields (`pick`, variants, `decline` retired, `reveals.when = "given"`) |
 | `spec/06-input-and-ui.md` | the quest log's breadcrumb and rolled objectives; the character screen's guild line; one quest topic per quest |
 | `spec/09-development-interface.md`, CLAUDE.md | the `quest_roll` dev action; the dump fields; `accept-ID`/`decline-ID` gone from the action text syntax |
-| `docs/dev/quests.md` | giving, rolls, the stream, tribes, `slain`; a new `docs/dev/guild.md` only if the code earns a module of its own (`world/guild.rs` for ranks) |
+| `docs/dev/quests.md` | giving, rolls, the stream, tribes, `slain`; a new `docs/dev/guild.md` only if the code earns a module of its own (`world/people/guild.rs` for ranks) |
 | `docs/dev/magic-items.md` | uniques and powers |
 | `docs/dev/campaign.md`, `overworld.md`, `mapgen.md` | the Gildhalle; the lairs' hidden entries; the four branches |
 | Wiki | the quests page: quests are given by talking, never declined, and a named monster's death counts however it died. A page **"The Weyfarers' Gilde"** under the Ascmearc's quests: the chain, each link's pool exactly (generated: the link-1 types by level, the tribes and their members, the scrolls), the four criminals with their stats, lairs, and items, the seven ranks and what reaches each (the letters left unsaid there too). Generated tables: `xtask/src/wiki/tribes.rs`, `uniques.rs`, and a `guild.rs` for the pools and ranks; registered in `generate()` by topic. Names in the Ascmearc names table with their registers (Old English, Middle English, Victorian) |

@@ -1,15 +1,15 @@
 //! Towns (spec §8 "Dialogue": "Goodwill", #1247; each campaign's `data/towns/`, one file per
 //! town): a town's people, and the goodwill its quests earn. Every quest one of its people gives
-//! that the player completes makes their services `goodwill` percent cheaper (`world/goodwill.rs`).
+//! that the player completes makes their services `goodwill` percent cheaper (`world/people/goodwill.rs`).
 //! The town's goodwill is derived from the quest records, never saved.
 //!
-//! A town may keep class helpers (`[[town.servant]]`, #1405, #1407; `world/stipend.rs`): each a
+//! A town may keep class helpers (`[[town.servant]]`, #1405, #1407; `world/classes/stipend.rs`): each a
 //! creature of the type named for the player's gender, speaking the npc dialogue named for their
 //! race (`speech`, `default` for the races not named), placed on cell `at` of level `level` as it
 //! is made, only in a run whose character holds the class ability `talent`: an aristocrat's own
 //! servant (Stipend; `[dialogue.stipend]` words), a merchant's business partner (Invest,
-//! `world/invest.rs`; `[dialogue.partner]` words), a craftsperson's patron (Patron,
-//! `world/patron.rs`; `[dialogue.patron]` words).
+//! `world/classes/invest.rs`; `[dialogue.partner]` words), a craftsperson's patron (Patron,
+//! `world/crafting/patron.rs`; `[dialogue.patron]` words).
 
 use super::dialogue::Speaker;
 use super::{Content, ContentError, DialogueId};
@@ -30,7 +30,7 @@ pub struct TownDef {
     pub goodwill: u32,
     /// Said as a quest of its people's is completed: "Cēaptūn's folk think the better of you."
     pub told: String,
-    /// The class helpers kept here (`world/stipend.rs`): an aristocrat's servant, a merchant's
+    /// The class helpers kept here (`world/classes/stipend.rs`): an aristocrat's servant, a merchant's
     /// business partner.
     #[serde(default, rename = "servant")]
     pub servants: Vec<TownServant>,
@@ -51,7 +51,7 @@ pub struct TownServant {
     /// Its npc dialogue by the player's race id; `default` for every race not named.
     pub speech: std::collections::BTreeMap<String, String>,
     /// A business partner's weekly bonus, in basis points, for each of these quests completed,
-    /// by quest id (`world/invest.rs`; Fire in the deep); none for anyone else.
+    /// by quest id (`world/classes/invest.rs`; Fire in the deep); none for anyone else.
     #[serde(default)]
     pub bonus: std::collections::BTreeMap<String, i32>,
 }

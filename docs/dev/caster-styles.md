@@ -12,7 +12,7 @@ school's, and no rank anywhere lifts a school's spells.
 
 ## How one casts: the caster styles
 
-`world/cast_style.rs` (S10, #757; reworked by #1251, the design's §10.2 is history).
+`world/magic/cast_style.rs` (S10, #757; reworked by #1251, the design's §10.2 is history).
 `Actor::spell_grip(content, spell)` is the caster style's grip, decided by the spell and the
 armour alone, never by where the spell is aimed: `ArmouredSpell` (`worn_spell_cost` above 0:
 Battle caster, whatever the spell), else for a spell that rolls to hit
@@ -52,7 +52,7 @@ cast), S11's `spell_lands`.
 
 ## Marks
 
-`World::practise_cast(cast)` (`world/cast.rs`), at the end of `cast_spell` once the cast went
+`World::practise_cast(cast)` (`world/magic/cast.rs`), at the end of `cast_spell` once the cast went
 off, for `Pay::Mana` only (a scroll, a wand, or a flask trains nothing), never once the player is
 dead: it practises the caster style the spell was cast in with `practise(style, landed, level)`
 (the one function every weapon skill's marks go through); a spell cast in no style trains
@@ -109,7 +109,7 @@ Saves are pinned to the game version: the school rows' `Training` entries on
 
 `content/weapon_skill.rs` (`the_builtin_table_loads`, `the_caster_ladder_loads_and_is_checked`:
 the rows, `spell_mods`, the refusals of `cells` and `bonus` on other grips and roles),
-`world/caster_style_tests.rs` (the styles by the spell: a ray trains Sniper wherever it is aimed,
+`world/magic/caster_style_tests.rs` (the styles by the spell: a ray trains Sniper wherever it is aimed,
 a Fireball, Magic missile, and a Blessing none, a touch that rolls to hit Toucher and a touch heal
 none, every spell in hindering armour Battle caster with full marks; Sniper's cells and Toucher's
 bonus in the reach and the roll; Toucher's ranks in the hit chance and the critical range; a

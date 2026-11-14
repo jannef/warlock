@@ -44,10 +44,10 @@ pub enum Build {
     /// A sneak attack of the holder's hit: a blow at a creature unaware of it (spec §8 "Class
     /// abilities": the thief's sneak attack).
     SneakAttack,
-    /// A feint of the holder's fooled its foe (`world/feint.rs`: it falls for it). A chosen
-    /// attack under the mark rule (`world/mark.rs`), made before the check.
+    /// A feint of the holder's fooled its foe (`world/skills/feint.rs`: it falls for it). A chosen
+    /// attack under the mark rule (`world/classes/mark.rs`), made before the check.
     Feint,
-    /// The holder killed its mark, the creature its openings are in (`world/mark.rs`; a wound
+    /// The holder killed its mark, the creature its openings are in (`world/classes/mark.rs`; a wound
     /// it dealt bleeding the mark to death counts). Raised beside `Kill`, before the mark is
     /// cleared.
     MarkKill,
@@ -219,7 +219,7 @@ pub struct ResourceDef {
     /// Whether it ends at zero: the holder loses it (and its bar) until it is granted again.
     pub ends_at_zero: bool,
     /// Whether its points are in one creature's guard (Openings): its holder's mark
-    /// (`Actor::mark`, `world/mark.rs`) is kept while it holds it, a chosen attack at another
+    /// (`Actor::mark`, `world/classes/mark.rs`) is kept while it holds it, a chosen attack at another
     /// living creature empties it, and it builds on nobody but the mark.
     pub marked: bool,
     /// What the player is told when it ends ("Your rage subsides."), if anything.

@@ -3,7 +3,7 @@
 //! the material of its main part, or that material's group, the first row of the type that
 //! matches deciding.
 //!
-//! The rule itself lives in `world/ruin.rs`: which casts ruin, what is spared, the draws, and
+//! The rule itself lives in `world/magic/ruin.rs`: which casts ruin, what is spared, the draws, and
 //! what the player is told. The file is optional: without it nothing is ruined.
 
 use super::{Content, ContentError, DamageTypeId, ItemClassId, MaterialId};

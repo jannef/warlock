@@ -1,4 +1,4 @@
-//! A haunted room's `haunt` (spec §7 "Special rooms", design §9.8; `world/haunt.rs`): while the
+//! A haunted room's `haunt` (spec §7 "Special rooms", design §9.8; `world/fixtures/haunt.rs`): while the
 //! player rests inside, at every full `every` of the clock a creature of `faction` of the floor's
 //! danger comes inside.
 

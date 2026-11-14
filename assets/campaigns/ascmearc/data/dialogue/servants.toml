@@ -1,4 +1,4 @@
-# An aristocrat's own servant (#1405; world/stipend.rs): the squire, chambermaid, or servant who
+# An aristocrat's own servant (#1405; world/classes/stipend.rs): the squire, chambermaid, or servant who
 # waits at Cēaptūn's Gæsthūs in an aristocrat's run, of the aristocrat's own race, and speaks in
 # that race's register (docs/dev/npcs.md "Speech by race and station"; a servant is no lord, so a
 # human one is a Cockney commoner). data/towns/ceaptun.toml names the npc for each race. Each

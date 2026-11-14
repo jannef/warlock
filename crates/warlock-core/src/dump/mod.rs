@@ -133,7 +133,7 @@ fn summary(world: &World) -> String {
         .filter(|h| *h != Hunger::NotHungry)
         .map_or(String::new(), |h| format!(" hunger {}", h.id()));
     let dazzled = if view.dazzled() { " dazzled" } else { "" };
-    // Averted eyes (`world/avert.rs`), as the status bar shows them.
+    // Averted eyes (`world/creatures/avert.rs`), as the status bar shows them.
     let averted = if view.averted() { " averted" } else { "" };
     // The allies with the player: on the level or in the retinue (spec §8 "Allies").
     let allies = match view.allies_with() {

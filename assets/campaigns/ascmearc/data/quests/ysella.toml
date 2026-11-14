@@ -2,7 +2,7 @@
 # Gimmwīc's binder wants a crystal guardian for the town's gem trade, and the only one to be had
 # keeps the hollow at the bottom of Meyn Bew, a pocket of the plane of earth under the town.
 # Asked, she opens the crystal portal beside her (the reveal of the town's hidden `meyn_bew`), and
-# the guardian is made on the crystal hollow's bed (`waits`, world/lure.rs). It follows whoever
+# the guardian is made on the crystal hollow's bed (`waits`, world/people/lure.rs). It follows whoever
 # stands beside it as they take the stairs, so the player leads it up four floors and out through
 # the portal; in Gimmwīc, with Ysella there, she binds it (`[quest.binding]`): for good at
 # peace, its spell circle on it, it walks to Kerensa's Stones and keeps to the corner by her

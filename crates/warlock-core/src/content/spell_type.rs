@@ -1,7 +1,7 @@
 //! What every spell of a damage type does beyond its damage (`[types]` in `data/spells.toml`, the
 //! spell types design `docs/design/spell-types-and-new-spells.md` §3, §4): the table and its
 //! checks. A type without an entry does nothing beyond damage; weapon blows never read it.
-//! `world/spell_type.rs` holds the rules.
+//! `world/magic/spell_type.rs` holds the rules.
 
 use super::spell::BurstIce;
 use super::{Content, ContentError, DamageTypeId, LightId, StatusId};
@@ -123,7 +123,7 @@ pub struct SpellType {
     /// The fire a burst leaves on its centre cell: its light, and the seconds it burns.
     pub fire: Option<(LightId, u32)>,
     /// The percent chance a single-target or line strike jumps to a creature beside the one it
-    /// harmed (`world/spell_arc.rs`).
+    /// harmed (`world/magic/spell_arc.rs`).
     pub arc: Option<u8>,
     /// Whether it strikes everyone standing in the body of water of a creature it harmed.
     pub conducts: bool,
@@ -138,7 +138,7 @@ pub struct SpellType {
     /// The creature tags immune to the type (`Content::load` lays it on their `resist`).
     pub immune_tags: Vec<String>,
     /// Whether it eats the gear of those it harms: a piece the player wears takes acid's item
-    /// damage (`world/corrode.rs`).
+    /// damage (`world/combat/corrode.rs`).
     pub corrodes: bool,
 }
 

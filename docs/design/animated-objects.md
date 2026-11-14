@@ -160,9 +160,9 @@ A family is the run of generated types of one tier. Four places see it, each one
 | Where | Read | Why |
 |---|---|---|
 | Danger draw (`content/danger.rs`) | a population line naming `animated_blade` becomes **one candidate** for the whole run (§10.3) | listing 16 levels as 16 candidates would weigh the tier 3–4 times a single type |
-| First kill (`world/experience.rs::earn_kill`) | `discovered.kills` keyed by the family's id, the line by its plural: "You learn something of animated blades." once, not 16 times | |
-| Kill quests and tag objectives (`world/quest.rs`) | a quest's `target = "animated_blade"` counts any member; a `tag:animated` objective lists families once ("animated candlesticks, ..., animated blades"), not 107 types | |
-| Wiki and bestiary tests (`xtask/src/wiki/`, `world/bestiary_tests.rs`) | one row per family, the per-level numbers in the tier's own table | |
+| First kill (`world/character/experience.rs::earn_kill`) | `discovered.kills` keyed by the family's id, the line by its plural: "You learn something of animated blades." once, not 16 times | |
+| Kill quests and tag objectives (`world/people/quest.rs`) | a quest's `target = "animated_blade"` counts any member; a `tag:animated` objective lists families once ("animated candlesticks, ..., animated blades"), not 107 types | |
+| Wiki and bestiary tests (`xtask/src/wiki/`, `world/creatures/bestiary_tests.rs`) | one row per family, the per-level numbers in the tier's own table | |
 
 ### 4.5 What each creature still carries, and where it is saved
 
@@ -435,7 +435,7 @@ inherits, and the gaps are follow-ups.
 | Stat raises (`Stat`: of the ox, of the lynx, ...) | yes | `Actor::effective_stats`: hit points, to hit, damage, Defence |
 | To hit, damage, extra damage, threat, crit, parry | yes | the attack profile (`Mods::local` and `Mods::worn`) |
 | Elemental riders (Flaming, Shocking, ...) | yes | the attack profile's riders: a flaming blade burns |
-| Attack speed, move speed | yes | `world/schedule.rs::cost_of`, for every actor |
+| Attack speed, move speed | yes | `world/turn/schedule.rs::cost_of`, for every actor |
 | Armour, Shield, MaxDex, Dodge, Deflection, Natural | yes | `Actor`'s Defence |
 | Protection | yes | `Stack::protection` → `Actor::protection` |
 | Resistances | yes | `Mods::resistances` → `Actor::resistances` |
@@ -683,13 +683,13 @@ besides the creature id. `progress` (dev): nothing new.
 | `creatures_follow_the_guideline` covers the generated types (no change: they are ordinary) | `content/experience.rs` |
 | `fingerprint_for` with and without the test world still agree for a real campaign | `content` tests |
 | the family candidate weighs by the clamped level and returns that member, out-of-depth too | `content/danger.rs` tests |
-| first kill, kill quests, and the tag objective count a family once | `world/experience` and `world/tag_tests.rs` |
-| `compose` is deterministic per stream; the body's material is drawn; slot lines follow `from`, `count`, and the two-handed rule; the weapon rank is set | `world/animated_tests.rs` |
+| first kill, kill quests, and the tag objective count a family once | `world/experience` and `world/creatures/tag_tests.rs` |
+| `compose` is deterministic per stream; the body's material is drawn; slot lines follow `from`, `count`, and the two-handed rule; the weapon rank is set | `world/creatures/animated_tests.rs` |
 | a panoply with a Flaming long sword burns; with "of the ox" hits harder; with a resistance affix takes less; a glowing ring lights it | same, via `fight` |
 | immunities: an animated creature is never poisoned, bleeding, or diseased; others are as before | same |
 | drops: with a fixed `drop/` stream, intact components fall whole (magic kept, unidentified); broken ones as pieces of their materials and a loose gem; nothing of paper; Salvager raises the share | same |
 | `break_up` counts, materials, gems, and the no-group case; `piece` names, weight, value, stacking | `object` tests |
-| stealing from one is refused, no time | `world/steal_tests.rs` |
+| stealing from one is refused, no time | `world/skills/steal_tests.rs` |
 | save round trip with an animated creature; a replay with one (`replay --create`/`--verify`) | `save` tests, CLI |
 | look mode names, the material word, and the gear line (household, blade, armour, panoply): text snapshot | `crates/warlock/src/ui/screen_snapshots.rs` |
 | no golden screenshot: a glyph and a colour are seen by dumps and text snapshots (A6's chromatic look is its own question, §15) | |
@@ -720,7 +720,7 @@ stays even.
 | `spec/07c-generation.md` "Danger levels" | family candidates in the draw |
 | `spec/03b-campaign.md` | the populations (Cealdhlāw, Fennmynster, Fyrdelf) |
 | `spec/07*` objects | household objects, the `piece` object, `break_up` |
-| `docs/dev/animated.md` (new topic) | generation (ids, order, the fingerprint), families and their four reads, `compose`, presentation, drops; it earns `content/animated.rs` and `world/animated.rs` |
+| `docs/dev/animated.md` (new topic) | generation (ids, order, the fingerprint), families and their four reads, `compose`, presentation, drops; it earns `content/animated.rs` and `world/creatures/animated.rs` |
 | `docs/dev/content.md` | generated creature types beside generated corpses: where they are numbered |
 | `docs/dev/objects.md` | `piece`, `break_up` |
 | `docs/dev/status-effects.md` | the `immune` field |

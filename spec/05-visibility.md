@@ -22,7 +22,7 @@ rate or animation.
   landed, until it has burned out; §8 "Ranged combat"), creatures that carry light, the
   light the player has ready in the Tool slot (a lantern, below), and the glow of a
   magic item an actor wears or wields (its brightest; a steady preset, §8 "Magic items").
-- **Carried lights** (#643; `world/lamp.rs`): the lantern is an item (`objects/lantern.toml`, a tool),
+- **Carried lights** (#643; `world/items/lamp.rs`): the lantern is an item (`objects/lantern.toml`, a tool),
   and an object with a `light` and a `slot` but no `burns` is a carried light: ready in the Tool
   slot and lit it gives its preset; in the pack or on the ground it gives none. Its mode is item
   state, saved with the stack wherever it goes (`light`, left out while unlit): unlit, lit, or
@@ -192,7 +192,7 @@ rate or animation.
     special room does, on its cells (§7 "Special rooms": 25 °C warmer or colder than the level,
     `WorldState::temperature_at`, the one place a cell's temperature is decided), and the
     status bar shows the temperature of the player's cell.
-- **Ice** (`warlock-core/src/ice.rs`, rules in `world/ice.rs`; M26):
+- **Ice** (`warlock-core/src/ice.rs`, rules in `world/levels/ice.rs`; M26):
   - **Freezing**: every cell of water that freezes (terrain with a `freeze` table, §7: still
     water below 0 °C at full pace; running water only below −6 °C, at 40 %) has an ice
     thickness, kept sparsely with its level (only cells with ice; in micrometres, so slow
@@ -296,7 +296,7 @@ rate or animation.
 
   The scenario sets the starting profile. The dev action `SetVision` switches it; it takes no game
   time but is recorded in replays like any action. Infravision is deferred.
-- **Effective eyes** (`world/eyes.rs`, `WorldState::eyes`; #239): the profile is the base; the
+- **Effective eyes** (`world/turn/eyes.rs`, `WorldState::eyes`; #239): the profile is the base; the
   player's talents change it (§8 "Talents": Night eyes halves the threshold, Dark adaptation adds 2
   cells of darkvision, to darkvision or low-light eyes), and perception reads the result (keeping
   the base's id and name). Creatures keep their types' profiles.

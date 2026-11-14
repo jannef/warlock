@@ -1,5 +1,5 @@
 //! The checks of a branch's bosses (spec §7 "The endless branch", "The Pits";
-//! `world/layer_boss.rs`, `world/pit.rs`): an endless branch's layer bosses, each a unique type
+//! `world/levels/layer_boss.rs`, `world/levels/pit.rs`): an endless branch's layer bosses, each a unique type
 //! that leaves an everlasting, profane corpse, and a portal branch's warden, of any type (every Pit has its own); each lair a dungeon vault of
 //! the branch's campaign (or shared) that places its boss once, stamps nowhere else (it is
 //! pinned), and marks the hidden stairs, `>`, exactly where the floor leads down (a Pit's last
@@ -89,7 +89,7 @@ impl Content {
 
     /// Whether creature type `c` is some branch's boss (a layer boss, a Pit's warden): it keeps
     /// to its lair
-    /// (`world/stair_followers.rs`).
+    /// (`world/levels/stair_followers.rs`).
     pub fn is_layer_boss(&self, c: CreatureId) -> bool {
         (self.dungeons.values()).any(|d| d.bosses.iter().any(|b| b.creature == c))
     }

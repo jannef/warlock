@@ -6,7 +6,7 @@
 //! colour that always give it; the loader makes one wall terrain per vein (`vein_<metal>`, a copy
 //! of the `[veins]` table's `wall`), and `mapgen/vein.rs` lays them.
 //!
-//! The rule itself lives in `world/mine.rs`. The file is optional: without it nothing is mined.
+//! The rule itself lives in `world/crafting/mine.rs`. The file is optional: without it nothing is mined.
 
 use super::{ContentError, MaterialId, ObjectId, SkillId, TerrainId};
 use crate::color::Rgb;

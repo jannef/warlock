@@ -12,7 +12,7 @@
 //! its own. How many pieces some grams of a material make is [`count_for`].
 //!
 //! [`break_up`] is what an item falls to when it breaks (an animated thing's broken component,
-//! `world/animated.rs`; later sundering and fire): for each of its resolved parts, in part order,
+//! `world/creatures/animated.rs`; later sundering and fire): for each of its resolved parts, in part order,
 //! a gem gives its loose gem, a material with a group pieces of it by weight, and a material
 //! without one (paper, wax, flesh) nothing. Its magic is lost. No draws.
 

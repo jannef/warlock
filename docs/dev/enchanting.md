@@ -48,9 +48,9 @@ after its material, ornament, wand rung, and (for creature gear) its condition:
   item.
 - Creature gear makes its magic pieces with `loot::make_as_unfinished`; `gear::finish` trims the
   whole pack from the gear stream (`gear/<level id>` or `gear/<actor id>`) after
-  `gear_condition::apply` (its own `condition/<key>` stream), all three in `gear::equip`, the one
+  `gear::condition::apply` (its own `condition/<key>` stream), all three in `gear::equip`, the one
   place gear's last steps are written (#1494), which `gear::arm` and
-  `world/travel.rs::placed_gear` call; the balance probe writes them out itself. So a Fine piece keeps a second affix and
+  `world/levels/travel.rs::placed_gear` call; the balance probe writes them out itself. So a Fine piece keeps a second affix and
   a damaged one is trimmed to its plain capacity.
 - An item that fits draws nothing, so its stream is as before; a trimmed one shifts what follows
   on that stream (the next find of a hoard, the next piece of a creature's gear).
@@ -111,8 +111,8 @@ line after the affixes, before a unique's power and lore, only for a holder of E
 value above 0); `PerceptionView::appraisal` is the one read: `It can bear two enchantments.` for a plain item
 or one whose magic is unidentified (the count of its affixes stays hidden), `It bears one
 enchantment and could bear one more.`, `It bears all it can.`, `It bears more than its make should
-hold.` Everyone else is never told (`world/appraise_tests.rs`,
-`world/craftsperson_tests.rs::eye_for_the_make_tells_the_capacity_without_appraise`).
+hold.` Everyone else is never told (`world/skills/appraise_tests.rs`,
+`world/crafting/craftsperson_tests.rs::eye_for_the_make_tells_the_capacity_without_appraise`).
 
 The dumps show the truth: the `inventory` layer adds `(holds 1/2)` (affixes held / capacity) to
 every base item, and the `actors` layer's items (`Stack::describe_truth`) the same.
@@ -169,8 +169,8 @@ refuses an unknown one), `stat = "willpower"` (every enchanting check's stat; #1
 
 A crystal is consumed as food is eaten and a potion drunk: it is in the Consume list (`e`,
 `ObjectList::Eat`, whose filter takes `PerceptionView::is_crystal` beside food and drinks), and
-the action is `Action::Eat` (`eat:b`, `eat:floor:a`): `world/eat.rs::eat` hands a crystal to
-`world/crystal.rs::consume_crystal` before it looks for a drink or food. No ability, no screen of
+the action is `Action::Eat` (`eat:b`, `eat:floor:a`): `world/health/eat.rs::eat` hands a crystal to
+`world/crafting/crystal.rs::consume_crystal` before it looks for a drink or food. No ability, no screen of
 its own, no hunger needed. One crystal of the stack (from the pack or the pile underfoot), a
 turn of `ActionKind::Drink`, no check, no draw: `[consume] mana` (to the maximum, as a potion's
 mana; never refused for a full pool), `train_stat_times(StatUse::Consumed, None, [consume]
@@ -183,7 +183,7 @@ crystals). The rare materials are no crystals: the list leaves them out, and `ea
 
 ## Salvage's affix checks
 
-`world/crystal.rs::catch_magic`, called by `world/salvage.rs::salvaged` before its material
+`world/crafting/crystal.rs::catch_magic`, called by `world/crafting/salvage.rs::salvaged` before its material
 checks (so its draws come first; nothing changes until all are drawn). A magic or rare item,
 **identified or not** (it is gone at once, so what its crystals' colours tell matters to no one;
 the owner, 2026-11-13): one check per affix in the item's order, `combat::roll_natural` (two gameplay draws) +
@@ -216,7 +216,7 @@ reach `enchant_level` (`Effect::EnchantLevel`, `[[0, 1], [110, 12], [200, 12]]`,
   loader refuses an `enchant` kind on another `use` or missing on `enchant`, a kind twice,
   `crystals` above 3 or on another `use`, a kind that rolls (all but Unbind) with none, and
   Unbind with any. Imbue's file gives 3.
-- **The rules** (`world/enchant.rs`; `Spent::Enchant(Enchanting)`, dispatched by one line each
+- **The rules** (`world/crafting/enchant.rs`; `Spent::Enchant(Enchanting)`, dispatched by one line each
   from `World::start_craft`, `craft::lack`, `craft::takes`, `craft_make::craft_steps`, and
   `craft_plan`): `craft:kindle:ITEM,CRYSTAL`, `craft:quicken:ITEM,CRYSTAL`, `craft:recast:ITEM,CRYSTAL`,
   `craft:imbue:ITEM,C1,C2,C3`, `craft:ennoble:ITEM,CRYSTAL`, `craft:unbind:ITEM`.
@@ -299,7 +299,7 @@ reach `enchant_level` (`Effect::EnchantLevel`, `[[0, 1], [110, 12], [200, 12]]`,
 
 ## Seals and the rare materials
 
-E6 (#1432; design §9; `world/seal.rs`, its tests `world/seal_tests.rs`).
+E6 (#1432; design §9; `world/crafting/seal.rs`, its tests `world/crafting/seal_tests.rs`).
 
 - **The picks** (`seal::slots`): the item, a crystal for each the recipe takes, then three seal
   slots (none for Unbind), then Recast's affix kept. A seal's pick is a family's index in
@@ -365,7 +365,7 @@ crystallises too: the effect is the spell's.
   `spell_strikes` does not know the spell.
 - **The mark**: `spell_attack` sets `World::glassing` (not saved) to the target around its
   `spell_strikes`, whoever casts it (a reflected one marks the caster it turns on). A kill of that
-  blow reaches `fight.rs::creature_dies`, which asks `World::crystallise` (`world/crystal.rs`)
+  blow reaches `fight.rs::creature_dies`, which asks `World::crystallise` (`world/crafting/crystal.rs`)
   before anything else of the body: a type with a corpse (`Content::corpse_of`), not
   `everlasting` (a layer boss always leaves its corpse, #1624), no animated thing, and a colour (`Crystals::colour_of`) leaves `yield_at(level)` crystals of its colour (no
   draw), no corpse, and no `drops_of` stock (as a statue leaves none); a creature tagged `[rare] tag`
@@ -380,21 +380,21 @@ crystallises too: the effect is the spell's.
 
 ## Tests
 
-`world/seal_tests.rs` (a seal shuts its family on many fates; each costs a crystal of the colour
+`world/crafting/seal_tests.rs` (a seal shuts its family on many fates; each costs a crystal of the colour
 and half an hour; every seal refusal with no time; the seal steps narrowed by the crystal, the item,
 and the seals before; a rare's Quicken with and without a heart-crystal, made, failed, and at
 capacity; Recast keeping an affix with a soul-fetter, its refusals, the affix step and the plan's
 words, a failure spending the fetter; Imbue's seals paid by the first crystal of their colour; a
-replay). `world/enchant_tests.rs` (the band; the three recipes' data; Kindle of every colour on many
+replay). `world/crafting/enchant_tests.rs` (the band; the three recipes' data; Kindle of every colour on many
 fates holding `Magic::check` and the colour rule; a failure and a warp; Quicken's lacking kind;
 Unbind made and failed; a stack of arrows at once; the reach and a deeper item's level; the
 steps, the plan, and the rows' lacks; every refusal with no time; the hour and the mark; a
 replay). `content/crystal_tests.rs` (the owner's order and two rules, the yield, every affix's colour and
-word, every creature's colour by its first tags, the loader's refusals), `world/crystal_tests.rs`
+word, every creature's colour by its first tags, the loader's refusals), `world/crafting/crystal_tests.rs`
 (consuming through `eat`: mana to the maximum, the marks, the step and its diminishing, from the
 floor, the rare materials refused with no time, a replay; salvage: a crystal per affix by its
 check, unidentified magic's the same by the same fate with nothing named, Enchanting's mark, the rare materials' chance at item level 10 and none
-below), `world/soulglass_tests.rs` (a kobold's green crystal and nothing else, Leech's corpse,
+below), `world/crafting/soulglass_tests.rs` (a kobold's green crystal and nothing else, Leech's corpse,
 the yield by level and the gorgon's heart-crystal, a creature of no colour dying as ever, the rare
 material's chance from level 15 and none below, the witch's grant at 16).
 
@@ -405,7 +405,7 @@ every loot path at item levels 1 to 20 and every creature's gear after its condi
 capacity, and `hand_made_items_are_never_trimmed`. `magic/shares_tests.rs` prints the share of
 rares the trim leaves at each affix count, and holds deep rares to keeping more (#1436); the
 `[[depth]]` rows' loader checks and `Odds::deeper` are tested in `content/gear_condition.rs`, loot's
-make in `world/gear_condition_tests.rs`; `magic/describe` tests the capacity line.
+make in `gear/condition_tests.rs`; `magic/describe` tests the capacity line.
 
 ## The measured shares
 

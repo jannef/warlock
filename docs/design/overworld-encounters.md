@@ -5,12 +5,12 @@
 Design document for the owner's review (2026-11-01, #793). Written against `origin/main` at
 db88ffa3 (spell circles C3). Nothing here is implemented; §12 cuts it into issues. It builds on
 what is there: the overworld and its generated local areas (`docs/dev/overworld.md`,
-`world/travel.rs`, `mapgen/local/`), surprise, slipping past, and the initiative check
-(`docs/dev/surprise.md`, `world/surprise.rs`, `world/slip.rs`, `world/ambush.rs`), checks
-(`check.rs`), the danger levels' draw (`content/danger.rs`, `world/spawn.rs`), skills and their
+`world/levels/travel.rs`, `mapgen/local/`), surprise, slipping past, and the initiative check
+(`docs/dev/surprise.md`, `world/combat/surprise.rs`, `world/combat/slip.rs`, `world/combat/ambush.rs`), checks
+(`check.rs`), the danger levels' draw (`content/danger.rs`, `world/creatures/spawn.rs`), skills and their
 marks (`docs/dev/skills.md`), the energy scheduler (`docs/dev/time.md`), the day's phases and the
 weather (`daylight.rs`, `weather.rs`), quests and revealed locations (`docs/dev/quests.md`,
-`world/reveal.rs`), the RNG streams (`docs/dev/mapgen.md`, `rng.rs`), and the one dialog
+`world/levels/reveal.rs`), the RNG streams (`docs/dev/mapgen.md`, `rng.rs`), and the one dialog
 (`docs/dev/screens.md`). Every number is data and hidden in the game; the wiki states it (the
 owner's rule: the game is vague, the wiki is accurate).
 
@@ -75,13 +75,13 @@ during the scenario (a quest stage, a revealed place, time passing); start posit
 
 | Part | Today | Used for |
 |---|---|---|
-| An overworld step | `World::player_moves` (`world/travel.rs`): the step's price is the terrain's `travel_minutes` (`LevelState::step_price`, `World::step_price` with Survival's `travel` and the talents' `travel_percent`); `WorldState::overworld_step` keeps the direction | the roll's hook (one line after the move), the time that scales the chance, the arrival side |
-| Local areas | `Content::local_area(campaign, local:x,y)` says whether a cell has one; `World::visit` generates it from `map/local:x,y`; `enter_local_area` arrives by `mapgen::local::arrival(side)`; `LevelState::exit` returns to the cell; `world/quick_leave.rs` refuses `<` with hostiles about | the fight's level, the arrival cell, the way out |
+| An overworld step | `World::player_moves` (`world/levels/travel.rs`): the step's price is the terrain's `travel_minutes` (`LevelState::step_price`, `World::step_price` with Survival's `travel` and the talents' `travel_percent`); `WorldState::overworld_step` keeps the direction | the roll's hook (one line after the move), the time that scales the chance, the arrival side |
+| Local areas | `Content::local_area(campaign, local:x,y)` says whether a cell has one; `World::visit` generates it from `map/local:x,y`; `enter_local_area` arrives by `mapgen::local::arrival(side)`; `LevelState::exit` returns to the cell; `world/levels/quick_leave.rs` refuses `<` with hostiles about | the fight's level, the arrival cell, the way out |
 | Unaware, surprise, the slip | `World::unaware` (one definition), `World::startle` (the one place anyone is surprised: the initiative check, Surprised on a failure, Hair trigger), `Mind::missed` and `World::slipped_past` (a creature slipped past is unaware until `end_slip`: hurt, or the player steps into its light; lasts `[slip] lasts_turns` 60) | ambush (`missed` on the party), ambushed (`startle` on the player) |
 | Checks | `check::check(rng, modifier, difficulty)`: 2d12 + modifier reaches the difficulty, a natural 2 fails, 24 succeeds; two gameplay draws; `check::ways` for the wiki | the two lookouts and evade |
-| Skills | Spot (`spot`, passive noticing), Stealth (`quiet`, `slip`), Survival (`travel`, `forage`), Listen (`hearing`); creature types may carry `skills` (the footpad's `stealth = 25`); each benefit is read in one place (`docs/dev/skills.md`) | new benefits `lookout` (Spot, Survival), `stalk` (Stealth), `evade` (Survival), each read in `world/encounter.rs` only |
+| Skills | Spot (`spot`, passive noticing), Stealth (`quiet`, `slip`), Survival (`travel`, `forage`), Listen (`hearing`); creature types may carry `skills` (the footpad's `stealth = 25`); each benefit is read in one place (`docs/dev/skills.md`) | new benefits `lookout` (Spot, Survival), `stalk` (Stealth), `evade` (Survival), each read in `world/levels/encounter.rs` only |
 | Danger draws | `danger::draw(rng, own, generic, danger, odds)` with `Content::candidates`, `level_weight` (4 at D and D−1, 2 at D−2, D−3, 1 down to D−8) | a `draw` entry's party |
-| The scheduler | energy per actor (`WorldState`), the player acts at energy ≥ 0, others in time order (`world/schedule.rs`) | the head start: one action's debt on the side caught out |
+| The scheduler | energy per actor (`WorldState`), the player acts at energy ≥ 0, others in time order (`world/turn/schedule.rs`) | the head start: one action's debt on the side caught out |
 | Day, weather | `daylight::phase(time)` (Day, Twilight within `TWILIGHT_HALF` of 06:00 and 18:00, Night); `weather::blend`/`conditions` give the weather over the overworld; `WeatherDef::sight` already shortens overworld sight by rain | the phase factor, the concealment terms |
 | Regions | `LevelTemplate::region_at(pos)`, the status bar's names | a table's `regions` condition |
 | Quests, reveals | `Quests::record(id)` (stage, completed), `WorldState::revealed` | `quest_active`, `quest_done`, `revealed` conditions |
@@ -95,7 +95,7 @@ The deferred line "no wandering encounters now" (campaign design §9.1; the over
 
 ### 4.1 The hook
 
-One line at the end of the overworld branch of `World::player_moves`, after the step's events and before the step's price is returned: `self.encounter_roll(step_seconds, events)` in a new `world/encounter.rs`. It runs only when
+One line at the end of the overworld branch of `World::player_moves`, after the step's events and before the step's price is returned: `self.encounter_roll(step_seconds, events)` in a new `world/levels/encounter.rs`. It runs only when
 
 - the level is `LevelKind::Overworld`,
 - the destination cell has a local area (`Content::local_area` is `Some`: a location cell, the pass, a bridge's water, nothing there),
@@ -156,7 +156,7 @@ Two independent checks, `check::check` on the gameplay stream, made as the entry
 
 `[checks]` in `data/encounters.toml`: `difficulty = 13`, `cover = { road = 0, plains = 0, grassland = 1, hills = 2, forest = 2, dense_forest = 4, swamp = 3 }`, `night = 3`, `twilight = 1`, `rain = 1`, `heavy_rain = 2`, `light = 4`. Burden adds nothing: the clatter of a loaded pack is the footsteps rule, which the overworld does not run (spec §5: "the overworld is silent").
 
-Why Intelligence and not Willpower: the passive search that notices a secret door in passing is an Intelligence check (`world/search.rs::notice_hidden`), and a lookout is the same noticing; one stat for "noticing" keeps the wiki's story short. Why the night counts against a human but not a goblin: 238 of 294 creature types see in the dark (surprise design §3.4), and the owner's "time of day affects encounters" should mean what it does in the fiction: the night is theirs.
+Why Intelligence and not Willpower: the passive search that notices a secret door in passing is an Intelligence check (`world/skills/search.rs::notice_hidden`), and a lookout is the same noticing; one stat for "noticing" keeps the wiki's story short. Why the night counts against a human but not a goblin: 238 of 294 creature types see in the dark (surprise design §3.4), and the owner's "time of day affects encounters" should mean what it does in the fiction: the night is theirs.
 
 Odds (2d12 + modifier reaches the difficulty; `check::ways`): needing 9 is 81 %, 11 69 %, 13 54 %, 15 38 %, 17 25 %, 19 15 %, 21 7 %.
 
@@ -319,9 +319,9 @@ The "changes during the scenario" cases the owner named are each a row: a quest 
 
 ## 8. Peaceful encounters
 
-Proposed, small. The owner's four outcomes are a hostile party's; a peaceful entry has no checks and no outcomes, only a question: **"Hail them"** opens the area with the party at `fight` range, neutral, the lead given the entry's `npc` dialogue so `chat` and `ask` work as with any person (`docs/dev/npcs.md`), and **"Pass by"** is nothing (no time: the step's is spent). A **wildlife** entry is the same with "Hunt them" / "Let them be": deer at `fight` range in a glade, food for a hungry traveller (`docs/dev/hunger.md`), Beast-friend's business as always (`world/beast_friend.rs`).
+Proposed, small. The owner's four outcomes are a hostile party's; a peaceful entry has no checks and no outcomes, only a question: **"Hail them"** opens the area with the party at `fight` range, neutral, the lead given the entry's `npc` dialogue so `chat` and `ask` work as with any person (`docs/dev/npcs.md`), and **"Pass by"** is nothing (no time: the step's is spent). A **wildlife** entry is the same with "Hunt them" / "Let them be": deer at `fight` range in a glade, food for a hungry traveller (`docs/dev/hunger.md`), Beast-friend's business as always (`world/allies/beast_friend.rs`).
 
-The Ascmearc's first: a **pedlar** (`campaigns/ascmearc/data/creatures/pedlar.toml`, faction `merchants`, human, level 3, a pack of small wares as `carry`, a dialogue with two topics: `rumours` with a `route` to Cealdhlāw and the ford (the rumoured ways, `world/rumour.rs`: his telling marks the player's map as day sight along the road would), and `news` (a rotation of lines about the roads: the design's register for commoners), and a `mutter`), **villagers** on the roads of the vale (the existing `villager`, faction `peaceful`, a rotation of greetings), and **deer**.
+The Ascmearc's first: a **pedlar** (`campaigns/ascmearc/data/creatures/pedlar.toml`, faction `merchants`, human, level 3, a pack of small wares as `carry`, a dialogue with two topics: `rumours` with a `route` to Cealdhlāw and the ford (the rumoured ways, `world/people/rumour.rs`: his telling marks the player's map as day sight along the road would), and `news` (a rotation of lines about the roads: the design's register for commoners), and a `mutter`), **villagers** on the roads of the vale (the existing `villager`, faction `peaceful`, a rotation of greetings), and **deer**.
 
 Not proposed: a travelling shop. Shops are level fixtures with a floor and a keeper's post (`docs/dev/shops.md`); a cart on the road would need a shop without a floor, a new thing for one encounter. The pedlar talks; if the owner wants him to trade, that is a shop-design question (§14 Q7).
 
@@ -403,7 +403,7 @@ The spec gains "Overworld encounters" in spec/07c-generation.md after "Leaving a
 | System | What encounters read of it | Its talents that act, unchanged |
 |---|---|---|
 | `travel` (Overworld travel and local areas) | the roll's time, the area, evade | Long strider, Pathfinder, Trailblazer, Swift tracker, Trade routes: less time, less exposure (§4.2) |
-| `awareness` | the lookout; `startle` when ambushed | Wary (+4 on the initiative check), Cool head, Hair trigger, Stalker's eye (the ambushed party's mark); **Alert widened**: its `notice` (2) is added to the player's lookout, one more read of `TalentMods::notice` in `world/encounter.rs`, and its `systems` gain `awareness` (its description already says "you notice hidden things in passing") |
+| `awareness` | the lookout; `startle` when ambushed | Wary (+4 on the initiative check), Cool head, Hair trigger, Stalker's eye (the ambushed party's mark); **Alert widened**: its `notice` (2) is added to the player's lookout, one more read of `TalentMods::notice` in `world/levels/encounter.rs`, and its `systems` gain `awareness` (its description already says "you notice hidden things in passing") |
 | `stealth` | the player's stalk | Camouflage and the footstep talents touch noise, which the overworld does not run; none reads the stalk, and none is added |
 | `surprise` / `sneak_attack` | an ambush is a won slip | Ambusher, Improved sneak attack, Master thief, Patient blade, Anatomist, Long reach: the thief's and ranger's ambush is where they shine |
 | `factions` | wildlife and peaceful entries | Beast-friend |
@@ -431,10 +431,10 @@ The owner adopted #776's rule 6: an overworld-only talent is niche and is not mi
 
 | Slice | Issue | What it touches | Depends on |
 |---|---|---|---|
-| **E1 Rules** | encounters: the roll, the checks, the pending choice, the positions | `warlock-core`: `content/encounter.rs` (the rules file, the tables, the load checks), `Content::encounter_tables`, `rng.rs::encounters`, `world/encounter.rs` (`encounter_roll`, the lookouts, `choose`, `open_area` with the positions, evade, `refuse_pending`), one line in `travel.rs::player_moves`, `Action::Encounter`, `Event::Encounter`, the replay text (`encounter:`, `meet:`), `WorldState` fields, the three skill benefits (`Effect::{Lookout, Stalk, Evade}`, `Use::Lookout`) on Spot, Survival, Stealth in `data/skills.toml`, Alert's extra read and tag, `PerceptionView::encounter`, the dumps (§10.2), `data/encounters.toml`; a fixture campaign's tables in tests; `world/encounter_tests.rs` (§9.3), `content/encounter.rs` tests; `docs/dev/encounters.md`, CLAUDE.md's action text | — |
+| **E1 Rules** | encounters: the roll, the checks, the pending choice, the positions | `warlock-core`: `content/encounter.rs` (the rules file, the tables, the load checks), `Content::encounter_tables`, `rng.rs::encounters`, `world/levels/encounter.rs` (`encounter_roll`, the lookouts, `choose`, `open_area` with the positions, evade, `refuse_pending`), one line in `travel.rs::player_moves`, `Action::Encounter`, `Event::Encounter`, the replay text (`encounter:`, `meet:`), `WorldState` fields, the three skill benefits (`Effect::{Lookout, Stalk, Evade}`, `Use::Lookout`) on Spot, Survival, Stealth in `data/skills.toml`, Alert's extra read and tag, `PerceptionView::encounter`, the dumps (§10.2), `data/encounters.toml`; a fixture campaign's tables in tests; `world/levels/encounter_tests.rs` (§9.3), `content/encounter.rs` tests; `docs/dev/encounters.md`, CLAUDE.md's action text | — |
 | **E2 UI** | the dialog and the messages | `crates/warlock`: `input.rs::encounter_dialog` from the view in `Game::applied` and on load, the labels; `ui/screen_snapshots.rs` cases `encounter-drop`, `encounter-met`, `encounter-peaceful` (text snapshots; no golden: a dialog is text); `docs/dev/screens.md` one line | E1 |
-| **E3 Content** | the Ascmearc's tables, the pedlar, the wiki, the spec | `campaigns/ascmearc/data/encounters/*.toml` (§7.4), `campaigns/ascmearc/data/creatures/pedlar.toml` and its dialogue, `villager`'s rotation; `xtask/src/wiki/encounters.rs` and `wiki/src/encounters.md`, `SUMMARY.md`, `TERMS.md`; spec/07c-generation.md; `world/ascmearc_tests.rs` (every table's regions exist, a replay through one forced encounter of each outcome, the level-1 road rate) | E1 (E2 for the snapshots of its texts) |
-| **E4 Later** | encounters while resting on the overworld (§14 Q3), a peaceful party's trade (Q7), a `quest_variant` condition (Q6) if not in E1 | `world/rest.rs` one hook, `world/encounter.rs` | E1, the owner's answers |
+| **E3 Content** | the Ascmearc's tables, the pedlar, the wiki, the spec | `campaigns/ascmearc/data/encounters/*.toml` (§7.4), `campaigns/ascmearc/data/creatures/pedlar.toml` and its dialogue, `villager`'s rotation; `xtask/src/wiki/encounters.rs` and `wiki/src/encounters.md`, `SUMMARY.md`, `TERMS.md`; spec/07c-generation.md; `world/campaigns/ascmearc_tests.rs` (every table's regions exist, a replay through one forced encounter of each outcome, the level-1 road rate) | E1 (E2 for the snapshots of its texts) |
+| **E4 Later** | encounters while resting on the overworld (§14 Q3), a peaceful party's trade (Q7), a `quest_variant` condition (Q6) if not in E1 | `world/turn/rest.rs` one hook, `world/levels/encounter.rs` | E1, the owner's answers |
 
 E1 and E3 add saved state and actions (E1) and content (E3): two PRs at once at most, by the integrator's rule. Each PR runs the full check; E1's snapshots are the dumps' insta files; E2's are text snapshots; no golden anywhere (nothing here is the GPU's).
 
@@ -461,7 +461,7 @@ These override the sections above wherever they differ.
 |---|---|---|
 | Q1 | Rates as written for now; tuned in data later | nothing |
 | Q2 | Pass by is nothing | nothing |
-| Q3 | **Yes**: resting on the overworld rolls encounters, and so does **foraging** (the Forage ability, `world/forage.rs`) | the E4 slice: both hooks, the §14 Q3 default (a quarter of the landscape's rate per hour; a resting player's lookout by Listen's `hearing`; a forager's as a traveller's) |
+| Q3 | **Yes**: resting on the overworld rolls encounters, and so does **foraging** (the Forage ability, `world/skills/forage.rs`) | the E4 slice: both hooks, the §14 Q3 default (a quarter of the landscape's rate per hour; a resting player's lookout by Listen's `hearing`; a forager's as a traveller's) |
 | Q4 | One action of debt when ambushed | nothing |
 | Q5 | **No level gates.** Some entries *might* be retired as the player rises | `when.level` keeps only `max` (an entry or table that stops at a level); every `level.min` of §7.2 and §7.4 is dropped |
 | Q6 | The rolled quest's variant condition goes wherever it is cheapest | the E3 content slice, where it is first used |
@@ -473,7 +473,7 @@ These override the sections above wherever they differ.
 **Escape works as in ADOM** (the owner):
 
 - **The player's distance from the area's edge depends on how advantaged the encounter is.** The ambushed player starts in the middle of the area with the party around them; a player who lies in wait starts near the edge they came from; a chosen fight or a met party starts between the two; a failed evade nearer the middle than a chosen fight. The distances are data (`[positions]` in `data/encounters.toml`, the player's cells from the arrival edge per outcome, the party's placed relative to the player as §6.1 says).
-- **The quick leave (`<`) is refused with enemies about**, as it is today (`world/quick_leave.rs`).
+- **The quick leave (`<`) is refused with enemies about**, as it is today (`world/levels/quick_leave.rs`).
 - **Walking off the area's edge is refused while an enemy is within 3 cells** of the player ("They are too close to slip away.", no time). This is a rule of every local area, not only of encounters' (the cheapest and the most consistent); 3 is data.
 
 ### Revised slices
@@ -484,5 +484,5 @@ These override the sections above wherever they differ.
 | **E1 Rules** | §13's E1, with Q5 (`level.max` only), Q9 (no leaving the choice), Q10 (the known party), and the edge distances by outcome | — |
 | **E2 UI** | §13's E2; the dialog has no cancel | E1 |
 | **E3 Content** | §13's E3 without level gates; the variant condition (Q6) | E1, E2 |
-| **E4 Resting and foraging** | the Q3 hooks in `world/rest.rs` and `world/forage.rs` | E1 |
+| **E4 Resting and foraging** | the Q3 hooks in `world/turn/rest.rs` and `world/skills/forage.rs` | E1 |
 | **E5 The pedlar's offer and three uniques** | Q7 | E1, E2, E3 (the pedlar) |

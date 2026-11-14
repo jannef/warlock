@@ -32,7 +32,7 @@ Per-tribe notes:
 Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
 rules it implements are in spec/08b-creatures.md. Keep it current with the code, as CLAUDE.md says.
 
-Stair followers (spec §8 "Stair followers", #985) live in `world/stair_followers.rs`, whose
+Stair followers (spec §8 "Stair followers", #985) live in `world/levels/stair_followers.rs`, whose
 module docs are the rules: `take_stairs` asks `stair_followers` before `travel` (awareness reads
 the level being left) and `followers_arrive` after. A follower crosses through
 `travel.rs::cross_to`, the allies' way, and keeps its `Mind` with `last_seen` set to the player's
@@ -45,7 +45,7 @@ behind and goes on if it came. A den's sleepers don't follow until woken, a shop
 hauntings keep no ids, so losing a guardian to the stairs changes nothing there.
 
 Auras, innate statuses, and cries (#1128, design `docs/design/monster-dread.md` §5.4, §9) live in
-`world/aura.rs`, whose module docs are the rules, with the data in `content/aura.rs`
+`world/creatures/aura.rs`, whose module docs are the rules, with the data in `content/aura.rs`
 (`[creature.aura]`, `innate`, `cry`; `CreatureDef::{aura, innate, cry}`). Two lines in
 `ai.rs::creature_turn`: `aura_turn` as the turn starts (after the slumber and coarse-turn
 returns, before `decide`; it puts the innate statuses back first) and `cry` beside `mutter` once
@@ -66,7 +66,7 @@ kept beast. Perception copies it to `SeenActor::grade`; look mode puts the word 
 the `actors` dump says `; grade WORD`, the JSON `grade`. The tests are `grade_tests.rs` (the
 draw's odds and determinism, the reads, the roster of the ungraded, saves and hash, the dumps).
 
-The unseen (#1132; `docs/design/monster-dread.md` §5.10, §5.11) live in `world/unseen.rs`, whose
+The unseen (#1132; `docs/design/monster-dread.md` §5.10, §5.11) live in `world/creatures/unseen.rs`, whose
 module docs are the rules, and `content/unseen.rs` (the data). Per type: `shadowy` (unseen on a
 cell dim to the player's eyes, `VisionProfile::dim`: under twice its threshold, darkvision or
 not, unless beside them), `invisible` (`invisible = true`, innate: the invisible stalker; or
@@ -102,7 +102,7 @@ player but for the two story feuds, Seelie and wrathful fey against the Unseelie
 against devils, #612, the tribes' old feuds kept as comments; a level that wants a brawl gives
 one side a faction of its own by a legend override, as the arena's rats are `arena_rats`) and per creature type
 `faction`, `vision`, `sight`, `combat` (`melee`/`ranged`/`caster`/`dragon`), `range`, `opens_doors`, `lurks`
-(unharmed, it waits where it stands for a hostile it sees to come beside it; `world/lurk.rs`, one
+(unharmed, it waits where it stands for a hostile it sees to come beside it; `world/combat/lurk.rs`, one
 branch on `ai.rs::fight`'s plan; the meenlock and the barrow spider),
 `alignment` and `race` (`docs/dev/alignment.md`; read a creature's with `Actor::nature`, never the
 type's) (`content/creature.rs`, checked in `content/load_creatures.rs`). Its `tags` (`content/tag.rs`, #441) are plain singular
@@ -115,10 +115,10 @@ one file per creature named by its id (`kobold.toml`; the field documentation is
 `Content::stance(creature, creature)`, `World::stance(actor, actor)`, and for presentation only
 `PerceptionView::stance(seen actor)` (look mode's "(hostile)"). Between the player and a creature,
 the Beast-friend talent makes `animal` factions neutral until the player attacks one of the type
-(`world/beast_friend.rs::befriended`, read by `World::stance`, the AI's `nearest_hostile_in_sight`,
-and `PerceptionView::stance`; `docs/dev/progression.md`). The AI is `world/ai.rs`
+(`world/allies/beast_friend.rs::befriended`, read by `World::stance`, the AI's `nearest_hostile_in_sight`,
+and `PerceptionView::stance`; `docs/dev/progression.md`). The AI is `world/creatures/ai.rs`
 (look → fight → search the last seen spot → look into the newest unseen noise → back to the post →
-patrol), paths `world/path.rs` (A*, fixed tie-breaks), and per-creature memory `Mind` on `Actor`
+patrol), paths `world/creatures/path.rs` (A*, fixed tie-breaks), and per-creature memory `Mind` on `Actor`
 (saved, hashed; its `noticed` is the player's half of awareness, set by perception, not the AI:
 docs/dev/surprise.md; its `missed`, the turn the player slipped past it, is set at the look by
 `slip::looks_at`, the AI's one random draw, docs/dev/surprise.md). Creature sight is `sight.rs`: the player's rules computed per creature, only for
@@ -150,12 +150,12 @@ be read); a dragon without one has no breath to use;
 table or a list (`creature::NaturalAttacks`, its own `Deserialize`: a table or an array of
 tables, so parse errors stay the field's): `CreatureDef::attack` is the first,
 `CreatureDef::more_attacks` the rest, `CreatureDef::natural_attacks()` all in order. **Rules**:
-`world/breath.rs` (`World::breathes_at`, one branch in `ai.rs::fight` after the summoning and
+`world/creatures/breath.rs` (`World::breathes_at`, one branch in `ai.rs::fight` after the summoning and
 the throw, `Plan::Breathe(at)`; `World::creature_breathes`: the status, `noise::Act::Roar`, the
 words, `World::cast_cone` in `spell.rs` (the one place a cone strikes, shared with Burning
 hands; reuse it for any creature's cone), `say_spell`, `spell_type_lands`, then each rider by
 `World::rider` on each target harmed and alive: the gorgon's stiffening); the cooldown is a
-status in the actor's `effects`, saved as every status is. `world/natural.rs`
+status in the actor's `effects`, saved as every status is. `world/combat/natural.rs`
 (`World::more_natural_blows`, one line in `fight.rs::attack` after the second blow:
 `Actor::more_natural_blows` gives each later attack's profile, built by `Actor::melee_with`;
 each is `World::attack_with`, and its `Event::Attacked` gets `natural: Some(index)`, which
@@ -165,7 +165,7 @@ blow's profile (`Actor::melee_with` sets `Profile::on_hit` first, before the aff
 attack, `creature_breaths` (`creature-breaths.md`, "Breath" in `creature-numbers.md`); the
 roar in the hearing table. **Probe**: the monsters' sides sum every natural attack's damage
 (`balance_probe.rs::Side::more`), and `balance_probe/dragon.rs` measures the fire drake against
-the players of its level (docs/balance.md "Dragons"). **Tests**: `world/breath_tests.rs`.
+the players of its level (docs/balance.md "Dragons"). **Tests**: `world/creatures/breath_tests.rs`.
 Adding a dragon: `combat = "dragon"`, a `[creature.breath]` of its element with a burst effect
 of that element in `data/effects.toml`, `[[creature.attack]]`s, and the tag `dragon`.
 
@@ -173,7 +173,7 @@ Warning signs (#1133, design `docs/design/monster-dread.md` §9 channels 3 and 4
 `leavings = ["statue", "web", "acid_pit", "torn_cloth"]` (`content/leaving.rs`: `Leaving`, each
 laid as a fixed terrain or object, `Content::leaving`; the loader refuses a kind the content
 lacks) and `first_sight = "A basilisk. Do not meet its eyes."` on a type. **Rules**: the
-generator lays leavings (`mapgen/leavings.rs`, docs/dev/mapgen.md); `world/first_sight.rs`
+generator lays leavings (`mapgen/leavings.rs`, docs/dev/mapgen.md); `world/creatures/first_sight.rs`
 (`World::first_sight`, the last line of `perceive.rs::perceive`) says a type's line once a run
 when one is first among the perception's actors, remembering the type's id in
 `Progress::sighted` (saved). **Content**: every dread type has a `first_sight` and nothing else
@@ -182,10 +182,10 @@ acid pits on the hezrou and ember beetle, torn cloth on the imp and nymph. **Dum
 `leavings web: (12, 5), ...` a line per kind; JSON `leavings` (`pos`, `kind`) the ones the player
 sees or remembers (`PerceptionView::known_leavings`). **Wiki**: `creature_signs`
 (`creature-signs.md`, "Warning signs" in `creature-numbers.md`). **Tests**:
-`mapgen/leavings_tests.rs`, `world/first_sight_tests.rs`, `ui/look.rs`.
+`mapgen/leavings_tests.rs`, `world/creatures/first_sight_tests.rs`, `ui/look.rs`.
 
 Rooted (#1294, design `docs/design/miscasts-review.md` §6.2: a miscast's gates). **Data**:
-`rooted = true` (`CreatureDef::rooted`, default false). **Rules**: `world/rooted.rs`, one check
+`rooted = true` (`CreatureDef::rooted`, default false). **Rules**: `world/creatures/rooted.rs`, one check
 in each place that moves an actor: `World::rooted_plan` in `ai.rs::creature_turn` after the
 fear and the hold (a `Step`, `Patrol`, or `Blink` is a `Wait`; it still strikes, shoots,
 breathes, gazes, casts, and summons where it stands), `World::rooted_stride` in `stride.rs`
@@ -195,7 +195,7 @@ status `spell_type.rs::rooted` reads it too), `trap.rs::teleport_to` (no telepor
 a rod's says "The X holds fast."; a miscast's swap passes it by, and a rooted caster swaps with
 no one), `stair_followers.rs::may_follow` (never a follower), and `ally.rs::follow_along` (a
 rooted ally stays behind). **Dump**: the dev `actors` layer adds `; rooted`. **Tests**:
-`world/rooted_tests.rs` (a fixture: a rooted thorn that never steps and strikes beside it, a
+`world/creatures/rooted_tests.rs` (a fixture: a rooted thorn that never steps and strikes beside it, a
 rooted gate that summons to its cap, a rooted shrub that never gives way, never driven or
 teleported, never a stair follower beside a wolf that is).
 
@@ -205,20 +205,20 @@ Gazes and averted eyes (spec §8 "Creature behavior": "Gazes", #1125, design
 `chance` (default 100), `cooldown` 6 to 600 s (default 12, the `gaze` status's
 `ceil(cooldown / eases)` degrees), `averted`, `glance` (only with `averted`, default 25), and
 `riders`, `on_hit` entries resolved by `OnHitSpec::resolve`, a status or a drain only).
-**Rules**: `world/gaze.rs` (`World::gazes_at`, one branch in `ai.rs::fight` after the summoning
+**Rules**: `world/creatures/gaze.rs` (`World::gazes_at`, one branch in `ai.rs::fight` after the summoning
 and before the throw, `Plan::Gaze(target)`: in range, the cooldown off, the target with vitals
 (its type's `vitals` and `Content::has_vitals`); `World::creature_gazes`: the cooldown status,
 a `cast`'s price, then the eyes must meet: the player's by `Perception::sees_actors_at` on the
 gazer's cell (the snapshot's sight, no disguise), a creature's by `World::sees_now`; unmet, the
 player is told "You feel a cold stare on you."; met, one draw at `Gaze::chance_against` (below
 100 only) and each rider by `World::rider` in `status.rs`, the one place a blow's riders fall
-too). No noise. `world/avert.rs`: Averted is `Perception::averted` (a seen hostile whose gaze is
+too). No noise. `world/creatures/avert.rs`: Averted is `Perception::averted` (a seen hostile whose gaze is
 `averted`), derived in `Perception::compute`, never saved and out of the hash; read by
 `World::averted_blow` in `fight.rs::resolve` (`[averted] to_hit` of `data/rules/tuning.toml`, −4), `World::averted_defence`
 in `fight.rs::defence_of` (a positive Dodge halved), and `free_blow.rs::free_blows_of` (none at
 all); `World::avert_news` notes it beginning and ending. Status bar "Averted"; dump header
 `averted`, JSON `averted`; the cooldown shows among `actors`' effects. Nothing is `averted` until
-D2's basilisk. **Tests**: `world/gaze_tests.rs`, and `content/gaze.rs`'s roster of the moved
+D2's basilisk. **Tests**: `world/creatures/gaze_tests.rs`, and `content/gaze.rs`'s roster of the moved
 riders (`MOVED`). Keep the rider generic: D2's stiffening is a status rider like any.
 Bursts: vortices and death throes (the dread design `docs/design/monster-dread.md` §5.3, #1127).
 **Data**: `[creature.burst]` (`content/burst.rs`: `BurstSpec` resolved in the creature loop into
@@ -227,7 +227,7 @@ Bursts: vortices and death throes (the dread design `docs/design/monster-dread.m
 `burst::check_effects` once effects load), optional `noun`/`verb`, `rider` (the spell types'
 rider form, `spell_type::rider`), `douses`, `gust`); `check_combat` refuses a `touches` burst on
 a type with an `attack` or a `combat` other than melee (the burst is struck instead of every
-melee blow, so the attack would never be). **Rules**: `world/creature_burst.rs`:
+melee blow, so the attack would never be). **Rules**: `world/creatures/creature_burst.rs`:
 `ai.rs::creature_turn` sends every melee plan of a vortex (`World::bursts_on_touch`) to
 `World::creature_bursts` (a melee attack's price; the burst, then `dies` with no killer);
 `fight.rs::dies` calls `World::death_throes` after `creature_dies` (current level only; the
@@ -240,20 +240,20 @@ and `spell_strikes` are the spells'; then the wave (`quench` on everyone on its 
 their chance on those harmed (no `spell_type_lands`). A dead burster's blows are its own: it is
 in `fallen`. **Wiki**: `creature_bursts` (`creature-bursts.md`, "Bursts" in
 `creature-numbers.md`), the creatures table's "bursts beside you" / "bursts when it dies", the
-attacks table's vortex row. **Tests**: `world/creature_burst_tests.rs`; the elementals' roster
+attacks table's vortex row. **Tests**: `world/creatures/creature_burst_tests.rs`; the elementals' roster
 test pins every line's burst and the earth line's throw.
 Theft and the blink (docs/design/monster-dread.md §5.6, #1130). **Data**: `steals = { what,
 chance, cooldown }` and `blinks = { range, cooldown }` on a type (`content/theft.rs`:
 `StealsSpec` and `BlinksSpec`, resolved in the creature loop into `CreatureDef::steals:
 Option<Steals>` and `CreatureDef::blinks: Option<Blinks>` with their cooldown statuses' degrees,
 `theft` and `blink` in `data/status/`, a degree per 6 s; `what` is `small`, the classes of
-`theft::SMALL`, or `any`). **Rules**: `world/snatch.rs` (`World::snatches_at`, a guard in `ai.rs::fight` before a cast: a thief
+`theft::SMALL`, or `any`). **Rules**: `world/creatures/snatch.rs` (`World::snatches_at`, a guard in `ai.rs::fight` before a cast: a thief
 beside the player, its cooldown off, strikes in melee; `World::snatch`, one line in `fight.rs`
 after `barbed`, so a thief cut down by barbs takes nothing): a melee hit on the
 player that leaves them alive, the cooldown off, one `chance` draw, then one stack of the loose
 ones its `what` allows, `index(n)` with two or more (the Steal ability's pick); the stack into
 the thief's pack, the cooldown on it; it fights on, and its pack falls where it dies
-(`fight.rs::dies`). With nothing to take, no cooldown. `world/blink.rs` (`World::blinks_at`, a
+(`fight.rs::dies`). With nothing to take, no cooldown. `world/creatures/blink.rs` (`World::blinks_at`, a
 guard in `ai.rs::fight`'s `close_in` on `Route::Wait | Route::Unreachable`, `Plan::Blink(at)`;
 `World::creature_blinks`): a cell beside the target within `range` of the blinker and in its
 line of sight that the teleport trap would land on (`trap.rs::may_land`), not shunned, drawn
@@ -262,11 +262,11 @@ after the AI decided, on the gameplay stream. **Words**: "The pixie snatches 40 
 from you!" ("Something" unseen); "The blink dog is suddenly beside you." where the player sees
 it land, nothing unseen. **Wiki**: `creature_thieves` and `creature_blinks`
 (`creature-thieves.md`, `creature-blinks.md`, "Thieves" and "Blinkers" in
-`creature-numbers.md`). **Tests**: `world/theft_tests.rs`. No talent (design §11).
+`creature-numbers.md`). **Tests**: `world/skills/theft_tests.rs`. No talent (design §11).
 The disarming blow (#1166). **Data**: `disarms = { chance, difficulty }` on a type
 (`CreatureSpec::disarms`, `CreatureDef::disarms: Option<Disarms>`, `content/creature.rs`).
 **Rules**:
-`world/knock_away.rs` (`World::knock_away`, one line in `fight.rs` after `snatch`): a melee hit
+`world/combat/knock_away.rs` (`World::knock_away`, one line in `fight.rs` after `snatch`): a melee hit
 on the player that leaves them alive, a weapon in the first hand slot; one `chance` draw, then
 the open cells beside the player in row order (`is_walkable`, not `swim`, not a closed door, no
 actor; none: nothing more drawn), then the Dexterity check (`check::check`, two draws) with
@@ -276,7 +276,7 @@ with two or more. The stack leaves the pack (`after_removal`) onto the cell's pi
 stack is taken off and `fade_spirit` says it goes. No noise of its own (the fight's is heard).
 **Words**: "The ultroloth knocks your long sword from your hand!", "It lands beside you.".
 **Wiki**: `creature_disarmers` (`creature-disarmers.md`, "Disarmers" in `creature-numbers.md`).
-**Tests**: `world/knock_away_tests.rs` (the roster pinned there). No talent (a gimmick).
+**Tests**: `world/combat/knock_away_tests.rs` (the roster pinned there). No talent (a gimmick).
 
 Casters (spec §8 "Creature behavior": "Casters", #1102). **Data**: `spells = [...]` on a
 `combat = "caster"` type (`CreatureSpec::spells`, resolved in the creature loop by
@@ -285,7 +285,7 @@ order; spells load before creatures). Refused: a caster without a list, a list o
 type (never read), an unknown id, and a spell no creature casts (`creature_spells::castable`:
 zones, corpses, the open sky, pushes, charms, ground- or tag-bound hexes, heals not by touch,
 summons, cleansings, utilities). A caster's `mana` is its pool (summoners' summons share it).
-**Rules**: `world/creature_cast.rs`: `World::creature_spell` (one branch in `ai.rs::fight`
+**Rules**: `world/creatures/creature_cast.rs`: `World::creature_spell` (one branch in `ai.rs::fight`
 after the breath, `Plan::Cast { spell, on }`), `World::spell_reach_at` (how far the AI closes
 in; `None` sends it to a launcher or to melee: never idle), `World::creature_casts` (mana
 through `World::spend_mana`, a spell's noise, the words, then by kind: a buff or a hex through
@@ -297,7 +297,7 @@ and `cast.rs::cast_single`, which now takes its caster's id, then `spell_type_sp
 (`reflect.rs`) turns a caster's rays and bolts back at it. **Wiki**: `creature_spells`
 (`creature-spells.md`, "Spells" in `creature-numbers.md`). **Probe**:
 `balance_probe/casters.rs` (docs/balance.md "Casters"). **Tests**:
-`world/creature_cast_tests.rs`, the silent vault's in `silent_tests.rs`. Adding a caster:
+`world/creatures/creature_cast_tests.rs`, the silent vault's in `silent_tests.rs`. Adding a caster:
 `combat = "caster"`, a `range`, `spells` (up to level 10 only level-1 harm and level ≤ 3 hexes,
 heals, and buffs, and `rarity = "very_rare"`), and `mana` for a
 handful of its main spell.
@@ -314,7 +314,7 @@ computes. A new creature type: give it the hide its body asks at its level.
 
 Incorporeal creatures (spec §8 "Incorporeal creatures", #381): the data is a creature type's
 `incorporeal = { wall_defence }` (`content/creature.rs::Incorporeal`, read in `Content::load`
-beside `natural`; `Content::incorporeal(type)`). The rules are `world/incorporeal.rs`:
+beside `natural`; `Content::incorporeal(type)`). The rules are `world/creatures/incorporeal.rs`:
 `LevelState::phaseable` (solid terrain, neither walkable nor transparent, off the level's edge:
 walls, rock, closed doors), `World::in_wall`, `World::wall_defence` (read by
 `World::defence_of`: the Wall category, `combat::Category::Wall`), and `World::landing` (where
@@ -327,13 +327,13 @@ inside it). Sight is unchanged: the player's perception already sees a wall cell
 actor in it) by its lit face or darkvision; `sight::sees` sees opaque cells only within
 darkvision. The message for a miss the wall turned is `fight::attack_message`'s `Category::Wall`
 arm. The example type is `stone_haunt` (placed by no level). Tests:
-`world/incorporeal_tests.rs`, `shoot_tests::a_shade_in_a_wall_is_shot_there_...`,
+`world/creatures/incorporeal_tests.rs`, `shoot_tests::a_shade_in_a_wall_is_shot_there_...`,
 `spawn_tests::an_incorporeal_creature_is_never_placed_inside_a_wall`.
 
 Danger levels and spawning (spec §7 "Danger levels", #326): the data is `content/danger.rs`
 (`DangerRule`, `Spawning`, `level_weight`, `weight` and `draw`, the field parsing shared by
 `data/dungeons.toml` and level files), reached through `Content::spawning(level id)` (a hand-made level's own, else
-its branch's at the depth; `None`: danger 0). The rules are `world/spawn.rs`: `World::danger`
+its branch's at the depth; `None`: danger 0). The rules are `world/creatures/spawn.rs`: `World::danger`
 (computed, never stored), `LevelState::spawner` (the next attempt's time and the stream
 `spawn/<level id>`, `Rng::spawn`; made with a level that has a danger rule, else absent so other
 levels hash as before), `spawn_tick` (one call at the end of `run_turn`: every attempt due on the
@@ -365,7 +365,7 @@ leaves those out, so the spawner's cap and the dumps' `population 2/6` do not co
 this a floor laid down full would see nothing come until as many had died as the vault holds, and
 an avoided vault would stop the floor's respawning for good; a teeming den's sleepers, by contrast,
 do count (spec §7 "Special rooms"). Tests: `mapgen/vault_monsters_tests.rs`,
-`world::spawn_tests::a_vault_s_monster_pool_stands_outside_the_cap`.
+`world::creatures::spawn_tests::a_vault_s_monster_pool_stands_outside_the_cap`.
 Rarity (#373): `content/creature_rarity.rs` parses `data/creature_rarities.toml` (tiers in file
 order, each a `factor` in percent of a common type's weight, 1 to 1000; `common` required, the
 only tier without the file); `CreatureDef::rarity` is an index into `Content::creature_rarities`
@@ -397,7 +397,7 @@ population is met as a stray, and people, keepers, hand-placed guardians, and qu
 (neutral or unique) never stray. Tests: `content::tests::the_generic_list_is_every_hostile_type_without_uniques_or_people`,
 `a_lair_draws_its_strays_from_the_populations_only`,
 `a_first_floor_draw_gone_far_out_of_depth_brings_a_type_of_no_population`, and
-`world::spawn_tests::strays_come_from_every_hostile_type_but_those_kept_out`; `populate` builds the generic candidates once a floor, the own ones per creature (a
+`world::creatures::spawn_tests::strays_come_from_every_hostile_type_but_those_kept_out`; `populate` builds the generic candidates once a floor, the own ones per creature (a
 unique leaves them). Hand-placed creatures (level legends, vaults,
 scenario people, shopkeepers) are never drawn, whatever their tier.
 Neutral animals (#1195; the owner: "it's a game about killing stuff, not Dwarf Fortress"):
@@ -406,7 +406,7 @@ hand-made level; 100 without the field) scales the rarity factor of every candid
 to the player by its data stance (`Content::stance` with `player`; the `wildlife` faction and
 anything else neutral by default; never Beast-friend's empathy, which is the player's, not the
 type's) in `Content::draw_candidates`, at least 1 unless 0 %. The floor's population
-(`mapgen/population.rs`, the count's draws) and the spawner (`world/spawn.rs::draw_spawn`) draw
+(`mapgen/population.rs`, the count's draws) and the spawner (`world/creatures/spawn.rs::draw_spawn`) draw
 by it; the count is unchanged, so the freed weight goes to the hostile types. Untouched, as
 places that mean what they draw: a vault's monster pools, teeming dens (a beast den's
 `swarm.factions` is animals by design), hoards' guardians (hostile anyway), outcomes' summons,
@@ -431,17 +431,17 @@ branch's odds. Tests: `content::danger::tests` (the roll, the fallbacks, determi
 `content::dungeon::tests::a_depths_dread_one_in_wins_over_the_branchs_over_the_defaults`,
 `an_endless_branch_reads_its_dread_curve_at_the_true_depth`, `content::dread::tests`,
 `content::dread_roster_tests` (the sort's flags and tiers, no unique dread), and
-`world::spawn_tests::the_spawner_rolls_for_dread_at_the_levels_own_odds`,
+`world::creatures::spawn_tests::the_spawner_rolls_for_dread_at_the_levels_own_odds`,
 `draw_odds_take_the_most_specific_dread_one_in`.
 Splitting and dying into (docs/design/monster-dread.md §5.5, #1129; spec §8 "Splitting and dying
 into"): `CreatureDef::splits` (`content::Splits`: damage types, `least`) and `dies_into`
 (`content::DiesInto`: pool, count, spread), resolved in `Content::load_splits`
-(`content/split.rs`, after `load_summons`). The rules are `world/split.rs`: `World::split`, one
+(`content/split.rs`, after `load_summons`). The rules are `world/creatures/split.rs`: `World::split`, one
 line in `fight.rs::resolve` after a blow that left the target alive; `World::dies_into`, one
 line in `fight.rs::dies` before `creature_dies` (its line is said after the death's break
 lines); `World::offspring_share` in `dies` for the credit; `Actor::split_from` (`Split::Half`,
 `Split::Corpse`; saved, left out while `None`). Look mode's ", writhing" is the UI's
-(`ui/look.rs`). Tests: `world/split_tests.rs`, `ui::look::tests::what_lives_in_a_wormhost_shows_writhing`.
+(`ui/look.rs`). Tests: `world/creatures/split_tests.rs`, `ui::look::tests::what_lives_in_a_wormhost_shows_writhing`.
 Where the rosters are met (#531): the showcase's Depths has no danger (its patrol of rats, bats,
 and kobolds only; there is no general candidate pool). In the Ascmearc a type of level 17 or less
 (level 11 or less in Fennmynster, whose danger runs 3 to 10) is placed in a population where it
@@ -451,7 +451,7 @@ fits (Fennmynster 3–10, Fyrdelf 5–16, #534); every other hostile type comes 
 population (`xtask/src/bench.rs`); its night's rest is held to the 500 ms budget thanks to coarse
 turns.
 
-Who is on a level (#1507): `WorldState::actors` is `Actors` (`world/actors.rs`), the run's
+Who is on a level (#1507): `WorldState::actors` is `Actors` (`world/turn/actors.rs`), the run's
 actors by id (every level the run visited keeps its own; only Grundlēas forgets them) with an
 index of the ids on each level. Reading is the map's (`Deref`); `insert`, `remove`, `retain`, and
 `set_level` (the one way an actor's level changes: `travel`, `cross_to`) keep the index;
@@ -464,7 +464,7 @@ filter the whole map. The index is derived: the saved map is unchanged, and the 
 on load. `bench-turns` measures it with `l-1` (the deepest floor of a 40-floor cave branch,
 fresh) and `long` (the same floor after visiting the other 39, about 3,000 actors in the run).
 
-Coarse turns while the player rests (#349, spec §8 "Coarse turns while resting"): `world/stride.rs`,
+Coarse turns while the player rests (#349, spec §8 "Coarse turns while resting"): `world/turn/stride.rs`,
 one call at the top of `World::creature_turn` (`coarse_turn` → `Coarse::Strode(price)` returns at
 once, `Slow` multiplies the usual action's price by `STRIDE`, `Usual` is the usual turn). `away`
 (the player rests, a local level, no dialogue, and not hostile to the player within its sight
@@ -475,11 +475,11 @@ no door, ice, trap, actor, or shunned cell, not a cell the player's last percept
 on, not within its step noise's reach of the player, none within its sight of a hostile; prices
 and step noise cached per terrain), and a stride's one `make_step_noise` at its end. An idle
 creature whose next route cell is taken waits `STRIDE` waits; one whose first step is not plain
-takes its turn as usual. Outside a rest nothing here runs. Tests: `world/stride_tests.rs` (pace
+takes its turn as usual. Outside a rest nothing here runs. Tests: `world/turn/stride_tests.rs` (pace
 kept, busy ones slowed, turn by turn near the player, replays, the rest's sight equals a
 perception's); the rest-versus-waiting tests in `time_tests`, `cost_tests`, `hearing_tests`, and
 `talk_tests` still hold (their creatures cross into view or earshot turn by turn), and
-`speed_tests::resting_accounts_for_fast_creatures` compares a rest with resting turn by turn. Tests: `world/spawn_tests.rs` (the property test of the
+`speed_tests::resting_accounts_for_fast_creatures` compares a rest with resting turn by turn. Tests: `world/creatures/spawn_tests.rs` (the property test of the
 design's §9.6, the population of a generated floor and that nothing else moves, uniques in a
 population, a spawn's gear stream, frozen floors, the talents, determinism),
 `content/danger.rs` (rules, counts, weights, draws, a rare type drawn less often, out-of-depth
@@ -499,28 +499,28 @@ type's stats and size). Who rolls is `CreatureSpawn::rolls_gear` (true for a leg
 entry without `carry`/`wield`/`wear`, `Canvas::add_patrol`, the local areas' deer; false for a
 keeper): a generated level clears it in `gear::arm` (stream `gear/<level id>`, after
 `place_loot`, in both `mapgen::generate_with` and `mapgen::local::generate`), and
-`world/travel.rs::placed_gear` rolls the rest as `instantiate_level` places them (stream
+`world/levels/travel.rs::placed_gear` rolls the rest as `instantiate_level` places them (stream
 `gear/<actor id>`). The danger levels' paths set `rolls_gear`: the initial population of a
 generated floor (rolled by `gear::arm` after it) and a spawn in play (rolled by
-`make_creature`). What falls is unidentified (Scavenger, which told it, was cut by #816). Tests: `world/gear_tests.rs`; the mapgen
+`make_creature`). What falls is unidentified (Scavenger, which told it, was cut by #816). Tests: `world/items/gear_tests.rs`; the mapgen
 snapshots print each spawn's gear.
 
 Gear condition (#1193): right after `gear::roll` in `gear::equip` (gear's last steps, written
-once for `gear::arm` and `placed_gear`, #1494), `world/gear_condition.rs::apply` draws each piece's state ([`Worked`], the
+once for `gear::arm` and `placed_gear`, #1494), `gear/condition.rs::apply` draws each piece's state ([`Worked`], the
 smith's: damaged with `by` for its word, or one to three improvements, each an attempt) from its
 own stream, `condition/<key>` with the gear stream's key, so the gear's draws and the rest of the
 level do not move. One draw below 1000 per piece against the creature's tribe's odds
 (`data/gear_condition.toml`, `content/gear_condition.rs`: `[default]`, `[[tribe]]` by creature
 tag, first match in file order), then one per improvement for its aspect. Only single pieces of
 arms or armour an anvil or knife could work (`magic::worked::arms`, aspects), never protected ones
-(`item_damage::protected`, with every object any quest may ask for, fixed or rolled: gear is made
+(`magic::worked::protected`, with every object any quest may ask for, fixed or rolled: gear is made
 before a quest is given). The kind is by the main part's material group (`[kinds]`, metal: rust
 and acid): the one the material withstands least, never one at 100; else `ItemHarm::Work`
 ("damaged"). `World::loot_of` (a death's extra drop) is treasure, not gear, and takes no
 condition. What a body leaves of crafting stock is the drops by tag (`data/drops/`; docs/dev/objects.md "Material drops"). Tribes chosen: undead (95 % damaged), duergar, hobgoblin, drow, devil (disciplined:
 8–10 % damaged, Fine 10–15 %), kobold, goblin, orc, troll (scavengers: 45–55 % damaged); the
 rest the default (30 %, Fine 4 %, Marvellous 0.8 %, Masterwork 0.2 %). Tests:
-`world/gear_condition_tests.rs`.
+`gear/condition_tests.rs`.
 
 ## Variance by role
 
@@ -577,7 +577,7 @@ wave, #335 the delf wave): content only, on the fields above. A wave adds
   Four test fixtures write their own neutral factions file over the shipped one
   (`world/{equip,magic,object,read}_tests.rs`): every shipped faction id must be listed there
   too, or the shipped types naming it fail to load;
-- its rows in `world/bestiary_tests.rs`'s `WAVES` (the type and its owning campaign), and its
+- its rows in `world/creatures/bestiary_tests.rs`'s `WAVES` (the type and its owning campaign), and its
   stances in that file's faction test.
 
 **`hostile_to_all`** (`content/faction.rs`): a faction with it (`berserk`, Rouse the dead's,
@@ -611,4 +611,4 @@ player's side (allies take the player's faction, and an ally's target is its mas
 `docs/dev/allies.md`) fights it, the companion's own pick, its nose, and Sic 'em alike; a blast
 hurts it as any creature in it. Tests: `faction.rs` (`friendly_to_all_keeps_its_own_quarrels_alone`),
 `content/gate_roster_tests.rs` (the shipped gates at peace with every faction but the player's),
-`world/gate_tests.rs`, `world/sic_tests.rs` (the companion goes for a rift on its own and set on it).
+`world/levels/gate_tests.rs`, `world/allies/sic_tests.rs` (the companion goes for a rift on its own and set on it).

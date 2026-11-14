@@ -121,7 +121,7 @@ Notation: **Hook** is the one rule that reads it (names from CLAUDE.md and the p
 
 | Animal | id | Name | Effect | Hook | A/P | Needs |
 |---|---|---|---|---|---|---|
-| **Salamander** (first through the gate: quick and clever, if slight) | `fleet` | Fleet | you move and act a little faster (speed +5 %) | the scheduler's speed (`world/schedule.rs`, as `quick` reads it) | P | |
+| **Salamander** (first through the gate: quick and clever, if slight) | `fleet` | Fleet | you move and act a little faster (speed +5 %) | the scheduler's speed (`world/turn/schedule.rs`, as `quick` reads it) | P | |
 | | `slip_away` | Slip away | a step that takes you out of reach of every adjacent hostile costs a quarter less | `step_price`, with `World::flees`' adjacency test | P | |
 | | `slight` | Slight *(flaw)* | carrying limit −10 % | `burden::load` | P | |
 | **Hydra** (the strongest swimmer, tireless, of many minds) | `regrowth` | Regrowth | hit points come back half again as fast; Bleeding eases twice as fast | `World::healing_rate`, `Effect::until_eases` | P | |
@@ -537,7 +537,7 @@ One read each, at the hooks the progression design already names (§10.3 there);
 | alignment's start (#254) | the animal's `alignment` |
 | the character and death screens | `Character::title` after the name |
 
-New modules: `content/horoscope.rs` grows (grants, lucky, flavour, validation); `world/stars.rs` (the rising, the barbs, the streak, the flavour's reach and cooldown reads: the sign-specific rules that are not one line at a hook); `ui/chargen_screen.rs::SignScreen`; `xtask/src/wiki/horoscope.rs`.
+New modules: `content/horoscope.rs` grows (grants, lucky, flavour, validation); `world/character/stars.rs` (the rising, the barbs, the streak, the flavour's reach and cooldown reads: the sign-specific rules that are not one line at a hook); `ui/chargen_screen.rs::SignScreen`; `xtask/src/wiki/horoscope.rs`.
 
 ### 10.4 Determinism
 
@@ -576,7 +576,7 @@ Also raised, outside this plan: the seed field removed from New run outside dev 
 
 **Waves**: S1 right after #229 merges (it is the one PR here that touches `chargen_screen.rs`, so it runs beside #237/#238 of the progression waves, not beside #236, which also edits that file); then S2, S3, S4 together (three agents; each owns its hook files: S2 `fight.rs`'s profile and `after_blow`, `talk.rs`, `search.rs`; S3 `dies`, light, perception, `loot.rs`, `second_blow`; S4 `spell.rs`, the lantern preset, `practise`); then S5, S6, S8 together; S7 when #151 lands; the backlog item whenever.
 
-**Tests each item carries**: `character.rs` (grants per sign and day; the five lucky signs and days pinned; nothing moved for existing seeds: a fixture of ten seeds' `Start`s before and after; a helper that finds a seed born on each lucky day for the captures), `content/horoscope.rs` (validation), the rule tests beside each hook (`world/stars_tests.rs`: the rising once and never twice without Second rising, Ashen, the streak, the barbs, Held), screen tests for `SignScreen` (text, the lucky lines present and absent, Enter, Esc, the summary's Return), a replay per active (`replay --create` then `--verify`), the creature-sight invariant with Inner light, a golden entry `chargen-sign` (advisory under #166), `cargo xtask wiki --check`.
+**Tests each item carries**: `character.rs` (grants per sign and day; the five lucky signs and days pinned; nothing moved for existing seeds: a fixture of ten seeds' `Start`s before and after; a helper that finds a seed born on each lucky day for the captures), `content/horoscope.rs` (validation), the rule tests beside each hook (`world/character/stars_tests.rs`: the rising once and never twice without Second rising, Ashen, the streak, the barbs, Held), screen tests for `SignScreen` (text, the lucky lines present and absent, Enter, Esc, the summary's Return), a replay per active (`replay --create` then `--verify`), the creature-sight invariant with Inner light, a golden entry `chargen-sign` (advisory under #166), `cargo xtask wiki --check`.
 
 ## 12. Decisions
 

@@ -127,7 +127,7 @@ impl TrapAvoid {
     }
 }
 
-/// Disarming a known trap (`[disarm]` in `data/traps.toml`; `world/disarm.rs`).
+/// Disarming a known trap (`[disarm]` in `data/traps.toml`; `world/skills/disarm.rs`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TrapDisarm {
@@ -144,7 +144,7 @@ impl Default for TrapDisarm {
     }
 }
 
-/// What a trap's damage may be cut by (`[harm]` in `data/traps.toml`; `world/trap.rs`).
+/// What a trap's damage may be cut by (`[harm]` in `data/traps.toml`; `world/fixtures/trap.rs`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TrapHarm {
@@ -641,7 +641,7 @@ pub struct Trap {
     /// The way a bolt runs from it; `None`: along the longest clear line from it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dir: Option<Dir>,
-    /// Rigged by the player (the craftsperson's Trapwright, `world/rig.rs`): what it kills is
+    /// Rigged by the player (the craftsperson's Trapwright, `world/crafting/rig.rs`): what it kills is
     /// the player's kill.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub rigged: bool,

@@ -1,7 +1,7 @@
 //! Outcome tables (`data/outcomes/<id>.toml`, one table a file; spec §7 "Special rooms"): what
 //! using a place's ability draws: a forgotten altar's prayer, a healing spring's drink. The rules
-//! are `world/outcome.rs` (applying an outcome), `world/pray.rs` (the prayer),
-//! `world/drink.rs` (the drink), and `world/potion.rs` (a gamble's draught, `kind = "gamble"`:
+//! are `world/fixtures/outcome.rs` (applying an outcome), `world/fixtures/pray.rs` (the prayer),
+//! `world/fixtures/drink.rs` (the drink), and `world/health/potion.rs` (a gamble's draught, `kind = "gamble"`:
 //! the potions wave 2 design §4.3).
 //!
 //! ```toml
@@ -132,7 +132,7 @@ pub struct Explosion {
     pub noise: Option<TrapNoise>,
 }
 
-/// What an outcome does: each field one hook (`world/outcome.rs`), applied in this order.
+/// What an outcome does: each field one hook (`world/fixtures/outcome.rs`), applied in this order.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct OutcomeEffect {
     /// Hit points back.

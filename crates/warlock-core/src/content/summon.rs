@@ -1,5 +1,5 @@
 //! A creature type's summoning (spec §8 "Summoning", #520): `[creature.summon]`, the enemy-only
-//! ability to call forth creatures of its side. The rules are `world/summon.rs`.
+//! ability to call forth creatures of its side. The rules are `world/creatures/summon.rs`.
 //!
 //! The pool is a list of creature ids (`creatures`), each as likely, or every type carrying a
 //! tag within a level window (`tag`, `levels`), uniques and the summoner itself left out, in

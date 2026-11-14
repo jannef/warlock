@@ -62,7 +62,7 @@ pub enum Layer {
     /// a direction`, `Steal (skill): not usable yet`).
     Abilities,
     /// Not a map: every profession's recipes as its screen lists them for the player (spec §8
-    /// "Skills"; `world/craft.rs`), a `Metalcraft:` line per profession they have, then one a
+    /// "Skills"; `world/crafting/craft.rs`), a `Metalcraft:` line per profession they have, then one a
     /// line with what each takes and why it cannot be made now (`Temper: a metal weapon or
     /// armour, an anvil, about 10 minutes (no anvil beside you)`).
     Recipes,
@@ -84,7 +84,7 @@ pub enum Layer {
     /// The player's companion as they know it (spec §8 "Allies"): its name, type, grade, cell
     /// (where seen), health in words, and order; `no companion` without one.
     Companion,
-    /// The player's familiar, as the companion layer says a companion (`world/familiar.rs`);
+    /// The player's familiar, as the companion layer says a companion (`world/allies/familiar.rs`);
     /// `no familiar` without one, `no familiar; Tibb, a cat, answers a calling` while the one
     /// she remembers is dead (`Character::familiar`).
     Familiar,

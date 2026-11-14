@@ -1,7 +1,7 @@
 //! The starting beasts by race (#1567): the `[start]` table the companion's and the familiar's
 //! data share (`data/companions.toml`, `data/familiars.toml`), the lists by race and the rares,
 //! with the checks both files make, and the names check. The rules that draw from them are
-//! `world/companion.rs` and `world/familiar.rs`.
+//! `world/allies/companion.rs` and `world/allies/familiar.rs`.
 
 use super::{Content, ContentError, CreatureId};
 use serde::Deserialize;

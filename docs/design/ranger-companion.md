@@ -6,14 +6,14 @@ Design document for the owner's review (#825; first draft 2026-11-02, **revised 
 the owner's second round**, §18). Written against `origin/main` at 34e2d008, on the **merged**
 ally core of the druid's design (`docs/design/druid-and-summons.md` §4 and §14; A1 #836 the core,
 A2 #837 summons, A3 #838 the UI, D1 #839 the druid's calls; `docs/dev/allies.md` is its topic
-file, `crates/warlock-core/src/world/ally.rs` its code, `assets/data/allies.toml` its numbers).
+file, `crates/warlock-core/src/world/allies/ally.rs` its code, `assets/data/allies.toml` its numbers).
 Nothing of this document is implemented; §17 cuts it into issues. It builds on what is there:
-the class tables and their actives (`docs/dev/progression.md` "Class tables", `world/class.rs`,
-`world/class_ability.rs`), Focus (`world/focus.rs`), factions and stance (`World::stance`,
-`stance_between`, `world/beast_friend.rs`), the creature AI (`world/ai.rs`), making creatures
+the class tables and their actives (`docs/dev/progression.md` "Class tables", `world/classes/class.rs`,
+`world/classes/class_ability.rs`), Focus (`world/classes/focus.rs`), factions and stance (`World::stance`,
+`stance_between`, `world/allies/beast_friend.rs`), the creature AI (`world/creatures/ai.rs`), making creatures
 (`travel::make_creature`, `World::make_ally`), level changes (`World::travel`, `follow_along`),
 the abilities registry (`warlock_core::ability`), the kill credit (`fight.rs::dies`), checks
-(`check.rs`), skills and their benefits (`docs/dev/skills.md`), the Heal ability (`world/heal.rs`,
+(`check.rs`), skills and their benefits (`docs/dev/skills.md`), the Heal ability (`world/health/heal.rs`,
 `heal::treatable`), the background story (`docs/dev/background.md`), perception
 (`perception.rs::Perception::compute`, `sight.rs`), equipment (`docs/dev/equipment.md`), and the
 RNG streams (`rng.rs`). Every number is data and hidden in the game; the wiki states it (the
@@ -113,7 +113,7 @@ defers to the same core; nothing here is particular to a hound that a familiar c
 | Skill abilities | `Ability::PickLock` (Open lock), `Disarm` (Disable device), `Heal` (Heal) under `Source::Skill`, `had_by` the skill trained, `Ability::use_of` | **Tame** (Handle animal), the same way |
 | Focus | granted by Rapid shot (12), max 10, regenerates 1 a base turn; Volley spends 6 | Sic 'em's cost |
 | Checks | `check::check(rng, modifier, difficulty)`, 2d12, two gameplay draws | the tame check |
-| Skills | Handle animal (`kind = "action"`, trained by the ranger 2d4+4, the barbarian, druid, paladin, witch, aristocrat, commoner, merchant) marks on `handle` (an order, an ally's kill; 50 %); benefits are read in one place each | the `tame` benefit, read in `world/tame.rs`; Tame marks `Use::Handle` too |
+| Skills | Handle animal (`kind = "action"`, trained by the ranger 2d4+4, the barbarian, druid, paladin, witch, aristocrat, commoner, merchant) marks on `handle` (an order, an ally's kill; 50 %); benefits are read in one place each | the `tame` benefit, read in `world/allies/tame.rs`; Tame marks `Use::Handle` too |
 | Unaware, surprise | `World::unaware(a, b)` (the one definition), `Mind::noticed`, Stalker's eye's `sees_unaware` | who may be tamed |
 | Natural Protection by body and level | the data rule (`combat-progression.md` §8; `Body::of`): hide (L − 10) ÷ 8, bony L ÷ 6, armoured L ÷ 4 + 1 | the companion's Protection at its grade |
 | Perception | `Perception::compute(state, content, lights)`: the player's line of sight (`compute_fov`), the light on it, `sight`/`visible_cells`/`seen`, then **Blood scent's pass** (creatures with a status in line of sight within a radius, "however dark their cells", marked `Sight::Seen`), wall completion, the seen actors; `sight::sees_by(state, content, lights, &los, eye, p)` is any viewer's eye; `allies_of(state, content) -> Vec<AllyView>` the player's knowledge of their allies | Hunter's bond's shared sight and the nose add a pass in the same place, the same way (§11.2) |
@@ -146,11 +146,11 @@ defers to the same core; nothing here is particular to a hound that a familiar c
 
 | # | Change | Where | Slice |
 |---|---|---|---|
-| A | `AllySource::Companion` → `Companion(CompanionData { name: String, grade: u8 })` | `world/ally.rs` (the variant), `AllySource::id` unchanged (`"companion"`) | C1 |
+| A | `AllySource::Companion` → `Companion(CompanionData { name: String, grade: u8 })` | `world/allies/ally.rs` (the variant), `AllySource::id` unchanged (`"companion"`) | C1 |
 | B | **A companion always comes along**: `follow_along` takes every ally of the player's on `from` whose source is `Companion`, wherever it stands and held fast or not, beside the `comes_along` rule for the rest | one filter in `follow_along` | C1 |
 | C | **The share by class**: `[xp] ally_percent` becomes **50** (everyone's); `ClassDef::ally_share: Option<u8>` (`ally_share = 100` on the ranger and the druid) is read first in `fight.rs::dies` where `ally_percent` is read now. The druid's hash is unchanged (100 before, 100 after) | `allies.toml`, `content/class.rs`, one line in `dies` | C0 |
-| D | **The healer's hand**: `heal::treatable` candidates include an adjacent ally's; `heal:ID:DIR` | `heal.rs`, `world/heal.rs`, `Aim::Ailment`'s list | C0 |
-| E | **Give** joins the Allies group (a fourth row, not an order: it takes a wear's time and is aimed at a stack) | `ability.rs`, `world/collar.rs` | C3 |
+| D | **The healer's hand**: `heal::treatable` candidates include an adjacent ally's; `heal:ID:DIR` | `heal.rs`, `world/health/heal.rs`, `Aim::Ailment`'s list | C0 |
+| E | **Give** joins the Allies group (a fourth row, not an order: it takes a wear's time and is aimed at a stack) | `ability.rs`, `world/allies/collar.rs` | C3 |
 
 Nothing else of the core is touched: `heel`, `leash`, `stay.reach`, `hunt.reach`, `comes_along` (the summons'), `most`, the orders' noise, and the clock stay as they are.
 
@@ -267,7 +267,7 @@ review of the texts comes after the wave, as for the pools.
 
 `Ability::Tame`, `Source::Skill` ("Handle animal"), `Aim::Direction`, `tame:DIR`; had by anyone
 with Handle animal trained (`had_by`, as Pick lock is Open lock's). The one place is
-`world/tame.rs`.
+`world/allies/tame.rs`.
 
 | Step | Rule |
 |---|---|
@@ -399,7 +399,7 @@ and drop any previous on the floor." Every actor already has `equipment` by slot
 
 | Piece | Rule |
 |---|---|
-| **Give** | `Ability::Give`, the Allies group (`Source::Ally`, after Set on; not an order: it takes time), `Aim::Stack` (`Ability::action_on`: the stacks the player carries whose object's `slot` is `neck`), `give:LETTER`. Refused, no time: with no companion adjacent ("Snel is not beside you."), with a stack that does not fit the neck ("Snel has no use for that."). The one place is `world/collar.rs` |
+| **Give** | `Ability::Give`, the Allies group (`Source::Ally`, after Set on; not an order: it takes time), `Aim::Stack` (`Ability::action_on`: the stacks the player carries whose object's `slot` is `neck`), `give:LETTER`. Refused, no time: with no companion adjacent ("Snel is not beside you."), with a stack that does not fit the neck ("Snel has no use for that."). The one place is `world/allies/collar.rs` |
 | **The hand-over** | one item of the stack leaves the player's inventory and is put in the companion's `neck` slot (`Equipment`, the one slot a companion uses); the amulet it wore, if any, is **dropped on the companion's cell** (a pile, the ordinary rules). Priced as a `wear` (`actions.toml`). "You fasten the amber amulet about Snel's neck." / "Snel's jade amulet falls to the floor." |
 | **What it does** | the amulet's magic works on the companion as on any wearer: `Mods::worn` (natural armour, resistances), `worn_vision` (an amulet that gives eyes gives the hound them), the regeneration affixes. Identification is the player's: wearing it on the beast teaches nothing. There is no taking it back but by giving another (the old one falls to the floor) or by its death: the owner's rule, and no "take off" is added |
 | **Shown** | look mode: "Snel, your hound (unhurt), wearing an amber amulet." (worn things are seen, as any creature's); the `companion` dump and the `actors` layer list it; the status bar line does not |
@@ -430,7 +430,7 @@ direction for the class is the pet.
 ### 11.1 Pack tactics (18, passive)
 
 `pack_tactics`, effects `[{ kind = "pack_tactics", to_hit = 2 }, { kind = "shares_favoured_prey" }]`,
-systems `combat`, `allies`. Read in `World::resolve` → the attack profile, one hook (`world/pack.rs`):
+systems `combat`, `allies`. Read in `World::resolve` → the attack profile, one hook (`world/allies/pack.rs`):
 
 - a creature adjacent to **both** the ranger and their companion is **flanked**: the ranger's
   melee and the companion's blows on it get `+to_hit` (2). Missiles not (flanking is about
@@ -497,7 +497,7 @@ touched; it reads `vision`, which has its talents. Shared buffs read `status`, w
 `resource = { id = "focus", cost = 5 }`, effects `[{ kind = "sic", blows = 3, speed_percent = 50 }]`,
 systems `combat`, `resources`, `allies`. Refused with no companion on the level, a cell with no
 creature the player sees, or the target not hostile to the player; the cost is spent after the
-checks. It does two things (`world/sic.rs`):
+checks. It does two things (`world/allies/sic.rs`):
 
 1. the companion takes `Hunt { at: the target's cell }` and keeps hunting that creature while it
    sees it (the hunt cell follows the target: one line in the arm for a hunt begun by Sic 'em);
@@ -790,13 +790,13 @@ golden is added, and C1 updates the one the beast appears in.
 
 | Slice | Issue | What it touches | Depends on |
 |---|---|---|---|
-| **C0 The share and the healer's hand** | an ally's kill pays by the master's class; Heal treats an adjacent ally | `allies.toml` (`ally_percent` 50), `ClassDef::ally_share` and its check, the two class files, one line in `fight.rs::dies`; `heal::treatable` with the actor, `Aim::Ailment`'s list, `heal:ID:DIR`, `world/heal.rs`; `ally_tests` (a druid's 100, a commoner's 50, the tally full), heal tests; `docs/dev/allies.md`, `docs/dev/skills.md`, the wiki's allies page and Heal row, spec | — |
-| **C1 The companion** | Animal companion: the starting beasts by race and the rares, the story's chapter, the name, growth, always along, the nose, the table's level 1 | `animal_companion` talent and the ranger's table (level 1), `TalentEffect::{Companion, Tame}`, `hand_out`'s note, `AllySource::Companion(CompanionData)` (change A), `world/companion.rs` (`bring_companion`, the draw, `World::companion`, the level-up grade, `called`), the six growth hooks (§8), `CreatureDef::{tameable, nose}` and their load checks, the ten `creatures/*.toml` and `tameable`/`nose` on the eight existing (`beasts.md` rows, `beast_roster_tests`), `follow_along`'s companion filter (change B), the nose in `ally_plan`'s predicate, `content/companion.rs` (`data/companions.toml`), `background/08-companion.toml` with `Chapter::when`, `When::companion`, `Witness::companion` (`content/background.rs`, `background.rs`, `world/background.rs`, the chapter's wiki table), the `companion` dump layer and JSON, the status bar line, look mode's name, the Character screen's line, the story screen (text snapshots); tests (§13); `docs/dev/companion.md`, `docs/dev/background.md`, `docs/dev/allies.md`; spec; the wiki's Companions and Starting companions sections and the growth table; the ranger replays re-created; `sky.toml`'s forest golden updated in the finisher's pass | C0 |
-| **C2 Tame** | everyone's skill ability, the ranger's bonus | `Ability::Tame` (`Source::Skill`), `world/tame.rs` (the channel, the check, the food, the mark), the `tame` benefit on Handle animal (`skills.toml`), `TalentMods::tame` read, `tame:DIR`, the menu row and its reasons, tests, the wiki's Taming table, `docs/dev/skills.md` | C1 |
-| **C3 The collar** | the neck slot | `Ability::Give` (`Source::Ally`, `Aim::Stack`), `world/collar.rs`, `give:LETTER`, the pile on the companion's cell, look mode's "wearing", the `companion` dump's `wears`, tests (the mods reach it; the old one on the floor; the pile on death), wiki, `docs/dev/equipment.md` (one line) | C1 |
-| **C4 Pack tactics** | level 18 | `pack_tactics` talent, `TalentEffect::{PackTactics, SharesFavouredPrey}`, `world/pack.rs`, the table row, tests, wiki | C1 |
+| **C0 The share and the healer's hand** | an ally's kill pays by the master's class; Heal treats an adjacent ally | `allies.toml` (`ally_percent` 50), `ClassDef::ally_share` and its check, the two class files, one line in `fight.rs::dies`; `heal::treatable` with the actor, `Aim::Ailment`'s list, `heal:ID:DIR`, `world/health/heal.rs`; `ally_tests` (a druid's 100, a commoner's 50, the tally full), heal tests; `docs/dev/allies.md`, `docs/dev/skills.md`, the wiki's allies page and Heal row, spec | — |
+| **C1 The companion** | Animal companion: the starting beasts by race and the rares, the story's chapter, the name, growth, always along, the nose, the table's level 1 | `animal_companion` talent and the ranger's table (level 1), `TalentEffect::{Companion, Tame}`, `hand_out`'s note, `AllySource::Companion(CompanionData)` (change A), `world/allies/companion.rs` (`bring_companion`, the draw, `World::companion`, the level-up grade, `called`), the six growth hooks (§8), `CreatureDef::{tameable, nose}` and their load checks, the ten `creatures/*.toml` and `tameable`/`nose` on the eight existing (`beasts.md` rows, `beast_roster_tests`), `follow_along`'s companion filter (change B), the nose in `ally_plan`'s predicate, `content/companion.rs` (`data/companions.toml`), `background/08-companion.toml` with `Chapter::when`, `When::companion`, `Witness::companion` (`content/background.rs`, `background.rs`, `world/character/background.rs`, the chapter's wiki table), the `companion` dump layer and JSON, the status bar line, look mode's name, the Character screen's line, the story screen (text snapshots); tests (§13); `docs/dev/companion.md`, `docs/dev/background.md`, `docs/dev/allies.md`; spec; the wiki's Companions and Starting companions sections and the growth table; the ranger replays re-created; `sky.toml`'s forest golden updated in the finisher's pass | C0 |
+| **C2 Tame** | everyone's skill ability, the ranger's bonus | `Ability::Tame` (`Source::Skill`), `world/allies/tame.rs` (the channel, the check, the food, the mark), the `tame` benefit on Handle animal (`skills.toml`), `TalentMods::tame` read, `tame:DIR`, the menu row and its reasons, tests, the wiki's Taming table, `docs/dev/skills.md` | C1 |
+| **C3 The collar** | the neck slot | `Ability::Give` (`Source::Ally`, `Aim::Stack`), `world/allies/collar.rs`, `give:LETTER`, the pile on the companion's cell, look mode's "wearing", the `companion` dump's `wears`, tests (the mods reach it; the old one on the floor; the pile on death), wiki, `docs/dev/equipment.md` (one line) | C1 |
+| **C4 Pack tactics** | level 18 | `pack_tactics` talent, `TalentEffect::{PackTactics, SharesFavouredPrey}`, `world/allies/pack.rs`, the table row, tests, wiki | C1 |
 | **C5 Hunter's bond** | level 25 | `hunters_bond` talent, `TalentEffect::{SharedSight, SharedBuffs}`, the second viewpoint in `Perception::compute` (§11.2) with the nose's cells and the light over them, the hook in `World::afflict` with `circles`' buff test, the table row, tests (shared sight equals the companion's `sees_by` plus the nose; memory; dazzle; a buff both ways and a hex never; the retinue), a `--capture` looked at, wiki | C1 |
-| **C6 Sic 'em** | level 40 | `sic` talent, `ClassActive::Sic`, `world/sic.rs` (the hunt that follows its target), the `savage` status (`auto_critical`, eased by hits, `speed_percent`) and its read in `strike_with`, the table row, tests, wiki | C1 |
+| **C6 Sic 'em** | level 40 | `sic` talent, `ClassActive::Sic`, `world/allies/sic.rs` (the hunt that follows its target), the `savage` status (`auto_critical`, eased by hits, `speed_percent`) and its read in `strike_with`, the table row, tests, wiki | C1 |
 | **C7 The wild beasts** | content | the `boar`, `lynx`, and `badger` in `mapgen/local/` (the glade's boar, the deep wood's lynx, the hills' badger, as the deer) and the Ascmearc's wildlife encounter rows, wiki | C1 |
 | **C8 The probe** | the ranger-and-hound row in `balance_probe`; a companion beside the player on `bench-turns`' `delf` row (an ally in the coarse turns) | `balance_probe`, `xtask/src/bench.rs`, `docs/balance.md`, `docs/perf.md` | C1 |
 

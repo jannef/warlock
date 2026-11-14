@@ -1,11 +1,11 @@
 //! Encounters on the overworld (`assets/data/encounters.toml`, spec §7 "Leaving an outdoor
 //! area", "Overworld encounters"; `docs/dev/encounters.md`): the edge rule, how near a hostile
 //! creature holds the player in an outdoor area when they walk off its edge
-//! (`world/edge_leave.rs`); the numbers of meeting someone on the way ([`Meetings`]); and each
+//! (`world/levels/edge_leave.rs`); the numbers of meeting someone on the way ([`Meetings`]); and each
 //! campaign's encounter tables (`campaigns/<id>/data/encounters/*.toml`, [`EncounterTable`]).
 //!
-//! The meetings live in `world/encounter.rs` (the roll, the lookouts, the choice) and
-//! `world/encounter_area.rs` (the local area and who stands where). Without the file the rules
+//! The meetings live in `world/levels/encounter.rs` (the roll, the lookouts, the choice) and
+//! `world/levels/encounter_area.rs` (the local area and who stands where). Without the file the rules
 //! are [`EncounterRules::default`]: the edge rule at 3 and nobody meets anybody; so does a
 //! campaign without tables.
 

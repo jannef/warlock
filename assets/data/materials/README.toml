@@ -60,7 +60,7 @@
 #             (rings and amulets), other; each "good" (the default: its weight as given),
 #             "poor" (a tenth), or "odd" (a hundredth, at least 1: a tin long sword, a wool ring)
 #   resists   its chance in percent to withstand each kind of item damage (none: nothing),
-#             `{ acid = 20, rust = 10, fire = 95 }` (world/item_damage.rs). An item is damaged by
+#             `{ acid = 20, rust = 10, fire = 95 }` (world/combat/item_damage.rs). An item is damaged by
 #             its main part's material: acid and rust by a creature's `corrodes`
 #             (creatures/README.toml), fire by one whose `corrodes` kind is fire. Withstood,
 #             nothing happens; else the item is damaged (the smith's one state, mended by Temper
@@ -72,7 +72,7 @@
 #             wood burns; stone and glass stand acid and heat
 #   proof     never damaged by anything (default false): it withstands acid, rust, and heat, a
 #             failed Temper only fails to improve it, a spell's ruin spares it, and a creature's
-#             gear of it is never found damaged (world/item_damage.rs). Adamantium alone
+#             gear of it is never found damaged (world/combat/item_damage.rs). Adamantium alone
 #   work      how hard it is to work (default 0, steel's): a signed modifier on the check of every
 #             salvage and recipe that works it (docs/design/professions.md §4; the profession
 #             that works it is its group's in stock.toml). Soft metals −3, adamantium +8

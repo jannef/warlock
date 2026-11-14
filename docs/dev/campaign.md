@@ -175,7 +175,7 @@ lane and the bounty board, a named place on the wall beside it: `docs/dev/guild.
 dialogue screen through `SeenActor::dialogue`). Their quests are below ("Cēaptūn's quests"); each one
 done makes their services 5% cheaper (`data/towns/ceaptun.toml`, docs/dev/npcs.md "Goodwill"). The dev
 scenario `ceaptun` starts on the square (seed 2, a warrior, 60 gold). Tests:
-`world/ceaptun_tests.rs` (the way in and out, the shops' goods, everyone at peace, names, the
+`world/campaigns/ceaptun_tests.rs` (the way in and out, the shops' goods, everyone at peace, names, the
 sanctuary and the services, Godgifu's topics, the view snapshot `ceaptun_start`, a replay),
 `ui/look.rs` (Sister Hild's look line), the `dialogue-services` and `dialogue-guild` text
 snapshots.
@@ -202,7 +202,7 @@ worth 0: never traded). The chalice lies on the barrow chamber's plinth, which C
 for its second floor (`[[dungeon.levels]] vaults`: certain, once, and never drawn at random); the
 reliquary on the sunken crypt's altar, Fennmynster 8; the drake in its hoard, Fyrdelf 12. The
 three branches' first levels say their `arrival` lines (`DungeonDef::arrival`, read through
-`Content::arrival` in `travel` with the hand-made levels'). Tests: `world/ceaptun_quest_tests.rs`
+`Content::arrival` in `travel` with the hand-made levels'). Tests: `world/campaigns/ceaptun_quest_tests.rs`
 (one quest a giver at a time, the lost shaft's prerequisite, its level-5 refusal, and its reveal and log, the fen minster's reveal, kills on any Cealdhlāw level, the arrival lines, a
 replay), `mapgen/cealdhlaw_tests.rs` (the chamber and its chalice on floor 2 for certain),
 `mapgen/fennmynster_tests.rs` (the reliquary on the crypt's altar).
@@ -231,7 +231,7 @@ is `aelfham`.
 
 For the quest (#1141): giver npc `wynflaed` (level `holtwic`, (54, 13)), hidden location id
 `aelfham` (a quest's `reveals`), the bottom level `aelfham:3`, the place name `the moss bed`.
-Tests: `world/holtwic_tests.rs` (the way in from Cēaptūn by road and out by the edge, everyone at
+Tests: `world/campaigns/holtwic_tests.rs` (the way in from Cēaptūn by road and out by the edge, everyone at
 peace, the wise-woman's name and topics with no reveal, the hidden mound until `reveal:aelfham`
 and the way down, the three floors and the moss bed on the third, the view snapshot
 `holtwic_start`, a replay).
@@ -253,7 +253,7 @@ burial ground and its crypts (`lictun_crypt_01`, The Undercroft; `lictun_crypt_0
 (`E36 S10 W36 N10`, clear of every plot); his words are `data/dialogue/lictun.toml`: greetings,
 nine one-liners and five mutters ("grumbles") in the commoner register, no topic, no service, no
 quest. No dev scenario: tests and captures walk from the Ascmearc's start (`move:E*6 move:S*4
-move:E descend`). Tests: `world/lictun_tests.rs` (`docs/dev/graves.md` "Tests"), `ui/look.rs`
+move:E descend`). Tests: `world/campaigns/lictun_tests.rs` (`docs/dev/graves.md` "Tests"), `ui/look.rs`
 (`a_gravestone_reads_its_inscription`).
 
 ## The wiki (`xtask/src/wiki/order.rs::campaigns`)
@@ -290,7 +290,7 @@ campaign's runs may open its Pits. No campaign's level or quest may name it or i
 population is in no other area's lists (`Content::fill_generic`), so a campaign's
 `stray_pool = "populations"` branches do not gain its fiends.
 
-Grundlēas (`grundleas`, #1010, `docs/dev/mapgen.md`, `world/endless.rs`) is the Ascmearc's
+Grundlēas (`grundleas`, #1010, `docs/dev/mapgen.md`, `world/levels/endless.rs`) is the Ascmearc's
 endless branch: an ordinary location (`9` at (52, 52) on the overworld, no `hidden`), 40 cells from
 Beorggeat, so no reveal is needed and no one starts beside it. No quest names it: a reach quest
 naming an endless branch's level is refused at load, and `Pick::Creatures` lists leave it out. Its

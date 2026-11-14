@@ -1,7 +1,7 @@
 //! Spells in data (spec §8 "Traps", "Spells"): the bursts and bolts that traps
 //! (`data/traps.toml`) cast, with the rules and checks the spells of `data/spells/` share (their
 //! bursts and lines go off through the same code). Who casts one decides only who deals its harm
-//! (`world/spell.rs`).
+//! (`world/magic/spell.rs`).
 //!
 //! - A **burst** (`Burst`, a fireball): everyone on the cells within its `radius` that a
 //!   shadowcast from its center reaches takes one roll of its `damage`, half of it (at least 1)

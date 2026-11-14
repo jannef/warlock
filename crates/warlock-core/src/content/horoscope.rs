@@ -132,7 +132,7 @@ pub struct Horoscope {
 }
 
 /// The calendar and moon flavour of the gifts (`[flavour]`, spec §8 "Birth sign"): pure
-/// functions of the time and the birth date, read at one hook each (`world/flavour.rs`).
+/// functions of the time and the birth date, read at one hook each (`world/character/flavour.rs`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Flavour {
     /// Percent of the healing pace on the character's birthday (125: a quarter faster).

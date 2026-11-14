@@ -1,6 +1,6 @@
 //! A caster's spells as its type writes them (spec §8 "Creature behavior": "Casters", #1102):
 //! `spells = ["spark", "hex_of_weakness"]`, ids in `data/spells/`, in the order it prefers
-//! them. Resolved when the creature types load (spells load first); `world/creature_cast.rs`
+//! them. Resolved when the creature types load (spells load first); `world/creatures/creature_cast.rs`
 //! casts them.
 //!
 //! Checks: a `combat = "caster"` type names at least one spell, and no other type names any;

@@ -17,12 +17,12 @@ and `World::own_slot` (`equip:` and `remove:` refuse another class's slot as an 
 **Barred and opened slots** (#1628, the profane gifts' body, `docs/dev/profane-gifts.md`): a
 talent's `opens_slot` makes a class's slot the holder's too, and its `bars_slot` keeps a slot
 from them; both are `TalentEffect::Slots` (`talent/slots.rs`, summed in `TalentMods::slots`),
-read in `world/body_slots.rs` alone: `has_slot` (a slot is everyone's, the class's, or opened)
+read in `world/items/body_slots.rs` alone: `has_slot` (a slot is everyone's, the class's, or opened)
 behind `World::own_slot` and `PerceptionView::own_slots`; `World::barred_words` refuses
 `equip:` in a barred slot with the talent's `refused` words and no time (before the fit check);
 `PerceptionView::barred` (the mark) and `barred_words` give the equipment screen's `— (horns)`
 row and the choice's words in place of its list, and the `equipment` dump's `a Head: - (horns)`;
-`World::shed_unworn`, after a gift is given or taken away (`world/profane.rs`), takes off what is
+`World::shed_unworn`, after a gift is given or taken away (`world/character/profane.rs`), takes off what is
 worn in a slot barred or no longer the player's and drops it on their cell ("Your iron helm no
 longer fits, and falls to the floor.", "Your silver ring slips from a finger that is no longer
 there."). The loader (`content::talent::check_slots`, after the objects) refuses a bar on a grip
@@ -36,7 +36,7 @@ fighting, `docs/dev/weapon-skills.md`), `ammo`, `launches`; `Content::fits`, `Co
 `equipment.rs` holds the runtime side: `Equipment` (slot → inventory position, on
 `Actor::equipment`, saved and hashed; equipped stacks stay in the inventory and keep weighing),
 `slots_taken` (every hand for a two-handed object), `free_slot` (spawn data), `mark` ("being
-worn"), `verbs` (the message verbs per action). `world/equip.rs` is the rules: `Action::Equip {
+worn"), `verbs` (the message verbs per action). `world/items/equip.rs` is the rules: `Action::Equip {
 slot, item }` / `Action::Remove(slot)` take off what is in the way (a swap) and cost the slot
 action (`wield`, `wear`, `body_armor`, `ready` in `data/actions.toml`) of everything put on or
 taken off (`World::price_for`); dropping takes off first (`take_off_before_dropping`) and
@@ -53,7 +53,7 @@ extend the profile's riders with `Effects::blows` right after `Mods::sharpen` ha
 reads a rider. Fists and natural attacks take it through `melee`; `kick`, `bash_with`, and the
 missile profiles do not.
 
-**Spirit weapons** (the Hunter's Spirit weapon, #881, `world/spirit_weapon.rs`): a `Stack::spirit`
+**Spirit weapons** (the Hunter's Spirit weapon, #881, `world/classes/spirit_weapon.rs`): a `Stack::spirit`
 exists only in a hand slot. `World::equip_saying` (what `World::equip` calls, with the call's own
 line, "A long sword of pale light is in your hand.") and `World::remove` end with
 `World::fade_spirit`: any spirit stack in the pack and out of the hands (taken off, swapped for
@@ -62,7 +62,7 @@ trade first pass their positions through `World::release_spirit` (the spirit sta
 faded, the rest renumbered), so neither the floor nor a shop ever holds one; `World::throw`
 refuses one; `shop::count_of` and the quests' counts skip it. What takes a stack out of the pack
 (an outcome's `remove_stacks`) needs nothing: the stack is gone either way.
-A kept beast's collar (`world/collar.rs`, `docs/dev/companion.md`) is the one thing handed over to
+A kept beast's collar (`world/allies/collar.rs`, `docs/dev/companion.md`) is the one thing handed over to
 a creature's `equipment` in play: the `neck` slot, by the Give ability.
 Creatures wield and wear from their spawn
 (`wield`/`wear` in a level legend, resolved in `content/level.rs::equip`). Presentation reads

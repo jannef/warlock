@@ -1,0 +1,102 @@
+//! Picking locks (spec §8 "Doors"; the Pick lock ability, the Open lock skill's use, #233).
+//!
+//! - **Who**: an actor trained in a skill with the `pick` effect (Open lock, `data/skills/`),
+//!   [`crate::skills::Skills::trains_effect`]: the abilities menu lists Pick lock for them
+//!   ([`crate::ability::Ability::PickLock`]). Anyone else is told "You do not know how to pick
+//!   locks." and no time passes.
+//! - **A try** at the locked closed door in a direction is a check ([`crate::check`]): 2d12 plus
+//!   the picker's Dexterity modifier (of the effective score, spec §8 "Stats") plus what Open lock
+//!   gives ([`Effect::Pick`]) against the lock's difficulty ([`World::lock_difficulty`]). It takes
+//!   the `pick_lock` action whatever comes of it, may earn Open lock a training mark
+//!   ([`Use::Pick`]), and makes no noise of its own.
+//! - **Picked**, the lock is gone and the door swings open in the same action, as a key opens
+//!   it ([`World::swing_open`]: its noise, and a trap on the door going off at the picker), on top
+//!   of the try's time (`open_door`); both are priced before the check, since a trap may kill.
+//!   **Failed**, the lock holds: "You fail to pick the lock." Nothing is remembered of a failed
+//!   try, so the next may succeed (no limit on trying again, the owner's rule: time is the
+//!   price).
+//! - A shut chest's lock is picked the same way (spec §8 "Chests"): picked, the chest opens as a
+//!   key opens it ([`World::lift_lid`]), on top of the try's time (`open_chest`).
+//! - A closed door without a lock, or anything else, is refused and takes no time: "That door is
+//!   not locked." (as `o` would find out at once), "There is no lock there."
+
+use crate::action::Event;
+use crate::check::check;
+use crate::content::ActionKind;
+use crate::geom::{Dir, Pos};
+use crate::skills::{Effect, Use};
+use crate::stats::Stat;
+use crate::world::{Spent, World};
+
+impl World {
+    /// The player tries to pick the lock of the closed door in `dir`. Returns what it cost.
+    pub(in crate::world) fn pick_lock(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
+        let content = self.content.clone();
+        let me = self.state.player();
+        if !crate::ability::Ability::PickLock.had_by(me, &content) {
+            self.say("You do not know how to pick locks.");
+            return Spent::Nothing;
+        }
+        let modifier =
+            me.check_modifier(&content, Stat::Dexterity) + me.skill_effect(&content, Effect::Pick);
+        let at = self.player_pos().step(dir);
+        // What they take for a chest is a mimic (`mimic.rs`).
+        if let Some(spent) = self.touch(at, events) {
+            return spent;
+        }
+        let level = self.state.current();
+        let def = (level.terrain.get(at)).map(|t| content.terrain(*t));
+        // A shut chest's lock is picked as a door's (spec §8 "Chests").
+        let chest = def.is_some_and(|d| d.is_shut_chest());
+        if !def.is_some_and(|d| d.is_closed_door()) && !chest {
+            self.say("There is no lock there.");
+            return Spent::Nothing;
+        }
+        if !level.locks.contains_key(&at) {
+            match chest {
+                true => self.say(format!("The {} is not locked.", self.chest_name(at))),
+                false => self.say("That door is not locked."),
+            }
+            return Spent::Nothing;
+        }
+        let difficulty = self.lock_difficulty(at);
+        let player = self.state.player;
+        let try_price = self.price_of(player, ActionKind::PickLock);
+        let opens = if chest {
+            ActionKind::OpenChest
+        } else {
+            ActionKind::OpenDoor
+        };
+        let open_price = self.price_of(player, opens);
+        let picked = check(&mut self.state.rng, modifier, difficulty);
+        if self.trains(Use::Pick) {
+            self.train(Use::Pick);
+        }
+        if !picked {
+            self.say("You fail to pick the lock.");
+            return Spent::Turn(try_price);
+        }
+        self.state.current_mut().locks.remove(&at);
+        if chest {
+            let name = self.chest_name(at);
+            self.say(format!("You pick the lock and open the {name}."));
+            self.open_lid(at, events);
+            return Spent::Turn(try_price + open_price);
+        }
+        self.say("You pick the lock and open the door.");
+        self.swing_open(player, at, events);
+        Spent::Turn(try_price + open_price)
+    }
+
+    /// How hard the lock at `at` on the current level is to pick (spec §8 "Doors"): its own
+    /// difficulty ([`crate::door::Lock::difficulty`]), plus on a dungeon branch its
+    /// `locks_per_depth` for each level below the first. 0 where there is no lock.
+    pub(super) fn lock_difficulty(&self, at: Pos) -> i32 {
+        let Some(lock) = self.state.current().locks.get(&at) else {
+            return 0;
+        };
+        let deeper = (self.content.branch_level(&self.state.current_level))
+            .map_or(0, |(def, depth)| def.locks_at(depth));
+        i32::from(lock.difficulty()).saturating_add(deeper)
+    }
+}

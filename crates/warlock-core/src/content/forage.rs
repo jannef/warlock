@@ -1,7 +1,7 @@
 //! Foraging (`assets/data/forage.toml`, spec §8 "Foraging"; #547): how long a forage takes,
 //! and for each landscape of the wild its chance of finding food, what it finds, and how much.
 //!
-//! The rule itself lives in `world/forage.rs`: who forages (anyone trained in a skill with the
+//! The rule itself lives in `world/skills/forage.rs`: who forages (anyone trained in a skill with the
 //! `forage` benefit, Survival), where (the overworld and its local areas, on land with a row
 //! here, never in water), and what comes of it.
 //!

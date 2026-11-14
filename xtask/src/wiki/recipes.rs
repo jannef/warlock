@@ -1,8 +1,8 @@
 //! The professions' recipes (spec §8 "Skills": professions; docs/dev/crafting.md): every generic
 //! recipe from `data/recipes/<skill>/`, a table a profession, the grades a made item comes out at,
-//! from `data/recipes.toml`'s bands and the 2d12 rules (`world/craft_make.rs::grade`), and gem
-//! cutting (`world/cut.rs`: the cut bands, a large uncut ruby's fates, the odds), and gem setting
-//! (`world/set.rs`: the odds).
+//! from `data/recipes.toml`'s bands and the 2d12 rules (`world/crafting/craft_make.rs::grade`), and gem
+//! cutting (`world/crafting/cut.rs`: the cut bands, a large uncut ruby's fates, the odds), and gem setting
+//! (`world/crafting/set.rs`: the odds).
 
 use super::util::{Term, anchored, capital, link};
 use std::fmt::Write as _;
@@ -27,7 +27,7 @@ const BONUSES: [(i32, &str); 4] = [
 ];
 
 /// What Master's hand adds to a made check's margin as it is graded (the craftsperson's level-50
-/// passive, `world/mastery.rs::graded_margin`): its `grade_ease`, 0 without the talent.
+/// passive, `world/crafting/mastery.rs::graded_margin`): its `grade_ease`, 0 without the talent.
 fn grade_ease(content: &Content) -> i32 {
     (content.talents().id("masters_hand"))
         .map(|id| content.talents().get(id))
@@ -605,7 +605,7 @@ const CUT_BONUSES: [(i32, &str); 4] = [
     (16, "a master with a steady hand"),
 ];
 
-/// Gem cutting (Jewelcraft's Cut, `world/cut.rs`): the cut each margin reaches and what it does
+/// Gem cutting (Jewelcraft's Cut, `world/crafting/cut.rs`): the cut each margin reaches and what it does
 /// to the size, a large uncut ruby at each outcome with its worth, then the odds by bonus on a
 /// ruby and on a smokestone.
 pub(super) fn gem_cutting(content: &Content) -> String {
@@ -773,7 +773,7 @@ pub(super) fn gem_cutting(content: &Content) -> String {
     out
 }
 
-/// Gem setting (Jewelcraft's Set, `world/set.rs`): the odds of each outcome by the check's whole
+/// Gem setting (Jewelcraft's Set, `world/crafting/set.rs`): the odds of each outcome by the check's whole
 /// bonus, on the cutting tables' ruby and on the softest gem.
 pub(super) fn gem_setting(content: &Content) -> String {
     let Some(recipe) = content.recipes().of_use(RecipeUse::Set) else {

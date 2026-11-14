@@ -1,6 +1,6 @@
 //! An item's make (#1436, #1494): Fine, Marvellous, or Masterwork as found or as a creature's
 //! gear spawns (`data/gear_condition.toml`). Loot's make ([`make`]) is a step of making a find
-//! ([`super::loot`]); creature gear's condition (`world/gear_condition.rs`) improves its pieces
+//! ([`super::loot`]); creature gear's condition (`gear/condition.rs`) improves its pieces
 //! the same way ([`improve`]).
 //!
 //! **Loot's make** ([`make`]): loot's arms and armour (floor loot, chests, hoards, dens, room

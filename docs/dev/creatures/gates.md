@@ -6,7 +6,7 @@ miscast table: `docs/dev/spells.md` "Miscasts". Design: `docs/design/miscasts-re
 The gates (#1295): nine shared creature types in `assets/data/creatures/`, one file each, made
 only by a miscast. Each is opened by the miscast row of its own id (`assets/data/miscasts/<id>.toml`,
 `effect = { kind = "summon", creature = "<id>" }`, all above the protected half), which puts it
-on the first free cell around the caster (`world/miscast.rs::miscast_summon`, of its own
+on the first free cell around the caster (`world/magic/miscast.rs::miscast_summon`, of its own
 faction, `gates`). They replace the `harm` stand-ins #1288 laid under the same ids.
 
 | L | id | name | hp (base + To) | Prot. | lets through | count | every | most | row |
@@ -38,11 +38,11 @@ Common to all:
   (`Actor::faction_override`) brings its fiends to that one. A gate the Pit's warden opens comes
   in the warden's `layer_keepers`, and so do its fiends: they fight on the warden's side, hunt the
   player, and fall on no one else. A miscast's gate in a Pit still lets its fiends through
-  `loosed`, and those fall on the warden as on all else (`world/pit_warden_tests.rs`).
-- **Rooted** (#1294, `world/rooted.rs`): it never moves or is moved. A rooted type with **no
+  `loosed`, and those fall on the warden as on all else (`world/campaigns/pit_warden_tests.rs`).
+- **Rooted** (#1294, `world/creatures/rooted.rs`): it never moves or is moved. A rooted type with **no
   natural attack and no weapon in hand strikes no blow** (`World::rooted_plan`: a melee
   `Plan::Attack` is a wait; this PR's one line of code beside the data), so a gate's turn is a
-  summoning when `summons_at` allows, else a wait. `world/rooted_tests.rs` checks it.
+  summoning when `summons_at` allows, else a wait. `world/creatures/rooted_tests.rs` checks it.
 - **The summoning**: an id pool (shared types only), `mana` left out (no cost: a breeder's rule,
   so `base_mana` is 0; `content/summoner_roster_tests.rs` lets a rooted summoner have none), the
   default range 8 and spread 2, verb "lets through" ("The rift lets through a dretch!"). The
@@ -71,10 +71,10 @@ its summons are in `creature-summons.md`, and `wiki/src/miscasts.md` "Gates" tel
 Tests: `content/gate_roster_tests.rs` (every gate rooted, of the `gates`, letting its pool
 through `loosed`, with no attack, no stray, no
 corpse, no mana, its pool as above; each opened by its one row, of its id, above the protected
-half; the `gates` at peace with every faction but the player's); `world/gate_tests.rs` (a `rift`
+half; the `gates` at peace with every faction but the player's); `world/levels/gate_tests.rs` (a `rift`
 row on the built-in content opens the rift beside the caster, hostile to the player and neutral
 to the kobold; it lets dretches and quasits through, `loosed`, at
-no cost, never more than four, and never moves); `world/rooted_tests.rs` (a gate with no attack
-strikes no blow beside the player); `world/gate_tests.rs` again (a kobold and a loosed dretch
+no cost, never more than four, and never moves); `world/creatures/rooted_tests.rs` (a gate with no attack
+strikes no blow beside the player); `world/levels/gate_tests.rs` again (a kobold and a loosed dretch
 beside a rift never pick it for a target, the player's blows land on it; a kobold's Acid splash
-hurts it); `world/sic_tests.rs` (the ranger's companion strikes a rift on its own and set on it).
+hurts it); `world/allies/sic_tests.rs` (the ranger's companion strikes a rift on its own and set on it).

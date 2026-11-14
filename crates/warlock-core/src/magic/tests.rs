@@ -718,7 +718,10 @@ fn tiers_roll_from_a_window_below_the_item_level() {
 /// to name its hook here.
 fn reader(effect: Effect) -> (&'static str, &'static str) {
     const MODS: (&str, &str) = ("magic/mods.rs", include_str!("mods.rs"));
-    const ACTOR: (&str, &str) = ("world/actor.rs", include_str!("../world/actor.rs"));
+    const ACTOR: (&str, &str) = (
+        "world/turn/actor.rs",
+        include_str!("../world/turn/actor.rs"),
+    );
     match effect {
         Effect::ToHit
         | Effect::Damage
@@ -742,24 +745,32 @@ fn reader(effect: Effect) -> (&'static str, &'static str) {
         | Effect::MaxHp
         | Effect::MaxMana => ACTOR,
         Effect::Weight | Effect::Protection => ("object.rs", include_str!("../object.rs")),
-        Effect::Proof => (
-            "world/item_damage.rs",
-            include_str!("../world/item_damage.rs"),
+        Effect::Proof => ("magic/worked.rs", include_str!("worked.rs")),
+        Effect::AttackSpeed | Effect::MoveSpeed => (
+            "world/turn/schedule.rs",
+            include_str!("../world/turn/schedule.rs"),
         ),
-        Effect::AttackSpeed | Effect::MoveSpeed => {
-            ("world/schedule.rs", include_str!("../world/schedule.rs"))
-        }
-        Effect::Durability => ("world/shoot.rs", include_str!("../world/shoot.rs")),
-        Effect::Regeneration => ("world/status.rs", include_str!("../world/status.rs")),
-        Effect::ManaRegeneration | Effect::ManaCost => {
-            ("world/mana.rs", include_str!("../world/mana.rs"))
-        }
+        Effect::Durability => (
+            "world/combat/shoot.rs",
+            include_str!("../world/combat/shoot.rs"),
+        ),
+        Effect::Regeneration => (
+            "world/health/status.rs",
+            include_str!("../world/health/status.rs"),
+        ),
+        Effect::ManaRegeneration | Effect::ManaCost => (
+            "world/magic/mana.rs",
+            include_str!("../world/magic/mana.rs"),
+        ),
         Effect::Carry => ("burden.rs", include_str!("../burden.rs")),
         Effect::Stealth => ("noise.rs", include_str!("../noise.rs")),
-        Effect::SpellEase => ("world/cast.rs", include_str!("../world/cast.rs")),
+        Effect::SpellEase => (
+            "world/magic/cast.rs",
+            include_str!("../world/magic/cast.rs"),
+        ),
         Effect::SpellToHit | Effect::SpellThreat => (
-            "world/spell_rung.rs",
-            include_str!("../world/spell_rung.rs"),
+            "world/magic/spell_rung.rs",
+            include_str!("../world/magic/spell_rung.rs"),
         ),
         Effect::SpellRungs
         | Effect::SpellBonus
@@ -769,25 +780,45 @@ fn reader(effect: Effect) -> (&'static str, &'static str) {
         | Effect::SpellReach
         | Effect::SpellDuration
         | Effect::WandRungs => (
-            "world/spell_mods.rs",
-            include_str!("../world/spell_mods.rs"),
+            "world/magic/spell_mods.rs",
+            include_str!("../world/magic/spell_mods.rs"),
         ),
-        Effect::ManaOnKill | Effect::ResourceOnKill => {
-            ("world/siphon.rs", include_str!("../world/siphon.rs"))
-        }
-        Effect::ResourceMax | Effect::ResourceRate => {
-            ("world/resource.rs", include_str!("../world/resource.rs"))
-        }
+        Effect::ManaOnKill | Effect::ResourceOnKill => (
+            "world/items/siphon.rs",
+            include_str!("../world/items/siphon.rs"),
+        ),
+        Effect::ResourceMax | Effect::ResourceRate => (
+            "world/character/resource.rs",
+            include_str!("../world/character/resource.rs"),
+        ),
         Effect::ActiveStamina => (
-            "world/weapon_active.rs",
-            include_str!("../world/weapon_active.rs"),
+            "world/combat/weapon_active.rs",
+            include_str!("../world/combat/weapon_active.rs"),
         ),
-        Effect::DoorKick => ("world/door.rs", include_str!("../world/door.rs")),
-        Effect::DigPercent => ("world/dig.rs", include_str!("../world/dig.rs")),
-        Effect::Hunger => ("world/hunger.rs", include_str!("../world/hunger.rs")),
-        Effect::TrapDamage => ("world/trap.rs", include_str!("../world/trap.rs")),
-        Effect::DiseaseCheck => ("world/disease.rs", include_str!("../world/disease.rs")),
-        Effect::PotionKept => ("world/potion.rs", include_str!("../world/potion.rs")),
+        Effect::DoorKick => (
+            "world/fixtures/door.rs",
+            include_str!("../world/fixtures/door.rs"),
+        ),
+        Effect::DigPercent => (
+            "world/crafting/dig.rs",
+            include_str!("../world/crafting/dig.rs"),
+        ),
+        Effect::Hunger => (
+            "world/health/hunger.rs",
+            include_str!("../world/health/hunger.rs"),
+        ),
+        Effect::TrapDamage => (
+            "world/fixtures/trap.rs",
+            include_str!("../world/fixtures/trap.rs"),
+        ),
+        Effect::DiseaseCheck => (
+            "world/health/disease.rs",
+            include_str!("../world/health/disease.rs"),
+        ),
+        Effect::PotionKept => (
+            "world/health/potion.rs",
+            include_str!("../world/health/potion.rs"),
+        ),
     }
 }
 
@@ -816,53 +847,146 @@ fn every_shipped_affix_effect_is_read_by_its_hook() {
 /// affixes count), and its source. An exhaustive match, so a new benefit has to name its hook.
 fn skill_reader(effect: crate::skills::Effect) -> (&'static str, &'static str) {
     use crate::skills::Effect as S;
-    const ACTOR: (&str, &str) = ("world/actor.rs", include_str!("../world/actor.rs"));
-    const SEARCH: (&str, &str) = ("world/search.rs", include_str!("../world/search.rs"));
-    const SCHEDULE: (&str, &str) = ("world/schedule.rs", include_str!("../world/schedule.rs"));
+    const ACTOR: (&str, &str) = (
+        "world/turn/actor.rs",
+        include_str!("../world/turn/actor.rs"),
+    );
+    const SEARCH: (&str, &str) = (
+        "world/skills/search.rs",
+        include_str!("../world/skills/search.rs"),
+    );
+    const SCHEDULE: (&str, &str) = (
+        "world/turn/schedule.rs",
+        include_str!("../world/turn/schedule.rs"),
+    );
     match effect {
         S::Dodge | S::Hearing | S::Speed => ACTOR,
         S::Quiet => ("noise.rs", include_str!("../noise.rs")),
         S::Search | S::SearchReach | S::Spot | S::DetectTraps => SEARCH,
-        S::Study | S::Learn => ("world/learn.rs", include_str!("../world/learn.rs")),
-        S::Cast | S::Ward => ("world/miscast.rs", include_str!("../world/miscast.rs")),
-        S::Decipher => ("world/decipher.rs", include_str!("../world/decipher.rs")),
-        S::Disarm => ("world/disarm.rs", include_str!("../world/disarm.rs")),
+        S::Study | S::Learn => (
+            "world/magic/learn.rs",
+            include_str!("../world/magic/learn.rs"),
+        ),
+        S::Cast | S::Ward => (
+            "world/magic/miscast.rs",
+            include_str!("../world/magic/miscast.rs"),
+        ),
+        S::Decipher => (
+            "world/magic/decipher.rs",
+            include_str!("../world/magic/decipher.rs"),
+        ),
+        S::Disarm => (
+            "world/skills/disarm.rs",
+            include_str!("../world/skills/disarm.rs"),
+        ),
         S::Burden | S::Travel | S::Wade | S::Footing => SCHEDULE,
-        S::Forage => ("world/forage.rs", include_str!("../world/forage.rs")),
-        S::Wedge => ("world/wedge.rs", include_str!("../world/wedge.rs")),
-        S::Freshness => ("world/freshness.rs", include_str!("../world/freshness.rs")),
-        S::Bargain => ("world/shop.rs", include_str!("../world/shop.rs")),
-        S::Identify | S::IdentifyPotion | S::IdentifyMagic => {
-            ("world/appraise.rs", include_str!("../world/appraise.rs"))
-        }
-        S::Herbs => ("world/forage.rs", include_str!("../world/forage.rs")),
-        S::Dig => ("world/dig.rs", include_str!("../world/dig.rs")),
-        S::Kick => ("world/door.rs", include_str!("../world/door.rs")),
-        S::Slip => ("world/slip.rs", include_str!("../world/slip.rs")),
-        S::Lookout | S::Stalk | S::Evade => {
-            ("world/encounter.rs", include_str!("../world/encounter.rs"))
-        }
-        S::Steal => ("world/steal.rs", include_str!("../world/steal.rs")),
-        S::Feint => ("world/feint.rs", include_str!("../world/feint.rs")),
-        S::Heal => ("world/heal.rs", include_str!("../world/heal.rs")),
-        S::Tame => ("world/tame.rs", include_str!("../world/tame.rs")),
-        S::Intimidate => ("world/war_cry.rs", include_str!("../world/war_cry.rs")),
-        S::SongDegrees | S::SongCraft => ("world/song.rs", include_str!("../world/song.rs")),
-        S::Escape => ("world/hold.rs", include_str!("../world/hold.rs")),
-        S::Climb => ("world/trap.rs", include_str!("../world/trap.rs")),
-        S::Pick => ("world/lockpick.rs", include_str!("../world/lockpick.rs")),
-        S::Temper | S::Whittle => ("world/temper.rs", include_str!("../world/temper.rs")),
-        S::Craft => ("world/salvage.rs", include_str!("../world/salvage.rs")),
-        S::EnchantLevel => ("world/enchant.rs", include_str!("../world/enchant.rs")),
-        S::Swim => ("world/ice.rs", include_str!("../world/ice.rs")),
-        S::Resist => ("world/knowledge.rs", include_str!("../world/knowledge.rs")),
-        S::SneakDice => ("world/ambush.rs", include_str!("../world/ambush.rs")),
-        S::Surprise | S::Initiative | S::SurpriseEase | S::SteadyEase => {
-            ("world/surprise.rs", include_str!("../world/surprise.rs"))
-        }
+        S::Forage => (
+            "world/skills/forage.rs",
+            include_str!("../world/skills/forage.rs"),
+        ),
+        S::Wedge => (
+            "world/skills/wedge.rs",
+            include_str!("../world/skills/wedge.rs"),
+        ),
+        S::Freshness => (
+            "world/health/freshness.rs",
+            include_str!("../world/health/freshness.rs"),
+        ),
+        S::Bargain => (
+            "world/people/shop.rs",
+            include_str!("../world/people/shop.rs"),
+        ),
+        S::Identify | S::IdentifyPotion | S::IdentifyMagic => (
+            "world/skills/appraise.rs",
+            include_str!("../world/skills/appraise.rs"),
+        ),
+        S::Herbs => (
+            "world/skills/forage.rs",
+            include_str!("../world/skills/forage.rs"),
+        ),
+        S::Dig => (
+            "world/crafting/dig.rs",
+            include_str!("../world/crafting/dig.rs"),
+        ),
+        S::Kick => (
+            "world/fixtures/door.rs",
+            include_str!("../world/fixtures/door.rs"),
+        ),
+        S::Slip => (
+            "world/combat/slip.rs",
+            include_str!("../world/combat/slip.rs"),
+        ),
+        S::Lookout | S::Stalk | S::Evade => (
+            "world/levels/encounter.rs",
+            include_str!("../world/levels/encounter.rs"),
+        ),
+        S::Steal => (
+            "world/skills/steal.rs",
+            include_str!("../world/skills/steal.rs"),
+        ),
+        S::Feint => (
+            "world/skills/feint.rs",
+            include_str!("../world/skills/feint.rs"),
+        ),
+        S::Heal => (
+            "world/health/heal.rs",
+            include_str!("../world/health/heal.rs"),
+        ),
+        S::Tame => (
+            "world/allies/tame.rs",
+            include_str!("../world/allies/tame.rs"),
+        ),
+        S::Intimidate => (
+            "world/classes/war_cry.rs",
+            include_str!("../world/classes/war_cry.rs"),
+        ),
+        S::SongDegrees | S::SongCraft => (
+            "world/classes/song.rs",
+            include_str!("../world/classes/song.rs"),
+        ),
+        S::Escape => (
+            "world/health/hold.rs",
+            include_str!("../world/health/hold.rs"),
+        ),
+        S::Climb => (
+            "world/fixtures/trap.rs",
+            include_str!("../world/fixtures/trap.rs"),
+        ),
+        S::Pick => (
+            "world/skills/lockpick.rs",
+            include_str!("../world/skills/lockpick.rs"),
+        ),
+        S::Temper | S::Whittle => (
+            "world/crafting/temper.rs",
+            include_str!("../world/crafting/temper.rs"),
+        ),
+        S::Craft => (
+            "world/crafting/salvage.rs",
+            include_str!("../world/crafting/salvage.rs"),
+        ),
+        S::EnchantLevel => (
+            "world/crafting/enchant.rs",
+            include_str!("../world/crafting/enchant.rs"),
+        ),
+        S::Swim => (
+            "world/levels/ice.rs",
+            include_str!("../world/levels/ice.rs"),
+        ),
+        S::Resist => (
+            "world/skills/knowledge.rs",
+            include_str!("../world/skills/knowledge.rs"),
+        ),
+        S::SneakDice => (
+            "world/combat/ambush.rs",
+            include_str!("../world/combat/ambush.rs"),
+        ),
+        S::Surprise | S::Initiative | S::SurpriseEase | S::SteadyEase => (
+            "world/combat/surprise.rs",
+            include_str!("../world/combat/surprise.rs"),
+        ),
         S::ManaRegen | S::MaxMana => (
-            "world/concentration.rs",
-            include_str!("../world/concentration.rs"),
+            "world/magic/concentration.rs",
+            include_str!("../world/magic/concentration.rs"),
         ),
     }
 }
