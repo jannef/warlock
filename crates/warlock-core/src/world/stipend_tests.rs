@@ -10,6 +10,7 @@ use crate::replay::Replay;
 use crate::talent::TalentMods;
 use crate::test_support::CONTENT;
 use crate::test_support::run as act;
+use crate::test_support::texts as said;
 
 /// Beside the servant's cell (40, 27) in the Gæsthūs, east of it.
 const BESIDE: Pos = Pos::new(41, 27);
@@ -46,10 +47,6 @@ fn offered_landed(character: &str) -> bool {
     let draft = World::draft(CONTENT.clone(), "ceaptun", None, &spec).expect("a draft");
     let (_, offers) = draft.creation_offers(&[]).expect("offers");
     (offers.iter()).any(|(id, _)| CONTENT.talents().get(*id).id == "landed_noble")
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 fn servant(world: &World) -> Option<&Actor> {

@@ -8,6 +8,7 @@ use crate::content::ContentFiles;
 use crate::magic::{Affix, Magic, Rarity};
 use crate::replay::Replay;
 use crate::test_support::run;
+use crate::test_support::texts as said;
 
 /// The appraiser's words and service, added to the built-in dialogue.
 const APPRAISER: &str = r##"
@@ -71,10 +72,6 @@ const SCROLLS: &[&str] = &["scroll_of_fireball*3", "scroll_of_lightning*2"];
 fn gold(w: &World) -> u32 {
     let coin = w.content().object_id("gold_coin").expect("gold");
     super::shop::count_of(&w.state().player().inventory, coin)
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 /// The player carries an unidentified iron ring of the Bear.

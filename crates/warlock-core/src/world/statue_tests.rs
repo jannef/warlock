@@ -8,6 +8,7 @@ use crate::content::ContentFiles;
 use crate::skills::{SkillId, Trained};
 use crate::stats::Stat;
 use crate::test_support::run;
+use crate::test_support::texts as said;
 
 // A lit hall: the player by a pick-axe and a scroll of restoration, a kobold east of them on a
 // dagger, a deer far off, and a basilisk behind the wall (B) for the gaze.
@@ -40,10 +41,6 @@ fn files(scenario: &str) -> ContentFiles {
 fn world(scenario: &str) -> World {
     let content = Arc::new(Content::load(&files(scenario)).expect("test content is valid"));
     World::new(content, "stone_hall", None).expect("world")
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 fn stiffening(w: &World) -> StatusId {

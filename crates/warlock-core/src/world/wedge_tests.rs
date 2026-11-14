@@ -9,6 +9,7 @@ use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stats};
+use crate::test_support::last_text as last_message;
 use std::sync::LazyLock;
 
 /// A hall split by iron bars and a door; the hobgoblin sees the player through the bars, and its way round is the door beside the player.
@@ -64,10 +65,6 @@ fn world(woodcraft: Option<u16>) -> World {
 fn terrain(w: &World) -> String {
     let (level, _) = w.ground_truth();
     w.content().terrain(level.terrain[DOOR]).id.clone()
-}
-
-fn last_message(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
 }
 
 fn wedged(w: &World) -> Option<u8> {

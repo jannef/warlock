@@ -8,6 +8,7 @@ use crate::noise::SoundKind;
 use crate::replay::Replay;
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -214,10 +215,6 @@ fn world_of(hall: &str, allies: Option<&str>) -> World {
 
 fn world() -> World {
     world_of(HALL, Some(ALLIES))
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn last_said(w: &World) -> String {

@@ -16,6 +16,7 @@ use crate::skills::Effect;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::CONTENT as BUILTIN;
 use crate::test_support::run;
+use crate::test_support::said;
 
 /// A human of `class` in the showcase (seed 7), with their kit, born under no sign, every score
 /// 14.
@@ -43,10 +44,6 @@ fn world(class: &str) -> World {
     let max = w.state.player().max_hp(w.content());
     w.player_mut().hp = max;
     w
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 fn last(world: &World) -> String {

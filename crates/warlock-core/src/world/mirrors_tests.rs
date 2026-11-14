@@ -9,6 +9,7 @@ use crate::dump::{Layer, layer_rows};
 use crate::object::Stack;
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said_text as said;
 use std::collections::BTreeSet;
 
 /// A hall, 31 wide, fully lit: the east part (x 14 to 24, walls included) a hall of mirrors with
@@ -63,10 +64,6 @@ fn kobold(w: &World, x: i32) -> ActorId {
 fn put_player(w: &mut World, p: Pos) {
     w.player_mut().pos = p;
     w.apply(&Action::Wait);
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 #[test]

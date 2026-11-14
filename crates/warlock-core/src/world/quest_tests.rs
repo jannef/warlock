@@ -9,6 +9,7 @@ use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::texts as said;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -326,10 +327,6 @@ fn ask(world: &mut World, dir: Dir, topic: &str) -> Outcome {
         dir,
         topic: topic.into(),
     })
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 /// The last `n` messages.

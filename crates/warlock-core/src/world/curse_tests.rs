@@ -10,6 +10,7 @@ use crate::content::{ClassActive, ContentFiles, CreatureId, CreatureSpawn};
 use crate::dump::{self, Layer};
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said_text as said;
 
 /// A hall, 30 wide, with a cursed room over x 10 to 19. Lit, so the player sees all of it.
 const HALL: &str = "\
@@ -59,10 +60,6 @@ fn content(pervaded: bool) -> Arc<Content> {
 
 fn world(pervaded: bool) -> World {
     World::new(content(pervaded), "test_curse", None).expect("world")
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 /// The creature standing at `p`, if any.

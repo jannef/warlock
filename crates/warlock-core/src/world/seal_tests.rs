@@ -13,6 +13,7 @@ use crate::replay::Replay;
 use crate::skills::Trained;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::run as apply;
+use crate::test_support::{last_text as last, said_text as said};
 use std::sync::LazyLock;
 
 const ROOM: &str = "\
@@ -137,14 +138,6 @@ fn category(w: &World, affix: &Affix) -> String {
         .expect("affix")
         .category
         .clone()
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 fn recipe(w: &World, id: &str) -> crate::content::RecipeId {

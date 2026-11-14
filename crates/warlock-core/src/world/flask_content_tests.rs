@@ -8,6 +8,7 @@ use super::*;
 use crate::content::{ContentFiles, ZoneKind};
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said as texts;
 
 // A training dummy takes a lot and never fights back; a dead one is undead.
 const DUMMIES: &str = "[[creature]]\nid = \"dummy\"\nname = \"training dummy\"\nglyph = \"D\"\n\
@@ -48,10 +49,6 @@ fn hall(map: &str) -> World {
 
 /// The hall every throw is made in: the dummy six cells east of the player.
 const ROW: &str = "############\n#@.....D...#\n############\n";
-
-fn texts(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
-}
 
 fn at(w: &World, p: Pos) -> ActorId {
     (w.state.actors.values())

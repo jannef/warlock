@@ -10,6 +10,7 @@ use crate::perception::Sale;
 use crate::replay::Replay;
 use crate::stats::{Stat, Stats};
 use crate::test_support::builtin as content;
+use crate::test_support::last_text as last;
 
 /// From the courtyard's start: east along the path, the purse in the gazebo (a), the scroll of
 /// light beside it (b), then along the flagstones to the hut, opening its door, and in.
@@ -42,10 +43,6 @@ fn apply(w: &mut World, actions: &str) -> Outcome {
         last = w.apply(&action);
     }
     last
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or(String::new(), |m| m.text.clone())
 }
 
 fn said(w: &World, text: &str) -> bool {

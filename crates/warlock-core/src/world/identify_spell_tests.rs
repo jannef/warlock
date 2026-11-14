@@ -7,6 +7,7 @@ use crate::ability::{Ability, Aim};
 use crate::content::{Rarity, SpellId};
 use crate::item_list::ItemList;
 use crate::magic::{Affix, Magic};
+use crate::test_support::last;
 use crate::test_support::run;
 
 /// The pack: a, two scrolls of identify.
@@ -29,10 +30,6 @@ fn world(mana: u16) -> World {
     let identify = w.content.object_id("scroll_of_identify").expect("identify");
     w.state.known_scrolls.insert(identify);
     w
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.display())
 }
 
 /// An unidentified magic ring, put at the end of the pack; its position.

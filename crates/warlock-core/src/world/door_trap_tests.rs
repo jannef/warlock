@@ -10,6 +10,7 @@ use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said as texts;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -286,10 +287,6 @@ fn world_with(map: &str, scenario: &str) -> World {
 
 fn world(map: &str) -> World {
     world_with(map, "")
-}
-
-fn texts(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 /// Who set off a trap at `at` in `out`, in order.

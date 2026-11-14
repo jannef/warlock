@@ -11,6 +11,7 @@ use crate::geom::Dir;
 use crate::replay::Replay;
 use crate::test_support::CONTENT as BUILTIN;
 use crate::test_support::run;
+use crate::test_support::said;
 use crate::world::{Order, stance_between};
 use std::sync::Arc;
 
@@ -32,10 +33,6 @@ fn kitted(spec: &str, seed: u64) -> World {
         true,
     )
     .expect("world")
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn companion_of(w: &World) -> (&Actor, &CompanionData) {

@@ -11,6 +11,7 @@ use crate::content::ContentFiles;
 use crate::noise::Act;
 use crate::replay::Replay;
 use crate::test_support::run;
+use crate::test_support::{last_text as last_message, texts};
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -363,17 +364,6 @@ fn took(w: &mut World, actions: &str) -> u64 {
         assert!(out.took_turn, "{action}: {:?}", last_message(w));
     }
     total(&outs)
-}
-
-fn last_message(w: &World) -> String {
-    w.messages()
-        .iter()
-        .last()
-        .map_or(String::new(), |m| m.text.clone())
-}
-
-fn texts(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 fn burden(w: &World) -> Burden {

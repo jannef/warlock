@@ -13,6 +13,7 @@ use crate::replay::Replay;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::CONTENT as BUILTIN;
 pub(super) use crate::test_support::run;
+use crate::test_support::said;
 
 /// A human of `class` in the showcase (seed 7), with their kit, every score 14.
 /// A human of `class` in the showcase, born under no sign, so a sign's gifts (Rise from the
@@ -37,10 +38,6 @@ pub(super) fn world(class: &str) -> World {
     let max = w.state.player().max_hp(w.content());
     w.player_mut().hp = max;
     w
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 pub(super) fn last(world: &World) -> String {

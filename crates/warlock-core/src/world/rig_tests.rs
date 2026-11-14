@@ -12,6 +12,7 @@ use crate::replay::Replay;
 use crate::rng::Rng;
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said as texts;
 
 /// A lit hall on the built-in content, the player at `@` as a human craftsperson with
 /// Trapwright, every score 10, born under no sign (no gift of theirs saves them); `r` a rat.
@@ -58,10 +59,6 @@ const HALL: &str = "#######\n#.....#\n#.@...#\n#.....#\n#######\n";
 
 /// East of the player in [`HALL`].
 const EAST: Pos = Pos::new(3, 2);
-
-fn texts(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
-}
 
 fn last(world: &World) -> String {
     texts(world).last().cloned().unwrap_or_default()

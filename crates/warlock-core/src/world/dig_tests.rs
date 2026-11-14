@@ -9,6 +9,7 @@ use crate::content::ContentFiles;
 use crate::noise::{self, Act, SoundKind};
 use crate::perception::CellView;
 use crate::replay::Replay;
+use crate::test_support::last_text as last_message;
 
 // A lit cellar. The player starts by a pick-axe and a mattock; north of the corridor stand packed
 // earth (E), a stone wall, and granite (G); a closed door leads south; below the corridor's south
@@ -79,10 +80,6 @@ fn run(w: &mut World, actions: &str) -> Outcome {
         last = w.apply(&action);
     }
     last
-}
-
-fn last_message(w: &World) -> String {
-    (w.messages().iter().last()).map_or(String::new(), |m| m.text.clone())
 }
 
 fn terrain_at(w: &World, p: Pos) -> String {

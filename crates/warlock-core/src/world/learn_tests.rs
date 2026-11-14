@@ -10,6 +10,7 @@ use crate::action::parse_actions;
 use crate::content::{Band, ContentFiles, drawn_among};
 use crate::replay::Replay;
 use crate::test_support::builtin;
+pub(super) use crate::test_support::last;
 pub(super) use crate::test_support::run;
 
 /// The pack: a, two grimoires of fireball (Fireball, level 11); b, one of lightning (Lightning
@@ -60,14 +61,6 @@ pub(super) const HALL: &str = "#######\n#.....#\n#..@..#\n#.....#\n#######\n";
 
 fn world() -> World {
     world_with(HALL, 10)
-}
-
-pub(super) fn last(w: &World) -> String {
-    w.messages()
-        .iter()
-        .last()
-        .map(|m| m.display())
-        .unwrap_or_default()
 }
 
 pub(super) fn count(w: &World, object: &str) -> u32 {

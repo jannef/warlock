@@ -8,6 +8,7 @@ use crate::burden::Burden;
 use crate::content::ContentFiles;
 use crate::object::Stack;
 use crate::test_support::builtin;
+use crate::test_support::said_text as said;
 
 /// A hall with a collapsed floor over x 10 to 19 (`:` its cracked floor, `.` one plain cell of
 /// it) and a way down to the cellar.
@@ -72,10 +73,6 @@ fn world_with(down: &str, rat: bool) -> World {
 
 fn world() -> World {
     world_with(", to = \"test_cellar\"", false)
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 /// Puts the player back on the top level at `at`, whole.

@@ -10,6 +10,7 @@ use crate::content::{ContentFiles, Stance};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::run as act;
+use crate::test_support::texts as said;
 use std::sync::LazyLock;
 
 /// Cēaptūn's cell, where the south road starts.
@@ -28,10 +29,6 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
     files.remove_encounter_tables();
     Arc::new(Content::load(&files).expect("builtin content"))
 });
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
-}
 
 /// A run of the Ascmearc in the yard, given `graveyard` as the run begins.
 fn yard(graveyard: Vec<Fallen>) -> World {

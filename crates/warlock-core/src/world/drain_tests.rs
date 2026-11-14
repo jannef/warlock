@@ -12,6 +12,7 @@ use crate::replay::Replay;
 use crate::stats::{DRAIN_FLOOR, PerStat, Stat, Stats};
 use crate::test_support::CONTENT as BUILTIN;
 use crate::test_support::run;
+use crate::test_support::said;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -114,10 +115,6 @@ fn content(map: &str, scenario: &str) -> Arc<Content> {
 
 fn world_on(map: &str, scenario: &str, seed: u64) -> World {
     World::new(content(map, scenario), "crypt", Some(seed)).expect("world")
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 const HIT: Blow = Blow {

@@ -11,6 +11,7 @@ use crate::geom::Pos;
 use crate::perception::Perception;
 use crate::replay::Replay;
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::last;
 use crate::test_support::run;
 
 const ME: Pos = Pos::new(7, 15);
@@ -59,10 +60,6 @@ fn set_focus(w: &mut World, value: u16) {
 fn focus(w: &World) -> u16 {
     let focus = w.content().resource_id("focus").expect("focus");
     (w.state.player().resources.get(focus)).map_or(0, |p| p.value)
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.display())
 }
 
 /// A creature of `id` at `p` on the current level, with hit points to spare.

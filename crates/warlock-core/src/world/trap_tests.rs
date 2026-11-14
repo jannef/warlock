@@ -7,6 +7,7 @@ use crate::content::{ContentFiles, TrapId};
 use crate::replay::Replay;
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said as texts;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -227,10 +228,6 @@ fn content(map: &str, dark: bool, scenario: &str) -> Arc<Content> {
 
 fn world(map: &str) -> World {
     World::new(content(map, false, ""), "hall", None).expect("world")
-}
-
-fn texts(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 fn trap_id(world: &World, id: &str) -> TrapId {

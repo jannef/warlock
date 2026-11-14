@@ -9,6 +9,7 @@ use crate::noise::{self, Act, Noise, SoundKind};
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{MAX_VALUE, SkillId, Trained};
+use crate::test_support::said_text as said;
 
 /// A lit yard: the player in a corner, a peaceful rat standing in the far one.
 const YARD: &str = r##"
@@ -160,10 +161,6 @@ fn value(w: &World, id: &str) -> Option<u16> {
 /// The training marks the player's skill `id` has gathered; `None` if untrained.
 fn marks(w: &World, id: &str) -> Option<u32> {
     (w.state.player().skills.get(skill(w, id))).map(|t| t.marks)
-}
-
-fn said(w: &World, text: &str) -> bool {
-    w.messages().iter().any(|m| m.text == text)
 }
 
 #[test]

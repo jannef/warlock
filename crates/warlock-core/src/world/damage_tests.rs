@@ -12,6 +12,7 @@ use crate::content::{ContentFiles, DamageTypeId};
 use crate::damage::{Damage, IMMUNE, MAX_RESISTANCE, ResistanceWord};
 use crate::magic::{Affix, Magic, Rarity};
 use crate::object::Stack;
+use crate::test_support::said;
 use std::sync::LazyLock;
 
 /// A lit room beside the built-in content: the player (`@`) between a salamander (`s`, immune
@@ -136,10 +137,6 @@ fn magic(id: &str, affix: &str, tier: u8, value: i32, identified: bool) -> Stack
     let object = CONTENT.object_id(id).expect(id);
     (magic.check(CONTENT.object(object), &CONTENT)).expect("a valid item");
     Stack::with_magic(object, 1, magic)
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 #[test]

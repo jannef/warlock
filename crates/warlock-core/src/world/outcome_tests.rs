@@ -8,6 +8,7 @@ use crate::ability::Ability;
 use crate::alignment::{Alignment, Score};
 use crate::content::{ContentFiles, OutcomeDef, OutcomeKind, OutcomeTable};
 use crate::test_support::builtin;
+use crate::test_support::said_text as said;
 use crate::world::outcome::leaned_kinds;
 
 /// A room with a forgotten altar at (5, 2), the player beside it at (4, 3), and at `k` a kobold
@@ -78,10 +79,6 @@ fn outcome(w: &World, id: &str) -> OutcomeDef {
 fn befall(w: &mut World, id: &str) {
     let outcome = outcome(w, id);
     w.befall(&outcome, ALTAR, &mut Vec::new());
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 fn terrain(w: &World, p: Pos) -> String {

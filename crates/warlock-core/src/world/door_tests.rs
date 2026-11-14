@@ -6,6 +6,7 @@ use crate::action::{AttackKind, parse_actions};
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::last_text as last_message;
 use crate::test_support::run;
 
 const TERRAIN: &str = r##"
@@ -277,10 +278,6 @@ fn content() -> Arc<Content> {
 
 fn world(scenario: &str) -> World {
     World::new(content(), scenario, None).expect("world")
-}
-
-fn last_message(world: &World) -> String {
-    (world.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
 }
 
 fn terrain(world: &World, p: Pos) -> String {

@@ -9,6 +9,7 @@ use crate::content::{ContentFiles, ZoneKind};
 use crate::replay::Replay;
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said as texts;
 
 /// A lit hall of `map` (`@` the player, `k` a kobold alchemist, `g` a goblin firebomber, `c` a
 /// cult chymist), the player with plenty of hit points.
@@ -30,10 +31,6 @@ fn hall(map: &str) -> World {
     );
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     World::new(content, "hall", None).expect("world")
-}
-
-fn texts(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn first_of(w: &World, creature: &str) -> ActorId {

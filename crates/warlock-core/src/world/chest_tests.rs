@@ -15,6 +15,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::test_support::run;
+use crate::test_support::{last_text as last_message, said_text as said};
 
 /// A lit hall: the player at the west end of the walk (row 2), chests along row 1: a coffer
 /// holding a dagger and coins (`C`, x 1), a locked coffer (`L`, x 3), a locked kist (`K`, x 5,
@@ -70,14 +71,6 @@ fn content() -> Arc<Content> {
 
 fn world(scenario: &str) -> World {
     World::new(content(), scenario, None).expect("world")
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
-}
-
-fn last_message(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
 }
 
 fn terrain(w: &World, p: Pos) -> String {

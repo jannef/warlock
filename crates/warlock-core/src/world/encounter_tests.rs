@@ -9,6 +9,7 @@ use crate::action::{Action, parse_actions};
 use crate::content::{ContentFiles, LevelKind, local_area_id};
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::last_text as last;
 use crate::test_support::run as act;
 
 const TABLE: &str = r#"
@@ -81,14 +82,6 @@ fn fixture(certain: bool, rest: u32) -> Arc<Content> {
 
 fn world(certain: bool) -> World {
     World::new(content(certain), "world", None).expect("world")
-}
-
-fn last(w: &World) -> String {
-    w.messages()
-        .iter()
-        .last()
-        .map(|m| m.text.clone())
-        .unwrap_or_default()
 }
 
 fn said(w: &World, text: &str) -> bool {

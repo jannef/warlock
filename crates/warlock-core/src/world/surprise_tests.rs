@@ -9,6 +9,7 @@ use crate::action::parse_actions;
 use crate::combat::{Category, Defence, Target};
 use crate::content::{ActionKind, ContentFiles};
 use crate::replay::Replay;
+pub(super) use crate::test_support::texts;
 
 /// A hall split by a wall: the player in the west part, a goblin at `k` beside them, another
 /// at `K` behind the wall, a hidden alarm trap at `^` and a known one at `!`.
@@ -93,10 +94,6 @@ pub(super) fn lull(w: &mut World, id: ActorId) {
 
 pub(super) fn surprised_status(w: &World) -> crate::content::StatusId {
     w.content.status_id("surprised").expect("surprised")
-}
-
-pub(super) fn texts(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 /// `w`'s generator after one natural roll more: the check's two draws.

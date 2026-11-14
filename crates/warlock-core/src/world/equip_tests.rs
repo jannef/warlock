@@ -8,6 +8,7 @@ use crate::action::{letter, parse_actions};
 use crate::content::ContentFiles;
 use crate::equipment;
 use crate::replay::Replay;
+use crate::test_support::last_text as last_message;
 
 // The player stands on a pile of arms and armor in a fully lit room; a kobold with a short sword
 // stands in sight, and one with a spear and a jerkin behind a closed door.
@@ -90,13 +91,6 @@ fn pairs(list: &[(&str, &str)]) -> Vec<(String, String)> {
     list.iter()
         .map(|(a, b)| (a.to_string(), b.to_string()))
         .collect()
-}
-
-fn last_message(w: &World) -> String {
-    w.messages()
-        .iter()
-        .last()
-        .map_or(String::new(), |m| m.text.clone())
 }
 
 #[test]

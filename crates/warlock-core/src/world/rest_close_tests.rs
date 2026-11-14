@@ -12,6 +12,7 @@ use crate::content::ContentFiles;
 use crate::hunger::Hunger;
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::last_text as last;
 use crate::test_support::run;
 
 /// The built-in content with `map`: the player at `@` (a ration and a pick-axe under them), a
@@ -73,10 +74,6 @@ fn of(w: &World, kind: &str) -> ActorId {
         .find(|a| a.creature == kind)
         .expect("there")
         .id
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or(String::new(), |m| m.text.clone())
 }
 
 fn dist(w: &World, id: ActorId) -> i32 {

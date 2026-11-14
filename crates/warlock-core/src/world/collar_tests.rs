@@ -13,6 +13,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::test_support::CONTENT as BUILTIN;
 use crate::test_support::run;
+use crate::test_support::said;
 use std::sync::Arc;
 
 /// A kitted run of `spec` in the courtyard.
@@ -90,10 +91,6 @@ fn collar(w: &World) -> Option<String> {
     let a = beast(w);
     let on = a.equipment.get(neck)?;
     Some(BUILTIN.object(a.inventory[on].object).id.clone())
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 /// How long putting an amulet on takes the same character.

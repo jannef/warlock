@@ -8,6 +8,7 @@ use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::geom::Dir;
 use crate::replay::Replay;
+use crate::test_support::last_text as last;
 
 // A lit hall: the player between an animated candlestick of silver (west) and an animated teapot
 // (east), a rug further on, and a peaceful kobold below.
@@ -54,10 +55,6 @@ fn hall(intact: u8) -> World {
 fn at(w: &World, p: Pos) -> ActorId {
     let level = &w.state.current_level;
     w.state.actor_at(level, p).expect("someone there").id
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or(String::new(), |m| m.text.clone())
 }
 
 #[test]

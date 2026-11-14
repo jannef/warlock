@@ -10,6 +10,7 @@ use crate::content::{CampaignKind, ContentFiles, LevelTemplate};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::run as act;
+use crate::test_support::texts as said;
 use std::collections::BinaryHeap;
 use std::sync::LazyLock;
 
@@ -54,10 +55,6 @@ fn overworld() -> &'static LevelTemplate {
 
 fn start() -> World {
     World::new(CONTENT.clone(), "ascmearc", None).expect("a run of the Ascmearc")
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 fn put_player(world: &mut World, at: Pos) {

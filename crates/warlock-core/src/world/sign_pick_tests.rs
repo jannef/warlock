@@ -14,6 +14,7 @@ use crate::geom::Pos;
 use crate::stats::{PerStat, Stats};
 use crate::talent::{Candidate, Refusal, may_take};
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::last;
 use crate::test_support::run;
 
 /// The fourteen picks with the sign each asks for (`(animal, element)`, one of them set).
@@ -60,10 +61,6 @@ fn with(animal: &str, element: &str, id: &str) -> World {
     let mut w = born(animal, element);
     w.player_mut().talents.take(id, None);
     w
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().map(|m| m.display()).next_back()).unwrap_or_default()
 }
 
 fn said(w: &World, text: &str) -> bool {

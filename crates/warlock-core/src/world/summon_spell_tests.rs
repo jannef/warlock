@@ -7,6 +7,7 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::test_support::run;
+use crate::test_support::said;
 
 /// Two rats for five minutes, three of them at once.
 const RATS: &str = r#"
@@ -119,10 +120,6 @@ fn world_on(scenario: &str) -> World {
     }
     w.player_mut().mana = 300;
     w
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn last_said(w: &World) -> String {

@@ -11,6 +11,7 @@ use crate::content::{ContentFiles, DialogueId, ServiceKind, Stance};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::run as act;
+use crate::test_support::texts as said;
 use std::sync::LazyLock;
 
 const SCENARIO: &str = include_str!("../../../../assets/campaigns/ascmearc/scenarios/ceaptun.toml");
@@ -37,10 +38,6 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
 
 fn town() -> World {
     World::new(CONTENT.clone(), "ceaptun", None).expect("a run in Cēaptūn")
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 fn put_player(world: &mut World, at: Pos) {

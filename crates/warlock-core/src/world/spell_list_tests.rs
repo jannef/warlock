@@ -9,6 +9,7 @@ use crate::content::{ActionKind, ContentFiles, Reading, SpellPurpose, TalentEffe
 use crate::talent::MagicEffect;
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said;
 
 /// The pack: a, two scrolls of magic missile; b, one of haste; c, one of web; d, one of sleep;
 /// e, one of fireball.
@@ -36,10 +37,6 @@ fn world() -> World {
     );
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     World::new(content, "hall", Some(3)).expect("world")
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn count(w: &World, object: &str) -> u32 {

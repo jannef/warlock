@@ -10,6 +10,7 @@ use crate::item_list::ItemList;
 use crate::magic::Worked;
 use crate::talent::CraftEffect;
 use crate::test_support::builtin;
+use crate::test_support::last;
 use crate::test_support::run;
 
 const MEND: ClassActive = ClassActive::MakeDo;
@@ -42,10 +43,6 @@ fn world(difficulty: i32) -> World {
     let mut w = World::new(content, "hall", Some(3)).expect("world");
     w.player_mut().talents.take("make_do_and_mend", None);
     w
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.display())
 }
 
 /// The stack at `at` damaged, after `attempts` attempts at the anvil.

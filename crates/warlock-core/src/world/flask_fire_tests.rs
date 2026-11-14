@@ -10,6 +10,7 @@ use super::*;
 use crate::content::{ContentFiles, ZoneKind};
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said as texts;
 
 // A training dummy takes a lot and never fights back.
 const DUMMY: &str = "[[creature]]\nid = \"dummy\"\nname = \"training dummy\"\nglyph = \"D\"\n\
@@ -44,10 +45,6 @@ fn hall(map: &str) -> World {
 /// The dummy four cells east of the player, in reach of every flask here.
 const ROW: &str = "##########\n#@...D...#\n#........#\n##########\n";
 const DUMMY_AT: Pos = Pos::new(5, 1);
-
-fn texts(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
-}
 
 fn dummy(w: &World) -> ActorId {
     (w.state.actors.values())

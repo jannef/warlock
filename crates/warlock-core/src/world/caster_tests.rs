@@ -11,6 +11,7 @@ use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stat, Stats};
 pub(super) use crate::test_support::run;
+pub(super) use crate::test_support::said;
 use std::sync::LazyLock;
 
 static BUILTIN: LazyLock<Arc<Content>> = LazyLock::new(|| Arc::new(quiet()));
@@ -59,10 +60,6 @@ pub(super) fn world_with(content: Arc<Content>, class: &str) -> World {
     w.player_mut().mana_base = 60;
     w.player_mut().mana = 40;
     w
-}
-
-pub(super) fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 pub(super) fn last(world: &World) -> String {

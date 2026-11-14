@@ -12,6 +12,7 @@ use crate::action::parse_actions;
 use crate::content::{LevelKind, Stance};
 use crate::replay::Replay;
 use crate::test_support::builtin as content;
+use crate::test_support::last_text as last;
 
 /// The town's square, where the dev scenario starts, and its cell on the overworld.
 const SQUARE: Pos = Pos::new(46, 17);
@@ -27,10 +28,6 @@ fn town() -> World {
 fn act(world: &mut World, actions: &str) -> Vec<bool> {
     let actions = parse_actions(actions).expect("actions");
     actions.iter().map(|a| world.apply(a).took_turn).collect()
-}
-
-fn last(world: &World) -> String {
-    (world.messages().iter().last()).map_or(String::new(), |m| m.text.clone())
 }
 
 /// `<` is refused: no time passes, the player stays, and the line names nobody.

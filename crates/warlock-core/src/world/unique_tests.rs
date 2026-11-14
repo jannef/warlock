@@ -9,6 +9,7 @@ use crate::combat::{Blow, Strike};
 use crate::content::{Affliction, ContentFiles, OnHit, Power, StatusId};
 use crate::magic::describe::{self, LineKind};
 use crate::magic::{Affix, Rarity};
+use crate::test_support::last as last_message;
 use crate::test_support::run;
 
 // A dark room: the player, and a giant rat three cells off (no light of its own).
@@ -82,12 +83,6 @@ fn severity(w: &World, actor: ActorId, id: &str) -> Option<u16> {
         .effects
         .get(status)
         .map(|e| e.severity)
-}
-
-fn last_message(w: &World) -> String {
-    (w.messages().iter().last())
-        .map(|m| m.display())
-        .unwrap_or_default()
 }
 
 const HIT: Blow = Blow {

@@ -12,6 +12,7 @@ use crate::action::AttackKind;
 use crate::combat::{Category, Strike};
 use crate::content::Trigger;
 use crate::equipment;
+use crate::test_support::said;
 use crate::weapon_skills::WeaponSkills;
 
 // Sure blades that do a point or two, a cleaver that takes a third of a post at once, a foil that
@@ -246,10 +247,6 @@ pub(super) fn ranks(w: &mut World, id: ActorId, ranks: &[(&str, u8)]) {
 pub(super) fn at(w: &World, x: i32, y: i32) -> ActorId {
     let level = &w.state.current().id;
     w.state.actor_at(level, Pos::new(x, y)).expect("someone").id
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn severity(w: &World, id: ActorId, status: &str) -> u16 {

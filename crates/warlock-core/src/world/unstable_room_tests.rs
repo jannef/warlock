@@ -5,6 +5,7 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::test_support::builtin;
+use crate::test_support::said_text as said;
 
 /// A hall, 30 wide, with an unstable room over x 10 to 19; `r` is a giant rat inside it.
 const HALL: &str = "\
@@ -42,10 +43,6 @@ fn world(rat: bool) -> World {
     );
     let content = Arc::new(Content::load(&files).expect("fixture content is valid"));
     World::new(content, "test_unstable", None).expect("world")
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 /// Actor `who` steps onto `at` `times` times (put back there after each warp); how many of the

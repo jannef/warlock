@@ -10,6 +10,7 @@ use crate::noise::SoundKind;
 use crate::perception::Perception;
 use crate::test_support::CONTENT as BUILTIN;
 use crate::test_support::run;
+use crate::test_support::said;
 use std::sync::Arc;
 
 /// A room, the player at its west end, then a second room behind a wall (no way between them
@@ -97,10 +98,6 @@ fn afflict(w: &mut World, actor: ActorId, id: &str) {
     let status = status(w, id);
     let mut events = Vec::new();
     w.afflict(actor, status, 1, None, &mut events);
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 /// It neither moves nor acts: perception alone is under test.

@@ -7,6 +7,7 @@ use crate::content::{ContentFiles, LevelTemplate};
 use crate::perception::Perception;
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said;
 use crate::time::{Duration, GameTime};
 use std::collections::BTreeSet;
 
@@ -118,10 +119,6 @@ fn files_with(haunt: &str) -> ContentFiles {
 
 fn haunt(seed: u64) -> World {
     World::new(content(), "haunt", Some(seed)).expect("world")
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 /// The creatures on the player's level but the player.

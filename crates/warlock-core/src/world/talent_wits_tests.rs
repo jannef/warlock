@@ -18,6 +18,7 @@ use crate::stats::{PerStat, Stats};
 use crate::talent::{self, Candidate};
 use crate::test_support::CONTENT as BUILTIN;
 use crate::test_support::run;
+use crate::test_support::said;
 
 /// A human warrior in the showcase, every score 14.
 fn world() -> World {
@@ -55,10 +56,6 @@ fn hall(map: &str, pack: &str) -> World {
     );
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     World::new(content, "wits_hall", None).expect("world")
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 /// The player takes talent `id` (one rank more), without a level to pick it at.

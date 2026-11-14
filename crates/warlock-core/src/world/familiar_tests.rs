@@ -10,6 +10,7 @@ use crate::content::{Content, ContentFiles, Stance};
 use crate::perception::Perception;
 use crate::test_support::CONTENT as BUILTIN;
 use crate::test_support::run;
+use crate::test_support::said;
 use crate::world::stance_between;
 use std::sync::{Arc, LazyLock};
 
@@ -82,10 +83,6 @@ fn hall(seed: u64) -> World {
         Some(&spec("human,female,witch")),
     )
     .expect("world")
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn familiar_of(w: &World) -> (&Actor, &CompanionData) {

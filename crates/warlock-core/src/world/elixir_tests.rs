@@ -6,6 +6,7 @@ use super::*;
 use crate::content::ContentFiles;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::run;
+use crate::test_support::said;
 
 /// The six elixirs, by id, with the stat each raises.
 const ELIXIRS: &[(&str, Stat)] = &[
@@ -40,10 +41,6 @@ fn world_seeded(pack: &str, seed: u64, potential: u8) -> World {
 
 fn world(pack: &str) -> World {
     world_seeded(pack, 7, 11)
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn stat(w: &World, stat: Stat) -> (u8, u8) {

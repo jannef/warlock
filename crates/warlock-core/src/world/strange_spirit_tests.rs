@@ -13,6 +13,7 @@ use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Factor};
 use crate::daylight::{self, DayPhase};
 use crate::replay::Replay;
+use crate::test_support::last_text as last_message;
 use std::sync::LazyLock;
 
 /// The bard's cap, and the level its calling asks.
@@ -71,10 +72,6 @@ fn run(w: &mut World, actions: &str) {
 
 fn said(w: &World, text: &str) -> bool {
     w.messages().iter().any(|m| m.text.contains(text))
-}
-
-fn last_message(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
 }
 
 /// The XP that takes the player to `level`'s threshold, every choice due then spent.

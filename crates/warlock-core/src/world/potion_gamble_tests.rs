@@ -7,6 +7,7 @@ use super::*;
 use crate::content::ContentFiles;
 use crate::stats::Stat;
 use crate::test_support::run;
+use crate::test_support::said;
 
 /// The test content: a lit hall, the player at `@` carrying `pack`; `more` adds files.
 fn content_with(pack: &str, more: &[(&str, &str)]) -> Result<Content, String> {
@@ -34,10 +35,6 @@ fn world_of(content: Content) -> World {
 
 fn world(pack: &str) -> World {
     world_of(content_with(pack, &[]).expect("test content is valid"))
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn severity(w: &World, id: &str) -> Option<u16> {

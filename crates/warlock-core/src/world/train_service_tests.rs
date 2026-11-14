@@ -7,6 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
+use crate::test_support::last_text as last_message;
 use crate::test_support::run;
 
 /// The teacher's words and service, added to the built-in dialogue.
@@ -77,10 +78,6 @@ fn world(gold: u32) -> World {
 fn gold(w: &World) -> u32 {
     let coin = w.content().object_id("gold_coin").expect("gold");
     super::shop::count_of(&w.state().player().inventory, coin)
-}
-
-fn last_message(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
 }
 
 fn mining(w: &World) -> Option<u16> {

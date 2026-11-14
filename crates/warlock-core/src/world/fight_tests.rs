@@ -9,6 +9,7 @@ use crate::content::{ContentFiles, Role};
 use crate::replay::Replay;
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said as messages;
 
 #[test]
 fn messages_say_what_came_of_an_attack_without_numbers() {
@@ -507,10 +508,6 @@ fn world_on(map: &str, extra: &str) -> World {
     let files = files(map, "ambient = [255, 255, 255, 0]", extra);
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     World::new(content, "fight", None).expect("world")
-}
-
-fn messages(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 fn actor(world: &World, id: u32) -> Option<&Actor> {

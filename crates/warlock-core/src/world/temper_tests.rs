@@ -10,6 +10,7 @@ use crate::content::ContentFiles;
 use crate::magic::{Affix, Aspect, Effect, Magic, Mods, Numbers, Rarity, Worked, may_roll};
 use crate::object::{Stack, add_to_inventory};
 use crate::rng::Rng;
+use crate::test_support::said_text as said;
 
 /// A forge with its anvil at (5, 2), the player beside it at (4, 3), and at `k` a kobold (also
 /// beside it), when asked for.
@@ -146,10 +147,6 @@ fn magic_sword(w: &mut World) {
     w.player_mut()
         .inventory
         .insert(0, Stack::with_magic(id, 1, magic));
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 /// Why Metalcraft's Temper row cannot be made now (`None`: it can).

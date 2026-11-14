@@ -13,6 +13,7 @@ use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::builtin;
 use crate::test_support::run as act;
+use crate::test_support::texts as said;
 
 /// Godgifu, in the Gæsthūs: she gives the test quests.
 const GODGIFU: Pos = Pos::new(46, 26);
@@ -79,10 +80,6 @@ fn town(seed: u64) -> World {
     w.state.actors.get_mut(&id).expect("player").pos = GODGIFU.step(Dir::W);
     w.perceive(&mut Vec::new());
     w
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 fn roll(world: &World, id: &str) -> Option<crate::content::Roll> {

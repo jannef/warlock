@@ -14,6 +14,7 @@ use crate::content::{Sign, StatusId};
 use crate::geom::{Dir, Pos};
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::last;
 
 /// A human warrior in the showcase (seed 7) born under the `element` `animal` on day `day`, every
 /// score 14 and at full hit points; the run restored, so the gifts are granted as a load does.
@@ -41,10 +42,6 @@ fn status(w: &World, id: &str) -> StatusId {
 
 fn suffers(w: &World, who: ActorId, id: &str) -> bool {
     w.state.actors[&who].effects.has(status(w, id))
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().map(|m| m.display()).next_back()).unwrap_or_default()
 }
 
 /// A free floor cell beside the player in direction `dir` or the next ones clockwise.

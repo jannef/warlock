@@ -10,6 +10,7 @@ use crate::action::AttackKind;
 use crate::combat::{Category, Defence, Strike};
 use crate::content::{ContentFiles, STAMINA};
 use crate::equipment;
+use crate::test_support::said;
 use crate::weapon_skills::WeaponSkills;
 
 // Sure weapons of every kind the actives ask for, a shield, a tower of a shield, and a bow.
@@ -290,10 +291,6 @@ fn lost_hp(w: &World, id: ActorId) -> i32 {
 fn stamina(w: &World) -> u16 {
     let id = w.content().resource_id(STAMINA).expect("stamina");
     w.state.player().resources.get(id).map_or(0, |p| p.value)
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn use_(w: &mut World, text: &str) -> Outcome {

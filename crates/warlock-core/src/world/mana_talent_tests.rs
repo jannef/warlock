@@ -9,6 +9,7 @@ use crate::character::CharacterSpec;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::talent::TalentMods;
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::last;
 use crate::test_support::run;
 
 /// An elf wizard in the showcase, every score 14.
@@ -18,10 +19,6 @@ fn world() -> World {
         World::with_character(BUILTIN.clone(), "showcase", Some(7), Some(&spec)).expect("world");
     w.player_mut().stats = Stats::new(PerStat::splat(14), PerStat::splat(40));
     w
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.display())
 }
 
 /// The player gains experience until they are at character `level`.

@@ -15,6 +15,7 @@ use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stats};
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::last_text as last_message;
 use crate::world::{CraftStepKind, RecipeLack};
 use std::sync::LazyLock;
 
@@ -178,10 +179,6 @@ fn takes(w: &World, id: &str) -> String {
         .find(|r| r.id == recipe)
         .map(|r| r.takes)
         .expect("listed")
-}
-
-fn last_message(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
 }
 
 /// Applies `craft:ID:PICKS` (action text); the seconds it took.

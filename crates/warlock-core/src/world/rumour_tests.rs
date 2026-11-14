@@ -9,6 +9,7 @@ use crate::content::{ContentFiles, TerrainId};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::run as act;
+use crate::test_support::texts as said;
 use std::sync::LazyLock;
 
 const OVERWORLD: &str = "ascmearc";
@@ -42,10 +43,6 @@ fn at_the_inn() -> World {
         "beside Godgifu"
     );
     w
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 /// What the player remembers of overworld cell `p`, if the overworld has been made.

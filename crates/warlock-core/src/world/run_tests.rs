@@ -7,6 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
+use crate::test_support::last_text as last;
 
 /// The built-in content with `map`, lit: the player at `@`, a kobold at `k`, fences
 /// (transparent, not walkable, never named as a statue is) at `F`.
@@ -27,10 +28,6 @@ fn world(map: &str) -> World {
     );
     let content = Arc::new(Content::load(&files).expect("fixture content is valid"));
     World::new(content, "test_run", Some(1)).expect("world")
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or(String::new(), |m| m.text.clone())
 }
 
 fn run(w: &mut World, dir: Dir) -> Outcome {

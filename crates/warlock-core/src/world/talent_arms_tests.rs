@@ -13,6 +13,7 @@ use crate::equipment::{free_slot, slots_taken};
 use crate::object::Stack;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::last;
 use crate::test_support::run;
 
 /// A human warrior in the showcase, every score 14.
@@ -22,10 +23,6 @@ fn world() -> World {
         World::with_character(BUILTIN.clone(), "showcase", Some(7), Some(&spec)).expect("world");
     w.player_mut().stats = Stats::new(PerStat::splat(14), PerStat::splat(14));
     w
-}
-
-fn last(world: &World) -> String {
-    (world.messages().iter().last()).map_or_else(String::new, |m| m.display())
 }
 
 /// Grants the XP that takes the player to `level`.

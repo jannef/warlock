@@ -7,6 +7,7 @@ use crate::character::CharacterSpec;
 use crate::content::{GiftTier, TalentId};
 use crate::stats::{DRAIN_FLOOR, Stat};
 use crate::test_support::builtin;
+use crate::test_support::said_text as said;
 
 fn world(character: &str) -> World {
     let content = builtin();
@@ -21,10 +22,6 @@ fn gift(w: &World, id: &str) -> TalentId {
 fn holds(w: &World, id: &str) -> bool {
     let me = w.state.player();
     me.talents.has(id) && me.boons.iter().any(|b| b.id == id)
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 fn give(w: &mut World, id: &str) {

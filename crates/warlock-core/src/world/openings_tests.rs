@@ -14,6 +14,7 @@ use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::last;
 use crate::test_support::run;
 
 /// A human thief in the showcase (seed 7), with their kit, born under no sign, every score 14.
@@ -36,10 +37,6 @@ fn thief() -> World {
     let max = w.state.player().max_hp(w.content());
     w.player_mut().hp = max;
     w
-}
-
-fn last(world: &World) -> String {
-    (world.messages().iter().next_back()).map_or_else(String::new, |m| m.display())
 }
 
 /// Grants the XP that takes the player to `level` and spends every choice it brings.

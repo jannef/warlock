@@ -11,6 +11,7 @@ use crate::stats::Stat;
 use crate::status::Effect;
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said as messages;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -230,10 +231,6 @@ fn hp(w: &World) -> i32 {
 fn set_hp(w: &mut World, hp: i32) {
     let player = w.state.player;
     w.state.actors.get_mut(&player).expect("player").hp = hp;
-}
-
-fn messages(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 fn count(world: &World, text: &str) -> usize {

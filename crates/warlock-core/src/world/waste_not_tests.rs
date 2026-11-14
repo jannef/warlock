@@ -13,6 +13,7 @@ use crate::object::Stack;
 use crate::rng::Rng;
 use crate::skills::{SkillId, Trained};
 use crate::test_support::builtin;
+use crate::test_support::said_text as said;
 use std::sync::LazyLock;
 
 /// A forge with its anvil at (5, 2), the player beside it at (4, 3).
@@ -75,10 +76,6 @@ fn world(waste_not: bool) -> World {
 
 fn one(w: &World, id: &str) -> Stack {
     Stack::one(w.content.object_id(id).expect(id))
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 fn pack(w: &World) -> Vec<String> {

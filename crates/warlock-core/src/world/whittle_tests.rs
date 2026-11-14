@@ -10,6 +10,7 @@ use crate::content::ContentFiles;
 use crate::magic::{Aspect, Worked};
 use crate::object::Stack;
 use crate::rng::Rng;
+use crate::test_support::said_text as said;
 
 /// A plain room, the player at (4, 3), and at `k` a kobold, when asked for. No anvil.
 const ROOM: &str = "\
@@ -60,10 +61,6 @@ fn object(w: &World, id: &str) -> crate::content::ObjectId {
 fn give(w: &mut World, id: &str) {
     let stack = Stack::one(object(w, id));
     w.player_mut().inventory.insert(0, stack);
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 /// The state of the stack in the pack's first place, if there is one worked.

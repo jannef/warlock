@@ -10,6 +10,7 @@ use crate::mapgen;
 use crate::replay::Replay;
 use crate::test_support::CONTENT;
 use crate::test_support::run;
+use crate::test_support::said;
 use proptest::prelude::*;
 
 const BRANCH: &str = "grundleas";
@@ -28,10 +29,6 @@ fn ranger(seed: u64) -> World {
     let spec: CharacterSpec = "human,male,ranger".parse().expect("a character");
     let spec = spec.with_talents(picks);
     World::start_run(CONTENT.clone(), BRANCH, Some(seed), Some(&spec), None, true).expect("world")
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 /// The way `dir` off the current level.

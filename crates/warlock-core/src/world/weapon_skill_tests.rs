@@ -4,6 +4,7 @@
 //! to-hit, damage, threat, Defence, and cost, starting ranks come from race and class, and all of
 //! it is saved and replayed.
 
+use crate::test_support::said as messages;
 use crate::test_support::{CONTENT as BUILTIN, builtin};
 /// The test creatures name no level: level 1 (spec §8 "Experience").
 const UNLEVELLED: u32 = 1;
@@ -295,10 +296,6 @@ fn set(w: &mut World, name: &str, rank: u8, marks: u32) {
     skills.raise(id, rank);
     skills.train(w.content.weapon_skills(), id, marks);
     me.weapon_skills = skills;
-}
-
-fn messages(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 /// What came of the player's attack in `outcome`.

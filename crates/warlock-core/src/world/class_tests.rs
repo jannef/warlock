@@ -14,6 +14,7 @@ use crate::replay::Replay;
 use crate::rng::Rng;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::said;
 
 /// A human of `class` in the showcase.
 fn world(class: &str) -> World {
@@ -25,10 +26,6 @@ fn run(world: &mut World, actions: &str) {
     for action in parse_actions(actions).expect("actions") {
         world.apply(&action);
     }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 fn last(world: &World) -> String {

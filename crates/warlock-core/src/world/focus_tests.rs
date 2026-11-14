@@ -9,6 +9,7 @@ use crate::character::CharacterSpec;
 use crate::content::{ClassActive, Factor, ResourceId, percent_of};
 use crate::replay::Replay;
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::last;
 use crate::test_support::run;
 
 /// A human ranger in the showcase (seed 7), with their kit, at `level` with every choice spent.
@@ -46,10 +47,6 @@ fn held(w: &World) -> Option<u16> {
 fn set(w: &mut World, value: u16) {
     let focus = focus(w);
     w.player_mut().resources.set(focus, value);
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.display())
 }
 
 /// What a plain shot costs the player now.

@@ -5,6 +5,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
+use crate::test_support::last_text as last_message;
 use crate::test_support::run;
 
 const TERRAIN: &str = r##"
@@ -191,15 +192,6 @@ fn content() -> Arc<Content> {
 
 fn world(scenario: &str) -> World {
     World::new(content(), scenario, None).expect("world")
-}
-
-fn last_message(world: &World) -> String {
-    world
-        .messages()
-        .iter()
-        .last()
-        .map(|m| m.text.clone())
-        .unwrap_or_default()
 }
 
 /// A time on the camp scenario's start month (Rainmoon, year 1).

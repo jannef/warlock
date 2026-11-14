@@ -9,6 +9,7 @@ use crate::action::parse_actions;
 use crate::content::{CombatStance, ContentFiles, Goal, QuestKind};
 use crate::replay::Replay;
 use crate::test_support::run as act;
+use crate::test_support::texts as said;
 use std::sync::LazyLock;
 
 const WYNFLAED: Pos = Pos::new(54, 13);
@@ -27,10 +28,6 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
 
 fn village() -> World {
     World::new(CONTENT.clone(), "holtwic", None).expect("a run in Holtwīc")
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 fn heard(world: &World, start: &str) -> bool {

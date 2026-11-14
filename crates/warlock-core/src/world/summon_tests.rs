@@ -6,6 +6,7 @@ use super::*;
 use crate::content::ContentFiles;
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -177,10 +178,6 @@ fn summoned_by(w: &World, by: ActorId) -> Vec<&Actor> {
     (w.state.actors.values())
         .filter(|a| a.summoner == Some(by))
         .collect()
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 #[test]

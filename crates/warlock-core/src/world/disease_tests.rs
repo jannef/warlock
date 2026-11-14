@@ -13,6 +13,7 @@ use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said as messages;
 use crate::time::DAY;
 
 const TERRAIN: &str = r##"
@@ -242,10 +243,6 @@ fn diseased(w: &World) -> StatusId {
 
 fn infection(w: &World, id: &str) -> Option<crate::disease::Infection> {
     w.state().player().diseases.get(disease(w, id)).copied()
-}
-
-fn messages(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 fn count(world: &World, text: &str) -> usize {

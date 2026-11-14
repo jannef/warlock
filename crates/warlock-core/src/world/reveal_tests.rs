@@ -12,6 +12,7 @@ use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::builtin;
 use crate::test_support::run as act;
+use crate::test_support::texts as said;
 
 const OVERWORLD: &str = include_str!("../../../../assets/campaigns/showcase/levels/overworld.toml");
 const QUESTS: &str =
@@ -83,10 +84,6 @@ fn put_player(world: &mut World, at: Pos) {
     let id = world.state.player;
     world.state.actors.get_mut(&id).expect("player").pos = at;
     world.perceive(&mut Vec::new());
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 fn last(world: &World) -> String {

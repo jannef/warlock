@@ -11,6 +11,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stats};
+use crate::test_support::{said_text as said, texts};
 use std::sync::LazyLock;
 
 const ROOM: &str = "\
@@ -108,14 +109,6 @@ fn loose(w: &World, gem: &str, size: &str, cut: &str, count: u32) -> Stack {
 fn give(w: &mut World, stack: impl FnOnce(&World) -> Stack) {
     let stack = stack(w);
     w.player_mut().inventory.insert(0, stack);
-}
-
-fn texts(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.text.clone()).collect()
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 fn pack(w: &World) -> Vec<String> {

@@ -5,6 +5,7 @@ use super::*;
 use crate::content::ContentFiles;
 use crate::noise::{self, Act};
 use crate::test_support::builtin;
+use crate::test_support::last_text as last_message;
 use crate::test_support::run as apply;
 
 /// A hall, 25 wide: the west part plain, the east part (walls included) the special room
@@ -56,10 +57,6 @@ fn teleport(world: &World, p: Pos) -> World {
     let player = state.player;
     state.actors.get_mut(&player).expect("player").pos = p;
     World::from_state(world.content().clone(), state).expect("valid state")
-}
-
-fn last_message(world: &World) -> String {
-    (world.messages().iter().last()).map_or(String::new(), |m| m.text.clone())
 }
 
 #[test]

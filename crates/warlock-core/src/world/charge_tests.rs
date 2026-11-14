@@ -8,6 +8,7 @@
 use super::*;
 use crate::action::AttackKind;
 use crate::content::{ContentFiles, STAMINA};
+use crate::test_support::said;
 
 const CREATURES: &str = r##"
 [[creature]]
@@ -88,10 +89,6 @@ fn stamina(w: &World) -> u16 {
 fn at(w: &World, x: i32, y: i32) -> ActorId {
     let level = &w.state.current().id;
     w.state.actor_at(level, Pos::new(x, y)).expect("someone").id
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn use_(w: &mut World, text: &str) -> Outcome {

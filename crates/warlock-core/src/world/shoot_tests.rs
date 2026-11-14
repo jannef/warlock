@@ -7,6 +7,7 @@ use crate::action::{AttackKind, MissileEnd, Positions, parse_actions};
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::sight::{self, LineOfSight};
+use crate::test_support::last as last_message;
 use crate::test_support::run;
 
 const TERRAIN: &str = r##"
@@ -351,15 +352,6 @@ fn armed(map: &str, objects: &str, dark: bool) -> World {
     );
     run(&mut w, "pickup equip:missile_weapon:a equip:missiles:b");
     w
-}
-
-fn last_message(world: &World) -> String {
-    world
-        .messages()
-        .iter()
-        .last()
-        .map(|m| m.display())
-        .unwrap_or_default()
 }
 
 fn pile(world: &World, p: Pos) -> Vec<(String, u32)> {

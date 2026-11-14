@@ -9,6 +9,7 @@ use crate::action::AttackKind;
 use crate::content::ContentFiles;
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said;
 
 /// The pack: a, a wand of magic missile; b, a wand of scorching ray; c, a crossbow; d, a
 /// scroll of identify; e, a wand of fireball.
@@ -34,10 +35,6 @@ fn world() -> World {
     );
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     World::new(content, "hall", Some(3)).expect("world")
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 /// The rat, put back two cells east of the player with plenty of hit points; its id.

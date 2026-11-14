@@ -8,6 +8,7 @@ use crate::action::Meal;
 use crate::content::ContentFiles;
 use crate::stats::Stat;
 use crate::test_support::builtin;
+use crate::test_support::said_text as said;
 
 /// Food underfoot, nothing else about.
 const PANTRY: &str = r##"
@@ -39,10 +40,6 @@ fn content_with(edits: &[(&str, &str)]) -> Arc<Content> {
         assert!(found, "{from}");
     }
     Arc::new(Content::load(&files).expect("test content is valid"))
-}
-
-fn said(w: &World, text: &str) -> bool {
-    w.messages().iter().any(|m| m.text == text)
 }
 
 fn marks(w: &World, stat: Stat) -> i32 {

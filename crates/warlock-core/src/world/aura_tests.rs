@@ -5,6 +5,7 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::noise::{Listening, SoundKind};
+use crate::test_support::texts as said;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -192,10 +193,6 @@ fn first_of<'w>(w: &'w World, kind: &str) -> &'w Actor {
 fn on_player(w: &World, id: &str) -> u16 {
     let s = status(w, id);
     w.state.player().effects.get(s).map_or(0, |e| e.severity)
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 #[test]

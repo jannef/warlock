@@ -8,6 +8,7 @@ use crate::action::{Action, parse_actions};
 use crate::content::{ContentFiles, StairsDir};
 use crate::grid::Grid;
 use crate::test_support::run as act;
+use crate::test_support::texts as said;
 use std::collections::{BTreeSet, VecDeque};
 use std::sync::LazyLock;
 
@@ -73,10 +74,6 @@ fn town(seed: Option<u64>) -> World {
         (w.state.actors.get_mut(&id).expect("player").inventory).push(Stack::new(object, 1));
     }
     w
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 /// Puts the player north of Wat, so they talk to the south.

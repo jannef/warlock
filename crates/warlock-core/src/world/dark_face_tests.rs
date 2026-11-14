@@ -8,6 +8,7 @@ use crate::alignment::Score;
 use crate::content::ContentFiles;
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said_text as said;
 
 /// A lit hall: the player at (1, 1), a peaceful kobold beside them at `k` (2, 1), another at `j`
 /// (8, 1), and a peaceful skeleton (immune to poison) at `s` (5, 3); a wall at x 14 hides the
@@ -68,10 +69,6 @@ fn world(room: Option<&str>) -> World {
     me.mana_base = 20;
     me.mana = 20;
     w
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 fn at(w: &World, p: Pos) -> ActorId {

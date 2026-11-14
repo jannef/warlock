@@ -9,6 +9,7 @@ use crate::noise::SoundKind;
 use crate::replay::Replay;
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::{last_text as last_message, texts};
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -378,19 +379,6 @@ fn content() -> Arc<Content> {
 
 fn world(scenario: &str) -> World {
     World::new(content(), scenario, None).expect("world")
-}
-
-fn texts(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
-}
-
-fn last_message(world: &World) -> String {
-    world
-        .messages()
-        .iter()
-        .last()
-        .map(|m| m.text.clone())
-        .unwrap_or_default()
 }
 
 fn pos(world: &World, id: u32) -> Pos {

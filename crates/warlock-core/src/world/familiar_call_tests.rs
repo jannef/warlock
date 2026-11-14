@@ -8,6 +8,7 @@ use crate::character::{CharacterSpec, RememberedFamiliar};
 use crate::content::{ClassActive, Content, ContentFiles};
 use crate::perception::Perception;
 use crate::test_support::run;
+use crate::test_support::said;
 use crate::time::Duration;
 use std::sync::{Arc, LazyLock};
 
@@ -115,10 +116,6 @@ fn start(content: &Arc<Content>, scenario: &str, character: &str, seed: u64) -> 
 
 fn witch(scenario: &str, seed: u64) -> World {
     start(&CONTENT, scenario, "human,female,witch", seed)
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn last(w: &World) -> String {

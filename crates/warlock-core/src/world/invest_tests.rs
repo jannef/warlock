@@ -10,6 +10,7 @@ use crate::character::CharacterSpec;
 use crate::replay::Replay;
 use crate::test_support::CONTENT;
 use crate::test_support::run as act;
+use crate::test_support::texts as said;
 
 /// The partner's desk in Wulfrun's office, and the cell west of it.
 const DESK: Pos = Pos::new(75, 23);
@@ -20,10 +21,6 @@ fn run(character: &str) -> World {
     let spec: CharacterSpec = character.parse().expect("a character");
     World::start_run(CONTENT.clone(), "ceaptun", None, Some(&spec), None, true)
         .expect("a run in Cēaptūn")
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 fn last(world: &World) -> String {

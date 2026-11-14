@@ -10,6 +10,7 @@ use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::test_support::CONTENT as BUILTIN;
 use crate::test_support::run;
+use crate::test_support::said;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -187,10 +188,6 @@ fn content_with(map: &str, creatures: &str) -> Result<Arc<Content>, crate::conte
         "name = \"Xp\"\nstart_level = \"xp\"\nhp = 8\nstats = { strength = 30 }\n",
     );
     Content::load(&files).map(Arc::new)
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 fn pups_left(world: &World) -> usize {

@@ -8,6 +8,7 @@ use crate::content::{CreatureSpawn, Takes};
 use crate::geom::Pos;
 use crate::object::Stack;
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::last;
 
 /// A kitted human warrior in the showcase (seed 7), alone on the level, carrying only what they
 /// wear and wield, in an open room of floor 21 by 11 cells walled round, its west end at the
@@ -94,10 +95,6 @@ fn carries(w: &World, who: ActorId, id: &str) -> u32 {
         .filter(|s| s.object == object)
         .map(|s| s.count)
         .sum()
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().map(|m| m.display()).next_back()).unwrap_or_default()
 }
 
 /// Lets `thief` try its luck on a hit, the cooldown cleared, until it takes something (at most

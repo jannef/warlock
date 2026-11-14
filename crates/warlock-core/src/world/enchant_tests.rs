@@ -13,6 +13,7 @@ use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stats};
 use crate::test_support::run as apply;
+use crate::test_support::{last_text as last, said_text as said, texts};
 use std::sync::LazyLock;
 
 const ROOM: &str = "\
@@ -134,18 +135,6 @@ fn kinds(w: &World, magic: &Magic) -> Vec<AffixKind> {
     (magic.affixes.iter())
         .map(|a| w.content.affixes().get(&a.id).expect("affix").kind)
         .collect()
-}
-
-fn texts(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.text.clone()).collect()
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
 }
 
 fn pack(w: &World) -> Vec<String> {

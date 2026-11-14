@@ -7,6 +7,7 @@ use super::*;
 use crate::action::Positions;
 use crate::content::{ContentFiles, SpecialRoom};
 use crate::test_support::builtin;
+use crate::test_support::said_text as said;
 
 /// A lit hall, its east part (x 7 on, walls included) a tempting hoard with one door, closed
 /// (`+`, at (7, 3)), and an open one (`'`, at (7, 1)). Daggers lie at `a` and `b` inside. A wall
@@ -59,10 +60,6 @@ fn world() -> World {
         HALL,
         "[7, 0, 14, 6]",
     )
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 /// The player stands at `at`, looks about, and picks up everything there.

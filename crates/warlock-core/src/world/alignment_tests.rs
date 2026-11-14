@@ -10,6 +10,7 @@ use crate::content::{ClassActive, ContentFiles, Sign};
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::last_text as last;
 use crate::test_support::run;
 
 const TERRAIN: &str = r##"
@@ -286,10 +287,6 @@ fn band(w: &World) -> Band {
 
 fn said(w: &World, text: &str) -> bool {
     w.messages().iter().any(|m| m.text.contains(text))
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or(String::new(), |m| m.text.clone())
 }
 
 /// Kicks whoever stands in `dir` until they are dead (they have one hit point).

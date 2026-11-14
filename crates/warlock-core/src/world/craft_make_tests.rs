@@ -9,6 +9,7 @@ use super::*;
 use crate::content::{ContentFiles, RecipeId};
 use crate::object::Stack;
 use crate::skills::{SkillId, Trained};
+use crate::test_support::last_text as said;
 use crate::test_support::run as apply;
 
 /// A forge with its anvil at (5, 2), the player beside it at (4, 3), and at `k` a kobold, when
@@ -92,10 +93,6 @@ fn gem(w: &mut World, gem: &str, cut: &str) {
     let part = crate::item_parts::ItemPart::gem(&content, None, m, cutting);
     let stack = Stack::one(gems.object).with_parts(vec![part]);
     w.player_mut().inventory.push(stack);
-}
-
-fn said(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
 }
 
 fn recipe(w: &World, id: &str) -> RecipeId {

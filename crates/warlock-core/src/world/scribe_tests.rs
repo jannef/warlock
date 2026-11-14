@@ -8,6 +8,7 @@ use crate::action::parse_actions;
 use crate::content::{ContentFiles, Reading};
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::last;
 use crate::test_support::run;
 use crate::time::Duration;
 
@@ -44,12 +45,6 @@ fn world_with(map: &str, mana: u16, pack: &str) -> World {
 
 fn world() -> World {
     world_with(HALL, 200, PACK)
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last())
-        .map(|m| m.display())
-        .unwrap_or_default()
 }
 
 fn count(w: &World, object: &str) -> u32 {

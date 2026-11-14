@@ -8,6 +8,7 @@ use crate::character::CharacterSpec;
 use crate::magic::worked::Quality;
 use crate::test_support::CONTENT;
 use crate::test_support::run as act;
+use crate::test_support::texts as said;
 
 /// The patron's corner of the Gæsthūs, and the cell west of it.
 const CORNER: Pos = Pos::new(50, 23);
@@ -18,10 +19,6 @@ fn run(character: &str) -> World {
     let spec: CharacterSpec = character.parse().expect("a character");
     World::start_run(CONTENT.clone(), "ceaptun", None, Some(&spec), None, true)
         .expect("a run in Cēaptūn")
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 /// What the patron said last.

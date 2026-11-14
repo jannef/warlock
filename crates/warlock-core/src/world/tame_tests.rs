@@ -12,6 +12,7 @@ use crate::replay::Replay;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::Stat;
 use crate::test_support::builtin;
+use crate::test_support::texts as said;
 use std::sync::Arc;
 
 /// A lit nook: the player below a beast walled in on three sides, so it cannot wander off.
@@ -70,10 +71,6 @@ fn beast(w: &World) -> ActorId {
         .find(|a| a.pos == at && a.id != w.state.player)
         .map(|a| a.id)
         .expect("the beast")
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 fn last(w: &World) -> String {

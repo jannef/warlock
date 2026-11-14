@@ -14,6 +14,7 @@ use crate::skills::Use;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::test_support::CONTENT as BUILTIN;
 use crate::test_support::run;
+use crate::test_support::said;
 use crate::time::{DAWN, DAY};
 use std::sync::LazyLock;
 
@@ -34,10 +35,6 @@ static SURE: LazyLock<Arc<Content>> = LazyLock::new(|| {
 fn world_with(content: Arc<Content>) -> World {
     let spec: CharacterSpec = "human,male,warrior".parse().expect("a character");
     World::with_character(content, "showcase", Some(7), Some(&spec)).expect("world")
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 fn marks(world: &World) -> PerStat<i32> {

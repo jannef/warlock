@@ -10,6 +10,7 @@ use crate::magic::{Affix, LootGrade, Magic, Rarity};
 use crate::replay::Replay;
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said as texts;
 
 // A training dummy takes a lot and never fights back.
 const DUMMY: &str = "[[creature]]\nid = \"dummy\"\nname = \"training dummy\"\nglyph = \"D\"\n\
@@ -52,10 +53,6 @@ fn hall(map: &str, hp: u16, ambient: u16) -> World {
 
 fn world(map: &str) -> World {
     world_with(map, 1000)
-}
-
-fn texts(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn lost(w: &World, id: ActorId) -> i32 {

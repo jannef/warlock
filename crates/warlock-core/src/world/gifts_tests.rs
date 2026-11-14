@@ -12,6 +12,7 @@ use crate::damage::Damage;
 use crate::geom::Pos;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::last;
 use crate::test_support::run;
 
 /// A human warrior in `scenario` (seed 7), born under the `element` `animal` (`None`: under no
@@ -31,10 +32,6 @@ fn born(scenario: &str, sign: Option<(&str, &str)>) -> World {
     let max = w.state.player().max_hp(w.content());
     w.player_mut().hp = max;
     w
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().map(|m| m.display()).next_back()).unwrap_or_default()
 }
 
 fn status(w: &World, id: &str) -> StatusId {

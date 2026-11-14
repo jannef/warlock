@@ -1,6 +1,7 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::perception::CellView;
+use crate::test_support::last_text as last_message;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -131,15 +132,6 @@ fn world() -> World {
 fn terrain_name(world: &World, p: Pos) -> String {
     let (level, _) = world.ground_truth();
     world.content().terrain(level.terrain[p]).id.clone()
-}
-
-fn last_message(world: &World) -> String {
-    world
-        .messages()
-        .iter()
-        .last()
-        .map(|m| m.text.clone())
-        .unwrap_or_default()
 }
 
 #[test]

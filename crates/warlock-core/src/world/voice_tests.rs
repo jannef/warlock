@@ -4,6 +4,7 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::noise::SoundKind;
+use crate::test_support::last_text as last_message;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -127,14 +128,6 @@ description = "A voice where you will."
 effects = [{ kind = "throw_voice" }]
 systems = ["hearing"]
 "#;
-
-fn last_message(w: &World) -> String {
-    w.messages()
-        .iter()
-        .last()
-        .map(|m| m.text.clone())
-        .unwrap_or_default()
-}
 
 #[test]
 fn a_thrown_voice_draws_creatures_with_enemies_to_look() {

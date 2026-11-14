@@ -7,6 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::combat::Category;
 use crate::content::ContentFiles;
+use crate::test_support::last as last_message;
 use crate::test_support::run;
 
 const TERRAIN: &str = r##"
@@ -199,10 +200,6 @@ fn pos(world: &World, id: ActorId) -> Pos {
 fn terrain_at(world: &World, p: Pos) -> String {
     let level = world.state.current();
     world.content.terrain(level.terrain[p]).id.clone()
-}
-
-fn last_message(world: &World) -> String {
-    (world.messages().iter().last()).map_or_else(String::new, |m| m.display())
 }
 
 #[test]

@@ -11,6 +11,7 @@ use crate::content::{ContentFiles, StatusId};
 use crate::dice::Dice;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::builtin;
+use crate::test_support::said_text as said;
 use std::sync::LazyLock;
 
 const POND: &str = r#"
@@ -60,10 +61,6 @@ fn on(w: &mut World, id: ActorId, name: &str) {
 
 fn look(w: &mut World) {
     *w.perception = crate::perception::Perception::compute(&w.state, &w.content, &mut w.lights);
-}
-
-fn said(w: &World, text: &str) -> bool {
-    w.messages().iter().any(|m| m.text == text)
 }
 
 /// A kobold beside the player (east), of `hp` hit points, and the player cloaked in fire.

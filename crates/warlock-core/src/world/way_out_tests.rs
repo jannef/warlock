@@ -9,13 +9,10 @@ use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::builtin;
 use crate::test_support::run as act;
+use crate::test_support::texts as said;
 
 /// Ūtgang's way in on the Ascmearc, on the volcano's south foot.
 const UTGANG: Pos = Pos::new(103, 17);
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
-}
 
 fn locations(world: &World) -> String {
     dump::layer_rows(world, Layer::Locations).join("\n")

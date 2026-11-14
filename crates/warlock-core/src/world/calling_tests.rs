@@ -12,6 +12,7 @@ use crate::content::{ContentFiles, Factor, Table};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::run;
+use crate::test_support::said;
 use std::sync::LazyLock;
 
 /// The bard's cap in this fixture.
@@ -68,10 +69,6 @@ static FIXTURE: LazyLock<Arc<Content>> = LazyLock::new(|| {
 fn world(class: &str) -> World {
     let spec: CharacterSpec = format!("human,male,{class}").parse().expect("a character");
     World::with_character(FIXTURE.clone(), "showcase", Some(7), Some(&spec)).expect("world")
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 fn threshold(world: &World, level: u8) -> u32 {

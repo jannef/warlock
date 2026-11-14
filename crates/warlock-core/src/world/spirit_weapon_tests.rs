@@ -12,6 +12,7 @@ use crate::dump::{self, Layer};
 use crate::magic::describe::{self, LineKind};
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::last;
 use crate::test_support::run;
 use std::sync::LazyLock;
 
@@ -43,10 +44,6 @@ fn hunter() -> World {
     let mut w = plain();
     w.player_mut().talents.take("spirit_weapon", None);
     w
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.display())
 }
 
 fn said(w: &World, text: &str) -> bool {

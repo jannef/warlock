@@ -7,6 +7,7 @@ use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
 use crate::test_support::CONTENT as BUILTIN;
 use crate::test_support::run;
+use crate::test_support::said;
 
 /// Every potion type, by id.
 const POTIONS: &[&str] = &[
@@ -46,10 +47,6 @@ fn content_with(pack: &str, more: &[(&str, &str)]) -> Arc<Content> {
 
 fn world(pack: &str) -> World {
     World::new(content_with(pack, &[]), "potion_hall", Some(7)).expect("world")
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn id(w: &World, object: &str) -> ObjectId {

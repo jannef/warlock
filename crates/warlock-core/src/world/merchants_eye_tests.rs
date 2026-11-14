@@ -8,6 +8,7 @@ use crate::action::parse_actions;
 use crate::content::{ActionKind, ClassActive, ContentFiles, Rarity};
 use crate::item_list::ItemList;
 use crate::magic::{Affix, Magic};
+use crate::test_support::last;
 use crate::test_support::run;
 
 const EYE: ClassActive = ClassActive::MerchantsEye;
@@ -27,10 +28,6 @@ fn world() -> World {
     );
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     World::new(content, "hall", Some(3)).expect("world")
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.display())
 }
 
 /// An unidentified magic ring, put at the end of the pack; its position.

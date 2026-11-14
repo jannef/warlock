@@ -8,16 +8,13 @@ use crate::rng::Rng;
 use crate::skills::Effect;
 use crate::test_support::CONTENT as BUILTIN;
 use crate::test_support::run;
+use crate::test_support::said;
 use crate::time::HOUR;
 
 /// A human of `class` in the showcase.
 fn world(class: &str) -> World {
     let spec: CharacterSpec = format!("human,male,{class}").parse().expect("a character");
     World::with_character(BUILTIN.clone(), "showcase", Some(7), Some(&spec)).expect("world")
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 /// An unidentified magic long sword, nothing of its own parts.

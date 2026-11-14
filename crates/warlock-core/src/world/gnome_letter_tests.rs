@@ -6,6 +6,7 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::test_support::run as act;
+use crate::test_support::texts as said;
 use std::sync::LazyLock;
 
 const WULFRUN: Pos = Pos::new(72, 26);
@@ -17,10 +18,6 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
     files.remove_encounter_tables();
     Arc::new(Content::load(&files).expect("builtin content"))
 });
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
-}
 
 /// The player's topics with whoever stands at `at` on the current level.
 fn topics(world: &World, at: Pos) -> Vec<String> {

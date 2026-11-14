@@ -7,6 +7,7 @@ use super::*;
 use crate::action::Event;
 use crate::content::ContentFiles;
 use crate::test_support::run;
+use crate::test_support::texts as said;
 
 /// The player stands on stairs down and up (below): `k` beside them, `f` two cells off.
 const TOP: &str = "\
@@ -103,10 +104,6 @@ fn beside(w: &World) -> ActorId {
 
 fn far(w: &World) -> ActorId {
     at(w, 6, 2)
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 /// The player was told `line`.

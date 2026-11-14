@@ -7,6 +7,7 @@ use crate::content::ContentFiles;
 use crate::dump::{Layer, layer_rows};
 use crate::perception::CellView;
 use crate::replay::Replay;
+use crate::test_support::last_text as last_message;
 
 // Room A (x 1..5) with a pile, some arrows, a single dagger, and a heap of daggers; a closed door
 // at (6, 2) to room B, where a ruby lies and a kobold carrying a spear and coins stands. Fully
@@ -82,14 +83,6 @@ fn truth(w: &World, p: Pos) -> Vec<(String, u32)> {
 
 fn inventory(w: &World) -> Vec<(String, u32)> {
     ids(w, w.perception().inventory())
-}
-
-fn last_message(w: &World) -> String {
-    w.messages()
-        .iter()
-        .last()
-        .map(|m| m.text.clone())
-        .unwrap_or_default()
 }
 
 fn pair(id: &str, count: u32) -> (String, u32) {

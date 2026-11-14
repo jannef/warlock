@@ -7,6 +7,7 @@ use super::split::Split;
 use super::*;
 use crate::content::{ActionKind, Affliction, ContentFiles, StatusId};
 use crate::test_support::run;
+use crate::test_support::said;
 
 /// A breeder of its own kind at no cost, for the self-pool.
 const BREEDER: &str = r##"
@@ -66,10 +67,6 @@ fn first(w: &World, kind: &str) -> ActorId {
 
 fn kind(w: &World, id: &str) -> Option<crate::content::DamageTypeId> {
     w.content().damage_type_id(id)
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 /// Says the news as an action would.

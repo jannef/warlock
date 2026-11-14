@@ -15,6 +15,7 @@ use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stats};
 use crate::test_support::run as apply;
+use crate::test_support::{last_text as last, said_text as said, texts};
 use std::sync::LazyLock;
 
 const ROOM: &str = "\
@@ -132,18 +133,6 @@ fn stock(w: &mut World, material: &str, count: u32) {
     let m = w.content.material_id(material).expect(material);
     let stack = crate::piece::make(&w.content, m, count).expect("stock");
     w.player_mut().inventory.push(stack);
-}
-
-fn texts(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.text.clone()).collect()
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
 }
 
 fn pack(w: &World) -> Vec<String> {

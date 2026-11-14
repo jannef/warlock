@@ -8,6 +8,7 @@ use crate::content::{ContentFiles, Stance};
 use crate::replay::Replay;
 use crate::test_support::builtin;
 use crate::test_support::run;
+use crate::test_support::said as messages;
 use std::sync::LazyLock;
 
 const TERRAIN: &str = r##"
@@ -295,10 +296,6 @@ fn world(scenario: &str) -> World {
 
 fn pos(world: &World, id: ActorId) -> Pos {
     world.state().actors[&id].pos
-}
-
-fn messages(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 fn last_message(world: &World) -> String {

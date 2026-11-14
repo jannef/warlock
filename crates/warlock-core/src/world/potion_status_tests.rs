@@ -7,6 +7,7 @@ use super::*;
 use crate::content::ContentFiles;
 use crate::stats::Stat;
 use crate::test_support::run;
+use crate::test_support::said;
 
 /// The test content: a dark hall (no light at all), the player at `@` carrying `pack`; `more`
 /// adds or replaces files.
@@ -44,10 +45,6 @@ fn pass(w: &mut World, minutes: u64) {
     while w.state.time < until {
         run(w, "wait");
     }
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn severity(w: &World, status: &str) -> Option<u16> {

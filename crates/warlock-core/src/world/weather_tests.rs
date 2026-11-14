@@ -11,6 +11,7 @@ use crate::light::Sun;
 use crate::perception::Emitter;
 use crate::replay::Replay;
 use crate::test_support::CONTENT;
+use crate::test_support::texts;
 use crate::weather::{Clouds, Weather, weather_at};
 
 /// From the showcase start to the courtyard, up the stairs nook's `<`.
@@ -36,10 +37,6 @@ fn world(scenario: &str) -> World {
 
 fn climate() -> &'static Climate {
     CONTENT.climate()
-}
-
-fn texts(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 /// The weather messages the player could get, in the order they were logged.
