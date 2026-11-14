@@ -988,11 +988,16 @@ impl<'a> PerceptionView<'a> {
             .into_iter()
             .flat_map(|(table, own)| table.abilities_to(book, own))
             .collect();
-        // The rising is spent once it is used up: the first with no Second rising, else both.
+        // The rising is spent once it is used up: the first with no Second rising, else both; a
+        // profane gift's (Twice-born) once its own once is.
         let risen = self.progress.happened(crate::world::RISEN);
         let twice = self.progress.happened(crate::world::RISEN_TWICE);
+        let profane_risen = self.progress.happened(crate::world::PROFANE_RISEN);
         let second = (self.player.talent_mods(self.content)).vigour.second_rising;
-        let spent = |e: &crate::content::TalentEffect| match e {
+        let spent = |gift: bool, e: &crate::content::TalentEffect| match e {
+            crate::content::TalentEffect::Vigour(crate::talent::VigourEffect::RiseFromAshes {
+                ..
+            }) if gift => profane_risen,
             crate::content::TalentEffect::Vigour(crate::talent::VigourEffect::RiseFromAshes {
                 ..
             }) => risen && (!second || twice),
@@ -1023,7 +1028,7 @@ impl<'a> PerceptionView<'a> {
                     race: def.granted && Some(def.tree) == book.tree_id("racial"),
                     flaw: def.flaw,
                     class: class.contains(&id),
-                    spent: def.effects.iter().any(&spent),
+                    spent: def.effects.iter().any(|e| spent(profane.is_some(), e)),
                     boon: boon && !story && profane.is_none(),
                     story,
                     profane,

@@ -1,0 +1,12 @@
+[[gift]]
+id = "stone_sinewed"
+name = "Stone-sinewed"
+kind = "boon"
+tier = "dire"
+weight = 10
+description = "Sinews of cord and bones of stone: you are far stronger, and carry more."
+line = "Your sinews turn to cord and your bones to stone."
+effects = [
+    { kind = "stat", stat = "strength", value = 3 },
+    { kind = "carry_percent", value = 30 },
+]

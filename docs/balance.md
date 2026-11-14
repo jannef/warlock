@@ -140,6 +140,10 @@ docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/r
 - **Not modelled**: triggered and active weapon abilities (Rend, Riposte, Sunder, ...), stances (but the rage table's),
   sneak attacks outside the table above, a talent build, potions, resistances against spells, healing between rounds,
   and fights against several monsters at once.
+- **Outside the probe**: the profane gifts (`docs/dev/profane-gifts.md`; design
+  `docs/design/profane-gifts.md` §12). Eating a keeper's corpse is optional and late, its draws
+  are a gamble by design, and a "with every signature" column is not worth the probe's time:
+  the design's §12 judges each keeper's gift against the depth it sits at instead.
 
 ## Players
 

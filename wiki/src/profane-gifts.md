@@ -69,6 +69,15 @@ Each gift is given in full before the next roll, so a roll never draws what the 
 ruled out. The odds in the table below are a tier's odds while none of its gifts is held or
 barred. As you gather gifts the rest of the tier shares the odds, by the same weights.
 
+For example, the lesser tier's weights add up to 124, and [Hungering](#talent-hungering) weighs
+12: 9.7 % of a lesser roll. Hold [Thick-blooded](#talent-thick-blooded) (weight 10), which also
+rules out [Paper-skinned](#talent-paper-skinned) (weight 8), and the tier's open weights add up to
+106: Hungering is then 12 in 106, 11.3 %.
+
+Every tier holds good, bad, and mixed gifts, so no roll is ever safe. By weight the lesser tier is
+45 % good, 27 % mixed, and 27 % bad; the greater 45 %, 28 %, and 26 %; the dire 37 %, 25 %, and
+38 %.
+
 ## Gifts with other gifts
 
 Some gifts change what happens to the others:
@@ -79,6 +88,24 @@ Some gifts change what happens to the others:
   else (Withered over Oak-hearted). If you do not hold it, you get this gift as usual.
 - **Never with**: you cannot hold both. While you hold one, the other is never drawn.
 
+Every such link in the table:
+
+| Gift | With other gifts |
+|---|---|
+| [Deep-eyed](#talent-deep-eyed) | replaces [Barrow-eyed](#talent-barrow-eyed) and [Mere-eyed](#talent-mere-eyed); never with [Dim-eyed](#talent-dim-eyed) |
+| [Wyrm-blooded](#talent-wyrm-blooded) | replaces [Ember-veined](#talent-ember-veined) |
+| [Wyrm's hunger](#talent-wyrms-hunger) | replaces [Hungering](#talent-hungering) |
+| [Withered](#talent-withered) | undoes [Oak-hearted](#talent-oak-hearted) |
+| [Palsied](#talent-palsied) | undoes [Adder-quick](#talent-adder-quick) |
+| [Dim-eyed](#talent-dim-eyed) | never with [Barrow-eyed](#talent-barrow-eyed), [Mere-eyed](#talent-mere-eyed), or [Deep-eyed](#talent-deep-eyed) |
+| [Hoofed](#talent-hoofed) | never with [Soft-footed](#talent-soft-footed) |
+| [Many-fingered](#talent-many-fingered) | never with [Clawed](#talent-clawed) |
+| [Thick-blooded](#talent-thick-blooded) | never with [Paper-skinned](#talent-paper-skinned) or [Glass-boned](#talent-glass-boned) |
+| [Scaled](#talent-scaled) | never with [Paper-skinned](#talent-paper-skinned), [Glass-boned](#talent-glass-boned), or [Hollowed](#talent-hollowed) |
+
+[Hill-thewed](#talent-hill-thewed) has nothing that undoes it. A replacing gift you draw while
+holding neither lesser form is simply taken, and the lesser forms can still be drawn after it.
+
 There is no cure. No temple, potion, scroll, or prayer removes a profane gift. Only a later
 gift that replaces or undoes it takes it away.
 
@@ -86,8 +113,8 @@ gift that replaces or undoes it takes it away.
 
 Some gifts change more than your numbers:
 
-- **Slots.** Horns, hooves, and claws bar the helm, boot, and glove slots; a sixth finger opens
-  a ring slot. What no longer fits falls to the floor as the gift takes (see [Barred and opened
+- **Slots.** Horns, hooves, claws, and wing stubs bar the helm, boot, glove, and cloak slots; a
+  sixth finger opens a ring slot. What no longer fits falls to the floor as the gift takes (see [Barred and opened
   slots](equipment.md#barred-and-opened-slots)).
 - **Claws.** [Clawed](#talent-clawed) bare hands hit harder and can make a foe
   [bleed](status-effects.md#bleeding). With a weapon in your hand the claws do nothing.
@@ -101,6 +128,18 @@ Some gifts change more than your numbers:
   quest](quests.md#drawn-quests) asks you to kill a kind it keeps neutral.
 - **Mana.** [Fell-minded](#talent-fell-minded) gives you a quarter more
   [mana](mana.md#how-much-mana-you-have) at most, on top of what its Intelligence adds.
+- **Rising again.** [Twice-born](#talent-twice-born) is the Phoenix's
+  [Rise from the ashes](horoscope.md#talent-rise-from-ashes), with the same numbers, but a
+  rising of its own. Anyone Twice-born rises once. A Phoenix who is Twice-born rises once by the
+  sign (twice with [Second rising](horoscope.md#talent-second-rising)) and then once more by the
+  gift. The Talents page marks it spent once it is used.
+- **Light.** [Ember-veined](#talent-ember-veined) makes you shed a dim red light at all times,
+  enough to see the cells beside you, and enough for everything about to see you by. Under a full
+  moon it burns as brightly as the Phoenix's [Inner light](horoscope.md#talent-inner-light).
+  [Wyrm-blooded](#talent-wyrm-blooded) puts it out.
+- **The stare.** [Stone-eyed](#talent-stone-eyed) gives you the Basilisk's
+  [Transfixing stare](horoscope.md#talent-transfixing-stare), used from the abilities menu. If
+  your sign gave you one already, you keep one stare, the stronger.
 
 ## The gift table
 

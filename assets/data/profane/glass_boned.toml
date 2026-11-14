@@ -1,0 +1,16 @@
+[[gift]]
+id = "glass_boned"
+name = "Glass-boned"
+kind = "bane"
+tier = "dire"
+weight = 10
+description = "Light, brittle bones: blows land harder, heavy blows wound you deeper, and traps hurt you more."
+line = "Your bones go light and brittle."
+effects = [
+    { kind = "natural", value = -2 },
+    { kind = "trap_damage_percent", value = 50 },
+    { kind = "wound_more", value = 1 },
+]
+# Written here, on the later of the two (docs/design/profane-gifts.md §6.5): made symmetric at
+# load. Scaled's `excludes` names it too.
+excludes = ["thick_blooded"]

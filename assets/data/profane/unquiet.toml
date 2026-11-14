@@ -1,0 +1,12 @@
+[[gift]]
+id = "unquiet"
+name = "Unquiet"
+kind = "bane"
+tier = "dire"
+weight = 8
+description = "Sleep brings no rest: resting heals you and restores your mana no faster than waking."
+line = "Sleep comes, but rest does not."
+effects = [
+    { kind = "resting_percent", value = -100 },
+    { kind = "mana_resting_percent", value = -100 },
+]

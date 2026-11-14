@@ -1,5 +1,10 @@
 # Warlock — Profane gifts: the layer bosses' corpses and the gift table
 
+**Built; this file is history** (P1–P6, #1624–#1629, complete with #1629). The current rules are
+spec §8 "Hunger" (`spec/08h-hunger.md`), `docs/dev/profane-gifts.md`, and the wiki's
+`profane-gifts.md`. One name changed in the building: the design's `thin_skinned` is
+`paper_skinned`.
+
 Design document (2026-11-13) for #1471, **approved by the owner on 2026-11-14 with the recommendations**: every question of the review took the recommended answer, recorded in §14 and folded into the rules below. Written against `origin/main` at 1559218c6 (version 0.16.0), finalised against 7095e8bdb (0.17.0). Nothing here is implemented; §13 maps it onto implementation issues, one PR each. Resistance follows #1620's model (§6.6), and the phases that grant resistance come after it. It builds on what is there: eating and corpses (`docs/dev/hunger.md`: `OnEat`, `eat.rs::eat_fresh`, `corpse_gifts`, the rot stages), alignment (`docs/dev/alignment.md`, `data/alignment.toml`), stat training and gifts (`docs/dev/stats.md`: `Stats::gift`, the marks), the talent machinery (`docs/dev/progression.md`: `TalentEffect`, `TalentMods`, `granted` talents, `Actor::boons`, `World::bestow`), the layer bosses (`world/layer_boss.rs`, spec §7 "The endless branch"), and the ten boss files in `assets/campaigns/ascmearc/data/creatures/`.
 
 Every number below is data and hidden in the game; the wiki states it (the owner's rule: the game is vague, the wiki is accurate). The aim: **eating a layer boss is the biggest gamble in the game**: a sure, large, fitting change from the boss itself, one to three draws on a table of permanent changes to the body, good, bad, and mixed, and a heavy pull toward evil, all for life. The corpses never rot, so the meal can wait; nothing else about them waits for anything.

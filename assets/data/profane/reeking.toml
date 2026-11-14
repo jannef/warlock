@@ -1,0 +1,9 @@
+[[gift]]
+id = "reeking"
+name = "Reeking"
+kind = "bane"
+tier = "lesser"
+weight = 6
+description = "A smell of the midden clings to you: you are easier to notice, and no one makes way for you."
+line = "A smell of the midden follows you, and you cannot wash it off."
+effects = [{ kind = "skill", skill = "stealth", value = -15 }, { kind = "distrusted" }]

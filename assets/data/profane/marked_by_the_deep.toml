@@ -1,0 +1,9 @@
+[[gift]]
+id = "marked_by_the_deep"
+name = "Marked by the deep"
+kind = "bane"
+tier = "greater"
+weight = 10
+description = "Something far below has your scent: creatures come to wherever you are more often."
+line = "Something far below has your scent."
+effects = [{ kind = "spawn_every_percent", value = -40 }]

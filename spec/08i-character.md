@@ -148,7 +148,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     every creature there (no roll to hit; a kill is the player's), and the ice there melts. The
     rising is kept in the saved progression (`Progress::once`, `risen`), so it never comes again;
     the Stars line and the talents say "Rise from the ashes (spent)". With **Second rising** (a
-    pick, below) it comes once more (`risen_twice`), and only then is it spent. A Toughness
+    pick, below) it comes once more (`risen_twice`), and only then is it spent; the profane gift
+    Twice-born (§8 "Hunger") gives one more of its own after those (`profane_risen`). A Toughness
     drained to 0 by
     a disease still kills (the rising would leave them dying of it). The flames draw from the
     gameplay stream only when they come.

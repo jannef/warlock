@@ -1,0 +1,14 @@
+[[gift]]
+id = "storm_marrowed"
+name = "Storm-marrowed"
+kind = "mixed"
+tier = "dire"
+weight = 8
+description = "Your bones hum: lightning troubles you little and spells cost you less, but you are frailer and hungrier."
+line = "Your bones hum."
+effects = [
+    { kind = "resist", damage = "electricity", value = 100 },
+    { kind = "mana_cost_percent", value = -20 },
+    { kind = "max_hp_percent", value = -10 },
+    { kind = "hunger_percent", value = 30 },
+]

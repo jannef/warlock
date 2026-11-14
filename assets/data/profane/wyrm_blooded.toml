@@ -1,0 +1,15 @@
+[[gift]]
+id = "wyrm_blooded"
+name = "Wyrm-blooded"
+kind = "boon"
+tier = "dire"
+weight = 10
+description = "A wyrm's blood: fire, cold, lightning, and poison all trouble you less."
+line = "Your blood runs thick and slow, and nothing much hurts it."
+effects = [
+    { kind = "resist", damage = "fire", value = 50 },
+    { kind = "resist", damage = "cold", value = 50 },
+    { kind = "resist", damage = "electricity", value = 50 },
+    { kind = "resist", damage = "poison", value = 50 },
+]
+replaces = ["ember_veined"]

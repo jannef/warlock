@@ -1,0 +1,15 @@
+[[gift]]
+id = "hollowed"
+name = "Hollowed"
+kind = "mixed"
+tier = "dire"
+weight = 8
+description = "Blades and blows pass half through you, but your wounds close slowly, and others feel the lack in you."
+line = "Blades pass half through you now. So does warmth."
+effects = [
+    { kind = "resist", damage = "slashing", value = 25 },
+    { kind = "resist", damage = "piercing", value = 25 },
+    { kind = "resist", damage = "bludgeoning", value = 25 },
+    { kind = "healing_percent", value = -50 },
+    { kind = "stat", stat = "presence", value = -2 },
+]
