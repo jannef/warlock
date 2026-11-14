@@ -22,7 +22,6 @@
 //! without vitals (`Content::has_vitals`: the bones, the spirits, the animated). Nothing limits
 //! trying again (the owner's rule): the time is the price.
 
-use super::talk::capitalized;
 use super::{Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, Stance};
@@ -30,6 +29,7 @@ use crate::fov::radius2;
 use crate::geom::Pos;
 use crate::noise::Act;
 use crate::skills::{Effect, Use};
+use crate::text::capitalized;
 
 impl World {
     /// [`crate::Action::Intimidate`]: the player threatens the creature on `at` (see the module

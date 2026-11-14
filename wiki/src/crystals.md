@@ -42,7 +42,8 @@ colour lie where it fell. What it carried falls as usual.
 A stronger creature leaves more crystals, and a very strong one may leave a
 [rare material](#rare-materials) too (how many and how often is under [The numbers](#the-numbers)).
 A creature with no corpse (a spirit, a fire elemental), an animated thing, a summoned creature,
-and a creature of no colour die as they would from any other spell. The undead take no
+a creature of no colour, and a [keeper of Grundlēas](food.md#corpses) die as they would from any
+other spell. The undead take no
 [necrotic](spellcasting.md#spell-types) harm, so Soulglass does nothing to them.
 
 ## Consuming a crystal
@@ -53,7 +54,7 @@ one: you crush it and drink what is in it. This takes a turn and needs no check,
 be hungry. It gives:
 
 - **mana**, the same for every colour, never past your maximum,
-- several [training marks](stats.md#training) in Willpower (how many is under
+- several [training marks](stats.md#raising-your-stats) in Willpower (how many is under
   [The numbers](#the-numbers)),
 - a step toward evil on your [alignment](alignment.md). A crystal is what is left of a soul.
 
@@ -76,3 +77,6 @@ colour holds, if you stop to listen (see [People](npcs.md)).
 ## The numbers
 
 {{#include generated/crystal-rules.md}}
+
+See also: [Enchanting](enchanting.md), [Crafting](crafting.md#salvage), and
+[Magic items](magic-items.md).

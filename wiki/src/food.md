@@ -1,5 +1,8 @@
 # Food and corpses
 
+This page has what you eat: eating, food that spoils, and the corpse tables. How hunger works
+and what it does to you is on [Hunger](hunger.md).
+
 Food (`%`) keeps [hunger](hunger.md#how-hungry-you-are) away. Press `e` (the Eat command) to
 consume something. A list titled "Consume what?" shows what you can eat: first what lies where
 you stand ("lying here"), then the food you carry (see [Lists of
@@ -67,6 +70,11 @@ corpse has rotted away."). A corpse does not show how old it is, so remember whe
 Eating a rotten one is as bad an idea as eating any rotten food: "Ugh! The kobold corpse was
 rotten."
 
+The corpses of the [keepers of Grundlēas](dungeon-guide.md#the-keepers-of-the-layers) never rot.
+Each keeper always leaves its corpse where it fell: [Soulglass](magic.md#spell-soulglass) does not
+turn it to glass, and turned to stone it still leaves its corpse, not a statue. Most are far too
+heavy to carry, but the corpse waits in the lair for as long as you stay on that floor.
+
 A corpse is good for more than a meal. [Necromancy](spellcasting.md#spell-types) has three uses
 for a corpse of any age, and each one uses it up. [Charnel burst](magic.md#spell-charnel-burst)
 blows it apart, [Grave feast](magic.md#spell-grave-feast) draws out what life is left, and
@@ -76,7 +84,7 @@ blows it apart, [Grave feast](magic.md#spell-grave-feast) draws out what life is
 
 Eating a fresh corpse may do more than feed you. Some taste terrible and may come back up. Some
 make you [sick](status-effects.md#poisoned). Some do you good, and many feed your body's
-[training](stats.md#training): a corpse gives **marks** toward a stat, just as using the stat
+[training](stats.md#raising-your-stats): a corpse gives **marks** toward a stat, just as using the stat
 does. A few corpses (giants', trolls', hags', ogres', and the fey's) have a small chance to
 widen how far that stat can grow, its [potential](stats.md#potentials).
 

@@ -24,6 +24,7 @@ use warlock_core::content::Rarity;
 use warlock_core::equipment;
 use warlock_core::magic::describe::{Line, LineKind};
 use warlock_core::perception::PerceptionView;
+use warlock_core::text::capitalized;
 
 /// Panel width: the description's lines wrap within it.
 const WIDTH: i32 = 64;
@@ -167,13 +168,6 @@ impl Default for Row {
             color: TEXT,
         }
     }
-}
-
-fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    chars
-        .next()
-        .map_or_else(String::new, |c| c.to_uppercase().chain(chars).collect())
 }
 
 #[cfg(test)]

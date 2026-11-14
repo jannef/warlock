@@ -13,7 +13,7 @@ toward the next rank, and benefits per rank that add to your weapon skill's.
 
 You train a style by fighting in it. Every attack you make while you hold your weapons its way
 earns marks in the style as well as in the weapon's own skill. The rules are the same: more for a
-hit, more against stronger opponents (see [Marks and ranks](weapon-skills.md#marks-and-ranks)). A [dagger](weapon-skills.md#weapon-skill-daggers) alone in your hand
+hit, more against stronger opponents (see [Raising a weapon skill](weapon-skills.md#raising-a-weapon-skill)). A [dagger](weapon-skills.md#weapon-skill-daggers) alone in your hand
 trains [Duelist](fighting-styles.md#style-duelist). The same dagger beside a sword trains [Twin Blades](fighting-styles.md#style-twin-blades). A shield alone is no style at
 all, and neither is a [shield bash](abilities.md#ability-shield-bash) with an empty other hand.
 
@@ -73,7 +73,7 @@ your shields turn [staggers](status-effects.md#status-staggered) its striker (*[
 
 - every bash is at a penalty to hit;
 - every attack takes longer;
-- a spell you cast with your own [mana](mana.md#how-much) may fail, because your hands are full of shields. The
+- a spell you cast with your own [mana](mana.md#how-much-mana-you-have) may fail, because your hands are full of shields. The
   mana and the time are spent all the same.
 
 The style eases all three, and from rank 9 none is left. A [scroll](scrolls.md) you read or a [wand](wands-and-rods.md#wands) you use never
@@ -94,7 +94,7 @@ rules. A style's benefits add to those of the weapon skill you fight with:
   other.
 - **Bash penalty**, **Slower attacks**, and **Spell failure**: with two shields, the penalty to hit
   of every bash, how much longer every attack takes, and the chance that a spell you cast with your
-  own [mana](mana.md#how-much) fails.
+  own [mana](mana.md#how-much-mana-you-have) fails.
 
 {{#include generated/style-benefits.md}}
 

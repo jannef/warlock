@@ -21,7 +21,8 @@ weight = 3000000
 stats = { strength = 35, dexterity = 20, toughness = 36, intelligence = 29, willpower = 33, presence = 29 }
 base_hp = 309
 natural = { defence = 3, protection = 13, name = "ice" }
-resist = { piercing = 25, cold = 100, fire = -50, poison = 100 }
+resist = { piercing = 25, fire = -50 }
+immune = ["cold", "poison"]
 corpse = false
 blood = "none"
 [creature.attack]

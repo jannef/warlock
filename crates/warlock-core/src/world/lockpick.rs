@@ -37,9 +37,8 @@ impl World {
             self.say("You do not know how to pick locks.");
             return Spent::Nothing;
         }
-        let modifier = me.effective_stats(&content).modifier(Stat::Dexterity)
-            + me.skill_effect(&content, Effect::Pick)
-            + me.talent_mods(&content).check(Stat::Dexterity);
+        let modifier =
+            me.check_modifier(&content, Stat::Dexterity) + me.skill_effect(&content, Effect::Pick);
         let at = self.player_pos().step(dir);
         // What they take for a chest is a mimic (`mimic.rs`).
         if let Some(spent) = self.touch(at, events) {

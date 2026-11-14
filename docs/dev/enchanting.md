@@ -368,8 +368,8 @@ crystallises too: the effect is the spell's.
 - **The mark**: `spell_attack` sets `World::glassing` (not saved) to the target around its
   `spell_strikes`, whoever casts it (a reflected one marks the caster it turns on). A kill of that
   blow reaches `fight.rs::creature_dies`, which asks `World::crystallise` (`world/crystal.rs`)
-  before anything else of the body: a type with a corpse (`Content::corpse_of`), no animated
-  thing, and a colour (`Crystals::colour_of`) leaves `yield_at(level)` crystals of its colour (no
+  before anything else of the body: a type with a corpse (`Content::corpse_of`), not
+  `everlasting` (a layer boss always leaves its corpse, #1624), no animated thing, and a colour (`Crystals::colour_of`) leaves `yield_at(level)` crystals of its colour (no
   draw), no corpse, and no `drops_of` stock (as a statue leaves none); a creature tagged `[rare] tag`
   (`dragon`) also `[rare] dragon` (no draw), any other of `[rare] level` or more one `chance(chance)` draw
   and, made, an `index` among `materials`, all from the gameplay stream. Its gear falls as any

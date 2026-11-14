@@ -13,6 +13,7 @@ use crate::combat::HIGHEST;
 use crate::content::{ActionKind, Content, Draught, ItemKind, ObjectDef, Rarity, weapon_noun};
 use crate::object::{Stack, format_weight};
 use crate::scroll_label::Lore;
+use crate::text::capitalized;
 use crate::world::{Actor, CastBy};
 
 /// What a line of a description is, for how it is shown.
@@ -120,7 +121,7 @@ fn capacity_line(stack: &Stack, content: &Content) -> Option<Line> {
         Some(n) => format!(
             "It bears {} and could bear {} more.",
             enchantments(n),
-            number_word(room - n)
+            crate::text::number_word(room - n)
         ),
     };
     Some(line(LineKind::Stat, text))
@@ -142,16 +143,8 @@ fn mark_line(stack: &Stack, maker: Option<&str>) -> Option<Line> {
 fn enchantments(n: usize) -> String {
     match n {
         1 => "one enchantment".to_string(),
-        n => format!("{} enchantments", number_word(n)),
+        n => format!("{} enchantments", crate::text::number_word(n)),
     }
-}
-
-/// `n` (up to six, the most an item bears) in words.
-fn number_word(n: usize) -> &'static str {
-    ["no", "one", "two", "three", "four", "five", "six"]
-        .get(n)
-        .copied()
-        .unwrap_or("many")
 }
 
 /// What a grimoire teaches (spec §8 "Spells": "Learning", "Ranks"): its spell and level, then
@@ -289,7 +282,7 @@ fn potion_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
         .filter(|(_, s)| drink.does.cures().iter().any(|c| s.cured_by.contains(c)))
         .map(|(_, s)| s.name.to_lowercase())
         .collect();
-    let cures = crate::content::and_list(&cured.iter().map(String::as_str).collect::<Vec<_>>());
+    let cures = crate::text::and_list(&cured.iter().map(String::as_str).collect::<Vec<_>>());
     let text = match &drink.does {
         Draught::Heal { .. } if cured.is_empty() => "Heals wounds at once".to_string(),
         Draught::Heal { .. } => format!("Heals wounds at once, and cures {cures}"),
@@ -311,7 +304,7 @@ fn potion_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
                 .map(|(stat, _)| boosted(stat))
                 .collect();
             let much = if *severity > 1 { "much " } else { "" };
-            let raised = crate::content::and_list(&raised);
+            let raised = crate::text::and_list(&raised);
             format!("Makes you {much}{raised} for a while")
         }
         Draught::Vision { status } => {
@@ -330,7 +323,7 @@ fn potion_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
             let kinds: Vec<&str> = (content.status(*status).resist.iter())
                 .map(|&(kind, _)| content.damage_type(kind).name.as_str())
                 .collect();
-            let kinds = crate::content::and_list(&kinds);
+            let kinds = crate::text::and_list(&kinds);
             format!("Wards you against {kinds} for a while")
         }
         Draught::Nourish { .. } => "Fills you as a meal does".to_string(),
@@ -898,11 +891,4 @@ pub fn make_lines(
         }
     }
     out
-}
-
-fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    chars
-        .next()
-        .map_or_else(String::new, |c| c.to_uppercase().chain(chars).collect())
 }

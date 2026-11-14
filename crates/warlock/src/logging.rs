@@ -80,7 +80,6 @@ mod desktop {
     use std::fs;
     use std::path::{Path, PathBuf};
     use std::sync::{Mutex, OnceLock};
-    use std::time::{SystemTime, UNIX_EPOCH};
 
     /// How many `warlock-*.log` files to keep (including the current run's).
     const KEEP_LOGS: usize = 5;
@@ -194,29 +193,14 @@ mod desktop {
 
     /// `YYYYMMDD-HHMMSS` in UTC.
     pub fn timestamp() -> String {
-        let secs = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map_or(0, |d| d.as_secs());
-        format_utc(secs)
+        format_utc(crate::utc::since_epoch().as_secs())
     }
 
     fn format_utc(secs: u64) -> String {
-        let (days, rem) = ((secs / 86_400) as i64, secs % 86_400);
-        // Civil-from-days (Howard Hinnant).
-        let z = days + 719_468;
-        let era = z.div_euclid(146_097);
-        let doe = z.rem_euclid(146_097);
-        let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
-        let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-        let mp = (5 * doy + 2) / 153;
-        let day = doy - (153 * mp + 2) / 5 + 1;
-        let month = if mp < 10 { mp + 3 } else { mp - 9 };
-        let year = yoe + era * 400 + i64::from(month <= 2);
+        let t = crate::utc::utc_parts(secs);
         format!(
-            "{year:04}{month:02}{day:02}-{:02}{:02}{:02}",
-            rem / 3600,
-            rem % 3600 / 60,
-            rem % 60
+            "{:04}{:02}{:02}-{:02}{:02}{:02}",
+            t.year, t.month, t.day, t.hour, t.minute, t.second
         )
     }
 

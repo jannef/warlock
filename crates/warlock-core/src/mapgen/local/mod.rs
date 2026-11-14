@@ -38,6 +38,7 @@ use crate::content::{
 };
 use crate::geom::{Dir, Pos};
 use crate::rng::Rng;
+use crate::text::capitalized;
 use land::{Claim, Land};
 use std::collections::BTreeMap;
 
@@ -190,7 +191,7 @@ pub(super) fn generate(
         };
         let mut template = LevelTemplate {
             id: id.to_string(),
-            name: capitalize(&content.terrain(area.terrain).name),
+            name: capitalized(&content.terrain(area.terrain).name),
             arrival: None,
             ambient: crate::light::Light::DARK,
             kind: LevelKind::Outdoor,
@@ -385,14 +386,6 @@ fn graze(land: &mut Land, rng: &mut Rng, creature: CreatureId, count: i32, start
             });
             break;
         }
-    }
-}
-
-fn capitalize(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
     }
 }
 

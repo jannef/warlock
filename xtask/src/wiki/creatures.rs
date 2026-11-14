@@ -13,12 +13,13 @@ use warlock_core::combat::Category;
 use warlock_core::content::{
     ActionKind, Affliction, BASE_TURN, Benefit, BurstWhen, Combat, Content, CorrodesWhat,
     CreatureDef, CreatureId, FactionId, Invisible, Leaving, NORMAL_COST, NaturalAttack, OnHit,
-    Stance, Takes, article, price, spoken,
+    Stance, Takes, price, spoken,
 };
 use warlock_core::geom::Pos;
 use warlock_core::object::format_weight;
 use warlock_core::skills::Effect;
 use warlock_core::stats::Stat;
+use warlock_core::text::article;
 use warlock_core::world::{Actor, ActorId, ActorKind};
 
 /// How a creature stands toward the player and how it attacks, as seen in play, how often it
@@ -396,15 +397,17 @@ pub(super) fn creature_defences(content: &Content) -> String {
             Some(hide) if hide.protection > 0 => format!("{} ({})", hide.protection, hide.name),
             _ => "-".into(),
         };
-        let mut resists: Vec<String> = (c.resist.iter())
-            .map(|&(kind, percent)| {
+        // Immunities first (#1620): no resistance, nothing of the kind hurts it.
+        let immune = (c.immune_kinds.iter())
+            .map(|&kind| format!("immune to {}", damage_link(content, kind)));
+        let mut resists: Vec<String> = immune
+            .chain(c.resist.iter().map(|&(kind, percent)| {
                 let name = damage_link(content, kind);
                 match percent {
-                    100 => format!("immune to {name}"),
                     p if p < 0 => format!("{name} {}% (takes more)", signed(p)),
                     p => format!("{name} {p}%"),
                 }
-            })
+            }))
             .collect();
         // Bloodless: no wound's status takes on it (Bleeding; `World::afflict_one`).
         if c.blood.is_none() {

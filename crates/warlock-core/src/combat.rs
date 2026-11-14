@@ -1225,10 +1225,11 @@ mod tests {
         for &(k, more) in vs {
             against[k] += more;
         }
+        let (immune, resist): (Vec<_>, Vec<_>) = resist.iter().partition(|&&(_, p)| p == IMMUNE);
         let resistances = Resistances::sum(
             3,
+            immune.iter().map(|&(k, _)| DamageTypeId(k as u8)),
             resist.iter().map(|&(k, p)| (DamageTypeId(k as u8), p)),
-            [],
         );
         Target {
             defence: Defence::from_bonuses([(Category::Dexterity, -10)]),

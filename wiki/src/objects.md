@@ -156,13 +156,13 @@ The inventory screen lists each stack's weight and marks what you wear or wield 
 "(wielded)", and so on; see [Equipment](equipment.md)). Below the list it shows:
 
 - **Carrying**: the weight of everything in your pack, worn and wielded things included, and
-  your [burden](burden.md#burden-1) if you have one;
+  your [burden](burden.md#burden-levels) if you have one;
 - **Your weight**: your own weight plus what you carry;
-- the weights at which you become [burdened, strained, and overloaded](burden.md#burden-1).
+- the weights at which you become [burdened, strained, and overloaded](burden.md#burden-levels).
 
 What you can carry is limited by your [Strength](stats.md#stat-strength) and
 [Toughness](stats.md#stat-toughness). Carry too much and everything you do is slower, until you
-are [overloaded](burden.md#burden-1) and cannot move. See [Burden](burden.md).
+are [overloaded](burden.md#burden-levels) and cannot move. See [Burden](burden.md).
 [Creatures](creatures.md) have weights too, and some carry objects, but you cannot see what they
 carry or what they weigh, only what they wear and wield.
 

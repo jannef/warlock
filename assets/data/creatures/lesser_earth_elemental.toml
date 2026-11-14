@@ -20,7 +20,8 @@ weight = 150000
 stats = { strength = 18, dexterity = 10, toughness = 19, intelligence = 2, willpower = 18, presence = 2 }
 base_hp = 43
 natural = { defence = 0, protection = 2, name = "stone body" }
-resist = { slashing = 25, piercing = 50, electricity = 100, poison = 100 }
+resist = { slashing = 25, piercing = 50 }
+immune = ["electricity", "poison"]
 corpse = false
 blood = "none"
 [creature.attack]

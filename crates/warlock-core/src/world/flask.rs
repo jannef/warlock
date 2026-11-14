@@ -34,7 +34,6 @@
 
 use super::cast::Cast;
 use super::spell::{Caster, burst_cells};
-use super::talk::capitalized;
 use super::{ActorId, AttackSkills, Cause, Spent, World};
 use crate::action::{AttackKind, Event, MissileEnd, Positions, SpellShape};
 use crate::content::{
@@ -42,6 +41,7 @@ use crate::content::{
 };
 use crate::geom::Pos;
 use crate::noise::{Act, SHATTER_NOISE, SoundKind};
+use crate::text::capitalized;
 
 impl World {
     /// The player throws one of inventory stack `item`, a potion, at cell `at` (module docs).

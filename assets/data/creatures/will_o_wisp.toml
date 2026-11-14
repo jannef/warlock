@@ -34,7 +34,7 @@ base_hp = 10
 skills = { concentration = 25, spellcraft = 30 }
 natural = { defence = 6, protection = 0, name = "flickering form" }
 attack = { damage = "1d6", damage_type = "electricity", name = "spark", verb = "shocks", to_hit = 1, on_hit = [{ status = "ebbing", chance = 30, severity = 1 }] }
-resist = { electricity = 100, poison = 100 }
+immune = ["electricity", "poison"]
 corpse = false
 blood = "none"
 # It fades from sight on a cooldown (docs/dev/creatures.md "The unseen").

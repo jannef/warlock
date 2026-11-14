@@ -358,9 +358,8 @@ impl World {
         }
         let mut worked = stack.worked().cloned().unwrap_or_default();
         let me = self.state.player();
-        let modifier = me.effective_stats(&content).modifier(craft.stat())
-            + me.skill_effect(&content, craft.effect())
-            + me.talent_mods(&content).check(craft.stat());
+        let modifier =
+            me.check_modifier(&content, craft.stat()) + me.skill_effect(&content, craft.effect());
         let natural = combat::roll_natural(&mut self.state.rng);
         let against = content.temper().against(worked.attempts);
         let made = check_made(natural, modifier, against);

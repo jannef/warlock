@@ -4,9 +4,9 @@
 //! live in `world/companion.rs`; the ally core's constants are `allies.toml`. The file is
 //! optional: without it no companion can be made, and nothing here is read.
 
-use super::{Content, ContentError, CreatureId};
+use super::race_beasts::{self, RaceBeasts, StartSpec};
+use super::{Content, ContentError};
 use serde::Deserialize;
-use std::collections::BTreeMap;
 
 /// The chapter of the background story told to a character with a starting beast.
 pub const CHAPTER: &str = "companion";
@@ -14,14 +14,8 @@ pub const CHAPTER: &str = "companion";
 /// The numbers of the companion.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CompanionRules {
-    /// The jackpot, in a thousand: a beast of `rare` instead of the race's list.
-    pub rare_per_mille: u32,
-    /// The rares, shared by every race, in file order.
-    pub rare: Vec<CreatureId>,
-    /// A race's list holds beasts of at most this level.
-    pub most_level: u8,
-    /// Every race's starting beasts, by race id, in file order.
-    pub by_race: Vec<(String, Vec<CreatureId>)>,
+    /// The starting beasts by race and the rares (`[start]`).
+    pub start: RaceBeasts,
     pub tame: TameRules,
     pub growth: Growth,
     /// What a companion may be called.
@@ -76,19 +70,10 @@ impl Growth {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct File {
-    start: Start,
+    start: StartSpec,
     tame: Tame,
     growth: GrowthSpec,
     names: Vec<String>,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct Start {
-    rare_per_mille: u32,
-    rare: Vec<String>,
-    most_level: u8,
-    by_race: BTreeMap<String, Vec<String>>,
 }
 
 #[derive(Deserialize)]
@@ -113,67 +98,13 @@ struct GrowthSpec {
 }
 
 impl CompanionRules {
-    /// The beasts of race `race`'s list, if it has one.
-    pub fn list_of(&self, race: &str) -> Option<&[CreatureId]> {
-        (self.by_race.iter())
-            .find(|(r, _)| r == race)
-            .map(|(_, list)| list.as_slice())
-    }
-
-    /// Every beast a start may draw, the races' lists and the rares, each once, in file order.
-    pub fn every_start(&self) -> Vec<CreatureId> {
-        let mut out: Vec<CreatureId> = Vec::new();
-        for id in (self.by_race.iter().flat_map(|(_, l)| l.iter())).chain(&self.rare) {
-            if !out.contains(id) {
-                out.push(*id);
-            }
-        }
-        out
-    }
-
-    /// Parses `data/companions.toml` once the creatures and the races are known: every list is a
-    /// known race's and holds known creatures (a race without a list draws no starting beast:
-    /// test fixtures add races), the lists and the names are not empty (the draws index them),
-    /// and the growth's divisors are 1 or more.
+    /// Parses `data/companions.toml` once the creatures and the races are known: its `[start]`
+    /// as [`RaceBeasts::parse`] checks it, the names not empty (the draw indexes them), and the
+    /// growth's divisors 1 or more.
     pub(super) fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(path, m);
         let file: File = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        let beast = |where_: &str, name: &str| -> Result<CreatureId, ContentError> {
-            (content.creature_id(name))
-                .filter(|_| name != "player")
-                .ok_or_else(|| err(format!("{where_}: unknown creature `{name}`")))
-        };
-        // The draws index the lists and the names.
-        if file.start.rare.is_empty() {
-            return Err(err("`start.rare` lists at least one beast".into()));
-        }
-        let rare = (file.start.rare.iter())
-            .map(|n| beast("`start.rare`", n))
-            .collect::<Result<Vec<_>, _>>()?;
-        let mut by_race = Vec::new();
-        for race in &content.races().list {
-            let Some(names) = file.start.by_race.get(&race.id) else {
-                continue;
-            };
-            if names.is_empty() {
-                return Err(err(format!(
-                    "`start.by_race.{}` lists at least one beast",
-                    race.id
-                )));
-            }
-            let where_ = format!("`start.by_race.{}`", race.id);
-            let list = (names.iter())
-                .map(|name| beast(&where_, name))
-                .collect::<Result<Vec<_>, _>>()?;
-            by_race.push((race.id.clone(), list));
-        }
-        // A list for a race the content lacks (where it has races at all: a fixture without
-        // `races.toml` keeps the shipped file).
-        if !content.races().list.is_empty()
-            && let Some(race) = (file.start.by_race.keys()).find(|r| content.race(r).is_none())
-        {
-            return Err(err(format!("`start.by_race`: unknown race `{race}`")));
-        }
+        let start = RaceBeasts::parse(path, file.start, content)?;
         let g = file.growth;
         // Divisors of the growth.
         for (name, every) in [
@@ -187,14 +118,8 @@ impl CompanionRules {
                 return Err(err(format!("`growth.{name}` is at least 1, not {every}")));
             }
         }
-        if file.names.is_empty() {
-            return Err(err("`names`: at least one name".into()));
-        }
         let rules = CompanionRules {
-            rare_per_mille: file.start.rare_per_mille,
-            rare,
-            most_level: file.start.most_level,
-            by_race,
+            start,
             tame: TameRules {
                 turns: file.tame.turns,
                 difficulty: file.tame.difficulty,
@@ -210,7 +135,7 @@ impl CompanionRules {
                 defence_every: g.defence_every,
                 stat_every: g.stat_every,
             },
-            names: file.names,
+            names: race_beasts::names(path, file.names)?,
         };
         Ok(rules)
     }
@@ -238,11 +163,12 @@ mod tests {
         let rules = content.companions().expect("companions.toml");
         for race in &content.races().list {
             let list = rules
+                .start
                 .list_of(&race.id)
                 .unwrap_or_else(|| panic!("{}", race.id));
             assert!(!list.is_empty(), "{}", race.id);
         }
-        assert_eq!(rules.rare.len(), 4);
+        assert_eq!(rules.start.rare.len(), 4);
         assert_eq!(rules.growth.grade(30, 1), 30);
         assert_eq!(rules.growth.grade(1, 6), 6, "never below the type's level");
         assert_eq!(super::Growth::above(30, 4), 26);

@@ -11,8 +11,8 @@ use super::screens::{MenuChoice, ScreenAction};
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::render::console::Console;
 use crate::settings::Clock;
-use warlock_core::content::article;
 use warlock_core::perception::PerceptionView;
+use warlock_core::text::article;
 use warlock_core::time::GameTime;
 
 #[derive(Debug)]

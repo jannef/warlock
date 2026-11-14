@@ -52,8 +52,7 @@ impl World {
         let difficulty = content.feint().map_or(0, |f| f.difficulty);
         let me = self.state.player();
         let difficulty = difficulty
-            + me.effective_stats(&content).modifier(Stat::Presence)
-            + me.talent_mods(&content).check(Stat::Presence)
+            + me.check_modifier(&content, Stat::Presence)
             + me.skill_effect(&content, Effect::Feint);
         let lead = self.lead_of(entry, &pending.members, pending.cell);
         let nerve = lead.map_or(0, |c| content.creature(c).stats.modifier(Stat::Willpower));

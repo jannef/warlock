@@ -26,6 +26,7 @@
 use super::ContentError;
 use super::gem::Cutting;
 use super::material::{ANY, MaterialDef, MaterialId};
+use crate::text::and_list;
 use serde::Deserialize;
 use std::collections::BTreeSet;
 
@@ -451,16 +452,6 @@ fn with_material(written: &str, base: &str, made: &str) -> String {
     match found {
         Some((at, _)) => format!("{}{made}{}", &written[..at], &written[at + base.len()..]),
         None => format!("{made} {written}"),
-    }
-}
-
-/// Words in a list: "gold", "gold and ruby", "gold, ruby, and emerald".
-pub fn and_list(words: &[&str]) -> String {
-    match words {
-        [] => String::new(),
-        [one] => (*one).to_string(),
-        [a, b] => format!("{a} and {b}"),
-        [init @ .., last] => format!("{}, and {last}", init.join(", ")),
     }
 }
 

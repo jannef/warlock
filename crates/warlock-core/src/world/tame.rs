@@ -31,7 +31,6 @@
 //! - **Marks**: Handle animal ([`Use::Handle`], the training stream), made or failed.
 
 use super::rest::Ended;
-use super::talk::capitalized;
 use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::check;
@@ -39,6 +38,7 @@ use crate::content::{ActionKind, Stance};
 use crate::geom::Dir;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::text::capitalized;
 use std::cell::Cell;
 
 /// A try at taming under way ([`super::Spent::Tame`]).
@@ -173,8 +173,7 @@ impl World {
         };
         let me = self.state.player();
         let mods = me.talent_mods(content);
-        let modifier = me.effective_stats(content).modifier(Stat::Willpower)
-            + mods.check(Stat::Willpower)
+        let modifier = me.check_modifier(content, Stat::Willpower)
             + me.skill_effect(content, Effect::Tame)
             + if fed { rules.food } else { 0 }
             + mods.tame;

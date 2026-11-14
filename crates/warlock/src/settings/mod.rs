@@ -29,6 +29,7 @@
 //! move_n = ["k", "Numpad8", "ArrowUp"]
 //! ```
 
+pub mod bindings;
 pub mod clock;
 pub mod fixed;
 pub mod keymap;
@@ -38,7 +39,7 @@ pub mod palette;
 
 use crate::cli::Args;
 use crate::input::Bindings;
-use crate::storage::Backend;
+use crate::storage::{self, Backend, Folder};
 use bevy::prelude::*;
 pub use clock::Clock;
 pub use palette::{Palette, Role};
@@ -427,7 +428,7 @@ impl SettingsStore {
             Some(dir) => Some(Backend::Dir(dir.clone())),
             // Captures and replays are reproducible dev tools: no player settings in or out.
             None if args.capture.is_some() || args.replay.is_some() => None,
-            None => default_backend(),
+            None => storage::default_backend(Folder::Config, "settings last for this session only"),
         };
         Self { backend }
     }
@@ -501,21 +502,6 @@ impl SettingsStore {
             .write(FILE_NAME, to_toml(settings, bindings).as_bytes())
             .map_err(|e| format!("cannot write {}: {e}", backend.describe(FILE_NAME)))
     }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn default_backend() -> Option<Backend> {
-    crate::paths::locations()
-        .config
-        .dir
-        .clone()
-        .map(Backend::Dir)
-}
-
-/// Browser storage; without it (some privacy modes) settings last for the session only.
-#[cfg(target_arch = "wasm32")]
-fn default_backend() -> Option<Backend> {
-    crate::storage::web::available().then_some(Backend::Browser)
 }
 
 /// Loads the settings for this run, logging what was wrong with the file (if anything). With

@@ -27,10 +27,10 @@ examples:
 (see [Equipment](equipment.md)). Your own body does not. For scale, a leather jerkin weighs 3.5
 kg, a chain mail shirt 11 kg, an iron helm 1.5 kg, a short sword 1.1 kg, and a small shield 2.5
 kg (see [Objects](objects.md#the-objects)). An average [human](races.md#race-human) in mail and
-a helm, with a sword and a shield, is [burdened](burden.md#burden-1). A fighter in medium armour
+a helm, with a sword and a shield, is [burdened](burden.md#burden-levels). A fighter in medium armour
 usually is.
 
-## Burden
+## Burden levels
 
 Your **burden** compares what you carry with your limit. It rises by thirds of the limit:
 

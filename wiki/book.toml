@@ -15,3 +15,8 @@ preferred-dark-theme = "coal"
 site-url = "/warlock/wiki/"
 git-repository-url = "https://github.com/jannef/warlock"
 edit-url-template = "https://github.com/jannef/warlock/edit/main/wiki/{path}"
+
+# Fold the sidebar: only the open page's branch shows its children.
+[output.html.fold]
+enable = true
+level = 1

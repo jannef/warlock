@@ -152,6 +152,7 @@ mod enchant;
 mod encounter;
 mod encounter_area;
 mod endless;
+mod enter;
 mod equip;
 mod escort;
 mod escort_waits;
@@ -1740,14 +1741,6 @@ impl World {
     }
 }
 
-/// `A` or `An` for a noun.
-fn article(noun: &str) -> &'static str {
-    match noun.chars().next() {
-        Some(c) if "aeiouAEIOU".contains(c) => "An",
-        _ => "A",
-    }
-}
-
 #[cfg(test)]
 mod affix_draught_tests;
 #[cfg(test)]
@@ -1935,6 +1928,8 @@ mod equip_tests;
 mod escape_tests;
 #[cfg(test)]
 mod escort_tests;
+#[cfg(test)]
+mod everlasting_tests;
 #[cfg(test)]
 mod experience_tests;
 #[cfg(test)]

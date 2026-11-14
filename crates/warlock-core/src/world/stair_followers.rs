@@ -34,9 +34,10 @@
 //! it gets no blow out of their climb: at equal speed the player acts first on arrival, and a
 //! fast creature comes at its own speed. No draws at all, so replays stay deterministic.
 
-use super::ally::{capital, few};
+use super::ally::few;
 use super::{ActorId, ActorKind, Mind, World, beast_friend};
-use crate::content::{ActionKind, Budge, CreatureId, LevelKind, Stance, and_list, the};
+use crate::content::{ActionKind, Budge, CreatureId, LevelKind, Stance, the};
+use crate::text::{and_list, capitalized};
 
 impl World {
     /// The creatures that follow the player if they take a staircase now (module docs), in id
@@ -152,6 +153,9 @@ impl World {
             })
             .collect();
         let who = and_list(&words.iter().map(String::as_str).collect::<Vec<_>>());
-        Some(format!("{} {verb} you {way} the stairs.", capital(&who)))
+        Some(format!(
+            "{} {verb} you {way} the stairs.",
+            capitalized(&who)
+        ))
     }
 }

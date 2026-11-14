@@ -35,13 +35,12 @@ use super::work::{Job, Task};
 use super::{Actor, Spent, World};
 use crate::action::Event;
 use crate::combat;
-use crate::content::{
-    ActionKind, ClassActive, Content, LevelKind, RigDef, RigId, RigTakes, Trap, article,
-};
+use crate::content::{ActionKind, ClassActive, Content, LevelKind, RigDef, RigId, RigTakes, Trap};
 use crate::geom::{Dir, Pos};
 use crate::perception::PerceptionView;
 use crate::skills::Effect;
 use crate::stats::Stat;
+use crate::text::article;
 use crate::time::Duration;
 
 /// A rig under way: which, and on which cell.
@@ -352,9 +351,8 @@ impl World {
             return;
         };
         let me = self.state.player();
-        let modifier = me.effective_stats(&content).modifier(Stat::Dexterity)
-            + me.skill_effect_of(&content, rules.skill, Effect::Craft)
-            + me.talent_mods(&content).check(Stat::Dexterity);
+        let modifier = me.check_modifier(&content, Stat::Dexterity)
+            + me.skill_effect_of(&content, rules.skill, Effect::Craft);
         let natural = combat::roll_natural(&mut self.state.rng);
         let snaps = natural == 2;
         if !snaps && !crate::check::makes(natural, modifier, rules.difficulty) {

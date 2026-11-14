@@ -193,8 +193,7 @@ impl World {
         };
         let stat = (self.profession_of(gem)).map_or(Stat::Dexterity, |(_, stat)| stat);
         let me = self.state.player();
-        let modifier = me.effective_stats(&content).modifier(stat)
-            + me.talent_mods(&content).check(stat)
+        let modifier = me.check_modifier(&content, stat)
             + me.skill_effect_of(&content, def.skill, Effect::Craft)
             + self.binding_boon(def.skill);
         let against = def.difficulty + content.material(gem).work;

@@ -10,9 +10,12 @@
 //! - A [`Rider`] is damage added to an attack of another kind (a flaming arrow's 1d4 fire, a
 //!   magic weapon's "adds 1d4 fire damage"): rolled after the attack's own dice, each kind
 //!   resisted on its own, never soaked.
-//! - [`Resistances`] are a target's percent per kind: negative is vulnerability, [`IMMUNE`]
-//!   (100) takes nothing. Gear and innate resistance add up, capped at [`MAX_RESISTANCE`] (75)
-//!   above and [`MIN_RESISTANCE`] (−100) below; only a creature's own 100 makes it immune.
+//! - [`Resistances`] are a target's percent per kind: negative is vulnerability. Every source
+//!   (its type, its race, gear and affixes, talents, statuses) adds up with no cap, so a total
+//!   may stand at 200 or −150; what counts is the **effective** resistance ([`effective`], read
+//!   through [`Resistances::get`]): the total clamped to [`MAX_RESISTANCE`] (75) above and
+//!   [`MIN_RESISTANCE`] (−100) below (#1620). Immunity is no resistance: a creature type's
+//!   `immune` kinds take nothing ([`IMMUNE`], 100), whatever else it has of that kind.
 //!   [`resist`] takes the percentage off an amount, rounded to the nearest (half up), so a
 //!   1-point hit at 50 % still hurts and at 75 % does not.
 //! - [`Protection`] is a target's Pv against each kind: its base for the physical kinds, each
@@ -23,11 +26,11 @@ use crate::content::{Content, DamageTypeId};
 use crate::dice::Dice;
 use serde::{Deserialize, Serialize};
 
-/// The resistance that takes all of a kind: nothing hurts.
+/// What an immunity reads as: all of a kind is taken off, nothing hurts.
 pub const IMMUNE: i32 = 100;
-/// The most resistance gear and a creature's own add up to, short of immunity.
+/// The most resistance that counts, whatever the total (the effective cap).
 pub const MAX_RESISTANCE: i32 = 75;
-/// The lowest resistance: a vulnerability that doubles the damage.
+/// The lowest resistance that counts: a vulnerability that doubles the damage.
 pub const MIN_RESISTANCE: i32 = -100;
 /// The most kinds one attack may name (a sword: slashing or piercing).
 pub const MAX_KINDS: usize = 2;
@@ -47,6 +50,19 @@ impl Damage {
     /// Untyped harm: starving, a disease, a wound's bleeding.
     pub const fn untyped(amount: i32) -> Self {
         Self { amount, kind: None }
+    }
+}
+
+/// The resistance that counts of a `total` added up from every source: at most
+/// [`MAX_RESISTANCE`], at least [`MIN_RESISTANCE`] (#1620). The one place the cap is applied;
+/// every reader goes through [`Resistances::get`], which calls it.
+pub const fn effective(total: i32) -> i32 {
+    if total > MAX_RESISTANCE {
+        MAX_RESISTANCE
+    } else if total < MIN_RESISTANCE {
+        MIN_RESISTANCE
+    } else {
+        total
     }
 }
 
@@ -127,64 +143,78 @@ pub struct Rider {
     pub dice: Dice,
 }
 
-/// A target's resistance to each kind, in percent (0 when it has none): one value per damage
-/// type in content order.
+/// A target's resistance to each kind, in percent: one total per damage type in content order,
+/// added up from every source with no cap, and the kinds it is immune to.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct Resistances(Vec<i32>);
+pub struct Resistances {
+    total: Vec<i32>,
+    immune: Vec<bool>,
+}
 
 impl Resistances {
     /// No resistance to anything (`count` kinds).
     pub fn none(count: usize) -> Self {
-        Self(vec![0; count])
+        Self {
+            total: vec![0; count],
+            immune: vec![false; count],
+        }
     }
 
-    /// Adds up `innate` (what a creature is) and `gear` (what it wears, affixes included), each
-    /// a list of (kind, percent): the sum, capped at [`MAX_RESISTANCE`] and [`MIN_RESISTANCE`],
-    /// except that an innate [`IMMUNE`] stays immune whatever is worn.
+    /// The kinds in `immune` (a creature type's immunities) and every (kind, percent) of
+    /// `sources` (its type's and race's, what it wears, its affixes, talents, and statuses)
+    /// added up: the totals are kept as they are, uncapped; [`Resistances::get`] caps them.
     pub fn sum(
         count: usize,
-        innate: impl IntoIterator<Item = (DamageTypeId, i32)>,
-        gear: impl IntoIterator<Item = (DamageTypeId, i32)>,
+        immune: impl IntoIterator<Item = DamageTypeId>,
+        sources: impl IntoIterator<Item = (DamageTypeId, i32)>,
     ) -> Self {
-        let mut own = vec![0i32; count];
-        for (kind, percent) in innate {
-            if let Some(slot) = own.get_mut(usize::from(kind.0)) {
+        let mut out = Self::none(count);
+        for kind in immune {
+            if let Some(slot) = out.immune.get_mut(usize::from(kind.0)) {
+                *slot = true;
+            }
+        }
+        for (kind, percent) in sources {
+            if let Some(slot) = out.total.get_mut(usize::from(kind.0)) {
                 *slot = slot.saturating_add(percent);
             }
         }
-        let mut total = own.clone();
-        for (kind, percent) in gear {
-            if let Some(slot) = total.get_mut(usize::from(kind.0)) {
-                *slot = slot.saturating_add(percent);
-            }
-        }
-        for (total, own) in total.iter_mut().zip(&own) {
-            *total = if *own >= IMMUNE {
-                IMMUNE
-            } else {
-                (*total).clamp(MIN_RESISTANCE, MAX_RESISTANCE)
-            };
-        }
-        Self(total)
+        out
     }
 
-    /// The resistance to `kind`, in percent: 0 for untyped damage and unknown kinds.
+    /// The resistance to `kind` that counts, in percent: [`IMMUNE`] for a kind it is immune to,
+    /// else its total made [`effective`] (−100 to 75); 0 for untyped damage and unknown kinds.
+    /// What every rule reads.
     pub fn get(&self, kind: Option<DamageTypeId>) -> i32 {
-        kind.and_then(|k| self.0.get(usize::from(k.0)))
+        let Some(i) = kind.map(|k| usize::from(k.0)) else {
+            return 0;
+        };
+        if self.immune.get(i).copied().unwrap_or(false) {
+            return IMMUNE;
+        }
+        effective(self.total.get(i).copied().unwrap_or(0))
+    }
+
+    /// The total resistance to `kind` added up from every source, uncapped (an immunity aside):
+    /// what is left after a later penalty is [`effective`] of it less the penalty.
+    pub fn total(&self, kind: Option<DamageTypeId>) -> i32 {
+        kind.and_then(|k| self.total.get(usize::from(k.0)))
             .copied()
             .unwrap_or(0)
     }
 
-    /// Every kind resisted or suffered, with its percent, in content order (0 left out).
+    /// Every kind resisted, suffered, or immune, with the percent that counts
+    /// ([`Resistances::get`]), in content order (0 left out).
     pub fn iter(&self) -> impl Iterator<Item = (DamageTypeId, i32)> + '_ {
-        (self.0.iter().enumerate())
-            .filter(|(_, p)| **p != 0)
-            .map(|(i, p)| (DamageTypeId(i as u8), *p))
+        (0..self.total.len())
+            .map(|i| DamageTypeId(i as u8))
+            .map(|k| (k, self.get(Some(k))))
+            .filter(|(_, p)| *p != 0)
     }
 
     /// Whether there is nothing to tell.
     pub fn is_empty(&self) -> bool {
-        self.0.iter().all(|p| *p == 0)
+        self.iter().next().is_none()
     }
 }
 
@@ -196,7 +226,7 @@ pub enum ResistanceWord {
     Vulnerable,
     /// Above 0, short of immunity.
     Resistant,
-    /// 100: nothing of that kind hurts it.
+    /// An immunity ([`IMMUNE`]): nothing of that kind hurts it.
     Immune,
 }
 
@@ -339,28 +369,49 @@ mod tests {
     }
 
     #[test]
-    fn resistances_add_up_and_cap_but_innate_immunity_stays() {
+    fn resistances_add_up_uncapped_and_count_capped_and_immunity_is_apart() {
         let (fire, cold) = (DamageTypeId(0), DamageTypeId(1));
-        let r = Resistances::sum(3, [(fire, 20)], [(fire, 30), (cold, -40), (fire, 40)]);
-        assert_eq!(r.get(Some(fire)), MAX_RESISTANCE, "capped");
+        let r = Resistances::sum(3, [], [(fire, 20), (fire, 30), (cold, -40), (fire, 40)]);
+        assert_eq!(r.total(Some(fire)), 90, "kept as added up");
+        assert_eq!(r.get(Some(fire)), MAX_RESISTANCE, "75 counts");
         assert_eq!(r.get(Some(cold)), -40);
         assert_eq!(r.get(Some(DamageTypeId(2))), 0);
         assert_eq!(r.get(None), 0);
-        let immune = Resistances::sum(2, [(fire, IMMUNE)], [(fire, -200)]);
-        assert_eq!(immune.get(Some(fire)), IMMUNE);
-        let worn = Resistances::sum(2, [(fire, 10)], [(fire, 200)]);
+        // The owner's case (#1620): 200 fire counts as 75, and a −100 on top still leaves 75.
+        let stacked = Resistances::sum(1, [], [(fire, 120), (fire, 80)]);
         assert_eq!(
-            worn.get(Some(fire)),
-            MAX_RESISTANCE,
-            "gear never makes immune"
+            (stacked.total(Some(fire)), stacked.get(Some(fire))),
+            (200, 75)
         );
-        let weak = Resistances::sum(2, [(cold, -80)], [(cold, -80)]);
-        assert_eq!(weak.get(Some(cold)), MIN_RESISTANCE);
+        let cursed = Resistances::sum(1, [], [(fire, 200), (fire, -100)]);
+        assert_eq!(cursed.get(Some(fire)), MAX_RESISTANCE);
+        let cursed = Resistances::sum(1, [], [(fire, 200), (fire, -150)]);
+        assert_eq!(cursed.get(Some(fire)), 50);
+        // A 100 from any source is a resistance like another: it counts as 75.
+        assert_eq!(
+            Resistances::sum(1, [], [(fire, IMMUNE)]).get(Some(fire)),
+            75
+        );
+        // Immunity stands apart from every amount.
+        let immune = Resistances::sum(2, [fire], [(fire, -200)]);
+        assert_eq!(immune.get(Some(fire)), IMMUNE);
+        assert_eq!(immune.iter().collect::<Vec<_>>(), [(fire, IMMUNE)]);
+        // The vulnerability floor.
+        let weak = Resistances::sum(2, [], [(cold, -80), (cold, -80)]);
+        assert_eq!(
+            (weak.total(Some(cold)), weak.get(Some(cold))),
+            (-160, MIN_RESISTANCE)
+        );
         assert_eq!(r.iter().collect::<Vec<_>>(), [(fire, 75), (cold, -40)]);
         assert!(Resistances::none(4).is_empty() && !r.is_empty());
+        assert!(Resistances::sum(1, [], [(fire, 50), (fire, -50)]).is_empty());
         assert_eq!(
-            Resistances::sum(1, [], [(DamageTypeId(9), 50)]).get(Some(fire)),
+            Resistances::sum(1, [DamageTypeId(9)], [(DamageTypeId(9), 50)]).get(Some(fire)),
             0
+        );
+        assert_eq!(
+            (effective(140), effective(-101), effective(30)),
+            (75, -100, 30)
         );
     }
 

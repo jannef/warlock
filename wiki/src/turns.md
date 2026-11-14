@@ -25,8 +25,8 @@ The clock counts whole seconds, so an action of 8.4 seconds shows as 8 or 9 seco
 of actions still adds up to their exact time: five such actions take exactly 42 seconds.
 
 A heavy load slows every action you take, journeys included. Each takes a quarter longer when
-you are [burdened](burden.md#burden-1) (a normal action takes 7.5 seconds) and half again as long
-when you are [strained](burden.md#burden-1) (9 seconds). [Overloaded](burden.md#burden-1), you
+you are [burdened](burden.md#burden-levels) (a normal action takes 7.5 seconds) and half again as long
+when you are [strained](burden.md#burden-levels) (9 seconds). [Overloaded](burden.md#burden-levels), you
 cannot move at all. See [Burden](burden.md).
 
 ## Steps

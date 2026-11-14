@@ -29,7 +29,6 @@
 //! bones, the spirits, the animated). Nothing limits trying again (the owner's rule): the time
 //! is the price.
 
-use super::talk::capitalized;
 use super::{Spent, World};
 use crate::action::Event;
 use crate::check;
@@ -37,6 +36,7 @@ use crate::content::{ActionKind, Build, Stance};
 use crate::geom::Dir;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::text::capitalized;
 
 impl World {
     /// [`crate::Action::Feint`]: the player feints at the creature in `dir` (see the module docs).
@@ -71,8 +71,7 @@ impl World {
             + me.effective_stats(&content).modifier(Stat::Presence)
             + me.skill_effect(&content, Effect::Feint);
         let them = &self.state.actors[&foe];
-        let nerve = them.effective_stats(&content).modifier(Stat::Willpower)
-            + them.talent_mods(&content).check(Stat::Willpower);
+        let nerve = them.check_modifier(&content, Stat::Willpower);
         if check::check(&mut self.state.rng, nerve, difficulty) {
             self.say(format!("{name} is not fooled."));
         } else {

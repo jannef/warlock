@@ -42,7 +42,6 @@
 
 use super::cast::Cast;
 use super::spell::{Caster, burst_cells, cone_cells};
-use super::talk::capitalized;
 use super::{ActorId, AttackSkills, World};
 use crate::action::{AttackKind, Event, SpellShape};
 use crate::content::{
@@ -51,6 +50,7 @@ use crate::content::{
 use crate::fov::radius2;
 use crate::geom::Pos;
 use crate::noise::Act;
+use crate::text::capitalized;
 
 impl World {
     /// What a creature adds to its `attack` spells' roll: its level's quarter, as its natural

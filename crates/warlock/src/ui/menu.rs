@@ -8,6 +8,7 @@
 //! [`ScreenAction`], so it is testable without a window. Selection is always shown by text (a `>`
 //! marker), never by color alone.
 
+use super::cursor;
 use super::dialog_screen::Dialog;
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{ACCENT, PANEL_BG, TEXT, TEXT_DIM};
@@ -371,8 +372,8 @@ impl MainMenu {
         let items = self.items();
         self.selected = self.selected.min(items.len() - 1);
         match press.nav {
-            Nav::Up => self.selected = (self.selected + items.len() - 1) % items.len(),
-            Nav::Down => self.selected = (self.selected + 1) % items.len(),
+            Nav::Up => self.selected = cursor::up(self.selected, items.len()),
+            Nav::Down => self.selected = cursor::down(self.selected, items.len()),
             Nav::Back if self.pause => return ScreenAction::Close,
             Nav::Enter => {
                 return match items[self.selected] {
@@ -567,6 +568,33 @@ pub(super) fn wrap(text: &str, width: i32) -> Vec<String> {
         lines.push(line);
     }
     lines
+}
+
+/// `text` cut to `width` cells, its end given up for a `…` when it is longer.
+pub(super) fn truncated(text: &str, width: usize) -> String {
+    if text.chars().count() <= width {
+        return text.to_string();
+    }
+    match width {
+        0 => String::new(),
+        _ => text.chars().take(width - 1).chain(['…']).collect(),
+    }
+}
+
+/// `text` cut to `width` cells, its start given up for a `…` when it is longer (a path, whose
+/// end matters most).
+pub(super) fn truncated_head(text: &str, width: usize) -> String {
+    let len = text.chars().count();
+    if len <= width {
+        return text.to_string();
+    }
+    match width {
+        0 => String::new(),
+        _ => ['…']
+            .into_iter()
+            .chain(text.chars().skip(len - (width - 1)))
+            .collect(),
+    }
 }
 
 #[cfg(test)]

@@ -11,7 +11,7 @@ A wand holds one spell and a number of charges. Ready it in the
 **[missile weapon slot](equipment.md#what-fits-where)**, where it takes a
 [launcher](ranged.md#getting-ready)'s place (and a launcher takes its place). Use it as you would
 shoot: press `t`, aim, and it casts its spell. Each cast uses up a charge instead of your
-[mana](mana.md#how-much).
+[mana](mana.md#how-much-mana-you-have).
 
 A wand casts its spell at a **rung of its own** on the spell's ladder (see
 [How a spell grows](spellcasting.md#how-a-spell-grows)). The rung is rolled when the wand is made,
@@ -55,7 +55,7 @@ Each wand is made with its own number of charges (in the table above).
 A rod holds an **effect no spell has**: [digging](digging.md#digging), sleep, terror, or sending a
 creature away. Like a wand, it goes in the **missile weapon slot** and is used the way you shoot
 (`t`, then aim). It has no charges. Each use costs **your own [mana](mana.md#spending-it)** (the
-rod's cost), so it never runs out while you have the [mana](mana.md#how-much) to feed it.
+rod's cost), so it never runs out while you have the [mana](mana.md#how-much-mana-you-have) to feed it.
 
 Without enough mana a rod does nothing and takes no time ("You have not the mana to use it."). You
 cannot use one while something stops you casting, such as

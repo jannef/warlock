@@ -3,8 +3,7 @@
 //! has no vitals. The slip contest's odds are `skills::slipping_past`, the creatures' craft
 //! `creatures::creature_surprise`.
 
-use super::combat::percent;
-use super::text::{Term, link};
+use super::text::{Term, link, percent_of};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Content, CreatureDef, CreatureId, TalentEffect};
@@ -165,7 +164,7 @@ pub(super) fn initiative_odds(content: &Content) -> String {
         let _ = write!(out, "| {sign}{} |", i32::abs(edge));
         for craft in CRAFTS {
             let ways = check::ways(edge, rules.difficulty + craft);
-            let _ = write!(out, " {} |", percent(ways, 144));
+            let _ = write!(out, " {} |", percent_of(ways, 144));
         }
         out.push('\n');
     }
@@ -221,7 +220,7 @@ mod tests {
         );
         let odds = initiative_odds(&content);
         // 13 at +0: 2d12 reaches 13 in 78 of 144 ways.
-        assert!(odds.contains("| +0 | 54% |"), "{odds}");
+        assert!(odds.contains("| +0 | 54.2% |"), "{odds}");
         let vitals = no_vitals(&content);
         assert!(vitals.contains("incorporeal"), "{vitals}");
         assert!(vitals.contains("`skeleton`"), "{vitals}");

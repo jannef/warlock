@@ -22,7 +22,7 @@ reached is skipped, even if it ails you.
 
 {{#include generated/prayer-uses.md}}
 
-A prayer trains nothing: no [stat](stats.md#training) and no [caster style](schools.md#caster-styles). It does
+A prayer trains nothing: no [stat](stats.md#raising-your-stats) and no [caster style](schools.md#caster-styles). It does
 not move your [alignment](alignment.md#what-moves-you).
 
 ## How it grows
@@ -93,3 +93,6 @@ Besides the prayer, the priest's table has three rites of holy and unholy ground
   [Special rooms](cursed-and-hallowed.md#hallowed-ground)).
 
 {{#include generated/prayer-rites.md}}
+
+See also: [the priest](classes.md#priest), [Healing](healing.md), and
+[Abilities](abilities.md).

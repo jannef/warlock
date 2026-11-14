@@ -180,8 +180,7 @@ impl World {
         let mut checks = Vec::with_capacity(works.len());
         for (material, skill, stat) in works {
             let me = self.state.player();
-            let modifier = me.effective_stats(&content).modifier(stat)
-                + me.talent_mods(&content).check(stat)
+            let modifier = me.check_modifier(&content, stat)
                 + me.skill_effect_of(&content, skill, Effect::Craft);
             let against = rules.difficulty + content.material(material).work;
             let natural = combat::roll_natural(&mut self.state.rng);

@@ -31,7 +31,8 @@ weight = 2000000
 stats = { strength = 26, dexterity = 12, toughness = 26, intelligence = 16, willpower = 20, presence = 20 }
 base_hp = 90
 natural = { defence = 3, protection = 3, name = "scales" }
-resist = { fire = 100, cold = -25 }
+resist = { cold = -25 }
+immune = ["fire"]
 on_eat = { message = "The drake's flesh burns going down, and leaves you stronger.", vomit = 20, train = { strength = 150, toughness = 150 } }
 blood = "#a0200a"
 # Its breath (docs/balance.md "Dragons"): about a third of a level-19 fighter's hit points, more

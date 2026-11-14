@@ -4,6 +4,7 @@
 //! there, special rooms entered, and terrain changing under the light. `world/mod.rs` has only
 //! the dispatch lines.
 
+use super::enter::Entry;
 use super::spawn::Spawner;
 use super::talk::Refusal;
 use super::wriggle::Wriggled;
@@ -22,7 +23,6 @@ use crate::geom::{Dir, Pos};
 use crate::magic::loot::Luck;
 use crate::mapgen::local::arrival;
 use crate::object::Stack;
-use crate::skills::Use;
 use std::borrow::Cow;
 
 impl World {
@@ -223,76 +223,17 @@ impl World {
             // Turned back with nowhere to go: the step's time, spent at the door.
             return Spent::Turn(step);
         }
-        if let Some(actor) = self.state.actors.get_mut(&player) {
-            actor.pos = to;
-        }
-        // Moving, they let go of whatever they held (Drowning grip, `lucky.rs`).
-        self.let_go(player, None);
-        self.dive_in(from, to);
-        events.push(Event::ActorMoved {
-            actor: player,
+        // Everything a step onto a cell does (`enter.rs`).
+        let entry = Entry {
             from,
             to,
-        });
-        self.after_tread(player, (from, to), footing, events);
-        self.make_step_noise(player, to, fleeing);
-        // Wading through a marsh may give a disease, by how long the step takes.
-        let speed = self.state.player().speed(&self.content);
-        self.wade(
-            onto,
-            u64::try_from(step).unwrap_or(0) / u64::from(speed.max(1)),
-        );
-        self.train_wade(onto, footing);
-        self.train_rough_step(onto);
-        if let Some((other, seen)) = swap {
-            self.swap_places(other, to, from, seen, events);
-        }
-        // A journey on the overworld trains survival.
-        if overworld && self.trains(Use::Travel) {
-            self.train(Use::Travel);
-        }
-        // Entering a shop the keeper greets the player; leaving it owing is theft.
-        self.shop_step(from, to);
-        let level = self.state.current();
-        if let Some(stairs) = level.stairs_at(to) {
-            // A location goes by its name, even while it leads nowhere yet.
-            let named =
-                (stairs.name.clone()).or_else(|| Some(self.place_name(stairs.to.as_ref()?)));
-            let text = match (level.kind, stairs.dir, named) {
-                (LevelKind::Overworld, StairsDir::Down, Some(name)) => {
-                    format!("The way into {name} is here.")
-                }
-                (_, StairsDir::Down, _) => "There is a staircase down here.".into(),
-                (_, StairsDir::Up, _) => "There is a staircase up here.".into(),
-            };
-            self.say(text);
-        }
-        // A feature of the ground there ("There is an altar here."), before what lies on it.
-        self.announce_feature();
-        // Goods for sale say their price (spec §7 "Shops").
-        let text = match self.state.current().objects_at(to) {
-            [] => None,
-            [one] => Some(match self.asking_price(to, one) {
-                Some(price) => format!(
-                    "You see here {} (for sale, {price} gold).",
-                    self.lore().describe(one)
-                ),
-                None => format!("You see here {}.", self.lore().describe(one)),
-            }),
-            _ => Some("There are several objects here.".to_string()),
+            footing,
+            fleeing,
+            price: step,
+            willing,
+            swap,
         };
-        if let Some(text) = text {
-            self.say(text);
-        }
-        // A trap there goes off (spec §8 "Traps"), unless the player knew of it and stepped
-        // past it of their own will (`sidestep.rs`); a pit costs the next action too.
-        let climb = if willing {
-            self.step_willingly(to, events)
-        } else {
-            self.step_onto_trap(to, player, events)
-        };
-        // A collapsed floor may give way under them (`collapse.rs`).
-        self.collapse_step(to, events);
+        let climb = self.enter_cell(entry, events);
         // Stepping up beside a hostile that braces or shoots point-blank (weapon abilities,
         // `weapon_ability.rs`), they are met as they come, as a creature is (`free_blow.rs`).
         if self.state.death.is_none() {
@@ -435,7 +376,21 @@ impl World {
         let from = self.state.current_level.clone();
         let old = self.player_pos();
         let new = !self.state.levels.contains_key(to) && self.state.endless.pays(&self.content, to);
-        self.visit(to, Some(&from))?;
+        // A level not yet made is made only once it is sure to have somewhere to arrive (a
+        // staircase, maybe a revealed hidden location's, or a start): a failed travel is a
+        // pure refusal, nothing made and nothing drawn.
+        let content = self.content.clone();
+        if let Some(template) = self.unmade_template(&content, to, Some(&from))? {
+            let revealed = |id: &String| self.state.revealed.contains(id);
+            let somewhere = at.is_some()
+                || template.player_start.is_some()
+                || !template.stairs.is_empty()
+                || template.hidden.values().any(|h| revealed(&h.id));
+            if !somewhere {
+                return Err(WorldError::NoPlayerStart(to.to_string()));
+            }
+            instantiate_level(&mut self.state, &content, &template);
+        }
         let target = &self.state.levels[to];
         let arrival = at
             .or_else(|| {
@@ -493,30 +448,43 @@ impl World {
         id: &str,
         from: Option<&str>,
     ) -> Result<&LevelState, WorldError> {
-        if !self.state.levels.contains_key(id) {
-            // A Pit's first floor climbs out to its mouth, however it is reached (`pit.rs`).
-            let out = self.state.pit_way_out(&self.content, id);
-            let from = out.as_deref().or(from);
-            // A Pit's floor reads its own warden's death, never the slain list (`pit.rs`).
-            let pit_slain = self.state.pit_slain(&self.content, id);
-            let visit = crate::mapgen::Visit {
-                luck: Luck::of(&self.state.player().talent_mods(&self.content)),
-                player_level: self.player_level(),
-                uniques: Some(&self.state.progress.uniques),
-                slain: Some(pit_slain.as_ref().unwrap_or(self.state.quests.slain_set())),
-            };
-            let template = level_template(
-                &self.content,
-                (
-                    &self.state.campaign,
-                    self.state.level_seed(&self.content, id),
-                ),
-                id,
-                (from, &visit),
-            )?;
-            instantiate_level(&mut self.state, &self.content, &template);
+        let content = self.content.clone();
+        if let Some(template) = self.unmade_template(&content, id, from)? {
+            instantiate_level(&mut self.state, &content, &template);
         }
         Ok(&self.state.levels[id])
+    }
+
+    /// The template level `id` is made from on the first visit, `from` the level it is entered
+    /// from; `None` once it is made. Changes nothing ([`level_template`] draws from the level's
+    /// own streams only), so a caller may refuse after it.
+    fn unmade_template<'c>(
+        &self,
+        content: &'c Content,
+        id: &str,
+        from: Option<&str>,
+    ) -> Result<Option<Cow<'c, LevelTemplate>>, WorldError> {
+        if self.state.levels.contains_key(id) {
+            return Ok(None);
+        }
+        // A Pit's first floor climbs out to its mouth, however it is reached (`pit.rs`).
+        let out = self.state.pit_way_out(&self.content, id);
+        let from = out.as_deref().or(from);
+        // A Pit's floor reads its own warden's death, never the slain list (`pit.rs`).
+        let pit_slain = self.state.pit_slain(&self.content, id);
+        let visit = crate::mapgen::Visit {
+            luck: Luck::of(&self.state.player().talent_mods(&self.content)),
+            player_level: self.player_level(),
+            uniques: Some(&self.state.progress.uniques),
+            slain: Some(pit_slain.as_ref().unwrap_or(self.state.quests.slain_set())),
+        };
+        let template = level_template(
+            content,
+            (&self.state.campaign, self.state.level_seed(content, id)),
+            id,
+            (from, &visit),
+        )?;
+        Ok(Some(template))
     }
 
     /// `p` if no actor stands there, else the nearest walkable unoccupied cell (ring search).
@@ -794,4 +762,41 @@ fn placed_gear(
         item_level,
     );
     (pack.items, pack.equipment)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::content::ContentFiles;
+    use std::sync::Arc;
+
+    /// A travel to a level with no way in (no stairs, no start) is refused and changes nothing:
+    /// the level is not made, and no stream has drawn (#1598).
+    #[test]
+    fn a_failed_travel_changes_nothing() {
+        let mut files = ContentFiles::builtin();
+        files.insert(
+            "levels/test_from.toml",
+            "name = \"From\"\nmap = '''\n...\n.@.\n...\n'''\n\
+             [legend]\n\"@\" = { terrain = \"floor\", spawn = \"player\" }\n",
+        );
+        files.insert(
+            "levels/test_nowhere.toml",
+            "name = \"Nowhere\"\nmap = '''\n...\n...\n...\n'''\n",
+        );
+        files.insert(
+            "scenarios/test_from.toml",
+            "name = \"T\"\nstart_level = \"test_from\"\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("fixture content is valid"));
+        let mut w = World::new(content, "test_from", None).expect("world");
+        let before = w.state_hash();
+        let refused = w.travel("test_nowhere", None);
+        assert!(
+            matches!(refused, Err(WorldError::NoPlayerStart(_))),
+            "{refused:?}"
+        );
+        assert!(!w.state.levels.contains_key("test_nowhere"));
+        assert_eq!(w.state_hash(), before);
+    }
 }

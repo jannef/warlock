@@ -66,16 +66,7 @@ impl World {
     /// empty (it is then not offered) or the quest is not rolled.
     pub(super) fn roll_quest(&self, def: &QuestDef) -> Option<Roll> {
         let pool = self.quest_pool(def);
-        let total: u32 = pool.iter().map(|c| c.weight).sum();
-        if total == 0 {
-            return None;
-        }
-        let mut at = Rng::quest(self.state.seed, &def.id).below(total);
-        let drawn = pool.iter().find(|c| {
-            let here = at < c.weight;
-            at = at.saturating_sub(c.weight);
-            here
-        })?;
+        let drawn = Rng::quest(self.state.seed, &def.id).weighted(&pool, |c| c.weight)?;
         Some(roll_of(def, drawn))
     }
 

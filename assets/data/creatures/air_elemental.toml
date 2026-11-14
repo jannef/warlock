@@ -20,7 +20,8 @@ weight = 50000
 stats = { strength = 19, dexterity = 20, toughness = 19, intelligence = 2, willpower = 23, presence = 2 }
 base_hp = 24
 natural = { defence = 3, protection = 0, name = "rushing wind" }
-resist = { piercing = 50, electricity = 50, poison = 100 }
+resist = { piercing = 50, electricity = 50 }
+immune = ["poison"]
 corpse = false
 blood = "none"
 [creature.attack]

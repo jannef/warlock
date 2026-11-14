@@ -20,7 +20,7 @@ hearing = 12
 weight = 50000
 stats = { strength = 18, dexterity = 14, toughness = 19, intelligence = 17, willpower = 22, presence = 17 }
 base_hp = 42
-resist = { poison = 100 }
+immune = ["poison"]
 on_eat = { message = "Gallows meat.", vomit = 80, harm = "1d4" }
 blood = "#3a2420"
 [creature.attack]

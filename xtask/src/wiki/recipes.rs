@@ -50,7 +50,7 @@ fn eased(margin: i32, ease: i32) -> i32 {
 /// The percentages of `counts` (each of `total`) from `from` on, joined by " / ".
 fn percents(counts: &[u32], from: usize, total: u32) -> String {
     let parts: Vec<String> = (counts[from..].iter())
-        .map(|&n| format!("{:.0}%", f64::from(n) * 100.0 / f64::from(total)))
+        .map(|&n| super::text::percent_of(n, total))
         .collect();
     parts.join(" / ")
 }

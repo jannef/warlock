@@ -12,7 +12,7 @@ same way, and is as hard to find as a [secret door](doors.md#secret-doors). Once
 here sounds hollow*. It stays a stone wall until you [dig](digging.md#digging) or
 [blast](digging.md#explosions) through it.
 
-## Searching
+## How to search
 
 - `s` or numpad `5` waits a [turn](time.md#what-takes-time) (6 seconds) and searches the cells
   around you. Waiting and searching are the same thing: every turn you wait, you search.

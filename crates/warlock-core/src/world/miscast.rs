@@ -36,7 +36,6 @@ use super::cast::Cast;
 use super::fight::Harm;
 use super::pit::Refused;
 use super::spell::Caster;
-use super::talk::capitalized;
 use super::{Actor, ActorId, Cause, World};
 use crate::action::{Event, ReadTarget};
 use crate::check::{self, Checked};
@@ -50,6 +49,7 @@ use crate::geom::{Dir, Pos};
 use crate::noise::SoundKind;
 use crate::skills::Effect;
 use crate::stats::Stat;
+use crate::text::capitalized;
 
 /// How far "near the caster" reaches for a swap and a boon.
 pub const NEAR: i32 = 6;
@@ -69,9 +69,7 @@ impl Actor {
         let Some(rules) = content.miscast_rules() else {
             return 0;
         };
-        self.effective_stats(content).modifier(rules.stat)
-            + self.talent_mods(content).check(rules.stat)
-            + self.skill_effect(content, Effect::Cast)
+        self.check_modifier(content, rules.stat) + self.skill_effect(content, Effect::Cast)
     }
 
     /// The difficulty of its Spellcraft check on a cast of `spell` (`def`), at its rank in it,

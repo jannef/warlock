@@ -61,9 +61,7 @@ impl World {
             true => me.skill_effect(&content, Effect::Decipher),
             false => 0,
         };
-        let bonus = me.effective_stats(&content).modifier(Stat::Intelligence)
-            + me.talent_mods(&content).check(Stat::Intelligence)
-            + skill;
+        let bonus = me.check_modifier(&content, Stat::Intelligence) + skill;
         let made = crate::check::check(&mut self.state.rng, bonus, rules.difficulty(level));
         self.train(Use::Decipher);
         if !made {

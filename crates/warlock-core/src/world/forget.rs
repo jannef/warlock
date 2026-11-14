@@ -17,7 +17,8 @@
 //! Determinism: one gameplay draw for each further spell forgotten, none otherwise.
 
 use super::{ActorId, World};
-use crate::content::{SpellId, and_list};
+use crate::content::SpellId;
+use crate::text::and_list;
 
 impl World {
     /// `caster` knows `spell` `ranks` ranks lower, never below 1 (module docs).

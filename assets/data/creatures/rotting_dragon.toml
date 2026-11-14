@@ -21,7 +21,7 @@ weight = 2500000
 stats = { strength = 37, dexterity = 21, toughness = 38, intelligence = 2, willpower = 34, presence = 2 }
 base_hp = 334
 natural = { defence = 4, protection = 5, name = "rotting scales" }
-resist = { poison = 100 }
+immune = ["poison"]
 on_eat = { message = "Dragon, and rotten through.", vomit = 90, harm = "1d6" }
 blood = "#2e3418"
 [creature.attack]

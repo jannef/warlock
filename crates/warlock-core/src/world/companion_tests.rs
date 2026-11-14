@@ -281,12 +281,13 @@ fn allies(w: &World) -> Vec<&Actor> {
 fn every_race_draws_from_its_list_or_the_rares_at_the_rare_odds() {
     let content = &*BUILTIN;
     let rules = content.companions().expect("companions.toml");
-    assert_eq!(rules.rare_per_mille, 50);
-    assert_eq!(rules.rare.len(), 4);
+    assert_eq!(rules.start.rare_per_mille, 50);
+    assert_eq!(rules.start.rare.len(), 4);
     let mut draws = 0u32;
     let mut rares = 0u32;
     for race in &content.races().list {
         let list = rules
+            .start
             .list_of(&race.id)
             .expect("every shipped race has a list");
         assert!((1..=3).contains(&list.len()), "{}", race.id);
@@ -294,7 +295,7 @@ fn every_race_draws_from_its_list_or_the_rares_at_the_rare_odds() {
         for seed in 0..400 {
             let beast = super::draw(content, seed, &spec).expect("a beast");
             assert!(content.creature(beast).tameable, "{}", race.id);
-            if rules.rare.contains(&beast) && !list.contains(&beast) {
+            if rules.start.rare.contains(&beast) && !list.contains(&beast) {
                 rares += 1;
             } else {
                 assert!(
@@ -385,7 +386,7 @@ fn a_ranger_begins_with_a_named_beast_and_its_story_and_a_warrior_with_neither()
         text.contains(&format!(
             "{}, {} {} (grade {})",
             data.name,
-            crate::content::article(&kind.name),
+            crate::text::article(&kind.name),
             kind.name,
             data.grade
         )),

@@ -137,7 +137,7 @@ fn a_roll_is_drawn_as_the_quest_is_given_and_never_again() {
         .expect("said");
     assert!(offer.contains(&format!(
         "a price on {} {name}.",
-        crate::content::article(&name)
+        crate::text::article(&name)
     )));
     assert!(!offer.contains('{'), "{offer}");
     let mut capital = plural.chars();
@@ -151,7 +151,7 @@ fn a_roll_is_drawn_as_the_quest_is_given_and_never_again() {
         logged(&w, "bounty").objective,
         format!(
             "Godgifu wants you to kill {} {name}. {capital} are known in Cealdhlāw.",
-            crate::content::article(&name)
+            crate::text::article(&name)
         )
     );
     assert_eq!(

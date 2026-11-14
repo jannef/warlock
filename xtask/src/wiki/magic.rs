@@ -1,8 +1,7 @@
 //! Magic items (spec §8 "Magic items"): rarity, base items, prefixes, suffixes, and rare names.
 
-use super::combat::percent;
 use super::order;
-use super::text::capital;
+use super::text::{capital, percent_of};
 use super::vision::glow_word;
 use std::fmt::Write as _;
 use warlock_core::content::Effect as ItemEffect;
@@ -33,7 +32,7 @@ pub(super) fn magic_rarity(content: &Content) -> String {
             out,
             "| {} | {} |",
             capital(rarity.word()),
-            percent(affixes.rarity_weight(rarity), total.max(1))
+            percent_of(affixes.rarity_weight(rarity), total.max(1))
         );
     }
     let [prefix, suffix, both] = affixes.magic_affixes;
@@ -42,9 +41,9 @@ pub(super) fn magic_rarity(content: &Content) -> String {
         out,
         "\n| A magic item has | How often |\n|---|---:|\n\
          | a prefix | {} |\n| a suffix | {} |\n| a prefix and a suffix | {} |",
-        percent(prefix, shapes),
-        percent(suffix, shapes),
-        percent(both, shapes)
+        percent_of(prefix, shapes),
+        percent_of(suffix, shapes),
+        percent_of(both, shapes)
     );
     let counts: u32 = affixes.rare_counts.iter().map(|(_, w)| *w).sum();
     out.push_str("\n| A rare item has | How often |\n|---|---:|\n");
@@ -52,7 +51,7 @@ pub(super) fn magic_rarity(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {count} affixes | {} |",
-            percent(*weight, counts.max(1))
+            percent_of(*weight, counts.max(1))
         );
     }
     let window = TIER_WINDOW - 1;
@@ -95,7 +94,7 @@ pub(super) fn magic_bases(content: &Content) -> String {
             let often = if o.frequency == 0 {
                 "never".to_string()
             } else {
-                percent(o.frequency, total.max(1))
+                percent_of(o.frequency, total.max(1))
             };
             let _ = writeln!(
                 out,

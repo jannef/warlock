@@ -86,7 +86,7 @@ conflict every time; two that insert at different places merge cleanly. So:
   per-release save bump's business, not the PR's.
 - **A feature's dispatch lives in its own module**: one match arm in `world/mod.rs::player_acts`
   calling `self.feature(..)` in `world/feature.rs`, one line each in the other hot files
-  (`action.rs`, `content/mod.rs`, `dump.rs`, `input.rs`, `settings/keys.rs`), and its own tests
+  (`action.rs`, `content/mod.rs`, `dump.rs`, `input/play.rs`, `settings/keys.rs`), and its own tests
   file (`world/feature_tests.rs`).
 - **Docs follow the same rule**: a feature edits its own `docs/dev/<topic>.md` and the `spec/`
   files of the sections it touches (bullets next to the related ones); `docs/dev/cli.md` for a new

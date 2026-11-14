@@ -4,8 +4,7 @@
 //! "Foraging").
 
 use super::burden::factor;
-use super::combat::percent;
-use super::text::{Term, anchored, link};
+use super::text::{Term, anchored, capital, link, percent_of};
 use std::fmt::Write as _;
 use warlock_core::burden::Burden;
 use warlock_core::check::{CONTEST_WAYS, contest_ways, ways};
@@ -423,8 +422,8 @@ pub(super) fn stealing(_content: &Content) -> String {
             out,
             "| {sign}{} | {} | {} |",
             edge.abs(),
-            percent(won, CONTEST_WAYS),
-            percent(CONTEST_WAYS - won, CONTEST_WAYS)
+            percent_of(won, CONTEST_WAYS),
+            percent_of(CONTEST_WAYS - won, CONTEST_WAYS)
         );
     }
     out
@@ -450,8 +449,8 @@ pub(super) fn feinting(content: &Content) -> String {
             out,
             "| {sign}{} | {} | {} |",
             edge.abs(),
-            percent(144 - made, 144),
-            percent(made, 144)
+            percent_of(144 - made, 144),
+            percent_of(made, 144)
         );
     }
     out
@@ -502,8 +501,8 @@ pub(super) fn slipping_past(content: &Content) -> String {
             out,
             "| {sign}{} | {} | {} |",
             edge.abs(),
-            percent(won, CONTEST_WAYS),
-            percent(CONTEST_WAYS - won, CONTEST_WAYS)
+            percent_of(won, CONTEST_WAYS),
+            percent_of(CONTEST_WAYS - won, CONTEST_WAYS)
         );
     }
     out
@@ -528,7 +527,7 @@ pub(super) fn foraging(content: &Content) -> String {
             .collect();
         finds.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
         let finds: Vec<String> = (finds.iter())
-            .map(|(name, w)| format!("{name} {}", percent(*w, total)))
+            .map(|(name, w)| format!("{name} {}", percent_of(*w, total)))
             .collect();
         let herb_total: u32 = g.herbs.iter().map(|(_, w)| *w).sum();
         let mut herbs: Vec<(String, u32)> = (g.herbs.iter())
@@ -536,7 +535,7 @@ pub(super) fn foraging(content: &Content) -> String {
             .collect();
         herbs.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
         let herbs: Vec<String> = (herbs.iter())
-            .map(|(name, w)| format!("{name} {}", percent(*w, herb_total)))
+            .map(|(name, w)| format!("{name} {}", percent_of(*w, herb_total)))
             .collect();
         let herbs = if herbs.is_empty() {
             "—".to_string()
@@ -629,7 +628,7 @@ pub(super) fn heal_targets(content: &Content) -> String {
          |---|---:|---:|---:|---|---|\n",
     );
     let odds = |difficulty: i32| {
-        let at = |m| percent(warlock_core::check::ways(m, difficulty), 144);
+        let at = |m| percent_of(warlock_core::check::ways(m, difficulty), 144);
         (at(0), at(8))
     };
     for (_, def) in content.status_ids() {
@@ -669,16 +668,11 @@ pub(super) fn heal_targets(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {} | {zero} | {eight} | {made} | no more tries at this bout |",
-            capitalized(&def.name),
+            capital(&def.name),
             def.difficulty
         );
     }
     out
-}
-
-fn capitalized(s: &str) -> String {
-    let mut chars = s.chars();
-    (chars.next()).map_or_else(String::new, |c| c.to_uppercase().chain(chars).collect())
 }
 
 /// The skill ladder: the die a level-up roll throws by the skill's marks, and the die a skill the

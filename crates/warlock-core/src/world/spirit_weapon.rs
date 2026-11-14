@@ -132,7 +132,7 @@ impl World {
         let hands = if def.two_handed { "hands" } else { "hand" };
         let line = format!(
             "{} of pale light is in your {hands}.",
-            super::talk::capitalized(&def.describe(1))
+            crate::text::capitalized(&def.describe(1))
         );
         // Priced by the swap: a wield, and what the hands held put away as any swap's.
         let slot = content.slot(hand).id.clone();

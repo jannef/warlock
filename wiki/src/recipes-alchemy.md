@@ -36,7 +36,7 @@ recipe's difficulty.
   [brewer's blunder](potions.md#potion-brewers-blunder), a gamble to drink.
 - **A natural 24** always brews the potion.
 
-Every finished brew may earn Alchemy a [training mark](skills.md#getting-better), whatever came
+Every finished brew may earn Alchemy a [training mark](skills.md#improving-a-skill), whatever came
 of it.
 
 ## The recipes

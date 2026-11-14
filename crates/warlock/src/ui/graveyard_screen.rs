@@ -19,7 +19,8 @@ use crate::render::console::Console;
 use crate::save::played_text;
 use crate::settings::Clock;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use warlock_core::content::{Content, article};
+use warlock_core::content::Content;
+use warlock_core::text::article;
 
 /// The widest the panel gets.
 const WIDTH: i32 = 80;

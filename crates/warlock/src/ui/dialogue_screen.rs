@@ -10,6 +10,7 @@
 //! first, in the one dialog, with the total it would cost now; with nothing to pay for it asks
 //! straight away (the speaker says there is nothing to do).
 
+use super::cursor;
 use super::dialog_screen::Dialog;
 use super::menu::{HINTS, Nav, Panel, Press, wrap};
 use super::screens::ScreenAction;
@@ -17,6 +18,7 @@ use super::{ACCENT, TEXT};
 use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
 use warlock_core::perception::PerceptionView;
+use warlock_core::text::capitalized;
 use warlock_core::world::Conversation;
 use warlock_core::{Action, Dir, Event, Outcome};
 
@@ -117,11 +119,11 @@ impl DialogueScreen {
         match (number, press.nav) {
             (Some(i), _) => self.ask(i),
             (None, Nav::Up) if n > 0 => {
-                self.selected = (self.selected + n - 1) % n;
+                self.selected = cursor::up(self.selected, n);
                 ScreenAction::Stay
             }
             (None, Nav::Down) if n > 0 => {
-                self.selected = (self.selected + 1) % n;
+                self.selected = cursor::down(self.selected, n);
                 ScreenAction::Stay
             }
             (None, Nav::Enter) if self.selected < n => self.ask(self.selected),
@@ -252,15 +254,6 @@ pub fn last_talk(outcome: &Outcome) -> Option<&Conversation> {
         Event::Talked(talk) => Some(talk),
         _ => None,
     })
-}
-
-/// `text` with its first letter in upper case.
-fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
-    }
 }
 
 #[cfg(test)]

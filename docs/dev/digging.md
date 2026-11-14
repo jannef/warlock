@@ -14,7 +14,7 @@ instead, `Action::UseTool`, `world/lamp.rs`, #643) needs `Actor::dig_tool` and t
 in Mining (#1391: the skill `data/mining.toml` names, no rule without that file; untrained,
 `dig::UNTRAINED`, "You do not know how to mine: that takes the Mining skill."). Both are one
 function, `dig::dig_refusal(actor, content)`, read by `start_dig` and by
-`PerceptionView::dig_refusal`, so `u` (`input.rs`) asks for no direction where the rules would
+`PerceptionView::dig_refusal`, so `u` (`input/play.rs`) asks for no direction where the rules would
 refuse and sends `dig:N` for the words instead; creatures never dig, so it is the player's rule
 only. Tests that dig train the player at Mining 0 (`World::learn_mining`, a `#[cfg(test)]` helper
 in `dig_tests.rs`: 0 adds no speed, so the times of before hold); a teacher sells it

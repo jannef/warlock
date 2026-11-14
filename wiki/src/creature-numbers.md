@@ -116,7 +116,7 @@ the unwary with no extra dice.
 - **Nose** is how far it smells a foe when it is someone's
   [companion](companions.md#companions), through the dark and a closed door.
 - **Tameable** says whether it may be a companion at all.
-- It is [burdened](burden.md#burden-1) past a third of its
+- It is [burdened](burden.md#burden-levels) past a third of its
   **[carrying limit](burden.md#how-much-you-can-carry)**, as you are (see [Burden](burden.md)).
 
 {{#include generated/creature-senses.md}}

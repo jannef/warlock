@@ -3,7 +3,7 @@
 //! priest's levels with its titles, and the priest's rites beside it (Consecrate, Communion with
 //! the dark, Sanctuary). Every number here is hidden in the game.
 
-use super::text::{Term, anchored, link};
+use super::text::{Term, anchored, capital, link};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, PrayerRules, PrayerUse, TalentDef, TalentEffect};
 use warlock_core::time::Duration;
@@ -106,7 +106,7 @@ pub(super) fn prayer_uses(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {i} | {} | {ails} | {holy}: \"{}\" | {dark}: \"{}\" | {} |",
-            anchored(Term::PrayerUse, u.id.id(), &capitalised(u.id.id())),
+            anchored(Term::PrayerUse, u.id.id(), &capital(u.id.id())),
             u.words.holy,
             u.words.dark,
             gained_at(content, u.id),
@@ -179,14 +179,6 @@ fn use_text(content: &Content, rules: &PrayerRules, id: PrayerUse) -> (String, S
             "the same".into(),
         ),
     }
-}
-
-/// `disease` → `Disease`.
-fn capitalised(id: &str) -> String {
-    let mut c = id.chars();
-    c.next()
-        .map(|f| f.to_uppercase().chain(c).collect())
-        .unwrap_or_default()
 }
 
 /// Where a use is first given: `level 12 ([Prayer](...))` per class whose table gives it.
@@ -333,7 +325,7 @@ pub(super) fn prayer_rites(content: &Content) -> String {
                         (
                             link(Term::Ability, &def.id, &def.name),
                             format!(
-                                "{mana} [mana](mana.md#spending-it) and {} of kneeling: every cell within {radius} of where you knelt (a {side} by {side} square) is [hallowed ground](cursed-and-hallowed.md#hallowed-ground) for {}; hostile creatures do not step onto it, and whoever stands on it [heals](healing.md#how-fast) and gets [mana back](mana.md#how-fast-it-comes-back) {pace}",
+                                "{mana} [mana](mana.md#spending-it) and {} of kneeling: every cell within {radius} of where you knelt (a {side} by {side} square) is [hallowed ground](cursed-and-hallowed.md#hallowed-ground) for {}; hostile creatures do not step onto it, and whoever stands on it [heals](healing.md#how-fast-you-heal) and gets [mana back](mana.md#how-fast-it-comes-back) {pace}",
                                 spoken(time),
                                 spoken(lasts)
                             ),

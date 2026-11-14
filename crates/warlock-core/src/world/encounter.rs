@@ -35,6 +35,7 @@ use crate::geom::{Dir, Pos};
 use crate::rng::Rng;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::text::capitalized;
 use crate::weather::Weather;
 use serde::{Deserialize, Serialize};
 
@@ -245,14 +246,6 @@ pub struct EncounterView {
     pub choices: Vec<(String, Choice)>,
 }
 
-/// The first letter in upper case.
-fn capital(text: &str) -> String {
-    let mut chars = text.chars();
-    chars.next().map_or_else(String::new, |c| {
-        c.to_uppercase().chain(chars).collect::<String>()
-    })
-}
-
 /// "Ahead" as the way there is: on the road, on the trail, or across the land.
 fn ahead(landscape: Option<Landscape>) -> &'static str {
     match landscape {
@@ -324,7 +317,7 @@ pub(crate) fn view(
     };
     EncounterView {
         name: name.to_string(),
-        title: capital(name),
+        title: capitalized(name),
         text,
         choices: (choices.iter())
             .map(|&c| (pending.outcome.label(c).to_string(), c))
@@ -464,16 +457,11 @@ impl World {
             .flat_map(|t| &t.entries)
             .filter(|e| self.when_holds(&e.when, here))
             .collect();
-        let total: u32 = entries.iter().map(|e| e.weight).sum();
-        if total == 0 {
+        // The stream is made on its first draw: none while nothing weighs anything.
+        if entries.iter().all(|e| e.weight == 0) {
             return;
         }
-        let mut r = self.encounters_rng().below(total);
-        let Some(entry) = entries.into_iter().find(|e| {
-            let hit = r < e.weight;
-            r = r.saturating_sub(e.weight);
-            hit
-        }) else {
+        let Some(&entry) = self.encounters_rng().weighted(&entries, |e| e.weight) else {
             return;
         };
         let side = self.arrival_side();
@@ -818,8 +806,7 @@ impl World {
             false => dark,
         };
         let lit = here.phase != DayPhase::Day && self.state.carried_light(&content).is_some();
-        let mine = player.effective_stats(&content).modifier(Stat::Willpower)
-            + talents.check(Stat::Willpower)
+        let mine = player.check_modifier(&content, Stat::Willpower)
             + player.skill_effect(&content, Effect::Lookout)
             + talents.notice.unwrap_or(0);
         let mine_against =
@@ -871,10 +858,8 @@ impl World {
             Weather::HeavyRain => c.heavy_rain,
             _ => 0,
         };
-        let mine = player.effective_stats(&content).modifier(Stat::Willpower)
-            + talents.check(Stat::Willpower)
-            + ears
-            + talents.notice.unwrap_or(0);
+        let mine =
+            player.check_modifier(&content, Stat::Willpower) + ears + talents.notice.unwrap_or(0);
         let against = c.difficulty + lead.skills.effect(&content, Effect::Stalk) + rain;
         let woke = check::check(&mut self.state.rng, mine, against);
         if self.trains(Use::Hear) {
@@ -976,13 +961,11 @@ impl World {
         };
         let unaware = pending.outcome == Outcome::Drop;
         let player = self.state.player();
-        let talents = player.talent_mods(&content);
         let stalk = match unaware {
             true => player.skill_effect(&content, Effect::Stalk),
             false => 0,
         };
-        let modifier = player.effective_stats(&content).modifier(Stat::Dexterity)
-            + talents.check(Stat::Dexterity)
+        let modifier = player.check_modifier(&content, Stat::Dexterity)
             + player.skill_effect(&content, Effect::Evade)
             + stalk;
         let e = rules.evade;

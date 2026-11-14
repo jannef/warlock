@@ -387,16 +387,17 @@ fn the_undead_are_immune_to_necrotic_and_the_dump_says_so() {
     let necrotic = kind(&w, "necrotic");
     assert_eq!(w.resistances_of(id).get(necrotic), 100);
     assert!(
-        (content.creature(zombie).resist.iter()).any(|&(k, p)| Some(k) == necrotic && p == 100),
-        "on its line, for all that reads one"
+        necrotic.is_some_and(|k| content.creature(zombie).immune_kinds.contains(&k)),
+        "among its immunities, for all that reads them"
     );
     strike(&mut w, id, cell(1, at.y), "necrotic", 50, HIT);
     assert_eq!(w.state.actors[&id].hp, 2, "it took nothing");
     let rows = dump::layer_rows(&w, Layer::Actors).join("\n");
     assert!(rows.contains("resists poison 100 necrotic 100"), "{rows}");
     let kobold = content.creature_id("kobold").expect("kobolds");
-    let resist = &content.creature(kobold).resist;
-    assert!(!resist.iter().any(|&(k, _)| Some(k) == necrotic));
+    let kobold = content.creature(kobold);
+    assert!(!(kobold.resist.iter()).any(|&(k, _)| Some(k) == necrotic));
+    assert!(necrotic.is_some_and(|k| !kobold.immune_kinds.contains(&k)));
 }
 
 #[test]

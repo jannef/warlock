@@ -302,7 +302,7 @@ impl Character {
             Some(p) => format!("{class} and {}", p.name.to_lowercase()),
             None => class,
         };
-        format!("{} {text}", crate::content::article(&text))
+        format!("{} {text}", crate::text::article(&text))
     }
 
     /// Whether the character was born in a year of `element` (an id: "is this character
