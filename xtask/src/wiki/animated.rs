@@ -82,7 +82,8 @@ pub(super) fn animated_tiers(content: &Content) -> String {
 /// all, damage dice (a family that wields: none of its own), a family's speed and natural
 /// Defence (a household thing's speed is its body's), and experience.
 pub(super) fn animated_numbers(content: &Content) -> String {
-    let mut out = String::from(
+    let mut out = super::text::stat_key();
+    out.push_str(
         "| Tier | Level | St | Dx | To | In | Wi | Pr | Hit points | Max | Dice | Speed | Defence \
          | XP |\n|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---:|---:|---:|\n",
     );

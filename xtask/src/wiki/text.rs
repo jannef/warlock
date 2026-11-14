@@ -199,3 +199,12 @@ pub(super) fn damage_link(content: &Content, kind: DamageTypeId) -> String {
 pub(super) fn stat_link(stat: Stat) -> String {
     link(Term::Stat, stat.name(), stat.name())
 }
+
+/// The line above a table whose columns are the stats' abbreviations (#1574), so a reader meets
+/// "To" and "Pr" spelled out: "**St** Strength, **Dx** Dexterity, …", and a blank line.
+pub(super) fn stat_key() -> String {
+    let names: Vec<String> = (Stat::ALL.iter())
+        .map(|&s| format!("**{}** {}", s.abbrev(), stat_link(s)))
+        .collect();
+    format!("Stats: {}.\n\n", names.join(", "))
+}

@@ -147,7 +147,7 @@ remembers a failed try; time, and the risk, are the only price. Disarming earns 
 ## Rigging traps
 
 A [craftsperson](classes.md#craftsperson) of level 25 can rig traps of their own, with
-[Trapwright](talents.md#talent-trapwright). Choose it in the [abilities menu](abilities.md), pick a
+[Trapwright](classes.md#talent-trapwright). Choose it in the [abilities menu](abilities.md), pick a
 trap from the list, then the way: the trap goes on the cell beside you in that direction. The list
 greys out a trap you lack something for, and says what.
 

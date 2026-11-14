@@ -27,7 +27,10 @@ fn talents_with(content: &Content, pick: impl Fn(&TalentEffect) -> Option<i32>) 
     let mut out: Vec<(&str, String)> = Vec::new();
     for (_, def) in content.talents().iter() {
         for n in def.effects.iter().filter_map(&pick) {
-            let text = format!("{} ({n:+})", link(Term::Talent, &def.id, &def.name));
+            let text = format!(
+                "{} ({n:+})",
+                super::talents::talent_link(content, &def.id, &def.name)
+            );
             out.push((def.name.as_str(), text));
         }
     }
