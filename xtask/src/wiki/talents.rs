@@ -289,8 +289,8 @@ pub(super) fn prestige_levels(content: &Content) -> String {
     out
 }
 
-/// One class's (or prestige class's) table: a heading (a class's page has its own: what the
-/// class is instead), its bonus picks, then each row's ability with what it does, between mdBook
+/// One class's (or prestige class's) table: a prestige class's heading (a class's page has its
+/// own, and its card says what the class is), its bonus picks, then each row's ability with what it does, between mdBook
 /// anchors named by its id, so a page can include one class's section
 /// (`{{#include generated/class-levels.md:paladin}}`) and follow it with prose.
 fn level_table(content: &Content, table: Table, out: &mut String) {
@@ -300,13 +300,10 @@ fn level_table(content: &Content, table: Table, out: &mut String) {
         return;
     }
     let _ = writeln!(out, "<!-- ANCHOR: {} -->\n", table.id());
-    match table {
-        Table::Class(class) => {
-            let _ = writeln!(out, "{}\n", class.description);
-        }
-        Table::Prestige(_) => {
-            let _ = writeln!(out, "### {}\n", table.name());
-        }
+    // A class's page has its own heading, and what the class is in its card
+    // (`class_guide::cards`).
+    if let Table::Prestige(_) = table {
+        let _ = writeln!(out, "### {}\n", table.name());
     }
     if !bonus.levels.is_empty() {
         let levels: Vec<String> = bonus.levels.iter().map(u8::to_string).collect();

@@ -1,6 +1,23 @@
 # Priest
 
+{{#include generated/class-card.md:priest}}
+
+See also: [Prayer](prayer.md), the priest's prayer in full.
+
+## How to play
+
+You fight with mace and buckler and heal yourself. Your prayer,
+[Orison](abilities.md#ability-orison) in the [abilities menu](abilities.md#the-abilities-menu)
+(`a`), costs no [mana](mana.md) and answers the worst thing that ails you: at first only your
+wounds, later [hunger, disease, poison, and more](prayer.md#what-it-answers). Pray too often and
+it fizzles (the [strain](prayer.md#strain)). Save your mana for [Mend](magic.md#spell-mend) and, from
+level 3, [Cure wounds](#talent-cure-wounds) and [Blessing](#talent-blessing).
+
+## Levels
+
 {{#include generated/class-levels.md:priest}}
+
+## Abilities
 
 **The priest's prayer** ([Orison](abilities.md#ability-orison), from level 1) costs no
 [mana](mana.md#spending-it) and takes the time of a spell. It answers the worst thing that ails you,

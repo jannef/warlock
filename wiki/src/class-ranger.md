@@ -1,6 +1,23 @@
 # Ranger
 
+{{#include generated/class-card.md:ranger}}
+
+See also: [Focus](focus.md) and [Companions](companions.md).
+
+## How to play
+
+You fight from a distance. Shoot with your short bow (`t`, then
+[aim](controls-prompts.md#aiming)), and let your [animal companion](companions.md), with you from
+the first turn, keep foes off you; the short sword is for when they get close. Pick your arrows up
+after a fight, and make more with your knife ([Fletching](skill-uses.md#fletching)): the
+[Fletcher](#talent-fletcher) makes twice as many. [Favoured prey](#talent-favoured-prey) makes you
+better against the kind of creature you have killed most.
+
+## Levels
+
 {{#include generated/class-levels.md:ranger}}
+
+## Abilities
 
 The ranger's [rapid shot](#talent-rapid-shot) and
 [volley](abilities.md#ability-volley) run on [focus](focus.md).

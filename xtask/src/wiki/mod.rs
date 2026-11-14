@@ -21,6 +21,7 @@ mod burden;
 mod calendar;
 mod character;
 mod chests;
+mod class_guide;
 mod combat;
 mod companions;
 mod crafting;
@@ -268,6 +269,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("races.md", character::races),
         ("race-traits.md", character::race_traits),
         ("classes.md", character::classes),
+        ("classes-glance.md", class_guide::glance),
+        ("class-card.md", class_guide::cards),
         ("class-limits.md", character::class_limits),
         ("prestige-classes.md", character::prestige_classes),
         ("prestige-levels.md", talents::prestige_levels),
@@ -569,6 +572,13 @@ mod tests {
                 page.matches("{{#include generated/class-levels.md").count(),
                 1
             );
+            // The template (#1536): the card first, then How to play, then the levels.
+            let card = format!("{{{{#include generated/class-card.md:{}}}}}", class.id);
+            assert_eq!(page.matches(&card).count(), 1, "{name}");
+            let at = |s: &str| page.find(s).unwrap_or_else(|| panic!("{name}: {s}"));
+            assert!(at(&card) < at("## How to play"), "{name}");
+            assert!(at("## How to play") < at("## Levels"), "{name}");
+            assert!(at("## Levels") < at(&include), "{name}");
         }
     }
 

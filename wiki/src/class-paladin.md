@@ -1,6 +1,23 @@
 # Paladin
 
+{{#include generated/class-card.md:paladin}}
+
+See also: [Zeal](zeal.md).
+
+## How to play
+
+You fight up close with sword and shield, like a [warrior](class-warrior.md), and you hold
+[zeal](zeal.md): every blow of yours that hits, and every blow that hits you, builds a point.
+Spend it from the [abilities menu](abilities.md#the-abilities-menu) (`a`) on
+[Smite](#talent-smite), a harder blow, hardest against the undead and fiends, or on
+[Lay on hands](#talent-lay-on-hands), hit points back at once. Your few spells come from level 6.
+A deed that moves you toward evil empties your zeal (see [Alignment](alignment.md)).
+
+## Levels
+
 {{#include generated/class-levels.md:paladin}}
+
+## Abilities
 
 The paladin fights from one pool, **[zeal](zeal.md)**, for wrath and mercy
 alike. It holds 10, plus your [Presence](stats.md#stat-presence)

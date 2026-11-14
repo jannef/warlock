@@ -1,31 +1,37 @@
 //! Starting kits (spec §8 "Character creation"): what each class starts with and what each race
-//! adds, items as they are named, in the order New run offers them.
+//! adds, items as they are named: the classes in the wiki's order, the races in the order New run
+//! offers them.
 
 use std::fmt::Write as _;
-use warlock_core::content::{Content, Keep, Kit, KitItem};
+use warlock_core::content::{ClassDef, Content, Keep, Kit, KitItem};
 use warlock_core::equipment::{self, Equipment};
 use warlock_core::magic::LootGrade;
 use warlock_core::object::Stack;
 use warlock_core::text::or_list;
 
-/// The classes' kits, one row each.
+/// The classes' kits, one row each, in the wiki's order of the classes.
 pub(super) fn class_kits(content: &Content) -> String {
     let mut out = String::from("| Class | Starts with |\n|---|---|\n");
-    for c in content.classes() {
-        let mut text = kit_text(content, &c.kit);
-        if let Some(random) = &c.random_scrolls {
-            let _ = write!(
-                text,
-                "; {} random [spell scrolls](scrolls.md) (each the scroll of one of the {} spells of \
-                 [spell level](magic.md#spell-levels) {} or below, as likely as any other)",
-                random.count,
-                random.scrolls.len(),
-                highest_level(content, &random.scrolls),
-            );
-        }
-        let _ = writeln!(out, "| {} | {text} |", c.name);
+    for c in super::class_guide::ordered(content) {
+        let _ = writeln!(out, "| {} | {} |", c.name, class_kit(content, c));
     }
     out
+}
+
+/// One class's kit in words, its random spell scrolls too.
+pub(super) fn class_kit(content: &Content, c: &ClassDef) -> String {
+    let mut text = kit_text(content, &c.kit);
+    if let Some(random) = &c.random_scrolls {
+        let _ = write!(
+            text,
+            "; {} random [spell scrolls](scrolls.md) (each the scroll of one of the {} spells of \
+             [spell level](magic.md#spell-levels) {} or below, as likely as any other)",
+            random.count,
+            random.scrolls.len(),
+            highest_level(content, &random.scrolls),
+        );
+    }
+    text
 }
 
 /// The highest spell level among the spells `scrolls` cast.

@@ -5,6 +5,31 @@ Your level (`Lv`) is in the [status bar](the-screen.md#the-screen). The
 [character screen](character.md) (`@`) shows it with your XP and the XP at which the next level
 comes, like `XP  85 / 128`. Dying shows the level you had reached.
 
+## When you level up
+
+The game says "Welcome to level N." Some things come by themselves at once:
+
+- more [hit points](hit-points.md#hit-points) (up to level 50) and more
+  [mana](mana.md#how-much-mana-you-have) (up to level 60), as [Levelling up](#levelling-up) below
+  says;
+- a chance for each of your [stats](stats.md#raising-your-stats) to rise, by how much you have used
+  it;
+- whatever your [class](classes.md#levels)'s level table gives at that level: a class ability, a
+  spell, or a talent it names. Your class's own page has the table.
+
+Then the **level-up screen** opens by itself, and you make the level's choices in this order:
+
+1. your **[skill rolls](skills.md#improving-a-skill)**, every level: two for most classes, more for
+   some, spent on the skills you are trained in;
+2. a **bonus talent**, at the levels your class names (see
+   [When you get a talent](talents.md#when-you-get-a-talent));
+3. a **[talent](talents.md)**, every third level: 3, 6, 9, and so on.
+
+The screen can't be closed until everything is chosen, and nothing can be saved for later. Your
+[weapon skills](weapon-skills.md#raising-a-weapon-skill) are not part of it: they rise with use,
+not with levels. Later on, some classes can be called into a
+[prestige class](prestige-classes.md#callings).
+
 ## Earning experience
 
 You get XP for:
