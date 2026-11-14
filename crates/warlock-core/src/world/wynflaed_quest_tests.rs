@@ -9,7 +9,7 @@ use crate::action::parse_actions;
 use crate::content::{CombatStance, ContentFiles, Goal, QuestKind};
 use crate::replay::Replay;
 use crate::test_support::run as act;
-use crate::test_support::texts as said;
+use crate::test_support::texts;
 use std::sync::LazyLock;
 
 const WYNFLAED: Pos = Pos::new(54, 13);
@@ -31,7 +31,7 @@ fn village() -> World {
 }
 
 fn heard(world: &World, start: &str) -> bool {
-    said(world).iter().any(|m| m.starts_with(start))
+    texts(world).iter().any(|m| m.starts_with(start))
 }
 
 fn put_player(world: &mut World, at: Pos) {

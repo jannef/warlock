@@ -6,7 +6,7 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::test_support::run as act;
-use crate::test_support::texts as said;
+use crate::test_support::texts;
 use std::sync::LazyLock;
 
 const WULFRUN: Pos = Pos::new(72, 26);
@@ -94,7 +94,7 @@ fn the_letter_goes_down_to_peran_and_his_answer_comes_back_up() {
     assert_eq!(stage(&w, "gnome_letter"), Some(Stage::Done));
     assert_eq!(carried(&w, "sealed_letter"), 0);
     assert_eq!(carried(&w, "gem"), gems_before + 1);
-    assert!(said(&w).iter().any(|m| m.contains("for the walk down")));
+    assert!(texts(&w).iter().any(|m| m.contains("for the walk down")));
 
     // Then he has the moot's answer to send back up (once the level the reward brought is spent).
     assert!(topics(&w, headman).contains(&"quest-gnome_reply".into()));
@@ -110,5 +110,5 @@ fn the_letter_goes_down_to_peran_and_his_answer_comes_back_up() {
     assert_eq!(stage(&w, "gnome_reply"), Some(Stage::Done));
     assert_eq!(carried(&w, "sealed_letter"), 0);
     assert_eq!(carried(&w, "gold_coin"), gold + 300);
-    assert!(said(&w).iter().any(|m| m.contains("every word of it")));
+    assert!(texts(&w).iter().any(|m| m.contains("every word of it")));
 }

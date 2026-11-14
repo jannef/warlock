@@ -10,7 +10,7 @@ use crate::content::{CampaignKind, ContentFiles, LevelTemplate};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::run as act;
-use crate::test_support::texts as said;
+use crate::test_support::texts;
 use std::collections::BinaryHeap;
 use std::sync::LazyLock;
 
@@ -149,7 +149,7 @@ fn a_run_starts_on_beorggeat_with_its_arrival_line() {
     assert_eq!(w.perception().level_id(), "ascmearc");
     assert_eq!(terrain_at(PASS), "mountain_pass");
     assert_eq!(w.perception().region(), Some("Grægweall"));
-    let lines = said(&w);
+    let lines = texts(&w);
     assert!(
         lines[0].starts_with("Welcome to The Ascmearc."),
         "{lines:?}"
@@ -186,7 +186,7 @@ fn beorggeat_is_a_closed_way_back() {
     let before = w.time();
     act(&mut w, "descend move:W move:NW move:SW");
     assert_eq!(w.player_pos(), PASS);
-    assert!(said(&w).contains(&"There is nothing to explore here.".to_string()));
+    assert!(texts(&w).contains(&"There is nothing to explore here.".to_string()));
     assert!(
         w.time().seconds() - before.seconds() < 60,
         "nothing but the usual time to try"
@@ -202,7 +202,7 @@ fn the_town_lies_five_road_cells_east_of_the_pass() {
     let mut w = start();
     act(&mut w, "move:E*6");
     assert_eq!(w.player_pos(), TOWN);
-    assert_eq!(said(&w).last().unwrap(), "The way into Cēaptūn is here.");
+    assert_eq!(texts(&w).last().unwrap(), "The way into Cēaptūn is here.");
     assert_eq!(w.perception().leads_to(TOWN).as_deref(), Some("Cēaptūn"));
     // It leads into the town (#336; `ceaptun_tests`).
     act(&mut w, "descend");

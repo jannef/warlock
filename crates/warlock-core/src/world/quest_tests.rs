@@ -9,7 +9,7 @@ use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::test_support::builtin;
 use crate::test_support::run;
-use crate::test_support::texts as said;
+use crate::test_support::texts;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -331,13 +331,13 @@ fn ask(world: &mut World, dir: Dir, topic: &str) -> Outcome {
 
 /// The last `n` messages.
 fn last(world: &World, n: usize) -> Vec<String> {
-    let all = said(world);
+    let all = texts(world);
     all[all.len().saturating_sub(n)..].to_vec()
 }
 
 /// The messages from the last one that is `first` on, at most `n`.
 fn from(world: &World, first: &str, n: usize) -> Vec<String> {
-    let all = said(world);
+    let all = texts(world);
     let i =
         (all.iter().rposition(|m| m == first)).unwrap_or_else(|| panic!("{first:?} in {all:?}"));
     all[i..].iter().take(n).cloned().collect()
@@ -470,9 +470,9 @@ fn a_kill_quest_counts_the_players_kills_and_rewards_with_xp() {
         ["quest-pups", "quest-parcel", "weather"]
     );
     kill_pups_east(&mut w, 1);
-    assert!(said(&w).contains(&"Quest updated: 1 / 2 pups.".to_string()));
+    assert!(texts(&w).contains(&"Quest updated: 1 / 2 pups.".to_string()));
     kill_pups_east(&mut w, 1);
-    let log = said(&w);
+    let log = texts(&w);
     let i = (log.iter())
         .position(|m| m == "Quest updated: 2 / 2 pups. Return to the elder.")
         .expect("the goal is met");
@@ -599,7 +599,7 @@ fn a_reach_quest_needs_its_prerequisite_and_counts_where_the_player_has_been() {
     run(&mut w, "move:SE move:E*3 descend");
     assert_eq!(w.perception().level_id(), "cellar");
     assert!(
-        said(&w).contains(
+        texts(&w).contains(
             &"Quest updated: you have reached the Cellar. Return to the elder.".to_string()
         ),
         "{:?}",
@@ -688,7 +688,7 @@ fn a_bring_quest_takes_from_the_pack_and_repeats() {
     run(&mut w, "move:SW pickup");
     assert_eq!(last(&w, 1), ["Quest updated: 1 / 2 apples."]);
     run(&mut w, "move:E pickup move:E pickup");
-    assert!(said(&w).contains(&"Quest updated: 2 / 2 apples. Return to the crone.".to_string()));
+    assert!(texts(&w).contains(&"Quest updated: 2 / 2 apples. Return to the crone.".to_string()));
     assert_eq!(carried(&w, "apple"), 3);
     put_player(&mut w, Pos::new(2, 1));
     ask(&mut w, Dir::E, "quest-apples");
@@ -1073,7 +1073,7 @@ fn the_hermits_rats_then_the_depths() {
     }
     assert_eq!(creatures_left(&w, "rat"), 0, "{:?}", last(&w, 8));
     assert!(
-        said(&w)
+        texts(&w)
             .contains(&"Quest updated: 3 / 3 giant rats. Return to the old hermit.".to_string())
     );
     w.travel("hub", None).expect("hub");
@@ -1101,7 +1101,7 @@ fn the_hermits_rats_then_the_depths() {
     let toward = beside(&mut w, "hermit");
     ask(&mut w, toward, "quest-depths");
     let gift = "The old hermit gives you 50 gold coins and a jade amulet.";
-    assert!(said(&w).contains(&gift.to_string()));
+    assert!(texts(&w).contains(&gift.to_string()));
 }
 
 #[test]

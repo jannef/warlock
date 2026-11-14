@@ -7,7 +7,7 @@ use super::*;
 use crate::action::Event;
 use crate::content::ContentFiles;
 use crate::test_support::run;
-use crate::test_support::texts as said;
+use crate::test_support::texts;
 
 /// The player stands on stairs down and up (below): `k` beside them, `f` two cells off.
 const TOP: &str = "\
@@ -108,7 +108,7 @@ fn far(w: &World) -> ActorId {
 
 /// The player was told `line`.
 fn told(w: &World, line: &str) {
-    let lines = said(w);
+    let lines = texts(w);
     assert!(lines.iter().any(|m| m == line), "{lines:?}");
 }
 

@@ -12,7 +12,7 @@ use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::builtin;
 use crate::test_support::run as act;
-use crate::test_support::texts as said;
+use crate::test_support::texts;
 
 const OVERWORLD: &str = include_str!("../../../../assets/campaigns/showcase/levels/overworld.toml");
 const QUESTS: &str =
@@ -87,7 +87,7 @@ fn put_player(world: &mut World, at: Pos) {
 }
 
 fn last(world: &World) -> String {
-    said(world).pop().unwrap_or_default()
+    texts(world).pop().unwrap_or_default()
 }
 
 fn glyph(world: &World, layer: Layer, at: Pos) -> char {
@@ -138,9 +138,9 @@ fn a_hidden_location_never_reaches_perception_or_the_dumps() {
     w.apply(&Action::Move(Dir::S));
     assert_eq!(w.player_pos(), BARROW);
     assert!(
-        !said(&w).iter().any(|m| m.contains("way into")),
+        !texts(&w).iter().any(|m| m.contains("way into")),
         "{:?}",
-        said(&w)
+        texts(&w)
     );
     w.apply(&Action::Descend);
     assert_eq!(last(&w), "You explore the swamp.");
@@ -190,13 +190,13 @@ fn the_dev_reveal_marks_it_and_it_leads_on() {
     // Walking there, it is the way in, and `>` enters the Depths.
     put_player(&mut w, BARROW.step(Dir::N));
     w.apply(&Action::Move(Dir::S));
-    assert!(said(&w).contains(&"The way into The Old Barrow is here.".to_string()));
+    assert!(texts(&w).contains(&"The way into The Old Barrow is here.".to_string()));
     w.apply(&Action::Descend);
     assert_eq!(w.state.current_level, "depths:1");
     assert!(
-        said(&w).contains(&"You enter The Old Barrow.".to_string()),
+        texts(&w).contains(&"You enter The Old Barrow.".to_string()),
         "{:?}",
-        said(&w)
+        texts(&w)
     );
 }
 
@@ -274,7 +274,7 @@ fn a_quest_reveals_its_location_at_its_stage() {
         ask(&mut w, toward, "quest-depths");
         assert!(revealed(&w), "{when:?} done");
         // Marked once, after the hermit's words.
-        let all = said(&w);
+        let all = texts(&w);
         let marked: Vec<usize> = (all.iter().enumerate())
             .filter(|(_, m)| *m == MARKS)
             .map(|(i, _)| i)
@@ -297,7 +297,7 @@ fn the_quest_log_says_where() {
         format!("The old hermit wants you to reach the Depths 3. {WHERE}")
     );
     // The offer and its `accept` line, then the mark.
-    let said = said(&w);
+    let said = texts(&w);
     let n = said.len();
     assert!(
         said[n - 2].ends_with(

@@ -9,7 +9,7 @@ use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::builtin;
 use crate::test_support::run as act;
-use crate::test_support::texts as said;
+use crate::test_support::texts;
 
 /// Ūtgang's way in on the Ascmearc, on the volcano's south foot.
 const UTGANG: Pos = Pos::new(103, 17);
@@ -40,7 +40,7 @@ fn the_way_in_is_hidden_until_the_player_climbs_out_of_it() {
     assert_eq!(w.perception().level_id(), "ascmearc");
     assert_eq!(w.player_pos(), UTGANG, "out on the way in");
     assert!(w.state.revealed.contains("utgang"));
-    let lines = said(&w);
+    let lines = texts(&w);
     assert!(
         lines.iter().any(|l| l == "You mark Ūtgang on your map."),
         "{lines:?}"
@@ -56,12 +56,12 @@ fn the_way_in_is_hidden_until_the_player_climbs_out_of_it() {
     w.apply(&action);
     replay.push(&action, &w);
     assert_eq!(w.perception().level_id(), "utgang:1");
-    let before = said(&w).len();
+    let before = texts(&w).len();
     let action = parse_actions("ascend").expect("actions").remove(0);
     w.apply(&action);
     replay.push(&action, &w);
     assert_eq!(w.player_pos(), UTGANG);
-    assert!(!said(&w)[before..].iter().any(|l| l.contains("mark")));
+    assert!(!texts(&w)[before..].iter().any(|l| l.contains("mark")));
     let verified = Replay::from_json(&replay.to_json())
         .expect("json")
         .run(w.content().clone())

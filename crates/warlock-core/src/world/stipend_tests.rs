@@ -10,7 +10,7 @@ use crate::replay::Replay;
 use crate::talent::TalentMods;
 use crate::test_support::CONTENT;
 use crate::test_support::run as act;
-use crate::test_support::texts as said;
+use crate::test_support::texts;
 
 /// Beside the servant's cell (40, 27) in the Gæsthūs, east of it.
 const BESIDE: Pos = Pos::new(41, 27);
@@ -115,7 +115,7 @@ fn every_level_grows_the_stipend_and_the_servant_hands_it_over() {
         "{put_by} for {levels}"
     );
     assert!(
-        said(&w)
+        texts(&w)
             .iter()
             .any(|m| m.contains("your stipend has grown"))
     );
@@ -127,7 +127,7 @@ fn every_level_grows_the_stipend_and_the_servant_hands_it_over() {
     assert!(w.state.stipend.is_empty());
     assert_eq!(gold(&w), had + put_by);
     assert!(w.state.player().inventory.len() >= pack + items.min(1).saturating_sub(1));
-    let words = said(&w);
+    let words = texts(&w);
     assert!(
         words.iter().any(
             |m| m.starts_with("Your chambermaid says: \"Yer family's sent") && m.contains("m'lady")
@@ -140,7 +140,7 @@ fn every_level_grows_the_stipend_and_the_servant_hands_it_over() {
     );
     // Nothing put by: a one-liner, addressed.
     act(&mut w, "chat:W");
-    let last = said(&w).last().cloned().unwrap_or_default();
+    let last = texts(&w).last().cloned().unwrap_or_default();
     assert!(
         last.starts_with("Your chambermaid says:") && !last.contains('{'),
         "{last}"
@@ -160,7 +160,7 @@ fn what_would_overload_the_player_is_set_down_at_their_feet() {
         here.iter().any(|s| s.object == coin),
         "the gold lies at their feet"
     );
-    assert!(said(&w).iter().any(|m| m.starts_with("Too much to carry")));
+    assert!(texts(&w).iter().any(|m| m.starts_with("Too much to carry")));
     assert!(w.state.stipend.is_empty());
 }
 

@@ -9,7 +9,7 @@ use crate::content::{ContentFiles, TerrainId};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::run as act;
-use crate::test_support::texts as said;
+use crate::test_support::texts;
 use std::sync::LazyLock;
 
 const OVERWORLD: &str = "ascmearc";
@@ -66,7 +66,7 @@ fn asking_marks_the_way_and_nothing_else() {
         assert_eq!(w.state.time, time, "{topic}: asking takes no time");
         let terrain = w.state.levels[OVERWORLD].terrain[end];
         assert_eq!(remembered(&w, end), Some(terrain), "{topic}: marked");
-        let lines = said(&w);
+        let lines = texts(&w);
         assert!(lines[lines.len() - 2].starts_with("Godgifu says: \""));
         assert_eq!(
             lines.last().map(String::as_str),
@@ -85,7 +85,7 @@ fn asking_marks_the_way_and_nothing_else() {
         let count = remembered_count(&w);
         act(&mut w, &format!("ask:SE:{topic}"));
         assert_eq!(remembered_count(&w), count, "{topic}: idempotent");
-        assert!(said(&w).last().unwrap().starts_with("Godgifu says: \""));
+        assert!(texts(&w).last().unwrap().starts_with("Godgifu says: \""));
     }
 }
 

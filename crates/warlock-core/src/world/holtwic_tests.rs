@@ -10,7 +10,7 @@ use crate::content::{ContentFiles, Stance};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::run as act;
-use crate::test_support::texts as said;
+use crate::test_support::texts;
 use std::sync::LazyLock;
 
 /// Cēaptūn's cell, where the north road starts.
@@ -63,11 +63,11 @@ fn the_village_is_at_the_north_roads_end_and_left_by_its_edge() {
     let mut w = World::new(CONTENT.clone(), "ascmearc", None).expect("the Ascmearc");
     act(&mut w, "move:E*6 move:N*11");
     assert_eq!(w.player_pos(), VILLAGE_CELL);
-    assert_eq!(said(&w).last().unwrap(), "The way into Holtwīc is here.");
+    assert_eq!(texts(&w).last().unwrap(), "The way into Holtwīc is here.");
     act(&mut w, "descend");
     assert_eq!(w.state.current_level, "holtwic");
     assert_eq!(w.player_pos(), START, "on the lane from the road");
-    let words = said(&w);
+    let words = texts(&w);
     assert!(
         words
             .iter()
@@ -139,15 +139,15 @@ fn gammer_wynflaed_talks_of_the_village_the_wood_and_the_fair_folk() {
         ["quest-taken_under_the_hill", "holtwic", "wood", "fair_folk"]
     );
     put_player(&mut w, WYNFLAED.step(Dir::W));
-    let before = said(&w).len();
+    let before = texts(&w).len();
     act(&mut w, "chat:E");
     // What she says first (a mutter of hers may follow it in the same turn).
-    assert!(said(&w)[before].starts_with("Gammer Wynflæd says: \""));
+    assert!(texts(&w)[before].starts_with("Gammer Wynflæd says: \""));
     // Her quest is `wynflaed_quest_tests.rs`'s.
     for topic in &topics[1..] {
-        let before = said(&w).len();
+        let before = texts(&w).len();
         act(&mut w, &format!("ask:E:{topic}"));
-        assert!(said(&w)[before].starts_with("Gammer Wynflæd says: \""));
+        assert!(texts(&w)[before].starts_with("Gammer Wynflæd says: \""));
     }
     assert!(
         w.state.revealed.is_empty(),
@@ -189,7 +189,7 @@ fn the_mound_is_hidden_in_the_wood_until_revealed() {
     put_player(&mut w, MOUND);
     act(&mut w, "descend");
     assert_eq!(w.perception().level_id(), "aelfham:1");
-    assert!(said(&w).iter().any(|l| l.contains("pipes are playing")));
+    assert!(texts(&w).iter().any(|l| l.contains("pipes are playing")));
 }
 
 #[test]

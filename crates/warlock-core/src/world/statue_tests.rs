@@ -8,7 +8,7 @@ use crate::content::ContentFiles;
 use crate::skills::{SkillId, Trained};
 use crate::stats::Stat;
 use crate::test_support::run;
-use crate::test_support::texts as said;
+use crate::test_support::texts;
 
 // A lit hall: the player by a pick-axe and a scroll of restoration, a kobold east of them on a
 // dagger, a deer far off, and a basilisk behind the wall (B) for the gaze.
@@ -101,7 +101,7 @@ fn three_warnings_then_stone_and_the_death_screen_says_so() {
     );
     let before = w.messages().len();
     run(&mut w, "afflict:stiffening*3");
-    let lines: Vec<String> = said(&w).split_off(before);
+    let lines: Vec<String> = texts(&w).split_off(before);
     for line in [
         "Your limbs stiffen.",
         "Your skin greys and hardens.",
@@ -169,7 +169,7 @@ fn a_statue_is_dug_through_and_falls_to_rubble_and_what_it_held() {
     w.learn_mining();
     let at = stone_the_kobold(&mut w);
     run(&mut w, "pickup:a equip:tool:a dig:E");
-    assert_eq!(terrain_at(&w, at), "rubble", "{:?}", said(&w).last());
+    assert_eq!(terrain_at(&w, at), "rubble", "{:?}", texts(&w).last());
     assert!(pile_at(&w, at).contains(&"dagger".to_string()));
     let (level, _) = w.ground_truth();
     assert!(level.statues().is_empty());
@@ -194,7 +194,7 @@ fn kicks_mostly_bruise_but_earn_strength_marks_and_one_breaks_it() {
     assert_eq!(terrain_at(&w, at), "rubble");
     assert!(pile_at(&w, at).contains(&"dagger".to_string()));
     assert!(
-        said(&w)
+        texts(&w)
             .iter()
             .any(|l| l == "The statue cracks and falls to pieces!")
     );
@@ -223,11 +223,11 @@ fn the_scroll_of_restoration_ends_it() {
     }
     assert_eq!(severity(&w, player), None);
     assert!(
-        said(&w)[before..]
+        texts(&w)[before..]
             .iter()
             .any(|l| l == "Your limbs move freely again."),
         "{:?}",
-        &said(&w)[before..]
+        &texts(&w)[before..]
     );
 }
 
@@ -349,11 +349,11 @@ fn the_gorgons_breath_stiffens_a_feeble_player_and_seldom_a_hardy_one() {
         "two breaths, and a check failed"
     );
     assert!(
-        said(&feeble)
+        texts(&feeble)
             .iter()
             .any(|l| l == "The gorgon breathes a grey vapour!"),
         "{:?}",
-        said(&feeble)
+        texts(&feeble)
     );
     let mut hardy = world("stats = { toughness = 30 }");
     breathed(&mut hardy, 3);
