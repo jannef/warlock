@@ -127,6 +127,11 @@ fn bad_tables_are_refused() {
             "seconds = 60\nkinds = { boon = 1 }\nexhaust = 0\n",
             "no outcome",
         ),
+        // A draw sums the weights in a `u32` (#1594).
+        (
+            "seconds = 60\nkinds = { boon = 4294967295, bane = 1 }\nexhaust = 0\n",
+            "add up to more",
+        ),
     ];
     for (text, why) in cases {
         let e = parse(text).expect_err(text).to_string();
@@ -171,6 +176,16 @@ fn bad_outcomes_are_refused() {
         (
             "message = \"A.\"\neffect = { wish = true }\n",
             "unknown field",
+        ),
+        (
+            "message = \"A.\"\neffect = { objects = [{ object = \"dagger\", count = \"1\", \
+             weight = 0 }] }\n",
+            "not all 0",
+        ),
+        (
+            "message = \"A.\"\neffect = { objects = [{ object = \"dagger\", count = \"1\", \
+             weight = 4294967295 }, { object = \"dagger\", count = \"1\" }] }\n",
+            "add up to more",
         ),
     ];
     for (extra, why) in cases {

@@ -245,7 +245,7 @@ impl World {
         let content = self.content.clone();
         let name = crate::content::the_start(&content.creature(them.creature).name);
         let def = content.status(status);
-        let does = if def.id == "staggered" {
+        let does = if content.ids().staggered == Some(status) {
             "staggers".to_string()
         } else {
             format!(
@@ -571,8 +571,7 @@ impl World {
             .collect();
         let surprise = content.surprise().map(|s| s.status);
         let mut steadied = false;
-        let was_staggered =
-            (content.status_id(super::footing::STAGGERED)).is_some_and(|s| spent.contains(&s));
+        let was_staggered = (content.ids().staggered).is_some_and(|s| spent.contains(&s));
         for status in spent {
             let left = (actor.effects.get_mut(status)).map_or(0, |e| {
                 e.severity = e.severity.saturating_sub(1);

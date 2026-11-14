@@ -1047,9 +1047,8 @@ What every spell of a damage type does beyond its damage (the design:
     as a corroding creature's touch. Item damage is the player's pack's alone, so a creature's
     gear is never eaten.
   - `immune_tags` has no hook on the cast path: `spell_type::lay_immunities` at load (after
-    `load_creatures`) sets the type to `IMMUNE` on the `resist` of every creature type of the tag,
-    so `Actor::resistances`, Knowledge's `known_resistances`, the creature's description, and the
-    wiki all read it, and no creature file names it. It stands against any harm of the type, as a
+    `load_creatures`) adds the type to the `immune_kinds` of every creature type of the tag (#1620),
+    so `Actor::resistances`, Knowledge's `known_resistances`, and the wiki all read it, and no creature file names it. It stands against any harm of the type, as a
     `resist` line does: a Withering blade too, though no blow reads the rest of the table.
     `Caster::Trap` and `Caster::Place` keep their own data and read no type. Blaze is not on this
     path.

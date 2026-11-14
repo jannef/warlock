@@ -6,19 +6,17 @@
 //! a shop's way out and its offers are dialogs; so is any new question: build a `Dialog` and
 //! answer [`ScreenAction::Dialog`] with it, never a screen of its own.
 //!
-//! Keys: the menu keys move the selection (↑/↓, ←/→) and Enter takes it; the `Context::Dialog`
-//! commands Yes and No (`y` and `n` by default; rebindable, in a context of their own because
-//! `y` and `n` move the player in play) pick the option whose role is Accept, and Decline (else
-//! Cancel); Esc picks the Cancel option (else Decline), or closes the dialog if there is none;
+//! Keys (fixed, `settings::fixed`): the menu keys move the selection (↑/↓, ←/→) and Enter takes
+//! it; `y` and `n` pick the option whose role is Accept, and Decline (else Cancel); Esc picks the Cancel option (else Decline), or closes the dialog if there is none;
 //! a dialog that must be answered ([`Dialog::required`]: an overworld encounter) ignores Esc.
 //! The safe option (Cancel, else Decline) is selected at first. Each option shows its shortcut
 //! keys. A held key's repeats never answer (`ScreenStack::handle`).
 
-use super::menu::{Hints, Nav, Panel, Press, wrap};
+use super::menu::{HINTS, Nav, Panel, Press, wrap};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM};
-use crate::input::{Bindings, Context, KeyCommand};
 use crate::render::console::Console;
+use crate::settings::fixed::{self, Answer};
 
 /// What an option means, for its shortcut keys and the first selection.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -133,18 +131,17 @@ impl Dialog {
         }
     }
 
-    /// The keys that pick option `i`, as bound: "y", "n, Esc".
-    fn keys_of(&self, i: usize, bindings: &Bindings) -> Vec<String> {
-        let key = |command| (bindings.keys_of(command).first()).map(|k| k.display());
+    /// The keys that pick option `i`: "y", "n, Esc".
+    fn keys_of(&self, i: usize) -> Vec<&'static str> {
         let mut keys = Vec::new();
         if self.by_role(Role::Accept) == Some(i) {
-            keys.extend(key(KeyCommand::Yes));
+            keys.push(fixed::YES);
         }
         if self.by_role(Role::Decline) == Some(i) {
-            keys.extend(key(KeyCommand::No));
+            keys.push(fixed::NO);
         }
         if self.by_role(Role::Cancel) == Some(i) {
-            keys.push("Esc".to_string());
+            keys.push("Esc");
         }
         keys
     }
@@ -173,16 +170,16 @@ impl DialogScreen {
         self.dialog.required
     }
 
-    pub fn handle(&mut self, press: &Press, bindings: &Bindings) -> ScreenAction {
+    pub fn handle(&mut self, press: &Press) -> ScreenAction {
         let pick = |i: Option<usize>| {
             i.and_then(|i| self.dialog.options.get(i))
                 .map(|o| o.outcome.clone())
         };
         let count = self.dialog.options.len();
-        let shortcut = (press.binding.as_ref()).and_then(|k| bindings.owner_in(Context::Dialog, k));
+        let shortcut = (press.binding.as_ref()).and_then(fixed::dialog);
         match (shortcut, press.nav) {
-            (Some(KeyCommand::Yes), _) => pick(self.dialog.by_role(Role::Accept)),
-            (Some(KeyCommand::No), _) => pick(self.dialog.by_role(Role::Decline)),
+            (Some(Answer::Yes), _) => pick(self.dialog.by_role(Role::Accept)),
+            (Some(Answer::No), _) => pick(self.dialog.by_role(Role::Decline)),
             (_, Nav::Back) if self.dialog.required => None,
             (_, Nav::Back) => pick(self.dialog.by_role(Role::Cancel)).or(Some(ScreenAction::Close)),
             (_, Nav::Enter) => pick(Some(self.selected)).or(Some(ScreenAction::Close)),
@@ -200,9 +197,9 @@ impl DialogScreen {
     }
 
     /// Option rows as drawn: the label, then its keys in parentheses.
-    fn rows(&self, bindings: &Bindings) -> Vec<String> {
+    fn rows(&self) -> Vec<String> {
         (self.dialog.options.iter().enumerate())
-            .map(|(i, o)| match self.dialog.keys_of(i, bindings).join(", ") {
+            .map(|(i, o)| match self.dialog.keys_of(i).join(", ") {
                 keys if keys.is_empty() => o.label.clone(),
                 keys => format!("{}  ({keys})", o.label),
             })
@@ -211,10 +208,10 @@ impl DialogScreen {
 
     /// Draws the dialog sized to fit its question, its options, and the footer: the question
     /// centered, the options in a column under it (`>` marks the selection).
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         let lines = wrap(&self.dialog.text, TEXT_W as i32);
-        let rows = self.rows(bindings);
-        let keys = Hints::of(bindings);
+        let rows = self.rows();
+        let keys = HINTS;
         let footer = match rows.len() {
             0 | 1 => format!("{} select", keys.confirm),
             _ => format!("{}/{} choose  {} select", keys.up, keys.down, keys.confirm),
@@ -279,52 +276,47 @@ mod tests {
 
     #[test]
     fn the_safe_option_is_the_default_and_esc_and_no_pick_it() {
-        let b = Bindings::default();
         let mut s = DialogScreen::new(quit());
-        assert_eq!(s.handle(&Press::nav(Nav::Enter), &b), ScreenAction::Close);
-        assert_eq!(s.handle(&Press::nav(Nav::Back), &b), ScreenAction::Close);
-        assert_eq!(s.handle(&key("n"), &b), ScreenAction::Close);
+        assert_eq!(s.handle(&Press::nav(Nav::Enter)), ScreenAction::Close);
+        assert_eq!(s.handle(&Press::nav(Nav::Back)), ScreenAction::Close);
+        assert_eq!(s.handle(&key("n")), ScreenAction::Close);
     }
 
     #[test]
     fn yes_or_the_selection_takes_the_accept_option() {
-        let b = Bindings::default();
         let yes = ScreenAction::Choose(MenuChoice::Quit);
-        assert_eq!(DialogScreen::new(quit()).handle(&key("y"), &b), yes);
+        assert_eq!(DialogScreen::new(quit()).handle(&key("y")), yes);
         let mut s = DialogScreen::new(quit());
-        assert_eq!(s.handle(&Press::nav(Nav::Up), &b), ScreenAction::Stay);
-        assert_eq!(s.handle(&Press::nav(Nav::Enter), &b), yes);
-        assert_eq!(s.handle(&Press::nav(Nav::Right), &b), ScreenAction::Stay);
-        assert_eq!(s.handle(&Press::nav(Nav::Enter), &b), ScreenAction::Close);
+        assert_eq!(s.handle(&Press::nav(Nav::Up)), ScreenAction::Stay);
+        assert_eq!(s.handle(&Press::nav(Nav::Enter)), yes);
+        assert_eq!(s.handle(&Press::nav(Nav::Right)), ScreenAction::Stay);
+        assert_eq!(s.handle(&Press::nav(Nav::Enter)), ScreenAction::Close);
     }
 
     #[test]
     fn other_keys_do_nothing() {
-        let b = Bindings::default();
         let mut s = DialogScreen::new(quit());
-        assert_eq!(s.handle(&key("q"), &b), ScreenAction::Stay);
-        assert_eq!(s.handle(&key("1"), &b), ScreenAction::Stay);
+        assert_eq!(s.handle(&key("q")), ScreenAction::Stay);
+        assert_eq!(s.handle(&key("1")), ScreenAction::Stay);
     }
 
     #[test]
     fn a_required_dialog_ignores_esc_and_is_answered_by_an_option() {
-        let b = Bindings::default();
         let dialog = Dialog::new("Kobolds", "They have not seen you.")
             .plain("Lie in wait", MenuChoice::Quit)
             .plain("Stand and fight", MenuChoice::SaveToMenu)
             .required();
         let mut s = DialogScreen::new(dialog);
-        assert_eq!(s.handle(&Press::nav(Nav::Back), &b), ScreenAction::Stay);
-        assert_eq!(s.handle(&key("n"), &b), ScreenAction::Stay);
+        assert_eq!(s.handle(&Press::nav(Nav::Back)), ScreenAction::Stay);
+        assert_eq!(s.handle(&key("n")), ScreenAction::Stay);
         assert_eq!(
-            s.handle(&Press::nav(Nav::Enter), &b),
+            s.handle(&Press::nav(Nav::Enter)),
             ScreenAction::Choose(MenuChoice::Quit)
         );
     }
 
     #[test]
     fn options_are_parameters_with_roles_and_any_outcome() {
-        let b = Bindings::default();
         let then = Dialog::yes_no("Sure", "Really?", "Yes", MenuChoice::Quit, "No");
         let dialog = Dialog::new("Three ways", "Which?")
             .accept("First", ScreenAction::Open(ScreenName::Help))
@@ -332,56 +324,38 @@ mod tests {
             .decline("Third", MenuChoice::SaveToMenu);
         let ask = || DialogScreen::new(dialog.clone());
         assert_eq!(
-            ask().handle(&key("y"), &b),
+            ask().handle(&key("y")),
             ScreenAction::Open(ScreenName::Help)
         );
         assert_eq!(
-            ask().handle(&key("n"), &b),
+            ask().handle(&key("n")),
             ScreenAction::Choose(MenuChoice::SaveToMenu)
         );
         // Without a Cancel option Esc declines, and the Decline option is selected first.
         assert_eq!(
-            ask().handle(&Press::nav(Nav::Back), &b),
+            ask().handle(&Press::nav(Nav::Back)),
             ScreenAction::Choose(MenuChoice::SaveToMenu)
         );
         let mut s = ask();
-        s.handle(&Press::nav(Nav::Up), &b);
-        assert_eq!(
-            s.handle(&Press::nav(Nav::Enter), &b),
-            ScreenAction::from(then)
-        );
+        s.handle(&Press::nav(Nav::Up));
+        assert_eq!(s.handle(&Press::nav(Nav::Enter)), ScreenAction::from(then));
         // A plain option has no shortcut, and with no options at all Enter and Esc close.
         let mut empty = DialogScreen::new(Dialog::new("", "Nothing to choose."));
-        assert_eq!(empty.handle(&key("y"), &b), ScreenAction::Stay);
-        assert_eq!(
-            empty.handle(&Press::nav(Nav::Enter), &b),
-            ScreenAction::Close
-        );
-        assert_eq!(
-            empty.handle(&Press::nav(Nav::Back), &b),
-            ScreenAction::Close
-        );
+        assert_eq!(empty.handle(&key("y")), ScreenAction::Stay);
+        assert_eq!(empty.handle(&Press::nav(Nav::Enter)), ScreenAction::Close);
+        assert_eq!(empty.handle(&Press::nav(Nav::Back)), ScreenAction::Close);
     }
 
     #[test]
-    fn the_shortcuts_are_rebindable_and_shown_beside_their_options() {
-        let mut b = Bindings::default();
+    fn the_shortcuts_are_fixed_and_shown_beside_their_options() {
         assert_eq!(
-            DialogScreen::new(quit()).rows(&b),
+            DialogScreen::new(quit()).rows(),
             ["Quit  (y)", "Stay  (n, Esc)"]
         );
-        b.bind_primary(KeyCommand::Yes, KeyBinding::Char("j".into()))
-            .expect("j is free in the dialog");
-        b.bind_primary(KeyCommand::No, KeyBinding::Char("x".into()))
-            .expect("x is free in the dialog");
         let mut s = DialogScreen::new(quit());
-        assert_eq!(s.handle(&key("y"), &b), ScreenAction::Stay);
-        assert_eq!(s.handle(&key("x"), &b), ScreenAction::Close);
-        assert_eq!(
-            s.handle(&key("j"), &b),
-            ScreenAction::Choose(MenuChoice::Quit)
-        );
-        assert_eq!(s.rows(&b), ["Quit  (j)", "Stay  (x, Esc)"]);
+        assert_eq!(s.handle(&key("x")), ScreenAction::Stay);
+        assert_eq!(s.handle(&key("n")), ScreenAction::Close);
+        assert_eq!(s.handle(&key("y")), ScreenAction::Choose(MenuChoice::Quit));
     }
 
     #[test]
@@ -394,7 +368,7 @@ mod tests {
             .cancel("Stay", ScreenAction::Close);
         let mut console = Console::default();
         console.resize(80, 24);
-        DialogScreen::new(dialog).draw(&mut console, &Bindings::default());
+        DialogScreen::new(dialog).draw(&mut console);
         let rows = text(&console);
         let shown = rows.join("\n");
         let words: Vec<&str> = (rows.iter())

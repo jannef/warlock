@@ -51,9 +51,7 @@ pub(super) const QUEST: &str = "quest-";
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Stage {
-    /// Given. (An offer of an older save, `offered`, waiting for an answer that no longer
-    /// exists, loads as given.)
-    #[serde(alias = "offered")]
+    /// Given.
     Active,
     /// Done (a repeatable one may be offered again).
     Done,

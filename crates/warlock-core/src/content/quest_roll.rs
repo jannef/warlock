@@ -527,11 +527,8 @@ pub(super) fn parse_variants(
         return Err("a quest's variants are at least one".into());
     }
     // The draw sums the weights in a `u32`.
-    if (variants.iter())
-        .try_fold(0u32, |sum, v| sum.checked_add(v.weight))
-        .is_none()
-    {
-        return Err("the variants' weights add up past a u32".into());
+    if crate::rng::weight_sum(variants.iter().map(|v| v.weight)).is_none() {
+        return Err(crate::rng::WEIGHTS_OVERFLOW.into());
     }
     Ok(variants)
 }

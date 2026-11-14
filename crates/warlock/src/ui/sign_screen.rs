@@ -10,10 +10,9 @@
 //! not born on one. Like every screen it is a plain state machine, testable without a window.
 
 use super::chargen_screen::{Draft, WIDTH, adjustments};
-use super::menu::{Hints, Nav, Panel, Press, wrap};
+use super::menu::{HINTS, Nav, Panel, Press, wrap};
 use super::screens::{ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
-use crate::input::Bindings;
 use crate::render::console::Console;
 use warlock_core::content::Content;
 
@@ -196,7 +195,7 @@ impl SignScreen {
         lines
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         // Rows: margin, the lines, a gap, the footer, the frame.
         let inner = WIDTH.min(console.cols() as i32) - 4;
         let lines = self.lines(inner - 2);
@@ -213,7 +212,7 @@ impl SignScreen {
                 console.print(x + 1 + at, y, line, look.color());
             }
         }
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         panel.footer(console, &format!("{} continue   Esc back", keys.confirm));
     }
 }
@@ -249,7 +248,7 @@ mod tests {
     fn text(screen: &SignScreen) -> String {
         let mut console = Console::default();
         console.resize(80, 30);
-        screen.draw(&mut console, &Bindings::default());
+        screen.draw(&mut console);
         (0..console.rows() as i32)
             .map(|y| {
                 (0..console.cols() as i32)

@@ -89,6 +89,8 @@ mod learning;
 pub mod leaving;
 mod level;
 mod light;
+#[cfg(test)]
+mod loader_check_tests;
 mod material;
 pub mod mimic;
 #[cfg(test)]
@@ -117,6 +119,7 @@ mod ranged;
 mod recipe;
 #[cfg(test)]
 mod recipe_tests;
+pub mod required;
 mod resource;
 mod rig;
 mod rod;
@@ -191,6 +194,7 @@ mod unseen;
 mod vault;
 mod vault_turn;
 mod vision;
+mod walk;
 mod wand;
 mod weapon_ability;
 mod weapon_skill;
@@ -317,6 +321,7 @@ pub use recipe::{
     EnchantKind, InputKind, MOST_CRYSTALS, PartSource, ProfessionText, RecipeCount, RecipeDef,
     RecipeId, RecipeInput, RecipePart, RecipeResult, RecipeSettings, RecipeUse, Recipes,
 };
+pub use required::RequiredIds;
 pub use resource::{Build, MAX_RESOURCE, MaxFrom, OverTime, ResourceDef, ResourceId};
 pub use rig::{RigDef, RigId, RigRules, RigTakes};
 pub use rod::{Rod, RodDoes, RodEffect, RodShape};
@@ -403,6 +408,7 @@ use crate::stats::Stats;
 use crate::weapon_skills::WeaponSkills;
 use level::{LegendEntry, legend_char};
 use serde::Deserialize;
+use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::path::Path;
@@ -435,10 +441,13 @@ mod builtin {
     include!(concat!(env!("OUT_DIR"), "/builtin_assets.rs"));
 }
 
-/// Raw content files keyed by path relative to the assets root, e.g. `levels/hub.toml`.
+/// Raw content files keyed by path relative to the assets root, e.g. `data/creatures/rat.toml`.
 #[derive(Clone, Debug, Default)]
 pub struct ContentFiles {
     files: BTreeMap<String, String>,
+    /// The paths a loader has looked up (#1530): [`Content::load`] fails on any file it was
+    /// given that is not among them ([`ContentFiles::check_all_read`]).
+    read: RefCell<BTreeSet<String>>,
 }
 
 impl ContentFiles {
@@ -451,28 +460,14 @@ impl ContentFiles {
         files
     }
 
-    /// Reads the `campaigns/`, `data/`, `levels/`, `scenarios/`, and `vaults/` TOML files under
-    /// `root`, subdirectories included (`data/creatures/kobold.toml`): the same set, under the
-    /// same paths, as `build.rs` embeds.
+    /// Reads the `campaigns/`, `data/`, and `vaults/` TOML files under `root`, subdirectories
+    /// included (`data/creatures/kobold.toml`): the same set, under the same paths, as `build.rs`
+    /// embeds from `assets/` (one walk, `content/walk.rs`), the test world left out without the
+    /// `showcase` feature.
     pub fn from_dir(root: &Path) -> std::io::Result<Self> {
-        fn collect(dir: &Path, rel: &str, files: &mut ContentFiles) -> std::io::Result<()> {
-            let Ok(entries) = std::fs::read_dir(dir) else {
-                return Ok(());
-            };
-            for entry in entries {
-                let path = entry?.path();
-                let name = path.file_name().unwrap_or_default().to_string_lossy();
-                if path.is_dir() {
-                    collect(&path, &format!("{rel}/{name}"), files)?;
-                } else if path.extension().is_some_and(|e| e == "toml") {
-                    files.insert(&format!("{rel}/{name}"), &std::fs::read_to_string(&path)?);
-                }
-            }
-            Ok(())
-        }
         let mut files = Self::default();
-        for dir in [CAMPAIGNS, "data", "levels", "scenarios", "vaults"] {
-            collect(&root.join(dir), dir, &mut files)?;
+        for (rel, path) in walk::walk(root, cfg!(feature = "showcase"), &mut |_| {})? {
+            files.insert(&rel, &std::fs::read_to_string(&path)?);
         }
         Ok(files)
     }
@@ -494,6 +489,13 @@ impl ContentFiles {
     /// (subdirectories included) in path order, then every campaign's `data/<name>/` the same
     /// way, the campaigns in [`ContentFiles::campaign_order`]. Each is `(path, text)`.
     pub fn table<'a>(&'a self, name: &str) -> impl Iterator<Item = (&'a str, &'a str)> {
+        let all = self.table_unread(name);
+        self.mark(all.iter().map(|(p, _)| *p));
+        all.into_iter()
+    }
+
+    /// [`ContentFiles::table`], without counting its files as read.
+    fn table_unread<'a>(&'a self, name: &str) -> Vec<(&'a str, &'a str)> {
         let single = format!("data/{name}.toml");
         let mut all: Vec<(&str, &str)> = (self.files.get_key_value(&single).into_iter())
             .map(|(p, t)| (p.as_str(), t.as_str()))
@@ -510,13 +512,13 @@ impl ContentFiles {
                 .filter(|(p, _)| p.ends_with(".toml"));
             all.extend(files.map(|(p, t)| (p.as_str(), t.as_str())));
         }
-        all.into_iter()
+        all
     }
 
     /// Rewrites every file of table `name` with `edit` (tests: a built-in creature with a line
     /// changed, whichever file it is in).
     pub fn edit_table(&mut self, name: &str, mut edit: impl FnMut(&str) -> String) {
-        let edited: Vec<(String, String)> = (self.table(name))
+        let edited: Vec<(String, String)> = (self.table_unread(name).into_iter())
             .map(|(p, t)| (p.to_string(), edit(t)))
             .collect();
         for (path, text) in edited {
@@ -530,7 +532,37 @@ impl ContentFiles {
     }
 
     fn get_optional(&self, path: &str) -> Option<&str> {
+        self.mark([path]);
         self.files.get(path).map(String::as_str)
+    }
+
+    /// Counts `paths` as read by a loader.
+    fn mark<'a>(&self, paths: impl IntoIterator<Item = &'a str>) {
+        let mut read = self.read.borrow_mut();
+        for path in paths {
+            if !read.contains(path) {
+                read.insert(path.to_string());
+            }
+        }
+    }
+
+    /// Fails on the first file no loader read (#1530): a misnamed file (`data/feints.toml`) or
+    /// directory (`data/town/`), or a file in a place nothing looks, would otherwise load cleanly
+    /// with its feature quietly off. `README.toml` files, comments for the authors, are never
+    /// read. Checks whatever set was loaded, so a file added on top of the built-in set is held to
+    /// it too.
+    fn check_all_read(&self) -> Result<(), ContentError> {
+        let read = self.read.borrow();
+        let unread = (self.files.keys())
+            .filter(|p| !p.ends_with("/README.toml") && p.as_str() != "README.toml")
+            .find(|p| !read.contains(p.as_str()));
+        match unread {
+            Some(path) => Err(ContentError::new(
+                path,
+                "no loader reads this file: is its name or directory misspelt?",
+            )),
+            None => Ok(()),
+        }
     }
 
     /// Files directly under `dir/` with their stem (`levels/hub.toml` → `hub`), then those
@@ -548,6 +580,7 @@ impl ContentFiles {
         for campaign in self.campaign_order() {
             all.extend(under(format!("{CAMPAIGNS}/{campaign}/{dir}/")));
         }
+        self.mark(all.iter().map(|(p, ..)| *p));
         all
     }
 }
@@ -905,6 +938,8 @@ pub struct Content {
     callings: Vec<CallingDef>,
     /// Shops (`data/shops.toml`); none without the file.
     shops: Option<Shops>,
+    /// The ids the engine names in code, resolved at load (`content/required.rs`).
+    ids: RequiredIds,
 }
 
 impl Content {
@@ -914,6 +949,7 @@ impl Content {
     }
 
     pub fn load(files: &ContentFiles) -> Result<Self, ContentError> {
+        files.read.borrow_mut().clear();
         let mut content = Content {
             terrain: Vec::new(),
             terrain_ids: BTreeMap::new(),
@@ -1034,6 +1070,7 @@ impl Content {
             towns: Vec::new(),
             callings: Vec::new(),
             shops: None,
+            ids: RequiredIds::default(),
         };
         content.campaigns = campaign::parse(files)?;
         content.load_plurals(files)?;
@@ -1314,7 +1351,7 @@ impl Content {
         }
         let path = "data/gear_condition.toml";
         if let Some(text) = files.get_optional(path) {
-            content.gear_condition = GearConditions::parse(path, text)?;
+            content.gear_condition = GearConditions::parse(path, text, &content)?;
         }
         let path = "data/steal.toml";
         if let Some(text) = files.get_optional(path) {
@@ -1552,10 +1589,12 @@ impl Content {
 
         content.callings = calling::parse(files.table("callings"), &content)?;
         content.encounter_tables = encounter::parse(files.table("encounters"), &content)?;
+        content.ids = required::resolve(&content)?;
         content.validate()?;
         content.check_topic_routes()?;
         content.check_topic_callings()?;
         content.check_campaigns()?;
+        files.check_all_read()?;
         Ok(content)
     }
 
@@ -1930,10 +1969,8 @@ impl Content {
                 })?;
             let blood = creature::blood(spec.blood.as_deref())
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
-            let immune = (spec.immune.iter())
-                .map(|s| self.status_id(s))
-                .collect::<Option<Vec<_>>>()
-                .ok_or_else(|| err(format!("creature `{}`: immune: unknown status", spec.id)))?;
+            let (immune, immune_kinds) = creature::immunities(self, &spec.immune)
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             if let Some(animated) = &mut spec.animated {
                 animated.family = CreatureId(id.0 - u16::from(animated.member));
             }
@@ -1960,6 +1997,7 @@ impl Content {
                 weapon_skills,
                 resist,
                 immune,
+                immune_kinds,
                 spells: creature_spells::resolve(self, &spec).map_err(err)?,
                 faction: self.creature_faction(&spec).map_err(err)?,
                 factions: self.creature_factions(&spec).map_err(err)?,
@@ -2773,7 +2811,7 @@ impl Content {
     /// not marked `stray = false`.
     pub fn may_stray(&self, c: CreatureId) -> bool {
         let def = self.creature(c);
-        let player = self.creature_id("player");
+        let player = self.creature_id(required::PLAYER);
         def.stray
             && !def.unique
             && def.animated.is_none()
@@ -3114,6 +3152,11 @@ impl Content {
         &self.creatures[usize::from(id.0)]
     }
 
+    /// The ids the engine names in code (`content/required.rs`), resolved at load.
+    pub fn ids(&self) -> &RequiredIds {
+        &self.ids
+    }
+
     pub fn creature_id(&self, name: &str) -> Option<CreatureId> {
         self.creature_ids.get(name).copied()
     }
@@ -3168,12 +3211,6 @@ impl Content {
     pub fn unarmed_damage(&self) -> Option<DamageTypeId> {
         let i = self.damage_types.iter().position(|t| t.unarmed)?;
         u8::try_from(i).ok().map(DamageTypeId)
-    }
-
-    /// Whether damage of `kind` is physical, which Protection soaks (untyped damage counts as
-    /// physical: it is soaked as every blow was before damage had types).
-    pub fn is_physical(&self, kind: Option<DamageTypeId>) -> bool {
-        kind.is_none_or(|k| self.damage_type(k).physical)
     }
 
     /// The kinds `names` name (`damage_type` in data: one or two type ids), checked; none
@@ -3722,7 +3759,7 @@ impl Content {
     ) -> Vec<danger::Candidate> {
         let mut candidates = self.candidates(kinds, met);
         if odds.neutral < 100 {
-            let player = self.creature_id("player");
+            let player = self.creature_id(required::PLAYER);
             for (c, _, factor, _) in &mut candidates {
                 if player.is_some_and(|p| self.stance(*c, p) != faction::Stance::Hostile) {
                     // At least 1 unless 0 % (a rare type at a small share still comes).
@@ -4932,8 +4969,9 @@ mod tests {
         assert_eq!(content.object_id("nail"), Some(ObjectId(0)));
     }
 
-    /// `from_dir` reads subdirectories like `build.rs` embeds them: the same paths, the built-in
-    /// set being exactly what is on disk under `assets/`.
+    /// `from_dir` reads subdirectories like `build.rs` embeds them (one walk, `walk.rs`): the
+    /// same paths, outside `campaigns/`, `data/`, and `vaults/` nothing, the built-in set being
+    /// exactly what is on disk under `assets/` (with the `showcase` feature or without).
     #[test]
     fn from_dir_reads_nested_directories_like_the_build() {
         let root = std::env::temp_dir().join(format!("warlock-content-{}", std::process::id()));
@@ -4954,7 +4992,6 @@ mod tests {
                 "data/creatures/deep/bat.toml",
                 "data/creatures/rat.toml",
                 "data/legend.toml",
-                "levels/hub.toml",
             ]
         );
         let table: Vec<(&str, &str)> = files.table("creatures").collect();

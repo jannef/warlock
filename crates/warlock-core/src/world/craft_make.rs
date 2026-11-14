@@ -23,10 +23,11 @@
 //!   optional part makes the recipe's `brittle` object, of the other parts' chosen materials.
 //! - **The work**: the recipe's `seconds` (Fletcher's share of it for the arrows), in turns of
 //!   [`ActionKind::Craft`] ([`World::keep_at`]; on the overworld watched as a forage is); an
-//!   interruption costs only the time. Done, the plan is made again from the pack ("You have
-//!   nothing left to work with." if it no longer holds), then one check (two gameplay draws, the
-//!   natural roll): the profession's stat modifier, what the skill gives of [`Effect::Craft`]
-//!   (that skill's alone), the talents' checks of the stat (and Fletcher's for the arrows),
+//!   interruption costs only the time. Done, the picks are found again (`work_on.rs`) and the
+//!   plan made again from the pack ("You have nothing left to work with." if either fails), then
+//!   one check (two gameplay draws, the natural roll): the profession's stat modifier, what the
+//!   skill gives of [`Effect::Craft`] (that skill's alone), the talents' checks of the stat (and
+//!   Fletcher's for the arrows), a bound lure's boon of the skill (`World::binding_boon`),
 //!   against the recipe's `difficulty` plus the `work` of the main chosen part's material. The
 //!   profession is the recipe's directory's (a flint knife and a steel-headed arrow are
 //!   Woodcraft's work, by Dexterity), its stat and verb its row's in `data/recipes.toml` where
@@ -1034,7 +1035,8 @@ impl World {
 
     /// Works turn after turn until the work is done or something stops it (module docs): its
     /// last turn cut short to end exactly when its time is up.
-    pub(super) fn make(&mut self, work: Crafting, events: &mut Vec<Event>) {
+    pub(super) fn make(&mut self, mut work: Crafting, events: &mut Vec<Event>) {
+        let on = self.work_on(work.picks());
         let until = self.state.time + Duration::seconds(u64::from(work.seconds));
         let turn = self.price_of(self.state.player, ActionKind::Craft);
         let ended = self.keep_at(
@@ -1049,7 +1051,13 @@ impl World {
         );
         match ended {
             Ended::Died => {}
-            _ if self.state.time >= until => self.crafted(work),
+            _ if self.state.time >= until => match self.worked_on(&on) {
+                Some(now) => {
+                    work.picks[..now.len()].copy_from_slice(&now);
+                    self.crafted(work);
+                }
+                None => self.say("You have nothing left to work with."),
+            },
             Ended::Came(came) => {
                 let text = format!("{}; you put down your work.", self.came_line(came));
                 self.say(text);
@@ -1067,6 +1075,7 @@ impl World {
             + me.skill_effect_of(content, def.skill, Effect::Craft)
             + me.talent_mods(content).check(stat)
             + fletch::fletcher_check(content, me, def)
+            + self.binding_boon(def.skill)
     }
 
     /// The work of `work` is done: the plan again, the check, what comes of it, the mark.

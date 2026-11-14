@@ -53,14 +53,15 @@ to open, read keys for, or draw one:
   on the inventory or equipment screen beneath (`ScreenStack::looked_item`; the first stack
   without one, as `--screen describe` opens it over the inventory).
 - **Input**: `input::route_keys` is the one reader of `KeyboardInput`. Stack not empty: the press
-  goes to the top screen as a `Press` whose `nav` comes from the `Context::Menu` bindings (Esc is
-  always `Nav::Back`; see `docs/dev/settings.md` for contexts: a screen never matches a key code or
-  a character, except list letters and digits and the typed seed; a numpad key no `Context::Menu`
-  binding claims is the arrows' fixed alias there, `menu::numpad_nav`: 8, 2, 4, 6 are Up, Down,
-  Left, Right, and NumEnter is Confirm's own binding, #1197) and whose `edit` comes from the
-  `Context::Text` bindings (Esc is always `Edit::Back`), for the text field, which reads only
+  goes to the top screen as a `Press` whose `nav` comes from the fixed menu keys
+  (`settings::fixed::menu`, #1533) and `Back`'s bindings (Esc is always `Nav::Back`; see
+  `docs/dev/settings.md`: a screen never matches a key code or a character, except list letters
+  and digits and the typed seed; a numpad key nothing else claims is the arrows' fixed alias there,
+  `menu::numpad_nav`: 8, 2, 4, 6 are Up, Down, Left, Right, and NumEnter is a fixed Enter, #1197)
+  and whose `edit` comes from the fixed text keys (`settings::fixed::text`) and `TextBack`'s
+  bindings (Esc is always `Edit::Back`), for the text field, which reads only
   `edit` and `text` (the key event's text, literal; else the character its key stands for), so
-  every key not bound there types; held keys type and erase but never accept
+  every other key types; held keys type and erase but never accept
   (`ScreenStack::handle` →
   `ScreenAction`: stay, close, open, a
   `MenuChoice`, or `Act(Action)`: close and apply a gameplay action, e.g. `pickup:ac`,
@@ -89,8 +90,7 @@ to open, read keys for, or draw one:
   text).accept(..).decline(..).cancel(..).plain(..)`, or `Dialog::yes_no(title, text, yes,
   outcome, no)` for a plain question. It sizes itself to its content and draws the options in
   a column, each with its shortcut keys. Keys: the menu keys move the selection, Enter takes it;
-  the `Context::Dialog` commands `KeyCommand::Yes`/`No` (`y`/`n` by default, rebindable, in their
-  own context) pick the Accept option and the Decline
+  the fixed `y` and `n` (`settings::fixed::dialog`, #1533) pick the Accept option and the Decline
   option (else Cancel); Esc picks Cancel (else Decline; else closes), except in a dialog that must
   be answered (`Dialog::required`), where Esc does nothing; the safe option (Cancel,
   else Decline) is selected first. A menu choice pops the dialog and is applied as usual, an
@@ -123,10 +123,9 @@ to open, read keys for, or draw one:
   position is its number), its panel sized with `panel_width`, and one `draw_tabs` call in its
   `draw`; never a separate way to switch.
   Sub-steps of a page (`EquipItem`, pick-up/drop/throw lists) are not pages and keep their
-  number keys. The keys are the `Context::Pages` commands `Page(1..9)`, `NextPage` (Shift
-  reverses), `PrevPage`: existing commands, kept as they are (new screen keys are fixed, never `KeyCommand`s; `KeyCommand::context`: keys are unique
-  per context, so Tab is `NextTarget` in play and `NextPage` here; `Bindings::owner_in` and
-  `lookup` read one context). `Press::shift` carries Shift from the router. The dialogue screen
+  number keys. The keys are fixed (`settings::fixed::page`, #1533): the top-row digits `1` to `9`
+  and Tab (Shift reverses), with `PrevPage` (`Context::Pages`, unbound) the one rebindable
+  back-style command. `Press::shift` carries Shift from the router. The dialogue screen
   is no page: its digits ask about topics, the top row's only (`Press::is_numpad`).
   **The numpad on screens** (#1197): it is navigation, never page switching, matched by
   physical key (`KeyCode::NumpadN`) whatever Num Lock says. winit 0.30 reports a numpad key with
@@ -181,8 +180,7 @@ to open, read keys for, or draw one:
   first) and at most 26 items; letters run down a page from `a` and restart on every page
   (`at_letter`), a class split across pages repeats its header, and the frame shows `Page 2/3`
   (`draw_label`). The list's cursor picks the page shown; Up/Down move it across pages, and the
-  `Context::Menu` commands `NextListPage` (`>`, PageDown) and `PrevListPage` (`<`, PageUp),
-  `Nav::NextPage`/`PrevPage`, turn the page (cursor to its first item; no wrapping). Drawing knows
+  fixed menu keys `>` (PageDown) and `<` (PageUp), `Nav::NextPage`/`PrevPage`, turn the page (cursor to its first item; no wrapping). Drawing knows
   the console, presses do not: `route_keys` keeps `ScreenStack::console` current and the stack
   calls the screen's `fit` before each press, so a letter names what is drawn even before the
   first draw (`--keys`). Screens hold stack positions (`Item::position`), never letters, and

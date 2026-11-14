@@ -88,18 +88,6 @@ impl FamiliarRules {
         out
     }
 
-    /// Every beast the races' lists may give, each once (the rares have no story line of their
-    /// own: the companion chapter's plain line tells them).
-    pub fn common_starts(&self) -> Vec<CreatureId> {
-        let mut out: Vec<CreatureId> = Vec::new();
-        for id in self.by_race.iter().flat_map(|(_, l)| l.iter()) {
-            if !out.contains(id) {
-                out.push(*id);
-            }
-        }
-        out
-    }
-
     /// How a familiar of type `creature` arrives ("winds about your ankles").
     pub fn arrives(&self, creature: CreatureId) -> Option<&str> {
         (self.arrives.iter())

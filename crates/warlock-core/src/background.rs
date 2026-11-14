@@ -171,19 +171,9 @@ pub fn tell(content: &Content, seed: u64, witness: &Witness) -> Story {
                 .collect();
             tier = t.below();
         }
-        let total: u32 = pool.iter().map(|l| l.weight).sum();
-        if total == 0 {
+        let Some(&line) = rng.weighted(&pool, |l| l.weight) else {
             continue;
-        }
-        let mut at = rng.below(total);
-        let line = *pool
-            .iter()
-            .find(|l| {
-                let here = at < l.weight;
-                at = at.saturating_sub(l.weight);
-                here
-            })
-            .expect("the draw is below the total weight");
+        };
         for effect in &line.effects {
             story
                 .effects

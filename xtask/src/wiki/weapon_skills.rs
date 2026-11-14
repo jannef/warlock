@@ -245,6 +245,7 @@ pub(super) fn rank_table(table: &WeaponSkillTable, id: WeaponSkillId) -> String 
         })
         .collect();
     let two = table.two_weapons();
+    #[allow(clippy::type_complexity)]
     let hands: [(&str, i32, fn(&Benefit) -> u8); 2] = [
         ("Main hand", two.main, |b| b.ease_main),
         ("Off hand", two.off, |b| b.ease_off),
@@ -265,6 +266,7 @@ pub(super) fn rank_table(table: &WeaponSkillTable, id: WeaponSkillId) -> String 
             .collect();
         columns.push(("Bash penalty", cells));
     }
+    #[allow(clippy::type_complexity)]
     let banes: [(&str, u8, fn(&Benefit) -> u8); 2] = [
         ("Slower attacks", shields.slow, |b| b.ease_slow),
         ("Spell failure", shields.spell_failure, |b| b.ease_spell),

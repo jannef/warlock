@@ -10,14 +10,14 @@
 //! bash = []
 //!
 //! [menu] # Menus and screens
-//! menu_up = ["ArrowUp", "k"]
+//! back = []
 //! ```
 //!
 //! [`export`] writes every rebindable command (an empty list: no key). [`import`] changes only
 //! the commands a file lists, as rebinding in Controls does: a key another command of the same
 //! context has moves to the listed one, a key two listed commands claim goes to the first in the
 //! controls screen's order, unknown commands and keys are skipped with a warning, and the
-//! lockout rules hold (Esc cannot be bound; the vital commands keep a key). A file without a
+//! lockout rules hold (Esc cannot be bound; the menu keys are fixed). A file without a
 //! `version` is version 0: command ids at the top level, or a `[bindings]` table as in
 //! `settings.toml`.
 //!
@@ -25,7 +25,7 @@
 //! `--export-keys` / `--import-keys`, `main.rs`), and on the web a download and a file picker.
 
 use crate::input::{Bindings, Context, KeyBinding, KeyCommand};
-use crate::settings::keys::{REBINDABLE, RETIRED, VITAL};
+use crate::settings::keys::{REBINDABLE, RETIRED, RETIRED_CONTEXTS};
 use std::path::PathBuf;
 
 /// The file's name in the config folder, and the web download's.
@@ -124,7 +124,7 @@ fn listed(table: &toml::Table, warnings: &mut Vec<String>) -> Vec<(KeyCommand, V
         let holds_commands =
             name == "bindings" || Context::ALL.iter().any(|c| c.id() == name.as_str());
         match value {
-            _ if name == "version" => {}
+            _ if name == "version" || RETIRED_CONTEXTS.contains(&name.as_str()) => {}
             toml::Value::Table(inner) if holds_commands => {
                 let place = |id: &String| format!("[{name}] {id}");
                 entries.extend(inner.iter().map(|(id, v)| (place(id), id.as_str(), v)));
@@ -159,10 +159,6 @@ fn listed(table: &toml::Table, warnings: &mut Vec<String>) -> Vec<(KeyCommand, V
         }
         if keys.is_empty() && !items.is_empty() {
             warnings.push(format!("{place}: no usable keys; left as it was"));
-        } else if keys.is_empty() && VITAL.contains(&command) {
-            warnings.push(format!(
-                "{place}: needed to reach the controls; left as it was"
-            ));
         } else if listed.iter().any(|(c, _)| *c == command) {
             warnings.push(format!("{place}: listed twice; the first kept"));
         } else {
@@ -195,14 +191,6 @@ fn apply(
                     command.name(),
                     owner.name()
                 )),
-                // A command listed later gets its own keys anyway.
-                Some(owner) if !later.contains(&owner) && bindings.keeps(owner, &key) => {
-                    warnings.push(format!(
-                        "{shown} is the only key for {}; not moved to {}",
-                        owner.name(),
-                        command.name()
-                    ));
-                }
                 Some(owner) => {
                     bindings.0.retain(|(k, c)| !(*c == owner && *k == key));
                     if !later.contains(&owner) && bindings.keys_of(owner).is_empty() {
@@ -217,12 +205,10 @@ fn apply(
             }
         }
         let same = bindings.keys_of(command).into_iter().eq(kept.iter());
-        if same || (kept.is_empty() && VITAL.contains(&command)) {
-            continue;
+        if !same {
+            bindings.set_keys(command, kept);
         }
-        bindings.set_keys(command, kept);
     }
-    bindings.ensure_vital();
 }
 
 /// Where Export keys and Import keys go in this launch.
@@ -425,8 +411,8 @@ mod tests {
     fn customized() -> Bindings {
         let mut b = Bindings::default();
         b.bind_primary(KeyCommand::Move(Dir::N), ch("w")).unwrap();
-        b.bind_primary(KeyCommand::MenuUp, ch("w")).unwrap();
-        b.bind_primary(KeyCommand::Loose, ch("f")).unwrap();
+        b.bind_primary(KeyCommand::Back, ch("w")).unwrap();
+        b.bind_primary(KeyCommand::PrevTarget, ch("f")).unwrap();
         b.bind_primary(KeyCommand::Quit, ch("Q")).unwrap();
         // Modified keys (#1323).
         let chord = |text| KeyBinding::from_text(text).unwrap();
@@ -467,8 +453,8 @@ mod tests {
         for (command, key) in [
             (KeyCommand::Wait, "k"),
             (KeyCommand::Descend, "w"),
-            (KeyCommand::MenuDown, "w"),
-            (KeyCommand::Yes, "Q"),
+            (KeyCommand::TextBack, "w"),
+            (KeyCommand::PrevPage, "Q"),
         ] {
             scrambled.bind_primary(command, ch(key)).unwrap();
         }
@@ -502,8 +488,12 @@ mod tests {
             close = ["Banana"]
             kick = "K"
             [menu]
-            confirm = ["Escape"]
+            back = ["Escape"]
             menu_up = []
+            [dialog]
+            yes = ["j"]
+            [prompt]
+            rest_hour = ["F1"]
         "#;
         let report = import(&mut b, text).unwrap();
         assert_eq!(report.changed, [KeyCommand::Open]);
@@ -515,8 +505,7 @@ mod tests {
             "[play] open: \"Banana\"",
             "[play] close: no usable keys",
             "[play] kick: expected a list",
-            "[menu] confirm: no usable keys",
-            "[menu] menu_up: needed to reach the controls",
+            "[menu] back: no usable keys",
         ] {
             assert!(
                 report.warnings.iter().any(|w| w.contains(needle)),
@@ -524,12 +513,19 @@ mod tests {
                 report.warnings
             );
         }
-        // Esc stays Cancel's, and Choose keeps its keys.
+        // The commands that became fixed keys, and their tables, go without a word (#1533).
+        for quiet in ["menu_up", "yes", "rest_hour", "dialog", "prompt"] {
+            assert!(
+                !report.warnings.iter().any(|w| w.contains(quiet)),
+                "{quiet}: {:?}",
+                report.warnings
+            );
+        }
+        // Esc stays Cancel's.
         assert_eq!(
             b.keys_of(KeyCommand::Cancel),
             vec![&KeyBinding::Code(KeyCode::Escape)]
         );
-        assert_eq!(b.keys_of(KeyCommand::Confirm).len(), 2);
     }
 
     #[test]
@@ -542,9 +538,9 @@ mod tests {
             look = ["x", "Y"]
             open = ["k"]
             [menu]
-            mark = ["ArrowUp"]
+            back = ["ArrowUp"]
             [aim]
-            loose = ["o"]
+            prev_target = ["o"]
         "#;
         let report = import(&mut b, text).unwrap();
         // Two listed commands claim `x`: the first in the controls screen's order keeps it.
@@ -553,16 +549,19 @@ mod tests {
         // `k` moves from Kick, which has no key left; `o` while aiming leaves Open alone.
         assert!(b.keys_of(KeyCommand::Kick).is_empty());
         assert_eq!(b.owner(&ch("o")), None, "Open took k instead");
-        assert_eq!(b.owner_in(Context::Aim, &ch("o")), Some(KeyCommand::Loose));
-        // ↑ moves from Menu up, which keeps `k`; never from Move north in play.
+        assert_eq!(
+            b.owner_in(Context::Aim, &ch("o")),
+            Some(KeyCommand::PrevTarget)
+        );
+        // ↑ is a fixed menu key: Back may not take it, and Move north keeps it in play.
         let up = KeyBinding::Code(KeyCode::ArrowUp);
-        assert_eq!(b.owner_in(Context::Menu, &up), Some(KeyCommand::Mark));
-        assert_eq!(b.keys_of(KeyCommand::MenuUp), vec![&ch("k")]);
+        assert_eq!(b.owner_in(Context::Menu, &up), None);
         assert_eq!(b.owner(&up), Some(KeyCommand::Move(Dir::N)));
         assert!(b.conflicts().is_empty());
         for needle in [
             "x is listed for both Wait/search and Look around",
             "Kick has no key now",
+            "↑ is fixed in menus and screens",
         ] {
             assert!(
                 report.warnings.iter().any(|w| w.contains(needle)),
@@ -570,27 +569,6 @@ mod tests {
                 report.warnings
             );
         }
-    }
-
-    #[test]
-    fn the_last_key_of_a_vital_command_stays_unless_it_is_listed_too() {
-        let mut b = Bindings::default();
-        b.bind_primary(KeyCommand::Erase, KeyBinding::Code(KeyCode::Enter))
-            .unwrap();
-        // Choose has only NumEnter left: Mark may not take it.
-        let numpad = KeyBinding::Code(KeyCode::NumpadEnter);
-        let report = import(&mut b, "[menu]\nmark = [\"NumpadEnter\"]\n").unwrap();
-        assert_eq!(b.keys_of(KeyCommand::Confirm), vec![&numpad]);
-        assert!(report.warnings[0].contains("only key for Choose"));
-        // Swapping it with a command listed too is fine.
-        let text = "[menu]\nmark = [\"NumpadEnter\"]\nconfirm = [\"Space\"]\n";
-        let report = import(&mut b, text).unwrap();
-        assert!(report.warnings.is_empty(), "{:?}", report.warnings);
-        assert_eq!(b.keys_of(KeyCommand::Mark), vec![&numpad]);
-        assert_eq!(
-            b.keys_of(KeyCommand::Confirm),
-            vec![&KeyBinding::Code(KeyCode::Space)]
-        );
     }
 
     #[test]

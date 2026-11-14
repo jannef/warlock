@@ -493,11 +493,13 @@ impl World {
         // An incorporeal creature goes through solid terrain too (`incorporeal.rs`).
         let phases = self.content.incorporeal(me.creature).is_some();
         let phaseable = |p: Pos| phases && level.phaseable(&self.content, p);
-        let others: Vec<Pos> = (self.state.actors.values())
+        // Sorted once, searched for every cell the path search expands.
+        let mut others: Vec<Pos> = (self.state.actors.values())
             .filter(|a| a.level == level.id && a.id != id)
             .map(|a| a.pos)
             .collect();
-        let occupied = |p: Pos| others.contains(&p);
+        others.sort_unstable();
+        let occupied = |p: Pos| others.binary_search(&p).is_ok();
         if goal(me.pos) {
             return Route::There;
         }

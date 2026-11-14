@@ -10,6 +10,10 @@ use super::*;
 use crate::check;
 use crate::content::{ContentFiles, Miscast, MishapEffect, ZoneKind};
 use crate::dice::Dice;
+use std::sync::LazyLock;
+
+/// The built-in content, loaded once: [`miscast`] runs for every cast of the long loops.
+static BUILTIN: LazyLock<Content> = LazyLock::new(|| Content::builtin().expect("content"));
 
 /// The built-in content with `data/miscast.toml`'s `base` set to `base` (−1000: only the 1 and
 /// 1 fails; 1000: every cast fails, by far), and, with `only`, the table cut to that one entry
@@ -75,8 +79,7 @@ fn spark(w: &mut World, k: ActorId) -> Vec<String> {
 
 /// Whether `lines` hold a miscast's message.
 fn miscast(lines: &[String]) -> bool {
-    let content = Content::builtin().expect("content");
-    (content.miscasts().iter()).any(|m| lines.contains(&m.message))
+    (BUILTIN.miscasts().iter()).any(|m| lines.contains(&m.message))
 }
 
 /// The built-in entry `id`.

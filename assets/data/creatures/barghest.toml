@@ -20,7 +20,7 @@ hearing = 18
 weight = 60000
 stats = { strength = 16, dexterity = 18, toughness = 16, intelligence = 15, willpower = 21, presence = 15 }
 base_hp = 16
-resist = { poison = 100 }
+immune = ["poison"]
 on_eat = { message = "It was rotten long before it died.", vomit = 80, harm = "1d4" }
 blood = "#2a2228"
 cry = { kind = "howl", loudness = 150, every = 120 }

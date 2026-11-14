@@ -25,9 +25,6 @@ use crate::action::Event;
 use crate::content::{DiseaseId, Face, TalentEffect};
 use crate::status::Effect;
 
-/// The status a hold's holder is laid under when the hold is turned back.
-const WEBBED: &str = "webbed";
-
 impl World {
     /// The creature nearest the player that they see on the current level: the least squared
     /// distance, the lowest id on a tie.
@@ -79,7 +76,7 @@ impl World {
     /// sees: a hex at the degrees it had, a hold's holder Webbed for the hold's degrees.
     pub(super) fn turn_hexes_back(&mut self, ended: &[Effect], events: &mut Vec<Event>) {
         let player = self.state.player;
-        let webbed = self.content.status_id(WEBBED);
+        let webbed = self.content.ids().webbed;
         for e in ended {
             let Some(by) = e.by.filter(|&by| by != player) else {
                 continue;

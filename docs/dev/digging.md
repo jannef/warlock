@@ -30,7 +30,7 @@ Explosions call `World::blast(center, radius, blast, events)` (a burst trap with
 after its damage: the fireball's 1000): every breakable wall in the burst
 (line of sight from the center, computed before anything breaks) with hardness below the blast
 breaks (`Breach::Blast`; `perceive_events` says "The wall collapses!" for those the player sees).
-Perception sees and remembers the rubble like any terrain; `PerceptionView::ready_to_dig` and
+Perception sees and remembers the rubble like any terrain; `PerceptionView::dig_refusal` and
 `is_dug` (a visible wall with progress: look mode's "partly dug") are all presentation gets. The
 app bursts the new terrain's `toggle` particles (rubble's dust) on `WallBroken`, like a door's.
 Creatures do not dig. Times are in the wiki's generated `digging.md` tables.

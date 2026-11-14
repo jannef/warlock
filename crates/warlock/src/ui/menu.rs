@@ -11,32 +11,33 @@
 use super::dialog_screen::Dialog;
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{ACCENT, PANEL_BG, TEXT, TEXT_DIM};
-use crate::input::{Bindings, Context, KeyBinding, KeyCommand};
+use crate::input::{Bindings, Context, KeyBinding};
 use crate::render::console::Console;
+use crate::settings::fixed;
 use crate::settings::mods::Mods;
 use bevy::input::keyboard::{Key, KeyCode, KeyboardInput};
 
-/// A key press reduced to what menus care about: the `Context::Menu` command it is bound to, or
-/// Esc, which always backs out.
+/// A key press reduced to what menus care about: its fixed menu key (`settings::fixed::menu`),
+/// `KeyCommand::Back`'s keys, or Esc, which always backs out.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Nav {
     Up,
     Down,
     Left,
     Right,
-    /// Choose the selected row (`KeyCommand::Confirm`, Enter).
+    /// Choose the selected row (Enter).
     Enter,
     /// Back out: Esc, always, and `KeyCommand::Back`'s keys.
     Back,
-    /// Erase a character typed, or reset a command's keys (`KeyCommand::Erase`).
+    /// Erase a character typed, or reset a command's keys (Delete, Backspace).
     Erase,
-    /// Mark the selected stack on a pick-up or drop list (`KeyCommand::Mark`, Space).
+    /// Mark the selected stack on a pick-up or drop list (Space).
     Mark,
-    /// Mark everything on a pick-up or drop list (`KeyCommand::MarkAll`, `,`).
+    /// Mark everything on a pick-up or drop list (`,`).
     MarkAll,
-    /// The next page of an item list (`KeyCommand::NextListPage`, `>`).
+    /// The next page of an item list (`>`, PageDown).
     NextPage,
-    /// The previous page of an item list (`KeyCommand::PrevListPage`, `<`).
+    /// The previous page of an item list (`<`, PageUp).
     PrevPage,
     Other,
 }
@@ -58,9 +59,8 @@ const NUMPAD: [KeyCode; 11] = [
     KeyCode::NumpadEnter,
 ];
 
-/// The numpad's fixed menu meaning, for a key no `Context::Menu` binding claims: 8, 2, 4, and 6
-/// are the arrows (#1197; NumEnter is Confirm's own binding). Fixed screen keys, never
-/// rebindable (CLAUDE.md): an alias, not a binding.
+/// The numpad's fixed menu meaning, for a key nothing else claims: 8, 2, 4, and 6 are the
+/// arrows (#1197; NumEnter is a fixed Enter, `settings::fixed::menu`).
 fn numpad_nav(code: KeyCode) -> Nav {
     match code {
         KeyCode::Numpad8 => Nav::Up,
@@ -71,17 +71,18 @@ fn numpad_nav(code: KeyCode) -> Nav {
     }
 }
 
-/// A key press reduced to what a text field cares about besides the text typed: the
-/// `Context::Text` command it is bound to, or Esc, which always backs out.
+/// A key press reduced to what a text field cares about besides the text typed: its fixed text
+/// key (`settings::fixed::text`), `KeyCommand::TextBack`'s keys, or Esc, which always backs
+/// out.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Edit {
-    /// Accept the text (`KeyCommand::TextConfirm`, Enter).
+    /// Accept the text (Enter).
     Confirm,
     /// Back out: Esc, always, and `KeyCommand::TextBack`'s keys.
     Back,
-    /// Erase the last character (`KeyCommand::TextErase`, Backspace).
+    /// Erase the last character (Backspace, Delete).
     Erase,
-    /// A random value (`KeyCommand::TextRandom`, Tab).
+    /// A random value (Tab).
     Random,
 }
 
@@ -102,8 +103,8 @@ pub struct Press {
 }
 
 impl Press {
-    /// The press as screens see it: its menu meaning comes from the `Context::Menu` bindings,
-    /// its text field meaning from the `Context::Text` bindings, and Esc always backs out,
+    /// The press as screens see it: its menu and text field meanings are the fixed keys
+    /// (`settings::fixed`) and the back-style commands' bindings, and Esc always backs out,
     /// whatever is bound (it cannot be bound: no lockout).
     /// `mods` are the modifiers held: Ctrl, Alt, and Super make the press another binding (no
     /// fixed key is one), and Shift is [`Press::shift`].
@@ -111,31 +112,15 @@ impl Press {
         let nav = if input.key_code == KeyCode::Escape {
             Nav::Back
         } else {
-            match bindings.lookup_in(Context::Menu, input, mods) {
-                Some(KeyCommand::MenuUp) => Nav::Up,
-                Some(KeyCommand::MenuDown) => Nav::Down,
-                Some(KeyCommand::MenuLeft) => Nav::Left,
-                Some(KeyCommand::MenuRight) => Nav::Right,
-                Some(KeyCommand::Confirm) => Nav::Enter,
-                Some(KeyCommand::Back) => Nav::Back,
-                Some(KeyCommand::Erase) => Nav::Erase,
-                Some(KeyCommand::Mark) => Nav::Mark,
-                Some(KeyCommand::MarkAll) => Nav::MarkAll,
-                Some(KeyCommand::NextListPage) => Nav::NextPage,
-                Some(KeyCommand::PrevListPage) => Nav::PrevPage,
-                _ => numpad_nav(input.key_code),
-            }
+            let back = |k: &KeyBinding| bindings.owner_in(Context::Menu, k).map(|_| Nav::Back);
+            fixed::read(input, mods, back, fixed::menu)
+                .unwrap_or_else(|| numpad_nav(input.key_code))
         };
         let edit = if input.key_code == KeyCode::Escape {
             Some(Edit::Back)
         } else {
-            match bindings.lookup_in(Context::Text, input, mods) {
-                Some(KeyCommand::TextConfirm) => Some(Edit::Confirm),
-                Some(KeyCommand::TextBack) => Some(Edit::Back),
-                Some(KeyCommand::TextErase) => Some(Edit::Erase),
-                Some(KeyCommand::TextRandom) => Some(Edit::Random),
-                _ => None,
-            }
+            let back = |k: &KeyBinding| bindings.owner_in(Context::Text, k).map(|_| Edit::Back);
+            fixed::read(input, mods, back, fixed::text)
         };
         // One printable character: the event's text (what the layout and dead keys made of the
         // press), else the character the key stands for.
@@ -204,47 +189,44 @@ impl Press {
     }
 }
 
-/// The menu keys as footers name them: each command's first key as bound, so a footer never
-/// names a key that no longer does what it says (`?` for a command without a key).
+/// The menu keys as footers name them: fixed (`settings::fixed`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Hints {
-    pub up: String,
-    pub down: String,
-    pub left: String,
-    pub right: String,
-    pub confirm: String,
-    pub erase: String,
-    pub mark: String,
-    pub mark_all: String,
-    pub next_page: String,
-    pub prev_page: String,
+    pub up: &'static str,
+    pub down: &'static str,
+    pub left: &'static str,
+    pub right: &'static str,
+    pub confirm: &'static str,
+    pub erase: &'static str,
+    pub mark: &'static str,
+    pub mark_all: &'static str,
+    pub next_page: &'static str,
+    pub prev_page: &'static str,
 }
 
+/// The menu keys.
+pub const HINTS: Hints = Hints {
+    up: fixed::UP,
+    down: fixed::DOWN,
+    left: fixed::LEFT,
+    right: fixed::RIGHT,
+    confirm: fixed::CONFIRM,
+    erase: fixed::ERASE,
+    mark: fixed::MARK,
+    mark_all: fixed::MARK_ALL,
+    next_page: fixed::NEXT_LIST_PAGE,
+    prev_page: fixed::PREV_LIST_PAGE,
+};
+
 impl Hints {
-    pub fn of(bindings: &Bindings) -> Self {
-        let key = |command| bindings.key_name(command).unwrap_or_else(|| "?".into());
-        Self {
-            up: key(KeyCommand::MenuUp),
-            down: key(KeyCommand::MenuDown),
-            left: key(KeyCommand::MenuLeft),
-            right: key(KeyCommand::MenuRight),
-            confirm: key(KeyCommand::Confirm),
-            erase: key(KeyCommand::Erase),
-            mark: key(KeyCommand::Mark),
-            mark_all: key(KeyCommand::MarkAll),
-            next_page: key(KeyCommand::NextListPage),
-            prev_page: key(KeyCommand::PrevListPage),
-        }
-    }
-
-    /// The up and down keys together: `↑↓`, or `w/s` when they are not arrows.
+    /// The up and down keys together: `↑↓`.
     pub fn up_down(&self) -> String {
-        pair(&self.up, &self.down)
+        pair(self.up, self.down)
     }
 
-    /// The left and right keys together: `←→`, or `a/d`.
+    /// The left and right keys together: `←→`.
     pub fn left_right(&self) -> String {
-        pair(&self.left, &self.right)
+        pair(self.left, self.right)
     }
 }
 
@@ -411,7 +393,7 @@ impl MainMenu {
     }
 
     /// Draws the menu, with `notice` (something the player should know) under the rows.
-    pub fn draw(&self, console: &mut Console, notice: Option<&str>, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console, notice: Option<&str>) {
         let items = self.items();
         let notice_lines = notice.map_or(Vec::new(), |n| wrap(n, 44));
         let h = 12 + items.len() as i32 + notice_lines.len() as i32;
@@ -449,7 +431,7 @@ impl MainMenu {
                 ACCENT,
             );
         }
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         let hint = format!("{} select   {} choose", keys.up_down(), keys.confirm);
         let hint = if self.pause {
             format!("{hint}   Esc resume")
@@ -617,6 +599,7 @@ pub(super) fn truncated_head(text: &str, width: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::input::KeyCommand;
 
     fn press(menu: &mut MainMenu, nav: Nav) -> ScreenAction {
         menu.handle(&Press::nav(nav))
@@ -634,7 +617,7 @@ mod tests {
     }
 
     #[test]
-    fn menu_keys_come_from_the_bindings_and_esc_always_backs_out() {
+    fn menu_keys_are_fixed_and_esc_always_backs_out() {
         let mut b = Bindings::default();
         let nav = |b: &Bindings, input: &KeyboardInput| Press::from_input(input, Mods::NONE, b).nav;
         let down = key(KeyCode::ArrowDown, Key::ArrowDown);
@@ -649,24 +632,20 @@ mod tests {
         assert_eq!(nav(&b, &space), Nav::Mark);
         assert_eq!(nav(&b, &s), Nav::Other);
         assert_eq!(nav(&b, &esc), Nav::Back);
-        // Rebound: `s` moves down, the arrow it replaced does not, and `j` still does.
-        b.bind_primary(KeyCommand::MenuDown, KeyBinding::Char("s".into()))
-            .unwrap();
-        assert_eq!(nav(&b, &s), Nav::Down);
-        assert_eq!(nav(&b, &down), Nav::Other);
-        assert_eq!(nav(&b, &j), Nav::Down);
-        // Back on Space: Esc still backs out, and Space no longer marks.
-        b.bind_primary(KeyCommand::Back, KeyBinding::Code(KeyCode::Space))
-            .unwrap();
-        assert_eq!(nav(&b, &space), Nav::Back);
+        // Back may take a free key, never a fixed one: Esc still backs out.
+        let s_key = KeyBinding::Char("s".into());
+        assert!(s_key.refused_for(KeyCommand::Back).is_none());
+        b.bind_primary(KeyCommand::Back, s_key).unwrap();
+        assert_eq!(nav(&b, &s), Nav::Back);
         assert_eq!(nav(&b, &esc), Nav::Back);
-        // With the defaults the footers read as before; rebound, they name the new keys.
-        let hints = Hints::of(&Bindings::default());
+        let refused = KeyBinding::Code(KeyCode::Space).refused_for(KeyCommand::Back);
         assert_eq!(
-            (hints.up_down(), hints.confirm.as_str()),
-            ("↑↓".into(), "Enter")
+            refused.as_deref(),
+            Some("Space is fixed in menus and screens")
         );
-        assert_eq!(Hints::of(&b).up_down(), "↑/s");
+        assert_eq!(nav(&b, &space), Nav::Mark);
+        // The footers name the fixed keys.
+        assert_eq!((HINTS.up_down(), HINTS.confirm), ("↑↓".into(), "Enter"));
     }
 
     #[test]

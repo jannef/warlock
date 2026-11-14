@@ -4,6 +4,10 @@
 //! keeps it off some of those floors is also looked for on deeper ones (#1077). What its monster
 //! pools give is checked as stamped: sleepers asleep, every carried key opening its lock and
 //! reachable without it, and patrols walking their route turned with the vault.
+//!
+//! The default run checks every stamp on a few dozen seeds; that every vault stamps at all, and
+//! every patrol turns, takes hundreds (the rarest stamp first near seed 360), so the full sweep
+//! is `#[ignore]`d and run weekly (the `Ignored tests` workflow, #1514).
 
 use super::vault_turn_tests::{reached, stamps};
 use super::*;
@@ -19,14 +23,30 @@ static CONTENT: LazyLock<Content> = LazyLock::new(|| Content::builtin().expect("
 const BRANCHES: [&str; 2] = ["banfeld", "wulfeshol"];
 const DANGERS: RangeInclusive<u8> = 6..=9;
 const SEEDS: u64 = 600;
+/// The default run's seeds: every stamp they make is checked, not that every vault stamps.
+const SHORT_SEEDS: u64 = 40;
 /// Deeper floors for a vault whose `danger` keeps it off some of [`BRANCHES`]': the endless
 /// branch's rooms floors (its danger is its depth) and Fyrdelf's caves, each of dangers 9 to 16.
 const DEEP: [(&str, RangeInclusive<u32>); 2] = [("grundleas", 9..=16), ("fyrdelf", 5..=12)];
 /// Fewer seeds there: eight floors a seed, and only the deep vaults looked for.
 const DEEP_SEEDS: u64 = 100;
+const SHORT_DEEP_SEEDS: u64 = 8;
 
 #[test]
+fn shared_dungeon_vaults_stamp_soundly_on_a_few_dozen_seeds() {
+    sweep(SHORT_SEEDS, SHORT_DEEP_SEEDS, false);
+}
+
+#[test]
+#[ignore = "the full sweep, minutes long: run weekly and by hand (#1514)"]
 fn every_shared_dungeon_vault_stamps_on_rooms_and_caves_floors() {
+    sweep(SEEDS, DEEP_SEEDS, true);
+}
+
+/// Stamps every shared vault on [`BRANCHES`]' floors for `seeds` seeds and on [`DEEP`]'s for
+/// `deep_seeds`, checking each stamp found; `whole`: also that every vault looked for stamps
+/// somewhere and every patrol walks more than one way.
+fn sweep(seeds: u64, deep_seeds: u64, whole: bool) {
     let shared: Vec<&Vault> = (CONTENT.vaults().iter())
         // A lair (the Pits' warden's hall) is stamped only where its branch names it.
         .filter(|v| !v.is_outdoor() && v.campaign.is_none() && !v.pinned)
@@ -49,11 +69,11 @@ fn every_shared_dungeon_vault_stamps_on_rooms_and_caves_floors() {
         (
             *b,
             1..=CONTENT.dungeon(b).expect("branch").depth,
-            SEEDS,
+            seeds,
             &shared,
         )
     });
-    let deeper = (DEEP.iter()).map(|(b, d)| (*b, d.clone(), DEEP_SEEDS, &deep));
+    let deeper = (DEEP.iter()).map(|(b, d)| (*b, d.clone(), deep_seeds, &deep));
     for (branch, depths, seeds, vaults) in floors.chain(deeper) {
         let mut seen: BTreeMap<&str, usize> = BTreeMap::new();
         let mut dangers: BTreeSet<u8> = BTreeSet::new();
@@ -104,6 +124,9 @@ fn every_shared_dungeon_vault_stamps_on_rooms_and_caves_floors() {
             }
         }
         // Every vault looked for here that some floor of it suits stamps at least once.
+        if !whole {
+            continue;
+        }
         for vault in vaults
             .iter()
             .filter(|v| dangers.iter().any(|d| v.suits(*d)))
@@ -115,8 +138,11 @@ fn every_shared_dungeon_vault_stamps_on_rooms_and_caves_floors() {
             );
         }
     }
+    // Even the short run meets most of them (30 of 42 in its 40 seeds when it was cut, #1514).
+    let met = routes.len();
+    assert!(met * 2 >= shared.len(), "{met} of {} stamped", shared.len());
     // A patrol turns with its vault: over the stamps it walks more than one way.
-    for vault in &shared {
+    for vault in shared.iter().filter(|_| whole) {
         if vault.template.monsters.iter().any(|m| !m.route.is_empty()) {
             let ways = routes.get(vault.id()).map_or(0, BTreeSet::len);
             assert!(ways > 1, "{}: its patrols walked {ways} way(s)", vault.id());

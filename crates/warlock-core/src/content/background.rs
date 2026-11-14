@@ -403,11 +403,6 @@ pub struct Line {
 }
 
 impl Line {
-    /// Whether it is a plain line: common, asking nothing, giving nothing.
-    pub fn is_plain(&self) -> bool {
-        self.tier == Tier::Common && !self.only && self.when.is_empty() && self.effects.is_empty()
-    }
-
     /// Its boons and banes in points.
     pub fn worth(&self, points: &Points) -> (i32, i32) {
         (self.effects.iter()).fold((0, 0), |(b, c), e| {
@@ -474,6 +469,9 @@ impl Content {
         files: &super::ContentFiles,
     ) -> Result<(), ContentError> {
         let Some(text) = files.get_optional(SETTINGS) else {
+            // Without the settings the chapters are switched off, not misplaced: counted as
+            // read (`ContentFiles::check_all_read`), never parsed.
+            files.table("background").for_each(drop);
             return Ok(());
         };
         let settings: SettingsFile =
@@ -531,6 +529,11 @@ impl Content {
             }
             let line = self.story_line(spec, &head.id).map_err(|m| m.to_string());
             lines.push(line?);
+        }
+        // A draw sums the weights of lines of the chapter.
+        if crate::rng::weight_sum(lines.iter().map(|l| l.weight)).is_none() {
+            let m = crate::rng::WEIGHTS_OVERFLOW;
+            return Err(format!("chapter `{}`: {m}", head.id));
         }
         Ok(Chapter {
             id: head.id,

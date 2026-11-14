@@ -654,11 +654,6 @@ impl DungeonDef {
         self.bosses.iter().find(|b| b.depth == depth)
     }
 
-    /// Every vault id some level of the branch names.
-    pub fn named_vaults(&self) -> impl Iterator<Item = &str> {
-        self.vaults.iter().flatten().map(String::as_str)
-    }
-
     /// The level id of `depth`, e.g. `depths:3`; of a portal branch, what a vault or a dungeon
     /// list names its floors by (no level is called so: see [`Self::pit_level_id`]).
     pub fn level_id(&self, depth: u32) -> String {
@@ -763,6 +758,7 @@ impl DungeonFile {
     /// Validates every branch; `creature_id` resolves creature names (with their levels),
     /// `key_id` the names of keys (objects that open a lock), `trap_id` trap names; `rooms` and
     /// `shops` are the shared special-room and shop odds a branch's own tables fall back to.
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn resolve(
         self,
         file: &str,

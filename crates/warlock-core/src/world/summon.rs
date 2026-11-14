@@ -102,18 +102,14 @@ impl World {
                     .fold(1u32, |w, &(_, by)| w.saturating_mul(by))
             })
             .collect();
-        let total = weights.iter().fold(0u32, |t, &w| t.saturating_add(w));
-        if total == 0 || weights.iter().all(|&w| w == 1) {
+        if weights.iter().all(|&w| w == 1) {
             return plain(self);
         }
-        let mut roll = self.state.rng.below(total);
-        for (i, &w) in weights.iter().enumerate() {
-            if roll < w {
-                return pool[i];
-            }
-            roll -= w;
+        let weighted: Vec<(CreatureId, u32)> = pool.iter().copied().zip(weights).collect();
+        match self.state.rng.weighted(&weighted, |&(_, w)| w) {
+            Some(&(creature, _)) => creature,
+            None => plain(self),
         }
-        pool[pool.len() - 1]
     }
 
     /// Creature `id` summons (its AI saw to it that it can). Returns the price: a `cast`.

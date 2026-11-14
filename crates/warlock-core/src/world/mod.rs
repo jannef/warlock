@@ -326,6 +326,7 @@ mod weapon_ability;
 mod weapon_active;
 mod wedge;
 mod witch;
+mod work_on;
 mod wriggle;
 mod zap;
 mod zone;
@@ -421,7 +422,7 @@ use crate::hunger::Satiation;
 use crate::light::{LightCache, Sky};
 use crate::messages::MessageLog;
 use crate::noise::Recent;
-use crate::object::{Stack, Weight};
+use crate::object::Stack;
 use crate::perception::{Perception, PerceptionView};
 use crate::rng::Rng;
 use crate::scroll_label::{Labels, Lore};
@@ -546,7 +547,7 @@ pub struct WorldState {
     pub(crate) ruin_rng: Option<Rng>,
     /// When the daily stat check comes next (spec §8 "Stats": 06:00 game time;
     /// `world/stat_training.rs`). `None` while the content has no training rules (so content
-    /// without them hashes as before) and in a save made before it: scheduled on load.
+    /// without them hashes as before).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) next_stat_check: Option<GameTime>,
     /// Dev: the weather set by hand (`weather:rain`), until it runs out.
@@ -1005,7 +1006,8 @@ impl World {
             .player_start
             .ok_or_else(|| WorldError::NoPlayerStart(start.id.clone()))?;
         let player_creature = content
-            .creature_id("player")
+            .ids()
+            .player
             .expect("content validation guarantees a player creature");
 
         let mut state = WorldState {
@@ -1419,9 +1421,10 @@ impl World {
     }
 
     /// The weight of actor `id`, on any level: its creature's base weight plus everything it
-    /// carries. For the rules and dev tools; the player is shown only their own
-    /// ([`PerceptionView::own_weight`]).
-    pub fn actor_weight(&self, id: ActorId) -> Option<Weight> {
+    /// carries (tests; the player is shown only their own,
+    /// [`PerceptionView::own_weight`]).
+    #[cfg(test)]
+    pub fn actor_weight(&self, id: ActorId) -> Option<crate::object::Weight> {
         self.state.actors.get(&id).map(|a| a.weight(&self.content))
     }
 

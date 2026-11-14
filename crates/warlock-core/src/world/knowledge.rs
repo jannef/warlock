@@ -74,7 +74,8 @@ impl Actor {
             return Vec::new();
         }
         let count = content.damage_types().len();
-        (Resistances::sum(count, def.resist.iter().copied(), []).iter())
+        let kind = Resistances::sum(count, def.immune_kinds.iter().copied(), def.resist.clone());
+        (kind.iter())
             .filter_map(|(kind, percent)| Some((kind, ResistanceWord::of(percent)?)))
             .collect()
     }

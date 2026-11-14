@@ -2,7 +2,7 @@
 //! it spares (no one); what the player knows of one.
 
 use super::caster_tests::{kobold_at, sp};
-use super::spell_type_tests::{cast, cell, files, start, status};
+use super::spell_type_tests::{HALL_CONTENT, cast, cell, files, start, status};
 use super::*;
 use crate::action::{Action, parse_actions};
 use crate::content::ZoneKind;
@@ -10,7 +10,7 @@ use crate::light::Light;
 use crate::stats::{PerStat, Stat, Stats};
 
 fn hall(seed: u64) -> World {
-    let mut w = start(Arc::new(Content::load(&files()).expect("content")), seed);
+    let mut w = start(HALL_CONTENT.clone(), seed);
     for spell in ["balefire", "reek", "mirk", "slick", "frost"] {
         w.player_mut().spells.insert(sp(spell), 1);
     }

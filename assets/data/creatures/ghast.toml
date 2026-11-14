@@ -21,7 +21,7 @@ hearing = 15
 weight = 50000
 stats = { strength = 14, dexterity = 17, toughness = 14, intelligence = 13, willpower = 18, presence = 13 }
 base_hp = 9
-resist = { poison = 100 }
+immune = ["poison"]
 on_eat = { message = "Carrion upon carrion.", vomit = 80, harm = "1d4" }
 blood = "#3a2a3a"
 [creature.attack]

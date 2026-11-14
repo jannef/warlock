@@ -8,7 +8,7 @@
 //! scrolls. It is read from the perception snapshot when it opens; no game time passes while it
 //! is open.
 
-use super::menu::{Hints, Nav, Panel, Press, wrap};
+use super::menu::{HINTS, Nav, Panel, Press, wrap};
 use super::screens::{ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, KeyCommand};
@@ -106,7 +106,7 @@ impl QuestScreen {
         // the footer, the frame.
         let body = list.len().max(1) as i32 + 1 + details.len() as i32;
         let panel = Panel::new(console, " Quests ", width, body + 5);
-        info_tabs_line(console, &panel, bindings);
+        info_tabs_line(console, &panel);
         let x = panel.inner_x();
         let fits = |y: i32| y < panel.y + panel.h - 2;
         let mut y = panel.y + 2;
@@ -150,13 +150,13 @@ impl QuestScreen {
             Some(own) => format!("{own} or Esc close"),
             None => "Esc close".to_string(),
         };
-        format!("{} choose   {close}", Hints::of(bindings).up_down())
+        format!("{} choose   {close}", HINTS.up_down())
     }
 }
 
 /// The info pages' tab line on the panel's bottom border.
-fn info_tabs_line(console: &mut Console, panel: &Panel, bindings: &Bindings) {
-    super::info_tabs::draw_tabs(console, panel, bindings, ScreenName::Quests);
+fn info_tabs_line(console: &mut Console, panel: &Panel) {
+    super::info_tabs::draw_tabs(console, panel, ScreenName::Quests);
 }
 
 #[cfg(test)]

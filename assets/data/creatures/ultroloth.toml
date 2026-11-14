@@ -27,7 +27,8 @@ base_hp = 145
 # A hit may knock the player's weapon from their hand (#1166; a commander of ten thousand duels).
 disarms = { chance = 20, difficulty = 24 }
 natural = { defence = 4, protection = 6, name = "grey hide" }
-resist = { acid = 100, poison = 100, fire = 50, cold = 50, electricity = 50 }
+resist = { fire = 50, cold = 50, electricity = 50 }
+immune = ["acid", "poison"]
 corpse = false
 blood = "#2a2a34"
 [creature.attack]

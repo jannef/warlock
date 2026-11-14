@@ -68,9 +68,8 @@ pub struct Stack {
     charges: Option<Charges>,
     /// A wand's rung on its spell's damage ladder (spec §8 "Magic items": "Wands"; the spell
     /// scaling design §7.4), drawn evenly in its kind's `rungs` as it is made
-    /// ([`Stack::draw_wand_rung`]); `None` for everything else. A wand without one (made before
-    /// rungs were drawn: an older save) casts at rung 0. Ground truth: presentation reads it
-    /// only through [`Stack::known_wand_rung`].
+    /// ([`Stack::draw_wand_rung`]); `None` for everything else. A wand without one casts at rung
+    /// 0. Ground truth: presentation reads it only through [`Stack::known_wand_rung`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     wand_rung: Option<u8>,
     /// A carried light's mode (spec §5 "Light sources": a lantern unlit, lit, or hooded), kept

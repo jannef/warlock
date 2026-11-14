@@ -23,7 +23,8 @@ weight = 1000000
 stats = { strength = 37, dexterity = 26, toughness = 38, intelligence = 36, willpower = 38, presence = 36 }
 base_hp = 160
 natural = { defence = 5, protection = 0, name = "flickering flame" }
-resist = { fire = 100, cold = -50, poison = 100 }
+resist = { cold = -50 }
+immune = ["fire", "poison"]
 corpse = false
 blood = "none"
 [creature.attack]

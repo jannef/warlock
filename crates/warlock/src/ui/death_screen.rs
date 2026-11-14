@@ -6,10 +6,9 @@
 //! takes every key press: Enter or Esc returns to the main menu. It is read from the perception
 //! snapshot, which carries the death once it has happened.
 
-use super::menu::{Hints, Nav, Panel, Press, wrap};
+use super::menu::{HINTS, Nav, Panel, Press, wrap};
 use super::screens::{MenuChoice, ScreenAction};
 use super::{ACCENT, TEXT, TEXT_DIM};
-use crate::input::Bindings;
 use crate::render::console::Console;
 use crate::settings::Clock;
 use warlock_core::perception::PerceptionView;
@@ -95,7 +94,7 @@ impl DeathScreen {
         }
     }
 
-    pub fn draw(&self, console: &mut Console, clock: Clock, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console, clock: Clock) {
         let w = 52;
         let lines = self.lines.iter().map(|line| match &self.when {
             Some((date, time)) if line.is_empty() => {
@@ -137,7 +136,7 @@ impl DeathScreen {
         if self.remembered && fits(y + 1) {
             console.print(cx(remembered), y + 1, remembered, TEXT_DIM);
         }
-        let footer = format!("{} or Esc  main menu", Hints::of(bindings).confirm);
+        let footer = format!("{} or Esc  main menu", HINTS.confirm);
         panel.footer(console, &footer);
     }
 }
@@ -179,7 +178,7 @@ mod tests {
         let screen = DeathScreen::new(Some(&w.perception()));
         let mut console = Console::default();
         console.resize(80, 30);
-        screen.draw(&mut console, Clock::H24, &Bindings::default());
+        screen.draw(&mut console, Clock::H24);
         let shown = text(&console);
         assert!(shown.contains("Bled to death,"), "{shown}");
         assert!(!shown.contains("Killed by"), "{shown}");
@@ -208,7 +207,7 @@ mod tests {
                 let screen = DeathScreen::new(Some(&w.perception()));
                 let mut console = Console::default();
                 console.resize(80, 30);
-                screen.draw(&mut console, Clock::H24, &Bindings::default());
+                screen.draw(&mut console, Clock::H24);
                 let shown = text(&console);
                 shown
                     .contains("something you did not see")
@@ -259,7 +258,7 @@ mod tests {
         let screen = DeathScreen::new(Some(&w.perception()));
         let mut console = Console::default();
         console.resize(80, 30);
-        screen.draw(&mut console, Clock::H24, &Bindings::default());
+        screen.draw(&mut console, Clock::H24);
         let shown = text(&console);
         assert!(shown.contains("Here lies Tamsin,"), "{shown}");
         assert!(shown.contains("starved to death,"), "{shown}");

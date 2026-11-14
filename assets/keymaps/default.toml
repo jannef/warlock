@@ -61,54 +61,20 @@ help = ["?"]
 quit = []
 
 [aim] # Aiming
-next_target = ["Tab"]
 prev_target = []
-loose = ["Enter", "NumpadEnter"]
-
-[prompt] # Rest prompt
-rest_hour = ["h"]
-rest_dawn = ["d"]
-rest_dusk = ["n"]
 
 [more] # More messages (--more--)
 more_next = ["Space", "Enter", "NumpadEnter"]
 more_skip = []
 
 [menu] # Menus and screens
-menu_up = ["ArrowUp", "k"]
-menu_down = ["ArrowDown", "j"]
-menu_left = ["ArrowLeft", "h"]
-menu_right = ["ArrowRight", "l"]
-confirm = ["Enter", "NumpadEnter"]
 back = []
-erase = ["Delete", "Backspace"]
-mark = ["Space"]
-mark_all = [","]
-next_list_page = [">", "PageDown"]
-prev_list_page = ["<", "PageUp"]
 
 [text] # Text fields
-text_confirm = ["Enter", "NumpadEnter"]
-text_erase = ["Backspace", "Delete"]
-text_random = ["Tab"]
 text_back = []
 
 [pages] # Info pages
-page_1 = ["1"]
-page_2 = ["2"]
-page_3 = ["3"]
-page_4 = ["4"]
-page_5 = ["5"]
-page_6 = ["6"]
-page_7 = ["7"]
-page_8 = ["8"]
-page_9 = ["9"]
-next_page = ["Tab"]
 prev_page = []
-
-[dialog] # Dialogs
-yes = ["y"]
-no = ["n"]
 
 [dev] # Developer
 dev_reveal_map = ["F2"]

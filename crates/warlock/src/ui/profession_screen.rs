@@ -10,7 +10,7 @@
 //! the forging wizard (the arrows too); a greyed one does nothing. The list keys turn the page; Esc closes it. Every key is the
 //! list's own, fixed.
 
-use super::menu::{Hints, Nav, Panel, Press};
+use super::menu::{HINTS, Nav, Panel, Press};
 use super::paged_list::{PagedList, Row, draw_header};
 use super::screens::{ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
@@ -187,7 +187,7 @@ impl ProfessionScreen {
         }
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         // Rows: margin, the list, a gap, the line under it, a gap, the footer, the frame.
         self.fit(console.cols(), console.rows());
         let count = self.recipes.tallest().max(1) as i32;
@@ -246,12 +246,12 @@ impl ProfessionScreen {
             let text: String = text.chars().take(panel.inner_w().max(0) as usize).collect();
             console.print(x, under, &text, TEXT_DIM);
         }
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         let confirm = &keys.confirm;
         let choose = match self.recipes.last_letter() {
             Some('a') => format!("a or {confirm}"),
             Some(last) => format!("a-{last} or {confirm}"),
-            None => confirm.clone(),
+            None => confirm.to_string(),
         };
         let page = (self.recipes.hint(&keys)).map_or(String::new(), |hint| format!("{hint}   "));
         if self.recipes.is_empty() {

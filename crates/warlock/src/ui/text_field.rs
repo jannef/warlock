@@ -1,5 +1,5 @@
-//! The game's one text field (the Name step's, and the dialogue screen's Say field): the keys
-//! bound in `Context::Text` edit it (accept, erase, back; Random is the caller's), and every
+//! The game's one text field (the Name step's, and the dialogue screen's Say field): the fixed
+//! text keys and `TextBack`'s edit it (accept, erase, back; Random is the caller's), and every
 //! other key types its text, literally, as long as the font draws it and the field has room.
 //! Held keys type and erase again.
 

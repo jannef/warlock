@@ -24,8 +24,8 @@ weight = 1000000
 stats = { strength = 10, dexterity = 3, toughness = 38, intelligence = 3, willpower = 38, presence = 27 }
 base_hp = 122
 natural = { defence = 0, protection = 12, name = "warded rim" }
-resist = { fire = 100, poison = 100, cold = 50 }
-immune = ["asleep", "bleeding", "diseased", "frightened", "held", "poisoned", "stunned", "transfixed"]
+resist = { cold = 50 }
+immune = ["asleep", "bleeding", "diseased", "fire", "frightened", "held", "poison", "poisoned", "stunned", "transfixed"]
 cry = { kind = "howl", loudness = 92, every = 90 }
 corpse = false
 blood = "none"

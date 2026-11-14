@@ -355,19 +355,7 @@ impl World {
     pub(super) fn draw_mishap(&mut self, band: Band) -> Option<Mishap> {
         let content = self.content.clone();
         let among: Vec<&Mishap> = crate::content::drawn_among(content.mishaps(), band).collect();
-        let total: u32 = among.iter().map(|m| u32::from(m.weight)).sum();
-        if total == 0 {
-            return None;
-        }
-        let mut roll = self.state.rng.below(total);
-        for m in among {
-            let w = u32::from(m.weight);
-            if roll < w {
-                return Some(m.clone());
-            }
-            roll -= w;
-        }
-        None
+        (self.state.rng.weighted(&among, |m| u32::from(m.weight))).map(|&m| m.clone())
     }
 
     /// What `mishap` does to the player who failed to learn `lesson`'s spell (module docs).

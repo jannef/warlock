@@ -46,9 +46,6 @@ all = { level = "warn", priority = -1 }
 dbg_macro = "warn"
 todo = "warn"
 unwrap_used = "warn"
-# Bevy systems routinely take many parameters and complex query types.
-too_many_arguments = "allow"
-type_complexity = "allow"
 
 # Fast iteration: optimize dependencies (Bevy) even in dev builds.
 [profile.dev]
