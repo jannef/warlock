@@ -27,6 +27,7 @@
 pub mod capacity;
 pub mod describe;
 pub mod loot;
+pub(crate) mod make;
 pub mod mods;
 pub(crate) mod name;
 pub mod numbers;

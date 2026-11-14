@@ -9,7 +9,7 @@
 //!   floor), with nobody on it, no trap the player knows of, and nothing lying there; a cell of
 //!   a level, never the overworld. Refused with the reason, taking no time.
 //! - **The work**: the talent's `seconds` (an hour) in turns of the `craft` action
-//!   ([`World::keep_at`], the rest's machinery; the last turn cut short to end on time); a
+//!   ([`World::work`], the rest's machinery; the last turn cut short to end on time); a
 //!   creature coming into view, a message, or a blow stops it, and nothing is made (the time is
 //!   spent, the ingot kept).
 //! - **Done**: no check (an hour's labour, not a craft). The cell and the ingot are asked again;
@@ -21,20 +21,28 @@
 //!
 //! No draws at all.
 
-use super::rest::Ended;
 use super::shop::unpaid_parts;
+use super::work::{Job, Task};
 use super::{LevelState, Spent, World};
 use crate::action::Event;
-use crate::content::{ActionKind, Content, LevelKind, TerrainId};
+use crate::content::{Content, LevelKind, TerrainId};
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
-use crate::time::Duration;
 
-/// A field forge under way: the cell it is set on and its time.
+/// A field forge under way: the cell it is set on.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Forging {
     at: Pos,
-    seconds: u32,
+}
+
+impl Job for Forging {
+    fn leave(&self) -> String {
+        "you leave the anvil unfinished".into()
+    }
+
+    fn done(&self, w: &mut World, _: &mut Vec<Event>) {
+        w.forged(self.at);
+    }
 }
 
 /// Whether `p` on `level`, of terrain `terrain`, is open ground an anvil may be set on (module
@@ -122,29 +130,7 @@ impl World {
             return Spent::Nothing;
         }
         self.say("You heap up stones to set an ingot on.");
-        let seconds = self.craft_seconds(seconds);
-        Spent::FieldForge(Forging { at, seconds })
-    }
-
-    /// Works turn after turn until the time is up or something stops it, then sets the anvil
-    /// (module docs).
-    pub(super) fn field_forge(&mut self, work: Forging, events: &mut Vec<Event>) {
-        let until = self.state.time + Duration::seconds(u64::from(work.seconds));
-        let turn = self.price_of(self.state.player, ActionKind::Craft);
-        let ended = self.keep_at(
-            events,
-            |w| w.state.time < until,
-            |w, _| turn.min(w.price_until(until)),
-        );
-        match ended {
-            Ended::Died => {}
-            _ if self.state.time >= until => self.forged(work.at),
-            Ended::Came(came) => {
-                let text = format!("{}; you leave the anvil unfinished.", self.came_line(came));
-                self.say(text);
-            }
-            Ended::Said | Ended::Done => self.say("You leave the anvil unfinished."),
-        }
+        self.craft_work(Task::FieldForge(Forging { at }), seconds)
     }
 
     /// The time is up: the ingot spent and the anvil set, if both still hold.

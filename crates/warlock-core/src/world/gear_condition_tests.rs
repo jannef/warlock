@@ -2,13 +2,14 @@
 //! over many creatures, the kind by the material, protected items untouched, the loader's checks,
 //! and a damaged weapon in a creature's hand; deeper finds' make (#1436).
 
-use super::gear_condition::{apply, conditioned, kind, make, quest_objects, stream};
+use super::gear_condition::{apply, conditioned, kind, quest_objects, stream};
 use super::*;
 use crate::content::{ContentFiles, CreatureId, ItemHarm, PER_MILLE};
 use crate::gear;
 use crate::item_parts::ItemPart;
 use crate::kit::Pack;
 use crate::magic::Worked;
+use crate::magic::make::make;
 use crate::object::Stack;
 use crate::rng::Rng;
 use std::collections::BTreeSet;

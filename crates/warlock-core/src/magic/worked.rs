@@ -19,7 +19,8 @@
 //! The numbers are read in two places: to hit, plus damage, Defence, and Protection through
 //! [`super::Mods::local`], the dice through [`Stack::attack`](crate::object::Stack::attack).
 
-use crate::content::{ItemHarm, ObjectDef};
+use crate::content::{Content, ItemHarm, ItemKind, ObjectDef};
+use crate::object::Stack;
 use serde::{Deserialize, Serialize};
 
 /// The make a hand-made item is given in data (`quality = "masterwork"` on a unique, a level's
@@ -120,6 +121,14 @@ impl Aspect {
 /// The aspects an improvement of base item `def` is drawn among.
 pub fn aspects(def: &ObjectDef) -> Vec<Aspect> {
     (Aspect::ALL.into_iter()).filter(|a| a.of(def)).collect()
+}
+
+/// Whether `stack` is of a kind an anvil works at all: a weapon, a missile weapon, armour, or a
+/// shield (not ammunition, rings, or amulets).
+pub fn arms(content: &Content, stack: &Stack) -> bool {
+    content.object(stack.object).kind.is_some_and(|k| {
+        matches!(k, ItemKind::Weapon | ItemKind::Launcher | ItemKind::Shield) || k.is_armour()
+    })
 }
 
 /// What the anvil has done to an item so far.

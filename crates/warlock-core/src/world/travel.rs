@@ -763,12 +763,15 @@ fn placed_gear(
     }
     let key = id.0.to_string();
     let mut rng = crate::rng::Rng::gear(seed, &key);
-    let item_level = content.item_level(level);
-    let mut pack = crate::gear::roll(content, &mut rng, spawn.creature, item_level);
     let mut condition = super::gear_condition::stream(seed, &key);
-    let creature = (spawn.creature, item_level);
-    super::gear_condition::apply(content, &mut condition, creature, &mut pack);
-    crate::gear::finish(content, &mut rng, &mut pack);
+    let item_level = content.item_level(level);
+    let pack = crate::gear::equip(
+        content,
+        &mut rng,
+        &mut condition,
+        spawn.creature,
+        item_level,
+    );
     (pack.items, pack.equipment)
 }
 
