@@ -42,7 +42,7 @@ Build the engine and framework, not the game. Everything built is production qua
   burrowing worms can kill), and slow healing; stat damage mends a point a day once they are gone (§8 "Checks", "Diseases")
 - Moons with phases and moonlight, weather starting with rain (M12)
 - Temperature and ice (M26): a fixed temperature underground, under the open sky one that follows
-  the month, the time of day, and the weather, always shown in the status bar; water that freezes
+  the month, the time of day, and the weather, shown in the pause menu (§6); water that freezes
   slowly in the cold and thaws in the warmth, ice of tracked thickness that holds actors by their
   weight (what they carry included) and gives way under the heavy, falling in and climbing out,
   and bursts of frost, heat, and blasts as hooks for spells and explosions (§5 "Temperature",

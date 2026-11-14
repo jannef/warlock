@@ -16,8 +16,8 @@ transition is decided). `WorldState::temperature_on(level, ..)` is the one place
 temperature is decided, and `WorldState::temperature_at(level, .., pos)` a cell's (the level's
 plus a hot or a cold special room's, `docs/dev/special-rooms.md`); `World::temperature()` (ground
 truth, at the player's cell), `World::temperature_at`, and `PerceptionView::temperature()` (the
-player feels it where they stand) read it. The status bar always shows it (`ui::status_segments`,
-priority 4, after the weather; cool tint below 0, warm from 30 °C), in the settings' unit.
+player feels it where they stand) read it. The pause menu's line on the world tells it (`ui/almanac.rs`, after the weather: `rain at
+4 °C`, out of the weather `the air at 10 °C`), in the settings' unit.
 Nothing feels the cold yet.
 
 **Ice** (spec §5 "Ice", `ice.rs` the model, `world/levels/ice.rs` the rules; M26): water terrain with a

@@ -20,29 +20,26 @@ Below the map, the **status bar** shows, from left to right:
   alarming as it gets worse (see [Hunger](hunger.md#what-you-see)).
 - Your [burden](burden.md#burden-levels), when you have one: `Burdened`, `Strained`, or `Overloaded`
   (see [Burden](burden.md)).
-- The time, the date, and the [phase of the moon](sun.md#phases) (see [Time and the
-  calendar](time.md)).
-- The [weather](weather.md#how-the-weather-changes), while you are under the open sky (see
-  [Weather](weather.md)).
-- The [temperature](temperature.md) where you are, as `4 °C` (or °F). It is cool blue below
-  freezing and warm orange from 30 °C (see [Temperature and ice](temperature.md)).
+- Your [level](experience.md), as `Lv 3`, and your [combat stance](stances.md) unless it is
+  neutral.
+- How your [companion](companions.md) or familiar looks, as `Snel: unhurt`.
+- The time of day, as `14:32` (see [Time and the calendar](time.md)).
+
+The date, the moon, the weather, and the temperature are not on the status bar: the
+[pause menu](#menus) tells them.
 
 At its right end, `? controls` reminds you where the keys are. It names the key as you bound it
 (`Esc menu` when the controls have no key), and so does the welcome line at the start of a new
 run.
 
 When the window is too narrow for everything, the status bar leaves out the least important parts
-first:
-
-1. the moon's [phase](sun.md#phases), first shortened to its picture, then dropped;
-2. then the temperature, the region, the year of the date, and then the date.
-
-The [weather](weather.md#how-the-weather-changes), the time, your [burden](burden.md#burden-levels),
+first: the region, then your animal's health. The time, your [burden](burden.md#burden-levels),
 your [hunger](hunger.md#how-hungry-you-are), your [status effects](status-effects.md#how-they-work)
 (the least urgent go first), your [resources](resources.md) (the last one goes first), your
 [mana](mana.md#how-much-mana-you-have), your [hit points](hit-points.md#hit-points), and the name of the level
 stay longest. From `Hungry` down, your hunger outlasts them all. Parts come back as soon as there
-is room.
+is room. The [character screen](#character) always lists everything that ails you, even what
+the status bar has no room for.
 
 ## Messages
 
@@ -75,8 +72,10 @@ opens. The up and down keys scroll it a line at a time, and `<` and `>` (or `Pag
 - your [stats](stats.md); one lowered by a status effect or a disease is shown lowered, in red;
 - your [hit points](hit-points.md#hit-points) and [Defence](combat.md#defence) (`Dv`; see
   [Combat](combat.md));
-- what ails you (`Status  Bleeding, Poisoned`; see [Status effects](status-effects.md)), and the
-  diseases you know you have (`Diseased  Filth fever`; see [Diseases](diseases.md));
+- everything that ails you, all of it, even what the status bar has no room for: your [status
+  effects](status-effects.md), being dazzled, your [hunger](hunger.md#how-hungry-you-are), and
+  your [burden](burden.md#burden-levels) (`Status  Bleeding, Poisoned, Hungry, Burdened`), and
+  the diseases you know you have (`Diseased  Filth fever`; see [Diseases](diseases.md));
 - your weight, what you carry, and the weights at which your [burden](burden.md) changes.
 
 It takes no time. Press `@` or `Esc` to close it, or `A` for your skills.
@@ -124,7 +123,11 @@ menu.
 ## Menus
 
 `Esc` during play, when no prompt is open, opens the pause menu: Resume, Settings, Controls, Save
-and quit to menu, and Quit, which saves too.
+and quit to menu, and Quit, which saves too. Under its title one line tells the date, the
+[moon's phase](sun.md#phases), the [weather](weather.md) when you are under the open sky, and the
+[temperature](temperature.md) where you are, for example: *The 11th of Darkening, 1444, under a
+waxing gibbous moon, rain at 4 °C, the world waits.* Indoors and underground it says *the air at
+10 °C* instead of the weather. In a narrow window the moon is left out first, then the weather.
 
 The main menu, where the game opens, has Continue (when there is a saved run), Characters (when
 any character is saved), Graveyard (once any character has died), New run, Settings, Controls, and

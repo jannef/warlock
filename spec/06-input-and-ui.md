@@ -173,10 +173,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   character creation: New run starts the scenario as it is.
 - **Pause menu**: Esc during a run (when no prompt is open) opens it, drawn in glyphs:
   Resume, Settings, Controls, Save and quit to menu, Quit (which saves). No game time passes while
-  it is open; Esc or Back in Settings/Controls returns to it.
+  it is open; Esc or Back in Settings/Controls returns to it. Under its title one short sentence
+  tells the world as the player perceives it (`ui/almanac.rs`, #1679): the date, the moon's phase
+  in words, the weather under the open sky, and the temperature where the player is (in the
+  setting's unit), ending ", the world waits." (`The 11th of Darkening, 1444, under a waxing
+  gibbous moon, rain at 4 °C, the world waits.`; out of the weather `the air at 10 °C`; with
+  several moons each by name, `under Moon full and Ilse new`). It wraps to two centred lines; if it
+  would need a third, the moon gives way, then the weather. The status bar shows none of these:
+  this is where the date, the moon, the weather, and the temperature are shown.
 - **Settings** (`settings.toml` in the config dir, §7 "File locations"; on the web, browser `localStorage`): font size (logical
   px, 12 to 36), reduced effects and the per-effect switches, blood (§4.8), color palette, the
-  temperature unit (`temperature = "celsius"` (the default) or `"fahrenheit"`: how the status bar
+  temperature unit (`temperature = "celsius"` (the default) or `"fahrenheit"`: how the pause menu
   shows the temperature, whole degrees, applied only when it is shown), key bindings, and a Files
   screen (where the files are and why; Open folder). A missing or damaged file means
   defaults and a logged warning. Changes apply live (a font size change rebuilds the glyph atlas)
@@ -428,9 +435,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   they hold, under it (`Rage  11/20`, in resource order; §8 "Resources"), their alignment band
   (`Alignment  Kind`; §8 "Alignment"; never the score), a row per guild they belong to with their
   rank, the title in its metal's colour (`Guild  Tin of the Weyfarers' Gilde`; §8 "Quests",
-  "Guilds"; none before joining one), the status effects
-  they suffer, by name, when there are any (`Status  Bleeding, Poisoned`; never how severe or for
-  how long), what they resist, in words only, a row per word when there is anything to tell
+  "Guilds"; none before joining one), every condition on them that the status bar can show, by
+  name, when there are any, all of them however narrow the window, wrapped under each other
+  (`Status  Bleeding, Poisoned, Dazzled, Hungry, Burdened`: the status effects, Dazzled, Averted,
+  hunger unless Not hungry, and the burden, from the same list the status bar draws, so the two
+  never disagree, #1695; never how severe or for how long), what they resist, in words only, a row per word when there is anything to tell
   (`Immune to  poison`, `Resistant to  fire, cold`, `Vulnerable to  acid`, kinds in damage type
   order; never a percentage; §8 "Damage types"), the diseases they know they have, by name, on a row of their own below (`Diseased
   Filth fever, red ache`; one that has not progressed yet is only "Diseased"; never a timer or a
@@ -853,23 +862,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
   creation"), their hunger unless they are Not hungry (`Hungry`, `Weak`, `Fainting`, `Starving`,
   `Satiated`, `Bloated`; §8 "Hunger"), their burden when they have one (`Burdened`, `Strained`,
   `Overloaded`; §8 "Burden"), their level as `Lv 3` (§8 "Experience"; it goes after the burden
-  and before the time and the date), region (on the overworld and in
-  its local areas), time of day and date as `14:32 · 12 Rainmoon, Year 1444`, the moon's phase as a
-  glyph and its name (`◑ First quarter`; with several moons each moon's name and glyph, `Moon ●
-  Ilse ☽`), the weather under the open sky (`Clear`, `Overcast`, `Rain`, `Heavy rain`; §5
-  "Weather"), the temperature where the player is, always (`4 °C`, or `39 °F` with the setting:
-  whole degrees, rounded half away from zero; tinted a subtle cool blue below freezing and warm
-  from 30 °C, the number saying it all; §5 "Temperature"); with the developer keys on, and
+  and before the time), the combat stance unless neutral, the kept beasts (`Snel: unhurt`), region
+  (on the overworld and in its local areas), and the time of day as `14:32` (it shapes light and
+  sight); with the developer keys on, and
   only then, turn, position, light at the player, vision profile, and seed: no part of the
-  character's status, #1557, #1666). A lantern's mode shows in its name in the item lists ("a lantern (lit)"). The phase glyph
-  shows the lit part of the disc, lit on the right while waxing: `○` new, `☽` waxing crescent,
-  `◑` first quarter and waxing gibbous, `●` full, `◐` waning gibbous and last quarter, `☾` waning
-  crescent. When the window is narrow, segments give way in priority order — the developer
-  segments (seed, position, vision, light, turn), then the moon's phase (first cut down to its glyph), the
-  temperature, region, date (first cut down to day and month, `12 Rainmoon`), weather, time,
+  character's status, #1557, #1666). The date, the moon, the weather, and the temperature are the
+  pause menu's (above). Segments are separated by two spaces, no other mark. A lantern's mode
+  shows in its name in the item lists ("a lantern (lit)"). When the window is narrow, segments
+  give way in priority order — the developer
+  segments (seed, position, vision, light, turn), then region, the kept beasts (first cut down to
+  their names), time, stance, level,
   burden, hunger (Satiated and Bloated here; from Hungry down it stays to the last, drawn in its
   colour, §8 "Hunger"), the status effects (the least important first), the resources (the last
   first), mana, hit points, and the
   level name — and
-  segments that fit again in the room left take it back, most important first. Outdoors the
-  weather outranks the date: it changes the light and how far one sees.
+  segments that fit again in the room left take it back, most important first. The Character
+  screen lists every condition the bar may have given up.

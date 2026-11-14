@@ -173,7 +173,7 @@ Water is calm by design; motion stays tasteful, never busy:
   switch is on and reduced effects is off. Blood (§4.8) has a switch too, outside the
   preset: reduced effects leaves it as it is; so do spell circles (§4.8), which reduced effects
   only stills. Rain has a switch of its own rather than riding on particles: it moves
-  over the whole view, not around a few sources. The weather itself (its light, the status bar)
+  over the whole view, not around a few sources. The weather itself (its light, the pause menu's words)
   never depends on it. No gameplay information may
   depend on an effect: heard sounds keep a still marker when their ripple (glyph animation) is
   off (§5 "Hearing"). These are settings (§6); the `--reduced-effects` flag forces everything off.

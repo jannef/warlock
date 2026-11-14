@@ -93,8 +93,10 @@ pub struct CharacterScreen {
     scores: PerStat<u8>,
     /// The scores without status effects: a score below its own is lowered.
     base: PerStat<u8>,
-    /// The status effects they suffer, by name, the most important first.
-    effects: Vec<String>,
+    /// Every condition on them, by name, as the status bar names them ([`super::conditions`]):
+    /// the status effects (the most important first), Dazzled, Averted, hunger, and the burden.
+    /// All of them, where the status bar may give some up for room (#1695).
+    conditions: Vec<String>,
     /// The diseases they know they have, by name (one that has not progressed yet is only
     /// "Diseased").
     diseases: Vec<String>,
@@ -146,7 +148,7 @@ impl CharacterScreen {
                 kept: Vec::new(),
                 scores: PerStat::splat(warlock_core::stats::AVERAGE),
                 base: PerStat::splat(warlock_core::stats::AVERAGE),
-                effects: Vec::new(),
+                conditions: Vec::new(),
                 diseases: Vec::new(),
                 resistances: Vec::new(),
                 weight: Weight::default(),
@@ -218,8 +220,8 @@ impl CharacterScreen {
             kept,
             scores: view.own_scores(),
             base: view.own_base_scores(),
-            effects: (view.own_effects())
-                .map(|s| content.status(s).name.clone())
+            conditions: (super::conditions(view).into_iter())
+                .map(|s| s.text)
                 .collect(),
             diseases: (view.own_diseases())
                 .map(|d| content.disease(d).name.clone())
@@ -297,7 +299,7 @@ impl CharacterScreen {
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, the name, a gap, race, gender, class, the birth, and a gap (with a
         // character), the stats, a gap, level, experience, talents, hit points and mana, Defence and
-        // Protection, and stance (and the resources held, the status effects and known diseases, if any), a gap, the weight, the
+        // Protection, and stance (and the resources held, the conditions and known diseases, if any), a gap, the weight, the
         // burden's thresholds, a gap, the footer, frame.
         let width = WIDTH.min(console.cols() as i32) - 4;
         let birth = fit_parts(&self.birth, width);
@@ -307,10 +309,14 @@ impl CharacterScreen {
             n => (n + birth.len() + stars.len()) as i32 + self.kept.len() as i32 + 1,
         };
         let thresholds = (self.load.as_ref()).map_or(Vec::new(), |l| thresholds(l, width));
+        // A comma ends each line but the last (the width leaves it room).
+        let mut conditions = fit_joined(&self.conditions, ", ", width - 5 - NAME_W);
+        let last = conditions.len().saturating_sub(1);
+        conditions[..last].iter_mut().for_each(|l| l.push(','));
         let status_rows = self.resources.len() as i32
             + i32::from(self.alignment.is_some())
             + self.guilds.len() as i32
-            + i32::from(!self.effects.is_empty())
+            + conditions.len() as i32
             + i32::from(!self.diseases.is_empty())
             + self.resistances.len() as i32;
         let h = Stat::COUNT as i32 + 16 + identity_rows + thresholds.len() as i32 + status_rows;
@@ -436,11 +442,14 @@ impl CharacterScreen {
             }
             y += 1;
         }
-        // `    Status        Bleeding, Poisoned`: names only, never how bad.
-        if !self.effects.is_empty() {
+        // `    Status        Bleeding, Poisoned, Hungry, Burdened`: names only, never how bad,
+        // every one, wrapped under each other.
+        for (i, line) in conditions.iter().enumerate() {
             if fits(y) {
-                console.print(x + 4, y, "Status", TEXT);
-                console.print(x + 4 + NAME_W, y, &self.effects.join(", "), LOWERED);
+                if i == 0 {
+                    console.print(x + 4, y, "Status", TEXT);
+                }
+                console.print(x + 4 + NAME_W, y, line, LOWERED);
             }
             y += 1;
         }
@@ -763,6 +772,42 @@ mod tests {
             .find(|c| c.ch == '8')
             .expect("the score");
         assert_eq!(score.fg, LOWERED);
+    }
+
+    #[test]
+    fn lists_every_condition_the_status_bar_can_show_wrapped() {
+        // Burdened in the hoard, with five statuses: more than a narrow bar holds (#1695).
+        let mut world = crate::ui::hoard();
+        world.apply(&Action::PickUp(Positions::default()));
+        for status in ["bleeding", "poisoned", "fortified", "owl_eyed", "surprised"] {
+            world.apply(&Action::Afflict(status.into()));
+        }
+        let view = world.perception();
+        let named: Vec<String> = (crate::ui::conditions(&view).into_iter())
+            .map(|s| s.text)
+            .collect();
+        assert!(named.contains(&"Burdened".to_string()), "{named:?}");
+        assert!(named.len() >= 6, "{named:?}");
+        let text = drawn(&world, 60, 40);
+        let at = text.iter().position(|l| l.contains("Status")).expect("row");
+        let rows = text[at..]
+            .iter()
+            .take_while(|l| l.contains(", ") || l.contains("Burdened"));
+        let listed = rows.map(|l| {
+            l.trim_matches(['│', ' '])
+                .trim_start_matches("Status")
+                .trim()
+        });
+        let listed = listed.collect::<Vec<_>>().join(" ");
+        assert!(
+            listed.contains(&named.join(", ")),
+            "{named:?} in {listed:?}"
+        );
+        assert!(
+            text[at].trim_end_matches(['│', ' ']).ends_with(','),
+            "{}",
+            text[at]
+        );
     }
 
     #[test]

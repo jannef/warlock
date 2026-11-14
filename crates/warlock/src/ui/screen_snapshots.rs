@@ -205,8 +205,7 @@ fn status_bar(app: &App, dev: bool) -> Option<String> {
     let mut bar = Console::default();
     bar.resize(console.cols(), console.rows());
     let y = console.rows() as i32 - 1;
-    let units = (settings.clock, settings.temperature, dev);
-    draw_status(&mut bar, game, y, units, &hint);
+    draw_status(&mut bar, game, y, (settings.clock, dev), &hint);
     text(&bar).split('\n').next_back().map(String::from)
 }
 

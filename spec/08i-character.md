@@ -224,7 +224,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     heights at night (+1 to +3); only the gifts' (`TalentMods::gift_reach` marks the `scent`
     and `night_sight` of `stars` talents: Blood scent is not lengthened). Inner
     light burns as `full_moon_light` (`ember_full`, radius 2) instead of its `ember`. Nothing
-    new is shown: the status bar shows the moon's phase already, the cooldown its status, and
+    new is shown: the pause menu tells the moon's phase already, the cooldown its status, and
     the wiki the numbers. The design's element seasons stay deferred.
   - **Sign prerequisites**: a talent may ask `animal = "roc"`, `element = "fire"`, or `lucky =
     true` ("to be born in the year of the Roc", "to be Fire-born", "to be born on a lucky

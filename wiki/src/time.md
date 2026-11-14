@@ -5,8 +5,9 @@ your run and is saved with it; nothing depends on real-world time.
 
 ## Days
 
-A day has 24 hours, as usual. The [status bar](the-screen.md#the-screen) shows the time, the date,
-and the phase of the [moon](sun.md#phases) like this: `14:32 · 12 Rainmoon, Year 1444 · ◑ First quarter`.
+A day has 24 hours, as usual. The [status bar](the-screen.md#the-screen) shows the time, as `14:32`.
+The [pause menu](the-screen.md#menus) (`Esc`) tells the date and the phase of the
+[moon](sun.md#phases) like this: *The 12th of Rainmoon, 1444, under a waxing gibbous moon, ...*
 
 - **Dawn** is at 06:00 and **dusk** is at 18:00. The sun rises at dawn and sets at dusk; see
   [Sun, moon, and sky](sun.md).
@@ -23,25 +24,22 @@ Days are numbered 1 to 30 within a month, and years count up from 1.
 
 ## The moon's phase
 
-The [moon](sun.md#phases) waxes and wanes once a month (see [Sun, moon, and sky](sun.md)). The [status bar](the-screen.md#the-screen) shows its
-phase as a small picture of the moon and a name. The picture shows the lit part of the moon, which
-is on the right while the moon waxes and on the left while it wanes:
+The [moon](sun.md#phases) waxes and wanes once a month (see [Sun, moon, and sky](sun.md)). The
+[pause menu](the-screen.md#menus) names its phase in words, *under a full moon*:
 
-| Picture | Phase | In a month |
-|:---:|---|---|
-| `○` | New moon | around the 1st |
-| `☽` | Waxing crescent | |
-| `◑` | First quarter, and waxing gibbous after it | around the 8th |
-| `●` | Full moon | around the 16th |
-| `◐` | Waning gibbous, and last quarter after it | around the 23rd |
-| `☾` | Waning crescent | |
+| The pause menu says | In a month |
+|---|---|
+| a new moon | around the 1st |
+| a waxing crescent moon | |
+| a waxing half moon | around the 8th |
+| a waxing gibbous moon | |
+| a full moon | around the 16th |
+| a waning gibbous moon | |
+| a waning half moon | around the 23rd |
+| a waning crescent moon | |
 
-If the game world has more than one moon, the [status bar](the-screen.md#the-screen) shows each moon's name and picture
-instead, for example `Moon ●  Ilse ☽`.
-
-Under the open sky the [status bar](the-screen.md#the-screen) also shows the [weather](weather.md), after the moon. When the
-window is narrow, the [status bar](the-screen.md#the-screen) shortens the moon's phase to its picture and the date to its day
-and month before it drops them; see [The screen](the-screen.md#the-screen).
+If the game world has more than one moon, the pause menu names each moon and its phase instead,
+for example *under Moon full and Ilse waxing crescent*.
 
 ## What takes time
 

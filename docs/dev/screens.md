@@ -250,7 +250,10 @@ to open, read keys for, or draw one:
   `blank_way` too. Heal's and Give's ways between two kept beasts stay their own (`tend_way`,
   `InputMode::GiveWay`).
 - Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Hints`,
-  `Panel`, main and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`,
+  `Panel`, main and pause menu; the pause menu's line on the world under its title is
+  `ui/almanac.rs`'s `Almanac`, read from the `PerceptionView` when the menu opens: the date, the
+  moon in words, the weather, the temperature in the settings' unit, ending ", the world waits.",
+  at most two centred lines, the moon then the weather giving way before a third), `ui/new_run_screen.rs`, `ui/settings_screen.rs`,
   `ui/controls_screen.rs` (commands grouped by `Context` under headings, notes on Esc and list
   letters, Reset all keys, Export keys…, Import keys…; Enter on a command opens its keys under
   it as a sub-list, `Row::Key` and `Row::AddKey` (#1324): Enter replaces the selected key or adds
@@ -280,8 +283,9 @@ to open, read keys for, or draw one:
   `ui/equipment_screen.rs` (`EquipmentScreen`: slots by letter, which always name slots, so its
   own key `i` closes it only when it names none (with 13 slots `i` always names one); `ItemScreen`: the stacks that fit one slot), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
   and sign (`birth_parts`/`fit_parts`, shared with the summary), the player's scores, hit points
-  and Defence total, the alignment band (`PerceptionView::own_alignment`), weight and burden
-  thresholds; the attacks beside the stats (`draw_attacks`, from `PerceptionView::own_attacks`:
+  and Defence total, the alignment band (`PerceptionView::own_alignment`), the Status row (every
+  condition the status bar can show, from the same `ui::conditions` it draws, wrapped, never
+  dropped, #1695), weight and burden thresholds; the attacks beside the stats (`draw_attacks`, from `PerceptionView::own_attacks`:
   two rows each, label and name, then `OwnAttack::summary` under the name); 80 wide),
   `ui/weapon_skills_screen.rs` (an info page: sections, ranks, and a faint ten-cell marks bar,
   the fighting styles in use marked `•`; two columns from 88 wide, else one that drops its gaps

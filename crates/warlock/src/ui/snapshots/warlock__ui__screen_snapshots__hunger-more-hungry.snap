@@ -1,6 +1,6 @@
 ---
 source: crates/warlock/src/ui/screen_snapshots.rs
-expression: "render(&case, content)"
+expression: "render(case, content)"
 ---
  You are getting hungry. --more--
 
@@ -31,4 +31,4 @@ expression: "render(&case, content)"
 
 
 
- The Wildlands  ·  HP 20/20  ·  MP 4/4  ·  Hungry  ·  Lv 1  ·  Lēof  ·  08:19            ? controls
+ The Wildlands  HP 20/20  MP 4/4  Hungry  Lv 1  Lēof: with you  Greenmarch  08:19        ? controls

@@ -20,6 +20,16 @@ cases! {
         screen: Some("character"),
         ..BASE
     },
+    // Every condition on the character in the Status row (#1695), wrapped, where the status
+    // bar beneath gives some up for room.
+    character_screen_conditions: Case {
+        name: "character-screen-conditions",
+        status_bar: true,
+        actions: "afflict:bleeding afflict:poisoned afflict:fortified afflict:owl_eyed \
+                  stance:aggressive wait",
+        screen: Some("character"),
+        ..BASE
+    },
     character_screen_lucky: Case {
         name: "character-screen-lucky",
         // Seed 440 gives Tamsin a lucky day (#269): the Deep One, the title after the name.

@@ -67,7 +67,7 @@ impl Weather {
         self as usize
     }
 
-    /// How the status bar names it.
+    /// Its name, capitalised (the wiki's tables; the dev message lowercases it).
     pub const fn name(self) -> &'static str {
         match self {
             Weather::Clear => "Clear",

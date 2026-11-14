@@ -184,14 +184,14 @@ rate or animation.
     weather's `chill` (rain 1 °C, heavy rain 2 °C). Where the weather changes, its swing and chill
     change with the clouds, over the same hour (`weather::Blend`). The dev weather override sets
     them too, from the moment it is given. A clear night on 11 Darkening falls to about −3 °C.
-  - **Shown**: the status bar always shows the temperature where the player is, in dungeons and
-    outdoors alike, in whole degrees (`4 °C`; °F with the setting, §6), with a subtle cool tint
-    below freezing and a warm one from 30 °C. The number is the one exception to numbers being
+  - **Shown**: the pause menu's line on the world (§6 "Pause menu") tells the temperature where
+    the player is, in dungeons and outdoors alike, in whole degrees (`4 °C`; °F with the setting,
+    §6). The number is the one exception to numbers being
     hidden: the player feels the air. Nothing else feels it yet: no hypothermia, warmth, or
     clothing; it freezes water ("Ice" below). Ice does not change the air; a hot or a cold
     special room does, on its cells (§7 "Special rooms": 25 °C warmer or colder than the level,
     `WorldState::temperature_at`, the one place a cell's temperature is decided), and the
-    status bar shows the temperature of the player's cell.
+    pause menu tells the temperature of the player's cell.
 - **Ice** (`warlock-core/src/ice.rs`, rules in `world/levels/ice.rs`; M26):
   - **Freezing**: every cell of water that freezes (terrain with a `freeze` table, §7: still
     water below 0 °C at full pace; running water only below −6 °C, at 40 %) has an ice

@@ -277,7 +277,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     is decided in one place, `WorldState::temperature_at` (the level's, §5 "Temperature", plus
     what the effects there add, the room's and the whole level's), and whatever the temperature
     does is the environment's, so a hot room is like any hot place. Today that is two things:
-    the status bar shows the temperature of the player's cell, so stepping in shows the change,
+    the pause menu tells the temperature of the player's cell, so stepping in changes it there,
     and the ice follows it (§5 "Ice": a cold room's water freezes on a 10 °C level, ice melts in
     a hot room in a frost). A level with a hot or a cold room has had the same 30 days of
     weather as a level under the open sky when it is first made, so a cold room's pool is

@@ -22,7 +22,7 @@ changed in the Controls screen instead; see [Controls](controls-rebinding.md).
 | Blood | The stains big hits and kills leave on floors and walls (see [Combat](hit-points.md#blood)), and the [char](hit-points.md#char) fire leaves. Not one of the effects: Reduced effects leaves it as it is. |
 | Color palette | The colors: Default, High contrast, or Colorblind (red-green). See below. |
 | Clock | How the [time of day](time.md#days) is written: 24-hour (`14:32`, the default) or 12-hour (`2:32 PM`). It changes the [status bar](the-screen.md#the-screen) and the death screen; the game itself keeps one clock. |
-| Temperature | The unit the [status bar](the-screen.md#the-screen) shows the [temperature](temperature.md) in: °C (Celsius, to start with) or °F (Fahrenheit). See [Temperature and ice](temperature.md). |
+| Temperature | The unit the [pause menu](the-screen.md#menus) tells the [temperature](temperature.md) in: °C (Celsius, to start with) or °F (Fahrenheit). See [Temperature and ice](temperature.md). |
 | Where are my files? | Opens a screen showing where your settings, save, and logs are, and why, with **Open folder** for each. See [Saving](saving.md#portable-mode). |
 | Reset to defaults | Puts every setting above back to its default. Your [keys](controls-rebinding.md) stay as they are. |
 

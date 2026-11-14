@@ -11,7 +11,7 @@ warnings (the settings', the paths') come before `LogPlugin` exists: `logging::w
 them and a `Startup` system logs them (to the log file too), or, for a launch that exits first (a
 file command, content that does not load), `logging::print_early_warnings` prints them (#1591). The
 temperature unit (`temperature = "celsius"`/`"fahrenheit"`, `settings::TemperatureUnit`) is
-applied only where the status bar shows the temperature (`TemperatureUnit::show`). Effects:
+applied only where the pause menu tells the temperature (`TemperatureUnit::show`, `ui/almanac.rs`). Effects:
 `reduced_effects` is a preset over the `[effects]` switches (`EffectSwitches`: glyph_animation,
 flicker, motion, glow, distortion, particles, screen_fades, screen_shake, weather; all on by default), all but
 `blood` (on by default too), a content preference the preset leaves as set, and `circles` (the

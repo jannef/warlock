@@ -8,14 +8,15 @@
 //! [`ScreenAction`], so it is testable without a window. Selection is always shown by text (a `>`
 //! marker), never by color alone.
 
+use super::almanac::Almanac;
 use super::cursor;
 use super::dialog_screen::Dialog;
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{ACCENT, PANEL_BG, TEXT, TEXT_DIM};
 use crate::input::{Bindings, Context, KeyBinding};
 use crate::render::console::Console;
-use crate::settings::fixed;
 use crate::settings::mods::Mods;
+use crate::settings::{TemperatureUnit, fixed};
 use bevy::input::keyboard::{Key, KeyCode, KeyboardInput};
 
 /// A key press reduced to what menus care about: its fixed menu key (`settings::fixed::menu`),
@@ -306,6 +307,9 @@ pub struct MainMenu {
     saved: bool,
     /// Anyone has died (the graveyard, `graveyard.rs`): the main menu offers the Graveyard.
     dead: bool,
+    /// What the pause menu tells of the world under its title (the date, the moon, the weather,
+    /// the temperature); `None` on the main menu, or a pause menu with no run beneath.
+    almanac: Option<Almanac>,
 }
 
 impl MainMenu {
@@ -318,6 +322,7 @@ impl MainMenu {
             saved: saved || last.is_some(),
             last,
             dead: false,
+            almanac: None,
         }
     }
 
@@ -326,13 +331,15 @@ impl MainMenu {
         Self { dead, ..self }
     }
 
-    pub fn pause() -> Self {
+    /// The pause menu, telling `almanac` of the world beneath it.
+    pub fn pause(almanac: Option<Almanac>) -> Self {
         Self {
             selected: 0,
             pause: true,
             last: None,
             saved: false,
             dead: false,
+            almanac,
         }
     }
 
@@ -393,12 +400,15 @@ impl MainMenu {
         ScreenAction::Stay
     }
 
-    /// Draws the menu, with `notice` (something the player should know) under the rows.
-    pub fn draw(&self, console: &mut Console, notice: Option<&str>) {
+    /// Draws the menu, with `notice` (something the player should know) under the rows, and
+    /// the pause menu's temperature in `unit`.
+    pub fn draw(&self, console: &mut Console, notice: Option<&str>, unit: TemperatureUnit) {
         let items = self.items();
         let notice_lines = notice.map_or(Vec::new(), |n| wrap(n, 44));
         let h = 12 + items.len() as i32 + notice_lines.len() as i32;
-        let panel = Panel::new(console, "", 52, h);
+        // The pause menu is wider, for its line on the world.
+        let w = if self.pause { 58 } else { 52 };
+        let panel = Panel::new(console, "", w, h);
         let cx = |text: &str| panel.x + (panel.w - text.chars().count() as i32) / 2;
         let title = if self.pause {
             "P A U S E D"
@@ -408,12 +418,17 @@ impl MainMenu {
         console.print(cx(title), panel.y + 2, title, ACCENT);
         let rule = "═".repeat(title.chars().count());
         console.print(cx(&rule), panel.y + 3, &rule, TEXT_DIM);
-        let tagline = if self.pause {
-            "the world waits"
-        } else {
-            "an ASCII roguelike"
+        // The pause menu's line on the world, in at most two centred lines (three in a very
+        // narrow window): `The 11th of Darkening, 1444, under a waxing gibbous moon, the air at
+        // 10 °C, the world waits.`
+        let tagline = match (&self.almanac, self.pause) {
+            (Some(almanac), _) => almanac.lines(unit, panel.inner_w()),
+            (None, true) => vec!["the world waits".to_string()],
+            (None, false) => vec!["an ASCII roguelike".to_string()],
         };
-        console.print(cx(tagline), panel.y + 4, tagline, TEXT_DIM);
+        for (i, line) in tagline.iter().take(3).enumerate() {
+            console.print(cx(line), panel.y + 4 + i as i32, line, TEXT_DIM);
+        }
         for (i, item) in items.iter().enumerate() {
             let y = panel.y + 7 + i as i32;
             // Continue names who it resumes.
@@ -766,7 +781,7 @@ mod tests {
 
     #[test]
     fn pause_menu_rows_and_choices() {
-        let mut m = MainMenu::pause();
+        let mut m = MainMenu::pause(None);
         let rows: Vec<_> = m.items().iter().map(|i| i.label()).collect();
         assert_eq!(
             rows,

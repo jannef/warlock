@@ -26,6 +26,7 @@
 //! so they are testable without a window.
 
 use super::abilities_screen::AbilitiesScreen;
+use super::almanac::Almanac;
 use super::character_screen::CharacterScreen;
 use super::characters_screen::CharactersScreen;
 use super::chargen_screen::{ChoiceScreen, Draft, Picks, Step, SummaryScreen};
@@ -442,7 +443,7 @@ impl Screen {
             ScreenName::Graveyard => {
                 Screen::Graveyard(GraveyardScreen::new(&launch.fallen, content))
             }
-            ScreenName::Pause => Screen::Menu(MainMenu::pause()),
+            ScreenName::Pause => Screen::Menu(MainMenu::pause(run.map(Almanac::of))),
             // A release build's new run gets a seed no one chooses; a developer may type one.
             ScreenName::NewRun => {
                 let fresh = (!launch.dev).then(new_run_screen::fresh_seed);
