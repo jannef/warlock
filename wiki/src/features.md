@@ -79,8 +79,8 @@ against your weight: a laden dwarf breaks through where a light elf crosses, and
 
 You make a [character](character.md) at the start of every run. There are thirteen
 [races](races.md), each with its own eyes, three [genders](character.md#gender), and twelve
-[classes](classes.md) to choose from, from [berserker](classes.md#berserker) and
-[wizard](classes.md#wizard) to [aristocrat](classes.md#aristocrat), though not every class is open
+[classes](classes.md) to choose from, from [berserker](class-berserker.md) and
+[wizard](class-wizard.md) to [aristocrat](class-aristocrat.md), though not every class is open
 to every race ([Who may take which](classes.md#who-may-take-which)). Your year of birth gives you a
 [horoscope](horoscope.md) sign. Characters are not balanced, on purpose: some are a challenge.
 
@@ -99,7 +99,7 @@ carried when they die.
 
 [Weapon skills](weapon-skills.md) and [fighting styles](fighting-styles.md) improve as you fight.
 [Ranged combat](ranged.md) has bows, a crossbow, a sling, and [throwing
-weapons](ranged.md#shooting-and-throwing); you [aim](controls.md#aiming) with a cursor and pick
+weapons](ranged.md#shooting-and-throwing); you [aim](controls-prompts.md#aiming) with a cursor and pick
 up your arrows where they fell. Big hits leave [blood](hit-points.md#blood) on the floor and the
 walls.
 
@@ -113,7 +113,7 @@ back with [time](healing.md#how-fast-you-heal), twice as fast while you [rest](r
 rest are learned from [scrolls](scrolls.md). [Wands](wands-and-rods.md#wands) cast their spell
 from charges, for anyone. [Rods](wands-and-rods.md#rods) do what no spell does, such as digging or
 sending a creature away, for your own mana. Some classes use [resources](resources.md) of their
-own, such as a berserker's [rage](resources.md#rage).
+own, such as a berserker's [rage](rage.md).
 
 ## Things to find and use
 
@@ -158,7 +158,7 @@ Ponds glint in the torchlight, streams flow and foam against rocks, torches flic
 throw sparks and heat haze. Every effect can be turned off on its own in the
 [settings](settings.md), and a reduced-effects preset turns them all off. Settings also cover font
 size, color [palettes](settings.md#palettes) (including high contrast and a colorblind-friendly
-one), °C or °F, and fully [rebindable keys](controls.md#rebinding-keys).
+one), °C or °F, and fully [rebindable keys](controls-rebinding.md).
 
 ![The effects room](images/m4-effects-room.png)
 

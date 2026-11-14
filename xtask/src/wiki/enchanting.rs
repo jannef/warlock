@@ -152,7 +152,7 @@ pub(super) fn enchanting_seals(content: &Content) -> String {
     );
     let _ = writeln!(
         out,
-        "- [Salvaging](crafting.md#salvage) a rare item of item level {} or more: a {}% chance of \
+        "- [Salvaging](salvage.md) a rare item of item level {} or more: a {}% chance of \
          {} (even odds).",
         rare.salvage_level,
         rare.salvage_chance,

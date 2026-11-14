@@ -18,7 +18,7 @@ The first time you step into a special room, a message tells you what it is:
 The light seems to drain away here.
 ```
 
-From then on you know the room. [Look mode](controls.md#look-mode) names it on any of its floor
+From then on you know the room. [Look mode](controls-prompts.md#look-mode) names it on any of its floor
 you see or remember ("A stone floor in an echoing hall.", "You remember a stone floor here, in a
 sanctuary."). Before you have been inside, it is just a room, though you may notice something odd
 about it from the doorway: an unnatural darkness, a faint warm glow, [water](terrain.md#water) on
@@ -105,9 +105,9 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
   Everyone inside, you and creatures alike, is [Silenced](status-effects.md#status-silenced) (see
   [Status effects](status-effects.md)) for as long as they stay and ten seconds after they leave.
   No [spell](magic.md#the-spells) can be cast, no [scroll](scrolls.md) read, and no
-  [voice](hearing.md#throwing-your-voice) thrown. A [wizard](classes.md#wizard) and a
+  [voice](hearing.md#throwing-your-voice) thrown. A [wizard](class-wizard.md) and a
   [kobold shaman](creatures.md#creature-kobold-shaman) fight with sticks in it; a
-  [thief](classes.md#thief) walks through unheard.
+  [thief](class-thief.md) walks through unheard.
 - **Heavy hall.** The stones pull at whatever you carry. Inside, your
   [carrying limit](burden.md#how-much-you-can-carry) is half what it is anywhere else, so a load
   that was light makes you [burdened](burden.md#burden-levels), and armour that only burdened you
@@ -119,7 +119,7 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
   [Teeming dens](teeming-dens.md).
 - **Hall of mirrors.** Glass on every side. Everyone in it, you too, is shown with two reflections
   that look exactly like them, standing elsewhere in the room and shifting every turn. Nothing on
-  the screen tells a reflection from the real thing; [look mode](controls.md#look-mode) only knows
+  the screen tells a reflection from the real thing; [look mode](controls-prompts.md#look-mode) only knows
   your own ("Your reflection"). Swing at or walk into a reflection and your blow meets only glass,
   which costs you the blow's time. An [arrow](ranged.md#shooting-and-throwing) or a thrown dagger
   aimed at one flies on through it. An archer outside the hall shooting at you while you are inside
@@ -211,7 +211,7 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
   [training mark](skills.md#improving-a-skill) in
   [Decipher script](skills.md#skill-decipher-script) is doubled:
   [making out a scroll](scrolls.md#making-out-a-scroll) or reading a
-  [grimoire](magic.md#learning-a-spell) through earns two marks here instead of one,
+  [grimoire](learning-spells.md#learning-a-spell) through earns two marks here instead of one,
   and reading a scroll earns one every time instead of half the time.
   Only rooms of 9 floor cells or more can be one.
 

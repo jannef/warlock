@@ -46,11 +46,11 @@ utility, and [skills](skills.md).
 - **Stamina**: *of Breath*, *of Ease*, and *of the Hunt* help
   [stamina](resources.md#resource-stamina).
 - **Class resources**: *of Fury*, *of Steadiness*, *of Stillness*, *of Guile*, and *of the Muse*
-  raise the most [rage](resources.md#rage), [focus](resources.md#resource-focus),
+  raise the most [rage](rage.md), [focus](resources.md#resource-focus),
   [ki](resources.md#resource-ki), [openings](resources.md#resource-openings), or
   [inspiration](resources.md#resource-inspiration) you can hold. Only
-  [berserkers](classes.md#berserker), [rangers](classes.md#ranger),
-  [ascetics](classes.md#ascetic), [thieves](classes.md#thief), and [bards](classes.md#bard) hold
+  [berserkers](class-berserker.md), [rangers](class-ranger.md),
+  [ascetics](class-ascetic.md), [thieves](class-thief.md), and [bards](class-bard.md) hold
   those (see [Resources](resources.md)), so to anyone else they are no use.
 - *Of Siphoning* and *of the Hunt* give their [mana](mana.md#mana-on-a-kill) or
   [stamina](resources.md#resource-stamina) only for a kill made by your own blow, shot, or spell,

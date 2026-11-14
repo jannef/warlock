@@ -33,7 +33,7 @@ it. `Backspace` erases and `Enter` accepts. `Tab` puts in one of your people's n
 random by race and gender; press it again for another.
 
 A name cannot be empty. If you accept an empty field, you get the random name it shows, dimmed.
-These keys are fixed (see [Text fields](controls.md#text-fields)).
+These keys are fixed (see [Text fields](controls-menus.md#text-fields)).
 
 Your name appears on the character screen, the summary, the death screen, and the list of saved
 characters (see [Saving](saving.md)). It changes nothing else.
@@ -66,15 +66,15 @@ Some changes are **dice**, rolled when you start:
 - `−1d2` takes one two-sided die away: −1 or −2.
 - A plain number, such as `+2` or `−1`, is always that.
 
-Classes roll their key stats. A [warrior](classes.md#warrior)'s
-[Strength](stats.md#stat-strength) is `1d3+1`, a [wizard](classes.md#wizard)'s
+Classes roll their key stats. A [warrior](class-warrior.md)'s
+[Strength](stats.md#stat-strength) is `1d3+1`, a [wizard](class-wizard.md)'s
 [Intelligence](stats.md#stat-intelligence) `2d2+1`. [Races](races.md) are mostly plain numbers,
 with a few dice. The [horoscope](horoscope.md) rolls none. The summary shows only the final
 scores. Change a choice and the dice are rolled again.
 
 The choices are not balanced, and they are not meant to be. Some combinations are poor on
-purpose: a [halfling](races.md#race-halfling) [commoner](classes.md#commoner) or a
-[gnome](races.md#race-gnome) [berserker](classes.md#berserker) has a hard start. That is part of
+purpose: a [halfling](races.md#race-halfling) [commoner](class-commoner.md) or a
+[gnome](races.md#race-gnome) [berserker](class-berserker.md) has a hard start. That is part of
 the fun. There is one consolation. Your race and class also set how much
 [experience](experience.md#levels) each level needs. Long-lived [races](races.md) and patient
 callings level slowly; short-lived races and everyday folk level quickly.

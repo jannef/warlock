@@ -545,22 +545,30 @@ mod tests {
         out
     }
 
-    /// The classes page includes every class's level table once, by its anchor, so a class's
-    /// prose sits in its one section (#1171: the paladin and the bard had two).
+    /// Each class's page includes its level table once, by its anchor, so a class's prose sits
+    /// in its one page (#1171: the paladin and the bard had two sections; #1540: a page each).
     #[test]
-    fn the_classes_page_includes_every_class_table_once() {
+    fn every_class_page_includes_its_table_once() {
         let content = Content::builtin().expect("content loads");
         let table = talents::class_levels(&content);
-        let page = std::fs::read_to_string(workspace_root().join("wiki/src/classes.md"))
+        let overview = std::fs::read_to_string(workspace_root().join("wiki/src/classes.md"))
             .expect("classes.md");
-        assert!(!page.contains("{{#include generated/class-levels.md}}"));
+        assert!(!overview.contains("{{#include generated/class-levels.md"));
         for class in content.classes() {
+            let name = character::class_page(&class.id);
+            let page = std::fs::read_to_string(workspace_root().join("wiki/src").join(&name))
+                .unwrap_or_else(|_| panic!("{name}"));
             let anchored = table.contains(&format!("<!-- ANCHOR: {} -->", class.id));
             let include = format!("{{{{#include generated/class-levels.md:{}}}}}", class.id);
-            let wanted = usize::from(anchored);
-            assert_eq!(page.matches(&include).count(), wanted, "{}", class.id);
-            let heading = format!("### The {}\n", class.name.to_lowercase());
-            assert!(!page.contains(&heading), "{}: a second section", class.id);
+            assert_eq!(
+                page.matches(&include).count(),
+                usize::from(anchored),
+                "{name}"
+            );
+            assert_eq!(
+                page.matches("{{#include generated/class-levels.md").count(),
+                1
+            );
         }
     }
 

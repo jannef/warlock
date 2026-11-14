@@ -1,7 +1,7 @@
 # The screen
 
 The map fills most of the window. Above it, the **[message line](#messages)** (two rows) tells you
-what this turn brought. Prompts and [look mode](controls.md#look-mode) use the same line. This page
+what this turn brought. Prompts and [look mode](controls-prompts.md#look-mode) use the same line. This page
 also covers the info pages, the menus, and the death screen; the keys are on
 [Controls](controls.md).
 

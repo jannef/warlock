@@ -1,10 +1,33 @@
 # Creatures in numbers
 
 The game never shows you a creature's numbers. You see what it does, and
-[look mode](controls.md#look-mode) tells you how hurt it looks. This page gives the numbers
+[look mode](controls-prompts.md#look-mode) tells you how hurt it looks. This page gives the numbers
 exactly, as the rules use them, taken from the game's data. How creatures behave is on the
 [Creatures](creatures.md) page. Their special powers (throwing, summoning, breath, spells, and the
 rest) are on [Creature powers](creature-powers.md).
+
+The tables are split by family, a page each:
+
+- [The dead and spirits](creature-numbers-dead.md): the undead (zombies, ghouls, wights, vampires,
+  liches, skeletons) and the spirits.
+- [Fiends](creature-numbers-fiends.md): demons, devils, yugoloths, and the gates a miscast opens.
+- [The fey](creature-numbers-fey.md): sprites, pixies, redcaps, dryads, and the rest of the courts.
+- [Elementals](creature-numbers-elementals.md): the elementals of air, earth, fire, ice, lightning,
+  and water, and their motes.
+- [Animated things and mimics](creature-numbers-animated.md): animated objects, constructs, and
+  mimics.
+- [Giants, trolls, hags, and dragons](creature-numbers-giants.md): giants and ogres, trolls, hags,
+  and the dragons.
+- [Kobolds, goblins, and orcs](creature-numbers-goblins.md): kobolds, goblins, hobgoblins, and
+  orcs.
+- [Drow, duergar, and deep gnomes](creature-numbers-deep-folk.md): the peoples of the deep: drow,
+  duergar, and deep gnomes.
+- [Beasts and vermin](creature-numbers-beasts.md): animals, giant vermin, and the things of the
+  marsh.
+- [People and other creatures](creature-numbers-others.md): townsfolk, outlaws, cultists, and every
+  creature of no family above.
+
+This page says what each table's columns mean.
 
 ## Stats and skills
 
@@ -15,8 +38,6 @@ It also gives the six [stats](stats.md), each with its [modifier](stats.md#modif
 A creature's [potentials](stats.md#potentials) are how far each score could grow, but creatures do
 not train or grow yet. Skill values are on the scale of the [Skills](skills.md) page, and weapon
 skill ranks on the scale of [Weapon skills](weapon-skills.md).
-
-{{#include generated/creature-stats.md}}
 
 ## Hit points, Defence, and resistances
 
@@ -34,8 +55,6 @@ The [Protection](combat.md#protection) shown is its natural armour's, and what i
 it. [Resistances](damage-types.md#armour-and-resistance) take their share off each kind of damage
 after Protection (see [Damage types](damage-types.md)).
 
-{{#include generated/creature-defences.md}}
-
 ## Attacks
 
 This table shows what each creature does with nothing in its hands: its natural attack (a bite, a
@@ -49,8 +68,6 @@ to factions with no enemies (see [Creatures](creatures.md#factions)).
 
 What a hit may cause is a chance for each effect, rolled when the hit lands and the target lives.
 [A disease](diseases.md) is then resisted with a check (see [Diseases](diseases.md)).
-
-{{#include generated/creature-attacks.md}}
 
 ### By role
 
@@ -95,7 +112,7 @@ These are the creatures with a craft for [surprise](status-effects.md#status-sur
 - Their **[spot](skills.md#skill-spot)** counts against you when you
   [slip past](skill-uses.md#slipping-past) them in the dark.
 - A creature that **lurks** waits where it stands for you to come beside it, until it is hurt (see
-  [Creatures](creatures.md#what-they-do)).
+  [How creatures behave](creature-behaviour.md#what-they-do)).
 
 Every other creature has none of this. Its initiative check is its Dexterity alone, and it strikes
 the unwary with no extra dice.
@@ -118,5 +135,3 @@ the unwary with no extra dice.
 - **Tameable** says whether it may be a companion at all.
 - It is [burdened](burden.md#burden-levels) past a third of its
   **[carrying limit](burden.md#how-much-you-can-carry)**, as you are (see [Burden](burden.md)).
-
-{{#include generated/creature-senses.md}}

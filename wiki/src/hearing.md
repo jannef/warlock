@@ -30,11 +30,11 @@ around you hear too.
 - **[Voices](npcs.md#muttering).** People muttering to themselves can be heard a few cells away.
   If you hear one you cannot see, you hear a voice, and its words unless it was faint: "You hear a voice to the
   north: "Weeds. Always the weeds."" See [People and talk](npcs.md#muttering).
-- **Songs.** A [bard](classes.md#bard)'s song ([inspire](abilities.md#ability-inspire), the
+- **Songs.** A [bard](class-bard.md)'s song ([inspire](abilities.md#ability-inspire), the
   [lullaby](abilities.md#ability-lullaby)) is sung aloud, a voice louder than muttering, heard where
   the bard stands. Creatures that hear it and cannot see the singer come to look.
   [Stealth](skills.md#what-skills-give) does not quiet it.
-- **A cackle.** A [witch](classes.md#witch)'s [cackle](abilities.md#ability-cackle) is a voice
+- **A cackle.** A [witch](class-witch.md)'s [cackle](abilities.md#ability-cackle) is a voice
   louder than muttering (60), heard where she stands. Those who hear it come to look. Stealth does
   not quiet it either.
 
@@ -99,7 +99,7 @@ A sound you hear shows on the map as a faint dotted ring, `◌`, until your next
 - With glyph animation on, a ring ripples out of the marker when you hear it. With reduced
   effects the marker is simply still; it never disappears, because it is information.
 
-[Look mode](controls.md#look-mode) (`l`) describes a marker: "You hear footsteps here.", "You faintly hear
+[Look mode](controls-prompts.md#look-mode) (`l`) describes a marker: "You hear footsteps here.", "You faintly hear
 footsteps here.", or "You hear footsteps here, where you remember a stone floor."
 
 ## Messages

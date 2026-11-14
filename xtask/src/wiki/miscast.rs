@@ -156,7 +156,7 @@ fn effect_text(content: &Content, effect: MishapEffect, protected: bool) -> Stri
         }
         MishapEffect::Mark { stat } => format!("a training mark of {}", stat.name()),
         MishapEffect::RankLoss { ranks } => format!(
-            "you know the spell {ranks} [rank{}](magic.md#spell-ranks) lower, never below rank 1",
+            "you know the spell {ranks} [rank{}](learning-spells.md#spell-ranks) lower, never below rank 1",
             if ranks == 1 { "" } else { "s" }
         ),
         MishapEffect::Forget { spells: Some(1) } => {
@@ -197,7 +197,7 @@ fn effect_text(content: &Content, effect: MishapEffect, protected: bool) -> Stri
             radius,
             turns,
         } => format!(
-            "a [zone](spellcasting.md#zones) of {} lies around you for {turns} turns, radius {radius}",
+            "a [zone](spell-rules.md#zones) of {} lies around you for {turns} turns, radius {radius}",
             zone_name(kind)
         ),
         MishapEffect::Portal { gate } => format!(

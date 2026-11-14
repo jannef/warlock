@@ -18,7 +18,7 @@ writing depends on one of three things:
   script](skills.md#skill-decipher-script) if you are trained in it.
 - **Enough learning.** If you are trained in [Decipher
   script](skills.md#skill-decipher-script) and your
-  [learning](magic.md#learning) is at least the scroll's [spell level](magic.md#spell-levels),
+  [learning](learning-spells.md#your-learning) is at least the scroll's [spell level](magic.md#spell-levels),
   you simply read it. What you could learn for certain, you can read for certain. A scroll with
   no spell behind it ([restoration](#the-scroll-of-restoration)) counts as level 0, so any
   training in Decipher script will do.
@@ -48,7 +48,7 @@ have not [identified](#unknown-scrolls) its kind yet. It takes ten minutes. A cr
 into view, or a blow, stops it, and then nothing comes of it.
 
 After the ten minutes you make the same check as for reading, with the same rules: a scroll of a
-spell you know, or one within your [learning](magic.md#learning), is made out at once. If you make it,
+spell you know, or one within your [learning](learning-spells.md#your-learning), is made out at once. If you make it,
 you learn the kind: every scroll of that kind shows by its name from now on, and you keep this
 one, unread. If you fail, the ten minutes are gone and the scroll stays a label. You may try
 again. Every check earns a [training mark](skills.md#improving-a-skill) in Decipher script, just as
@@ -61,7 +61,7 @@ in the same plain colour as every other unknown scroll. Each kind of scroll has 
 The labels are made up anew for each character and stay the same for their whole life, so two
 scrolls labelled ZUNBAR are always the same kind. The label shows everywhere: in your
 [pack](objects.md#your-pack), on the floor, in a [shop](shops.md), in [look
-mode](controls.md#look-mode), and in what you are told.
+mode](controls-prompts.md#look-mode), and in what you are told.
 
 You learn what a kind of scroll is, for good, in any of these ways:
 
@@ -71,7 +71,7 @@ You learn what a kind of scroll is, for good, in any of these ways:
   too.
 - **Read the [scroll of identify](#the-scroll-of-identify) on it** (below). You know the scroll
   of identify itself once you have read your first one.
-- **A [merchant](classes.md#merchant)'s [Merchant's eye](classes.md#talent-merchants-eye)**
+- **A [merchant](class-merchant.md)'s [Merchant's eye](class-merchant.md#talent-merchants-eye)**
   (from level 12), used on it from the abilities menu, tells the scroll for what it is, as the
   scroll of identify would.
 - **An appraisal.** Factor Wulfrun in Cēaptūn identifies everything you carry for 100
@@ -81,7 +81,7 @@ You learn what a kind of scroll is, for good, in any of these ways:
   caster's random ones.
 
 Knowing what a scroll is does not teach you its spell. No scroll does: the spell's
-[grimoire](magic.md#learning-a-spell) teaches it. A scroll that cannot be read, such as a sealed
+[grimoire](learning-spells.md#learning-a-spell) teaches it. A scroll that cannot be read, such as a sealed
 letter, has no label and is known on sight. A [shop](shops.md#prices) charges its true price for
 an unknown scroll.
 
@@ -95,11 +95,11 @@ in the [spell's row](magic.md#the-spells).
 
 It casts at the rung the scroll's row gives (the table's "Casts at"), which for most scrolls is
 the base. Your stats do not grow a scroll's damage or healing, but its reach and how long it
-lasts are yours, as for your own casts. [Scroll adept](classes.md#talent-scroll-adept) takes it
+lasts are yours, as for your own casts. [Scroll adept](class-wizard.md#talent-scroll-adept) takes it
 a rung up.
 
 A scroll is **free of [mana](mana.md#spending-it)**. Anyone can try one, even a
-[warrior](classes.md#warrior), by making [the check](#making-out-a-scroll). A spell on yourself
+[warrior](class-warrior.md), by making [the check](#making-out-a-scroll). A spell on yourself
 ([Haste](magic.md#spell-haste), [Barkskin](magic.md#spell-barkskin),
 [Blessing](magic.md#spell-blessing)) is read at once. Any other spell is aimed first, as below.
 [Mend](magic.md#spell-mend) and [Cure wounds](magic.md#spell-cure-wounds) are aimed at the
@@ -118,7 +118,7 @@ The scrolls of [fireball](magic.md#spell-fireball) (a rung up: 6d6),
 when you cast it.
 
 An aimed scroll is aimed like a [shot](ranged.md#shooting-and-throwing) (see
-[Controls](controls.md#aiming)). After you choose the scroll, a cursor appears on the map. It
+[Aiming](controls-prompts.md#aiming)). After you choose the scroll, a cursor appears on the map. It
 starts on your last target (a creature you still see) if it is within range, otherwise on the
 nearest [hostile](creatures.md#factions) [creature](creatures.md) you see within range, otherwise on you. `Tab` moves
 it from creature to creature, and the movement keys move it anywhere. `Enter` (or `r` again)
@@ -156,7 +156,7 @@ the thunder are heard like any noise (see [Hearing](hearing.md)). Spells cannot 
 
 Reading a scroll uses it up, but scholars do better (see [Talents](talents.md)). [Scroll
 savant](talents.md#talent-scroll-savant) reads in half the time, and together with the
-[wizard](classes.md#wizard)'s Scroll adept in a quarter, but no less. With [Spell
+[wizard](class-wizard.md)'s Scroll adept in a quarter, but no less. With [Spell
 recall](talents.md#talent-spell-recall) on top, one read in four leaves the scroll as it was:
 "The writing does not fade from the scroll."
 
@@ -174,7 +174,7 @@ writing swims, you keep the scroll and learn nothing about what you chose.
 
 Reading it casts the spell **[Identify](magic.md#spell-identify)** for you, free of
 [mana](mana.md#spending-it). The grimoire of identify teaches the spell for good (see
-[Magic](magic.md#learning-a-spell)). Cast for [mana](mana.md#how-much-mana-you-have), Identify is
+[Magic](learning-spells.md#learning-a-spell)). Cast for [mana](mana.md#how-much-mana-you-have), Identify is
 dear at 60 mana, so only an experienced caster can afford it (see [Magic](magic.md#what-a-spell-costs)).
 
 The scroll of identify is the most common scroll. It turns up more often than any other in
@@ -191,7 +191,7 @@ Hild's mending in Cēaptūn does (see [Services](npcs.md#services)), but whereve
 
 It works even with a [disease](diseases.md) still on you, though the disease may damage the stat
 again. With nothing to restore, it is not read ("There is nothing to restore."), and you keep it.
-As no spell is behind it, it has no [grimoire](magic.md#learning-a-spell).
+As no spell is behind it, it has no [grimoire](learning-spells.md#learning-a-spell).
 It is rare, found from [item level](affixes.md#base-items) 8, and dear (see the table above).
 
 ## Writing scrolls
@@ -200,7 +200,7 @@ A **blank scroll** is paper with nothing on it. It is never labelled, it is know
 it weighs 50 g and is worth 15 gold. Read it and nothing happens ("There is nothing written on
 it."), and you keep it.
 
-The [wizard](classes.md#wizard)'s **[Scribe](abilities.md#ability-scribe)** (from level 12)
+The [wizard](class-wizard.md)'s **[Scribe](abilities.md#ability-scribe)** (from level 12)
 writes on one. Choose it in the abilities menu and a list of the spells you know opens, sorted by
 school, each with what writing it costs you in [mana](mana.md#spending-it) and how long it takes.
 Choose one, and you write its scroll on the first blank scroll you carry.
@@ -209,7 +209,7 @@ Choose one, and you write its scroll on the first blank scroll you carry.
   [Frugal caster](talents.md#talent-frugal-caster), with your armour, School focus, Empower, and
   Archmage counted, and then the whole is cut by Frugal caster. Fireball's 26 becomes 78, Magic
   missile's 3 becomes 9, and Identify's 60 becomes 180.
-- **The time** is the time reading the spell's [grimoire](magic.md#learning-a-spell) takes: 100 turns plus 20 for
+- **The time** is the time reading the spell's [grimoire](learning-spells.md#learning-a-spell) takes: 100 turns plus 20 for
   each spell level,
   or 10 minutes plus 2 a level at a normal pace. Magic missile takes 16 minutes and Fireball 32.
   [Quick study](talents.md#talent-quick-study) does not shorten it.
@@ -218,9 +218,9 @@ Choose one, and you write its scroll on the first blank scroll you carry.
   blank used up only when the scroll is done: "You write a scroll of fireball."
 - **The scroll** is the ordinary scroll of that spell, at its own [rung](#spell-scrolls), as one
   you found would be, and you know what it is. It reads and sells like any other (a
-  shop buys it at its usual offer). [Scroll adept](classes.md#talent-scroll-adept) adds its rung
+  shop buys it at its usual offer). [Scroll adept](class-wizard.md#talent-scroll-adept) adds its rung
   when you read it. Neither writing nor reading it asks a [check](#making-out-a-scroll): you know the
-  spell, so you read it at once, even one you learned beyond your [learning](magic.md#learning).
+  spell, so you read it at once, even one you learned beyond your [learning](learning-spells.md#your-learning).
 - **Scribe is refused**, with no time or mana spent, for a spell you do not know, with no blank
   scroll ("You have nothing to write on."), while raging, or with too little mana ("You lack the
   mana to write it."). Light and place do not matter.

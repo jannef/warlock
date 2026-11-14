@@ -111,8 +111,8 @@ has a hue, and a potion with several effects mixes their hues.
 | The unseen and the unplaced ([Quick-sensed](status-effects.md#status-quick-sensed), [Invisible](status-effects.md#status-invisible), [blinking](#utility-potions)) | opal |
 | Utility ([Water-borne](status-effects.md#status-water-borne), [sustenance](#utility-potions)) | sky blue |
 | [Restoration](#utility-potions) | mint |
-| Smoke ([Fume](spellcasting.md#zones)) | ash grey |
-| Light ([Lit](status-effects.md#status-lit), a [Flare](spellcasting.md#spells-with-a-rule-of-their-own)) | silver |
+| Smoke ([Fume](spell-rules.md#zones)) | ash grey |
+| Light ([Lit](status-effects.md#status-lit), a [Flare](spell-rules.md)) | silver |
 | [Acid](damage-types.md#damage-acid) | lime |
 | [Gambles](#gambles) | iridescent |
 | [Elixirs](#elixirs) (a [stat](stats.md) for good) | gold |
@@ -194,10 +194,10 @@ gives each flask's spell, its numbers, and its range in cells.
 - **Thrown at you**: some creatures throw flasks (the bombers on
   [Creature powers](creature-powers.md#throws)). Seeing where one breaks teaches you what it was,
   as when you throw it, and a bomber carries a flask or two of its kind that fall where it dies.
-- **Smoke**: a flask of smoke leaves a cloud of [smoke](spellcasting.md#zones) no eye sees into or
+- **Smoke**: a flask of smoke leaves a cloud of [smoke](spell-rules.md#zones) no eye sees into or
   through, yours and every creature's: a way past archers, or out of a fight.
 - **Acid**: a vial of acid burns, keeps eating, and eats at the armour of anyone it harms, yours
-  too if you stand in it ([Acid](spellcasting.md#spell-types)).
+  too if you stand in it ([Acid](spell-types.md)).
 - **Drinking a flask** is a poor idea: the sleeping draught makes you drowsy, as the table says.
 - **A flask of holy water** is a kind one: thrown, it casts [Rebuke](magic.md#spell-rebuke),
   which sears and frightens only the undead and harms nothing living; drunk, it washes a hex off

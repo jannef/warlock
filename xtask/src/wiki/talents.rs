@@ -15,19 +15,20 @@ mod beast;
 const STARS: &str = "stars";
 
 /// The page a talent's row is on (#1554): a birth sign's gift on the horoscope page, a class
-/// ability in its first class's level table (else its first prestige class's), any other on the
-/// talents page.
-fn talent_page(content: &Content, def: &TalentDef) -> &'static str {
+/// ability in its first class's level table, on that class's page (else its first prestige
+/// class's), any other on the talents page.
+fn talent_page(content: &Content, def: &TalentDef) -> String {
     let book = content.talents();
     if book.tree_id(STARS) == Some(def.tree) {
-        "horoscope.md"
+        "horoscope.md".into()
     } else if book.tree(def.tree).class {
         match home_table(content, &def.id) {
-            Some(Table::Prestige(_)) => "prestige-classes.md",
-            _ => "classes.md",
+            Some(Table::Prestige(_)) => "prestige-classes.md".into(),
+            Some(Table::Class(class)) => super::character::class_page(&class.id),
+            None => "classes.md".into(),
         }
     } else {
-        "talents.md"
+        "talents.md".into()
     }
 }
 
@@ -288,9 +289,10 @@ pub(super) fn prestige_levels(content: &Content) -> String {
     out
 }
 
-/// One class's (or prestige class's) table: a heading, its bonus picks, then each row's
-/// ability with what it does, between mdBook anchors named by its id, so a page can include one
-/// class's section (`{{#include generated/class-levels.md:paladin}}`) and follow it with prose.
+/// One class's (or prestige class's) table: a heading (a class's page has its own: what the
+/// class is instead), its bonus picks, then each row's ability with what it does, between mdBook
+/// anchors named by its id, so a page can include one class's section
+/// (`{{#include generated/class-levels.md:paladin}}`) and follow it with prose.
 fn level_table(content: &Content, table: Table, out: &mut String) {
     let book = content.talents();
     let bonus = table.bonus_talents();
@@ -298,7 +300,14 @@ fn level_table(content: &Content, table: Table, out: &mut String) {
         return;
     }
     let _ = writeln!(out, "<!-- ANCHOR: {} -->\n", table.id());
-    let _ = writeln!(out, "### {}\n", table.name());
+    match table {
+        Table::Class(class) => {
+            let _ = writeln!(out, "{}\n", class.description);
+        }
+        Table::Prestige(_) => {
+            let _ = writeln!(out, "### {}\n", table.name());
+        }
+    }
     if !bonus.levels.is_empty() {
         let levels: Vec<String> = bonus.levels.iter().map(u8::to_string).collect();
         let trees = match table.bonus_trees(book) {
@@ -880,7 +889,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 "each level you reach puts by {} plus {} gold, and ({} % of the time) one loot \
                  roll at that level with the odds of a magic or rare item {}{}, kept if magic, \
                  rare, a potion, a scroll, or a gem; your servant hands it all over when you \
-                 talk to them (see [Stipend](classes.md#stipend))",
+                 talk to them (see [Stipend](class-aristocrat.md#stipend))",
                 rules.each,
                 rules.dice,
                 rules.chance,
@@ -898,7 +907,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             chance,
             magic,
         } => format!(
-            "your [stipend](classes.md#stipend) puts by {} gold, makes its loot roll {} \
+            "your [stipend](class-aristocrat.md#stipend) puts by {} gold, makes its loot roll {} \
              percentage points more often, and the odds of a magic or rare item in it are {}",
             percent(gold),
             signed(chance),
@@ -909,7 +918,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 "your business partner invests the gold you put with them ({} % kept going in, \
                  {} % coming out): every week it changes by {} plus {} basis points (hundredths \
                  of a percent), {} more per quest of their town's people done and more for some \
-                 quests (see [Invest](classes.md#invest))",
+                 quests (see [Invest](class-merchant.md#invest))",
                 rules.fee_in, rules.fee_out, rules.base, rules.dice, rules.per_quest
             ),
             None => "nothing: investing is not in this game".to_string(),
@@ -1020,7 +1029,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             )
         }
         TalentEffect::EyeForMake => format!(
-            "an item's description reads its make: what [salvage](crafting.md#salvage) would \
+            "an item's description reads its make: what [salvage](salvage.md) would \
              give of it if every check went well ({}% of each material's weight, a gem whole; \
              never the odds), how many more improvements \
              [the anvil](altars-forges-springs.md#forges) or a knife could give it, or that it is \
@@ -1030,7 +1039,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             content.salvage().map_or(0, |s| s.percent)
         ),
         TalentEffect::WasteNot { salvage, failed } => format!(
-            "[salvage](crafting.md#salvage) gives back {salvage}% of each material's weight \
+            "[salvage](salvage.md) gives back {salvage}% of each material's weight \
              (everyone else: {}%), and a [failed recipe](crafting.md#how-well-it-comes-out) gives back \
              {failed}% of its stock and inputs (everyone else: {}%; a failed brew is still spent \
              on its murky draught)",
@@ -1053,9 +1062,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         ),
         TalentEffect::CraftTimePercent { value } => format!(
             "every craft takes {value}% of its time: [recipes](crafting.md#the-recipes) \
-             (after [Fletcher](classes.md#talent-fletcher)'s share), \
+             (after [Fletcher](class-ranger.md#talent-fletcher)'s share), \
              [Temper](altars-forges-springs.md#forges), [Whittle](skill-uses.md#whittling), \
-             [cutting and setting gems](gem-cutting.md), [salvage](crafting.md#salvage), and \
+             [cutting and setting gems](gem-cutting.md), [salvage](salvage.md), and \
              the craftsperson's own works"
         ),
         TalentEffect::GradeEase { value } => format!(

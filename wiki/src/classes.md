@@ -12,19 +12,20 @@ did before you set out. Your class:
 - decides most of your [starting kit](starting-kit.md), its garb among it (a wizard's robe, a
   priest's habit).
 
-No [spells](magic.md) come with it at the start. A class with a level table also gives
-**[class abilities](classes.md#levels)** as you reach its levels, and bonus
+No [spells](magic.md) come with it at the start. Each class also gives
+**class abilities** as you reach its levels, and bonus
 [talents](talents.md) (see [Levels](#levels) below). You keep your class for good, but a class may
 later open onto a [prestige class](prestige-classes.md).
 
 The first eleven classes are adventurers. The last four are everyday folk: an
-[aristocrat](classes.md#aristocrat), a [commoner](classes.md#commoner), a
-[craftsperson](classes.md#craftsperson), and a [merchant](classes.md#merchant). They were never
+[aristocrat](class-aristocrat.md), a [commoner](class-commoner.md), a
+[craftsperson](class-craftsperson.md), and a [merchant](class-merchant.md). They were never
 trained for this, and it mostly shows. A new run offers all four.
 
 The first table is what each class adds to your starting stats. The second gives its hit points
 and the weapon skills and fighting styles it starts you in. A short description of each class
-follows.
+follows, linking to its own page: its level table, what each ability does, and its spells and
+resource.
 
 {{#include generated/classes.md}}
 
@@ -38,9 +39,9 @@ each other, and some are poor choices on purpose.
 
 Not every class is open to everyone. A new run lists only the classes open to the
 [race](races.md) and gender you chose, and its Random picks only among those. No goblin, drow,
-kobold, lizardfolk, duergar, or ratfolk is taken into a [paladin](classes.md#paladin)'s order.
-Elves and dwarves keep no [witches](classes.md#witch). Among the drow, only women are
-[priests](classes.md#priest).
+kobold, lizardfolk, duergar, or ratfolk is taken into a [paladin](class-paladin.md)'s order.
+Elves and dwarves keep no [witches](class-witch.md). Among the drow, only women are
+[priests](class-priest.md).
 
 {{#include generated/class-limits.md}}
 
@@ -48,432 +49,21 @@ Elves and dwarves keep no [witches](classes.md#witch). Among the drow, only wome
 
 Each class's level table gives an ability at levels 1, 6, 12, 18, 25, 32, 40, 50, and 60. It also
 gives a bonus [talent](talents.md) at a few levels in between, from the trees it names. The
-[bard](classes.md#bard)'s table is shorter. It stops at level 30 (see [The bard](#bard) below),
+[bard](class-bard.md)'s table is shorter. It stops at level 30,
 with its abilities at 1, 3, 6, 9, 12, 16, 20, 25, and 30.
 
 An ability comes the moment you reach its level ("You gain Fencing.") and works from then on. The
-game describes each in words; this page gives the exact numbers. A stat an ability raises rises
+game describes each in words; the class's page gives the exact numbers. A stat an ability raises rises
 for good, both score and potential. Some abilities are used from the
 [abilities menu](abilities.md); the rest simply work.
 
-So far these classes have their tables: the [warrior](classes.md#warrior), the
-[berserker](classes.md#berserker), the [paladin](classes.md#paladin), the
-[ascetic](classes.md#ascetic), the [priest](classes.md#priest), the [druid](classes.md#druid), the
-[wizard](classes.md#wizard), the [witch](classes.md#witch), the [ranger](classes.md#ranger), the
-[thief](classes.md#thief), the [bard](classes.md#bard), and the everyday folk.
-
-A table may hand out an ordinary talent: the [ranger](classes.md#ranger)'s and the
-[thief](classes.md#thief)'s [Evasion](talents.md#talent-evasion), the [bard](classes.md#bard)'s
-[Fast healer](talents.md#talent-fast-healer), the [druid](classes.md#druid)'s
+A table may hand out an ordinary talent: the [ranger](class-ranger.md)'s and the
+[thief](class-thief.md)'s [Evasion](talents.md#talent-evasion), the [bard](class-bard.md)'s
+[Fast healer](talents.md#talent-fast-healer), the [druid](class-druid.md)'s
 [Beast-friend](talents.md#talent-beast-friend). If you took that talent already, the level gives
 you a talent pick in its place.
 
-Some classes give spells: the [priest](classes.md#priest), [druid](classes.md#druid),
-[wizard](classes.md#wizard), and [witch](classes.md#witch) a few, a [bard](classes.md#bard), a
-[paladin](classes.md#paladin), or a [ranger](classes.md#ranger) one or two (see
-[What your class gives](magic.md#what-your-class-gives)). You cast them from the menu as
-**spells** ([Magic](magic.md)). Each costs [mana](mana.md#spending-it) by its
-[spell level](magic.md#spell-levels) and your armour. It is greyed out ("too little") while you
-have less mana; there is no other wait.
-
-- A [burst](spellcasting.md#shapes) flies and goes off as a [scroll](scrolls.md)'s does.
-- A [line](spellcasting.md#shapes) runs through everyone on it; its blows and kills are yours.
-- A [hex](spellcasting.md#shapes) falls on a [hostile](creatures.md#factions) you see within its
-  reach.
-
-[Call lightning](abilities.md#ability-call-lightning) answers only under the open sky. The
-[druid](classes.md#druid)'s calls bring wolves, bears, and elementals to fight beside them as
-[allies](allies.md).
-
-{{#include generated/class-levels.md:berserker}}
-
-The [berserker](classes.md#berserker)'s [rage](abilities.md#ability-rage) runs on a pool of its
-own, [Rage](resources.md#rage) (see [Resources](resources.md)).
-
-{{#include generated/class-levels.md:bard}}
-
-The [bard](classes.md#bard)'s [inspire](abilities.md#ability-inspire) spends
-[inspiration](resources.md#resource-inspiration) (see [Resources](resources.md)).
-
-The bard knows a little of everything and masters nothing. They are a wandering singer who has
-handled every weapon once and picked up every trade a little. Their table is shorter than the
-others': it gives its last ability at level 30 and stops there. A bard learns nothing new past 30.
-Experience earned after that still counts, but buys no level, and what comes after is found, not
-given (see [Prestige classes](prestige-classes.md#prestige-classes)).
-
-The bard has two **[songs](abilities.md#songs)**:
-
-- **[Inspire](abilities.md#ability-inspire)** (level 9) lifts you. It is paid in
-  [inspiration](resources.md#resource-inspiration).
-- The **[lullaby](abilities.md#ability-lullaby)** (level 20) makes [hostile](creatures.md#factions)
-  hearers [drowsy](status-effects.md#status-drowsy). It is paid in [mana](mana.md#spending-it).
-
-[Songs](abilities.md#songs) tells them in full: what they cost, how far they are heard, how
-[Music](skills.md#skill-music) lengthens them, and the odds of shaking the lullaby off. A
-[virtuoso](classes.md#talent-virtuoso) (level 30) sings for nothing, a degree longer.
-
-**[Travelled hands](classes.md#talent-travelled-hands)** (level 3) raises, once, every
-[weapon skill](weapon-skills.md) and [fighting style](fighting-styles.md) the bard has at rank 0 to
-rank 1. It never raises a hidden style. The bard is a point
-surer with whatever comes to hand.
-
-**[Jack of all trades](classes.md#talent-jack-of-all-trades)** (level 12) trains every
-[skill](skills.md) the bard lacks at 1d4+1, except Sneak attack, the thief's. From then on they are
-skills like any other: used, marked, and raised at a level.
-
-**[Master of none](classes.md#talent-master-of-none)** (level 25) makes every skill the bard is
-trained in count 5 higher.
-
-{{#include generated/class-levels.md:priest}}
-
-**The priest's prayer** ([Orison](abilities.md#ability-orison), from level 1) costs no
-[mana](mana.md#spending-it) and takes the time of a spell. It answers the worst thing that ails you,
-as far as your prayers reach. At first that is only [wounds](prayer.md#prayer-wounds). As the
-levels come, it reaches [hunger](prayer.md#prayer-hunger), [disease](prayer.md#prayer-disease) and
-[poison](prayer.md#prayer-poison), [hexes and holds](prayer.md#prayer-release),
-[stat damage](prayer.md#prayer-restoration), and [mana](prayer.md#prayer-mana). At 40 a prayer
-brings two answers, and at 60 everything. All of it is on [Prayer](prayer.md).
-
-A hidden [strain](prayer.md#strain) makes prayers too close together fizzle. A priest fallen to
-Callous or worse ([alignment](alignment.md)) is answered by the dark powers instead, with a twist:
-the sicknesses and poisons they cure pass to the nearest [creature](creatures.md) you see. See
-[Prayer](prayer.md) for every use, the names, the strain, and
-[the dark powers' answers](prayer.md#the-holy-and-the-dark).
-
-**[Consecrate](abilities.md#ability-consecrate)** is the [priest](classes.md#priest)'s at level 9
-and the [paladin](classes.md#paladin)'s at 12. It works only while you are Neutral or better. A
-minute's prayer, for 15 [mana](mana.md#spending-it), lifts a cursed, draining, or haunted room's
-curse for good (see [Special rooms](cursed-and-hallowed.md#cursed-rooms)).
-
-Its dark twin is **[Communion with the dark](classes.md#talent-communion)** (the priest's at level
-9). It works only while you are Callous or worse. While you stand in a
-[cursed](special-rooms.md#room-cursed), [draining](special-rooms.md#room-draining), or
-[haunted](special-rooms.md#room-haunted) room, or on a level such a curse lies over, your prayers
-add no [strain](prayer.md#strain), and the place's drain
-([Ebbing](status-effects.md#status-ebbing)) never touches you.
-
-The priest's **[Sanctuary](abilities.md#ability-sanctuary)** (level 50) costs 30
-[mana](mana.md#spending-it) and a minute's kneeling. It hallows the ground about the priest for an
-hour. Hostile creatures keep off it, and whoever stands on it heals and gets mana back three times
-as fast. It ends when the priest strikes from it (see
-[Special rooms](cursed-and-hallowed.md#hallowed-ground)).
-
-{{#include generated/class-levels.md:druid}}
-
-{{#include generated/class-levels.md:ascetic}}
-
-The [ascetic](classes.md#ascetic)'s [flurry](classes.md#talent-flurry),
-[stunning strike](abilities.md#ability-stunning-strike), and
-[quivering palm](abilities.md#ability-quivering-palm) run on [ki](resources.md#resource-ki) (see
-[Resources](resources.md)).
-
-**[Martial arts](classes.md#talent-martial-arts)** gives you [ki](resources.md#resource-ki) at level
-1, full. You have 5 with [Willpower](stats.md#stat-willpower) 12, and more as your Willpower and
-your [level](experience.md#levels) grow.
-
-**[Flurry](classes.md#talent-flurry)** (level 1) spends it. Every attack with nothing in your hands
-strikes a second blow, at −2 [to hit](combat.md#hitting), for a point of ki. With no ki left, the
-attack is a single blow.
-
-**[Step of the wind](abilities.md#ability-step-of-the-wind)** (level 6) makes your steps 10 %
-quicker while you wear no body armour and carry no shield. For a point of ki, taking no time at
-all, it also leaves you [light-footed](status-effects.md#status-light-footed): your next action,
-whatever it is (a step, a blow, a shot), takes half its [time](turns.md#what-actions-cost). It
-cannot be stacked. While you are light-footed already it is refused and costs nothing.
-
-**[Stunning strike](abilities.md#ability-stunning-strike)** (level 12) costs 1 ki. It is a blow of
-your bare hand that leaves a foe it wounds [stunned](status-effects.md#status-stunned): caught
-[flat-footed](surprise.md#stunned) and slow to act. It cannot be used with a weapon in hand.
-
-**[Patient defence](abilities.md#ability-patient-defence)** (level 18) costs a point of ki and the
-[time](turns.md#what-actions-cost) of a wait. It leaves you [poised](status-effects.md#status-poised)
-until your next action, whatever it is. While poised you have +4 [Dodge](combat.md#defence), and
-you answer at once with a blow of your own, a [riposte](stances.md#free-blows), every melee blow you
-dodge (it misses by your Dexterity or Dodge) or parry. Used again while poised, it holds for one
-action more. It works with any grip, a staff too.
-
-**[Stillness](abilities.md#ability-stillness)** (level 25, with
-[still mind](classes.md#talent-still-mind)) costs 2 ki and takes no time at all. It ends at once
-whichever of these you suffer, so you act this very turn: [held](status-effects.md#status-held),
-[pinned](status-effects.md#status-pinned), [staggered](status-effects.md#status-staggered),
-[stunned](status-effects.md#status-stunned), [surprised](status-effects.md#status-surprised),
-[transfixed](status-effects.md#status-transfixed), [frightened](status-effects.md#status-frightened),
-[drowsy](status-effects.md#status-drowsy), and [webbed](status-effects.md#status-webbed). With none
-of them on you it is refused and costs nothing. Any grip will do.
-
-**[Diamond soul](classes.md#talent-diamond-soul)** (level 40) adds +2
-[Deflection](combat.md#defence). While you hold no weapon and no shield, it also lets you pluck from
-the air a [shot or a throw](ranged.md) that would hit you, a [trap](traps.md)'s arrow too, for a
-point of ki, spent by itself. The hit becomes a miss, and the missile falls at your feet. With no
-ki left, or a weapon or shield in hand, it hits. Spells and blasts are never caught.
-
-**[Quivering palm](abilities.md#ability-quivering-palm)** (level 50) costs 5 ki and has no other
-wait. It cannot be used with a weapon in hand.
-
-{{#include generated/class-levels.md:paladin}}
-
-The paladin fights from one pool, **[zeal](resources.md#resource-zeal)**, for wrath and mercy
-alike. It holds 10, plus your [Presence](stats.md#stat-presence)
-[modifier](stats.md#modifiers), plus a point per 10 [levels](experience.md#levels). It comes with
-Smite at level 1, holding 5.
-
-You build a point of zeal with every blow, shot, or throw of yours that hits, and with every blow
-that hits you. It also comes back a point a minute, resting too (see
-[Resources](resources.md#resource-zeal)). Your [mana](mana.md#how-much-mana-you-have) is for your spells; none of
-this spends it.
-
-**A deed that moves you toward evil** empties the pool at once ("Your zeal deserts you."). It fills
-again, and bars nothing (see [Alignment](alignment.md)).
-
-**The unholy** are the creatures holy wrath falls hardest on: every type tagged undead, fiend,
-demon, devil, or yugoloth. What a creature has done, or which side it is on, plays no part. A
-hostile bear takes your smite as well as a ghoul does; only the ghoul takes the unholy die.
-
-**The smites** are each a row of the [abilities menu](abilities.md). Each is a melee blow with what
-you wield at the [hostile](creatures.md#factions) in a direction, priced as the attack. It adds
-[Presence](stats.md#stat-presence)'s modifier to hit, and 1d6 more [damage](combat.md) per 10 levels
-(at least 1d6), and one die more against the unholy. With nobody hostile there it is refused, for
-no time and no zeal. A miss still spends its zeal.
-
-| Level | Smite | Zeal | What it does |
-|---:|---|---:|---|
-| 1 | [Smite](abilities.md#ability-smite) | 3 | The blow, and nothing more |
-| 12 | [Branding smite](abilities.md#ability-branding-smite) | 3 | The foe it wounds is [Branded](status-effects.md#status-branded) for five minutes: it sheds a faint light wherever it goes, so you can see it in the dark and it lights its fellows |
-| 32 | [Wrathful smite](abilities.md#ability-wrathful-smite) | 4 | The foe it wounds makes a [Willpower](stats.md#stat-willpower) [check](diseases.md#checks) against 13 plus your Presence modifier; failing, it is [Frightened](status-effects.md#status-frightened) of you for 2d3 turns and flees |
-| 50 | [Banishing smite](abilities.md#ability-banishing-smite) | 6 | A foe it wounds that was [summoned](creature-powers.md#summoning) is unmade, whatever its [hit points](hit-points.md#hit-points), your kill as any other; an unholy foe not summoned takes the smite's dice twice over; anyone else takes a plain smite |
-
-A smite's extra effect still spends its zeal when it has nothing to do, and a blow that does no
-damage carries no extra effect.
-
-**[Lay on hands](abilities.md#ability-lay-on-hands)** (level 1) spends 6 zeal and a spell's time to
-heal 2 hit points a level. **[Avatar](classes.md#talent-avatar)** (level 60) makes it heal fully,
-cure every status that ticks and every [disease](diseases.md), and cost half: 3 zeal.
-
-**[Retribution](classes.md#talent-retribution)** (level 25) works by itself. When a hostile creature
-beside you lands a blow of its melee attack on you, your smite answers once the attack is over. It
-costs 4 zeal and an [exertion](stances.md#stamina), and no time. The blow has already built its
-point, so 3 zeal is enough. With less, or while you are off guard, nothing happens. An attack it
-answers is not also [riposted](fighting-styles.md#style-ability-riposte); see
-[Combat](stances.md#free-blows).
-
-**[Holy wrath](classes.md#talent-holy-wrath)** (level 40) works by itself and costs nothing. Every
-blow, shot, or throw of yours that hits the unholy, smites too, rolls 1d6 more of the blow's own
-kind. It is [resisted](damage-types.md#armour-and-resistance) but never soaked by Protection. From
-[Avatar](classes.md#talent-avatar) on, it lands on every creature you hit.
-
-**[Zealot](talents.md#talent-zealot)** is the one talent pick on the pool, from level 6. Every blow
-that hits you builds 2 zeal instead of 1, for a paladin who stands in the doorway and takes them.
-
-**Which side you are on.** [Lay on hands](abilities.md#ability-lay-on-hands), the smites, and
-[Holy radiance](abilities.md#ability-holy-radiance) work only while you are Kind or better;
-[Consecrate](abilities.md#ability-consecrate) while you are Neutral or better (see
-[Alignment](alignment.md)). Otherwise you can still use them, but nothing happens and no zeal is
-spent. A smite says "You call for holy wrath, but none answers." The abilities that work by
-themselves do not care, except Retribution, which answers no blow while you are outside them. Your
-zeal builds whichever side you are on.
-
-{{#include generated/class-levels.md:ranger}}
-
-The [ranger](classes.md#ranger)'s [rapid shot](classes.md#talent-rapid-shot) and
-[volley](abilities.md#ability-volley) run on [focus](resources.md#resource-focus) (see
-[Resources](resources.md)).
-
-The ranger's **favoured prey** is the kind of [creature](creatures.md) you have killed most,
-counted over every [level](experience.md#levels). When two are tied, the one that got there first
-stays favoured until another is killed more often.
-
-**[Pack tactics](classes.md#talent-pack-tactics)** (level 18) makes you and your
-[companion](companions.md#companions) hunt as one. A creature standing beside you both is
-**flanked**. Your melee attacks and your companion's at it get +2 [to hit](combat.md#hitting) (not
-shots, throws, or spells). Your companion's attacks at your favoured prey also carry your favoured
-prey bonus to hit and damage ([Master hunter](classes.md#talent-master-hunter)'s too).
-
-**[Sic 'em](abilities.md#ability-sic)** (level 40) sets your companion on a creature you see, for 5
-[focus](resources.md#resource-focus). It [hunts that creature, savage](companions.md#companions).
-
-A **[volley](abilities.md#ability-volley)** looses three shots of your
-[readied missile weapon](ranged.md#getting-ready) at the place you [aim](controls.md#aiming) at, one
-after another, for the time of one ordinary shot. It stops early when you run out of ammunition,
-and costs 6 [focus](resources.md#resource-focus).
-
-**[Rapid shot](classes.md#talent-rapid-shot)** gives you focus (10, full). Every shot you loose
-while you have at least 2 focus spends 2 and takes 10 % less [time](turns.md#what-actions-cost).
-With less, it is an ordinary shot.
-
-{{#include generated/class-levels.md:thief}}
-
-The [thief](classes.md#thief)'s [sneak attacks](classes.md#talent-sneak-attack) build
-[openings](resources.md#resource-openings). [Exploit](abilities.md#ability-exploit), theirs from
-level 1, spends every one they hold on a single sneak attack, deeper for each, and
-[Low blow](classes.md#talent-low-blow) at 12, [Improved sneak attack](classes.md#talent-improved-sneak-attack)
-at 32, and [Master thief](classes.md#talent-master-thief) at 60 add to it (see
-[Exploit](resources.md#exploit)). From level 18 [Thrown exploit](resources.md#thrown-exploit)
-makes the same blow with a thrown weapon, at a foe up to 6 cells away. The thief has no
-[stamina](resources.md) until a [weapon rank](weapon-skills.md#raising-a-weapon-skill) teaches an active
-ability.
-
-{{#include generated/class-levels.md:wizard}}
-
-The [wizard](classes.md#wizard)'s **[Knock](abilities.md#ability-knock)** (from level 4, 5
-[mana](mana.md#spending-it)) springs the lock of the [locked door](doors.md#locked-doors) or chest
-in a direction. It opens nothing by itself (see [Chests](chests.md#locked-chests)).
-
-The wizard's **[Scribe](abilities.md#ability-scribe)** (from level 12) writes a scroll of a spell he
-knows on a blank scroll. It costs three times the spell's [mana](mana.md#spending-it) and the time
-its grimoire takes to read (see [Scrolls](scrolls.md#writing-scrolls)). It is mana banked between fights, to be read in
-the next.
-
-{{#include generated/class-levels.md:witch}}
-
-**The witch's familiar** ([Familiar](classes.md#talent-familiar), from level 1) is a small beast at
-her heel. Its [touch](familiars.md#the-touch) lays her [evil eye](magic.md#spell-evil-eye), and it
-[goes for what she has hexed](familiars.md#what-it-goes-for). If it is lost, another comes to an
-hour's [calling](familiars.md#call-familiar). From level 30 that may be an
-[imp](creatures.md#creature-imp). All of it is on [Familiars](familiars.md).
-
-**The witch's cackle** ([Cackle](abilities.md#ability-cackle), from level 6) keeps her hexes on. It
-costs no [mana](mana.md#spending-it) and takes the time of a spell. Every hex she laid herself on a
-creature she sees grows a degree, up to its maximum, and the time of its degree starts again. The
-hexes are [hexed](status-effects.md#status-ill-wished), [weakened](status-effects.md#status-weakened),
-[sluggish](status-effects.md#status-sluggish), [drowsy](status-effects.md#status-drowsy), and
-[webbed](status-effects.md#status-webbed). A hex already at its maximum only starts again.
-
-Another caster's hex and a creature out of sight are untouched. With no creature in sight under one
-of her hexes, she does not cackle at all, and no time is spent. The cackle is loud: a voice of
-[loudness](hearing.md#how-loud) 60, louder than talk. Whoever [hears it](hearing.md#creatures-hear-you)
-comes to look.
-
-**The witch's malison** ([Malison](classes.md#talent-malison), from level 18) works by itself. A
-creature under a hex, anyone's, takes 3 more [damage](combat.md) from her blows, shots, and spells
-for each hex it is under, before its [resistances](damage-types.md#armour-and-resistance). When a
-creature dies under a hex she laid herself, whatever killed it and wherever it is, she gains
-[mana](mana.md) equal to half its level (rounded down, at least 1), never past her maximum: "The
-hex comes home."
-
-**The witch's soulglass** ([Soulglass](magic.md#spell-soulglass), from level 16) is a ray of
-necromancy. A creature it kills leaves no corpse but [magic crystals](crystals.md#soulglass) of
-its nature, for an enchanter to bind or for her to [consume](crystals.md#consuming-a-crystal).
-
-{{#include generated/class-levels.md:warrior}}
-
-{{#include generated/class-levels.md:aristocrat}}
-
-<a id="stipend"></a>**The aristocrat's stipend** ([Stipend](classes.md#talent-stipend), from level
-1) is money from home. Every time the aristocrat gains a [level](experience.md), their family puts
-by 150 + 10d10 gold (about 200). With an 85 % chance it also adds one
-[loot roll](magic-items.md) at that level, with [magic and rare](magic-items.md) items twice as
-likely as usual. The find is kept if it is magic or rare, a [potion](potions.md), a
-[scroll](scrolls.md), or a [gem](gems.md), and thrown away otherwise. About 38 % of level-ups
-bring a find. Every level counts, a [prestige class](prestige-classes.md)'s too, and levels gained
-far from town count as well.
-
-It all waits with the aristocrat's own servant at the Gæsthūs in Cēaptūn: a squire for a man, a
-chambermaid for a woman, a servant for anyone else, of the aristocrat's own race and speaking as
-their people speak. Only an aristocrat's run has them. [Talk](npcs.md) to them and they hand over
-everything: the gold and the finds go into your pack, and whatever would leave you
-[overloaded](burden.md) is set down at your feet. With nothing waiting, they tell you how
-splendid you are. If the servant dies, no one else brings the stipend.
-
-[Landed noble](talents.md#talent-landed-noble), a talent only an aristocrat can take, and only as
-a new character, doubles the gold, makes the loot roll every time, and makes magic and rare items
-four times as likely as usual: about 47 % of level-ups then bring a find.
-
-{{#include generated/class-levels.md:commoner}}
-
-{{#include generated/class-levels.md:craftsperson}}
-
-What a craftsperson makes, and how, is on [Crafting](crafting.md); the burgher who buys their
-best work is on [The patron](patron.md).
-
-<a id="trades"></a>**The craftsperson's trades.** A craftsperson learns no craft from the class
-itself. Instead they pick two [trades](talents.md#crafts-a-craftspersons-trades) as a new
-character, before their other [talents](talents.md): the Talents step asks "Choose a trade"
-first. Each trade trains its craft skill at `3d6`, and
-[Time served](classes.md#talent-time-served) adds 6 to that, so a trade starts at 9 to 24.
-Each also comes with the tools of the trade. A craftsperson may spend an ordinary pick on a
-third trade too. Their skills grow fast: three [skill rolls](skills.md#improving-a-skill) a level,
-and a roll on a trade throws the die one step up.
-
-<a id="eye-for-the-make"></a>**Eye for the make** works whenever you look at an item's
-description. It adds a line on what [salvage](crafting.md#salvage) would give of it if every
-check went well, a line on how many more improvements
-[the anvil](altars-forges-springs.md#forges) (for metal) or a knife (for wood) could still give
-arms or armour, or that the thing is damaged (and, once you have
-[Make do and mend](classes.md#make-do-and-mend), that your own hands could mend it), and a line when its main material is hard or soft
-to [work](crafting.md#which-skill-makes-what). Like [Appraise](skills.md#skill-appraise), it also tells
-you how many [enchantments the item can bear](magic-items.md#capacity). It never tells you the
-odds, or how often a smith has worked the piece before. With
-[Waste not](crafting.md#waste-not) it counts the three quarters salvage then gives back.
-
-**Waste not**, from level 6, means nothing is lost in a craftsperson's hands but time: salvage
-gives back more, a failed recipe loses none of its stock, and a failed temper spoils nothing
-(the numbers are under [Crafting](crafting.md#waste-not)).
-
-<a id="make-do-and-mend"></a>**Make do and mend** (from level 18) mends a
-[damaged](materials.md#item-damage) thing you carry, anywhere, with no anvil and no tools. Choose
-it in the [abilities menu](abilities.md#the-abilities-menu), then the item. It takes ten
-minutes. If something comes into view, you stop, the item is untouched, and the time is lost.
-
-When the time is up you make one check: 2d12, plus the [modifier](stats.md#modifiers) of the
-stat of the [craft that works](crafting.md#which-skill-makes-what) the item's main material (Strength for
-metal, Dexterity for wood and leather), plus what that craft skill gives you, against 10 plus
-the material's [work](crafting.md#which-skill-makes-what). Untrained in the craft, only the stat counts.
-A steel sword is 10 to beat, mithril 14, wood 9.
-
-- **Made:** the damage is gone. The improvements it lost stay lost, and the next attempt at an
-  anvil is just as hard as it would have been.
-- **Failed:** nothing happens to it. It stays damaged, and you can try again.
-
-It never destroys anything. You cannot mend something you wear or wield (take it off first), a
-[protected](materials.md#protected-items) item, goods you have not paid for, or something of a
-material no craft works, like cloth or glass. If you are trained in the craft, the check may earn
-it a [training mark](skills.md#improving-a-skill).
-
-<a id="field-forge"></a>**Field forge** (from level 32) makes an anvil wherever you are: a
-[makeshift anvil](altars-forges-springs.md#the-makeshift-anvil) from one ingot and an hour's work.
-
-<a id="patron"></a>**The patron** ([Patron](classes.md#talent-patron), from level 12) is a
-well-to-do burgher at the Gæsthūs in Cēaptūn who commissions Fine work from the craftsperson's
-trades, one piece at a time, hands over the stock for it, and pays its full worth on delivery.
-See [The patron](patron.md).
-
-**Quick hands** (from level 40) makes every craft take half its time, and **Master's hand**
-(from level 50) makes every grade and every cut come sooner (the numbers are under
-[Crafting](crafting.md#quick-hands) and [Master's hand](crafting.md#masters-hand)).
-
-<a id="makers-mark"></a>**Maker's mark** (from level 60) puts the craftsperson's name on what
-they make: the arms, armour, and jewellery of their making are worth half again, the patron pays
-more for them, and they can bear one [enchantment](magic-items.md#capacity) more (the numbers are
-under [Crafting](crafting.md#makers-mark)).
-
-<a id="trapwright"></a>**Trapwright** (from level 25) rigs a trap on the cell beside you: a
-tripwire from arrows, stakes from a billet of wood, or a pitfall dug with your pick. A creature
-your trap kills is your kill. See [Rigging traps](traps.md#rigging-traps).
-
-{{#include generated/class-levels.md:merchant}}
-
-<a id="invest"></a>**The merchant's investment** ([Invest](classes.md#talent-invest), from level 1)
-works like a fund. The merchant has a business partner at the corner desk of Factor Wulfrun's
-office in Cēaptūn, of the merchant's own race and speaking as their people speak. Only a
-merchant's run has them. [Talk](npcs.md#chatting) to them and they tell you what your stake is
-worth, to the coin. Then pick a topic:
-
-- **Invest 100 gold**, **Invest 1000 gold**, or **Invest all your gold**: the partner keeps 2 %
-  as a fee (rounded up to a whole coin), and the rest goes into your stake.
-- **Withdraw 100 gold**, **Withdraw 1000 gold**, or **Withdraw everything**: the partner keeps
-  2 % of what you take out, and you get the rest. Gold that would leave you
-  [overloaded](burden.md) is set down at your feet.
-
-Each takes as long as a chat. Every game week (seven days, counted from the start of the
-calendar), wherever you are, the stake goes up or down by a random return: 0.10 % plus a roll of
-4d201−404 hundredths of a percent, so anything from −3.9 % to +4.1 %, mostly within about 1.2 %
-either way. Weeks spent resting or travelling count just the same. Over a 360-day year that comes
-to **about 5 % a year on average**, but about three years in ten lose money.
-
-The more Cēaptūn owes you, the better the partner does. Every
-[quest](quests.md) you have completed for one of Cēaptūn's people adds 0.01 % to every week's
-return (each quest once). Completing Wulfrun's Fire in the deep, which slays the fire drake and
-lets the town dig in its mines again, adds 0.06 % more. With all of Cēaptūn's fourteen quests
-done the stake grows by about 16 % a year, and only about one year in thirty loses.
-
-If the partner dies, your stake dies with them.
+Some classes give spells: the priest, druid, wizard, and witch a few, a bard, a paladin, or a
+ranger one or two (see [What your class gives](magic.md#what-your-class-gives) and
+[Casting a spell](spellcasting.md#casting-a-spell)). Some fight from a pool of their own, such as
+the berserker's rage or the thief's openings (see [Resources](resources.md)).
