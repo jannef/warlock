@@ -195,8 +195,8 @@ jobs:
   # Manual only: Actions > CI > Run workflow with "update_golden" ticked (or
   # `gh workflow run ci.yml --ref <branch> -f update_golden=true`). Reference screenshots are
   # produced on Linux (lavapipe) only, because GPU and driver output differs across platforms.
-  # Download the artifact, review the images, and commit them deliberately (CLAUDE.md,
-  # "Golden screenshots"). Normal CI only compares and never updates.
+  # Download the artifact, review the images, and commit them deliberately (docs/dev/golden.md;
+  # CLAUDE.md "Golden screenshots"). Normal CI only compares and never updates.
   golden-update:
     name: Regenerate golden references (Linux, lavapipe)
     if: github.event_name == 'workflow_dispatch' && inputs.update_golden

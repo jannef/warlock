@@ -1,6 +1,6 @@
 # An elemental essence (docs/design/recipes.md §9): an Alchemy and Enchanting input, drawn in its
-# element's colour. Never floor loot (no `level` or `frequency`); creature drops are to come. Made
-# of stone, as the loose gem is, so it neither burns nor rusts.
+# element's colour. Never floor loot (no `level` or `frequency`); creatures of its element drop it
+# (drops/). Made of stone, as the loose gem is, so it neither burns nor rusts.
 [[object]]
 id = "essence_of_lightning"
 name = "essence of lightning"
