@@ -93,6 +93,35 @@ conflict every time; two that insert at different places merge cleanly. So:
   flag, `--screen` name, scenario, dump layer, or action (by its group); CLAUDE.md only for a new
   command; the wiki gets its page and tables; `README.md` is not touched by feature work.
 
+## One home per fact
+
+A fact written in several places drifts: the copies come to disagree, and no merge conflict
+says so. It also makes every feature PR edit four to six files, which then become the hot files
+of the next merge. So each kind of fact has **one home**; everywhere else links to it (spec §8
+"Professions", `docs/dev/crafting.md` "Making a recipe") instead of restating it.
+
+| Kind of fact | Its one home | Elsewhere |
+|---|---|---|
+| Player-visible rules: what the game does | `spec/`, the section's bullet | link "§N Name" |
+| Numbers kept in data | the data file under `assets/` | the wiki's generated tables show them (`xtask/src/wiki/`); never retyped in prose |
+| Modules, functions, invariants, tests | `docs/dev/<topic>.md` | link the topic and its heading |
+| Flags, `--scenario` and `--screen` names, dump layers, action text, replay files | `docs/dev/cli.md` | CLAUDE.md and spec §9 link |
+| Explanation for players | `wiki/` | |
+| Why it was decided, and when it changed | git log, PRs, issues, `docs/design/` | the homes above state the current fact only |
+| How agents work | CLAUDE.md (short), this playbook, `ops/agents/rules.md` (the briefs' shared rules) | each brief links `rules.md` |
+
+- **A PR edits the home of each fact it changes**, and turns any copy of that fact it comes
+  across into a link. The existing copies are folded into links as their topics are next
+  touched, not in a sweep.
+- **The homes state what is true now**, not its history: no "since #N", "was X, now Y", "no
+  longer", or "until #N". An issue link belongs where the reason matters (at most one per
+  section is a good guide); the history itself lives in the PRs and issues.
+- **A built design is history.** Once its issues are closed, a `docs/design/` file gets a
+  header line naming the spec sections and `docs/dev/` topics that now describe it (see
+  "Design documents" below), and agents read those instead.
+- Whether `spec/` keeps implementation paths and issue numbers is the owner's open question
+  (#1539): leave the ones there until it is decided.
+
 ## Roster and content PRs and hot docs
 
 Creature roster PRs edit only their own `docs/dev/creatures/<tribe>.md`; never
@@ -166,6 +195,11 @@ issue body, or one with many choices to review) is a **draft PR that adds
   to the section it implements. The spec stays the source of truth for what is built: when a
   feature lands, its spec section and `docs/dev/` topic describe it, and the design document
   stays as the record of why.
+- **When its last implementation issue closes**, the design gets one header line under its
+  title, and is otherwise left as approved: "**Built; this file is history.** Current behaviour
+  is in spec §N "Name" and `docs/dev/<topic>.md`." Agents read those, not the design; a number
+  in a built design may since have moved. `docs/design/README.md` lists the built and the
+  unbuilt designs; the slices' progress is the issues', not the README's.
 - CI's `changes` job sees a PR that touches only `docs/design/` and skips the build. The
   required checks report as skipped, which counts as passing. Touching any other file builds as
   usual, so keep design PRs to their document.
@@ -175,5 +209,6 @@ issue body, or one with many choices to review) is a **draft PR that adds
 ## Agents and context
 
 The local subagents' briefs live in `ops/agents/local/` (`feature.md`, `finisher.md`), so they
-survive a wiped `/tmp`. A feature agent stops when its PR is open: it never waits for CI and is
+survive a wiped `/tmp`; what they share with the cloud briefs is in `ops/agents/rules.md`, the one
+copy (`ops/agents/README.md`). A feature agent stops when its PR is open: it never waits for CI and is
 never resumed. Agents keep contexts small: read files in parts, grep, filter test output.
