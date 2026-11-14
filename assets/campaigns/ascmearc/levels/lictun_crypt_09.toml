@@ -1,0 +1,63 @@
+# Cwealmpytt, "the death-pit" (#1684): the ninth crypt under Līctūn, below Hryre, reached by the
+# stairs that open there once its places are filled (spec §7 "Graves"; `docs/dev/graves.md`).
+# Its stairs up (<) lead back to Hryre. No danger, nobody here.
+#
+# No crypt but a pit, dug in haste in a year of plague and roofed over after. Its walls are bare
+# earth; a rough tunnel comes down to it from the north-west. In the middle the plague's dead lie
+# heaped and walled in with their own bones (B), one niche sealed in the heap with words for all
+# of them (F). Round it a ring of trodden earth, niches cut later into the pit's outer wall,
+# places for statues on its rim (S). A second tunnel leaves to the south-east, to the way down
+# to the next crypt (v), shut until every place here is filled.
+#
+# Places: 26 niches, filled in row order.
+name = "Cwealmpytt"
+arrival = "Cwealmpytt, the death-pit: a round pit dug in bare earth, and a heap of bones in the middle."
+temperature = 5
+ambient = [6, 6, 8, 0]
+item_level = 1
+map = '''
+##########################################################
+##########################################################
+########t#################################################
+#######<,####################N##N#########################
+#########,,############N##N,,,,,,,,N######################
+###########,,#######N#,,,,,,,,,,,,,,######################
+#############,,###,,,,,,,,,,,,,,,,,,,#####################
+###############,,,,,,,,,,,,,,,,,,S,,,,N###################
+################,,,,,,,i,,,,,,,,,,,,,,,,#N################
+##############N,,,,,,,,,,,,,,BB,,,,,,,,,,,,#N#############
+##############,,,,,,,,,,,,,BBFBBB,,,,,,,,,,,,#############
+##############,,,,,,,,,,BBBBBBBBBB,,,,,,,,,,,,#N##########
+#############N,,,,,,,,BBBBBBBBBBBBBB,,,,,,,,,,,,##########
+##############,,,S,,,BBBBBBBBBBBBBBBBB,,,S,,,,,,,#########
+###############,,,,,,,,BBBBBBBBBBBBBB,,,,,,,,,,,,N########
+#############N,,,,,,,,,,,BBBBBBBBBB,,,,,,,,,,,,,,#########
+#############,,,,,,,,,,,,,BBBBBB,,,,,,,,,,,,,,,N##########
+#############,,,,,,,,,,,,,,,BB,,,,,,,,,,,,,,##############
+###########N,,,,,,,,,,,,,,,,,,,,,,,,i,,,,,,,##############
+#############,,,,,,,,,,,,,S,,,,,,,,,,,,,,,##,,############
+##############N,,,,,,,,,,,,,,,,,,,,,,,,,#N####,,,#########
+#################N##N##N#,N##N##N##N##N##########,,#######
+###################################################,v#####
+##########################################################
+##########################################################
+##########################################################
+##########################################################
+'''
+
+[burial]
+chain = "lictun"
+depth = 9
+epitaph = "Here lies {name}, {death}. Laid in the earth with the plague's dead, and none the worse for it."
+
+[legend]
+"#" = "packed_earth"
+"," = "dusty_floor"
+"B" = "bone_wall"
+"N" = "empty_niche"
+"i" = "candles"
+"t" = "sconce"
+"<" = { terrain = "stairs_up", to = "lictun_crypt_08" }
+"S" = { terrain = "dusty_floor", statue_place = true }
+"v" = { terrain = "dusty_floor", burial_stairs = "stairs_down" }
+"F" = { terrain = "sealed_niche", epitaph = "Here lie the dead of the great death of 664, who could not be numbered. Lord, have mercy." }

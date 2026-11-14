@@ -60,34 +60,9 @@ village, the wood, and the fair folk, and will [talk](npcs.md) of them. A girl o
 
 ### Līctūn
 
-Four cells down the south road from the town, beside the road, is **Līctūn**, Cēaptūn's
-churchyard. A drystone wall runs round it, with a gate on the road. Inside are rows of grave
-plots, a yew in each corner, and a little stone chapel in the middle. Nothing comes there to
-fight you.
-
-**Your own dead are buried here.** Every character who dies goes into the graveyard, a list kept
-beside your settings. Each of them gets a grave of their own in Līctūn, except those who were
-[turned to stone](status-list.md#status-stiffening): they stand as
-[statues](creature-tricks.md#warning-signs) instead. Look at a grave to read it: "Here lies
-Brakka the dwarf warrior, killed by a kobold in Fyrdelf 3, The Ascmearc."
-
-The oldest death is buried first. The yard has forty plots, in four rows of ten, filled from the
-top row down and left to right. An empty plot is a kerb of stones round turned earth; a filled
-one has its stone.
-
-Ten older stones stand by the chapel. They are the town's own dead, and each has its own words:
-"Here lies Ælfric atte Welle, reeve of Cēaptūn, 1361–1419. He kept the peace and the tally
-both."
-
-**The crypts.** When all forty plots are filled, the flagstone at the end of the path behind the
-chapel opens into [stairs](terrain.md#stairs) down to **the Undercroft**, a crypt of family
-vaults with 26 places in its niches and stone coffins. When those are filled too, its stairs open
-down to **Bānhūs**, the bone-house, with 30 more. Your dead are laid there in the same order,
-oldest first. Nothing lives in the crypts, and they are lit only by a few candles and torches, so
-bring a light.
-
-The sexton, **Old Dudda**, walks his rounds of the yard. He will [talk](npcs.md), grimly, but
-has nothing to sell and nothing to ask of you. Walk off the yard's edge to leave.
+Four cells down the south road from the town is **Līctūn**, Cēaptūn's churchyard, where your
+own dead are buried, and the crypts below it fill as they do. Its own page,
+[Līctūn](lictun.md), tells it all.
 
 ### Gimmwīc
 
@@ -191,6 +166,15 @@ kind. Creatures keep their plain English names.
 | Holtwīc | *holt* "wood" + *wīc* "dwelling" | the dwelling at the wood | the village at the north road's end |
 | Līctūn | *līc* "body, corpse" + *tūn* "enclosure" | the corpse-yard | Cēaptūn's churchyard |
 | Bānhūs | *bān* "bone" + *hūs* "house" | the bone-house | the second crypt under Līctūn |
+| Prēostcleofa | *prēost* "priest" + *cleofa* "chamber" | the priests' chamber | the third crypt under Līctūn |
+| Cēapmanna Ærn | *cēapmanna* "of the chapmen" + *ærn* "house" | the chapmen's house | the fourth crypt |
+| Cyrcweardes Cofa | *cyrcweardes* "the church-ward's" + *cofa* "store, closet" | the sexton's store | the fifth crypt |
+| Flōdærn | *flōd* "flood" + *ærn* | the flood-house | the sixth crypt |
+| Cildra Ærn | *cildra* "of the children" + *ærn* | the children's house | the seventh crypt |
+| Hryre | *hryre* "fall, ruin" | the fall | the eighth crypt |
+| Cwealmpytt | *cwealm* "death, pestilence" + *pytt* "pit" | the death-pit | the ninth crypt |
+| Munuccleofan | *munuc* "monk" + *cleofan* "chambers" | the monks' cells | the tenth crypt |
+| Enta Geweorc | *enta* "of giants" + *geweorc* "work" | the work of giants | the eleventh crypt; what the English called the ruins left by those before them |
 | Ælfhām | *ælf* "elf" + *hām* "home" | the elves' home | the fey hall under the mound |
 | Dēopgang | *dēop* "deep" + *gang* "way, passage" | the deep way | the deep gnomes' road down |
 | Gimmwīc | *gimm* "gem" + *wīc* "dwelling" | the gem dwelling | the deep gnomes' town |

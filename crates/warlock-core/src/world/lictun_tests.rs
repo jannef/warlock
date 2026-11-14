@@ -22,7 +22,20 @@ const START: Pos = Pos::new(2, 13);
 /// The walk from the pass to the yard's cell.
 const WALK: &str = "move:E*6 move:S*4 move:E";
 /// The chain's levels, the yard first.
-const CHAIN: [&str; 3] = ["lictun", "lictun_crypt_01", "lictun_crypt_02"];
+const CHAIN: [&str; 12] = [
+    "lictun",
+    "lictun_crypt_01",
+    "lictun_crypt_02",
+    "lictun_crypt_03",
+    "lictun_crypt_04",
+    "lictun_crypt_05",
+    "lictun_crypt_06",
+    "lictun_crypt_07",
+    "lictun_crypt_08",
+    "lictun_crypt_09",
+    "lictun_crypt_10",
+    "lictun_crypt_11",
+];
 
 /// Built-in content with nobody hungering, and nobody met on the way.
 static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
@@ -169,7 +182,7 @@ fn nobody_but_the_sexton_and_nothing_comes() {
 }
 
 #[test]
-fn the_chain_is_the_yard_then_two_crypts_each_quiet_with_room_for_statues() {
+fn the_chain_is_the_yard_then_its_crypts_each_quiet_with_room_for_statues() {
     assert_eq!(CONTENT.burial_chain("lictun"), CHAIN);
     for (depth, id) in CHAIN.iter().enumerate() {
         let b = burial(id);
@@ -262,8 +275,12 @@ fn a_full_yard_opens_the_way_down_and_the_crypts_fill_in_turn() {
         "one plot left"
     );
     assert!(open(&yard(many(yard_places)), "lictun"), "full");
-    // Enough to fill the yard and the first crypt, and one more for the second.
-    let n = yard_places + first + 1;
+    // Enough to fill the yard and every crypt but the deepest, and one more for that.
+    let deepest = CHAIN[CHAIN.len() - 1];
+    let above: usize = (CHAIN[..CHAIN.len() - 1].iter())
+        .map(|id| burial(id).places.len())
+        .sum();
+    let n = above + 1;
     let mut dead = many(n);
     // A petrified one among them takes no place.
     dead.insert(
@@ -306,18 +323,39 @@ fn a_full_yard_opens_the_way_down_and_the_crypts_fill_in_turn() {
         assert!(CONTENT.terrain(level.terrain[*p]).grave, "{p} filled");
     }
     assert!(open(&w, CHAIN[1]));
-    go_down(&mut w, CHAIN[1]);
-    assert_eq!(w.state.current_level, CHAIN[2]);
-    let deepest = names(&w, CHAIN[2]);
-    assert_eq!(deepest.len(), 1);
-    assert!(deepest[0].starts_with(&format!("Here lies Hero{} ", n - 1)));
-    assert!(!open(&w, CHAIN[2]), "the deepest's way down leads nowhere");
+    // Each crypt below full in turn, its own words on its graves, and its way down open.
+    let mut laid = yard_places + first;
+    for (depth, id) in CHAIN.iter().enumerate().skip(2) {
+        go_down(&mut w, CHAIN[depth - 1]);
+        assert_eq!(w.state.current_level, *id);
+        let here = names(&w, id);
+        if *id == deepest {
+            break;
+        }
+        let places = burial(id).places.len();
+        assert_eq!(here.len(), places, "{id}");
+        assert!(
+            here[0].starts_with(&format!("Here lies Hero{laid} ")),
+            "{here:?}"
+        );
+        let words = &burial(id).epitaph;
+        let tail = &words[words.find("{death}").expect("{death}") + "{death}".len()..];
+        assert!(here[0].ends_with(tail), "{id}: {here:?}");
+        laid += places;
+        assert!(open(&w, id), "{id} full");
+    }
+    assert_eq!(w.state.current_level, deepest);
+    let last = names(&w, deepest);
+    assert_eq!(last.len(), 1);
+    assert!(last[0].starts_with(&format!("Here lies Hero{} ", n - 1)));
+    assert!(!open(&w, deepest), "the deepest's way down leads nowhere");
     // And back up, arriving on the way down.
     act(&mut w, "ascend");
-    assert_eq!(w.state.current_level, CHAIN[1]);
+    let up = CHAIN[CHAIN.len() - 2];
+    assert_eq!(w.state.current_level, up);
     assert_eq!(
         w.player_pos(),
-        burial(CHAIN[1]).stairs.as_ref().expect("way down").pos
+        burial(up).stairs.as_ref().expect("way down").pos
     );
 }
 

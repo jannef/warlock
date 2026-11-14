@@ -1,0 +1,59 @@
+# Cyrcweardes Cofa, "the church-ward's store" (#1684): the fifth crypt under Līctūn, below
+# Cēapmanna Ærn, reached by the stairs that open there once its places are filled (spec §7
+# "Graves"; `docs/dev/graves.md`). Its stairs up (<) lead back to Cēapmanna Ærn. No danger,
+# nobody here.
+#
+# Where the sextons of old kept their gear and laid by what the yard would want. The stairs come
+# down into a small landing. A door east opens on the store: shelves along its north wall and eight
+# stone coffins in two rows, cut and waiting. South of the landing is the workroom, a table, a
+# bench, shelves. From there a low passage runs east between staggered niches, some earth fallen
+# into it, to the chamber where the oldest sexton lies (F), places for statues in its corners (S)
+# and the way down to the next crypt beyond him (v), shut until every place here is filled.
+#
+# Places: 8 sarcophagi and 18 niches, 26 in all, filled in row order.
+name = "Cyrcweardes Cofa"
+arrival = "Cyrcweardes Cofa, the sexton's store: shelves, a workbench, and coffins laid by."
+temperature = 7
+ambient = [6, 6, 8, 0]
+item_level = 1
+map = '''
+################################################
+################################################
+################################################
+###......#.==========.##########################
+##t..<...#..O.O.O.O...##########################
+###......'............##########################
+###......#..O.O.O.O..i##########################
+#####.####............##########################
+#####.##########################################
+#####.##########################################
+##i.........########################i.....######
+##..........#######################S......S#####
+##...TT.....##N#N#N#N#N#N#N#N#N#t#..........####
+##...................rr...............F....v.###
+##.......W..###N#N#N#N#N#N#N#N#N##..........####
+##=====....i#######################S......S#####
+####################################i.....######
+################################################
+################################################
+'''
+
+[burial]
+chain = "lictun"
+depth = 5
+epitaph = "Here lies {name}, {death}. Laid by in the sexton's store."
+
+[legend]
+"N" = "empty_niche"
+"O" = "open_sarcophagus"
+"r" = "rubble"
+"i" = "candles"
+"t" = "sconce"
+"=" = "shelves"
+"T" = "table"
+"W" = "workbench"
+"'" = "door_open"
+"<" = { terrain = "stairs_up", to = "lictun_crypt_04" }
+"S" = { terrain = "floor", statue_place = true }
+"v" = { terrain = "floor", burial_stairs = "stairs_down" }
+"F" = { terrain = "sarcophagus", epitaph = "Here lies Tīdhelm, sexton of Līctūn, 1101–1170. Fifty years he dug the yard; let another dig his." }

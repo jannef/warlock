@@ -4,8 +4,45 @@
 use super::*;
 
 const CRYPT_1: &str = "campaigns/ascmearc/levels/lictun_crypt_01.toml";
-const CRYPT_2: &str = "campaigns/ascmearc/levels/lictun_crypt_02.toml";
-const CRYPT_3: &str = "campaigns/ascmearc/levels/lictun_crypt_03.toml";
+
+/// Līctūn's chain as built in, and a crypt below its deepest: its file, its depth, and the level
+/// above it (so the tests hold however many crypts the campaign has).
+struct Below {
+    file: String,
+    depth: u8,
+    up: String,
+    /// The places on the chain's levels, all of them.
+    places: usize,
+}
+
+static BELOW: std::sync::LazyLock<Below> = std::sync::LazyLock::new(|| {
+    let content = Content::load(&ContentFiles::builtin()).expect("builtin content");
+    let chain = content.burial_chain("lictun");
+    let up = chain.last().expect("a chain").clone();
+    let places = (chain.iter())
+        .filter_map(|id| content.level(id)?.burial.as_ref())
+        .map(|b| b.places.len())
+        .sum();
+    Below {
+        file: format!(
+            "campaigns/ascmearc/levels/lictun_crypt_{:02}.toml",
+            chain.len()
+        ),
+        depth: u8::try_from(chain.len()).expect("a short chain"),
+        up,
+        places,
+    }
+});
+
+/// The builtin files with a small crypt below the deepest, `extra` in its `[burial]` table.
+fn new_crypt(extra: &str) -> ContentFiles {
+    with(&BELOW.file, &crypt(BELOW.depth, &BELOW.up, extra))
+}
+
+/// The builtin files with a small crypt below the deepest, its text edited by `edit`.
+fn new_crypt_edited(edit: impl Fn(String) -> String) -> ContentFiles {
+    with(&BELOW.file, &edit(crypt(BELOW.depth, &BELOW.up, "")))
+}
 
 /// A small crypt at `depth` under `up`.
 fn crypt(depth: u8, up: &str, extra: &str) -> String {
@@ -40,18 +77,15 @@ fn edited(path: &str, from: &str, to: &str) -> ContentFiles {
 
 #[test]
 fn a_new_crypt_is_one_file_and_the_one_above_leads_down_to_it() {
-    let content = Content::load(&with(CRYPT_3, &crypt(3, "lictun_crypt_02", ""))).expect("loads");
+    let content = Content::load(&new_crypt("")).expect("loads");
+    let id = format!("lictun_crypt_{:02}", BELOW.depth);
     let chain = content.burial_chain("lictun");
-    assert_eq!(chain.last().map(String::as_str), Some("lictun_crypt_03"));
-    let above = content
-        .level("lictun_crypt_02")
-        .and_then(|l| l.burial.as_ref());
+    assert_eq!(chain.last(), Some(&id));
+    let above = content.level(&BELOW.up).and_then(|l| l.burial.as_ref());
     let way = above.and_then(|b| b.stairs.as_ref()).expect("a way down");
-    assert_eq!(way.to.as_deref(), Some("lictun_crypt_03"));
-    let (before, burial) = content
-        .burial_of("lictun_crypt_03")
-        .expect("a burial ground");
-    assert_eq!(before, 40 + 26 + 30);
+    assert_eq!(way.to.as_deref(), Some(id.as_str()));
+    let (before, burial) = content.burial_of(&id).expect("a burial ground");
+    assert_eq!(before, BELOW.places);
     assert_eq!(burial.places.len(), 2);
     assert_eq!(burial.epitaph, DEFAULT_EPITAPH);
     // The deepest's way down leads nowhere.
@@ -60,12 +94,13 @@ fn a_new_crypt_is_one_file_and_the_one_above_leads_down_to_it() {
 
 #[test]
 fn a_chain_runs_from_its_churchyard_without_gaps() {
-    let gap = refused(&with(CRYPT_3, &crypt(4, "lictun_crypt_02", "")));
-    assert!(gap.contains("depth 3 has no level"), "{gap}");
-    let twice = refused(&with(CRYPT_3, &crypt(2, "lictun_crypt_01", "")));
+    let gap = refused(&with(&BELOW.file, &crypt(BELOW.depth + 1, &BELOW.up, "")));
+    let missing = format!("depth {} has no level", BELOW.depth);
+    assert!(gap.contains(&missing), "{gap}");
+    let twice = refused(&with(&BELOW.file, &crypt(2, "lictun_crypt_01", "")));
     assert!(twice.contains("at depth 2 of `lictun` too"), "{twice}");
-    let up = refused(&with(CRYPT_3, &crypt(3, "lictun", "")));
-    assert!(up.starts_with(CRYPT_3), "{up}");
+    let up = refused(&with(&BELOW.file, &crypt(BELOW.depth, "lictun", "")));
+    assert!(up.starts_with(&BELOW.file), "{up}");
     assert!(up.contains("no stairs up"), "{up}");
     let yard = "campaigns/ascmearc/levels/lictun.toml";
     let nameless = refused(&edited(yard, "chain = \"lictun\"", "chain = \"aaa\""));
@@ -81,7 +116,7 @@ fn a_chain_runs_from_its_churchyard_without_gaps() {
     ));
     assert!(shut.contains("no way down"), "{shut}");
     let deepest = edited(
-        CRYPT_2,
+        &format!("campaigns/ascmearc/levels/{}.toml", BELOW.up),
         "\"v\" = { terrain = \"floor\", burial_stairs = \"stairs_down\" }",
         "\"v\" = \"floor\"",
     );
@@ -90,28 +125,21 @@ fn a_chain_runs_from_its_churchyard_without_gaps() {
 
 #[test]
 fn what_a_level_author_gets_wrong_is_refused() {
-    let unmarked = refused(&with(
-        CRYPT_3,
-        &crypt(3, "lictun_crypt_02", "").replace("[burial]\nchain = \"lictun\"\ndepth = 3\n", ""),
-    ));
+    let burial = format!("[burial]\nchain = \"lictun\"\ndepth = {}\n", BELOW.depth);
+    let unmarked = refused(&new_crypt_edited(|t| t.replace(&burial, "")));
     assert!(unmarked.contains("need a `[burial]` table"), "{unmarked}");
-    let nobody = refused(&with(
-        CRYPT_3,
-        &crypt(3, "lictun_crypt_02", "epitaph = \"Here lies someone.\""),
-    ));
+    let nobody = refused(&new_crypt("epitaph = \"Here lies someone.\""));
     assert!(nobody.contains("names no one"), "{nobody}");
-    let blank = refused(&with(
-        CRYPT_3,
-        &crypt(3, "lictun_crypt_02", "").replace("\"empty_niche\"", "\"sealed_niche\""),
-    ));
+    let blank = refused(&new_crypt_edited(|t| {
+        t.replace("\"empty_niche\"", "\"sealed_niche\"")
+    }));
     assert!(blank.contains("has no `epitaph`"), "{blank}");
-    let statue = refused(&with(
-        CRYPT_3,
-        &crypt(3, "lictun_crypt_02", "").replace(
+    let statue = refused(&new_crypt_edited(|t| {
+        t.replace(
             "\"O\" = \"open_sarcophagus\"",
             "\"O\" = { terrain = \"wall\", statue_place = true }",
-        ),
-    ));
+        )
+    }));
     assert!(statue.contains("`statue_place`"), "{statue}");
 }
 

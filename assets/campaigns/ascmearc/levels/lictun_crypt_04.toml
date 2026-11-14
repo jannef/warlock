@@ -1,0 +1,58 @@
+# Cēapmanna Ærn, "the chapmen's house" (#1684): the fourth crypt under Līctūn, below
+# Prēostcleofa, reached by the stairs that open there once its places are filled (spec §7
+# "Graves"; `docs/dev/graves.md`). Its stairs up (<) lead back to Prēostcleofa. No danger, nobody
+# here.
+#
+# The vault the chapmen's gild of Cēaptūn built for its own, when the town was young and its
+# market already rich. A torch-lit passage from the stairs opens into a round hall: fourteen stone
+# coffins stand in a ring, and in the middle, between two candlesticks, the tomb of the gild's
+# first alderman (F), four places kept for statues round it (S). Niches line the hall's north and
+# south walls. East, a short passage leads to the gild's counting room, where the way down to the
+# next crypt waits (v), shut until every place here is filled.
+#
+# Places: 14 sarcophagi and 12 niches, 26 in all, filled in row order.
+name = "Cēapmanna Ærn"
+arrival = "Cēapmanna Ærn, the chapmen's vault: a round hall, its stone coffins set in a ring."
+temperature = 8
+ambient = [6, 6, 8, 0]
+item_level = 1
+map = '''
+######################################################
+######################################################
+#####################N#N#N#N#N#N######################
+####################i...........i#####################
+##################.................###################
+#################.....O...O...O.....##################
+################.....................#################
+###############....O.............O....################
+###############.......................################
+###############...O.....S...S.....O...######i.....####
+########t######.......................######......####
+###<...................i..F..i..................v.####
+########t######.......................######......####
+###############...O.....S...S.....O...######.....i####
+###############.......................################
+###############....O.............O....################
+################.....................#################
+#################.....O...O...O.....##################
+##################.................###################
+####################i...........i#####################
+#####################N#N#N#N#N#N######################
+######################################################
+######################################################
+'''
+
+[burial]
+chain = "lictun"
+depth = 4
+epitaph = "Here lies {name}, {death}. Laid in the chapmen's hall, though they never paid their dues."
+
+[legend]
+"N" = "empty_niche"
+"O" = "open_sarcophagus"
+"i" = "candles"
+"t" = "sconce"
+"<" = { terrain = "stairs_up", to = "lictun_crypt_03" }
+"S" = { terrain = "floor", statue_place = true }
+"v" = { terrain = "floor", burial_stairs = "stairs_down" }
+"F" = { terrain = "sarcophagus", epitaph = "Here lies Ōswold Cēapmann, first alderman of the chapmen's gild, 1148–1209. His weights were true and his word was better." }

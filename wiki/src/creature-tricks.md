@@ -82,7 +82,7 @@ A basilisk's statues may bear the names of your own past characters who were
 character who dies goes into the graveyard, a file kept beside the settings that no new version
 of the game invalidates. Its petrified characters are named on statues, the most recent first,
 and never twice on one floor. The rest are buried in
-[Līctūn](ascmearc.md#līctūn), Cēaptūn's churchyard.
+[Līctūn](lictun.md), Cēaptūn's churchyard.
 
 The more dreadful creatures are named once, the first time in a life you see one, with the line
 below. Each life remembers which it has seen.

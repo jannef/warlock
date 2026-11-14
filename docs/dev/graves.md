@@ -64,7 +64,11 @@ shrine). Ids `lictun_crypt_NN`, two digits.
 each way down at the next level (`BurialStairs::to`); the deepest's leads nowhere and never
 opens, so the dead past its last place are not shown. Līctūn's chain: `lictun` (40 plots, ten
 fixed graves by the chapel), `lictun_crypt_01` (The Undercroft, 26 places), `lictun_crypt_02`
-(Bānhūs, 30 places).
+(Bānhūs, 30), `_03` (Prēostcleofa, the priests' crypt, 30), `_04` (Cēapmanna Ærn, the chapmen's
+vault, 26), `_05` (Cyrcweardes Cofa, the sexton's store, 26), `_06` (Flōdærn, flooded, 25),
+`_07` (Cildra Ærn, the children's, 24), `_08` (Hryre, its roof fallen in, 31), `_09`
+(Cwealmpytt, a plague pit, 26), `_10` (Munuccleofan, the monks' cloister, 32), `_11` (Enta
+Geweorc, the old hall the English found, 27); each file's header says what it is.
 
 ## Burial
 

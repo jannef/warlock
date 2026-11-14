@@ -1,0 +1,62 @@
+# Munuccleofan, "the monks' cells" (#1684): the tenth crypt under Līctūn, below Cwealmpytt,
+# reached by the stairs that open there once its places are filled (spec §7 "Graves";
+# `docs/dev/graves.md`). Its stairs up (<) lead back to Cwealmpytt. No danger, nobody here.
+#
+# Cut in the rock by the monks who first came to Cēapdenu, as they would have built a cloister
+# above ground: a square walk, a candle at each corner, niches cut in its outer wall where the
+# brothers lie. Inside the walk the rock is left whole but for four short passages to the garth,
+# the shrine of the saint who led them here: his tomb (F) before a bare altar, a candle each
+# side, places for statues in its corners (S). A passage leaves the walk on the east to
+# the way down to the next crypt (v), shut until every place here is filled.
+#
+# Places: 32 niches, filled in row order.
+name = "Munuccleofan"
+arrival = "Munuccleofan, the monks' cells: a cloister walk cut in the rock, a saint's shrine at its heart."
+temperature = 5
+ambient = [6, 6, 8, 0]
+item_level = 1
+map = '''
+####################################################
+####################################################
+####################################################
+#######N##N##N##N##N##N##N##N##N##N##N##N##N########
+######i,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,i######
+######,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,######
+#####N,,#################.##################,,N#####
+######,,#################.##################,,######
+######,,#################.##################,,######
+######,,#########S...............S##########,,######
+#####N,,#########.................##########,,N#####
+######,,#########........_........##########,,######
+###t##,,#########.................##########,,######
+##<,,,,,..............i..F..i...............,,,,,v##
+###t##,,#########.................##########,,######
+######,,#########.................##########,,######
+######,,#########.................##########,,######
+######,,#########S...............S##########,,######
+#####N,,#################.##################,,N#####
+######,,#################.##################,,######
+######,,#################.##################,,######
+######,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,######
+######i,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,i######
+########N##N##N##N##N##N##N##N##N##N##N##N##N#######
+####################################################
+####################################################
+####################################################
+'''
+
+[burial]
+chain = "lictun"
+depth = 10
+epitaph = "Here lies {name}, {death}. Laid among the brothers, who ask no questions."
+
+[legend]
+"#" = "granite"
+"," = "dusty_floor"
+"N" = "empty_niche"
+"i" = "candles"
+"t" = "sconce"
+"<" = { terrain = "stairs_up", to = "lictun_crypt_09" }
+"S" = { terrain = "floor", statue_place = true }
+"v" = { terrain = "dusty_floor", burial_stairs = "stairs_down" }
+"F" = { terrain = "sarcophagus", epitaph = "Here lies Cynebald, abbot and saint, who brought the brothers over the hills to Cēapdenu, and the faith with them. Pray for us." }

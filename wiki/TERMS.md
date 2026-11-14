@@ -114,6 +114,7 @@ above.
 | Camping (resting on the overworld), the sleeper's lookout | `encounters.md#camping-and-foraging` |
 | An encounter table | `encounters.md#the-ascmearcs-encounters` (a table: `encounters.md#encounter-table-ID`) |
 | The Ascmearc and its places | `ascmearc.md#the-places` |
+| Līctūn, your dead's graves, the crypts | `lictun.md`, `lictun.md#the-crypts` |
 | Terrain, walls, water, stairs, creatures following you on stairs | `terrain.md#walls`, `terrain.md#water`, `terrain.md#stairs` |
 | Deep water, swimming | `terrain.md#deep-water` |
 | Digging, wall hardness | `digging.md#digging`, `digging.md#what-breaks-and-what-does-not` |
