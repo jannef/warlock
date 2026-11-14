@@ -18,10 +18,15 @@ struct FreeGlyphParams {
     supersample: u32,
     // The rows of a cell a capital letter covers, top and bottom: where colour bands lie.
     ink: vec2<f32>,
+    // The sky mask's cell (0, 0) top-left corner and cell size, in framebuffer pixels.
+    sky_origin: vec2<f32>,
+    sky_cell: vec2<f32>,
 }
 
 // Glyph flag: whole-pixel position at scale 1, so read the 1:1 atlas.
 const CRISP: u32 = 1u;
+// Glyph flag: drawn only over cells under the open sky (falling rain).
+const SKY: u32 = 2u;
 
 // The width of the soft border between two colour bands, in band heights.
 const SEAM: f32 = 0.35;
@@ -30,6 +35,8 @@ const SEAM: f32 = 0.35;
 @group(constants::MATERIAL_BIND_GROUP) @binding(1) var atlas: texture_2d<f32>;
 @group(constants::MATERIAL_BIND_GROUP) @binding(2) var smooth_atlas: texture_2d<f32>;
 @group(constants::MATERIAL_BIND_GROUP) @binding(3) var smooth_sampler: sampler;
+// One texel a cell: 1 under the open sky, 0 roofed, a building's wall, or unseen.
+@group(constants::MATERIAL_BIND_GROUP) @binding(4) var sky: texture_2d<f32>;
 
 struct Vertex {
     @builtin(instance_index) instance_index: u32,
@@ -112,6 +119,13 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     let frag = in.position.xy;
     if any(frag < params.clip_min) || any(frag >= params.clip_max) {
         return vec4(0.0);
+    }
+    if (in.glyph.y & SKY) != 0u {
+        let cell = floor((frag - params.sky_origin) / params.sky_cell);
+        let size = vec2<f32>(textureDimensions(sky));
+        if any(cell < vec2(0.0)) || any(cell >= size) || textureLoad(sky, vec2<i32>(cell), 0).r < 0.5 {
+            return vec4(0.0);
+        }
     }
     let index = in.glyph.x;
     let slot = vec2<f32>(f32(index % params.atlas_columns), f32(index / params.atlas_columns));

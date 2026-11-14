@@ -228,9 +228,14 @@ Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distor
   pixel-identical to no effects). `ScreenTints` draws a fading color over the map viewport:
   the level-change fade, and `flash()` for hit-style events.
 - **Rain** (`ui/rain.rs`, the `weather` switch): the weather's `drops`/`splash`/`ripples` emitters
-  (`data/weather.toml`) run as ambient emitters on every visible unroofed cell of the grid (plus
-  `BELOW` rows), keyed by level position; a particle is drawn only over a cell it rains on, at most
-  `MAX_PARTICLES` a frame. Drops are `│` sheared along their velocity (`FreeGlyph::slant`, pixels
+  (`data/weather.toml`) run as ambient emitters on every visible cell of the grid under the open
+  sky (plus `BELOW` rows): not roofed, and not a building's wall or door (a solid opaque cell or a
+  door beside a roofed cell the player has seen; freestanding walls and trees still get drops),
+  keyed by level position; a particle is drawn only while its middle is over a cell it rains on,
+  at most `MAX_PARTICLES` a frame. Rain glyphs are pushed with `FreeGlyphs::push_under_sky`: the
+  free-glyph shader clips them pixel by pixel against `FreeGlyphs::sky` (`SkyMask`, an `R8Unorm`
+  texel a cell, the same cells, its origin following the camera's slide each frame), so a streak
+  falling across a cell boundary never shows over a roof or a wall (#1691). Drops are `│` sheared along their velocity (`FreeGlyph::slant`, pixels
   across per pixel down, applied in `free_glyph::glyph_mesh`) and faint (`ParticleEmitter::opacity`).
 - **Spell effects** (spec §4.8 "Spell effects"): `Event::Spell { effect, origin, shape:
   SpellShape::{Burst { center, radius }, Bolt { path }}, cells }` in `warlock-core/src/action.rs`

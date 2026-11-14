@@ -3,9 +3,11 @@
 //! where the player is.
 //!
 //! The weather comes from the perception snapshot ([`PerceptionView::weather`], known only under
-//! the open sky). A cell rains iff it is visible and its terrain is not roofed; a drop is drawn
-//! only while it is over a cell that rains, so rain never falls under a roof or where the player
-//! does not see. The emitters are the weather's (`data/weather.toml`): ambient emitters per cell,
+//! the open sky). A cell rains iff it is visible, its terrain is not roofed, and it is not a
+//! building's wall or door (one beside a roofed cell the player knows); a drop is drawn only while
+//! its middle is over a cell that rains, and the free-glyph shader cuts it off pixel by pixel where
+//! it crosses into one that does not ([`FreeGlyphs::push_under_sky`]), so rain never falls under a
+//! roof, over a building's walls, or where the player does not see. The emitters are the weather's (`data/weather.toml`): ambient emitters per cell,
 //! keyed by the cell's level position (so the rain stays put while the camera scrolls), stateless
 //! like every particle. Drops are lit like other particles: faint in the dark, catching a
 //! lantern's light. Off with the `weather` effect switch; the darker light of a rainy day is
@@ -22,7 +24,7 @@ use crate::settings::{Role, Settings};
 use bevy::prelude::*;
 use warlock_core::Pos;
 use warlock_core::color::Rgb;
-use warlock_core::content::{GlyphAnim, ParticleEmitter, WeatherDef};
+use warlock_core::content::{GlyphAnim, ParticleEmitter, TerrainDef, WeatherDef};
 use warlock_core::perception::{CellView, PerceptionView};
 
 /// Most rain particles in a frame, whatever the size of the view.
@@ -44,7 +46,7 @@ enum Ground {
     Open,
     /// Still water: rings.
     Water,
-    /// Anything else (trees, walls, running water): drops only.
+    /// Anything else (trees, freestanding walls, running water): drops only.
     Other,
 }
 
@@ -60,7 +62,8 @@ pub(super) struct Wet {
 }
 
 impl Wet {
-    /// The visible, unroofed cells of `size` cells from `origin`, and [`BELOW`] rows more.
+    /// The visible, unroofed cells of `size` cells from `origin`, and [`BELOW`] rows more, but
+    /// a building's walls and doors.
     fn update(&mut self, view: &PerceptionView<'_>, origin: IVec2, size: UVec2) {
         let content = view.content();
         let size = UVec2::new(size.x, size.y + BELOW as u32);
@@ -76,8 +79,9 @@ impl Wet {
                     continue;
                 };
                 let def = content.terrain(t);
-                self.wet.push(!def.roofed);
-                if def.roofed {
+                let open = !def.roofed && !(eaves(def) && beside_roof(view, p));
+                self.wet.push(open);
+                if !open {
                     continue;
                 }
                 let ground = match def.anim {
@@ -97,6 +101,23 @@ impl Wet {
         }
         self.wet[(y * self.size.x as i32 + x) as usize]
     }
+}
+
+/// Whether `def` belongs to a building when it stands beside a roof: a wall (solid and opaque) or
+/// a door. A roof covers its walls; the rain stays off them.
+fn eaves(def: &TerrainDef) -> bool {
+    (!def.walkable && !def.transparent) || def.is_door()
+}
+
+/// Whether a cell around `p` is roofed, as far as the player knows (seen or remembered).
+fn beside_roof(view: &PerceptionView<'_>, p: Pos) -> bool {
+    let content = view.content();
+    (-1..=1).any(|dy| {
+        (-1..=1).any(|dx| match view.cell(Pos::new(p.x + dx, p.y + dy)) {
+            CellView::Visible(t) | CellView::Remembered(t) => content.terrain(t).roofed,
+            CellView::Unknown => false,
+        })
+    })
 }
 
 /// The rain's particles at `time` over the cells in `wet`, at most [`MAX_PARTICLES`], and for
@@ -170,7 +191,12 @@ pub(super) fn emit(
     if game.is_changed() || wet.key != Some(key) {
         wet.key = Some(key);
         wet.update(&view, grid.level_origin, size);
+        free.sky.size = wet.size;
+        free.sky.open.clone_from(&wet.wet);
     }
+    // The camera's slide moves the cells by fractions of a pixel from frame to frame.
+    free.sky.origin = grid.to_screen(wet.origin.as_vec2());
+    free.sky.cell = grid.cell;
     let (out, leans) = &mut *scratch;
     out.clear();
     leans.clear();
@@ -186,7 +212,7 @@ pub(super) fn emit(
         if !wet.is_wet(at) {
             continue;
         }
-        free.push(FreeGlyph {
+        free.push_under_sky(FreeGlyph {
             pos: grid.to_screen(p.pos),
             ch: p.ch,
             color: particle_color(p, at, &light),
@@ -205,15 +231,15 @@ mod tests {
     use warlock_core::weather::Weather;
     use warlock_core::{Action, World};
 
-    /// A walled garden under the sky: grass, a pond, a roofed porch, a wall, and a tree; in high
-    /// summer, so the pond is open water (spec §5 "Ice").
+    /// A walled garden under the sky: grass, a pond, a roofed porch (the player on it, by a lamp), a wall, and
+    /// a tree; in high summer, so the pond is open water (spec §5 "Ice").
     fn garden() -> World {
         let mut files = warlock_assets::files();
         files.insert(
             "levels/garden.toml",
             "name = \"Garden\"\nkind = \"outdoor\"\nmap = '''\n\
-             ##########\n#..~~..T.#\n#..~~....#\n#.@...===#\n##########\n'''\n\
-             [legend]\n\"@\" = { terrain = \"grass\", spawn = \"player\" }\n\
+             ##########\n#..~~..T.#\n#..~~....#\n#.....=@=#\n##########\n'''\n\
+             [legend]\n\"@\" = { terrain = \"gazebo_floor\", light = \"lamp\", spawn = \"player\" }\n\
              \".\" = \"grass\"\n\"~\" = \"water\"\n\"T\" = \"tree\"\n\"=\" = \"gazebo_floor\"\n",
         );
         files.insert(
@@ -247,6 +273,15 @@ mod tests {
         assert_eq!(ground(0, 0), Some(Ground::Other), "the wall");
         assert_eq!(ground(6, 3), None, "the porch is roofed");
         assert!(!wet.is_wet(Pos::new(6, 3)) && wet.is_wet(Pos::new(5, 3)));
+        // The walls round the porch are under its roof, the ones further off are not.
+        for p in [(5, 4), (7, 4), (9, 4), (9, 2)] {
+            assert_eq!(
+                ground(p.0, p.1),
+                None,
+                "the wall at {p:?} is under the porch"
+            );
+        }
+        assert!(wet.is_wet(Pos::new(4, 4)) && wet.is_wet(Pos::new(9, 1)));
         assert!(!wet.is_wet(Pos::new(-1, 0)) && !wet.is_wet(Pos::new(3, 9)));
     }
 
