@@ -28,6 +28,7 @@ use crate::content::{
     SkillDef, SpellId, StatusId, TalentActive, TalentEffect, WeaponAbilityId, WeaponSkillId,
 };
 use crate::geom::{Dir, Pos};
+use crate::item_list::ItemList;
 use crate::skills::{Effect, SkillId};
 use crate::talent::SongCost;
 use crate::world::{Actor, BREATH_RANGE, LevelState, STARE_RANGE, VOICE_RANGE};
@@ -269,10 +270,10 @@ pub enum Aim {
     /// them ([`crate::heal::treatable`]): asked only when there is more than one (the Heal
     /// ability).
     Ailment,
-    /// A stack the player carries, from a list of those it may work on (the Identify spell on
-    /// the identify list; Decipher: the scrolls of a type not yet known;
-    /// [`Ability::action_on`]).
-    Item,
+    /// A stack the player carries, from the list it names, of those it may work on
+    /// ([`crate::perception::PerceptionView::item_choices`]): the Identify spell on the identify
+    /// list, Decipher on the scrolls of a type not yet known ([`Ability::action_on`]).
+    Item(ItemList),
     /// Something to throw, from the throw list less flasks, then a cell in the aiming mode (the
     /// thief's Thrown exploit: [`Ability::action_throw`], `use:thrown_exploit:c:12,5`).
     Throw,
@@ -857,12 +858,13 @@ impl Ability {
             Ability::Sign(active) if active.aimed() => Aim::Cell,
             Ability::Sign(_) => Aim::Nothing,
             Ability::Class(active) if active.aimed() => Aim::Direction,
-            Ability::Spell(spell) if aims_item(content, spell) => Aim::Item,
+            Ability::Spell(spell) if aims_item(content, spell) => Aim::Item(ItemList::Identify),
             Ability::Spell(spell) if aims_corpse(content, spell) => Aim::Corpse,
             Ability::Spell(spell) if aimed(content, spell) => Aim::Cell,
             Ability::Spell(_) => Aim::Nothing,
             Ability::Class(active) if active.aims_cell() => Aim::Cell,
-            Ability::Class(active) if active.aims_item() => Aim::Item,
+            Ability::Class(ClassActive::MakeDo) => Aim::Item(ItemList::MakeDo),
+            Ability::Class(active) if active.aims_item() => Aim::Item(ItemList::Identify),
             Ability::Class(active) if active.aims_throw() => Aim::Throw,
             Ability::Class(active) if active.aims_shape() => Aim::Shape,
             Ability::Class(active) if active.aims_rig() => Aim::Rig,
@@ -881,7 +883,9 @@ impl Ability {
             | Ability::Heel
             | Ability::Hold
             | Ability::Drink => Aim::Nothing,
-            Ability::Salvage | Ability::Give | Ability::Decipher => Aim::Item,
+            Ability::Salvage => Aim::Item(ItemList::Salvage),
+            Ability::Give => Aim::Item(ItemList::Give),
+            Ability::Decipher => Aim::Item(ItemList::Decipher),
             Ability::Profession(_) => Aim::Recipes,
             Ability::ThrowVoice | Ability::SetOn | Ability::Intimidate => Aim::Cell,
             Ability::Heal => Aim::Ailment,
