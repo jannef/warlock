@@ -348,9 +348,13 @@ pub(super) fn parse<'a>(
 /// Ties the signatures to their corpses, once creatures have loaded: a creature's `on_eat.gives`
 /// names a gift whose `only` is that creature, and a gift's `only` names a creature whose `gives`
 /// is that gift, of the gift's own campaign (or shared). A signature is never taken away by
-/// another gift's `replaces` or `undoes`.
+/// another gift's `replaces` or `undoes`. Content without gifts (no talent table) checks nothing:
+/// its corpses' `gives` give nothing.
 pub(super) fn check_signatures(content: &Content) -> Result<(), ContentError> {
     let table = content.profane();
+    if table.is_empty() {
+        return Ok(());
+    }
     let book = content.talents();
     let gift_of = |id: &str| book.id(id).and_then(|t| table.gift(t));
     for creature in content.creature_defs() {

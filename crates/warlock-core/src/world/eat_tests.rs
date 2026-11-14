@@ -413,7 +413,7 @@ fn gnaegans_meal_gives_its_signature_then_a_lesser_draw_then_the_deed() {
     assert!(!said(&w, "You vomit!"));
     let mods = w.state.player().talent_mods(&w.content);
     let thick = if held[1] == "thick_blooded" { 2 } else { 0 };
-    assert_eq!(mods.disease_checks, 4 + thick);
+    assert_eq!(mods.vigour.disease_checks, 4 + thick);
 }
 
 #[test]

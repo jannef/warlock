@@ -1581,6 +1581,7 @@ mod tests {
         files.remove("data/talents/");
         // The profane gifts are talents of a tree these settings lack.
         files.remove("data/profane/");
+        files.remove("campaigns/ascmearc/data/profane/");
         // Background stories name talents of the built-in set.
         files.remove("data/background.toml");
         files.insert("data/talents.toml", settings);
