@@ -1,0 +1,12 @@
+# A niche in a crypt's wall closed with a slab (spec §7 "Graves"; #1682): a grave, its name cut in
+# the slab, which look mode reads.
+[[terrain]]
+id = "sealed_niche"
+name = "sealed niche"
+stone = true
+grave = true
+walkable = false
+transparent = false
+glyph = "▮"
+fg = "#b4ac9c"
+bg = "#1c1a17"

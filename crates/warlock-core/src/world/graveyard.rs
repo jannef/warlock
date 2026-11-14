@@ -34,7 +34,7 @@ impl World {
         let ids: Vec<String> = self.state.levels.keys().cloned().collect();
         for id in ids {
             name_statues(&mut self.state, &self.content, &id);
-            super::graves::carve_graves(&mut self.state, &self.content, &id);
+            super::graves::bury(&mut self.state, &self.content, &id);
         }
     }
 

@@ -1,0 +1,64 @@
+# Bānhūs, "the bone-house" (#1682): the second crypt under Līctūn, below the Undercroft, reached by
+# the stairs that open there once its places are filled (spec §7 "Graves"; `docs/dev/graves.md`).
+# Its stairs up (<) lead back to the Undercroft. No danger, nobody here.
+#
+# Older than the yard above: a landing under the stairs, steps down into the charnel, a round
+# chamber walled with the bones of the first yard's dead (B), stacked in courses when their graves
+# were wanted again; their common tomb stands in the middle (F), four places kept for statues
+# round it (S). East, the hall of ranks: twenty open sarcophagi in four rows, its north-east
+# corner fallen in (rubble). South from the hall a passage runs east between empty niches to the
+# way down to the next crypt (v), shut until every place here is filled.
+#
+# Places: 20 sarcophagi and 10 niches, 30 in all, filled in row order.
+name = "Bānhūs"
+arrival = "Bānhūs, the bone-house: walls of old bones, and rows of stone coffins beyond."
+temperature = 7
+ambient = [6, 6, 8, 0]
+item_level = 1
+map = '''
+############################################################
+############################################################
+####......##################################################
+####..<...##################################################
+####......##################################################
+######..####################################################
+######..####################i........s....rrr###############
+######..BBBBBBBBB###########...............rrr##############
+####BB..,,,,,,,,BBBB########...O..O..O..O..O.rr#############
+###BB,,,,,,,,,,,,,,BB#######..................r#############
+##BB,,,,S,,,,,,S,,,,BB######...................#############
+#BB,,,,,,,,,,,,,,,,,,BB#####...O..O..O..O..O...#############
+#B,,i,,,,,,F,,,,,,,i,..........................#############
+#B,,,,,,,,,,,,,,,,,,,..........................#############
+#BB,,,,,,,,,,,,,,,,,,BB#####...O..O..O..O..O...#############
+##BB,,,,S,,,,,,S,,,,BB######...................#############
+###BB,,,,,,,,,,,,,,BB#######...................#############
+####BBBB,,,,,,,,BBBB########...O..O..O..O..O...#############
+#######BBBBBBBBBB###########...................#############
+############################...................#############
+############################i........s........i#############
+#####################################.######################
+#####################################.##N##N##N##N##N#######
+#####################################..................vi###
+########################################N##N##N##N##N#######
+############################################################
+############################################################
+'''
+
+[burial]
+chain = "lictun"
+depth = 2
+epitaph = "Here lies {name}, {death}. Laid among the old bones."
+
+[legend]
+"," = "dusty_floor"
+"B" = "bone_wall"
+"N" = "empty_niche"
+"O" = "open_sarcophagus"
+"r" = "rubble"
+"i" = "candles"
+"<" = { terrain = "stairs_up", to = "lictun_crypt_01" }
+"S" = { terrain = "dusty_floor", statue_place = true }
+"s" = { terrain = "floor", statue_place = true }
+"v" = { terrain = "floor", burial_stairs = "stairs_down" }
+"F" = { terrain = "sarcophagus", epitaph = "Here lie the bones of the old yard, brought below when their graves were wanted. Their names are known to God." }

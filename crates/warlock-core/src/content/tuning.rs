@@ -42,8 +42,6 @@ pub struct Tuning {
     pub flurry: ToHit,
     /// Holding on to a weapon a blow would knock away (`world/knock_away.rs`).
     pub knock_away: KnockAway,
-    /// Gravestones naming the fallen (`world/graves.rs`).
-    pub graves: GraveRules,
     /// A read's price under talents (`world/read.rs`).
     pub read: Floor,
     /// A weapon active's time under talents (`world/weapon_active.rs`).
@@ -128,14 +126,6 @@ pub struct KnockAway {
     pub shield: i32,
 }
 
-/// Gravestones naming the fallen.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct GraveRules {
-    /// One stone in this many names one of the run's graveyard, while any is left.
-    pub fallen_one_in: u32,
-}
-
 /// The least a price may be cut to, in percent.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -184,7 +174,6 @@ impl Default for Tuning {
                 two_handed: 2,
                 shield: 1,
             },
-            graves: GraveRules { fallen_one_in: 10 },
             read: Floor { least_percent: 25 },
             weapon_active: Floor { least_percent: 50 },
             listen: ListenRules { keener: 2 },
@@ -236,9 +225,6 @@ impl Tuning {
         }
         within("knock_away.two_handed", t.knock_away.two_handed, 0, 20)?;
         within("knock_away.shield", t.knock_away.shield, 0, 20)?;
-        if t.graves.fallen_one_in == 0 {
-            return Err(err("`graves.fallen_one_in` must be above 0".into()));
-        }
         within("read.least_percent", t.read.least_percent, 1, 100)?;
         let floor = t.weapon_active.least_percent;
         within("weapon_active.least_percent", floor, 1, 100)?;
@@ -270,7 +256,6 @@ mod tests {
         for (from, to, says) in [
             ("range = 6", "range = 0", "throw_voice.range"),
             ("to_hit = -2", "to_hit = 3", "flurry.to_hit"),
-            ("fallen_one_in = 10", "fallen_one_in = 0", "fallen_one_in"),
             (
                 "least_percent = 25",
                 "least_percent = 0",

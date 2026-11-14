@@ -1,0 +1,14 @@
+# A wall of bones (#1682, Līctūn's ossuary): skulls and long bones stacked in courses against the
+# rock, as old crypts were cleared to make room. Breaks like any wall.
+[[terrain]]
+id = "bone_wall"
+name = "wall of bones"
+description = "Skulls and long bones, stacked in neat courses from floor to roof."
+stone = true
+glyph = "#"
+fg = "#d2c8aa"
+bg = "#2a261e"
+walkable = false
+transparent = false
+hardness = 600
+becomes = "rubble"

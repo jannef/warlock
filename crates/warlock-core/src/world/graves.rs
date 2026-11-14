@@ -1,116 +1,104 @@
-//! What is cut in gravestones (spec §7 "Graves"; #1258): a hand-made level's `[graves]` words
-//! (`content::Graves`) give every cell of a `grave` terrain one inscription as the level is made
-//! ([`carve_graves`], from `travel.rs::instantiate_level`, and again for the levels made already
-//! when the run is given its graveyard, `World::set_graveyard`).
+//! The run's dead laid to rest (spec §7 "Graves"; #1682; `docs/dev/graves.md`): a burial
+//! ground's places (`content/burial.rs`) are filled from the run's graveyard
+//! (`world/graveyard.rs`) as the level is made ([`bury`], from `travel.rs::instantiate_level`,
+//! and again for the levels made already when the run is given its graveyard,
+//! `World::set_graveyard`).
 //!
-//! Each stone, in row order, draws from the level's own stream `graves/<level>` (the level's
-//! seed): a roll of one in the `[graves]` `fallen_one_in` of `data/rules/tuning.toml`, then a
-//! stranger of the level's folk (a given name, a byname, an epitaph, how many years ago they died
-//! and how old they were, before the year the level is made). Every stone draws all of that
-//! whatever the graveyard holds, so a stranger's stone reads the same with any graveyard. Where the
-//! roll comes up and one of the run's graveyard (`world/graveyard.rs`) is left, the stone is theirs
-//! instead: which one is drawn from the stream `graves/<level>/fallen`, never twice on a level.
+//! Every one of the dead but the petrified (statues, `graveyard.rs`) has a grave of their own,
+//! the oldest death first: the churchyard's places in row order, then the first crypt's, the
+//! second's, and so on down the chain. A place filled becomes its grave terrain, cut with the
+//! level's `epitaph`; a level whose places are all filled opens its way down to the next. The
+//! fixed graves (the legend's `epitaph`) are cut whatever the graveyard holds. No draw: the
+//! same graveyard always lays the same dead in the same places.
 //!
-//! **Decoration**: no rule reads an inscription, and they are left out of the state hash
-//! (`LevelState::graves`), so a replay verifies under any graveyard. Saves keep them.
+//! **Decoration**: a place and its grave are the same in every rule (checked at load), no rule
+//! reads an inscription, and the state hash sees each level as it would be with no graveyard
+//! ([`LevelState::unburied`]): the places empty, the way down closed. So a replay verifies under
+//! any graveyard, unless it steps on or takes an opened way down. Saves keep them.
 
-use super::{Fallen, WorldState};
-use crate::content::{Content, Graves};
-use crate::geom::Pos;
-use crate::rng::Rng;
-use std::collections::BTreeMap;
+use super::{Fallen, LevelState, WorldState};
+use crate::content::{Burial, Content};
+use std::borrow::Cow;
 
 /// What a death without words reads as (an entry the app gave none).
 const UNTOLD: &str = "taken before their time";
 
-/// Cuts the inscriptions of level `id`'s gravestones (module docs); a level without `graves`
-/// words keeps its stones blank.
-pub(super) fn carve_graves(state: &mut WorldState, content: &Content, id: &str) {
-    let Some(graves) = content.level(id).and_then(|t| t.graves.as_ref()) else {
+/// Lays the run's dead in level `id`'s burial ground, as the module docs say; a level without
+/// one is left as it is.
+pub(super) fn bury(state: &mut WorldState, content: &Content, id: &str) {
+    let Some((above, burial)) = content.burial_of(id) else {
         return;
     };
-    let seed = state.level_seed(content, id);
-    let year = state.time.year();
-    let Some(level) = state.levels.get(id) else {
+    let Some(level) = state.levels.get_mut(id) else {
         return;
     };
-    let terrain = &level.terrain;
-    let mut cells = Vec::new();
-    for y in 0..terrain.height() {
-        for x in 0..terrain.width() {
-            let p = Pos::new(x, y);
-            if content.terrain(terrain[p]).grave {
-                cells.push(p);
-            }
-        }
-    }
-    let carved = carve(content, graves, &cells, (seed, id), year, &state.graveyard);
-    if let Some(level) = state.levels.get_mut(id) {
-        level.graves = carved;
-    }
-}
-
-/// The inscriptions of the stones on `cells` (in the order given) of level `id` in a run with
-/// `seed`, made in `year`, with the run's `graveyard` (module docs).
-pub(crate) fn carve(
-    content: &Content,
-    graves: &Graves,
-    cells: &[Pos],
-    (seed, id): (u64, &str),
-    year: u64,
-    graveyard: &[Fallen],
-) -> BTreeMap<Pos, String> {
-    let mut rng = Rng::stream(seed, &format!("graves/{id}"));
-    let mut pick = Rng::stream(seed, &format!("graves/{id}/fallen"));
-    let mut left: Vec<&Fallen> = Vec::new();
-    for fallen in graveyard {
-        if !left.contains(&fallen) {
-            left.push(fallen);
-        }
-    }
-    let mut carved = BTreeMap::new();
-    for &p in cells {
-        let theirs = rng.below(content.tuning().graves.fallen_one_in) == 0;
-        let stranger = stranger(graves, &mut rng, year);
-        let text = if theirs && !left.is_empty() {
-            let fallen = left.remove(pick.index(left.len()));
-            fallen_words(content, graves, fallen)
-        } else {
-            stranger
+    unbury(level);
+    level.graves = burial.epitaphs.clone();
+    let dead: Vec<&Fallen> = (state.graveyard.iter().rev())
+        .filter(|f| !f.petrified)
+        .collect();
+    let theirs = dead.iter().skip(above).take(burial.places.len());
+    for (&p, fallen) in burial.places.iter().zip(theirs) {
+        let place = level.terrain[p];
+        let Some(grave) = content.terrain(place).burial else {
+            continue;
         };
-        carved.insert(p, text);
+        change(level, p, grave);
+        level.graves.insert(p, words(content, burial, fallen));
     }
-    carved
+    if dead.len() >= above + burial.places.len()
+        && let Some(link) = burial.opened()
+    {
+        let stairs = burial.stairs.as_ref().expect("opened").terrain;
+        change(level, link.pos, stairs);
+        level.stairs.push(link);
+    }
 }
 
-/// A stranger of the level's folk: the same draws every time (module docs).
-fn stranger(graves: &Graves, rng: &mut Rng, year: u64) -> String {
-    let given = rng.pick(&graves.names).map_or("", String::as_str);
-    let byname = rng.pick(&graves.bynames);
-    let epitaph = rng.pick(&graves.epitaphs).map_or("", String::as_str);
-    let ago = rng.range(graves.died[0].into(), graves.died[1].into());
-    let age = rng.range(graves.age[0].into(), graves.age[1].into());
-    let name = match byname {
-        Some(byname) => format!("{given} {byname}"),
-        None => given.to_string(),
-    };
-    let year = i64::try_from(year).unwrap_or(i64::MAX);
-    let died = (year - i64::from(ago)).max(1);
-    let born = (died - i64::from(age)).max(1);
-    epitaph
-        .replace("{name}", &name)
-        .replace("{born}", &born.to_string())
-        .replace("{died}", &died.to_string())
+/// Sets cell `p` of `level` to `terrain` as burial does, keeping what it was.
+fn change(level: &mut LevelState, p: crate::geom::Pos, terrain: crate::content::TerrainId) {
+    let was = level.terrain[p];
+    level.buried.entry(p).or_insert(was);
+    level.terrain.set(p, terrain);
+    if level.memory[p].is_some() {
+        level.memory.set(p, Some(terrain));
+    }
 }
 
-/// One of the run's graveyard: "Here lies Brakka the dwarf, killed by a kobold in Fyrdelf 3."
-fn fallen_words(content: &Content, graves: &Graves, fallen: &Fallen) -> String {
+/// Undoes what [`bury`] did to `level`: the places empty, the way down closed (its link gone),
+/// and the player's memory of them so. The inscriptions stay for [`bury`] to cut again.
+fn unbury(level: &mut LevelState) {
+    let buried = std::mem::take(&mut level.buried);
+    for (&p, &was) in &buried {
+        level.terrain.set(p, was);
+        if level.memory[p].is_some() {
+            level.memory.set(p, Some(was));
+        }
+    }
+    level.stairs.retain(|s| !buried.contains_key(&s.pos));
+}
+
+impl LevelState {
+    /// The level as the state hash sees it: as it would be with no graveyard (module docs).
+    pub(crate) fn unburied(&self) -> Cow<'_, Self> {
+        if self.buried.is_empty() {
+            return Cow::Borrowed(self);
+        }
+        let mut level = self.clone();
+        unbury(&mut level);
+        Cow::Owned(level)
+    }
+}
+
+/// One of the run's dead in `burial`'s words: "Here lies Brakka the dwarf warrior, killed by a
+/// kobold in Fyrdelf 3, The Ascmearc."
+fn words(content: &Content, burial: &Burial, fallen: &Fallen) -> String {
     let mut chars = fallen.death.chars();
     let death = match chars.next() {
         Some(first) => first.to_lowercase().chain(chars).collect(),
         None => UNTOLD.to_string(),
     };
-    (graves.fallen)
-        .replace("{name}", &fallen.words(content))
+    (burial.epitaph)
+        .replace("{name}", &fallen.grave_words(content))
         .replace("{death}", &death)
 }

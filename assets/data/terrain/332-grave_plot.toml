@@ -1,0 +1,13 @@
+# A plot kept for a grave (spec §7 "Graves"; #1682, Līctūn): a kerb of stones round turned
+# earth. One of the run's dead laid there makes it a gravestone (`burial`), the same in every rule
+# (`content/burial.rs`).
+[[terrain]]
+id = "grave_plot"
+name = "empty grave plot"
+description = "A kerb of stones round a strip of turned earth, kept for a grave."
+stone = true
+walkable = false
+glyph = "▭"
+fg = "#8c7656"
+bg = "#22401a"
+burial = "gravestone"

@@ -263,9 +263,10 @@ No window, no Bevy; `--content-dir` works here too.
 
 - `dump` and `replay --create` take `--character dwarf,female,warrior` (starts as that
   character), `--name Brakka` (names them), `--talents healthy,lean` (picks their creation
-  talents), and `--fallen Brakka:dwarf:stone,Tamsin:elf` (gives the run the graveyard's dead,
-  `:stone` the petrified, to name statues (the petrified) and gravestones (all) from; out of the
-  state hash; docs/dev/saves.md "The graveyard").
+  talents), and `--fallen Brakka:dwarf:stone,Tamsin:elf:bard` (gives the run the graveyard's
+  dead, the most recent first, `NAME:RACE[:CLASS][:stone]`, `:stone` the petrified: statues are
+  named from the petrified, the rest laid in Līctūn's graves and crypts; out of the state hash;
+  docs/dev/saves.md "The graveyard", docs/dev/graves.md).
 - `gen` prints ground truth: `*` = light placed on floor, `&` = locked door, `S` = secret door;
   `^` = a trap, hidden ones too; a layer boss's lair prints its `hidden stairs` line; `⊟` = a
   chest, locked or trapped or not; `V` = an ore vein, hidden in the rock too; a special room's

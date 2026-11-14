@@ -61,19 +61,33 @@ village, the wood, and the fair folk, and will [talk](npcs.md) of them. A girl o
 ### Līctūn
 
 Four cells down the south road from the town, beside the road, is **Līctūn**, Cēaptūn's
-churchyard. A drystone wall runs round it, with a gate on the road. Inside are fifty gravestones
-in rows, a yew in each corner, and a little stone chapel in the middle. Nothing comes there to
+churchyard. A drystone wall runs round it, with a gate on the road. Inside are rows of grave
+plots, a yew in each corner, and a little stone chapel in the middle. Nothing comes there to
 fight you.
 
-Look at a stone to read it: "Here lies Ælfric Wudu, 1281–1336." Most name the town's own dead,
-with their years. About one stone in ten names one of your own past characters, if any have died:
-"Here lies Brakka the dwarf, killed by a kobold in Fyrdelf 3, The Ascmearc." Every character who
-dies goes into the graveyard, the same list that names
-[statues](creature-tricks.md#warning-signs). Each of your dead is on one stone at most.
+**Your own dead are buried here.** Every character who dies goes into the graveyard, a list kept
+beside your settings. Each of them gets a grave of their own in Līctūn, except those who were
+[turned to stone](status-list.md#status-stiffening): they stand as
+[statues](creature-tricks.md#warning-signs) instead. Look at a grave to read it: "Here lies
+Brakka the dwarf warrior, killed by a kobold in Fyrdelf 3, The Ascmearc."
 
-The sexton, **Old Dudda**, walks his rounds of the stones. He will [talk](npcs.md), grimly, but
-has nothing to sell and nothing to ask of you. Like the town, Līctūn has no
-[stairs](terrain.md#stairs); walk off its edge to leave.
+The oldest death is buried first. The yard has forty plots, in four rows of ten, filled from the
+top row down and left to right. An empty plot is a kerb of stones round turned earth; a filled
+one has its stone.
+
+Ten older stones stand by the chapel. They are the town's own dead, and each has its own words:
+"Here lies Ælfric atte Welle, reeve of Cēaptūn, 1361–1419. He kept the peace and the tally
+both."
+
+**The crypts.** When all forty plots are filled, the flagstone at the end of the path behind the
+chapel opens into [stairs](terrain.md#stairs) down to **the Undercroft**, a crypt of family
+vaults with 26 places in its niches and stone coffins. When those are filled too, its stairs open
+down to **Bānhūs**, the bone-house, with 30 more. Your dead are laid there in the same order,
+oldest first. Nothing lives in the crypts, and they are lit only by a few candles and torches, so
+bring a light.
+
+The sexton, **Old Dudda**, walks his rounds of the yard. He will [talk](npcs.md), grimly, but
+has nothing to sell and nothing to ask of you. Walk off the yard's edge to leave.
 
 ### Gimmwīc
 
@@ -176,6 +190,7 @@ kind. Creatures keep their plain English names.
 | Ūtgang | *ūtgang* "going out, exit" | the way out | the way up from the drake's deep |
 | Holtwīc | *holt* "wood" + *wīc* "dwelling" | the dwelling at the wood | the village at the north road's end |
 | Līctūn | *līc* "body, corpse" + *tūn* "enclosure" | the corpse-yard | Cēaptūn's churchyard |
+| Bānhūs | *bān* "bone" + *hūs* "house" | the bone-house | the second crypt under Līctūn |
 | Ælfhām | *ælf* "elf" + *hām* "home" | the elves' home | the fey hall under the mound |
 | Dēopgang | *dēop* "deep" + *gang* "way, passage" | the deep way | the deep gnomes' road down |
 | Gimmwīc | *gimm* "gem" + *wīc* "dwelling" | the gem dwelling | the deep gnomes' town |

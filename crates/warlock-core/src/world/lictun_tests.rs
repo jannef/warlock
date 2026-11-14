@@ -1,12 +1,13 @@
-//! Līctūn, Cēaptūn's churchyard by the south road (#1258; spec §7 "Graves"): the way in from the
-//! town and out by the edge, nobody but the sexton and nothing coming, Old Dudda's words, the
-//! fifty stones and their inscriptions (one in ten of the graveyard's fallen, never twice; a
-//! stranger's stone the same under any graveyard), out of the state hash and kept by a save, and
-//! a replay.
+//! Līctūn, Cēaptūn's churchyard by the south road, and its crypts (#1258, #1682; spec §7
+//! "Graves"): the way in from the town and out by the edge, nobody but the sexton and nothing
+//! coming, Old Dudda's words, the ten old graves and the forty plots, the run's dead laid oldest
+//! first (never the petrified), the way down opening once a level is full, the crypts filled in
+//! turn, all out of the state hash and kept by a save, and a replay verified without the
+//! graveyard.
 
 use super::*;
 use crate::action::parse_actions;
-use crate::content::{ContentFiles, Stance};
+use crate::content::{Burial, ContentFiles, Stance};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::{run as act, texts};
@@ -17,9 +18,11 @@ const TOWN_CELL: Pos = Pos::new(18, 28);
 /// Līctūn's cell on the overworld, beside the south road.
 const YARD_CELL: Pos = Pos::new(19, 32);
 /// Where the player arrives in the yard: the road outside the gate.
-const START: Pos = Pos::new(2, 12);
+const START: Pos = Pos::new(2, 13);
 /// The walk from the pass to the yard's cell.
 const WALK: &str = "move:E*6 move:S*4 move:E";
+/// The chain's levels, the yard first.
+const CHAIN: [&str; 3] = ["lictun", "lictun_crypt_01", "lictun_crypt_02"];
 
 /// Built-in content with nobody hungering, and nobody met on the way.
 static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
@@ -43,14 +46,16 @@ fn fallen(name: &str, race: &str, death: &str) -> Fallen {
     Fallen {
         name: name.into(),
         race: race.into(),
+        class: "warrior".into(),
         petrified: false,
         death: death.into(),
     }
 }
 
-/// Twenty of the dead, more than the stones that can name them.
-fn many() -> Vec<Fallen> {
-    (0..20)
+/// `n` of the dead, the most recent first: `Hero{n-1}` died first.
+fn many(n: usize) -> Vec<Fallen> {
+    (0..n)
+        .rev()
         .map(|i| {
             fallen(
                 &format!("Hero{i}"),
@@ -61,8 +66,30 @@ fn many() -> Vec<Fallen> {
         .collect()
 }
 
-fn graves(w: &World) -> BTreeMap<Pos, String> {
-    w.state.levels["lictun"].graves.clone()
+fn burial(level: &str) -> &'static Burial {
+    CONTENT
+        .level(level)
+        .and_then(|l| l.burial.as_ref())
+        .expect("a burial ground")
+}
+
+fn graves(w: &World, level: &str) -> BTreeMap<Pos, String> {
+    w.state.levels[level].graves.clone()
+}
+
+/// Whether level `level`'s way down is open in `w`.
+fn open(w: &World, level: &str) -> bool {
+    let at = burial(level).stairs.as_ref().expect("a way down").pos;
+    let state = &w.state.levels[level];
+    state.stairs.iter().any(|s| s.pos == at) && CONTENT.terrain(state.terrain[at]).stairs.is_some()
+}
+
+/// Takes level `from`'s open way down.
+fn go_down(w: &mut World, from: &str) {
+    let at = burial(from).stairs.as_ref().expect("a way down").pos;
+    let player = w.state.player;
+    w.state.actors.get_mut(&player).expect("player").pos = at;
+    act(w, "descend");
 }
 
 #[test]
@@ -92,6 +119,7 @@ fn the_yard_is_beside_the_south_road_and_left_by_its_edge() {
     );
     let level = CONTENT.level("lictun").expect("the yard's level");
     assert!(level.stairs.is_empty(), "{:?}", level.stairs);
+    assert!(w.state.current().stairs.is_empty(), "no way down yet");
     let exit = level.exit.as_ref().expect("an edge exit");
     assert_eq!((exit.to.as_str(), exit.pos), ("ascmearc", YARD_CELL));
     act(&mut w, "move:W*3");
@@ -141,80 +169,186 @@ fn nobody_but_the_sexton_and_nothing_comes() {
 }
 
 #[test]
-fn fifty_stones_each_cut_for_a_stranger_without_a_graveyard() {
-    let w = yard(Vec::new());
-    let cut = graves(&w);
-    assert_eq!(cut.len(), 50);
-    for (p, text) in &cut {
-        let terrain = CONTENT.terrain(w.state.levels["lictun"].terrain[*p]);
-        assert!(terrain.grave, "{p}");
-        // A stranger's: their years, before the year the yard was made.
-        assert!(text.contains('–'), "{p}: {text}");
-        assert!(!text.contains('{'), "{p}: {text}");
+fn the_chain_is_the_yard_then_two_crypts_each_quiet_with_room_for_statues() {
+    assert_eq!(CONTENT.burial_chain("lictun"), CHAIN);
+    for (depth, id) in CHAIN.iter().enumerate() {
+        let b = burial(id);
+        assert_eq!((b.chain.as_str(), usize::from(b.depth)), ("lictun", depth));
+        let level = CONTENT.level(id).expect("the level");
+        assert!(level.spawning.is_none(), "{id}: no danger");
+        assert!(level.creatures.len() <= 1, "{id}: nobody but the sexton");
+        let stairs = b.stairs.as_ref().expect("a way down");
+        assert_eq!(stairs.to.as_deref(), CHAIN.get(depth + 1).copied(), "{id}");
+        if depth > 0 {
+            assert!(
+                (10..=40).contains(&b.places.len()),
+                "{id}: {}",
+                b.places.len()
+            );
+            assert!(b.statue_places.len() >= 4, "{id}: room for statues");
+            let up = (level.stairs.iter()).find(|s| s.to.as_deref() == Some(CHAIN[depth - 1]));
+            assert!(up.is_some(), "{id}: stairs up to the level above");
+        }
     }
+    let yard = burial("lictun");
+    assert_eq!((yard.places.len(), yard.epitaphs.len()), (40, 10));
 }
 
 #[test]
-fn one_stone_in_ten_names_one_of_the_fallen_never_twice() {
-    let bare = graves(&yard(Vec::new()));
-    let w = yard(many());
-    let cut = graves(&w);
-    let theirs: Vec<(&Pos, &String)> = (cut.iter())
-        .filter(|(p, text)| bare[*p] != **text)
-        .collect();
-    // About one in ten of the fifty.
-    assert!((2..=10).contains(&theirs.len()), "{theirs:?}");
-    let mut named = Vec::new();
-    for (p, text) in &theirs {
-        let name = (text.strip_prefix("Here lies "))
-            .and_then(|t| {
-                t.split(" the dwarf, killed by a kobold in Fyrdelf 3.")
-                    .next()
-            })
-            .unwrap_or_else(|| panic!("{p}: {text}"));
-        assert!(
-            text.ends_with(" the dwarf, killed by a kobold in Fyrdelf 3."),
-            "{text}"
-        );
-        assert!(!named.contains(&name), "{name} twice");
-        named.push(name);
+fn ten_old_graves_and_forty_empty_plots_without_a_graveyard() {
+    let w = yard(Vec::new());
+    let cut = graves(&w, "lictun");
+    assert_eq!(cut, burial("lictun").epitaphs, "the town's own, as written");
+    assert!(
+        cut.values()
+            .any(|t| t.starts_with("Here lies Ælfric atte Welle"))
+    );
+    let level = &w.state.levels["lictun"];
+    for p in &burial("lictun").places {
+        assert_eq!(CONTENT.terrain(level.terrain[*p]).id, "grave_plot", "{p}");
     }
-    // The rest read as they do with no graveyard; the names are out of the state hash.
-    assert_eq!(w.state_hash(), yard(Vec::new()).state_hash());
-    // A graveyard of one: at most one stone of theirs, and the same stone the roll chose.
-    let one = graves(&yard(vec![fallen("Brakka", "dwarf", "Turned to stone")]));
-    let differ: Vec<&Pos> = (one.iter())
-        .filter(|(p, text)| bare[*p] != **text)
-        .map(|(p, _)| p)
-        .collect();
-    assert_eq!(differ, [theirs[0].0]);
+    assert!(!open(&w, "lictun"));
+}
+
+#[test]
+fn the_dead_fill_the_plots_oldest_first_and_the_petrified_are_statues() {
+    let mut dead = vec![
+        fallen(
+            "Osk",
+            "halfling",
+            "Killed by a goblin in Cealdhlāw 2, The Ascmearc",
+        ),
+        Fallen {
+            petrified: true,
+            death: "Turned to stone".into(),
+            ..fallen("Brakka", "dwarf", "")
+        },
+        fallen("Tamsin", "elf", ""),
+    ];
+    dead[2].class = String::new();
+    let w = yard(dead);
+    let places = &burial("lictun").places;
+    let cut = graves(&w, "lictun");
     assert_eq!(
-        one[theirs[0].0],
-        "Here lies Brakka the dwarf, turned to stone."
+        cut[&places[0]],
+        "Here lies Tamsin the elf, taken before their time."
+    );
+    assert_eq!(
+        cut[&places[1]],
+        "Here lies Osk the halfling warrior, killed by a goblin in Cealdhlāw 2, The Ascmearc."
+    );
+    assert!(!cut.contains_key(&places[2]), "Brakka is a statue's");
+    assert_eq!(cut.len(), 12);
+    let level = &w.state.levels["lictun"];
+    let at = |p: Pos| CONTENT.terrain(level.terrain[p]).id.as_str();
+    assert_eq!((at(places[0]), at(places[1])), ("gravestone", "gravestone"));
+    assert_eq!(at(places[2]), "grave_plot");
+    // The player reads one beside it.
+    let mut w = w;
+    let player = w.state.player;
+    w.state.actors.get_mut(&player).expect("player").pos = places[0].step(Dir::N);
+    w.perceive(&mut Vec::new());
+    assert_eq!(
+        w.perception().epitaph(places[0]),
+        Some(cut[&places[0]].as_str())
     );
 }
 
 #[test]
-fn the_graveyard_given_late_cuts_the_same_and_a_save_keeps_it() {
-    // Given after the yard was made (a replay's dump): cut again, the same as made with it.
+fn a_full_yard_opens_the_way_down_and_the_crypts_fill_in_turn() {
+    let (yard_places, first) = (40, burial(CHAIN[1]).places.len());
+    assert!(
+        !open(&yard(many(yard_places - 1)), "lictun"),
+        "one plot left"
+    );
+    assert!(open(&yard(many(yard_places)), "lictun"), "full");
+    // Enough to fill the yard and the first crypt, and one more for the second.
+    let n = yard_places + first + 1;
+    let mut dead = many(n);
+    // A petrified one among them takes no place.
+    dead.insert(
+        5,
+        Fallen {
+            petrified: true,
+            ..fallen("Stone", "dwarf", "Turned to stone")
+        },
+    );
+    let mut w = yard(dead);
+    assert!(open(&w, "lictun"));
+    let names = |w: &World, level: &str| -> Vec<String> {
+        let cut = graves(w, level);
+        (burial(level).places.iter())
+            .filter_map(|p| cut.get(p).cloned())
+            .collect()
+    };
+    let in_yard = names(&w, "lictun");
+    assert_eq!(in_yard.len(), yard_places);
+    assert!(
+        in_yard[0].starts_with("Here lies Hero0 the dwarf warrior,"),
+        "{in_yard:?}"
+    );
+    assert!(in_yard[39].starts_with("Here lies Hero39 "), "{in_yard:?}");
+    go_down(&mut w, "lictun");
+    assert_eq!(w.state.current_level, CHAIN[1]);
+    assert!(
+        texts(&w)
+            .iter()
+            .any(|t| t == "You descend the stairs to The Undercroft."),
+        "{:?}",
+        texts(&w)
+    );
+    let below = names(&w, CHAIN[1]);
+    assert_eq!(below.len(), first);
+    assert!(below[0].starts_with("Here lies Hero40 "), "{below:?}");
+    assert!(below[0].ends_with(". Laid in the undercroft."), "{below:?}");
+    let level = &w.state.levels[CHAIN[1]];
+    for p in &burial(CHAIN[1]).places {
+        assert!(CONTENT.terrain(level.terrain[*p]).grave, "{p} filled");
+    }
+    assert!(open(&w, CHAIN[1]));
+    go_down(&mut w, CHAIN[1]);
+    assert_eq!(w.state.current_level, CHAIN[2]);
+    let deepest = names(&w, CHAIN[2]);
+    assert_eq!(deepest.len(), 1);
+    assert!(deepest[0].starts_with(&format!("Here lies Hero{} ", n - 1)));
+    assert!(!open(&w, CHAIN[2]), "the deepest's way down leads nowhere");
+    // And back up, arriving on the way down.
+    act(&mut w, "ascend");
+    assert_eq!(w.state.current_level, CHAIN[1]);
+    assert_eq!(
+        w.player_pos(),
+        burial(CHAIN[1]).stairs.as_ref().expect("way down").pos
+    );
+}
+
+#[test]
+fn the_dead_are_out_of_the_hash_the_same_every_time_and_a_save_keeps_them() {
+    let full = yard(many(45));
+    assert!(open(&full, "lictun"));
+    assert_eq!(full.state_hash(), yard(Vec::new()).state_hash());
+    assert_eq!(graves(&full, "lictun"), graves(&yard(many(45)), "lictun"));
+    // Given after the yard was made (a replay's dump): laid the same as made with it, and
+    // given again with none, undone.
     let mut late = World::new(CONTENT.clone(), "ascmearc", None).expect("the Ascmearc");
     act(&mut late, WALK);
     act(&mut late, "descend");
-    late.set_graveyard(many());
-    assert_eq!(graves(&late), graves(&yard(many())));
+    late.set_graveyard(many(45));
+    assert_eq!(graves(&late, "lictun"), graves(&full, "lictun"));
+    assert_eq!(late.state.levels["lictun"], full.state.levels["lictun"]);
     let loaded = crate::save::decode(&crate::save::encode(&late), CONTENT.clone()).expect("loads");
-    assert_eq!(graves(&loaded), graves(&late));
-    // The player reads one.
-    let p = Pos::new(7, 19);
+    assert_eq!(loaded.state.levels["lictun"], late.state.levels["lictun"]);
+    assert_eq!(loaded.state_hash(), late.state_hash());
+    late.set_graveyard(Vec::new());
+    assert!(!open(&late, "lictun"));
     assert_eq!(
-        late.perception().epitaph(p),
-        Some(graves(&late)[&p].as_str())
+        late.state.levels["lictun"],
+        yard(Vec::new()).state.levels["lictun"]
     );
 }
 
 #[test]
 fn the_yard_on_arrival() {
-    let w = yard(Vec::new());
+    let w = yard(many(3));
     let rows = dump::layer_rows(&w, Layer::View).join("\n");
     insta::with_settings!({ snapshot_path => "../snapshots" }, {
         insta::assert_snapshot!("lictun_arrival", rows);
@@ -224,13 +358,14 @@ fn the_yard_on_arrival() {
 #[test]
 fn a_run_to_the_yard_replays_exactly_under_any_graveyard() {
     let mut w = World::new(CONTENT.clone(), "ascmearc", None).expect("the Ascmearc");
-    w.set_graveyard(many());
+    w.set_graveyard(many(50));
     let mut replay = Replay::new(&w);
-    let actions = format!("{WALK} descend move:E*3 wait*5");
+    let actions = format!("{WALK} descend move:E*3 wait*5 move:E*12");
     for action in parse_actions(&actions).expect("actions") {
         w.apply(&action);
         replay.push(&action, &w);
     }
+    assert!(open(&w, "lictun"));
     // Verified with no graveyard at all.
     let verified = Replay::from_json(&replay.to_json())
         .expect("json")

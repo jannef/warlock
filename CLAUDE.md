@@ -85,6 +85,7 @@ file). Topics:
 - `docs/dev/content.md` — TOML content embedded by `warlock-assets` and handed to core, level files and legends (faction overrides, arrival lines, water flow)
 - `docs/dev/campaign.md` — campaigns: `assets/campaigns/<id>/`, `campaign.toml`, what is a campaign's and what is shared, the cross-campaign checks, a run's campaign, the fingerprint per campaign, New run's order and its skip in a release, the Characters screen's campaign
 - `docs/dev/saves.md` — storage backends (native files, browser `localStorage`), one save per character and the list of them, autosave, permadeath, where files live (`paths.rs`, portable mode)
+- `docs/dev/graves.md` — burial grounds: the run's dead laid in Līctūn's plots and crypts, the `[burial]` table and the legend marks (places, fixed graves, the way down, statue places) a crypt level needs, the chain, out of the state hash
 - `docs/dev/releases.md` — cutting a release, the web build and its size tuning, GitHub Pages, logs and crash reports
 - `docs/dev/settings.md` — `settings.toml`, effect switches, clock, palettes, rebindable key commands (`settings/keys.rs`), the `Game` resource
 - `docs/dev/screens.md` — the screen stack (open, input, draw, the dialog, info pages, the text field), prompts as input modes, the screen modules, key commands and the abilities menu

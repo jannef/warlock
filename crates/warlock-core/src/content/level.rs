@@ -166,8 +166,8 @@ struct LevelFile {
     /// `vault::parse_turns`; refused on a level).
     #[serde(rename = "turns")]
     _turns: Option<bool>,
-    /// The words its gravestones are cut with (spec §7 "Graves"); default none: blank stones.
-    graves: Option<Graves>,
+    /// Its place in a burial chain (spec §7 "Graves"; `burial.rs`); default none.
+    burial: Option<super::burial::BurialSpec>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -383,6 +383,14 @@ pub(super) struct LegendDetail {
     name: Option<String>,
     /// A sentence look mode adds about the named place on this cell; only with `name`.
     note: Option<String>,
+    /// What the grave on this cell says (spec §7 "Graves"; a burial ground's fixed grave, one
+    /// of the town's own dead): only on a `grave` terrain, with `[burial]`.
+    epitaph: Option<String>,
+    /// This cell is kept for a statue (a burial ground's; nothing is placed yet).
+    statue_place: Option<bool>,
+    /// This cell is the burial ground's way down: the stairs terrain it becomes once every
+    /// place is filled (`burial_stairs = "stairs_down"`).
+    burial_stairs: Option<String>,
 }
 
 /// A legend entry's chest: its level, or its band by id.
@@ -566,43 +574,6 @@ pub struct Place {
     pub note: Option<String>,
 }
 
-/// The words a hand-made level's gravestones are cut with (spec §7 "Graves"; a level file's
-/// `[graves]`): every cell of a `grave` terrain gets one inscription as the level is made
-/// (`world/graves.rs`), a stranger of these folk's or one of the run's graveyard.
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Graves {
-    /// The given names of the folk buried here, one drawn a stone.
-    pub names: Vec<String>,
-    /// The bynames after them (`Wudu`, `atte Welle`), one drawn a stone; none: the given name
-    /// alone.
-    #[serde(default)]
-    pub bynames: Vec<String>,
-    /// A stranger's inscriptions, one drawn a stone: `{name}`, `{born}`, and `{died}` stand for
-    /// the drawn name and years.
-    pub epitaphs: Vec<String>,
-    /// The inscription for one of the run's graveyard: `{name}` ("Brakka the dwarf") and
-    /// `{death}` ("killed by a kobold in Fyrdelf 3, The Ascmearc").
-    pub fallen: String,
-    /// How many years before the year the level is made a stranger died, `[least, most]`.
-    pub died: [u16; 2],
-    /// How old a stranger was at death, in years, `[least, most]`.
-    pub age: [u16; 2],
-}
-
-impl Graves {
-    /// Well-formedness: something to draw from, and ranges that run upward.
-    fn check(&self) -> Result<(), String> {
-        if self.names.is_empty() || self.epitaphs.is_empty() {
-            return Err("`graves` needs `names` and `epitaphs`".into());
-        }
-        if self.died[0] > self.died[1] || self.age[0] > self.age[1] {
-            return Err("`graves`: `died` and `age` are `[least, most]`".into());
-        }
-        Ok(())
-    }
-}
-
 /// A parsed, validated level ready to instantiate: from a level file, or generated (see
 /// [`crate::mapgen`]).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -677,8 +648,8 @@ pub struct LevelTemplate {
     /// danger 0, nothing comes. A generated level's is its branch's
     /// ([`Content::spawning`]).
     pub spawning: Option<(DangerRule, Spawning)>,
-    /// A hand-made level's words for its gravestones (spec §7 "Graves"); `None`: blank stones.
-    pub graves: Option<Graves>,
+    /// A hand-made level's burial ground (spec §7 "Graves"; `burial.rs`); `None`: none.
+    pub burial: Option<super::burial::Burial>,
 }
 
 impl LevelTemplate {
@@ -769,6 +740,7 @@ pub(super) fn parse_level(
     let mut secret_doors: Vec<(Pos, TerrainId, u8)> = Vec::new();
     let mut hidden = BTreeMap::new();
     let mut places = BTreeMap::new();
+    let mut marks = super::burial::Marks::default();
 
     for (y, row) in rows.iter().enumerate() {
         for x in 0..width as usize {
@@ -813,6 +785,18 @@ pub(super) fn parse_level(
             let Some(detail) = detail else { continue };
             if let Some(place) = place {
                 places.insert(pos, place);
+            }
+            if let Some(words) = &detail.epitaph {
+                marks.epitaphs.insert(pos, words.clone());
+            }
+            if detail.statue_place == Some(true) {
+                marks.statue_places.push(pos);
+            }
+            if let Some(stairs) = &detail.burial_stairs {
+                let to = content
+                    .terrain_id(stairs)
+                    .ok_or_else(|| err(format!("legend `{ch}`: unknown terrain `{stairs}`")))?;
+                marks.stairs.push((pos, to));
             }
             if let Some(spec) = &detail.hidden {
                 let location = parse_hidden(spec, terrain, content)
@@ -1193,9 +1177,7 @@ pub(super) fn parse_level(
     if spawning.is_some() && parsed.kind == LevelKind::Overworld {
         return Err(err("the overworld has no `danger`".into()));
     }
-    if let Some(graves) = &parsed.graves {
-        graves.check().map_err(err)?;
-    }
+    let burial = super::burial::resolve(parsed.burial, marks, &terrain, content).map_err(err)?;
     let template = LevelTemplate {
         id: id.to_string(),
         name: parsed.name,
@@ -1228,7 +1210,7 @@ pub(super) fn parse_level(
         temperature,
         ice,
         spawning,
-        graves: parsed.graves,
+        burial,
     };
     for spawn in &template.creatures {
         validate_route(&template, content, spawn).map_err(err)?;
