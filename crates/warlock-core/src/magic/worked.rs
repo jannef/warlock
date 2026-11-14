@@ -19,9 +19,11 @@
 //! The numbers are read in two places: to hit, plus damage, Defence, and Protection through
 //! [`super::Mods::local`], the dice through [`Stack::attack`](crate::object::Stack::attack).
 
-use crate::content::{Content, ItemHarm, ItemKind, ObjectDef};
+use super::Mods;
+use crate::content::{Content, Effect, ItemHarm, ItemKind, ObjectDef, ObjectId};
 use crate::object::Stack;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
 
 /// The make a hand-made item is given in data (`quality = "masterwork"` on a unique, a level's
 /// `[[item]]`, the heirloom; docs/design/enchanting.md §4), as the forge's grades give it.
@@ -239,6 +241,21 @@ impl Worked {
             && (self.damaged || self.by.is_none())
             && self.improved.iter().all(|a| a.of(def))
     }
+}
+
+/// Whether `stack`'s main part is of a `proof` material, never damaged by anything
+/// (`world/combat/item_damage.rs`): adamantium.
+pub(crate) fn proof(content: &Content, stack: &Stack) -> bool {
+    (stack.parts(content).first()).is_some_and(|p| content.material(p.material).proof)
+}
+
+/// Whether `stack` is protected from item damage (`world/combat/item_damage.rs`), `quest` the
+/// quests' objects (`World::quest_objects`, gathered once for many stacks): a unique, of Proof,
+/// or a quest's.
+pub(crate) fn protected(content: &Content, quest: &BTreeSet<ObjectId>, stack: &Stack) -> bool {
+    stack.magic().is_some_and(|m| m.unique.is_some())
+        || Mods::local(stack, content).get(Effect::Proof) > 0
+        || quest.contains(&stack.object)
 }
 
 #[cfg(test)]

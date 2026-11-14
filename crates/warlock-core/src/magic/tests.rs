@@ -745,10 +745,7 @@ fn reader(effect: Effect) -> (&'static str, &'static str) {
         | Effect::MaxHp
         | Effect::MaxMana => ACTOR,
         Effect::Weight | Effect::Protection => ("object.rs", include_str!("../object.rs")),
-        Effect::Proof => (
-            "world/combat/item_damage.rs",
-            include_str!("../world/combat/item_damage.rs"),
-        ),
+        Effect::Proof => ("magic/worked.rs", include_str!("worked.rs")),
         Effect::AttackSpeed | Effect::MoveSpeed => (
             "world/turn/schedule.rs",
             include_str!("../world/turn/schedule.rs"),

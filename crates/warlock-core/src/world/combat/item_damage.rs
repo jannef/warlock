@@ -23,8 +23,9 @@
 //!
 //! What is said is the source's.
 
-use crate::content::{Content, Effect, ItemHarm, ObjectId};
-use crate::magic::{Mods, Worked};
+use crate::content::{Content, ItemHarm, ObjectId};
+use crate::magic::Worked;
+use crate::magic::worked::{proof, protected};
 use crate::object::Stack;
 use crate::world::World;
 use crate::world::fixtures::outcome::remove_stacks;
@@ -120,22 +121,4 @@ pub(crate) fn protected_in(
         true => protected(content, &quest, stack),
         false => quest.contains(&stack.object),
     }
-}
-
-/// Whether `stack`'s main part is of a `proof` material, never damaged by anything (module
-/// docs): adamantium.
-pub(crate) fn proof(content: &Content, stack: &Stack) -> bool {
-    (stack.parts(content).first()).is_some_and(|p| content.material(p.material).proof)
-}
-
-/// Whether `stack` is protected from item damage, `quest` the quests' objects
-/// ([`World::quest_objects`], gathered once for many stacks): a unique, of Proof, or a quest's.
-pub(in crate::world) fn protected(
-    content: &Content,
-    quest: &BTreeSet<ObjectId>,
-    stack: &Stack,
-) -> bool {
-    stack.magic().is_some_and(|m| m.unique.is_some())
-        || Mods::local(stack, content).get(Effect::Proof) > 0
-        || quest.contains(&stack.object)
 }

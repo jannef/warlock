@@ -1,9 +1,9 @@
-//! The condition creature gear spawns in (`world/items/gear_condition.rs`, #1193): the shares by tribe
+//! The condition creature gear spawns in (`gear/condition.rs`, #1193): the shares by tribe
 //! over many creatures, the kind by the material, protected items untouched, the loader's checks,
 //! and a damaged weapon in a creature's hand; deeper finds' make (#1436).
 
-use super::gear_condition::{apply, conditioned, kind, quest_objects, stream};
-use crate::content::{ContentFiles, CreatureId, ItemHarm, PER_MILLE};
+use super::condition::{apply, conditioned, kind, quest_objects, stream};
+use crate::content::{Content, ContentFiles, CreatureId, ItemHarm, PER_MILLE};
 use crate::gear;
 use crate::item_parts::ItemPart;
 use crate::kit::Pack;
@@ -244,7 +244,7 @@ fn adamantium_gear_is_never_found_damaged() {
 fn a_damaged_weapon_is_weaker_in_a_creatures_hand() {
     let w = World::new(CONTENT.clone(), "traps", None).expect("traps");
     let kobold = CONTENT.creature_id("kobold").expect("kobold");
-    let actor = (w.state.actors.values())
+    let actor = (w.state().actors.values())
         .find(|a| a.creature == kobold)
         .expect("a kobold");
     let armed = |worked: Option<Worked>| {

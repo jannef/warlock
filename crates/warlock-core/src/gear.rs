@@ -29,6 +29,10 @@ use crate::rng::Rng;
 use crate::stats::Stat;
 use crate::variant::{self, Source};
 
+pub(crate) mod condition;
+#[cfg(test)]
+mod condition_tests;
+
 /// The gear a creature of type `creature` spawns with on a floor of item level `item_level`,
 /// drawn from `rng` (the module docs give the draws).
 pub fn roll(content: &Content, rng: &mut Rng, creature: CreatureId, item_level: u8) -> Pack {
@@ -124,7 +128,7 @@ pub fn finish(content: &Content, rng: &mut Rng, pack: &mut Pack) {
 
 /// The gear of a creature of type `creature` on a level of item level `level`, with every last
 /// step, in order: [`roll`] from `rng`, its condition from `condition`
-/// (`world/items/gear_condition.rs`), then [`finish`] from `rng` again. Every creature's rolled gear
+/// (`gear/condition.rs`), then [`finish`] from `rng` again. Every creature's rolled gear
 /// is made here, a generated level's ([`arm`]) and a placed creature's alike.
 pub fn equip(
     content: &Content,
@@ -134,7 +138,7 @@ pub fn equip(
     level: u8,
 ) -> Pack {
     let mut pack = roll(content, rng, creature, level);
-    crate::world::items::gear_condition::apply(content, condition, (creature, level), &mut pack);
+    condition::apply(content, condition, (creature, level), &mut pack);
     finish(content, rng, &mut pack);
     pack
 }
@@ -143,7 +147,7 @@ pub fn equip(
 /// level's own stream `gear/<level id>`, in spawn order, on top of anything it carries already.
 pub fn arm(template: &mut LevelTemplate, content: &Content, seed: u64) {
     let mut rng = Rng::gear(seed, &template.id);
-    let mut condition = crate::world::items::gear_condition::stream(seed, &template.id);
+    let mut condition = condition::stream(seed, &template.id);
     let level = template.item_level;
     for spawn in &mut template.creatures {
         if !spawn.rolls_gear {

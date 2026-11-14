@@ -171,7 +171,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     fewer affixes, with none it is normal; then a wand's rung, then its make, and last the trim
     (below). Loot is found unidentified (its gems and material show).
   - **Deeper finds are better made** (#1436; `data/gear_condition.toml` `[[depth]]`,
-    `world/items/gear_condition.rs::make`): from item level 3 on, a row by item level gives loot's arms
+    `gear/condition.rs::make`): from item level 3 on, a row by item level gives loot's arms
     and armour (single pieces with something to better) a chance in per mille of Fine,
     Marvellous, or Masterwork (one draw from the loot stream after the wand's rung, then the
     aspects as the anvil draws them; none at item levels 1 and 2 or for anything else, so

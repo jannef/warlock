@@ -48,7 +48,7 @@ after its material, ornament, wand rung, and (for creature gear) its condition:
   item.
 - Creature gear makes its magic pieces with `loot::make_as_unfinished`; `gear::finish` trims the
   whole pack from the gear stream (`gear/<level id>` or `gear/<actor id>`) after
-  `gear_condition::apply` (its own `condition/<key>` stream), all three in `gear::equip`, the one
+  `gear::condition::apply` (its own `condition/<key>` stream), all three in `gear::equip`, the one
   place gear's last steps are written (#1494), which `gear::arm` and
   `world/levels/travel.rs::placed_gear` call; the balance probe writes them out itself. So a Fine piece keeps a second affix and
   a damaged one is trimmed to its plain capacity.
@@ -405,7 +405,7 @@ every loot path at item levels 1 to 20 and every creature's gear after its condi
 capacity, and `hand_made_items_are_never_trimmed`. `magic/shares_tests.rs` prints the share of
 rares the trim leaves at each affix count, and holds deep rares to keeping more (#1436); the
 `[[depth]]` rows' loader checks and `Odds::deeper` are tested in `content/gear_condition.rs`, loot's
-make in `world/items/gear_condition_tests.rs`; `magic/describe` tests the capacity line.
+make in `gear/condition_tests.rs`; `magic/describe` tests the capacity line.
 
 ## The measured shares
 

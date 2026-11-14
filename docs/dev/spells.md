@@ -916,7 +916,7 @@ What an area spell does to the items lying in it (#1100; spec §8 "Spells", "Rui
   `Reach`: its kind spared, no halving at the edge, `creature_burst.rs`), `cast_bolt` (lines; a
   birth sign's Fire breath too), `cast_cone` (cones and a dragon's breath, `breath.rs`). `Caster::Actor` only: a trap's or a place's burst ruins nothing; a spell
   with no damage type returns at once.
-- **Spared**: what item damage's one protection spares (`item_damage::protected`,
+- **Spared**: what item damage's one protection spares (`magic::worked::protected`,
   `docs/dev/objects.md` "Protection"; #1170): a unique, an item of Proof, and
   `World::quest_objects` (every fixed quest's `hand_in` object, bring or deliver, until the quest
   is completed and not repeatable, and an active rolled quest's drawn one). A reward is spared

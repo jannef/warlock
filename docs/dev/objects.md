@@ -207,8 +207,8 @@ rolls that many more dice of its own size (`Roll::more`), so a melee, thrown, or
 (not ammunition, which has no dice of its own) of adamantium rolls 2d9 for 1d9. `defence`
 (`variant::shield`, added as `Effect::Shield` in `Mods::local`, so Defence, the numbers, and the
 item description's "Shield +N" all read it): a shield's Defence × it over the base material's.
-`proof` (`item_damage::proof`): `World::withstands` withstands every `ItemHarm` (`Work` too) with
-no draw, `ruin.rs` spares it, and `gear_condition::apply` leaves a piece drawn damaged as made
+`proof` (`magic::worked::proof`): `World::withstands` withstands every `ItemHarm` (`Work` too) with
+no draw, `ruin.rs` spares it, and `gear::condition::apply` leaves a piece drawn damaged as made
 (its draws unchanged). It is not `protected`: salvage and Set still take it. Armour of it keeps
 200 % (`protection`), twice a steel piece's Protection.
 

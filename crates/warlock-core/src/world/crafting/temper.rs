@@ -51,11 +51,12 @@ use crate::combat;
 use crate::content::{ActionKind, Content, ItemHarm, Offer, RecipeUse, TerrainId};
 use crate::geom::{Dir, Pos};
 use crate::magic::Worked;
+use crate::magic::worked::proof;
 use crate::magic::worked::{arms, aspects};
 use crate::object::Stack;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
-use crate::world::combat::item_damage::{Harmed, proof};
+use crate::world::combat::item_damage::Harmed;
 use crate::world::items::loot::Identified;
 use crate::world::{Actor, Spent, World};
 

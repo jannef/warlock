@@ -3,7 +3,6 @@
 pub(in crate::world) mod body_slots;
 mod carry;
 mod equip;
-pub(crate) mod gear_condition;
 mod lamp;
 pub(in crate::world) mod loot;
 mod material_drops;
@@ -17,7 +16,6 @@ cfg_if! {
         mod affix_utility_tests;
         mod body_slots_tests;
         mod equip_tests;
-        mod gear_condition_tests;
         pub(in crate::world) mod gear_tests;
         mod gem_tests;
         pub(in crate::world) mod lamp_tests;

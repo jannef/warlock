@@ -773,7 +773,7 @@ fn placed_gear(
     }
     let key = id.0.to_string();
     let mut rng = crate::rng::Rng::gear(seed, &key);
-    let mut condition = crate::world::items::gear_condition::stream(seed, &key);
+    let mut condition = crate::gear::condition::stream(seed, &key);
     let item_level = content.item_level(level);
     let pack = crate::gear::equip(
         content,

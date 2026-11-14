@@ -25,11 +25,11 @@
 use super::spell::Caster;
 use crate::content::DamageTypeId;
 use crate::geom::Pos;
+use crate::magic::worked::{proof, protected};
 use crate::object::Stack;
 use crate::rng::Rng;
 use crate::text::capitalized;
 use crate::world::World;
-use crate::world::combat::item_damage::{proof, protected};
 use std::collections::BTreeSet;
 
 impl World {

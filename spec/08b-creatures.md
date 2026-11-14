@@ -727,7 +727,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   unique item (`unique:ID`, §8 "Magic items"): the Ascmearc's four wanted criminals (the
   `outlaws` faction, hostile to the player only and to no one else, with the footpads and
   footpad archers; #424, the guild design §8) each wield or wear their own this way.
-  **Condition** (`world/items/gear_condition.rs`, `data/gear_condition.toml`; #1193): every rolled
+  **Condition** (`gear/condition.rs`, `data/gear_condition.toml`; #1193): every rolled
   piece of arms or armour (not a stack of several, ammunition, rings, or a protected item: a
   unique, of Proof, or anything a quest may ask for, §7 "Materials") draws a condition by the
   creature's tribe (its first tag with a `[[tribe]]` row, else `[default]`; per mille): damaged
