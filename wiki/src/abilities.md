@@ -66,6 +66,14 @@ you never choose them, they work by themselves as you fight. They have their own
   dice land if it hits, and 1d6 more for each opening spent. The foe is not [Surprised](status-effects.md#status-surprised) by it and keeps its whole Defence.
   [Low blow](talents.md#talent-low-blow) (level 12) adds +1 to hit per opening and stuns the foe it hits. It is refused, costing nothing, with no
   opening, nobody hostile there, a creature other than your [mark](resources.md#the-mark), or one you see without vitals (see [Exploit](resources.md#exploit)).
+- **Thrown exploit**: the [thief](classes.md#thief)'s, from level 18. The same blow as Exploit,
+  made by throwing a weapon at a hostile you see, in the time of a throw. Pick what to throw
+  (a dagger, say; never a flask), then the target. It spends every opening you hold, and the
+  weapon lands by the foe. It reaches as far as you can throw the weapon, but never more than 6
+  cells, the farthest a [sneak attack](surprise.md#sneak-attacks) lands from a throw
+  ([Long reach](talents.md#talent-long-reach) adds to that). It is refused, costing nothing, for
+  Exploit's reasons, a target out of reach, or a wall or creature you see in the way (see
+  [Thrown exploit](resources.md#thrown-exploit)).
 - **Shield bash**: anyone can bash with a shield (see [Weapon skills](weapon-skills.md)), so it is always in the menu,
   and you can use it while you hold a shield. It strikes whoever stands in the direction you
   choose, in the time of a blow.

@@ -72,10 +72,13 @@ impl World {
         ambushed && (self.state.actors.get(&target)).is_some_and(|t| t.mind.last_seen.is_none())
     }
 
-    /// Whether `attacker`'s attack is a sneak attack whatever its target knows (an exploit's). The
-    /// one place [`super::weapon_active::Technique::sneak`] is read, which this attack takes.
-    pub(super) fn sneak_taken(&mut self, attacker: ActorId) -> bool {
-        attacker == self.state.player && std::mem::take(&mut self.technique.sneak)
+    /// Whether `attacker`'s attack on `target` is a sneak attack whatever its target knows (an
+    /// exploit's). The one place [`super::weapon_active::Technique::sneak`] is read, which this
+    /// attack takes, unless a thrown exploit is aimed at another creature (`openings.rs`).
+    pub(super) fn sneak_taken(&mut self, attacker: ActorId, target: ActorId) -> bool {
+        attacker == self.state.player
+            && self.technique.at.is_none_or(|at| at == target)
+            && std::mem::take(&mut self.technique.sneak)
     }
 
     /// Vanishing act: `attacker`'s sneak attack killed; it takes a degree of the status its

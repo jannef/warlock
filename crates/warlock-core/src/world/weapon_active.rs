@@ -57,6 +57,12 @@ pub(super) struct Technique {
     /// The openings the next blow the player strikes spends (Exploit, `openings.rs`; 0 none):
     /// taken by that blow, whose sneak dice they add to.
     pub(super) exploit: u16,
+    /// The creature a thrown exploit is aimed at (`openings.rs`): `sneak` and `exploit` are
+    /// taken by the attack on it only, and one on anyone else the missile meets first is a
+    /// plain throw. `None`: the next attack's, whoever it strikes (Exploit's blow).
+    pub(super) at: Option<ActorId>,
+    /// Whether the thrown exploit hit the creature it was aimed at: set where `exploit` is taken.
+    pub(super) struck: bool,
     /// The free blow the player is about to strike from a lurk, at this creature stepping up
     /// beside them (`thief.rs`): taken by that blow.
     pub(super) lurk: Option<ActorId>,

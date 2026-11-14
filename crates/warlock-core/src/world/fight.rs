@@ -827,6 +827,8 @@ impl World {
         ) else {
             return None;
         };
+        // A thrown exploit's ladder, on the creature it is aimed at only (`openings.rs`).
+        let profile = profile.map(|p| self.thrown_exploit_profile(attacker, target, p));
         let profile = profile.map(|p| self.glared(attacker, p));
         // Averted eyes (`avert.rs`): a fight half-blind.
         let profile = profile.map(|p| self.averted_blow(attacker, p));
@@ -849,7 +851,7 @@ impl World {
         // A lurk's blow finds a creature not hunting the player unawares (`thief.rs`); an
         // exploit is a sneak attack whatever the target knows (`openings.rs`).
         let unaware = fair && (self.unaware(target, attacker) || self.lurked(attacker, target));
-        let low = profile.is_some() && self.sneak_taken(attacker) && !dummy;
+        let low = profile.is_some() && self.sneak_taken(attacker, target) && !dummy;
         let unseen = fair && self.sneaks(attacker, target, unaware || low, missile);
         // Hair trigger's blow may cut the attacker down before it strikes (`free_blow.rs`); how
         // the blow found its target is told in its words (`surprise.rs`).
@@ -888,7 +890,7 @@ impl World {
         let rng = &mut self.state.rng;
         let blow = profile.map(|profile| combat::strike_with(&profile, &struck, rng, lucky));
         let blow = blow.map(|b| self.ambushed((attacker, target), unseen, b));
-        let blow = blow.map(|b| self.exploited(attacker, unseen, b));
+        let blow = blow.map(|b| self.exploited((attacker, target), unseen, b));
         let blow = blow.map(|b| self.lore_blow(attacker, target, b));
         // Holy wrath's die (`smite.rs`).
         let blow = blow.map(|b| self.holy_wrathed(attacker, target, b));

@@ -82,6 +82,25 @@ The thief's one active for openings from level 1 (`ClassActive::Exploit`, the cl
 | No build | `ambush.rs::ambushed` asks `exploiting(attacker)` | an exploit's sneak attack builds no opening (it spends them) |
 | After | `World::exploit` | `unmark(target)`: the mark goes with the pool unless the blow killed it (then `mark_dies` cleared it and `mark_kill` gave one); on a hit at a foe still standing, a degree of `ExploitMods::status` (Low blow's Stunned); then `after_attack`. Vanishing act fires on a kill as on any sneak kill |
 
+### The thrown exploit (level 18, #1465)
+
+The same blow delivered by a throw, for the mark out of melee reach (`ClassActive::ThrownExploit`,
+the class talent `thrown_exploit` at 18 beside Evasion, `TalentEffect::ThrownExploit` →
+`TalentMods::thrown_exploit`, `Aim::Throw`, `Action::UseThrow`, `use:thrown_exploit:c:12,5`:
+stack `c` thrown at level cell (12, 5); bare `use:thrown_exploit` says "Throw what, and where?").
+
+| Step | Where | What |
+|---|---|---|
+| Refusals, no time, nothing spent | `World::use_class_throw` (dispatched from `mod.rs`): `may_use_class`, `can_loose_here`, then `thrown_exploit_may` | "You carry no such thing."; "You cannot exploit an opening with …" for what `Actor::exploit_throw_range` refuses (not a thrown weapon, a flask, a spirit weapon); `may_loose` (unpaid goods); "There is no one there." (no hostile **the player sees** on the cell; a wall in the line hides it the same way); `off_mark_at` ("Your openings are in the kobold's guard."); "It has no vital spot."; "That is out of reach." beyond `exploit_throw_range` (the item's throw range, no farther than the rules' `missile_reach` + Long reach's `sneak_reach`, so the sneak dice always land); "Something is in the way." for a wall or a creature on the line before the cell **as the player knows it** (`PerceptionView::cell`, `actor_at`: the aiming mode's own line) |
+| The price | `ability::class_cost` | every opening held, as Exploit |
+| The throw | `World::thrown_exploit` | a throw's price (`attack_price` of `Throw`) and exertion; `choose_mark(target)`; Exploit's words by n; `Technique { sneak, exploit: n, at: Some(target) }`; `shoot.rs::player_looses` with the item's thrown profile (`Actor::thrown`): one of the stack flies (`loose`, `fly`) and comes down or breaks |
+| The ladder | `fight.rs::resolve` → `openings.rs::thrown_exploit_profile` (before the roll) and `exploited` (after) | only on the creature `Technique::at` names: `ExploitMods::profile(n, …)`, the sneak taken (`thief.rs::sneak_taken(attacker, target)`), n × the dice. A creature the player did not see in the way takes a **plain throw**; the technique stays for the target if the missile flies on. `exploited` records `Technique::struck` |
+| After | `World::thrown_exploit` | the technique cleared; `unmark(target)`; on `struck` at a foe still standing, a degree of `ExploitMods::status` (Low blow's Stunned) |
+
+The UI: the abilities menu's row opens `ObjectList::ThrownExploit` (the throw list less what
+`exploit_throw_range` refuses), then the aiming mode `AimKind::ThrownExploit(item)` at that
+reach, the cursor on the mark when it is seen within reach (`SeenActor::marked`).
+
 ### The ladder
 
 `TalentEffect::{Exploit, ExploitDice { dice }, ExploitToHit { value }, ExploitStatus { status },
@@ -109,7 +128,8 @@ active weapon rank (`fight.rs::grant_stamina`).
   `PerceptionView::own_mark`).
 - Look mode: "your mark" after the seen statuses (`SeenActor::marked`, from the player's own
   mark).
-- Abilities menu: `Exploit (class): a direction`, greyed "you have no opening" while empty.
+- Abilities menu: `Exploit (class): a direction`, from 18 `Thrown exploit (class): something to
+  throw, then a target`, both greyed "you have no opening" while empty.
 - Messages: "Your openings on the kobold are lost." (a chosen attack elsewhere, the pool above
   0); "Your openings are in the kobold's guard." (a refusal). Nothing on a build or a carry.
 - Dumps: `stats` `Mark the kobold`; the dev `actors` layer's `; mark #12` on the player's line;
@@ -133,7 +153,12 @@ moves the mark; one at a new foe empties first, then builds; a refused one moves
 spend of all with the words by n and no build, the ladder's dice by n, Low blow's stun and
 to-hit, Improved sneak attack's 2d6 at 32, Master thief's threat by n and the sure critical from
 five at 60 (every hit of five a critical; no finisher row, no `use:master_thief`), a pool of eight
-spent whole, a killing exploit's one opening and no mark, the replay); `world/class_rogue_tests.rs`
+spent whole, a killing exploit's one opening and no mark, the replay);
+`world/thrown_exploit_tests.rs` (Thrown exploit at 18, each refusal with no time and nothing
+spent, the spend of all and one dagger, Low blow's stun at range, every hit of five a critical
+at 60, a carried pool adopting a foe across the room, an unseen creature in the way taking a
+plain throw, a kill at range with Vanishing act, the action text and determinism);
+`world/class_rogue_tests.rs`
 (the table: Exploit at 1, no Trained wind, no stamina until an active rank; Vanishing act on a
 killing exploit); `world/resource_talent_tests.rs` (Patient blade's two); `content/resource.rs` (`marked`,
 `mark_kill`, and `feint` parse, `sneak_kill` is refused); `content/talent.rs` (the `exploit_*`

@@ -635,6 +635,9 @@ pub enum ClassActive {
     /// Every opening held spent on a blow in a direction that is a sneak attack whatever the
     /// foe knows (the thief's Exploit, `world/openings.rs`).
     Exploit,
+    /// Every opening held spent on a throw at a creature on a cell that is a sneak attack
+    /// whatever the foe knows (the thief's Thrown exploit, `world/openings.rs`).
+    ThrownExploit,
     /// A song that lifts the player's fighting a while, for inspiration (the bard's Inspire,
     /// `world/song.rs`).
     Inspire,
@@ -700,6 +703,7 @@ impl ClassActive {
         ClassActive::Sic,
         ClassActive::Lurk,
         ClassActive::Exploit,
+        ClassActive::ThrownExploit,
         ClassActive::Inspire,
         ClassActive::Lullaby,
         ClassActive::Consecrate,
@@ -738,6 +742,7 @@ impl ClassActive {
             ClassActive::Sic => "sic",
             ClassActive::Lurk => "lurk",
             ClassActive::Exploit => "exploit",
+            ClassActive::ThrownExploit => "thrown_exploit",
             ClassActive::Inspire => "inspire",
             ClassActive::Lullaby => "lullaby",
             ClassActive::Consecrate => "consecrate",
@@ -827,6 +832,12 @@ impl ClassActive {
         matches!(self, ClassActive::MerchantsEye | ClassActive::MakeDo)
     }
 
+    /// Whether it asks for a stack the player may throw, then a cell, before it is used (the
+    /// thief's Thrown exploit, [`crate::action::Action::UseThrow`], `use:thrown_exploit:c:12,5`).
+    pub const fn aims_throw(self) -> bool {
+        matches!(self, ClassActive::ThrownExploit)
+    }
+
     /// Whether it asks for a weapon's shape before it is used, an object id
     /// (`use:spirit_weapon:long_sword`).
     pub const fn aims_shape(self) -> bool {
@@ -878,6 +889,7 @@ impl ClassActive {
             | ClassActive::Cackle
             | ClassActive::Knock => ActionKind::Cast,
             ClassActive::Volley => ActionKind::Shoot,
+            ClassActive::ThrownExploit => ActionKind::Throw,
             // A run of steps: what blocks a step blocks it (the blow at its end comes free).
             ClassActive::Charge => ActionKind::Step,
             ClassActive::Inspire | ClassActive::Lullaby => ActionKind::Song,

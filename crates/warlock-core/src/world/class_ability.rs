@@ -2,7 +2,7 @@
 //! that is used from the abilities menu ([`crate::ability::Ability::Class`]) as [`Action::Use`]
 //! (`use:rage`, `use:smite:E`): Rage, War cry (for rage, `world/war_cry.rs`), Veteran's wind, Lay on hands, Smite (for zeal, `world/smite.rs`), Holy
 //! radiance, Stunning strike, Quivering palm and Step of the wind (for ki, `world/ascetic.rs`; the last takes no time), the songs (Inspire, for inspiration, `world/song.rs`), the thief's
-//! Lurk (`world/thief.rs`), Exploit (for openings,
+//! Lurk (`world/thief.rs`), Exploit and Thrown exploit (for openings,
 //! `world/openings.rs`; the ranger's Volley, aimed at a cell, is `world/volley.rs`, and the
 //! warrior's Charge, aimed at a creature, `world/charge.rs`). The
 //! abilities themselves are talents of the class tree, given as levels come (`world/class.rs`)
@@ -43,6 +43,11 @@ impl World {
         // One aimed at a cell asks where before anything is spent (`use_class_at` uses it).
         if active.aims_cell() {
             self.say("Where?");
+            return Spent::Nothing;
+        }
+        // One that throws asks what and where (`use_class_throw` uses it, `openings.rs`).
+        if active.aims_throw() {
+            self.say("Throw what, and where?");
             return Spent::Nothing;
         }
         let dir = match (active.aimed(), dir) {
@@ -125,7 +130,13 @@ impl World {
                 None,
             ) => Spent::Nothing,
             // Asked where above.
-            (ClassActive::Volley | ClassActive::Sic | ClassActive::Charge, _) => Spent::Nothing,
+            (
+                ClassActive::Volley
+                | ClassActive::Sic
+                | ClassActive::Charge
+                | ClassActive::ThrownExploit,
+                _,
+            ) => Spent::Nothing,
             (ClassActive::MerchantsEye | ClassActive::MakeDo, _) => {
                 self.say("Use it on what?");
                 Spent::Nothing

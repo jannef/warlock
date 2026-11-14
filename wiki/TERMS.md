@@ -34,6 +34,7 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A damage type (fire, slashing, …) | `damage-types.md#damage-ID` | `damage-types.md#damage-fire` |
 | A resource (Rage, Stamina, Ki, Focus, Inspiration, Openings, Zeal) | `resources.md#resource-ID` | `resources.md#resource-ki` |
 | The thief's mark; Exploit and what the class talents add to it | `resources.md#the-mark`, `resources.md#exploit` | |
+| Thrown exploit (the thief's, from 18) | `resources.md#thrown-exploit` | |
 | The unholy (what holy wrath falls hardest on) | `classes.md#paladin` | |
 | A stance | `stances.md#stance-NAME` | `stances.md#stance-frenzy` |
 | A stat | `stats.md#stat-NAME` | `stats.md#stat-toughness` |

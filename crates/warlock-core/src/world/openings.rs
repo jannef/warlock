@@ -15,15 +15,25 @@
 //! the mark cleared, unless the blow killed it (then the kill rule cleared it and gave its
 //! opening).
 //!
+//! From level 18 **Thrown exploit** (`use:thrown_exploit:c:12,5`, #1465) is the same blow
+//! delivered by a throw of one of stack `c` at the creature the player sees on that cell:
+//! Exploit's refusals, plus what cannot be thrown so (a flask), a cell beyond the throw's range
+//! capped at the sneak dice's reach ([`super::Actor::exploit_throw_range`]), and a wall or
+//! creature the player sees in the line. The ladder rides `Technique::at`, so a creature the
+//! player did not see in the way takes a plain throw.
+//!
 //! The grant is the general one for talents that grant a resource (`grants_resource`,
 //! `world/focus.rs::hold`). The ladder's dice are drawn from the gameplay stream after the sneak
 //! dice, on a hit that landed them only.
 
+use super::shoot::Loose;
 use super::{ActorId, Spent, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::{Blow, Profile};
 use crate::content::{ActionKind, ClassActive, Stance};
-use crate::geom::Dir;
+use crate::fov::radius2;
+use crate::geom::{Dir, Pos};
+use crate::perception::CellView;
 
 impl World {
     /// Exploit's refusals aimed `dir`, before anything is spent (no time; said): no hostile
@@ -64,11 +74,7 @@ impl World {
         let price = self.attack_price(player, ActionKind::Melee, with, melee);
         let ladder = me.talent_mods(&content).exploit;
         let profile = self.exploit_profile(n, me.melee(&content));
-        self.say(match n {
-            0 | 1 => "You strike at the opening.",
-            2..=4 => "You press your openings.",
-            _ => "You tear into every opening!",
-        });
+        self.say_exploit(n);
         let vitalless = !self.has_vitals(target);
         self.technique.sneak = true;
         self.technique.exploit = n;
@@ -89,6 +95,172 @@ impl World {
         Spent::Turn(price)
     }
 
+    /// What the player is told as an exploit of `n` openings is made, a blow or a throw.
+    fn say_exploit(&mut self, n: u16) {
+        self.say(match n {
+            0 | 1 => "You strike at the opening.",
+            2..=4 => "You press your openings.",
+            _ => "You tear into every opening!",
+        });
+    }
+
+    /// `use:thrown_exploit:c:12,5` ([`crate::action::Action::UseThrow`]): the player uses class
+    /// active `active`, one that throws, with inventory stack `item` at cell `at`.
+    pub(super) fn use_class_throw(
+        &mut self,
+        active: ClassActive,
+        item: usize,
+        at: Pos,
+        events: &mut Vec<Event>,
+    ) -> Spent {
+        if !active.aims_throw() {
+            self.say(format!("`{}` throws nothing.", active.id()));
+            return Spent::Nothing;
+        }
+        if !self.may_use_class(active) || !self.can_loose_here() {
+            return Spent::Nothing;
+        }
+        let Some(target) = self.thrown_exploit_may(active, item, at) else {
+            return Spent::Nothing;
+        };
+        let content = self.content.clone();
+        let player = self.state.player;
+        let mut n = 0;
+        if let Some(cost) = crate::ability::class_cost(self.state.player(), &content, active) {
+            self.spend_resource(player, cost.resource, cost.amount, events);
+            n = cost.amount;
+        }
+        self.thrown_exploit(item, (target, at), n, events)
+    }
+
+    /// The thrown exploit's refusals with stack `item` at cell `at`, before anything is spent (no
+    /// time; said): Exploit's (no hostile the player sees there, the openings in another
+    /// creature's guard, a foe without vitals) and a throw's (what cannot be thrown so, a flask
+    /// among them; beyond [`super::Actor::exploit_throw_range`]; a wall or a creature the player
+    /// sees on the line before it, as the aiming mode draws it). The creature there, when it may
+    /// be made.
+    fn thrown_exploit_may(&mut self, active: ClassActive, item: usize, at: Pos) -> Option<ActorId> {
+        let content = self.content.clone();
+        let player = self.state.player;
+        let me = self.state.player();
+        let Some(stack) = me.inventory.get(item) else {
+            self.say("You carry no such thing.");
+            return None;
+        };
+        let Some(range) = me.exploit_throw_range(item, &content) else {
+            let what = self.lore().describe(&stack.single());
+            self.say(format!("You cannot exploit an opening with {what}."));
+            return None;
+        };
+        // Unpaid goods are not thrown (`shop.rs`).
+        if !self.may_loose(item) {
+            return None;
+        }
+        let level = &self.state.current().id;
+        let foe = (self.state.actor_at(level, at).map(|a| a.id))
+            .filter(|&id| id != player && self.perception.sees_actors_at(at))
+            .filter(|&id| self.stance(player, id) == Stance::Hostile);
+        let Some(foe) = foe else {
+            self.say("There is no one there.");
+            return None;
+        };
+        if self.off_mark_at(active, at) {
+            return None;
+        }
+        if !self.has_vitals(foe) {
+            self.say("It has no vital spot.");
+            return None;
+        }
+        let here = self.player_pos();
+        if at.dist2(here) > radius2(range) {
+            self.say("That is out of reach.");
+            return None;
+        }
+        let view = self.perception();
+        let solid = |p: Pos| match view.cell(p) {
+            CellView::Visible(t) | CellView::Remembered(t) => !content.terrain(t).transparent,
+            CellView::Unknown => false,
+        };
+        let in_the_way =
+            (here.ray(at).take_while(|&p| p != at)).any(|p| solid(p) || view.actor_at(p).is_some());
+        if in_the_way {
+            self.say("Something is in the way.");
+            return None;
+        }
+        Some(foe)
+    }
+
+    /// The thrown exploit: one of inventory stack `item` thrown at `target` on cell `at`, its
+    /// thrown attack a sneak attack whatever the foe knows with the ladder of `n` openings (spent
+    /// by [`World::use_class_throw`]) on that creature only ([`World::thrown_exploit_profile`],
+    /// [`World::exploited`]): one the player did not see in the way takes a plain throw. A
+    /// throw's price and exertion.
+    fn thrown_exploit(
+        &mut self,
+        item: usize,
+        (target, at): (ActorId, Pos),
+        n: u16,
+        events: &mut Vec<Event>,
+    ) -> Spent {
+        let content = self.content.clone();
+        let player = self.state.player;
+        let me = self.state.player();
+        let (Some(range), Some(profile)) =
+            (me.throw_range(item, &content), me.thrown(item, &content))
+        else {
+            return Spent::Nothing;
+        };
+        let thrown = me.inventory[item].object;
+        let throwing = me.attack_skills(&content, AttackKind::Thrown, Some(thrown));
+        let ladder = me.talent_mods(&content).exploit;
+        // Priced as the throw begins, with what is thrown still in the pack.
+        let price = self.attack_price(player, ActionKind::Throw, None, throwing);
+        self.choose_mark(target);
+        self.say_exploit(n);
+        self.technique.sneak = true;
+        self.technique.exploit = n;
+        self.technique.at = Some(target);
+        self.technique.struck = false;
+        let loose = Loose {
+            kind: AttackKind::Thrown,
+            item,
+            profile,
+            range,
+        };
+        self.player_looses(at, loose, events);
+        let struck = self.technique.struck;
+        self.technique.sneak = false;
+        self.technique.exploit = 0;
+        self.technique.at = None;
+        self.technique.struck = false;
+        // The pool is spent: the mark goes with it, unless the throw killed it (`mark.rs`).
+        self.unmark(target);
+        if let Some(status) = ladder.status.filter(|_| struck)
+            && self.state.actors.contains_key(&target)
+        {
+            self.afflict(target, status, 1, Some(player), events);
+        }
+        self.exert(ActionKind::Throw);
+        Spent::Turn(price)
+    }
+
+    /// `profile`, `attacker`'s attack on `target`, with the ladder's before the roll when it is a
+    /// thrown exploit's at the creature it is aimed at ([`World::exploit_profile`]); any other
+    /// attack as it is. Exploit's blow has its ladder already ([`World::exploit`]).
+    pub(super) fn thrown_exploit_profile(
+        &self,
+        attacker: ActorId,
+        target: ActorId,
+        profile: Profile,
+    ) -> Profile {
+        let technique = &self.technique;
+        if attacker == self.state.player && technique.exploit > 0 && technique.at == Some(target) {
+            self.exploit_profile(technique.exploit, profile)
+        } else {
+            profile
+        }
+    }
+
     /// Whether `attacker`'s attack is an exploit's ([`World::exploit`]): its sneak attack builds
     /// no openings (`ambush.rs::ambushed`).
     pub(super) fn exploiting(&self, attacker: ActorId) -> bool {
@@ -98,11 +270,20 @@ impl World {
     /// `blow`, `attacker`'s attack, `unseen` (its sneak dice landed on a hit), with the ladder's
     /// dice when it is an exploit ([`World::land_exploit`]). The one place
     /// [`super::weapon_active::Technique::exploit`] is taken.
-    pub(super) fn exploited(&mut self, attacker: ActorId, unseen: bool, blow: Blow) -> Blow {
-        if attacker != self.state.player {
+    pub(super) fn exploited(
+        &mut self,
+        (attacker, target): (ActorId, ActorId),
+        unseen: bool,
+        blow: Blow,
+    ) -> Blow {
+        // A thrown exploit is taken by the creature it is aimed at only.
+        if attacker != self.state.player || self.technique.at.is_some_and(|at| at != target) {
             return blow;
         }
         let n = std::mem::take(&mut self.technique.exploit);
+        if n > 0 && self.technique.at.is_some() {
+            self.technique.struck = blow.strike.is_hit();
+        }
         if unseen {
             self.land_exploit(n, blow)
         } else {

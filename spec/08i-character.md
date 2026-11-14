@@ -1669,7 +1669,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     opening" while empty; refused with no time and nothing spent, "There is no one there.",
     without a hostile there, "Your openings are in the kobold's guard." at another than a
     standing mark, and "It has no vital spot." at a foe they see without vitals; after it the
-    pool is 0 and the mark cleared, unless the blow killed it, which gives one back). Low blow
+    pool is 0 and the mark cleared, unless the blow killed it, which gives one back), and from
+    18 Thrown exploit (#1465, the openings design §5.1: `use:thrown_exploit:c:12,5`, the throw
+    list less flasks, then the aiming mode; the same blow delivered by a throw of one of stack
+    `c` at the creature on that cell, for the mark out of melee reach: every opening held, the
+    time of a throw, the item's thrown attack a sneak attack whatever the foe knows with the
+    whole ladder below; Exploit's refusals, plus "That is out of reach." beyond the item's throw
+    range or the sneak dice's reach (6, Long reach's farther), and "Something is in the way."
+    for a wall or a creature the player sees on the line; a creature they do not see in the way
+    takes a plain throw, the openings spent). Low blow
     (12) has no active of its own since #1463: it is Exploit's first increment, the foe struck
     Stunned (flat-footed, its next action dear) and the exploit +1 to hit per opening.
     Improved sneak attack (32) adds a second 1d6 an opening (2d6), and Master thief (60) a

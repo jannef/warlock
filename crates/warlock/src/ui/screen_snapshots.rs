@@ -1189,6 +1189,25 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A thief past level 18 (#1465): Thrown exploit beside Exploit, both greyed out with no
+    // opening.
+    Case {
+        name: "abilities-menu-thief-18",
+        character: Some("human,female,thief"),
+        kit: true,
+        actions: "xp:150000 levelup:auto",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // The thrown exploit's list (#1465): the throw list less flasks, the kit's dagger.
+    Case {
+        name: "thrown-exploit-list",
+        character: Some("human,female,thief"),
+        kit: true,
+        actions: "xp:150000 levelup:auto",
+        screen: Some("thrown-exploit"),
+        ..BASE
+    },
     // A priest blessed and drained to their last mana: the spells in their Spells group with
     // the roll each makes now and its cost (the spell scaling design decision 11), those that
     // cost more than is left greyed out with what is left ("3 mana: you have 2").

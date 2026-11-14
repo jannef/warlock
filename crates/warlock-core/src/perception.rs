@@ -1949,6 +1949,12 @@ impl<'a> PerceptionView<'a> {
         self.player.throw_range(item, self.content)
     }
 
+    /// How far the player throws inventory stack `item` in a thrown exploit (its throw range,
+    /// no farther than their sneak dice reach); `None` for what cannot be thrown so (a flask).
+    pub fn exploit_throw_range(&self, item: usize) -> Option<i32> {
+        self.player.exploit_throw_range(item, self.content)
+    }
+
     /// Whether inventory stack `item` is made for throwing (what the throw choice lists): a
     /// throwing weapon, or a potion, which shatters where it lands (spec §8 "Potions": "Flasks").
     pub fn is_throwing_weapon(&self, item: usize) -> bool {

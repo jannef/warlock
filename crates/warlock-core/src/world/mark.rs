@@ -44,7 +44,7 @@ impl World {
 
     /// The player's mark as they know it, for what they are told: "the kobold" while they see
     /// it, else "an unseen foe".
-    fn mark_called(&self, mark: ActorId) -> String {
+    pub(super) fn mark_called(&self, mark: ActorId) -> String {
         match self.state.actors.get(&mark) {
             Some(a) if self.perception.sees_actors_at(a.pos) => self.called(a),
             _ => "an unseen foe".into(),
@@ -149,17 +149,23 @@ impl World {
     /// Whether class active `active`, aimed `dir`, is refused by the mark (no time; said): it is
     /// paid from a marked pool, a mark stands, and the creature that way is not it.
     pub(super) fn off_mark(&mut self, active: ClassActive, dir: Option<Dir>) -> bool {
-        let player = self.state.player;
         let Some(dir) = dir else {
             return false;
         };
+        let to = self.player_pos().step(dir);
+        self.off_mark_at(active, to)
+    }
+
+    /// Whether class active `active`, aimed at the creature on cell `to` (if any), is refused by
+    /// the mark (no time; said), as [`World::off_mark`] (the thrown exploit's, `openings.rs`).
+    pub(super) fn off_mark_at(&mut self, active: ClassActive, to: Pos) -> bool {
+        let player = self.state.player;
         let content = self.content.clone();
         let paid = crate::ability::class_cost(self.state.player(), &content, active)
             .is_some_and(|cost| content.resource(cost.resource).marked);
         let Some(mark) = self.mark_of(player).filter(|_| paid) else {
             return false;
         };
-        let to = self.player_pos().step(dir);
         let level = &self.state.current().id;
         let there = self.state.actor_at(level, to).map(|a| a.id);
         if there.is_none_or(|t| t == mark) {
