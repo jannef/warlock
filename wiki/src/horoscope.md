@@ -103,24 +103,24 @@ Most ask for a [level](experience.md#levels) as well; a few ask for a [stat](sta
 sign's.
 
 Most of these picks make one of your gifts stronger. The Hydra's
-*[Another head](talents.md#talent-another-head)* heals even while you starve, and the Phoenix's
-*[Second rising](talents.md#talent-second-rising)* rises from the ashes once more. Two are things
+*[Another head](horoscope.md#talent-another-head)* heals even while you starve, and the Phoenix's
+*[Second rising](horoscope.md#talent-second-rising)* rises from the ashes once more. Two are things
 you do, used from the [abilities menu](abilities.md#the-abilities-menu) under *Birth sign*: the
 Wyvern's **[Fire breath](abilities.md#ability-fire-breath)** and the Barghest's
 **[Hound's bay](abilities.md#ability-hounds-bay)**. Each rests a while after use.
 
 {{#include generated/horoscope-talents.md}}
 
-The Phoenix's *[Rise from the ashes](talents.md#talent-rise-from-ashes)* comes once in a life,
-twice with the pick *[Second rising](talents.md#talent-second-rising)*. Once you have risen, the
+The Phoenix's *[Rise from the ashes](horoscope.md#talent-rise-from-ashes)* comes once in a life,
+twice with the pick *[Second rising](horoscope.md#talent-second-rising)*. Once you have risen, the
 gift is spent (the [character screen](the-screen.md#character) says so), and the next death is your
 last.
 
-*[Hound's nose](talents.md#talent-hounds-nose)* tells you in a word on the eat list how fresh
+*[Hound's nose](horoscope.md#talent-hounds-nose)* tells you in a word on the eat list how fresh
 [food](food.md#food-spoils) is: fresh, turning, or rotten. Food that is turning is still fine to
 eat; rotten food is not.
 
-*[Gatekeeper](talents.md#talent-gatekeeper)* strikes a foe that steps up beside you only sometimes,
+*[Gatekeeper](horoscope.md#talent-gatekeeper)* strikes a foe that steps up beside you only sometimes,
 depending on your [stance](stances.md#stances) (see [Free blows](stances.md#free-blows)):
 
 | Stance | Chance |

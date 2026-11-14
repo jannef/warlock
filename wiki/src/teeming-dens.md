@@ -36,7 +36,7 @@ never wake by themselves, however long you wait or rest nearby. They wake when:
 safe. Your plain footsteps (60) wake a kobold, which hears 15 and so wakes at 30, up to three
 cells away. With some [Stealth](skills.md#skill-stealth) you can walk right past.
 
-A sleeper has seen no one, so [sneak attacks](talents.md#talent-sneak-attack) land on it every
+A sleeper has seen no one, so [sneak attacks](classes.md#talent-sneak-attack) land on it every
 time. But every blow is noise, and a kill is a fight its neighbours may hear. A sleeper you see
 shows as "asleep" in [look mode](controls.md#look-mode), and you are told when one wakes.
 

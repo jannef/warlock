@@ -94,8 +94,8 @@ Toughness checks, and Swim's points (the skills table's Swim check), against 11,
 level of [burden](burden.md) above Unburdened.
 
 - **Made**, you take the step. Its time gets wading's discounts ([Swim](skills.md#skill-swim) and
-  the [Swimmer](talents.md#talent-swimmer), [Strong swimmer](talents.md#talent-strong-swimmer), and
-  [Undertow](talents.md#talent-undertow) talents).
+  the [Swimmer](talents.md#talent-swimmer), [Strong swimmer](horoscope.md#talent-strong-swimmer), and
+  [Undertow](horoscope.md#talent-undertow) talents).
 - **Failed**, you spend the turn treading water and do not move. The cold takes 1 hit point,
   resisted as any [cold](damage-types.md), but never your last: nobody drowns.
 

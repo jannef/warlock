@@ -85,14 +85,14 @@ the game computes it:
 
 {{#include generated/companion-growth.md}}
 
-From level 18 the ranger's **[Pack tactics](talents.md#talent-pack-tactics)** makes the two of you
+From level 18 the ranger's **[Pack tactics](classes.md#talent-pack-tactics)** makes the two of you
 hunt as one. A creature beside you both is flanked: your melee attacks and your companion's at it
 get +2 [to hit](combat.md#hitting), and your companion shares your
 [favoured prey](classes.md#ranger) bonus.
 
 ## Hunter's bond
 
-From level 25 the ranger's **[Hunter's bond](talents.md#talent-hunters-bond)** lets them share what
+From level 25 the ranger's **[Hunter's bond](classes.md#talent-hunters-bond)** lets them share what
 their companion has. It works while the companion stands on the same level, not while it rides with
 you across the overworld.
 

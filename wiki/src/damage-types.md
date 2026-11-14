@@ -63,8 +63,8 @@ Two [talents](talents.md) work on damage types:
   blows.
 
 Three [birth-sign gifts](horoscope.md) resist too, 25 % each, counted like gear under the same cap.
-The Wyvern's **[Flame-hardened](talents.md#talent-flame-hardened)** and the Fire element's **[Kindled](talents.md#talent-kindled)** resist [fire](damage-types.md#damage-fire), so a Fire Wyvern
-has 50 %. The Kraken's **[Of the deep](talents.md#talent-of-the-deep)** resists [cold](damage-types.md#damage-cold).
+The Wyvern's **[Flame-hardened](horoscope.md#talent-flame-hardened)** and the Fire element's **[Kindled](horoscope.md#talent-kindled)** resist [fire](damage-types.md#damage-fire), so a Fire Wyvern
+has 50 %. The Kraken's **[Of the deep](horoscope.md#talent-of-the-deep)** resists [cold](damage-types.md#damage-cold).
 
 The [character screen](character.md) (`@`) tells you what you resist in words only: "Resistant to
 cold", "Vulnerable to fire", "Immune to poison". Item descriptions show the numbers for what you

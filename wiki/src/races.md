@@ -16,6 +16,9 @@ things:
 - It may close a few [classes](classes.md) to you: no drow paladins, no elven witches (see
   [Who may take which](classes.md#who-may-take-which)).
 
+The first table is what each race adds to your starting stats. The second gives its eyes, its
+starting ages, its hit points, and its weapon skills. A short description of each race follows.
+
 {{#include generated/races.md}}
 
 The changes are added to the average score of 10, together with your gender's, your

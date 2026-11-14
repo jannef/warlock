@@ -8,7 +8,7 @@ Everyone has [hit points](hit-points.md#hit-points) and [mana](mana.md). Some ch
 - Some **come back** by themselves over time, up to their maximum.
 - Some **wear off** over time, down to nothing.
 - Some **build up** from what you do: a kill, a blow that hits, a [critical](combat.md#criticals),
-  being hit, a [sneak attack](talents.md#talent-sneak-attack).
+  being hit, a [sneak attack](classes.md#talent-sneak-attack).
 - Abilities may **spend** them. An ability that costs more than you have is greyed out in the
   [abilities menu](abilities.md) ("not enough focus").
 - Some **end** when they run out: the resource is gone, and its bar with it, until something gives
@@ -30,12 +30,12 @@ Times below are given in base turns. A base turn is 6 seconds.
 **Rage.** The berserker's rage runs on Rage (see [Rage](#rage) below).
 
 **Focus.** The [ranger](classes.md#ranger) gets focus, full, with
-[rapid shot](talents.md#talent-rapid-shot) at level 12, and keeps it for good. A shot you loose
-while you hold 2 focus spends them and takes 10 % less time. A [volley](talents.md#talent-volley)
+[rapid shot](classes.md#talent-rapid-shot) at level 12, and keeps it for good. A shot you loose
+while you hold 2 focus spends them and takes 10 % less time. A [volley](classes.md#talent-volley)
 (level 50) costs 6. Focus comes back while you act, but not while you rest.
 
 **Openings.** Every [thief](classes.md#thief) holds openings from level 1
-([Sneak attack](talents.md#talent-sneak-attack)), starting at 0.
+([Sneak attack](classes.md#talent-sneak-attack)), starting at 0.
 
 - Every [sneak attack](skills.md#skill-sneak-attack) that hits gives one, up to 5.
 - Every [feint](skill-uses.md#feinting) the foe falls for gives one.
@@ -127,37 +127,37 @@ ability, then something to throw, then the target.
   dice and nothing per opening. The openings are spent all the same.
 
 **Ki.** The [ascetic](classes.md#ascetic) gets ki, full, with
-[martial arts](talents.md#talent-martial-arts) at level 1. The pool holds 4, plus your
+[martial arts](classes.md#talent-martial-arts) at level 1. The pool holds 4, plus your
 [Willpower](stats.md#stat-willpower) [modifier](stats.md#modifiers), plus a point per 6
 [levels](experience.md#levels), and never less than 3. For example, Willpower 12 holds 5 at level
 1, Willpower 14 holds 10 at level 25, and Willpower 16 holds 17 at level 60.
 [Inner calm](talents.md#talent-inner-calm) adds 2.
 
 Ki comes back a point every 3 base turns (18 seconds), resting too.
-[Perfect self](talents.md#talent-perfect-self) (level 60) brings it back twice as fast, a point
+[Perfect self](classes.md#talent-perfect-self) (level 60) brings it back twice as fast, a point
 every 9 seconds. What spends it:
 
-- Each second blow of a [flurry](talents.md#talent-flurry) (level 1) spends a point. With none
+- Each second blow of a [flurry](classes.md#talent-flurry) (level 1) spends a point. With none
   left, the attack is a single blow.
 - [Step of the wind](abilities.md#ability-step-of-the-wind) (level 6) spends 1 and takes no time.
-- [Stunning strike](talents.md#talent-stunning-strike) (level 12) spends 1.
+- [Stunning strike](classes.md#talent-stunning-strike) (level 12) spends 1.
 - [Patient defence](abilities.md#ability-patient-defence) (level 18) spends 1 and takes a wait's
   time.
 - [Stillness](abilities.md#ability-stillness) (level 25) spends 2 and takes no time.
-- [Diamond soul](talents.md#talent-diamond-soul) (level 40) spends 1 by itself on each missile it
+- [Diamond soul](classes.md#talent-diamond-soul) (level 40) spends 1 by itself on each missile it
   catches.
-- [Quivering palm](talents.md#talent-quivering-palm) (level 50) spends 5.
+- [Quivering palm](classes.md#talent-quivering-palm) (level 50) spends 5.
 
 **Inspiration.** The [bard](classes.md#bard) gets inspiration with
-[inspire](talents.md#talent-inspire) at level 9, starting at 0. Every kill of your own gives one,
+[inspire](classes.md#talent-inspire) at level 9, starting at 0. Every kill of your own gives one,
 up to 5, and one fades every 30 base turns (3 minutes). When empty, the pool stays with you.
 
 Only [Inspire](abilities.md#ability-inspire) spends it: 3 inspiration and nothing else, and with
 less you cannot sing it. (The [lullaby](abilities.md#ability-lullaby) is paid in
 [mana](mana.md#spending-it); see [Songs](abilities.md#songs).) A
-[virtuoso](talents.md#talent-virtuoso)'s inspire spends none.
+[virtuoso](classes.md#talent-virtuoso)'s inspire spends none.
 
-**Zeal.** The [paladin](classes.md#paladin) gets zeal with [Smite](talents.md#talent-smite) at
+**Zeal.** The [paladin](classes.md#paladin) gets zeal with [Smite](classes.md#talent-smite) at
 level 1, holding 5. The pool holds 10, plus your [Presence](stats.md#stat-presence)
 [modifier](stats.md#modifiers), plus a point per 10 [levels](experience.md#levels), and never less
 than 6. For example, Presence 12 holds 11 at level 1, and Presence 16 holds 16 at level 30.
@@ -169,8 +169,8 @@ than 6. For example, Presence 12 holds 11 at level 1, and Presence 16 holds 16 a
 - [Smite](abilities.md#ability-smite) spends 3, [Branding smite](abilities.md#ability-branding-smite)
   3, [Wrathful smite](abilities.md#ability-wrathful-smite) 4,
   [Banishing smite](abilities.md#ability-banishing-smite) 6, and
-  [Lay on hands](abilities.md#ability-lay-on-hands) 6 (3 with [Avatar](talents.md#talent-avatar)).
-  [Retribution](talents.md#talent-retribution) (level 25) spends 4 for every blow it answers. So
+  [Lay on hands](abilities.md#ability-lay-on-hands) 6 (3 with [Avatar](classes.md#talent-avatar)).
+  [Retribution](classes.md#talent-retribution) (level 25) spends 4 for every blow it answers. So
   wrath and mercy are paid from the one pool.
 - The blow that hits you builds its point first, so 3 zeal is enough for Retribution to answer it.
   With [Zealot](talents.md#talent-zealot) you need 2, and every blow that hits you builds 2.
@@ -181,7 +181,7 @@ than 6. For example, Presence 12 holds 11 at level 1, and Presence 16 holds 16 a
 
 **Stamina** is the fighter's breath: the pool that active weapon abilities are paid from (see
 [Combat](stances.md#stamina)), and the [warrior's](classes.md#warrior)
-[Charge](talents.md#talent-charge). A warrior holds it, full, from level 1 (Charge gives it).
+[Charge](classes.md#talent-charge). A warrior holds it, full, from level 1 (Charge gives it).
 Anyone else gets it, full, from the first [weapon rank](weapon-skills.md#marks-and-ranks) that
 teaches an active ability.
 
@@ -202,7 +202,7 @@ identified or not. It can give:
 - a faster **pace**, by so many percent, added to what talents add.
   [Steady breathing](talents.md#talent-steady-breathing)'s 50 % and an item's 30 % make 180 %;
 - for stamina, every active weapon ability **costing** so many points less. This adds to
-  [Drillmaster](talents.md#talent-drillmaster)'s discount, and a cost never goes below 1;
+  [Drillmaster](classes.md#talent-drillmaster)'s discount, and a cost never goes below 1;
 - so many more points on a **kill** (*of the Hunt*), never above the maximum. This follows the same
   rule as [mana](mana.md#how-much) *of Siphoning*: only your own blow, shot, or
   [spell](magic.md#the-spells) counts, with the one you killed within 3 cells of you (see
@@ -258,16 +258,16 @@ have no rage until that passes. Anything else that ends being Raging ends the ra
 
 The berserker's later levels add to it (see [Talents](talents.md)):
 
-- **[Battle-scarred](talents.md#talent-battle-scarred)** (level 6):
+- **[Battle-scarred](classes.md#talent-battle-scarred)** (level 6):
   [Protection](combat.md#protection) +1, and +2 more while raging (3 in all), whatever armour you
   wear.
-- **[Headlong](talents.md#talent-headlong)** (level 12): while raging, every step costs a fifth less
+- **[Headlong](classes.md#talent-headlong)** (level 12): while raging, every step costs a fifth less
   [time](time.md), in any armour and under any [burden](burden.md).
-- **[Blood frenzy](talents.md#talent-blood-frenzy)** (level 40): while raging, every melee attack
+- **[Blood frenzy](classes.md#talent-blood-frenzy)** (level 40): while raging, every melee attack
   costs a fifth less time, and every kill builds 5 more rage (8 in all).
-- **[Mighty rage](talents.md#talent-mighty-rage)** (level 50): Raging gives Strength +4 and
+- **[Mighty rage](classes.md#talent-mighty-rage)** (level 50): Raging gives Strength +4 and
   Toughness +4, rage holds up to 30, and the exhaustion lasts 75 seconds.
-- **[Unstoppable](talents.md#talent-unstoppable)** (level 60): while raging,
+- **[Unstoppable](classes.md#talent-unstoppable)** (level 60): while raging,
   [bleeding](status-effects.md#status-bleeding) and [poison](status-effects.md#status-poisoned) cost
   no hit points. A blow that would take your last [hit point](hit-points.md#hit-points) leaves it to
   you for 10 rage, as often as you have that much. Spending the last of the rage this way ends it.
@@ -288,7 +288,7 @@ as a pick from its trees, from the level given:
 - **[Patient blade](talents.md#talent-patient-blade)** (Shadow; [thief](classes.md#thief), level
   32): openings slip away half as fast, a point every 40 base turns instead of every 20. Killing
   your [mark](#the-mark) yourself gives two openings instead of one.
-- **[Zealot](talents.md#talent-zealot)** (Grit; whoever holds [Smite](talents.md#talent-smite), so
+- **[Zealot](talents.md#talent-zealot)** (Grit; whoever holds [Smite](classes.md#talent-smite), so
   the [paladin](classes.md#paladin), level 6): every blow that hits you builds 2
   [zeal](#resource-zeal) instead of 1. A blow you give still builds 1, and the pool holds no more.
 

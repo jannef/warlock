@@ -474,6 +474,14 @@ question a player would ask answered first; no developer terms (modules, fields,
 never sees) and no padded register (stacked hedges, empty summaries, a heading that restates the
 page). The numbers stay exact.
 
+**Tables a human can read** (#1586): a big generated table follows two or three plain lines on
+what it shows and how to read it, never the page's first line; long tables go at the end of the
+page. A table has at most 5 columns where practical: split a wide one by topic (the stats apart
+from the rest), turn one round (a row per skill effect, its values as columns), and put rare
+fields in a detail table or a per-row cell. A grid of short numbers along one axis (odds by bonus,
+a value by level) may be wider. Stat abbreviations (`St`, `Dx`, ...) are spelled out above the
+table that uses them (`text::stat_key`), and no cell holds code or action text (`use:...`).
+
 **The game is vague, the wiki is accurate** (the owner, 2026-10-20): in the game, hidden numbers
 stay hidden and effects are told in words (the perception rules above are unchanged), but the
 wiki states the truth exactly. The game is open source, so the truth is one look at the sources

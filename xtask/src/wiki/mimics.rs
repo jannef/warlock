@@ -13,10 +13,15 @@ pub(super) fn mimic_bands(content: &Content) -> String {
     if mimics.is_empty() {
         return "No mimics.\n".into();
     }
+    // Three tables of a few columns each (#1586): what a band is, its scores, and its fighting.
     let mut out = String::from(
-        "| Name | Levels | Passes for | St | To | Dx | Wp | Hit points | Slam | Holds | Grip | \
-         Protection | Weight |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n",
+        "| Name | Levels | Passes for | Hit points | Weight |\n|---|---|---|---:|---:|\n",
     );
+    let mut scores = String::from(
+        "| Name | Strength | Toughness | Dexterity | Willpower |\n|---|---:|---:|---:|---:|\n",
+    );
+    let mut fights =
+        String::from("| Name | Slam | Holds | Grip | Protection |\n|---|---|---:|---:|---:|\n");
     let chests = &content.chests().bands;
     for (i, band) in mimics.bands.iter().enumerate() {
         let from = band.from.max(mimics.levels[0]);
@@ -38,19 +43,30 @@ pub(super) fn mimic_bands(content: &Content) -> String {
         let chest = chests.get(i);
         let _ = writeln!(
             out,
-            "| {} | {from} to {to} | {} | {} | {} | {} | {} | {hp} | {slam} | {} % | {} | {} | {} kg |",
+            "| {} | {from} to {to} | {} | {hp} | {} kg |",
             band.name,
             chest.map_or("-", |c| c.name.as_str()),
+            band.weight / 1000,
+        );
+        let _ = writeln!(
+            scores,
+            "| {} | {} | {} | {} | {} |",
+            band.name,
             score(Stat::Strength),
             score(Stat::Toughness),
             score(Stat::Dexterity),
             score(Stat::Willpower),
+        );
+        let _ = writeln!(
+            fights,
+            "| {} | {slam} | {} % | {} | {} |",
+            band.name,
             chest.map_or(0, |c| c.hold),
             Mimics::grip(from),
             Mimics::protection(from),
-            band.weight / 1000,
         );
     }
+    let _ = write!(out, "\n{scores}\n{fights}");
     let first = content
         .mimic_at(mimics.levels[0])
         .map(|c| content.creature(c));
@@ -59,7 +75,7 @@ pub(super) fn mimic_bands(content: &Content) -> String {
             .unwrap_or_else(|| "none".into());
         let _ = write!(
             out,
-            "\nThe row is the band's first level; every level from {} to {} has its own type on \
+            "\nEach row is the band's first level; every level from {} to {} has its own type on \
              the same formulas (Strength 11 + 0.4 × level, Toughness 17 + 0.4 × level, Dexterity \
              10 + level ÷ 4, Willpower 16 + 0.35 × level, rounded down; hit points 4 × level \
              beyond Toughness; the slam one step up the dice ladder from the level's). Every \

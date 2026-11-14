@@ -99,8 +99,8 @@ it buys. Several things move prices:
   less and get offered more.
 - Shopkeepers are good folk, so your [alignment](alignment.md) moves their prices too. A saint
   pays a little less, an evil character more.
-- A [merchant](classes.md#merchant)'s [Haggler](talents.md#talent-haggler) is the one [class
-  ability](talents.md#class-abilities) that changes prices.
+- A [merchant](classes.md#merchant)'s [Haggler](classes.md#talent-haggler) is the one [class
+  ability](classes.md#levels) that changes prices.
 
 None of this is ever shown as a number. You see only the prices. Shops sell and buy by [item
 class](objects.md#item-classes):

@@ -28,7 +28,7 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A status effect (Staggered, Winded, Raging, Hasted, …) | `status-effects.md#status-ID` | `status-effects.md#status-staggered` |
 | A disease | `diseases.md#disease-ID` | `diseases.md#disease-filth-fever` |
 | A skill (Stealth, Open lock, Spot, …) | `skills.md#skill-ID` | `skills.md#skill-open-lock` |
-| A talent | `talents.md#talent-ID` | `talents.md#talent-hardy` |
+| A talent | `talents.md#talent-ID`; a birth sign's gift `horoscope.md#talent-ID`; a class ability `classes.md#talent-ID` (its first class's table; a prestige class's own, `prestige-classes.md#talent-ID`) | `talents.md#talent-hardy`, `horoscope.md#talent-fleet-footed`, `classes.md#talent-rage` |
 | An ability in the abilities menu (class abilities, sign actives, spells, skill uses) | `abilities.md#ability-ID` | `abilities.md#ability-lay-on-hands` |
 | A spell | `magic.md#spell-ID` | `magic.md#spell-fireball` |
 | A damage type (fire, slashing, …) | `damage-types.md#damage-ID` | `damage-types.md#damage-fire` |
@@ -131,7 +131,7 @@ above.
 | Healing spring | `altars-forges-springs.md#healing-springs` |
 | Trap, hidden trap, known trap | `traps.md#finding-traps` |
 | Disarming | `traps.md#disarming-traps` |
-| Rig, rigging, Trapwright, a rigged trap | `traps.md#rigging-traps` (the talent: `talents.md#talent-trapwright`) |
+| Rig, rigging, Trapwright, a rigged trap | `traps.md#rigging-traps` (the talent: `classes.md#talent-trapwright`) |
 | Searching, noticing in passing | `searching.md#searching-1`, `searching.md#noticing-in-passing` |
 | **Objects** | |
 | Object, item class | `objects.md#what-an-object-is`, `objects.md#item-classes` |
@@ -191,7 +191,7 @@ above.
 | Quick hands, every craft in half the time | `crafting.md#quick-hands` |
 | Waste not, nothing lost in a craftsperson's hands | `crafting.md#waste-not` |
 | A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents.md#delver` |
-| Class abilities | `talents.md#class-abilities`, `abilities.md` |
+| Class abilities | `classes.md#levels`, `abilities.md` |
 | The bard, a bard's cap at 30, Travelled hands, Jack of all trades | `classes.md#bard` |
 | Songs (Inspire, the Lullaby), singing, a song's degrees, shaking a song off, Virtuoso | `abilities.md#songs` |
 | Prestige class, the Hunter, total level, a class's cap (last level) | `prestige-classes.md#prestige-classes` (a prestige class's table: its heading, `prestige-classes.md#hunter`) |
@@ -201,7 +201,7 @@ above.
 | The priest's prayer (Orison, Prayer, Litany, Benediction, Miracle), what it answers | `prayer.md`, `prayer.md#what-it-answers` (a use: its row) |
 | Strain, a fizzled prayer | `prayer.md#strain` |
 | The holy and the dark powers, the dark face's twists (Whisper, Invocation, Rite, Pact) | `prayer.md#the-holy-and-the-dark` |
-| Communion with the dark | `talents.md#talent-communion`, `prayer.md#communion-and-sanctuary` |
+| Communion with the dark | `classes.md#talent-communion`, `prayer.md#communion-and-sanctuary` |
 | Hallowed ground, dreaded ground (Sanctuary) | `cursed-and-hallowed.md#hallowed-ground` |
 | Stats (Strength, Dexterity, …), score | `stats.md` (a stat: its row) |
 | Modifier | `stats.md#modifiers` |
