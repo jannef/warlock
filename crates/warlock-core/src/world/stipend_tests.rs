@@ -9,6 +9,7 @@ use crate::character::CharacterSpec;
 use crate::replay::Replay;
 use crate::talent::TalentMods;
 use crate::test_support::CONTENT;
+use crate::test_support::run as act;
 
 /// Beside the servant's cell (40, 27) in the Gæsthūs, east of it.
 const BESIDE: Pos = Pos::new(41, 27);
@@ -45,12 +46,6 @@ fn offered_landed(character: &str) -> bool {
     let draft = World::draft(CONTENT.clone(), "ceaptun", None, &spec).expect("a draft");
     let (_, offers) = draft.creation_offers(&[]).expect("offers");
     (offers.iter()).any(|(id, _)| CONTENT.talents().get(*id).id == "landed_noble")
-}
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn said(world: &World) -> Vec<String> {

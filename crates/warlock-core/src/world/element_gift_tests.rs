@@ -10,6 +10,7 @@ use crate::content::{Role, Sign, SignActive};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::run;
 
 const BLAZE: Action = Action::Gift(SignActive::Blaze, None);
 
@@ -32,12 +33,6 @@ fn born_in(scenario: &str, element: &str) -> World {
 
 fn born(element: &str) -> World {
     born_in("showcase", element)
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn last(world: &World) -> String {

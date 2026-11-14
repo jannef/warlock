@@ -7,6 +7,7 @@ use super::*;
 use crate::action::{Action, parse_actions};
 use crate::content::{ContentFiles, StairsDir};
 use crate::grid::Grid;
+use crate::test_support::run as act;
 use std::collections::{BTreeSet, VecDeque};
 use std::sync::LazyLock;
 
@@ -72,12 +73,6 @@ fn town(seed: Option<u64>) -> World {
         (w.state.actors.get_mut(&id).expect("player").inventory).push(Stack::new(object, 1));
     }
     w
-}
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn said(world: &World) -> Vec<String> {

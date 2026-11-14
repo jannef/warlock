@@ -8,6 +8,7 @@ use crate::content::ContentFiles;
 use crate::noise::SoundKind;
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -377,12 +378,6 @@ fn content() -> Arc<Content> {
 
 fn world(scenario: &str) -> World {
     World::new(content(), scenario, None).expect("world")
-}
-
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| world.apply(a))
-        .collect()
 }
 
 fn texts(world: &World) -> Vec<String> {

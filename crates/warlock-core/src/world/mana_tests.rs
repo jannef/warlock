@@ -7,6 +7,7 @@ use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 // Round numbers: resting brings mana back three times as fast; dazed halves the pace; a hex
 // drains 2 mana a tick (every 30 s a degree) and stops it, easing a degree a minute; befuddled
@@ -162,12 +163,6 @@ fn world_as(scenario: &str) -> World {
 
 fn world() -> World {
     world_as(MAGE)
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn mana(w: &World) -> i32 {

@@ -7,10 +7,10 @@
 
 use super::talent::Due;
 use super::*;
-use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{Build, ContentFiles, ResourceId};
 use crate::light::Light;
+use crate::test_support::run;
 use std::sync::LazyLock;
 
 /// A pitch-dark corridor: the player at its west end, a giant rat beside them.
@@ -40,12 +40,6 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
 
 fn world(seed: u64) -> World {
     World::new(CONTENT.clone(), "den", Some(seed)).expect("scenario starts")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn id(name: &str) -> ResourceId {

@@ -2,11 +2,11 @@
 //! pool's fifth, the maximum falling with the skill, and the `cast` marks.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::skills::Skills;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::run;
 
 /// An elf wizard in the showcase, every score 14, trained in nothing but Concentration at
 /// `value` (untrained with `None`), with a pool of `base` before Concentration, full.
@@ -33,12 +33,6 @@ fn wizard(value: Option<u16>, base: i32) -> World {
 
 fn max(w: &World) -> i32 {
     w.state.player().max_mana(&w.content)
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn marks(w: &World) -> u32 {

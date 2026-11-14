@@ -9,6 +9,7 @@ use crate::action::parse_actions;
 use crate::content::{ContentFiles, Stance};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
+use crate::test_support::run as act;
 use std::sync::LazyLock;
 
 /// Cēaptūn's cell, where the south road starts.
@@ -27,12 +28,6 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
     files.remove_encounter_tables();
     Arc::new(Content::load(&files).expect("builtin content"))
 });
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
 
 fn said(world: &World) -> Vec<String> {
     world.messages().iter().map(|m| m.text.clone()).collect()

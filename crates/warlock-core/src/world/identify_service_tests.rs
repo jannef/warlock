@@ -7,6 +7,7 @@ use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::magic::{Affix, Magic, Rarity};
 use crate::replay::Replay;
+use crate::test_support::run;
 
 /// The appraiser's words and service, added to the built-in dialogue.
 const APPRAISER: &str = r##"
@@ -66,12 +67,6 @@ fn world(gold: u32, carry: &[&str]) -> World {
 
 /// Three fireball scrolls and two lightning scrolls: two unidentified stacks.
 const SCROLLS: &[&str] = &["scroll_of_fireball*3", "scroll_of_lightning*2"];
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
-}
 
 fn gold(w: &World) -> u32 {
     let coin = w.content().object_id("gold_coin").expect("gold");

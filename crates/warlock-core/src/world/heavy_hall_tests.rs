@@ -7,6 +7,7 @@ use crate::burden::{self, Burden};
 use crate::content::ContentFiles;
 use crate::object::Stack;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 /// A hall, 30 wide, with a heavy hall over x 10 to 19.
 const HALL: &str = "\
@@ -37,12 +38,6 @@ fn world() -> World {
     );
     let content = Arc::new(Content::load(&files).expect("fixture content is valid"));
     World::new(content, "test_heavy", None).expect("world")
-}
-
-fn run(w: &mut World, text: &str) {
-    for action in crate::action::parse_actions(text).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn said(w: &World, line: &str) -> bool {

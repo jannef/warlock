@@ -9,6 +9,7 @@ use crate::action::{Action, parse_actions};
 use crate::content::{ContentFiles, LevelKind, local_area_id};
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::run as act;
 
 const TABLE: &str = r#"
 [[table]]
@@ -80,12 +81,6 @@ fn fixture(certain: bool, rest: u32) -> Arc<Content> {
 
 fn world(certain: bool) -> World {
     World::new(content(certain), "world", None).expect("world")
-}
-
-fn act(w: &mut World, actions: &str) {
-    for a in parse_actions(actions).expect("actions") {
-        w.apply(&a);
-    }
 }
 
 fn last(w: &World) -> String {

@@ -9,6 +9,7 @@ use crate::content::ContentFiles;
 use crate::magic::LootGrade;
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 /// A lit hall, the player carrying: a, three scrolls of fireball; b, two of lightning; c, two of
 /// identify; d, a sealed letter (no reading).
@@ -26,12 +27,6 @@ fn world(seed: u64) -> World {
     );
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     World::new(content, "hall", Some(seed)).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn texts(w: &World) -> Vec<String> {

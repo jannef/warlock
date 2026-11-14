@@ -12,6 +12,7 @@ use crate::magic::{Affix, Magic, Rarity};
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::run;
 use std::sync::Arc;
 
 /// A kitted run of `spec` in the courtyard.
@@ -42,12 +43,6 @@ fn way(w: &World) -> Option<Dir> {
     (allies_beside(&w.state).into_iter())
         .find(|(_, a)| a.companion().is_some())
         .map(|(d, _)| d)
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn plain(id: &str) -> Stack {

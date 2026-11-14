@@ -10,6 +10,7 @@ use crate::content::{ContentFiles, TerrainId};
 use crate::perception::CellView;
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 /// A hall on the built-in content, the player at `@` as `character` (`RACE,GENDER,CLASS`); `S` is
 /// a secret door anyone finds (difficulty 1: all but a natural 2), `H` one nobody does (50: only a
@@ -48,12 +49,6 @@ const WARRIOR: &str = "human,male,warrior";
 const THIEF: &str = "human,female,thief";
 const ELF: &str = "elf,female,warrior";
 const DWARF: &str = "dwarf,male,warrior";
-
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| world.apply(a))
-        .collect()
-}
 
 fn texts(world: &World) -> Vec<String> {
     world.messages().iter().map(|m| m.display()).collect()

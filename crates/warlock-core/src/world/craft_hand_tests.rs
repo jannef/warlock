@@ -8,6 +8,7 @@ use super::*;
 use crate::content::{ContentFiles, RecipeId};
 use crate::object::Stack;
 use crate::skills::{SkillId, Trained};
+use crate::test_support::run as apply;
 
 /// A forge with its anvil at (5, 2) and the player beside it at (4, 3).
 const ROOM: &str = "\
@@ -85,12 +86,6 @@ fn said(w: &World) -> String {
 
 fn recipe(w: &World, id: &str) -> RecipeId {
     w.content.recipes().id(id).expect(id)
-}
-
-fn apply(w: &mut World, text: &str) {
-    for action in crate::action::parse_actions(text).expect("parses") {
-        w.apply(&action);
-    }
 }
 
 /// What the first step of `id` takes of the first stack carried.

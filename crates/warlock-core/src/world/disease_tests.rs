@@ -12,6 +12,7 @@ use crate::content::{ContentFiles, DiseaseId, StatusId};
 use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::test_support::builtin;
+use crate::test_support::run;
 use crate::time::DAY;
 
 const TERRAIN: &str = r##"
@@ -241,14 +242,6 @@ fn diseased(w: &World) -> StatusId {
 
 fn infection(w: &World, id: &str) -> Option<crate::disease::Infection> {
     w.state().player().diseases.get(disease(w, id)).copied()
-}
-
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    parse_actions(actions)
-        .expect("actions")
-        .iter()
-        .map(|a| world.apply(a))
-        .collect()
 }
 
 fn messages(world: &World) -> Vec<String> {

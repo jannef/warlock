@@ -13,6 +13,7 @@ use crate::content::ContentFiles;
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
+use crate::test_support::run;
 
 /// A lit hall: the player at the west end of row 2; on row 1 a mimic disguised as a coffer
 /// (`M`, x 3) carrying a dagger and coins, and a real coffer (`C`, x 7); a kobold (`k`) in the
@@ -108,12 +109,6 @@ fn content() -> Arc<Content> {
 
 fn world(scenario: &str) -> World {
     World::new(content(), scenario, None).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn said(w: &World, line: &str) -> bool {

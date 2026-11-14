@@ -8,6 +8,7 @@ use crate::action::parse_actions;
 use crate::content::{ContentFiles, ZoneKind};
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 /// A lit hall of `map` (`@` the player, `k` a kobold alchemist, `g` a goblin firebomber, `c` a
 /// cult chymist), the player with plenty of hit points.
@@ -29,12 +30,6 @@ fn hall(map: &str) -> World {
     );
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     World::new(content, "hall", None).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
 }
 
 fn texts(w: &World) -> Vec<String> {

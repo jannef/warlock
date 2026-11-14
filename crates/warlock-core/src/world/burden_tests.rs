@@ -10,6 +10,7 @@ use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
 use crate::noise::Act;
 use crate::replay::Replay;
+use crate::test_support::run;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -349,14 +350,6 @@ fn carry(w: &mut World, id: ActorId, kg: u32) {
         vec![Stack::new(ingot, kg)]
     };
     actor.equipment = Default::default();
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    parse_actions(actions)
-        .expect("actions")
-        .iter()
-        .map(|a| w.apply(a))
-        .collect()
 }
 
 fn total(outs: &[Outcome]) -> u64 {

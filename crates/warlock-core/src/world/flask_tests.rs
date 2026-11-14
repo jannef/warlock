@@ -9,6 +9,7 @@ use crate::action::{MissileEnd, SpellShape, parse_actions};
 use crate::content::{ContentFiles, ZoneKind};
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 // A training dummy takes a lot and never fights back.
 const DUMMY: &str = "[[creature]]\nid = \"dummy\"\nname = \"training dummy\"\nglyph = \"D\"\n\
@@ -78,12 +79,6 @@ fn hall(map: &str, hp: u16, ambient: u16) -> World {
 
 fn world(map: &str) -> World {
     hall(map, 1000, 255)
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
 }
 
 fn texts(w: &World) -> Vec<String> {

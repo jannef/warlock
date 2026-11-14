@@ -14,6 +14,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stats};
+use crate::test_support::run as apply;
 use std::sync::LazyLock;
 
 const ROOM: &str = "\
@@ -153,12 +154,6 @@ fn pack(w: &World) -> Vec<String> {
 
 fn recipe(w: &World, id: &str) -> RecipeId {
     w.content.recipes().id(id).expect(id)
-}
-
-fn apply(w: &mut World, text: &str) {
-    for action in parse_actions(text).expect("parses") {
-        w.apply(&action);
-    }
 }
 
 #[test]

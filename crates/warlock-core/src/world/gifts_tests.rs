@@ -4,7 +4,7 @@
 
 use super::*;
 use crate::ability::{Ability, Unavailable};
-use crate::action::{AttackKind, parse_actions};
+use crate::action::AttackKind;
 use crate::character::CharacterSpec;
 use crate::combat::{Blow, Profile, Strike};
 use crate::content::{Sign, SignActive, StatusId};
@@ -12,6 +12,7 @@ use crate::damage::Damage;
 use crate::geom::Pos;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::run;
 
 /// A human warrior in `scenario` (seed 7), born under the `element` `animal` (`None`: under no
 /// sign), every score 14; the run restored, so the gifts are granted as a load grants them.
@@ -30,12 +31,6 @@ fn born(scenario: &str, sign: Option<(&str, &str)>) -> World {
     let max = w.state.player().max_hp(w.content());
     w.player_mut().hp = max;
     w
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn last(w: &World) -> String {

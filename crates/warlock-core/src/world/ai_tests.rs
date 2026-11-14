@@ -7,6 +7,7 @@ use crate::action::{AttackKind, parse_actions};
 use crate::content::{ContentFiles, Stance};
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::run;
 use std::sync::LazyLock;
 
 const TERRAIN: &str = r##"
@@ -290,14 +291,6 @@ static CONTENT: LazyLock<Arc<Content>> =
 
 fn world(scenario: &str) -> World {
     World::new(CONTENT.clone(), scenario, None).expect("world")
-}
-
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    parse_actions(actions)
-        .expect("actions")
-        .iter()
-        .map(|a| world.apply(a))
-        .collect()
 }
 
 fn pos(world: &World, id: ActorId) -> Pos {

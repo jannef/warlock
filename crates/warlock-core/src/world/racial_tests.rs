@@ -10,6 +10,7 @@ use crate::content::{ContentFiles, Role};
 use crate::stats::{PerStat, Stats};
 use crate::talent;
 use crate::test_support::CONTENT;
+use crate::test_support::run;
 
 fn spec(text: &str) -> CharacterSpec {
     text.parse().expect("a character")
@@ -334,10 +335,4 @@ fn a_replay_that_takes_a_racial_talent_verifies() {
         .run(CONTENT.clone())
         .expect("the replay verifies");
     assert_eq!(verified.state_hash(), w.state_hash());
-}
-
-fn run(w: &mut World, actions: &str) {
-    for a in parse_actions(actions).expect("actions") {
-        w.apply(&a);
-    }
 }

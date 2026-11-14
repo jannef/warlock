@@ -4,9 +4,9 @@
 //! by their own side; the first entry's line says which.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::alignment::{Alignment, Score};
 use crate::content::{ContentFiles, Regard, Shrine, StatusId};
+use crate::test_support::run;
 
 /// A hall, 25 wide: the west part plain, the east part (x 14 on, walls included) a shrine of
 /// a side with its stone at `S`. A creature may stand at `k` inside it.
@@ -64,12 +64,6 @@ fn creature(w: &World) -> &Actor {
     (w.state.actors.values())
         .find(|a| a.kind == ActorKind::Creature)
         .expect("a creature")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for a in parse_actions(actions).expect("actions") {
-        w.apply(&a);
-    }
 }
 
 fn said(w: &World, line: &str) -> bool {

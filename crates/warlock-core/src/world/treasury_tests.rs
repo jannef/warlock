@@ -4,6 +4,7 @@
 use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
+use crate::test_support::run;
 
 /// A lit hall, its east part (x 9 on, walls included) a treasure room behind a closed door at
 /// (9, 2).
@@ -147,12 +148,6 @@ fn vault_content(room: &str) -> Result<Arc<Content>, crate::content::ContentErro
 fn vault() -> World {
     let content = vault_content("breach = [5, 2]").expect("fixture content is valid");
     World::new(content, "test_vault", None).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 /// Searches beside the breach until it is found (a few hundred turns at most).

@@ -12,6 +12,7 @@ use crate::content::ContentFiles;
 use crate::hunger::Hunger;
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 /// The built-in content with `map`: the player at `@` (a ration and a pick-axe under them), a
 /// creature of type `them` at `k`, a kobold walking west and back at `r`, a deer at `d`,
@@ -219,12 +220,6 @@ fn carried(w: &World, id: &str) -> usize {
     let id = w.content.object_id(id).expect("an object");
     let pack = &w.state.player().inventory;
     (pack.iter().position(|s| s.object == id)).expect("carried")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 #[test]

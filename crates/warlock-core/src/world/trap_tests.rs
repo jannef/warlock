@@ -6,6 +6,7 @@ use crate::action::{MissileEnd, SpellShape, parse_actions};
 use crate::content::{ContentFiles, TrapId};
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -226,12 +227,6 @@ fn content(map: &str, dark: bool, scenario: &str) -> Arc<Content> {
 
 fn world(map: &str) -> World {
     World::new(content(map, false, ""), "hall", None).expect("world")
-}
-
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| world.apply(a))
-        .collect()
 }
 
 fn texts(world: &World) -> Vec<String> {

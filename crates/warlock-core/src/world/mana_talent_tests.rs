@@ -5,11 +5,11 @@
 use super::talent::Due;
 use super::*;
 use crate::ability::{Ability, Source};
-use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::talent::TalentMods;
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::run;
 
 /// An elf wizard in the showcase, every score 14.
 fn world() -> World {
@@ -18,12 +18,6 @@ fn world() -> World {
         World::with_character(BUILTIN.clone(), "showcase", Some(7), Some(&spec)).expect("world");
     w.player_mut().stats = Stats::new(PerStat::splat(14), PerStat::splat(40));
     w
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn last(w: &World) -> String {

@@ -4,9 +4,9 @@
 //! a level without a danger.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::test_support::builtin;
+use crate::test_support::run;
 use crate::time::GameTime;
 
 /// A lit hall, 30 wide; its east part (x 10 on) the haunted room. A wall at x 18, open at its
@@ -50,12 +50,6 @@ const DANGER: &str = "danger = 3\npopulation = [\"kobold\"]\nspawn = { chance = 
 /// The hall, on a level of danger 3, the room over x 10 to 29.
 fn world() -> World {
     world_of(DANGER, "[10, 0, 29, 5]")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 /// The creatures on the level.

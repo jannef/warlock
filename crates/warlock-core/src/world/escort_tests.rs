@@ -10,6 +10,7 @@ use crate::ability::{Ability, Unavailable};
 use crate::action::{Command, parse_actions};
 use crate::content::{CombatStance, ContentFiles, QuestKind};
 use crate::replay::Replay;
+use crate::test_support::run;
 
 /// The wise woman and Eadgyth, added to the built-in dialogue.
 const DIALOGUE: &str = r##"
@@ -100,12 +101,6 @@ fn content() -> Arc<Content> {
 
 fn world() -> World {
     World::new(content(), "hamlet", None).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn said(w: &World) -> Vec<String> {

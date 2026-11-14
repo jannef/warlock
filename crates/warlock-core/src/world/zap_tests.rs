@@ -5,9 +5,10 @@
 //! compete for the slot; charges and rungs are saved.
 
 use super::*;
-use crate::action::{AttackKind, parse_actions};
+use crate::action::AttackKind;
 use crate::content::ContentFiles;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 /// The pack: a, a wand of magic missile; b, a wand of scorching ray; c, a crossbow; d, a
 /// scroll of identify; e, a wand of fireball.
@@ -33,12 +34,6 @@ fn world() -> World {
     );
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     World::new(content, "hall", Some(3)).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
 }
 
 fn said(w: &World) -> Vec<String> {

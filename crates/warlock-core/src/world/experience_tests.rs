@@ -4,12 +4,12 @@
 //! a little more.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, StairsDir};
 use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::run;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -187,12 +187,6 @@ fn content_with(map: &str, creatures: &str) -> Result<Arc<Content>, crate::conte
         "name = \"Xp\"\nstart_level = \"xp\"\nhp = 8\nstats = { strength = 30 }\n",
     );
     Content::load(&files).map(Arc::new)
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn said(world: &World) -> Vec<String> {

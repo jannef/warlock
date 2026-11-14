@@ -2,10 +2,10 @@
 //! first-entry message, what the player knows of a room, and saving.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::noise::{self, Act};
 use crate::test_support::builtin;
+use crate::test_support::run as apply;
 
 /// A hall, 25 wide: the west part plain, the east part (walls included) the special room
 /// `effect`. The player stands in the plain part unless the map puts them elsewhere.
@@ -56,12 +56,6 @@ fn teleport(world: &World, p: Pos) -> World {
     let player = state.player;
     state.actors.get_mut(&player).expect("player").pos = p;
     World::from_state(world.content().clone(), state).expect("valid state")
-}
-
-fn apply(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn last_message(world: &World) -> String {

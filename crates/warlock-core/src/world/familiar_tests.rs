@@ -4,11 +4,12 @@
 //! dumps), a companion beside it, and saves.
 
 use super::*;
-use crate::action::{AttackKind, parse_actions};
+use crate::action::AttackKind;
 use crate::character::CharacterSpec;
 use crate::content::{Content, ContentFiles, Stance};
 use crate::perception::Perception;
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::run;
 use crate::world::stance_between;
 use std::sync::{Arc, LazyLock};
 
@@ -81,12 +82,6 @@ fn hall(seed: u64) -> World {
         Some(&spec("human,female,witch")),
     )
     .expect("world")
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn said(w: &World) -> Vec<String> {

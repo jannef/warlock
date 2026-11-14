@@ -7,6 +7,7 @@ use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 /// The sister's words and services, added to the built-in dialogue.
 const SISTER: &str = r##"
@@ -77,12 +78,6 @@ fn content(gold: u32) -> Arc<Content> {
 
 fn world(gold: u32) -> World {
     World::new(content(gold), "chapel", None).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
 }
 
 fn gold(w: &World) -> u32 {

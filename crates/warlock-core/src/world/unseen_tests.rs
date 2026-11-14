@@ -4,12 +4,12 @@
 //! its blows, the self-buff step, the wisp's light, the stalker's hunt, and the roster rows.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::{Content, ContentFiles, Invisible};
 use crate::geom::Pos;
 use crate::noise::SoundKind;
 use crate::perception::Perception;
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::run;
 use std::sync::Arc;
 
 /// A room, the player at its west end, then a second room behind a wall (no way between them
@@ -71,12 +71,6 @@ fn only_creature(w: &World) -> ActorId {
         .collect();
     assert_eq!(found.len(), 1, "one creature");
     found[0]
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn put(w: &mut World, id: ActorId, at: Pos) {

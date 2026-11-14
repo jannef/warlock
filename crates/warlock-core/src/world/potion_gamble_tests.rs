@@ -4,9 +4,9 @@
 //! statuses, `drain_stat`); the loader's checks.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::stats::Stat;
+use crate::test_support::run;
 
 /// The test content: a lit hall, the player at `@` carrying `pack`; `more` adds files.
 fn content_with(pack: &str, more: &[(&str, &str)]) -> Result<Content, String> {
@@ -34,12 +34,6 @@ fn world_of(content: Content) -> World {
 
 fn world(pack: &str) -> World {
     world_of(content_with(pack, &[]).expect("test content is valid"))
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|action| w.apply(action))
-        .collect()
 }
 
 fn said(w: &World) -> Vec<String> {

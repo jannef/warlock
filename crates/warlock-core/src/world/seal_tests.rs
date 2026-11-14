@@ -12,6 +12,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::Trained;
 use crate::stats::{PerStat, Stats};
+use crate::test_support::run as apply;
 use std::sync::LazyLock;
 
 const ROOM: &str = "\
@@ -144,12 +145,6 @@ fn last(w: &World) -> String {
 
 fn said(w: &World, line: &str) -> bool {
     w.messages().iter().any(|m| m.text == line)
-}
-
-fn apply(w: &mut World, text: &str) {
-    for action in parse_actions(text).expect("parses") {
-        w.apply(&action);
-    }
 }
 
 fn recipe(w: &World, id: &str) -> crate::content::RecipeId {

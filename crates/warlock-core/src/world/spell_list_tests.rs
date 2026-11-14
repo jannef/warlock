@@ -8,6 +8,7 @@ use crate::action::parse_actions;
 use crate::content::{ActionKind, ContentFiles, Reading, SpellPurpose, TalentEffect};
 use crate::talent::MagicEffect;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 /// The pack: a, two scrolls of magic missile; b, one of haste; c, one of web; d, one of sleep;
 /// e, one of fireball.
@@ -35,12 +36,6 @@ fn world() -> World {
     );
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     World::new(content, "hall", Some(3)).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
 }
 
 fn said(w: &World) -> Vec<String> {

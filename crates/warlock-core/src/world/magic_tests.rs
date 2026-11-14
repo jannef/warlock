@@ -13,6 +13,7 @@ use crate::noise::Act;
 use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 // A lit room: the player, and a kobold behind a door.
 const LEVEL: &str = r##"
@@ -46,12 +47,6 @@ fn content() -> Arc<Content> {
 
 fn world() -> World {
     World::new(content(), "vault", None).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions parse") {
-        w.apply(&action);
-    }
 }
 
 /// One `object` with the affixes `(id, value)` (each tier 1), magic or (with a name) rare.

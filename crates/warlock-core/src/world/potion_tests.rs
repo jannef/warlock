@@ -3,10 +3,10 @@
 //! drinker and Nose for draughts; the content checks.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::run;
 
 /// Every potion type, by id.
 const POTIONS: &[&str] = &[
@@ -46,12 +46,6 @@ fn content_with(pack: &str, more: &[(&str, &str)]) -> Arc<Content> {
 
 fn world(pack: &str) -> World {
     World::new(content_with(pack, &[]), "potion_hall", Some(7)).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn said(w: &World) -> Vec<String> {

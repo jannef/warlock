@@ -7,6 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
+use crate::test_support::run;
 use std::sync::LazyLock;
 
 const TERRAIN: &str = r##"
@@ -95,12 +96,6 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
 
 fn world(scenario: &str) -> World {
     World::new(CONTENT.clone(), scenario, None).expect("world")
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 const RAT: ActorId = ActorId(1);

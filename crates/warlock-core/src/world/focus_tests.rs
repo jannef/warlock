@@ -9,6 +9,7 @@ use crate::character::CharacterSpec;
 use crate::content::{ClassActive, Factor, ResourceId, percent_of};
 use crate::replay::Replay;
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::run;
 
 /// A human ranger in the showcase (seed 7), with their kit, at `level` with every choice spent.
 fn ranger(level: u8) -> World {
@@ -32,12 +33,6 @@ fn ranger(level: u8) -> World {
     w.player_mut().talents.forget("steady_hand");
     super::class_active_tests::at_normal_speed(&mut w);
     w
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn focus(w: &World) -> ResourceId {

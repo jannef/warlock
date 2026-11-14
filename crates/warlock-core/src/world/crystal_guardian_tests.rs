@@ -6,8 +6,8 @@
 //! Killed unbound, it forms again in the hollow. The load checks of a lure quest; a replay.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::{ContentFiles, StairsDir};
+use crate::test_support::run as act;
 use std::sync::LazyLock;
 
 const QUEST: &str = "crystal_guardian";
@@ -28,12 +28,6 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
 
 fn town() -> World {
     World::new(CONTENT.clone(), "gimmwic", None).expect("a run in Gimmwīc")
-}
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 /// What the player has been told, and what is still to be told this turn.

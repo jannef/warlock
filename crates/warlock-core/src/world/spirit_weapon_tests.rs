@@ -12,6 +12,7 @@ use crate::dump::{self, Layer};
 use crate::magic::describe::{self, LineKind};
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::run;
 use std::sync::LazyLock;
 
 const SPIRIT: ClassActive = ClassActive::SpiritWeapon;
@@ -42,12 +43,6 @@ fn hunter() -> World {
     let mut w = plain();
     w.player_mut().talents.take("spirit_weapon", None);
     w
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
 }
 
 fn last(w: &World) -> String {

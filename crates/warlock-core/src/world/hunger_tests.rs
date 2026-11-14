@@ -12,6 +12,7 @@ use crate::hunger::Hunger;
 use crate::replay::Replay;
 use crate::rot::Stage as Age;
 use crate::stats::Stat;
+use crate::test_support::run;
 
 /// The built-in hunger file, to edit for a test.
 const HUNGER: &str = include_str!("../../../../assets/data/hunger.toml");
@@ -96,14 +97,6 @@ fn world_in(content: &Arc<Content>, scenario: &str) -> World {
 fn as_character(scenario: &str, spec: &str) -> World {
     let spec: CharacterSpec = spec.parse().expect("a character");
     World::with_character(content(), scenario, None, Some(&spec)).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    parse_actions(actions)
-        .expect("actions")
-        .iter()
-        .map(|a| w.apply(a))
-        .collect()
 }
 
 fn texts(w: &World) -> Vec<String> {

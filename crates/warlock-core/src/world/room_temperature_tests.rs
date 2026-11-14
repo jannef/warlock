@@ -7,6 +7,7 @@ use super::*;
 use crate::content::ContentFiles;
 use crate::temperature::Temperature;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 /// A hall, 30 wide: plain water at x 3 to 5, a sweltering chamber over x 10 to 19 (water at 13 to
 /// 15), a frigid hall over x 20 to 29 (water at 23 to 25), each unless the test leaves it out.
@@ -50,12 +51,6 @@ fn world(temperature: i32, rooms: &[&str]) -> World {
     );
     let content = Arc::new(Content::load(&files).expect("fixture content is valid"));
     World::new(content, "test_heat", None).expect("world")
-}
-
-fn run(w: &mut World, text: &str) {
-    for action in crate::action::parse_actions(text).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn mm(w: &World, p: Pos) -> u32 {

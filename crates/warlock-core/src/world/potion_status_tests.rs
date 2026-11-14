@@ -4,9 +4,9 @@
 //! of kind `status` (the potions wave 2 design §4.1) and their checks.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::stats::Stat;
+use crate::test_support::run;
 
 /// The test content: a dark hall (no light at all), the player at `@` carrying `pack`; `more`
 /// adds or replaces files.
@@ -36,12 +36,6 @@ fn world_with(pack: &str, more: &[(&str, &str)]) -> World {
 
 fn world(pack: &str) -> World {
     world_with(pack, &[])
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 /// The player waits until `minutes` of game time have passed.

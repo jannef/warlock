@@ -11,6 +11,7 @@ use crate::geom::Pos;
 use crate::perception::Perception;
 use crate::replay::Replay;
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::run;
 
 const ME: Pos = Pos::new(7, 15);
 
@@ -48,12 +49,6 @@ fn grant(w: &mut World, id: &str) {
     });
     me.talents =
         serde_json::from_value(serde_json::to_value(&talents).expect("json")).expect("talents");
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn set_focus(w: &mut World, value: u16) {

@@ -5,8 +5,8 @@
 
 use super::split::Split;
 use super::*;
-use crate::action::parse_actions;
 use crate::content::{ActionKind, Affliction, ContentFiles, StatusId};
+use crate::test_support::run;
 
 /// A breeder of its own kind at no cost, for the self-pool.
 const BREEDER: &str = r##"
@@ -51,12 +51,6 @@ fn world_with(creature: &str, wield: &str) -> World {
     );
     let content = Arc::new(Content::load(&files).expect("the fixture content loads"));
     World::new(content, "split_hall", Some(5)).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn of_kind<'w>(w: &'w World, kind: &str) -> Vec<&'w Actor> {

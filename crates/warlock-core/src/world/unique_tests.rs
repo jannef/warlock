@@ -4,11 +4,12 @@
 //! attack's profile), Vision (the eyes), and Ward (`World::afflict`).
 
 use super::*;
-use crate::action::{AttackKind, parse_actions};
+use crate::action::AttackKind;
 use crate::combat::{Blow, Strike};
 use crate::content::{Affliction, ContentFiles, OnHit, Power, StatusId};
 use crate::magic::describe::{self, LineKind};
 use crate::magic::{Affix, Rarity};
+use crate::test_support::run;
 
 // A dark room: the player, and a giant rat three cells off (no light of its own).
 const LEVEL: &str = r##"
@@ -39,12 +40,6 @@ fn files() -> ContentFiles {
 fn world() -> World {
     let content = Arc::new(Content::load(&files()).expect("test content is valid"));
     World::new(content, "den", Some(1)).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions parse") {
-        w.apply(&action);
-    }
 }
 
 fn unique(w: &World, id: &str) -> Stack {

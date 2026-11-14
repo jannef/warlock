@@ -4,10 +4,10 @@
 
 use super::patron::{self, Patron};
 use super::*;
-use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::magic::worked::Quality;
 use crate::test_support::CONTENT;
+use crate::test_support::run as act;
 
 /// The patron's corner of the Gæsthūs, and the cell west of it.
 const CORNER: Pos = Pos::new(50, 23);
@@ -18,12 +18,6 @@ fn run(character: &str) -> World {
     let spec: CharacterSpec = character.parse().expect("a character");
     World::start_run(CONTENT.clone(), "ceaptun", None, Some(&spec), None, true)
         .expect("a run in Cēaptūn")
-}
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn said(world: &World) -> Vec<String> {

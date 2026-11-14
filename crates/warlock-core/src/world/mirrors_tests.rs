@@ -3,11 +3,12 @@
 //! through one, the creatures' aim from outside, and the `actors` dump.
 
 use super::*;
-use crate::action::{Event, parse_actions};
+use crate::action::Event;
 use crate::content::ContentFiles;
 use crate::dump::{Layer, layer_rows};
 use crate::object::Stack;
 use crate::test_support::builtin;
+use crate::test_support::run;
 use std::collections::BTreeSet;
 
 /// A hall, 31 wide, fully lit: the east part (x 14 to 24, walls included) a hall of mirrors with
@@ -62,11 +63,6 @@ fn kobold(w: &World, x: i32) -> ActorId {
 fn put_player(w: &mut World, p: Pos) {
     w.player_mut().pos = p;
     w.apply(&Action::Wait);
-}
-
-fn run(w: &mut World, text: &str) -> Vec<Outcome> {
-    let actions = parse_actions(text).expect("actions");
-    actions.iter().map(|a| w.apply(a)).collect()
 }
 
 fn said(w: &World, line: &str) -> bool {

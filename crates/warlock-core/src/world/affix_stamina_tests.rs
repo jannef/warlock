@@ -8,12 +8,12 @@
 
 use super::class_active_tests::beside;
 use super::*;
-use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, ResourceId};
 use crate::dump::{self, Layer};
 use crate::magic::{Affix, Magic, Rarity};
 use crate::stats::{PerStat, Stats};
+use crate::test_support::run;
 
 const AFFIXES: &str = r#"
 [[prefix]]
@@ -88,12 +88,6 @@ fn plain_world() -> World {
     let mut w = World::new(content(), "showcase", Some(7)).expect("world");
     w.player_mut().talents = Default::default();
     w
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn pool(w: &World, id: &str) -> ResourceId {

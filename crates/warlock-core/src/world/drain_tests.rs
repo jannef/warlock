@@ -11,6 +11,7 @@ use crate::content::{Affliction, ContentFiles, Drain};
 use crate::replay::Replay;
 use crate::stats::{DRAIN_FLOOR, PerStat, Stat, Stats};
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::run;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -113,12 +114,6 @@ fn content(map: &str, scenario: &str) -> Arc<Content> {
 
 fn world_on(map: &str, scenario: &str, seed: u64) -> World {
     World::new(content(map, scenario), "crypt", Some(seed)).expect("world")
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn said(world: &World) -> Vec<String> {

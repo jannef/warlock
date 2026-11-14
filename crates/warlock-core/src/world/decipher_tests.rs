@@ -11,6 +11,7 @@ use crate::replay::Replay;
 use crate::rng::Rng;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::Stat;
+use crate::test_support::run;
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
@@ -70,12 +71,6 @@ fn train(w: &mut World, id: &str, value: Option<u16>) {
         all.push((skill, Trained { value, marks: 0 }));
     }
     *skills = all.into_iter().collect();
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
 }
 
 fn said(w: &World, text: &str) -> bool {

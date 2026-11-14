@@ -6,7 +6,6 @@
 
 use super::fight::Harm;
 use super::*;
-use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::combat::Category;
 use crate::content::{Benefit, CombatStance, Factor, MAX_RANK, WeaponSkillId};
@@ -14,6 +13,7 @@ use crate::equipment::{free_slot, slots_taken};
 use crate::object::Stack;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::run;
 
 /// A human warrior in the showcase, every score 14.
 fn world() -> World {
@@ -22,12 +22,6 @@ fn world() -> World {
         World::with_character(BUILTIN.clone(), "showcase", Some(7), Some(&spec)).expect("world");
     w.player_mut().stats = Stats::new(PerStat::splat(14), PerStat::splat(14));
     w
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn last(world: &World) -> String {

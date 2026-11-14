@@ -7,6 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::combat::Category;
 use crate::content::ContentFiles;
+use crate::test_support::run;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -180,12 +181,6 @@ fn world(map: &str, dark: bool) -> World {
     );
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     World::new(content, "crypt", Some(1)).expect("world")
-}
-
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| world.apply(a))
-        .collect()
 }
 
 /// The first creature of type `id` on the level.

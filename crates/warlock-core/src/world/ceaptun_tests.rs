@@ -10,6 +10,7 @@ use crate::action::parse_actions;
 use crate::content::{ContentFiles, DialogueId, ServiceKind, Stance};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
+use crate::test_support::run as act;
 use std::sync::LazyLock;
 
 const SCENARIO: &str = include_str!("../../../../assets/campaigns/ascmearc/scenarios/ceaptun.toml");
@@ -36,12 +37,6 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
 
 fn town() -> World {
     World::new(CONTENT.clone(), "ceaptun", None).expect("a run in Cēaptūn")
-}
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn said(world: &World) -> Vec<String> {

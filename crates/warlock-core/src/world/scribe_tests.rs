@@ -8,6 +8,7 @@ use crate::action::parse_actions;
 use crate::content::{ContentFiles, Reading};
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::run;
 use crate::time::Duration;
 
 /// The pack: a, two blank scrolls; b, a dagger.
@@ -43,12 +44,6 @@ fn world_with(map: &str, mana: u16, pack: &str) -> World {
 
 fn world() -> World {
     world_with(HALL, 200, PACK)
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
 }
 
 fn last(w: &World) -> String {

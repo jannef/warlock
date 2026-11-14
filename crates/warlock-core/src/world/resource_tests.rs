@@ -10,6 +10,7 @@ use crate::character::CharacterSpec;
 use crate::combat::Strike;
 use crate::content::{Build, ClassActive, ContentFiles, ResourceId};
 use crate::replay::Replay;
+use crate::test_support::run;
 use crate::time::Duration;
 
 // A lit hall without creatures; a den with a kobold east of the player.
@@ -73,12 +74,6 @@ fn content(costly: bool) -> Arc<Content> {
 
 fn world(scenario: &str) -> World {
     World::new(content(false), scenario, None).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn id(w: &World, name: &str) -> ResourceId {

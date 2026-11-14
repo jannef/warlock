@@ -9,6 +9,7 @@ use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
+use crate::test_support::run as act;
 use std::sync::LazyLock;
 
 /// Wat One-Eye's post, by the Gildhalle's far wall.
@@ -25,12 +26,6 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
 
 fn town() -> World {
     World::new(CONTENT.clone(), "ceaptun", None).expect("a run in Cēaptūn")
-}
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn said(world: &World) -> Vec<String> {

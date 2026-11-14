@@ -9,6 +9,7 @@ use crate::action::{SpellShape, parse_actions};
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -285,12 +286,6 @@ fn world_with(map: &str, scenario: &str) -> World {
 
 fn world(map: &str) -> World {
     world_with(map, "")
-}
-
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| world.apply(a))
-        .collect()
 }
 
 fn texts(world: &World) -> Vec<String> {

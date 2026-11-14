@@ -10,6 +10,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::rot::{self, Stage as Age};
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 /// The built-in hunger file, to edit for a test.
 const HUNGER: &str = include_str!("../../../../assets/data/hunger.toml");
@@ -75,12 +76,6 @@ fn content() -> Arc<Content> {
 
 fn larder(content: &Arc<Content>) -> World {
     World::new(content.clone(), "larder", None).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn texts(w: &World) -> Vec<String> {

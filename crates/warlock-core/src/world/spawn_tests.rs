@@ -3,10 +3,10 @@
 //! determinism.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::{ContentFiles, LevelTemplate};
 use crate::perception::Perception;
 use crate::test_support::builtin;
+use crate::test_support::run;
 use crate::time::{Duration, GameTime};
 use std::collections::BTreeSet;
 
@@ -118,12 +118,6 @@ fn files_with(haunt: &str) -> ContentFiles {
 
 fn haunt(seed: u64) -> World {
     World::new(content(), "haunt", Some(seed)).expect("world")
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn said(world: &World) -> Vec<String> {

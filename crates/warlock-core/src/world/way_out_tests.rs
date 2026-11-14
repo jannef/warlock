@@ -8,15 +8,10 @@ use crate::action::parse_actions;
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::run as act;
 
 /// Ūtgang's way in on the Ascmearc, on the volcano's south foot.
 const UTGANG: Pos = Pos::new(103, 17);
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
 
 fn said(world: &World) -> Vec<String> {
     world.messages().iter().map(|m| m.text.clone()).collect()

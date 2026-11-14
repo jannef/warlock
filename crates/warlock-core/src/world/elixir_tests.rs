@@ -3,9 +3,9 @@
 //! of the `elixir` use, Quick study of the body, and where elixirs come from.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::run;
 
 /// The six elixirs, by id, with the stat each raises.
 const ELIXIRS: &[(&str, Stat)] = &[
@@ -40,12 +40,6 @@ fn world_seeded(pack: &str, seed: u64, potential: u8) -> World {
 
 fn world(pack: &str) -> World {
     world_seeded(pack, 7, 11)
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn said(w: &World) -> Vec<String> {

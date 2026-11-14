@@ -7,6 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
+use crate::test_support::run;
 
 /// The teacher's words and service, added to the built-in dialogue.
 const TEACHER: &str = r##"
@@ -71,12 +72,6 @@ fn world(gold: u32) -> World {
     let pick = (w.state().player().inventory.len()).to_string();
     run(&mut w, &format!("pickup equip:tool:{pick}"));
     w
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in &parse_actions(actions).expect("actions") {
-        w.apply(action);
-    }
 }
 
 fn gold(w: &World) -> u32 {

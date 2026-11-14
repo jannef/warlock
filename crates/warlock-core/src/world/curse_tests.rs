@@ -5,11 +5,11 @@
 
 use super::*;
 use crate::ability::{Ability, Unavailable};
-use crate::action::parse_actions;
 use crate::alignment::Score;
 use crate::content::{ClassActive, ContentFiles, CreatureId, CreatureSpawn};
 use crate::dump::{self, Layer};
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 /// A hall, 30 wide, with a cursed room over x 10 to 19. Lit, so the player sees all of it.
 const HALL: &str = "\
@@ -59,12 +59,6 @@ fn content(pervaded: bool) -> Arc<Content> {
 
 fn world(pervaded: bool) -> World {
     World::new(content(pervaded), "test_curse", None).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn said(w: &World, line: &str) -> bool {

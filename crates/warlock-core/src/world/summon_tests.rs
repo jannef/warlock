@@ -3,9 +3,9 @@
 //! Silence stops it; what comes is a creature like any other.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -155,12 +155,6 @@ fn world_with(summon: &str, mana: u16, map: &str) -> World {
 
 fn world() -> World {
     world_with(RAISES, 100, HALL)
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn summoner(w: &World) -> &Actor {

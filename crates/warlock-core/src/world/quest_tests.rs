@@ -8,6 +8,7 @@ use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -318,12 +319,6 @@ fn files_with(map: &str, quests: &str) -> ContentFiles {
 fn world_on(map: &str) -> World {
     let content = Content::load(&files_with(map, QUESTS)).expect("test content is valid");
     World::new(Arc::new(content), "yard", None).expect("world")
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn ask(world: &mut World, dir: Dir, topic: &str) -> Outcome {

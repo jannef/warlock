@@ -3,9 +3,9 @@
 //! kill quest of any campaign draws a creature type the talent calms, or a tag one carries.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Goal};
+use crate::test_support::run as act;
 use std::sync::LazyLock;
 
 const LEOFRIC: Pos = Pos::new(60, 26);
@@ -26,12 +26,6 @@ fn town(class: &str) -> World {
     w.state.actors.get_mut(&id).expect("player").pos = LEOFRIC.step(Dir::W);
     w.perceive(&mut Vec::new());
     w
-}
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn def<'a>(world: &'a World, id: &str) -> &'a crate::content::QuestDef {

@@ -5,13 +5,13 @@
 //! system is held to the coverage bar.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::damage::{Damage, ResistanceWord};
 use crate::equipment::{free_slot, slots_taken};
 use crate::object::Stack;
 use crate::stats::{PerStat, Stats};
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::run;
 
 /// A human warrior in the showcase, every score 14, holding nothing.
 fn world() -> World {
@@ -27,12 +27,6 @@ fn world() -> World {
     me.stats = Stats::new(PerStat::splat(14), PerStat::splat(14));
     me.equipment = Default::default();
     w
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn last(world: &World) -> String {

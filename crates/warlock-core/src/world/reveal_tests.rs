@@ -11,6 +11,7 @@ use crate::content::{ContentFiles, RevealWhen};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::run as act;
 
 const OVERWORLD: &str = include_str!("../../../../assets/campaigns/showcase/levels/overworld.toml");
 const QUESTS: &str =
@@ -98,12 +99,6 @@ fn glyph(world: &World, layer: Layer, at: Pos) -> char {
         .chars()
         .nth(at.x as usize)
         .unwrap_or(' ')
-}
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 #[test]

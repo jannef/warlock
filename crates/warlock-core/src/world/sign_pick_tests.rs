@@ -5,7 +5,7 @@
 
 use super::*;
 use crate::ability::{Ability, Unavailable};
-use crate::action::{AttackKind, parse_actions};
+use crate::action::AttackKind;
 use crate::character::CharacterSpec;
 use crate::combat::Profile;
 use crate::content::{Sign, SignActive, StatusId};
@@ -14,6 +14,7 @@ use crate::geom::Pos;
 use crate::stats::{PerStat, Stats};
 use crate::talent::{Candidate, Refusal, may_take};
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::run;
 
 /// The fourteen picks with the sign each asks for (`(animal, element)`, one of them set).
 const PICKS: [(&str, Option<&str>, Option<&str>); 14] = [
@@ -59,12 +60,6 @@ fn with(animal: &str, element: &str, id: &str) -> World {
     let mut w = born(animal, element);
     w.player_mut().talents.take(id, None);
     w
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn last(w: &World) -> String {

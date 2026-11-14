@@ -5,6 +5,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
+use crate::test_support::run;
 use std::sync::LazyLock;
 
 const TERRAIN: &str = r##"
@@ -285,14 +286,6 @@ static CONTENT: LazyLock<Arc<Content>> =
 
 fn world(scenario: &str) -> World {
     World::new(CONTENT.clone(), scenario, None).expect("world")
-}
-
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    parse_actions(actions)
-        .expect("actions")
-        .iter()
-        .map(|a| world.apply(a))
-        .collect()
 }
 
 // The track's creatures, by speed.

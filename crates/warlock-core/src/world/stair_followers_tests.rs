@@ -4,8 +4,9 @@
 
 use super::fight::Harm;
 use super::*;
-use crate::action::{Event, parse_actions};
+use crate::action::Event;
 use crate::content::ContentFiles;
+use crate::test_support::run;
 
 /// The player stands on stairs down and up (below): `k` beside them, `f` two cells off.
 const TOP: &str = "\
@@ -86,12 +87,6 @@ fn world_of(f: &Fixture) -> World {
 
 fn world() -> World {
     world_of(&Fixture::default())
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
 }
 
 /// The creature that started at `at`.

@@ -7,6 +7,7 @@ use crate::content::{ContentFiles, Stance};
 use crate::noise::SoundKind;
 use crate::replay::Replay;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -213,12 +214,6 @@ fn world_of(hall: &str, allies: Option<&str>) -> World {
 
 fn world() -> World {
     world_of(HALL, Some(ALLIES))
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn said(w: &World) -> Vec<String> {

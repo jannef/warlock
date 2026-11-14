@@ -3,10 +3,11 @@
 //! walker, Beast-friend. Each changes the one rule it names.
 
 use super::*;
-use crate::action::{AttackKind, parse_actions};
+use crate::action::AttackKind;
 use crate::combat::{Blow, Strike};
 use crate::content::{ContentFiles, Stance};
 use crate::light::Light;
+use crate::test_support::run;
 use std::sync::LazyLock;
 
 /// A pitch-dark corridor: the player at its west end, a giant rat seven cells east.
@@ -60,11 +61,6 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
 
 fn world(scenario: &str) -> World {
     World::new(CONTENT.clone(), scenario, None).expect("scenario starts")
-}
-
-fn run(world: &mut World, text: &str) -> Vec<Outcome> {
-    let actions = parse_actions(text).expect("actions");
-    actions.iter().map(|a| world.apply(a)).collect()
 }
 
 /// The player takes talent `id` (one rank more), without a level to pick it at, and looks

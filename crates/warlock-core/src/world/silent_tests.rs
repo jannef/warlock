@@ -3,8 +3,9 @@
 //! creature's spells too; it eases soon after leaving.
 
 use super::*;
-use crate::action::{Rest, parse_actions};
+use crate::action::Rest;
 use crate::content::{ActionKind, ContentFiles, StatusId};
+use crate::test_support::run;
 use crate::time::Duration;
 
 /// A hall, 25 wide: the west part plain, the east part (x 14 on, walls included) a silent vault
@@ -57,12 +58,6 @@ fn creature(w: &World) -> &Actor {
     (w.state.actors.values())
         .find(|a| a.kind == ActorKind::Creature)
         .expect("a creature")
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
 }
 
 fn last(w: &World) -> String {

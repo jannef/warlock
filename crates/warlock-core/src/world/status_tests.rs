@@ -10,6 +10,7 @@ use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::status::Effect;
 use crate::test_support::builtin;
+use crate::test_support::run;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -229,14 +230,6 @@ fn hp(w: &World) -> i32 {
 fn set_hp(w: &mut World, hp: i32) {
     let player = w.state.player;
     w.state.actors.get_mut(&player).expect("player").hp = hp;
-}
-
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    parse_actions(actions)
-        .expect("actions")
-        .iter()
-        .map(|a| world.apply(a))
-        .collect()
 }
 
 fn messages(world: &World) -> Vec<String> {

@@ -5,12 +5,12 @@
 //! nose of its own for her, no buffs.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::{Content, ContentFiles};
 use crate::geom::Pos;
 use crate::perception::Perception;
 use crate::sight::{self, LineOfSight};
 use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::run;
 use std::sync::Arc;
 
 /// Two dim rooms, a wall between them and a closed door in it: the player in the west room
@@ -69,12 +69,6 @@ fn hall_with(kobold: bool, door: char, beast: &str) -> World {
     let mut w = World::new(content, "bond_hall", Some(7)).expect("world");
     run(&mut w, &format!("ally:{beast}"));
     w
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn bond(w: &mut World) {
