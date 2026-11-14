@@ -47,3 +47,11 @@ impl SwimRules {
         })
     }
 }
+
+impl super::RulesFile for SwimRules {
+    const PATH: &'static str = "data/swim.toml";
+
+    fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
+        Self::parse(path, text, content)
+    }
+}

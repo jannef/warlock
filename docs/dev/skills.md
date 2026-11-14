@@ -241,7 +241,7 @@ an item's Swim bonus alone asks no check. Tests `world/swim_tests.rs`.
 **Deep water** (spec §8 "Skills": Swim, #1019; design §6.4 S2) is `world/swim.rs`, one line each
 in `player_moves`, the refused actions (`pick_up_objects`, `drop_objects`, `start_rest`, the
 search dispatch, `start_dig`, lighting in `use_tool`), and `equip`. The terrain's `swim = true`
-with `walkable = false` (`content/mod.rs` checks the pair) is why nothing else needs to know of it:
+with `walkable = false` (`content/load_world.rs` checks the pair) is why nothing else needs to know of it:
 paths, travel, spawning, teleports, blinks, and landings treat it as impassable. `at_the_shore`
 stops a step from anything else: water not in the level's memory is written there, with no time, so
 the step cannot go in unasked (presentation asks only of what the player knows,

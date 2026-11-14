@@ -6,6 +6,7 @@ use super::*;
 use crate::ability::{Ability, Aim, Unavailable};
 use crate::action::{parse_actions, position_text};
 use crate::content::{ActionKind, ClassActive, ContentFiles, ItemHarm};
+use crate::item_list::ItemList;
 use crate::magic::Worked;
 
 const MEND: ClassActive = ClassActive::MakeDo;
@@ -120,19 +121,28 @@ fn without_it_a_mend_is_refused_with_no_time() {
 #[test]
 fn the_row_is_greyed_with_nothing_to_mend() {
     let mut w = world(-100);
-    assert_eq!(Ability::Class(MEND).aim(&w.content), Aim::Item);
+    assert_eq!(
+        Ability::Class(MEND).aim(&w.content),
+        Aim::Item(ItemList::MakeDo)
+    );
     assert_eq!(row(&w), Some(Some(Unavailable::NothingToMend)));
+    assert!(w.perception().item_choices(ItemList::MakeDo).is_empty());
     damage(&mut w, 0, 0);
     assert_eq!(row(&w), Some(None));
+    // The list offers the damaged sword; Salvage the sword too, not the cloth cloak.
+    assert_eq!(w.perception().item_choices(ItemList::MakeDo), [0]);
+    assert_eq!(w.perception().item_choices(ItemList::Salvage), [0]);
     let layer = crate::dump::parse_layers("abilities").expect("layer")[0];
     let rows = crate::dump::layer_rows(&w, layer);
     assert!(
         rows.contains(&"Make do and mend (class): an item you carry".to_string()),
         "{rows:?}"
     );
-    // Wielded, it is not one to mend.
+    // Wielded, it is not one to mend, nor to take apart.
     run(&mut w, "equip:main_hand:a");
     assert_eq!(row(&w), Some(Some(Unavailable::NothingToMend)));
+    assert!(w.perception().item_choices(ItemList::MakeDo).is_empty());
+    assert!(w.perception().item_choices(ItemList::Salvage).is_empty());
 }
 
 #[test]

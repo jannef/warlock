@@ -152,6 +152,7 @@ mod enchant;
 mod encounter;
 mod encounter_area;
 mod endless;
+mod enter;
 mod equip;
 mod escort;
 mod escort_waits;

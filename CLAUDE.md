@@ -3,7 +3,8 @@
 Warlock is a GPU-rendered ASCII roguelike in Rust + Bevy. **`specification.md` is the source of
 truth** for what to build (an index over `spec/`, one file per section); this file is about *how*
 to work on it, and `docs/dev/` holds the notes per subsystem (the index is under "Architecture").
-Update them together whenever behavior, commands, or architecture change.
+Each kind of fact has one home and the others link to it (`docs/dev/merging.md` "One home per
+fact"): a change edits the homes of the facts it changes.
 
 ## Toolchain
 
@@ -69,6 +70,7 @@ then read the PNG.
 crates/warlock-core   plain Rust, no Bevy, deterministic simulation
 crates/warlock-cli    headless dev tool on top of core (no Bevy)
 crates/warlock        Bevy app: rendering, input, UI, effects, platform
+crates/workspace-hack no code: pins features so every member shares one warlock-core build (docs/dev/merging.md)
 xtask                 screenshot capture, golden-image comparison, vast level generator, benchmarks
 assets                fonts, data definitions, vaults, campaigns (each a world: levels, scenarios, ...)
 ```
@@ -255,7 +257,8 @@ Known differences from older Bevy:
 - `Material2d`, `Mesh2d`, `MeshMaterial2d`, `AlphaMode2d` live in `bevy::sprite_render`.
 - Buffered events are **messages**: `MessageWriter<AppExit>`, `MessageReader<T>`; observers take
   `On<E>`.
-- Bevy features are trimmed in the workspace `Cargo.toml` (`default-features = false`). Adding a
+- Bevy features are trimmed in the workspace `Cargo.toml` (`default-features = false`, leaf
+  features only: no `bevy_text`, `bevy_state`, `bevy_animation`, or gizmos, #1590). Adding a
   Bevy feature is a deliberate change. `tonemapping_luts` is deliberately off (it pulls `ruzstd`
   0.8, RUSTSEC-2026-0344); cameras use `Tonemapping::None`, which also keeps palette colors exact.
 

@@ -55,6 +55,14 @@ impl SmiteRules {
     }
 }
 
+impl super::RulesFile for SmiteRules {
+    const PATH: &'static str = "data/smite.toml";
+
+    fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
+        Self::parse(path, text, content)
+    }
+}
+
 impl Content {
     /// Whether creature type `id` is unholy (spec §8 "Class abilities": "Smite"): it carries a
     /// tag of `data/smite.toml`'s `unholy` list. The one reader of the list; nothing is unholy

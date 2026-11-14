@@ -1,5 +1,7 @@
 # Warlock — Campaign: the game world, its overworld, the first town, the nearest dungeons, danger levels
 
+**Built; this file is history.** Current behaviour is in spec §3b and `docs/dev/campaign.md` and `docs/dev/overworld.md`.
+
 Design document for the owner's review (2026-10-25). Written against `origin/main` at 953fd30b. Nothing here is implemented; §13 cuts it into issues. Revision 2 (2026-10-25) records the owner's answers to the first revision's sixteen open questions as decisions, each in the section it belongs to, marked **Decision (2026-10-25)**; §14 lists where each went. Nothing is open.
 
 ## Contents

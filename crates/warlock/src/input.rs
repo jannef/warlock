@@ -34,8 +34,8 @@ use crate::settings::fixed::{self, AimKey};
 use crate::settings::mods::{self, Mods};
 use crate::ui::step_dialogs::{burst_dialog, sale_dialog, step_dialog, step_screen, treat_dialog};
 use crate::ui::{
-    Aim, AimKind, DevOverlays, Dialog, IdentifyBy, LastTarget, MenuChoice, Press, ScreenAction,
-    ScreenName, Screens,
+    Aim, AimKind, DevOverlays, Dialog, IdentifyBy, LastTarget, MenuChoice, ObjectList, Press,
+    ScreenAction, ScreenName, Screens,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::input::ButtonState;
@@ -43,7 +43,8 @@ use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use warlock_core::ability::{self, Ability};
 use warlock_core::beside::{Beside, Way};
-use warlock_core::content::{ClassActive, RigId};
+use warlock_core::content::RigId;
+use warlock_core::item_list::ItemList;
 use warlock_core::perception::PerceptionView;
 use warlock_core::{Action, Dir, Pos};
 
@@ -315,14 +316,14 @@ impl Gameplay<'_> {
         let game = self.game.as_ref()?;
         let by = match ability {
             Ability::Spell(spell) => IdentifyBy::Spell(spell),
-            // Make do and mend has its own list (`use_ability`).
-            Ability::Class(ClassActive::MakeDo) => return None,
             Ability::Class(active) => IdentifyBy::Class(active),
             _ => return None,
         };
         let usable = (game.world.perception().abilities().iter())
             .any(|own| own.ability == ability && own.unavailable.is_none());
-        (usable && ability.aim(game.world.content()) == ability::Aim::Item).then_some(by)
+        let identifies =
+            ability.aim(game.world.content()) == ability::Aim::Item(ItemList::Identify);
+        (usable && identifies).then_some(by)
     }
 
     /// Uses `ability`: asks for what it needs (a direction in the message line, a cell in the
@@ -342,21 +343,10 @@ impl Gameplay<'_> {
             (true, ability::Aim::Cell | ability::Aim::Corpse) => {
                 self.aim(AimKind::Ability(ability));
             }
-            // Give's and Decipher's lists; the identify list asks which stack (`identify_by`,
-            // before this).
-            (true, ability::Aim::Item) => {
-                if ability == Ability::Give {
-                    return Some(ScreenAction::Open(ScreenName::Give));
-                }
-                if ability == Ability::Salvage {
-                    return Some(ScreenAction::Open(ScreenName::Salvage));
-                }
-                if ability == Ability::Class(ClassActive::MakeDo) {
-                    return Some(ScreenAction::Open(ScreenName::MakeDo));
-                }
-                if ability == Ability::Decipher {
-                    return Some(ScreenAction::Open(ScreenName::Decipher));
-                }
+            // The list the ability names asks which stack (the identify list opens for the
+            // ability used, `identify_by`, before this).
+            (true, ability::Aim::Item(list)) => {
+                return ObjectList::screen_of(list).map(ScreenAction::Open);
             }
             (true, ability::Aim::Nothing) => {
                 if let Some(action) = ability.action(&content, None) {

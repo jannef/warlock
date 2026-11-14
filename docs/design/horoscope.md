@@ -1,5 +1,7 @@
 # Warlock — Horoscope revamp: sign abilities, lucky days, the sign revealed after the race
 
+**Built; this file is history.** Current behaviour is in spec §7 "Horoscope" and `docs/dev/character-creation.md`.
+
 Design document for the owner's review (2026-10-20; revised the same day with the owner's answers, §12). Written against `origin/main` at 247d48cf and the approved progression design (`docs/design/progression.md`). Nothing here is implemented; §11 cuts it into issues.
 
 ## Contents

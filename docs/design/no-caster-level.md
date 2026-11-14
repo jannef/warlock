@@ -1,5 +1,7 @@
 # Warlock — No caster level: learning by Spellcraft alone
 
+**Built; this file is history.** Current behaviour is in spec §8 "Spells" and `docs/dev/spells.md`.
+
 Design document for the owner's review (#977), revised after the owner's approval of draft PR #981 (§9 records the decisions: no learning without Spellcraft). Written 2026-11-05 against `origin/main` at 6f43a36a. Nothing here is implemented; §8 cuts it into issues. Every number below was read from the files named or computed from them by a throwaway script (the 2d12 ways as `check::ways` counts them, the curves as `Benefit::at` rounds them); nothing was built or run in the game, and anything not checked is marked *(unchecked)*.
 
 **The owner's request** (#977): *"abolish the caster level concept. Spell learning should only come from the Spellcraft skill. Give casters appropriate starting points in that."* The decision is final: caster level goes. This document keeps it under no other name and computes no hidden value from the character level.

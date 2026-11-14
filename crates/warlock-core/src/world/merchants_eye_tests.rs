@@ -6,6 +6,7 @@ use super::*;
 use crate::ability::{Ability, Aim};
 use crate::action::parse_actions;
 use crate::content::{ActionKind, ClassActive, ContentFiles, Rarity};
+use crate::item_list::ItemList;
 use crate::magic::{Affix, Magic};
 
 const EYE: ClassActive = ClassActive::MerchantsEye;
@@ -85,7 +86,10 @@ fn without_it_the_eye_is_refused_with_no_time() {
 fn the_eye_identifies_a_stack_for_the_time_of_a_reading() {
     let mut w = world();
     w.player_mut().talents.take("merchants_eye", None);
-    assert_eq!(Ability::Class(EYE).aim(&w.content), Aim::Item);
+    assert_eq!(
+        Ability::Class(EYE).aim(&w.content),
+        Aim::Item(ItemList::Identify)
+    );
     let layer = crate::dump::parse_layers("abilities").expect("layer")[0];
     let rows = crate::dump::layer_rows(&w, layer);
     assert!(

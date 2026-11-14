@@ -86,11 +86,8 @@ impl World {
             return Spent::Nothing;
         }
         let healer = self.state.player();
-        let modifier = healer
-            .effective_stats(&content)
-            .modifier(Stat::Intelligence)
-            + healer.skill_effect(&content, Effect::Heal)
-            + healer.talent_mods(&content).check(Stat::Intelligence);
+        let modifier = healer.check_modifier(&content, Stat::Intelligence)
+            + healer.skill_effect(&content, Effect::Heal);
         let difficulty = match ailment {
             Ailment::Status(s) => {
                 let severity = me.effects.get(s).map_or(1, |e| e.severity);

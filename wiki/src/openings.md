@@ -68,7 +68,6 @@ more, and the foe is stunned. At level 32 the same exploit does 8d6 more. At lev
 [sneak attack](surprise.md#sneak-attacks) (that step never below 3), so a weapon that threatens on
 20 threatens on 3. An exploit of 5 or more is a critical whenever it hits, with no confirmation roll. The
 critical doubles only the weapon's part: the sneak dice and the exploit's dice are never doubled.
-This was the master thief's finisher, which is now part of Exploit.
 
 ## Thrown exploit
 

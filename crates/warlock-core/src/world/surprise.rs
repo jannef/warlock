@@ -244,8 +244,7 @@ impl World {
         let helpless =
             me.kind == ActorKind::Creature && (self.asleep(target) || self.disguised(target));
         let talents = me.talent_mods(content);
-        let modifier = me.effective_stats(content).modifier(Stat::Dexterity)
-            + talents.check(Stat::Dexterity)
+        let modifier = me.check_modifier(content, Stat::Dexterity)
             + talents.initiative_bonus
             + me.skill_effect(content, Effect::Initiative);
         let difficulty = difficulty + by.map_or(0, |by| self.craft(by));

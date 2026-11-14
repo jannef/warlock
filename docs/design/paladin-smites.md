@@ -1,5 +1,7 @@
 # Warlock — The paladin: Zeal, Smite, and the modes of smiting
 
+**Built; this file is history.** Current behaviour is in spec §8 "The adventurers' class tables, and the class actives" and `docs/dev/progression.md` and `docs/dev/resources.md`.
+
 Design document for the owner's review (2026-11-02; #823). Written against `origin/main` at f3846261. Nothing here is implemented; §12 cuts it into issues. It builds on what is there: the class tables and the class actives (`world/class_ability.rs`, `content/class.rs::ClassActive`, `docs/dev/progression.md`), alternative resources (`docs/dev/resources.md`: Rage, Focus, Openings, Ki, Inspiration, Stamina), alignment and the holy gifts' bands (`docs/dev/alignment.md`: `World::answered`), free blows (`world/free_blow.rs`: `Cue`), statuses that shed light (`status.toml` `light`, read by `light/cache.rs`), the Frightened status that `flees` (Hound's bay's), summoning's record of who summoned whom (`docs/dev/summoning.md`), and the talent coverage policy (`docs/dev/progression.md`, "Coverage policy", rules 1–9 of #776, binding here). Every number is data and hidden in the game; the wiki states it (the owner's rule: the game is vague, the wiki is accurate).
 
 **The owner's request** (2026-11-02, verbatim): *"Paladin: create design issue to bring the paladin class fantasy together. I think we want to lean into smites and alternative modes of smiting."* The gaps report (#802) lists the paladin's empty levels: **25** (Shield of faith, cut by #798) and **32** (Steadfast, cut by #798).

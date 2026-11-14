@@ -173,8 +173,7 @@ impl World {
         };
         let me = self.state.player();
         let mods = me.talent_mods(content);
-        let modifier = me.effective_stats(content).modifier(Stat::Willpower)
-            + mods.check(Stat::Willpower)
+        let modifier = me.check_modifier(content, Stat::Willpower)
             + me.skill_effect(content, Effect::Tame)
             + if fed { rules.food } else { 0 }
             + mods.tame;

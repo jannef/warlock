@@ -60,6 +60,14 @@ impl SearchRules {
     }
 }
 
+impl super::RulesFile for SearchRules {
+    const PATH: &'static str = "data/search.toml";
+
+    fn parse(path: &str, text: &str, _content: &Content) -> Result<Self, ContentError> {
+        Self::parse(path, text)
+    }
+}
+
 /// Which hidden features a race notices in passing, untrained (spec §8 "Searching"; races'
 /// `passive_search`): elves everything, dwarves what is on stone (terrain with `stone`),
 /// kobolds hidden traps.

@@ -1,5 +1,7 @@
 # Warlock — The druid, and allies: player-castable summons on a shared ally core
 
+**Built; this file is history.** Current behaviour is in spec §8 "Allies" and "The casters' class tables, and their spells", and `docs/dev/allies.md`.
+
 Design document for the owner's review (2026-11-02, #821). Written against `origin/main` at
 f3846261 (encounters E5). Nothing here is implemented; §13 cuts it into issues. It builds on what
 is there: enemy summoning (`docs/dev/summoning.md`, `world/summon.rs`), the one cast path and

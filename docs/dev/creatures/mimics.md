@@ -10,9 +10,9 @@ A generated family, as the animated blades are (`docs/dev/animated.md` "Families
 file and code: `Mimics::parse` reads `[family]`, `[creature]`, and the `[[band]]`s after the
 chest bands (`data/chests.toml` now loads before the creatures: a mimic band must match a chest
 band's `from`, one to one, and its slam's hold chance is the chest band's `hold`).
-`Mimics::specs` builds one `CreatureSpec` per level of `levels` (`mimic_1` … `mimic_60`) as a
-TOML table, so a member is checked exactly as a written type: the `[creature]` table, then the
-member's own `id`, `name` and `fg` (its band's), `weight`, `stats`, `base_hp`, `level`, `xp` (the
+`Mimics::specs` builds one `CreatureSpec` per level of `levels` (`mimic_1` … `mimic_60`), checked
+exactly as a written type: the `[creature]` table, parsed once as a creature file with each
+member's own fields empty (`Mimics::shared`, #1552), then the member's own `id`, `name` and `fg` (its band's), `weight`, `stats`, `base_hp`, `level`, `xp` (the
 guideline), `natural` (the body rule's hide, from level 18), and the attack's `damage` with an
 `on_hit` hold (`chance` the chest band's `hold`, `difficulty` `Mimics::grip`, 12 + L ÷ 5). The
 numbers are `Numbers::of` (`content/animated.rs`, the roster's formulas, shared with the

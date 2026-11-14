@@ -37,3 +37,11 @@ impl DecipherRules {
         self.base + i32::from(level) / self.levels_per_point
     }
 }
+
+impl super::RulesFile for DecipherRules {
+    const PATH: &'static str = "data/decipher.toml";
+
+    fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
+        Self::parse(path, text)
+    }
+}

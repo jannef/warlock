@@ -1,5 +1,7 @@
 # Warlock — Spell types, and thirty-six new spells
 
+**Built; this file is history.** Current behaviour is in spec §8 "Spells" and `docs/dev/spells.md`.
+
 Design document (#980), approved by the owner on #982 on 2026-11-05 with the answers in §10. Revised against `origin/main` at b1c203a9. Nothing here is implemented; §9 cuts it into issues. Every number was read from the files named. The balance probe was not run: the power notes reason from `docs/balance.md`, and the first issue that adds spells reruns it.
 
 **The owner's request** (#980, verbatim): *"propose 20-40 new spells. some buffs, some damage spells, some crowd controls. also cool spells (like chain lightning, corpse explosion etc) that interact with the world little different than typical rogue like."* And: *"come up with some fantasy for spell types. Like fire spells could have small chance to leave targets burning. There was a numbing cold talent -- perhaps remove that and just give that to frost spells. Lightning spells could have a small chance to jump into adjacent target (and perhaps affect all targets in the same pool of water) etc etc"*
