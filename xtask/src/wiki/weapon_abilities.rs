@@ -4,7 +4,7 @@
 //! styles' on the Schools and caster styles page (`schools.rs`), with the rank, the kind,
 //! the trigger, exactly what it does, and its costs (a triggered ability has none).
 
-use super::text::{Term, anchored, link, table_text};
+use super::util::{Term, anchored, link, table_text};
 use super::weapon_skills::is_caster_style;
 use std::fmt::Write as _;
 use warlock_core::content::{

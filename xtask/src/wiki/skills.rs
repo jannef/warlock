@@ -3,8 +3,7 @@
 //! intimidated foe flees (spec §8 "Skills": Intimidate), and what foraging finds (spec §8
 //! "Foraging").
 
-use super::burden::factor;
-use super::text::{Term, anchored, capital, link, percent_of};
+use super::util::{Term, anchored, capital, factor, link, percent_of};
 use std::fmt::Write as _;
 use warlock_core::burden::Burden;
 use warlock_core::check::{CONTEST_WAYS, contest_ways, ways};

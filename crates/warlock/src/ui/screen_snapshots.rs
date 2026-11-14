@@ -4,8 +4,12 @@
 //! it (map content is `warlock-cli dump --layers view`), nor colors.
 //!
 //! Screens belong here, not in `tests/golden/`: a text diff is exact, readable in review, and
-//! needs no GPU. Add a case to `CASES`, run `cargo test -p warlock screen_snapshots`, and review
+//! needs no GPU. Add a case to `cases!`, run `cargo test -p warlock screen_snapshots`, and review
 //! the new snapshot with `cargo insta review` (or `INSTA_UPDATE=always`, then read the diff).
+//!
+//! Two things every case shares are left out, so a change to them rewrites no snapshot of a
+//! screen that only shows them (#1521, #1532): the status bar's row over a run, kept only by the
+//! cases about the bar (`status_bar`), and the game's version, written `[version]`.
 
 use super::*;
 use crate::cli::Args;
@@ -16,7 +20,7 @@ use crate::ui::screens::{MenuChoice, ScreenStack};
 use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput, NativeKeyCode};
 use clap::Parser;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 use warlock_core::content::Content;
 
 /// One snapshot: a run (or the main menu) and what is open over it.
@@ -44,6 +48,8 @@ pub(super) struct Case {
     /// The graveyard file's text (`graveyard.rs`), kept in a folder of the case's own; none
     /// keeps no graveyard, as a capture does.
     pub(super) graveyard: Option<&'static str>,
+    /// Keeps the status bar's row (a case about the bar); otherwise it is left out (#1521).
+    pub(super) status_bar: bool,
     /// The UI console's size (columns, rows).
     pub(super) size: (u32, u32),
 }
@@ -61,6 +67,7 @@ pub(super) const BASE: Case = Case {
     keys: None,
     save_dir: None,
     graveyard: None,
+    status_bar: false,
     size: (100, 30),
 };
 
@@ -175,27 +182,44 @@ age = 22
 when = 1794000000
 "#;
 
-const CASES: &[Case] = &[
+/// One `#[test]` a case, named after it (`main-menu` is `cases::main_menu`), so a mismatch hides
+/// none of the others (#1529): `cargo test -p warlock screen_snapshots` runs them all, and
+/// `cargo test -p warlock cases::main_menu` one.
+macro_rules! cases {
+    ($($test:ident: $case:expr,)*) => {
+        mod cases {
+            use super::*;
+            $(
+                #[test]
+                fn $test() {
+                    check(&$case);
+                }
+            )*
+        }
+    };
+}
+
+cases! {
     // Menus and settings.
-    Case {
+    main_menu: Case {
         name: "main-menu",
         screen: Some("main"),
         ..BASE
     },
-    Case {
+    main_menu_saved: Case {
         name: "main-menu-saved",
         screen: Some("main"),
         save_dir: Some("tests/golden/saved-characters"),
         ..BASE
     },
-    Case {
+    characters_screen: Case {
         name: "characters-screen",
         screen: Some("characters"),
         save_dir: Some("tests/golden/saved-characters"),
         ..BASE
     },
     // The count of the dead under the list (the graveyard, #1137).
-    Case {
+    characters_screen_graveyard: Case {
         name: "characters-screen-graveyard",
         screen: Some("characters"),
         save_dir: Some("tests/golden/saved-characters"),
@@ -204,56 +228,56 @@ const CASES: &[Case] = &[
     },
     // The main menu offers the Graveyard once anyone has died, and it lists the fallen, the
     // most experienced first (#1252).
-    Case {
+    main_menu_graveyard: Case {
         name: "main-menu-graveyard",
         screen: Some("main"),
         graveyard: Some(GRAVEYARD_XP),
         ..BASE
     },
-    Case {
+    graveyard_screen: Case {
         name: "graveyard-screen",
         screen: Some("graveyard"),
         graveyard: Some(GRAVEYARD_XP),
         ..BASE
     },
-    Case {
+    graveyard_screen_paged: Case {
         name: "graveyard-screen-paged",
         screen: Some("graveyard"),
         graveyard: Some(GRAVEYARD),
         ..BASE
     },
-    Case {
+    graveyard_screen_empty: Case {
         name: "graveyard-screen-empty",
         screen: Some("graveyard"),
         ..BASE
     },
     // Every scenario under its campaign's name (a developer build), the start first.
-    Case {
+    new_run_screen: Case {
         name: "new-run-screen",
         screen: Some("new-run"),
         size: (100, 34),
         ..BASE
     },
-    Case {
+    pause_menu: Case {
         name: "pause-menu",
         actions: "wait",
         screen: Some("pause"),
         ..BASE
     },
-    Case {
+    help_screen: Case {
         name: "help-screen",
         actions: "wait",
         screen: Some("help"),
         size: (120, 44),
         ..BASE
     },
-    Case {
+    settings_screen: Case {
         name: "settings-screen",
         actions: "wait",
         screen: Some("settings"),
         ..BASE
     },
-    Case {
+    controls_screen: Case {
         name: "controls-screen",
         actions: "wait",
         screen: Some("controls"),
@@ -261,7 +285,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Up wraps to the last row: the abilities' own keys at the very bottom (#644).
-    Case {
+    controls_screen_bottom: Case {
         name: "controls-screen-bottom",
         actions: "wait",
         screen: Some("controls"),
@@ -271,7 +295,7 @@ const CASES: &[Case] = &[
     },
     // A play key rebound with Ctrl held (#1323): Move north's first key becomes Ctrl+k, and the
     // message says so (the Run and Search for a while defaults hold Alt, #1385).
-    Case {
+    controls_screen_ctrl_key: Case {
         name: "controls-screen-ctrl-key",
         actions: "wait",
         screen: Some("controls"),
@@ -281,7 +305,7 @@ const CASES: &[Case] = &[
     },
     // A command's keys open under it (#1324): Wait/search's `s` added to Move north moves, and
     // the message says from where; "Add a key" waits below the new key.
-    Case {
+    controls_screen_keys: Case {
         name: "controls-screen-keys",
         actions: "wait",
         screen: Some("controls"),
@@ -290,86 +314,86 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Character creation.
-    Case {
+    race_screen: Case {
         name: "race-screen",
         screen: Some("race"),
         ..BASE
     },
-    Case {
+    race_screen_drow: Case {
         name: "race-screen-drow",
         screen: Some("race"),
         keys: Some("Down Down Down Down Down Down"),
         ..BASE
     },
-    Case {
+    sign_screen: Case {
         name: "sign-screen",
         screen: Some("sign"),
         ..BASE
     },
-    Case {
+    sign_screen_lucky: Case {
         name: "sign-screen-lucky",
         screen: Some("new-run"),
         keys: Some("4 4 0 Enter Enter"),
         size: (100, 36),
         ..BASE
     },
-    Case {
+    gender_screen: Case {
         name: "gender-screen",
         screen: Some("gender"),
         keys: Some("Down"),
         ..BASE
     },
-    Case {
+    class_screen: Case {
         name: "class-screen",
         screen: Some("class"),
         ..BASE
     },
     // Only the classes open to the race and gender (#1279): a drow man is no priest or
     // paladin, a dwarf no witch; the everyday folk are never listed.
-    Case {
+    class_screen_drow_male: Case {
         name: "class-screen-drow-male",
         screen: Some("race"),
         keys: Some("Down Down Down Down Down Down Enter Enter Up Enter"),
         ..BASE
     },
-    Case {
+    class_screen_dwarf: Case {
         name: "class-screen-dwarf",
         screen: Some("race"),
         keys: Some("Down Enter Enter Enter"),
         ..BASE
     },
     // The showcase's thief: Random preselected; a letter marks a talent.
-    Case {
+    chargen_talents_screen: Case {
         name: "chargen-talents-screen",
         screen: Some("chargen-talents"),
         size: (100, 40),
         ..BASE
     },
-    Case {
+    chargen_talents_marked: Case {
         name: "chargen-talents-marked",
         screen: Some("chargen-talents"),
         keys: Some("b"),
         size: (100, 40),
         ..BASE
     },
-    Case {
+    name_screen: Case {
         name: "name-screen",
         screen: Some("name"),
         keys: Some("B r a k k a"),
         ..BASE
     },
-    Case {
+    character_summary: Case {
         name: "character-summary",
         screen: Some("summary"),
         ..BASE
     },
-    Case {
+    character_summary_other: Case {
         name: "character-summary-other",
         screen: Some("gender"),
         keys: Some("Down Enter Enter Enter Enter"),
         ..BASE
     },
-    Case {
+    kit_summary: Case {
         name: "kit-summary",
         scenario: "world",
         screen: Some("new-run"),
@@ -380,7 +404,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // The character's pages.
-    Case {
+    character_screen: Case {
         name: "character-screen",
         actions: "move:SW*2 pickup",
         screen: Some("character"),
@@ -388,14 +412,15 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A witch and her familiar: the With row and the status bar's segment (#929).
-    Case {
+    character_screen_familiar: Case {
         name: "character-screen-familiar",
+        status_bar: true,
         character: Some("human,female,witch"),
         run: true,
         screen: Some("character"),
         ..BASE
     },
-    Case {
+    character_screen_lucky: Case {
         name: "character-screen-lucky",
         // Seed 440 gives Tamsin a lucky day (#269): the Deep One, the title after the name.
         seed: Some(440),
@@ -405,7 +430,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A Tin of the Weyfarers' Gilde (#425): the rank under the alignment.
-    Case {
+    character_guild: Case {
         name: "character-guild",
         scenario: "ceaptun",
         actions: "move:E*26 move:S*4 move:E*9 open:S move:S*5 ask:S:quest-guild_quarry",
@@ -415,7 +440,7 @@ const CASES: &[Case] = &[
     },
     // The attacks beside the stats (the showcase's own character has bare hands): a sword and
     // shield, a bow with a sword, and two weapons with a bow.
-    Case {
+    character_attacks_sword_and_shield: Case {
         name: "character-attacks-sword-and-shield",
         character: Some("human,male,warrior"),
         run: true,
@@ -423,7 +448,7 @@ const CASES: &[Case] = &[
         size: (100, 36),
         ..BASE
     },
-    Case {
+    character_attacks_bow: Case {
         name: "character-attacks-bow",
         character: Some("human,male,ranger"),
         run: true,
@@ -431,7 +456,7 @@ const CASES: &[Case] = &[
         size: (100, 36),
         ..BASE
     },
-    Case {
+    character_attacks_two_weapons: Case {
         name: "character-attacks-two-weapons",
         character: Some("human,male,ranger"),
         actions: "move:SW*2 pickup equip:off_hand:k",
@@ -439,7 +464,7 @@ const CASES: &[Case] = &[
         size: (100, 36),
         ..BASE
     },
-    Case {
+    status_effects: Case {
         name: "status-effects",
         actions: "afflict:poisoned*4 afflict:bleeding wait",
         screen: Some("character"),
@@ -448,46 +473,50 @@ const CASES: &[Case] = &[
     },
     // Taken by surprise (#681): the status's line in the message line, Surprised in the status
     // bar, never a number.
-    Case {
+    status_surprised: Case {
         name: "status-surprised",
+        status_bar: true,
         actions: "afflict:surprised",
         ..BASE
     },
     // A potion's boost (#567): Fortified by name in the Status row and the status bar, the
     // Strength score raised, no numbers.
-    Case {
+    potion_boost: Case {
         name: "potion-boost",
+        status_bar: true,
         actions: "afflict:fortified afflict:owl_eyed wait",
         screen: Some("character"),
         size: (100, 36),
         ..BASE
     },
-    Case {
+    diseased: Case {
         name: "diseased",
         actions: "infect:the_shakes rest:24h*3",
         screen: Some("character"),
         size: (100, 36),
         ..BASE
     },
-    Case {
+    resources: Case {
         // Alternative resources (#225): a row each under the stance, and in the status bar.
         name: "resources",
+        status_bar: true,
         actions: "resource:rage resource:focus wait",
         screen: Some("character"),
         size: (100, 36),
         ..BASE
     },
-    Case {
+    frenzy: Case {
         // A berserker's rage brings the frenzy (#680): the stance in the status bar and the
         // Stance row, the change refused while the rage holds it.
         name: "frenzy",
+        status_bar: true,
         character: Some("human,male,berserker"),
         actions: "stance:coward use:rage stance:neutral",
         screen: Some("character"),
         size: (120, 36),
         ..BASE
     },
-    Case {
+    alignment_band_character: Case {
         // A band crossed (the `fall` line) and the Alignment row: seed 9's Basilisk-born warrior
         // (#272) starts Neutral, so the kick takes him down to Callous. A warrior, as a paladin's
         // zeal deserting him pushes the line behind the pager (#910, #914).
@@ -501,14 +530,14 @@ const CASES: &[Case] = &[
         size: (100, 36),
         ..BASE
     },
-    Case {
+    skills_screen: Case {
         name: "skills-screen",
         run: true,
         screen: Some("skills"),
         ..BASE
     },
     // Knowledge chosen (#667): its description says in words what it does against creatures.
-    Case {
+    skills_screen_knowledge: Case {
         name: "skills-screen-knowledge",
         character: Some("human,female,wizard"),
         run: true,
@@ -517,14 +546,14 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A wizard's (#668): Concentration first, its description saying what it gives in words.
-    Case {
+    skills_screen_wizard: Case {
         name: "skills-screen-wizard",
         run: true,
         character: Some("elf,female,wizard"),
         screen: Some("skills"),
         ..BASE
     },
-    Case {
+    weapon_skills_screen: Case {
         name: "weapon-skills-screen",
         scenario: "arena",
         actions: "move:E pickup equip:missile_weapon:b equip:missiles:c fire:30,16*12",
@@ -533,7 +562,7 @@ const CASES: &[Case] = &[
     },
     // A wizard's (#571): Sniper from the class, not listed here (the caster styles are the
     // Magic page's).
-    Case {
+    weapon_skills_screen_wizard: Case {
         name: "weapon-skills-screen-wizard",
         character: Some("human,female,wizard"),
         run: true,
@@ -542,7 +571,7 @@ const CASES: &[Case] = &[
     },
     // Two Shields (#611), hidden until its first marks: here at the rank the dev action sets,
     // listed among the styles.
-    Case {
+    weapon_skills_screen_two_shields: Case {
         name: "weapon-skills-screen-two-shields",
         actions: "rank:two_shields:1",
         screen: Some("weapon-skills"),
@@ -550,7 +579,7 @@ const CASES: &[Case] = &[
     },
     // The Magic page (the spell scaling design §11): the showcase wizard's mana, the caster
     // styles (Sniper from the class), and the spells with their rolls.
-    Case {
+    magic_screen: Case {
         name: "magic-screen",
         character: Some("human,female,wizard"),
         run: true,
@@ -559,7 +588,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A wizard of level 18 with ranks set as risen ones are: more spells, climbed bars.
-    Case {
+    magic_screen_trained: Case {
         name: "magic-screen-trained",
         character: Some("human,female,wizard"),
         actions: "xp:133334 levelup:auto rank:sniper:5 rank:toucher:3",
@@ -568,7 +597,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A paladin in the forge's chain mail, which hinders casting: Battle caster marked.
-    Case {
+    magic_screen_armoured: Case {
         name: "magic-screen-armoured",
         scenario: "forge",
         character: Some("human,male,paladin"),
@@ -578,7 +607,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A warrior: no caster styles, no spells.
-    Case {
+    magic_screen_none: Case {
         name: "magic-screen-none",
         character: Some("human,male,warrior"),
         run: true,
@@ -588,7 +617,7 @@ const CASES: &[Case] = &[
     },
     // An 80 by 14 console: the short tab line, and the page of a wizard of level 18 scrolls,
     // its gaps given way (at 80 by 20 it fits).
-    Case {
+    magic_screen_short: Case {
         name: "magic-screen-short",
         character: Some("human,female,wizard"),
         actions: "xp:133334 levelup:auto",
@@ -596,7 +625,7 @@ const CASES: &[Case] = &[
         size: (80, 14),
         ..BASE
     },
-    Case {
+    abilities_menu: Case {
         name: "abilities-menu",
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
             pickup:a equip:off_hand:b",
@@ -605,7 +634,7 @@ const CASES: &[Case] = &[
     },
     // What weapon skill and style ranks teach (the combat progression design §4): greyed
     // under the Weapon skills group as firing by themselves, each after its skill's name.
-    Case {
+    abilities_menu_weapon_skills: Case {
         name: "abilities-menu-weapon-skills",
         actions: "rank:long_blades:5 rank:sword_and_board:4 rank:shield_bash:5",
         screen: Some("abilities"),
@@ -613,7 +642,7 @@ const CASES: &[Case] = &[
     },
     // A warrior's actives (#564): Vital strike, Shield rush, and Shield wall usable with their
     // stamina; Lunge greyed, a long sword being no spear.
-    Case {
+    abilities_menu_weapon_actives: Case {
         name: "abilities-menu-weapon-actives",
         character: Some("human,male,warrior"),
         kit: true,
@@ -622,7 +651,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Two shield walls later: the pool spent, the rows greyed short of breath.
-    Case {
+    abilities_menu_weapon_actives_short: Case {
         name: "abilities-menu-weapon-actives-short",
         character: Some("human,male,warrior"),
         kit: true,
@@ -633,7 +662,7 @@ const CASES: &[Case] = &[
     },
     // A warrior at level 1 (#1466): Charge among the class abilities, its stamina by the pace,
     // asking for a cell.
-    Case {
+    abilities_menu_charge: Case {
         name: "abilities-menu-charge",
         character: Some("human,male,warrior"),
         kit: true,
@@ -643,7 +672,7 @@ const CASES: &[Case] = &[
     },
     // A berserker at level 25 (#844): War cry under Rage among the class abilities, greyed
     // while no rage is held.
-    Case {
+    abilities_menu_war_cry: Case {
         name: "abilities-menu-war-cry",
         character: Some("human,male,berserker"),
         kit: true,
@@ -653,7 +682,7 @@ const CASES: &[Case] = &[
     },
     // A wizard at level 4 (spec §8 "Chests"): Knock among the class abilities, asking for a
     // direction, paid in mana.
-    Case {
+    abilities_menu_knock: Case {
         name: "abilities-menu-knock",
         character: Some("human,male,wizard"),
         kit: true,
@@ -662,7 +691,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A ranger at level 40 (#921): Sic 'em among the class abilities, asking for a cell.
-    Case {
+    abilities_menu_sic: Case {
         name: "abilities-menu-sic",
         character: Some("human,male,ranger"),
         kit: true,
@@ -672,7 +701,7 @@ const CASES: &[Case] = &[
     },
     // A merchant past level 12 (#816): Merchant's eye among the class abilities, asking for
     // something carried.
-    Case {
+    abilities_menu_merchants_eye: Case {
         name: "abilities-menu-merchants-eye",
         character: Some("human,male,merchant"),
         kit: true,
@@ -682,13 +711,13 @@ const CASES: &[Case] = &[
     },
     // The Hunter's Spirit weapon asks for a shape (#881): every melee weapon by weapon skill,
     // as plain ones; the list is the game's objects, whoever opens it.
-    Case {
+    shape_list: Case {
         name: "shape-list",
         run: true,
         screen: Some("shape"),
         ..BASE
     },
-    Case {
+    shape_list_second_page: Case {
         name: "shape-list-second-page",
         run: true,
         screen: Some("shape"),
@@ -697,7 +726,7 @@ const CASES: &[Case] = &[
     },
     // The wizard's Scribe asks for a spell (#906): the spells known by school, each with its
     // price and its time in words; no blank scroll carried, which the line above says.
-    Case {
+    scribe_list: Case {
         name: "scribe-list",
         character: Some("human,female,wizard"),
         actions: "xp:133334 levelup:auto",
@@ -705,7 +734,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Without Scribe (a warrior), nothing to write.
-    Case {
+    scribe_list_none: Case {
         name: "scribe-list-none",
         character: Some("human,male,warrior"),
         run: true,
@@ -715,7 +744,7 @@ const CASES: &[Case] = &[
     // The craftsperson's Trapwright asks for a rig (#1423): each with what it takes and its
     // time; a knife and a billet carried but no arrows or digging tool, so the tripwire and
     // the pitfall greyed with what is lacking.
-    Case {
+    rig_list: Case {
         name: "rig-list",
         character: Some("human,female,craftsperson"),
         actions: "xp:3000000 levelup:auto",
@@ -724,7 +753,7 @@ const CASES: &[Case] = &[
     },
     // An ascetic past level 12 (#848): Stunning strike among the class abilities, asking for
     // a direction, paid in ki.
-    Case {
+    abilities_menu_stunning_strike: Case {
         name: "abilities-menu-stunning-strike",
         character: Some("human,male,ascetic"),
         kit: true,
@@ -734,7 +763,7 @@ const CASES: &[Case] = &[
     },
     // An ascetic past level 25 (#850): Stillness, Still mind's active, greyed with nothing to
     // end.
-    Case {
+    abilities_menu_stillness: Case {
         name: "abilities-menu-stillness",
         character: Some("human,male,ascetic"),
         kit: true,
@@ -744,7 +773,7 @@ const CASES: &[Case] = &[
     },
     // A priest at level 1 (#886): the prayer by its first tier's title, Orison, chosen, its
     // description below.
-    Case {
+    abilities_priest_1: Case {
         name: "abilities-priest-1",
         character: Some("human,male,priest"),
         kit: true,
@@ -755,7 +784,7 @@ const CASES: &[Case] = &[
     },
     // A priest at level 60 (#886): the prayer by its last tier's title, Miracle, chosen,
     // between Consecrate and Sanctuary.
-    Case {
+    abilities_priest_60: Case {
         name: "abilities-priest-60",
         character: Some("human,male,priest"),
         kit: true,
@@ -765,7 +794,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Beside a forgotten altar (spec §7 "Special rooms"): Pray in the Here group, last.
-    Case {
+    abilities_menu_here: Case {
         name: "abilities-menu-here",
         scenario: "shrine",
         actions: "move:N open:N move:N*3",
@@ -774,14 +803,14 @@ const CASES: &[Case] = &[
     },
     // Beside a forge's anvil with arms and armour picked up: no Here group (Temper is a recipe on
     // Metalcraft's screen, #1334); then the Temper list, metal arms and armour (no lantern).
-    Case {
+    abilities_menu_forge: Case {
         name: "abilities-menu-forge",
         scenario: "forge",
         actions: "move:SW move:S pickup move:W pickup move:E*2 pickup move:E pickup move:N*2",
         screen: Some("abilities"),
         ..BASE
     },
-    Case {
+    temper_list: Case {
         name: "temper-list",
         scenario: "forge",
         actions: "move:SW move:S pickup move:W pickup move:E*2 pickup move:E pickup move:N*2",
@@ -789,7 +818,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // An attempt made and one failed (spec §7 "Special rooms"): the name and numbers follow.
-    Case {
+    temper_list_fine: Case {
         name: "temper-list-fine",
         scenario: "forge",
         actions: "move:SW move:S pickup move:W pickup move:E*2 pickup move:E pickup move:N*2 \
@@ -797,7 +826,7 @@ const CASES: &[Case] = &[
         screen: Some("temper"),
         ..BASE
     },
-    Case {
+    temper_list_damaged: Case {
         name: "temper-list-damaged",
         scenario: "forge",
         actions: "move:SW move:S pickup move:W pickup move:E*2 pickup move:E pickup move:N*2 \
@@ -806,7 +835,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // The craftsperson's Make do and mend list (#1422): the damaged long sword alone.
-    Case {
+    make_do_list: Case {
         name: "make-do-list",
         scenario: "forge",
         actions: "move:SW move:S pickup move:W pickup move:E*2 pickup move:E pickup move:N*2 \
@@ -816,7 +845,7 @@ const CASES: &[Case] = &[
     },
     // A ranger in the Thornwood after a forage (spec §8 "Foraging"): Survival listed as its
     // use, Forage, usable; the message line says what came of it.
-    Case {
+    abilities_menu_forage: Case {
         name: "abilities-menu-forage",
         scenario: "forest",
         actions: "forage",
@@ -824,7 +853,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A ranger in the showcase's hall, no wilderness: Forage greyed out, "not usable here".
-    Case {
+    abilities_menu_forage_not_here: Case {
         name: "abilities-menu-forage-not-here",
         character: Some("human,male,ranger"),
         run: true,
@@ -833,7 +862,7 @@ const CASES: &[Case] = &[
     },
     // A ranger after a batch in the forest area's glade, where wood is free (spec §8
     // "Fletching"; #1336): Woodcraft… in the skill's place; the message line says what was made.
-    Case {
+    abilities_menu_fletch: Case {
         name: "abilities-menu-fletch",
         scenario: "forest",
         character: Some("human,male,ranger"),
@@ -844,7 +873,7 @@ const CASES: &[Case] = &[
     },
     // The arrows' wizard in the forest area's glade (#1336): the head step alone (the shaft is
     // cut from the trees), nothing carried to head them, None on `-` for brittle arrows.
-    Case {
+    craft_pick_arrows_head: Case {
         name: "craft-pick-arrows-head",
         scenario: "forest",
         character: Some("human,male,ranger"),
@@ -854,7 +883,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A ranger's Whittle list (#1028): the wooden weapons carried (the bow), not the knife.
-    Case {
+    whittle_list: Case {
         name: "whittle-list",
         character: Some("human,male,ranger"),
         run: true,
@@ -862,7 +891,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A ranger's Salvage list (#1333): what a craft works, carried, less what is worn or wielded.
-    Case {
+    salvage_list: Case {
         name: "salvage-list",
         character: Some("human,male,ranger"),
         run: true,
@@ -872,7 +901,7 @@ const CASES: &[Case] = &[
     // A Gemcutter craftsperson (Jewelcraft their trade) with the hub's secret closet's gems, a
     // medium fine sapphire and an uncut tiny garnet (#1355): Jewelcraft's screen (the first
     // profession whose recipes they see) lists Cut under Work; the Cut list both gems.
-    Case {
+    profession_jewelcraft: Case {
         name: "profession-jewelcraft",
         seed: Some(8),
         character: Some("human,male,craftsperson"),
@@ -881,7 +910,7 @@ const CASES: &[Case] = &[
         screen: Some("profession"),
         ..BASE
     },
-    Case {
+    cut_list: Case {
         name: "cut-list",
         seed: Some(8),
         character: Some("human,male,craftsperson"),
@@ -893,7 +922,7 @@ const CASES: &[Case] = &[
     // The garnet cut (it splits to nothing at this fate) and the sapphire re-cut a size smaller:
     // the list holds the small fine sapphire (and the trade's uncut garnet), and the message line
     // says what came of it.
-    Case {
+    cut_list_after: Case {
         name: "cut-list-after",
         seed: Some(8),
         character: Some("human,male,craftsperson"),
@@ -905,7 +934,7 @@ const CASES: &[Case] = &[
     },
     // Set (#1356) by the same craftsperson, Jewelcraft 16 from their trade, the
     // hand axe taken out of the hand: the wizard's item step lists the axe (its pommel unset),
-    Case {
+    set_pick_item: Case {
         name: "set-pick-item",
         seed: Some(8),
         character: Some("human,male,craftsperson"),
@@ -916,7 +945,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // its gem step the sapphire alone (never the uncut garnet),
-    Case {
+    set_pick_gem: Case {
         name: "set-pick-gem",
         seed: Some(8),
         character: Some("human,male,craftsperson"),
@@ -927,7 +956,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // and the dialog names the axe as it would be.
-    Case {
+    set_pick_dialog: Case {
         name: "set-pick-dialog",
         seed: Some(8),
         character: Some("human,male,craftsperson"),
@@ -941,7 +970,7 @@ const CASES: &[Case] = &[
     // Masterwork rare, in the pack: the six works (#1431) greyed by skill or "nothing to
     // enchant" (no plain item free), Quicken "it holds all it can" (the rare at its capacity,
     // #1432), Unbind ready;
-    Case {
+    profession_enchanting: Case {
         name: "profession-enchanting",
         seed: Some(13),
         character: Some("human,female,wizard"),
@@ -951,7 +980,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Unbind's item step lists the sword alone (never the wielded staff),
-    Case {
+    enchant_pick_item: Case {
         name: "enchant-pick-item",
         seed: Some(13),
         character: Some("human,female,wizard"),
@@ -962,7 +991,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // and the dialog, with nothing used up, says only the time.
-    Case {
+    enchant_dialog: Case {
         name: "enchant-dialog",
         seed: Some(13),
         character: Some("human,female,wizard"),
@@ -975,7 +1004,7 @@ const CASES: &[Case] = &[
     // A Wright craftsperson whose kit's knife (`b`) is dropped: Woodcraft's screen (its row in the
     // abilities menu, `c`) greys the arrows and Whittle, each with the reason in place of what it
     // takes (#1334). Only the trained have the row (#1387).
-    Case {
+    profession_woodcraft_no_knife: Case {
         name: "profession-woodcraft-no-knife",
         character: Some("human,male,craftsperson"),
         talents: Some("wright,smith,healthy,lean,skill_focus:appraise"),
@@ -986,7 +1015,7 @@ const CASES: &[Case] = &[
     },
     // A ranger's knife, but their bow put away, so none is ready: Whittle can be made, the arrows
     // not (`e`: Woodcraft…, after the stare, Decipher, Tame, and Forage).
-    Case {
+    profession_woodcraft_no_launcher: Case {
         name: "profession-woodcraft-no-launcher",
         character: Some("human,male,ranger"),
         actions: "remove:missile_weapon",
@@ -997,7 +1026,7 @@ const CASES: &[Case] = &[
     },
     // Metalcraft's screen (`--screen profession`, the first profession's) away from an anvil:
     // Temper under "Work", greyed "no anvil beside you".
-    Case {
+    profession_metalcraft_no_anvil: Case {
         name: "profession-metalcraft-no-anvil",
         character: Some("human,male,craftsperson"),
         talents: Some("smith,wright,healthy,lean,skill_focus:appraise"),
@@ -1006,7 +1035,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Beside the forge's anvil: Temper can be made, what it takes under the list.
-    Case {
+    profession_metalcraft_forge: Case {
         name: "profession-metalcraft-forge",
         scenario: "forge",
         actions: "move:E",
@@ -1015,7 +1044,7 @@ const CASES: &[Case] = &[
     },
     // The forge's stock picked up beside the anvil: the weapons under "Melee weapons", those from
     // a higher Metalcraft greyed "beyond your skill".
-    Case {
+    profession_metalcraft_stock: Case {
         name: "profession-metalcraft-stock",
         scenario: "forge",
         actions: "move:E pickup",
@@ -1024,7 +1053,7 @@ const CASES: &[Case] = &[
     },
     // The dagger's wizard (#1335): its first step, the metal, the ingots carried with what the
     // recipe takes of each.
-    Case {
+    craft_pick_blade: Case {
         name: "craft-pick-blade",
         scenario: "forge",
         actions: "move:E pickup",
@@ -1033,7 +1062,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Its second, the pommel: None on `-`, the cut gems; the running choice in the header.
-    Case {
+    craft_pick_pommel: Case {
         name: "craft-pick-pommel",
         scenario: "forge",
         actions: "move:E pickup",
@@ -1042,7 +1071,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // The last pick asks in the one dialog, with the item named as it will be made.
-    Case {
+    craft_pick_dialog: Case {
         name: "craft-pick-dialog",
         scenario: "forge",
         actions: "move:E pickup",
@@ -1053,7 +1082,7 @@ const CASES: &[Case] = &[
     // A witch's Alchemy (#1357; `--screen profession`, the first profession she has recipes of)
     // after three gathers at the hub's fungus: the brews, those from a higher Alchemy greyed
     // "beyond your skill", those short of herbs "not enough".
-    Case {
+    profession_alchemy_herbs: Case {
         name: "profession-alchemy-herbs",
         character: Some("human,female,witch"),
         actions: "move:N*6 move:E*30 move:N*3 move:W*6 gather:W*3",
@@ -1061,7 +1090,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A brew chooses nothing: its row asks at once in the one dialog, the potion named truly.
-    Case {
+    brew_dialog: Case {
         name: "brew-dialog",
         character: Some("human,female,witch"),
         actions: "move:N*6 move:E*30 move:N*3 move:W*6 gather:W*3",
@@ -1071,7 +1100,7 @@ const CASES: &[Case] = &[
     },
     // The smith's javelin after its iron head (#1351): the haft, Woodcraft's wood billets on a
     // Metalcraft recipe, never the ingots.
-    Case {
+    craft_pick_haft: Case {
         name: "craft-pick-haft",
         scenario: "forge",
         actions: "move:E pickup",
@@ -1080,7 +1109,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // `--screen craft-pick`: the first recipe with a choice, the amber amulet, with nothing carried.
-    Case {
+    craft_pick_first: Case {
         name: "craft-pick-first",
         scenario: "forge",
         actions: "move:E",
@@ -1088,7 +1117,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Beside a healing spring (spec §7 "Special rooms"): Drink in the Here group, last.
-    Case {
+    abilities_menu_spring: Case {
         name: "abilities-menu-spring",
         scenario: "spring",
         actions: "move:N*5",
@@ -1098,7 +1127,7 @@ const CASES: &[Case] = &[
     // Beside the darkness chamber's glowing fungus after a gather (spec §8 "Gathering herbs"):
     // Gather in the Here group, greyed out for Tamsin, untrained in Herbalism (#1400); the
     // message line says why she was refused.
-    Case {
+    abilities_menu_gather: Case {
         name: "abilities-menu-gather",
         actions: "move:N*3 open:N move:N*2 move:E*30 open:N move:N*2 move:W*6 gather:W",
         screen: Some("abilities"),
@@ -1106,7 +1135,7 @@ const CASES: &[Case] = &[
     },
     // Two allies beside the player (spec §8 "Allies"): the Allies group's three orders, Set on
     // asking for a place.
-    Case {
+    abilities_menu_allies: Case {
         name: "abilities-menu-allies",
         actions: "ally:dire_warg:2",
         screen: Some("abilities"),
@@ -1114,14 +1143,14 @@ const CASES: &[Case] = &[
     },
     // A ranger beside their hound with the darkness chamber's amulet: Give in the Allies group,
     // asking for something carried, then its list, what fits a neck only.
-    Case {
+    abilities_menu_give: Case {
         name: "abilities-menu-give",
         character: Some("human,male,ranger"),
         actions: "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 move:W*2 pickup move:E*2 move:N*2 wait*2 move:W",
         screen: Some("abilities"),
         ..BASE
     },
-    Case {
+    give_list: Case {
         name: "give-list",
         character: Some("human,male,ranger"),
         actions: "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 move:W*2 pickup move:E*2 move:N*2 wait*2 move:W",
@@ -1129,7 +1158,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // An ally in the retinue on the overworld, none on the level: the orders greyed.
-    Case {
+    abilities_menu_allies_none: Case {
         name: "abilities-menu-allies-none",
         scenario: "world",
         actions: "ally:dire_warg",
@@ -1138,7 +1167,7 @@ const CASES: &[Case] = &[
     },
     // A druid past Pack leader (#839) who has called two wolves: the calls among the spells,
     // "2 called" with Pack leader's one more, and the Allies group's orders.
-    Case {
+    abilities_menu_druid_calls: Case {
         name: "abilities-menu-druid-calls",
         character: Some("human,female,druid"),
         actions: "xp:666667 levelup:auto use:call_of_the_wild",
@@ -1147,7 +1176,7 @@ const CASES: &[Case] = &[
     },
     // A ranger below the hall's door: Listen and Wedge listed beside a closed door (left out
     // elsewhere, the owner, #1327).
-    Case {
+    abilities_menu_door: Case {
         name: "abilities-menu-door",
         character: Some("human,female,ranger"),
         actions: "move:N*3",
@@ -1155,14 +1184,14 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Set on chosen from the menu: the aiming mode, its prompt in the message line.
-    Case {
+    set_on_aim: Case {
         name: "set-on-aim",
         actions: "ally:dire_warg:2",
         keys: Some("a j"),
         ..BASE
     },
     // Come to heel chosen from the menu: the order's words, no time.
-    Case {
+    come_to_heel: Case {
         name: "come-to-heel",
         actions: "ally:dire_warg:2",
         keys: Some("a h"),
@@ -1170,7 +1199,7 @@ const CASES: &[Case] = &[
     },
     // A paladin of some level: the Class group, Lay on hands refused and greyed out short of
     // zeal (it costs six; the pool was granted at five), Smite ready (three).
-    Case {
+    abilities_menu_class: Case {
         name: "abilities-menu-class",
         character: Some("human,male,paladin"),
         // Seed 12: a Unicorn-born paladin (#272: Good, and a Birth sign gift in the menu).
@@ -1181,7 +1210,7 @@ const CASES: &[Case] = &[
     },
     // A thief of level 12 (#684, #1463): Lurk ready, Exploit greyed out with no opening; Disarm,
     // Pick lock, and Steal from the class's skills.
-    Case {
+    abilities_menu_thief: Case {
         name: "abilities-menu-thief",
         character: Some("human,female,thief"),
         kit: true,
@@ -1191,7 +1220,7 @@ const CASES: &[Case] = &[
     },
     // A thief past level 18 (#1465): Thrown exploit beside Exploit, both greyed out with no
     // opening.
-    Case {
+    abilities_menu_thief_18: Case {
         name: "abilities-menu-thief-18",
         character: Some("human,female,thief"),
         kit: true,
@@ -1200,7 +1229,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // The thrown exploit's list (#1465): the throw list less flasks, the kit's dagger.
-    Case {
+    thrown_exploit_list: Case {
         name: "thrown-exploit-list",
         character: Some("human,female,thief"),
         kit: true,
@@ -1211,7 +1240,7 @@ const CASES: &[Case] = &[
     // A priest blessed and drained to their last mana: the spells in their Spells group with
     // the roll each makes now and its cost (the spell scaling design decision 11), those that
     // cost more than is left greyed out with what is left ("3 mana: you have 2").
-    Case {
+    abilities_menu_spells: Case {
         name: "abilities-menu-spells",
         character: Some("human,female,priest"),
         actions: "xp:66667 levelup:auto use:blessing drain:101",
@@ -1221,7 +1250,7 @@ const CASES: &[Case] = &[
     // A gnome wizard at Intelligence 19 (Keen) with Empower (level 32; the spell scaling design
     // §11): the rolls up their ladders and a rung more, Magic missile selected, its reach in the
     // description line.
-    Case {
+    abilities_menu_spells_grown: Case {
         name: "abilities-menu-spells-grown",
         character: Some("gnome,male,wizard"),
         actions: "xp:666667 levelup:auto afflict:keen",
@@ -1232,7 +1261,7 @@ const CASES: &[Case] = &[
     // A bard of level 25 with too little mana (#244): Throw your voice aimed at a place, Inspire
     // greyed out for inspiration (a song costs one thing, #870), the Lullaby for mana (#873),
     // Music no row (read by rules).
-    Case {
+    abilities_menu_bard: Case {
         name: "abilities-menu-bard",
         character: Some("human,female,bard"),
         actions: "xp:266667 levelup:auto drain:106",
@@ -1241,7 +1270,7 @@ const CASES: &[Case] = &[
     },
     // A witch past level 6 (#904): Cackle under Class, nothing to aim, listed usable (the rules
     // refuse it with no hex of hers in sight), beside her hexes in Spells.
-    Case {
+    abilities_menu_witch: Case {
         name: "abilities-menu-witch",
         character: Some("human,female,witch"),
         actions: "xp:13334 levelup:auto",
@@ -1249,7 +1278,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A priest bleeding and poisoned (#549): Heal in the Skills group, used on yourself.
-    Case {
+    abilities_menu_heal: Case {
         name: "abilities-menu-heal",
         character: Some("human,female,priest"),
         actions: "afflict:bleeding*2 afflict:poisoned*2",
@@ -1257,7 +1286,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // The same priest choosing Heal: with two things to treat, the dialog asks which.
-    Case {
+    heal_dialog: Case {
         name: "heal-dialog",
         character: Some("human,female,priest"),
         actions: "afflict:bleeding*2 afflict:poisoned*2",
@@ -1266,7 +1295,7 @@ const CASES: &[Case] = &[
     },
     // Progression: a warrior gaining levels 2 and 3 at once (the level-up screen opens by
     // itself), their talent pick, and the Talents page.
-    Case {
+    level_up_rolls: Case {
         name: "level-up-rolls",
         character: Some("human,male,warrior"),
         actions: "xp:461",
@@ -1275,7 +1304,7 @@ const CASES: &[Case] = &[
     },
     // The skill-roll step at the smallest console (#543): a thief's search marks set a
     // bigger die, and each skill shows the dice a roll on it adds.
-    Case {
+    level_up_rolls_marks: Case {
         name: "level-up-rolls-marks",
         character: Some("human,female,thief"),
         actions: "search:100*2 xp:461",
@@ -1283,21 +1312,21 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A skill past the soft cap rises by half its roll: `(dice)/2`.
-    Case {
+    level_up_rolls_halved: Case {
         name: "level-up-rolls-halved",
         character: Some("human,male,warrior"),
         actions: "xp:200000 levelup:auto xp:400000",
         size: (80, 25),
         ..BASE
     },
-    Case {
+    level_up_talent: Case {
         name: "level-up-talent",
         character: Some("human,male,warrior"),
         actions: "xp:461 advance:athletics*6",
         size: (100, 40),
         ..BASE
     },
-    Case {
+    level_up_choice: Case {
         name: "level-up-choice",
         character: Some("human,male,warrior"),
         actions: "xp:461 advance:athletics*6",
@@ -1306,7 +1335,7 @@ const CASES: &[Case] = &[
         size: (100, 40),
         ..BASE
     },
-    Case {
+    talents_screen: Case {
         name: "talents-screen",
         character: Some("dwarf,male,warrior"),
         run: true,
@@ -1326,7 +1355,7 @@ const CASES: &[Case] = &[
     },
     // A level-3 wizard's pick, School focus for evocation: the Spellcraft tree, Arcane
     // training among the class abilities (#400).
-    Case {
+    talents_screen_spellcraft: Case {
         name: "talents-screen-spellcraft",
         character: Some("human,male,wizard"),
         actions: "xp:587 talent:school_focus:evocation advance:spellcraft*8",
@@ -1336,14 +1365,14 @@ const CASES: &[Case] = &[
     },
     // The Ascmearc's pedlar met on the road east of Cēaptūn (#806): the one dialog, which
     // must be answered.
-    Case {
+    encounter_pedlar: Case {
         name: "encounter-pedlar",
         scenario: "ascmearc",
         actions: "move:E*7 meet:road_pedlar",
         ..BASE
     },
     // A story talent (#707): the flux gave this warrior Hardy, "(story)".
-    Case {
+    talents_screen_story: Case {
         name: "talents-screen-story",
         scenario: "ascmearc",
         seed: Some(107),
@@ -1356,14 +1385,14 @@ const CASES: &[Case] = &[
     // The background story (#703): opened by the app as the run New run's summary started
     // begins (the showcase's character, its seed), then page 9 of a kit run, and page 9 of a
     // scenario's own character, who has none.
-    Case {
+    story_screen: Case {
         name: "story-screen",
         screen: Some("summary"),
         keys: Some("Enter"),
         size: (100, 36),
         ..BASE
     },
-    Case {
+    story_page: Case {
         name: "story-page",
         character: Some("dwarf,female,warrior"),
         run: true,
@@ -1372,7 +1401,7 @@ const CASES: &[Case] = &[
         size: (112, 36),
         ..BASE
     },
-    Case {
+    story_page_none: Case {
         name: "story-page-none",
         run: true,
         screen: Some("character"),
@@ -1381,7 +1410,7 @@ const CASES: &[Case] = &[
     },
     // A Unicorn (seed 12) after Horn's grace: the Birth sign group, the grace greyed out while
     // Graceless (#266).
-    Case {
+    abilities_menu_sign: Case {
         name: "abilities-menu-sign",
         seed: Some(12),
         character: Some("human,male,warrior"),
@@ -1390,7 +1419,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A Fire-born warrior (a Fire Kraken) after a Blaze: the Birth sign group, burnt out.
-    Case {
+    abilities_menu_blaze: Case {
         name: "abilities-menu-blaze",
         seed: Some(15),
         character: Some("human,male,warrior"),
@@ -1400,7 +1429,7 @@ const CASES: &[Case] = &[
     },
     // A Wyvern warrior (seed 2) who picked Fire breath (#270) and breathed it: the Birth sign
     // group, drained.
-    Case {
+    abilities_menu_fire_breath: Case {
         name: "abilities-menu-fire-breath",
         seed: Some(2),
         character: Some("human,male,warrior"),
@@ -1410,7 +1439,7 @@ const CASES: &[Case] = &[
     },
     // A Barghest warrior (seed 21) in the arena who picked Hound's bay (#270) and howled: the
     // kobolds who heard it flee.
-    Case {
+    abilities_menu_hounds_bay: Case {
         name: "abilities-menu-hounds-bay",
         scenario: "arena",
         seed: Some(21),
@@ -1420,7 +1449,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A wizard with Blood magic (#242), after giving blood for mana: the Talents group.
-    Case {
+    abilities_menu_blood_magic: Case {
         name: "abilities-menu-blood-magic",
         seed: Some(4),
         character: Some("elf,female,wizard"),
@@ -1429,19 +1458,19 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Items.
-    Case {
+    equipment_screen: Case {
         name: "equipment-screen",
         actions: ARMED,
         screen: Some("equipment"),
         ..BASE
     },
-    Case {
+    equip_item_screen: Case {
         name: "equip-item-screen",
         actions: ARMED,
         screen: Some("equip-item"),
         ..BASE
     },
-    Case {
+    kit_equipment: Case {
         name: "kit-equipment",
         scenario: "world",
         kit: true,
@@ -1450,7 +1479,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // An aristocrat's three extra ring slots (#1404), after the hands' rings.
-    Case {
+    aristocrat_equipment: Case {
         name: "aristocrat-equipment",
         scenario: "world",
         character: Some("human,female,aristocrat"),
@@ -1458,7 +1487,7 @@ const CASES: &[Case] = &[
         screen: Some("equipment"),
         ..BASE
     },
-    Case {
+    kit_inventory: Case {
         name: "kit-inventory",
         scenario: "world",
         kit: true,
@@ -1466,13 +1495,13 @@ const CASES: &[Case] = &[
         screen: Some("inventory"),
         ..BASE
     },
-    Case {
+    inventory_screen: Case {
         name: "inventory-screen",
         actions: "move:SW*2 pickup move:NE*2 move:E*2 move:NE pickup",
         screen: Some("inventory"),
         ..BASE
     },
-    Case {
+    inventory_page_2: Case {
         name: "inventory-page-2",
         actions: HOARD,
         screen: Some("inventory"),
@@ -1482,7 +1511,7 @@ const CASES: &[Case] = &[
     },
     // The inventory's drop mode (#1196): `D` there, marks kept across pages; and as `d` in
     // play opens it.
-    Case {
+    inventory_drop_mode: Case {
         name: "inventory-drop-mode",
         actions: HOARD,
         screen: Some("inventory"),
@@ -1490,41 +1519,41 @@ const CASES: &[Case] = &[
         size: (80, 24),
         ..BASE
     },
-    Case {
+    drop_mode_from_play: Case {
         name: "drop-mode-from-play",
         actions: "move:SW*2 pickup move:NE*2 move:E*2 move:NE pickup",
         screen: Some("drop"),
         keys: Some("b"),
         ..BASE
     },
-    Case {
+    burdened_inventory: Case {
         name: "burdened-inventory",
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
             pickup move:S*2 pickup move:NW move:W*2 move:N pickup move:SW pickup",
         screen: Some("inventory"),
         ..BASE
     },
-    Case {
+    magic_inventory: Case {
         name: "magic-inventory",
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*5 pickup \
             move:E pickup equip:head:d",
         screen: Some("inventory"),
         ..BASE
     },
-    Case {
+    gem_inventory: Case {
         name: "gem-inventory",
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*7 move:W*4 move:S move:W*3 \
             pickup",
         screen: Some("inventory"),
         ..BASE
     },
-    Case {
+    pick_up_screen: Case {
         name: "pick-up-screen",
         actions: "move:SW*2",
         screen: Some("pick-up"),
         ..BASE
     },
-    Case {
+    eat_screen: Case {
         name: "eat-screen",
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 kick:E*4 move:E*2 move:N \
             pickup move:E*2",
@@ -1532,7 +1561,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Born under the Barghest (seed 21): Hound's nose says how fresh the food smells.
-    Case {
+    eat_screen_smell: Case {
         name: "eat-screen-smell",
         seed: Some(21),
         character: Some("human,male,warrior"),
@@ -1541,7 +1570,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A thief is trained in Appraise (#1031): the eat list says how fresh the food looks.
-    Case {
+    eat_screen_judged: Case {
         name: "eat-screen-judged",
         seed: Some(6),
         character: Some("human,male,thief"),
@@ -1550,7 +1579,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Nothing to consume (the arena's pack holds no food).
-    Case {
+    consume_list_none: Case {
         name: "consume-list-none",
         scenario: "arena",
         run: true,
@@ -1559,21 +1588,21 @@ const CASES: &[Case] = &[
     },
     // Potions (spec §8 "Potions"): the Consume list with food (the bread carried) and potions
     // (the hub's pile underfoot) together, unknown ones by their word and colour.
-    Case {
+    consume_list: Case {
         name: "consume-list",
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*3 open:S move:S*4 move:E*4 \
             open:N move:N*2 move:NE move:E pickup move:SW",
         screen: Some("eat"),
         ..BASE
     },
-    Case {
+    potion_description_unidentified: Case {
         name: "potion-description-unidentified",
         actions: "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*3 open:S move:S*4 move:E*4 \
             open:N move:N*2 move:E pickup",
         screen: Some("describe"),
         ..BASE
     },
-    Case {
+    potion_description: Case {
         name: "potion-description",
         actions: "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*3 open:S move:S*4 move:E*4 \
             open:N move:N*2 move:E pickup eat:a",
@@ -1582,34 +1611,34 @@ const CASES: &[Case] = &[
     },
     // Flasks (spec §8 "Potions": "Flasks", #1223): the throw choice lists potions beside
     // throwing weapons, and a known flask says what its throw does.
-    Case {
+    throw_list_flasks: Case {
         name: "throw-list-flasks",
         actions: "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*3 open:S move:S*4 move:E*4 \
             open:N move:N*2 move:E move:W*3 pickup identify",
         keys: Some("T"),
         ..BASE
     },
-    Case {
+    potion_description_flask: Case {
         name: "potion-description-flask",
         actions: "drop move:N*3 open:N move:N*2 move:E*16 open:S move:S*3 open:S move:S*4 move:E*4 \
             open:N move:N*2 move:E move:W*3 pickup:c identify",
         screen: Some("describe"),
         ..BASE
     },
-    Case {
+    item_description: Case {
         name: "item-description",
         actions: "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup \
             equip:head:a",
         screen: Some("describe"),
         ..BASE
     },
-    Case {
+    ornament_description: Case {
         name: "ornament-description",
         actions: "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup:b",
         screen: Some("describe"),
         ..BASE
     },
-    Case {
+    variant_description: Case {
         name: "variant-description",
         actions: "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*3 move:N \
             pickup:b",
@@ -1618,14 +1647,14 @@ const CASES: &[Case] = &[
     },
     // A unique item (the quarry's Stonebiter): unidentified, a rare dagger; identified, its
     // name, affixes, power, and lore.
-    Case {
+    unique_description_unidentified: Case {
         name: "unique-description-unidentified",
         scenario: "quarry",
         actions: "drop move:W pickup",
         screen: Some("describe"),
         ..BASE
     },
-    Case {
+    unique_description: Case {
         name: "unique-description",
         scenario: "quarry",
         actions: "drop move:W pickup identify",
@@ -1634,21 +1663,21 @@ const CASES: &[Case] = &[
     },
     // The system affixes (#635), in words: the trap hall's staff (spells and mana), mail coat
     // (stamina, rage, eased casting), and amulet (hunger, disease, potions).
-    Case {
+    item_description_spell_affix: Case {
         name: "item-description-spell-affix",
         scenario: "traps",
         actions: "drop:a move:E*5 pickup",
         screen: Some("describe"),
         ..BASE
     },
-    Case {
+    item_description_stamina_affix: Case {
         name: "item-description-stamina-affix",
         scenario: "traps",
         actions: "drop:a move:E*6 pickup",
         screen: Some("describe"),
         ..BASE
     },
-    Case {
+    item_description_utility_affix: Case {
         name: "item-description-utility-affix",
         scenario: "traps",
         actions: "drop:a move:E*7 pickup",
@@ -1656,14 +1685,14 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Scrolls.
-    Case {
+    scroll_read_list: Case {
         name: "scroll-read-list",
         scenario: "traps",
         actions: "move:E pickup",
         screen: Some("read"),
         ..BASE
     },
-    Case {
+    scroll_identify_list: Case {
         name: "scroll-identify-list",
         scenario: "traps",
         actions: "move:E pickup",
@@ -1672,7 +1701,7 @@ const CASES: &[Case] = &[
     },
     // The Decipher ability's list (spec §8 "Scrolls"): the scrolls carried of a type not yet made
     // out; a wizard is trained in Decipher script.
-    Case {
+    scroll_decipher_list: Case {
         name: "scroll-decipher-list",
         scenario: "traps",
         character: Some("human,male,wizard"),
@@ -1680,7 +1709,7 @@ const CASES: &[Case] = &[
         screen: Some("decipher"),
         ..BASE
     },
-    Case {
+    scroll_too_close: Case {
         name: "scroll-too-close",
         scenario: "traps",
         // The fireballs identified first: an unknown scroll is read without a warning.
@@ -1690,21 +1719,21 @@ const CASES: &[Case] = &[
     },
     // Wands (spec §8 "Magic items": "Wands"): the trap hall's two, unknown, then identified;
     // aiming one from the missile weapon slot.
-    Case {
+    wand_description_unidentified: Case {
         name: "wand-description-unidentified",
         scenario: "traps",
         actions: "drop:a move:E move:E pickup",
         screen: Some("describe"),
         ..BASE
     },
-    Case {
+    wand_description: Case {
         name: "wand-description",
         scenario: "traps",
         actions: "drop:a move:E move:E pickup identify",
         screen: Some("describe"),
         ..BASE
     },
-    Case {
+    wand_aim: Case {
         name: "wand-aim",
         scenario: "traps",
         actions: "drop:a move:E move:E pickup identify equip:missile_weapon:a",
@@ -1713,14 +1742,14 @@ const CASES: &[Case] = &[
     },
     // Rods (spec §8 "Magic items": "Rods"): the trap hall's two, identified; aiming one from the
     // missile weapon slot shows its reach.
-    Case {
+    rod_description: Case {
         name: "rod-description",
         scenario: "traps",
         actions: "drop:a move:E move:E move:E pickup identify",
         screen: Some("describe"),
         ..BASE
     },
-    Case {
+    rod_aim: Case {
         name: "rod-aim",
         scenario: "traps",
         actions: "drop:a move:E move:E move:E pickup identify equip:missile_weapon:a",
@@ -1728,14 +1757,14 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Talk, quests, messages.
-    Case {
+    dialogue_screen: Case {
         name: "dialogue-screen",
         actions: concat!(hermit!(), " chat:SE ask:SE:rooms"),
         screen: Some("dialogue"),
         ..BASE
     },
     // Cēaptūn's Sister Hild: a proper name, topics, and two services with their prices (#336).
-    Case {
+    dialogue_services: Case {
         name: "dialogue-services",
         scenario: "ceaptun",
         actions: "move:SW*4 move:W*15 open:SW move:SW move:S*2 chat:SE",
@@ -1743,7 +1772,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Cēaptūn's Factor Wulfrun: an appraisal, priced per thing (#432).
-    Case {
+    dialogue_appraisal: Case {
         name: "dialogue-appraisal",
         scenario: "ceaptun",
         actions: "move:E*26 move:S*4 open:S move:S*4 chat:S",
@@ -1752,7 +1781,7 @@ const CASES: &[Case] = &[
     },
     // Cēaptūn's Wat One-Eye (#425): the guild's chain, one quest topic at a time, before his
     // own two.
-    Case {
+    dialogue_guild: Case {
         name: "dialogue-guild",
         scenario: "ceaptun",
         actions: "move:E*26 move:S*4 move:E*9 open:S move:S*5 chat:S",
@@ -1761,7 +1790,7 @@ const CASES: &[Case] = &[
     },
     // Cēaptūn's smith, Eadric, the smithy's keeper (#1394): his topics, then Metalcraft taught
     // for 2000 gold.
-    Case {
+    dialogue_smith: Case {
         name: "dialogue-smith",
         scenario: "ceaptun",
         actions: "move:NW*7 move:N chat:N",
@@ -1770,7 +1799,7 @@ const CASES: &[Case] = &[
     },
     // An aristocrat's squire at the Gæsthūs (#1405): the stipend of a few levels handed over,
     // then a flattering one-liner, in the message history.
-    Case {
+    servant_stipend: Case {
         name: "servant-stipend",
         scenario: "ceaptun",
         character: Some("human,male,aristocrat"),
@@ -1780,7 +1809,7 @@ const CASES: &[Case] = &[
     },
     // A merchant's business partner in Wulfrun's office (#1407): 100 gold put in, a month gone,
     // and the dialogue screen on what the stake is worth and the deals.
-    Case {
+    partner_invest: Case {
         name: "partner-invest",
         scenario: "ceaptun",
         character: Some("human,male,merchant"),
@@ -1791,7 +1820,7 @@ const CASES: &[Case] = &[
     },
     // A craftsperson's patron at the Gæsthūs (#1421): a commission given with its stock, then
     // the reminder while it waits, in the message history.
-    Case {
+    patron_commission: Case {
         name: "patron-commission",
         scenario: "ceaptun",
         character: Some("human,male,craftsperson"),
@@ -1800,7 +1829,7 @@ const CASES: &[Case] = &[
         screen: Some("messages"),
         ..BASE
     },
-    Case {
+    quest_offer: Case {
         name: "quest-offer",
         actions: concat!(hermit!(), " chat:SE ask:SE:quest-rats"),
         screen: Some("dialogue"),
@@ -1808,40 +1837,40 @@ const CASES: &[Case] = &[
     },
     // A rolled quest (#422): the courtyard's gardener, whose offer names what was drawn as it
     // was given.
-    Case {
+    quest_offer_rolled: Case {
         name: "quest-offer-rolled",
         scenario: "courtyard",
         actions: "move:E*9 move:NE*6 wait*12 move:E ask:N:quest-slug_charm",
         screen: Some("dialogue"),
         ..BASE
     },
-    Case {
+    quest_log: Case {
         name: "quest-log",
         actions: concat!(hermit!(), " ask:SE:quest-rats"),
         screen: Some("quests"),
         ..BASE
     },
     // A rolled quest's first breadcrumb, filled.
-    Case {
+    quest_log_rolled: Case {
         name: "quest-log-rolled",
         scenario: "courtyard",
         actions: "move:E*9 move:NE*6 wait*12 move:E ask:N:quest-slug_charm",
         screen: Some("quests"),
         ..BASE
     },
-    Case {
+    message_history: Case {
         name: "message-history",
         actions: concat!(hermit!(), " chat:SE ask:SE:quest-rats"),
         screen: Some("messages"),
         ..BASE
     },
-    Case {
+    more_prompt: Case {
         name: "more-prompt",
         actions: concat!(hermit!(), " chat:SE ask:SE:quest-rats"),
         ..BASE
     },
     // Shops, traps, death.
-    Case {
+    shop_unpaid: Case {
         name: "shop-unpaid",
         scenario: "courtyard",
         actions: concat!(shop!(), " move:E move:NE pickup move:E move:E pickup"),
@@ -1849,7 +1878,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Selling is a drop in a shop: marked in the drop mode, Enter asks.
-    Case {
+    shop_sell: Case {
         name: "shop-sell",
         scenario: "courtyard",
         actions: concat!(shop!(), " move:E move:NE pickup move:SW move:W"),
@@ -1857,7 +1886,7 @@ const CASES: &[Case] = &[
         keys: Some("D b Enter"),
         ..BASE
     },
-    Case {
+    shop_leaving: Case {
         name: "shop-leaving",
         scenario: "courtyard",
         actions: concat!(shop!(), " move:E move:NE pickup move:W move:SW"),
@@ -1866,20 +1895,20 @@ const CASES: &[Case] = &[
     },
     // The one trap known beside the player: `a c` (Disarm a trap, after the thief's birth
     // sign's stare and Exploit, #266) disarms it at once, with no prompt (#1327).
-    Case {
+    trap_disarm_at_once: Case {
         name: "trap-disarm-at-once",
         actions: "move:N*3 open:N move:N*2 move:E*67 open:S move:S*7 move:SW descend",
         keys: Some("a c"),
         ..BASE
     },
     // Two beside the thief to rob: `a e` (Steal) asks which way in the message line (#1327).
-    Case {
+    steal_prompt: Case {
         name: "steal-prompt",
         actions: "ally:dire_warg:2",
         keys: Some("a e"),
         ..BASE
     },
-    Case {
+    death_screen: Case {
         name: "death-screen",
         scenario: "arena",
         // Pip's birth sign has gifts (#265): seed 4 is one where the fight still ends in his death.
@@ -1888,7 +1917,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // The death remembered in the graveyard (#1137).
-    Case {
+    death_screen_graveyard: Case {
         name: "death-screen-graveyard",
         scenario: "arena",
         seed: Some(4),
@@ -1896,7 +1925,7 @@ const CASES: &[Case] = &[
         graveyard: Some(GRAVEYARD),
         ..BASE
     },
-    Case {
+    death_screen_lucky: Case {
         name: "death-screen-lucky",
         scenario: "arena",
         // Seed 142 gives Pip a lucky day, the Iron Scourge (#269), and the fight his death.
@@ -1904,14 +1933,16 @@ const CASES: &[Case] = &[
         actions: "use_tool wait*20",
         ..BASE
     },
-];
+}
 
-#[test]
-fn screens_as_text() {
-    let content = Arc::new(Content::builtin().expect("content"));
-    for case in CASES {
-        insta::assert_snapshot!(case.name, render(case, content.clone()));
-    }
+/// The built-in content, loaded once for every case.
+static CONTENT: LazyLock<Arc<Content>> =
+    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+
+/// The snapshot of one of the [`cases!`].
+fn check(case: &Case) {
+    let content = &*CONTENT;
+    insta::assert_snapshot!(case.name, render(case, content.clone()));
 }
 
 /// Factor Wulfrun asked about the lost shaft before level 5: the topic is listed, her reply
@@ -2075,6 +2106,7 @@ fn hunger_stops_as_text() {
         let case = Case {
             name,
             keys: Some(keys),
+            status_bar: true,
             ..road
         };
         insta::assert_snapshot!(case.name, render(&case, content));
@@ -2355,18 +2387,68 @@ fn an_encounter_row_answers_it() {
     );
 }
 
-/// The UI console's text once `case` has started and its keys were pressed: one line a row,
-/// trailing blanks trimmed.
+/// The UI console's text once `case` has started and its keys were pressed, as [`shown`] tells
+/// it, the status bar kept if the case is about it.
 fn render(case: &Case, content: Arc<Content>) -> String {
     let mut app = start(case, content);
     press_keys(&mut app, case.keys.unwrap_or(""));
-    text(app.world().resource::<Console>())
+    if case.status_bar {
+        redact(text(app.world().resource::<Console>()))
+    } else {
+        shown(&app)
+    }
+}
+
+/// The UI console's text for a snapshot: one line a row, trailing blanks trimmed, the game's
+/// version written `[version]` (#1532), and the status bar's row left out where it shows whole
+/// (#1521): a screen that covers any of it keeps the row as drawn.
+pub(super) fn shown(app: &App) -> String {
+    let console = app.world().resource::<Console>();
+    let mut lines: Vec<String> = text(console).split('\n').map(String::from).collect();
+    if let Some(bar) = status_bar(app)
+        && lines.last() == Some(&bar)
+    {
+        lines.pop();
+    }
+    redact(lines.join("\n"))
+}
+
+/// `text` with the game's version written `[version]`, so a release changes no snapshot.
+fn redact(text: String) -> String {
+    text.replace(warlock_core::GAME_VERSION, "[version]")
+}
+
+/// The status bar's row as the run's UI draws it on its own, trailing blanks trimmed; none
+/// without a run.
+fn status_bar(app: &App) -> Option<String> {
+    let world = app.world();
+    let game = world.get_resource::<Game>()?;
+    let console = world.resource::<Console>();
+    let settings = world.resource::<Settings>();
+    let hint = controls_hint(world.resource::<Bindings>());
+    let dev = crate::input::dev_keys(world.resource::<Args>());
+    let mut bar = Console::default();
+    bar.resize(console.cols(), console.rows());
+    let y = console.rows() as i32 - 1;
+    let units = (settings.clock, settings.temperature, dev);
+    draw_status(&mut bar, game, y, units, &hint);
+    text(&bar).split('\n').next_back().map(String::from)
+}
+
+/// The folder a case's `save_dir` names, relative to the workspace root: the saved characters'
+/// fixture as the tests read it (`save::saved_characters_fixture`, this version written in).
+fn fixture(dir: &str) -> String {
+    let path = if dir == "tests/golden/saved-characters" {
+        crate::save::saved_characters_fixture()
+    } else {
+        std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../..")).join(dir)
+    };
+    path.to_string_lossy().into_owned()
 }
 
 /// The app of `case` started, its screens open, no keys pressed yet.
 pub(super) fn start(case: &Case, content: Arc<Content>) -> App {
-    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../..");
-    let save_dir = case.save_dir.map(|dir| format!("{root}/{dir}"));
+    let save_dir = case.save_dir.map(fixture);
     let mut argv = vec![
         "warlock",
         "--capture",

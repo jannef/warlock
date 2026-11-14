@@ -176,8 +176,9 @@ mapping, `merged` table, or lenient read for old saves; `#[serde(default)]` on a
 fine. Feature PRs that change `WorldState` or the content fingerprint (any new id in an indexed
 table) say "saves change" in the PR: development builds share a version, so their saves are not
 promised across builds, and a save a build cannot read is renamed `<id>.sav.bad`, never lost.
-The release that bumps the workspace version also sets `version` in the fixture summaries under
-`tests/golden/saved-characters/saves/` (all but Osric's, another version's on purpose).
+The release that bumps the workspace version touches no test file: the fixture summaries under
+`tests/golden/saved-characters/saves/` say `@VERSION@` (all but Osric's, another version's on
+purpose), and the screen snapshots write the version `[version]` (#1532).
 
 ## Random streams: keep the gameplay stream still
 

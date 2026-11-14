@@ -441,7 +441,10 @@ place of golden screenshots. Each `Case` starts a run the way a golden entry doe
 console `size`). It runs the real systems headlessly (`open_startup_screens`, `route_keys`,
 `apply_choice`, `refresh`, `converse`, `on_death`, `more::wait`, `draw`) and snapshots the UI
 console with `insta` (`ui/snapshots/`, one file per case). The map layer and colors aren't part
-of it: map content is `warlock-cli dump`. To add one, append a case under its group in `CASES`,
-run `cargo test -p warlock screen_snapshots`, then `cargo insta review` (or
-`INSTA_UPDATE=always`, then read the diff). A changed screen shows as a text diff in the PR. New
+of it: map content is `warlock-cli dump`. To add one, add a case under its group in `cases!`
+(`test_name: Case { name: "test-name", .. }`: one `#[test]` a case, #1529, so one mismatch
+hides no other), run `cargo test -p warlock screen_snapshots`, then `cargo insta review` (or
+`INSTA_UPDATE=always`, then read the diff). The snapshot leaves out the status bar's row where
+it shows whole (`shown`, #1521: a HUD change rewrites only the cases about the bar, those with
+`status_bar: true`) and writes the game's version `[version]` (#1532). A changed screen shows as a text diff in the PR. New
 screens get a case here, never a golden (CLAUDE.md "Golden screenshots").

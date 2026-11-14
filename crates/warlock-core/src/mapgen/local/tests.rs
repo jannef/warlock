@@ -42,8 +42,8 @@ fn id(name: &str) -> TerrainId {
     CONTENT.terrain_id(name).expect("terrain")
 }
 
-/// A map with one character per terrain (several share a glyph in the game), creatures as `d`,
-/// the start as `@`, and running water as the way it flows.
+/// A map with one character per terrain (several share a glyph in the game), the start as `@`,
+/// and running water as the way it flows.
 fn debug_map(level: &LevelTemplate) -> String {
     let chars: &[(&str, char)] = &[
         ("forest_floor", '.'),
@@ -76,9 +76,7 @@ fn debug_map(level: &LevelTemplate) -> String {
         for x in 0..level.terrain.width() {
             let p = Pos::new(x, y);
             let def = CONTENT.terrain(level.terrain[p]);
-            let c = if level.creatures.iter().any(|c| c.pos == p) {
-                'd'
-            } else if level.player_start == Some(p) {
+            let c = if level.player_start == Some(p) {
                 '@'
             } else if let Some(f) = level.flow.get(&p) {
                 match f.dir {
@@ -102,24 +100,23 @@ fn debug_map(level: &LevelTemplate) -> String {
     out
 }
 
-/// Header (name, exit, creatures, lights, flow speeds) plus the map, for snapshots.
+/// Header (name, exit, flow speeds) plus the map, for snapshots: the terrain, the start, and the
+/// water's flow, never the creatures or lights put on it (#1526: those churn with the rosters;
+/// creatures are checked instead, on walkable ground, one to a cell).
 fn describe(level: &LevelTemplate) -> String {
+    let mut stood = BTreeSet::new();
+    for c in &level.creatures {
+        let def = CONTENT.terrain(level.terrain[c.pos]);
+        assert!(def.walkable, "a creature on {} at {}", def.id, c.pos);
+        assert!(stood.insert(c.pos), "two creatures at {}", c.pos);
+    }
     let (w, h) = (level.terrain.width(), level.terrain.height());
     let mut out = format!("{} ({}) {w}x{h}\n", level.name, level.id);
     if let Some(exit) = &level.exit {
         let _ = writeln!(out, "edges -> {} at {}", exit.to, exit.pos);
     }
-    for c in &level.creatures {
-        let route: Vec<&str> = c.route.iter().map(|d| d.name()).collect();
-        let name = &CONTENT.creature(c.creature).id;
-        let _ = writeln!(out, "{name} at {} route {}", c.pos, route.join(" "));
-    }
     let speeds: BTreeSet<u16> = level.flow.values().map(|f| f.speed).collect();
-    let _ = writeln!(
-        out,
-        "{} placed lights, flow speeds {speeds:?}",
-        level.lights.len()
-    );
+    let _ = writeln!(out, "flow speeds {speeds:?}");
     out + &debug_map(level)
 }
 

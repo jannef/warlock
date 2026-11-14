@@ -1,7 +1,7 @@
 //! Dungeons and danger levels (spec §7 "Dungeon branches", "Danger levels"): every branch's
 //! floors with their danger, who lives there, and how they come back.
 
-use super::text::percent;
+use super::util::percent;
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use warlock_core::content::danger::{self, Odds, StrayPool, TOO_WEAK};

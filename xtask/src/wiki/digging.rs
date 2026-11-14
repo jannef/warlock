@@ -1,6 +1,6 @@
 //! Digging (spec §8 "Digging"): the walls that break and how long each tool takes through them.
 
-use super::text::{article, capital, glyph, yes};
+use super::util::{article, capital, glyph, yes};
 use std::fmt::Write as _;
 use warlock_core::content::{
     ActionKind, BASE_TURN, Content, NORMAL_SPEED, TerrainDef, TrapEffect, price,

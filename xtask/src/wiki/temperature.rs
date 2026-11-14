@@ -1,8 +1,7 @@
 //! Temperature (spec §5 "Temperature") and ice (spec §5 "Ice"): the months, the weather, what
 //! freezes, what ice holds, and how fast it grows.
 
-use super::actions::at_normal_pace;
-use super::text::capital;
+use super::util::{at_normal_pace, capital};
 use std::fmt::Write as _;
 use warlock_core::content::{ActionKind, Content, LevelKind};
 use warlock_core::ice;

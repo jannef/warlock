@@ -2,7 +2,7 @@
 //! something and how hard it is to break out, what comes out by danger, the veins, and each
 //! dungeon's ores.
 
-use super::text::{capital, percent_of};
+use super::util::{capital, percent_of};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, MAX_LEVEL, Mined};
 

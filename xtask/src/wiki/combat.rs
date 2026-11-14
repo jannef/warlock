@@ -1,10 +1,9 @@
 //! Combat (spec §8 "Combat"): weapons, missile weapons, ammunition, armour, stances, the 2d12
 //! odds and what adds to them, Protection's soak, hit points, and regeneration.
 
-use super::actions::at_normal_pace;
 use super::objects::goes_on;
 use super::order;
-use super::text::{Term, anchored, capital, percent_of, signed};
+use super::util::{Term, anchored, at_normal_pace, capital, percent_of, signed};
 use std::fmt::Write as _;
 use warlock_core::combat;
 use warlock_core::content::{ActionKind, BASE_TURN, Content, price};

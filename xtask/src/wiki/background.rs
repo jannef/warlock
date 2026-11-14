@@ -3,7 +3,7 @@
 //! story in words only).
 
 use super::kits::line_text;
-use super::text::{Term, link, percent, signed, stat_link, table_text};
+use super::util::{Term, link, percent, signed, signed_or_zero, stat_link, table_text};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, Marks, StoryEffect, StoryLine, StoryTier};
 use warlock_core::text::or_list;
@@ -70,10 +70,6 @@ fn capital_tier(tier: StoryTier) -> &'static str {
         StoryTier::Rare => "Rare",
         StoryTier::Fateful => "Fateful",
     }
-}
-
-fn signed_or_zero(n: i32) -> String {
-    if n == 0 { "0".into() } else { signed(n) }
 }
 
 /// What each kind of effect is worth, in points (each line's worth must fit its kind's band).

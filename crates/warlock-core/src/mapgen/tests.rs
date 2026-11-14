@@ -29,38 +29,25 @@ fn level(seed: u64, depth: u32) -> LevelTemplate {
     .expect("generates")
 }
 
-/// Header (name, stairs, creatures, traps) plus the map, for snapshots.
+/// Header (name, stairs, special rooms, shops, places) plus the terrain, for snapshots (#1526):
+/// what the generator lays out, never what is put on it. Creatures, their gear, objects, traps,
+/// and lights churn with every loot or roster change, so they are left out of the text and
+/// checked instead ([`nothing_on_a_wall_in`]: on walkable ground, one creature to a cell).
 pub(super) fn describe(level: &LevelTemplate) -> String {
     describe_in(&CONTENT, level)
 }
 
 /// [`describe`] with `content` (another branch's tests: `cealdhlaw_tests.rs`).
 pub(super) fn describe_in(content: &Content, level: &LevelTemplate) -> String {
+    if let Err(e) = nothing_on_a_wall_in(content, level) {
+        panic!("{} places something wrongly: {e}", level.id);
+    }
     let (w, h) = (level.terrain.width(), level.terrain.height());
     let mut out = format!("{} ({}) {w}x{h}\n", level.name, level.id);
     for s in &level.stairs {
         let to = s.to.as_deref().unwrap_or("nowhere");
         let _ = writeln!(out, "stairs {:?} at {} -> {to}", s.dir, s.pos);
     }
-    for c in &level.creatures {
-        let route: Vec<&str> = c.route.iter().map(|d| d.name()).collect();
-        let name = &content.creature(c.creature).id;
-        let _ = write!(out, "{name} at {} route {}", c.pos, route.join(" "));
-        // Its gear (spec §8 "Creature gear"), with what of it is worn and wielded.
-        let pack = crate::kit::Pack {
-            items: c.carry.clone(),
-            equipment: c.equipment.clone(),
-        };
-        let gear = pack.names(content);
-        if !gear.is_empty() {
-            let _ = write!(out, " carrying {}", gear.join(", "));
-        }
-        let _ = writeln!(out);
-    }
-    for (p, trap) in &level.traps {
-        let _ = writeln!(out, "{} trap at {p}", content.trap(trap.kind).id);
-    }
-    let _ = writeln!(out, "{} placed lights", level.lights.len());
     for room in &level.rooms {
         let effect = content.room_effect(room.effect);
         let _ = writeln!(
@@ -82,7 +69,43 @@ pub(super) fn describe_in(content: &Content, level: &LevelTemplate) -> String {
         let note = place.note.as_deref().unwrap_or("");
         let _ = writeln!(out, "place {} at {p}: {note}", place.name);
     }
-    out + &ascii_with_rooms(level, content)
+    out + &terrain_map(level, content)
+}
+
+/// The terrain as text (stairs are terrain): its glyphs, `&` for a locked door, `S` for a secret
+/// door, `V` for a vein of ore, and the plain ground of each special room as its effect's mark;
+/// no creatures, objects, traps, or lights (`mapgen::ascii` draws those). Trailing spaces are
+/// trimmed.
+fn terrain_map(level: &LevelTemplate, content: &Content) -> String {
+    let veins = content.mining();
+    let mut out = String::new();
+    for y in 0..level.terrain.height() {
+        let row: String = (0..level.terrain.width())
+            .map(|x| {
+                let p = Pos::new(x, y);
+                let t = level.terrain[p];
+                let room = (level.rooms.iter())
+                    .find(|r| r.contains(p) && content.terrain(t).is_plain_ground());
+                if level.chests.contains_key(&p) {
+                    // A chest by its own glyph, whatever its lock.
+                    content.terrain(t).glyph
+                } else if level.locks.contains_key(&p) {
+                    '&'
+                } else if level.secrets.contains_key(&p) {
+                    'S'
+                } else if veins.is_some_and(|m| m.vein_of(t).is_some()) {
+                    'V'
+                } else if let Some(room) = room {
+                    content.room_effect(room.effect).mark
+                } else {
+                    content.terrain(t).glyph
+                }
+            })
+            .collect();
+        out.push_str(row.trim_end());
+        out.push('\n');
+    }
+    out
 }
 
 #[test]
@@ -886,7 +909,11 @@ fn a_mimic_never_stands_in_a_sanctuary() {
 /// shun), every chest is shut chest terrain with nothing lying or standing on it, and traps and
 /// locks are on walkable ground, a door, or a chest.
 fn nothing_on_a_wall(level: &LevelTemplate) -> Result<(), TestCaseError> {
-    let content = &**CONTENT;
+    nothing_on_a_wall_in(&CONTENT, level)
+}
+
+/// [`nothing_on_a_wall`] with `content` (another branch's).
+fn nothing_on_a_wall_in(content: &Content, level: &LevelTemplate) -> Result<(), TestCaseError> {
     let terrain = |p: Pos| content.terrain(level.terrain[p]);
     for (p, pile) in &level.objects {
         prop_assert!(terrain(*p).walkable, "objects on a wall at {}", p);
