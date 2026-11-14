@@ -128,6 +128,7 @@ impl Setting {
 }
 
 /// Chances (percent) and counts of the features of a landscape.
+#[allow(clippy::type_complexity)]
 struct Features {
     pond: u32,
     brook: u32,

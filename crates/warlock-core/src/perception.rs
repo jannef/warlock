@@ -1922,6 +1922,7 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// The digging tool the player has ready (spec §8 "Digging"), if any.
+    #[cfg(test)]
     pub fn ready_to_dig(&self) -> Option<ObjectId> {
         self.player.dig_tool(self.content).map(|(tool, _)| tool)
     }

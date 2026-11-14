@@ -403,11 +403,6 @@ pub struct Line {
 }
 
 impl Line {
-    /// Whether it is a plain line: common, asking nothing, giving nothing.
-    pub fn is_plain(&self) -> bool {
-        self.tier == Tier::Common && !self.only && self.when.is_empty() && self.effects.is_empty()
-    }
-
     /// Its boons and banes in points.
     pub fn worth(&self, points: &Points) -> (i32, i32) {
         (self.effects.iter()).fold((0, 0), |(b, c), e| {

@@ -1361,6 +1361,7 @@ impl TalentEffect {
 
     /// Whether it is a passive that works only within its talent's `alignment` bands (Communion
     /// with the dark, Retribution; `docs/dev/alignment.md`), as a holy active's gift does.
+    #[cfg(test)]
     pub fn band_gated(&self) -> bool {
         matches!(
             self,
@@ -2089,6 +2090,7 @@ struct EffectSpec {
 
 /// `effects` split into the plain ones and those under a status, each checked; a `while` on
 /// content without statuses has nothing to check it by, and its effect does nothing.
+#[allow(clippy::type_complexity)]
 fn split_effects(
     specs: Vec<EffectSpec>,
     content: &Content,

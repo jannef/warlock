@@ -72,6 +72,7 @@ pub(super) fn stat_uses(content: &Content) -> String {
             s.presence
         )
     });
+    #[allow(clippy::type_complexity)]
     let rows: [(Stat, Vec<Option<String>>, Vec<Option<String>>); 6] = [
         (
             Stat::Strength,

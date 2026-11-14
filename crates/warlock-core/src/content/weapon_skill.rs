@@ -1013,6 +1013,7 @@ mod tests {
         let text = include_str!("../../../../assets/data/weapon_skills.toml");
         let table = parse(text).expect("valid");
         // (id, to_hit, damage, threat, speed, parry, shield, reload)
+        #[allow(clippy::type_complexity)]
         #[rustfmt::skip]
         let skills: [(&str, i32, i32, u8, u8, i32, i32, u8); 15] = [
             // Light blades

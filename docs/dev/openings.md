@@ -119,7 +119,7 @@ cap on n beyond the pool's maximum (Of Guile's eight openings are 8 × the dice 
 | 32 | Improved sneak attack (keeps `ambush 2d6`) | a second `exploit_dice` 1d6: 2d6 an opening |
 | 60 | Master thief (keeps `ambush_threat 2`) | threat 4 lower, never below 2 (`exploit_threat`); with five or more spent a critical whenever it hits, no confirmation (`sure_at = 5`: the finisher, folded in; `ClassActive::MasterThief` and `use:master_thief` are gone, O4 #1464) |
 
-Trained wind is off the thief's table (a save holding it keeps it); the pool comes with the first
+Trained wind is off the thief's table; the pool comes with the first
 active weapon rank (`fight.rs::grant_stamina`).
 
 ## What the player sees

@@ -3168,12 +3168,6 @@ impl Content {
         u8::try_from(i).ok().map(DamageTypeId)
     }
 
-    /// Whether damage of `kind` is physical, which Protection soaks (untyped damage counts as
-    /// physical: it is soaked as every blow was before damage had types).
-    pub fn is_physical(&self, kind: Option<DamageTypeId>) -> bool {
-        kind.is_none_or(|k| self.damage_type(k).physical)
-    }
-
     /// The kinds `names` name (`damage_type` in data: one or two type ids), checked; none
     /// named is an untyped attack (soaked and wounding as every blow did before damage had
     /// types; the built-in data names one everywhere, a test checks).

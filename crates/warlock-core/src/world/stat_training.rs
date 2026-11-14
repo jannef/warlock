@@ -374,8 +374,7 @@ pub(super) enum Check {
 }
 
 /// Schedules the daily stat check for a new or loaded run: the next 06:00 after now when the
-/// content has training rules and none is scheduled (a run just begun, a save made before the
-/// check), none without the rules.
+/// content has training rules and none is scheduled (a run just begun), none without the rules.
 pub(super) fn schedule(state: &mut WorldState, content: &Content) {
     if !content.stat_training().is_active() {
         state.next_stat_check = None;

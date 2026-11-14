@@ -71,11 +71,6 @@ impl LevelState {
         self.ice_until
     }
 
-    /// The temperature here underground; `None` under the open sky (it follows the weather).
-    pub fn fixed_temperature(&self) -> Option<Temperature> {
-        self.temperature
-    }
-
     /// Shows the ice at `p` as thick as it is: the ice terrain its thickness reaches, else the
     /// water beneath. (Ice and water are transparent and give no light, so light masks keep.)
     pub(crate) fn show_ice(&mut self, content: &Content, p: Pos) {
