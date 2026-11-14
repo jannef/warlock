@@ -189,8 +189,8 @@ never down. "—" means it gives nothing yet at that value.
 >   Disable device: its points grow evenly from +0 at 0 to +8 at 100, so 25 gives
 >   8 × 25 ÷ 100 = 2. In all, **+4**.
 > - **What the dice must reach:** 14 − 4 = **10**: 108 of the 144 rolls, **75%**.
-> - **Setting it off:** falling short by 5 or more (a total of 9 or less, so dice of 6 or less)
->   sets the trap off at her: 15 rolls in 144, **10.4%**.
+> - **Setting it off:** falling short by 5 or more (a total of 9 or less, so dice of 5 or less)
+>   sets the trap off at her: 10 rolls in 144, **6.9%**.
 > - At Disable device 100 she adds +10 and the dice need 4: only 3 rolls in 144 fail (2.1%), and
 >   none sets the trap off.
 
