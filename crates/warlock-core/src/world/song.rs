@@ -112,7 +112,7 @@ impl World {
         };
         let will = them.check_modifier(&content, stat);
         let seen = self.perception.sees_actors_at(them.pos);
-        let who = super::talk::capitalized(&self.called(them));
+        let who = crate::text::capitalized(&self.called(them));
         let falls = !check::check(&mut self.state.rng, will, difficulty);
         if falls {
             let player = self.state.player;

@@ -27,12 +27,12 @@
 
 use super::cast::Cast;
 use super::fight::Harm;
-use super::talk::capitalized;
 use super::{ActorId, World};
 use crate::action::Event;
-use crate::content::{CreatureId, CreatureSpawn, LevelKind, SpellPurpose, Stance, and_list};
+use crate::content::{CreatureId, CreatureSpawn, LevelKind, SpellPurpose, Stance};
 use crate::damage::Damage;
 use crate::dice::Dice;
+use crate::text::{and_list, capitalized};
 
 impl World {
     /// Spell `cast` backfires on `caster`, at its base roll or, when `full`, its cast's (module
@@ -202,7 +202,7 @@ impl World {
                 super::ally::few(&def.name, &def.plural, n)
             })
             .collect();
-        let list = super::ally::capital(&and_list(
+        let list = crate::text::capitalized(&and_list(
             &words.iter().map(String::as_str).collect::<Vec<_>>(),
         ));
         let verb = if count == 1 { "comes" } else { "come" };

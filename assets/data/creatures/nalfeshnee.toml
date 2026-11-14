@@ -23,7 +23,8 @@ stats = { strength = 36, dexterity = 20, toughness = 37, intelligence = 30, will
 base_hp = 322
 loot = 19
 natural = { defence = 4, protection = 5, name = "hide" }
-resist = { fire = 75, cold = 25, electricity = 25, poison = 100 }
+resist = { fire = 75, cold = 25, electricity = 25 }
+immune = ["poison"]
 corpse = false
 blood = "#2a0a1a"
 [creature.aura]

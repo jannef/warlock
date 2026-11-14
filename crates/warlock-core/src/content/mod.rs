@@ -296,14 +296,14 @@ pub use mining::{Mined, MiningBand, MiningFind, MiningRules, Vein, Veins};
 pub use miscast::{Miscast, MiscastRules};
 pub use monster_pool::{MonsterPool, VaultMonsters};
 pub use names::{NameLists, Names};
-pub use object::{MAX_VALUE, ObjectDef, ObjectId, article, counted, weapon_noun};
+pub use object::{MAX_VALUE, ObjectDef, ObjectId, counted, weapon_noun};
 pub use offer::TradeOffer;
 pub use outcome::{
     Amount, Explosion, Harmful, Near, OutcomeDef, OutcomeEffect, OutcomeKind, OutcomeSummon,
     OutcomeTable, OutcomeTables, OutcomeTier,
 };
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
-pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole, and_list};
+pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use patron::PatronRules;
 pub use plural::Plurals;
@@ -1971,10 +1971,8 @@ impl Content {
                 })?;
             let blood = creature::blood(spec.blood.as_deref())
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
-            let immune = (spec.immune.iter())
-                .map(|s| self.status_id(s))
-                .collect::<Option<Vec<_>>>()
-                .ok_or_else(|| err(format!("creature `{}`: immune: unknown status", spec.id)))?;
+            let (immune, immune_kinds) = creature::immunities(self, &spec.immune)
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             if let Some(animated) = &mut spec.animated {
                 animated.family = CreatureId(id.0 - u16::from(animated.member));
             }
@@ -2001,6 +1999,7 @@ impl Content {
                 weapon_skills,
                 resist,
                 immune,
+                immune_kinds,
                 spells: creature_spells::resolve(self, &spec).map_err(err)?,
                 faction: self.creature_faction(&spec).map_err(err)?,
                 factions: self.creature_factions(&spec).map_err(err)?,
@@ -2021,6 +2020,13 @@ impl Content {
             if spec.on_eat.is_some() && (!spec.corpse || spec.id == "player") {
                 return Err(err(format!(
                     "creature `{}`: `on_eat` is for creatures that leave a corpse",
+                    spec.id
+                )));
+            }
+            // An everlasting corpse is a unique's, and there must be one to keep.
+            if spec.everlasting && (!spec.corpse || !spec.unique || spec.id == "player") {
+                return Err(err(format!(
+                    "creature `{}`: `everlasting` is for a unique creature that leaves a corpse",
                     spec.id
                 )));
             }
@@ -2565,7 +2571,12 @@ impl Content {
                         .map_err(|_| err("too many objects".into()))?,
                 );
                 let creature_id = CreatureId(i as u16);
-                let food = corpses.sizes[creature.size];
+                let mut food = corpses.sizes[creature.size];
+                if creature.everlasting {
+                    // It never rots: the one way to a shelf life of never.
+                    food.keeps = None;
+                    food.lasts = None;
+                }
                 let def = ObjectDef::corpse_of(creature_id, creature, class, material, food);
                 if self.object_ids.insert(def.id.clone(), id).is_some() {
                     return Err(err(format!(

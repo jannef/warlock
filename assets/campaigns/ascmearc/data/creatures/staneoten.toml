@@ -33,6 +33,7 @@ base_hp = 420
 weapon_skills = { thrown = 6 }
 natural = { defence = 2, protection = 7, name = "hide" }
 resist = { cold = 25, electricity = 25 }
+everlasting = true
 on_eat = { message = "Like chewing the hill itself; it sits in you like a stone.", vomit = 30, train = { strength = 200 } }
 blood = "#7a3a1a"
 [creature.attack]

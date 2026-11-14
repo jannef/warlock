@@ -29,7 +29,6 @@
 //! bones, the spirits, the animated). Nothing limits trying again (the owner's rule): the time
 //! is the price.
 
-use super::talk::capitalized;
 use super::{Spent, World};
 use crate::action::Event;
 use crate::check;
@@ -37,6 +36,7 @@ use crate::content::{ActionKind, Build, Stance};
 use crate::geom::Dir;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::text::capitalized;
 
 impl World {
     /// [`crate::Action::Feint`]: the player feints at the creature in `dir` (see the module docs).

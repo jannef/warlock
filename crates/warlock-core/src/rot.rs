@@ -56,11 +56,11 @@ pub(crate) fn stage(content: &Content, stack: &Stack, now: GameTime) -> Option<S
     Some(food.stage(now.since(made)))
 }
 
-/// When `stack` has rotted away (`None` as for [`stage`]).
+/// When `stack` has rotted away (`None` as for [`stage`], and for food that lasts for ever).
 pub(crate) fn gone_at(content: &Content, stack: &Stack) -> Option<GameTime> {
     content.hunger()?;
     let made = stack.died?;
-    Some(made + content.object(stack.object).food?.lasts)
+    Some(made + content.object(stack.object).food?.lasts?)
 }
 
 /// Food among `stacks` that does not know its age yet is made at `now`: what a level, a spawned

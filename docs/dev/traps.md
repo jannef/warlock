@@ -37,7 +37,7 @@ same list, the shut chest's cell skipped by `step_onto_trap`, a shot out of the 
 victim where it stands, a bolt without a `dir` runs from the door through the victim (`spring_trap`
 picks `Dir::toward` when the victim stands next to the trap), and a burst's own cell never stops it
 (`World::cast_burst`), so a shut door's blast leaves both sides. The app's step prompt
-(`input::trap_dialog`) skips doors. **Damage by danger** (#1165): `TrapDef::grows`
+(`ui::step_dialogs::trap_dialog`) skips doors. **Damage by danger** (#1165): `TrapDef::grows`
 (`content::TrapGrows`, parsed from `[trap.grows]`'s `damage = "danger 3 1d4, ..."` by
 `spell_ladder::parse_rungs`, the rung reader `[spell.grows]` shares; refused: no `danger` prefix,
 rungs not rising, out of 1 to `MAX_DANGER`, a rung that can roll below 0, or rungs on a trap

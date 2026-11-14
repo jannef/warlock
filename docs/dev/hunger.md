@@ -28,7 +28,17 @@ its tags', `Corpses::gifts_of`, then its own per stat, zeros dropped; `MAX_TRAIN
 undead's files switch their caster, troll, and marsh-thing gifts off with zeros), scenarios' `carry` (a starting pack on top of the character's kit, docs/dev/character-creation.md). Corpses are objects made at load
 (`Content::load_hunger`, after the file's objects, id `<creature>_corpse`, `ObjectDef::corpse`
 names the creature, `Content::corpse_of`), feeding and keeping by their creature's size, and
-level files cannot place corpses. **Rot** (#195): every food stack carries `Stack::died` (when
+level files cannot place corpses. **Everlasting corpses** (#1624, the profane gifts' P1,
+docs/design/profane-gifts.md §3): `CreatureDef::everlasting` (refused by `load_creatures`
+without `corpse`, on a non-`unique`, and on the player) makes `load_hunger` give its corpse
+`Food { keeps: None, lasts: None }` (`Food::keeps`/`lasts` are `Option<Duration>`; `shelf_life`
+always reads `Some`, so an object file cannot ask for never): `Food::stage` is Fresh for ever,
+`rot::gone_at` is `None`, so `rot_pack`, `rot_away`, `until_rots`, and `freshness::judged` (all
+through `rot::stage`/`gone_at`) leave it be; `crystallise` skips it and `fight.rs`'s `stoned` is
+false for it, so its death always lays the corpse. `content/layer_boss.rs::pin_lairs` refuses an
+endless branch's boss without `corpse` and `everlasting`. Tests: `world/everlasting_tests.rs`, the glass in `soulglass_tests.rs`, the refusals in
+`layer_boss_tests.rs`.
+**Rot** (#195): every food stack carries `Stack::died` (when
 it was made; a corpse, when its creature died; crate-private: presentation cannot read any
 food's age), and `Stack::is_valid_for` checks food knows it and nothing else does. Food that
 comes into the world from content is made then (`rot::made_at`: in `instantiate_level` for
@@ -109,7 +119,7 @@ the actions queued behind it that frame (as it drops a step behind another that 
 from where the first left the player, `input::asks_first`, #1538: the frame's presses are all read
 before any is applied, so input asked about it from the cell before) (it takes the `ResMut` so a frame without actions leaves the
 `Game` unchanged: `on_level_up` and `refresh` run on change). A replay's last step sets no stop.
-`input::hunger_dialog` asks before an overworld step while Fainting or Starving
+`ui::step_dialogs::hunger_dialog` asks before an overworld step while Fainting or Starving
 (`PerceptionView::level_kind`, the state alone); text cases `hunger-*` in `screen_snapshots.rs`.
 There is no multi-step movement to end (no run or travel command, on the overworld or anywhere): a
 held key's repeats are the only walking.

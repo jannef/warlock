@@ -33,6 +33,7 @@ use crate::content::{Content, Stance, the};
 use crate::fov::radius2;
 use crate::noise::{self, Act, Noise, SoundKind};
 use crate::sight::LineOfSight;
+use crate::text::capitalized;
 
 /// Puts `actor`'s innate statuses on it (module docs): those it lacks, and those that refresh.
 pub(super) fn wear_innate(actor: &mut Actor, content: &Content) {
@@ -147,7 +148,7 @@ impl World {
                 aura.unseen.clone()
             };
             if let Some(line) = line {
-                self.say(capital(&line));
+                self.say(capitalized(&line));
             }
         }
         events.extend(made);
@@ -171,14 +172,5 @@ impl World {
             return;
         }
         self.make_noise(id, Act::Cry(cry.kind));
-    }
-}
-
-/// `text` with its first letter upper-case.
-fn capital(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
     }
 }

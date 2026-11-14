@@ -35,6 +35,7 @@ use crate::geom::{Dir, Pos};
 use crate::rng::Rng;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::text::capitalized;
 use crate::weather::Weather;
 use serde::{Deserialize, Serialize};
 
@@ -245,14 +246,6 @@ pub struct EncounterView {
     pub choices: Vec<(String, Choice)>,
 }
 
-/// The first letter in upper case.
-fn capital(text: &str) -> String {
-    let mut chars = text.chars();
-    chars.next().map_or_else(String::new, |c| {
-        c.to_uppercase().chain(chars).collect::<String>()
-    })
-}
-
 /// "Ahead" as the way there is: on the road, on the trail, or across the land.
 fn ahead(landscape: Option<Landscape>) -> &'static str {
     match landscape {
@@ -324,7 +317,7 @@ pub(crate) fn view(
     };
     EncounterView {
         name: name.to_string(),
-        title: capital(name),
+        title: capitalized(name),
         text,
         choices: (choices.iter())
             .map(|&c| (pending.outcome.label(c).to_string(), c))
@@ -464,16 +457,11 @@ impl World {
             .flat_map(|t| &t.entries)
             .filter(|e| self.when_holds(&e.when, here))
             .collect();
-        let total: u32 = entries.iter().map(|e| e.weight).sum();
-        if total == 0 {
+        // The stream is made on its first draw: none while nothing weighs anything.
+        if entries.iter().all(|e| e.weight == 0) {
             return;
         }
-        let mut r = self.encounters_rng().below(total);
-        let Some(entry) = entries.into_iter().find(|e| {
-            let hit = r < e.weight;
-            r = r.saturating_sub(e.weight);
-            hit
-        }) else {
+        let Some(&entry) = self.encounters_rng().weighted(&entries, |e| e.weight) else {
             return;
         };
         let side = self.arrival_side();

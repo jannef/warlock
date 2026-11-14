@@ -6,6 +6,7 @@ use warlock_core::content::{Content, Keep, Kit, KitItem};
 use warlock_core::equipment::{self, Equipment};
 use warlock_core::magic::LootGrade;
 use warlock_core::object::Stack;
+use warlock_core::text::or_list;
 
 /// The classes' kits, one row each.
 pub(super) fn class_kits(content: &Content) -> String {
@@ -79,9 +80,9 @@ pub(super) fn line_text(content: &Content, line: &KitItem) -> String {
         .map(|stacks| named(content, stacks))
         .collect();
     let what = match names.as_slice() {
-        [one] => one.clone(),
-        [init @ .., last] => format!("one of {} or {last}", init.join(", ")),
         [] => String::new(),
+        [one] => one.clone(),
+        many => format!("one of {}", or_list(many)),
     };
     let mut notes = Vec::new();
     if line.keep != Keep::Carry {

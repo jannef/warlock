@@ -23,7 +23,8 @@ weight = 300
 size = "small"
 stats = { strength = 8, dexterity = 15, toughness = 5, intelligence = 2, willpower = 17, presence = 2 }
 base_hp = 2
-resist = { fire = 100, cold = -50, poison = 100 }
+resist = { cold = -50 }
+immune = ["fire", "poison"]
 corpse = false
 blood = "none"
 # A vortex (the dread design §5.3): beside its target it bursts instead of attacking, and is

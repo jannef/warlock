@@ -25,11 +25,12 @@
 use super::{Actor, LevelState, Spent, World};
 use crate::content::{
     Content, InputKind, MaterialId, ObjectId, PartSource, RecipeDef, RecipeId, RecipeInput,
-    RecipeUse, TerrainId, article, counted,
+    RecipeUse, TerrainId, counted,
 };
 use crate::geom::{Dir, Pos};
 use crate::scroll_label::Lore;
 use crate::skills::SkillId;
+use crate::text::article;
 use crate::time::Duration;
 
 /// One recipe as the profession's screen lists it.

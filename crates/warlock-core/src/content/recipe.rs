@@ -20,6 +20,7 @@ use super::{Content, ContentError, Landscape, MaterialId, ObjectId, TerrainId, d
 use crate::dice::Dice;
 use crate::skills::SkillId;
 use crate::stats::Stat;
+use crate::text::capitalized;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -988,13 +989,4 @@ fn part_index(content: &Content, object: ObjectId, name: &str) -> Option<usize> 
     }
     let id = content.part_id(name)?;
     parts.iter().position(|p| p.part == Some(id))
-}
-
-/// `text` with its first letter in upper case ("Long sword").
-fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
-    }
 }

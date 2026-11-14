@@ -386,7 +386,7 @@ fn a_ranger_begins_with_a_named_beast_and_its_story_and_a_warrior_with_neither()
         text.contains(&format!(
             "{}, {} {} (grade {})",
             data.name,
-            crate::content::article(&kind.name),
+            crate::text::article(&kind.name),
             kind.name,
             data.grade
         )),

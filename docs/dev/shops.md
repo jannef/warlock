@@ -68,4 +68,4 @@ service is `temple = true` (a temple's cure and mending stay flat, Pious aside),
 a good keeper makes of their alignment band, `world/alignment.rs::keeper_favour`, at most
 `MAX_FAVOUR`) is never shown: presentation reads only prices
 (`PerceptionView::shop_at`/`shop_here`, `price_tag`, `unpaid`, `owed_on_leaving`, `sale`,
-`own_gold`; look mode, the object screens, and the shop's dialogs in `input.rs`).
+`own_gold`; look mode, the object screens, and the shop's dialogs in `ui/step_dialogs.rs`).

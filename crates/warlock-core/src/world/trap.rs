@@ -45,7 +45,7 @@ use crate::action::{Event, MissileEnd};
 use crate::check::check;
 use crate::combat::{self, Blow, Profile, Strike};
 use crate::content::StatUse;
-use crate::content::{ActionKind, Bolt, Effect, ObjectId, TrapEffect, TrapId, article};
+use crate::content::{ActionKind, Bolt, Effect, ObjectId, TrapEffect, TrapId};
 use crate::damage::Damage;
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
@@ -53,6 +53,7 @@ use crate::perception::VIEW_RADIUS;
 use crate::skills::{Effect as SkillEffect, Use};
 use crate::stats::Stat;
 use crate::talent::TalentMods;
+use crate::text::article;
 use std::collections::BTreeSet;
 
 /// How far past its victim a trap's missile flies on, at most, when it misses.

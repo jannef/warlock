@@ -303,9 +303,7 @@ pub fn fresh_seed() -> u64 {
     #[cfg(not(target_arch = "wasm32"))]
     let noise = {
         use std::hash::BuildHasher;
-        let nanos = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_or(0, |d| d.as_nanos() as u64);
+        let nanos = crate::utc::since_epoch().as_nanos() as u64;
         nanos ^ std::collections::hash_map::RandomState::new().hash_one(nanos)
     };
     mix(noise) >> 32

@@ -6,7 +6,7 @@
 # closed, who sits his throne on the fortieth floor with his dead court about him. Once a run
 # (`unique`), in no population: only his hall places him. His fight is the court: he calls the
 # dead up out of the floor while his will lasts, and his barrow-blade's cold saps the strength
-# of whoever it cuts.
+# of whoever it cuts. Like every keeper of the deep, he leaves a corpse that never rots.
 [[creature]]
 id = "wealaf"
 level = 41
@@ -32,8 +32,10 @@ stats = { strength = 30, dexterity = 18, toughness = 34, intelligence = 20, will
 base_hp = 190
 mana = 120
 natural = { defence = 3, protection = 3, name = "dead flesh" }
-resist = { poison = 100, cold = 50 }
-corpse = false
+resist = { cold = 50 }
+immune = ["poison"]
+everlasting = true
+on_eat = { message = "Grave-cold and dry as barrow dust: the meat of a king long dead.", vomit = 60 }
 blood = "none"
 [creature.attack]
 damage = "5d8"

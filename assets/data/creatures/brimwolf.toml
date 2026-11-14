@@ -23,7 +23,8 @@ weight = 5000000
 stats = { strength = 33, dexterity = 24, toughness = 34, intelligence = 32, willpower = 35, presence = 32 }
 base_hp = 138
 natural = { defence = 4, protection = 0, name = "flowing body" }
-resist = { fire = 50, piercing = 50, electricity = -50, poison = 100 }
+resist = { fire = 50, piercing = 50, electricity = -50 }
+immune = ["poison"]
 corpse = false
 blood = "none"
 [creature.attack]

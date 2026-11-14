@@ -32,7 +32,8 @@ base_hp = 118
 mana = 64
 skills = { sneak_attack = 40, initiative = 50, spot = 40 }
 natural = { defence = 3, protection = 3, name = "chitin" }
-resist = { poison = 100 }
+immune = ["poison"]
+everlasting = true
 on_eat = { message = "Bitter beyond bearing, and your mouth goes numb.", vomit = 80, harm = "2d4" }
 blood = "#4a6a2a"
 [creature.attack]

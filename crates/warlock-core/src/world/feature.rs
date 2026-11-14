@@ -30,7 +30,7 @@ fn feature_at(state: &WorldState, content: &Content, p: Pos) -> Option<String> {
         return None;
     }
     let name = &def.name;
-    let a = crate::content::article(name);
+    let a = crate::text::article(name);
     let mut line = format!("There is {a} {name} here.");
     let note = level
         .place(content, p)

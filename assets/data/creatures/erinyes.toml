@@ -23,7 +23,8 @@ weight = 70000
 stats = { strength = 26, dexterity = 22, toughness = 27, intelligence = 25, willpower = 29, presence = 25 }
 base_hp = 95
 natural = { defence = 2, protection = 0, name = "hide" }
-resist = { fire = 100, poison = 50, cold = 50 }
+resist = { poison = 50, cold = 50 }
+immune = ["fire"]
 weapon_skills = { long_blades = 9, duelist = 7 }
 loot = 6
 corpse = false

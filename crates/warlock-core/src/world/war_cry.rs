@@ -102,7 +102,7 @@ impl World {
         };
         let nerve = them.check_modifier(&content, Stat::Willpower);
         let seen = self.perception.sees_actors_at(them.pos);
-        let who = super::talk::capitalized(&self.called(them));
+        let who = crate::text::capitalized(&self.called(them));
         let quails = !check::check(&mut self.state.rng, nerve, difficulty);
         if quails {
             let player = self.state.player;

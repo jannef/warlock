@@ -17,6 +17,7 @@ use super::{ACCENT, TEXT};
 use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
 use warlock_core::perception::PerceptionView;
+use warlock_core::text::capitalized;
 use warlock_core::world::Conversation;
 use warlock_core::{Action, Dir, Event, Outcome};
 
@@ -252,15 +253,6 @@ pub fn last_talk(outcome: &Outcome) -> Option<&Conversation> {
         Event::Talked(talk) => Some(talk),
         _ => None,
     })
-}
-
-/// `text` with its first letter in upper case.
-fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
-    }
 }
 
 #[cfg(test)]

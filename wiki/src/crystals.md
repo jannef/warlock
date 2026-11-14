@@ -42,7 +42,8 @@ colour lie where it fell. What it carried falls as usual.
 A stronger creature leaves more crystals, and a very strong one may leave a
 [rare material](#rare-materials) too (how many and how often is under [The numbers](#the-numbers)).
 A creature with no corpse (a spirit, a fire elemental), an animated thing, a summoned creature,
-and a creature of no colour die as they would from any other spell. The undead take no
+a creature of no colour, and a [keeper of Grundlēas](food.md#corpses) die as they would from any
+other spell. The undead take no
 [necrotic](spellcasting.md#spell-types) harm, so Soulglass does nothing to them.
 
 ## Consuming a crystal

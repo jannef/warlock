@@ -104,6 +104,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the pile where it fell, after what it carried, whatever killed it (`World::leave_corpse`, in
     `creature_dies`), bloodless creatures too unless their type says `corpse = false`. It rots
     like any food from the moment of the death ("Your giant rat corpse has rotted away.").
+    - **Everlasting corpses** (#1624; docs/design/profane-gifts.md §3): a unique creature's type
+      may say `everlasting = true` (refused without `corpse` and on any creature not `unique`):
+      its corpse never rots (`Food::keeps` and `lasts` are `None`, set by the loader from
+      `everlasting` alone; no object file can say never), so it is fresh at any age, never rots
+      away in a pack or a pile, and a trained eye judges it fresh. Its death always lays it: a
+      crystal spell does not turn it to glass, nor a petrifying death to a statue. All ten keepers
+      of Grundlēas (§7 "The endless branch") are everlasting, and the campaign check refuses an
+      endless branch's layer boss without `corpse` and `everlasting`. Nothing in the game names
+      the rule.
   - **Eating rotten food** of any kind (by its age when the last turn of the meal is done; gone
     food not yet removed counts as rotten): "Ugh! The loaf of bread was rotten.", one draw with
     `[rotten] vomit` (50 %) to vomit, else it makes them sick, exposes them to the diseases

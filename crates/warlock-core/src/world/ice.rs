@@ -38,6 +38,7 @@ use crate::object;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::temperature::{self, Temperature};
+use crate::text::capitalized;
 use crate::time::GameTime;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -555,6 +556,9 @@ impl World {
     /// The dev action `freeze:x,y,r` ([`crate::action::Action::Freeze`]): a frost burst at `at`
     /// within `radius`, said and shown. Takes no time.
     pub(super) fn freeze_dev(&mut self, at: Pos, radius: i32, events: &mut Vec<Event>) -> Spent {
+        if self.off_level_dev(at) {
+            return Spent::Nothing;
+        }
         let froze = self.frost(at, radius, crate::ice::FROST);
         self.say(format!(
             "Frost seizes the water around {},{} ({froze} cells, dev).",
@@ -567,20 +571,14 @@ impl World {
     /// The dev action `thaw:x,y,r` ([`crate::action::Action::Thaw`]): a burst of heat at `at`
     /// within `radius`, said. Takes no time.
     pub(super) fn thaw_dev(&mut self, at: Pos, radius: i32, events: &mut Vec<Event>) -> Spent {
+        if self.off_level_dev(at) {
+            return Spent::Nothing;
+        }
         self.say(format!(
             "Heat melts the ice around {},{} (dev).",
             at.x, at.y
         ));
         self.shock(at, radius, crate::ice::Shock::Heat, events);
         Spent::NoTime
-    }
-}
-
-/// `text` with its first letter in upper case.
-fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
     }
 }

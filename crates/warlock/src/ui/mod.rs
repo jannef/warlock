@@ -75,6 +75,7 @@ mod sounds;
 mod spells;
 #[cfg(test)]
 mod stale_list_tests;
+pub(crate) mod step_dialogs;
 mod story_screen;
 mod talents_screen;
 mod target;

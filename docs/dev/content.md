@@ -127,3 +127,14 @@ embedded copy:
   A new id the engine names goes into that list.
 - **`data/gear_condition.toml`'s keys** (#1556): each `[kinds]` key is some material's `group`,
   and each `[[tribe]]`'s `tag` some creature's.
+
+## Words
+
+The small text helpers live once, in `warlock_core::text`, and core, the app, and the wiki
+generator all call them (#1543, #1548): `capitalized` (a first letter in capitals), `article`
+(`a` or `an`, lower case), `and_list` and `or_list` (a list with the Oxford comma, "a, b, and c",
+the owner's choice for all game text), and `number_word` ("no", "one" to "twelve", digits
+beyond). The app keeps its wall-clock helpers in `crates/warlock/src/utc.rs` (`since_epoch`,
+`utc_parts`; #1571) and its cut-to-width helpers beside `wrap` in `ui/menu.rs` (`truncated`,
+`truncated_head`). The wiki generator writes every percentage through `xtask/src/wiki/text.rs`
+(`percent`, `percent_of`: `12.5%`, no space, a tenth from 1% up; #1577).

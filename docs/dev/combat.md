@@ -122,10 +122,14 @@ Damage types (spec §8 "Damage types", #151): the data is `data/damage_types.tom
 terrain parse with). The model is `warlock-core/src/damage.rs`: `Damage { amount, kind:
 Option<DamageTypeId> }` (`None` untyped), `Kinds` (at most `MAX_KINDS` 2; `best(resistance,
 protection)` picks the kind a blow does, no draw), `Rider { kind, dice }` (added damage),
-`Resistances` (one percent per type; `sum(count, innate, gear)` caps at `MAX_RESISTANCE` 75 /
-`MIN_RESISTANCE` −100 and keeps an innate `IMMUNE` 100; a spell type's `immune_tags` is laid on the
-tagged creature types' `resist` at load, `content/spell_type.rs::lay_immunities`, so every reader
-has it: `docs/dev/spells.md` "Spell types"), `resist(amount, percent)` (nearest,
+`Resistances` (a total per type and the immune types; `sum(count, immune, sources)` adds every
+source up **uncapped**, and `get` is the one reader: `IMMUNE` 100 for an immune type, else
+`damage::effective(total)`, the total clamped to `MAX_RESISTANCE` 75 / `MIN_RESISTANCE` −100 at
+the point of use, #1620; `total` is the uncapped sum, the `actors` dump's `fire 75 (of 200)`;
+immunity is `CreatureDef::immune_kinds`, a creature type's `immune` ids that name a damage type
+(`content/creature.rs::immunities` splits them from the statuses), and a spell type's
+`immune_tags` adds to it at load, `content/spell_type.rs::lay_immunities`: `docs/dev/spells.md`
+"Spell types"; nothing else makes immune, a resistance of 100 from any source counts as 75), `resist(amount, percent)` (nearest,
 half up), `Protection { base, against }`, and `ResistanceWord` (the player's words). **Every
 damage path goes through one of two doors**: a blow rolled against Defence through
 `combat::strike` (its `Profile` carries `kinds` and `riders`, set by `Actor::melee`,

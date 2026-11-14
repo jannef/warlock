@@ -29,7 +29,8 @@ stats = { strength = 36, dexterity = 28, toughness = 40, intelligence = 40, will
 base_hp = 88
 skills = { concentration = 220, spellcraft = 225 }
 natural = { defence = 6, protection = 11, name = "skull" }
-resist = { slashing = 50, piercing = 50, bludgeoning = 50, poison = 100 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50 }
+immune = ["poison"]
 corpse = false
 blood = "none"
 [creature.aura]

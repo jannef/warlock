@@ -135,7 +135,7 @@ impl World {
     /// Ally `id` as the subject of a sentence: its name ("Snel"), else "Your wolf".
     pub(super) fn ally_subject(&self, id: ActorId) -> String {
         if let Some(escort) = (self.state.actors.get(&id)).filter(|a| a.escorting().is_some()) {
-            return super::talk::capitalized(&self.called(escort));
+            return crate::text::capitalized(&self.called(escort));
         }
         match self.companion_words(id) {
             Some((name, _)) => name,

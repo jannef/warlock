@@ -44,11 +44,12 @@ use super::{ActorId, World};
 use crate::action::Event;
 use crate::check::check;
 use crate::content::StatUse;
-use crate::content::{ActionKind, PassiveSearch, RaceDef, TrapId, article};
+use crate::content::{ActionKind, PassiveSearch, RaceDef, TrapId};
 use crate::geom::Pos;
 use crate::sight::LineOfSight;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::text::article;
 use std::cell::Cell;
 
 /// A hidden feature on a cell of the current level.
