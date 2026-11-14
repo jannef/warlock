@@ -1,0 +1,8 @@
+[[terrain]]
+id = "stool"
+name = "stool"
+description = "A three-legged stool, worn smooth."
+walkable = false
+glyph = "╥"
+fg = "#a8845a"
+bg = "#2c1e10"

@@ -1,0 +1,9 @@
+[[terrain]]
+id = "cave_mouth"
+name = "cave mouth"
+glyph = "∩"
+fg = "#d8d0c0"
+bg = "#000000"
+stairs = "down"
+glow = 0.2
+travel_minutes = 30

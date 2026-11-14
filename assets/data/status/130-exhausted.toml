@@ -1,0 +1,9 @@
+[[status]]
+id = "exhausted"
+name = "Exhausted"
+max = 1
+stacking = "refresh"
+eases = 150
+penalty = { from = 1, strength = -1 }
+start = "You are exhausted."
+end = "You feel rested again."

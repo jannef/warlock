@@ -1,0 +1,15 @@
+# Places' statuses (special rooms, room_effects.toml `status`): held while one stays inside, then
+# eased away. Ebbing, a draining room's: a point of mana drained every 20 seconds and none coming
+# back, half a minute after leaving.
+[[status]]
+id = "ebbing"
+name = "Ebbing"
+seen = "ebbing"
+max = 1
+stacking = "refresh"
+tick = 20
+mana_damage = 1
+mana_regen = 0
+eases = 30
+start = "Your power ebbs away."
+end = "Your power stops ebbing."

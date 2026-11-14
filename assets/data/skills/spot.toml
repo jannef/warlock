@@ -1,0 +1,19 @@
+[[skill]]
+id = "spot"
+name = "Spot"
+description = "Noticing what is hiding or out of place at a glance."
+kind = "passive"
+mark = [
+  { on = "spot", chance = 50 },
+  { on = "lookout", chance = 50 },
+  { on = "sight", chance = 25 },
+  { on = "search", chance = 3 },
+]
+# Noticing hidden features in passing (spec §8 "Searching"): secret doors, hollow walls, and
+# disguised mimics, not traps (Detect traps); trained at all, you notice them (else only elves
+# and dwarves do); added to the check, +8 at 100, +12 at 200. The lookout for a party on the
+# overworld (spec §7 "Overworld encounters", encounters.toml): +8 at 100, +12 at 200.
+benefit = [
+  { effect = "spot", curve = [[0, 0], [100, 8], [200, 12]] },
+  { effect = "lookout", curve = [[0, 0], [100, 8], [200, 12]] },
+]

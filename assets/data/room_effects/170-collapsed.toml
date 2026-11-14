@@ -1,0 +1,10 @@
+[[effect]]
+id = "collapsed"
+name = "collapsed floor"
+mark = "k"
+near = "The floor ahead is cracked and sagging."
+enter = "The floor creaks under your weight."
+weight = 3
+needs_below = true
+floor = "cracked_floor"
+collapse = { chance = 15, damage = "2d6" }

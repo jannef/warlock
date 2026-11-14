@@ -1,0 +1,8 @@
+[[effect]]
+id = "hot"
+name = "sweltering chamber"
+mark = "o"
+enter = "A wave of heat meets you."
+weight = 5
+glow = [30, 10, 0, 0]
+temperature = 25

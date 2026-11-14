@@ -1,0 +1,15 @@
+# Stunned (the ascetic's Stunning strike, #848): reeling from a blow. Flat-footed (Dexterity and
+# Dodge count nothing toward Defence, no free blows, sneak dice land), and the next action costs
+# half again as much; that action ends it. A second stun before it only keeps it (refresh).
+[[status]]
+id = "stunned"
+name = "Stunned"
+seen = "stunned"
+max = 1
+stacking = "refresh"
+per_action = true
+cost = 150
+flat_footed = true
+cured_by = ["clear_head"]
+start = "You are stunned."
+end = "Your head clears."

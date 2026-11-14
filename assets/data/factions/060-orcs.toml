@@ -1,0 +1,9 @@
+# The orc tribe (#455): war bands of orcs and the wargs they keep. They raid the kobolds' warrens,
+# eat the vermin, and fight the dead and the duergar (whose mine they raid: listed on this side);
+# the goblins they bully but march beside, so the two tribes leave each other be.
+# These wars are lore, not fought on the floor.
+[[faction]]
+id = "orcs"
+name = "orcs"
+hostile = ["player"]
+gear = { bone = 55, iron = 15 }

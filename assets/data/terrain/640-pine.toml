@@ -1,0 +1,11 @@
+# Conifers stand taller than the leafy trees and cast longer shadows.
+[[terrain]]
+id = "pine"
+name = "pine"
+glyph = "♠"
+fg = "#3c9c5c"
+bg = "#0c2412"
+walkable = false
+transparent = false
+height = 3
+bounce = "#88b890"

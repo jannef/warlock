@@ -1,0 +1,5 @@
+# The outdoors: the overworld, its local areas, and the sky over them (weather, sun, and moon:
+# folded in by #787).
+[[system]]
+id = "travel"
+name = "Overworld travel, local areas, and weather"

@@ -1,0 +1,13 @@
+# Poised, the ascetic's Patient defence (#849, a class active for ki): a breath taken in the
+# guard, until the next action. Dodge +4, and a melee blow dodged or parried meanwhile is
+# answered at once (the riposte free blow, switched on in `free_blows_of`); the next action ends
+# it, silently.
+[[status]]
+id = "poised"
+name = "Poised"
+seen = "poised"
+max = 1
+stacking = "refresh"
+per_action = true
+combat = { dodge = 4 }
+start = "You settle into your guard."

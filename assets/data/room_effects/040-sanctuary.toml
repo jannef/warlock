@@ -1,0 +1,10 @@
+[[effect]]
+id = "sanctuary"
+name = "sanctuary"
+mark = "p"
+enter = "You feel at peace here."
+weight = 6
+regen = 300
+mana_regen = 300
+glow = [60, 44, 22, 0]
+shunned = true

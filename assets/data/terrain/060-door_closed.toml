@@ -1,0 +1,29 @@
+[[terrain]]
+id = "door_closed"
+name = "closed door"
+glyph = "+"
+fg = "#c08040"
+bg = "#2a1a0e"
+walkable = false
+transparent = false
+opens_to = "door_open"
+# It creaks open, and muffles what goes on behind it.
+toggle_noise = 60
+muffle = 30
+# Kicked in (`K`), it breaks with a chance of the kicker's Strength in 30.
+breaks_to = "door_broken"
+sturdiness = 30
+
+# Dust shaken loose when the door swings.
+[[terrain.particles]]
+on = "toggle"
+glyphs = "·.,"
+colors = ["#8a806c", "#4a4438"]
+count = 5
+life = 0.7
+velocity = [0.0, 0.2]
+spread = [0.9, 0.4]
+gravity = 0.4
+area = [0.35, 0.4]
+scale = 0.7
+fade = 0.6

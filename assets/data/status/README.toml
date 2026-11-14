@@ -1,0 +1,119 @@
+# Status effects (spec §8 "Status effects"): the fields of a status file.
+# One file per entity, `NNN-<id>.toml`: the number keeps the order the game reads them in
+# (their ids are indices in that order), in steps of 10 so a new one fits between two.
+#
+# [[status]], in order of importance: the status bar shows the first first, and gives way from
+# the last. A status has a severity in degrees (never shown to the player) and lives in game time:
+#   id         stable id, used by `on_hit` (creatures.toml) and saves
+#   name       how the status bar and the character screen show it
+#   seen       how look mode names it on a creature you see ("A kobold (hostile, wounded,
+#              bleeding)"); none: it does not show on others
+#   max        the most degrees it reaches (at least 1)
+#   stacking   how a new dose adds to one the actor has: "add" (the degrees add up, to max; the
+#              default), "highest" (the stronger of the two), "refresh" (the stronger of the two,
+#              and its easing starts over)
+#   tick       seconds between its ticks at one degree (at least 1); at n degrees it ticks n
+#              times as often
+#   damage     hit points each tick costs (default 0; needs a tick)
+#   eases      seconds for it to ease by one degree (at least 1); at none it is gone. None: until
+#              cured
+#   regen      how fast hit points come back while it lasts, in percent of the normal pace
+#              (default 100; 0 none; above 100 quicker). With several statuses the slowest
+#              counts while any is below 100, else the fastest
+#   mana_regen how fast mana comes back while it lasts, the same way (default 100)
+#   mana_damage  mana each tick drains (default 0; needs a tick): never below 0, never a death
+#   penalty    what it does to stats from a severity on: { from = 4, strength = -1 }; every rule
+#              reads the stat that much lower (combat, burden, hit points); several add up. A
+#              positive number raises the stat instead; `from` at most `max`
+#   combat     what it adds to the fighting of whoever suffers it while it lasts, as a stance does
+#              (stances.toml): { to_hit = 1, damage = 2, dodge = 1, parry = 1 }, each 0 when
+#              left out; several add up (of Parry bonuses the highest counts); `shield`
+#              adds on top of a held shield's Defence (Walled)
+#   cost       what every action costs while it lasts, in percent of its price (above 0;
+#              default 100): 150 is half again as slow. Several multiply. Below 100 it hastens,
+#              which only a spell's buff on its caster may do (Haste), and Sic 'em's Savage on
+#              a companion
+#   attack_cost  what every attack costs while it lasts, in percent of its price, on top of
+#              `cost` (above 0; default 100): 125 a quarter slower. Several multiply
+#   blocks     the actions refused while it lasts, by their ids in actions.toml: ["read"]; an
+#              ability that costs one cannot be used either; "cast" also refuses spending mana
+#   flees      true: a creature suffering it runs from the one who gave it (else the nearest foe
+#              it sees) while a step takes it farther away, and fights only when cornered
+#   follows    a status that begins (at one degree) as this one ends, worn off or cured: a rage's
+#              exhaustion. A status with no tick that eases away is a cooldown: while it lasts,
+#              the ability that gave it cannot be used again
+#   wound      the blows that cause it: { big_hit = 1, critical = 2 } degrees for a hit that takes
+#              at least a third of the target's hit points, and for a confirmed critical (a
+#              blow that is both: the more of the two); `from` lists the kinds of damage that
+#              wound this way (damage_types.toml; bleeding from slashing and piercing), none
+#              listed: any
+#   damage_type the kind of damage the status is (poison): a target immune to it never suffers
+#              it, and a resistance shrinks each dose it is given (spec §8 "Damage types")
+#   cured_by   what cures it at once (a bandage, an antidote, a potion of clear head's
+#              `clear_head`)
+#   treat      how the Heal skill treats it (the Heal ability, spec §8 "Skills"): an Intelligence
+#              check plus Heal against { difficulty = 6, per_degree = 2 } (the difficulty,
+#              plus `per_degree` for each degree); `stops = true`: made, it ends, and a failed try may
+#              be made again at once; else, made, it eases a degree, and a failed try may be
+#              made again too. `made` and `failed` are what you are
+#              told. None: Heal cannot treat it
+#   quenched   true: a step into water, or a fall into it, ends it (Burning)
+#   senses     what its bearer, the player, feels while it lasts: { reach = 8, kind = "heartbeat" },
+#              every living creature within `reach` they do not see, a sound of `kind` at
+#              a rough place, each turn (Quick-sensed; not the undead, animated things, constructs, elementals)
+#   start, end what the player is told as it begins and ends ("end" lets a rest go on)
+#   dies       what a creature you see does when it kills it ("The giant rat bleeds to death.")
+#   death      the death screen's line when it kills you
+#   stages     what the player is told as each degree is reached, a line a degree from the first:
+#              ["Your limbs stiffen.", ...]; the first is its start line (give `start` or
+#              `stages`), and one that kills at its max has none for that degree
+#   kills_at_max  true: its bearer dies of it as it reaches its max: Stiffening, to stone
+#   statue     true (with kills_at_max): a creature it kills leaves no corpse but a statue (the
+#              terrain with `statue` in terrain.toml), holding what it carried
+#   hides      true: a creature suffering it hides as a shut chest (a mimic's Disguised): it takes
+#              no turn, has seen no one, no creature sets on it, and perception shows the chest in
+#              its place, never it; only being found out ends it (spec §8 "Mimics")
+#   unseen     true: its sufferer is unseen by the player whatever the light and however near
+#              (Invisible): perception leaves it out, unless Blood scent, the companion's nose,
+#              Seeing, or a blow that just found it shows it; it sheds no light of its own type
+#              while it lasts (a will-o'-wisp's goes out), and is heard as ever
+#   sees_unseen true: its bearer, the player, sees the unseen and the shadowy while it lasts
+#              (Seeing)
+#   flat_footed true: its sufferer is flat-footed while it lasts (Surprised, Stunned): its
+#              Dexterity and Dodge count nothing toward its Defence, it makes no free blow out
+#              of its turn, and an attacker's sneak dice land on it (spec §8 "Surprise and sneak
+#              attacks")
+#   auto_critical  true: its sufferer's blows that hit are criticals without the confirmation
+#              roll, and each such hit spends a degree (Savage, Sic 'em's)
+#   sleeps     true: a creature suffering it sleeps: it takes no turn and has seen no one (a
+#              sneak attack lands); noise at its hearing threshold times its den's `wake`, a
+#              blow, or a cry wakes it, which ends the status (spec §7 "Special rooms")
+#   per_action true: it eases a degree with each action its sufferer takes, instead of with
+#              time (no `eases`): at one degree it lasts until the next action, which is priced
+#              with it (its `cost`). One given during an action is not eased by that action
+#   hold      makes it a hold: whoever caused it holds the sufferer, and it ends when the holder
+#              dies, leaves the sufferer's side, or is held or slowed (a cost above 100) itself.
+#              { check = "strength", difficulty = 13, turns = "3d4" }: the held player's step is
+#              a check of `check` (default strength) against the holder's grip (its on_hit
+#              entry's `difficulty`, else this one): made, they break free and step; failed, the
+#              turn is spent. A dose's degrees are drawn from `turns` (never below 1); the
+#              holds here ease a degree a turn (`eases = 6`), keep the highest, and block "step"
+#   retaliates a melee blow that lands on its sufferer strikes the striker back: { damage = "1d6",
+#              damage_type = "fire" }, as a spell of that type would, its type's rule and all
+#              (Fire cloak's)
+#   blows      what its sufferer's melee blows do besides: { damage = "1d4", damage_type = "fire" },
+#              a rider as a worn elemental affix's, which reads no type rule (Brand's)
+#   wades_free its sufferer wades as if on dry land (Water walking's)
+#   ice_holds  ice never gives way under its sufferer, however thin, nor melts or shatters under
+#              them in a burst (Water walking's)
+#   escape     bonds a trained Escape artist may slip: the difficulty of the automatic
+#              check, the better of Strength and Dexterity plus the skill, when the status stops
+#              or slows what they try (world/hold.rs). Needs `blocks` or a `cost` above 100 (else it is
+#              never struggled against); its `seen` ("You struggle, but you are still caught in a
+#              web.") is said of a failed try; not on a hold, whose
+#              grip counts the same way. Slowed minds and bodies (Staggered, Stunned, Surprised,
+#              Transfixed, Sluggish, Drowsy) are no bonds and take none
+#   light      a light of lights.toml its sufferer sheds while it lasts (Lit; spec §5); the
+#              brightest of several
+# Creatures' attacks may cause statuses too: `on_hit` in creatures.toml. Diseases (diseases.toml)
+# show as one status here, named by their `status`.

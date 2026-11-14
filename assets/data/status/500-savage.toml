@@ -1,0 +1,12 @@
+# Savage, Sic 'em's (the ranger's level 40) on the companion: half again as fast, and its next
+# three hits are criticals with no confirmation, a degree each; a degree a minute otherwise. No
+# buff spell's or potion's status, so Hunter's bond's shared buffs never carry it to the ranger.
+[[status]]
+id = "savage"
+name = "Savage"
+seen = "savage"
+max = 3
+stacking = "refresh"
+eases = 60
+cost = 67
+auto_critical = true

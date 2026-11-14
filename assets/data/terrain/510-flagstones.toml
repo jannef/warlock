@@ -1,0 +1,7 @@
+[[terrain]]
+id = "flagstones"
+name = "flagstone path"
+stone = true
+glyph = "."
+fg = "#c0b29a"
+bg = "#3a3428"

@@ -1,0 +1,9 @@
+# A road wading through a river: slower than a bridge.
+[[terrain]]
+id = "ford"
+name = "ford"
+glyph = "≈"
+fg = "#f4e2b0"
+bg = "#2c3a44"
+travel_minutes = 30
+landscape = "road"

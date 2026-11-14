@@ -1,0 +1,8 @@
+# The fiends that are neither demons, devils, nor yugoloths (#450): the hell hound, the
+# nightmare, the succubus and the incubus, the night hag, the cambion, the rakshasa. They hunt the
+# player and leave everyone else to their own schemes. Not animals: a Beast-friend calms neither
+# the hell hound nor the nightmare, which are fiends in a beast's shape.
+[[faction]]
+id = "fiends"
+name = "fiends"
+hostile = ["player"]

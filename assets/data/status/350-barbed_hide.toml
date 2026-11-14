@@ -1,0 +1,9 @@
+# A barbed devil's hide (its `innate`, `world/aura.rs`): barbs that stab whoever strikes it in
+# melee. Refreshed each turn its bearer takes; never shown on it, since its kind always has it.
+[[status]]
+id = "barbed_hide"
+name = "Barbed hide"
+max = 1
+stacking = "refresh"
+eases = 60
+retaliates = { damage = "1d6", damage_type = "piercing" }

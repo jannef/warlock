@@ -1,0 +1,7 @@
+# The layer bosses of Grundlēas (#1118; spec §7 "The endless branch"): each the one keeper of
+# its layer, alone in its lair, and what it calls up fights at its side. They hunt the player and
+# no one else. Not animals: a Beast-friend calms no rat king.
+[[faction]]
+id = "layer_keepers"
+name = "keepers of the layers"
+hostile = ["player"]

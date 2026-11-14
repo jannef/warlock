@@ -1,0 +1,13 @@
+# What every disease shows as (diseases.toml): one status for them all, while at least one of
+# them shows (its incubation over). Diseases give it and take it away, so it has no timers or
+# cures of its own; the diseases speak for themselves (onset, symptoms, recovery), so it says
+# nothing as it begins and ends. Hit points and mana come back at half the pace; a disease may
+# slow them more (its own regen and mana_regen).
+[[status]]
+id = "diseased"
+name = "Diseased"
+max = 1
+regen = 50
+mana_regen = 50
+dies = "succumbs to disease"
+death = "Died of disease"

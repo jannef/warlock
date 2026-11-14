@@ -1,0 +1,10 @@
+[[terrain]]
+id = "standing_stone"
+name = "standing stone"
+stone = true
+glyph = "●"
+fg = "#c4bcb0"
+bg = "#2e2b26"
+walkable = false
+transparent = false
+height = 3

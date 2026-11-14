@@ -1,0 +1,13 @@
+# Three visions, eyes lent for half an hour (`vision`, a profile of vision.toml, bettering the
+# drinker's own part by part as a unique item's Vision power does): low light, darkvision, and the
+# ultraviolet sight of the moth.
+[[status]]
+id = "cat_eyed"
+name = "Cat-eyed"
+seen = "cat-eyed"
+max = 4
+stacking = "refresh"
+eases = 1800
+vision = "low_light"
+start = "The dark is less dark to you."
+end = "The dim grows dim again."

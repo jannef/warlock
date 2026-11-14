@@ -1,0 +1,8 @@
+[[terrain]]
+id = "acid_pit"
+name = "acid-pitted floor"
+description = "The stone is eaten into little pits, and smells sour."
+stone = true
+glyph = "."
+fg = "#8fb43a"
+bg = "#0d100a"

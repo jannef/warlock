@@ -1,0 +1,6 @@
+# The fire things of the volcano's deep (Fyrdelf): ember beetles, salamanders, magma crawlers,
+# cinder elementals, the fire drake. They burn the player and leave everyone else alone.
+[[faction]]
+id = "fire"
+name = "fire things"
+hostile = ["player"]

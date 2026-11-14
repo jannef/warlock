@@ -1,0 +1,25 @@
+# What a broken wall becomes (and what ruins are strewn with).
+[[terrain]]
+id = "rubble"
+name = "rubble"
+stone = true
+glyph = ","
+fg = "#a49c8e"
+bg = "#1c1a15"
+move_cost = 150
+# Loose stones clatter.
+step_noise = 150
+
+# Dust and grit thrown up where a wall gives way.
+[[terrain.particles]]
+on = "toggle"
+glyphs = "·.,'"
+colors = ["#b4aa96", "#5a5244"]
+count = 6
+life = 0.8
+velocity = [0.0, -0.5]
+spread = [1.1, 0.6]
+gravity = 0.9
+area = [0.45, 0.45]
+scale = 0.7
+fade = 0.6

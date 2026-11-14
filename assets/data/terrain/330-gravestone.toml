@@ -1,0 +1,13 @@
+# A gravestone (spec §7 "Graves"; #1258, Līctūn): a headstone, here and there a cross, on the
+# churchyard grass. Solid, seen past. Its level's `[graves]` words cut an inscription in each as
+# the level is made (`world/graves.rs`), which look mode reads.
+[[terrain]]
+id = "gravestone"
+name = "gravestone"
+stone = true
+grave = true
+walkable = false
+glyph = "∩"
+variants = "∩∩∩∩∩†∩∩∩∩∩∩†∩"
+fg = "#aaa69c"
+bg = "#22401a"

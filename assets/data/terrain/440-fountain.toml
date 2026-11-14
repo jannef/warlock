@@ -1,0 +1,23 @@
+[[terrain]]
+id = "fountain"
+name = "fountain"
+stone = true
+glyph = "{"
+fg = "#8fd0ff"
+bg = "#0a1a30"
+walkable = false
+stains = false
+
+# Spray arcing up and falling back into the basin.
+[[terrain.particles]]
+glyphs = "'`.,"
+colors = ["#a8d4ff", "#4f8fe0"]
+rate = 5
+life = 0.7
+velocity = [0.0, -3.0]
+spread = [0.7, 0.4]
+gravity = 9.0
+offset = [0.0, -0.45]
+area = [0.1, 0.0]
+scale = 0.55
+fade = 0.3

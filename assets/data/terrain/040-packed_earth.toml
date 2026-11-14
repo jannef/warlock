@@ -1,0 +1,13 @@
+# Walls that dig easily or hardly at all (spec §8 "Digging"; the quarry shows them).
+[[terrain]]
+id = "packed_earth"
+name = "packed earth"
+glyph = "#"
+fg = "#9a6a40"
+bg = "#22160c"
+walkable = false
+transparent = false
+bounce = "#c8a888"
+# A minute with a pick-axe.
+hardness = 100
+becomes = "rubble"

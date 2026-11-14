@@ -1,0 +1,7 @@
+[[effect]]
+id = "echoing"
+name = "echoing hall"
+mark = "e"
+enter = "Your footsteps echo loudly."
+weight = 8
+noise = 200

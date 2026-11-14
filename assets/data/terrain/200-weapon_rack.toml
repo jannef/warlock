@@ -1,0 +1,10 @@
+# An armoury's and a workshop's dressing (spec §7 "Special rooms", #487): stood along their walls,
+# seen over, not walked through.
+[[terrain]]
+id = "weapon_rack"
+name = "weapon rack"
+description = "A wooden rack for spears and blades. Most of its pegs are empty."
+glyph = "‡"
+fg = "#a07850"
+bg = "#0d0d10"
+walkable = false

@@ -1,0 +1,13 @@
+# Branding smite's (the paladin's): holy light clings to the foe for five minutes, and it sheds
+# the faint item glow wherever it goes.
+[[status]]
+id = "branded"
+name = "Branded"
+seen = "shining"
+max = 1
+stacking = "refresh"
+eases = 300
+light = "item_glow"
+cured_by = ["holy_water"]
+start = "Holy light clings to you."
+end = "The holy light about you fades."

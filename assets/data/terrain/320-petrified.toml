@@ -1,0 +1,18 @@
+# What a creature turned to stone leaves (spec §8 "Statues"; a status's `statue`, Stiffening's):
+# a fixture of the cell, as a chest is. The statue on the cell (`LevelState::statues`) names what
+# it was ("a statue of a dwarf, mouth open") and holds what it carried. Dug through (a quarter
+# hour with a pick-axe: harder than a wall, softer than granite, and no fireball breaks it) or
+# kicked apart (`statue`: a chance of the kicker's Strength in its `sturdiness`, so most kicks
+# only bruise), it falls to rubble and what it held.
+[[terrain]]
+id = "petrified"
+name = "statue"
+stone = true
+statue = true
+walkable = false
+glyph = "Ω"
+fg = "#8a8a84"
+bg = "#0d0d10"
+hardness = 1500
+becomes = "rubble"
+sturdiness = 200

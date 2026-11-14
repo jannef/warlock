@@ -1,0 +1,11 @@
+# A drystone wall (#1258, Līctūn's): fieldstone laid without mortar, about waist high. Like a
+# fence it stops a step, never sight or sound.
+[[terrain]]
+id = "drystone_wall"
+name = "drystone wall"
+description = "Fieldstone laid without mortar, about waist high, grown over with moss."
+stone = true
+walkable = false
+glyph = "#"
+fg = "#9a958a"
+bg = "#22401a"

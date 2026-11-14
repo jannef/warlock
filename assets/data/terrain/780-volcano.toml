@@ -1,0 +1,25 @@
+# A fire mountain standing in a range: impassable, glowing faintly, a thin plume of smoke.
+[[terrain]]
+id = "volcano"
+name = "volcano"
+glyph = "▲"
+fg = "#d4553a"
+bg = "#2a0e08"
+walkable = false
+transparent = false
+glow = 0.35
+
+# Smoke rising slowly from the crater, now and then.
+[[terrain.particles]]
+glyphs = "°·."
+colors = ["#8a6a60", "#5a4c48", "#2e2826"]
+rate = 0.4
+life = 3.0
+velocity = [0.15, -0.5]
+spread = [0.1, 0.15]
+gravity = -0.05
+offset = [0.0, -0.4]
+area = [0.2, 0.05]
+sway = 0.25
+scale = 0.6
+fade = 0.7

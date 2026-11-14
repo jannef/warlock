@@ -1,0 +1,10 @@
+[[status]]
+id = "barkskin"
+name = "Barkskin"
+seen = "bark-skinned"
+max = 6
+stacking = "refresh"
+eases = 60
+combat = { dodge = 2 }
+start = "Your skin hardens like bark."
+end = "Your skin softens again."

@@ -1,0 +1,8 @@
+[[skill]]
+id = "listen"
+name = "Listen"
+description = "Hearing what others miss: faint steps, a door far off."
+kind = "passive"
+mark = [{ on = "hear", chance = 30 }, { on = "overhear", chance = 5 }, { on = "listen", chance = 100 }]
+# One fainter for every 10 points.
+benefit = [{ effect = "hearing", every = 10 }]

@@ -1,0 +1,10 @@
+[[status]]
+id = "hasted"
+name = "Hasted"
+seen = "quickened"
+max = 6
+stacking = "refresh"
+eases = 60
+cost = 75
+start = "The world slows around you."
+end = "The world quickens again."

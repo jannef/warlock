@@ -1,0 +1,10 @@
+[[skill]]
+id = "disable_device"
+name = "Disable device"
+description = "Taking traps and mechanisms apart without setting them off."
+kind = "action"
+mark = [{ on = "disarm", chance = 20 }]
+# Disarming a trap you know of (spec §8 "Disarming traps"; the Disarm ability): trained at all,
+# you can try; added to the Dexterity check, +8 at 100 (an arrow trap of 14 disarmed 46 % of the
+# time at Dexterity 10 becomes 93 %), +12 at 200.
+benefit = [{ effect = "disarm", curve = [[0, 0], [100, 8], [200, 12]] }]

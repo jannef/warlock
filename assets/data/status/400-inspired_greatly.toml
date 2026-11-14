@@ -1,0 +1,11 @@
+# Inspire as a Virtuoso sings it: ten minutes a degree, and more of it.
+[[status]]
+id = "inspired_greatly"
+name = "Inspired"
+seen = "inspired"
+max = 3
+stacking = "refresh"
+eases = 600
+combat = { to_hit = 2, dodge = 2 }
+start = "Your song soars, and your heart with it."
+end = "The song fades from your heart."

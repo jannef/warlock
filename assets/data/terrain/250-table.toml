@@ -1,0 +1,8 @@
+[[terrain]]
+id = "table"
+name = "table"
+description = "A plain table of scrubbed boards, marked with knife cuts and cup rings."
+walkable = false
+glyph = "Π"
+fg = "#c09a68"
+bg = "#2c1e10"

@@ -1,0 +1,6 @@
+# Giant rats.
+[[faction]]
+id = "vermin"
+name = "vermin"
+hostile = ["player"]
+animal = true

@@ -1,0 +1,6 @@
+# What a people is good at: each talent asks for its race. A race's own grant (races.toml `talents`: the humans' Versatile) is a `granted`
+# talent here, never on a pick list.
+[[tree]]
+id = "racial"
+name = "Racial"
+description = "What your people are good at."

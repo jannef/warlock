@@ -1,0 +1,4 @@
+# Danger levels (#326): how dangerous a level is, and the creatures that keep coming to it.
+[[system]]
+id = "danger"
+name = "Danger levels and creatures that come"

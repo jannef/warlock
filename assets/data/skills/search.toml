@@ -1,0 +1,13 @@
+[[skill]]
+id = "search"
+name = "Search"
+description = "Finding what is hidden: secret doors, hollow walls, and caches."
+kind = "rules"
+mark = [{ on = "search", chance = 10 }]
+# Searching (spec §8 "Searching"; `s`): added to the check (for traps Detect traps is instead), +8 at 100 (a secret door of 14 found
+# with 46 % of the turns of searching at Intelligence 10 becomes 93 %), +12 at 200; from 75 on a
+# search reaches a cell farther.
+benefit = [
+    { effect = "search", curve = [[0, 0], [100, 8], [200, 12]] },
+    { effect = "search_reach", steps = [75] },
+]

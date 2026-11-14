@@ -1,0 +1,8 @@
+[[effect]]
+id = "unstable"
+name = "unstable room"
+mark = "u"
+enter = "The floor shimmers under your feet."
+weight = 4
+max_cells = 60
+warp = 10

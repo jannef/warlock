@@ -1,0 +1,10 @@
+# The Transfixing stare's cooldown (a Basilisk's birth sign gift): two hours, two degrees of an
+# hour (Petrifying gaze leaves one).
+[[status]]
+id = "spent_eyed"
+name = "Spent-eyed"
+max = 2
+stacking = "refresh"
+eases = 3600
+start = "Your eyes ache from the stare."
+end = "Your gaze is keen again."

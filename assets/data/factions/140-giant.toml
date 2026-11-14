@@ -1,0 +1,9 @@
+# The giant tribe (#457): ogres and giants, hill, stone, frost, fire, cloud, and storm. They
+# crush the player, the vermin, and the kobolds; the goblins and their kin they leave be (the
+# ogres run with them), and they and the duergar are old enemies.
+# Only the player is fought on the floor: the rest is lore.
+[[faction]]
+id = "giant"
+name = "giants"
+hostile = ["player"]
+gear = { bone = 25, fur = 20, iron = 20 }

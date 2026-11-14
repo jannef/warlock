@@ -1,0 +1,14 @@
+# Under the open sky (spec §5 "Sunlight"): outdoor levels are lit by the sun and the sky by day.
+# Tall terrain casts shadows that turn and stretch with the sun (`height`); roofed floor never
+# gets sun or sky light.
+
+[[terrain]]
+id = "grass"
+plants = true
+name = "grass"
+glyph = "."
+fg = "#86ba5c"
+bg = "#22401a"
+bounce = "#b4dc8c"
+# Soft underfoot.
+step_noise = 70

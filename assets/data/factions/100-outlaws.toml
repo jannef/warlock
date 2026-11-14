@@ -1,0 +1,8 @@
+# The outlaws (the adventurers' guild design §8, #424): footpads and the four wanted criminals
+# who hide in old places with whatever lives there. Hostile to the player only, and no faction
+# lists them: the things of a criminal's lair never fight their master or the footpads.
+[[faction]]
+id = "outlaws"
+name = "outlaws"
+hostile = ["player"]
+gear = { iron = 25 }

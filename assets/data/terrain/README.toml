@@ -1,0 +1,72 @@
+# Terrain types. Colors are the fully lit appearance; lighting darkens and tints them.
+# Fields: id, name, description (what look mode adds after the name; optional), announce (a special
+# feature of the ground, an altar: arriving on it says so, "There is an altar here.", with its
+# description and the note of a place on the cell after; one that is not walkable, a statue, is
+# told on arriving beside it; default false), glyph, fg, bg (default black), walkable (default true),
+# transparent (default true), move_cost (what a step onto it costs, in percent of a normal step,
+# the `step` cost in actions.toml; default 100; local levels only), opens_to / closes_to (doors),
+# breaks_to and sturdiness (closed doors, spec §8 "Doors": a kick breaks the door into this
+# terrain with a chance of the kicker's Strength score in its sturdiness; both or
+# neither), chest ("shut", "open", or "smashed": a chest's terrain, spec §8 "Chests", one terrain
+# each; a shut one is not walkable, open and smashed ones are; its band, chests.toml, names and
+# colours it), statue (true: the statue a stoned creature leaves, spec §8 "Statues", at
+# most one terrain, with a `sturdiness` a kick breaks it against, as a door's, and no
+# `breaks_to` or `chest`; the data's is not walkable but transparent, and breaks with `hardness`), stairs ("up"/"down"),
+# light (a preset in lights.toml the terrain emits), bounce (gameplay, spec §5: the tint of the
+# light the surface bounces, "#rrggbb", default white = neutral), height (gameplay, spec §5
+# "Sunlight": how many cells tall it stands for sun shadows; default 1 if opaque, else 0),
+# roofed (gameplay: under a roof, never lit by the sun or the sky; default false),
+# stains (presentation-only, spec §8 "Blood": whether blood stains it; default true; water, lava,
+# and fire hold none), stone (gameplay, spec §8 "Searching": stone, worked or not; dwarves notice
+# what is hidden on it in passing, a secret door in a stone wall or a trap in a stone floor;
+# default false), plants (gameplay, spec §8 "Spells": things grow on it, so Bramble catches whoever
+# stands on it; default false), works_as (gameplay: a terrain id it serves as a station of, one
+# that works as nothing itself: a makeshift anvil works as the anvil, for every recipe made there
+# and for Temper, and walking into it is walking into the anvil; default none),
+# anim (presentation-only, §4.3).
+# Noise (gameplay, spec §5 "Hearing"): step_noise (how loud steps onto it are, in percent of the
+# walker's footsteps; default 100), toggle_noise (doors and shut chests only: how loud
+# opening the closed door or chest or closing the open door is, at most 300; default 0, silent),
+# and muffle (the
+# loudness a sound loses entering the cell, at most 300; default 0, but solid terrain, neither
+# walkable nor transparent, blocks sound unless it has a muffle).
+# Breaking walls (gameplay, spec §8 "Digging"): hardness (the work it takes to dig
+# through; a pick-axe at Strength 10 does 10 a turn of digging, so hardness 600 takes it 60 turns,
+# 6 minutes; an explosion breaks it if its blast is greater) and becomes (what it turns into once
+# broken: walkable, transparent open ground, rubble) go together; terrain without them never
+# breaks, and neither does a cell on a level's edge. The data breaks only solid terrain. face (solid rock deep in the ground: the terrain it shows as once a cell
+# next to it is broken open, its wall face).
+# Terrain with a "flow" anim is running water: every cell of it needs a flow direction from the
+# level legend (the arrows in legend.toml).
+# Ice (gameplay, spec §5 "Ice"): water that freezes has a `freeze` table: `below` (ice grows while
+# the air is colder than this, °C; it melts above 0), `rate` (how fast, in percent
+# of still water's pace, default 100), `plunge` (dice: the hit points a fall
+# through the ice into it takes; never the last one), and `damage_type` (the kind of damage the
+# plunge does, damage_types.toml: cold, which whoever falls in resists like any). Ice is terrain with `ice`, the thinnest ice
+# that looks like it in mm (the next one's takes over from its thickness; each its own): it lies on
+# water, which it thaws back into, so levels lay it with `ice = MM` on a water cell, never by
+# itself. Both are walkable and transparent, without a light, and neither doors nor stairs.
+# Overworld terrain (spec §3, §7): travel_minutes (an overworld step onto it at normal speed: the
+# step's base time instead of 6 seconds; required for walkable terrain on the
+# overworld), local (the ground of the local area entered with `>` from a cell of it; none:
+# nothing to explore there), and landscape (what its land is like in
+# local areas: "plains", "grassland", "forest", "dense_forest", "hills", or "swamp" pick the
+# generator of its own local areas; "road" runs a road through them towards the neighboring
+# roads and locations, amid the neighbors' land; "river" and "lake" put running or still water
+# along that side of the neighboring areas; required with `local`).
+# Presentation-only effects (spec §4.8): glow (0-1, the glyph blooms), haze (0-1, heat haze rises
+# above the cell), and [[terrain.particles]] emitters:
+#   on        "ambient" (default; `rate` per second while in view), "step" (a burst of `count` when
+#             a creature is seen stepping in), "toggle" (a burst when a cell is seen turning into
+#             this terrain: a door opening or closing, a wall giving way), or "obstacle" (running
+#             water only: `rate` per second
+#             where the flow runs into anything but running water; turned with the flow, so `y`
+#             points downstream)
+#   glyphs    glyphs to pick from; colors: color stops over the particle's life
+#   life      seconds; velocity [x, y] cells/s (y down) ± spread [x, y]; gravity cells/s² (down)
+#   offset    start [x, y] cells from the cell; area: random spread ± [x, y] cells around it
+#   sway      sideways drift in cells; scale: glyph size
+#   fade      fraction of the life spent fading out (default 0.5); glow: 0-1
+#
+# One file per entity, `NNN-<id>.toml`: the number keeps the order the game reads them in
+# (their ids are indices in that order), in steps of 10 so a new one fits between two.

@@ -1,0 +1,6 @@
+# What a family hands down (#697): talents only for character creation (`needs = { creation =
+# true }`), never a level's pick.
+[[tree]]
+id = "heritage"
+name = "Heritage"
+description = "What your family gave you: only at character creation."

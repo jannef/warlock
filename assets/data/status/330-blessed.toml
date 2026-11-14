@@ -1,0 +1,13 @@
+# Blessing's (the priest's spell): ten minutes of a god's favour, blows truer and the will firmer.
+# Up to three degrees: the caster's Presence lengthens it (a degree is ten minutes; spells.toml).
+[[status]]
+id = "blessed"
+name = "Blessed"
+seen = "blessed"
+max = 3
+stacking = "refresh"
+eases = 600
+combat = { to_hit = 1 }
+penalty = { from = 1, willpower = 1 }
+start = "You feel blessed."
+end = "Your blessing fades."

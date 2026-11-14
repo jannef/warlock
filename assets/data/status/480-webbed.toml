@@ -1,0 +1,11 @@
+[[status]]
+id = "webbed"
+name = "Webbed"
+seen = "caught in a web"
+max = 6
+stacking = "refresh"
+eases = 6
+blocks = ["step"]
+escape = 13
+start = "Sticky strands hold you fast."
+end = "You tear free of the web."

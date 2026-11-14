@@ -1,0 +1,17 @@
+# Held: a hold (spec §8 "Status effects"). A creature's bite may hold (on_hit, a creature's
+# `{ status = "held", chance = 10, difficulty = 15 }`), and a Drowning grip (a lucky day's gift,
+# spec §8 "Birth sign") holds a creature the Deep One hits in melee until they miss it, strike
+# another, or move. The held cannot step (a creature fights back instead; the player struggles,
+# a Strength check against the grip); it ends as the holder dies, leaves, or is held or slowed,
+# and after 3d4 turns at most (a degree a turn; a new hit draws again, keeping the longer).
+[[status]]
+id = "held"
+name = "Held"
+seen = "held"
+max = 12
+stacking = "highest"
+eases = 6
+blocks = ["step"]
+hold = { check = "strength", difficulty = 13, turns = "3d4" }
+start = "You are held fast."
+end = "You are free to move."

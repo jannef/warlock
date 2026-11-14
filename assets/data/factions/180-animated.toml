@@ -1,0 +1,6 @@
+# Animated objects (#483): things a will set moving and left, from household junk to hollow
+# armour. They set on the living who come near, and leave the rest be: hostile to the player only.
+[[faction]]
+id = "animated"
+name = "animated things"
+hostile = ["player"]

@@ -1,0 +1,9 @@
+# A mimic's disguise (data/mimics.toml; spec §8 "Mimics"): disguised, a creature takes no turn,
+# has seen no one, no creature sets on it, and the player sees a shut chest in its place, never
+# it. Never by time: touching it, a blow, Knock, or finding it out by searching ends it, and
+# nothing is said of the status itself (the reveal has its own line).
+[[status]]
+id = "disguised"
+name = "Disguised"
+max = 1
+hides = true

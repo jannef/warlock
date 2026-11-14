@@ -1,0 +1,7 @@
+# What a miscast lets through (spec §8 "Spells": "Miscasts"): every fiend the gates let through
+# (their summoning's `faction`). Loyal to one another and to nothing else but the gates: they
+# fall on the player, the kobolds, the townsfolk, and the fiends of the ordered hells alike.
+[[faction]]
+id = "loosed"
+name = "the loosed"
+hostile_to_others = true

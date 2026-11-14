@@ -1,0 +1,8 @@
+[[terrain]]
+id = "stairs_up"
+name = "staircase up"
+stone = true
+glyph = "<"
+fg = "#f0e6c8"
+bg = "#0d0d10"
+stairs = "up"
