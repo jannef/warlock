@@ -549,8 +549,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   is made of** (§7 "Pieces and breaking": loose gems, pieces of its grouped materials by
   `[drops] pieces`, nothing of paper; its magic lost), with a line if the player sees it ("The
   silver candlestick breaks apart.", after the death line). Nothing can be
-  stolen from one ("It is all of a piece.", no time). No talents of their own (Salvager,
-  Unbinder, and Appraiser's eye were cut in #774). Three household bodies have a trick of
+  stolen from one ("It is all of a piece.", no time). No talents of their own
+  (#774). Three household bodies have a trick of
   their own (#1136, the dread design §13): the rug of smothering's blow may **engulf**
   (`{ status = "engulfed", chance = 15, difficulty = 12, damage = 1 }`: its grip 12, and a
   tick 1 hit point while it holds instead of the status's 2), the bellows' gust may
@@ -585,7 +585,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `animated_panoply_20` … `_70` ("animated panoply", the standard role: Toughness +2, hit points
   ×1.2, speed 1000, +4 a level past 20 (at most 1200), rare). Both are medium, step loudly
   (footsteps 60), open doors, "collapse with a clang", and show as `A` in their body armour's
-  material colour (the tier's `shown_by = "body"`; one colour until #463). A slot line may name
+  material colour (the tier's `shown_by = "body"`, #463). A slot line may name
   `from` (the least level it is tried at) and `count` (how many times it is tried, each further
   piece going to a free slot of the same kind, `fits`: a ring for each hand); the lines are
   tried in order and a line whose slots are all taken is passed over with nothing drawn, so a
@@ -635,8 +635,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   or a trap: "The coffer shudders: ..."), and by **searching** (`Hidden::Mimic`, difficulty
   12 + L ÷ 5 plus the branch's `hidden_per_depth`; in passing only for those who notice
   everything: "You notice the coffer breathing: a young mimic!"). Stealing from one: "It has no
-  pockets." Talents (system `chests`, which holds mimics since #773): **Chest-wise** (delver;
-  Intelligence 11 or Detect traps 15; #775 merged Mimic-wise and Slick into it): within two
+  pockets." Talents (system `chests`, which holds mimics, #773): **Chest-wise** (delver;
+  Intelligence 11 or Detect traps 15; #775): within two
   cells a disguised mimic is shown as itself (the snapshot does not hide it; the rules still
   see it disguised), and a mimic's grip never holds them (`World::afflict`).
 - **Natural Protection by body and level** (#563, `docs/design/combat-progression.md` §8): a

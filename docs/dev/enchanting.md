@@ -73,19 +73,18 @@ them more affixes; the capacity and the trim are unchanged, and everything still
   before the trim, from the loot stream: one draw, then one per improvement's aspect; none where
   the row gives nothing (item levels 1 and 2 have no row) or for what takes no make (not single
   arms or armour with an aspect). Creature gear adds the row of its level's item level to its
-  tribe's odds (`Odds::deeper`: damaged gives way to what the improvements leave), the same one
-  condition draw as before. The loader keeps every row's improvements with any table's within
+  tribe's odds (`Odds::deeper`: damaged gives way to what the improvements leave), in the same one
+  condition draw. The loader keeps every row's improvements with any table's within
   1000. Kits, the background's gifts, the stipend, the pedlar, and animated things (`loot::make`,
   `make_as` with `Source::Gear`) take none.
 - **Gems**: the row's `ornament` adds percent to loot's `[[ornament]]` chance (`gem::ornament`'s
   `more`), the same one draw.
 - **Materials**: in the material files' `rarity` (and `gear`): mithril from item level 8,
   `deeper = 8`; dragonbone and dragonscale from 6, `deeper = 5`; adamantium from 16, `deeper = 6`;
-  gold `deeper = 3`. The draw itself (`variant::draw`, one draw) is unchanged.
+  gold `deeper = 3`. The draw itself is `variant::draw`'s one draw.
 
-Shallow levels draw exactly as before: no row below item level 3, and the material weights at
-item level 1 are unchanged. Deeper, the make's draws come after the old ones on the loot stream,
-so a level's later finds differ from before.
+Shallow levels have no row below item level 3, and the material weights at item level 1 are
+the base ones. Deeper, the make's draws come after the item's other draws on the loot stream.
 
 ## Quality on hand-made items
 
@@ -99,10 +98,9 @@ High Toby (Fine, an amethyst inlay), the Turncoat (Masterwork), the Unhalwed Bed
 smokestone setting), Widowmaker (Marvellous); in the test world Rune Song (Masterwork, a topaz tip), Ash Coat (Masterwork), the hub's Dread
 Visage (Masterwork) and Storm Song (Marvellous). Father's sword's heirloom is Masterwork
 (`quality = "masterwork"` in `data/talents/fathers_sword.toml`: capacity 4 on every race's
-weapon since #1444, its 2 to 4 affixes never trimmed). The design chose these against a base of 1
-and quality +1/+2/+3; with the base at 2 and quality +0/+1/+2 (#1444) every one still fits, and
-the two that no longer needed a make (Stonebiter and the trap hall's dagger, two affixes each)
-are plain again.
+weapon, #1444, its 2 to 4 affixes never trimmed). With the base at 2 and quality +0/+1/+2
+(#1444) every one fits; Stonebiter and the trap hall's dagger (two affixes each) need no make
+and are plain.
 
 ## What the player sees
 
@@ -408,10 +406,7 @@ make in `world/gear_condition_tests.rs`; `magic/describe` tests the capacity lin
 `magic/shares_tests.rs` at item levels 1, 4, 8, 12, 16, and 20 (4 000 rares and 4 000
 magic-grade finds each, loot's bases of every class), with the base at 2, deeper finds better
 made (#1436), and the quality's term scaled down (Fine +0, Marvellous +1, Masterwork +2) and
-adamantium's binding to +1 (#1444). Before #1436 every level looked like level 1: about 87 % of
-bases held 2 and 10 % to 12 % of rares kept three or more. With #1436 and the old quality term
-(+1/+2/+3) rares kept three or more 11 %, 15 %, 28 %, 49 %, 57 %, and 64 % of the time at the six
-levels.
+adamantium's binding to +1 (#1444).
 
 | Item level | Rares: capacity 2 | Rares keep 3+ | Rares untrimmed | Magic-grade untrimmed |
 |---:|---:|---:|---:|---:|
@@ -423,6 +418,6 @@ levels.
 | 20 | 57.5 % | 41.0 % | 26.1 % | 89.8 % |
 
 The test fails if rares at item levels 1 and 4 keep three or more a fifth of the time or more, at
-16 and 20 a quarter of the time or less (half before #1444), or if the share falls from one level
+16 and 20 a quarter of the time or less, or if the share falls from one level
 to the next. Magic-grade finds (one or two affixes) are untrimmed about 88 % to 90 % of the time at
 every level.

@@ -91,7 +91,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     each acts on every spell): `spell_rungs` rungs, `spell_bonus` (Potent: +1, +2, +3 at item
     levels 3, 7, 11) on the roll, `spell_sides`, `spell_dice`, `spell_reroll`, `spell_reach`
     cells of range or length with School focus's, `spell_duration` degrees. Of the
-    Scholar (Decipher script since #1270) is the one affix of learning, on staffs too.
+    Scholar (Decipher script, #1270) is the one affix of learning, on staffs too.
     The utility hooks
     are in (#631), worn by the player or a creature, identified or not: `door_kick` adds to a
     kick's Strength as Lockbreaker's does (a door's and a chest's), `dig_percent` is that much
@@ -279,7 +279,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   there is nothing to learn about ("You already know what a dagger is.").
   - **Making out a scroll** (`world/decipher.rs`, data `data/decipher.toml`; #1024, the skill
     uses design §6.6, the owner's rule: Decipher script is how non-casters use scrolls, by a
-    check; one with enough learning (Decipher script's, since #1270) bypasses it; this overrides the no-caster-level
+    check; one with enough learning (Decipher script's, #1270) bypasses it; this overrides the no-caster-level
     design's line that reading works for anyone). Once nothing refuses the reading and before the
     scroll is used up: **a known spell** reads at once, no draw, and still marks Decipher script
     (on a trained skill; a scroll the player wrote too); else **a bypass**, trained in Decipher script with a learning (§8 "Spells":
