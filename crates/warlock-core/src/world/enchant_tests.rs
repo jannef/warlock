@@ -881,3 +881,63 @@ fn ennoble_makes_a_magic_item_rare_with_one_affix_more_and_a_name() {
     apply(&mut w, "craft:ennoble:a,b");
     assert_eq!(w.state.time.since(before).as_seconds(), 5400);
 }
+
+/// A warp on a stack of arrows warps one of them, set apart, and the rest are as they were
+/// (#1487); a proof item that withstands a warp says so.
+#[test]
+fn a_warp_on_a_stack_warps_one_and_a_proof_item_says_it_withstood() {
+    let mut w = world(2);
+    item(&mut w, "arrow", 40);
+    crystal(&mut w, "red");
+    enchant_out_for_test(&mut w, "kindle", &[Some(0), Some(1)], EnchantBand::Warped);
+    let damaged = |s: &Stack| s.worked().is_some_and(|w| w.damaged);
+    let pack = &w.state.player().inventory;
+    assert_eq!(pack.len(), 2, "{:?}", texts(&w));
+    assert_eq!((pack[0].count, damaged(&pack[0])), (39, false));
+    assert_eq!((pack[1].count, damaged(&pack[1])), (1, true));
+    assert!(
+        said(&w, "The arrow warps under your hands."),
+        "{:?}",
+        texts(&w)
+    );
+
+    let mut w = world(1);
+    magic_sword(&mut w, &["sharp"], false, true);
+    let content = w.content.clone();
+    let adamantium = content.material_id("adamantium").expect("adamantium");
+    let sword = w.player_mut().inventory.last_mut().expect("the sword");
+    *sword = sword
+        .clone()
+        .with_parts(vec![crate::item_parts::ItemPart::material(
+            &content, None, adamantium,
+        )]);
+    enchant_out_for_test(&mut w, "unbind", &[Some(0)], EnchantBand::Warped);
+    assert!(!damaged(&w.state.player().inventory[0]));
+    assert_eq!(last(&w), "The work goes wrong, but no harm is done.");
+}
+
+/// Bread ahead of the sword rots away during the hour (#1564): the work finds the sword and the
+/// crystal where they went and kindles the sword, never the crystal or the dagger after them.
+#[test]
+fn a_stack_gone_ahead_of_the_work_never_turns_it_on_the_next() {
+    for seed in 1..20 {
+        let mut w = world(seed);
+        let loaf = super::work_on::rotting_loaf(&w);
+        w.player_mut().inventory.push(loaf);
+        item(&mut w, "long_sword", 1);
+        crystal(&mut w, "red");
+        item(&mut w, "dagger", 1);
+        apply(&mut w, "craft:kindle:b,c");
+        assert!(said(&w, "Your loaf of bread has rotted away."));
+        let pack = &w.state.player().inventory;
+        let name = |s: &Stack| w.content.object(s.object).name.clone();
+        assert_eq!(name(&pack[0]), "long sword", "{:?}", texts(&w));
+        let dagger = pack.last().expect("the dagger");
+        assert_eq!((name(dagger).as_str(), dagger.magic()), ("dagger", None));
+        if pack[0].magic().is_some() {
+            assert_eq!(pack.len(), 2, "the crystal spent");
+            return;
+        }
+    }
+    panic!("some fate kindles the sword");
+}

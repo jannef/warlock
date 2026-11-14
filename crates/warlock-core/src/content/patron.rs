@@ -11,11 +11,9 @@ use serde::Deserialize;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PatronRules {
-    /// Percent of the delivered item's worth paid.
+    /// Percent of the delivered item's worth paid (a maker's mark counted in the worth, its half
+    /// again once: #1489).
     pub pays: u32,
-    /// Percent more for a piece bearing the player's maker's mark (Maker's mark, the craftsperson
-    /// design §7.10).
-    pub bonus: u32,
 }
 
 impl PatronRules {
@@ -29,10 +27,9 @@ impl PatronRules {
         Ok(rules)
     }
 
-    /// What `worth` gold of work delivered is paid, `marked` when it bears the player's mark.
-    pub fn paid(&self, worth: u64, marked: bool) -> u64 {
-        let more = if marked { u64::from(self.bonus) } else { 0 };
-        worth * u64::from(self.pays) * (100 + more) / 10_000
+    /// What `worth` gold of work delivered is paid.
+    pub fn paid(&self, worth: u64) -> u64 {
+        worth * u64::from(self.pays) / 100
     }
 }
 
@@ -43,19 +40,18 @@ mod tests {
     const PATH: &str = "data/patron.toml";
 
     #[test]
-    fn the_patron_pays_the_worth_and_half_again_for_a_mark() {
+    fn the_patron_pays_the_worth() {
         let content = Content::builtin().expect("content");
         let rules = content.patron().expect("the patron is in the game");
-        assert_eq!((rules.pays, rules.bonus), (100, 50));
-        assert_eq!(rules.paid(160, false), 160);
-        assert_eq!(rules.paid(160, true), 240);
+        assert_eq!(rules.pays, 100);
+        assert_eq!(rules.paid(160), 160);
     }
 
     #[test]
     fn a_bad_file_is_refused_and_none_is_no_patron() {
         for (text, says) in [
-            ("pays = 0\nbonus = 50\n", "above 0"),
-            ("pays = 100\nbonus = 50\nmost = 1\n", "unknown field"),
+            ("pays = 0\n", "above 0"),
+            ("pays = 100\nbonus = 50\n", "unknown field"),
         ] {
             let mut files = ContentFiles::builtin();
             files.insert(PATH, text);

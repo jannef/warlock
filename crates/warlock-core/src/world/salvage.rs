@@ -135,6 +135,7 @@ impl World {
     /// Works turn after turn until the attempt is done or something stops it (module docs): its
     /// last turn cut short to end exactly when its time is up.
     pub(super) fn salvage(&mut self, work: Salvaging, events: &mut Vec<Event>) {
+        let on = self.work_on(&[Some(work.item)]);
         let until = self.state.time + Duration::seconds(u64::from(work.seconds));
         let turn = self.price_of(self.state.player, ActionKind::Salvage);
         let ended = self.keep_at(
@@ -144,7 +145,10 @@ impl World {
         );
         match ended {
             Ended::Died => {}
-            _ if self.state.time >= until => self.salvaged(work.item),
+            _ if self.state.time >= until => match self.worked_on_one(&on) {
+                Some(item) => self.salvaged(item),
+                None => self.say("You have nothing left to work on."),
+            },
             Ended::Came(came) => {
                 let text = format!("{}; you leave off your work.", self.came_line(came));
                 self.say(text);

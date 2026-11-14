@@ -455,3 +455,28 @@ fn a_salvage_replays() {
     assert_eq!(divergence, None);
     assert_eq!(verified.state_hash(), w.state_hash());
 }
+
+/// Bread ahead of the sword rots away while it is taken apart (#1564): the sword comes apart
+/// all the same, and the quarterstaff that moves up to the sword's place is untouched.
+#[test]
+fn a_stack_gone_ahead_of_the_work_never_turns_it_on_the_next() {
+    let mut w = world(false, 3);
+    let (sword, staff) = (object(&w, "long_sword"), object(&w, "quarterstaff"));
+    let loaf = super::work_on::rotting_loaf(&w);
+    let pack = &mut w.player_mut().inventory;
+    pack.extend([loaf, Stack::one(sword), Stack::one(staff)]);
+    w.apply(&Action::Salvage { item: 1 });
+    assert!(
+        said(&w, "Your loaf of bread has rotted away."),
+        "{:?}",
+        texts(&w)
+    );
+    assert!(
+        said(&w, "You take the long sword apart."),
+        "{:?}",
+        texts(&w)
+    );
+    let pack = &w.state.player().inventory;
+    assert!(pack.iter().all(|s| s.object != sword), "{:?}", texts(&w));
+    assert_eq!(pack[0], Stack::one(staff), "untouched, first now");
+}

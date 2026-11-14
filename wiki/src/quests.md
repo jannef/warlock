@@ -82,8 +82,9 @@ chasing you. The one in the march is **Ysella the Binder's**, in
   good, a slow circle of light turns about it, and it walks to Kerensa's Stones, the gem dealer,
   and stands in the corner by her counter. The quest is done: **1200 gold**, **4000
   [experience](experience.md)**, and an uncut sapphire.
-- While it stands bound in the town, every [Cut and Set](gem-cutting.md) you make in Gimmwīc gets
-  **+2** to its check.
+- While it stands bound in the town, every [Cut and Set](gem-cutting.md) and every ring or
+  amulet you [make with Jewelcraft](crafting.md#making-jewellery) in Gimmwīc gets **+2** to its
+  check.
 
 If you kill it before it is bound, nothing fails: a new one grows in its hollow, and it is there
 the next time you come down to that floor. Killed after it is bound, it is gone for good, and so is

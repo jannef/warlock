@@ -326,6 +326,7 @@ mod weapon_ability;
 mod weapon_active;
 mod wedge;
 mod witch;
+mod work_on;
 mod wriggle;
 mod zap;
 mod zone;
