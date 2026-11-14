@@ -1,0 +1,17 @@
+[[gift]]
+id = "hoofed"
+name = "Hoofed"
+kind = "mixed"
+tier = "lesser"
+weight = 8
+description = "Hooves: no boots fit and your steps ring out, but you are quicker and your kicks land hard."
+line = "Your feet harden, and ring on the stone."
+effects = [
+    { kind = "bars_slot", slot = "feet", mark = "hooves", refused = "Your hooves will not go into anything." },
+    { kind = "speed_percent", value = 5 },
+    { kind = "footsteps_percent", value = 50 },
+    { kind = "kick_die", sides = 8 },
+]
+# Written here, on the later of the two (docs/design/profane-gifts.md §6.5): made symmetric at
+# load.
+excludes = ["soft_footed"]

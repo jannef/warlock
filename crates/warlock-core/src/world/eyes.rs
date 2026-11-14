@@ -1,6 +1,7 @@
 //! Effective eyes (spec §5 "Vision"; the design's B4): the player's vision profile as their
 //! talents change it. `WorldState::vision` stays the base profile (the race's, or the dev
-//! `vision:` override); [`WorldState::eyes`] betters it by a unique item's Vision power they
+//! `vision:` override), which a `vision` talent replaces ([`WorldState::base_vision`]: Deep-eyed's
+//! darkvision eyes); [`WorldState::eyes`] betters it by a unique item's Vision power they
 //! wear (`Actor::eyes`; not the dev override), then applies the talents (Night eyes' threshold,
 //! Dark adaptation's darkvision, Rune sight's UV) and is what perception reads.
 //! Creatures see with their types' profiles, bettered the same way by a unique item they wear.
@@ -14,8 +15,7 @@ impl WorldState {
     /// (spec §8 "Magic items"; never the dev override, which shows a profile as it is), with
     /// what their talents change.
     pub(crate) fn eyes(&self, content: &Content) -> VisionProfile {
-        let base = content.vision_index(&self.vision).unwrap_or(0);
-        let base = &content.vision_profiles()[base];
+        let base = &content.vision_profiles()[self.base_vision(content)];
         let player = self.player();
         let base = if self.vision_dev {
             std::borrow::Cow::Borrowed(base)
@@ -23,6 +23,19 @@ impl WorldState {
             player.eyes(content, base)
         };
         eyes_with(&base, &player.talent_mods(content))
+    }
+}
+
+impl WorldState {
+    /// The player's own vision profile, an index into `Content::vision_profiles`: a `vision`
+    /// talent's (Deep-eyed) in place of [`WorldState::vision`], the race's; the dev override
+    /// wins over both.
+    pub(crate) fn base_vision(&self, content: &Content) -> usize {
+        let player = self.player();
+        let talent = (!self.vision_dev && !player.talents.is_empty())
+            .then(|| player.talent_mods(content).senses.vision)
+            .flatten();
+        talent.unwrap_or_else(|| content.vision_index(&self.vision).unwrap_or(0))
     }
 }
 

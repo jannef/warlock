@@ -1,0 +1,13 @@
+[[gift]]
+id = "mere_eyed"
+name = "Mere-eyed"
+kind = "mixed"
+tier = "lesser"
+weight = 6
+description = "Pale, wide eyes: you see by less light, but not as far under the open sky."
+line = "Your eyes go pale and wide."
+undone = "The pale film over your eyes clears, and the dark goes deeper still."
+effects = [
+    { kind = "threshold_percent", value = -25 },
+    { kind = "day_sight", value = -2 },
+]

@@ -570,6 +570,7 @@ cfg_if! {
 }
 
 // Objects, equipment, and magic items (docs/dev/objects.md, equipment.md, magic-items.md).
+mod body_slots;
 mod carry;
 mod equip;
 pub(crate) mod gear_condition;
@@ -584,6 +585,7 @@ cfg_if! {
         mod affix_spell_tests;
         mod affix_stamina_tests;
         mod affix_utility_tests;
+        mod body_slots_tests;
         mod equip_tests;
         mod gear_condition_tests;
         mod gear_tests;
@@ -754,6 +756,8 @@ pub use actors::Actors;
 pub use alignment::Deed;
 pub use ally::{Ally, AllySource, MAX_DEV_ALLIES, Order};
 pub use attacks::{AttackSource, OwnAttack};
+pub(crate) use beast_friend::calms;
+pub(crate) use body_slots::has_slot;
 pub use calling::CallingStatus;
 pub use cast::Reach;
 pub use collar::fits_neck;

@@ -22,7 +22,7 @@ impl World {
         let actor = self.state.actors.get(&id)?;
         let blind = self.state.race_of(&self.content, actor)?.light_blind?;
         let pos = actor.pos;
-        let vision = self.content.vision_index(&self.state.vision).unwrap_or(0);
+        let vision = self.state.base_vision(&self.content);
         let eye = &self.content.vision_profiles()[vision];
         let light = sight::light(&self.state, &self.content, &mut self.lights, pos, eye, true);
         blind.dazzled_by(light).then_some(blind)

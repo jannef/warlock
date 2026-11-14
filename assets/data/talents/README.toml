@@ -105,6 +105,7 @@
 #   max_mana_per_levels { per_levels, at_least }   mana: one per that many character levels,
 #                                 at least at_least, handed out at the pick and as each later
 #                                 level comes (as max_hp_per_levels)
+#   max_mana_percent { value }    maximum mana that percent more (negative: less, never below 0)
 #   mana_resting_percent { value }   resting brings mana back that percent faster on top of
 #                                 resting's pace
 #   mana_cost_percent { value }   abilities cost that percent more mana (negative: less; never
@@ -119,6 +120,8 @@
 #   threshold_percent { value }   its eyes need that percent more light (negative: less)
 #   darkvision { value }          its darkvision reaches that many cells farther (from none:
 #                                 that far)
+#   vision { profile }            its eyes are that vision profile (an id in ../vision.toml),
+#                                 not its race's; the first such talent's
 #   scent { status, radius }      it sees creatures suffering that status (an id in
 #                                 ../status/) in its line of sight within radius cells
 #                                 (1 to 20), however dark
@@ -161,6 +164,14 @@
 #   wading_proof                  wading never gives it a disease
 #   beast_friend                  creatures of animal factions (../factions/) are neutral
 #                                 to it until it attacks one of that type
+#   kin_to { tag }                creatures whose type carries that tag (a creature's `tags`)
+#                                 are neutral to it until it attacks one of that type
+#   bars_slot { slot, mark, refused }   that equipment slot (an id in ../slots.toml, never a
+#                                 hand or a `ready` slot) cannot be used: putting anything there
+#                                 says `refused` and takes no time, the equipment screen shows
+#                                 `— (mark)`, and what is worn there falls as the talent takes
+#   opens_slot { slot }           that slot, gated to a class (../slots.toml), is its too; what
+#                                 is worn there falls when the talent goes
 #   stipend                       each level reached adds to its family's stipend, which its
 #                                 servant hands over (../stipend.toml, the aristocrat's)
 #   stipend_more { gold, chance, magic }  the stipend's gold that percent more, its loot roll
@@ -400,6 +411,10 @@
 #                                 much more (1 to 3, at most x5)
 #   unarmed_die { sides }         blows with nothing in hand and kicks roll one die of that many
 #                                 sides (the bigger of it and kick_die)
+#   unarmed_on_hit { status, chance, severity }   a blow with nothing in hand (not a kick)
+#                                 that hits causes severity degrees of status (an id in
+#                                 ../status/) by chance percent (1 to 100), as a natural attack's
+#                                 on_hit
 #   stance_costs                  changing its combat stance takes a wait's time (free otherwise)
 #   stance_dodge { stance, percent }   that stance's Dodge penalty that percent smaller
 #   step_percent { value, unarmoured, unburdened, no_shield }   steps cost that percent more

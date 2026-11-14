@@ -170,10 +170,34 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// The slots the player has, in display order: every slot but another class's own (the
-    /// aristocrat's extra rings, #1404; `Content::slots_for`).
+    /// aristocrat's extra rings, #1404; `Content::slots_for`), unless a talent of theirs opens it
+    /// (Many-fingered; `world/body_slots.rs`).
     pub fn own_slots(&self) -> Vec<(SlotId, &'a SlotDef)> {
         let class = self.character.map(|c| c.spec.class.as_str());
-        self.content.slots_for(class).collect()
+        let mods = self.player.talent_mods(self.content);
+        (self.content.slot_ids())
+            .filter(|&(slot, _)| crate::world::has_slot(self.content, class, &mods, slot))
+            .collect()
+    }
+
+    /// The equipment screen's note for slot `slot` when a talent of the player's bars it, which
+    /// they know: `horns`, shown `— (horns)` (Horned; `world/body_slots.rs`).
+    pub fn barred(&self, slot: SlotId) -> Option<String> {
+        if self.player.talents.is_empty() {
+            return None;
+        }
+        let mods = self.player.talent_mods(self.content);
+        mods.slots.barred(slot).map(|b| b.mark.clone())
+    }
+
+    /// The words that refuse anything put in slot `slot` while a talent of the player's bars it
+    /// ("Your horns are in the way."), which the equipment choice shows in place of a list.
+    pub fn barred_words(&self, slot: SlotId) -> Option<String> {
+        if self.player.talents.is_empty() {
+            return None;
+        }
+        let mods = self.player.talent_mods(self.content);
+        mods.slots.barred(slot).map(|b| b.refused.clone())
     }
 
     /// What seen creature `actor` wears and wields, each thing once, in slot order: all the

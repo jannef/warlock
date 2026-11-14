@@ -8,7 +8,8 @@ What is in so far: the everlasting corpses (P1, `docs/dev/hunger.md`), the gift 
 (P2, #1625): the data, the tree, bestowing and rescinding, the dumps, the Talents page; and
 Gnægan's meal (P3, #1626): the signatures' `only`, a profane corpse's `gives` and `profane`, the
 draw, and the deed; and the other nine signatures (P4, #1627): every layer boss of Grundlēas
-leaves a profane corpse. The spec (§8 "Hunger") and the wiki (`wiki/src/profane-gifts.md`) say what
+leaves a profane corpse; and the body (P5, #1628): the six effects of §6.4 and the ten gifts that
+use them or relate to them (below). The spec (§8 "Hunger") and the wiki (`wiki/src/profane-gifts.md`) say what
 eating one does.
 
 ## Data: `data/profane/`
@@ -72,8 +73,24 @@ the larger `severity`. The abilities menu lists such an active under `Source::Pr
 when no non-gift talent of the player's gives it (`Ability::source_for`, `OwnAbility::source`),
 else under the birth sign.
 
-Not yet on: the tier coverage check (P6). Rat-king's court lacks its `kin_to { tag = "vermin" }`
-until P5.
+Not yet on: the tier coverage check (P6).
+
+**The body** (P5, #1628; design §6.4). Six talent effects, any talent's to use, each read at one
+hook (`docs/dev/progression.md`'s table has them all): `bars_slot` and `opens_slot` (the new
+`slots` area, `talent/slots.rs`; read in `world/body_slots.rs`, `docs/dev/equipment.md`
+"Barred and opened slots"), `unarmed_on_hit` (`offence`: bare hands' `on_hit`, `Actor::melee`),
+`vision` (`senses`: `WorldState::base_vision`), `kin_to` (`beast`: Beast-friend's rule by tag,
+`world/beast_friend.rs::calms`), and `max_mana_percent` (`magic`: `Actor::mana_scaled`). The
+gifts: lesser `soft_footed`, `barrow_eyed`, `horned`, `hoofed`, `mere_eyed`; greater `clawed`,
+`many_fingered`, `dim_eyed`; dire `deep_eyed`, `fell_minded`; and Rat-king's court's
+`kin_to { tag = "vermin" }`. Their relations are written on the later of each pair (`hoofed`
+excludes `soft_footed`, `many_fingered` excludes `clawed`, `dim_eyed` excludes `barrow_eyed` and
+`mere_eyed`, `deep_eyed` replaces those two and excludes `dim_eyed`). The design's `bars_slot`
+shape gave a `mark` and `refused`; each gift's here: Horned's horns, Hoofed's hooves, Clawed's
+claws. What falls, and its words, is the code's (`World::shed_unworn`): "Your iron helm no
+longer fits, and falls to the floor." for a slot barred, "Your silver ring slips from a finger
+that is no longer there." for a slot no longer the player's (only rings are gated to a class
+today; an aristocrat's own extra ring stays when Many-fingered goes).
 
 ## In the world: `world/profane.rs`
 
@@ -86,8 +103,10 @@ until P5.
   `stat` effects handed out, its `line` said, then "You are <name>.". Excludes and races are the
   pool's business, not this (a signature is sure, §7.3).
 - `World::rescind(talent)` (§7.4): out of `Actor::boons` and `Actor::talents`, each `stat` effect
-  given back in the negative, the `undone` line said. The hook the deferred good use (#196) will
-  call.
+  given back in the negative, the `undone` line said, then what is worn in a slot no longer the
+  player's falls (`shed_unworn`: an `opens_slot` gone; a `bars_slot` gone frees its slot, nothing
+  put back). The hook the deferred good use (#196) will call.
+- A gift given ends the same way: what is worn in a slot it bars falls (Horned's helm).
 - Stats (`shift_stats`): a rise is `Stats::gift` (score and potential, a Toughness rise bringing
   its hit points); a fall is `Stats::lessen` never below `DRAIN_FLOOR`, as the altar's wrath, stat
   damage kept within the score, hit points and mana kept within their maxima, never below 1 hit
@@ -114,7 +133,7 @@ load, as any unknown talent does.
   `OwnTalent::boon` stays the altar's). A screen snapshot: `talents-screen-profane`.
 - `talents` dump: `Oak-hearted (profane)`, `Withered (profane, bane)`; JSON `talents[].profane`,
   `"boon" | "mixed" | "bane"`, left out otherwise.
-- `progress` dump (dev): `profane 1 held; pool lesser 4/4, greater 0/1, dire 2/2` (each tier's
+- `progress` dump (dev): `profane 1 held; pool lesser 9/9, greater 3/4, dire 4/4` (each tier's
   gifts a draw may give now, of all it holds).
 - Dev actions (no time; `docs/dev/cli.md`): `gift:ID` gives a gift as a draw would (refused for
   one held, excluded, or barred to the race), `rescind:ID` takes one away.
@@ -127,6 +146,10 @@ table, the deed in full and diminished, a paladin's zeal, the loader's profane-c
 signature refusals), `world/signature_tests.rs` (each of the nine corpses: its gift, its stats, its resistance totals;
 Līgetdrȳ's Decipher script; the two wyrms summed and capped; one breath, the larger; the
 `Fire breath (profane)` row), `world/layer_boss_tests.rs` (every keeper's profane corpse, the
-campaign check), `world/profane_tests.rs` (bestow; rescind reversing `stat` exactly; Withered at the floor;
+campaign check), `world/body_slots_tests.rs` (P5: Horned's helm falls and the equip is refused
+with no time; Many-fingered's ring, and its fall when the gift goes, an aristocrat's kept;
+Clawed's bleeding; Rat-king's court's vermin neutral until struck; Deep-eyed's darkvision eyes
+on a human, replacing Barrow-eyed; Fell-minded's quarter more mana), `content/profane.rs`'s
+`the_loader_refuses_a_bad_body_effect`, the screen snapshot `equipment-horned`, `world/profane_tests.rs` (bestow; rescind reversing `stat` exactly; Withered at the floor;
 `replaces`; `undoes` with and without the boon; `excludes` both ways; `not_for`; a save; the
 `progress` row).

@@ -797,7 +797,11 @@ impl World {
         let seeing = |profile: Option<&crate::content::VisionProfile>| {
             profile.is_some_and(|v| v.darkvision > 0)
         };
-        let mine_dark = match seeing(content.vision(&self.state.vision)) {
+        let mine_dark = match seeing(
+            content
+                .vision_profiles()
+                .get(self.state.base_vision(&content)),
+        ) {
             true => dark / 2,
             false => dark,
         };

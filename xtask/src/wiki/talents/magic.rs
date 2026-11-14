@@ -13,6 +13,12 @@ pub(super) fn text(content: &Content, effect: &MagicEffect) -> String {
         MagicEffect::ManaRegenPercent { value } => {
             format!("mana regeneration pace {}", percent(value))
         }
+        MagicEffect::MaxManaPercent { value } => {
+            format!(
+                "maximum [mana](mana.md#how-much-mana-you-have) {}",
+                percent(value)
+            )
+        }
         MagicEffect::MaxManaPerLevels {
             per_levels,
             at_least,

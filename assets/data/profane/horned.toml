@@ -1,0 +1,13 @@
+[[gift]]
+id = "horned"
+name = "Horned"
+kind = "mixed"
+tier = "lesser"
+weight = 8
+description = "Horns: no helm fits, but you carry yourself like something to be reckoned with."
+line = "Two knots of bone push through your brow."
+effects = [
+    { kind = "bars_slot", slot = "head", mark = "horns", refused = "Your horns are in the way." },
+    { kind = "stat", stat = "presence", value = 1 },
+    { kind = "natural", value = 1 },
+]

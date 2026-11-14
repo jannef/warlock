@@ -1006,6 +1006,8 @@ impl Content {
         scroll::check_spells(&content).map_err(|m| ContentError::new("data/objects", m))?;
         talent::check_heirlooms(&content).map_err(|m| ContentError::new("data/talents", m))?;
         talent::check_trades(&content).map_err(|m| ContentError::new("data/talents", m))?;
+        talent::check_slots(&content).map_err(|m| ContentError::new("data/talents", m))?;
+        talent::check_kin(&content).map_err(|m| ContentError::new("data/talents", m))?;
         spell_def::check_effects(&content).map_err(|m| ContentError::new("data/spells", m))?;
         breath::check_effects(&content)?;
         burst::check_effects(&content)?;

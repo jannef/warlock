@@ -127,6 +127,24 @@ screen, and they count everything you wear, unidentified [magic](magic-items.md)
 
 {{#include generated/light-weapons.md}}
 
+## Barred and opened slots
+
+Some [profane gifts](profane-gifts.md) change which slots your body has:
+
+- **A barred slot** cannot be used at all. [Horns](profane-gifts.md#talent-horned) bar the
+  Head slot, [hooves](profane-gifts.md#talent-hoofed) the Feet, and
+  [claws](profane-gifts.md#talent-clawed) the Hands. The equipment screen shows the slot as
+  `— (horns)`. Trying to put something there says why ("Your horns are in the way.") and takes
+  no time. What you wore there when the gift took falls to the floor at your feet: "Your iron
+  helm no longer fits, and falls to the floor."
+- **An opened slot** is one that only a class has, now yours too. [A sixth
+  finger](profane-gifts.md#talent-many-fingered) opens Extra ring 1, the
+  [aristocrat](class-aristocrat.md)'s first extra ring slot, whatever your class. It shows and
+  works just as the aristocrat's does. If you ever lose the gift, the ring there falls to the
+  floor, unless the slot is your class's own.
+
+Hands, missile weapons, missiles, and tools are never barred: a body changes, a grip does not.
+
 ## How long it takes
 
 {{#include generated/actions.md}}

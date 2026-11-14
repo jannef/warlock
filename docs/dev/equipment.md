@@ -14,6 +14,20 @@ class). The readers of "every slot" that a player sees or acts on go through the
 `PerceptionView::own_slots` (the equipment screen's rows, lettered by row, so `SlotRow::slot`
 carries the id and nobody else's letters move; the choice's height; the `equipment` dump layer)
 and `World::own_slot` (`equip:` and `remove:` refuse another class's slot as an unknown one).
+**Barred and opened slots** (#1628, the profane gifts' body, `docs/dev/profane-gifts.md`): a
+talent's `opens_slot` makes a class's slot the holder's too, and its `bars_slot` keeps a slot
+from them; both are `TalentEffect::Slots` (`talent/slots.rs`, summed in `TalentMods::slots`),
+read in `world/body_slots.rs` alone: `has_slot` (a slot is everyone's, the class's, or opened)
+behind `World::own_slot` and `PerceptionView::own_slots`; `World::barred_words` refuses
+`equip:` in a barred slot with the talent's `refused` words and no time (before the fit check);
+`PerceptionView::barred` (the mark) and `barred_words` give the equipment screen's `— (horns)`
+row and the choice's words in place of its list, and the `equipment` dump's `a Head: - (horns)`;
+`World::shed_unworn`, after a gift is given or taken away (`world/profane.rs`), takes off what is
+worn in a slot barred or no longer the player's and drops it on their cell ("Your iron helm no
+longer fits, and falls to the floor.", "Your silver ring slips from a finger that is no longer
+there."). The loader (`content::talent::check_slots`, after the objects) refuses a bar on a grip
+(a `hand` slot or a `ready` one: main and off hand, missile weapon, missiles, tool) and an
+opening of a slot no class gates.
 `free_slot` (kits, heirlooms' fallback, spawn data, escorts) never picks a class's slot, so a
 creature or an ally never wears there; what reads the equipment itself (`Mods::worn`, Defence,
 `Actor::weapon`) reads whatever is in it, so a ring there works as on either hand. Objects say where they go (`slot` = a slot's `fits`,
