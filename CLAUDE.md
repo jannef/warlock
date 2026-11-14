@@ -24,11 +24,11 @@ Update them together whenever behavior, commands, or architecture change.
 | Dependency audit | `cargo deny check` |
 | Screenshot smoke test | `cargo xtask smoke` (writes `target/xtask/smoke.png`; captures after 60 frames, retried once after 600 if the capture is a single flat color, which still fails: #669) |
 | Web build | `cargo xtask web` (writes `target/web/`, without the test world; see "Releases, web build, logs") |
-| Release configuration | `cargo build --no-default-features -p warlock -p warlock-cli` (no `showcase` feature: the test world left out, as in a release; `cargo test --no-default-features -p warlock-core -p warlock release_content` checks it; CI's `release-config` job; docs/dev/campaign.md) |
+| Release configuration | `cargo build --no-default-features -p warlock -p warlock-cli` (no `showcase` feature: the test world left out, as in a release; `cargo test --no-default-features -p warlock-core --test release_content` checks it; CI's `release-config` job; docs/dev/campaign.md) |
 | Web smoke test | `cargo xtask web-smoke <chrome>` (serves `target/web`, drives headless Chromium through menu → New run (skipped: the web build lists one scenario, the Ascmearc's start, so it opens on the race) → race, the stars, gender, class (preselected) → talents (Random) → name (empty: a random one) → summary → the story (opened once as the run begins; Enter) → the run on Beorggeat, checks the new character's save `warlock/saves/<id>.sav`, waits five turns, reloads, Continue, and checks the run resumed at turn 5; writes `target/xtask/web-smoke.png`; fails on logged errors; not run in CI) |
 | Regenerate the vast level | `cargo xtask gen-vast` (writes `assets/campaigns/showcase/levels/vast.toml`; deterministic, never hand-edit) |
-| Check the vast level is fresh | `cargo xtask gen-vast --check` (fails if the file differs from the generator output; run it after touching `xtask/src/vast.rs`) |
-| Third-party notices | `cargo xtask licenses` (regenerates `THIRD_PARTY_LICENSES.html` with `cargo-about`, config `about.toml`/`about.hbs`; install: `cargo install cargo-about --locked --features cli`); `--check` fails when it is stale (CI runs it). **Run it after changing dependencies** (`Cargo.toml`/`Cargo.lock`); keep `about.toml`'s `accepted` list in sync with `deny.toml`'s `allow` |
+| Check the vast level is fresh | `cargo xtask gen-vast --check` (fails if the file differs from the generator output; run it after touching `xtask/src/vast.rs`; CI runs it) |
+| Third-party notices | `cargo xtask licenses` (regenerates `THIRD_PARTY_LICENSES.html` with `cargo-about`, config `about.toml`/`about.hbs`; install: `cargo install cargo-about --locked --features cli`); `--check` fails when it is stale (CI runs the same `cargo about` call in shell, without building xtask: keep `.github/workflows/ci.yml`'s `deny` job in step with `xtask/src/licenses.rs`). **Run it after changing dependencies** (`Cargo.toml`/`Cargo.lock`); keep `about.toml`'s `accepted` list in sync with `deny.toml`'s `allow` |
 | Player wiki tables | `cargo xtask wiki` (writes `wiki/src/generated/*.md` from the game data; not committed: CI and the release workflow run it before `mdbook build wiki`), `--build` (also runs `mdbook build wiki` into `wiki/book/`; needs `cargo install mdbook --locked`), `--check-links` (builds, then fails on any link to a missing page or anchor, or an anchor defined twice; CI runs it) |
 | Golden screenshots | `cargo xtask golden` (compare; authoritative on Linux only), `--local` (capture to `target/xtask/golden/*.local.png`, no compare), `--update` (rewrite references; see "Golden screenshots") |
 | Frame-time benchmark | `cargo xtask bench-frames [WxH]` (release, offscreen; the hub, again with the Flicker switch off (`steady`), the vast level, and fifty spell circles with the switch on and off, `xtask/src/bench_circles.rs`; method and results in `docs/perf.md`) |
@@ -534,7 +534,7 @@ A successful compile does not verify anything visual. Before opening a PR:
 - Work is tracked in GitHub issues under milestones (and Housekeeping); use the `gh` CLI.
 - One branch and PR per issue (or a tight group of related issues); reference issues with
   `Closes #N`. CI must be green before a squash merge into `main`.
-- CI runs on Linux only (`CI` workflow: fmt, clippy, tests, headless screenshots, wasm32 check,
+- CI runs on Linux only (`CI` workflow: fmt, clippy, tests (with cargo-nextest: every test in a process of its own), headless screenshots in a job beside them, wasm32 check,
   cargo-deny, the release configuration without the test world; the web build on pushes to
   `main`). macOS is not run in Actions: development happens
   on macOS, so run the full local check there before every PR (a PR built by a cloud agent,
