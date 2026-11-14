@@ -7,8 +7,11 @@
 //! for life. [`ProfaneTable`] adds what a talent lacks: the kind, the tier and weight a draw
 //! reads, the lines, and the relations (`excludes`, made symmetric here; `replaces`; `undoes`).
 //!
-//! The checks of §6.5 that need the whole table in place (each tier holding a gift of each kind)
-//! or the signatures (`only`, a creature's `gives`) come with the phases that land them.
+//! A **signature** gift (`only`, weight 0) is one creature's own, given sure by its corpse's
+//! `on_eat.gives` and never drawn; [`check_signatures`] ties the two together once creatures have
+//! loaded. A profane corpse's draws are its `on_eat.profane` ([`ProfaneRolls`]). The check of
+//! §6.5 that needs the whole table in place (each tier holding a gift of each kind) comes with
+//! P6.
 
 use super::talent::{Needs, TalentBook, TalentDef, TalentEffect, TalentId};
 use super::{Content, ContentError};
@@ -85,6 +88,46 @@ pub struct GiftDef {
     pub undoes: Vec<TalentId>,
     /// The races it is never drawn for, by id.
     pub not_for: Vec<String>,
+    /// The creature whose corpse gives it, sure (a signature, weight 0, never drawn).
+    pub only: Option<String>,
+    /// The campaign whose `data/profane/` holds it (`None`: shared).
+    pub campaign: Option<String>,
+}
+
+impl GiftDef {
+    /// Whether a meal's roll may draw it: every gift but a signature.
+    pub fn drawn(&self) -> bool {
+        self.weight > 0
+    }
+}
+
+/// A profane corpse's draws (`on_eat.profane = { rolls = 1, tiers = { lesser = 100 } }`,
+/// docs/design/profane-gifts.md §7.1): how many rolls, and each roll's odds of each tier in
+/// percent, summing to 100.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ProfaneRolls {
+    pub rolls: u8,
+    pub tiers: BTreeMap<GiftTier, u8>,
+}
+
+impl ProfaneRolls {
+    /// At least one roll, and tier weights summing to 100.
+    pub(super) fn check(&self) -> Result<(), String> {
+        if self.rolls == 0 {
+            return Err("`profane` needs at least one roll".into());
+        }
+        let sum: u32 = self.tiers.values().map(|&w| u32::from(w)).sum();
+        if sum != 100 {
+            return Err(format!("`profane` tier weights sum to {sum}, not 100"));
+        }
+        Ok(())
+    }
+
+    /// The odds of `tier`, in percent.
+    pub fn weight(&self, tier: GiftTier) -> u8 {
+        self.tiers.get(&tier).copied().unwrap_or(0)
+    }
 }
 
 /// Every gift, in path order.
@@ -139,6 +182,7 @@ struct GiftSpec {
     undoes: Vec<String>,
     #[serde(default)]
     not_for: Vec<String>,
+    only: Option<String>,
 }
 
 /// The tree the gifts are talents of.
@@ -195,8 +239,14 @@ pub(super) fn parse<'a>(
         if book.id(&spec.id).is_some() {
             return Err(err("its id is a talent's already".into()));
         }
-        if !(1..=100).contains(&spec.weight) {
-            return Err(err(format!("weight {} is not 1 to 100", spec.weight)));
+        // A signature weighs 0 (never drawn); every other gift 1 to 100.
+        match (&spec.only, spec.weight) {
+            (Some(_), 0) => {}
+            (Some(_), _) => return Err(err("a gift with `only` weighs 0".into())),
+            (None, w) if !(1..=100).contains(&w) => {
+                return Err(err(format!("weight {w} is not 1 to 100")));
+            }
+            (None, _) => {}
         }
         for effect in &spec.effects {
             effect.check(content, None).map_err(err)?;
@@ -238,6 +288,8 @@ pub(super) fn parse<'a>(
             replaces: Vec::new(),
             undoes: Vec::new(),
             not_for: spec.not_for.clone(),
+            only: spec.only.clone(),
+            campaign: super::campaign::of_path(file).map(str::to_string),
         });
     }
     // The relations, each naming another gift.
@@ -291,6 +343,61 @@ pub(super) fn parse<'a>(
     }
     check_acyclic(&table, &specs)?;
     Ok(table)
+}
+
+/// Ties the signatures to their corpses, once creatures have loaded: a creature's `on_eat.gives`
+/// names a gift whose `only` is that creature, and a gift's `only` names a creature whose `gives`
+/// is that gift, of the gift's own campaign (or shared). A signature is never taken away by
+/// another gift's `replaces` or `undoes`. Content without gifts (no talent table) checks nothing:
+/// its corpses' `gives` give nothing.
+pub(super) fn check_signatures(content: &Content) -> Result<(), ContentError> {
+    let table = content.profane();
+    if table.is_empty() {
+        return Ok(());
+    }
+    let book = content.talents();
+    let gift_of = |id: &str| book.id(id).and_then(|t| table.gift(t));
+    for creature in content.creature_defs() {
+        let Some(gives) = creature.on_eat.as_ref().and_then(|e| e.gives.as_deref()) else {
+            continue;
+        };
+        let err = |m: String| {
+            ContentError::new(
+                "data/creatures/",
+                format!("creature `{}`: {m}", creature.id),
+            )
+        };
+        let gift = gift_of(gives).ok_or_else(|| err(format!("`gives` names no gift `{gives}`")))?;
+        if gift.only.as_deref() != Some(creature.id.as_str()) {
+            return Err(err(format!(
+                "`gives` names `{gives}`, whose `only` is not it"
+            )));
+        }
+    }
+    for gift in table.iter() {
+        let err =
+            |m: String| ContentError::new("data/profane/", format!("gift `{}`: {m}", gift.id));
+        if let Some(only) = &gift.only {
+            let creature = (content.creature_id(only))
+                .map(|c| content.creature(c))
+                .ok_or_else(|| err(format!("`only` names no creature `{only}`")))?;
+            let gives = creature.on_eat.as_ref().and_then(|e| e.gives.as_deref());
+            if gives != Some(gift.id.as_str()) {
+                return Err(err(format!(
+                    "`only` names `{only}`, whose corpse does not give it"
+                )));
+            }
+            if gift.campaign.is_some() && creature.campaign != gift.campaign {
+                return Err(err(format!("`only` names `{only}`, of another campaign")));
+            }
+        }
+        for taken in gift.replaces.iter().chain(&gift.undoes) {
+            if table.gift(*taken).is_some_and(|g| g.only.is_some()) {
+                return Err(err("`replaces` or `undoes` names a signature".into()));
+            }
+        }
+    }
+    Ok(())
 }
 
 /// `replaces` and `undoes` together never lead from a gift back to itself.

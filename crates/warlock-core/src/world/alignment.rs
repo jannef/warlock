@@ -5,7 +5,8 @@
 //! **Deeds** ([`Deed`]), each hooked in once where it happens: a kill (`fight.rs::dies`, beside
 //! the experience it earns: [`World::judge_kill`]), attacking a shopkeeper, theft, and paying
 //! what is owed (`shop.rs`: [`World::player_did`]), eating a corpse of one's own race or of a
-//! peaceful creature who talks (`eat.rs`: [`World::ate_corpse`]), and a quest's own shift on
+//! peaceful creature who talks (`eat.rs`: [`World::ate_corpse`]), eating a profane corpse
+//! (`profane.rs`: [`World::profane_meal`]), and a quest's own shift on
 //! completion (`quest.rs`), consecrating an unholy place (`consecrate.rs`), and consuming a magic crystal (`crystal.rs`). Stealing (`steal.rs`: `World::got_away_with`, a theft that took something)
 //! is a [`Deed::Theft`] too.
 //!
@@ -39,6 +40,9 @@ pub enum Deed {
     PaidDebt,
     /// Ate the corpse of one of their own race, or of a peaceful creature who talks.
     AteKin,
+    /// Ate a profane corpse: a layer boss's flesh, its gifts taken (docs/design/profane-gifts.md
+    /// §9).
+    EatProfane,
     /// Completed a quest that moves the score.
     Quest,
     /// Consecrated an unholy place (Consecrate).
@@ -59,6 +63,7 @@ impl Deed {
             Deed::Theft => Some(shift.theft),
             Deed::PaidDebt => Some(shift.pay_debt),
             Deed::AteKin => Some(shift.eat_kin),
+            Deed::EatProfane => Some(shift.eat_profane),
             Deed::Consecrated => Some(shift.consecrate),
             Deed::ConsumedCrystal => Some(shift.consume_crystal),
             Deed::Prayed(Alignment::Good) => Some(shift.prayed_good),

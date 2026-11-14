@@ -65,7 +65,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   warren; a touch that drains the will and frightens), 90 Wælcyrge the Chooser (nearly twice as
   fast as anyone, a spear whose wounds bleed) on the field of the slain, and 100 Nīðdraca the
   Hate-Wyrm (a fire dragon's breath, demons called up, claws that set alight) on the burning
-  hoard (#1122). Past 100 a tenth floor is ordinary.
+  hoard (#1122). Past 100 a tenth floor is ordinary. Every keeper leaves an everlasting corpse,
+  and Gnægan's is a profane corpse (§8 "Hunger": a sure gift, a draw on the gift table, and a
+  pull toward evil to whoever eats it; the other nine follow, #1627).
   **The Pits** (`[dungeon.portal]`, #1296; docs/design/miscasts-review.md §7): a portal branch
   exists only as instances. **Hellegeat** (`data/dungeons/hellegeat.toml`) is one shared branch,
   of no campaign, that any run of any campaign opens Pits of: five caves floors 80×40, 45 °C, a dull

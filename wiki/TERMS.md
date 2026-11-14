@@ -38,7 +38,7 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A status effect (Staggered, Winded, Raging, Hasted, …) | `status-effects.md#status-ID` | `status-effects.md#status-staggered` |
 | A disease | `diseases.md#disease-ID` | `diseases.md#disease-filth-fever` |
 | A skill (Stealth, Open lock, Spot, …) | `skills.md#skill-ID` | `skills.md#skill-open-lock` |
-| A talent | `talents.md#talent-ID`; a birth sign's gift `horoscope.md#talent-ID`; a class ability `class-CLASS.md#talent-ID` (its first class's table, on that class's page; a prestige class's own, `prestige-classes.md#talent-ID`) | `talents.md#talent-hardy`, `horoscope.md#talent-fleet-footed`, `class-berserker.md#talent-rage` |
+| A talent | `talents.md#talent-ID`; a birth sign's gift `horoscope.md#talent-ID`; a class ability `class-CLASS.md#talent-ID` (its first class's table, on that class's page; a prestige class's own, `prestige-classes.md#talent-ID`); a profane gift `profane-gifts.md#talent-ID` | `talents.md#talent-hardy`, `horoscope.md#talent-fleet-footed`, `class-berserker.md#talent-rage` |
 | An ability in the abilities menu (class abilities, sign actives, spells, skill uses) | `abilities.md#ability-ID` | `abilities.md#ability-lay-on-hands` |
 | A spell | `magic.md#spell-ID` | `magic.md#spell-fireball` |
 | A damage type (fire, slashing, …) | `damage-types.md#damage-ID` | `damage-types.md#damage-fire` |
@@ -170,6 +170,9 @@ above.
 | Burden (Unburdened, Burdened, Strained, Overloaded), carrying limit | `burden.md#burden-levels`, `burden.md#how-much-you-can-carry` |
 | Hunger, nutrition (Satiated, Hungry, Weak, Fainting, Starving, Bloated) | `hunger.md#how-hungry-you-are` |
 | Eating, food, rot, corpses | `food.md#eating`, `food.md#food-spoils`, `food.md#corpses` |
+| Everlasting (a keeper's corpse, which never rots) | `food.md#corpses` |
+| Profane gift, profane corpse, eating a keeper's corpse | `profane-gifts.md`, `profane-gifts.md#eating-a-keepers-corpse` (a gift: its row) |
+| Signature gift (a keeper's own, sure) | `profane-gifts.md#each-keepers-own-gift` |
 | Shop, buying, selling, prices | `shops.md#buying`, `shops.md#selling`, `shops.md#prices` |
 | Gold, money | `shops.md#money` |
 | Theft from a shop | `shops.md#theft` |

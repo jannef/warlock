@@ -1,14 +1,17 @@
 //! The profane gifts in the world (docs/design/profane-gifts.md §7.3, §7.4;
 //! `docs/dev/profane-gifts.md`): giving one ([`World::bestow_gift`], its relations applied) and
-//! taking one away ([`World::rescind`]), with the dev actions `gift:ID` and `rescind:ID`.
+//! taking one away ([`World::rescind`]), with the dev actions `gift:ID` and `rescind:ID`; and
+//! the meal that gives them ([`World::profane_meal`], §4): a profane corpse's signature, its
+//! draws on the table (§7.2, [`World::draw_gift`]), and the pull toward evil.
 //!
 //! A gift held is a talent in [`Actor::talents`](super::Actor) and [`Actor::boons`](super::Actor),
 //! so a restored run puts it back (`stars::grant`) and the state hash covers it. Its `stat`
 //! effects are handed out as it takes and taken back as it goes; every other effect is read at its
 //! hook and is simply there or not.
 
+use super::alignment::Deed;
 use super::{Spent, World};
-use crate::content::{GiftDef, GiftTier, TalentEffect, TalentId};
+use crate::content::{GiftDef, GiftTier, OnEat, TalentEffect, TalentId};
 use crate::stats::DRAIN_FLOOR;
 use crate::talent::{Taken, VigourEffect};
 
@@ -25,13 +28,63 @@ impl World {
             && !race.is_some_and(|r| gift.not_for.iter().any(|n| n == r))
     }
 
-    /// The gifts of `tier` a draw may give the player now, and how many the tier holds.
+    /// The gifts of `tier` a draw may give the player now, and how many the tier holds (its
+    /// drawn gifts: a signature is never drawn).
     pub(crate) fn gift_pool(&self, tier: GiftTier) -> (usize, usize) {
-        let gifts = self.content.profane().iter().filter(|g| g.tier == tier);
+        let gifts = (self.content.profane().iter()).filter(|g| g.tier == tier && g.drawn());
         let (all, open) = gifts.fold((0, 0), |(all, open), g| {
             (all + 1, open + usize::from(self.may_take_gift(g)))
         });
         (open, all)
+    }
+
+    /// A profane corpse's own steps (§4, after its message and the gifts every corpse gives,
+    /// before it feeds): its signature (`gives`), sure; then each of its `profane` rolls, a gift
+    /// drawn ([`World::draw_gift`]) and given, each complete before the next draw; then the
+    /// deed, [`Deed::EatProfane`], its notes said. Nothing for a corpse that is not profane.
+    pub(super) fn profane_meal(&mut self, on_eat: &OnEat) {
+        let (Some(gives), Some(rolls)) = (&on_eat.gives, &on_eat.profane) else {
+            return;
+        };
+        let content = self.content.clone();
+        if let Some(signature) = content.talents().id(gives) {
+            self.bestow_gift(signature);
+        }
+        for _ in 0..rolls.rolls {
+            match self.draw_gift(rolls) {
+                Some(gift) => {
+                    self.bestow_gift(gift);
+                }
+                None => self.say("Nothing more of it will take in you."),
+            }
+        }
+        self.player_did(Deed::EatProfane);
+        // The band crossed (and a paladin's zeal), said now, before the hunger news: the meal
+        // ends after the last turn's perception.
+        self.say_news();
+    }
+
+    /// One roll (§7.2): a tier by `rolls`' odds (one gameplay draw), then one of that tier's
+    /// gifts the player may take by weight (another); an empty tier gives way to the next up,
+    /// then down (lesser → greater → dire; dire → greater → lesser). `None` when all three are
+    /// empty.
+    pub(super) fn draw_gift(&mut self, rolls: &crate::content::ProfaneRolls) -> Option<TalentId> {
+        let tier = *(self.state.rng).weighted(&GiftTier::ALL, |&t| u32::from(rolls.weight(t)))?;
+        let order = match tier {
+            GiftTier::Lesser => [GiftTier::Lesser, GiftTier::Greater, GiftTier::Dire],
+            GiftTier::Greater => [GiftTier::Greater, GiftTier::Dire, GiftTier::Lesser],
+            GiftTier::Dire => [GiftTier::Dire, GiftTier::Greater, GiftTier::Lesser],
+        };
+        let content = self.content.clone();
+        for tier in order {
+            let pool: Vec<&GiftDef> = (content.profane().iter())
+                .filter(|g| g.tier == tier && g.drawn() && self.may_take_gift(g))
+                .collect();
+            if let Some(gift) = self.state.rng.weighted(&pool, |g| u32::from(g.weight)) {
+                return Some(gift.talent);
+            }
+        }
+        None
     }
 
     /// Gives the player `gift` (§7.3): an `undoes` with a gift it names held takes that away and

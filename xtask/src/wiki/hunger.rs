@@ -302,6 +302,9 @@ pub(super) fn corpse_effects(content: &Content) -> String {
         if let Some(harm) = eat.harm {
             does.push(format!("{harm} degrees {sickness}"));
         }
+        if eat.gives.is_some() {
+            does.push("[profane gifts](profane-gifts.md) and a pull toward evil".into());
+        }
         let does = if does.is_empty() {
             "nothing more".to_string()
         } else {

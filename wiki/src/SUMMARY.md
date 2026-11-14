@@ -76,6 +76,7 @@
   - [Diseases](diseases.md)
 - [Hunger](hunger.md)
   - [Food and corpses](food.md)
+    - [Profane gifts](profane-gifts.md)
 - [Burden](burden.md)
 - [Allies](allies.md)
   - [Companions](companions.md)

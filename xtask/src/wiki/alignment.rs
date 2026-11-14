@@ -93,6 +93,10 @@ pub(super) fn alignment_deeds(content: &Content) -> String {
             "Eating one of your own race, or a peaceful creature who talks",
             s.eat_kin,
         ),
+        (
+            "Eating a keeper's corpse and taking its [profane gifts](profane-gifts.md)",
+            s.eat_profane,
+        ),
         ("Consecrating a cursed or draining place", s.consecrate),
         (
             "Praying at a good forgotten altar (gold glow)",

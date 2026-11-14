@@ -73,7 +73,8 @@ rotten."
 The corpses of the [keepers of Grundlēas](dungeon-guide.md#the-keepers-of-the-layers) never rot.
 Each keeper always leaves its corpse where it fell: [Soulglass](magic.md#spell-soulglass) does not
 turn it to glass, and turned to stone it still leaves its corpse, not a statue. Most are far too
-heavy to carry, but the corpse waits in the lair for as long as you stay on that floor.
+heavy to carry, but the corpse waits in the lair for as long as you stay on that floor. Eating one
+is the biggest gamble in the game: see [Profane gifts](profane-gifts.md).
 
 A corpse is good for more than a meal. [Necromancy](spell-types.md) has three uses
 for a corpse of any age, and each one uses it up. [Charnel burst](magic.md#spell-charnel-burst)

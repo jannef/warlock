@@ -329,13 +329,22 @@ fn a_vault_with_stairs_must_be_a_lair_and_a_lair_must_have_them() {
     ))
     .expect("the king")
     .replace("unique = true\n", "")
-    .replace("everlasting = true\n", "");
+    .replace("everlasting = true\n", "")
+    .replace(PROFANE, "");
     files.insert(path, &rat_king);
+    files.remove(SIGNATURE);
     let err = Content::load(&files).expect_err("refused").to_string();
     assert!(err.contains("is not `unique`"), "{err}");
 }
 
-/// Content with the Rat King's file edited: each `from` (which must be there) replaced by `to`.
+/// The Rat King's profane corpse (`docs/dev/profane-gifts.md`), left out where a test takes away
+/// what it needs (`everlasting`), with its signature gift.
+const PROFANE: &str =
+    ", gives = \"rat_kings_court\", profane = { rolls = 1, tiers = { lesser = 100 } }";
+const SIGNATURE: &str = "campaigns/ascmearc/data/profane/";
+
+/// Content with the Rat King's file edited: each `from` (which must be there) replaced by `to`,
+/// its corpse no longer profane.
 fn rat_king_with(edits: &[(&str, &str)]) -> Result<Content, String> {
     let path = "campaigns/ascmearc/data/creatures/gnaegan.toml";
     let mut text = std::fs::read_to_string(format!(
@@ -347,8 +356,10 @@ fn rat_king_with(edits: &[(&str, &str)]) -> Result<Content, String> {
         assert!(text.contains(from), "{from}");
         text = text.replacen(from, to, 1);
     }
+    let text = text.replace(PROFANE, "");
     let mut files = ContentFiles::builtin();
     files.insert(path, &text);
+    files.remove(SIGNATURE);
     Content::load(&files).map_err(|e| e.to_string())
 }
 

@@ -38,6 +38,14 @@ through `rot::stage`/`gone_at`) leave it be; `crystallise` skips it and `fight.r
 false for it, so its death always lays the corpse. `content/layer_boss.rs::pin_lairs` refuses an
 endless branch's boss without `corpse` and `everlasting`. Tests: `world/everlasting_tests.rs`, the glass in `soulglass_tests.rs`, the refusals in
 `layer_boss_tests.rs`.
+**Profane corpses** (#1626, the profane gifts' P3, docs/dev/profane-gifts.md): an `on_eat`
+with `gives` (the signature gift's id) and `profane` (`ProfaneRolls`: `rolls`, `tiers` by
+`GiftTier`) is a layer boss's. `load_creatures` asks for both together and `everlasting`, refuses
+`vomit` on one (it always takes), and the tier odds must sum to 100 (`ProfaneRolls::check`);
+`profane::check_signatures` (after `load_hunger`) ties `gives` to the gift's `only`. `eat_fresh`
+runs the usual steps (message, gifts, skills, heal, harm), then `World::profane_meal`
+(`world/profane.rs`: the signature, the draws, the deed), then feeds. All of it is in `finish`,
+so an interrupted meal changes nothing. Tests: `eat_tests.rs`.
 **Rot** (#195): every food stack carries `Stack::died` (when
 it was made; a corpse, when its creature died; crate-private: presentation cannot read any
 food's age), and `Stack::is_valid_for` checks food knows it and nothing else does. Food that
