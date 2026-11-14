@@ -80,15 +80,10 @@ jobs:
         run: cargo fmt --all --check
       - name: Clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
-      # nextest schedules single tests across all the test binaries at once, so the long core
-      # binary no longer runs alone at the end. It runs no doctests: the workspace has none (add
-      # a `cargo test --doc` step with the first).
-      - name: Install cargo-nextest
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-nextest@0.9.151
+      # Plain `cargo test`, not nextest: nextest runs every test in a process of its own, and each
+      # re-parses the shared content, so the step took 21 min against about 13.5 (#1612).
       - name: Test
-        run: cargo nextest run --workspace --locked --no-fail-fast
+        run: cargo test --workspace --locked
 
   # The steps that need the game and xtask built but not the tests: beside `linux`, not after it.
   screens:

@@ -534,7 +534,7 @@ A successful compile does not verify anything visual. Before opening a PR:
 - Work is tracked in GitHub issues under milestones (and Housekeeping); use the `gh` CLI.
 - One branch and PR per issue (or a tight group of related issues); reference issues with
   `Closes #N`. CI must be green before a squash merge into `main`.
-- CI runs on Linux only (`CI` workflow: fmt, clippy, tests (with cargo-nextest: every test in a process of its own), headless screenshots in a job beside them, wasm32 check,
+- CI runs on Linux only (`CI` workflow: fmt, clippy, tests, headless screenshots in a job beside them, wasm32 check,
   cargo-deny, the release configuration without the test world; the web build on pushes to
   `main`). macOS is not run in Actions: development happens
   on macOS, so run the full local check there before every PR (a PR built by a cloud agent,
