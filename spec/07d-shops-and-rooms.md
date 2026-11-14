@@ -552,7 +552,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       grid is the record, and the `rooms` dev layer marks such a room `spent` (or `destroyed`).
       No other place offers prayer (the design's decision 14).
   - **Forges and tempering** (`offers = { temper = true }`, #418, #1022; `world/temper.rs`,
-    `magic/worked.rs`, `data/temper.toml`; the owner's rule, `docs/design/skill-uses.md` §6.7 M0):
+    `magic/worked.rs`, `data/rules/temper.toml`; the owner's rule, `docs/design/skill-uses.md` §6.7 M0):
     the forge's feature is an **anvil** (terrain `anvil`, `π`, cold, no light; look mode adds its
     description); Cēaptūn's smithy has one too, beside the smith's fire (#1023), free to use. **Temper** (`Action::Temper { item }`, `temper:LETTER` in action text) is a recipe
     of Metalcraft's, for those trained in it (§8 "Skills": professions; #1334, #1387), its row on

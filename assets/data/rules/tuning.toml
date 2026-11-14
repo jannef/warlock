@@ -1,5 +1,5 @@
 # Tuning (#1541): the numbers of rules that have no data file of their own, one table per rule
-# (`content/tuning.rs`). A rule with a file of its own keeps its numbers there (swim.toml,
+# (`content/tuning.rs`). A rule with a file of its own keeps its numbers there (rules/swim.toml,
 # traps.toml, hunger.toml, miscast.toml, the talents' effects). Every key is required; each is
 # checked against its bounds when the game loads. Ranges are discs (Euclidean, as a spell's);
 # reaches and distances are steps (Chebyshev).

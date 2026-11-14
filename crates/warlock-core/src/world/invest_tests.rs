@@ -275,7 +275,7 @@ fn the_stake_dies_with_the_partner() {
     assert!(said(&w).iter().any(|m| m.contains("your stake is lost")));
 }
 
-/// The expected yearly return of `data/invest.toml` with `bonus` basis points, over many
+/// The expected yearly return of `data/rules/invest.toml` with `bonus` basis points, over many
 /// years of 360 days: the mean growth and the share of years that lose.
 fn yearly(bonus: i32, years: u64) -> (f64, f64) {
     let rules = CONTENT.invest().expect("rules");

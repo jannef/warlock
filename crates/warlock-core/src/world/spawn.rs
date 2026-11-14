@@ -12,7 +12,7 @@
 //! its chance, it draws a type of the level's population by the danger, now and then a stray
 //! of the generic creature list or one from deeper ([`crate::content::danger::draw`]: a unique
 //! type once a run), a cell out of the player's view
-//! by the perception rules and at least the `[spawn]` `away` of `data/tuning.toml` from them
+//! by the perception rules and at least the `[spawn]` `away` of `data/rules/tuning.toml` from them
 //! (walkable, free, no stairs, door, shop floor, sanctuary, or sealed room; up to [`TRIES`] draws,
 //! else nothing comes), and a short route where one fits, else a post. The newcomer is an ordinary
 //! creature from then on.

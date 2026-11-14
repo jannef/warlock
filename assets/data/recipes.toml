@@ -36,7 +36,7 @@
 #               action, with its own list and rules; it takes no result, parts, inputs,
 #               ornament, failure, fumble, or brittle, and a `difficulty` and `seconds` only for
 #               `cut`, `set`, and `enchant`, which must give both (the others keep theirs in
-#               temper.toml)
+#               rules/temper.toml)
 #   enchant     an `enchant` recipe's kind: `kindle`, `quicken`, `recast`, `imbue`,
 #               `ennoble`, or `unbind` (each once;
 #               docs/dev/enchanting.md "The recipes")

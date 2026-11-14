@@ -25,14 +25,14 @@ impl Content {
         &self.encounters
     }
 
-    /// The numbers of searching for hidden features (spec §8 "Searching"; `data/search.toml`,
+    /// The numbers of searching for hidden features (spec §8 "Searching"; `data/rules/search.toml`,
     /// else [`SearchRules::default`]).
     pub fn search(&self) -> &SearchRules {
         &self.search
     }
 
-    /// The rules of stealing that live in data (spec §8 "Stealing"; `data/steal.toml`); `None`
-    /// without the file, when nobody steals.
+    /// The rules of stealing that live in data (spec §8 "Stealing"; `data/rules/steal.toml`);
+    /// `None` without the file, when nobody steals.
     pub fn steal(&self) -> Option<&StealRules> {
         self.steal.as_ref()
     }
@@ -44,7 +44,7 @@ impl Content {
     }
 
     /// The rules of smiting that live in data (spec §8 "Class abilities": "Smite";
-    /// `data/smite.toml`); `None` without the file, when nothing is unholy.
+    /// `data/rules/smite.toml`); `None` without the file, when nothing is unholy.
     pub fn smite(&self) -> Option<&SmiteRules> {
         self.smite.as_ref()
     }
@@ -55,8 +55,8 @@ impl Content {
         self.fletch.as_ref()
     }
 
-    /// The numbers of salvaging an item for its materials (`data/salvage.toml`); `None` without
-    /// the file, when nobody salvages.
+    /// The numbers of salvaging an item for its materials (`data/rules/salvage.toml`); `None`
+    /// without the file, when nobody salvages.
     pub fn salvage(&self) -> Option<&SalvageRules> {
         self.salvage.as_ref()
     }
@@ -91,32 +91,32 @@ impl Content {
         &self.ranged
     }
 
-    /// The numbers of feinting (spec §8 "Skills": Bluff; `data/feint.toml`); `None` without the
-    /// file, when nobody feints.
+    /// The numbers of feinting (spec §8 "Skills": Bluff; `data/rules/feint.toml`); `None` without
+    /// the file, when nobody feints.
     pub fn feint(&self) -> Option<&FeintRules> {
         self.feint.as_ref()
     }
 
     /// What an aristocrat's stipend grows by (spec §8 "Class abilities": Stipend;
-    /// `data/stipend.toml`); `None` without the file, when it never grows.
+    /// `data/rules/stipend.toml`); `None` without the file, when it never grows.
     pub fn stipend(&self) -> Option<&StipendRules> {
         self.stipend.as_ref()
     }
 
     /// What a merchant's investment pays and costs (spec §8 "Class abilities": Invest;
-    /// `data/invest.toml`); `None` without the file, when no one invests.
+    /// `data/rules/invest.toml`); `None` without the file, when no one invests.
     pub fn invest(&self) -> Option<&InvestRules> {
         self.invest.as_ref()
     }
 
     /// What a craftsperson's patron pays (spec §8 "Class abilities": Patron;
-    /// `data/patron.toml`); `None` without the file, when no one commissions work.
+    /// `data/rules/patron.toml`); `None` without the file, when no one commissions work.
     pub fn patron(&self) -> Option<&PatronRules> {
         self.patron.as_ref()
     }
 
-    /// The numbers of intimidating (spec §8 "Skills": Intimidate; `data/intimidate.toml`); `None`
-    /// without the file, when nobody intimidates.
+    /// The numbers of intimidating (spec §8 "Skills": Intimidate; `data/rules/intimidate.toml`);
+    /// `None` without the file, when nobody intimidates.
     pub fn intimidate(&self) -> Option<&IntimidateRules> {
         self.intimidate.as_ref()
     }
@@ -127,8 +127,8 @@ impl Content {
         &self.ruin
     }
 
-    /// The numbers of swimming in deep water (spec §8 "Skills": Swim; `data/swim.toml`); `None`
-    /// without the file, when nobody swims.
+    /// The numbers of swimming in deep water (spec §8 "Skills": Swim; `data/rules/swim.toml`);
+    /// `None` without the file, when nobody swims.
     pub fn swim(&self) -> Option<&SwimRules> {
         self.swim.as_ref()
     }
@@ -163,14 +163,14 @@ impl Content {
         &self.stat_training
     }
 
-    /// The tuning numbers of rules without a data file of their own (`data/tuning.toml`, #1541;
-    /// its defaults without the file).
+    /// The tuning numbers of rules without a data file of their own (`data/rules/tuning.toml`,
+    /// #1541; its defaults without the file).
     pub fn tuning(&self) -> &Tuning {
         &self.tuning
     }
 
-    /// The numbers of working an item at an anvil (spec §7 "Special rooms"; `data/temper.toml`,
-    /// else [`TemperRules::default`]).
+    /// The numbers of working an item at an anvil (spec §7 "Special rooms";
+    /// `data/rules/temper.toml`, else [`TemperRules::default`]).
     pub fn temper(&self) -> &TemperRules {
         &self.temper
     }

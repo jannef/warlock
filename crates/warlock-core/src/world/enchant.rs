@@ -30,9 +30,9 @@
 //!   [`World::work`]):
 //!   interrupted, nothing is spent, but the time is. No grade, so Master's hand has nothing to ease.
 //! - **The check**: two gameplay draws (the natural roll), plus the modifier of
-//!   `data/enchanting.toml`'s `stat` (Willpower), its talents' checks, and the recipe's skill's
-//!   [`Effect::Craft`], against the recipe's `difficulty` + the roll's
-//!   item level ÷ `level_step` (`data/enchanting.toml`; [`enchant_band`]). Made (or a natural
+//!   `data/rules/enchanting.toml`'s `stat` (Willpower), its talents' checks, and the recipe's
+//!   skill's [`Effect::Craft`], against the recipe's `difficulty` + the roll's
+//!   item level ÷ `level_step` (`data/rules/enchanting.toml`; [`enchant_band`]). Made (or a natural
 //!   24): Kindle draws the kind (`[magic]`'s prefix and suffix weights among the kinds that can
 //!   roll), then the affix, tier, and value; Quicken the affix of the kind the item lacks;
 //!   Recast takes every affix off and rolls as many of the same kinds, in order; Imbue draws the
@@ -498,7 +498,7 @@ fn resolve(
 }
 
 /// How long work of recipe `def` with `seals` takes before Quick hands: its own time and each
-/// seal's (`data/enchanting.toml` `seal_seconds`).
+/// seal's (`data/rules/enchanting.toml` `seal_seconds`).
 fn work_seconds(content: &Content, def: &RecipeDef, seals: usize) -> u32 {
     let each = content.enchanting().map_or(0, |r| r.seal_seconds);
     def.seconds + each * seals as u32

@@ -17,8 +17,8 @@ pub(super) type Sightline = ((u64, Pos), LineOfSight);
 
 impl World {
     /// How near, in steps (Chebyshev), a hostile creature in view must come to stop a long
-    /// action ([`World::keep_at`], spec §8 "Rest"; `[long_action]` in `data/tuning.toml`); one
-    /// farther off may be seen and the action goes on.
+    /// action ([`World::keep_at`], spec §8 "Rest"; `[long_action]` in `data/rules/tuning.toml`);
+    /// one farther off may be seen and the action goes on.
     pub(super) fn stop_within(&self) -> i32 {
         self.content.tuning().long_action.stop_within
     }

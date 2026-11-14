@@ -11,8 +11,8 @@
 //! - **fouled** (Reek): a creature that starts its turn in it suffers the poison type's rule, no
 //!   harm (the poison-immune nothing, `afflict`). It does not block sight.
 //! - **slick** (Slick): a step onto it or off it is a Dexterity check against
-//!   the `[slick]` difficulty of `data/tuning.toml`; failed, Staggered, the step already spent.
-//!   Nothing incorporeal slips.
+//!   the `[slick]` difficulty of `data/rules/tuning.toml`; failed, Staggered, the step already
+//!   spent. Nothing incorporeal slips.
 //! - **dark** (Mirk): no light reaches its cells and a source on them sheds none
 //!   ([`LevelState::shade`]), so eyes that need light see nothing there, the player's and a
 //!   creature's alike (`perception/lighting.rs`, `sight.rs`, one shade for both).

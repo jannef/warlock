@@ -3,11 +3,11 @@
 //!
 //! The player stops at a closed door next to them for a turn. During it their hearing threshold
 //! for a sound that reaches them by way of that door is lower by what Listen gives (its
-//! `hearing` effect, one per 10 points) and the `[listen]` `keener` of `data/tuning.toml` besides
-//! (`noise::hearers`, which reads [`crate::noise::Listening`]). What is heard comes as ever: sound
-//! markers in the perception, and every sound of the turn told in words, or that nothing was heard.
-//! Every listen marks Listen, whatever is heard. Refused, taking no time, without the skill or a
-//! closed door that way.
+//! `hearing` effect, one per 10 points) and the `[listen]` `keener` of `data/rules/tuning.toml`
+//! besides (`noise::hearers`, which reads [`crate::noise::Listening`]). What is heard comes as
+//! ever: sound markers in the perception, and every sound of the turn told in words, or that
+//! nothing was heard. Every listen marks Listen, whatever is heard. Refused, taking no time,
+//! without the skill or a closed door that way.
 
 use super::{Spent, World};
 use crate::ability::Ability;

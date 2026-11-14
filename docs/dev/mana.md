@@ -109,7 +109,7 @@ issue how it interacts with mana**, and hooks in at the one place below.
   it holds (docs/dev/resources.md). The limit: it is called only at the kill point of an attack,
   `fight.rs::resolve` (a blow, a shot, a throw, a creature's spell; beside `train_kill`) and
   `spell.rs::spell_strikes` (the player's spells, scrolls, a breath), and counts only when the
-  slain stood within the `[siphon]` range of `data/tuning.toml` (3) of the slayer (`dist2 <= radius2(3)`, a radius as every
+  slain stood within the `[siphon]` range of `data/rules/tuning.toml` (3) of the slayer (`dist2 <= radius2(3)`, a radius as every
   other); a self-kill never. A death by a status tick or a trap goes through `dies` alone and
   never reaches it; a summon's kill is the summon's. Creatures count the same. No draw; nothing
   worn, nothing changed. Tests: `world/siphon_tests.rs` (a blow, a shot at 3 and 4, a spell at

@@ -10,9 +10,9 @@
 //! - **The portal** ([`World::open_pit`]): on the caster's level, in play, the first plain free
 //!   cell around the caster ([`World::pit_mouth`]: walkable, no one on it, no stairs, door,
 //!   chest, statue, grave, light, trap, hidden location, place, or flow; out to the `[pit]`
-//!   `mouth_reach` of `data/tuning.toml`) becomes stairs down to `hellegeat@S:1` named "the Pit",
-//!   as [`World::open_lair`] opens a lair's; the entry's gate comes to the first free cell around
-//!   the caster but the mouth. **Refused**, the gate alone made and said so
+//!   `mouth_reach` of `data/rules/tuning.toml`) becomes stairs down to `hellegeat@S:1` named "the
+//!   Pit", as [`World::open_lair`] opens a lair's; the entry's gate comes to the first free cell
+//!   around the caster but the mouth. **Refused**, the gate alone made and said so
 //!   ([`World::pit_refused`]), on the overworld, on a Pit's own floor, and where no cell is plain.
 //!   A creature's miscast on a level not in play does nothing.
 //! - **The way out**: a Pit's first floor's `<` leads to its record's `from` whenever the floor

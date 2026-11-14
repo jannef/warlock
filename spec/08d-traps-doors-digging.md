@@ -429,7 +429,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (12, 5): shut, locked, trapped (arrow), holds 3 stacks`; JSON `chests` lists those the player sees or
     remembers (`pos`, `band`, `state`, and `locked`: with Chest-wise for a shut one in sight,
     else null).
-- **Searching** (`warlock-core/src/world/search.rs`; data `data/search.toml` §7; #140): one
+- **Searching** (`warlock-core/src/world/search.rs`; data `data/rules/search.toml` §7; #140): one
   check finds every hidden feature, secret doors, hidden traps, and the breaches of sealed rooms
   (§7 "Special rooms": a greater treasure room's, at the secret-door difficulty) alike.
   - **Secret doors**: a closed door that looks and acts like the wall around it until it is
@@ -441,7 +441,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and breaks as that wall to digging and blasts; whatever becomes of the wall takes the secret
     with it (`World::set_terrain`). Perception never carries secrets.
   - **Difficulty**: each hidden feature has one, a trap type's (`difficulty`, §7) or a secret
-    door's own (`secret = N` in a legend, else `data/search.toml`'s `secret_door`, 14), plus on
+    door's own (`secret = N` in a legend, else `data/rules/search.toml`'s `secret_door`, 14), plus on
     a dungeon branch its `hidden_per_depth` for each level below the first (the Depths: 1, so a
     secret door on depth 8 is 21).
   - **The checks** (§8 "Checks": 2d12 plus a modifier against the difficulty; a natural 2 always
@@ -458,7 +458,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Searching** (Wait/search, Num5 or `s`: `Action::Search(1)`, replay text `search`, or
     `Action::Wait`, replay text `wait`, the same action by another spelling: waiting is searching,
     #1326; rest does not search, nor creatures' waits; Alt+s or Alt+Num5, searching for a while:
-    `search:N`, N up to 100, the key sending `data/search.toml`'s `turns`, 10): each turn is the
+    `search:N`, N up to 100, the key sending `data/rules/search.toml`'s `turns`, 10): each turn is the
     `search` action (1000, 6 s; slowed by burden like every price) and gives every hidden feature
     within reach the active check: the eight cells around the player (never their own: a trap
     there has just gone off), and with the Search skill's reach (75 and up: one cell more) the

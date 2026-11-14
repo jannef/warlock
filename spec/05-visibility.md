@@ -342,7 +342,7 @@ rate or animation.
     on the door: banging, 100, made on the door's cell, so both sides hear it. A creature
     muttering to itself (§8 "Dialogue") is a voice (50) where it stands; the player's voice,
     thrown (§6 "Abilities"; #235), is a voice (50) on the cell it is thrown to, a cell they see
-    (not solid) within 6 (`[throw_voice]` in `data/tuning.toml`, a disc), made there and not where they stand, and as
+    (not solid) within 6 (`[throw_voice]` in `data/rules/tuning.toml`, a disc), made there and not where they stand, and as
     quiet as ever (stealth does not touch a voice). A trap going off (§8
     "Traps") makes the noise its data gives on its cell, made by no actor (so everyone in earshot
     hears it): an arrow trap's bowstring (40), a fireball's explosion (150), a lightning bolt's

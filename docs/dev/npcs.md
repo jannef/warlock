@@ -36,7 +36,7 @@ route) unless `World::refusal` says why not (the type's `budge`: `never`, or `of
 mind is calm, ready for shopkeepers, #145; it cannot move; or it is two sizes or more larger:
 sizes are listed smallest first). A player trained in Escape artist is not refused for the
 `budge` (`World::wriggle`, `world/wriggle.rs`, #1032): an automatic check instead, Dexterity plus
-the `escape` points against 11 (`[wriggle]` in `data/tuning.toml`) plus the creature's Willpower modifier; never a shop's keeper (`Shop::keeper`, the refusal stands untouched); tests `wriggle_tests.rs`. What an actor is called in messages comes from
+the `escape` points against 11 (`[wriggle]` in `data/rules/tuning.toml`) plus the creature's Willpower modifier; never a shop's keeper (`Shop::keeper`, the refusal stands untouched); tests `wriggle_tests.rs`. What an actor is called in messages comes from
 `World::called` ("the gardener"): named shopkeepers go there, and so do unique characters with a
 proper name (an npc dialogue's `name`, `Dialogue::name`, #336: "Sister Hild", no article; also
 `Content::speaker_name`/`speaker_called` for quest texts and the wiki). Presentation knows a seen
@@ -139,7 +139,7 @@ on their cell ("Too much to carry, set down at your feet: …"; `World::receive`
 partner's withdrawals share). Tests: `world/stipend_tests.rs`.
 
 **The merchant's business partner** (#1407; spec §8 "Class abilities": Invest): `world/invest.rs`,
-`content/invest.rs` (`data/invest.toml`: `fees`, `week` (`base` and `dice` in basis points),
+`content/invest.rs` (`data/rules/invest.toml`: `fees`, `week` (`base` and `dice` in basis points),
 `bonus.quest` per quest of the partner's town, `steps`; shared, so it names no campaign's quest).
 Cēaptūn's second class helper (`talent = "invest"`, `bonus = { fire_deep = 6 }`: a helper's own
 per-quest bonus, `TownServant::bonus`, quest ids checked) keeps the corner desk of
@@ -164,7 +164,7 @@ skip against week-by-week and a rest across a week's turn, the quests' bonus, th
 yearly return by simulation, a save and a replay), `content/invest.rs`.
 
 **The craftsperson's patron** (#1421; spec §8 "Class abilities": Patron; the craftsperson design
-§7.4): `world/patron.rs`, `content/patron.rs` (`data/patron.toml`: `pays`, the percent of the
+§7.4): `world/patron.rs`, `content/patron.rs` (`data/rules/patron.toml`: `pays`, the percent of the
 work's worth paid, and `bonus`, more for a piece bearing the player's maker's mark, read once
 Maker's mark lands; shared). Cēaptūn's third class helper (`talent = "patron"`) lodges in the
 Gæsthūs's north-east corner (50, 23): `patron` (`campaigns/ascmearc/data/creatures/`), speaking

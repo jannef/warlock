@@ -43,8 +43,8 @@ use crate::object::Stack;
 impl Actor {
     /// The chance in percent a potion this actor drinks is not used up: Thrifty drinker's
     /// (`MagicMods::potion_kept`) plus the worn items' `potion_kept` (of the Alchemist,
-    /// unidentified too), the sum held to the `[potion_kept]` `most` of `data/tuning.toml` unless
-    /// the talent alone is above it.
+    /// unidentified too), the sum held to the `[potion_kept]` `most` of `data/rules/tuning.toml`
+    /// unless the talent alone is above it.
     pub fn potion_kept(&self, content: &Content) -> u8 {
         let talent = self.talent_mods(content).magic.potion_kept;
         let worn = self.mods(content).get(Effect::PotionKept).max(0);

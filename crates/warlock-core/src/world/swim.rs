@@ -9,9 +9,9 @@
 //! ([`World::dive_in`]).
 //!
 //! **A step in it**, one that starts in the water wherever it ends, is a check
-//! ([`World::stroke_fails`]; `data/swim.toml`): made, the step; failed, the turn goes on treading
-//! water, with no move, and the cold takes a hit point, never the last. Two gameplay draws (the
-//! 2d12), and [`Use::Stroke`] whatever came of it.
+//! ([`World::stroke_fails`]; `data/rules/swim.toml`): made, the step; failed, the turn goes on
+//! treading water, with no move, and the cold takes a hit point, never the last. Two gameplay draws
+//! (the 2d12), and [`Use::Stroke`] whatever came of it.
 //!
 //! **Afloat**: dropping, picking up, resting, searching, digging, and lighting a light are refused
 //! with no time ([`World::refused_afloat`]); the rest goes on as anywhere. Nothing drags a swimmer

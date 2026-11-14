@@ -6,9 +6,9 @@
 //! the player from seeing the gazer (an unlit cell, a wall or a door, a `dark` zone, a disguise)
 //! keeps them from being Averted, and its gaze from taking (`gaze.rs`).
 //!
-//! Averted, they fight half-blind: the `[averted]` to-hit of `data/tuning.toml` on every attack
-//! they make ([`World::averted_blow`], read in `fight.rs::resolve` beside the glare's), their Dodge
-//! halved ([`World::averted_defence`], in `fight.rs::defence_of`), and no free blows
+//! Averted, they fight half-blind: the `[averted]` to-hit of `data/rules/tuning.toml` on every
+//! attack they make ([`World::averted_blow`], read in `fight.rs::resolve` beside the glare's),
+//! their Dodge halved ([`World::averted_defence`], in `fight.rs::defence_of`), and no free blows
 //! (`free_blow.rs::free_blows_of`). The gaze itself takes at its `glance` share of its chance.
 //! [`World::avert_news`] says when it begins and ends.
 

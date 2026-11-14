@@ -4,11 +4,11 @@
 //! check against bonds is part of the attempt (`hold.rs`): no action, no ability row, no key.
 //!
 //! The player's Dexterity modifier, what talents add to Dexterity's checks, and Escape artist's
-//! `escape` points, against the `[wriggle]` difficulty of `data/tuning.toml` plus the creature's
-//! Willpower modifier (and its talents'). Two draws of the gameplay stream. Made, the step goes
-//! ahead as the swap of a talked-to NPC does (`talk.rs::swap_places`); failed, the turn is the
-//! step's price and the player stays. Every try marks Escape artist ([`Use::Wriggle`]) at the
-//! data's chance.
+//! `escape` points, against the `[wriggle]` difficulty of `data/rules/tuning.toml` plus the
+//! creature's Willpower modifier (and its talents'). Two draws of the gameplay stream. Made, the
+//! step goes ahead as the swap of a talked-to NPC does (`talk.rs::swap_places`); failed, the turn
+//! is the step's price and the player stays. Every try marks Escape artist ([`Use::Wriggle`]) at
+//! the data's chance.
 //!
 //! Never for a hostile creature (the step is a blow then), a creature too big to squeeze past, one
 //! that cannot move at all (overloaded), or while swimming (those refusals stand), and never for a

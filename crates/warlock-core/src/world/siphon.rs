@@ -2,14 +2,14 @@
 //! #632): of Siphoning's mana (`mana_on_kill`) and of the Hunt's point of a pool
 //! (`resource_on_kill`, keyed by the pool the affix names), read from what the slayer wears and
 //! wields. **The limit**: only a kill by the wearer's own blow, shot, throw, or spell, the slain
-//! within the `[siphon]` range of `data/tuning.toml`, counts. The one caller is the kill point of
-//! an attack, where both actors' cells are known: `fight.rs::resolve` (a blow, a shot, a throw, a
-//! creature's spell) and `spell.rs::spell_strikes` (a spell of the player's, a scroll's, a breath).
-//! A death by a status tick (poison, bleeding), a trap, a fall, or hunger goes through `dies` alone
-//! and never reaches it; a summoned creature's kill is its own (the summoner wears nothing of it).
-//! Creatures' kills count under the same rule. The data's `builds` and the talents' (a kill
-//! builds Inspiration, Second breath) stay in `dies`, for any kill. No draw, no saved state: a
-//! slayer wearing none of these changes nothing.
+//! within the `[siphon]` range of `data/rules/tuning.toml`, counts. The one caller is the kill
+//! point of an attack, where both actors' cells are known: `fight.rs::resolve` (a blow, a shot, a
+//! throw, a creature's spell) and `spell.rs::spell_strikes` (a spell of the player's, a scroll's, a
+//! breath). A death by a status tick (poison, bleeding), a trap, a fall, or hunger goes through
+//! `dies` alone and never reaches it; a summoned creature's kill is its own (the summoner wears
+//! nothing of it). Creatures' kills count under the same rule. The data's `builds` and the talents'
+//! (a kill builds Inspiration, Second breath) stay in `dies`, for any kill. No draw, no saved
+//! state: a slayer wearing none of these changes nothing.
 
 use super::{ActorId, World};
 use crate::content::{Effect as ItemEffect, ResourceId};

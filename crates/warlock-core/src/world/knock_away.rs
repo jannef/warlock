@@ -37,8 +37,8 @@ use crate::stats::Stat;
 
 /// The modifier `who` holds on to its main-hand weapon `weapon` with (module docs): its
 /// Dexterity modifier and its talents' Dexterity checks, its rank in the weapon's skill, and
-/// its grip: the `[knock_away]` numbers of `data/tuning.toml` for a two-handed weapon and with a
-/// shield, its
+/// its grip: the `[knock_away]` numbers of `data/rules/tuning.toml` for a two-handed weapon and
+/// with a shield, its
 /// rank in the style of one weapon alone (Duelist) when the other hand is empty.
 pub fn hold(content: &Content, who: &super::Actor, weapon: crate::content::ObjectId) -> i32 {
     let dexterity = who.check_modifier(content, Stat::Dexterity);

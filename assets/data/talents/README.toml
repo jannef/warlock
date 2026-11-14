@@ -437,7 +437,7 @@
 #                                 lands on every foe
 #   smite { per_levels, sides, aim, unholy }   the active Smite: a blow in a direction with one
 #                                 die of `sides` more per `per_levels` levels (at least one),
-#                                 `unholy` dice more on a creature smite.toml calls unholy, and
+#                                 `unholy` dice more on a creature rules/smite.toml calls unholy, and
 #                                 the `aim` stat's modifier added to hit (its cost is the
 #                                 talent's `resource`: zeal)
 #   smite_mode { mode, status, severity, turns, check, difficulty }   a mode of smiting, its own

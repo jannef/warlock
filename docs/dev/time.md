@@ -24,7 +24,7 @@ the goal or an interruption, its last turn cut short with `price_until` so it en
 goal at any player speed. Long actions (`rest`, `dig`, meals) go through `World::keep_at(events, more,
 act)`: turn after turn of `act` while `more` holds, stopping on a creature hostile to the player
 (`World::disturbs_rest`: neutral and peaceful ones and allies never) coming within
-`World::stop_within` (`[long_action]` of `data/tuning.toml`: 5 steps, Chebyshev; owner, #1216) in view (`watched_in_view`; one farther off,
+`World::stop_within` (`[long_action]` of `data/rules/tuning.toml`: 5 steps, Chebyshev; owner, #1216) in view (`watched_in_view`; one farther off,
 `hostiles_in_view`, may be seen and the action goes on; `Ended::Came(Came { id, seen })`,
 `World::came_line` says "comes into view" or, seen farther off before, "comes close"), on a
 perceived attack on the player or a shot or a spell within `stop_within` of them (`World::stirs`, so a

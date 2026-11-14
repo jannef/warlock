@@ -4,12 +4,12 @@
 //! when the run is given its graveyard, `World::set_graveyard`).
 //!
 //! Each stone, in row order, draws from the level's own stream `graves/<level>` (the level's
-//! seed): a roll of one in the `[graves]` `fallen_one_in` of `data/tuning.toml`, then a stranger of
-//! the level's folk (a given name, a byname, an epitaph, how many years ago they died and how old
-//! they were, before the year the level is made). Every stone draws all of that whatever the
-//! graveyard holds, so a stranger's stone reads the same with any graveyard. Where the roll comes
-//! up and one of the run's graveyard (`world/graveyard.rs`) is left, the stone is theirs instead:
-//! which one is drawn from the stream `graves/<level>/fallen`, never twice on a level.
+//! seed): a roll of one in the `[graves]` `fallen_one_in` of `data/rules/tuning.toml`, then a
+//! stranger of the level's folk (a given name, a byname, an epitaph, how many years ago they died
+//! and how old they were, before the year the level is made). Every stone draws all of that
+//! whatever the graveyard holds, so a stranger's stone reads the same with any graveyard. Where the
+//! roll comes up and one of the run's graveyard (`world/graveyard.rs`) is left, the stone is theirs
+//! instead: which one is drawn from the stream `graves/<level>/fallen`, never twice on a level.
 //!
 //! **Decoration**: no rule reads an inscription, and they are left out of the state hash
 //! (`LevelState::graves`), so a replay verifies under any graveyard. Saves keep them.

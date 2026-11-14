@@ -405,7 +405,7 @@ fn study_odds_read_decipher_scripts_tenth_not_its_reading_points() {
 #[test]
 fn without_the_file_every_scroll_simply_reads() {
     let mut files = files(HASTE);
-    files.remove("data/decipher.toml");
+    files.remove("data/rules/decipher.toml");
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     assert!(content.decipher().is_none());
     let mut w = World::new(content, "hall", None).expect("world");

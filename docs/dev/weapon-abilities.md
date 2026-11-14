@@ -153,7 +153,7 @@ beside), prices the action before it is made (`attack_price` with what the blow 
 the shield for a rush; `shot_price`; `price_of(Wait)`), then `pay_active` (stamina through
 `spend_resource`, the cooldown if any), then the blow or shot, then `exert`, and returns
 `Spent::Turn(active_price(id, base))`: `percent_of(base, percent × (100 +
-weapon_energy_percent) / 100)`, never below 50 (`[weapon_active] least_percent` of `data/tuning.toml`). Light-footed and Walled are
+weapon_energy_percent) / 100)`, never below 50 (`[weapon_active] least_percent` of `data/rules/tuning.toml`). Light-footed and Walled are
 in `base` (statuses' `cost` in `burdened`, Walled's `attack_cost` in `attack_price`).
 
 **Effects**: `active_blow` (a blow with `me.melee()`, its profile changed: `sure_critical`,

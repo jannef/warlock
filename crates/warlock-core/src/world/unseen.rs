@@ -5,8 +5,8 @@
 //!   ([`VisionProfile::dim`](crate::content::VisionProfile::dim): perceived light under twice the
 //!   eye's threshold), however good their darkvision, a shadowy creature is not in the snapshot,
 //!   unless it stands beside them. "You feel a cold draught." when one the player does not see
-//!   comes within the `[unseen]` `draught` of `data/tuning.toml` (`perceive.rs`). Never on the
-//!   overworld, where light does not matter.
+//!   comes within the `[unseen]` `draught` of `data/rules/tuning.toml` (`perceive.rs`). Never on
+//!   the overworld, where light does not matter.
 //! - **Invisible** ([`Actor::invisible`]): by its type (`invisible = true`, the invisible
 //!   stalker) or by a status that is `unseen` (Invisible), it is not in the snapshot whatever
 //!   the light and however near.
@@ -22,8 +22,8 @@
 //! truth and so shows it too. Creature sight is unchanged: creatures see the unseen.
 //!
 //! **Striking at the unseen** ([`World::at_the_unseen`]): a blow of the player's at a concealed
-//! creature (a move into its cell) is at the `[unseen]` `to_hit` of `data/tuning.toml`, said "You
-//! strike at something." first; a hit shows it for that turn.
+//! creature (a move into its cell) is at the `[unseen]` `to_hit` of `data/rules/tuning.toml`, said
+//! "You strike at something." first; a hit shows it for that turn.
 //!
 //! **The self-buff step** ([`World::fades`], from `ai.rs::creature_turn` before it decides):
 //! a type with `[creature.invisible]` gives itself the Invisible status whenever it holds neither

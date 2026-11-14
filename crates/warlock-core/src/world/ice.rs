@@ -437,7 +437,7 @@ impl World {
 
     /// The Swim check of a player who plunged in, trained in it (no draw otherwise): Toughness and
     /// [`Effect::Swim`] against the `[plunge]` difficulty of
-    /// `data/tuning.toml`. Whether it was made; a mark either way.
+    /// `data/rules/tuning.toml`. Whether it was made; a mark either way.
     fn keeps_afloat(&mut self) -> bool {
         let content = self.content.clone();
         let me = self.state.player();

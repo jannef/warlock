@@ -465,7 +465,7 @@ pub struct RoomEffectDef {
     pub sides: Option<[Option<LightId>; 3]>,
     /// What it offers beside its feature, and the outcome table that draws it (an id in
     /// `data/outcomes/`, checked once those are loaded; none for Temper, which has its own rules,
-    /// `data/temper.toml`).
+    /// `data/rules/temper.toml`).
     pub offers: Option<(Offer, Option<String>)>,
     /// The `sides` lights as data names them, until resolved.
     side_lights: BTreeMap<Alignment, String>,

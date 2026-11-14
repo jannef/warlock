@@ -89,7 +89,7 @@ before `decide`: a fading type that holds neither status and is not blocked from
 itself both, free of time and mana, heard as chanting and said where seen ("The duergar warrior
 fades from sight."), and then takes its turn as ever; `World::unveiled` (from `buff.rs::ended`)
 says "You can see the duergar warrior again." where the player sees the cell. **Striking**:
-`World::at_the_unseen` (one line in `fight.rs::resolve`) puts the `[unseen]` `to_hit` of `data/tuning.toml` (−4) on the
+`World::at_the_unseen` (one line in `fight.rs::resolve`) puts the `[unseen]` `to_hit` of `data/rules/tuning.toml` (−4) on the
 player's blow at a concealed creature, `World::glimpse` marks a hit, and `travel.rs::strike_at`
 says "You strike at something." first. Creature sight is unchanged (creatures see the unseen;
 the player's own Invisible, from the dev `afflict:invisible`, hides them from no one yet). The
@@ -214,7 +214,7 @@ player is told "You feel a cold stare on you."; met, one draw at `Gaze::chance_a
 100 only) and each rider by `World::rider` in `status.rs`, the one place a blow's riders fall
 too). No noise. `world/avert.rs`: Averted is `Perception::averted` (a seen hostile whose gaze is
 `averted`), derived in `Perception::compute`, never saved and out of the hash; read by
-`World::averted_blow` in `fight.rs::resolve` (`[averted] to_hit` of `data/tuning.toml`, −4), `World::averted_defence`
+`World::averted_blow` in `fight.rs::resolve` (`[averted] to_hit` of `data/rules/tuning.toml`, −4), `World::averted_defence`
 in `fight.rs::defence_of` (a positive Dodge halved), and `free_blow.rs::free_blows_of` (none at
 all); `World::avert_news` notes it beginning and ending. Status bar "Averted"; dump header
 `averted`, JSON `averted`; the cooldown shows among `actors`' effects. Nothing is `averted` until
@@ -271,7 +271,7 @@ on the player that leaves them alive, a weapon in the first hand slot; one `chan
 the open cells beside the player in row order (`is_walkable`, not `swim`, not a closed door, no
 actor; none: nothing more drawn), then the Dexterity check (`check::check`, two draws) with
 `knock_away::hold` (Dexterity modifier and talent checks, the weapon's skill rank, the grip:
-`[knock_away]`'s `two_handed` or `shield` (`data/tuning.toml`), or the `OneWeapon` style's rank), then `index(n)` for the cell
+`[knock_away]`'s `two_handed` or `shield` (`data/rules/tuning.toml`), or the `OneWeapon` style's rank), then `index(n)` for the cell
 with two or more. The stack leaves the pack (`after_removal`) onto the cell's pile; a spirit
 stack is taken off and `fade_spirit` says it goes. No noise of its own (the fight's is heard).
 **Words**: "The ultroloth knocks your long sword from your hand!", "It lands beside you.".
@@ -338,7 +338,7 @@ its branch's at the depth; `None`: danger 0). The rules are `world/spawn.rs`: `W
 `spawn/<level id>`, `Rng::spawn`; made with a level that has a danger rule, else absent so other
 levels hash as before), `spawn_tick` (one call at the end of `run_turn`: every attempt due on the
 current level), `arrive_spawner` (one line in `travel`: frozen floors), `attempt` (the cap by `World::stance`, the chance, the draw, the
-cell out of a freshly computed `Perception`'s sight and `[spawn] away` cells off (`data/tuning.toml`), the route by
+cell out of a freshly computed `Perception`'s sight and `[spawn] away` cells off (`data/rules/tuning.toml`), the route by
 `mapgen::out_and_back`, then `travel::make_creature`, the one way a creature is made from a
 `CreatureSpawn`), and the dev `spawn` action. A spawn bumps `World::spawned`, so a rest perceives
 after that turn. Uniques are remembered in `Progress::uniques` by type id, in `make_creature`

@@ -57,7 +57,7 @@ ready = 1000
 # objects.toml; corpses by their creature's size, hunger.toml).
 eat = 1000
 # Reading a scroll (`r`; spec §8 "Scrolls"): casting the spell written on it, or identifying an
-# item. The scroll is used up, unless the reader fails to make it out (decipher.toml): the time is
+# item. The scroll is used up, unless the reader fails to make it out (rules/decipher.toml): the time is
 # spent all the same.
 read = 1000
 # A turn of reading a grimoire to learn its spell (spec §8 "Spells"): a study takes study.toml's
@@ -77,7 +77,7 @@ dig = 1000
 # searching; spec §8 "Searching"): searching for a while (Alt+s) goes on turn after turn until something is found or interrupts it.
 search = 1000
 # A turn of making out a labelled scroll without reading it (the Decipher ability; spec §8
-# "Scrolls"): a try takes decipher.toml's `seconds`, a turn of this after another.
+# "Scrolls"): a try takes rules/decipher.toml's `seconds`, a turn of this after another.
 decipher = 1000
 # A turn of praying at a forgotten altar (the Pray ability; spec §7 "Special rooms"): a prayer
 # takes its outcome table's `seconds` (data/outcomes/), a turn of this after another.
@@ -96,16 +96,16 @@ forage = 1000
 gather = 1000
 
 # A turn of working an item at a forge's anvil (the Temper ability; spec §7 "Special rooms"): an
-# attempt takes `seconds` (data/temper.toml), a turn of this after another.
+# attempt takes `seconds` (data/rules/temper.toml), a turn of this after another.
 temper = 1000
 # A turn of whittling a wooden item with a knife (the Whittle ability): an attempt takes
-# temper.toml's `seconds`, a turn of this after another.
+# rules/temper.toml's `seconds`, a turn of this after another.
 whittle = 1000
 # A turn of making a recipe (a profession's: the forge's swords, docs/dev/crafting.md): the work
 # takes the recipe's `seconds`, a turn of this after another.
 craft = 1000
 # A turn of salvaging an item for its materials (the Salvage ability): an attempt takes
-# salvage.toml's `seconds`, a turn of this after another.
+# rules/salvage.toml's `seconds`, a turn of this after another.
 salvage = 1000
 # Trying to disarm a trap you know of next to you (the Disarm ability; spec §8 "Disarming traps"):
 # careful work, whether it comes off, fails, or sets the trap off.

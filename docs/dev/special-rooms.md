@@ -450,7 +450,7 @@ south of its altars.
 
 #418, #1022, `docs/design/skill-uses.md` §6.7 M0 (the owner's rule, not bound by the house rules
 on retrying). Data: the `forge` effect, the terrain `anvil` (`π`, no light, a `description`), the
-`temper` action cost (1000 a turn), `data/temper.toml` (`content::TemperRules`: `seconds = 600`,
+`temper` action cost (1000 a turn), `data/rules/temper.toml` (`content::TemperRules`: `seconds = 600`,
 `difficulty = 13`, `per_attempt = 2`, `most = 3`, `most` at most `worked::GRADES`' length), and
 Metalcraft's `temper` benefit and mark (`data/skills/`; `skills::Effect::Temper`, `Use::Temper`,
 which is `StatUse::Forged` too). No outcome table, and no `spent`: the anvil is never spent.

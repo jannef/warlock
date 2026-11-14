@@ -18,7 +18,7 @@ pub enum KeyCommand {
     /// Wait a turn, which is searching the cells around the player for secret doors and hidden
     /// traps (spec §8 "Searching"; #1326: one action, `Action::Wait`).
     Wait,
-    /// Search turn after turn, up to `data/search.toml`'s `turns`, stopping when something is
+    /// Search turn after turn, up to `data/rules/search.toml`'s `turns`, stopping when something is
     /// found or something interrupts, like a rest.
     SearchLong,
     Open,

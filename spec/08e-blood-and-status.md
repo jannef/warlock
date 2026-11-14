@@ -349,7 +349,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **On a kill** (the affixes design §4, decision 7; #632): the `mana_on_kill` of what the
     slayer wears and wields (of Siphoning) raises its mana by their sum, never past its
     maximum, when its own blow, shot, throw, or spell kills, and the slain stood within
-    the `[siphon]` range (`data/tuning.toml`: 3) cells (Euclidean, as a radius: `dist2` within `radius2(3)`). A death by a
+    the `[siphon]` range (`data/rules/tuning.toml`: 3) cells (Euclidean, as a radius: `dist2` within `radius2(3)`). A death by a
     status tick (poison, bleeding), a trap, or anything else that is not the slayer's own attack
     gives nothing, and a summoned creature's kill is its own. Creatures' kills count the same
     way. Read once, at the kill point of an attack (`World::siphon`, `world/siphon.rs`, called

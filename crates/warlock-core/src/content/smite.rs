@@ -1,5 +1,5 @@
-//! Smiting (`assets/data/smite.toml`, spec §8 "Class abilities": "Smite"): what holy wrath falls
-//! hardest on, and what a sin does to the smiter's zeal.
+//! Smiting (`assets/data/rules/smite.toml`, spec §8 "Class abilities": "Smite"): what holy wrath
+//! falls hardest on, and what a sin does to the smiter's zeal.
 //!
 //! The rule itself lives in `world/smite.rs` (the blow) and `world/alignment.rs` (the sin). The
 //! file is optional: without it nothing is unholy and no sin empties a pool (fixtures).
@@ -32,7 +32,7 @@ struct SmiteTable {
 }
 
 impl SmiteRules {
-    /// Parses `data/smite.toml`: each tag of the tag form, and the pool a sin empties a known
+    /// Parses `data/rules/smite.toml`: each tag of the tag form, and the pool a sin empties a known
     /// resource.
     pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
@@ -56,7 +56,7 @@ impl SmiteRules {
 }
 
 impl super::RulesFile for SmiteRules {
-    const PATH: &'static str = "data/smite.toml";
+    const PATH: &'static str = "data/rules/smite.toml";
 
     fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         Self::parse(path, text, content)
@@ -65,8 +65,8 @@ impl super::RulesFile for SmiteRules {
 
 impl Content {
     /// Whether creature type `id` is unholy (spec §8 "Class abilities": "Smite"): it carries a
-    /// tag of `data/smite.toml`'s `unholy` list. The one reader of the list; nothing is unholy
-    /// without the file (fixtures). Read by tags, never by a creature's hidden alignment.
+    /// tag of `data/rules/smite.toml`'s `unholy` list. The one reader of the list; nothing is
+    /// unholy without the file (fixtures). Read by tags, never by a creature's hidden alignment.
     pub fn unholy(&self, id: CreatureId) -> bool {
         (self.smite()).is_some_and(|rules| rules.unholy.iter().any(|t| self.has_tag(id, t)))
     }
@@ -76,7 +76,7 @@ impl Content {
 mod tests {
     use crate::content::{Content, ContentFiles};
 
-    const PATH: &str = "data/smite.toml";
+    const PATH: &str = "data/rules/smite.toml";
 
     #[test]
     fn the_shipped_rules_parse() {

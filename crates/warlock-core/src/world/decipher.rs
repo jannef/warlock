@@ -18,7 +18,7 @@
 //!
 //! The Decipher ability (#1025, design §6.6 D2; [`Action::Decipher`], `decipher:b`): the same
 //! check on a scroll of a type not yet identified ([`undeciphered`]), without reading it.
-//! `data/decipher.toml`'s `seconds` of turns of the `decipher` action ([`World::work`], as a
+//! `data/rules/decipher.toml`'s `seconds` of turns of the `decipher` action ([`World::work`], as a
 //! forage); a creature coming into view or a blow stops it and nothing comes of it. Done, the
 //! check is [`World::deciphers`] with the scroll's spell and level; made, the type is learned
 //! (every scroll of it shows by its name from now on) and the scroll is kept, unread. Failed,

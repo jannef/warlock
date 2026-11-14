@@ -1,5 +1,5 @@
 //! Throwing one's voice (spec §5 "Hearing"; #235): the player makes a voice sound at a cell they
-//! see within the `[throw_voice]` range of `data/tuning.toml`, as loud there as a voice
+//! see within the `[throw_voice]` range of `data/rules/tuning.toml`, as loud there as a voice
 //! ([`crate::noise::VOICE_NOISE`]) and made there, not where they stand. It goes through the one
 //! noise path ([`World::make_noise`], [`Act::ThrowVoice`]): creatures that hear it and do not see
 //! its cell go and look there (the AI's listening step, `ai.rs`), as they go to any noise whose

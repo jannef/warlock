@@ -130,7 +130,7 @@ hooks' items in `Actor::spell_mods` (`world/spell_mods.rs`, beside the talents':
 `spell_duration` as degrees; no tag filter on an item yet), `spell_threat` in `Actor::spell_threat` (22 less it, never below `THREATS`' floor;
 an own cast only, `reflect::Shot::threat`). **The potion and wand hooks** (E2, #633;
 `world/affix_draught_tests.rs`): `potion_kept` in `Actor::potion_kept` (Thrifty drinker's chance
-plus the worn, held to `[potion_kept] most` 50 (`data/tuning.toml`) unless the talent alone is above it; `take_draught`
+plus the worn, held to `[potion_kept] most` 50 (`data/rules/tuning.toml`) unless the talent alone is above it; `take_draught`
 draws only above 0), `wand_rungs` (of Wands) in `Actor::spell_mods` (beside Wand mastery's). Each hook's tests bring fixture affix files
 (`ContentFiles::insert("data/affixes/zz_fixture.toml", ...)`, as `magic/tests.rs` does).
 `spell_ease` is an item effect (local: the piece's own `spell_cost_percent`), allowed on body
@@ -145,7 +145,7 @@ sum by (effect, resource) in `Mods::pools`, read with `Mods::resource(effect, id
 stamina, global) in `Actor::weapon_stamina`. **On a kill** (E1, #632; `world/siphon.rs`,
 `world/siphon_tests.rs`): `mana_on_kill` and `resource_on_kill` in `World::siphon`, called at
 the kill point of an attack (`fight.rs::resolve`, `spell.rs::spell_strikes`), the slain within
-the `[siphon]` range of `data/tuning.toml` (3, a radius); never from `dies`, so a status tick's or a trap's death gives
+the `[siphon]` range of `data/rules/tuning.toml` (3, a radius); never from `dies`, so a status tick's or a trap's death gives
 nothing. **`Group`** is a struct `{ effect, skill, damage_type, resource }` (`Group::of` for an
 effect that names nothing else): one group per (effect, resource), so Tireless (stamina) and of
 Fury (rage) are two. **`ItemKind::Tool`** (`ALL` is a slice; the `tools`
@@ -171,7 +171,7 @@ draws. With classes: one draw among those that hold something at the item level 
 coins (`chest::purse`, the purse of a chest of that level), a loose gem (`gem::loose`; which
 classes these are comes from the currency's and the gem object's `class`, never `Luck::gems`), or
 the base and the rest of `roll_with`'s draws among the class's objects, with the finder's
-`Luck::magic`. Tests: `magic/pool_tests.rs`. The aristocrat's stipend (`world/stipend.rs`, #1405) rolls `roll_with` once a level-up, by `data/stipend.toml`'s chance, at the level, with its `Luck` from data (plus Landed noble's), on the stream `stipend/<level>`, keeping only magic and rare finds and the `keep` classes. **A drop's item level**
+`Luck::magic`. Tests: `magic/pool_tests.rs`. The aristocrat's stipend (`world/stipend.rs`, #1405) rolls `roll_with` once a level-up, by `data/rules/stipend.toml`'s chance, at the level, with its `Luck` from data (plus Landed noble's), on the stream `stipend/<level>`, keeping only magic and rare finds and the `keep` classes. **A drop's item level**
 (`world/loot.rs::drop_level`): the creature type's level, at least the floor's item level, at
 most `MAX_ITEM_LEVEL`; floor loot keeps the floor's (`world/magic_tests.rs`,
 `a_drop_rolls_at_the_creatures_level_at_least_the_floors`).

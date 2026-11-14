@@ -3,7 +3,7 @@
 # stack of several, ammunition, rings, or what is protected: a unique, of Proof, or what a quest
 # may ask for) draws one condition: damaged (a point worse, its improvements none, its word the
 # kind's below), Fine, Marvellous, or Masterwork (one, two, or three improvements, as the Temper
-# ability makes them, capped at temper.toml's `most`), or else as made. A fixed kit (a level
+# ability makes them, capped at rules/temper.toml's `most`), or else as made. A fixed kit (a level
 # file's placed gear) is never rolled and stays as made. Dropped, a piece keeps its condition.
 #
 # Deeper finds are better made (#1436): from an item level on, a depth row adds its chances of

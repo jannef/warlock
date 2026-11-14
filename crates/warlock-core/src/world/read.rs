@@ -240,7 +240,7 @@ impl World {
 
     /// What reading a scroll costs the player: the `read` action's price, scaled by their
     /// talents (Scroll savant: half; the wizard's Scroll adept: half), never below a quarter
-    /// (the `[read]` floor of `data/tuning.toml`: both together), at least 1.
+    /// (the `[read]` floor of `data/rules/tuning.toml`: both together), at least 1.
     fn read_price(&self) -> i64 {
         let price = self.price_of(self.state.player, ActionKind::Read);
         match self

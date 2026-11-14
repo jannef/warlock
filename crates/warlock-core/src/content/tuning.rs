@@ -1,7 +1,8 @@
-//! The tuning numbers of rules that have no data file of their own (`assets/data/tuning.toml`,
+//! The tuning numbers of rules that have no data file of their own
+//! (`assets/data/rules/tuning.toml`,
 //! #1541): check difficulties, ranges, reaches, to-hit penalties, chances, and floors a designer
 //! would tune, one table per rule. The rules themselves live in `world/`, each reading its table
-//! here; a rule with a data file of its own keeps its numbers there (`data/swim.toml`,
+//! here; a rule with a data file of its own keeps its numbers there (`data/rules/swim.toml`,
 //! `data/traps.toml`, ...).
 //!
 //! The file is optional: without it (a test's bare content) every rule reads
@@ -159,8 +160,8 @@ pub struct PotionKept {
     pub most: u8,
 }
 
-/// The numbers for content without the file (bare test content): what `assets/data/tuning.toml`
-/// held when they moved into it (#1541).
+/// The numbers for content without the file (bare test content): what
+/// `assets/data/rules/tuning.toml` held when they moved into it (#1541).
 impl Default for Tuning {
     fn default() -> Self {
         Self {
@@ -196,7 +197,7 @@ impl Default for Tuning {
 const MOST_CELLS: i32 = 40;
 
 impl Tuning {
-    /// Parses `data/tuning.toml`, each number within its bounds.
+    /// Parses `data/rules/tuning.toml`, each number within its bounds.
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let t: Tuning = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -248,7 +249,7 @@ impl Tuning {
 }
 
 impl super::RulesFile for Tuning {
-    const PATH: &'static str = "data/tuning.toml";
+    const PATH: &'static str = "data/rules/tuning.toml";
 
     fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
         Self::parse(path, text)
@@ -260,7 +261,7 @@ mod tests {
     use super::Tuning;
     use crate::content::{Content, ContentFiles};
 
-    const PATH: &str = "data/tuning.toml";
+    const PATH: &str = "data/rules/tuning.toml";
 
     #[test]
     fn a_number_out_of_bounds_is_refused_and_none_is_the_default() {
