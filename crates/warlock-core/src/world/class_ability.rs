@@ -2,7 +2,7 @@
 //! that is used from the abilities menu ([`crate::ability::Ability::Class`]) as [`Action::Use`]
 //! (`use:rage`, `use:smite:E`): Rage, War cry (for rage, `world/war_cry.rs`), Veteran's wind, Whirlwind, Lay on hands, Smite (for zeal, `world/smite.rs`), Holy
 //! radiance, Stunning strike, Quivering palm and Step of the wind (for ki, `world/ascetic.rs`; the last takes no time), the songs (Inspire, for inspiration, `world/song.rs`), the thief's
-//! Lurk and Low blow (`world/thief.rs`), Master thief's finisher (for openings,
+//! Lurk (`world/thief.rs`), Exploit and Master thief's finisher (for openings,
 //! `world/openings.rs`; the ranger's Volley, aimed at a cell, is `world/volley.rs`, and the
 //! warrior's Charge, aimed at a creature, `world/charge.rs`). The
 //! abilities themselves are talents of the class tree, given as levels come (`world/class.rs`)
@@ -53,8 +53,8 @@ impl World {
             (_, dir) => dir,
         };
         // An aimed blow with nobody hostile there is refused before anything is spent, and so is
-        // a blow of the bare hand (Stunning strike, Quivering palm) with a weapon in hand, a low
-        // blow with nobody there, and a lurk too late (`thief.rs`).
+        // a blow of the bare hand (Stunning strike, Quivering palm) with a weapon in hand, an
+        // exploit with nobody there or at a foe without vitals, and a lurk too late (`thief.rs`).
         if !self.thief_may(active, dir) {
             return Spent::Nothing;
         }
@@ -77,11 +77,13 @@ impl World {
         // unanswered, it spends nothing.
         let player = self.state.player;
         let content = self.content.clone();
+        let mut spent = 0;
         if let Some(cost) = crate::ability::class_cost(self.state.player(), &content, active) {
             if active.holy() && !self.answered(active) {
                 return self.unanswered(active);
             }
             self.spend_resource(player, cost.resource, cost.amount, events);
+            spent = cost.amount;
         }
         match (active, dir) {
             (ClassActive::Rage, _) => self.rage(events),
@@ -108,7 +110,7 @@ impl World {
             }
             (ClassActive::StunningStrike, Some(dir)) => self.stunning_strike(dir, events),
             (ClassActive::QuiveringPalm, Some(dir)) => self.quivering_palm(dir, events),
-            (ClassActive::LowBlow, Some(dir)) => self.low_blow(dir, events),
+            (ClassActive::Exploit, Some(dir)) => self.exploit(dir, spent, events),
             (ClassActive::MasterThief, Some(dir)) => self.finisher(dir, events),
             (ClassActive::Knock, Some(dir)) => self.knock(dir),
             (ClassActive::FieldForge, Some(dir)) => self.start_field_forge(dir),
@@ -119,7 +121,7 @@ impl World {
                 | ClassActive::BanishingSmite
                 | ClassActive::StunningStrike
                 | ClassActive::QuiveringPalm
-                | ClassActive::LowBlow
+                | ClassActive::Exploit
                 | ClassActive::MasterThief
                 | ClassActive::Knock
                 | ClassActive::FieldForge,

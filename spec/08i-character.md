@@ -1656,11 +1656,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     meanwhile takes their blow at once, the gatekeeper's free blow, and is caught unawares by it
     unless it was already hunting them, so the blow is resolved as on an unaware target: the
     initiative check, the sneak attack dice, flat-footed; refused with no time, "Too late to
-    lurk.", with a hostile they see beside them) and Low blow (12, #684: `use:low_blow:E`, 3
-    openings, the time of a melee attack: a blow at the hostile that way that is a sneak attack
-    whatever it knows, its dice on a hit, the foe not Surprised and keeping its Defence; none on
-    a thing without vitals, "It has no vital spot."; greyed out "not enough openings" while
-    short; refused with no time, "There is no one there to blind.", without a hostile there).
+    lurk.", with a hostile they see beside them) and Exploit (1, #1463, the openings design §5:
+    `use:exploit:E`, the time of a melee attack: **every opening held** (n) spent on a blow at
+    the hostile that way that is a sneak attack whatever it knows, its dice on a hit, the foe
+    not Surprised and keeping its Defence, and n × 1d6 more after the sneak dice, after
+    Protection and never multiplied; "You strike at the opening." (1), "You press your
+    openings." (2 to 4), "You tear into every opening!" (5 or more); greyed out "you have no
+    opening" while empty; refused with no time and nothing spent, "There is no one there.",
+    without a hostile there, "Your openings are in the kobold's guard." at another than a
+    standing mark, and "It has no vital spot." at a foe they see without vitals; after it the
+    pool is 0 and the mark cleared, unless the blow killed it, which gives one back). Low blow
+    (12) has no active of its own since #1463: it is Exploit's first increment, the foe struck
+    Stunned (flat-footed, its next action dear) and the exploit +1 to hit per opening. Trained
+    wind is off the thief's table (#1463): nothing the thief does costs stamina before an
+    active weapon rank grants the pool.
     Trapfinding, Pick lock, and Light fingers, which only gave what the class's skills give,
     are gone from the table (#684); a save holding one loads without it (said in the log).
   - **Passives**, each one read: Familiar (the witch's level 1, #929: a small beast of her race's

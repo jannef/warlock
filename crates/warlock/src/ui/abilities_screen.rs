@@ -390,14 +390,16 @@ mod tests {
             " Abilities ",
             "Birth sign",
             "> a  Transfixing stare  at a place you see",
+            "Class",
+            "  b  Exploit            you have no opening",
             "Skills",
-            "  b  Disarm a trap      no known trap beside you",
-            "  c  Pick lock          no lock beside you",
-            "  d  Steal              no one beside you to rob",
-            "  e  Salvage            on something you carry",
+            "  c  Disarm a trap      no known trap beside you",
+            "  d  Pick lock          no lock beside you",
+            "  e  Steal              no one beside you to rob",
+            "  f  Salvage            on something you carry",
             "Weapon skills",
-            "  f  Shield bash        you hold no shield",
-            "a-f or Enter use   Esc close",
+            "  g  Shield bash        you hold no shield",
+            "a-g or Enter use   Esc close",
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
@@ -417,8 +419,8 @@ mod tests {
         let screen = AbilitiesScreen::new(Some(&world.perception()), None);
         let text = drawn(&screen, 80, 30).join("\n");
         for expected in [
-            "  c  Listen at a door   in a direction",
-            "  d  Pick lock          in a direction",
+            "  d  Listen at a door   in a direction",
+            "  e  Pick lock          in a direction",
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
@@ -429,7 +431,7 @@ mod tests {
         let b = Bindings::default();
         let world = thief(false);
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), None);
-        assert_eq!(screen.handle(&Press::typed('f'), &b), ScreenAction::Stay);
+        assert_eq!(screen.handle(&Press::typed('g'), &b), ScreenAction::Stay);
         assert_eq!(screen.selected(), Some(Ability::ShieldBash));
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(text.contains("Shield bash: you hold no shield."), "{text}");
@@ -440,7 +442,7 @@ mod tests {
         // With a shield in hand but no foe beside, it says so (#1327).
         let world = thief(true);
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), None);
-        assert_eq!(screen.handle(&Press::typed('f'), &b), ScreenAction::Stay);
+        assert_eq!(screen.handle(&Press::typed('g'), &b), ScreenAction::Stay);
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(text.contains("Shield bash: no foe within reach."), "{text}");
         // Someone beside to rob (an ally): Steal can be used; the cursor starts on the first that
@@ -450,7 +452,7 @@ mod tests {
         let stare = Ability::Sign(warlock_core::content::SignActive::TransfixingStare);
         assert_eq!(screen.selected(), Some(stare));
         assert_eq!(
-            screen.handle(&Press::typed('d'), &b),
+            screen.handle(&Press::typed('e'), &b),
             ScreenAction::UseAbility(Ability::Steal)
         );
         let last = Some(Ability::Steal);
@@ -458,7 +460,7 @@ mod tests {
         assert_eq!(screen.selected(), Some(Ability::Steal));
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(
-            text.contains("> d  Steal              in a direction"),
+            text.contains("> e  Steal              in a direction"),
             "{text}"
         );
         assert_eq!(
@@ -518,7 +520,7 @@ mod tests {
         let last = Some(Ability::ShieldBash);
         let screen = AbilitiesScreen::new(Some(&world.perception()), last);
         let text = drawn(&screen, 80, 13).join("\n");
-        assert!(text.contains("Page 6/6"), "{text}");
+        assert!(text.contains("Page 7/7"), "{text}");
         assert!(text.contains("> a  Shield bash"), "{text}");
     }
 }

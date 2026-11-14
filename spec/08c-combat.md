@@ -392,7 +392,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Surprise and sneak attacks** (`world/surprise.rs`, `data/surprise.toml`; #681, design
   `docs/design/surprise-and-sneak-attacks.md` §3–§5; `docs/dev/surprise.md`): being caught
   unawares, both ways round, the Sneak attack and Initiative skills (#682), slipping past
-  (#683), the thief's Lurk, Low blow, and Vanishing act (#684, §8i "The ranger's, thief's, and bard's tables"), the two weapon
+  (#683), the thief's Lurk, Exploit (#1463), and Vanishing act (#684, §8i "The ranger's, thief's, and bard's tables"), the two weapon
   abilities on the `sneak_attack` trigger (#685, §8i "Weapon abilities"), the creatures that
   sneak-attack, recover, spot, and lurk (#686, §8 "Creature behavior"), the unaware mark and
   Hair trigger (#687; Hair trigger's blow under Free blows above), and the player wiki's page,
@@ -464,8 +464,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     abilities": Knife in the dark, Hunter's shot) with the attack's skills, after its `hit`
     triggers (`World::sneak_trigger`); none without the dice. The thief's actives (#684): a
     Lurk's blow on a hostile that steps up beside them and was not hunting them counts as
-    unaware (`thief.rs::lurked`: the check, the strip, the dice); a Low blow passes as unaware
-    for the dice alone (`low_blow_taken`: no check, no strip).
+    unaware (`thief.rs::lurked`: the check, the strip, the dice); an Exploit passes as unaware
+    for the dice alone (`sneak_taken`: no check, no strip), its ladder's dice after them.
   - **Vitals** (critical immunity; `Content::has_vitals`, the one reader): an incorporeal
     creature, an animated object, a type carrying a tag of `no_vitals` (elemental, skeleton,
     spirit, construct), or one with `vitals = false` has no vitals: no critical is confirmed on it

@@ -1244,7 +1244,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
             .flatten()
             .collect(),
         ClassActive::VeteransWind => mods.veterans_wind.map(|w| w.cooldown).into_iter().collect(),
-        // Volley costs Focus, Low blow and Master thief Openings, Stunning strike and Quivering
+        // Volley costs Focus, Exploit and Master thief Openings, Stunning strike and Quivering
         // palm Ki, and the smites and Lay on hands Zeal instead
         // (their talents' `resource`, [`short_of`]), as War cry Rage; Lurk only its time.
         ClassActive::LayOnHands
@@ -1261,7 +1261,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::StepOfTheWind
         | ClassActive::Stillness
         | ClassActive::Lurk
-        | ClassActive::LowBlow
+        | ClassActive::Exploit
         | ClassActive::MasterThief
         | ClassActive::Inspire
         | ClassActive::Lullaby
@@ -1352,7 +1352,8 @@ pub fn spell_unavailable(actor: &Actor, content: &Content, spell: SpellId) -> Op
 
 /// What class active `active` costs `actor` in an alternative resource (spec §8 "Resources"):
 /// its talent's `resource`, with Avatar's share of it for Lay on hands (`percent_of`, at least
-/// 1); `None` when it costs none. The one reading of the cost: `use_class` spends it.
+/// 1), and for Exploit every one held (its talent's cost the least it needs); `None` when it
+/// costs none. The one reading of the cost: `use_class` spends it.
 pub(crate) fn class_cost(
     actor: &Actor,
     content: &Content,
@@ -1364,6 +1365,10 @@ pub(crate) fn class_cost(
     {
         let share = crate::content::percent_of(i64::from(cost.amount), u32::from(percent));
         cost.amount = u16::try_from(share).unwrap_or(cost.amount).max(1);
+    }
+    if active == ClassActive::Exploit {
+        let held = actor.resources.get(cost.resource).map_or(0, |p| p.value);
+        cost.amount = cost.amount.max(held);
     }
     Some(cost)
 }

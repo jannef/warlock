@@ -168,7 +168,7 @@ fn a_level_brings_its_abilities_and_says_so() {
     assert_eq!(restored.state_hash(), w.state_hash());
     // A run on the scenario's own character has its class's too (the showcase's thief).
     let plain = World::new(BUILTIN.clone(), "showcase", Some(7)).expect("world");
-    assert_eq!(class_rows(&plain), ["Sneak attack"]);
+    assert_eq!(class_rows(&plain), ["Sneak attack", "Exploit"]);
 }
 
 #[test]

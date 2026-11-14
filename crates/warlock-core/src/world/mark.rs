@@ -17,7 +17,7 @@
 //!   leaves the game otherwise ([`World::unmark`], where a creature departs); the player changes
 //!   level ([`World::travel`]); the pool decays to 0 ([`faded`], in `World::live`). A mark out of
 //!   sight stays the mark.
-//! - [`World::off_mark`]: an active paid from a marked pool (Low blow, Master thief's finisher)
+//! - [`World::off_mark`]: an active paid from a marked pool (Exploit, Master thief's finisher)
 //!   aimed at a creature that is not the mark is refused while a mark stands.
 //!
 //! Nothing here draws.
