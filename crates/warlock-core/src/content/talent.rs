@@ -1947,6 +1947,15 @@ impl TalentBook {
         self.iter().filter(move |(_, t)| t.tree == tree)
     }
 
+    /// Adds a talent defined outside `data/talents/` (a profane gift, `content/profane.rs`),
+    /// after every other; its id is checked unique by the caller.
+    pub(super) fn add(&mut self, def: TalentDef) -> TalentId {
+        let id = TalentId(self.list.len() as u16);
+        self.ids.insert(def.id.clone(), id);
+        self.list.push(def);
+        id
+    }
+
     /// Whether the terrain the effects name (`terrain_as`) is in `content`, once its terrain has
     /// loaded (after the talents; content without terrain has nothing to check them by).
     pub(super) fn check_terrain(&self, content: &Content) -> Result<(), ContentError> {
@@ -2470,6 +2479,8 @@ mod tests {
         let mut files = ContentFiles::builtin();
         files.remove("data/talents.toml");
         files.remove("data/talents/");
+        // The profane gifts are talents of a tree these settings lack.
+        files.remove("data/profane/");
         // Background stories name talents of the built-in set.
         files.remove("data/background.toml");
         files.insert("data/talents.toml", settings);

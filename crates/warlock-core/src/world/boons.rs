@@ -152,6 +152,8 @@ impl World {
         let me = self.state.player();
         let mut flaws: Vec<String> = (content.talents().by_tree())
             .filter(|(_, def)| def.flaw && !me.talents.has(&def.id))
+            // A profane bane comes of a meal, never of an altar.
+            .filter(|(id, _)| content.profane().gift(*id).is_none())
             .map(|(_, def)| def.id.clone())
             .collect();
         flaws.sort();

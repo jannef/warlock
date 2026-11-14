@@ -433,6 +433,13 @@ pub enum Action {
     /// (`world/lure.rs`). For replays, tests, and captures that skip the walk. Takes no game
     /// time; recorded in replays.
     Lure(String),
+    /// Dev command: the player is given profane gift `ID` (an id in `data/profane/`) as a draw
+    /// would give it, its relations applied (`world/profane.rs`); refused for one a draw would
+    /// not offer. For tests and captures. Takes no game time; recorded in replays.
+    Profane(String),
+    /// Dev command: profane gift `ID` is taken from the player (`World::rescind`). Takes no game
+    /// time; recorded in replays.
+    Rescind(String),
     /// Dev command: active rolled quest `quest`, with no progress yet, draws `target` instead
     /// (spec §8 "Quests": a target its pool may hold, or a variant's id), its kills counted
     /// from now and a variant's reveal made. For replays, tests, and captures. Takes no game

@@ -1,0 +1,7 @@
+# The profane gifts (docs/design/profane-gifts.md; #1471): what eating a layer boss's corpse
+# changes in the body for good. Its talents are the gifts of `profane/`, each granted, never
+# picked (no free talent: never offered). Listed last.
+[[tree]]
+id = "profane"
+name = "Profane"
+description = "What the flesh you ate made of you."

@@ -1,0 +1,11 @@
+[[gift]]
+id = "midden_gut"
+name = "Midden-gut"
+kind = "boon"
+tier = "lesser"
+weight = 12
+description = "Your stomach takes anything: rotten meat does you no harm."
+line = "Your stomach turns over once, and is never troubled again."
+effects = [{ kind = "eats_rotten" }, { kind = "rot_harm_percent", value = -100 }]
+# Ratfolk eat rotten meat unharmed already.
+not_for = ["ratfolk"]

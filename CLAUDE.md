@@ -98,6 +98,7 @@ file). Topics:
 - `docs/dev/stats.md` — the six stats, modifiers, scores and potentials, what may be shown, stat training (marks by use, the level-up checks)
 - `docs/dev/burden.md` — load, limits, sizes, every penalty's one hook
 - `docs/dev/hunger.md` — satiation, eating, corpses and rot, starving
+- `docs/dev/profane-gifts.md` — the profane gifts: `data/profane/`, `ProfaneTable` and its gifts as talents of the `profane` tree, the loader's checks, `World::bestow_gift` and `rescind` with the relations, the dumps
 - `docs/dev/character-creation.md` — `CharacterSpec`, races, classes, genders, the horoscope, starting rolls, names, starting kits
 - `docs/dev/background.md` — background stories: `data/background/` (and a campaign's chapter), the loader's checks, `background::tell` (streams, tiers, `only`, slots; no caps), `World::tell_background` and its effects, `Character::story`, the `story` dump
 - `docs/dev/alignment.md` — the good–evil score and its bands, the deeds that move it (one hook each), what reads it

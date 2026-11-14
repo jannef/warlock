@@ -888,6 +888,8 @@ impl World {
                 | A::Resource(_)
                 | A::Infect(_)
                 | A::Reveal(_)
+                | A::Profane(_)
+                | A::Rescind(_)
                 | A::QuestRoll { .. }
                 | A::GrantXp(_)
                 | A::SetRank { .. }

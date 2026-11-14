@@ -1,0 +1,9 @@
+[[gift]]
+id = "thick_blooded"
+name = "Thick-blooded"
+kind = "boon"
+tier = "lesser"
+weight = 10
+description = "Your blood runs slow and dark: wounds bleed less, and sickness takes you less often."
+line = "Your blood runs slow and dark."
+effects = [{ kind = "clotting" }, { kind = "disease_checks", value = 2 }]

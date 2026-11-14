@@ -85,6 +85,9 @@ impl TalentsScreen {
                     .push(Line::Tree(book.tree(talent.tree).name.clone()));
             }
             let from = match () {
+                // A profane gift (docs/design/profane-gifts.md §11), a bane marked as a flaw.
+                () if talent.profane.is_some() && talent.flaw => Some("profane, flaw"),
+                () if talent.profane.is_some() => Some("profane"),
                 () if talent.story && talent.flaw => Some("story, flaw"),
                 () if talent.story => Some("story"),
                 () if talent.boon => Some("altar"),

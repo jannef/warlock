@@ -195,14 +195,19 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         .collect();
     let talents: Vec<Value> = (view.own_talents().iter())
         .map(|t| {
-            json!({
+            let mut talent = json!({
                 "id": content.talents().get(t.id).id,
                 "name": t.name,
                 "choice": t.choice,
                 "granted": t.granted,
                 "flaw": t.flaw,
                 "class": t.class,
-            })
+            });
+            // A profane gift's kind (docs/design/profane-gifts.md §11), left out otherwise.
+            if let Some(kind) = t.profane {
+                talent["profane"] = json!(kind.id());
+            }
+            talent
         })
         .collect();
     let mut out = json!({

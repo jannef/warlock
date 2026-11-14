@@ -8,7 +8,7 @@ use crate::ability::Aim;
 use crate::action::{letter, position_text};
 use crate::blood::{self, Stain};
 use crate::character::Gender;
-use crate::content::{Content, SpecialRoom, WeaponSkillId};
+use crate::content::{Content, GiftKind, GiftTier, SpecialRoom, WeaponSkillId};
 use crate::equipment;
 use crate::geom::Pos;
 use crate::hunger::Hunger;

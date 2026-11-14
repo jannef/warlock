@@ -606,3 +606,11 @@ the sign's grants. `OwnTalent::story` (a boon a told line names, `background::ga
 story's "(story)" / "(story, flaw)"; `OwnTalent::boon` is the altar's (a boon the story did not
 give). A class table naming a held boon later gives a talent pick in its place
 (`class::grant` skips what is held, `class::held_already` counts it into the level's `Due`).
+
+**Profane gifts** (`docs/dev/profane-gifts.md`, #1625) are talents of the `profane` tree (listed
+last, never offered: each is `granted`, a bane a `flaw`), defined in `data/profane/` rather than
+`data/talents/` and registered into the book after every other talent (`TalentBook::add`).
+`World::bestow_gift` keeps one in `Actor::boons` like the altar's, so `stars::grant` puts it back
+on restore; `World::rescind` takes it away again. `OwnTalent::profane` (the kind) marks
+"(profane)" / "(profane, bane)" in the dump and "(profane)" / "(profane, flaw)" on the Talents
+page; `OwnTalent::boon` is never set for one.

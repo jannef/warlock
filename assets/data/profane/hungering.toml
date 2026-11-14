@@ -1,0 +1,10 @@
+[[gift]]
+id = "hungering"
+name = "Hungering"
+kind = "bane"
+tier = "lesser"
+weight = 12
+description = "You hunger sooner than you should."
+line = "You are hungry again already."
+undone = "The gnawing in your belly sharpens into something worse."
+effects = [{ kind = "hunger_percent", value = 50 }]

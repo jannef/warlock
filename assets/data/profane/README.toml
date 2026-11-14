@@ -1,0 +1,25 @@
+# Profane gifts (docs/design/profane-gifts.md §6; docs/dev/profane-gifts.md): the permanent
+# changes to the body that eating a layer boss's corpse draws. One file per gift, named by its
+# id (`midden_gut.toml`); a file holds one `[[gift]]`. This file holds only the notes below.
+#
+# Each gift is loaded as a talent of the `profane` tree (../talents/trees/170-profane.toml), granted (never picked)
+# and a flaw when it is a bane, so its id is unique against every talent and a save names it as
+# any talent. Every gift defines:
+#   id, name      its id (`gift:midden_gut`) and its name, as the game shows it
+#   kind          "boon", "mixed", or "bane"
+#   tier          "lesser", "greater", or "dire": the table a meal's roll draws from
+#   weight        its weight within its tier, 1 to 100
+#   description   what it does, in the game's words (the Talents page): never a hidden number
+#   line          said as it takes, before "You are <name>."
+#   effects       talent effects (../talents/README.toml), never one handed out once that could
+#                 not be taken back cleanly (`max_hp_per_levels`, `weapon_ranks`, `extra_pick`,
+#                 `starting_gold`, `companion`, ...): `stat` is the one hand-out allowed
+# and may define:
+#   undone        said when another gift's `replaces` or `undoes` takes it (required then)
+#   instead       said in place of its own line when its `undoes` takes a gift held (required
+#                 with `undoes`)
+#   excludes      gifts that cannot be held with it; written once, on either gift (the loader
+#                 makes it symmetric)
+#   replaces      gifts it takes away as it is taken: the greater form of a lesser
+#   undoes        gifts it takes away instead of being taken, if one is held
+#   not_for       races it would do nothing for, never drawn for them

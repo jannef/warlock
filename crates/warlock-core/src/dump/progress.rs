@@ -153,6 +153,10 @@ pub(super) fn progress_rows(world: &World) -> Vec<String> {
     if !marked.is_empty() {
         rows.push(format!("stat marks {}", marked.join(", ")));
     }
+    // The profane gifts held and each tier's pool: the gifts a draw may give now of all it holds.
+    if !world.content().profane().is_empty() {
+        rows.push(profane_row(world));
+    }
     // The rung each known spell's roll is cast at (the spell scaling design §11): of its
     // ladder's length, with the score that reached it and the rungs from outside the stats.
     let content = world.content();
@@ -193,4 +197,22 @@ pub(super) fn progress_rows(world: &World) -> Vec<String> {
         _ => "cannot learn: not trained in Decipher script".to_string(),
     });
     rows
+}
+
+/// `profane 3 held; pool lesser 9/14, greater 12/12, dire 14/14` (`progress`, dev-only;
+/// docs/design/profane-gifts.md §11).
+fn profane_row(world: &World) -> String {
+    let content = world.content();
+    let player = world.state().player();
+    let held = (player.talents.iter())
+        .filter_map(|t| content.talents().id(&t.id))
+        .filter(|&t| content.profane().gift(t).is_some())
+        .count();
+    let pools: Vec<String> = (GiftTier::ALL.iter())
+        .map(|&tier| {
+            let (open, all) = world.gift_pool(tier);
+            format!("{} {open}/{all}", tier.id())
+        })
+        .collect();
+    format!("profane {held} held; pool {}", pools.join(", "))
 }

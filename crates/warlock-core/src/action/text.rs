@@ -192,6 +192,8 @@ impl fmt::Display for Action {
             Action::Infect(id) => write!(f, "infect:{id}"),
             Action::Reveal(id) => write!(f, "reveal:{id}"),
             Action::Lure(id) => write!(f, "lure:{id}"),
+            Action::Profane(id) => write!(f, "gift:{id}"),
+            Action::Rescind(id) => write!(f, "rescind:{id}"),
             Action::QuestRoll { quest, target } => write!(f, "quest_roll:{quest}:{target}"),
             Action::Freeze { at, radius } => write!(f, "freeze:{},{},{radius}", at.x, at.y),
             Action::Thaw { at, radius } => write!(f, "thaw:{},{},{radius}", at.x, at.y),
@@ -309,6 +311,8 @@ static VERBS: &[(&str, Shape)] = &[
     ("infect", Shape::Id(Action::Infect, "a disease id, e.g. `infect:filth_fever`")),
     ("reveal", Shape::Id(Action::Reveal, "a hidden location id, e.g. `reveal:fennmynster`")),
     ("lure", Shape::Id(Action::Lure, "a lure quest's id, e.g. `lure:crystal_guardian`")),
+    ("gift", Shape::Id(Action::Profane, "a profane gift's id, e.g. `gift:oak_hearted`")),
+    ("rescind", Shape::Id(Action::Rescind, "a profane gift's id, e.g. `rescind:oak_hearted`")),
     ("quest_roll", Shape::Own(quest_roll)),
     ("levelup", Shape::Own(level_up)),
     ("xp", Shape::Own(xp)),
@@ -1156,6 +1160,8 @@ mod tests {
             Action::Infect("Odd_Case".into()),
             Action::Reveal("old_barrow".into()),
             Action::Lure("crystal_guardian".into()),
+            Action::Profane("oak_hearted".into()),
+            Action::Rescind("oak_hearted".into()),
             Action::Talent {
                 id: "hardy".into(),
                 choice: None,
@@ -1790,7 +1796,7 @@ mod tests {
             ];
             let by_positions: [fn(Positions) -> Action; 4] =
                 [Action::PickUp, Action::Drop, Action::Sell, Action::Identify];
-            let by_cased: [fn(String) -> Action; 9] = [
+            let by_cased: [fn(String) -> Action; 11] = [
                 Action::Remove,
                 Action::Advance,
                 Action::SetVision,
@@ -1800,6 +1806,8 @@ mod tests {
                 Action::Infect,
                 Action::Reveal,
                 Action::Lure,
+                Action::Profane,
+                Action::Rescind,
             ];
             let arms: Vec<BoxedStrategy<Action>> = vec![
                 bare.boxed(),

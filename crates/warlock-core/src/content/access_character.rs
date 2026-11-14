@@ -3,9 +3,9 @@
 
 use super::{
     AlignmentRules, ClassActive, ClassDef, CombatStance, Content, Experience, Flavour, Horoscope,
-    Lucky, Names, PrestigeDef, RaceDef, Races, Sign, SignActive, SkillDef, SpellData, SpellId,
-    StanceDef, Stances, TalentBook, TalentDef, TalentEffect, WeaponAbility, WeaponAbilityId,
-    WeaponSkillId, WeaponSkillTable,
+    Lucky, Names, PrestigeDef, ProfaneTable, RaceDef, Races, Sign, SignActive, SkillDef, SpellData,
+    SpellId, StanceDef, Stances, TalentBook, TalentDef, TalentEffect, WeaponAbility,
+    WeaponAbilityId, WeaponSkillId, WeaponSkillTable,
 };
 use crate::skills::Ladder;
 use crate::skills::RollRules;
@@ -188,6 +188,11 @@ impl Content {
     /// the files.
     pub fn talents(&self) -> &TalentBook {
         &self.talents
+    }
+
+    /// The profane gifts (`data/profane/`): none without the files or the talents.
+    pub fn profane(&self) -> &ProfaneTable {
+        &self.profane
     }
 
     /// The skill ladder: the die a level-up roll throws by the skill's marks (`[ladder]` in

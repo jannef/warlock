@@ -81,6 +81,9 @@ pub struct OwnTalent {
     pub boon: bool,
     /// The background story gave it (spec §8 "Background story"): "(story)", "(story, flaw)".
     pub story: bool,
+    /// A profane gift, of this kind (docs/design/profane-gifts.md §11): "(profane)", "(profane,
+    /// bane)" in the dump; never an altar's or a story's.
+    pub profane: Option<crate::content::GiftKind>,
 }
 
 /// How fresh food smells to those who can tell (spec §8 "Birth sign": Hound's nose): a word,
