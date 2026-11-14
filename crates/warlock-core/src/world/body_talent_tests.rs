@@ -191,7 +191,7 @@ fn clotting_stanches_big_hits_and_criticals_and_bleeding_stops_sooner() {
     hit(&mut w, true);
     assert_eq!(bleeding(&w), 1, "a degree less");
     let talents = w.state.player().talent_mods(&content);
-    assert_eq!(talents.eases_every(status(&w, "bleeding"), 60), 30);
+    assert_eq!(talents.vigour.eases_every(status(&w, "bleeding"), 60), 30);
 }
 
 #[test]
@@ -200,7 +200,13 @@ fn strong_constitution_and_fever_proof_are_read_by_disease_checks() {
     give(&mut w, "strong_constitution");
     give(&mut w, "fever_proof");
     let talents = w.state.player().talent_mods(w.content());
-    assert_eq!((talents.disease_checks, talents.disease_recovery), (2, 1));
+    assert_eq!(
+        (
+            talents.vigour.disease_checks,
+            talents.vigour.disease_recovery
+        ),
+        (2, 1)
+    );
     // A disease that needs two good checks in a row goes after one with Fever-proof: a
     // character this tough wins every check but a natural 2.
     set_scores(&mut w, 40);
@@ -229,10 +235,16 @@ fn mighty_kick_and_crusher_change_kicks_and_breaker_digs_faster() {
     give(&mut w, "crusher");
     assert_eq!(kick(&w).penetration, 2, "a kick is bludgeoning");
     let talents = w.state.player().talent_mods(&content);
-    assert_eq!((talents.door_kick, talents.dig_percent), (4, 0));
+    assert_eq!(
+        (talents.delving.door_kick, talents.delving.dig_percent),
+        (4, 0)
+    );
     give(&mut w, "breaker");
     let talents = w.state.player().talent_mods(&content);
-    assert_eq!((talents.door_kick, talents.dig_percent), (4, 25));
+    assert_eq!(
+        (talents.delving.door_kick, talents.delving.dig_percent),
+        (4, 25)
+    );
 }
 
 #[test]

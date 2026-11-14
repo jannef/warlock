@@ -273,7 +273,7 @@ pub fn run(mode: Mode) -> Result<(), String> {
     std::fs::create_dir_all(&out_dir).map_err(|e| format!("cannot create out dir: {e}"))?;
     let manifest = load_manifest(&golden_dir.join("manifest"))?;
     let d = &manifest.defaults.unwrap_or_default();
-    let content = Arc::new(Content::builtin().map_err(|e| e.to_string())?);
+    let content = Arc::new(warlock_assets::content().map_err(|e| e.to_string())?);
 
     if !cfg!(target_os = "linux") && mode == Mode::Compare {
         eprintln!(

@@ -10,7 +10,7 @@ Openings (R3), Ki and Inspiration (R4), and the four resource talents (R5). Rage
 (R2), Openings (R3), Ki, and Inspiration (R4), and the resource talents (R5) have moved (below).
 
 - **Granted by talents**: the talent effect `grants_resource { resource }` collects into
-  `TalentMods::grants`; `world/focus.rs::hold` gives the actor each it lacks at its start (one
+  `ResourceMods::grants`; `world/focus.rs::hold` gives the actor each it lacks at its start (one
   held keeps its value). Called from `class::hand_out` (a talent taken or given) and
   `World::grant_class` (so a restored run gets one its talents grant), the only two places so
   far. `hold` takes the character level (the maximum a pool starts at may depend on it). The
@@ -18,13 +18,13 @@ Openings (R3), Ki and Inspiration (R4), and the four resource talents (R5). Rage
   player gains is said) holds stamina for a player without it when a rank first teaches an
   active weapon ability, said "You learn to pace your breath." after the ability's line
   (`weapon_active_tests::the_first_active_rank_grants_the_pool`).
-- **Focus** (R2, #250; `world/focus.rs`): Rapid shot grants it. `TalentEffect::RapidShot {
-  resource, cost, saving }` (`TalentMods::rapid_shot`) is read in one place,
+- **Focus** (R2, #250; `world/focus.rs`): Rapid shot grants it. `MartialEffect::RapidShot {
+  resource, cost, saving }` (`MartialMods::rapid_shot`) is read in one place,
   `World::rapid_shot`, which `shoot.rs::fire` calls on the shot's price: with `cost` held it
   spends it and takes `saving` percent off the whole price (`percent_of`, at least 1), else the
   price stands. Volley (`world/volley.rs`) costs `resource = { id = "focus", cost = 6 }` on its
   talent, spent after its own checks (so a refused volley spends nothing), and has no cooldown
-  (`TalentEffect::Volley { shots }` only); its price is `shot_price`, never Rapid shot's.
+  (`MartialEffect::Volley { shots }` only); its price is `shot_price`, never Rapid shot's.
   Creatures never shoot through `fire`, so never use either. Tests: `world/focus_tests.rs`.
 
 - **Data**: `content/resource.rs` parses `data/resources.toml` into `ResourceDef`s (`id`,
@@ -52,7 +52,7 @@ statuses).
     capped at the maximum. `World::grant_resource_with_status(id, resource, by, events)` also
     begins its `status` (the Rage ability and the dev action call this one).
   - `World::gain_resource(id, on)`: every pool held that builds on `on` gains its amount (its
-    `builds`, plus the talents' `resource_build`s, `TalentMods::resource_builds`), up to the
+    `builds`, plus the talents' `resource_build`s, `ResourceMods::resource_builds`), up to the
     maximum. Called in `fight.rs::dies` (`Kill`, for `by`, creatures' deaths only),
     `fight.rs::resolve` (`Hit` and `Critical` for the attacker on a `Strike::Hit`, `MeleeHit`
     beside `Hit` for a melee blow and `MeleeKill` at the kill point of a melee blow (Battle
@@ -112,7 +112,7 @@ statuses).
   spell kills within `SIPHON_RANGE` (3) cells. `gain_resource(by, Build::Kill)` stays in
   `dies` for the data's `builds` and the talents' (any kill). Tests: `world/siphon_tests.rs`.
 - **Rage** (R1, #249; `world/rage.rs`): the talent effect `rage { resource = "rage" }`
-  (`TalentMods::rage: Option<ResourceId>`, `rage_status` its resource's status) makes the Rage
+  (`MartialMods::rage: Option<ResourceId>`, `rage_status` its resource's status) makes the Rage
   ability grant the pool with Raging (`World::rage`); the cooldown is Raging and what it `follows`
   (`ability.rs::class_cooldown`). The pool's own `builds` (#842) are `struck` 1, `critical` 2,
   and `kill` 3, and its `lacking` is "you have not the rage for it"; Exhausted `eases = 150`,
@@ -134,33 +134,33 @@ statuses).
   (`grants_resource`), full; `max = 4`, `max_from = { stat = "willpower", per_levels = 6,
   least = 3 }` (no code: stamina's field), `lacking = "your ki is spent"`. Perfect self (60)
   carries `resource_rate` +100 (read in `World::resource_rate`). Flurry (level 1) carries
-  `TalentEffect::FlurryCost { resource, cost }` (`TalentMods::flurry_cost`), read in one place,
+  `MartialEffect::FlurryCost { resource, cost }` (`MartialMods::flurry_cost`), read in one place,
   `World::flurry` (`free_blow.rs`, from `second_blow` on `Cue::First`, which now takes `events`
   for the spend): the second blow is decided only once its cost is spent; short, none. Patient
   defence (level 18, S5, #849) costs `resource = { id = "ki", cost = 1 }` on its talent
-  (`TalentEffect::PatientDefence { status }`, `TalentMods::patient_defence`): `World::patient_defence`
+  (`MartialEffect::PatientDefence { status }`, `MartialMods::patient_defence`): `World::patient_defence`
   (`world/ascetic.rs`) gives a degree of Poised for a wait's price; refused only by
   `may_use_class` with no ki. Given during the priced action, the status sits on `World::fresh`,
   so the creatures' turns meet it and the next action eases it. Tests: `world/ascetic_tests.rs`.
   Quivering
   palm costs `resource = { id = "ki", cost = 5 }` on its talent and lost its cooldown
-  (`TalentEffect::QuiveringPalm { status, severity }`); `use_class` refuses it with a weapon in
+  (`MartialEffect::QuiveringPalm { status, severity }`); `use_class` refuses it with a weapon in
   hand before the spend (`ClassActive::bare_handed`). Stunning strike (12, #848) costs
-  `resource = { id = "ki", cost = 1 }` on its talent (`TalentEffect::StunningStrike { status,
+  `resource = { id = "ki", cost = 1 }` on its talent (`MartialEffect::StunningStrike { status,
   severity }`), refused the same way; both blows are `World::palm_blow` (`world/ascetic.rs`).
   Tests: `world/ki_tests.rs`, `world/stunning_strike_tests.rs`. Step of the wind (level 6, S3, #847) costs `resource = { id = "ki",
-  cost = 1 }` on its talent (`TalentEffect::WindStep { status }`, `TalentMods::wind_step`):
+  cost = 1 }` on its talent (`MartialEffect::WindStep { status }`, `MartialMods::wind_step`):
   `World::wind_step` (`world/ascetic.rs`) gives a degree of Light-footed and returns
   `Spent::NoTime`; `World::may_wind_step` refuses it before the spend while Light-footed already.
   The status is taken off `World::fresh` (a status given in a priced action is not eased by it):
   no time passed, so the next action eases it. Tests: `world/ki_tests.rs`,
   `world/ascetic_tests.rs`. Stillness (Still mind, level 25, S6, #850) costs `resource = { id =
-  "ki", cost = 2 }` on Still mind (`TalentEffect::Stillness { name, statuses }`,
-  `TalentMods::stillness`): `World::stillness` ends every listed status the ascetic suffers and
+  "ki", cost = 2 }` on Still mind (`MartialEffect::Stillness { name, statuses }`,
+  `MartialMods::stillness`): `World::stillness` ends every listed status the ascetic suffers and
   returns `Spent::NoTime`; with none of them to end `Unavailable::Still` refuses it before the
   spend ("Your mind is already still."), and so does too little ki.
   Diamond soul (level 40, S7, #851) carries
-  `TalentEffect::CatchMissiles { resource, cost }` (`TalentMods::catch_missiles`), a passive
+  `MartialEffect::CatchMissiles { resource, cost }` (`MartialMods::catch_missiles`), a passive
   spend like Flurry's: `World::caught_missile` (`world/ascetic.rs`) spends it by itself when a
   missile (`resolve` for a shot or throw, `trap_strikes` for a trap's) hits a holder with no
   weapon and no shield in hand, and the hit becomes `Blow::missed(None)`; the transient
@@ -192,7 +192,7 @@ statuses).
   1), by `Ability::unavailable` and by `use_class`, which, for a holy gift (`ClassActive::holy`),
   asks `World::answered` before it spends, so an unanswered smite or heal spends nothing.
   Retribution (P3, #912, the paladin's at 25) spends 4 a blow it answers:
-  `TalentEffect::Retribution { resource, cost }` (`TalentMods::retribution`), read in one place,
+  `FaithEffect::Retribution { resource, cost }` (`FaithMods::retribution`), read in one place,
   `World::retribution` (`world/smite.rs`), after its other checks (the attack hit, the attacker
   beside, the bands), so a blow it does not answer spends nothing; the blow taken has already
   built its point (`Struck` fires in `resolve`, before the attack's end), so 3 held answers. A deed

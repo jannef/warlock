@@ -255,7 +255,7 @@ impl World {
         let level = state.current();
         let player = state.player();
         if level.kind == LevelKind::Overworld
-            || !player.talent_mods(&content).scent.is_empty()
+            || !player.talent_mods(&content).senses.scent.is_empty()
             || (state.race_of(&content, player)).is_some_and(|r| r.light_blind.is_some())
             || (level.zones.iter()).any(|z| z.kind == crate::content::ZoneKind::Smoke)
         {

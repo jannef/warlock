@@ -20,7 +20,7 @@ use crate::content::Content;
 
 /// How long a craft of `base` seconds takes `actor`: Quick hands' share of it, at least a second.
 pub(super) fn craft_seconds(content: &Content, actor: &Actor, base: u32) -> u32 {
-    match actor.talent_mods(content).craft_time_percent {
+    match actor.talent_mods(content).craft.craft_time_percent {
         Some(percent) => (u64::from(base) * u64::from(percent) / 100).max(1) as u32,
         None => base,
     }
@@ -30,7 +30,7 @@ pub(super) fn craft_seconds(content: &Content, actor: &Actor, base: u32) -> u32 
 /// the check is made (`margin` 0 or more), never to a failure.
 pub(super) fn graded_margin(content: &Content, actor: &Actor, margin: i32) -> i32 {
     match margin >= 0 {
-        true => margin + actor.talent_mods(content).grade_ease,
+        true => margin + actor.talent_mods(content).craft.grade_ease,
         false => margin,
     }
 }

@@ -591,7 +591,7 @@ mod tests {
     }
 
     fn arena() -> World {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut w = World::new(content, "arena", None).expect("arena");
         // The war band comes into the torchlight.
         for _ in 0..8 {
@@ -628,7 +628,7 @@ mod tests {
         last.0 = Some(("hub".into(), Target::Creature(ActorId(0))));
         assert_eq!(Aim::start(AimKind::Fire, &view, &last).at, nearest);
         // With no one in view, the cursor starts on the player.
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let hub = World::new(content, "showcase", None).expect("hub");
         let view = hub.perception();
         let aim = Aim::start(AimKind::Throw(2), &view, &LastTarget::default());
@@ -643,7 +643,7 @@ mod tests {
 
     #[test]
     fn the_cursor_starts_only_within_range() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let spec: warlock_core::character::CharacterSpec =
             "human,female,wizard".parse().expect("a wizard");
         let mut w = World::start_run(content.clone(), "arena", Some(7), Some(&spec), None, true)
@@ -721,7 +721,7 @@ mod tests {
 
     #[test]
     fn the_line_of_fire_ends_at_what_is_solid_and_marks_range() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let w = World::new(content, "showcase", None).expect("hub");
         let view = w.perception();
         let me = view.viewer();
@@ -756,7 +756,7 @@ mod tests {
     #[test]
     fn a_scroll_is_aimed_as_far_as_its_spell_reaches_and_close_bursts_ask() {
         // The trap hall's scrolls picked up: b fireball (range 10), c lightning (12 cells).
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut w = World::new(content, "traps", None).expect("trap hall");
         // The lantern put down first, so the scrolls keep their letters.
         w.apply(&Action::Drop(warlock_core::Positions::of([0])));
@@ -811,7 +811,7 @@ mod tests {
 
     #[test]
     fn a_spell_aimed_at_a_corpse_says_when_there_is_none() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let spell = |id: &str| content.spell_id(id).expect("a spell");
         let w = caster(content.clone(), "witch");
         let view = w.perception();
@@ -834,7 +834,7 @@ mod tests {
 
     #[test]
     fn a_spell_is_aimed_by_its_shape_at_the_players_own_reach() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let spell = |id: &str| content.spell_id(id).expect("a spell");
         let w = caster(content.clone(), "druid");
         let view = w.perception();
@@ -862,7 +862,7 @@ mod tests {
         assert_eq!(cells.len(), 3, "{cells:?}");
         assert_eq!(line.catches_reader(&view), None);
         // The same spell as a cone: the fan of cells it reaches.
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert(
             "data/spells/arcane_bolt.toml",
             "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndescription = \"x\"\n\
@@ -930,7 +930,7 @@ mod tests {
         let text = throw.prompt("a dagger", "t");
         assert!(text.starts_with("Throw a dagger:"), "{text}");
         assert!(text.contains("Enter or t throws"), "{text}");
-        let content = Content::builtin().expect("content");
+        let content = warlock_assets::content().expect("content");
         assert_eq!(
             throw.action(&content),
             Some(Action::Throw {
@@ -944,7 +944,7 @@ mod tests {
     #[test]
     fn set_on_aims_past_the_allies_at_a_foe() {
         // Two wolves beside the player in the arena, the war band in sight.
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut w = World::new(content, "arena", None).expect("arena");
         let walk = "move:E*6 move:NE*3 ally:brimwolf:2 wait";
         for action in warlock_core::action::parse_actions(walk).expect("actions") {

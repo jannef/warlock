@@ -6,6 +6,7 @@
 use super::*;
 use crate::action::parse_actions;
 use crate::content::{ActionKind, ContentFiles, Reading, SpellPurpose, TalentEffect};
+use crate::talent::MagicEffect;
 
 /// The pack: a, two scrolls of magic missile; b, one of haste; c, one of web; d, one of sleep;
 /// e, one of fireball.
@@ -226,7 +227,7 @@ fn every_class_has_mana_and_its_guaranteed_spells() {
         for (level, talent) in &class.abilities {
             let def = book.get(book.id(talent).expect("a talent"));
             for effect in &def.effects {
-                let TalentEffect::Spell { spell } = effect else {
+                let TalentEffect::Magic(MagicEffect::Spell { spell }) = effect else {
                     continue;
                 };
                 let s = content.spell(content.spell_id(spell).expect("a spell"));

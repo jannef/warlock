@@ -697,7 +697,6 @@ mod tests {
     use std::collections::BTreeSet;
     use std::sync::Arc;
     use warlock_core::World;
-    use warlock_core::content::Content;
 
     #[test]
     fn shader_constants_match() {
@@ -854,7 +853,7 @@ mod tests {
     }
 
     fn showcase(actions: &[warlock_core::Action]) -> World {
-        let content = Arc::new(Content::builtin().expect("builtin content"));
+        let content = Arc::new(warlock_assets::content().expect("builtin content"));
         let mut world = World::new(content, "showcase", None).expect("world");
         for action in actions {
             world.apply(action);
@@ -1127,7 +1126,7 @@ mod tests {
     // The per-cell mask the spell circles' shader reads (#786): visible, opaque, occupied.
     #[test]
     fn cells_are_flagged_visible_opaque_and_occupied() {
-        let content = Arc::new(Content::builtin().expect("builtin content"));
+        let content = Arc::new(warlock_assets::content().expect("builtin content"));
         let world = World::new(content, "circles", None).expect("world");
         let view = world.perception();
         let light = composite_level(&view, &Shadows::default(), None);

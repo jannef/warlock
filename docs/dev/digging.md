@@ -51,7 +51,7 @@ for a statue (`TerrainDef::statue`), or to one untrained in the file's `skill` (
 then). Draws, all `state.rng`, in this order: the band's `chance` (`MiningRules::band`: the
 hardest band not harder than the wall's `hardness`), the check (`combat::roll_natural`: stat
 modifier + `skill_effect_of(Mining, Effect::Craft)` (Mining's new `craft` curve, +8 at 100, +12 at
-200) + `TalentMods::check(stat)` against the band's `difficulty`; natural 2 fails, 24 makes), the
+200) + `VigourMods::check(stat)` against the band's `difficulty`; natural 2 fails, 24 makes), the
 row (`MiningRules::at(Content::floor_danger(level, player level), allow-list)`, `pick_weighted`;
 a row's weight is `rarity + deeper × (danger − its danger)`, 0 below its danger), and for the gem
 row `gem::uncut` (gem by rarity, size by the item level; the roughest cut). Count for ore and

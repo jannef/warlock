@@ -237,7 +237,7 @@ fn slight_and_rocs_strength_move_the_carrying_limit() {
     let slight = limit(&born_under("salamander", "fire", 5));
     let roc = limit(&born_under("roc", "fire", 5));
     assert!(slight < base && base < roc, "{slight} < {base} < {roc}");
-    assert_eq!(mods(&born_under("roc", "fire", 5)).door_kick, 4);
+    assert_eq!(mods(&born_under("roc", "fire", 5)).delving.door_kick, 4);
 }
 
 #[test]
@@ -273,7 +273,7 @@ fn strong_swimmers_wade_as_on_dry_land() {
     assert_eq!(hydra.step_price(id, marsh, false), dry);
     assert!(super::stars::wading(&BUILTIN, marsh));
     assert!(!super::stars::wading(&BUILTIN, floor));
-    assert!(mods(&hydra).swimmer);
+    assert!(mods(&hydra).movement.swimmer);
 }
 
 #[test]
@@ -293,7 +293,7 @@ fn pure_blood_spares_the_scores_from_poison() {
         player(&unicorn).raised_stats(&BUILTIN).scores(),
         "but not the pure of blood"
     );
-    assert_eq!(mods(&unicorn).disease_checks, 4);
+    assert_eq!(mods(&unicorn).vigour.disease_checks, 4);
 }
 
 #[test]
@@ -306,7 +306,7 @@ fn heedless_and_always_a_way_move_every_search_check() {
         assert_eq!(roc.search_modifier(look, Hidden::Door(0)), base - 4);
         assert_eq!(water.search_modifier(look, Hidden::Door(0)), base + 3);
     }
-    assert_eq!(mods(&water).search_reach, 1);
+    assert_eq!(mods(&water).delving.search_reach, 1);
 }
 
 #[test]
@@ -332,17 +332,17 @@ fn supple_dodges_and_stone_hide_soaks() {
     );
     let soak = |w: &World| player(w).protection(&BUILTIN, None).against(None);
     assert_eq!(soak(&earth), soak(&plain) + 1);
-    assert_eq!(mods(&wood).burden_dex, 1);
-    assert_eq!(mods(&wood).hunger_percent, -15);
-    assert_eq!(mods(&wood).rot_harm_percent, -50);
+    assert_eq!(mods(&wood).movement.burden_dex, 1);
+    assert_eq!(mods(&wood).hunger.hunger_percent, -15);
+    assert_eq!(mods(&wood).hunger.rot_harm_percent, -50);
 }
 
 #[test]
 fn stonewise_notices_on_stone_and_digs_faster() {
     let earth = born_under("hydra", "earth", 5);
     let m = mods(&earth);
-    assert!(m.stone_sense);
-    assert_eq!(m.dig_percent, 25);
+    assert!(m.delving.stone_sense);
+    assert_eq!(m.delving.dig_percent, 25);
     // On stone it notices in passing, as a dwarf does; the human it is would not.
     let plain = born_under("hydra", "fire", 5);
     let level = earth.state.current();
@@ -360,7 +360,7 @@ fn keen_edge_threatens_lower_and_riddlers_mind_learns_more() {
     let metal = born_under("hydra", "metal", 5);
     let threat = |w: &World| player(w).melee(&BUILTIN).threat;
     assert_eq!(threat(&metal), threat(&plain) - 1);
-    assert_eq!(mods(&born_under("sphinx", "fire", 5)).xp_percent, 10);
+    assert_eq!(mods(&born_under("sphinx", "fire", 5)).growth.xp_percent, 10);
 }
 
 #[test]

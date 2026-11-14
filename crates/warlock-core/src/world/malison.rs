@@ -27,7 +27,7 @@ impl World {
         if me.talents.is_empty() {
             return;
         }
-        let Some(per_levels) = me.talent_mods(&self.content).hex_tithe else {
+        let Some(per_levels) = me.talent_mods(&self.content).magic.hex_tithe else {
             return;
         };
         let hexes = self.content.hex_statuses();

@@ -652,13 +652,13 @@ pub fn generate() -> Result<String, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use warlock_core::content::{Content, ContentFiles};
+    use warlock_core::content::Content;
 
     #[test]
     fn generation_is_deterministic_and_loads() {
         let a = generate().expect("generates");
         assert_eq!(a, generate().expect("generates"));
-        let mut files = ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert("campaigns/showcase/levels/vast.toml", &a);
         let content = Content::load(&files).expect("vast level loads");
         let level = content.level("vast").expect("vast level exists");

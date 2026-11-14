@@ -281,11 +281,14 @@ fn a_rod_of_terror_frightens_and_a_rod_of_teleport_other_sends_away() {
 #[test]
 fn channeler_cuts_a_rods_cost_before_frugal_caster() {
     let channeler = TalentMods {
-        rod_cost_percent: -25,
+        magic: crate::talent::MagicMods {
+            rod_cost_percent: -25,
+            ..Default::default()
+        },
         ..TalentMods::default()
     };
-    assert_eq!(channeler.rod_cost(12), 9);
-    assert_eq!(channeler.rod_cost(1), 1, "never below 1");
+    assert_eq!(channeler.magic.rod_cost(12), 9);
+    assert_eq!(channeler.magic.rod_cost(1), 1, "never below 1");
     let mut w = world();
     let content = w.content.clone();
     let rod = (content.object(w.state.player().inventory[2].object).rod).expect("a rod");

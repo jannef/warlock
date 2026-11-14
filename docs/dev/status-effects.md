@@ -121,7 +121,7 @@ bettering part by part; a potion's Owl-eyed, #567), and `resist` (`Vec<(DamageTy
 `penalty` takes positive numbers too (a raise), and `per_degree = true` counts it once a degree
 (`StatusDef::penalty_times`, read in `Effects::penalty_for`; a potion's boost; its value times
 `max` stays in −10 to 10). A talent's `status_lasts` lengthens a status's easing per degree
-after `status_eases` shortens it (`TalentMods::eases_every`), so a saved `wear` may exceed the
+after `status_eases` shortens it (`VigourMods::eases_every`), so a saved `wear` may exceed the
 status's own `eases`: `Effects::is_valid_for` takes the sufferer's talents and allows the
 slower pace. Each field
 has one reader: `Effects::sharpen` in `Actor::stanced` (every attack profile, after the stance),

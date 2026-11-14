@@ -167,11 +167,10 @@ mod tests {
     use std::sync::Arc;
     use warlock_core::World;
     use warlock_core::action::parse_actions;
-    use warlock_core::content::Content;
 
     /// The showcase beside the old hermit, with the rats taken up and the apples' quest done.
     fn with_quests() -> World {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut world = World::new(content, "showcase", None).expect("run");
         let walk = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:SE*3 \
                     ask:SE:quest-rats";

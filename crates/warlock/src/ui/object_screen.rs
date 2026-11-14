@@ -966,7 +966,7 @@ mod tests {
 
     /// The showcase, standing on the start room's pile (a jerkin, a dagger, two candles).
     fn on_the_pile() -> World {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut world = World::new(content, "showcase", None).expect("world");
         // The lantern put down first, so what is picked up is lettered from a.
         world.apply(&Action::Drop(Positions::of([0])));
@@ -994,7 +994,7 @@ mod tests {
     /// A larder: food underfoot (two rations on top of a dagger) and an apple and a dagger in
     /// the pack.
     fn in_the_larder() -> World {
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert(
             "levels/larder.toml",
             "name = \"Larder\"\nmap = '''\n#####\n#@..#\n#####\n'''\n[legend]\n\
@@ -1070,7 +1070,7 @@ mod tests {
     /// The trap hall's scrolls and unknown dagger picked up: a dagger (magic, unidentified), b
     /// fireball, c lightning, d frost, e identify (the scrolls all unknown, under labels).
     fn with_scrolls() -> World {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut world = World::new(content, "traps", None).expect("world");
         world.apply(&Action::Drop(Positions::of([0])));
         world.apply(&Action::Move(Dir::E));
@@ -1080,7 +1080,7 @@ mod tests {
 
     #[test]
     fn a_scroll_of_a_spell_on_oneself_is_read_at_once_and_an_aimed_one_aimed() {
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert(
             "levels/hall.toml",
             "name = \"Hall\"\nmap = '''\n#####\n#.@.#\n#####\n'''\n[legend]\n\
@@ -1511,7 +1511,7 @@ mod tests {
 
     /// Standing on a heap of 40 stacks: 20 daggers, 12 leather caps, and 8 wool cloaks.
     fn on_the_heap() -> World {
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert(
             "levels/heap.toml",
             "name = \"Heap\"\nmap = '''\n#####\n#@..#\n#####\n'''\n[legend]\n\
@@ -1634,7 +1634,7 @@ mod tests {
     fn a_short_console_drops_the_gaps_before_it_pages() {
         // The storeroom's nine things, each of its own class: 18 rows with their headers. At 24
         // rows the margin and the gaps give way so they fit on one page.
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut world = World::new(content, "showcase", None).expect("world");
         let walk = "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
                     pickup move:S*2 pickup move:NW move:W*2 move:N pickup move:SW pickup";

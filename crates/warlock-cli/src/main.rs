@@ -15,7 +15,7 @@ use std::process::ExitCode;
 use std::sync::Arc;
 use warlock_core::action::parse_actions;
 use warlock_core::character::CharacterSpec;
-use warlock_core::content::{Content, ContentFiles};
+use warlock_core::content::Content;
 use warlock_core::dump;
 use warlock_core::mapgen;
 use warlock_core::replay::Replay;
@@ -171,9 +171,9 @@ fn run(cli: Cli) -> Result<(), String> {
 
 fn load_content(dir: Option<&Path>) -> Result<Arc<Content>, String> {
     let files = match dir {
-        Some(dir) => ContentFiles::from_dir(dir)
+        Some(dir) => warlock_assets::from_dir(dir)
             .map_err(|e| format!("cannot read content from {}: {e}", dir.display()))?,
-        None => ContentFiles::builtin(),
+        None => warlock_assets::files(),
     };
     Content::load(&files)
         .map(Arc::new)

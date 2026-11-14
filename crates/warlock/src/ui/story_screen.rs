@@ -183,7 +183,7 @@ mod tests {
     use warlock_core::content::Content;
 
     static CONTENT: LazyLock<Arc<Content>> =
-        LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+        LazyLock::new(|| Arc::new(warlock_assets::content().expect("builtin content")));
 
     /// A chosen character's run with its kit, so with a story.
     fn kitted() -> World {

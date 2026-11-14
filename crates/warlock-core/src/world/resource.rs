@@ -40,7 +40,7 @@ impl Actor {
     /// never grants the pool: one who does not hold it gets nothing of this.
     pub fn resource_max(&self, content: &Content, resource: ResourceId, level: u8) -> u16 {
         let mods = self.talent_mods(content);
-        let talents: i32 = (mods.resource_max.iter())
+        let talents: i32 = (mods.resource.resource_max.iter())
             .filter(|(r, _)| *r == resource)
             .map(|(_, more)| i32::from(*more))
             .sum();
@@ -71,7 +71,7 @@ impl Actor {
         } else {
             def.start
         };
-        let more: u16 = (self.talent_mods(content).resource_start.iter())
+        let more: u16 = (self.talent_mods(content).resource.resource_start.iter())
             .filter(|(r, _)| *r == resource)
             .map(|(_, more)| *more)
             .sum();
@@ -114,10 +114,14 @@ impl World {
         if actor.talents.is_empty() && worn == 0 {
             return 100;
         }
-        let talents: i32 = (actor.talent_mods(&self.content).resource_rate.iter())
-            .filter(|(r, _)| *r == resource)
-            .map(|(_, more)| *more)
-            .sum();
+        let talents: i32 = (actor
+            .talent_mods(&self.content)
+            .resource
+            .resource_rate
+            .iter())
+        .filter(|(r, _)| *r == resource)
+        .map(|(_, more)| *more)
+        .sum();
         u32::try_from(100 + talents + worn).unwrap_or(0)
     }
 
@@ -201,6 +205,7 @@ impl World {
         let talents = actor
             .talent_mods(&self.content)
             .into_owned()
+            .resource
             .resource_builds;
         let gains: Vec<(ResourceId, u16, u16)> = (actor.resources.iter())
             .filter(|pool| marked || !self.content.resource(pool.resource).marked)

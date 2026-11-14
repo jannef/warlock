@@ -11,6 +11,7 @@ use warlock_core::content::{
 use warlock_core::dice::Dice;
 use warlock_core::hunger::Hunger;
 use warlock_core::stats;
+use warlock_core::talent::{FaithEffect, MartialEffect, SignEffect, SongEffect};
 use warlock_core::time::Duration;
 
 /// A pace of healing in percent of normal, in words: `twice as fast`, `half as fast`, `not at
@@ -240,12 +241,14 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
             .map(|(_, t)| t)
             .filter(|t| {
                 t.effects.iter().any(|e| match e {
-                    warlock_core::content::TalentEffect::StunningStrike { status: s, .. }
-                    | warlock_core::content::TalentEffect::QuiveringPalm { status: s, .. } => {
-                        content
-                            .status_id(s)
-                            .is_some_and(|s| usize::from(s.0) == status)
-                    }
+                    warlock_core::content::TalentEffect::Martial(
+                        MartialEffect::StunningStrike { status: s, .. },
+                    )
+                    | warlock_core::content::TalentEffect::Martial(
+                        MartialEffect::QuiveringPalm { status: s, .. },
+                    ) => content
+                        .status_id(s)
+                        .is_some_and(|s| usize::from(s.0) == status),
                     _ => false,
                 })
             })
@@ -254,9 +257,11 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
     // The modes of smiting (the paladin's): a wounding smite, with a check failed for fear.
     for (_, t) in content.talents().iter() {
         for e in &t.effects {
-            if let warlock_core::content::TalentEffect::SmiteMode {
-                status: s, check, ..
-            } = e
+            if let warlock_core::content::TalentEffect::Faith(FaithEffect::SmiteMode {
+                status: s,
+                check,
+                ..
+            }) = e
                 && content
                     .status_id(s)
                     .is_some_and(|s| usize::from(s.0) == status)
@@ -276,13 +281,13 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
     // The songs sung over their hearers (the bard's Lullaby): a check failed.
     for (_, t) in content.talents().iter() {
         for e in &t.effects {
-            if let warlock_core::content::TalentEffect::Song {
+            if let warlock_core::content::TalentEffect::Song(SongEffect::Song {
                 on: warlock_core::content::SongOn::Hearers,
                 status: s,
                 check: Some(stat),
                 difficulty,
                 ..
-            } = e
+            }) = e
                 && content
                     .status_id(s)
                     .is_some_and(|s| usize::from(s.0) == status)
@@ -744,10 +749,14 @@ fn status_cures(content: &Content, status: usize, def: &StatusDef) -> Vec<String
     for (_, talent) in content.talents().iter() {
         for effect in &talent.effects {
             match effect {
-                TalentEffect::Stillness { name, statuses } if statuses.contains(&def.id) => {
+                TalentEffect::Martial(MartialEffect::Stillness { name, statuses })
+                    if statuses.contains(&def.id) =>
+                {
                     out.push(link(Term::Ability, name, name));
                 }
-                TalentEffect::HornsGrace { cures, .. } if cures.contains(&def.id) => {
+                TalentEffect::Sign(SignEffect::HornsGrace { cures, .. })
+                    if cures.contains(&def.id) =>
+                {
                     out.push(link(Term::Ability, &talent.id, &talent.name));
                 }
                 _ => {}

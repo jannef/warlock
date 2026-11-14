@@ -1,14 +1,15 @@
 //! Embeds the TOML content under `assets/{campaigns,data,vaults}` (subdirectories included:
-//! `data/creatures/kobold.toml`, `campaigns/showcase/levels/hub.toml`) into the binary, so every
-//! build (including the web build) is self-contained. The walk is `src/content/walk.rs`, the one
-//! `ContentFiles::from_dir` takes too, so the list is in sorted path order, the order it reads a
-//! content directory in.
+//! `data/creatures/kobold.toml`, `campaigns/showcase/levels/hub.toml`), so every binary (the web
+//! build too) is self-contained. It lives in this small crate, not warlock-core, so a data edit
+//! rebuilds this crate and the binaries above it, never the core (#1587). The walk is
+//! warlock-core's `src/content/walk.rs`, the one `ContentFiles::from_dir` takes too, so the list
+//! is in sorted path order, the order it reads a content directory in.
 //!
 //! The test world, `campaigns/showcase/`, is embedded only with the `showcase` feature (on by
 //! default, off in release builds and the web build): without it a build embeds no file of
 //! it (docs/dev/campaign.md, "The test world in release builds").
 
-#[path = "src/content/walk.rs"]
+#[path = "../warlock-core/src/content/walk.rs"]
 #[allow(dead_code)]
 mod walk;
 
@@ -26,7 +27,7 @@ fn main() {
     let mut watch = |dir: &std::path::Path| println!("cargo:rerun-if-changed={}", dir.display());
     let files = walk::walk(&assets, showcase, &mut watch).expect("read assets/");
 
-    let mut out = String::from("pub(super) const FILES: &[(&str, &str)] = &[\n");
+    let mut out = String::from("pub(crate) const FILES: &[(&str, &str)] = &[\n");
     for (rel, path) in &files {
         let abs = path.canonicalize().unwrap_or(path.clone());
         println!("cargo:rerun-if-changed={}", abs.display());

@@ -49,12 +49,12 @@
 //!   plain blow. Its Sneak attack skill is set by level (`sneak_value`), as it rises by use and
 //!   `levelup:auto` spends the rolls elsewhere; the dice are `World::sneak_dice` (the skill and
 //!   the talents), the foe flat-footed (`World::flat_footed`), Master thief's threat
-//!   (`TalentMods::ambush_threat`), and no dice on a type without vitals (`Content::has_vitals`).
+//!   (`StealthMods::ambush_threat`), and no dice on a type without vitals (`Content::has_vitals`).
 //!
 //! - **Exploits** (#1464, `exploits.rs`): the thief's Exploit of 1, 3, and 5 openings on an
 //!   aware monster of their level with vitals, beside the plain and unaware blows, with the
 //!   ladder as `World::exploit_profile` and `World::land_exploit` make it
-//!   (`TalentMods::exploit`), the thrown exploit of 3 with the first throwing weapon carried,
+//!   (`StealthMods::exploit`), the thrown exploit of 3 with the first throwing weapon carried,
 //!   and the openings a fight against one foe yields.
 //!
 //! - **Rage** (#842): the berserker, calm and raging (`rage_of`: the pool granted, Raging and
@@ -540,7 +540,10 @@ fn side_of(w: &World, id: ActorId) -> Side {
         missile: w.target_against(id, true).defence,
         blows,
         hp: a.max_hp(content),
-        wrath: mods.holy_wrath.map(|dice| (dice, mods.avatar.is_some())),
+        wrath: mods
+            .faith
+            .holy_wrath
+            .map(|dice| (dice, mods.faith.avatar.is_some())),
     }
 }
 
@@ -666,7 +669,7 @@ fn casts(w: &World) -> Vec<Cast> {
     let mut out = Vec::new();
     let table = content.weapon_skills();
     let rules = content.spell_rules().expect("spell rules");
-    let bite = (me.talent_mods(content).status_damage.iter())
+    let bite = (me.talent_mods(content).offence.status_damage.iter())
         .filter(|(status, _)| content.hex_statuses().contains(status))
         .map(|(_, v)| *v)
         .max()
@@ -804,7 +807,9 @@ struct Ki {
 /// `World::flurry` makes it.
 fn ki_of(w: &World, id: ActorId) -> Option<Ki> {
     let content = w.content.clone();
-    let cost = (w.state.actors[&id].talent_mods(&content)).flurry_cost?;
+    let cost = (w.state.actors[&id].talent_mods(&content))
+        .martial
+        .flurry_cost?;
     let ki = cost.resource;
     let mut w = w.clone();
     if w.state.actors[&id].weapon_item(&content).is_some() {
@@ -858,7 +863,7 @@ fn zeal_of(w: &World, id: ActorId) -> Option<Zeal> {
     let content = w.content.clone();
     let me = &w.state.actors[&id];
     let mods = me.talent_mods(&content);
-    let smite = mods.smite?;
+    let smite = mods.faith.smite?;
     let cost = content.class_active(ClassActive::Smite)?.resource?;
     let zeal = cost.resource;
     let def = content.resource(zeal);
@@ -870,6 +875,7 @@ fn zeal_of(w: &World, id: ActorId) -> Option<Zeal> {
         ..blow.clone()
     };
     let banishing = mods
+        .faith
         .smite_mode(ClassActive::BanishingSmite)
         .map(|_| Profile {
             extra: Some(dice.and(dice)),
@@ -884,7 +890,7 @@ fn zeal_of(w: &World, id: ActorId) -> Option<Zeal> {
         _ => f64::INFINITY,
     };
     let built = |mods: &crate::talent::TalentMods, on: Event| {
-        let more: u16 = (mods.resource_builds.iter())
+        let more: u16 = (mods.resource.resource_builds.iter())
             .filter(|(r, b, _)| *r == zeal && *b == on)
             .map(|(_, _, n)| *n)
             .sum();
@@ -930,14 +936,14 @@ struct Rage {
 fn rage_of(w: &World, id: ActorId) -> Option<Rage> {
     use crate::content::Build as Event;
     let content = w.content.clone();
-    let rage = (w.state.actors[&id].talent_mods(&content)).rage?;
+    let rage = (w.state.actors[&id].talent_mods(&content)).martial.rage?;
     let mut w = w.clone();
     act(&mut w, &format!("resource:{}", content.resource(rage).id));
     let me = &w.state.actors[&id];
     let mods = me.talent_mods(&content);
     let def = content.resource(rage);
     let built = |on: Event| {
-        let more: u16 = (mods.resource_builds.iter())
+        let more: u16 = (mods.resource.resource_builds.iter())
             .filter(|(r, b, _)| *r == rage && *b == on)
             .map(|(_, _, n)| *n)
             .sum();
@@ -1115,11 +1121,11 @@ fn career(
                 paced: paced.clone(),
                 fought_a_day: f64::from(log.fought_casts) / days,
                 sneak: w2.sneak_dice(player),
-                ambush_threat: mods.ambush_threat,
-                exploit: mods.exploit,
+                ambush_threat: mods.stealth.ambush_threat,
+                exploit: mods.stealth.exploit,
                 feint: exploits::feint_difficulty(&w2),
                 thrown: (0..me.inventory.len())
-                    .filter(|_| mods.thrown_exploit)
+                    .filter(|_| mods.stealth.thrown_exploit)
                     .filter(|&i| content.object(me.inventory[i].object).is_thrown())
                     .find_map(|i| me.thrown(i, content)),
                 rage: (gear == Gear::Plain)

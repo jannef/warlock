@@ -8,14 +8,16 @@
 
 use super::level::OneOrMany;
 use super::{
-    Build, CombatStance, Content, ContentError, ItemKind, ResourceId, Role, StatusId,
-    WeaponSkillId, duplicate_id,
+    Content, ContentError, ItemKind, ResourceId, Role, StatusId, WeaponSkillId, duplicate_id,
 };
 use crate::alignment::Requirement;
-use crate::dice::Dice;
 use crate::skills::SkillId;
 use crate::stats::{PerStat, Stat};
-use crate::talent::BeastEffect;
+use crate::talent::{
+    AllyEffect, BeastEffect, CraftEffect, DefenceEffect, DelvingEffect, FaithEffect, FortuneEffect,
+    GrowthEffect, HungerEffect, MagicEffect, MartialEffect, MovementEffect, OffenceEffect,
+    ResourceEffect, SensesEffect, SignEffect, SongEffect, StealthEffect, VigourEffect,
+};
 use crate::text::article;
 use serde::{Deserialize, Deserializer};
 use std::collections::BTreeMap;
@@ -147,1053 +149,60 @@ impl Choice {
     }
 }
 
-/// What a talent does, one typed effect. Each is read by one rule, where the rule already reads
-/// what magic items do (spec §8 "Talents"); a new kind is a variant here, its field in
-/// [`crate::talent::TalentMods`], and its one read, or, of an area split out (#1495), a variant
-/// of that area's enum ([`BeastEffect`]), with its field and its sum in the area's module.
+/// What a talent does, one typed effect, of one area (#1495): each area's enum is in its own
+/// module under `talent/` with its sum ([`crate::talent::TalentMods`]'s field of the area) and
+/// its one read per kind. A new kind is a variant of its area's enum, its field and its arm in
+/// the area's sum, its wiki words in `xtask/src/wiki/talents/<area>.rs`, and its one read.
 ///
-/// The data is flat (`kind = "companion"` as `kind = "dodge"`): the deserializer hands the
-/// kinds of an area to its enum and the rest to the derived one (`remote = "Self"`, the
-/// derive's own function under the trait's).
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
-#[serde(
-    remote = "Self",
-    tag = "kind",
-    rename_all = "snake_case",
-    deny_unknown_fields
-)]
+/// The data is flat (`kind = "companion"` as `kind = "dodge"`): the deserializer hands each kind
+/// to the enum of its area (the areas' `KINDS`).
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TalentEffect {
     /// What the holder's companion, familiar, and beasts get ([`BeastEffect`],
     /// `talent/beast.rs`).
-    #[serde(skip)]
     Beast(BeastEffect),
-    /// Defence in the Dodge category (bonuses add up).
-    Dodge { value: i32 },
-    /// Natural armour: added to the actor's own, whatever the best item gives.
-    Natural { value: i32 },
-    /// Damage added to every melee blow (the main hand's and the off hand's).
-    MeleeDamage { value: i32 },
-    /// Damage added to every attack it makes while below a third of its hit points (Ferocity).
-    Ferocity { value: i32 },
-    /// Every attack threatens a critical this many natural points lower.
-    Threat { value: i32 },
-    /// A natural 2 on an attack roll (a fumble) is rolled again, once.
-    RerollFumble,
-    /// What the holder's allies get (spec §8 "Allies": Beast-bond): to-hit on their attacks
-    /// and Protection, read through their master (`world/ally.rs`); and what the holder's summon
-    /// spells do (`world/summon_spell.rs`): `count` more come every call, a call lasts
-    /// `duration_percent` longer, `lasting` calls stay until slain, `most` more of each call's
-    /// are kept at once.
-    AllyMod {
-        #[serde(default)]
-        to_hit: i32,
-        #[serde(default)]
-        protection: i32,
-        #[serde(default)]
-        count: i32,
-        #[serde(default)]
-        duration_percent: i32,
-        #[serde(default)]
-        lasting: bool,
-        #[serde(default)]
-        most: i32,
-    },
-    /// The summon draw's bias (the owner's Q9 of #828): a creature of a summon spell's pool that
-    /// carries `tag` is `weight` times as likely to come (0: it never comes while another may).
-    SummonBias { tag: String, weight: u32 },
-    /// Each melee blow at the creature its last blow was at, in a row (its own turn or the one
-    /// before), is +1 to hit more, to `max` (Relentless; `World::streak`); with `damage_every`
-    /// (Relentless fury), every that many blows before it in the streak add +1 damage too.
-    Streak {
-        max: u8,
-        #[serde(default)]
-        damage_every: u8,
-    },
-    /// Its off hand's blows do this much more damage (Tentacles).
-    OffHandDamage { value: i32 },
-    /// Its attacks with its best weapon skill (the highest rank it holds, ties all counting)
-    /// threaten a critical this many natural points lower (Tempered).
-    BestSkillThreat { value: i32 },
-    /// Maximum hit points: 1 per `per_levels` character levels, at least `at_least`, handed out
-    /// into the actor's base hit points when the talent is taken and as each later level comes
-    /// (as levels' own hit points are), so a talent taken early keeps growing.
-    MaxHpPerLevels { per_levels: u8, at_least: i32 },
-    /// Maximum hit points, this percent more (negative: fewer; never below 1; Frail).
-    MaxHpPercent { value: i32 },
-    /// A stat's score and its potential, this much higher: handed out into the actor's stats
-    /// when the talent is taken or given (a class ability's gift), never read again.
-    Stat { stat: Stat, value: i32 },
-    /// Hit points come back this percent faster (negative: slower).
-    HealingPercent { value: i32 },
-    /// Mana comes back this percent faster (negative: slower; Tidal), on
-    /// [`crate::world::World::mana_rate`]'s pace.
-    ManaRegenPercent { value: i32 },
-    /// Maximum mana: 1 per `per_levels` character levels, at least `at_least`, handed out into
-    /// the actor's base mana when the talent is taken and as each later level comes, as
-    /// `max_hp_per_levels` does hit points (Deep well).
-    MaxManaPerLevels { per_levels: u8, at_least: i32 },
-    /// Resting brings mana back this percent faster on top of resting's own pace (Meditation).
-    ManaRestingPercent { value: i32 },
-    /// What abilities cost in mana, this percent more (negative: less; never below 1; Frugal
-    /// caster), in [`crate::world::World::spend_mana`].
-    ManaCostPercent { value: i32 },
-    /// What rods cost in mana, this percent more (negative: less; never below 1; Channeler; spec
-    /// §8 "Magic items": "Rods"), before [`TalentEffect::ManaCostPercent`].
-    RodCostPercent { value: i32 },
-    /// The active Blood magic: give `hp` hit points (never the last) for `mana` mana.
-    BloodMagic { hp: i32, mana: i32 },
-    /// Footsteps this percent louder (negative: quieter).
-    FootstepsPercent { value: i32 },
-    /// The doors the actor opens and closes make no noise.
-    SilentDoors,
-    /// The actor hears sounds this much fainter (its hearing threshold, lower).
-    Hearing { value: i32 },
-    /// It places the footsteps it hears exactly, at the cell they came from, never roughly
-    /// (Watchful).
-    ExactFootsteps,
-    /// Its eyes need this percent more light to see by (negative: less; Night eyes), on the
-    /// vision profile's threshold ([`crate::world::WorldState::eyes`]).
-    ThresholdPercent { value: i32 },
-    /// Its darkvision reaches this many cells farther (from none: this far).
-    Darkvision { value: i32 },
-    /// It sees creatures suffering `status` (an id in `data/status/`) in its line of sight
-    /// within `radius` cells however dark it is (Blood scent).
-    Scent { status: String, radius: i32 },
-    /// Its overworld sight at night reaches this many cells farther.
-    NightSight { value: i32 },
-    /// Its overworld sight by day reaches this many cells farther (Eyes of the heights).
-    DaySight { value: i32 },
-    /// The lit light it has ready in the Tool slot (a lantern) burns as the light preset `light`
-    /// (an id in `data/lights.toml`; Lamplighter), not while hooded.
-    LanternLight { light: String },
-    /// It sheds light `light` (an id in `data/lights.toml`) wherever it is, always (Inner
-    /// light): it sees by it, and so does everything else.
-    InnerLight { light: String },
-    /// Its blows and shots at a creature that has not seen it do `dice` more damage, after
-    /// Protection (Ambusher).
-    Ambush { dice: Dice },
-    /// This much added to its initiative check when it is caught unawares (Wary;
-    /// `World::startle`, `world/surprise.rs`).
-    InitiativeBonus { value: i32 },
-    /// This percent of the extra cost of the action it takes Surprised is spared (Cool head:
-    /// 100, none; `World::surprise_cost`).
-    SurpriseEase { value: i32 },
-    /// Those it catches unawares find their initiative check this much harder (the thief's
-    /// Sneak attack; `World::startle`'s craft).
-    SurpriseDifficulty { value: i32 },
-    /// Its shots, throws, and attack spells sneak-attack this many cells farther than the
-    /// rules' `missile_reach` (Long reach; `World::sneaks`).
-    SneakReach { value: i32 },
-    /// A sneak attack of its that kills leaves it a degree of `status` (Vanishing act:
-    /// Light-footed; read in `World::resolve` where a sneak attack's blow kills, `world/thief.rs`).
-    SneakKillStatus { status: String },
-    /// The perception snapshot tells which creatures in view have not noticed it, and they are
-    /// drawn with the unaware mark (Stalker's eye; `SeenActor::unaware`).
-    SeesUnaware,
-    /// A batch of arrows or bolts (Fletcher, the ranger's level 1; spec §8 "Fletching"): `check`
-    /// more on its check, `count_times` the count after the margin, `time_percent` of its time,
-    /// and plain at any Woodcraft.
-    Fletcher {
-        check: i32,
-        count_times: i32,
-        time_percent: u32,
-    },
-    /// An initiative check it makes against a hostile attacker beside it is answered with a
-    /// free blow at once (Hair trigger; `Cue::Startled`, `world/free_blow.rs`).
-    StartledBlow,
-    /// The carrying limit, this percent more.
-    CarryPercent { value: i32 },
-    /// Being Burdened costs it nothing, as a dwarf's burden (Porter).
-    IgnoreBurdened,
-    /// Coins it carries weigh nothing.
-    WeightlessCoins,
-    /// Journeys on the overworld take this percent more time (negative: quicker).
-    TravelPercent { value: i32 },
-    /// Wading (water, marsh) costs a plain step, and never gives a disease.
-    Swimmer,
-    /// A step onto any of `terrains` costs what a step onto `like` does (ids in
-    /// `data/terrain/`; Swimmer, Trailblazer).
-    TerrainAs { terrains: Vec<String>, like: String },
-    /// A plunge through ice into the water never hurts it (Swimmer).
-    PlungeProof,
-    /// Ice holds it as if it carried nothing (Winter-born).
-    LightOnIce,
-    /// Climbing out of the water onto ice costs this percent more (negative: less).
-    ClimbPercent { value: i32 },
-    /// Wading never gives it a disease (Nature's ward).
-    WadingProof,
-    /// Each level reached adds to the family's stipend, which its servant hands over (Stipend:
-    /// `data/stipend.toml`, `world/stipend.rs`).
-    Stipend,
-    /// The stipend's gold is `gold` percent more, its loot roll made by `chance` percent more
-    /// (percentage points), and its magic and rare rarities `magic` percent more likely (Landed
-    /// noble).
-    StipendMore { gold: i32, chance: i32, magic: i32 },
-    /// A business partner in town invests the gold put with them (Invest: `data/invest.toml`,
-    /// `world/invest.rs`).
-    Invest,
-    /// A patron in town commissions graded work from its trades and advances the stock (Patron:
-    /// `data/patron.toml`, `world/patron.rs`).
-    Patron,
-    /// Hunger burns this percent faster (negative: slower).
-    HungerPercent { value: i32 },
-    /// The sickness rotten food gives, this percent more (negative: less), rounded down.
-    RotHarmPercent { value: i32 },
-    /// It smells how fresh food is: the eat list says fresh, turning, or rotten (Hound's nose).
-    SmellRot,
-    /// Exerting oneself (a blow, a shot, a throw) burns no extra nutrition.
-    NoExertion,
-    /// A meal never leaves it Bloated: what does not fit below Bloated is lost (Gourmand).
-    NoBloating,
-    /// Hunger never weakens it: Weak, Fainting, and Starving take nothing off its Strength and
-    /// Dexterity (`Actor::penalty`), and it never faints (`World::faint`; Long fast). Starving
-    /// still costs hit points.
-    NoHungerWeakness,
-    /// A fresh corpse's stat training marks and chances to widen a potential, this percent more
-    /// (Gourmand).
-    CorpseStatsPercent { value: i32 },
-    /// Experience gained, this percent more.
-    XpPercent { value: i32 },
-    /// Skill rolls every level, this many more (Quick learner).
-    SkillRolls { value: i32 },
-    /// One more talent pick at character level `level` (1: at creation; Versatile).
-    ExtraPick { level: u8 },
-    /// Handed out once, as the talent is taken or given: every weapon skill and style of
-    /// `skills` (none named: every row of `weapon_skills.toml` but the
-    /// hidden styles, whatever the content holds) held below rank `to` rises to it (Travelled
-    /// hands; `WeaponSkills::raise_to`). `news` is said when a class table gives it.
-    WeaponRanks {
-        to: u8,
-        #[serde(default)]
-        skills: Vec<String>,
-        #[serde(default)]
-        news: Option<String>,
-    },
-    /// Handed out once, as the talent is taken or given: every skill of `skills/` the holder
-    /// is not trained in, but those `except` names, is trained at `dice`, rolled from the
-    /// `levels` stream, whatever skills the content holds (Jack of all trades;
-    /// `world/jack.rs`). `news` is said when a class table gives it.
-    TakeUpSkills {
-        dice: crate::dice::Dice,
-        #[serde(default)]
-        except: Vec<String>,
-        #[serde(default)]
-        news: Option<String>,
-    },
-    /// Loot it finds (what generated levels hold, what creatures drop) rolls magic and rare this
-    /// percent more often: their rarity weights (Treasure hunter).
-    LootMagicPercent { value: i32 },
-    /// Reading a scroll takes this percent more time (negative: less; Scroll savant).
-    ReadPercent { value: i32 },
-    /// Studying a spell (spec §8 "Spells"): `bonus` points off the check's difficulty, it
-    /// takes `percent` more time (negative: less; Quick study), and its overreach counts
-    /// `overreach_percent` more in the check (negative: less, rounded down; Overreach, the
-    /// spell scaling design §7.2). Each defaults to 0.
-    Study {
-        #[serde(default)]
-        bonus: i32,
-        #[serde(default)]
-        percent: i32,
-        #[serde(default)]
-        overreach_percent: i32,
-    },
-    /// A scroll it reads is not used up, by this chance in percent (one gameplay draw a read;
-    /// Scroll savant).
-    ScrollKept { chance: u8 },
-    /// A potion it drinks is not used up, by this chance in percent (one gameplay draw a drink;
-    /// Thrifty drinker).
-    PotionKept { chance: u8 },
-    /// Its own bursts never catch it (Scroll savant).
-    SparesSelf,
-    /// Added to its searching, not to noticing in passing (Keen searcher).
-    Searching { value: i32 },
-    /// The damage traps do it, this percent more (negative: less; Trap sense).
-    TrapDamagePercent { value: i32 },
-    /// The gold a quest gives, this percent more.
-    QuestGoldPercent { value: i32 },
-    /// Prices move this many percent more in its favour (spec §7 "Shops"), before the cap.
-    FavourPercent { value: i32 },
-    /// Temple services cost it half, and a cure also mends a point of each damaged stat
-    /// (Pious; `world/service.rs`).
-    Pilgrim,
-    /// Item descriptions show what each gem in a thing is worth.
-    GemWorth,
-    /// A magic item it has carried this many hours since it held the effect is identified.
-    IdentifyCarried { hours: u32 },
-    /// Loot it finds and creatures drop is a loose gem this percent more often (Hoard sense):
-    /// the gems' chance, never above certain.
-    GemFindPercent { value: i32 },
-    /// Handed out once, as it is taken (a talent only for character creation: Family wealth):
-    /// gold coins, `percent` of those the character carries more, at least `at_least` and at
-    /// most `at_most` (`world/heirloom.rs`).
-    StartingGold {
-        percent: u32,
-        at_least: u32,
-        at_most: u32,
-    },
-    /// Handed out once, as it is taken (Family wealth): `min` to `max` loose gems found at item
-    /// level `level`, drawn from the stream `character/family-wealth/<race>,<gender>,<class>`.
-    StartingGems { min: u8, max: u8, level: u8 },
-    /// Handed out once, as it is taken (Father's sword): the race's heirloom weapon (`weapons`,
-    /// by race id; `fallback` for a race without one), magic with `min` to `max` affixes rolled at
-    /// item level `level` and identified, from the stream
-    /// `character/fathers-sword/<race>,<gender>,<class>`, of `quality` if given; wielded in the
-    /// main hand when it is free, else carried.
-    Heirloom {
-        weapons: BTreeMap<String, String>,
-        fallback: String,
-        min: u8,
-        max: u8,
-        level: u8,
-        /// Its make (`quality = "masterwork"`), so its capacity holds its affixes
-        /// (docs/dev/enchanting.md); none: plain.
-        #[serde(default)]
-        quality: Option<crate::magic::Quality>,
-    },
-    /// Handed out once, as it is taken (a Crafts trade: Smith, Wright, ...; `world/trade.rs`):
-    /// `skill` trained at `dice` plus the holder's `trade_bonus`, rolled from the stream
-    /// `character/trade/<race>,<gender>,<class>/<skill>`, and the tools of the trade, kit lines
-    /// (`content/kit.rs`) made from the same stream and carried, worn, or wielded as they say.
-    /// The skill is then a trade of the holder's: a level-up roll on it throws the die one step
-    /// up, as a class's known-for skill does (`TalentMods::trades`, read in `skill_roll`).
-    Trade {
-        skill: String,
-        dice: Dice,
-        #[serde(default)]
-        tools: Vec<super::kit::KitLineSpec>,
-    },
-    /// Added to the dice of every trade it takes, as the trade is handed down (Time served).
-    TradeBonus { value: i32 },
-    /// Item descriptions read an item's make: what salvage would give of it, the improvements
-    /// left in it, how hard its stuff is to work (Eye for the make;
-    /// [`crate::magic::describe::make_lines`]).
-    EyeForMake,
-    /// Nothing is wasted in its hands (Waste not): salvage gives back `salvage` % of each made
-    /// material's grams, and a failed recipe `failed` % of its stock and object inputs, each
-    /// where it is more than everyone's (`data/salvage.toml`'s, `data/recipes.toml`'s `yield`;
-    /// `world/salvage.rs::salvage_percent`, `world/craft_make.rs::failed_percent`).
-    WasteNot { salvage: u8, failed: u32 },
-    /// A failed Temper or Whittle damages nothing: the item is as it was, the attempt counted
-    /// (Waste not; `world/temper.rs`).
-    TemperSafe,
-    /// Every craft it works takes `value` % of its time: recipes, Temper and Whittle, Cut and
-    /// Set, Salvage, and the craftsperson's actives (Quick hands; the least held;
-    /// `world/mastery.rs::craft_seconds`).
-    CraftTimePercent { value: u32 },
-    /// Added to a made check's margin as its grade or cut is read, never to whether it is made
-    /// (Master's hand; summed; `world/mastery.rs::graded_margin`).
-    GradeEase { value: i32 },
-    /// Its graded work bears its mark (Maker's mark): an item made with a `kind` is built marked
-    /// (`world/craft_make.rs::make_out`, the one read), and a marked item is worth
-    /// `worth_percent` % more ([`TalentBook::mark_percent`], `Worked::value`), the patron pays
-    /// more for it, and it holds one enchantment more (`magic/capacity.rs`).
-    MakersMark { worth_percent: u32 },
-    /// The actor notices hidden things in passing as if trained in Spot and Detect traps, with
-    /// this much added.
-    Notice { value: i32 },
-    /// The actor notices hidden things on stone in passing, as a dwarf does.
-    StoneSense,
-    /// Added to its checks to find what is hidden on stone, searching and in passing (Stone
-    /// sense).
-    StoneFind { value: i32 },
-    /// Added to every check to find hidden things, searching and in passing.
-    Search { value: i32 },
-    /// The creatures that come to a level the actor is on come this percent less often (the
-    /// time between attempts this percent longer; Quiet delver).
-    SpawnEveryPercent { value: i32 },
-    /// It tells a locked chest from an unlocked one at a glance (Chest-wise;
-    /// [`crate::perception::PerceptionView::chest_at`]), and a shut chest's trap in its sight
-    /// becomes known to it (`World::chest_wise_look`).
-    ChestWise,
-    /// A disguised mimic within this many cells is seen for what it is (Chest-wise;
-    /// [`crate::perception::Perception`]'s disguises).
-    SeesMimics { value: i32 },
-    /// A mimic's grip never holds it (Chest-wise; `World::afflict`).
-    Slick,
-    /// At a forgotten altar of the actor's own side the side's lean counts double, and an
-    /// opposed one leans as a neutral one (Pious; the prayer draw, `World::lean`).
-    Devout,
-    /// Where a special room quickens healing or mana, the quickening is this percent more
-    /// (Old delver; the room's pace in `World::healing_rate` and `World::mana_rate`).
-    RoomPacePercent { value: i32 },
-    /// A special room's (or a whole level's) `status` never takes it (Old delver: Ebbing;
-    /// `World::dwell`).
-    RoomStatusImmune { status: String },
-    /// A collapsed floor never gives way under it (Old delver; `World::collapse_step`).
-    CollapseProof,
-    /// A tempting hoard seals only after this many stacks more are lifted inside it (Old delver;
-    /// `World::lift_in_hoard`, `world/hoard.rs`).
-    HoardGrace { value: i32 },
-    /// What it kills never rises in a cursed room (Old delver; `World::curse_corpse`).
-    GraveWarden,
-    /// Searching reaches this many cells farther.
-    SearchReach { value: i32 },
-    /// A skill counts this much higher wherever its value is read (an untrained one from 0):
-    /// `skill`, or left out the chosen one (Skill focus; the talent takes a `skill` choice).
-    Skill {
-        #[serde(default)]
-        skill: Option<String>,
-        value: i32,
-    },
-    /// No one makes way for it (Trusted by none), whatever else would have them.
-    Distrusted,
-    /// A free blow the actor is given (spec §8 "Free blows"); `one_in` (the gatekeeper's only)
-    /// makes it a chance: one in that many, scaled by the stance's `gatekeeper` percent.
-    FreeBlow {
-        trigger: FreeBlowTrigger,
-        #[serde(default)]
-        one_in: Option<u32>,
-    },
-    /// What attacks with some weapon skills gain, as their ranks give it
-    /// ([`super::Benefit`]): the weapon skill or style `skill` names, else the chosen one's (no
-    /// `role`; the talent takes a choice), else every skill of `role`'s. `ranks`: its benefits read that many ranks higher
-    /// (a rank held, never past [`super::MAX_RANK`]); `bash` only where a free bash is had already.
-    Weapon {
-        #[serde(default)]
-        role: Option<Role>,
-        /// A weapon skill or style by id: its benefits, whatever the choice (Fencing's duelist).
-        #[serde(default)]
-        skill: Option<String>,
-        #[serde(default)]
-        to_hit: i32,
-        #[serde(default)]
-        damage: i32,
-        #[serde(default)]
-        threat: u8,
-        #[serde(default)]
-        ranks: u8,
-        #[serde(default)]
-        speed: u8,
-        #[serde(default)]
-        reload: u8,
-        #[serde(default)]
-        ease: u8,
-        #[serde(default)]
-        bash: u8,
-        #[serde(default)]
-        shield: i32,
-        /// Added to a confirmed critical's multiplier (never past ×5).
-        #[serde(default)]
-        crit: u8,
-        /// Only for a skill held at this rank at least (0: any).
-        #[serde(default)]
-        at_rank: u8,
-    },
-    /// The marks its attacks earn in the weapon skills of `role`, this percent more (Weapon
-    /// drill); without a `role`, in every weapon skill and fighting style (Forge-born).
-    WeaponMarks {
-        #[serde(default)]
-        role: Option<Role>,
-        value: i32,
-    },
-    /// A confirmed critical's multiplier with a two-handed weapon, this much more (never past
-    /// ×5; Brutal critical).
-    TwoHandedCrit { value: u8 },
-    /// Its blows with no weapon in hand (and its kicks) roll one die of this many sides instead
-    /// of bare hands' dice (Martial arts); the biggest counts.
-    UnarmedDie { sides: u8 },
-    /// The readied missile weapon shoots this many cells farther; with `skill` (a weapon skill
-    /// id), only a launcher of that skill (Slinger's slings).
-    LauncherRange {
-        value: i32,
-        #[serde(default)]
-        skill: Option<String>,
-    },
-    /// Throws reach this many cells farther.
-    ThrowRange { value: i32 },
-    /// Worn armour's cap on Dexterity in Defence (`max_dex`), this much higher.
-    MaxDex { value: i32 },
-    /// Defence in the Deflection category, on top of what magic items give.
-    Deflection { value: i32 },
-    /// Protection, added to what is worn; only while the body armour worn has `body_armour`
-    /// Protection at least (if set), only while holding a shield (if `shield`), and once for
-    /// every armour piece worn (if `per_piece`).
-    Protection {
-        value: i32,
-        #[serde(default)]
-        body_armour: Option<i32>,
-        #[serde(default)]
-        shield: bool,
-        /// For every piece of armour worn (anything worn with Protection of its own).
-        #[serde(default)]
-        per_piece: bool,
-    },
-    /// The to-hit penalty of combat stance `stance`, this percent smaller (100: none).
-    StanceToHit { stance: CombatStance, percent: i32 },
-    /// The Dodge penalty of combat stance `stance`, this percent smaller (100: none; Iron
-    /// stance).
-    StanceDodge { stance: CombatStance, percent: i32 },
-    /// Changing its combat stance costs an action, as a wait does (Set in its ways), not
-    /// nothing.
-    StanceCosts,
-    /// A step that takes it out of reach of every hostile beside it costs this percent more
-    /// (negative: cheaper; Slip away), whatever its stance.
-    SlipPercent { value: i32 },
-    /// Every hit on the actor (a blow, a shot, a throw, a trap) does this much less after its
-    /// Protection soaked it, never below 1.
-    Pain { value: i32 },
-    /// A creature whose melee blow hits it takes `damage` (Barbed hide): no blow, no roll, and
-    /// no experience if it dies of it.
-    Barbs { damage: i32 },
-    /// Resistance in percent to damage type `damage` (an id in `data/damage_types.toml`), else
-    /// to the chosen element (the talent takes an `element` choice).
-    Resist {
-        value: i32,
-        #[serde(default)]
-        damage: Option<String>,
-    },
-    /// Resting heals this percent faster on top of resting's own pace (Fast healer).
-    RestingPercent { value: i32 },
-    /// The active Second wind: `per_level` hit points per character level back at once, at
-    /// least `at_least`, then the `cooldown` status (an id in `data/status/`), while which
-    /// it cannot be used again.
-    SecondWind {
-        per_level: u8,
-        at_least: i32,
-        cooldown: String,
-    },
-    /// Once in its life, a hit, a trap, or a status that would kill it does not (Rise from the
-    /// ashes; not starving or choking): it rises with `hp_percent` of its hit points, a burst of
-    /// `damage` (`damage_type`) strikes every creature beside it (`spell`, an effect in
-    /// `data/effects.toml`, drawn over `radius` cells) and melts the ice there, and it suffers
-    /// `status` (Ashen).
-    RiseFromAshes {
-        hp_percent: i32,
-        status: String,
-        spell: String,
-        radius: i32,
-        damage: Dice,
-        damage_type: String,
-    },
-    /// Its rising from the ashes brings it back whole (Reborn whole): every hit point, every
-    /// status effect and disease burned away, and none of the rising's own status.
-    RebornWhole,
-    /// It may rise from the ashes once more (Second rising): a second once in its life.
-    SecondRising,
-    /// Its hit points come back while it is Starving too (Another head).
-    StarvingHeals,
-    /// The class active Veteran's wind ([`ClassActive::VeteransWind`]): as Second wind.
-    VeteransWind {
-        per_level: u8,
-        at_least: i32,
-        cooldown: String,
-    },
-    /// The class active Lay on hands: `per_level` hit points per character level back at once
-    /// (what it costs is the talent's `resource`: Zeal).
-    LayOnHands { per_level: u8 },
-    /// Lay on hands heals fully and cures every status that may be cured and every disease, for
-    /// `hands_cost_percent` of its cost; and Holy wrath's die lands on every foe (Avatar).
-    Avatar { hands_cost_percent: u8 },
-    /// The class active Rage: the player is granted `resource` (Rage, spec §8 "Resources") and
-    /// suffers its status (Raging) while it lasts; no rage while that or the status it `follows`
-    /// into lasts.
-    Rage { resource: String },
-    /// The class active War cry: a roar as loud as a howl; every hostile that hears it, sees the
-    /// player, and has vitals rolls Willpower against `difficulty` + the player's Strength
-    /// modifier + their Intimidate; failed, it suffers `severity` degrees of `status` (one that
-    /// `flees`; `world/war_cry.rs`).
-    WarCry {
-        status: String,
-        severity: u16,
-        difficulty: i32,
-    },
-    /// The class active Cackle: a voice `noise` loud; every hex of the player's on a creature
-    /// they see grows `degrees` and starts its degree afresh, to its status's `max`
-    /// (`world/witch.rs`).
-    Cackle { degrees: u16, noise: u16 },
-    /// Event `on` builds `resource` this much more while it is held, beside what the resource's
-    /// own `builds` give (Blood frenzy: 5 rage a kill).
-    ResourceBuild {
-        resource: String,
-        on: Build,
-        amount: u16,
-    },
-    /// `resource` holds this much more at most (Mighty rage: 10 more rage).
-    ResourceMax { resource: String, value: u16 },
-    /// `resource` is granted holding this much more (Battle trance: rage starts 6 higher).
-    ResourceStart { resource: String, value: u16 },
-    /// `resource` changes over time this percent faster (negative: slower): one that
-    /// regenerates comes back sooner, one that decays wears off sooner (Steady hand, Patient
-    /// blade).
-    ResourceRate { resource: String, value: i32 },
-    /// While raging: the statuses named tick nothing, and a blow that would take the last hit
-    /// point leaves it for `cost` of the rage, when that much is held (Unstoppable).
-    Unstoppable { statuses: Vec<String>, cost: u16 },
-    /// The class active Charge (the warrior's, `world/charge.rs`): a rush along the line to a
-    /// hostile the player sees, ending beside it with a blow, provoking no free blows on the
-    /// way: it costs the talent's `resource` (Stamina) and `per_cell` more for every cell
-    /// moved.
-    Charge { per_cell: u16 },
-    /// Charge also strikes every hostile beside a cell it passes, each once, a free blow (the
-    /// warrior's Whirling charge, `world/charge.rs`); the one charged at gets only its own.
-    WhirlingCharge,
-    /// The class active Smite: a melee blow in a direction with one die of `sides` more damage
-    /// per `per_levels` character levels (at least one), `unholy` dice more against an unholy
-    /// foe (`data/smite.toml`), and the smiter's modifier in `aim` added to hit (what it costs
-    /// is the talent's `resource`: Zeal; `world/smite.rs`).
-    Smite {
-        per_levels: u8,
-        sides: u8,
-        #[serde(default)]
-        aim: Option<Stat>,
-        #[serde(default)]
-        unholy: u8,
-    },
-    /// A mode of smiting (the paladin's; `world/smite.rs`, docs/design/paladin-smites.md §6):
-    /// the class active of its `mode` (Branding smite, Wrathful smite), the Smite talent's blow
-    /// with a rider on a hit that did damage (what it costs is the talent's `resource`: Zeal).
-    /// `brand`: the foe suffers `severity` degrees of `status`. `fear`: the foe makes a `check`
-    /// of that stat against `difficulty` plus the smiter's Smite `aim` modifier, and failing
-    /// suffers `status` (one that flees) at `turns` degrees, caused by the smiter. `banish`
-    /// takes nothing more: a summoned foe is unmade, and an unholy one takes the smite's dice
-    /// twice (the rule's, `world/smite.rs`).
-    SmiteMode {
-        mode: SmiteRiderKind,
-        #[serde(default)]
-        status: String,
-        #[serde(default)]
-        severity: u16,
-        #[serde(default)]
-        turns: Option<Dice>,
-        #[serde(default)]
-        check: Option<Stat>,
-        #[serde(default)]
-        difficulty: i32,
-    },
-    /// Every blow, shot, or throw that hits an unholy target (`Content::unholy`; with Avatar any
-    /// target) rolls `dice` more, after the blow's own damage, of its kind, resisted but never
-    /// soaked (the paladin's Holy wrath, `world/smite.rs`).
-    HolyWrath { dice: Dice },
-    /// The class active Holy radiance: a toggle; while it suffers `status` it sheds light
-    /// `light` (an id in `data/lights.toml`).
-    Radiance { status: String, light: String },
-    /// The class active Patient defence: a wait, then a degree of `status` (Poised: Dodge up
-    /// and the riposte switched on until the next action; what it costs is the talent's
-    /// `resource`: Ki; `world/ascetic.rs`).
-    PatientDefence { status: String },
-    /// The class active Quivering palm: an unarmed blow in a direction; a hit that wounds
-    /// leaves the target `severity` degrees of `status` (what it costs is the talent's
-    /// `resource`: Ki).
-    QuiveringPalm { status: String, severity: u16 },
-    /// The class active Stunning strike (the ascetic's, #848): an unarmed blow in a direction;
-    /// a hit that wounds leaves the target `severity` degrees of `status` (Stunned; what it
-    /// costs is the talent's `resource`: Ki). Quivering palm's blow with another status.
-    StunningStrike { status: String, severity: u16 },
-    /// The class active Step of the wind: a degree of `status` (Light-footed) on the player,
-    /// taking no time (what it costs is the talent's `resource`: Ki; `world/ascetic.rs`).
-    WindStep { status: String },
-    /// The class active Stillness (the ascetic's, on Still mind, #850): every status of
-    /// `statuses` the player suffers ends at once, taking no time (what it costs is the talent's
-    /// `resource`: Ki; `world/ascetic.rs`). `name` is the abilities menu's, as the talent that
-    /// carries it has a passive name of its own.
-    Stillness { name: String, statuses: Vec<String> },
-    /// The active Blaze (a birth sign's, spec §8 "Birth sign"): a burst of `radius` around the
-    /// player that does `damage` of kind `damage_type` (an id in `data/damage_types.toml`) to
-    /// every creature it reaches but them, melts the ice it reaches, and sets each cell it
-    /// reaches but theirs burning for `burns` seconds with light preset `fire` (as a burning
-    /// missile where it lands); shown as effect `spell` (`data/effects.toml`); then the
-    /// `cooldown` status.
-    Blaze {
-        radius: i32,
-        damage: Dice,
-        damage_type: String,
-        spell: String,
-        fire: String,
-        burns: u32,
-        cooldown: String,
-    },
-    /// Blaze bursts out to `radius` with `damage` instead of its own (Wildfire).
-    Wildfire { radius: i32, damage: Dice },
-    /// The active Fire breath (a birth sign's pick, spec §8 "Birth sign"), aimed at a cell
-    /// within [`crate::world::BREATH_RANGE`]: a bolt of `damage` of kind `damage_type` along the
-    /// line toward it, `length` cells from the player, through everyone on it; shown as effect
-    /// `spell` (a bolt); then `degrees` of the `cooldown` status.
-    FireBreath {
-        length: i32,
-        damage: Dice,
-        damage_type: String,
-        spell: String,
-        cooldown: String,
-        degrees: u16,
-    },
-    /// The active Hound's bay (a birth sign's pick): a howl; every hostile that hears it and is
-    /// of a lower level than the player suffers `severity` degrees of `status` (one that
-    /// `flees`), then the `cooldown` status.
-    HoundsBay {
-        status: String,
-        severity: u16,
-        cooldown: String,
-    },
-    /// Every level past `hp_level` (data/experience.toml) adds hit points again, as the levels
-    /// up to it do, and `bonus` more (Hardened). Handed out as the levels come.
-    Hardened { bonus: i32 },
-    /// The active Horn's grace (a birth sign's): the statuses `cures` end and up to `diseases`
-    /// diseases that show are shaken off, then `degrees` of the `cooldown` status.
-    HornsGrace {
-        cures: Vec<String>,
-        diseases: u8,
-        cooldown: String,
-        #[serde(default = "one_degree")]
-        degrees: u16,
-    },
-    /// Horn's grace also gives back `per_level` hit points per character level, and leaves
-    /// `degrees` of its cooldown instead of its own (Horn of plenty).
-    HornOfPlenty { per_level: u8, degrees: u16 },
-    /// The active Transfixing stare (a birth sign's): a hostile within
-    /// [`crate::world::STARE_RANGE`] cells that the player sees and that sees them suffers
-    /// `severity` degrees of `status`, then `degrees` of the `cooldown` status.
-    Stare {
-        status: String,
-        severity: u16,
-        cooldown: String,
-        #[serde(default = "one_degree")]
-        degrees: u16,
-    },
-    /// The Transfixing stare leaves `severity` degrees of its status and `degrees` of its
-    /// cooldown instead of its own (Petrifying gaze).
-    PetrifyingGaze { severity: u16, degrees: u16 },
-    /// Rotten food never makes it vomit and sickens it half as much; overeating never makes it
-    /// vomit (Iron stomach).
-    IronStomach,
-    /// Rotten food never harms it: no vomiting, no sickness, no disease, as a race that eats
-    /// rotten food (Deep roots).
-    EatsRotten,
-    /// Wading (water, and ground a disease is caught wading in) costs it a plain step (Undertow;
-    /// unlike `swimmer`, it may still catch a disease).
-    WadesFree,
-    /// Status `status` eases this percent faster (100: twice as fast).
-    StatusEases { status: String, value: i32 },
-    /// Status `status` lasts this percent longer: each degree takes that much more time to
-    /// ease (50: half again; Strong constitution's potions).
-    StatusLasts { status: String, value: i32 },
-    /// Status `status` never lowers its scores.
-    NoPenalty { status: String },
-    /// A big hit makes it bleed no more, a critical one degree less (Clotting): the statuses
-    /// that come of wounds.
-    Clotting,
-    /// A big hit wounds it this many degrees more (Thin-skinned): the statuses that come of
-    /// wounds, where the hit wounds at all.
-    WoundMore { value: u16 },
-    /// What its statuses take off its scores, this percent more (negative: less; Unbowed).
-    PenaltyPercent { value: i32 },
-    /// Added to its disease checks: catching one and every progression.
-    DiseaseChecks { value: i32 },
-    /// Added to its checks against a drain (spec §8 "Stats": "Drain").
-    DrainChecks { value: i32 },
-    /// Added to every check of stat `stat` it makes (spec §8 "Checks").
-    Checks { stat: Stat, value: i32 },
-    /// A disease's progressions come this percent further apart (negative: closer; Ageless).
-    DiseaseIntervalPercent { value: i32 },
-    /// A disease needs this many checks fewer won in a row to be shaken off, never fewer than 1.
-    DiseaseRecovery { value: i32 },
-    /// It never catches a disease (Divine health, Purity of body): no check, no infection.
-    DiseaseImmune,
-    /// No status lowers its score in `stat` (Still mind).
-    NoPenaltyTo { stat: Stat },
-    /// What status `status` raises its scores by, this percent more (Mighty rage: Raging's
-    /// Strength and Toughness doubled); lowerings are untouched.
-    RaisePercent { status: String, value: i32 },
-    /// Its kicks at creatures roll one die of this many sides instead of bare hands' dice.
-    KickDie { sides: u8 },
-    /// Its door kicks as if this much stronger.
-    DoorKick { value: i32 },
-    /// A kick of its that hits drives the foe a cell back, when the cell is free (Breaker;
-    /// `World::kick_back`).
-    KickBack,
-    /// Its door kicks are this percent louder (negative: quieter; Lockbreaker).
-    KickNoisePercent { value: i32 },
-    /// What a chest it kicks open holds breaks this percent more often (negative: less;
-    /// Lockbreaker; spec §8 "Chests").
-    SmashDestroyPercent { value: i32 },
-    /// Its digging does this percent more work a turn.
-    DigPercent { value: i32 },
-    /// Its blows with a two-handed weapon cost this percent more (negative: cheaper).
-    TwoHandedPrice { value: i32 },
-    /// Its melee attacks cost this percent more (negative: cheaper; Blood frenzy while raging).
-    AttackPricePercent { value: i32 },
-    /// A critical it confirms in melee leaves the target suffering `status` (one degree).
-    CriticalStatus { status: String },
-    /// A creature it hits in melee suffers `status` (one degree, caused by it), and is held by
-    /// it: the status lasts until it misses that creature, strikes another, or moves (Drowning
-    /// grip; the status `blocks` the creature's steps).
-    Grip { status: String },
-    /// Added to the roll that confirms its criticals (every attack).
-    CriticalConfirm { value: i32 },
-    /// Its weapon abilities come this many ranks sooner (Early mastery; the combat progression
-    /// design §11): their thresholds read its ranks that much higher.
-    AbilityRanks { value: i32 },
-    /// Its weapon actives take this percent more time (negative: less; Practised technique),
-    /// never below half the action's price (#564).
-    WeaponEnergyPercent { value: i32 },
-    /// Its weapon actives cost `value` points less stamina, at least 1: those named in
-    /// `abilities` (ids in `data/weapon_abilities/`), or every one when none are named
-    /// (Drillmaster; Armour-breaker's Sunder and Gap shot).
-    WeaponStamina {
-        value: i32,
-        #[serde(default)]
-        abilities: Vec<String>,
-    },
-    /// Its Brace's blow is at `to_hit` more, and a foe it hits suffers `status` (one degree;
-    /// Brace of steel).
-    Brace { to_hit: i32, status: String },
-    /// Its confirmed criticals ignore this much more Protection (every attack; Armour-breaker).
-    CriticalPenetration { value: i32 },
-    /// Its blows that can do damage of kind `damage` (an id in `data/damage_types.toml`) ignore this
-    /// much more Protection.
-    Penetration { damage: String, value: i32 },
-    /// The burden's cap on its Dexterity in Defence, this much higher.
-    BurdenDex { value: i32 },
-    /// Percent off the burden's slowdown, on top of what Balance takes off (60: Burdened ×1.10
-    /// instead of ×1.25).
-    BurdenEase { value: i32 },
-    /// A trap it steps onto first gets a Dexterity check against its difficulty: won, it does
-    /// not go off under it, and it is found (Light step).
-    SureStep,
-    /// Pits never catch it (Light step, Bedrock).
-    PitProof,
-    /// It can disarm traps (the Disarm ability) without Disable device.
-    Disarm,
-    /// It moves and acts this percent quicker (its speed; the number is hidden in the game).
-    SpeedPercent { value: i32 },
-    /// Its steps cost this percent more (negative: cheaper), only while it wears no body armour
-    /// (if `unarmoured`), is Unburdened (if `unburdened`), and holds no shield (if `no_shield`):
-    /// Fleet; Headlong, while raging.
-    StepPercent {
-        value: i32,
-        #[serde(default)]
-        unarmoured: bool,
-        #[serde(default)]
-        unburdened: bool,
-        #[serde(default)]
-        no_shield: bool,
-    },
-    /// Strained costs it what Burdened costs others (Beast of burden).
-    Stout,
-    /// Dodge added against shots, throws, and trap missiles.
-    MissileDodge { value: i32 },
-    /// Dodge added against the attacks of creatures larger than it (Small target).
-    SmallTarget { value: i32 },
-    /// The damage bursts and bolts (traps, scrolls) do it, this percent more (negative: less).
-    SpellDamagePercent { value: i32 },
-    /// A caster's spell (design §4.1 B2, spec §8 "Spells"): its holder has the spell ability
-    /// `spell`, the spell of that id in `data/spells/` (a class ability's; each given once).
-    Spell { spell: String },
-    /// What it does to its spells through the six hooks (spec §8 "Spells": "Hooks";
-    /// `content/spell_mod.rs`): rungs, dice, rerolls, riders, reach, degrees, and a cost
-    /// percent, for every spell or those of its `when` tags (a talent chosen for a school or an
-    /// element: those of the choice). Empower, Archmage, Keen mind, School focus, Scroll
-    /// adept, Wand mastery, Sure hand, Brimming.
-    SpellMod(super::SpellModSpec),
-    /// What it does to a spell type's own rule (`[types]` in `data/spells.toml`) for the damage
-    /// types in `when`: `arc_chance`, the percent its spells of them arc at, read in
-    /// `world/spell_arc.rs` (Conductor).
-    SpellType { arc_chance: u8, when: Vec<String> },
-    /// Its spells cost this percent more mana (negative: less; Archmage, Empower), at least 1.
-    SpellManaPercent { value: i32 },
-    /// Defence in the Deflection category, only while it wears no body armour (Mage armour).
-    DeflectionUnarmoured { value: i32 },
-    /// Rotten food neither sickens it nor exposes it to a disease (Purify).
-    Purify,
-    /// A corpse's own harm (`on_eat`: sickness, vomiting) never touches it (Herb lore,
-    /// Cauldron).
-    CorpseHarmless,
-    /// Eating `object` (an id in `data/objects/`; none: a fresh corpse) also heals `dice` hit
-    /// points (Herb lore's angelica root, Cauldron's corpses).
-    MealHeals {
-        #[serde(default)]
-        object: Option<String>,
-        dice: Dice,
-    },
-    /// Its blows that hit a creature suffering `status` do `value` more damage (Poison lore).
-    StatusDamage { status: String, value: i32 },
-    /// When a creature dies under a hex its holder laid (`Content::hex_statuses`), whoever
-    /// killed it, the holder's mana rises by the dead creature's level divided by `per_levels`,
-    /// at least 1, never past its maximum (Malison; `world/malison.rs`).
-    HexTithe { per_levels: u8 },
-    /// Once in its life (`once` names it), what would kill it does not (not starving or
-    /// choking): it is left at 1 hit point, suffers `status`, and `stat` is `by` lower for good;
-    /// `message` is said (Miracle, Hag's bargain).
-    Reprieve {
-        once: String,
-        status: String,
-        #[serde(default)]
-        stat: Option<Stat>,
-        #[serde(default)]
-        by: i32,
-        message: String,
-    },
-    /// Against the creature type it has killed most (ties: the first to get there), its attacks
-    /// are this much likelier to hit and do this much more damage (Favoured prey).
-    FavouredPrey { to_hit: i32, damage: i32 },
-    /// Against creature types that carry the tag it was taken for (a `choice = "tag"`), its
-    /// attacks are this much likelier to hit and do this much more damage (Sworn foe).
-    SwornFoe { to_hit: i32, damage: i32 },
-    /// It places every sound it hears where it was made (Tracker).
-    ExactSounds,
-    /// Its steps make no sound while it is Unburdened (Hide in plain sight).
-    SilentUnburdened,
-    /// Its attacks are this percent louder (negative: quieter).
-    AttackNoisePercent { value: i32 },
-    /// Hidden traps are this much easier for it to find (none carries it since #684).
-    TrapEase { value: i32 },
-    /// It can pick locks (the Pick lock ability) without Open lock.
-    PickLock,
-    /// It can steal (the Steal ability) without the Steal skill.
-    Steal,
-    /// It can throw its voice (the Throw your voice ability; the bard's).
-    ThrowVoice,
-    /// Its attacks on a creature that has not seen it threaten a critical this many points
-    /// lower (Master thief).
-    AmbushThreat { value: u8 },
-    /// The class active Lurk: a wait in ambush, a degree of `status` on it (Lurking: a hostile
-    /// stepping up beside it takes its blow at once; `world/thief.rs`).
-    Lurk { status: String },
-    /// The class active Exploit: every opening held spent on a melee blow in a direction that
-    /// is a sneak attack whatever the foe knows (its `resource` cost, the least it needs:
-    /// Openings; `world/openings.rs`).
-    Exploit,
-    /// The class active Thrown exploit: Exploit's blow as a throw at a creature on a cell (its
-    /// `resource` cost, the least it needs: Openings; `world/openings.rs`).
-    ThrownExploit,
-    /// An exploit that hits does `dice` more damage per opening spent, after Protection, never
-    /// multiplied (Exploit's own 1d6; dice of one size add up).
-    ExploitDice { dice: Dice },
-    /// An exploit is `value` likelier to hit per opening spent (Low blow).
-    ExploitToHit { value: i32 },
-    /// An exploit that hits leaves the foe a degree of `status` (Low blow: Stunned).
-    ExploitStatus { status: String },
-    /// An exploit threatens a critical `value` lower per opening spent, never below 2, and with
-    /// `sure_at` or more spent is a critical whenever it hits, no confirmation (Master thief).
-    ExploitThreat { value: u8, sure_at: u16 },
-    /// Every skill it is trained in counts this much higher (Jack of all trades).
-    TrainedSkills { value: i32 },
-    /// It holds alternative resource `resource` (spec §8 "Resources") from the moment it has the
-    /// talent, for good (Rapid shot's Focus).
-    GrantsResource { resource: String },
-    /// A shot it looses while it holds `cost` of `resource` spends them and takes `saving`
-    /// percent less time (Rapid shot, on Focus).
-    RapidShot {
-        resource: String,
-        cost: u16,
-        saving: u8,
-    },
-    /// Each second blow of its flurry spends `cost` of `resource`; holding less, it strikes
-    /// none (Flurry, on Ki).
-    FlurryCost { resource: String, cost: u16 },
-    /// A hostile's melee attack beside it that lands a blow on it is answered by its smite at
-    /// once, free, spending `cost` of `resource`; with less, nothing (Retribution, the
-    /// paladin's at 25, on zeal; `world/smite.rs`).
-    Retribution { resource: String, cost: u16 },
-    /// A missile (a shot, a throw, a trap's) that would hit it while its hands hold no weapon
-    /// and no shield spends `cost` of `resource` by itself and misses; holding less, it hits
-    /// (Diamond soul's catch, on Ki; `world/ascetic.rs`).
-    CatchMissiles { resource: String, cost: u16 },
-    /// The class active Volley: `shots` shots at a cell for the price of one (what it costs is
-    /// the talent's `resource`, if anything).
-    Volley { shots: u8 },
-    /// The class active Sic 'em (`world/sic.rs`): the companion is set on a creature the player
-    /// sees within `range`, and suffers `blows` degrees of `status`, one that makes its hits
-    /// criticals (`auto_critical`; what it costs is the talent's `resource`).
-    Sic {
-        status: String,
-        blows: u16,
-        range: i32,
-    },
-    /// A song (spec §8 "Class abilities", the bard's songs; `world/song.rs`): class active `id`
-    /// (`use:inspire`), sung aloud. Who it is `on` suffers `severity` degrees of `status`, and the
-    /// singer's Music's `song_degrees` more; it costs **one** thing, `cost` of `resource`
-    /// (Inspire's 3 Inspiration) or `mana`. A song on its hearers asks each hostile one a
-    /// `check` of that stat against `difficulty` plus the singer's `song_craft` (the Lullaby's,
-    /// #873).
-    Song {
-        id: String,
-        on: SongOn,
-        status: String,
-        #[serde(default = "one_degree")]
-        severity: u16,
-        #[serde(default)]
-        resource: Option<String>,
-        #[serde(default)]
-        cost: u16,
-        #[serde(default)]
-        mana: i32,
-        #[serde(default)]
-        check: Option<Stat>,
-        #[serde(default)]
-        difficulty: i32,
-    },
-    /// Every song costs nothing and gives a degree more; a song on the singer gives `status`
-    /// instead (Virtuoso: Inspired greatly).
-    Virtuoso { status: String },
-    /// The class active Consecrate: `time` (a duration) of prayer, for `mana` mana, lifts an
-    /// unholy special room (or a whole level's unholy effect) for good (`world/consecrate.rs`).
-    Consecrate { mana: i32, time: String },
-    /// Communion with the dark (the priest design §6.3, `world/dark_face.rs`): standing in an
-    /// unholy place, its prayers add no strain and the place's status never touches it. A
-    /// band-gated passive: outside its talent's `alignment` it does nothing.
-    Communion,
-    /// The class active Sanctuary: `time` (a duration) of a kneeling rite, for `mana` mana,
-    /// hallows the ground within `radius` of the player for `lasts`: no hostile sets foot in it,
-    /// and those in it heal and regain mana `regen` percent as fast (`world/sanctuary.rs`).
-    Sanctuary {
-        mana: i32,
-        time: String,
-        radius: u8,
-        lasts: String,
-        regen: u16,
-    },
-    /// The priest's prayer (the class active Orison, `world/orison.rs`; `data/prayer.toml`):
-    /// a prayer talent of `tier` (1 to 5, its `title` for each face) or a use added between
-    /// them; `uses` it may answer, `answers` problems a prayer (the largest held), `all` every
-    /// problem and every pool at once. The tier-1 talent carries the ability.
-    Prayer {
-        #[serde(default)]
-        tier: Option<u8>,
-        #[serde(default)]
-        title: Option<super::Faced>,
-        #[serde(default)]
-        uses: Vec<super::PrayerUse>,
-        #[serde(default)]
-        answers: Option<u8>,
-        #[serde(default)]
-        all: bool,
-    },
-    /// The class active Knock: for `mana` mana, the lock of the locked door or chest in a
-    /// direction springs open (`world/knock.rs`; spec §8 "Chests").
-    Knock { mana: i32 },
-    /// The class active Scribe: a scroll of a spell the player knows written on a blank scroll,
-    /// for `mana_times` the spell's mana and a study's time (`world/scribe.rs`; spec §8
-    /// "Scrolls").
-    Scribe { mana_times: u8 },
-    /// The class active Merchant's eye: a stack the player carries is identified, for the time of
-    /// a reading (`world/merchants_eye.rs`; spec §8 "Class abilities").
-    MerchantsEye,
-    /// The class active Field forge: an ingot carried set on a heap of stones beside the player
-    /// in `seconds`, a makeshift anvil for good (`world/field_forge.rs`; the craftsperson's).
-    FieldForge { seconds: u32 },
-    /// The class active Make do and mend: a damaged thing the player carries mended in the field,
-    /// with no anvil, in `seconds`, by a check against `difficulty` plus its main material's
-    /// `work` that destroys nothing (`world/make_do.rs`; the craftsperson design §7.5).
-    MakeDo { seconds: u32, difficulty: i32 },
-    /// The class active Trapwright: a trap rigged on a cell beside the player from what the rig
-    /// list (`data/rigs.toml`) asks (`world/rig.rs`; spec §8 "Traps": "Rigging traps").
-    Rigs,
-    /// The class active Spirit weapon: a melee weapon of spirit-stuff called into the hand in a
-    /// shape chosen (`world/spirit_weapon.rs`; spec §8 "Prestige classes"), which strikes
-    /// `to_hit` surer, threatens `threat` lower, and ignores all Protection if
-    /// `ignores_protection`; `phrase` is its description's power line.
-    SpiritWeapon {
-        to_hit: i32,
-        threat: u8,
-        #[serde(default)]
-        ignores_protection: bool,
-        phrase: String,
-    },
-}
-
-/// One degree: a cooldown's default.
-fn one_degree() -> u16 {
-    1
+    /// What the holder's attacks get ([`OffenceEffect`], `talent/offence.rs`).
+    Offence(OffenceEffect),
+    /// What the holder's defences get ([`DefenceEffect`], `talent/defence.rs`).
+    Defence(DefenceEffect),
+    /// What the holder's body gets: hit points, healing, statuses, diseases ([`VigourEffect`],
+    /// `talent/vigour.rs`).
+    Vigour(VigourEffect),
+    /// What the holder's hunger and meals get ([`HungerEffect`], `talent/hunger.rs`).
+    Hunger(HungerEffect),
+    /// What the holder's mana and spells get ([`MagicEffect`], `talent/magic.rs`).
+    Magic(MagicEffect),
+    /// What the holder's senses get ([`SensesEffect`], `talent/senses.rs`).
+    Senses(SensesEffect),
+    /// What the holder's stealth, surprise, and exploits get ([`StealthEffect`],
+    /// `talent/stealth.rs`).
+    Stealth(StealthEffect),
+    /// What the holder's movement and burden get ([`MovementEffect`], `talent/movement.rs`).
+    Movement(MovementEffect),
+    /// What the holder gets in the dungeon: searching, traps, chests, rooms, doors, digging
+    /// ([`DelvingEffect`], `talent/delving.rs`).
+    Delving(DelvingEffect),
+    /// What the holder's wealth, loot, and standing get ([`FortuneEffect`], `talent/fortune.rs`).
+    Fortune(FortuneEffect),
+    /// What the holder's growth gets: experience, picks, ranks, skills ([`GrowthEffect`],
+    /// `talent/growth.rs`).
+    Growth(GrowthEffect),
+    /// What the holder's crafts get ([`CraftEffect`], `talent/craft.rs`).
+    Craft(CraftEffect),
+    /// A birth sign's actives and what makes them stronger ([`SignEffect`], `talent/sign.rs`).
+    Sign(SignEffect),
+    /// What the holy and the unholy get: smites, rites, prayer ([`FaithEffect`],
+    /// `talent/faith.rs`).
+    Faith(FaithEffect),
+    /// The warrior's, berserker's, ascetic's, and hunter's class actives ([`MartialEffect`],
+    /// `talent/martial.rs`).
+    Martial(MartialEffect),
+    /// What the holder's alternative resources get ([`ResourceEffect`], `talent/resource.rs`).
+    Resource(ResourceEffect),
+    /// The bard's songs ([`SongEffect`], `talent/song.rs`).
+    Song(SongEffect),
+    /// What the holder's allies get ([`AllyEffect`], `talent/ally.rs`).
+    Ally(AllyEffect),
 }
 
 /// A talent's own active (spec §8 "Talents"; the abilities menu's Talents group), used as
@@ -1242,7 +251,7 @@ pub enum FreeBlowTrigger {
     Gatekeeper,
 }
 
-/// What a mode of smiting does besides the blow ([`TalentEffect::SmiteMode`]): each is its own
+/// What a mode of smiting does besides the blow ([`FaithEffect::SmiteMode`]): each is its own
 /// class active.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -1266,7 +275,7 @@ impl SmiteRiderKind {
     }
 }
 
-/// Whom a song is sung on ([`TalentEffect::Song`]).
+/// Whom a song is sung on ([`SongEffect::Song`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SongOn {
@@ -1281,13 +290,88 @@ impl<'de> Deserialize<'de> for TalentEffect {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         use serde::de::Error;
         let value = toml::Value::deserialize(d)?;
-        let kind = value.get("kind").and_then(toml::Value::as_str);
-        if kind.is_some_and(|k| BeastEffect::KINDS.contains(&k)) {
+        let Some(kind) = value.get("kind").and_then(toml::Value::as_str) else {
+            // No kind, or one that is no string: the derived enum's own words for it.
             return BeastEffect::deserialize(value)
                 .map(TalentEffect::Beast)
                 .map_err(D::Error::custom);
-        }
-        TalentEffect::deserialize(value).map_err(D::Error::custom)
+        };
+        let effect = if BeastEffect::KINDS.contains(&kind) {
+            BeastEffect::deserialize(value).map(TalentEffect::Beast)
+        } else if OffenceEffect::KINDS.contains(&kind) {
+            OffenceEffect::deserialize(value).map(TalentEffect::Offence)
+        } else if DefenceEffect::KINDS.contains(&kind) {
+            DefenceEffect::deserialize(value).map(TalentEffect::Defence)
+        } else if VigourEffect::KINDS.contains(&kind) {
+            VigourEffect::deserialize(value).map(TalentEffect::Vigour)
+        } else if HungerEffect::KINDS.contains(&kind) {
+            HungerEffect::deserialize(value).map(TalentEffect::Hunger)
+        } else if MagicEffect::KINDS.contains(&kind) {
+            MagicEffect::deserialize(value).map(TalentEffect::Magic)
+        } else if SensesEffect::KINDS.contains(&kind) {
+            SensesEffect::deserialize(value).map(TalentEffect::Senses)
+        } else if StealthEffect::KINDS.contains(&kind) {
+            StealthEffect::deserialize(value).map(TalentEffect::Stealth)
+        } else if MovementEffect::KINDS.contains(&kind) {
+            MovementEffect::deserialize(value).map(TalentEffect::Movement)
+        } else if DelvingEffect::KINDS.contains(&kind) {
+            DelvingEffect::deserialize(value).map(TalentEffect::Delving)
+        } else if FortuneEffect::KINDS.contains(&kind) {
+            FortuneEffect::deserialize(value).map(TalentEffect::Fortune)
+        } else if GrowthEffect::KINDS.contains(&kind) {
+            GrowthEffect::deserialize(value).map(TalentEffect::Growth)
+        } else if CraftEffect::KINDS.contains(&kind) {
+            CraftEffect::deserialize(value).map(TalentEffect::Craft)
+        } else if SignEffect::KINDS.contains(&kind) {
+            SignEffect::deserialize(value).map(TalentEffect::Sign)
+        } else if FaithEffect::KINDS.contains(&kind) {
+            FaithEffect::deserialize(value).map(TalentEffect::Faith)
+        } else if MartialEffect::KINDS.contains(&kind) {
+            MartialEffect::deserialize(value).map(TalentEffect::Martial)
+        } else if ResourceEffect::KINDS.contains(&kind) {
+            ResourceEffect::deserialize(value).map(TalentEffect::Resource)
+        } else if SongEffect::KINDS.contains(&kind) {
+            SongEffect::deserialize(value).map(TalentEffect::Song)
+        } else if AllyEffect::KINDS.contains(&kind) {
+            AllyEffect::deserialize(value).map(TalentEffect::Ally)
+        } else {
+            // The derived enum's words, every area's kinds listed, under the key as toml says it.
+            let unknown = serde::de::value::Error::unknown_variant(kind, TalentEffect::kinds());
+            return Err(D::Error::custom(format!("{unknown}\nin `kind`")));
+        };
+        effect.map_err(D::Error::custom)
+    }
+}
+
+impl TalentEffect {
+    /// Every `kind` of the data, of every area, in alphabetical order.
+    pub fn kinds() -> &'static [&'static str] {
+        static KINDS: std::sync::LazyLock<Vec<&'static str>> = std::sync::LazyLock::new(|| {
+            let mut kinds: Vec<&'static str> = (BeastEffect::KINDS.iter())
+                .chain(OffenceEffect::KINDS.iter())
+                .chain(DefenceEffect::KINDS.iter())
+                .chain(VigourEffect::KINDS.iter())
+                .chain(HungerEffect::KINDS.iter())
+                .chain(MagicEffect::KINDS.iter())
+                .chain(SensesEffect::KINDS.iter())
+                .chain(StealthEffect::KINDS.iter())
+                .chain(MovementEffect::KINDS.iter())
+                .chain(DelvingEffect::KINDS.iter())
+                .chain(FortuneEffect::KINDS.iter())
+                .chain(GrowthEffect::KINDS.iter())
+                .chain(CraftEffect::KINDS.iter())
+                .chain(SignEffect::KINDS.iter())
+                .chain(FaithEffect::KINDS.iter())
+                .chain(MartialEffect::KINDS.iter())
+                .chain(ResourceEffect::KINDS.iter())
+                .chain(SongEffect::KINDS.iter())
+                .chain(AllyEffect::KINDS.iter())
+                .copied()
+                .collect();
+            kinds.sort_unstable();
+            kinds
+        });
+        &KINDS
     }
 }
 
@@ -1296,11 +380,11 @@ impl TalentEffect {
     pub fn sign_active(&self) -> Option<super::SignActive> {
         use super::SignActive as A;
         Some(match self {
-            TalentEffect::HornsGrace { .. } => A::HornsGrace,
-            TalentEffect::Stare { .. } => A::TransfixingStare,
-            TalentEffect::Blaze { .. } => A::Blaze,
-            TalentEffect::FireBreath { .. } => A::FireBreath,
-            TalentEffect::HoundsBay { .. } => A::HoundsBay,
+            TalentEffect::Sign(SignEffect::HornsGrace { .. }) => A::HornsGrace,
+            TalentEffect::Sign(SignEffect::Stare { .. }) => A::TransfixingStare,
+            TalentEffect::Sign(SignEffect::Blaze { .. }) => A::Blaze,
+            TalentEffect::Sign(SignEffect::FireBreath { .. }) => A::FireBreath,
+            TalentEffect::Sign(SignEffect::HoundsBay { .. }) => A::HoundsBay,
             _ => return None,
         })
     }
@@ -1309,37 +393,39 @@ impl TalentEffect {
     pub fn active(&self) -> Option<super::ClassActive> {
         use super::ClassActive as A;
         Some(match self {
-            TalentEffect::Rage { .. } => A::Rage,
-            TalentEffect::WarCry { .. } => A::WarCry,
-            TalentEffect::Cackle { .. } => A::Cackle,
+            TalentEffect::Martial(MartialEffect::Rage { .. }) => A::Rage,
+            TalentEffect::Martial(MartialEffect::WarCry { .. }) => A::WarCry,
+            TalentEffect::Magic(MagicEffect::Cackle { .. }) => A::Cackle,
             TalentEffect::Beast(BeastEffect::Familiar) => A::CallFamiliar,
-            TalentEffect::VeteransWind { .. } => A::VeteransWind,
-            TalentEffect::Charge { .. } => A::Charge,
-            TalentEffect::LayOnHands { .. } => A::LayOnHands,
-            TalentEffect::Smite { .. } => A::Smite,
-            TalentEffect::SmiteMode { mode, .. } => mode.active(),
-            TalentEffect::Radiance { .. } => A::HolyRadiance,
-            TalentEffect::PatientDefence { .. } => A::PatientDefence,
-            TalentEffect::StunningStrike { .. } => A::StunningStrike,
-            TalentEffect::QuiveringPalm { .. } => A::QuiveringPalm,
-            TalentEffect::WindStep { .. } => A::StepOfTheWind,
-            TalentEffect::Stillness { .. } => A::Stillness,
-            TalentEffect::Volley { .. } => A::Volley,
-            TalentEffect::Sic { .. } => A::Sic,
-            TalentEffect::Lurk { .. } => A::Lurk,
-            TalentEffect::Exploit => A::Exploit,
-            TalentEffect::ThrownExploit => A::ThrownExploit,
-            TalentEffect::Song { id, .. } => return A::from_id(id).filter(|a| a.sings()),
-            TalentEffect::Consecrate { .. } => A::Consecrate,
-            TalentEffect::Sanctuary { .. } => A::Sanctuary,
-            TalentEffect::Prayer { tier: Some(1), .. } => A::Orison,
-            TalentEffect::Knock { .. } => A::Knock,
-            TalentEffect::Scribe { .. } => A::Scribe,
-            TalentEffect::MerchantsEye => A::MerchantsEye,
-            TalentEffect::FieldForge { .. } => A::FieldForge,
-            TalentEffect::MakeDo { .. } => A::MakeDo,
-            TalentEffect::Rigs => A::Rig,
-            TalentEffect::SpiritWeapon { .. } => A::SpiritWeapon,
+            TalentEffect::Martial(MartialEffect::VeteransWind { .. }) => A::VeteransWind,
+            TalentEffect::Martial(MartialEffect::Charge { .. }) => A::Charge,
+            TalentEffect::Faith(FaithEffect::LayOnHands { .. }) => A::LayOnHands,
+            TalentEffect::Faith(FaithEffect::Smite { .. }) => A::Smite,
+            TalentEffect::Faith(FaithEffect::SmiteMode { mode, .. }) => mode.active(),
+            TalentEffect::Faith(FaithEffect::Radiance { .. }) => A::HolyRadiance,
+            TalentEffect::Martial(MartialEffect::PatientDefence { .. }) => A::PatientDefence,
+            TalentEffect::Martial(MartialEffect::StunningStrike { .. }) => A::StunningStrike,
+            TalentEffect::Martial(MartialEffect::QuiveringPalm { .. }) => A::QuiveringPalm,
+            TalentEffect::Martial(MartialEffect::WindStep { .. }) => A::StepOfTheWind,
+            TalentEffect::Martial(MartialEffect::Stillness { .. }) => A::Stillness,
+            TalentEffect::Martial(MartialEffect::Volley { .. }) => A::Volley,
+            TalentEffect::Ally(AllyEffect::Sic { .. }) => A::Sic,
+            TalentEffect::Stealth(StealthEffect::Lurk { .. }) => A::Lurk,
+            TalentEffect::Stealth(StealthEffect::Exploit) => A::Exploit,
+            TalentEffect::Stealth(StealthEffect::ThrownExploit) => A::ThrownExploit,
+            TalentEffect::Song(SongEffect::Song { id, .. }) => {
+                return A::from_id(id).filter(|a| a.sings());
+            }
+            TalentEffect::Faith(FaithEffect::Consecrate { .. }) => A::Consecrate,
+            TalentEffect::Faith(FaithEffect::Sanctuary { .. }) => A::Sanctuary,
+            TalentEffect::Faith(FaithEffect::Prayer { tier: Some(1), .. }) => A::Orison,
+            TalentEffect::Magic(MagicEffect::Knock { .. }) => A::Knock,
+            TalentEffect::Magic(MagicEffect::Scribe { .. }) => A::Scribe,
+            TalentEffect::Fortune(FortuneEffect::MerchantsEye) => A::MerchantsEye,
+            TalentEffect::Craft(CraftEffect::FieldForge { .. }) => A::FieldForge,
+            TalentEffect::Craft(CraftEffect::MakeDo { .. }) => A::MakeDo,
+            TalentEffect::Craft(CraftEffect::Rigs) => A::Rig,
+            TalentEffect::Martial(MartialEffect::SpiritWeapon { .. }) => A::SpiritWeapon,
             _ => return None,
         })
     }
@@ -1348,7 +434,7 @@ impl TalentEffect {
     /// mind; Call familiar, on Familiar).
     pub fn active_name(&self) -> Option<&str> {
         match self {
-            TalentEffect::Stillness { name, .. } => Some(name),
+            TalentEffect::Martial(MartialEffect::Stillness { name, .. }) => Some(name),
             TalentEffect::Beast(BeastEffect::Familiar) => Some("Call familiar"),
             _ => None,
         }
@@ -1360,7 +446,8 @@ impl TalentEffect {
     pub fn band_gated(&self) -> bool {
         matches!(
             self,
-            TalentEffect::Communion | TalentEffect::Retribution { .. }
+            TalentEffect::Faith(FaithEffect::Communion)
+                | TalentEffect::Faith(FaithEffect::Retribution { .. })
         )
     }
 
@@ -1369,10 +456,10 @@ impl TalentEffect {
     pub fn is_handed_down(&self) -> bool {
         matches!(
             self,
-            TalentEffect::StartingGold { .. }
-                | TalentEffect::StartingGems { .. }
-                | TalentEffect::Heirloom { .. }
-                | TalentEffect::Trade { .. }
+            TalentEffect::Fortune(FortuneEffect::StartingGold { .. })
+                | TalentEffect::Fortune(FortuneEffect::StartingGems { .. })
+                | TalentEffect::Fortune(FortuneEffect::Heirloom { .. })
+                | TalentEffect::Craft(CraftEffect::Trade { .. })
         )
     }
 
@@ -1383,25 +470,25 @@ impl TalentEffect {
         self.active().is_none()
             && !matches!(
                 self,
-                TalentEffect::SecondWind { .. }
-                    | TalentEffect::BloodMagic { .. }
-                    | TalentEffect::Spell { .. }
-                    | TalentEffect::Prayer { .. }
-                    | TalentEffect::Communion
-                    | TalentEffect::SpellMod(_)
-                    | TalentEffect::SpellType { .. }
-                    | TalentEffect::WeaponStamina { .. }
-                    | TalentEffect::WeaponRanks { .. }
-                    | TalentEffect::TakeUpSkills { .. }
-                    | TalentEffect::ExtraPick { .. }
-                    | TalentEffect::StartingGold { .. }
-                    | TalentEffect::StartingGems { .. }
-                    | TalentEffect::Heirloom { .. }
-                    | TalentEffect::Trade { .. }
-                    | TalentEffect::TradeBonus { .. }
-                    | TalentEffect::TerrainAs { .. }
-                    | TalentEffect::Scent { .. }
-                    | TalentEffect::NightSight { .. }
+                TalentEffect::Vigour(VigourEffect::SecondWind { .. })
+                    | TalentEffect::Magic(MagicEffect::BloodMagic { .. })
+                    | TalentEffect::Magic(MagicEffect::Spell { .. })
+                    | TalentEffect::Faith(FaithEffect::Prayer { .. })
+                    | TalentEffect::Faith(FaithEffect::Communion)
+                    | TalentEffect::Magic(MagicEffect::SpellMod(_))
+                    | TalentEffect::Magic(MagicEffect::SpellType { .. })
+                    | TalentEffect::Offence(OffenceEffect::WeaponStamina { .. })
+                    | TalentEffect::Growth(GrowthEffect::WeaponRanks { .. })
+                    | TalentEffect::Growth(GrowthEffect::TakeUpSkills { .. })
+                    | TalentEffect::Growth(GrowthEffect::ExtraPick { .. })
+                    | TalentEffect::Fortune(FortuneEffect::StartingGold { .. })
+                    | TalentEffect::Fortune(FortuneEffect::StartingGems { .. })
+                    | TalentEffect::Fortune(FortuneEffect::Heirloom { .. })
+                    | TalentEffect::Craft(CraftEffect::Trade { .. })
+                    | TalentEffect::Craft(CraftEffect::TradeBonus { .. })
+                    | TalentEffect::Movement(MovementEffect::TerrainAs { .. })
+                    | TalentEffect::Senses(SensesEffect::Scent { .. })
+                    | TalentEffect::Senses(SensesEffect::NightSight { .. })
             )
     }
 
@@ -1450,45 +537,47 @@ impl TalentEffect {
         };
         let duration = |text: &str| text.parse::<crate::time::Duration>().map(|_| ());
         match self {
-            TalentEffect::GrantsResource { resource: id }
-            | TalentEffect::RapidShot { resource: id, .. }
-            | TalentEffect::FlurryCost { resource: id, .. }
-            | TalentEffect::Retribution { resource: id, .. }
-            | TalentEffect::CatchMissiles { resource: id, .. }
-            | TalentEffect::Rage { resource: id }
-            | TalentEffect::ResourceBuild { resource: id, .. }
-            | TalentEffect::ResourceMax { resource: id, .. }
-            | TalentEffect::ResourceStart { resource: id, .. }
-            | TalentEffect::ResourceRate { resource: id, .. } => resource(id),
-            TalentEffect::Sic { status: id, .. }
-            | TalentEffect::Virtuoso { status: id }
-            | TalentEffect::RoomStatusImmune { status: id }
-            | TalentEffect::RaisePercent { status: id, .. }
-            | TalentEffect::VeteransWind { cooldown: id, .. }
-            | TalentEffect::SecondWind { cooldown: id, .. }
-            | TalentEffect::Lurk { status: id }
-            | TalentEffect::SneakKillStatus { status: id }
-            | TalentEffect::ExploitStatus { status: id }
-            | TalentEffect::WindStep { status: id }
-            | TalentEffect::QuiveringPalm { status: id, .. }
-            | TalentEffect::StunningStrike { status: id, .. }
-            | TalentEffect::PatientDefence { status: id }
-            | TalentEffect::WarCry { status: id, .. }
-            | TalentEffect::StatusDamage { status: id, .. }
-            | TalentEffect::Scent { status: id, .. }
-            | TalentEffect::StatusEases { status: id, .. }
-            | TalentEffect::StatusLasts { status: id, .. }
-            | TalentEffect::Brace { status: id, .. }
-            | TalentEffect::NoPenalty { status: id }
-            | TalentEffect::CriticalStatus { status: id }
-            | TalentEffect::Grip { status: id }
-            | TalentEffect::Reprieve { status: id, .. } => status(id),
-            TalentEffect::Song {
+            TalentEffect::Resource(ResourceEffect::GrantsResource { resource: id })
+            | TalentEffect::Martial(MartialEffect::RapidShot { resource: id, .. })
+            | TalentEffect::Martial(MartialEffect::FlurryCost { resource: id, .. })
+            | TalentEffect::Faith(FaithEffect::Retribution { resource: id, .. })
+            | TalentEffect::Martial(MartialEffect::CatchMissiles { resource: id, .. })
+            | TalentEffect::Martial(MartialEffect::Rage { resource: id })
+            | TalentEffect::Resource(ResourceEffect::ResourceBuild { resource: id, .. })
+            | TalentEffect::Resource(ResourceEffect::ResourceMax { resource: id, .. })
+            | TalentEffect::Resource(ResourceEffect::ResourceStart { resource: id, .. })
+            | TalentEffect::Resource(ResourceEffect::ResourceRate { resource: id, .. }) => {
+                resource(id)
+            }
+            TalentEffect::Ally(AllyEffect::Sic { status: id, .. })
+            | TalentEffect::Song(SongEffect::Virtuoso { status: id })
+            | TalentEffect::Delving(DelvingEffect::RoomStatusImmune { status: id })
+            | TalentEffect::Vigour(VigourEffect::RaisePercent { status: id, .. })
+            | TalentEffect::Martial(MartialEffect::VeteransWind { cooldown: id, .. })
+            | TalentEffect::Vigour(VigourEffect::SecondWind { cooldown: id, .. })
+            | TalentEffect::Stealth(StealthEffect::Lurk { status: id })
+            | TalentEffect::Stealth(StealthEffect::SneakKillStatus { status: id })
+            | TalentEffect::Stealth(StealthEffect::ExploitStatus { status: id })
+            | TalentEffect::Martial(MartialEffect::WindStep { status: id })
+            | TalentEffect::Martial(MartialEffect::QuiveringPalm { status: id, .. })
+            | TalentEffect::Martial(MartialEffect::StunningStrike { status: id, .. })
+            | TalentEffect::Martial(MartialEffect::PatientDefence { status: id })
+            | TalentEffect::Martial(MartialEffect::WarCry { status: id, .. })
+            | TalentEffect::Offence(OffenceEffect::StatusDamage { status: id, .. })
+            | TalentEffect::Senses(SensesEffect::Scent { status: id, .. })
+            | TalentEffect::Vigour(VigourEffect::StatusEases { status: id, .. })
+            | TalentEffect::Vigour(VigourEffect::StatusLasts { status: id, .. })
+            | TalentEffect::Offence(OffenceEffect::Brace { status: id, .. })
+            | TalentEffect::Vigour(VigourEffect::NoPenalty { status: id })
+            | TalentEffect::Offence(OffenceEffect::CriticalStatus { status: id })
+            | TalentEffect::Offence(OffenceEffect::Grip { status: id })
+            | TalentEffect::Vigour(VigourEffect::Reprieve { status: id, .. }) => status(id),
+            TalentEffect::Song(SongEffect::Song {
                 id,
                 status: status_id,
                 resource: pool,
                 ..
-            } => {
+            }) => {
                 if (super::ClassActive::from_id(id)).is_none_or(|a| !a.sings()) {
                     return Err(format!("`song`: `{id}` is no song's active"));
                 }
@@ -1497,26 +586,28 @@ impl TalentEffect {
                 }
                 status(status_id)
             }
-            TalentEffect::Consecrate { time, .. } => duration(time),
-            TalentEffect::FieldForge { seconds: 0 } => Err("`field_forge`: `seconds` is 0".into()),
-            TalentEffect::MakersMark { worth_percent: 0 } => {
+            TalentEffect::Faith(FaithEffect::Consecrate { time, .. }) => duration(time),
+            TalentEffect::Craft(CraftEffect::FieldForge { seconds: 0 }) => {
+                Err("`field_forge`: `seconds` is 0".into())
+            }
+            TalentEffect::Craft(CraftEffect::MakersMark { worth_percent: 0 }) => {
                 Err("`makers_mark`: `worth_percent` is 0".into())
             }
-            TalentEffect::CraftTimePercent { value: 0 } => {
+            TalentEffect::Craft(CraftEffect::CraftTimePercent { value: 0 }) => {
                 Err("`craft_time_percent`: `value` is 0".into())
             }
-            TalentEffect::Sanctuary { time, lasts, .. } => {
+            TalentEffect::Faith(FaithEffect::Sanctuary { time, lasts, .. }) => {
                 duration(time)?;
                 duration(lasts)
             }
-            TalentEffect::Skill { skill: name, .. } => match (name, choice) {
+            TalentEffect::Growth(GrowthEffect::Skill { skill: name, .. }) => match (name, choice) {
                 (Some(name), _) => skill(name),
                 (None, Some(Choice::Skill)) => Ok(()),
                 (None, _) => Err(
                     "`skill` names a skill, or is for the chosen one: `choice = \"skill\"`".into(),
                 ),
             },
-            TalentEffect::Heirloom { weapons, .. } => {
+            TalentEffect::Fortune(FortuneEffect::Heirloom { weapons, .. }) => {
                 for race in weapons.keys() {
                     if !content.races().list.is_empty() && content.race(race).is_none() {
                         return Err(format!("`heirloom`: names an unknown race `{race}`"));
@@ -1526,72 +617,77 @@ impl TalentEffect {
                 Ok(())
             }
             // Its tools are checked once the objects load (`check_trades`).
-            TalentEffect::Trade { skill: name, .. } => skill(name),
-            TalentEffect::WeaponRanks { skills, .. } => {
+            TalentEffect::Craft(CraftEffect::Trade { skill: name, .. }) => skill(name),
+            TalentEffect::Growth(GrowthEffect::WeaponRanks { skills, .. }) => {
                 skills.iter().try_for_each(|id| weapon_skill(id))
             }
-            TalentEffect::TakeUpSkills { except, .. } => except.iter().try_for_each(|id| skill(id)),
-            TalentEffect::UnarmedDie { sides } => {
+            TalentEffect::Growth(GrowthEffect::TakeUpSkills { except, .. }) => {
+                except.iter().try_for_each(|id| skill(id))
+            }
+            TalentEffect::Offence(OffenceEffect::UnarmedDie { sides }) => {
                 nonzero("unarmed_die", "sides", u32::from(*sides))
             }
-            TalentEffect::KickDie { sides } => nonzero("kick_die", "sides", u32::from(*sides)),
-            TalentEffect::ExploitThreat { value, sure_at } => {
+            TalentEffect::Offence(OffenceEffect::KickDie { sides }) => {
+                nonzero("kick_die", "sides", u32::from(*sides))
+            }
+            TalentEffect::Stealth(StealthEffect::ExploitThreat { value, sure_at }) => {
                 nonzero("exploit_threat", "value", u32::from(*value))?;
                 nonzero("exploit_threat", "sure_at", u32::from(*sure_at))
             }
-            TalentEffect::Smite {
+            TalentEffect::Faith(FaithEffect::Smite {
                 per_levels, sides, ..
-            } => {
+            }) => {
                 nonzero("smite", "per_levels", u32::from(*per_levels))?;
                 nonzero("smite", "sides", u32::from(*sides))
             }
-            TalentEffect::HexTithe { per_levels } => {
+            TalentEffect::Magic(MagicEffect::HexTithe { per_levels }) => {
                 nonzero("hex_tithe", "per_levels", u32::from(*per_levels))
             }
-            TalentEffect::MaxHpPerLevels { per_levels, .. } => {
+            TalentEffect::Vigour(VigourEffect::MaxHpPerLevels { per_levels, .. }) => {
                 nonzero("max_hp_per_levels", "per_levels", u32::from(*per_levels))
             }
-            TalentEffect::MaxManaPerLevels { per_levels, .. } => {
+            TalentEffect::Magic(MagicEffect::MaxManaPerLevels { per_levels, .. }) => {
                 nonzero("max_mana_per_levels", "per_levels", u32::from(*per_levels))
             }
-            TalentEffect::FreeBlow {
+            TalentEffect::Offence(OffenceEffect::FreeBlow {
                 one_in: Some(n), ..
-            } => nonzero("free_blow", "one_in", *n),
-            TalentEffect::SmiteMode {
+            }) => nonzero("free_blow", "one_in", *n),
+            TalentEffect::Faith(FaithEffect::SmiteMode {
                 mode, status: id, ..
-            } => match mode {
+            }) => match mode {
                 SmiteRiderKind::Banish => Ok(()),
                 _ => status(id),
             },
-            TalentEffect::Stillness { statuses, .. }
-            | TalentEffect::Unstoppable { statuses, .. } => {
+            TalentEffect::Martial(MartialEffect::Stillness { statuses, .. })
+            | TalentEffect::Martial(MartialEffect::Unstoppable { statuses, .. }) => {
                 statuses.iter().try_for_each(|id| status(id))
             }
-            TalentEffect::Blaze {
+            TalentEffect::Sign(SignEffect::Blaze {
                 damage_type: kind,
                 fire,
                 cooldown,
                 ..
-            } => {
+            }) => {
                 damage_type(kind)?;
                 light(fire)?;
                 status(cooldown)
             }
-            TalentEffect::Radiance {
+            TalentEffect::Faith(FaithEffect::Radiance {
                 status: id,
                 light: l,
-            } => {
+            }) => {
                 status(id)?;
                 light(l)
             }
-            TalentEffect::InnerLight { light: l } | TalentEffect::LanternLight { light: l } => {
-                light(l)
-            }
-            TalentEffect::Resist {
+            TalentEffect::Senses(SensesEffect::InnerLight { light: l })
+            | TalentEffect::Senses(SensesEffect::LanternLight { light: l }) => light(l),
+            TalentEffect::Defence(DefenceEffect::Resist {
                 damage: Some(kind), ..
+            })
+            | TalentEffect::Offence(OffenceEffect::Penetration { damage: kind, .. }) => {
+                damage_type(kind)
             }
-            | TalentEffect::Penetration { damage: kind, .. } => damage_type(kind),
-            TalentEffect::Resist { damage: None, .. } => match choice {
+            TalentEffect::Defence(DefenceEffect::Resist { damage: None, .. }) => match choice {
                 Some(Choice::Element) => Ok(()),
                 _ => Err(
                     "`resist` without a `damage` is for the chosen element: it needs \
@@ -1599,46 +695,46 @@ impl TalentEffect {
                         .into(),
                 ),
             },
-            TalentEffect::HornsGrace {
+            TalentEffect::Sign(SignEffect::HornsGrace {
                 cures, cooldown, ..
-            } => {
+            }) => {
                 cures.iter().try_for_each(|id| status(id))?;
                 status(cooldown)
             }
-            TalentEffect::Stare {
+            TalentEffect::Sign(SignEffect::Stare {
                 status: id,
                 cooldown,
                 ..
-            }
-            | TalentEffect::HoundsBay {
+            })
+            | TalentEffect::Sign(SignEffect::HoundsBay {
                 status: id,
                 cooldown,
                 ..
-            } => {
+            }) => {
                 status(id)?;
                 status(cooldown)
             }
-            TalentEffect::FireBreath {
+            TalentEffect::Sign(SignEffect::FireBreath {
                 damage_type: kind,
                 spell,
                 cooldown,
                 ..
-            } => {
+            }) => {
                 damage_type(kind)?;
                 super::spell::check_effect(content, spell, super::effect::EffectShape::Bolt)?;
                 status(cooldown)
             }
-            TalentEffect::RiseFromAshes {
+            TalentEffect::Vigour(VigourEffect::RiseFromAshes {
                 status: id,
                 spell,
                 damage_type: kind,
                 ..
-            } => {
+            }) => {
                 damage_type(kind)?;
                 super::spell::check_effect(content, spell, super::effect::EffectShape::Burst)?;
                 status(id)
             }
-            TalentEffect::Weapon { role, skill, .. } => match skill {
+            TalentEffect::Offence(OffenceEffect::Weapon { role, skill, .. }) => match skill {
                 Some(id) => weapon_skill(id),
                 None if role.is_some() || choice.is_some_and(Choice::is_weapon_skill) => Ok(()),
                 None => Err(
@@ -1647,14 +743,16 @@ impl TalentEffect {
                         .into(),
                 ),
             },
-            TalentEffect::SpellMod(spec) => spec.check(content),
-            TalentEffect::SpellType { when, .. } => when.iter().try_for_each(|id| damage_type(id)),
-            TalentEffect::LauncherRange {
+            TalentEffect::Magic(MagicEffect::SpellMod(spec)) => spec.check(content),
+            TalentEffect::Magic(MagicEffect::SpellType { when, .. }) => {
+                when.iter().try_for_each(|id| damage_type(id))
+            }
+            TalentEffect::Offence(OffenceEffect::LauncherRange {
                 skill: Some(id), ..
-            } => weapon_skill(id),
+            }) => weapon_skill(id),
             // A spell ability names a spell of data/spells/ of its id (content without spells
             // has nothing to check it by).
-            TalentEffect::Spell { spell } => {
+            TalentEffect::Magic(MagicEffect::Spell { spell }) => {
                 if content.spells().is_empty() || content.spell_id(spell).is_some() {
                     Ok(())
                 } else {
@@ -1964,7 +1062,8 @@ impl TalentBook {
         }
         for (_, def) in self.iter() {
             for effect in &def.effects {
-                let TalentEffect::TerrainAs { terrains, like } = effect else {
+                let TalentEffect::Movement(MovementEffect::TerrainAs { terrains, like }) = effect
+                else {
                     continue;
                 };
                 if let Some(id) =
@@ -2304,9 +1403,9 @@ fn resolve_needs(
 pub(super) fn check_heirlooms(content: &Content) -> Result<(), String> {
     for (_, def) in content.talents().iter() {
         for effect in &def.effects {
-            let TalentEffect::Heirloom {
+            let TalentEffect::Fortune(FortuneEffect::Heirloom {
                 weapons, fallback, ..
-            } = effect
+            }) = effect
             else {
                 continue;
             };
@@ -2329,7 +1428,7 @@ pub(super) fn check_heirlooms(content: &Content) -> Result<(), String> {
 pub(super) fn check_trades(content: &Content) -> Result<(), String> {
     for (_, def) in content.talents().iter() {
         for effect in &def.effects {
-            if let TalentEffect::Trade { tools, .. } = effect {
+            if let TalentEffect::Craft(CraftEffect::Trade { tools, .. }) = effect {
                 (content.kit_lines(tools))
                     .map_err(|m| format!("talent `{}`: `trade`: {m}", def.id))?;
             }
@@ -2338,8 +1437,9 @@ pub(super) fn check_trades(content: &Content) -> Result<(), String> {
     Ok(())
 }
 
-/// Parses the talent table: the settings (`[[tree]]`, `[[system]]`) and the talents, resolved against `content`, which must have
-/// its skills, weapon skills, races, classes, vision profiles, and damage types already.
+/// Parses the talent table: the settings (`[[tree]]`, `[[system]]`) and the talents, resolved
+/// against `content`, which must have its skills, weapon skills, races, classes, vision profiles,
+/// and damage types already.
 pub(super) fn parse<'a>(
     files: impl IntoIterator<Item = (&'a str, &'a str)>,
     content: &Content,
@@ -2461,7 +1561,7 @@ pub(super) fn parse<'a>(
     book.mark_percent = (book.list.iter())
         .flat_map(|t| &t.effects)
         .filter_map(|e| match e {
-            TalentEffect::MakersMark { worth_percent } => Some(*worth_percent),
+            TalentEffect::Craft(CraftEffect::MakersMark { worth_percent }) => Some(*worth_percent),
             _ => None,
         })
         .max()
@@ -2583,10 +1683,16 @@ systems = ["hit_points"]
         let book = content.talents();
         let x = book.get(book.id("x").expect("x"));
         let raging = content.status_id("raging").expect("raging");
-        assert_eq!(x.effects, vec![TalentEffect::Dodge { value: 1 }]);
+        assert_eq!(
+            x.effects,
+            vec![TalentEffect::Defence(DefenceEffect::Dodge { value: 1 })]
+        );
         assert_eq!(
             x.effects_while,
-            vec![(raging, TalentEffect::Dodge { value: 2 })]
+            vec![(
+                raging,
+                TalentEffect::Defence(DefenceEffect::Dodge { value: 2 })
+            )]
         );
         // Alone, it is something to do.
         with("{ kind = \"dodge\", value = 2, while = \"raging\" }").expect("loads");
@@ -2835,8 +1941,9 @@ systems = ["hit_points"]
 
     /// Every effect kind of [`TalentEffect`] is documented in `data/talents/README.toml`, the
     /// content's schema notes (#1535): a comment line `#   kind ...` names it. The kinds are
-    /// read from the sources, the enums' variants in snake case as serde names them: this
-    /// file's, less the areas' wrappers (`Beast`), and each area's enum (#1495, [`BeastEffect`]).
+    /// read from the sources, each area's enum's variants in snake case as serde names them
+    /// (#1495), and each area's `KINDS` are checked against them; together they are
+    /// [`TalentEffect::kinds`], every kind once.
     #[test]
     fn readme_documents_every_effect_kind() {
         let readme = include_str!("../../../../assets/data/talents/README.toml");
@@ -2860,13 +1967,119 @@ systems = ["hit_points"]
                 })
                 .collect()
         };
-        let beast = variants(include_str!("../talent/beast.rs"), "pub enum BeastEffect {");
-        assert_eq!(beast.len(), BeastEffect::KINDS.len(), "{beast:?}");
-        let mut kinds: Vec<String> = variants(include_str!("talent.rs"), "pub enum TalentEffect {")
-            .into_iter()
-            .filter(|k| k != "beast")
-            .collect();
-        kinds.extend(beast);
+        let areas: [(&str, &str, &[&str]); 19] = [
+            (
+                "ally",
+                include_str!("../talent/ally.rs"),
+                &AllyEffect::KINDS,
+            ),
+            (
+                "beast",
+                include_str!("../talent/beast.rs"),
+                &BeastEffect::KINDS,
+            ),
+            (
+                "craft",
+                include_str!("../talent/craft.rs"),
+                &CraftEffect::KINDS,
+            ),
+            (
+                "defence",
+                include_str!("../talent/defence.rs"),
+                &DefenceEffect::KINDS,
+            ),
+            (
+                "delving",
+                include_str!("../talent/delving.rs"),
+                &DelvingEffect::KINDS,
+            ),
+            (
+                "faith",
+                include_str!("../talent/faith.rs"),
+                &FaithEffect::KINDS,
+            ),
+            (
+                "fortune",
+                include_str!("../talent/fortune.rs"),
+                &FortuneEffect::KINDS,
+            ),
+            (
+                "growth",
+                include_str!("../talent/growth.rs"),
+                &GrowthEffect::KINDS,
+            ),
+            (
+                "hunger",
+                include_str!("../talent/hunger.rs"),
+                &HungerEffect::KINDS,
+            ),
+            (
+                "magic",
+                include_str!("../talent/magic.rs"),
+                &MagicEffect::KINDS,
+            ),
+            (
+                "martial",
+                include_str!("../talent/martial.rs"),
+                &MartialEffect::KINDS,
+            ),
+            (
+                "movement",
+                include_str!("../talent/movement.rs"),
+                &MovementEffect::KINDS,
+            ),
+            (
+                "offence",
+                include_str!("../talent/offence.rs"),
+                &OffenceEffect::KINDS,
+            ),
+            (
+                "resource",
+                include_str!("../talent/resource.rs"),
+                &ResourceEffect::KINDS,
+            ),
+            (
+                "senses",
+                include_str!("../talent/senses.rs"),
+                &SensesEffect::KINDS,
+            ),
+            (
+                "sign",
+                include_str!("../talent/sign.rs"),
+                &SignEffect::KINDS,
+            ),
+            (
+                "song",
+                include_str!("../talent/song.rs"),
+                &SongEffect::KINDS,
+            ),
+            (
+                "stealth",
+                include_str!("../talent/stealth.rs"),
+                &StealthEffect::KINDS,
+            ),
+            (
+                "vigour",
+                include_str!("../talent/vigour.rs"),
+                &VigourEffect::KINDS,
+            ),
+        ];
+        let mut kinds: Vec<String> = Vec::new();
+        for (area, source, listed) in areas {
+            let head = format!(
+                "pub enum {}{}Effect {{",
+                area[..1].to_uppercase(),
+                &area[1..]
+            );
+            let mut read = variants(source, &head);
+            read.sort();
+            assert_eq!(read, listed, "{area}: KINDS are its variants, sorted");
+            kinds.extend(read);
+        }
+        let mut every: Vec<&str> = kinds.iter().map(String::as_str).collect();
+        every.sort_unstable();
+        assert_eq!(every, TalentEffect::kinds(), "every kind of one area");
+        assert!(every.windows(2).all(|w| w[0] != w[1]), "every kind once");
         assert!(kinds.len() > 200, "{} kinds read", kinds.len());
         // An entry's head runs to the first double space: `kind { fields }`, or several kinds
         // that share their words, `pick_lock, steal, throw_voice`.

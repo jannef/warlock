@@ -140,7 +140,8 @@ impl Actor {
         let armour = self.armour_spell_cost(content);
         let price = rules.mana(spell, armour);
         let price = u16::try_from(price).unwrap_or(u16::MAX);
-        mods.spell_mana_with(price, self.spell_mods(content, spell).cost)
+        mods.magic
+            .spell_mana_with(price, self.spell_mods(content, spell).cost)
     }
 
     /// What `spell` costs it (the one hook, spec §8 "Spells"): [`Actor::spell_base`] through

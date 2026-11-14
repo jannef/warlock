@@ -25,7 +25,7 @@ impl World {
     pub(super) fn cackle(&mut self, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
-        let Some(cackle) = self.state.player().talent_mods(&content).cackle else {
+        let Some(cackle) = self.state.player().talent_mods(&content).magic.cackle else {
             return Spent::Nothing;
         };
         let hexes = self.own_hexes_in_sight();

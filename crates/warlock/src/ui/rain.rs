@@ -201,14 +201,14 @@ pub(super) fn emit(
 mod tests {
     use super::*;
     use std::sync::Arc;
-    use warlock_core::content::{Content, ContentFiles};
+    use warlock_core::content::Content;
     use warlock_core::weather::Weather;
     use warlock_core::{Action, World};
 
     /// A walled garden under the sky: grass, a pond, a roofed porch, a wall, and a tree; in high
     /// summer, so the pond is open water (spec §5 "Ice").
     fn garden() -> World {
-        let mut files = ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.insert(
             "levels/garden.toml",
             "name = \"Garden\"\nkind = \"outdoor\"\nmap = '''\n\

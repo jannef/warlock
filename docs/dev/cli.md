@@ -24,7 +24,7 @@ The one-line table is in CLAUDE.md ("Commands"); this is what each row does.
   "Releases, web build, logs").
 - **Release configuration**, `cargo build --no-default-features -p warlock -p warlock-cli`: no
   `showcase` feature, the test world left out, as in a release; `cargo test
-  --no-default-features -p warlock-core --test release_content` checks it; CI's
+  --no-default-features -p warlock-assets --test release_content` checks it; CI's
   `release-config` job; docs/dev/campaign.md.
 - **Web smoke test**, `cargo xtask web-smoke <chrome>`: serves `target/web`, drives headless
   Chromium through menu → New run (skipped: the web build lists one scenario, the Ascmearc's

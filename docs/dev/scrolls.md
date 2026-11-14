@@ -29,7 +29,7 @@ magic, and draws no rarity for them).
 The rules are `world/read.rs`: `Action::Read { item, target: Option<ReadTarget> }` (`read:b`,
 `read:b:12,5` a cell, `read:b:c` a stack; `ReadTarget::{Cell, Item}`), one arm in
 `player_acts`, priced `ActionKind::Read` (`read` in `data/actions.toml`; `read_price` scales it
-by `TalentMods::read_percent`, Scroll savant's and Scroll adept's halves, never below
+by `MagicMods::read_percent`, Scroll savant's and Scroll adept's halves, never below
 `READ_FLOOR`, a quarter) before the scroll is
 used up (`use_up`, which follows the equipment's letters; it reports the Read stat use and
 `Use::Read`, Decipher script's 50 % mark, #1270: all reading trains it). Refusals take no time
@@ -70,7 +70,7 @@ calls `deciphers` with the scroll's spell and level (`Reading::Cast`, else none 
 reading's refusals and its `use_up`. A spell the player knows (`Actor::knows_spell`, a scroll they
 wrote too): true, no draw, and `Use::Decipher` still marks (a trained skill only). Else trained in Decipher script (the skill of learning, #1270) with `Actor::learning` at
 least `level`: true, no draw, no mark, no words. Otherwise a `check::check` of the Intelligence modifier +
-`TalentMods::check(Intelligence)` + `skill_effect(Effect::Decipher)` (0 unless trained in Decipher script) against
+`VigourMods::check(Intelligence)` + `skill_effect(Effect::Decipher)` (0 unless trained in Decipher script) against
 `DecipherRules::difficulty` (`base` + level ÷ `levels_per_point`), then `Use::Decipher` (100 %,
 whatever came of it; none for Spellcraft), and on a failure
 "The writing swims before your eyes." An untrained reader's points are 0, whatever
@@ -117,8 +117,8 @@ label) and known on sight; `content/object.rs` lets a scrolls-class object witho
 loot (`level`, `frequency`: a `frequency` given makes it loot, so the sealed letter, which has
 none, stays out). `World::read` refuses it before anything else ("There is nothing written on
 it."). **Writing scrolls** is `world/scribe.rs`, the
-wizard's Scribe (`scribe` talent at 12, `TalentEffect::Scribe { mana_times }`,
-`TalentMods::scribe`): `Action::Scribe { spell }` (`scribe:fireball`, its own action, as the
+wizard's Scribe (`scribe` talent at 12, `MagicEffect::Scribe { mana_times }`,
+`MagicMods::scribe`): `Action::Scribe { spell }` (`scribe:fireball`, its own action, as the
 active asks for a spell: `ClassActive::aims_spell`, `Aim::Spell`), `World::start_scribe`
 refusing with no time (`may_use_class`; an unknown id, a spell not known, `Content::scroll_of`
 none, no blank, `scribe_cost` above the mana), then `Spent::Scribe(Writing)` → `World::scribe`

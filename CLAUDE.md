@@ -67,7 +67,8 @@ then read the PNG.
 ## Architecture (spec §8)
 
 ```
-crates/warlock-core   plain Rust, no Bevy, deterministic simulation
+crates/warlock-core   plain Rust, no Bevy, deterministic simulation; takes its content as input
+crates/warlock-assets the content under assets/ embedded for the binaries (#1587)
 crates/warlock-cli    headless dev tool on top of core (no Bevy)
 crates/warlock        Bevy app: rendering, input, UI, effects, platform
 crates/workspace-hack no code: pins features so every member shares one warlock-core build (docs/dev/merging.md)
@@ -81,7 +82,7 @@ tests. **Read the ones your task touches before changing code, and update them w
 file). Topics:
 
 - `docs/dev/cli.md` — the CLI reference: game flags, `--scenario` and `--screen` names, `warlock-cli`, the `cargo xtask` rows in detail, replay files, dump layers, action text syntax
-- `docs/dev/content.md` — TOML content embedded by `build.rs`, level files and legends (faction overrides, arrival lines, water flow)
+- `docs/dev/content.md` — TOML content embedded by `warlock-assets` and handed to core, level files and legends (faction overrides, arrival lines, water flow)
 - `docs/dev/campaign.md` — campaigns: `assets/campaigns/<id>/`, `campaign.toml`, what is a campaign's and what is shared, the cross-campaign checks, a run's campaign, the fingerprint per campaign, New run's order and its skip in a release, the Characters screen's campaign
 - `docs/dev/saves.md` — storage backends (native files, browser `localStorage`), one save per character and the list of them, autosave, permadeath, where files live (`paths.rs`, portable mode)
 - `docs/dev/releases.md` — cutting a release, the web build and its size tuning, GitHub Pages, logs and crash reports
@@ -133,7 +134,7 @@ file). Topics:
 - `docs/dev/magic-items.md` — affixes, rarities, base items, loot, identification, the item description
 - `docs/dev/enchanting.md` — affix capacity (`magic/capacity.rs`, materials' `binding`), the trim as the last step of making any item (`loot::finished`, gear's after its condition), `quality` on hand-made items, the capacity line for the Appraise-trained, the recipes (Kindle, Quicken, Recast, Imbue, Ennoble, Unbind: `world/enchant.rs`, `roll_affix_within`, the reach)
 - `docs/dev/potions.md` — potions: the drink kinds, drinking through Consume, words and colours, sources, their talents
-- `docs/dev/prayer.md` — the priest's prayer: `data/prayer.toml`, the prayer talents and `TalentMods::prayer`, the face, the problems in priority order, the strain and its lock, the fixes, the dumps
+- `docs/dev/prayer.md` — the priest's prayer: `data/prayer.toml`, the prayer talents and `FaithMods::prayer`, the face, the problems in priority order, the strain and its lock, the fixes, the dumps
 - `docs/dev/scrolls.md` — reading, spell scrolls on the traps' shared spell code, the scroll of identify, the read and identify lists
 - `docs/dev/overworld.md` — the overworld level, locations, sight at map scale, generated local areas
 - `docs/dev/encounters.md` — overworld encounters: the rules file and the campaigns' tables, the roll, the lookouts, the pending choice, evading, where everyone stands by outcome, known parties

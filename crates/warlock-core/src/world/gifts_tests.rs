@@ -154,14 +154,14 @@ fn many_minds_divides_the_will_and_heavy_feet_and_keen_eyes_are_data() {
     use crate::stats::Stat;
     let hydra = born("showcase", Some(("wood", "hydra")));
     let mods = hydra.state.player().talent_mods(hydra.content());
-    assert_eq!(mods.checks[Stat::Willpower], -2);
+    assert_eq!(mods.vigour.checks[Stat::Willpower], -2);
     let wyvern = born("showcase", Some(("wood", "wyvern")));
     let mods = wyvern.state.player().talent_mods(wyvern.content());
-    assert_eq!(mods.footsteps_percent, 25);
+    assert_eq!(mods.stealth.footsteps_percent, 25);
     let basilisk = born("showcase", Some(("wood", "basilisk")));
     let mods = basilisk.state.player().talent_mods(basilisk.content());
-    assert_eq!(mods.notice, Some(2));
-    assert!(mods.distrusted);
+    assert_eq!(mods.delving.notice, Some(2));
+    assert!(mods.fortune.distrusted);
 }
 
 #[test]

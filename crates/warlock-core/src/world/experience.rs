@@ -192,7 +192,7 @@ impl World {
         if gain == 0 {
             return;
         }
-        let percent = self.state.player().talent_mods(&content).xp_percent;
+        let percent = self.state.player().talent_mods(&content).growth.xp_percent;
         let gain = TalentMods::scaled(u64::from(gain), percent);
         let gain = u32::try_from(gain).unwrap_or(u32::MAX).max(1);
         self.add_xp(gain);

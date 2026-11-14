@@ -170,11 +170,10 @@ mod tests {
     use std::sync::Arc;
     use warlock_core::World;
     use warlock_core::character::CharacterSpec;
-    use warlock_core::content::Content;
 
     #[test]
     fn a_letter_writes_its_spell() {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let spec: CharacterSpec = "human,female,wizard".parse().expect("a character");
         let mut world =
             World::with_character(content, "showcase", None, Some(&spec)).expect("world");

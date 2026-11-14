@@ -77,7 +77,7 @@ pub fn roll_count(
         class,
         race,
         intelligence: content.skill_rolls().for_intelligence(score),
-        talents: u8::try_from(player.talent_mods(content).skill_rolls.max(0)).unwrap_or(0),
+        talents: u8::try_from(player.talent_mods(content).growth.skill_rolls.max(0)).unwrap_or(0),
     }
 }
 
@@ -118,7 +118,7 @@ impl SkillRoll {
 }
 
 /// The level-up roll on `skill`, trained as `trained`, of a player of `character` whose trades
-/// are `trades` (`TalentMods::trades`): the die the skill's marks set on the ladder, one step up
+/// are `trades` (`CraftMods::trades`): the die the skill's marks set on the ladder, one step up
 /// for a skill the class is known for (or the prestige class, once called: the union of both;
 /// spec §8 "Prestige classes") or a trade (the step is one, whatever gives it), +1 for any other
 /// skill the class trains or a skill the race trains, halved from the soft cap on.
@@ -199,7 +199,13 @@ impl World {
     /// and the words, never the number. The one path of a level-up roll and an automatic one.
     fn roll_skill(&mut self, id: SkillId, trained: Trained) {
         let content = self.content.clone();
-        let trades = self.state.player().talent_mods(&content).trades.clone();
+        let trades = self
+            .state
+            .player()
+            .talent_mods(&content)
+            .craft
+            .trades
+            .clone();
         let character = self.state.character.as_ref();
         let roll = skill_roll(&content, character, &trades, id, trained);
         let seed = self.state.seed;

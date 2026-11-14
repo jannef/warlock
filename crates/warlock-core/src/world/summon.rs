@@ -79,7 +79,7 @@ impl World {
     /// One creature drawn from summoning pool `pool` (not empty) on the gameplay stream, shared
     /// by the enemy summoner and the player's summon spells (`summon_spell.rs`). Without a
     /// `bias`, or with one that matches nothing, one `below(pool.len())`, each entry as likely.
-    /// With one (the owner's Q9 of #828: `TalentMods::summon_bias`), an entry whose type
+    /// With one (the owner's Q9 of #828: `AllyMods::summon_bias`), an entry whose type
     /// carries a bias's tag weighs that bias's weight (several multiply), the rest 1, and the
     /// draw is one `below(total)`; a total of 0 falls back to the plain draw.
     pub(super) fn summon_draw(

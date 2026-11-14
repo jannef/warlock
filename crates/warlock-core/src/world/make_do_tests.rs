@@ -8,6 +8,7 @@ use crate::action::{parse_actions, position_text};
 use crate::content::{ActionKind, ClassActive, ContentFiles, ItemHarm};
 use crate::item_list::ItemList;
 use crate::magic::Worked;
+use crate::talent::CraftEffect;
 
 const MEND: ClassActive = ClassActive::MakeDo;
 
@@ -85,10 +86,10 @@ fn the_craftsperson_gains_it_at_level_eighteen() {
     assert!(
         matches!(
             effects[0],
-            crate::content::TalentEffect::MakeDo {
+            crate::content::TalentEffect::Craft(CraftEffect::MakeDo {
                 seconds: 600,
                 difficulty: 10
-            }
+            })
         ),
         "{effects:?}"
     );

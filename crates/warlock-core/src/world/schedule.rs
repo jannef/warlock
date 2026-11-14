@@ -173,14 +173,18 @@ impl World {
         // Iron grip (spec §8 "Talents"): blows with a two-handed weapon cost less.
         let two_handed = (with.and_then(|i| actor.inventory.get(i)))
             .is_some_and(|s| self.content.object(s.object).two_handed);
-        let base = match actor.talent_mods(&self.content).two_handed_price {
+        let base = match actor.talent_mods(&self.content).offence.two_handed_price {
             0 => base,
             _ if kind != ActionKind::Melee || !two_handed => base,
             percent => percent_of(base, u32::try_from((100 + percent).max(0)).unwrap_or(0)),
         };
         // Blood frenzy (spec §8 "Class abilities"; while raging, the sum's `while`): every
         // melee attack costs less.
-        let base = match actor.talent_mods(&self.content).attack_price_percent {
+        let base = match actor
+            .talent_mods(&self.content)
+            .offence
+            .attack_price_percent
+        {
             0 => base,
             _ if kind != ActionKind::Melee => base,
             percent => percent_of(base, u32::try_from((100 + percent).max(0)).unwrap_or(0)),
@@ -215,7 +219,7 @@ impl World {
         let level = self.state.current();
         // Its talents may price the terrain as another (Swimmer, Trailblazer).
         let to = match self.content.terrain_id(&to.id) {
-            Some(t) => (talents.terrain_as.iter())
+            Some(t) => (talents.movement.terrain_as.iter())
                 .find(|(from, _)| *from == t)
                 .map_or(to, |&(_, like)| self.content.terrain(like)),
             None => to,
@@ -225,7 +229,7 @@ impl World {
         // Undertow (a Water-born's pick) or Water walking bears. Swim spares a part of it, never
         // more.
         if self.wading_step(to) {
-            let free = talents.swimmer || actor.wades_free(&self.content);
+            let free = talents.movement.swimmer || actor.wades_free(&self.content);
             let spared = if free {
                 100
             } else {
@@ -242,7 +246,7 @@ impl World {
         if level.kind == LevelKind::Overworld {
             price = shortened(price, actor.skill_effect(&self.content, Effect::Travel));
             // Then its talents (Long strider): a signed percent of the journey's time.
-            let percent = talents.travel_percent;
+            let percent = talents.movement.travel_percent;
             if percent != 0 {
                 price = percent_of(price, u32::try_from((100 + percent).max(1)).unwrap_or(1));
             }
@@ -250,11 +254,11 @@ impl World {
         // Fleet and Headlong (spec §8 "Class abilities"): lighter steps, Fleet's unarmoured,
         // Headlong's while raging (the sum's `while`).
         let talents = actor.talent_mods(&self.content);
-        if !talents.step_percent.is_empty() {
+        if !talents.movement.step_percent.is_empty() {
             let armoured = actor.wears_body_armour(&self.content);
             let burdened = self.load_of(id).penalty() != crate::burden::Burden::Unburdened;
             let shield = actor.shield(&self.content).is_some();
-            let percent = talents.step_percent(armoured, burdened, shield);
+            let percent = talents.movement.step_percent(armoured, burdened, shield);
             if percent != 0 {
                 price = percent_of(price, u32::try_from((100 + percent).max(1)).unwrap_or(1));
             }
@@ -285,7 +289,7 @@ impl World {
         let talents = actor.talent_mods(&self.content);
         // The burden line (Pack mule; spec §8 "Talents") eases the burden's slowdown on top of
         // Balance.
-        let ease = actor.skill_effect(&self.content, Effect::Burden) + talents.burden_ease;
+        let ease = actor.skill_effect(&self.content, Effect::Burden) + talents.movement.burden_ease;
         let price = self.bloated(id, self.load_of(id).penalty().slow_eased(price, ease));
         // A talent's `speed_percent` (Quick, Fleet-footed) is not read here: `Actor::speed` counts
         // it, once.

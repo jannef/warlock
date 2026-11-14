@@ -38,11 +38,11 @@ impl World {
 /// darkvision radius farther. Its id and name stay the base's.
 pub(crate) fn eyes_with(base: &VisionProfile, mods: &TalentMods) -> VisionProfile {
     let mut eye = base.clone();
-    if mods.threshold_percent != 0 {
-        let percent = u32::try_from((100 + mods.threshold_percent).max(0)).unwrap_or(0);
+    if mods.senses.threshold_percent != 0 {
+        let percent = u32::try_from((100 + mods.senses.threshold_percent).max(0)).unwrap_or(0);
         let threshold = u32::from(eye.threshold) * percent / 100;
         eye.threshold = u16::try_from(threshold).unwrap_or(u16::MAX);
     }
-    eye.darkvision = (eye.darkvision + mods.darkvision).max(0);
+    eye.darkvision = (eye.darkvision + mods.senses.darkvision).max(0);
     eye
 }

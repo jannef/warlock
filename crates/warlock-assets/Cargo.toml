@@ -1,0 +1,24 @@
+[package]
+name = "warlock-assets"
+description = "The content under assets/ embedded for the binaries, handed to warlock-core as ContentFiles (#1587)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+warlock-core.workspace = true
+
+[features]
+# The test world (`assets/campaigns/showcase/`), embedded only with this feature: on for every
+# dev command, test, and benchmark; release builds and `cargo xtask web` turn it off with
+# `--no-default-features` in the binaries that forward it (docs/dev/campaign.md, "The test world
+# in release builds").
+default = ["showcase"]
+showcase = []
+
+[lints]
+workspace = true

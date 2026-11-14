@@ -219,17 +219,19 @@ fn weapon_drill_shield_line_and_armour_drill() {
     let mods = w.state.player().talent_mods(&content);
     let melee = crate::content::Role::Melee;
     assert_eq!(
-        mods.marks(melee, 100),
+        mods.offence.marks(melee, 100),
         125,
         "Weapon drill: a quarter more marks"
     );
-    assert_eq!(mods.marks(crate::content::Role::Launcher, 100), 100);
+    assert_eq!(mods.offence.marks(crate::content::Role::Launcher, 100), 100);
     // Shield line: the class talent's own effect gives the shield +1 (the picks levelup:auto
     // makes on the way may add to Defence too).
     let book = content.talents();
     let line = book.get(book.id("shield_line").expect("shield line"));
     let line = crate::talent::TalentMods::of(&content, line.effects.iter().cloned());
-    let (benefit, _) = line.weapon_benefit("", crate::content::Role::Style, 0);
+    let (benefit, _) = line
+        .offence
+        .weapon_benefit("", crate::content::Role::Style, 0);
     assert_eq!(benefit.shield, 1, "Shield line");
     let protection = w.state.player().protection(&content, None).against(None);
     reach(&mut w, 25);
@@ -547,7 +549,13 @@ fn lay_on_hands_smite_and_radiance_work_for_the_good_side_only() {
     run(&mut w, "use:lay_on_hands");
     assert!(said(&w).contains(&"Warmth flows from your hands.".to_string()));
     // Smite (`smite_tests.rs` has its numbers): a blow with more dice, for three zeal.
-    let smite = w.state.player().talent_mods(&content).smite.expect("smite");
+    let smite = w
+        .state
+        .player()
+        .talent_mods(&content)
+        .faith
+        .smite
+        .expect("smite");
     assert_eq!(smite.dice_at(12, false).to_string(), "1d6");
     assert_eq!(smite.dice_at(35, false).to_string(), "3d6");
     let kobold = beside(&mut w, "kobold", 500);
@@ -578,7 +586,7 @@ fn lay_on_hands_smite_and_radiance_work_for_the_good_side_only() {
     reach(&mut w, 40);
     let lit = |w: &World| {
         let me = w.state.player();
-        let (status, _) = me.talent_mods(&content).radiance.expect("radiance");
+        let (status, _) = me.talent_mods(&content).faith.radiance.expect("radiance");
         me.effects.has(status)
     };
     run(&mut w, "use:holy_radiance");
@@ -664,9 +672,9 @@ fn martial_arts_flurry_still_mind_and_quivering_palm() {
     let mind = book.get(book.id("still_mind").expect("still mind"));
     let mods = crate::talent::TalentMods::of(&content, mind.effects.iter().cloned());
     let poisoned = status(&w, "poisoned");
-    assert_eq!(mods.penalty(poisoned, Stat::Intelligence, -2), 0);
-    assert_eq!(mods.penalty(poisoned, Stat::Strength, -2), -2);
-    assert_eq!(mods.check(Stat::Willpower), 2);
+    assert_eq!(mods.vigour.penalty(poisoned, Stat::Intelligence, -2), 0);
+    assert_eq!(mods.vigour.penalty(poisoned, Stat::Strength, -2), -2);
+    assert_eq!(mods.vigour.check(Stat::Willpower), 2);
     // Quivering palm: a wounding blow leaves the foe bleeding three degrees.
     reach(&mut w, 50);
     run(&mut w, "use:quivering_palm:E");

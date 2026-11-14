@@ -4,6 +4,7 @@ use super::*;
 use crate::content::{Cutting, ItemHarm, TalentEffect};
 use crate::item_parts::ItemPart;
 use crate::magic::{Affix, LootGrade, LootPool, Quality, Rarity, Worked, loot};
+use crate::talent::FortuneEffect;
 
 fn content() -> Content {
     Content::builtin().expect("built-in content")
@@ -483,13 +484,13 @@ fn hand_made_items_are_never_trimmed() {
     // The heirloom: every race's weapon at the top count, of the effect's make.
     for (_, def) in c.talents().iter() {
         for effect in &def.effects {
-            let TalentEffect::Heirloom {
+            let TalentEffect::Fortune(FortuneEffect::Heirloom {
                 weapons,
                 fallback,
                 max,
                 quality,
                 ..
-            } = effect
+            }) = effect
             else {
                 continue;
             };

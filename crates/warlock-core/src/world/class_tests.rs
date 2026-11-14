@@ -108,7 +108,14 @@ fn level_one_abilities_come_with_the_character_and_others_with_their_levels() {
     assert!(holds(&w, "family_wealth"));
     reach(&mut w, 32);
     assert!(!holds(&w, "iron_will") || !said(&w).contains(&"You gain Iron will.".to_string()));
-    assert!(w.state.player().talent_mods(w.content()).free_blows.riposte);
+    assert!(
+        w.state
+            .player()
+            .talent_mods(w.content())
+            .offence
+            .free_blows
+            .riposte
+    );
     let json = dump::json(&w, &[], false);
     let riposte = (json["talents"].as_array().expect("talents").iter())
         .find(|t| t["id"] == "riposte")
@@ -369,15 +376,15 @@ fn checks_of_a_stat_take_the_talents_bonus() {
         w.search_modifier(super::search::Look::Passive, super::search::Hidden::Door(0)),
         passive + 2
     );
-    assert_eq!(mods(&w).check(Stat::Willpower), 2);
+    assert_eq!(mods(&w).vigour.check(Stat::Willpower), 2);
     give(&mut w, "stubborn");
     assert_eq!(
-        mods(&w).check(Stat::Toughness),
+        mods(&w).vigour.check(Stat::Toughness),
         0,
         "Toughness itself instead (#1406)"
     );
     let poisoned = w.content().status_id("poisoned").expect("poisoned");
-    assert!(mods(&w).no_penalty.contains(&poisoned));
+    assert!(mods(&w).vigour.no_penalty.contains(&poisoned));
 }
 
 #[test]
@@ -410,7 +417,9 @@ fn weapons_and_styles_read_the_talents_benefits() {
     let before_maces = w.state.player().benefit(w.content(), Some(maces));
     give(&mut w, "fencing");
     let duelist = &w.content().weapon_skills().skill(duelist).clone();
-    let (_, ranks) = mods(&w).weapon_benefit(&duelist.id, duelist.role, 0);
+    let (_, ranks) = mods(&w)
+        .offence
+        .weapon_benefit(&duelist.id, duelist.role, 0);
     assert_eq!(ranks, 1, "Duelist reads a rank higher");
     give(&mut w, "big_hands");
     let maced = w.state.player().benefit(w.content(), Some(maces));
@@ -504,7 +513,7 @@ fn old_lore_identifies_a_magic_item_carried_a_day() {
 fn trade_talents_sum_into_the_mods() {
     let mut w = world("warrior");
     give(&mut w, "haggler");
-    assert_eq!(mods(&w).favour_percent, 15);
+    assert_eq!(mods(&w).fortune.favour_percent, 15);
 }
 
 /// A magic long sword, unidentified, set with no gem (one the store can afford).

@@ -72,7 +72,7 @@ impl World {
         let melee = me.attack_skills(&content, AttackKind::Melee, None);
         let with = me.weapon_item(&content);
         let price = self.attack_price(player, ActionKind::Melee, with, melee);
-        let ladder = me.talent_mods(&content).exploit;
+        let ladder = me.talent_mods(&content).stealth.exploit;
         let profile = self.exploit_profile(n, me.melee(&content));
         self.say_exploit(n);
         let vitalless = !self.has_vitals(target);
@@ -212,7 +212,7 @@ impl World {
         };
         let thrown = me.inventory[item].object;
         let throwing = me.attack_skills(&content, AttackKind::Thrown, Some(thrown));
-        let ladder = me.talent_mods(&content).exploit;
+        let ladder = me.talent_mods(&content).stealth.exploit;
         // Priced as the throw begins, with what is thrown still in the pack.
         let price = self.attack_price(player, ActionKind::Throw, None, throwing);
         self.choose_mark(target);
@@ -299,7 +299,12 @@ impl World {
         if n == 0 || !blow.strike.is_hit() {
             return blow;
         }
-        let ladder = self.state.player().talent_mods(&self.content).exploit;
+        let ladder = self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .stealth
+            .exploit;
         let Some(dice) = ladder.dice else {
             return blow;
         };
@@ -318,7 +323,12 @@ impl World {
     /// thief's threat and sure critical). The one place the ladder touches the attack itself;
     /// the dice after the hit are [`World::land_exploit`]'s.
     pub(super) fn exploit_profile(&self, n: u16, profile: Profile) -> Profile {
-        let ladder = self.state.player().talent_mods(&self.content).exploit;
+        let ladder = self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .stealth
+            .exploit;
         ladder.profile(n, profile)
     }
 }

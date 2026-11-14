@@ -96,6 +96,7 @@ impl World {
             self.state
                 .player()
                 .talent_mods(&content)
+                .vigour
                 .eases_every(status, every),
         );
         let Some(effect) = self.player_mut().effects.get_mut(status) else {

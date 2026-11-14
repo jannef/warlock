@@ -4,6 +4,7 @@
 use super::*;
 use crate::character::CharacterSpec;
 use crate::content::{GOLD, Rarity, TalentEffect};
+use crate::talent::FortuneEffect;
 use std::sync::LazyLock;
 
 // Without background stories: what the heritage alone hands down.
@@ -60,9 +61,9 @@ fn heirloom_weapon(race: &str) -> String {
     let book = CONTENT.talents();
     let def = book.get(book.id("fathers_sword").expect("fathers_sword"));
     for effect in &def.effects {
-        if let TalentEffect::Heirloom {
+        if let TalentEffect::Fortune(FortuneEffect::Heirloom {
             weapons, fallback, ..
-        } = effect
+        }) = effect
         {
             return weapons.get(race).unwrap_or(fallback).clone();
         }

@@ -10,6 +10,7 @@ use warlock_core::check::{CONTEST_WAYS, contest_ways, ways};
 use warlock_core::content::{Content, OptionalSkill, RecipeCount, TalentEffect};
 use warlock_core::dice::Dice;
 use warlock_core::skills::{Effect, SkillId};
+use warlock_core::talent::CraftEffect;
 
 /// Every skill in the order the Skills screen lists them: what kind it is, what it is about,
 /// what it gives (the benefits table has the numbers), and when it earns a training mark (with
@@ -569,11 +570,11 @@ pub(super) fn fletching(content: &Content) -> String {
     let fletcher = (content.talents().iter())
         .flat_map(|(_, def)| &def.effects)
         .find_map(|e| match e {
-            TalentEffect::Fletcher {
+            TalentEffect::Craft(CraftEffect::Fletcher {
                 check,
                 count_times,
                 time_percent,
-            } => Some((*check, *count_times, *time_percent)),
+            }) => Some((*check, *count_times, *time_percent)),
             _ => None,
         });
     let (check, times, time) = fletcher.unwrap_or((0, 1, 100));

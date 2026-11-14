@@ -3,7 +3,7 @@
 //! floor terrain, where the room lays one) has the effect's chance, doubled while they are
 //! Burdened or worse, to give way: one draw of the gameplay stream, made only on such a cell, and
 //! only while the level has a way down that leads somewhere. Old delver
-//! (`TalentMods::collapse_proof`) skips the draw. The player falls to the level the way down leads
+//! (`DelvingMods::collapse_proof`) skips the draw. The player falls to the level the way down leads
 //! to (generated as usual on a first visit, [`World::travel`]), landing on a random cell of it
 //! (another gameplay draw, [`landing`]), takes the effect's damage (`Harm::Fall`: it can kill,
 //! and a death by it is `Cause::Fall`; the generator leaves a sound rim round the cracks, so
@@ -41,7 +41,7 @@ impl World {
         let Some(below) = level_below(level) else {
             return false;
         };
-        if player.talent_mods(&content).collapse_proof {
+        if player.talent_mods(&content).delving.collapse_proof {
             return false;
         }
         let burdened = self.load_of(self.state.player).penalty() >= Burden::Burdened;

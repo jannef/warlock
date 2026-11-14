@@ -34,7 +34,7 @@ impl World {
     pub(super) fn sic(&mut self, at: Pos, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
-        let Some(sic) = self.state.player().talent_mods(&content).sic else {
+        let Some(sic) = self.state.player().talent_mods(&content).ally.sic else {
             return Spent::Nothing;
         };
         let companion = self.companion().filter(|id| {

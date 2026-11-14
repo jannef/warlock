@@ -242,7 +242,6 @@ mod tests {
     use std::sync::Arc;
     use warlock_core::World;
     use warlock_core::action::parse_actions;
-    use warlock_core::content::Content;
 
     #[test]
     fn shadows_are_soft_and_short() {
@@ -332,7 +331,7 @@ mod tests {
     }
 
     fn run(scenario: &str, actions: &str) -> World {
-        let content = Arc::new(Content::builtin().expect("builtin content"));
+        let content = Arc::new(warlock_assets::content().expect("builtin content"));
         let mut world = World::new(content, scenario, None).expect("world");
         for action in parse_actions(actions).expect("actions parse") {
             world.apply(&action);

@@ -96,14 +96,14 @@ impl World {
         progress.due.retain(|d| d.level < level);
         // What the level gave: its own hit points and mana, the talents' growth, Hardened's.
         let mods = self.state.player().talent_mods(&content).into_owned();
-        let mut hp = mods.hp_at(level) - mods.hp_at(below);
+        let mut hp = mods.vigour.hp_at(level) - mods.vigour.hp_at(below);
         if level <= rules.hp_level() {
             hp += self.level_hp(&content, level);
         }
-        if let Some(bonus) = mods.hardened.filter(|_| level > rules.hp_level()) {
+        if let Some(bonus) = mods.vigour.hardened.filter(|_| level > rules.hp_level()) {
             hp += self.level_hp(&content, level) + bonus;
         }
-        let mut mana = mods.mana_at(level) - mods.mana_at(below);
+        let mut mana = mods.magic.mana_at(level) - mods.magic.mana_at(below);
         if level <= rules.mana_level() {
             mana += self.level_mana(&content, level);
         }

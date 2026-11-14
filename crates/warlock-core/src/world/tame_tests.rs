@@ -180,7 +180,7 @@ fn the_check_is_willpower_skill_food_and_the_rangers_bonus_against_the_beasts_le
         let me = w.state.player();
         let mods = me.talent_mods(&content);
         let base = me.effective_stats(&content).modifier(Stat::Willpower)
-            + mods.check(Stat::Willpower)
+            + mods.vigour.check(Stat::Willpower)
             + me.skill_effect(&content, Effect::Tame);
         assert_eq!(me.skill_effect(&content, Effect::Tame), 10, "+10 at 100");
         assert_eq!(mods.beast.tame, 0, "a commoner has no bonus");

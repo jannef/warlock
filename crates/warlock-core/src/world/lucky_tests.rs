@@ -137,13 +137,14 @@ fn each_lucky_day_grants_its_gift_and_another_day_none() {
 fn the_scourge_cleaves_and_the_gate_warden_strikes_soaks_and_is_less_bowed() {
     let scourge = born("metal", "manticore", 3);
     let mods = scourge.state.player().talent_mods(scourge.content());
-    assert!(mods.free_blows.cleave);
+    assert!(mods.offence.free_blows.cleave);
     let plain = born("metal", "manticore", 4);
     assert!(
         !plain
             .state
             .player()
             .talent_mods(plain.content())
+            .offence
             .free_blows
             .cleave
     );
@@ -152,11 +153,19 @@ fn the_scourge_cleaves_and_the_gate_warden_strikes_soaks_and_is_less_bowed() {
     let mods = warden.state.player().talent_mods(warden.content());
     let other = born("earth", "barghest", 29);
     let before = other.state.player().talent_mods(other.content());
-    assert!(mods.free_blows.opportunist && !before.free_blows.opportunist);
+    assert!(mods.offence.free_blows.opportunist && !before.offence.free_blows.opportunist);
     let poisoned = status(&warden, "poisoned");
-    assert_eq!(before.penalty(poisoned, Stat::Strength, -2), -2);
-    assert_eq!(mods.penalty(poisoned, Stat::Strength, -2), -1, "halved");
-    assert_eq!(mods.penalty(poisoned, Stat::Strength, -1), 0, "toward 0");
+    assert_eq!(before.vigour.penalty(poisoned, Stat::Strength, -2), -2);
+    assert_eq!(
+        mods.vigour.penalty(poisoned, Stat::Strength, -2),
+        -1,
+        "halved"
+    );
+    assert_eq!(
+        mods.vigour.penalty(poisoned, Stat::Strength, -1),
+        0,
+        "toward 0"
+    );
     let soak = |w: &World| w.state.player().protection(&BUILTIN, None).against(None);
     assert_eq!(soak(&warden), soak(&other) + 1);
 }

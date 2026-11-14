@@ -513,7 +513,7 @@ mod tests {
 
     #[test]
     fn the_prestige_tables_read_the_data() {
-        let content = Content::builtin().expect("content");
+        let content = warlock_assets::content().expect("content");
         let classes = prestige_classes(&content);
         assert!(
             classes.contains("<a id=\"prestige-hunter\"></a>Hunter | 30 | 7 |"),

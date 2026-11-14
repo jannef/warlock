@@ -13,6 +13,7 @@
 
 use super::dialogue::Speaker;
 use super::{Content, ContentError, DialogueId};
+use crate::talent::FortuneEffect;
 use serde::Deserialize;
 
 /// A town as data.
@@ -101,9 +102,15 @@ fn check_servant(servant: &TownServant, content: &Content) -> Result<(), String>
     // A talent the game lacks (content cut down for a test) is held by no one: the helper is
     // never placed, and its words are not asked for.
     let effects = (book.id(&servant.talent)).map_or(&[][..], |t| &book.get(t).effects[..]);
-    let stipend = effects.iter().any(|e| matches!(e, TalentEffect::Stipend));
-    let partner = effects.iter().any(|e| matches!(e, TalentEffect::Invest));
-    let patron = effects.iter().any(|e| matches!(e, TalentEffect::Patron));
+    let stipend = effects
+        .iter()
+        .any(|e| matches!(e, TalentEffect::Fortune(FortuneEffect::Stipend)));
+    let partner = effects
+        .iter()
+        .any(|e| matches!(e, TalentEffect::Fortune(FortuneEffect::Invest)));
+    let patron = effects
+        .iter()
+        .any(|e| matches!(e, TalentEffect::Fortune(FortuneEffect::Patron)));
     let kinds = &servant.creature;
     for id in [&kinds.male, &kinds.female, &kinds.other] {
         if content.creature_id(id).is_none() {

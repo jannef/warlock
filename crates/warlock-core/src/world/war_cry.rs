@@ -35,7 +35,7 @@ impl World {
         let content = self.content.clone();
         let player = self.state.player;
         let me = self.state.player();
-        let Some(cry) = me.talent_mods(&content).war_cry else {
+        let Some(cry) = me.talent_mods(&content).martial.war_cry else {
             return Spent::Nothing;
         };
         let price = self.price_of(player, ActionKind::Wait);

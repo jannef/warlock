@@ -137,8 +137,17 @@ fn elven_accuracy_threatens_more_with_bows_and_ageless_slows_hunger_and_disease(
     let mut w = world("elf,male,ranger");
     give(&mut w, "elven_accuracy");
     let m = mods(&w);
-    assert_eq!(m.weapon_benefit("bows", Role::Launcher, 3).0.threat, 1);
-    assert_eq!(m.weapon_benefit("slings", Role::Launcher, 3).0.threat, 0);
+    assert_eq!(
+        m.offence.weapon_benefit("bows", Role::Launcher, 3).0.threat,
+        1
+    );
+    assert_eq!(
+        m.offence
+            .weapon_benefit("slings", Role::Launcher, 3)
+            .0
+            .threat,
+        0
+    );
     // Ageless: hunger 20 % slower, a disease's progressions twice as far apart.
     let hunger = w.hunger_percent();
     give(&mut w, "ageless");
@@ -164,7 +173,10 @@ fn half_elves_bargain_better() {
     let mut w = world("half_elf,female,bard");
     give(&mut w, "diplomat");
     let m = mods(&w);
-    assert_eq!((m.favour_percent, m.quest_gold_percent), (10, 25));
+    assert_eq!(
+        (m.fortune.favour_percent, m.fortune.quest_gold_percent),
+        (10, 25)
+    );
 }
 
 #[test]
@@ -181,7 +193,7 @@ fn stone_sense_finds_what_is_hidden_in_stone_and_digs_faster() {
     assert_eq!((w.stone_find(rock), w.stone_find(other)), (0, 0));
     give(&mut w, "stone_sense");
     assert_eq!((w.stone_find(rock), w.stone_find(other)), (4, 0));
-    assert_eq!(mods(&w).dig_percent, 25);
+    assert_eq!(mods(&w).delving.dig_percent, 25);
 }
 
 #[test]
@@ -190,7 +202,10 @@ fn dwarven_resilience_eases_poison_and_disease() {
     give(&mut w, "dwarven_resilience");
     let poisoned = w.content().status_id("poisoned").expect("poisoned");
     let m = mods(&w);
-    assert_eq!((m.eases_every(poisoned, 60), m.disease_checks), (30, 2));
+    assert_eq!(
+        (m.vigour.eases_every(poisoned, 60), m.vigour.disease_checks),
+        (30, 2)
+    );
 }
 
 #[test]
@@ -199,12 +214,18 @@ fn halflings_are_lucky_slingers_and_hard_for_the_big_to_hit() {
     give(&mut w, "lucky");
     give(&mut w, "slinger");
     let m = mods(&w);
-    assert!(m.reroll_fumble);
-    assert_eq!(m.weapon_benefit("slings", Role::Launcher, 2).0.damage, 1);
+    assert!(m.offence.reroll_fumble);
+    assert_eq!(
+        m.offence
+            .weapon_benefit("slings", Role::Launcher, 2)
+            .0
+            .damage,
+        1
+    );
     assert_eq!(
         (
-            m.launcher_range_for(Some("slings")),
-            m.launcher_range_for(Some("bows"))
+            m.offence.launcher_range_for(Some("slings")),
+            m.offence.launcher_range_for(Some("bows"))
         ),
         (2, 0)
     );
@@ -259,8 +280,8 @@ fn gnomes_tinker_with_traps_and_know_their_gems() {
     give(&mut w, "tinkerer");
     give(&mut w, "gem_lore");
     let m = mods(&w);
-    assert!(m.disarm && m.gem_worth);
-    assert_eq!(m.gem_find_percent, 100);
+    assert!(m.delving.disarm && m.fortune.gem_worth);
+    assert_eq!(m.fortune.gem_find_percent, 100);
 }
 
 #[test]
@@ -274,7 +295,7 @@ fn half_orcs_hit_harder_when_badly_hurt_and_have_a_thicker_hide() {
     assert_eq!(bonus(&w), whole, "not while hale");
     w.player_mut().hp = (max - 1) / 3;
     assert_eq!(bonus(&w), whole + 2, "below a third");
-    let protection = |w: &World| mods(w).protection_with(None, false, 0);
+    let protection = |w: &World| mods(w).defence.protection_with(None, false, 0);
     let before = protection(&w);
     give(&mut w, "orcish_hide");
     assert_eq!(protection(&w), before + 1);
@@ -311,7 +332,7 @@ fn a_replay_that_takes_a_racial_talent_verifies() {
         replay.push(&action, &w);
     }
     assert!(w.state.player().talents.has("lucky"));
-    assert!(mods(&w).reroll_fumble);
+    assert!(mods(&w).offence.reroll_fumble);
     let verified = (crate::replay::Replay::from_json(&replay.to_json()).expect("json"))
         .run(CONTENT.clone())
         .expect("the replay verifies");

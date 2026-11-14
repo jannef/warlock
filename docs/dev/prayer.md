@@ -11,8 +11,8 @@ hallowed ground: `docs/dev/special-rooms.md` "Hallowed ground".
 | Module | What it holds |
 |---|---|
 | `content/prayer.rs` | `PrayerRules` (`Content::prayer()`), parsed from `data/prayer.toml`: `strain`, `decay`, `fizzle_per_100`, the faces' bands (`holy`, `dark`: `Requirement`s), the `release` statuses, each face's `pray`/`fizzle`/`nothing` lines, and the uses in priority order with their words; `PrayerUse` (the closed list: disease, poison, wounds, release, mana, hunger, restoration), `Face`, `Faced`. Optional: without the file every prayer is refused. |
-| `content/talent.rs` | `TalentEffect::Prayer { tier, title, uses, answers, all }`; `active()` maps only `tier = 1` to `ClassActive::Orison`, so `Content::class_active` finds the tier-1 talent. |
-| `talent.rs` | `TalentMods::prayer: Option<Prayer>`: `uses` (the union), `answers` (the largest, at least 1), `all` (any), `tier` and `title` (the highest tier's). `has_active(Orison)` asks for a tier. |
+| `content/talent.rs` | `FaithEffect::Prayer { tier, title, uses, answers, all }`; `active()` maps only `tier = 1` to `ClassActive::Orison`, so `Content::class_active` finds the tier-1 talent. |
+| `talent.rs` | `FaithMods::prayer: Option<Prayer>`: `uses` (the union), `answers` (the largest, at least 1), `all` (any), `tier` and `title` (the highest tier's). `has_active(Orison)` asks for a tier. |
 | `content/class.rs` | `ClassActive::Orison` (`orison`, a `Cast`: Raging and Silenced block it through `Ability::unavailable`). |
 | `world/orison.rs` | `Strain` (saved in `Progress::prayer`), `Actor::prayer_face`, `Actor::prayer_title`, `World::orison` (the one arm in `class_ability.rs::use_class`), the problems (`ails`), the fixes (`answer_prayer`, which calls the dark face's twists), `World::prayer_state` (dev). |
 | `world/dark_face.rs` | The dark face's twists: `nearest_seen`, `pass_on_diseases`, `pass_on_poison`, `turn_hexes_back`; Communion: `World::communes` (the talent, its band, the Dark face) and `communing_here` (and an unholy effect where the player stands). |
@@ -81,7 +81,7 @@ stance changes, no alignment moves (a kill is judged as any kill of the player's
 
 ## Communion with the dark
 
-`TalentEffect::Communion` → `TalentMods::communion`. `World::communes(id)`: the actor holds it,
+`FaithEffect::Communion` → `FaithMods::communion`. `World::communes(id)`: the actor holds it,
 its band is one the Communion talent's `alignment` allows (as `World::answered` reads a holy
 gift's; no rules, allowed), and its prayer face is Dark. Two reads, each where an unholy effect
 (`RoomEffectDef::unholy`: cursed, draining, haunted; a room's or the level's) lies at the

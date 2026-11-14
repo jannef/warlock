@@ -4,6 +4,7 @@ use super::order;
 use super::util::{article, capital, yes};
 use std::fmt::Write as _;
 use warlock_core::content::{AffixKind, Content, LightId, TalentEffect};
+use warlock_core::talent::SensesEffect;
 
 pub(super) fn vision(content: &Content) -> String {
     let mut out = String::from(
@@ -101,7 +102,7 @@ fn light_name(content: &Content, id: LightId) -> String {
     let tended: Vec<&str> = (content.talents().iter())
         .filter(|(_, t)| {
             (t.effects.iter())
-                .any(|e| matches!(e, TalentEffect::LanternLight { light } if *light == preset.id))
+                .any(|e| matches!(e, TalentEffect::Senses(SensesEffect::LanternLight { light }) if *light == preset.id))
         })
         .map(|(_, t)| t.name.as_str())
         .collect();

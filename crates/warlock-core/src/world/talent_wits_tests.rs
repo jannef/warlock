@@ -366,7 +366,14 @@ fn iron_will_trap_sense_and_keen_searcher_add_to_the_checks() {
         passive + 5
     );
     assert_eq!(w.search_modifier(Look::Active, Hidden::Door(0)), active + 7);
-    assert_eq!(w.state.player().talent_mods(w.content()).search_reach, 1);
+    assert_eq!(
+        w.state
+            .player()
+            .talent_mods(w.content())
+            .delving
+            .search_reach,
+        1
+    );
 }
 
 #[test]
@@ -435,7 +442,7 @@ fn lockbreaker_kicks_harder_and_quieter_and_tunneler_digs_faster() {
     give(&mut w, "tunneler");
     assert_eq!(loud(&w), before / 2);
     let mods = w.state.player().talent_mods(w.content());
-    assert_eq!((mods.door_kick, mods.dig_percent), (6, 50));
+    assert_eq!((mods.delving.door_kick, mods.delving.dig_percent), (6, 50));
 }
 
 #[test]

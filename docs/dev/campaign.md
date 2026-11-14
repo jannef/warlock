@@ -30,7 +30,8 @@ starts, one of the campaign's own), and `kind`, `campaign` (default) or `test`.
 
 ## Loading (`content/campaign.rs`, `content/files.rs`, `content/mod.rs`)
 
-- `build.rs` embeds and `ContentFiles::from_dir` reads `assets/campaigns/` with the rest.
+- `warlock-assets`' `build.rs` embeds and `ContentFiles::from_dir` reads `assets/campaigns/`
+  with the rest (docs/dev/content.md).
 - `ContentFiles::campaign_order`: the campaign directories, those of kind `campaign` in path
   order, then the test ones. Every table and directory reads in this order.
 - `ContentFiles::table(name)`: `data/<name>.toml`, `data/<name>/**`, then each campaign's
@@ -125,14 +126,16 @@ docs/dev/saves.md).
 
 Test content never appears in a release. The cargo feature `showcase` holds it:
 
-- `warlock-core` has `[features] default = ["showcase"]`; `warlock` and `warlock-cli` have the
-  same default and forward it (`showcase = ["warlock-core/showcase"]`); the workspace table
-  takes `warlock-core` with `default-features = false`, so each member's own feature decides.
-  `xtask` asks for it (`features = ["showcase"]`): the wiki, the goldens, and the benchmarks
-  read the test world.
-- `build.rs` leaves out every file under `campaigns/showcase/` without the feature
-  (`CARGO_FEATURE_SHOWCASE`), so such a build embeds no file of the test world.
-  `--content-dir assets` still reads everything on disk: a developer tool.
+- `warlock-assets`, the crate that embeds the content (#1587), has `[features] default =
+  ["showcase"]`; `warlock` and `warlock-cli` have the same default and forward it (`showcase =
+  ["warlock-assets/showcase"]`); the workspace table takes `warlock-assets` with
+  `default-features = false`, so each member's own feature decides. `xtask` asks for it
+  (`features = ["showcase"]`): the wiki, the goldens, and the benchmarks read the test world.
+  `warlock-core` has no feature: it embeds nothing, so it is one build with the test world or
+  without, and its own tests read all of `assets/` from disk.
+- `warlock-assets`' `build.rs` leaves out every file under `campaigns/showcase/` without the
+  feature (`CARGO_FEATURE_SHOWCASE`), so such a build embeds no file of the test world, and
+  `warlock_assets::from_dir` leaves it out too (`--content-dir assets` on a release build).
 - Every documented command (`cargo build`, `test`, `run`, the xtask commands but `web`) has the
   feature on and is unchanged. Release artifacts turn it off: the `Release` workflow builds with
   `--no-default-features`, and `cargo xtask web` passes it itself.
@@ -140,13 +143,13 @@ Test content never appears in a release. The cargo feature `showcase` holds it:
   `Content::default_scenario`: the showcase where it is built in, else the first campaign's
   start. `warlock-cli` keeps its default `showcase` and, in a release build, refuses it as an
   unknown scenario.
-- **Guards**: the test `release_content` (an integration test of warlock-core,
+- **Guards**: the test `release_content` (an integration test of warlock-assets,
   `tests/release_content.rs`, empty unless built without the feature: one small harness, #1593)
-  checks that `Content::builtin()` loads and holds no campaign of kind `test` and nothing of one
+  checks that `warlock_assets::content()` loads and holds no campaign of kind `test` and nothing of one
   (scenario, level, dungeon, quest, dialogue, creature type, vault), so New run lists nothing of
   the test world, also with `--dev`, and that there is one campaign. CI's `release-config` job
   builds the release configuration, checks it for wasm32, runs
-  `cargo test --no-default-features -p warlock-core --test release_content`,
+  `cargo test --no-default-features -p warlock-assets --test release_content`,
   and expects `warlock-cli dump --scenario showcase` to fail with "unknown scenario". The
   `Release` workflow does the last on each platform's binary and checks the game binary holds
   no `campaigns/showcase/campaign.toml` (the key of the embedded file), and `cargo xtask web`
@@ -270,7 +273,7 @@ campaigns it does not describe (`order::described`).
 numbering, a run of each, the fingerprint and a save across a build without the test world, the
 cross-campaign refusals, the id clashes, one overworld a campaign), `new_run_screen.rs` (the
 order in release and developer builds), the `new-run-screen` text snapshot, and
-`tests/release_content.rs` (compiled only in the release configuration).
+`crates/warlock-assets/tests/release_content.rs` (compiled only in the release configuration).
 
 Vaults (#337): `Vault::stamps_on(def, depth)` keeps a campaign's vaults to its own branches, and
 to the branches or branch levels its file's `dungeons` names (`vault::parse_dungeons`, checked by

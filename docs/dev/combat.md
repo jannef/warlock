@@ -102,7 +102,7 @@ shell.", "Something hits you but does no harm." when an end is unseen. Penetrati
 `off_hand_blow`, `ranged` (launcher plus ammunition), and `thrown`; natural attacks, bashes,
 kicks, and traps have none. A spirit weapon (the Hunter's, `world/spirit_weapon.rs::gifts`, read
 in `Actor::melee` and `off_hand_blow` when the stack is `spirit` and the actor has
-`TalentMods::spirit_weapon`) adds its `to_hit`, lowers the threat (never below 3), and sets the
+`MartialMods::spirit_weapon`) adds its `to_hit`, lowers the threat (never below 3), and sets the
 penetration to `ALL_PROTECTION` (`world/weapon_active.rs`: no soak drawn); the character screen's
 attack then says `pierces armour` (`OwnAttack::pierces`). Data: objects `protection` (armour worn, never a hand slot or a
 shield; `check_protection`) and `penetration`; creatures `natural = { defence, protection,
@@ -180,7 +180,7 @@ cleave's next), `Leaves` (`World::opportunist`), `Approaches` (`World::gatekeepe
 hostile that steps up beside a gatekeeper, from `World::step_up(id, from)` at the end of
 `ai.rs::creature_steps`, after the trap; each gatekeeper it was not beside before strikes;
 `World::gatekeeper_odds` decides who is one and how often: `FreeBlows::gatekeeper` (a class
-switch, Brace, a lurk) every time, the Gatekeeper gift's `TalentMods::gatekeeper_one_in` scaled by
+switch, Brace, a lurk) every time, the Gatekeeper gift's `OffenceMods::gatekeeper_one_in` scaled by
 `StanceDef::gatekeeper` percent, capped at always, #1094; `gatekeeper_draw` draws once the blow
 would be struck, from the stream `gatekeeper/<keeper>/<mover>/<second>` derived on demand, so no
 other stream moves).

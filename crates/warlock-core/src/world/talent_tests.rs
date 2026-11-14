@@ -150,7 +150,7 @@ fn prerequisites_are_checked_and_said_in_words() {
     assert_eq!(last(&w), "You learn Dodge.");
     // Prerequisites hold at the pick and are never checked again: a lower score later keeps it.
     set_scores(&mut w, 10);
-    assert_eq!(player(&w).talent_mods(w.content()).dodge, 1);
+    assert_eq!(player(&w).talent_mods(w.content()).defence.dodge, 1);
 }
 
 #[test]
@@ -390,7 +390,7 @@ fn each_talent_changes_the_rule_it_names() {
     assert_eq!(loud(&w), Some(plain * 60 / 100));
     let door = Act::OpenDoor(w.player_pos());
     let mods = player(&w).talent_mods(&content);
-    assert!(mods.silent_doors);
+    assert!(mods.stealth.silent_doors);
     assert_eq!(
         noise::noise(&content, &level, player(&w), Burden::Unburdened, door),
         None,

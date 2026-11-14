@@ -1212,7 +1212,7 @@ mod tests {
     use warlock_core::{Action, Dir, Pos};
 
     fn content() -> Arc<Content> {
-        Arc::new(Content::builtin().expect("content"))
+        Arc::new(warlock_assets::content().expect("content"))
     }
 
     fn press(stack: &mut ScreenStack, press: Press) -> ScreenAction {
@@ -2984,7 +2984,7 @@ mod tests {
         let args = Args::parse_from(["warlock", "--capture", "unused.png"]);
         let store = SaveStore::from_args(&args);
         // Content that tells no stories: a chosen character with the kit, and still none.
-        let mut files = warlock_core::content::ContentFiles::builtin();
+        let mut files = warlock_assets::files();
         files.remove("data/background.toml");
         let untold = Arc::new(Content::load(&files).expect("content without stories"));
         let spec: CharacterSpec = "dwarf,female,warrior".parse().expect("a character");

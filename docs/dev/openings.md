@@ -86,8 +86,8 @@ The thief's one active for openings from level 1 (`ClassActive::Exploit`, the cl
 ### The thrown exploit (level 18, #1465)
 
 The same blow delivered by a throw, for the mark out of melee reach (`ClassActive::ThrownExploit`,
-the class talent `thrown_exploit` at 18 beside Evasion, `TalentEffect::ThrownExploit` →
-`TalentMods::thrown_exploit`, `Aim::Throw`, `Action::UseThrow`, `use:thrown_exploit:c:12,5`:
+the class talent `thrown_exploit` at 18 beside Evasion, `StealthEffect::ThrownExploit` →
+`StealthMods::thrown_exploit`, `Aim::Throw`, `Action::UseThrow`, `use:thrown_exploit:c:12,5`:
 stack `c` thrown at level cell (12, 5); bare `use:thrown_exploit` says "Throw what, and where?").
 
 | Step | Where | What |
@@ -106,8 +106,8 @@ reach, the cursor on the mark when it is seen within reach (`SeenActor::marked`)
 
 `TalentEffect::{Exploit, ExploitDice { dice }, ExploitToHit { value }, ExploitStatus { status },
 ExploitThreat { value, sure_at }}` (`exploit`, `exploit_dice`, `exploit_to_hit`,
-`exploit_status`, `exploit_threat`), collected into `TalentMods::exploit_active` and
-`TalentMods::exploit: ExploitMods { dice, to_hit, status, threat, sure_at }` (`exploit_dice`
+`exploit_status`, `exploit_threat`), collected into `StealthMods::exploit_active` and
+`StealthMods::exploit: ExploitMods { dice, to_hit, status, threat, sure_at }` (`exploit_dice`
 summed with `Dice::and`, `exploit_threat`'s values summed and the lowest `sure_at` kept;
 `exploit_threat`'s two fields are at least 1). Two places read it: `ExploitMods::profile`
 (through `World::exploit_profile`) before the roll, and `land_exploit` after a hit. There is no

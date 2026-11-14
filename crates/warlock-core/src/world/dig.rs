@@ -172,7 +172,7 @@ impl World {
         let strength = player.effective_stats(&self.content).score(Stat::Strength);
         // Breaker (spec §8 "Talents"), a Delving tool or gear (spec §8 "Magic items"), and
         // Mining (#1343): more work a turn.
-        let faster = player.talent_mods(&self.content).dig_percent
+        let faster = player.talent_mods(&self.content).delving.dig_percent
             + player.mods(&self.content).get(Effect::DigPercent)
             + player.skill_effect(&self.content, SkillEffect::Dig);
         let work = TalentMods::scaled(u64::from(dig_work(power, strength)), faster);

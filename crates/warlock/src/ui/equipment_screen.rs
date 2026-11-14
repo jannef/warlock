@@ -456,7 +456,7 @@ mod tests {
     use super::*;
     use crate::input::KeyBinding;
     use std::sync::Arc;
-    use warlock_core::content::Content;
+
     use warlock_core::{Dir, World};
 
     /// The lantern put down (so the arms are lettered from a), and the storeroom's arms and armor
@@ -467,7 +467,7 @@ mod tests {
          move:W*2 move:N pickup move:S*2 pickup move:NW move:W*2 move:N pickup move:SW pickup";
 
     pub(crate) fn armed() -> World {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = Arc::new(warlock_assets::content().expect("content"));
         let mut world = World::new(content, "showcase", None).expect("world");
         for action in warlock_core::action::parse_actions(ARMED).expect("actions") {
             world.apply(&action);

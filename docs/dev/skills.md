@@ -18,7 +18,7 @@ automatic one (#1328). Marks are a reservoir: `World::level_up` (`world/talent.r
 player is trained in nothing) into each level's `Due::rolls`; `refuse_due` refuses everything
 else ("You have skill rolls to spend."); `advance:SKILL` (`World::advance_skill`) throws
 `Ladder::die(step(marks) + known_for)` from `levels_rng` (made on the first draw; a Crafts trade,
-`TalentMods::trades`, is a step up too, never a second: docs/dev/progression.md "Crafts"), adds +1 for a
+`CraftMods::trades`, is a step up too, never a second: docs/dev/progression.md "Crafts"), adds +1 for a
 class's other or a race's skill (`ClassDef::is_known_for`/`trains`, `RaceDef::skills`), and `Skills::roll` adds it (halved from `soft_cap`) and spends
 `RollRules::spent` of the marks. The dice and the count are each computed in one public
 function the rule and the level-up screen share (#543): `world::skill_roll` (a `SkillRoll`: the

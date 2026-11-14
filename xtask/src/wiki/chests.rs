@@ -6,6 +6,7 @@ use std::fmt::Write as _;
 use warlock_core::content::Content;
 use warlock_core::dice::Dice;
 use warlock_core::door;
+use warlock_core::talent::DelvingEffect;
 
 /// The Strength scores the kick columns show (what the kicker's athletics and talents add counts
 /// as Strength).
@@ -54,7 +55,9 @@ pub(super) fn chest_breaking(content: &Content) -> String {
         .map(|id| content.talents().get(id))
         .and_then(|t| {
             t.effects.iter().find_map(|e| match e {
-                warlock_core::content::TalentEffect::SmashDestroyPercent { value } => Some(*value),
+                warlock_core::content::TalentEffect::Delving(
+                    DelvingEffect::SmashDestroyPercent { value },
+                ) => Some(*value),
                 _ => None,
             })
         })

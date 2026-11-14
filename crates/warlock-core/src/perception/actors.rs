@@ -77,7 +77,7 @@ pub(super) fn seen(
         })
         .collect();
     // Stalker's eye: which of them have not noticed the player.
-    if v.talents.sees_unaware {
+    if v.talents.stealth.sees_unaware {
         for seen in &mut actors {
             seen.unaware = (seen.kind == ActorKind::Creature)
                 && creature_unaware(state, content, lights, seen.id, state.player);
@@ -117,7 +117,7 @@ type Image = (ActorId, ActorId, Pos);
 /// within its reach where the player sees it.
 fn disguises(v: &Viewing, sight: &Window<Sight>) -> Vec<Disguise> {
     let (content, viewer) = (v.content, v.viewer);
-    let reach = v.talents.sees_mimics;
+    let reach = v.talents.delving.sees_mimics;
     let shut = content.chest_terrain(crate::chest::ChestState::Shut);
     (v.state.actors.values())
         .filter(|a| a.level == v.level.id && a.effects.hides(content))

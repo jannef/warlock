@@ -511,7 +511,7 @@ mod tests {
 
     #[test]
     fn table_assigns_grid_entries_and_free_pulses() {
-        let content = Content::builtin().expect("built-in content loads");
+        let content = warlock_assets::content().expect("built-in content loads");
         let water = content.terrain_id("water").expect("water exists");
         let altar = content.terrain_id("altar").expect("altar exists");
         let floor = content.terrain_id("floor").expect("floor exists");
@@ -539,7 +539,7 @@ mod tests {
 
     #[test]
     fn running_water_cells_carry_their_flow() {
-        let content = Content::builtin().expect("built-in content loads");
+        let content = warlock_assets::content().expect("built-in content loads");
         let running = content.terrain_id("running_water").expect("running water");
         let water = content.terrain_id("water").expect("still water");
         let table = AnimTable::new(&content, |_| 7, true, Palette::Default);

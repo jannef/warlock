@@ -217,7 +217,7 @@ generator patrol walks, as for a den: it lies unguarded.
 Sealing (`world/hoard.rs`): `World::lift_in_hoard(at, stacks)` is the one line in
 `carry.rs::pick_up`, after the pick-up is said. Inside a room with a `hoard` that has not sealed,
 `SpecialRoom::lifted` grows by the stacks lifted; once it passes the player's
-`TalentMods::hoard_grace` (Old hand: 1) the room is `sealed` and `seal` runs: every cell of the
+`DelvingMods::hoard_grace` (Old hand: 1) the room is `sealed` and `seal` runs: every cell of the
 room (`cells()`: a rooms level's rectangle holds its walls and doors) that is an open door with
 nothing in the doorway is shut (`set_terrain` to its `closes_to`), every closed door there then
 gets `Lock::new(None)` unless it is locked already (only a skeleton key fits; `lock_difficulty`
@@ -403,7 +403,7 @@ Nothing new is saved but `SpecialRoom::side` (left out while `None`): the terrai
 of a spent or blown altar. The `rooms` dev layer adds `, side good` and `, spent`/`, destroyed`
 (`dump/truth.rs::feature_state`). The showcase's `shrine` scenario has a good, a neutral, and an evil
 altar side by side. Talent: Pious (system `special_rooms`, which holds prayer,
-#773; `devout`, `TalentMods::devout`; hook `leaned_kinds`).
+#773; `devout`, `FaithMods::devout`; hook `leaned_kinds`).
 
 The great outcomes (#407, `world/boons.rs`; tests `world/boons_tests.rs`) are five more hooks,
 applied after `becomes`: `gift` (`Stats::gift` on a random stat), `wrath` (`Stats::lessen`,
@@ -469,7 +469,7 @@ Metalcraft's screen for the trained; untrained, the step goes to the rules, whic
 `most` improvements); `start_temper` (the refusals, no time), `Spent::Temper(Tempering)`,
 `World::temper` (`keep_at` for `seconds`, as a prayer), then `tempered`: the natural roll
 (`combat::roll_natural`) plus the Strength modifier, `skill_effect(Effect::Temper)`, and
-`TalentMods::check(Strength)` against `TemperRules::against(attempts)` (`check_made`: a natural 2
+`VigourMods::check(Strength)` against `TemperRules::against(attempts)` (`check_made`: a natural 2
 fails, a natural 24 succeeds); the attempt counted; `set_apart` (one of a stack of several moved to
 the pack's end; being worked it joins nothing again); `work_out`, the table (one `index` draw among
 `worked::aspects` for an improvement; `remove_stacks` and `keep_hp_within_max` for the end of it);
@@ -528,7 +528,7 @@ dim its own transient light.
 line in `fight.rs::creature_dies` right after `leave_corpse` (so at the corpse's cell, after an
 incorporeal creature's landing): with `Here::rise` at the cell (the room's, else the level's), a
 dead type not of the rise's faction, with `corpse` and a corpse object, and not the player's kill
-under Old delver (`TalentMods::grave_warden`), `rises_as` draws the type from the gameplay
+under Old delver (`DelvingMods::grave_warden`), `rises_as` draws the type from the gameplay
 stream (`rise_candidates`: the faction's non-unique types, shared or the run's campaign's, of the
 nearest level to the dead's, the lower on a tie, in id order; one `below(n)` draw, none for a
 single candidate) and pushes a `Rising { at, pos, from, into }` on the dead's level
@@ -542,8 +542,8 @@ rising line if seen, else `make_noise_at(risen, Act::Mutter, 100)`. Levels the p
 are never ticked, so their due risings rise on the first turn back. `World::risings` (the current
 level's) feeds the `actors` dev layer's `rising <from> at (x, y) as <into> at hh:mm:ss` rows.
 
-Consecrate (`world/consecrate.rs`): `ClassActive::Consecrate` (`TalentEffect::Consecrate { mana,
-time }`, `TalentMods::consecrate`; the `consecrate` talent, priest 9 and paladin 12, `alignment =
+Consecrate (`world/consecrate.rs`): `ClassActive::Consecrate` (`FaithEffect::Consecrate { mana,
+time }`, `FaithMods::consecrate`; the `consecrate` talent, priest 9 and paladin 12, `alignment =
 { min = "neutral" }`). `use_class` → `begin_consecrate`: `hallowable` (the unholy room the player
 stands in, else an unholy `pervading`), refused with no time when none; then, outside the bands
 its `alignment` names, `World::unanswered` (a cast's time, no mana, nothing lifted;
@@ -573,8 +573,8 @@ is said otherwise. Consecrate lifts it (`unholy`).
 ## Hallowed ground
 
 `world/sanctuary.rs` (#885, the priest design §6.4): the priest's level-50 class active
-Sanctuary (`ClassActive::Sanctuary`, `use:sanctuary`; `TalentEffect::Sanctuary { mana, time,
-radius, lasts, regen }` → `TalentMods::sanctuary`; the `sanctuary` talent, `classes/03-priest.toml`
+Sanctuary (`ClassActive::Sanctuary`, `use:sanctuary`; `FaithEffect::Sanctuary { mana, time,
+radius, lasts, regen }` → `FaithMods::sanctuary`; the `sanctuary` talent, `classes/03-priest.toml`
 50, load checks: mana 1–500, time 10 s–1 h, radius 1–5, lasts 10 min–12 h, regen 100–1000).
 Not a special room: no effect id, no `effects_at`, so nothing that folds `Here` changes.
 
@@ -621,7 +621,7 @@ Not a special room: no effect id, no `effects_at`, so nothing that folds `Here` 
 `World::dwell(id)` (`world/rooms.rs`): every status `Here::statuses` gives at the actor's cell (the
 room's, then the level's) is given at one degree through `World::afflict` (so `refresh` stacking
 renews its easing; immunity to its `damage_type` refuses it). Skipped for an actor whose
-`TalentMods::room_status_immune` lists it (Old delver), for an unholy effect's status for one that
+`DelvingMods::room_status_immune` lists it (Old delver), for an unholy effect's status for one that
 `World::communes` (Communion with the dark, `docs/dev/prayer.md`), and, for a status that only touches mana
 (`StatusDef::touches_only_mana`), for one whose `max_mana` is 0 (no rat shows "ebbing", and a
 quiet creature stays quiet in `untouched_by`). The one call is in `World::pass_time`, before each
@@ -740,7 +740,7 @@ only the player's moves, so creatures never fall and draw nothing. It returns at
 nothing, unless `Here::collapse` (the room's only, never a pervading effect) holds at `at`, the
 player still stands there, the cell is the room's laid `floor` (cracked floor; a room's other
 cells never give way), the level has a down staircase whose `to` is set (`level_below`), and
-the player lacks Old delver (`TalentMods::collapse_proof`). Then one gameplay draw at
+the player lacks Old delver (`DelvingMods::collapse_proof`). Then one gameplay draw at
 `chance`, doubled while `load_of(player).penalty() >= Burdened` (capped at 100). On a fall:
 `World::visit` makes the level below (as stairs would, with the visit's luck and level),
 `landing` lists its cells (a flood fill from `start`, else the first staircase, through

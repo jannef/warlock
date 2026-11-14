@@ -61,10 +61,9 @@ Cargo resolves features per command, so `cargo test --workspace`, `cargo run -p 
 `cargo run -p warlock-cli`, and `cargo xtask` each see their own tree. A crate whose features
 differ anywhere below it gets another fingerprint, so before #1572 warlock-core (300k lines) was
 built once per tree: twice in a CI job, and again on every switch between the tests, the CLI,
-and xtask after an edit to core. Four things keep the trees equal below warlock-core:
+and xtask after an edit to core. Three things keep the trees equal below warlock-core (it has no
+features of its own: the test world's `showcase` feature is `warlock-assets`', #1587):
 
-- `showcase` in `warlock` and `warlock-cli`, and xtask's dependency, name warlock-core's
-  `default` beside `showcase`, as `cargo test --workspace` turns it on;
 - the workspace's `serde` (`alloc`) and `flate2` (default features) carry what the game's tree
   adds;
 - `crates/workspace-hack` (no code; a dependency of `warlock-cli` and xtask) pins the rest the
@@ -78,8 +77,9 @@ After a Bevy or dependency update, check it: after `cargo test --workspace --no-
 does, compare the trees: `cargo tree -p <member> -e normal,build -f '{p} {f}'`, or, for
 everything Cargo hashes (features, profile, host or target), `RUSTC_BOOTSTRAP=1 cargo build -p
 <member> --unit-graph -Z unstable-options`; the difference goes into
-`crates/workspace-hack/Cargo.toml`. `--no-default-features` builds (the release, the web build)
-and release builds are other trees by design.
+`crates/workspace-hack/Cargo.toml`. Release builds are other trees by design; a
+`--no-default-features` build (the release configuration, the web build) changes only
+`warlock-assets` and the binaries above it.
 
 ## Hot registries: insert by group, never append
 
