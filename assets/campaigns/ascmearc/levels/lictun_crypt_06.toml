@@ -1,6 +1,6 @@
-# Flōdærn, "the flood-house" (#1684): the sixth crypt under Līctūn, below Cyrcweardes Cofa,
+# Līctūn crypt 6, "the flood-house" (#1684): the sixth crypt under Līctūn, below Līctūn crypt 5,
 # reached by the stairs that open there once its places are filled (spec §7 "Graves";
-# `docs/dev/graves.md`). Its stairs up (<) lead back to Cyrcweardes Cofa. No danger, nobody here.
+# `docs/dev/graves.md`). Its stairs up (<) lead back to Līctūn crypt 5. No danger, nobody here.
 #
 # Ground water found this crypt long ago and never left. The stairs come down onto a dry landing;
 # below it a gallery lies under a hand's depth of water, niches cut unevenly in both its walls. It
@@ -10,8 +10,8 @@
 # way down to the next crypt (v), shut until every place here is filled.
 #
 # Places: 17 niches and 8 sarcophagi, 25 in all, filled in row order.
-name = "Flōdærn"
-arrival = "Flōdærn, the flood-house: still water over the floor, and coffins standing in it."
+name = "Līctūn crypt 6"
+arrival = "Līctūn crypt 6, the flood-house: still water over the floor, and coffins standing in it."
 temperature = 6
 ambient = [6, 6, 8, 0]
 item_level = 1

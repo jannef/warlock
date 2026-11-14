@@ -1,4 +1,4 @@
-# The Undercroft (#1682): the first crypt under Līctūn, Cēaptūn's churchyard, reached by the stairs
+# Līctūn crypt 1 (#1682): the first crypt under Līctūn, Cēaptūn's churchyard, reached by the stairs
 # that open in the yard once its forty plots are filled (spec §7 "Graves"; `docs/dev/graves.md`).
 # Its stairs up (<) lead back to the yard. No danger, nobody here.
 #
@@ -10,7 +10,7 @@
 # the next crypt (v), shut until every place here is filled.
 #
 # Places: 18 niches and 8 sarcophagi, 26 in all, filled in row order.
-name = "The Undercroft"
+name = "Līctūn crypt 1"
 arrival = "The undercroft under Līctūn's chapel: a dusty nave, and family vaults off it."
 temperature = 9
 ambient = [6, 6, 8, 0]

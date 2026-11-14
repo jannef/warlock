@@ -1,6 +1,6 @@
-# Cildra Ærn, "the children's house" (#1684): the seventh crypt under Līctūn, below Flōdærn,
+# Līctūn crypt 7, "the children's house" (#1684): the seventh crypt under Līctūn, below Līctūn crypt 6,
 # reached by the stairs that open there once its places are filled (spec §7 "Graves";
-# `docs/dev/graves.md`). Its stairs up (<) lead back to Flōdærn. No danger, nobody here.
+# `docs/dev/graves.md`). Its stairs up (<) lead back to Līctūn crypt 6. No danger, nobody here.
 #
 # Dug for the children of a hard winter, and small in every part. The stairs come down a narrow
 # passage into a round room where the children lie together under one stone (F), two candles
@@ -9,8 +9,8 @@
 # far side of the southern one (v), shut until every place here is filled.
 #
 # Places: 24 niches, filled in row order.
-name = "Cildra Ærn"
-arrival = "Cildra Ærn, the children's house: little rooms round a little hall, and short niches."
+name = "Līctūn crypt 7"
+arrival = "Līctūn crypt 7, the children's house: little rooms round a little hall, and short niches."
 temperature = 6
 ambient = [6, 6, 8, 0]
 item_level = 1

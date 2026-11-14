@@ -1,6 +1,6 @@
-# Cwealmpytt, "the death-pit" (#1684): the ninth crypt under Līctūn, below Hryre, reached by the
+# Līctūn crypt 9, "the death-pit" (#1684): the ninth crypt under Līctūn, below Līctūn crypt 8, reached by the
 # stairs that open there once its places are filled (spec §7 "Graves"; `docs/dev/graves.md`).
-# Its stairs up (<) lead back to Hryre. No danger, nobody here.
+# Its stairs up (<) lead back to Līctūn crypt 8. No danger, nobody here.
 #
 # No crypt but a pit, dug in haste in a year of plague and roofed over after. Its walls are bare
 # earth; a rough tunnel comes down to it from the north-west. In the middle the plague's dead lie
@@ -10,8 +10,8 @@
 # to the next crypt (v), shut until every place here is filled.
 #
 # Places: 26 niches, filled in row order.
-name = "Cwealmpytt"
-arrival = "Cwealmpytt, the death-pit: a round pit dug in bare earth, and a heap of bones in the middle."
+name = "Līctūn crypt 9"
+arrival = "Līctūn crypt 9, the death-pit: a round pit dug in bare earth, and a heap of bones in the middle."
 temperature = 5
 ambient = [6, 6, 8, 0]
 item_level = 1

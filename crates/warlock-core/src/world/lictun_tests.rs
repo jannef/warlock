@@ -310,7 +310,7 @@ fn a_full_yard_opens_the_way_down_and_the_crypts_fill_in_turn() {
     assert!(
         texts(&w)
             .iter()
-            .any(|t| t == "You descend the stairs to The Undercroft."),
+            .any(|t| t == "You descend the stairs to Līctūn crypt 1."),
         "{:?}",
         texts(&w)
     );

@@ -1,6 +1,6 @@
-# Hryre, "the fall" (#1684): the eighth crypt under Līctūn, below Cildra Ærn, reached by the
+# Līctūn crypt 8, "the fall" (#1684): the eighth crypt under Līctūn, below Līctūn crypt 7, reached by the
 # stairs that open there once its places are filled (spec §7 "Graves"; `docs/dev/graves.md`).
-# Its stairs up (<) lead back to Cildra Ærn. No danger, nobody here.
+# Its stairs up (<) lead back to Līctūn crypt 7. No danger, nobody here.
 #
 # Once a long hall of two aisles on pillars (P), niches all along both walls. Its roof came down
 # in the middle long ago: a mound of fallen earth (E) fills the centre, rubble and cracked stone
@@ -10,8 +10,8 @@
 # him the way down to the next crypt (v), shut until every place here is filled.
 #
 # Places: 25 niches and 6 sarcophagi, 31 in all, filled in row order.
-name = "Hryre"
-arrival = "Hryre, the fall: a pillared hall, its middle buried under the roof that came down."
+name = "Līctūn crypt 8"
+arrival = "Līctūn crypt 8, the fall: a pillared hall, its middle buried under the roof that came down."
 temperature = 6
 ambient = [6, 6, 8, 0]
 item_level = 1

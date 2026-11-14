@@ -1,6 +1,6 @@
-# Enta Geweorc, "the work of giants" (#1684): the eleventh crypt under Līctūn, below
-# Munuccleofan, reached by the stairs that open there once its places are filled (spec §7
-# "Graves"; `docs/dev/graves.md`). Its stairs up (<) lead back to Munuccleofan. No danger, nobody
+# Līctūn crypt 11, "the work of giants" (#1684): the eleventh crypt under Līctūn, below
+# Līctūn crypt 10, reached by the stairs that open there once its places are filled (spec §7
+# "Graves"; `docs/dev/graves.md`). Its stairs up (<) lead back to Līctūn crypt 10. No danger, nobody
 # here.
 #
 # Older than everything above it: a burial hall of the people who held this land before the
@@ -12,8 +12,8 @@
 # Places for statues in the apse and at the hall's east corners (S).
 #
 # Places: 27 niches, filled in row order.
-name = "Enta Geweorc"
-arrival = "Enta Geweorc, the work of giants: a long hall on columns, built before the English came."
+name = "Līctūn crypt 11"
+arrival = "Līctūn crypt 11, the work of giants: a long hall on columns, built before the English came."
 temperature = 4
 ambient = [6, 6, 8, 0]
 item_level = 1

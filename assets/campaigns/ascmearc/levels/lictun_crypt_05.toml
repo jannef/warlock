@@ -1,6 +1,6 @@
-# Cyrcweardes Cofa, "the church-ward's store" (#1684): the fifth crypt under Līctūn, below
-# Cēapmanna Ærn, reached by the stairs that open there once its places are filled (spec §7
-# "Graves"; `docs/dev/graves.md`). Its stairs up (<) lead back to Cēapmanna Ærn. No danger,
+# Līctūn crypt 5, "the church-ward's store" (#1684): the fifth crypt under Līctūn, below
+# Līctūn crypt 4, reached by the stairs that open there once its places are filled (spec §7
+# "Graves"; `docs/dev/graves.md`). Its stairs up (<) lead back to Līctūn crypt 4. No danger,
 # nobody here.
 #
 # Where the sextons of old kept their gear and laid by what the yard would want. The stairs come
@@ -11,8 +11,8 @@
 # and the way down to the next crypt beyond him (v), shut until every place here is filled.
 #
 # Places: 8 sarcophagi and 18 niches, 26 in all, filled in row order.
-name = "Cyrcweardes Cofa"
-arrival = "Cyrcweardes Cofa, the sexton's store: shelves, a workbench, and coffins laid by."
+name = "Līctūn crypt 5"
+arrival = "Līctūn crypt 5, the sexton's store: shelves, a workbench, and coffins laid by."
 temperature = 7
 ambient = [6, 6, 8, 0]
 item_level = 1

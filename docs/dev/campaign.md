@@ -247,7 +247,7 @@ rows of ten and ten fixed `gravestone`s by the chapel (each its own legend entry
 `epitaph`: Cēaptūn's own dead, world-building material); yews (`tree`) in the corners; a little
 stone chapel in the middle (a door between two sconces, stools for pews, the altar between two
 lamps, a back door onto a flagged path whose end, `v`, is the way down to the crypts). The
-burial ground and its crypts (`lictun_crypt_01`, The Undercroft; `lictun_crypt_02`, Bānhūs; on to
+burial ground and its crypts (`lictun_crypt_01` and `lictun_crypt_02`, named "Līctūn crypt 1" and "Līctūn crypt 2"; on to
 `lictun_crypt_11`) are
 `docs/dev/graves.md`'s. The keeper is the campaign creature type `sexton`
 (`data/creatures/sexton.toml`), npc `dudda`, **Old Dudda**, on a `route` round the chapel

@@ -165,16 +165,6 @@ kind. Creatures keep their plain English names.
 | Ūtgang | *ūtgang* "going out, exit" | the way out | the way up from the drake's deep |
 | Holtwīc | *holt* "wood" + *wīc* "dwelling" | the dwelling at the wood | the village at the north road's end |
 | Līctūn | *līc* "body, corpse" + *tūn* "enclosure" | the corpse-yard | Cēaptūn's churchyard |
-| Bānhūs | *bān* "bone" + *hūs* "house" | the bone-house | the second crypt under Līctūn |
-| Prēostcleofa | *prēost* "priest" + *cleofa* "chamber" | the priests' chamber | the third crypt under Līctūn |
-| Cēapmanna Ærn | *cēapmanna* "of the chapmen" + *ærn* "house" | the chapmen's house | the fourth crypt |
-| Cyrcweardes Cofa | *cyrcweardes* "the church-ward's" + *cofa* "store, closet" | the sexton's store | the fifth crypt |
-| Flōdærn | *flōd* "flood" + *ærn* | the flood-house | the sixth crypt |
-| Cildra Ærn | *cildra* "of the children" + *ærn* | the children's house | the seventh crypt |
-| Hryre | *hryre* "fall, ruin" | the fall | the eighth crypt |
-| Cwealmpytt | *cwealm* "death, pestilence" + *pytt* "pit" | the death-pit | the ninth crypt |
-| Munuccleofan | *munuc* "monk" + *cleofan* "chambers" | the monks' cells | the tenth crypt |
-| Enta Geweorc | *enta* "of giants" + *geweorc* "work" | the work of giants | the eleventh crypt; what the English called the ruins left by those before them |
 | Ælfhām | *ælf* "elf" + *hām* "home" | the elves' home | the fey hall under the mound |
 | Dēopgang | *dēop* "deep" + *gang* "way, passage" | the deep way | the deep gnomes' road down |
 | Gimmwīc | *gimm* "gem" + *wīc* "dwelling" | the gem dwelling | the deep gnomes' town |

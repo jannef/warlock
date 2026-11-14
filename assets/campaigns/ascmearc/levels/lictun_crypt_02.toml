@@ -1,6 +1,6 @@
-# Bānhūs, "the bone-house" (#1682): the second crypt under Līctūn, below the Undercroft, reached by
+# Līctūn crypt 2, "the bone-house" (#1682): the second crypt under Līctūn, below Līctūn crypt 1, reached by
 # the stairs that open there once its places are filled (spec §7 "Graves"; `docs/dev/graves.md`).
-# Its stairs up (<) lead back to the Undercroft. No danger, nobody here.
+# Its stairs up (<) lead back to Līctūn crypt 1. No danger, nobody here.
 #
 # Older than the yard above: a landing under the stairs, steps down into the charnel, a round
 # chamber walled with the bones of the first yard's dead (B), stacked in courses when their graves
@@ -10,8 +10,8 @@
 # way down to the next crypt (v), shut until every place here is filled.
 #
 # Places: 20 sarcophagi and 10 niches, 30 in all, filled in row order.
-name = "Bānhūs"
-arrival = "Bānhūs, the bone-house: walls of old bones, and rows of stone coffins beyond."
+name = "Līctūn crypt 2"
+arrival = "Līctūn crypt 2, the bone-house: walls of old bones, and rows of stone coffins beyond."
 temperature = 7
 ambient = [6, 6, 8, 0]
 item_level = 1

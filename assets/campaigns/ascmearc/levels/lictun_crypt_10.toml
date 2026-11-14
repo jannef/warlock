@@ -1,6 +1,6 @@
-# Munuccleofan, "the monks' cells" (#1684): the tenth crypt under Līctūn, below Cwealmpytt,
+# Līctūn crypt 10, "the monks' cells" (#1684): the tenth crypt under Līctūn, below Līctūn crypt 9,
 # reached by the stairs that open there once its places are filled (spec §7 "Graves";
-# `docs/dev/graves.md`). Its stairs up (<) lead back to Cwealmpytt. No danger, nobody here.
+# `docs/dev/graves.md`). Its stairs up (<) lead back to Līctūn crypt 9. No danger, nobody here.
 #
 # Cut in the rock by the monks who first came to Cēapdenu, as they would have built a cloister
 # above ground: a square walk, a candle at each corner, niches cut in its outer wall where the
@@ -10,8 +10,8 @@
 # the way down to the next crypt (v), shut until every place here is filled.
 #
 # Places: 32 niches, filled in row order.
-name = "Munuccleofan"
-arrival = "Munuccleofan, the monks' cells: a cloister walk cut in the rock, a saint's shrine at its heart."
+name = "Līctūn crypt 10"
+arrival = "Līctūn crypt 10, the monks' cells: a cloister walk cut in the rock, a saint's shrine at its heart."
 temperature = 5
 ambient = [6, 6, 8, 0]
 item_level = 1

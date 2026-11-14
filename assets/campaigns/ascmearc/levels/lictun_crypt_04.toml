@@ -1,6 +1,6 @@
-# Cēapmanna Ærn, "the chapmen's house" (#1684): the fourth crypt under Līctūn, below
-# Prēostcleofa, reached by the stairs that open there once its places are filled (spec §7
-# "Graves"; `docs/dev/graves.md`). Its stairs up (<) lead back to Prēostcleofa. No danger, nobody
+# Līctūn crypt 4, "the chapmen's house" (#1684): the fourth crypt under Līctūn, below
+# Līctūn crypt 3, reached by the stairs that open there once its places are filled (spec §7
+# "Graves"; `docs/dev/graves.md`). Its stairs up (<) lead back to Līctūn crypt 3. No danger, nobody
 # here.
 #
 # The vault the chapmen's gild of Cēaptūn built for its own, when the town was young and its
@@ -11,8 +11,8 @@
 # next crypt waits (v), shut until every place here is filled.
 #
 # Places: 14 sarcophagi and 12 niches, 26 in all, filled in row order.
-name = "Cēapmanna Ærn"
-arrival = "Cēapmanna Ærn, the chapmen's vault: a round hall, its stone coffins set in a ring."
+name = "Līctūn crypt 4"
+arrival = "Līctūn crypt 4, the chapmen's vault: a round hall, its stone coffins set in a ring."
 temperature = 8
 ambient = [6, 6, 8, 0]
 item_level = 1

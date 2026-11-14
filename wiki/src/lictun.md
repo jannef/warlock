@@ -36,17 +36,17 @@ words.
 
 | Crypt | What it is | Places |
 |---|---|---|
-| 1. The Undercroft | family vaults off a nave | 26 |
-| 2. Bānhūs | a charnel walled with bones, and a hall of coffins | 30 |
-| 3. Prēostcleofa | the priests' crypt, laid out as a cross | 30 |
-| 4. Cēapmanna Ærn | the chapmen's gild's round vault | 26 |
-| 5. Cyrcweardes Cofa | the old sextons' store and workroom | 26 |
-| 6. Flōdærn | a crypt the ground water flooded | 25 |
-| 7. Cildra Ærn | small rooms for the children of a hard winter | 24 |
-| 8. Hryre | a pillared hall whose roof fell in | 31 |
-| 9. Cwealmpytt | a pit dug in a year of plague | 26 |
-| 10. Munuccleofan | the first monks' cloister, cut in the rock round their saint's shrine | 32 |
-| 11. Enta Geweorc | a hall on columns, built before the English came | 27 |
+| 1. Līctūn crypt 1 | family vaults off a nave | 26 |
+| 2. Līctūn crypt 2 | a charnel walled with bones, and a hall of coffins | 30 |
+| 3. Līctūn crypt 3 | the priests' crypt, laid out as a cross | 30 |
+| 4. Līctūn crypt 4 | the chapmen's gild's round vault | 26 |
+| 5. Līctūn crypt 5 | the old sextons' store and workroom | 26 |
+| 6. Līctūn crypt 6 | a crypt the ground water flooded | 25 |
+| 7. Līctūn crypt 7 | small rooms for the children of a hard winter | 24 |
+| 8. Līctūn crypt 8 | a pillared hall whose roof fell in | 31 |
+| 9. Līctūn crypt 9 | a pit dug in a year of plague | 26 |
+| 10. Līctūn crypt 10 | the first monks' cloister, cut in the rock round their saint's shrine | 32 |
+| 11. Līctūn crypt 11 | a hall on columns, built before the English came | 27 |
 
 Nothing lives in the crypts, and they are lit only by a few candles and torches, so bring a
 light. Some of the deeper ones stand in water or are half filled with fallen earth and

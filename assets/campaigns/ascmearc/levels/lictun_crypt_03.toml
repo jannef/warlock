@@ -1,6 +1,6 @@
-# Prēostcleofa, "the priests' chamber" (#1684): the third crypt under Līctūn, below Bānhūs,
+# Līctūn crypt 3, "the priests' chamber" (#1684): the third crypt under Līctūn, below Līctūn crypt 2,
 # reached by the stairs that open there once its places are filled (spec §7 "Graves";
-# `docs/dev/graves.md`). Its stairs up (<) lead back to Bānhūs. No danger, nobody here.
+# `docs/dev/graves.md`). Its stairs up (<) lead back to Līctūn crypt 2. No danger, nobody here.
 #
 # The crypt of an older church than the chapel above, laid out as a cross. The stairs come down at
 # the foot of a long nave lined with niches; at the crossing the arms open north and south, two
@@ -10,8 +10,8 @@
 # next crypt (v), shut until every place here is filled.
 #
 # Places: 22 niches and 8 sarcophagi, 30 in all, filled in row order.
-name = "Prēostcleofa"
-arrival = "Prēostcleofa, the priests' crypt: a nave and its arms laid out as a cross, an altar at its head."
+name = "Līctūn crypt 3"
+arrival = "Līctūn crypt 3, the priests' crypt: a nave and its arms laid out as a cross, an altar at its head."
 temperature = 8
 ambient = [6, 6, 8, 0]
 item_level = 1
