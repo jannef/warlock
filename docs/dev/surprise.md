@@ -72,7 +72,8 @@ Keep it current with the code, as CLAUDE.md says.
   finisher's "It has no vital spot.", a `news` line after the blow's).
 - `world/thief.rs`, the thief's actives and passive on surprise (#684): Lurk (`lurking` in
   `status.toml`, after Surprised: `per_action`, `max = 1`, `refresh`, "You wait in ambush.",
-  no `end`), Low blow (`Technique::sneak`), Vanishing act (`sneak_kill_status`). The hooks are
+  no `end`), Vanishing act (`sneak_kill_status`); Exploit (`Technique::sneak`) is
+  `world/openings.rs`'s (`docs/dev/openings.md`). The hooks are
   the rows marked #684 below.
 - `world/lurk.rs`, lurking (#686): `World::lurker_waits` turns the step of `ai.rs::fight`'s plan
   into a wait for a type with `lurks = true` (`CreatureDef::lurks`) while its hit points are at
@@ -113,7 +114,7 @@ Keep it current with the code, as CLAUDE.md says.
 | `weapon_ability.rs::approached` | a flat-footed keeper fires no Point-blank shot |
 | `schedule.rs::slowed` | `Effects::slow_with(price, status_cost)`: the dear action |
 | `weapon_ability.rs::spend_actions` | a `per_action` status that ends pushes `Event::Status { began: false }` (its `end` line: "You recover your wits.", Staggered's and Pinned's too) |
-| `fight.rs::resolve` (#684) | `lurked` (a lurk's blow on a creature not hunting the player is unaware: `startle`, flat-footed, dice) and `low_blow_taken` (a low blow passes `sneaks` as unaware: dice only); `vanishing_act` on a sneak attack's blow that kills |
+| `fight.rs::resolve` (#684) | `lurked` (a lurk's blow on a creature not hunting the player is unaware: `startle`, flat-footed, dice) and `sneak_taken` (an exploit passes `sneaks` as unaware: dice only; its ladder's dice after them, `openings.rs::exploited`); `vanishing_act` on a sneak attack's blow that kills |
 | the player's chosen attacks (#1461): `fight.rs::player_attacks`, `player_blow_with`, `player_kicks`, `bash`; `weapon_active.rs::rush`, `sweep` (the aimed one); `shoot.rs::fire`, `throw`, `weapon_active.rs::active_shot`, `volley.rs` (`choose_at_cell`); `cast.rs::cast_single` (the player's spell that rolls to hit) | `choose_mark` (`mark.rs`) before the attack: the mark rule, so its sneak attack builds in the new mark's pool (docs/dev/openings.md) |
 | `free_blow.rs::strike_free`, `weapon_ability.rs` (a free shot) (#1461) | `free_blow_at` (`mark.rs`): sets a mark when none stands, never moves one |
 | `free_blow.rs::free_blows_of`, `step_up` (#684) | Lurking switches the gatekeeper's blow on; `lie_in_wait` flags the player's blow from a lurk (`Technique::lurk`, cleared after) |

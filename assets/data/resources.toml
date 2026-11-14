@@ -82,6 +82,7 @@ max = 5
 start = 0
 decays = 120
 marked = true
+lacking = "you have no opening"
 builds = [
   { on = "sneak_attack", amount = 1 },
   { on = "feint", amount = 1 },

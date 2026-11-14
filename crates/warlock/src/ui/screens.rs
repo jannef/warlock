@@ -2498,11 +2498,11 @@ mod tests {
     #[test]
     fn picking_a_lock_acts_at_once_on_the_one_door_beside() {
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // Below the hall's door, the showcase's thief (trained in Open lock): `a` `d` (Pick
-        // lock, after their birth sign's stare, Disarm, and Listen) picks it at
+        // Below the hall's door, the showcase's thief (trained in Open lock): `a` `e` (Pick
+        // lock, after their birth sign's stare, Exploit, Disarm, and Listen) picks it at
         // once, with no prompt (#1327).
         let mut app = thief_after("move:N*3");
-        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyD, "d")]);
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyE, "e")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Normal);
         assert_eq!(actions(&app), [Action::PickLock(Dir::N)]);
@@ -2563,20 +2563,20 @@ mod tests {
     #[test]
     fn stealing_acts_at_once_on_one_beside_and_asks_among_several() {
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // The showcase's thief can steal; an ally beside is someone to rob: `a` `d` (Steal)
+        // The showcase's thief can steal; an ally beside is someone to rob: `a` `e` (Steal)
         // steals from it at once.
         let mut app = thief_after("ally:panther");
         let [one] = ways_to_creatures(&app)[..] else {
             panic!("one ally beside");
         };
-        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyD, "d")]);
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyE, "e")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Normal);
         assert_eq!(actions(&app), [Action::Steal(one)]);
         // Two beside: it asks for a direction in the message line, and a direction steals.
         let mut app = thief_after("ally:panther:2");
         assert_eq!(ways_to_creatures(&app).len(), 2);
-        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyD, "d")]);
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyE, "e")]);
         assert_eq!(mode(&app), InputMode::Ability(Ability::Steal));
         frame(&mut app, &[EAST]);
         assert_eq!(actions(&app), [Action::Steal(Dir::E)]);
@@ -2619,22 +2619,22 @@ mod tests {
         const ABILITIES: (KeyCode, &str) = (KeyCode::KeyA, "a");
         const REPEAT: (KeyCode, &str) = (KeyCode::KeyX, "X");
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // Without a shield: the menu opens on `a`; the shield bash (`f`) is greyed out, so its
+        // Without a shield: the menu opens on `a`; the shield bash (`g`) is greyed out, so its
         // letter only says why; Esc closes the menu, and no time passed.
         let mut app = app(true);
         frame(&mut app, &[ABILITIES]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
-        frame(&mut app, &[(KeyCode::KeyF, "f")]);
+        frame(&mut app, &[(KeyCode::KeyG, "g")]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
         frame(&mut app, &[ESC]);
         assert!(names(&app).is_empty() && actions(&app).is_empty());
         // The quick repeat with nothing used yet opens the menu.
         frame(&mut app, &[REPEAT]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
-        // Two allies beside: `a` `d` closes the menu and asks for a direction; a direction
+        // Two allies beside: `a` `e` closes the menu and asks for a direction; a direction
         // steals.
         let mut app = thief_after("ally:panther:2");
-        frame(&mut app, &[ABILITIES, (KeyCode::KeyD, "d")]);
+        frame(&mut app, &[ABILITIES, (KeyCode::KeyE, "e")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Ability(Ability::Steal));
         frame(&mut app, &[EAST]);

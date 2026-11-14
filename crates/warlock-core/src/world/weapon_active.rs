@@ -52,8 +52,11 @@ pub(super) struct Technique {
     /// by that shot.
     pub(super) pierce: bool,
     /// The next blow the player strikes is a sneak attack whatever its target knows (the
-    /// thief's Low blow, `thief.rs`): taken by that blow.
+    /// thief's Exploit, `openings.rs`): taken by that blow.
     pub(super) sneak: bool,
+    /// The openings the next blow the player strikes spends (Exploit, `openings.rs`; 0 none):
+    /// taken by that blow, whose sneak dice they add to.
+    pub(super) exploit: u16,
     /// The free blow the player is about to strike from a lurk, at this creature stepping up
     /// beside them (`thief.rs`): taken by that blow.
     pub(super) lurk: Option<ActorId>,

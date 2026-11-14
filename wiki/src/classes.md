@@ -299,8 +299,12 @@ With less, it is an ordinary shot.
 {{#include generated/class-levels.md:thief}}
 
 The [thief](classes.md#thief)'s [sneak attacks](talents.md#talent-sneak-attack) build
-[openings](resources.md#resource-openings), which [low blow](abilities.md#ability-low-blow) and
-[master thief](abilities.md#ability-master-thief)'s finisher spend (see [Resources](resources.md)).
+[openings](resources.md#resource-openings). [Exploit](abilities.md#ability-exploit), theirs from
+level 1, spends every one they hold on a single sneak attack, deeper for each, and
+[Low blow](talents.md#talent-low-blow) at 12 adds to it; [master thief](abilities.md#ability-master-thief)'s
+finisher spends five (see [Exploit](resources.md#exploit)). The thief has no
+[stamina](resources.md) until a [weapon rank](weapon-skills.md#marks-and-ranks) teaches an active
+ability.
 
 {{#include generated/class-levels.md:wizard}}
 

@@ -41,8 +41,8 @@ while you hold 2 focus spends them and takes 10 % less time. A [volley](talents.
 - Every [feint](skill-uses.md#feinting) the foe falls for gives one.
 - Killing your [mark](#the-mark) yourself gives one more.
 - One slips away every 20 base turns (2 minutes). When empty, the pool stays with you.
-- At level 12, [Low blow](abilities.md#ability-low-blow) (an ability, aimed in a direction) spends
-  3 for a melee blow that counts as a sneak attack, whatever the foe knows.
+- From level 1, [Exploit](#exploit) (an ability, aimed in a direction) spends **every** opening
+  you hold on one melee blow that counts as a sneak attack, whatever the foe knows.
 - At level 60, [Master thief](talents.md#talent-master-thief) gives the **finisher** (an ability,
   aimed in a direction). It spends all 5 for a melee blow that is a [critical](combat.md#criticals)
   whenever it hits, with no confirmation roll. A miss still spends them.
@@ -66,9 +66,40 @@ mark".
 - **Your mark is forgotten** when it vanishes (a summoned creature's time runs out), when you
   take the stairs to another level, and when your openings run down to 0. Your openings stay.
   A mark that steps out of sight is still your mark.
-- **Spending them on someone else is refused.** [Low blow](abilities.md#ability-low-blow) and the
+- **Spending them on someone else is refused.** [Exploit](#exploit) and the
   [finisher](talents.md#talent-master-thief) at a creature other
   than your mark do nothing and take no time ("Your openings are in the kobold's guard.").
+
+### Exploit
+
+Exploit is the [thief](classes.md#thief)'s way to cash in openings, from level 1. Choose a
+direction, and you strike the hostile there with what you wield, in the time of a melee blow.
+
+- **It spends every opening you hold**, from 1 to 5. You choose how many by when you strike.
+- **It is a [sneak attack](surprise.md#sneak-attacks) whatever the foe knows.** The sneak attack
+  dice land if it hits. The foe is not [Surprised](status-effects.md#status-surprised) and keeps
+  its whole Defence.
+- **Each opening spent adds 1d6 damage** on a hit, after the sneak dice. Like them, it comes after
+  [Protection](combat.md#protection), and a [critical](combat.md#criticals) never doubles it.
+- **Its own sneak attack gives no opening.** After it you hold none, and your
+  [mark](#the-mark) is forgotten. If the blow kills your mark, that kill still gives you one.
+- **It is refused**, taking no time and spending nothing, with no opening ("you have no opening"
+  in the menu), with no hostile there ("There is no one there."), at a creature other than your
+  mark ("Your openings are in the kobold's guard."), and at a creature you see that has no vitals
+  ("It has no vital spot.": skeletons, spirits, animated things; see
+  [Criticals](combat.md#criticals)).
+- The game tells you how deep it cuts: "You strike at the opening." (1), "You press your
+  openings." (2 to 4), "You tear into every opening!" (5).
+
+The thief's class talents add to every exploit, per opening spent:
+
+| Level | Talent | Adds per opening spent |
+|---|---|---|
+| 1 | [Exploit](talents.md#talent-exploit) | +1d6 damage |
+| 12 | [Low blow](talents.md#talent-low-blow) | +1 to hit; a hit leaves the foe [Stunned](status-effects.md#status-stunned) (its next action costs half again as much, and your next blow finds it flat-footed) |
+
+So at level 12 an exploit of 4 openings is +4 to hit and does the blow, the sneak dice, and 4d6
+more, and the foe is stunned.
 
 **Ki.** The [ascetic](classes.md#ascetic) gets ki, full, with
 [martial arts](talents.md#talent-martial-arts) at level 1. The pool holds 4, plus your

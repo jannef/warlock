@@ -2,9 +2,10 @@
 
 The Openings pool (`data/resources.toml`, `docs/dev/resources.md` "Openings") remembers whose
 guard its points are in: the **mark**. Design: `docs/design/thief-openings.md` (#1449); this
-file covers phases O1 (#1461: the mark, the kill that carries, and the builds) and O2 (#1462:
-a feint builds). Spec §8 "Resources"
-and "Surprise and sneak attacks".
+file covers phases O1 (#1461: the mark, the kill that carries, and the builds), O2 (#1462:
+a feint builds), and O3 (#1463: Exploit at level 1, Low blow its first increment, Trained wind
+off the thief's table). Spec §8 "Resources", "Class abilities", and "Surprise and sneak
+attacks".
 
 ## Data
 
@@ -40,7 +41,7 @@ hash as before. Only the player ever has one; it is set and cleared only in `wor
 | A departure | `unmark(id)`, in `ally.rs::departs` | cleared, the pool kept (a lapsed summons) |
 | A level change | `unmark_on_travel()`, in `travel.rs::travel` | cleared, the pool kept |
 | Time passing | `mark::faded(actor, content)`, in `World::live` after `resource::pass` (both paths) | cleared once every marked pool held is at 0 (decayed, or never built): no mark stands over an empty pool after a turn's time |
-| An active paid from a marked pool | `off_mark(active, dir)`, in `class_ability.rs::use_class` after the hostile check | refused, no time, nothing spent: "Your openings are in the kobold's guard." while a mark stands and the creature that way is another (Low blow, Master thief's finisher) |
+| An active paid from a marked pool | `off_mark(active, dir)`, in `class_ability.rs::use_class` after the hostile check | refused, no time, nothing spent: "Your openings are in the kobold's guard." while a mark stands and the creature that way is another (Exploit, Master thief's finisher) |
 
 A mark out of sight stays the mark. The mark is named as the player knows it: `World::called`
 while they see it, "an unseen foe" while they do not (`mark_called`; `content::possessive` for
@@ -51,7 +52,7 @@ while they see it, "an unseen foe" while they do not (`mark_called`; `content::p
 Before the attack, so its sneak attack builds in the new mark's pool:
 
 - `fight.rs::player_attacks` (a blow by moving or attacking), `player_blow_with` (every class
-  or weapon active's single blow: Low blow, the finisher, Smite, Quivering palm, Lunge, ...),
+  or weapon active's single blow: Exploit, the finisher, Smite, Quivering palm, Lunge, ...),
   `player_kicks`, `bash`;
 - `weapon_active.rs::rush` (Shield rush), `sweep` (Whirl, Staff sweep: only the one in the aimed
   direction; the rest are struck through `strike_with` and swept up, an area);
@@ -67,12 +68,43 @@ Whirling charge's blows on the way (`charge.rs::whirl`) go through `strike_free`
 Vanishing act stays where a sneak attack's blow kills, in `fight.rs::resolve` (`unseen` is
 known only there); it no longer rides a build.
 
+## Exploit (`world/openings.rs`)
+
+The thief's one active for openings from level 1 (`ClassActive::Exploit`, the class talent
+`exploit`, `use:exploit:E`, `Aim::Direction`, the abilities menu only; its `KeyCommand` unbound).
+
+| Step | Where | What |
+|---|---|---|
+| Refusals, no time, nothing spent | `use_class`: `may_use_class` (greyed `Unavailable::Short`, "you have no opening": Openings' `lacking`), "Which way?", then `thief.rs::thief_may` → `openings.rs::exploit_may` | "There is no one there." (no hostile that way); `off_mark` ("Your openings are in the kobold's guard."); "It has no vital spot." for a foe the player **sees** without vitals (`Content::has_vitals`; an unseen one is struck and told so after, as any blow, so nothing leaks) |
+| The price | `ability::class_cost` | the talent's `resource` cost (1) is the least it needs; for Exploit the cost is **every opening held** (n), spent by `use_class` and handed to `World::exploit` |
+| The blow | `World::exploit` | a melee attack's price and exertion; the words by n ("You strike at the opening." 1, "You press your openings." 2–4, "You tear into every opening!" 5+); `profile.to_hit += n × ExploitMods::to_hit`; `Technique::sneak` (a sneak attack whatever the foe knows: the sneak dice land on a hit, the foe keeps its Defence and is not Surprised) and `Technique::exploit = n`; `player_blow_with` (which runs `choose_mark`) |
+| The ladder's dice | `fight.rs::resolve` → `openings.rs::exploited` → `land_exploit(n, blow)` | after `ambush.rs::ambushed`, on a hit whose sneak dice landed: n × `ExploitMods::dice` from the gameplay stream, after Protection, never multiplied |
+| No build | `ambush.rs::ambushed` asks `exploiting(attacker)` | an exploit's sneak attack builds no opening (it spends them) |
+| After | `World::exploit` | `unmark(target)`: the mark goes with the pool unless the blow killed it (then `mark_dies` cleared it and `mark_kill` gave one); on a hit at a foe still standing, a degree of `ExploitMods::status` (Low blow's Stunned); then `after_attack`. Vanishing act fires on a kill as on any sneak kill |
+
+### The ladder so far
+
+`TalentEffect::{Exploit, ExploitDice { dice }, ExploitToHit { value }, ExploitStatus { status }}`
+(`exploit`, `exploit_dice`, `exploit_to_hit`, `exploit_status`), collected into
+`TalentMods::exploit_active` and `TalentMods::exploit: ExploitMods { dice, to_hit, status }`
+(`exploit_dice` summed with `Dice::and`).
+
+| Level | Talent | Adds per opening spent |
+|---|---|---|
+| 1 | Exploit | the blow; +1d6 (`exploit_dice`) |
+| 12 | Low blow (no active since O3) | +1 to hit (`exploit_to_hit`); the foe Stunned on a hit (`exploit_status`: flat-footed, its next action dear) |
+
+Improved sneak attack's second die and Master thief's threat and sure critical are O4 (#1464).
+Trained wind is off the thief's table (a save holding it keeps it); the pool comes with the first
+active weapon rank (`fight.rs::grant_stamina`).
+
 ## What the player sees
 
 - Character screen: the pool's row `Openings 3/5, in the kobold's guard` (`OwnResource::marked`,
   `PerceptionView::own_mark`).
 - Look mode: "your mark" after the seen statuses (`SeenActor::marked`, from the player's own
   mark).
+- Abilities menu: `Exploit (class): a direction`, greyed "you have no opening" while empty.
 - Messages: "Your openings on the kobold are lost." (a chosen attack elsewhere, the pool above
   0); "Your openings are in the kobold's guard." (a refusal). Nothing on a build or a carry.
 - Dumps: `stats` `Mark the kobold`; the dev `actors` layer's `; mark #12` on the player's line;
@@ -89,9 +121,14 @@ attack. Saves are pinned to the version (no shim).
 `world/mark_tests.rs` (a chosen attack sets, keeps, or empties, said once and only above 0; a
 free blow sets and never moves or builds on a stranger; a throw counts and a burst does not;
 the mark's death by the thief carries and adds one, by another carries; a departure, a level
-change, and the decay to 0 clear; Low blow's refusal; the dumps, a save, and a replay);
+change, and the decay to 0 clear; Exploit's refusal off the mark; the dumps, a save, and a replay);
 `world/feint_tests.rs` (a feint made builds one, at the mark too; a failed one builds none and
 moves the mark; one at a new foe empties first, then builds; a refused one moves nothing);
-`world/resource_talent_tests.rs` (Patient blade's two); `content/resource.rs` (`marked`,
-`mark_kill`, and `feint` parse, `sneak_kill` is refused); `ui/look.rs`'s
+`world/openings_tests.rs` (Exploit at level 1, each refusal with no time and nothing spent, the
+spend of all with the words by n and no build, the ladder's dice by n, Low blow's stun and
+to-hit, a killing exploit's one opening and no mark, the replay); `world/class_rogue_tests.rs`
+(the table: Exploit at 1, no Trained wind, no stamina until an active rank; Vanishing act on a
+killing exploit); `world/resource_talent_tests.rs` (Patient blade's two); `content/resource.rs` (`marked`,
+`mark_kill`, and `feint` parse, `sneak_kill` is refused); `content/talent.rs` (the `exploit_*`
+effects refuse a bad die or status); `ui/look.rs`'s
 `the_creature_your_openings_are_in_is_your_mark` (look mode's "your mark", `own_mark`).

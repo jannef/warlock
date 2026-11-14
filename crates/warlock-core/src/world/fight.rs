@@ -846,10 +846,10 @@ impl World {
         let fair = profile.is_some() && !dummy;
         // Caught unawares (`surprise.rs`): the initiative check, before the strike's draws.
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
-        // A lurk's blow finds a creature not hunting the player unawares; a low blow is a sneak
-        // attack whatever the target knows (`thief.rs`).
+        // A lurk's blow finds a creature not hunting the player unawares (`thief.rs`); an
+        // exploit is a sneak attack whatever the target knows (`openings.rs`).
         let unaware = fair && (self.unaware(target, attacker) || self.lurked(attacker, target));
-        let low = profile.is_some() && self.low_blow_taken(attacker) && !dummy;
+        let low = profile.is_some() && self.sneak_taken(attacker) && !dummy;
         let unseen = fair && self.sneaks(attacker, target, unaware || low, missile);
         // Hair trigger's blow may cut the attacker down before it strikes (`free_blow.rs`); how
         // the blow found its target is told in its words (`surprise.rs`).
@@ -888,6 +888,7 @@ impl World {
         let rng = &mut self.state.rng;
         let blow = profile.map(|profile| combat::strike_with(&profile, &struck, rng, lucky));
         let blow = blow.map(|b| self.ambushed((attacker, target), unseen, b));
+        let blow = blow.map(|b| self.exploited(attacker, unseen, b));
         let blow = blow.map(|b| self.lore_blow(attacker, target, b));
         // Holy wrath's die (`smite.rs`).
         let blow = blow.map(|b| self.holy_wrathed(attacker, target, b));

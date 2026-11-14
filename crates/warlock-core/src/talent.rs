@@ -705,8 +705,11 @@ pub struct TalentMods {
     pub finisher: bool,
     /// The active Lurk: the status it waits in ambush under (Lurking).
     pub lurk: Option<StatusId>,
-    /// The active Low blow: a blow that is a sneak attack whatever the foe knows.
-    pub low_blow: bool,
+    /// The active Exploit (`world/openings.rs`): every opening held spent on a blow that is a
+    /// sneak attack whatever the foe knows.
+    pub exploit_active: bool,
+    /// What an exploit adds per opening spent (Exploit's dice, Low blow's stun and to-hit).
+    pub exploit: ExploitMods,
     /// The active Merchant's eye: a stack it carries identified, for the time of a reading.
     pub merchants_eye: bool,
     /// The active Field forge: the seconds it takes to set a makeshift anvil, if it has it.
@@ -882,6 +885,17 @@ pub struct Sanctuary {
 pub struct MakeDo {
     pub seconds: u32,
     pub difficulty: i32,
+}
+
+/// What the thief's class talents add to an exploit, per opening spent (the openings design §6;
+/// `world/openings.rs::land_exploit`): dice of damage after Protection, never multiplied
+/// (`exploit_dice`, summed), to hit (`exploit_to_hit`), and a status the foe struck is left a
+/// degree of (`exploit_status`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct ExploitMods {
+    pub dice: Option<Dice>,
+    pub to_hit: i32,
+    pub status: Option<StatusId>,
 }
 
 /// The active Knock (spec §8 "Class abilities", "Chests"): its mana.
@@ -1213,7 +1227,7 @@ impl TalentMods {
             A::Volley => self.volley.is_some(),
             A::Sic => self.sic.is_some(),
             A::Lurk => self.lurk.is_some(),
-            A::LowBlow => self.low_blow,
+            A::Exploit => self.exploit_active,
             A::MerchantsEye => self.merchants_eye,
             A::FieldForge => self.field_forge.is_some(),
             A::MakeDo => self.make_do.is_some(),
@@ -2130,7 +2144,14 @@ impl TalentMods {
             TalentEffect::Lurk { status } => {
                 self.lurk = content.status_id(&status).or(self.lurk);
             }
-            TalentEffect::LowBlow => self.low_blow = true,
+            TalentEffect::Exploit => self.exploit_active = true,
+            TalentEffect::ExploitDice { dice } => {
+                self.exploit.dice = Some(self.exploit.dice.map_or(dice, |had| had.and(dice)));
+            }
+            TalentEffect::ExploitToHit { value } => self.exploit.to_hit += value,
+            TalentEffect::ExploitStatus { status } => {
+                self.exploit.status = content.status_id(&status).or(self.exploit.status);
+            }
             TalentEffect::MerchantsEye => self.merchants_eye = true,
             TalentEffect::FieldForge { seconds } => self.field_forge = Some(seconds),
             TalentEffect::MakeDo {

@@ -632,9 +632,9 @@ pub enum ClassActive {
     /// A wait in ambush: a hostile stepping up beside you takes your blow at once (the
     /// thief's Lurk).
     Lurk,
-    /// A blow in a direction that is a sneak attack whatever the foe knows, for openings (the
-    /// thief's Low blow).
-    LowBlow,
+    /// Every opening held spent on a blow in a direction that is a sneak attack whatever the
+    /// foe knows (the thief's Exploit, `world/openings.rs`).
+    Exploit,
     /// A blow in a direction that is a critical if it hits, for openings (the Master thief's
     /// finisher).
     MasterThief,
@@ -702,7 +702,7 @@ impl ClassActive {
         ClassActive::Volley,
         ClassActive::Sic,
         ClassActive::Lurk,
-        ClassActive::LowBlow,
+        ClassActive::Exploit,
         ClassActive::MasterThief,
         ClassActive::Inspire,
         ClassActive::Lullaby,
@@ -741,7 +741,7 @@ impl ClassActive {
             ClassActive::Volley => "volley",
             ClassActive::Sic => "sic",
             ClassActive::Lurk => "lurk",
-            ClassActive::LowBlow => "low_blow",
+            ClassActive::Exploit => "exploit",
             ClassActive::MasterThief => "master_thief",
             ClassActive::Inspire => "inspire",
             ClassActive::Lullaby => "lullaby",
@@ -775,7 +775,7 @@ impl ClassActive {
                 | ClassActive::BanishingSmite
                 | ClassActive::StunningStrike
                 | ClassActive::QuiveringPalm
-                | ClassActive::LowBlow
+                | ClassActive::Exploit
                 | ClassActive::MasterThief
                 | ClassActive::Knock
                 | ClassActive::FieldForge
@@ -875,7 +875,7 @@ impl ClassActive {
             | ClassActive::BanishingSmite
             | ClassActive::StunningStrike
             | ClassActive::QuiveringPalm
-            | ClassActive::LowBlow
+            | ClassActive::Exploit
             | ClassActive::MasterThief => ActionKind::Melee,
             ClassActive::LayOnHands
             | ClassActive::HolyRadiance

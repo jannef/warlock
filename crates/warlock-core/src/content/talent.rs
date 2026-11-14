@@ -1070,9 +1070,17 @@ pub enum TalentEffect {
     /// The class active Lurk: a wait in ambush, a degree of `status` on it (Lurking: a hostile
     /// stepping up beside it takes its blow at once; `world/thief.rs`).
     Lurk { status: String },
-    /// The class active Low blow: a melee blow in a direction that is a sneak attack whatever
-    /// the foe knows (its cost is the talent's `resource`: Openings; `world/thief.rs`).
-    LowBlow,
+    /// The class active Exploit: every opening held spent on a melee blow in a direction that
+    /// is a sneak attack whatever the foe knows (its `resource` cost, the least it needs:
+    /// Openings; `world/openings.rs`).
+    Exploit,
+    /// An exploit that hits does `dice` more damage per opening spent, after Protection, never
+    /// multiplied (Exploit's own 1d6; dice of one size add up).
+    ExploitDice { dice: Dice },
+    /// An exploit is `value` likelier to hit per opening spent (Low blow).
+    ExploitToHit { value: i32 },
+    /// An exploit that hits leaves the foe a degree of `status` (Low blow: Stunned).
+    ExploitStatus { status: String },
     /// Every skill it is trained in counts this much higher (Jack of all trades).
     TrainedSkills { value: i32 },
     /// It holds alternative resource `resource` (spec §8 "Resources") from the moment it has the
@@ -1321,7 +1329,7 @@ impl TalentEffect {
             TalentEffect::Volley { .. } => A::Volley,
             TalentEffect::Sic { .. } => A::Sic,
             TalentEffect::Lurk { .. } => A::Lurk,
-            TalentEffect::LowBlow => A::LowBlow,
+            TalentEffect::Exploit => A::Exploit,
             TalentEffect::Finisher => A::MasterThief,
             TalentEffect::Song { id, .. } => return A::from_id(id).filter(|a| a.sings()),
             TalentEffect::Consecrate { .. } => A::Consecrate,
@@ -1461,6 +1469,7 @@ impl TalentEffect {
             | TalentEffect::SecondWind { cooldown: id, .. }
             | TalentEffect::Lurk { status: id }
             | TalentEffect::SneakKillStatus { status: id }
+            | TalentEffect::ExploitStatus { status: id }
             | TalentEffect::WindStep { status: id }
             | TalentEffect::QuiveringPalm { status: id, .. }
             | TalentEffect::StunningStrike { status: id, .. }
@@ -2677,6 +2686,12 @@ systems = ["hit_points"]
                 .contains("unknown status")
         );
         assert!(bad("effects = [{ kind = \"kick_die\", sides = 0 }]").contains("at least 1"));
+        // Exploit's ladder (#1463): a die that is no die, a status that does not exist.
+        assert!(!bad("effects = [{ kind = \"exploit_dice\", dice = \"lots\" }]").is_empty());
+        assert!(
+            bad("effects = [{ kind = \"exploit_status\", status = \"dazed\" }]")
+                .contains("unknown status")
+        );
         let no_system = "[[talent]]\nid = \"x\"\nname = \"X\"\ntree = \"vigour\"\ndescription = \"d\"\n\
                          effects = [{ kind = \"dodge\", value = 1 }]\nsystems = [\"nope\"]\n";
         assert!(

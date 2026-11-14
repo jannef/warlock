@@ -106,7 +106,7 @@ thief's [Improved sneak attack](talents.md#talent-improved-sneak-attack). They a
   still Surprised for your next blow. One that made it is not.
 - The thief's [Lurk](talents.md#talent-lurk) waits in ambush: a hostile that steps up beside you
   takes your blow at once, caught unawares unless it was already hunting you.
-- [Low blow](talents.md#talent-low-blow) is a sneak attack whatever the foe knows, but it does not
+- [Exploit](resources.md#exploit) is a sneak attack whatever the foe knows, but it does not
   surprise the foe.
 - [Vanishing act](talents.md#talent-vanishing-act) leaves you light on your feet after a sneak
   attack that kills.
