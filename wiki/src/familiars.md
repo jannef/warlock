@@ -53,13 +53,16 @@ It is refused, for no time:
   ([Silenced](status-effects.md#status-silenced), [Raging](status-effects.md#status-raging)).
 
 A creature coming into view, a blow, or any news breaks the sitting off. The time spent is spent,
-and she may begin again. At its end, "Something comes out of the dark and sits at your feet.": a
-new beast, drawn as at the start, with a new name and her level. With nowhere near her for it to
-stand, nothing comes and the hour is lost. On the overworld it joins her at once and steps out at
-the next place.
+and she may begin again. At its end **the familiar she lost comes back**: the same kind of beast
+with the same name, grown to her level now. "Tibb, your cat, comes back to you out of the dark."
+With nowhere near her for it to stand, nothing comes and the hour is lost. On the overworld it
+joins her at once and steps out at the next place.
 
-From level 30 of her class, the draw may answer with an [imp](creatures.md#creature-imp), one more
-beast on her race's list. It stings and it poisons, and its touch is the same evil eye.
+So a calling never brings a different beast. Only a witch who never had a familiar draws one
+when she calls: "Something comes out of the dark and sits at your feet.", a beast drawn as at the
+start, which is hers from then on. From level 30 of her class, that draw may answer with an
+[imp](creatures.md#creature-imp), one more beast on her race's list. It stings and it poisons, and
+its touch is the same evil eye.
 
 ## Familiar's sight
 

@@ -84,8 +84,8 @@ impl World {
         self.content.has_vitals(t.creature)
     }
 
-    /// A blow of the player's that would be a critical whenever it hits (Vital strike, Master
-    /// thief's finisher) hit a target that had no vitals (`vitalless`, asked before the blow):
+    /// A blow of the player's that would be a critical whenever it hits (Vital strike, an
+    /// exploit) hit a target that had no vitals (`vitalless`, asked before the blow):
     /// it was a plain blow, and the player is told so after its line.
     pub(super) fn no_vital_spot(&mut self, vitalless: bool, blow: Option<Blow>) {
         if vitalless && blow.is_some_and(|b| b.strike.is_hit()) {
@@ -115,14 +115,22 @@ impl World {
         }
         if let Some(a) = self.state.actors.get(&attacker) {
             let lower = a.talent_mods(&self.content).ambush_threat;
-            profile.threat = profile.threat.saturating_sub(lower).max(3);
+            // Never below 3, nor above what it was (an exploit's ladder may have brought it
+            // to 2 already, `openings.rs::exploit_profile`).
+            let lowered = profile.threat.saturating_sub(lower).max(3);
+            profile.threat = lowered.min(profile.threat);
         }
         profile
     }
 
-    /// `blow` by `attacker`, `unseen` (it is [`World::sneaking`]), with the sneak dice added
-    /// when it hit.
-    pub(super) fn ambushed(&mut self, attacker: ActorId, unseen: bool, blow: Blow) -> Blow {
+    /// `blow` by `attacker` at `target`, `unseen` (it is [`World::sneaking`]), with the sneak
+    /// dice added when it hit.
+    pub(super) fn ambushed(
+        &mut self,
+        (attacker, target): (ActorId, ActorId),
+        unseen: bool,
+        blow: Blow,
+    ) -> Blow {
         if !unseen || !blow.strike.is_hit() {
             return blow;
         }
@@ -130,8 +138,13 @@ impl World {
             return blow;
         };
         let extra = dice.roll(&mut self.state.rng).max(0);
-        // A sneak attack that hits builds the attacker's resources (spec §8 "Resources").
-        self.gain_resource(attacker, Build::SneakAttack);
+        // A sneak attack that hits builds the attacker's resources (spec §8 "Resources"); its
+        // openings only on its mark, or with none standing (`mark.rs`); an exploit's, spending
+        // them, builds none (`openings.rs`).
+        if !self.exploiting(attacker) {
+            let marked = self.builds_on(attacker, target);
+            self.build_resources(attacker, Build::SneakAttack, marked);
+        }
         // And marks the player's Sneak attack and Dexterity (training stream).
         if attacker == self.state.player && self.trains(Use::SneakAttack) {
             self.train(Use::SneakAttack);

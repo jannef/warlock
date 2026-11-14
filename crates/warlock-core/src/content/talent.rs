@@ -277,7 +277,7 @@ pub enum TalentEffect {
     /// rules' `missile_reach` (Long reach; `World::sneaks`).
     SneakReach { value: i32 },
     /// A sneak attack of its that kills leaves it a degree of `status` (Vanishing act:
-    /// Light-footed; read where `Build::SneakKill` is raised, `world/thief.rs`).
+    /// Light-footed; read in `World::resolve` where a sneak attack's blow kills, `world/thief.rs`).
     SneakKillStatus { status: String },
     /// The perception snapshot tells which creatures in view have not noticed it, and they are
     /// drawn with the unaware mark (Stalker's eye; `SeenActor::unaware`).
@@ -738,9 +738,14 @@ pub enum TalentEffect {
     /// While raging: the statuses named tick nothing, and a blow that would take the last hit
     /// point leaves it for `cost` of the rage, when that much is held (Unstoppable).
     Unstoppable { statuses: Vec<String>, cost: u16 },
-    /// The class active Whirlwind: a blow at every hostile beside it for the price of one
-    /// attack.
-    Whirlwind,
+    /// The class active Charge (the warrior's, `world/charge.rs`): a rush along the line to a
+    /// hostile the player sees, ending beside it with a blow, provoking no free blows on the
+    /// way: it costs the talent's `resource` (Stamina) and `per_cell` more for every cell
+    /// moved.
+    Charge { per_cell: u16 },
+    /// Charge also strikes every hostile beside a cell it passes, each once, a free blow (the
+    /// warrior's Whirling charge, `world/charge.rs`); the one charged at gets only its own.
+    WhirlingCharge,
     /// The class active Smite: a melee blow in a direction with one die of `sides` more damage
     /// per `per_levels` character levels (at least one), `unholy` dice more against an unholy
     /// foe (`data/smite.toml`), and the smiter's modifier in `aim` added to hit (what it costs
@@ -1059,15 +1064,26 @@ pub enum TalentEffect {
     /// Its attacks on a creature that has not seen it threaten a critical this many points
     /// lower (Master thief).
     AmbushThreat { value: u8 },
-    /// The class active Master thief: its finisher, a melee blow in a direction that is a
-    /// critical if it hits, with no confirmation roll (its cost is the talent's `resource`).
-    Finisher,
     /// The class active Lurk: a wait in ambush, a degree of `status` on it (Lurking: a hostile
     /// stepping up beside it takes its blow at once; `world/thief.rs`).
     Lurk { status: String },
-    /// The class active Low blow: a melee blow in a direction that is a sneak attack whatever
-    /// the foe knows (its cost is the talent's `resource`: Openings; `world/thief.rs`).
-    LowBlow,
+    /// The class active Exploit: every opening held spent on a melee blow in a direction that
+    /// is a sneak attack whatever the foe knows (its `resource` cost, the least it needs:
+    /// Openings; `world/openings.rs`).
+    Exploit,
+    /// The class active Thrown exploit: Exploit's blow as a throw at a creature on a cell (its
+    /// `resource` cost, the least it needs: Openings; `world/openings.rs`).
+    ThrownExploit,
+    /// An exploit that hits does `dice` more damage per opening spent, after Protection, never
+    /// multiplied (Exploit's own 1d6; dice of one size add up).
+    ExploitDice { dice: Dice },
+    /// An exploit is `value` likelier to hit per opening spent (Low blow).
+    ExploitToHit { value: i32 },
+    /// An exploit that hits leaves the foe a degree of `status` (Low blow: Stunned).
+    ExploitStatus { status: String },
+    /// An exploit threatens a critical `value` lower per opening spent, never below 2, and with
+    /// `sure_at` or more spent is a critical whenever it hits, no confirmation (Master thief).
+    ExploitThreat { value: u8, sure_at: u16 },
     /// Every skill it is trained in counts this much higher (Jack of all trades).
     TrainedSkills { value: i32 },
     /// It holds alternative resource `resource` (spec §8 "Resources") from the moment it has the
@@ -1303,7 +1319,7 @@ impl TalentEffect {
             TalentEffect::Cackle { .. } => A::Cackle,
             TalentEffect::Familiar => A::CallFamiliar,
             TalentEffect::VeteransWind { .. } => A::VeteransWind,
-            TalentEffect::Whirlwind => A::Whirlwind,
+            TalentEffect::Charge { .. } => A::Charge,
             TalentEffect::LayOnHands { .. } => A::LayOnHands,
             TalentEffect::Smite { .. } => A::Smite,
             TalentEffect::SmiteMode { mode, .. } => mode.active(),
@@ -1316,8 +1332,8 @@ impl TalentEffect {
             TalentEffect::Volley { .. } => A::Volley,
             TalentEffect::Sic { .. } => A::Sic,
             TalentEffect::Lurk { .. } => A::Lurk,
-            TalentEffect::LowBlow => A::LowBlow,
-            TalentEffect::Finisher => A::MasterThief,
+            TalentEffect::Exploit => A::Exploit,
+            TalentEffect::ThrownExploit => A::ThrownExploit,
             TalentEffect::Song { id, .. } => return A::from_id(id).filter(|a| a.sings()),
             TalentEffect::Consecrate { .. } => A::Consecrate,
             TalentEffect::Sanctuary { .. } => A::Sanctuary,
@@ -1456,6 +1472,7 @@ impl TalentEffect {
             | TalentEffect::SecondWind { cooldown: id, .. }
             | TalentEffect::Lurk { status: id }
             | TalentEffect::SneakKillStatus { status: id }
+            | TalentEffect::ExploitStatus { status: id }
             | TalentEffect::WindStep { status: id }
             | TalentEffect::QuiveringPalm { status: id, .. }
             | TalentEffect::StunningStrike { status: id, .. }
@@ -1522,6 +1539,10 @@ impl TalentEffect {
                 nonzero("unarmed_die", "sides", u32::from(*sides))
             }
             TalentEffect::KickDie { sides } => nonzero("kick_die", "sides", u32::from(*sides)),
+            TalentEffect::ExploitThreat { value, sure_at } => {
+                nonzero("exploit_threat", "value", u32::from(*value))?;
+                nonzero("exploit_threat", "sure_at", u32::from(*sure_at))
+            }
             TalentEffect::Smite {
                 per_levels, sides, ..
             } => {
@@ -2672,6 +2693,20 @@ systems = ["hit_points"]
                 .contains("unknown status")
         );
         assert!(bad("effects = [{ kind = \"kick_die\", sides = 0 }]").contains("at least 1"));
+        // Exploit's ladder (#1463): a die that is no die, a status that does not exist.
+        assert!(!bad("effects = [{ kind = \"exploit_dice\", dice = \"lots\" }]").is_empty());
+        assert!(
+            bad("effects = [{ kind = \"exploit_status\", status = \"dazed\" }]")
+                .contains("unknown status")
+        );
+        // The ladder's top (#1464): a threat or a sure critical of nothing.
+        let threat = |fields: &str| {
+            bad(&format!(
+                "effects = [{{ kind = \"exploit_threat\", {fields} }}]"
+            ))
+        };
+        assert!(threat("value = 0, sure_at = 5").contains("at least 1"));
+        assert!(threat("value = 4, sure_at = 0").contains("at least 1"));
         let no_system = "[[talent]]\nid = \"x\"\nname = \"X\"\ntree = \"vigour\"\ndescription = \"d\"\n\
                          effects = [{ kind = \"dodge\", value = 1 }]\nsystems = [\"nope\"]\n";
         assert!(

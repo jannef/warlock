@@ -2,6 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
+ You fly into a rage!
 ┌─ Character ──────────────────────────────────────────────────────────────────────────────────────┐
 │                                                                                                  │
 │ Tamsin                                                                                           │
@@ -20,7 +21,7 @@ expression: "render(case, content.clone())"
 │ Pr  Presence       9                                                                             │
 │                                                                                                  │
 │ Lv  Level         1                                                                              │
-│ XP  Experience    0 / 182                                                                        │
+│ XP  Experience    0 / 122                                                                        │
 │     Talents       6                                                                              │
 │ HP  Hit points    18/20   MP  Mana       1/1                                                     │
 │ Dv  Defence       11      Pv  Protection  0                                                      │
@@ -28,7 +29,6 @@ expression: "render(case, content.clone())"
 │     Rage          11/20                                                                          │
 │     Focus         10/10                                                                          │
 │     Openings      0/5                                                                            │
-│     Stamina       10/11                                                                          │
 │     Alignment     Callous                                                                        │
 │     Status        Raging                                                                         │
 │                                                                                                  │

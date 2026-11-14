@@ -827,6 +827,8 @@ impl World {
         ) else {
             return None;
         };
+        // A thrown exploit's ladder, on the creature it is aimed at only (`openings.rs`).
+        let profile = profile.map(|p| self.thrown_exploit_profile(attacker, target, p));
         let profile = profile.map(|p| self.glared(attacker, p));
         // Averted eyes (`avert.rs`): a fight half-blind.
         let profile = profile.map(|p| self.averted_blow(attacker, p));
@@ -846,10 +848,10 @@ impl World {
         let fair = profile.is_some() && !dummy;
         // Caught unawares (`surprise.rs`): the initiative check, before the strike's draws.
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
-        // A lurk's blow finds a creature not hunting the player unawares; a low blow is a sneak
-        // attack whatever the target knows (`thief.rs`).
+        // A lurk's blow finds a creature not hunting the player unawares (`thief.rs`); an
+        // exploit is a sneak attack whatever the target knows (`openings.rs`).
         let unaware = fair && (self.unaware(target, attacker) || self.lurked(attacker, target));
-        let low = profile.is_some() && self.low_blow_taken(attacker) && !dummy;
+        let low = profile.is_some() && self.sneak_taken(attacker, target) && !dummy;
         let unseen = fair && self.sneaks(attacker, target, unaware || low, missile);
         // Hair trigger's blow may cut the attacker down before it strikes (`free_blow.rs`); how
         // the blow found its target is told in its words (`surprise.rs`).
@@ -887,7 +889,8 @@ impl World {
         let made = profile.as_ref().map_or_else(Vec::new, |p| p.on_hit.clone());
         let rng = &mut self.state.rng;
         let blow = profile.map(|profile| combat::strike_with(&profile, &struck, rng, lucky));
-        let blow = blow.map(|b| self.ambushed(attacker, unseen, b));
+        let blow = blow.map(|b| self.ambushed((attacker, target), unseen, b));
+        let blow = blow.map(|b| self.exploited((attacker, target), unseen, b));
         let blow = blow.map(|b| self.lore_blow(attacker, target, b));
         // Holy wrath's die (`smite.rs`).
         let blow = blow.map(|b| self.holy_wrathed(attacker, target, b));
@@ -947,6 +950,9 @@ impl World {
         // target's (the berserker's rage: hits taken before mitigation).
         if let Some(Strike::Hit { critical }) = blow.map(|b| b.strike) {
             self.gain_resource(attacker, Build::Hit);
+            if kind == AttackKind::Melee {
+                self.gain_resource(attacker, Build::MeleeHit);
+            }
             if critical {
                 self.gain_resource(attacker, Build::Critical);
             }
@@ -967,6 +973,10 @@ impl World {
                 self.train_kill((attacker, target), kind);
                 // Of Siphoning and of the Hunt: a kill of one's own close by (`siphon.rs`).
                 self.siphon(attacker, (target, to));
+                // A kill in melee (Battle rhythm's stamina).
+                if kind == AttackKind::Melee {
+                    self.gain_resource(attacker, Build::MeleeKill);
+                }
                 let fired = super::weapon_ability::Fired {
                     other: target,
                     kind,
@@ -975,9 +985,8 @@ impl World {
                 };
                 self.weapon_trigger(attacker, crate::content::Trigger::Kill, fired, events);
             }
-            // A sneak attack that kills builds more (Patient blade's openings).
+            // A sneak attack that kills: Vanishing act (`thief.rs`).
             if died && unseen {
-                self.gain_resource(attacker, Build::SneakKill);
                 self.vanishing_act(attacker, events);
             }
             if !died {
@@ -1236,6 +1245,8 @@ impl World {
             if let Some(by) = master.or(by) {
                 self.gain_resource(by, Build::Kill);
             }
+            // The mark's death: its killer's own kill builds `mark_kill`; cleared (`mark.rs`).
+            self.mark_dies(id, by);
             if credited {
                 let percent = master.map_or(100, |_| self.ally_share());
                 // A half, or what crawled out of a corpse, pays less and counts for no quest.
@@ -1348,6 +1359,7 @@ impl World {
     /// strike; events reach presentation only if they saw the target.
     pub(super) fn player_attacks(&mut self, target: ActorId, seen: bool, events: &mut Vec<Event>) {
         let player = self.state.player;
+        self.choose_mark(target);
         let first = self.player_blow(target, seen, None, events);
         let mut parried = free_blow::parried(first);
         if let Some(second) = self.second_blow(player, target, Cue::First(first), events) {
@@ -1393,7 +1405,8 @@ impl World {
     }
 
     /// The player strikes `target` in melee with what they wield, as `profile` says (a class
-    /// active's blow: Smite's dice, Quivering palm's bare hand), its noise made.
+    /// active's blow: Smite's dice, Quivering palm's bare hand), its noise made: an attack they
+    /// chose at it (the mark rule, `mark.rs`).
     pub(super) fn player_blow_with(
         &mut self,
         target: ActorId,
@@ -1401,6 +1414,7 @@ impl World {
         profile: Profile,
         events: &mut Vec<Event>,
     ) -> Option<Blow> {
+        self.choose_mark(target);
         let skills = (self.state.player()).attack_skills(&self.content, AttackKind::Melee, None);
         let words = |me: &Actor, content: &Content, damage| {
             Words::of(me, AttackKind::Melee, None, damage, content)
@@ -1425,6 +1439,7 @@ impl World {
         seen: bool,
         events: &mut Vec<Event>,
     ) {
+        self.choose_mark(target);
         let profile = self.state.player().kick(&self.content);
         let skills = AttackSkills::only(self.content.weapon_skills().of_role(Role::Unarmed));
         let blow = (None, profile, skills);
@@ -1481,6 +1496,7 @@ impl World {
         let words = |me: &Actor, content: &Content, damage| {
             Words::of(me, AttackKind::Melee, Some(shield), damage, content)
         };
+        self.choose_mark(target);
         let struck = self.player_strikes(target, seen, blow, (&words, true), events);
         self.after_attack(player, target, free_blow::parried(struck), events);
         Spent::Turn(price)

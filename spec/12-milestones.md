@@ -112,7 +112,7 @@ Each milestone ships a playable build.
 - **M25 Special rooms** — ADOM-like special rooms (data, `data/room_effects.toml`): a
   shadowed room, an echoing hall, a hushed chamber, a sanctuary, and a flooded room, in about one
   generated level in two or three and in areas hand-made levels mark (the hub's stairs nook is a
-  sanctuary); one query for the rules (`World::room_effect_at`), a first-entry message, and look
+  sanctuary); one query for the rules (`World::effects_at`), a first-entry message, and look
   mode naming rooms the player has been in.
 - **M27 Merchants and shops** — ADOM-like shops (#145): a value in gold on every object, a
   general store and four specialty shops in data (`data/shops.toml`), named shopkeepers in a

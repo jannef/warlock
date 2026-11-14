@@ -1,9 +1,10 @@
 //! The class actives in the world (spec §8 "Class abilities"): what a class's level table gives
 //! that is used from the abilities menu ([`crate::ability::Ability::Class`]) as [`Action::Use`]
-//! (`use:rage`, `use:smite:E`): Rage, War cry (for rage, `world/war_cry.rs`), Veteran's wind, Whirlwind, Lay on hands, Smite (for zeal, `world/smite.rs`), Holy
+//! (`use:rage`, `use:smite:E`): Rage, War cry (for rage, `world/war_cry.rs`), Veteran's wind, Lay on hands, Smite (for zeal, `world/smite.rs`), Holy
 //! radiance, Stunning strike, Quivering palm and Step of the wind (for ki, `world/ascetic.rs`; the last takes no time), the songs (Inspire, for inspiration, `world/song.rs`), the thief's
-//! Lurk and Low blow (`world/thief.rs`), Master thief's finisher (for openings,
-//! `world/openings.rs`; the ranger's Volley, aimed at a cell, is `world/volley.rs`). The
+//! Lurk (`world/thief.rs`), Exploit and Thrown exploit (for openings,
+//! `world/openings.rs`; the ranger's Volley, aimed at a cell, is `world/volley.rs`, and the
+//! warrior's Charge, aimed at a creature, `world/charge.rs`). The
 //! abilities themselves are talents of the class tree, given as levels come (`world/class.rs`)
 //! and read through `Actor::talent_mods`. Each active refuses, taking no time, without the
 //! ability, while its cooldown (or the rage and the exhaustion after it) lasts, and (an aimed
@@ -21,7 +22,7 @@
 use super::smite::SmiteMode;
 use super::{ActorId, Spent, World};
 use crate::ability::{Ability, Unavailable};
-use crate::action::{AttackKind, Event};
+use crate::action::Event;
 use crate::content::{ActionKind, ClassActive, Stance};
 use crate::geom::Dir;
 use crate::status::Effect;
@@ -39,6 +40,16 @@ impl World {
         if !self.may_use_class(active) {
             return Spent::Nothing;
         }
+        // One aimed at a cell asks where before anything is spent (`use_class_at` uses it).
+        if active.aims_cell() {
+            self.say("Where?");
+            return Spent::Nothing;
+        }
+        // One that throws asks what and where (`use_class_throw` uses it, `openings.rs`).
+        if active.aims_throw() {
+            self.say("Throw what, and where?");
+            return Spent::Nothing;
+        }
         let dir = match (active.aimed(), dir) {
             (true, None) => {
                 self.say("Which way?");
@@ -47,8 +58,8 @@ impl World {
             (_, dir) => dir,
         };
         // An aimed blow with nobody hostile there is refused before anything is spent, and so is
-        // a blow of the bare hand (Stunning strike, Quivering palm) with a weapon in hand, a low
-        // blow with nobody there, and a lurk too late (`thief.rs`).
+        // a blow of the bare hand (Stunning strike, Quivering palm) with a weapon in hand, an
+        // exploit with nobody there or at a foe without vitals, and a lurk too late (`thief.rs`).
         if !self.thief_may(active, dir) {
             return Spent::Nothing;
         }
@@ -56,6 +67,10 @@ impl World {
             return Spent::Nothing;
         }
         if dir.is_some_and(|d| active.strikes() && self.hostile_toward(d).is_none()) {
+            return Spent::Nothing;
+        }
+        // Openings spent on another than the creature they are in (`mark.rs`).
+        if self.off_mark(active, dir) {
             return Spent::Nothing;
         }
         if active.bare_handed() && self.state.player().weapon_item(&self.content).is_some() {
@@ -67,17 +82,18 @@ impl World {
         // unanswered, it spends nothing.
         let player = self.state.player;
         let content = self.content.clone();
+        let mut spent = 0;
         if let Some(cost) = crate::ability::class_cost(self.state.player(), &content, active) {
             if active.holy() && !self.answered(active) {
                 return self.unanswered(active);
             }
             self.spend_resource(player, cost.resource, cost.amount, events);
+            spent = cost.amount;
         }
         match (active, dir) {
             (ClassActive::Rage, _) => self.rage(events),
             (ClassActive::WarCry, _) => self.war_cry(events),
             (ClassActive::VeteransWind, _) => self.veterans_wind(events),
-            (ClassActive::Whirlwind, _) => self.whirlwind(events),
             (ClassActive::LayOnHands, _) => self.lay_on_hands(events),
             (ClassActive::HolyRadiance, _) => self.holy_radiance(events),
             (ClassActive::Inspire | ClassActive::Lullaby, _) => self.sing(active, events),
@@ -98,8 +114,7 @@ impl World {
             }
             (ClassActive::StunningStrike, Some(dir)) => self.stunning_strike(dir, events),
             (ClassActive::QuiveringPalm, Some(dir)) => self.quivering_palm(dir, events),
-            (ClassActive::LowBlow, Some(dir)) => self.low_blow(dir, events),
-            (ClassActive::MasterThief, Some(dir)) => self.finisher(dir, events),
+            (ClassActive::Exploit, Some(dir)) => self.exploit(dir, spent, events),
             (ClassActive::Knock, Some(dir)) => self.knock(dir),
             (ClassActive::FieldForge, Some(dir)) => self.start_field_forge(dir),
             (
@@ -109,16 +124,19 @@ impl World {
                 | ClassActive::BanishingSmite
                 | ClassActive::StunningStrike
                 | ClassActive::QuiveringPalm
-                | ClassActive::LowBlow
-                | ClassActive::MasterThief
+                | ClassActive::Exploit
                 | ClassActive::Knock
                 | ClassActive::FieldForge,
                 None,
             ) => Spent::Nothing,
-            (ClassActive::Volley | ClassActive::Sic, _) => {
-                self.say("Where?");
-                Spent::Nothing
-            }
+            // Asked where above.
+            (
+                ClassActive::Volley
+                | ClassActive::Sic
+                | ClassActive::Charge
+                | ClassActive::ThrownExploit,
+                _,
+            ) => Spent::Nothing,
             (ClassActive::MerchantsEye | ClassActive::MakeDo, _) => {
                 self.say("Use it on what?");
                 Spent::Nothing
@@ -245,35 +263,6 @@ impl World {
             None => self.afflict(player, status, 1, Some(player), events),
         }
         Spent::Turn(self.price_of(player, ActionKind::Cast))
-    }
-
-    /// Whirlwind: one blow at every hostile beside the player, clockwise from the north, each
-    /// with the free blows the end of an attack brings, for the price of one attack and its one
-    /// exertion. Refused (no time) with no hostile beside them.
-    fn whirlwind(&mut self, events: &mut Vec<Event>) -> Spent {
-        let player = self.state.player;
-        let around = self.hostiles_beside();
-        if around.is_empty() {
-            self.say("There is nobody beside you to strike.");
-            return Spent::Nothing;
-        }
-        let me = self.state.player();
-        let melee = me.attack_skills(&self.content, AttackKind::Melee, None);
-        let with = me.weapon_item(&self.content);
-        let price = self.attack_price(player, ActionKind::Melee, with, melee);
-        self.say("You whirl about you!");
-        for (target, seen) in around {
-            if self.state.death.is_some() {
-                break;
-            }
-            if !self.state.actors.contains_key(&target) {
-                continue;
-            }
-            let first = self.player_blow(target, seen, None, events);
-            self.after_attack(player, target, super::free_blow::parried(first), events);
-        }
-        self.exert(ActionKind::Melee);
-        Spent::Turn(price)
     }
 
     /// Quivering palm: a blow of the player's bare hand at the hostile in `dir`; a hit that

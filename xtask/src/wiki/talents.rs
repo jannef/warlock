@@ -380,7 +380,17 @@ pub(super) fn effects_text(content: &Content, def: &TalentDef) -> String {
     let mut parts: Vec<String> = plain.chain(def.effects_while.iter().map(under)).collect();
     if let Some(cost) = def.resource {
         let name = content.resource(cost.resource).name.to_lowercase();
-        parts.push(format!("costs {} {name}", cost.amount));
+        // Exploit spends every one held; its cost is the least it needs.
+        if (def.effects.iter())
+            .any(|e| matches!(e, TalentEffect::Exploit | TalentEffect::ThrownExploit))
+        {
+            parts.push(format!(
+                "spends all the {name} held (at least {})",
+                cost.amount
+            ));
+        } else {
+            parts.push(format!("costs {} {name}", cost.amount));
+        }
     }
     parts.join("; ")
 }
@@ -1455,9 +1465,17 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 names.join(" and ")
             )
         }
-        TalentEffect::Whirlwind => {
-            "active (the time of a melee attack, one exertion): one blow at \
-             every hostile beside you, clockwise from the north"
+        TalentEffect::Charge { per_cell } => format!(
+            "active, aimed at a hostile you see: you rush along the straight line to it and \
+             strike it once, ending beside it, for {per_cell} more stamina a cell moved (at \
+             least 1 cell, the time of the steps, the blow free); creatures passed or left get \
+             no free blows, and a wall, a closed door, deep water, a known trap, or a creature \
+             you see on the line refuses it"
+        ),
+        TalentEffect::WhirlingCharge => {
+            "your Charge also strikes every hostile beside each cell you pass, in the order \
+             passed, each once and the one you charge at only its own blow: free blows, no \
+             time, no stamina; one that falls does not stop the charge"
                 .to_string()
         }
         TalentEffect::Smite {
@@ -2005,9 +2023,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "attacks on a creature that has not seen you threaten a critical {value} lower \
              (never below 3)"
         ),
-        TalentEffect::Finisher => "active (the time of a melee attack), in a direction: a blow \
-                                   that is a critical whenever it hits, with no confirmation roll"
-            .to_string(),
         TalentEffect::PatientDefence { status: id } => format!(
             "active (the time of a wait): you are {} until your next action; a melee blow you \
              dodge (it misses by your Dexterity or Dodge) or parry meanwhile is answered with \
@@ -2020,11 +2035,37 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              unless it was already hunting you; refused with a hostile you see beside you",
             status(&id)
         ),
-        TalentEffect::LowBlow => "active (the time of a melee attack), in a direction: a blow \
-                                  that is a sneak attack whatever the foe knows (the sneak \
-                                  attack dice on a hit; the foe is not surprised and keeps its \
-                                  Defence; no dice on a thing without vitals)"
+        TalentEffect::Exploit => "active (the time of a melee attack), in a direction: every \
+                                  opening you hold spent on one blow that is a sneak attack \
+                                  whatever the foe knows (the sneak attack dice on a hit; the foe \
+                                  is not surprised and keeps its Defence); refused with no \
+                                  opening, at another than the creature your openings are in, \
+                                  and at a thing you see without vitals"
             .to_string(),
+        TalentEffect::ThrownExploit => "active (the time of a throw), something to throw and a \
+                                        creature you see: Exploit's blow as a throw, every \
+                                        opening you hold spent on a sneak attack whatever the \
+                                        foe knows, with every increment of an exploit; within \
+                                        the item's throw range and 6 cells (Long reach's \
+                                        farther), the line clear as far as you see; refused as \
+                                        Exploit is, and for a flask"
+            .to_string(),
+        TalentEffect::ExploitDice { dice } => format!(
+            "an exploit that hits does +{dice} damage per opening spent, after Protection, never \
+             multiplied by a critical"
+        ),
+        TalentEffect::ExploitToHit { value } => {
+            format!("an exploit is {} to hit per opening spent", signed(value))
+        }
+        TalentEffect::ExploitStatus { status: id } => format!(
+            "an exploit that hits leaves the foe {} (1 degree)",
+            status(&id)
+        ),
+        TalentEffect::ExploitThreat { value, sure_at } => format!(
+            "an exploit threatens a critical {value} lower per opening spent (never below 2); \
+             with {sure_at} or more spent, it is a critical whenever it hits, with no \
+             confirmation roll"
+        ),
         TalentEffect::TrainedSkills { value } => {
             format!("every trained skill counts {}", signed(value))
         }

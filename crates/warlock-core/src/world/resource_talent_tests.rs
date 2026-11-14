@@ -136,7 +136,7 @@ fn steady_hand_brings_focus_back_faster_but_not_while_resting() {
 }
 
 #[test]
-fn patient_blade_slows_the_openings_and_a_sneak_kill_gives_two() {
+fn patient_blade_slows_the_openings_and_the_marks_kill_gives_two() {
     let mut w = world(1);
     give(&mut w, "patient_blade");
     let mut twin = plain(&w);
@@ -151,16 +151,16 @@ fn patient_blade_slows_the_openings_and_a_sneak_kill_gives_two() {
     assert_eq!(held(&w, "openings"), Some(4));
     run(&mut w, "wait*20");
     assert_eq!(held(&w, "openings"), Some(3));
-    // A sneak attack that kills: one more with the talent, none without.
+    // The mark's kill: two with the talent, one without.
     let player = w.state.player;
-    w.gain_resource(player, Build::SneakKill);
-    twin.gain_resource(player, Build::SneakKill);
-    assert_eq!(held(&w, "openings"), Some(4));
-    assert_eq!(held(&twin, "openings"), Some(3));
+    w.gain_resource(player, Build::MarkKill);
+    twin.gain_resource(player, Build::MarkKill);
+    assert_eq!(held(&w, "openings"), Some(5));
+    assert_eq!(held(&twin, "openings"), Some(4));
 }
 
 #[test]
-fn a_sneak_attack_that_kills_builds_the_second_opening_in_a_fight() {
+fn a_sneak_attack_that_kills_its_mark_builds_three_openings_with_patient_blade() {
     let mut kills = 0;
     for seed in 0..40 {
         let mut w = world(seed);
@@ -186,9 +186,13 @@ fn a_sneak_attack_that_kills_builds_the_second_opening_in_a_fight() {
             continue; // the blow missed
         }
         kills += 1;
-        assert_eq!(held(&w, "openings"), Some(2), "the hit's and the kill's");
+        assert_eq!(
+            held(&w, "openings"),
+            Some(3),
+            "the hit's and the kill's two"
+        );
         if twin.state.actors.len() == 1 {
-            assert_eq!(held(&twin, "openings"), Some(1), "the hit's only");
+            assert_eq!(held(&twin, "openings"), Some(2), "the hit's and the kill's");
         }
     }
     assert!(kills > 0, "some sneak attack killed");

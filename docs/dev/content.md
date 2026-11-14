@@ -46,8 +46,9 @@ each end included; absent, every danger) keeps a vault drawn at random to floors
 past danger 1, its `from`, and a shallow one its `to`. The level parser reads a top-level
 `danger` as a level's rule first (`level::DangerField`), then as this range, which
 `vault::parse_danger` reads again; refused at load: on a level, on an outdoor vault, on a vault
-a branch level names, and a level's own rule (`danger = 3`) on a vault (the ends are the
-author's, #1205) (`mapgen/vault_danger_tests.rs`). `secret =
+a branch level names, a level's own rule (`danger = 3`) on a vault (the ends are the
+author's, #1205), and a table that is no range (`{ form = 8 }`, `{ from = 300 }`: a vault's range is read
+before the level parser, so the error names the field, #1588) (`mapgen/vault_danger_tests.rs`). `secret =
 true` (or a difficulty) on a closed door makes it a secret door: the cell shows the wall around
 it until found (`docs/dev/searching.md`). Water: `~` is still water; running water (terrain with a
 `flow` anim) needs a flow on every cell from its legend entry (`flow = "S"`, optional

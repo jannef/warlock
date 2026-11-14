@@ -226,12 +226,14 @@ fn the_tithe_stops_at_her_maximum_and_says_nothing_when_full() {
     lay(&mut w, target, "ill_wished", Some(player));
     w.player_mut().mana = max - 2;
     spell(&mut w, target, 500);
-    assert_eq!(w.state.player().mana, max, "5 owed, 2 paid");
+    // The kill may bring a level, and its mana with it: the maximum is read after each.
+    let max = |w: &World| w.state.player().max_mana(w.content());
+    assert_eq!(w.state.player().mana, max(&w), "5 owed, 2 paid");
     let target = foe(&mut w, "lesser_air_elemental", 2);
     lay(&mut w, target, "ill_wished", Some(player));
     w.news.clear();
     spell(&mut w, target, 500);
-    assert_eq!(w.state.player().mana, max);
+    assert_eq!(w.state.player().mana, max(&w));
     assert!(!told(&w), "nothing came home");
 }
 

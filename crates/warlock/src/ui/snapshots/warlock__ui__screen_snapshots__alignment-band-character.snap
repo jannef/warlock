@@ -22,7 +22,7 @@ expression: "render(case, content.clone())"
 │ Pr  Presence       9                                                                             │
 │                                                                                                  │
 │ Lv  Level         1                                                                              │
-│ XP  Experience    0 / 192                                                                        │
+│ XP  Experience    0 / 128                                                                        │
 │     Talents       9                                                                              │
 │ HP  Hit points    19/25   MP  Mana       2/2                                                     │
 │ Dv  Defence       15      Pv  Protection  3                                                      │
@@ -31,7 +31,7 @@ expression: "render(case, content.clone())"
 │     Alignment     Callous                                                                        │
 │     Resistant to  acid                                                                           │
 │                                                                                                  │
-│ Weight 84.7 kg (you 70 kg, carrying 14.7 kg)                                                     │
+│ Weight 86.2 kg (you 70 kg, carrying 16.2 kg)                                                     │
 │ Burdened over 21 kg, strained over 42 kg, overloaded over 63 kg                                  │
 │                                                                                                  │
 │ @ or Esc close   A skills                                                                        │

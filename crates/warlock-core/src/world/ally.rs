@@ -719,6 +719,7 @@ impl World {
         let Some(actor) = self.state.actors.remove(&id) else {
             return;
         };
+        self.unmark(id);
         events.push(Event::Departed {
             actor: id,
             at: actor.pos,

@@ -593,8 +593,6 @@ pub enum ClassActive {
     WarCry,
     /// Hit points back at once, then a cooldown (the warrior's Veteran's wind).
     VeteransWind,
-    /// A blow at every hostile beside you for the price of one attack.
-    Whirlwind,
     /// Hit points back by the level, then a cooldown (the paladin's Lay on hands).
     LayOnHands,
     /// A blow of holy wrath in a direction with dice more damage, for zeal (`world/smite.rs`).
@@ -623,6 +621,9 @@ pub enum ClassActive {
     /// What clouds the mind or holds the body ended at once, for ki, taking no time (the
     /// ascetic's Stillness, on Still mind, `world/ascetic.rs`).
     Stillness,
+    /// A rush to a hostile the player sees, ending beside it with a blow, provoking no free
+    /// blows on the way, for stamina by the distance (the warrior's Charge, `world/charge.rs`).
+    Charge,
     /// Shots at a cell, several for the price of one, then a cooldown (the ranger's Volley).
     Volley,
     /// The companion set on a creature the player sees, savage, for focus (the ranger's Sic 'em,
@@ -631,12 +632,12 @@ pub enum ClassActive {
     /// A wait in ambush: a hostile stepping up beside you takes your blow at once (the
     /// thief's Lurk).
     Lurk,
-    /// A blow in a direction that is a sneak attack whatever the foe knows, for openings (the
-    /// thief's Low blow).
-    LowBlow,
-    /// A blow in a direction that is a critical if it hits, for openings (the Master thief's
-    /// finisher).
-    MasterThief,
+    /// Every opening held spent on a blow in a direction that is a sneak attack whatever the
+    /// foe knows (the thief's Exploit, `world/openings.rs`).
+    Exploit,
+    /// Every opening held spent on a throw at a creature on a cell that is a sneak attack
+    /// whatever the foe knows (the thief's Thrown exploit, `world/openings.rs`).
+    ThrownExploit,
     /// A song that lifts the player's fighting a while, for inspiration (the bard's Inspire,
     /// `world/song.rs`).
     Inspire,
@@ -685,8 +686,8 @@ impl ClassActive {
     pub const ALL: &[ClassActive] = &[
         ClassActive::Rage,
         ClassActive::WarCry,
+        ClassActive::Charge,
         ClassActive::VeteransWind,
-        ClassActive::Whirlwind,
         ClassActive::LayOnHands,
         ClassActive::Smite,
         ClassActive::BrandingSmite,
@@ -701,8 +702,8 @@ impl ClassActive {
         ClassActive::Volley,
         ClassActive::Sic,
         ClassActive::Lurk,
-        ClassActive::LowBlow,
-        ClassActive::MasterThief,
+        ClassActive::Exploit,
+        ClassActive::ThrownExploit,
         ClassActive::Inspire,
         ClassActive::Lullaby,
         ClassActive::Consecrate,
@@ -724,8 +725,8 @@ impl ClassActive {
         match self {
             ClassActive::Rage => "rage",
             ClassActive::WarCry => "war_cry",
+            ClassActive::Charge => "charge",
             ClassActive::VeteransWind => "veterans_wind",
-            ClassActive::Whirlwind => "whirlwind",
             ClassActive::LayOnHands => "lay_on_hands",
             ClassActive::Smite => "smite",
             ClassActive::BrandingSmite => "branding_smite",
@@ -740,8 +741,8 @@ impl ClassActive {
             ClassActive::Volley => "volley",
             ClassActive::Sic => "sic",
             ClassActive::Lurk => "lurk",
-            ClassActive::LowBlow => "low_blow",
-            ClassActive::MasterThief => "master_thief",
+            ClassActive::Exploit => "exploit",
+            ClassActive::ThrownExploit => "thrown_exploit",
             ClassActive::Inspire => "inspire",
             ClassActive::Lullaby => "lullaby",
             ClassActive::Consecrate => "consecrate",
@@ -774,8 +775,7 @@ impl ClassActive {
                 | ClassActive::BanishingSmite
                 | ClassActive::StunningStrike
                 | ClassActive::QuiveringPalm
-                | ClassActive::LowBlow
-                | ClassActive::MasterThief
+                | ClassActive::Exploit
                 | ClassActive::Knock
                 | ClassActive::FieldForge
         )
@@ -817,15 +817,25 @@ impl ClassActive {
         matches!(self, ClassActive::Inspire | ClassActive::Lullaby)
     }
 
-    /// Whether it asks for a cell before it is used (`use:volley:12,5`, `use:sic:12,5`).
+    /// Whether it asks for a cell before it is used (`use:volley:12,5`, `use:sic:12,5`,
+    /// `use:charge:12,5`).
     pub const fn aims_cell(self) -> bool {
-        matches!(self, ClassActive::Volley | ClassActive::Sic)
+        matches!(
+            self,
+            ClassActive::Volley | ClassActive::Sic | ClassActive::Charge
+        )
     }
 
     /// Whether it asks for a stack the player carries before it is used
     /// (`use:merchants_eye:c`, `use:make_do_and_mend:c`).
     pub const fn aims_item(self) -> bool {
         matches!(self, ClassActive::MerchantsEye | ClassActive::MakeDo)
+    }
+
+    /// Whether it asks for a stack the player may throw, then a cell, before it is used (the
+    /// thief's Thrown exploit, [`crate::action::Action::UseThrow`], `use:thrown_exploit:c:12,5`).
+    pub const fn aims_throw(self) -> bool {
+        matches!(self, ClassActive::ThrownExploit)
     }
 
     /// Whether it asks for a weapon's shape before it is used, an object id
@@ -864,15 +874,13 @@ impl ClassActive {
             // It takes no time (`takes_no_time`): none block a wait.
             | ClassActive::StepOfTheWind
             | ClassActive::Stillness => ActionKind::Wait,
-            ClassActive::Whirlwind
-            | ClassActive::Smite
+            ClassActive::Smite
             | ClassActive::BrandingSmite
             | ClassActive::WrathfulSmite
             | ClassActive::BanishingSmite
             | ClassActive::StunningStrike
             | ClassActive::QuiveringPalm
-            | ClassActive::LowBlow
-            | ClassActive::MasterThief => ActionKind::Melee,
+            | ClassActive::Exploit => ActionKind::Melee,
             ClassActive::LayOnHands
             | ClassActive::HolyRadiance
             | ClassActive::Consecrate
@@ -881,6 +889,9 @@ impl ClassActive {
             | ClassActive::Cackle
             | ClassActive::Knock => ActionKind::Cast,
             ClassActive::Volley => ActionKind::Shoot,
+            ClassActive::ThrownExploit => ActionKind::Throw,
+            // A run of steps: what blocks a step blocks it (the blow at its end comes free).
+            ClassActive::Charge => ActionKind::Step,
             ClassActive::Inspire | ClassActive::Lullaby => ActionKind::Song,
             ClassActive::MerchantsEye => ActionKind::Read,
             // A turn of it; setting the block takes the talent's seconds (`world/field_forge.rs`).

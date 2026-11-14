@@ -1,5 +1,6 @@
 //! The stamina pool (spec §8 "Resources"; the combat progression design §4.5, #560): the
-//! fighting classes hold it from level 1 by the granted talent Trained wind, its maximum grows
+//! warrior holds it from level 1 by the granted talent Charge (#1466; the others from the first
+//! weapon active a rank teaches, `weapon_active_tests.rs`), its maximum grows
 //! with Toughness and the level (`max_from`, read in `Actor::resource_max`), it comes back a
 //! point every two base turns, resting too, and Deep lungs, Steady breathing, and Second breath
 //! change it through the existing resource hooks.
@@ -40,30 +41,34 @@ fn scores(w: &mut World, score: u8) {
 }
 
 #[test]
-fn the_fighting_classes_hold_it_from_level_one_and_the_others_do_not() {
+fn the_warrior_holds_it_from_level_one_by_charge_and_the_others_do_not() {
     let content = world("warrior").content.clone();
+    assert!(
+        content.talents().id("trained_wind").is_none(),
+        "Trained wind is gone"
+    );
     let start = |class: &str| {
         let spec: CharacterSpec = format!("human,male,{class}").parse().expect("a character");
         World::with_character(content.clone(), "showcase", Some(7), Some(&spec)).expect("world")
     };
+    let w = start("warrior");
+    assert_eq!(w.player_level(), 1);
+    assert!(w.state.player().talents.holds("charge", None));
+    assert_eq!(held(&w), Some(max(&w)), "the warrior holds stamina, full");
     for class in [
-        "warrior",
         "berserker",
         "paladin",
         "ranger",
         "ascetic",
         "thief",
         "bard",
+        "wizard",
+        "priest",
+        "witch",
+        "druid",
+        "commoner",
+        "merchant",
     ] {
-        let w = start(class);
-        assert_eq!(w.player_level(), 1);
-        assert!(
-            w.state.player().talents.holds("trained_wind", None),
-            "{class} is given Trained wind"
-        );
-        assert_eq!(held(&w), Some(max(&w)), "{class} holds stamina, full");
-    }
-    for class in ["wizard", "priest", "witch", "druid", "commoner", "merchant"] {
         let w = start(class);
         assert!(w.state.character.is_some());
         assert_eq!(held(&w), None, "{class} holds none");
@@ -73,6 +78,9 @@ fn the_fighting_classes_hold_it_from_level_one_and_the_others_do_not() {
 #[test]
 fn a_berserker_holds_rage_and_stamina_at_once() {
     let mut w = world("berserker");
+    // Stamina as the first weapon active a rank teaches grants it.
+    let (player, id) = (w.state.player, stamina(&w));
+    w.grant_resource(player, id);
     run(&mut w, "use:rage");
     let rage = w.content().resource_id("rage").expect("rage");
     assert!(w.state.player().resources.get(rage).is_some(), "raging");
@@ -142,7 +150,7 @@ fn steady_breathing_brings_it_back_half_again_as_fast() {
 
 #[test]
 fn an_old_save_of_a_fighter_is_granted_the_pool_on_load() {
-    let mut w = world("ranger");
+    let mut w = world("warrior");
     reach(&mut w, 4);
     let mut state = w.state().clone();
     let id = stamina(&w);

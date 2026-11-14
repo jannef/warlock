@@ -36,7 +36,6 @@ abilities = [
     { level = 1, talent = "fletcher" },
     { level = 1, talent = "animal_companion" },
     { level = 1, talent = "favoured_prey" },
-    { level = 1, talent = "trained_wind" },
     { level = 2, talent = "stalkers_eye" },
     { level = 6, talent = "tracker" },
     { level = 6, talent = "barkskin" },

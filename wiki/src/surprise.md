@@ -106,11 +106,12 @@ thief's [Improved sneak attack](talents.md#talent-improved-sneak-attack). They a
   still Surprised for your next blow. One that made it is not.
 - The thief's [Lurk](talents.md#talent-lurk) waits in ambush: a hostile that steps up beside you
   takes your blow at once, caught unawares unless it was already hunting you.
-- [Low blow](talents.md#talent-low-blow) is a sneak attack whatever the foe knows, but it does not
+- [Exploit](resources.md#exploit) is a sneak attack whatever the foe knows, but it does not
   surprise the foe.
 - [Vanishing act](talents.md#talent-vanishing-act) leaves you light on your feet after a sneak
   attack that kills.
-- Every sneak attack that hits gives the thief an [opening](resources.md#resource-openings).
+- Every sneak attack that hits gives the thief an [opening](resources.md#resource-openings),
+  if it is on their [mark](resources.md#the-mark) or they have none.
 - Two weapon abilities trigger on a sneak attack that hits:
   [Knife in the dark](weapon-skills.md#weapon-ability-knife-in-the-dark) and
   [Hunter's shot](fighting-styles.md#style-ability-hunters-shot).
@@ -131,7 +132,7 @@ rangers, ascetics, berserkers, bards, and thieves train Initiative (see
 
 Some things have no vitals to find. Sneak attack dice never land on them, and a
 [critical](combat.md#criticals) is never confirmed on them. [Vital strike](weapon-skills.md#weapon-ability-vital-strike)
-and the master thief's finisher are a plain blow against them ("It has no vital spot."). They can
+and a master thief's sure critical are a plain blow against them ("It has no vital spot."). They can
 still be surprised like anyone, and still be struck flat-footed. The fleshy undead (draugr, ghouls,
 the drowned, vampires, mummies) do have vitals.
 

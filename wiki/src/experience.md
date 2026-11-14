@@ -3,7 +3,7 @@
 Killing monsters earns **experience points** (XP), and enough of them make you a higher **level**.
 Your level (`Lv`) is in the [status bar](the-screen.md#the-screen). The
 [character screen](character.md) (`@`) shows it with your XP and the XP at which the next level
-comes, like `XP  85 / 192`. Dying shows the level you had reached.
+comes, like `XP  85 / 128`. Dying shows the level you had reached.
 
 ## What counts
 
@@ -71,13 +71,13 @@ XP earned after it. One who becomes a [hunter](prestige-classes.md#prestige-clas
 every level that XP buys, from level 31 on. The curve itself runs on to level 100, for levels a
 class does not give.
 
-Each level costs a number of kills of [creatures](creatures.md) of your own level: 38 for level 2,
-about 160 a level by level 10, and more for every level after that, up to 365 for level 60 and 485
+Each level costs a number of kills of [creatures](creatures.md) of your own level: 26 for level 2,
+about 110 a level by level 10, and more for every level after that, up to 243 for level 60 and 323
 for level 100. The first levels come faster:
 
 | Level | Share of the full price |
 |---:|---:|
-| 2 | 25 % (10 kills) |
+| 2 | 25 % (6 kills) |
 | 3 | 30 % |
 | 4 | 35 % |
 | 5 | 40 % |
@@ -89,7 +89,7 @@ for level 100. The first levels come faster:
 | 11 | 95 % |
 | 12 on | 100 % |
 
-That is about 2,600 such kills to reach level 20, and 14,600 to reach level 60. Real counts run
+That is about 1,700 such kills to reach level 20, and 9,700 to reach level 60. Real counts run
 higher, because weaker monsters are worth less and grey ones nothing. At your last level your XP
 still counts, but buys nothing more. Gaining a level says "You feel more experienced." and "Welcome
 to level N." One kill can bring several levels at once.

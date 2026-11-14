@@ -26,169 +26,25 @@ warlock-cli gen --level depths:3 --seed warlock           # print a generated le
 cargo xtask golden [--update | --local]                   # compare golden screenshots
 ```
 
-- Replays are JSON: `{game_version, scenario, seed, character, steps: [{action, hash}]}`, the
-  character `{race, gender, class}` (left out for a run without one; a replay without it starts
-  as the scenario's character, so older replays still load). Actions use a text
-  syntax (`move:E wait open:E close:W pick:E ascend descend use_tool rest:1h rest:dawn rest:dusk
-  pickup pickup:ac drop drop:b sell:b pay pay:W equip:body:b remove:body bash:E fire:12,5
-  throw:c:12,5 eat:b
-  eat:floor:a dig:E search search:10 chat:E ask:E:rooms ask:E:quest-rats
-  throw_voice:12,5 vision:darkvision
-  skip:1h weather:rain spawn stance:coward effect:fireball@12,5 effect:lightning_bolt@3,4>12,4
-  identify:a afflict:bleeding drain:5 infect:filth_fever reveal:fennmynster
-  quest_roll:slug_charm:scroll_of_frost talent:hardy talent:weapon_focus:long_blades
-  advance:stealth levelup:auto xp:2500 freeze:12,5,3 thaw:12,5,3`; `pick:DIR` tries
-  the lock of the door that way (§8 "Doors"), `bash:DIR` bashes with the held shield that way, `dig:DIR` digs toward a direction until the wall gives way or
-  something interrupts; `search` searches the cells around the player once, `search:N` for up to
-  N turns (1 to 100), stopping when something is found; `fire:X,Y` shoots at level cell (X, Y),
-  `throw:LETTER:X,Y` throws one of inventory stack LETTER there; `eat:LETTER` eats one of
-  inventory stack LETTER, `eat:floor:LETTER` one of stack LETTER of the pile underfoot;
-  `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC` asks it about a topic by id (a
-  quest's: `quest-ID`, which gives it, reminds, or hands it in; there is no accept or decline
-  topic, §8 "Quests"); `use_tool` uses the light ready in the Tool slot (a lantern: unlit, lit,
-  hooded, unlit again; §5 "Light sources");
-  `throw_voice:X,Y` throws the player's voice to level cell (X, Y); the dev
-  action `effect:ID@X,Y[>X,Y]` shows spell effect ID (`data/effects.toml`) as the player perceives it, a
-  burst around X,Y (around the second cell, flying there from the first) or a bolt from the first
-  cell toward the second (cut short by the first opaque cell); it hurts no one, takes no time,
-  and only says so in the message log; the dev bursts `freeze:X,Y,R` (an instant frost: the
-  water within radius R, 0 to 20, of cell (X, Y), in its line of sight, freezes to 10 cm of ice)
-  and `thaw:X,Y,R` (a burst of heat: the ice there melts, and whoever stood on it falls in) take
-  no time (§5 "Ice");
-  durations are a whole number with `s`, `m`, or `h`, a rest at most `24h`; letters name stacks
-  of the pile or the inventory by position, `a` first, `z` the 26th, and any position may be a
-  number instead (`drop:0,2,30`, `equip:body:26`, `throw:27:12,5`), as positions past `z` must;
-  without letters `pickup`, `drop`, `sell`, and the
-  dev `identify` (§8 "Magic items") take everything; `sell` sells to the shop the player stands
-  in, `pay` pays it, and `pay:DIR` pays and steps out that way (§7 "Shops"); `equip:SLOT:LETTER` puts inventory stack LETTER
-  on in slot SLOT (a slot id of `data/slots.toml`) and `remove:SLOT` takes off what is there;
-  the dev weather override takes `clear`, `overcast`, `rain`, or `heavy`; the dev `afflict:ID`
-  gives the player a degree more of status ID (`data/status.toml`), `drain:N` spends N of their
-  mana (1 or more, through `World::spend_mana`; refused when they have less; §8 "Mana"),
-  `resource:ID` grants them alternative resource ID (`data/resources.toml`, at its start,
-  through `World::grant_resource`; no time; §8 "Resources"), and
-  `infect:ID` makes them catch disease ID (`data/diseases.toml`); `reveal:ID` reveals hidden location ID
-  of the overworld at once, as a quest would, marked on the map (§7 "Hidden locations"; no time);
-  `quest_roll:ID:TARGET` makes active rolled quest ID, while it has no progress, draw TARGET
-  instead (a target its pool can hold, wherever the player can go: a creature, `tag:` a tag, or
-  an object id; or a variant id), its kills counted from then and a variant's reveal made (§8
-  "Quests"; no time; refused otherwise);
-  `spawn` makes one attempt to
-  bring a creature to the current level now, whatever its cap and chance (§7 "Danger levels";
-  refused at danger 0; no time); `talent:ID[:CHOICE]` takes a talent (an id in
-  `data/talents/`, with its choice) when a level's pick is due (§8 "Talents"; every other
-  action is refused until it is made), `advance:SKILL` spends one of a level's skill rolls on a
-  trained skill (§8 "Skills"), the dev `levelup:auto` spends every choice due with the first the player may take, and
-  the dev `xp:N` grants N experience with the levels it brings; in scripts, `ACTION*N` repeats an
-  action, e.g. `wait*10`); `hash` is the
-  FNV-1a 64 hash of the
-  canonical JSON encoding of `WorldState` after the step. Verification reports the first
+- The flags, the replay format, the action text syntax, and the dump layers are listed in one
+  place, [`docs/dev/cli.md`](../docs/dev/cli.md), kept with the code; this section states what
+  they must do.
+- Replays are JSON: the game version, scenario, seed, character (left out for a run without one;
+  a replay without it starts as the scenario's character, so older replays still load), the
+  character's name, and the steps, each an action in the text syntax and the FNV-1a 64 hash of
+  the canonical JSON encoding of `WorldState` after the step. Verification reports the first
   diverging step. `--replay` takes its scenario, seed, character, and name from the file;
   `--record` rewrites its file after every action (including replayed steps). `--character
   RACE,GENDER,CLASS`, like `--seed`, shapes the run that `--scenario`, `--new`, `--record`, or
   `--capture` starts (and `warlock-cli dump` and `replay --create`); without it, the scenario's
-  character. `--name NAME` names that character (up to 20 characters; without it the scenario's
-  name for its own character, else one of the race's names from the seed, §8 "Character
-  creation"). Replays record the name (`"name"`, beside `"character"`).
-- Dump layers: `view`, `fov`, `memory` (terrain, the top object of each known pile, and known
-  traps over them), `light`
-  (perceived brightness of each visible cell as a digit, `0` dark to `9` fully lit or brighter),
-  `sound` (the view with each heard sound at its rough place: `f` footsteps, `o` a door opening,
-  `c` a door closing, `x` fighting, `b` a bowstring, `m` chanting, `k` banging (a door kicked),
-  `d` digging, `v` a voice, `a` an alarm bell, `e` an explosion, `t` a thunderclap, upper case
-  when loud),
-  `traps` (the traps the player knows, one a line, `(12, 5) fireball trap`, `(remembered)` when
-  out of sight; `no known traps`), `locations` (the overworld locations the player knows, one a
-  line, `(45, 23) The Hall`, a hidden one only once revealed; `no known locations`, also on any
-  other level),
-  `inventory` (what the player carries, grouped by item class as the screens group it, a
-  `Melee weapons:` line before each class, each stack by its position as action text names it
-  with weights and what is worn or wielded marked, `b - a leather jerkin (being worn) (3.5 kg)`, and in a shop what is unpaid, `c - a
-  dagger (unpaid, 45 gold) (450 g)`, then what they carry, their burden and
-  its thresholds, and what they weigh, `carried 4.2 kg (unburdened: burdened over 14 kg,
-  strained over 28 kg, overloaded over 42 kg), total weight 74.2 kg`),
-  `equipment` (the player's slots by letter, `c Body: a leather jerkin (b)`, `-` when empty),
-  `stats` (the player's name, race, gender, and class, `Name Brakka`, `Race Dwarf`, their age, birthday, and
-  sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores as
-  the rules read them, `Strength 12`, then their alignment band, `Alignment Kind` (never the
-  score), then each guild they belong to with their rank, `Guild Weyfarers' Gilde, Tin` (§8
-  "Quests", "Guilds"), then their status effects by name, `Effects Bleeding,
-  Diseased`, then the diseases they know they have, `Diseases filth fever`), `skills` (the player's trained skills in skill order, `Stealth 17`),
-  `weapon_skills` (the player's weapon skills and fighting styles in file order with their rank
-  and how far their marks are toward the next, `Long blades 2 (40%)`; at rank 10 the rank alone;
-  the styles they fight in now marked, `Duelist 1 (0%), in use`), `attacks` (the player's ready
-  attacks as the character screen shows them, §6: `Main hand long sword: +4 to hit, 1d9+2
-  slashing`, `Missile short bow: +3 to hit, 1d6 piercing, range 10`), `talents` (the player's
-  talents in the order taken, each for its choice, `Skill focus (stealth)`,
-  `Weapon focus (long blades)`; never what a rank gives), `quests`
-  (the quest log, active first: `Rats in the arena (active, from the old hermit): Kill 3 giant
-  rats in the Arena. 0 / 3 killed.`), and `story` (the background story, a paragraph a line;
-  `no story`) are built from the perception snapshot only;
-  `truth` (terrain, objects, traps hidden or known, secret doors as `S`, and creatures),
-  `progress` (the level-up choices due, `due level 3: 1 talent`, the talents the player may
-  take now by id with the choices each may be taken for, `takeable healthy,
-  weapon_focus:{bows,slings}`, the creature types whose first kill has paid, and the stat
-  training marks, `stat marks St 3, To 1`, and the learning, `learning 36 (Decipher script 108)` or
-  `cannot learn: not trained in Decipher script`; §8 "Talents", "Stats", "Spells"),
-  and `actors` (every actor on
-  the level with its hit
-  points, mana, its alternative resources with their progress (`resources rage 11/20 (0)`), and Defence, `hp 8/12 mp 0/0 dv 13`, its alignment (`alignment evil`; the player's score and
-  band, `alignment 450 (good)`; §8 "Alignment"), its
-  weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
-  spear` (magic items as they truly are, `an iron ring of the Bear (unidentified)`), what its
-  magic items do to it by effect id, `magic strength +1 light item_glow`, its burden and carrying
-  limit, `unburdened (limit 31.5 kg)`, its weapon skills with rank and marks, `weapon skills
-  spears 1 (0/30)`, its stats as score/potential, `St 12/15`, its trained skills with their
-  marks toward the next point, `skills stealth 17 (2/5)`, its status effects with their
-  severities, `effects bleeding 2`, its diseases with their progressions (checks won in a row)
-  or `incubating` and the time to their next turn, `diseases filth_fever 2 (1 won) 0d17h`, and
-  its stat damage, `damage Dx 2 To 1`, the player's nutrition and hunger, `nutrition 3540
-  (not_hungry)`, and the unique character it is and how far its talk has got, `npc elder; talk
-  said 3, muttered 1, met`, if any; then every corpse on the level and in the player's pack with
-  when it died and how it has rotted, `corpse rat_corpse at (2, 1): died 1444-11-11 08:01:12, 2
-  hours ago, fresh`), `rooms` (the level's special rooms: the terrain with each room's plain
-  ground drawn as its effect's `mark`, then a line per room, `s shadowed room at (34, 8)-(49,
-  13), entered`), and `ice` (a line with the temperature on the level and when its ice was last
-  brought up to date, then the map with each iced cell's thickness in whole centimetres, `0`–`9`,
-  `a`–`z` for 10–35, `#` beyond, over the terrain) show
-  ground truth and are dev-only. JSON dumps
-  carry turn, game time (seconds and calendar fields), level, viewer, the special room the
-  player stands in if they know it (`room`, its effect id; else null), the open shop they stand
-  in (`shop: {sign, keeper, owed}`; else null; §7 "Shops"), the weather (under the open
-  sky; else null), the temperature where the player is (`temperature`, °C to a tenth), seen
-  actors (each with how hurt it looks, `health`: `unhurt`,
-  `lightly_wounded`, `wounded`, `badly_wounded`, `nearly_dead`, and the status effects that show
-  on it, `effects`, by id), heard sounds, known traps (`known_traps: [{pos, trap, seen}]`), known
-  overworld locations (`known_locations: [{pos, name}]`), the
-  player's
-  inventory (each stack's letter, object, count, weight, `name` as the player knows it, `rarity`,
-  `identified`, and `magic`: `{level, name, affixes: [{id, tier, value}]}` once identified, else
-  null; an unpaid stack with its price, `unpaid`), equipment (by slot id: letter, object, count), weight, burden (`burden: {level,
-  limit}`, the limit in grams), character
-  (`{name, race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
-  null), scores (`stats`, by stat id), the alignment band (`alignment`, its id, or null without
-  alignment rules), the guilds they belong to (`guilds`: `{id, name, rank}`, left out before
-  joining one), trained skills (`skills`, by skill id with their values),
-  status effects (`effects`, by id), the diseases they know they have (`diseases`, by id),
-  weapon skills and fighting styles (`weapon_skills`, by skill id: `{rank, progress}`, the
-  progress a percent or null at rank 10), the styles in use (`styles_in_use`, style ids), the ready attacks (`attacks`: `{source, kind,
-  name, to_hit, damage, range}`), the
-  talents (`talents`, in the order taken: `{id, name, choice}`) and the level-up
-  choices due (`due`: `{level, talents}`, or null), the
-  quest log (`quests`: `[{id, name,
-  kind, active, completed, giver, objective, status}]`), the background story (`story`:
-  `[{chapter, line, text}]`; `character.story` the ids), hit points (`hp: {current, max}`),
-  mana (`mana: {current, max}`), the alternative resources held (`resources: [{id, current,
-  max}]`, in resource order),
-  Defence (`defence`, the total), hunger (`hunger`: `bloated` … `starving`, or null when nobody
-  hungers), how the run ended (`death: {turn, time, place, by, of, cause, trap}` or null;
-  `cause` "Starved to death", "Killed by a fireball trap", "Fell through a collapsed floor", and the like when neither a creature
-  nor a status effect killed them; `trap` the id of the trap that did, else null),
-  recent messages,
-  and optionally the full world state; the ASCII header line has the turn, the time
-  (`0001-01-01 08:00:00`), level, viewer, the player's hit points and mana (`hp 17/17 mp 3/3`,
-  then each resource they hold, `rage 11/20`, then `dead` once they have died), their hunger unless Not hungry (`hunger hungry`), the weather under the open
-  sky (`weather rain`), the temperature (`temperature -3.5 °C`), and hash.
+  character. `--name NAME` names that character (§8 "Character creation").
+- Every player action has a text form (`move:E`, `pickup:ac`, `fire:12,5`, `rest:dawn`; in
+  scripts `ACTION*N` repeats one), so any state can be reached from a script and recorded. Dev
+  actions (experience, status effects, weather, spell effects for captures, and the like) take no
+  game time unless they say so and exist to set up states for tests and captures.
+- Dump layers show the perception snapshot only (what the player sees, remembers, hears, and
+  knows of themselves), except the dev-only layers (`truth`, `actors`, `progress`, `rooms`,
+  `ice`), which show ground truth. JSON dumps carry the same and optionally the full world state.
 - Freezing visual time and fixing window size and scale make screenshots reproducible. With frozen
   time, glyph animations show that moment and motion (slides, camera) completes instantly.
 - `--fire` (dev) starts the run aiming the readied missile weapon, as the Fire command would, so captures show
@@ -208,6 +64,7 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   and the `?` help, which can rebind them) only where they work. Dev builds (debug, or `--dev`)
   also give New run its seed field (§6 "Main menu"); elsewhere a new run's seed is random.
 - CLAUDE.md documents build commands, architecture notes, pinned documentation references, and
-  verification procedures, including the agent workflow guidance from the original brief.
+  verification procedures, including the agent workflow guidance from the original brief; the
+  CLI reference is `docs/dev/cli.md`.
   Verification uses tests, dumps, logs, and screenshots — a successful compile alone does not
   verify rendering.

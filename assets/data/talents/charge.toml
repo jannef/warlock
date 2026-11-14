@@ -1,0 +1,9 @@
+[[talent]]
+id = "charge"
+name = "Charge"
+tree = "class"
+granted = true
+description = "Rush a foe you see along the straight way and strike it as you come (an ability): a point of stamina, and one more a pace. Nobody you pass gets a blow in."
+effects = [{ kind = "grants_resource", resource = "stamina" }, { kind = "charge", per_cell = 1 }]
+resource = { id = "stamina", cost = 1 }
+systems = ["stamina", "combat", "resources"]

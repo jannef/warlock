@@ -298,7 +298,7 @@ pub enum Action {
     /// takes the time of `wait`.
     UseTalent(TalentActive),
     /// Use a class active (spec §8 "Class abilities"; the abilities menu's Class group): rage,
-    /// veteran's wind, whirlwind, lay on hands, holy radiance, and, aimed in a direction, smite
+    /// veteran's wind, lay on hands, holy radiance, and, aimed in a direction, smite
     /// and quivering palm (`use:rage`, `use:smite:E`). Takes the time of its cost's action;
     /// refused (no time) without the ability, while its cooldown lasts, or without the
     /// direction it asks.
@@ -329,6 +329,11 @@ pub enum Action {
     /// abilities"): the merchant's Merchant's eye (`use:merchants_eye:c`). Takes the time of its
     /// cost's action; refused (no time) without the ability, or for a stack it may not work on.
     UseOn(ClassActive, usize),
+    /// Use a class active that throws a stack the player carries, by its position, at a cell
+    /// (spec §8 "Class abilities"): the thief's Thrown exploit (`use:thrown_exploit:c:12,5`).
+    /// Takes the time of a throw; refused (no time) without the ability, without an opening, or
+    /// for a throw it may not make.
+    UseThrow(ClassActive, usize, Pos),
     /// Use a class active in a weapon's shape, by the object's id (spec §8 "Prestige classes"):
     /// the Hunter's Spirit weapon (`use:spirit_weapon:long_sword`) calls a weapon of that shape
     /// into the main hand, for the time of a wield. Refused (no time) without the ability, or
@@ -1041,6 +1046,14 @@ impl fmt::Display for Action {
             Action::CastOn(spell, on) => write!(f, "use:{spell}:{}", position_text(*on)),
             Action::UseAt(active, at) => write!(f, "use:{}:{},{}", active.id(), at.x, at.y),
             Action::UseOn(active, on) => write!(f, "use:{}:{}", active.id(), position_text(*on)),
+            Action::UseThrow(active, item, at) => write!(
+                f,
+                "use:{}:{}:{},{}",
+                active.id(),
+                position_text(*item),
+                at.x,
+                at.y
+            ),
             Action::Shape(active, shape) => write!(f, "use:{}:{shape}", active.id()),
             Action::Gift(active, None) => write!(f, "use:{}", active.id()),
             Action::Gift(active, Some(at)) => write!(f, "use:{}:{},{}", active.id(), at.x, at.y),
@@ -1313,6 +1326,15 @@ impl FromStr for Action {
                     let at = aim
                         .ok_or_else(|| format!("`use:{id}` needs a cell, e.g. `use:{id}:12,5`"))?;
                     return Ok(Action::UseAt(active, parse_cell(at)?));
+                }
+                // One that throws a stack at a cell, `use:thrown_exploit:c:12,5` (bare, the rules
+                // ask for both).
+                if let Some(aim) = aim.filter(|_| active.aims_throw()) {
+                    let usage =
+                        || format!("`use:{id}` needs a stack and a cell, e.g. `use:{id}:c:12,5`");
+                    let (item, at) = aim.split_once(':').ok_or_else(usage)?;
+                    let item = parse_position(item).ok_or_else(usage)?;
+                    return Ok(Action::UseThrow(active, item, parse_cell(at)?));
                 }
                 // One called in a weapon's shape, `use:spirit_weapon:long_sword` (bare, the rules
                 // ask for the shape).
@@ -1979,6 +2001,8 @@ mod tests {
             Action::Use(ClassActive::Smite, Some(Dir::SW)),
             Action::UseAt(ClassActive::Volley, Pos::new(12, 5)),
             Action::UseOn(ClassActive::MerchantsEye, 2),
+            Action::UseThrow(ClassActive::ThrownExploit, 2, Pos::new(12, 5)),
+            Action::UseThrow(ClassActive::ThrownExploit, 30, Pos::new(3, 4)),
             Action::UseOn(ClassActive::MerchantsEye, 30),
             Action::Shape(ClassActive::SpiritWeapon, "long_sword".into()),
             Action::Shape(ClassActive::SpiritWeapon, "great_axe".into()),

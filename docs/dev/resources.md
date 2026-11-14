@@ -38,7 +38,7 @@ statuses).
   The loader checks only well-formedness (#1205): unique ids, resolution, the divisors above,
   `ended` only with `ends_at_zero`; the grant and the pool keep a value within the maximum. `ResourceId` is an index, in `Content::fingerprint` (its own
   group, after the damage types). `Build` is the closed list of events (`kill`, `hit`,
-  `critical`, `struck`, `sneak_attack`; `Build::ALL` in wiki order). Loaded before the talents,
+  `melee_hit`, `melee_kill`, `critical`, `struck`, `sneak_attack`, `feint`, `mark_kill`; `Build::ALL` in wiki order). Loaded before the talents,
   whose class actives may cost one (`TalentDef::resource: Option<ResourceCost>`, data `resource =
   { id, cost }`, checked: a known id, a talent with a class active, a cost no more than
   `ResourceDef::most`, the data's `max` with what `max_from` adds at the highest level for
@@ -54,11 +54,15 @@ statuses).
   - `World::gain_resource(id, on)`: every pool held that builds on `on` gains its amount (its
     `builds`, plus the talents' `resource_build`s, `TalentMods::resource_builds`), up to the
     maximum. Called in `fight.rs::dies` (`Kill`, for `by`, creatures' deaths only),
-    `fight.rs::resolve` (`Hit` and `Critical` for the attacker on a `Strike::Hit`, `Struck` for
+    `fight.rs::resolve` (`Hit` and `Critical` for the attacker on a `Strike::Hit`, `MeleeHit`
+    beside `Hit` for a melee blow and `MeleeKill` at the kill point of a melee blow (Battle
+    rhythm's stamina, the warrior's at 40, #1467; a bleed's later kill is no `MeleeKill`), `Struck` for
     the target on every strike that `is_hit()`, `Soaked` and `Resisted` too (#842: the rage
     builds on hits taken before mitigation; zeal builds on it too, #910), before the
     damage, so a killing blow counts), and `ambush.rs::ambushed`
-    (`SneakAttack`, when the sneak attack's dice are added). A new event is a `Build` variant and
+    (`SneakAttack`, when the sneak attack's dice are added; a pool `marked` in data builds only
+    on its holder's mark, `World::build_resources`), and `mark.rs::mark_dies` (`MarkKill`, beside
+    `Kill`: the holder killed its mark; docs/dev/openings.md), and `feint.rs::feint` (`Feint`, a feint the foe falls for). A new event is a `Build` variant and
     one call where it happens.
   - `World::spend_resource(id, resource, amount, events) -> bool`: refused when not held or
     short; spending to 0 ends one that `ends_at_zero`. `world/class_ability.rs::use_class` spends
@@ -86,8 +90,8 @@ statuses).
   resource)` (the pace in percent: 0 while resting for `resting = false`, else 100 plus the
   talents' `resource_rate`, never below 0: Battle trance's −33, Inner calm's and Steady hand's
   +50, Patient blade's −50). A talent's `resource_build { resource, on, amount }` is a build only
-  its holder has (Blood frenzy's 5 rage a kill; Zealot's second zeal on `struck`; Patient blade's opening on `sneak_kill`, which
-  `World::resolve` raises after a sneak attack's blow kills, after `sneak_attack`'s).
+  its holder has (Blood frenzy's 5 rage a kill; Zealot's second zeal on `struck`; Patient blade's second opening on
+  `mark_kill`, docs/dev/openings.md).
 - **Affixes** (B1, #630; docs/design/affixes-systems.md §5): the same two hooks read what the
   actor wears for the pool an affix names (`Mods::resource(effect, id)`, `Actor::mods`, so an
   unidentified piece counts): `resource_max` adds to `Actor::resource_max` (Tireless for stamina,
@@ -168,13 +172,15 @@ statuses).
   cost, so its songs are free). `World::sing` (`world/song.rs`) spends it (`spend_resource`);
   `Ability::unavailable` greys it out `Unavailable::Short` while short. Tests:
   `world/ki_tests.rs`, `world/song_tests.rs`.
-- **Openings** (R3, #251; `world/openings.rs`): the thief's Sneak attack (level 1, #682) grants the pool
-  (`grants_resource`); its build is the data's `sneak_attack`; Master thief's `finisher` effect is
-  the class active `ClassActive::MasterThief` (`use:master_thief:E`, aimed, the cost `resource = {
-  id = "openings", cost = 5 }` on the talent): a melee blow with `Profile::sure_critical` (every
-  hit a critical, no confirmation draw; `combat::strike_with`). `use_class` refuses an aimed
-  active with nobody hostile that way before it spends anything. Tests:
-  `world/openings_tests.rs`, and `combat.rs`'s sure-critical test.
+- **Openings** (R3, #251; `world/openings.rs`; the mark and its builds in **docs/dev/openings.md**):
+  the thief's Sneak attack (level 1, #682) grants the pool
+  (`grants_resource`); `marked = true` (its points are in one creature's guard); its builds are
+  the data's `sneak_attack`, `feint`, and `mark_kill`; Exploit (`use:exploit:E`) spends every
+  opening held, and the class talents' ladder grows it (Master thief's finisher is folded into
+  it since #1464: a sure critical from five spent, `Profile::sure_critical`, no confirmation
+  draw; `combat::strike_with`). `use_class` refuses an aimed active with nobody hostile that way
+  before it spends anything. Tests: `world/openings_tests.rs`, and `combat.rs`'s sure-critical
+  test.
 - **Zeal** (P1, #910; `docs/design/paladin-smites.md` §4): the last entry of `resources.toml`.
   The paladin's Smite (level 1) grants it (`grants_resource`) at `start = 5`; `max = 10`,
   `max_from = { stat = "presence", per_levels = 10, least = 6 }`, `regenerates = 60` (resting
@@ -196,13 +202,16 @@ statuses).
 - **Stamina** (SP1, #560; the combat progression design §4.5): the entry of
   `resources.toml` (file order is save order), `short = "Sta"`, `max = 10`, `max_from = { stat =
   "toughness", per_levels = 10, least = 5 }`, `regenerates = 12`, resting too, starting full.
-  The granted talent `trained_wind` (`grants_resource`) is in the level-1 row of the warrior's,
-  berserker's, paladin's, ranger's, ascetic's, thief's, and bard's tables (`data/classes/`), so
-  `class::grant` holds it at creation and `World::grant_class` on load. The weapon actives
-  spend it (#564, `world/weapon_active.rs::pay_active`, through `spend_resource`, after their
-  refusals); its `lacking` words ("you are short of breath") are how `Unavailable::Short` reads
+  The warrior's granted talent `charge` (`grants_resource`, beside its `charge` effect; #1466,
+  which removed Trained wind) is in the level-1 row of the warrior's table (`data/classes/`), so
+  `class::grant` holds it at creation and `World::grant_class` on load; every other character
+  gets it from the first weapon active a rank teaches (`fight.rs::grant_stamina`). The weapon
+  actives spend it (#564, `world/weapon_active.rs::pay_active`, through `spend_resource`, after
+  their refusals), and so does Charge (`world/charge.rs`: its talent's `resource`, 1, plus
+  `per_cell` a cell moved, checked and spent by the charge itself, since the price is the
+  distance's); its `lacking` words ("you are short of breath") are how `Unavailable::Short` reads
   for it. Its talents (`[[system]] id =
-  "stamina"`): Trained wind, Deep lungs (`resource_max` +4), Steady breathing (`resource_rate`
+  "stamina"`): Charge, Deep lungs (`resource_max` +4), Steady breathing (`resource_rate`
   +50, a weapon skill at 5). Tests:
   `world/stamina_tests.rs`; the parse and `MaxFrom::max` in `content/resource.rs`.
 - **Abilities**: `Unavailable::Short(ResourceId)` ("not enough focus", `short:focus`; a

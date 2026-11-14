@@ -146,6 +146,9 @@ pub struct OwnResource {
     pub resource: ResourceId,
     pub value: u16,
     pub max: u16,
+    /// Its points are in one creature's guard (`marked` in data: Openings), the mark
+    /// [`PerceptionView::own_mark`] names.
+    pub marked: bool,
 }
 
 /// A grimoire the player could learn from (spec §8 "Spells": "Learning"): one teaching a spell
@@ -289,6 +292,10 @@ pub struct SeenActor {
     /// for everyone otherwise (spec §8 "Surprise and sneak attacks": the unaware mark).
     #[serde(skip)]
     pub unaware: bool,
+    /// It is the player's mark, the creature their openings are in (`world/mark.rs`): their
+    /// own choice, so they know it.
+    #[serde(skip)]
+    pub marked: bool,
     /// It is an ally of the player's (spec §8 "Allies"), which they know by sight.
     #[serde(skip)]
     pub ally: bool,
@@ -1031,6 +1038,7 @@ impl Perception {
                 health: a.health(content),
                 shape: shape(a, content),
                 unaware: false,
+                marked: a.id != state.player && state.player().mark == Some(a.id),
                 ally: a.master() == Some(state.player),
                 companion: a.master() == Some(state.player) && a.kept().is_some(),
                 grade: a.graded(),
@@ -1941,6 +1949,12 @@ impl<'a> PerceptionView<'a> {
         self.player.throw_range(item, self.content)
     }
 
+    /// How far the player throws inventory stack `item` in a thrown exploit (its throw range,
+    /// no farther than their sneak dice reach); `None` for what cannot be thrown so (a flask).
+    pub fn exploit_throw_range(&self, item: usize) -> Option<i32> {
+        self.player.exploit_throw_range(item, self.content)
+    }
+
     /// Whether inventory stack `item` is made for throwing (what the throw choice lists): a
     /// throwing weapon, or a potion, which shatters where it lands (spec §8 "Potions": "Flasks").
     pub fn is_throwing_weapon(&self, item: usize) -> bool {
@@ -2270,6 +2284,23 @@ impl<'a> PerceptionView<'a> {
         crate::world::craft_steps(self.content, self.lore, self.level, self.player, recipe)
     }
 
+    /// [`Self::craft_steps`] as the picks made so far (in step order) narrow them: an
+    /// Enchanting recipe's seals follow its crystals and item, its affix kept its item.
+    pub fn craft_steps_given(
+        &self,
+        recipe: crate::content::RecipeId,
+        picks: &[Option<usize>],
+    ) -> Vec<crate::world::CraftStep> {
+        crate::world::craft_steps_given(
+            self.content,
+            self.lore,
+            self.level,
+            self.player,
+            recipe,
+            picks,
+        )
+    }
+
     /// What `recipe` made with `picks` (inventory positions in step order, `None` a skipped
     /// optional) would make and use, in words; or why it cannot, as the rules would say it.
     pub fn craft_plan(
@@ -2380,9 +2411,22 @@ impl<'a> PerceptionView<'a> {
                     resource: pool.resource,
                     value: pool.value.min(max),
                     max,
+                    marked: self.content.resource(pool.resource).marked,
                 }
             })
             .collect()
+    }
+
+    /// The player's mark, the creature their openings are in (`world/mark.rs`), as they know it:
+    /// "the kobold" while they see it, "an unseen foe" while they do not; `None` without one.
+    /// Their own choice, so nothing hidden.
+    pub fn own_mark(&self) -> Option<String> {
+        let mark = self.player.mark?;
+        let seen = (self.snapshot.actors.iter()).find(|a| a.id == mark);
+        Some(seen.map_or_else(
+            || "an unseen foe".to_string(),
+            |a| crate::content::the(&self.content.creature(a.creature).name),
+        ))
     }
 
     /// The player's level, experience total, and the total at which the next level comes (none

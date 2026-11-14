@@ -1,5 +1,5 @@
 # The heart-crystal (docs/design/enchanting.md §9): a rare material, the Enchanting input that
-# adds an affix to a rare beyond its roll (to come). Very rarely caught by salvaging a rare item of item level 10 or more
+# adds an affix to a rare beyond its roll (a rare's Quicken). Very rarely caught by salvaging a rare item of item level 10 or more
 # (crystals.toml `[rare]`). Not a crystal: it cannot be consumed. Never floor loot, never
 # stocked. Made of stone, as the crystals are.
 [[object]]

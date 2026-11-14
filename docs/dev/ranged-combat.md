@@ -26,6 +26,14 @@ with `FreeGlyph::turn`, trail, embers via `particles::trail`, impact puff) and w
 `render::lighting::Transients` (the moving light of a burning missile, and landed lights held back
 until it arrives; `draw_map`, object glow, and object particles hold back what is `arriving` too).
 
+The thief's Thrown exploit (#1465, `world/openings.rs`, docs/dev/openings.md "The thrown
+exploit") is a throw through the same path: `World::thrown_exploit` hands its `Loose` to
+`player_looses`, with `Technique::at` naming the creature aimed at so that `resolve` gives the
+exploit's parts to that creature alone. Its aim is `Aim::Throw` (the item list
+`ObjectList::ThrownExploit`, the throw list less flasks), then `AimKind::ThrownExploit(item)` at
+`Actor::exploit_throw_range` (the throw range capped at the sneak dice's reach), the cursor on
+the mark when seen; its line is the throw's (`line_of`, creatures block).
+
 A target dummy (`world/dummy.rs`, docs/dev/weapon-skills.md "Target dummies") stops a missile in
 `World::fly`, hit or miss (pierce or not): the flight ends on its cell and
 `World::dummy_catches` takes the place of `breaks` and `come_down`: destroyed by the dummy's

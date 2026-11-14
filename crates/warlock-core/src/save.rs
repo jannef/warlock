@@ -31,6 +31,10 @@ pub enum SaveError {
     ContentMismatch,
     #[error("the save file is damaged: {0}")]
     Corrupt(String),
+    /// The state could not be turned into bytes (#1580): nothing is written, so the save
+    /// already there is kept.
+    #[error("the game could not be written to a save: {0}")]
+    Unwritable(String),
 }
 
 /// `version 0.8.0`, or for a save that does not say, `an older version`.
@@ -62,25 +66,44 @@ struct EnvelopeIn {
 }
 
 /// Serializes the world's state into save bytes.
-pub fn encode(world: &World) -> Vec<u8> {
-    encode_state(world.state(), world.fingerprint())
+pub fn try_encode(world: &World) -> Result<Vec<u8>, SaveError> {
+    try_encode_state(world.state(), world.fingerprint())
 }
 
 /// Serializes a state (for example a clone taken earlier) with the content fingerprint of the
-/// content it was played with.
-pub fn encode_state(state: &WorldState, content_fingerprint: u64) -> Vec<u8> {
-    let envelope = EnvelopeOut {
+/// content it was played with. An error (a map keyed by a struct, say: JSON keys are strings)
+/// is returned, never an empty save that would be written over a good one (#1580).
+pub fn try_encode_state(
+    state: &WorldState,
+    content_fingerprint: u64,
+) -> Result<Vec<u8>, SaveError> {
+    compress(&EnvelopeOut {
         magic: MAGIC,
         game_version: crate::GAME_VERSION,
         content_fingerprint,
         state,
-    };
+    })
+}
+
+/// [`try_encode`] for tests, which may panic.
+#[cfg(test)]
+pub fn encode(world: &World) -> Vec<u8> {
+    try_encode(world).expect("the state serializes")
+}
+
+/// [`try_encode_state`] for tests, which may panic.
+#[cfg(test)]
+pub fn encode_state(state: &WorldState, content_fingerprint: u64) -> Vec<u8> {
+    try_encode_state(state, content_fingerprint).expect("the state serializes")
+}
+
+/// `value` as gzip-compressed JSON.
+fn compress(value: &impl Serialize) -> Result<Vec<u8>, SaveError> {
+    let unwritable = |e: &dyn std::fmt::Display| SaveError::Unwritable(e.to_string());
+    let json = serde_json::to_vec(value).map_err(|e| unwritable(&e))?;
     let mut gz = GzEncoder::new(Vec::new(), Compression::default());
-    // The state is plain data with string-keyed maps, and writing to a Vec cannot fail, so these
-    // fallbacks are unreachable; an empty result would simply fail to decode as a save.
-    let json = serde_json::to_vec(&envelope).unwrap_or_default();
-    let _ = gz.write_all(&json);
-    gz.finish().unwrap_or_default()
+    gz.write_all(&json).map_err(|e| unwritable(&e))?;
+    gz.finish().map_err(|e| unwritable(&e))
 }
 
 /// The campaign of a saved state: its own, or for a state without one its scenario's.
@@ -136,6 +159,15 @@ mod tests {
 
     fn content() -> Arc<Content> {
         Arc::new(Content::builtin().expect("builtin content loads"))
+    }
+
+    /// A value serde_json cannot write (a map keyed by a tuple) is an error, never an empty
+    /// save written over a good one (#1580).
+    #[test]
+    fn a_state_that_cannot_be_serialized_is_an_error() {
+        let map = std::collections::BTreeMap::from([((1u8, 2u8), 3u8)]);
+        let err = compress(&map).expect_err("JSON keys are strings");
+        assert!(matches!(err, SaveError::Unwritable(_)), "{err:?}");
     }
 
     fn world() -> World {
@@ -258,6 +290,54 @@ mod tests {
         );
         assert!(matches!(
             decode(&gz(&bad_state), content()),
+            Err(SaveError::Corrupt(_))
+        ));
+    }
+
+    /// The first JSON object (depth first) that has `key`.
+    fn find_with<'a>(v: &'a mut serde_json::Value, key: &str) -> Option<&'a mut serde_json::Value> {
+        if v.get(key).is_some() {
+            return Some(v);
+        }
+        match v {
+            serde_json::Value::Object(m) => m.values_mut().find_map(|c| find_with(c, key)),
+            serde_json::Value::Array(a) => a.iter_mut().find_map(|c| find_with(c, key)),
+            _ => None,
+        }
+    }
+
+    /// `w`'s save with its state changed by `change`.
+    fn tampered(w: &World, change: impl FnOnce(&mut serde_json::Value)) -> Vec<u8> {
+        let mut state = serde_json::to_value(w.state()).expect("state");
+        change(&mut state);
+        let envelope = serde_json::json!({
+            "magic": MAGIC,
+            "game_version": GAME_VERSION,
+            "content_fingerprint": w.fingerprint(),
+            "state": state,
+        });
+        gz(&envelope.to_string())
+    }
+
+    /// A grid whose cells do not fill it, or a memory not the terrain's size, is a damaged
+    /// save, never a panic on Continue (#1585).
+    #[test]
+    fn rejects_grids_of_the_wrong_size() {
+        let w = world();
+        let short = tampered(&w, |state| {
+            let grid = find_with(state, "cells").expect("a grid");
+            grid["cells"].as_array_mut().expect("cells").pop();
+        });
+        assert!(matches!(
+            decode(&short, content()),
+            Err(SaveError::Corrupt(_))
+        ));
+        let small_memory = tampered(&w, |state| {
+            let level = find_with(state, "memory").expect("a level");
+            level["memory"] = serde_json::json!({"width": 1, "height": 1, "cells": [null]});
+        });
+        assert!(matches!(
+            decode(&small_memory, content()),
             Err(SaveError::Corrupt(_))
         ));
     }

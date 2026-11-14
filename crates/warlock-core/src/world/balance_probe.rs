@@ -51,6 +51,12 @@
 //!   the talents), the foe flat-footed (`World::flat_footed`), Master thief's threat
 //!   (`TalentMods::ambush_threat`), and no dice on a type without vitals (`Content::has_vitals`).
 //!
+//! - **Exploits** (#1464, `exploits.rs`): the thief's Exploit of 1, 3, and 5 openings on an
+//!   aware monster of their level with vitals, beside the plain and unaware blows, with the
+//!   ladder as `World::exploit_profile` and `World::land_exploit` make it
+//!   (`TalentMods::exploit`), the thrown exploit of 3 with the first throwing weapon carried,
+//!   and the openings a fight against one foe yields.
+//!
 //! - **Rage** (#842): the berserker, calm and raging (`rage_of`: the pool granted, Raging and
 //!   the stance it forces), and what feeds the pool a round: the foe's blows that `is_hit()`,
 //!   the berserker's criticals, and kills, at the content's and the talents' builds.
@@ -82,6 +88,7 @@
 mod caster_pace;
 mod casters;
 mod dragon;
+mod exploits;
 mod familiar;
 mod miscasts;
 mod ranger;
@@ -550,6 +557,8 @@ struct Monster {
     mana: i32,
     /// Its Spellcraft and the bonus of its check on a cast (`miscasts.rs`).
     cast: (i32, i32),
+    /// Its Willpower check's modifier against a feint (`exploits.rs`).
+    nerve: i32,
 }
 
 /// Every creature type with a level, made in one world.
@@ -568,6 +577,7 @@ fn monsters(content: &Arc<Content>) -> Vec<Monster> {
         let mut sides = Vec::new();
         let mut spells = (Vec::new(), 0);
         let mut cast = (0, 0);
+        let mut nerve = 0;
         for seed in 0..=SEEDS {
             let (carry, equipment) = if seed == 0 {
                 (Vec::new(), Default::default())
@@ -595,6 +605,7 @@ fn monsters(content: &Arc<Content>) -> Vec<Monster> {
             if seed == 0 {
                 spells = casters::spells_of(&w, id);
                 cast = miscasts::cast_of(&w, id);
+                nerve = exploits::nerve_of(&w, id);
             }
             w.state.actors.remove(&id);
         }
@@ -608,6 +619,7 @@ fn monsters(content: &Arc<Content>) -> Vec<Monster> {
             spells: spells.0,
             mana: spells.1,
             cast,
+            nerve,
         });
     }
     out
@@ -760,6 +772,12 @@ struct Snap {
     /// Its sneak dice (`World::sneak_dice`) and Master thief's lower threat on a sneak attack.
     sneak: Option<Dice>,
     ambush_threat: u8,
+    /// Its exploit's ladder, and the difficulty its feint sets a foe's Willpower (with Feint).
+    exploit: crate::talent::ExploitMods,
+    feint: Option<i32>,
+    /// The attack of the first throwing weapon it carries, thrown, once it has the thrown
+    /// exploit.
+    thrown: Option<Profile>,
     /// Raging, in plain gear (a class with the Rage ability).
     rage: Option<Rage>,
     /// Its ki, bare-handed in plain gear (a class whose Flurry spends ki).
@@ -1098,6 +1116,12 @@ fn career(
                 fought_a_day: f64::from(log.fought_casts) / days,
                 sneak: w2.sneak_dice(player),
                 ambush_threat: mods.ambush_threat,
+                exploit: mods.exploit,
+                feint: exploits::feint_difficulty(&w2),
+                thrown: (0..me.inventory.len())
+                    .filter(|_| mods.thrown_exploit)
+                    .filter(|&i| content.object(me.inventory[i].object).is_thrown())
+                    .find_map(|i| me.thrown(i, content)),
                 rage: (gear == Gear::Plain)
                     .then(|| rage_of(&w2, player))
                     .flatten(),
@@ -1329,6 +1353,7 @@ fn balance_probe() {
     tables::caster_pace(&p, &mut out);
     tables::weapon_pace(&p, &mut out);
     tables::sneak_attacks(&p, &mut rng, &mut out);
+    exploits::exploits(&p, &mut Rng::stream(1464, "exploits"), &mut out);
     tables::rage(&p, &mut rng, &mut out);
     tables::ki(&p, &mut rng, &mut out);
     tables::zeal(&p, &mut rng, &mut out);

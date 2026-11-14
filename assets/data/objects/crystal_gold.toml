@@ -1,6 +1,6 @@
 # A magic crystal (docs/design/enchanting.md §5; docs/dev/enchanting.md): the craft and the fortune. Caught
 # from an affix of its colour's families by salvaging an identified magic item (salvage.toml,
-# crystals.toml), and an Enchanting input to come; anyone may consume one for mana (the Consume
+# crystals.toml), and an Enchanting input (Kindle and the other recipes); anyone may consume one for mana (the Consume
 # crystal ability). Never floor loot (no `level` or `frequency`) and never stocked. Made of
 # stone, as the essences are, so it neither burns nor rusts.
 [[object]]

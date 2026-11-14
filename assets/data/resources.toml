@@ -32,9 +32,15 @@
 #                 resource is granted and ends with it (and the resource with the status, if
 #                 something cures that); a status that `eases` by itself may end first (rage: Raging)
 #   builds        what builds it up: [{ on = "kill", amount = 5 }]; events are
-#                 kill (a kill credited to the holder), hit (a blow of theirs hits), critical (a
-#                 blow of theirs is a critical), struck (they are hit), sneak_attack (a sneak
-#                 attack of theirs hits), and sneak_kill (a sneak attack of theirs kills)
+#                 kill (a kill credited to the holder), hit (a blow of theirs hits), melee_hit
+#                 (a melee blow of theirs hits), melee_kill (a melee blow of theirs kills),
+#                 critical (a blow of theirs is a critical), struck (they are hit), sneak_attack (a sneak
+#                 attack of theirs hits), feint (a feint of theirs fools its foe), and mark_kill
+#                 (they kill their mark: a marked pool's)
+#   marked        its points are in one creature's guard, the holder's mark (Openings; default
+#                 false): the mark is the creature of their last chosen attack, a chosen attack
+#                 at another living creature empties the pool, and it builds on nobody else;
+#                 the mark's death clears it and keeps the pool (docs/dev/openings.md)
 #
 # The numbers are the progression design's first guesses (§4.18).
 
@@ -66,7 +72,8 @@ max = 10
 regenerates = 6
 resting = false
 
-# The thief's openings: built by sneak attacks, a point lost every 20 base turns.
+# The thief's openings: built by sneak attacks, feints the foe falls for, and killing the mark,
+# a point lost every 20 base turns; they are in the guard of one creature, the mark (docs/dev/openings.md).
 [[resource]]
 id = "openings"
 name = "Openings"
@@ -74,7 +81,13 @@ short = "Openings"
 max = 5
 start = 0
 decays = 120
-builds = [{ on = "sneak_attack", amount = 1 }]
+marked = true
+lacking = "you have no opening"
+builds = [
+  { on = "sneak_attack", amount = 1 },
+  { on = "feint", amount = 1 },
+  { on = "mark_kill", amount = 1 },
+]
 
 # The ascetic's ki (the ki tricks design): granted full by Martial arts at level 1, a point back
 # every three base turns, resting too; it never ends. Its maximum is 4, plus the Willpower
@@ -100,7 +113,8 @@ decays = 180
 builds = [{ on = "kill", amount = 1 }]
 
 # Stamina (the combat progression design §4.5, #560): the pool weapon actives are paid from.
-# Every character of a fighting class holds it from level 1 (the granted talent Trained wind).
+# A warrior holds it from level 1 (the granted talent Charge, which spends it); anyone else gets
+# it, full, from the first weapon active a rank teaches.
 # It comes back a point every two base turns, resting too, and sits at 0 when spent; it is
 # granted full. Its maximum is 10, plus the Toughness modifier, plus a point per 10 levels, at
 # least 5; talents add on top (Deep lungs).

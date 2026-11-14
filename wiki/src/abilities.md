@@ -61,11 +61,19 @@ you never choose them, they work by themselves as you fight. They have their own
   the blow is a [sneak attack](skills.md#skill-sneak-attack), it may be [Surprised](status-effects.md#status-surprised), and it is struck without its Dexterity
   and Dodge. You cannot lurk with a hostile you see already beside you ("Too late to lurk.", no
   time). It costs nothing and has no cooldown.
-- **Low blow**: the [thief](classes.md#thief)'s, from level 12, for 3 [openings](resources.md#resource-openings). It is a melee blow, in the time of
+- **Exploit**: the [thief](classes.md#thief)'s, from level 1. It spends every [opening](resources.md#resource-openings) you hold on a melee blow, in the time of
   one, at the hostile in the direction you choose. It is a [sneak attack](skills.md#skill-sneak-attack) whatever the foe knows: the
-  dice land if it hits. The foe is not [Surprised](status-effects.md#status-surprised) by it and keeps its whole Defence. A thing
-  with no vitals takes the blow without the dice (see [Criticals](combat.md#criticals)). With nobody hostile there, it
-  is refused and costs nothing.
+  dice land if it hits, and 1d6 more for each opening spent. The foe is not [Surprised](status-effects.md#status-surprised) by it and keeps its whole Defence.
+  [Low blow](talents.md#talent-low-blow) (level 12) adds +1 to hit per opening and stuns the foe it hits. It is refused, costing nothing, with no
+  opening, nobody hostile there, a creature other than your [mark](resources.md#the-mark), or one you see without vitals (see [Exploit](resources.md#exploit)).
+- **Thrown exploit**: the [thief](classes.md#thief)'s, from level 18. The same blow as Exploit,
+  made by throwing a weapon at a hostile you see, in the time of a throw. Pick what to throw
+  (a dagger, say; never a flask), then the target. It spends every opening you hold, and the
+  weapon lands by the foe. It reaches as far as you can throw the weapon, but never more than 6
+  cells, the farthest a [sneak attack](surprise.md#sneak-attacks) lands from a throw
+  ([Long reach](talents.md#talent-long-reach) adds to that). It is refused, costing nothing, for
+  Exploit's reasons, a target out of reach, or a wall or creature you see in the way (see
+  [Thrown exploit](resources.md#thrown-exploit)).
 - **Shield bash**: anyone can bash with a shield (see [Weapon skills](weapon-skills.md)), so it is always in the menu,
   and you can use it while you hold a shield. It strikes whoever stands in the direction you
   choose, in the time of a blow.
@@ -82,7 +90,9 @@ you never choose them, they work by themselves as you fight. They have their own
   you (see [Stealing](skill-uses.md#stealing)).
 - **Feint**: anyone trained in the [Bluff](skills.md#skill-bluff) skill has it, in the skill's place among the Skills. It asks
   for a direction and lies to the hostile creature there. Unless it sees through you, it is
-  [surprised](status-effects.md#status-surprised), and your next blow finds it off guard (see [Feinting](skill-uses.md#feinting)). This is not the
+  [surprised](status-effects.md#status-surprised), and your next blow finds it off guard (see [Feinting](skill-uses.md#feinting)). For a
+  [thief](classes.md#thief) it makes the creature the [mark](resources.md#the-mark), and a feint it
+  falls for gives an [opening](resources.md#resource-openings). This is not the
   Duelist style's [False lead](fighting-styles.md#style-ability-false-lead), which is a blow.
 - **Intimidate**: anyone trained in the [Intimidate](skills.md#skill-intimidate) skill has it, in the skill's place among the
   Skills. It asks for a place you see within 6 cells and threatens the hostile creature there.
@@ -115,7 +125,7 @@ you never choose them, they work by themselves as you fight. They have their own
   while you have one.
 - **Other skills used as actions** ([Knowledge](skills.md#skill-knowledge), ...): each is in the menu once you are trained in it
   (see [Skills](skills.md)), greyed out until its use comes to the game.
-- **[Class abilities](talents.md#class-abilities)** ([Rage](abilities.md#ability-rage), [War cry](abilities.md#ability-war-cry), [Lullaby](abilities.md#ability-lullaby), [Cackle](abilities.md#ability-cackle), [Veteran's wind](abilities.md#ability-veterans-wind), [Whirlwind](abilities.md#ability-whirlwind), [Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance),
+- **[Class abilities](talents.md#class-abilities)** ([Rage](abilities.md#ability-rage), [War cry](abilities.md#ability-war-cry), [Charge](abilities.md#ability-charge), [Lullaby](abilities.md#ability-lullaby), [Cackle](abilities.md#ability-cackle), [Veteran's wind](abilities.md#ability-veterans-wind), [Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance),
   [Step of the wind](abilities.md#ability-step-of-the-wind), [Stunning strike](abilities.md#ability-stunning-strike), [Patient defence](abilities.md#ability-patient-defence), [Stillness](abilities.md#ability-stillness), [Quivering palm](abilities.md#ability-quivering-palm), [Consecrate](abilities.md#ability-consecrate), [Orison](abilities.md#ability-orison), [Sanctuary](abilities.md#ability-sanctuary), [Knock](abilities.md#ability-knock)) come
   from your [class](classes.md)'s level table (see [Classes](classes.md#levels)). Each is under Class from the level that brings
   it.
@@ -124,6 +134,25 @@ you never choose them, they work by themselves as you fight. They have their own
   - A [paladin](classes.md#paladin)'s holy gifts are never greyed out by [alignment](alignment.md), but they do nothing unless you are
     Kind or better (see [Alignment](alignment.md)).
   - They have no key of their own yet: `X` uses the one you used last again.
+- **[Charge](abilities.md#ability-charge)**, the [warrior](classes.md#warrior)'s at level 1, rushes a foe you see.
+  Aim it like a shot, at the creature. You run along the straight line to it, stop in the cell
+  before it, and strike it once, as an ordinary [melee attack](combat.md).
+  - It costs 1 [stamina](resources.md#resource-stamina), plus 1 for every cell you run. It takes the time
+    of those steps; the blow is free.
+  - You must gain at least one cell, so it is refused when you already stand beside the foe.
+  - A wall, a closed door, deep water, ice, a [trap](traps.md) you know of, or anyone you see on
+    the line refuses it before you move. So does too little stamina for the whole run, or a run out of a
+    [shop](shops.md)'s door while you owe it. A refused
+    charge takes no time and costs nothing.
+  - Nobody you pass or leave behind gets a [free blow](stances.md#free-blows) at you on the way.
+  - Someone you cannot see on the line stops you short, with no blow. A hidden trap goes off as
+    you run over it and stops you there.
+  - Charge also gives the warrior their stamina pool from level 1.
+  - With [Whirling charge](talents.md#talent-whirling-charge) (the warrior's at level 50), every
+    hostile beside a cell you run into takes a [free blow](stances.md#free-blows) as you pass, in
+    the order you pass them. Each is struck once a charge. The foe you charge at gets only the
+    charge's own blow at the end. The blows cost no time and no stamina, and a foe that falls
+    does not stop you.
 - **[War cry](abilities.md#ability-war-cry)**, the [berserker](classes.md#berserker)'s at level 25, is paid in [rage](resources.md): 4 of it, plus the time of a wait.
   So it is greyed out with "you have not the rage for it" until you [rage](abilities.md#ability-rage). You roar as loud as a
   [howl](hearing.md), heard across the floor; it wakes sleepers and draws the curious.

@@ -247,6 +247,12 @@ pub struct Actor {
     /// left out of saves and hashes then.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub risen: Option<GameTime>,
+    /// Whose guard its openings are in (the thief's mark; `world/mark.rs`): the creature its
+    /// last chosen attack was at, while it holds a pool `marked` in data (Openings). Set and
+    /// cleared only in `mark.rs`; creatures never have one. Left out of saves and hashes while
+    /// `None`, so runs without a thief save and hash as before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mark: Option<ActorId>,
     /// Its alignment score (spec §8 "Alignment"; [`crate::alignment`]): the player's, when the
     /// content has alignment rules; creatures have none, and stand where [`Actor::nature`]
     /// says. Moved only by `World::shift_alignment`; never shown as a number.
@@ -739,7 +745,7 @@ impl Actor {
                 mods.get(ItemEffect::Deflection) + talents.deflection + mage_armour,
             ),
         ];
-        // Iron stance (spec §8 "Class abilities") softens a stance's Dodge penalty.
+        // Wild guard (spec §8 "Stances") softens a stance's Dodge penalty.
         let stance =
             (content.stance_def(self.stance).defence()).map(|(category, bonus)| match category {
                 Category::Dodge => (category, talents.stance_dodge(self.stance, bonus)),
@@ -1202,6 +1208,21 @@ impl Actor {
         let range = content.object(stack.object).throw_range()?;
         let talents = self.talent_mods(content).throw_range;
         Some(range + Mods::local(stack, content).get(ItemEffect::Range) + talents)
+    }
+
+    /// How far it throws inventory stack `item` in a thrown exploit (`openings.rs`): its throw
+    /// range, no farther than its sneak dice land on a missile (the rules' `missile_reach` plus
+    /// Long reach's `sneak_reach`); `None` for what cannot be thrown so, a flask among them
+    /// (it shatters, with no point to put into a gap).
+    pub fn exploit_throw_range(&self, item: usize, content: &Content) -> Option<i32> {
+        let stack = self.inventory.get(item)?;
+        if content.object(stack.object).shatters() || stack.is_spirit() {
+            return None;
+        }
+        let range = self.throw_range(item, content)?;
+        let sneak = (content.surprise())
+            .map(|rules| rules.missile_reach + self.talent_mods(content).sneak_reach);
+        Some(sneak.map_or(range, |sneak| range.min(sneak)))
     }
 
     /// The ammunition it has ready for its launcher: the first ready stack the launcher fires.

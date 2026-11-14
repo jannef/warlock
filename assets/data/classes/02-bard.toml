@@ -39,7 +39,6 @@ bonus_talents = { levels = [5, 10, 15, 23, 28] }
 # skill 5 at 25 (#872). The Lullaby, the song against foes, at 20 (#873).
 abilities = [
     { level = 1, talent = "mend" },
-    { level = 1, talent = "trained_wind" },
     { level = 3, talent = "travelled_hands" },
     { level = 6, talent = "fast_healer" },
     { level = 8, talent = "mesmerise" },

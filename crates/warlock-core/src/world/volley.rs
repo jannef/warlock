@@ -32,6 +32,7 @@ impl World {
         match active {
             ClassActive::Volley => self.volley(at, events),
             ClassActive::Sic => self.sic(at, events),
+            ClassActive::Charge => self.charge(at, events),
             _ => Spent::Nothing,
         }
     }
@@ -69,6 +70,7 @@ impl World {
             self.spend_resource(player, cost.resource, cost.amount, events);
         }
         self.say("You loose a volley!");
+        self.choose_at_cell(at, false);
         for _ in 0..volley.shots {
             if self.state.death.is_some() {
                 break;

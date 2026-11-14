@@ -220,19 +220,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
   their character (M30, #226; the design is `docs/design/progression.md` §3). **The curve is
   written in kills** of the player's own level (`[kills]`): with m = n − 1 a level n costs
   `k(n) = plateau × m ÷ (m + ramp) + slope_per_100 ÷ 100 × m` kills (213, 5, 285: 38 for level
-  2, 163 for level 10, 223 for 20, 365 for 60, 485 for 100, before the early discount), each worth the
+  2, 163 for level 10, 223 for 20, 365 for 60, 485 for 100), times the curve's **scale**
+  (`[kills] scale`, an exact `times ÷ over`: two thirds since the owner's cut of 2026-11-13, #1468,
+  every level a third cheaper: 26 for level 2, 108 for 10, 149 for 20, 243 for 60, 323 for 100,
+  before the early discount), each worth the
   **creature XP guideline**
   `per_level × n + base` (5 and 10, which the creature data follows: a content test fails for a
   type more than three times off it either way, but for the listed outliers, the bat, the deer,
-  and the shopkeeper); a level's XP is `k(n) × guideline(n)` times its **early discount**
+  and the shopkeeper); a level's XP is `k(n) × scale × guideline(n)` times its **early discount**
   (`[early] percent`, owner 2026-10-27: 25, 30, 35, 40, 50, 60, 70, 80, 90, and 95 % for levels 2
   to 11, 100 % from level 12 on; the list may cover levels 2 to the cap, each value 1 to 100, never
   decreasing, else the file is refused), rounded once from the exact fraction, and the threshold
-  of level n is the sum over levels 2 to n (192 for level 2, 691 for 3, 1 619 for 4, 3 104 for 5,
-  29 715 for 10, 52 688 for 12, 205 205 for 20, 2 845 856 for 60, 9 966 935 for the curve's top,
+  of level n is the sum over levels 2 to n (128 for level 2, 461 for 3, 1 080 for 4, 2 070 for 5,
+  19 811 for 10, 35 127 for 12, 136 806 for 20, 1 897 239 for 60, 6 644 628 for the curve's top,
   level 100 (`max_level`, #877; `docs/design/prestige-classes.md` §5); from level 12 on
-  each level costs what it would undiscounted, so the totals are 15 892 lower than without the
-  discount: about 2 600 such kills to reach level 20 and 14 600 to reach 60; a test pins the
+  each level costs what it would undiscounted, so the totals are 10 592 lower than without the
+  discount: about 1 700 such kills to reach level 20 and 9 700 to reach 60; a test pins the
   table's hash; XP beyond the cap counts but buys nothing). The level also stops at the
   character's **class cap** (`ClassDef::max_level`, default `[levels] class_max`, 60: every class
   today; a run without a character stops there too) until a prestige class raises it, at most to
@@ -389,7 +392,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Surprise and sneak attacks** (`world/surprise.rs`, `data/surprise.toml`; #681, design
   `docs/design/surprise-and-sneak-attacks.md` §3–§5; `docs/dev/surprise.md`): being caught
   unawares, both ways round, the Sneak attack and Initiative skills (#682), slipping past
-  (#683), the thief's Lurk, Low blow, and Vanishing act (#684, §8i "The ranger's, thief's, and bard's tables"), the two weapon
+  (#683), the thief's Lurk, Exploit (#1463), and Vanishing act (#684, §8i "The ranger's, thief's, and bard's tables"), the two weapon
   abilities on the `sneak_attack` trigger (#685, §8i "Weapon abilities"), the creatures that
   sneak-attack, recover, spot, and lurk (#686, §8 "Creature behavior"), the unaware mark and
   Hair trigger (#687; Hair trigger's blow under Free blows above), and the player wiki's page,
@@ -455,18 +458,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `missile_reach` (6) cells, Chebyshev, plus Long reach's `sneak_reach`. Decided before the
     strike (no draw), the dice drawn from the gameplay stream on a hit; the player's mark Sneak
     attack (`sneak_attack`, 50 %) and Dexterity (`sneak_attack`, 20 %) on the training stream.
-    A sneak attack that hits raises the `sneak_attack` weapon-ability trigger (§8i "Weapon
+    A sneak attack that hits builds the attacker's resources (`sneak_attack`; the thief's
+    openings only on their mark, or with none standing: §8 "Resources", "The mark",
+    `world/mark.rs`). A sneak attack that hits raises the `sneak_attack` weapon-ability trigger (§8i "Weapon
     abilities": Knife in the dark, Hunter's shot) with the attack's skills, after its `hit`
     triggers (`World::sneak_trigger`); none without the dice. The thief's actives (#684): a
     Lurk's blow on a hostile that steps up beside them and was not hunting them counts as
-    unaware (`thief.rs::lurked`: the check, the strip, the dice); a Low blow passes as unaware
-    for the dice alone (`low_blow_taken`: no check, no strip).
+    unaware (`thief.rs::lurked`: the check, the strip, the dice); an Exploit passes as unaware
+    for the dice alone (`sneak_taken`: no check, no strip), its ladder's dice after them.
   - **Vitals** (critical immunity; `Content::has_vitals`, the one reader): an incorporeal
     creature, an animated object, a type carrying a tag of `no_vitals` (elemental, skeleton,
     spirit, construct), or one with `vitals = false` has no vitals: no critical is confirmed on it
     (`combat::Target::no_criticals`, set by `World::target_of` and `ambush.rs::vitals`: a threat is a plain hit, no confirmation drawn, a sure
     critical a plain hit too), no sneak dice land on it, no Master thief threat; it is surprised
-    like anyone. Vital strike or the finisher that hits one says "It has no vital spot." after
+    like anyone. Vital strike or an exploit that hits one says "It has no vital spot." after
     the blow's line. The fleshy undead have vitals. Without `data/surprise.toml` everything has
     vitals and a missile's sneak attack has no reach limit.
   - **Told after the fact**, never before, never a roll: the player's attack that rolls to hit

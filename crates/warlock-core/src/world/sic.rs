@@ -12,7 +12,7 @@
 //! - **Savage** (`data/status.toml`): the talent's `blows` degrees of a status with
 //!   `auto_critical`. While the attacker suffers one, its blows are
 //!   [`Profile::sure_critical`](crate::combat::Profile), the read `combat::strike_with` already
-//!   has for the finisher, so a critical comes with no confirmation roll; a target with no
+//!   has for an exploit's sure critical, so a critical comes with no confirmation roll; a target with no
 //!   vitals still takes a plain hit. Each blow that hits spends a degree. The status's `cost`
 //!   makes the beast half again as fast. It is no buff spell's and no potion's status, so
 //!   Hunter's bond never carries it to the ranger.

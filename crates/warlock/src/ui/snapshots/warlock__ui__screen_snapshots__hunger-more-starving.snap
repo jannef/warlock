@@ -1,6 +1,6 @@
 ---
 source: crates/warlock/src/ui/screen_snapshots.rs
-expression: "render(&case, hunger_content(nutrition))"
+expression: "render(&case, content)"
 ---
  You are starving! Eat, or you will die! --more--
 
@@ -31,4 +31,4 @@ expression: "render(&case, hunger_content(nutrition))"
 
 
 
- The Wildlands  ·  HP 19/20  ·  MP 4/4  ·  Sta 10/10  ·  Starving  ·  Lv 1  ·  08:19     ? controls
+ The Wildlands  ·  HP 19/20  ·  MP 4/4  ·  Starving  ·  Lv 1  ·  Lēof  ·  08:19          ? controls

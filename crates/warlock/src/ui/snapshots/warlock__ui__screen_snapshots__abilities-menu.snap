@@ -7,28 +7,28 @@ expression: "render(case, content.clone())"
 
 
 
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
+                    │ Class                                                    │
+                    │   b  Exploit            you have no opening              │
                     │ Skills                                                   │
-                    │   b  Disarm a trap      no known trap beside you         │
-                    │   c  Pick lock          no lock beside you               │
-                    │   d  Steal              no one beside you to rob         │
-                    │   e  Salvage            on something you carry           │
+                    │   c  Disarm a trap      no known trap beside you         │
+                    │   d  Pick lock          no lock beside you               │
+                    │   e  Steal              no one beside you to rob         │
+                    │   f  Salvage            on something you carry           │
                     │ Weapon skills                                            │
-                    │   f  Shield bash        no foe within reach              │
+                    │   g  Shield bash        no foe within reach              │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-f or Enter use   Esc close                             │
+                    │ a-g or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 
 
 
-
- The Hub  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1  ·  08:03       ? controls
+ The Hub  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Lv 1  ·  08:03  ·  11 Darkening    ? controls

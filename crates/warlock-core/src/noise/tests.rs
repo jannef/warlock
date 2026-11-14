@@ -139,6 +139,7 @@ fn actor(content: &Content, creature: &str) -> Actor {
         split_from: None,
         ally: None,
         risen: None,
+        mark: None,
         alignment: None,
         alignment_override: None,
         npc: None,

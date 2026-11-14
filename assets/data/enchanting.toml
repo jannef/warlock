@@ -11,8 +11,8 @@
 #   salvage_difficulty  what an affix's check must reach, before its tier
 #   salvage_tier_step   the tiers that add one to the check's difficulty (at least 1)
 #   level_step          the item levels of an enchanting roll that add one to its difficulty
-#                       (the recipes, to come; at least 1)
-#   seal_seconds        the time a seal adds to a recipe, in seconds (to come)
+#                       (the recipes; at least 1)
+#   seal_seconds        the time a seal adds to a recipe, in seconds
 
 salvage_difficulty = 12
 salvage_tier_step = 3

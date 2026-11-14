@@ -1,0 +1,8 @@
+[[talent]]
+id = "whirling_charge"
+name = "Whirling charge"
+tree = "class"
+granted = true
+description = "Your Charge cuts a lane: every foe beside your way takes a blow as you pass, each once, before the one you charge at takes its own."
+effects = [{ kind = "whirling_charge" }]
+systems = ["combat"]

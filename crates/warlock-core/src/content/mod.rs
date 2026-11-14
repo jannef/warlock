@@ -225,8 +225,8 @@ pub use companion::{
 };
 pub use creature::{
     Budge, Combat, CorpseGifts, Corrodes, CorrodesWhat, CreatureDef, CreatureId, DEFAULT_SIGHT,
-    Disarms, Hide, Incorporeal, NORMAL_SPEED, NaturalAttack, OnEat, SkillGift, is_proper, the,
-    the_start,
+    Disarms, Hide, Incorporeal, NORMAL_SPEED, NaturalAttack, OnEat, SkillGift, is_proper,
+    possessive, the, the_start,
 };
 pub use creature_rarity::{COMMON, CreatureRarity};
 pub use crystal::{CrystalColour, Crystals, EnchantingRules, RareMaterials};
@@ -1512,13 +1512,15 @@ impl Content {
             if let Some(first) = seen.insert(id.to_string(), path) {
                 return Err(duplicate_id("vault", id, path, first));
             }
+            // Its range first: the level parser would refuse a bad one without saying why.
+            let danger = vault::parse_danger(path, text)?.unwrap_or_default();
             let template = level::parse_level(path, id, text, &content, &default_legend)?;
             let mut vault =
                 Vault::new(template, &content).map_err(|m| ContentError::new(path, m))?;
             vault.campaign = campaign::of_path(path).map(str::to_string);
             vault.dungeons = vault::parse_dungeons(path, text)?;
             vault.turns = vault::parse_turns(path, text)?.unwrap_or(true);
-            vault.danger = vault::parse_danger(path, text)?.unwrap_or_default();
+            vault.danger = danger;
             content.vaults.push(vault);
         }
         content.load_dungeons(files)?;
@@ -4012,6 +4014,17 @@ impl Content {
         (self.talents.iter())
             .map(|(_, def)| def)
             .find(|def| def.effects.iter().any(|e| e.active() == Some(active)))
+    }
+
+    /// What the warrior's Charge costs (`world/charge.rs`), as its talent says: the stamina
+    /// every charge costs, and what each cell moved costs on top.
+    pub fn charge_cost(&self) -> Option<(u16, u16)> {
+        let def = self.class_active(ClassActive::Charge)?;
+        let per_cell = def.effects.iter().find_map(|e| match e {
+            TalentEffect::Charge { per_cell } => Some(*per_cell),
+            _ => None,
+        })?;
+        Some((def.resource.map_or(0, |r| r.amount), per_cell))
     }
 
     /// How far Sic 'em reaches (`world/sic.rs`), as its talent says.

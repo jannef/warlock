@@ -129,6 +129,24 @@ fn what_the_field_refuses_is_refused_with_a_message() {
         "danger = 3\npopulation = [\"kobold\"]",
         "no danger rule of its own",
     );
+    // A typo or a number past a danger is no range: refused, not read as every danger (#1588).
+    for (head, says) in [
+        ("danger = { form = 8 }", "`danger`: unknown field `form`"),
+        (
+            "danger = { from = 300 }",
+            "`danger`: invalid value: integer `300`",
+        ),
+        (
+            "danger = { from = 2, too = 6 }",
+            "`danger`: unknown field `too`",
+        ),
+        (
+            "danger = { base = 2, from = 3 }",
+            "`danger`: unknown field `base`",
+        ),
+    ] {
+        refused(head, says);
+    }
 
     // An outdoor vault: a local area has no danger.
     let mut files = ContentFiles::builtin();

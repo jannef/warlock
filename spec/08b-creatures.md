@@ -513,10 +513,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
   alive anywhere, the retinue too ("Your familiar lives yet."; the menu: "your familiar lives"), with
   a hostile the player sees ("Not with that watching."; "something is watching"), while a status
   blocks a cast, and without the data ("Nothing comes."). What would stop a rest breaks it off: the
-  time is spent, nothing else lost. At the end two draws on the gameplay stream, the start's draw,
+  time is spent, nothing else lost. At the end the familiar she remembers comes back (#1470): the
+  character keeps the kind and name of the first that came to her (`Character::familiar`, saved,
+  hashed; set as it comes, kept after it dies), and a calling makes that kind with that name at the
+  player's grade now, "Tibb, your cat, comes back to you out of the dark.", with no draw. Only a
+  witch who never had one draws: two draws on the gameplay stream, the start's draw,
   with `bargain_kinds` (the imp) in the race's list from `bargain_level` (30) of the character's
   class level; "Something comes out of the dark and sits at your feet." and the kind's arrival, the
-  name on the same stream as a start's, at the player's grade; on the overworld in the retinue; with
+  name on the same stream as a start's, at the player's grade; that one is remembered from then on.
+  A re-call has no chance of a rare kind or the imp. On the overworld in the retinue; with
   no free cell "Nothing comes." and the hour spent. **Familiar's sight** (the witch's level
   25, #932; passive): the shared sight of Hunter's bond with the familiar as its viewpoint, by the
   same rules, its nose reaching `nose` cells of `familiars.toml` (6) or its type's where that is

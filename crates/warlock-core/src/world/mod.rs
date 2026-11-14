@@ -112,6 +112,7 @@ mod carry;
 mod cast;
 mod cast_style;
 mod caster;
+mod charge;
 mod charm;
 mod chest;
 mod class;
@@ -217,6 +218,7 @@ mod lurk;
 mod make_do;
 mod malison;
 mod mana;
+mod mark;
 mod mastery;
 mod material_drops;
 mod merchants_eye;
@@ -259,6 +261,7 @@ mod salvage;
 mod sanctuary;
 mod schedule;
 mod scribe;
+mod seal;
 mod sear;
 mod search;
 mod second_wind;
@@ -346,6 +349,7 @@ pub use cut::{CutBand, cut_band, cut_outcome, cuttable};
 pub use decipher::undeciphered;
 pub use dig::{MAX_DIG, WORK_SCALE, dig_refusal, dig_work, digs_to_break};
 pub use disarm::SPRINGS_SHORT_BY;
+pub(crate) use enchant::craft_steps_given;
 pub use enchant::{EnchantBand, enchant_band};
 pub(crate) use encounter::view as encounter_view;
 pub use encounter::{
@@ -382,6 +386,7 @@ pub use rig::{RigRow, takes_words};
 pub use salvage::{chipped, salvage_percent, salvageable};
 pub use sanctuary::Hallow;
 pub use scribe::scribe_turns;
+pub use seal::MOST_SEALS;
 pub use set::{SetBand, set_band, settable};
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
 pub use sign_picks::BREATH_RANGE;
@@ -1078,6 +1083,7 @@ impl World {
             split_from: None,
             ally: None,
             risen: None,
+            mark: None,
             alignment: content.alignment().map(|_| alignment),
             alignment_override: None,
             npc: None,
@@ -1679,6 +1685,9 @@ impl World {
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
             Action::UseAt(active, at) => return self.use_class_at(*active, *at, events),
             Action::UseOn(active, item) => return self.use_class_on(*active, *item),
+            Action::UseThrow(active, item, at) => {
+                return self.use_class_throw(*active, *item, *at, events);
+            }
             Action::Shape(active, shape) => return self.use_class_shape(*active, shape),
             Action::Gift(active, at) => return self.use_gift(*active, *at, events),
             // A `use:ID` that names no spell but a weapon active is that active.
@@ -1837,6 +1846,8 @@ mod ceaptun_quest_tests;
 mod ceaptun_tests;
 #[cfg(test)]
 mod character_tests;
+#[cfg(test)]
+mod charge_tests;
 #[cfg(test)]
 mod charm_tests;
 #[cfg(test)]
@@ -2082,6 +2093,8 @@ mod mana_talent_tests;
 #[cfg(test)]
 mod mana_tests;
 #[cfg(test)]
+mod mark_tests;
+#[cfg(test)]
 mod mastery_tests;
 #[cfg(test)]
 mod material_draw_tests;
@@ -2321,6 +2334,8 @@ mod temper_tests;
 mod tests;
 #[cfg(test)]
 mod theft_tests;
+#[cfg(test)]
+mod thrown_exploit_tests;
 #[cfg(test)]
 mod time_tests;
 #[cfg(test)]

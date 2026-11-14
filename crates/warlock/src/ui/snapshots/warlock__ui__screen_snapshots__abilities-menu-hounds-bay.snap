@@ -7,26 +7,26 @@ expression: "render(case, content.clone())"
 
 
 
-                    ┌─ Abilities ──────────────────────────────────────────────┐
-                    │                                                          │
-                    │ Birth sign                                               │
-                    │   a  Hound's bay     you are hoarse                      │
-                    │ Class                                                    │
-                    │ > b  Veteran's wind                                      │
-                    │ Skills                                                   │
-                    │   c  Intimidate      at a place you see                  │
-                    │   d  Jewelcraft…                                         │
-                    │   e  Salvage         on something you carry              │
-                    │ Weapon skills                                            │
-                    │   f  Shield bash     no foe within reach                 │
-                    │                                                          │
-                    │ An old soldier's second breath (an ability): hit points  │
-                    │ back at once, then winded a quarter hour.                │
-                    │                                                          │
-                    │                                                          │
-                    │ a-f or Enter use   Esc close                             │
-                    └──────────────────────────────────────────────────────────┘
-
+                 ┌─ Abilities ───────────────────────────────────────────────────┐
+                 │                                                               │
+                 │ Birth sign                                                    │
+                 │   a  Hound's bay     you are hoarse                           │
+                 │ Class                                                         │
+                 │ > b  Charge          1 stamina + 1 a pace, at a place you see │
+                 │   c  Veteran's wind                                           │
+                 │ Skills                                                        │
+                 │   d  Intimidate      at a place you see                       │
+                 │   e  Jewelcraft…                                              │
+                 │   f  Salvage         on something you carry                   │
+                 │ Weapon skills                                                 │
+                 │   g  Shield bash     no foe within reach                      │
+                 │                                                               │
+                 │ Rush a foe you see along the straight way and strike it as    │
+                 │ you come (an ability): a point of stamina, and one more a     │
+                 │ pace. Nobody you pass gets a blow in.                         │
+                 │                                                               │
+                 │ a-g or Enter use   Esc close                                  │
+                 └───────────────────────────────────────────────────────────────┘
 
 
 

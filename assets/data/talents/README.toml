@@ -399,8 +399,8 @@
 #                                 would take the last hit point leaves it for `cost` of the rage
 #                                 (when that much is held; spent to nothing, the rage ends)
 #   veterans_wind { per_level, at_least, cooldown }   the active Veteran's wind (as second_wind)
-#   whirlwind                     the active Whirlwind: a blow at every hostile beside, for the
-#                                 price of one attack
+#   whirling_charge               Charge strikes every hostile beside a cell it passes, each once
+#                                 (a free blow; the one charged at not twice)
 #   lay_on_hands { per_level }    the active Lay on hands: hit points back by the level (its
 #                                 cost is the talent's `resource`: zeal)
 #   avatar { hands_cost_percent } Lay on hands heals fully, cures what ticks and every disease,
@@ -504,16 +504,27 @@
 #   ambush_threat { value }       its attacks on a creature that has not seen it threaten a
 #                                 critical that many points lower (1 to 5; ambush dice of the
 #                                 same sides add up: 1d6 and 2d6 are 3d6)
-#   finisher                      the active Master thief, aimed in a direction
-#                                 (`use:master_thief:E`): a blow that is a critical whenever it
-#                                 hits, with no confirmation roll (its price the talent's
-#                                 `resource` cost: five openings)
 #   lurk { status }               the active Lurk (`use:lurk`, a wait): that status (Lurking)
 #                                 until its next action; a hostile stepping up beside it takes
 #                                 its blow at once, caught unawares unless it was hunting it
-#   low_blow                      the active Low blow, aimed in a direction
-#                                 (`use:low_blow:E`): a blow that is a sneak attack whatever the
-#                                 foe knows (its price the talent's `resource` cost: openings)
+#   exploit                       the active Exploit, aimed in a direction
+#                                 (`use:exploit:E`): every opening held spent on one blow that
+#                                 is a sneak attack whatever the foe knows (its `resource` cost,
+#                                 1, the least it needs; refused at a foe without vitals)
+#   thrown_exploit                the active Thrown exploit, a stack then a cell
+#                                 (`use:thrown_exploit:c:12,5`): Exploit's blow as a throw at
+#                                 the creature there, within the throw's range and the sneak
+#                                 dice's reach (its `resource` cost as Exploit's)
+#   exploit_dice { dice }         an exploit that hits does `dice` more damage per opening spent,
+#                                 after Protection, never multiplied (dice of the same sides add
+#                                 up: two 1d6 are 2d6)
+#   exploit_to_hit { value }      an exploit is that much likelier to hit per opening spent
+#   exploit_status { status }     an exploit that hits leaves the foe a degree of that status
+#                                 (Low blow: Stunned)
+#   exploit_threat { value, sure_at }   an exploit threatens a critical `value` lower per
+#                                 opening spent (never below 2), and with `sure_at` or more spent
+#                                 is a critical whenever it hits, no confirmation roll (Master
+#                                 thief: 4 and 5; both at least 1)
 #   trained_skills { value }      every skill it is trained in counts that much higher
 #   grants_resource { resource }  it holds that alternative resource (data/resources.toml) from
 #                                 the moment it has the talent, at its start, for good

@@ -1,7 +1,7 @@
 # Quicken (docs/design/enchanting.md §8; docs/dev/enchanting.md "The recipes"): one affix more,
 # of the crystal's families and of the kind it lacks, on a magic item carried with one affix and
-# room for another (its capacity). A rare's Quicken takes a heart-crystal (a later phase): until
-# then a rare is refused. The check and its failure are Kindle's; the rules are
+# room for another (its capacity). A rare with room takes a heart-crystal carried
+# too and gains an affix of a kind with room. The check and its failure are Kindle's; the rules are
 # `world/enchant.rs`.
 [[recipe]]
 id = "quicken"

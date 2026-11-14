@@ -21,7 +21,7 @@ expression: "render(case, content.clone())"
 │ Pr  Presence       9                                                                             │
 │                                                                                                  │
 │ Lv  Level         1                                                                              │
-│ XP  Experience    0 / 221                                                                        │
+│ XP  Experience    0 / 147                                                                        │
 │     Talents       9                                                                              │
 │ HP  Hit points    13/13   MP  Mana       13/13                                                   │
 │ Dv  Defence       11      Pv  Protection  0                                                      │

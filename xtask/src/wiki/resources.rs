@@ -2,9 +2,10 @@
 //! the level add), its start, how it changes over time, what builds it, and whether it ends at
 //! zero.
 
-use super::text::{Term, anchored};
+use super::text::{Term, anchored, link, signed};
 use std::fmt::Write as _;
-use warlock_core::content::{Build, Content, OverTime, ResourceDef};
+use warlock_core::content::{Build, Content, OverTime, ResourceDef, TalentEffect};
+use warlock_core::dice::Dice;
 
 /// Every resource, by name.
 pub(super) fn resources(content: &Content) -> String {
@@ -70,6 +71,106 @@ pub(super) fn resources(content: &Content) -> String {
         );
     }
     out
+}
+
+/// Exploit's ladder (spec §8 "Class abilities"; the openings design §6): every class talent on a
+/// class's level table that adds to an exploit, by level, what it adds per opening spent, and
+/// the ladder from that level on.
+pub(super) fn exploit_ladder(content: &Content) -> String {
+    let book = content.talents();
+    let mut out = String::from(
+        "| Level | Talent | Adds per opening spent | An exploit from then on, per opening |\n\
+         |:---:|---|---|---|\n",
+    );
+    for class in content.classes() {
+        let mut rows: Vec<(u8, &str)> = (class.abilities.iter())
+            .map(|(level, talent)| (*level, talent.as_str()))
+            .collect();
+        rows.sort_unstable();
+        let mut ladder = Ladder::default();
+        for (level, id) in rows {
+            let Some(t) = book.id(id).map(|t| book.get(t)) else {
+                continue;
+            };
+            let adds: Vec<String> = (t.effects.iter())
+                .filter_map(|e| ladder.add(content, e))
+                .collect();
+            if adds.is_empty() {
+                continue;
+            }
+            let _ = writeln!(
+                out,
+                "| {level} | {} | {} | {} |",
+                link(Term::Talent, &t.id, &t.name),
+                adds.join("; "),
+                ladder.words()
+            );
+        }
+    }
+    out
+}
+
+/// Exploit's ladder summed so far, as [`exploit_ladder`] walks a class's table.
+#[derive(Default)]
+struct Ladder {
+    dice: Option<Dice>,
+    to_hit: i32,
+    status: Option<String>,
+    threat: u32,
+    sure_at: Option<u16>,
+}
+
+impl Ladder {
+    /// Adds `effect`, if it is one of the ladder's; what it adds in words.
+    fn add(&mut self, content: &Content, effect: &TalentEffect) -> Option<String> {
+        Some(match effect {
+            TalentEffect::ExploitDice { dice } => {
+                self.dice = Some(self.dice.map_or(*dice, |had| had.and(*dice)));
+                format!("+{dice} damage")
+            }
+            TalentEffect::ExploitToHit { value } => {
+                self.to_hit += value;
+                format!("{} to hit", signed(*value))
+            }
+            TalentEffect::ExploitStatus { status } => {
+                let name = (content.status_id(status))
+                    .map_or(status.clone(), |s| content.status(s).name.to_lowercase());
+                let named = link(Term::Status, status, &name);
+                self.status = Some(named.clone());
+                format!("a hit leaves the foe {named} (1 degree)")
+            }
+            TalentEffect::ExploitThreat { value, sure_at } => {
+                self.threat += u32::from(*value);
+                self.sure_at = Some(self.sure_at.map_or(*sure_at, |had| had.min(*sure_at)));
+                format!(
+                    "a [critical](combat.md#criticals) threat {value} lower (never below 2); with \
+                     {sure_at} or more spent, a critical whenever it hits, with no confirmation \
+                     roll"
+                )
+            }
+            _ => return None,
+        })
+    }
+
+    /// The ladder in words: "+2d6 damage, +1 to hit, stunned, threat 4 lower, sure critical
+    /// from 5".
+    fn words(&self) -> String {
+        let mut parts = vec![
+            self.dice
+                .map_or_else(|| "-".into(), |d| format!("+{d} damage")),
+        ];
+        if self.to_hit != 0 {
+            parts.push(format!("{} to hit", signed(self.to_hit)));
+        }
+        parts.extend(self.status.clone());
+        if self.threat != 0 {
+            parts.push(format!("threat {} lower", self.threat));
+        }
+        if let Some(at) = self.sure_at {
+            parts.push(format!("a sure critical from {at} spent"));
+        }
+        parts.join(", ")
+    }
 }
 
 /// `6 seconds` (a base turn), `2 minutes`, `1 minute and 30 seconds`.

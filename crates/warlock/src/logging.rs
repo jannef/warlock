@@ -25,6 +25,39 @@ pub fn init() {
     desktop::init(crate::paths::locations().logs.dir.clone());
 }
 
+/// Warnings found before the log exists (paths, settings; #1591), held until it does.
+static EARLY: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
+
+/// A warning found before `LogPlugin` is built: [`log_early_warnings`] logs it (to the log file
+/// too) once it is, or [`print_early_warnings`] prints it where the game never starts.
+pub fn warn_early(text: String) {
+    if let Ok(mut early) = EARLY.lock() {
+        early.push(text);
+    }
+}
+
+fn take_early() -> Vec<String> {
+    EARLY
+        .lock()
+        .map(|mut e| std::mem::take(&mut *e))
+        .unwrap_or_default()
+}
+
+/// Startup system: logs the warnings [`warn_early`] held.
+pub fn log_early_warnings() {
+    for text in take_early() {
+        bevy::log::warn!("{text}");
+    }
+}
+
+/// Prints the warnings [`warn_early`] held to stderr, for a launch that exits before the app
+/// runs (a file command, content that does not load).
+pub fn print_early_warnings() {
+    for text in take_early() {
+        eprintln!("warlock: warning: {text}");
+    }
+}
+
 /// The current UTC time as `YYYYMMDD-HHMMSS`.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn timestamp() -> String {

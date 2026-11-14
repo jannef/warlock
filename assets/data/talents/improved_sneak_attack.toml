@@ -3,6 +3,6 @@ id = "improved_sneak_attack"
 name = "Improved sneak attack"
 tree = "class"
 granted = true
-description = "Your sneak attacks hurt far more."
-effects = [{ kind = "ambush", dice = "2d6" }]
-systems = ["combat", "stealth", "sneak_attack"]
+description = "Your sneak attacks hurt far more, and every opening an exploit spends cuts twice as deep."
+effects = [{ kind = "ambush", dice = "2d6" }, { kind = "exploit_dice", dice = "1d6" }]
+systems = ["combat", "stealth", "sneak_attack", "resources"]

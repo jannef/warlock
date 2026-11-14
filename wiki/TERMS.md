@@ -33,6 +33,8 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A spell | `magic.md#spell-ID` | `magic.md#spell-fireball` |
 | A damage type (fire, slashing, …) | `damage-types.md#damage-ID` | `damage-types.md#damage-fire` |
 | A resource (Rage, Stamina, Ki, Focus, Inspiration, Openings, Zeal) | `resources.md#resource-ID` | `resources.md#resource-ki` |
+| The thief's mark; Exploit and what the class talents add to it | `resources.md#the-mark`, `resources.md#exploit` | |
+| Thrown exploit (the thief's, from 18) | `resources.md#thrown-exploit` | |
 | The unholy (what holy wrath falls hardest on) | `classes.md#paladin` | |
 | A stance | `stances.md#stance-NAME` | `stances.md#stance-frenzy` |
 | A stat | `stats.md#stat-NAME` | `stats.md#stat-toughness` |
@@ -226,7 +228,8 @@ above.
 | Crafting, a craft skill, craft points, who works which material, a material's work | `crafting.md`, `crafting.md#who-works-what` |
 | Salvage, taking an item apart, a gem chipped or shattered | `crafting.md#salvage` |
 | Magic crystal, a crystal's colour, consuming a crystal | `crystals.md`, a colour `crystals.md#crystal-ID` (`crystals.md#crystal-red`), `crystals.md#consuming-a-crystal` |
-| Heart-crystal, soul-fetter (rare materials) | `crystals.md#rare-materials` |
+| Heart-crystal, soul-fetter (rare materials) | `crystals.md#rare-materials`; what they do: `enchanting.md#the-rare-materials` |
+| Seal (in enchanting) | `enchanting.md#seals` |
 | Enchanting, Kindle, Quicken, Unbind, an enchanting recipe | `enchanting.md`, `enchanting.md#the-recipes` |
 | Reach (an enchanter's item level), warped (a natural 2 in enchanting) | `enchanting.md#how-strong-the-magic-is`, `enchanting.md#the-check` |
 | Cut, gem cutting, a re-cut, a gem's cut grade | `gem-cutting.md`, `gem-cutting.md#how-well-it-comes-out` |

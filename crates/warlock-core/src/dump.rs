@@ -60,7 +60,7 @@ pub enum Layer {
     /// any, then their own scores, one stat a line (`Strength 12`, lowered while a status effect
     /// or stat damage lowers it), then their alignment band (`Alignment Kind`; spec §8
     /// "Alignment", never the score), then their status effects by name (`Effects Bleeding,
-    /// Diseased`) and the diseases they know they have (`Diseases filth fever`) if any; never
+    /// Diseased`), the creature their openings are in (`Mark the kobold`), and the diseases they know they have (`Diseases filth fever`) if any; never
     /// potentials, modifiers, how severe an effect is, or a disease's timers.
     Stats,
     /// Not a map: the player's own trained skills, one a line in skill order (`Stealth 17`);
@@ -106,7 +106,8 @@ pub enum Layer {
     /// (where seen), health in words, and order; `no companion` without one.
     Companion,
     /// The player's familiar, as the companion layer says a companion (`world/familiar.rs`);
-    /// `no familiar` without one.
+    /// `no familiar` without one, `no familiar; Tibb, a cat, answers a calling` while the one
+    /// she remembers is dead (`Character::familiar`).
     Familiar,
     /// Not a map: the player's quest log, one quest a line, active first (`Rats in the arena
     /// (active, from the old hermit): Kill 3 giant rats in the Arena. 2 / 3 killed.`).
@@ -737,7 +738,7 @@ fn story_rows(world: &World) -> Vec<String> {
 }
 
 /// Which kept beast a dump says: the companion or the familiar.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 enum Kept {
     Companion,
     Familiar,
@@ -798,7 +799,18 @@ fn wears(view: &PerceptionView<'_>, ally: &crate::perception::AllyView) -> Optio
 fn kept_rows(view: &PerceptionView<'_>, kept: Kept) -> Vec<String> {
     let content = view.content();
     let Some((ally, data)) = kept.of(view) else {
-        return vec![format!("no {}", kept.id())];
+        let remembered = (view.character())
+            .and_then(|c| c.familiar.as_ref())
+            .filter(|_| kept == Kept::Familiar);
+        let Some(lost) = remembered else {
+            return vec![format!("no {}", kept.id())];
+        };
+        let kind = &content.creature(lost.creature).name;
+        return vec![format!(
+            "no familiar; {}, {} {kind}, answers a calling",
+            lost.name,
+            article(kind)
+        )];
     };
     let kind = &content.creature(ally.creature).name;
     let head = format!(
@@ -1033,6 +1045,10 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
         .collect();
     if !effects.is_empty() {
         rows.push(format!("Effects {}", effects.join(", ")));
+    }
+    // Whose guard their openings are in (`world/mark.rs`), their own choice.
+    if let Some(mark) = view.own_mark() {
+        rows.push(format!("Mark {mark}"));
     }
     let diseases: Vec<&str> = (view.own_diseases())
         .map(|d| content.disease(d).name.as_str())
@@ -1488,6 +1504,7 @@ fn aim_word(aim: Aim) -> &'static str {
         Aim::Corpse => "a corpse you see",
         Aim::Ailment => "what to treat",
         Aim::Item => "an item you carry",
+        Aim::Throw => "something to throw, then a target",
         Aim::Shape => "a weapon's shape",
         Aim::Rig => "a rig and a direction",
         Aim::Spell => "a spell you know",
@@ -1728,6 +1745,11 @@ fn actor_rows(world: &World) -> Vec<String> {
             // Who summoned it (spec §8 "Summoning"), and so whose side it took.
             let court = match a.summoner {
                 Some(by) => format!("{court}; summoned by {by}"),
+                None => court,
+            };
+            // Whose guard its openings are in (`world/mark.rs`).
+            let court = match a.mark {
+                Some(mark) => format!("{court}; mark {mark}"),
                 None => court,
             };
             // Whose ally it is, what made it one, how long it stays, and its order (spec §8
@@ -2058,6 +2080,10 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             if a.unaware {
                 seen["unaware"] = json!(true);
             }
+            // The player's mark (`world/mark.rs`).
+            if a.marked {
+                seen["marked"] = json!(true);
+            }
             // An ally of the player's (spec §8 "Allies").
             if a.ally {
                 seen["ally"] = json!(true);
@@ -2289,6 +2315,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 "id": content.resource(r.resource).id,
                 "current": r.value,
                 "max": r.max,
+                "on": view.own_mark().filter(|_| r.marked),
             }))
             .collect::<Vec<_>>(),
         "experience": view.own_experience(),
@@ -2714,6 +2741,7 @@ mod tests {
             layer_rows(&world, Layer::Abilities),
             [
                 "Transfixing stare (sign): a cell",
+                "Exploit (class): you have no opening",
                 "Disarm a trap (skill): no known trap beside you",
                 "Pick lock (skill): no lock beside you",
                 "Steal (skill): no one beside you to rob",
@@ -2723,28 +2751,33 @@ mod tests {
         );
         let value = json(&world, &[], false);
         assert_eq!(
-            value["abilities"][4],
+            value["abilities"][5],
             json!({"id": "salvage", "source": "skill", "aim": "an item you carry",
                    "unavailable": null})
         );
         assert_eq!(
-            value["abilities"][5],
+            value["abilities"][6],
             json!({"id": "shield_bash", "source": "weapon_skill", "aim": "a direction",
                    "unavailable": "no_shield"})
         );
         assert_eq!(
-            value["abilities"][1],
+            value["abilities"][2],
             json!({"id": "disarm", "source": "skill", "aim": "a direction",
                    "unavailable": "no_target:trap"})
         );
         assert_eq!(
-            value["abilities"][2],
+            value["abilities"][3],
             json!({"id": "pick_lock", "source": "skill", "aim": "a direction",
                    "unavailable": "no_target:lock"})
         );
         assert_eq!(value["abilities"][0]["aim"], "a cell");
         assert_eq!(
-            value["abilities"][3],
+            value["abilities"][1],
+            json!({"id": "exploit", "source": "class", "aim": "a direction",
+                   "unavailable": "short:openings"})
+        );
+        assert_eq!(
+            value["abilities"][4],
             json!({"id": "steal", "source": "skill", "aim": "a direction",
                    "unavailable": "no_target:mark"})
         );
@@ -2753,8 +2786,8 @@ mod tests {
             world.apply(&action);
         }
         let rows = layer_rows(&world, Layer::Abilities);
-        assert_eq!(rows[2], "Listen at a door (skill): a direction");
-        assert_eq!(rows[3], "Pick lock (skill): a direction");
+        assert_eq!(rows[3], "Listen at a door (skill): a direction");
+        assert_eq!(rows[4], "Pick lock (skill): a direction");
         // The storeroom's small shield in hand: with no foe beside, there is nobody to bash.
         let walk = "open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
                     pickup:a equip:off_hand:b";
@@ -2762,9 +2795,9 @@ mod tests {
             world.apply(&action);
         }
         let rows = layer_rows(&world, Layer::Abilities);
-        assert_eq!(rows[5], "Shield bash (weapon skill): no foe within reach");
+        assert_eq!(rows[6], "Shield bash (weapon skill): no foe within reach");
         assert_eq!(
-            json(&world, &[], false)["abilities"][5]["unavailable"],
+            json(&world, &[], false)["abilities"][6]["unavailable"],
             "no_target:foe"
         );
         assert!(!Layer::Abilities.is_dev_only());

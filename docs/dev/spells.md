@@ -548,7 +548,7 @@ cast path shares.
   exception to hidden numbers; `ui/abilities_screen.rs`, snapshots `abilities-menu-spells` and
   `abilities-menu-spells-grown`); a wand's description, once its type is known, its dice at the
   wand's rung and the user's wand rungs and its radius (`Holds Fireball: 4d6 fire, radius 2`,
-  `describe::appraised_by` through `PerceptionView::describe`; snapshot `wand-description`);
+  `describe::appraised_for` through `PerceptionView::describe`; snapshot `wand-description`);
   no "your spell grows" line anywhere: the menu shows the new dice when it next opens; the
   aiming mode by shape
   (`ui/target.rs`: `cast_spell`, `Aim::spell_line`; a cone's dots are its cells).

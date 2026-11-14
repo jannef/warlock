@@ -52,8 +52,17 @@ pub(super) struct Technique {
     /// by that shot.
     pub(super) pierce: bool,
     /// The next blow the player strikes is a sneak attack whatever its target knows (the
-    /// thief's Low blow, `thief.rs`): taken by that blow.
+    /// thief's Exploit, `openings.rs`): taken by that blow.
     pub(super) sneak: bool,
+    /// The openings the next blow the player strikes spends (Exploit, `openings.rs`; 0 none):
+    /// taken by that blow, whose sneak dice they add to.
+    pub(super) exploit: u16,
+    /// The creature a thrown exploit is aimed at (`openings.rs`): `sneak` and `exploit` are
+    /// taken by the attack on it only, and one on anyone else the missile meets first is a
+    /// plain throw. `None`: the next attack's, whoever it strikes (Exploit's blow).
+    pub(super) at: Option<ActorId>,
+    /// Whether the thrown exploit hit the creature it was aimed at: set where `exploit` is taken.
+    pub(super) struck: bool,
     /// The free blow the player is about to strike from a lurk, at this creature stepping up
     /// beside them (`thief.rs`): taken by that blow.
     pub(super) lurk: Option<ActorId>,
@@ -281,6 +290,7 @@ impl World {
         let with = me.shield_item(&content);
         let base = self.attack_price(player, ActionKind::Melee, with, skills);
         self.pay_active(id, events);
+        self.choose_mark(target);
         let blow = self.strike_with(target, seen, (Some(shield), profile, skills), events);
         self.after_attack(player, target, super::free_blow::parried(blow), events);
         if let WeaponDoes::Knockback { status, .. } = effect {
@@ -451,6 +461,13 @@ impl World {
         let with = me.weapon_item(&content);
         let base = self.attack_price(player, ActionKind::Melee, with, melee);
         self.pay_active(id, events);
+        // The one aimed at is chosen (the mark rule, `mark.rs`); the rest are swept up.
+        if let Some(&(aimed, _)) = (around.first()).filter(|(t, _)| {
+            let at = self.state.actors.get(t).map(|a| a.pos);
+            at == Some(here.step(from))
+        }) {
+            self.choose_mark(aimed);
+        }
         for (i, (target, seen)) in around.into_iter().enumerate() {
             if self.state.death.is_some() {
                 break;
@@ -469,7 +486,7 @@ impl World {
                 None => {
                     let mut profile = me.melee(&content);
                     profile.to_hit += to_hit;
-                    self.player_blow_with(target, seen, profile, events)
+                    self.strike_with(target, seen, (None, profile, melee), events)
                 }
             };
             self.after_attack(player, target, super::free_blow::parried(blow), events);
@@ -519,6 +536,7 @@ impl World {
             profile,
             range,
         };
+        self.choose_at_cell(at, false);
         self.player_looses(at, loose, events);
         self.technique = Technique::default();
         self.exert(ActionKind::Shoot);

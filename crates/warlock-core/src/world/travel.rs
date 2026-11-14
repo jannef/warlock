@@ -457,6 +457,8 @@ impl World {
         self.state.current_level = to.to_string();
         self.state.overworld_step = None;
         self.let_go(player, None);
+        // The openings stay, the mark is left behind (`mark.rs`).
+        self.unmark_on_travel();
         self.reach(to);
         if new {
             self.discover_level(to);
@@ -722,6 +724,7 @@ pub(super) fn make_creature(
         split_from: None,
         ally: None,
         risen: None,
+        mark: None,
         alignment: None,
         alignment_override: spawn.alignment,
         npc: spawn.npc.clone(),

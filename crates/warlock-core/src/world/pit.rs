@@ -247,6 +247,8 @@ impl World {
         if self.state.current_level != from {
             if let Some(level) = self.state.levels.get_mut(&from) {
                 level.terrain.set(at, rubble);
+                // The cache keeps every level visited (#1518).
+                self.lights.terrain_changed(level, &content, at);
             }
             return;
         }
