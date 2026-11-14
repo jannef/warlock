@@ -50,6 +50,32 @@ old one, a changed pick by index); accept it only when you can say why, and say 
 snapshot you cannot explain is a bug until proven otherwise. Never accept a snapshot to make a
 test pass.
 
+## One build of warlock-core
+
+Cargo resolves features per command, so `cargo test --workspace`, `cargo run -p warlock`,
+`cargo run -p warlock-cli`, and `cargo xtask` each see their own tree. A crate whose features
+differ anywhere below it gets another fingerprint, so before #1572 warlock-core (300k lines) was
+built once per tree: twice in a CI job, and again on every switch between the tests, the CLI,
+and xtask after an edit to core. Four things keep the trees equal below warlock-core:
+
+- `showcase` in `warlock` and `warlock-cli`, and xtask's dependency, name warlock-core's
+  `default` beside `showcase`, as `cargo test --workspace` turns it on;
+- the workspace's `serde` (`alloc`) and `flate2` (default features) carry what the game's tree
+  adds;
+- `crates/workspace-hack` (no code; a dependency of `warlock-cli` and xtask) pins the rest the
+  game's tree and the tests' dev-dependencies add below warlock-core, the proc macros' host
+  crates (`syn` 2 and 3, `proc-macro2`) as build dependencies;
+- `[profile.dev.build-override] debug = false`: without it, Cargo builds a host crate the game
+  also uses at runtime (`unicode-ident`) with debug info, and without it in a tree that does not.
+
+After a Bevy or dependency update, check it: after `cargo test --workspace --no-run`, each of
+`cargo build -p xtask`, `-p warlock-cli`, and `-p warlock` compiles no warlock-core. Where one
+does, compare the trees: `cargo tree -p <member> -e normal,build -f '{p} {f}'`, or, for
+everything Cargo hashes (features, profile, host or target), `RUSTC_BOOTSTRAP=1 cargo build -p
+<member> --unit-graph -Z unstable-options`; the difference goes into
+`crates/workspace-hack/Cargo.toml`. `--no-default-features` builds (the release, the web build)
+and release builds are other trees by design.
+
 ## Hot registries: insert by group, never append
 
 Every list a feature extends is edited by every feature. Two PRs that both append at the end
