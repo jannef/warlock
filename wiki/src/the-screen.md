@@ -10,7 +10,7 @@ Below the map, the **status bar** shows, from left to right:
 - The name of the level. On the overworld and in its local areas, also the region you are in.
 - Your [hit points](hit-points.md#hit-points), as `HP 18/24`: what you have left, then your most
   (see [Combat](combat.md)).
-- Your [mana](mana.md#how-much), as `MP 5/12`, the same way (see [Mana](mana.md)).
+- Your [mana](mana.md#how-much-mana-you-have), as `MP 5/12`, the same way (see [Mana](mana.md)).
 - Each [resource](resources.md) you hold, as `Rage 7` or `Focus 7/10` (see
   [Resources](resources.md)).
 - What ails you, if anything, the most urgent first: `Bleeding`, `Poisoned`, `Diseased` (see
@@ -18,7 +18,7 @@ Below the map, the **status bar** shows, from left to right:
 - How [hungry](hunger.md#how-hungry-you-are) you are, unless you are not hungry: `Hungry`, `Weak`,
   `Fainting`, `Starving`, `Satiated`, or `Bloated`. From `Hungry` down, the colour grows more
   alarming as it gets worse (see [Hunger](hunger.md#what-you-see)).
-- Your [burden](burden.md#burden-1), when you have one: `Burdened`, `Strained`, or `Overloaded`
+- Your [burden](burden.md#burden-levels), when you have one: `Burdened`, `Strained`, or `Overloaded`
   (see [Burden](burden.md)).
 - The time, the date, and the [phase of the moon](sun.md#phases) (see [Time and the
   calendar](time.md)).
@@ -42,10 +42,10 @@ first:
 2. then the moon's [phase](sun.md#phases), first shortened to its picture, then dropped;
 3. then the temperature, the region, the year of the date, and then the date.
 
-The [weather](weather.md#how-the-weather-changes), the time, your [burden](burden.md#burden-1),
+The [weather](weather.md#how-the-weather-changes), the time, your [burden](burden.md#burden-levels),
 your [hunger](hunger.md#how-hungry-you-are), your [status effects](status-effects.md#how-they-work)
 (the least urgent go first), your [resources](resources.md) (the last one goes first), your
-[mana](mana.md#how-much), your [hit points](hit-points.md#hit-points), and the name of the level
+[mana](mana.md#how-much-mana-you-have), your [hit points](hit-points.md#hit-points), and the name of the level
 stay longest. From `Hungry` down, your hunger outlasts them all. Parts come back as soon as there
 is room.
 
@@ -89,7 +89,7 @@ It takes no time. Press `@` or `Esc` to close it, or `A` for your skills.
 ## Skills
 
 `A` lists the [skills](skills.md) you are trained in. Each shows its value and a small meter of how
-practised it is, which is how big its next [roll at a level-up](skills.md#getting-better) will be.
+practised it is, which is how big its next [roll at a level-up](skills.md#improving-a-skill) will be.
 Pick a skill with the arrow keys to read what it does. It takes no time. Press `A` or `Esc` to
 close it.
 

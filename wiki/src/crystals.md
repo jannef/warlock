@@ -54,7 +54,7 @@ one: you crush it and drink what is in it. This takes a turn and needs no check,
 be hungry. It gives:
 
 - **mana**, the same for every colour, never past your maximum,
-- several [training marks](stats.md#training) in Willpower (how many is under
+- several [training marks](stats.md#raising-your-stats) in Willpower (how many is under
   [The numbers](#the-numbers)),
 - a step toward evil on your [alignment](alignment.md). A crystal is what is left of a soul.
 
@@ -77,3 +77,6 @@ colour holds, if you stop to listen (see [People](npcs.md)).
 ## The numbers
 
 {{#include generated/crystal-rules.md}}
+
+See also: [Enchanting](enchanting.md), [Crafting](crafting.md#salvage), and
+[Magic items](magic-items.md).

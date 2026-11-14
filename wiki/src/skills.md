@@ -11,7 +11,7 @@ treating a wound; those uses are explained on [Using your skills](skill-uses.md)
   100 a skill still grows, but slowly.
 - `A` shows your **[Skills](the-screen.md#skills)** screen. It lists every skill you are trained in, with its value and a
   small meter (`━━──`) of how practised it is, which is how big its next roll will
-  be (see [Getting better](#getting-better)). Use the arrow keys to read what each skill is about. Looking takes no
+  be (see [Improving a skill](#improving-a-skill)). Use the arrow keys to read what each skill is about. Looking takes no
   time. `A` on the [character screen](character.md) (`@`) opens it too, and the summary at the end of character
   creation lists the skills you will start with.
 
@@ -23,11 +23,11 @@ difference. This page gives the rules, with the exact numbers.
 Skills come in three sorts:
 
 - **Passive** skills work by themselves, all the time.
-- Some are used as **actions**: [searching](searching.md#searching-1), [picking a lock](doors.md#picking-locks), [binding a wound](skill-uses.md#treating-yourself).
-- Some are **checked by rules** when something calls for them, such as [athletics](skills.md#skill-athletics) when you [kick a door](doors.md#kicking).
+- Some are used as **actions**: [searching](searching.md#how-to-search), [picking a lock](doors.md#picking-locks), [binding a wound](skill-uses.md#treating-yourself).
+- Some are **checked by rules** when something calls for them, such as [athletics](skills.md#skill-athletics) when you [kick a door](doors.md#kicking-a-door-open).
 
 Not every skill does something yet. These do: the passive skills, [Appraise](skills.md#skill-appraise), [Negotiation](skills.md#skill-negotiation), [Athletics](skills.md#skill-athletics)
-(quicker in everything, and [kicking](doors.md#kicking) doors in; see [Doors](doors.md)), [Search](skills.md#skill-search) (see [Searching](searching.md)),
+(quicker in everything, and [kicking](doors.md#kicking-a-door-open) doors in; see [Doors](doors.md)), [Search](skills.md#skill-search) (see [Searching](searching.md)),
 [Disable device](skills.md#skill-disable-device) (disarming traps; see [Traps](traps.md#disarming-traps)), [Open lock](skills.md#skill-open-lock) (picking locks; see [Doors](doors.md#picking-locks)), [Steal](skills.md#skill-steal) (see
 [Stealing](skill-uses.md#stealing)), [Bluff](skills.md#skill-bluff) (see [Feinting](skill-uses.md#feinting)), [Heal](skills.md#skill-heal) (see [Treating yourself](skill-uses.md#treating-yourself)), and [Survival](skills.md#skill-survival) (see
 [Foraging](skill-uses.md#foraging)), [Herbalism](skills.md#skill-herbalism) (herbs on a forage, more of them [gathered](herbs.md#gathering) from the glowing fungus), [Mining](skills.md#skill-mining) (quicker
@@ -66,7 +66,7 @@ The passive skills help you more the higher they are:
   +8 at 100, +12 at 200.
 - **[Listen](skills.md#skill-listen)** lets you hear fainter sounds. Your [hearing](hearing.md) threshold drops by the number shown,
   but never below 1.
-- **[Balance](skills.md#skill-balance)** takes away some of the slowdown of a heavy load (see [Burden](burden.md)). A [burdened](burden.md#burden-1) master
+- **[Balance](skills.md#skill-balance)** takes away some of the slowdown of a heavy load (see [Burden](burden.md)). A [burdened](burden.md#burden-levels) master
   is slowed by a tenth, not a quarter. It also saves part of the time rough ground adds to a step
   ([bush](terrain.md#terrain-bush), [reeds](terrain.md#terrain-reeds), [rubble](terrain.md#terrain-rubble), ice): 60 % of the extra at 100, all of it at 200. Water and marsh
   are Swim's, not Balance's. And it saves part of the extra time a [staggered](status-effects.md#status-staggered) action costs: half at
@@ -145,7 +145,7 @@ The passive skills help you more the higher they are:
   - Standing above a creature's level by even 1 also tells you in [look mode](controls.md#look-mode) what its kind
     [resists, is immune to, and is vulnerable to](damage-types.md#armour-and-resistance), in words. That is lore about its kind, so it says
     nothing of what this one wears or has drunk, and it earns no marks.
-  - It earns marks whenever you gain [discovery experience](experience.md#discovery) (a first kill of a kind, a new place
+  - It earns marks whenever you gain [discovery experience](experience.md#experience-for-something-new) (a first kill of a kind, a new place
     that pays), and now and then whenever you roll to resist such a power, whatever comes of it.
   - A [creature](creatures.md)'s level is in its [table](creatures.md).
 - **[Sneak attack](skills.md#skill-sneak-attack)** adds d6s to a hit on a foe that has not seen you, or is [surprised](status-effects.md#status-surprised).
@@ -177,7 +177,7 @@ The passive skills help you more the higher they are:
   200). Untrained, you still cast, with nothing added.
 
 [Skill focus](talents.md#talent-skill-focus) makes one skill you are trained in count 25 higher in the table below, the way a
-[magic item](magic-items.md)'s bonus does. It works past 100 too, since 100 only slows a skill's [growth](skills.md#getting-better) and is no
+[magic item](magic-items.md)'s bonus does. It works past 100 too, since 100 only slows a skill's [growth](skills.md#improving-a-skill) and is no
 ceiling. It stacks with [Master of none](classes.md#talent-master-of-none) and any magic item. Your Skills screen still shows the value
 you trained. On most skills the +25 is worth 2 points of what the skill gives below 100, and 1
 past it. On [Stealth](skills.md#skill-stealth)'s quiet, it is 15 % less noise below 100 and 7 % past it.
@@ -190,7 +190,7 @@ never down. "—" means it gives nothing yet at that value.
 
 {{#include generated/skill-resist.md}}
 
-## Who trains what
+## Which skills you start with
 
 Each [race](races.md) trains one or two skills. Each [class](classes.md) trains a handful: a few of them well (`2d6+10`), the
 rest a little (`2d4+4`). A skill both your [race](races.md) and your [class](classes.md) train adds the two. [Humans](races.md#race-human) train no skill of
@@ -219,7 +219,7 @@ Some [creatures](creatures.md) are trained in skills too: deer listen well, and 
 [spells](magic.md#the-spells). You never see a [creature](creatures.md)'s skills in the game. They are on
 [Creatures in numbers](creature-numbers.md#stats-and-skills).
 
-## Getting better
+## Improving a skill
 
 In short: **using a skill builds up practice, and each new level turns that practice into points.**
 

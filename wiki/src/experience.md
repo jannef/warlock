@@ -1,11 +1,11 @@
-# Experience
+# Experience and levelling up
 
 Killing monsters earns **experience points** (XP), and enough of them make you a higher **level**.
 Your level (`Lv`) is in the [status bar](the-screen.md#the-screen). The
 [character screen](character.md) (`@`) shows it with your XP and the XP at which the next level
 comes, like `XP  85 / 128`. Dying shows the level you had reached.
 
-## What counts
+## Earning experience
 
 You get XP for:
 
@@ -26,7 +26,7 @@ then shows what a kill pays and how, `45 (30 × 150 %)`:
 
 {{#include generated/experience-creatures.md}}
 
-## Discovery
+## Experience for something new
 
 Meeting something new teaches you a little.
 
@@ -34,7 +34,7 @@ Meeting something new teaches you a little.
   below you it is ("You learn something of kobolds.").
 - The first time you arrive on a level, you gain a little for finding your way there ("You gain 10
   experience for finding your way here.").
-- The first time you learn a spell by reading its [grimoire](magic.md#learning-spells-from-grimoires), you gain 5 XP for each level of the spell
+- The first time you learn a spell by reading its [grimoire](magic.md#learning-a-spell), you gain 5 XP for each level of the spell
   (at least 5): 55 for a level 11 spell, 350 for a level 70 one. Spells a class gives you cost
   nothing and pay nothing; a failed reading pays nothing.
 
@@ -105,12 +105,12 @@ matters:
 
 The XP needed for each level, for a character of 100 % (a [human](races.md#race-human)
 [warrior](classes.md#warrior), say) and for the quickest and the slowest race and class. The table
-also shows what each level grows (see [What a level gives](#what-a-level-gives)) and the classes
+also shows what each level grows (see [Levelling up](#levelling-up)) and the classes
 that stop there:
 
 {{#include generated/experience-levels.md}}
 
-## What a level gives
+## Levelling up
 
 **Hit points.** Each level up to 50 raises your maximum
 **[hit points](hit-points.md#hit-points)**, and the hit points you have now, by half your
@@ -118,15 +118,18 @@ that stop there:
 From level 51 on, levels add no hit points, so hit point pools do not run away.
 
 **Stats.** Each level gives every [stat](stats.md) a chance to rise, by what you have done with it
-since (see [Stats](stats.md#training)).
+since (see [Stats](stats.md#raising-your-stats)).
 
-**Mana.** Up to level 60, each level raises your **[mana](mana.md#how-much)** by half your class's
+**Mana.** Up to level 60, each level raises your **[mana](mana.md#how-much-mana-you-have)** by half your class's
 mana plus what the better of your [Intelligence](stats.md#stat-intelligence) and
 [Willpower](stats.md#stat-willpower) adds, if that comes to anything (see [Mana](mana.md)).
 
-**Skill rolls.** Every level gives **[skill rolls](skills.md#getting-better)**: two for most classes,
+**Skill rolls.** Every level gives **[skill rolls](skills.md#improving-a-skill)**: two for most classes,
 three for a [thief](classes.md#thief) or a [ranger](classes.md#ranger), four for a
 [bard](classes.md#bard), one more for a [human](races.md#race-human), and more for a high
 [Intelligence](stats.md#stat-intelligence). You spend them on your trained [skills](skills.md)
 before you do anything else. How much each roll adds depends on how much you have used the skill
-since its last roll (see [Skills](skills.md#getting-better)).
+since its last roll (see [Skills](skills.md#improving-a-skill)).
+
+See also: [Talents](talents.md), [Skills](skills.md), and
+[Prestige classes](prestige-classes.md).

@@ -46,7 +46,7 @@ A new [wizard](classes.md#wizard) has a bonus of about 3, so about one cast in f
 spell goes wrong. A spell ten levels above that miscasts most of the time.
 
 Spellcraft is how you move the odds. A wizard who puts every [skill
-roll](skills.md#getting-better) on Spellcraft has a bonus of about 20 at level 10 and 28 at level
+roll](skills.md#improving-a-skill) on Spellcraft has a bonus of about 20 at level 10 and 28 at level
 20. At level 10 only a roll of 1 and 1 goes wrong on any spell up to level 15, and at level 20 on
 any spell up to level 23. A spell twenty levels above them still goes wrong four casts in five,
 and one in five at [rank](magic.md#spell-ranks) 10. A wizard who puts no roll on it stays at
@@ -55,7 +55,7 @@ about 5 to 8 all career.
 Classes that cast on the side start with little Spellcraft. A [ranger](classes.md#ranger) of
 level 6 casting Barkskin miscasts about one cast in four, and a new [bard](classes.md#bard)
 casting Mend about one in seven. That is intended. Their miscasts stay in the protected rows (see
-below), and a [skill roll](skills.md#getting-better) or two on Spellcraft at a level-up moves the
+below), and a [skill roll](skills.md#improving-a-skill) or two on Spellcraft at a level-up moves the
 odds a long way. So does [deepening the spell](magic.md#spell-ranks): every rank above the first
 counts as one point of bonus.
 
@@ -89,7 +89,7 @@ The results below 71 are **protected**:
 - They never drain a stat for good, make you forget a spell, turn the spell on you, or open a
   [gate](#gates).
 - They can cost you a [rank](#forgotten-spells) or two in the spell, never below rank 1, and a
-  [stat training mark](stats.md#training).
+  [stat training mark](stats.md#raising-your-stats).
 
 To reach 71 you must miss the check by 10 or more. So the worst a near miss does is leave you hurt,
 out of mana, or hindered in a fight that can still kill you.
@@ -126,7 +126,7 @@ worst every spell you know. A spell your [class](magic.md#what-your-class-gives)
 forgotten just the same. A forgotten spell is gone from the [Magic page](schools.md#the-magic-page)
 and the [abilities menu](abilities.md#the-abilities-menu), and you cannot cast it.
 
-The only way back is its [grimoire](magic.md#learning-spells-from-grimoires), exactly as you
+The only way back is its [grimoire](magic.md#learning-a-spell), exactly as you
 learned it the first time: the same reading, the same check, and the same experience. It comes
 back at rank 1, whatever rank you had.
 

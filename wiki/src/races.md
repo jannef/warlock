@@ -8,7 +8,7 @@ things:
 - It sets how old you can be when you start.
 - It adds to your [hit points](hit-points.md#hit-points).
 - It trains you in a [skill](skills.md) or two. [Humans](races.md#race-human) instead get a little
-  more in one of their class's skills (see [Skills](skills.md#who-trains-what)).
+  more in one of their class's skills (see [Skills](skills.md#which-skills-you-start-with)).
 - It may give you a rank in a [weapon skill](weapon-skills.md) or two, on top of your class's.
 - It adds a few things to your [starting kit](starting-kit.md): an [elf](races.md#race-elf)'s
   waybread, a [dwarf](races.md#race-dwarf)'s pick-axe, a [halfling](races.md#race-halfling)'s pipe. It also gives the everyday clothes and shoes of

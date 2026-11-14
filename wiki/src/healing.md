@@ -1,14 +1,51 @@
 # Healing
 
-Lost [hit points](hit-points.md#hit-points) come back by themselves over time. [Resting](resting.md)
-(`b`) is the quickest way to let that time pass. A [potion of healing](potions.md#potion-of-healing)
-brings some back at once (see [Potions](potions.md)).
+This page answers "how do I get my health back?". Lost [hit points](hit-points.md#hit-points)
+come back by themselves over time, and there are quicker ways too. What stops bleeding, poison,
+and disease is in the second section.
 
-The healing spells, [Mend](magic.md#spell-mend), [Cure wounds](magic.md#spell-cure-wounds), and
-[Benison](magic.md#spell-benison), bring some back too. On the undead they
-[harm instead](spellcasting.md#healing-harms-the-undead).
+## Getting your health back
 
-## How fast
+- **Wait or rest.** Hit points come back by themselves, faster the tougher you are
+  ([below](#how-fast-you-heal)). [Resting](resting.md) (`b`) is the quickest way to let that time pass,
+  and you heal twice as fast while you rest.
+- **Drink a potion.** A [potion of healing](potions.md#potion-of-healing), a
+  [greater](potions.md#potion-of-greater-healing) one, or a
+  [potion of full healing](potions.md#potion-of-full-healing) brings hit points back at once.
+- **Cast a spell.** [Mend](magic.md#spell-mend), [Cure wounds](magic.md#spell-cure-wounds), and
+  [Benison](magic.md#spell-benison) bring some back, and [Renewal](magic.md#spell-renewal) makes
+  you heal four times as fast. On the undead they
+  [harm instead](spellcasting.md#healing-harms-the-undead).
+- **Pray.** A [priest](classes.md#priest)'s prayer mends [wounds](prayer.md#prayer-wounds) (see
+  [Prayer](prayer.md)), and a [paladin](classes.md#paladin)'s
+  [Lay on hands](abilities.md#ability-lay-on-hands) heals with zeal.
+- **Catch your breath.** The [Second wind](abilities.md#ability-second-wind) talent gives hit
+  points back at once.
+- **Find a place that heals.** A [healing spring](altars-forges-springs.md#healing-springs) may
+  heal you when you drink at it, and in a [sanctuary](special-rooms.md#room-sanctuary) wounds heal
+  three times as fast.
+
+## Curing bleeding, poison, and disease
+
+Each of these slows or stops your healing until it ends, and each ends by itself in time
+(see [Status effects](status-effects.md) and [Diseases](diseases.md)). To end one sooner:
+
+- **[Bleeding](status-effects.md#bleeding)**: bind the wound with the
+  [Heal](skill-uses.md#treating-yourself) skill, or drink a greater healing potion or one of full
+  healing.
+- **[Poison](status-effects.md#poisoned)**: a [potion of antidote](potions.md#potion-of-antidote)
+  or of full healing, the Heal skill (it draws out some of a dose), or a priest's prayer against
+  [poison](prayer.md#prayer-poison).
+- **[Disease](diseases.md#curing-a-disease)**: an angelica root, a
+  [potion of cure disease](potions.md#potion-of-cure-disease), a temple's cure (see
+  [Services](npcs.md#services)), or a priest's prayer against [disease](prayer.md#prayer-disease).
+  The Heal skill eases one but never cures it.
+- **Stunned, frightened, or drowsy**: a [potion of clear head](potions.md#potion-of-clear-head).
+
+Those born in the year of the Unicorn have [Horn's grace](abilities.md#ability-horns-grace), which
+ends bleeding and poison and shakes off a disease.
+
+## How fast you heal
 
 At the usual pace you get a [hit point](hit-points.md#hit-points) back every so often. The tougher
 you are, the faster it comes:

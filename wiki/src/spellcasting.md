@@ -223,7 +223,7 @@ skeleton." Grave feast is not a healing spell: it drains a corpse, so this does 
 A **zone** is an area that lies on the floor for a while. [Balefire](magic.md#the-spells) burns,
 [Reek](magic.md#the-spells) poisons, [Mirk](magic.md#the-spells) darkens,
 [Slick](magic.md#the-spells) trips, and [Fume](magic.md#the-spells) smokes. All five come only
-from the [grimoires](magic.md#learning-spells-from-grimoires) and [scrolls](scrolls.md#spell-scrolls) you find (and a flask of smoke lays Fume's).
+from the [grimoires](magic.md#learning-a-spell) and [scrolls](scrolls.md#spell-scrolls) you find (and a flask of smoke lays Fume's).
 [Pitch fire](magic.md#spell-pitch-fire) burns too, in a pool where it bursts; it comes from a scroll or
 a [flask](potions.md#flasks) of it.
 
