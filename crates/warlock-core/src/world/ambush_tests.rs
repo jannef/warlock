@@ -183,19 +183,21 @@ fn the_attackers_craft_and_the_targets_initiative_shape_the_check() {
     // Against a fixture's difficulty of 1 everyone but a natural 2 makes it; a master's craft
     // (+12) and the thief's +2 make it 15, and Initiative 200 (+12) eases it again.
     let made = |sneak: u16, initiative: u16| {
+        let mut base = world(true);
+        let player = base.state.player;
+        train(&mut base, "sneak_attack", sneak);
+        let goblin = one(&base, "goblin");
+        // The player stands where the goblin cannot see: it makes the check.
+        if initiative > 0 {
+            let id = base.content.skill_id("initiative").expect("the skill");
+            let actor = base.state.actors.get_mut(&goblin).expect("goblin");
+            actor.skills.add(id, i32::from(initiative));
+        }
+        // The same world on 200 streams (one content load, not one a stream).
         let mut made = 0;
         for seed in 0..200u64 {
-            let mut w = world(true);
+            let mut w = base.clone();
             w.state.rng = crate::rng::Rng::stream(seed, "craft-test");
-            let player = w.state.player;
-            train(&mut w, "sneak_attack", sneak);
-            let goblin = one(&w, "goblin");
-            // The player stands where the goblin cannot see: it makes the check.
-            if initiative > 0 {
-                let id = w.content.skill_id("initiative").expect("the skill");
-                let actor = w.state.actors.get_mut(&goblin).expect("goblin");
-                actor.skills.add(id, i32::from(initiative));
-            }
             let mut events = Vec::new();
             w.startle(goblin, Some(player), &mut events);
             made += i32::from(!w.surprised(goblin));

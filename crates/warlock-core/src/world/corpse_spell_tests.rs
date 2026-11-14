@@ -2,7 +2,7 @@
 //! Charnel burst, Grave feast, Rouse the dead and its berserk, on the shipped spells.
 
 use super::caster_tests::{kobold_at, sp};
-use super::spell_type_tests::{cell, files, start};
+use super::spell_type_tests::{HALL_CONTENT, cell, files, start};
 use super::*;
 use crate::ability::{Ability, Aim};
 use crate::action::{Action, ReadTarget, parse_actions};
@@ -13,8 +13,7 @@ use crate::time::Duration;
 
 /// The spell types' lit hall, the player at (2, 3) knowing the three spells, with mana.
 fn world(seed: u64) -> World {
-    let content = Arc::new(Content::load(&files()).expect("content"));
-    let mut w = start(content, seed);
+    let mut w = start(HALL_CONTENT.clone(), seed);
     for spell in ["charnel_burst", "grave_feast", "rouse_the_dead"] {
         w.player_mut().spells.insert(sp(spell), 1);
     }

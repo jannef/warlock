@@ -74,12 +74,13 @@ fn rig(world: &mut World, avoid: bool) {
     world.state.rng = Rng::gameplay(seed);
 }
 
-/// How many of `tries` fresh worlds (`map`, `stats`), each on its own stream, step onto the trap
-/// east without setting it off.
+/// How many of `tries` fresh worlds (`map`, `stats`; one built, then copied), each on its own
+/// stream, step onto the trap east without setting it off.
 fn avoided(map: &str, stats: &str, tries: u64) -> u64 {
+    let fresh = world(map, stats);
     (0..tries)
         .filter(|&s| {
-            let mut w = world(map, stats);
+            let mut w = fresh.clone();
             w.state.rng = Rng::gameplay(s);
             !sprung(&step(&mut w))
         })
