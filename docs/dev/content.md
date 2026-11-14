@@ -87,6 +87,23 @@ takes its type's impl, a `Content` field, an accessor, and one line in `Content:
 `content.x = content.load_optional(files)?` (an `Option`, `None` without the file) or
 `content.load_or_default(files)?` (the type's default without it).
 
+**Tuning numbers live in data** (the owner, #1541): a number a designer would tune (a check's
+difficulty, a range or reach, a chance, a duration, a to-hit penalty, a multiplier, a floor or
+cap that is balance and not an invariant) is never a Rust `const`. It goes in the data file of
+its rule when there is one (a table or key of `data/traps.toml`, `data/hunger.toml`,
+`data/miscast.toml`, a talent effect's field, ...), else in a table of `data/tuning.toml`
+(`content/tuning.rs`, `Content::tuning`: one table per rule, every key required, each checked
+against its bounds at load), and the rule reads it from `Content`. The wiki's tables read the same
+value, so they cannot drift. What stays in Rust is structural: units and scales (`time::HOUR`,
+`dig.rs::WORK_SCALE`), array sizes and id ranges, hash constants, search bounds of an algorithm
+(`spawn.rs::TRIES`, `swim.rs::SHORE_REACH`, `trap.rs::OVERSHOOT`), path costs of the AI
+(`ai.rs`), the engine's coarse-turn stride (`stride.rs::STRIDE`), sentinels
+(`weapon_active.rs::ALL_PROTECTION`), caps that are invariants of a format or a rule
+(`seal.rs::MOST_SEALS`, `enchant.rs::RARE_LEAST`, a rare's three affixes),
+the dev actions' own numbers, and the balance probe's sample sizes. A rules file's `Default`
+(for bare test content without the file) repeats the numbers the file held when it was made;
+the file is what the game plays by.
+
 Creature types made in code (the animated objects, the mimics) are `CreatureSpec` values built
 with `..CreatureSpec::default()` (#1552), whose `Default` is serde's field defaults (a test in
 `content/creature.rs` holds them together), and go through `load_creatures` like a file's.

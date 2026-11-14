@@ -52,7 +52,7 @@ reaches the fewest hit points among them; malformed rungs refused). The wiki's
 `trap-damage.md` (`xtask/src/wiki/traps.rs::by_danger`) is the trap × band table. A trap's blow
 is dealt like any other
 (`World::trap_deals`: the target's Trap sense percent less its worn `trap_damage` (of Wariness),
-at most `TRAP_DAMAGE_CUT` = 75 % off, rounded down, at least 1; blood by `World::spill`, `hurt` with `Harm::Trap`, then the wound's
+at most `[harm] most_cut` = 75 % (`data/traps.toml`) off, rounded down, at least 1; blood by `World::spill`, `hurt` with `Harm::Trap`, then the wound's
 statuses by `World::wounded`), of the trap's `damage_type` (`TrapEffect::damage_kind`;
 docs/dev/combat.md "Damage types": a shot's and a strike's `Attack::kinds` go through
 `combat::strike`, a burst's, a bolt's, and a pit's `Damage` through `World::trap_hurts` →
@@ -91,8 +91,8 @@ kill), rolls `check::roll` (`Checked::Made` / `Failed { by }`, two gameplay draw
 `disarm_modifier` (effective Dexterity modifier plus `Actor::skill_effect(Effect::Disarm)`)
 against `World::difficulty_of(Hidden::Trap(kind))` (search's: the trap's `difficulty` plus the
 branch's depth), reports `Use::Disarm` for marks, and then removes the trap and its
-`trap_memory` (made), says so (failed by less than `SPRINGS_SHORT_BY`, 5, re-exported from
-`world`), or calls `spring_trap(at, player)` and adds the pit's climb to the price (failed by
+`trap_memory` (made), says so (failed by less than `[disarm] springs_short_by`, 5, of
+`data/traps.toml`), or calls `spring_trap(at, player)` and adds the pit's climb to the price (failed by
 more). A door's trap is the same cell's trap: nothing about doors is special. The app's
 `Ability::Disarm` asks for a direction (`InputMode::Ability`, "Disarm in which direction?") from
 the abilities menu or `KeyCommand::Disarm` (unbound). The wiki's `trap-disarm.md` table

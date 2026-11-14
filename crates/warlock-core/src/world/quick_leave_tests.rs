@@ -6,7 +6,7 @@
 //! they were.
 
 use super::caster_tests::kobold_at;
-use super::quick_leave::{QUICK_LEAVE_REACH, QUICK_LEAVE_REFUSED};
+use super::quick_leave::QUICK_LEAVE_REFUSED;
 use super::*;
 use crate::action::parse_actions;
 use crate::content::{LevelKind, Stance};
@@ -18,6 +18,11 @@ const TOWN_CELL: Pos = Pos::new(18, 28);
 
 fn content() -> Arc<Content> {
     Arc::new(Content::load(&crate::content::ContentFiles::builtin()).expect("builtin content"))
+}
+
+/// How near an unseen hostile stops the quick leave.
+fn reach(w: &World) -> i32 {
+    w.content().tuning().quick_leave.reach
 }
 
 fn town() -> World {
@@ -61,7 +66,7 @@ fn the_town_is_left_at_once_when_no_enemy_is_about() {
     let player = w.state.player;
     let near = (w.state.actors.values())
         .filter(|a| a.id != player && a.level == "ceaptun")
-        .filter(|a| a.pos.chebyshev(here) <= QUICK_LEAVE_REACH)
+        .filter(|a| a.pos.chebyshev(here) <= reach(&w))
         .map(|a| a.id)
         .collect::<Vec<_>>();
     assert!(!near.is_empty(), "someone near the square");
@@ -77,7 +82,7 @@ fn a_hostile_creature_in_sight_stops_it_however_far() {
     let kobold = kobold_at(&mut w, (14, 0), 10);
     let at = w.state.actors[&kobold].pos;
     assert!(w.perception.sees_actors_at(at), "in sight on the square");
-    assert!(at.chebyshev(w.player_pos()) > QUICK_LEAVE_REACH);
+    assert!(at.chebyshev(w.player_pos()) > reach(&w));
     refused(&mut w);
     // Gone, the way is clear again.
     w.state.actors.remove(&kobold);
@@ -91,7 +96,7 @@ fn a_hidden_hostile_creature_within_ten_cells_stops_it_and_one_farther_does_not(
     let kobold = kobold_at(&mut w, (-6, 10), 10);
     let at = w.state.actors[&kobold].pos;
     assert!(!w.perception.sees_actors_at(at), "unseen indoors");
-    assert_eq!(at.chebyshev(w.player_pos()), QUICK_LEAVE_REACH);
+    assert_eq!(at.chebyshev(w.player_pos()), reach(&w));
     refused(&mut w);
     // One row farther, eleven away: it does not count.
     w.state.actors.get_mut(&kobold).expect("the kobold").pos = Pos::new(at.x, at.y + 1);

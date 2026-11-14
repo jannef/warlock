@@ -206,6 +206,7 @@ mod theft;
 mod throw;
 mod town;
 mod trap;
+mod tuning;
 mod unique;
 mod unseen;
 mod validate;
@@ -405,7 +406,8 @@ pub use terrain::{Breakable, Freeze, FreezeSpec, StairsDir, TerrainDef, TerrainI
 pub use theft::{Blinks, SMALL as SMALL_LOOT, Steals, Takes};
 pub use throw::Throw;
 pub use town::{TownDef, TownServant};
-pub use trap::{Trap, TrapAvoid, TrapDef, TrapEffect, TrapId, TrapNoise};
+pub use trap::{Trap, TrapAvoid, TrapDef, TrapDisarm, TrapEffect, TrapHarm, TrapId, TrapNoise};
+pub use tuning::Tuning;
 pub use unique::{Power, UNIQUE, UniqueDef, Uniques};
 pub use unseen::Invisible;
 pub use vault::{DangerRange, Vault};
@@ -572,6 +574,10 @@ pub struct Content {
     trap_ids: BTreeMap<String, TrapId>,
     /// The chance of stepping onto a known trap unharmed (`[avoid]` in `data/traps.toml`).
     trap_avoid: TrapAvoid,
+    /// Disarming a known trap (`[disarm]` in `data/traps.toml`).
+    trap_disarm: TrapDisarm,
+    /// What a trap's damage may be cut by (`[harm]` in `data/traps.toml`).
+    trap_harm: TrapHarm,
     /// The numbers of searching for hidden features (`data/search.toml`, spec §8 "Searching").
     search: SearchRules,
     /// The numbers of working an item at an anvil (`data/temper.toml`, spec §7 "Special rooms").
@@ -651,6 +657,8 @@ pub struct Content {
     familiars: Option<FamiliarRules>,
     /// The rules of stat training (`data/stats.toml`, spec §8 "Stats").
     stat_training: StatTraining,
+    /// The tuning numbers of rules without a file of their own (`data/tuning.toml`, #1541).
+    tuning: Tuning,
     factions: Factions,
     lights: Vec<LightPreset>,
     light_ids: BTreeMap<String, LightId>,
@@ -1011,8 +1019,9 @@ impl Content {
         burst::check_effects(&content)?;
         let path = "data/traps.toml";
         if let Some(text) = files.get_optional(path) {
-            let (traps, ids, avoid) = trap::parse(path, text, &content)?;
-            (content.traps, content.trap_ids, content.trap_avoid) = (traps, ids, avoid);
+            let (traps, ids, rules) = trap::parse(path, text, &content)?;
+            (content.traps, content.trap_ids) = (traps, ids);
+            (content.trap_avoid, content.trap_disarm, content.trap_harm) = rules;
         }
         // Learning spells (spec §8 "Spells"): mishaps name statuses and creatures.
         content.study = content.load_optional(files)?;
@@ -1045,6 +1054,7 @@ impl Content {
         content.prayer = content.load_optional(files)?;
         content.allies = content.load_optional(files)?;
         content.stat_training = content.load_or_default(files)?;
+        content.tuning = content.load_or_default(files)?;
         content.dialogues = dialogue::parse(files.table("dialogue"), &content)?;
         content.load_hunger(files)?;
         profane::check_signatures(&content)?;

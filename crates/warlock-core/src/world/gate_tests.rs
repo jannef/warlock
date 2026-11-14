@@ -15,7 +15,7 @@ fn content(only: &str) -> Arc<Content> {
     files.insert(
         "data/miscast.toml",
         "stat = \"intelligence\"\nbase = 1000\nper_level = 1\narmour_percent = 10\n\
-         rank_ease = 1\ndie = \"2d12\"\nper_margin = 5\nsafe_below = 71\n",
+         rank_ease = 1\ndie = \"2d12\"\nper_margin = 5\nsafe_below = 71\nnear = 6\n",
     );
     let builtin = Content::builtin().expect("content");
     for m in builtin.miscasts() {

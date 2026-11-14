@@ -11,7 +11,8 @@
 //! - **fouled** (Reek): a creature that starts its turn in it suffers the poison type's rule, no
 //!   harm (the poison-immune nothing, `afflict`). It does not block sight.
 //! - **slick** (Slick): a step onto it or off it is a Dexterity check against
-//!   [`SLICK_DIFFICULTY`]; failed, Staggered, the step already spent. Nothing incorporeal slips.
+//!   the `[slick]` difficulty of `data/tuning.toml`; failed, Staggered, the step already spent.
+//!   Nothing incorporeal slips.
 //! - **dark** (Mirk): no light reaches its cells and a source on them sheds none
 //!   ([`LevelState::shade`]), so eyes that need light see nothing there, the player's and a
 //!   creature's alike (`perception/lighting.rs`, `sight.rs`, one shade for both).
@@ -51,8 +52,6 @@ use std::collections::BTreeSet;
 
 use super::cast::Cast;
 
-/// The check a step onto slick ground is made against.
-const SLICK_DIFFICULTY: i32 = 12;
 /// A player's turn, for a zone's `turns`.
 const TURN_SECONDS: u64 = 6;
 /// The dev action's zone: how many turns it lies, and the harm of a fire.
@@ -466,7 +465,11 @@ impl World {
         }
         let modifier = actor.check_modifier(&content, Stat::Dexterity);
         let pos = actor.pos;
-        if check::check(&mut self.state.rng, modifier, SLICK_DIFFICULTY) {
+        if check::check(
+            &mut self.state.rng,
+            modifier,
+            content.tuning().slick.difficulty,
+        ) {
             return;
         }
         if id == self.state.player {

@@ -5,8 +5,8 @@
 //!   ([`VisionProfile::dim`](crate::content::VisionProfile::dim): perceived light under twice the
 //!   eye's threshold), however good their darkvision, a shadowy creature is not in the snapshot,
 //!   unless it stands beside them. "You feel a cold draught." when one the player does not see
-//!   comes within [`DRAUGHT`] (`perceive.rs`). Never on the overworld, where light does not
-//!   matter.
+//!   comes within the `[unseen]` `draught` of `data/tuning.toml` (`perceive.rs`). Never on the
+//!   overworld, where light does not matter.
 //! - **Invisible** ([`Actor::invisible`]): by its type (`invisible = true`, the invisible
 //!   stalker) or by a status that is `unseen` (Invisible), it is not in the snapshot whatever
 //!   the light and however near.
@@ -22,8 +22,8 @@
 //! truth and so shows it too. Creature sight is unchanged: creatures see the unseen.
 //!
 //! **Striking at the unseen** ([`World::at_the_unseen`]): a blow of the player's at a concealed
-//! creature (a move into its cell) is at [`UNSEEN_TO_HIT`], said "You strike at something."
-//! first; a hit shows it for that turn.
+//! creature (a move into its cell) is at the `[unseen]` `to_hit` of `data/tuning.toml`, said "You
+//! strike at something." first; a hit shows it for that turn.
 //!
 //! **The self-buff step** ([`World::fades`], from `ai.rs::creature_turn` before it decides):
 //! a type with `[creature.invisible]` gives itself the Invisible status whenever it holds neither
@@ -45,11 +45,6 @@ use crate::geom::Pos;
 use crate::noise::Act;
 use crate::status::Effect;
 
-/// What a blow at a creature the player does not see adds to its to-hit (the Averted penalty's
-/// number, docs/design/monster-dread.md §5.11).
-pub(crate) const UNSEEN_TO_HIT: i32 = -4;
-/// How near (Chebyshev) an unseen shadowy creature must be for the player to feel its draught.
-pub(crate) const DRAUGHT: i32 = 2;
 /// What the player feels as an unseen shadowy creature comes near.
 pub(crate) const DRAUGHT_LINE: &str = "You feel a cold draught.";
 
@@ -167,7 +162,7 @@ impl World {
         self.say(format!("You can see {who} again."));
     }
 
-    /// `profile`, a blow by `attacker` at `target`, at [`UNSEEN_TO_HIT`] when it is the
+    /// `profile`, a blow by `attacker` at `target`, at the `[unseen]` `to_hit` when it is the
     /// player's at one they do not see for its being unseen.
     pub(super) fn at_the_unseen(
         &self,
@@ -176,7 +171,7 @@ impl World {
         mut profile: Profile,
     ) -> Profile {
         if attacker == self.state.player && self.perception.conceals(target) {
-            profile.to_hit += UNSEEN_TO_HIT;
+            profile.to_hit += self.content.tuning().unseen.to_hit;
         }
         profile
     }

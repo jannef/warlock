@@ -2,11 +2,11 @@
 //! #632): of Siphoning's mana (`mana_on_kill`) and of the Hunt's point of a pool
 //! (`resource_on_kill`, keyed by the pool the affix names), read from what the slayer wears and
 //! wields. **The limit**: only a kill by the wearer's own blow, shot, throw, or spell, the slain
-//! within [`SIPHON_RANGE`] cells, counts. The one caller is the kill point of an attack, where
-//! both actors' cells are known: `fight.rs::resolve` (a blow, a shot, a throw, a creature's
-//! spell) and `spell.rs::spell_strikes` (a spell of the player's, a scroll's, a breath). A death
-//! by a status tick (poison, bleeding), a trap, a fall, or hunger goes through `dies` alone and
-//! never reaches it; a summoned creature's kill is its own (the summoner wears nothing of it).
+//! within the `[siphon]` range of `data/tuning.toml`, counts. The one caller is the kill point of
+//! an attack, where both actors' cells are known: `fight.rs::resolve` (a blow, a shot, a throw, a
+//! creature's spell) and `spell.rs::spell_strikes` (a spell of the player's, a scroll's, a breath).
+//! A death by a status tick (poison, bleeding), a trap, a fall, or hunger goes through `dies` alone
+//! and never reaches it; a summoned creature's kill is its own (the summoner wears nothing of it).
 //! Creatures' kills count under the same rule. The data's `builds` and the talents' (a kill
 //! builds Inspiration, Second breath) stay in `dies`, for any kill. No draw, no saved state: a
 //! slayer wearing none of these changes nothing.
@@ -16,15 +16,11 @@ use crate::content::{Effect as ItemEffect, ResourceId};
 use crate::fov::radius2;
 use crate::geom::Pos;
 
-/// How far the slain may stand from the slayer for the on-kill affixes to count, in cells
-/// (Euclidean, as every radius: [`radius2`]): melee always, a shot or a spell at close quarters.
-/// The player is told "close by"; the wiki says three.
-pub const SIPHON_RANGE: i32 = 3;
-
 impl World {
     /// Actor `by`'s own blow, shot, or spell killed actor `slain`, which stood at `at`: when
-    /// that was within [`SIPHON_RANGE`] of `by`, its worn `mana_on_kill` raises its mana, never
-    /// past its maximum, and its worn `resource_on_kill` raises each pool it holds that the
+    /// that was within the `[siphon]` range of `by` (Euclidean, as every radius: [`radius2`]; the
+    /// player is told "close by", the wiki says how far), its worn `mana_on_kill` raises its mana,
+    /// never past its maximum, and its worn `resource_on_kill` raises each pool it holds that the
     /// affix names, never past that pool's maximum (an affix never grants a pool).
     pub(super) fn siphon(&mut self, by: ActorId, (slain, at): (ActorId, Pos)) {
         if by == slain {
@@ -34,7 +30,7 @@ impl World {
         let Some(actor) = self.state.actors.get(&by) else {
             return;
         };
-        if actor.pos.dist2(at) > radius2(SIPHON_RANGE) {
+        if actor.pos.dist2(at) > radius2(self.content.tuning().siphon.range) {
             return;
         }
         let mods = actor.mods(&self.content);

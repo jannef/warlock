@@ -140,7 +140,7 @@ of the next merge. So each kind of fact has **one home**; everywhere else links 
 | Kind of fact | Its one home | Elsewhere |
 |---|---|---|
 | Player-visible rules: what the game does | `spec/`, the section's bullet | link "§N Name" |
-| Numbers kept in data | the data file under `assets/` | the wiki's generated tables show them (`xtask/src/wiki/`); never retyped in prose |
+| Numbers kept in data, and every tuning number (`docs/dev/content.md` "Tuning numbers live in data") | the data file under `assets/` (the rule's own, else `data/tuning.toml`), never a Rust `const` | the wiki's generated tables show them (`xtask/src/wiki/`); never retyped in prose |
 | Modules, functions, invariants, tests | `docs/dev/<topic>.md` | link the topic and its heading |
 | Flags, `--scenario` and `--screen` names, dump layers, action text, replay files | `docs/dev/cli.md` | CLAUDE.md and spec §9 link |
 | Explanation for players | `wiki/` | |

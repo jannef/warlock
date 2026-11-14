@@ -209,7 +209,7 @@ fn only_levels_with_a_danger_keep_a_spawner() {
 }
 
 /// The property test of the design (§9.6): over many seeds, nothing comes in view or within
-/// [`spawn::AWAY`] cells, nothing above the danger but out-of-depth draws within 3, a unique
+/// the `[spawn]` `away` cells, nothing above the danger but out-of-depth draws within 3, a unique
 /// type once, and the cap holds.
 #[test]
 fn what_comes_comes_out_of_sight_near_the_danger_and_within_the_cap() {
@@ -230,7 +230,7 @@ fn what_comes_comes_out_of_sight_near_the_danger_and_within_the_cap() {
                 actor.pos
             );
             assert!(
-                actor.pos.chebyshev(w.player_pos()) >= spawn::AWAY,
+                actor.pos.chebyshev(w.player_pos()) >= w.content().tuning().spawn.away,
                 "seed {seed}"
             );
             assert!(def.level <= danger + 3, "seed {seed}: {}", def.id);

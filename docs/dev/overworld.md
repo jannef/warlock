@@ -25,7 +25,7 @@ field), so it is left by its edge like a local area (Cēaptūn has no stairs). T
 stairs up underfoot on an `Outdoor` level with an `exit` goes through `leave_by_edge` (priced as
 `Stairs` by the dispatch) unless `enemies_about`: an actor on the level with
 `Stance::Hostile` toward the player that `Perception::sees_actors_at`, or any within
-`QUICK_LEAVE_REACH` (10, Chebyshev) unseen; ground truth, read as a rule. Refused, it says
+`[quick_leave] reach` (`data/tuning.toml`; 10, Chebyshev) unseen; ground truth, read as a rule. Refused, it says
 `QUICK_LEAVE_REFUSED` and spends nothing. `take_stairs` calls it in its "no way" branch, so stairs
 underfoot win and dungeons and the overworld are untouched. Tests: `world/quick_leave_tests.rs`.
 The edge rule (#803, `world/edge_leave.rs`): `player_moves` off the grid of a level with an

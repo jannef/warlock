@@ -150,7 +150,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     trap's `difficulty`, the one finding it takes (with a branch's `hidden_per_depth`, §8
     "Searching"). Made: the trap is gone (from the level and from memory), "You disarm the
     arrow trap."; it earns nothing else. Failed: it stays, "You fail to disarm the arrow trap.";
-    failed by 5 or more (`SPRINGS_SHORT_BY`; a natural 2 fails but falls short only by what the
+    failed by 5 or more (`springs_short_by` in `data/traps.toml`; a natural 2 fails but falls short only by what the
     numbers say): "You set off the arrow trap!", and it goes off at the player as if they had
     set it off from where they stand (`World::spring_trap(at, player)`, as a trapped door is
     opened from the next cell: its arrow from the slit at them, its spears at them, its blast

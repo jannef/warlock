@@ -4,10 +4,11 @@
 //! check against bonds is part of the attempt (`hold.rs`): no action, no ability row, no key.
 //!
 //! The player's Dexterity modifier, what talents add to Dexterity's checks, and Escape artist's
-//! `escape` points, against [`DIFFICULTY`] plus the creature's Willpower modifier (and its
-//! talents'). Two draws of the gameplay stream. Made, the step goes ahead as the swap of a
-//! talked-to NPC does (`talk.rs::swap_places`); failed, the turn is the step's price and the
-//! player stays. Every try marks Escape artist ([`Use::Wriggle`]) at the data's chance.
+//! `escape` points, against the `[wriggle]` difficulty of `data/tuning.toml` plus the creature's
+//! Willpower modifier (and its talents'). Two draws of the gameplay stream. Made, the step goes
+//! ahead as the swap of a talked-to NPC does (`talk.rs::swap_places`); failed, the turn is the
+//! step's price and the player stays. Every try marks Escape artist ([`Use::Wriggle`]) at the
+//! data's chance.
 //!
 //! Never for a hostile creature (the step is a blow then), a creature too big to squeeze past, one
 //! that cannot move at all (overloaded), or while swimming (those refusals stand), and never for a
@@ -19,9 +20,6 @@ use super::*;
 use crate::check::check;
 use crate::skills::Effect as SkillEffect;
 use crate::stats::Stat;
-
-/// What a creature in the way adds to the check beside its Willpower modifier.
-const DIFFICULTY: i32 = 11;
 
 /// How a step into a creature that will not make way came out.
 pub(super) enum Wriggled {
@@ -60,7 +58,7 @@ impl World {
         let past = check(
             &mut self.state.rng,
             modifier,
-            DIFFICULTY.saturating_add(nerve),
+            content.tuning().wriggle.difficulty.saturating_add(nerve),
         );
         if self.trains(Use::Wriggle) {
             self.train(Use::Wriggle);

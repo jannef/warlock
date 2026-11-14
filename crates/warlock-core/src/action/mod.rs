@@ -138,10 +138,10 @@ pub enum Action {
     /// of `intimidate`; refused (no time) untrained, at no one seen, out of reach, at one not
     /// hostile, or at one with no vitals.
     Intimidate(Pos),
-    /// Throw the player's voice to a cell they see within [`crate::world::VOICE_RANGE`] (spec §5
-    /// "Hearing"): a voice sounds there, and creatures that hear it and do not see its cell go
-    /// and look. Takes the time of `throw_voice`; refused (no time) at a cell they do not see,
-    /// out of reach, solid, or their own.
+    /// Throw the player's voice to a cell they see within the `[throw_voice]` range of
+    /// `data/tuning.toml` (spec §5 "Hearing"): a voice sounds there, and creatures that hear it and
+    /// do not see its cell go and look. Takes the time of `throw_voice`; refused (no time) at a
+    /// cell they do not see, out of reach, solid, or their own.
     ThrowVoice(Pos),
     /// Give every ally of the player's on the level an order (spec §8 "Allies";
     /// `world/ally.rs`): `order:follow` (Come to heel), `order:stay` (Hold here), `order:hunt:X,Y`

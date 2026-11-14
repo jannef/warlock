@@ -40,18 +40,16 @@ use crate::content::{
 };
 use crate::object::Stack;
 
-/// The most the worn items of the Alchemist raise the chance a potion is kept to, in percent,
-/// with Thrifty drinker's (a talent's own chance above it stands).
-pub(super) const MAX_KEPT: u8 = 50;
-
 impl Actor {
     /// The chance in percent a potion this actor drinks is not used up: Thrifty drinker's
     /// (`MagicMods::potion_kept`) plus the worn items' `potion_kept` (of the Alchemist,
-    /// unidentified too), the sum held to [`MAX_KEPT`] unless the talent alone is above it.
+    /// unidentified too), the sum held to the `[potion_kept]` `most` of `data/tuning.toml` unless
+    /// the talent alone is above it.
     pub fn potion_kept(&self, content: &Content) -> u8 {
         let talent = self.talent_mods(content).magic.potion_kept;
         let worn = self.mods(content).get(Effect::PotionKept).max(0);
-        let sum = (i32::from(talent) + worn).min(i32::from(MAX_KEPT.max(talent)));
+        let most = content.tuning().potion_kept.most;
+        let sum = (i32::from(talent) + worn).min(i32::from(most.max(talent)));
         u8::try_from(sum).unwrap_or(talent)
     }
 }

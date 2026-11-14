@@ -383,7 +383,7 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `Ability::Sign(SignActive)` (`Source::Sign`, the menu's Birth sign group between Racial and
   Class) are the birth sign's actives (`docs/dev/character-creation.md`): listed while some talent
   has one, had by whoever's `TalentMods` has it, `While(cooldown)`; their action is
-  `Action::Gift` (`use:horns_grace`, `use:transfixing_stare:X,Y`, a cell at `STARE_RANGE`).
+  `Action::Gift` (`use:horns_grace`, `use:transfixing_stare:X,Y`, a cell within the stare's `range`).
   `Ability::Class(ClassActive)` (`Source::Class`) are the class actives
   (`docs/dev/progression.md` "Class actives"): listed while some talent has one, had
   by whoever's `TalentMods` has it, `While(cooldown)`; their action is

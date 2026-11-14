@@ -7,12 +7,12 @@
 //! Dexterity modifier (of the effective score, spec §8 "Stats") plus what Disable device gives,
 //! against the trap's difficulty (the one finding it takes, deeper on a branch too:
 //! [`World::difficulty_of`]). Made, the trap is gone; failed, it stays, and failed by
-//! [`SPRINGS_SHORT_BY`] or more it goes off at the player ([`World::spring_trap`]: an arrow from
-//! its slit at them, spears at them, its blast, its bolt through them, a pit's fall and climb, an
-//! alarm, a teleport of them; a burst on a chest blows the chest apart). Every try takes the `disarm` action's time and may earn Disable
-//! device a training mark (training stream), whatever comes of it; nothing remembers a failed
-//! one, so the next try may make it (no limit on trying again: the owner's rule; time and the
-//! risk are the price).
+//! the `[disarm]` `springs_short_by` of `data/traps.toml` or more it goes off at the player
+//! ([`World::spring_trap`]: an arrow from its slit at them, spears at them, its blast, its bolt
+//! through them, a pit's fall and climb, an alarm, a teleport of them; a burst on a chest blows the
+//! chest apart). Every try takes the `disarm` action's time and may earn Disable device a training
+//! mark (training stream), whatever comes of it; nothing remembers a failed one, so the next try
+//! may make it (no limit on trying again: the owner's rule; time and the risk are the price).
 //!
 //! Without the skill, or without a trap the player knows of there (a hidden one is as good as
 //! none: the refusal is the same, so it gives nothing away), the action is refused and takes no
@@ -27,9 +27,6 @@ use crate::content::ActionKind;
 use crate::geom::Dir;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
-
-/// How far short of a trap's difficulty a failed try must fall to set the trap off.
-pub const SPRINGS_SHORT_BY: i32 = 5;
 
 impl World {
     /// The player tries to disarm the trap they know of in `dir` (module docs). Returns what it
@@ -63,7 +60,7 @@ impl World {
                 self.say(format!("You disarm the {name}."));
                 Spent::Turn(price)
             }
-            Checked::Failed { by } if by >= SPRINGS_SHORT_BY => {
+            Checked::Failed { by } if by >= self.content.trap_disarm().springs_short_by => {
                 self.say(format!("You set off the {name}!"));
                 // A burst on a chest blows it apart (spec §8 "Chests").
                 let (climb, _) = self.spring_chest_trap(at, player, events);

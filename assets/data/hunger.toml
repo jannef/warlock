@@ -73,6 +73,14 @@ vomit = 50
 vomit = 50
 harm = "1d4"
 
+# Telling freshness (`world/freshness.rs`): one trained in a skill that tells it (Appraise,
+# Survival: skills/ `freshness`) may tell by looking whether food is fresh, old, or rotten. The
+# chance in percent is what those skills give, plus `rotten_ease` for food that has rotted (it
+# shows), at most `most` (0 to 100: a trained eye can still miss).
+[freshness]
+rotten_ease = 25
+most = 95
+
 # Corpses: a creature that dies leaves one (`corpse = false` in creatures.toml for none), made of
 # `material` and weighing what the creature did. It rots from the moment of the death.
 [corpses]

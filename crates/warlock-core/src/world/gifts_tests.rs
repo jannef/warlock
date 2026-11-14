@@ -376,8 +376,8 @@ fn the_transfixing_stare_slows_a_foe_that_sees_you() {
     w.perceive(&mut Vec::new());
     assert_eq!(own(&w, SignActive::TransfixingStare), Some(None));
     assert_eq!(
-        Ability::Sign(SignActive::TransfixingStare).range(),
-        Some(STARE_RANGE)
+        Ability::Sign(SignActive::TransfixingStare).reach(w.content()),
+        Some(6)
     );
     // At yourself, or where you see no one: refused, no time.
     assert!(

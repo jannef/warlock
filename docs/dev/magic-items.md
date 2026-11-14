@@ -130,7 +130,7 @@ hooks' items in `Actor::spell_mods` (`world/spell_mods.rs`, beside the talents':
 `spell_duration` as degrees; no tag filter on an item yet), `spell_threat` in `Actor::spell_threat` (22 less it, never below `THREATS`' floor;
 an own cast only, `reflect::Shot::threat`). **The potion and wand hooks** (E2, #633;
 `world/affix_draught_tests.rs`): `potion_kept` in `Actor::potion_kept` (Thrifty drinker's chance
-plus the worn, held to `potion::MAX_KEPT` 50 unless the talent alone is above it; `take_draught`
+plus the worn, held to `[potion_kept] most` 50 (`data/tuning.toml`) unless the talent alone is above it; `take_draught`
 draws only above 0), `wand_rungs` (of Wands) in `Actor::spell_mods` (beside Wand mastery's). Each hook's tests bring fixture affix files
 (`ContentFiles::insert("data/affixes/zz_fixture.toml", ...)`, as `magic/tests.rs` does).
 `spell_ease` is an item effect (local: the piece's own `spell_cost_percent`), allowed on body
@@ -145,7 +145,7 @@ sum by (effect, resource) in `Mods::pools`, read with `Mods::resource(effect, id
 stamina, global) in `Actor::weapon_stamina`. **On a kill** (E1, #632; `world/siphon.rs`,
 `world/siphon_tests.rs`): `mana_on_kill` and `resource_on_kill` in `World::siphon`, called at
 the kill point of an attack (`fight.rs::resolve`, `spell.rs::spell_strikes`), the slain within
-`SIPHON_RANGE` (3, a radius); never from `dies`, so a status tick's or a trap's death gives
+the `[siphon]` range of `data/tuning.toml` (3, a radius); never from `dies`, so a status tick's or a trap's death gives
 nothing. **`Group`** is a struct `{ effect, skill, damage_type, resource }` (`Group::of` for an
 effect that names nothing else): one group per (effect, resource), so Tireless (stamina) and of
 Fury (rage) are two. **`ItemKind::Tool`** (`ALL` is a slice; the `tools`
@@ -181,7 +181,7 @@ reads it, through `Actor::mods` (so unidentified gear works, and a creature's ge
 rule reads a creature): `door_kick` in `World::kick_force` (`world/door.rs`, a door's kick and a
 chest's), `dig_percent` in `dig_turn`, `hunger` in `World::hunger_percent` (subtracted: hunger
 comes slower; the pace at least 1), `trap_damage` in `trap_deals` (subtracted from Trap sense's
-percent, the sum at most `TRAP_DAMAGE_CUT` = 75 off), `disease_check` in
+percent, the sum at most `[harm] most_cut` of `data/traps.toml` = 75 off), `disease_check` in
 `World::disease_modifier`. Tests on fixture affixes: `world/affix_utility_tests.rs`. The
 pick-axe is the one `tool` base item (`level = 3`, `frequency = 10`); `Numbers::of` shows a
 tool nothing, and `describe`'s base stats give any digging tool's power ("Digs at 10"). Delving,

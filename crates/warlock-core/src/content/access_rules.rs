@@ -5,7 +5,7 @@ use super::{
     ForageRules, GearConditions, HerbRules, HungerDef, IntimidateRules, InvestRules, MiningRules,
     PatronRules, PrayerRules, RangedRules, RequiredIds, RigRules, RuinRules, SalvageRules,
     SearchRules, SmiteRules, StatTraining, StealRules, StipendRules, SurpriseRules, SwimRules,
-    TagDrops, TemperRules,
+    TagDrops, TemperRules, Tuning,
 };
 
 impl Content {
@@ -161,6 +161,12 @@ impl Content {
     /// [`StatTraining::default`]: nothing trains).
     pub fn stat_training(&self) -> &StatTraining {
         &self.stat_training
+    }
+
+    /// The tuning numbers of rules without a data file of their own (`data/tuning.toml`, #1541;
+    /// its defaults without the file).
+    pub fn tuning(&self) -> &Tuning {
+        &self.tuning
     }
 
     /// The numbers of working an item at an anvil (spec §7 "Special rooms"; `data/temper.toml`,

@@ -342,7 +342,7 @@ fn an_averted_gaze_makes_the_player_avert_their_eyes_while_they_see_it() {
     let profile = w.state.player().melee(w.content());
     assert_eq!(
         w.averted_blow(me, profile.clone()).to_hit,
-        profile.to_hit + avert::AVERTED_TO_HIT
+        profile.to_hit + w.content().tuning().averted.to_hit
     );
     let basilisk = first_of(&w, "basilisk").id;
     assert_eq!(

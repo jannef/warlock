@@ -65,6 +65,8 @@ pub struct MiscastRules {
     pub per_margin: i32,
     /// An entry whose `to` is below this is protected (module docs).
     pub safe_below: i32,
+    /// "Near the caster" for a swap and a boon, in steps (Chebyshev), in a clear line.
+    pub near: i32,
     /// The faction a backfired summon's creatures come in (`world/backfire.rs`), hostile to
     /// everyone; `None`: their type's own.
     #[serde(skip)]
@@ -72,8 +74,8 @@ pub struct MiscastRules {
 }
 
 impl MiscastRules {
-    /// Parses `data/miscast.toml`: `armour_percent` positive, a die that rolls at least 1, a
-    /// `backfire_faction` that is a known faction.
+    /// Parses `data/miscast.toml`: `armour_percent` positive, a die that rolls at least 1, `near`
+    /// 1 to 40, a `backfire_faction` that is a known faction.
     pub(super) fn parse(file: &str, text: &str, factions: &Factions) -> Result<Self, ContentError> {
         let err = |m: &str| ContentError::new(file, m);
         let mut table: toml::Table = toml::from_str(text).map_err(|e| err(&e.to_string()))?;
@@ -92,6 +94,9 @@ impl MiscastRules {
         }
         if parsed.die.min() < 1 {
             return Err(err("`die` must roll at least 1"));
+        }
+        if !(1..=40).contains(&parsed.near) {
+            return Err(err("`near` must be 1 to 40"));
         }
         Ok(parsed)
     }
@@ -281,7 +286,7 @@ mod tests {
     #[test]
     fn the_rules_say_the_difficulty() {
         let text = "stat = \"intelligence\"\nbase = 8\nper_level = 1\narmour_percent = 10\n\
-            rank_ease = 1\ndie = \"2d12\"\nper_margin = 5\nsafe_below = 71\n";
+            rank_ease = 1\ndie = \"2d12\"\nper_margin = 5\nsafe_below = 71\nnear = 6\n";
         let none = Factions::default();
         let r = MiscastRules::parse("miscast.toml", text, &none).expect("valid");
         assert_eq!(r.backfire_faction, None, "left out: the type's own");

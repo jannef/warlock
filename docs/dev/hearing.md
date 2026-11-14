@@ -45,7 +45,7 @@ with their words by `World::say_mutters` instead, as notes). The app draws
 `PerceptionView::sounds()` in `ui/sounds.rs` (a still `◌` marker, always: it is information; the
 ripple only with `glyph_animation`), and there too where the player's own thrown voice sounded
 (`Event::VoiceThrown` in the last outcome, as a loud sound). Throwing one's voice (#235) is
-`world/voice.rs` (`World::throw_voice`, `VOICE_RANGE`; tests `world/voice_tests.rs`): refused
+`world/voice.rs` (`World::throw_voice`, `[throw_voice] range` of `data/tuning.toml`; tests `world/voice_tests.rs`): refused
 on the overworld, at the player, out of reach, or at a cell not `sees_actors_at` or solid; else
 one `make_noise(player, Act::ThrowVoice(at))`, so the AI's listening step sends creatures with
 enemies that do not see the cell there. Sounds carry at most `noise::MAX_REACH` (30) cells, under
@@ -55,7 +55,7 @@ Listening at a door (#1026, `world/listen.rs`): `Ability::Listen` (the Listen sk
 skill with the `hearing` effect, listed as it in its place) sends `Action::Listen(dir)` (`listen:E`),
 refused with no time without the skill or a closed door (a terrain with `opens_to`) that way.
 Else it sets `WorldState::listening` (`noise::Listening { at, keener }`, `keener` = the
-`hearing` effect plus `EXTRA_KEEN` 2; never saved, cleared as `World::apply` ends), marks
+`hearing` effect plus `[listen] keener` 2 of `data/tuning.toml`; never saved, cleared as `World::apply` ends), marks
 `Use::Listen` (100 % in `skills/`), and spends a wait's time. While it is set, `noise::hearers`
 lowers the player's threshold by `keener` for the sound that reaches them by the door cell (the
 field's loudness there less one step), and `World::hear` tells every sound of the turn, news or

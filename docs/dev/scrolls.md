@@ -30,7 +30,7 @@ The rules are `world/read.rs`: `Action::Read { item, target: Option<ReadTarget> 
 `read:b:12,5` a cell, `read:b:c` a stack; `ReadTarget::{Cell, Item}`), one arm in
 `player_acts`, priced `ActionKind::Read` (`read` in `data/actions.toml`; `read_price` scales it
 by `MagicMods::read_percent`, Scroll savant's and Scroll adept's halves, never below
-`READ_FLOOR`, a quarter) before the scroll is
+`[read] least_percent` of `data/tuning.toml`, a quarter) before the scroll is
 used up (`use_up`, which follows the equipment's letters; it reports the Read stat use and
 `Use::Read`, Decipher script's 50 % mark, #1270: all reading trains it). Refusals take no time
 and keep the scroll. A read is a cast (`World::read_cast`, below): a damage spell checks `can_loose_here`

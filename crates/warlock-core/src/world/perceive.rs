@@ -46,12 +46,12 @@ impl World {
         seen
     }
 
-    /// Those of [`World::hostiles_in_view`] within [`super::rest::CLOSE`] of the player: whose
+    /// Those of [`World::hostiles_in_view`] within [`World::stop_within`] of the player: whose
     /// coming there stops a rest.
     pub(super) fn watched_in_view(&self) -> Vec<ActorId> {
         let here = self.player_pos();
         let mut seen = self.hostiles_in_view();
-        seen.retain(|id| self.state.actors[id].pos.chebyshev(here) <= super::rest::CLOSE);
+        seen.retain(|id| self.state.actors[id].pos.chebyshev(here) <= self.stop_within());
         seen
     }
 
@@ -121,12 +121,13 @@ impl World {
     /// death is always said, and settles whether they saw what killed them. A death of a status
     /// effect is said if the player sees where it happened ("The giant rat bleeds to death.").
     /// An attack on the player stops a rest; others' attacks and deaths only within
-    /// [`super::rest::CLOSE`] of them (spec §8 "Rest"). The player's own status effects are said as they begin (stopping a rest) and end (not
-    /// stopping one); their diseases as they show and worsen (stopping a rest) and leave (not
-    /// stopping one). A trap going off is said and kept if the player set it off, saw its cell,
-    /// or saw any of its blast; what it did to someone if they are the player or the player saw
-    /// them (each stopping a rest). A wall that gave way is kept if the player sees its cell, and
-    /// one blasted open is said ("The wall collapses!"; digging says its own).
+    /// [`World::stop_within`] of them (spec §8 "Rest"). The player's own status effects are said as
+    /// they begin (stopping a rest) and end (not stopping one); their diseases as they show and
+    /// worsen (stopping a rest) and leave (not stopping one). A trap going off is said and kept if
+    /// the player set it off, saw its cell, or saw any of its blast; what it did to someone if they
+    /// are the player or the player saw them (each stopping a rest). A wall that gave way is kept
+    /// if the player sees its cell, and one blasted open is said ("The wall collapses!"; digging
+    /// says its own).
     pub(super) fn perceive_events(&mut self, events: &mut Vec<Event>) -> Vec<(String, bool)> {
         use fight::{End, Guard, Words, attack_message, death_message};
         let player = self.state.player;
@@ -146,7 +147,7 @@ impl World {
         // Others' fights and deaths stop a rest only within close reach of the player (spec §8
         // "Rest", `rest.rs`): farther off they are told and the rest goes on.
         let here = self.player_pos();
-        let close = |p: Pos| p.chebyshev(here) <= super::rest::CLOSE;
+        let close = |p: Pos| p.chebyshev(here) <= self.stop_within();
         let end = |id: ActorId, seen: bool| match self.actor_or_fallen(id) {
             _ if id == player => End::You,
             Some(a) if seen && a.master() == Some(player) => match a.kept() {

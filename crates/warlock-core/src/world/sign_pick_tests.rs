@@ -294,8 +294,8 @@ fn fire_breath_burns_along_its_line_then_drains() {
         "listed, usable"
     );
     assert_eq!(
-        Ability::Sign(SignActive::FireBreath).range(),
-        Some(BREATH_RANGE)
+        Ability::Sign(SignActive::FireBreath).reach(w.content()),
+        Some(8)
     );
     // At yourself or out of range: refused, no time.
     let breathe = |at: Pos| Action::Gift(SignActive::FireBreath, Some(at));

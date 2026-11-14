@@ -32,7 +32,7 @@ use crate::item_list::ItemList;
 use crate::skills::{Effect, SkillId};
 use crate::talent::SongCost;
 use crate::talent::{MagicEffect, VigourEffect};
-use crate::world::{Actor, BREATH_RANGE, LevelState, STARE_RANGE, VOICE_RANGE};
+use crate::world::{Actor, LevelState};
 use std::borrow::Cow;
 
 /// An ability, as the abilities menu lists it.
@@ -937,55 +937,25 @@ impl Ability {
         }
     }
 
-    /// How far a cell it aims at may be, in cells (a disc, as ranges are); `None` for one that
-    /// aims at no cell.
-    pub const fn range(self) -> Option<i32> {
-        match self {
-            Ability::ThrowVoice => Some(VOICE_RANGE),
-            Ability::Sign(SignActive::TransfixingStare) => Some(STARE_RANGE),
-            Ability::Sign(SignActive::FireBreath) => Some(BREATH_RANGE),
-            Ability::Sign(SignActive::HornsGrace)
-            | Ability::Sign(SignActive::Blaze)
-            | Ability::Sign(SignActive::HoundsBay)
-            | Ability::Class(_)
-            | Ability::Spell(_)
-            | Ability::Skill(_)
-            | Ability::Disarm
-            | Ability::Listen
-            | Ability::PickLock
-            | Ability::Steal
-            | Ability::Wedge
-            | Ability::Feint
-            | Ability::Tame
-            | Ability::Intimidate
-            | Ability::Forage
-            | Ability::Profession(_)
-            | Ability::Salvage
-            | Ability::Decipher
-            | Ability::Heal
-            | Ability::SecondWind
-            | Ability::BloodMagic
-            | Ability::ShieldBash
-            | Ability::Weapon(..)
-            | Ability::Pray
-            | Ability::Drink
-            | Ability::Gather
-            | Ability::Heel
-            | Ability::Hold
-            | Ability::SetOn
-            | Ability::Give => None,
-        }
-    }
-
-    /// How far a cell it aims at may be, in cells, with what `content` says of it: a spell's
-    /// is its data's base ([`crate::content::SpellData::base_range`]; a caster's own is
-    /// [`Actor::spell_reach`]); every other ability's is [`Ability::range`].
+    /// How far a cell it aims at may be, in cells (a disc, as ranges are), with what `content`
+    /// says of it; `None` for one that aims at no cell. A spell's is its data's base
+    /// ([`crate::content::SpellData::base_range`]; a caster's own is [`Actor::spell_reach`]); a
+    /// birth sign's active's is its talent effect's `range`
+    /// ([`crate::talent::SignEffect::range`]); throwing one's voice reads `data/tuning.toml`.
     pub fn reach(self, content: &Content) -> Option<i32> {
         match self {
             Ability::Spell(spell) => content.spell_of(spell).and_then(|s| s.base_range()),
             Ability::Intimidate => content.intimidate().map(|r| r.range),
             Ability::Class(ClassActive::Sic) => content.sic_range(),
-            other => other.range(),
+            Ability::ThrowVoice => Some(content.tuning().throw_voice.range),
+            Ability::Sign(active) => (content.talents().iter())
+                .flat_map(|(_, talent)| &talent.effects)
+                .find(|effect| effect.sign_active() == Some(active))
+                .and_then(|effect| match effect {
+                    TalentEffect::Sign(sign) => sign.range(),
+                    _ => None,
+                }),
+            _ => None,
         }
     }
 
@@ -1588,7 +1558,7 @@ mod tests {
             Ability::Skill(SkillId(0)).action(&content, Some(Dir::E)),
             None
         );
-        assert_eq!(bash.range(), None);
+        assert_eq!(bash.reach(&content), None);
         assert_eq!(bash.action_at(&content, Pos::new(3, 4)), None);
     }
 
@@ -1601,7 +1571,7 @@ mod tests {
             (Aim::Cell, Source::Class)
         );
         assert_eq!(voice.cost(), Some(ActionKind::ThrowVoice));
-        assert_eq!(voice.range(), Some(VOICE_RANGE));
+        assert_eq!(voice.reach(&content), Some(6));
         assert_eq!(voice.action(&content, None), None, "not without a cell");
         let at = Pos::new(3, 4);
         assert_eq!(voice.action_at(&content, at), Some(Action::ThrowVoice(at)));

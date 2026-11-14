@@ -30,10 +30,11 @@ pub enum SignEffect {
     /// Blaze bursts out to `radius` with `damage` instead of its own (Wildfire).
     Wildfire { radius: i32, damage: Dice },
     /// The active Fire breath (a birth sign's pick, spec §8 "Birth sign"), aimed at a cell
-    /// within [`crate::world::BREATH_RANGE`]: a bolt of `damage` of kind `damage_type` along the
+    /// within `range` (1 to 40): a bolt of `damage` of kind `damage_type` along the
     /// line toward it, `length` cells from the player, through everyone on it; shown as effect
     /// `spell` (a bolt); then `degrees` of the `cooldown` status.
     FireBreath {
+        range: i32,
         length: i32,
         damage: Dice,
         damage_type: String,
@@ -61,10 +62,11 @@ pub enum SignEffect {
     /// Horn's grace also gives back `per_level` hit points per character level, and leaves
     /// `degrees` of its cooldown instead of its own (Horn of plenty).
     HornOfPlenty { per_level: u8, degrees: u16 },
-    /// The active Transfixing stare (a birth sign's): a hostile within
-    /// [`crate::world::STARE_RANGE`] cells that the player sees and that sees them suffers
+    /// The active Transfixing stare (a birth sign's): a hostile within `range` cells (1 to 40;
+    /// more under a full moon) that the player sees and that sees them suffers
     /// `severity` degrees of `status`, then `degrees` of the `cooldown` status.
     Stare {
+        range: i32,
         status: String,
         severity: u16,
         cooldown: String,
@@ -89,6 +91,16 @@ impl SignEffect {
         "stare",
         "wildfire",
     ];
+
+    /// How far a cell it aims at may be, in cells (a disc): the Transfixing stare's and Fire
+    /// breath's `range` ([`crate::ability::Ability::reach`]); `None` for an effect that aims at
+    /// no cell.
+    pub fn range(&self) -> Option<i32> {
+        match self {
+            SignEffect::Stare { range, .. } | SignEffect::FireBreath { range, .. } => Some(*range),
+            _ => None,
+        }
+    }
 }
 
 /// What an actor's talents of the area do, summed: one field per effect kind, read by one
@@ -126,6 +138,7 @@ impl SignMods {
             }
             SignEffect::Wildfire { radius, damage } => self.wildfire = Some((radius, damage)),
             SignEffect::FireBreath {
+                range: _,
                 length,
                 damage,
                 damage_type,
@@ -203,6 +216,7 @@ impl SignMods {
                 }
             }
             SignEffect::Stare {
+                range: _,
                 status,
                 severity,
                 cooldown,

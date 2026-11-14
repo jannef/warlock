@@ -1,8 +1,7 @@
 //! Running (#1325, `run.rs`): in the open to the wall, along a corridor through its bends to a
 //! room, stopping at an intersection and at a side door, and for whatever stops a rest (a hostile
-//! coming within [`super::rest::CLOSE`] in view; never one farther off).
+//! coming within [`World::stop_within`] in view; never one farther off).
 
-use super::rest::CLOSE;
 use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
@@ -183,7 +182,7 @@ fn a_hostile_coming_close_stops_a_run_as_it_stops_a_rest() {
     let kobold = (w.state.actors.values())
         .find(|a| a.id != w.state.player)
         .expect("the kobold");
-    assert!(kobold.pos.chebyshev(w.player_pos()) <= CLOSE);
+    assert!(kobold.pos.chebyshev(w.player_pos()) <= w.stop_within());
     assert!(w.player_pos().x < 18, "stopped short of the wall");
     assert_eq!(last(&w), "The kobold comes close; you stop running.");
 }

@@ -927,7 +927,7 @@ fn listening_at_a_door_hears_through_it_what_plain_ears_miss() {
     assert_eq!(made_beyond_door(&mut w, 62), 0, "plain ears");
     w.state.listening = Some(crate::noise::Listening {
         at: Pos::new(2, 1),
-        keener: 5 + crate::world::listen::EXTRA_KEEN,
+        keener: 5 + w.content().tuning().listen.keener,
     });
     assert_eq!(made_beyond_door(&mut w, 62), 1, "ears to the door");
     // Too faint even so.
