@@ -2,9 +2,9 @@
 
 **A turn-based fantasy roguelike drawn entirely in glyphs, with real light and shadow.**
 
-**[Play in your browser](https://jannef.github.io/warlock/)** ·
-**[Download](https://github.com/jannef/warlock/releases/latest)** ·
-**[Read the wiki](https://jannef.github.io/warlock/wiki/)**
+**[Play in your browser](https://ascmearc.com/)** ·
+**[Download](https://github.com/jannef/ascmearc/releases/latest)** ·
+**[Read the wiki](https://ascmearc.com/wiki/)**
 
 ![Cēaptūn's market square at seven in the evening: torches and braziers light the square, the lanes beyond fade into the dark](docs/screenshots/ceaptun-night.png)
 
@@ -51,21 +51,21 @@ cold barrows, a drowned minster, a hidden fey hall, and a fire mountain that smo
 
 *The character sheet: one of nine pages about your character.*
 
-The wiki's [What's in the game](https://jannef.github.io/warlock/wiki/features.html) has more
+The wiki's [What's in the game](https://ascmearc.com/wiki/features.html) has more
 screenshots and a tour of every feature.
 
 ## How to play
 
-- **In your browser:** [jannef.github.io/warlock](https://jannef.github.io/warlock/), always the
+- **In your browser:** [jannef.github.io/warlock](https://ascmearc.com/), always the
   latest release. It needs a browser with WebGPU (a recent Chrome or Edge, for example) and a
   keyboard.
 - **On your computer:** download the
-  [latest release](https://github.com/jannef/warlock/releases/latest) for Windows, macOS (Apple
+  [latest release](https://github.com/jannef/ascmearc/releases/latest) for Windows, macOS (Apple
   silicon), or Linux, unpack it, and run it.
-- **New to the game?** Start with [Your first run](https://jannef.github.io/warlock/wiki/first-run.html).
-  The [Controls](https://jannef.github.io/warlock/wiki/controls.html) page lists the keys, and in
+- **New to the game?** Start with [Your first run](https://ascmearc.com/wiki/first-run.html).
+  The [Controls](https://ascmearc.com/wiki/controls.html) page lists the keys, and in
   the game `?` shows them as you have bound them. Every key can be rebound.
-- **Everything else** is in the [wiki](https://jannef.github.io/warlock/wiki/): races, classes,
+- **Everything else** is in the [wiki](https://ascmearc.com/wiki/): races, classes,
   creatures, spells, crafting, and every number the game keeps to itself.
 
 ## For developers
@@ -99,7 +99,7 @@ Feature work changes the wiki, the spec, and the developer notes, not this file.
 To play a locked release from source, install it with `cargo install` (a tag picks the version):
 
 ```sh
-cargo install --git https://github.com/jannef/warlock --tag v0.17.0 --locked --no-default-features warlock
+cargo install --git https://github.com/jannef/ascmearc --tag v0.17.0 --locked --no-default-features warlock
 ```
 
 - `--locked` uses the release's `Cargo.lock`. `--no-default-features` leaves out the test world,
