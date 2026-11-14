@@ -16,7 +16,7 @@ use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::object::{Stack, add_to_pile};
 use crate::rng::Rng;
-use crate::world::Statue;
+use crate::statue::Statue;
 use std::collections::BTreeSet;
 
 /// How far (Chebyshev) from its creature a leaving is laid.

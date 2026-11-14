@@ -21,37 +21,8 @@ use super::{World, WorldState};
 use crate::content::Content;
 use crate::geom::Pos;
 use crate::rng::Rng;
-use serde::{Deserialize, Serialize};
 
-/// One character of a past run who died, as a statue or a gravestone names them: "Brakka the
-/// dwarf".
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Fallen {
-    /// The character's name.
-    pub name: String,
-    /// Their race, by id (`dwarf`); one this content lacks is named by its id.
-    #[serde(default, skip_serializing_if = "String::is_empty")]
-    pub race: String,
-    /// Whether they were turned to stone: only these name statues.
-    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    pub petrified: bool,
-    /// How and where they died, in the app's words, without a full stop: "Killed by a kobold
-    /// in Fyrdelf 3, The Ascmearc"; empty when unknown.
-    #[serde(default, skip_serializing_if = "String::is_empty")]
-    pub death: String,
-}
-
-impl Fallen {
-    /// "Brakka the dwarf" (the race's name in lower case), or "Brakka" without a race.
-    pub fn words(&self, content: &Content) -> String {
-        let race = (content.race(&self.race)).map_or(self.race.clone(), |r| r.name.to_lowercase());
-        if race.is_empty() {
-            self.name.clone()
-        } else {
-            format!("{} the {race}", self.name)
-        }
-    }
-}
+pub use crate::statue::Fallen;
 
 impl World {
     /// The run's dead of past runs, the most recent first (module docs): the app's, read from

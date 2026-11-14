@@ -25,35 +25,14 @@
 
 use super::{Actor, Spent, World};
 use crate::action::{Breach, Event};
-use crate::content::{ActionKind, Content, CreatureId};
+use crate::content::ActionKind;
 use crate::door::kick_breaks;
 use crate::geom::Pos;
 use crate::noise::Act;
 use crate::object::{self, Stack};
 use crate::skills::Use;
-use serde::{Deserialize, Serialize};
 
-/// A statue on a cell (ground truth but for what it was, which the player sees).
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Statue {
-    /// The creature type it was.
-    pub of: CreatureId,
-    /// What it held, top first: what the creature carried, then the pile it stood on.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub holds: Vec<Stack>,
-    /// The past character it is of, a name from the graveyard (`world/graveyard.rs`):
-    /// decoration, read by no rule and left out of the state hash.
-    #[serde(default, skip_serializing_if = "super::hash::unhashed_option")]
-    pub name: Option<super::Fallen>,
-}
-
-impl Statue {
-    /// Whether its creature type is in `content` (a guard for loaded saves; what it holds is
-    /// checked with the piles).
-    pub(crate) fn is_valid_for(&self, content: &Content) -> bool {
-        usize::from(self.of.0) < content.creature_defs().len()
-    }
-}
+pub use crate::statue::Statue;
 
 impl World {
     /// `actor`, a creature just stoned to death, becomes a statue where it fell, holding
