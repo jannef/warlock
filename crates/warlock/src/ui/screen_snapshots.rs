@@ -1343,6 +1343,16 @@ cases! {
         size: (100, 40),
         ..BASE
     },
+    // Two profane gifts (#1625): the Profane group last among the player's own, a boon and a
+    // bane (a flaw).
+    talents_screen_profane: Case {
+        name: "talents-screen-profane",
+        character: Some("dwarf,male,warrior"),
+        actions: "gift:oak_hearted gift:hungering",
+        screen: Some("talents"),
+        size: (100, 40),
+        ..BASE
+    },
     // A level-3 wizard's pick, School focus for evocation: the Spellcraft tree, Arcane
     // training among the class abilities (#400).
     talents_screen_spellcraft: Case {

@@ -1,0 +1,16 @@
+[[skill]]
+id = "appraise"
+name = "Appraise"
+description = "Judging what a thing is worth and what it is made of."
+kind = "passive"
+# Now and then an eye for things tells one unidentified thing you carry or wear for what it is
+# (spec §8 "Skills"; #666): each game hour, this percent chance (2 % at the lowest, 12 % at 100,
+# 20 % at 200). Trained only. Each thing told this way trains it. The shops' prices are
+# Negotiation's. An eye for food (#1031): trained, each hour the chance of telling how fresh a
+# corpse or food is in words (summed with Survival's), 25 % at the lowest, 60 % at 100, 80 % at
+# 200; eating food whose freshness it told trains it.
+mark = [{ on = "appraise", chance = 100 }, { on = "judged", chance = 10 }]
+benefit = [
+    { effect = "identify", curve = [[0, 2], [100, 12], [200, 20]] },
+    { effect = "freshness", curve = [[0, 25], [100, 60], [200, 80]] },
+]

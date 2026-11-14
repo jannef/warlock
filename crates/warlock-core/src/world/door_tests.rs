@@ -246,8 +246,8 @@ fn files() -> ContentFiles {
         "data/item_classes.toml",
         crate::content::BUILTIN_ITEM_CLASSES,
     );
-    files.insert("data/terrain.toml", TERRAIN);
-    files.insert("data/factions.toml", FACTIONS);
+    files.replace_table("terrain", TERRAIN);
+    files.replace_table("factions", FACTIONS);
     files.insert("data/creatures.toml", CREATURES);
     files.insert("data/objects.toml", OBJECTS);
     files.insert("data/slots.toml", SLOTS);
@@ -466,10 +466,7 @@ fn the_chance_to_break_a_door_is_strength_in_sturdiness() {
 #[test]
 fn athletics_helps_kick_a_door_in_and_kicking_doors_trains_it() {
     let mut files = files();
-    files.insert(
-        "data/skills.toml",
-        include_str!("../../../../assets/data/skills.toml"),
-    );
+    files.insert_builtin_table("skills");
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     let athletics = content.skill_id("athletics").expect("athletics");
     // Strength 10 and athletics 100 (+8 Strength) against sturdiness 30: 60 % of first kicks

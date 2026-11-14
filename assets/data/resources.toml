@@ -28,7 +28,7 @@
 #                 ends_at_zero)
 #   lacking       how the abilities menu greys out an ability it pays for while too little is
 #                 held ("you are short of breath"; default: "not enough stamina")
-#   status        a status (status.toml) its holder suffers while they hold it: it begins as the
+#   status        a status (status/) its holder suffers while they hold it: it begins as the
 #                 resource is granted and ends with it (and the resource with the status, if
 #                 something cures that); a status that `eases` by itself may end first (rage: Raging)
 #   builds        what builds it up: [{ on = "kill", amount = 5 }]; events are

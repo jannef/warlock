@@ -1,0 +1,10 @@
+[[gift]]
+id = "oak_hearted"
+name = "Oak-hearted"
+kind = "boon"
+tier = "greater"
+weight = 10
+description = "Your heart beats slow and strong: you are tougher than you were."
+line = "Your heart beats slow and strong."
+undone = "Your heart stumbles, and its strength drains away."
+effects = [{ kind = "stat", stat = "toughness", value = 2 }]

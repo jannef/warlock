@@ -1,0 +1,15 @@
+# The witch's hexes (spec §8 "Class abilities"), on creatures she sees: the Evil eye's minute of
+# fumbling blows, the Hex of weakness's two minutes of weak and clumsy limbs, and the Curse of
+# sloth's minute in which everything takes half again as long. Up to three degrees: the witch's
+# Presence lengthens them (a degree is one more span of `eases`; spells.toml).
+[[status]]
+id = "ill_wished"
+name = "Hexed"
+seen = "hexed"
+max = 3
+stacking = "refresh"
+eases = 60
+combat = { to_hit = -2 }
+cured_by = ["holy_water"]
+start = "You feel hexed."
+end = "The hex lifts."

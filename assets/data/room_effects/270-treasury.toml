@@ -1,0 +1,13 @@
+# A treasure room (spec §7 "Special rooms"): its doors all secret, chests, gold, and gems inside,
+# and a hint on every arrival until it is entered. Not a tempting hoard: nothing seals, nothing
+# guards it; finding it is the work.
+[[effect]]
+id = "treasury"
+name = "treasure room"
+mark = "$"
+arrive = "Something tells you there is wealth hidden on this level."
+enter = "Gold glints in the dust. No one has been here in a long time."
+weight = 4
+min_cells = 9
+secret_doors = "all"
+treasure = { chests = "1d2", gold = { heaps = "1d4+1", dice = "3d6", each = 2 }, gems = "1d3" }

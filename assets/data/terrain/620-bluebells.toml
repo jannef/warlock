@@ -1,0 +1,8 @@
+[[terrain]]
+id = "bluebells"
+plants = true
+name = "bluebells"
+glyph = "*"
+fg = "#9a9cf4"
+bg = "#1a2a16"
+step_noise = 70

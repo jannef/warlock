@@ -81,7 +81,7 @@ piercing)", "Adds 1d4 fire damage".
 Creatures have resistances and weaknesses of their own, and some are immune to a kind. The game
 never gives their numbers. You learn them by playing. A blow that is shrugged off says so: "The
 fireball does the salamander no harm." A blow stopped by armour alone glances off instead. You may
-also simply know: [look mode](controls.md#look-mode) describes a creature's resistances in words when your
+also simply know: [look mode](controls-prompts.md#look-mode) describes a creature's resistances in words when your
 [Knowledge](skills.md#skill-knowledge) stands above its level.
 
 ## What else the kind decides

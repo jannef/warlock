@@ -9,7 +9,7 @@ A spell's school matters for:
 - *[Keen mind](talents.md#talent-keen-mind)* and *[School focus](talents.md#talent-school-focus)*,
   which you take for one school (or one element) and which help only its spells;
 - your class's affinity with each school, which makes its spells easier or harder to
-  [learn](magic.md#learning);
+  [learn](learning-spells.md#your-learning);
 - the colour of a [spell circle](spell-circles.md).
 
 How well you cast depends on your stats, your [talents](talents.md), your items, and the
@@ -30,7 +30,7 @@ column, which scrolls (↑↓) when the window is too small for it. From the top
 - the [caster styles](#caster-styles), each with your rank and a faint bar of your marks toward the
   next, with a `•` on Battle caster while your armour hinders casting ("• the style you cast in
   now"). They are shown to anyone who knows a spell or has trained a caster style;
-- every spell you know, by level then name, with its [rank](magic.md#spell-ranks) and the roll it
+- every spell you know, by level then name, with its [rank](learning-spells.md#spell-ranks) and the roll it
   makes now and its mana, as the [abilities menu](abilities.md) shows them ("Magic missile
   rank 1   4d4 force, 4 mana, aimed").
 
@@ -90,9 +90,9 @@ is the item's.
 A touch reaches only the creature beside you. Nothing makes it reach farther: not
 [School focus](talents.md#talent-school-focus), not a style, not an item.
 
-The [wizard](classes.md#wizard) and the [druid](classes.md#druid) start in Sniper, the
-[witch](classes.md#witch) and the [priest](classes.md#priest) in Toucher, and the
-[paladin](classes.md#paladin) in Battle caster. Any caster may advance in any of them by casting
+The [wizard](class-wizard.md) and the [druid](class-druid.md) start in Sniper, the
+[witch](class-witch.md) and the [priest](class-priest.md) in Toucher, and the
+[paladin](class-paladin.md) in Battle caster. Any caster may advance in any of them by casting
 that way.
 
 The [Magic page](#the-magic-page) marks Battle caster as the style you cast in while you wear

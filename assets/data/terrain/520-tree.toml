@@ -1,0 +1,10 @@
+[[terrain]]
+id = "tree"
+name = "tree"
+glyph = "♣"
+fg = "#62c450"
+bg = "#173012"
+walkable = false
+transparent = false
+height = 2
+bounce = "#98c878"

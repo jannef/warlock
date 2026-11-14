@@ -1,0 +1,9 @@
+# The gates a miscast opens (#1316; docs/dev/creatures/gates.md): at peace with every monster,
+# the loosed they let through and the berserk too (`friendly_to_all`: no other faction's flag
+# makes it a foe), and hostile to the player and the player's side alone, so only those attack
+# one. A blast hurts a gate as it hurts anything in it.
+[[faction]]
+id = "gates"
+name = "the gates"
+hostile = ["player"]
+friendly_to_all = true

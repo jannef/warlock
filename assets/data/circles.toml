@@ -13,12 +13,12 @@
 # [[status]]   one row per circled status: a `kind = "buff"` or `"hex"` spell's status (one without
 #              a row has no circle; a sleep's, `sleeps`, never has one: Slumber's `asleep`, a den's),
 #              or a status no spell lays that names its own `kind` (a lure quest's binding)
-#   status     an id in data/status.toml; it must have `seen` (others see it on a creature)
+#   status     an id in data/status/; it must have `seen` (others see it on a creature)
 #   school     the school whose colour it is drawn in
 #   kind       "buff" or "hex", only for a status no spell lays (a spell's status takes its
 #              spell's)
 #
-# Rows are in no particular order: a circle orders its effects by status order (data/status.toml).
+# Rows are in no particular order: a circle orders its effects by status order (data/status/).
 
 [[school]]
 id = "evocation"

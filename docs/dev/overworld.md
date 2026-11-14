@@ -58,7 +58,7 @@ roads, ruins; `Clear` glade, banks, roadsides, no obstacles; `Free`), `water.rs`
 bands, ponds, brooks, winding courses; a lake's still water more than 3 columns in is `deep_water` where all eight neighbours are still water, so never on the map's edge and the shore stays wadeable; ponds, rivers and brooks have none; #1020), `road.rs`, `cover.rs` (one function per landscape; wood
 share blends towards the neighbors), and `reach.rs` (trails, joining pockets, ways out,
 validation, `arrival`). Overworld terrain picks its generator with `landscape` in
-`data/terrain.toml`; outdoor vaults are vault files with `kind = "outdoor"` (nine: Burnt Steading,
+`data/terrain/`; outdoor vaults are vault files with `kind = "outdoor"` (nine: Burnt Steading,
 Drowned Mill, Fairy Ring, Hermit's Hut, Hoar-stone, Old Battle, Ruined chapel, Ruined tower, Stone
 circle; `docs/design/generic-vaults.md` §4). The generator joins what it cannot walk to, so a ruin
 cannot hold a shut door (a closed door is not walkable: the Hermit's Hut's stands open), and a
@@ -78,7 +78,7 @@ checked with the stairs' targets in `Content::validate`) goes into `LevelTemplat
 `LevelState::hidden` (by cell; ground truth). It works like a secret door: the terrain grid holds
 the plain terrain, so the view, memory, look mode, local areas (`Content::local_area` reads the
 template), and every perception-built dump show it with no filter; only `world/reveal.rs` and the
-dev views (`dump.rs::truth_rows`, the F2 overlay in `ui/dev.rs`) read `hidden`.
+dev views (`dump/truth.rs::truth_rows`, the F2 overlay in `ui/dev.rs`) read `hidden`.
 `World::reveal_location(id)` (the one reveal, on whichever level of the campaign holds it, called by `world/quest.rs` at a quest's
 `reveals.when` (`given` or `done`; a rolled quest's variant reveals its own, #422), by the dev
 `quest_roll` choosing a variant, by the dev action `reveal:ID`, and by

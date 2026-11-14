@@ -1,0 +1,4 @@
+# Shopkeepers (shops.toml): they trade with everyone and fight no one...
+[[faction]]
+id = "merchants"
+name = "merchants"

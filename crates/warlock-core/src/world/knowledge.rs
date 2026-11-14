@@ -4,7 +4,7 @@
 //!   disease a creature's attack carries, struggling free of a creature's hold) adds what the
 //!   skills with the [`Effect::Resist`] benefit give, read at how far each skill's value stands
 //!   **above the creature's level** ([`Actor::skill_effect_above`]): nothing at or below it,
-//!   growing with the margin by the benefit's curve in `data/skills.toml`, at most
+//!   growing with the margin by the benefit's curve in `data/skills/`, at most
 //!   [`crate::skills::MAX_RESIST_BONUS`]. A rank of 0 stands above no creature, so in practice
 //!   only a trained value past the creature's level helps (and an untrained skill gives nothing,
 //!   as every skill). Creatures resisting each other's abilities get nothing: the player's

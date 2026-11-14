@@ -1,7 +1,7 @@
 # Familiars
 
-A **familiar** is the [witch](classes.md#witch)'s small beast of the old craft. It is hers from the
-first turn, through her [Familiar](classes.md#talent-familiar) (level 1): a cat (*catt*), a toad
+A **familiar** is the [witch](class-witch.md)'s small beast of the old craft. It is hers from the
+first turn, through her [Familiar](class-witch.md#talent-familiar) (level 1): a cat (*catt*), a toad
 (*tādige*), a raven (*hræfn*), a hare (*hara*), a bat (*hrēremūs*), or another small beast from her
 race's list. She has one at a time. She may also keep a [companion](companions.md#companions)
 beside it; they are different things.
@@ -26,7 +26,7 @@ When a familiar's melee blow hits a creature and leaves it alive, the creature i
 costs no [mana](mana.md) and none of her turns.
 
 **She is the hex's giver**, so anything that works on a hex of hers works on this one. Her
-[cackle](abilities.md#ability-cackle) keeps it on, and her [malison](classes.md#talent-malison)
+[cackle](abilities.md#ability-cackle) keeps it on, and her [malison](class-witch.md#talent-malison)
 bites through it. The same touch also starts every other [hex](status-effects.md) of hers on that
 creature afresh at its own degree: while the familiar scratches, her hexes stick. No other ally's
 blow does this, a cat's included. The touch is a familiar's alone.
@@ -66,7 +66,7 @@ its touch is the same evil eye.
 
 ## Familiar's sight
 
-From level 25, the witch's **[Familiar's sight](classes.md#talent-familiars-sight)** lets her share
+From level 25, the witch's **[Familiar's sight](class-witch.md#talent-familiars-sight)** lets her share
 what her familiar has. It works while the familiar stands on the same level, not while it rides with
 her across the overworld.
 

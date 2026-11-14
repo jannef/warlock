@@ -1,0 +1,114 @@
+# Special rooms (spec §7 "Special rooms"): the fields of an effect file.
+# One file per entity, `NNN-<id>.toml`: the number keeps the order the game reads them in
+# (their ids are indices in that order), in steps of 10 so a new one fits between two.
+#
+# Fields of an effect:
+#   id       the effect's id (level files name it: `[[room]] effect = "hushed"`)
+#   name     what it is called, without an article ("echoing hall"), in look mode and the wiki
+#   mark     one character marking its cells in the `rooms` dev dump layer
+#   enter    the message the first time the player enters such a room
+#   weight   how often it is drawn against the others where no dungeon says otherwise;
+#            default 10
+#   near     the message the first time a cell of such a room comes into view from outside it;
+#            default none
+#   level_chance  percent of the levels that draw it for a room that it covers whole instead
+#            (the room stays plain); default 0. Needs `pervade`, and never with
+#            `shunned` or `floor`
+#   pervade  the message each time the player arrives on a level it covers whole
+#   needs_danger  drawn only on a level with a danger; default false
+#   needs_below   drawn only on a dungeon level with another below it; default false
+#   min_cells, max_cells  drawn only for a room of at least / at most this many floor cells;
+#            default no limit
+#   light    percent of all light kept inside (ambient, sky, bounce, every source: placed lights,
+#            carried ones, fires, the sun and the moons); default 100
+#   glow     light added over the room, [r, g, b, uv] (it lights the room like ambient light);
+#            default none
+#   noise    percent of the loudness of every noise made inside (steps, doors, attacks);
+#            default 100. Louder noises carry farther; at most 300 still.
+#   regen    percent of the usual pace at which hit points come back inside;
+#            default 100
+#   mana_regen  percent of the usual pace at which mana comes back inside; default
+#            100
+#   shunned  creatures hostile to the player do not step into the room (they may still reach in
+#            with a blow from its edge, or shoot into it); default false
+#   floor    terrain generators lay over the room's floor (walkable, not stairs, doors, or
+#            running water); a hand-made level draws its own
+#   status   a status (status/) everyone inside holds, at least at one degree, while they
+#            stay, creatures too; it eases by its own `eases` once they leave. One immune to its kind of damage never holds it; one with no mana
+#            never holds a status that only touches mana
+#   swarm    a teeming den (needs `needs_danger`; never a whole level): generators fill the room
+#            with sleepers (status/ `sleeps`: Asleep) drawn by the floor's danger from the
+#            branch's population (hostile types, no uniques), and their hoard.
+#            { per_cells, min, max }: one sleeper per `per_cells` floor cells, `min` to `max`;
+#            `wake`: a noise wakes a sleeper at this percent of its hearing threshold;
+#            `cry`: how loud a waking sleeper cries out, which may wake the next
+#            (at most 300, the loudest noise); `loot_level`: the hoard (an item per four sleepers, at least one) is
+#            this many item levels above the floor's; `themes = { kind, faction }`: percent
+#            chances that every sleeper is of one type (a warren) or of one faction (a tribe);
+#            `factions`: faction ids (factions/): its sleepers are only of these, hostile or
+#            not, and it is drawn only in a branch whose own population holds one (a beast den);
+#            `hoard`: `items` (the default) or `corpses`: per four sleepers (at least one) a
+#            fresh corpse of a creature drawn from the branch's population and a pile of bones;
+#            `population`: creature ids (families by their own id, `animated_blade`): its
+#            sleepers are drawn only among these (hostile or not, no strays, never with
+#            `factions`), whatever the branch's population, and it is drawn only where one of them
+#            weighs something at the floor's least danger (an armoury); `danger`: its sleepers are
+#            drawn this many dangers deeper than the floor's (default 0)
+#   temperature  degrees Celsius added to the level's temperature inside; default 0.
+#            The room sets its cells' temperature and nothing else: what the temperature does
+#            (ice today) is the environment's (spec §5 "Temperature"); the status bar shows it
+#   burden   percent of everyone's carrying limit inside; default 100 (a heavy
+#            hall's 50 halves it: what is carried weighs on one as if it were twice as heavy)
+#   mirrors  a hall of mirrors: `{ images = N }` reflections of everyone inside the player
+#            sees, on free floor of the room, moving each turn; they look just like what they
+#            reflect. A blow or a step into one meets only glass; a missile aimed at one flies on;
+#            creatures outside shooting at the player inside may aim at one. Never the whole level
+#   warp     percent chance, every step onto a cell inside (the player's or a creature's), that
+#            the stepper is moved to a free cell of the level as a teleport trap moves its victim;
+#            default 0
+#   hoard    a tempting hoard (needs `needs_danger`; never a whole level): generators lay `items`
+#            items on its floor, `loot_level` item levels above the floor's. The first
+#            stack the player lifts inside seals the room: every door of it shuts and locks (a lock
+#            of the floor's level: picked, kicked, or opened with a skeleton key), and `guardians`
+#            = [least, most] hostiles of the level's danger + `danger` come at the
+#            room's edges, out of the player's view where they can be
+#   collapse a collapsed floor (needs `needs_below`; never the whole level): `{ chance, damage }`,
+#            the percent chance that a step of the player onto a cell inside gives
+#            way, doubled while they are Burdened or worse, and the dice they take as they land
+#            on the level below (they can kill); they land Staggered. A generator cracks only
+#            the room's middle (`floor` there, never beside a wall, door, or its edge)
+#   rise     a cursed room: `{ faction, after }`: a creature that dies inside, is not of
+#            `faction` (factions/), and leaves a corpse rises from its corpse `after` (a
+#            duration) as a creature of `faction` of its level (else the nearest level,
+#            the lower on a tie), unless the corpse is gone from where it died by then. Needs
+#            `needs_danger`
+#   unholy   Consecrate (the priest's and the paladin's) lifts it for good: the room becomes
+#            plain, or the whole level does; default false
+#   feature  a terrain (not walkable, transparent) generators place at the free floor cell nearest
+#            the room's middle, never where it would cut the room's floor apart; a hand-made level
+#            draws its own. Never the whole level
+#   sides    the room has a hidden side, good, neutral, or evil (drawn one to two to one; a level
+#            file's `[[room]]` gives it: `side = "evil"`), which its feature shows by its light:
+#            { good = LIGHT, evil = LIGHT } (lights.toml; a side left out keeps the terrain's)
+#   offers   what the player may do beside the feature, in the abilities menu's Here group:
+#            { pray = TABLE }, an outcome table in data/outcomes/ (Pray: spec §7 "Special rooms"),
+#            or { drink = TABLE } (Drink at a healing spring); one of them
+#   dressing pieces of a terrain (not walkable, transparent) generators stand along the room's
+#            walls: { terrain, per_cells, most }, one per `per_cells` floor cells, at least one
+#            and at most `most`, never beside a door or where it would cut the room's
+#            floor apart; a hand-made level draws its own. Never the whole level
+#   secret_doors  "all": every door of the room is a secret door, found by searching (the
+#            branch's difficulty), never counted against the branch's `secret_doors`. On a rooms
+#            level its doors are hidden; on a cave level the room is a box stamped into the rock
+#            with one secret door. Never the whole level
+#   sealed   "dig": no door at all and no corridor: on either generator the room is a box
+#            stamped into the rock, one of its walls (its breach, beside a cell reached from the
+#            up staircase) guaranteed to open it; found by searching (it sounds hollow), opened
+#            by digging or a blast. A level file's room names its `breach = [x, y]`. Not with
+#            `secret_doors`; never the whole level
+#   treasure what generators lay inside a treasure room: { chests = DICE, gold = { heaps = DICE,
+#            dice = DICE, each = N }, gems = DICE }: `chests` chests of the floor's item
+#            level, `heaps` heaps of `dice` × `each` gold coins, and `gems`
+#            loose gems, each on a plain floor cell of the room. Never the whole level
+#   arrive   said on every arrival on a level holding such a room the player has not entered
+#            yet (one line for all such rooms of one effect). Never the whole level

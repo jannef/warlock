@@ -1,0 +1,10 @@
+[[status]]
+id = "poison_proof"
+name = "Proof against poison"
+seen = "proof against poison"
+max = 1
+stacking = "refresh"
+eases = 1800
+resist = { poison = 50 }
+start = "Your blood feels thick and sure."
+end = "Your blood feels ordinary again."

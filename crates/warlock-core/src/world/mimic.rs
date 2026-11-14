@@ -4,7 +4,7 @@
 //! - **While disguised** it takes no turn (`creature_turn`, beside the sleepers), it is unaware of
 //!   everyone (`ambush.rs`: a sneak attack lands), no creature sets on it (`ai.rs`), and the
 //!   perception snapshot shows a shut chest of its band in its place and never it
-//!   (`perception.rs`; Chest-wise sees through it within the talent's reach). Nothing it hears
+//!   (`perception/actors.rs`; Chest-wise sees through it within the talent's reach). Nothing it hears
 //!   or sees, and no time, ends the disguise.
 //! - **Revealing** ([`World::reveal_mimic`]) ends it, said as a line of its own when the player
 //!   sees the cell (nothing is said of the status). It comes of a **touch** (opening, picking,

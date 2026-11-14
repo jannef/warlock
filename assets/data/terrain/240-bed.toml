@@ -1,0 +1,10 @@
+# The furniture of a house (#1248, Cēaptūn's private houses): scenery the player cannot pass
+# but sees over.
+[[terrain]]
+id = "bed"
+name = "bed"
+description = "A straw mattress on a wooden frame, a blanket folded at its foot."
+walkable = false
+glyph = "="
+fg = "#9a6a58"
+bg = "#2c1e10"

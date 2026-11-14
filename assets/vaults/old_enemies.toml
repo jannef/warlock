@@ -1,6 +1,6 @@
 # Vault: demons in one hall, devils in the other, a nave between them and a rare find in it.
 # The decision: let them fight it out, or go in while it is on.
-# Demons and devils are hostile both ways (data/factions.toml: a hostile list binds both sides),
+# Demons and devils are hostile both ways (data/factions/: a hostile list binds both sides),
 # so the player's arrival is not the start of the fight. One door, into the nave.
 # Borrows: the Blood War of D&D's planes, by shape only.
 name = "Old Enemies"

@@ -31,13 +31,13 @@
 #                 two-weapon attack hit one foe, which lives), approaches (a hostile steps up
 #                 beside the actor: its missile weapon or what it has ready to throw counts).
 #                 A switch effect (free_blow, parry_missiles) has none
-#   systems       the talent table's systems it touches (talents.toml's [[system]] ids)
+#   systems       the talent table's systems it touches (the ids of talents/systems/)
 #   [weapon_ability.effect]   what it does, by `kind`, with only its own fields:
 #                 free_blow       `trigger`: riposte, cleave, great_cleave, opportunist, or
 #                                 gatekeeper: switches that free blow on (spec §8 "Free blows")
 #                                 while the holder wields a weapon of the skill (or fights in
 #                                 the style)
-#                 status          `status` (status.toml) on the other end (`on = "target"`, the
+#                 status          `status` (status/) on the other end (`on = "target"`, the
 #                                 default: the one struck, or the attacker of a parried,
 #                                 blocked, or dodged attack) or on the actor (`on = "self"`):
 #                                 `severity` degrees (default 1), or degrees drawn from

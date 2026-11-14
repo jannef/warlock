@@ -21,7 +21,7 @@ pub enum SensesEffect {
     ThresholdPercent { value: i32 },
     /// Its darkvision reaches this many cells farther (from none: this far).
     Darkvision { value: i32 },
-    /// It sees creatures suffering `status` (an id in `data/status.toml`) in its line of sight
+    /// It sees creatures suffering `status` (an id in `data/status/`) in its line of sight
     /// within `radius` cells however dark it is (Blood scent).
     Scent { status: String, radius: i32 },
     /// Its overworld sight at night reaches this many cells farther.

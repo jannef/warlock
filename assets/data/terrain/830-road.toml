@@ -1,0 +1,9 @@
+[[terrain]]
+id = "road"
+name = "road"
+glyph = "·"
+fg = "#f4e2b0"
+bg = "#4a3820"
+travel_minutes = 20
+local = "grass"
+landscape = "road"

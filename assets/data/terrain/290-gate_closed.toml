@@ -1,0 +1,14 @@
+# The fence's gate: a door that is seen through (spec §8 "Doors"; opened and closed as one).
+# Creatures that open no doors (hens) stay behind it.
+[[terrain]]
+id = "gate_closed"
+name = "closed gate"
+description = "A gate of rails on leather hinges, tied shut with a loop of rope."
+walkable = false
+glyph = "+"
+fg = "#a07a4a"
+bg = "#22401a"
+opens_to = "gate_open"
+toggle_noise = 30
+breaks_to = "door_broken"
+sturdiness = 20

@@ -1,0 +1,12 @@
+[[gift]]
+id = "paper_skinned"
+name = "Paper-skinned"
+kind = "bane"
+tier = "lesser"
+weight = 8
+description = "Your skin is thin as paper: heavy blows wound you deeper, and traps hurt you more."
+line = "Your skin goes thin as paper."
+effects = [{ kind = "wound_more", value = 1 }, { kind = "trap_damage_percent", value = 25 }]
+# Written here, on the later of the two (docs/design/profane-gifts.md §6.5): made symmetric at
+# load.
+excludes = ["thick_blooded"]

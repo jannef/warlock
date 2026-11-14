@@ -14,6 +14,7 @@ static CONTENT: LazyLock<Content> =
 /// mark, and enter line), at the end of `room_effects.toml`, and the shared `chance` at `chance`.
 fn with_feature(extra: &str, chance: u8) -> Content {
     let mut files = ContentFiles::builtin();
+    files.flatten_table("room_effects");
     files.edit_table("room_effects", |text| {
         let text = text.replace("chance = 12\n", &format!("chance = {chance}\n"));
         format!(

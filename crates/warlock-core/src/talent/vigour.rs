@@ -29,7 +29,7 @@ pub enum VigourEffect {
     /// Resting heals this percent faster on top of resting's own pace (Fast healer).
     RestingPercent { value: i32 },
     /// The active Second wind: `per_level` hit points per character level back at once, at
-    /// least `at_least`, then the `cooldown` status (an id in `data/status.toml`), while which
+    /// least `at_least`, then the `cooldown` status (an id in `data/status/`), while which
     /// it cannot be used again.
     SecondWind {
         per_level: u8,

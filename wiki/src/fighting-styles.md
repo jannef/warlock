@@ -136,8 +136,8 @@ Two abilities that do the same thing never add up:
 
 ## Where your styles come from
 
-Your [class](classes.md) starts you with a rank in a style or two. A [warrior](classes.md#warrior) fights with
-[sword and board](fighting-styles.md#style-sword-and-board), a [berserker](classes.md#berserker) with a [great weapon](fighting-styles.md#style-great-weapon), and a [ranger](classes.md#ranger) is a [marksman](fighting-styles.md#style-marksman). A [thief](classes.md#thief) has learned
-either [Twin Blades](fighting-styles.md#style-twin-blades) or [Duelist](fighting-styles.md#style-duelist), and an [ascetic](classes.md#ascetic) either [Brawler](fighting-styles.md#style-brawler) or [Staff Fighter](fighting-styles.md#style-staff-fighter); the dice decide. The
+Your [class](classes.md) starts you with a rank in a style or two. A [warrior](class-warrior.md) fights with
+[sword and board](fighting-styles.md#style-sword-and-board), a [berserker](class-berserker.md) with a [great weapon](fighting-styles.md#style-great-weapon), and a [ranger](class-ranger.md) is a [marksman](fighting-styles.md#style-marksman). A [thief](class-thief.md) has learned
+either [Twin Blades](fighting-styles.md#style-twin-blades) or [Duelist](fighting-styles.md#style-duelist), and an [ascetic](class-ascetic.md) either [Brawler](fighting-styles.md#style-brawler) or [Staff Fighter](fighting-styles.md#style-staff-fighter); the dice decide. The
 [weapon skills screen](weapon-skills.md#seeing-your-skills) (`W`) lists your styles below your weapon skills, and marks the ones you
 fight in now with a `•`.

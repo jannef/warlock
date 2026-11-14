@@ -1,0 +1,11 @@
+[[terrain]]
+id = "reeds"
+plants = true
+name = "reeds"
+glyph = "¦"
+fg = "#9aac5e"
+bg = "#182a19"
+move_cost = 150
+step_noise = 130
+height = 1
+bounce = "#c0d090"

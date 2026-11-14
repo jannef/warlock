@@ -288,7 +288,7 @@ impl Content {
     }
 
     /// The effects of special rooms and how often generated levels get them
-    /// (`data/room_effects.toml`; none without it).
+    /// (`data/room_effects/`; none without it).
     pub fn room_effects(&self) -> &RoomEffects {
         &self.room_effects
     }

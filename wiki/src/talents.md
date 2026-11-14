@@ -7,7 +7,7 @@ most ask something of you first.
 ## When you get a talent
 
 A new character picks **two talents at creation**, on the Talents step after the
-[class](classes.md). The **[bard](classes.md#bard)**, the lucky class, picks one more, and so does a
+[class](classes.md). The **[bard](class-bard.md)**, the lucky class, picks one more, and so does a
 **[human](races.md#race-human)** (their racial [Versatile](talents.md#talent-versatile), below). A
 human bard picks four.
 
@@ -31,7 +31,7 @@ for good.
 Some [classes](classes.md#levels) also give a **bonus talent** at a few levels (the everyday folk at
 10, 20, 30, 45, and 55), from the trees the class names: "You must choose a talent of Weaponcraft
 or Delver." When a level brings both kinds, a talent from the class's trees fills the bonus pick
-first. The [commoner](classes.md#commoner)'s bonus talents come from any tree.
+first. The [commoner](class-commoner.md)'s bonus talents come from any tree.
 
 If there is nothing you can take (a run with no talents, or every talent you qualify for already
 learned), the pick is simply lost. A level never waits for the impossible.
@@ -54,8 +54,8 @@ you already meet stand out from those you don't, so you can plan a build there.
 **Class abilities** are talents too, in a tree of their own. Your [class](classes.md) gives them as
 its levels come (see [Classes](classes.md#levels)); you never pick them. If your class gives one you
 already learned, it is not given again, and that level gives you a talent pick in its place. Some are
-talents anyone may pick (the [aristocrat](classes.md#aristocrat)'s
-[Riposte](talents.md#talent-riposte), the [commoner](classes.md#commoner)'s
+talents anyone may pick (the [aristocrat](class-aristocrat.md)'s
+[Riposte](talents.md#talent-riposte), the [commoner](class-commoner.md)'s
 [Second wind](talents.md#talent-second-wind)).
 
 ## Choices and prerequisites
@@ -116,7 +116,7 @@ give comes at once, on top of your [starting kit](starting-kit.md).
   each, so the weakest of the small peoples ([halflings](races.md#race-halfling),
   [gnomes](races.md#race-gnome), [goblins](races.md#race-goblin), [kobolds](races.md#race-kobold),
   [ratfolk](races.md#race-ratfolk)) may set out [Burdened](burden.md#burden-levels).
-  An [aristocrat](classes.md#aristocrat) is born to it: their class gives it at level 1, so they
+  An [aristocrat](class-aristocrat.md) is born to it: their class gives it at level 1, so they
   never pick it, and they may pick Father's sword straight away.
 - **[Father's sword](talents.md#talent-fathers-sword)** (needs Family wealth) is your people's
   heirloom weapon: not always a sword, but always a weapon. It is [magic](magic-items.md), with 2 to
@@ -133,10 +133,10 @@ give comes at once, on top of your [starting kit](starting-kit.md).
 ## Crafts: a craftsperson's trades
 
 The **Crafts** tree holds the trades: one for each [profession](crafting.md#which-skill-makes-what) skill.
-Only a [craftsperson](classes.md#craftsperson) may take one, and only at
+Only a [craftsperson](class-craftsperson.md) may take one, and only at
 [character creation](character.md). No other class is offered them, and no later level is. A
 craftsperson's first two picks are always trades: the class gives them two
-[bonus picks](classes.md#trades) at creation for them, on top of the usual ones. They may spend an
+[bonus picks](class-craftsperson.md#trades) at creation for them, on top of the usual ones. They may spend an
 ordinary pick on a trade too, so a human craftsperson may set out with three.
 
 A trade is never one your [race](races.md) already gives everyone. A
@@ -148,7 +148,7 @@ extra class skill, say) does not count.
 Taking a trade does three things:
 
 - It **trains the skill** at `3d6` (3 to 18), rolled once as you take it, plus 6 from the
-  craftsperson's [Time served](classes.md#talent-time-served). If you have the skill already,
+  craftsperson's [Time served](class-craftsperson.md#talent-time-served). If you have the skill already,
   the roll adds to it.
 - It gives you the **tools of the trade**, on top of your [starting kit](starting-kit.md). A
   pick-axe is readied in the Tool [slot](equipment.md#what-fits-where) if your kit left it free,

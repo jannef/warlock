@@ -33,7 +33,7 @@ pub(super) fn text(content: &Content, effect: &MartialEffect) -> String {
                 )
             });
             format!(
-                "active (the time of a wait): you gain {gain} (see Resources){brings}; no rage \
+                "active (the time of a wait): you gain {gain} (see [Resources](resources.md)){brings}; no rage \
                  while it or what follows it lasts"
             )
         }

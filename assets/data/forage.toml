@@ -1,5 +1,5 @@
 # Foraging (spec §8 "Foraging"; #547): living off the land, the Survival skill's use, chosen
-# from the abilities menu (`a`, Forage). Whoever is trained in Survival (skills.toml: the skill
+# from the abilities menu (`a`, Forage). Whoever is trained in Survival (skills/: the skill
 # with the `forage` benefit) can forage in the wild: on the overworld, or in a local area of it,
 # wherever the land has a row below, and never standing in water (or on ice).
 #
@@ -13,7 +13,7 @@
 #
 # Fields:
 #   seconds        how long a forage takes, in seconds (at least 1)
-#   [[ground]]     one row per landscape (terrain.toml's `landscape`: what the land of an
+#   [[ground]]     one row per landscape (terrain/'s `landscape`: what the land of an
 #                  overworld cell is like; a local area's is its overworld cell's), once.
 #                  Roads, rivers, and lakes have none here: there is nothing to forage there.
 #     landscape    a landscape id (water is never foraged, whatever its row)
@@ -22,7 +22,7 @@
 #     finds        what may be found: { object = ID, weight = N }, objects (objects/), each
 #                  as likely as its weight among the row's
 #     herbs        what a herbalist may find besides (default none), in the same form: on a
-#                  forage that found something, a player trained in Herbalism (skills.toml: the
+#                  forage that found something, a player trained in Herbalism (skills/: the
 #                  skill with the `herbs` benefit) has its percent chance (one draw) of one of
 #                  these too, by weight (one draw), one of it: angelica root, and the herbs
 #                  of brewing that grow there (#1340; glowcap and mandrake are the dungeon's,

@@ -1,0 +1,10 @@
+# The fey courts (#452): each fey creature joins one when it is made, by its type's `factions`
+# weights (data/creatures/README.toml). The Seelie court leaves the player be, the Unseelie hunts
+# them, and the two are at war; both leave every other faction alone. A Seelie fey the player
+# attacks turns wrathful (`provoked`): hostile to the player from then on, still at peace with
+# its court and at war with the Unseelie.
+[[faction]]
+id = "seelie"
+name = "Seelie court"
+hostile = ["unseelie"]
+provoked = "wrathful_fey"

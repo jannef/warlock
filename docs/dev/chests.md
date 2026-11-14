@@ -38,7 +38,7 @@ what they held (`statue_gone`).
 | `mapgen/connect.rs` | `validate` accepts a lock on a shut chest and asks no key for it |
 | `world/knock.rs` | Knock (`ClassActive::Knock`, `MagicEffect::Knock { mana }`, `MagicMods::knock`): springs the lock in a direction; refused, no time or mana, where nothing locked stands. `ClassActive::strikes` keeps the "nobody hostile there" refusal to the aimed blows |
 | `world/travel.rs` | `instantiate_level` makes the food chests hold now (`rot::made_at`), as a level's piles |
-| `perception.rs` | `PerceptionView::chest_at(p)` (cells seen or remembered; `locked` only with Chest-wise on a shut chest in sight), `known_chests()` |
+| `perception/truth.rs` | `PerceptionView::chest_at(p)` (cells seen or remembered; `locked` only with Chest-wise on a shut chest in sight), `known_chests()` |
 | `dump.rs` | `truth`'s chest lines (`chest_rows`: `trapped (arrow)`), JSON `chests`; `view` and `memory` keep a chest's glyph over its known trap |
 | `warlock/src/ui/mod.rs`, `ui/look.rs`, `ui/effects.rs` | the band's colour on the map, the chest's glyph over its known trap; look mode's band name, its known trap after it ("A coffer, trapped: an arrow trap."), and the description; `ChestBroken` bursts the smashed chest's splinters |
 
@@ -87,7 +87,7 @@ what they held (`statue_gone`).
 
 ## Talents
 
-System `chests` (`data/talents.toml`, after `doors`; it holds the mimics since #773):
+System `chests` (`data/talents/systems/`, after `doors`; it holds the mimics since #773):
 Chest-wise (Delver, Intelligence 11 or Detect traps 15: `chest_wise`, read in `chest_at` for the
 lock and in `chest_wise_look` for the trap; `sees_mimics` 2 and `slick`, docs/dev/creatures/mimics.md),
 Lockbreaker (Delver, Strength 12; its `systems` gained `chests`: `door_kick` is read by

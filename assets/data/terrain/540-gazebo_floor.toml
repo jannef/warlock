@@ -1,0 +1,13 @@
+# A gazebo: wooden posts holding up a roof over plank floor. The roof shades the floor from sun
+# and sky and casts its own shadow.
+[[terrain]]
+id = "gazebo_floor"
+name = "gazebo floor"
+glyph = "."
+fg = "#c89c6c"
+bg = "#3a2814"
+roofed = true
+height = 2
+bounce = "#e0c098"
+# Boards creak.
+step_noise = 120

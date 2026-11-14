@@ -1,0 +1,13 @@
+# Invisible (docs/dev/creatures.md "The unseen"): what a creature's `[creature.invisible]` gives
+# it, two minutes of it, and the one status nobody sees: its sufferer is out of the player's
+# sight however lit and near (`unseen`). The dev `afflict:invisible` gives it to the player, who
+# is told; creatures see as ever.
+[[status]]
+id = "invisible"
+name = "Invisible"
+max = 1
+stacking = "refresh"
+eases = 120
+unseen = true
+start = "You fade from sight."
+end = "You can see yourself again."

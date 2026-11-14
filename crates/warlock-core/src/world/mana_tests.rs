@@ -104,7 +104,7 @@ const WELL: &str = "\n[[effect]]\nid = \"well\"\nname = \"mana well\"\nmark = \"
 
 /// The shipped statuses with `STATUS` in place of the ones it redefines (and its healing paces).
 fn status_text() -> String {
-    let real = include_str!("../../../../assets/data/status.toml");
+    let real = ContentFiles::builtin().table_text("status");
     let mut out = STATUS.to_string();
     for block in real.split("\n[[status]]\n").skip(1) {
         let redefined = STATUS
@@ -123,12 +123,12 @@ fn status_text() -> String {
 /// "hall" without a character with `scenario`'s lines; `extra` files added or replaced.
 fn files(scenario: &str, extra: &[(&str, &str)]) -> ContentFiles {
     let mut files = ContentFiles::builtin();
-    files.insert("data/status.toml", &status_text());
+    files.replace_table("status", &status_text());
     let diseases = include_str!("../../../../assets/data/diseases.toml");
     files.insert("data/diseases.toml", &format!("{diseases}\n{FOG}"));
     files.insert("data/experience.toml", EXPERIENCE);
-    let rooms = include_str!("../../../../assets/data/room_effects.toml");
-    files.insert("data/room_effects.toml", &format!("{rooms}{WELL}"));
+    let rooms = ContentFiles::builtin().table_text("room_effects");
+    files.replace_table("room_effects", &format!("{rooms}{WELL}"));
     files.insert("levels/hall.toml", LEVEL);
     files.insert(
         "scenarios/hall.toml",

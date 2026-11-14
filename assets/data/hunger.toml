@@ -18,7 +18,7 @@ start = 3600
 max = 6500
 # Vomiting (overeating, rotten food, a corpse that disagrees) leaves at most this much: hungry.
 vomit_leaves = 1000
-# What harm from food is: degrees of this status (status.toml), from rotten food and from a
+# What harm from food is: degrees of this status (status/), from rotten food and from a
 # creature's `on_eat` harm. Without it nothing eaten may harm.
 sickness = "poisoned"
 

@@ -26,7 +26,7 @@
 //! overworld are lit by the sun and the sky by day (spec §5). Optional
 //! `[[region]]` tables name areas of the level (`name`, `area = [x0, y0, x1, y1]`, inclusive; the
 //! first match wins), shown in the status bar. Optional `[[room]]` tables mark special rooms
-//! (spec §7 "Special rooms"): `effect` (an id in `data/room_effects.toml`) over `area = [x0, y0,
+//! (spec §7 "Special rooms"): `effect` (an id in `data/room_effects/`) over `area = [x0, y0,
 //! x1, y1]` (inclusive, walls and doors included); rooms do not overlap; a top-level `effect`
 //! (one that can, never on the overworld) covers the whole level. Optional `[[shop]]`
 //! tables mark shops (spec §7 "Shops"): `kind` (an id in `data/shops.toml`), the `keeper`'s
@@ -252,7 +252,7 @@ struct RegionSpec {
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct RoomSpec {
-    /// An effect id in `data/room_effects.toml`.
+    /// An effect id in `data/room_effects/`.
     effect: String,
     /// `[x0, y0, x1, y1]`, inclusive: the room with its walls.
     area: [i32; 4],
@@ -306,7 +306,7 @@ pub(super) struct LegendDetail {
     spawn: Option<Spawn>,
     creature: Option<String>,
     /// Faction the creature on this cell belongs to instead of its type's (`faction =
-    /// "peaceful"`); an id in `data/factions.toml`.
+    /// "peaceful"`); an id in `data/factions/`.
     faction: Option<String>,
     /// Where the creature on this cell stands between good and evil instead of its type's
     /// (`alignment = "good"`, spec §8 "Alignment").
@@ -634,7 +634,7 @@ pub struct LevelTemplate {
     pub chests: BTreeMap<Pos, Chest>,
     /// Statues of the stoned, by position (spec §8 "Statues"): one on every statue terrain cell
     /// the generator laid as a leaving (`mapgen/leavings.rs`); none in a level file.
-    pub statues: BTreeMap<Pos, crate::world::Statue>,
+    pub statues: BTreeMap<Pos, crate::statue::Statue>,
     /// Secret doors, by position (spec §8 "Searching"): the terrain there is the wall each
     /// looks like until it is found.
     pub secrets: BTreeMap<Pos, Secret>,
@@ -1107,7 +1107,7 @@ pub(super) fn parse_level(
         }
         Some(name) => {
             let id = (content.room_effects().id(name))
-                .ok_or_else(|| err(format!("unknown effect `{name}` (room_effects.toml)")))?;
+                .ok_or_else(|| err(format!("unknown effect `{name}` (room_effects/)")))?;
             if !content.room_effect(id).can_pervade() {
                 return Err(err(format!(
                     "effect `{name}` cannot cover a whole level: it needs a `pervade` line, and \

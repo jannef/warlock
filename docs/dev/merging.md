@@ -87,15 +87,17 @@ Every list a feature extends is edited by every feature. Two PRs that both appen
 conflict every time; two that insert at different places merge cleanly. So:
 
 - **New entries go where they belong** (alphabetically, or by the group the list is in), never at
-  the end: `Action` and its replay text syntax (`action.rs`: the enum, `parse`, `Display`,
-  `FromStr`), `ActionKind::ALL` and `data/actions.toml`, `KeyCommand` and `REBINDABLE`
+  the end: `Action` and its replay text syntax (`action/mod.rs`: the enum; `action/text.rs`: the
+  `VERBS` table and `Display`), `ActionKind::ALL` and `data/actions.toml`, `KeyCommand` and `REBINDABLE`
   (`settings/keys.rs`: the controls screen shows that order, so a new command goes next to its
-  group), the dump layers (`dump.rs`), the settings rows (`ui/settings_screen.rs`), the
+  group), the dump layers (`dump/layer.rs`, `dump/mod.rs::layer_rows`), the settings rows (`ui/settings_screen.rs`), the
   `Content` fields and `Content::load` steps, the `mod` lists (`world/mod.rs` is alphabetical),
   the wiki's `generate()` list (`xtask/src/wiki/mod.rs`) and `wiki/src/SUMMARY.md` (pages by
   topic), `tests/golden/manifest/*.toml` (the feature's own file), the content fingerprint
   groups, and single-file data tables (`data/slots.toml`, `stats.rs`, `data/weapon_skills.toml`,
-  `data/skills.toml`, `data/factions.toml`, `data/actions.toml`, ...).
+  `data/actions.toml`, ...), and the numbered table directories (`data/status/`,
+  `data/terrain/`, `data/factions/`, `data/room_effects/`, `data/talents/trees/` and
+  `systems/`: `NNN-id.toml`, a new file takes a free number where it belongs).
 - **Fixed-size arrays become slices** when a feature would grow them: `pub const ALL: &[Kind] =
   &[...]`, never `[Kind; 23]`, so two PRs adding an entry do not both edit the length.
 - **Never reorder what exists** in a list whose order is observable: the content fingerprint's
@@ -152,14 +154,14 @@ of the next merge. So each kind of fact has **one home**; everywhere else links 
 
 Creature roster PRs edit only their own `docs/dev/creatures/<tribe>.md`; never
 `docs/dev/creatures.md` (the stable index) or the spec's creature and faction lists
-(`spec/07b-data.md` points at `assets/data/creatures/` and `assets/data/factions.toml`; the
+(`spec/07b-data.md` points at `assets/data/creatures/` and `assets/data/factions/`; the
 tag list is the one in `assets/data/creatures/README.toml`). Other hot spots seen in the
 roster wave, and what to do in each:
-- `assets/data/factions.toml`: insert by group, never at the end.
+- `assets/data/factions/`: a new faction takes a free `NNN-` number by its group, never the last.
 - test fixtures and the factions list: `world/{equip,magic,object,read}_tests.rs` take their
   at-peace factions from `world/fixture_factions.rs::peaceful_factions()` (the shipped
-  `factions.toml` without its grudges), so a new faction edits none of them. `world/mana_tests.rs`
-  keeps the shipped `status.toml` and replaces only the few statuses it needs
+  `factions/` without its grudges), so a new faction edits none of them. `world/mana_tests.rs`
+  keeps the shipped `status/` and replaces only the few statuses it needs
   (`status_text()`), so a creature's rider status needs no fixture edit.
 - the creatures README tag list: add a tag's line by group, only when something uses the tag.
 - `assets/data/plurals.toml`: insert alphabetically.

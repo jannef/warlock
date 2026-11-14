@@ -1,5 +1,5 @@
-//! Talents (spec §8 "Talents"; `assets/data/talents.toml` for the settings, one file per talent
-//! under `assets/data/talents/`): what a character may pick as they level up. A talent has a
+//! Talents (spec §8 "Talents"; one file per talent
+//! under `assets/data/talents/`, one per tree and system under its `trees/` and `systems/`): what a character may pick as they level up. A talent has a
 //! tree, prerequisites ([`Needs`]) that must all hold when it is chosen, and typed effects ([`TalentEffect`]) summed by [`crate::talent::TalentMods`] and
 //! read where the rules already read what magic items do. A talent may name the systems it
 //! touches from the list in the settings file (the wiki's matrix reads them). The loader checks
@@ -62,7 +62,7 @@ pub enum Choice {
     WeaponSkill,
     /// A fighting style.
     Style,
-    /// A skill (an id in `data/skills.toml`), trained or not.
+    /// A skill (an id in `data/skills/`), trained or not.
     Skill,
     /// An element: a damage type (an id in `data/damage_types.toml`).
     Element,
@@ -1045,6 +1045,15 @@ impl TalentBook {
         self.iter().filter(move |(_, t)| t.tree == tree)
     }
 
+    /// Adds a talent defined outside `data/talents/` (a profane gift, `content/profane.rs`),
+    /// after every other; its id is checked unique by the caller.
+    pub(super) fn add(&mut self, def: TalentDef) -> TalentId {
+        let id = TalentId(self.list.len() as u16);
+        self.ids.insert(def.id.clone(), id);
+        self.list.push(def);
+        id
+    }
+
     /// Whether the terrain the effects name (`terrain_as`) is in `content`, once its terrain has
     /// loaded (after the talents; content without terrain has nothing to check them by).
     pub(super) fn check_terrain(&self, content: &Content) -> Result<(), ContentError> {
@@ -1309,7 +1318,7 @@ fn resolve_needs(
         let stat = Stat::from_id(&name).ok_or_else(|| format!("needs an unknown stat `{name}`"))?;
         stats[stat] = score;
     }
-    // Content without skills (no `data/skills.toml`) has nothing to measure a skill need by:
+    // Content without skills (no `data/skills/`) has nothing to measure a skill need by:
     // it is left out, as skill affixes are; weapon skills likewise.
     let mut skills = Vec::new();
     for (name, value) in spec.skills {
@@ -1447,7 +1456,7 @@ pub(super) fn parse<'a>(
         systems.extend(parsed.system.into_iter().map(|s| (file, s)));
         pending.extend(parsed.talent.into_iter().map(|spec| Pending { file, spec }));
     }
-    let first_file = first_file.unwrap_or("data/talents.toml");
+    let first_file = first_file.unwrap_or("data/talents/");
     let mut book = TalentBook {
         trees: Vec::new(),
         systems: Vec::new(),
@@ -1510,7 +1519,7 @@ pub(super) fn parse<'a>(
         for name in &spec.systems {
             let id = (book.system_id(name)).ok_or_else(|| {
                 err(format!(
-                    "names a system `{name}` that is not in the list (data/talents.toml)"
+                    "names a system `{name}` that is not in the list (data/talents/systems/)"
                 ))
             })?;
             systems.push(id);
@@ -1570,6 +1579,8 @@ mod tests {
         let mut files = ContentFiles::builtin();
         files.remove("data/talents.toml");
         files.remove("data/talents/");
+        // The profane gifts are talents of a tree these settings lack.
+        files.remove("data/profane/");
         // Background stories name talents of the built-in set.
         files.remove("data/background.toml");
         files.insert("data/talents.toml", settings);

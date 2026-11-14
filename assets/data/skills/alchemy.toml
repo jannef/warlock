@@ -1,0 +1,16 @@
+[[skill]]
+id = "alchemy"
+name = "Alchemy"
+description = "Brewing potions, and telling one draught from another."
+kind = "action"
+# Telling potions (#1343, professions §9): trained, each game hour this percent chance of telling
+# one potion or flask you carry whose kind you do not know (5 % at the lowest, 25 % at 100, 40 % at
+# 200), beside Appraise's look at anything.
+# Its craft (docs/dev/crafting.md "Brewing"; the alchemist's recipes, data/recipes/alchemy/):
+# added to the Intelligence check of a brew, +8 at 100, +12 at 200, as Metalcraft's. Marked by
+# every brew that runs its time, whatever came of it.
+mark = [{ on = "craft", chance = 100 }]
+benefit = [
+    { effect = "identify_potion", curve = [[0, 5], [100, 25], [200, 40]] },
+    { effect = "craft", curve = [[0, 0], [100, 8], [200, 12]] },
+]

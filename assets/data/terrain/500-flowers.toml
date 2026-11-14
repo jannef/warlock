@@ -1,0 +1,9 @@
+[[terrain]]
+id = "flowers"
+plants = true
+name = "wildflowers"
+glyph = "*"
+fg = "#f0b4dc"
+bg = "#22401a"
+bounce = "#e8c8dc"
+step_noise = 70

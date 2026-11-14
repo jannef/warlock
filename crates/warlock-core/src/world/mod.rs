@@ -239,6 +239,7 @@ mod perceive;
 mod pit;
 mod potion;
 mod pray;
+mod profane;
 mod quest;
 mod quest_roll;
 mod quick_leave;
@@ -328,6 +329,7 @@ mod weapon_ability;
 mod weapon_active;
 mod wedge;
 mod witch;
+mod work;
 mod work_on;
 mod wriggle;
 mod zap;
@@ -810,26 +812,8 @@ enum Spent {
     Forage(u32),
     /// Gathering herbs from the glowing fungus for this many seconds (see [`World::gather`]).
     Gather(u32),
-    /// Making out a labelled scroll (see [`World::decipher`]).
-    Decipher(decipher::Deciphering),
-    /// Tempering an item at a forge's anvil (see [`World::temper`]).
-    Temper(temper::Tempering),
-    /// Setting an ingot on a heap of stones (see [`World::field_forge`]).
-    FieldForge(field_forge::Forging),
-    /// Making a recipe (see [`World::make`]).
-    Craft(craft_make::Crafting),
-    /// Cutting a loose gem (see [`World::cut`]).
-    Cut(cut::GemWork),
-    /// Working an enchanting recipe on an item (see [`World::enchant`]).
-    Enchant(enchant::Enchanting),
-    /// Salvaging an item for its materials (see [`World::salvage`]).
-    Salvage(salvage::Salvaging),
-    /// Mending a damaged item in the field (see [`World::make_do`]).
-    MakeDo(make_do::Mending),
-    /// Rigging a trap beside the player (see [`World::rig`]).
-    Rig(rig::Rigging),
-    /// Setting a cut gem in an item (see [`World::set`]).
-    Set(set::Setting),
+    /// Long work: deciphering, a craft, salvage, a rig (see [`World::work`]).
+    Work(work::Work),
     /// Taming a beast beside the player (see [`World::tame`]).
     Tame(tame::Taming),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
@@ -1526,16 +1510,7 @@ impl World {
             Spent::Drink(draught) => self.drink(draught, &mut events),
             Spent::Forage(seconds) => self.forage(seconds, &mut events),
             Spent::Gather(seconds) => self.gather(seconds, &mut events),
-            Spent::Decipher(work) => self.decipher(work, &mut events),
-            Spent::Temper(work) => self.temper(work, &mut events),
-            Spent::FieldForge(work) => self.field_forge(work, &mut events),
-            Spent::Craft(work) => self.make(work, &mut events),
-            Spent::Cut(work) => self.cut(work, &mut events),
-            Spent::Enchant(work) => self.enchant(work, &mut events),
-            Spent::Salvage(work) => self.salvage(work, &mut events),
-            Spent::MakeDo(work) => self.make_do(work, &mut events),
-            Spent::Rig(work) => self.rig(work, &mut events),
-            Spent::Set(work) => self.set(work, &mut events),
+            Spent::Work(work) => self.work(work, &mut events),
             Spent::Tame(taming) => self.tame(taming, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
@@ -1746,6 +1721,8 @@ impl World {
             Action::Infect(id) => return self.infect_dev(id),
             Action::Reveal(id) => return self.reveal_dev(id),
             Action::Lure(id) => return self.lure_dev(id),
+            Action::Profane(id) => return self.gift_dev(id),
+            Action::Rescind(id) => return self.rescind_dev(id),
             Action::QuestRoll { quest, target } => return self.quest_roll_dev(quest, target),
             Action::LevelUpAuto => return self.level_up_auto(),
             Action::GrantXp(xp) => return self.grant_xp_dev(*xp),

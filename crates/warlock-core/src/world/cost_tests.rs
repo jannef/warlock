@@ -323,8 +323,8 @@ fn files(player_speed: u32) -> ContentFiles {
         "data/item_classes.toml",
         crate::content::BUILTIN_ITEM_CLASSES,
     );
-    files.insert("data/terrain.toml", TERRAIN);
-    files.insert("data/factions.toml", FACTIONS);
+    files.replace_table("terrain", TERRAIN);
+    files.replace_table("factions", FACTIONS);
     files.insert("data/actions.toml", ACTIONS);
     let creatures = CREATURES.replace("PLAYER_SPEED", &player_speed.to_string());
     files.insert("data/creatures.toml", &creatures);

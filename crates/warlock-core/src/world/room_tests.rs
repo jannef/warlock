@@ -432,6 +432,7 @@ const MORE_EFFECTS: &str = "\n[[effect]]\nid = \"gloom\"\nname = \"gloomy room\"
 /// a second level `other` (the same hall, plain) to travel to.
 fn hall_with(effect: &str, header: &str) -> World {
     let mut files = ContentFiles::builtin();
+    files.flatten_table("room_effects");
     files.edit_table("room_effects", |text| format!("{text}{MORE_EFFECTS}"));
     let room = |effect: &str| {
         if effect.is_empty() {
@@ -522,6 +523,7 @@ fn a_pervaded_level_is_told_on_every_arrival_and_saved() {
 fn level_files_name_only_effects_that_can_cover_a_level() {
     let attempt = |header: &str| {
         let mut files = ContentFiles::builtin();
+        files.flatten_table("room_effects");
         files.edit_table("room_effects", |text| format!("{text}{MORE_EFFECTS}"));
         files.insert(
             "levels/test_room.toml",

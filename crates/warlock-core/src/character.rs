@@ -1254,12 +1254,15 @@ mod tests {
     fn skill_free_content() -> Content {
         let mut files = ContentFiles::builtin();
         files.remove("data/skills.toml");
+        files.remove("data/skills/");
         // Background stories start skills.
         files.remove("data/background.toml");
         // Mining names its skill.
         files.remove("data/mining.toml");
         // Gathering herbs names its skill.
         files.remove("data/herbs.toml");
+        // Enchanting names its skill (#1493).
+        files.remove("data/enchanting.toml");
         // Rigging names its skill (Woodcraft).
         files.remove("data/rigs.toml");
         // Skill affixes go with the skills, and the uniques that have them.

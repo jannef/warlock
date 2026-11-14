@@ -1,0 +1,10 @@
+# A churchyard by a road (#1258, Līctūn): a cross pale on the grass, a way into its walls.
+[[terrain]]
+id = "graveyard"
+name = "graveyard"
+glyph = "†"
+fg = "#d8d4c8"
+bg = "#1a2412"
+stairs = "down"
+glow = 0.15
+travel_minutes = 30

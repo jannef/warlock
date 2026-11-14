@@ -63,6 +63,6 @@ The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the r
 
 Gear condition (#1193, `data/gear_condition.toml`'s `duergar` row): a disciplined smiths' tribe, so their gear is seldom damaged (8 %) and more often Fine (15 %), Marvellous 4 %, Masterwork 1 % (docs/dev/creatures.md, "Gear condition").
 
-Gear materials (#1191): the faction's `gear` in `data/factions.toml`: duergar favour iron (30 %) and steel (20 %), the smiths' metals, each its share of the draws for an item whose construction list holds it, the usual draw the rest (`docs/dev/objects.md` "Materials and variants").
+Gear materials (#1191): the faction's `gear` in `data/factions/`: duergar favour iron (30 %) and steel (20 %), the smiths' metals, each its share of the draws for an item whose construction list holds it, the usual draw the rest (`docs/dev/objects.md` "Materials and variants").
 
 **Material drops** (#1341; `data/drops/`, docs/dev/objects.md "Material drops"): `duergar.toml`: iron 1d2 (50 %), steel 1 (30 %).

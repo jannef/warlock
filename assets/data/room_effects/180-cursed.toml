@@ -1,0 +1,14 @@
+# A cursed room: the dead killed inside rise two minutes later as undead of their level, unless
+# their corpse is taken or eaten first. Consecrate lifts it, and the draining room.
+[[effect]]
+id = "cursed"
+name = "cursed room"
+mark = "g"
+near = "A cold draught smells of the grave."
+enter = "The air is cold and the dead are near."
+weight = 6
+needs_danger = true
+level_chance = 5
+pervade = "The dead do not rest on this level."
+rise = { faction = "undead", after = "2m" }
+unholy = true

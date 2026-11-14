@@ -16,7 +16,7 @@
 # already gone off in full, and then the caster rolls on the miscast table (miscasts/):
 #
 #   total = `die` + per_margin × how far the check fell short
-#           − Spellcraft's `ward` points (skills.toml: 10 at 100, 20 at 200)
+#           − Spellcraft's `ward` points (skills/: 10 at 100, 20 at 200)
 #           − the stance's `miscast` (stances.toml: Defensive 5, Aggressive −5, Frenzy −10)
 #
 # at least 1. Higher totals are worse: the miss carries the total, the die is the small variance.

@@ -261,8 +261,8 @@ fn files() -> ContentFiles {
         "data/item_classes.toml",
         crate::content::BUILTIN_ITEM_CLASSES,
     );
-    files.insert("data/terrain.toml", TERRAIN);
-    files.insert("data/factions.toml", FACTIONS);
+    files.replace_table("terrain", TERRAIN);
+    files.replace_table("factions", FACTIONS);
     files.insert("data/creatures.toml", CREATURES);
     files.insert("data/legend.toml", LEGEND);
     files.insert("data/objects.toml", OBJECTS);
@@ -414,7 +414,7 @@ fn creatures_name_known_factions_and_read_their_combat() {
     }
     // Without a factions file there are none: everyone is neutral, and none may be named.
     let mut files = files();
-    files.insert("data/factions.toml", "");
+    files.replace_table("factions", "");
     assert!(Content::load(&files).is_err(), "an empty factions file");
     let mut bare = ContentFiles::default();
     for (path, text) in [
@@ -446,11 +446,7 @@ fn creatures_name_known_factions_and_read_their_combat() {
          weight = 1\nfaction = \"player\"\n",
     );
     let err = Content::load(&bare).unwrap_err();
-    assert!(
-        err.message.contains("no data/factions.toml"),
-        "{}",
-        err.message
-    );
+    assert!(err.message.contains("no data/factions/"), "{}", err.message);
 }
 
 #[test]
@@ -942,8 +938,8 @@ map = '''
 /// The dark room above, with lights and eyes: the player (normal eyes) has an unlit lantern.
 fn dark_world(level: &str) -> World {
     let mut files = ContentFiles::default();
-    files.insert("data/terrain.toml", LIT_TERRAIN);
-    files.insert("data/factions.toml", FACTIONS);
+    files.replace_table("terrain", LIT_TERRAIN);
+    files.replace_table("factions", FACTIONS);
     files.insert("data/creatures.toml", LIT_CREATURES);
     files.insert(
         "data/legend.toml",

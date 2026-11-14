@@ -1,0 +1,11 @@
+[[terrain]]
+id = "altar"
+name = "altar"
+announce = true
+stone = true
+glyph = "_"
+fg = "#e0c060"
+bg = "#0d0d10"
+light = "altar_glow"
+anim = { kind = "pulse", bpm = 54, amount = 0.18 }
+glow = 0.35

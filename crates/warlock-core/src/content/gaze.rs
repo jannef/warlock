@@ -13,7 +13,7 @@ use super::disease::DiseaseId;
 use super::status::{OnHit, OnHitSpec, StatusId};
 use serde::Deserialize;
 
-/// The cooldown status a gaze gives (`data/status.toml`).
+/// The cooldown status a gaze gives (`data/status/`).
 pub const STATUS: &str = "gaze";
 /// A gaze's cooldown unless its type says otherwise, in seconds.
 pub const DEFAULT_COOLDOWN: u32 = 12;
@@ -89,7 +89,7 @@ impl GazeSpec {
             })
             .collect::<Result<Vec<_>, String>>()?;
         let found = (content.status_id(STATUS))
-            .ok_or_else(|| format!("gaze: needs the `{STATUS}` status in data/status.toml"))?;
+            .ok_or_else(|| format!("gaze: needs the `{STATUS}` status in data/status/"))?;
         let def = content.status(found);
         let eases = (def.eases)
             .filter(|_| def.tick.is_none())

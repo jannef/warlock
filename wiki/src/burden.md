@@ -17,11 +17,18 @@ three quarters of what anyone else does:
 {{#include generated/burden-races.md}}
 
 The limit uses your scores, not the bonuses they give, so it grows evenly with them. Each point
-of [Strength](stats.md#stat-strength) is worth 3 kg and each point of
-[Toughness](stats.md#stat-toughness) 1.5 kg, or three quarters of that for the small. Some
+of Strength is worth 3 kg and each point of
+Toughness 1.5 kg, or three quarters of that for the small. Some
 examples:
 
 {{#include generated/burden-examples.md}}
+
+> **Example: a dwarf warrior's starting load.** Thora, a [dwarf](races.md#race-dwarf)
+> [warrior](class-warrior.md), has Strength 15 and Toughness 17. Her limit is
+> 1.5 kg × (2 × 15 + 17) × 1 = **70.5 kg**. She is unburdened up to a third of it, 23.5 kg,
+> burdened up to 47 kg, and strained up to 70.5 kg. Her starting kit (a long sword, a hand axe, a
+> dagger, a crossbow and bolts, a small shield, a leather jerkin, and the rest) weighs 23.6 kg, so
+> she starts just burdened. Being a dwarf, that costs her nothing until she is strained.
 
 **Everything you carry counts**, including the armour you wear and the weapon in your hand
 (see [Equipment](equipment.md)). Your own body does not. For scale, a leather jerkin weighs 3.5
@@ -48,13 +55,13 @@ Your **burden** compares what you carry with your limit. It rises by thirds of t
 - **Louder**: your [footsteps](hearing.md#what-makes-noise) carry farther (see
   [Hearing](hearing.md)).
 - **Overloaded**: you cannot move at all ("You carry too much to move."), not even a step or up
-  or down the [stairs](terrain.md#stairs). Everything else still works, as slowly as when
+  or down the stairs. Everything else still works, as slowly as when
   strained. Drop something and you can go on. You can always pick things up, even when that
   overloads you.
 
 [Dwarves](races.md#race-dwarf) and [duergar](races.md#race-duergar) have carried loads all
 their lives. Being burdened costs them nothing: no time, no
-[Dexterity](stats.md#stat-dexterity), and no [noise](hearing.md#how-loud). From strained on,
+Dexterity, and no [noise](hearing.md#how-loud). From strained on,
 they suffer like everyone else.
 
 The [Balance](skills.md#skill-balance) skill takes away some of the slowdown. At 100, being
@@ -65,20 +72,20 @@ The **burden line**, three [talents](talents.md) of the Grit tree taken in order
 it a step at a time:
 
 - [Pack mule](talents.md#talent-pack-mule) (Strength 11): you carry a tenth more, 60 % of the
-  slowdown is gone (added to what [Balance](skills.md#skill-balance) takes away; together they
-  can take it all), and each burden's limit on your [Dexterity](stats.md#stat-dexterity) in
-  [Defence](combat.md#defence) is 1 higher.
+  slowdown is gone (added to what Balance takes away; together they
+  can take it all), and each burden's limit on your Dexterity in
+  Defence is 1 higher.
 - [Porter](talents.md#talent-porter) (Pack mule, Toughness 12): a tenth more again, the
   Dexterity limits 1 higher again, and being burdened costs you nothing, as it costs a dwarf
   nothing.
 - [Beast of burden](talents.md#talent-beast-of-burden) (Porter, level 12): a tenth more again,
   and being strained costs you only what being burdened costs others.
 
-Some classes are given the first steps: [commoners](classes.md#commoner) Pack mule at
-level 1, [merchants](classes.md#merchant) at 6, and [thieves](classes.md#thief)
+Some classes are given the first steps: [commoners](class-commoner.md) Pack mule at
+level 1, [merchants](class-merchant.md) at 6, and [thieves](class-thief.md)
 Pack mule and Porter at 25.
 
-[Creatures](creatures.md) carry by the same rules, using their own
+Creatures carry by the same rules, using their own
 [Strength](stats.md#stat-strength), [Toughness](stats.md#stat-toughness), and size.
 
 In a [heavy hall](special-rooms.md#room-heavy), a [special room](special-rooms.md), everyone's

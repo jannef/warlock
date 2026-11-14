@@ -1,0 +1,12 @@
+# Ice that holds a person (with a heavy pack, maybe not): a smooth grey-blue sheet, a glint of
+# frost here and there.
+[[terrain]]
+id = "ice"
+name = "ice"
+glyph = "·"
+variants = "·  ·   "
+fg = "#aec4da"
+bg = "#2a3e53"
+ice = 50
+move_cost = 120
+bounce = "#c8dcf4"

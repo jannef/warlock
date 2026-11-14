@@ -170,7 +170,7 @@ nobody (a teleport's check); the move pushes `Event::ActorMoved`, says "The post
 back." if seen, then the effect's `status` (Staggered). `Technique` is transient (not saved,
 cleared after each active), like `acting` and `fresh`.
 
-**Walled**: `status.toml`'s last entry, `combat = { shield = 3 }` (`CombatBonus::shield`, added
+**Walled**: `status/`'s last entry, `combat = { shield = 3 }` (`CombatBonus::shield`, added
 by `Actor::defence` on top of the Shield category while it is above 0: a status's shield adds
 to the shield's own instead of competing with it) and `attack_cost = 125`
 (`StatusDef::attack_cost`, `Effects::slow_attack`, multiplied into `attack_price`).
@@ -198,7 +198,7 @@ were removed with the schools of magic as trained skills (#1263).
 
 ## Talents
 
-System `weapon_abilities` (`talents.toml`), with Early mastery (`ability_ranks`), Brace of steel (`brace { to_hit, status }`), Practised technique
+System `weapon_abilities` (`data/talents/systems/`), with Early mastery (`ability_ranks`), Brace of steel (`brace { to_hit, status }`), Practised technique
 (Weaponcraft, a weapon skill at 7: `weapon_energy_percent` −25, read in `active_price`), and the
 warrior's class ability Drillmaster (level 25: `weapon_stamina` 1, read in
 `Actor::weapon_stamina`). Armour-breaker (P1's) gained `weapon_stamina { value = 2, abilities =

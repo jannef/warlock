@@ -9,7 +9,7 @@ forge, P5), the forging wizard, and salvage. Material stock (the piece) is in
 
 ## Who works what: professions and stock
 
-- **The skills** (`data/skills.toml`): Metalcraft, Woodcraft, and Jewelcraft are the professions
+- **The skills** (`data/skills/`): Metalcraft, Woodcraft, and Jewelcraft are the professions
   that work materials today; Alchemy is a profession that works no material (it brews from
   herbs, "Brewing" below), Enchanting a profession that binds magic into what is carried
   (Willpower, its recipes built in: docs/dev/enchanting.md "The recipes"), and Herbalism and
@@ -343,7 +343,7 @@ lump spent; not listed for the untrained).
 ## Stations and the makeshift anvil: `works_as`, Field forge
 
 A recipe's `station` is a terrain beside the maker. A terrain may serve as another's station:
-`TerrainDef::works_as` (`works_as = "anvil"` in `data/terrain.toml`, resolved at load; a terrain
+`TerrainDef::works_as` (`works_as = "anvil"` in `data/terrain/`, resolved at load; a terrain
 that works as one that works as another is refused). It is read in one place,
 `Content::works_as(terrain)` (its `works_as`, else itself), which both station tests ask:
 `world/craft.rs::station_beside` (every recipe's `lack`, so `start_making` and the screen; the
@@ -362,7 +362,7 @@ stack of ingots carried (a `piece` of a `metal`-group material, not unpaid goods
 have no ingot to set."; the cell open ground (`open_ground`: walkable, no door, chest, stairs,
 grave, freezing water, ice, swim water, glowing fungus, or shop floor), nobody on it (ground
 truth), no known trap, nothing lying there; each refused with its line and no time. Then
-`Spent::FieldForge(Forging { at, seconds })`: `seconds` in `craft` turns by `keep_at`, as a
+the work driver's `Task::FieldForge(Forging { at })`: `seconds` in `craft` turns, as a
 gather; interrupted, nothing ("...; you leave the anvil unfinished."); done, the ingot and the
 cell are asked again, one ingot is spent, and `set_terrain(at, makeshift_anvil)`. No check, no
 draw, no mark. The terrain is saved with the level; a pick clears it (`hardness` 300, becoming
@@ -481,9 +481,9 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
   pieces counted, "an arrowhead for each made", and "the ruby".
 - **Start** (`World::start_making`): refused with no time by the row's `lack` (beyond skill: "That
   is beyond your skill."; no station: "There is no anvil here."; no knife; no launcher: "You
-  have no bow ready."), then by the plan's reason. Then "You set to work on the long sword at the anvil." and `Spent::Craft(Crafting)`
-  (`Copy`: the picks in a `[Option<usize>; MAX_PICKS]`).
-- **The work** (`World::make`): `keep_at` for the recipe's `seconds` (`fletch::fletcher_seconds`:
+  have no bow ready."), then by the plan's reason. Then "You set to work on the long sword at the anvil." and the work driver's
+  `Task::Craft(Crafting)` (`Copy`: the picks in a `[Option<usize>; MAX_PICKS]`).
+- **The work** (`world/work.rs`, "The work driver" below): `keep_at` for the recipe's `seconds` (`fletch::fletcher_seconds`:
   Fletcher's share for the arrows) in `ActionKind::Craft` turns, watched on the overworld as a
   forage is (`Watch::Forage`); stopped early, "...; you put down your work." and nothing is spent. Done (`crafted`),
   the picks are found again and the plan is resolved again from the pack ("You have nothing
@@ -517,12 +517,27 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
   Cut), and Alchemy the `craft` mark (Woodcraft's from P5b); `skill_effect_of` keeps one profession's benefit
   from counting for another's recipe.
 
+## The work driver
+
+Every craft's long work, and Decipher's, goes through one driver (#1492; `world/work.rs`): its
+`start_*` checks what it checks and returns `Spent::Work(Work)`, a `Task` (one variant per kind:
+`Crafting`, `GemWork`, `Deciphering`, `Enchanting`, `Forging`, `Mending`, `Rigging`,
+`Salvaging`, `Setting`, `Tempering`) and its seconds (`World::craft_work(task, base)` takes
+Quick hands' share, `World::craft_seconds`; Decipher's `Work::spent` none, and a recipe's making
+passes `fletch::fletcher_seconds`, which took it already). `World::work`, the one dispatch line
+in `world/mod.rs`, then runs `keep_at` for those seconds in turns of the task's action, the last
+turn cut short, watched on the overworld where the task says; interrupted, it says the task's
+words ("...; you put down your work.", "You leave off your work."), the time spent; done, it
+finds the task's stacks again (below) and calls the task's end. Each kind implements `Job`
+(`kind`, `watch`, `on`, `found`, `leave`, `nothing_left`, `done`; all but `done` have the common
+default), so a rule for every craft goes in `work.rs` once.
+
 ## Long work's stacks found again
 
 Every long work on stacks of the pack (`craft_make.rs` `make`, Temper and Whittle, Cut, Set,
 salvage, Make do and mend, Decipher, the enchanting recipes) names them by position as it
 begins, and a stack gone while it works (food rotting away, which does not stop it) shifts every
-later one (#1564). So each keeps a copy of its stacks as its time begins (`World::work_on`,
+later one (#1564). So the driver keeps a copy of its stacks as its time begins (`World::work_on`,
 `world/work_on.rs`; only the enchanting picks that are positions, `Enchanting::in_pack`) and finds
 those very stacks when it ends (`World::worked_on`: at the old position if still there, else the
 first stack equal to it); any gone or changed ends the work on nothing ("You have nothing left to
@@ -560,7 +575,7 @@ is. The flaming arrows' oil the same. Each essence's source is a tag's material 
 (`data/drops/{fire,ice,lightning,air,water,earth}.toml`, `bodiless`; `fire-thing.toml`'s essence
 of fire at 25 %; `docs/dev/creatures.md`); `brew_tests.rs` checks every essence a brew takes drops
 from some creature and every flask input is stocked by a generated shop. Alchemy in
-`data/skills.toml` gains the `craft` curve (Metalcraft's) and the `craft` mark (100 %);
+`data/skills/` gains the `craft` curve (Metalcraft's) and the `craft` mark (100 %);
 `data/recipes.toml`'s Alchemy row names `stat = "intelligence"`, `verb = "Brew"`, and its
 `failed` and `fumbled` lines. In `world/craft_make.rs`:
 
@@ -805,14 +820,14 @@ P11 (#1356; `docs/design/recipes.md` §6 "Rings and amulets"), generic recipes:
   "You have no gem to hand." with no time.
 - No aspect, so never graded; a failure of metal on an item with no aspect says "The work goes
   wrong, and you save what you can of it." (the brittle blade's line is for arms and armour).
-- The wiki's table: generated `recipes-jewelcraft.md` (`recipes::recipes_jewelcraft`), under
-  `crafting.md`'s "The recipes"; the prose in `crafting.md#making-jewellery`. The first generic
+- The wiki's table: generated `recipes-jewelcraft.md` (`recipes::recipes_jewelcraft`), on
+  `jewellery.md` (Crafting's sub-page, #1600) with the prose. The first generic
   recipe with steps, `--screen craft-pick`'s, is the amber amulet.
 
 ## Salvage
 
 `world/salvage.rs` (one module; one line each in `world/mod.rs`'s `Spent` and dispatch,
-`action.rs`, `ability.rs`'s matches, `buff.rs`), numbers in `data/salvage.toml`
+`action/text.rs`, `ability.rs`'s matches, `buff.rs`), numbers in `data/salvage.toml`
 (`content/salvage.rs`, `Content::salvage`, optional: without it nobody salvages and the ability
 is not listed): `seconds = 600`, `difficulty = 12`, `yield = 50`.
 
@@ -931,14 +946,14 @@ levels 40 and 50, each one read.
   }`, `CraftEffect::CraftTimePercent`, `CraftMods::craft_time_percent`, the least held):
   `mastery::craft_seconds(content, actor, base)` (and `World::craft_seconds(base)` for the
   player) is the time of every craft, at least a second. Every craft's `start_*` asks it for the
-  seconds its `keep_at` loop runs: `fletch::fletcher_seconds` (every recipe's time, read there
+  seconds the work driver runs (`World::craft_work`, "The work driver" above): `fletch::fletcher_seconds` (every recipe's time, read there
   alone: forged, counted after Fletcher's `time_percent` so the two multiply, brewed, Smelt,
   and any recipe a later profession adds, enchanting's too), `temper.rs` (Temper and Whittle),
   `cut.rs`, `set.rs`, `salvage.rs`, `make_do.rs`, `field_forge.rs`, and `rig.rs`. The lists that
   tell a craft's time ask the same (`craft.rs::takes`, the forging wizard's and Set's `CraftPlan`,
   the rig list), so
   the time shown is the time spent. Not crafts, unchanged: Gather, Forage, Scribe, Decipher. A
-  new craft's loop calls `craft_seconds` with its data's seconds.
+  new craft starts with `craft_work` and its data's seconds.
 - **Master's hand** (`data/talents/masters_hand.toml`, `{ kind = "grade_ease", value = 4 }`,
   `CraftEffect::GradeEase`, `CraftMods::grade_ease`, summed): `mastery::graded_margin(content,
   actor, margin)` adds it to a made check's margin (0 or more), never a failure's, so whether the

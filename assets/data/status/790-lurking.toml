@@ -1,0 +1,10 @@
+# Lurking, the thief's Lurk (#684, a class active): waiting in ambush. A hostile that steps up
+# beside the lurker takes its blow at once, caught unawares unless it was hunting them; the
+# lurker's next action ends it, silently.
+[[status]]
+id = "lurking"
+name = "Lurking"
+max = 1
+stacking = "refresh"
+per_action = true
+start = "You wait in ambush."

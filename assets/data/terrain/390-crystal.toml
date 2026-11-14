@@ -1,0 +1,9 @@
+# A pedestal for colored light; the level legend gives each crystal its light.
+[[terrain]]
+id = "crystal"
+name = "light crystal"
+glyph = "♦"
+fg = "#f4f0ff"
+bg = "#0d0d10"
+walkable = false
+glow = 0.35

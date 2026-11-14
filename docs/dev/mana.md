@@ -60,7 +60,7 @@ issue how it interacts with mana**, and hooks in at the one place below.
     giving it (`Skills::trains_effect`). `Actor::max_mana` and `lasting_max_mana` end in
     `Actor::deeper_pool` (`mana::deeper(pool, bonus)`: at most `pool / 5`), so
     `keep_mana_within_max` cuts mana when an item or talent raising the skill comes off. Its
-    marks: `skills::Use::Cast` (`cast`, 25 % in `data/skills.toml`), reported by
+    marks: `skills::Use::Cast` (`cast`, 25 % in `data/skills/`), reported by
     `spend_mana` beside the Willpower mark (the dev `drain:N` too). Levels and Deep well raise `mana_base` through
     `Actor::grow_mana_base`, which fills what the maximum grew by (Concentration's share of the
     larger pool too); a level-up roll on the skill raises the maximum alone, like an item. Tests:

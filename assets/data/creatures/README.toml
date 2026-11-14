@@ -13,7 +13,7 @@
 # by the size's carry, before it is burdened, spec §8 "Burden"; the player's comes from their
 # race when the run has a character), light (a preset in
 # lights.toml the creature carries), anim, and the presentation-only effects glow and
-# [[creature.particles]] (see terrain.toml; they move with the creature; `on = "attack"` bursts
+# [[creature.particles]] (see terrain/; they move with the creature; `on = "attack"` bursts
 # at the target of each attack the player sees, e.g. a spell's sparkle).
 # Hearing (gameplay, spec §5 "Hearing"): footsteps (how loud its steps are on terrain with a
 # step_noise of 100; a sound loses 10 a cell, 14 diagonally, and a closed door muffles 30; at most
@@ -22,7 +22,7 @@
 #
 # Behavior (spec §8 "Creature behavior"; nothing here is shown to the player but the faction's
 # stance toward them):
-#   faction      a faction id in factions.toml (none: neutral to all; the player's is "player")
+#   faction      a faction id in factions/ (none: neutral to all; the player's is "player")
 #   factions     instead of faction: the factions each creature of the type may join, by weight
 #                (1 or more), `{ seelie = 50, unseelie = 50 }`: each draws its own when it is made
 #                (a spawn, a floor's population, a level file's entry without a faction of its
@@ -56,7 +56,7 @@
 #   invisible    `invisible = true`: the player never sees it, however lit and near (the
 #                invisible stalker); or [creature.invisible] with `cooldown` (seconds, 6 to
 #                600): at the start of its turn, whenever the cooldown is off, it gives itself
-#                the Invisible status (data/status.toml, two minutes), free of time and mana,
+#                the Invisible status (data/status/, two minutes), free of time and mana,
 #                then goes on as ever; Silenced, it cannot. Seeing, Blood scent, a companion's
 #                nose, and a blow that finds it show it; it is heard as ever
 #   budge       whether you can swap places with it when it is not hostile to you (spec §8
@@ -150,7 +150,7 @@
 # strongest of a place), the rarer. A level legend's hand-placed creatures are not drawn.
 #
 # Skills (spec §8 "Skills"; never shown to the player): skills, the skills it is trained in, by
-# skill id (skills.toml), with fixed values (0 to 999); every other skill is untrained. The player's
+# skill id (skills/), with fixed values (0 to 999); every other skill is untrained. The player's
 # come from their race and class, not from here. Creatures do not train (yet). Those of surprise
 # (spec §8 "Surprise and sneak attacks") work for creatures as for the player: sneak_attack (dice
 # on a hit that finds its target unaware, and a harder initiative check for it), initiative
@@ -185,7 +185,7 @@
 #             optionally threat, crit, and to_hit as for weapons (objects.toml); Strength adds
 #             to hit and to damage. damage_type is the kind of damage it does (damage_types.toml,
 #             spec §8 "Damage types": a bite piercing, a claw slashing, a slam bludgeoning).
-#             on_hit lists the status effects (status.toml) and diseases (diseases.toml) a hit
+#             on_hit lists the status effects (status/) and diseases (diseases.toml) a hit
 #             with it may cause, if the target lives: [{ status = "poisoned", chance = 10,
 #             severity = 2 }] (chance in percent, 1 to 100; severity in degrees, up to the
 #             status's max), { disease = "filth_fever", chance = 10 } (then a check to resist it).
@@ -198,7 +198,7 @@
 #             needs combat = "dragon", and a dragon needs it): [creature.breath] with damage
 #             (dice, rolled once for everyone in the cone), damage_type (its element: one type),
 #             length (the cone's, in cells, 2 to 12; a quarter turn wide, as Burning hands'),
-#             cooldown (seconds before the next, 6 to 600: the `breath` status of status.toml, a
+#             cooldown (seconds before the next, 6 to 600: the `breath` status of status/, a
 #             degree per 6 s), effect (a burst effect of effects.toml drawn over the cone), and
 #             optionally noun (what strikes, in the messages: "fire"; default "breath") and verb
 #             (what it does: "breathes fire"; default "breathes"), and riders (on_hit entries
@@ -212,7 +212,7 @@
 #             with their check, each by its own chance; never a disease or a hold), and
 #             optionally chance (percent that eyes that meet it are caught, 1 to 100; default
 #             100), cooldown (seconds before the next, 6 to 600: the `gaze` status of
-#             status.toml, a degree per 6 s; default 12), averted (true: the player averts their
+#             status/, a degree per 6 s; default 12), averted (true: the player averts their
 #             eyes by reflex while they see it, fighting at -4 to hit with Dodge halved and no
 #             free blows; default false) and glance (with averted: the share of chance it takes
 #             at against averted eyes, percent; default 25). It gazes before it throws, whenever
@@ -258,7 +258,7 @@
 #             calls shared types only, a campaign's its own too; a list may name the type itself,
 #             a breeder), count (dice: how many at once,
 #             1 to 12: "1d3"), cooldown (seconds before the next, 6 to 600: the `summoning` status
-#             of status.toml, a degree per 6 s), mana (what one costs, 1 to 1000; the type then
+#             of status/, a degree per 6 s), mana (what one costs, 1 to 1000; the type then
 #             needs mana; left out, it costs none), and optionally range (it summons at a hostile it sees within this many cells,
 #             1 to 20; default 8), spread (how far from it they appear, 1 to 5; default 2), most
 #             (how many of its summoned may live at once, 1 to 20; default 6), and verb (the
@@ -268,12 +268,12 @@
 #             experience when killed. A type
 #             with a summoning carries the tag `summoner` (content::summoner_roster_tests)
 #   aura      a status it gives every hostile near it now and then (design monster-dread §5.4;
-#             world/aura.rs): [creature.aura] with status (status.toml; no hold), radius (1 to 6
+#             world/aura.rs): [creature.aura] with status (status/; no hold), radius (1 to 6
 #             cells), touch (the words of its first touch on the player who sees it, the bearer
 #             as {the}: "A chill comes off {the}."), and optionally severity (degrees, default
 #             1), check and difficulty (a stat and 1 to 40: made, it does not take; none: it
 #             always takes), every (seconds between touches, 6 to 600, default 12: the `aura`
-#             status of status.toml, a degree per 6 s), heard = true with loudness (it reaches by
+#             status of status/, a degree per 6 s), heard = true with loudness (it reaches by
 #             hearing, as a voice that loud where it stands, through walls; default 50; else by
 #             line of sight), damage_type (the resistance that takes its share of the dose), and
 #             unseen (the words when the player does not see it: "A wail rises through the
@@ -295,7 +295,7 @@
 #             and counting for no quest; look mode calls it "writhing"
 #   steals    a thief (docs/design/monster-dread.md §5.6; enemy-only; a type with hands):
 #             { what = "small" | "any", chance = 30, cooldown = 60 }. A melee hit on the player
-#             that leaves them alive, while the `theft` status of status.toml is off, takes one
+#             that leaves them alive, while the `theft` status of status/ is off, takes one
 #             stack from their pack by its chance (1 to 100; never what they wear or wield;
 #             "small": coins, gems, potions, rings, scrolls), and the thief takes the status for
 #             cooldown seconds (6 to 600, a degree per 6 s). It fights on; what it took is in its

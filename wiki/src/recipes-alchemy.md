@@ -6,6 +6,14 @@ If you are trained in [Alchemy](skills.md#skill-alchemy), you can brew
 and choose a potion. You need no station and no tools, and the flask is free: an alchemist always
 has bottles. You can brew anywhere.
 
+**You need:**
+- **Skill:** Alchemy. [Witches](class-witch.md) start with it, a
+  [craftsperson](class-craftsperson.md#trades) may take the [Brewster](talents.md#talent-brewster)
+  trade, and a [commoner](class-commoner.md) may have it as their trade (others:
+  [Which skills you start with](skills.md#which-skills-you-start-with)). No one teaches it.
+- **Stock:** herbs, and for some brews an essence or a flask.
+- **Place:** anywhere, with no tools.
+
 The battle flasks (fire, frost, thunder, smoke, pitch fire, the blasting flask) and three potions
 (frost, earthing, sea legs) also take an [essence](materials.md#herbs-and-essences). Elementals
 leave their element's essence when they die, and other fire creatures sometimes leave an essence

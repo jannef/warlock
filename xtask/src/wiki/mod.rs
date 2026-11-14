@@ -21,6 +21,7 @@ mod burden;
 mod calendar;
 mod character;
 mod chests;
+mod class_guide;
 mod combat;
 mod companions;
 mod crafting;
@@ -44,6 +45,7 @@ mod hearing;
 mod herbs;
 mod horoscope;
 mod hunger;
+mod install;
 mod kits;
 mod learning;
 mod links;
@@ -156,6 +158,7 @@ type Table = fn(&Content) -> String;
 /// topic (a new module for a new topic) plus one line here, next to its topic: never at the end.
 fn generate(content: &Content) -> Vec<(String, String)> {
     let tables: &[(&str, Table)] = &[
+        ("install.md", install::install),
         ("calendar.md", calendar::months),
         ("actions.md", actions::action_costs),
         ("speeds.md", actions::speeds),
@@ -268,6 +271,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("races.md", character::races),
         ("race-traits.md", character::race_traits),
         ("classes.md", character::classes),
+        ("classes-glance.md", class_guide::glance),
+        ("class-card.md", class_guide::cards),
         ("class-limits.md", character::class_limits),
         ("prestige-classes.md", character::prestige_classes),
         ("prestige-levels.md", talents::prestige_levels),
@@ -545,26 +550,41 @@ mod tests {
         out
     }
 
-    /// The classes page includes every class's level table once, by its anchor, so a class's
-    /// prose sits in its one section (#1171: the paladin and the bard had two).
+    /// Each class's page includes its level table once, by its anchor, so a class's prose sits
+    /// in its one page (#1171: the paladin and the bard had two sections; #1540: a page each).
     #[test]
-    fn the_classes_page_includes_every_class_table_once() {
+    fn every_class_page_includes_its_table_once() {
         let content = Content::builtin().expect("content loads");
         let table = talents::class_levels(&content);
-        let page = std::fs::read_to_string(workspace_root().join("wiki/src/classes.md"))
+        let overview = std::fs::read_to_string(workspace_root().join("wiki/src/classes.md"))
             .expect("classes.md");
-        assert!(!page.contains("{{#include generated/class-levels.md}}"));
+        assert!(!overview.contains("{{#include generated/class-levels.md"));
         for class in content.classes() {
+            let name = character::class_page(&class.id);
+            let page = std::fs::read_to_string(workspace_root().join("wiki/src").join(&name))
+                .unwrap_or_else(|_| panic!("{name}"));
             let anchored = table.contains(&format!("<!-- ANCHOR: {} -->", class.id));
             let include = format!("{{{{#include generated/class-levels.md:{}}}}}", class.id);
-            let wanted = usize::from(anchored);
-            assert_eq!(page.matches(&include).count(), wanted, "{}", class.id);
-            let heading = format!("### The {}\n", class.name.to_lowercase());
-            assert!(!page.contains(&heading), "{}: a second section", class.id);
+            assert_eq!(
+                page.matches(&include).count(),
+                usize::from(anchored),
+                "{name}"
+            );
+            assert_eq!(
+                page.matches("{{#include generated/class-levels.md").count(),
+                1
+            );
+            // The template (#1536): the card first, then How to play, then the levels.
+            let card = format!("{{{{#include generated/class-card.md:{}}}}}", class.id);
+            assert_eq!(page.matches(&card).count(), 1, "{name}");
+            let at = |s: &str| page.find(s).unwrap_or_else(|| panic!("{name}: {s}"));
+            assert!(at(&card) < at("## How to play"), "{name}");
+            assert!(at("## How to play") < at("## Levels"), "{name}");
+            assert!(at("## Levels") < at(&include), "{name}");
         }
     }
 
-    /// Only a status with a light (its own in data/status.toml, or its spell circle's in
+    /// Only a status with a light (its own in data/status/, or its spell circle's in
     /// data/circles.toml) says it sheds one, and a circle's is named as the circle's.
     #[test]
     fn only_statuses_with_a_light_shed_one() {
@@ -1695,12 +1715,13 @@ mod tests {
                 "| Costs a hit point every 40 seconds, faster the worse it is; hit points do not \
                  come back; shows on others as \"bleeding\" | ",
                 "| Big hits and confirmed criticals; the attacks of 11 creatures; ",
-                "| A degree a minute; cured at once by bandage |",
+                "| A degree a minute; ended at once by potion of full healing, potion of greater \
+                 healing, a priest's prayer, the Heal skill (binds it), ",
             ],
         );
         for row in [
             "half as fast | The attacks of 27 creatures; eating rotten food | A degree every 2 \
-             minutes; cured at once by antidote |",
+             minutes; ended at once by potion of antidote, potion of full healing, ",
             "Strength \u{2212}1, Dexterity \u{2212}1 when strong",
         ] {
             assert!(statuses.contains(row), "{row} in {statuses}");

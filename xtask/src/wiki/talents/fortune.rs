@@ -14,7 +14,7 @@ pub(super) fn text(content: &Content, effect: &FortuneEffect) -> String {
                 "each level you reach puts by {} plus {} gold, and ({} % of the time) one loot \
                  roll at that level with the odds of a magic or rare item {}{}, kept if magic, \
                  rare, a potion, a scroll, or a gem; your servant hands it all over when you \
-                 talk to them (see [Stipend](classes.md#stipend))",
+                 talk to them (see [Stipend](class-aristocrat.md#stipend))",
                 rules.each,
                 rules.dice,
                 rules.chance,
@@ -32,7 +32,7 @@ pub(super) fn text(content: &Content, effect: &FortuneEffect) -> String {
             chance,
             magic,
         } => format!(
-            "your [stipend](classes.md#stipend) puts by {} gold, makes its loot roll {} \
+            "your [stipend](class-aristocrat.md#stipend) puts by {} gold, makes its loot roll {} \
              percentage points more often, and the odds of a magic or rare item in it are {}",
             percent(gold),
             signed(chance),
@@ -43,7 +43,7 @@ pub(super) fn text(content: &Content, effect: &FortuneEffect) -> String {
                 "your business partner invests the gold you put with them ({} % kept going in, \
                  {} % coming out): every week it changes by {} plus {} basis points (hundredths \
                  of a percent), {} more per quest of their town's people done and more for some \
-                 quests (see [Invest](classes.md#invest))",
+                 quests (see [Invest](class-merchant.md#invest))",
                 rules.fee_in, rules.fee_out, rules.base, rules.dice, rules.per_quest
             ),
             None => "nothing: investing is not in this game".to_string(),

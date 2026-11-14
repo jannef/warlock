@@ -1,0 +1,15 @@
+# A staggering blow's (the Staggering blow talent, the weapon abilities' Crushing blow, Stunning
+# bash, Stunning fist, Staggering block; a fall through a collapsed floor): the next action costs
+# half again as much, and that action ends it. A new dose only keeps it (refresh): one slowed
+# action however many blows staggered.
+[[status]]
+id = "staggered"
+name = "Staggered"
+seen = "staggered"
+max = 1
+stacking = "refresh"
+per_action = true
+cost = 150
+cured_by = ["clear_head"]
+start = "You stagger."
+end = "You find your feet again."

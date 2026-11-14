@@ -1,0 +1,10 @@
+[[terrain]]
+id = "dry_grass"
+plants = true
+name = "dry grass"
+glyph = "."
+fg = "#bcae6a"
+bg = "#2a2612"
+bounce = "#dcd098"
+# It rustles.
+step_noise = 120

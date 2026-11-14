@@ -1,0 +1,5 @@
+# Potions (#565, #567, the combat progression design §10): drunk from the Consume list. Thrifty
+# drinker (Delver) and Lasting draughts (Vigour).
+[[system]]
+id = "potions"
+name = "Potions"

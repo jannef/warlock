@@ -1,0 +1,9 @@
+[[terrain]]
+id = "town"
+name = "town"
+glyph = "#"
+fg = "#f0b868"
+bg = "#24170a"
+stairs = "down"
+glow = 0.3
+travel_minutes = 30

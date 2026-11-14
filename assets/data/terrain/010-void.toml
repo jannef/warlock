@@ -1,0 +1,12 @@
+# Rock deep in the ground, never seen: once a cell next to it is dug or blasted open, it shows
+# its face, a stone wall (generated levels wall their open ground the same way).
+[[terrain]]
+id = "void"
+name = "solid rock"
+stone = true
+glyph = " "
+fg = "#000000"
+walkable = false
+transparent = false
+stains = false
+face = "wall"

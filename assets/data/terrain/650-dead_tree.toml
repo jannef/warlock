@@ -1,0 +1,8 @@
+[[terrain]]
+id = "dead_tree"
+name = "dead tree"
+glyph = "ψ"
+fg = "#a08e6c"
+bg = "#14120c"
+walkable = false
+height = 2

@@ -29,7 +29,7 @@ pub enum GrowthEffect {
         #[serde(default)]
         news: Option<String>,
     },
-    /// Handed out once, as the talent is taken or given: every skill of `skills.toml` the holder
+    /// Handed out once, as the talent is taken or given: every skill of `skills/` the holder
     /// is not trained in, but those `except` names, is trained at `dice`, rolled from the
     /// `levels` stream, whatever skills the content holds (Jack of all trades;
     /// `world/jack.rs`). `news` is said when a class table gives it.

@@ -1,0 +1,12 @@
+# A teeming den: a room full of sleeping creatures of the floor's danger, and their hoard. They
+# wake to noise, a blow, or a waking neighbour's cry, never by themselves.
+[[effect]]
+id = "teeming"
+name = "teeming den"
+mark = "t"
+near = "A warm, rank smell drifts out of the dark ahead."
+enter = "You hear slow breathing all around you."
+weight = 8
+needs_danger = true
+min_cells = 16
+swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60, loot_level = 1, themes = { kind = 10, faction = 20 } }

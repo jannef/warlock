@@ -5,7 +5,7 @@ this file.** This file is the stable overview of the creature subsystem (faction
 sight, spawning, gear, incorporeal creatures, coarse turns); every tribe's or wave's roster
 notes, per-creature facts, and test-row lists live in the per-tribe files below. The spec's
 creature and faction lists are likewise not edited by a roster (`spec/07b-data.md` points at
-`assets/data/creatures/` and `assets/data/factions.toml`). A new tribe adds a new file and one
+`assets/data/creatures/` and `assets/data/factions/`). A new tribe adds a new file and one
 line here only if it truly is a new family, in the same PR as nothing else shares.
 
 Per-tribe notes:
@@ -49,7 +49,7 @@ Auras, innate statuses, and cries (#1128, design `docs/design/monster-dread.md` 
 (`[creature.aura]`, `innate`, `cry`; `CreatureDef::{aura, innate, cry}`). Two lines in
 `ai.rs::creature_turn`: `aura_turn` as the turn starts (after the slumber and coarse-turn
 returns, before `decide`; it puts the innate statuses back first) and `cry` beside `mutter` once
-the plan is done; `travel.rs::make_creature` calls `aura::wear_innate`, and `perception.rs`
+the plan is done; `travel.rs::make_creature` calls `aura::wear_innate`, and `perception/actors.rs`
 leaves a type's innate statuses out of the seen effects. The aura's cooldown is the `aura`
 status; its draws (a check's two per target) and the cry's one are the gameplay stream's, on
 the bearer's turn. `content::aura_roster_tests` holds the bearers' rows; the tribe files say
@@ -96,7 +96,7 @@ the player's own Invisible, from the dev `afflict:invisible`, hides them from no
 tests are `unseen_tests.rs`.
 
 Factions and creature behavior (spec §7 "Factions", §5 "Creature sight", §8 "Creature behavior"):
-`data/factions.toml` (`content/faction.rs`: `Factions`, symmetric hostility, `Stance`; optional,
+`data/factions/` (`content/faction.rs`: `Factions`, symmetric hostility, `Stance`; optional,
 without it everyone is neutral, but then no creature may name a faction; monsters fight only the
 player but for the two story feuds, Seelie and wrathful fey against the Unseelie and demons
 against devils, #612, the tribes' old feuds kept as comments; a level that wants a brawl gives
@@ -246,7 +246,7 @@ Theft and the blink (docs/design/monster-dread.md §5.6, #1130). **Data**: `stea
 chance, cooldown }` and `blinks = { range, cooldown }` on a type (`content/theft.rs`:
 `StealsSpec` and `BlinksSpec`, resolved in the creature loop into `CreatureDef::steals:
 Option<Steals>` and `CreatureDef::blinks: Option<Blinks>` with their cooldown statuses' degrees,
-`theft` and `blink` in `data/status.toml`, a degree per 6 s; `what` is `small`, the classes of
+`theft` and `blink` in `data/status/`, a degree per 6 s; `what` is `small`, the classes of
 `theft::SMALL`, or `any`). **Rules**: `world/snatch.rs` (`World::snatches_at`, a guard in `ai.rs::fight` before a cast: a thief
 beside the player, its cooldown off, strikes in melee; `World::snatch`, one line in `fight.rs`
 after `barbed`, so a thief cut down by barbs takes nothing): a melee hit on the
@@ -493,7 +493,7 @@ object fits; what fits no slot as kept is carried, `Pack::equip`).
 The rolls are `gear.rs`: `gear::roll(content, rng, creature, item_level) -> kit::Pack` (the
 kit's `Pack::put`/`equip`, `loot::make_as` for a magic piece, `variant::draw` with
 `Source::Gear { level, faction }` (the type's level and faction: a faction's `gear`
-favourites, `data/factions.toml`, #1191, `docs/dev/objects.md` "Materials and variants") for a
+favourites, `data/factions/`, #1191, `docs/dev/objects.md` "Materials and variants") for a
 plain one, the burden guard against `burden::limit` of the
 type's stats and size). Who rolls is `CreatureSpawn::rolls_gear` (true for a legend or vault
 entry without `carry`/`wield`/`wear`, `Canvas::add_patrol`, the local areas' deer; false for a
@@ -505,14 +505,14 @@ generated floor (rolled by `gear::arm` after it) and a spawn in play (rolled by
 `make_creature`). What falls is unidentified (Scavenger, which told it, was cut by #816). Tests: `world/gear_tests.rs`; the mapgen
 snapshots print each spawn's gear.
 
-Gear condition (#1193): right after each `gear::roll` (one line in `gear::arm`, one in
-`placed_gear`), `world/gear_condition.rs::apply` draws each piece's state ([`Worked`], the
+Gear condition (#1193): right after `gear::roll` in `gear::equip` (gear's last steps, written
+once for `gear::arm` and `placed_gear`, #1494), `world/gear_condition.rs::apply` draws each piece's state ([`Worked`], the
 smith's: damaged with `by` for its word, or one to three improvements, each an attempt) from its
 own stream, `condition/<key>` with the gear stream's key, so the gear's draws and the rest of the
 level do not move. One draw below 1000 per piece against the creature's tribe's odds
 (`data/gear_condition.toml`, `content/gear_condition.rs`: `[default]`, `[[tribe]]` by creature
 tag, first match in file order), then one per improvement for its aspect. Only single pieces of
-arms or armour an anvil or knife could work (`temper::arms`, aspects), never protected ones
+arms or armour an anvil or knife could work (`magic::worked::arms`, aspects), never protected ones
 (`item_damage::protected`, with every object any quest may ask for, fixed or rolled: gear is made
 before a quest is given). The kind is by the main part's material group (`[kinds]`, metal: rust
 and acid): the one the material withstands least, never one at 100; else `ItemHarm::Work`
@@ -573,7 +573,7 @@ wave, #335 the delf wave): content only, on the fields above. A wave adds
   `campaigns/ascmearc/data/creatures/`. Each file starts with a comment naming its wave; `xp` follows
   `5 × level + 10`; a humanoid has `racial_weapon` with a rank in its skill and `[[creature.gear]]`
   lines (a second weapon of another skill wants a rank there too, so it benefits);
-- its factions in `data/factions.toml`, inserted by group (after the kobolds), never at the end.
+- its factions in `data/factions/`, inserted by group (after the kobolds), never at the end.
   Four test fixtures write their own neutral factions file over the shipped one
   (`world/{equip,magic,object,read}_tests.rs`): every shipped faction id must be listed there
   too, or the shipped types naming it fail to load;
@@ -586,7 +586,7 @@ wave, #335 the delf wave): content only, on the fields above. A wave adds
 (`stance_between`), and `Factions::has_enemies` counts a faction's own quarrels only: being on the
 berserk's list makes no one a fighter (`disturbs_rest`, hearing, `stride.rs`, the wiki's `fights`).
 `fixture_factions.rs` strips the line with the other grudges, so a fixture's berserk are at peace;
-the fixtures that write their own `data/factions.toml` have no such faction, which is why the
+the fixtures that write their own `data/factions/` have no such faction, which is why the
 spell's `berserk_faction` is read at the cast (none: it rises serving) and checked on the shipped
 data by a test rather than at load.
 

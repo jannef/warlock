@@ -54,7 +54,7 @@ a direction prompt like open/close, bash, and dig) and bursts the door terrain's
 `Event::DoorKicked`/`DoorBroken`.
 **Wedging** (#1027, design `docs/design/skill-uses.md` §6.5 W2) is `world/wedge.rs`: `Action::Wedge(dir)`
 (replay text `wedge:DIR`, priced as a wait, `ActionKind::Wait` as Listen is), `Ability::Wedge` (had by
-whoever is trained in a skill with `Effect::Wedge`: Woodcraft's second benefit in `skills.toml`, curve
+whoever is trained in a skill with `Effect::Wedge`: Woodcraft's second benefit in `skills/`, curve
 `[[0, 0], [100, 8], [200, 12]]`, mark `wedge` 100 %; tests `world/wedge_tests.rs`). A wedged door is
 `LevelState::wedged: BTreeMap<Pos, u8>` (the points; saved with `skip_serializing_if`, so levels
 without one hash as before; hashed through the state; ground truth only, so perception shows nothing),

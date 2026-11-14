@@ -3,9 +3,9 @@
 An **ally** is a creature on your side. It follows you, fights what you are hostile to, and comes
 along when you move on. Allies come in two kinds:
 
-- **Summons** are called by a spell for a while, such as the [druid](classes.md#druid)'s wolves.
+- **Summons** are called by a spell for a while, such as the [druid](class-druid.md)'s wolves.
 - **[Companions](companions.md#companions)** are beasts that are yours for good, such as the
-  [ranger](classes.md#ranger)'s hound.
+  [ranger](class-ranger.md)'s hound.
 
 The witch's beast, her [familiar](familiars.md#familiars), is a kept beast of its own kind.
 [Companions](companions.md) and [Familiars](familiars.md) have pages of their own. This page covers
@@ -46,7 +46,7 @@ find their places first.
 
 An ally's kill is yours. It counts in full for your [quests](quests.md), and builds what a kill of
 yours builds. It pays you **half** the experience your own blow would. The classes that live with
-beasts, the [ranger](classes.md#ranger) and the [druid](classes.md#druid), are paid in full (see
+beasts, the [ranger](class-ranger.md) and the [druid](class-druid.md), are paid in full (see
 [The rules](#the-rules)). The share goes by your class, whatever brought the ally. The ally itself
 gains nothing.
 
@@ -66,7 +66,7 @@ Your own spells that harm an area hurt your allies in it too.
 {{#include generated/summon-spells.md}}
 
 "Learning" is what the spell adds to the difficulty of
-[learning it from its grimoire](magic.md#learning-a-spell). The calls are very hard to
+[learning it from its grimoire](learning-spells.md#learning-a-spell). The calls are very hard to
 learn, even for a caster well above their level.
 
 ### The risen
@@ -135,9 +135,9 @@ The druid calls the wild:
 - [Call of the forest](magic.md#spell-call-of-the-forest) at 25;
 - [Call the elements](magic.md#spell-call-the-elements) at 40, whose element the wild chooses.
 
-Each call keeps one of its own beside you. From [Pack leader](classes.md#talent-pack-leader) (level
+Each call keeps one of its own beside you. From [Pack leader](class-druid.md#talent-pack-leader) (level
 32), every call brings one more, keeps two of its own, and lasts half again as long.
-[Lord of the wild](classes.md#talent-lord-of-the-wild) (level 60) keeps three of each, and what you
+[Lord of the wild](class-druid.md#talent-lord-of-the-wild) (level 60) keeps three of each, and what you
 call stays until it is slain.
 
 [Beast-bond](talents.md#talent-beast-bond), a Wayfarer talent for those with some

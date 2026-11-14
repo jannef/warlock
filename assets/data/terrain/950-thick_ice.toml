@@ -1,0 +1,10 @@
+# Thick ice: opaque and pale, frosted all over; it holds anything that walks.
+[[terrain]]
+id = "thick_ice"
+name = "thick ice"
+glyph = "·"
+fg = "#dce7f2"
+bg = "#44586e"
+ice = 150
+move_cost = 120
+bounce = "#d8e6f6"

@@ -1,0 +1,9 @@
+[[terrain]]
+id = "spent_altar"
+name = "spent altar"
+description = "An altar of worn stone, cold and dark. Whatever listened here has stopped."
+stone = true
+walkable = false
+glyph = "_"
+fg = "#5a5a5e"
+bg = "#0d0d10"

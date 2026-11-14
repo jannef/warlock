@@ -1,0 +1,11 @@
+# Four resistances for half an hour (`resist`, counted as gear's: never immunity).
+[[status]]
+id = "warmed"
+name = "Warmed"
+seen = "warmed"
+max = 1
+stacking = "refresh"
+eases = 1800
+resist = { fire = 50 }
+start = "A warmth settles deep in your bones."
+end = "The warmth leaves your bones."

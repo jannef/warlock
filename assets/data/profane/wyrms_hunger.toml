@@ -1,0 +1,10 @@
+[[gift]]
+id = "wyrms_hunger"
+name = "Wyrm's hunger"
+kind = "bane"
+tier = "dire"
+weight = 8
+description = "You hunger far sooner than you should, though no meal makes you sluggish."
+line = "You could eat the hoard, and the wyrm after it."
+effects = [{ kind = "hunger_percent", value = 150 }, { kind = "no_bloating" }]
+replaces = ["hungering"]

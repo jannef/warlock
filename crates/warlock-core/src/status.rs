@@ -1,5 +1,5 @@
 //! Status effects on actors (spec §8 "Status effects"): the rules of one actor's effects. What
-//! the statuses are is data ([`crate::content::StatusDef`], `data/status.toml`); applying them
+//! the statuses are is data ([`crate::content::StatusDef`], `data/status/`); applying them
 //! to the world (causes, ticks as the clock moves, deaths, messages) is `world/status.rs`.
 //!
 //! An actor carries its **effects** ([`Effects`]): at most one of each status, each with a
@@ -483,7 +483,7 @@ mod tests {
     #[test]
     fn slows_multiply_rounding_up_and_the_first_block_names_why() {
         let mut files = ContentFiles::builtin();
-        let (_, text) = files.table("status").next().expect("data/status.toml");
+        let text = files.table_text("status");
         let text = format!(
             "{text}[[status]]\nid = \"slowed\"\nname = \"Slowed\"\nmax = 1\ncost = 150\n\
              blocks = [\"read\"]\n\
@@ -491,7 +491,7 @@ mod tests {
              blocks = [\"read\", \"melee\"]\n\
              combat = {{ to_hit = 2, damage = -1, dodge = -2, parry = 1 }}\n"
         );
-        files.insert("data/status.toml", &text);
+        files.replace_table("status", &text);
         let content = Content::load(&files).expect("content");
         let (slowed, slow) = def(&content, "slowed");
         let (mired, mire) = def(&content, "mired");

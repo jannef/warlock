@@ -35,7 +35,7 @@ pub fn parse_local_area(id: &str) -> Option<Pos> {
 }
 
 /// What the land of an overworld terrain is like at the scale of a local area (`landscape` in
-/// `data/terrain.toml`): which generator builds the local areas of its cells, and what it adds
+/// `data/terrain/`): which generator builds the local areas of its cells, and what it adds
 /// to the local areas beside it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -256,11 +256,8 @@ mod tests {
         );
         let terrain = |from: &str, to: &str| {
             load_with(|f| {
-                let text = f
-                    .get("data/terrain.toml")
-                    .expect("terrain")
-                    .replacen(from, to, 1);
-                f.insert("data/terrain.toml", &text);
+                let text = f.table_text("terrain").replacen(from, to, 1);
+                f.replace_table("terrain", &text);
             })
         };
         let err = terrain("local = \"grass\"", "local = \"wall\"");

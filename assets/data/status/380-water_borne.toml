@@ -1,0 +1,13 @@
+# Water walking's: wading as Undertow's (talents/undertow.toml), and ice that holds. Up to three
+# degrees, two minutes each.
+[[status]]
+id = "water_borne"
+name = "Water-borne"
+seen = "water-borne"
+max = 6
+stacking = "refresh"
+eases = 120
+wades_free = true
+ice_holds = true
+start = "Water feels as firm as the road beneath you."
+end = "Water is only water again."

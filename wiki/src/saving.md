@@ -15,11 +15,13 @@ since there is nothing to continue.
 - When you choose **Save and quit to menu** or **Quit** in the [pause menu](the-screen.md#menus)
   (`Esc`) and answer Yes. Quitting always asks first: `y`, or Enter on Yes, confirms; `n`, `Esc`,
   or Enter on No (the default) cancels. You can bind a "Save and quit" key in the
-  [Controls](controls.md#rebinding-keys) screen; it asks too.
+  [Controls](controls-rebinding.md) screen; it asks too.
 - Automatically every 50 [turns](time.md#what-takes-time).
 - Automatically when you change level.
 
 On the web the page is also saved when it is hidden or closed.
+
+## Your characters and the graveyard
 
 **Continue** on the [main menu](the-screen.md#menus) resumes the character you played last, and
 names them. It appears only if a character that this version of the game can continue is saved.
@@ -31,7 +33,7 @@ asks first). A character saved by another version of the game is listed as made 
 It cannot be continued, and Continue skips it, but you can still delete it.
 
 **Graveyard** appears once any character has died. It lists every fallen character, the one with
-the most [experience](experience.md#levels) at the moment of death first: name, race and class,
+the most experience at the moment of death first: name, race and class,
 level, and experience, then what killed them, where, when (in UTC), and how old they were.
 Characters who died before the game began keeping their experience count as 0 and come last, the
 highest level first. If the list is longer than the screen, the arrow keys or `>` and `<` turn the
@@ -57,13 +59,13 @@ Logs and crash reports are in a `logs` folder: on macOS and Linux inside the dat
 in `%LOCALAPPDATA%\warlock\data\logs`.
 
 To see the exact folders for your launch, and why they are there, run `warlock --paths`, or open
-**[Settings](settings.md)**, then **Where are my files?**, which also has an **Open folder** action for each.
+**Settings**, then **Where are my files?**, which also has an **Open folder** action for each.
 
 ### Portable mode
 
 To keep everything with the game, for a USB stick or a game folder you can copy, make an empty
 folder named **`warlock-data`** next to the game (on macOS, next to `Warlock.app`, not inside it).
-The game then keeps its [settings](settings.md), [key bindings](controls.md#rebinding-keys), saves, and logs in it:
+The game then keeps its [settings](settings.md), [key bindings](controls-rebinding.md), saves, and logs in it:
 
 | Inside `warlock-data` | What |
 |---|---|
@@ -82,7 +84,7 @@ the emptied folder to `warlock-data.moved-<date>`. `warlock --move-data portable
 reverse. Add `--dry-run` to see the plan first. Nothing is overwritten: a file already there is
 kept as `NAME.bak-<time>`. It will not run while the game is running.
 
-**Browser.** Saves and [settings](settings.md) are kept in your browser's local storage for the
+**Browser.** Saves and settings are kept in your browser's local storage for the
 page, under `warlock/saves/` (`warlock/saves/brakka-1.sav`). They survive reloads. If the browser
 blocks storage (some private modes do), the game runs but cannot save, and writes a warning to its
 log. If the browser runs out of room, a message appears on the [message

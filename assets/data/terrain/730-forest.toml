@@ -1,0 +1,9 @@
+[[terrain]]
+id = "forest"
+name = "forest"
+glyph = "♣"
+fg = "#42a24c"
+bg = "#071208"
+travel_minutes = 90
+local = "forest_floor"
+landscape = "forest"

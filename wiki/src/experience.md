@@ -5,6 +5,31 @@ Your level (`Lv`) is in the [status bar](the-screen.md#the-screen). The
 [character screen](character.md) (`@`) shows it with your XP and the XP at which the next level
 comes, like `XP  85 / 128`. Dying shows the level you had reached.
 
+## When you level up
+
+The game says "Welcome to level N." Some things come by themselves at once:
+
+- more [hit points](hit-points.md#hit-points) (up to level 50) and more
+  [mana](mana.md#how-much-mana-you-have) (up to level 60), as [Levelling up](#levelling-up) below
+  says;
+- a chance for each of your [stats](stats.md#raising-your-stats) to rise, by how much you have used
+  it;
+- whatever your [class](classes.md#levels)'s level table gives at that level: a class ability, a
+  spell, or a talent it names. Your class's own page has the table.
+
+Then the **level-up screen** opens by itself, and you make the level's choices in this order:
+
+1. your **[skill rolls](skills.md#improving-a-skill)**, every level: two for most classes, more for
+   some, spent on the skills you are trained in;
+2. a **bonus talent**, at the levels your class names (see
+   [When you get a talent](talents.md#when-you-get-a-talent));
+3. a **[talent](talents.md)**, every third level: 3, 6, 9, and so on.
+
+The screen can't be closed until everything is chosen, and nothing can be saved for later. Your
+[weapon skills](weapon-skills.md#raising-a-weapon-skill) are not part of it: they rise with use,
+not with levels. Later on, some classes can be called into a
+[prestige class](prestige-classes.md#callings).
+
 ## Earning experience
 
 You get XP for:
@@ -34,7 +59,7 @@ Meeting something new teaches you a little.
   below you it is ("You learn something of kobolds.").
 - The first time you arrive on a level, you gain a little for finding your way there ("You gain 10
   experience for finding your way here.").
-- The first time you learn a spell by reading its [grimoire](magic.md#learning-a-spell), you gain 5 XP for each level of the spell
+- The first time you learn a spell by reading its [grimoire](learning-spells.md#learning-a-spell), you gain 5 XP for each level of the spell
   (at least 5): 55 for a level 11 spell, 350 for a level 70 one. Spells a class gives you cost
   nothing and pay nothing; a failed reading pays nothing.
 
@@ -65,7 +90,7 @@ So a [kobold shaman](creatures.md#creature-kobold-shaman) is worth less every le
 
 ## Levels
 
-Every [class](classes.md) stops at level 60, its last, except the [bard](classes.md#bard), who stops
+Every [class](classes.md) stops at level 60, its last, except the [bard](class-bard.md), who stops
 at 30 (the table below says so for each). The road there is long. A bard at 30 keeps every point of
 XP earned after it. One who becomes a [hunter](prestige-classes.md#prestige-classes) gains at once
 every level that XP buys, from level 31 on. The curve itself runs on to level 100, for levels a
@@ -96,15 +121,15 @@ to level N." One kill can bring several levels at once.
 
 Your **[race](races.md) and [class](classes.md)** change how much XP every level needs. Long-lived
 races and the patient callings need more; short-lived races and everyday folk need less. The two
-multiply, so an [elf](races.md#race-elf) [wizard](classes.md#wizard) needs 175 % of the XP below,
-and a [half-orc](races.md#race-half-orc) [commoner](classes.md#commoner) 72 %.
+multiply, so an [elf](races.md#race-elf) [wizard](class-wizard.md) needs 175 % of the XP below,
+and a [half-orc](races.md#race-half-orc) [commoner](class-commoner.md) 72 %.
 [Character creation](character.md) says "Levels come slowly." or "Levels come quickly." where it
 matters:
 
 {{#include generated/experience-factors.md}}
 
 The XP needed for each level, for a character of 100 % (a [human](races.md#race-human)
-[warrior](classes.md#warrior), say) and for the quickest and the slowest race and class. The table
+[warrior](class-warrior.md), say) and for the quickest and the slowest race and class. The table
 also shows what each level grows (see [Levelling up](#levelling-up)) and the classes
 that stop there:
 
@@ -125,8 +150,8 @@ mana plus what the better of your [Intelligence](stats.md#stat-intelligence) and
 [Willpower](stats.md#stat-willpower) adds, if that comes to anything (see [Mana](mana.md)).
 
 **Skill rolls.** Every level gives **[skill rolls](skills.md#improving-a-skill)**: two for most classes,
-three for a [thief](classes.md#thief) or a [ranger](classes.md#ranger), four for a
-[bard](classes.md#bard), one more for a [human](races.md#race-human), and more for a high
+three for a [thief](class-thief.md) or a [ranger](class-ranger.md), four for a
+[bard](class-bard.md), one more for a [human](races.md#race-human), and more for a high
 [Intelligence](stats.md#stat-intelligence). You spend them on your trained [skills](skills.md)
 before you do anything else. How much each roll adds depends on how much you have used the skill
 since its last roll (see [Skills](skills.md#improving-a-skill)).

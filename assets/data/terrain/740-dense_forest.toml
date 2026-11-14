@@ -1,0 +1,11 @@
+# Too thick to see through.
+[[terrain]]
+id = "dense_forest"
+name = "dense forest"
+glyph = "♠"
+fg = "#2e7c3c"
+bg = "#040c05"
+transparent = false
+travel_minutes = 150
+local = "forest_floor"
+landscape = "dense_forest"

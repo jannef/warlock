@@ -1,0 +1,9 @@
+# A cut through a mountain range: walkable, but nothing to explore (no local area) and no way
+# into anywhere. Beorggeat, where the Ascmearc begins (campaign design §5.1).
+[[terrain]]
+id = "mountain_pass"
+name = "mountain pass"
+glyph = ")"
+fg = "#c6c2cc"
+bg = "#1c1b21"
+travel_minutes = 30

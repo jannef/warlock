@@ -10,9 +10,9 @@ use super::Content;
 use super::status::StatusId;
 use serde::Deserialize;
 
-/// The cooldown status a theft gives (`data/status.toml`).
+/// The cooldown status a theft gives (`data/status/`).
 pub const STEAL_STATUS: &str = "theft";
-/// The cooldown status a blink gives (`data/status.toml`).
+/// The cooldown status a blink gives (`data/status/`).
 pub const BLINK_STATUS: &str = "blink";
 /// The item classes a `small` thief takes (`data/item_classes.toml`): coins, gems, potions, a
 /// ring, scrolls. A class the content lacks is left out.
@@ -107,7 +107,7 @@ fn cooldown(
     seconds: u32,
 ) -> Result<(StatusId, u16), String> {
     let status = (content.status_id(id))
-        .ok_or_else(|| format!("{field}: needs the `{id}` status in data/status.toml"))?;
+        .ok_or_else(|| format!("{field}: needs the `{id}` status in data/status/"))?;
     let def = content.status(status);
     let eases = (def.eases)
         .filter(|_| def.tick.is_none())

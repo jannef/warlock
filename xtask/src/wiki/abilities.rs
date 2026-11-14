@@ -78,7 +78,7 @@ pub(super) fn abilities(content: &Content) -> String {
                 "everyone beside a forgotten altar not yet spent (a prayer takes a minute)".into()
             }
             Ability::Salvage => {
-                "everyone (anywhere, with nothing; see [Crafting](crafting.md#salvage))".into()
+                "everyone (anywhere, with nothing; see [Salvage](salvage.md))".into()
             }
             Ability::Drink => "everyone beside a healing spring (a drink takes ten seconds)".into(),
             Ability::Gather => {
@@ -209,9 +209,9 @@ fn read_more(content: &Content, a: Ability) -> String {
                 )
             },
         ),
-        Ability::Class(ClassActive::Exploit) => page("Exploit", "resources.md#exploit"),
+        Ability::Class(ClassActive::Exploit) => page("Exploit", "openings.md#exploit"),
         Ability::Class(ClassActive::ThrownExploit) => {
-            page("Thrown exploit", "resources.md#thrown-exploit")
+            page("Thrown exploit", "openings.md#thrown-exploit")
         }
         Ability::Class(ClassActive::Inspire | ClassActive::Lullaby) => page("Songs", "#songs"),
         Ability::Class(ClassActive::Orison) => page("Prayer", "prayer.md"),
@@ -253,7 +253,7 @@ fn read_more(content: &Content, a: Ability) -> String {
             "Forgotten altars",
             "altars-forges-springs.md#forgotten-altars",
         ),
-        Ability::Salvage => page("Salvage", "crafting.md#salvage"),
+        Ability::Salvage => page("Salvage", "salvage.md"),
         Ability::Drink => page(
             "Healing springs",
             "altars-forges-springs.md#healing-springs",
@@ -277,7 +277,7 @@ fn class_of(content: &Content, active: ClassActive) -> String {
     };
     let anchor = |name: &str| name.to_lowercase().replace(' ', "-");
     if let Some(c) = (content.classes().iter()).find(|c| gives(&c.abilities)) {
-        return format!("[{}](classes.md#{})", c.name, anchor(&c.name));
+        return format!("[{}]({})", c.name, super::character::class_page(&c.id));
     }
     if let Some(p) = (content.prestiges().iter()).find(|p| gives(&p.abilities)) {
         return format!("[{}](prestige-classes.md#{})", p.name, anchor(&p.name));
@@ -481,7 +481,7 @@ pub(super) fn songs(content: &Content) -> String {
 /// The Music values the song tables show.
 const MUSIC_VALUES: [u16; 6] = [0, 50, 100, 150, 200, 300];
 
-/// What Music adds to every song (`skills.toml`'s `song_degrees` and `song_craft`), by value.
+/// What Music adds to every song (`skills/`'s `song_degrees` and `song_craft`), by value.
 pub(super) fn song_music(content: &Content) -> String {
     let Some(music) = content.skills().iter().find(|s| s.id == "music") else {
         return "Nothing makes a song better.\n".into();

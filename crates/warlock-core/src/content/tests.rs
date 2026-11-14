@@ -65,8 +65,8 @@ fn a_bottom_is_a_level_of_its_campaign_with_a_way_back_up() {
 fn minimal_files(level_map: &str, extra_legend: &str) -> ContentFiles {
     let mut files = ContentFiles::default();
     files.insert("data/item_classes.toml", BUILTIN_ITEM_CLASSES);
-    files.insert(
-        "data/terrain.toml",
+    files.replace_table(
+        "terrain",
         r##"
         [[terrain]]
         id = "void"
@@ -333,10 +333,10 @@ fn effects_load_and_their_glyphs_join_the_atlas() {
 #[test]
 fn bad_effects_are_reported_with_the_terrain() {
     let mut files = minimal_files("#@#\n", "");
-    let terrain = files.get("data/terrain.toml").unwrap().to_string();
+    let terrain = files.table_text("terrain");
     let sparks = "glyphs = \"'\"\ncolors = []\nlife = 1\n";
-    files.insert(
-        "data/terrain.toml",
+    files.replace_table(
+        "terrain",
         &format!("{terrain}\n[[terrain.particles]]\n{sparks}"),
     );
     let err = Content::load(&files).unwrap_err();
@@ -347,12 +347,12 @@ fn bad_effects_are_reported_with_the_terrain() {
         "{}",
         err.message
     );
-    files.insert("data/terrain.toml", &format!("{terrain}glow = nan\n"));
+    files.replace_table("terrain", &format!("{terrain}glow = nan\n"));
     let err = Content::load(&files).unwrap_err();
     assert!(err.message.contains("`glow` and `haze`"), "{}", err.message);
     let sparks = sparks.replace("[]", "[\"#ffa040\"]");
-    files.insert(
-        "data/terrain.toml",
+    files.replace_table(
+        "terrain",
         &format!("{terrain}\n[[terrain.particles]]\n{sparks}rate = 2\n"),
     );
     assert!(Content::load(&files).is_ok());
@@ -505,6 +505,7 @@ fn creature_skills_must_exist_and_the_player_lists_none() {
     // Without a skills file, nothing may name a skill.
     let mut files = ContentFiles::builtin();
     files.remove("data/skills.toml");
+    files.remove("data/skills/");
     let err = Content::load(&files).unwrap_err();
     assert!(err.message.contains("unknown skill"), "{err}");
 }
@@ -1213,16 +1214,16 @@ fn water_animations_are_checked() {
             "glyph = \".\"",
             &format!("glyph = \".\"\n            {anim}"),
         );
-        files.insert("data/terrain.toml", &terrain);
+        files.replace_table("terrain", &terrain);
         let err = Content::load(&files).unwrap_err();
         assert!(err.message.contains(expected), "{anim}: {}", err.message);
     }
     // Foam needs running water to foam in.
     let mut files = minimal_files("#@#\n", "");
-    let terrain = files.get("data/terrain.toml").unwrap().to_string();
+    let terrain = files.table_text("terrain");
     let foam = "on = \"obstacle\"\nglyphs = \".\"\ncolors = [\"#ffffff\"]\nrate = 1\nlife = 1\n";
-    files.insert(
-        "data/terrain.toml",
+    files.replace_table(
+        "terrain",
         &format!("{terrain}\n[[terrain.particles]]\n{foam}"),
     );
     let err = Content::load(&files).unwrap_err();

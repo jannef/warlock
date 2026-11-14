@@ -129,14 +129,17 @@ pub(super) fn text(content: &Content, effect: &OffenceEffect) -> String {
             let role = match role {
                 None => {
                     return format!(
-                        "marks in every weapon skill and fighting style {}",
+                        "[training marks](weapon-skills.md#raising-a-weapon-skill) in every weapon skill and fighting style {}",
                         percent(value)
                     );
                 }
                 Some(Role::Launcher) => "missile".to_string(),
                 Some(r) => r.id().replace('_', " "),
             };
-            format!("marks in every {role} weapon skill {}", percent(value))
+            format!(
+                "[training marks](weapon-skills.md#raising-a-weapon-skill) in every {role} weapon skill {}",
+                percent(value)
+            )
         }
         OffenceEffect::TwoHandedCrit { value } => {
             format!("critical multiplier +{value} with a two-handed weapon (at most \u{d7}5)")

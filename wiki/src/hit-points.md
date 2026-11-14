@@ -12,13 +12,13 @@ Your **hit points** are your [Toughness](stats.md#stat-toughness) plus what your
 
 {{#include generated/hit-points.md}}
 
-A [dwarf](races.md#race-dwarf) [berserker](classes.md#berserker) with Toughness 16 has 6 + 8 + 16 = 30 hit points. An [elf](races.md#race-elf) [wizard](classes.md#wizard) with Toughness
+A [dwarf](races.md#race-dwarf) [berserker](class-berserker.md) with Toughness 16 has 6 + 8 + 16 = 30 hit points. An [elf](races.md#race-elf) [wizard](class-wizard.md) with Toughness
 8 has 10. You start every run unhurt. The [status bar](the-screen.md#the-screen) shows your hit points (`HP 18/24`), and so
 does the character screen.
 
 Creatures have hit points too, but the game never shows their numbers. They are listed on
 [Creatures in numbers](creature-numbers.md#hit-points-defence-and-resistances).
-[Look mode](controls.md#look-mode) tells you how hurt a creature looks:
+[Look mode](controls-prompts.md#look-mode) tells you how hurt a creature looks:
 
 - unhurt
 - lightly wounded: more than two thirds left
@@ -35,7 +35,7 @@ you [rest](resting.md#how-resting-works). They come back slower, or not at all, 
 [diseased](status-effects.md#status-diseased). The details are on [Healing](healing.md).
 
 A [disease](diseases.md) that lowers your [Toughness](stats.md#stat-toughness) lowers your maximum hit points too (see
-[Diseases](diseases.md)). Creatures heal the same way while you are on their level. In a
+Diseases). Creatures heal the same way while you are on their level. In a
 [sanctuary](special-rooms.md#room-sanctuary) (a [special room](special-rooms.md)) wounds heal three times as fast, yours and
 everyone else's.
 
@@ -46,12 +46,13 @@ wore and wielded, falls where it stood for you to pick up, with its corpse on to
 [Food and corpses](food.md)). A wounded creature may also die later of its wounds: "The giant rat
 bleeds to death."
 
-When **you** reach 0 [hit points](#hit-points), you die: "You die..." The run is over. A screen tells you what
+When **you** reach 0 hit points, you die: "You die..." The run is over. A screen tells you what
 killed you, where, when, and after how many turns. It names the killer if you saw it, says "Bled to
 death" if your wounds did it, or says you starved (see [Hunger](hunger.md)).
 
-There is no going back. Your save is deleted at once (see [Saving](saving.md)). Press `Enter` or
-`Esc` to return to the main menu and start a new run.
+There is no going back. Your save is deleted at once (see [Saving](saving.md)). Your character
+is remembered in the [graveyard](saving.md#your-characters-and-the-graveyard) on the main menu,
+with what killed them. Press `Enter` or `Esc` to return to the main menu and start a new run.
 
 ## Blood
 
@@ -66,7 +67,7 @@ Only some [kinds of damage](damage-types.md) spill blood. Blades, blunt blows, [
 [force](damage-types.md#damage-force) do. [Fire](damage-types.md#damage-fire) sears the wound shut, and [cold](damage-types.md#damage-cold), [electricity](damage-types.md#damage-electricity),
 [poison](damage-types.md#damage-poison), and [necrotic](damage-types.md#damage-necrotic) harm leave no wound to bleed: a creature killed by a fireball leaves no
 blood, only [char](#char). A sword that cuts or stabs spills blood either way. The table on
-[Damage types](damage-types.md) lists every kind.
+Damage types lists every kind.
 
 How much blood depends on how big the victim was and how it died. A blow far beyond what was needed
 to kill, or a critical, spills more. An arrow or a thrown weapon spills less, sprayed along its
@@ -78,7 +79,7 @@ red and dries darker and browner over a few hours. The cave beetle bleeds a gree
 Water, lava, and fire take no stains.
 
 You see blood wherever you see the floor. On a wall you see it only from the splattered side. You
-remember blood as you last saw it, and [look mode](controls.md#look-mode) mentions it: "on blood-stained stone floor".
+remember blood as you last saw it, and [look mode](controls-prompts.md#look-mode) mentions it: "on blood-stained stone floor".
 
 Blood is only for show. It never changes a fight, and the Blood switch in the
 [settings](settings.md) hides it.
@@ -91,7 +92,7 @@ brown soot, then blackened, then charred through.
 - A [fireball](magic.md#spell-fireball) or a fire flask chars every floor cell its blast reaches: 20, half that at the
   blast's edge.
 - A cone of fire, such as [Burning hands](magic.md#spell-burning-hands) or a dragon's breath, chars every cell it covers: 20.
-- A [fire zone](spellcasting.md#zones) chars the cells it burns on: 24 as it is laid.
+- A [fire zone](spell-rules.md#zones) chars the cells it burns on: 24 as it is laid.
 - A creature burned by fire chars the cell it stands on: 3, plus a third of the blood the blow
   would have spilled.
 - Walls beside a burning cell take 75 % of that cell's char on the side facing it (half that

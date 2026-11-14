@@ -1,0 +1,7 @@
+# The cult of the drowned minster (Fennmynster): cultists and their priests. They would bind the
+# fen to their rites, so the marsh things fight them; the drowned dead they leave alone.
+# The fen's feud with the cult is lore, not fought on the floor.
+[[faction]]
+id = "cult"
+name = "cultists"
+hostile = ["player"]

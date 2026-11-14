@@ -10,8 +10,8 @@ scenario, dump layer, or action is added here in the same PR, by its group, neve
 
 Where the lists come from: `--scenario` names are the files of `assets/campaigns/*/scenarios/`,
 `--screen` names are `ui/screens.rs::ScreenName` (clap lists them: `cargo run -p warlock --
---help`), dump layers are `dump.rs::Layer`, and action verbs are `action.rs`'s parser
-(`Action::from_str`).
+--help`), dump layers are `dump/layer.rs::Layer`, and action verbs are `action/text.rs`'s `VERBS` table
+(read by `Action::from_str`).
 
 ## `cargo xtask` commands in detail
 
@@ -341,7 +341,8 @@ and are **dev-only**.
   piercing, range 10`, a spirit weapon's ending `, pierces armour`; unidentified magic left out.
 - `talents`: the player's talents in the order taken, `Hardy`, `Skill focus (stealth)`, `Weapon
   focus (long blades)`, a birth sign's gifts first, `Fleet-footed (sign)`, `Slight (sign,
-  flaw)`, those their class gives marked `Haggler (class)`; never what a rank gives.
+  flaw)`, those their class gives marked `Haggler (class)`, a profane gift `Oak-hearted
+  (profane)`, a profane bane `Withered (profane, bane)`; never what a rank gives.
 - `spells`: the spells the player knows with spell level, rank, and cost and what each does now,
   its roll and reach as they would cast it, `Fireball (level 11, rank 1, 26 mana): 4d6 fire,
   burns one in four, range 11, radius 2`.
@@ -409,7 +410,9 @@ On a level with a danger, `truth` and `actors` start with `danger 3 population 2
   bonus in basis points, `invest 98.24 gold, week 74260, bonus 0 bp`; the stat training marks
   with the price in force (the drop's for a negative pile), `stat marks St 120/160, To -30/75`;
   each known spell's rung of its roll's ladder with the score and the outside rungs, `fireball
-  rung 2/4 (In 16; +1 Empower)`; the learning, `learning 36 (Decipher script 108)` (the skill's
+  rung 2/4 (In 16; +1 Empower)`; the profane gifts held and each tier's pool, the gifts a draw
+  may give now of all the tier holds, `profane 1 held; pool lesser 4/4, greater 0/1, dire 2/2`;
+  the learning, `learning 36 (Decipher script 108)` (the skill's
   trained value) or `cannot learn: not trained in Decipher script`.
 - `rooms`: the level's special rooms: the terrain with their plain ground drawn as the effect's
   `mark`, then a line per room, `s shadowed room at (34, 8)-(49, 13), entered`.
@@ -465,7 +468,8 @@ messages, heard sounds, and, with `--state`, the full world state; and:
   `weapon_skills` (by skill id: `rank`, `progress`, the progress a percent or null at rank 10),
   `caster_styles` (the caster styles alone), `styles_in_use` (style ids), `attacks` (`source`,
   `kind`, `name`, `to_hit`, `damage` (the text), `range`).
-- `talents` (in the order taken: `id`, `name`, `choice`, `class`, `granted`, `flaw`).
+- `talents` (in the order taken: `id`, `name`, `choice`, `class`, `granted`, `flaw`, and
+  `profane`, a profane gift's kind, `boon`, `mixed`, or `bane`, left out otherwise).
 - `character`: `name`, `race`, `gender`, `class`, `raised`, `age`, `born` (`{year, month,
   day}`), `sign` (`{animal, element}`), and `lucky`, a lucky day's title, only for one born on it,
   `prestige`, the prestige class once called, and `classes`, every class with its own level,
@@ -503,7 +507,8 @@ steal:DIR tame:DIR throw_voice:X,Y order:follow|stay|hunt:X,Y rest:GOAL encounte
 stance:NAME vision:PROFILE talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N call:ID
 rank:SKILL:N skip:DURATION weather:KIND spawn ally:CREATURE[:N[:DURATION]] meet:ENTRY[:OUTCOME]
 effect:ID@X,Y[>X,Y] zone:KIND@X,Y,R identify[:LETTERS] afflict:STATUS drain:N resource:ID
-infect:DISEASE reveal:ID lure:ID quest_roll:ID:TARGET freeze:X,Y,R thaw:X,Y,R`
+infect:DISEASE reveal:ID lure:ID gift:ID rescind:ID quest_roll:ID:TARGET freeze:X,Y,R
+thaw:X,Y,R`
 
 ### Arguments
 
@@ -820,7 +825,7 @@ None takes game time unless said.
   effect, and only says so in the message log.
 - `identify[:LETTERS]` identifies magic items and labelled scrolls' types; without letters
   everything carried (F8 records it).
-- `afflict:STATUS` gives one degree more of `STATUS`, an id in `assets/data/status.toml`, e.g.
+- `afflict:STATUS` gives one degree more of `STATUS`, an id in `assets/data/status/`, e.g.
   `afflict:poisoned*4 afflict:bleeding` (not `diseased`: that comes of a disease; nor `raging`:
   that comes of `resource:rage`).
 - `drain:N` the player spends N mana (1 or more) through `World::spend_mana` (as an ability
@@ -836,6 +841,10 @@ None takes game time unless said.
 - `lure:ID` active lure quest `ID`'s creature comes beside the player, aware of them (made if it
   is nowhere), e.g. `ask:E:quest-crystal_guardian` on Ysella then `descend
   lure:crystal_guardian ascend` (`docs/dev/quests.md` "Lure quests").
+- `gift:ID` the player is given profane gift `ID`, an id in `assets/data/profane/`, as a meal's
+  draw would give it, its relations applied (`replaces`, `undoes`); refused for one held, one a
+  gift held excludes, or one barred to the race. `rescind:ID` takes a gift held away again, its
+  `stat` given back (`docs/dev/profane-gifts.md`).
 - `quest_roll:ID:TARGET` active rolled quest `ID`, with no progress yet, draws `TARGET` instead (a
   creature, `tag:` a tag, or an object id its pool can hold, wherever the player can go, or a
   variant id; its kills count from then, a variant's reveal is made; refused otherwise;

@@ -1,0 +1,10 @@
+[[terrain]]
+id = "gazebo_post"
+name = "wooden post"
+glyph = "○"
+fg = "#d8a470"
+bg = "#3a2814"
+walkable = false
+transparent = false
+roofed = true
+height = 2

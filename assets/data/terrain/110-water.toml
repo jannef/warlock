@@ -1,0 +1,30 @@
+# Still water (pools, ponds): a slow, faint swell and now and then a glint of the light on it.
+[[terrain]]
+id = "water"
+name = "still water"
+glyph = "~"
+fg = "#4f8fe0"
+bg = "#0a1a30"
+# Wading takes twice as long as a step on dry ground, and splashes.
+move_cost = 200
+step_noise = 200
+bounce = "#a8c8ff"
+anim = { kind = "wave", speed = 0.16, amount = 0.05, glint = 0.5 }
+# It freezes below 0 °C, and a fall through the ice into it hurts a little.
+freeze = { below = 0, plunge = "1d3", damage_type = "cold" }
+stains = false
+
+# A splash when something wades in.
+[[terrain.particles]]
+on = "step"
+glyphs = "'`,."
+colors = ["#b8dcff", "#4f8fe0"]
+count = 5
+life = 0.45
+velocity = [0.0, -2.6]
+spread = [2.4, 0.8]
+gravity = 10.0
+offset = [0.0, -0.1]
+area = [0.35, 0.1]
+scale = 0.6
+fade = 0.4

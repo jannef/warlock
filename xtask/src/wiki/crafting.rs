@@ -100,7 +100,7 @@ pub(super) fn salvage(content: &Content) -> String {
         "\nSalvaging takes {} seconds ({} minutes). Each material's check is 2d12 plus the \
          modifier of the stat its skill works with, what talents add to checks of that stat, and \
          what that one skill gives to its craft, against {} plus the material's work. A natural \
-         {FUMBLE} always fails, a natural {HIGHEST} always succeeds. A material saved gives back \
+         {FUMBLE} always fails, a natural {HIGHEST} always succeeds. A material salvaged gives back \
          {}% of its weight as stock, at least one piece.\n",
         rules.seconds,
         rules.seconds / 60,

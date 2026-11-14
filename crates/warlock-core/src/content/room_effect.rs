@@ -1,4 +1,4 @@
-//! Special rooms (`assets/data/room_effects.toml`, spec §7 "Special rooms"), ADOM-like: a room of
+//! Special rooms (`assets/data/room_effects/`, spec §7 "Special rooms"), ADOM-like: a room of
 //! a generated level, or an area a hand-made level marks, can carry an effect that changes the
 //! rules while one is inside it.
 //!
@@ -68,12 +68,11 @@ pub const MAX_EFFECTS: usize = 256;
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct RoomEffectFile {
-    /// Percent per room (or cave chamber) of a generated level.
-    #[serde(default)]
-    chance: u8,
-    /// At most this many special rooms a generated level.
-    #[serde(default = "one")]
-    per_level: u8,
+    /// Percent per room (or cave chamber) of a generated level (default 0); set in at most one
+    /// file of the table.
+    chance: Option<u8>,
+    /// At most this many special rooms a generated level (default 1); the same.
+    per_level: Option<u8>,
     #[serde(default)]
     effect: Vec<RoomEffectSpec>,
 }
@@ -232,7 +231,7 @@ struct RiseSpec {
 /// rises from it as a creature of `faction` `after` its death.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Rise {
-    /// The faction (an id in `data/factions.toml`) the dead rise as, and that never rises
+    /// The faction (an id in `data/factions/`) the dead rise as, and that never rises
     /// (checked once the factions load, [`RoomEffects::check_factions`]).
     pub faction: String,
     /// How long after the death.
@@ -314,7 +313,7 @@ pub struct Swarm {
     /// Percent chances that a den is themed: all of one creature type, or all of one faction.
     #[serde(default)]
     pub themes: Themes,
-    /// The factions (ids in `data/factions.toml`) its sleepers are of, whether hostile or not (a
+    /// The factions (ids in `data/factions/`) its sleepers are of, whether hostile or not (a
     /// beast den's `wildlife`, `vermin`, and `marsh`); empty: any type hostile to the player.
     /// Checked against the factions once they load ([`RoomEffects::check_factions`]).
     #[serde(default)]
@@ -671,7 +670,7 @@ impl<'c> Here<'c> {
     }
 }
 
-/// The effects of `data/room_effects.toml` and how often generated levels get them.
+/// The effects of `data/room_effects/` and how often generated levels get them.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct RoomEffects {
     /// Percent per room of a generated level (each of a cave's chambers) to be special.
@@ -703,7 +702,7 @@ impl RoomEffects {
         outcomes: &OutcomeTables,
         light: impl Fn(&str) -> Option<LightId>,
     ) -> Result<(), ContentError> {
-        let err = |m: String| ContentError::new("data/room_effects.toml", m);
+        let err = |m: String| ContentError::new("data/room_effects/", m);
         for def in &mut self.defs {
             if let Some((offer, Some(table))) = &def.offers
                 && outcomes.get(table).is_none()
@@ -736,10 +735,7 @@ impl RoomEffects {
     ) -> Result<(), ContentError> {
         for def in &mut self.defs {
             let (loot, train) = (def.lore.resolve(&class, (&skill, skills))).map_err(|m| {
-                ContentError::new(
-                    "data/room_effects.toml",
-                    format!("effect `{}`: {m}", def.id),
-                )
+                ContentError::new("data/room_effects/", format!("effect `{}`: {m}", def.id))
             })?;
             def.loot = loot;
             def.train = train;
@@ -760,7 +756,7 @@ impl RoomEffects {
                 && factions.id(&haunt.faction).is_none()
             {
                 return Err(ContentError::new(
-                    "data/room_effects.toml",
+                    "data/room_effects/",
                     format!(
                         "effect `{}`: haunt faction `{}` is unknown",
                         def.id, haunt.faction
@@ -771,7 +767,7 @@ impl RoomEffects {
                 && factions.id(&rise.faction).is_none()
             {
                 return Err(ContentError::new(
-                    "data/room_effects.toml",
+                    "data/room_effects/",
                     format!(
                         "effect `{}`: rise faction `{}` is unknown",
                         def.id, rise.faction
@@ -781,7 +777,7 @@ impl RoomEffects {
             let Some(swarm) = &def.swarm else { continue };
             if let Some(name) = swarm.factions.iter().find(|n| factions.id(n).is_none()) {
                 return Err(ContentError::new(
-                    "data/room_effects.toml",
+                    "data/room_effects/",
                     format!("effect `{}`: swarm faction `{name}` is unknown", def.id),
                 ));
             }
@@ -803,7 +799,7 @@ impl RoomEffects {
             for name in &swarm.population {
                 let (id, _) = creature(name).ok_or_else(|| {
                     ContentError::new(
-                        "data/room_effects.toml",
+                        "data/room_effects/",
                         format!("effect `{}`: swarm population `{name}` is unknown", def.id),
                     )
                 })?;
@@ -814,8 +810,8 @@ impl RoomEffects {
         Ok(())
     }
 
-    /// Parses `data/room_effects.toml` with no statuses known; `terrain` resolves a floor's
-    /// terrain id and definition.
+    /// Parses one file's `text` as the whole table, with no statuses known (tests); `terrain`
+    /// resolves a floor's terrain id and definition.
     #[cfg(test)]
     pub(super) fn parse<'t>(
         file: &str,
@@ -825,24 +821,57 @@ impl RoomEffects {
         Self::parse_with(file, text, terrain, |_| None)
     }
 
-    /// Parses `data/room_effects.toml`; `terrain` resolves a floor's terrain id and definition,
-    /// `status` a status's id and definition.
+    /// Parses one file's `text` as the whole table, with statuses (tests).
+    #[cfg(test)]
     pub(super) fn parse_with<'t, 's>(
         file: &str,
         text: &str,
         terrain: impl Fn(&str) -> Option<(TerrainId, &'t TerrainDef)>,
         status: impl Fn(&str) -> Option<(StatusId, &'s StatusDef)>,
     ) -> Result<Self, ContentError> {
-        let err = |m: String| ContentError::new(file, m);
-        let parsed: RoomEffectFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        if parsed.effect.len() > MAX_EFFECTS {
-            return Err(err(format!("at most {MAX_EFFECTS} effects")));
+        Self::parse_table([(file, text)], terrain, status)
+    }
+
+    /// Parses the room effect table (`data/room_effects.toml`, `chance` and `per_level`, then a
+    /// file per effect in `data/room_effects/`; `ContentFiles::table`), the effects in the
+    /// table's order; `terrain` resolves a floor's terrain id and definition, `status` a status's
+    /// id and definition.
+    pub(super) fn parse_table<'a, 't, 's>(
+        files: impl IntoIterator<Item = (&'a str, &'a str)>,
+        terrain: impl Fn(&str) -> Option<(TerrainId, &'t TerrainDef)>,
+        status: impl Fn(&str) -> Option<(StatusId, &'s StatusDef)>,
+    ) -> Result<Self, ContentError> {
+        let mut chance: Option<(&str, u8)> = None;
+        let mut per_level: Option<(&str, u8)> = None;
+        let mut specs: Vec<(&str, RoomEffectSpec)> = Vec::new();
+        for (file, text) in files {
+            let err = |m: String| ContentError::new(file, m);
+            let parsed: RoomEffectFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+            for (key, value, set) in [
+                ("chance", parsed.chance, &mut chance),
+                ("per_level", parsed.per_level, &mut per_level),
+            ] {
+                let Some(value) = value else { continue };
+                if let Some((first, _)) = set {
+                    return Err(err(format!("`{key}` is set in {first} too")));
+                }
+                *set = Some((file, value));
+            }
+            specs.extend(parsed.effect.into_iter().map(|spec| (file, spec)));
+        }
+        if specs.len() > MAX_EFFECTS {
+            return Err(ContentError::new(
+                "data/room_effects/",
+                format!("at most {MAX_EFFECTS} effects"),
+            ));
         }
         let mut defs: Vec<RoomEffectDef> = Vec::new();
-        for spec in parsed.effect {
+        let mut paths: Vec<&str> = Vec::new();
+        for (file, spec) in specs {
+            let err = |m: String| ContentError::new(file, m);
             let bad = |m: String| err(format!("effect `{}`: {m}", spec.id));
-            if defs.iter().any(|d| d.id == spec.id) {
-                return Err(err(format!("duplicate effect id `{}`", spec.id)));
+            if let Some(at) = defs.iter().position(|d| d.id == spec.id) {
+                return Err(super::duplicate_id("effect", &spec.id, file, paths[at]));
             }
             if spec.collapse.is_some() && !spec.needs_below {
                 return Err(bad("a `collapse` needs `needs_below`".into()));
@@ -1012,10 +1041,11 @@ impl RoomEffects {
                 )));
             }
             defs.push(def);
+            paths.push(file);
         }
         Ok(Self {
-            chance: parsed.chance,
-            per_level: parsed.per_level,
+            chance: chance.map_or(0, |(_, c)| c),
+            per_level: per_level.map_or_else(one, |(_, p)| p),
             defs,
         })
     }

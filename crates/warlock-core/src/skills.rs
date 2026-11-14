@@ -1,6 +1,6 @@
 //! Skills (spec §8 "Skills"; #132): what an actor has trained in, ADOM-like.
 //!
-//! The skills themselves are content (`data/skills.toml`, [`crate::content::SkillDef`]): an id,
+//! The skills themselves are content (`data/skills/`, [`crate::content::SkillDef`]): an id,
 //! a name, a one-line description, what kind of skill it is, when it earns training marks, and
 //! what it gives. This module holds what an actor has of them and the rules that read them.
 //!

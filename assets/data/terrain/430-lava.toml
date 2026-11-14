@@ -1,0 +1,29 @@
+# Effects room (spec §3, §4.8).
+
+[[terrain]]
+id = "lava"
+name = "lava"
+glyph = "≈"
+fg = "#ff7020"
+bg = "#3a0c04"
+walkable = false
+light = "lava"
+bounce = "#ffb070"
+anim = { kind = "shimmer", color = "#ffd060", speed = 0.35 }
+glow = 0.5
+haze = 0.6
+stains = false
+
+# Embers drifting up from the surface.
+[[terrain.particles]]
+glyphs = "·.'"
+colors = ["#ffd070", "#ff6010", "#501005"]
+rate = 0.2
+life = 1.4
+velocity = [0.0, -0.6]
+spread = [0.2, 0.25]
+gravity = 0.1
+area = [0.4, 0.2]
+sway = 0.2
+scale = 0.5
+glow = 0.5

@@ -54,13 +54,11 @@ fn files(eager: bool) -> ContentFiles {
         );
     }
     if eager {
-        let text = include_str!("../../../../assets/data/skills.toml");
-        let eager = text.replace(
+        files.replace_in_table(
+            "skills",
             "mark = [{ on = \"heal\", chance = 30 }]",
             "mark = [{ on = \"heal\", chance = 100 }]",
         );
-        assert_ne!(eager, text, "Heal earns marks on a try");
-        files.insert("data/skills.toml", &eager);
     }
     files
 }

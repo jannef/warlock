@@ -63,7 +63,7 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   `Resistance`, and `Status` go through `World::lend`: `afflict` the
   status at its degrees; its start line is the event's when it begins, said here when an
   existing one grows stronger, and "Nothing more comes of it." when nothing changes (boosts
-  stack `highest`, the others `refresh`). The statuses (`data/status.toml`, the potions' group
+  stack `highest`, the others `refresh`). The statuses (`data/status/`, the potions' group
   after Barkskin): six boosts (`penalty` with `per_degree`, `eases = 600`, `max = 2`), three
   visions (`vision`, `eases = 1800`), four resistances (`resist`, 50 %, `eases = 1800`); what
   they do is the statuses' (docs/dev/status-effects.md). Status and disease beginnings and ends are not said here: they are the action's events,

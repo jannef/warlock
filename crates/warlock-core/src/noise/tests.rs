@@ -83,7 +83,7 @@ const LEGEND: &str = r##"
 /// Content with one level `t` drawn by `map` (rows of the legend above; it needs no `@`).
 fn content(map: &str) -> Content {
     let mut files = ContentFiles::default();
-    files.insert("data/terrain.toml", TERRAIN);
+    files.replace_table("terrain", TERRAIN);
     files.insert("data/creatures.toml", CREATURES);
     files.insert("data/legend.toml", LEGEND);
     files.insert(
@@ -282,7 +282,7 @@ fn an_action_s_noise_comes_from_the_actor_and_the_terrain() {
 fn noise_fields_are_validated() {
     let with = |terrain: &str, creatures: &str| {
         let mut files = ContentFiles::default();
-        files.insert("data/terrain.toml", terrain);
+        files.replace_table("terrain", terrain);
         files.insert("data/creatures.toml", creatures);
         files.insert("data/legend.toml", LEGEND);
         Content::load(&files).map(|_| ()).map_err(|e| e.message)

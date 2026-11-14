@@ -1,8 +1,8 @@
-//! Skills (`assets/data/skills.toml`, spec §8 "Skills"): what can be trained, how it trains, and
-//! what it gives. Adding a skill is one entry; what an actor has of them is
+//! Skills (`assets/data/skills/`, one file per skill, spec §8 "Skills"): what can be trained, how
+//! it trains, and what it gives. Adding a skill is one file; what an actor has of them is
 //! [`crate::skills::Skills`].
 //!
-//! The file also holds how skills grow at level-up (spec §8 "Skills"): the ladder of dice their
+//! `assets/data/skills.toml` holds how skills grow at level-up (spec §8 "Skills"): the ladder of dice their
 //! marks set ([`Ladder`], `[ladder]`) and the rolls' rules ([`RollRules`], `[rolls]`).
 
 use super::ContentError;
@@ -53,10 +53,9 @@ pub(super) fn optional_skills(
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct SkillFile {
+    ladder: Option<Ladder>,
+    rolls: Option<RollRules>,
     #[serde(default)]
-    ladder: Ladder,
-    #[serde(default)]
-    rolls: RollRules,
     skill: Vec<SkillSpec>,
 }
 
@@ -107,37 +106,65 @@ pub struct SkillBook {
 }
 
 impl SkillBook {
-    /// Parses `data/skills.toml`.
+    /// Parses one file's `text` as the whole skill table (tests).
+    #[cfg(test)]
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
-        let err = |m: String| ContentError::new(file, m);
-        let parsed: SkillFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        parsed.ladder.check().map_err(err)?;
-        if parsed.skill.len() > usize::from(u8::MAX) + 1 {
-            return Err(err("too many skills (at most 256)".into()));
-        }
+        Self::parse_table([(file, text)])
+    }
+
+    /// Parses the skill table (`data/skills.toml`, the ladder and the rolls, then a file per
+    /// skill in `data/skills/`; `ContentFiles::table`), the skills in the table's order.
+    /// `[ladder]` and `[rolls]` are each set in at most one file.
+    pub(super) fn parse_table<'a>(
+        files: impl IntoIterator<Item = (&'a str, &'a str)>,
+    ) -> Result<Self, ContentError> {
+        let mut ladder: Option<(&str, Ladder)> = None;
+        let mut rolls: Option<(&str, RollRules)> = None;
         let mut list: Vec<SkillDef> = Vec::new();
-        for spec in parsed.skill {
-            let id = &spec.id;
-            if list.iter().any(|s| &s.id == id) {
-                return Err(err(format!("duplicate skill id `{id}`")));
+        let mut paths: Vec<&str> = Vec::new();
+        for (file, text) in files {
+            let err = |m: String| ContentError::new(file, m);
+            let parsed: SkillFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+            if let Some(l) = parsed.ladder {
+                l.check().map_err(err)?;
+                if let Some((first, _)) = ladder {
+                    return Err(err(format!("`[ladder]` is set in {first} too")));
+                }
+                ladder = Some((file, l));
             }
-            let benefits = (spec.benefit.into_iter())
-                .map(BenefitSpec::resolve)
-                .collect::<Result<Vec<_>, _>>()
-                .map_err(|m| err(format!("skill `{id}`: {m}")))?;
-            list.push(SkillDef {
-                id: spec.id,
-                name: spec.name,
-                description: spec.description,
-                kind: spec.kind,
-                marks: spec.mark,
-                benefits,
-            });
+            if let Some(r) = parsed.rolls {
+                if let Some((first, _)) = rolls {
+                    return Err(err(format!("`[rolls]` is set in {first} too")));
+                }
+                rolls = Some((file, r));
+            }
+            for spec in parsed.skill {
+                let id = &spec.id;
+                if let Some(at) = list.iter().position(|s| &s.id == id) {
+                    return Err(super::duplicate_id("skill", id, file, paths[at]));
+                }
+                if list.len() > usize::from(u8::MAX) {
+                    return Err(err("too many skills (at most 256)".into()));
+                }
+                let benefits = (spec.benefit.into_iter())
+                    .map(BenefitSpec::resolve)
+                    .collect::<Result<Vec<_>, _>>()
+                    .map_err(|m| err(format!("skill `{id}`: {m}")))?;
+                list.push(SkillDef {
+                    id: spec.id,
+                    name: spec.name,
+                    description: spec.description,
+                    kind: spec.kind,
+                    marks: spec.mark,
+                    benefits,
+                });
+                paths.push(file);
+            }
         }
         Ok(Self {
             list,
-            ladder: parsed.ladder,
-            rolls: parsed.rolls,
+            ladder: ladder.map(|(_, l)| l).unwrap_or_default(),
+            rolls: rolls.map(|(_, r)| r).unwrap_or_default(),
         })
     }
 
@@ -145,14 +172,6 @@ impl SkillBook {
     pub fn id(&self, id: &str) -> Option<SkillId> {
         let i = self.list.iter().position(|s| s.id == id)?;
         u8::try_from(i).ok().map(SkillId)
-    }
-}
-
-impl super::RulesFile for SkillBook {
-    const PATH: &'static str = "data/skills.toml";
-
-    fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
-        Self::parse(path, text)
     }
 }
 

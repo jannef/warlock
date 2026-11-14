@@ -50,7 +50,7 @@ An item can be **damaged** in several ways, and it is always the same state. A d
 its improvements and is a point worse until it is mended, at an
 [anvil](altars-forges-springs.md#forges) or, for wood, with a knife
 ([Whittle](skill-uses.md#whittling)), or anywhere by a craftsperson's
-[Make do and mend](classes.md#make-do-and-mend). That is the state a failed attempt at an anvil leaves it
+[Make do and mend](class-craftsperson.md#make-do-and-mend). That is the state a failed attempt at an anvil leaves it
 in. An item damaged again, by anything, is **destroyed**. Only its name tells what did it: *a
 corroded*, *a rusted*, *a scorched*, or *a damaged long sword*.
 
@@ -84,7 +84,7 @@ anvil is never withstood, except by adamantium. Fighting bare-handed or with a s
 
 Some items no harm reaches at all: not acid, rust, or fire, not a failed attempt at an
 [anvil](altars-forges-springs.md#forges) or with the knife, and not a spell's
-[ruin](spellcasting.md#what-lies-in-its-way) of what lies on the floor. They are:
+[ruin](spell-types.md#what-lies-in-its-way) of what lies on the floor. They are:
 
 - [unique items](magic-items.md#unique-items);
 - items of the [of Proof](affixes.md#suffixes) affix, whether or not you have identified it;
@@ -239,7 +239,7 @@ Stone, flint, and obsidian are knapped by hand, so Woodcraft works them, not Jew
 and glass have no crafting skill yet. Some materials are harder to work than
 others: the **work** column of the materials table is added to the difficulty of working them
 (steel 0, tin −3, adamantium +8).
-[Salvage](crafting.md#salvage) uses both: it takes an item apart into these pieces.
+[Salvage](salvage.md) uses both: it takes an item apart into these pieces.
 
 {{#include generated/pieces.md}}
 

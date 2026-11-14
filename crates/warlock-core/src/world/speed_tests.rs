@@ -248,9 +248,9 @@ f.......
 
 fn files() -> ContentFiles {
     let mut files = ContentFiles::default();
-    files.insert("data/terrain.toml", TERRAIN);
+    files.replace_table("terrain", TERRAIN);
     files.insert("data/creatures.toml", CREATURES);
-    files.insert("data/factions.toml", FACTIONS);
+    files.replace_table("factions", FACTIONS);
     files.insert("data/legend.toml", LEGEND);
     files.insert("levels/track.toml", TRACK);
     files.insert("levels/cellar.toml", CELLAR);

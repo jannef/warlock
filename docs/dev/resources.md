@@ -223,7 +223,7 @@ statuses).
   before it; `show_max` picks `Focus 7/10` or `Rage 7`), the character screen's rows under the
   stance. Dumps: the header's `rage 11/20`, JSON `resources: [{id, current, max}]`, the dev
   `actors` layer's `resources rage 11/20 (progress)`. Never a creature's, never a pace.
-- **Talents**: `[[system]] id = "resources"` in `data/talents.toml`, named
+- **Talents**: system `resources` in `data/talents/systems/`, named
   since R5 (#253) by Battle trance, Inner calm, Steady hand, Patient blade, and Zealot (#914; the
   only class-limited picks, Zealot by its prerequisite), and the class abilities Rage, Blood frenzy, Mighty rage, Unstoppable,
   Rapid shot, Volley, Improved sneak attack, Master thief, Smite, Lay on hands, and Avatar. Tests:

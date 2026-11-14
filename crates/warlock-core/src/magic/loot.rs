@@ -37,7 +37,7 @@
 //!    (`Source::Loot`): arms and armour are Fine, Marvellous, or Masterwork by the `[[depth]]`
 //!    row of `data/gear_condition.toml` at the item level (one draw, then one per improvement;
 //!    none where the row gives nothing or for what takes no make:
-//!    [`crate::world::gear_condition::make`]); the same row adds its `ornament` percent to step
+//!    [`super::make::make`]); the same row adds its `ornament` percent to step
 //!    7's chance;
 //! 10. **the trim** ([`finished`], the very last step of every path that completes an item,
 //!     creature gear's after its condition): an item with more affixes than its capacity
@@ -411,7 +411,7 @@ fn make_from(
     // A wand's rung (the spell scaling design §7.4): one draw, a wand's only.
     stack.draw_wand_rung(content, rng);
     if loot {
-        crate::world::gear_condition::make(content, rng, level, &mut stack);
+        super::make::make(content, rng, level, &mut stack);
     }
     stack
 }

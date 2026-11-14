@@ -1,0 +1,9 @@
+# A dragon's breath spent (spec §8 "Creature behavior": "Dragons", the creatures'
+# `[creature.breath]`): a degree for every six seconds of its `cooldown`; while it lasts the
+# dragon fights with claws and bite. Creatures only: no one sees it on them.
+[[status]]
+id = "breath"
+name = "Breath spent"
+max = 100
+stacking = "refresh"
+eases = 6

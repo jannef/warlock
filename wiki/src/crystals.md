@@ -4,7 +4,7 @@ A **magic crystal** is magic caught in a stone. There are six colours, and each 
 is the blood and the fire, blue the mind and the frost, and so on. An [enchanter](enchanting.md) binds them
 into arms and armour. The colour decides what kinds of magic a crystal can give.
 
-You get crystals by [salvaging](crafting.md#salvage) magic items, identified or not, and from
+You get crystals by [salvaging](salvage.md) magic items, identified or not, and from
 the creatures you kill with [Soulglass](#soulglass). No shop sells them and none lie on the
 floor.
 Anyone can [consume](#consuming-a-crystal) one.
@@ -22,7 +22,7 @@ blue. Mana is blue, never red.
 
 ## Catching crystals in salvage
 
-When you [salvage](crafting.md#salvage) a magic or rare item, each of its affixes
+When you [salvage](salvage.md) a magic or rare item, each of its affixes
 gets a check before the materials do. You make it even if you are not trained in
 [Enchanting](skills.md#skill-enchanting). A made check leaves one crystal of the affix's colour:
 the first colour in the table whose families hold it. A failed one leaves nothing. Deeper magic
@@ -34,7 +34,7 @@ colours you get hint at what it was.
 
 ## Soulglass
 
-[Soulglass](magic.md#spell-soulglass) is a ray of necromancy. The [witch](classes.md#witch) learns
+[Soulglass](magic.md#spell-soulglass) is a ray of necromancy. The [witch](class-witch.md) learns
 it at level 16, and anyone can learn it from its grimoire. A living creature it kills turns to
 glass: it leaves no corpse and none of the crafting stock its body would give, but crystals of its
 colour lie where it fell. What it carried falls as usual.
@@ -44,7 +44,7 @@ A stronger creature leaves more crystals, and a very strong one may leave a
 A creature with no corpse (a spirit, a fire elemental), an animated thing, a summoned creature,
 a creature of no colour, and a [keeper of Grundlēas](food.md#corpses) die as they would from any
 other spell. The undead take no
-[necrotic](spellcasting.md#spell-types) harm, so Soulglass does nothing to them.
+[necrotic](spell-types.md) harm, so Soulglass does nothing to them.
 
 ## Consuming a crystal
 
@@ -78,5 +78,5 @@ colour holds, if you stop to listen (see [People](npcs.md)).
 
 {{#include generated/crystal-rules.md}}
 
-See also: [Enchanting](enchanting.md), [Crafting](crafting.md#salvage), and
+See also: [Enchanting](enchanting.md), [Salvage](salvage.md), and
 [Magic items](magic-items.md).

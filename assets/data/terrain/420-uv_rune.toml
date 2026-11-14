@@ -1,0 +1,10 @@
+[[terrain]]
+id = "uv_rune"
+name = "faint rune"
+announce = true
+stone = true
+glyph = "ᛟ"
+fg = "#c890ff"
+bg = "#0d0d10"
+light = "uv_rune"
+glow = 0.3

@@ -35,7 +35,7 @@ pub(super) fn text(content: &Content, effect: &CraftEffect) -> String {
             )
         }
         CraftEffect::EyeForMake => format!(
-            "an item's description reads its make: what [salvage](crafting.md#salvage) would \
+            "an item's description reads its make: what [salvage](salvage.md) would \
              give of it if every check went well ({}% of each material's weight, a gem whole; \
              never the odds), how many more improvements \
              [the anvil](altars-forges-springs.md#forges) or a knife could give it, or that it is \
@@ -45,7 +45,7 @@ pub(super) fn text(content: &Content, effect: &CraftEffect) -> String {
             content.salvage().map_or(0, |s| s.percent)
         ),
         CraftEffect::WasteNot { salvage, failed } => format!(
-            "[salvage](crafting.md#salvage) gives back {salvage}% of each material's weight \
+            "[salvage](salvage.md) gives back {salvage}% of each material's weight \
              (everyone else: {}%), and a [failed recipe](crafting.md#how-well-it-comes-out) gives back \
              {failed}% of its stock and inputs (everyone else: {}%; a failed brew is still spent \
              on its murky draught)",
@@ -68,9 +68,9 @@ pub(super) fn text(content: &Content, effect: &CraftEffect) -> String {
         ),
         CraftEffect::CraftTimePercent { value } => format!(
             "every craft takes {value}% of its time: [recipes](crafting.md#the-recipes) \
-             (after [Fletcher](classes.md#talent-fletcher)'s share), \
+             (after [Fletcher](class-ranger.md#talent-fletcher)'s share), \
              [Temper](altars-forges-springs.md#forges), [Whittle](skill-uses.md#whittling), \
-             [cutting and setting gems](gem-cutting.md), [salvage](crafting.md#salvage), and \
+             [cutting and setting gems](gem-cutting.md), [salvage](salvage.md), and \
              the craftsperson's own works"
         ),
         CraftEffect::GradeEase { value } => format!(

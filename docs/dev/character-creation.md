@@ -272,7 +272,7 @@ The gifts from the Salamander to the Basilisk (#266) that are more than a read a
 while `None`; a blow continues it at the same target while `turn <= streak.turn + 1`, the player's
 turn counter, so anything else in between starts it over), Barbed hide (`World::barbed`,
 `Harm::Barbs`), and Slip away (`World::slipped`). The cooldowns and the stare's hold are statuses
-(`graceless`, `spent_eyed`, `transfixed` in `data/status.toml`). Most scenarios' characters are
+(`graceless`, `spent_eyed`, `transfixed` in `data/status/`). Most scenarios' characters are
 Water Basilisks, so their runs now notice in passing (Unblinking draws a check a turn near
 hidden things), list the stare first in the abilities menu, and are made way for by no one.
 Tests: `world/gifts_tests.rs`.

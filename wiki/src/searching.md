@@ -47,7 +47,7 @@ Who notices things in passing:
   the grass.
 - **[Kobolds](races.md#race-kobold)**: hidden **[traps](traps.md#finding-traps)**, anywhere, but never a [secret door](doors.md#secret-doors).
 - **Anyone trained in [Spot](skills.md#skill-spot)**: everything but [traps](traps.md#finding-traps). Some races and classes train it (below).
-- **Anyone trained in [Detect traps](skills.md#skill-detect-traps)**: hidden **[traps](traps.md#finding-traps)**. [Thieves](classes.md#thief) and [kobolds](races.md#race-kobold) start trained in it.
+- **Anyone trained in [Detect traps](skills.md#skill-detect-traps)**: hidden **[traps](traps.md#finding-traps)**. [Thieves](class-thief.md) and [kobolds](races.md#race-kobold) start trained in it.
 - Everyone else notices nothing in passing, but can always search.
 
 {{#include generated/search-races.md}}

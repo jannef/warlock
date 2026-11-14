@@ -9,7 +9,7 @@
 //!   of what the player cannot see; Hunter's bond, which every ranger of this level has, shows
 //!   them what the beast senses). Lost, it is the ordinary hunt to the last cell. Any new order
 //!   ends it (`World::set_order`).
-//! - **Savage** (`data/status.toml`): the talent's `blows` degrees of a status with
+//! - **Savage** (`data/status/`): the talent's `blows` degrees of a status with
 //!   `auto_critical`. While the attacker suffers one, its blows are
 //!   [`Profile::sure_critical`](crate::combat::Profile), the read `combat::strike_with` already
 //!   has for an exploit's sure critical, so a critical comes with no confirmation roll; a target with no

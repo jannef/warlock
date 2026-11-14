@@ -1,9 +1,8 @@
 # Magic items
 
 Some of what you find is magic. A magic item is a **base item** (a long sword, an iron helm, a
-silver ring) with **prefixes** and **suffixes** that add to what it does, much as in Path of
-Exile. The lists and numbers below are not final and will change after playtesting. Every base item, prefix, and suffix is listed on
-[Prefixes and suffixes](affixes.md).
+silver ring) with **prefixes** and **suffixes** that add to what it does. Every base item,
+prefix, and suffix is listed on [Prefixes and suffixes](affixes.md).
 
 **Making your own.** Those trained in Enchanting can make a plain item magic, or add to one, with
 magic crystals: see [Enchanting](enchanting.md).
@@ -23,8 +22,9 @@ How often loot is normal, magic, or rare, and how many affixes magic and rare it
 
 {{#include generated/magic-rarity.md}}
 
-How many of a rare item's affixes are [prefixes](affixes.md#prefixes) is picked evenly among the splits
-that keep at most three of each:
+A rare item has at most three prefixes and three
+suffixes; the split is random. Each split the count allows is equally
+likely:
 
 - three affixes: none to three prefixes, a quarter each;
 - four affixes: one, two, or three prefixes, a third each;
@@ -45,7 +45,7 @@ Every item can bear only so many **enchantments** (affixes, [prefixes](affixes.m
   silver −2, tin and flint −1, steel and iron 0, gold and adamantium +1, mithril and dragonbone
   +2);
 - **+1** for a [gem](gems.md) set in it, **+2** for a flawless one;
-- **+1** for a craftsperson's [maker's mark](crafting.md#makers-mark).
+- **+1** for a craftsperson's [maker's mark](class-craftsperson.md#makers-mark).
 
 It is never less than one or more than six. Some examples:
 
@@ -76,7 +76,7 @@ The deeper you go, the better made the things you find, so they can bear more. F
 [item level](#finding-them) 3 on, every weapon, missile weapon, shield, and piece of armour you
 find (on the floor, in a chest or a hoard, in a den or a room) may be **Fine**, **Marvellous**, or
 **Masterwork**, never damaged. What creatures carry gets the same chances on top of its
-[own](creatures.md#gear). Rings, amulets, ammunition, and the
+[own](creature-gear.md). Rings, amulets, ammunition, and the
 [gear you start with](starting-kit.md) are not affected. Deeper finds are also set with a
 [gem](gems.md) more often, for the kinds of item that ever are:
 
@@ -106,7 +106,7 @@ magic, which works as before.
 
 The game tells you what an item can bear only if you are trained in
 [Appraise](skills.md#skill-appraise) or have the craftsperson's talent
-[Eye for the make](classes.md#eye-for-the-make): its description then says "It can bear two
+[Eye for the make](class-craftsperson.md#eye-for-the-make): its description then says "It can bear two
 enchantments.", or how many more it could bear.
 
 ## Finding them
@@ -144,7 +144,7 @@ Their magic works all the same while you wear or wield them. An unknown
 that glows lights your way. Wearing it for a while does not tell you what it is. These do:
 
 - a [scroll of identify](scrolls.md#the-scroll-of-identify);
-- a [merchant](classes.md#merchant)'s [Merchant's eye](classes.md#talent-merchants-eye), from
+- a [merchant](class-merchant.md)'s [Merchant's eye](class-merchant.md#talent-merchants-eye), from
   level 12: a careful look that takes as long as reading a scroll;
 - carrying the item for a day, if you were born to [Old lore](horoscope.md#talent-old-lore);
 - Factor Wulfrun in Cēaptūn, for 100 [gold](shops.md#money) per unidentified
@@ -167,11 +167,11 @@ merely carried.
   [amulets](objects.md#class-amulets), a [helm](objects.md#class-helmets)), attack magic changes
   **every attack** you make, bare hands and thrown rocks included.
 - Magic that changes the item itself belongs to the item: its [Armour](combat.md#defence),
-  [Protection](combat.md#protection), [Shield](combat.md#defence), or [Parry](combat.md#defence),
-  how much [Dexterity](stats.md#stat-dexterity) it lets add to your [Defence](combat.md#defence),
+  [Protection](combat.md#protection), Shield, or Parry,
+  how much [Dexterity](stats.md#stat-dexterity) it lets add to your Defence,
   and its weight.
 - Everything else is yours: [stats](stats.md), [hit points](hit-points.md#hit-points),
-  [Dodge](combat.md#defence), [Deflection](combat.md#defence), and natural armour, how fast your
+  Dodge, Deflection, and natural armour, how fast your
   wounds [heal](healing.md#how-fast-you-heal), how fast you [move](turns.md#speed), how much you can
   [carry](burden.md#how-much-you-can-carry), how quietly you [walk](hearing.md#what-makes-noise),
   [light](light.md#what-light-is), and [skills](skills.md). "+20 to Stealth" works as if your
@@ -183,26 +183,26 @@ Rules from elsewhere in the game carry over:
 - **Stats** raised by an item count everywhere a stat does:
   [Strength](stats.md#stat-strength) [to hit](combat.md#hitting) and in your [carrying
   limit](burden.md#how-much-you-can-carry), [Toughness](stats.md#stat-toughness) in your [hit
-  points](hit-points.md#hit-points), [Dexterity](stats.md#stat-dexterity) in your
-  [Defence](combat.md#defence). The [character screen](character.md) shows your stats with what
+  points](hit-points.md#hit-points), Dexterity in your
+  Defence. The [character screen](character.md) shows your stats with what
   you wear. A [status effect](status-effects.md) that lowers a stat lowers it from there: if you
   are [poisoned](status-effects.md#status-poisoned) while wearing a ring of Strength, you are still
   stronger than you would be without the ring.
-- **[Defence](combat.md#defence)**: among Armour, Shield, Parry, Deflection, and natural armour,
+- **Defence**: among Armour, Shield, Parry, Deflection, and natural armour,
   only the best counts. Dodge adds up (see [Combat](combat.md)).
-  **[Protection](combat.md#protection)** always adds up, piece by piece, and a
-  [Hardened](classes.md#talent-hardened) piece of armour adds its magic to its own (see
-  [Combat](combat.md#protection)).
-- **[Hit points](hit-points.md#hit-points)** and **[mana](mana.md#how-much-mana-you-have)**: putting on
+  **Protection** always adds up, piece by piece, and a
+  [Hardened](class-berserker.md#talent-hardened) piece of armour adds its magic to its own (see
+  Combat).
+- **Hit points** and **[mana](mana.md#how-much-mana-you-have)**: putting on
   something that adds to them raises your maximum, not what you have now. Taking it off lowers
   both, if need be (see [Mana](mana.md)).
 - **Healing**: magic that speeds healing adds on top of everything else that changes its pace
   (see [Healing](healing.md)). Nothing heals you while you [bleed](status-effects.md#bleeding),
   magic or not.
 - **Throwing**: a magic weapon [readied](ranged.md#getting-ready) in the Missile weapon slot keeps
-  its magic when you [throw](ranged.md#shooting-and-throwing) it, and still has it where it lands.
-  Its [Parry](combat.md#defence) counts only while you hold it in a hand.
-- **[Speed](turns.md#speed)** is never a number in the game. Things "attack faster" or make you
+  its magic when you throw it, and still has it where it lands.
+  Its Parry counts only while you hold it in a hand.
+- **Speed** is never a number in the game. Things "attack faster" or make you
   "move faster". In exact terms, each takes its share off the time of every attack or step (see
   the tables below). The shares of everything you wear and wield add up, to at most half the
   time, which is twice as quick.
@@ -267,7 +267,7 @@ Its power works while it is worn or wielded, identified or not:
   the weapon in your other hand, has none of it.
 - **Vision**: its wearer sees with a [vision](vision.md#the-four-types) profile wherever that is
   better than their own eyes.
-- **Ward**: its wearer never suffers a [status](status-effects.md#how-they-work).
+- **Ward**: its wearer never suffers a status.
 
 {{#include generated/uniques.md}}
 

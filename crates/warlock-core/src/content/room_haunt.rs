@@ -15,7 +15,7 @@ pub(super) struct HauntSpec {
 /// A haunted room's hauntings (`haunt = { faction = "undead", every = "1h" }`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Haunt {
-    /// The faction (an id in `data/factions.toml`) what comes is of (checked once the factions
+    /// The faction (an id in `data/factions/`) what comes is of (checked once the factions
     /// load, `RoomEffects::check_factions`).
     pub faction: String,
     /// How often: at every full multiple of it on the clock while the player rests inside.

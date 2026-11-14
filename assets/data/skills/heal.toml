@@ -1,0 +1,10 @@
+[[skill]]
+id = "heal"
+name = "Heal"
+description = "Binding wounds and tending the sick."
+kind = "action"
+mark = [{ on = "heal", chance = 30 }]
+# Treating yourself (spec §8 "Skills"; the Heal ability): trained at all, you can bind your
+# bleeding and try to ease a poison or a disease; added to the Intelligence check against what it
+# treats (status/ `treat`, a disease's `difficulty`), +8 at 100, +12 at 200.
+benefit = [{ effect = "heal", curve = [[0, 0], [100, 8], [200, 12]] }]

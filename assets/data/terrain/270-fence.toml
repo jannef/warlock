@@ -1,0 +1,9 @@
+# A wooden fence (#1248, Holtwīc's chicken pen): it stops a step, never sight or sound.
+[[terrain]]
+id = "fence"
+name = "fence"
+description = "Split rails lashed to stakes, about waist high."
+walkable = false
+glyph = "#"
+fg = "#8a6a44"
+bg = "#22401a"

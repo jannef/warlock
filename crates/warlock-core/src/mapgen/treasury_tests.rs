@@ -9,6 +9,7 @@ use crate::content::ContentFiles;
 /// most often; without its `treasure` when `treasure` is false.
 fn content(treasure: bool) -> Content {
     let mut files = ContentFiles::builtin();
+    files.flatten_table("room_effects");
     files.edit_table("room_effects", |text| {
         let text = text.replace("chance = 12\n", "chance = 100\n");
         let text = text.replace(
@@ -182,6 +183,7 @@ fn treasure_rooms_hold_chests_gold_and_gems_from_their_own_stream() {
 /// room most often.
 fn great() -> Content {
     let mut files = ContentFiles::builtin();
+    files.flatten_table("room_effects");
     files.edit_table("room_effects", |text| {
         text.replace("chance = 12\n", "chance = 100\n").replace(
             "weight = 2\nmin_cells = 9\nsealed",

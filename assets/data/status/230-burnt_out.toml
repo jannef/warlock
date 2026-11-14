@@ -1,0 +1,10 @@
+# Blaze's cooldown (the Fire-born's gift, spec §8 "Birth sign"): twelve hours before the fire in
+# them kindles again. Nothing else; time is the penalty.
+[[status]]
+id = "burnt_out"
+name = "Burnt out"
+max = 1
+stacking = "refresh"
+eases = 43200
+start = "The fire in you burns low."
+end = "The fire in you kindles again."

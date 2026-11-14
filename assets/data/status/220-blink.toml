@@ -1,0 +1,9 @@
+# A blinker's cooldown (docs/design/monster-dread.md §5.6, the creatures' `blinks`): a degree
+# for every six seconds of its `cooldown`; while it lasts the creature walks. Creatures only: no
+# one sees it on them.
+[[status]]
+id = "blink"
+name = "Blink spent"
+max = 100
+stacking = "refresh"
+eases = 6

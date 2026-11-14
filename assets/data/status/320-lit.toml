@@ -1,0 +1,12 @@
+# Light's (the spell, and the scroll of light that casts it): a pale light about the caster,
+# half an hour a degree; the caster's Presence lengthens it (spells.toml).
+[[status]]
+id = "lit"
+name = "Lit"
+seen = "glowing"
+max = 3
+stacking = "refresh"
+eases = 1800
+light = "spell_light"
+start = "A pale light gathers about you."
+end = "The light about you fades."

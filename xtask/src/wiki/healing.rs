@@ -5,11 +5,13 @@ use super::order;
 use super::util::{Term, anchored, capital, link, percent_of, signed, stat_link, yes};
 use std::fmt::Write as _;
 use warlock_core::check;
-use warlock_core::content::{Affliction, Content, DiseaseDef, DiseaseId, StatusDef};
+use warlock_core::content::{
+    Affliction, Content, DiseaseDef, DiseaseId, PrayerUse, StatusDef, StatusId, TalentEffect,
+};
 use warlock_core::dice::Dice;
 use warlock_core::hunger::Hunger;
 use warlock_core::stats;
-use warlock_core::talent::{FaithEffect, MartialEffect, SongEffect};
+use warlock_core::talent::{FaithEffect, MartialEffect, SignEffect, SongEffect};
 use warlock_core::time::Duration;
 
 /// A pace of healing in percent of normal, in words: `twice as fast`, `half as fast`, `not at
@@ -443,7 +445,7 @@ fn also(content: &Content, status: usize, def: &StatusDef) -> Vec<String> {
             1 => "on your cell and the cells beside you".to_string(),
             r => format!("{r} cells around you"),
         };
-        // A status with no light of its own in data/status.toml sheds its spell circle's
+        // A status with no light of its own in data/status/ sheds its spell circle's
         // (data/circles.toml; the loader fills `StatusDef::light` with it): say which.
         let circle = (content.circles().rows().iter())
             .find(|row| usize::from(row.status.0) == status && row.light == light);
@@ -691,11 +693,88 @@ fn status_ends(content: &Content, status: usize, def: &StatusDef) -> String {
     if let Some(d) = def.escape {
         parts.push(format!("a trained Escape artist may slip it, against {d}"));
     }
-    if !def.cured_by.is_empty() {
-        let cures: Vec<String> = (def.cured_by.iter()).map(|c| c.replace('_', " ")).collect();
-        parts.push(format!("cured at once by {}", cures.join(", ")));
+    let cures = status_cures(content, status, def);
+    if !cures.is_empty() {
+        parts.push(format!("ended at once by {}", cures.join(", ")));
     }
     capital(&parts.join("; "))
+}
+
+/// Every way to end status `status` sooner than it wears off (#1563), from the data: what you
+/// drink or eat that names one of its `cured_by` means, the scroll of restoration and a
+/// temple's cure by theirs, the spells that cleanse it, a priest's prayer, the Heal skill's
+/// treatment, the talents' actives that end it, and the forgotten altar's answers.
+fn status_cures(content: &Content, status: usize, def: &StatusDef) -> Vec<String> {
+    let id = StatusId(status as u16);
+    let named = |cures: &[String]| cures.iter().any(|c| def.cured_by.contains(c));
+    let mut out = Vec::new();
+    for object in content.object_defs() {
+        if (object.drink.as_ref()).is_some_and(|d| named(d.does.cures())) {
+            out.push(link(Term::Potion, &object.id, &object.name));
+        } else if named(&object.cures) {
+            out.push(format!("eating {}", object.name));
+        }
+    }
+    // The means `world/restore.rs` and `world/service.rs` cure by (private there).
+    if def.cured_by.iter().any(|c| c == "restoration") {
+        out.push("the [scroll of restoration](scrolls.md#the-scroll-of-restoration)".into());
+    }
+    if def.cured_by.iter().any(|c| c == "prayer") {
+        out.push("a temple's [cure](npcs.md#services)".into());
+    }
+    for spell in content.spells() {
+        if spell.effect.cures.contains(&id) {
+            let spell = link(Term::Spell, &spell.id, &spell.name);
+            out.push(format!("the {spell} spell"));
+        }
+    }
+    if let Some(rules) = content.prayer() {
+        let ids = content.ids();
+        for u in &rules.uses {
+            let anchor = match u.id {
+                PrayerUse::Poison if ids.poisoned == Some(id) => "poison",
+                PrayerUse::Wounds if ids.bleeding == Some(id) => "wounds",
+                PrayerUse::Release if rules.release.contains(&id) => "release",
+                _ => continue,
+            };
+            out.push(format!("a priest's [prayer](prayer.md#prayer-{anchor})"));
+        }
+    }
+    if let Some(treat) = &def.treat {
+        let does = if treat.stops { "binds it" } else { "eases it" };
+        out.push(format!(
+            "the [Heal](skill-uses.md#treating-yourself) skill ({does})"
+        ));
+    }
+    for (_, talent) in content.talents().iter() {
+        for effect in &talent.effects {
+            match effect {
+                TalentEffect::Martial(MartialEffect::Stillness { name, statuses })
+                    if statuses.contains(&def.id) =>
+                {
+                    out.push(link(Term::Ability, name, name));
+                }
+                TalentEffect::Sign(SignEffect::HornsGrace { cures, .. })
+                    if cures.contains(&def.id) =>
+                {
+                    out.push(link(Term::Ability, &talent.id, &talent.name));
+                }
+                _ => {}
+            }
+        }
+    }
+    let altar = (content.outcomes().iter())
+        .flat_map(|t| t.outcomes.iter())
+        .any(|o| {
+            o.effect.cure.contains(&id)
+                || (o.effect.cure_by.as_ref()).is_some_and(|c| def.cured_by.contains(c))
+        });
+    if altar {
+        out.push(
+            "now and then a [forgotten altar](altars-forges-springs.md#forgotten-altars)".into(),
+        );
+    }
+    out
 }
 
 /// Who causes each status with an attack (#1558): every creature whose attack, throw, or gaze

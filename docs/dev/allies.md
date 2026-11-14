@@ -87,7 +87,7 @@ mutter or a thrown voice is not), `Event::Ordered { at }` for presentation, the 
 wolf comes to heel." / "Your wolves hold." / "You set your wolf on the kobold." or "... on that
 spot."; `pack_phrase`: "your wolf", "your wolves", "your wolves and bear" by type, a companion by
 its name first, "Snel and your wolves"), and a Handle animal mark
-(`Use::Handle`, `skills.toml` `handle_animal`'s `mark`, 50 %: the skill's first; the owner's
+(`Use::Handle`, `skills/` `handle_animal`'s `mark`, 50 %: the skill's first; the owner's
 Q10). Refused, no time and no noise, with no ally on the level ("You have no one to call.") and
 Set on at a cell the player does not see (`Perception::is_visible`). `buff.rs::kind_of` prices
 it as nothing (no `ActionKind`); `refuse_pending` refuses it while an encounter is pending, like
@@ -262,7 +262,7 @@ both; bonuses) → `TalentMods::ally: AllyMods { to_hit, protection }` (summed).
 `favoured`) adds `to_hit` to an ally's attack profile; `World::ally_protection` in
 `World::protection_of` adds `protection` through `Actor::protection_plus` (the master's hide is
 untouched). `assets/data/talents/beast_bond.toml` (Wayfarer, needs Handle animal 20: the owner's
-Q10; `[[system]] allies` in `data/talents.toml`, after `danger`). The wiki's talent tables say
+Q10; `allies` in `data/talents/systems/`, after `danger`). The wiki's talent tables say
 it (`xtask/src/wiki/talents.rs::effect_text`).
 
 ## Dumps and perception

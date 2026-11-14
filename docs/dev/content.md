@@ -9,7 +9,7 @@ Content (`assets/campaigns`, `assets/data`, `assets/vaults`; test fixtures may a
 release; `docs/dev/campaign.md`). A world's levels, scenarios, branches, quests, dialogue, and own creature types live
 in its campaign, `assets/campaigns/<id>/` (`docs/dev/campaign.md`). Level maps are ASCII with a
 legend; see `assets/campaigns/showcase/levels/hub.toml` and spec §7. A legend entry with a `creature` may set `faction = "peaceful"` (any id in
-`data/factions.toml`) to override its type's faction for that spawn (`Actor::faction_override`; read it with
+`data/factions/`) to override its type's faction for that spawn (`Actor::faction_override`; read it with
 `Actor::faction`, never the creature type's, when computing stance), and `alignment = "good"`
 to override its type's alignment the same way (`Actor::alignment_override`, read with
 `Actor::nature`; `docs/dev/alignment.md`), and `status = ["blessed", "weakened*2"]` to place it
@@ -86,9 +86,16 @@ with `..CreatureSpec::default()` (#1552), whose `Default` is serde's field defau
 
 The tables that grow entry by entry are directories, so two PRs adding an entity never touch
 the same file: `assets/data/creatures/`, `objects/` (base items included), `materials/`,
-`affixes/`, `talents/`, `classes/`, `uniques/`, and `weapon_abilities/` (each campaign's too), **one file per entity, named by its id** (classes as
+`affixes/`, `talents/`, `classes/`, `uniques/`, `weapon_abilities/`, `skills/`, `status/`,
+`terrain/`, `factions/`, `room_effects/`, and the talent trees and systems in `talents/trees/` and
+`talents/systems/` (each campaign's too), **one file per entity, named by its id** (classes as
 `NN-id.toml`: their order is the order New run offers them, so the number keeps it; the
-background story's chapters in `background/` the same, `NN-<chapter>.toml`, docs/dev/background.md) (`creatures/kobold.toml`,
+background story's chapters in `background/` the same, `NN-<chapter>.toml`, docs/dev/background.md;
+statuses, terrain, factions, room effects, and talent trees and systems as `NNN-id.toml` in steps
+of 10 (#1525): their ids are indices in their order, which saves, state hashes, the status bar,
+and the special rooms' draw read, so the number keeps the order the single files had and a new
+entry takes a free number where it belongs; skills were already by id, so they are `id.toml`)
+(`creatures/kobold.toml`,
 `affixes/of_the_bear.toml`). A family file holds several entries only for a tight set of
 variants always edited together, named after the family (`objects/arrows.toml`: the arrow, the
 flaming arrow, and the burning arrow it flies as). Each directory's `README.toml` is comments
@@ -115,8 +122,13 @@ own, so an error names the file the bad entry is in; **a duplicate id across fil
 exactly one file of the table (a second file setting one is an error naming both), and the
 entry files hold `[[prefix]]`/`[[suffix]]` only. `ContentFiles::remove("data/creatures/")` drops
 a directory; `ContentFiles::edit_table(name, edit)` rewrites every file of a table (tests that
-change one built-in line). Every other `data/*.toml` file is a single file whose order means
-something (slots, stats, weapon skills, factions, actions, ...): never split those.
+change one built-in line; the test-only `replace_in_table`, `insert_builtin_table`, `table_text`,
+and `replace_table` do the same by a line, copy a shipped table into a fixture, or swap a whole
+table for one file). The tables with settings keep them in their single file, each set in at
+most one file of the table (a second is an error naming both): `[healing]` in
+`data/status.toml`, `[ladder]` and `[rolls]` in `data/skills.toml`, `chance` and `per_level` in
+`data/room_effects.toml`. Every other `data/*.toml` file is a single file whose order means
+something (slots, stats, weapon skills, actions, ...): never split those.
 
 **Nothing visible follows the load order of these four tables.** Wiki tables sort by an
 explicit key (`xtask/src/wiki/order.rs`: objects by class, weapon skill, value, name; creatures,
@@ -158,5 +170,5 @@ generator all call them (#1543, #1548): `capitalized` (a first letter in capital
 the owner's choice for all game text), and `number_word` ("no", "one" to "twelve", digits
 beyond). The app keeps its wall-clock helpers in `crates/warlock/src/utc.rs` (`since_epoch`,
 `utc_parts`; #1571) and its cut-to-width helpers beside `wrap` in `ui/menu.rs` (`truncated`,
-`truncated_head`). The wiki generator writes every percentage through `xtask/src/wiki/text.rs`
+`truncated_head`). The wiki generator writes every percentage through `xtask/src/wiki/util.rs`
 (`percent`, `percent_of`: `12.5%`, no space, a tenth from 1% up; #1577).

@@ -503,7 +503,7 @@ pub(super) fn stances(content: &Content) -> String {
 
 /// How often an attack hits by what its roll needs (Defence minus to-hit): the 2d12 bell.
 pub(super) fn hit_chances(_content: &Content) -> String {
-    let mut out = String::from("| The roll needs | Hits |\n|:---:|:---:|\n");
+    let mut out = String::from("| Defence minus your bonus | You hit |\n|:---:|:---:|\n");
     for needed in [4, 6, 8, 10, 11, 12, 13, 14, 15, 16, 18, 20, 21, 22, 24] {
         let _ = writeln!(
             out,
@@ -518,7 +518,7 @@ pub(super) fn hit_chances(_content: &Content) -> String {
 /// against Defence 10 at +0.
 pub(super) fn threats(_content: &Content) -> String {
     let mut out = String::from(
-        "| Critical on | A roll threatens | Confirmed, with no bonus against Defence 10 | Like D&D's |\n\
+        "| Critical on | A roll threatens | Confirmed, with no bonus against Defence 10 | Same odds as a d20 roll of |\n\
          |:---:|:---:|:---:|:---:|\n",
     );
     for (threat, dnd) in [(22, "20"), (20, "19–20"), (19, "18–20")] {

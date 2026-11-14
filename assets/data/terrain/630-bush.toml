@@ -1,0 +1,12 @@
+# Undergrowth: low enough to see over, slow and loud to push through. Its shadow is short.
+[[terrain]]
+id = "bush"
+plants = true
+name = "bush"
+glyph = "♧"
+fg = "#5cae4c"
+bg = "#142a10"
+move_cost = 200
+step_noise = 150
+height = 1
+bounce = "#98c878"

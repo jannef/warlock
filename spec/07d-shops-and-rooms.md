@@ -167,7 +167,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `unpaid`, `owed_on_leaving`, `sale`, `own_gold`): an open shop's sign, its keeper's name, its
     prices for them, what they owe, and their own gold; never a value, a markup, or how their
     Presence and skills move the prices.
-- **Special rooms** (`data/room_effects.toml`, optional; without it there are none; M25, #402;
+- **Special rooms** (`data/room_effects/`, optional; without it there are none; M25, #402;
   developer notes `docs/dev/special-rooms.md`, the second wave's design
   `docs/design/special-rooms.md`), ADOM-like: a room of a generated level, or an area a
   hand-made level marks, carries an **effect** (a *feature*) that changes the rules while one is
@@ -730,7 +730,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `data/dungeons/`, or on a range of its depths in `[[dungeon.levels]]`, overriding the
     branch's table field by field): `chance` (percent), `per_level`, `favoured = { id = share }`
     (fixed shares of its draws in percent: a favoured effect keeps its share however many effects
-    are added) and `banned = [ids]` (never drawn), each defaulting to `room_effects.toml`'s (no
+    are added) and `banned = [ids]` (never drawn), each defaulting to `room_effects/`'s (no
     favoured, none banned). Unknown ids are content errors. A new effect therefore turns up in every dungeon that does not ban it.
     Fennmynster: `chance` 25, `per_level` 2, favoured flooded 35, hushed 15, shadowed 15,
     banned hot.

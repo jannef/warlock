@@ -121,7 +121,7 @@ map = '''
 
 fn files(creatures: &str) -> ContentFiles {
     let mut files = ContentFiles::default();
-    files.insert("data/terrain.toml", TERRAIN);
+    files.replace_table("terrain", TERRAIN);
     files.insert("data/creatures.toml", creatures);
     files.insert("data/legend.toml", LEGEND);
     files.insert("levels/closet.toml", CLOSET);

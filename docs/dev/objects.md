@@ -154,7 +154,7 @@ use (`MaterialDef::fit`, a `Fits` of `Fit::{Good, Poor, Odd}` per use: `weapon` 
 the owner's wrong combinations are a material against a kind of item (tin blades, wool rings), the
 four uses are what the code already tells apart (`PartRole`, `is_jewellery`), and the default
 `good` keeps the data to one line on the twenty-odd materials that need it. A gear source's
-faction (`FactionDef::gear`, `data/factions.toml` `gear = { bone = 55 }`, resolved by
+faction (`FactionDef::gear`, `data/factions/` `gear = { bone = 55 }`, resolved by
 `Factions::resolve_gear` once materials load: known grouped materials, 1 to 100 each, at most
 100 in all) takes its percent first for each favoured material on the item's list, the usual draw
 the rest; it never adds a material. `gear.rs` reads the creature type's faction (not a legend's

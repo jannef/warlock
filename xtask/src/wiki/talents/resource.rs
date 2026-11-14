@@ -3,7 +3,7 @@
 //! `warlock-core/src/talent/resource.rs`.
 
 use super::resource_name;
-use crate::wiki::util::signed;
+use crate::wiki::util::{Term, link, signed};
 use warlock_core::content::{Content, OverTime};
 use warlock_core::talent::ResourceEffect;
 
@@ -52,9 +52,10 @@ pub(super) fn text(content: &Content, effect: &ResourceEffect) -> String {
             )
         }
         ResourceEffect::GrantsResource { resource } => {
+            let name = resource_name(content, &resource);
             format!(
-                "you hold {} from now on (see Resources)",
-                resource_name(content, &resource)
+                "you hold {} from now on",
+                link(Term::Resource, &resource, &name)
             )
         }
     }

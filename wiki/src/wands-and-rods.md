@@ -37,8 +37,8 @@ keep. Wands are **never recharged**.
 Wands are found unknown. Each kind has its own look for the whole game ("an oak wand"). Using one
 tells you its kind, and from then on every wand of that kind shows by name. Its **charges** stay
 unknown until you [identify](magic-items.md#unidentified-items) that wand, with the
-[scroll of identify](scrolls.md#scroll-of-identify) or a [merchant](classes.md#merchant)'s
-[Merchant's eye](classes.md#talent-merchants-eye). Wands lie in the dungeon and are sold in general
+[scroll of identify](scrolls.md#scroll-of-identify) or a [merchant](class-merchant.md)'s
+[Merchant's eye](class-merchant.md#talent-merchants-eye). Wands lie in the dungeon and are sold in general
 stores.
 
 The *[Wand mastery](talents.md#talent-wand-mastery)* talent (Weaponcraft) moves every wand you use

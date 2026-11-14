@@ -3,7 +3,7 @@
 //! few cells of where a population draw or a vault places one (`mapgen/leavings.rs`). Each kind
 //! is a terrain or an object of a fixed id (the statue is the one `statue` terrain):
 //!
-//! - `statue`: a statue of the stoned (`data/terrain.toml`'s `statue = true`), a nobody of the
+//! - `statue`: a statue of the stoned (`data/terrain/`'s `statue = true`), a nobody of the
 //!   floor's own population, holding nothing;
 //! - `web`: the [`WEB`] terrain, old webs, which catch no one;
 //! - `acid_pit`: the [`ACID_PIT`] terrain, floor eaten into pits;

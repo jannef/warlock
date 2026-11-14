@@ -3,9 +3,9 @@
 
 use super::{
     AlignmentRules, ClassActive, ClassDef, CombatStance, Content, Experience, Flavour, Horoscope,
-    Lucky, Names, PrestigeDef, RaceDef, Races, Sign, SignActive, SkillDef, SpellData, SpellId,
-    StanceDef, Stances, TalentBook, TalentDef, TalentEffect, WeaponAbility, WeaponAbilityId,
-    WeaponSkillId, WeaponSkillTable,
+    Lucky, Names, PrestigeDef, ProfaneTable, RaceDef, Races, Sign, SignActive, SkillDef, SpellData,
+    SpellId, StanceDef, Stances, TalentBook, TalentDef, TalentEffect, WeaponAbility,
+    WeaponAbilityId, WeaponSkillId, WeaponSkillTable,
 };
 use crate::skills::Ladder;
 use crate::skills::RollRules;
@@ -142,7 +142,7 @@ impl Content {
         &self.experience
     }
 
-    /// The skills of `data/skills.toml`, in file order (by [`SkillId`]; none without the file).
+    /// The skills of `data/skills/`, in file order (by [`SkillId`]; none without the file).
     pub fn skills(&self) -> &[SkillDef] {
         &self.skills.list
     }
@@ -187,10 +187,15 @@ impl Content {
             .map(|(i, a)| (WeaponAbilityId(i as u16), a))
     }
 
-    /// The talents (`data/talents.toml` and `data/talents/`, spec §8 "Talents"): none without
+    /// The talents (`data/talents/`, its trees and systems too, spec §8 "Talents"): none without
     /// the files.
     pub fn talents(&self) -> &TalentBook {
         &self.talents
+    }
+
+    /// The profane gifts (`data/profane/`): none without the files or the talents.
+    pub fn profane(&self) -> &ProfaneTable {
+        &self.profane
     }
 
     /// The skill ladder: the die a level-up roll throws by the skill's marks (`[ladder]` in

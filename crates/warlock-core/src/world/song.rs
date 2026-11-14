@@ -21,7 +21,7 @@
 //! the marks): who hears is the world's, never the player's to know.
 //!
 //! Refused, taking no time and nothing spent, on the overworld (it is silent) and, by the
-//! `song` action's `blocks` (`data/status.toml`), while Silenced. Nothing is drawn but the
+//! `song` action's `blocks` (`data/status/`), while Silenced. Nothing is drawn but the
 //! training marks and a hearers song's checks.
 
 use super::{ActorId, Spent, World};

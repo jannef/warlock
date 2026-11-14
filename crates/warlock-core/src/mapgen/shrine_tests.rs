@@ -8,6 +8,7 @@ use crate::content::ContentFiles;
 /// The built-in content with every room of a generated level special and shrines drawn often.
 fn content() -> Content {
     let mut files = ContentFiles::builtin();
+    files.flatten_table("room_effects");
     files.edit_table("room_effects", |text| {
         let text = text.replace("chance = 12\n", "chance = 100\n");
         text.replace(

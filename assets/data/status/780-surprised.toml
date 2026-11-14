@@ -1,0 +1,15 @@
+# Surprised (spec §8 "Surprise and sneak attacks", surprise.toml): caught unawares and the
+# initiative check failed. Flat-footed (Dexterity and Dodge count nothing toward Defence), no free
+# blows, and the next action costs half again as much (less what Cool head eases); that action
+# ends it. A second surprise before it only keeps it (refresh).
+[[status]]
+id = "surprised"
+name = "Surprised"
+seen = "surprised"
+max = 1
+stacking = "refresh"
+per_action = true
+cost = 150
+flat_footed = true
+start = "You are taken by surprise!"
+end = "You recover your wits."

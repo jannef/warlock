@@ -109,7 +109,7 @@ fn asleep_is_a_status_that_sleeps_and_a_den_is_data() {
 
 #[test]
 fn bad_swarms_are_refused() {
-    let shipped = include_str!("../../../../assets/data/room_effects.toml");
+    let shipped = ContentFiles::builtin().table_text("room_effects");
     let good = "swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60, loot_level = 1, \
                 themes = { kind = 10, faction = 20 } }";
     assert!(shipped.contains(good), "the shipped den");
@@ -119,13 +119,13 @@ fn bad_swarms_are_refused() {
         "swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 900, loot_level = 1 }",
     ] {
         let mut files = ContentFiles::builtin();
-        files.insert("data/room_effects.toml", &shipped.replace(good, bad));
+        files.replace_table("room_effects", &shipped.replace(good, bad));
         assert!(Content::load(&files).is_err(), "{bad}");
     }
     // A den needs a danger.
     let mut files = ContentFiles::builtin();
     let text = shipped.replace("needs_danger = true\n", "");
-    files.insert("data/room_effects.toml", &text);
+    files.replace_table("room_effects", &text);
     assert!(Content::load(&files).is_err(), "no needs_danger");
 }
 

@@ -33,19 +33,20 @@ mod vigour;
 const STARS: &str = "stars";
 
 /// The page a talent's row is on (#1554): a birth sign's gift on the horoscope page, a class
-/// ability in its first class's level table (else its first prestige class's), any other on the
-/// talents page.
-fn talent_page(content: &Content, def: &TalentDef) -> &'static str {
+/// ability in its first class's level table, on that class's page (else its first prestige
+/// class's), any other on the talents page.
+fn talent_page(content: &Content, def: &TalentDef) -> String {
     let book = content.talents();
     if book.tree_id(STARS) == Some(def.tree) {
-        "horoscope.md"
+        "horoscope.md".into()
     } else if book.tree(def.tree).class {
         match home_table(content, &def.id) {
-            Some(Table::Prestige(_)) => "prestige-classes.md",
-            _ => "classes.md",
+            Some(Table::Prestige(_)) => "prestige-classes.md".into(),
+            Some(Table::Class(class)) => super::character::class_page(&class.id),
+            None => "classes.md".into(),
         }
     } else {
-        "talents.md"
+        "talents.md".into()
     }
 }
 
@@ -78,7 +79,8 @@ pub(super) fn talents(content: &Content) -> String {
     let book = content.talents();
     let mut out = String::new();
     for (i, tree) in (0u8..).zip(&book.trees) {
-        if tree.class || book.tree_id(STARS) == Some(TreeId(i)) {
+        // The profane gifts are no picks, and nothing gives them in play yet (#1625).
+        if tree.class || book.tree_id(STARS) == Some(TreeId(i)) || tree.id == "profane" {
             continue;
         }
         let _ = writeln!(out, "### {}\n\n{}\n", tree.name, tree.description);
@@ -308,9 +310,10 @@ pub(super) fn prestige_levels(content: &Content) -> String {
     out
 }
 
-/// One class's (or prestige class's) table: a heading, its bonus picks, then each row's
-/// ability with what it does, between mdBook anchors named by its id, so a page can include one
-/// class's section (`{{#include generated/class-levels.md:paladin}}`) and follow it with prose.
+/// One class's (or prestige class's) table: a prestige class's heading (a class's page has its
+/// own, and its card says what the class is), its bonus picks, then each row's ability with what it does, between mdBook
+/// anchors named by its id, so a page can include one class's section
+/// (`{{#include generated/class-levels.md:paladin}}`) and follow it with prose.
 fn level_table(content: &Content, table: Table, out: &mut String) {
     let book = content.talents();
     let bonus = table.bonus_talents();
@@ -318,7 +321,11 @@ fn level_table(content: &Content, table: Table, out: &mut String) {
         return;
     }
     let _ = writeln!(out, "<!-- ANCHOR: {} -->\n", table.id());
-    let _ = writeln!(out, "### {}\n", table.name());
+    // A class's page has its own heading, and what the class is in its card
+    // (`class_guide::cards`).
+    if let Table::Prestige(_) = table {
+        let _ = writeln!(out, "### {}\n", table.name());
+    }
     if !bonus.levels.is_empty() {
         let levels: Vec<String> = bonus.levels.iter().map(u8::to_string).collect();
         let trees = match table.bonus_trees(book) {
@@ -374,7 +381,7 @@ fn level_table(content: &Content, table: Table, out: &mut String) {
     let _ = writeln!(out, "<!-- ANCHOR_END: {} -->\n", table.id());
 }
 
-/// The talents by system: every system of the list in `data/talents.toml` with the talents
+/// The talents by system: every system of `data/talents/systems/` with the talents
 /// that touch it. Systems and talents sort by name, never by file order.
 pub(super) fn by_system(content: &Content) -> String {
     let book = content.talents();

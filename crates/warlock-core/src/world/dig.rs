@@ -1,6 +1,6 @@
 //! Digging and breaking walls (spec §8 "Digging").
 //!
-//! Terrain that `breaks` (`data/terrain.toml`: a `hardness` and what it `becomes`) gives way to
+//! Terrain that `breaks` (`data/terrain/`: a `hardness` and what it `becomes`) gives way to
 //! digging and to explosions; a cell on a level's edge never does, whatever its terrain.
 //!
 //! **Digging** ([`crate::Action::Dig`]) takes the digging tool the player has ready (an object

@@ -68,7 +68,7 @@ give the bands, the rows with their weights by danger, and each branch's ores.
 size }` (`MiningFind::vein`, `Vein`). The loader makes one terrain per vein,
 `add_vein_terrain`: a clone of `wall`'s `TerrainDef` (hardness, glyph, ground, `stone`) with id
 `vein_<metal>`, name "vein of <metal> ore", a description, and the row's `fg`, appended to the
-terrain list after `terrain.toml`'s (so no hand-made level names one). `MiningRules::vein_of`
+terrain list after `terrain/`'s (so no hand-made level names one). `MiningRules::vein_of`
 maps a terrain back to its metal, `vein_table` is `at` with only the vein rows. In `mine`, a vein
 wall skips the band's `chance` draw and the table draw: the check is rolled as for any wall and
 gives `count` made, 1 failed (`lay_mined` lays and says it). The trained rule, the branch-floor

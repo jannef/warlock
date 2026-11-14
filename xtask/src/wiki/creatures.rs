@@ -239,6 +239,105 @@ fn listed(content: &Content) -> Vec<(CreatureId, &CreatureDef)> {
         .collect()
 }
 
+/// The families the numbers' tables are split by, a page each (#1550): its title, its anchor
+/// (the page is `creature-numbers-ANCHOR.md`), and its tags. A creature is in the first family
+/// whose tags it carries, else in the last.
+pub(super) const FAMILIES: &[(&str, &str, &[&str])] = &[
+    (
+        "The dead and spirits",
+        "dead",
+        &["undead", "skeleton", "spirit"],
+    ),
+    (
+        "Fiends",
+        "fiends",
+        &["fiend", "demon", "devil", "yugoloth", "gate"],
+    ),
+    ("The fey", "fey", &["fey"]),
+    (
+        "Elementals",
+        "elementals",
+        &[
+            "elemental",
+            "air",
+            "earth",
+            "fire",
+            "ice",
+            "lightning",
+            "water",
+        ],
+    ),
+    (
+        "Animated things and mimics",
+        "animated",
+        &["construct", "animated", "mimic"],
+    ),
+    (
+        "Giants, trolls, hags, and dragons",
+        "giants",
+        &["giant", "ogre", "troll", "hag", "dragon"],
+    ),
+    (
+        "Kobolds, goblins, and orcs",
+        "goblins",
+        &["kobold", "goblin", "hobgoblin", "orc"],
+    ),
+    (
+        "Drow, duergar, and deep gnomes",
+        "deep-folk",
+        &["drow", "duergar", "deep-gnome"],
+    ),
+    (
+        "Beasts and vermin",
+        "beasts",
+        &["beast", "vermin", "marsh-thing"],
+    ),
+    ("People and other creatures", "others", &[]),
+];
+
+/// The family (an index into [`FAMILIES`]) creature type `id` is in.
+fn family(content: &Content, id: CreatureId) -> usize {
+    (FAMILIES.iter())
+        .position(|(_, _, tags)| tags.iter().any(|t| content.has_tag(id, t)))
+        .unwrap_or(FAMILIES.len() - 1)
+}
+
+/// A creature table (its header, then rows that each start with a creature's link) split by
+/// family: each family's rows under the header again, between mdBook anchors named by the
+/// family, so its page includes its own (`{{#include generated/creature-stats.md:fey}}`).
+fn by_family(content: &Content, table: &str) -> String {
+    let rows = table
+        .find("\n|---")
+        .and_then(|i| table[i + 1..].find('\n').map(|j| i + j + 2));
+    let rows = rows.expect("a table with a header");
+    let (header, rows) = table.split_at(rows);
+    let families: std::collections::BTreeMap<String, usize> = (listed(content).into_iter())
+        .map(|(id, c)| {
+            (
+                link(Term::Creature, &c.id, &capital(&c.name)),
+                family(content, id),
+            )
+        })
+        .collect();
+    let mut out = String::new();
+    for (i, (_, anchor, _)) in FAMILIES.iter().enumerate() {
+        let _ = writeln!(out, "<!-- ANCHOR: {anchor} -->\n\n{header}");
+        out.pop();
+        for row in rows.lines() {
+            let creature = row
+                .trim_start_matches("| ")
+                .split(" | ")
+                .next()
+                .unwrap_or("");
+            if families.get(creature) == Some(&i) {
+                let _ = writeln!(out, "{row}");
+            }
+        }
+        let _ = writeln!(out, "\n<!-- ANCHOR_END: {anchor} -->\n");
+    }
+    out
+}
+
 /// Whether creatures of type `c` fight at all: their faction has enemies.
 fn fights(content: &Content, c: &CreatureDef) -> bool {
     c.faction.is_some_and(|f| content.factions().has_enemies(f))
@@ -340,7 +439,7 @@ pub(super) fn creature_stats(content: &Content) -> String {
             dash(&weapon_skills)
         );
     }
-    out
+    by_family(content, &out)
 }
 
 /// A creature's rarity for a table cell, and whether it is dread (docs/design/monster-dread.md
@@ -434,7 +533,7 @@ pub(super) fn creature_defences(content: &Content) -> String {
             dash(&resists)
         );
     }
-    out
+    by_family(content, &out)
 }
 
 /// What a hit with `attack` may cause: each status with its degrees and each disease, with its
@@ -590,7 +689,7 @@ pub(super) fn creature_attacks(content: &Content) -> String {
             );
         }
     }
-    out
+    by_family(content, &out)
 }
 
 /// What each creature that throws (spec §8 "Ranged combat": "Creatures' throws") throws: what,
@@ -1164,7 +1263,7 @@ pub(super) fn creature_senses(content: &Content) -> String {
             format_weight(limit)
         );
     }
-    out
+    by_family(content, &out)
 }
 
 /// The creatures with a craft for surprise (spec §8 "Surprise and sneak attacks"), by name:
@@ -1254,5 +1353,18 @@ mod tests {
             "{table}"
         );
         assert!(table.contains("| `undead` | undead |"), "{table}");
+    }
+
+    /// Every family of the numbers' pages has creatures, and every creature is in one (#1550).
+    #[test]
+    fn every_family_has_its_creatures() {
+        let content = Content::builtin().expect("content");
+        let stats = creature_stats(&content);
+        for (i, (title, _, _)) in FAMILIES.iter().enumerate() {
+            let n = (listed(&content).into_iter()).filter(|&(id, _)| family(&content, id) == i);
+            assert!(n.count() > 0, "{title} is empty");
+        }
+        let rows = stats.lines().filter(|l| l.starts_with("| [")).count();
+        assert_eq!(rows, listed(&content).len());
     }
 }

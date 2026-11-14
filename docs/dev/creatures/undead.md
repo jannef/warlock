@@ -136,6 +136,6 @@ The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the r
 
 Gear condition (#1193, `data/gear_condition.toml`'s `undead` row): what the dead carry is almost always damaged (95 %, Fine 1 %), rusted on iron and steel, corroded on other metals, plainly damaged on wood and leather (docs/dev/creatures.md, "Gear condition").
 
-Gear materials (#1191): the faction's `gear` in `data/factions.toml`: the undead favour bronze (40 %) and iron (15 %): the barrows' grave goods, each its share of the draws for an item whose construction list holds it, the usual draw the rest (`docs/dev/objects.md` "Materials and variants").
+Gear materials (#1191): the faction's `gear` in `data/factions/`: the undead favour bronze (40 %) and iron (15 %): the barrows' grave goods, each its share of the draws for an item whose construction list holds it, the usual draw the rest (`docs/dev/objects.md` "Materials and variants").
 
 **Material drops** (#1341; `data/drops/`, docs/dev/objects.md "Material drops"): `undead.toml`: bone 1d2 (50 %), only for the corpse-leaving dead (zombies, ghouls, draugr, vampires); `skeleton.toml` is `bodiless`: bone 1d3 (80 %) for every skeleton. A spirit leaves nothing (no corpse, no file).

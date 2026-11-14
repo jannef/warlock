@@ -80,8 +80,9 @@ pub(super) fn rules(content: &Content) -> String {
     for (name, id, share) in shares {
         let _ = writeln!(
             out,
-            "| Experience: [{name}](classes.md#{id}) | an ally's kill pays a {} {share} % of what \
+            "| Experience: [{name}]({}) | an ally's kill pays a {} {share} % of what \
              their own blow would |",
+            super::character::class_page(id),
             name.to_lowercase()
         );
     }

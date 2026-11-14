@@ -1,0 +1,10 @@
+[[status]]
+id = "weakened"
+name = "Weakened"
+seen = "weakened"
+max = 3
+stacking = "refresh"
+eases = 120
+penalty = { from = 1, strength = -2, dexterity = -2 }
+start = "You feel weak."
+end = "Your strength returns."

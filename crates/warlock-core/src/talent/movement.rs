@@ -23,7 +23,7 @@ pub enum MovementEffect {
     /// Wading (water, marsh) costs a plain step, and never gives a disease.
     Swimmer,
     /// A step onto any of `terrains` costs what a step onto `like` does (ids in
-    /// `data/terrain.toml`; Swimmer, Trailblazer).
+    /// `data/terrain/`; Swimmer, Trailblazer).
     TerrainAs { terrains: Vec<String>, like: String },
     /// A plunge through ice into the water never hurts it (Swimmer).
     PlungeProof,

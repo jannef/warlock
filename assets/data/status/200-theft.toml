@@ -1,0 +1,9 @@
+# A thief's cooldown (docs/design/monster-dread.md §5.6, the creatures' `steals`): a degree for
+# every six seconds of its `cooldown`; while it lasts the creature's hits take nothing.
+# Creatures only: no one sees it on them.
+[[status]]
+id = "theft"
+name = "Theft spent"
+max = 100
+stacking = "refresh"
+eases = 6

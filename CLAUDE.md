@@ -98,6 +98,7 @@ file). Topics:
 - `docs/dev/stats.md` — the six stats, modifiers, scores and potentials, what may be shown, stat training (marks by use, the level-up checks)
 - `docs/dev/burden.md` — load, limits, sizes, every penalty's one hook
 - `docs/dev/hunger.md` — satiation, eating, corpses and rot, starving
+- `docs/dev/profane-gifts.md` — the profane gifts: `data/profane/`, `ProfaneTable` and its gifts as talents of the `profane` tree, the loader's checks, `World::bestow_gift` and `rescind` with the relations, the dumps
 - `docs/dev/character-creation.md` — `CharacterSpec`, races, classes, genders, the horoscope, starting rolls, names, starting kits
 - `docs/dev/background.md` — background stories: `data/background/` (and a campaign's chapter), the loader's checks, `background::tell` (streams, tiers, `only`, slots; no caps), `World::tell_background` and its effects, `Character::story`, the `story` dump
 - `docs/dev/alignment.md` — the good–evil score and its bands, the deeds that move it (one hook each), what reads it
@@ -226,9 +227,10 @@ stay hidden and effects are told in words (the perception rules above are unchan
 wiki states the truth exactly. The game is open source, so the truth is one look at the sources
 away, and the wiki is also where facts are inspected during development.
 
-**Wiki prose links its terms**: new or edited wiki prose links every mechanic or keyword it
-mentions to the section that explains it (`wiki/TERMS.md`, the term map, says where; generated
-tables anchor every row, `status-effects.md#status-staggered`), and CI checks the links
+**Wiki prose links its terms once per section** (the owner, #1609): new or edited wiki prose
+links each mechanic or keyword at its first mention in a section to the section that explains it
+(`wiki/TERMS.md`, the term map, says where; generated tables anchor every row,
+`status-effects.md#status-staggered`), and not again in that section; CI checks the links
 (`cargo xtask wiki --check-links`).
 
 **A PR that changes gameplay mechanics or world facts updates the wiki in the same PR**, like the
@@ -267,7 +269,7 @@ Known differences from older Bevy:
 A successful compile does not verify anything visual. Before opening a PR:
 1. `cargo fmt`, clippy with `-D warnings`, `cargo test --workspace`.
 2. Simulation changes: add or update unit, property, or snapshot tests in `warlock-core`
-   (`insta` snapshots live in `crates/warlock-core/src/snapshots/`, `src/mapgen/snapshots/`, and
+   (`insta` snapshots live in `crates/warlock-core/src/snapshots/`, `src/dump/snapshots/`, `src/mapgen/snapshots/`, and
    `src/mapgen/local/snapshots/`, the screens' in `crates/warlock/src/ui/snapshots/`; review with `cargo insta review` or `INSTA_UPDATE=always`, and read the diff). Look at the
    result with `warlock-cli dump` (or `gen` for a generated level), and check determinism with
    `replay --create` then `replay --verify`.

@@ -14,7 +14,7 @@
 //!   [`SLICK_DIFFICULTY`]; failed, Staggered, the step already spent. Nothing incorporeal slips.
 //! - **dark** (Mirk): no light reaches its cells and a source on them sheds none
 //!   ([`LevelState::shade`]), so eyes that need light see nothing there, the player's and a
-//!   creature's alike (`perception.rs`, `sight.rs`, one shade for both).
+//!   creature's alike (`perception/lighting.rs`, `sight.rs`, one shade for both).
 //! - **smoke** (Fume): no eye sees into it or through it, the player's and a creature's alike
 //!   ([`LevelState::sight_stops`], the one rule the line of sight of every viewer is computed
 //!   with): a smoke cell stops a line of sight as a wall does, a viewer standing in smoke sees

@@ -53,7 +53,7 @@ pub enum Ability {
     /// whoever's class gives the ability that names it; unavailable without the mana it costs
     /// (that check is [`spell_unavailable`]'s).
     Spell(SpellId),
-    /// A skill used as an action (`kind = "action"` in `data/skills.toml`) that the actor is
+    /// A skill used as an action (`kind = "action"` in `data/skills/`) that the actor is
     /// trained in, whose use is not in the game yet: listed, never available (spec §8
     /// "Skills"). A use, when it comes, is a variant of its own with its action, and its skill
     /// is no longer listed as this.

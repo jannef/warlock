@@ -9,7 +9,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 
 | Where | What |
 |---|---|
-| `content/talent.rs` | `TalentBook` from `data/talents.toml` (settings: `[[tree]]`, `[[system]]`) and `data/talents/*.toml` (one `[[talent]]` a file, `ContentFiles::table("talents")` order; `TalentId` an index, saves name talents by id so it is **not** in the content fingerprint). `TalentDef` (tree, `needs`, `effects`, `choice`, `systems`, `granted`), `Needs`/`Need` (the prerequisite kinds and their words: talents, stat scores, skill values, weapon-skill ranks, any skill of a role (`any_weapon_skill`), `chosen`, level, race, class, eyes (never an alignment band: alignment bars nothing, `docs/dev/alignment.md`), and `either`, any one of several, `Need::Either`), `TalentEffect` (the typed effects: one wrapper per area, its deserializer, `check`), `Choice::options`/`name` (`school`: a spell school or a non-physical damage type, #400). The load checks only that the table is well formed ("Loading" below). |
+| `content/talent.rs` | `TalentBook` from `data/talents/trees/` and `data/talents/systems/` (one `[[tree]]` or `[[system]]` a file, `NNN-<id>.toml`, the number keeping their order) and `data/talents/*.toml` (one `[[talent]]` a file, `ContentFiles::table("talents")` order; `TalentId` an index, saves name talents by id so it is **not** in the content fingerprint). `TalentDef` (tree, `needs`, `effects`, `choice`, `systems`, `granted`), `Needs`/`Need` (the prerequisite kinds and their words: talents, stat scores, skill values, weapon-skill ranks, any skill of a role (`any_weapon_skill`), `chosen`, level, race, class, eyes (never an alignment band: alignment bars nothing, `docs/dev/alignment.md`), and `either`, any one of several, `Need::Either`), `TalentEffect` (the typed effects: one wrapper per area, its deserializer, `check`), `Choice::options`/`name` (`school`: a spell school or a non-physical damage type, #400). The load checks only that the table is well formed ("Loading" below). |
 | `talent.rs` | The runtime: `Talents` (`Vec<Taken { id, choice }>` on `Actor::talents`, `holds(id, choice)`, `has(id)`, saved and hashed, left out of the JSON while empty), `TalentMods` (every effect summed; `Talents::mods(content, effects)`, the effects under a status counted while the holder suffers it, / `Actor::talent_mods`, the sum kept on `Talents` until they change (`mods_cached`, a `SharedMods`; "The kept sum" below), one shared empty sum for an actor without talents; a field per area, each area in `talent/<area>.rs`, "Areas" below), `Candidate` (what prerequisites read: `Candidate::player`), `unmet`, `may_take` → `Refusal` (in words; `Held`, "You have Hardy already."), `openings`, `offers` (the pick list, tree by tree). |
 | `world/talent.rs` | `Due { level, talents }` in `Progress::due` (lowest level first); `World::level_up(from, to)` from `grant_xp` (a pick every `Experience::talent_every` levels, and the per-level hit points of talents held); `refuse_due` (the first line of `player_acts`: everything but `Talent`, `Advance`, `LevelUpAuto` is refused with "You have skill rolls to spend." or "You must choose a talent first."); `take_talent` (the first due with a pick, so a talent may come before the rolls), `level_up_auto` (dev); `settle_due` drops talent picks nothing can be spent on (`offers` empty and no roll left) and rolls when no skill is trained, asked again after each pick. `Due { level, talents, rolls, bonus }`: a level with rolls but no pick is due too; `bonus` are the class's bonus picks (a talent of the class's trees spends one before an ordinary pick; "You must choose a talent of Weaponcraft or Delver."), dropped like the others when nothing fits. |
 | `world/creation.rs` | Creation picks (#236; below): `creation_count`, `World::open_creation` (a level 1 `Due` from `begin`, for a run with the kit), `take_creation` (from `start_run`: the spec's picks, else `take_random` on the `character/talents/<spec>` stream; recorded in `CharacterSpec::talents`), `World::draft` / `creation_offers` / `random_creation` (character creation's Talents step), `chosen_with_talents` and `parse_talents` (`--talents`). `World::learn` (`world/talent.rs`) is `take_talent` without its words. |
@@ -17,7 +17,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 | `content/class.rs` | `ClassDef::abilities` (`[(level, talent id)]`), `bonus_talents` (`levels`, `trees`; none: any), `abilities_to`, `bonus_at`, `bonus_trees`, `check_table` (after the talents load, from `Content::check_class_tables`: the talents and trees named resolve). Rows are read by level, lowest first (`table_rows` sorts them; `abilities_to` takes them while their level is reached). A book without a class tree (fixtures) gives nothing and checks nothing. |
 | `world/skill_roll.rs` | The skill rolls (#230, `docs/dev/skills.md`): `roll_count`/`skill_roll` (the count's parts and a roll's dice, shared with the level-up screen, #543), `level_rolls`, `advance_skill` (`advance:SKILL`), `advance_auto` (`levelup:auto`'s rolls), `roll_skill` (the one roll both use), `mark_skill` (every mark added; the automatic roll at `[rolls] auto_at`, #1328, outside any `Due`). `World::due()` and `candidate()`. |
 | `world/experience.rs` | `grant_xp` scales every gain by `GrowthMods::xp_percent` and calls `level_up`; the dev `xp:N` (`grant_xp_dev`). |
-| `perception.rs` | `due()`, `dues()` (every level's, for the level-up screen's sequence), `roll_count()`, `skill_roll(skill)` (the skill-roll step's numbers, #543), `bonus_trees()`, `own_talents()` (`OwnTalent`), `talents()` (`TalentView`: `held`, the needs with `met`, `openings`): what the level-up screen (`ui/level_up_screen.rs`), the Talents page (`ui/talents_screen.rs`), and the creation step (`ui/chargen_talents_screen.rs`) read (`docs/dev/screens.md`). |
+| `perception/view.rs`, `perception/truth.rs` | `due()`, `dues()` (every level's, for the level-up screen's sequence), `roll_count()`, `skill_roll(skill)` (the skill-roll step's numbers, #543), `bonus_trees()`, `own_talents()` (`OwnTalent`), `talents()` (`TalentView`: `held`, the needs with `met`, `openings`): what the level-up screen (`ui/level_up_screen.rs`), the Talents page (`ui/talents_screen.rs`), and the creation step (`ui/chargen_talents_screen.rs`) read (`docs/dev/screens.md`). |
 | `dump.rs` | layers `talents` (held, `Skill focus (stealth)`) and `progress` (dev: dues, `due level 3: 3 skill rolls, 1 talent`, `rolls a level 3 (class 2, race 1, intelligence 0, talents 0)`, `roll dice athletics 1d3, balance +2`, takeable ids with choices, discovered kills, `empathy broken rat`); JSON `talents`, `due` (`level`, `talents`, `rolls`) |
 | `action.rs` | `Talent { id, choice }` (`talent:hardy`, `talent:weapon_focus:long_blades`; ids keep their case), `Advance(skill)`, dev `LevelUpAuto` (`levelup:auto`), `GrantXp` (`xp:N`); all `Spent::NoTime` or refused. |
 | `rng.rs` | `Rng::levels(seed)`, the `levels` stream, kept in `WorldState::levels_rng: Option<Rng>` **from the first draw** (the stat checks of each level, `world/stat_training.rs`; skill rolls, `world/skill_roll.rs`), so runs that never drew hash as before. |
@@ -124,11 +124,11 @@ wiki's effect text appends "while raging".
 | `ally_mod` (`count`, `duration_percent`, `lasting`, `most`) | `World::cast_summon` (`world/summon_spell.rs`): more come, a longer `Ally::until`, none, each spell's `most` raised (docs/dev/allies.md "Summons") |
 | `summon_bias` (`tag`, `weight`) | `World::summon_draw` (`world/summon.rs`), from `cast_summon`: the pool's weights (no item or talent yet; the owner's Q9 of #828) |
 | `familiar` | `World::bring_familiar` (`world/familiar.rs`, from `World::begin`): a familiar as the run begins; `has_active` for Call familiar, `World::start_calling` (`docs/dev/familiar.md`) |
-| `shared_sight` | `Perception::compute` (`perception.rs`): the companion's second viewpoint, its eyes and nose (Hunter's bond, `docs/dev/companion.md`) |
-| `familiar_sight` | `Perception::compute` (`perception.rs`): the same viewpoint on the familiar, its nose at least `familiars.toml`'s `nose`; no buffs (Familiar's sight, `docs/dev/familiar.md`) |
+| `shared_sight` | `Perception::compute` (`perception/seeing.rs`): the companion's second viewpoint, its eyes and nose (Hunter's bond, `docs/dev/companion.md`) |
+| `familiar_sight` | `Perception::compute` (`perception/seeing.rs`): the same viewpoint on the familiar, its nose at least `familiars.toml`'s `nose`; no buffs (Familiar's sight, `docs/dev/familiar.md`) |
 | `shared_buffs` | `World::afflict` → `World::share_buff` (`world/bond.rs`): a buff lands on the player and their companion both (Hunter's bond) |
 | `fletcher` | `world/fletch.rs`: a `count = "fletch"` recipe's time, its check, and its count after the margin (Fletcher, the ranger's at level 1, #1021; "never brittle" gone with #1336) |
-| `sees_unaware` | `Perception::compute` (`perception.rs`): `SeenActor::unaware` from `surprise::creature_unaware` for each creature in view, false for all without it; read by look mode ("unaware of you") and `ui/glyphs.rs` (the unaware mark) (Stalker's eye, the ranger's at level 2) |
+| `sees_unaware` | `Perception::compute` (`perception/actors.rs`): `SeenActor::unaware` from `surprise::creature_unaware` for each creature in view, false for all without it; read by look mode ("unaware of you") and `ui/glyphs.rs` (the unaware mark) (Stalker's eye, the ranger's at level 2) |
 | `startled_blow` | `World::startle` → `World::hair_trigger` (`world/free_blow.rs`): a check made against a hostile attacker beside the holder is answered by `Cue::Startled`'s free blow before the attack is rolled; `resolve` (and `cast.rs::spell_attack`) stop when it fells the attacker (Hair trigger) |
 | `carry_percent` | `burden::load` (the limit before the affixes' kilograms, kept a multiple of 3) |
 | `travel_percent` | `World::step_price` on the overworld, after the survival skill |
@@ -265,7 +265,7 @@ Birth sign gifts, the Roc to the Barghest (#267), and their hooks:
 
 | Effect | Read by |
 |---|---|
-| `day_sight` | `perception.rs`, the overworld range by day (`night_sight` at night) |
+| `day_sight` | `perception/seeing.rs`, the overworld range by day (`night_sight` at night) |
 | `exact_footsteps` | `noise::perceive` (footsteps at their own cell, never `rough_place`) |
 | `stance_costs` | `World::set_stance`: a wait's price instead of no time |
 | `max_hp_percent` | `Actor::max_hp`, `lasting_max_hp` (`Actor::frail`, at least 1) |
@@ -360,8 +360,8 @@ durations that parse; a die's sides and a divisor (`per_levels`, `one_in`) not 0
 trees or systems and 65,535 talents (the ids' widths). Everything else is the author's: numbers
 in any range, a talent with no effects or no systems, two talents alike, a chain of choices of
 different kinds (`Candidate::meets` reads a need of another kind as held at all), a flaw that
-is needed, a resource cost or alignment on a talent that has no active. `data/talents.toml`'s
-`[[system]]` list is read only by the wiki's talents-by-system table.
+is needed, a resource cost or alignment on a talent that has no active. `data/talents/systems/`
+list is read only by the wiki's talents-by-system table.
 
 ## Creation picks
 
@@ -557,7 +557,7 @@ and Riposte at 2.
 Vigour, Might, and Finesse (#237) ship whole; Battle trance and Inner calm (the class
 resources) came with R5 (#253); `body_talent_tests.rs` covers each one's rule, `hunger_tests.rs` Iron stomach.
 The statuses Winded (Second wind's cooldown) and Staggered (`cost = 150`, until the next action:
-`per_action`, docs/dev/weapon-abilities.md) are in `data/status.toml`.
+`per_action`, docs/dev/weapon-abilities.md) are in `data/status/`.
 
 Scholar, Grit, and Delver (#240) ship whole; their five mana talents (Deep well, Clear mind,
 Meditation, Frugal caster, Blood magic) came with #242 (H6; `docs/dev/mana.md`,
@@ -597,7 +597,7 @@ resistance.
 Shadow and Wayfarer (#239) ship whole but for Hooded light (it waited for the lantern's hood,
 #235; the hood is now a lantern's mode, `u`, #643, so the talent needs a new rule) and Patient blade (the thief's openings,
 #225); `land_talent_tests.rs` covers each one's rule. `data/lights.toml` has the Lamplighter's
-`lantern_bright`; `data/factions.toml` marks the vermin and the wildlife `animal`. Blood scent's
+`lantern_bright`; `data/factions/` marks the vermin and the wildlife `animal`. Blood scent's
 radius is 9 (the design's "4 cells" read as four beyond darkvision's five, which it needs: at 4 it
 would see nothing darkvision does not). The design's B5 (Defence by attack kind) is
 `World::target_against`, which came with Deflect missiles (#237).
@@ -622,3 +622,11 @@ the sign's grants. `OwnTalent::story` (a boon a told line names, `background::ga
 story's "(story)" / "(story, flaw)"; `OwnTalent::boon` is the altar's (a boon the story did not
 give). A class table naming a held boon later gives a talent pick in its place
 (`class::grant` skips what is held, `class::held_already` counts it into the level's `Due`).
+
+**Profane gifts** (`docs/dev/profane-gifts.md`, #1625) are talents of the `profane` tree (listed
+last, never offered: each is `granted`, a bane a `flaw`), defined in `data/profane/` rather than
+`data/talents/` and registered into the book after every other talent (`TalentBook::add`).
+`World::bestow_gift` keeps one in `Actor::boons` like the altar's, so `stars::grant` puts it back
+on restore; `World::rescind` takes it away again. `OwnTalent::profane` (the kind) marks
+"(profane)" / "(profane, bane)" in the dump and "(profane)" / "(profane, flaw)" on the Talents
+page; `OwnTalent::boon` is never set for one.
