@@ -1,8 +1,8 @@
-//! The thief's Openings (spec §8 "Resources" and "Class abilities"; #251, #1463): Sneak attack
-//! (level 1) grants the pool, a sneak attack that hits builds it, it slips away with time,
-//! Exploit (level 1) spends every one held on a sneak attack whatever the foe knows, its dice by
-//! the openings spent and Low blow's stun and to-hit added, and Master thief's finisher spends
-//! five for a blow that is a critical whenever it hits.
+//! The thief's Openings (spec §8 "Resources" and "Class abilities"; #251, #1463, #1464): Sneak
+//! attack (level 1) grants the pool, a sneak attack that hits builds it, it slips away with
+//! time, Exploit (level 1) spends every one held on a sneak attack whatever the foe knows, its
+//! dice by the openings spent (2d6 each from Improved sneak attack, 32), Low blow's stun and
+//! to-hit added, and Master thief's threat by the openings and its sure critical from five (60).
 
 use super::*;
 use crate::ability::{Ability, Unavailable};
@@ -182,99 +182,6 @@ fn openings_slip_away_a_point_every_twenty_base_turns_and_stay_at_zero() {
     assert_eq!(held(&w), Some(1), "a point gone after twenty base turns");
     run(&mut w, "wait*30");
     assert_eq!(held(&w), Some(0), "never ends: it sits at 0");
-}
-
-#[test]
-fn the_finisher_needs_five_openings_and_a_hostile() {
-    let mut w = thief();
-    let finisher = Ability::Class(ClassActive::MasterThief);
-    reach(&mut w, 59);
-    assert!(
-        !finisher.had_by(w.state.player(), w.content()),
-        "not before 60"
-    );
-    reach(&mut w, 60);
-    let id = openings(&w);
-    let me = w.state.player();
-    assert!(finisher.had_by(me, w.content()));
-    assert_eq!(
-        finisher.unavailable(me, w.content()),
-        Some(Unavailable::Short(id))
-    );
-    let row = (dump::layer_rows(&w, Layer::Abilities).into_iter())
-        .find(|r| r.starts_with("Master thief"))
-        .expect("in the abilities menu");
-    assert_eq!(row, "Master thief (class): you have no opening");
-    let outcome = w.apply(&"use:master_thief:E".parse().expect("action"));
-    assert!(!outcome.took_turn);
-    assert_eq!(last(&w), "You have no opening.");
-    // With five, but nobody there: refused, and nothing spent.
-    set(&mut w, 5);
-    assert_eq!(finisher.unavailable(w.state.player(), w.content()), None);
-    let outcome = w.apply(&"use:master_thief:E".parse().expect("action"));
-    assert!(!outcome.took_turn);
-    assert_eq!(held(&w), Some(5), "nothing spent on a refusal");
-}
-
-#[test]
-fn every_hit_of_the_finisher_is_a_critical() {
-    let mut w = thief();
-    reach(&mut w, 60);
-    let player = w.state.player;
-    let target = beside(&mut w, "kobold", 10_000, Dir::E);
-    let (mut hits, mut tries) = (0, 0);
-    while hits < 5 && tries < 60 {
-        tries += 1;
-        set(&mut w, 5);
-        let max = w.state.player().max_hp(w.content());
-        w.player_mut().hp = max;
-        let outcome = w.apply(&"use:master_thief:E".parse().expect("action"));
-        assert!(outcome.took_turn, "used");
-        assert_eq!(held(&w), Some(0), "five openings spent, hit or miss");
-        // The finisher's own blow is the player's first attack of the turn.
-        let first = (outcome.events.iter()).find_map(|e| match e {
-            Event::Attacked {
-                attacker, strike, ..
-            } if *attacker == player => *strike,
-            _ => None,
-        });
-        if let Some(Strike::Hit { critical }) = first {
-            assert!(critical, "a hit of the finisher is a critical");
-            hits += 1;
-        }
-        assert!(w.state.actors.contains_key(&target), "it stands");
-    }
-    assert_eq!(hits, 5, "five hits in {tries} tries");
-}
-
-#[test]
-fn the_finisher_replays() {
-    let spec: CharacterSpec = "human,male,thief".parse().expect("a character");
-    let mut w = World::start_run(
-        BUILTIN.clone(),
-        "showcase",
-        Some(7),
-        Some(&spec),
-        None,
-        true,
-    )
-    .expect("world");
-    let mut replay = Replay::new(&w);
-    let text = "xp:3000000 levelup:auto use:master_thief:E wait";
-    for action in parse_actions(text).expect("actions") {
-        w.apply(&action);
-        replay.push(&action, &w);
-    }
-    assert_eq!(held(&w), Some(0), "granted on the way to 60");
-    let verified = Replay::from_json(&replay.to_json())
-        .expect("json")
-        .run(BUILTIN.clone())
-        .expect("the replay verifies");
-    assert_eq!(verified.state_hash(), w.state_hash());
-    assert_eq!(
-        Action::Use(ClassActive::MasterThief, Some(Dir::E)).to_string(),
-        "use:master_thief:E"
-    );
 }
 
 /// The player's events of using Exploit `dir`, without the turn's end (no creature acts after).
@@ -480,4 +387,115 @@ fn exploit_replays() {
         ClassActive::from_id("low_blow").is_none(),
         "no longer a class active"
     );
+    // Master thief's finisher is folded into Exploit (#1464): no active, and its action text is
+    // no class active's (an unknown `use:ID` is read as a spell's).
+    assert!(ClassActive::from_id("master_thief").is_none());
+    let finisher = "use:master_thief:E".parse::<Action>();
+    assert!(!matches!(finisher, Ok(Action::Use(..))), "{finisher:?}");
+}
+
+/// A hit of `n` openings' exploit with nothing else on it.
+const HIT: Blow = Blow {
+    strike: Strike::Hit { critical: false },
+    damage: 2,
+    kind: None,
+};
+
+#[test]
+fn improved_sneak_attack_makes_the_ladders_dice_two_d6_an_opening_at_32() {
+    let mut w = thief();
+    reach(&mut w, 31);
+    let one = w.state.player().talent_mods(w.content()).exploit.dice;
+    assert_eq!(one.map(|d| d.to_string()), Some("1d6".into()), "before 32");
+    reach(&mut w, 32);
+    let two = w.state.player().talent_mods(w.content()).exploit.dice;
+    assert_eq!(two.map(|d| d.to_string()), Some("2d6".into()), "from 32");
+    for n in 1..=5u16 {
+        for _ in 0..20 {
+            let extra = w.land_exploit(n, HIT).damage - 2;
+            let n = i32::from(n);
+            assert!((2 * n..=12 * n).contains(&extra), "{extra} for {n}");
+        }
+    }
+}
+
+#[test]
+fn master_thief_lowers_an_exploits_threat_four_an_opening_and_is_sure_from_five() {
+    let mut w = thief();
+    reach(&mut w, 59);
+    let ladder = w.state.player().talent_mods(w.content()).exploit;
+    assert_eq!((ladder.threat, ladder.sure_at), (0, None), "not before 60");
+    let melee = w.state.player().melee(w.content());
+    assert_eq!(w.exploit_profile(3, melee.clone()).threat, melee.threat);
+    reach(&mut w, 60);
+    let ladder = w.state.player().talent_mods(w.content()).exploit;
+    assert_eq!((ladder.threat, ladder.sure_at), (4, Some(5)));
+    let melee = w.state.player().melee(w.content());
+    for n in 0..=8u16 {
+        let profile = w.exploit_profile(n, melee.clone());
+        let lower = 4 * i32::from(n);
+        let threat = (i32::from(melee.threat) - lower).max(2);
+        assert_eq!(i32::from(profile.threat), threat, "threat at {n}");
+        assert_eq!(profile.sure_critical, n >= 5, "sure at {n}");
+        // Low blow's to-hit rides along.
+        assert_eq!(profile.to_hit, melee.to_hit + i32::from(n), "to-hit at {n}");
+    }
+    // The sneak attack's own lowering never raises what the ladder brought to 2.
+    let player = w.state.player;
+    let low = w.exploit_profile(5, melee);
+    assert_eq!(w.sneak_threat(player, true, low).threat, 2);
+}
+
+#[test]
+fn every_hit_of_an_exploit_of_five_at_sixty_is_a_critical() {
+    let mut w = thief();
+    reach(&mut w, 60);
+    let player = w.state.player;
+    let target = beside(&mut w, "kobold", 10_000, Dir::E);
+    let (mut hits, mut tries) = (0, 0);
+    while hits < 5 && tries < 60 {
+        tries += 1;
+        set(&mut w, 5);
+        let max = w.state.player().max_hp(w.content());
+        w.player_mut().hp = max;
+        let (spent, events) = exploit_now(&mut w, Dir::E);
+        assert!(matches!(spent, Spent::Turn(_)), "used");
+        assert_eq!(held(&w), Some(0), "five openings spent, hit or miss");
+        let first = (events.iter()).find_map(|e| match e {
+            Event::Attacked {
+                attacker, strike, ..
+            } if *attacker == player => *strike,
+            _ => None,
+        });
+        if let Some(Strike::Hit { critical }) = first {
+            assert!(critical, "a hit of an exploit of five is a critical");
+            hits += 1;
+        }
+        assert!(w.state.actors.contains_key(&target), "it stands");
+    }
+    assert_eq!(hits, 5, "five hits in {tries} tries");
+    // The abilities menu has Exploit and no finisher.
+    let rows = dump::layer_rows(&w, Layer::Abilities);
+    assert!(rows.iter().any(|r| r.starts_with("Exploit")));
+    assert!(
+        !rows.iter().any(|r| r.starts_with("Master thief")),
+        "{rows:?}"
+    );
+}
+
+#[test]
+fn a_pool_past_five_is_spent_whole_with_no_cap_on_the_ladder() {
+    // Of Guile raises the pool's maximum; the ladder counts every opening spent.
+    let mut w = thief();
+    reach(&mut w, 60);
+    let kobold = beside(&mut w, "kobold", 10_000, Dir::E);
+    set(&mut w, 8);
+    let (spent, _) = exploit_now(&mut w, Dir::E);
+    assert!(matches!(spent, Spent::Turn(_)));
+    assert_eq!(held(&w), Some(0), "all eight spent");
+    assert!(w.state.actors.contains_key(&kobold));
+    for _ in 0..20 {
+        let extra = w.land_exploit(8, HIT).damage - 2;
+        assert!((16..=96).contains(&extra), "8 × 2d6: {extra}");
+    }
 }

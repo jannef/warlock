@@ -408,6 +408,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("miscast-chances.md", miscast::chances),
         ("miscast-table.md", miscast::table),
         ("resources.md", resources::resources),
+        ("exploit-ladder.md", resources::exploit_ladder),
         ("experience-levels.md", experience::experience_levels),
         ("experience-factors.md", experience::experience_factors),
         ("experience-discovery.md", experience::experience_discovery),

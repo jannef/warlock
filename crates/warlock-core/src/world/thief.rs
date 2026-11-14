@@ -10,7 +10,7 @@
 //! - **Vanishing act** (a class passive, `sneak_kill_status`): a sneak attack of theirs that
 //!   kills leaves them a degree of its status (Light-footed), read in `fight.rs::resolve` where
 //!   a sneak attack's blow kills.
-//! - The openings' actives, Exploit and Master thief's finisher, are `openings.rs`'s.
+//! - The openings' active, Exploit, is `openings.rs`'s.
 //!
 //! Nothing here draws: the blows draw as any blow does.
 

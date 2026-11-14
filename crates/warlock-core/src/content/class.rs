@@ -635,9 +635,6 @@ pub enum ClassActive {
     /// Every opening held spent on a blow in a direction that is a sneak attack whatever the
     /// foe knows (the thief's Exploit, `world/openings.rs`).
     Exploit,
-    /// A blow in a direction that is a critical if it hits, for openings (the Master thief's
-    /// finisher).
-    MasterThief,
     /// A song that lifts the player's fighting a while, for inspiration (the bard's Inspire,
     /// `world/song.rs`).
     Inspire,
@@ -703,7 +700,6 @@ impl ClassActive {
         ClassActive::Sic,
         ClassActive::Lurk,
         ClassActive::Exploit,
-        ClassActive::MasterThief,
         ClassActive::Inspire,
         ClassActive::Lullaby,
         ClassActive::Consecrate,
@@ -742,7 +738,6 @@ impl ClassActive {
             ClassActive::Sic => "sic",
             ClassActive::Lurk => "lurk",
             ClassActive::Exploit => "exploit",
-            ClassActive::MasterThief => "master_thief",
             ClassActive::Inspire => "inspire",
             ClassActive::Lullaby => "lullaby",
             ClassActive::Consecrate => "consecrate",
@@ -776,7 +771,6 @@ impl ClassActive {
                 | ClassActive::StunningStrike
                 | ClassActive::QuiveringPalm
                 | ClassActive::Exploit
-                | ClassActive::MasterThief
                 | ClassActive::Knock
                 | ClassActive::FieldForge
         )
@@ -875,8 +869,7 @@ impl ClassActive {
             | ClassActive::BanishingSmite
             | ClassActive::StunningStrike
             | ClassActive::QuiveringPalm
-            | ClassActive::Exploit
-            | ClassActive::MasterThief => ActionKind::Melee,
+            | ClassActive::Exploit => ActionKind::Melee,
             ClassActive::LayOnHands
             | ClassActive::HolyRadiance
             | ClassActive::Consecrate

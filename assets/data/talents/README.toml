@@ -504,10 +504,6 @@
 #   ambush_threat { value }       its attacks on a creature that has not seen it threaten a
 #                                 critical that many points lower (1 to 5; ambush dice of the
 #                                 same sides add up: 1d6 and 2d6 are 3d6)
-#   finisher                      the active Master thief, aimed in a direction
-#                                 (`use:master_thief:E`): a blow that is a critical whenever it
-#                                 hits, with no confirmation roll (its price the talent's
-#                                 `resource` cost: five openings)
 #   lurk { status }               the active Lurk (`use:lurk`, a wait): that status (Lurking)
 #                                 until its next action; a hostile stepping up beside it takes
 #                                 its blow at once, caught unawares unless it was hunting it
@@ -521,6 +517,10 @@
 #   exploit_to_hit { value }      an exploit is that much likelier to hit per opening spent
 #   exploit_status { status }     an exploit that hits leaves the foe a degree of that status
 #                                 (Low blow: Stunned)
+#   exploit_threat { value, sure_at }   an exploit threatens a critical `value` lower per
+#                                 opening spent (never below 2), and with `sure_at` or more spent
+#                                 is a critical whenever it hits, no confirmation roll (Master
+#                                 thief: 4 and 5; both at least 1)
 #   trained_skills { value }      every skill it is trained in counts that much higher
 #   grants_resource { resource }  it holds that alternative resource (data/resources.toml) from
 #                                 the moment it has the talent, at its start, for good

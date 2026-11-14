@@ -927,8 +927,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Openings** (the thief's; R3, #251, `world/openings.rs`): Sneak attack (level 1; #682)
     grants them at 0 (`grants_resource`); each sneak attack that hits builds one (to 5), and so
     does each feint the foe falls for (`feint`, #1462; `world/feint.rs`), one
-    slips away every 120 s (20 base turns), and at 0 they stay, held. Master thief (level 60)
-    spends 5 on its finisher (§8 "Class abilities").
+    slips away every 120 s (20 base turns), and at 0 they stay, held. Exploit spends every one
+    held, growing with the thief's class talents (§8 "Class abilities"; Master thief's finisher
+    is folded into it, a sure critical from five spent).
     - **The mark** (#1461; `world/mark.rs`, `docs/dev/openings.md`; the openings design
       `docs/design/thief-openings.md` §3): the openings are in one creature's guard,
       `Actor::mark` (saved, hashed, left out while none). Every attack the thief **chooses** at a
@@ -944,7 +945,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       clears it and the pool stays, carried to the next target; the thief's own kill (credited,
       a bleed included) builds one more (`mark_kill`; Patient blade: two). A departure (a lapsed
       summons), a level change, and time passing with the pool at 0 clear it, the pool kept; a
-      mark out of sight stays the mark. Exploit and the finisher at another than a standing mark
+      mark out of sight stays the mark. Exploit at another than a standing mark
       are refused, no time, nothing spent ("Your openings are in the kobold's guard."). The player
       sees it: the character screen's `Openings 3/5, in the kobold's guard`, look mode's "your
       mark"; "an unseen foe" while they do not see it.

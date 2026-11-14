@@ -2021,9 +2021,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "attacks on a creature that has not seen you threaten a critical {value} lower \
              (never below 3)"
         ),
-        TalentEffect::Finisher => "active (the time of a melee attack), in a direction: a blow \
-                                   that is a critical whenever it hits, with no confirmation roll"
-            .to_string(),
         TalentEffect::PatientDefence { status: id } => format!(
             "active (the time of a wait): you are {} until your next action; a melee blow you \
              dodge (it misses by your Dexterity or Dodge) or parry meanwhile is answered with \
@@ -2053,6 +2050,11 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::ExploitStatus { status: id } => format!(
             "an exploit that hits leaves the foe {} (1 degree)",
             status(&id)
+        ),
+        TalentEffect::ExploitThreat { value, sure_at } => format!(
+            "an exploit threatens a critical {value} lower per opening spent (never below 2); \
+             with {sure_at} or more spent, it is a critical whenever it hits, with no \
+             confirmation roll"
         ),
         TalentEffect::TrainedSkills { value } => {
             format!("every trained skill counts {}", signed(value))

@@ -2,7 +2,7 @@
 //! that is used from the abilities menu ([`crate::ability::Ability::Class`]) as [`Action::Use`]
 //! (`use:rage`, `use:smite:E`): Rage, War cry (for rage, `world/war_cry.rs`), Veteran's wind, Lay on hands, Smite (for zeal, `world/smite.rs`), Holy
 //! radiance, Stunning strike, Quivering palm and Step of the wind (for ki, `world/ascetic.rs`; the last takes no time), the songs (Inspire, for inspiration, `world/song.rs`), the thief's
-//! Lurk (`world/thief.rs`), Exploit and Master thief's finisher (for openings,
+//! Lurk (`world/thief.rs`), Exploit (for openings,
 //! `world/openings.rs`; the ranger's Volley, aimed at a cell, is `world/volley.rs`, and the
 //! warrior's Charge, aimed at a creature, `world/charge.rs`). The
 //! abilities themselves are talents of the class tree, given as levels come (`world/class.rs`)
@@ -110,7 +110,6 @@ impl World {
             (ClassActive::StunningStrike, Some(dir)) => self.stunning_strike(dir, events),
             (ClassActive::QuiveringPalm, Some(dir)) => self.quivering_palm(dir, events),
             (ClassActive::Exploit, Some(dir)) => self.exploit(dir, spent, events),
-            (ClassActive::MasterThief, Some(dir)) => self.finisher(dir, events),
             (ClassActive::Knock, Some(dir)) => self.knock(dir),
             (ClassActive::FieldForge, Some(dir)) => self.start_field_forge(dir),
             (
@@ -121,7 +120,6 @@ impl World {
                 | ClassActive::StunningStrike
                 | ClassActive::QuiveringPalm
                 | ClassActive::Exploit
-                | ClassActive::MasterThief
                 | ClassActive::Knock
                 | ClassActive::FieldForge,
                 None,

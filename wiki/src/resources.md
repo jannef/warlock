@@ -42,10 +42,8 @@ while you hold 2 focus spends them and takes 10 % less time. A [volley](talents.
 - Killing your [mark](#the-mark) yourself gives one more.
 - One slips away every 20 base turns (2 minutes). When empty, the pool stays with you.
 - From level 1, [Exploit](#exploit) (an ability, aimed in a direction) spends **every** opening
-  you hold on one melee blow that counts as a sneak attack, whatever the foe knows.
-- At level 60, [Master thief](talents.md#talent-master-thief) gives the **finisher** (an ability,
-  aimed in a direction). It spends all 5 for a melee blow that is a [critical](combat.md#criticals)
-  whenever it hits, with no confirmation roll. A miss still spends them.
+  you hold on one melee blow that counts as a sneak attack, whatever the foe knows. The thief's
+  class talents make it bigger as they come (see [Exploit](#exploit)).
 
 ### The mark
 
@@ -66,16 +64,16 @@ mark".
 - **Your mark is forgotten** when it vanishes (a summoned creature's time runs out), when you
   take the stairs to another level, and when your openings run down to 0. Your openings stay.
   A mark that steps out of sight is still your mark.
-- **Spending them on someone else is refused.** [Exploit](#exploit) and the
-  [finisher](talents.md#talent-master-thief) at a creature other
-  than your mark do nothing and take no time ("Your openings are in the kobold's guard.").
+- **Spending them on someone else is refused.** [Exploit](#exploit) at a creature other
+  than your mark does nothing and takes no time ("Your openings are in the kobold's guard.").
 
 ### Exploit
 
 Exploit is the [thief](classes.md#thief)'s way to cash in openings, from level 1. Choose a
 direction, and you strike the hostile there with what you wield, in the time of a melee blow.
 
-- **It spends every opening you hold**, from 1 to 5. You choose how many by when you strike.
+- **It spends every opening you hold**, from 1 to 5 (more with an item *of Guile*, see
+  [Suffixes](affixes.md#suffixes); there is no cap). You choose how many by when you strike.
 - **It is a [sneak attack](surprise.md#sneak-attacks) whatever the foe knows.** The sneak attack
   dice land if it hits. The foe is not [Surprised](status-effects.md#status-surprised) and keeps
   its whole Defence.
@@ -93,13 +91,18 @@ direction, and you strike the hostile there with what you wield, in the time of 
 
 The thief's class talents add to every exploit, per opening spent:
 
-| Level | Talent | Adds per opening spent |
-|---|---|---|
-| 1 | [Exploit](talents.md#talent-exploit) | +1d6 damage |
-| 12 | [Low blow](talents.md#talent-low-blow) | +1 to hit; a hit leaves the foe [Stunned](status-effects.md#status-stunned) (its next action costs half again as much, and your next blow finds it flat-footed) |
+{{#include generated/exploit-ladder.md}}
+
+A [stunned](status-effects.md#status-stunned) foe's next action costs half again as much, and
+your next blow finds it flat-footed.
 
 So at level 12 an exploit of 4 openings is +4 to hit and does the blow, the sneak dice, and 4d6
-more, and the foe is stunned.
+more, and the foe is stunned. At level 32 the same exploit does 8d6 more. At level 60 its
+[critical](combat.md#criticals) threat is 16 lower, and 2 lower again as on any
+[sneak attack](surprise.md#sneak-attacks) (that step never below 3), so a weapon that threatens on
+20 threatens on 3. An exploit of 5 or more is a critical whenever it hits, with no confirmation roll. The
+critical doubles only the weapon's part: the sneak dice and the exploit's dice are never doubled.
+This was the master thief's finisher, which is now part of Exploit.
 
 **Ki.** The [ascetic](classes.md#ascetic) gets ki, full, with
 [martial arts](talents.md#talent-martial-arts) at level 1. The pool holds 4, plus your

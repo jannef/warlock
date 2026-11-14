@@ -1671,7 +1671,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     standing mark, and "It has no vital spot." at a foe they see without vitals; after it the
     pool is 0 and the mark cleared, unless the blow killed it, which gives one back). Low blow
     (12) has no active of its own since #1463: it is Exploit's first increment, the foe struck
-    Stunned (flat-footed, its next action dear) and the exploit +1 to hit per opening. Trained
+    Stunned (flat-footed, its next action dear) and the exploit +1 to hit per opening.
+    Improved sneak attack (32) adds a second 1d6 an opening (2d6), and Master thief (60) a
+    threat 4 lower an opening, never below 2, and with five or more spent a critical whenever
+    it hits, no confirmation roll (`Profile::sure_critical`): its finisher, an active of its own
+    until #1464, is folded into Exploit, and `use:master_thief` is gone. No cap on n beyond the
+    pool's maximum (Of Guile's). Trained
     wind is off the thief's table (#1463): nothing the thief does costs stamina before an
     active weapon rank grants the pool.
     Trapfinding, Pick lock, and Light fingers, which only gave what the class's skills give,
@@ -1707,9 +1712,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Light-footed, a degree, `sneak_kill_status`, read in `World::resolve` where a sneak
     attack's blow kills; `world/thief.rs`), Hide in plain sight (no footsteps while Unburdened;
     attacks half as loud), Master thief (an attack on an unaware creature threatens a critical
-    2 lower, never below 3; and its finisher, an active aimed in a direction, `use:master_thief:E`,
-    for 5 openings: a melee blow that is a critical whenever it hits, with no confirmation roll,
-    `Profile::sure_critical`, for a melee attack's time; `world/openings.rs`); Travelled hands
+    2 lower, never below 3 nor above what an exploit's ladder made it; and Exploit's top
+    increment, `exploit_threat`, above; `world/openings.rs`); Travelled hands
     (the bard's at 3, in Blessing's place, #871: a hand-out once, `weapon_ranks { to = 1 }`:
     every weapon skill and fighting style the bard holds at rank 0, whatever rows the content
     has, but the hidden styles, rises to rank 1 by

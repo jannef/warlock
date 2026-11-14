@@ -132,7 +132,7 @@ rangers, ascetics, berserkers, bards, and thieves train Initiative (see
 
 Some things have no vitals to find. Sneak attack dice never land on them, and a
 [critical](combat.md#criticals) is never confirmed on them. [Vital strike](weapon-skills.md#weapon-ability-vital-strike)
-and the master thief's finisher are a plain blow against them ("It has no vital spot."). They can
+and a master thief's sure critical are a plain blow against them ("It has no vital spot."). They can
 still be surprised like anyone, and still be struck flat-footed. The fleshy undead (draugr, ghouls,
 the drowned, vampires, mummies) do have vitals.
 

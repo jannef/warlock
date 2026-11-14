@@ -55,7 +55,8 @@ it again and replace those sections, then revisit the tuning notes. The code is
 `crates/warlock-core/src/world/balance_probe.rs` (the measuring, with the method in its module
 docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/ranger.rs`
 (the ranger and their companion), `balance_probe/familiar.rs` (the witch's familiar),
-`balance_probe/caster_pace.rs` (the casters' caster style pace), `balance_probe/spread.rs` (the spread of rounds to kill and to die), and `balance_probe/tables.rs` (the tables).
+`balance_probe/caster_pace.rs` (the casters' caster style pace), `balance_probe/exploits.rs`
+(the thief's Exploit and the openings a fight yields), `balance_probe/spread.rs` (the spread of rounds to kill and to die), and `balance_probe/tables.rs` (the tables).
 
 ## Method
 
@@ -119,6 +120,15 @@ docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/r
   12 plus 3.5 a level (15 at 1, 117 at 30, 222 at 60), the design's "about 100 by level 25 to
   30". Only the first blow is measured: the initiative check's Surprised, which strips the
   Defence for the next blow too, is not.
+- **Exploits** (#1464, `balance_probe/exploits.rs`): the thief's Exploit of 1, 3, and 5
+  openings on the same monsters, aware of them: the foe keeps its Defence, the profile is
+  `ExploitMods::profile` (Low blow's to-hit, Master thief's threat and sure critical, as
+  `World::exploit_profile`), then the sneak attack's own lower threat, and a hit lands the sneak
+  dice and n × the ladder's dice. Beside it the openings a fight against one of those monsters
+  yields under a feint-when-aware policy: the first blow (unaware) builds one on a hit, the
+  thief then feints until the foe falls for it (its Willpower check, `feint.rs`'s difficulty),
+  each feint made builds one and sets up a flat-footed sneak attack that builds one more on a
+  hit, and the mark's kill gives one. Only the inflow: spending is not modelled.
 - **Rage** (#842): a human male berserker (great axe; axes, great blades, and the great weapon
   style at the warrior's ranks), measured for that table alone, calm and raging: the Rage pool
   granted (the dev grant: Raging and the stance it forces), and its `builds` and decay read from
@@ -979,19 +989,58 @@ rank 4 at level 10, 6 at 20, 8 at 40, and 9 at 60 (Sniper 9 to 10; #1095's run, 
 
 The thief's main-hand blow on the monsters of their level (trained stats), aware and caught unawares. The Sneak attack value assumed, the dice it gives with the talents, and the share of the monsters within two levels with vitals (no dice and no critical on the rest, so their first blow gains only the flat-footed Defence); then each cell: P(hit) aware / unaware % · damage of a blow aware : the first blow unaware · how many times as much, the median over the monsters within two levels that have vitals.
 
-The thief's Exploit (#1463) is a sneak attack whatever the foe knows: the aware P(hit) (the foe keeps its Defence; Low blow adds 1 per opening from 12), the sneak dice of the unaware blow, and 1d6 more per opening spent (3.5 each). The probe's own table of it comes with the ladder's top (O4, #1464; the openings design §10).
-
 | L | Sneak attack | dice | with vitals | Thief plain | Thief magic |
 |---|---|---|---|---|---|
 | 1 | 15 | 1d6 | 82% | 72/78 · 2.7:6.0 · ×2.2 | 72/78 · 2.7:6.0 · ×2.2 |
 | 5 | 29 | 2d6 | 62% | 78/87 · 3.7:10.3 · ×2.7 | 78/87 · 4.8:11.5 · ×2.4 |
 | 10 | 47 | 2d6 | 75% | 91/97 · 7.2:14.4 · ×2.0 | 94/97 · 8.3:15.4 · ×1.9 |
-| 15 | 64 | 3d6 | 64% | 98/99 · 9.5:20.2 · ×2.1 | 99/99 · 11.0:21.6 · ×2.0 |
+| 15 | 64 | 3d6 | 64% | 98/99 · 9.7:20.4 · ×2.1 | 99/99 · 11.2:21.8 · ×2.0 |
 | 20 | 82 | 4d6 | 65% | 98/99 · 9.7:23.9 · ×2.5 | 99/99 · 11.4:25.4 · ×2.2 |
-| 30 | 117 | 5d6 | 67% | 99/99 · 12.6:30.1 · ×2.4 | 99/99 · 20.0:37.5 · ×1.9 |
+| 30 | 117 | 5d6 | 67% | 99/99 · 12.8:30.3 · ×2.4 | 99/99 · 20.2:37.6 · ×1.9 |
 | 40 | 152 | 8d6 | 62% | 99/99 · 14.4:42.4 · ×2.9 | 99/99 · 19.9:47.6 · ×2.4 |
 | 50 | 187 | 8d6 | 58% | 99/99 · 15.8:43.6 · ×2.8 | 99/99 · 22.8:50.7 · ×2.2 |
-| 60 | 222 | 9d6 | 50% | 96/99 · 15.8:50.1 · ×3.2 | 99/99 · 19.4:53.4 · ×2.8 |
+| 60 | 222 | 9d6 | 50% | 96/99 · 16.1:50.4 · ×3.1 | 99/99 · 19.6:53.6 · ×2.7 |
+
+## Exploits
+
+The thief's Exploit (plain gear, trained stats) on the monsters of their level with vitals, aware of them: the openings' blow keeps the foe's Defence and lands the sneak dice and n × the ladder's on a hit. The ladder (per opening spent) as the talents give it; then each cell: P(hit) % · damage, misses included, the median over the monsters within two levels that have vitals. Plain: the blow on the aware; Unaware: the first blow on a foe caught unawares (flat-footed).
+
+| L | ladder an opening | Plain | Unaware | Exploit 1 | Exploit 3 | Exploit 5 |
+|---|---|---|---|---|---|---|
+| 1 | 1d6 | 72 · 2.7 | 78 · 5.9 | 72 · 8.2 | 72 · 13.4 | 72 · 18.6 |
+| 5 | 1d6 | 78 · 3.8 | 87 · 10.3 | 78 · 12.0 | 78 · 17.3 | 78 · 23.0 |
+| 10 | 1d6 | 91 · 7.2 | 97 · 14.3 | 91 · 16.5 | 91 · 22.9 | 91 · 29.4 |
+| 15 | 1d6, +1 hit, stun | 98 · 9.7 | 99 · 20.4 | 99 · 23.5 | 99 · 30.8 | 99 · 37.8 |
+| 20 | 1d6, +1 hit, stun | 98 · 9.8 | 99 · 23.8 | 99 · 27.2 | 99 · 34.2 | 99 · 41.3 |
+| 30 | 1d6, +1 hit, stun | 99 · 12.9 | 99 · 30.3 | 99 · 33.7 | 99 · 40.7 | 99 · 47.7 |
+| 40 | 2d6, +1 hit, stun | 99 · 14.3 | 99 · 42.3 | 99 · 49.1 | 99 · 63.1 | 99 · 76.9 |
+| 50 | 2d6, +1 hit, stun | 99 · 15.8 | 99 · 43.5 | 99 · 50.6 | 99 · 64.4 | 99 · 78.5 |
+| 60 | 2d6, +1 hit, stun, threat −4, sure at 5 | 96 · 16.2 | 99 · 50.2 | 98 · 61.1 | 99 · 80.1 | 99 · 94.3 |
+
+The openings a fight against one of those monsters yields (the inflow; Exploit's spending is not modelled), the thief feinting whenever the foe is aware and not yet fooled, then striking it flat-footed: the chance a feint fools it (its Willpower check against 10 + the thief's Presence modifier + Bluff), the first blow's opening (the chance it hits), the feints' openings with the sneak attack each fooling sets up, the mark's kill (1), the whole fight's, and its turns, the median over the monsters. A thief who cannot feint (untrained in Bluff) only strikes.
+
+| L | feint fools | first blow | feints | the kill | a fight | turns |
+|---|---|---|---|---|---|---|
+| 1 | 12% | 0.78 | 0.5 | 1 | 2.3 | 3.9 |
+| 5 | 9% | 0.87 | 0.9 | 1 | 2.8 | 6.7 |
+| 10 | 6% | 0.97 | 1.9 | 1 | 3.8 | 15.9 |
+| 15 | 4% | 0.99 | 2.2 | 1 | 4.1 | 19.0 |
+| 20 | 1% | 0.99 | 2.0 | 1 | 4.0 | 35.2 |
+| 30 | 0% | 0.99 | 2.9 | 1 | 4.9 | 110.7 |
+| 40 | 0% | 0.99 | 2.7 | 1 | 4.7 | 129.9 |
+| 50 | 0% | 0.99 | 5.6 | 1 | 7.6 | 409.1 |
+| 60 | 0% | 0.99 | 3.6 | 1 | 5.5 | 265.7 |
+
+Read with the openings design §10's first pass (#1464's run): Exploit is close to the design's
+numbers below 32 (an exploit of 3 at 30 is 40.7 against its 41.9), and from 32 the second die
+makes an exploit of 5 about five times the plain blow (76.9 against 14.3 at 40); at 60 the sure
+critical lifts an exploit of 5 to 94.3 (the design's ≈ 103). The feint is the weak build: the
+monsters' Willpower beats a feint of difficulty 10 + Presence + Bluff (the probe's thief spends
+no level-up rolls on Bluff, `levelup:auto`) nearly always, 12 % fooled at level 1 and none from
+30, so a fight's openings come from the first blow and the kill (about 2 a fight), not from
+feints, and the "turns" column shows a feint-first policy is a loss past level 10. Not tuned
+here: whether Feint's difficulty or Bluff's `feint` points should rise is a later balance
+change.
 
 ## Rage
 

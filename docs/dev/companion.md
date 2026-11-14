@@ -301,7 +301,7 @@ the cost a wait's). `Content::sic_range` is `Ability::reach` for the aiming mode
   allies never disturb a rest, so `World::out_of_view_for` stays exact), `auto_critical`
   (`StatusDef::auto_critical`). `World::savage_blow`, a hook in `fight.rs::resolve` after
   `pack_blow`, sets `Profile::sure_critical` while the attacker suffers one, the read
-  `combat::strike_with` has for the finisher: no confirmation roll, and a target with no vitals
+  `combat::strike_with` has for an exploit of five at 60: no confirmation roll, and a target with no vitals
   still takes a plain hit. `World::savage_spent`, after the strike, spends a degree for each blow
   that hits (`Strike::is_hit`: soaked or resisted too), the status gone at none.
 

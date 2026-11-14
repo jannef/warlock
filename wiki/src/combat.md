@@ -130,7 +130,7 @@ each one's). The message says so: "The kobold hits you hard!" A confirmed critic
 Some things have **no vitals** to find, so they are **immune to criticals** and to
 [sneak attacks](skills.md#skill-sneak-attack). A threat on them is a plain hit, and
 [Vital strike](weapon-skills.md#weapon-ability-vital-strike) or a
-[master thief](talents.md#talent-master-thief)'s finisher is only a plain blow ("It has no vital
+an [exploit](resources.md#exploit) of five at level 60 is only a plain blow ("It has no vital
 spot."). These are the [incorporeal](creature-bodies.md#incorporeal-creatures) (ghosts and wraiths),
 [animated objects](animated.md), and every [creature](creatures.md) tagged elemental, skeleton,
 spirit, or construct (the mud golem; [elementals](creature-bodies.md#elementals)). The fleshy undead

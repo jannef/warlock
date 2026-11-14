@@ -471,7 +471,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     spirit, construct), or one with `vitals = false` has no vitals: no critical is confirmed on it
     (`combat::Target::no_criticals`, set by `World::target_of` and `ambush.rs::vitals`: a threat is a plain hit, no confirmation drawn, a sure
     critical a plain hit too), no sneak dice land on it, no Master thief threat; it is surprised
-    like anyone. Vital strike or the finisher that hits one says "It has no vital spot." after
+    like anyone. Vital strike or an exploit that hits one says "It has no vital spot." after
     the blow's line. The fleshy undead have vitals. Without `data/surprise.toml` everything has
     vitals and a missile's sneak attack has no reach limit.
   - **Told after the fact**, never before, never a roll: the player's attack that rolls to hit
