@@ -64,7 +64,7 @@ you never choose them, they work by themselves as you fight. They have their own
 - **Exploit**: the [thief](classes.md#thief)'s, from level 1. It spends every [opening](resources.md#resource-openings) you hold on a melee blow, in the time of
   one, at the hostile in the direction you choose. It is a [sneak attack](skills.md#skill-sneak-attack) whatever the foe knows: the
   dice land if it hits, and 1d6 more for each opening spent. The foe is not [Surprised](status-effects.md#status-surprised) by it and keeps its whole Defence.
-  [Low blow](talents.md#talent-low-blow) (level 12) adds +1 to hit per opening and stuns the foe it hits. It is refused, costing nothing, with no
+  [Low blow](classes.md#talent-low-blow) (level 12) adds +1 to hit per opening and stuns the foe it hits. It is refused, costing nothing, with no
   opening, nobody hostile there, a creature other than your [mark](resources.md#the-mark), or one you see without vitals (see [Exploit](resources.md#exploit)).
 - **Thrown exploit**: the [thief](classes.md#thief)'s, from level 18. The same blow as Exploit,
   made by throwing a weapon at a hostile you see, in the time of a throw. Pick what to throw
@@ -125,7 +125,7 @@ you never choose them, they work by themselves as you fight. They have their own
   while you have one.
 - **Other skills used as actions** ([Knowledge](skills.md#skill-knowledge), ...): each is in the menu once you are trained in it
   (see [Skills](skills.md)), greyed out until its use comes to the game.
-- **[Class abilities](talents.md#class-abilities)** ([Rage](abilities.md#ability-rage), [War cry](abilities.md#ability-war-cry), [Charge](abilities.md#ability-charge), [Lullaby](abilities.md#ability-lullaby), [Cackle](abilities.md#ability-cackle), [Veteran's wind](abilities.md#ability-veterans-wind), [Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance),
+- **[Class abilities](classes.md#levels)** ([Rage](abilities.md#ability-rage), [War cry](abilities.md#ability-war-cry), [Charge](abilities.md#ability-charge), [Lullaby](abilities.md#ability-lullaby), [Cackle](abilities.md#ability-cackle), [Veteran's wind](abilities.md#ability-veterans-wind), [Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance),
   [Step of the wind](abilities.md#ability-step-of-the-wind), [Stunning strike](abilities.md#ability-stunning-strike), [Patient defence](abilities.md#ability-patient-defence), [Stillness](abilities.md#ability-stillness), [Quivering palm](abilities.md#ability-quivering-palm), [Consecrate](abilities.md#ability-consecrate), [Orison](abilities.md#ability-orison), [Sanctuary](abilities.md#ability-sanctuary), [Knock](abilities.md#ability-knock)) come
   from your [class](classes.md)'s level table (see [Classes](classes.md#levels)). Each is under Class from the level that brings
   it.
@@ -141,13 +141,14 @@ you never choose them, they work by themselves as you fight. They have their own
     of those steps; the blow is free.
   - You must gain at least one cell, so it is refused when you already stand beside the foe.
   - A wall, a closed door, deep water, ice, a [trap](traps.md) you know of, or anyone you see on
-    the line refuses it before you move. So does too little stamina for the whole run. A refused
+    the line refuses it before you move. So does too little stamina for the whole run, or a run out of a
+    [shop](shops.md)'s door while you owe it. A refused
     charge takes no time and costs nothing.
   - Nobody you pass or leave behind gets a [free blow](stances.md#free-blows) at you on the way.
   - Someone you cannot see on the line stops you short, with no blow. A hidden trap goes off as
     you run over it and stops you there.
   - Charge also gives the warrior their stamina pool from level 1.
-  - With [Whirling charge](talents.md#talent-whirling-charge) (the warrior's at level 50), every
+  - With [Whirling charge](classes.md#talent-whirling-charge) (the warrior's at level 50), every
     hostile beside a cell you run into takes a [free blow](stances.md#free-blows) as you pass, in
     the order you pass them. Each is struck once a charge. The foe you charge at gets only the
     charge's own blow at the end. The blows cost no time and no stamina, and a foe that falls
@@ -204,7 +205,7 @@ A [bard](classes.md#bard) sings two songs, both from the menu under Class: **[In
   peaceful creatures only hear it. There is no level cut: a troll checks as a kobold does, only
   with more nerve. A song with nobody to hear it is still sung: its price and its time are spent,
   and the noise is made.
-- **[Virtuoso](talents.md#talent-virtuoso)** (the bard's at 30): every song costs nothing at all and brings one degree more.
+- **[Virtuoso](classes.md#talent-virtuoso)** (the bard's at 30): every song costs nothing at all and brings one degree more.
   Inspire also lifts you higher: [greatly inspired](status-effects.md#status-inspired-greatly) (+2 to hit and +2 [Dodge](combat.md#defence), 10 minutes a degree)
   instead of [inspired](status-effects.md#status-inspired) (+1 and +1, 5 minutes a degree).
 

@@ -8,7 +8,8 @@
 //!   walkable terrain that is no deep water, no ice, no trap the player knows of, and nobody the
 //!   player sees. Anything else refuses the charge, taking no time and spending nothing, and so
 //!   does a target beside them already (no cell to gain), one they do not see, one not hostile,
-//!   the overworld, swimming, or a load too heavy to move under.
+//!   the overworld, swimming, or a load too heavy to move under, and so does a way out of a
+//!   shop's door while the player owes it (the keeper steps into the way, as on a step).
 //! - **Unseen in the way**: someone the player does not see on the line stops the charge short
 //!   in the cell before them ("You run into something!"); the cells moved are paid, and no blow
 //!   is struck. A trap unknown to them goes off as on any step, and the charge stops there too.
@@ -181,6 +182,15 @@ impl World {
         });
         if blocked {
             self.say("Something stands in the way of a charge.");
+            return None;
+        }
+        // Out of a shop's door owing: the keeper would turn a step back there (`shop.rs`).
+        let mut steps = std::iter::once(here)
+            .chain(path.iter().copied())
+            .zip(path.iter().copied());
+        if let Some(shop) = steps.find_map(|(from, to)| self.owing_exit(from, to)) {
+            let text = format!("{} steps into your way: you haven't paid.", shop.name);
+            self.say(text);
             return None;
         }
         Some((target, path))

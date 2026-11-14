@@ -73,7 +73,7 @@ When several things change the pace at once:
 - These speed it up on top of all that, their percents added together:
   - [magic items](magic-items.md) that speed it ("mana comes back 50% faster");
   - being born under [Water](horoscope.md#elements), whose gift
-    *[Tidal](talents.md#talent-tidal)* makes mana come back 25 % faster (see [Horoscope](horoscope.md));
+    *[Tidal](horoscope.md#talent-tidal)* makes mana come back 25 % faster (see [Horoscope](horoscope.md));
   - the talent *[Clear mind](talents.md#talent-clear-mind)*, 25 % faster;
   - trained *[Concentration](skills.md#skill-concentration)*: 5 % faster at 20, 40 % at 100, 60 %
     at 200 (see [Skills](skills.md)).
@@ -122,7 +122,7 @@ You get nothing for a creature that dies of [poison](status-effects.md#status-po
 your summoned creature kills, nor for a kill farther off. Two such items add up, identified or not.
 A creature wearing one refills its own mana the same way when it kills.
 
-A [witch](classes.md#witch)'s [Malison](talents.md#talent-malison) (from level 18) pays her mana
+A [witch](classes.md#witch)'s [Malison](classes.md#talent-malison) (from level 18) pays her mana
 for every death under one of her [hexes](status-effects.md#status-ill-wished), however it died,
 whoever killed it, and at any distance. She gets half the creature's level (rounded down, at least
 1), never above her maximum. This adds to what an item of Siphoning gives.

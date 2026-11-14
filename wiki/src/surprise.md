@@ -23,7 +23,7 @@ numbers are below.
   [Slipping past](skill-uses.md#slipping-past).
 
 Nothing tells you which creatures have not noticed you, unless you have
-[Stalker's eye](talents.md#talent-stalkers-eye) (the [ranger](classes.md#ranger)'s, from level 2). With it, look mode says
+[Stalker's eye](classes.md#talent-stalkers-eye) (the [ranger](classes.md#ranger)'s, from level 2). With it, look mode says
 "unaware of you", and such creatures are drawn with a slow, faint shimmer.
 
 After you attack, though, the attack's own message tells you how it found a target you see (see
@@ -42,7 +42,7 @@ trap springing beside you does not.
   what [Wary](talents.md#talent-wary) and the [Initiative](skills.md#skill-initiative) skill add.
   It must reach 13 plus the attacker's **craft**. Craft is what the attacker's
   [Sneak attack](skills.md#skill-sneak-attack) skill adds, plus 2 for the thief's
-  [Sneak attack](talents.md#talent-sneak-attack) talent. A trap has no craft. A sleeper or a mimic
+  [Sneak attack](classes.md#talent-sneak-attack) talent. A trap has no craft. A sleeper or a mimic
   in disguise makes no check: it is always surprised.
 - **Made**: "You keep your wits about you." (or "The kobold whirls to face you."). Nothing more
   happens. With [Hair trigger](talents.md#talent-hair-trigger), if the attacker is a hostile beside
@@ -66,7 +66,7 @@ succeeds.
 
 ### Stunned
 
-The ascetic's [Stunning strike](talents.md#talent-stunning-strike) leaves a foe it wounds
+The ascetic's [Stunning strike](classes.md#talent-stunning-strike) leaves a foe it wounds
 [Stunned](status-effects.md#status-stunned) until it next acts. Stunned is flat-footed just like
 Surprised: no Dexterity and no Dodge in Defence, no free blow, and
 [sneak dice](#sneak-attacks) land on it. Its next action also takes half as long again, but
@@ -96,19 +96,19 @@ are taken by surprise!" already tells it.
 If you have **sneak dice**, you add them to a hit on a target that is unaware of you, Surprised, or
 [Stunned](#stunned). The dice come from the [Sneak attack](skills.md#skill-sneak-attack) skill (1d6
 once you are trained at all) and from talents: [Ambusher](talents.md#talent-ambusher) and the
-thief's [Improved sneak attack](talents.md#talent-improved-sneak-attack). They are added after
+thief's [Improved sneak attack](classes.md#talent-improved-sneak-attack). They are added after
 [Protection](combat.md#protection), and a [critical](combat.md#criticals) never doubles them.
-[Master thief](talents.md#talent-master-thief) makes such a hit a critical threat 2 sooner.
+[Master thief](classes.md#talent-master-thief) makes such a hit a critical threat 2 sooner.
 
 - A blow counts at any reach. A shot, a throw, or an attack spell counts only within a few cells
   (see the table below; [Long reach](talents.md#talent-long-reach) adds to it).
 - Usually only the first blow of a fight finds the foe unaware. A foe that failed its check is
   still Surprised for your next blow. One that made it is not.
-- The thief's [Lurk](talents.md#talent-lurk) waits in ambush: a hostile that steps up beside you
+- The thief's [Lurk](classes.md#talent-lurk) waits in ambush: a hostile that steps up beside you
   takes your blow at once, caught unawares unless it was already hunting you.
 - [Exploit](resources.md#exploit) is a sneak attack whatever the foe knows, but it does not
   surprise the foe.
-- [Vanishing act](talents.md#talent-vanishing-act) leaves you light on your feet after a sneak
+- [Vanishing act](classes.md#talent-vanishing-act) leaves you light on your feet after a sneak
   attack that kills.
 - Every sneak attack that hits gives the thief an [opening](resources.md#resource-openings),
   if it is on their [mark](resources.md#the-mark) or they have none.

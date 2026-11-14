@@ -17,9 +17,8 @@ is or how long it will last: you just watch your hit points go.
 
 Being grabbed, engulfed, or swallowed has a page of its own: [Held](held.md).
 
-The table gives the exact paces, what causes each effect, and the chance a hit has to cause it:
-
-{{#include generated/status-effects.md}}
+Every status effect is in the [tables at the end of this page](#every-status-effect), with its
+exact paces.
 
 ## How they work
 
@@ -34,6 +33,26 @@ The table gives the exact paces, what causes each effect, and the chance a hit h
   Only creatures on other levels are paused: their effects wait for you to come back.
 - **They can kill.** If a status effect takes your last hit point, you die of it, and the death
   screen says so: "Bled to death".
+
+## Stunned, frightened, drowsy, surprised
+
+These four come up in most fights. None of them costs hit points; each costs you time or aim.
+
+- **Stunned.** A heavy blow rings your head. Your next action takes half again as long, and until
+  then you are [flat-footed](surprise.md#caught-unawares): your Dexterity and Dodge do not help
+  your [Defence](combat.md#defence), you make no free blow, and a
+  [sneak attack](surprise.md#sneak-attacks)'s extra dice land. A creature's blow or an ascetic's
+  [Stunning strike](classes.md#talent-stunning-strike) can do it (see [Surprise](surprise.md#stunned)).
+- **Frightened.** You hit less often (−3 [to hit](combat.md#hitting)). A frightened creature runs
+  from you while it can, and fights only when cornered. Fear wears off a degree every 6 seconds.
+- **Drowsy.** Everything you do takes three times as long. The bard's
+  [lullaby](abilities.md#ability-lullaby) and some creatures cause it. It eases a degree every 12
+  seconds.
+- **Surprised.** You were [caught unawares](surprise.md#caught-unawares) and failed the initiative
+  check. You are flat-footed, and your next action takes half again as long.
+
+A [potion of clear head](potions.md#potion-of-clear-head) cures stunned, frightened, and drowsy at
+once.
 
 ## Bleeding
 
@@ -119,7 +138,7 @@ keeps it from ever taking you.
 
 The creatures of a [teeming den](special-rooms.md#room-teeming) lie **asleep** ("asleep" in look
 mode). A sleeper does nothing at all and has seen no one, so a
-[sneak attack](talents.md#talent-sneak-attack) on it always lands. Time never wakes it. A loud
+[sneak attack](classes.md#talent-sneak-attack) on it always lands. Time never wakes it. A loud
 enough noise does, as does any harm or a waking neighbour's cry.
 
 ## Silenced
@@ -149,8 +168,8 @@ Creatures of the other side are unwelcome there too, and you can see it on them 
 
 ## Buffs and cooldowns
 
-A status effect can help or hinder in other ways while it lasts. The table's last column says which
-of these each one does:
+A status effect can help or hinder in other ways while it lasts. The "What it does" column of
+[the tables](#every-status-effect) says which of these each one does:
 
 - **Stats.** It may raise a score as well as lower one. If a higher
   [Toughness](stats.md#stat-toughness) let you [heal](healing.md#how-fast) to more hit points,
@@ -195,7 +214,7 @@ The [potions](potions.md) that last a while give:
   [Earthed](#status-earthed), and [Proof against poison](#status-poison-proof).
 
 The bard's [songs](abilities.md#songs) give three more. [Inspired](#status-inspired) (and a
-[virtuoso](talents.md#talent-virtuoso)'s greater inspired) lifts the singer.
+[virtuoso](classes.md#talent-virtuoso)'s greater inspired) lifts the singer.
 [Drowsy](#status-drowsy), from the [lullaby](abilities.md#ability-lullaby), slows those who fail to
 shake it off. Each goes up to three degrees, as many as the singer's [Music](skills.md#skill-music)
 gives the song.
@@ -208,7 +227,7 @@ A **hex** is a status that a [hex spell](spellcasting.md#shapes) lays: [Hexed](#
   degree, up to its maximum, and starts its degree's time again.
 - Her [familiar](familiars.md#the-touch)'s touch lays her Hexed on what it hits, and starts her
   other hexes on it afresh.
-- Her [malison](talents.md#talent-malison) makes a creature take 3 more damage from her for each of
+- Her [malison](classes.md#talent-malison) makes a creature take 3 more damage from her for each of
   her hexes on it, and a creature that dies under one of her hexes pays her mana.
 
 A **cooldown** is a status effect that only waits to wear off. While you are, say,
@@ -216,7 +235,7 @@ A **cooldown** is a status effect that only waits to wear off. While you are, sa
 (`you are winded`). Time is the only price: nothing counts how often you use an ability.
 
 **[Raging](#status-raging)** comes with the berserker's [rage](resources.md#rage), one of the
-[class abilities](talents.md#class-abilities). While the rage lasts you are stronger and tougher but
+[class abilities](classes.md#berserker). While the rage lasts you are stronger and tougher but
 less clever, and cannot read or spend [mana](mana.md#spending-it). When it runs out you are
 **[Exhausted](#status-exhausted)** for two and a half minutes: a little weaker, and with no rage
 until it passes.
@@ -225,3 +244,43 @@ until it passes.
 
 "You are bleeding." and "You feel sick." stop a [rest](resting.md), like any news. "The bleeding
 stops." and "The poison wears off." show in the message line but let you rest on.
+
+## Every status effect
+
+The tables give every status effect in four groups, with the exact paces. **What it does** is
+what it costs and changes while it lasts, and how you see it on others. **Caused by** is where it
+comes from; the creatures whose attacks cause it are listed in [Who causes it](#who-causes-it).
+**How it ends** is how it wears off, and what cures it at once.
+
+### Harmful
+
+These cost [hit points](hit-points.md#hit-points) or [mana](mana.md) as time passes, and can kill.
+
+{{#include generated/status-effects.md:harmful}}
+
+### Hindering
+
+These cost nothing, but leave you weaker, slower, or unable to do something.
+
+{{#include generated/status-effects.md:hindering}}
+
+### Helpful
+
+These help whoever has them. Some cost something besides, as a rage does.
+
+{{#include generated/status-effects.md:helpful}}
+
+### Cooldowns and marks
+
+These do nothing by themselves. A cooldown only waits to wear off, and keeps the ability that
+caused it from being used again. A mark matters to something else: a light, a smite, a
+[spell circle](magic.md).
+
+{{#include generated/status-effects.md:cooldowns}}
+
+## Who causes it
+
+Every creature whose attack, throw, or gaze can cause a status effect, with the chance a hit has
+and how bad it makes it. A [Held](held.md) creature's grip is the difficulty of breaking free.
+
+{{#include generated/status-causes.md}}

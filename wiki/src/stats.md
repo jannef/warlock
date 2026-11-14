@@ -216,7 +216,7 @@ like any other. A temple's **mending** gives every drained point back at once, a
 [stat damage](diseases.md#stat-damage) (see [Services](npcs.md#services)).
 
 [Talents](talents.md) help you hold: **[Unbroken soul](talents.md#talent-unbroken-soul)** (+4 to the check), **[Iron will](talents.md#talent-iron-will)** (+2 to every [Willpower](stats.md#stat-willpower) check),
-and the [paladin](classes.md#paladin)'s **[Divine grace](talents.md#talent-divine-grace)** (+2 to the check). See [Talents](talents.md).
+and the [paladin](classes.md#paladin)'s **[Divine grace](classes.md#talent-divine-grace)** (+2 to the check). See [Talents](talents.md).
 
 The [creatures](creatures.md) that drain:
 

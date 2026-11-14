@@ -46,7 +46,7 @@ then loose [gems](gems.md). Its items are found as [loot](magic-items.md#finding
 so some may turn out to be gems. They are of the floor's level, or a few levels above it for the
 greater chests, and a share of them is sure to be [magic](magic-items.md) or
 [rare](magic-items.md#rarity). Talents that make your finds richer
-([Treasure hunter](talents.md#talent-treasure-hunter), [Hoard sense](talents.md#talent-hoard-sense))
+([Treasure hunter](talents.md#talent-treasure-hunter), [Hoard sense](horoscope.md#talent-hoard-sense))
 count for what is in a chest too.
 
 {{#include generated/chest-loot.md}}

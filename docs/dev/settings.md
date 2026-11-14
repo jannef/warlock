@@ -4,7 +4,12 @@ Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185)
 rules it implements are in spec/06-input-and-ui.md. Keep it current with the code, as CLAUDE.md says.
 
 Settings (`crates/warlock/src/settings/`): `settings.toml` in the config dir, schema in the `settings/mod.rs` module docs (the config dir also keeps `graveyard.toml`, the dead, append-only and unpinned: `docs/dev/saves.md` "The graveyard"). Changes
-apply live and are written at once; a bad file means defaults plus a warning, per value. The
+apply live and are written at once; a bad file means defaults plus a warning, per value. A file
+that does not read at all (not TOML, not UTF-8) is renamed `settings.toml.bad`, as an unusable
+save is, so the first change does not write the defaults over the player's keys (#1576). Startup
+warnings (the settings', the paths') come before `LogPlugin` exists: `logging::warn_early` holds
+them and a `Startup` system logs them (to the log file too), or, for a launch that exits first (a
+file command, content that does not load), `logging::print_early_warnings` prints them (#1591). The
 temperature unit (`temperature = "celsius"`/`"fahrenheit"`, `settings::TemperatureUnit`) is
 applied only where the status bar shows the temperature (`TemperatureUnit::show`). Effects:
 `reduced_effects` is a preset over the `[effects]` switches (`EffectSwitches`: glyph_animation,

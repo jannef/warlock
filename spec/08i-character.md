@@ -1371,7 +1371,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     it once, an ordinary melee attack with what follows one; at least a cell gained, so refused
     beside it; refused, no time and nothing spent, over a wall, a closed door, deep water, ice,
     a known trap, or anyone the player sees on the line, at nobody seen or nobody hostile, on
-    the overworld, swimming, or too burdened to move; someone unseen on the line stops it short
+    the overworld, swimming, too burdened to move, or out of a shop's door owing it (its
+    keeper steps into the way, as on a step, #1488); someone unseen on the line stops it short
     with no blow, an unknown trap goes off and stops it there; the steps provoke no free blows,
     no opportunist's, gatekeeper's, brace, or point-blank; 1 stamina and 1 more a cell moved,
     spent as it begins, refused while short of the whole; the steps' time, each priced as a step

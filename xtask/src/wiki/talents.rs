@@ -9,35 +9,82 @@ use warlock_core::content::{
 };
 use warlock_core::noise::SONG_NOISE;
 
-/// Every tree in display order: a heading, its description, and its talents (name, what it
-/// needs, what it does as the rule, and the systems it touches).
+/// The tree of the birth signs' gifts: on the horoscope page, not the talents page (#1554).
+const STARS: &str = "stars";
+
+/// The page a talent's row is on (#1554): a birth sign's gift on the horoscope page, a class
+/// ability in its first class's level table (else its first prestige class's), any other on the
+/// talents page.
+fn talent_page(content: &Content, def: &TalentDef) -> &'static str {
+    let book = content.talents();
+    if book.tree_id(STARS) == Some(def.tree) {
+        "horoscope.md"
+    } else if book.tree(def.tree).class {
+        match home_table(content, &def.id) {
+            Some(Table::Prestige(_)) => "prestige-classes.md",
+            _ => "classes.md",
+        }
+    } else {
+        "talents.md"
+    }
+}
+
+/// The level table a class ability's row is anchored in: the first class's (in New run's
+/// order) that teaches it, else the first prestige class's.
+fn home_table<'c>(content: &'c Content, id: &str) -> Option<Table<'c>> {
+    let teaches = |t: &Table| t.abilities().iter().any(|(_, a)| a == id);
+    (content.classes().iter().map(Table::Class))
+        .chain(content.prestiges().iter().map(Table::Prestige))
+        .find(teaches)
+}
+
+/// A link to the row that defines talent `id`, on whichever page it is (#1554): the talents
+/// page, the horoscope page, or a class's level table.
+pub(super) fn talent_link(content: &Content, id: &str, name: &str) -> String {
+    let anchor = link(Term::Talent, id, name);
+    match content.talents().id(id) {
+        Some(t) => {
+            let page = talent_page(content, content.talents().get(t));
+            anchor.replacen("](talents.md#", &format!("]({page}#"), 1)
+        }
+        None => anchor,
+    }
+}
+
+/// Every tree a talent may be picked from, in display order: a heading, its description, and its
+/// talents (name, what it needs, and what it does as the rule). The stars' gifts are on the
+/// horoscope page and the class abilities in the class tables (#1554).
 pub(super) fn talents(content: &Content) -> String {
     let book = content.talents();
     let mut out = String::new();
     for (i, tree) in (0u8..).zip(&book.trees) {
-        let _ = writeln!(out, "### {}\n\n{}\n", tree.name, tree.description);
-        let rows: Vec<&TalentDef> = book.of_tree(TreeId(i)).map(|(_, t)| t).collect();
-        if rows.is_empty() {
-            out.push_str("No talents yet.\n\n");
+        if tree.class || book.tree_id(STARS) == Some(TreeId(i)) {
             continue;
         }
-        out.push_str("| Talent | Needs | Effect | Systems |\n|---|---|---|---|\n");
-        for def in rows {
-            let systems: Vec<&str> = (def.systems.iter())
-                .map(|s| book.system(*s).name.as_str())
-                .collect();
-            let _ = writeln!(
-                out,
-                "| {} | {} | {} | {} |",
-                anchored(Term::Talent, &def.id, &name(def)),
-                needs_text(content, def),
-                effects_text(content, def),
-                systems.join(", ")
-            );
-        }
-        out.push('\n');
+        let _ = writeln!(out, "### {}\n\n{}\n", tree.name, tree.description);
+        tree_table(content, TreeId(i), &mut out);
     }
     out
+}
+
+/// One tree's table: each talent with what it needs and what it does.
+fn tree_table(content: &Content, tree: TreeId, out: &mut String) {
+    let rows: Vec<&TalentDef> = content.talents().of_tree(tree).map(|(_, t)| t).collect();
+    if rows.is_empty() {
+        out.push_str("No talents yet.\n\n");
+        return;
+    }
+    out.push_str("| Talent | Needs | Effect |\n|---|---|---|\n");
+    for def in rows {
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} |",
+            anchored(Term::Talent, &def.id, &name(def)),
+            needs_text(content, def),
+            effects_text(content, def),
+        );
+    }
+    out.push('\n');
 }
 
 /// The talents each class picks at creation (spec §8 "Talents"): everyone's and the class's
@@ -282,11 +329,24 @@ fn level_table(content: &Content, table: Table, out: &mut String) {
         );
     }
     out.push_str("| Level | Ability | Effect |\n|---:|---|---|\n");
+    let mut seen: Vec<&str> = Vec::new();
     for (level, id) in table.abilities() {
         let Some(talent) = book.id(id) else { continue };
         let def = book.get(talent);
         let effects = effects_text(content, def);
-        let _ = writeln!(out, "| {level} | {} | {effects} |", def.name);
+        // A class ability's row is defined here, in its first table, at its first level
+        // (#1554); a later one links to it.
+        let home = book.tree(def.tree).class
+            && home_table(content, id).is_some_and(|t| t.id() == table.id());
+        let ability = if home && !seen.contains(&id.as_str()) {
+            anchored(Term::Talent, &def.id, &def.name)
+        } else if home {
+            def.name.clone()
+        } else {
+            talent_link(content, &def.id, &def.name)
+        };
+        seen.push(id);
+        let _ = writeln!(out, "| {level} | {ability} | {effects} |");
     }
     out.push('\n');
     let _ = writeln!(out, "<!-- ANCHOR_END: {} -->\n", table.id());
@@ -596,7 +656,7 @@ fn prayer_text(
     {
         let order: Vec<&str> = rules.uses.iter().map(|u| u.id.id()).collect();
         parts.push(format!(
-            "active (`use:orison`, the time of a spell, no mana): it answers the first problem \
+            "active (the time of a spell, no mana): it answers the first problem \
              the priest has, in the order {}. The holy powers answer {} and better, the dark \
              ones {} and worse, by the band at the moment. Every attempt adds {} strain, \
              answered or not, and a point passes every {}; a prayer fizzles with a chance of {} % \
@@ -1024,7 +1084,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         ),
         TalentEffect::CraftTimePercent { value } => format!(
             "every craft takes {value}% of its time: [recipes](crafting.md#the-recipes) \
-             (after [Fletcher](talents.md#talent-fletcher)'s share), \
+             (after [Fletcher](classes.md#talent-fletcher)'s share), \
              [Temper](altars-forges-springs.md#forges), [Whittle](skill-uses.md#whittling), \
              [cutting and setting gems](gem-cutting.md), [salvage](crafting.md#salvage), and \
              the craftsperson's own works"
@@ -2276,10 +2336,9 @@ fn spell_text(content: &Content, def: &SpellData) -> String {
     };
     let mana = content.spell_rules().map_or(0, |r| r.mana(def, 0));
     format!(
-        "spell `use:{}` (level {}, {casts}, {mana} mana): {}: {}",
-        def.id,
+        "the spell {} (level {}, {casts}, {mana} mana): {}",
+        link(Term::Spell, &def.id, &def.name),
         def.level,
-        def.name,
         super::spells::does(content, def)
     )
 }

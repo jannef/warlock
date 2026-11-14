@@ -1,7 +1,7 @@
 # The patron
 
 A [craftsperson](classes.md#craftsperson) who reaches level 12 gains
-[Patron](talents.md#talent-patron): a well-to-do burgher in Cēaptūn who buys their best work.
+[Patron](classes.md#talent-patron): a well-to-do burgher in Cēaptūn who buys their best work.
 
 ## Where is the patron?
 

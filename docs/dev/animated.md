@@ -77,7 +77,7 @@ disease) and `dies` (the death line's verb, `CreatureDef::death_verb`).
 `animated::compose(content, rng, creature)` makes a household creature's body: one draw for a
 body of several pieces (`count`, the cutlery's 3 to 6), then its material by `variant::draw` with
 `Source::Gear(level)` (the materials' `gear` weights: a silver candlestick is rare).
-`animated::with_body` puts it first in the pack (last if something is worn or wielded, whose
+`animated::kit` puts it first in the pack (last if something is worn or wielded, whose
 places must not move), in no slot, unless the creature carries its body already.
 
 - A generated level: `animated::arm(template, content, seed)` after `gear::arm` (both generators,

@@ -23,7 +23,7 @@ pub(super) fn prayer_strain(content: &Content) -> String {
     let mut out = String::from("| | |\n|---|---|\n");
     let _ = writeln!(
         out,
-        "| Strain a prayer adds | {}, answered or fizzled alike (none in an unholy place for a priest who [communes with the dark](talents.md#talent-communion)) |",
+        "| Strain a prayer adds | {}, answered or fizzled alike (none in an unholy place for a priest who [communes with the dark](classes.md#talent-communion)) |",
         rules.strain
     );
     let _ = writeln!(
@@ -201,7 +201,7 @@ fn gained_at(content: &Content, id: PrayerUse) -> String {
             if gives {
                 at.push(format!(
                     "level {level} ({}, {})",
-                    link(Term::Talent, &def.id, &def.name),
+                    super::talents::talent_link(content, &def.id, &def.name),
                     class.name.to_lowercase()
                 ));
                 break;
@@ -282,7 +282,7 @@ pub(super) fn prayer_levels(content: &Content) -> String {
             let _ = writeln!(
                 out,
                 "| {level} | {} | {} | {holy} | {dark} | {answers} |",
-                link(Term::Talent, &def.id, &def.name),
+                super::talents::talent_link(content, &def.id, &def.name),
                 adds.join(", ")
             );
         }
@@ -314,7 +314,7 @@ pub(super) fn prayer_rites(content: &Content) -> String {
                         ),
                     ),
                     TalentEffect::Communion => (
-                        link(Term::Talent, &def.id, &def.name),
+                        super::talents::talent_link(content, &def.id, &def.name),
                         "a passive: standing in a [cursed](special-rooms.md#room-cursed), [draining](special-rooms.md#room-draining), or [haunted](special-rooms.md#room-haunted) room, or on a level such a curse lies over, your prayers add no strain and the place's [Ebbing](status-effects.md#status-ebbing) never touches you; only while the dark powers answer you".into(),
                     ),
                     TalentEffect::Sanctuary {
