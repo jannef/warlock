@@ -1437,8 +1437,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Shield line (Shield +1 in a shield style, the styles' role since #1093), Cleaving strike (the cleave free blow; with the Cleave talent too, great
     cleave), Armour drill (worn armour's Dexterity cap +1, Protection +1 while wearing any),
     Weapon mastery (threat +1 with melee weapon skills at rank 8 or more), Battle rhythm (the
-    warrior's at 40, #1467: a melee hit of theirs gives back a point of stamina, a melee kill two
-    more, a killing blow three in all, never past the pool's maximum; `resource_build` on the
+    warrior's at 40, #1467: a melee hit of theirs gives back a point of stamina, a melee kill one
+    more, a killing blow two in all, never past the pool's maximum; `resource_build` on the
     `melee_hit` and `melee_kill` events, §8 "Resources"), Champion
     (critical multiplier +1 with melee weapons, at most ×5); Battle-scarred (Protection +1, and
     +2 more while raging: +3 in all, in any armour), Headlong (while raging, steps 20 % cheaper,

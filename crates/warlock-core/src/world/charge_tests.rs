@@ -291,13 +291,13 @@ fn hit(outcome: &Outcome) -> bool {
 }
 
 #[test]
-fn battle_rhythm_gives_a_point_a_melee_hit_and_two_more_a_kill() {
+fn battle_rhythm_gives_a_point_a_melee_hit_and_two_a_kill() {
     let [(plain, out), (rhythm, _)] = rhythm_twins(1000);
     assert!(hit(&out), "the fixture's first blow hits");
     assert_eq!(stamina(&rhythm), stamina(&plain) + 1, "{:#?}", said(&plain));
     let [(plain, out), (rhythm, _)] = rhythm_twins(1);
     assert!(hit(&out));
-    assert_eq!(stamina(&rhythm), stamina(&plain) + 3, "a hit and a kill");
+    assert_eq!(stamina(&rhythm), stamina(&plain) + 2, "a killing blow: two in all");
     // Never past the pool's maximum.
     let mut w = world("######\n#@p..#\n######\n");
     let player = w.player_id();

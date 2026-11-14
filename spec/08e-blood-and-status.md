@@ -984,7 +984,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     at 0. A berserker holds Rage and Stamina at once. Shown as `Sta 7/12`. Talents (the
     `stamina` system): **Deep lungs** (Vigour): +4 at most; **Steady breathing**
     (Weaponcraft, a weapon skill at 5): back at 150 %; **Battle rhythm** (the warrior's at 40,
-    #1467): a point back for each melee hit, two more for a melee kill. Anyone else is granted it, full, on the first weapon
+    #1467): a point back for each melee hit, two for a melee kill in all (the kill's one on the hit's one). Anyone else is granted it, full, on the first weapon
     rank that teaches an active (the third grant place, #564: `fight.rs::grant_stamina`, where
     every rank the player gains is said).
   - **Shown**: the player's own resources (`PerceptionView::own_resources`: each held, its value

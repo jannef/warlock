@@ -3,9 +3,9 @@ id = "battle_rhythm"
 name = "Battle rhythm"
 tree = "class"
 granted = true
-description = "The fight itself keeps your breath: every blow you land in melee gives back a point of stamina, and every foe you cut down there two more."
+description = "The fight itself keeps your breath: every blow you land in melee gives back a point of stamina, and a blow that cuts a foe down gives two."
 effects = [
     { kind = "resource_build", resource = "stamina", on = "melee_hit", amount = 1 },
-    { kind = "resource_build", resource = "stamina", on = "melee_kill", amount = 2 },
+    { kind = "resource_build", resource = "stamina", on = "melee_kill", amount = 1 },
 ]
 systems = ["stamina", "combat", "resources"]

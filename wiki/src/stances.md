@@ -88,8 +88,8 @@ Stamina comes back a point every 12 seconds (2 base [turns](time.md#what-takes-t
 with [Steady breathing](talents.md#talent-steady-breathing). Spent, it sits at 0 and comes back. Creatures never have it.
 
 A warrior with [Battle rhythm](talents.md#talent-battle-rhythm) (at level 40) also gets a point back
-for every [melee](combat.md) blow of theirs that hits, and 2 more for every foe such a blow kills: a
-killing blow gives 3. It never goes past the maximum. Shots, throws, and spells give none.
+for every [melee](combat.md) blow of theirs that hits, and 1 more for every foe such a blow kills: a
+killing blow gives 2 in all. It never goes past the maximum. Shots, throws, and spells give none.
 
 The active weapon abilities spend it (see
 [What a rank teaches](weapon-skills.md#what-a-rank-teaches)). Anyone else gets Stamina from the first
