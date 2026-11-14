@@ -250,7 +250,7 @@ impl LevelLights {
             }
         }
         let own_light = state.carried_light(content);
-        for actor in state.actors.values().filter(|a| a.level == level.id) {
+        for actor in state.actors.on_level(&level.id) {
             let id = u64::from(actor.id.0);
             // An invisible creature sheds no light of its own (`world/unseen.rs`).
             if let Some(preset) = content.creature(actor.creature).light

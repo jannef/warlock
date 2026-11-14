@@ -183,7 +183,7 @@ fn the_check_is_willpower_skill_food_and_the_rangers_bonus_against_the_beasts_le
             + mods.check(Stat::Willpower)
             + me.skill_effect(&content, Effect::Tame);
         assert_eq!(me.skill_effect(&content, Effect::Tame), 10, "+10 at 100");
-        assert_eq!(mods.tame, 0, "a commoner has no bonus");
+        assert_eq!(mods.beast.tame, 0, "a commoner has no bonus");
         let (modifier, difficulty) = w.tame_odds(beast(&w), true);
         assert_eq!(modifier, base + rules.food);
         assert_eq!(w.tame_odds(beast(&w), false).0, base);
@@ -201,7 +201,7 @@ fn the_check_is_willpower_skill_food_and_the_rangers_bonus_against_the_beasts_le
         false,
     )
     .expect("world");
-    assert_eq!(w.state.player().talent_mods(&content).tame, 2);
+    assert_eq!(w.state.player().talent_mods(&content).beast.tame, 2);
 }
 
 #[test]

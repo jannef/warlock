@@ -63,7 +63,7 @@ impl World {
     pub(super) fn loosen_holds(&mut self, events: &mut Vec<Event>) {
         let level = &self.state.current_level;
         let mut loose: Vec<(ActorId, Effect)> = Vec::new();
-        for actor in self.state.actors.values().filter(|a| a.level == *level) {
+        for actor in self.state.actors.on_level(level) {
             for e in actor.effects.iter() {
                 let Some(holder) = e.by else {
                     continue;

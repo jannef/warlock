@@ -84,8 +84,8 @@ pub(crate) fn unseen_by_player(
         return Vec::new();
     }
     let (viewer, turn) = (player.pos, state.turn);
-    let mut hidden: Vec<Concealed> = (state.actors.values())
-        .filter(|a| a.level == player.level && a.id != player.id && !a.in_retinue())
+    let mut hidden: Vec<Concealed> = (state.actors.on_level(&player.level))
+        .filter(|a| a.id != player.id && !a.in_retinue())
         .filter(|a| !scented.contains(&a.id))
         .filter(|a| !a.mind.glimpsed.is_some_and(|t| t + 1 >= turn))
         .filter_map(|a| {
@@ -105,12 +105,8 @@ pub(crate) fn unseen_by_player(
         return hidden;
     }
     // The companion's nose finds them (`companion.rs::smelt_within`).
-    let beast = (state.actors.values()).find(|a| {
-        a.master() == Some(state.player)
-            && a.companion().is_some()
-            && a.level == player.level
-            && !a.in_retinue()
-    });
+    let beast = (state.actors.on_level(&player.level))
+        .find(|a| a.master() == Some(state.player) && a.companion().is_some() && !a.in_retinue());
     let nose = beast.and_then(|b| content.creature(b.creature).nose);
     if let (Some(beast), Some(nose)) = (beast, nose) {
         let wanted =

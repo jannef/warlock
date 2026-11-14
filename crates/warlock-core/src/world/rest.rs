@@ -262,8 +262,8 @@ impl World {
             return None;
         }
         let viewer = player.pos;
-        let near: Vec<(ActorId, Pos)> = (state.actors.values())
-            .filter(|a| a.level == level.id && a.pos.chebyshev(viewer) <= CLOSE)
+        let near: Vec<(ActorId, Pos)> = (state.actors.on_level(&level.id))
+            .filter(|a| a.pos.chebyshev(viewer) <= CLOSE)
             .filter(|a| self.disturbs_rest(a))
             .map(|a| (a.id, a.pos))
             .collect();

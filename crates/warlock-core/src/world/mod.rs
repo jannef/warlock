@@ -84,6 +84,7 @@
 //! (of Willpower, after every turn, for those who notice such things).
 
 mod actor;
+mod actors;
 mod ai;
 mod alignment;
 mod ally;
@@ -332,6 +333,7 @@ mod zap;
 mod zone;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
+pub use actors::Actors;
 pub use alignment::Deed;
 pub use ally::{Ally, AllySource, MAX_DEV_ALLIES, Order};
 pub use attacks::{AttackSource, OwnAttack};
@@ -469,7 +471,7 @@ pub struct WorldState {
     pub(crate) time: GameTime,
     pub(crate) current_level: String,
     pub(crate) levels: BTreeMap<String, LevelState>,
-    pub(crate) actors: BTreeMap<ActorId, Actor>,
+    pub(crate) actors: Actors,
     pub(crate) player: ActorId,
     pub(crate) next_actor_id: u32,
     pub(crate) messages: MessageLog,
@@ -643,9 +645,7 @@ impl WorldState {
     /// Who stands on `p` of level `level`, if anyone: never an ally in the retinue, which stands
     /// in no one's way (`ally.rs`).
     fn actor_at(&self, level: &str, p: Pos) -> Option<&Actor> {
-        self.actors
-            .values()
-            .find(|a| a.level == level && a.pos == p && !a.in_retinue())
+        (self.actors.on_level(level)).find(|a| a.pos == p && !a.in_retinue())
     }
 
     fn check(&self) -> Result<(), WorldError> {
@@ -1023,7 +1023,7 @@ impl World {
             time: def.start,
             current_level: start.id.clone(),
             levels: BTreeMap::new(),
-            actors: BTreeMap::new(),
+            actors: Actors::default(),
             player: ActorId(0),
             next_actor_id: 1,
             messages: MessageLog::default(),
@@ -1551,6 +1551,11 @@ impl World {
             self.burden_news(burden);
             self.quest_news(&quests);
         }
+        // A level changed past `Actors::set_level` would leave the index behind (`actors.rs`).
+        debug_assert!(
+            self.state.actors.indexed(),
+            "the actors' level index is stale"
+        );
         Outcome {
             took_turn: self.state.turn != turn,
             elapsed: self.state.time.since(time),

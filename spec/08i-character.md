@@ -1593,7 +1593,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `dies`; "The hex comes home." when any came; never for the player's own death; no draws),
     Second sight (noticing
     as Spot +2, searching +2), Familiar's sight (#932: her familiar's sight and nose, §8 "Allies":
-    "The familiar"; `TalentEffect::FamiliarSight` read in `Perception::compute`), Curse of sloth (level 3: Sluggish 1 min a degree: every action
+    "The familiar"; `BeastEffect::FamiliarSight` read in `Perception::compute`), Curse of sloth (level 3: Sluggish 1 min a degree: every action
     costs 150 %; 3 mana), Blight (level 7: a burst of 2d6 poison, radius 2, and two degrees of
     Poisoned on everyone it harms; 17 mana), Cauldron (a corpse's harm never; its stat marks and widening chances doubled; a fresh one heals 1d4),
     Hag's bargain.
@@ -1692,12 +1692,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     are gone from the table (#684); a save holding one loads without it (said in the log).
   - **Passives**, each one read: Familiar (the witch's level 1, #929: a small beast of her race's
     list, or rarely a rare one, at her heel from the first turn, whose touch lays her evil eye and
-    which goes for what she has hexed, §8 "Allies": "The familiar"; `TalentEffect::Familiar` read
+    which goes for what she has hexed, §8 "Allies": "The familiar"; `BeastEffect::Familiar` read
     by `World::bring_familiar`; with it the active Call familiar, #930, `use:call_familiar`: an
     hour's sitting brings hers back, the same kind and name, when it is dead; only one who never had one draws, the imp among that draw from her level 30), Animal companion (the ranger's level 1, #916: a beast of the
     race's kind, or rarely a rare one, at their side from the first turn, that grows with their
-    level and always comes along, §8 "Allies": "The animal companion"; `TalentEffect::Companion`
-    read by `World::bring_companion`; and `tame = 2`, `TalentMods::tame`, the ranger's edge at
+    level and always comes along, §8 "Allies": "The animal companion"; `BeastEffect::Companion`
+    read by `World::bring_companion`; and `tame = 2`, `BeastMods::tame`, the ranger's edge at
     taming, read by the Tame skill ability, `world/tame.rs`), Pack tactics (the ranger's level
     18, #919: a creature beside both the ranger and their companion is flanked, the ranger's
     melee blows and the companion's at it +2 to hit, never a shot, a throw, or a spell; and the
@@ -1710,7 +1710,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     with `fire` while the ranger holds 2 focus spends them and takes 10 % less time, the whole
     shot's price; with less it is an ordinary shot; `world/focus.rs`), Hunter's bond (the
     ranger's at 25, #920: shared sight and shared buffs with the companion, §8 "Allies";
-    `TalentEffect::SharedSight` read in `Perception::compute`, `TalentEffect::SharedBuffs` in
+    `BeastEffect::SharedSight` read in `Perception::compute`, `BeastEffect::SharedBuffs` in
     `World::afflict`, `world/bond.rs`), Master hunter (bows and crossbows threat +1; Favoured
     prey +1 and +2 more); Sneak attack (#682: the class passive beside the Sneak attack skill,
     whose dice the thief trains, `2d6+10` and known for: it grants the Openings pool from level

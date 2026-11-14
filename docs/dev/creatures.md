@@ -451,6 +451,19 @@ fits (Fennmynster 3–10, Fyrdelf 5–16, #534); every other hostile type comes 
 population (`xtask/src/bench.rs`); its night's rest is held to the 500 ms budget thanks to coarse
 turns.
 
+Who is on a level (#1507): `WorldState::actors` is `Actors` (`world/actors.rs`), the run's
+actors by id (every level the run visited keeps its own; only Grundlēas forgets them) with an
+index of the ids on each level. Reading is the map's (`Deref`); `insert`, `remove`, `retain`, and
+`set_level` (the one way an actor's level changes: `travel`, `cross_to`) keep the index;
+`get_mut` and `values_mut` must not change `level` (a debug assertion after every action checks
+the index). `Actors::on_level(level)` gives a level's actors in id order, the order of the whole
+map filtered, so a scan moved to it decides the same. The scans a creature makes every turn
+use it (`actor_at`, sight's hostiles, routes and clear shots, strides, the scheduler, free
+blows on stepping, holds, hearers, the light cache, the rest's disturbers); the rarer ones still
+filter the whole map. The index is derived: the saved map is unchanged, and the index is built
+on load. `bench-turns` measures it with `l-1` (the deepest floor of a 40-floor cave branch,
+fresh) and `long` (the same floor after visiting the other 39, about 3,000 actors in the run).
+
 Coarse turns while the player rests (#349, spec §8 "Coarse turns while resting"): `world/stride.rs`,
 one call at the top of `World::creature_turn` (`coarse_turn` → `Coarse::Strode(price)` returns at
 once, `Slow` multiplies the usual action's price by `STRIDE`, `Usual` is the usual turn). `away`

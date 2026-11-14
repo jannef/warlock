@@ -177,7 +177,7 @@ impl World {
             + mods.check(Stat::Willpower)
             + me.skill_effect(content, Effect::Tame)
             + if fed { rules.food } else { 0 }
-            + mods.tame;
+            + mods.beast.tame;
         let level =
             (self.state.actors.get(&beast)).map_or(0, |b| content.creature(b.creature).level);
         (

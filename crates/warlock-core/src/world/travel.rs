@@ -450,8 +450,8 @@ impl World {
             .ok_or_else(|| WorldError::NoPlayerStart(to.to_string()))?;
         let arrival = self.free_cell_near(to, arrival);
         let player = self.state.player;
+        self.state.actors.set_level(player, to);
         if let Some(actor) = self.state.actors.get_mut(&player) {
-            actor.level = to.to_string();
             actor.pos = arrival;
         }
         self.state.current_level = to.to_string();
@@ -572,9 +572,10 @@ impl World {
     /// The one way an actor changes level but the player (`World::follow_along`,
     /// `World::followers_arrive`); each says what else it keeps of its mind.
     pub(super) fn cross_to(&mut self, id: ActorId, to: &str, pos: Pos) {
-        if let Some(a) = self.state.actors.get_mut(&id) {
+        if let Some(from) = self.state.actors.set_level(id, to)
+            && let Some(a) = self.state.actors.get_mut(&id)
+        {
             // A vault's monster pool stands outside its level's cap; on another level it counts.
-            let from = std::mem::replace(&mut a.level, to.to_string());
             a.pos = pos;
             a.heard.clear();
             if let Some(s) = (self.state.levels.get_mut(&from)).and_then(|l| l.spawner.as_mut()) {

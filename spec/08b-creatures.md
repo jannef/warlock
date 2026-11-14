@@ -446,7 +446,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   message, the player being hurt, or the beast leaving their side, with nothing lost but the time.
   Then the check, with no level gate: Willpower modifier (and what talents add to Willpower
   checks) + Handle animal's `tame` benefit (+10 at 100, +20 at 200) + `[tame] food` (2) if food
-  is carried (one of the first food stack, eaten as the check is made) + `TalentMods::tame` (the
+  is carried (one of the first food stack, eaten as the check is made) + `BeastMods::tame` (the
   ranger's 2), against `[tame] difficulty` (10) + `per_level` (2) × the beast's level. Made, the
   beast keeps its actor and its place and is the player's companion, its mind cleared, graded at
   their level, named: "The wolf comes to your hand. You call it Græg." Failed: "The wolf snaps at

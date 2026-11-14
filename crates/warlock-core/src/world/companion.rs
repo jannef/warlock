@@ -157,7 +157,7 @@ impl World {
         let Some(character) = self.state.character.clone() else {
             return;
         };
-        if !self.state.player().talent_mods(&content).companion {
+        if !self.state.player().talent_mods(&content).beast.companion {
             return;
         }
         let Some(rules) = content.companions() else {

@@ -38,8 +38,8 @@ without it hash as before).
 
 **Animal companion** (`assets/data/talents/animal_companion.toml`: tree `class`, `granted`,
 effects `companion` and `tame = 2`, system `allies`) is the ranger's level 1
-(`data/classes/07-ranger.toml`). `TalentEffect::Companion` → `TalentMods::companion`;
-`TalentEffect::Tame { bonus }` → `TalentMods::tame`, read by the Tame skill ability ("Taming" below). The
+(`data/classes/07-ranger.toml`). `BeastEffect::Companion` → `BeastMods::companion`;
+`BeastEffect::Tame { bonus }` → `BeastMods::tame`, read by the Tame skill ability ("Taming" below). The
 check: a `tame` bonus of 1 to 10.
 
 `World::bring_companion()` runs in `World::begin` once the level is laid and the player stands on
@@ -213,8 +213,8 @@ is the rules' to refuse, no time: "No beast of yours stands that way."
 
 The ranger's level 18 (`assets/data/talents/pack_tactics.toml`: tree `class`, `granted`, effects
 `pack_tactics` with `to_hit = 2` and `shares_favoured_prey`, systems `combat` and `allies`).
-`TalentEffect::PackTactics { to_hit }` (checked 1 to 10) → `TalentMods::pack_tactics`;
-`TalentEffect::SharesFavouredPrey` → `TalentMods::shares_favoured_prey`. One hook,
+`BeastEffect::PackTactics { to_hit }` (checked 1 to 10) → `BeastMods::pack_tactics`;
+`BeastEffect::SharesFavouredPrey` → `BeastMods::shares_favoured_prey`. One hook,
 `World::pack_blow` in `world/pack.rs`, called in `fight.rs::resolve` after `ally_blow` (Beast-bond):
 
 - **flanked**: the target stands beside (Chebyshev 1) both the player and `World::companion()`,
@@ -235,11 +235,11 @@ flanked too, and another type nothing).
 
 The ranger's level 25 (`assets/data/talents/hunters_bond.toml`: tree `class`, `granted`, effects
 `shared_sight` and `shared_buffs`, systems `vision`, `allies`, `status`). Two separate effects, so
-the witch's familiar takes the sight and the nose without the buffs (`TalentEffect::FamiliarSight`,
+the witch's familiar takes the sight and the nose without the buffs (`BeastEffect::FamiliarSight`,
 the same viewpoint, `docs/dev/familiar.md` "Familiar's sight"; `shared_sight` itself reads only the
 companion).
 
-**Shared sight** (`TalentEffect::SharedSight` → `TalentMods::shared_sight`), a second viewpoint in
+**Shared sight** (`BeastEffect::SharedSight` → `BeastMods::shared_sight`), a second viewpoint in
 `Perception::compute` (`perception.rs::BondView`, `bond_view`), only while the companion stands on
 the player's level (nothing from the retinue):
 
@@ -260,7 +260,7 @@ the dumps read them with no other change. Hidden traps and secret doors stay hid
 the player's own), the pass runs after the dazzle cut so a dazzled player keeps the companion's
 view, and it draws nothing and changes nothing (perception is a pure read of the state).
 
-**Shared buffs** (`TalentEffect::SharedBuffs` → `TalentMods::shared_buffs`), `world/bond.rs`, one
+**Shared buffs** (`BeastEffect::SharedBuffs` → `BeastMods::shared_buffs`), `world/bond.rs`, one
 hook: `World::afflict`, the one door of every status (`status-effects.md`), calls `afflict_one`
 and then `share_buff`. With the talent, a **buff** (`bond::is_buff`: a status of a buff spell, a
 `circles` row that is not a hex, or one a potion lends, `Draught::lends`) on the player lands on

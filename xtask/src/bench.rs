@@ -3,7 +3,8 @@
 //! forest area of the overworld at dawn, the courtyard and the forest area at midnight under the
 //! full moon, the arena, where a dozen creatures fight, a generated 120×60 cave floor at
 //! full population, 80 creatures of danger 8, the same with all but its kobolds shedding a spell
-//! circle's light, and the same of animated panoplies at danger 40,
+//! circle's light, the same of animated panoplies at danger 40, the deepest floor of a
+//! 40-floor cave branch fresh and after visiting the other 39 (a long run's actors, #1507),
 //! each wearing and wielding up to ten things (the vast level's budget; spec §10 budgets; a generated 80×21
 //! level, the courtyard, the 100×50 overworld, an 80×40 local area, and the 72×21 arena get the
 //! hub's), and the time a night's rest takes on each (dusk to dawn: 7200 turns of six seconds,

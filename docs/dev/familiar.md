@@ -40,7 +40,7 @@ since a familiar is called, not tamed.
 
 **Familiar** (`assets/data/talents/familiar.toml`: tree `class`, `granted`, effect `familiar`,
 systems `allies`, `status`, `spells`) is the witch's third entry at level 1
-(`data/classes/10-witch.toml`). `TalentEffect::Familiar` → `TalentMods::familiar`.
+(`data/classes/10-witch.toml`). `BeastEffect::Familiar` → `BeastMods::familiar`.
 
 ## The start
 
@@ -54,7 +54,7 @@ ankles."
 ## Call familiar
 
 `ClassActive::CallFamiliar`, `use:call_familiar`, `Aim::Nothing`, had by whoever holds `familiar`:
-`TalentEffect::Familiar` is its active as well as the passive that brings the first, so
+`BeastEffect::Familiar` is its active as well as the passive that brings the first, so
 `Content::class_active` finds the Familiar talent, and `active_name` calls the menu's row "Call
 familiar". `world/familiar.rs`:
 
@@ -130,8 +130,8 @@ the way (`InputMode::GiveWay`). A witch trained in Handle animal has both once s
 ## Familiar's sight (#932)
 
 The witch's level 25, beside Second sight (design §16 Q3; `assets/data/talents/familiars_sight.toml`:
-tree `class`, `granted`, systems `vision`, `allies`). Its one effect, `TalentEffect::FamiliarSight`
-→ `TalentMods::familiar_sight`, opens Hunter's bond's second viewpoint on the familiar
+tree `class`, `granted`, systems `vision`, `allies`). Its one effect, `BeastEffect::FamiliarSight`
+→ `BeastMods::familiar_sight`, opens Hunter's bond's second viewpoint on the familiar
 (`perception.rs::bond_view`; the viewpoint's rules, `docs/dev/companion.md` "Hunter's bond", stand
 unchanged: creature sight's rule by its own eyes, cells lit as the player's eyes perceive them, the
 nose shows only the foe's cell, no hidden trap or secret door, a dazzled player keeps it, nothing
