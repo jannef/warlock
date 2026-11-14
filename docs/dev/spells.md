@@ -875,7 +875,7 @@ cast path shares.
   with `caster_level`, or with `rungs` past its ladder refused; a zap at the stack's own rung,
   Wand mastery a rung more; the draw even over the range, once, the same for the same seed; a
   non-wand drawing nothing and saving as before; a wand saved without a rung read as 0; the
-  rung shown with the type and not before), `content/mod.rs` (spells in the
+  rung shown with the type and not before), `content/fingerprint.rs` (spells in the
   fingerprint), `content/experience.rs` (`mana_level` 60), `world/mana_tests.rs` (mana to
   level 60),
   `world/cast_tests.rs` (an attack can miss and critical with nothing holding it, auto and area
