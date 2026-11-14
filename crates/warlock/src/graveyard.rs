@@ -146,17 +146,29 @@ fn cause_id(world: &World, cause: warlock_core::world::Cause) -> String {
     }
 }
 
-/// Reads the file's text: every entry it can, in the order written (the oldest first). An
-/// entry that cannot be read is skipped; text that is no TOML at all reads as none.
+/// Reads the file's text: every entry it can, in the order written (the oldest first). Each
+/// `[[fallen]]` table is read alone, so an entry that cannot be read, even one an interrupted
+/// append left half written (#1573), is skipped, not the file; text with no entry reads as none.
 pub fn parse(text: &str) -> Vec<Fallen> {
-    let Ok(table) = text.parse::<toml::Table>() else {
-        return Vec::new();
-    };
-    let Some(toml::Value::Array(entries)) = table.get("fallen") else {
-        return Vec::new();
-    };
-    (entries.iter())
-        .filter_map(|entry| entry.clone().try_into::<Fallen>().ok())
+    let mut chunks: Vec<String> = Vec::new();
+    for line in text.lines() {
+        if line.trim_start().starts_with("[[fallen]]") {
+            chunks.push(String::new());
+        }
+        // Text before the first entry (none is written) is no entry.
+        if let Some(chunk) = chunks.last_mut() {
+            chunk.push_str(line);
+            chunk.push('\n');
+        }
+    }
+    (chunks.iter())
+        .filter_map(|chunk| chunk.parse::<toml::Table>().ok())
+        .filter_map(|mut table| match table.remove("fallen") {
+            Some(toml::Value::Array(entries)) => Some(entries),
+            _ => None,
+        })
+        .flatten()
+        .filter_map(|entry| entry.try_into::<Fallen>().ok())
         .collect()
 }
 
@@ -321,6 +333,21 @@ name = 12
             (0, 0, "")
         );
         assert!(parse("this is [not toml").is_empty());
+    }
+
+    /// An append cut short (a crash, a full disk) leaves half a table; the entries before it
+    /// and those appended after it still read (#1573).
+    #[test]
+    fn a_torn_append_skips_only_its_own_entry() {
+        let torn = "\n[[fallen]]\nname = \"Brakka\"\nlevel = 7\n\n[[fallen]]\nname = \"Ta";
+        let later = Fallen {
+            name: "Hild".into(),
+            level: 3,
+            ..Fallen::default()
+        };
+        let text = format!("{torn}\n{}", later.to_text());
+        let names: Vec<String> = parse(&text).into_iter().map(|f| f.name).collect();
+        assert_eq!(names, ["Brakka", "Hild"]);
     }
 
     /// An entry as version 0.14 writes it, with its experience (#1252), after the 0.11 ones.
