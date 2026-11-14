@@ -23,7 +23,7 @@ whatever is wielded, `World::player_kicks`), and `fight.rs::resolve` takes the s
 picked (`AttackSkills`: the weapon skill and the fighting style); `Profile::with(&Benefit)` and
 `Actor::melee`/`ranged`/`thrown`/`bash`/`kick` apply to-hit, damage, and threat; `Actor::defence` adds
 parry, and the style's `shield` (Sword and Board, Two Shields) to a held shield's (there is no
-shield blocking skill since #1093); `World::attack_price` takes `speed` off the cost and
+shield blocking skill, #1093); `World::attack_price` takes `speed` off the cost and
 `World::reload_price` `reload` (`World::attack_cost`: with the weapon's `attack_cost` and magic
 items' speed; a shield bash costs a blow with the shield, never the wielded weapon's cost);
 `World::resolve` (`fight.rs`) earns the player's marks (`practise`; a blow the player's shield
@@ -131,7 +131,7 @@ spell's to-hit scales; `World::spell_practised` calls `resolve_triggers` with `A
 as for a blow; `kill` and `big_hit` are not raised for spells, decided). The marks are the whole
 cast's, once, at its end (`World::practise_cast`): the style it was cast
 in, on every spell paid in mana, by its outcome, lands or not, along the `caster` curve
-(three times its first marks since #1251). Battle caster's `armour`
+(three times its first marks, #1251). Battle caster's `armour`
 (percent off the
 armour's percent) is read by `Actor::armour_spell_cost` whatever is cast. No `speed` for the
 caster grips (the loader refuses it: where one casts from never quickens a cast). `Benefit` fields of theirs: `far_to_hit`, `far_threat`, `cells` (Sniper's
@@ -143,6 +143,5 @@ Stylist (a chosen style) may choose a caster style, raising it a rank. Tests:
 `content/weapon_skill.rs` (`the_caster_ladder_loads_and_is_checked`),
 `world/caster_style_tests.rs`.
 
-The schools of magic were rows of `Role::School` (the spell scaling design §8) until #1263
-removed them, with their benefits, talents, and abilities; a spell's school is only its category
-now (docs/dev/caster-styles.md).
+The schools of magic are no rows here, with no benefits, talents, or abilities of their own
+(#1263): a spell's school is only its category (docs/dev/caster-styles.md).

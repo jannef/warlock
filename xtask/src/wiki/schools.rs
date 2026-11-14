@@ -2,7 +2,7 @@
 //! spells (`content::School`, the spells' `school`), with how many spells are of it; and the
 //! caster styles' ranks (`data/weapon_skills.toml`'s styles whose `grip` is a caster's).
 
-use super::text::{Term, anchored};
+use super::util::{Term, anchored};
 use super::weapon_skills::{grip_text, rank_table};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, School};
@@ -14,7 +14,7 @@ pub fn schools(content: &Content) -> String {
         let spells = (content.spells().iter())
             .filter(|spell| spell.school == school)
             .count();
-        let name = super::text::capital(school.id());
+        let name = super::util::capital(school.id());
         let _ = writeln!(
             out,
             "| {} | {spells} |",

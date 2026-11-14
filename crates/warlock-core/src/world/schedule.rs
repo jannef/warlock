@@ -144,7 +144,7 @@ impl World {
         if stance.flee_cost == 100 && stance.flee_noise == 100 {
             return false;
         }
-        (self.state.actors.values()).any(|other| self.leaves(me, other, to))
+        (self.state.actors.on_level(&me.level)).any(|other| self.leaves(me, other, to))
     }
 
     /// The energy price of attack `kind` (a blow, a bash, a kick, a shot, a throw, a spell) for
@@ -330,10 +330,9 @@ impl World {
             energy: a.energy,
         };
         // In the order ties go: the player, then the creatures by ascending id.
-        let creatures = self.state.actors.values();
+        let creatures = self.state.actors.on_level(level);
         // The retinue travels with the player and takes no turn (`ally.rs`).
-        let creatures =
-            creatures.filter(|a| a.level == *level && a.id != player && !a.in_retinue());
+        let creatures = creatures.filter(|a| a.id != player && !a.in_retinue());
         let mut schedule: Vec<Scheduled> = std::iter::once(self.state.player())
             .chain(creatures)
             .map(scheduled)

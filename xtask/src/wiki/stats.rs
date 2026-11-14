@@ -3,7 +3,7 @@
 //! stats for good. The game says
 //! none of these numbers; the wiki states them exactly.
 
-use super::text::{capital, percent_of};
+use super::util::{capital, ordinal, percent_of};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Affliction, Content, ODDS_SCALE};
@@ -75,7 +75,7 @@ pub(super) fn stat_prices(content: &Content) -> String {
     let rules = content.stat_training();
     let mut out = String::from("| Score | Below the potential |");
     for over in 1..=PAST {
-        let _ = write!(out, " {} past |", ordinal(over));
+        let _ = write!(out, " {} past |", ordinal(usize::from(over)));
     }
     out.push_str(" A drop |\n|---:|---:|");
     out.push_str(&"---:|".repeat(usize::from(PAST) + 1));
@@ -90,17 +90,6 @@ pub(super) fn stat_prices(content: &Content) -> String {
         let _ = writeln!(out, " {} |", rules.drop_price(score));
     }
     out
-}
-
-/// `1st`, `2nd`, `3rd`, `4th`, ...
-fn ordinal(n: u8) -> String {
-    let suffix = match n {
-        1 => "st",
-        2 => "nd",
-        3 => "rd",
-        _ => "th",
-    };
-    format!("{n}{suffix}")
 }
 
 /// The marks held at a check, as shares of the price ([`stat_odds`]), in hundredths.
@@ -151,7 +140,7 @@ pub(super) fn stat_pace(content: &Content) -> String {
         let price = rules.price(score, potential);
         let past = match (score + 1).saturating_sub(potential) {
             0 => String::new(),
-            over => format!(", {} point past the potential", ordinal(over)),
+            over => format!(", {} point past the potential", ordinal(usize::from(over))),
         };
         let _ = write!(out, " Score {score}{past} (price {price}) |");
     }

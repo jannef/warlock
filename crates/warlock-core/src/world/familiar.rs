@@ -111,7 +111,7 @@ impl World {
         let Some(character) = self.state.character.clone() else {
             return;
         };
-        if !self.state.player().talent_mods(&content).familiar {
+        if !self.state.player().talent_mods(&content).beast.familiar {
             return;
         }
         let Some(creature) = draw(&content, self.state.seed, &character.spec) else {

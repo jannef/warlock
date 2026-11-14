@@ -74,9 +74,10 @@ resumes the character played last that is playable; the main menu offers Charact
 save is listed, Continue only with a playable one. Resuming another version's save
 (`Resume::Failed`) leaves it as it is: never renamed `.sav.bad`, still listed. The screen
 snapshots' fixture (`tests/golden/saved-characters`) holds Osric, made by 0.8.0 and played
-last; the other summaries carry this version, so **the release that bumps the workspace
-version sets their `version` too** (`save.rs` test `the_listed_fixture_is_of_this_version`
-says so when it fails).
+last; the other summaries say `version = "@VERSION@"`, which the tests write as this version
+when they copy the fixture (`save::saved_characters_fixture`, #1532), so a release bumps
+nothing in it. Read straight from the folder (a `--capture` with `--save-dir`), they list as
+another version's.
 
 Replays are not pinned: a replay records `game_version`, but `replay --verify` and `--replay`
 play it in any version and compare the state hashes step by step, which is the check that

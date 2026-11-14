@@ -132,8 +132,8 @@ impl World {
         let (level, content) = (self.state.current(), &self.content);
         let me = &self.state.actors[&id];
         let radius = self.sight_of(id);
-        let mut others: Vec<Pos> = (self.state.actors.values())
-            .filter(|a| a.id != id && a.level == level.id)
+        let mut others: Vec<Pos> = (self.state.actors.on_level(&level.id))
+            .filter(|a| a.id != id)
             .map(|a| a.pos)
             .collect();
         others.sort_unstable();
@@ -207,10 +207,10 @@ impl World {
             return None;
         }
         let radius = self.sight_of(id);
-        let foes: Vec<(i32, Pos)> = (state.actors.values())
+        let foes: Vec<(i32, Pos)> = (state.actors.on_level(&me.level))
             .filter(|a| a.id != id)
             .map(|a| (a.pos.chebyshev(me.pos), a))
-            .filter(|(d, a)| *d <= radius + STRIDE && a.level == me.level)
+            .filter(|(d, _)| *d <= radius + STRIDE)
             .filter(|(_, a)| match a.id == state.player {
                 // The player's stance has more to it (Beast-friend).
                 true => self.stance(id, a.id) == Stance::Hostile,

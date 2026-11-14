@@ -559,10 +559,8 @@ pub(crate) fn hearers(state: &WorldState, content: &Content, noise: Noise) -> Ve
     let reach = i32::from(noise.loudness / STEP_LOSS);
     // The player listening at a door hears fainter sounds that come through it.
     let listening = state.listening;
-    let listeners: Vec<(ActorId, Pos, u16)> = state
-        .actors
-        .values()
-        .filter(|a| Some(a.id) != noise.maker && a.level == level.id)
+    let listeners: Vec<(ActorId, Pos, u16)> = (state.actors.on_level(&level.id))
+        .filter(|a| Some(a.id) != noise.maker)
         .filter(|a| a.pos.chebyshev(noise.at) <= reach)
         .filter_map(|a| {
             let threshold = a.hearing(content)?;

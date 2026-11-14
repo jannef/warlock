@@ -2,7 +2,7 @@
 //! with the exact rules the game says only in words, and how likely a lucky day is by race.
 
 use super::talents::{effects_text, needs_text, talent_link};
-use super::text::{Term, anchored, signed, table_text};
+use super::util::{Term, anchored, signed, table_text};
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 use warlock_core::character::BirthDate;

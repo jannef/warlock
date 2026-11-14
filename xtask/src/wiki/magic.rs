@@ -1,7 +1,7 @@
 //! Magic items (spec §8 "Magic items"): rarity, base items, prefixes, suffixes, and rare names.
 
 use super::order;
-use super::text::{capital, percent_of};
+use super::util::{capital, percent_of};
 use super::vision::glow_word;
 use std::fmt::Write as _;
 use warlock_core::content::Effect as ItemEffect;

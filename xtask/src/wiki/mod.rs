@@ -8,7 +8,7 @@
 //! and `--check-links` builds and then checks every link and anchor in the book (`links`).
 //!
 //! Layout: one module per wiki topic (`calendar`, `terrain`, `combat`, ...), each a set of
-//! `pub(super) fn table(content: &Content) -> String`; `text` holds the helpers two or more of
+//! `pub(super) fn table(content: &Content) -> String`; `util` holds the helpers two or more of
 //! them share. [`generate`] is the one registration list: a line per generated file, in order.
 
 mod abilities;
@@ -77,9 +77,9 @@ mod talents;
 mod temper;
 mod temperature;
 mod terrain;
-mod text;
 mod traps;
 mod uniques;
+mod util;
 mod vision;
 mod weapon_abilities;
 mod weapon_skills;
@@ -576,7 +576,7 @@ mod tests {
             // The tables group the statuses (#1558): each row found by its anchor.
             let start = format!(
                 "| {} |",
-                text::anchored(text::Term::Status, &def.id, &def.name)
+                util::anchored(util::Term::Status, &def.id, &def.name)
             );
             let row = (table.lines())
                 .find(|l| l.starts_with(&start))

@@ -3,7 +3,7 @@
 //! has no vitals. The slip contest's odds are `skills::slipping_past`, the creatures' craft
 //! `creatures::creature_surprise`.
 
-use super::text::{Term, link, percent_of};
+use super::util::{Term, link, percent_of};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Content, CreatureDef, CreatureId, TalentEffect};
@@ -199,7 +199,7 @@ pub(super) fn no_vitals(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {why} |",
-            link(Term::Creature, &c.id, &super::text::capital(&c.name))
+            link(Term::Creature, &c.id, &super::util::capital(&c.name))
         );
     }
     out.push_str("| every [animated object](animated.md) | made, not born |\n");

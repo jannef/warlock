@@ -68,7 +68,7 @@ Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (
 `factions = ["wildlife", "vermin", "marsh"]` and `hoard = "corpses"`, #410), collapsed (3, "collapsed
 floor", mark `k` (`c` is the cold room's), `needs_below`, `floor = "cracked_floor"`, `collapse =
 { chance = 15, damage = "2d6" }`, #420), tempting hoard (5,
-`hoard`, "tempting hoard" (named "treasure room" until #617), mark `T`, `needs_danger`, `hoard = { items = 3, loot_level = 3,
+`hoard`, "tempting hoard" (#617), mark `T`, `needs_danger`, `hoard = { items = 3, loot_level = 3,
 guardians = [2, 4], danger = 1 }`, #415), cursed (6, mark
 `g`, `needs_danger`, `level_chance` 5, `rise = { faction = "undead", after = "2m" }`, `unholy`,
 #408), altar (8, "altar room",
@@ -111,7 +111,7 @@ the room (`make`: its floor, no overlap, a shunned room never where a creature p
 order by their shares; past them (or with none favoured), a weighted draw by `weight` over the
 eligible features that are not favoured; if that set is empty, over the favoured ones by their
 shares. With no favoured feature the first draw is skipped. Adding a feature changes what
-existing seeds draw (the Depths' snapshots changed once, in #402).
+existing seeds draw (#402).
 
 Fixture branches in `mapgen/tests.rs` (`FIXTURE`) check that a branch favouring only flooded rooms
 makes only flooded rooms; `mapgen/special_tests.rs` checks the shares over many draws, a feature
@@ -402,8 +402,8 @@ seen creature's line, `Harm::Place`), and `becomes` (the placed light removed, `
 Nothing new is saved but `SpecialRoom::side` (left out while `None`): the terrain is the record
 of a spent or blown altar. The `rooms` dev layer adds `, side good` and `, spent`/`, destroyed`
 (`dump/truth.rs::feature_state`). The showcase's `shrine` scenario has a good, a neutral, and an evil
-altar side by side. Talent: Pious (system `special_rooms`, which holds prayer
-since #773; `devout`, `TalentMods::devout`; hook `leaned_kinds`).
+altar side by side. Talent: Pious (system `special_rooms`, which holds prayer,
+#773; `devout`, `TalentMods::devout`; hook `leaned_kinds`).
 
 The great outcomes (#407, `world/boons.rs`; tests `world/boons_tests.rs`) are five more hooks,
 applied after `becomes`: `gift` (`Stats::gift` on a random stat), `wrath` (`Stats::lessen`,

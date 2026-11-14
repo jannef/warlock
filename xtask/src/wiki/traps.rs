@@ -1,6 +1,6 @@
 //! Traps (spec §8 "Traps").
 
-use super::text::{Term, anchored, article, capital, percent_of, signed};
+use super::util::{Term, anchored, article, capital, percent_of, signed};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Bolt, Burst, BurstIce, Content, RigTakes, TrapEffect, TrapNoise};

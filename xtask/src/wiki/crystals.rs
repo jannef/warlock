@@ -3,7 +3,7 @@
 //! numbers of consuming one and of catching them in salvage. From `data/crystals.toml` and
 //! `data/enchanting.toml`.
 
-use super::text::{Term, anchored, capital};
+use super::util::{Term, anchored, capital};
 use std::fmt::Write as _;
 use warlock_core::combat::{FUMBLE, HIGHEST};
 use warlock_core::content::Content;
@@ -41,6 +41,7 @@ pub(super) fn crystal_rules(content: &Content) -> String {
     let (Some(crystals), Some(rules)) = (content.crystals(), content.enchanting()) else {
         return "There are no magic crystals.\n".to_string();
     };
+    let (stat, skill) = (rules.stat.name(), &content.skill(rules.skill).name);
     let rare: Vec<String> = (crystals.rare.materials.iter())
         .map(|&m| content.object(m).describe(1))
         .collect();
@@ -60,8 +61,8 @@ pub(super) fn crystal_rules(content: &Content) -> String {
     );
     let _ = writeln!(
         out,
-        "- **Salvage** checks each affix of a magic item, identified or not: 2d12 plus your Willpower \
-         modifier, what talents add to Willpower checks, and what Enchanting gives to its craft, \
+        "- **Salvage** checks each affix of a magic item, identified or not: 2d12 plus your {stat} \
+         modifier, what talents add to {stat} checks, and what {skill} gives to its craft, \
          against {} plus one for every {} tiers of the affix (a tier-12 affix is +{}). A natural \
          {FUMBLE} always fails, a natural {HIGHEST} always succeeds.",
         rules.salvage_difficulty,
@@ -83,11 +84,12 @@ pub(super) fn crystal_rules(content: &Content) -> String {
     let _ = writeln!(
         out,
         "- **[Soulglass](magic.md#spell-soulglass)** leaves 1 crystal, {}. A creature of level {} \
-         or more has a {}% chance of leaving {} as well (even odds); a dragon always leaves {}.",
+         or more has a {}% chance of leaving {} as well (even odds); a {} always leaves {}.",
         yields.join(", "),
         crystals.rare.level,
         crystals.rare.chance,
         rare.join(" or "),
+        crystals.rare.tag,
         content.object(crystals.rare.dragon).describe(1),
     );
     out

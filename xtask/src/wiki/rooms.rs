@@ -1,6 +1,6 @@
 //! Special rooms (spec §7 "Special rooms").
 
-use super::text::{Term, anchored, article, capital};
+use super::util::{Term, anchored, article, capital};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, Hoard, Offer, StatusId};
 use warlock_core::world::rise_candidates;

@@ -1,13 +1,15 @@
 //! Talents (spec §8 "Talents"): every tree with its talents, their prerequisites and their rules
 //! in full (the game says them in words), and the talents by system.
 
-use super::text::{Term, anchored, link, signed};
+use super::util::{Term, anchored, link, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{
     Content, Faced, Keep, KitLineSpec, Need, OverTime, PrayerUse, Role, SignActive, SmiteRiderKind,
     SongOn, SpellData, SpellModSpec, StatusId, Table, TalentDef, TalentEffect, TreeId,
 };
 use warlock_core::noise::SONG_NOISE;
+
+mod beast;
 
 /// The tree of the birth signs' gifts: on the horoscope page, not the talents page (#1554).
 const STARS: &str = "stars";
@@ -833,39 +835,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              check, {count_times} times the arrows or bolts after the check, and they are plain \
              at any Woodcraft"
         ),
-        TalentEffect::Companion => "an [animal companion](companions.md#companions) from the first \
-                                    turn: a beast of your race's kind, or rarely a rarer one, \
-                                    that fights for you, always comes along, and grows with \
-                                    your level"
-            .into(),
-        TalentEffect::Familiar => "a [familiar](familiars.md#familiars) from the first turn: a \
-                                   small beast whose touch is your [evil eye](familiars.md#the-touch), \
-                                   that goes for what you have hexed, always comes along, and \
-                                   grows with your level"
-            .into(),
-        TalentEffect::Tame { bonus } => format!("{} on your taming checks", signed(bonus)),
-        TalentEffect::SharedSight => "you see what your [companion](companions.md#hunters-bond) \
-                                      sees, by its own eyes, and the foes its nose finds, \
-                                      through the dark and closed doors"
-            .into(),
-        TalentEffect::FamiliarSight => "you see what your [familiar](familiars.md#familiars-sight) \
-                                        sees, by its own eyes, and the foes its nose finds, \
-                                        through the dark and closed doors"
-            .into(),
-        TalentEffect::SharedBuffs => "a [buff](companions.md#hunters-bond) that lands on you or \
-                                      your companion lands on the other too, at the same \
-                                      strength; a hex never does"
-            .into(),
-        TalentEffect::PackTactics { to_hit } => format!(
-            "a creature beside both you and your [companion](companions.md#companions) is flanked: \
-             your melee attacks and your companion's at it, to hit {} (not shots, throws, or \
-             spells)",
-            signed(to_hit)
-        ),
-        TalentEffect::SharesFavouredPrey => "your companion's attacks at your favoured prey \
-                                             carry your Favoured prey bonus, to hit and damage \
-                                             (Master hunter's too)"
-            .into(),
+        TalentEffect::Beast(effect) => beast::text(&effect),
         TalentEffect::SeesUnaware => "you see which creatures in view have not noticed you: \
                                       look mode says \"unaware of you\", and their glyphs are \
                                       drawn a shade cooler, breathing slowly (standing still \
@@ -905,9 +875,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             format!("climbing out onto ice costs {}", percent(value))
         }
         TalentEffect::WadingProof => "wading never gives you a disease".to_string(),
-        TalentEffect::BeastFriend => "creatures of animal factions are neutral to you until you \
-                                      attack one of that type"
-            .to_string(),
         TalentEffect::Stipend => match content.stipend() {
             Some(rules) => format!(
                 "each level you reach puts by {} plus {} gold, and ({} % of the time) one loot \
@@ -958,8 +925,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         },
         TalentEffect::HungerPercent { value } => format!("hunger pace {}", percent(value)),
         TalentEffect::SmellRot => {
-            "the eat list says whether food smells fresh, turning (old), or rotten"
-                .to_string()
+            "the eat list says whether food smells fresh, turning (old), or rotten".to_string()
         }
         TalentEffect::RotHarmPercent { value } => {
             format!(
@@ -1048,7 +1014,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             )
         }
         TalentEffect::TradeBonus { value } => {
-            format!("each trade you take at creation is trained {} more", signed(value))
+            format!(
+                "each trade you take at creation is trained {} more",
+                signed(value)
+            )
         }
         TalentEffect::EyeForMake => format!(
             "an item's description reads its make: what [salvage](crafting.md#salvage) would \
@@ -2259,7 +2228,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              no mana, cooldown, or check, as often as you like): the thing is identified as a \
              scroll of identify would identify it. On a thing you already know it is refused, \
              with no time spent",
-            super::actions::at_normal_pace(warlock_core::content::price(
+            super::util::at_normal_pace(warlock_core::content::price(
                 content
                     .action_costs()
                     .cost(warlock_core::content::ActionKind::Read),
@@ -2315,7 +2284,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                  one), and one you hold fades first. It strikes {} to hit, threatens criticals \
                  {threat} lower{armour}; it fades the moment it leaves your hands (put away, \
                  swapped, dropped, sold) and cannot be thrown",
-                super::actions::at_normal_pace(warlock_core::content::price(
+                super::util::at_normal_pace(warlock_core::content::price(
                     content
                         .action_costs()
                         .cost(warlock_core::content::ActionKind::Wield),

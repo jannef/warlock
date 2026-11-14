@@ -21,7 +21,7 @@ pub(crate) fn befriended(state: &WorldState, content: &Content, a: &Actor, b: &A
         && other
             .faction(content)
             .is_some_and(|f| content.factions().def(f).animal)
-        && player.talent_mods(content).beast_friend
+        && player.talent_mods(content).beast.beast_friend
         && !(state.progress.empathy_broken).contains(&content.creature(other.creature).id)
 }
 
@@ -29,7 +29,7 @@ pub(crate) fn befriended(state: &WorldState, content: &Content, a: &Actor, b: &A
 /// their talent calms, by its own faction (whether or not they have attacked one since). A rolled
 /// quest leaves such a type out of its pool (`world/quest_roll.rs`).
 pub(crate) fn calms(content: &Content, player: &Actor, creature: CreatureId) -> bool {
-    player.talent_mods(content).beast_friend
+    player.talent_mods(content).beast.beast_friend
         && (content.creature(creature).faction).is_some_and(|f| content.factions().def(f).animal)
 }
 
