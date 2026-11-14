@@ -107,7 +107,7 @@ mod tests {
 
     #[test]
     fn the_fees_round_up() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let rules = content.invest().expect("the investment is in the game");
         assert_eq!((rules.fee_in, rules.fee_out), (2, 2));
         assert_eq!(InvestRules::fee(100, 2), 2);

@@ -3,10 +3,11 @@
 //! through one, the creatures' aim from outside, and the `actors` dump.
 
 use super::*;
-use crate::action::{Event, parse_actions};
+use crate::action::Event;
 use crate::content::ContentFiles;
 use crate::dump::{Layer, layer_rows};
 use crate::object::Stack;
+use crate::test_support::{builtin, run, said_text as said};
 use std::collections::BTreeSet;
 
 /// A hall, 31 wide, fully lit: the east part (x 14 to 24, walls included) a hall of mirrors with
@@ -63,18 +64,9 @@ fn put_player(w: &mut World, p: Pos) {
     w.apply(&Action::Wait);
 }
 
-fn run(w: &mut World, text: &str) -> Vec<Outcome> {
-    let actions = parse_actions(text).expect("actions");
-    actions.iter().map(|a| w.apply(a)).collect()
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
-}
-
 #[test]
 fn the_hall_of_mirrors_is_data() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let effects = content.room_effects();
     let hall = effects.get(effects.id("mirrors").expect("mirrors"));
     assert_eq!(hall.name, "hall of mirrors");

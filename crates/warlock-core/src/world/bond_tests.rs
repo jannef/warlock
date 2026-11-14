@@ -5,15 +5,12 @@
 //! nose of its own for her, no buffs.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::{Content, ContentFiles};
 use crate::geom::Pos;
 use crate::perception::Perception;
 use crate::sight::{self, LineOfSight};
-use std::sync::{Arc, LazyLock};
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+use crate::test_support::{CONTENT as BUILTIN, run};
+use std::sync::Arc;
 
 /// Two dim rooms, a wall between them and a closed door in it: the player in the west room
 /// (human eyes), the east room for the hound (low-light eyes) to see, and a kobold behind the
@@ -71,12 +68,6 @@ fn hall_with(kobold: bool, door: char, beast: &str) -> World {
     let mut w = World::new(content, "bond_hall", Some(7)).expect("world");
     run(&mut w, &format!("ally:{beast}"));
     w
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn bond(w: &mut World) {

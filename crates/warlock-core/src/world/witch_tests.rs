@@ -3,12 +3,13 @@
 //! afresh; another's hex and one out of sight untouched; refused with no time when none of hers
 //! is in sight; a voice 60 loud; no draws.
 
-use super::class_active_tests::{last, reach, run, world};
+use super::class_active_tests::{reach, world};
 use super::war_cry_tests::foe_at;
 use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::content::{ClassActive, StatusId};
 use crate::noise::{self, Act, SoundKind};
+use crate::test_support::{last, run};
 
 const CACKLE: ClassActive = ClassActive::Cackle;
 

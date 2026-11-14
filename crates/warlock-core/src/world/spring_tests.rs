@@ -5,6 +5,7 @@
 use super::*;
 use crate::ability::Ability;
 use crate::content::{ContentFiles, OutcomeDef, OutcomeKind, OutcomeTable};
+use crate::test_support::{builtin, said_text as said};
 
 /// A room with a spring at (5, 2), the player beside it at (4, 3), and at `k` a kobold (also
 /// beside it), when asked for.
@@ -64,10 +65,6 @@ fn outcome(w: &World, id: &str) -> OutcomeDef {
 fn befall(w: &mut World, id: &str) {
     let outcome = outcome(w, id);
     w.befall(&outcome, SPRING, &mut Vec::new());
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 fn here(w: &World) -> Vec<Ability> {
@@ -187,7 +184,7 @@ fn a_spring_never_runs_dry() {
 
 #[test]
 fn the_spring_and_its_table_load() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let spring = content.terrain_id("spring").expect("the spring's terrain");
     let (offer, table) = content.offer_at(spring).expect("a spring offers");
     assert_eq!(

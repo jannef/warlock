@@ -12,6 +12,7 @@ use crate::dump::{self, Layer};
 use crate::noise::{self, Act};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::{last, run};
 use std::sync::LazyLock;
 
 /// The built-in content without the class tables (`world/class_tests.rs` has those): the
@@ -39,20 +40,6 @@ fn world_with(content: Arc<Content>) -> World {
     // Nor the race's grant (a human's Versatile, world/racial_tests.rs) until a restore.
     w.player_mut().talents.regrant(&content, &[]);
     w
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
-}
-
-fn last(world: &World) -> String {
-    said(world).last().cloned().unwrap_or_default()
 }
 
 /// Every score (and potential) of the player set to `score`.

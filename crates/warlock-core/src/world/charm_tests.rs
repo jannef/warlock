@@ -5,6 +5,7 @@
 use super::*;
 use crate::action::parse_actions;
 use crate::content::Stance;
+use crate::test_support::run;
 
 /// A lit hall: the player at the west end, a kobold a few cells east, its fellow farther on, a
 /// skeleton in the corner, and stairs down beside the player's start.
@@ -66,12 +67,6 @@ fn world() -> World {
 
 fn see(w: &mut World) {
     *w.perception = crate::perception::Perception::compute(&w.state, &w.content, &mut w.lights);
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn at(w: &World, x: i32, y: i32) -> Option<ActorId> {

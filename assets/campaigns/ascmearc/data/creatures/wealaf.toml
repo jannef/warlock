@@ -35,7 +35,8 @@ natural = { defence = 3, protection = 3, name = "dead flesh" }
 resist = { cold = 50 }
 immune = ["poison"]
 everlasting = true
-on_eat = { message = "Grave-cold and dry as barrow dust: the meat of a king long dead.", vomit = 60 }
+# A profane corpse (docs/design/profane-gifts.md §4): its signature, sure, and two draws.
+on_eat = { message = "Grave-cold and dry as barrow dust: the meat of a king long dead.", gives = "barrow_kings_will", profane = { rolls = 2, tiers = { lesser = 40, greater = 50, dire = 10 } } }
 blood = "none"
 [creature.attack]
 damage = "5d8"

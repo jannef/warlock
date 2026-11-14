@@ -158,7 +158,7 @@ mod tests {
     use crate::{Action, Dir, GAME_VERSION};
 
     fn content() -> Arc<Content> {
-        Arc::new(Content::builtin().expect("builtin content loads"))
+        crate::test_support::builtin()
     }
 
     /// A value serde_json cannot write (a map keyed by a tuple) is an error, never an empty

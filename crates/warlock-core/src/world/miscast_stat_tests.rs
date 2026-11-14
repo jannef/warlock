@@ -1,17 +1,18 @@
 //! Miscasts' stat losses (#1290, the miscasts design §5.2): `stat_damage` below 71, which mends
 //! a point a day, and the drain's `times` from 71, each its own draw and check.
 
-use super::caster_tests::{said, world_with};
+use super::caster_tests::world_with;
 use super::miscast::Aim;
 use super::*;
 use crate::action::Rest;
 use crate::content::{ContentFiles, Miscast, MishapEffect};
 use crate::stats::Stat;
+use crate::test_support::{builtin, said};
 use crate::time::{DAY, Duration};
 
 /// A wizard who knows Spark, with the built-in content.
 fn wizard() -> World {
-    let c = Arc::new(Content::builtin().expect("content"));
+    let c = builtin();
     let mut w = world_with(c, "wizard");
     let spark = w.content.spell_id("spark").expect("spark");
     w.player_mut().spells.insert(spark, 1);
@@ -47,7 +48,7 @@ fn entry(c: &Content, id: &str) -> Miscast {
 
 #[test]
 fn the_aches_are_stat_damage_and_the_witherings_drain_times_over() {
-    let c = Content::builtin().expect("content");
+    let c = builtin();
     let damage = |id| match entry(&c, id).effect {
         MishapEffect::StatDamage { stat: None, points } => points,
         other => panic!("{id}: {other:?}"),

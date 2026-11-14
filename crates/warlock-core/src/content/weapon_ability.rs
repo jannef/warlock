@@ -832,7 +832,7 @@ mod tests {
 
     #[test]
     fn the_shipped_abilities_load() {
-        let content = Content::load(&ContentFiles::builtin()).expect("content");
+        let content = crate::test_support::builtin();
         let rend = (content.weapon_abilities().iter())
             .find(|a| a.id == "rend")
             .expect("rend");

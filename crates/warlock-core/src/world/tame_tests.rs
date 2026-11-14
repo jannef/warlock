@@ -11,6 +11,7 @@ use crate::geom::Dir;
 use crate::replay::Replay;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::Stat;
+use crate::test_support::{builtin, last_text as last, texts};
 use std::sync::Arc;
 
 /// A lit nook: the player below a beast walled in on three sides, so it cannot wander off.
@@ -71,14 +72,6 @@ fn beast(w: &World) -> ActorId {
         .expect("the beast")
 }
 
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.text.clone()).collect()
-}
-
-fn last(w: &World) -> String {
-    said(w).last().cloned().unwrap_or_default()
-}
-
 fn tame(w: &mut World) -> Outcome {
     w.apply(&Action::Tame(Dir::N))
 }
@@ -120,7 +113,7 @@ fn a_calm_beast_is_tamed_after_the_turns_and_becomes_a_companion() {
     let start = w.time();
     let out = tame(&mut w);
     let turns = w.content().companions().expect("rules").tame.turns;
-    let said = said(&w);
+    let said = texts(&w);
     assert!(
         said.iter()
             .any(|t| t.starts_with("You crouch by the hound and hold out")),
@@ -190,7 +183,7 @@ fn the_check_is_willpower_skill_food_and_the_rangers_bonus_against_the_beasts_le
         assert_eq!(difficulty, rules.difficulty + rules.per_level * level);
     }
     // The ranger's Animal companion adds its 2.
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let spec: crate::character::CharacterSpec = "human,male,ranger".parse().expect("a ranger");
     let w = World::start_run(
         content.clone(),
@@ -254,12 +247,12 @@ fn a_hostile_beast_that_has_seen_you_is_refused_and_an_asleep_one_may_be_tried()
     let rat = beast(&w);
     asleep(&mut w, rat);
     w.perceive(&mut Vec::new());
-    assert!(tame(&mut w).took_turn, "{:?}", said(&w));
+    assert!(tame(&mut w).took_turn, "{:?}", texts(&w));
     let rat_now = &w.state.actors[&rat];
     assert!(
-        rat_now.companion().is_some() || said(&w).iter().any(|t| t.contains("snaps at you")),
+        rat_now.companion().is_some() || texts(&w).iter().any(|t| t.contains("snaps at you")),
         "it was tried: {:?}",
-        said(&w)
+        texts(&w)
     );
 }
 
@@ -298,7 +291,7 @@ fn a_blow_stops_the_taming_with_nothing_lost_but_the_time() {
     let out = tame(&mut w);
     assert!(out.took_turn);
     assert!(w.state.actors[&hound].ally.is_none(), "not tamed");
-    let said = said(&w);
+    let said = texts(&w);
     assert!(
         said.iter().any(|t| t == "You stop taming the hound."),
         "{said:?}"
@@ -320,7 +313,7 @@ fn a_tame_replays() {
         w.apply(&action);
         replay.push(&action, &w);
     }
-    assert!(said(&w).iter().any(|t| t.starts_with("You crouch by")));
+    assert!(texts(&w).iter().any(|t| t.starts_with("You crouch by")));
     let replay = Replay::from_json(&replay.to_json()).expect("parses");
     let (played, divergence) = replay.play(content).expect("plays");
     assert!(divergence.is_none(), "{divergence:?}");
@@ -335,7 +328,7 @@ fn a_witch_with_a_familiar_may_still_tame_a_companion() {
     assert!(w.familiar().is_some(), "the witch begins with a familiar");
     assert!(w.companion().is_none());
     assert!(tame(&mut w).took_turn);
-    assert_eq!(w.companion(), Some(hound), "{:?}", said(&w));
+    assert_eq!(w.companion(), Some(hound), "{:?}", texts(&w));
     assert!(w.familiar().is_some(), "the familiar stays");
     assert_eq!(w.perception().kept().count(), 2);
 }

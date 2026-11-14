@@ -12,11 +12,9 @@
 use super::vault_turn_tests::{reached, stamps};
 use super::*;
 use crate::content::{Stance, Turn};
+use crate::test_support::CONTENT;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::ops::RangeInclusive;
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Content> = LazyLock::new(|| Content::builtin().expect("content"));
 
 /// A rooms branch and a cave branch of the first campaign (both in a release build too), each of
 /// dangers 6 to 9.

@@ -3,10 +3,11 @@
 //! and the draws a cast makes. Spells the casters do not have are
 //! tried as the wizard's Arcane bolt, its file replaced (the ability's id is the spell's).
 
-use super::caster_tests::{kobold, kobold_at, last, reach, run, sp, world_with};
+use super::caster_tests::{kobold, kobold_at, reach, sp, world_with};
 use super::*;
 use crate::action::Event;
 use crate::combat::Strike;
+use crate::test_support::{last, run};
 
 use crate::stats::{PerStat, Stat, Stats};
 

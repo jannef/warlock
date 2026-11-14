@@ -4,9 +4,9 @@
 //! drunk through `eat:`; their content checks.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::stats::Stat;
+use crate::test_support::{run, said};
 
 /// The test content: a lit hall, the player at `@` carrying `pack`; `more` adds files.
 fn content_with(pack: &str, more: &[(&str, &str)]) -> Result<Content, String> {
@@ -31,16 +31,6 @@ fn content_with(pack: &str, more: &[(&str, &str)]) -> Result<Content, String> {
 fn world(pack: &str) -> World {
     let content = Arc::new(content_with(pack, &[]).expect("test content is valid"));
     World::new(content, "utility_hall", Some(7)).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|action| w.apply(action))
-        .collect()
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn nutrition(w: &World) -> i32 {

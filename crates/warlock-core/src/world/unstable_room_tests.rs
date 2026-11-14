@@ -4,6 +4,7 @@
 
 use super::*;
 use crate::content::ContentFiles;
+use crate::test_support::{builtin, said_text as said};
 
 /// A hall, 30 wide, with an unstable room over x 10 to 19; `r` is a giant rat inside it.
 const HALL: &str = "\
@@ -43,10 +44,6 @@ fn world(rat: bool) -> World {
     World::new(content, "test_unstable", None).expect("world")
 }
 
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
-}
-
 /// Actor `who` steps onto `at` `times` times (put back there after each warp); how many of the
 /// steps moved it elsewhere.
 fn warps(w: &mut World, who: ActorId, at: Pos, times: u32) -> u32 {
@@ -73,7 +70,7 @@ fn warps(w: &mut World, who: ActorId, at: Pos, times: u32) -> u32 {
 
 #[test]
 fn the_unstable_room_is_data() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let effects = content.room_effects();
     let unstable = effects.get(effects.id("unstable").expect("unstable"));
     assert_eq!(

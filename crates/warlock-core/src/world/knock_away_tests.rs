@@ -3,13 +3,10 @@
 use super::*;
 use crate::action::AttackKind;
 use crate::character::CharacterSpec;
-use crate::content::{Content, CreatureSpawn};
+use crate::content::CreatureSpawn;
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
-use std::sync::{Arc, LazyLock};
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::CONTENT as BUILTIN;
 
 /// A kitted human warrior in the showcase (seed `seed`), alone on the level, in an open room of
 /// floor walled round, its west end at the player's cell, wielding a long sword and nothing

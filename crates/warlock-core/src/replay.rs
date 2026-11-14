@@ -207,7 +207,7 @@ mod tests {
     use crate::action::parse_actions;
 
     fn content() -> Arc<Content> {
-        Arc::new(Content::builtin().expect("builtin content is valid"))
+        crate::test_support::builtin()
     }
 
     fn recorded(actions: &str) -> Replay {

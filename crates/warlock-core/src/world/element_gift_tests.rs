@@ -9,10 +9,7 @@ use crate::character::CharacterSpec;
 use crate::content::{Role, Sign, SignActive};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::{CONTENT as BUILTIN, last, run, said};
 
 const BLAZE: Action = Action::Gift(SignActive::Blaze, None);
 
@@ -35,20 +32,6 @@ fn born_in(scenario: &str, element: &str) -> World {
 
 fn born(element: &str) -> World {
     born_in("showcase", element)
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn last(world: &World) -> String {
-    (world.messages().iter().last()).map_or_else(String::new, |m| m.display())
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 fn blaze_row(world: &World) -> Option<Option<Unavailable>> {

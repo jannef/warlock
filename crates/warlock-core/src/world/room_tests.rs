@@ -2,9 +2,9 @@
 //! first-entry message, what the player knows of a room, and saving.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::noise::{self, Act};
+use crate::test_support::{builtin, last_text as last_message, run as apply};
 
 /// A hall, 25 wide: the west part plain, the east part (walls included) the special room
 /// `effect`. The player stands in the plain part unless the map puts them elsewhere.
@@ -57,16 +57,6 @@ fn teleport(world: &World, p: Pos) -> World {
     World::from_state(world.content().clone(), state).expect("valid state")
 }
 
-fn apply(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn last_message(world: &World) -> String {
-    (world.messages().iter().last()).map_or(String::new(), |m| m.text.clone())
-}
-
 #[test]
 fn the_room_effect_is_asked_of_any_visited_level() {
     let w = hall("hushed");
@@ -90,7 +80,7 @@ fn the_room_effect_is_asked_of_any_visited_level() {
         "a level not visited"
     );
     // The showcase's stairs nook is a sanctuary.
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let showcase = World::new(content, "showcase", None).expect("showcase");
     let nook = showcase.effects_at("hub", Pos::new(75, 16)).room;
     assert_eq!(nook.map(|e| e.id.as_str()), Some("sanctuary"));

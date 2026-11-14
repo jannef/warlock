@@ -6,14 +6,11 @@
 use super::flavour::BIRTHDAY;
 use super::*;
 use crate::ability::Ability;
-use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Sign, SignActive};
+use crate::test_support::{CONTENT as BUILTIN, run};
 use crate::time::{Duration, GameTime};
 use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 /// The built-in content files with the horoscope's `[flavour]` table replaced by `table`.
 fn with_flavour(table: &str) -> ContentFiles {
@@ -53,12 +50,6 @@ fn born(content: &Arc<Content>, sign: (&str, &str), month: u32, day: u32, time: 
     (character.born.month, character.born.day) = (month, day);
     state.time = time;
     World::from_state(content.clone(), state).expect("restores")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn said(w: &World, text: &str) -> usize {

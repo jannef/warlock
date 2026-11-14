@@ -16,6 +16,7 @@ use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::rng::Rng;
 use crate::skills::{SkillId, Trained};
+use crate::test_support::{run, said_text as said};
 
 /// A lit hall: the player at the west end of the walk (row 2), trapped chests along row 1: a
 /// coffer with a hidden arrow trap holding bread (`A`, x 1), a coffer with a fireball trap
@@ -73,16 +74,6 @@ fn content() -> Arc<Content> {
 
 fn world(scenario: &str) -> World {
     World::new(content(), scenario, None).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 fn terrain(w: &World, p: Pos) -> String {

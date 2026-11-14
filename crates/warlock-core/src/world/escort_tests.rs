@@ -10,6 +10,7 @@ use crate::ability::{Ability, Unavailable};
 use crate::action::{Command, parse_actions};
 use crate::content::{CombatStance, ContentFiles, QuestKind};
 use crate::replay::Replay;
+use crate::test_support::{run, texts};
 
 /// The wise woman and Eadgyth, added to the built-in dialogue.
 const DIALOGUE: &str = r##"
@@ -102,18 +103,8 @@ fn world() -> World {
     World::new(content(), "hamlet", None).expect("world")
 }
 
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.text.clone()).collect()
-}
-
 fn heard(w: &World, line: &str) -> bool {
-    said(w).iter().any(|m| m == line)
+    texts(w).iter().any(|m| m == line)
 }
 
 fn eadgyth(w: &World) -> &Actor {
@@ -150,7 +141,7 @@ fn chatted_with_while_the_quest_is_active_she_follows_in_the_coward_stance() {
     assert!(
         heard(&w, "Eadgyth says: \"Who's there?\""),
         "{:?}",
-        said(&w)
+        texts(&w)
     );
     let mut w = world();
     run(&mut w, FOUND);
@@ -167,7 +158,7 @@ fn chatted_with_while_the_quest_is_active_she_follows_in_the_coward_stance() {
             "Eadgyth says: \"Oh, thank you! I'll keep right behind you.\""
         ),
         "{:?}",
-        said(&w)
+        texts(&w)
     );
     // The quest log says so.
     let log = w.perception().quests();
@@ -263,7 +254,7 @@ fn given_a_sword_she_wields_it_and_drops_her_club() {
     assert!(
         heard(&w, "You give the long sword to Eadgyth."),
         "{:?}",
-        said(&w)
+        texts(&w)
     );
     assert!(heard(&w, "Eadgyth wields the long sword."));
     assert!(heard(&w, "Eadgyth drops the club."));

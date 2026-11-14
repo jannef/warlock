@@ -2,17 +2,14 @@
 //! anew by every staircase, what crosses and what is gone, the save, and replays.
 
 use super::*;
-use crate::action::{Action, parse_actions};
+use crate::action::Action;
 use crate::character::CharacterSpec;
-use crate::content::{Content, Generator};
+use crate::content::Generator;
 use crate::dump::{self, Layer};
 use crate::mapgen;
 use crate::replay::Replay;
+use crate::test_support::{CONTENT, run, said};
 use proptest::prelude::*;
-use std::sync::{Arc, LazyLock};
-
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
 
 const BRANCH: &str = "grundleas";
 
@@ -30,16 +27,6 @@ fn ranger(seed: u64) -> World {
     let spec: CharacterSpec = "human,male,ranger".parse().expect("a character");
     let spec = spec.with_talents(picks);
     World::start_run(CONTENT.clone(), BRANCH, Some(seed), Some(&spec), None, true).expect("world")
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 /// The way `dir` off the current level.

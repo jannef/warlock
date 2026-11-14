@@ -4,8 +4,8 @@
 
 use super::goodwill::discounted;
 use super::*;
-use crate::action::parse_actions;
 use crate::content::ContentFiles;
+use crate::test_support::{run as act, texts};
 use std::sync::LazyLock;
 
 const HILD: Pos = Pos::new(27, 25);
@@ -21,16 +21,6 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
 
 fn town() -> World {
     World::new(CONTENT.clone(), "ceaptun", None).expect("a run in Cēaptūn")
-}
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 /// Puts the player west of `npc`, so they talk to the east.
@@ -83,7 +73,7 @@ fn a_quest_done_for_the_reeve_makes_the_town_cheaper_and_says_so() {
         serde_json::from_str(r#"{"kills": {"cealdhlaw:1": {"rat": 5}}}"#).expect("quests");
     beside(&mut w, LEOFRIC);
     act(&mut w, "ask:E:quest-barrow_rats ask:E:quest-barrow_rats");
-    let told = said(&w);
+    let told = texts(&w);
     let complete = (told.iter())
         .position(|m| m.starts_with("Quest complete:"))
         .expect("the quest is done");
@@ -129,5 +119,5 @@ fn twenty_quests_make_the_town_s_services_free() {
     act(&mut w, "ask:E:cure");
     assert!(w.state().player().diseases.iter().next().is_none(), "cured");
     assert_eq!(gold(&w), before, "nothing paid");
-    assert!(!said(&w).iter().any(|m| m.starts_with("You pay")));
+    assert!(!texts(&w).iter().any(|m| m.starts_with("You pay")));
 }

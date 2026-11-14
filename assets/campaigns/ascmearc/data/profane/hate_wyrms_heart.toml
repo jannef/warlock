@@ -1,0 +1,20 @@
+# Campaign-owned: Nīðdraca's signature gift (docs/design/profane-gifts.md §5), given sure by its
+# corpse's `on_eat.gives` and never drawn (`only`, weight 0). Its tier groups it in the wiki.
+# Its cold vulnerability stays (§14, D8); with Rime-blooded the two wyrms sum. Its Fire breath is
+# the Wyvern's pick's, larger: one who holds both breathes the larger (`SignMods::add`).
+[[gift]]
+id = "hate_wyrms_heart"
+name = "Hate-wyrm's heart"
+kind = "mixed"
+tier = "dire"
+weight = 0
+only = "nithdraca"
+description = "The oldest fire under the hills, banked in you: fire hardly touches you, you are stronger and tougher, and you can breathe a great gout of flame, but cold bites deeper."
+line = "The wyrm's flesh is hot as a forge, and the heat finds a place behind your breastbone and stays."
+effects = [
+    { kind = "resist", damage = "fire", value = 100 },
+    { kind = "resist", damage = "cold", value = -25 },
+    { kind = "stat", stat = "strength", value = 2 },
+    { kind = "stat", stat = "toughness", value = 2 },
+    { kind = "fire_breath", range = 8, length = 10, damage = "12d8", damage_type = "fire", spell = "fire_breath", cooldown = "drained", degrees = 1 },
+]

@@ -5,6 +5,7 @@ use super::*;
 use crate::action::{MissileEnd, SpellShape, parse_actions};
 use crate::content::{ContentFiles, TrapId};
 use crate::replay::Replay;
+use crate::test_support::{builtin, run, said as texts};
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -227,16 +228,6 @@ fn world(map: &str) -> World {
     World::new(content(map, false, ""), "hall", None).expect("world")
 }
 
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| world.apply(a))
-        .collect()
-}
-
-fn texts(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
-}
-
 fn trap_id(world: &World, id: &str) -> TrapId {
     world.content().trap_id(id).expect("trap")
 }
@@ -256,7 +247,7 @@ fn creature_at(world: &World, p: Pos) -> ActorId {
 
 #[test]
 fn builtin_traps_load_and_bad_ones_are_reported() {
-    let content = Content::builtin().expect("builtin content");
+    let content = builtin();
     let ids: Vec<&str> = content.trap_defs().iter().map(|t| t.id.as_str()).collect();
     assert_eq!(
         ids,
@@ -670,7 +661,7 @@ fn a_rest_stops_when_a_trap_goes_off_in_view() {
 /// lightning strikes the beetle and leaves it alive.
 #[test]
 fn the_trap_hall_shows_hidden_traps_going_off() {
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = builtin();
     let mut w = World::new(content, "traps", None).expect("the trap hall");
     let known = |w: &World| w.perception().known_traps().len();
     assert_eq!(known(&w), 8, "the proving row, and the west closet's door");

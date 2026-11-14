@@ -13,6 +13,7 @@ use crate::replay::Replay;
 use crate::rng::Rng;
 use crate::skills::{Effect, SkillId};
 use crate::stats::Stat;
+use crate::test_support::{run, said as texts};
 use crate::time::Duration;
 
 /// How far short a failed try must fall to set the trap off (`data/traps.toml`).
@@ -59,16 +60,6 @@ const THIEF: &str = "human,female,thief";
 
 /// The player at (1, 1) with the trap (or door) east of them at (2, 1).
 const EAST: Pos = Pos::new(2, 1);
-
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| world.apply(a))
-        .collect()
-}
-
-fn texts(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
-}
 
 fn last(world: &World) -> String {
     texts(world).last().cloned().unwrap_or_default()
@@ -266,6 +257,7 @@ fn the_abilities_menu_lists_disarming_for_the_trained_only() {
     let abilities = w.perception().abilities();
     assert!(abilities.contains(&OwnAbility {
         ability: Ability::Disarm,
+        source: crate::ability::Source::Skill,
         unavailable: None,
     }));
     let id = disable_device(&w);

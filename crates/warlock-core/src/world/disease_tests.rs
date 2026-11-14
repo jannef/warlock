@@ -11,6 +11,7 @@ use crate::combat::{Blow, Strike};
 use crate::content::{ContentFiles, DiseaseId, StatusId};
 use crate::replay::Replay;
 use crate::stats::Stat;
+use crate::test_support::{builtin, run, said as messages};
 use crate::time::DAY;
 
 const TERRAIN: &str = r##"
@@ -240,18 +241,6 @@ fn diseased(w: &World) -> StatusId {
 
 fn infection(w: &World, id: &str) -> Option<crate::disease::Infection> {
     w.state().player().diseases.get(disease(w, id)).copied()
-}
-
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    parse_actions(actions)
-        .expect("actions")
-        .iter()
-        .map(|a| world.apply(a))
-        .collect()
-}
-
-fn messages(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 fn count(world: &World, text: &str) -> usize {
@@ -810,7 +799,7 @@ fn diseases_and_stat_damage_are_saved_hashed_and_replayed() {
 
 #[test]
 fn the_built_in_diseases_are_the_eight_pathologies() {
-    let content = Content::builtin().expect("builtin content");
+    let content = builtin();
     let ids: Vec<&str> = (content.disease_defs().iter())
         .map(|d| d.id.as_str())
         .collect();
@@ -881,8 +870,8 @@ fn the_built_in_diseases_are_the_eight_pathologies() {
 #[test]
 fn the_showcase_holds_no_disease() {
     // Its creatures are peaceful and it has no marsh: nothing there gives one.
-    let content = Content::builtin().expect("builtin content");
-    let world = World::new(Arc::new(content), "showcase", None).expect("world");
+    let content = builtin();
+    let world = World::new(content, "showcase", None).expect("world");
     let content = world.content();
     let marsh: Vec<_> = (content.disease_defs().iter())
         .filter_map(|d| d.wading.as_ref())

@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn the_shipped_file_loads_and_every_race_has_a_list() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let rules = content.familiars().expect("familiars.toml");
         for race in &content.races().list {
             let list = rules

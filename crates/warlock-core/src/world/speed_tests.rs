@@ -5,6 +5,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
+use crate::test_support::run;
 use std::sync::LazyLock;
 
 const TERRAIN: &str = r##"
@@ -287,14 +288,6 @@ fn world(scenario: &str) -> World {
     World::new(CONTENT.clone(), scenario, None).expect("world")
 }
 
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    parse_actions(actions)
-        .expect("actions")
-        .iter()
-        .map(|a| world.apply(a))
-        .collect()
-}
-
 // The track's creatures, by speed.
 const NORMAL: ActorId = ActorId(1);
 const QUICK: ActorId = ActorId(2);
@@ -338,7 +331,7 @@ fn speeds_come_from_content_and_the_player_has_normal_speed() {
         .map(|id| speed(&w, *id))
         .collect();
     assert_eq!(speeds, [1000, 1500, 2000, 900]);
-    let builtin = Content::builtin().expect("builtin content");
+    let builtin = crate::test_support::builtin();
     let of = |id: &str| builtin.creature(builtin.creature_id(id).unwrap()).speed;
     assert_eq!(of("player"), crate::content::NORMAL_SPEED);
     assert!(

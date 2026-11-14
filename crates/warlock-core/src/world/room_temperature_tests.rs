@@ -6,6 +6,7 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::temperature::Temperature;
+use crate::test_support::{builtin, run, said_text as said};
 
 /// A hall, 30 wide: plain water at x 3 to 5, a sweltering chamber over x 10 to 19 (water at 13 to
 /// 15), a frigid hall over x 20 to 29 (water at 23 to 25), each unless the test leaves it out.
@@ -51,12 +52,6 @@ fn world(temperature: i32, rooms: &[&str]) -> World {
     World::new(content, "test_heat", None).expect("world")
 }
 
-fn run(w: &mut World, text: &str) {
-    for action in crate::action::parse_actions(text).expect("actions") {
-        w.apply(&action);
-    }
-}
-
 fn mm(w: &World, p: Pos) -> u32 {
     w.state.current().ice_at(p).map_or(0, |i| i.mm())
 }
@@ -65,13 +60,9 @@ fn ice_map(w: &World) -> BTreeMap<Pos, crate::ice::Ice> {
     w.state.current().ice.clone()
 }
 
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
-}
-
 #[test]
 fn hot_and_cold_rooms_are_data() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let effects = content.room_effects();
     let hot = effects.get(effects.id("hot").expect("hot"));
     let cold = effects.get(effects.id("cold").expect("cold"));

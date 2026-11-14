@@ -1,0 +1,18 @@
+# Campaign-owned: Wælcyrge's signature gift (docs/design/profane-gifts.md §5), given sure by its
+# corpse's `on_eat.gives` and never drawn (`only`, weight 0). Its tier groups it in the wiki.
+[[gift]]
+id = "choosers_quickness"
+name = "Chooser's quickness"
+kind = "mixed"
+tier = "dire"
+weight = 0
+only = "waelcyrge"
+description = "She acted twice to anyone's once; now so do you, nearly: you are much quicker and nimbler, act first, and your wounds close fast, but you hunger more."
+line = "Lean and bitter. Your heart beats faster, and keeps the pace."
+effects = [
+    { kind = "speed_percent", value = 15 },
+    { kind = "stat", stat = "dexterity", value = 3 },
+    { kind = "initiative_bonus", value = 6 },
+    { kind = "clotting" },
+    { kind = "hunger_percent", value = 25 },
+]

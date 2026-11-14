@@ -4,8 +4,8 @@
 //! beside the breach digs into the greater one.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::chest::ChestState;
+use crate::test_support::{builtin, run, said_text as said};
 
 const COFFER: Pos = Pos::new(4, 4);
 const LOCKED: Pos = Pos::new(8, 4);
@@ -13,18 +13,8 @@ const TRAPPED: Pos = Pos::new(12, 4);
 const MIMIC: Pos = Pos::new(16, 4);
 
 fn world() -> World {
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = builtin();
     World::new(content, "chests", None).expect("the chest hall")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 #[test]

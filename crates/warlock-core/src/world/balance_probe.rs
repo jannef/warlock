@@ -1295,7 +1295,7 @@ fn armoured(l: u8) -> i32 {
 #[test]
 #[ignore = "the balance probe: run by hand, docs/balance.md"]
 fn balance_probe() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = crate::test_support::builtin();
     let monsters = monsters(&content);
     let mut snaps = Vec::new();
     for build in &BUILDS {

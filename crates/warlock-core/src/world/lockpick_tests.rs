@@ -12,6 +12,7 @@ use crate::door::{LOCK_DIFFICULTY, Lock};
 use crate::replay::Replay;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::Stat;
+use crate::test_support::last_text as last_message;
 use crate::time::Duration;
 
 /// A lit hall: the player west of a locked door (`L`, the usual difficulty), a hard one (`H`), an
@@ -115,10 +116,6 @@ fn modifier(w: &World) -> i32 {
     let me = w.state.player();
     me.effective_stats(w.content()).modifier(Stat::Dexterity)
         + me.skill_effect(w.content(), Effect::Pick)
-}
-
-fn last_message(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
 }
 
 fn terrain(w: &World, p: Pos) -> String {

@@ -1,9 +1,10 @@
 //! The frenzy stance (spec §8 "Stances"; #680): rage puts a berserker in it and holds them
 //! there, every end of the rage leaves them aggressive, and nothing else ever gives it.
 
-use super::class_active_tests::{last, run, world};
+use super::class_active_tests::world;
 use super::*;
 use crate::content::CombatStance::{self, *};
+use crate::test_support::{builtin, last, run};
 
 fn stance(w: &World) -> CombatStance {
     w.perception().own_stance()
@@ -147,7 +148,7 @@ fn the_frenzy_hits_harder_and_more_often_and_guards_worse_than_the_aggressive() 
 
 #[test]
 fn rage_is_all_a_replay_needs() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let spec: crate::character::CharacterSpec = "human,male,berserker".parse().expect("spec");
     let mut w =
         World::start_run(content, "showcase", Some(7), Some(&spec), None, true).expect("world");

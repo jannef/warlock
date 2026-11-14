@@ -11,6 +11,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::Stat;
+use crate::test_support::{builtin, run as apply};
 
 /// A cave with glowing fungus north-east of the player.
 const ROOM: &str = "\
@@ -77,12 +78,6 @@ fn said(w: &World, back: usize) -> String {
 
 fn recipe(w: &World, id: &str) -> RecipeId {
     w.content.recipes().id(id).expect(id)
-}
-
-fn apply(w: &mut World, text: &str) {
-    for action in crate::action::parse_actions(text).expect("parses") {
-        w.apply(&action);
-    }
 }
 
 /// The pack as the player knows it.
@@ -162,7 +157,7 @@ const ESSENCE_ROWS: [Row; 9] = [
 
 #[test]
 fn the_brews_are_the_designs_table_and_nothing_else() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let skill = content.skill_id("alchemy").expect("alchemy");
     let murky = content.object_id("murky_draught");
     let blunder = content.object_id("brewers_blunder");
@@ -595,7 +590,7 @@ fn a_failed_essence_brew_spends_its_essences_for_a_murky_draught_or_a_blunder() 
 
 #[test]
 fn every_essence_a_brew_takes_drops_from_some_creature_and_oil_and_tar_are_sold() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let skill = content.skill_id("alchemy").expect("alchemy");
     let shops = content.shops().expect("shops");
     let dropped = |object| {

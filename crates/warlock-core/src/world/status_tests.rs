@@ -9,6 +9,7 @@ use crate::content::{Affliction, ContentFiles, StatusId};
 use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::status::Effect;
+use crate::test_support::{builtin, run, said as messages};
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -228,18 +229,6 @@ fn hp(w: &World) -> i32 {
 fn set_hp(w: &mut World, hp: i32) {
     let player = w.state.player;
     w.state.actors.get_mut(&player).expect("player").hp = hp;
-}
-
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    parse_actions(actions)
-        .expect("actions")
-        .iter()
-        .map(|a| world.apply(a))
-        .collect()
-}
-
-fn messages(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 fn count(world: &World, text: &str) -> usize {
@@ -800,7 +789,7 @@ fn fights_with_wounds_and_poison_replay_exactly() {
 
 #[test]
 fn the_built_in_rat_may_sicken_and_wounds_may_bleed() {
-    let content = Content::builtin().expect("builtin content");
+    let content = builtin();
     let rat = content.creature_id("rat").expect("rat");
     let bite = content.creature(rat).attack.as_ref().expect("a bite");
     // A starter's rider (#1200): filth fever, 1 %; no poison.

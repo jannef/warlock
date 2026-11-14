@@ -109,7 +109,8 @@ impl SignEffect {
 pub struct SignMods {
     /// The birth sign's active Horn's grace, if it has it.
     pub horns_grace: Option<HornsGrace>,
-    /// The birth sign's active Transfixing stare, if it has it.
+    /// The birth sign's active Transfixing stare, if it has it; of two (a sign's and a profane
+    /// gift's), the larger severity.
     pub stare: Option<Stare>,
     /// The birth sign's active Blaze, if it has it.
     pub blaze: Option<Blaze>,
@@ -120,7 +121,8 @@ pub struct SignMods {
     pub petrifying_gaze: Option<(u16, u16)>,
     /// Wildfire: Blaze's radius and damage instead of its own.
     pub wildfire: Option<(i32, Dice)>,
-    /// The birth sign's active Fire breath, if it has it.
+    /// The birth sign's active Fire breath, if it has it; of two (the Wyvern's pick and
+    /// Hate-wyrm's heart), the larger damage.
     pub fire_breath: Option<FireBreath>,
     /// The birth sign's active Hound's bay, if it has it.
     pub hounds_bay: Option<HoundsBay>,
@@ -154,11 +156,17 @@ impl SignMods {
                         reroll: 0,
                         kind: content.damage_type_id(&damage_type),
                     };
-                    self.fire_breath = Some(FireBreath {
-                        bolt,
-                        cooldown,
-                        degrees,
-                    });
+                    // Two breaths (the Wyvern's pick and Hate-wyrm's heart): the larger
+                    // damage, with its own cooldown.
+                    let larger = (self.fire_breath.as_ref())
+                        .is_none_or(|held| bolt.damage.mean_x2() > held.bolt.damage.mean_x2());
+                    if larger {
+                        self.fire_breath = Some(FireBreath {
+                            bolt,
+                            cooldown,
+                            degrees,
+                        });
+                    }
                 }
             }
             SignEffect::HoundsBay {
@@ -225,12 +233,15 @@ impl SignMods {
                 if let (Some(status), Some(cooldown)) =
                     (content.status_id(&status), content.status_id(&cooldown))
                 {
-                    self.stare = Some(Stare {
-                        status,
-                        severity,
-                        cooldown,
-                        degrees,
-                    });
+                    // Two stares: the larger severity.
+                    if self.stare.is_none_or(|held| severity > held.severity) {
+                        self.stare = Some(Stare {
+                            status,
+                            severity,
+                            cooldown,
+                            degrees,
+                        });
+                    }
                 }
             }
         }

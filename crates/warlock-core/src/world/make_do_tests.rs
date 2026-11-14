@@ -9,6 +9,7 @@ use crate::content::{ActionKind, ClassActive, ContentFiles, ItemHarm};
 use crate::item_list::ItemList;
 use crate::magic::Worked;
 use crate::talent::CraftEffect;
+use crate::test_support::{builtin, last, run};
 
 const MEND: ClassActive = ClassActive::MakeDo;
 
@@ -42,16 +43,6 @@ fn world(difficulty: i32) -> World {
     w
 }
 
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.display())
-}
-
 /// The stack at `at` damaged, after `attempts` attempts at the anvil.
 fn damage(w: &mut World, at: usize, attempts: u8) {
     let mut worked = Worked::default();
@@ -75,7 +66,7 @@ fn row(w: &World) -> Option<Option<Unavailable>> {
 
 #[test]
 fn the_craftsperson_gains_it_at_level_eighteen() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let def = content.class("craftsperson").expect("craftsperson");
     let at = (def.abilities.iter()).find(|(_, t)| t == "make_do_and_mend");
     assert_eq!(at.map(|(level, _)| *level), Some(18));

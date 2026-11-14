@@ -5,6 +5,7 @@
 use super::*;
 use crate::action::{AttackKind, Event, parse_actions};
 use crate::content::ContentFiles;
+use crate::test_support::{builtin, said};
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -201,10 +202,6 @@ fn first_of<'w>(w: &'w World, kind: &str) -> &'w Actor {
         .expect("the creature")
 }
 
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
-}
-
 /// The player's hit points unhurt.
 fn full(w: &World) -> i32 {
     w.state.player().max_hp(w.content())
@@ -394,7 +391,7 @@ fn the_cooldown_is_saved_and_the_breath_is_deterministic() {
 
 #[test]
 fn the_fire_drake_is_a_dragon_with_a_cone_of_fire_and_claws_and_a_bite() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let drake = content.creature(content.creature_id("fire_drake").expect("the drake"));
     assert_eq!(drake.combat, crate::content::Combat::Dragon);
     let breath = drake.breath.as_ref().expect("a breath");

@@ -5,8 +5,8 @@
 
 use super::split::Split;
 use super::*;
-use crate::action::parse_actions;
 use crate::content::{ActionKind, Affliction, ContentFiles, StatusId};
+use crate::test_support::{run, said};
 
 /// A breeder of its own kind at no cost, for the self-pool.
 const BREEDER: &str = r##"
@@ -53,12 +53,6 @@ fn world_with(creature: &str, wield: &str) -> World {
     World::new(content, "split_hall", Some(5)).expect("world")
 }
 
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
-}
-
 fn of_kind<'w>(w: &'w World, kind: &str) -> Vec<&'w Actor> {
     let id = w.content().creature_id(kind).expect("a type");
     (w.state.actors.values())
@@ -72,10 +66,6 @@ fn first(w: &World, kind: &str) -> ActorId {
 
 fn kind(w: &World, id: &str) -> Option<crate::content::DamageTypeId> {
     w.content().damage_type_id(id)
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 /// Says the news as an action would.

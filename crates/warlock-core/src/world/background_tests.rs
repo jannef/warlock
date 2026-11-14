@@ -6,12 +6,10 @@ use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Rarity};
 use crate::replay::Replay;
 use crate::stats::Stat;
+use crate::test_support::CONTENT as BUILTIN;
 use crate::world::{Actor, WorldError};
 use std::sync::Arc;
 use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("built-in content")));
 
 static STORYLESS: LazyLock<Arc<Content>> =
     LazyLock::new(|| Arc::new(crate::background::storyless()));

@@ -5,6 +5,7 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::noise::{Listening, SoundKind};
+use crate::test_support::texts;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -194,16 +195,12 @@ fn on_player(w: &World, id: &str) -> u16 {
     w.state.player().effects.get(s).map_or(0, |e| e.severity)
 }
 
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.text.clone()).collect()
-}
-
 #[test]
 fn a_sight_aura_touches_the_hostile_within_its_radius_and_names_its_bearer() {
     let mut w = world_with(SIGHT, NEAR);
     w.apply(&Action::Wait);
     assert_eq!(on_player(&w, "chilled"), 1);
-    let said = said(&w);
+    let said = texts(&w);
     let touch = said
         .iter()
         .position(|m| m == "A chill comes off the wraith.");
@@ -257,7 +254,7 @@ fn a_heard_aura_reaches_through_a_door_and_says_so_unseen() {
     let mut w = world_with(HEARD, DOOR);
     w.apply(&Action::Wait);
     assert_eq!(on_player(&w, "chilled"), 1);
-    assert!(said(&w).contains(&"A wail rises through the walls.".to_string()));
+    assert!(texts(&w).contains(&"A wail rises through the walls.".to_string()));
     // Too quiet to carry through the door, it does not.
     let mut w = world_with(&HEARD.replace("loudness = 100", "loudness = 60"), DOOR);
     w.apply(&Action::Wait);
@@ -335,11 +332,11 @@ fn a_cry_is_heard_by_the_hearing_rules_through_a_door_and_at_listen() {
     w.apply(&Action::Wait);
     assert!(hears_a_hiss(&w));
     assert!(
-        said(&w)
+        texts(&w)
             .iter()
             .any(|m| m == "You faintly hear a hiss to the east."),
         "{:?}",
-        said(&w)
+        texts(&w)
     );
 }
 

@@ -5,10 +5,10 @@
 //! and put to sleep or to flight; rod labels leave the scrolls' and wands' as they were.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::talent::TalentMods;
+use crate::test_support::{builtin, run};
 
 /// The pack: a, a rod of digging; b, a rod of sleep; c, a rod of teleport other; d, a rod of
 /// terror; e, a scroll of identify; f, a crossbow.
@@ -46,12 +46,6 @@ fn world_of(south: &str, farther: &str, extra: &[(&str, String)]) -> World {
     );
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     World::new(content, "hall", Some(3)).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
 }
 
 fn said(w: &World) -> String {
@@ -371,7 +365,7 @@ fn a_rod_and_a_launcher_share_the_missile_weapon_slot_and_a_rod_saves_as_any_sta
 
 #[test]
 fn rod_labels_leave_the_scrolls_and_wands_labels_as_they_were() {
-    let with = Content::builtin().expect("content");
+    let with = builtin();
     let mut files = ContentFiles::builtin();
     files.remove("data/rod_labels.toml");
     let without = Content::load(&files).expect("content");

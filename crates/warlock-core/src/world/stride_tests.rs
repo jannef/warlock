@@ -7,6 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
+use crate::test_support::run;
 use std::sync::LazyLock;
 
 const TERRAIN: &str = r##"
@@ -97,12 +98,6 @@ fn world(scenario: &str) -> World {
     World::new(CONTENT.clone(), scenario, None).expect("world")
 }
 
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
 const RAT: ActorId = ActorId(1);
 
 fn rat(world: &World) -> &Actor {
@@ -178,7 +173,7 @@ fn coarse_turns_replay() {
 /// finds, in the arena's fight and the depths, turn after turn, with the line of sight it keeps.
 #[test]
 fn a_rest_sees_whom_a_perception_sees() {
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = crate::test_support::builtin();
     for scenario in ["arena", "depths", "showcase"] {
         let mut w = World::new(content.clone(), scenario, None).expect("world");
         let mut kept = None;

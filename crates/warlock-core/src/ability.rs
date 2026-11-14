@@ -187,6 +187,9 @@ pub enum Source {
     Race,
     /// The character's birth sign (spec §8 "Birth sign"): its active gifts.
     Sign,
+    /// A profane gift (`docs/dev/profane-gifts.md`): a sign's active a gift gives and no sign
+    /// talent of theirs does (Hate-wyrm's heart's Fire breath; [`Ability::source_for`]).
+    Profane,
     /// The character's class (spec §8 "Class abilities"): its actives, and throwing one's voice
     /// (everyone's until the class tables give it to the bard alone).
     Class,
@@ -212,6 +215,7 @@ impl Source {
     pub const ALL: &[Source] = &[
         Source::Race,
         Source::Sign,
+        Source::Profane,
         Source::Class,
         Source::Spell,
         Source::Talent,
@@ -227,6 +231,7 @@ impl Source {
         match self {
             Source::Race => "Racial",
             Source::Sign => "Birth sign",
+            Source::Profane => "Profane",
             Source::Class => "Class",
             Source::Spell => "Spells",
             Source::Talent => "Talents",
@@ -243,6 +248,7 @@ impl Source {
         match self {
             Source::Race => "race",
             Source::Sign => "sign",
+            Source::Profane => "profane",
             Source::Class => "class",
             Source::Spell => "spell",
             Source::Talent => "talent",
@@ -853,6 +859,34 @@ impl Ability {
         }
     }
 
+    /// Where it comes from for `actor`: [`Ability::source`], but a sign's active that only a
+    /// profane gift of theirs gives is [`Source::Profane`] (a sign talent that gives it too keeps
+    /// it the sign's).
+    pub fn source_for(self, actor: &Actor, content: &Content) -> Source {
+        let Ability::Sign(active) = self else {
+            return self.source();
+        };
+        let book = content.talents();
+        let (mut sign, mut profane) = (false, false);
+        for taken in actor.talents.iter() {
+            let Some(id) = book.id(&taken.id) else {
+                continue;
+            };
+            if (book.get(id).effects.iter()).any(|e| e.sign_active() == Some(active)) {
+                if content.profane().gift(id).is_some() {
+                    profane = true;
+                } else {
+                    sign = true;
+                }
+            }
+        }
+        if profane && !sign {
+            Source::Profane
+        } else {
+            Source::Sign
+        }
+    }
+
     /// What it asks for before it is used (a spell: by its shape in `content`).
     pub fn aim(self, content: &Content) -> Aim {
         match self {
@@ -1379,6 +1413,8 @@ fn short_of(actor: &Actor, cost: ResourceCost) -> Option<Unavailable> {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct OwnAbility {
     pub ability: Ability,
+    /// Its group in the menu: [`Ability::source_for`] the player.
+    pub source: Source,
     /// Why it cannot be used now; `None` when it can.
     pub unavailable: Option<Unavailable>,
 }
@@ -1398,6 +1434,7 @@ mod tests {
             [
                 "Racial",
                 "Birth sign",
+                "Profane",
                 "Class",
                 "Spells",
                 "Talents",
@@ -1412,7 +1449,7 @@ mod tests {
 
     #[test]
     fn every_ability_is_registered_in_menu_order() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let every = Ability::every(&content);
         assert!(every.windows(2).all(|w| w[0].source() <= w[1].source()));
         assert_eq!(
@@ -1495,7 +1532,7 @@ mod tests {
 
     #[test]
     fn no_two_abilities_share_an_id_or_a_name() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let every = Ability::every(&content);
         for (i, a) in every.iter().enumerate() {
             for b in &every[i + 1..] {
@@ -1511,7 +1548,7 @@ mod tests {
 
     #[test]
     fn stealing_asks_for_a_direction_and_is_had_by_those_trained_in_it() {
-        let content = std::sync::Arc::new(Content::builtin().expect("content"));
+        let content = crate::test_support::builtin();
         let steal = Ability::Steal;
         assert_eq!(steal.aim(&content), Aim::Direction);
         assert_eq!(steal.source(), Source::Skill);
@@ -1544,7 +1581,7 @@ mod tests {
 
     #[test]
     fn a_shield_bash_asks_for_a_direction_and_is_a_bash() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let bash = Ability::ShieldBash;
         assert_eq!(bash.aim(&content), Aim::Direction);
         assert_eq!(bash.source(), Source::WeaponSkill);
@@ -1564,7 +1601,7 @@ mod tests {
 
     #[test]
     fn throwing_a_voice_aims_at_a_cell() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let voice = Ability::ThrowVoice;
         assert_eq!(
             (voice.aim(&content), voice.source()),
@@ -1579,7 +1616,7 @@ mod tests {
 
     #[test]
     fn disarming_is_disable_devices_use_and_asks_for_a_direction() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let disable = (content.skills().iter())
             .find(|s| s.id == "disable_device")
             .expect("Disable device");
@@ -1608,7 +1645,7 @@ mod tests {
 
     #[test]
     fn picking_locks_is_open_locks_use_and_asks_for_a_direction() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let open_lock = (content.skills().iter())
             .find(|s| s.id == "open_lock")
             .expect("Open lock");

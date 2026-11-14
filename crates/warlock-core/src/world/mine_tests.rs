@@ -10,6 +10,7 @@ use crate::geom::Dir;
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
+use crate::test_support::builtin;
 
 /// The built-in content with a one-floor branch `mine` of `generator` at danger `danger`, its
 /// `ores` line if given, nothing living there, and every band of `data/mining.toml` certain to be
@@ -160,7 +161,7 @@ fn deep_rock_gives_mithril_and_bigger_margins_more_lumps() {
 
 #[test]
 fn mithril_and_adamantium_lie_deeper_than_any_bounded_branch() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let rules = content.mining().expect("mining.toml");
     let first = |name: &str| {
         let m = content.material_id(name).expect(name);

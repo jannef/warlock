@@ -4,6 +4,7 @@
 
 use crate::content::{Content, ContentFiles, Hoard, SpecialRoom, Swarm};
 use crate::geom::Pos;
+use crate::test_support::builtin;
 
 /// A rooms branch of `population` whose every special room is a beast den where one fits.
 fn branch(population: &str) -> Content {
@@ -31,7 +32,7 @@ room_effects = {{ chance = 100, per_level = 1, favoured = {{ beast_den = 100 }} 
 
 #[test]
 fn a_beast_den_is_data() {
-    let content = Content::load(&ContentFiles::builtin()).expect("content");
+    let content = builtin();
     let id = content.room_effects().id("beast_den").expect("beast_den");
     let def = content.room_effect(id);
     assert_eq!(def.name, "beast den");

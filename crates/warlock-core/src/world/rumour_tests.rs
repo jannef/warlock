@@ -8,6 +8,7 @@ use crate::action::parse_actions;
 use crate::content::{ContentFiles, TerrainId};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
+use crate::test_support::{run as act, texts};
 use std::sync::LazyLock;
 
 const OVERWORLD: &str = "ascmearc";
@@ -43,16 +44,6 @@ fn at_the_inn() -> World {
     w
 }
 
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
-}
-
 /// What the player remembers of overworld cell `p`, if the overworld has been made.
 fn remembered(world: &World, p: Pos) -> Option<TerrainId> {
     let level = world.state.levels.get(OVERWORLD)?;
@@ -74,7 +65,7 @@ fn asking_marks_the_way_and_nothing_else() {
         assert_eq!(w.state.time, time, "{topic}: asking takes no time");
         let terrain = w.state.levels[OVERWORLD].terrain[end];
         assert_eq!(remembered(&w, end), Some(terrain), "{topic}: marked");
-        let lines = said(&w);
+        let lines = texts(&w);
         assert!(lines[lines.len() - 2].starts_with("Godgifu says: \""));
         assert_eq!(
             lines.last().map(String::as_str),
@@ -93,7 +84,7 @@ fn asking_marks_the_way_and_nothing_else() {
         let count = remembered_count(&w);
         act(&mut w, &format!("ask:SE:{topic}"));
         assert_eq!(remembered_count(&w), count, "{topic}: idempotent");
-        assert!(said(&w).last().unwrap().starts_with("Godgifu says: \""));
+        assert!(texts(&w).last().unwrap().starts_with("Godgifu says: \""));
     }
 }
 

@@ -8,6 +8,7 @@ use crate::action::{ReadTarget, SpellShape, parse_actions};
 use crate::content::{ContentFiles, Reading, SpellPurpose};
 use crate::magic::{Affix, LootGrade, Magic, Rarity};
 use crate::replay::Replay;
+use crate::test_support::{builtin, run, said as texts};
 
 // A training dummy takes a lot and never fights back.
 const DUMMY: &str = "[[creature]]\nid = \"dummy\"\nname = \"training dummy\"\nglyph = \"D\"\n\
@@ -52,16 +53,6 @@ fn world(map: &str) -> World {
     world_with(map, 1000)
 }
 
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
-}
-
-fn texts(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
-}
-
 fn lost(w: &World, id: ActorId) -> i32 {
     let a = &w.state.actors[&id];
     a.max_hp(&w.content) - a.hp
@@ -101,7 +92,7 @@ fn spell(out: &Outcome) -> (&str, Pos, &SpellShape) {
 /// scaling design §7.4): fireball 1 (3d6), lightning 2 (4d6), frost 0 (2d6, the base).
 #[test]
 fn builtin_scrolls_cast_their_spells_at_their_rungs() {
-    let content = Content::builtin().expect("builtin content");
+    let content = builtin();
     let reading = |id: &str| {
         let o = content.object_id(id).expect("scroll");
         content.object(o).read.clone().expect("readable")
@@ -578,7 +569,7 @@ fn reading_survives_saves_and_replays() {
 
 #[test]
 fn scrolls_are_loot_but_never_magic() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let scroll = |s: &Stack| content.object(s.object).read.is_some();
     let mut found = 0;
     for i in 0..400 {

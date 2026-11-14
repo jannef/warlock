@@ -14,6 +14,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stats};
+use crate::test_support::{CONTENT as BUILTIN, last_text as last_message};
 use crate::world::{CraftStepKind, RecipeLack};
 use std::sync::LazyLock;
 
@@ -28,10 +29,6 @@ const ROOM: &str = "\
 #.......k.#
 ###########
 ";
-
-/// The built-in content, loaded once.
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 /// The built-in content with [`ROOM`] twice: with no one in it, and with a kobold.
 static FIXTURE: LazyLock<Arc<Content>> = LazyLock::new(|| {
@@ -181,10 +178,6 @@ fn takes(w: &World, id: &str) -> String {
         .find(|r| r.id == recipe)
         .map(|r| r.takes)
         .expect("listed")
-}
-
-fn last_message(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
 }
 
 /// Applies `craft:ID:PICKS` (action text); the seconds it took.

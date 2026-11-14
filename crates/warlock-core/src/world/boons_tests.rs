@@ -9,6 +9,7 @@ use crate::content::Content;
 use crate::content::{ContentFiles, OutcomeDef, OutcomeKind, OutcomeTier};
 use crate::magic::Rarity;
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::{builtin, said_text as said};
 use std::sync::Arc;
 
 /// A room with a forgotten altar at (5, 2), the player beside it at (4, 3).
@@ -61,10 +62,6 @@ fn befall(w: &mut World, id: &str) {
     let outcome = outcome(w, id);
     w.befall(&outcome, ALTAR, &mut Vec::new());
     w.say_news();
-}
-
-fn said(w: &World, line: &str) -> bool {
-    w.messages().iter().any(|m| m.text == line)
 }
 
 fn scores(w: &World) -> (u32, u32) {
@@ -316,7 +313,7 @@ fn a_relic_is_rare_and_lies_at_the_altars_foot() {
 
 #[test]
 fn damned_brings_a_horde_around_the_altar() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let mut w = World::new(content, "fennmynster", None).expect("fennmynster");
     let feature = w.player_pos();
     let count = w.state.actors.len();

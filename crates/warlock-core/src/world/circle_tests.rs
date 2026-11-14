@@ -4,12 +4,8 @@
 //! effects", the design's §8): a circled status sheds its school's faint light.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::SpellPurpose;
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("built-in content")));
+use crate::test_support::{CONTENT, run};
 
 fn circles() -> World {
     World::new(CONTENT.clone(), "circles", None).expect("the circles hall")
@@ -86,12 +82,6 @@ fn perception_shows_the_seen_buffs_and_hexes() {
         "hasted is seen now: {seen:?}"
     );
     assert!(seen.contains(&status("barkskin")), "{seen:?}");
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 /// The bark-skinned kobold archer in the dark alcove, in line with the player through the gap.

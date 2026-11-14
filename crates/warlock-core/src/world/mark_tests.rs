@@ -12,10 +12,7 @@ use crate::dump::{self, Layer};
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stats};
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::{CONTENT as BUILTIN, run};
 
 /// A human thief in the showcase (seed 7), with their kit, every score 14, hit points to spare.
 fn thief() -> World {
@@ -38,12 +35,6 @@ fn thief() -> World {
     let max = w.state.player().max_hp(w.content());
     w.player_mut().hp = max;
     w
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn openings(world: &World) -> ResourceId {

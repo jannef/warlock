@@ -2,6 +2,7 @@
 //! built-in ones load, a generic one of every field loads, and every check at load refuses.
 
 use super::{Content, ContentFiles, InputKind, PartSource, RecipeCount, RecipeUse};
+use crate::test_support::builtin;
 
 fn load_with(files: &[(&str, &str)]) -> Result<Content, super::ContentError> {
     let mut all = ContentFiles::builtin();
@@ -35,7 +36,7 @@ fn sword(extra: &str) -> String {
 #[test]
 fn the_built_in_recipes_are_the_forges_weapons_armour_tools_and_temper_and_woodcrafts_hand_made_ones_and_missiles()
  {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let recipes = content.recipes();
     let metal = content.skill_id("metalcraft").expect("metalcraft");
     let wood = content.skill_id("woodcraft").expect("woodcraft");
@@ -755,7 +756,7 @@ fn settings(from: &str, to: &str) -> String {
 
 #[test]
 fn the_settings_file_holds_the_bands() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let bands = content.recipes().settings.as_ref().expect("settings");
     assert_eq!(
         (
@@ -816,7 +817,7 @@ fn the_settings_file_refuses_an_unknown_skill_a_profession_twice_or_bands_out_of
 /// checked against the arrow's `made_of`.
 #[test]
 fn the_shipped_arrows_take_a_head_of_three_sources_and_the_loader_checks_them() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let recipe = |id: &str| content.recipe(content.recipes().id(id).expect(id));
     let arrows = recipe("arrows");
     assert_eq!(arrows.result.expect("made").count, RecipeCount::Fletch);
@@ -880,7 +881,7 @@ fn the_shipped_arrows_take_a_head_of_three_sources_and_the_loader_checks_them() 
 
 #[test]
 fn alchemys_row_and_its_brews_load_and_a_missing_herb_or_an_empty_line_is_refused() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let alchemy = content.skill_id("alchemy").expect("alchemy");
     let row = content
         .recipes()

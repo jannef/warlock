@@ -752,7 +752,7 @@ mod tests {
         assert_ne!(looks, changed);
         files.insert("data/effects.toml", &changed);
         let other = Content::load(&files).expect("changed effects load");
-        let builtin = Content::builtin().expect("builtin content");
+        let builtin = crate::test_support::builtin();
         assert_eq!(
             other.fingerprint_for("showcase"),
             builtin.fingerprint_for("showcase"),
@@ -762,7 +762,7 @@ mod tests {
             "effect:fireball@20,18 wait move:N effect:lightning_bolt@19,17>40,17 wait*3",
         )
         .expect("actions parse");
-        let mut a = World::new(Arc::new(builtin), "arena", None).expect("arena");
+        let mut a = World::new(builtin, "arena", None).expect("arena");
         let mut b = World::new(Arc::new(other), "arena", None).expect("arena");
         for action in &actions {
             assert_eq!(a.apply(action), b.apply(action), "{action}");

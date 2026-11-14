@@ -11,10 +11,8 @@ use crate::geom::{Dir, Pos};
 use crate::magic::{Affix, Magic, Rarity};
 use crate::object::Stack;
 use crate::replay::Replay;
-use std::sync::{Arc, LazyLock};
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+use crate::test_support::{CONTENT as BUILTIN, run, said};
+use std::sync::Arc;
 
 /// A kitted run of `spec` in the courtyard.
 fn kitted(spec: &str) -> World {
@@ -44,12 +42,6 @@ fn way(w: &World) -> Option<Dir> {
     (allies_beside(&w.state).into_iter())
         .find(|(_, a)| a.companion().is_some())
         .map(|(d, _)| d)
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn plain(id: &str) -> Stack {
@@ -97,10 +89,6 @@ fn collar(w: &World) -> Option<String> {
     let a = beast(w);
     let on = a.equipment.get(neck)?;
     Some(BUILTIN.object(a.inventory[on].object).id.clone())
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 /// How long putting an amulet on takes the same character.

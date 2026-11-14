@@ -10,6 +10,7 @@ use crate::character::CharacterSpec;
 use crate::combat::Strike;
 use crate::content::{Build, ClassActive, ContentFiles, ResourceId};
 use crate::replay::Replay;
+use crate::test_support::{last, run};
 use crate::time::Duration;
 
 // A lit hall without creatures; a den with a kobold east of the player.
@@ -75,12 +76,6 @@ fn world(scenario: &str) -> World {
     World::new(content(false), scenario, None).expect("world")
 }
 
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
-}
-
 fn id(w: &World, name: &str) -> ResourceId {
     w.content().resource_id(name).expect(name)
 }
@@ -96,10 +91,6 @@ fn held(w: &World, name: &str) -> Option<u16> {
 fn set(w: &mut World, name: &str, value: u16) {
     let r = id(w, name);
     w.player_mut().resources.set(r, value);
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().map(|m| m.display()).next_back()).unwrap_or_default()
 }
 
 #[test]

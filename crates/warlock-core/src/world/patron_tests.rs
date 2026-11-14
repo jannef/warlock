@@ -4,16 +4,13 @@
 
 use super::patron::{self, Patron};
 use super::*;
-use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::magic::worked::Quality;
+use crate::test_support::{CONTENT, run as act, texts};
 
 /// The patron's corner of the Gæsthūs, and the cell west of it.
 const CORNER: Pos = Pos::new(50, 23);
 const BESIDE: Pos = Pos::new(49, 23);
-
-static CONTENT: std::sync::LazyLock<Arc<Content>> =
-    std::sync::LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 /// A run in Cēaptūn as `character`, with its kit.
 fn run(character: &str) -> World {
@@ -22,19 +19,9 @@ fn run(character: &str) -> World {
         .expect("a run in Cēaptūn")
 }
 
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
-}
-
 /// What the patron said last.
 fn spoke(world: &World) -> String {
-    (said(world).into_iter().rev())
+    (texts(world).into_iter().rev())
         .find(|m| m.starts_with("Your patron says: "))
         .unwrap_or_default()
 }
@@ -177,7 +164,7 @@ fn a_commission_is_offered_logged_handed_in_and_paid_then_the_next() {
     assert!(line.contains(", sir."), "{line}");
     assert_eq!(w.state.patron.taken, 1);
     let object = work(&w);
-    assert!(said(&w).iter().any(|m| m.starts_with("You receive ")));
+    assert!(texts(&w).iter().any(|m| m.starts_with("You receive ")));
     assert!(
         w.state.player().inventory.len() > before,
         "the stock advanced"
@@ -267,7 +254,7 @@ fn nothing_to_commission_is_idle_and_the_patrons_death_drops_the_commission() {
     w.patron_dies(id);
     assert!(w.state.patron.open.is_none());
     assert!(
-        said(&w)
+        texts(&w)
             .iter()
             .any(|m| m == "With your patron dead, the commission is off.")
     );

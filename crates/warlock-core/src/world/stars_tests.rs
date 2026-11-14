@@ -11,10 +11,7 @@ use crate::content::{ContentFiles, Sign};
 use crate::dump::{self, Layer};
 use crate::rng::Rng;
 use crate::stats::{PerStat, Stats};
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::CONTENT as BUILTIN;
 
 /// A human warrior in the showcase, born under the `element` `animal` on day `day` of the
 /// month (the run restored with that birth, so the gifts are granted as a load grants them).

@@ -64,7 +64,7 @@ pub(super) fn text(content: &Content, effect: &DefenceEffect) -> String {
         } => {
             let name = (content.damage_type_id(&kind))
                 .map_or(kind.clone(), |d| content.damage_type(d).name.to_lowercase());
-            format!("resistance to {name} +{value} %")
+            format!("resistance to {name} {} %", signed(value))
         }
         DefenceEffect::SlipPercent { value } => format!(
             "a step out of reach of every hostile beside you costs {}, whatever your stance",

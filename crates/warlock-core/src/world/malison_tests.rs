@@ -4,11 +4,12 @@
 //! a creature dying under a hex of hers, by any cause and anyone's hand, pays her half its level
 //! in mana (at least 1, to her maximum), never for her own death; no draws.
 
-use super::class_active_tests::{reach, run, world};
+use super::class_active_tests::{reach, world};
 use super::war_cry_tests::foe_at;
 use super::*;
 use crate::combat::{Blow, Strike};
 use crate::damage::Damage;
+use crate::test_support::run;
 
 /// A witch with Malison (and nothing else of the witch's beyond her kit), alone on the level,
 /// with mana to spare.

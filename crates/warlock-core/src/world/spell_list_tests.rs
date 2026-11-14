@@ -7,6 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::{ActionKind, ContentFiles, Reading, SpellPurpose, TalentEffect};
 use crate::talent::MagicEffect;
+use crate::test_support::{builtin, run, said};
 
 /// The pack: a, two scrolls of magic missile; b, one of haste; c, one of web; d, one of sleep;
 /// e, one of fireball.
@@ -34,16 +35,6 @@ fn world() -> World {
     );
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     World::new(content, "hall", Some(3)).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn count(w: &World, object: &str) -> u32 {
@@ -176,7 +167,7 @@ fn reading_spell_scrolls_replays_and_saves_the_same() {
 
 #[test]
 fn every_spell_comes_on_one_scroll_and_every_scroll_names_a_spell() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for (i, spell) in content.spells().iter().enumerate() {
         let id = crate::content::SpellId(i as u16);
         let scrolls: Vec<&str> = (content.object_defs().iter())
@@ -219,7 +210,7 @@ fn every_class_has_mana_and_its_guaranteed_spells() {
     // The full casters; every other class is a hybrid or casts nothing it is given. A spell a
     // class gives is its holder's at that level, whatever its level (the learning design §4).
     const FULL: [&str; 4] = ["druid", "priest", "witch", "wizard"];
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let book = content.talents();
     for class in content.classes() {
         assert!(class.mana >= 1, "{} has mana", class.id);

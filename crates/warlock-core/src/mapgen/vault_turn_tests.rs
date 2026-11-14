@@ -3,11 +3,9 @@
 
 use super::*;
 use crate::content::{ContentFiles, Turn, validate_route};
+use crate::test_support::CONTENT;
 use std::borrow::Cow;
 use std::collections::{BTreeSet, VecDeque};
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Content> = LazyLock::new(|| Content::builtin().expect("content"));
 
 fn shared(id: &str) -> &'static Vault {
     (CONTENT.vaults().iter())

@@ -353,7 +353,7 @@ mod tests {
 
     #[test]
     fn the_showcase_is_the_test_campaign_and_owns_its_world() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let ids: Vec<_> = content
             .campaigns()
             .iter()
@@ -482,7 +482,7 @@ mod tests {
             release.creature_id("villager"),
             content.creature_id("villager")
         );
-        let builtin = Content::builtin().expect("content");
+        let builtin = crate::test_support::builtin();
         assert_ne!(
             builtin.fingerprint_for("showcase"),
             content.fingerprint_for("showcase")

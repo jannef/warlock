@@ -1,0 +1,21 @@
+# Campaign-owned: Nihtscinna's signature gift (docs/design/profane-gifts.md §5), given sure by its
+# corpse's `on_eat.gives` and never drawn (`only`, weight 0). Its tier groups it in the wiki.
+[[gift]]
+id = "hollow_of_the_night"
+name = "Hollow of the night"
+kind = "mixed"
+tier = "dire"
+weight = 0
+only = "nihtscinna"
+description = "Something of you is no longer quite there: you see in the dark, act first, fear nothing, and blades and blows pass partly through you, but you are frailer, and others feel the lack."
+line = "The husk is nothing in the mouth. Afterwards the dark is a little less dark, and you are a little less here."
+effects = [
+    { kind = "darkvision", value = 4 },
+    { kind = "initiative_bonus", value = 4 },
+    { kind = "resist", damage = "slashing", value = 25 },
+    { kind = "resist", damage = "piercing", value = 25 },
+    { kind = "resist", damage = "bludgeoning", value = 25 },
+    { kind = "no_penalty", status = "frightened" },
+    { kind = "stat", stat = "presence", value = -2 },
+    { kind = "max_hp_percent", value = -10 },
+]

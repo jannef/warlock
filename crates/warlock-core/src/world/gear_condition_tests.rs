@@ -12,11 +12,8 @@ use crate::magic::Worked;
 use crate::magic::make::make;
 use crate::object::Stack;
 use crate::rng::Rng;
+use crate::test_support::CONTENT;
 use std::collections::BTreeSet;
-use std::sync::{Arc, LazyLock};
-
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("built-in")));
 
 fn creature(id: &str) -> CreatureId {
     CONTENT.creature_id(id).expect(id)

@@ -9,6 +9,7 @@ use crate::noise::{self, Act, Noise, SoundKind};
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{MAX_VALUE, SkillId, Trained};
+use crate::test_support::said_text as said;
 
 /// A lit yard: the player in a corner, a peaceful rat standing in the far one.
 const YARD: &str = r##"
@@ -162,10 +163,6 @@ fn marks(w: &World, id: &str) -> Option<u32> {
     (w.state.player().skills.get(skill(w, id))).map(|t| t.marks)
 }
 
-fn said(w: &World, text: &str) -> bool {
-    w.messages().iter().any(|m| m.text == text)
-}
-
 #[test]
 fn the_player_perceives_only_their_own_trained_skills() {
     let mut w = world("yard");
@@ -195,6 +192,7 @@ fn the_player_perceives_only_their_own_trained_skills() {
         skill_abilities(&w),
         [OwnAbility {
             ability: Ability::Skill(skill(&w, "knowledge")),
+            source: crate::ability::Source::Skill,
             unavailable: Some(Unavailable::NotYet),
         }]
     );

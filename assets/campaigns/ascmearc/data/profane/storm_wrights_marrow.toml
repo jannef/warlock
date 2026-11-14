@@ -1,0 +1,17 @@
+# Campaign-owned: Līgetdrȳ's signature gift (docs/design/profane-gifts.md §5), given sure by its
+# corpse's `on_eat.gives` and never drawn (`only`, weight 0). Its tier groups it in the wiki. The
+# corpse teaches Decipher script beside it, as a caster's does.
+[[gift]]
+id = "storm_wrights_marrow"
+name = "Storm-wright's marrow"
+kind = "boon"
+tier = "greater"
+weight = 0
+only = "ligetdry"
+description = "The thunder under the hills found a new house: lightning hardly touches you, your mind is sharper, and your mana returns faster."
+line = "Your teeth ache, your hair stands on end, and it does not stop."
+effects = [
+    { kind = "resist", damage = "electricity", value = 100 },
+    { kind = "stat", stat = "intelligence", value = 2 },
+    { kind = "mana_regen_percent", value = 25 },
+]

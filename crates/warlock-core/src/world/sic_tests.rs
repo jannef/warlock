@@ -6,14 +6,11 @@ use super::*;
 use crate::action::{Event, parse_actions};
 use crate::character::CharacterSpec;
 use crate::combat::Strike;
-use crate::content::{ActionKind, Content, CreatureSpawn, StatusId};
+use crate::content::{ActionKind, CreatureSpawn, StatusId};
 use crate::geom::Pos;
 use crate::perception::Perception;
 use crate::replay::Replay;
-use std::sync::{Arc, LazyLock};
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::{CONTENT as BUILTIN, last, run};
 
 const ME: Pos = Pos::new(7, 15);
 
@@ -53,12 +50,6 @@ fn grant(w: &mut World, id: &str) {
         serde_json::from_value(serde_json::to_value(&talents).expect("json")).expect("talents");
 }
 
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
-}
-
 fn set_focus(w: &mut World, value: u16) {
     let focus = w.content().resource_id("focus").expect("focus");
     w.player_mut().resources.set(focus, value);
@@ -67,10 +58,6 @@ fn set_focus(w: &mut World, value: u16) {
 fn focus(w: &World) -> u16 {
     let focus = w.content().resource_id("focus").expect("focus");
     (w.state.player().resources.get(focus)).map_or(0, |p| p.value)
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.display())
 }
 
 /// A creature of `id` at `p` on the current level, with hit points to spare.

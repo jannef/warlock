@@ -1938,7 +1938,7 @@ systems = ["hit_points"]
 
     #[test]
     fn the_built_in_talents_load() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         assert!(
             content.talents().len() >= 12,
             "{} talents",

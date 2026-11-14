@@ -3,11 +3,12 @@
 //! it, and a save without it.
 
 use super::alignment::Deed;
-use super::class_active_tests::{at_normal_speed, beside, last, reach, run, world};
+use super::class_active_tests::{at_normal_speed, beside, reach, world};
 use super::*;
 use crate::content::{Build, ResourceId};
 use crate::replay::Replay;
 use crate::stats::Stat;
+use crate::test_support::{builtin, last, run};
 
 fn zeal(w: &World) -> ResourceId {
     w.content().resource_id("zeal").expect("zeal")
@@ -128,7 +129,7 @@ fn a_saved_paladin_without_the_pool_holds_it_on_load() {
 fn a_replay_of_a_smite_verifies() {
     // A paladin of the showcase from the start, as a replay records it: a smite at nobody
     // (refused, free), waits that bring zeal back, and Lay on hands for six of it.
-    let content = std::sync::Arc::new(crate::content::Content::builtin().expect("content"));
+    let content = builtin();
     let spec: crate::character::CharacterSpec = "human,male,paladin".parse().expect("spec");
     let mut w = World::start_run(
         content.clone(),

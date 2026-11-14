@@ -1627,7 +1627,7 @@ mod tests {
 
     /// Parses spell files `text` against the shipped cost table and the built-in content.
     fn spells(text: &str) -> Result<Vec<SpellData>, ContentError> {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let (_, list) = parse(Some(("data/spells.toml", SHIPPED)), [("s", text)], &content)?;
         Ok(list)
     }
@@ -1851,7 +1851,7 @@ damage = "2d6"
     fn the_designs_first_spell_list_parses() {
         let list = spells(FIRST_LIST).expect("every spell");
         assert_eq!(list.len(), 11);
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let fireball = list.iter().find(|s| s.id == "fireball").expect("fireball");
         assert_eq!(
             fireball.tags(&content),
@@ -2117,7 +2117,7 @@ damage = "2d6"
             "{}",
             e.message
         );
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let e = parse(None, [("s", fireball(good).as_str())], &content).unwrap_err();
         assert!(e.message.contains("need data/spells.toml"), "{}", e.message);
     }
@@ -2245,7 +2245,7 @@ damage = "2d6"
 
     #[test]
     fn the_shipped_spells_are_at_the_designs_levels_and_costs() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let r = content.spell_rules().expect("the cost table");
         // (spell, level, its base roll, mana, whether a class ability gives it; every other is
         // learned from scrolls only): the spell scaling design §5.8, §12.1.
@@ -2343,7 +2343,7 @@ damage = "2d6"
     /// degrees ladders are today's values at the scores where the old rounding changed them.
     #[test]
     fn the_shipped_ladders_are_the_designs() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let w78 = "willpower 14 7, 18 8";
         let w910 = "willpower 14 9, 18 10";
         let w1112 = "willpower 14 11, 18 12";

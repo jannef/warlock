@@ -8,6 +8,7 @@ use super::*;
 use crate::action::{MissileEnd, SpellShape, parse_actions};
 use crate::content::{ContentFiles, ZoneKind};
 use crate::replay::Replay;
+use crate::test_support::{builtin, run, said as texts};
 
 // A training dummy takes a lot and never fights back.
 const DUMMY: &str = "[[creature]]\nid = \"dummy\"\nname = \"training dummy\"\nglyph = \"D\"\n\
@@ -79,16 +80,6 @@ fn world(map: &str) -> World {
     hall(map, 1000, 255)
 }
 
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
-}
-
-fn texts(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
-}
-
 fn lost(w: &World, id: ActorId) -> i32 {
     let a = &w.state.actors[&id];
     a.max_hp(&w.content) - a.hp
@@ -139,7 +130,7 @@ fn flight(out: &Outcome) -> (Vec<Pos>, MissileEnd, Option<Pos>) {
 
 #[test]
 fn the_sleeping_draught_is_a_flask_of_sleep() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let id = content.object_id("sleeping_draught").expect("draught");
     let def = content.object(id);
     let flask = def.flask.as_ref().expect("a flask");

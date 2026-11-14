@@ -4,8 +4,8 @@
 //! Wulfrun takes back in Cēaptūn. Dēopgang is never hidden, so neither quest reveals anything.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::ContentFiles;
+use crate::test_support::{run as act, texts};
 use std::sync::LazyLock;
 
 const WULFRUN: Pos = Pos::new(72, 26);
@@ -17,16 +17,6 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
     files.remove_encounter_tables();
     Arc::new(Content::load(&files).expect("builtin content"))
 });
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
-}
 
 /// The player's topics with whoever stands at `at` on the current level.
 fn topics(world: &World, at: Pos) -> Vec<String> {
@@ -103,7 +93,7 @@ fn the_letter_goes_down_to_peran_and_his_answer_comes_back_up() {
     assert_eq!(stage(&w, "gnome_letter"), Some(Stage::Done));
     assert_eq!(carried(&w, "sealed_letter"), 0);
     assert_eq!(carried(&w, "gem"), gems_before + 1);
-    assert!(said(&w).iter().any(|m| m.contains("for the walk down")));
+    assert!(texts(&w).iter().any(|m| m.contains("for the walk down")));
 
     // Then he has the moot's answer to send back up (once the level the reward brought is spent).
     assert!(topics(&w, headman).contains(&"quest-gnome_reply".into()));
@@ -119,5 +109,5 @@ fn the_letter_goes_down_to_peran_and_his_answer_comes_back_up() {
     assert_eq!(stage(&w, "gnome_reply"), Some(Stage::Done));
     assert_eq!(carried(&w, "sealed_letter"), 0);
     assert_eq!(carried(&w, "gold_coin"), gold + 300);
-    assert!(said(&w).iter().any(|m| m.contains("every word of it")));
+    assert!(texts(&w).iter().any(|m| m.contains("every word of it")));
 }

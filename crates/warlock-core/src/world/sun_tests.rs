@@ -6,6 +6,7 @@ use crate::content::ContentFiles;
 use crate::light::{Light, Sun};
 use crate::perception::{CellView, Emitter, PerceptionView, SeenLight};
 use crate::replay::Replay;
+use crate::test_support::builtin;
 use proptest::prelude::*;
 use std::collections::BTreeSet;
 
@@ -440,7 +441,7 @@ fn creatures_in_the_sun_are_seen_from_afar() {
 
 #[test]
 fn sunlight_is_deterministic_and_replays_verify() {
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = builtin();
     let actions = crate::action::parse_actions(
         "move:E move:E skip:30m move:SE skip:5h move:E skip:6h rest:1h move:W skip:3h",
     )

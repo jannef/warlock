@@ -4,11 +4,7 @@
 //! hundred: no rock was left big enough to hold the vault on any of the 16 attempts.
 
 use super::*;
-use crate::content::ContentFiles;
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Content> =
-    LazyLock::new(|| Content::load(&ContentFiles::builtin()).expect("builtin content"));
+use crate::test_support::CONTENT;
 
 /// The levels of every branch (`bottom`: only each branch's last), each with the campaign whose
 /// run reaches it.

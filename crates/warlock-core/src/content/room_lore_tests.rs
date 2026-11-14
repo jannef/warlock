@@ -4,6 +4,7 @@
 
 use super::{Content, ContentFiles, Here, ItemClassId, RoomEffectId, RoomEffects};
 use crate::skills::SkillId;
+use crate::test_support::builtin;
 
 fn effect(extra: &str) -> String {
     format!("[[effect]]\nid = \"x\"\nname = \"x\"\nmark = \"x\"\nenter = \"In.\"\n{extra}\n")
@@ -104,7 +105,7 @@ fn train_multiplies_the_room_and_the_level() {
 
 #[test]
 fn the_scriptorium_is_built_in() {
-    let content = Content::load(&ContentFiles::builtin()).expect("content");
+    let content = builtin();
     let id = content
         .room_effects()
         .id("scriptorium")

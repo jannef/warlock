@@ -6,12 +6,12 @@
 
 use super::craft_make::make_out_for_test;
 use super::*;
-use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Factor};
 use crate::magic::worked::Quality;
 use crate::object::Stack;
 use crate::skills::{SkillId, Trained};
+use crate::test_support::{CONTENT, run as act};
 use std::sync::LazyLock;
 
 /// A forge with its anvil at (5, 2), the player beside it at (4, 3).
@@ -45,9 +45,6 @@ static FIXTURE: LazyLock<Arc<Content>> = LazyLock::new(|| {
     Arc::new(Content::load(&files).expect("fixture content is valid"))
 });
 
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
-
 /// The forge, the player carrying nothing, trained in Metalcraft and Jewelcraft at 50, holding
 /// Maker's mark when `marks`.
 fn world(marks: bool) -> World {
@@ -72,12 +69,6 @@ fn world(marks: bool) -> World {
         w.player_mut().talents.take("makers_mark", None);
     }
     w
-}
-
-fn act(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 /// `count` ingots of `metal` into the pack.

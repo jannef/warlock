@@ -4,7 +4,7 @@
 
 use super::search::{Hidden, Look};
 use super::*;
-use crate::action::{Meal, parse_actions};
+use crate::action::Meal;
 use crate::burden::Burden;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Need};
@@ -16,10 +16,7 @@ use crate::object::Stack;
 use crate::rng::Rng;
 use crate::stats::{PerStat, Stats};
 use crate::talent::{self, Candidate};
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::{CONTENT as BUILTIN, run, said};
 
 /// A human warrior in the showcase, every score 14.
 fn world() -> World {
@@ -57,16 +54,6 @@ fn hall(map: &str, pack: &str) -> World {
     );
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     World::new(content, "wits_hall", None).expect("world")
-}
-
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| world.apply(a))
-        .collect()
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 /// The player takes talent `id` (one rank more), without a level to pick it at.

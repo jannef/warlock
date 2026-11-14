@@ -7,6 +7,7 @@ use crate::action::{AttackKind, parse_actions};
 use crate::combat::{Category, Health, Strike};
 use crate::content::{ContentFiles, Role};
 use crate::replay::Replay;
+use crate::test_support::{builtin, run, said as messages};
 
 #[test]
 fn messages_say_what_came_of_an_attack_without_numbers() {
@@ -507,18 +508,6 @@ fn world_on(map: &str, extra: &str) -> World {
     World::new(content, "fight", None).expect("world")
 }
 
-fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
-    parse_actions(actions)
-        .expect("actions")
-        .iter()
-        .map(|a| world.apply(a))
-        .collect()
-}
-
-fn messages(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
-}
-
 fn actor(world: &World, id: u32) -> Option<&Actor> {
     world.state().actors.get(&ActorId(id))
 }
@@ -548,7 +537,7 @@ fn hit_points_are_toughness_plus_race_and_class_or_the_creatures_base() {
 
 #[test]
 fn the_players_hit_points_come_from_toughness_race_and_class() {
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = builtin();
     let hp = |spec: &str| {
         let spec: crate::character::CharacterSpec = spec.parse().expect("a character");
         let w =

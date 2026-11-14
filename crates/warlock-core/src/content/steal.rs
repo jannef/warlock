@@ -56,7 +56,7 @@ mod tests {
 
     #[test]
     fn a_caught_thief_faces_a_faction_hostile_to_them() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let rules = content.steal().expect("stealing is in the game");
         let factions = content.factions();
         assert_eq!(factions.def(rules.caught).id, "outraged");

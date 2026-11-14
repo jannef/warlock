@@ -10,6 +10,7 @@ use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
 use crate::noise::Act;
 use crate::replay::Replay;
+use crate::test_support::{last_text as last_message, run, texts};
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -351,14 +352,6 @@ fn carry(w: &mut World, id: ActorId, kg: u32) {
     actor.equipment = Default::default();
 }
 
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    parse_actions(actions)
-        .expect("actions")
-        .iter()
-        .map(|a| w.apply(a))
-        .collect()
-}
-
 fn total(outs: &[Outcome]) -> u64 {
     outs.iter().map(|o| o.elapsed.as_seconds()).sum()
 }
@@ -370,17 +363,6 @@ fn took(w: &mut World, actions: &str) -> u64 {
         assert!(out.took_turn, "{action}: {:?}", last_message(w));
     }
     total(&outs)
-}
-
-fn last_message(w: &World) -> String {
-    w.messages()
-        .iter()
-        .last()
-        .map_or(String::new(), |m| m.text.clone())
-}
-
-fn texts(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 fn burden(w: &World) -> Burden {

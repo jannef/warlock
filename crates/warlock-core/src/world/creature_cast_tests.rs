@@ -6,6 +6,7 @@ use super::*;
 use crate::action::{AttackKind, Event, parse_actions};
 use crate::content::ContentFiles;
 use crate::replay::Replay;
+use crate::test_support::run;
 
 /// The built-in content with `map`: the player at `@`, a caster of type `caster` at `k`, a
 /// creature of type `friend` at `f` (of the caster's faction), each hostile by its type.
@@ -59,12 +60,6 @@ fn of(w: &World, kind: &str) -> ActorId {
         .find(|a| a.creature == kind)
         .expect("there")
         .id
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
 }
 
 fn said(w: &World, text: &str) -> bool {

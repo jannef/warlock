@@ -112,7 +112,7 @@ mod tests {
 
     #[test]
     fn the_shipped_rules_parse() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let rules = content.surprise().expect("surprise is in the game");
         assert_eq!(content.status(rules.status).id, "surprised");
         assert_eq!(rules.difficulty, 13);

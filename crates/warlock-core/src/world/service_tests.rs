@@ -6,6 +6,7 @@ use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::stats::Stat;
+use crate::test_support::{builtin, last_text as last_message, run};
 
 /// The sister's words and services, added to the built-in dialogue.
 const SISTER: &str = r##"
@@ -78,19 +79,9 @@ fn world(gold: u32) -> World {
     World::new(content(gold), "chapel", None).expect("world")
 }
 
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
-}
-
 fn gold(w: &World) -> u32 {
     let coin = w.content().object_id("gold_coin").expect("gold");
     super::shop::count_of(&w.state().player().inventory, coin)
-}
-
-fn last_message(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
 }
 
 fn sick(w: &World) -> bool {
@@ -255,7 +246,7 @@ fn services_are_saved_and_replayed() {
 
 #[test]
 fn every_disease_is_cured_by_prayer() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for d in content.disease_defs() {
         assert!(
             d.cured_by.iter().any(|c| c == super::service::PRAYER),

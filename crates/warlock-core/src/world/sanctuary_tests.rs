@@ -2,7 +2,7 @@
 //! ground; the priest design §6.4, §7): the rite and its refusals, who keeps out, the pace, the
 //! break, the fade, and saves and replays.
 
-use super::caster_tests::{reach, run, said};
+use super::caster_tests::reach;
 use super::*;
 use crate::ability::Ability;
 use crate::action::parse_actions;
@@ -12,10 +12,7 @@ use crate::content::{ClassActive, ContentFiles, Factor};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stats};
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::{CONTENT as BUILTIN, run, said};
 
 /// A human priest of `level` (every score 14), Neutral, on `scenario`'s start.
 fn priest_on(scenario: &str, level: u8) -> World {

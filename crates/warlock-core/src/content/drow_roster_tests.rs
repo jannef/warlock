@@ -2,6 +2,7 @@
 //! blades, priestesses calling demons, gear worn and none wielded.
 
 use super::Content;
+use crate::test_support::builtin;
 
 /// Every drow type.
 const DROW: &[&str] = &[
@@ -22,7 +23,7 @@ const DROW: &[&str] = &[
 #[test]
 fn the_drow_hunt_the_player_and_leave_their_old_rivals_be() {
     use super::Stance;
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let stance = |a: &str, b: &str| {
         let id = |n: &str| content.creature_id(n).expect(n);
         content.stance(id(a), id(b))
@@ -139,7 +140,7 @@ fn a_priestess_calls_forth_demons_that_stand_with_the_drow() {
 fn the_drow_wear_their_gear_and_wield_none() {
     use crate::gear;
     use crate::rng::Rng;
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for &id in DROW {
         let creature = content.creature_id(id).expect(id);
         for seed in 0..200 {

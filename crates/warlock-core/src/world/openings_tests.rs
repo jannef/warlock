@@ -13,10 +13,7 @@ use crate::content::{ClassActive, Factor, ResourceId};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stats};
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::{CONTENT as BUILTIN, last, run};
 
 /// A human thief in the showcase (seed 7), with their kit, born under no sign, every score 14.
 fn thief() -> World {
@@ -38,16 +35,6 @@ fn thief() -> World {
     let max = w.state.player().max_hp(w.content());
     w.player_mut().hp = max;
     w
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn last(world: &World) -> String {
-    (world.messages().iter().next_back()).map_or_else(String::new, |m| m.display())
 }
 
 /// Grants the XP that takes the player to `level` and spends every choice it brings.

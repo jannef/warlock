@@ -9,7 +9,7 @@ use crate::action::parse_actions;
 use crate::content::{ContentFiles, Stance};
 use crate::gear;
 use crate::rng::Rng;
-use std::sync::LazyLock;
+use crate::test_support::CONTENT;
 
 /// The four criminals and the unique item each carries.
 const CRIMINALS: [(&str, &str); 4] = [
@@ -70,8 +70,6 @@ const LAIRS: [(&str, &[&str]); 4] = [
         ],
     ),
 ];
-
-static CONTENT: LazyLock<Content> = LazyLock::new(|| Content::builtin().expect("content"));
 
 fn stance(a: &str, b: &str) -> Stance {
     let id = |n: &str| CONTENT.creature_id(n).expect(n);

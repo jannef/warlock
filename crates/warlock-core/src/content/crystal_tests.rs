@@ -3,6 +3,7 @@
 //! loader refuses what would leave an affix that could never be enchanted.
 
 use crate::content::{Content, ContentFiles};
+use crate::test_support::builtin;
 
 const PATH: &str = "data/crystals.toml";
 
@@ -29,7 +30,7 @@ fn refused(from: &str, to: &str) -> String {
 
 #[test]
 fn the_six_colours_load_in_the_owners_order_with_his_two_rules() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let crystals = content.crystals().expect("crystals");
     let ids: Vec<&str> = crystals.colours.iter().map(|c| c.id.as_str()).collect();
     assert_eq!(ids, ["black", "blue", "white", "red", "green", "gold"]);
@@ -62,7 +63,7 @@ fn the_six_colours_load_in_the_owners_order_with_his_two_rules() {
 
 #[test]
 fn every_affix_has_a_colour_and_a_word_and_a_creature_its_first_tags() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let crystals = content.crystals().expect("crystals");
     for def in content.affixes().all() {
         assert!(
@@ -105,7 +106,7 @@ fn every_affix_has_a_colour_and_a_word_and_a_creature_its_first_tags() {
 /// Every family a colour names, and every `[[family]]`, is some affix's category.
 #[test]
 fn every_family_is_an_affix_category() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let crystals = content.crystals().expect("crystals");
     let is = |f: &str| content.affixes().all().iter().any(|a| a.category == f);
     for c in &crystals.colours {
@@ -122,7 +123,7 @@ fn every_family_is_an_affix_category() {
 /// check: a content set without a campaign, as some tests load, may lack a tag's creatures).
 #[test]
 fn every_colours_tag_is_carried() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for c in &content.crystals().expect("crystals").colours {
         for tag in &c.tags {
             assert!(content.tagged(tag).next().is_some(), "{}: {tag}", c.id);

@@ -4,13 +4,10 @@
 use super::*;
 use crate::action::{AttackKind, Positions};
 use crate::character::CharacterSpec;
-use crate::content::{Content, CreatureSpawn, Takes};
+use crate::content::{CreatureSpawn, Takes};
 use crate::geom::Pos;
 use crate::object::Stack;
-use std::sync::{Arc, LazyLock};
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::{CONTENT as BUILTIN, last};
 
 /// A kitted human warrior in the showcase (seed 7), alone on the level, carrying only what they
 /// wear and wield, in an open room of floor 21 by 11 cells walled round, its west end at the
@@ -97,10 +94,6 @@ fn carries(w: &World, who: ActorId, id: &str) -> u32 {
         .filter(|s| s.object == object)
         .map(|s| s.count)
         .sum()
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().map(|m| m.display()).next_back()).unwrap_or_default()
 }
 
 /// Lets `thief` try its luck on a hit, the cooldown cleared, until it takes something (at most

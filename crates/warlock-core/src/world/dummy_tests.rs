@@ -4,14 +4,10 @@
 
 use super::fight::Harm;
 use super::*;
-use crate::action::{AttackKind, parse_actions};
+use crate::action::AttackKind;
 use crate::content::WeaponSkillId;
 use crate::object::Stack;
-use std::sync::LazyLock;
-
-/// Built-in content, made once.
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+use crate::test_support::{CONTENT, run as act};
 
 /// The dummy at the west end of the shooting lane, and one of the three below it.
 const LANE: Pos = Pos::new(73, 17);
@@ -19,12 +15,6 @@ const POST: Pos = Pos::new(77, 19);
 
 fn town() -> World {
     World::new(CONTENT.clone(), "ceaptun", None).expect("a run in Cēaptūn")
-}
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 fn put_player(world: &mut World, at: Pos) {

@@ -9,6 +9,7 @@ use crate::action::parse_actions;
 use crate::beside::{Beside, Target};
 use crate::content::{ClassActive, ContentFiles, Offer, RecipeUse};
 use crate::object::Stack;
+use crate::test_support::{last_text as last, run};
 
 const FORGE: ClassActive = ClassActive::FieldForge;
 
@@ -68,16 +69,6 @@ fn ingots(w: &mut World, count: u32) {
     let steel = w.content.material_id("steel").expect("steel");
     let stack = crate::piece::make(&w.content, steel, count).expect("ingots");
     w.player_mut().inventory.push(stack);
-}
-
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
 }
 
 fn terrain_at(w: &World, p: Pos) -> String {

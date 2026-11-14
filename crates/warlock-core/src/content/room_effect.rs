@@ -1296,7 +1296,7 @@ mod tests {
 
     #[test]
     fn a_status_parses_and_must_be_known() {
-        let content = crate::content::Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let lookup = |name: &str| {
             let id = content.status_id(name)?;
             Some((id, content.status(id)))

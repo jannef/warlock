@@ -12,6 +12,7 @@ use crate::content::{ContentFiles, DiseaseId, StatusId};
 use crate::heal::Ailment;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::Stat;
+use crate::test_support::{last_text as last_message, texts as messages};
 use crate::time::Duration;
 
 /// A lit room with nothing in it.
@@ -90,14 +91,6 @@ fn modifier(w: &World) -> i32 {
     let me = w.state.player();
     me.effective_stats(w.content()).modifier(Stat::Intelligence)
         + me.skill_effect(w.content(), Effect::Heal)
-}
-
-fn last_message(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.text.clone())
-}
-
-fn messages(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 fn status(w: &World, id: &str) -> StatusId {

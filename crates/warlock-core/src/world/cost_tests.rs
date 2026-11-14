@@ -6,6 +6,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::{ActionCosts, ContentFiles, NORMAL_COST};
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -646,7 +647,7 @@ fn costs_come_from_data_and_are_validated() {
     // disarm a trap (2000), a try at picking a lock (2000), and treating oneself (2500); of the creatures only the
     // marilith's six blades (500), the balor's sword and whip (700), and the two-headed troll's
     // attacks (700: one head bites while the other looks, #456) have a cost of their own.
-    let builtin = Content::builtin().expect("builtin content");
+    let builtin = builtin();
     for &kind in ActionKind::ALL {
         let expected = match kind {
             ActionKind::BodyArmor => 3 * NORMAL_COST,

@@ -48,6 +48,9 @@ often as you come. It never follows you up or down the stairs. Once it is dead i
 and that depth's floors are ordinary from then on. A tenth floor deeper than the last keeper is
 ordinary too.
 
+Every keeper leaves a corpse that never rots. Eating it changes your body for good: its own gift,
+gifts drawn at random, and a hard pull toward evil (see [Profane gifts](profane-gifts.md)).
+
 {{#include generated/layer-bosses.md}}
 
 ## Fennmynster

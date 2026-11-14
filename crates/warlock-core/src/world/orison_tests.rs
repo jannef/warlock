@@ -2,7 +2,7 @@
 //! §7): each use at its level, the priority order, the answers a tier gives, the refusal, the
 //! strain and its lock, the faces, and saves and replays.
 
-use super::caster_tests::{last, reach, run, said, world_with};
+use super::caster_tests::{reach, world_with};
 use super::orison::Strain;
 use super::*;
 use crate::ability::Ability;
@@ -11,11 +11,8 @@ use crate::alignment::Score;
 use crate::content::ClassActive;
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
+use crate::test_support::{CONTENT as BUILTIN, last, run, said};
 use crate::time::Duration;
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 /// A human priest of `level` (every score 14), Neutral, at full hit points and mana, Not
 /// hungry, and with no strain.

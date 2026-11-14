@@ -12,7 +12,8 @@ test world, `campaigns/showcase/`, only with its `showcase` feature: never in a 
 `warlock_assets::files()` (or `content()`), or a directory with `warlock_assets::from_dir`
 (`--content-dir`). So a data edit rebuilds that crate and the binaries above it, never the core;
 warlock-core's own tests read `assets/` from disk instead (`ContentFiles::builtin` and
-`Content::builtin`, test-only, once per test binary), and its integration tests do the same with
+`Content::builtin`, test-only, once per test binary; the tests share one parsed copy,
+`test_support::CONTENT`, #1509), and its integration tests do the same with
 `ContentFiles::from_dir`. Extra files laid over a set (mods, later: #196) go in with
 `ContentFiles::insert` before the load, which checks the whole set ("The loader's whole-set
 checks" below). A world's levels, scenarios, branches, quests, dialogue, and own creature types live

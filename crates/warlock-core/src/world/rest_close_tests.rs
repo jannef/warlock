@@ -10,6 +10,7 @@ use crate::combat::Strike;
 use crate::content::ContentFiles;
 use crate::hunger::Hunger;
 use crate::replay::Replay;
+use crate::test_support::{builtin, last_text as last, run};
 
 /// The built-in content with `map`: the player at `@` (a ration and a pick-axe under them), a
 /// creature of type `them` at `k`, a kobold walking west and back at `r`, a deer at `d`,
@@ -70,10 +71,6 @@ fn of(w: &World, kind: &str) -> ActorId {
         .find(|a| a.creature == kind)
         .expect("there")
         .id
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or(String::new(), |m| m.text.clone())
 }
 
 fn dist(w: &World, id: ActorId) -> i32 {
@@ -222,12 +219,6 @@ fn carried(w: &World, id: &str) -> usize {
     (pack.iter().position(|s| s.object == id)).expect("carried")
 }
 
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
-}
-
 #[test]
 fn a_meal_and_digging_go_on_with_a_hostile_farther_off_in_view() {
     let mut w = world(PEN, "kobold");
@@ -255,7 +246,7 @@ fn a_meal_and_digging_go_on_with_a_hostile_farther_off_in_view() {
 fn a_fight_seen_far_off_is_told_and_the_rest_goes_on() {
     // The arena's pit, seen from its dark corner: blows, shots, spells, and deaths among the
     // kobolds and the rats, none of them near the player.
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = builtin();
     let mut w = World::new(content, "arena", None).expect("world");
     w.apply(&Action::Rest(Rest::For(Duration::hours(1))));
     assert_eq!(last(&w), "You rest for 1 hour.");

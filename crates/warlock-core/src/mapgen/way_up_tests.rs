@@ -5,9 +5,7 @@
 use super::connect::distances;
 use super::*;
 use crate::content::ContentFiles;
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Content> = LazyLock::new(|| Content::builtin().expect("content"));
+use crate::test_support::CONTENT;
 
 fn level(id: &str, seed: u64, from: Option<&str>) -> LevelTemplate {
     generate(&CONTENT, ("ascmearc", seed), id, from).expect("generates")

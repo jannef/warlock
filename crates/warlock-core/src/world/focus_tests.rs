@@ -8,10 +8,7 @@ use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{ClassActive, Factor, ResourceId, percent_of};
 use crate::replay::Replay;
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+use crate::test_support::{CONTENT as BUILTIN, last, run};
 
 /// A human ranger in the showcase (seed 7), with their kit, at `level` with every choice spent.
 fn ranger(level: u8) -> World {
@@ -37,12 +34,6 @@ fn ranger(level: u8) -> World {
     w
 }
 
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
-}
-
 fn focus(w: &World) -> ResourceId {
     w.content().resource_id("focus").expect("focus")
 }
@@ -54,10 +45,6 @@ fn held(w: &World) -> Option<u16> {
 fn set(w: &mut World, value: u16) {
     let focus = focus(w);
     w.player_mut().resources.set(focus, value);
-}
-
-fn last(w: &World) -> String {
-    (w.messages().iter().last()).map_or_else(String::new, |m| m.display())
 }
 
 /// What a plain shot costs the player now.

@@ -9,11 +9,9 @@ use crate::combat::Category;
 use crate::content::{Content, ContentFiles, Stance};
 use crate::geom::Dir;
 use crate::replay::Replay;
+use crate::test_support::{CONTENT as BUILTIN, run, said};
 use crate::world::{Order, stance_between};
-use std::sync::{Arc, LazyLock};
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+use std::sync::Arc;
 
 fn spec(text: &str) -> CharacterSpec {
     text.parse().expect("a character")
@@ -33,16 +31,6 @@ fn kitted(spec: &str, seed: u64) -> World {
         true,
     )
     .expect("world")
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn companion_of(w: &World) -> (&Actor, &CompanionData) {

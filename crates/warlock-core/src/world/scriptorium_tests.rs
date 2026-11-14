@@ -3,9 +3,9 @@
 //! #1024), other skills train as anywhere, and look mode and the messages name the room and its shelves.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::skills::{SkillId, Trained, Use};
+use crate::test_support::run;
 
 /// A lit hall, 25 wide: the west part plain, the east part (x 12 on) a scriptorium with its
 /// shelves at `S`.
@@ -44,12 +44,6 @@ fn world(mana: u16) -> World {
     );
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     World::new(content, "hall", None).expect("world")
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn skill(w: &World, id: &str) -> SkillId {

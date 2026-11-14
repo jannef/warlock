@@ -6,10 +6,7 @@ use super::*;
 use crate::action::{Action, parse_actions};
 use crate::content::{Content, ContentFiles, StairsDir};
 use crate::mapgen;
-use std::sync::{Arc, LazyLock};
-
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+use crate::test_support::CONTENT;
 
 const BRANCH: &str = "grundleas";
 
@@ -341,7 +338,7 @@ fn a_vault_with_stairs_must_be_a_lair_and_a_lair_must_have_them() {
 /// what it needs (`everlasting`), with its signature gift.
 const PROFANE: &str =
     ", gives = \"rat_kings_court\", profane = { rolls = 1, tiers = { lesser = 100 } }";
-const SIGNATURE: &str = "campaigns/ascmearc/data/profane/";
+const SIGNATURE: &str = "campaigns/ascmearc/data/profane/rat_kings_court.toml";
 
 /// Content with the Rat King's file edited: each `from` (which must be there) replaced by `to`,
 /// its corpse no longer profane.
@@ -382,4 +379,26 @@ fn everlasting_is_a_uniques_with_a_corpse_and_every_keeper_has_it() {
     ])
     .expect_err("refused");
     assert!(err.contains(keeper), "{err}");
+}
+
+#[test]
+fn every_keeper_leaves_a_profane_corpse() {
+    // The Rat King everlasting, but with no signature or draws: refused (P4's campaign check).
+    let profane = "layer boss `gnaegan` must leave a profane corpse";
+    let err = rat_king_with(&[]).expect_err("refused");
+    assert!(err.contains(profane), "{err}");
+    // The other nine: each names its own signature, and draws.
+    let content = Content::builtin().expect("content loads");
+    let grundleas = content.dungeon("grundleas").expect("Grundlēas");
+    assert_eq!(grundleas.bosses.len(), 10);
+    for boss in &grundleas.bosses {
+        let def = content.creature(boss.creature);
+        let on_eat = def.on_eat.as_ref().expect("an on_eat");
+        let gives = on_eat.gives.as_deref().expect("a signature");
+        let t = content.talents().id(gives).expect("a talent");
+        let gift = content.profane().gift(t).expect("a gift");
+        assert_eq!(gift.only.as_deref(), Some(def.id.as_str()));
+        assert!(on_eat.profane.is_some(), "{}", def.id);
+        assert_eq!(on_eat.vomit, 0, "{}", def.id);
+    }
 }

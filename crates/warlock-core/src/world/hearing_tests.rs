@@ -6,6 +6,7 @@ use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::noise::{Act, Heard, RECALL_TURNS, SoundKind};
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -370,7 +371,7 @@ fn doors_are_heard_by_creatures() {
 
 #[test]
 fn the_hub_s_gallery_patrol_is_heard_through_its_door() {
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = builtin();
     let mut w = World::new(content, "showcase", None).expect("world");
     // Out of the start room and along the corridor to the patrol gallery's closed door (43, 11).
     let walk = format!(

@@ -5,18 +5,16 @@
 //! point; nothing without the data.
 
 use super::*;
-use crate::action::{AttackKind, parse_actions};
+use crate::action::AttackKind;
 use crate::character::CharacterSpec;
 use crate::combat::{Blow, Category, Strike};
 use crate::content::{ContentFiles, Factor, ODDS_SCALE, StatUse};
 use crate::dump::{self, Layer};
 use crate::skills::Use;
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::{CONTENT as BUILTIN, run, said};
 use crate::time::{DAWN, DAY};
 use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 /// The built-in content with every training chance at 100, so marks come without a draw.
 static SURE: LazyLock<Arc<Content>> = LazyLock::new(|| {
@@ -35,16 +33,6 @@ static SURE: LazyLock<Arc<Content>> = LazyLock::new(|| {
 fn world_with(content: Arc<Content>) -> World {
     let spec: CharacterSpec = "human,male,warrior".parse().expect("a character");
     World::with_character(content, "showcase", Some(7), Some(&spec)).expect("world")
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 fn marks(world: &World) -> PerStat<i32> {

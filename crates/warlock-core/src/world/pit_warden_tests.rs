@@ -3,17 +3,13 @@
 //! alone, never the slain list; a sealed Pit's fifth floor made without it; the mouth closing on
 //! the next arrival outside; the content's checks of a portal branch's boss row.
 
-use super::caster_tests::said;
 use super::stance_between;
 use super::*;
 use crate::action::{Action, parse_actions};
 use crate::content::{Content, ContentFiles, CreatureSpawn, LevelTemplate, StairsDir, Stance};
 use crate::mapgen::Visit;
+use crate::test_support::{CONTENT, said};
 use std::collections::BTreeSet;
-use std::sync::{Arc, LazyLock};
-
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
 
 const WARDEN: &str = "gatewarden";
 

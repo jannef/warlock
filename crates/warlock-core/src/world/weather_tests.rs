@@ -10,11 +10,8 @@ use crate::fov::radius2;
 use crate::light::Sun;
 use crate::perception::Emitter;
 use crate::replay::Replay;
+use crate::test_support::{CONTENT, texts, world};
 use crate::weather::{Clouds, Weather, weather_at};
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
 
 /// From the showcase start to the courtyard, up the stairs nook's `<`.
 const TO_COURTYARD: &str =
@@ -33,16 +30,8 @@ fn run(world: &mut World, text: &str) {
     }
 }
 
-fn world(scenario: &str) -> World {
-    World::new(CONTENT.clone(), scenario, None).expect("scenario starts")
-}
-
 fn climate() -> &'static Climate {
     CONTENT.climate()
-}
-
-fn texts(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 /// The weather messages the player could get, in the order they were logged.

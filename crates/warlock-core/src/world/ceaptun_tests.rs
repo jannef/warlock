@@ -10,6 +10,7 @@ use crate::action::parse_actions;
 use crate::content::{ContentFiles, DialogueId, ServiceKind, Stance};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
+use crate::test_support::{run as act, texts};
 use std::sync::LazyLock;
 
 const SCENARIO: &str = include_str!("../../../../assets/campaigns/ascmearc/scenarios/ceaptun.toml");
@@ -38,16 +39,6 @@ fn town() -> World {
     World::new(CONTENT.clone(), "ceaptun", None).expect("a run in Cēaptūn")
 }
 
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
-}
-
 fn put_player(world: &mut World, at: Pos) {
     let id = world.state.player;
     world.state.actors.get_mut(&id).expect("player").pos = at;
@@ -71,11 +62,11 @@ fn the_town_is_entered_from_its_overworld_cell_and_left_by_its_edge() {
     let mut w = World::new(CONTENT.clone(), "ascmearc", None).expect("the Ascmearc");
     act(&mut w, "move:E*6");
     assert_eq!(w.player_pos(), TOWN_CELL);
-    assert_eq!(said(&w).last().unwrap(), "The way into Cēaptūn is here.");
+    assert_eq!(texts(&w).last().unwrap(), "The way into Cēaptūn is here.");
     act(&mut w, "descend");
     assert_eq!(w.state.current_level, "ceaptun");
     assert_eq!(w.player_pos(), START, "on the square");
-    let words = said(&w);
+    let words = texts(&w);
     assert!(words.contains(&"Market day in Cēaptūn: the square is loud.".to_string()));
     assert!(words.contains(&"You enter Cēaptūn.".to_string()));
     // No stairs anywhere: the town is left by its edge, like any outdoor area.
@@ -88,7 +79,7 @@ fn the_town_is_entered_from_its_overworld_cell_and_left_by_its_edge() {
     act(&mut w, "move:W");
     assert_eq!(w.state.current_level, "ascmearc");
     assert_eq!(w.player_pos(), TOWN_CELL);
-    assert_eq!(said(&w).last().unwrap(), "You return to The Ascmearc.");
+    assert_eq!(texts(&w).last().unwrap(), "You return to The Ascmearc.");
 }
 
 #[test]
@@ -323,7 +314,7 @@ fn ceolred_the_apprentice_stands_in_the_smithy_at_peace_and_keeps_no_shop() {
     assert!(inside(CEOLRED), "inside the smithy");
     put_player(&mut w, CEOLRED.step(Dir::S));
     act(&mut w, "chat:N");
-    let line = said(&w).last().unwrap().clone();
+    let line = texts(&w).last().unwrap().clone();
     assert!(line.starts_with("Ceolred says: \""), "{line}");
     // Every line is words, never a number.
     let d = CONTENT.dialogue_of_npc("ceolred").expect("a dialogue");
@@ -349,7 +340,7 @@ fn the_people_are_known_by_their_names() {
         assert_eq!(w.state.actors[&id].npc.as_deref(), Some(npc));
         put_player(&mut w, at.step(Dir::W));
         act(&mut w, "chat:E");
-        let line = said(&w).last().unwrap().clone();
+        let line = texts(&w).last().unwrap().clone();
         assert!(line.starts_with(&format!("{name} says: \"")), "{line}");
         let seen = (w.perception().actors().iter())
             .find(|a| a.id == id)
@@ -381,7 +372,7 @@ fn the_mynster_is_a_sanctuary_where_sister_hild_cures_and_mends() {
     put_player(&mut w, HILD.step(Dir::W));
     act(&mut w, "ask:E:cure");
     assert_eq!(
-        said(&w).last().unwrap(),
+        texts(&w).last().unwrap(),
         "Sister Hild says: \"Nothing ails you, child.\""
     );
     assert_eq!(gold(&w), 60);
@@ -390,7 +381,7 @@ fn the_mynster_is_a_sanctuary_where_sister_hild_cures_and_mends() {
     act(&mut w, "ask:E:cure");
     assert_eq!(gold(&w), 0);
     assert!(w.state().player().diseases.iter().next().is_none(), "cured");
-    assert!(said(&w).contains(&"You pay Sister Hild 60 gold.".to_string()));
+    assert!(texts(&w).contains(&"You pay Sister Hild 60 gold.".to_string()));
 }
 
 #[test]
@@ -404,7 +395,7 @@ fn factor_wulfrun_identifies_what_the_player_carries_for_gold() {
     put_player(&mut w, WULFRUN.step(Dir::W));
     act(&mut w, "ask:E:identify");
     assert!(
-        said(&w)
+        texts(&w)
             .last()
             .unwrap()
             .starts_with("Factor Wulfrun says: \"You know everything")
@@ -416,7 +407,7 @@ fn factor_wulfrun_identifies_what_the_player_carries_for_gold() {
         .inventory
         .push(crate::object::Stack::one(scroll));
     act(&mut w, "ask:E:identify");
-    assert_eq!(said(&w).last().unwrap(), "You cannot pay.");
+    assert_eq!(texts(&w).last().unwrap(), "You cannot pay.");
     assert_eq!(w.unidentified().len(), 1);
     // Nobody else in the campaigns offers it but Gimmwīc's gem dealer (#1434).
     let appraisers: Vec<String> = (0..CONTENT.dialogues().len())
@@ -472,7 +463,7 @@ fn eadric_the_smith_teaches_metalcraft_for_two_thousand_gold() {
     );
     act(&mut w, "chat:E");
     assert!(
-        said(&w)
+        texts(&w)
             .last()
             .unwrap()
             .starts_with("Eadric says: \"Mind the sparks")
@@ -480,15 +471,15 @@ fn eadric_the_smith_teaches_metalcraft_for_two_thousand_gold() {
     let time = w.time();
     act(&mut w, "ask:E:train_metalcraft");
     assert_eq!((gold(&w), metalcraft(&w)), (100, Some(5)));
-    assert!(said(&w).contains(&"You pay Eadric 2000 gold.".to_string()));
-    assert!(said(&w).contains(&"Eadric trains you in metalcraft.".to_string()));
+    assert!(texts(&w).contains(&"You pay Eadric 2000 gold.".to_string()));
+    assert!(texts(&w).contains(&"Eadric trains you in metalcraft.".to_string()));
     assert!(w.time() > time, "a chat's time");
     // Gone once trained; asked for anyway, his `nothing`, for no time or gold.
     assert!((w.topics(eadric).iter()).all(|t| t.id != "train_metalcraft"));
     let time = w.time();
     act(&mut w, "ask:E:train_metalcraft");
     assert!(
-        said(&w)
+        texts(&w)
             .last()
             .unwrap()
             .starts_with("Eadric says: \"You know yer way")
@@ -502,7 +493,7 @@ fn the_smith_s_teaching_is_refused_short_of_gold_and_cheaper_with_goodwill() {
     let eadric = who(&w, EADRIC);
     let time = w.time();
     act(&mut w, "ask:E:train_metalcraft");
-    assert_eq!(said(&w).last().unwrap(), "You cannot pay.");
+    assert_eq!(texts(&w).last().unwrap(), "You cannot pay.");
     assert_eq!((gold(&w), w.time(), metalcraft(&w)), (1999, time, None));
     // A quest done for the town takes 5% off, as off the town's other services.
     let json = r#"{"records": {"barrow_rats": {"stage": "done", "completed": 1}}}"#;
@@ -524,9 +515,9 @@ fn godgifu_tells_of_the_march_but_reveals_nothing() {
     put_player(&mut w, GODGIFU.step(Dir::W));
     act(&mut w, "chat:E");
     for topic in &topics {
-        let before = said(&w).len();
+        let before = texts(&w).len();
         act(&mut w, &format!("ask:E:{topic}"));
-        assert!(said(&w)[before].starts_with("Godgifu says: \""));
+        assert!(texts(&w)[before].starts_with("Godgifu says: \""));
     }
     assert!(w.state.revealed.is_empty(), "rumours are never a reveal");
 }

@@ -34,7 +34,8 @@ natural = { defence = 3, protection = 5, name = "scales" }
 resist = { fire = -25 }
 immune = ["cold"]
 everlasting = true
-on_eat = { message = "The wyrm's flesh is cold as the deep, and leaves you harder.", vomit = 20, train = { strength = 150, toughness = 150 } }
+# A profane corpse (docs/design/profane-gifts.md §4): its signature, sure, and one draw.
+on_eat = { message = "Pale, dense meat that numbs the jaw.", gives = "rime_blooded", profane = { rolls = 1, tiers = { lesser = 60, greater = 40 } } }
 blood = "#8ab0d0"
 # Its breath: about a third of a level-31 fighter's hit points to everyone in a cone ten cells
 # long; then six actions of claws and bite before the next.

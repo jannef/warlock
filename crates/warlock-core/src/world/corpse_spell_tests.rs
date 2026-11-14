@@ -5,10 +5,11 @@ use super::caster_tests::{kobold_at, sp};
 use super::spell_type_tests::{HALL_CONTENT, cell, files, start};
 use super::*;
 use crate::ability::{Ability, Aim};
-use crate::action::{Action, ReadTarget, parse_actions};
+use crate::action::{Action, ReadTarget};
 use crate::content::Stance;
 use crate::dump::{self, Layer};
 use crate::object::Stack;
+use crate::test_support::run;
 use crate::time::Duration;
 
 /// The spell types' lit hall, the player at (2, 3) knowing the three spells, with mana.
@@ -38,12 +39,6 @@ fn lay(w: &mut World, creature: &str, at: Pos) {
 
 fn cast(w: &mut World, spell: &str, at: Pos) {
     w.apply(&Action::Cast(spell.into(), Some(at)));
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }
 
 fn last_said(w: &World) -> String {

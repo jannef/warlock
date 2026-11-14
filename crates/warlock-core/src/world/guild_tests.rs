@@ -9,6 +9,7 @@ use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
+use crate::test_support::{run as act, texts};
 use std::sync::LazyLock;
 
 /// Wat One-Eye's post, by the Gildhalle's far wall.
@@ -25,16 +26,6 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
 
 fn town() -> World {
     World::new(CONTENT.clone(), "ceaptun", None).expect("a run in Cēaptūn")
-}
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
 }
 
 /// Puts the player north of Wat, so they talk to the south.
@@ -68,7 +59,7 @@ fn rank(world: &World) -> Option<String> {
 }
 
 fn promotions(world: &World) -> Vec<String> {
-    (said(world).into_iter())
+    (texts(world).into_iter())
         .filter(|l| l.contains("names you"))
         .collect()
 }
@@ -84,9 +75,9 @@ fn wat_keeps_the_gildhalle_and_reaches_his_post_from_the_square() {
     let wat = w.state.actor_at("ceaptun", WAT).expect("Wat").id;
     assert_eq!(w.state.actors[&wat].npc.as_deref(), Some("wat"));
     act(&mut w, TO_WAT);
-    assert_eq!(w.state.player().pos, WAT.step(Dir::N), "{:?}", said(&w));
+    assert_eq!(w.state.player().pos, WAT.step(Dir::N), "{:?}", texts(&w));
     act(&mut w, "chat:S");
-    let line = said(&w).last().cloned().expect("said");
+    let line = texts(&w).last().cloned().expect("said");
     assert!(
         line.starts_with("Wat One-Eye says: \"'Nother one"),
         "{line}"
@@ -182,9 +173,9 @@ fn the_score_and_five_done_makes_the_player_a_pewter() {
     }
     act(&mut w, "ask:S:quest-guild_score");
     assert!(
-        said(&w).contains(&"Quest complete: A score and five.".to_string()),
+        texts(&w).contains(&"Quest complete: A score and five.".to_string()),
         "{:?}",
-        said(&w)
+        texts(&w)
     );
     assert_eq!(rank(&w).as_deref(), Some("Pewter"));
     assert_eq!(
@@ -220,9 +211,9 @@ fn the_scroll_handed_in_leaves_the_pack_and_an_unpaid_one_stays_billed() {
     beside_wat(&mut w);
     act(&mut w, "ask:S:quest-guild_scroll");
     assert!(
-        said(&w).contains(&"Quest complete: A scroll for the Gilde.".to_string()),
+        texts(&w).contains(&"Quest complete: A scroll for the Gilde.".to_string()),
         "{:?}",
-        said(&w)
+        texts(&w)
     );
     assert_eq!(carried(&w, "scroll_of_identify"), 2, "one handed in");
     assert_eq!(billed(&w), 3, "still owed for");
@@ -316,14 +307,14 @@ fn reaching_grundleas_eleven_makes_the_player_a_steel() {
     // Floor 10 does not count, floor 11 does; the endless branch keeps no floor, the reach stays.
     w.reach("grundleas:10");
     act(&mut w, "ask:S:quest-guild_deep");
-    assert!(!said(&w).contains(&"Quest complete: Eleven floors down.".to_string()));
+    assert!(!texts(&w).contains(&"Quest complete: Eleven floors down.".to_string()));
     w.reach("grundleas:11");
     w.state.levels.remove("grundleas:11");
     act(&mut w, "ask:S:quest-guild_deep");
     assert!(
-        said(&w).contains(&"Quest complete: Eleven floors down.".to_string()),
+        texts(&w).contains(&"Quest complete: Eleven floors down.".to_string()),
         "{:?}",
-        said(&w)
+        texts(&w)
     );
     assert_eq!(rank(&w).as_deref(), Some("Steel"));
     assert_eq!(

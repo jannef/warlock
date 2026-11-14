@@ -10,6 +10,7 @@ use crate::content::{Factor, LevelKind, SpellId, StatusId};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::{last, run, said};
 use std::sync::LazyLock;
 
 static BUILTIN: LazyLock<Arc<Content>> = LazyLock::new(|| Arc::new(quiet()));
@@ -58,20 +59,6 @@ pub(super) fn world_with(content: Arc<Content>, class: &str) -> World {
     w.player_mut().mana_base = 60;
     w.player_mut().mana = 40;
     w
-}
-
-pub(super) fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-pub(super) fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
-}
-
-pub(super) fn last(world: &World) -> String {
-    said(world).last().cloned().unwrap_or_default()
 }
 
 /// Grants the XP that takes the player to `level` and spends every choice it brings, mana

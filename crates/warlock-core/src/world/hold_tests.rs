@@ -8,6 +8,7 @@ use crate::content::{Affliction, ContentFiles, StatusId};
 use crate::geom::{Dir, Pos};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stats};
+use crate::test_support::said as messages;
 
 /// A creature whose bite always holds, with a grip of 40 (a natural 24 alone breaks it), and one
 /// whose bite holds with the status's own grip.
@@ -107,10 +108,6 @@ fn grab(w: &mut World, by: Option<ActorId>) -> Vec<Event> {
     let mut events = Vec::new();
     w.afflict(player, status, 1, by, &mut events);
     events
-}
-
-fn messages(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.display()).collect()
 }
 
 fn ends(events: &[Event], status: StatusId) -> bool {

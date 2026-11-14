@@ -10,6 +10,7 @@ use crate::action::parse_actions;
 use crate::content::{ContentFiles, RevealWhen};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
+use crate::test_support::{builtin, last_text as last, run as act, texts};
 
 const OVERWORLD: &str = include_str!("../../../../assets/campaigns/showcase/levels/overworld.toml");
 const QUESTS: &str =
@@ -83,26 +84,12 @@ fn put_player(world: &mut World, at: Pos) {
     world.perceive(&mut Vec::new());
 }
 
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.text.clone()).collect()
-}
-
-fn last(world: &World) -> String {
-    said(world).pop().unwrap_or_default()
-}
-
 fn glyph(world: &World, layer: Layer, at: Pos) -> char {
     let rows = dump::layer_rows(world, layer);
     rows[at.y as usize]
         .chars()
         .nth(at.x as usize)
         .unwrap_or(' ')
-}
-
-fn act(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
 }
 
 #[test]
@@ -145,9 +132,9 @@ fn a_hidden_location_never_reaches_perception_or_the_dumps() {
     w.apply(&Action::Move(Dir::S));
     assert_eq!(w.player_pos(), BARROW);
     assert!(
-        !said(&w).iter().any(|m| m.contains("way into")),
+        !texts(&w).iter().any(|m| m.contains("way into")),
         "{:?}",
-        said(&w)
+        texts(&w)
     );
     w.apply(&Action::Descend);
     assert_eq!(last(&w), "You explore the swamp.");
@@ -197,13 +184,13 @@ fn the_dev_reveal_marks_it_and_it_leads_on() {
     // Walking there, it is the way in, and `>` enters the Depths.
     put_player(&mut w, BARROW.step(Dir::N));
     w.apply(&Action::Move(Dir::S));
-    assert!(said(&w).contains(&"The way into The Old Barrow is here.".to_string()));
+    assert!(texts(&w).contains(&"The way into The Old Barrow is here.".to_string()));
     w.apply(&Action::Descend);
     assert_eq!(w.state.current_level, "depths:1");
     assert!(
-        said(&w).contains(&"You enter The Old Barrow.".to_string()),
+        texts(&w).contains(&"You enter The Old Barrow.".to_string()),
         "{:?}",
-        said(&w)
+        texts(&w)
     );
 }
 
@@ -281,7 +268,7 @@ fn a_quest_reveals_its_location_at_its_stage() {
         ask(&mut w, toward, "quest-depths");
         assert!(revealed(&w), "{when:?} done");
         // Marked once, after the hermit's words.
-        let all = said(&w);
+        let all = texts(&w);
         let marked: Vec<usize> = (all.iter().enumerate())
             .filter(|(_, m)| *m == MARKS)
             .map(|(i, _)| i)
@@ -304,7 +291,7 @@ fn the_quest_log_says_where() {
         format!("The old hermit wants you to reach the Depths 3. {WHERE}")
     );
     // The offer and its `accept` line, then the mark.
-    let said = said(&w);
+    let said = texts(&w);
     let n = said.len();
     assert!(
         said[n - 2].ends_with(
@@ -351,12 +338,7 @@ fn a_run_without_reveals_keeps_its_state_as_before() {
     let json = serde_json::to_string(w.state()).expect("json");
     assert!(!json.contains("\"revealed\""));
     // The built-in Wildlands hide nothing.
-    let builtin = World::new(
-        Arc::new(Content::builtin().expect("content")),
-        "world",
-        None,
-    )
-    .expect("run");
+    let builtin = World::new(builtin(), "world", None).expect("run");
     let json = serde_json::to_string(builtin.state()).expect("json");
     assert!(!json.contains("\"hidden\""));
 }

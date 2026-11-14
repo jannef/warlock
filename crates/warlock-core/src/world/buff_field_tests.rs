@@ -10,6 +10,7 @@ use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, StatusId};
 use crate::dice::Dice;
 use crate::stats::{PerStat, Stats};
+use crate::test_support::{builtin, said_text as said};
 use std::sync::LazyLock;
 
 const POND: &str = r#"
@@ -59,10 +60,6 @@ fn on(w: &mut World, id: ActorId, name: &str) {
 
 fn look(w: &mut World) {
     *w.perception = crate::perception::Perception::compute(&w.state, &w.content, &mut w.lights);
-}
-
-fn said(w: &World, text: &str) -> bool {
-    w.messages().iter().any(|m| m.text == text)
 }
 
 /// A kobold beside the player (east), of `hp` hit points, and the player cloaked in fire.
@@ -405,7 +402,7 @@ fn the_spells_cast_on_oneself_and_the_presence_lengthens_them() {
 
 #[test]
 fn the_class_rows_and_the_scrolls_are_the_designs() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let row = |class: &str, talent: &str| {
         let class = (content.classes().iter())
             .find(|c| c.id == class)

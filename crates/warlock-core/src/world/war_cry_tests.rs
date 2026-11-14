@@ -3,13 +3,14 @@
 //! their nerve against Strength and Intimidate, and the failed flee; never refused but for want
 //! of rage; each cry a mark of Intimidate.
 
-use super::class_active_tests::{last, reach, run, suffers, world};
+use super::class_active_tests::{reach, suffers, world};
 use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::content::ClassActive;
 use crate::noise::SoundKind;
 use crate::skills::{Effect, Trained, Use};
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::{last, run};
 
 /// A creature of type `creature` placed at `at`, every score `score`, awake and hostile; its id.
 pub(super) fn foe_at(w: &mut World, creature: &str, at: Pos, score: u8) -> ActorId {

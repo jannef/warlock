@@ -4,8 +4,9 @@
 
 use super::fight::Harm;
 use super::*;
-use crate::action::{Event, parse_actions};
+use crate::action::Event;
 use crate::content::ContentFiles;
+use crate::test_support::{run, texts};
 
 /// The player stands on stairs down and up (below): `k` beside them, `f` two cells off.
 const TOP: &str = "\
@@ -88,12 +89,6 @@ fn world() -> World {
     world_of(&Fixture::default())
 }
 
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
-    (parse_actions(actions).expect("actions").iter())
-        .map(|a| w.apply(a))
-        .collect()
-}
-
 /// The creature that started at `at`.
 fn at(w: &World, x: i32, y: i32) -> ActorId {
     (w.state.actors.values())
@@ -110,13 +105,9 @@ fn far(w: &World) -> ActorId {
     at(w, 6, 2)
 }
 
-fn said(w: &World) -> Vec<String> {
-    w.messages().iter().map(|m| m.text.clone()).collect()
-}
-
 /// The player was told `line`.
 fn told(w: &World, line: &str) {
-    let lines = said(w);
+    let lines = texts(w);
     assert!(lines.iter().any(|m| m == line), "{lines:?}");
 }
 

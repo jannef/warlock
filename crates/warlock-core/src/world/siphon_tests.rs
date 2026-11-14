@@ -14,6 +14,7 @@ use crate::content::ContentFiles;
 use crate::damage::Damage;
 use crate::magic::{Affix, Magic, Rarity};
 use crate::stats::{PerStat, Stats};
+use crate::test_support::run;
 
 const AFFIXES: &str = r#"
 [[suffix]]
@@ -322,10 +323,4 @@ fn one_without_the_pool_or_the_gear_gets_nothing() {
     let before = w.state_hash();
     w.siphon(player, (target, w.state.actors[&target].pos));
     assert_eq!(w.state_hash(), before);
-}
-
-fn run(w: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        w.apply(&action);
-    }
 }

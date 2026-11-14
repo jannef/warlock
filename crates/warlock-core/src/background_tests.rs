@@ -4,10 +4,8 @@
 use super::*;
 use crate::character::{CharacterSpec, Start};
 use crate::content::{ContentFiles, StoryTier, When};
+use crate::test_support::CONTENT;
 use std::collections::BTreeMap;
-use std::sync::LazyLock;
-
-static CONTENT: LazyLock<Content> = LazyLock::new(|| Content::builtin().expect("built-in content"));
 
 fn start(content: &Content, character: &str, seed: u64) -> Start {
     let spec: CharacterSpec = character.parse().expect("a character");
@@ -453,8 +451,7 @@ fn the_same_seed_tells_the_same_story_and_another_seed_another() {
 /// The story a kitted run of `character` named `name` on Beorggeat is told with `seed`, as the
 /// player reads it (paragraphs), and its lines (`chapter/line`).
 fn sample(character: &str, name: &str, seed: u64) -> (Vec<String>, Vec<String>) {
-    static SHARED: LazyLock<std::sync::Arc<Content>> =
-        LazyLock::new(|| std::sync::Arc::new(Content::builtin().expect("built-in content")));
+    use crate::test_support::CONTENT as SHARED;
     let spec: CharacterSpec = character.parse().expect("a character");
     let world = crate::world::World::start_run(
         SHARED.clone(),

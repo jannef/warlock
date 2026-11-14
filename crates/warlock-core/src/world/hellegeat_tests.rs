@@ -4,11 +4,7 @@
 
 use super::*;
 use crate::action::{Action, parse_actions};
-use crate::content::Content;
-use std::sync::{Arc, LazyLock};
-
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+use crate::test_support::CONTENT;
 
 fn start(seed: u64) -> World {
     World::new(CONTENT.clone(), "grundleas", Some(seed)).expect("world")

@@ -32,7 +32,8 @@ base_hp = 260
 natural = { defence = 4, protection = 5, name = "ancient hide" }
 resist = { cold = 50, fire = 25, poison = 25 }
 everlasting = true
-on_eat = { message = "Rank as the bottom of a mere.", vomit = 70, harm = "2d6" }
+# A profane corpse (docs/design/profane-gifts.md §4): its signature, sure, and two draws.
+on_eat = { message = "Rank as the bottom of a mere.", gives = "mere_wifes_hide", profane = { rolls = 2, tiers = { lesser = 30, greater = 55, dire = 15 } } }
 blood = "#2a4a3a"
 # Two claws that seize and a bite, each struck in turn in one attack.
 [[creature.attack]]

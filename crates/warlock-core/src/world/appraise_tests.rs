@@ -3,30 +3,16 @@
 //! has the shops' prices it once had.
 
 use super::*;
-use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::rng::Rng;
 use crate::skills::Effect;
+use crate::test_support::{CONTENT as BUILTIN, run, said};
 use crate::time::HOUR;
-use std::sync::LazyLock;
-
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 /// A human of `class` in the showcase.
 fn world(class: &str) -> World {
     let spec: CharacterSpec = format!("human,male,{class}").parse().expect("a character");
     World::with_character(BUILTIN.clone(), "showcase", Some(7), Some(&spec)).expect("world")
-}
-
-fn run(world: &mut World, actions: &str) {
-    for action in parse_actions(actions).expect("actions") {
-        world.apply(&action);
-    }
-}
-
-fn said(world: &World) -> Vec<String> {
-    world.messages().iter().map(|m| m.display()).collect()
 }
 
 /// An unidentified magic long sword, nothing of its own parts.
