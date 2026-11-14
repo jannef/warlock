@@ -171,7 +171,8 @@ impl World {
 
     /// Works turn after turn until the cut is done or something stops it (module docs): its last
     /// turn cut short to end exactly when its time is up.
-    pub(super) fn cut(&mut self, work: GemWork, events: &mut Vec<Event>) {
+    pub(super) fn cut(&mut self, mut work: GemWork, events: &mut Vec<Event>) {
+        let on = self.work_on(&[Some(work.item)]);
         let until = self.state.time + Duration::seconds(u64::from(work.seconds));
         let turn = self.price_of(self.state.player, ActionKind::Craft);
         let ended = self.keep_at(
@@ -181,7 +182,13 @@ impl World {
         );
         match ended {
             Ended::Died => {}
-            _ if self.state.time >= until => self.gem_cut(work),
+            _ if self.state.time >= until => match self.worked_on_one(&on) {
+                Some(item) => {
+                    work.item = item;
+                    self.gem_cut(work);
+                }
+                None => self.say("You have nothing left to work on."),
+            },
             Ended::Came(came) => {
                 let text = format!("{}; you put down your work.", self.came_line(came));
                 self.say(text);

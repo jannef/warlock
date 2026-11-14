@@ -19,6 +19,7 @@
 
 use crate::content::{Content, DiseaseId, StatusId};
 use crate::geom::Dir;
+use crate::text::capitalized;
 use crate::world::Actor;
 
 /// Something the Heal skill treats.
@@ -65,13 +66,6 @@ pub fn noun(content: &Content, actor: &Actor, d: DiseaseId) -> String {
     } else {
         "sickness".to_string()
     }
-}
-
-fn capitalized(s: &str) -> String {
-    let mut chars = s.chars();
-    chars.next().map_or_else(String::new, |c| {
-        c.to_uppercase().chain(chars).collect::<String>()
-    })
 }
 
 /// Whether `actor` may treat `ailment` now: they suffer it (see the module's rules).

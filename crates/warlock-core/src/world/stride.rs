@@ -132,10 +132,11 @@ impl World {
         let (level, content) = (self.state.current(), &self.content);
         let me = &self.state.actors[&id];
         let radius = self.sight_of(id);
-        let others: Vec<Pos> = (self.state.actors.values())
+        let mut others: Vec<Pos> = (self.state.actors.values())
             .filter(|a| a.id != id && a.level == level.id)
             .map(|a| a.pos)
             .collect();
+        others.sort_unstable();
         let shuns = self.shuns(id);
         let plain = |to: Pos| {
             (level.terrain.get(to)).is_some_and(|t| content.terrain(*t).walkable)
@@ -145,7 +146,7 @@ impl World {
                 && level.zone_at(to, self.state.time).is_none()
                 // An unstable room's step may warp it (`warp.rs`): taken turn by turn.
                 && level.effects_at(content, to).warp() == 0
-                && !others.contains(&to)
+                && others.binary_search(&to).is_err()
                 && !shuns(to)
                 // Where the player saw creatures as they last looked, it goes turn by turn.
                 && !self.perception.sees_actors_at(to)

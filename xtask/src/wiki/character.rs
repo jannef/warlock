@@ -72,6 +72,7 @@ pub(super) fn stat_uses(content: &Content) -> String {
             s.presence
         )
     });
+    #[allow(clippy::type_complexity)]
     let rows: [(Stat, Vec<Option<String>>, Vec<Option<String>>); 6] = [
         (
             Stat::Strength,
@@ -155,7 +156,7 @@ pub(super) fn stat_uses(content: &Content) -> String {
 pub(super) fn potentials(content: &Content) -> String {
     let (names, align) = stat_columns();
     let races = content.races();
-    let mut out = format!("| Race |{names}\n|---|{align}\n");
+    let mut out = format!("{}| Race |{names}\n|---|{align}\n", super::text::stat_key());
     let (lo, hi) = (i32::from(*SCORES.start()), i32::from(*SCORES.end()));
     let base = i32::from(races.base_potential);
     for r in &races.list {
@@ -216,10 +217,20 @@ fn stat_cells(by: &PerStat<Dice>) -> String {
 /// The races in the order New run offers them: their stat adjustments, vision, and starting
 /// age, then what they are (their potentials are [`potentials`]).
 pub(super) fn races(content: &Content) -> String {
+    // Two tables, the stats and the rest, so neither is too wide to read (#1586).
     let (names, align) = stat_columns();
-    let mut out = format!(
-        "| Race |{names} Vision | Starting age | Hit points | Weapon skills |\n\
-         |---|{align}---|---|:---:|---|\n"
+    let mut out = format!("{}| Race |{names}\n|---|{align}\n", super::text::stat_key());
+    for r in &content.races().list {
+        let _ = writeln!(
+            out,
+            "| {} |{}",
+            anchored(Term::Race, &r.id, &r.name),
+            stat_cells(&r.stats),
+        );
+    }
+    out.push_str(
+        "\n| Race | Vision | Starting age | Hit points | Weapon skills |\n\
+         |---|---|---|:---:|---|\n",
     );
     for r in &content.races().list {
         let vision = content
@@ -227,9 +238,8 @@ pub(super) fn races(content: &Content) -> String {
             .map_or(r.vision.as_str(), |v| &v.name);
         let _ = writeln!(
             out,
-            "| {} |{} {vision} | {}–{} | {} | {} |",
-            anchored(Term::Race, &r.id, &r.name),
-            stat_cells(&r.stats),
+            "| {} | {vision} | {}–{} | {} | {} |",
+            r.name,
             r.age.start(),
             r.age.end(),
             r.hp,
@@ -299,17 +309,23 @@ pub(super) fn race_traits(content: &Content) -> String {
 
 /// The classes in the order New run offers them: their stat adjustments, then what they are.
 pub(super) fn classes(content: &Content) -> String {
+    // Two tables, the stats and the rest, so neither is too wide to read (#1586).
     let (names, align) = stat_columns();
     let mut out = format!(
-        "| Class |{names} Hit points | Weapon skills | Fighting styles |\n\
-         |---|{align}:---:|---|---|\n"
+        "{}| Class |{names}\n|---|{align}\n",
+        super::text::stat_key()
+    );
+    for c in content.classes() {
+        let _ = writeln!(out, "| {} |{}", c.name, stat_cells(&c.stats));
+    }
+    out.push_str(
+        "\n| Class | Hit points | Weapon skills | Fighting styles |\n|---|:---:|---|---|\n",
     );
     for c in content.classes() {
         let _ = writeln!(
             out,
-            "| {} |{} {} | {} | {} |",
+            "| {} | {} | {} | {} |",
             c.name,
-            stat_cells(&c.stats),
             c.hp,
             weapon_skills::class_ranks(content, c),
             weapon_skills::class_styles(content, c)
@@ -423,8 +439,10 @@ pub(super) fn horoscope(content: &Content) -> String {
         return "There is no horoscope.\n".into();
     };
     let (names, align) = stat_columns();
-    let mut out =
-        format!("## Animals\n\n| | Animal |{names} Those born under it |\n|---:|---|{align}---|\n");
+    let mut out = format!(
+        "## Animals\n\n{}| | Animal |{names} Those born under it |\n|---:|---|{align}---|\n",
+        super::text::stat_key()
+    );
     for (i, a) in h.animals.iter().enumerate() {
         let _ = writeln!(
             out,
@@ -490,7 +508,10 @@ mod tests {
         );
         let levels = super::super::talents::prestige_levels(&content);
         assert!(levels.contains("### Hunter"), "{levels}");
-        assert!(levels.contains("| 1 | Spirit weapon |"), "{levels}");
+        assert!(
+            levels.contains("| 1 | <a id=\"talent-spirit-weapon\"></a>Spirit weapon |"),
+            "{levels}"
+        );
         let callings = super::super::dialogue::callings(&content);
         assert!(callings.contains("grants it when spoken to"), "{callings}");
         assert!(

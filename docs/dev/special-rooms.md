@@ -349,11 +349,11 @@ Outcome tables (`content/outcome.rs`, `Content::outcomes`, one file each, the id
 moves the lean; `Content::offer_at(terrain)` is what a feature cell offers (the first effect
 whose `feature` it is), so a spent altar, another terrain, offers nothing.
 
-Walking into a feature (#975): `input::offer_dialog`, beside the trap's question, asks for a step
+Walking into a feature (#975): `ui::step_dialogs::offer_dialog`, beside the trap's question, asks for a step
 into a cell the perception shows (visible or remembered) whose terrain has an `offer_at`, with no
 actor seen on it. `Offer::asks` and the terrain's name make the question, `Ability::offered` the
 ability, and yes is `ScreenAction::UseAbility`, the menu's own path. An anvil (`Offer::Temper`,
-no ability) asks nothing: `input::step_screen` opens Metalcraft's screen (#1387, below). A
+no ability) asks nothing: `ui::step_dialogs::step_screen` opens Metalcraft's screen (#1387, below). A
 new feature with an existing offer asks with no code; a new `Offer` states its words in `asks`.
 The rules are unchanged: a `move` into one says it blocks the way, with no time. Doors and chests
 act on a step, and the rest that block (`shrine_stone`, `shelves`, `statue`, `fountain`) offer
@@ -460,7 +460,7 @@ Temper is a recipe of Metalcraft's (#1334, `docs/dev/crafting.md`:
 of the Here group (`Ability::offered(Offer::Temper)` is `None`): its row on Metalcraft's screen,
 greyed "no anvil beside you" away from one, opens `ScreenName::Temper` (`ObjectList::Temper`, the
 stacks `world::workable` accepts), and choosing one applies `Action::Temper { item }`. A walk
-into the anvil (`input.rs::step_screen`, reading `Content::offer`) asks nothing and opens
+into the anvil (`ui/step_dialogs.rs::step_screen`, reading `Content::offer`) asks nothing and opens
 Metalcraft's screen for the trained; untrained, the step goes to the rules, which refuse it with
 "You need Metalcraft to work at the anvil." (`World::anvil_needs`, no time).
 

@@ -60,13 +60,14 @@ use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Category, Profile, Strike, Target};
 use crate::content::{
     ActionKind, Build, Content, CreatureId, DamageTypeId, Grip, ObjectDef, ObjectId, Role, Stance,
-    StatusId, TrapId, WeaponSkillId, article,
+    StatusId, TrapId, WeaponSkillId,
 };
 use crate::damage::{self, Damage, Protection, Resistances};
 use crate::geom::Dir;
 use crate::noise::Act;
 use crate::object;
 use crate::skills::Use;
+use crate::text::{article, capitalized};
 use crate::time::GameTime;
 use serde::{Deserialize, Serialize};
 
@@ -511,13 +512,6 @@ pub(super) fn driven_message(who: End<'_>) -> String {
         End::Named(name) => format!("{name} is driven back."),
         End::Unseen | End::Trap(_) => "Something is driven back.".into(),
     }
-}
-
-fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    chars
-        .next()
-        .map_or_else(String::new, |c| c.to_uppercase().chain(chars).collect())
 }
 
 impl World {
@@ -1506,6 +1500,7 @@ impl World {
     /// off hand's weapon, or not (a blow, a kick), drawing on (and training) `skills`, said in
     /// the `words` of the kind of damage it did, with its noise if `noisy` (the first blow of
     /// an attack): see [`World::player_attacks`]. Returns the blow.
+    #[allow(clippy::type_complexity)]
     pub(super) fn player_strikes(
         &mut self,
         target: ActorId,

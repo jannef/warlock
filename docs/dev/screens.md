@@ -53,14 +53,15 @@ to open, read keys for, or draw one:
   on the inventory or equipment screen beneath (`ScreenStack::looked_item`; the first stack
   without one, as `--screen describe` opens it over the inventory).
 - **Input**: `input::route_keys` is the one reader of `KeyboardInput`. Stack not empty: the press
-  goes to the top screen as a `Press` whose `nav` comes from the `Context::Menu` bindings (Esc is
-  always `Nav::Back`; see `docs/dev/settings.md` for contexts: a screen never matches a key code or
-  a character, except list letters and digits and the typed seed; a numpad key no `Context::Menu`
-  binding claims is the arrows' fixed alias there, `menu::numpad_nav`: 8, 2, 4, 6 are Up, Down,
-  Left, Right, and NumEnter is Confirm's own binding, #1197) and whose `edit` comes from the
-  `Context::Text` bindings (Esc is always `Edit::Back`), for the text field, which reads only
+  goes to the top screen as a `Press` whose `nav` comes from the fixed menu keys
+  (`settings::fixed::menu`, #1533) and `Back`'s bindings (Esc is always `Nav::Back`; see
+  `docs/dev/settings.md`: a screen never matches a key code or a character, except list letters
+  and digits and the typed seed; a numpad key nothing else claims is the arrows' fixed alias there,
+  `menu::numpad_nav`: 8, 2, 4, 6 are Up, Down, Left, Right, and NumEnter is a fixed Enter, #1197)
+  and whose `edit` comes from the fixed text keys (`settings::fixed::text`) and `TextBack`'s
+  bindings (Esc is always `Edit::Back`), for the text field, which reads only
   `edit` and `text` (the key event's text, literal; else the character its key stands for), so
-  every key not bound there types; held keys type and erase but never accept
+  every other key types; held keys type and erase but never accept
   (`ScreenStack::handle` →
   `ScreenAction`: stay, close, open, a
   `MenuChoice`, or `Act(Action)`: close and apply a gameplay action, e.g. `pickup:ac`,
@@ -89,16 +90,15 @@ to open, read keys for, or draw one:
   text).accept(..).decline(..).cancel(..).plain(..)`, or `Dialog::yes_no(title, text, yes,
   outcome, no)` for a plain question. It sizes itself to its content and draws the options in
   a column, each with its shortcut keys. Keys: the menu keys move the selection, Enter takes it;
-  the `Context::Dialog` commands `KeyCommand::Yes`/`No` (`y`/`n` by default, rebindable, in their
-  own context) pick the Accept option and the Decline
+  the fixed `y` and `n` (`settings::fixed::dialog`, #1533) pick the Accept option and the Decline
   option (else Cancel); Esc picks Cancel (else Decline; else closes), except in a dialog that must
   be answered (`Dialog::required`), where Esc does nothing; the safe option (Cancel,
   else Decline) is selected first. A menu choice pops the dialog and is applied as usual, an
   action closes it and is applied (`play.act`, which may answer with a dialog of its own: the
   sell offer), a follow-up dialog replaces it (`ScreenStack::handle`). Users: every quit path
   (`menu::quit_dialog(saving)` for the pause and main menu Quit and a bound `KeyCommand::Quit`,
-  `save_to_menu_dialog`), the step into deep water (`input::deep_water_dialog`, spec §8 "Skills": Swim; first in the step's chain, below), the step onto a known trap (`input::trap_dialog`, spec §8 "Traps"), an overworld step while Fainting or Starving (`input::hunger_dialog`, spec §8 "Hunger"), a step into a feature that offers an action (`input::offer_dialog`, `docs/dev/special-rooms.md`), a burst
-  read so close it may catch the player (`input::burst_dialog`, spec §8 "Scrolls"), the shop (`input.rs`: `leaving_dialog`, `sale_dialog`; spec §7 "Shops"), and the overworld
+  `save_to_menu_dialog`), the step into deep water (`ui::step_dialogs::deep_water_dialog`, spec §8 "Skills": Swim; first in the step's chain, below), the step onto a known trap (`ui::step_dialogs::trap_dialog`, spec §8 "Traps"), an overworld step while Fainting or Starving (`ui::step_dialogs::hunger_dialog`, spec §8 "Hunger"), a step into a feature that offers an action (`ui::step_dialogs::offer_dialog`, `docs/dev/special-rooms.md`), a burst
+  read so close it may catch the player (`ui::step_dialogs::burst_dialog`, spec §8 "Scrolls"), the shop (`ui/step_dialogs.rs`: `leaving_dialog`, `sale_dialog`; spec §7 "Shops"), and the overworld
   encounter (`ui/encounter.rs`: `on_encounter`, after `on_death` and before `on_level_up`, opens
   `dialog(view)` from `PerceptionView::encounter()` whenever the run changed with one pending and
   none is open, so after the step and on load; a plain row per choice, `Action::Encounter`;
@@ -123,10 +123,9 @@ to open, read keys for, or draw one:
   position is its number), its panel sized with `panel_width`, and one `draw_tabs` call in its
   `draw`; never a separate way to switch.
   Sub-steps of a page (`EquipItem`, pick-up/drop/throw lists) are not pages and keep their
-  number keys. The keys are the `Context::Pages` commands `Page(1..9)`, `NextPage` (Shift
-  reverses), `PrevPage`: existing commands, kept as they are (new screen keys are fixed, never `KeyCommand`s; `KeyCommand::context`: keys are unique
-  per context, so Tab is `NextTarget` in play and `NextPage` here; `Bindings::owner_in` and
-  `lookup` read one context). `Press::shift` carries Shift from the router. The dialogue screen
+  number keys. The keys are fixed (`settings::fixed::page`, #1533): the top-row digits `1` to `9`
+  and Tab (Shift reverses), with `PrevPage` (`Context::Pages`, unbound) the one rebindable
+  back-style command. `Press::shift` carries Shift from the router. The dialogue screen
   is no page: its digits ask about topics, the top row's only (`Press::is_numpad`).
   **The numpad on screens** (#1197): it is navigation, never page switching, matched by
   physical key (`KeyCode::NumpadN`) whatever Num Lock says. winit 0.30 reports a numpad key with
@@ -182,23 +181,23 @@ to open, read keys for, or draw one:
   (`at_letter`), a class split across pages repeats its header, and the frame shows `Page 2/3`
   (`draw_label`). The list's cursor picks the page shown; Up/Down move it across pages (wrapping
   round at the ends, `ui/cursor.rs`, the step every screen's list takes), and the
-  `Context::Menu` commands `NextListPage` (`>`, PageDown) and `PrevListPage` (`<`, PageUp),
-  `Nav::NextPage`/`PrevPage`, turn the page (cursor to its first item; no wrapping). Drawing knows
+  fixed menu keys `>` (PageDown) and `<` (PageUp), `Nav::NextPage`/`PrevPage`, turn the page (cursor to its first item; no wrapping). Drawing knows
   the console, presses do not: `route_keys` keeps `ScreenStack::console` current and the stack
   calls the screen's `fit` before each press, so a letter names what is drawn even before the
   first draw (`--keys`). Screens hold stack positions (`Item::position`), never letters, and
   send actions by position.
 - Prompts in the message line (open/close/bash/chat direction, rest, look mode, aiming,
-  `--more--`) are `InputMode`s, not screens (look mode's second row starts with what Knowledge
+  `--more--`) are `InputMode`s, not screens (`Gameplay::press` hands a press to its mode's
+  handler: `input/play.rs` in plain play, `input/prompts.rs` for the prompts; look mode's second row starts with what Knowledge
   tells of the creature under the cursor, `look::known`, its hint after it: the hint clips first,
   docs/dev/skills.md); a question (the step onto a known trap,
-  `input::trap_dialog`; a journey while Fainting or Starving, `input::hunger_dialog`; a walk into what offers an action,
-  `input::offer_dialog`) is the dialog (above). A step opens one dialog, the first that applies:
+  `ui::step_dialogs::trap_dialog`; a journey while Fainting or Starving, `ui::step_dialogs::hunger_dialog`; a walk into what offers an action,
+  `ui::step_dialogs::offer_dialog`) is the dialog (above). A step opens one dialog, the first that applies:
   deep water, leaving a shop owing, a known trap, a journey while hungry, an offer. Deep water
   comes first, as it always asks and any other answer would step in unasked; its "Dive in" is a
   plain move, so the keeper still turns back one who owes, and a trap under it would still go off.
   The hungry journey (overworld, walkable) and the offer cannot apply to a step into deep water.
-  With no dialog, a walk into an anvil opens a screen instead (`input::step_screen`, #1387):
+  With no dialog, a walk into an anvil opens a screen instead (`ui::step_dialogs::step_screen`, #1387):
   Metalcraft's profession screen for one with its row, at once and with no time; untrained, the
   step goes to the rules, which say what it needs.
 - **The message line and `--more--`** (`ui/more.rs`, spec §6 "Messages", #207): `Game::read` is
@@ -214,7 +213,7 @@ to open, read keys for, or draw one:
   page, or left the player hungrier (`Game::hunger_stop`: the last page waits too, and `more::pages`
   leaves it room, docs/dev/hunger.md), from play only (a dev flag's aiming or look mode keeps its
   mode), and follows a resize.
-  In `More(page)` `Gameplay::press` reads `Context::More` first: `MoreNext` (Space, Enter)
+  In `More(page)` `Gameplay::press` (`input/prompts.rs::more`) reads `Context::More` first: `MoreNext` (Space, Enter)
   turns to `more::advance(page, more::stops(..))` (play once none is left to wait at), `MoreSkip` (unbound)
   and Esc go to play; every other command, and every held key's repeat, does nothing. Screens
   keep their keys while it waits beneath them. `more::draw` draws the page waited at with
@@ -330,7 +329,7 @@ since #1260), `p`
 (`KeyCommand::RepeatAbility`), bash (`KeyCommand::Bash`, unbound), disarm
 (`KeyCommand::Disarm`, unbound), picking a lock (`KeyCommand::PickLock`, unbound), steal
 (`KeyCommand::Steal`, unbound), and throwing one's voice
-(`KeyCommand::ThrowVoice`, unbound) are in `input.rs` and `settings/keys.rs`; their default keys are ADOM's (#350, `docs/dev/settings.md`).
+(`KeyCommand::ThrowVoice`, unbound) are in `settings/bindings.rs` and `settings/keys.rs`; their default keys are ADOM's (#350, `docs/dev/settings.md`).
 
 **Abilities** (spec §6 "Abilities"; racial, class, skill, weapon skill and style, item; the
 owner's rule, #156) get no key of their own: they go into the one abilities menu.
@@ -376,7 +375,7 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   or solid, the reach from `Ability::reach` (a caster's spell's from its data, every other's
   `Ability::range`), the action from `Ability::action_at`; a caster's strike, `Ability::Spell`,
   is aimed as a spell scroll is: its arm in `ui/target.rs` (`AimKind::Ability(Ability::Spell(_))`)
-  gives it the scroll's line of fire, and `input.rs::burst_dialog` asks "Cast it anyway?" when its burst may catch the player); an item (a
+  gives it the scroll's line of fire, and `ui/step_dialogs.rs::burst_dialog` asks "Cast it anyway?" when its burst may catch the player); an item (a
   `PagedList` of the pack) joins them with the first ability that needs one, as a variant and an
   arm in `Gameplay::use_ability`. Throwing one's voice (`Ability::ThrowVoice`, Class) is had
   by those a talent gives it. A lantern is no ability: `u` (`KeyCommand::UseTool`) turns a

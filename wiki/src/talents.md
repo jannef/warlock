@@ -12,7 +12,7 @@ A new character picks **two talents at creation**, on the Talents step after the
 human bard picks four.
 
 The list shows the talents your character so far may take. Its scores, [skills](skills.md),
-[class abilities](talents.md#class-abilities), and [birth sign](horoscope.md#what-a-sign-does) all
+[class abilities](classes.md#levels), and [birth sign](horoscope.md#what-a-sign-does) all
 count. Marking one may open another that needs it ([Healthy](talents.md#talent-healthy), then
 [Fast healer](talents.md#talent-fast-healer)). The **Random** row lets chance pick them. A
 character started without picks (from the command line) gets those same random picks. The
@@ -90,12 +90,17 @@ A prerequisite may be:
 A few ask for either of two ("Intelligence 12 or Appraise 20"). The game names what you lack: "You
 cannot take Dodge: you need [Dexterity](stats.md#stat-dexterity) 13."
 
-## Gifts of the stars
+## What nobody picks: the stars and class abilities
 
 The first tree, **Stars**, holds what your [birth sign](horoscope.md#what-a-sign-does) gives you:
-the gifts of your animal and your element, your animal's flaw, and a lucky day's gift (see
-[Horoscope](horoscope.md)). They are yours from birth without a pick, and nobody can pick them. No
-talent ever asks for a flaw.
+the gifts of your animal and your element, your animal's flaw, and a lucky day's gift. They are
+yours from birth without a pick, and nobody can pick them. No talent ever asks for a flaw. The
+whole tree is on the [Horoscope](horoscope.md#what-a-sign-does) page.
+
+The **Class abilities** are what your class teaches as its levels come. Nobody picks them either.
+Each is in its class's level table on the [Classes](classes.md#levels) page.
+
+The tables [below](#what-a-talent-does) hold every tree you can pick from.
 
 ## Heritage: only at character creation
 
@@ -143,7 +148,7 @@ extra class skill, say) does not count.
 Taking a trade does three things:
 
 - It **trains the skill** at `3d6` (3 to 18), rolled once as you take it, plus 6 from the
-  craftsperson's [Time served](talents.md#talent-time-served). If you have the skill already,
+  craftsperson's [Time served](classes.md#talent-time-served). If you have the skill already,
   the roll adds to it.
 - It gives you the **tools of the trade**, on top of your [starting kit](starting-kit.md). A
   pick-axe is readied in the Tool [slot](equipment.md#what-fits-where) if your kit left it free,
@@ -198,10 +203,11 @@ Some talents need a word more:
 
 ## Talents by system
 
-Each talent names the parts of the game it touches, from a list of broad parts: fighting,
-stealth, magic, light, hunger, and so on. A single kind of room, chest, or creature belongs to its
-part, not a part of its own. The table lists every part with the talents and
-[class abilities](talents.md#class-abilities) that touch it.
+Each talent touches some parts of the game: fighting, stealth, magic, light, hunger, and so on.
+A single kind of room, chest, or creature belongs to its part, not a part of its own. The table
+lists every part with the talents, the gifts of the stars, and the
+[class abilities](classes.md#levels) that touch it, so you can find everything that helps with,
+say, stealth.
 
 [Abilities](abilities.md) that cost a [resource](resources.md) have no waiting time on top: the
 resource coming back with time is the limit.

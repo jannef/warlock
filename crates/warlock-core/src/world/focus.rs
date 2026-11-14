@@ -10,8 +10,7 @@
 //!   (`world/volley.rs`); its shots are priced as one ordinary shot, never by Rapid shot.
 //!
 //! What a talent grants is held from the moment the talent is ([`hold`]): as it is taken or
-//! given (`class::hand_out`), and again when a run is restored (`World::grant_class`), so a
-//! character saved before the talent granted anything gets it.
+//! given (`class::hand_out`), and again when a run is restored (`World::grant_class`).
 
 use super::{Actor, ActorId, World};
 use crate::action::Event;

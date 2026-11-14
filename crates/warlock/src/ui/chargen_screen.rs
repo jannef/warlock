@@ -20,10 +20,9 @@
 
 use super::character_screen::{birth_parts, fit_joined, fit_parts};
 use super::cursor;
-use super::menu::{Hints, Nav, Panel, Press, wrap};
+use super::menu::{HINTS, Nav, Panel, Press, truncated, wrap};
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
-use crate::input::Bindings;
 use crate::render::console::Console;
 use warlock_core::character::{CharacterSpec, Gender, NAMELESS, Start, check_name, random_name};
 use warlock_core::content::{ClassDef, Content, pace_words};
@@ -371,7 +370,7 @@ impl ChoiceScreen {
         Rng::stream(self.seed, &label).index(self.choices.len())
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         // Rows: margin, the list (options and Random), a gap, the description (up to three
         // lines), the details (up to three), a gap, the footer, the frame.
         let rows = self.choices.len() as i32 + 1;
@@ -406,7 +405,7 @@ impl ChoiceScreen {
                 console.print(x + 2, y, &line, color);
             }
         }
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         let footer = format!(
             "{} choose   {} next   Esc back",
             keys.up_down(),
@@ -666,7 +665,7 @@ impl SummaryScreen {
         ScreenAction::Stay
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         // Rows: margin, start and the four steps, a gap, the birth and a gap (if any), the
         // stats with the skills beside them (or the skills below them, and a gap), a gap, the
         // kit, alignment, eyes, and scenario, a gap, the footer, the frame. Too tall for the
@@ -709,7 +708,7 @@ impl SummaryScreen {
                 };
                 // The value starts 12 cells in and is padded by two spaces on each side; a
                 // longer one is cut to stay inside the frame.
-                let value = clipped(value, inner - 14);
+                let value = truncated(value, (inner - 14).max(0) as usize);
                 panel.row(console, y, i == self.selected, label, &value, 6);
             }
             y += 1;
@@ -800,7 +799,7 @@ impl SummaryScreen {
             }
             y += 1;
         }
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         let (up_down, confirm) = (keys.up_down(), keys.confirm);
         let footer = format!("{up_down} choose   {confirm} start or change   Esc back");
         panel.footer(console, &footer);
@@ -808,15 +807,6 @@ impl SummaryScreen {
 }
 
 /// `text` cut to `width` cells, an ellipsis marking the cut: `Weapon focus (daggers and k…`.
-fn clipped(text: &str, width: i32) -> String {
-    let width = width.max(1) as usize;
-    if text.chars().count() <= width {
-        return text.to_string();
-    }
-    let head: String = text.chars().take(width - 1).collect();
-    format!("{head}…")
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -977,7 +967,7 @@ mod tests {
                 gender.selected = (gender.selected + 1) % (gender.choices.len() + 1);
                 let mut console = Console::default();
                 console.resize(80, 32);
-                gender.draw(&mut console, &Bindings::default());
+                gender.draw(&mut console);
                 let text = text(&console);
                 assert!(!text.to_lowercase().contains("seed"), "{text}");
                 for stat in Stat::ALL {
@@ -989,7 +979,7 @@ mod tests {
         race.selected = race.choices.len();
         let mut console = Console::default();
         console.resize(80, 32);
-        race.draw(&mut console, &Bindings::default());
+        race.draw(&mut console);
         assert!(text(&console).contains("Let chance pick your race."));
     }
 
@@ -999,7 +989,7 @@ mod tests {
         press(&mut race, Nav::Down);
         let mut console = Console::default();
         console.resize(80, 32);
-        race.draw(&mut console, &Bindings::default());
+        race.draw(&mut console);
         let text = text(&console);
         assert!(text.contains("Choose your race (1 of 5)"), "{text}");
         assert!(text.contains("> Dwarf"), "{text}");
@@ -1025,7 +1015,7 @@ mod tests {
             let screen = ChoiceScreen::new(step, &CONTENT, &draft);
             let mut console = Console::default();
             console.resize(80, 40);
-            screen.draw(&mut console, &Bindings::default());
+            screen.draw(&mut console);
             let text = text(&console);
             assert!(!text.contains('%'), "{text}");
             ["Levels come slowly.", "Levels come quickly."]
@@ -1048,7 +1038,7 @@ mod tests {
                 press(&mut class, Nav::Down);
                 let mut console = Console::default();
                 console.resize(cols, rows);
-                class.draw(&mut console, &Bindings::default());
+                class.draw(&mut console);
                 if rows >= 20 {
                     // The selected row is always in view.
                     let name = class.chosen().map_or("Random".to_string(), |id| {
@@ -1105,7 +1095,7 @@ mod tests {
         let mut d = d.clone();
         d.chosen.set(Step::Race, "halfling");
         d.chosen.set(Step::Class, "merchant");
-        SummaryScreen::new(&CONTENT, &d).draw(&mut console, &Bindings::default());
+        SummaryScreen::new(&CONTENT, &d).draw(&mut console);
         let short = super::tests::text(&console);
         for expected in [
             "Scenario  World, seed 1",
@@ -1119,7 +1109,7 @@ mod tests {
     fn drawn(screen: &SummaryScreen) -> String {
         let mut console = Console::default();
         console.resize(80, 30);
-        screen.draw(&mut console, &Bindings::default());
+        screen.draw(&mut console);
         text(&console)
     }
 
@@ -1171,7 +1161,7 @@ mod tests {
         }
         let mut console = Console::default();
         console.resize(44, 40);
-        summary("halfling,male,thief", 2).draw(&mut console, &Bindings::default());
+        summary("halfling,male,thief", 2).draw(&mut console);
         let narrow = super::tests::text(&console);
         assert!(narrow.contains("Appraise "), "{narrow}");
         assert!(narrow.contains(" · "), "{narrow}");
@@ -1192,7 +1182,7 @@ mod tests {
         // In a narrow console the sign goes on the next line.
         let mut console = Console::default();
         console.resize(60, 30);
-        summary("dwarf,female,warrior", 1).draw(&mut console, &Bindings::default());
+        summary("dwarf,female,warrior", 1).draw(&mut console);
         let narrow = super::tests::text(&console);
         assert!(
             narrow.contains("Age 101 · born 23 Rainmoon 1343  "),

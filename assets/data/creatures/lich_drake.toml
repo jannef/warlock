@@ -23,7 +23,8 @@ weight = 1000000
 stats = { strength = 40, dexterity = 24, toughness = 40, intelligence = 38, willpower = 36, presence = 36 }
 base_hp = 413
 natural = { defence = 5, protection = 10, name = "dry bones" }
-resist = { cold = 75, poison = 100 }
+resist = { cold = 75 }
+immune = ["poison"]
 corpse = false
 blood = "none"
 [creature.attack]

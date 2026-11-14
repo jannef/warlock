@@ -279,7 +279,7 @@ pub fn draw_header(console: &mut Console, x: i32, y: i32, name: &str) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::input::Bindings;
+    use crate::ui::menu::HINTS;
 
     fn content() -> Content {
         Content::builtin().expect("content")
@@ -424,7 +424,7 @@ mod tests {
         assert_eq!((list.cursor(), list.page()), (26, 26..30));
         assert!(!list.navigate(Nav::Enter));
         // The paging keys as bound name themselves in the hint.
-        let keys = Hints::of(&Bindings::default());
+        let keys = HINTS;
         assert_eq!(list.hint(&keys).as_deref(), Some("> < page"));
     }
 

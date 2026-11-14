@@ -73,15 +73,7 @@ pub(crate) fn draw(
         .map(|&id| (id, u32::from(effects.get(id).weight)))
         .collect();
     let pool = if rest.is_empty() { &favoured } else { &rest };
-    let total: u32 = pool.iter().map(|&(_, w)| w).sum();
-    let mut at = rng.below(total);
-    for &(id, weight) in pool {
-        if at < weight {
-            return Some(id);
-        }
-        at -= weight;
-    }
-    None
+    rng.weighted(pool, |&(_, w)| w).map(|&(id, _)| id)
 }
 
 /// The effect of a special room of `cells` floor cells on this level, drawn ([`draw`]) among

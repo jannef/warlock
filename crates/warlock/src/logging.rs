@@ -25,6 +25,39 @@ pub fn init() {
     desktop::init(crate::paths::locations().logs.dir.clone());
 }
 
+/// Warnings found before the log exists (paths, settings; #1591), held until it does.
+static EARLY: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
+
+/// A warning found before `LogPlugin` is built: [`log_early_warnings`] logs it (to the log file
+/// too) once it is, or [`print_early_warnings`] prints it where the game never starts.
+pub fn warn_early(text: String) {
+    if let Ok(mut early) = EARLY.lock() {
+        early.push(text);
+    }
+}
+
+fn take_early() -> Vec<String> {
+    EARLY
+        .lock()
+        .map(|mut e| std::mem::take(&mut *e))
+        .unwrap_or_default()
+}
+
+/// Startup system: logs the warnings [`warn_early`] held.
+pub fn log_early_warnings() {
+    for text in take_early() {
+        bevy::log::warn!("{text}");
+    }
+}
+
+/// Prints the warnings [`warn_early`] held to stderr, for a launch that exits before the app
+/// runs (a file command, content that does not load).
+pub fn print_early_warnings() {
+    for text in take_early() {
+        eprintln!("warlock: warning: {text}");
+    }
+}
+
 /// The current UTC time as `YYYYMMDD-HHMMSS`.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn timestamp() -> String {
@@ -47,7 +80,6 @@ mod desktop {
     use std::fs;
     use std::path::{Path, PathBuf};
     use std::sync::{Mutex, OnceLock};
-    use std::time::{SystemTime, UNIX_EPOCH};
 
     /// How many `warlock-*.log` files to keep (including the current run's).
     const KEEP_LOGS: usize = 5;
@@ -161,29 +193,14 @@ mod desktop {
 
     /// `YYYYMMDD-HHMMSS` in UTC.
     pub fn timestamp() -> String {
-        let secs = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map_or(0, |d| d.as_secs());
-        format_utc(secs)
+        format_utc(crate::utc::since_epoch().as_secs())
     }
 
     fn format_utc(secs: u64) -> String {
-        let (days, rem) = ((secs / 86_400) as i64, secs % 86_400);
-        // Civil-from-days (Howard Hinnant).
-        let z = days + 719_468;
-        let era = z.div_euclid(146_097);
-        let doe = z.rem_euclid(146_097);
-        let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
-        let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-        let mp = (5 * doy + 2) / 153;
-        let day = doy - (153 * mp + 2) / 5 + 1;
-        let month = if mp < 10 { mp + 3 } else { mp - 9 };
-        let year = yoe + era * 400 + i64::from(month <= 2);
+        let t = crate::utc::utc_parts(secs);
         format!(
-            "{year:04}{month:02}{day:02}-{:02}{:02}{:02}",
-            rem / 3600,
-            rem % 3600 / 60,
-            rem % 60
+            "{:04}{:02}{:02}-{:02}{:02}{:02}",
+            t.year, t.month, t.day, t.hour, t.minute, t.second
         )
     }
 

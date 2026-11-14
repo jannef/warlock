@@ -105,9 +105,11 @@ enough to kill) stops at each hit point; the bounded long actions go on, and a s
 says nothing, or a journey would log a line per ten minutes. In the game: `Game::apply` sets
 `Game::hunger_stop` when `Hunger::worsens(before, now)`; `ui::more` then waits at the last page too
 (`more::stops`; `pages`' `last_waits` leaves it room for `--more--`), and `game::apply_queued` drops
-the actions queued behind it that frame (it takes the `ResMut` so a frame without actions leaves the
+the actions queued behind it that frame (as it drops a step behind another that would ask first
+from where the first left the player, `input::asks_first`, #1538: the frame's presses are all read
+before any is applied, so input asked about it from the cell before) (it takes the `ResMut` so a frame without actions leaves the
 `Game` unchanged: `on_level_up` and `refresh` run on change). A replay's last step sets no stop.
-`input::hunger_dialog` asks before an overworld step while Fainting or Starving
+`ui::step_dialogs::hunger_dialog` asks before an overworld step while Fainting or Starving
 (`PerceptionView::level_kind`, the state alone); text cases `hunger-*` in `screen_snapshots.rs`.
 There is no multi-step movement to end (no run or travel command, on the overworld or anywhere): a
 held key's repeats are the only walking.

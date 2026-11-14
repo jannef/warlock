@@ -11,7 +11,7 @@
 
 use super::character_screen::fit_joined;
 use super::cursor;
-use super::menu::{Hints, Nav, Panel, Press};
+use super::menu::{HINTS, Nav, Panel, Press};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, KeyCommand};
@@ -85,7 +85,7 @@ impl SkillsScreen {
         let list = self.rows.len().max(1) as i32;
         let h = list + 8;
         let panel = Panel::new(console, " Skills ", width, h);
-        super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Skills);
+        super::info_tabs::draw_tabs(console, &panel, super::ScreenName::Skills);
         let x = panel.inner_x();
         let fits = |y: i32| y < panel.y + panel.h - 2;
         // A list taller than the panel scrolls to keep the selection in view.
@@ -116,7 +116,7 @@ impl SkillsScreen {
                 y += 1;
             }
         }
-        let up_down = Hints::of(bindings).up_down();
+        let up_down = HINTS.up_down();
         let footer = match bindings.keys_of(KeyCommand::Skills).first() {
             Some(key) => format!("{up_down} choose   {} or Esc close", key.display()),
             None => format!("{up_down} choose   Esc close"),

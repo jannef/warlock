@@ -6,8 +6,8 @@
 //! The cursor starts on the last target if the player still sees it (a creature) or it lies on
 //! this level (a cell), else on the nearest creature in view that is hostile, else on the player.
 //! Tab and Shift-Tab cycle through the creatures in view, nearest first; the direction keys move
-//! the cursor freely. Enter (or the key that started it) looses the missile and remembers the
-//! target; Esc cancels.
+//! the cursor freely. Enter (or the key that started it, [`Aim::confirmed_by`]) looses the missile
+//! and remembers the target; Esc cancels. Enter and Tab are fixed keys (`settings::fixed`).
 //!
 //! The line of fire ([`Line`]) is the integer line the rules fly a missile along
 //! ([`Pos::ray`]), drawn as faint dots from the player toward the cursor, as far as the player
@@ -27,10 +27,11 @@
 
 use super::look;
 use crate::game::Game;
-use crate::input::InputMode;
+use crate::input::{InputMode, KeyCommand};
 use crate::render::console::Console;
 use crate::render::free_glyph::{FreeGlyph, FreeGlyphs};
 use crate::render::grid::MapGrid;
+use crate::settings::fixed;
 use crate::settings::{Role, Settings};
 use bevy::prelude::*;
 use warlock_core::ability::Ability;
@@ -128,7 +129,40 @@ fn targets(view: &PerceptionView<'_>) -> Vec<(Pos, Stance)> {
     seen.into_iter().map(|(_, _, p, s)| (p, s)).collect()
 }
 
+impl AimKind {
+    /// The play command a prompt names beside Enter as looser: the key that starts the aim (`t`
+    /// for a shot, a throw, a zap, `r` for a scroll, `a` for an ability).
+    pub fn confirm(self) -> KeyCommand {
+        match self {
+            AimKind::Fire | AimKind::Zap(_) | AimKind::Throw(_) | AimKind::ThrownExploit(_) => {
+                KeyCommand::Missile
+            }
+            AimKind::Read(_) => KeyCommand::Read,
+            AimKind::Ability(_) => KeyCommand::Abilities,
+        }
+    }
+}
+
 impl Aim {
+    /// Whether play command `command` looses this aim as Enter does: the key that started it
+    /// (the owner, #1533), and `t` for any shot or throw. An ability is started from the
+    /// abilities menu, its quick repeat, or its own key (Throw your voice).
+    pub fn confirmed_by(&self, command: KeyCommand) -> bool {
+        use KeyCommand::{Abilities, Missile, Read, RepeatAbility, Throw, ThrowVoice};
+        match self.kind {
+            AimKind::Fire | AimKind::Zap(_) => command == Missile,
+            AimKind::Throw(_) => matches!(command, Missile | Throw),
+            AimKind::ThrownExploit(_) => {
+                matches!(command, Missile | Throw | Abilities | RepeatAbility)
+            }
+            AimKind::Read(_) => command == Read,
+            AimKind::Ability(ability) => {
+                matches!(command, Abilities | RepeatAbility)
+                    || (command == ThrowVoice && ability == Ability::ThrowVoice)
+            }
+        }
+    }
+
     /// Starts aiming `kind`: on the last target if it is still seen and within range, else on
     /// the nearest hostile creature in view within range, else on the player. A kind with no
     /// known range limits nothing.
@@ -343,18 +377,20 @@ impl Aim {
     }
 
     /// The prompt in the message line: what is aimed, and how. `ready` names the missile ("an
-    /// arrow"); the keys are the bindings' (Enter, `t`, Tab).
-    pub fn prompt(&self, ready: &str, (loose, confirm, next): (&str, &str, &str)) -> String {
+    /// arrow"); `confirm` is the key of [`AimKind::confirm`] as bound, Enter and Tab are fixed.
+    pub fn prompt(&self, ready: &str, confirm: &str) -> String {
+        let (loose, next) = (fixed::LOOSE, fixed::NEXT_TARGET);
         let (verb, does) = match self.kind {
             AimKind::Fire => ("Fire", "fires"),
             AimKind::Throw(_) => ("Throw", "throws"),
             AimKind::ThrownExploit(_) => ("Exploit an opening with", "throws"),
             AimKind::Read(_) => ("Read", "reads"),
             AimKind::Zap(_) => ("Zap", "zaps"),
-            // `ready` names the ability ("Throw your voice"), and only Enter uses it.
+            // `ready` names the ability ("Throw your voice").
             AimKind::Ability(_) => {
                 return format!(
-                    "{ready}: {next} or direction keys aim, {loose} uses it, Esc cancels."
+                    "{ready}: {next} or direction keys aim, {loose} or {confirm} uses it, Esc \
+                     cancels."
                 );
             }
         };
@@ -755,7 +791,7 @@ mod tests {
         };
         assert_eq!(bolt.range(&view), Some(8));
         assert_eq!(bolt.catches_reader(&view), None);
-        let text = bolt.prompt("a scroll of lightning", ("Enter", "r", "Tab"));
+        let text = bolt.prompt("a scroll of lightning", "r");
         assert!(text.starts_with("Read a scroll of lightning:"), "{text}");
         assert!(text.contains("Enter or r reads"), "{text}");
     }
@@ -845,12 +881,32 @@ mod tests {
     }
 
     #[test]
+    fn the_key_that_started_an_aim_looses_it() {
+        use KeyCommand::{Abilities, Look, Missile, Read, RepeatAbility, Throw, ThrowVoice};
+        let aim = |kind| Aim {
+            kind,
+            at: Pos::new(1, 1),
+        };
+        let fire = aim(AimKind::Fire);
+        assert!(fire.confirmed_by(Missile) && !fire.confirmed_by(Throw));
+        assert!(aim(AimKind::Throw(0)).confirmed_by(Throw));
+        assert!(aim(AimKind::Read(0)).confirmed_by(Read));
+        assert!(!aim(AimKind::Read(0)).confirmed_by(Missile));
+        let voice = aim(AimKind::Ability(Ability::ThrowVoice));
+        for key in [Abilities, RepeatAbility, ThrowVoice] {
+            assert!(voice.confirmed_by(key), "{key:?}");
+        }
+        assert!(!voice.confirmed_by(Look));
+        assert_eq!(AimKind::Ability(Ability::ThrowVoice).confirm(), Abilities);
+    }
+
+    #[test]
     fn prompts_say_what_is_aimed_and_why_it_would_not_reach() {
         let aim = Aim {
             kind: AimKind::Fire,
             at: Pos::new(1, 1),
         };
-        let text = aim.prompt("a flaming arrow", ("Enter", "f", "Tab"));
+        let text = aim.prompt("a flaming arrow", "f");
         assert_eq!(
             text,
             "Fire a flaming arrow: Tab or direction keys aim, Enter or f fires, Esc cancels."
@@ -871,7 +927,7 @@ mod tests {
             kind: AimKind::Throw(0),
             ..aim
         };
-        let text = throw.prompt("a dagger", ("Enter", "t", "Tab"));
+        let text = throw.prompt("a dagger", "t");
         assert!(text.starts_with("Throw a dagger:"), "{text}");
         assert!(text.contains("Enter or t throws"), "{text}");
         let content = Content::builtin().expect("content");

@@ -21,7 +21,8 @@ size = "small"
 stats = { strength = 7, dexterity = 14, toughness = 3, intelligence = 2, willpower = 16, presence = 2 }
 base_hp = 0
 natural = { protection = 1, name = "stone body" }
-resist = { slashing = 25, piercing = 50, electricity = 100, poison = 100 }
+resist = { slashing = 25, piercing = 50 }
+immune = ["electricity", "poison"]
 corpse = false
 blood = "none"
 # A vortex (the dread design §5.3): beside its target it bursts instead of attacking, and is

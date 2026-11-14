@@ -237,13 +237,17 @@ fn the_patron_pays_half_again_for_a_marked_piece() {
     let mut worked = Quality::Fine
         .worked(CONTENT.object(object))
         .expect("graded");
+    piece.set_worked(worked.clone());
+    let unmarked = piece.value(&CONTENT);
     worked.mark();
     piece.set_worked(worked);
     let worth = piece.value(&CONTENT);
+    assert_eq!(worth, unmarked * 3 / 2, "the mark is worth half again");
     let content = w.content.clone();
     crate::object::add_to_inventory(w.state.inventory_mut(), piece, &content);
     let coins = gold(&w);
     act(&mut w, "chat:E");
     assert!(w.state.patron.open.is_none(), "taken");
-    assert_eq!(gold(&w), coins + worth * 3 / 2);
+    // Half again the unmarked piece's pay, the mark paid for once (#1489): not 2.25 times.
+    assert_eq!(gold(&w), coins + unmarked * 3 / 2);
 }

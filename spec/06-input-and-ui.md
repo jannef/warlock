@@ -15,7 +15,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   listed command of its context has (`Bindings::from_table`).
 - Symbol commands (`<`, `>`, `?`) are bound by **logical key**, so they work on non-US layouts.
 - Bindings live in the settings file. The `?` help (the controls list, read-only) is generated from
-  the binding table, so it is always accurate. Only the play-context (gameplay) commands are rebindable (below); the keys of menus, menu lists, screens, info pages, prompts, dialogs, text fields, and the targeting mode are fixed (owner decision, 2026-10-26), and new ones are not added as bindable commands. Existing menu-context bindings stay as they are until a later cleanup; the back-style commands (Back and text fields' Back, skipping the rest at `--more--`, the previous info page, the previous target), unbound because Esc and Shift do them, stay exactly as they are (the owner, #644).
+  the binding table, so it is always accurate. Only the play-context (gameplay) commands are rebindable (below); the keys of menus, menu lists, screens, info pages, prompts, dialogs, text fields, and the targeting mode are fixed (owner decision, 2026-10-26; made so in #1533), and new ones are not added as bindable commands; the back-style commands (Back and text fields' Back, skipping the rest at `--more--`, the previous info page, the previous target), unbound because Esc and Shift do them, stay exactly as they are (the owner, #644).
 - **Screens**: the main menu, the saved characters, New run and its character creation steps, pause menu, Settings,
   Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, an
   item's description, the character screen, the Skills screen, the weapon skills screen, the quest
@@ -47,10 +47,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (accept, decline, cancel, or plain), and what choosing it does (a menu choice, a game action,
   or a further dialog in its place). It sizes itself to its content and lists the options in a
   column, each with its shortcut keys. ↑/↓ (and ←/→) move the selection and Enter takes it;
-  the Yes and No keys (`y` and `n` by default; rebindable, in a context of their own) pick the accept option and the decline option (else the cancel
+  the fixed `y` and `n` pick the accept option and the decline option (else the cancel
   one); Esc picks the cancel option (else the decline one). The safe option (cancel, else
   decline) is selected at first, so Enter alone never does what the player might regret. A held
-  key's repeats never open or answer it.
+  key's repeats never open or answer it. A step asked behind another in one frame (a held key's
+  repeat on a slow frame) is asked about again when it is applied, from where the first step
+  left the player: one that would ask first is dropped, with the rest of that frame's (#1538).
 - **Known traps** (§8 "Traps"): a step onto a trap the player knows (where no creature they see
   stands) asks first, in the dialog, ADOM-like: `Really step onto the fireball trap?` with
   `Step onto it` (accept: the move as usual, replay text `move:DIR`: the rules never ask) and
@@ -84,7 +86,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   where Esc goes back to the menu, §3 "The Ascmearc"), Settings, Controls, Quit. A new run's seed is no
   one's choice (#256): New run draws a fresh one from the platform's clock and entropy when it
   opens (the app's, never the rules'), and once drawn it is the run's like any seed (saved,
-  recorded in replays, shown in the status bar). Only developer builds (debug, or `--dev`: the
+  recorded in replays, shown in the status bar in developer builds only, #1557). Only developer builds (debug, or `--dev`: the
   switch that turns on the developer keys) show a seed field: type a number or a word (hashed
   like `--seed`); empty means the scenario's own seed, so dev runs and captures stay
   reproducible. The summary names the seed only there.
@@ -129,7 +131,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   number the game hides, nor the word "seed".
   The Name step is a text field (the game's): every key types what it types, literally (`j` and
   `k` too), as long as the font draws it and the name has room (20 characters; no space first);
-  the `Context::Text` commands, rebindable like every key, accept (Enter), erase the last
+  the fixed text field keys accept (Enter), erase the last
   character (Backspace, Delete), put in one of the race's names for the gender, from the run's
   seed (Tab; never the one shown; again for another), and back out (Esc, always). Held keys type
   and erase again but never accept. An empty field shows, dimmed, the name accepting it gives:
@@ -179,33 +181,38 @@ developer notes (CLAUDE.md, `docs/dev/`).
   screen (where the files are and why; Open folder). A missing or damaged file means
   defaults and a logged warning. Changes apply live (a font size change rebuilds the glyph atlas)
   and are written immediately.
-- **Every key is a command in its context** (#159): play (the map, the direction prompts, look
-  mode), aiming (next and previous target, shoot or throw: `Tab`, none, Enter), the rest prompt
-  (`h`, `d`, `n`), `--more--` (the next messages: Space and Enter; skip the rest: no key of its
-  own, as Esc always skips), menus and screens (up, down, left, right: the arrows and `k` `j` `h` `l`;
-  choose: Enter; back: no key of its own, as Esc always backs out; erase a character or reset a
-  key: Delete, Backspace; on the pick-up and drop lists mark: Space, mark everything: `,`; on
-  every item list the next and previous page: `>` and PageDown, `<` and PageUp), info pages (a
-  digit, `Tab`; Shift+`Tab` the previous), dialogs (yes, no), and the developer keys (§9). A key is unique within its context only,
-  so `Tab` is next target while aiming and next page on an info screen; a mode or screen with a
-  context of its own reads it first (the rest prompt, `--more--`, and aiming before play's keys). Two kinds of
-  keys are fixed: Esc, which always cancels a prompt, backs out of every screen, and opens the
-  pause menu, and the letters and digits that name the rows of a list (stacks, slots, topics).
-  Hints (screen footers, the prompts, the status bar's `? controls`, the welcome line's
-  `Press ? for controls.`) name the keys as bound.
-- **Rebinding** (play commands only by the owner decision of 2026-10-26; menus, lists, screens, prompts, and targeting keys are fixed and no new ones are made rebindable; the existing menu-context bindings below stay for now): in Controls (the commands by context under headings, below notes on Esc and on
-  list letters, and at the very bottom, under "Ability keys", the abilities' own keys: play
+- **Every play key is a command in its context** (#159): play (the map, the direction prompts,
+  look mode), `--more--` (the next messages: Space and Enter; skip the rest: no key of its own,
+  as Esc always skips), the back-style commands of aiming (the previous target), menus and
+  screens and text fields (back), and info pages (the previous page), all with no key of their own
+  as Esc and Shift do them, and the developer keys (§9). A key is unique within its context only;
+  a mode with a context of its own reads it first (`--more--` and aiming before play's keys).
+  **Fixed keys** (#1533): menus and screens (up, down, left, right: the arrows and `k` `j` `h` `l`;
+  choose: Enter; erase a character or reset a key: Delete, Backspace; on the pick-up and drop
+  lists mark: Space, mark everything: `,`; on every item list the next and previous page: `>` and
+  PageDown, `<` and PageUp), text fields (accept: Enter; erase: Backspace, Delete; random: Tab),
+  dialogs (`y`, `n`), info pages (a digit, `Tab`; Shift+`Tab` the previous), the rest prompt (`h`,
+  `d`, `n`), and aiming (next target: `Tab`, Shift+`Tab` the previous; shoot, throw, or cast:
+  Enter, or the key that started the aim: `t` for a shot, a throw, or a wand, `T` for a throw,
+  `r` for a scroll, the abilities key or its quick repeat for an ability). A back-style command
+  may not take a key fixed where it is read. So are Esc, which always cancels a prompt, backs out
+  of every screen, and opens the pause menu, and the letters and digits that name the rows of a
+  list (stacks, slots, topics). Hints (screen footers, the prompts, the status bar's
+  `? controls`, the welcome line's `Press ? for controls.`) name the play keys as bound and the
+  fixed keys as they are.
+- **Rebinding** (play commands only by the owner decision of 2026-10-26; menus, lists, screens, prompts, and targeting keys are fixed and no new ones are made rebindable): in Controls (the commands by context under headings, below notes on Esc and on
+  the fixed keys, and at the very bottom, under "Ability keys", the abilities' own keys: play
   commands, unbound by default, for a player who wants a key for an ability the abilities menu
   has; the owner, #644), select a command and press a key; it becomes the command's primary
   key (alternates such as the numpad stay). A key another command of the same context uses is taken
   from it and bound to the new command, and the screen says so ("K moved to Wait; Kick has no
   key." or "... (was Kick)."), so the table never holds a conflict; a command left without a key
   shows as none and is saved as an empty list. Fixed commands never lose their key: Esc (cancel,
-  which opens the pause menu) is refused with a reason, and so is the last key of the commands
-  that reach Controls from anywhere (up, down, and choose on the menus) and of the one that
-  accepts a text field (a new character's name), so no binding, settings file, or keymap can lock
-  the player out. Text fields have a context of their own (accept, erase, random, back): a key
-  bound there edits, every other key types. Delete resets a command, "Reset all keys" resets
+  which opens the pause menu) is refused with a reason, and the keys that reach Controls from
+  anywhere (up, down, and choose on the menus) and accept a text field (a new character's name)
+  are fixed, so no binding, settings file, or keymap can lock the player out; an old file's keys
+  for the commands that became fixed are dropped without a word. In a text field the fixed keys
+  and Back edit, every other key types. Delete resets a command, "Reset all keys" resets
   everything, and so does `--reset-keys` on the command line (saved at once; the game then starts
   as usual).
 - **Modifier keys** (#1323): a play command's key may be held with Ctrl, Alt, and Super (Option

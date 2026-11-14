@@ -17,7 +17,9 @@ that character's files; `cargo xtask web-smoke` checks a reload resumes at the t
 its default place through `storage::default_backend(Folder, lost)` (the config or data folder
 natively, browser storage on the web). Unavailable storage means no saving plus a log warning
 naming what is lost; failed writes (quota) are messages, never
-panics. Only the `web-sys` features in `crates/warlock/Cargo.toml` are enabled (size).
+panics. A page-hide save that fails is only a warning in the browser console (nothing better can
+be done once the page is going), so what can be lost is the turns since the last autosave: at
+most `AUTOSAVE_TURNS` (50) turns, or the last change of level (#1591). Only the `web-sys` features in `crates/warlock/Cargo.toml` are enabled (size).
 
 **Saves are pinned to the game version that wrote them** (#840; owner, 2026-11-02: "we do not
 need to preserve saves"). The envelope (`warlock-core/src/save.rs`) is `magic`, `game_version`
@@ -25,7 +27,13 @@ need to preserve saves"). The envelope (`warlock-core/src/save.rs`) is `magic`, 
 `save::decode` refuses a save whose `game_version` is not this build's (`SaveError::OtherVersion`,
 before the state is read; a save that names none, from before the pin, is "an older version"),
 then one whose fingerprint differs (`ContentMismatch`), then one that does not read (`Corrupt`).
-Nothing carries a save across versions: no format number, no id maps, no lenient reads. A state
+Nothing carries a save across versions: no format number, no id maps, no lenient reads.
+`save::try_encode`/`try_encode_state` return `Result` (`SaveError::Unwritable`, #1580): a state
+that cannot be serialized writes nothing, so `SaveStore::write` and the web page-hide save keep
+the save already there and say why (`encode`/`encode_state` are their panicking `#[cfg(test)]`
+forms). A `Grid` reads back only if its cells fill its width and height (`#[serde(try_from =
+"RawGrid")]`), and `Level::ids_valid_for` wants the memory the terrain's size (#1585), so a
+short grid is `Corrupt` (renamed `.sav.bad`), never a panic on Continue. A state
 naming something the content does not have (a talent, a story line, an affix value outside its
 tier, ...) is refused by `World::from_state`'s checks, never dropped or mapped.
 `#[serde(default)]` on new fields stays (harmless, and it keeps replays readable). What a run remembers once and for all lives in `Progress` and is saved with it: the first kills
@@ -94,7 +102,8 @@ resumes `SaveStore::last_played`, and so does a start that skips the menu unless
 Characters screen resumes one by id (`MenuChoice::Resume`) or deletes it after the dialog
 (`MenuChoice::DeleteCharacter` → `SaveStore::delete_character`). An unreadable save is renamed
 `<id>.sav.bad` when resuming it fails (never deleted; its summary goes, so the list no longer
-shows it) and the main menu opens afresh with the reason. Captures and replays never write: with
+shows it) and the main menu opens afresh with the reason. A save that fails as the window closes
+is logged with `error!` (the log file too: a game started from a shortcut has no terminal, #1591). Captures and replays never write: with
 `--save-dir` their store is read-only (`SaveStore::read_only`), so a capture can show the list of
 the characters in a folder (`tests/golden/saved-characters`, whose saves are placeholders: only the
 summaries are read; the screen snapshots' `main-menu-saved` and `characters-screen` read it too). A pre-#218 `run.sav` is left alone: not read, listed, or deleted (its
@@ -129,7 +138,9 @@ folder; portable mode's `warlock-data/config`; the web's `localStorage` key
 never rewritten, and the death screen says "Remembered in the graveyard." when the entry went in.
 Captures and replays keep none unless `--config-dir` names one. **This file is the one
 deliberate exception to version pinning** (the owner's word): its reader (`graveyard::parse`)
-ignores unknown fields, defaults missing ones, and skips an entry it cannot read; a field is
+ignores unknown fields, defaults missing ones, and skips an entry it cannot read (each
+`[[fallen]]` table is parsed alone, so half an entry a crashed append left costs only that entry,
+#1573; `a_torn_append_skips_only_its_own_entry`); a field is
 never renamed or re-meant; no format number, no migration. `a_fixture_written_by_0_11_reads`
 pins it, and `the_experience_field_reads_and_defaults` pins `xp` beside it. The main menu's
 Graveyard screen reads it whole, ordered by `graveyard::by_experience` (`xp`, then `level`, then
@@ -154,7 +165,7 @@ executable's folder; on macOS next to the `.app`, never inside it), then the pla
 (`directories`, app name "warlock"; macOS `~/Library/Application Support/warlock`). Portable
 layout `warlock-data/{config,data,logs}`; `Locations::prepare` creates it and warns (never
 fails) when it is unwritable. `resolve` is pure over `Inputs` and tested without a filesystem; new
-files go in the folder `Locations` gives (`keymaps_dir()` for key map files; `saves_dir()` and
+files go in the folder `Locations` gives (`saves_dir()` and
 `snapshots_dir()`, from `paths::SAVES_DIR` and `SNAPSHOTS_DIR`, which the save store names its files
 under). `warlock --paths`
 prints the report and exits; `warlock --move-data native|portable [DIR] [--dry-run]`

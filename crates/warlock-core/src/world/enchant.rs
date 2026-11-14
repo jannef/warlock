@@ -39,19 +39,21 @@
 //!   (`loot::rare_name`); Ennoble draws the kind evenly among those with room that can roll,
 //!   the affix, and the name; Unbind draws nothing and takes the magic off. Failed: the crystals are spent, the item as it was. A
 //!   natural 2: the crystals spent and the item warped ([`ItemHarm::Enchant`], as a failed
-//!   Temper damages; of Proof, spared).
+//!   Temper damages; of Proof, spared, and said so), one of a stack alone, set apart (#1487).
+//! - **Found again**: the picks in the pack are kept as the work begins and found again when it
+//!   ends (`work_on.rs`), so a stack gone meanwhile never turns the work on another (#1564).
 //! - **Known**: the magic made is identified: the enchanter knows their work.
 //! - **Marks**: [`Use::Craft`] on the recipe's skill alone, whatever came of it. No noise, no
 //!   alignment.
 //!
 //! [`Action::Craft`]: crate::action::Action::Craft
 
-use super::ally::capital;
 use super::craft::RecipeLack;
 use super::craft_make::{CraftOption, CraftPlan, CraftStep, CraftStepKind, MAX_PICKS};
 use super::item_damage::Harmed;
 use super::rest::Ended;
 use super::seal;
+use super::temper::WITHSTOOD;
 use super::{Actor, LevelState, Spent, World};
 use crate::action::Event;
 use crate::combat;
@@ -66,6 +68,7 @@ use crate::rng::Rng;
 use crate::scroll_label::Lore;
 use crate::skills::{Effect, MAX_ENCHANT_LEVEL, Use};
 use crate::stats::Stat;
+use crate::text::capitalized;
 use crate::time::Duration;
 
 /// What the check comes to.
@@ -563,16 +566,6 @@ fn the(lore: Lore<'_>, stack: &Stack) -> String {
     }
 }
 
-/// `words` listed: "a", "a and b", "a, b, and c".
-fn listed(words: &[String]) -> String {
-    match words {
-        [] => String::new(),
-        [one] => one.clone(),
-        [first, second] => format!("{first} and {second}"),
-        [rest @ .., last] => format!("{}, and {last}", rest.join(", ")),
-    }
-}
-
 /// What the work `resolved` uses, in words, in order (the order of the crystals matters to
 /// Imbue): "a red crystal", "a red crystal, a red crystal, and a blue crystal", then the seals'
 /// crystals, the heart-crystal, the soul-fetter with what it keeps, and what the seals shut out:
@@ -597,7 +590,7 @@ fn uses_words(content: &Content, lore: Lore<'_>, player: &Actor, resolved: &Reso
             1 => format!("one more {}", lore.title(&pack[at].single())),
             n => format!(
                 "{} more {}",
-                number_word(n as usize),
+                crate::text::number_word(n as usize),
                 lore.names(&pack[at]).1
             ),
         });
@@ -615,7 +608,7 @@ fn uses_words(content: &Content, lore: Lore<'_>, player: &Actor, resolved: &Reso
             lore.describe(&pack[at].single())
         ));
     }
-    let mut text = listed(&words);
+    let mut text = crate::text::and_list(&words);
     if !resolved.seals.is_empty() {
         let shut = seal::words(content, &resolved.seals);
         text = match text.is_empty() {
@@ -651,16 +644,6 @@ pub(super) fn plan(
     })
 }
 
-/// "three": a small count in a word, as the work's line says it.
-fn number_word(n: usize) -> String {
-    match n {
-        1 => "one".into(),
-        2 => "two".into(),
-        3 => "three".into(),
-        n => n.to_string(),
-    }
-}
-
 /// An enchanting under way: the recipe, the picks (in step order), how long.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct Enchanting {
@@ -673,6 +656,19 @@ pub(super) struct Enchanting {
 impl Enchanting {
     fn picks(self) -> Vec<Option<usize>> {
         self.picks[..usize::from(self.len)].to_vec()
+    }
+
+    /// The picks that are pack positions, the item's and the crystals' (`None` for the rest:
+    /// the seals and the kept affix are indices of their own).
+    fn in_pack(self, content: &Content) -> Vec<Option<usize>> {
+        let def = content.recipe(self.recipe);
+        let end = match def.uses {
+            Some(RecipeUse::Enchant(kind)) => seal::slots(kind, def.crystals).crystals.end,
+            _ => 1,
+        };
+        (self.picks().into_iter().enumerate())
+            .map(|(i, pick)| pick.filter(|_| i < end))
+            .collect()
     }
 }
 
@@ -720,7 +716,8 @@ impl World {
 
     /// Works turn after turn until the enchanting is done or something stops it (module docs):
     /// its last turn cut short to end exactly when its time is up.
-    pub(super) fn enchant(&mut self, work: Enchanting, events: &mut Vec<Event>) {
+    pub(super) fn enchant(&mut self, mut work: Enchanting, events: &mut Vec<Event>) {
+        let on = self.work_on(&work.in_pack(&self.content));
         let until = self.state.time + Duration::seconds(u64::from(work.seconds));
         let turn = self.price_of(self.state.player, ActionKind::Craft);
         let ended = self.keep_at(
@@ -730,7 +727,15 @@ impl World {
         );
         match ended {
             Ended::Died => {}
-            _ if self.state.time >= until => self.enchanted(work),
+            _ if self.state.time >= until => match self.worked_on(&on) {
+                Some(now) => {
+                    for (pick, at) in work.picks.iter_mut().zip(now) {
+                        *pick = at.or(*pick);
+                    }
+                    self.enchanted(work);
+                }
+                None => self.say("You have nothing left to work on."),
+            },
             Ended::Came(came) => {
                 let text = format!("{}; you put down your work.", self.came_line(came));
                 self.say(text);
@@ -801,27 +806,27 @@ impl World {
                     }
                     (EnchantKind::Imbue, _) => format!(
                         "{} drinks the {} crystals and wakes as {title}.",
-                        capital(&thing),
-                        number_word(crystals.len())
+                        capitalized(&thing),
+                        crate::text::number_word(crystals.len())
                     ),
                     (EnchantKind::Ennoble, Some(stone)) => format!(
                         "{} takes the {stone}'s glow and wakes as {title}.",
-                        capital(&thing)
+                        capitalized(&thing)
                     ),
                     (EnchantKind::Quicken, Some(stone)) if resolved.heart.is_some() => format!(
                         "{} takes the {stone}'s glow and the heart-crystal's, and holds more.",
-                        capital(&thing)
+                        capitalized(&thing)
                     ),
                     (_, Some(stone)) => format!(
                         "{} takes the {stone}'s glow. It is now {name}.",
-                        capital(&thing)
+                        capitalized(&thing)
                     ),
                 };
                 self.say(text);
             }
             EnchantBand::Failed => match kind {
                 EnchantKind::Unbind => {
-                    self.say(format!("{} clings to its magic.", capital(&thing)))
+                    self.say(format!("{} clings to its magic.", capitalized(&thing)))
                 }
                 _ => {
                     self.say(dark);
@@ -833,13 +838,17 @@ impl World {
                     self.say(dark);
                     self.rare_lost(resolved);
                 }
+                // One of a stack (of arrows) warps, set apart at the end of the pack, after
+                // every crystal's position (#1487).
+                let at = self.set_apart(at);
+                let thing = the(self.lore(), &self.state.player().inventory[at]);
                 match self.harm_item(at, ItemHarm::Enchant) {
-                    Harmed::Withstood => {}
+                    Harmed::Withstood => self.say(WITHSTOOD),
                     Harmed::Damaged => {
-                        self.say(format!("{} warps under your hands.", capital(&thing)))
+                        self.say(format!("{} warps under your hands.", capitalized(&thing)))
                     }
                     Harmed::Destroyed => {
-                        self.say(format!("{} warps and falls apart.", capital(&thing)));
+                        self.say(format!("{} warps and falls apart.", capitalized(&thing)));
                         for c in &mut crystals {
                             if *c > at {
                                 *c -= 1;

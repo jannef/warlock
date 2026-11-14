@@ -30,7 +30,7 @@ weapon_skills = { long_blades = 8, duelist = 7 }
 base_hp = 83
 skills = { concentration = 208, spellcraft = 213 }
 natural = { defence = 5, protection = 0, name = "dry bones" }
-resist = { poison = 100 }
+immune = ["poison"]
 corpse = false
 blood = "none"
 [creature.attack]

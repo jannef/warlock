@@ -12,12 +12,13 @@
 
 use super::cursor;
 use super::dialog_screen::Dialog;
-use super::menu::{Hints, Nav, Panel, Press, wrap};
+use super::menu::{HINTS, Nav, Panel, Press, wrap};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT};
 use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
 use warlock_core::perception::PerceptionView;
+use warlock_core::text::capitalized;
 use warlock_core::world::Conversation;
 use warlock_core::{Action, Dir, Event, Outcome};
 
@@ -198,7 +199,7 @@ impl DialogueScreen {
         }
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         let width = WIDTH.min(console.cols() as i32) - 4;
         let said = wrap(&format!("\"{}\"", self.line), width);
         // Rows: margin, what was said, a gap, the topics (and a gap), the footer, the frame.
@@ -237,7 +238,7 @@ impl DialogueScreen {
             }
             y += 1;
         }
-        let confirm = Hints::of(bindings).confirm;
+        let confirm = HINTS.confirm;
         let footer = match self.topics.len() {
             0 => "Esc  leave".to_string(),
             1 => format!("1 or {confirm}  ask    Esc  leave"),
@@ -253,15 +254,6 @@ pub fn last_talk(outcome: &Outcome) -> Option<&Conversation> {
         Event::Talked(talk) => Some(talk),
         _ => None,
     })
-}
-
-/// `text` with its first letter in upper case.
-fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
-    }
 }
 
 #[cfg(test)]
@@ -303,7 +295,7 @@ mod tests {
         let screen = DialogueScreen::new(last_talk(&outcome), Some(&view));
         let mut console = Console::default();
         console.resize(80, 30);
-        screen.draw(&mut console, &Bindings::default());
+        screen.draw(&mut console);
         let shown = text(&console);
         assert!(shown.contains(" The old hermit "), "{shown}");
         assert!(shown.contains("\"Hm? A visitor."), "{shown}");
@@ -329,7 +321,7 @@ mod tests {
         let screen = DialogueScreen::new(Some(&talk), Some(&view));
         let mut console = Console::default();
         console.resize(80, 30);
-        screen.draw(&mut console, &Bindings::default());
+        screen.draw(&mut console);
         let shown = text(&console);
         assert!(shown.contains("  6  These stairs"), "{shown}");
         assert!(
@@ -356,7 +348,7 @@ mod tests {
         let mut console = Console::default();
         console.resize(80, 30);
         let bindings = Bindings::default();
-        screen.draw(&mut console, &bindings);
+        screen.draw(&mut console);
         let shown = text(&console);
         assert!(
             shown.contains("  7  An appraisal of your goods (free)"),
@@ -390,7 +382,7 @@ mod tests {
         let mut console = Console::default();
         console.resize(80, 30);
         let bindings = Bindings::default();
-        screen.draw(&mut console, &bindings);
+        screen.draw(&mut console);
         let shown = text(&console);
         assert!(
             shown.contains("  7  An appraisal of your goods (100 gold each)"),
@@ -400,7 +392,7 @@ mod tests {
             ScreenAction::Dialog(dialog) => {
                 let mut console = Console::default();
                 console.resize(80, 30);
-                DialogScreen::new(*dialog).draw(&mut console, &bindings);
+                DialogScreen::new(*dialog).draw(&mut console);
                 Ok(text(&console))
             }
             other => Err(Box::new(other)),
@@ -441,7 +433,7 @@ mod tests {
         let mut console = Console::default();
         console.resize(80, 30);
         let bindings = Bindings::default();
-        screen.draw(&mut console, &bindings);
+        screen.draw(&mut console);
         let shown = text(&console);
         assert!(shown.contains("  7  Your wares (340 gold)"), "{shown}");
         let ScreenAction::Dialog(dialog) = screen.handle(&Press::typed('7'), &bindings) else {
@@ -450,10 +442,10 @@ mod tests {
         let mut dialog = DialogScreen::new(*dialog);
         let mut console = Console::default();
         console.resize(80, 30);
-        dialog.draw(&mut console, &bindings);
+        dialog.draw(&mut console);
         // The first row: up from Leave it, which is selected first, then Enter.
-        dialog.handle(&Press::nav(Nav::Up), &bindings);
-        let first = dialog.handle(&Press::nav(Nav::Enter), &bindings);
+        dialog.handle(&Press::nav(Nav::Up));
+        let first = dialog.handle(&Press::nav(Nav::Enter));
         (text(&console), first)
     }
 
@@ -525,7 +517,7 @@ mod tests {
         let screen = DialogueScreen::new(last_talk(&outcome), Some(&view));
         let mut console = Console::default();
         console.resize(80, 30);
-        screen.draw(&mut console, &Bindings::default());
+        screen.draw(&mut console);
         let shown = text(&console);
         assert!(
             shown.contains("\"A spring runs out of the east wall"),
@@ -539,7 +531,7 @@ mod tests {
         let mut screen = DialogueScreen::new(None, None);
         let mut console = Console::default();
         console.resize(80, 30);
-        screen.draw(&mut console, &Bindings::default());
+        screen.draw(&mut console);
         assert!(text(&console).contains("There is no one to talk to."));
         let bindings = Bindings::default();
         let action = screen.handle(&Press::nav(Nav::Enter), &bindings);

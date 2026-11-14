@@ -4,18 +4,18 @@ expression: "render(case, content.clone())"
 ---
  Welcome to Showcase. Press ┌─ Controls ───────────────────────────────────────────────────┐
                             │                                                            ↑ │
-                            │   Info page 4                          4                     │
-                            │   Info page 5                          5                     │
-                            │   Info page 6                          6                     │
-                            │   Info page 7                          7                     │
-                            │   Info page 8                          8                     │
-                            │   Info page 9                          9                     │
-                            │   Next info page (Shift: previous)     Tab                   │
-                            │   Previous info page                   (none)                │
+                            │ More messages (--more--)                                     │
+                            │   Show the next messages               Space Enter NumEnter  │
+                            │   Skip the rest (Esc always works)     (none)                │
                             │                                                              │
-                            │ Dialogs                                                      │
-                            │   Yes (in a dialog)                    y                     │
-                            │   No (in a dialog)                     n                     │
+                            │ Menus and screens                                            │
+                            │   Back (Esc always works)              (none)                │
+                            │                                                              │
+                            │ Text fields                                                  │
+                            │   Back (Esc always works)              (none)                │
+                            │                                                              │
+                            │ Info pages                                                   │
+                            │   Previous info page                   (none)                │
                             │                                                              │
                             │ Developer                                                    │
                             │   Reveal map (dev)                     F2                    │

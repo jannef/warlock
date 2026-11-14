@@ -11,9 +11,6 @@ use super::World;
 use crate::content::{LevelKind, TerrainDef, TerrainId};
 use crate::skills::Use;
 
-/// The id of the Staggered status in `data/status.toml`.
-pub(super) const STAGGERED: &str = "staggered";
-
 impl World {
     /// Whether a step onto `to` on the current level is onto rough ground: off the overworld,
     /// onto terrain that slows and is not wading ([`World::wading_step`]).

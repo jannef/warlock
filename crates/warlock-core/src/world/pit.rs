@@ -190,7 +190,7 @@ impl World {
             let to = def.pit_level_id(s, 1);
             let from = self.state.current_level.clone();
             self.state.pits.insert(s, Pit::new(from));
-            if let Some(stairs) = self.content.terrain_id("stairs_down") {
+            if let Some(stairs) = self.content.ids().stairs_down {
                 self.set_terrain(at, stairs);
             }
             self.state.current_mut().stairs.push(StairsLink {
@@ -241,12 +241,14 @@ impl World {
             return;
         };
         let at = level.stairs.remove(i).pos;
-        let Some(rubble) = content.terrain_id("rubble").or(content.terrain_id("floor")) else {
+        let Some(rubble) = content.ids().rubble else {
             return;
         };
         if self.state.current_level != from {
             if let Some(level) = self.state.levels.get_mut(&from) {
                 level.terrain.set(at, rubble);
+                // The cache keeps every level visited (#1518).
+                self.lights.terrain_changed(level, &content, at);
             }
             return;
         }

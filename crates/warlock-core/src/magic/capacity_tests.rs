@@ -372,6 +372,7 @@ fn every_loot_path_holds_its_items_to_their_capacity() {
 
 /// The affixes written for each shipped unique and each level's `[[item]]`, from the asset
 /// files: (where, unique id or level stem, `at`, object, how many).
+#[allow(clippy::type_complexity)]
 fn written() -> Vec<(String, String, Option<[i64; 2]>, String, usize)> {
     fn walk(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
         for entry in std::fs::read_dir(dir).expect("assets").flatten() {

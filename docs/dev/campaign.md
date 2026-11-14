@@ -71,7 +71,8 @@ starts, one of the campaign's own), and `kind`, `campaign` (default) or `test`.
   (`content/plural.rs`); a word it gives another plural than the shared file is an error.
 - Files outside `campaigns/` that campaigns would own (a top-level `levels/`, `scenarios/`, or
   a single `data/quests.toml`) belong to no campaign and are not checked: test fixtures insert
-  them on top of the built-in content. A scenario there plays in its start level's campaign.
+  them on top of the built-in content (the walk of a content directory, `content/walk.rs`,
+  reads no top-level `levels/` or `scenarios/`). A scenario there plays in its start level's campaign.
 - At most one level of kind `overworld` a campaign (and one outside every campaign).
 - `start` is a scenario of the campaign's own.
 
@@ -108,7 +109,7 @@ so Esc on the race goes back to the main menu. `--screen race` and the later ste
 as usual (`open_startup_screens` skips a screen already on top); `--screen new-run` in a release
 build shows the race step. A developer build lists the test world too and shows the screen.
 Tests: `new_run_screen.rs` (`skips` in both builds), `screens.rs`
-(`a_release_new_run_is_skipped_both_ways`), and `release_content` (one row).
+(`a_release_new_run_is_skipped_both_ways`), and `release_content` (one campaign).
 
 ## The Characters screen's campaign (#341, design §3.4)
 
@@ -139,12 +140,13 @@ Test content never appears in a release. The cargo feature `showcase` holds it:
   `Content::default_scenario`: the showcase where it is built in, else the first campaign's
   start. `warlock-cli` keeps its default `showcase` and, in a release build, refuses it as an
   unknown scenario.
-- **Guards**: the test `release_content` (compiled only without the feature, in
-  `content/campaign.rs` and `ui/new_run_screen.rs`) checks that `Content::builtin()` loads and
-  holds no campaign of kind `test` and nothing of one (scenario, level, dungeon, quest,
-  dialogue, creature type, vault), and that New run lists exactly the campaigns' starts, also
-  with `--dev`. CI's `release-config` job builds the release configuration, checks it for
-  wasm32, runs `cargo test --no-default-features -p warlock-core -p warlock release_content`,
+- **Guards**: the test `release_content` (an integration test of warlock-core,
+  `tests/release_content.rs`, empty unless built without the feature: one small harness, #1593)
+  checks that `Content::builtin()` loads and holds no campaign of kind `test` and nothing of one
+  (scenario, level, dungeon, quest, dialogue, creature type, vault), so New run lists nothing of
+  the test world, also with `--dev`, and that there is one campaign. CI's `release-config` job
+  builds the release configuration, checks it for wasm32, runs
+  `cargo test --no-default-features -p warlock-core --test release_content`,
   and expects `warlock-cli dump --scenario showcase` to fail with "unknown scenario". The
   `Release` workflow does the last on each platform's binary and checks the game binary holds
   no `campaigns/showcase/campaign.toml` (the key of the embedded file), and `cargo xtask web`
@@ -268,7 +270,7 @@ campaigns it does not describe (`order::described`).
 numbering, a run of each, the fingerprint and a save across a build without the test world, the
 cross-campaign refusals, the id clashes, one overworld a campaign), `new_run_screen.rs` (the
 order in release and developer builds), the `new-run-screen` text snapshot, and
-`release_content` in both (compiled only in the release configuration).
+`tests/release_content.rs` (compiled only in the release configuration).
 
 Vaults (#337): `Vault::stamps_on(def, depth)` keeps a campaign's vaults to its own branches, and
 to the branches or branch levels its file's `dungeons` names (`vault::parse_dungeons`, checked by

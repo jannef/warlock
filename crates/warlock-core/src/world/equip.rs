@@ -10,6 +10,7 @@
 use super::{Spent, World};
 use crate::content::{ActionKind, SlotId};
 use crate::equipment::{self, verbs};
+use crate::text::capitalized;
 
 impl World {
     /// Puts inventory stack `item` on in slot `slot` (an id), taking off first what is in the
@@ -166,12 +167,4 @@ impl World {
         let player = self.state.player;
         Spent::Turn(kinds.iter().map(|&k| self.price_of(player, k)).sum())
     }
-}
-
-/// `text` with its first letter in upper case.
-fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    chars
-        .next()
-        .map_or_else(String::new, |c| c.to_uppercase().chain(chars).collect())
 }

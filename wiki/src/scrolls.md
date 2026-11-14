@@ -71,7 +71,7 @@ You learn what a kind of scroll is, for good, in any of these ways:
   too.
 - **Read the [scroll of identify](#the-scroll-of-identify) on it** (below). You know the scroll
   of identify itself once you have read your first one.
-- **A [merchant](classes.md#merchant)'s [Merchant's eye](talents.md#talent-merchants-eye)**
+- **A [merchant](classes.md#merchant)'s [Merchant's eye](classes.md#talent-merchants-eye)**
   (from level 12), used on it from the abilities menu, tells the scroll for what it is, as the
   scroll of identify would.
 - **An appraisal.** Factor Wulfrun in Cēaptūn identifies everything you carry for 100
@@ -95,7 +95,7 @@ in the [spell's row](magic.md#the-spells).
 
 It casts at the rung the scroll's row gives (the table's "Casts at"), which for most scrolls is
 the base. Your stats do not grow a scroll's damage or healing, but its reach and how long it
-lasts are yours, as for your own casts. [Scroll adept](talents.md#talent-scroll-adept) takes it
+lasts are yours, as for your own casts. [Scroll adept](classes.md#talent-scroll-adept) takes it
 a rung up.
 
 A scroll is **free of [mana](mana.md#spending-it)**. Anyone can try one, even a
@@ -218,7 +218,7 @@ Choose one, and you write its scroll on the first blank scroll you carry.
   blank used up only when the scroll is done: "You write a scroll of fireball."
 - **The scroll** is the ordinary scroll of that spell, at its own [rung](#spell-scrolls), as one
   you found would be, and you know what it is. It reads and sells like any other (a
-  shop buys it at its usual offer). [Scroll adept](talents.md#talent-scroll-adept) adds its rung
+  shop buys it at its usual offer). [Scroll adept](classes.md#talent-scroll-adept) adds its rung
   when you read it. Neither writing nor reading it asks a [check](#making-out-a-scroll): you know the
   spell, so you read it at once, even one you learned beyond your [learning](magic.md#learning).
 - **Scribe is refused**, with no time or mana spent, for a spell you do not know, with no blank

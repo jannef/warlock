@@ -1,7 +1,7 @@
 //! The controls screen and rebinding UI (spec §6): select a command, press a key to bind it.
 //!
-//! Commands are listed by context (`input::Context`: in play, aiming, the rest prompt, menus
-//! and screens, info pages, dialogs, and in builds that have them the developer keys), then, at
+//! Commands are listed by context (`input::Context`: in play, aiming, `--more--`, menus and
+//! screens, text fields, info pages, and in builds that have them the developer keys), then, at
 //! the very bottom, the abilities' own keys (play commands, unbound by default: the abilities
 //! menu has them all; #644); a key is unique within its context only. Enter on a command opens
 //! its keys as a sub-list under it (#1324): each key, the first the one hints name, then "Add a
@@ -10,8 +10,8 @@
 //! the modifiers held with it (`Ctrl+r`; a modifier alone never binds, and kept shortcuts and
 //! modifiers on other contexts' keys are refused with the reason: `settings::mods`). A key
 //! another command of the same context uses moves to this one, and the message says so; Esc
-//! (fixed) and the last key of a vital command (`settings::keys::VITAL`) are refused, taken or
-//! removed, so the player cannot lock themselves out. Esc cancels, Delete on a command resets
+//! (fixed) is refused, taken or removed, and so is a key fixed where the command is read (the
+//! menu keys among them, `settings::fixed`, #1533), so the player cannot lock themselves out. Esc cancels, Delete on a command resets
 //! it, and "Reset all keys" restores the defaults. "Export keys" and "Import keys" write and read
 //! the keymap file (`settings::keymap`): in the config folder on the desktop, a download and a
 //! file picker on the web (whose file arrives a few frames later: [`receive_keymap`]).
@@ -21,7 +21,7 @@
 //! of code for both, so help always matches the bindings.
 
 use super::cursor;
-use super::menu::{Hints, Nav, Panel, Press, wrap};
+use super::menu::{HINTS, Nav, Panel, Press, truncated, wrap};
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, Context, KeyBinding, KeyCommand};
 use crate::render::console::Console;
@@ -105,9 +105,10 @@ impl Row {
 const ABILITY_KEYS_TITLE: &str = "Ability keys (all in the abilities menu too)";
 
 /// What the list says first: the keys no binding changes.
-const NOTES: [&str; 3] = [
+const NOTES: [&str; 4] = [
     "Esc always backs out and cancels; it cannot be rebound.",
-    "Letters (a-z) and digits that pick list rows are fixed.",
+    "Menus, dialogs, text fields, and info pages have fixed keys,",
+    "as do the rest prompt and aiming: hint lines name them.",
     "On screens the numpad moves as the arrows do (fixed).",
 ];
 
@@ -432,7 +433,7 @@ impl ControlsScreen {
                 format!("{shown} moved to {} (was {}).", command.name(), from.name())
             }
             Err(conflict) => format!(
-                "! {shown} is the only key for {} and cannot be taken.",
+                "! {shown} is fixed for {} and cannot be taken.",
                 conflict.owner.name()
             ),
         }];
@@ -490,13 +491,13 @@ impl ControlsScreen {
                     console.print(panel.inner_x(), y, ABILITY_KEYS_TITLE, ACCENT);
                 }
                 Row::Command(command) => {
-                    let value = fit(&key_list(bindings, *command), value_w);
+                    let value = truncated(&key_list(bindings, *command), value_w);
                     panel.row(console, y, selected, &command.name(), &value, label_w);
                 }
                 Row::Key(command, at) => {
                     let value = match bindings.keys_of(*command).get(*at) {
                         _ if selected && capturing => "press a key...".to_string(),
-                        Some(key) => fit(&key.display(), value_w),
+                        Some(key) => truncated(&key.display(), value_w),
                         None => String::new(),
                     };
                     let label = format!("  Key {}", at + 1);
@@ -525,7 +526,7 @@ impl ControlsScreen {
         if !read_only {
             self.draw_message(console, &panel, bindings);
         }
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         let footer = if read_only {
             let close = match bindings.key_name(KeyCommand::Help) {
                 Some(key) => format!("{key} or Esc close"),
@@ -646,7 +647,7 @@ fn remove_message(
         }
         Some(Ok(key)) => format!("{name}: {} removed.", key.display()),
         Some(Err(conflict)) => format!(
-            "! {} is the only key for {name} and cannot be removed.",
+            "! {} is fixed for {name} and cannot be removed.",
             conflict.key.display()
         ),
         None => String::new(),
@@ -654,14 +655,6 @@ fn remove_message(
 }
 
 /// `text` cut to `width` cells, ending in `…` when cut.
-fn fit(text: &str, width: usize) -> String {
-    if text.chars().count() <= width {
-        return text.to_string();
-    }
-    let kept: String = text.chars().take(width.saturating_sub(1)).collect();
-    format!("{kept}…")
-}
-
 /// A command's keys, primary first, separated by spaces.
 fn key_list(bindings: &Bindings, command: KeyCommand) -> String {
     let keys: Vec<String> = bindings
@@ -803,25 +796,6 @@ mod tests {
     }
 
     #[test]
-    fn a_vital_commands_last_key_is_not_removed() {
-        let (mut screen, mut b) = (
-            ControlsScreen::new(false, KeymapFile::Nowhere),
-            Bindings::default(),
-        );
-        open(&mut screen, &mut b, KeyCommand::Confirm);
-        while b.keys_of(KeyCommand::Confirm).len() > 1 {
-            nav(&mut screen, &mut b, Nav::Erase);
-        }
-        let last = key_list(&b, KeyCommand::Confirm);
-        nav(&mut screen, &mut b, Nav::Erase);
-        assert_eq!(key_list(&b, KeyCommand::Confirm), last);
-        assert_eq!(
-            message(&screen),
-            format!("! {last} is the only key for Choose and cannot be removed.")
-        );
-    }
-
-    #[test]
     fn a_used_key_moves_and_the_message_says_what_moved() {
         let (mut screen, mut b) = (
             ControlsScreen::new(false, KeymapFile::Nowhere),
@@ -852,14 +826,21 @@ mod tests {
             ControlsScreen::new(false, KeymapFile::Nowhere),
             Bindings::default(),
         );
-        // `w` for Up on the menus leaves play's keys alone, and `k` stays Move north in play.
-        open(&mut screen, &mut b, KeyCommand::MenuUp);
-        capture(&mut screen, &mut b, "w");
-        assert_eq!(message(&screen), "Up: ↑ is now w.");
-        let w = KeyBinding::from_text("w").unwrap();
-        assert_eq!(b.owner_in(Context::Menu, &w), Some(KeyCommand::MenuUp));
-        assert_eq!(b.owner(&w), None);
-        assert_eq!(b.keys_of(KeyCommand::MenuUp)[1].display(), "k");
+        // `q` for Back on the menus leaves play's keys alone: it stays the quest log in play.
+        open(&mut screen, &mut b, KeyCommand::Back);
+        capture(&mut screen, &mut b, "q");
+        assert_eq!(message(&screen), "Back (Esc always works): q added.");
+        let q = KeyBinding::from_text("q").unwrap();
+        assert_eq!(b.owner_in(Context::Menu, &q), Some(KeyCommand::Back));
+        assert_eq!(b.owner(&q), Some(KeyCommand::Quests));
+        // A key fixed on the menus is refused, and the screen waits on for another key.
+        open(&mut screen, &mut b, KeyCommand::Back);
+        capture(&mut screen, &mut b, "j");
+        assert_eq!(screen.mode, Mode::Capture);
+        assert_eq!(
+            message(&screen),
+            "! j is fixed in menus and screens. Try another, or Esc to cancel."
+        );
     }
 
     #[test]
@@ -876,12 +857,12 @@ mod tests {
         assert_eq!(b.owner(&ctrl_r), Some(KeyCommand::Read));
         assert_eq!(key_list(&b, KeyCommand::Read), "Ctrl+r");
         // A menu key takes no modifiers: refused, and the screen waits on for another key.
-        open(&mut screen, &mut b, KeyCommand::MenuUp);
+        open(&mut screen, &mut b, KeyCommand::Back);
         let before = b.0.clone();
         capture(&mut screen, &mut b, "Ctrl+w");
         assert_eq!(b.0, before);
         assert_eq!(screen.mode, Mode::Capture);
-        assert!(message(&screen).starts_with("! Up takes plain keys only"));
+        assert!(message(&screen).starts_with("! Back (Esc always works) takes plain keys only"));
     }
 
     #[test]
@@ -1026,7 +1007,7 @@ mod tests {
         // Down through a whole context lands on the next one's first command.
         select(&mut screen, Row::Command(KeyCommand::Quit));
         nav(&mut screen, &mut b, Nav::Down);
-        assert_eq!(screen.selected_command(), Some(KeyCommand::NextTarget));
+        assert_eq!(screen.selected_command(), Some(KeyCommand::PrevTarget));
         for _ in 0..500 {
             nav(&mut screen, &mut b, Nav::Down);
             assert!(screen.rows()[screen.selected].selectable(false));
@@ -1139,8 +1120,8 @@ mod tests {
             KeyCommand::Cancel,
             KeyCommand::RevealMap,
             KeyCommand::Snapshot,
-            KeyCommand::MenuUp,
-            KeyCommand::Loose,
+            KeyCommand::Back,
+            KeyCommand::PrevTarget,
         ] {
             assert!(rows.contains(&Row::Command(extra)), "{extra:?}");
         }
@@ -1170,7 +1151,7 @@ mod tests {
         for needle in [
             "? or Esc close",
             "Esc always backs out",
-            "Letters (a-z)",
+            "have fixed keys",
             "Menus and screens",
             "Aiming",
         ] {

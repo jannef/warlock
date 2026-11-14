@@ -336,7 +336,10 @@ pub mod web {
     fn flush() {
         PENDING.with(|p| {
             let Some(pending) = p.borrow().as_ref().map(|pending| {
-                let bytes = warlock_core::save::encode_state(&pending.state, pending.fingerprint);
+                // A state that cannot be encoded writes nothing: the old save is kept (#1580).
+                let bytes =
+                    warlock_core::save::try_encode_state(&pending.state, pending.fingerprint)
+                        .map_err(|e| std::io::Error::other(e.to_string()))?;
                 let (beside, text) = &pending.beside;
                 set(&pending.file, &super::encode_base64(&bytes))
                     .and_then(|()| set(beside, &super::encode_base64(text.as_bytes())))

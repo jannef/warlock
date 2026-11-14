@@ -30,9 +30,6 @@ use crate::geom::{Dir, Pos};
 use crate::object::Stack;
 use crate::time::Duration;
 
-/// The terrain a field forge makes.
-pub const ANVIL: &str = "makeshift_anvil";
-
 /// A field forge under way: the cell it is set on and its time.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Forging {
@@ -153,7 +150,7 @@ impl World {
     /// The time is up: the ingot spent and the anvil set, if both still hold.
     fn forged(&mut self, at: Pos) {
         let content = self.content.clone();
-        let Some(anvil) = content.terrain_id(ANVIL) else {
+        let Some(anvil) = content.ids().makeshift_anvil else {
             return;
         };
         let Some(item) = self.ingot() else {

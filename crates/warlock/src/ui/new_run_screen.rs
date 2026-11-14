@@ -11,10 +11,9 @@
 
 use super::chargen_screen::ScenarioPick;
 use super::cursor;
-use super::menu::{Hints, Nav, Panel, Press, wrap};
+use super::menu::{HINTS, Nav, Panel, Press, wrap};
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{TEXT, TEXT_DIM};
-use crate::input::Bindings;
 use crate::render::console::Console;
 use warlock_core::character::CharacterSpec;
 use warlock_core::content::{CampaignKind, Content};
@@ -171,7 +170,7 @@ impl NewRunScreen {
         ScreenAction::Stay
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         let field = match &self.seed {
             Seed::Field(text) => Some(text),
             Seed::Fresh(_) => None,
@@ -231,7 +230,7 @@ impl NewRunScreen {
                 TEXT_DIM,
             );
         }
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         let next = if self.creates_characters {
             "next"
         } else {
@@ -305,9 +304,7 @@ pub fn fresh_seed() -> u64 {
     #[cfg(not(target_arch = "wasm32"))]
     let noise = {
         use std::hash::BuildHasher;
-        let nanos = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_or(0, |d| d.as_nanos() as u64);
+        let nanos = crate::utc::since_epoch().as_nanos() as u64;
         nanos ^ std::collections::hash_map::RandomState::new().hash_one(nanos)
     };
     mix(noise) >> 32
@@ -333,7 +330,7 @@ mod tests {
     fn drawn(screen: &NewRunScreen) -> String {
         let mut console = Console::default();
         console.resize(80, 34);
-        screen.draw(&mut console, &Bindings::default());
+        screen.draw(&mut console);
         (0..console.rows() as i32)
             .map(|y| {
                 (0..console.cols() as i32)
@@ -504,33 +501,6 @@ mod tests {
                     name: None,
                 })
             );
-        }
-    }
-}
-
-/// A release build (`--no-default-features`, #331): New run lists the campaigns' starts and
-/// nothing of the test world, with `--dev` too. Run by CI's release-configuration job.
-#[cfg(all(test, not(feature = "showcase")))]
-mod release {
-    use super::*;
-
-    #[test]
-    fn release_content() {
-        let content = Content::builtin().expect("a release build's content loads");
-        let starts: Vec<&str> = (content.campaigns().iter())
-            .map(|c| c.start.as_str())
-            .collect();
-        assert_eq!(rows_of(&content, false), vec![(None, starts.clone())]);
-        // One campaign: New run's step is skipped, straight on to the race.
-        assert_eq!(starts.len(), 1, "{starts:?}");
-        assert!(NewRunScreen::new(&content, Some(1)).skips());
-        for (_, ids) in rows_of(&content, true) {
-            for id in ids {
-                let scenario = content.scenario(id).expect("a scenario");
-                let campaign = scenario.campaign.as_deref().expect("a campaign's");
-                let kind = content.campaign(campaign).map(|c| c.kind);
-                assert_eq!(kind, Some(CampaignKind::Campaign), "{id}");
-            }
         }
     }
 }

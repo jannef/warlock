@@ -135,9 +135,9 @@ The druid calls the wild:
 - [Call of the forest](magic.md#spell-call-of-the-forest) at 25;
 - [Call the elements](magic.md#spell-call-the-elements) at 40, whose element the wild chooses.
 
-Each call keeps one of its own beside you. From [Pack leader](talents.md#talent-pack-leader) (level
+Each call keeps one of its own beside you. From [Pack leader](classes.md#talent-pack-leader) (level
 32), every call brings one more, keeps two of its own, and lasts half again as long.
-[Lord of the wild](talents.md#talent-lord-of-the-wild) (level 60) keeps three of each, and what you
+[Lord of the wild](classes.md#talent-lord-of-the-wild) (level 60) keeps three of each, and what you
 call stays until it is slain.
 
 [Beast-bond](talents.md#talent-beast-bond), a Wayfarer talent for those with some

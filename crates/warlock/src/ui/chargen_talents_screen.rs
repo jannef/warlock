@@ -16,11 +16,10 @@
 
 use super::character_screen::fit_joined;
 use super::chargen_screen::{Draft, WIDTH};
-use super::menu::{Hints, Nav, Panel, Press};
+use super::menu::{HINTS, Nav, Panel, Press, truncated};
 use super::paged_list::{PagedList, Row, draw_header};
 use super::screens::{ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
-use crate::input::Bindings;
 use crate::render::console::Console;
 use std::sync::Arc;
 use warlock_core::World;
@@ -342,7 +341,7 @@ impl ChargenTalentsScreen {
         }
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         self.fit(console.cols(), console.rows());
         let list = self.list();
         let count = list.tallest().max(1) as i32;
@@ -386,11 +385,7 @@ impl ChargenTalentsScreen {
             let at = x + 5 + name_w + 2;
             let room = (panel.x + panel.w - 2 - at).max(0) as usize;
             if self.choosing.is_none() && entry.talent.is_some() && room > 8 {
-                let mut text: String = entry.description.chars().take(room).collect();
-                if entry.description.chars().count() > room {
-                    text = text.chars().take(room - 1).collect::<String>() + "…";
-                }
-                console.print(at, y, &text, TEXT_DIM);
+                console.print(at, y, &truncated(&entry.description, room), TEXT_DIM);
             }
         }
         let (text, color) = match (&self.notice, list.selected()) {
@@ -405,7 +400,7 @@ impl ChargenTalentsScreen {
                 console.print(x, y, line, color);
             }
         }
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         let mut footer = format!("{} or a letter mark", keys.confirm);
         if let Some(hint) = list.hint(&keys) {
             footer = format!("{footer}   {hint}");

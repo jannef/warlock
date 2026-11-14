@@ -16,7 +16,7 @@
 //! Both are read from the perception snapshot: the player's own inventory and equipment.
 
 use super::cursor;
-use super::menu::{Hints, Nav, Panel, Press};
+use super::menu::{HINTS, Nav, Panel, Press};
 use super::paged_list::{PagedList, Row, draw_header};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM, rarity_color};
@@ -199,7 +199,7 @@ impl EquipmentScreen {
         ScreenAction::Stay
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         // Rows: margin, the slots, a gap, the totals, the weight, a gap, the footer, the frame.
         let count = self.rows.len().max(1) as i32;
         let panel = Panel::new(
@@ -208,7 +208,7 @@ impl EquipmentScreen {
             super::info_tabs::panel_width(WIDTH),
             count + 8,
         );
-        super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Equipment);
+        super::info_tabs::draw_tabs(console, &panel, super::ScreenName::Equipment);
         let x = panel.inner_x();
         let right = panel.x + panel.w - 3;
         // Rows from the footer's down would draw over it, or the frame, of a panel cut short.
@@ -385,7 +385,7 @@ impl ItemScreen {
         })
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         // Rows: margin, the list, a gap, the hint, a gap, the footer, the frame; as large as the
         // equipment screen beneath at least. A page takes what rows the console has for it.
         self.fit(console.cols(), console.rows());
@@ -439,12 +439,12 @@ impl ItemScreen {
             );
             console.print(x, y, &hint, TEXT_DIM);
         }
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         let confirm = &keys.confirm;
         let choose = match self.choices.last_letter() {
             Some('a') => format!("a or {confirm}"),
             Some(last) => format!("a-{last} or {confirm}"),
-            None => confirm.clone(),
+            None => confirm.to_string(),
         };
         let page = (self.choices.hint(&keys)).map_or(String::new(), |hint| format!("{hint}   "));
         panel.footer(console, &format!("{choose} {put_on}   {page}Esc back"));
@@ -502,7 +502,6 @@ mod tests {
     #[test]
     fn lists_every_slot_with_its_letter_and_contents() {
         let mut world = armed();
-        let b = Bindings::default();
         world.apply(&Action::Equip {
             slot: "head".into(),
             item: 5,
@@ -512,7 +511,7 @@ mod tests {
             item: 1,
         });
         let screen = EquipmentScreen::new(Some(&world.perception()));
-        let text = drawn(|c| screen.draw(c, &b));
+        let text = drawn(|c| screen.draw(c));
         assert!(row(&text, " Equipment ").contains('─'));
         assert!(row(&text, "a  Head").contains("[ an iron helm"));
         assert!(row(&text, "a  Head").contains("1.5 kg"));
@@ -582,7 +581,7 @@ mod tests {
         world.apply(&wear);
         // Now it is there: choosing it takes it off.
         let mut screen = ItemScreen::new(Some(&world.perception()), body);
-        let text = drawn(|c| screen.draw(c, &b));
+        let text = drawn(|c| screen.draw(c));
         assert!(
             row(&text, "a - [ a chain mail shirt (Dv +2, Pv 3) (being worn)").contains("11 kg")
         );
@@ -609,7 +608,7 @@ mod tests {
         assert_eq!(names.len(), 2);
         let off = content.slot_id("off_hand").expect("off hand");
         let screen = ItemScreen::new(Some(&world.perception()), off);
-        let text = drawn(|c| screen.draw(c, &b));
+        let text = drawn(|c| screen.draw(c));
         row(&text, " Equipment: Off hand ");
         row(&text, "a - [ a small shield");
         row(&text, "a or Enter wield");
@@ -620,7 +619,7 @@ mod tests {
             item: 1,
         });
         let mut screen = ItemScreen::new(Some(&world.perception()), off);
-        let text = drawn(|c| screen.draw(c, &b));
+        let text = drawn(|c| screen.draw(c));
         row(
             &text,
             "> a - ) a quarterstaff (+0 hit, 1d6, Dv +1) (wielded in both hands)",
@@ -652,7 +651,7 @@ mod tests {
         });
         screen.refresh(&world.perception());
         assert_eq!(Some(screen.selected()), world.content().slot_id("feet"));
-        let text = drawn(|c| screen.draw(c, &b));
+        let text = drawn(|c| screen.draw(c));
         assert!(row(&text, "> j  Feet").contains("a pair of leather boots"));
         world.apply(&Action::Move(Dir::E));
         screen.refresh(&world.perception());
@@ -670,11 +669,11 @@ mod tests {
         for (cols, rows) in [(80, 30), (40, 12), (5, 3), (0, 0)] {
             let mut console = Console::default();
             console.resize(cols, rows);
-            screen.draw(&mut console, &b);
-            empty.draw(&mut console, &b);
-            choice.draw(&mut console, &b);
-            nothing.draw(&mut console, &b);
-            missing.draw(&mut console, &b);
+            screen.draw(&mut console);
+            empty.draw(&mut console);
+            choice.draw(&mut console);
+            nothing.draw(&mut console);
+            missing.draw(&mut console);
         }
         let mut nothing = nothing;
         assert_eq!(

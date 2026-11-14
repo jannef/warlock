@@ -47,9 +47,14 @@ map = '''
 
 /// A world on `map` where nobody but the player acts, the player has Charge and 12 stamina.
 fn world(map: &str) -> World {
+    world_with(map, "")
+}
+
+/// [`world`] with `more` after the level file's legend (`[[shop]]`, `[[pile]]` tables).
+fn world_with(map: &str, more: &str) -> World {
     let mut files = ContentFiles::builtin();
     files.insert("data/creatures/zz_ch_test.toml", CREATURES);
-    files.insert("levels/ch_yard.toml", &level(map));
+    files.insert("levels/ch_yard.toml", &format!("{}{more}", level(map)));
     files.insert(
         "scenarios/ch_yard.toml",
         "name = \"Yard\"\nstart_level = \"ch_yard\"\nhp = 1000\nstats = { toughness = 14 }\n",
@@ -163,6 +168,26 @@ fn a_charge_moves_at_least_a_cell_and_its_refusals_take_no_time() {
     );
     assert!(matches!(spent, Spent::Turn(_)));
     assert_eq!(stamina(&w), 0);
+}
+
+#[test]
+fn a_charge_out_of_a_shop_owing_is_refused() {
+    // A shop of four cells, its door open at (3, 2), a dagger at the player's feet (#1488).
+    let map = "##########\n#.@#.....#\n#..'...p.#\n##########\n";
+    let shop = "\"'\" = { terrain = \"door_open\" }\n[[pile]]\nat = [2, 1]\nobjects = [\"dagger\"]\n\
+                [[shop]]\nkind = \"weaponsmith\"\nkeeper = \"Orvald\"\narea = [1, 1, 2, 2]\n\
+                post = [1, 1]\n";
+    let mut w = world_with(map, shop);
+    assert_eq!(w.state.current().shops[0].exits, [Pos::new(3, 2)]);
+    use_(&mut w, "pickup");
+    use_(&mut w, "move:S");
+    assert!(!w.state.current().shops[0].unpaid.is_empty(), "owing");
+    let before = (stamina(&w), w.state.player().pos, w.state.turn);
+    let outcome = use_(&mut w, "use:charge:7,2");
+    assert!(!outcome.took_turn, "{:#?}", said(&w));
+    assert_eq!((stamina(&w), w.state.player().pos, w.state.turn), before);
+    assert!(said(&w).iter().any(|m| m.contains("you haven't paid")));
+    assert!(!w.state.current().shops[0].unpaid.is_empty(), "no theft");
 }
 
 #[test]

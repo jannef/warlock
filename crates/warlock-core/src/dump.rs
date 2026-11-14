@@ -8,7 +8,7 @@ use crate::ability::Aim;
 use crate::action::{letter, position_text};
 use crate::blood::{self, Stain};
 use crate::character::Gender;
-use crate::content::{Content, SpecialRoom, WeaponSkillId, article};
+use crate::content::{Content, SpecialRoom, WeaponSkillId};
 use crate::equipment;
 use crate::geom::Pos;
 use crate::hunger::Hunger;
@@ -17,6 +17,7 @@ use crate::noise::{PerceivedSound, SoundKind, Volume};
 use crate::object::{Stack, format_weight};
 use crate::perception::{CellView, PerceivedLight, PerceptionView};
 use crate::stats::Stat;
+use crate::text::article;
 use crate::weather::Weather;
 use crate::world::{CallingStatus, Cause, LevelState, World};
 use serde_json::{Value, json};
@@ -1194,7 +1195,7 @@ fn calling_rows(world: &World) -> Vec<String> {
                     .map_or("nobody".to_string(), |k| {
                         format!(
                             "{} {}",
-                            crate::content::article(&k.name),
+                            crate::text::article(&k.name),
                             k.name.to_lowercase()
                         )
                     });
@@ -1862,9 +1863,19 @@ fn actor_rows(world: &World) -> Vec<String> {
                 }
                 _ => talk,
             };
-            // What it resists, in percent by kind (ground truth: never shown in play).
-            let resists: Vec<String> = (world.resistances_of(a.id).iter())
-                .map(|(k, p)| format!("{} {p}", content.damage_type(k).id))
+            // What it resists, in percent by kind, as it counts (ground truth: never shown in
+            // play), and the total behind it where the cap cuts it (#1620): `fire 75 (of 200)`.
+            let resistances = world.resistances_of(a.id);
+            let resists: Vec<String> = (resistances.iter())
+                .map(|(k, p)| {
+                    let total = resistances.total(Some(k));
+                    let id = &content.damage_type(k).id;
+                    if p == crate::damage::IMMUNE || total == p {
+                        format!("{id} {p}")
+                    } else {
+                        format!("{id} {p} (of {total})")
+                    }
+                })
                 .collect();
             let resists = if resists.is_empty() {
                 String::new()

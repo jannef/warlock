@@ -20,7 +20,8 @@ hearing = 10
 weight = 30000
 stats = { strength = 15, dexterity = 12, toughness = 16, intelligence = 2, willpower = 19, presence = 2 }
 base_hp = 23
-resist = { fire = 100, cold = -50, poison = 100 }
+resist = { cold = -50 }
+immune = ["fire", "poison"]
 corpse = false
 blood = "none"
 [creature.attack]

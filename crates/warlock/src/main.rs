@@ -1,5 +1,8 @@
 //! Warlock game binary.
 
+// Bevy systems routinely take many parameters and complex query types.
+#![allow(clippy::too_many_arguments, clippy::type_complexity)]
+
 mod capture;
 mod cli;
 mod game;
@@ -14,6 +17,7 @@ mod save;
 mod settings;
 mod storage;
 mod ui;
+mod utc;
 mod viewport;
 
 use bevy::app::ScheduleRunnerPlugin;
@@ -32,7 +36,9 @@ fn file_command(args: &cli::Args) -> Option<AppExit> {
     }
     if args.export_keys.is_some() || args.import_keys.is_some() {
         paths::init(args, false);
-        return Some(match settings::keymap::command(args) {
+        let result = settings::keymap::command(args);
+        logging::print_early_warnings();
+        return Some(match result {
             Ok(text) => {
                 print!("{text}");
                 AppExit::Success
@@ -76,13 +82,14 @@ fn main() -> AppExit {
         return exit;
     }
     for warning in &paths::init(&args, false).warnings {
-        eprintln!("warlock: {warning}");
+        logging::warn_early(warning.clone());
     }
     logging::init();
     logging::maybe_crash_test();
     let content = match game::load_content(&args) {
         Ok(content) => content,
         Err(err) => {
+            logging::print_early_warnings();
             eprintln!("warlock: {err}");
             return AppExit::error();
         }
@@ -94,6 +101,7 @@ fn main() -> AppExit {
         match game::Game::start(&args, content.clone()) {
             Ok(game) => Some(game),
             Err(err) => {
+                logging::print_early_warnings();
                 eprintln!("warlock: {err}");
                 return AppExit::error();
             }
@@ -162,5 +170,6 @@ fn main() -> AppExit {
         ui::UiPlugin,
         capture::CapturePlugin,
     ))
+    .add_systems(Startup, logging::log_early_warnings)
     .run()
 }

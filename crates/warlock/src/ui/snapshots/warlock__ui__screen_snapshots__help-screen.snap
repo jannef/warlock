@@ -5,7 +5,8 @@ expression: "render(case, content.clone())"
  Welcome to Showcase. Press ┌─ Controls ───────────────────────────────────────────────────┐
                             │                                                              │
                             │ Esc always backs out and cancels; it cannot be rebound.      │
-                            │ Letters (a-z) and digits that pick list rows are fixed.      │
+                            │ Menus, dialogs, text fields, and info pages have fixed keys, │
+                            │ as do the rest prompt and aiming: hint lines name them.      │
                             │ On screens the numpad moves as the arrows do (fixed).        │
                             │                                                              │
                             │ In play                                                      │
@@ -43,6 +44,5 @@ expression: "render(case, content.clone())"
                             │   Talents                              G                     │
                             │   Message history                      v                     │
                             │   Rest                                 b                     │
-                            │   Consume                              e                     │
                             │ ↑↓ scroll   ? or Esc close                                 ↓ │
  The Hub  ·  HP 18/18  ·  MP└──────────────────────────────────────────────────────────────┘1444  ·  10 °C   ? controls

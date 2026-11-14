@@ -39,14 +39,7 @@ use crate::damage::Damage;
 use crate::dice::{Dice, Roll};
 use crate::geom::Pos;
 use crate::talent::TalentMods;
-
-/// `text` with its first letter in upper case.
-fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    chars
-        .next()
-        .map_or_else(String::new, |c| c.to_uppercase().chain(chars).collect())
-}
+use crate::text::capitalized;
 
 /// What an event a trigger fires on was ([`World::weapon_trigger`]): the other end of it (the
 /// one struck, or the attacker), the kind of attack, the skills concerned, and the blow, if one.
@@ -252,7 +245,7 @@ impl World {
         let content = self.content.clone();
         let name = crate::content::the_start(&content.creature(them.creature).name);
         let def = content.status(status);
-        let does = if def.id == "staggered" {
+        let does = if content.ids().staggered == Some(status) {
             "staggers".to_string()
         } else {
             format!(
@@ -578,8 +571,7 @@ impl World {
             .collect();
         let surprise = content.surprise().map(|s| s.status);
         let mut steadied = false;
-        let was_staggered =
-            (content.status_id(super::footing::STAGGERED)).is_some_and(|s| spent.contains(&s));
+        let was_staggered = (content.ids().staggered).is_some_and(|s| spent.contains(&s));
         for status in spent {
             let left = (actor.effects.get_mut(status)).map_or(0, |e| {
                 e.severity = e.severity.saturating_sub(1);

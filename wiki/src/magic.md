@@ -160,7 +160,7 @@ A spell's mana cost is worked out in steps:
 5. Apply your talents and the spell's [rank](#spell-ranks), their percents added together,
    rounding down and never below 1:
    *[School focus](talents.md#talent-school-focus)* takes 10 % off the spells of its school or
-   element, *[Archmage](talents.md#talent-archmage)* 50 %, and *[Empower](talents.md#talent-empower)*
+   element, *[Archmage](classes.md#talent-archmage)* 50 %, and *[Empower](classes.md#talent-empower)*
    10 %, while *[Brimming](talents.md#talent-brimming)* adds 10 %; a rank takes off what the
    spell's own table says.
 6. Last, *[Frugal caster](talents.md#talent-frugal-caster)* takes a fifth off, and

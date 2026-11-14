@@ -12,8 +12,8 @@ use super::menu::{Edit, Panel, Press, wrap};
 use super::screens::{ScreenAction, ScreenName};
 use super::text_field::TextField;
 use super::{TEXT, TEXT_DIM};
-use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
+use crate::settings::fixed;
 use warlock_core::character::{MAX_NAME, NAMELESS, random_name};
 use warlock_core::content::Content;
 
@@ -53,7 +53,7 @@ impl NameScreen {
         let who = spec.map_or(String::new(), |spec| {
             let race = (spec.race(content)).map_or(spec.race.clone(), |r| r.name.clone());
             let class = (spec.class(content)).map_or(spec.class.clone(), |c| c.name.clone());
-            let article = warlock_core::content::article(&race);
+            let article = warlock_core::text::article(&race);
             format!("{article} {} {}", race.to_lowercase(), class.to_lowercase())
         });
         Self {
@@ -106,7 +106,7 @@ impl NameScreen {
         }
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         // Rows: margin, who, a gap, the field, a gap, two lines of help, a gap, the footer, the
         // frame.
         let panel = Panel::new(
@@ -129,11 +129,10 @@ impl NameScreen {
         console.print(x + 2, y, "Name: ", TEXT);
         self.field.draw(console, x + 8, y, self.placeholder());
         y += 2;
-        let key = |command| bindings.key_name(command).unwrap_or_else(|| "?".into());
         let help = format!(
             "Type a name of up to {MAX_NAME} characters, or {} for one of your people's names. \
              Left empty, it is {}.",
-            key(KeyCommand::TextRandom),
+            fixed::TEXT_RANDOM,
             self.placeholder()
         );
         for line in wrap(&help, panel.inner_w() - 2).into_iter().take(2) {
@@ -142,9 +141,9 @@ impl NameScreen {
         }
         let footer = format!(
             "{} accept   {} random   {} erase   Esc back",
-            key(KeyCommand::TextConfirm),
-            key(KeyCommand::TextRandom),
-            key(KeyCommand::TextErase),
+            fixed::TEXT_CONFIRM,
+            fixed::TEXT_RANDOM,
+            fixed::TEXT_ERASE,
         );
         panel.footer(console, &footer);
     }
@@ -252,7 +251,7 @@ mod tests {
     fn drawn(screen: &NameScreen) -> String {
         let mut console = Console::default();
         console.resize(80, 24);
-        screen.draw(&mut console, &Bindings::default());
+        screen.draw(&mut console);
         (0..console.rows() as i32)
             .map(|y| {
                 (0..console.cols() as i32)

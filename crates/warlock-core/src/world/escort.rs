@@ -143,7 +143,7 @@ impl World {
                 ..
             } = &def.goal
             {
-                let who = super::talk::capitalized(&self.called(&self.state.actors[&escort]));
+                let who = crate::text::capitalized(&self.called(&self.state.actors[&escort]));
                 self.say(format!("{who} says: \"{thanks}\""));
             }
             // The giver thanks the player, if here to; else the escort does.
@@ -201,7 +201,7 @@ impl World {
         }
         allies.retain(|id| self.state.actors[id].escorting().is_none());
         let names: Vec<&str> = escorts.iter().map(String::as_str).collect();
-        let will = crate::content::and_list(&names);
+        let will = crate::text::and_list(&names);
         Some(format!("{will} will not go looking for a fight."))
     }
 

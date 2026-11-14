@@ -73,9 +73,9 @@ The passive skills help you more the higher they are:
   100, three quarters at 200.
 - **[Music](skills.md#skill-music)** makes your [songs](abilities.md#songs) last longer: a degree more at 50, at 100, and every 100 after. It
   also makes them harder for those they are sung against to shake off: +4 to their difficulty at
-  100, +8 at 200. Its two columns in the table below are its ladders. Every song trains it.
+  100, +8 at 200. Its two rows in the table below are its ladders. Every song trains it.
 - **[Athletics](skills.md#skill-athletics)** makes you quicker in everything you do: a twentieth at 100 and a tenth at 200. It
-  adds to the quickness of [talents](talents.md) such as [Fleet-footed](talents.md#talent-fleet-footed) and [Quick](talents.md#talent-quick). Your load slows you on top of it
+  adds to the quickness of [talents](talents.md) such as [Fleet-footed](horoscope.md#talent-fleet-footed) and [Quick](talents.md#talent-quick). Your load slows you on top of it
   (see [Burden](burden.md)). It also helps you kick [doors](doors.md) in (see [Doors](doors.md)). Besides kicks, it trains now and
   then when you act under a load that slows you, on journeys on the [overworld](overworld.md#travel), and when you
   climb out of a [pit](traps.md#trap-pit).
@@ -178,9 +178,13 @@ The passive skills help you more the higher they are:
 
 [Skill focus](talents.md#talent-skill-focus) makes one skill you are trained in count 25 higher in the table below, the way a
 [magic item](magic-items.md)'s bonus does. It works past 100 too, since 100 only slows a skill's [growth](skills.md#getting-better) and is no
-ceiling. It stacks with [Master of none](talents.md#talent-master-of-none) and any magic item. Your Skills screen still shows the value
+ceiling. It stacks with [Master of none](classes.md#talent-master-of-none) and any magic item. Your Skills screen still shows the value
 you trained. On most skills the +25 is worth 2 points of what the skill gives below 100, and 1
 past it. On [Stealth](skills.md#skill-stealth)'s quiet, it is 15 % less noise below 100 and 7 % past it.
+
+The table has one row for each thing a skill gives, the skill named on its first row. The columns
+are the skill's value, from 0 to 200. Between two columns the benefit grows a little at a time,
+never down. "—" means it gives nothing yet at that value.
 
 {{#include generated/skill-benefits.md}}
 

@@ -4,7 +4,12 @@ Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185)
 rules it implements are in spec/06-input-and-ui.md. Keep it current with the code, as CLAUDE.md says.
 
 Settings (`crates/warlock/src/settings/`): `settings.toml` in the config dir, schema in the `settings/mod.rs` module docs (the config dir also keeps `graveyard.toml`, the dead, append-only and unpinned: `docs/dev/saves.md` "The graveyard"). Changes
-apply live and are written at once; a bad file means defaults plus a warning, per value. The
+apply live and are written at once; a bad file means defaults plus a warning, per value. A file
+that does not read at all (not TOML, not UTF-8) is renamed `settings.toml.bad`, as an unusable
+save is, so the first change does not write the defaults over the player's keys (#1576). Startup
+warnings (the settings', the paths') come before `LogPlugin` exists: `logging::warn_early` holds
+them and a `Startup` system logs them (to the log file too), or, for a launch that exits first (a
+file command, content that does not load), `logging::print_early_warnings` prints them (#1591). The
 temperature unit (`temperature = "celsius"`/`"fahrenheit"`, `settings::TemperatureUnit`) is
 applied only where the status bar shows the temperature (`TemperatureUnit::show`). Effects:
 `reduced_effects` is a preset over the `[effects]` switches (`EffectSwitches`: glyph_animation,
@@ -20,31 +25,37 @@ in the UI (`Clock::format`: status bar, death screen); dumps stay 24-hour. Palet
 (`settings/palette.rs`) are applied only when cells are uploaded to the GPU (`render::upload`) and
 in `ui/glyphs.rs`, never to content colors.
 
-Key bindings (spec §6 "Rebinding", #159) are the `Bindings` resource (`input.rs`; text forms,
+Key bindings (spec §6 "Rebinding", #159) are the `Bindings` resource (`settings/bindings.rs`; text forms,
 ids, and the rules in `settings/keys.rs`). **Only play-context commands are rebindable by
 design; the keys of menus, menu lists, screens, info pages, prompts, dialogs, text fields, and the
-targeting mode are fixed, and new ones are plain fixed keys in their screen or input-mode code,
-listed in its hint line, with no `KeyCommand` or `Context` entry (owner, 2026-10-26). The
-contexts below are the existing menu-context bindings, which stay as they are (not widened, not
-removed; a cleanup is a later owner call); the back-style ones (`Back`, `TextBack`, `MoreSkip`,
-`PrevPage`, `PrevTarget`, all unbound) stay exactly as they are (owner, #644). Every key read so far is a `KeyCommand` in its
-`input::Context`**: `Play` (the map, direction prompts, look mode), `Aim` (`NextTarget`,
-`PrevTarget`, `Loose`), `Prompt` (the rest choices), `More` (at `--more--`: `MoreNext`, Space and
-Enter; `MoreSkip`, unbound, as Esc always skips; `ui/more.rs`), `Menu` (`MenuUp`/`Down`/`Left`/`Right`,
-`Confirm`, `Back`, `Erase`, `Mark`, `MarkAll`, and the item lists' `NextListPage` (`>`,
-PageDown) and `PrevListPage` (`<`, PageUp): `Press::from_input` turns them into `Nav`, so
-screens read `press.nav`, never a key), `Text` (a text field, the character's name:
-`TextConfirm` (Enter; vital), `TextErase` (Backspace, Delete), `TextRandom` (Tab), `TextBack`
-(unbound: Esc always backs out); `Press::from_input` turns them into `press.edit`, and every key
-bound to none of them types its text, literally, so a text field never reads the `Menu` keys),
-`Pages` (Tab; the previous info page is Shift with it,
-`PrevPage` unbound by default), `Dialog` (`Yes`, `No`), and `Dev` (the developer
-keys: in every table, read by `input::command_in` and listed by Controls only where
-`input::dev_keys` is true). Keys are unique within a context; a mode with its own context reads it
-before play's (`command_in`). Nothing matches a `KeyCode` or a character directly but Esc (fixed:
-Cancel in play, which skips the rest at `--more--`, `Nav::Back` on every screen) and the letters
-and digits that name list rows (and the text a text field types).
-Hints name keys through `Bindings::key_name` and `ui::menu::Hints` (footers), never a literal key.
+targeting mode are fixed** (owner, 2026-10-26; #1533), plain keys in `settings/fixed.rs`, which
+each place reads, with no `KeyCommand` or `Context` entry: the menu keys (`fixed::menu`: arrows
+and `hjkl` move, Enter and NumEnter choose, Delete and Backspace erase, Space and `,` mark, `>`
+and `<` (PageDown, PageUp) turn an item list's pages; `Press::from_input` turns them into `Nav`,
+so screens read `press.nav`, never a key, and the numpad's 8/2/4/6 are the arrows,
+`menu::numpad_nav`), the text field keys (`fixed::text`: Enter accepts, Backspace and Delete
+erase, Tab a random value, as `press.edit`; every other key types its text, literally, so a text
+field never reads the menu keys), the dialog's `y` and `n` (`fixed::dialog`), the info pages'
+top-row digits and Tab (`fixed::page`, Shift reverses Tab), the rest prompt's `h`, `d`, `n`
+(`fixed::REST`), and aiming's Enter (loose) and Tab (next target; `fixed::aim`), the last two read
+by `Gameplay::fixed_key` before the bindings. Aiming is also loosed by the play key that started
+it (`Aim::confirmed_by`: `t` for a shot, a throw, a zap, `T` for a throw, `r` for a scroll, the
+abilities key `a` or its quick repeat `X` for an ability, an ability's own key; the owner,
+#1533). The back-style commands (`Back`, `TextBack`, `MoreSkip`, `PrevPage`, `PrevTarget`, all
+unbound) stay rebindable exactly as they were (owner, #644), and may not take a key fixed where
+they are read (`fixed::refusal`, through `KeyBinding::refused_for`); `fixed::read` tries each key
+a press may stand for, most specific first, against the place's own command, then its fixed
+keys. **Every rebindable key is a `KeyCommand` in its `settings::bindings::Context`**: `Play` (the map,
+direction prompts, look mode), `Aim` (`PrevTarget`), `More` (at `--more--`: `MoreNext`, Space and
+Enter; `MoreSkip`, unbound, as Esc always skips; `ui/more.rs`), `Menu` (`Back`), `Text`
+(`TextBack`), `Pages` (`PrevPage`), and `Dev` (the developer keys: in every table, read by
+`input::command_in` and listed by Controls only where `input::dev_keys` is true). Keys are unique
+within a context; a mode with its own context reads it before play's (`command_in`). Nothing else
+matches a `KeyCode` or a character directly but Esc (fixed: Cancel in play, which skips the rest at
+`--more--`, `Nav::Back` on every screen) and the letters and digits that name list rows (and the
+text a text field types).
+Hints name play keys through `Bindings::key_name` and the fixed ones through `settings::fixed`'s
+names (`ui::menu::HINTS` for footers), never a literal key of their own.
 
 Modifier keys (#1323, `settings/mods.rs`): a play command's key may be held with Ctrl, Alt, and
 Super (Command on macOS, the Windows/Super key elsewhere): `KeyBinding::Chord(Mods, key)`, made by
@@ -90,11 +101,9 @@ Controls binds a key in place of one of a command's keys or after its last
 command has already trades places with the one replaced) and removes one by place
 (`Bindings::remove_key`). Binding a key another command of the same context uses moves it
 (`bind_at` returns `Bound::Moved`); refused with `Conflict` (taken or removed) are the keys of fixed
-commands outside `REBINDABLE` (Esc's Cancel) and the last key of a `VITAL` command (`MenuUp`,
-`MenuDown`, `Confirm`: what reaches Controls and its Reset all keys from anywhere; `TextConfirm`:
-what gets a new character past its name). `reset_command`
-keeps a vital command's keys rather than leave it keyless, and `ensure_vital` runs after a
-settings file or a keymap is read, so nothing can lock the player out; `--reset-keys`
+commands outside `REBINDABLE` (Esc's Cancel). What reaches Controls and its Reset all keys from
+anywhere (the menu keys, Enter) and what gets a new character past its name are fixed keys, so
+nothing can lock the player out; `--reset-keys`
 (`settings::load_for`) puts the defaults back and saves them. A command left keyless is saved as
 an empty list and loads unbound. Rebindable commands have stable ids, unique across contexts, in
 `settings/keys.rs` (`KeyCommand::id`): **a new `KeyCommand` variant must be added there** (in
@@ -120,7 +129,7 @@ after that one's own, by `fold_merged`, for a settings file and a keymap alike.
 The keymap file (`settings/keymap.rs`, #159): `export` writes every rebindable command by context
 (`[play]`, `[aim]`, ... from `Context::id`, `version = 1`); `import` applies a file to the live
 bindings the way rebinding does (only the listed commands change, keys move within a context, the
-first listed in `REBINDABLE` order wins a key, unknown ids and keys are warnings, except the ids in `keys::RETIRED` (deleted commands such as `fire`, dropped silently, in `from_table` too), the lockout rules
+first listed in `REBINDABLE` order wins a key, unknown ids and keys are warnings, except the ids in `keys::RETIRED` (deleted commands such as `fire`, and the menu, dialog, text field, info page, rest prompt, and aiming commands that became fixed keys in #1533, dropped silently, in `from_table` too) and the context tables in `keys::RETIRED_CONTEXTS` (`[dialog]`, `[prompt]`), the lockout rules
 hold) and returns a `Report`; version 0 is a flat table of ids or a settings file's `[bindings]`.
 `KeymapFile` (from `SettingsStore::keymap`) is where Controls' Export keys and Import keys go:
 `warlock-keys.toml` beside `settings.toml` (desktop), the browser (a blob download; a file input

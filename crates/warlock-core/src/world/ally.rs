@@ -52,12 +52,13 @@ use super::{Actor, ActorId, Mind, Spent, World, WorldState, stance_between};
 use crate::action::{Command, Event};
 use crate::combat::Profile;
 use crate::content::{
-    ActionKind, Content, CreatureId, CreatureSpawn, FactionId, LevelKind, SpellId, Stance,
-    and_list, counted, the_start,
+    ActionKind, Content, CreatureId, CreatureSpawn, FactionId, LevelKind, SpellId, Stance, counted,
+    the_start,
 };
 use crate::geom::Pos;
 use crate::noise::Act;
 use crate::skills::Use;
+use crate::text::{and_list, capitalized};
 use crate::time::{Duration, GameTime};
 use serde::{Deserialize, Serialize};
 
@@ -293,8 +294,8 @@ impl World {
             self.say("This world knows no allies.");
             return Spent::Nothing;
         }
-        let Some(kind) = (self.content.creature_id(creature))
-            .filter(|&c| Some(c) != self.content.creature_id("player"))
+        let Some(kind) =
+            (self.content.creature_id(creature)).filter(|&c| Some(c) != self.content.ids().player)
         else {
             self.say(format!("There is no creature `{creature}`."));
             return Spent::Nothing;
@@ -332,7 +333,7 @@ impl World {
         let def = self.content.creature(kind);
         let what = few(&def.name, &def.plural, made);
         let verb = if made == 1 { "comes" } else { "come" };
-        self.say(format!("{} {verb} to your side.", capital(&what)));
+        self.say(format!("{} {verb} to your side.", capitalized(&what)));
         Spent::NoTime
     }
 
@@ -503,10 +504,10 @@ impl World {
             self.set_order(id, order);
         }
         let line = match command {
-            Command::Heel if one => format!("{} comes to heel.", capital(&pack)),
-            Command::Heel => format!("{} come to heel.", capital(&pack)),
-            Command::Hold if one => format!("{} holds.", capital(&pack)),
-            Command::Hold => format!("{} hold.", capital(&pack)),
+            Command::Heel if one => format!("{} comes to heel.", capitalized(&pack)),
+            Command::Heel => format!("{} come to heel.", capitalized(&pack)),
+            Command::Hold if one => format!("{} holds.", capitalized(&pack)),
+            Command::Hold => format!("{} hold.", capitalized(&pack)),
             Command::SetOn(at) => {
                 let target = (self.state.actor_at(&self.state.current_level, at))
                     .filter(|a| a.id != player && self.perception.sees_actors_at(at))
@@ -624,7 +625,7 @@ impl World {
             .filter(|id| self.perception.sees_actors_at(self.state.actors[id].pos))
             .collect();
         if !seen.is_empty() {
-            let words = capital(&self.pack_phrase(&seen));
+            let words = capitalized(&self.pack_phrase(&seen));
             let verb = if seen.len() == 1 { "is" } else { "are" };
             self.say(format!("{words} {verb} left behind."));
         }
@@ -653,7 +654,7 @@ impl World {
             came.push(id);
         }
         if !came.is_empty() {
-            let words = capital(&self.pack_phrase(&came));
+            let words = capitalized(&self.pack_phrase(&came));
             let one = came.len() == 1;
             let line = match (from_overworld, one) {
                 (true, true) => format!("{words} follows you in."),
@@ -746,14 +747,5 @@ pub(super) fn few(name: &str, plural: &str, count: u32) -> String {
             Some(word) => format!("{word} {plural}"),
             None => format!("{n} {plural}"),
         },
-    }
-}
-
-/// `text` with its first letter upper-case.
-pub(super) fn capital(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
     }
 }

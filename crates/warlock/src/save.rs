@@ -239,8 +239,10 @@ impl SaveStore {
         let Some(backend) = self.writable() else {
             return Ok(());
         };
+        // A state that cannot be encoded writes nothing: the save already there is kept (#1580).
+        let bytes = save::try_encode(world).map_err(|e| format!("Could not save: {e}."))?;
         backend
-            .write(name, &save::encode(world))
+            .write(name, &bytes)
             .map_err(|e| format!("Could not save: {e}."))
     }
 }
@@ -403,7 +405,8 @@ fn save_on_exit(
         && !quit_saved.0
         && let Err(e) = store.save_run(&game.save_id, &game.world)
     {
-        eprintln!("warlock: {e}");
+        // To the log file too (#1591): a game started from a desktop shortcut has no terminal.
+        error!("{e}");
     }
 }
 

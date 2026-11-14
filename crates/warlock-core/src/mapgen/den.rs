@@ -146,7 +146,7 @@ fn plain(content: &Content, candidates: Vec<Candidate>) -> Vec<Candidate> {
 /// The candidates of `candidates` (no uniques) that may sleep in a den of `swarm`: those of its
 /// `factions` if it names any, else those hostile to the player.
 fn sleepers(content: &Content, swarm: &Swarm, candidates: &[Candidate]) -> Vec<Candidate> {
-    let player = content.creature_id("player");
+    let player = content.ids().player;
     (candidates.iter().copied())
         .filter(|&(c, ..)| {
             if swarm.factions.is_empty() {
@@ -210,7 +210,7 @@ fn corpses(
         &Spawning,
     ),
 ) {
-    let bones = content.object_id("bones");
+    let bones = content.ids().bones;
     for _ in 0..Swarm::hoard(placed) {
         let kill = danger::draw(rng, own, generic, danger, &spawning.odds);
         if let Some(corpse) = kill.and_then(|c| content.corpse_of(c)) {

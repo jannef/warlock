@@ -34,8 +34,15 @@ well and a point badly.
 
 **Resistance** takes a share off damage of one kind, in percent, after armour has done its part.
 A fur cloak resists [cold](damage-types.md#damage-cold), a leather jerkin resists [acid](damage-types.md#damage-acid) a little, and magic *of* an element resists
-that element (see the table below). Everything you wear adds up, to at most 75 %. Nothing you can
-wear makes you immune.
+that element (see the table below).
+
+Everything adds up: your race, what you wear, magic, [talents](talents.md), and [potions](potions.md). There is no cap on
+the total, but **at most 75 % counts**. With 200 % fire resistance you take a quarter of any
+fire. Lose 100 % of that again and you are still at 75 %, since 100 % remains. Below zero you take
+more, but at worst double: −100 % is the floor of what counts. The same cap holds for creatures.
+
+Nothing you can wear or learn makes you immune. Immunity belongs to some creatures alone: a
+creature immune to a kind takes nothing of it, whatever it wears or suffers.
 
 The share comes off each kind on its own: a flaming arrow's point and its fire are reduced
 separately. The result is rounded to the nearest point, so a 1-point hit still hurts at 50 % but
@@ -57,14 +64,14 @@ Two [talents](talents.md) work on damage types:
 
 - **[Elemental ward](talents.md#talent-elemental-ward)** is taken for one element: [fire](damage-types.md#damage-fire), [cold](damage-types.md#damage-cold), [electricity](damage-types.md#damage-electricity), [acid](damage-types.md#damage-acid), [poison](damage-types.md#damage-poison),
   [force](damage-types.md#damage-force), or [necrotic](damage-types.md#damage-necrotic). It resists that element 25 % per rank, up to two ranks. It counts like gear,
-  under the same cap. A ward against poison also shrinks each dose of poison.
+  under the same 75 % cap. A ward against poison also shrinks each dose of poison.
 - **[Crusher](talents.md#talent-crusher)** lets your striking blows and kicks ignore 2 points of the target's [Protection](combat.md#protection). That
   covers a mace, a club, a staff, bare hands, and a [shield bash](abilities.md#ability-shield-bash). Shots and throws are not
   blows.
 
 Three [birth-sign gifts](horoscope.md) resist too, 25 % each, counted like gear under the same cap.
-The Wyvern's **[Flame-hardened](talents.md#talent-flame-hardened)** and the Fire element's **[Kindled](talents.md#talent-kindled)** resist [fire](damage-types.md#damage-fire), so a Fire Wyvern
-has 50 %. The Kraken's **[Of the deep](talents.md#talent-of-the-deep)** resists [cold](damage-types.md#damage-cold).
+The Wyvern's **[Flame-hardened](horoscope.md#talent-flame-hardened)** and the Fire element's **[Kindled](horoscope.md#talent-kindled)** resist [fire](damage-types.md#damage-fire), so a Fire Wyvern
+has 50 %. The Kraken's **[Of the deep](horoscope.md#talent-of-the-deep)** resists [cold](damage-types.md#damage-cold).
 
 The [character screen](character.md) (`@`) tells you what you resist in words only: "Resistant to
 cold", "Vulnerable to fire", "Immune to poison". Item descriptions show the numbers for what you

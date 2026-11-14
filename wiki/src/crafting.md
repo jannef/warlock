@@ -157,7 +157,9 @@ at the anvil: first the stock, then a gem if the piece takes one.
   nothing.
 
 Rings and amulets are never Fine or better: they come out plain, however well you do. A failure
-gives back half the stock (at least one piece) and keeps the gem.
+gives back half the stock (at least one piece) and keeps the gem. In
+[Gimmwīc](ascmearc.md#gimmwīc), once the [crystal guardian](quests.md#lures) stands bound there,
+Jewelcraft's checks get **+2** (not a bone amulet's: that is Woodcraft).
 
 ## The recipes
 
@@ -294,7 +296,7 @@ From level 40 a craftsperson has **Quick hands**: every craft takes half its tim
 [whittle](skill-uses.md#whittling), [cutting and setting a gem](gem-cutting.md),
 [salvage](#salvage), [Make do and mend](classes.md#make-do-and-mend),
 [Field forge](classes.md#field-forge), and [rigging a trap](traps.md#rigging-traps). A long sword takes half as long to forge, and salvage five
-minutes instead of ten. A ranger's [Fletcher](talents.md#talent-fletcher) halves arrows too, and
+minutes instead of ten. A ranger's [Fletcher](classes.md#talent-fletcher) halves arrows too, and
 the two together make them in a quarter of the time. Gathering herbs, foraging, scribing, and
 deciphering are not crafts and take as long as ever. The times the game shows are the halved
 ones.
@@ -320,8 +322,8 @@ Brakka's mark." Its name does not change.
 - **Worth:** a marked piece is worth **half again** (+50 %, rounded down), on top of its grade. A
   marked Fine steel long sword is worth three times a plain one. A marked piece that is later
   damaged is worth half of that.
-- **The patron** pays **50 % more** for a marked piece than for the same piece unmarked, on top of
-  its higher worth ([The patron](patron.md#delivering)).
+- **The patron** pays for that higher worth: a marked piece fetches half again what the same
+  piece unmarked does ([The patron](patron.md#delivering)).
 - **Enchantments:** a marked piece can bear **one more** ([Capacity](magic-items.md#capacity)).
 
 The mark stays for good: tempering, damage, and mending never take it away.

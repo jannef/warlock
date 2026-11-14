@@ -1,9 +1,8 @@
 //! Healing (spec §8 "Healing"), status effects (spec §8 "Status effects"), and diseases (spec §8
 //! "Diseases").
 
-use super::combat::percent;
 use super::order;
-use super::text::{Term, anchored, capital, signed, stat_link, yes};
+use super::text::{Term, anchored, capital, link, percent_of, signed, stat_link, yes};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Affliction, Content, DiseaseDef, DiseaseId, StatusDef};
@@ -88,38 +87,68 @@ fn exactly(seconds: u32) -> String {
     }
 }
 
-/// The creatures' natural attacks and throws a hit with which may cause `what` (an `on_hit`
-/// entry it matches; `what` returns what to add after the chance), by creature name: "the giant
-/// rat's bite (10%, 2 degrees)", "the drow crossbowman's poisoned bolt (20%, 1 degree)".
-fn attacks_causing(content: &Content, what: impl Fn(&Affliction) -> Option<String>) -> Vec<String> {
+/// A creature's attack (or gaze) a hit with which may cause something: the creature, the
+/// attack's name, the chance a hit has, and what the matcher added after the chance.
+struct Causing<'a> {
+    creature: &'a warlock_core::content::CreatureDef,
+    attack: String,
+    chance: u8,
+    detail: String,
+}
+
+/// The creatures' natural attacks, throws, and gazes a hit with which may cause `what` (an
+/// `on_hit` entry it matches; `what` returns what to add after the chance), by creature name.
+fn causing<'a>(
+    content: &'a Content,
+    what: impl Fn(&Affliction) -> Option<String>,
+) -> Vec<Causing<'a>> {
     let mut found = Vec::new();
     for (_, c) in order::creatures(content) {
         let thrown = c.throw.as_ref().map(|t| &t.attack);
         for attack in c.attack.iter().chain(thrown) {
             for o in &attack.on_hit {
                 if let Some(detail) = what(&o.what) {
-                    found.push(format!(
-                        "the {}'s {} ({}%{detail})",
-                        c.name, attack.name, o.chance
-                    ));
+                    found.push(Causing {
+                        creature: c,
+                        attack: attack.name.clone(),
+                        chance: o.chance,
+                        detail,
+                    });
                 }
             }
         }
         // A gaze's riders, at sight (spec §8 "Creature behavior": "Gazes").
         for o in c.gaze.iter().flat_map(|g| &g.riders) {
             if let Some(detail) = what(&o.what) {
-                found.push(format!("the {}'s gaze ({}%{detail})", c.name, o.chance));
+                found.push(Causing {
+                    creature: c,
+                    attack: "gaze".into(),
+                    chance: o.chance,
+                    detail,
+                });
             }
         }
     }
     found
 }
 
-/// What causes a status, in words: wounds, diseases, the creatures' attacks whose `on_hit` names
-/// it (with the chance a hit has and the degrees it gives), and rotten corpses when it is the
-/// sickness of food (spec §8 "Hunger").
-fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
-    let attacks = attacks_causing(content, |what| match *what {
+/// [`causing`] in words: "the giant rat's bite (10%, 2 degrees)", "the drow crossbowman's
+/// poisoned bolt (20%, 1 degree)".
+fn attacks_causing(content: &Content, what: impl Fn(&Affliction) -> Option<String>) -> Vec<String> {
+    (causing(content, what).iter())
+        .map(|c| {
+            format!(
+                "the {}'s {} ({}%{})",
+                c.creature.name, c.attack, c.chance, c.detail
+            )
+        })
+        .collect()
+}
+
+/// What a creature's hit adds to status `status` after the chance: its degrees and the check
+/// that wards it off, or a hold's grip.
+fn status_detail(def: &StatusDef, status: usize, what: &Affliction) -> Option<String> {
+    match *what {
         Affliction::Status {
             status: s,
             severity,
@@ -141,7 +170,22 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
             Some(format!(", grip {grip}"))
         }
         _ => None,
-    });
+    }
+}
+
+/// What causes a status, in words: wounds, diseases, the creatures' attacks whose `on_hit` names
+/// it (with the chance a hit has and the degrees it gives), and rotten corpses when it is the
+/// sickness of food (spec §8 "Hunger").
+fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
+    // The creatures are only counted here: the Who causes it table names them (#1558).
+    let creatures = causing(content, |what| status_detail(def, status, what)).len();
+    let attacks = match creatures {
+        0 => None,
+        1 => Some("[a creature's attack](status-effects.md#who-causes-it)".to_string()),
+        n => Some(format!(
+            "[the attacks of {n} creatures](status-effects.md#who-causes-it)"
+        )),
+    };
     let mut causes = Vec::new();
     if content
         .disease_status()
@@ -156,13 +200,13 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
             (false, _) => causes.push("confirmed criticals"),
         }
     }
-    causes.extend(attacks.iter().map(String::as_str));
+    let mut causes: Vec<String> = causes.into_iter().map(String::from).collect();
+    causes.extend(attacks);
     let brought = brought_by(content, status).map(|r| format!("holding {r}"));
     let sickness = (content.hunger()).and_then(|h| content.status_id(h.sickness.as_deref()?));
     if sickness.is_some_and(|s| usize::from(s.0) == status) {
-        causes.push("eating rotten food");
+        causes.push("eating rotten food".into());
     }
-    let mut causes: Vec<String> = causes.into_iter().map(String::from).collect();
     causes.extend(brought);
     // The special rooms that give it to everyone inside (the Special rooms page).
     causes.extend(
@@ -269,7 +313,12 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
     if causes.is_empty() {
         "—".into()
     } else {
-        capital(&causes.join("; "))
+        let causes = causes.join("; ");
+        // The creatures' link first: its text starts with the capital.
+        match causes.strip_prefix('[') {
+            Some(rest) => format!("[{}", capital(rest)),
+            None => capital(&causes),
+        }
     }
 }
 
@@ -282,8 +331,8 @@ fn brought_by(content: &Content, status: usize) -> Option<String> {
 
 /// What else a status does while it lasts and as it ends, in words: its fighting bonuses (as a
 /// stance's), how much slower it makes every action, what it keeps you from doing, and what
-/// follows it.
-fn also(content: &Content, status: usize, def: &StatusDef) -> String {
+/// follows it: a phrase each, not capitalised, to join.
+fn also(content: &Content, status: usize, def: &StatusDef) -> Vec<String> {
     let mut parts = Vec::new();
     let c = def.combat;
     let fighting: Vec<String> = [
@@ -332,6 +381,20 @@ fn also(content: &Content, status: usize, def: &StatusDef) -> String {
             _ => doing.join(" or "),
         };
         parts.push(format!("you cannot {list}"));
+    }
+    if def.flees {
+        parts.push(
+            "a creature suffering it runs from whoever gave it while a step takes it farther \
+             away, and fights only when cornered"
+                .to_string(),
+        );
+    }
+    if def.sleeps {
+        parts.push(
+            "a creature suffering it sleeps: it takes no turn, and a loud enough noise, a blow, \
+             or a cry wakes it"
+                .to_string(),
+        );
     }
     if let Some(next) = def.follows {
         parts.push(format!("{} follows it", content.status(next).name));
@@ -425,6 +488,163 @@ fn also(content: &Content, status: usize, def: &StatusDef) -> String {
             .collect();
         parts.push(format!("you resist {}, as armour does", kinds.join(", ")));
     }
+    parts
+}
+
+/// The four groups the status effects page shows its tables in (#1558), each between mdBook
+/// anchors of its id.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum StatusGroup {
+    /// It costs hit points or mana as time passes, or kills.
+    Harmful,
+    /// It only hinders: weaker, slower, held, kept from doing something.
+    Hindering,
+    /// It helps whoever has it in some way (and may cost something too, as a rage does).
+    Helpful,
+    /// It does nothing but wait to wear off.
+    Cooldown,
+}
+
+impl StatusGroup {
+    const ALL: [StatusGroup; 4] = [
+        StatusGroup::Harmful,
+        StatusGroup::Hindering,
+        StatusGroup::Helpful,
+        StatusGroup::Cooldown,
+    ];
+
+    fn id(self) -> &'static str {
+        match self {
+            StatusGroup::Harmful => "harmful",
+            StatusGroup::Hindering => "hindering",
+            StatusGroup::Helpful => "helpful",
+            StatusGroup::Cooldown => "cooldowns",
+        }
+    }
+
+    /// The group a status falls in, from what it does.
+    fn of(content: &Content, status: usize, def: &StatusDef) -> StatusGroup {
+        let diseased = (content.disease_status()).is_some_and(|s| usize::from(s.0) == status);
+        let costs = def.tick.is_some() && (def.damage > 0 || def.mana_damage > 0);
+        if costs || def.kills_at_max || diseased {
+            return StatusGroup::Harmful;
+        }
+        let c = def.combat;
+        let bonuses = [c.to_hit, c.damage, c.dodge, c.parry, c.shield];
+        let stats: Vec<i8> = (def.penalty.iter())
+            .flat_map(|p| p.by.iter().map(|(_, by)| by))
+            .collect();
+        let helps = bonuses.iter().any(|&n| n > 0)
+            || stats.iter().any(|&n| n > 0)
+            || def.cost < 100
+            || def.regen > 100
+            || def.blows.is_some()
+            || def.retaliates.is_some()
+            || def.wades_free
+            || def.ice_holds
+            || def.vision.is_some()
+            || def.senses.is_some()
+            || def.sees_unseen
+            || def.unseen
+            || def.hides
+            || def.auto_critical
+            || !def.resist.is_empty();
+        let hinders = bonuses.iter().any(|&n| n < 0)
+            || stats.iter().any(|&n| n < 0)
+            || def.cost > 100
+            || def.attack_cost > 100
+            || def.regen < 100
+            || def.mana_regen < 100
+            || !def.blocks.is_empty()
+            || def.flat_footed
+            || def.hold.is_some()
+            || def.sleeps
+            || def.flees;
+        match (helps, hinders) {
+            (true, _) => StatusGroup::Helpful,
+            (false, true) => StatusGroup::Hindering,
+            (false, false) => StatusGroup::Cooldown,
+        }
+    }
+}
+
+/// The status effects (spec §8 "Status effects") in four tables by what they do (#1558), each
+/// between mdBook anchors of its group: what each does (what it costs, its stats, healing, the
+/// rest, and how it shows on others), what causes it (the creatures only counted:
+/// [`status_causes`] names them), and how it ends.
+pub(super) fn status_effects(content: &Content) -> String {
+    let mut out = String::new();
+    for group in StatusGroup::ALL {
+        let _ = writeln!(out, "<!-- ANCHOR: {} -->\n", group.id());
+        out.push_str("| Status | What it does | Caused by | How it ends |\n|---|---|---|---|\n");
+        for (i, def) in content.status_defs().iter().enumerate() {
+            if StatusGroup::of(content, i, def) != group {
+                continue;
+            }
+            let _ = writeln!(
+                out,
+                "| {} | {} | {} | {} |",
+                anchored(Term::Status, &def.id, &def.name),
+                status_does(content, i, def),
+                causes(content, i, def),
+                status_ends(content, i, def),
+            );
+        }
+        let _ = writeln!(out, "\n<!-- ANCHOR_END: {} -->\n", group.id());
+    }
+    out
+}
+
+/// What a status does while it lasts, in words: what it costs, its stats, how fast hit points
+/// come back, the rest ([`also`]), and how others show it.
+fn status_does(content: &Content, status: usize, def: &StatusDef) -> String {
+    let mut parts = Vec::new();
+    match def.tick {
+        Some(tick) if def.damage > 0 => {
+            let hp = if def.damage == 1 {
+                "a hit point".to_string()
+            } else {
+                format!("{} hit points", def.damage)
+            };
+            let faster = if def.max > 1 {
+                ", faster the worse it is"
+            } else {
+                ""
+            };
+            parts.push(format!("costs {hp} {}{faster}", every(tick)));
+        }
+        Some(tick) if def.mana_damage > 0 => {
+            let none = if def.mana_regen == 0 {
+                ", and none comes back"
+            } else {
+                ""
+            };
+            parts.push(format!(
+                "costs {} mana {}{none}",
+                def.mana_damage,
+                every(tick)
+            ));
+        }
+        _ => {}
+    }
+    if let Some(p) = &def.penalty {
+        let changed: Vec<String> = (p.by.iter())
+            .filter(|(_, by)| *by != 0)
+            .map(|(stat, by)| format!("{} {}", stat_link(stat), signed(i32::from(by))))
+            .collect();
+        let when = if p.from > 1 { " when strong" } else { "" };
+        let per = if p.per_degree { " a degree" } else { "" };
+        parts.push(format!("{}{per}{when}", changed.join(", ")));
+    }
+    match def.regen {
+        100 => {}
+        0 => parts.push("hit points do not come back".into()),
+        r => parts.push(format!("hit points come back {}", pace(u32::from(r)))),
+    }
+    parts.extend(also(content, status, def));
+    if let Some(seen) = &def.seen {
+        parts.push(format!("shows on others as \"{seen}\""));
+    }
     if parts.is_empty() {
         "—".into()
     } else {
@@ -432,104 +652,71 @@ fn also(content: &Content, status: usize, def: &StatusDef) -> String {
     }
 }
 
-/// The status effects (spec §8 "Status effects"): how they show, what causes them, what they
-/// cost, how they wear off, and what they do to healing and stats.
-pub(super) fn status_effects(content: &Content) -> String {
+/// How a status ends, in words: how it wears off, the bonds an Escape artist slips, and what
+/// cures it at once.
+fn status_ends(content: &Content, status: usize, def: &StatusDef) -> String {
+    let diseased = (content.disease_status()).is_some_and(|s| usize::from(s.0) == status);
+    let eases = match def.eases {
+        Some(e) if def.hold.is_some() => {
+            let turns = def.hold.map(|h| h.turns.to_string()).unwrap_or_default();
+            format!(
+                "after {turns} turns ({} each) at most; at once when the holder dies, leaves \
+                 your side, or is held or slowed",
+                exactly(e)
+            )
+        }
+        Some(e) if def.max == 1 => format!("after {}", exactly(e)),
+        Some(e) => format!("a degree {}", every(e)),
+        None if def.per_action && def.max == 1 => {
+            "after your next action (one given during an action outlasts it)".to_string()
+        }
+        None if def.per_action => {
+            "a degree with each action you take (one given during an action outlasts it)"
+                .to_string()
+        }
+        None if diseased => "when the diseases are gone".to_string(),
+        None if brought_by(content, status).is_some() => {
+            let r = brought_by(content, status).unwrap_or_default();
+            format!("when {} ends (the Resources page)", r.to_lowercase())
+        }
+        None => "only when cured".to_string(),
+    };
+    let mut parts = vec![eases];
+    // Bonds a trained Escape artist may slip; a hold's grip is on the creature's attack.
+    if let Some(d) = def.escape {
+        parts.push(format!("a trained Escape artist may slip it, against {d}"));
+    }
+    if !def.cured_by.is_empty() {
+        let cures: Vec<String> = (def.cured_by.iter()).map(|c| c.replace('_', " ")).collect();
+        parts.push(format!("cured at once by {}", cures.join(", ")));
+    }
+    capital(&parts.join("; "))
+}
+
+/// Who causes each status with an attack (#1558): every creature whose attack, throw, or gaze
+/// may cause it, with the chance a hit has and the degrees it gives (or a hold's grip), the
+/// status named on its first row.
+pub(super) fn status_causes(content: &Content) -> String {
     let mut out = String::from(
-        "| Status | Seen on others | Caused by | Costs | Wears off | Healing | Stats | Cured by | \
-         Also |\n|---|---|---|---|---|---|---|---|---|\n",
+        "| Status | Creature | Attack | Chance a hit has | Gives |\n|---|---|---|---:|---|\n",
     );
     for (i, def) in content.status_defs().iter().enumerate() {
-        let seen = def
-            .seen
-            .as_ref()
-            .map_or_else(|| "no".to_string(), |s| format!("yes, \"{s}\""));
-        let costs = match def.tick {
-            Some(tick) if def.damage > 0 => {
-                let hp = if def.damage == 1 {
-                    "a hit point".to_string()
-                } else {
-                    format!("{} hit points", def.damage)
-                };
-                let faster = if def.max > 1 {
-                    ", faster the worse it is"
-                } else {
-                    ""
-                };
-                format!("{hp} {}{faster}", every(tick))
-            }
-            Some(tick) if def.mana_damage > 0 => {
-                let none = if def.mana_regen == 0 {
-                    ", and none comes back"
-                } else {
-                    ""
-                };
-                format!("{} mana {}{none}", def.mana_damage, every(tick))
-            }
-            _ => "nothing".into(),
-        };
-        let diseased = content
-            .disease_status()
-            .is_some_and(|s| usize::from(s.0) == i);
-        let eases = match def.eases {
-            Some(e) if def.hold.is_some() => {
-                let turns = def.hold.map(|h| h.turns.to_string()).unwrap_or_default();
-                format!(
-                    "after {turns} turns ({} each) at most; at once when the holder dies, leaves \
-                     your side, or is held or slowed",
-                    exactly(e)
-                )
-            }
-            Some(e) if def.max == 1 => {
-                format!("after {}", exactly(e))
-            }
-            Some(e) => format!("a degree {}", every(e)),
-            None if def.per_action && def.max == 1 => {
-                "after your next action (one given during an action outlasts it)".to_string()
-            }
-            None if def.per_action => {
-                "a degree with each action you take (one given during an action outlasts it)"
-                    .to_string()
-            }
-            None if diseased => "when the diseases are gone".to_string(),
-            None if brought_by(content, i).is_some() => {
-                let r = brought_by(content, i).unwrap_or_default();
-                format!("when {} ends (the Resources page)", r.to_lowercase())
-            }
-            None => "only when cured".to_string(),
-        };
-        // Bonds a trained Escape artist may slip; a hold's grip is on the creature's attack.
-        let eases = match def.escape {
-            Some(d) => format!("{eases}; a trained Escape artist may slip it, against {d}"),
-            None => eases,
-        };
-        let stats = def.penalty.as_ref().map_or_else(
-            || "—".to_string(),
-            |p| {
-                let lowered: Vec<String> = (p.by.iter())
-                    .filter(|(_, by)| *by != 0)
-                    .map(|(stat, by)| format!("{} {}", stat_link(stat), signed(i32::from(by))))
-                    .collect();
-                let when = if p.from > 1 { " when strong" } else { "" };
-                let per = if p.per_degree { " a degree" } else { "" };
-                format!("{}{per}{when}", lowered.join(", "))
-            },
-        );
-        let cured = if def.cured_by.is_empty() {
-            "—".to_string()
-        } else {
-            capital(&def.cured_by.join(", "))
-        };
-        let _ = writeln!(
-            out,
-            "| {} | {seen} | {} | {} | {} | {} | {stats} | {cured} | {} |",
-            anchored(Term::Status, &def.id, &def.name),
-            causes(content, i, def),
-            capital(&costs),
-            capital(&eases),
-            capital(&pace(u32::from(def.regen))),
-            also(content, i, def),
-        );
+        let rows = causing(content, |what| status_detail(def, i, what));
+        for (n, c) in rows.iter().enumerate() {
+            let status = if n == 0 {
+                link(Term::Status, &def.id, &def.name)
+            } else {
+                String::new()
+            };
+            let _ = writeln!(
+                out,
+                "| {status} | {} | {} | {}% | {} |",
+                link(Term::Creature, &c.creature.id, &capital(&c.creature.name)),
+                c.attack,
+                c.chance,
+                c.detail.trim_start_matches(", "),
+            );
+        }
     }
     out
 }
@@ -549,7 +736,10 @@ pub(super) fn disease_checks(content: &Content) -> String {
         let odds: String = (CHECK_SCORES.iter())
             .map(|&s| {
                 let modifier = stats::modifier(i32::from(s));
-                format!(" {} |", percent(check::ways(modifier, def.difficulty), 144))
+                format!(
+                    " {} |",
+                    percent_of(check::ways(modifier, def.difficulty), 144)
+                )
             })
             .collect();
         let _ = writeln!(
@@ -613,7 +803,7 @@ pub(super) fn diseases(content: &Content) -> String {
         let resisted = format!(
             "{}, {}",
             stat_link(def.check),
-            percent(check::ways(0, def.difficulty), 144)
+            percent_of(check::ways(0, def.difficulty), 144)
         );
         let progresses = match def.interval {
             1 => "Every day".to_string(),

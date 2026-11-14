@@ -20,7 +20,7 @@ weight = 25000
 size = "small"
 stats = { strength = 14, dexterity = 5, toughness = 10, intelligence = 2, willpower = 17, presence = 2 }
 base_hp = 4
-resist = { poison = 100 }
+immune = ["poison"]
 on_eat = { message = "It was rotten long before it died.", vomit = 80, harm = "1d3" }
 blood = "#3a4a28"
 [creature.attack]

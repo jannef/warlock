@@ -124,7 +124,7 @@ impl World {
                     .map_or(0, |stat| me.effective_stats(&content).modifier(stat));
                 let nerve = them.effective_stats(&content).modifier(check)
                     + them.talent_mods(&content).check(check);
-                let who = super::talk::capitalized(&name);
+                let who = crate::text::capitalized(&name);
                 if crate::check::check(&mut self.state.rng, nerve, difficulty + aim) {
                     if seen {
                         self.say(format!("{who}'s will holds."));
@@ -138,7 +138,7 @@ impl World {
                 }
             }
             SmiteRider::Banish => {
-                let who = super::talk::capitalized(&name);
+                let who = crate::text::capitalized(&name);
                 if them.summoner.is_some() {
                     if seen {
                         self.say(format!("{who} is unmade!"));

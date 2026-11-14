@@ -4,12 +4,12 @@
 //! ([`crate::talent::TalentMods::grip`]). The Iron Scourge's and the Gate Warden's gifts are
 //! free blows and sums read where those rules live. Nothing here draws at random.
 
-use super::talk::capitalized;
 use super::{ActorId, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::Blow;
 use crate::content::{ActionKind, Stance};
 use crate::status::Effect;
+use crate::text::capitalized;
 
 impl World {
     /// The player rising from the ashes is reborn whole, if their talents say so: every status

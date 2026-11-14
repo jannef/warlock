@@ -23,11 +23,12 @@
 //!
 //! Nothing here draws from any stream.
 
-use super::ally::{Ally, AllySource, Order, capital};
+use super::ally::{Ally, AllySource, Order};
 use super::cast::Cast;
 use super::{ActorId, World};
 use crate::content::SpellCharm;
 use crate::geom::Pos;
+use crate::text::capitalized;
 use crate::time::Duration;
 
 impl World {
@@ -44,7 +45,7 @@ impl World {
         if let Some(id) = seen
             && self.master_of(id).is_some()
         {
-            let who = capital(&self.called(&self.state.actors[&id]));
+            let who = capitalized(&self.called(&self.state.actors[&id]));
             self.say(format!("{who} is already at someone's side."));
             return false;
         }
@@ -80,7 +81,7 @@ impl World {
                 until: Some(until),
             });
         }
-        let who = capital(&self.called(&self.state.actors[&target]));
+        let who = capitalized(&self.called(&self.state.actors[&target]));
         self.say(format!("{who} {}.", charm.message));
         self.spell_landed(cast, target, true);
         true
@@ -90,7 +91,7 @@ impl World {
     fn uncharmable(&self, id: ActorId, charm: &SpellCharm) -> Option<String> {
         let actor = &self.state.actors[&id];
         let def = self.content.creature(actor.creature);
-        let who = capital(&self.called(actor));
+        let who = capitalized(&self.called(actor));
         if def.unique || actor.npc.is_some() {
             return Some(format!("{who} is no one's fool."));
         }
@@ -129,7 +130,7 @@ impl World {
                 .and_then(|s| s.effect.charm.as_ref())
                 .map_or("shakes off the charm", |c| c.ends.as_str())
                 .to_string();
-            let who = capital(&self.called(&self.state.actors[&id]));
+            let who = capitalized(&self.called(&self.state.actors[&id]));
             self.say(format!("{who} {ends}."));
         }
     }

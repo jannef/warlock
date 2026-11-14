@@ -26,7 +26,6 @@
 //! but the door is theft).
 
 use super::alignment::Deed;
-use super::talk::capitalized;
 use super::{ActorId, Spent, World};
 use crate::action::Positions;
 use crate::check;
@@ -35,6 +34,7 @@ use crate::geom::Dir;
 use crate::object::{self, Stack};
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::text::capitalized;
 
 impl World {
     /// [`crate::Action::Steal`]: the player tries to steal from the creature in `dir` (see the

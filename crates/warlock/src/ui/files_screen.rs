@@ -4,10 +4,9 @@
 //! same facts as `warlock --paths`, from `paths.rs`.
 
 use super::cursor;
-use super::menu::{Hints, Nav, Panel, Press, wrap};
+use super::menu::{HINTS, Nav, Panel, Press, truncated_head, wrap};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM};
-use crate::input::Bindings;
 use crate::paths::{Entry, Locations, Reason};
 use crate::render::console::Console;
 use std::path::Path;
@@ -76,7 +75,7 @@ impl FilesScreen {
         ScreenAction::Stay
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         let panel = Panel::new(console, " Where are my files? ", 80, 31);
         let (x, w) = (panel.inner_x(), panel.inner_w());
         let mut y = panel.y + 2;
@@ -106,7 +105,7 @@ impl FilesScreen {
             console.print(x + 2, y, e.label, color);
             console.print(x + 14, y, e.what, TEXT_DIM);
             let place = match &e.dir {
-                Some(dir) => shorten(&dir.display().to_string(), w - 4),
+                Some(dir) => truncated_head(&dir.display().to_string(), (w - 4).max(0) as usize),
                 None => "(not stored)".into(),
             };
             console.print(x + 2, y + 1, &place, color);
@@ -127,7 +126,7 @@ impl FilesScreen {
         let footer = if self.entries.is_empty() {
             "Esc back".to_string()
         } else {
-            let keys = Hints::of(bindings);
+            let keys = HINTS;
             let (up_down, confirm) = (keys.up_down(), keys.confirm);
             format!("{up_down} select   {confirm} open folder   Esc back")
         };
@@ -147,15 +146,6 @@ fn fit(text: &str, width: i32) -> Vec<String> {
 }
 
 /// `text` cut to `width` cells, keeping its end (the interesting part of a path).
-fn shorten(text: &str, width: i32) -> String {
-    let (len, width) = (text.chars().count(), width.max(2) as usize);
-    if len <= width {
-        return text.to_string();
-    }
-    let tail: String = text.chars().skip(len - (width - 1)).collect();
-    format!("…{tail}")
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -243,7 +233,7 @@ mod tests {
 
     #[test]
     fn long_paths_keep_their_end() {
-        assert_eq!(shorten("/a/b", 10), "/a/b");
-        assert_eq!(shorten("/very/long/path/here", 8), "…th/here");
+        assert_eq!(truncated_head("/a/b", 10), "/a/b");
+        assert_eq!(truncated_head("/very/long/path/here", 8), "…th/here");
     }
 }

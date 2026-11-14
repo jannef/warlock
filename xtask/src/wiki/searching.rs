@@ -2,8 +2,7 @@
 //! who notices them in passing. Chances for an average character (Intelligence and Willpower 10,
 //! untrained, no racial bonus), never a difficulty or a modifier.
 
-use super::combat::percent;
-use super::text::capital;
+use super::text::{capital, percent_of};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Content, Generator, PassiveSearch};
@@ -30,9 +29,9 @@ fn chances(content: &Content, difficulty: i32) -> String {
     let passive = check::ways(-content.search().passive_penalty, difficulty);
     format!(
         "{} | {} | {}",
-        percent(active, 144),
+        percent_of(active, 144),
         within(active, TURNS),
-        percent(passive, 144)
+        percent_of(passive, 144)
     )
 }
 

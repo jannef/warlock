@@ -64,8 +64,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `natural`, its natural armour (`{ defence = 1, protection = 3, name = "shell" }`: `defence`
   in the Natural category of Defence, `protection` soaking damage off every hit with what it
   wears, each 0 to 20, not both 0; the name is said when it turns or soaks a blow); `resist`,
-  what it resists in percent per damage type (`{ acid = 50, poison = 25 }`, −100 to 100, 100
-  immune; §8 "Damage types"; the cave beetle acid 50 and poison 25, the kobold shaman fire 25;
+  what it resists in percent per damage type (`{ acid = 50, poison = 25 }`, any amount, of
+  which at most 75 counts and at least −100; §8 "Damage types"; the cave beetle acid 50 and poison 25, the kobold shaman fire 25;
   never shown). For experience (§8
   "Experience"): `level` (1 to 99, default 1) and `xp` (0 to 100000, default 0; the player
   creature has neither): the kobold 2/15, the kobold archer 3/25, the kobold shaman 4/40, the
@@ -105,8 +105,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `opens_doors`, slot lines (`slot`, `classes`, `chance`, `from`, `count`), and magic, rare,
   weapon-rank, and `shield_rank` odds by level) and `data/animated/` (one household body a file: its object, level, rarity, speed,
   attack, and how it moves and dies), numbered after the shared creature files and before every
-  campaign's (§8 "Animated objects"). A creature may list the statuses it never suffers,
-  `immune = ["poisoned", "bleeding"]` (`diseased`: every disease), and its death line's verb,
+  campaign's (§8 "Animated objects"). A creature may list the statuses it never suffers and
+  the damage types that never hurt it, `immune = ["poison", "poisoned", "bleeding"]`
+  (`diseased`: every disease; an id is a status or a damage type, never both), and its death line's verb,
   `dies = "splinters"`. For blood (§8 "Blood";
   presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
