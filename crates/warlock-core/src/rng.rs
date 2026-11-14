@@ -3,28 +3,96 @@
 //! Every stream is a ChaCha8 generator (`rand_chacha`; its output is specified, so it is identical
 //! on every platform) seeded from a 64-bit key: FNV-1a over the run seed and a stream label.
 //!
+//! **Which stream a new draw takes** (`docs/dev/merging.md`, "Random streams"): `gameplay` is
+//! shared by every rule that rolls in play, so a draw added to it or taken from it shifts every
+//! later roll of the run (replays, insta snapshots, and golden walks of unrelated features). A
+//! self-contained new feature draws from a keyed stream of its own instead: a constructor here
+//! (`Rng::grade`), a labelled [`Rng::stream`] made where it is used and never kept
+//! (`appraise/<hour>`), or a keyed draw with no generator at all (`weather::draw`). High-churn
+//! users of `gameplay` (outcome tables, eating) move to their own streams as they are touched,
+//! each move in a PR of its own that says the run's rolls change.
+//!
+//! Generation, per level (none kept; derived on demand, so a level depends only on the run seed
+//! and its id, never on the order levels are visited or on gameplay):
+//!
+//! | Stream | Label |
+//! |---|---|
+//! | Map | `map/<level id>` (retry *k*: `map/<level id>/<k>`) |
+//! | An endless branch's floor seed | key `endless/<floors made>` (a seed, not a stream) |
+//! | Rooms floor or caves on an endless floor | `floor_kind/<level id>` |
+//! | A vault's phases | `vault_phases/<vault id>` |
+//! | Deep water in a cave | `deep_water/<level id>` |
+//! | Ore veins | `veins/<level id>` |
+//! | Hidden traps | `traps/<level id>` |
+//! | Secret doors | `secrets/<level id>` |
+//! | Loot | `loot/<level id>` |
+//! | A wand's rung in a level's, a fixed kit's, or a pack's objects | `objects/<level id>`, `objects/actor/<id>`, `objects/pack` |
+//! | Vault monsters | `vault_monsters/<level id>` |
+//! | Initial population (and its leavings) | `population/<level id>` |
+//! | A teeming den's sleepers and hoards | `swarm/<level id>` |
+//! | Vault chests | `vault_chests/<level id>` |
+//! | Chests | `chests/<level id>` |
+//! | Treasure rooms | `treasure/<level id>` |
+//! | Creatures' gear | `gear/<level id>` |
+//! | Animated creatures' bodies | `animated/<level id>` |
+//! | Gravestones (and which fallen they name) | `graves/<level id>`, `graves/<level id>/fallen` |
+//! | Which petrified dead name its statues | `statue-names/<level id>` |
+//!
+//! Per actor or object (derived on demand, never kept):
+//!
+//! | Stream | Label |
+//! |---|---|
+//! | What a creature drops when it dies | `drop/<actor id>` |
+//! | The materials a dead creature leaves | `materials/<actor id>` |
+//! | A creature's gear, placed in play | `gear/<actor id>` |
+//! | An animated creature's body, placed in play | `animated/<actor id>` |
+//! | A creature's court (a fey's faction) | `court/<actor id>` |
+//! | A creature's grade | `grade/<actor id>` |
+//! | Gear's condition | `condition/<key>` |
+//! | A beast's name | `companion/name/<actor id>` |
+//! | A trader's wares | `wares/<actor id>` |
+//!
+//! Kept in [`crate::WorldState`] (saves continue them):
+//!
 //! | Stream | Label | Kept |
 //! |---|---|---|
-//! | Map generation, per level | `map/<level id>` (retry *k*: `map/<level id>/<k>`) | never; derived on demand |
-//! | Hidden traps, per generated level | `traps/<level id>` | never |
-//! | A generated level's loot | `loot/<level id>` | never; derived on demand |
-//! | A generated level's chests and what they hold | `chests/<level id>` | never; derived on demand |
-//! | What a creature drops when it dies | `drop/<actor id>` | never; derived on demand |
+//! | Gameplay | `gameplay` | always |
+//! | Training marks' chances (skills) | `training` | always |
+//! | What level-ups roll (skill rolls, stat checks) | `levels` | from the first draw |
+//! | What an area spell ruins | `ruin` | from the first draw |
+//! | Overworld encounters | `encounters` | from the first draw |
 //! | What comes to a level with a danger (spec §7 "Danger levels") | `spawn/<level id>` | in the level's state, from its making |
-//! | A generated level's creatures' gear | `gear/<level id>` | never; derived on demand |
-//! | A creature's gear, placed in play | `gear/<actor id>` | never; derived on demand |
-//! | Gameplay | `gameplay` | in [`crate::WorldState`], so saves continue it |
-//! | Training marks' chances (skills) | `training` | in [`crate::WorldState`] |
-//! | What level-ups roll (skill rolls, stat checks) | `levels` | in [`crate::WorldState`], from the first draw |
-//! | The stat gender "other" raises | `character/gender` | never; derived on demand |
-//! | A new character's age and birthday | `character/birth/<race>` | never |
-//! | A new character's dice | `character/rolls/<race>,<gender>,<class>` | never |
-//! | A chosen character's background story, per chapter | `background/<race>,<gender>,<class>/<chapter>` | never |
 //!
-//! A level's map therefore depends only on the run seed and its id, never on the order in which
-//! levels are visited or on gameplay; a new character only on the run seed and the choices
-//! (`crate::character`). Visual randomness in the app uses its own generator and never
-//! touches these streams. All helpers are integer-only: no floating point decides anything.
+//! In play, keyed by the moment (made where used, never kept):
+//!
+//! | Stream | Label |
+//! |---|---|
+//! | A rolled quest's draw | `quest/<quest id>` |
+//! | Appraising | `appraise/<hour>` |
+//! | A gatekeeper's free blow | `gatekeeper/<keeper>/<mover>/<seconds>` |
+//! | Whether food is told stale | `freshness/<object>/<died>/<hour>` |
+//! | An investment's week | `invest/<week>` |
+//! | An aristocrat's stipend | `stipend/<level>` |
+//! | A patron's gift | `patron/<taken>` |
+//! | Scroll labels | `identification` |
+//! | Weather, one-liners' order, mutters | keyed draws (`weather::draw`): `weather`, `weather/start`, `line…`, `mutter…` |
+//!
+//! A new character (derived on demand, never kept; only the run seed and the choices):
+//!
+//! | Stream | Label |
+//! |---|---|
+//! | The stat gender "other" raises | `character/gender` |
+//! | Age and birthday | `character/birth/<race>` |
+//! | Dice | `character/rolls/<race>,<gender>,<class>` |
+//! | Name | `character/name/<race>,<gender>/<draw>` |
+//! | Weapon skills, styles, optional skills, a skill choice | `character/weapon-skills/<spec>`, `character/styles/<spec>`, `character/optional-skills/<spec>`, `character/skill-choice/<spec>` |
+//! | Random talents | `character/talents/<spec>` |
+//! | Starting kit, family wealth, father's sword, trade | `character/kit/<spec>`, `character/family-wealth/<spec>`, `character/fathers-sword/<spec>`, `character/trade/<spec>/<skill>` |
+//! | Starting companion, familiar | `companion/<spec>`, `familiar/<spec>` |
+//! | Background story, per chapter | `background/<race>,<gender>,<class>/<chapter>` |
+//!
+//! Visual randomness in the app uses its own generator and never touches these streams. All
+//! helpers are integer-only: no floating point decides anything.
 
 use crate::world::fnv1a;
 use rand_chacha::ChaCha8Rng;

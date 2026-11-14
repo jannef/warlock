@@ -35,7 +35,6 @@ pub(crate) use sun::{ONE, Sunlight, TURN, cos};
 
 use crate::fov::radius2;
 use crate::geom::{Dir, Pos};
-use crate::grid::Grid;
 use serde::{Deserialize, Serialize};
 
 /// Integer light: red, green, blue, and ultraviolet. Written in content files as `[r, g, b, uv]`.
@@ -143,13 +142,13 @@ pub fn falloff(color: Light, radius: i32, d2: i32) -> Light {
 /// out; the order is kept.
 pub(crate) fn lit_in_sight(
     cells: &[(Pos, Light)],
-    los: &Grid<bool>,
+    in_sight: impl Fn(Pos) -> bool,
     perceive: impl Fn(Pos, Light) -> Light,
 ) -> Vec<(Pos, Light)> {
     cells
         .iter()
         .map(|&(q, light)| (q, perceive(q, light)))
-        .filter(|&(q, light)| !light.is_dark() && los.get(q) == Some(&true))
+        .filter(|&(q, light)| !light.is_dark() && in_sight(q))
         .collect()
 }
 
