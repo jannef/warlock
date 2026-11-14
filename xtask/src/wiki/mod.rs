@@ -35,6 +35,8 @@ mod drops;
 mod dungeons;
 mod enchanting;
 mod encounters;
+#[cfg(test)]
+mod examples;
 mod experience;
 mod familiars;
 mod gear_condition;
@@ -526,7 +528,7 @@ mod tests {
         out
     }
 
-    fn unlink(text: &str) -> String {
+    pub(super) fn unlink(text: &str) -> String {
         let mut out = String::with_capacity(text.len());
         let mut rest = text;
         while let Some(open) = rest.find('[') {
