@@ -71,7 +71,7 @@ keyboard layout.
 
 ## Menus and screens
 
-On every menu and screen:
+On every menu and screen these keys are fixed: you cannot rebind them.
 
 | Command | Keys |
 |---|---|
@@ -85,7 +85,8 @@ On every menu and screen:
 
 ## Text fields
 
-In a text field (your character's [name](character.md#name)), every key types what it types, but these:
+In a text field (your character's [name](character.md#name)), every key types what it types, but
+these fixed keys:
 
 | Command | Keys |
 |---|---|
@@ -109,13 +110,16 @@ page.
 ## Rebinding keys
 
 You rebind the keys of play in the Controls screen: open the main menu or the pause menu, then
-Controls. The keys of menus, lists, screens, and prompts are fixed. Controls still lists some of
-them as rebindable today; a later update may fix those too.
+Controls. The keys of [menus and screens](#menus-and-screens), [text fields](#text-fields), the
+question windows (`y` and `n`), the [info pages](the-screen.md#info-pages) (the digits and `Tab`),
+the [rest prompt](resting.md#how-resting-works) (`h`, `d`, `n`), and [aiming](#aiming) (`Tab` and
+`Enter`) are fixed. The hints on screen name them.
 
-Controls lists the commands in groups, by where they are used: in play, while aiming, in the
-[rest prompt](resting.md#how-resting-works), at `--more--`, on menus and screens, in text fields,
-on the [info pages](the-screen.md#info-pages), in the question windows, and (in builds that have
-them) the developer keys. Last come the [ability](abilities.md#keys-of-their-own) keys, which have
+Controls lists the commands in groups, by where they are used: in play, while aiming, at
+`--more--`, on menus and screens, in text fields, on the info pages, and (in builds that have
+them) the developer keys. Outside play, each group holds only a "back" or "previous" command. It
+has no key until you give it one, since `Esc` and `Shift` already do it, and it cannot take a key
+that is fixed there. Last come the [ability](abilities.md#keys-of-their-own) keys, which have
 no key until you give them one.
 
 A command can have several keys: moving north is numpad `8` and Up. To change them, select the
@@ -136,18 +140,17 @@ hold them while you press the new key, as in `Ctrl+r`. A modified key is its own
 never does what `r` does, and `r` does nothing while `Ctrl` is held. `Shift` counts with keys
 that type no character, such as `Shift+Up`; a letter carries it already (`K` is not `k`). Keys
 your system or browser keeps for itself, such as `Cmd+Q`, `Alt+F4`, or `Ctrl+W` in the browser,
-cannot be bound, and the screen says why. The keys of menus, screens, and prompts take no
-modifiers.
+cannot be bound, and the screen says why. The back commands of menus, screens, and prompts take
+no modifiers.
 
-The same key can mean different things in different groups. `Tab` is the next target while
+The same key can mean different things in different places. `Tab` is the next target while
 [aiming](#aiming) and the next page on an [info screen](the-screen.md#info-pages). `d`
 [drops](objects.md#dropping) in play but [rests](resting.md#how-resting-works) until dawn in the
 rest prompt.
 
 You cannot lock yourself out. `Esc` always backs out of every screen and cancels every prompt, and
-it cannot be taken. Nor can the last key for up, down, or choose on the menus (you need them to
-get back to Controls), or the last key that accepts a text field (you need it to name a new
-character): they can be neither moved nor removed. `Delete` on a command whose keys are closed
+it cannot be taken. The keys of the menus, which you need to get back to Controls, and of text
+fields, which you need to name a new character, are fixed. `Delete` on a command whose keys are closed
 puts its default keys back, and **Reset all keys** resets every command. If your keys still get in the way, start the game with
 `warlock --reset-keys`: every key goes back to its default, and the game starts as usual. Your
 keys are kept with your [settings](settings.md).
@@ -185,8 +188,7 @@ Some commands ask a question on the [message line](the-screen.md#messages) befor
 
 Answer with a direction or the key shown, or press `Esc` to cancel. Pressing any other command also
 cancels the prompt. The [rest prompt's](resting.md#how-resting-works) keys (`h`, `d`, `n`) are its
-own. You can rebind them without touching the keys of play (where `d` drops), and the prompt names
-them as you bound them.
+own and fixed: in play `d` still drops.
 
 A few things ask first, in a small window over the map: quitting, stepping onto a trap you know
 (see [Traps](traps.md)), leaving a [shop](shops.md) owing money, and dropping something a shop
@@ -275,11 +277,13 @@ Either key puts a cursor on the map:
   wall, or a creature in the way that the missile would reach first).
 - The [message line](the-screen.md#messages) describes the target as [look mode](#look-mode) does.
   It never shows a chance to hit.
-- `Enter` (or `t` again) shoots or throws, and `Esc` cancels. The next time, the cursor starts on
-  the same target, so `t` `Enter` shoots it again.
+- `Enter`, or the key that started the aim (`t` again, or `T` for a throw), shoots or throws, and
+  `Esc` cancels. The next time, the cursor starts on the same target, so `t` `Enter` shoots it
+  again.
 
-The aiming keys are their own group in Controls: next target, previous target (no key until you
-bind one), and shoot or throw.
+`Tab` and `Enter` are fixed. Only the previous target is in Controls, with no key until you bind
+one. An [ability](abilities.md) that asks for a place is aimed the same way: `Enter`, the
+abilities key `a`, or the key that repeats the last ability, `X`, uses it.
 
 A spell scroll you read (`r`, see [Scrolls](scrolls.md)) is aimed the same way, and `Enter` or `r`
 reads it at the cursor. A [lightning bolt](magic.md#spell-lightning-bolt) runs through creatures,

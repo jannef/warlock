@@ -34,7 +34,8 @@ base_hp = 260
 skills = { initiative = 120, spot = 90 }
 natural = { defence = 9, protection = 0, name = "insubstantial form" }
 incorporeal = { wall_defence = 10 }
-resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, necrotic = 100, poison = 100 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50 }
+immune = ["necrotic", "poison"]
 everlasting = true
 on_eat = { message = "A husk of shadow that weighs next to nothing: it tastes of dust and the dark.", vomit = 40 }
 blood = "none"

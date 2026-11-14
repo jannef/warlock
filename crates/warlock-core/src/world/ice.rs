@@ -29,6 +29,7 @@ use super::fight::Harm;
 use super::{ActorId, LevelState, Spent, World, WorldState};
 use crate::action::{Event, SpellShape};
 use crate::content::StatUse;
+use crate::content::required::FROST_BURST;
 use crate::content::{ActionKind, Content, Here, TerrainId};
 use crate::fov::compute_fov;
 use crate::geom::Pos;
@@ -44,8 +45,6 @@ use std::collections::{BTreeMap, BTreeSet};
 const PLUNGE: &str = "The ice cracks beneath you and you plunge into the freezing water!";
 /// What a plunge's Swim check is against ([`World::keeps_afloat`]).
 const PLUNGE_DIFFICULTY: i32 = 11;
-/// The effect a frost burst shows (`data/effects.toml`).
-const FROST_BURST: &str = "frost_burst";
 
 /// What stepping onto a cell did to the ice there ([`World::tread`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -69,11 +68,6 @@ impl LevelState {
     /// When the ice was last brought up to date (dev dumps).
     pub fn ice_until(&self) -> GameTime {
         self.ice_until
-    }
-
-    /// The temperature here underground; `None` under the open sky (it follows the weather).
-    pub fn fixed_temperature(&self) -> Option<Temperature> {
-        self.temperature
     }
 
     /// Shows the ice at `p` as thick as it is: the ice terrain its thickness reaches, else the
@@ -562,6 +556,9 @@ impl World {
     /// The dev action `freeze:x,y,r` ([`crate::action::Action::Freeze`]): a frost burst at `at`
     /// within `radius`, said and shown. Takes no time.
     pub(super) fn freeze_dev(&mut self, at: Pos, radius: i32, events: &mut Vec<Event>) -> Spent {
+        if self.off_level_dev(at) {
+            return Spent::Nothing;
+        }
         let froze = self.frost(at, radius, crate::ice::FROST);
         self.say(format!(
             "Frost seizes the water around {},{} ({froze} cells, dev).",
@@ -574,6 +571,9 @@ impl World {
     /// The dev action `thaw:x,y,r` ([`crate::action::Action::Thaw`]): a burst of heat at `at`
     /// within `radius`, said. Takes no time.
     pub(super) fn thaw_dev(&mut self, at: Pos, radius: i32, events: &mut Vec<Event>) -> Spent {
+        if self.off_level_dev(at) {
+            return Spent::Nothing;
+        }
         self.say(format!(
             "Heat melts the ice around {},{} (dev).",
             at.x, at.y

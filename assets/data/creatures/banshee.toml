@@ -24,7 +24,8 @@ stats = { strength = 18, dexterity = 19, toughness = 18, intelligence = 19, will
 base_hp = 34
 natural = { defence = 4, protection = 0, name = "insubstantial form" }
 incorporeal = { wall_defence = 4 }
-resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50 }
+immune = ["poison"]
 corpse = false
 blood = "none"
 cry = { kind = "wail", loudness = 100, every = 60 }

@@ -197,7 +197,7 @@ pub struct Character {
     pub sign: Option<Sign>,
     /// The background story told when the run began (spec §8 "Background story"), by ids: the
     /// text is told again from the content (`background::retell`). Empty for a character
-    /// nobody chose and for one saved before stories.
+    /// nobody chose.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub story: Vec<crate::background::Told>,
     /// The prestige class the character has been called into (spec §8 "Prestige classes"), by

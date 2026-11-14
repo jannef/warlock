@@ -5,7 +5,7 @@
 //! and armour take deeper, and the more often loot is set with a gem. The rule itself is
 //! `crate::world::gear_condition`. Without the file every piece spawns as made.
 
-use super::{ContentError, ItemHarm};
+use super::{Content, ContentError, ItemHarm};
 use serde::Deserialize;
 
 /// What the chances are out of.
@@ -171,10 +171,37 @@ struct TribeSpec {
 }
 
 impl GearConditions {
-    /// Parses `data/gear_condition.toml`: odds that add up to at most [`PER_MILLE`] (a roll out
-    /// of it falls in one band), each tribe's tag once; `[[depth]]` rows by rising level, each
-    /// one's improvements with any table's within [`PER_MILLE`], its `ornament` at most 100.
-    pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
+    /// Parses `data/gear_condition.toml` against `content` (its materials and creatures loaded):
+    /// [`GearConditions::parse_text`]'s checks, then every `[kinds]` key a material's `group`
+    /// and every tribe's tag one a creature carries (#1556), so a misspelt `mettal` is an error,
+    /// not a table that never matches.
+    pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
+        let rules = Self::parse_text(file, text)?;
+        for (group, _) in &rules.kinds {
+            let known = (content.materials.iter()).any(|m| m.group.as_deref() == Some(group));
+            if !known {
+                return Err(ContentError::new(
+                    file,
+                    format!("`[kinds]`: no material is of the group `{group}`"),
+                ));
+            }
+        }
+        let tags = content.tags();
+        for tribe in &rules.tribes {
+            if !tags.contains(&tribe.tag.as_str()) {
+                return Err(ContentError::new(
+                    file,
+                    format!("tribe `{}`: no creature carries the tag", tribe.tag),
+                ));
+            }
+        }
+        Ok(rules)
+    }
+
+    /// Parses the file alone: odds that add up to at most [`PER_MILLE`] (a roll out of it falls
+    /// in one band), each tribe's tag once; `[[depth]]` rows by rising level, each one's
+    /// improvements with any table's within [`PER_MILLE`], its `ornament` at most 100.
+    fn parse_text(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: File = toml::from_str(text).map_err(|e| err(e.to_string()))?;
         let check = |name: &str, odds: &Odds| {
@@ -266,7 +293,7 @@ mod tests {
         let text = "[default]\ndamaged = 900\nfine = 40\nmarvellous = 0\nmasterwork = 0\n\
                     [[depth]]\nlevel = 4\nfine = 60\nornament = 2\n\
                     [[depth]]\nlevel = 8\nfine = 100\nmarvellous = 50\n";
-        let rules = GearConditions::parse("t", text).expect("parses");
+        let rules = GearConditions::parse_text("t", text).expect("parses");
         assert_eq!(rules.depth_at(3), Depth::default());
         assert_eq!(
             (rules.depth_at(4).fine, rules.depth_at(7).ornament),
@@ -280,8 +307,8 @@ mod tests {
             (810, 140, 50)
         );
         let falling = text.replace("level = 8", "level = 4");
-        assert!(GearConditions::parse("t", &falling).is_err());
+        assert!(GearConditions::parse_text("t", &falling).is_err());
         let over = text.replace("marvellous = 50", "marvellous = 950");
-        assert!(GearConditions::parse("t", &over).is_err());
+        assert!(GearConditions::parse_text("t", &over).is_err());
     }
 }

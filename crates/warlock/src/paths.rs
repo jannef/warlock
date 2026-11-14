@@ -205,12 +205,6 @@ pub fn resolve(inputs: &Inputs, is_dir: &dyn Fn(&Path) -> bool) -> Locations {
 }
 
 impl Locations {
-    /// The directory holding key binding files (`keymaps/` beside the settings).
-    #[allow(dead_code)] // For the keymap files (#159); the bindings live in settings.toml today.
-    pub fn keymaps_dir(&self) -> Option<PathBuf> {
-        self.config.dir.as_ref().map(|d| d.join("keymaps"))
-    }
-
     /// Folder for the saves, one per character.
     pub fn saves_dir(&self) -> Option<PathBuf> {
         self.data.dir.as_ref().map(|d| d.join(SAVES_DIR))
@@ -483,10 +477,6 @@ mod tests {
         assert_eq!(
             l.snapshots_dir().unwrap(),
             Path::new("/game/warlock-data/data/snapshots")
-        );
-        assert_eq!(
-            l.keymaps_dir().unwrap(),
-            Path::new("/game/warlock-data/config/keymaps")
         );
     }
 

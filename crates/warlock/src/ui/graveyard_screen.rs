@@ -11,11 +11,10 @@
 //! The words come from the content where its ids are known; an id another version wrote and
 //! this one lacks falls back to the entry's own words (its `killer`) or to plain "Died".
 
-use super::menu::{Hints, Nav, Panel, Press, wrap};
+use super::menu::{HINTS, Nav, Panel, Press, wrap};
 use super::screens::ScreenAction;
 use super::{TEXT, TEXT_DIM};
 use crate::graveyard::{Fallen, STONE};
-use crate::input::Bindings;
 use crate::render::console::Console;
 use crate::save::played_text;
 use crate::settings::Clock;
@@ -202,7 +201,7 @@ impl GraveyardScreen {
         pages
     }
 
-    pub fn draw(&self, console: &mut Console, clock: Clock, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console, clock: Clock) {
         let width = WIDTH.min(console.cols() as i32) - 4;
         let blocks = self.blocks(width, clock);
         let total = (blocks.iter().sum::<usize>() as i32).max(1);
@@ -237,7 +236,7 @@ impl GraveyardScreen {
             }
             y += 2;
         }
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         let footer = if pages.len() > 1 {
             format!(
                 "{} {} {} page   Esc back",
@@ -295,7 +294,7 @@ cause = "bleeding"
     fn drawn(screen: &GraveyardScreen, cols: u32, rows: u32) -> String {
         let mut console = Console::default();
         console.resize(cols, rows);
-        screen.draw(&mut console, Clock::H24, &Bindings::default());
+        screen.draw(&mut console, Clock::H24);
         (0..console.rows() as i32)
             .map(|y| {
                 (0..console.cols() as i32)

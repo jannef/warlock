@@ -469,14 +469,6 @@ fn asking_about_a_quest_gives_it_and_takes_no_time() {
 }
 
 #[test]
-fn an_offer_of_an_older_save_loads_as_given() {
-    let record: QuestRecord =
-        serde_json::from_str(r#"{"stage":"offered"}"#).expect("an old record loads");
-    assert_eq!(record.stage, Stage::Active);
-    assert_eq!(record.roll, None);
-}
-
-#[test]
 fn a_kill_quest_counts_the_players_kills_and_rewards_with_xp() {
     let mut w = world_on("#########\n#E@pp...#\n#########\n");
     take(&mut w, Dir::W, "pups");

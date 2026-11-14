@@ -9,6 +9,7 @@ use crate::character::CharacterSpec;
 use crate::combat::Strike;
 use crate::content::{Burst, ContentFiles, Reading, StatusId};
 use crate::stats::{PerStat, Stats};
+use std::sync::LazyLock;
 
 /// A lit hall with a pond (x 5 to 7, y 2 to 4), the player at (2, 3), and a kobold walled up in a
 /// closet (`kobold_at` copies one).
@@ -28,6 +29,10 @@ pub(super) fn files() -> ContentFiles {
     );
     files
 }
+
+/// The content of [`files`], loaded once for the tests that start a world for every sample.
+pub(super) static HALL_CONTENT: LazyLock<Arc<Content>> =
+    LazyLock::new(|| Arc::new(Content::load(&files()).expect("content")));
 
 pub(super) fn start(content: Arc<Content>, seed: u64) -> World {
     let spec: CharacterSpec = "human,female,wizard".parse().expect("a character");

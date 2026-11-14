@@ -312,9 +312,10 @@
 #             (2 to 40), plus the weapon's skill rank and their grip, keeps it; failed, it lies on
 #             a random open cell beside them (a spirit weapon fades instead)
 #   resist    what it resists, in percent per damage type (spec §8 "Damage types"):
-#             { acid = 50 }; -100 (it takes double) to 100 (immune: nothing of the kind hurts
-#             it, whatever it wears). What it wears adds up with this, capped at 75 short of
-#             immunity. Never shown: the player learns it by play
+#             { acid = 50 }; negative is a vulnerability. Any amount: it adds up with what it
+#             wears, its statuses, and the rest uncapped, and at most 75 of the total counts, at
+#             least -100 (it takes double). An immunity is no resistance: name the damage type in
+#             `immune`. Never shown: the player learns it by play
 #   weapon_skills  its ranks in weapon skills (spec §8 "Weapon skills"), by skill id in
 #             weapon_skills.toml, 0 to 10: { spears = 1 }; fighting styles too ({ duelist = 2 },
 #             spec §8 "Fighting styles"). Creatures do not
@@ -358,8 +359,10 @@
 # bloodless creature. How much it spills goes by its size's `blood` in sizes.toml.
 
 # Immunities and death (spec §8 "Status effects"; never shown to the player):
-#   immune    status ids it never suffers (`immune = ["poisoned", "bleeding"]`; `diseased` is
-#             every disease): refused where they are given, nothing rolled
+#   immune    status ids it never suffers and damage type ids that never hurt it, whatever
+#             its resistances (`immune = ["poison", "poisoned", "bleeding"]`; `diseased` is every
+#             disease): refused where they are given, nothing rolled; an id is a status or a
+#             damage type, never both
 #   dies      the verb of its death line, "The animated chair splinters." (default "dies")
 #   depart    the words of its going as an ally whose call has run out, "The wolf slips back into
 #             the dark." (default "fades away"; docs/dev/allies.md)
@@ -377,7 +380,7 @@
 # Peaceful by type: they never fight, and you swap places with them when they are in your way.
 #
 # The undead (the roster, #383; content::undead_roster_tests checks the numbers): faction
-# "undead", tags ["undead", ...] (with "skeleton" or "spirit" where they are one), alignment "evil", vision "darkvision", resist poison 100; they do not train and have
+# "undead", tags ["undead", ...] (with "skeleton" or "spirit" where they are one), alignment "evil", vision "darkvision", immune to poison; they do not train and have
 # no on_eat stat gifts (a tag's, caster or troll, switched off with train = { ... = 0 }). xp = 5 × level + 10. Stats, base_hp, dice, and speed come from the level
 # and a role (shambler, brute, standard, quick, spirit, caster, small; #383's tables), within
 # ±35 % of max HP and dice average. Bone types resist piercing 50 and bludgeoning −50; spirits
@@ -392,8 +395,8 @@
 # them, and until then come only as strays (Strays, above).
 #
 # The demons (the roster, #449; content::demon_roster_tests checks the numbers): faction
-# "demon", tags ["demon", "fiend"], alignment "evil", vision "darkvision", resist poison 100 and
-# fire (100 for the balor), and cold and electricity 25 from level 24. The undead's formulas and
+# "demon", tags ["demon", "fiend"], alignment "evil", vision "darkvision", immune to poison, resist
+# fire (immune: the balor), and cold and electricity 25 from level 24. The undead's formulas and
 # roles (#383) give their xp, stats, base_hp, dice, to-hit, and natural Defence; a hold in on_hit
 # has difficulty 12 + level ÷ 5. No corpse (a demon's body comes apart), dark ichor for blood.
 # Glyphs: u the lesser demons, U the greater. The dretch and the quasit live in Fyrdelf; the rest
@@ -409,16 +412,16 @@
 # The devils (the devil roster, #448; content::devil_roster_tests checks the numbers): faction
 # "devil", tags ["devil", "fiend"], alignment "evil", vision "darkvision", on the undead roster's
 # formulas (#383: xp, stats, base_hp, dice, to-hit, natural defence, speed by level and role).
-# Every devil resists fire 100 and poison 50; cold 50 from the bearded devil up (the ice devil
-# 100); the bone devil and the pit fiend poison 100. One natural attack each, its rider standing
+# Every devil is immune to fire and resists poison 50; cold 50 from the bearded devil up (the ice
+# devil immune); the bone devil and the pit fiend immune to poison. One natural attack each, its rider standing
 # for the rest. A devil's body burns away when it dies: no corpse, a dark ichor for blood (the
 # bone devil none). Glyphs: u the lemure, i the imp, U the greater devils, each in its own colour.
 # Fyrdelf's population has the lemure and the imp (#531); the rest wait.
 #
 # The yugoloths (#446; content::yugoloth_roster_tests checks the numbers): mercenary fiends of the
 # lower planes, faction "yugoloth" (hostile to the player only), tags ["yugoloth", "fiend", ...],
-# alignment "evil", vision "darkvision", resist acid and poison 100, fire, cold, and electricity
-# 50; no corpse (the body falls to ash), a dark ichor for blood. Their numbers follow the undead
+# alignment "evil", vision "darkvision", immune to acid and poison, resist fire, cold, and
+# electricity 50; no corpse (the body falls to ash), a dark ichor for blood. Their numbers follow the undead
 # roster's formulas (#383) by level and role. Glyph "&", a colour each. In no population yet:
 # no danger window reaches them.
 #
@@ -450,7 +453,7 @@
 #
 # The elementals (the roster, #453; content::elemental_roster_tests checks the numbers): faction
 # "elemental" (the cinder elemental keeps the delf's "fire"), tags ["elemental", ELEMENT],
-# alignment "neutral", resist poison 100, no corpse and no blood. The numbers are the undead
+# alignment "neutral", immune to poison, no corpse and no blood. The numbers are the undead
 # roster's formulas (xp, stats, base_hp, dice, to_hit, natural Defence from L20), with the role by
 # element (fire and water standard, earth and ice brute, air and lightning quick; motes small, `e`,
 # size "small"). Each element is immune to its own damage type where it has one and hurt more by
@@ -482,7 +485,7 @@
 # hostile to the player's side; #1316), what they let through "loosed" (the summoning's faction), tags ["summoner", "fiend",
 # "gate"], alignment "evil", no attack (a rooted type with none strikes no blow), no mana (their
 # summoning costs nothing: its cooldown and `most` are its limits), id pools of the shared fiends.
-# No corpse, no blood, no grades; resist fire and poison 100, cold 50. Glyph 0, a colour each.
+# No corpse, no blood, no grades; immune to fire and poison, resist cold 50. Glyph 0, a colour each.
 #
 # The troll tribe (#456; content::troll_roster_tests checks the numbers): levels 13 to 42, faction
 # "troll" (the marsh troll stays a marsh thing, the rotting troll undead; both carry the tag),

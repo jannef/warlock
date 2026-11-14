@@ -33,7 +33,7 @@ it. `Backspace` erases and `Enter` accepts. `Tab` puts in one of your people's n
 random by race and gender; press it again for another.
 
 A name cannot be empty. If you accept an empty field, you get the random name it shows, dimmed.
-You can rebind these keys in Controls, under **Text fields**.
+These keys are fixed (see [Text fields](controls.md#text-fields)).
 
 Your name appears on the character screen, the summary, the death screen, and the list of saved
 characters (see [Saving](saving.md)). It changes nothing else.

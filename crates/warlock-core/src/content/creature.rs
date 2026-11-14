@@ -357,7 +357,8 @@ pub(super) struct CreatureSpec {
     #[serde(default = "yes")]
     pub vitals: bool,
     /// What it resists, in percent per damage type (spec §8 "Damage types"): `resist = { acid
-    /// = 50 }`; 100 is immune, negative a vulnerability. Never its number; Knowledge tells it in words (#1030).
+    /// = 50 }`, negative a vulnerability; any amount, of which at most 75 counts (an immunity is
+    /// `immune`, #1620). Never its number; Knowledge tells it in words (#1030).
     #[serde(default)]
     pub resist: BTreeMap<String, i32>,
     /// Its acid (spec §8 "Creature gimmicks"; `world/corrode.rs`): what of a foe's gear it eats.
@@ -377,8 +378,9 @@ pub(super) struct CreatureSpec {
     /// The colour of its blood (`"#rrggbb"`), or `"none"` for a bloodless creature; none:
     /// dark red ([`crate::blood::RED`]).
     pub blood: Option<String>,
-    /// The status effects it never suffers, by id (`immune = ["poisoned", "bleeding"]`;
-    /// `diseased` is every disease): spec §8 "Status effects".
+    /// The status effects it never suffers and the damage types that never hurt it, by id
+    /// (`immune = ["poison", "poisoned", "bleeding"]`; `diseased` is every disease): spec §8
+    /// "Status effects", "Damage types". Each id names a damage type or a status, never both.
     #[serde(default)]
     pub immune: Vec<String>,
     /// The verb of its death line ("The animated chair splinters."); none: "dies".
@@ -692,7 +694,28 @@ pub(super) struct Resolved {
     pub weapon_skills: WeaponSkills,
     pub resist: Vec<(DamageTypeId, i32)>,
     pub immune: Vec<StatusId>,
+    pub immune_kinds: Vec<DamageTypeId>,
     pub spells: Vec<super::SpellId>,
+}
+
+/// A creature's `immune` ids, split: the statuses it never suffers and the damage types that never
+/// hurt it. Each id names one or the other; an id that names both, or neither, is refused.
+pub(super) fn immunities(
+    content: &super::Content,
+    ids: &[String],
+) -> Result<(Vec<StatusId>, Vec<DamageTypeId>), String> {
+    let (mut statuses, mut kinds) = (Vec::new(), Vec::new());
+    for id in ids {
+        match (content.status_id(id), content.damage_type_id(id)) {
+            (Some(status), None) => statuses.push(status),
+            (None, Some(kind)) => kinds.push(kind),
+            (Some(_), Some(_)) => {
+                return Err(format!("immune: `{id}` is both a status and a damage type"));
+            }
+            (None, None) => return Err(format!("immune: unknown status or damage type `{id}`")),
+        }
+    }
+    Ok((statuses, kinds))
 }
 
 impl CreatureSpec {
@@ -769,6 +792,7 @@ impl CreatureSpec {
             incorporeal: self.incorporeal,
             vitals: self.vitals,
             resist: r.resist,
+            immune_kinds: r.immune_kinds,
             corrodes: self.corrodes,
             disarms: self.disarms,
             corpse: self.corpse,
@@ -1018,10 +1042,15 @@ pub struct CreatureDef {
     /// has them is [`super::Content::has_vitals`], which adds the rules' kinds. Rules only (the
     /// wiki states it).
     pub vitals: bool,
-    /// Gameplay: what it resists, in percent per damage type (spec §8 "Damage types"); 100 is
-    /// immune, negative a vulnerability. The player learns it by play, or in words by Knowledge
+    /// Gameplay: what it resists, in percent per damage type (spec §8 "Damage types"), negative
+    /// a vulnerability; added to every other source, of which at most 75 counts
+    /// (`damage::effective`). The player learns it by play, or in words by Knowledge
     /// (`world/knowledge.rs`).
     pub resist: Vec<(DamageTypeId, i32)>,
+    /// Gameplay: the damage types it is immune to (its `immune` ids that name one, and the
+    /// spell types' `immune_tags`, `spell_type::lay_immunities`): nothing of them hurts it,
+    /// whatever its resistances add up to (#1620). Known to the player as resistances are.
+    pub immune_kinds: Vec<DamageTypeId>,
     /// Gameplay: its acid, eating at a foe's gear (`world/corrode.rs`).
     pub corrodes: Option<Corrodes>,
     /// Gameplay: its disarming blow (`world/knock_away.rs`): a melee hit on the player may
@@ -1091,4 +1120,28 @@ pub struct CreatureDef {
     /// The campaign whose own type it is (`campaigns/<id>/data/creatures/`, spec §3); `None`
     /// for a shared one. Only that campaign's files may name it.
     pub campaign: Option<String>,
+}
+
+#[cfg(test)]
+mod immunity_tests {
+    use super::*;
+
+    #[test]
+    fn immune_ids_split_into_statuses_and_damage_types() {
+        let content = super::super::Content::builtin().expect("built-in content");
+        let ids = |list: &[&str]| list.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        let (statuses, kinds) =
+            immunities(&content, &ids(&["poison", "poisoned", "fire"])).expect("both kinds");
+        assert_eq!(statuses, [content.status_id("poisoned").expect("status")]);
+        let (poison, fire) = (
+            content.damage_type_id("poison"),
+            content.damage_type_id("fire"),
+        );
+        assert_eq!(kinds, [poison.expect("poison"), fire.expect("fire")]);
+        let err = immunities(&content, &ids(&["nothing"])).expect_err("unknown");
+        assert!(
+            err.contains("unknown status or damage type `nothing`"),
+            "{err}"
+        );
+    }
 }

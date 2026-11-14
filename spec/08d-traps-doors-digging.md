@@ -573,6 +573,6 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `Event::WallBroken { pos, cause }` (`Dug` or `Blast`) reaches presentation when the player
     sees the cell: dust rises there (the rubble's `toggle` particles, §4.8).
   - **What the player perceives**: whether they have a digging tool ready
-    (`PerceptionView::ready_to_dig`) and which walls in sight they have dug into
+    (`PerceptionView::dig_refusal`) and which walls in sight they have dug into
     (`PerceptionView::is_dug`: look mode's "partly dug"); never the work done in numbers.
     Creatures do not dig, and no one digs down or up.

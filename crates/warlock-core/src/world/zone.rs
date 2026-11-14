@@ -308,7 +308,7 @@ impl World {
         radius: i32,
         events: &mut Vec<Event>,
     ) -> Spent {
-        if !self.can_loose_here() {
+        if !self.can_loose_here() || self.off_level_dev(at) {
             return Spent::Nothing;
         }
         let cells: Vec<Pos> = self.burst(at, radius).into_iter().collect();
@@ -323,6 +323,17 @@ impl World {
             at.y
         ));
         Spent::NoTime
+    }
+
+    /// Whether a dev burst's centre `at` lies off the current level, said if so: the dev bursts
+    /// (`zone:`, `freeze:`, `thaw:`) refuse it, with no time (a centre far off the map would
+    /// overflow their line of sight, #1569).
+    pub(super) fn off_level_dev(&mut self, at: Pos) -> bool {
+        let off = !self.state.current().terrain.in_bounds(at);
+        if off {
+            self.say(format!("{},{} is off the level (dev).", at.x, at.y));
+        }
+        off
     }
 
     /// A miscast's zone (`miscast.rs`): `kind` by `by` around `center`, within `radius` in its
@@ -447,7 +458,7 @@ impl World {
         let Some(actor) = self.state.actors.get(&id) else {
             return;
         };
-        let Some(staggered) = content.status_id("staggered") else {
+        let Some(staggered) = content.ids().staggered else {
             return;
         };
         if content.incorporeal(actor.creature).is_some() {

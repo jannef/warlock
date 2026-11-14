@@ -7,7 +7,7 @@
 //! into the direction prompt; `rig:tripwire:E`); the list keys turn the page; Esc closes it.
 //! The keys are the list's own, fixed.
 
-use super::menu::{Hints, Nav, Panel, Press};
+use super::menu::{HINTS, Nav, Panel, Press};
 use super::paged_list::{PagedList, Row, draw_header};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM};
@@ -75,7 +75,7 @@ impl RigScreen {
         }
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         // Rows: margin, the list, a gap, the footer, the frame.
         self.fit(console.cols(), console.rows());
         let count = self.rigs.tallest().max(1) as i32;
@@ -121,12 +121,12 @@ impl RigScreen {
             let tail_x = right - tail.chars().count() as i32;
             console.print(tail_x, y, &tail, TEXT_DIM);
         }
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         let confirm = &keys.confirm;
         let choose = match self.rigs.last_letter() {
             Some('a') => format!("a or {confirm}"),
             Some(last) => format!("a-{last} or {confirm}"),
-            None => confirm.clone(),
+            None => confirm.to_string(),
         };
         let page = (self.rigs.hint(&keys)).map_or(String::new(), |hint| format!("{hint}   "));
         if self.rigs.is_empty() {

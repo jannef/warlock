@@ -396,15 +396,17 @@ pub(super) fn creature_defences(content: &Content) -> String {
             Some(hide) if hide.protection > 0 => format!("{} ({})", hide.protection, hide.name),
             _ => "-".into(),
         };
-        let mut resists: Vec<String> = (c.resist.iter())
-            .map(|&(kind, percent)| {
+        // Immunities first (#1620): no resistance, nothing of the kind hurts it.
+        let immune = (c.immune_kinds.iter())
+            .map(|&kind| format!("immune to {}", damage_link(content, kind)));
+        let mut resists: Vec<String> = immune
+            .chain(c.resist.iter().map(|&(kind, percent)| {
                 let name = damage_link(content, kind);
                 match percent {
-                    100 => format!("immune to {name}"),
                     p if p < 0 => format!("{name} {}% (takes more)", signed(p)),
                     p => format!("{name} {p}%"),
                 }
-            })
+            }))
             .collect();
         // Bloodless: no wound's status takes on it (Bleeding; `World::afflict_one`).
         if c.blood.is_none() {

@@ -19,7 +19,7 @@
 //! after it (and Esc skips back over them).
 
 use super::dialog_screen::Dialog;
-use super::menu::{Hints, Nav, Panel, Press};
+use super::menu::{HINTS, Nav, Panel, Press};
 use super::paged_list::{PagedList, Row, draw_header};
 use super::screens::{ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
@@ -299,7 +299,7 @@ impl CraftPickScreen {
         }
     }
 
-    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console) {
         self.fit(console.cols(), console.rows());
         let count = self.list().tallest().max(1) as i32;
         let Some(step) = self.steps.get(self.step) else {
@@ -388,7 +388,7 @@ impl CraftPickScreen {
             console.print(x + 2, y, &name, color);
             console.print(state_x, y, &state, TEXT_DIM);
         }
-        let keys = Hints::of(bindings);
+        let keys = HINTS;
         let confirm = &keys.confirm;
         let mut hints = Vec::new();
         match self.list().last_letter() {

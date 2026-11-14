@@ -699,18 +699,7 @@ pub(crate) fn rare_name(content: &Content, rng: &mut Rng, def: &ObjectDef) -> St
     format!("{first} {second}").trim().to_string()
 }
 
-/// One of `items` drawn by weight (one draw); `None` if they weigh nothing.
+/// One of `items` drawn by weight (one draw, [`Rng::weighted`]); `None` if they weigh nothing.
 pub(crate) fn pick_weighted<'a, T>(rng: &mut Rng, items: &'a [(T, u32)]) -> Option<&'a T> {
-    let total: u32 = items.iter().map(|(_, w)| *w).sum();
-    if total == 0 {
-        return None;
-    }
-    let mut left = rng.below(total);
-    for (item, weight) in items {
-        if left < *weight {
-            return Some(item);
-        }
-        left -= weight;
-    }
-    None
+    rng.weighted(items, |(_, w)| *w).map(|(item, _)| item)
 }

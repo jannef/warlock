@@ -1,6 +1,6 @@
 //! The info-screen group (spec §6): the screens that show what the player knows about themselves
 //! are numbered pages of one set. While one is the top screen, the top-row digits `1`..`9`
-//! replace it with the numbered page ([`ScreenAction::Replace`], not a push), so Esc still
+//! (fixed keys, `settings::fixed::page`) replace it with the numbered page ([`ScreenAction::Replace`], not a push), so Esc still
 //! returns to wherever the first one was opened from. Each page keeps its own opening key in play.
 //!
 //! A new info screen joins the group by adding one entry to [`PAGES`] (in the order its number
@@ -12,8 +12,9 @@
 use super::menu::{Panel, Press};
 use super::screens::{ScreenAction, ScreenName};
 use super::{ACCENT, TEXT_DIM};
-use crate::input::{Bindings, Context, KeyCommand};
+use crate::input::{Bindings, Context};
 use crate::render::console::Console;
+use crate::settings::fixed::{self, PageKey};
 
 /// The pages, in number order, with their tab labels: a name, and a short one for a console too
 /// narrow for every name (short enough that the line fits an 80-column console). Only screens
@@ -57,19 +58,22 @@ pub fn is_page(name: ScreenName) -> bool {
 }
 
 /// The key that turns to page `name` with its name, as a hint line names it ("6 Magic"); `None`
-/// for a screen that is no page, or a page with no key.
-pub fn hint(name: ScreenName, bindings: &Bindings) -> Option<String> {
+/// for a screen that is no page.
+pub fn hint(name: ScreenName) -> Option<String> {
     let i = PAGES.iter().position(|(n, _, _)| *n == name)?;
-    let key = bindings.keys_of(KeyCommand::Page(u8::try_from(i + 1).ok()?));
-    Some(format!("{} {}", key.first()?.display(), PAGES[i].1))
+    Some(format!("{} {}", i + 1, PAGES[i].1))
 }
 
 /// What a press does on page `current`: replace it with the page the press names, if that is
-/// another page. The keys are the `Pages` context of the bindings: a page's number, and next and
-/// previous (wrapping; Shift reverses a next or previous). Numpad digits are movement unless the
-/// player binds them.
+/// another page. The keys are fixed (`settings::fixed::page`): a page's number, and Tab for the
+/// next (wrapping; Shift reverses it); the previous is `KeyCommand::PrevPage`'s keys (none by
+/// default). Numpad digits are movement.
 pub fn switch(current: ScreenName, press: &Press, bindings: &Bindings) -> Option<ScreenAction> {
-    let command = bindings.owner_in(Context::Pages, press.binding.as_ref()?)?;
+    let key = press.binding.as_ref()?;
+    let command = match bindings.owner_in(Context::Pages, key) {
+        Some(_) => None,
+        None => Some(fixed::page(key)?),
+    };
     let here = PAGES.iter().position(|(n, _, _)| *n == current)?;
     let step = |forward: bool| {
         let (len, forward) = (PAGES.len(), forward != press.shift);
@@ -80,10 +84,9 @@ pub fn switch(current: ScreenName, press: &Press, bindings: &Bindings) -> Option
         }
     };
     let to = match command {
-        KeyCommand::Page(n) => usize::from(n).checked_sub(1)?,
-        KeyCommand::NextPage => step(true),
-        KeyCommand::PrevPage => step(false),
-        _ => return None,
+        Some(PageKey::To(n)) => usize::from(n).checked_sub(1)?,
+        Some(PageKey::Next) => step(true),
+        None => step(false),
     };
     let (name, _, _) = PAGES.get(to)?;
     (*name != current).then_some(ScreenAction::Replace(*name))
@@ -94,14 +97,11 @@ pub fn switch(current: ScreenName, press: &Press, bindings: &Bindings) -> Option
 /// current one (and every page's panel is as wide, [`panel_width`]), so the line stays put as
 /// the pages turn and only its highlight moves. Each page named has its key before its name.
 /// Pairs of (text, is the current page).
-fn tabs(current: ScreenName, bindings: &Bindings, width: usize) -> Vec<(String, bool)> {
+fn tabs(current: ScreenName, width: usize) -> Vec<(String, bool)> {
     let make = |label: Label| -> Vec<(String, bool)> {
         let mut parts = Vec::new();
         for (i, (name, full, short)) in PAGES.iter().enumerate() {
-            let key = u8::try_from(i + 1)
-                .ok()
-                .and_then(|n| (bindings.keys_of(KeyCommand::Page(n)).first()).map(|k| k.display()))
-                .unwrap_or_default();
+            let key = (i + 1).to_string();
             let here = *name == current;
             let named = match label {
                 Label::Name => *full,
@@ -129,8 +129,8 @@ fn tabs(current: ScreenName, bindings: &Bindings, width: usize) -> Vec<(String, 
 
 /// Draws the tab line on the panel's bottom border, as the title sits on the top one:
 /// ` 1 Character · 2 Inventory · … `, the current page in the accent color.
-pub fn draw_tabs(console: &mut Console, panel: &Panel, bindings: &Bindings, current: ScreenName) {
-    let tabs = tabs(current, bindings, (panel.inner_w() - 2).max(0) as usize);
+pub fn draw_tabs(console: &mut Console, panel: &Panel, current: ScreenName) {
+    let tabs = tabs(current, (panel.inner_w() - 2).max(0) as usize);
     if tabs.is_empty() {
         return;
     }
@@ -201,36 +201,27 @@ mod tests {
     }
 
     #[test]
-    fn page_keys_are_rebindable_and_independent_of_play() {
+    fn the_previous_page_is_rebindable_and_page_keys_are_not() {
+        use crate::input::KeyCommand;
         use ScreenName::*;
         let mut b = Bindings::default();
-        // Tab means next target while aiming and next page here, at once.
+        let w = KeyBinding::Char("w".into());
+        b.bind_primary(KeyCommand::PrevPage, w.clone()).unwrap();
         assert_eq!(
-            b.owner_in(Context::Aim, &KeyBinding::Code(KeyCode::Tab)),
-            Some(KeyCommand::NextTarget)
+            switch(Equipment, &press(w, false), &b),
+            Some(ScreenAction::Replace(Inventory))
         );
-        assert!(b.conflicts().is_empty());
-        // Page 3 on `w`.
-        b.bind_primary(KeyCommand::Page(3), KeyBinding::Char("w".into()))
-            .unwrap();
-        assert_eq!(
-            switch(Character, &top_row("w"), &b),
-            Some(ScreenAction::Replace(Equipment))
-        );
-        // Page keys are unique among themselves (a used one moves), but may be play keys too.
         let two = KeyBinding::Char("2".into());
-        b.bind_primary(KeyCommand::NextTarget, two.clone()).unwrap();
-        assert_eq!(b.owner_in(Context::Pages, &two), Some(KeyCommand::Page(2)));
-        b.bind_primary(KeyCommand::Page(3), two.clone()).unwrap();
-        assert_eq!(b.owner_in(Context::Pages, &two), Some(KeyCommand::Page(3)));
-        assert_eq!(b.owner_in(Context::Aim, &two), Some(KeyCommand::NextTarget));
+        assert!(
+            two.refused_for(KeyCommand::PrevPage).is_some(),
+            "a fixed page key"
+        );
     }
 
     #[test]
     fn the_tab_line_is_the_same_on_every_page_and_shortens_to_fit() {
-        let b = Bindings::default();
         let line = |current, w| {
-            let parts = tabs(current, &b, w);
+            let parts = tabs(current, w);
             (parts.iter().map(|(t, _)| t.as_str()).collect::<Vec<_>>()).join(" · ")
         };
         let full = "1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Magic · \
@@ -245,7 +236,7 @@ mod tests {
         );
         for (page, _, _) in PAGES {
             assert_eq!(line(*page, room), full);
-            let tabs = tabs(*page, &b, room);
+            let tabs = tabs(*page, room);
             let here: Vec<usize> = (0..tabs.len()).filter(|i| tabs[*i].1).collect();
             assert_eq!(here.len(), 1);
             assert_eq!(PAGES[here[0]].0, *page);
@@ -266,9 +257,8 @@ mod tests {
 
     #[test]
     fn a_hint_names_a_page_by_its_key_and_name() {
-        let b = Bindings::default();
-        assert_eq!(hint(ScreenName::Magic, &b).as_deref(), Some("6 Magic"));
-        assert_eq!(hint(ScreenName::Messages, &b), None);
+        assert_eq!(hint(ScreenName::Magic).as_deref(), Some("6 Magic"));
+        assert_eq!(hint(ScreenName::Messages), None);
     }
 
     #[test]

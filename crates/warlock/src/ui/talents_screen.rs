@@ -10,7 +10,7 @@
 //! Read-only: ↑↓ choose (the list scrolls); Esc, Enter, or its own key closes it. Read from the
 //! perception snapshot when it opens.
 
-use super::menu::{Hints, Nav, Panel, Press, wrap};
+use super::menu::{HINTS, Nav, Panel, Press, wrap};
 use super::screens::{ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, KeyCommand};
@@ -150,7 +150,7 @@ impl TalentsScreen {
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         let h = self.lines.len() as i32 + EXTRA;
         let panel = Panel::new(console, " Talents ", WIDTH, h);
-        super::info_tabs::draw_tabs(console, &panel, bindings, ScreenName::Talents);
+        super::info_tabs::draw_tabs(console, &panel, ScreenName::Talents);
         let x = panel.inner_x();
         let room = (panel.h - EXTRA).max(1) as usize;
         // Scroll to keep the selected talent's lines (and its tree's heading) in view.
@@ -196,7 +196,7 @@ impl TalentsScreen {
                 }
             }
         }
-        let up_down = Hints::of(bindings).up_down();
+        let up_down = HINTS.up_down();
         let footer = match bindings.keys_of(KeyCommand::Talents).first() {
             Some(key) => format!("{up_down} choose   {} or Esc close", key.display()),
             None => format!("{up_down} choose   Esc close"),

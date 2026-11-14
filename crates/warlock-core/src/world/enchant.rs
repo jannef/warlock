@@ -39,7 +39,9 @@
 //!   (`loot::rare_name`); Ennoble draws the kind evenly among those with room that can roll,
 //!   the affix, and the name; Unbind draws nothing and takes the magic off. Failed: the crystals are spent, the item as it was. A
 //!   natural 2: the crystals spent and the item warped ([`ItemHarm::Enchant`], as a failed
-//!   Temper damages; of Proof, spared).
+//!   Temper damages; of Proof, spared, and said so), one of a stack alone, set apart (#1487).
+//! - **Found again**: the picks in the pack are kept as the work begins and found again when it
+//!   ends (`work_on.rs`), so a stack gone meanwhile never turns the work on another (#1564).
 //! - **Known**: the magic made is identified: the enchanter knows their work.
 //! - **Marks**: [`Use::Craft`] on the recipe's skill alone, whatever came of it. No noise, no
 //!   alignment.
@@ -52,6 +54,7 @@ use super::craft_make::{CraftOption, CraftPlan, CraftStep, CraftStepKind, MAX_PI
 use super::item_damage::Harmed;
 use super::rest::Ended;
 use super::seal;
+use super::temper::WITHSTOOD;
 use super::{Actor, LevelState, Spent, World};
 use crate::action::Event;
 use crate::combat;
@@ -674,6 +677,19 @@ impl Enchanting {
     fn picks(self) -> Vec<Option<usize>> {
         self.picks[..usize::from(self.len)].to_vec()
     }
+
+    /// The picks that are pack positions, the item's and the crystals' (`None` for the rest:
+    /// the seals and the kept affix are indices of their own).
+    fn in_pack(self, content: &Content) -> Vec<Option<usize>> {
+        let def = content.recipe(self.recipe);
+        let end = match def.uses {
+            Some(RecipeUse::Enchant(kind)) => seal::slots(kind, def.crystals).crystals.end,
+            _ => 1,
+        };
+        (self.picks().into_iter().enumerate())
+            .map(|(i, pick)| pick.filter(|_| i < end))
+            .collect()
+    }
 }
 
 impl World {
@@ -720,7 +736,8 @@ impl World {
 
     /// Works turn after turn until the enchanting is done or something stops it (module docs):
     /// its last turn cut short to end exactly when its time is up.
-    pub(super) fn enchant(&mut self, work: Enchanting, events: &mut Vec<Event>) {
+    pub(super) fn enchant(&mut self, mut work: Enchanting, events: &mut Vec<Event>) {
+        let on = self.work_on(&work.in_pack(&self.content));
         let until = self.state.time + Duration::seconds(u64::from(work.seconds));
         let turn = self.price_of(self.state.player, ActionKind::Craft);
         let ended = self.keep_at(
@@ -730,7 +747,15 @@ impl World {
         );
         match ended {
             Ended::Died => {}
-            _ if self.state.time >= until => self.enchanted(work),
+            _ if self.state.time >= until => match self.worked_on(&on) {
+                Some(now) => {
+                    for (pick, at) in work.picks.iter_mut().zip(now) {
+                        *pick = at.or(*pick);
+                    }
+                    self.enchanted(work);
+                }
+                None => self.say("You have nothing left to work on."),
+            },
             Ended::Came(came) => {
                 let text = format!("{}; you put down your work.", self.came_line(came));
                 self.say(text);
@@ -833,8 +858,12 @@ impl World {
                     self.say(dark);
                     self.rare_lost(resolved);
                 }
+                // One of a stack (of arrows) warps, set apart at the end of the pack, after
+                // every crystal's position (#1487).
+                let at = self.set_apart(at);
+                let thing = the(self.lore(), &self.state.player().inventory[at]);
                 match self.harm_item(at, ItemHarm::Enchant) {
-                    Harmed::Withstood => {}
+                    Harmed::Withstood => self.say(WITHSTOOD),
                     Harmed::Damaged => {
                         self.say(format!("{} warps under your hands.", capital(&thing)))
                     }

@@ -31,7 +31,8 @@ weight = 2500000
 stats = { strength = 30, dexterity = 14, toughness = 32, intelligence = 16, willpower = 22, presence = 20 }
 base_hp = 160
 natural = { defence = 3, protection = 5, name = "scales" }
-resist = { cold = 100, fire = -25 }
+resist = { fire = -25 }
+immune = ["cold"]
 everlasting = true
 on_eat = { message = "The wyrm's flesh is cold as the deep, and leaves you harder.", vomit = 20, train = { strength = 150, toughness = 150 } }
 blood = "#8ab0d0"

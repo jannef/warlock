@@ -22,6 +22,7 @@ stats = { strength = 23, dexterity = 12, toughness = 24, intelligence = 2, willp
 base_hp = 119
 natural = { protection = 3, name = "bones" }
 attack = { damage = "3d8", damage_type = "piercing", name = "sting", verb = "stings", to_hit = 2, threat = 24, crit = 3 }
-resist = { piercing = 50, bludgeoning = -50, poison = 100 }
+resist = { piercing = 50, bludgeoning = -50 }
+immune = ["poison"]
 corpse = false
 blood = "none"

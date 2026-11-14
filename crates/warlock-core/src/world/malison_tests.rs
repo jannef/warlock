@@ -169,6 +169,7 @@ fn a_death_under_her_hex_pays_half_its_level() {
 #[test]
 fn any_cause_pays_and_no_draw_is_made() {
     // A death by another's hand, by a status, by a trap: every death goes through `dies`.
+    #[allow(clippy::type_complexity)]
     let causes: [fn(ActorId) -> (Option<ActorId>, Option<&'static str>); 3] = [
         |other| (Some(other), None),
         |_| (None, Some("poisoned")),

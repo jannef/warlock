@@ -37,7 +37,8 @@ base_hp = 180
 mana = 60
 skills = { initiative = 40, spot = 40 }
 natural = { defence = 3, protection = 10, name = "hide" }
-resist = { fire = 100, poison = 100, cold = 50 }
+resist = { cold = 50 }
+immune = ["fire", "poison"]
 corpse = false
 blood = "#4a1010"
 # Its claws, and its whip in turn.

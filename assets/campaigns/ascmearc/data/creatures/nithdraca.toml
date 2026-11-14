@@ -35,7 +35,8 @@ base_hp = 640
 mana = 200
 skills = { initiative = 150, spot = 100 }
 natural = { defence = 5, protection = 16, name = "scales" }
-resist = { fire = 100, poison = 50, cold = -25 }
+resist = { poison = 50, cold = -25 }
+immune = ["fire"]
 everlasting = true
 on_eat = { message = "The wyrm's flesh is hot as a forge, and you feel it in your bones for days.", vomit = 20, train = { strength = 200, toughness = 200 } }
 blood = "#d06020"

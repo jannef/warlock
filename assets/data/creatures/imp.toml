@@ -24,7 +24,8 @@ hearing = 10
 weight = 4000
 stats = { strength = 11, dexterity = 16, toughness = 12, intelligence = 14, willpower = 19, presence = 14 }
 base_hp = 11
-resist = { fire = 100, poison = 50 }
+resist = { poison = 50 }
+immune = ["fire"]
 steals = { what = "small", chance = 30, cooldown = 60 }
 corpse = false
 blood = "#4a1010"

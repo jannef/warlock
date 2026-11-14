@@ -311,14 +311,21 @@ fn apply_actions(mut actions: MessageReader<PlayerAction>, mut game: ResMut<Game
 
 /// Applies the actions input asked for this frame (the game is changed only if there are any). A
 /// worsening hunger state stops the player (spec §8 "Hunger"): the actions after it, a held key's
-/// repeats, are dropped.
+/// repeats, are dropped. So does a step behind another that would ask first from where the first
+/// left the player (a known trap, deep water: `input::asks_first`): input asked about it from the
+/// cell before, as the frame's presses are all read before any is applied (#1538).
 pub fn apply_queued<'a>(actions: impl Iterator<Item = &'a PlayerAction>, game: &mut ResMut<Game>) {
     let mut stopped = false;
-    for PlayerAction(action) in actions {
-        if !stopped {
-            game.apply(action);
-            stopped = game.hunger_stop;
+    for (i, PlayerAction(action)) in actions.enumerate() {
+        if stopped {
+            continue;
         }
+        if i > 0 && crate::input::asks_first(&game.world.perception(), action) {
+            stopped = true;
+            continue;
+        }
+        game.apply(action);
+        stopped = game.hunger_stop;
     }
 }
 
