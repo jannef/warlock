@@ -1,7 +1,7 @@
 //! Guilds: the ranks and what reaches each, and what a guild master's drawn quests can draw.
 
 use super::order;
-use super::text::capital;
+use super::util::capital;
 use std::fmt::Write as _;
 use warlock_core::content::{Content, Pick, RankBy, Rolled};
 

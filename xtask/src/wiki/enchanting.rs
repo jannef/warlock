@@ -6,7 +6,7 @@
 //! `world/seal.rs`): a seal's cost and time, and where the rare materials come from, with their
 //! chances, from `data/enchanting.toml` and `data/crystals.toml`.
 
-use super::text::capital;
+use super::util::capital;
 use std::fmt::Write as _;
 use warlock_core::combat::HIGHEST;
 use warlock_core::content::{Content, EnchantKind, RecipeUse};

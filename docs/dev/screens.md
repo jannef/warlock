@@ -271,7 +271,7 @@ to open, read keys for, or draw one:
   under the list; a letter or Enter on an available row opens Temper's or Whittle's list over it
   or a generic recipe's wizard (`ui/craft_pick_screen.rs`, the arrows too); fixed keys; `--screen profession`, the first profession's, is
   `ScreenName::FirstProfession`; `docs/dev/crafting.md`), `ui/object_screen.rs` (inventory, pick up,
-  drop, throw, consume (the eat command renamed, key and id `eat` unchanged); in the choices letters always name stacks, even `h j k l`; the consume choice
+  drop, throw, consume (key and id `eat`); in the choices letters always name stacks, even `h j k l`; the consume choice
   lists food lying here first ("lying here"), then the pack's; in the inventory a letter opens
   the stack's description, and `I` closes it; marks belong to stacks
   (positions), so they stay as pages turn),
@@ -335,13 +335,18 @@ to open, read keys for, or draw one:
   `ui/death_screen.rs`
   (who died, "Here lies Brakka,", who or what killed them, where, when, after how many turns).
 
-Key commands `,`/`;` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop`: the inventory in its drop mode, #1196; `ObjectScreen::dropping`, Esc closes it; the inventory's own fixed `D`, upper case so it names no stack (letters are `a` to `z` down a page) and not Tab (a page key), turns the mode on in place, where Esc turns it off again with nothing dropped and the marks gone; the mode shows the title "Inventory: drop", no page tabs (the info-page keys do nothing there: `Screen::name` calls it `Drop`, no page), and marks, Enter dropping the marked stacks as one `Action::Drop`, which in a shop the sale dialog takes over as before),
+Key commands `,`/`;` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop`: the
+inventory in its drop mode, #1196; `ObjectScreen::dropping`, Esc closes it; the inventory's own
+fixed `D`, upper case so it names no stack (letters are `a` to `z` down a page) and not Tab (a page
+key), turns the mode on in place, where Esc turns it off again with nothing dropped and the marks
+gone; the mode shows the title "Inventory: drop", no page tabs (the info-page keys do nothing there:
+`Screen::name` calls it `Drop`, no page), and marks, Enter dropping the marked stacks as one
+`Action::Drop`, which in a shop the sale dialog takes over as before),
 `I` (`Inventory` screen), `i` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
 screen), `v` (`KeyCommand::Messages`: the `Messages` screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability; the scrolls and the
 grimoires carried, a grimoire in `PerceptionView::studies` marked with the chance in words
 (`learning: a struggle`, or `rank 3 of 10: a struggle` for a spell known that it would deepen, #1264) and
-asking in the one dialog before its `Action::Read`; the Study command, `L`, and its list are gone
-since #1260), `p`
+asking in the one dialog before its `Action::Read`; there is no Study command of its own, #1260), `p`
 (`KeyCommand::Pay`), `a` (`KeyCommand::Abilities`: the `Abilities` screen), `X`
 (`KeyCommand::RepeatAbility`), bash (`KeyCommand::Bash`, unbound), disarm
 (`KeyCommand::Disarm`, unbound), picking a lock (`KeyCommand::PickLock`, unbound), steal
@@ -431,7 +436,7 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   every context's group, under "Ability keys" (`controls_screen::Row::AbilityKeys`; text
   snapshot `controls-screen-bottom`).
 
-**Fletching** (#1021) is Woodcraft's arrows and bolts recipes since #1336, for the trained on
+**Fletching** (#1021) is Woodcraft's arrows and bolts recipes (#1336), for the trained on
 Woodcraft's screen (#1387), greyed "no knife", "no bow ready", or "no wood to hand"
 (`profession-woodcraft-no-knife`, `-no-launcher`; `docs/dev/crafting.md` "Arrows and bolts").
 
@@ -441,7 +446,10 @@ place of golden screenshots. Each `Case` starts a run the way a golden entry doe
 console `size`). It runs the real systems headlessly (`open_startup_screens`, `route_keys`,
 `apply_choice`, `refresh`, `converse`, `on_death`, `more::wait`, `draw`) and snapshots the UI
 console with `insta` (`ui/snapshots/`, one file per case). The map layer and colors aren't part
-of it: map content is `warlock-cli dump`. To add one, append a case under its group in `CASES`,
-run `cargo test -p warlock screen_snapshots`, then `cargo insta review` (or
-`INSTA_UPDATE=always`, then read the diff). A changed screen shows as a text diff in the PR. New
+of it: map content is `warlock-cli dump`. To add one, add a case under its group in `cases!`
+(`test_name: Case { name: "test-name", .. }`: one `#[test]` a case, #1529, so one mismatch
+hides no other), run `cargo test -p warlock screen_snapshots`, then `cargo insta review` (or
+`INSTA_UPDATE=always`, then read the diff). The snapshot leaves out the status bar's row where
+it shows whole (`shown`, #1521: a HUD change rewrites only the cases about the bar, those with
+`status_bar: true`) and writes the game's version `[version]` (#1532). A changed screen shows as a text diff in the PR. New
 screens get a case here, never a golden (CLAUDE.md "Golden screenshots").

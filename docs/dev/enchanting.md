@@ -48,8 +48,9 @@ after its material, ornament, wand rung, and (for creature gear) its condition:
   item.
 - Creature gear makes its magic pieces with `loot::make_as_unfinished`; `gear::finish` trims the
   whole pack from the gear stream (`gear/<level id>` or `gear/<actor id>`) after
-  `gear_condition::apply` (its own `condition/<key>` stream), in `gear::arm`,
-  `world/travel.rs::placed_gear`, and the balance probe. So a Fine piece keeps a second affix and
+  `gear_condition::apply` (its own `condition/<key>` stream), all three in `gear::equip`, the one
+  place gear's last steps are written (#1494), which `gear::arm` and
+  `world/travel.rs::placed_gear` call; the balance probe writes them out itself. So a Fine piece keeps a second affix and
   a damaged one is trimmed to its plain capacity.
 - An item that fits draws nothing, so its stream is as before; a trimmed one shifts what follows
   on that stream (the next find of a hoard, the next piece of a creature's gear).
@@ -69,23 +70,22 @@ them more affixes; the capacity and the trim are unchanged, and everything still
 - **The make**: `data/gear_condition.toml`'s `[[depth]]` rows (`content::Depth`, by rising item
   level; `GearConditions::depth_at`) give per mille of Fine, Marvellous, and Masterwork. Loot
   (every find `make_from` makes with `Source::Loot`: floor loot, chests, hoards, dens, room loot,
-  vault loot) draws its make with `world/gear_condition.rs::make` after the wand's rung and
+  vault loot) draws its make with `magic/make.rs::make` after the wand's rung and
   before the trim, from the loot stream: one draw, then one per improvement's aspect; none where
   the row gives nothing (item levels 1 and 2 have no row) or for what takes no make (not single
   arms or armour with an aspect). Creature gear adds the row of its level's item level to its
-  tribe's odds (`Odds::deeper`: damaged gives way to what the improvements leave), the same one
-  condition draw as before. The loader keeps every row's improvements with any table's within
+  tribe's odds (`Odds::deeper`: damaged gives way to what the improvements leave), in the same one
+  condition draw. The loader keeps every row's improvements with any table's within
   1000. Kits, the background's gifts, the stipend, the pedlar, and animated things (`loot::make`,
   `make_as` with `Source::Gear`) take none.
 - **Gems**: the row's `ornament` adds percent to loot's `[[ornament]]` chance (`gem::ornament`'s
   `more`), the same one draw.
 - **Materials**: in the material files' `rarity` (and `gear`): mithril from item level 8,
   `deeper = 8`; dragonbone and dragonscale from 6, `deeper = 5`; adamantium from 16, `deeper = 6`;
-  gold `deeper = 3`. The draw itself (`variant::draw`, one draw) is unchanged.
+  gold `deeper = 3`. The draw itself is `variant::draw`'s one draw.
 
-Shallow levels draw exactly as before: no row below item level 3, and the material weights at
-item level 1 are unchanged. Deeper, the make's draws come after the old ones on the loot stream,
-so a level's later finds differ from before.
+Shallow levels have no row below item level 3, and the material weights at item level 1 are
+the base ones. Deeper, the make's draws come after the item's other draws on the loot stream.
 
 ## Quality on hand-made items
 
@@ -99,10 +99,9 @@ High Toby (Fine, an amethyst inlay), the Turncoat (Masterwork), the Unhalwed Bed
 smokestone setting), Widowmaker (Marvellous); in the test world Rune Song (Masterwork, a topaz tip), Ash Coat (Masterwork), the hub's Dread
 Visage (Masterwork) and Storm Song (Marvellous). Father's sword's heirloom is Masterwork
 (`quality = "masterwork"` in `data/talents/fathers_sword.toml`: capacity 4 on every race's
-weapon since #1444, its 2 to 4 affixes never trimmed). The design chose these against a base of 1
-and quality +1/+2/+3; with the base at 2 and quality +0/+1/+2 (#1444) every one still fits, and
-the two that no longer needed a make (Stonebiter and the trap hall's dagger, two affixes each)
-are plain again.
+weapon, #1444, its 2 to 4 affixes never trimmed). With the base at 2 and quality +0/+1/+2
+(#1444) every one fits; Stonebiter and the trap hall's dagger (two affixes each) need no make
+and are plain.
 
 ## What the player sees
 
@@ -138,7 +137,8 @@ and objects:
 - `[yield] levels = [10, 20]`: `yield_at(level)`, Soulglass's count (E3): one, plus one per level
   reached.
 - `[rare]`: `materials` (`heart_crystal`, `soul_fetter`: class `materials`, 30 g, value 300, not
-  crystals), Soulglass's `level`, `chance`, `dragon` (E3), salvage's `salvage_level = 10`,
+  crystals), Soulglass's `level`, `chance`, `tag` (`"dragon"`) and `dragon` (the material a creature
+  of that tag always gives, E3), salvage's `salvage_level = 10`,
   `salvage_chance = 3`, and which the recipes take: `heart` (a rare's Quicken) and `fetter`
   (Recast's affix kept), each one of `materials` (`RareMaterials::{heart, fetter}`; the loader
   refuses otherwise).
@@ -158,7 +158,10 @@ gnome on Gimmwīc's cutting floor (`npc = "morwenna"`, `campaigns/ascmearc/data/
 gimmwic.toml`; `docs/dev/creatures/deep-gnomes.md`): her lines are hand-written from the
 families, so change them with the colours.
 
-`data/enchanting.toml` (`EnchantingRules`, `Content::enchanting`): `salvage_difficulty = 12`,
+`data/enchanting.toml` (`EnchantingRules`, `Content::enchanting`): `skill = "enchanting"` (the
+skill of every enchanting check's `craft` points, the reach, and salvage's affix mark; the loader
+refuses an unknown one), `stat = "willpower"` (every enchanting check's stat; #1493),
+`salvage_difficulty = 12`,
 `salvage_tier_step = 3` (`salvage_against(affix)` = 12 + tier ÷ 3, a tier-12 affix +4),
 `level_step = 3` (the recipes' check, below) and `seal_seconds = 1800` (a seal's time, below).
 
@@ -184,7 +187,7 @@ crystals). The rare materials are no crystals: the list leaves them out, and `ea
 checks (so its draws come first; nothing changes until all are drawn). A magic or rare item,
 **identified or not** (it is gone at once, so what its crystals' colours tell matters to no one;
 the owner, 2026-11-13): one check per affix in the item's order, `combat::roll_natural` (two gameplay draws) +
-Willpower's modifier + `TalentMods::check(Willpower)` + `skill_effect_of(enchanting, Craft)`
+`stat`'s modifier (Willpower) + `TalentMods::check(stat)` + `skill_effect_of(skill, Craft)`
 (0 until E4 gives Enchanting its `craft` curve) against `salvage_against(affix)`, `check::makes`.
 Made: one crystal of `colour_of_affix` ("You catch its Flaming magic in a red crystal.", "You
 catch its magic of the Bear in a red crystal."); failed: "Its Flaming magic goes out unread.".
@@ -248,10 +251,11 @@ reach `enchant_level` (`Effect::EnchantLevel`, `[[0, 1], [110, 12], [200, 12]]`,
 - **The roll's item level**: the reach is `skill_effect_of(enchanting, EnchantLevel)` clamped
   to 1..12; Kindle and Imbue roll at the reach, Quicken, Recast, and Ennoble at the greater of the item's `Magic.level` and the
   reach, Unbind's check reads the item's own. The made item's `Magic.level` is the roll's.
-- **The check** (`World::enchanted`, after `keep_at` ran the recipe's `seconds`, Quick hands' share
+- **The check** (`World::enchanted`, after the work driver ran the recipe's `seconds`, Quick hands' share
   of them, `mastery::craft_seconds`, as the plan and the row say; an interruption
-  spends nothing but the time): `combat::roll_natural` (two gameplay draws) + Willpower's
-  modifier + `TalentMods::check(Willpower)` + `skill_effect_of(enchanting, Craft)` against
+  spends nothing but the time): `combat::roll_natural` (two gameplay draws) + `stat`'s modifier
+  (`data/enchanting.toml`, Willpower) + `TalentMods::check(stat)` + `skill_effect_of(recipe's
+  skill, Craft)` against
   `difficulty` + level ÷ `level_step`; `enchant_band`: a natural 2 `Warped`, a natural 24 or a
   margin of 0 or more `Made`, else `Failed`.
 - **Made** (`World::enchant_out`, `worked`): Kindle draws the kind by `[magic]`'s prefix and suffix
@@ -364,8 +368,8 @@ crystallises too: the effect is the spell's.
   blow reaches `fight.rs::creature_dies`, which asks `World::crystallise` (`world/crystal.rs`)
   before anything else of the body: a type with a corpse (`Content::corpse_of`), not
   `everlasting` (a layer boss always leaves its corpse, #1624), no animated thing, and a colour (`Crystals::colour_of`) leaves `yield_at(level)` crystals of its colour (no
-  draw), no corpse, and no `drops_of` stock (as a statue leaves none); a creature tagged `dragon`
-  also `[rare] dragon` (no draw), any other of `[rare] level` or more one `chance(chance)` draw
+  draw), no corpse, and no `drops_of` stock (as a statue leaves none); a creature tagged `[rare] tag`
+  (`dragon`) also `[rare] dragon` (no draw), any other of `[rare] level` or more one `chance(chance)` draw
   and, made, an `index` among `materials`, all from the gameplay stream. Its gear falls as any
   dead creature's; a summoned or risen one leaves nothing, a statue's death is the statue's
   (stone first), and no cursed room raises glass. Anything else dies as it would.
@@ -408,10 +412,7 @@ make in `world/gear_condition_tests.rs`; `magic/describe` tests the capacity lin
 `magic/shares_tests.rs` at item levels 1, 4, 8, 12, 16, and 20 (4 000 rares and 4 000
 magic-grade finds each, loot's bases of every class), with the base at 2, deeper finds better
 made (#1436), and the quality's term scaled down (Fine +0, Marvellous +1, Masterwork +2) and
-adamantium's binding to +1 (#1444). Before #1436 every level looked like level 1: about 87 % of
-bases held 2 and 10 % to 12 % of rares kept three or more. With #1436 and the old quality term
-(+1/+2/+3) rares kept three or more 11 %, 15 %, 28 %, 49 %, 57 %, and 64 % of the time at the six
-levels.
+adamantium's binding to +1 (#1444).
 
 | Item level | Rares: capacity 2 | Rares keep 3+ | Rares untrimmed | Magic-grade untrimmed |
 |---:|---:|---:|---:|---:|
@@ -423,6 +424,6 @@ levels.
 | 20 | 57.5 % | 41.0 % | 26.1 % | 89.8 % |
 
 The test fails if rares at item levels 1 and 4 keep three or more a fifth of the time or more, at
-16 and 20 a quarter of the time or less (half before #1444), or if the share falls from one level
+16 and 20 a quarter of the time or less, or if the share falls from one level
 to the next. Magic-grade finds (one or two affixes) are untrimmed about 88 % to 90 % of the time at
 every level.

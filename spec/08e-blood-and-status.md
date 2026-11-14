@@ -359,7 +359,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     serializes as before).
 - **Spells** (the magic design, `docs/design/magic.md` §3 to §8, as the spell scaling design,
   `docs/design/spell-scaling.md`, revised it: levels for tiers, ladders and hooks for the cap
-  and the lift, and learning by Spellcraft (Decipher script since #1270), `docs/design/no-caster-level.md`; `content/spell_def.rs`,
+  and the lift, and learning by Decipher script (#1270), `docs/design/no-caster-level.md`; `content/spell_def.rs`,
   `world/cast.rs`, `world/learn.rs`; #394, #395, #396, #397, #759): the
   spell data, the one cast path, learning, and the first spell list. A spell's growth is
   written in its own file as ladders on the caster's stats and printed in the wiki as written;
@@ -528,9 +528,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     rung a caster reaches is how many rungs their **effective score** in the ladder's stat
     (statuses, stat damage, drains, worn items counted) is at or above; below the first, the
     base, so a low score never shrinks a spell. The cast rung is that plus the rungs from
-    outside (the hooks), never past the last rung. The shipped ladders reproduce today's reach
-    and duration exactly at the scores where the old rounding changed them (Willpower 14, 18;
-    Presence 14, 18) and give every rolling spell a ladder (§12 of the design).
+    outside (the hooks), never past the last rung. The shipped ladders step reach
+    and duration at Willpower 14 and 18 and Presence 14 and 18, and give every rolling spell a ladder (§12 of the design).
   - **Hooks** (the spell scaling design §7.1; `content/spell_mod.rs`, `world/spell_mods.rs`,
     `world/spell_rung.rs`): talents and items act on a spell through six named hooks, the
     fields of one `SpellMods`, summed once a cast from the caster's talents (`spell_mod`
@@ -764,7 +763,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and it grows by level-up rolls as any skill. **All reading trains it**: a check to make a
     scroll out (and a scroll of a spell one knows, read), 100 %; any scroll read and used up,
     50 %; a grimoire read to its end, 100 %. **Casting trains Spellcraft** (its one mark, `cast`,
-    25 %); Spellcraft has no benefit of its own since #1270 and waits for a rule.
+    25 %); Spellcraft has no benefit of its own (#1270) and waits for a rule.
   - **Learning** (`world/learn.rs`, `content/learning.rs`, `content/grimoire.rs`; #396,
     grimoires #1260): a character knows a set of spells for good: those their class abilities
     give and those they learned (`Actor::spells`, saved by id, left out of the JSON while
@@ -979,7 +978,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     warrior's granted talent **Charge** (`grants_resource`) is in the level-1 row of their
     table, so a warrior holds it from creation, full; a saved warrior is granted it on load
     (`World::grant_class`). Everyone else gets it, full, from the first weapon active a rank
-    teaches (Trained wind, which gave it to every fighting class at level 1, is gone, #1466). Its maximum is 10
+    teaches (#1466). Its maximum is 10
     + the Toughness modifier + a point per 10 levels, at least 5 (`max_from`), so Toughness 14
     holds 12 at level 1; it comes back a point every 12 s (2 base turns), resting too, and sits
     at 0. A berserker holds Rage and Stamina at once. Shown as `Sta 7/12`. Talents (the

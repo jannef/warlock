@@ -1,7 +1,7 @@
 //! Services: who sells a cure, a mending, an identification, or a skill's training, and for how
 //! much.
 
-use super::text::capital;
+use super::util::capital;
 use std::fmt::Write as _;
 use warlock_core::content::{Content, DialogueId, ServiceKind};
 

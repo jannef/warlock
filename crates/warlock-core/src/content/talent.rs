@@ -15,8 +15,9 @@ use crate::alignment::Requirement;
 use crate::dice::Dice;
 use crate::skills::SkillId;
 use crate::stats::{PerStat, Stat};
+use crate::talent::BeastEffect;
 use crate::text::article;
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 use std::collections::BTreeMap;
 
 /// A talent, an index into the book (file order). Saves name talents by id, never by this.
@@ -148,10 +149,24 @@ impl Choice {
 
 /// What a talent does, one typed effect. Each is read by one rule, where the rule already reads
 /// what magic items do (spec §8 "Talents"); a new kind is a variant here, its field in
-/// [`crate::talent::TalentMods`], and its one read.
+/// [`crate::talent::TalentMods`], and its one read, or, of an area split out (#1495), a variant
+/// of that area's enum ([`BeastEffect`]), with its field and its sum in the area's module.
+///
+/// The data is flat (`kind = "companion"` as `kind = "dodge"`): the deserializer hands the
+/// kinds of an area to its enum and the rest to the derived one (`remote = "Self"`, the
+/// derive's own function under the trait's).
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
-#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+#[serde(
+    remote = "Self",
+    tag = "kind",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum TalentEffect {
+    /// What the holder's companion, familiar, and beasts get ([`BeastEffect`],
+    /// `talent/beast.rs`).
+    #[serde(skip)]
+    Beast(BeastEffect),
     /// Defence in the Dodge category (bonuses add up).
     Dodge { value: i32 },
     /// Natural armour: added to the actor's own, whatever the best item gives.
@@ -283,30 +298,6 @@ pub enum TalentEffect {
         count_times: i32,
         time_percent: u32,
     },
-    /// An animal companion from the first turn (Animal companion, the ranger's level 1; spec §8
-    /// "Allies": `World::bring_companion`): a beast of its race's list, or rarely a rare one.
-    Companion,
-    /// A familiar from the first turn (Familiar, the witch's level 1; spec §8 "Allies":
-    /// `World::bring_familiar`): a small beast of its race's list, or rarely a rare one, whose
-    /// touch is her evil eye.
-    Familiar,
-    /// `bonus` on its taming checks (Animal companion's edge; the Tame skill ability reads it).
-    Tame { bonus: i32 },
-    /// It sees what its companion sees, by its companion's eyes and nose (Hunter's bond; the
-    /// second viewpoint in `Perception::compute`).
-    SharedSight,
-    /// It sees what its familiar sees, by its familiar's eyes and nose (Familiar's sight; the same
-    /// second viewpoint, `familiars.toml`'s `nose` at the least); no buff crosses.
-    FamiliarSight,
-    /// A buff status that lands on it or its companion lands on the other too (Hunter's bond;
-    /// `world/bond.rs`); never a hex.
-    SharedBuffs,
-    /// A creature beside both it and its companion is flanked: its melee blows and the
-    /// companion's at it are `to_hit` likelier to hit (Pack tactics; `world/pack.rs`).
-    PackTactics { to_hit: i32 },
-    /// Its companion's attacks carry its Favoured prey bonus against its favoured prey (Pack
-    /// tactics; `world/pack.rs`).
-    SharesFavouredPrey,
     /// An initiative check it makes against a hostile attacker beside it is answered with a
     /// free blow at once (Hair trigger; `Cue::Startled`, `world/free_blow.rs`).
     StartledBlow,
@@ -331,9 +322,6 @@ pub enum TalentEffect {
     ClimbPercent { value: i32 },
     /// Wading never gives it a disease (Nature's ward).
     WadingProof,
-    /// Creatures of animal factions are neutral to it until it attacks one of that type
-    /// (Beast-friend).
-    BeastFriend,
     /// Each level reached adds to the family's stipend, which its servant hands over (Stipend:
     /// `data/stipend.toml`, `world/stipend.rs`).
     Stipend,
@@ -1289,6 +1277,20 @@ pub enum SongOn {
     Hearers,
 }
 
+impl<'de> Deserialize<'de> for TalentEffect {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        use serde::de::Error;
+        let value = toml::Value::deserialize(d)?;
+        let kind = value.get("kind").and_then(toml::Value::as_str);
+        if kind.is_some_and(|k| BeastEffect::KINDS.contains(&k)) {
+            return BeastEffect::deserialize(value)
+                .map(TalentEffect::Beast)
+                .map_err(D::Error::custom);
+        }
+        TalentEffect::deserialize(value).map_err(D::Error::custom)
+    }
+}
+
 impl TalentEffect {
     /// The birth sign's active it is, if it is one (spec §8 "Birth sign").
     pub fn sign_active(&self) -> Option<super::SignActive> {
@@ -1310,7 +1312,7 @@ impl TalentEffect {
             TalentEffect::Rage { .. } => A::Rage,
             TalentEffect::WarCry { .. } => A::WarCry,
             TalentEffect::Cackle { .. } => A::Cackle,
-            TalentEffect::Familiar => A::CallFamiliar,
+            TalentEffect::Beast(BeastEffect::Familiar) => A::CallFamiliar,
             TalentEffect::VeteransWind { .. } => A::VeteransWind,
             TalentEffect::Charge { .. } => A::Charge,
             TalentEffect::LayOnHands { .. } => A::LayOnHands,
@@ -1347,7 +1349,7 @@ impl TalentEffect {
     pub fn active_name(&self) -> Option<&str> {
         match self {
             TalentEffect::Stillness { name, .. } => Some(name),
-            TalentEffect::Familiar => Some("Call familiar"),
+            TalentEffect::Beast(BeastEffect::Familiar) => Some("Call familiar"),
             _ => None,
         }
     }
@@ -2822,29 +2824,38 @@ systems = ["hit_points"]
 
     /// Every effect kind of [`TalentEffect`] is documented in `data/talents/README.toml`, the
     /// content's schema notes (#1535): a comment line `#   kind ...` names it. The kinds are
-    /// read from this file's source, the enum's variants in snake case as serde names them.
+    /// read from the sources, the enums' variants in snake case as serde names them: this
+    /// file's, less the areas' wrappers (`Beast`), and each area's enum (#1495, [`BeastEffect`]).
     #[test]
     fn readme_documents_every_effect_kind() {
-        let source = include_str!("talent.rs");
         let readme = include_str!("../../../../assets/data/talents/README.toml");
-        let start = source.find("pub enum TalentEffect {").expect("the enum");
-        let body = &source[start..];
-        let body = &body[..body.find("\n}\n").expect("the enum's end")];
-        let kinds: Vec<String> = (body.lines())
-            .filter_map(|l| l.strip_prefix("    "))
-            .filter(|l| l.starts_with(|c: char| c.is_ascii_uppercase()))
-            .map(|l| {
-                let name = l.split(|c: char| !c.is_ascii_alphanumeric()).next();
-                let mut snake = String::new();
-                for (i, c) in name.unwrap_or_default().chars().enumerate() {
-                    if c.is_ascii_uppercase() && i > 0 {
-                        snake.push('_');
+        let variants = |source: &str, head: &str| -> Vec<String> {
+            let start = source.find(head).expect("the enum");
+            let body = &source[start..];
+            let body = &body[..body.find("\n}\n").expect("the enum's end")];
+            (body.lines())
+                .filter_map(|l| l.strip_prefix("    "))
+                .filter(|l| l.starts_with(|c: char| c.is_ascii_uppercase()))
+                .map(|l| {
+                    let name = l.split(|c: char| !c.is_ascii_alphanumeric()).next();
+                    let mut snake = String::new();
+                    for (i, c) in name.unwrap_or_default().chars().enumerate() {
+                        if c.is_ascii_uppercase() && i > 0 {
+                            snake.push('_');
+                        }
+                        snake.push(c.to_ascii_lowercase());
                     }
-                    snake.push(c.to_ascii_lowercase());
-                }
-                snake
-            })
+                    snake
+                })
+                .collect()
+        };
+        let beast = variants(include_str!("../talent/beast.rs"), "pub enum BeastEffect {");
+        assert_eq!(beast.len(), BeastEffect::KINDS.len(), "{beast:?}");
+        let mut kinds: Vec<String> = variants(include_str!("talent.rs"), "pub enum TalentEffect {")
+            .into_iter()
+            .filter(|k| k != "beast")
             .collect();
+        kinds.extend(beast);
         assert!(kinds.len() > 200, "{} kinds read", kinds.len());
         // An entry's head runs to the first double space: `kind { fields }`, or several kinds
         // that share their words, `pick_lock, steal, throw_voice`.

@@ -78,7 +78,7 @@ checked with the stairs' targets in `Content::validate`) goes into `LevelTemplat
 `LevelState::hidden` (by cell; ground truth). It works like a secret door: the terrain grid holds
 the plain terrain, so the view, memory, look mode, local areas (`Content::local_area` reads the
 template), and every perception-built dump show it with no filter; only `world/reveal.rs` and the
-dev views (`dump.rs::truth_rows`, the F2 overlay in `ui/dev.rs`) read `hidden`.
+dev views (`dump/truth.rs::truth_rows`, the F2 overlay in `ui/dev.rs`) read `hidden`.
 `World::reveal_location(id)` (the one reveal, on whichever level of the campaign holds it, called by `world/quest.rs` at a quest's
 `reveals.when` (`given` or `done`; a rolled quest's variant reveals its own, #422), by the dev
 `quest_roll` choosing a variant, by the dev action `reveal:ID`, and by

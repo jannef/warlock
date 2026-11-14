@@ -144,3 +144,17 @@ effects landed the same measurement gave 0.48 ms per frame; the cost roughly dou
 a real Windows/Linux integrated GPU before confirming the budgets in the spec.
 
 Ranger and companion (#923, 2026-11-03, Apple M5 Pro (Darwin 25.6), a release build, other builds running, one run each): `bench-turns` has a `d-pet` row, the `delf` floor with the `world` scenario's kind of character, a human ranger of a high level (`xp:300000` and the level-ups, so the companion's grade is high too and the walk is not cut short by the cave's creatures) and their starting beast beside them, an ally in every turn of the floor (`PET_SCENARIO`). Its turns took 0.96 ms on average and 1.65 ms at most (budget 16 ms), against `delf`'s 0.63 ms and 1.40 ms in the same run, so the companion adds about 0.3 ms a turn. Its rest was cut short at once (18 turns: the cave's creatures see the player), so the row times the walk; a rest with a companion among far-off creatures is not measured. The first run of the session, while a build was compiling, was slower throughout (`delf` 1.10 ms on average and 7.5 ms at most, and `f-moon` a single 7.4 ms turn over its 5 ms budget); the two runs after it were clean (`f-moon` 0.57 ms at most), so that was load, not a regression. No budget failed in a clean run.
+
+A long run, and the kept talent sum (#1495, #1507, 2026-11-14, Apple M5 Pro (Darwin 25.6), release builds of `main` and the branch, each run twice, the two binaries alternated; other agents' builds kept the load average at 26 to 57, so the maxima are noise and the averages are what to read). `bench-turns` has two rows for a long run: `l-1`, the deepest floor of a 40-floor cave branch (120×60, danger 8, about 75 creatures) walked fresh, and `long`, the same floor after visiting the other 39 first (`World::dev_travel`, untimed), so the run holds some 3,000 actors. The player of `long` has the levels its discoveries brought, so the two walks are not the same; `main` against the branch on one row is the comparison. Average turn in ms, `main` / the branch, the two runs each:
+
+| row | `main` | branch |
+|---|---|---|
+| hub | 0.160, 0.130 | 0.049, 0.067 |
+| arena | 0.335, 0.288 | 0.136, 0.215 |
+| delf | 2.52, 2.43 | 1.83, 2.76 |
+| d-pet | 3.30, 3.34 | 1.62, 2.56 |
+| panop | 1.61, 1.55 | 1.05, 1.81 |
+| l-1 | 1.80, 1.81 | 1.23, 2.17 |
+| long | 12.09, 11.91 | 2.73, 4.02 |
+
+The hub's night's rest went from 206 and 212 ms to 22 and 30 ms, `d-pet`'s from 80 to 24 and 43 ms: the player's talents were summed on every read (some 300 a turn), now once until they change (`Talents::mods_cached`, docs/dev/progression.md "The kept sum"). Measured alone (the first step, before the level index), the kept sum took `long` from about 12 ms to 8.2 and 8.4 ms. The level index (`Actors::on_level`, docs/dev/creatures.md) took it the rest of the way: `long` is now within twice `l-1` (its player's levels make the rest), where `main` was 6.6 times; `main`'s `long` was over its 16 ms budget at its maximum in both runs, the branch's never. A profile of `long` on `main` had the whole-map scans (B-tree iteration and the level ids' string compares) at the top; on the branch what is left at the top walks the floor's own actors (`step_up`, `hearers`).

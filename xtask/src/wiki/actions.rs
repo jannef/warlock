@@ -2,29 +2,9 @@
 //! speed (spec §8 "Speed").
 
 use super::order;
-use super::text::capital;
+use super::util::{at_normal_pace, at_speed, capital};
 use std::fmt::Write as _;
-use warlock_core::content::{ActionKind, BASE_TURN, Content, NORMAL_COST, NORMAL_SPEED, price};
-use warlock_core::time::Duration;
-
-/// How long an action of energy price `price` takes at normal speed (the player's, 1000):
-/// `6 seconds`, `5.4 seconds`, `45 minutes`.
-pub(super) fn at_normal_pace(price: i64) -> String {
-    at_speed(price, NORMAL_SPEED)
-}
-
-/// How long an action of energy price `price` takes an actor of `speed` (spec §8 "Speed": it
-/// gains its speed in energy a second), to a tenth of a second under a minute: `6 seconds`,
-/// `7.5 seconds`, `45 minutes`.
-pub(super) fn at_speed(price: i64, speed: u32) -> String {
-    let speed = i64::from(speed.max(1));
-    let tenths = (price * 10 + speed / 2) / speed;
-    if tenths % 10 != 0 && tenths < 600 {
-        return format!("{}.{} seconds", tenths / 10, tenths % 10);
-    }
-    let seconds = u64::try_from(price.div_euclid(speed)).unwrap_or(0);
-    Duration::seconds(seconds).spoken()
-}
+use warlock_core::content::{ActionKind, BASE_TURN, Content, NORMAL_COST, price};
 
 /// What each action costs and how long it takes at a normal pace (spec §8 "Time"), and the
 /// creature types whose attacks cost something else.

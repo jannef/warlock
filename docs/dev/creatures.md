@@ -451,6 +451,19 @@ fits (Fennmynster 3–10, Fyrdelf 5–16, #534); every other hostile type comes 
 population (`xtask/src/bench.rs`); its night's rest is held to the 500 ms budget thanks to coarse
 turns.
 
+Who is on a level (#1507): `WorldState::actors` is `Actors` (`world/actors.rs`), the run's
+actors by id (every level the run visited keeps its own; only Grundlēas forgets them) with an
+index of the ids on each level. Reading is the map's (`Deref`); `insert`, `remove`, `retain`, and
+`set_level` (the one way an actor's level changes: `travel`, `cross_to`) keep the index;
+`get_mut` and `values_mut` must not change `level` (a debug assertion after every action checks
+the index). `Actors::on_level(level)` gives a level's actors in id order, the order of the whole
+map filtered, so a scan moved to it decides the same. The scans a creature makes every turn
+use it (`actor_at`, sight's hostiles, routes and clear shots, strides, the scheduler, free
+blows on stepping, holds, hearers, the light cache, the rest's disturbers); the rarer ones still
+filter the whole map. The index is derived: the saved map is unchanged, and the index is built
+on load. `bench-turns` measures it with `l-1` (the deepest floor of a 40-floor cave branch,
+fresh) and `long` (the same floor after visiting the other 39, about 3,000 actors in the run).
+
 Coarse turns while the player rests (#349, spec §8 "Coarse turns while resting"): `world/stride.rs`,
 one call at the top of `World::creature_turn` (`coarse_turn` → `Coarse::Strode(price)` returns at
 once, `Slow` multiplies the usual action's price by `STRIDE`, `Usual` is the usual turn). `away`
@@ -492,14 +505,14 @@ generated floor (rolled by `gear::arm` after it) and a spawn in play (rolled by
 `make_creature`). What falls is unidentified (Scavenger, which told it, was cut by #816). Tests: `world/gear_tests.rs`; the mapgen
 snapshots print each spawn's gear.
 
-Gear condition (#1193): right after each `gear::roll` (one line in `gear::arm`, one in
-`placed_gear`), `world/gear_condition.rs::apply` draws each piece's state ([`Worked`], the
+Gear condition (#1193): right after `gear::roll` in `gear::equip` (gear's last steps, written
+once for `gear::arm` and `placed_gear`, #1494), `world/gear_condition.rs::apply` draws each piece's state ([`Worked`], the
 smith's: damaged with `by` for its word, or one to three improvements, each an attempt) from its
 own stream, `condition/<key>` with the gear stream's key, so the gear's draws and the rest of the
 level do not move. One draw below 1000 per piece against the creature's tribe's odds
 (`data/gear_condition.toml`, `content/gear_condition.rs`: `[default]`, `[[tribe]]` by creature
 tag, first match in file order), then one per improvement for its aspect. Only single pieces of
-arms or armour an anvil or knife could work (`temper::arms`, aspects), never protected ones
+arms or armour an anvil or knife could work (`magic::worked::arms`, aspects), never protected ones
 (`item_damage::protected`, with every object any quest may ask for, fixed or rolled: gear is made
 before a quest is given). The kind is by the main part's material group (`[kinds]`, metal: rust
 and acid): the one the material withstands least, never one at 100; else `ItemHarm::Work`

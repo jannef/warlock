@@ -3,7 +3,7 @@
 //! levels.
 
 use super::creatures::xp_cell;
-use super::text::{capital, thousands};
+use super::util::{capital, thousands};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, CreatureId, Factor, pace_words};
 

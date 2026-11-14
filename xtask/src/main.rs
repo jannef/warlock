@@ -11,7 +11,8 @@
 //!   mdBook; `--check-links`: also check every link and anchor in the built book).
 //! - `bench-frames`: release-mode frame-time measurement of offscreen captures (the hub, with
 //!   flicker on and off, the vast level, and fifty spell circles, `bench_circles.rs`).
-//! - `bench-turns`: release-mode turn-time table for the hub and the vast level.
+//! - `bench-turns [ROW...]`: release-mode turn-time table for the hub, the vast level, and the
+//!   rest (`bench.rs`); rows named by label run alone.
 //!
 //! `target/` above is Cargo's target directory, wherever it is ([`target_dir`]): build output
 //! is looked for there and xtask's own output (`xtask/`, `web/`) goes there too.
@@ -38,11 +39,11 @@ fn main() -> ExitCode {
         Some("licenses") => licenses::run(args.get(1).is_some_and(|a| a == "--check")),
         Some("golden") => golden::parse_mode(&args[1..]).and_then(golden::run),
         Some("wiki") => wiki::parse_mode(&args[1..]).and_then(wiki::run),
-        Some("bench-turns") => bench_turns(),
+        Some("bench-turns") => bench_turns(&args[1..]),
         Some("bench-frames") => bench::frames(args.get(1).map_or("2560x1440", String::as_str)),
         _ => {
             eprintln!(
-                "usage: cargo xtask <smoke | web | web-smoke [CHROME] | gen-vast [--check] | licenses [--check] | golden [--update | --local] | wiki [--build | --check-links] | bench-turns | bench-frames [WxH]>"
+                "usage: cargo xtask <smoke | web | web-smoke [CHROME] | gen-vast [--check] | licenses [--check] | golden [--update | --local] | wiki [--build | --check-links] | bench-turns [ROW...] | bench-frames [WxH]>"
             );
             return ExitCode::from(2);
         }
@@ -398,9 +399,9 @@ fn gen_vast(check: bool) -> Result<(), String> {
 }
 
 /// Turn timing is only meaningful with optimizations, so a debug xtask re-runs itself in release.
-fn bench_turns() -> Result<(), String> {
+fn bench_turns(rows: &[String]) -> Result<(), String> {
     if !cfg!(debug_assertions) {
-        return bench::run();
+        return bench::run(rows);
     }
     let status = Command::new(env!("CARGO"))
         .current_dir(workspace_root())
@@ -413,6 +414,7 @@ fn bench_turns() -> Result<(), String> {
             "--",
             "bench-turns",
         ])
+        .args(rows)
         .status()
         .map_err(|e| format!("failed to run cargo: {e}"))?;
     if status.success() {

@@ -2,7 +2,7 @@
 //! much, what reads it, and the score and band each race and class starts with. The game shows
 //! only the band; the wiki states the numbers exactly (the game is vague, the wiki is accurate).
 
-use super::text::{capital, signed};
+use super::util::{capital, signed, signed_or_zero};
 use std::fmt::Write as _;
 use warlock_core::alignment::{Band, Score};
 use warlock_core::content::{AlignmentRules, ClassActive, Content};
@@ -19,11 +19,6 @@ fn worth(amount: i32) -> String {
         _ => "very strongly",
     };
     format!("{how} {way}")
-}
-
-/// A score or a worth with its sign (a real minus), 0 bare.
-fn signed_or_zero(n: i32) -> String {
-    if n == 0 { "0".into() } else { signed(n) }
 }
 
 fn rules(content: &Content) -> Option<&AlignmentRules> {

@@ -87,10 +87,10 @@ Every list a feature extends is edited by every feature. Two PRs that both appen
 conflict every time; two that insert at different places merge cleanly. So:
 
 - **New entries go where they belong** (alphabetically, or by the group the list is in), never at
-  the end: `Action` and its replay text syntax (`action.rs`: the enum, `parse`, `Display`,
-  `FromStr`), `ActionKind::ALL` and `data/actions.toml`, `KeyCommand` and `REBINDABLE`
+  the end: `Action` and its replay text syntax (`action/mod.rs`: the enum; `action/text.rs`: the
+  `VERBS` table and `Display`), `ActionKind::ALL` and `data/actions.toml`, `KeyCommand` and `REBINDABLE`
   (`settings/keys.rs`: the controls screen shows that order, so a new command goes next to its
-  group), the dump layers (`dump.rs`), the settings rows (`ui/settings_screen.rs`), the
+  group), the dump layers (`dump/layer.rs`, `dump/mod.rs::layer_rows`), the settings rows (`ui/settings_screen.rs`), the
   `Content` fields and `Content::load` steps, the `mod` lists (`world/mod.rs` is alphabetical),
   the wiki's `generate()` list (`xtask/src/wiki/mod.rs`) and `wiki/src/SUMMARY.md` (pages by
   topic), `tests/golden/manifest/*.toml` (the feature's own file), the content fingerprint
@@ -178,8 +178,9 @@ mapping, `merged` table, or lenient read for old saves; `#[serde(default)]` on a
 fine. Feature PRs that change `WorldState` or the content fingerprint (any new id in an indexed
 table) say "saves change" in the PR: development builds share a version, so their saves are not
 promised across builds, and a save a build cannot read is renamed `<id>.sav.bad`, never lost.
-The release that bumps the workspace version also sets `version` in the fixture summaries under
-`tests/golden/saved-characters/saves/` (all but Osric's, another version's on purpose).
+The release that bumps the workspace version touches no test file: the fixture summaries under
+`tests/golden/saved-characters/saves/` say `@VERSION@` (all but Osric's, another version's on
+purpose), and the screen snapshots write the version `[version]` (#1532).
 
 ## Random streams: keep the gameplay stream still
 

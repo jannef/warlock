@@ -1261,6 +1261,8 @@ mod tests {
         files.remove("data/mining.toml");
         // Gathering herbs names its skill.
         files.remove("data/herbs.toml");
+        // Enchanting names its skill (#1493).
+        files.remove("data/enchanting.toml");
         // Rigging names its skill (Woodcraft).
         files.remove("data/rigs.toml");
         // Skill affixes go with the skills, and the uniques that have them.

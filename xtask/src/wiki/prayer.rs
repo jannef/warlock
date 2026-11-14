@@ -3,7 +3,7 @@
 //! priest's levels with its titles, and the priest's rites beside it (Consecrate, Communion with
 //! the dark, Sanctuary). Every number here is hidden in the game.
 
-use super::text::{Term, anchored, capital, link};
+use super::util::{Term, anchored, capital, link, ordinal};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, PrayerRules, PrayerUse, TalentDef, TalentEffect};
 use warlock_core::time::Duration;
@@ -78,17 +78,6 @@ fn found(rules: &PrayerRules, gap: u64, n: usize) -> u16 {
         strain = (strain + u64::from(rules.strain)).saturating_sub(passed);
     }
     u16::try_from(strain).unwrap_or(u16::MAX)
-}
-
-/// `2nd`, `3rd`, `5th`, `10th`.
-fn ordinal(n: usize) -> String {
-    let suffix = match (n % 10, n % 100) {
-        (1, x) if x != 11 => "st",
-        (2, x) if x != 12 => "nd",
-        (3, x) if x != 13 => "rd",
-        _ => "th",
-    };
-    format!("{n}{suffix}")
 }
 
 /// The uses in the priority order: what ails the priest, how each face answers, in its words,

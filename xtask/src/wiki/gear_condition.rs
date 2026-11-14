@@ -1,14 +1,9 @@
 //! The condition creature gear spawns in (spec §8 "Creature gear"; #1193): the odds by tribe from
 //! `data/gear_condition.toml`, exactly, and what damaged gear of each material is called.
 
-use super::text::percent;
+use super::util::per_mille;
 use std::fmt::Write as _;
 use warlock_core::content::{Content, ItemHarm, Odds, PER_MILLE};
-
-/// A per mille chance as a percentage, without trailing zeros.
-fn per_mille(n: u32) -> String {
-    percent(f64::from(n) / 10.0)
-}
 
 /// One row of odds.
 fn row(out: &mut String, who: &str, odds: &Odds) {

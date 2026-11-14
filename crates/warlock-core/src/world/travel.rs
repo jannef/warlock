@@ -405,8 +405,8 @@ impl World {
             .ok_or_else(|| WorldError::NoPlayerStart(to.to_string()))?;
         let arrival = self.free_cell_near(to, arrival);
         let player = self.state.player;
+        self.state.actors.set_level(player, to);
         if let Some(actor) = self.state.actors.get_mut(&player) {
-            actor.level = to.to_string();
             actor.pos = arrival;
         }
         self.state.current_level = to.to_string();
@@ -439,6 +439,16 @@ impl World {
             self.say(line);
         }
         let _ = self.settle_in();
+        Ok(())
+    }
+
+    /// Moves the player to level `to` as [`World::travel`] does, with no stairs, no time, and
+    /// no word: the benches' way to fill a run with visited levels (`cargo xtask bench-turns`,
+    /// its `long` row), never an action of the rules.
+    #[doc(hidden)]
+    pub fn dev_travel(&mut self, to: &str) -> Result<(), WorldError> {
+        self.travel(to, None)?;
+        self.perceive(&mut Vec::new());
         Ok(())
     }
 
@@ -530,9 +540,10 @@ impl World {
     /// The one way an actor changes level but the player (`World::follow_along`,
     /// `World::followers_arrive`); each says what else it keeps of its mind.
     pub(super) fn cross_to(&mut self, id: ActorId, to: &str, pos: Pos) {
-        if let Some(a) = self.state.actors.get_mut(&id) {
+        if let Some(from) = self.state.actors.set_level(id, to)
+            && let Some(a) = self.state.actors.get_mut(&id)
+        {
             // A vault's monster pool stands outside its level's cap; on another level it counts.
-            let from = std::mem::replace(&mut a.level, to.to_string());
             a.pos = pos;
             a.heard.clear();
             if let Some(s) = (self.state.levels.get_mut(&from)).and_then(|l| l.spawner.as_mut()) {
@@ -752,12 +763,15 @@ fn placed_gear(
     }
     let key = id.0.to_string();
     let mut rng = crate::rng::Rng::gear(seed, &key);
-    let item_level = content.item_level(level);
-    let mut pack = crate::gear::roll(content, &mut rng, spawn.creature, item_level);
     let mut condition = super::gear_condition::stream(seed, &key);
-    let creature = (spawn.creature, item_level);
-    super::gear_condition::apply(content, &mut condition, creature, &mut pack);
-    crate::gear::finish(content, &mut rng, &mut pack);
+    let item_level = content.item_level(level);
+    let pack = crate::gear::equip(
+        content,
+        &mut rng,
+        &mut condition,
+        spawn.creature,
+        item_level,
+    );
     (pack.items, pack.equipment)
 }
 

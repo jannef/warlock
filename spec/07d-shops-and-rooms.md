@@ -237,7 +237,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     on a level with another below it) has a floor of cracked stone that may give way under the
     player ("The floor ahead is cracked and sagging." when glimpsed, "The floor creaks under your
     weight." on entering; below); a *tempting hoard* (5, #415, mark `T`; only on a level with a
-    danger; named "treasure room" until #617) is a hoard that seals (below; "Something glitters
+    danger; #617) is a hoard that seals (below; "Something glitters
     ahead." when glimpsed, "Treasure lies here, unguarded." on entering); a *treasure room* (4,
     #617, mark `$`; only in a room of at least 9 floor cells) is hidden behind secret doors and
     holds chests, gold, and gems (below; "Gold glints in the dust. No one has been here in a long

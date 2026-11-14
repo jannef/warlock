@@ -272,7 +272,7 @@ impl World {
         let Some(me) = self.state.actors.get(&id) else {
             return false;
         };
-        let behind: Vec<ActorId> = (self.state.actors.values())
+        let behind: Vec<ActorId> = (self.state.actors.on_level(&me.level))
             // Who it leaves first: its talents are dear to read.
             .filter(|other| self.leaves(me, other, to) && self.free_blows_of(other).opportunist)
             .map(|other| other.id)
@@ -292,8 +292,8 @@ impl World {
         let Some(me) = self.state.actors.get(&id) else {
             return;
         };
-        let keepers: Vec<ActorId> = (self.state.actors.values())
-            .filter(|other| other.id != id && other.level == me.level)
+        let keepers: Vec<ActorId> = (self.state.actors.on_level(&me.level))
+            .filter(|other| other.id != id)
             .filter(|other| other.pos.chebyshev(me.pos) == 1 && other.pos.chebyshev(from) > 1)
             .filter(|other| self.gatekeeper_odds(other).is_some())
             .filter(|other| self.stance(id, other.id) == Stance::Hostile)

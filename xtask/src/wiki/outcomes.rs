@@ -3,7 +3,7 @@
 //! what a healing spring's drink may bring, per drink (`data/outcomes/spring.toml`); and what
 //! each gamble potion may bring, per draught (spec §8 "Potions").
 
-use super::text::{capital, percent};
+use super::util::{capital, percent};
 use std::fmt::Write as _;
 use warlock_core::alignment::Alignment;
 use warlock_core::content::{

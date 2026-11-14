@@ -10,7 +10,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 | Where | What |
 |---|---|
 | `content/talent.rs` | `TalentBook` from `data/talents/trees/` and `data/talents/systems/` (one `[[tree]]` or `[[system]]` a file, `NNN-<id>.toml`, the number keeping their order) and `data/talents/*.toml` (one `[[talent]]` a file, `ContentFiles::table("talents")` order; `TalentId` an index, saves name talents by id so it is **not** in the content fingerprint). `TalentDef` (tree, `needs`, `effects`, `choice`, `systems`, `granted`), `Needs`/`Need` (the prerequisite kinds and their words: talents, stat scores, skill values, weapon-skill ranks, any skill of a role (`any_weapon_skill`), `chosen`, level, race, class, eyes (never an alignment band: alignment bars nothing, `docs/dev/alignment.md`), and `either`, any one of several, `Need::Either`), `TalentEffect` (the typed effects), `Choice::options`/`name` (`school`: a spell school or a non-physical damage type, #400). The load checks only that the table is well formed ("Loading" below). |
-| `talent.rs` | The runtime: `Talents` (`Vec<Taken { id, choice }>` on `Actor::talents`, `holds(id, choice)`, `has(id)`, saved and hashed, left out of the JSON while empty), `TalentMods` (every effect summed; `Talents::mods(content, effects)`, the effects under a status counted while the holder suffers it, / `Actor::talent_mods`, a `Cow`: borrowed and shared for an actor without talents, which most creatures are, so the many reads a turn copy nothing), `Candidate` (what prerequisites read: `Candidate::player`), `unmet`, `may_take` → `Refusal` (in words; `Held`, "You have Hardy already."), `openings`, `offers` (the pick list, tree by tree). |
+| `talent.rs` | The runtime: `Talents` (`Vec<Taken { id, choice }>` on `Actor::talents`, `holds(id, choice)`, `has(id)`, saved and hashed, left out of the JSON while empty), `TalentMods` (every effect summed; `Talents::mods(content, effects)`, the effects under a status counted while the holder suffers it, / `Actor::talent_mods`, the sum kept on `Talents` until they change (`mods_cached`, a `SharedMods`; "The kept sum" below), one shared empty sum for an actor without talents), `Candidate` (what prerequisites read: `Candidate::player`), `unmet`, `may_take` → `Refusal` (in words; `Held`, "You have Hardy already."), `openings`, `offers` (the pick list, tree by tree). |
 | `world/talent.rs` | `Due { level, talents }` in `Progress::due` (lowest level first); `World::level_up(from, to)` from `grant_xp` (a pick every `Experience::talent_every` levels, and the per-level hit points of talents held); `refuse_due` (the first line of `player_acts`: everything but `Talent`, `Advance`, `LevelUpAuto` is refused with "You have skill rolls to spend." or "You must choose a talent first."); `take_talent` (the first due with a pick, so a talent may come before the rolls), `level_up_auto` (dev); `settle_due` drops talent picks nothing can be spent on (`offers` empty and no roll left) and rolls when no skill is trained, asked again after each pick. `Due { level, talents, rolls, bonus }`: a level with rolls but no pick is due too; `bonus` are the class's bonus picks (a talent of the class's trees spends one before an ordinary pick; "You must choose a talent of Weaponcraft or Delver."), dropped like the others when nothing fits. |
 | `world/creation.rs` | Creation picks (#236; below): `creation_count`, `World::open_creation` (a level 1 `Due` from `begin`, for a run with the kit), `take_creation` (from `start_run`: the spec's picks, else `take_random` on the `character/talents/<spec>` stream; recorded in `CharacterSpec::talents`), `World::draft` / `creation_offers` / `random_creation` (character creation's Talents step), `chosen_with_talents` and `parse_talents` (`--talents`). `World::learn` (`world/talent.rs`) is `take_talent` without its words. |
 | `world/class.rs` | Class abilities (#246): `grant` gives the talents a class's level table names up to a level that the player lacks (`hand_out` for hit points by level, stat gifts, and `weapon_ranks`), at creation (`start_run`, level 1), as each level comes (`level_up`, with the news "You gain Fencing."), and on `from_state` (a grown table reaches saves; nothing is taken away); `bonus_trees`; `appraise_carried` (Lore, Arcane lore, Old lore, from `World::live` for the player). |
@@ -39,6 +39,25 @@ hit points a level gives) is `docs/dev/experience.md`.
 
 `TalentMods` is read where the rules already read what magic items do (`Mods::worn`), one read
 each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its one read.
+
+**Areas** (#1495): an area's effects leave the flat lists for a module of their own,
+`talent/<area>.rs`, holding the area's enum (its kinds in `KINDS`), its sum (a `TalentMods`
+field: `TalentMods::beast`), and the sum's `add`; the wiki's words for them are in
+`xtask/src/wiki/talents/<area>.rs`. The data stays flat (`kind = "companion"`):
+`TalentEffect`'s deserializer hands an area's kinds to its enum (`TalentEffect::Beast`) and the
+rest to the derived one (`#[serde(remote = "Self")]`). A new effect of an area is a variant and
+a `KINDS` entry there, a field and an arm in its `add`, a wiki arm, and its one read. So far one
+area: the beast talents (`talent/beast.rs`: Companion, Familiar, Tame, Shared sight, Familiar's
+sight, Shared buffs, Pack tactics, Shares favoured prey, Beast-friend).
+
+**The kept sum** (#1495): `Actor::talent_mods` is `Talents::mods_cached`, a `SharedMods`
+(`Arc` of the sum, `Deref` to read, `into_owned` to change a copy): the sum is made on the
+first read after the talents change and kept on `Talents` (never saved or hashed), so the many
+reads a turn sum nothing. Every `&mut` method of `Talents` (`take`, `regrant`) drops it; it is
+kept per content (by address), and while a status of the held talents' `while` effects is on the
+holder the sum is made afresh (`Talents::mods`), so the effects add up in the same order. The
+sum reads only the talents, their choices, the content, and those statuses: nothing else
+(equipment, level, stats) goes into it.
 
 **`while = "STATUS"`** (#843, the Berserker design §6.1): any effect may carry it in data, a
 status id resolved at load (`content/talent.rs::split_effects`; an unknown one is refused). Such
