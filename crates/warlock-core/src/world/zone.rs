@@ -447,7 +447,7 @@ impl World {
         let Some(actor) = self.state.actors.get(&id) else {
             return;
         };
-        let Some(staggered) = content.status_id("staggered") else {
+        let Some(staggered) = content.ids().staggered else {
             return;
         };
         if content.incorporeal(actor.creature).is_some() {

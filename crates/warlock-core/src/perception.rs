@@ -2682,7 +2682,7 @@ impl<'a> PerceptionView<'a> {
         {
             return Stance::Neutral;
         }
-        match self.content.creature_id("player") {
+        match self.content.ids().player {
             Some(player) => self
                 .content
                 .stance_of(self.content.creature(player).faction, actor.faction),

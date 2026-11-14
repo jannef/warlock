@@ -474,6 +474,9 @@ impl Content {
         files: &super::ContentFiles,
     ) -> Result<(), ContentError> {
         let Some(text) = files.get_optional(SETTINGS) else {
+            // Without the settings the chapters are switched off, not misplaced: counted as
+            // read (`ContentFiles::check_all_read`), never parsed.
+            files.table("background").for_each(drop);
             return Ok(());
         };
         let settings: SettingsFile =

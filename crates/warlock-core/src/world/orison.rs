@@ -33,11 +33,6 @@ use crate::time::GameTime;
 use crate::world::Actor;
 use serde::{Deserialize, Serialize};
 
-/// The status a bleeding wound is (the wounds use's).
-const BLEEDING: &str = "bleeding";
-/// The status poison is (the poison use's).
-const POISONED: &str = "poisoned";
-
 /// The strain of the player's prayers (saved in `Progress::prayer`): its value at `at`, and
 /// whether a fizzle has locked the prayer until it passes to 0.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -199,11 +194,11 @@ impl World {
     fn ails(&self, rules: &PrayerRules, id: PrayerUse) -> bool {
         let content = &self.content;
         let me = self.state.player();
-        let suffers = |status: &str| (content.status_id(status)).is_some_and(|s| me.effects.has(s));
+        let suffers = |status: Option<_>| status.is_some_and(|s| me.effects.has(s));
         match id {
             PrayerUse::Disease => me.diseases.iter().any(|i| i.shown),
-            PrayerUse::Poison => suffers(POISONED),
-            PrayerUse::Wounds => suffers(BLEEDING) || me.hp < me.max_hp(content),
+            PrayerUse::Poison => suffers(content.ids().poisoned),
+            PrayerUse::Wounds => suffers(content.ids().bleeding) || me.hp < me.max_hp(content),
             PrayerUse::Release => rules.release.iter().any(|&s| me.effects.has(s)),
             PrayerUse::Mana => me.mana < me.max_mana(content),
             PrayerUse::Hunger => me.hunger(content).is_some_and(|h| h <= Hunger::Hungry),
@@ -238,13 +233,13 @@ impl World {
                 }
             }
             PrayerUse::Poison => {
-                let ended = self.end_statuses(&[content.status_id(POISONED)], events);
+                let ended = self.end_statuses(&[content.ids().poisoned], events);
                 if dark {
                     self.pass_on_poison(&ended, events);
                 }
             }
             PrayerUse::Wounds => {
-                self.end_statuses(&[content.status_id(BLEEDING)], events);
+                self.end_statuses(&[content.ids().bleeding], events);
                 let max = self.state.player().max_hp(&content);
                 let me = self.player_mut();
                 me.hp = me.hp.max(max);

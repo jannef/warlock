@@ -29,6 +29,7 @@ use super::fight::Harm;
 use super::{ActorId, LevelState, Spent, World, WorldState};
 use crate::action::{Event, SpellShape};
 use crate::content::StatUse;
+use crate::content::required::FROST_BURST;
 use crate::content::{ActionKind, Content, Here, TerrainId};
 use crate::fov::compute_fov;
 use crate::geom::Pos;
@@ -44,8 +45,6 @@ use std::collections::{BTreeMap, BTreeSet};
 const PLUNGE: &str = "The ice cracks beneath you and you plunge into the freezing water!";
 /// What a plunge's Swim check is against ([`World::keeps_afloat`]).
 const PLUNGE_DIFFICULTY: i32 = 11;
-/// The effect a frost burst shows (`data/effects.toml`).
-const FROST_BURST: &str = "frost_burst";
 
 /// What stepping onto a cell did to the ice there ([`World::tread`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

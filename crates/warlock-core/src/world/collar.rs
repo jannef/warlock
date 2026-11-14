@@ -26,11 +26,8 @@ use crate::content::{ActionKind, Content, SlotId};
 use crate::geom::Dir;
 use crate::object::{self, Stack};
 
-/// The slot a companion wears things in.
-const NECK: &str = "neck";
-
 fn neck(content: &Content) -> Option<SlotId> {
-    content.slot_id(NECK)
+    content.ids().neck
 }
 
 /// Whether `stack` goes on a neck: what the Give list shows.

@@ -71,7 +71,8 @@ starts, one of the campaign's own), and `kind`, `campaign` (default) or `test`.
   (`content/plural.rs`); a word it gives another plural than the shared file is an error.
 - Files outside `campaigns/` that campaigns would own (a top-level `levels/`, `scenarios/`, or
   a single `data/quests.toml`) belong to no campaign and are not checked: test fixtures insert
-  them on top of the built-in content. A scenario there plays in its start level's campaign.
+  them on top of the built-in content (the walk of a content directory, `content/walk.rs`,
+  reads no top-level `levels/` or `scenarios/`). A scenario there plays in its start level's campaign.
 - At most one level of kind `overworld` a campaign (and one outside every campaign).
 - `start` is a scenario of the campaign's own.
 
