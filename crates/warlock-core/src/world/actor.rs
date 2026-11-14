@@ -846,14 +846,13 @@ impl Actor {
     /// What it resists (spec §8 "Damage types"), in percent per kind: what its creature type
     /// is and its race (`race`, the player's when the run has a character), plus what it wears
     /// and wields (each piece's `resist`, and the resistance affixes of all of it), its talents,
-    /// and its status effects (a potion's `resist`), capped
-    /// ([`Resistances::sum`]).
+    /// and its status effects (a potion's `resist`), added up uncapped, and its creature type's
+    /// immunities ([`Resistances::sum`]; what counts is capped, [`Resistances::get`]).
     pub fn resistances(&self, content: &Content, race: Option<&RaceDef>) -> Resistances {
         let count = content.damage_types().len();
         let born = race.map_or(&[][..], |r| r.resist.as_slice());
-        let innate = (content.creature(self.creature).resist.iter())
-            .chain(born)
-            .copied();
+        let def = content.creature(self.creature);
+        let innate = (def.resist.iter()).chain(born).copied();
         let worn = (self.equipment.items().into_iter())
             .filter_map(|(_, item)| self.inventory.get(item))
             .flat_map(|s| s.resists(content).iter().copied());
@@ -863,11 +862,12 @@ impl Actor {
             .filter_map(|(element, r)| Some((content.damage_type_id(&element)?, r)));
         // And so do its status effects' (a potion's Warmed, spec §8 "Potions").
         let lent = (self.effects.iter()).flat_map(|e| content.status(e.status).resist.iter());
-        let gear: Vec<(DamageTypeId, i32)> = (worn.chain(magic.resistances().iter().copied()))
+        let sources: Vec<(DamageTypeId, i32)> = (innate.chain(worn))
+            .chain(magic.resistances().iter().copied())
             .chain(talents)
             .chain(lent.copied())
             .collect();
-        Resistances::sum(count, innate, gear)
+        Resistances::sum(count, def.immune_kinds.iter().copied(), sources)
     }
 
     /// The side of it an attack strikes (spec §8 "Combat"): its Defence (its `burden` capping

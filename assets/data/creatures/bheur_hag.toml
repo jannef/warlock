@@ -30,7 +30,8 @@ stats = { strength = 25, dexterity = 20, toughness = 29, intelligence = 31, will
 base_hp = 52
 skills = { concentration = 136, spellcraft = 141 }
 natural = { defence = 3, protection = 2, name = "frost-hard skin" }
-resist = { cold = 100, fire = -25 }
+resist = { fire = -25 }
+immune = ["cold"]
 on_eat = { message = "Cold as a grave in winter.", vomit = 60, harm = "1d4", skills = { decipher_script = { gives = 12, up_to = 95 } } }
 blood = "#4a5a6a"
 [creature.aura]

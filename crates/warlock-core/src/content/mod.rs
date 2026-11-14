@@ -1969,10 +1969,8 @@ impl Content {
                 })?;
             let blood = creature::blood(spec.blood.as_deref())
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
-            let immune = (spec.immune.iter())
-                .map(|s| self.status_id(s))
-                .collect::<Option<Vec<_>>>()
-                .ok_or_else(|| err(format!("creature `{}`: immune: unknown status", spec.id)))?;
+            let (immune, immune_kinds) = creature::immunities(self, &spec.immune)
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             if let Some(animated) = &mut spec.animated {
                 animated.family = CreatureId(id.0 - u16::from(animated.member));
             }
@@ -1999,6 +1997,7 @@ impl Content {
                 weapon_skills,
                 resist,
                 immune,
+                immune_kinds,
                 spells: creature_spells::resolve(self, &spec).map_err(err)?,
                 faction: self.creature_faction(&spec).map_err(err)?,
                 factions: self.creature_factions(&spec).map_err(err)?,

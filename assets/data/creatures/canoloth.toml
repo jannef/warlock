@@ -22,7 +22,8 @@ weight = 120000
 stats = { strength = 23, dexterity = 22, toughness = 23, intelligence = 6, willpower = 26, presence = 12 }
 base_hp = 36
 natural = { defence = 1, protection = 2, name = "hide" }
-resist = { acid = 100, poison = 100, fire = 50, cold = 50, electricity = 50 }
+resist = { fire = 50, cold = 50, electricity = 50 }
+immune = ["acid", "poison"]
 corpse = false
 blood = "#3a2418"
 [creature.attack]

@@ -88,7 +88,7 @@ sight = 20
 base_hp = 1000
 level = 10
 combat = "{combat}"
-resist = { fire = 100 }
+immune = ["fire"]
 [creature.breath]
 {breath}
 [[creature.attack]]
@@ -118,7 +118,7 @@ fg = "#e08020"
 weight = 5000
 faction = "wild"
 base_hp = 1000
-resist = { fire = 100 }
+immune = ["fire"]
 
 [[creature]]
 id = "deer"

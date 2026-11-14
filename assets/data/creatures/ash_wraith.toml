@@ -29,6 +29,7 @@ stats = { strength = 14, dexterity = 15, toughness = 16, intelligence = 16, will
 base_hp = 22
 skills = { concentration = 45, spellcraft = 50 }
 attack = { damage = "2d6", damage_type = "cold", name = "touch", verb = "touches", to_hit = 2 }
-resist = { cold = 50, poison = 100 }
+resist = { cold = 50 }
+immune = ["poison"]
 corpse = false
 blood = "none"
