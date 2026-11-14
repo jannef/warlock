@@ -6,6 +6,7 @@ use super::*;
 use crate::ability::{Ability, Aim};
 use crate::action::parse_actions;
 use crate::content::{Rarity, SpellId};
+use crate::item_list::ItemList;
 use crate::magic::{Affix, Magic};
 
 /// The pack: a, two scrolls of identify.
@@ -106,7 +107,10 @@ fn casting_identify_names_a_stack_and_spends_its_mana() {
     let mut w = world(100);
     let id = spell(&w);
     w.player_mut().spells.insert(id, 1);
-    assert_eq!(Ability::Spell(id).aim(&w.content), Aim::Item);
+    assert_eq!(
+        Ability::Spell(id).aim(&w.content),
+        Aim::Item(ItemList::Identify)
+    );
     let layer = crate::dump::parse_layers("abilities").expect("layer")[0];
     let rows = crate::dump::layer_rows(&w, layer);
     assert!(

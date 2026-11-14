@@ -52,6 +52,7 @@ mod magic_screen;
 mod menu;
 mod messages_screen;
 mod missiles;
+mod modal;
 pub(crate) mod more;
 mod motion;
 mod name_screen;
@@ -85,7 +86,7 @@ mod zone_tint;
 
 pub use dialog_screen::Dialog;
 pub use menu::{Edit, Nav, Press, quit_dialog};
-pub use object_screen::IdentifyBy;
+pub use object_screen::{IdentifyBy, ObjectList};
 pub use screens::{MenuChoice, ScreenAction, ScreenName, ScreenStack, Screens};
 
 pub use dev::DevOverlays;

@@ -44,6 +44,7 @@ use super::level_up_screen::LevelUpScreen;
 use super::magic_screen::MagicScreen;
 use super::menu::{MainMenu, Press, quit_dialog};
 use super::messages_screen::MessagesScreen;
+use super::modal::{Keys, ModalScreen, Show};
 use super::motion::Motion;
 use super::name_screen::NameScreen;
 use super::new_run_screen::{self, NewRunScreen};
@@ -231,50 +232,27 @@ pub enum ScreenName {
 }
 
 impl ScreenName {
-    /// Screens that show something of a run and open only over one.
+    /// Screens that show something of a run and open only over one: all but the menus, New
+    /// run and character creation, the settings, and the dialog (so a new screen of a run, an
+    /// item list, needs no line here).
     pub fn needs_run(self) -> bool {
-        matches!(
+        !matches!(
             self,
-            ScreenName::Pause
-                | ScreenName::Help
-                | ScreenName::Inventory
-                | ScreenName::Equipment
-                | ScreenName::EquipItem
-                | ScreenName::Describe
-                | ScreenName::Character
-                | ScreenName::Skills
-                | ScreenName::WeaponSkills
-                | ScreenName::Magic
-                | ScreenName::Quests
-                | ScreenName::Talents
-                | ScreenName::Story
-                | ScreenName::Messages
-                | ScreenName::PickUp
-                | ScreenName::Drop
-                | ScreenName::Throw
-                | ScreenName::ThrownExploit
-                | ScreenName::Eat
-                | ScreenName::Read
-                | ScreenName::Identify
-                | ScreenName::Temper
-                | ScreenName::Whittle
-                | ScreenName::Salvage
-                | ScreenName::MakeDo
-                | ScreenName::Cut
-                | ScreenName::Decipher
-                | ScreenName::Give
-                | ScreenName::Abilities
-                | ScreenName::Shape
-                | ScreenName::Scribe
-                | ScreenName::Rig
-                | ScreenName::Profession(_)
-                | ScreenName::FirstProfession
-                | ScreenName::CraftPick(_)
-                | ScreenName::FirstCraftPick
-                | ScreenName::CraftConfirm
-                | ScreenName::Dialogue
-                | ScreenName::Death
-                | ScreenName::LevelUp
+            ScreenName::Main
+                | ScreenName::Characters
+                | ScreenName::Graveyard
+                | ScreenName::NewRun
+                | ScreenName::Race
+                | ScreenName::Sign
+                | ScreenName::Gender
+                | ScreenName::Class
+                | ScreenName::ChargenTalents
+                | ScreenName::Name
+                | ScreenName::Summary
+                | ScreenName::Settings
+                | ScreenName::Files
+                | ScreenName::Controls
+                | ScreenName::Dialog
         )
     }
 }
@@ -485,7 +463,6 @@ impl Screen {
                 Screen::Controls(ControlsScreen::new(launch.dev, launch.keymap.clone()))
             }
             ScreenName::Help => Screen::Controls(ControlsScreen::help(launch.dev)),
-            ScreenName::Inventory => objects(ObjectList::Inventory),
             ScreenName::Equipment => Screen::Equipment(EquipmentScreen::new(run)),
             ScreenName::EquipItem => {
                 Screen::EquipItem(ItemScreen::new(run, slot.unwrap_or(SlotId(0))))
@@ -501,22 +478,10 @@ impl Screen {
             ScreenName::Talents => Screen::Talents(TalentsScreen::new(run)),
             ScreenName::Story => Screen::Story(StoryScreen::page(run)),
             ScreenName::Messages => Screen::Messages(MessagesScreen::new(run)),
-            ScreenName::PickUp => objects(ObjectList::PickUp),
             ScreenName::Drop => Screen::Objects(ObjectScreen::dropping(run)),
-            ScreenName::Throw => objects(ObjectList::Throw),
-            ScreenName::ThrownExploit => objects(ObjectList::ThrownExploit),
-            ScreenName::Eat => objects(ObjectList::Eat),
-            ScreenName::Read => objects(ObjectList::Read),
             ScreenName::Identify => objects(ObjectList::Identify(IdentifyBy::Scroll(
                 beneath.item.unwrap_or(0),
             ))),
-            ScreenName::Temper => objects(ObjectList::Temper),
-            ScreenName::Whittle => objects(ObjectList::Whittle),
-            ScreenName::Salvage => objects(ObjectList::Salvage),
-            ScreenName::MakeDo => objects(ObjectList::MakeDo),
-            ScreenName::Cut => objects(ObjectList::Cut),
-            ScreenName::Decipher => objects(ObjectList::Decipher),
-            ScreenName::Give => objects(ObjectList::Give),
             ScreenName::Abilities => Screen::Abilities(AbilitiesScreen::new(run, beneath.ability)),
             ScreenName::Shape => Screen::Shape(ShapeScreen::new(run)),
             ScreenName::Scribe => Screen::Scribe(ScribeScreen::new(run)),
@@ -536,72 +501,75 @@ impl Screen {
             ScreenName::Death => Screen::Death(DeathScreen::new(run)),
             ScreenName::LevelUp => Screen::LevelUp(LevelUpScreen::new(run)),
             ScreenName::Dialog => Screen::Dialog(DialogScreen::new(quit_dialog(run.is_some()))),
+            // Every other name is an item list's, one entry of its table (`ObjectList::spec`).
+            name => match ObjectList::of_screen(name) {
+                Some(list) => objects(list),
+                None => unreachable!("screen {name:?} has no list"),
+            },
         }
     }
 
     fn name(&self) -> ScreenName {
-        match self {
-            Screen::Menu(menu) if menu.is_pause() => ScreenName::Pause,
-            Screen::Menu(_) => ScreenName::Main,
-            Screen::Characters(_) => ScreenName::Characters,
-            Screen::Graveyard(_) => ScreenName::Graveyard,
-            Screen::NewRun(_) => ScreenName::NewRun,
-            Screen::Choice(screen) => screen.step().screen(),
-            Screen::ChargenTalents(_) => ScreenName::ChargenTalents,
-            Screen::Sign(_) => ScreenName::Sign,
-            Screen::Name(_) => ScreenName::Name,
-            Screen::Summary(_) => ScreenName::Summary,
-            Screen::Settings(_) => ScreenName::Settings,
-            Screen::Files(_) => ScreenName::Files,
-            Screen::Controls(screen) if screen.is_help() => ScreenName::Help,
-            Screen::Controls(_) => ScreenName::Controls,
-            Screen::Objects(screen) => match screen.list() {
-                ObjectList::Inventory if screen.is_dropping() => ScreenName::Drop,
-                ObjectList::Inventory => ScreenName::Inventory,
-                ObjectList::PickUp => ScreenName::PickUp,
-                ObjectList::Throw => ScreenName::Throw,
-                ObjectList::ThrownExploit => ScreenName::ThrownExploit,
-                ObjectList::Eat => ScreenName::Eat,
-                ObjectList::Read => ScreenName::Read,
-                ObjectList::Identify(_) => ScreenName::Identify,
-                ObjectList::Temper => ScreenName::Temper,
-                ObjectList::Whittle => ScreenName::Whittle,
-                ObjectList::Salvage => ScreenName::Salvage,
-                ObjectList::MakeDo => ScreenName::MakeDo,
-                ObjectList::Cut => ScreenName::Cut,
-                ObjectList::Decipher => ScreenName::Decipher,
-                ObjectList::Give => ScreenName::Give,
-            },
-            Screen::Equipment(_) => ScreenName::Equipment,
-            Screen::EquipItem(_) => ScreenName::EquipItem,
-            Screen::Describe(_) => ScreenName::Describe,
-            Screen::Character(_) => ScreenName::Character,
-            Screen::Skills(_) => ScreenName::Skills,
-            Screen::WeaponSkills(_) => ScreenName::WeaponSkills,
-            Screen::Magic(_) => ScreenName::Magic,
-            Screen::Quests(_) => ScreenName::Quests,
-            Screen::Talents(_) => ScreenName::Talents,
-            Screen::Story(_) => ScreenName::Story,
-            Screen::Messages(_) => ScreenName::Messages,
-            Screen::Abilities(_) => ScreenName::Abilities,
-            Screen::Shape(_) => ScreenName::Shape,
-            Screen::Scribe(_) => ScreenName::Scribe,
-            Screen::Rig(_) => ScreenName::Rig,
-            Screen::Profession(screen) => match screen.skill() {
-                Some(skill) => ScreenName::Profession(skill),
-                None => ScreenName::FirstProfession,
-            },
-            Screen::CraftPick(screen) => match screen.chosen() {
-                Some((recipe, _)) => ScreenName::CraftPick(recipe),
-                None => ScreenName::FirstCraftPick,
-            },
-            Screen::Dialogue(_) => ScreenName::Dialogue,
-            Screen::Death(_) => ScreenName::Death,
-            Screen::LevelUp(_) => ScreenName::LevelUp,
-            Screen::Dialog(_) => ScreenName::Dialog,
-        }
+        self.modal().name()
     }
 }
+
+/// Lists every [`Screen`] variant once: the one dispatch to what each screen does
+/// ([`ModalScreen`]).
+macro_rules! dispatch {
+    ($($variant:ident),* $(,)?) => {
+        impl Screen {
+            fn modal(&self) -> &dyn ModalScreen {
+                match self {
+                    $(Screen::$variant(screen) => screen,)*
+                }
+            }
+
+            fn modal_mut(&mut self) -> &mut dyn ModalScreen {
+                match self {
+                    $(Screen::$variant(screen) => screen,)*
+                }
+            }
+        }
+    };
+}
+
+dispatch!(
+    Menu,
+    Characters,
+    Graveyard,
+    NewRun,
+    Choice,
+    ChargenTalents,
+    Sign,
+    Name,
+    Summary,
+    Settings,
+    Files,
+    Controls,
+    Objects,
+    Equipment,
+    EquipItem,
+    Describe,
+    Character,
+    Skills,
+    WeaponSkills,
+    Magic,
+    Quests,
+    Talents,
+    Story,
+    Messages,
+    Abilities,
+    Shape,
+    Scribe,
+    Rig,
+    Profession,
+    CraftPick,
+    Dialogue,
+    Death,
+    LevelUp,
+    Dialog,
+);
 
 /// Every open modal screen, bottom to top. While it is not empty, the top screen owns the
 /// keyboard: no game time passes.
@@ -799,13 +767,6 @@ impl ScreenStack {
         settings: &mut Settings,
         bindings: &mut Bindings,
     ) -> ScreenAction {
-        let leave = |left: bool| {
-            if left {
-                ScreenAction::Close
-            } else {
-                ScreenAction::Stay
-            }
-        };
         if !press.repeat
             && let Some(screen) = self.screens.last()
             && info_tabs::is_page(screen.name())
@@ -815,119 +776,35 @@ impl ScreenStack {
             self.notice = None;
             return action;
         }
-        let action = match self.screens.last_mut() {
-            None => ScreenAction::Stay,
-            Some(Screen::Menu(menu)) => menu.handle(press),
-            Some(Screen::Characters(screen)) => screen.handle(press),
-            Some(Screen::Graveyard(screen)) => screen.handle(press),
-            Some(Screen::NewRun(screen)) => screen.handle(press),
-            Some(Screen::Choice(screen)) => {
-                let action = screen.handle(press);
+        let Some(screen) = self.screens.last_mut() else {
+            return ScreenAction::Stay;
+        };
+        if let Some((cols, rows)) = self.console {
+            screen.modal().fit(cols, rows);
+        }
+        let action = screen
+            .modal_mut()
+            .handle(press, &mut Keys { settings, bindings });
+        // Character creation remembers the choices made on a step left forward (or back, for
+        // the talents), preselected when it opens again.
+        match screen {
+            Screen::Choice(screen) => {
                 if let (ScreenAction::Open(_), Some(id)) = (&action, screen.chosen()) {
                     self.picks.set(screen.step(), id);
                 }
-                action
             }
-            Some(Screen::ChargenTalents(screen)) => {
-                if let Some((cols, rows)) = self.console {
-                    screen.fit(cols, rows);
-                }
-                let action = screen.handle(press);
+            Screen::ChargenTalents(screen) => {
                 if matches!(action, ScreenAction::Open(_) | ScreenAction::Close) {
                     self.picks.talents = Some(screen.picks().to_vec());
                 }
-                action
             }
-            Some(Screen::Sign(screen)) => screen.handle(press),
-            Some(Screen::Name(screen)) => {
-                let action = screen.handle(press);
+            Screen::Name(screen) => {
                 if let ScreenAction::Open(_) = action {
                     self.picks.set(Step::Name, screen.text());
                 }
-                action
             }
-            Some(Screen::Summary(screen)) => screen.handle(press),
-            Some(Screen::Settings(screen)) => screen.handle(press, settings),
-            Some(Screen::Files(screen)) => screen.handle(press),
-            Some(Screen::Controls(screen)) => leave(screen.handle(press, bindings)),
-            Some(Screen::Objects(screen)) => {
-                if let Some((cols, rows)) = self.console {
-                    screen.fit(cols, rows);
-                }
-                screen.handle(press, bindings)
-            }
-            Some(Screen::Equipment(screen)) => screen.handle(press, bindings),
-            Some(Screen::EquipItem(screen)) => {
-                if let Some((cols, rows)) = self.console {
-                    screen.fit(cols, rows);
-                }
-                screen.handle(press, bindings)
-            }
-            Some(Screen::Describe(screen)) => screen.handle(press, bindings),
-            Some(Screen::Character(screen)) => screen.handle(press, bindings),
-            Some(Screen::Skills(screen)) => screen.handle(press, bindings),
-            Some(Screen::WeaponSkills(screen)) => screen.handle(press, bindings),
-            Some(Screen::Magic(screen)) => screen.handle(press),
-            Some(Screen::Quests(screen)) => screen.handle(press, bindings),
-            Some(Screen::Talents(screen)) => screen.handle(press, bindings),
-            Some(Screen::Story(screen)) => {
-                if let Some((cols, rows)) = self.console {
-                    screen.fit(cols, rows);
-                }
-                screen.handle(press)
-            }
-            Some(Screen::Messages(screen)) => {
-                if let Some((cols, rows)) = self.console {
-                    screen.fit(cols, rows);
-                }
-                screen.handle(press, bindings)
-            }
-            Some(Screen::Abilities(screen)) => {
-                if let Some((cols, rows)) = self.console {
-                    screen.fit(cols, rows);
-                }
-                screen.handle(press, bindings)
-            }
-            Some(Screen::Shape(screen)) => {
-                if let Some((cols, rows)) = self.console {
-                    screen.fit(cols, rows);
-                }
-                screen.handle(press, bindings)
-            }
-            Some(Screen::Scribe(screen)) => {
-                if let Some((cols, rows)) = self.console {
-                    screen.fit(cols, rows);
-                }
-                screen.handle(press, bindings)
-            }
-            Some(Screen::Rig(screen)) => {
-                if let Some((cols, rows)) = self.console {
-                    screen.fit(cols, rows);
-                }
-                screen.handle(press, bindings)
-            }
-            Some(Screen::Profession(screen)) => {
-                if let Some((cols, rows)) = self.console {
-                    screen.fit(cols, rows);
-                }
-                screen.handle(press, bindings)
-            }
-            Some(Screen::CraftPick(screen)) => {
-                if let Some((cols, rows)) = self.console {
-                    screen.fit(cols, rows);
-                }
-                screen.handle(press, bindings)
-            }
-            Some(Screen::Dialogue(screen)) => screen.handle(press, bindings),
-            Some(Screen::Death(screen)) => screen.handle(press),
-            Some(Screen::LevelUp(screen)) => {
-                if let Some((cols, rows)) = self.console {
-                    screen.fit(cols, rows);
-                }
-                screen.handle(press)
-            }
-            Some(Screen::Dialog(screen)) => screen.handle(press),
-        };
+            _ => {}
+        }
         if action == ScreenAction::Stay {
             return action;
         }
@@ -956,42 +833,14 @@ impl ScreenStack {
     /// Draws the top screen. Each screen is a panel at least as large as the menu it was opened
     /// from, so the screens below would not show anyway.
     pub fn draw(&self, console: &mut Console, settings: &Settings, bindings: &Bindings) {
-        match self.screens.last() {
-            None => {}
-            Some(Screen::Menu(menu)) => menu.draw(console, self.notice.as_deref()),
-            Some(Screen::Characters(screen)) => screen.draw(console, settings.clock),
-            Some(Screen::Graveyard(screen)) => screen.draw(console, settings.clock),
-            Some(Screen::NewRun(screen)) => screen.draw(console),
-            Some(Screen::Choice(screen)) => screen.draw(console),
-            Some(Screen::ChargenTalents(screen)) => screen.draw(console),
-            Some(Screen::Sign(screen)) => screen.draw(console),
-            Some(Screen::Name(screen)) => screen.draw(console),
-            Some(Screen::Summary(screen)) => screen.draw(console),
-            Some(Screen::Settings(screen)) => screen.draw(console, settings),
-            Some(Screen::Files(screen)) => screen.draw(console),
-            Some(Screen::Controls(screen)) => screen.draw(console, bindings),
-            Some(Screen::Objects(screen)) => screen.draw(console, bindings),
-            Some(Screen::Equipment(screen)) => screen.draw(console),
-            Some(Screen::EquipItem(screen)) => screen.draw(console),
-            Some(Screen::Describe(screen)) => screen.draw(console, bindings),
-            Some(Screen::Character(screen)) => screen.draw(console, bindings),
-            Some(Screen::Skills(screen)) => screen.draw(console, bindings),
-            Some(Screen::WeaponSkills(screen)) => screen.draw(console, bindings),
-            Some(Screen::Magic(screen)) => screen.draw(console),
-            Some(Screen::Quests(screen)) => screen.draw(console, bindings),
-            Some(Screen::Talents(screen)) => screen.draw(console, bindings),
-            Some(Screen::Story(screen)) => screen.draw(console),
-            Some(Screen::Messages(screen)) => screen.draw(console, bindings),
-            Some(Screen::Abilities(screen)) => screen.draw(console, bindings),
-            Some(Screen::Shape(screen)) => screen.draw(console),
-            Some(Screen::Scribe(screen)) => screen.draw(console),
-            Some(Screen::Rig(screen)) => screen.draw(console),
-            Some(Screen::Profession(screen)) => screen.draw(console),
-            Some(Screen::CraftPick(screen)) => screen.draw(console),
-            Some(Screen::Dialogue(screen)) => screen.draw(console),
-            Some(Screen::Death(screen)) => screen.draw(console, settings.clock),
-            Some(Screen::LevelUp(screen)) => screen.draw(console),
-            Some(Screen::Dialog(screen)) => screen.draw(console),
+        if let Some(screen) = self.screens.last() {
+            let show = Show {
+                settings,
+                bindings,
+                clock: settings.clock,
+                notice: self.notice.as_deref(),
+            };
+            screen.modal().draw(console, &show);
         }
     }
 

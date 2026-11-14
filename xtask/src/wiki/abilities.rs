@@ -302,7 +302,7 @@ fn aim(aim: Aim) -> &'static str {
         Aim::Cell => "a place you see",
         Aim::Corpse => "a corpse you see",
         Aim::Ailment => "what to treat, when there is more than one",
-        Aim::Item => "an item you carry",
+        Aim::Item(_) => "an item you carry",
         Aim::Throw => "something to throw (never a flask), then a place you see",
         Aim::Shape => "a weapon's shape, from every melee weapon",
         Aim::Rig => "a rig, from the list of them with what each takes, then a direction",
