@@ -178,6 +178,31 @@ fn a_creature_of_no_colour_dies_as_ever() {
 }
 
 #[test]
+fn a_keeper_of_grundleas_leaves_its_corpse_never_glass() {
+    let content = content();
+    let crystals = content.crystals().expect("crystals");
+    // The keepers with a colour, which glass would otherwise take; at least one.
+    let keepers: Vec<String> = (0..content.creature_defs().len())
+        .map(|i| CreatureId(u16::try_from(i).expect("few")))
+        .filter(|&c| content.creature(c).everlasting)
+        .filter(|&c| crystals.colour_of(&content, c).is_some())
+        .map(|c| content.creature(c).id.clone())
+        .collect();
+    assert!(!keepers.is_empty(), "a keeper with a colour");
+    for keeper in keepers.iter().take(2) {
+        let mut w = world(1);
+        let pile = kill(&mut w, keeper, "soulglass");
+        assert_eq!(
+            count(&pile, &format!("{keeper}_corpse")),
+            1,
+            "{keeper}: {pile:?}"
+        );
+        assert!(!pile.iter().any(|o| o.starts_with("crystal_")), "{keeper}");
+        assert!(!said(&w, "Its body turns to glass"), "{keeper}");
+    }
+}
+
+#[test]
 fn the_powerful_sometimes_leave_a_rare_material() {
     let content = content();
     let crystals = content.crystals().expect("crystals");

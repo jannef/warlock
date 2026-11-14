@@ -20,7 +20,11 @@ fn lasts(def: &HungerDef, points: i32, percent: u16) -> String {
 
 /// A shelf life, exactly: "30 days", "1 day", "36 hours", "8 hours" (food does not show its age in
 /// the game).
-fn shelf(d: Duration) -> String {
+fn shelf(d: Option<Duration>) -> String {
+    let Some(d) = d else {
+        // An everlasting corpse (a keeper of Grundlēas's): it never rots.
+        return "never (*everlasting*)".into();
+    };
     match d.as_seconds() {
         DAY => "1 day".into(),
         s if s > DAY && s % DAY == 0 => format!("{} days", s / DAY),

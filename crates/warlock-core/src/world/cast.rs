@@ -64,7 +64,6 @@
 use super::reflect::{Shot, Turned};
 use super::spell::{Caster, burst_cells};
 use super::spell_rung::CastBy;
-use super::talk::capitalized;
 use super::{Actor, ActorId, AttackSkills, Cause, Spent, World};
 use crate::ability::{Ability, Unavailable};
 use crate::action::position_text;
@@ -79,6 +78,7 @@ use crate::damage::{Damage, Kinds};
 use crate::dice::Roll;
 use crate::geom::Pos;
 use crate::magic::Mods;
+use crate::text::capitalized;
 use std::cell::Cell;
 
 /// How far a spell reaches as one actor casts it, its reach ladders climbed (each `None` where

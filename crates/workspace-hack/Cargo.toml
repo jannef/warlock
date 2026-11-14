@@ -1,0 +1,33 @@
+[package]
+name = "workspace-hack"
+description = "No code: pins the features the game's tree turns on below warlock-core, so the CLI and xtask build the same warlock-core as the game and the tests (#1572)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+# Cargo resolves features per command: `cargo run -p warlock-cli` or `cargo xtask` sees only its
+# own tree, and Bevy's tree turns on more features in crates below warlock-core. A feature set
+# that differs anywhere below a crate gives it another fingerprint, so warlock-core was built once
+# per tree. The features below are the difference (a dependency's features reach everything built
+# on it, proc macros included); warlock-cli and xtask depend on this crate to take them on.
+# Check it after a Bevy or dependency update: docs/dev/merging.md, "One build of warlock-core".
+[dependencies]
+# flate2 -> crc32fast, miniz_oxide -> simd-adler32: default features, as png has them.
+crc32fast = "1"
+simd-adler32 = "0.3"
+# rand_chacha -> ppv-lite86 -> zerocopy.
+zerocopy = { version = "0.8", features = ["derive"] }
+
+# Proc macros (serde_derive and thiserror-impl on syn 3, zerocopy-derive on syn 2) build on these
+# on the host.
+[build-dependencies]
+proc-macro2 = { version = "1", features = ["span-locations"] }
+syn = { version = "3", features = ["full"] }
+syn2 = { package = "syn", version = "2", features = ["extra-traits", "full", "visit", "visit-mut"] }
+
+[lints]
+workspace = true

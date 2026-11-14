@@ -3,9 +3,10 @@
 //! story in words only).
 
 use super::kits::line_text;
-use super::text::{Term, link, signed, stat_link, table_text};
+use super::text::{Term, link, percent, signed, stat_link, table_text};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, Marks, StoryEffect, StoryLine, StoryTier};
+use warlock_core::text::or_list;
 
 /// The campaign whose own chapter (the road) the wiki lists: the first campaign's.
 const CAMPAIGN: &str = "ascmearc";
@@ -19,16 +20,6 @@ fn chapters(content: &Content) -> usize {
             .filter(|c| c.when == warlock_core::content::ChapterWhen::default())
             .count()
     })
-}
-
-/// A percentage to a tenth, the tenth left out when it is 0: `12 %`, `0.5 %`, `3.9 %`.
-fn percent(p: f64) -> String {
-    let tenths = (p * 1000.0).round() / 10.0;
-    if tenths.fract() == 0.0 {
-        format!("{tenths:.0} %")
-    } else {
-        format!("{tenths:.1} %")
-    }
 }
 
 /// The odds of `tier` per chapter (`Tiers::of`, counted over every roll).
@@ -55,7 +46,7 @@ pub(super) fn tiers(content: &Content) -> String {
         let (once, expected) = match tier {
             StoryTier::Common => ("—".to_string(), format!("{:.2}", p * n as f64)),
             _ => (
-                percent(1.0 - (1.0 - p).powi(n as i32)),
+                percent(100.0 * (1.0 - (1.0 - p).powi(n as i32))),
                 format!("{:.2}", p * n as f64),
             ),
         };
@@ -63,7 +54,7 @@ pub(super) fn tiers(content: &Content) -> String {
             out,
             "| {} | {} | {once} | {expected} | {} to {} | {} |",
             capital_tier(tier),
-            percent(p),
+            percent(100.0 * p),
             signed_or_zero(low),
             signed_or_zero(high),
             if bane { "yes" } else { "no" }
@@ -162,15 +153,6 @@ fn dash(s: String) -> String {
     if s.is_empty() { "—".into() } else { s }
 }
 
-/// `a, b, or c`.
-fn any_of(items: &[String]) -> String {
-    match items {
-        [] => String::new(),
-        [one] => one.clone(),
-        [init @ .., last] => format!("{} or {last}", init.join(", ")),
-    }
-}
-
 /// A line's conditions in words, each one a clause: "Dwarf or Duergar; aged 14 or more".
 fn when_text(content: &Content, line: &StoryLine) -> String {
     let w = &line.when;
@@ -182,17 +164,17 @@ fn when_text(content: &Content, line: &StoryLine) -> String {
         })
         .collect();
     if !races.is_empty() {
-        parts.push(any_of(&races));
+        parts.push(or_list(&races));
     }
     let classes: Vec<String> = (w.class.iter())
         .map(|id| content.class(id).map_or(id.clone(), |c| c.name.clone()))
         .collect();
     if !classes.is_empty() {
-        parts.push(format!("a {}", any_of(&classes)));
+        parts.push(format!("a {}", or_list(&classes)));
     }
     let genders: Vec<String> = w.gender.iter().map(|g| g.name().to_lowercase()).collect();
     if !genders.is_empty() {
-        parts.push(any_of(&genders));
+        parts.push(or_list(&genders));
     }
     if let Some(h) = content.horoscope() {
         let animals: Vec<String> = (w.animal.iter())
@@ -200,14 +182,14 @@ fn when_text(content: &Content, line: &StoryLine) -> String {
             .map(|a| a.name.clone())
             .collect();
         if !animals.is_empty() {
-            parts.push(format!("born under the {}", any_of(&animals)));
+            parts.push(format!("born under the {}", or_list(&animals)));
         }
         let elements: Vec<String> = (w.element.iter())
             .filter_map(|id| h.elements.iter().find(|e| &e.id == id))
             .map(|e| e.name.clone())
             .collect();
         if !elements.is_empty() {
-            parts.push(format!("{}-born", any_of(&elements)));
+            parts.push(format!("{}-born", or_list(&elements)));
         }
     }
     match w.lucky {
@@ -246,7 +228,7 @@ fn when_text(content: &Content, line: &StoryLine) -> String {
     }
     if !w.not_tags.is_empty() {
         let tags: Vec<String> = w.not_tags.iter().map(|t| format!("`{t}`")).collect();
-        parts.push(format!("never after {}", any_of(&tags)));
+        parts.push(format!("never after {}", or_list(&tags)));
     }
     if let Some(age) = w.age {
         parts.push(match (age.min, age.max) {
@@ -260,7 +242,7 @@ fn when_text(content: &Content, line: &StoryLine) -> String {
         .map(|id| content.campaign(id).map_or(id.clone(), |c| c.name.clone()))
         .collect();
     if !campaigns.is_empty() {
-        parts.push(format!("in {}", any_of(&campaigns)));
+        parts.push(format!("in {}", or_list(&campaigns)));
     }
     let beasts: Vec<String> = (w.companion.iter())
         .map(|&c| {
@@ -272,7 +254,7 @@ fn when_text(content: &Content, line: &StoryLine) -> String {
         })
         .collect();
     if !beasts.is_empty() {
-        parts.push(format!("with {} at your side", any_of(&beasts)));
+        parts.push(format!("with {} at your side", or_list(&beasts)));
     }
     let familiars: Vec<String> = (w.familiar.iter())
         .map(|&c| {
@@ -284,7 +266,7 @@ fn when_text(content: &Content, line: &StoryLine) -> String {
         })
         .collect();
     if !familiars.is_empty() {
-        parts.push(format!("with {} as your familiar", any_of(&familiars)));
+        parts.push(format!("with {} as your familiar", or_list(&familiars)));
     }
     parts.retain(|p| !p.is_empty());
     dash(parts.join("; "))

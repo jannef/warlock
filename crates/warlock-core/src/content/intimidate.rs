@@ -67,6 +67,14 @@ impl IntimidateRules {
     }
 }
 
+impl super::RulesFile for IntimidateRules {
+    const PATH: &'static str = "data/intimidate.toml";
+
+    fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
+        Self::parse(path, text, content)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::content::{Content, ContentFiles};

@@ -148,6 +148,14 @@ impl SkillBook {
     }
 }
 
+impl super::RulesFile for SkillBook {
+    const PATH: &'static str = "data/skills.toml";
+
+    fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
+        Self::parse(path, text)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -17,10 +17,10 @@
 //! An encounter entry's `when = { calling = "ID" }` holds while it is open.
 //! There is no `from_state`: a restore grants both tables' abilities (`World::grant_class`).
 
-use super::talk::capitalized;
 use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, CallingDef, DialogueId};
+use crate::text::capitalized;
 
 /// Where the player stands with a calling, for the dev `progress` dump.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -149,7 +149,7 @@ impl World {
         else {
             self.say(format!(
                 "No calling of this world opens `{id}` to {} {class} (dev).",
-                crate::content::article(&class)
+                crate::text::article(&class)
             ));
             return Spent::Nothing;
         };

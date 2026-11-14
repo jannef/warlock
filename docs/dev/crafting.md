@@ -349,7 +349,7 @@ that works as one that works as another is refused). It is read in one place,
 `world/craft.rs::station_beside` (every recipe's `lack`, so `start_making` and the screen; the
 "You set to work on the dagger at the makeshift anvil." line names the cell's own terrain) and
 `Content::offer` (what a feature offers, so Temper's `anvil_beside`, `anvil_needs`, and the
-walk-in, `input.rs::step_screen`, need no change). Mining finds nothing in a terrain that works as
+walk-in, `ui/step_dialogs.rs::step_screen`, need no change). Mining finds nothing in a terrain that works as
 a station (`world/mine.rs`).
 
 The one such terrain is `makeshift_anvil`, which the craftsperson's **Field forge** (level 32,
@@ -377,7 +377,7 @@ a recipe directory, before `Ability::use_of` and `Ability::Skill`, so a professi
 usable yet" row (Jewelcraft's went with Cut). `had_by`: trained in the skill (#1387: no recipe is
 open to the untrained). The former `Ability::Temper`, `Ability::Whittle`, and `Ability::Fletch`
 are gone; `Offer::Temper` stays: the anvil is the Temper recipe's station, and walking into it
-(`input.rs::step_screen`, after `step_dialog` asks nothing) opens Metalcraft's profession screen,
+(`ui/step_dialogs.rs::step_screen`, after `step_dialog` asks nothing) opens Metalcraft's profession screen,
 `ScreenName::Profession(skill)` of Temper's recipe's skill, at once, with no dialog and no time,
 for one who has that row (the owner, #1387). Untrained, the step goes to the rules:
 `travel.rs::player_moves` refuses it, taking no time, with `World::anvil_needs`' "You need
@@ -994,7 +994,7 @@ fixtures of every new field and the old shape unchanged, each check's refusal, t
 file's bands and refusals), `world/craft_tests.rs` (rows by training and place, each reason,
 `craft:` refused with no time, the abilities menu's rows, Jewelcraft's rows), `world/cut_tests.rs` (Cutting a gem), `ability.rs`'s registry test (the
 profession rows in their skills' places, no Temper, Whittle, or Fletch row; `world/fletch_tests.rs`
-for the counted recipes), `input.rs`'s
+for the counted recipes), `ui/step_dialogs.rs`'s
 walk-in test (the anvil still asks, opening the Temper list), `ui/profession_screen.rs` (a
 built-in row's action, a greyed row), `world/set_tests.rs` (Setting a gem, Jewellery), and the
 text snapshots `profession-*` and `set-pick-*` in

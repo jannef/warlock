@@ -124,12 +124,15 @@ fn every_race_draws_from_its_list_or_the_rares_at_the_rare_odds() {
     let mut draws = 0u32;
     let mut rares = 0u32;
     for race in &content.races().list {
-        let list = rules.list_of(&race.id).expect("every race has a list");
+        let list = rules
+            .start
+            .list_of(&race.id)
+            .expect("every race has a list");
         let spec = spec(&format!("{},female,witch", race.id));
         for seed in 0..400 {
             let beast = super::draw(content, seed, &spec).expect("a beast");
             assert!(rules.arrives(beast).is_some(), "{}", race.id);
-            if rules.rare.contains(&beast) && !list.contains(&beast) {
+            if rules.start.rare.contains(&beast) && !list.contains(&beast) {
                 rares += 1;
             } else {
                 assert!(list.contains(&beast), "{}", race.id);
@@ -179,7 +182,13 @@ fn a_familiar_is_told_its_own_line_and_a_rare_the_plain_one() {
         let w = kitted("human,female,witch", seed);
         let (beast, _) = familiar_of(&w);
         let line = chapter.line(&companion_line(&w)).expect("a line");
-        if content.familiars().unwrap().rare.contains(&beast.creature) {
+        if content
+            .familiars()
+            .unwrap()
+            .start
+            .rare
+            .contains(&beast.creature)
+        {
             assert_eq!(line.id, "plain_companion");
             plain += 1;
         } else {
@@ -223,7 +232,7 @@ fn a_witch_begins_with_a_named_familiar_and_a_warrior_without() {
     let head = format!(
         "{}, {} {} (grade {})",
         data.name,
-        crate::content::article(&kind.name),
+        crate::text::article(&kind.name),
         kind.name,
         data.grade
     );

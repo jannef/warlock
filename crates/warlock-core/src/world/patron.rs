@@ -37,7 +37,7 @@ use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::content::{
     ActionKind, Content, DialogueId, InputKind, MaterialId, ObjectId, PartSource, PatronWords,
-    QuestKind, RecipeCount, RecipeDef, RecipeId, article,
+    QuestKind, RecipeCount, RecipeDef, RecipeId,
 };
 use crate::dice::Dice;
 use crate::magic::worked;
@@ -45,6 +45,7 @@ use crate::object::Stack;
 use crate::perception::PerceptionView;
 use crate::rng::Rng;
 use crate::skills::Use;
+use crate::text::article;
 use serde::{Deserialize, Serialize};
 
 /// The player's commissions from their patron.

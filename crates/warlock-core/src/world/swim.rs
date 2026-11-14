@@ -105,9 +105,8 @@ impl World {
         let rules = content.swim()?;
         let player = self.state.player;
         let me = self.state.player();
-        let modifier = me.effective_stats(&content).modifier(Stat::Toughness)
-            + me.skill_effect(&content, Effect::Swim)
-            + me.talent_mods(&content).check(Stat::Toughness);
+        let modifier =
+            me.check_modifier(&content, Stat::Toughness) + me.skill_effect(&content, Effect::Swim);
         let burden = burden_above(self.load_of(player).penalty());
         let difficulty = rules.difficulty + rules.per_burden * burden;
         let made = crate::check::check(&mut self.state.rng, modifier, difficulty);

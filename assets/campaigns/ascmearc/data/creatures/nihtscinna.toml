@@ -7,7 +7,8 @@
 # population: only its warren places it. Its fight is the stone: it walks through the walls of
 # its warren, waits there, comes out of the rock beside whoever passes, and is harder to strike
 # while it stands in it; blades pass half through it; its touch empties the will and fills the
-# heart with dread.
+# heart with dread. It leaves a corpse all the same, a husk that weighs what it did, 100 g, and
+# never rots, as every keeper's.
 [[creature]]
 id = "nihtscinna"
 level = 81
@@ -33,8 +34,10 @@ base_hp = 260
 skills = { initiative = 120, spot = 90 }
 natural = { defence = 9, protection = 0, name = "insubstantial form" }
 incorporeal = { wall_defence = 10 }
-resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, necrotic = 100, poison = 100 }
-corpse = false
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50 }
+immune = ["necrotic", "poison"]
+everlasting = true
+on_eat = { message = "A husk of shadow that weighs next to nothing: it tastes of dust and the dark.", vomit = 40 }
 blood = "none"
 [creature.attack]
 damage = "6d8"

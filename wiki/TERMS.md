@@ -14,7 +14,15 @@ A term with no explaining section gets a short definition where its topic is, an
 `cargo xtask wiki --check-links` builds the book and fails on a link to a missing page or
 anchor (CI runs it). mdBook's heading anchors are the heading in lower case, spaces as hyphens,
 punctuation dropped (`## Hit points, Defence, and resistances` is
-`#hit-points-defence-and-resistances`; a second `## Burden` on a page is `#burden-1`).
+`#hit-points-defence-and-resistances`). A heading that repeats the page's title or another
+heading on the page gets a numbered anchor (`#burden-1`), which breaks when a heading is added
+above it: give every heading its own words (`## Burden levels` on the Burden page).
+
+Headings are what mdBook's search finds first, so phrase a topic's heading as what a player would
+look for, the question or the action: `## Levelling up`, `## Enchanting an item`, `## Curing a
+disease`, not `## What a level gives` or `## Cures`. Renaming a heading changes its anchor: fix
+every link to it (pages, `xtask/src/wiki/`, this file); `cargo xtask wiki --check-links` finds
+the ones missed.
 
 ## Rows of the generated tables
 
@@ -109,7 +117,7 @@ above.
 | Digging, wall hardness | `digging.md#digging`, `digging.md#what-breaks-and-what-does-not` |
 | Explosions, blasts | `digging.md#explosions` |
 | Mining, ore, smelting, veins, each dungeon's ores | `mining.md` (a find: `mining.md#mined-ID`, `mining.md#mined-iron`; a vein: `mining.md#vein-ID`, `mining.md#veins`) |
-| Doors; locked, kicked, broken doors | `doors.md`, `doors.md#locked-doors`, `doors.md#kicking` |
+| Doors; locked, kicked, broken doors | `doors.md`, `doors.md#locked-doors`, `doors.md#kicking-a-door-open` |
 | Creatures opening doors | `doors.md#creatures-and-doors` |
 | Keys, skeleton key | `doors.md#keys` |
 | Picking locks | `doors.md#picking-locks` |
@@ -132,7 +140,7 @@ above.
 | Trap, hidden trap, known trap | `traps.md#finding-traps` |
 | Disarming | `traps.md#disarming-traps` |
 | Rig, rigging, Trapwright, a rigged trap | `traps.md#rigging-traps` (the talent: `classes.md#talent-trapwright`) |
-| Searching, noticing in passing | `searching.md#searching-1`, `searching.md#noticing-in-passing` |
+| Searching, noticing in passing | `searching.md#how-to-search`, `searching.md#noticing-in-passing` |
 | **Objects** | |
 | Object, item class | `objects.md#what-an-object-is`, `objects.md#item-classes` |
 | Stack, pile | `objects.md#piles` |
@@ -157,7 +165,7 @@ above.
 | Base item | `affixes.md#base-items` |
 | Unique item | `magic-items.md#unique-items` |
 | Ammunition, arrows, bolts | `ammunition.md` |
-| Burden (Unburdened, Burdened, Strained, Overloaded), carrying limit | `burden.md#burden-1`, `burden.md#how-much-you-can-carry` |
+| Burden (Unburdened, Burdened, Strained, Overloaded), carrying limit | `burden.md#burden-levels`, `burden.md#how-much-you-can-carry` |
 | Hunger, nutrition (Satiated, Hungry, Weak, Fainting, Starving, Bloated) | `hunger.md#how-hungry-you-are` |
 | Eating, food, rot, corpses | `food.md#eating`, `food.md#food-spoils`, `food.md#corpses` |
 | Shop, buying, selling, prices | `shops.md#buying`, `shops.md#selling`, `shops.md#prices` |
@@ -206,11 +214,11 @@ above.
 | Stats (Strength, Dexterity, …), score | `stats.md` (a stat: its row) |
 | Modifier | `stats.md#modifiers` |
 | Potential | `stats.md#potentials` |
-| Stat training, training marks of a stat | `stats.md#training` |
+| Stat training, training marks of a stat | `stats.md#raising-your-stats` |
 | The daily check | `stats.md#the-checks` |
 | Drained stats, stat damage | `stats.md#drained-stats`, `diseases.md#stat-damage` |
 | Skills, trained and untrained | `skills.md`, `skills.md#what-skills-give` (a skill: its row) |
-| Skill rolls, skill marks | `skills.md#getting-better` |
+| Skill rolls, skill marks | `skills.md#improving-a-skill` |
 | A skill's ladder (what it gives by value: Music's song degrees and difficulty, …) | `skills.md#what-skills-give` |
 | Slipping past (a creature with darkvision, unlit) | `skill-uses.md#slipping-past` |
 | Stealing | `skill-uses.md#stealing` |
@@ -225,12 +233,12 @@ above.
 | Masterwork (crafted), a crafted item's grade, margin | `crafting.md#how-well-it-comes-out` |
 | Brewing, potion recipes, Alchemy's recipes, a failed brew (murky draught, brewer's blunder) | `recipes-alchemy.md`, `recipes-alchemy.md#how-a-brew-goes` (a recipe: its row, `brew-ID`) |
 | Foraging | `skill-uses.md#foraging` |
-| Crafting, a craft skill, craft points, who works which material, a material's work | `crafting.md`, `crafting.md#who-works-what` |
+| Crafting, a craft skill, craft points, who works which material, a material's work | `crafting.md`, `crafting.md#which-skill-makes-what` |
 | Salvage, taking an item apart, a gem chipped or shattered | `crafting.md#salvage` |
 | Magic crystal, a crystal's colour, consuming a crystal | `crystals.md`, a colour `crystals.md#crystal-ID` (`crystals.md#crystal-red`), `crystals.md#consuming-a-crystal` |
 | Heart-crystal, soul-fetter (rare materials) | `crystals.md#rare-materials`; what they do: `enchanting.md#the-rare-materials` |
-| Seal (in enchanting) | `enchanting.md#seals` |
-| Enchanting, Kindle, Quicken, Unbind, an enchanting recipe | `enchanting.md`, `enchanting.md#the-recipes` |
+| Seal (in enchanting) | `enchanting.md#keeping-magic-out-with-seals` |
+| Enchanting, Kindle, Quicken, Unbind, an enchanting recipe | `enchanting.md`, `enchanting.md#enchanting-an-item` |
 | Reach (an enchanter's item level), warped (a natural 2 in enchanting) | `enchanting.md#how-strong-the-magic-is`, `enchanting.md#the-check` |
 | Cut, gem cutting, a re-cut, a gem's cut grade | `gem-cutting.md`, `gem-cutting.md#how-well-it-comes-out` |
 | Set, setting a gem in an item, a gem chipped in the setting | `gem-cutting.md#setting-a-gem` |
@@ -240,8 +248,8 @@ above.
 | Abilities, the abilities menu | `abilities.md#the-abilities-menu` |
 | Experience, XP, levels | `experience.md`, `experience.md#levels` |
 | The level curve to 100, the XP of every level | `experience.md#levels` |
-| Experience for discoveries | `experience.md#discovery` |
-| A level-up, what a level gives | `experience.md#what-a-level-gives` |
+| Experience for discoveries | `experience.md#experience-for-something-new` |
+| A level-up, what a level gives | `experience.md#levelling-up` |
 | **Fighting** | |
 | To hit, the 2d12 roll | `combat.md#hitting` |
 | Finesse weapon | `combat.md#finesse-weapons` |
@@ -254,7 +262,7 @@ above.
 | Stance | `stances.md#stances` (a stance: its row) |
 | Free blow, cleave | `stances.md#free-blows` |
 | Stamina | `stances.md#stamina` |
-| Hit points, regeneration | `hit-points.md#hit-points`, `healing.md#how-fast` |
+| Hit points, regeneration | `hit-points.md#hit-points`, `healing.md#how-fast-you-heal` |
 | Death, permadeath | `hit-points.md#death`, `saving.md` |
 | Blood, stains | `hit-points.md#blood` |
 | Char, scorch marks | `hit-points.md#char` |
@@ -263,7 +271,7 @@ above.
 | Shot distance, long range, a shot from beside the target | `ranged.md#distance` |
 | Where a missile goes, missiles in flight | `ranged.md#where-a-missile-goes` |
 | Flaming arrows | `ranged.md#flaming-arrows` |
-| Weapon skill, rank, marks | `weapon-skills.md`, `weapon-skills.md#marks-and-ranks` |
+| Weapon skill, rank, marks | `weapon-skills.md`, `weapon-skills.md#raising-a-weapon-skill` |
 | Target dummy, training dummy, the Gilde's yard | `weapon-skills.md#target-dummies`, `guild.md#the-yard` |
 | Fighting style | `fighting-styles.md` (a style: its row) |
 | Two-weapon fighting, off hand | `fighting-styles.md#two-weapons` |
@@ -271,8 +279,9 @@ above.
 | Status effect, severity, degrees | `status-effects.md#how-they-work` (a status: its row) |
 | Buffs and cooldowns | `status-effects.md#buffs-and-cooldowns` |
 | Disease, incubation, checks | `diseases.md#how-a-disease-goes`, `diseases.md#checks` |
-| Healing, healing paces | `healing.md#how-fast` |
-| Mana, mana regeneration | `mana.md#how-much`, `mana.md#how-fast-it-comes-back` |
+| Healing, healing paces | `healing.md#how-fast-you-heal` |
+| Getting your health back, every way; curing bleeding, poison, and disease | `healing.md#getting-your-health-back`, `healing.md#curing-bleeding-poison-and-disease` |
+| Mana, mana regeneration | `mana.md#how-much-mana-you-have`, `mana.md#how-fast-it-comes-back` |
 | Mana on a kill | `mana.md#mana-on-a-kill` |
 | Spending mana | `mana.md#spending-it` |
 | Magic, spells, casting | `magic.md`, `magic.md#the-spells` |
@@ -287,12 +296,12 @@ above.
 | Corroded | `status-effects.md#corroded` |
 | How a spell resolves (attack, auto, area, touch) | `spellcasting.md#how-a-spell-finds-its-target` |
 | Healing spells on the undead (harm instead of healing) | `spellcasting.md#healing-harms-the-undead` |
-| Mishap | `magic.md#learning-spells-from-grimoires` |
+| Mishap | `magic.md#learning-a-spell` |
 | Miscast, the Spellcraft check on casting, the miscast table | `miscasts.md#the-check`, `miscasts.md#the-miscast-table` |
 | Protected results, the protected half (a miscast that cannot kill) | `miscasts.md#the-protected-half` |
 | Gate (a miscast's: rift, hellmouth, ... lords' gate), the loosed | `miscasts.md#gates` (a gate: `creatures.md#creature-ID`) |
 | A miscast's Pit stair | `miscasts.md#pits` |
-| Learning a spell from a grimoire, overreach | `magic.md#learning-spells-from-grimoires` |
+| Learning a spell from a grimoire, overreach | `magic.md#learning-a-spell` |
 | Spell rank, deepening a spell, rereading a grimoire | `magic.md#spell-ranks` |
 | Forgetting a spell, a forgotten spell, ranks lost to a miscast | `miscasts.md#forgotten-spells` |
 | Wand, rod, charges | `wands-and-rods.md#wands`, `wands-and-rods.md#rods` |
@@ -312,7 +321,7 @@ above.
 | Mimic | `mimics.md` |
 | Ally, your wolf, orders (Come to heel, Hold here, Set on) | `allies.md`, `allies.md#orders` |
 | Summon, summon spell, a call (the druid's) | `allies.md#summons`, `allies.md#the-druids-calls` |
-| Companion, animal companion, the nose, a companion's level (grade) | `companions.md#companions`, `companions.md#starting-companions`, `companions.md#growth` |
+| Companion, animal companion, the nose, a companion's level (grade) | `companions.md#companions`, `companions.md#starting-companions`, `companions.md#how-a-companion-grows` |
 | The collar, Give | `companions.md#the-collar` |
 | Tame, taming | `companions.md#taming` |
 | Familiar, a familiar's touch, what it goes for, calling one | `familiars.md#familiars`, `familiars.md#the-touch`, `familiars.md#what-it-goes-for`, `familiars.md#call-familiar` |

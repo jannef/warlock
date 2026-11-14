@@ -60,19 +60,8 @@ impl World {
         table: &'t OutcomeTable,
         kinds: [u32; 3],
     ) -> Option<&'t OutcomeDef> {
-        let total: u32 = kinds.iter().sum();
-        if total == 0 {
-            return None;
-        }
-        let mut at = self.state.rng.below(total);
-        let mut kind = OutcomeKind::Bane;
-        for (k, w) in OutcomeKind::ALL.into_iter().zip(kinds) {
-            if at < w {
-                kind = k;
-                break;
-            }
-            at -= w;
-        }
+        let kinds: Vec<(OutcomeKind, u32)> = OutcomeKind::ALL.into_iter().zip(kinds).collect();
+        let &(kind, _) = self.state.rng.weighted(&kinds, |&(_, w)| w)?;
         self.draw_in(table, kind)
     }
 
@@ -82,18 +71,8 @@ impl World {
         table: &'t OutcomeTable,
         kind: OutcomeKind,
     ) -> Option<&'t OutcomeDef> {
-        let sum = table.total(kind);
-        if sum == 0 {
-            return None;
-        }
-        let mut at = self.state.rng.below(sum);
-        for outcome in table.of(kind) {
-            if at < outcome.weight {
-                return Some(outcome);
-            }
-            at -= outcome.weight;
-        }
-        None
+        let outcomes: Vec<&OutcomeDef> = table.of(kind).collect();
+        self.state.rng.weighted(&outcomes, |o| o.weight).copied()
     }
 
     /// `outcome` befalls the player at the place whose feature is on `feature` (module docs).
@@ -412,13 +391,8 @@ impl World {
 
     /// One of `effect.objects`, by weight, at the feature's foot.
     fn leave_objects(&mut self, effect: &OutcomeEffect, feature: Pos) {
-        let total: u32 = effect.objects.iter().map(|o| o.2).sum();
-        let mut at = self.state.rng.below(total.max(1));
-        let Some(&(object, count, _)) = effect.objects.iter().find(|o| {
-            let hit = at < o.2;
-            at = at.saturating_sub(o.2);
-            hit
-        }) else {
+        // The loader keeps the weights above 0 in all and within a `u32`.
+        let Some(&(object, count, _)) = self.state.rng.weighted(&effect.objects, |o| o.2) else {
             return;
         };
         let n = u32::try_from(count.roll(&mut self.state.rng).max(1)).unwrap_or(1);

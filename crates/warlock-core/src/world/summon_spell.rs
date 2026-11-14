@@ -26,11 +26,12 @@
 //! Draws: the count roll, then one draw per creature, on the gameplay stream, only when a call
 //! goes off.
 
-use super::ally::{AllySource, capital, few};
+use super::ally::{AllySource, few};
 use super::cast::Cast;
 use super::{ActorId, World};
 use crate::action::Event;
-use crate::content::{CreatureId, LevelKind, SpellId, and_list};
+use crate::content::{CreatureId, LevelKind, SpellId};
+use crate::text::{and_list, capitalized};
 use crate::time::Duration;
 
 impl World {
@@ -118,7 +119,7 @@ impl World {
             .collect();
         let list = and_list(&words.iter().map(String::as_str).collect::<Vec<_>>());
         let verb = if count == 1 { "comes" } else { "come" };
-        self.say(format!("{} {verb} to your call.", capital(&list)));
+        self.say(format!("{} {verb} to your call.", capitalized(&list)));
         self.spell_landed(cast, player, true);
         true
     }

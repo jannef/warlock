@@ -32,7 +32,7 @@ stats = { strength = 30, dexterity = 24, toughness = 34, intelligence = 36, will
 base_hp = 67
 skills = { concentration = 172, spellcraft = 177 }
 natural = { defence = 4, protection = 9, name = "dry bones" }
-resist = { poison = 100 }
+immune = ["poison"]
 corpse = false
 blood = "none"
 [creature.aura]

@@ -25,7 +25,7 @@ in the UI (`Clock::format`: status bar, death screen); dumps stay 24-hour. Palet
 (`settings/palette.rs`) are applied only when cells are uploaded to the GPU (`render::upload`) and
 in `ui/glyphs.rs`, never to content colors.
 
-Key bindings (spec §6 "Rebinding", #159) are the `Bindings` resource (`input.rs`; text forms,
+Key bindings (spec §6 "Rebinding", #159) are the `Bindings` resource (`settings/bindings.rs`; text forms,
 ids, and the rules in `settings/keys.rs`). **Only play-context commands are rebindable by
 design; the keys of menus, menu lists, screens, info pages, prompts, dialogs, text fields, and the
 targeting mode are fixed** (owner, 2026-10-26; #1533), plain keys in `settings/fixed.rs`, which
@@ -45,7 +45,7 @@ abilities key `a` or its quick repeat `X` for an ability, an ability's own key; 
 unbound) stay rebindable exactly as they were (owner, #644), and may not take a key fixed where
 they are read (`fixed::refusal`, through `KeyBinding::refused_for`); `fixed::read` tries each key
 a press may stand for, most specific first, against the place's own command, then its fixed
-keys. **Every rebindable key is a `KeyCommand` in its `input::Context`**: `Play` (the map,
+keys. **Every rebindable key is a `KeyCommand` in its `settings::bindings::Context`**: `Play` (the map,
 direction prompts, look mode), `Aim` (`PrevTarget`), `More` (at `--more--`: `MoreNext`, Space and
 Enter; `MoreSkip`, unbound, as Esc always skips; `ui/more.rs`), `Menu` (`Back`), `Text`
 (`TextBack`), `Pages` (`PrevPage`), and `Dev` (the developer keys: in every table, read by

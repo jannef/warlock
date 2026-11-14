@@ -279,7 +279,7 @@ impl World {
                 .collect();
             return Err(format!(
                 "You must choose a talent of {}.",
-                talent::list_with(&names, "or")
+                crate::text::or_list(&names)
             ));
         };
         let def = content.talents().get(talent);

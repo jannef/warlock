@@ -19,7 +19,7 @@
 //! follow the terrain as they do a door's: [`World::set_terrain`] drops the light masks the cell
 //! could change, and perception sees and remembers the rubble like any terrain.
 
-use super::{Ended, LevelState, Spent, World, article};
+use super::{Ended, LevelState, Spent, World};
 use crate::action::{Breach, Event, MAX_REST};
 use crate::content::StatUse;
 use crate::content::{ActionKind, Content, Effect, LevelKind};
@@ -29,6 +29,7 @@ use crate::sight::LineOfSight;
 use crate::skills::{Effect as SkillEffect, Use};
 use crate::stats::Stat;
 use crate::talent::TalentMods;
+use crate::text::{article, capitalized};
 use crate::time::Duration;
 
 /// The work done on a wall is kept in twentieths of a point of hardness, so a dig's work,
@@ -271,6 +272,6 @@ impl World {
         if crate::content::is_proper(name) {
             return name.clone();
         }
-        format!("{} {name}", article(name))
+        format!("{} {name}", capitalized(article(name)))
     }
 }

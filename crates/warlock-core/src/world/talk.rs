@@ -30,6 +30,7 @@ use crate::content::StatUse;
 use crate::content::{ActionKind, Budge, Dialogue, DialogueId, Service, Stance, Topic};
 use crate::geom::{Dir, Pos};
 use crate::noise::{self, Act, Heard, SoundKind, Volume};
+use crate::text::capitalized;
 use serde::{Deserialize, Serialize};
 
 /// How near the player a creature mutters, in cells (Chebyshev): as far as its voice carries.
@@ -572,15 +573,6 @@ impl World {
         if let Some(actor) = self.state.actors.get_mut(&id) {
             actor.energy = actor.energy.saturating_sub(extra);
         }
-    }
-}
-
-/// `text` with its first letter in upper case.
-pub(super) fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
     }
 }
 

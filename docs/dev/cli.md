@@ -491,7 +491,7 @@ messages, heard sounds, and, with `--state`, the full world state; and:
 
 ## Action text syntax
 
-Actions are whitespace-separated words; `ACTION*N` repeats one, e.g. `wait*10`. The verbs:
+Actions are whitespace-separated words; `ACTION*N` repeats one, e.g. `wait*10` (N at most 100,000, `action::MOST_REPEATS`; more is a parse error). The verbs:
 
 `move:DIR run:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend use_tool
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR

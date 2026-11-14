@@ -46,13 +46,14 @@ use super::menu::{HINTS, Nav, Panel, Press, wrap};
 use super::paged_list::{PagedList, Row, draw_header};
 use super::screens::ScreenAction;
 use super::target::AimKind;
-use super::{ACCENT, TEXT, TEXT_DIM, rarity_color};
+use super::{ACCENT, ScreenName, TEXT, TEXT_DIM, rarity_color};
 use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
 use warlock_core::burden::{Burden, Load};
 use warlock_core::color::Rgb;
 use warlock_core::content::{ClassActive, MAX_SPELL_RANK, Rarity, RecipeUse, SpellId};
 use warlock_core::equipment;
+use warlock_core::item_list::ItemList;
 use warlock_core::object::{Stack, Weight, format_weight};
 use warlock_core::perception::PerceptionView;
 use warlock_core::{Action, Meal, Positions, ReadTarget};
@@ -107,85 +108,225 @@ pub enum IdentifyBy {
     Class(ClassActive),
 }
 
+/// What a list is: its screen, its words, its rows, and what choosing does (#1542). Each list is
+/// one entry of [`ObjectList::spec`].
+struct ListSpec {
+    /// The screen it is (`--screen`, the stack's name for it).
+    screen: ScreenName,
+    title: &'static str,
+    /// What it says when it lists nothing.
+    empty: &'static str,
+    /// Where its rows come from.
+    rows: Rows,
+    /// What choosing a stack does, in the footer ("temper"), for a list of one pick; `None` for
+    /// one that marks stacks (the inventory's drop mode, the pile).
+    verb: Option<&'static str>,
+    /// The action choosing a stack makes, for a list that only acts on it.
+    act: Option<fn(usize) -> Action>,
+}
+
+/// Where a list's rows come from.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Rows {
+    /// Every stack carried.
+    Pack,
+    /// Every stack on the player's cell.
+    Pile,
+    /// The stacks the item list offers, from perception ([`PerceptionView::item_choices`]): what
+    /// lies here first, then what is carried.
+    Choices(ItemList),
+}
+
+/// The lists a screen's name opens by itself: all but the identify list, which reads the scroll
+/// chosen on the read list beneath, or the ability used.
+const BY_NAME: [ObjectList; 13] = [
+    ObjectList::Inventory,
+    ObjectList::PickUp,
+    ObjectList::Throw,
+    ObjectList::ThrownExploit,
+    ObjectList::Eat,
+    ObjectList::Read,
+    ObjectList::Temper,
+    ObjectList::Whittle,
+    ObjectList::Salvage,
+    ObjectList::MakeDo,
+    ObjectList::Cut,
+    ObjectList::Decipher,
+    ObjectList::Give,
+];
+
 impl ObjectList {
-    fn title(self) -> &'static str {
+    /// The list's entry in the table.
+    fn spec(self) -> ListSpec {
+        let list = |screen, title, empty, items, verb| ListSpec {
+            screen,
+            title,
+            empty,
+            rows: Rows::Choices(items),
+            verb: Some(verb),
+            act: None,
+        };
+        let acts = |act: fn(usize) -> Action, spec: ListSpec| ListSpec {
+            act: Some(act),
+            ..spec
+        };
         match self {
-            ObjectList::Inventory => " Inventory ",
-            ObjectList::PickUp => " Pick up ",
-            ObjectList::Throw => " Throw ",
-            ObjectList::ThrownExploit => " Thrown exploit ",
-            ObjectList::Eat => " Consume what? ",
-            ObjectList::Read => " Read ",
-            ObjectList::Identify(_) => " Identify ",
-            ObjectList::Temper => " Temper ",
-            ObjectList::Whittle => " Whittle ",
-            ObjectList::Salvage => " Salvage ",
-            ObjectList::MakeDo => " Make do and mend ",
-            ObjectList::Cut => " Cut ",
-            ObjectList::Decipher => " Decipher ",
-            ObjectList::Give => " Give ",
+            ObjectList::Inventory => ListSpec {
+                screen: ScreenName::Inventory,
+                title: " Inventory ",
+                empty: "You are not carrying anything.",
+                rows: Rows::Pack,
+                verb: None,
+                act: None,
+            },
+            ObjectList::PickUp => ListSpec {
+                screen: ScreenName::PickUp,
+                title: " Pick up ",
+                empty: "There is nothing here.",
+                rows: Rows::Pile,
+                verb: None,
+                act: None,
+            },
+            ObjectList::Throw => list(
+                ScreenName::Throw,
+                " Throw ",
+                "You have nothing to throw.",
+                ItemList::Throw,
+                "choose",
+            ),
+            ObjectList::ThrownExploit => list(
+                ScreenName::ThrownExploit,
+                " Thrown exploit ",
+                "You have nothing to throw into an opening.",
+                ItemList::ThrownExploit,
+                "choose",
+            ),
+            ObjectList::Eat => list(
+                ScreenName::Eat,
+                " Consume what? ",
+                "You have nothing to consume.",
+                ItemList::Eat,
+                "consume",
+            ),
+            ObjectList::Read => list(
+                ScreenName::Read,
+                " Read ",
+                "You have nothing to read.",
+                ItemList::Read,
+                "read",
+            ),
+            ObjectList::Identify(_) => list(
+                ScreenName::Identify,
+                " Identify ",
+                "You carry nothing unidentified.",
+                ItemList::Identify,
+                "identify",
+            ),
+            ObjectList::Temper => acts(
+                |item| Action::Temper { item },
+                list(
+                    ScreenName::Temper,
+                    " Temper ",
+                    "You carry no metal arms or armour to work.",
+                    ItemList::Temper,
+                    "temper",
+                ),
+            ),
+            ObjectList::Whittle => acts(
+                |item| Action::Whittle { item },
+                list(
+                    ScreenName::Whittle,
+                    " Whittle ",
+                    "You carry no wooden weapon to whittle.",
+                    ItemList::Whittle,
+                    "whittle",
+                ),
+            ),
+            ObjectList::Salvage => acts(
+                |item| Action::Salvage { item },
+                list(
+                    ScreenName::Salvage,
+                    " Salvage ",
+                    "You carry nothing worth taking apart.",
+                    ItemList::Salvage,
+                    "salvage",
+                ),
+            ),
+            ObjectList::MakeDo => acts(
+                |item| Action::UseOn(ClassActive::MakeDo, item),
+                list(
+                    ScreenName::MakeDo,
+                    " Make do and mend ",
+                    "You carry nothing damaged to mend.",
+                    ItemList::MakeDo,
+                    "mend",
+                ),
+            ),
+            ObjectList::Cut => list(
+                ScreenName::Cut,
+                " Cut ",
+                "You carry no gem that can be cut.",
+                ItemList::Cut,
+                "cut",
+            ),
+            ObjectList::Decipher => acts(
+                |item| Action::Decipher { item },
+                list(
+                    ScreenName::Decipher,
+                    " Decipher ",
+                    "You carry no scroll you have not made out.",
+                    ItemList::Decipher,
+                    "decipher",
+                ),
+            ),
+            ObjectList::Give => acts(
+                |item| Action::Give { item, ally: None },
+                list(
+                    ScreenName::Give,
+                    " Give ",
+                    "You carry nothing for a beast's neck.",
+                    ItemList::Give,
+                    "give",
+                ),
+            ),
         }
+    }
+
+    /// The list screen `name` opens, if it is one of them ([`BY_NAME`]).
+    pub fn of_screen(name: ScreenName) -> Option<Self> {
+        BY_NAME.into_iter().find(|list| list.spec().screen == name)
+    }
+
+    /// The screen of the list of `items` an ability asks from (`Aim::Item`), if one opens by its
+    /// name (the identify list does not: it opens for the ability used, `open_identify`).
+    pub fn screen_of(items: ItemList) -> Option<ScreenName> {
+        (BY_NAME.into_iter())
+            .map(Self::spec)
+            .find(|spec| spec.rows == Rows::Choices(items))
+            .map(|spec| spec.screen)
+    }
+
+    fn title(self) -> &'static str {
+        self.spec().title
     }
 
     fn empty(self) -> &'static str {
-        match self {
-            ObjectList::Inventory => "You are not carrying anything.",
-            ObjectList::PickUp => "There is nothing here.",
-            ObjectList::Throw => "You have nothing to throw.",
-            ObjectList::ThrownExploit => "You have nothing to throw into an opening.",
-            ObjectList::Eat => "You have nothing to consume.",
-            ObjectList::Read => "You have nothing to read.",
-            ObjectList::Identify(_) => "You carry nothing unidentified.",
-            ObjectList::Temper => "You carry no metal arms or armour to work.",
-            ObjectList::Whittle => "You carry no wooden weapon to whittle.",
-            ObjectList::Salvage => "You carry nothing worth taking apart.",
-            ObjectList::MakeDo => "You carry nothing damaged to mend.",
-            ObjectList::Cut => "You carry no gem that can be cut.",
-            ObjectList::Decipher => "You carry no scroll you have not made out.",
-            ObjectList::Give => "You carry nothing for a beast's neck.",
-        }
+        self.spec().empty
     }
 
     /// The panel's width: the inventory's is wider, for what the player carries, weighs, and
-    /// may carry on one line each.
+    /// may carry on one line each; every other has room for a name with its numbers and its
+    /// marks (`a chain mail shirt (Dv +2, Pv 3) (being worn)`).
     fn width(self) -> i32 {
         match self {
             ObjectList::Inventory => super::info_tabs::panel_width(72),
-            ObjectList::PickUp
-            | ObjectList::Throw
-            | ObjectList::ThrownExploit
-            | ObjectList::Eat
-            | ObjectList::Read
-            // Room for a name with its numbers and its marks (`a chain mail shirt (Dv +2,
-            // Pv 3) (being worn)`).
-            | ObjectList::Identify(_)
-            | ObjectList::Temper
-            | ObjectList::Whittle
-            | ObjectList::Salvage
-            | ObjectList::MakeDo
-            | ObjectList::Cut
-            | ObjectList::Decipher
-            | ObjectList::Give => 78,
+            _ => 78,
         }
     }
 
     /// Whether choosing is one pick (a letter or Enter) rather than marking several.
     fn picks_one(self) -> bool {
-        matches!(
-            self,
-            ObjectList::Throw
-                | ObjectList::ThrownExploit
-                | ObjectList::Eat
-                | ObjectList::Read
-                | ObjectList::Identify(_)
-                | ObjectList::Temper
-                | ObjectList::Whittle
-                | ObjectList::Salvage
-                | ObjectList::MakeDo
-                | ObjectList::Cut
-                | ObjectList::Decipher
-                | ObjectList::Give
-        )
+        self.spec().verb.is_some()
     }
 }
 
@@ -286,82 +427,19 @@ impl ObjectScreen {
         };
         let content = view.content();
         let (pile, pack) = (view.objects(view.viewer()), view.inventory());
-        // What may be consumed: food, potions (spec §8 "Potions": drunk from this list), and
-        // magic crystals (`world/crystal.rs`).
-        let edible = |s: &Stack| {
-            let def = content.object(s.object);
-            def.food.is_some() || def.drink.is_some() || view.is_crystal(s)
-        };
         let reading = |s: &Stack| content.object(s.object).read.as_ref();
-        let readable =
-            |s: &Stack| reading(s).is_some() || content.object(s.object).grimoire.is_some();
         let studies = view.studies();
-        let items: Vec<Item> = match list {
-            ObjectList::PickUp => (0..pile.len()).map(Item::Floor).collect(),
-            ObjectList::Inventory => (0..pack.len()).map(Item::Pack).collect(),
-            ObjectList::Throw => (0..pack.len())
-                .filter(|&i| view.is_throwing_weapon(i))
-                .map(Item::Pack)
-                .collect(),
-            ObjectList::ThrownExploit => (0..pack.len())
-                .filter(|&i| view.is_throwing_weapon(i) && view.exploit_throw_range(i).is_some())
-                .map(Item::Pack)
-                .collect(),
-            ObjectList::Eat => ((0..pile.len())
-                .filter(|&i| edible(&pile[i]))
-                .map(Item::Floor))
-            .chain(
-                (0..pack.len())
-                    .filter(|&i| edible(&pack[i]))
-                    .map(Item::Pack),
-            )
-            .collect(),
-            ObjectList::Read => (0..pack.len())
-                .filter(|&i| readable(&pack[i]))
-                .map(Item::Pack)
-                .collect(),
-            // The scroll read is not among them: reading it names its own kind anyway.
-            ObjectList::Identify(by) => (0..pack.len())
-                .filter(|&i| by != IdentifyBy::Scroll(i) && !view.lore().knows(&pack[i]))
-                .map(Item::Pack)
-                .collect(),
-            ObjectList::Temper => (0..pack.len())
-                .filter(|&i| warlock_core::world::workable(content, &pack[i]))
-                .map(Item::Pack)
-                .collect(),
-            ObjectList::Whittle => (0..pack.len())
-                .filter(|&i| warlock_core::world::workable_wood(content, &pack[i]))
-                .map(Item::Pack)
-                .collect(),
-            // Never what is worn or wielded (the rules refuse it).
-            ObjectList::Salvage => (0..pack.len())
-                .filter(|&i| {
-                    warlock_core::world::salvageable(content, &pack[i])
-                        && !view.equipment().holds(i)
+        let items: Vec<Item> = match list.spec().rows {
+            Rows::Pile => (0..pile.len()).map(Item::Floor).collect(),
+            Rows::Pack => (0..pack.len()).map(Item::Pack).collect(),
+            Rows::Choices(items) => (view.floor_choices(items).into_iter().map(Item::Floor))
+                .chain(view.item_choices(items).into_iter().map(Item::Pack))
+                // The scroll of identify read is not among them: reading it names its own kind
+                // anyway.
+                .filter(|&item| match list {
+                    ObjectList::Identify(by) => by != IdentifyBy::Scroll(item.position()),
+                    _ => true,
                 })
-                .map(Item::Pack)
-                .collect(),
-            // Never what is worn or wielded (the rules refuse it).
-            ObjectList::MakeDo => (0..pack.len())
-                .filter(|&i| warlock_core::world::mendable(&pack[i]) && !view.equipment().holds(i))
-                .map(Item::Pack)
-                .collect(),
-            ObjectList::Cut => (0..pack.len())
-                .filter(|&i| warlock_core::world::cuttable(content, &pack[i]))
-                .map(Item::Pack)
-                .collect(),
-            ObjectList::Decipher => (0..pack.len())
-                .filter(|&i| warlock_core::world::undeciphered(content, &view.lore(), &pack[i]))
-                .map(Item::Pack)
-                .collect(),
-            // Beside an escort, anything it could put on (`world/escort.rs`).
-            ObjectList::Give => (0..pack.len())
-                .filter(|&i| {
-                    warlock_core::world::fits_neck(content, &pack[i])
-                        || (view.escort_beside()
-                            && warlock_core::world::fits_escort(content, &pack[i]))
-                })
-                .map(Item::Pack)
                 .collect(),
         };
         let unpaid = view.unpaid();
@@ -466,6 +544,14 @@ impl ObjectScreen {
         self.dropping != Dropping::No
     }
 
+    /// The screen this is: its list's, or the inventory's drop mode's.
+    pub fn name(&self) -> ScreenName {
+        match self.is_dropping() {
+            true => ScreenName::Drop,
+            false => self.list.spec().screen,
+        }
+    }
+
     /// Whether this is the plain inventory: letters look, nothing is marked.
     fn read_only(&self) -> bool {
         self.list == ObjectList::Inventory && !self.is_dropping()
@@ -548,18 +634,6 @@ impl ObjectScreen {
             (ObjectList::Identify(IdentifyBy::Class(active)), item) => {
                 ScreenAction::Act(Action::UseOn(active, item.position()))
             }
-            (ObjectList::Temper, item) => ScreenAction::Act(Action::Temper {
-                item: item.position(),
-            }),
-            (ObjectList::Whittle, item) => ScreenAction::Act(Action::Whittle {
-                item: item.position(),
-            }),
-            (ObjectList::Salvage, item) => ScreenAction::Act(Action::Salvage {
-                item: item.position(),
-            }),
-            (ObjectList::MakeDo, item) => {
-                ScreenAction::Act(Action::UseOn(ClassActive::MakeDo, item.position()))
-            }
             (ObjectList::Cut, item) => match &self.cast {
                 Some(recipe) => ScreenAction::Act(Action::Craft {
                     recipe: recipe.clone(),
@@ -567,17 +641,15 @@ impl ObjectScreen {
                 }),
                 None => ScreenAction::Stay,
             },
-            (ObjectList::Decipher, item) => ScreenAction::Act(Action::Decipher {
-                item: item.position(),
-            }),
-            (ObjectList::Give, item) => ScreenAction::Act(Action::Give {
-                item: item.position(),
-                ally: None,
-            }),
             (ObjectList::ThrownExploit, item) => {
                 ScreenAction::Aim(AimKind::ThrownExploit(item.position()))
             }
-            (_, item) => ScreenAction::Aim(AimKind::Throw(item.position())),
+            (ObjectList::Throw, item) => ScreenAction::Aim(AimKind::Throw(item.position())),
+            // A list that only acts on the stack chosen (Temper, Salvage, Give, ...).
+            (list, item) => match list.spec().act {
+                Some(act) => ScreenAction::Act(act(item.position())),
+                None => ScreenAction::Stay,
+            },
         }
     }
 
@@ -679,19 +751,7 @@ impl ObjectScreen {
                 };
                 return ScreenAction::Act(match self.list {
                     ObjectList::PickUp => Action::PickUp(chosen),
-                    ObjectList::Inventory
-                    | ObjectList::Throw
-                    | ObjectList::ThrownExploit
-                    | ObjectList::Eat
-                    | ObjectList::Read
-                    | ObjectList::Identify(_)
-                    | ObjectList::Temper
-                    | ObjectList::Whittle
-                    | ObjectList::Salvage
-                    | ObjectList::MakeDo
-                    | ObjectList::Cut
-                    | ObjectList::Decipher
-                    | ObjectList::Give => Action::Drop(chosen),
+                    _ => Action::Drop(chosen),
                 });
             }
             nav => {
@@ -886,20 +946,11 @@ impl ObjectScreen {
                     format!("{page}{}{drop}{close}", with("look"))
                 }
             },
-            ObjectList::Eat => format!("{}   {page}Esc cancel", either("consume")),
-            ObjectList::Throw | ObjectList::ThrownExploit => {
-                format!("{}   {page}Esc cancel", either("choose"))
-            }
-            ObjectList::Read => format!("{}   {page}Esc cancel", either("read")),
-            ObjectList::Identify(_) => format!("{}   {page}Esc cancel", either("identify")),
-            ObjectList::Temper => format!("{}   {page}Esc cancel", either("temper")),
-            ObjectList::Whittle => format!("{}   {page}Esc cancel", either("whittle")),
-            ObjectList::Salvage => format!("{}   {page}Esc cancel", either("salvage")),
-            ObjectList::MakeDo => format!("{}   {page}Esc cancel", either("mend")),
-            ObjectList::Cut => format!("{}   {page}Esc cancel", either("cut")),
-            ObjectList::Decipher => format!("{}   {page}Esc cancel", either("decipher")),
-            ObjectList::Give => format!("{}   {page}Esc cancel", either("give")),
             ObjectList::PickUp => mark("pick up", "cancel"),
+            list => {
+                let verb = list.spec().verb.unwrap_or("choose");
+                format!("{}   {page}Esc cancel", either(verb))
+            }
         }
     }
 }

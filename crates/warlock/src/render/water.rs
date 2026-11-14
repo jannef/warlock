@@ -95,6 +95,19 @@ mod tests {
     use warlock_core::Pos;
 
     #[test]
+    fn shader_constants_match() {
+        let src = include_str!("console.wesl");
+        for (name, value) in [
+            ("FLOW_SPEED_STEPS", FLOW_SPEED_STEPS),
+            ("GLINT_PERIOD", GLINT_PERIOD),
+            ("GLINT_CHANCE", GLINT_CHANCE),
+            ("GLINT_LENGTH", GLINT_LENGTH),
+        ] {
+            assert_eq!(crate::render::wesl_const(src, name), value, "{name}");
+        }
+    }
+
+    #[test]
     fn flow_bytes_round_trip_direction_and_speed() {
         for dir in Dir::ALL {
             let (step, speed) = unpack_flow(flow_byte(Flow::new(dir, 100))).expect("flows");

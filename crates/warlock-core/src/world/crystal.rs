@@ -40,7 +40,6 @@
 //! [`Crystals::colour_of_affix`]: crate::content::Crystals::colour_of_affix
 
 use super::alignment::Deed;
-use super::ally::capital;
 use super::{Actor, Spent, World};
 use crate::action::{Meal, Positions};
 use crate::combat;
@@ -48,6 +47,7 @@ use crate::content::{ActionKind, AffixKind, StatUse};
 use crate::object::Stack;
 use crate::skills::Effect;
 use crate::stats::Stat;
+use crate::text::capitalized;
 
 /// What salvage's affix checks caught: the lines to say, in order, the stacks caught, and
 /// whether any check was made (Enchanting's mark).
@@ -131,8 +131,7 @@ impl World {
         };
         let me = self.state.player();
         let enchanting = content.skill_id("enchanting");
-        let modifier = me.effective_stats(&content).modifier(Stat::Willpower)
-            + me.talent_mods(&content).check(Stat::Willpower)
+        let modifier = me.check_modifier(&content, Stat::Willpower)
             + enchanting.map_or(0, |s| me.skill_effect_of(&content, s, Effect::Craft));
         for affix in &magic.affixes {
             let Some(def) = content.affixes().get(&affix.id) else {
@@ -150,7 +149,7 @@ impl World {
             let colour = crystals.colour_of_affix(&content, &affix.id);
             match colour.filter(|_| made) {
                 Some(colour) => {
-                    let a = crate::content::article(&colour.name);
+                    let a = crate::text::article(&colour.name);
                     let name = &colour.name;
                     caught
                         .lines
@@ -161,7 +160,7 @@ impl World {
                         None => caught.stacks.push(crystal),
                     }
                 }
-                None => (caught.lines).push(format!("{} goes out unread.", capital(&named))),
+                None => (caught.lines).push(format!("{} goes out unread.", capitalized(&named))),
             }
         }
         let rare = &crystals.rare;
@@ -183,7 +182,8 @@ impl World {
     /// What `actor`, a creature just dead, leaves in place of its body if a Soulglass blow
     /// killed it (module docs): its colour's crystals, perhaps a rare material, and the line
     /// saying so where the player sees its cell. `None` when no `crystal` spell struck it, or
-    /// its kind leaves no corpse, is an animated thing, or has no colour: it dies as it would.
+    /// its kind leaves no corpse, an everlasting one (it always leaves its corpse), is an
+    /// animated thing, or has no colour: it dies as it would.
     pub(super) fn crystallise(&mut self, actor: &Actor) -> Option<(Vec<Stack>, Option<String>)> {
         if self.glassing != Some(actor.id) {
             return None;
@@ -191,7 +191,8 @@ impl World {
         let content = self.content.clone();
         let crystals = content.crystals()?;
         let def = content.creature(actor.creature);
-        if content.corpse_of(actor.creature).is_none() || def.animated.is_some() {
+        if content.corpse_of(actor.creature).is_none() || def.everlasting || def.animated.is_some()
+        {
             return None;
         }
         let colour = crystals.colour_of(&content, actor.creature)?;

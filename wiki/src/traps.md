@@ -9,7 +9,7 @@ someone opens or kicks the [door](doors.md) (see [Trapped doors](#trapped-doors)
 
 You learn where a trap is in one of three ways:
 
-- you find it by [searching](searching.md#searching-1) or [in passing](searching.md#noticing-in-passing),
+- you find it by [searching](searching.md#how-to-search) or [in passing](searching.md#noticing-in-passing),
   which your [Detect traps](skills.md#skill-detect-traps) skill helps (see [Searching](searching.md)
   and [Skills](skills.md));
 - **you** set it off;
@@ -34,7 +34,7 @@ the arrow trap.", "You step lightly over the pit."). The trap stays where it is,
 the step takes its usual time. If you fail, it goes off as usual.
 
 The chance depends on your **[dodge](combat.md#defence)**. That is your
-[Dexterity](stats.md#stat-dexterity) modifier as your armour and [burden](burden.md#burden-1) leave
+[Dexterity](stats.md#stat-dexterity) modifier as your armour and [burden](burden.md#burden-levels) leave
 it (heavy armour and a heavy load cap it, as in [combat](combat.md)), plus every Dodge bonus you
 have: from the [Tumble](skills.md#skill-tumble) skill, [talents](talents.md), [magic](magic-items.md),
 your [stance](stances.md#stances), and your state. The chance is 55% at a dodge of 0. Each point
@@ -179,7 +179,7 @@ never sets it off, and stepping into it never asks.
 
 It goes off when someone **opens** the door, you or a creature that opens doors. That means `o`,
 walking into it, unlocking it with a [key](doors.md#keys), or [picking its lock](doors.md#picking-locks).
-It also goes off at every **[kick](doors.md#kicking)** at the door, whether the door breaks or
+It also goes off at every **[kick](doors.md#kicking-a-door-open)** at the door, whether the door breaks or
 holds. It strikes whoever opened or kicked it, from the door. An [arrow](traps.md#trap-arrow)
 shoots at them from the wall beside the door, a blade strikes at them, lightning runs from the door
 through them. A [fireball](traps.md#trap-fireball) bursts out on both sides of the door, even while
@@ -187,7 +187,7 @@ it is still shut. [Pits](traps.md#trap-pit) are never on doors.
 
 The trap stays with the door. Shut the door again and the trap is set again, ready for the next one
 who opens it, unless it has run out of charges. A door you kick in takes its trap with it.
-[Searching](searching.md#searching-1) finds a door's trap like any hidden trap ("You notice that the
+[Searching](searching.md#how-to-search) finds a door's trap like any hidden trap ("You notice that the
 door is trapped: an arrow trap."). Once you know it, it shows as `^` in place of the door. A
 [secret door](doors.md#secret-doors) is never trapped. A door's trap can be disarmed like any other
 (see [Disarming traps](#disarming-traps)).

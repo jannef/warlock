@@ -3,7 +3,8 @@
 Warlock is a GPU-rendered ASCII roguelike in Rust + Bevy. **`specification.md` is the source of
 truth** for what to build (an index over `spec/`, one file per section); this file is about *how*
 to work on it, and `docs/dev/` holds the notes per subsystem (the index is under "Architecture").
-Update them together whenever behavior, commands, or architecture change.
+Each kind of fact has one home and the others link to it (`docs/dev/merging.md` "One home per
+fact"): a change edits the homes of the facts it changes.
 
 ## Toolchain
 
@@ -69,6 +70,7 @@ then read the PNG.
 crates/warlock-core   plain Rust, no Bevy, deterministic simulation
 crates/warlock-cli    headless dev tool on top of core (no Bevy)
 crates/warlock        Bevy app: rendering, input, UI, effects, platform
+crates/workspace-hack no code: pins features so every member shares one warlock-core build (docs/dev/merging.md)
 xtask                 screenshot capture, golden-image comparison, vast level generator, benchmarks
 assets                fonts, data definitions, vaults, campaigns (each a world: levels, scenarios, ...)
 ```
@@ -198,7 +200,9 @@ list) into `wiki/src/generated/` (ignored by git: a build product) and pulled in
 links) on the Linux job, and the release workflow does the same before publishing (mdBook pinned in both). To
 preview: `cargo xtask wiki --build`, then open `wiki/book/index.html`. Tables sort by explicit
 keys (class, level, name), never by content file order. New pages go into
-`wiki/src/SUMMARY.md` by topic, never at the end; a new table is its own function in its
+`wiki/src/SUMMARY.md` by topic, never at the end, in the part where a player would look (the parts
+run in the order a player meets things: Getting started first, How the world works, the reference,
+last; #1522); a new table is its own function in its
 topic's module plus one line in `generate()` next to its topic. A page that grows past about
 250 lines is split into sub-pages by topic (flat files in `wiki/src/`, nested under the parent in
 `SUMMARY.md`; the parent keeps a short overview linking them), its moved anchors fixed everywhere
@@ -253,7 +257,8 @@ Known differences from older Bevy:
 - `Material2d`, `Mesh2d`, `MeshMaterial2d`, `AlphaMode2d` live in `bevy::sprite_render`.
 - Buffered events are **messages**: `MessageWriter<AppExit>`, `MessageReader<T>`; observers take
   `On<E>`.
-- Bevy features are trimmed in the workspace `Cargo.toml` (`default-features = false`). Adding a
+- Bevy features are trimmed in the workspace `Cargo.toml` (`default-features = false`, leaf
+  features only: no `bevy_text`, `bevy_state`, `bevy_animation`, or gizmos, #1590). Adding a
   Bevy feature is a deliberate change. `tonemapping_luts` is deliberately off (it pulls `ruzstd`
   0.8, RUSTSEC-2026-0344); cameras use `Tonemapping::None`, which also keeps palette colors exact.
 

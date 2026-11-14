@@ -5,8 +5,8 @@
 //! close." when they see a regenerating creature (its `regen` above 100) get a tenth of its hit
 //! points back in one passing of time.
 
-use super::talk::capitalized;
 use super::{ActorId, World};
+use crate::text::capitalized;
 
 impl World {
     /// Creature `id`'s hit points before time passes for it, if it regenerates (its type's

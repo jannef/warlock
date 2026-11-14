@@ -15,6 +15,7 @@ use crate::render::console::Console;
 use warlock_core::Action;
 use warlock_core::content::School;
 use warlock_core::perception::PerceptionView;
+use warlock_core::text::capitalized;
 
 /// Panel width: room for the longest spell name with its price and time.
 const WIDTH: i32 = 64;
@@ -160,15 +161,6 @@ impl ScribeScreen {
         } else {
             panel.footer(console, &format!("{choose} write   {page}Esc back"));
         }
-    }
-}
-
-/// `text` with its first letter in upper case ("Evocation").
-fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
     }
 }
 

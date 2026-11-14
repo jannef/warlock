@@ -60,9 +60,12 @@ close only once you are out.
 A Pit's floors forget, as [Grundlēas](dungeon-guide.md#grundlēas)'s do. Leave a floor and
 everything on it is gone, your memory of it too. Climb back up and the floor above is made again:
 the same caves, but its dead are back and its loot is new. A floor pays
-[experience](experience.md#discovery) for arriving only the first time you reach that depth of
+[experience](experience.md#experience-for-something-new) for arriving only the first time you reach that depth of
 that Pit.
 
 Your [allies](allies.md) come with you as anywhere else. Those too far away stay behind, and that
 is the last of them. Your [companion](companions.md#companions) or
 [familiar](familiars.md#familiars) is never left behind.
+
+See also: [Miscasts](miscasts.md#gates), [Dungeons and danger](dungeons.md), and
+[The dungeons one by one](dungeon-guide.md).

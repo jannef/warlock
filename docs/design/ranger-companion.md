@@ -1,5 +1,7 @@
 # Warlock — The ranger, the pet class: the animal companion
 
+**Built; this file is history.** Current behaviour is in spec §8 "The ranger's, thief's, and bard's tables" and "Allies", and `docs/dev/companion.md`.
+
 Design document for the owner's review (#825; first draft 2026-11-02, **revised 2026-11-03 for
 the owner's second round**, §18). Written against `origin/main` at 34e2d008, on the **merged**
 ally core of the druid's design (`docs/design/druid-and-summons.md` §4 and §14; A1 #836 the core,

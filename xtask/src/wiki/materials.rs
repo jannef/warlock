@@ -3,7 +3,7 @@
 //! metal.
 
 use super::order;
-use super::text::{capital, signed, yes};
+use super::text::{capital, percent, signed, yes};
 use std::fmt::Write as _;
 use warlock_core::content::{
     Content, Fit, MaterialDef, MaterialId, ObjectDef, PartRole, VERY_RARE,
@@ -159,19 +159,8 @@ pub(super) fn material_finds(content: &Content) -> String {
 }
 
 /// A share in parts per million as a percentage: 90%, 1.2%, 0.05%.
-fn percent(ppm: u32) -> String {
-    let p = f64::from(ppm) / 10_000.0;
-    if p == 0.0 {
-        "0%".to_string()
-    } else if p >= 10.0 {
-        format!("{p:.0}%")
-    } else if p >= 1.0 {
-        format!("{p:.1}%")
-    } else if p >= 0.01 {
-        format!("{p:.2}%")
-    } else {
-        "under 0.01%".to_string()
-    }
+fn per_million(ppm: u32) -> String {
+    percent(f64::from(ppm) / 10_000.0)
 }
 
 /// The items [`material_odds`] shows: a few of each use.
@@ -223,16 +212,16 @@ pub(super) fn material_odds(content: &Content) -> String {
             }
             others.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(b.1)));
             let likeliest: Vec<String> = (others.iter().take(3))
-                .map(|(w, name)| format!("{name} {}", percent(*w)))
+                .map(|(w, name)| format!("{name} {}", per_million(*w)))
                 .collect();
             let _ = writeln!(
                 out,
                 "| {} | {depth} | {} | {} | {} | {} | {} |",
                 capital(&def.name),
-                percent(by_fit[0]),
-                percent(by_fit[1]),
-                percent(by_fit[2]),
-                percent(by_fit[3]),
+                per_million(by_fit[0]),
+                per_million(by_fit[1]),
+                per_million(by_fit[2]),
+                per_million(by_fit[3]),
                 likeliest.join(", ")
             );
         }

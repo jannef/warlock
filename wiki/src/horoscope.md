@@ -96,7 +96,7 @@ number, only the band you start in.
 ## Picks for your sign
 
 Every animal and every element also has **one talent of the Stars tree that only those born under
-it may pick**. You pick it at a [level-up](experience.md#what-a-level-gives) or at character
+it may pick**. You pick it at a [level-up](experience.md#levelling-up) or at character
 creation, like any other [talent](talents.md#choices-and-prerequisites) whose prerequisites hold.
 Most ask for a [level](experience.md#levels) as well; a few ask for a [stat](stats.md) or a
 [weapon skill](weapon-skills.md). The Talents page and the level-up screen show only your own
@@ -158,7 +158,7 @@ start.
 
 The [calendar](time.md#the-calendar) and the moons touch a few gifts, a little:
 
-- On your birthday you [heal](healing.md#how-fast) faster.
+- On your birthday you [heal](healing.md#how-fast-you-heal) faster.
 - In the month you were born, your sign's actives rest sooner.
 - While the [moon](sun.md#moonlight) is full and up, the gifts that reach out reach farther.
 

@@ -142,7 +142,7 @@ impl World {
             return;
         }
         let seen = self.perception.shows(id);
-        let who = super::talk::capitalized(&self.called(me));
+        let who = crate::text::capitalized(&self.called(me));
         self.afflict(id, status, 1, Some(id), events);
         self.afflict(id, spent, degrees, Some(id), events);
         self.make_noise(id, Act::Attack(AttackKind::Spell));

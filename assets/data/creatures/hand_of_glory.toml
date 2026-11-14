@@ -24,7 +24,7 @@ weight = 600
 size = "small"
 stats = { strength = 13, dexterity = 18, toughness = 14, intelligence = 16, willpower = 22, presence = 16 }
 base_hp = 20
-resist = { poison = 100 }
+immune = ["poison"]
 corpse = false
 blood = "none"
 [creature.attack]

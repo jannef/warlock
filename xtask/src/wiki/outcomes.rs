@@ -3,7 +3,7 @@
 //! what a healing spring's drink may bring, per drink (`data/outcomes/spring.toml`); and what
 //! each gamble potion may bring, per draught (spec §8 "Potions").
 
-use super::text::capital;
+use super::text::{capital, percent};
 use std::fmt::Write as _;
 use warlock_core::alignment::Alignment;
 use warlock_core::content::{
@@ -18,8 +18,8 @@ fn altar(content: &Content) -> Option<&OutcomeTable> {
 }
 
 /// A share in percent, to two decimals.
-fn percent(p: f64) -> String {
-    format!("{:.2}%", p * 100.0)
+fn share(p: f64) -> String {
+    percent(p * 100.0)
 }
 
 /// What `effect` does, exactly, in words.
@@ -258,7 +258,7 @@ pub(super) fn altar_outcomes(content: &Content) -> String {
                 o.tier.id(),
                 capital(&o.id.replace('_', " ")),
                 o.weight,
-                percent(f64::from(o.weight) / f64::from(total.max(1))),
+                share(f64::from(o.weight) / f64::from(total.max(1))),
                 does(content, &o.effect),
                 lines(o),
             );
@@ -318,12 +318,12 @@ pub(super) fn altar_shares(content: &Content) -> String {
             kinds[0],
             kinds[1],
             kinds[2],
-            percent(nothing),
-            percent(tiers[OutcomeTier::Minor as usize]),
-            percent(tiers[OutcomeTier::Moderate as usize]),
-            percent(tiers[OutcomeTier::Great as usize]),
-            percent(burst),
-            percent(explodes),
+            share(nothing),
+            share(tiers[OutcomeTier::Minor as usize]),
+            share(tiers[OutcomeTier::Moderate as usize]),
+            share(tiers[OutcomeTier::Great as usize]),
+            share(burst),
+            share(explodes),
         );
     }
     let colour = |side: Alignment| match side {
@@ -414,7 +414,7 @@ fn per_draw(content: &Content, table: &OutcomeTable, draw: &str) -> String {
                 capital(kind.id()),
                 o.tier.id(),
                 capital(&o.id.replace('_', " ")),
-                percent(f64::from(w) / sum * f64::from(o.weight) / total),
+                share(f64::from(w) / sum * f64::from(o.weight) / total),
                 does(content, &o.effect),
                 lines(o),
             );

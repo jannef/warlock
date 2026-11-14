@@ -22,7 +22,8 @@ stats = { strength = 29, dexterity = 16, toughness = 30, intelligence = 14, will
 base_hp = 207
 natural = { defence = 2, protection = 2, name = "hide" }
 weapon_skills = { thrown = 1 }
-resist = { fire = 100, cold = -50 }
+resist = { cold = -50 }
+immune = ["fire"]
 on_eat = { message = "It is still warm, and tastes of soot.", vomit = 30 }
 [creature.attack]
 damage = "4d8"

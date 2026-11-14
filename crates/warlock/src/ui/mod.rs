@@ -32,6 +32,7 @@ mod circle_tracks;
 mod circles;
 mod controls_screen;
 mod craft_pick_screen;
+mod cursor;
 mod death_screen;
 mod describe_screen;
 mod dev;
@@ -52,6 +53,7 @@ mod magic_screen;
 mod menu;
 mod messages_screen;
 mod missiles;
+mod modal;
 pub(crate) mod more;
 mod motion;
 mod name_screen;
@@ -75,6 +77,7 @@ mod sounds;
 mod spells;
 #[cfg(test)]
 mod stale_list_tests;
+pub(crate) mod step_dialogs;
 mod story_screen;
 mod talents_screen;
 mod target;
@@ -84,7 +87,7 @@ mod zone_tint;
 
 pub use dialog_screen::Dialog;
 pub use menu::{Edit, Nav, Press, quit_dialog};
-pub use object_screen::IdentifyBy;
+pub use object_screen::{IdentifyBy, ObjectList};
 pub use screens::{MenuChoice, ScreenAction, ScreenName, ScreenStack, Screens};
 
 pub use dev::DevOverlays;

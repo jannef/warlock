@@ -308,7 +308,7 @@ impl World {
         radius: i32,
         events: &mut Vec<Event>,
     ) -> Spent {
-        if !self.can_loose_here() {
+        if !self.can_loose_here() || self.off_level_dev(at) {
             return Spent::Nothing;
         }
         let cells: Vec<Pos> = self.burst(at, radius).into_iter().collect();
@@ -323,6 +323,17 @@ impl World {
             at.y
         ));
         Spent::NoTime
+    }
+
+    /// Whether a dev burst's centre `at` lies off the current level, said if so: the dev bursts
+    /// (`zone:`, `freeze:`, `thaw:`) refuse it, with no time (a centre far off the map would
+    /// overflow their line of sight, #1569).
+    pub(super) fn off_level_dev(&mut self, at: Pos) -> bool {
+        let off = !self.state.current().terrain.in_bounds(at);
+        if off {
+            self.say(format!("{},{} is off the level (dev).", at.x, at.y));
+        }
+        off
     }
 
     /// A miscast's zone (`miscast.rs`): `kind` by `by` around `center`, within `radius` in its
@@ -453,8 +464,7 @@ impl World {
         if content.incorporeal(actor.creature).is_some() {
             return;
         }
-        let modifier = actor.effective_stats(&content).modifier(Stat::Dexterity)
-            + actor.talent_mods(&content).check(Stat::Dexterity);
+        let modifier = actor.check_modifier(&content, Stat::Dexterity);
         let pos = actor.pos;
         if check::check(&mut self.state.rng, modifier, SLICK_DIFFICULTY) {
             return;
@@ -462,7 +472,7 @@ impl World {
         if id == self.state.player {
             self.say("You slip on the slick ground!");
         } else if self.perception.sees_actors_at(pos) {
-            let who = super::talk::capitalized(&self.called(&self.state.actors[&id]));
+            let who = crate::text::capitalized(&self.called(&self.state.actors[&id]));
             self.say(format!("{who} slips."));
         }
         self.afflict(id, staggered, 1, Some(zone.by), events);

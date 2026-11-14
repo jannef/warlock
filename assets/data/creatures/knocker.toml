@@ -22,7 +22,8 @@ base_hp = 20
 natural = { defence = 3, protection = 0, name = "insubstantial form" }
 attack = { damage = "2d6", damage_type = "bludgeoning", name = "blow", verb = "hammers", to_hit = 3 }
 incorporeal = { wall_defence = 3 }
-resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50 }
+immune = ["poison"]
 corpse = false
 blood = "none"
 cry = { kind = "banging", loudness = 80, every = 60 }

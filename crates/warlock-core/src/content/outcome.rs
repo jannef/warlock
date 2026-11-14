@@ -33,6 +33,7 @@ use super::{
 };
 use crate::dice::Dice;
 use crate::magic::loot::LootGrade;
+use crate::rng::{WEIGHTS_OVERFLOW, weight_sum};
 use crate::stats::Stat;
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -495,6 +496,9 @@ fn resolve(id: &str, spec: TableSpec, content: &Content) -> Result<OutcomeTable,
     if kinds.iter().all(|&w| w == 0) {
         return Err("`kinds` weights are not all 0".into());
     }
+    if weight_sum(kinds).is_none() {
+        return Err(WEIGHTS_OVERFLOW.into());
+    }
     if spec.lean > spec.kinds.boon.min(spec.kinds.bane) {
         return Err("`lean` moves at most what the boon and the bane each have".into());
     }
@@ -529,6 +533,9 @@ fn resolve(id: &str, spec: TableSpec, content: &Content) -> Result<OutcomeTable,
             otherwise: o.otherwise,
             effect,
         });
+    }
+    if weight_sum(outcomes.iter().map(|o| o.weight)).is_none() {
+        return Err(WEIGHTS_OVERFLOW.into());
     }
     let table = OutcomeTable {
         id: id.to_string(),
@@ -609,7 +616,14 @@ fn resolve_effect(e: EffectSpec, content: &Content) -> Result<OutcomeEffect, Str
                 .ok_or_else(|| format!("unknown object `{}`", o.object))?;
             Ok((id, o.count, o.weight))
         })
-        .collect::<Result<_, String>>()?;
+        .collect::<Result<Vec<_>, String>>()?;
+    if !objects.is_empty() {
+        match weight_sum(objects.iter().map(|o| o.2)) {
+            Some(0) => return Err("`objects` weights are not all 0".into()),
+            None => return Err(WEIGHTS_OVERFLOW.into()),
+            Some(_) => {}
+        }
+    }
     // Shares of what one has: never more than all of it.
     if e.lose_coins > 100 || e.xp > 100 {
         return Err("`lose_coins` and `xp` are percents: 0 to 100".into());

@@ -29,7 +29,7 @@ weight = 55000
 stats = { strength = 11, dexterity = 17, toughness = 13, intelligence = 16, willpower = 14, presence = 12 }
 base_hp = 24
 skills = { stealth = 60, heal = 50 }
-resist = { poison = 100 }
+immune = ["poison"]
 weapon_skills = { daggers = 4, duelist = 1 }
 [[creature.gear]]
 chance = 100

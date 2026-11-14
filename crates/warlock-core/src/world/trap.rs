@@ -45,7 +45,7 @@ use crate::action::{Event, MissileEnd};
 use crate::check::check;
 use crate::combat::{self, Blow, Profile, Strike};
 use crate::content::StatUse;
-use crate::content::{ActionKind, Bolt, Effect, ObjectId, TrapEffect, TrapId, article};
+use crate::content::{ActionKind, Bolt, Effect, ObjectId, TrapEffect, TrapId};
 use crate::damage::Damage;
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
@@ -53,6 +53,7 @@ use crate::perception::VIEW_RADIUS;
 use crate::skills::{Effect as SkillEffect, Use};
 use crate::stats::Stat;
 use crate::talent::TalentMods;
+use crate::text::article;
 use std::collections::BTreeSet;
 
 /// How far past its victim a trap's missile flies on, at most, when it misses.
@@ -132,8 +133,7 @@ impl World {
         let pit = matches!(def.effect, TrapEffect::Pit { .. });
         let light = (talents.pit_proof && pit)
             || (talents.sure_step && {
-                let dexterity = player.effective_stats(&content).modifier(Stat::Dexterity)
-                    + talents.check(Stat::Dexterity);
+                let dexterity = player.check_modifier(&content, Stat::Dexterity);
                 check(&mut self.state.rng, dexterity, i32::from(def.difficulty))
             });
         if light {

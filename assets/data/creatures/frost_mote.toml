@@ -21,7 +21,8 @@ size = "small"
 stats = { strength = 9, dexterity = 15, toughness = 9, intelligence = 2, willpower = 18, presence = 2 }
 base_hp = 5
 natural = { protection = 2, name = "ice" }
-resist = { piercing = 25, cold = 100, fire = -50, poison = 100 }
+resist = { piercing = 25, fire = -50 }
+immune = ["cold", "poison"]
 corpse = false
 blood = "none"
 # A vortex (the dread design §5.3): beside its target it bursts instead of attacking, and is

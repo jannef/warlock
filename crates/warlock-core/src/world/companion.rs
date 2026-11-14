@@ -94,7 +94,7 @@ impl Actor {
 /// of the rares, else one of the race's list (`None` without the data or a list for the race).
 /// Two draws on `companion/<spec>`, and nothing else.
 pub fn draw(content: &Content, seed: u64, spec: &CharacterSpec) -> Option<CreatureId> {
-    let rules = content.companions()?;
+    let rules = &content.companions()?.start;
     let list = rules.list_of(&spec.race)?;
     let mut rng = Rng::stream(seed, &format!("companion/{spec}"));
     let rare = rng.below(1000) < rules.rare_per_mille;
@@ -135,7 +135,7 @@ impl World {
     /// Ally `id` as the subject of a sentence: its name ("Snel"), else "Your wolf".
     pub(super) fn ally_subject(&self, id: ActorId) -> String {
         if let Some(escort) = (self.state.actors.get(&id)).filter(|a| a.escorting().is_some()) {
-            return super::talk::capitalized(&self.called(escort));
+            return crate::text::capitalized(&self.called(escort));
         }
         match self.companion_words(id) {
             Some((name, _)) => name,

@@ -33,6 +33,7 @@ use crate::geom::Pos;
 use crate::noise::Act;
 use crate::object::{Stack, add_to_pile, phrase};
 use crate::skills::Use;
+use crate::text::capitalized;
 
 /// The sturdiness of a chest without a band (content without `data/chests.toml`).
 const STURDINESS: u8 = 20;
@@ -203,7 +204,7 @@ impl World {
         if !lost.is_empty() {
             let count: u32 = lost.iter().map(|s| s.count).sum();
             let verb = if count == 1 { "is" } else { "are" };
-            let lost = capitalize(&phrase(&lost, self.lore()));
+            let lost = capitalized(&phrase(&lost, self.lore()));
             self.say(format!("{lost} {verb} destroyed."));
         }
         if !kept.is_empty() {
@@ -239,7 +240,7 @@ impl World {
             let trap = &self.content.trap(kind).name;
             let text = format!(
                 "You notice that the {name} is trapped: {} {trap}.",
-                crate::content::article(trap)
+                crate::text::article(trap)
             );
             self.say(text);
         }
@@ -270,13 +271,5 @@ impl World {
             let found = phrase(found, self.lore());
             self.say(format!("Inside you find {found}."));
         }
-    }
-}
-
-fn capitalize(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
     }
 }

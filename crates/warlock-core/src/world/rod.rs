@@ -28,11 +28,11 @@
 //! Determinism: nothing here draws; a teleport's landing cell is the teleport trap's hash.
 
 use super::spell::burst_cells;
-use super::talk::capitalized;
 use super::{Actor, ActorId, Spent, World};
 use crate::action::{Breach, Event};
 use crate::content::{ActionKind, Content, Rod, RodDoes, RodEffect, RodShape};
 use crate::geom::Pos;
+use crate::text::capitalized;
 
 impl Actor {
     /// Where in its inventory the rod it has ready is: the first stack in a `ready` slot (the

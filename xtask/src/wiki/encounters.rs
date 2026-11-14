@@ -2,8 +2,7 @@
 //! campaign's `data/encounters/`; `docs/dev/encounters.md`): the rates by landscape and phase, the
 //! checks and their odds, the skill ladders, where everyone stands, and each campaign's tables.
 
-use super::combat::percent;
-use super::text::{Term, capital, link, signed};
+use super::text::{Term, capital, link, percent_of, signed};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{
@@ -184,7 +183,7 @@ pub(super) fn odds(_content: &Content) -> String {
     for edge in (-4..=20).step_by(2) {
         let _ = write!(out, "| {} |", signed(edge));
         for n in NEEDED {
-            let _ = write!(out, " {} |", percent(check::ways(edge, n), 144));
+            let _ = write!(out, " {} |", percent_of(check::ways(edge, n), 144));
         }
         out.push('\n');
     }
@@ -472,7 +471,7 @@ mod tests {
             "{checks}"
         );
         let odds = odds(&content);
-        assert!(odds.contains("| +0 | 69% | 54% |"), "{odds}");
+        assert!(odds.contains("| +0 | 68.8% | 54.2% |"), "{odds}");
         let ladders = ladders(&content);
         assert!(
             ladders.contains("[Spot](skills.md#skill-spot): lookout"),

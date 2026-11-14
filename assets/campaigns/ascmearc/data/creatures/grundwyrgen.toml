@@ -31,6 +31,7 @@ stats = { strength = 38, dexterity = 20, toughness = 38, intelligence = 14, will
 base_hp = 260
 natural = { defence = 4, protection = 5, name = "ancient hide" }
 resist = { cold = 50, fire = 25, poison = 25 }
+everlasting = true
 on_eat = { message = "Rank as the bottom of a mere.", vomit = 70, harm = "2d6" }
 blood = "#2a4a3a"
 # Two claws that seize and a bite, each struck in turn in one attack.

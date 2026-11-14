@@ -22,10 +22,11 @@
 
 use super::{ActorId, World};
 use crate::action::{AttackKind, Event};
-use crate::content::{ActionKind, CreatureId, CreatureSpawn, and_list, counted, the_start};
+use crate::content::{ActionKind, CreatureId, CreatureSpawn, counted, the_start};
 use crate::geom::Pos;
 use crate::noise::Act;
 use crate::sight::LineOfSight;
+use crate::text::{and_list, capitalized};
 
 impl World {
     /// Whether creature `id` summons now, at a hostile it sees at `at` (module docs).
@@ -101,18 +102,14 @@ impl World {
                     .fold(1u32, |w, &(_, by)| w.saturating_mul(by))
             })
             .collect();
-        let total = weights.iter().fold(0u32, |t, &w| t.saturating_add(w));
-        if total == 0 || weights.iter().all(|&w| w == 1) {
+        if weights.iter().all(|&w| w == 1) {
             return plain(self);
         }
-        let mut roll = self.state.rng.below(total);
-        for (i, &w) in weights.iter().enumerate() {
-            if roll < w {
-                return pool[i];
-            }
-            roll -= w;
+        let weighted: Vec<(CreatureId, u32)> = pool.iter().copied().zip(weights).collect();
+        match self.state.rng.weighted(&weighted, |&(_, w)| w) {
+            Some(&(creature, _)) => creature,
+            None => plain(self),
         }
-        pool[pool.len() - 1]
     }
 
     /// Creature `id` summons (its AI saw to it that it can). Returns the price: a `cast`.
@@ -204,17 +201,8 @@ impl World {
         } else {
             let one = seen.len() == 1 && seen[0].1 == 1;
             let verb = if one { "appears" } else { "appear" };
-            format!("{} {verb}!", capital(&list))
+            format!("{} {verb}!", capitalized(&list))
         };
         self.say(line);
-    }
-}
-
-/// `text` with its first letter upper-case.
-fn capital(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
     }
 }

@@ -22,18 +22,12 @@ pub(super) fn join(
     creature: CreatureId,
 ) -> Option<FactionId> {
     let factions = &content.creature(creature).factions;
-    let total: u32 = factions.iter().map(|&(_, w)| w).sum();
-    if total == 0 {
+    if factions.is_empty() {
         return None;
     }
-    let mut roll = Rng::court(seed, &id.0.to_string()).below(total);
-    for &(faction, weight) in factions {
-        if roll < weight {
-            return Some(faction);
-        }
-        roll -= weight;
-    }
-    unreachable!("a roll below the total weight falls in a faction")
+    let mut rng = Rng::court(seed, &id.0.to_string());
+    rng.weighted(factions, |&(_, w)| w)
+        .map(|&(faction, _)| faction)
 }
 
 impl World {

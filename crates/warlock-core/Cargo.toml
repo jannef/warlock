@@ -20,7 +20,7 @@ toml.workspace = true
 
 [dev-dependencies]
 insta.workspace = true
-proptest = "1.12"
+proptest.workspace = true
 
 [features]
 # The test world (`assets/campaigns/showcase/`), embedded only with this feature: on for every

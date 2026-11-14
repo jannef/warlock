@@ -59,6 +59,14 @@ impl RangedRules {
     }
 }
 
+impl super::RulesFile for RangedRules {
+    const PATH: &'static str = "data/ranged.toml";
+
+    fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
+        Self::parse(path, text)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

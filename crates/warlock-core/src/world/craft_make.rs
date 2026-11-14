@@ -953,19 +953,10 @@ pub(crate) fn craft_plan(
     Ok(CraftPlan {
         verb,
         name,
-        uses: joined(&uses),
+        uses: crate::text::and_list(&uses),
         station: def.station.map(|t| content.terrain(t).name.clone()),
         time: format!("about {}", Duration::seconds(u64::from(seconds)).spoken()),
     })
-}
-
-/// `items` joined as a list is said: "a, b and c".
-fn joined(items: &[String]) -> String {
-    match items {
-        [] => String::new(),
-        [one] => one.clone(),
-        [rest @ .., last] => format!("{} and {last}", rest.join(", ")),
-    }
 }
 
 /// A recipe's work under way: which, with what (positions in step order), and how long.
@@ -1080,9 +1071,8 @@ impl World {
         let content = &self.content;
         let stat = profession_stat(content, def, main);
         let me = self.state.player();
-        me.effective_stats(content).modifier(stat)
+        me.check_modifier(content, stat)
             + me.skill_effect_of(content, def.skill, Effect::Craft)
-            + me.talent_mods(content).check(stat)
             + fletch::fletcher_check(content, me, def)
             + self.binding_boon(def.skill)
     }

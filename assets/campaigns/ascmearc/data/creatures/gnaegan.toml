@@ -33,6 +33,7 @@ mana = 60
 skills = { initiative = 30, spot = 30 }
 natural = { defence = 2, protection = 0, name = "hairy hide" }
 resist = { poison = 50 }
+everlasting = true
 on_eat = { message = "It is rats, many rats, and none of them fresh.", vomit = 90, harm = "1d6" }
 blood = "#7a2a1a"
 # Three of its many mouths, each struck in turn in one attack.

@@ -1,5 +1,7 @@
 # Warlock — The monk renamed, a class of ki tricks
 
+**Built; this file is history.** Current behaviour is in spec §8 "The adventurers' class tables, and the class actives" and `docs/dev/progression.md`.
+
 Design document for the owner's review (2026-11-02), for #822. Written against `origin/main` at f3846261. Nothing here is implemented; §9 cuts it into issues. It builds on what is there: the class tables and their actives (`docs/dev/progression.md` "Class actives", `world/class_ability.rs`), the alternative resources and the Ki pool (`docs/dev/resources.md`, `data/resources.toml`), the statuses that ease by actions and what Surprised does (`docs/dev/status-effects.md`, `docs/dev/weapon-abilities.md`, `world/surprise.rs`), the free blows and their switches (`world/free_blow.rs`), the unarmed skill and the Brawler and Staff Fighter styles (`data/weapon_skills.toml`), the weapon abilities those styles teach (`data/weapon_abilities/`), and the talent coverage policy (`docs/dev/progression.md`, rules 1 to 9 of #776). Every number is data and hidden in the game; the wiki states it.
 
 **The owner's request** (2026-11-02, verbatim): *"Monk: create design issue to lean into ki tricks. Let's rename this to something else (Martial artist? idk)"*. The gaps report (#802) finds the monk's table full: this design reworks it rather than fills it.

@@ -105,7 +105,7 @@ one side a faction of its own by a legend override, as the arena's rats are `are
 (unharmed, it waits where it stands for a hostile it sees to come beside it; `world/lurk.rs`, one
 branch on `ai.rs::fight`'s plan; the meenlock and the barrow spider),
 `alignment` and `race` (`docs/dev/alignment.md`; read a creature's with `Actor::nature`, never the
-type's) (`content/creature.rs`, checked in `content/mod.rs`). Its `tags` (`content/tag.rs`, #441) are plain singular
+type's) (`content/creature.rs`, checked in `content/load_creatures.rs`). Its `tags` (`content/tag.rs`, #441) are plain singular
 words for quests and rules (`tag:goblin`, `docs/dev/quests.md` "Creature tags"), never the
 faction: **tag every new creature** of a group or role listed in the README (an undead of the
 `undead` faction must carry `undead`: `content::tag`'s test). Creature types live in `data/creatures/`,

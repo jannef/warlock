@@ -1,9 +1,8 @@
 //! Healing (spec §8 "Healing"), status effects (spec §8 "Status effects"), and diseases (spec §8
 //! "Diseases").
 
-use super::combat::percent;
 use super::order;
-use super::text::{Term, anchored, capital, link, signed, stat_link, yes};
+use super::text::{Term, anchored, capital, link, percent_of, signed, stat_link, yes};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Affliction, Content, DiseaseDef, DiseaseId, StatusDef};
@@ -737,7 +736,10 @@ pub(super) fn disease_checks(content: &Content) -> String {
         let odds: String = (CHECK_SCORES.iter())
             .map(|&s| {
                 let modifier = stats::modifier(i32::from(s));
-                format!(" {} |", percent(check::ways(modifier, def.difficulty), 144))
+                format!(
+                    " {} |",
+                    percent_of(check::ways(modifier, def.difficulty), 144)
+                )
             })
             .collect();
         let _ = writeln!(
@@ -801,7 +803,7 @@ pub(super) fn diseases(content: &Content) -> String {
         let resisted = format!(
             "{}, {}",
             stat_link(def.check),
-            percent(check::ways(0, def.difficulty), 144)
+            percent_of(check::ways(0, def.difficulty), 144)
         );
         let progresses = match def.interval {
             1 => "Every day".to_string(),

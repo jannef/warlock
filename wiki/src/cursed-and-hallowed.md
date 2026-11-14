@@ -25,7 +25,7 @@ was due to rise meanwhile rises as you return.
 **Consecrate.** A [priest](classes.md#priest) (from level 9) or [paladin](classes.md#paladin) (from
 level 12) of [Neutral or better](alignment.md) can lift the curse. Standing inside a
 [cursed](special-rooms.md#room-cursed), a [draining](special-rooms.md#room-draining), or a
-[haunted](special-rooms.md#room-haunted) room, they spend 15 [mana](mana.md#how-much) and pray for a
+[haunted](special-rooms.md#room-haunted) room, they spend 15 [mana](mana.md#how-much-mana-you-have) and pray for a
 minute (from the [abilities menu](abilities.md#the-abilities-menu)). Anything that would stop a
 [rest](resting.md#how-resting-works) stops the prayer, and then the mana and the time are lost.
 
@@ -39,7 +39,7 @@ consecrate."), costing nothing.
 
 Whispers are all you notice from outside ("You hear a whisper, and then nothing."), and inside it
 is too quiet ("It is very quiet here. Too quiet to sleep."). Nothing happens while you walk, fight,
-or [search](searching.md#searching-1) in it.
+or [search](searching.md#how-to-search) in it.
 
 But [rest](resting.md#how-resting-works) in it, and each time the clock strikes a full hour while
 you rest (1:00, 2:00, and so on, however long or short each of your rests is), one of the undead
@@ -65,7 +65,7 @@ hour.
   already standing on it when it was laid may move about on it and leave, but not come back.
 - Nothing new comes to the level there.
 - Arrows and spells still cross it.
-- Whoever stands on it [heals](healing.md#how-fast) and gets
+- Whoever stands on it [heals](healing.md#how-fast-you-heal) and gets
   [mana back](mana.md#how-fast-it-comes-back) three times as fast. In a sanctuary room the faster
   of the two counts; they do not add up.
 

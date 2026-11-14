@@ -20,6 +20,7 @@ stats = { strength = 12, dexterity = 14, toughness = 12, intelligence = 10, will
 base_hp = 14
 attack = { damage = "1d8", damage_type = "cold", name = "touch", verb = "touches", to_hit = 2 }
 incorporeal = { wall_defence = 2 }
-resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50 }
+immune = ["poison"]
 corpse = false
 blood = "none"

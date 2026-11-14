@@ -1,14 +1,13 @@
 //! The condition creature gear spawns in (spec §8 "Creature gear"; #1193): the odds by tribe from
 //! `data/gear_condition.toml`, exactly, and what damaged gear of each material is called.
 
+use super::text::percent;
 use std::fmt::Write as _;
 use warlock_core::content::{Content, ItemHarm, Odds, PER_MILLE};
 
 /// A per mille chance as a percentage, without trailing zeros.
-fn percent(per_mille: u32) -> String {
-    let text = format!("{:.1}", f64::from(per_mille) / 10.0);
-    let text = text.strip_suffix(".0").unwrap_or(&text);
-    format!("{text}%")
+fn per_mille(n: u32) -> String {
+    percent(f64::from(n) / 10.0)
 }
 
 /// One row of odds.
@@ -17,7 +16,7 @@ fn row(out: &mut String, who: &str, odds: &Odds) {
     let made = PER_MILLE - bands.iter().sum::<u32>();
     let _ = write!(out, "| {who} |");
     for n in bands.into_iter().chain([made]) {
-        let _ = write!(out, " {} |", percent(n));
+        let _ = write!(out, " {} |", per_mille(n));
     }
     out.push('\n');
 }
@@ -86,9 +85,14 @@ pub(super) fn gear_depth(content: &Content) -> String {
         let odds = row.odds();
         let _ = write!(out, "| {levels} |");
         for n in [odds.fine, odds.marvellous, odds.masterwork].map(u32::from) {
-            let _ = write!(out, " {} |", percent(n));
+            let _ = write!(out, " {} |", per_mille(n));
         }
-        let _ = writeln!(out, " {} | +{}% |", percent(odds.improved()), row.ornament);
+        let _ = writeln!(
+            out,
+            " {} | +{}% |",
+            per_mille(odds.improved()),
+            row.ornament
+        );
     }
     out
 }

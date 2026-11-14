@@ -46,14 +46,13 @@ impl World {
         {
             return Wriggled::No;
         }
-        let modifier = (me.effective_stats(&content).modifier(Stat::Dexterity))
-            .saturating_add(me.talent_mods(&content).check(Stat::Dexterity))
+        let modifier = me
+            .check_modifier(&content, Stat::Dexterity)
             .saturating_add(me.skill_effect(&content, SkillEffect::Escape));
         let Some(them) = self.state.actors.get(&id) else {
             return Wriggled::No;
         };
-        let nerve = them.effective_stats(&content).modifier(Stat::Willpower)
-            + them.talent_mods(&content).check(Stat::Willpower);
+        let nerve = them.check_modifier(&content, Stat::Willpower);
         let who = match seen {
             true => self.called(them),
             false => "something".to_string(),

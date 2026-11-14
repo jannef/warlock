@@ -71,7 +71,7 @@ chances:
 
 {{#include generated/companion-taming.md}}
 
-## Growth
+## How a companion grows
 
 A companion's level is **yours**. Whatever its kind's own level, it is raised to your level when it
 becomes yours and every time you gain a level ("Snel grows stronger."), and it never falls.

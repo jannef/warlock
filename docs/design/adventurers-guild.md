@@ -1,5 +1,7 @@
 # Warlock — The adventurers' guild: rolled quests in a chain, tribes, wanted criminals, unique items
 
+**Built; this file is history.** Current behaviour is in spec §7 "Guilds" and §8 "Quests", and `docs/dev/guild.md` and `docs/dev/quests.md`.
+
 Design document for the owner's review (2026-10-26). Written against `origin/main` at 1c0ce120, the approved campaign design (`docs/design/campaign.md`), and the code it produced (#327 hidden locations, #336 Cēaptūn, #340 its quests). Nothing here is implemented; §13 cuts it into issues. §14 records the owner's answers to the first draft's open questions (2026-10-26); §15 lists the follow-ups. Names and dialogue follow the world's language policy (§14, decision 13; the pass over existing text is #378).
 
 ## Contents

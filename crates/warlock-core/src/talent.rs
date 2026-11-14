@@ -24,6 +24,7 @@ use crate::dice::Dice;
 use crate::skills::{SkillId, Skills};
 use crate::stats::{PerStat, Stat, Stats};
 use crate::status::Effects;
+use crate::text::and_list;
 use crate::weapon_skills::WeaponSkills;
 use crate::world::{Actor, FreeBlows};
 use serde::{Deserialize, Serialize};
@@ -2677,24 +2678,9 @@ impl Refusal {
             Refusal::Held => format!("You have {name} already."),
             Refusal::Unmet(needs) => {
                 let words: Vec<String> = needs.iter().map(|n| n.words(content)).collect();
-                format!("You cannot take {name}: you need {}.", list(&words))
+                format!("You cannot take {name}: you need {}.", and_list(&words))
             }
         }
-    }
-}
-
-/// `a`, `a and b`, `a, b, and c`.
-fn list(words: &[String]) -> String {
-    list_with(words, "and")
-}
-
-/// `a`, `a or b`, `a, b, or c` with `joint` "or".
-pub(crate) fn list_with(words: &[String], joint: &str) -> String {
-    match words {
-        [] => String::new(),
-        [one] => one.clone(),
-        [a, b] => format!("{a} {joint} {b}"),
-        [rest @ .., last] => format!("{}, {joint} {last}", rest.join(", ")),
     }
 }
 
@@ -2899,7 +2885,7 @@ mod tests {
 
     #[test]
     fn lists_read_naturally() {
-        let w = |s: &[&str]| list(&s.iter().map(|s| s.to_string()).collect::<Vec<_>>());
+        let w = |s: &[&str]| and_list(s);
         assert_eq!(w(&["Strength 13"]), "Strength 13");
         assert_eq!(w(&["Strength 13", "Dodge"]), "Strength 13 and Dodge");
         assert_eq!(w(&["a", "b", "c"]), "a, b, and c");

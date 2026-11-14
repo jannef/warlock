@@ -23,7 +23,8 @@ weight = 80000
 stats = { strength = 39, dexterity = 33, toughness = 39, intelligence = 38, willpower = 40, presence = 38 }
 base_hp = 88
 natural = { defence = 8, protection = 0, name = "crackling form" }
-resist = { electricity = 100, piercing = 25, poison = 100 }
+resist = { piercing = 25 }
+immune = ["electricity", "poison"]
 corpse = false
 blood = "none"
 [creature.attack]

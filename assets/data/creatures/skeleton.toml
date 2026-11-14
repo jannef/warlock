@@ -20,7 +20,8 @@ weight = 12000
 stats = { strength = 12, dexterity = 11, toughness = 8, intelligence = 3, willpower = 20, presence = 2 }
 base_hp = 3
 attack = { damage = "1d4", damage_type = "slashing", name = "claw", verb = "claws" }
-resist = { piercing = 50, bludgeoning = -50, poison = 100 }
+resist = { piercing = 50, bludgeoning = -50 }
+immune = ["poison"]
 weapon_skills = { short_blades = 1, spears = 1 }
 corpse = false
 blood = "none"

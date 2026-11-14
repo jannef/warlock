@@ -118,7 +118,7 @@ impl World {
                 continue;
             }
             if self.perception.sees_actors_at(them.pos) {
-                fled.push(super::talk::capitalized(&self.called(them)));
+                fled.push(crate::text::capitalized(&self.called(them)));
             }
             self.afflict(id, bay.status, bay.severity, Some(player), events);
         }

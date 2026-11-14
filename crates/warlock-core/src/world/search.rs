@@ -44,11 +44,12 @@ use super::{ActorId, World};
 use crate::action::Event;
 use crate::check::check;
 use crate::content::StatUse;
-use crate::content::{ActionKind, PassiveSearch, RaceDef, TrapId, article};
+use crate::content::{ActionKind, PassiveSearch, RaceDef, TrapId};
 use crate::geom::Pos;
 use crate::sight::LineOfSight;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::text::article;
 use std::cell::Cell;
 
 /// A hidden feature on a cell of the current level.
@@ -149,7 +150,6 @@ impl World {
     pub(super) fn search_modifier(&self, look: Look, hidden: Hidden) -> i32 {
         let content = &self.content;
         let player = self.state.player();
-        let stats = player.effective_stats(content);
         let race = self.player_race().map_or(0, |r| r.search);
         let talents = player.talent_mods(content);
         // A hidden trap is Detect traps' to find, either way.
@@ -161,16 +161,14 @@ impl World {
         // Talents that add to every check of a stat (spec §8 "Class abilities": Iron will).
         let own = match look {
             Look::Active => {
-                stats.modifier(Stat::Intelligence)
+                player.check_modifier(content, Stat::Intelligence)
                     + skill(player.skill_effect(content, Effect::Search))
                     + talents.searching
-                    + talents.check(Stat::Intelligence)
             }
             Look::Passive => {
-                stats.modifier(Stat::Willpower)
+                player.check_modifier(content, Stat::Willpower)
                     + skill(player.skill_effect(content, Effect::Spot))
                     + talents.notice.unwrap_or(0)
-                    + talents.check(Stat::Willpower)
                     - content.search().passive_penalty
             }
         };

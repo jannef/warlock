@@ -8,7 +8,7 @@ striking you are. If you know Dungeons & Dragons: [Toughness](stats.md#stat-toug
 
 Your stats are set when you create your character at the start of a run. Your [race](races.md), your
 gender, and your [class](classes.md) each add to or take from the average of 10 (see
-[Your character](character.md)). After that, they grow by use (see [Training](#training) below).
+[Your character](character.md)). After that, they grow by use (see [Raising your stats](#raising-your-stats) below).
 
 ## Seeing your stats
 
@@ -18,7 +18,7 @@ Press `@` to open the **character screen**. It shows:
 - your age, birthday, and [birth sign](horoscope.md);
 - your stats in the order above, with their short names. A stat that a [status effect](status-effects.md#how-they-work) or a
   [disease](diseases.md#how-a-disease-goes) lowers is shown lowered, in red;
-- your [hit points](hit-points.md#hit-points), [mana](mana.md#how-much) (see [Mana](mana.md)), and [Defence](combat.md#defence) (see [Combat](combat.md));
+- your [hit points](hit-points.md#hit-points), [mana](mana.md#how-much-mana-you-have) (see [Mana](mana.md)), and [Defence](combat.md#defence) (see [Combat](combat.md));
 - your weight: your own, plus what you carry (see [Objects and your pack](objects.md)), and how much you can carry (see
   [Burden](burden.md)).
 
@@ -30,10 +30,10 @@ Looking takes no time. Press `@` or `Esc` to close it.
 ## What they do
 
 Stats matter in a fight (see [Combat](combat.md)), under a load (see [Burden](burden.md)), at a door (see
-[Doors](doors.md)), and for your [mana](mana.md#how-much) (see [Mana](mana.md)):
+[Doors](doors.md)), and for your [mana](mana.md#how-much-mana-you-have) (see [Mana](mana.md)):
 
 - **[Strength](stats.md#stat-strength)** helps you [hit](combat.md#hitting) up close, adds to the [damage](combat.md#damage) of your blows, and draws a bow. It counts
-  double toward how much you can [carry](burden.md#how-much-you-can-carry). The stronger you are, the sooner you kick a [door](doors.md#kicking) in
+  double toward how much you can [carry](burden.md#how-much-you-can-carry). The stronger you are, the sooner you kick a [door](doors.md#kicking-a-door-open) in
   and [dig](digging.md#digging) through a wall.
 - **[Dexterity](stats.md#stat-dexterity)** helps you aim a shot or a throw and dodge blows. It adds to your [Defence](combat.md#defence), but less
   under a heavy load or in heavy armour.
@@ -45,7 +45,7 @@ Stats matter in a fight (see [Combat](combat.md)), under a load (see [Burden](bu
   back sooner, and it fights off a few [diseases](diseases.md#how-a-disease-goes) (brain fever). It strengthens the spells whose
   [ladders](magic.md#the-spells) name it: most spells' reach, and some spells' damage or healing.
 - **[Presence](stats.md#stat-presence)** moves [shop](shops.md) prices in your favour, or against you if it is low. It adds to your
-  [mana](mana.md#how-much), and strengthens the spells whose [ladders](magic.md#the-spells) name it: how long a blessing or a hex lasts.
+  [mana](mana.md#how-much-mana-you-have), and strengthens the spells whose [ladders](magic.md#the-spells) name it: how long a blessing or a hex lasts.
 
 ### Modifiers
 
@@ -64,7 +64,7 @@ Every stat also has a **potential**: how far it can grow for good. The game neve
 
 - [Magic items](magic-items.md) raise a stat only while you wear them, whatever the potential.
 - Training gets more expensive past the potential but carries on. It never moves the potential
-  itself (see [Training](#training)).
+  itself (see [Raising your stats](#raising-your-stats)).
 - Only elixirs, and rarely a fresh [corpse](food.md#corpses), widen the potential.
 
 Yours are set at the start of a run. Each is the potential your [race](races.md) gives, rolled once. It is
@@ -90,20 +90,20 @@ For good:
 
 - Eating the [corpse](food.md#corpses) of some [creatures](creatures.md) may raise a stat, as far as it can grow (see
   [Food and corpses](food.md)).
-- [Training](#training) may raise a stat at a new level or at dawn.
+- [Training](#raising-your-stats) may raise a stat at a new level or at dawn.
 - The touch of some undead lowers a stat ([Drained stats](#drained-stats)), and so may a check after
   [deeds that cost marks](#losing-marks).
 
 Nothing else raises or lowers them for good.
 
-## Training
+## Raising your stats
 
 You never pick a stat to raise. Instead, your stats grow with what you do:
 
 - **[Strength](stats.md#stat-strength)**: fighting up close, landing [criticals](combat.md#criticals), blocking with a shield.
 - **[Dexterity](stats.md#stat-dexterity)**: dodging, parrying, shooting.
 - **[Toughness](stats.md#stat-toughness)**: being hurt, felling worthy foes.
-- **[Intelligence](stats.md#stat-intelligence)**: reading, [searching](searching.md#searching-1).
+- **[Intelligence](stats.md#stat-intelligence)**: reading, [searching](searching.md#how-to-search).
 - **[Willpower](stats.md#stat-willpower)**: enduring, noticing, casting.
 - **[Presence](stats.md#stat-presence)**: talking, trading.
 
@@ -208,10 +208,10 @@ stat's [modifier](stats.md#modifiers) against the drain's difficulty, as for a [
   Your score is simply lower from then on, for everything it does.
 
 A drain of [Toughness](stats.md#stat-toughness) lowers your maximum [hit points](hit-points.md#hit-points). A drain of [Intelligence](stats.md#stat-intelligence), [Willpower](stats.md#stat-willpower), or [Presence](stats.md#stat-presence) lowers
-your maximum [mana](mana.md#how-much). A drain never kills you, and never takes a score below 3 (nor below what
+your maximum [mana](mana.md#how-much-mana-you-have). A drain never kills you, and never takes a score below 3 (nor below what
 the [stat damage](diseases.md#stat-damage) on it needs). [Resting](resting.md#how-resting-works) never brings drained points back.
 
-Your **[potential](stats.md#potentials)** stays where it was, so a drained stat can grow back by [training](#training) and corpses
+Your **[potential](stats.md#potentials)** stays where it was, so a drained stat can grow back by [training](#raising-your-stats) and corpses
 like any other. A temple's **mending** gives every drained point back at once, along with any
 [stat damage](diseases.md#stat-damage) (see [Services](npcs.md#services)).
 

@@ -10,6 +10,7 @@
 //! mentions it (#256).
 
 use super::chargen_screen::ScenarioPick;
+use super::cursor;
 use super::menu::{HINTS, Nav, Panel, Press, wrap};
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{TEXT, TEXT_DIM};
@@ -144,8 +145,8 @@ impl NewRunScreen {
         }
         match press.nav {
             Nav::Back => return ScreenAction::Close,
-            Nav::Up if count > 0 => self.selected = (self.selected + count - 1) % count,
-            Nav::Down if count > 0 => self.selected = (self.selected + 1) % count,
+            Nav::Up => self.selected = cursor::up(self.selected, count),
+            Nav::Down => self.selected = cursor::down(self.selected, count),
             Nav::Erase => {
                 if let Seed::Field(seed) = &mut self.seed {
                     seed.pop();
@@ -303,9 +304,7 @@ pub fn fresh_seed() -> u64 {
     #[cfg(not(target_arch = "wasm32"))]
     let noise = {
         use std::hash::BuildHasher;
-        let nanos = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_or(0, |d| d.as_nanos() as u64);
+        let nanos = crate::utc::since_epoch().as_nanos() as u64;
         nanos ^ std::collections::hash_map::RandomState::new().hash_one(nanos)
     };
     mix(noise) >> 32

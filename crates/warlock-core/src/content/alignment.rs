@@ -217,6 +217,14 @@ impl AlignmentRules {
     }
 }
 
+impl super::RulesFile for AlignmentRules {
+    const PATH: &'static str = "data/alignment.toml";
+
+    fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
+        Self::parse(path, text)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

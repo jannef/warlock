@@ -60,13 +60,14 @@ use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Category, Profile, Strike, Target};
 use crate::content::{
     ActionKind, Build, Content, CreatureId, DamageTypeId, Grip, ObjectDef, ObjectId, Role, Stance,
-    StatusId, TrapId, WeaponSkillId, article,
+    StatusId, TrapId, WeaponSkillId,
 };
 use crate::damage::{self, Damage, Protection, Resistances};
 use crate::geom::Dir;
 use crate::noise::Act;
 use crate::object;
 use crate::skills::Use;
+use crate::text::{article, capitalized};
 use crate::time::GameTime;
 use serde::{Deserialize, Serialize};
 
@@ -511,13 +512,6 @@ pub(super) fn driven_message(who: End<'_>) -> String {
         End::Named(name) => format!("{name} is driven back."),
         End::Unseen | End::Trap(_) => "Something is driven back.".into(),
     }
-}
-
-fn capitalized(text: &str) -> String {
-    let mut chars = text.chars();
-    chars
-        .next()
-        .map_or_else(String::new, |c| c.to_uppercase().chain(chars).collect())
 }
 
 impl World {
@@ -1267,8 +1261,10 @@ impl World {
             self.hex_tithe(id);
             // What crawls out of its corpse (`split.rs`).
             let crawled = self.dies_into(id);
-            // Turned to stone, it leaves a statue (`statue.rs`).
-            let stoned = of.is_some_and(|s| self.content.status(s).statue);
+            // Turned to stone, it leaves a statue (`statue.rs`); an everlasting creature always
+            // leaves its corpse.
+            let stoned = of.is_some_and(|s| self.content.status(s).statue)
+                && !self.content.creature(creature).everlasting;
             // A business partner takes the stake with them (`invest.rs`).
             self.partner_dies(id);
             // A patron's open commission is off (`patron.rs`).

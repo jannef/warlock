@@ -11,7 +11,7 @@ A familiar is a **kept** beast, under the same rules as a companion:
 - It wears a [collar](companions.md#the-collar).
 - It has a name, drawn from those the English witch trials recorded ("Tibb, your cat, winds about
   your ankles.").
-- It stays until it is slain, and its level is hers ([growth](companions.md#growth)).
+- It stays until it is slain, and its level is hers ([growth](companions.md#how-a-companion-grows)).
 - It [always comes along](companions.md#companions).
 - It dies as a companion does, leaving a corpse.
 
@@ -90,7 +90,7 @@ They differ in those, never in the hex.
 {{#include generated/familiar-rules.md}}
 
 These beasts can only be familiars. Here they are at her level, by the same
-[growth](companions.md#growth) rules as a companion's (the rest are in that table):
+[growth](companions.md#how-a-companion-grows) rules as a companion's (the rest are in that table):
 
 {{#include generated/familiar-growth.md}}
 
