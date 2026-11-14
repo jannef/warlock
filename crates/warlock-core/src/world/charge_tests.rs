@@ -297,7 +297,11 @@ fn battle_rhythm_gives_a_point_a_melee_hit_and_two_a_kill() {
     assert_eq!(stamina(&rhythm), stamina(&plain) + 1, "{:#?}", said(&plain));
     let [(plain, out), (rhythm, _)] = rhythm_twins(1);
     assert!(hit(&out));
-    assert_eq!(stamina(&rhythm), stamina(&plain) + 2, "a killing blow: two in all");
+    assert_eq!(
+        stamina(&rhythm),
+        stamina(&plain) + 2,
+        "a killing blow: two in all"
+    );
     // Never past the pool's maximum.
     let mut w = world("######\n#@p..#\n######\n");
     let player = w.player_id();
