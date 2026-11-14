@@ -30,6 +30,7 @@ use crate::geom::Pos;
 use crate::item_parts::ItemPart;
 use crate::magic::loot::pick_weighted;
 use crate::object::{self, Stack};
+use crate::rng::draw;
 use crate::skills::Effect;
 use crate::world::World;
 
@@ -71,10 +72,12 @@ impl World {
         let modifier = me.check_modifier(&content, rules.stat)
             + me.skill_effect_of(&content, rules.skill, Effect::Craft);
         let vein = rules.vein_of(wall);
-        if vein.is_none() && !self.state.rng.chance(u32::from(band.chance)) {
+        // The strike: whether anything is there, the check, what, and a gem: one stream.
+        let mut rng = draw!(self, "mine/player");
+        if vein.is_none() && !rng.chance(u32::from(band.chance)) {
             return;
         }
-        let natural = combat::roll_natural(&mut self.state.rng);
+        let natural = combat::roll_natural(&mut rng);
         let margin = natural + modifier - band.difficulty;
         let made = natural == combat::HIGHEST || (natural != combat::FUMBLE && margin >= 0);
         let count = (1 + margin.max(0) / rules.more_every).clamp(1, rules.most as i32) as u32;
@@ -90,15 +93,13 @@ impl World {
             .map(|list| list.iter().filter_map(|m| content.material_id(m)).collect());
         let danger = content.floor_danger(&here, self.player_level());
         let table = rules.at(danger, ores.as_deref());
-        let Some(&row) = pick_weighted(&mut self.state.rng, &table) else {
+        let Some(&row) = pick_weighted(&mut rng, &table) else {
             return;
         };
         let found = match rules.finds[row].what {
             Mined::Ore(metal) => Some(ore(&content, rules, metal, count)),
             Mined::Piece(material) => crate::piece::make(&content, material, count),
-            Mined::Gem => {
-                crate::gem::uncut(&content, &mut self.state.rng, content.item_level(&here))
-            }
+            Mined::Gem => crate::gem::uncut(&content, &mut rng, content.item_level(&here)),
         };
         if let Some(found) = found {
             self.lay_mined(at, found);

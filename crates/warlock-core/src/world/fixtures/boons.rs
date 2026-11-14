@@ -29,6 +29,7 @@
 //! [`DRAIN_FLOOR`]: crate::stats::DRAIN_FLOOR
 
 use crate::dice::Dice;
+use crate::rng::draw;
 use crate::stats::{DRAIN_FLOOR, Stat};
 use crate::talent::{self, Taken};
 use crate::world::{World, classes::class};
@@ -37,8 +38,9 @@ impl World {
     /// Gift of the forgotten: a random stat's score and potential rise by `dice`, for good.
     pub(super) fn gift_stat(&mut self, dice: Dice) {
         let content = self.content.clone();
-        let stat = Stat::ALL[self.state.rng.index(Stat::ALL.len())];
-        let points = dice.roll(&mut self.state.rng).max(1);
+        let mut rng = draw!(self, "boons/gift_stat/player");
+        let stat = Stat::ALL[rng.index(Stat::ALL.len())];
+        let points = dice.roll(&mut rng).max(1);
         let me = self.player_mut();
         let before = me.max_hp(&content);
         me.stats.gift(stat, points);
@@ -51,8 +53,9 @@ impl World {
     /// Wrath of the forgotten: a random stat's potential and score fall by `dice`, for good,
     /// never below [`DRAIN_FLOOR`]. Whether anything fell.
     pub(super) fn wrath_stat(&mut self, dice: Dice) -> bool {
-        let stat = Stat::ALL[self.state.rng.index(Stat::ALL.len())];
-        let points = u8::try_from(dice.roll(&mut self.state.rng).max(1)).unwrap_or(u8::MAX);
+        let mut rng = draw!(self, "boons/wrath_stat/player");
+        let stat = Stat::ALL[rng.index(Stat::ALL.len())];
+        let points = u8::try_from(dice.roll(&mut rng).max(1)).unwrap_or(u8::MAX);
         let me = self.player_mut();
         let fell = me.stats.lessen(stat, points, DRAIN_FLOOR);
         let score = me.stats.score(stat);
@@ -135,7 +138,7 @@ impl World {
             return false;
         }
         found(self);
-        let (id, choice) = ways[self.state.rng.index(ways.len())].clone();
+        let (id, choice) = ways[draw!(self, "boons/talent/player").index(ways.len())].clone();
         self.bestow(&id, choice.as_deref());
         let def = content
             .talents()
@@ -161,7 +164,7 @@ impl World {
             return false;
         }
         found(self);
-        let id = flaws[self.state.rng.index(flaws.len())].clone();
+        let id = flaws[draw!(self, "boons/flaw/player").index(flaws.len())].clone();
         self.bestow(&id, None);
         let def = content
             .talents()

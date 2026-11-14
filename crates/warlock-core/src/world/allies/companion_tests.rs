@@ -436,6 +436,7 @@ fn the_companion_grows_with_its_masters_level() {
     let content = &*BUILTIN;
     let growth = content.companions().unwrap().growth;
     let mut w = kitted("human,male,ranger", 7);
+    crate::test_support::ungrade(&mut w);
     let (beast, data) = companion_of(&w);
     let own = content.creature(beast.creature).level;
     let (grade0, hp0) = (data.grade, beast.max_hp(content));

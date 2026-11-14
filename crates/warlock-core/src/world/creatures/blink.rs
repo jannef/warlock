@@ -24,6 +24,7 @@
 use crate::action::Event;
 use crate::content::{ActionKind, the_start};
 use crate::geom::Pos;
+use crate::rng::draw;
 use crate::sight::LineOfSight;
 use crate::world::{ActorId, World};
 
@@ -78,7 +79,7 @@ impl World {
         }
         let to = match cells.len() {
             1 => cells[0],
-            n => cells[self.state.rng.index(n)],
+            n => cells[draw!(self, "blink/{}", self.state.actors.key(id)).index(n)],
         };
         self.teleport_to(id, (from, to), events);
         self.afflict(id, blinks.status, blinks.degrees, None, events);

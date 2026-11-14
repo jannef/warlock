@@ -24,6 +24,7 @@ use crate::action::Event;
 use crate::check::check;
 use crate::content::ActionKind;
 use crate::geom::{Dir, Pos};
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::world::{Spent, World};
@@ -68,7 +69,7 @@ impl World {
             ActionKind::OpenDoor
         };
         let open_price = self.price_of(player, opens);
-        let picked = check(&mut self.state.rng, modifier, difficulty);
+        let picked = check(&mut draw!(self, "lockpick/player"), modifier, difficulty);
         if self.trains(Use::Pick) {
             self.train(Use::Pick);
         }

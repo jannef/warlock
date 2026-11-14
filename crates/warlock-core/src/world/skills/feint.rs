@@ -33,6 +33,7 @@ use crate::action::Event;
 use crate::check;
 use crate::content::{ActionKind, Build, Stance};
 use crate::geom::Dir;
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::text::capitalized;
@@ -72,7 +73,7 @@ impl World {
             + me.skill_effect(&content, Effect::Feint);
         let them = &self.state.actors[&foe];
         let nerve = them.check_modifier(&content, Stat::Willpower);
-        if check::check(&mut self.state.rng, nerve, difficulty) {
+        if check::check(&mut draw!(self, "feint/{}", them.key), nerve, difficulty) {
             self.say(format!("{name} is not fooled."));
         } else {
             self.afflict(foe, rules.status, 1, Some(player), events);

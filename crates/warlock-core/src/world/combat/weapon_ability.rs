@@ -37,6 +37,7 @@ use crate::content::{
 use crate::damage::Damage;
 use crate::dice::{Dice, Roll};
 use crate::geom::Pos;
+use crate::rng::draw;
 use crate::talent::TalentMods;
 use crate::text::capitalized;
 use crate::world::{Actor, ActorId, AttackSkills, Spent, World};
@@ -203,7 +204,13 @@ impl World {
                     let severity = match turns {
                         Some(dice) => {
                             let max = i32::from(content.status(status).max);
-                            let rolled = dice.roll(&mut self.state.rng).clamp(1, max);
+                            let mut rng = draw!(
+                                self,
+                                "weapon_ability/status/{}/{}",
+                                self.state.actors.key(by),
+                                self.state.actors.key(whom)
+                            );
+                            let rolled = dice.roll(&mut rng).clamp(1, max);
                             u16::try_from(rolled).unwrap_or(1)
                         }
                         None => severity,
@@ -300,9 +307,8 @@ impl World {
             content.creature(them.creature).name.clone(),
             content.creature(them.creature).death_verb().to_string(),
         );
-        let amount: i32 = (rolls.iter())
-            .map(|d| d.roll(&mut self.state.rng).max(0))
-            .sum();
+        let mut rng = draw!(self, "weapon_ability/harm/{}/{}", me.key, them.key);
+        let amount: i32 = rolls.iter().map(|d| d.roll(&mut rng).max(0)).sum();
         let amount = self.resisted(target, Damage { amount, kind });
         let end = if seen_them {
             End::Seen(&names.1)

@@ -43,6 +43,7 @@ use crate::action::{Meal, Positions};
 use crate::combat;
 use crate::content::{ActionKind, AffixKind, StatUse};
 use crate::object::Stack;
+use crate::rng::draw;
 use crate::skills::Effect;
 use crate::text::capitalized;
 use crate::world::character::alignment::Deed;
@@ -135,7 +136,7 @@ impl World {
             let Some(def) = content.affixes().get(&affix.id) else {
                 continue;
             };
-            let natural = combat::roll_natural(&mut self.state.rng);
+            let natural = combat::roll_natural(&mut draw!(self, "crystal/salvage/player"));
             let made = crate::check::makes(natural, modifier, rules.salvage_against(affix));
             caught.checked = true;
             // The affix by name only where the player knows the item's magic.
@@ -164,9 +165,9 @@ impl World {
         let rare = &crystals.rare;
         if magic.rarity == crate::content::Rarity::Rare
             && magic.level >= rare.salvage_level
-            && self.state.rng.chance(u32::from(rare.salvage_chance))
+            && draw!(self, "crystal/rare_salvage/player").chance(u32::from(rare.salvage_chance))
         {
-            let pick = self.state.rng.index(rare.materials.len());
+            let pick = draw!(self, "crystal/rare_salvage/player").index(rare.materials.len());
             let found = rare.materials[pick];
             let what = content.object(found).describe(1);
             caught
@@ -203,8 +204,10 @@ impl World {
         let rare = &crystals.rare;
         if def.tags.contains(&rare.tag) {
             left.push(Stack::new(rare.dragon, 1));
-        } else if def.level >= rare.level && self.state.rng.chance(u32::from(rare.chance)) {
-            let pick = self.state.rng.index(rare.materials.len());
+        } else if def.level >= rare.level
+            && draw!(self, "crystal/rare_unbind/player").chance(u32::from(rare.chance))
+        {
+            let pick = draw!(self, "crystal/rare_unbind/player").index(rare.materials.len());
             left.push(Stack::new(rare.materials[pick], 1));
         }
         let seen =

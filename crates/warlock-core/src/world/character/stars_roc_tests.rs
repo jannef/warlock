@@ -139,7 +139,7 @@ fn hoard_sense_finds_magic_and_gems_more_often_from_the_same_draws() {
     );
     let content = &*BUILTIN;
     let gems = |luck: Luck| {
-        let mut rng = Rng::gameplay(3);
+        let mut rng = Rng::stream(3, "stars-test");
         (0..4000)
             .filter_map(|_| {
                 crate::magic::loot::roll_with(
@@ -221,6 +221,7 @@ fn beside(world: &mut World, creature: &str, hp: i32) -> ActorId {
     let def = content.creature(creature);
     let actor = Actor {
         id,
+        key: format!("test/{}", id.0),
         creature,
         pos: at,
         patrol: None,

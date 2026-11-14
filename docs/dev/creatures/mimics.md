@@ -60,7 +60,7 @@ Every mimic is placed **disguised** (`travel::make_creature` adds the status tha
 status the player never saw), says the line when the cell is in sight (`Perception::in_sight`;
 `Found` always), and on a touch strikes. A revealed mimic never hides again.
 
-Draws: none of its own; the touch's blow is the gameplay stream's as any attack, the search
+Draws: none of its own; the touch's blow is its keyed stream's as any attack, the search
 checks too. A run that never meets a mimic is unchanged.
 
 ## Talents

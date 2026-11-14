@@ -9,7 +9,7 @@ once, flies along `Pos::ray` (the line the AI's `clear_shot` checks) over transp
 as the weapon's `range`, attacks whoever stands in its way (`World::missile_hits`, no noise) until
 one is hit (or caught: Diamond soul's catch sets `World::caught` and the flight ends on that
 cell, a miss; `world/classes/ascetic.rs`, a trap's `trap_shot` alike), and comes down (`come_down`) on
-top of the pile, unless it broke (`breaks`, one gameplay draw on a hit) or the cell is not
+top of the pile, unless it broke (`breaks`, one keyed draw on a hit) or the cell is not
 walkable. What is `lit` flies as its burning object and
 starts a fire (`LevelState::fires`, saved): a light source in `LightCache::sources` while the clock
 is before its end, cleaned up by `World::burn_out` at the start of `perceive`. Prices go through
@@ -37,8 +37,8 @@ the mark when seen; its line is the throw's (`line_of`, creatures block).
 A target dummy (`world/combat/dummy.rs`, docs/dev/weapon-skills.md "Target dummies") stops a missile in
 `World::fly`, hit or miss (pierce or not): the flight ends on its cell and
 `World::dummy_catches` takes the place of `breaks` and `come_down`: destroyed by the dummy's
-`breaks` (one gameplay draw, only when the missile's own chance and the dummy's are both above
-0), else down on a walkable cell beside it holding no actor (one gameplay draw), or on its own
+`breaks` (one keyed draw, only when the missile's own chance and the dummy's are both above
+0), else down on a walkable cell beside it holding no actor (one keyed draw), or on its own
 cell when there is none. Tests: `world/combat/dummy_tests.rs`.
 
 Shots by distance (spec §8 "Ranged combat": "Distance", #956): `data/ranged.toml` (optional;
@@ -65,7 +65,7 @@ next to the target, not inside an opaque cell (an incorporeal thrower comes out 
 first), in range, `clear_shot`), `World::creature_hurls` prices the throw
 (`attack_price` of `throw`, which `Content::action_cost` gives the throw's `cost`), makes the
 noise, and flies a `shoot::Flight` with `lands: None` and `breaks: 0` through `World::fly`, the
-flight `loose` uses (so no gameplay draw beyond the attacks' and nothing comes down).
+flight `loose` uses (so no keyed draw beyond the attacks' and nothing comes down).
 `Actor::hurled` is its profile (`Profile::thrown`, the `thrown` rank, affixes, stance);
 `status.rs::on_hit_of` gives a creature's thrown attacks its throw's `on_hit`. The flight is an
 `Event::Missile` of the throw's object (the `boulder`, which nothing else places), shown like an

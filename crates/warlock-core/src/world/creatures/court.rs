@@ -13,19 +13,19 @@ use crate::content::{Content, CreatureId, FactionId};
 use crate::rng::Rng;
 use crate::world::{ActorId, World};
 
-/// The faction a creature of type `creature`, made as actor `id` in the run of `seed`, joins:
-/// one of its type's factions, drawn by weight; `None` for a type of one faction.
+/// The faction a creature of type `creature`, made as the actor keyed `key` in the run of
+/// `seed`, joins: one of its type's factions, drawn by weight; `None` for a type of one faction.
 pub(in crate::world) fn join(
     content: &Content,
     seed: u64,
-    id: ActorId,
+    key: &str,
     creature: CreatureId,
 ) -> Option<FactionId> {
     let factions = &content.creature(creature).factions;
     if factions.is_empty() {
         return None;
     }
-    let mut rng = Rng::court(seed, &id.0.to_string());
+    let mut rng = Rng::court(seed, key);
     rng.weighted(factions, |&(_, w)| w)
         .map(|&(faction, _)| faction)
 }

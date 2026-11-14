@@ -44,15 +44,15 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   consume a dagger."). `world/fixtures/drink.rs` is the healing spring's Drink ability, a different thing;
   the two share only the `drink` action price (`data/actions.toml`, one turn).
 - Order: priced at the start; one taken (`take_draught`: pack or floor; the keep
-  (`Actor::potion_kept`: Thrifty drinker, worn affixes) is one gameplay draw, only above 0); "You drink the {title}." by the name the player
+  (`Actor::potion_kept`: Thrifty drinker, worn affixes) is one keyed draw, only above 0); "You drink the {title}." by the name the player
   knew; `learn_scroll` and "It is a potion of healing." for news; in a shop `drank_goods`
   (`world/people/shop.rs`, `ate_goods`'s twin, naming the potion as the player knows it); the effect;
   `train_stat_times(StatUse::Drank, Some(stat), count)` per mark (sure marks, no draw); the
   KEPT line if kept. Returns `Spent::Turn`.
-- Effects: `Heal` rolls its dice on the gameplay stream, raises hp to at most the maximum, then
+- Effects: `Heal` rolls its dice on its keyed stream, raises hp to at most the maximum, then
   `World::cure` per means; `Cure` cures per means and, with `diseases`, `end_disease` for every
   infection; `Mana` raises mana to at most the maximum; `Elixir` is `World::drink_elixir`
-  (`world/health/elixir.rs`): the potential's roll first (one gameplay draw), then `points` ×
+  (`world/health/elixir.rs`): the potential's roll first (one keyed draw), then `points` ×
   `Stats::train(stat)` (the score +1; a trained rise leaves the potential, so the elixir lifts
   it to the score where it was below with `Stats::widen`),
   then `Stats::widen(stat, roll)` (never past `SCORES`), the hit points a Toughness rise adds
@@ -82,7 +82,7 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
 - The gambles (#1229, the potions wave 2 design §4.3): `Gamble { outcomes }` names a table of
   `data/outcomes/` (`content/outcome.rs`; the tables load after the objects, so
   `potion::check_gambles` checks the id once they have, one line in `Content::load`).
-  `World::gamble` is the spring's `drunk`: `draw_outcome(table, table.kinds)` (two gameplay
+  `World::gamble` is the spring's `drunk`: `draw_outcome(table, table.kinds)` (two keyed
   draws, nothing leans) and `befall` at the player's cell (objects left "at the feature's foot"
   land beside them). A table's `seconds` defaults to 0 (a gamble's has none); `exhaust = 0`
   (nothing spent). The two outcome effects the gambles brought: `status` as a list (each

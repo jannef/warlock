@@ -31,6 +31,7 @@ use crate::content::{Content, Cutting, MaterialId, PartId, RecipeDef, RecipeId};
 pub use crate::gem::ornament_part;
 use crate::item_parts::{self, ItemPart};
 use crate::object::{self, Stack};
+use crate::rng::draw;
 use crate::scroll_label::Lore;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
@@ -278,7 +279,7 @@ impl World {
             + me.skill_effect_of(&content, def.skill, Effect::Craft)
             + self.binding_boon(def.skill);
         let against = def.difficulty + content.material(gem).work;
-        let natural = combat::roll_natural(&mut self.state.rng);
+        let natural = combat::roll_natural(&mut draw!(self, "set/player"));
         let band = set_band(natural, natural + modifier - against);
         self.set_out(work, gem, cutting, made, band);
         if self.trains(Use::Craft) {

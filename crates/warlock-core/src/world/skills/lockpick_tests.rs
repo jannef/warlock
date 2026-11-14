@@ -11,6 +11,7 @@ use crate::door::{LOCK_DIFFICULTY, Lock};
 use crate::replay::Replay;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::Stat;
+use crate::test_support::draws;
 use crate::test_support::last_text as last_message;
 use crate::time::Duration;
 use crate::world::*;
@@ -196,7 +197,7 @@ fn a_try_is_a_dexterity_check_plus_open_lock_against_the_locks_difficulty() {
             go_to_row(&mut w, row);
             let door = Pos::new(2, row);
             assert_eq!(w.lock_difficulty(door), difficulty);
-            let mut rng = w.state.rng.clone();
+            let mut rng = crate::test_support::peek(&w, "lockpick/player");
             let expected = check::check(&mut rng, plus, difficulty);
             let out = w.apply(&Action::PickLock(Dir::E));
             assert!(out.took_turn);
@@ -319,11 +320,11 @@ fn a_status_that_blocks_picking_greys_it_out_and_refuses_it() {
         pick_lock_in_menu(&w),
         Some(Some(Unavailable::While(shaking)))
     );
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     let out = w.apply(&Action::PickLock(Dir::E));
     assert!(!out.took_turn);
     assert_eq!(last_message(&w), "You cannot pick locks while shaking.");
-    assert_eq!(w.state.rng, rng, "no check rolled");
+    assert_eq!(draws(&w), rng, "no check rolled");
     assert!(locked(&w, Pos::new(2, 1)));
 }
 

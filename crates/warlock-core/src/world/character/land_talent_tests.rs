@@ -6,6 +6,7 @@ use crate::action::AttackKind;
 use crate::combat::{Blow, Strike};
 use crate::content::{ContentFiles, Stance};
 use crate::light::Light;
+use crate::test_support::draws;
 use crate::test_support::run;
 use crate::world::*;
 use std::sync::LazyLock;
@@ -257,7 +258,7 @@ fn ambusher_hurts_a_creature_that_has_not_seen_you() {
         w.unaware(rat, player),
         "in the dark, it does not see the player"
     );
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     let missed = Blow::missed(None);
     assert_eq!(
         {
@@ -267,7 +268,7 @@ fn ambusher_hurts_a_creature_that_has_not_seen_you() {
         missed,
         "a miss"
     );
-    assert_eq!(w.state.rng, rng, "nothing drawn for a miss");
+    assert_eq!(draws(&w), rng, "nothing drawn for a miss");
     let ambushed = {
         let unseen = w.sneaking(player, rat, false);
         w.ambushed((player, player), unseen, hit)
@@ -341,14 +342,14 @@ fn natures_ward_never_catches_a_disease_wading() {
     let mut w = world("fen");
     let marsh = CONTENT.terrain_id("marsh").expect("marsh");
     give(&mut w, "natures_ward");
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     // A hundred hours in the marsh: a sure catch for anyone else.
     w.wade(marsh, 360_000);
-    assert_eq!(w.state.rng, rng, "nothing drawn");
+    assert_eq!(draws(&w), rng, "nothing drawn");
     assert!(w.state.player().diseases.is_empty());
     let mut other = world("fen");
     other.wade(marsh, 360_000);
-    assert_ne!(other.state.rng, rng, "exposed, they check");
+    assert_ne!(draws(&other), rng, "exposed, they check");
 }
 
 #[test]

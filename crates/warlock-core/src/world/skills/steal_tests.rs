@@ -4,11 +4,11 @@
 
 use crate::ability::Ability;
 use crate::action::parse_actions;
-use crate::combat;
 use crate::content::ContentFiles;
 use crate::geom::Dir;
 use crate::replay::Replay;
 use crate::stats::{Stat, Stats};
+use crate::test_support::draws;
 use crate::test_support::last_text as last;
 use crate::world::*;
 
@@ -245,27 +245,21 @@ fn refusals_take_no_time() {
 }
 
 #[test]
-fn a_theft_draws_the_contest_then_the_pick_from_the_gameplay_stream() {
-    // The contest: the victim's natural roll, then the thief's (four draws); with nothing loose
-    // to take, nothing more.
+fn a_theft_draws_the_contest_then_the_pick() {
+    // The contest, one draw; with nothing loose to take, nothing more.
     let mut w = den();
     let gardener = at(&w, Pos::new(2, 2));
     rig(&mut w, gardener, true);
-    let mut expected = w.state.rng.clone();
-    combat::roll_natural(&mut expected);
-    combat::roll_natural(&mut expected);
+    let expected = draws(&w) + 1;
     w.apply(&Action::Steal(Dir::W));
-    assert_eq!(w.state.rng, expected);
+    assert_eq!(draws(&w), expected);
     // Two stacks to pick from: one more draw.
     let mut w = den();
     let kobold = at(&w, Pos::new(4, 2));
     rig(&mut w, kobold, true);
-    let mut expected = w.state.rng.clone();
-    combat::roll_natural(&mut expected);
-    combat::roll_natural(&mut expected);
-    expected.index(2);
+    let expected = draws(&w) + 2;
     w.apply(&Action::Steal(Dir::E));
-    assert_eq!(w.state.rng, expected);
+    assert_eq!(draws(&w), expected);
 }
 
 #[test]

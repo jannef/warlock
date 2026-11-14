@@ -115,7 +115,7 @@ fn spell_recall_now_and_then_keeps_the_scroll() {
 fn treasure_hunter_finds_magic_more_often_from_the_same_draws() {
     let content = &BUILTIN;
     let count = |luck: i32, grade: LootGrade| {
-        let mut rng = Rng::gameplay(11);
+        let mut rng = Rng::stream(11, "wits-test");
         let mut rarities = [0u32; 3];
         for _ in 0..3000 {
             let source = crate::variant::Source::Loot;

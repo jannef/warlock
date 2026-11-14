@@ -7,6 +7,7 @@
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, StatDeed, TrapId};
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::draws;
 use crate::test_support::{CONTENT as BUILTIN, run, said};
 use crate::time::DAWN;
 use crate::world::*;
@@ -113,11 +114,11 @@ fn starving_hit_points_cost_toughness_marks() {
     let mut w = world_with(BUILTIN.clone());
     set_stats(&mut w, 18);
     set_nutrition(&mut w, -10);
-    let (rng, training) = (w.state.rng.clone(), w.state.training.clone());
+    let (rng, training) = (draws(&w), w.state.training.clone());
     let (lost, _) = w.digest(player, 6000);
     assert_eq!(lost, 10);
     assert!((-10..=0).contains(&marks(&w, Stat::Toughness)));
-    assert_eq!(w.state.rng, rng, "never the gameplay stream");
+    assert_eq!(draws(&w), rng, "never the gameplay stream");
     let mut drawn = training;
     for _ in 0..10 {
         drawn.chance(50);

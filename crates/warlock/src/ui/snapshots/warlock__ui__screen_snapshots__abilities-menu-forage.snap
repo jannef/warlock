@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  Beald, your boar, pads at your heel.
- You search the land about you for something to eat. You find nothing worth eating.
+ You search the land about you for something to eat. You gather 3 angelica roots.
 
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │

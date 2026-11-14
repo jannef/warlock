@@ -74,10 +74,10 @@ familiar". `world/allies/familiar.rs`:
   calling's, and nothing clears it, so it outlives the beast. With it, `finish_calling` makes that
   kind with that name (`make_familiar`'s `returning`) at the grade the player's level gives now,
   says "Tibb, your cat, comes back to you out of the dark." instead of the draw's two lines, and
-  **draws nothing**: no `calling_draw`, no `name_for`, so the gameplay stream stays where it was and
+  **draws nothing**: no `calling_draw`, no `name_for`, so no keyed draw is made and
   later draws differ from a run before #1470. A re-call therefore never has the rare jackpot or the
   bargain kinds; only the first familiar draws. Without it (a witch who never had one: no room at
-  the start, or a later Familiar talent), `calling_draw` on the **gameplay** stream (two draws: the
+  the start, or a later Familiar talent), `calling_draw` on its keyed stream `familiar/calling/player` (two draws: the
   jackpot, then the pick;
   `bargain_kinds` join the race's list, never the rares, from `bargain_level` of the character's
   class level, the first of `Character::class_levels`), and that one is remembered. `familiar_cell` (the player's cell on the
@@ -156,7 +156,7 @@ Dumps: the `familiar` layer and JSON `familiar`, one function with the companion
 
 ## Determinism, saves, replays
 
-Streams above; the touch, the harrying, and growth draw nothing; a calling draws on the gameplay
+Streams above; the touch, the harrying, and growth draw nothing; a calling draws on its keyed
 stream at its end. A run without a witch hashes as before; no shipped scenario, replay, or golden
 has a witch. Saved: the variant inside `Actor::ally`, and `Character::familiar`; a calling is one action, nothing in flight. The
 new creatures and the new action change the content fingerprint: development saves are invalidated

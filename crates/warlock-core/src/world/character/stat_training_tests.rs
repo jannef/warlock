@@ -11,6 +11,7 @@ use crate::content::{ContentFiles, Factor, ODDS_SCALE, StatUse};
 use crate::dump::{self, Layer};
 use crate::skills::Use;
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::draws;
 use crate::test_support::{CONTENT as BUILTIN, run, said};
 use crate::time::{DAWN, DAY};
 use crate::world::*;
@@ -89,11 +90,11 @@ fn uses_earn_marks_through_their_own_report_and_the_one_skills_share() {
 #[test]
 fn marks_draw_from_the_training_stream_and_never_from_gameplay() {
     let mut w = world_with(BUILTIN.clone());
-    let (rng, training) = (w.state.rng.clone(), w.state.training.clone());
+    let (rng, training) = (draws(&w), w.state.training.clone());
     for _ in 0..200 {
         w.train_stat(StatUse::Blow);
     }
-    assert_eq!(w.state.rng, rng, "the gameplay stream is untouched");
+    assert_eq!(draws(&w), rng, "the gameplay stream is untouched");
     assert_ne!(w.state.training, training);
     let n = marks(&w)[Stat::Strength];
     assert!((10..60).contains(&n), "about 15 % of 200 blows: {n}");
@@ -205,11 +206,7 @@ fn a_level_checks_each_stat_and_a_rise_pays_its_price_and_says_so_in_words() {
         expected.below(ODDS_SCALE);
     }
     assert_eq!(w.state.levels_rng.as_ref(), Some(&expected));
-    assert_eq!(
-        w.state.rng,
-        world_with(BUILTIN.clone()).state.rng,
-        "no gameplay draw"
-    );
+    assert_eq!(draws(&w), 0, "no keyed draw");
 }
 
 #[test]

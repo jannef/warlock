@@ -7,9 +7,9 @@ use crate::action::{ReadTarget, parse_actions};
 use crate::check;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
-use crate::rng::Rng;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::Stat;
+use crate::test_support::draws;
 use crate::test_support::{run, said_text as said};
 use crate::world::*;
 use std::collections::BTreeMap;
@@ -57,7 +57,7 @@ fn world(carry: &str, reader: Reader, seed: u64) -> World {
     let mut w = World::new(content(carry), "hall", None).expect("world");
     train(&mut w, "spellcraft", None);
     train(&mut w, "decipher_script", reader);
-    w.state.rng = Rng::gameplay(seed);
+    w.state.seed = seed;
     w
 }
 
@@ -141,12 +141,12 @@ fn a_learning_at_or_above_the_level_reads_at_once_and_below_it_does_not() {
         let reader = Some(value);
         for seed in 0..40 {
             let mut w = world(HASTE, reader, seed);
-            let rng = w.state.rng.clone();
+            let rng = draws(&w);
             let out = run(&mut w, "read:a");
             assert!(out[0].took_turn);
             assert_eq!(carried(&w, "scroll_of_haste"), 1, "read, at {value}");
             assert!(!said(&w, SWIMS));
-            assert_eq!(rng, w.state.rng, "no draw");
+            assert_eq!(rng, draws(&w), "no draw");
             let marks = marks(&w, "decipher_script");
             assert!(marks <= 1, "no check's mark, at most the read's: {marks}");
         }
@@ -190,12 +190,12 @@ fn a_refusal_comes_first_with_no_draw_and_no_mark() {
     let carry = format!("{FIREBALL}, {RESTORATION}");
     let reader = Some(10);
     let mut w = world(&carry, reader, 1);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     // No cell, the reader's own cell, and nothing to restore.
     for refused in ["read:a", "read:a:2,1", "read:b"] {
         assert!(!run(&mut w, refused)[0].took_turn, "{refused}");
     }
-    assert_eq!(rng, w.state.rng);
+    assert_eq!(rng, draws(&w));
     assert_eq!(marks(&w, "decipher_script"), 0);
     assert_eq!(carried(&w, "scroll_of_fireball"), 1);
     assert_eq!(carried(&w, "scroll_of_restoration"), 1);
@@ -276,7 +276,7 @@ fn decipher_scripts_points_are_on_the_check() {
 fn a_scroll_of_identify_refuses_first_and_a_failure_identifies_nothing() {
     let carry = "\"scroll_of_identify\", \"dagger\"";
     let mut w = world(carry, UNTRAINED, 0);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     let read_on = |on| Action::Read {
         item: 0,
         target: Some(ReadTarget::Item(on)),
@@ -285,7 +285,7 @@ fn a_scroll_of_identify_refuses_first_and_a_failure_identifies_nothing() {
         !w.apply(&read_on(1)).took_turn,
         "a plain dagger tells nothing"
     );
-    assert_eq!(rng, w.state.rng, "and no draw");
+    assert_eq!(rng, draws(&w), "and no draw");
     let carry = "\"scroll_of_identify\", \"scroll_of_frost\"";
     let (mut made, mut failed) = (false, false);
     for seed in 0..60 {
@@ -313,9 +313,9 @@ fn scribe_asks_no_check_and_what_it_writes_reads_by_the_rule() {
         me.talents.take("scribe", None);
         me.spells.insert(sp("fireball"), 1);
         me.mana = me.mana_base;
-        let rng = w.state.rng.clone();
+        let rng = draws(&w);
         run(&mut w, "scribe:fireball");
-        assert_eq!(rng, w.state.rng, "writing rolls nothing");
+        assert_eq!(rng, draws(&w), "writing rolls nothing");
         assert_eq!(carried(&w, "scroll_of_fireball"), 1, "written");
         assert_eq!(marks(&w, "decipher_script"), 0);
         w
@@ -350,11 +350,11 @@ fn a_known_spell_succeeds_with_no_draw_and_still_marks() {
     let seed = seed_where(true, reader);
     let mut w = world(HASTE, reader, seed);
     w.player_mut().spells.insert(sp("haste"), 1);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     run(&mut w, "read:a");
     assert!(!said(&w, SWIMS));
     assert_eq!(carried(&w, "scroll_of_haste"), 1, "read");
-    assert_eq!(rng, w.state.rng, "no draw");
+    assert_eq!(rng, draws(&w), "no draw");
     let marks_now = marks(&w, "decipher_script");
     assert!(
         (1..=2).contains(&marks_now),
@@ -372,9 +372,9 @@ fn a_known_spell_succeeds_with_no_draw_and_still_marks() {
 fn a_learning_that_reaches_the_level_without_the_spell_keeps_the_bypass() {
     let reader = Some(decipher_for(11));
     let mut w = world(HASTE, reader, 0);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     run(&mut w, "read:a");
-    assert_eq!(rng, w.state.rng, "no draw");
+    assert_eq!(rng, draws(&w), "no draw");
     let marks = marks(&w, "decipher_script");
     assert!(marks <= 1, "no check's mark, at most the read's: {marks}");
 }
@@ -400,9 +400,9 @@ fn without_the_file_every_scroll_simply_reads() {
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     assert!(content.decipher().is_none());
     let mut w = World::new(content, "hall", None).expect("world");
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     run(&mut w, "read:a");
-    assert_eq!(rng, w.state.rng);
+    assert_eq!(rng, draws(&w));
     assert!(!said(&w, SWIMS));
     assert_eq!(carried(&w, "scroll_of_haste"), 1);
 }

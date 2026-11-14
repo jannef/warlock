@@ -8,7 +8,6 @@ use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Factor};
 use crate::magic::{Aspect, Worked};
 use crate::object::Stack;
-use crate::rng::Rng;
 use crate::skills::{SkillId, Trained};
 use crate::test_support::{builtin, said_text as said};
 use crate::world::crafting::craft_make::make_out_for_test;
@@ -141,7 +140,7 @@ fn salvage_gives_back_three_quarters() {
     let saved = w.state.clone();
     let made = (0..100).any(|n| {
         w.state = saved.clone();
-        w.state.rng = Rng::stream(n, "waste_not_tests_salvage");
+        w.state.seed = n;
         w.apply(&Action::Salvage { item: 0 });
         pack(&w) == ["8 wood billets"]
     });
@@ -182,7 +181,7 @@ fn fail(w: &mut World, action: &Action, line: &str) -> bool {
     let saved = w.state.clone();
     (0..300).any(|n| {
         w.state = saved.clone();
-        w.state.rng = Rng::stream(n, "waste_not_tests");
+        w.state.seed = n;
         w.apply(action);
         said(w, line)
     })

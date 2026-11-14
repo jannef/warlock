@@ -328,7 +328,7 @@ fn glimpse_identifies_and_muddled_forgets_or_says_their_other_line() {
             .map(|i| crate::content::ObjectId(i as u16))
     });
     let ring = ring.expect("a magic base");
-    let mut rng = crate::rng::Rng::gameplay(7);
+    let mut rng = crate::rng::Rng::stream(7, "outcome-test");
     let stack = crate::magic::loot::make(
         &content,
         &mut rng,

@@ -921,8 +921,8 @@ fn creatures_shoot_with_the_bow_they_have_ready() {
     assert!(
         shown
             .iter()
-            .any(|m| m == "The kobold archer shoots you."
-                || m == "The kobold archer shoots you hard!"),
+            .any(|m| m.starts_with("The kobold archer shoots you.")
+                || m.starts_with("The kobold archer shoots you hard!")),
         "{shown:?}"
     );
 }

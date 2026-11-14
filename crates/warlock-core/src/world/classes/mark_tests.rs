@@ -77,6 +77,7 @@ fn beside(world: &mut World, creature: &str, dir: Dir) -> ActorId {
     let def = content.creature(creature);
     let actor = Actor {
         id,
+        key: format!("test/{}", id.0),
         creature,
         pos: at,
         patrol: None,

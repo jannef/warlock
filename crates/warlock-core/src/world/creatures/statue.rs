@@ -29,6 +29,7 @@ use crate::door::kick_breaks;
 use crate::geom::Pos;
 use crate::noise::Act;
 use crate::object::{self, Stack};
+use crate::rng::draw;
 use crate::skills::Use;
 use crate::world::{Actor, Spent, World};
 
@@ -107,7 +108,11 @@ impl World {
         let def = self.content.terrain(self.state.current().terrain[p]);
         let (name, sturdiness) = (def.name.clone(), def.statue.unwrap_or(u8::MAX));
         let force = self.kick_force();
-        let broken = kick_breaks(force, sturdiness, &mut self.state.rng);
+        let broken = kick_breaks(
+            force,
+            sturdiness,
+            &mut draw!(self, "statue/kick/{},{}", p.x, p.y),
+        );
         if self.trains(Use::Kick) {
             self.train(Use::Kick);
         }

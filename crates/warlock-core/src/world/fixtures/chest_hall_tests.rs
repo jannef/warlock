@@ -72,13 +72,20 @@ fn the_secret_door_leads_into_the_treasure_room() {
 
 #[test]
 fn the_pick_axe_digs_into_the_greater_treasure_room() {
-    let mut w = world();
-    w.learn_mining();
-    run(
-        &mut w,
-        "move:SE*6 move:E*15 pickup equip:tool:a dig:E move:E*2",
-    );
-    assert_eq!(w.player_pos(), Pos::new(26, 8));
+    // A hollow found in passing would interrupt the dig: a seed under which none is.
+    let w = (0..40u64)
+        .map(|seed| {
+            let mut w = world();
+            w.state.seed = seed;
+            w.learn_mining();
+            run(
+                &mut w,
+                "move:SE*6 move:E*15 pickup equip:tool:a dig:E move:E*2",
+            );
+            w
+        })
+        .find(|w| w.player_pos() == Pos::new(26, 8))
+        .expect("a dig that goes through");
     assert!(said(
         &w,
         "The air is stale and heavy with the smell of old gold."

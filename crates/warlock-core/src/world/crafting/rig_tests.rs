@@ -8,7 +8,6 @@ use crate::action::parse_actions;
 use crate::content::{ClassActive, ContentFiles, Trap};
 use crate::object::Stack;
 use crate::replay::Replay;
-use crate::rng::Rng;
 use crate::test_support::{builtin, run, said as texts};
 use crate::world::*;
 
@@ -89,7 +88,7 @@ fn count_of(world: &World, object: &str) -> u32 {
 fn fated(world: &World, action: &str, said: &str) -> World {
     for seed in 0..2_000 {
         let mut w = world.clone();
-        w.state.rng = Rng::gameplay(seed);
+        w.state.seed = seed;
         run(&mut w, action);
         if texts(&w).iter().any(|t| t.contains(said)) {
             return w;
@@ -336,7 +335,7 @@ fn a_rigged_traps_kill_is_the_players_and_a_plain_ones_is_not() {
             if let Some(a) = w.state.actors.get_mut(&rat) {
                 a.hp = 1;
             }
-            w.state.rng = Rng::gameplay(seed);
+            w.state.seed = seed;
             w.state.current_mut().traps.entry(at).or_insert(Trap {
                 kind,
                 known: true,
@@ -373,7 +372,7 @@ fn ones_own_trap_springs_on_the_rigger_as_a_trap() {
         if w.death().is_some() {
             break;
         }
-        w.state.rng = Rng::gameplay(seed);
+        w.state.seed = seed;
         w.state.current_mut().traps.entry(here).or_insert(Trap {
             kind,
             known: true,

@@ -186,7 +186,7 @@ crystals). The rare materials are no crystals: the list leaves them out, and `ea
 `world/crafting/crystal.rs::catch_magic`, called by `world/crafting/salvage.rs::salvaged` before its material
 checks (so its draws come first; nothing changes until all are drawn). A magic or rare item,
 **identified or not** (it is gone at once, so what its crystals' colours tell matters to no one;
-the owner, 2026-11-13): one check per affix in the item's order, `combat::roll_natural` (two gameplay draws) +
+the owner, 2026-11-13): one check per affix in the item's order, `combat::roll_natural` (two keyed draws) +
 `stat`'s modifier (Willpower) + `VigourMods::check(stat)` + `skill_effect_of(skill, Craft)`
 (0 until E4 gives Enchanting its `craft` curve) against `salvage_against(affix)`, `check::makes`.
 Made: one crystal of `colour_of_affix` ("You catch its Flaming magic in a red crystal.", "You
@@ -253,7 +253,7 @@ reach `enchant_level` (`Effect::EnchantLevel`, `[[0, 1], [110, 12], [200, 12]]`,
   reach, Unbind's check reads the item's own. The made item's `Magic.level` is the roll's.
 - **The check** (`World::enchanted`, after the work driver ran the recipe's `seconds`, Quick hands' share
   of them, `mastery::craft_seconds`, as the plan and the row say; an interruption
-  spends nothing but the time): `combat::roll_natural` (two gameplay draws) + `stat`'s modifier
+  spends nothing but the time): `combat::roll_natural` (two keyed draws) + `stat`'s modifier
   (`data/rules/enchanting.toml`, Willpower) + `VigourMods::check(stat)` + `skill_effect_of(recipe's
   skill, Craft)` against
   `difficulty` + level ÷ `level_step`; `enchant_band`: a natural 2 `Warped`, a natural 24 or a
@@ -370,7 +370,7 @@ crystallises too: the effect is the spell's.
   `everlasting` (a layer boss always leaves its corpse, #1624), no animated thing, and a colour (`Crystals::colour_of`) leaves `yield_at(level)` crystals of its colour (no
   draw), no corpse, and no `drops_of` stock (as a statue leaves none); a creature tagged `[rare] tag`
   (`dragon`) also `[rare] dragon` (no draw), any other of `[rare] level` or more one `chance(chance)` draw
-  and, made, an `index` among `materials`, all from the gameplay stream. Its gear falls as any
+  and, made, an `index` among `materials`, all from its keyed stream. Its gear falls as any
   dead creature's; a summoned or risen one leaves nothing, a statue's death is the statue's
   (stone first), and no cursed room raises glass. Anything else dies as it would.
 - **Words**, where the player sees the cell: "Its body turns to glass: where it fell lies a green

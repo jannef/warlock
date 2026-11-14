@@ -6,6 +6,7 @@ use super::vitals_tests::{lull, one, train, world};
 use crate::combat::{Blow, Strike};
 use crate::content::ContentFiles;
 use crate::skills::{Effect, Use};
+use crate::test_support::draws;
 use crate::world::magic::cast_tests::cast_at;
 use crate::world::magic::caster_tests::{kobold, reach, world_with};
 use crate::world::*;
@@ -133,19 +134,19 @@ fn a_sneak_attack_that_hits_marks_sneak_attack_and_dexterity() {
         damage: 2,
         kind: None,
     };
-    let gameplay = w.state.rng.clone();
+    let gameplay = draws(&w);
     for _ in 0..40 {
         let damage = w.ambushed((player, player), true, hit).damage;
         assert!((3..=8).contains(&damage), "{damage}");
     }
-    assert_ne!(w.state.rng, gameplay, "the dice are gameplay draws");
+    assert_ne!(draws(&w), gameplay, "the dice are gameplay draws");
     let marks = w.state.player().skills.get(id).expect("trained").marks;
     assert!((5..=35).contains(&marks), "about half: {marks}");
     // A seen blow, or a miss, marks nothing and draws nothing.
-    let rng = (w.state.rng.clone(), w.state.training.clone());
+    let rng = (draws(&w), w.state.training.clone());
     w.ambushed((player, player), false, hit);
     w.ambushed((player, player), true, Blow::missed(None));
-    assert_eq!((w.state.rng.clone(), w.state.training.clone()), rng);
+    assert_eq!((draws(&w), w.state.training.clone()), rng);
 }
 
 #[test]
@@ -197,7 +198,7 @@ fn the_attackers_craft_and_the_targets_initiative_shape_the_check() {
         let mut made = 0;
         for seed in 0..200u64 {
             let mut w = base.clone();
-            w.state.rng = crate::rng::Rng::stream(seed, "craft-test");
+            w.state.seed = seed;
             let mut events = Vec::new();
             w.startle(goblin, Some(player), &mut events);
             made += i32::from(!w.surprised(goblin));

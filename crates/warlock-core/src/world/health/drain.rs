@@ -24,6 +24,7 @@
 use crate::action::Event;
 use crate::check::check;
 use crate::content::Drain;
+use crate::rng::draw;
 use crate::stats::{DRAIN_FLOOR, Stat};
 use crate::world::{ActorId, World};
 
@@ -45,11 +46,12 @@ impl World {
         let Some(actor) = self.state.actors.get(&target) else {
             return false;
         };
+        let key = actor.key.clone();
         let modifier = actor
             .check_modifier(&content, stat)
             .saturating_add(extra)
             .saturating_add(self.resisting(target, by));
-        let made = check(&mut self.state.rng, modifier, difficulty);
+        let made = check(&mut draw!(self, "drain/resist/{key}"), modifier, difficulty);
         if made {
             self.train_resisting(target, stat);
             if target == self.state.player {
@@ -75,7 +77,7 @@ impl World {
         let stat = match drain.stat {
             Some(stat) => stat,
             None => {
-                let i = self.state.rng.below(Stat::COUNT as u32) as usize;
+                let i = draw!(self, "drain/stat/{}", actor.key).below(Stat::COUNT as u32) as usize;
                 Stat::ALL[i]
             }
         };

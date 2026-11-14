@@ -41,6 +41,7 @@
 use crate::action::{Action, Event};
 use crate::check::check;
 use crate::content::{ActionKind, Affliction, Content, StatusId};
+use crate::rng::draw;
 use crate::skills::{Effect as SkillEffect, Use};
 use crate::stats::Stat;
 use crate::status::Effect;
@@ -48,14 +49,16 @@ use crate::world::Actor;
 use crate::world::{ActorId, Spent, World};
 
 impl World {
-    /// The degrees a dose of hold `status` lasts: its `turns` drawn (within 1 and its `max`),
-    /// or `severity` for a status that is no hold.
-    pub(super) fn hold_turns(&mut self, status: StatusId, severity: u16) -> u16 {
+    /// The degrees a dose of hold `status` on actor `id` lasts: its `turns` drawn (within 1 and
+    /// its `max`), or `severity` for a status that is no hold.
+    pub(super) fn hold_turns(&mut self, id: ActorId, status: StatusId, severity: u16) -> u16 {
         let def = self.content.status(status);
         let Some(hold) = def.hold else {
             return severity;
         };
-        let turns = hold.turns.roll(&mut self.state.rng);
+        let turns = hold
+            .turns
+            .roll(&mut draw!(self, "hold/turns/{}", self.state.actors.key(id)));
         u16::try_from(turns).unwrap_or(1).clamp(1, def.max)
     }
 
@@ -154,7 +157,11 @@ impl World {
         };
         // Know your enemy (Knowledge, `knowledge.rs`): the holder's.
         let modifier = modifier.saturating_add(self.resisting(player, effect.by));
-        let free = check(&mut self.state.rng, modifier, difficulty);
+        let free = check(
+            &mut draw!(self, "hold/struggle/player"),
+            modifier,
+            difficulty,
+        );
         self.struggled();
         if free {
             self.player_mut().effects.remove(status);
@@ -177,7 +184,7 @@ impl World {
     /// Whether it was made.
     fn slip(&mut self, status: StatusId, difficulty: i32, events: &mut Vec<Event>) -> bool {
         let modifier = self.slipping(Stat::Strength);
-        let free = check(&mut self.state.rng, modifier, difficulty);
+        let free = check(&mut draw!(self, "hold/slip/player"), modifier, difficulty);
         self.struggled();
         if free {
             let player = self.state.player;

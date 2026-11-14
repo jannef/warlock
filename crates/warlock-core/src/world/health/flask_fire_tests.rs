@@ -143,7 +143,10 @@ fn pitch_fire_leaves_a_pool_of_fire_by_its_thrower_for_six_turns() {
     let id = dummy(&w);
     let began = w.time();
     run(&mut w, "throw:c:5,1");
-    assert!((2..=12).contains(&lost(&w, id)), "2d6 fire at rung 0");
+    assert!(
+        (2..=24).contains(&lost(&w, id)),
+        "2d6 fire at rung 0, and the pool's first burn"
+    );
     assert_eq!(w.zones().len(), 1);
     let zone = &w.zones()[0];
     assert_eq!(zone.kind(), ZoneKind::Fire);

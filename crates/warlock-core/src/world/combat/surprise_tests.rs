@@ -8,6 +8,7 @@ use crate::action::parse_actions;
 use crate::combat::{Category, Defence, Target};
 use crate::content::{ActionKind, ContentFiles};
 use crate::replay::Replay;
+use crate::test_support::draws;
 use crate::test_support::texts;
 use crate::world::*;
 
@@ -96,11 +97,9 @@ pub(super) fn surprised_status(w: &World) -> crate::content::StatusId {
     w.content.status_id("surprised").expect("surprised")
 }
 
-/// `w`'s generator after one natural roll more: the check's two draws.
-fn after_a_check(w: &World) -> crate::rng::Rng {
-    let mut rng = w.state.rng.clone();
-    crate::combat::roll_natural(&mut rng);
-    rng
+/// `w`'s draws after one more: the check's.
+fn after_a_check(w: &World) -> u64 {
+    draws(w) + 1
 }
 
 #[test]
@@ -161,7 +160,7 @@ fn a_failed_check_surprises_and_a_made_one_does_not() {
         let (player, id) = (w.state.player, goblin(&w, 2));
         let rng = after_a_check(&w);
         w.startle(id, Some(player), &mut Vec::new());
-        assert_eq!(w.state.rng, rng, "two draws");
+        assert_eq!(draws(&w), rng, "one draw");
         (w.surprised(id), texts(&w))
     };
     let (caught, said) = surprised(Rules::Difficulty(40));
@@ -181,10 +180,10 @@ fn sleepers_and_mimics_are_surprised_with_no_check_and_no_word() {
     let mut w = world(120, Rules::Difficulty(1));
     let (player, id) = (w.state.player, goblin(&w, 2));
     lull(&mut w, id);
-    let (rng, said) = (w.state.rng.clone(), texts(&w));
+    let (rng, said) = (draws(&w), texts(&w));
     w.startle(id, Some(player), &mut Vec::new());
     assert!(w.surprised(id), "no check to make");
-    assert_eq!(w.state.rng, rng, "no draw");
+    assert_eq!(draws(&w), rng, "no draw");
     assert_eq!(
         texts(&w),
         said,
@@ -201,10 +200,10 @@ fn sleepers_and_mimics_are_surprised_with_no_check_and_no_word() {
         .expect("goblin")
         .effects
         .add(disguise, &def, 1, None);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     w.startle(id, Some(player), &mut Vec::new());
     assert!(w.surprised(id));
-    assert_eq!(w.state.rng, rng);
+    assert_eq!(draws(&w), rng);
 }
 
 #[test]
@@ -354,7 +353,7 @@ fn an_attack_on_the_unaware_is_rolled_flat_footed_and_surprises() {
     assert!(w.surprised(far));
     // An intent rolls nothing and surprises nobody.
     let mut w = world(120, Rules::Difficulty(40));
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     w.attack_with(
         player,
         far,
@@ -363,7 +362,7 @@ fn an_attack_on_the_unaware_is_rolled_flat_footed_and_surprises() {
         &mut Vec::new(),
     );
     assert!(!w.surprised(far));
-    assert_eq!(w.state.rng, rng);
+    assert_eq!(draws(&w), rng);
 }
 
 #[test]
@@ -415,7 +414,7 @@ fn no_draws_while_nothing_is_unaware() {
     for action in &actions {
         with.apply(action);
         without.apply(action);
-        assert_eq!(with.state.rng, without.state.rng, "{action}");
+        assert_eq!(draws(&with), draws(&without), "{action}");
         let hp = |w: &World| {
             w.state
                 .actors
@@ -534,7 +533,7 @@ fn no_blow_without_the_talent_a_made_check_or_an_attacker_beside() {
     let player = w.state.player;
     let rng = after_a_check(&w);
     assert!(w.startle(player, None, &mut Vec::new()));
-    assert_eq!(w.state.rng, rng);
+    assert_eq!(draws(&w), rng);
 }
 
 #[test]
@@ -542,7 +541,7 @@ fn hair_trigger_may_cut_the_attacker_down_before_it_strikes() {
     // Some fate fells the goblin with the answering blow: its own attack is never rolled.
     let felled = (0..200).find_map(|seed| {
         let mut w = world(0, Rules::Difficulty(1));
-        w.state.rng = crate::rng::Rng::gameplay(seed);
+        w.state.seed = seed;
         let (player, id) = (w.state.player, goblin(&w, 2));
         w.player_mut().talents.take("hair_trigger", None);
         let profile = w.state.actors[&id].melee(&w.content);

@@ -31,6 +31,7 @@ use crate::check::check;
 use crate::content::{Content, Stance, the};
 use crate::fov::radius2;
 use crate::noise::{self, Act, Noise, SoundKind};
+use crate::rng::draw;
 use crate::sight::LineOfSight;
 use crate::text::capitalized;
 use crate::world::{Actor, ActorId, World};
@@ -115,9 +116,11 @@ impl World {
             return;
         };
         if let Some((stat, difficulty)) = aura.check {
+            let (mine, theirs) = (me.key.clone(), them.key.clone());
             let modifier = (them.check_modifier(&content, stat))
                 .saturating_add(self.resisting(target, Some(id)));
-            if check(&mut self.state.rng, modifier, difficulty) {
+            let mut rng = draw!(self, "aura/resist/{theirs}/{mine}");
+            if check(&mut rng, modifier, difficulty) {
                 self.train_resisting(target, stat);
                 return;
             }
@@ -168,7 +171,7 @@ impl World {
         let Some(cry) = self.content.creature(me.creature).cry else {
             return;
         };
-        if self.state.rng.below(cry.every) >= crate::content::CRY_TURN {
+        if draw!(self, "aura/cry/{}", me.key).below(cry.every) >= crate::content::CRY_TURN {
             return;
         }
         self.make_noise(id, Act::Cry(cry.kind));

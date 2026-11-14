@@ -29,6 +29,7 @@
 use crate::action::{DiseaseNews, Event};
 use crate::check::check;
 use crate::content::{DiseaseId, Effect, TerrainId};
+use crate::rng::draw;
 use crate::skills::Use;
 use crate::stats::Stat;
 use crate::talent::TalentMods;
@@ -64,7 +65,11 @@ impl World {
         let modifier = self.disease_modifier(actor, stat);
         // Know your enemy (Knowledge, `knowledge.rs`): a disease a creature's attack carries.
         let modifier = modifier.saturating_add(self.resisting(id, by));
-        if check(&mut self.state.rng, modifier, difficulty) {
+        if check(
+            &mut draw!(self, "disease/expose/{}", self.state.actors.key(id)),
+            modifier,
+            difficulty,
+        ) {
             self.train_resisting(id, stat);
             return false;
         }
@@ -91,7 +96,8 @@ impl World {
         if !(self.state.actors.get(&id)).is_some_and(|a| !a.diseases.has(disease)) {
             return false;
         }
-        let days = u64::try_from(def.incubation.roll(&mut self.state.rng).max(1)).unwrap_or(1);
+        let mut rng = draw!(self, "disease/incubation/{}", self.state.actors.key(id));
+        let days = u64::try_from(def.incubation.roll(&mut rng).max(1)).unwrap_or(1);
         (self.state.actors.get_mut(&id)).is_some_and(|a| a.diseases.catch(disease, days * DAY, by))
     }
 
@@ -135,7 +141,7 @@ impl World {
             }
             let odds = u64::from(wading.per_hour).saturating_mul(seconds.max(1));
             let sure = odds >= PER_HOUR;
-            if sure || u64::from(self.state.rng.below(PER_HOUR as u32)) < odds {
+            if sure || u64::from(draw!(self, "disease/wade/player").below(PER_HOUR as u32)) < odds {
                 self.expose(player, disease, None);
             }
         }
@@ -171,6 +177,7 @@ impl World {
                 u32::try_from(scaled).unwrap_or(u32::MAX)
             }
         };
+        let key = actor.key.clone();
         let Some(infection) = actor.diseases.get_mut(disease) else {
             return true;
         };
@@ -193,7 +200,9 @@ impl World {
         }
         infection.progressions = infection.progressions.saturating_add(1);
         let n = infection.progressions;
-        if check(&mut self.state.rng, modifier, def.difficulty) {
+        // The check and the damage of a failed one: one stream (`disease/turn/<actor>`).
+        let mut rng = draw!(self, "disease/turn/{key}");
+        if check(&mut rng, modifier, def.difficulty) {
             infection.streak = infection.streak.saturating_add(1);
             if def.recovers() && infection.streak >= recovery {
                 self.end_disease(id, disease, events);
@@ -209,11 +218,11 @@ impl World {
             if dice.is_zero() {
                 continue;
             }
-            let points = dice.roll(&mut self.state.rng);
+            let points = dice.roll(&mut rng);
             let gone = actor.damage.take(stat, points, actor.stats.score(stat));
             no_toughness |= gone && stat == Stat::Toughness;
         }
-        let lost = def.hp.map_or(0, |hp| hp.roll(&mut self.state.rng));
+        let lost = def.hp.map_or(0, |hp| hp.roll(&mut rng));
         if id == player {
             let news = DiseaseNews::Worse(n);
             events.push(Event::Disease {

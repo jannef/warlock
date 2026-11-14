@@ -1,8 +1,8 @@
 ---
 source: crates/warlock/src/ui/screen_snapshots.rs
-expression: "render(&case, content.clone())"
+expression: "render(case, content)"
 ---
- A withered rotting drake (hostile, unhurt), on stone floor.
+ A rotting drake (hostile, unhurt), on stone floor.
  Looking: direction keys move, Esc or l to stop.
 
    D

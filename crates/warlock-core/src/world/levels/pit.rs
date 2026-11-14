@@ -135,6 +135,12 @@ impl WorldState {
     }
 }
 
+/// The integer of the `n`-th Pit opened in the run of `seed`: a key of its own (`pit/<n>`),
+/// never 0.
+fn pit_integer(seed: u64, n: usize) -> u32 {
+    (crate::rng::stream_key(seed, &format!("pit/{n}")) as u32).max(1)
+}
+
 impl World {
     /// Why a portal at `here` on the current level opens no Pit, if it does not.
     pub(in crate::world) fn pit_refused(&self, here: Pos) -> Option<Refused> {
@@ -182,9 +188,13 @@ impl World {
             None => self.pit_mouth(here),
         };
         if let Some(at) = mouth {
-            let mut s = self.state.rng.below(u32::MAX) + 1;
+            // The Pit's integer: the run's Pits in the order opened (`pit/<n>`; a repeat, which
+            // the hash all but rules out, takes the next).
+            let mut n = self.state.pits.len();
+            let mut s = pit_integer(self.state.seed, n);
             while self.state.pits.contains_key(&s) {
-                s = self.state.rng.below(u32::MAX) + 1;
+                n += 1;
+                s = pit_integer(self.state.seed, n);
             }
             let Some(def) = self.content.dungeons().find(|d| d.portal.is_some()) else {
                 return;

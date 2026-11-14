@@ -17,6 +17,7 @@
 //! Determinism: one gameplay draw for each further spell forgotten, none otherwise.
 
 use crate::content::SpellId;
+use crate::rng::draw;
 use crate::text::and_list;
 use crate::world::{ActorId, World};
 
@@ -60,7 +61,8 @@ impl World {
                     if left.is_empty() {
                         break;
                     }
-                    let i = self.state.rng.below(left.len() as u32) as usize;
+                    let i = draw!(self, "forget/{}", self.state.actors.key(caster))
+                        .below(left.len() as u32) as usize;
                     gone.push(left.remove(i));
                 }
             }

@@ -8,7 +8,7 @@ Blood (spec §8 "Blood", §4.8; M17): the pure pattern is `warlock-core/src/bloo
 overkill, critical, missile; `spatter`: pool, fan away from the attacker (±45° melee, ±30°
 missiles), kill flecks, stopped by opaque cells, walls next to the victim stained on their face;
 `Stain`: amount to `CAP` 100, colour and spill time mixed by amount, `faces` bits; `seed` hashes
-turn, time, and actor ids with SplitMix: **never the gameplay stream**). `world/combat/bleed.rs`
+turn, time, and actor ids with SplitMix: **no keyed draw**). `world/combat/bleed.rs`
 (`World::bleed`, called from `fight.rs::resolve` before `hurt`) writes `LevelState::blood` via
 `LevelState::stain` (terrain `stains`, data; never on the overworld). No rule reads blood;
 `blood_tests.rs` checks a fight is identical with and without it. Perception: `PerceptionView::blood`
@@ -28,8 +28,8 @@ electricity, poison, necrotic.
 `warlock-core/src/scorch.rs` (`area`: each open cell its jittered share, walls beside on the face
 toward it at `WALL` percent, half across a corner; `blow`: a struck creature's cell; `add`: amount
 to the cap, faces joined, colour from the type's `char.light` to `char.heavy` by amount; `word`;
-`seed` hashes turn, time, and the centre cell with a salt apart from blood's: **never the gameplay
-stream**). It reuses `blood::Stain` for storage. `world/combat/sear.rs` applies it: `sear_burst` (from
+`seed` hashes turn, time, and the centre cell with a salt apart from blood's: **no keyed
+draw**). It reuses `blood::Stain` for storage. `world/combat/sear.rs` applies it: `sear_burst` (from
 `spell.rs::cast_burst_reaching`, every caster: spell, scroll, wand, flask, trap, place),
 `sear_area` (from `cast_cone`, and `zone.rs::lay_cells` for a fire zone), `sear_blow` (from
 `bleed.rs::spill`, before the blood check); all write `LevelState::scorch` via

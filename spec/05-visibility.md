@@ -223,7 +223,7 @@ rate or animation.
     so 5 cm holds 87.5 kg (a person with a pack), 15 cm 787.5 kg. An actor stepping onto ice
     whose weight (its creature's base weight plus everything it carries, worn and wielded things
     included) is at most that crosses safely, with no draw. Above that the ice gives way with a
-    chance rising evenly to certain at twice that (one draw of the gameplay stream, made only
+    chance rising evenly to certain at twice that (one draw of its keyed stream, made only
     between the two); ice that held by luck creaks under the player ("The ice creaks under your
     weight."). A step onto ice costs its terrain's `move_cost` (120: careful steps). Wading into
     water whose ice is too thin to look like ice breaks that skin.

@@ -6,6 +6,7 @@
 use crate::burden::Burden;
 use crate::content::ContentFiles;
 use crate::object::Stack;
+use crate::test_support::draws;
 use crate::test_support::{builtin, said_text as said};
 use crate::world::*;
 
@@ -154,23 +155,23 @@ fn a_burdened_step_gives_way_twice_as_often() {
 fn old_delver_never_falls_and_draws_nothing() {
     let mut w = world();
     w.player_mut().talents.take("old_delver", None);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     assert_eq!(falls(&mut w, CRACKED, 500), 0);
-    assert_eq!(w.state.rng, rng);
+    assert_eq!(draws(&w), rng);
 }
 
 #[test]
 fn steps_where_nothing_can_give_way_draw_nothing() {
     let mut w = world();
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     falls(&mut w, SOUND, 50);
     falls(&mut w, OUTSIDE, 50);
-    assert_eq!(w.state.rng, rng);
+    assert_eq!(draws(&w), rng);
     // A way down that leads nowhere yet: nothing to fall to.
     let mut w = world_with("", false);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     assert_eq!(falls(&mut w, CRACKED, 100), 0);
-    assert_eq!(w.state.rng, rng);
+    assert_eq!(draws(&w), rng);
 }
 
 #[test]
@@ -180,13 +181,13 @@ fn a_creature_never_falls() {
     let id = *(w.state.actors.keys())
         .find(|&&a| a != player)
         .expect("the rat");
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     for _ in 0..200 {
         w.state.actors.get_mut(&id).expect("rat").pos = CRACKED;
         w.step_onto_trap(CRACKED, id, &mut Vec::new());
     }
     assert_eq!(w.state.actors[&id].level, "test_top");
-    assert_eq!(w.state.rng, rng);
+    assert_eq!(draws(&w), rng);
 }
 
 #[test]

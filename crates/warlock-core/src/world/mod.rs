@@ -221,9 +221,9 @@ pub use people::shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts
 pub use people::talk::{Conversation, Talk, TopicView};
 pub(crate) use skills::forage::forage_ground;
 pub(crate) use skills::gather::{fungus_ways, unskilled};
-pub use turn::actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
+pub use turn::actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, PLAYER_KEY, Patrol};
 pub use turn::actors::Actors;
-pub(crate) use turn::hash::fnv1a;
+pub(crate) use turn::hash::{FNV_OFFSET, fnv1a, fnv1a_fold};
 pub use turn::level::{Fire, LevelState};
 use turn::rest::Ended;
 
@@ -242,7 +242,7 @@ use crate::messages::MessageLog;
 use crate::noise::Recent;
 use crate::object::Stack;
 use crate::perception::{Perception, PerceptionView};
-use crate::rng::Rng;
+use crate::rng::{Draws, Rng};
 use crate::scroll_label::{Labels, Lore};
 use crate::skills::{Skills, Use};
 use crate::time::{Duration, GameTime};
@@ -279,9 +279,12 @@ pub struct WorldState {
     #[serde(default)]
     pub(crate) campaign: String,
     pub(crate) seed: u64,
-    /// The gameplay random stream (spec §8), continued across saves. Map generation never draws
-    /// from it: each generated level has its own stream derived from the seed and its id.
-    pub(crate) rng: Rng,
+    /// The moment's draws (`rng.rs`, "Keys"): how many times each label was drawn in the current
+    /// second, so every rule's roll takes a key of its own; continued across saves. Map
+    /// generation never draws by the moment: each generated level has its own streams derived
+    /// from the seed and its id.
+    #[serde(default, skip_serializing_if = "Draws::is_empty")]
+    pub(crate) draws: Draws,
     pub(crate) turn: u64,
     /// The game clock.
     pub(crate) time: GameTime,
@@ -818,7 +821,7 @@ impl World {
             scenario: def.id.clone(),
             campaign,
             seed,
-            rng: Rng::gameplay(seed),
+            draws: Draws::default(),
             training: Rng::training(seed),
             levels_rng: None,
             ruin_rng: None,
@@ -859,6 +862,7 @@ impl World {
         };
         let mut player = Actor {
             id: ActorId(0),
+            key: PLAYER_KEY.into(),
             kind: ActorKind::Player,
             creature: player_creature,
             level: start.id.clone(),
@@ -1131,6 +1135,12 @@ impl World {
     /// ([`Content::fingerprint_for`]).
     pub fn fingerprint(&self) -> u64 {
         self.content.fingerprint_for(&self.state.campaign)
+    }
+
+    /// The state, to rig (`test_support::rig`).
+    #[cfg(test)]
+    pub(crate) fn state_mut(&mut self) -> &mut WorldState {
+        &mut self.state
     }
 
     pub fn state(&self) -> &WorldState {

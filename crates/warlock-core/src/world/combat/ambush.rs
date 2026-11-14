@@ -18,6 +18,7 @@ use crate::action::{AttackKind, Event};
 use crate::combat::{Blow, Profile, Target};
 use crate::content::{Build, Trigger};
 use crate::dice::Dice;
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::world::{ActorId, AttackSkills, World};
 
@@ -142,7 +143,13 @@ impl World {
         let Some(dice) = self.sneak_dice(attacker) else {
             return blow;
         };
-        let extra = dice.roll(&mut self.state.rng).max(0);
+        let mut rng = draw!(
+            self,
+            "ambush/sneak/{}/{}",
+            self.state.actors.key(attacker),
+            self.state.actors.key(target)
+        );
+        let extra = dice.roll(&mut rng).max(0);
         // A sneak attack that hits builds the attacker's resources (spec §8 "Resources"); its
         // openings only on its mark, or with none standing (`mark.rs`); an exploit's, spending
         // them, builds none (`openings.rs`).

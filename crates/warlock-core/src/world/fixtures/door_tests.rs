@@ -423,13 +423,13 @@ fn a_door_that_holds_says_whamm_and_an_unbreakable_one_always_holds() {
     }
     // An iron door has no sturdiness: it never breaks, and no die is rolled.
     let mut w = world("iron");
-    let rng = w.state().rng.clone();
+    let rng = crate::test_support::draws(&w);
     for _ in 0..20 {
         assert!(w.apply(&Action::Kick(Dir::E)).took_turn);
         assert_eq!(last_message(&w), "WHAMM!");
     }
     assert_eq!(terrain(&w, EAST), "iron_door");
-    assert_eq!(w.state().rng, rng);
+    assert_eq!(crate::test_support::draws(&w), rng);
 }
 
 #[test]

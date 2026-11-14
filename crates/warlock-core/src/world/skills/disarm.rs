@@ -24,6 +24,7 @@ use crate::action::Event;
 use crate::check::{self, Checked};
 use crate::content::ActionKind;
 use crate::geom::Dir;
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::world::{Spent, World};
@@ -47,7 +48,7 @@ impl World {
         let price = self.price_of(player, ActionKind::Disarm);
         let modifier = self.disarm_modifier();
         let difficulty = self.difficulty_of(Hidden::Trap(kind));
-        let checked = check::roll(&mut self.state.rng, modifier, difficulty);
+        let checked = check::roll(&mut draw!(self, "disarm/player"), modifier, difficulty);
         if self.trains(Use::Disarm) {
             self.train(Use::Disarm);
         }

@@ -9,6 +9,7 @@ use crate::content::ClassActive;
 use crate::noise::SoundKind;
 use crate::skills::{Effect, Trained, Use};
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::draws;
 use crate::test_support::{last, run};
 use crate::world::*;
 
@@ -27,6 +28,7 @@ pub(in crate::world) fn foe_at(w: &mut World, creature: &str, at: Pos, score: u8
     let def = content.creature(creature);
     let actor = Actor {
         id,
+        key: format!("test/{}", id.0),
         creature,
         pos: at,
         patrol: None,
@@ -213,12 +215,11 @@ fn no_level_cut_and_two_draws_a_hearer() {
     let troll = foe_at(&mut w, "troll", at, 3);
     assert!(w.content().creature(w.state.actors[&troll].creature).level > w.player_level());
     w.perceive(&mut Vec::new());
-    let mut rng = w.state.rng.clone();
+    let before = draws(&w);
     let mut events = Vec::new();
     let _ = w.war_cry(&mut events);
     assert!(suffers(&w, troll, "frightened"));
-    crate::combat::roll_natural(&mut rng);
-    assert_eq!(w.state.rng, rng, "two gameplay draws for the one hearer");
+    assert_eq!(draws(&w), before + 1, "one draw for the one hearer");
 }
 
 #[test]
@@ -237,10 +238,10 @@ fn the_fearless_and_the_peaceful_draw_nothing() {
         .faction_override = Some(peaceful);
     assert_ne!(w.stance(w.state.player, friend), Stance::Hostile);
     w.perceive(&mut Vec::new());
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     let mut events = Vec::new();
     let _ = w.war_cry(&mut events);
-    assert_eq!(w.state.rng, rng, "no draw");
+    assert_eq!(draws(&w), rng, "no draw");
     assert!(!suffers(&w, bones, "frightened"));
 }
 

@@ -131,7 +131,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `most` of those it summoned live (on any level), and a free cell lies within `spread`; deciding
   draws nothing. It then pays the mana, takes `ceil(cooldown / eases)` degrees of `summoning`
   (the house rule: an ability's limit is a cooldown status), makes a spell's noise, and rolls
-  `count` on the gameplay stream, capped by the room `most` leaves; each creature is one
+  `count` on its keyed stream, capped by the room `most` leaves; each creature is one
   `below(pool.len())` draw, made like a spawn (gear rolled from `gear/<actor id>`) on the next
   free cell: within `spread` (Chebyshev) in its line of sight, walkable, no one there, not a
   sanctuary it would shun, nearest first (Chebyshev distance, squared distance, row order). Fewer
@@ -155,7 +155,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `unseen` line when they do not see the bearer. No time, no noise. An ally of the player's has
   none. `innate` statuses: an actor is made with them and they come back as each of its turns
   starts; the look line never shows them. A `cry = { kind, loudness, every }`: after a turn
-  that was not a fight, a chance of 6 in `every` (one gameplay draw on its turn) of
+  that was not a fight, a chance of 6 in `every` (one keyed draw on its turn) of
   `Act::Cry(kind)`, a noise heard by the hearing rules ("You hear a hiss.", the sound layer).
 - **Splitting and dying into** (`warlock-core/src/world/creatures/split.rs`, the rules;
   `content/split.rs`, the data; docs/design/monster-dread.md §5.5 G5a and G5b, #1129): an
@@ -166,7 +166,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   gear, the spawner's cap ignored, its side, summoner, and mind copied, and `Actor::split_from =
   Half`. No draw. `dies_into = { creatures = [...], count = "2d4", spread = 1 }` (count 1 to 20,
   spread 1 to 5, default 1; never the player, a unique, or itself): as it dies, on the
-  player's level, `count` is rolled on the gameplay stream and each is one `below(pool.len())`
+  player's level, `count` is rolled on its keyed stream and each is one `below(pool.len())`
   draw, made on the next of `summon_cells(id, spread)` with the dead one's faction and no gear,
   `split_from = Corpse`. A kill of a half pays 25 % of its experience (after an ally's share), of
   a corpse's creature 10 %, and neither counts toward a quest's kills (`tally_kill`). Words: the
@@ -375,7 +375,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`ObjectDef::corpse`) on its cell or the nearest free one, at half its maximum hit points rounded
   up, with no gear, pack, `npc` id, or mimic's disguise. It serves as a summon does (`most` 2, ten
   minutes), and a second death leaves nothing. A `unique` type's corpse is refused. One time in ten
-  (one `below(100)` on the gameplay stream, after every refusal) it rises **berserk** instead: in
+  (one `below(100)` on its keyed stream, after every refusal) it rises **berserk** instead: in
   the faction `berserk`, `hostile_to_all` (hostile to every faction and to itself), by the plain
   AI, no ally, under no orders, counted toward neither `most` nor the cap nor a level's population,
   on the same clock (`Actor::risen`). Its kill pays as any of its type.
@@ -517,7 +517,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   character keeps the kind and name of the first that came to her (`Character::familiar`, saved,
   hashed; set as it comes, kept after it dies), and a calling makes that kind with that name at the
   player's grade now, "Tibb, your cat, comes back to you out of the dark.", with no draw. Only a
-  witch who never had one draws: two draws on the gameplay stream, the start's draw,
+  witch who never had one draws: two draws on its keyed stream, the start's draw,
   with `bargain_kinds` (the imp) in the race's list from `bargain_level` (30) of the character's
   class level; "Something comes out of the dark and sits at your feet." and the kind's arrival, the
   name on the same stream as a start's, at the player's grade; that one is remembered from then on.
@@ -867,7 +867,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     + 4 (at least 4), 15 gold per affix per level, 2 % one of his three uniques at 1500 gold.
   - **Muttering**: after each of its actions, a creature whose dialogue has a `mutter`, that goes
     about its routine (its mind calm) within 5 cells of the player (as far as a voice carries), mutters
-    with its `chance` (a hash of the run seed, the actor, and the moment: the gameplay stream is
+    with its `chance` (a hash of the run seed, the actor, and the moment: its keyed stream is
     untouched) one of its muttered lines, in rounds like the one-liners. It is a noise, a voice
     (50; §5 "Hearing"), and the player gets the words only if they hear it: with the speaker's
     name if they see it (`The bard sings: "Over the Wendle and under the moon..."`), else from
@@ -896,7 +896,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     pack ("The gardener gives you 10 gold coins.", what has no room lies at the player's feet),
     and the XP is gained ("You gain 15 experience.", with any levels it earns, §8 "Experience").
     A reward may also teach skills (`skills`, by skill id; #1329): a skill the player is untrained
-    in is trained at its `start` roll (drawn on the `levels` stream, never the gameplay one), a
+    in is trained at its `start` roll (drawn on the `levels` stream, never a keyed one), a
     trained one gets `marks` training marks instead, each as a mark earned by use (§8 "Skills");
     told in words, never numbers ("Sister Hild shows you how to dress a wound.", "You learn more
     of healing."). Sister Hild's Grave goods teaches Heal: `1d4`, or 100 marks.
@@ -1054,7 +1054,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   cannot move, one too big, or while swimming) is not refused: no action, no ability row, no key,
   the step itself is a check (as the check against bonds is, §8 "Status effects"). Their Dexterity
   modifier, what talents add to Dexterity's checks, and Escape artist's `escape` points, against
-  11 plus the creature's Willpower modifier (and its talents'); two gameplay draws. Made, "You
+  11 plus the creature's Willpower modifier (and its talents'); two keyed draws. Made, "You
   wriggle past the shopkeeper." and the step goes ahead as a swap; failed, "You try to wriggle
   past the shopkeeper, but it is in the way.", the step's price, the player stays. Every try marks
   Escape artist (`wriggle`, 50 %). A hostile creature is still struck, not wriggled past, and a shop's keeper is immune (the owner:

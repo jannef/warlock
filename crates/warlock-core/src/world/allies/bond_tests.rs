@@ -303,7 +303,10 @@ fn a_witch_comes_into_her_familiars_sight_at_25() {
 
 #[test]
 fn a_familiars_sight_is_its_own_eyes() {
-    let (mut w, cat, _) = familiar_hall('#', "cat", false);
+    let (mut w, cat, at) = familiar_hall('#', "cat", false);
+    // The kobold beside where the cat goes would fight it: gone.
+    let kobold = w.state.actor_at("bond_hall", at).expect("the kobold").id;
+    w.state.actors.remove(&kobold);
     put(&mut w, cat, Pos::new(9, 1));
     let far = Pos::new(12, 3);
     assert!(!compute(&mut w).in_sight(far), "not without the talent");

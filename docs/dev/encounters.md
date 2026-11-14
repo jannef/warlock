@@ -106,7 +106,7 @@ no talking out of being caught anywhere (B2), and "be careful what to flag".
   with `talk_past = true`, only in `Outcome::Met` (face to face: never the drop, a known party
   met is as any party of the entry), and only to a player trained in a skill with the `feint`
   benefit (Bluff; `Ability::Feint`'s test) while `data/rules/feint.toml` loads.
-- **The check** (gameplay stream, two draws): the lead type's (`World::lead_of`) Willpower
+- **The check** (a keyed stream of its own, two draws): the lead type's (`World::lead_of`) Willpower
   modifier against `rules/feint.toml`'s `difficulty` + the player's Presence modifier + their talents'
   Presence checks + Bluff's `feint` points (a feint's contest, at the party's lead). The lead
   failed: "You talk your way past.", the party lets the player go as `pass` does (nothing made),
@@ -160,7 +160,7 @@ pedlar's numbers are in `campaigns/ascmearc/data/dialogue/road.toml` and the thr
 `docs/dev/magic-items.md` "Unique items"). Hailing him opens the area as before; the offer is
 made on the first chat (or ask), on its own stream, so the encounter rolls are unchanged.
 
-## The checks (gameplay stream, two draws each)
+## The checks (each a keyed stream of its own, two draws)
 
 - The player's lookout: Willpower modifier + talents' Willpower checks + `lookout` + Alert's
   `notice`, against `difficulty` + the lead type's `stalk` + cover + the dark (night or twilight,
@@ -201,7 +201,7 @@ the player's next action, not by this one), then perception.
 (`Vec<Party>`), each left out while empty, so runs without encounters hash as before. A campaign
 without tables (the showcase) draws nothing: no replay moves. A run of the Ascmearc draws the
 rate roll on every overworld step onto a local area's cell from `encounters` alone, so its
-gameplay stream and hash change only from a step that meets someone. Tests that walk the
+draws and hash change only from a step that meets someone. Tests that walk the
 Ascmearc's overworld for something else (the ways into its dungeons, the lairs) load without
 the tables (`ContentFiles::remove_encounter_tables`, test-only), and so do fixtures that make
 peace with every faction (`fixture_factions::make_peace`: a hostile entry's types must be

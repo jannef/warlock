@@ -21,6 +21,7 @@
 
 use crate::combat::Profile;
 use crate::content::{Content, Grip, ObjectId, TwoShields};
+use crate::rng::draw;
 use crate::world::{Actor, World};
 
 /// What fighting with two shields costs now (each eased by the style's rank and talents).
@@ -93,7 +94,10 @@ impl World {
             .attack_benefit(&content, crate::action::AttackKind::Melee, None)
             .bash;
         let bash = me.bash_with(&content, second)?;
-        (hit && chance > 0 && self.state.rng.chance(u32::from(chance))).then_some(bash)
+        let bashes = hit
+            && chance > 0
+            && draw!(self, "two_shields/bash/{}", me.key).chance(u32::from(chance));
+        bashes.then_some(bash)
     }
 
     /// Whether the player's shields spoil the spell they are about to cast for `mana` (its
@@ -104,7 +108,9 @@ impl World {
         let Some(banes) = self.state.player().shield_banes(&self.content) else {
             return false;
         };
-        if banes.spell_failure == 0 || !self.state.rng.chance(banes.spell_failure) {
+        if banes.spell_failure == 0
+            || !draw!(self, "two_shields/fumble/player").chance(banes.spell_failure)
+        {
             return false;
         }
         self.spend_mana(player, mana);

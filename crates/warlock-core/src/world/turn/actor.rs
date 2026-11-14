@@ -123,9 +123,17 @@ impl AttackSkills {
     }
 }
 
+/// The player's actor key ([`Actor::key`]).
+pub const PLAYER_KEY: &str = "player";
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Actor {
     pub id: ActorId,
+    /// The actor's key for keyed draws (`rng.rs`, "Actor keys"): [`PLAYER_KEY`] for the player,
+    /// else the level, cell, and second it was made at and a counter of those made there then
+    /// (`depths:1/12,5@3600#0`; `Draws::actor_key`). Unique in the run and stable: unlike `id`,
+    /// never moved by how many actors were made before it.
+    pub key: String,
     pub kind: ActorKind,
     pub creature: CreatureId,
     pub level: String,

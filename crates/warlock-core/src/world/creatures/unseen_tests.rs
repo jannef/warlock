@@ -42,7 +42,9 @@ fn world_with(map: &str, ambient: u8) -> World {
         "name = \"Unseen\"\nstart_level = \"unseen_room\"\nseed = 7\nhp = 1000\n",
     );
     let content = Arc::new(Content::load(&files).expect("the fixture content loads"));
-    World::new(content, "unseen_room", Some(7)).expect("world")
+    let mut w = World::new(content, "unseen_room", Some(7)).expect("world");
+    crate::test_support::ungrade(&mut w);
+    w
 }
 
 /// The room with one creature, `glyph`, put on `at`.

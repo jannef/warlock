@@ -76,6 +76,7 @@ use crate::damage::{Damage, Kinds};
 use crate::dice::Roll;
 use crate::geom::Pos;
 use crate::magic::Mods;
+use crate::rng::draw;
 use crate::text::capitalized;
 use crate::world::combat::reflect::{Shot, Turned};
 use crate::world::{Actor, ActorId, AttackSkills, Cause, Spent, World};
@@ -505,7 +506,13 @@ impl World {
         if !self.pay_cast(cast) {
             return true;
         }
-        let back = heal.roll(&mut self.state.rng, cast.reroll).max(0);
+        let mut rng = draw!(
+            self,
+            "cast/heal/{}/{}",
+            self.state.actors.key(cast.by),
+            self.state.actors.key(target)
+        );
+        let back = heal.roll(&mut rng, cast.reroll).max(0);
         self.spell_heals(target, back);
         self.spell_landed(cast, target, back > 0);
         true
@@ -1057,7 +1064,13 @@ impl World {
                     ..Profile::bare(&attack).with(&benefit)
                 };
                 let profile = self.sneak_threat(by, unseen, profile);
-                let blow = combat::strike(&profile, &against, &mut self.state.rng);
+                let mut rng = draw!(
+                    self,
+                    "cast/strike/{}/{}",
+                    self.state.actors.key(by),
+                    self.state.actors.key(target)
+                );
+                let blow = combat::strike(&profile, &against, &mut rng);
                 // The sneak dice come on top, as after Protection.
                 let sneak = self.ambushed((by, target), unseen, blow).damage - blow.damage;
                 self.spell_practised(target, skills, blow, made);
@@ -1066,7 +1079,17 @@ impl World {
                 (blow.damage, blow.strike, sneak, caught)
             }
             Resolution::Auto | Resolution::Area => (
-                shot.dice.roll(&mut self.state.rng, shot.reroll).max(0),
+                shot.dice
+                    .roll(
+                        &mut draw!(
+                            self,
+                            "cast/auto/{}/{}",
+                            self.state.actors.key(by),
+                            self.state.actors.key(target)
+                        ),
+                        shot.reroll,
+                    )
+                    .max(0),
                 Strike::Hit { critical: false },
                 0,
                 None,

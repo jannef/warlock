@@ -12,6 +12,7 @@
 
 use super::alignment::Deed;
 use crate::content::{GiftDef, GiftTier, OnEat, TalentEffect, TalentId};
+use crate::rng::draw;
 use crate::stats::DRAIN_FLOOR;
 use crate::talent::{Taken, VigourEffect};
 use crate::world::{Spent, World};
@@ -73,7 +74,8 @@ impl World {
         &mut self,
         rolls: &crate::content::ProfaneRolls,
     ) -> Option<TalentId> {
-        let tier = *(self.state.rng).weighted(&GiftTier::ALL, |&t| u32::from(rolls.weight(t)))?;
+        let mut rng = draw!(self, "profane/gift/player");
+        let tier = *rng.weighted(&GiftTier::ALL, |&t| u32::from(rolls.weight(t)))?;
         let order = match tier {
             GiftTier::Lesser => [GiftTier::Lesser, GiftTier::Greater, GiftTier::Dire],
             GiftTier::Greater => [GiftTier::Greater, GiftTier::Dire, GiftTier::Lesser],
@@ -84,7 +86,7 @@ impl World {
             let pool: Vec<&GiftDef> = (content.profane().iter())
                 .filter(|g| g.tier == tier && g.drawn() && self.may_take_gift(g))
                 .collect();
-            if let Some(gift) = self.state.rng.weighted(&pool, |g| u32::from(g.weight)) {
+            if let Some(gift) = rng.weighted(&pool, |g| u32::from(g.weight)) {
                 return Some(gift.talent);
             }
         }

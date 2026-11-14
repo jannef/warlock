@@ -4,7 +4,7 @@ Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185)
 rules it implements are in spec/08d-traps-doors-digging.md. Keep it current with the code, as CLAUDE.md says.
 
 Doors (spec §8 "Doors"; M19, #130): the rules are `warlock-core/src/door.rs` (`Lock`, `Key`,
-`kick_breaks`/`break_chance`: `1d(sturdiness) ≤ Strength`, one gameplay draw), applied in
+`kick_breaks`/`break_chance`: `1d(sturdiness) ≤ Strength`, one keyed draw), applied in
 `world/fixtures/door.rs` (`open_door` unlocks with `Actor::key_for` and costs `unlock` + `open_door`,
 `swing_open`, `close_door`, `kick`/`kick_door`, the kick's Strength `World::kick_force`
 (effective Strength + athletics + talents' `door_kick` + worn `door_kick`, Hobnailed; a chest's

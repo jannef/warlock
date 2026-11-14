@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You pick up Hollow Charm, a gold and ruby amulet. Spears spring from the floor! The spear stabs
- the giant rat. Lightning arcs across the floor! The lightning bolt strikes the cave beetle.
+ The lightning bolt strikes the cave beetle.
+ You pick up Hollow Charm, a gold and ruby amulet.
 
 
 

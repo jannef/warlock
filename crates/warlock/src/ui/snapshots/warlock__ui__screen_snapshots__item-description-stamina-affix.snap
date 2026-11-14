@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You see here Ash Coat, a Masterwork chain mail shirt.
- You pick up Ash Coat, a Masterwork chain mail shirt.
+ You pick up Ash Coat, a Masterwork chain mail shirt. Spears spring from the floor! The spear stabs
+ the giant rat. Lightning arcs across the floor! The lightning bolt strikes the cave beetle.
 
 
 

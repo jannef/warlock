@@ -13,7 +13,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stats};
-use crate::test_support::{CONTENT as BUILTIN, last_text as last_message};
+use crate::test_support::{CONTENT as BUILTIN, last_text as last_message, run};
 use crate::world::*;
 use crate::world::{CraftStepKind, RecipeLack};
 use std::sync::LazyLock;
@@ -597,6 +597,9 @@ fn fletcher_is_half_the_time_twice_the_count_and_a_better_check() {
         let mut w = equipped(false, seed, "short_bow");
         if fletches {
             w.player_mut().talents.take("fletcher", None);
+            // The count is drawn as the work ends: start late, so both end at the one moment and
+            // draw alike (`rng.rs`, "Keys").
+            run(&mut w, "rest:5m");
         }
         pieces(&mut w, "bone", 1); // c
         pieces(&mut w, "wood", 2); // d

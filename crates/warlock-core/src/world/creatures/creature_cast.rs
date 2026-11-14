@@ -47,6 +47,7 @@ use crate::content::{
 use crate::fov::radius2;
 use crate::geom::Pos;
 use crate::noise::Act;
+use crate::rng::draw;
 use crate::text::capitalized;
 use crate::world::magic::cast::Cast;
 use crate::world::magic::spell::{Caster, burst_cells, cone_cells};
@@ -328,7 +329,13 @@ impl World {
         let Some(heal) = cast.roll else {
             return;
         };
-        let back = heal.roll(&mut self.state.rng, cast.reroll).max(0);
+        let mut rng = draw!(
+            self,
+            "creature_cast/heal/{}/{}",
+            self.state.actors.key(cast.by),
+            self.state.actors.key(on)
+        );
+        let back = heal.roll(&mut rng, cast.reroll).max(0);
         if on == self.state.player {
             self.spell_heals(on, back);
             return;

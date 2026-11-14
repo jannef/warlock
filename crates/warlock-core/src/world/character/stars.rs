@@ -11,6 +11,7 @@ use crate::content::{Content, TerrainDef};
 use crate::damage::Damage;
 use crate::geom::Pos;
 use crate::ice::Shock;
+use crate::rng::draw;
 use crate::talent::{Taken, Talents};
 use crate::world::magic::spell::Caster;
 use crate::world::{ActorId, World};
@@ -133,7 +134,9 @@ impl World {
             },
             cells: cells.clone(),
         });
-        let roll = burst.damage.roll(&mut self.state.rng, burst.reroll);
+        let roll = burst
+            .damage
+            .roll(&mut draw!(self, "stars/burst/player"), burst.reroll);
         let here = self.state.current_level.clone();
         let caught: Vec<ActorId> = (self.state.actors.values())
             .filter(|a| a.id != player && a.level == here && cells.contains(&a.pos))

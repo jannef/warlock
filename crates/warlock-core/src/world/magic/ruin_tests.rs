@@ -7,6 +7,7 @@ use super::spell::Caster;
 use crate::content::{Burst, ContentFiles, DamageTypeId};
 use crate::magic::{Magic, Rarity};
 use crate::object::Stack;
+use crate::test_support::draws;
 use crate::test_support::{builtin, said};
 use crate::world::*;
 
@@ -208,14 +209,14 @@ fn a_fireball_cast_burns_and_draws_from_its_own_stream() {
     w.player_mut().spells.insert(sp("fireball"), 1);
     w.player_mut().mana = 100;
     let at = lay(&mut w, "scroll_of_fireball", 100);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     let mut other = w.clone();
     w.apply(&Action::Cast("fireball".into(), Some(at)));
     assert!(count(&w, at, "scroll_of_fireball") < 100);
     // The same cast over no pile rolls the gameplay stream the same.
     other.state.current_mut().set_pile(at, Vec::new());
     other.apply(&Action::Cast("fireball".into(), Some(at)));
-    assert_eq!(w.state.rng, other.state.rng);
-    assert_ne!(w.state.rng, rng, "the cast rolled its damage");
+    assert_eq!(draws(&w), draws(&other));
+    assert_ne!(draws(&w), rng, "the cast rolled its damage");
     assert!(other.state.ruin_rng.is_none());
 }

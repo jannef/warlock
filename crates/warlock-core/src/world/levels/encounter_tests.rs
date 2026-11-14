@@ -7,6 +7,7 @@
 use crate::action::{Action, parse_actions};
 use crate::content::{ContentFiles, LevelKind, local_area_id};
 use crate::replay::Replay;
+use crate::test_support::draws;
 use crate::test_support::{builtin, last_text as last, run as act};
 use crate::world::*;
 
@@ -97,30 +98,27 @@ fn party(w: &World) -> Vec<ActorId> {
 fn no_draws_without_an_encounter() {
     // No tables: nothing is drawn on any step, from any stream.
     let mut plain = World::new(builtin(), "world", None).expect("world");
-    let rng = plain.state.rng.clone();
+    let rng = draws(&plain);
     act(&mut plain, "move:E*3 move:S*2");
     assert!(plain.state.encounters.is_none(), "no stream is made");
-    assert_eq!(plain.state.rng, rng, "the gameplay stream is not drawn");
+    assert_eq!(draws(&plain), rng, "the gameplay stream is not drawn");
     // Pending: steps are refused and draw nothing.
     let mut w = world(true);
     act(&mut w, "meet:kobolds:drop");
-    let (rng, encounters) = (w.state.rng.clone(), w.state.encounters.clone());
+    let (rng, encounters) = (draws(&w), w.state.encounters.clone());
     let at = w.player_pos();
     act(&mut w, "move:E wait");
     assert_eq!(w.player_pos(), at);
     assert_eq!(last(&w), PENDING_REFUSED);
-    assert_eq!(
-        (w.state.rng.clone(), w.state.encounters.clone()),
-        (rng, encounters)
-    );
+    assert_eq!((draws(&w), w.state.encounters.clone()), (rng, encounters));
 }
 
 #[test]
 fn a_forced_outcome_on_a_peaceful_party_draws_no_check() {
     let mut w = world(true);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     act(&mut w, "meet:hermit");
-    assert_eq!(w.state.rng, rng, "no lookouts for travellers");
+    assert_eq!(draws(&w), rng, "no lookouts for travellers");
     let view = w.perception().encounter().expect("pending");
     assert_eq!(view.title, "A hermit");
     let ids: Vec<_> = view.choices.iter().map(|(_, c)| c.id()).collect();
@@ -587,10 +585,10 @@ fn talking_past_is_offered_only_when_flagged_met_and_trained() {
     let mut w = talker(1, 14, None);
     act(&mut w, "meet:talkers:met");
     assert_eq!(choice_ids(&w), ["evade", "fight"]);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     act(&mut w, "encounter:bluff");
     assert_eq!(last(&w), "That is not a choice now.");
-    assert_eq!(w.state.rng, rng, "a refusal draws nothing");
+    assert_eq!(draws(&w), rng, "a refusal draws nothing");
     // Not for an entry without the flag.
     let mut w = talker(1, 14, Some(50));
     act(&mut w, "meet:kobolds:met");

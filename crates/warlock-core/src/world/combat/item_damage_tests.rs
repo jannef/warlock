@@ -6,7 +6,7 @@ use super::item_damage::Harmed;
 use crate::content::{ContentFiles, ItemHarm};
 use crate::item_parts::ItemPart;
 use crate::object::Stack;
-use crate::rng::Rng;
+use crate::test_support::draws;
 use crate::world::classes::class_active_tests::world;
 use crate::world::*;
 
@@ -30,7 +30,7 @@ fn damaged_of_200(material: &str, harm: ItemHarm) -> usize {
     (0..200)
         .filter(|&n| {
             let mut v = w.clone();
-            v.state.rng = Rng::stream(n, "item_damage_tests");
+            v.state.seed = n;
             v.harm_item(0, harm) == Harmed::Damaged
         })
         .count()
@@ -59,10 +59,10 @@ fn the_material_chance_decides_over_seeds() {
 fn no_material_withstands_a_failed_attempt_and_the_extremes_draw_nothing() {
     // Mithril withstands rust at 100, but not a failed attempt.
     let mut w = sword_of("mithril");
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     assert!(w.withstands(0, ItemHarm::Rust));
     assert!(!w.withstands(0, ItemHarm::Work));
-    assert_eq!(w.state.rng, rng, "0 and 100 draw nothing");
+    assert_eq!(draws(&w), rng, "0 and 100 draw nothing");
     assert_eq!(w.harm_item(0, ItemHarm::Work), Harmed::Damaged);
     let worked = w.state.player().inventory[0]
         .worked()
@@ -86,9 +86,9 @@ fn adamantium_is_never_damaged_by_anything() {
         ItemHarm::Work,
     ] {
         let mut v = w.clone();
-        let rng = v.state.rng.clone();
+        let rng = draws(&v);
         assert_eq!(v.harm_item(0, harm), Harmed::Withstood, "{harm:?}");
-        assert_eq!(v.state.rng, rng, "{harm:?}: nothing drawn");
+        assert_eq!(draws(&v), rng, "{harm:?}: nothing drawn");
         assert!(v.state.player().inventory[0].worked().is_none());
     }
     assert!(harmed_by_all(&w).iter().all(|h| *h == Harmed::Withstood));
@@ -167,12 +167,12 @@ fn harmed_by_all(w: &World) -> Vec<Harmed> {
         .flat_map(|n| harms.map(|h| (n, h)))
         .map(|(n, harm)| {
             let mut v = w.clone();
-            v.state.rng = Rng::stream(n, "item_damage_protect");
-            let rng = v.state.rng.clone();
+            v.state.seed = n;
+            let rng = draws(&v);
             let protected = v.item_protected(&v.state.player().inventory[0]);
             let came = v.harm_item(0, harm);
             if protected {
-                assert_eq!(v.state.rng, rng, "protection draws nothing");
+                assert_eq!(draws(&v), rng, "protection draws nothing");
             }
             came
         })

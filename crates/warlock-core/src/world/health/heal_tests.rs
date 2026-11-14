@@ -11,6 +11,7 @@ use crate::content::{ContentFiles, DiseaseId, StatusId};
 use crate::heal::Ailment;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::Stat;
+use crate::test_support::peek;
 use crate::test_support::{last_text as last_message, texts as messages};
 use crate::time::Duration;
 use crate::world::*;
@@ -202,7 +203,7 @@ fn bleeding_is_an_intelligence_check_and_stops_or_may_be_tried_again() {
             let plus = modifier(&w);
             let treat = (w.content().status(status(&w, "bleeding")).treat.clone()).expect("treat");
             assert_eq!(treat.difficulty_at(5), difficulty);
-            let mut rng = w.state.rng.clone();
+            let mut rng = peek(&w, "heal/player");
             let expected = check::check(&mut rng, plus, difficulty);
             let out = w.apply(&"heal:bleeding".parse().expect("action"));
             assert!(out.took_turn);
@@ -255,7 +256,7 @@ fn a_poison_may_be_tried_again_after_a_failure_and_after_a_success() {
         let mut w = World::new(content(false), "room", Some(seed)).expect("world");
         train(&mut w, 0);
         afflict(&mut w, "poisoned", 4);
-        let mut rng = w.state.rng.clone();
+        let mut rng = peek(&w, "heal/player");
         let expected = check::check(&mut rng, modifier(&w), 8 + 4);
         assert!(w.apply(&"heal:poisoned".parse().expect("action")).took_turn);
         let poisoned = status(&w, "poisoned");
@@ -277,7 +278,7 @@ fn a_poison_may_be_tried_again_after_a_failure_and_after_a_success() {
         // Whatever came of it, it may be tried again at once.
         assert_eq!(heal_in_menu(&w), Some(None));
         let severity_before = effect.severity;
-        let mut rng = w.state.rng.clone();
+        let mut rng = peek(&w, "heal/player");
         let expected = check::check(&mut rng, modifier(&w), 8 + i32::from(severity_before));
         let out = w.apply(&"heal:poisoned".parse().expect("action"));
         assert!(out.took_turn && !out.elapsed.is_zero());
@@ -308,7 +309,7 @@ fn a_disease_may_be_tried_again_eased_never_cured() {
         assert_eq!(own[0].action, "heal:filth_fever".parse().expect("action"));
         let before = *w.state.player().diseases.get(fever).expect("it");
         let difficulty = w.content().disease(fever).difficulty;
-        let mut rng = w.state.rng.clone();
+        let mut rng = peek(&w, "heal/player");
         let expected = check::check(&mut rng, modifier(&w), difficulty);
         assert!(
             w.apply(&Action::Heal {

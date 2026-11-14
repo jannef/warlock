@@ -5,6 +5,7 @@
 
 use crate::combat::Category;
 use crate::content::ContentFiles;
+use crate::test_support::draws;
 use crate::test_support::run;
 use crate::world::*;
 use std::sync::LazyLock;
@@ -270,20 +271,16 @@ fn a_stomach_for_rotten_food_eats_it_unharmed() {
 fn an_eye_for_traps_notices_traps_in_passing_but_not_secret_doors() {
     // One check a turn for the trap beside them, none for the secret door.
     let mut w = world_in("traptest", "trapwise");
-    let checked = |w: &World| {
-        let mut rng = w.state.rng.clone();
-        crate::combat::roll_natural(&mut rng);
-        rng
-    };
+    let checked = |w: &World| draws(w) + 1;
     let once = checked(&w);
     // A turn of rest: a wait would search (#1326).
     run(&mut w, "rest:6s");
-    assert_eq!(w.state.rng, once, "one check, for the trap");
+    assert_eq!(draws(&w), once, "one check, for the trap");
     // A warrior of a race without the eye notices neither.
     let mut human = world_in("traptest", "human");
-    let before = human.state.rng.clone();
+    let before = draws(&human);
     run(&mut human, "rest:6s");
-    assert_eq!(human.state.rng, before, "no check at all");
+    assert_eq!(draws(&human), before, "no check at all");
 }
 
 #[test]

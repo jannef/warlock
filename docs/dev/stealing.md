@@ -26,7 +26,7 @@ is the Steal skill's use: `Action::Steal(Dir)` (replay text `steal:DIR`, cost `s
   on the cell (`World::seen_creature_at`, shared with talk), or when it is hostile
   (`World::stance`). Else priced first (`price_of(player, ActionKind::Steal)`, before the load
   changes), then the contest `check::contest(rng, Dexterity modifier + Steal benefit, victim's
-  Willpower modifier)` (effective scores; four gameplay draws, the victim's roll first; ties go
+  Willpower modifier)` (effective scores; four keyed draws, the victim's roll first; ties go
   to the thief). Unnoticed: `lift` takes one stack the victim neither wears nor wields
   (`Equipment::holds`), uniformly (`rng.index(n)`, a draw only when there are two or more),
   `Equipment::after_removal` follows the victim's letters, and the stack joins the player's pack.

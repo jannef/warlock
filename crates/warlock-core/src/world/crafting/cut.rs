@@ -31,6 +31,7 @@ use crate::combat;
 use crate::content::{Content, CutId, Cutting, Gems, RecipeId};
 use crate::item_parts::ItemPart;
 use crate::object::{self, Stack};
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::world::{Spent, World};
@@ -197,7 +198,7 @@ impl World {
             + me.skill_effect_of(&content, def.skill, Effect::Craft)
             + self.binding_boon(def.skill);
         let against = def.difficulty + content.material(gem).work;
-        let natural = combat::roll_natural(&mut self.state.rng);
+        let natural = combat::roll_natural(&mut draw!(self, "cut/player"));
         let step = (content.recipes().settings.as_ref()).map_or(5, |s| s.cut_step);
         // Master's hand: the cut comes sooner, never the making (`mastery.rs`).
         let margin = natural + modifier - against;

@@ -8,6 +8,7 @@ use crate::action::{Action, parse_actions};
 use crate::combat::{Blow, Strike};
 use crate::content::{ClassActive, ResourceId};
 use crate::replay::Replay;
+use crate::test_support::draws;
 use crate::test_support::{builtin, last, run};
 use crate::world::*;
 
@@ -85,9 +86,9 @@ fn holy_wrath_falls_on_the_unholy_alone_until_avatar() {
     w.state.actors.remove(&draugr);
     let goblin = foe(&mut w, "goblin", 500);
     assert!(!w.content().unholy(w.state.actors[&goblin].creature));
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     assert_eq!(wrath_on(&mut w, goblin, 10), vec![0; 10]);
-    assert_eq!(w.state.rng, rng, "no draw when it does not fall");
+    assert_eq!(draws(&w), rng, "no draw when it does not fall");
     // Avatar: on every foe, the goblin too.
     reach(&mut w, 60);
     let wrath = wrath_on(&mut w, goblin, 60);
@@ -104,10 +105,10 @@ fn holy_wrath_asks_a_hit_and_is_resisted() {
     let player = w.state.player;
     let draugr = foe(&mut w, "draugr", 500);
     // A miss: nothing, and no draw.
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     let missed = Blow::missed(None);
     assert_eq!(w.holy_wrathed(player, draugr, missed), missed);
-    assert_eq!(w.state.rng, rng);
+    assert_eq!(draws(&w), rng);
     // A blow soaked to nothing still carries it: it is never soaked.
     let soaked = Blow { damage: 0, ..HIT };
     assert!(w.holy_wrathed(player, draugr, soaked).damage >= 1);

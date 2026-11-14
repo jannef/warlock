@@ -63,7 +63,7 @@ reschedules to the first 06:00 after it).
 
 Elixirs (#568, `world/health/elixir.rs`) and corpses raise a **potential**: an elixir's trained
 rise, the potential lifted to the score where it was below, then `Stats::widen(stat, by)`,
-never past `SCORES` (docs/dev/potions.md); a corpse's `on_eat` `widen`, a gameplay draw for
+never past `SCORES` (docs/dev/potions.md); a corpse's `on_eat` `widen`, a keyed draw for
 `Stats::widen(stat, 1)` (docs/dev/hunger.md). A corpse's `train` marks go straight into
 `Actor::stat_marks` (`world/health/eat.rs::corpse_gifts`, sure, no draw, no `StatUse`).
 

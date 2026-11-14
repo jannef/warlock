@@ -8,6 +8,7 @@ use crate::content::{Affliction, ContentFiles, StatusId};
 use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::status::Effect;
+use crate::test_support::draws;
 use crate::test_support::{builtin, run, said as messages};
 use crate::world::*;
 
@@ -404,7 +405,7 @@ fn bites_poison_by_their_chance_drawing_only_below_a_sure_thing() {
     // The biter always poisons: no draw.
     let mut w = world_on("#####\n#@b.#\n#####\n", "hp = 1000");
     let (player, biter) = (w.player_id(), ActorId(1));
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     w.after_blow(
         biter,
         player,
@@ -415,7 +416,7 @@ fn bites_poison_by_their_chance_drawing_only_below_a_sure_thing() {
         ),
         &mut Vec::new(),
     );
-    assert_eq!(w.state.rng, rng, "nothing drawn at 100 %");
+    assert_eq!(draws(&w), rng, "nothing drawn at 100 %");
     assert_eq!(effect(&w, player, "poisoned").map(|e| e.severity), Some(4));
     // Only its bite: a shot or a spell by it carries nothing.
     let mut w = world_on("#####\n#@b.#\n#####\n", "hp = 1000");
@@ -434,8 +435,9 @@ fn bites_poison_by_their_chance_drawing_only_below_a_sure_thing() {
         let mut w = World::new(content, "fight", Some(seed)).expect("world");
         (0..40)
             .map(|_| {
-                let mut expected = w.state.rng.clone();
-                let lands = expected.chance(50);
+                let label = format!("status/rider/{}/player", w.state.actors.key(ActorId(1)));
+                let lands = crate::test_support::peek(&w, &label).chance(50);
+                let expected = crate::test_support::draws(&w) + 1;
                 let poisoned = status(&w, "poisoned");
                 let me = w.state.actors.get_mut(&player).expect("player");
                 me.effects.remove(poisoned);
@@ -449,7 +451,7 @@ fn bites_poison_by_their_chance_drawing_only_below_a_sure_thing() {
                     ),
                     &mut Vec::new(),
                 );
-                assert_eq!(w.state.rng, expected, "one draw");
+                assert_eq!(crate::test_support::draws(&w), expected, "one draw");
                 assert_eq!(effect(&w, player, "poisoned").is_some(), lands);
                 lands
             })

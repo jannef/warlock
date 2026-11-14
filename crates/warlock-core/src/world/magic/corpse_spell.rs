@@ -32,6 +32,7 @@ use crate::content::{
     CorpseUse, CreatureId, CreatureSpawn, FactionId, LevelKind, SpellData, SpellRise,
 };
 use crate::geom::Pos;
+use crate::rng::draw;
 use crate::time::{Duration, GameTime};
 use crate::world::allies::ally::AllySource;
 use crate::world::{ActorId, World, levels::travel};
@@ -99,8 +100,9 @@ impl World {
             return true;
         }
         self.use_corpse(cast.def, at);
-        let back = heal.roll(&mut self.state.rng, cast.reroll).max(0);
-        let mana = (cast.def.effect.mana).map_or(0, |m| m.roll(&mut self.state.rng, 0).max(0));
+        let mut rng = draw!(self, "corpse_spell/feast/player");
+        let back = heal.roll(&mut rng, cast.reroll).max(0);
+        let mana = (cast.def.effect.mana).map_or(0, |m| m.roll(&mut rng, 0).max(0));
         self.heal_player(back);
         let me = self.player_mut();
         me.mana = (me.mana + mana).min(max_mana).max(me.mana);
@@ -199,7 +201,7 @@ impl World {
     /// The one draw that says whether it rises berserk, and the faction it then rises in (none
     /// where the world has no such faction).
     fn draw_berserk(&mut self, rise: &SpellRise) -> Option<FactionId> {
-        let draw = self.state.rng.below(100);
+        let draw = draw!(self, "corpse_spell/berserk/player").below(100);
         (draw < u32::from(rise.berserk))
             .then(|| self.content.factions().id(&rise.berserk_faction))
             .flatten()

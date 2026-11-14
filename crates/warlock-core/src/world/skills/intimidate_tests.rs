@@ -6,6 +6,7 @@ use crate::ability::Ability;
 use crate::noise::SoundKind;
 use crate::skills::{Effect, Trained};
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::draws;
 use crate::test_support::{last, run};
 use crate::world::classes::class_active_tests::{suffers, world};
 use crate::world::*;
@@ -29,6 +30,7 @@ pub(in crate::world) fn foe_at(w: &mut World, creature: &str, at: Pos, score: u8
     let def = content.creature(creature);
     let actor = Actor {
         id,
+        key: format!("test/{}", id.0),
         creature,
         pos: at,
         patrol: None,
@@ -131,10 +133,10 @@ fn refusals_take_no_time_and_no_draw() {
     let me = w.player_pos();
     let at = near(&w);
     let refused = |w: &mut World, at: Pos, why: &str| {
-        let (time, rng) = (w.state.time, w.state.rng.clone());
+        let (time, rng) = (w.state.time, draws(w));
         let out = threaten(w, at);
         assert!(!out.took_turn, "{why}");
-        assert_eq!((w.state.time, &w.state.rng), (time, &rng), "{why}");
+        assert_eq!((w.state.time, draws(w)), (time, rng), "{why}");
         assert_eq!(last(w), why);
     };
     refused(&mut w, at, "You see no one there to intimidate.");
@@ -194,11 +196,10 @@ fn the_faint_hearted_quail_and_the_steady_stand() {
     let at = near(&w);
     let kobold = foe_at(&mut w, "kobold", at, 3);
     w.perceive(&mut Vec::new());
-    let mut rng = w.state.rng.clone();
+    let before = draws(&w);
     let spent = w.intimidate(at, &mut Vec::new());
     assert!(matches!(spent, Spent::Turn(_)));
-    crate::combat::roll_natural(&mut rng);
-    assert_eq!(w.state.rng, rng, "two gameplay draws");
+    assert_eq!(draws(&w), before + 1, "one draw");
     assert!(said(&w, "The kobold quails and flees from you."));
     let fear_id = w.content().status_id("frightened").expect("frightened");
     let effect = w.state.actors[&kobold].effects.get(fear_id).copied();

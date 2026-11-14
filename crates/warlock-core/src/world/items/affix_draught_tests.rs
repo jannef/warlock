@@ -6,6 +6,7 @@
 
 use crate::content::ContentFiles;
 use crate::magic::{Affix, Magic, Rarity};
+use crate::test_support::draws;
 use crate::test_support::run;
 use crate::world::health::potion::KEPT;
 use crate::world::*;
@@ -99,9 +100,9 @@ fn potions(w: &World) -> u32 {
 fn of_the_alchemist_keeps_potions_by_its_chance_until_taken_off() {
     let mut w = world(false);
     assert_eq!(kept(&w), 0);
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     run(&mut w, "eat:a");
-    assert_eq!(w.state.rng, rng, "no chance, no draw");
+    assert_eq!(draws(&w), rng, "no chance, no draw");
     assert_eq!(potions(&w), 29);
 
     wear(
@@ -123,9 +124,9 @@ fn of_the_alchemist_keeps_potions_by_its_chance_until_taken_off() {
 
     run(&mut w, "remove:left_ring");
     assert_eq!(kept(&w), 0, "taken off, the chance is gone");
-    let rng = w.state.rng.clone();
+    let rng = draws(&w);
     run(&mut w, "eat:a");
-    assert_eq!(w.state.rng, rng);
+    assert_eq!(draws(&w), rng);
     assert_eq!(potions(&w), left - 1);
 }
 

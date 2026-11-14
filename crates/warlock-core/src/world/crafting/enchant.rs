@@ -65,6 +65,7 @@ use crate::magic::loot::{pick_weighted, rare_name, rare_split, roll_affix_within
 use crate::magic::{Affix, Magic, capacity};
 use crate::object::Stack;
 use crate::rng::Rng;
+use crate::rng::draw;
 use crate::scroll_label::Lore;
 use crate::skills::{Effect, MAX_ENCHANT_LEVEL, Use};
 use crate::stats::Stat;
@@ -747,7 +748,7 @@ impl World {
             + me.skill_effect_of(&content, def.skill, Effect::Craft);
         let step = content.enchanting().map_or(3, |r| r.level_step.max(1));
         let against = def.difficulty + i32::from(resolved.level / step);
-        let natural = combat::roll_natural(&mut self.state.rng);
+        let natural = combat::roll_natural(&mut draw!(self, "enchant/check/player"));
         let band = enchant_band(natural, natural + modifier - against);
         self.enchant_out(def, &resolved, band);
         if self.trains(Use::Craft) {
@@ -892,7 +893,8 @@ impl World {
         let families = resolved.first();
         let level = resolved.level;
         let room = capacity(&stack, content);
-        let rng = &mut self.state.rng;
+        let mut rng = draw!(self, "enchant/affixes/player");
+        let rng = &mut rng;
         let fresh = |affixes: Vec<Affix>, rarity: Rarity, name: Option<String>| Magic {
             rarity,
             level,

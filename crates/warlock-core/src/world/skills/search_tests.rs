@@ -8,6 +8,7 @@ use crate::combat;
 use crate::content::{ContentFiles, TerrainId};
 use crate::perception::CellView;
 use crate::replay::Replay;
+use crate::test_support::draws;
 use crate::test_support::{builtin, run, said as texts};
 use crate::world::*;
 
@@ -53,13 +54,9 @@ fn id(world: &World, terrain: &str) -> TerrainId {
     world.content().terrain_id(terrain).expect(terrain)
 }
 
-/// The gameplay stream after `checks` checks from where `world`'s is now.
-fn after_checks(world: &World, checks: usize) -> crate::rng::Rng {
-    let mut rng = world.state.rng.clone();
-    for _ in 0..checks {
-        combat::roll_natural(&mut rng);
-    }
-    rng
+/// The draws there will have been after `checks` checks from where `world`'s are now.
+fn after_checks(world: &World, checks: usize) -> u64 {
+    draws(world) + checks as u64
 }
 
 // A secret door in the wall between two rooms; the player in the west room, beside it.
@@ -119,7 +116,7 @@ fn waiting_is_searching() {
         assert_eq!(waited.state_hash(), searched.state_hash());
         assert_eq!(texts(&waited), texts(&searched));
         // The active check, once: the door of difficulty 1 is found, the one of 50 not.
-        assert_eq!(waited.state.rng, expected);
+        assert_eq!(draws(&waited), expected);
         assert_eq!(waited.state.current().secrets.is_empty(), found, "{map}");
         assert_eq!(
             texts(&waited).last().map(String::as_str) == Some("You find a secret door!"),
@@ -136,27 +133,27 @@ fn checks_draw_only_when_something_hidden_is_in_reach() {
         "#######\n#@#...#\n#.H...#\n#.#...#\n#.#...#\n#######\n",
         WARRIOR,
     );
-    let before = w.state.rng.clone();
+    let before = draws(&w);
     run(&mut w, "rest:18s");
-    assert_eq!(w.state.rng, before, "no passive check for the warrior");
+    assert_eq!(draws(&w), before, "no passive check for the warrior");
     // A search checks it once a turn: two draws (the natural roll).
     let expected = after_checks(&w, 1);
     run(&mut w, "search");
-    assert_eq!(w.state.rng, expected);
+    assert_eq!(draws(&w), expected);
     // Out of reach, a search draws nothing.
     run(&mut w, "move:S*3");
     assert_eq!(w.player_pos(), Pos::new(1, 4));
-    let before = w.state.rng.clone();
+    let before = draws(&w);
     run(&mut w, "search wait");
-    assert_eq!(w.state.rng, before);
+    assert_eq!(draws(&w), before);
 }
 
 #[test]
 fn nothing_hidden_nearby_means_nothing_drawn_however_long_one_searches() {
     let mut w = world("#######\n#@....#\n#.....#\n#######\n", THIEF);
-    let before = w.state.rng.clone();
+    let before = draws(&w);
     let out = run(&mut w, "search:10 wait*5");
-    assert_eq!(w.state.rng, before);
+    assert_eq!(draws(&w), before);
     assert_eq!(out[0].elapsed, crate::time::Duration::seconds(60));
     assert!(
         texts(&w).contains(&"You search for 1 minute and find nothing.".to_string()),
@@ -181,12 +178,16 @@ fn who_notices_in_passing() {
         (stone, WARRIOR, false),
     ] {
         let mut w = world(map, character);
-        let before = w.state.rng.clone();
+        // Whoever checks makes it: a natural 24.
+        crate::test_support::rig(&mut w, "search/passive/2,2", |rng| {
+            combat::roll_natural(rng) == 24
+        });
+        let before = draws(&w);
         // A turn of rest, in passing: a wait would search (#1326).
         run(&mut w, "rest:6s");
         let found = w.state.current().secrets.is_empty();
         assert_eq!(found, notices, "{character} in {map}");
-        assert_eq!(w.state.rng != before, notices, "{character}: drew a check");
+        assert_eq!(draws(&w) != before, notices, "{character}: drew a check");
         if notices {
             assert!(texts(&w).contains(&"You find a secret door!".to_string()));
         }
@@ -209,9 +210,9 @@ fn traps_are_detect_traps_to_find_and_the_rest_spot_and_search() {
             let id = w.content().skill_id(skill).expect(skill);
             w.player_mut().skills.add(id, 1);
         }
-        let before = w.state.rng.clone();
+        let before = draws(&w);
         run(&mut w, "rest:6s");
-        assert_eq!(w.state.rng != before, notices, "{character} with {skill:?}");
+        assert_eq!(draws(&w) != before, notices, "{character} with {skill:?}");
     }
     // The skill each check reads: Detect traps for a trap, both ways; Search and Spot for the
     // rest.
@@ -268,9 +269,9 @@ fn a_found_trap_is_known_and_said() {
         "a search that finds something says only that: {said:?}"
     );
     // Known, it asks no more checks.
-    let before = w.state.rng.clone();
+    let before = draws(&w);
     run(&mut w, "search");
-    assert_eq!(w.state.rng, before);
+    assert_eq!(draws(&w), before);
 }
 
 #[test]
@@ -327,7 +328,7 @@ fn a_high_search_skill_reaches_farther_in_line_of_sight() {
         }
         let expected = after_checks(&w, checks);
         run(&mut w, "search");
-        assert_eq!(w.state.rng, expected, "{map}: master {master}");
+        assert_eq!(draws(&w), expected, "{map}: master {master}");
     }
 }
 
@@ -338,9 +339,9 @@ fn whatever_becomes_of_the_wall_takes_the_secret_with_it() {
     w.set_terrain(DOOR, rubble);
     assert!(w.state.current().secrets.is_empty());
     // Found or dug through, nothing is left to find.
-    let before = w.state.rng.clone();
+    let before = draws(&w);
     run(&mut w, "search");
-    assert_eq!(w.state.rng, before);
+    assert_eq!(draws(&w), before);
 }
 
 #[test]

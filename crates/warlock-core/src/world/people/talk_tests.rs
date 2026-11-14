@@ -556,11 +556,11 @@ fn mutters_are_heard_with_their_words_and_seen_with_the_speaker() {
 #[test]
 fn mutters_never_stop_a_rest_nor_draw_on_the_gameplay_stream() {
     let mut w = world("hall");
-    let rng = w.state().rng.clone();
+    let rng = crate::test_support::draws(&w);
     w.apply(&Action::Rest(Rest::For(Duration::minutes(10))));
     assert_eq!(last_message(&w), "You rest for 10 minutes.");
     assert!(texts(&w).iter().any(|t| t.starts_with("The crone hums")));
-    assert_eq!(w.state().rng, rng);
+    assert_eq!(crate::test_support::draws(&w), rng);
     // Off its routine (on its way back to a post), it keeps quiet.
     let mut w = world("hall");
     if let Some(crone) = w.state.actors.get_mut(&ActorId(1)) {

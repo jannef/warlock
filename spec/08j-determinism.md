@@ -41,14 +41,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   spawn order after its loot, so the rest of the level is the same with or without it, §8
   "Creature gear"), and their condition (`condition/<level id>`, in the same order, so the gear
   is the same with or without it); the gear of a creature placed in play without a fixed kit (`gear/<actor
-  id>`: a hand-made level's, rolled as the level is first entered; its condition from
-  `condition/<actor id>`); what a creature drops when
-  it dies (`drop/<actor id>`, so a
-  kill never changes a later roll of the gameplay stream; actor ids are never reused), and the
-  crafting stock its body leaves (`materials/<actor id>`, its own so loot and gems never move;
-  §7 "Material drops");
-  gameplay (`gameplay`, kept in the world state and saved; a teleport trap's destination is a
-  hash, never this stream, §8 "Traps"); character creation (derived on
+  key>`: a hand-made level's, rolled as the level is first entered; its condition from
+  `condition/<actor key>`); what a creature drops when
+  it dies (`drop/<actor key>`, so a
+  kill never changes another roll), and the
+  crafting stock its body leaves (`materials/<actor key>`, its own so loot and gems never move;
+  §7 "Material drops"); every rule's roll in play, each from a keyed stream of its own
+  (`<rule>/<decision>/<actor key>@<second>#<n>`: the rule and whom it concerns, the second of game
+  time, and a count of that label's draws in the second, kept in the world state and saved, so
+  that no two draws share a key and a draw added to one rule moves no other's; an actor's key is
+  the level, cell, and second it was made at, `player` for the player, never its id; a teleport
+  trap's destination is a hash, no draw at all, §8 "Traps"); character creation (derived on
   demand: `character/gender` for the stat "other" raises, `character/birth/<race>` for the age
   and birthday, `character/rolls/<race>,<gender>,<class>` for the dice,
   `character/weapon-skills/<race>,<gender>,<class>` for the starting weapon skills,
@@ -61,7 +64,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   all: each weather block hashes the seed, a label, and its number (FNV-1a, then SplitMix64's
   finalizer; §5 "Weather"), nor the temperature and the ice, which follow from the weather, the
   clock, and the levels (only ice giving way under a weight between what it holds and twice that
-  draws from the gameplay stream; §5 "Ice"); and visual-only randomness in the app, which never uses either. No hash-order iteration and no floating point in the core's decisions.
+  draws, from its own keyed stream; §5 "Ice"); and visual-only randomness in the app, which never uses any of these. No hash-order iteration and no floating point in the core's decisions.
   The same seed and actions produce the same result within a game version; seeds are not
   guaranteed stable across versions, and snapshot tests flag when generator output changes. A seed
   is a number or a word (`--seed warlock`, hashed with FNV-1a 64).

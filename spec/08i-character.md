@@ -152,7 +152,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Twice-born (§8 "Hunger") gives one more of its own after those (`profane_risen`). A Toughness
     drained to 0 by
     a disease still kills (the rising would leave them dying of it). The flames draw from the
-    gameplay stream only when they come.
+    keyed stream only when they come.
   - **Sign-limited picks** (#270; design §9.1): the Stars tree also holds one talent per animal
     and per element that is **picked**, not granted: offered on the level-up screen and the
     creation Talents step like any talent whose prerequisites hold, the sign among them
@@ -458,7 +458,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     automatic ones (below).
   - **Training marks**: a meaningful use of a trained skill may earn it a mark, with its rule's
     chance (§7), one draw of the run's **training stream** (`training`, kept in the world state;
-    never the gameplay stream, so training never changes a fight's rolls) per rule: a step of the
+    no keyed draw, so training never changes a fight's rolls) per rule: a step of the
     player's that some creature on the level would hear at its threshold but for their stealth
     (`sneak`, through the same propagation as hearing; the overworld is silent), a perceived
     sound that is news (`hear`, one draw per turn with news), an attack on the player that missed
@@ -517,7 +517,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`data/rules/swim.toml`): made, the step, priced by `step_price` (Wade, Swimmer, Strong swimmer,
     Undertow); failed, the turn is spent, no move, and 1 cold hit point through `hurt` with
     `Harm::Spared` (never the last: no drowning; one who grows Strained in it swims on, harder).
-    Two gameplay draws a step; `stroke` 25 %. Afloat, dropping and picking up ("It would sink."),
+    Two keyed draws a step; `stroke` 25 %. Afloat, dropping and picking up ("It would sink."),
     resting, searching, digging, and lighting a light ("The water would only put it out.") are
     refused with no time; fighting, firing, casting, reading, and waiting go on; a wait asks no
     check; nothing carried is lost. A light made ready in it goes out too. It does not freeze.
@@ -538,7 +538,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     racial skill is a step up and +1); it adds the result to the value, half of it rounded up
     from the soft cap (`soft_cap`, 100) on, and **spends** `spend` (50) percent of the skill's
     marks rounded up (50 → 25 → 12 → 6 → 3), so the next roll on it is smaller. Rolls draw from
-    the run's **levels stream** (`WorldState::levels_rng`), never the gameplay or training
+    the run's **levels stream** (`WorldState::levels_rng`), never the keyed or training
     stream. Said: "Your stealth improves." (never the number rolled). The level-up screen shows
     each skill's dice before the choice, with the marks and what set them, and where a level's
     rolls come from (the owner, 2026-10-27, #543; §6 "Level-up"); one function computes each for
@@ -580,7 +580,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     with vitals there. It takes the `intimidate` action (a turn), is spoken aloud (a voice where
     the player stands, as loud as a mutter), and marks Intimidate, whatever comes of it. If the
     foe hears the voice (asked before it is made) and sees the player now, it rolls War cry's
-    check (`world/classes/war_cry.rs`, shared: two gameplay draws, its Willpower modifier against the
+    check (`world/classes/war_cry.rs`, shared: two keyed draws, its Willpower modifier against the
     file's `difficulty` 10 + the player's Strength modifier + their Intimidate); failed, it is
     Frightened, caused by the player, at the degrees the file's ladder gives for the points
     Intimidate adds (`degrees = [[0, 1], [3, 2], [6, 3]]`: one degree below 3 points, value 38;
@@ -593,7 +593,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     of it). Its use is the **Feint** ability (the abilities menu's Skills group, in the skill's
     place, while `data/rules/feint.toml` exists; no key): in a direction, `feint:DIR`, at a hostile
     creature the player sees there, with a mind to fool. It takes the `feint` action (a turn). The
-    foe rolls 2d12 + its Willpower modifier (+ its talents' Willpower checks; two gameplay draws)
+    foe rolls 2d12 + its Willpower modifier (+ its talents' Willpower checks; two keyed draws)
     against the file's `difficulty` 10 + the player's Presence modifier + what Bluff adds. Failed,
     it is Surprised, caused by the player ("The kobold falls for it."): its first action in that
     turn does not ease it, so the player's next blow finds it flat-footed (no Dexterity or Dodge
@@ -699,11 +699,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **The contest** ("Checks" in §8): 2d12 + the player's Dexterity modifier + what Steal gives,
     against 2d12 + the victim's Willpower modifier (both of the effective scores); a tie goes to
     the thief, and their natural 2 always fails, their natural 24 always works. Four draws of
-    the gameplay stream (the victim's roll first). It takes the `steal` action's time whatever
+    its keyed stream (the victim's roll first). It takes the `steal` action's time whatever
     comes of it (priced before anything changes hands, so the burden applies) and may earn
     Steal a training mark.
   - **Unnoticed**: the player takes one stack, all of it, of what the victim carries and neither
-    wears nor wields, picked uniformly (one more gameplay draw when there are two or more), "You
+    wears nor wields, picked uniformly (one more keyed draw when there are two or more), "You
     steal 7 copper coins from the kobold."; with nothing like that on it, "You find nothing to
     take from the gardener.", unnoticed all the same. There is no choice of item: the player
     never sees a creature's pack (`PerceptionView::gear` is only what it wears and wields), and
@@ -746,8 +746,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (curve `[[0, 0], [100, 8], [200, 12]]`) against `difficulty` (12) plus the head's `work`. The
     count is `1d4` + Woodcraft's value ÷ 25, at most what the billets and arrowheads chosen cover
     (a billet covers up to 11 arrows, 4 bolts). Margin 0 or more makes the whole count; −1 to −3
-    half, rounded up; −4 to −6 one; below −6 none (a natural 2 none, a natural 24 all). Gameplay
-    stream. Woodcraft earns a mark on every batch that ran its time (`Use::Craft`). The stock is
+    half, rounded up; −4 to −6 one; below −6 none (a natural 2 none, a natural 24 all). The
+    craft's keyed stream. Woodcraft earns a mark on every batch that ran its time (`Use::Craft`). The stock is
     spent for what was made; none made, half of it comes back (a single piece whole).
   - **Fletcher** (`talents/fletcher.toml`, effect `fletcher`, `CraftMods::fletcher`): the ranger's at
     level 1, nobody else's; half the time, +4 to the check, twice the count after the margin. The
@@ -955,13 +955,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     like a rest (something comes into view, a message, a blow: "You stop foraging."); a forage
     cut short finds nothing. It makes no noise of its own, as a rest makes none.
   - **The find**: the row's `chance` plus Survival's `forage` benefit (percent, at most 30), at
-    most 100, one gameplay draw; found, one of the row's `finds` by weight (one draw) and its
+    most 100, one keyed draw; found, one of the row's `finds` by weight (one draw) and its
     `count` dice. The food is fresh (made now) and goes into the pack: "You gather 2 handfuls of
     berries."; else "You find nothing worth eating.". Then Survival may earn a mark (`forage`).
   - **Herbs** (#1343): a forage that found something, by one trained in Herbalism, on ground
     with a `herbs` list, has Herbalism's `herbs` percent (25 / 60 / 80 at 0 / 100 / 200) of one
     herb besides, by weight, one of it: "Your eye for herbs finds an angelica root besides." Two
-    more gameplay draws, a herbalist's only: anyone else's forage draws as before. The lists
+    more keyed draws, a herbalist's only: anyone else's forage draws as before. The lists
     hold angelica root and the brewing herbs where they grow (#1340): moonwort and comfrey on
     grassland and in forests, feverfew and vervain in forests, henbane and bog myrtle in swamps,
     eyebright on hills; glowcap and mandrake never (the dungeon's). Herbalism marks on a
@@ -984,8 +984,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Time**: the file's `seconds` (300: five minutes), in turns of the `gather` action (1000),
     stopped like a rest ("You stop gathering."); a gather cut short finds nothing, the time
     spent.
-  - **The find**: `count` (`1d2`, one gameplay draw per die) plus one for every
-    `value_per_count` (50) of Herbalism's trained value. Each herb is one gameplay draw by weight from the `[[herb]]` rows at the level's item
+  - **The find**: `count` (`1d2`, one keyed draw per die) plus one for every
+    `value_per_count` (50) of Herbalism's trained value. Each herb is one keyed draw by weight from the `[[herb]]` rows at the level's item
     level (a dungeon level's depth; a hand-made level's `item_level`), read as `gems.toml`'s
     sizes are: `find` at level 1, `deeper` added per level past the first (negative for
     moonwort), never below 0, none below `level`. Nine herbs: glowcap 40/0/1, moonwort 30/−1/1,
@@ -1361,7 +1361,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     leave) and `spares_self` (the caster's own burst, a scroll's or a spell's, never catches
     them, and the game does not warn before reading one close); Spell recall (Scholar; after
     Scroll savant, Intelligence 15, level 12) `scroll_kept` (one read in four keeps the scroll,
-    one gameplay draw a read with the talent, "The writing does not fade from the scroll."); `loot_magic_percent` (Treasure hunter: the weights of the rarities better than
+    one keyed draw a read with the talent, "The writing does not fade from the scroll."); `loot_magic_percent` (Treasure hunter: the weights of the rarities better than
     a find's least half again, so anything found is magic and rare more often and a creature's
     drop, always magic, rare more often; from the same draws of the loot streams, so a map never
     changes, and a level made before the talent keeps its loot); `skill_rolls` (Quick learner: a
@@ -1495,7 +1495,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     lights, spells, terrain) resolves, a choice-keyed effect has its choice, and a die's sides or
     a divisor is not 0. Whether a talent is worth taking, alike to another, or in range is the
     data author's call.
-  - **Determinism and saves**: picks are replayed actions; nothing here draws from the gameplay
+  - **Determinism and saves**: picks are replayed actions; nothing here draws from its keyed stream
     stream; the `levels` stream (`WorldState::levels_rng`, for the skill rolls and stat checks
     to come) is made on its first draw. `Actor::talents` (by id, like affixes: adding talents
     keeps saves; on every actor, so creatures may get some from data later), `Progress::due`,
@@ -1531,7 +1531,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     25, #844, `world/classes/war_cry.rs`: 4 rage, the talent's `resource`, and a wait's time; a roar as
     loud as a howl, `Act::Howl`, heard across the floor, waking dens; every hostile that hears
     it, sees the player now, and has vitals rolls its Willpower modifier against 10 + the
-    player's Strength modifier + their Intimidate, two gameplay draws apiece in actor-id order,
+    player's Strength modifier + their Intimidate, two keyed draws apiece in actor-id order,
     no level cut; failed, Frightened 3 degrees, caused by the player, it runs from them; "The
     kobold quails and flees from you." or "The kobold does not flinch." for those the player
     sees. Its one refusal is the rage: not held, or less than 4, "You have not the rage for
@@ -1820,7 +1820,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     truth, asked before it is made: an unseen foe in earshot is checked like any other) and is
     hostile to the singer; friends, allies, and the peaceful only hear it. Each, in actor-id
     order, checks `check` (its modifier and its talents' checks of that stat) against
-    `difficulty` plus Music's `song_craft` (+4 at 100, +8 at 200), two gameplay draws apiece;
+    `difficulty` plus Music's `song_craft` (+4 at 100, +8 at 200), two keyed draws apiece;
     failed, it suffers the song's status at the song's degrees, caused by the singer. "You sing a
     lullaby.", then for each seen "The kobold's eyes grow heavy." or "The kobold shakes off the
     song."; nothing of the unseen. Sung to an empty room all the same (no refusal: who hears is
@@ -2086,7 +2086,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     action at the main hand's price, and hunger's exertion is counted once. Creatures that wield
     two weapons fight with both.
   - **Shield bash after a hit**: in the `weapon_and_shield` grip, a blow that hits a target that
-    still stands is followed, by the style's `bash` chance (one gameplay draw, only when the
+    still stands is followed, by the style's `bash` chance (one keyed draw, only when the
     chance is above 0), by a shield bash at it, free and silent, drawing on and training shield
     bashing and the style.
   - **Two shields** (#611; `world/combat/two_shields.rs`, docs/dev/weapon-skills.md): any shield fits

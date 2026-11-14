@@ -77,7 +77,7 @@ hold: unarmed fighting alone (`AttackSkills::only`), in no style, so no style sp
 two weapons in hand; `World::second_blow` (`fight.rs`) is the one place a melee attack's second
 blow is decided, on `Cue::First` (its other cues are the free blows, `docs/dev/combat.md`): the
 off hand's, `[two_weapons]` penalties eased by `TwoWeapons::eased`; else
-Sword and Board's chance of a shield bash after a hit, one gameplay draw only when the chance is
+Sword and Board's chance of a shield bash after a hit, one keyed draw only when the chance is
 above 0; for the player (`player_attacks`) and creatures (`World::attack`) alike; it is an
 attack `with` the off-hand weapon or the shield (`Actor::attack_skill` tells them apart by
 `ObjectDef::bash`), silent, and resolved like any blow: its own weapon's skill and affixes

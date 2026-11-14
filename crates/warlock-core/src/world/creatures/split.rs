@@ -27,6 +27,7 @@
 
 use crate::content::{CORPSE_SHARE, CreatureId, CreatureSpawn, HALF_SHARE, counted};
 use crate::content::{the, the_start};
+use crate::rng::draw;
 use crate::text::{and_list, capitalized};
 use crate::world::{ActorId, World};
 use serde::{Deserialize, Serialize};
@@ -127,13 +128,14 @@ impl World {
         }
         let (pos, faction) = (me.pos, me.faction(&content));
         let cells = self.summon_cells(id, into.spread);
-        let rolled = into.count.roll(&mut self.state.rng);
+        let mut rng = draw!(self, "split/{}", me.key);
+        let rolled = into.count.roll(&mut rng);
         let count = usize::try_from(rolled.max(1)).unwrap_or(1);
         let level = self.state.current_level.clone();
         let mut seen: Vec<(CreatureId, u32)> = Vec::new();
         for &at in cells.iter().take(count) {
             let len = u32::try_from(into.pool.len()).unwrap_or(u32::MAX);
-            let creature = into.pool[self.state.rng.below(len) as usize];
+            let creature = into.pool[rng.below(len) as usize];
             let own = content.creature(creature).faction;
             let spawn = CreatureSpawn {
                 creature,

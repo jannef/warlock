@@ -116,6 +116,14 @@ fn the_rug_lets_go_when_it_dies() {
     let rug = first(&w, "animated_rug");
     w.afflict(player, status("engulfed"), 1, Some(rug), &mut Vec::new());
     assert!(w.hurt(rug, 1000, Harm::Actor(player), &mut Vec::new()));
+    // Everything else too, so nothing takes hold anew in the wait.
+    let others: Vec<ActorId> = (w.state.actors.values())
+        .filter(|a| a.id != player && a.id != rug)
+        .map(|a| a.id)
+        .collect();
+    for other in others {
+        w.hurt(other, 1000, Harm::Actor(player), &mut Vec::new());
+    }
     for action in parse_actions("wait").expect("actions") {
         w.apply(&action);
     }
@@ -205,7 +213,7 @@ fn blades_come_notched_or_keen_and_no_other_animated_thing_is_graded() {
         status: Vec::new(),
     };
     let grades: Vec<i8> = (0..600)
-        .map(|i| crate::grade::draw(&CONTENT, 5, ActorId(i), &blade))
+        .map(|i| crate::grade::draw(&CONTENT, 5, &i.to_string(), &blade))
         .collect();
     assert!(grades.contains(&-1) && grades.contains(&1) && grades.contains(&0));
 }

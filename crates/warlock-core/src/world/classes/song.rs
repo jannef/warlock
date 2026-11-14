@@ -28,6 +28,7 @@ use crate::action::Event;
 use crate::check;
 use crate::content::{ActionKind, ClassActive, SongOn, Stance, StatUse, StatusId};
 use crate::noise::Act;
+use crate::rng::draw;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::talent::SongCost;
@@ -113,7 +114,7 @@ impl World {
         let will = them.check_modifier(&content, stat);
         let seen = self.perception.sees_actors_at(them.pos);
         let who = crate::text::capitalized(&self.called(them));
-        let falls = !check::check(&mut self.state.rng, will, difficulty);
+        let falls = !check::check(&mut draw!(self, "song/lull/{}", them.key), will, difficulty);
         if falls {
             let player = self.state.player;
             self.afflict(id, status, degrees, Some(player), events);

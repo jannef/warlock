@@ -31,6 +31,7 @@
 use crate::action::Event;
 use crate::content::{ActionKind, Content, Reading, SpellId};
 use crate::object::Stack;
+use crate::rng::draw;
 use crate::scroll_label::Lore;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
@@ -62,7 +63,11 @@ impl World {
             false => 0,
         };
         let bonus = me.check_modifier(&content, Stat::Intelligence) + skill;
-        let made = crate::check::check(&mut self.state.rng, bonus, rules.difficulty(level));
+        let made = crate::check::check(
+            &mut draw!(self, "decipher/player"),
+            bonus,
+            rules.difficulty(level),
+        );
         self.train(Use::Decipher);
         if !made {
             self.say(SWIMS);
