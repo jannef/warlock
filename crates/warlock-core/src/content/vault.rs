@@ -112,11 +112,26 @@ pub(super) fn parse_turns(path: &str, text: &str) -> Result<Option<bool>, Conten
 }
 
 /// The `danger = { from, to }` a vault file (or a level file, which may not give it) says; `None`
-/// for none, or for a level's own `danger` rule (`danger = 3`, `{ base = 2, per_depth = 1 }`).
+/// for none, or for a level's own `danger` rule (`danger = 3`, `{ base = 2, per_depth = 1 }`,
+/// told apart by its keys; the level parser reads and checks it). Any other table is a range,
+/// and one that is no good (`{ form = 8 }`, `{ from = 300 }`) is refused (#1588).
 pub(super) fn parse_danger(path: &str, text: &str) -> Result<Option<DangerRange>, ContentError> {
-    Ok((parse_fields(path, text)?.danger)
-        .and_then(|v| DangerRange::deserialize(v).ok())
-        .filter(DangerRange::is_given))
+    let Some(value) = parse_fields(path, text)?.danger else {
+        return Ok(None);
+    };
+    let rule = match &value {
+        toml::Value::Table(table) => {
+            !table.is_empty()
+                && (table.keys()).all(|k| ["base", "per_depth", "player"].contains(&k.as_str()))
+        }
+        _ => true,
+    };
+    if rule {
+        return Ok(None);
+    }
+    let range = DangerRange::deserialize(value)
+        .map_err(|e| ContentError::new(path, format!("`danger`: {}", e.message())))?;
+    Ok(Some(range).filter(DangerRange::is_given))
 }
 
 fn parse_fields(path: &str, text: &str) -> Result<VaultFields, ContentError> {

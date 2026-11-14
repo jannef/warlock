@@ -141,7 +141,8 @@ you never choose them, they work by themselves as you fight. They have their own
     of those steps; the blow is free.
   - You must gain at least one cell, so it is refused when you already stand beside the foe.
   - A wall, a closed door, deep water, ice, a [trap](traps.md) you know of, or anyone you see on
-    the line refuses it before you move. So does too little stamina for the whole run. A refused
+    the line refuses it before you move. So does too little stamina for the whole run, or a run out of a
+    [shop](shops.md)'s door while you owe it. A refused
     charge takes no time and costs nothing.
   - Nobody you pass or leave behind gets a [free blow](stances.md#free-blows) at you on the way.
   - Someone you cannot see on the line stops you short, with no blow. A hidden trap goes off as
