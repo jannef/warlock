@@ -1,7 +1,7 @@
 //! Enchanting's recipes (docs/design/enchanting.md §7, §8; `world/enchant.rs`): each recipe of
 //! `data/recipes/enchanting/` with what it works on, the crystals it takes, its time, the skill it
 //! is listed from, its difficulty, and the odds of a made check at three skill values; and the
-//! enchanter's reach by skill value. From the recipe files, `data/skills.toml`'s Enchanting, and
+//! enchanter's reach by skill value. From the recipe files, `data/skills/`'s Enchanting, and
 //! `data/enchanting.toml`. And the seals and the rare materials (docs/design/enchanting.md §9;
 //! `world/seal.rs`): a seal's cost and time, and where the rare materials come from, with their
 //! chances, from `data/enchanting.toml` and `data/crystals.toml`.

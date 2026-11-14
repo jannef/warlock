@@ -3,7 +3,7 @@
 //! rule that silently stops working.
 //!
 //! Each id is required only while the table it lives in, or the feature that uses it, is loaded:
-//! content without `data/status.toml` (a test fixture, or a mod that leaves statuses out) still
+//! content without `data/status/` (a test fixture, or a mod that leaves statuses out) still
 //! loads, and the ids of that table are `None` there, as before. Once the table is there, a
 //! missing id fails the load, whatever set of files was loaded (the built-in copy, `--content-dir`,
 //! or files overlaid on it).
@@ -14,7 +14,7 @@ use super::{
 
 /// The creature type the player is (`data/creatures/player.toml`).
 pub const PLAYER: &str = "player";
-/// The status a fall, a slick, or a stumble leaves one in (`data/status.toml`): required while
+/// The status a fall, a slick, or a stumble leaves one in (`data/status/`): required while
 /// a room effect collapses.
 pub const STAGGERED: &str = "staggered";
 /// The statuses the priest's prayer for wounds and for poison ends (required, with Webbed,
@@ -77,20 +77,12 @@ pub(super) fn resolve(content: &Content) -> Result<RequiredIds, ContentError> {
     let forge = (content.talents.iter())
         .any(|(_, t)| (t.effects.iter()).any(|e| matches!(e, TalentEffect::FieldForge { .. })));
     let beasts = content.companions.is_some() || content.familiars.is_some();
-    let status = |id, wanted| {
-        need(
-            content.status_id(id),
-            wanted,
-            "data/status.toml",
-            "status",
-            id,
-        )
-    };
+    let status = |id, wanted| need(content.status_id(id), wanted, "data/status/", "status", id);
     let terrain = |id, wanted| {
         need(
             content.terrain_id(id),
             wanted,
-            "data/terrain.toml",
+            "data/terrain/",
             "terrain",
             id,
         )

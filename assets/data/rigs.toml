@@ -7,7 +7,7 @@
 # it, and no trap, chest, door, stairs, shop floor, water, ice, or glowing fungus. The work takes
 # `seconds` of game time, in turns of the `craft` action; a creature coming into view, a message,
 # or a blow stops it, and work cut short does nothing (the time is spent, the inputs kept). Done,
-# one check: 2d12 + the Dexterity modifier + `skill`'s `craft` points (skills.toml: Woodcraft's)
+# one check: 2d12 + the Dexterity modifier + `skill`'s `craft` points (skills/: Woodcraft's)
 # + the talents' Dexterity checks against `difficulty`. A natural 2 always fails, a natural 24
 # always succeeds. Made, the trap is placed, known to the rigger, with its charges, and the
 # inputs are spent. Failed, nothing is placed and the inputs are kept. A natural 2 springs it on

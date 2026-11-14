@@ -48,10 +48,10 @@
 #                 false); from Strained on they are treated like everyone else
 #   passive_search  which hidden features (secret doors, hidden traps; spec §8 "Searching") the
 #                 character notices in passing without the Spot skill (for traps, Detect
-#                 traps): "all", "stone" (those on stone, terrain.toml `stone`), or "traps"
+#                 traps): "all", "stone" (those on stone, terrain/ `stone`), or "traps"
 #                 (hidden traps only); default none: only with the skill trained
 #   search        points added to searching and to noticing in passing alike (default 0)
-#   skills        the skills the race trains (spec §8 "Skills"; skills.toml), by skill id: dice
+#   skills        the skills the race trains (spec §8 "Skills"; skills/), by skill id: dice
 #                 (`"1d6+4"`) or a number, rolled when the character is made; added to the
 #                 class's (a skill both train sums the two)
 #   optional_skills  skills a new character of the race may or may not start with, as a

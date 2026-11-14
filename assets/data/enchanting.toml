@@ -3,7 +3,7 @@
 #
 # Salvaging a magic or rare item, identified or not (salvage.toml), first makes one check for each
 # of its affixes, in the item's order: 2d12 + Willpower's modifier + the talents' Willpower checks +
-# Enchanting's `craft` points (skills.toml) against `salvage_difficulty` + the affix's tier
+# Enchanting's `craft` points (skills/) against `salvage_difficulty` + the affix's tier
 # divided by `salvage_tier_step` (rounded down: a top tier, 12, is +4). A natural 2 always fails,
 # a natural 24 always succeeds. Each check made catches one crystal of the affix's colour.
 #

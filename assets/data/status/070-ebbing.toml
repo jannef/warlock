@@ -1,4 +1,4 @@
-# Places' statuses (special rooms, room_effects.toml `status`): held while one stays inside, then
+# Places' statuses (special rooms, room_effects/ `status`): held while one stays inside, then
 # eased away. Ebbing, a draining room's: a point of mana drained every 20 seconds and none coming
 # back, half a minute after leaving.
 [[status]]

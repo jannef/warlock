@@ -492,7 +492,7 @@ fn digging_survives_saves_and_replays() {
 
 #[test]
 fn breaking_terrain_and_digging_tools_are_validated() {
-    const TERRAIN: &str = include_str!("../../../../assets/data/terrain.toml");
+    let terrain = ContentFiles::builtin().table_text("terrain");
     const PICK_AXE: &str = include_str!("../../../../assets/data/objects/pick_axe.toml");
     let load = |path: &str, text: String| {
         let mut files = ContentFiles::builtin();
@@ -500,12 +500,10 @@ fn breaking_terrain_and_digging_tools_are_validated() {
         Content::load(&files).map(|_| ()).map_err(|e| e.message)
     };
     let wall = "hardness = 600\nbecomes = \"rubble\"";
-    assert!(TERRAIN.contains(wall), "{wall}");
-    let err = load(
-        "data/terrain.toml",
-        TERRAIN.replacen(wall, "hardness = 600", 1),
-    )
-    .unwrap_err();
+    assert!(terrain.contains(wall), "{wall}");
+    let mut files = ContentFiles::builtin();
+    files.replace_table("terrain", &terrain.replacen(wall, "hardness = 600", 1));
+    let err = Content::load(&files).unwrap_err().message;
     assert!(
         err.contains("`hardness` and `becomes` go together"),
         "{err}"

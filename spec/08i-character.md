@@ -437,7 +437,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`Actor::skill_effect`, the one way rules read a benefit), an untrained skill's from 0; they
     never train it or change the value shown.
   - **Concentration** (#668): a trained Concentration makes mana come back faster and the pool a
-    little deeper (§8 "Mana": the curves in `data/skills.toml`, the pool's at most a fifth);
+    little deeper (§8 "Mana": the curves in `data/skills/`, the pool's at most a fifth);
     untrained, it gives nothing, even raised by an item or a talent. The Skills screen says so
     in its description, in words. The priest, druid, wizard, ascetic, paladin, and witch start
     trained in it; every class has some mana, so any trained in it gains.
@@ -498,7 +498,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Swim** (#1018): wading is quicker. A step onto wading terrain (`stars::wading`: water that
     freezes, ground a disease is caught wading in; `move_cost` above 100, off the overworld) has
     a percent of what it adds to a plain step spared: 60 at 100, all of it at 200
-    (`data/skills.toml`, `wade`), under the talents that spare all of it already (Swimmer,
+    (`data/skills/`, `wade`), under the talents that spare all of it already (Swimmer,
     Strong swimmer, Undertow). A player trained in it who plunges through the ice (§5 "Ice")
     makes a **Swim check**: Toughness's modifier, the talents' Toughness checks, and the `swim`
     benefit (+8 at 100, +12 at 200, at most 20) against 11; made, half the plunge's hit points,
@@ -668,7 +668,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ally that way; the healer's check, the patient's ailment and degrees, the same time and marks.
   The player knows their own allies' hurts, poison and sickness too; "You have no ally there."
   refuses a direction with none, with no time. What may be treated (`heal::treatable`, in status order, then disease
-  order): a status with a `treat` table (`data/status.toml`: bleeding, poisoned), and a disease
+  order): a status with a `treat` table (`data/status/`: bleeding, poisoned), and a disease
   that shows (one still incubating is unknown to its sufferer). With more than one, the menu
   asks which in the dialog (§6), each by the name the player knows it by ("Sickness" for a
   disease not yet known by name); a bare `heal` treats the player's first. A try is a check (§8 "Checks"):
@@ -998,7 +998,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `world/talent.rs`, the picks; M30, #229; design `docs/design/progression.md` §7, §10): knacks
   a character picks as they level, each a typed effect read where the rules already read what
   magic items do.
-  - **Data** (§7): `data/talents.toml` (the settings: the `[[tree]]`s
+  - **Data** (§7): `data/talents/trees/` and `data/talents/systems/` (one a file: the `[[tree]]`s
     in display order, the `[[system]]` list) and `data/talents/<id>.toml`, one `[[talent]]`
     a file (`id`, `name`, `tree`, `description` in the game's words,
     `choice` (`weapon_skill`, `style`, `skill`, `element`, `stat`), `needs`, `effects`,
@@ -1152,12 +1152,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     game); `missile_dodge` (Deflect missiles: Dodge +2 against shots, throws, and trap missiles,
     `World::target_against`); `spell_damage_percent` (Evasion: bursts and bolts, traps' and
     scrolls', do half, rounded down, before resistances). The statuses these name are checked
-    at load; `data/status.toml` loads before the talents.
+    at load; `data/status/` loads before the talents.
   - **Class abilities** (#246; the design's §4): a class's level table (`abilities` in
     `data/classes/`, `{ level, talent }` rows) names talents for its levels (1, 6, 12, 18, 25,
     32, 40, 50, and 60 at first; the culls of #774 and #787 left some empty, and the ranger's
     Stalker's eye came at 2 with #788): a talent of the **Class abilities** tree (`class = true` in
-    `data/talents.toml`; `granted`, never on a pick list) or an ordinary talent it hands out
+    `data/talents/trees/`; `granted`, never on a pick list) or an ordinary talent it hands out
     (the aristocrat's Family wealth at 1 and Riposte at 18, the commoner's Second wind at 32). The player is given each
     as they reach its level ("You gain Fencing." with the level's news), level 1's at
     creation, and again whatever is missing when a run is restored, so a grown table reaches a
@@ -1488,7 +1488,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     race's grants join the birth sign's (`stars::grant`, at the start and on every restore),
     shown as the race's ("(race)" in the dump).
   - **Systems**: a talent may name the systems it touches from the list in
-    `data/talents.toml`; the wiki's talents-by-system table reads them. The load checks only
+    `data/talents/systems/`; the wiki's talents-by-system table reads them. The load checks only
     that the talent table is well formed (#1205): it parses, every id it names (talents, trees,
     systems, statuses, resources, skills, weapon skills, races, classes, eyes, damage types,
     lights, spells, terrain) resolves, a choice-keyed effect has its choice, and a die's sides or

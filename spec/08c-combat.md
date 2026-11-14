@@ -439,7 +439,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     bonus, + Wary's `initiative_bonus`, + its Initiative skill's `initiative`) against
     `difficulty` (13) plus the attacker's **craft** (its Sneak attack skill's `surprise`, + its
     talents' `surprise_difficulty`: the thief's Sneak attack, 2; none for a trap). Failed, it
-    suffers **Surprised** (`data/status.toml`: `per_action`, one degree, `refresh`,
+    suffers **Surprised** (`data/status/`: `per_action`, one degree, `refresh`,
     `cost = 150`). A check the player makes marks Initiative (`surprise`, 100 %).
   - **Surprised**: flat-footed, Dexterity and Dodge count nothing toward its Defence (positive
     bonuses only, `Target::without`, the strip Feint uses); no free blow out of its turn

@@ -15,7 +15,7 @@ use super::{Content, ContentError};
 use crate::dice::Dice;
 use serde::Deserialize;
 
-/// The cooldown status a breath gives (`data/status.toml`).
+/// The cooldown status a breath gives (`data/status/`).
 pub const STATUS: &str = "breath";
 
 /// A breath as written: `[creature.breath]` (`data/creatures/README.toml` has the fields).
@@ -71,7 +71,7 @@ impl BreathSpec {
         let kind = (content.damage_type_id(&self.damage_type))
             .ok_or_else(|| format!("breath: unknown damage type `{}`", self.damage_type))?;
         let status = (content.status_id(STATUS))
-            .ok_or_else(|| format!("breath: needs the `{STATUS}` status in data/status.toml"))?;
+            .ok_or_else(|| format!("breath: needs the `{STATUS}` status in data/status/"))?;
         let status_def = content.status(status);
         let eases = (status_def.eases)
             .filter(|_| status_def.tick.is_none())

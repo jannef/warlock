@@ -1,6 +1,6 @@
 # A forgotten altar (spec §7 "Special rooms"): the feature of an altar room, where the player may
 # pray. Its own terrain, so it never reads as a temple's altar. Its light is the neutral grey; a
-# good or an evil altar's cell carries a light of its own (room_effects.toml `sides`). Spent, it
+# good or an evil altar's cell carries a light of its own (room_effects/ `sides`). Spent, it
 # becomes the dark spent altar; blown apart, rubble.
 [[terrain]]
 id = "forgotten_altar"

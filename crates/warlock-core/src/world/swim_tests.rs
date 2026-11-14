@@ -43,13 +43,11 @@ static CONTENT: LazyLock<Arc<Content>> =
 /// The same, a step's wading mark made certain.
 static EAGER: LazyLock<Arc<Content>> = LazyLock::new(|| {
     let mut files = files();
-    let text = include_str!("../../../../assets/data/skills.toml");
-    let eager = text.replace(
+    files.replace_in_table(
+        "skills",
         "{ on = \"wade\", chance = 10 }",
         "{ on = \"wade\", chance = 100 }",
     );
-    assert_ne!(text, eager);
-    files.insert("data/skills.toml", &eager);
     Arc::new(Content::load(&files).expect("test content is valid"))
 });
 

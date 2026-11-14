@@ -9,6 +9,7 @@ use crate::content::ContentFiles;
 /// often; without their `loot` when `loot` is false.
 fn content(loot: bool) -> Content {
     let mut files = ContentFiles::builtin();
+    files.flatten_table("room_effects");
     files.edit_table("room_effects", |text| {
         let text = text.replace("chance = 12\n", "chance = 100\n");
         let text = text.replace(

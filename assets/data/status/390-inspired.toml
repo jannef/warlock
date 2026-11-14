@@ -1,6 +1,6 @@
 # Inspire (the bard's song, spec §8 "Class abilities"): five minutes of a lifted heart a degree,
 # a little surer to hit and quicker to dodge. The degrees are time, not strength: one more at
-# Music 50 and at 100 (skills.toml). Its price is inspiration, not a cooldown.
+# Music 50 and at 100 (skills/). Its price is inspiration, not a cooldown.
 [[status]]
 id = "inspired"
 name = "Inspired"

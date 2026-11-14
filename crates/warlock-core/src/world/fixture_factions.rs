@@ -1,11 +1,11 @@
 //! Test support: the shipped factions with every grudge removed, so a fixture's creatures stand
-//! by. Built from `assets/data/factions.toml`, so a new faction edits no fixture.
+//! by. Built from `assets/data/factions/`, so a new faction edits no fixture.
 
 /// The shipped factions at peace: no `hostile` (`hostile_to_all` and `hostile_to_others` too) and
 /// no `provoked` lines, except that the outraged (shopkeepers who come after the player) stay
 /// hostile to the player.
 pub(super) fn peaceful_factions() -> String {
-    let real = include_str!("../../../../assets/data/factions.toml");
+    let real = crate::content::ContentFiles::builtin().table_text("factions");
     let mut id = "";
     let mut out = String::new();
     for line in real.lines() {
@@ -27,7 +27,7 @@ pub(super) fn peaceful_factions() -> String {
 /// entry names types hostile to the player, which no type is now; `docs/dev/encounters.md`), and
 /// no shared vaults (a tag pool, the Catacomb's `undead`, draws only types hostile to the player).
 pub(super) fn make_peace(files: &mut crate::content::ContentFiles) {
-    files.insert("data/factions.toml", &peaceful_factions());
+    files.replace_table("factions", &peaceful_factions());
     files.remove_encounter_tables();
     files.remove_shared_vaults();
 }

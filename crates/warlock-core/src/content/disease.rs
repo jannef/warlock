@@ -1,5 +1,5 @@
 //! Diseases (`assets/data/diseases.toml`, spec §8 "Diseases"): the pathologies behind the one
-//! status a sufferer shows, "Diseased" (the file's `status`, a status in `data/status.toml`).
+//! status a sufferer shows, "Diseased" (the file's `status`, a status in `data/status/`).
 //!
 //! A disease is data, modelled on D&D 3.5's diseases: how hard it is to resist (its
 //! `difficulty`, against a check of its `check` stat), how long it incubates (dice, in days),
@@ -179,7 +179,7 @@ pub(super) fn parse(
         None if parsed.disease.is_empty() => None,
         None => {
             return Err(err(
-                "`status` (the status diseases show as, in status.toml) is required".into(),
+                "`status` (the status diseases show as, in status/) is required".into(),
             ));
         }
     };

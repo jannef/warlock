@@ -1,4 +1,4 @@
-# A teeming den's sleepers (room_effects.toml `swarm`): asleep, a creature takes no turn and has
+# A teeming den's sleepers (room_effects/ `swarm`): asleep, a creature takes no turn and has
 # seen no one, until a noise loud enough, a blow, or a waking neighbour's cry wakes it. Never by
 # time: it lasts until something wakes it.
 [[status]]

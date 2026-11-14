@@ -323,7 +323,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `data/chests.toml` §7 "Chests"; docs/design/chests-and-treasure.md, slices C1 to C3): a chest is a
   **fixture of a cell**, as a door is, never a carried object.
   - **What it is**: one of three terrains (`chest = "shut"`, `"open"`, `"smashed"` in
-    `data/terrain.toml`: `⊟`, `⊔`, `⊠`; a shut one is not walkable and blocks nothing else, an
+    `data/terrain/`: `⊟`, `⊔`, `⊠`; a shut one is not walkable and blocks nothing else, an
     open or smashed one is walkable, a pile on it) plus a chest on the cell
     (`LevelState::chests`, saved and hashed, left out while a level has none): its **level** and,
     while it is shut, what it **holds** (ground truth). The level is the floor's (a branch floor's

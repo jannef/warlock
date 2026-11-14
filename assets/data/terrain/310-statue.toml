@@ -1,4 +1,4 @@
-# A statue (spec §7, a vault's; terrain.toml `announce`): a figure of stone, seen past, not walked through. Arriving beside
+# A statue (spec §7, a vault's; terrain/ `announce`): a figure of stone, seen past, not walked through. Arriving beside
 # it says so; a vault may cut an inscription into it (its legend cell's `note`).
 [[terrain]]
 id = "statue"

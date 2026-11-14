@@ -7,7 +7,7 @@
 # succeeds at the disease's `difficulty` or more (a natural 2 always fails, a natural 24 always
 # succeeds). Never shown in the game: no difficulty, modifier, or roll.
 #
-#   status      the status every disease shows as (status.toml)
+#   status      the status every disease shows as (status/)
 #
 # [[disease]], in order:
 #   id          stable id, used by `on_hit` (creatures.toml) and saves

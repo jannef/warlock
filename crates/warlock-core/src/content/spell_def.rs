@@ -732,7 +732,7 @@ pub struct SpellCharm {
     pub ends: String,
 }
 
-/// The ground a spell with `only_terrain` reaches: a flag of `data/terrain.toml`.
+/// The ground a spell with `only_terrain` reaches: a flag of `data/terrain/`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum OnlyTerrain {

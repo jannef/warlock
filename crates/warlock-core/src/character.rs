@@ -1254,6 +1254,7 @@ mod tests {
     fn skill_free_content() -> Content {
         let mut files = ContentFiles::builtin();
         files.remove("data/skills.toml");
+        files.remove("data/skills/");
         // Background stories start skills.
         files.remove("data/background.toml");
         // Mining names its skill.

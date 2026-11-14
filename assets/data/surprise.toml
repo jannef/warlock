@@ -7,14 +7,14 @@
 # within `memory_turns` turns. The one surprised makes an initiative check: 2d12 + its Dexterity
 # modifier (+ Wary's bonus, + its Initiative skill's) against `difficulty` plus the attacker's
 # craft (its Sneak attack skill's, + the thief's Sneak attack's 2); a sleeper or a disguised mimic
-# gets none. Failed, it suffers `status` (Surprised, status.toml): Dexterity and Dodge count
+# gets none. Failed, it suffers `status` (Surprised, status/): Dexterity and Dodge count
 # nothing toward its Defence, it makes no free blows, and its next action costs half again as
 # much (Initiative and Cool head ease it). The surprising attack itself is rolled without its
 # Dexterity and Dodge either way. An attacker with sneak dice (the Sneak attack skill, Ambusher,
 # Improved sneak attack) adds them to a hit on a target unaware or Surprised: a blow at any
 # reach, a shot, a throw, or an attack spell within `missile_reach` cells.
 [surprise]
-status = "surprised"      # the status an actor caught unawares suffers (status.toml)
+status = "surprised"      # the status an actor caught unawares suffers (status/)
 difficulty = 13           # the initiative check's difficulty before the attacker's craft
 missile_reach = 6         # how far a shot, a throw, or an attack spell is still a sneak attack
 memory_turns = 20         # how many turns the player stays aware of a creature they have seen

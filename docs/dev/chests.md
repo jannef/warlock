@@ -87,7 +87,7 @@ what they held (`statue_gone`).
 
 ## Talents
 
-System `chests` (`data/talents.toml`, after `doors`; it holds the mimics since #773):
+System `chests` (`data/talents/systems/`, after `doors`; it holds the mimics since #773):
 Chest-wise (Delver, Intelligence 11 or Detect traps 15: `chest_wise`, read in `chest_at` for the
 lock and in `chest_wise_look` for the trap; `sees_mimics` 2 and `slick`, docs/dev/creatures/mimics.md),
 Lockbreaker (Delver, Strength 12; its `systems` gained `chests`: `door_kick` is read by

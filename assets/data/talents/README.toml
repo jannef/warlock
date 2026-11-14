@@ -51,7 +51,7 @@
 #                 the talents' sum reads (not an active, a spell given, or what is rolled or
 #                 handed down when it is taken) may also say
 #                   while = "raging"   it counts only while its holder suffers that status
-#                                      (../status.toml); left out, always
+#                                      (../status/); left out, always
 #   granted       true: given (by a race, a birth sign, a class), never on a pick list; a birth sign's
 #                 gifts are in the `stars` tree and named by horoscope.toml's `grants`, a race's
 #                 in the `racial` tree and named by races.toml's `talents`
@@ -120,7 +120,7 @@
 #   darkvision { value }          its darkvision reaches that many cells farther (from none:
 #                                 that far)
 #   scent { status, radius }      it sees creatures suffering that status (an id in
-#                                 ../status.toml) in its line of sight within radius cells
+#                                 ../status/) in its line of sight within radius cells
 #                                 (1 to 20), however dark
 #   night_sight { value }         its overworld sight at night, that many cells farther
 #   day_sight { value }           its overworld sight by day, that many cells farther
@@ -136,7 +136,7 @@
 #   sneak_reach { value }         its shots, throws, and attack spells sneak-attack that many
 #                                 cells beyond surprise.toml's missile_reach
 #   sneak_kill_status { status }  a sneak attack of its that kills leaves it a degree of that
-#                                 status (../status.toml; Vanishing act: light_footed)
+#                                 status (../status/; Vanishing act: light_footed)
 #   sees_unaware                  it sees which creatures in view have not noticed it: look
 #                                 mode says "unaware of you", and their glyphs carry the
 #                                 unaware mark (Stalker's eye)
@@ -154,12 +154,12 @@
 #   swimmer                       wading (water, and ground a disease is caught wading in)
 #                                 costs a plain step, and never gives a disease
 #   terrain_as { terrains, like } a step onto any of terrains costs what a step onto like does
-#                                 (terrain ids in ../terrain.toml)
+#                                 (terrain ids in ../terrain/)
 #   plunge_proof                  a plunge through the ice never hurts it
 #   light_on_ice                  ice holds it as if it carried nothing
 #   climb_percent { value }       climbing out onto ice costs that percent more (negative: less)
 #   wading_proof                  wading never gives it a disease
-#   beast_friend                  creatures of animal factions (../factions.toml) are neutral
+#   beast_friend                  creatures of animal factions (../factions/) are neutral
 #                                 to it until it attacks one of that type
 #   stipend                       each level reached adds to its family's stipend, which its
 #                                 servant hands over (../stipend.toml, the aristocrat's)
@@ -189,7 +189,7 @@
 #                                 to it; `news`, if any, said when a class
 #                                 table gives it
 #   take_up_skills { dice, except, news }   handed out once, as the talent is taken or given:
-#                                 every skill of ../skills.toml it is not trained in, but those
+#                                 every skill of ../skills/ it is not trained in, but those
 #                                 `except` names, whatever the content holds, is trained at
 #                                 `dice` (1 to 100), rolled from the levels stream in file order;
 #                                 `news`, if any, said when a class table gives it
@@ -324,7 +324,7 @@
 #   wades_free                    wading costs it a plain step (it may still catch a disease)
 #   second_wind { per_level, at_least, cooldown }   the Second wind ability: per_level hit points
 #                                 per character level back at once (at least at_least), then the
-#                                 cooldown status (an id in ../status.toml)
+#                                 cooldown status (an id in ../status/)
 #   blaze { radius, damage, damage_type, spell, fire, burns, cooldown }   a birth sign's active
 #                                 (Fire's Blaze, `use:blaze`): a burst of radius (1 to 3) around
 #                                 the player, damage dice of damage_type to every creature in it
@@ -608,7 +608,7 @@
 #                                 of `resource` (unusable while short) or `mana` (1 to 100); no
 #                                 cooldown, the cost is the price. `on = "self"`: the singer
 #                                 suffers `status` at `severity` (default 1, 1 to 10) degrees
-#                                 plus the singer's Music's song degrees (skills.toml), at most
+#                                 plus the singer's Music's song degrees (skills/), at most
 #                                 the status's `max`. `on = "hearers"`: each hostile creature
 #                                 that hears it rolls `check` (a stat) against `difficulty` (0 to
 #                                 30) plus the singer's Music's song craft, and failed, suffers

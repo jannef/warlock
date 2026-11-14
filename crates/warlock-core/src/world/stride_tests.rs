@@ -79,8 +79,8 @@ fn levels() -> [(&'static str, String); 2] {
 
 static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
     let mut files = ContentFiles::default();
-    files.insert("data/terrain.toml", TERRAIN);
-    files.insert("data/factions.toml", FACTIONS);
+    files.replace_table("terrain", TERRAIN);
+    files.replace_table("factions", FACTIONS);
     files.insert("data/creatures.toml", CREATURES);
     files.insert("data/legend.toml", LEGEND);
     for (name, level) in levels() {

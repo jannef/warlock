@@ -265,7 +265,7 @@ cast path shares.
     `safe_below`) is refused with `backfire`, `drain`, `forget`, `summon`, `portal`, a `fire` zone (a
     `rank_loss` is allowed: it never forgets), or a `status` or
     `boon` whose `StatusDef` has `damage` or `mana_damage`. Spellcraft's `cast` and `ward` benefits
-    (`skills::Effect::{Cast, Ward}`, `data/skills.toml`) and `StanceDef::miscast`
+    (`skills::Effect::{Cast, Ward}`, `data/skills/`) and `StanceDef::miscast`
     (`data/stances.toml`).
   - **The hooks**: `World::cast_spell` calls `World::after_cast(player, &cast,
     Aim::Player(target))` after the spell went off and trained (`train_spell`, `practise_cast`);
@@ -636,7 +636,7 @@ cast path shares.
     actions insert into `spells` directly or via `TalentMods` and pay nothing.
   - **Learning, the number** (`Actor::learning(content) -> Option<i32>`, #987,
     `docs/design/no-caster-level.md` §2): the `learn` benefit (`skills::Effect::Learn`, Decipher script's
-    (#1270), in `data/skills.toml`; ceiling `MAX_SPELL_LEVEL`) through `Actor::skill_effect`, so skill
+    (#1270), in `data/skills/`; ceiling `MAX_SPELL_LEVEL`) through `Actor::skill_effect`, so skill
     affixes and the talents' `skill` bonuses count, at least 1; `None` when
     `Skills::trains_effect(Effect::Learn)` is false, whatever bonuses are worn. `None` means no
     learning at all: `study_odds` gives none, `PerceptionView::studies` lists nothing (the read
@@ -804,7 +804,7 @@ cast path shares.
     an unknown rod still costs its mana when used; teleport other provokes as a blow does, the
     status bursts do not (as an area hex); a use takes the `cast` action's time.
 - **Talents** (#400; design §10; the spell scaling design §7.2; tests
-  `world/spell_talent_tests.rs`): the `spells` system in `data/talents.toml`, held to the bar.
+  `world/spell_talent_tests.rs`): the `spells` system in `data/talents/systems/`, held to the bar.
   The Spellcraft tree: Quick study (#396), Overreach (level 6, `study { overreach_percent = -33
   }`), School focus (`choice = "school"`, `Choice::School`: the seven schools then the
   non-physical damage types; `spell_mod { cost = -10, cells = 1 }`, one pick per choice, foci on
@@ -1059,7 +1059,7 @@ What every spell of a damage type does beyond its damage (the design:
 - **`World::lay_fire`** (`spell_type.rs`): the one laying of a fire on a walkable cell, longest
   wins; Blaze's `kindle` calls it, and a burning missile's `come_down` keeps its own (it adds to a
   pile). `douses` goes through `shoot.rs::put_out`, burning objects there with it.
-- **Burning**: `assets/data/status.toml`; the light is the status light (`StatusDef::light`,
+- **Burning**: `assets/data/status/`; the light is the status light (`StatusDef::light`,
   `ember`, radius 1: `LightCache` sheds it for every actor). `quenched = true` is the status field
   for "water ends it": `World::quench` from `ice.rs::after_tread` (every step's one hook, the
   player's, a creature's, a displaced one's) on open water, and from `fall_in`. A knock-back or a
@@ -1140,7 +1140,7 @@ the shape too and refuses each field off its kind and shape).
   tagged `eyeless` (`content::EYELESS`: the grave worm, the nightworm, the black pudding, the
   canoloth) is passed by. Nothing is drawn for it.
 - **`only_terrain = "plants"`** (Bramble; an area hex's): `World::stands_on`, the `plants` flag in
-  `data/terrain.toml` (grass, tall and dry grass, marsh, reeds, flowers, buttercups, bluebells,
+  `data/terrain/` (grass, tall and dry grass, marsh, reeds, flowers, buttercups, bluebells,
   bush, forest floor, fungus).
 - **`push`, `douses`, and `clears`** (Gale; a line hex's, `push` 1 to 3): `cast_gale`, from `cast_hex` when the
   spell has a `push` (a hex needs `status`, `push`, or `zone`). The creatures on `bolt_line` are listed in

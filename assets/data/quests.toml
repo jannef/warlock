@@ -52,7 +52,7 @@
 #                stairs when it is beside you as you take them (spec §8 "Stair followers"); once
 #                it stands on `level` with you and the giver, the giver binds it and the quest is
 #                done (the giver says `done` and pays). `[quest.binding]` says how: `status` (one
-#                with no `eases`, data/status.toml: it carries it for good), `faction` (the one it
+#                with no `eases`, data/status/: it carries it for good), `faction` (the one it
 #                joins: at peace with you), `post` ([x, y] on `level`, walkable: where it walks
 #                and stays), `words` (what you are told as it is bound, a message each),
 #                `shatters` (optional: told as it dies unbound), `reforms` (optional: told as it
@@ -104,7 +104,7 @@
 #              `accept`, `reminder`, `done`, each replacing the quest's own (which may then be
 #              left out)
 # A kill a Beast-friend's talent forbids is never drawn for one: a creature type of an animal
-# faction (data/factions.toml), a tag any of whose types is one, or a variant asking for either.
+# faction (data/factions/), a tag any of whose types is one, or a variant asking for either.
 # Their texts (all but `name`) may name the roll: {target} and {targets} (the name and plural),
 # {a_target} (with its article; a unique's name alone), {count}, {members} (a tag's types,
 # plurals in a list), {branch} (the first branch, in the pick's order, it lives in), {where} (the

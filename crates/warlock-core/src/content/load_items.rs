@@ -304,12 +304,12 @@ impl Content {
                     .any(|c| c.on_eat.as_ref().is_some_and(|e| e.harm.is_some())));
         match &def.sickness {
             Some(id) if self.status_id(id).is_none() => {
-                return Err(err(format!("unknown sickness `{id}` (data/status.toml)")));
+                return Err(err(format!("unknown sickness `{id}` (data/status/)")));
             }
             None if harms => {
                 return Err(err(
                     "rotten food's `harm` and `on_eat` harm need a `sickness`, a status in \
-                     data/status.toml"
+                     data/status/"
                         .into(),
                 ));
             }
@@ -332,7 +332,7 @@ impl Content {
             creature.on_eat = (!on_eat.is_empty()).then_some(on_eat);
         }
         // What a corpse teaches is a skill with its words in `[corpses.skills]` (without
-        // `data/skills.toml` there are no skills, and corpses teach nothing).
+        // `data/skills/` there are no skills, and corpses teach nothing).
         if self.skills().is_empty() {
             return Ok(());
         }

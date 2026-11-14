@@ -1584,7 +1584,7 @@ shows and where the number lives.
 
 ## Talents coverage
 
-Every system the design added meets the coverage bar (`assets/data/talents.toml`, `min_talents`
+Every system the design added meets the coverage bar (`assets/data/talents/systems/`, `min_talents`
 1 since #773, checked when the game loads):
 - `weapon_abilities` has 4 talents (Early mastery, Brace of steel, Practised technique,
   Drillmaster).

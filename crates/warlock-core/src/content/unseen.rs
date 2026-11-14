@@ -12,9 +12,9 @@ use super::Content;
 use super::status::StatusId;
 use serde::Deserialize;
 
-/// The status a fading gives (`data/status.toml`): Invisible.
+/// The status a fading gives (`data/status/`): Invisible.
 pub const STATUS: &str = "invisible";
-/// The cooldown status a fading gives (`data/status.toml`).
+/// The cooldown status a fading gives (`data/status/`).
 pub const SPENT: &str = "invisibility";
 
 /// `invisible` as written: `invisible = true` or `[creature.invisible]` with its `cooldown`.
@@ -62,7 +62,7 @@ impl InvisibleSpec {
             .filter(|&s| content.status(s).unseen)
             .ok_or_else(|| format!("invisible: needs the `{STATUS}` status, `unseen`"))?;
         let spent = (content.status_id(SPENT))
-            .ok_or_else(|| format!("invisible: needs the `{SPENT}` status in data/status.toml"))?;
+            .ok_or_else(|| format!("invisible: needs the `{SPENT}` status in data/status/"))?;
         let spent_def = content.status(spent);
         let eases = (spent_def.eases)
             .filter(|_| spent_def.tick.is_none())

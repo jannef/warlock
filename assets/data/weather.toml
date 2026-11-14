@@ -114,7 +114,7 @@ heavy_rain = 5
 #   swing    percent of a clear day's swing of temperature left under it (0 to 100, default 100):
 #            clouds keep the day cooler and the night milder
 #   chill    how much cooler it is, in °C (0 to 15, default 0): rain cools the air
-# Presentation only (particle emitters as in terrain.toml, `ambient`, `rate` per cell and second;
+# Presentation only (particle emitters as in terrain/, `ambient`, `rate` per cell and second;
 # off with the `weather` effect switch):
 #   drops    rain falling on every visible cell under the open sky (never under a roof)
 #   splash   drops splashing on visible open ground

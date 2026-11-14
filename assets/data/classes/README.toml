@@ -45,7 +45,7 @@
 #   alignment     the class's part of a new character's hidden alignment score (spec §8
 #                 "Alignment"; alignment.toml; -1000 evil to 1000 good, default 0), added to the
 #                 race's: paladins start Good, thieves and witches Callous, everyone else Neutral
-#   skills        the skills the class trains (spec §8 "Skills"; skills.toml), by skill id: dice
+#   skills        the skills the class trains (spec §8 "Skills"; skills/), by skill id: dice
 #                 (`"2d6+10"`) or a number, rolled when the character is made; added to the
 #                 race's. Each class has a few skills it is known
 #                 for (2d6+10) and a few more (2d4+4); every other skill is untrained

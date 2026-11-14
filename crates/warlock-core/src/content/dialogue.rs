@@ -187,7 +187,7 @@ pub struct Service {
     pub train: Option<ServiceTraining>,
 }
 
-/// What a `train_skill` service teaches: the skill (an id in `data/skills.toml`) and the value
+/// What a `train_skill` service teaches: the skill (an id in `data/skills/`) and the value
 /// the player starts it at.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]

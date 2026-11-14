@@ -1,6 +1,6 @@
 # Chests (spec §7 "Chests", §8 "Chests"; docs/design/chests-and-treasure.md): what a chest of each
 # level is called and what it is like. A chest is a fixture of a cell (the `chest` terrains,
-# terrain.toml) with a level: its floor's (a branch floor's depth, a hand-made level's
+# terrain/) with a level: its floor's (a branch floor's depth, a hand-made level's
 # item_level), or what a level's legend gives it (`chest = "kist"`: that band's `from`; `chest =
 # 7`). The band is the last whose `from` the level reaches: it names the chest and gives its
 # numbers. The band is never saved, only the level, so bands may be renamed or re-cut freely.
@@ -11,7 +11,7 @@
 #   from          the least level of the band (bands in rising order; a level below the first
 #                 band's is of the first)
 #   sturdiness    a kick breaks it with a chance of the kicker's Strength in this, as a door's
-#                 (terrain.toml)
+#                 (terrain/)
 #   hardness      what a blast must beat to blow it apart, as a wall's
 #   locked        percent of generated chests of the band that come locked (0 to 100)
 #   trapped       percent that come trapped, from the branch's traps that fit (0 to 100)

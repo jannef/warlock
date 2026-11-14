@@ -694,6 +694,7 @@ fn jack_of_all_trades_takes_up_every_skill_but_sneak_attack_then_master_of_none_
 fn a_restored_bard_past_25_is_given_both_and_a_skill_added_later_is_taken_up() {
     // A skill the content adds later is the bard's too: the hand-out reads the content.
     let mut files = ContentFiles::builtin();
+    files.flatten_table("skills");
     files.edit_table("skills", |text| {
         format!(
             "{text}\n[[skill]]\nid = \"juggling\"\nname = \"Juggling\"\n\

@@ -202,7 +202,7 @@ E4 (#1430) and E5 (#1431; design §7, §8). Enchanting is a profession: `data/re
 holds `kindle.toml`, `quicken.toml`, `recast.toml`, `imbue.toml`, `ennoble.toml`, and
 `unbind.toml` (rows in file-name order), so its row "Enchanting…" is in the abilities
 menu for the trained, and `data/recipes.toml`'s `[[profession]]` gives it "Your work as an
-enchanter.", `stat = "willpower"`, `verb = "Enchant"`. `data/skills.toml` gives Enchanting
+enchanter.", `stat = "willpower"`, `verb = "Enchant"`. `data/skills/` gives Enchanting
 the professions' `craft` curve (0, 8 at 100, 12 at 200; salvage's affix checks read it too), its
 reach `enchant_level` (`Effect::EnchantLevel`, `[[0, 1], [110, 12], [200, 12]]`, at most
 `MAX_ENCHANT_LEVEL` 12), and a `craft` mark at 100 %.

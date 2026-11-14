@@ -77,7 +77,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **With blood**: both are kept on a cell, neither erases the other; blood is drawn over the
     char.
 - **Status effects** (`warlock-core/src/status.rs`, the rules of one actor's effects;
-  `world/status.rs`, applying them; data `data/status.toml`, §7; M24, #138): what ails an actor.
+  `world/status.rs`, applying them; data `data/status/`, §7; M24, #138): what ails an actor.
   Diseases ("Diseases" below) build on it: they show as one status, Diseased.
   - **Effects**: an actor carries at most one effect of each status (`Actor::effects`, in status
     order), each with a **severity** in degrees (1 to the status's `max`), its progress toward
@@ -272,7 +272,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     what magic items add (`max_mana` affixes, §8 "Magic items") plus the modifiers of the three
     mental stats, Intelligence, Willpower, and Presence, the effective scores', at least 0, then
     deepened by a trained **Concentration** (§8 "Skills"; `world/concentration.rs`): +1 at 25 to +5
-    at 100 and +8 at 200 (`data/skills.toml`), never more than a fifth of the pool without it
+    at 100 and +8 at 200 (`data/skills/`), never more than a fifth of the pool without it
     (rounded down, `mana::deeper`: a pool under 5 gains nothing), so it also follows the skill
     down when an item or a talent raising it comes off. Every actor starts with all of it. Each level gained up to the experience file's `mana_level` (60,
     past `hp_level`, so casters keep growing after hit points stop) adds `max(0, class mana ÷ 2 +
@@ -597,7 +597,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     cells, it never spreads). A spell's own `heat` or `frost` stands in for its type's. A trap's,
     a place's, and a birth sign's bursts and bolts are no spells and read nothing. **Fire**:
     Burning 1, one time in four per creature harmed; melts ice; `arrow_fire` for 60 s. **Cold**:
-    Sluggish 1, certain; ends Burning; `frost = 100`; douses. **Burning** (`data/status.toml`):
+    Sluggish 1, certain; ends Burning; `frost = 100`; douses. **Burning** (`data/status/`):
     max 3, adding; 1 hit point of fire per 10 s at one degree, a degree easing per 30 s; sheds the
     `ember` light; a step or a fall into water ends it (`quenched`). **Force**: `shove`, after
     the hurt, on one who lives: a blow of at least ⌈max hp / 3⌉ taken or a confirmed critical knocks
@@ -613,7 +613,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (the potions wave 2 design §9.3): when it harms the player, the first piece they wear (the
     body armour first) takes acid's item damage after the rider, the material's chance to
     withstand it its only draw (`world/corrode.rs`); a creature's gear is never eaten.
-    **Corroded** (`data/status.toml`): max 3, adding; 1 hit point of acid per 6 s, a degree easing
+    **Corroded** (`data/status/`): max 3, adding; 1 hit point of acid per 6 s, a degree easing
     per 12 s: two points a degree. **Electricity** spreads from
     every creature it harmed, at the cast's one roll, with no roll to hit and no Evasion, and
     spares no one, the caster included. `conducts`: everyone standing in that creature's body of
@@ -747,7 +747,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       `data/miscast.toml`.
   - **Learning, the number** (`Actor::learning`, `world/learn.rs`; derived, never stored;
     `docs/design/no-caster-level.md`, #987): what a grimoire teaches for certain comes from the
-    Decipher script skill and nothing else (#1270; Spellcraft's before), its `learn` benefit (`data/skills.toml`: 0 to 10, 10 at 60,
+    Decipher script skill and nothing else (#1270; Spellcraft's before), its `learn` benefit (`data/skills/`: 0 to 10, 10 at 60,
     30 at the soft cap 100, 70, the last spell level, from 150) at the skill's value with what
     skill affixes and the talents' `skill` bonuses add (`Actor::skill_effect`), **at least 1** for a
     character trained in Decipher script. A character **not trained** in it (the skill not in their

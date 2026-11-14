@@ -63,13 +63,11 @@ fn world(eager: bool) -> World {
         "name = \"house\"\nstart_level = \"house\"\ncarry = [\"gold_coin*500\"]\n",
     );
     if eager {
-        let text = include_str!("../../../../assets/data/skills.toml");
-        let eager = text.replace(
+        files.replace_in_table(
+            "skills",
             "{ on = \"deal\", chance = 25 }",
             "{ on = \"deal\", chance = 100 }",
         );
-        assert_ne!(eager, text, "Negotiation earns marks on a deal");
-        files.insert("data/skills.toml", &eager);
     }
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     World::new(content, "house", Some(7)).expect("world")

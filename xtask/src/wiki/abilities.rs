@@ -477,7 +477,7 @@ pub(super) fn songs(content: &Content) -> String {
 /// The Music values the song tables show.
 const MUSIC_VALUES: [u16; 6] = [0, 50, 100, 150, 200, 300];
 
-/// What Music adds to every song (`skills.toml`'s `song_degrees` and `song_craft`), by value.
+/// What Music adds to every song (`skills/`'s `song_degrees` and `song_craft`), by value.
 pub(super) fn song_music(content: &Content) -> String {
     let Some(music) = content.skills().iter().find(|s| s.id == "music") else {
         return "Nothing makes a song better.\n".into();

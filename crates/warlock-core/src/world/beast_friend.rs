@@ -1,5 +1,5 @@
 //! Beast-friend (spec §8 "Talents"): creatures of animal factions (`animal = true` in
-//! `data/factions.toml`: the vermin, the wildlife) are neutral to a player with the talent,
+//! `data/factions/`: the vermin, the wildlife) are neutral to a player with the talent,
 //! until the player attacks one: from then on that creature type stands toward them as its
 //! faction does (`Progress::empathy_broken`, by creature type id, saved). Every stance between
 //! the player and a creature goes through [`befriended`]: [`World::stance`], the creatures'

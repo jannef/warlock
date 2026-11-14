@@ -33,11 +33,11 @@
 #            with a blow from its edge, or shoot into it); default false
 #   floor    terrain generators lay over the room's floor (walkable, not stairs, doors, or
 #            running water); a hand-made level draws its own
-#   status   a status (status.toml) everyone inside holds, at least at one degree, while they
+#   status   a status (status/) everyone inside holds, at least at one degree, while they
 #            stay, creatures too; it eases by its own `eases` once they leave. One immune to its kind of damage never holds it; one with no mana
 #            never holds a status that only touches mana
 #   swarm    a teeming den (needs `needs_danger`; never a whole level): generators fill the room
-#            with sleepers (status.toml `sleeps`: Asleep) drawn by the floor's danger from the
+#            with sleepers (status/ `sleeps`: Asleep) drawn by the floor's danger from the
 #            branch's population (hostile types, no uniques), and their hoard.
 #            { per_cells, min, max }: one sleeper per `per_cells` floor cells, `min` to `max`;
 #            `wake`: a noise wakes a sleeper at this percent of its hearing threshold;
@@ -45,7 +45,7 @@
 #            (at most 300, the loudest noise); `loot_level`: the hoard (an item per four sleepers, at least one) is
 #            this many item levels above the floor's; `themes = { kind, faction }`: percent
 #            chances that every sleeper is of one type (a warren) or of one faction (a tribe);
-#            `factions`: faction ids (factions.toml): its sleepers are only of these, hostile or
+#            `factions`: faction ids (factions/): its sleepers are only of these, hostile or
 #            not, and it is drawn only in a branch whose own population holds one (a beast den);
 #            `hoard`: `items` (the default) or `corpses`: per four sleepers (at least one) a
 #            fresh corpse of a creature drawn from the branch's population and a pile of bones;
@@ -78,7 +78,7 @@
 #            on the level below (they can kill); they land Staggered. A generator cracks only
 #            the room's middle (`floor` there, never beside a wall, door, or its edge)
 #   rise     a cursed room: `{ faction, after }`: a creature that dies inside, is not of
-#            `faction` (factions.toml), and leaves a corpse rises from its corpse `after` (a
+#            `faction` (factions/), and leaves a corpse rises from its corpse `after` (a
 #            duration) as a creature of `faction` of its level (else the nearest level,
 #            the lower on a tie), unless the corpse is gone from where it died by then. Needs
 #            `needs_danger`

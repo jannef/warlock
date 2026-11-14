@@ -118,7 +118,7 @@ impl Stock {
     /// a `unit` of at least 1, `skill`, `stat`, and `verb` all three or none, known skills, and
     /// no skill worked by two stats; each material row once, of a known material with a group,
     /// naming a skill some group or the gems name (its stat and verb are theirs) or a form word
-    /// (`name` and `plural` together), or both. Without `data/skills.toml` the professions are
+    /// (`name` and `plural` together), or both. Without `data/skills/` the professions are
     /// left out.
     pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);

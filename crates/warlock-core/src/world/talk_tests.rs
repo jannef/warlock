@@ -338,9 +338,9 @@ fn files() -> ContentFiles {
         "data/item_classes.toml",
         crate::content::BUILTIN_ITEM_CLASSES,
     );
-    files.insert("data/terrain.toml", TERRAIN);
+    files.replace_table("terrain", TERRAIN);
     files.insert("data/creatures.toml", CREATURES);
-    files.insert("data/factions.toml", FACTIONS);
+    files.replace_table("factions", FACTIONS);
     files.insert("data/sizes.toml", SIZES);
     files.insert("data/dialogue.toml", DIALOGUE);
     files.insert("data/materials.toml", MATERIALS);

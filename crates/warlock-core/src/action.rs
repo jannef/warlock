@@ -404,7 +404,7 @@ pub enum Action {
     /// game time; recorded in replays.
     Identify(Positions),
     /// Dev command: the player suffers one degree more of a status effect (an id in
-    /// `data/status.toml`), as a wound or a bite would give it: for trying statuses out and for
+    /// `data/status/`), as a wound or a bite would give it: for trying statuses out and for
     /// captures. Takes no game time; recorded in replays.
     Afflict(String),
     /// Dev command: the player spends this much mana (spec §8 "Mana"), as a spell will, through

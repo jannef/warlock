@@ -352,7 +352,7 @@ fn level_table(content: &Content, table: Table, out: &mut String) {
     let _ = writeln!(out, "<!-- ANCHOR_END: {} -->\n", table.id());
 }
 
-/// The talents by system: every system of the list in `data/talents.toml` with the talents
+/// The talents by system: every system of `data/talents/systems/` with the talents
 /// that touch it. Systems and talents sort by name, never by file order.
 pub(super) fn by_system(content: &Content) -> String {
     let book = content.talents();

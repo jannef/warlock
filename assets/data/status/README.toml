@@ -69,7 +69,7 @@
 #              `stages`), and one that kills at its max has none for that degree
 #   kills_at_max  true: its bearer dies of it as it reaches its max: Stiffening, to stone
 #   statue     true (with kills_at_max): a creature it kills leaves no corpse but a statue (the
-#              terrain with `statue` in terrain.toml), holding what it carried
+#              terrain with `statue` in terrain/), holding what it carried
 #   hides      true: a creature suffering it hides as a shut chest (a mimic's Disguised): it takes
 #              no turn, has seen no one, no creature sets on it, and perception shows the chest in
 #              its place, never it; only being found out ends it (spec §8 "Mimics")

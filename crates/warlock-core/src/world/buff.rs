@@ -1,6 +1,6 @@
 //! Status effects as buffs, hexes, and cooldowns (spec §8 "Status effects", #227): what a status
 //! does besides ticking and healing, while it lasts and as it ends. What each does is data
-//! (`data/status.toml`, [`crate::content::StatusDef`]: `penalty`, `combat`, `cost`, `blocks`,
+//! (`data/status/`, [`crate::content::StatusDef`]: `penalty`, `combat`, `cost`, `blocks`,
 //! `follows`); the one way to give a status is still [`World::afflict`] (an ability that buffs
 //! the player is `afflict(player, status, 1, player)`).
 //!

@@ -9,7 +9,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 
 | Where | What |
 |---|---|
-| `content/talent.rs` | `TalentBook` from `data/talents.toml` (settings: `[[tree]]`, `[[system]]`) and `data/talents/*.toml` (one `[[talent]]` a file, `ContentFiles::table("talents")` order; `TalentId` an index, saves name talents by id so it is **not** in the content fingerprint). `TalentDef` (tree, `needs`, `effects`, `choice`, `systems`, `granted`), `Needs`/`Need` (the prerequisite kinds and their words: talents, stat scores, skill values, weapon-skill ranks, any skill of a role (`any_weapon_skill`), `chosen`, level, race, class, eyes (never an alignment band: alignment bars nothing, `docs/dev/alignment.md`), and `either`, any one of several, `Need::Either`), `TalentEffect` (the typed effects), `Choice::options`/`name` (`school`: a spell school or a non-physical damage type, #400). The load checks only that the table is well formed ("Loading" below). |
+| `content/talent.rs` | `TalentBook` from `data/talents/trees/` and `data/talents/systems/` (one `[[tree]]` or `[[system]]` a file, `NNN-<id>.toml`, the number keeping their order) and `data/talents/*.toml` (one `[[talent]]` a file, `ContentFiles::table("talents")` order; `TalentId` an index, saves name talents by id so it is **not** in the content fingerprint). `TalentDef` (tree, `needs`, `effects`, `choice`, `systems`, `granted`), `Needs`/`Need` (the prerequisite kinds and their words: talents, stat scores, skill values, weapon-skill ranks, any skill of a role (`any_weapon_skill`), `chosen`, level, race, class, eyes (never an alignment band: alignment bars nothing, `docs/dev/alignment.md`), and `either`, any one of several, `Need::Either`), `TalentEffect` (the typed effects), `Choice::options`/`name` (`school`: a spell school or a non-physical damage type, #400). The load checks only that the table is well formed ("Loading" below). |
 | `talent.rs` | The runtime: `Talents` (`Vec<Taken { id, choice }>` on `Actor::talents`, `holds(id, choice)`, `has(id)`, saved and hashed, left out of the JSON while empty), `TalentMods` (every effect summed; `Talents::mods(content, effects)`, the effects under a status counted while the holder suffers it, / `Actor::talent_mods`, a `Cow`: borrowed and shared for an actor without talents, which most creatures are, so the many reads a turn copy nothing), `Candidate` (what prerequisites read: `Candidate::player`), `unmet`, `may_take` → `Refusal` (in words; `Held`, "You have Hardy already."), `openings`, `offers` (the pick list, tree by tree). |
 | `world/talent.rs` | `Due { level, talents }` in `Progress::due` (lowest level first); `World::level_up(from, to)` from `grant_xp` (a pick every `Experience::talent_every` levels, and the per-level hit points of talents held); `refuse_due` (the first line of `player_acts`: everything but `Talent`, `Advance`, `LevelUpAuto` is refused with "You have skill rolls to spend." or "You must choose a talent first."); `take_talent` (the first due with a pick, so a talent may come before the rolls), `level_up_auto` (dev); `settle_due` drops talent picks nothing can be spent on (`offers` empty and no roll left) and rolls when no skill is trained, asked again after each pick. `Due { level, talents, rolls, bonus }`: a level with rolls but no pick is due too; `bonus` are the class's bonus picks (a talent of the class's trees spends one before an ordinary pick; "You must choose a talent of Weaponcraft or Delver."), dropped like the others when nothing fits. |
 | `world/creation.rs` | Creation picks (#236; below): `creation_count`, `World::open_creation` (a level 1 `Due` from `begin`, for a run with the kit), `take_creation` (from `start_run`: the spec's picks, else `take_random` on the `character/talents/<spec>` stream; recorded in `CharacterSpec::talents`), `World::draft` / `creation_offers` / `random_creation` (character creation's Talents step), `chosen_with_talents` and `parse_talents` (`--talents`). `World::learn` (`world/talent.rs`) is `take_talent` without its words. |
@@ -325,8 +325,8 @@ durations that parse; a die's sides and a divisor (`per_levels`, `one_in`) not 0
 trees or systems and 65,535 talents (the ids' widths). Everything else is the author's: numbers
 in any range, a talent with no effects or no systems, two talents alike, a chain of choices of
 different kinds (`Candidate::meets` reads a need of another kind as held at all), a flaw that
-is needed, a resource cost or alignment on a talent that has no active. `data/talents.toml`'s
-`[[system]]` list is read only by the wiki's talents-by-system table.
+is needed, a resource cost or alignment on a talent that has no active. `data/talents/systems/`
+list is read only by the wiki's talents-by-system table.
 
 ## Creation picks
 
@@ -522,7 +522,7 @@ and Riposte at 2.
 Vigour, Might, and Finesse (#237) ship whole; Battle trance and Inner calm (the class
 resources) came with R5 (#253); `body_talent_tests.rs` covers each one's rule, `hunger_tests.rs` Iron stomach.
 The statuses Winded (Second wind's cooldown) and Staggered (`cost = 150`, until the next action:
-`per_action`, docs/dev/weapon-abilities.md) are in `data/status.toml`.
+`per_action`, docs/dev/weapon-abilities.md) are in `data/status/`.
 
 Scholar, Grit, and Delver (#240) ship whole; their five mana talents (Deep well, Clear mind,
 Meditation, Frugal caster, Blood magic) came with #242 (H6; `docs/dev/mana.md`,
@@ -562,7 +562,7 @@ resistance.
 Shadow and Wayfarer (#239) ship whole but for Hooded light (it waited for the lantern's hood,
 #235; the hood is now a lantern's mode, `u`, #643, so the talent needs a new rule) and Patient blade (the thief's openings,
 #225); `land_talent_tests.rs` covers each one's rule. `data/lights.toml` has the Lamplighter's
-`lantern_bright`; `data/factions.toml` marks the vermin and the wildlife `animal`. Blood scent's
+`lantern_bright`; `data/factions/` marks the vermin and the wildlife `animal`. Blood scent's
 radius is 9 (the design's "4 cells" read as four beyond darkvision's five, which it needs: at 4 it
 would see nothing darkvision does not). The design's B5 (Defence by attack kind) is
 `World::target_against`, which came with Deflect missiles (#237).

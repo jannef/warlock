@@ -8,7 +8,7 @@
 # in the abilities menu (a profession without one shows its skill's description):
 #
 #   [[profession]]
-#     skill        the skill (skills.toml) whose directory it is
+#     skill        the skill (skills/) whose directory it is
 #     description  the abilities menu's line for its row
 #     stat         the check's stat when no chosen stock names one (stock.toml's `stat` does for
 #                  stock; herbs are no stock, so Alchemy names Intelligence here)

@@ -1,7 +1,7 @@
 # Stealing (spec §8 "Stealing"; #234): lifting a purse or a trinket from someone next to you, the
 # Steal skill's use, chosen from the abilities menu (`a`, then a direction).
 #
-# Whoever is trained in Steal (skills.toml: the skill with the `steal` benefit) can try it on any
+# Whoever is trained in Steal (skills/: the skill with the `steal` benefit) can try it on any
 # creature next to them that they see and that is not hostile to them. It is a contest (spec §8
 # "Checks"): 2d12 + your Dexterity modifier + what your Steal skill gives, against 2d12 + its
 # Willpower modifier; a tie is yours, and your natural 2 always fails, your natural 24 always
@@ -15,6 +15,6 @@
 #
 # Try as often as you like: a creature that caught you stays angry, and that is the price.
 
-# The faction a creature that catches you stealing joins (factions.toml): one hostile to you, so
+# The faction a creature that catches you stealing joins (factions/): one hostile to you, so
 # the creature comes after you.
 caught = "outraged"

@@ -1,4 +1,4 @@
-//! Terrain definitions (`assets/data/terrain.toml`).
+//! Terrain definitions (`assets/data/terrain/`).
 
 use super::action::{BASE_TURN, price};
 use super::anim::GlyphAnim;

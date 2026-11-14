@@ -2,7 +2,7 @@
 //! use, a lie in combat.
 //!
 //! The rule itself lives in `world/feint.rs`: who can (anyone trained in a skill with the `feint`
-//! benefit, `data/skills.toml`), at whom (a hostile creature they see next to them, with a mind),
+//! benefit, `data/skills/`), at whom (a hostile creature they see next to them, with a mind),
 //! the check (its Willpower against `difficulty` + their Presence modifier + their Bluff), and
 //! the status a failed check leaves.
 //!

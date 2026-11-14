@@ -825,7 +825,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     known and with "You cannot pay." short of the total, neither taking time. Pious does not
     halve it (a temple's talent).
   - **Training** (`does = "train_skill"`, #1391): `train = { skill = "mining", value = 5 }` names
-    a skill (`data/skills.toml`, checked when content loads) and the value it is taught at: a
+    a skill (`data/skills/`, checked when content loads) and the value it is taught at: a
     fixed number, no roll (5, the low end of a dwarf's Mining). Offered only while the player is
     untrained in that skill: `World::topics` leaves it out once they are, and asked for anyway it
     is the `nothing` line, no time. Bought, the player is trained at that value and told "Alberich

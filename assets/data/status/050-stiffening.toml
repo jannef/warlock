@@ -1,6 +1,6 @@
 # Stiffening (a basilisk's gaze, spec §8 "Creature behavior": "Gazes"; the dread design §5.2):
 # the flesh turning to stone. Three warnings, a degree each, then at the fourth the bearer is
-# stone: dead, and a creature a statue holding what it carried (terrain.toml `statue`). Two
+# stone: dead, and a creature a statue holding what it carried (terrain/ `statue`). Two
 # minutes a degree to ease, so a basilisk looked at twice and fled from is a fright. Ended at
 # once by the scroll of restoration (`restoration`) and a temple's cure (`prayer`), eased a degree a try
 # by the Heal skill, and ended by Still mind's Stillness.

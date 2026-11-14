@@ -54,7 +54,7 @@
 #             (very rare) for that item, whatever it says here; jewellery is never worse
 #   gear      the same for what creatures carry (what they drop), by the creature's level instead
 #             of the item level: primitive materials for kobolds, steel for tougher creatures (a
-#             creature's faction may favour materials besides: data/factions.toml `gear`)
+#             creature's faction may favour materials besides: data/factions/ `gear`)
 #   fit       how well it suits an item by its use (#1191), `fit = { weapon = "odd", armour =
 #             "poor" }`: weapon (what strikes or is shot), armour (with shields), jewellery
 #             (rings and amulets), other; each "good" (the default: its weight as given),

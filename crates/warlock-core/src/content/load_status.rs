@@ -3,14 +3,12 @@
 use super::{Content, ContentError, ContentFiles, DiseaseId, StatusId, disease, status};
 
 impl Content {
+    /// Statuses (optional: none): `data/status.toml` (the healing rules) and a file per status in
+    /// `data/status/`, in path order (`NNN-<id>.toml`: the number keeps their order).
     pub(super) fn load_statuses(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
-        let path = "data/status.toml";
-        let Some(text) = files.get_optional(path) else {
-            return Ok(());
-        };
-        let (healing, list) = status::parse(
-            path,
-            text,
+        let path = "data/status/";
+        let (healing, list) = status::parse_table(
+            files.table("status"),
             |id| self.damage_type_id(id),
             |id| self.light_id(id),
             |id| self.vision_index(id),
