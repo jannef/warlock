@@ -67,7 +67,7 @@ hair trigger, retribution, a cleave) and `weapon_ability.rs`'s free shot (Point-
 Whirling charge's blows on the way (`charge.rs::whirl`) go through `strike_free` too.
 
 Vanishing act stays where a sneak attack's blow kills, in `fight.rs::resolve` (`unseen` is
-known only there); it no longer rides a build.
+known only there); it rides no build.
 
 ## Exploit (`world/openings.rs`)
 
@@ -116,9 +116,9 @@ cap on n beyond the pool's maximum (Of Guile's eight openings are 8 × the dice 
 | Level | Talent | Adds per opening spent |
 |---|---|---|
 | 1 | Exploit | the blow; +1d6 (`exploit_dice`) |
-| 12 | Low blow (no active since O3) | +1 to hit (`exploit_to_hit`); the foe Stunned on a hit (`exploit_status`: flat-footed, its next action dear) |
+| 12 | Low blow (no active, O3) | +1 to hit (`exploit_to_hit`); the foe Stunned on a hit (`exploit_status`: flat-footed, its next action dear) |
 | 32 | Improved sneak attack (keeps `ambush 2d6`) | a second `exploit_dice` 1d6: 2d6 an opening |
-| 60 | Master thief (keeps `ambush_threat 2`) | threat 4 lower, never below 2 (`exploit_threat`); with five or more spent a critical whenever it hits, no confirmation (`sure_at = 5`: the finisher, folded in; `ClassActive::MasterThief` and `use:master_thief` are gone, O4 #1464) |
+| 60 | Master thief (keeps `ambush_threat 2`) | threat 4 lower, never below 2 (`exploit_threat`); with five or more spent a critical whenever it hits, no confirmation (`sure_at = 5`: the finisher, folded in, O4 #1464) |
 
 Trained wind is gone from the content (O3); the pool comes with the first
 active weapon rank (`fight.rs::grant_stamina`).

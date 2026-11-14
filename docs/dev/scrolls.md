@@ -7,11 +7,11 @@ as CLAUDE.md says.
 Scrolls (spec §8 "Scrolls") are objects with a `read` table (`content/scroll.rs`: `ReadSpec` →
 `Reading::Cast(SpellScroll { spell, rungs, reach, on_item })`), one file each in
 `data/objects/`: a scroll of every spell of `data/spells/` (`scroll_of_ID`, kind `spell`,
-"Scrolls of spells" below). Since S2 (the spell scaling design §7.4) the three older ones
-(`scroll_of_fireball`, `scroll_of_lightning`, `scroll_of_frost`) are spell scrolls too, at a
-rung of their spells' ladders (1, 2, and 0: 3d6, 4d6, 2d6, as they rolled); their `burst` and
-`bolt` readings are gone (a `read` of either kind is refused, naming the `spell` kind and
-`rungs`). **Every scroll is a real spell** (#592), but the scroll of restoration (below, #887): each casts its spell
+"Scrolls of spells" below). The three older ones
+(`scroll_of_fireball`, `scroll_of_lightning`, `scroll_of_frost`) are spell scrolls too (S2, the
+spell scaling design §7.4), at a rung of their spells' ladders (1, 2, and 0: 3d6, 4d6, 2d6);
+there are no `burst` or `bolt` readings (a `read` of either kind is refused, naming the `spell`
+kind and `rungs`). **Every scroll is a real spell** (#592), but the scroll of restoration (below, #887): each casts its spell
 (`read_tests.rs::every_builtin_scroll_can_be_read` holds every `scroll_of_*` to it), and none
 teaches it: its grimoire does (#1260, "Grimoires" below); the
 `identify` reading kind is gone, and `scroll_of_identify` is a `spell` scroll of Identify
@@ -68,7 +68,7 @@ calls `deciphers` with the scroll's spell and level (`Reading::Cast`, else none 
 **Making out a scroll** (#1024, `world/decipher.rs`, `content/decipher.rs`,
 `data/decipher.toml`; the skill uses design §6.6): `World::deciphers(spell, level)` stands between a
 reading's refusals and its `use_up`. A spell the player knows (`Actor::knows_spell`, a scroll they
-wrote too): true, no draw, and `Use::Decipher` still marks (a trained skill only). Else trained in Decipher script (the skill of learning since #1270) with `Actor::learning` at
+wrote too): true, no draw, and `Use::Decipher` still marks (a trained skill only). Else trained in Decipher script (the skill of learning, #1270) with `Actor::learning` at
 least `level`: true, no draw, no mark, no words. Otherwise a `check::check` of the Intelligence modifier +
 `TalentMods::check(Intelligence)` + `skill_effect(Effect::Decipher)` (0 unless trained in Decipher script) against
 `DecipherRules::difficulty` (`base` + level ÷ `levels_per_point`), then `Use::Decipher` (100 %,
@@ -227,5 +227,5 @@ wiki's table is `xtask/src/wiki/scrolls.rs` (`scrolls.md`), sharing `ice_text`/`
 with the traps' table; its "Casts at" column is the roll at the scroll's rung
 (`SpellData::roll_at`). Tests: `world/read_tests.rs` (the three older scrolls at their rungs,
 bursts and bolts, kills and experience, refusals, identify, death, saves and replays, loot,
-the old readings refused), `world/spell_talent_tests.rs` (Scroll adept's rung), the read
+the `burst` and `bolt` readings refused), `world/spell_talent_tests.rs` (Scroll adept's rung), the read
 and identify lists in `ui/object_screen.rs`, aiming in `ui/target.rs`.

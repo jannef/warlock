@@ -322,8 +322,8 @@ impl World {
         let radius = sight::sight_radius(state, content, def.sight);
         let reach2 = radius2(radius);
         let from = me.pos;
-        let mut hostiles: Vec<(i32, ActorId, Pos)> = (state.actors.values())
-            .filter(|a| a.level == me.level && a.id != id && a.pos.dist2(me.pos) <= reach2)
+        let mut hostiles: Vec<(i32, ActorId, Pos)> = (state.actors.on_level(&me.level))
+            .filter(|a| a.id != id && a.pos.dist2(me.pos) <= reach2)
             // A disguised mimic is a chest to every eye (`mimic.rs`).
             .filter(|a| !a.effects.hides(content))
             .filter(|a| wanted(state, content, me, a))
@@ -470,8 +470,8 @@ impl World {
     pub(super) fn clear_shot(&self, from: Pos, to: Pos, shooter: ActorId, target: ActorId) -> bool {
         let level = self.state.current();
         let occupied = |p: Pos| {
-            (self.state.actors.values())
-                .any(|a| a.level == level.id && a.pos == p && a.id != shooter && a.id != target)
+            (self.state.actors.on_level(&level.id))
+                .any(|a| a.pos == p && a.id != shooter && a.id != target)
         };
         from.line_between(to)
             .all(|p| !level.is_opaque(&self.content, p) && !occupied(p))
@@ -494,8 +494,8 @@ impl World {
         let phases = self.content.incorporeal(me.creature).is_some();
         let phaseable = |p: Pos| phases && level.phaseable(&self.content, p);
         // Sorted once, searched for every cell the path search expands.
-        let mut others: Vec<Pos> = (self.state.actors.values())
-            .filter(|a| a.level == level.id && a.id != id)
+        let mut others: Vec<Pos> = (self.state.actors.on_level(&level.id))
+            .filter(|a| a.id != id)
             .map(|a| a.pos)
             .collect();
         others.sort_unstable();

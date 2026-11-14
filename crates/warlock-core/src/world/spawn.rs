@@ -94,7 +94,7 @@ impl World {
     /// monster pool stands outside it, [`Spawner::outside`]).
     pub(super) fn hostiles_here(&self) -> u32 {
         let (player, level) = (self.state.player, &self.state.current_level);
-        let here = (self.state.actors.values()).filter(|a| a.level == *level && a.id != player);
+        let here = (self.state.actors.on_level(level)).filter(|a| a.id != player);
         let spawner = self.state.current().spawner.as_ref();
         let outside = |id: ActorId| spawner.is_some_and(|s| s.outside.contains(&id));
         let n = here

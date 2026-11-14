@@ -99,12 +99,13 @@ fn the_ranger_gains_pack_tactics_at_level_18() {
         !w.state
             .player()
             .talent_mods(w.content())
+            .beast
             .shares_favoured_prey
     );
     grant(&mut w, "pack_tactics");
     let mods = w.state.player().talent_mods(w.content());
-    assert_eq!(mods.pack_tactics, 2);
-    assert!(mods.shares_favoured_prey);
+    assert_eq!(mods.beast.pack_tactics, 2);
+    assert!(mods.beast.shares_favoured_prey);
 }
 
 #[test]

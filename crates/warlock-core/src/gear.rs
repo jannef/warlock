@@ -122,6 +122,23 @@ pub fn finish(content: &Content, rng: &mut Rng, pack: &mut Pack) {
     }
 }
 
+/// The gear of a creature of type `creature` on a level of item level `level`, with every last
+/// step, in order: [`roll`] from `rng`, its condition from `condition`
+/// (`world/gear_condition.rs`), then [`finish`] from `rng` again. Every creature's rolled gear
+/// is made here, a generated level's ([`arm`]) and a placed creature's alike.
+pub fn equip(
+    content: &Content,
+    rng: &mut Rng,
+    condition: &mut Rng,
+    creature: CreatureId,
+    level: u8,
+) -> Pack {
+    let mut pack = roll(content, rng, creature, level);
+    crate::world::gear_condition::apply(content, condition, (creature, level), &mut pack);
+    finish(content, rng, &mut pack);
+    pack
+}
+
 /// Rolls the gear of every spawn of generated level `template` that has no fixed kit, from the
 /// level's own stream `gear/<level id>`, in spawn order, on top of anything it carries already.
 pub fn arm(template: &mut LevelTemplate, content: &Content, seed: u64) {
@@ -132,14 +149,7 @@ pub fn arm(template: &mut LevelTemplate, content: &Content, seed: u64) {
         if !spawn.rolls_gear {
             continue;
         }
-        let mut pack = roll(content, &mut rng, spawn.creature, level);
-        crate::world::gear_condition::apply(
-            content,
-            &mut condition,
-            (spawn.creature, level),
-            &mut pack,
-        );
-        finish(content, &mut rng, &mut pack);
+        let pack = equip(content, &mut rng, &mut condition, spawn.creature, level);
         // What it was given already (a monster pool's key, `mapgen/population.rs`) comes after
         // its gear, so the gear's equipment still points at it.
         let given = std::mem::replace(&mut spawn.carry, pack.items);

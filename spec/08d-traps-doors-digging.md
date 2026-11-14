@@ -64,9 +64,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       a pure function of the level's danger, nothing stored: saves and replays are unchanged by
       it. A door's and a chest's trap read the same rungs. The base (danger 0 to 2) never kills
       a level-1 character at full hit points in one going off, a critical included (the owner:
-      "we can't make them too dead right away"); today's builtin rungs rise at danger 3, 6, 10,
-      15, 22, and 30, reaching the old dice (the fireball's 3d6) at 10 and going beyond.
-      Messages are unchanged; the game never names the damage, the wiki does.
+      "we can't make them too dead right away"); the builtin rungs rise at danger 3, 6, 10,
+      15, 22, and 30, reaching the fireball's 3d6 at 10 and going beyond.
+      The messages do not change with the rung; the game never names the damage, the wiki does.
     - **alarm**: only its noise.
     - **teleport**: the victim is moved at once to a free cell of the level (walkable, no one
       there, no trap, no ice: §5 "Ice"), the cell at index `hash % count` of those in row order,

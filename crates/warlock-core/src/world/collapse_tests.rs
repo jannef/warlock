@@ -81,8 +81,9 @@ fn said(w: &World, line: &str) -> bool {
 fn back(w: &mut World, at: Pos) {
     w.state.current_level = "test_top".into();
     let content = w.content.clone();
+    let id = w.state.player;
+    w.state.actors.set_level(id, "test_top");
     let player = w.player_mut();
-    player.level = "test_top".into();
     player.pos = at;
     player.hp = player.max_hp(&content);
 }

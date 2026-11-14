@@ -600,14 +600,14 @@ fn bond_view<'a>(
     content: &Content,
     talents: &TalentMods,
 ) -> Option<BondView<'a>> {
-    if !talents.shared_sight && !talents.familiar_sight {
+    if !talents.beast.shared_sight && !talents.beast.familiar_sight {
         return None;
     }
     let level = state.current();
     let beast = (state.actors.values()).find(|a| {
         a.master() == Some(state.player)
-            && ((talents.shared_sight && a.companion().is_some())
-                || (talents.familiar_sight && a.familiar().is_some()))
+            && ((talents.beast.shared_sight && a.companion().is_some())
+                || (talents.beast.familiar_sight && a.familiar().is_some()))
             && a.level == level.id
             && !a.in_retinue()
     })?;
@@ -2702,7 +2702,7 @@ impl<'a> PerceptionView<'a> {
             .is_some_and(|f| self.content.factions().def(f).animal);
         if animal
             && actor.kind == ActorKind::Creature
-            && self.player.talent_mods(self.content).beast_friend
+            && self.player.talent_mods(self.content).beast.beast_friend
             && !(self.progress.empathy_broken).contains(&self.content.creature(actor.creature).id)
         {
             return Stance::Neutral;
