@@ -105,7 +105,6 @@ use missiles::Missiles;
 use motion::Motion;
 use spells::Spells;
 use warlock_core::Pos;
-use warlock_core::World;
 use warlock_core::ability::Ability;
 use warlock_core::burden::Burden;
 use warlock_core::color::Rgb;
@@ -695,7 +694,8 @@ fn draw_status(
             bg: PANEL_BG,
         },
     );
-    let segments = status_segments(&game.world, clock, unit, dev);
+    let view = game.world.perception();
+    let segments = status_segments(&view, clock, unit, dev);
     // The controls hint matters most to new players, so it keeps its place unless the window is
     // very narrow; status segments give way around it.
     let hint_w = hint.chars().count() as i32;
@@ -705,7 +705,7 @@ fn draw_status(
     let line = fit_segments(&segments, width);
     console.print(1, y, &line, TEXT);
     // A subtle hint of cold or heat on the temperature, when it is shown: the number says it.
-    let temperature = game.world.perception().temperature();
+    let temperature = view.temperature();
     let tint = match temperature.tenths() {
         t if t < 0 => Some(COLD),
         t if t >= HOT_TENTHS => Some(HOT),
@@ -717,7 +717,7 @@ fn draw_status(
         console.print(1 + x, y, &text, tint);
     }
     // The hunger word's colour, as it worsens.
-    if let Some(hunger) = game.world.perception().own_hunger()
+    if let Some(hunger) = view.own_hunger()
         && let Some(tint) = hunger_tint(hunger)
         && let Some(x) = segment_x(&line, hunger.name())
     {
@@ -752,14 +752,18 @@ fn segment_x(line: &str, text: &str) -> Option<i32> {
     None
 }
 
-/// The status bar's segments for `world`, in display order, the time on `clock` and the
-/// temperature in `unit`. The seed shows only where the dev keys are on (`dev`): a player is
-/// never told of it (#1557).
-fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit, dev: bool) -> Vec<Segment> {
-    let view = world.perception();
-    let pos = world.player_pos();
-    let time = world.time();
-    let light = view.light(pos).map_or(0, |l| l.brightness());
+/// The status bar's segments, a HUD of the character's status (#1666), drawn from what the
+/// player perceives (`view`) only, in display order, the time on `clock` and the temperature in
+/// `unit`. The turn, the position, the light at the player's feet, the vision profile, and the
+/// seed are developer segments, shown only where the dev keys are on (`dev`): a player is never
+/// told of them (#1557, #1666).
+fn status_segments(
+    view: &PerceptionView,
+    clock: Clock,
+    unit: TemperatureUnit,
+    dev: bool,
+) -> Vec<Segment> {
+    let time = view.time();
     let content = view.content();
     // Display order; the number is the drop priority (higher drops first when space runs out;
     // of equal ones the later first). The moon phase is cut down to its glyph and the date to
@@ -775,7 +779,7 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit, dev: bool
     // from Hungry down it outlasts everything, the level's name too (spec §8 "Hunger"). The
     // character level (`Lv 3`) comes after them and goes before them, but after the time. The
     // temperature where the player is (always, underground too) sits after the weather; it
-    // outlasts the turn, the position, the seed, and the moon, and gives way before the date.
+    // outlasts the moon and the developer segments, and gives way before the date.
     let calendar = content.calendar();
     let (hp, max_hp) = view.own_hp();
     let (mp, max_mp) = view.own_mana();
@@ -827,18 +831,26 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit, dev: bool
             .map(|(text, glyphs)| Segment::new(5, text).or_short(glyphs)),
         view.weather().map(|w| Segment::new(2, w.name())),
         Some(Segment::new(4, unit.show(view.temperature()))),
-        Some(Segment::new(6, format!("Turn {}", world.turn()))),
-        Some(Segment::new(10, format!("{},{}", pos.x, pos.y))),
-        Some(Segment::new(7, format!("Light {light}"))),
-        Some(Segment::new(8, format!("{} vision", view.vision().name))),
-        dev.then(|| Segment::new(11, format!("Seed {}", world.seed()))),
     ];
+    // The developer segments, which give way first.
+    let dev_tail = dev.then(|| {
+        let pos = view.viewer();
+        let light = view.light(pos).map_or(0, |l| l.brightness());
+        [
+            Segment::new(6, format!("Turn {}", view.turn())),
+            Segment::new(10, format!("{},{}", pos.x, pos.y)),
+            Segment::new(7, format!("Light {light}")),
+            Segment::new(8, format!("{} vision", view.vision().name)),
+            Segment::new(11, format!("Seed {}", view.seed())),
+        ]
+    });
     (head.into_iter())
         .chain(resources)
         .chain(effects)
         .chain(rest.into_iter().flatten())
         .chain(kept)
         .chain(tail.into_iter().flatten())
+        .chain(dev_tail.into_iter().flatten())
         .collect()
 }
 
@@ -964,7 +976,7 @@ fn fit_segments(segments: &[Segment], width: usize) -> String {
 /// A test world: average scores (St 10 To 10, so burdened over 15 kg), standing on two chain
 /// mails (22 kg).
 #[cfg(test)]
-pub(crate) fn hoard() -> World {
+pub(crate) fn hoard() -> warlock_core::World {
     let mut files = warlock_assets::files();
     files.insert(
         "levels/hoard.toml",
@@ -977,7 +989,7 @@ pub(crate) fn hoard() -> World {
         "name = \"Hoard\"\nstart_level = \"hoard\"\n",
     );
     let content = warlock_core::content::Content::load(&files).expect("valid");
-    World::new(std::sync::Arc::new(content), "hoard", None).expect("world")
+    warlock_core::World::new(std::sync::Arc::new(content), "hoard", None).expect("world")
 }
 
 #[cfg(test)]
@@ -993,7 +1005,7 @@ mod tests {
     fn the_status_bar_shows_the_burden_after_the_hit_points_and_mana_and_keeps_it_late() {
         let mut world = hoard();
         let texts = |w: &World| -> Vec<String> {
-            status_segments(w, Clock::H24, TemperatureUnit::Celsius, true)
+            status_segments(&w.perception(), Clock::H24, TemperatureUnit::Celsius, true)
                 .into_iter()
                 .map(|s| s.text)
                 .collect()
@@ -1003,7 +1015,12 @@ mod tests {
             "unburdened: nothing"
         );
         world.apply(&Action::PickUp(Positions::default()));
-        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true);
+        let segments = status_segments(
+            &world.perception(),
+            Clock::H24,
+            TemperatureUnit::Celsius,
+            true,
+        );
         assert_eq!(segments[1].text, "HP 10/10");
         assert_eq!(
             segments[2].text, "MP 0/0",
@@ -1042,11 +1059,15 @@ mod tests {
         );
         let content = Arc::new(Content::load(&files).expect("valid"));
         let world = World::new(content, "stare", None).expect("world");
-        let texts: Vec<String> =
-            status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true)
-                .into_iter()
-                .map(|s| s.text)
-                .collect();
+        let texts: Vec<String> = status_segments(
+            &world.perception(),
+            Clock::H24,
+            TemperatureUnit::Celsius,
+            true,
+        )
+        .into_iter()
+        .map(|s| s.text)
+        .collect();
         assert!(texts.contains(&"Averted".to_string()), "{texts:?}");
     }
 
@@ -1075,7 +1096,7 @@ mod tests {
             World::with_character(content, "glare", None, Some(&spec)).expect("world")
         };
         let texts = |w: &World| -> Vec<String> {
-            status_segments(w, Clock::H24, TemperatureUnit::Celsius, true)
+            status_segments(&w.perception(), Clock::H24, TemperatureUnit::Celsius, true)
                 .into_iter()
                 .map(|s| s.text)
                 .collect()
@@ -1109,7 +1130,7 @@ mod tests {
             World::new(content, "hoard", None).expect("world")
         };
         let texts = |w: &World| -> Vec<String> {
-            status_segments(w, Clock::H24, TemperatureUnit::Celsius, true)
+            status_segments(&w.perception(), Clock::H24, TemperatureUnit::Celsius, true)
                 .into_iter()
                 .map(|s| s.text)
                 .collect()
@@ -1135,7 +1156,12 @@ mod tests {
         }
         let mut world = world_starting_at(1000);
         world.apply(&Action::PickUp(Positions::default()));
-        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true);
+        let segments = status_segments(
+            &world.perception(),
+            Clock::H24,
+            TemperatureUnit::Celsius,
+            true,
+        );
         assert_eq!(
             texts(&world)[..5],
             ["Hoard", "HP 10/10", "MP 0/0", "Hungry", "Burdened"]
@@ -1153,7 +1179,12 @@ mod tests {
         assert_eq!(fit_segments(&segments, 10), "Hungry");
         // A well-fed word gives way as it did: before the mana, and the level's name goes last.
         let fed = world_starting_at(5000);
-        let segments = status_segments(&fed, Clock::H24, TemperatureUnit::Celsius, true);
+        let segments = status_segments(
+            &fed.perception(),
+            Clock::H24,
+            TemperatureUnit::Celsius,
+            true,
+        );
         assert_eq!(fit_segments(&segments, 36), "Hoard  ·  HP 10/10  ·  MP 0/0");
         assert_eq!(fit_segments(&segments, 10), "Hoard");
     }
@@ -1178,7 +1209,12 @@ mod tests {
         let mut world = hoard();
         world.apply(&Action::Afflict("poisoned".into()));
         world.apply(&Action::Afflict("bleeding".into()));
-        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true);
+        let segments = status_segments(
+            &world.perception(),
+            Clock::H24,
+            TemperatureUnit::Celsius,
+            true,
+        );
         let texts: Vec<&str> = segments.iter().map(|s| s.text.as_str()).collect();
         assert_eq!(
             texts[..5],
@@ -1198,7 +1234,7 @@ mod tests {
         let mut world = hoard();
         world.apply(&Action::Infect("the_shakes".into()));
         let texts = |w: &World| -> Vec<String> {
-            status_segments(w, Clock::H24, TemperatureUnit::Celsius, true)
+            status_segments(&w.perception(), Clock::H24, TemperatureUnit::Celsius, true)
                 .into_iter()
                 .map(|s| s.text)
                 .collect()
@@ -1235,7 +1271,12 @@ mod tests {
         let content = Arc::new(Content::load(&files).expect("valid"));
         let mut world = World::new(content, "cell", None).expect("world");
         world.apply(&Action::Drain(7));
-        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true);
+        let segments = status_segments(
+            &world.perception(),
+            Clock::H24,
+            TemperatureUnit::Celsius,
+            true,
+        );
         assert_eq!(segments[2].text, "MP 5/12");
     }
 
@@ -1245,16 +1286,25 @@ mod tests {
         world.apply(&Action::Resource("rage".into()));
         world.apply(&Action::Resource("focus".into()));
         world.apply(&Action::Wait);
-        let texts: Vec<String> =
-            status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true)
-                .into_iter()
-                .map(|s| s.text)
-                .collect();
+        let texts: Vec<String> = status_segments(
+            &world.perception(),
+            Clock::H24,
+            TemperatureUnit::Celsius,
+            true,
+        )
+        .into_iter()
+        .map(|s| s.text)
+        .collect();
         // Rage shows its value alone, focus its maximum too.
         assert_eq!(texts[2..5], ["MP 0/0", "Rage 11", "Focus 10/10"]);
         // Raging (the rage brings it) raises Toughness, and the maximum with it.
         let line = "Hoard  ·  HP 10/12  ·  MP 0/0  ·  Rage 11  ·  Focus 10/10";
-        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true);
+        let segments = status_segments(
+            &world.perception(),
+            Clock::H24,
+            TemperatureUnit::Celsius,
+            true,
+        );
         assert_eq!(
             fit_segments(&segments, line.chars().count() - 1),
             "Hoard  ·  HP 10/12  ·  MP 0/0  ·  Rage 11",
@@ -1266,14 +1316,19 @@ mod tests {
     fn the_status_bar_names_a_stance_that_is_not_neutral() {
         let mut world = hoard();
         let texts = |w: &World| -> Vec<String> {
-            status_segments(w, Clock::H24, TemperatureUnit::Celsius, true)
+            status_segments(&w.perception(), Clock::H24, TemperatureUnit::Celsius, true)
                 .into_iter()
                 .map(|s| s.text)
                 .collect()
         };
         assert!(!texts(&world).iter().any(|t| t.contains("Neutral")));
         world.apply(&Action::SetStance(CombatStance::Defensive));
-        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true);
+        let segments = status_segments(
+            &world.perception(),
+            Clock::H24,
+            TemperatureUnit::Celsius,
+            true,
+        );
         let at = |t: &str| segments.iter().position(|s| s.text == t);
         assert_eq!(
             at("Defensive"),
@@ -1362,10 +1417,15 @@ mod tests {
     fn the_status_bar_shows_the_weather_only_under_the_open_sky() {
         let content = Arc::new(warlock_assets::content().expect("content"));
         let texts = |world: &World| -> Vec<String> {
-            status_segments(world, Clock::H24, TemperatureUnit::Celsius, true)
-                .into_iter()
-                .map(|s| s.text)
-                .collect()
+            status_segments(
+                &world.perception(),
+                Clock::H24,
+                TemperatureUnit::Celsius,
+                true,
+            )
+            .into_iter()
+            .map(|s| s.text)
+            .collect()
         };
         let mut world = World::new(content.clone(), "showcase", None).expect("starts");
         world.apply(&Action::SetWeather(warlock_core::weather::Weather::Rain));
@@ -1375,7 +1435,12 @@ mod tests {
         world.apply(&Action::SetWeather(
             warlock_core::weather::Weather::HeavyRain,
         ));
-        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true);
+        let segments = status_segments(
+            &world.perception(),
+            Clock::H24,
+            TemperatureUnit::Celsius,
+            true,
+        );
         let at = |text: &str| segments.iter().position(|s| s.text.contains(text));
         let (weather, moon, date) = (at("Heavy rain"), at("Waxing gibbous"), at("Darkening"));
         assert_eq!(weather, moon.map(|m| m + 1), "shown after the moon");
@@ -1394,15 +1459,26 @@ mod tests {
     }
 
     #[test]
-    fn the_seed_shows_only_with_the_dev_keys() {
+    fn the_developer_segments_show_only_with_the_dev_keys() {
         let content = Arc::new(warlock_assets::content().expect("content"));
         let hub = World::new(content, "showcase", None).expect("starts");
-        let seed = |dev| {
-            (status_segments(&hub, Clock::H24, TemperatureUnit::Celsius, dev).iter())
-                .any(|s| s.text.starts_with("Seed "))
+        let texts = |dev| -> Vec<String> {
+            (status_segments(&hub.perception(), Clock::H24, TemperatureUnit::Celsius, dev).iter())
+                .map(|s| s.text.clone())
+                .collect()
         };
-        assert!(seed(true));
-        assert!(!seed(false), "a player is never told of the seed (#1557)");
+        let pos = hub.player_pos();
+        let dev_only = |t: &String| {
+            t.starts_with("Seed ")
+                || t.starts_with("Turn ")
+                || t.starts_with("Light ")
+                || t.ends_with(" vision")
+                || *t == format!("{},{}", pos.x, pos.y)
+        };
+        assert_eq!(texts(true).iter().filter(|t| dev_only(t)).count(), 5);
+        // A player is never told of the seed (#1557), and the turn, the position, the light, and
+        // the vision profile are no part of the character's status (#1666).
+        assert_eq!(texts(false).iter().find(|t| dev_only(t)), None);
     }
 
     #[test]
@@ -1410,15 +1486,30 @@ mod tests {
         let content = Arc::new(warlock_assets::content().expect("content"));
         // Underground too: the hub is 10 °C, after the moon (there is no weather there).
         let hub = World::new(content.clone(), "showcase", None).expect("starts");
-        let segments = status_segments(&hub, Clock::H24, TemperatureUnit::Celsius, true);
+        let segments = status_segments(
+            &hub.perception(),
+            Clock::H24,
+            TemperatureUnit::Celsius,
+            true,
+        );
         let at = |segments: &[Segment], text: &str| segments.iter().position(|s| s.text == text);
         let moon = segments.iter().position(|s| s.text.contains("gibbous"));
         assert_eq!(at(&segments, "10 °C"), moon.map(|m| m + 1));
-        let fahrenheit = status_segments(&hub, Clock::H24, TemperatureUnit::Fahrenheit, true);
+        let fahrenheit = status_segments(
+            &hub.perception(),
+            Clock::H24,
+            TemperatureUnit::Fahrenheit,
+            true,
+        );
         assert!(at(&fahrenheit, "50 °F").is_some());
         // Outdoors, the weather's, right after the weather.
         let yard = World::new(content, "courtyard", None).expect("starts");
-        let segments = status_segments(&yard, Clock::H24, TemperatureUnit::Celsius, true);
+        let segments = status_segments(
+            &yard.perception(),
+            Clock::H24,
+            TemperatureUnit::Celsius,
+            true,
+        );
         let shown = TemperatureUnit::Celsius.show(yard.perception().temperature());
         let weather = segments.iter().position(|s| s.text == "Clear");
         assert_eq!(at(&segments, &shown), weather.map(|w| w + 1));
@@ -1460,7 +1551,12 @@ mod tests {
     fn the_twelve_hour_clock_is_longer_but_the_status_bar_still_fits() {
         let content = Arc::new(warlock_assets::content().expect("content"));
         let world = World::new(content, "showcase", None).expect("starts");
-        let segments = status_segments(&world, Clock::H12, TemperatureUnit::Celsius, true);
+        let segments = status_segments(
+            &world.perception(),
+            Clock::H12,
+            TemperatureUnit::Celsius,
+            true,
+        );
         let time = (segments.iter())
             .map(|s| &s.text)
             .find(|t| t.ends_with(" AM") || t.ends_with(" PM"))
@@ -1479,7 +1575,12 @@ mod tests {
     fn the_status_bar_shows_hit_points_and_keeps_them_late() {
         let content = Arc::new(warlock_assets::content().expect("content"));
         let world = World::new(content, "showcase", None).expect("starts");
-        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius, true);
+        let segments = status_segments(
+            &world.perception(),
+            Clock::H24,
+            TemperatureUnit::Celsius,
+            true,
+        );
         assert_eq!(segments[1].text, "HP 18/18", "right after the level");
         // Narrow: everything but the level gives way first, the time included.
         let line = fit_segments(&segments, 25);

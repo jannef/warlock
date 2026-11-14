@@ -262,7 +262,7 @@ Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distor
   `effect:fireball@30,14` and `effect:lightning_bolt@21,17>58,17` in the arena, 0.03 to 0.6 s; a ray, `effect:frost_ray@21,17>35,11`).
 
 `ui/` decides what is drawn from the perception snapshot: `ui/mod.rs` (UI console, map grid in
-base colors, the status bar: `status_segments`), `ui/circles.rs` (spell circles), `ui/glyphs.rs` (free glyphs), `ui/motion.rs`
+base colors, the status bar: `status_segments`, a HUD of the character's status from the `PerceptionView` alone, its developer segments only with the dev keys, #1666), `ui/circles.rs` (spell circles), `ui/glyphs.rs` (free glyphs), `ui/motion.rs`
 (slides from `Outcome.events`, one per creature along all the steps it took that turn; camera
 easing; new input completes running motion), `ui/effects.rs` (particles, bursts, glow and haze,
 fades), `ui/rain.rs` (rain), `ui/spells.rs` (spell effects), `ui/sounds.rs` (heard-sound markers), `ui/look.rs` (look mode), `ui/dev.rs` (dev overlays: reveal map, the one reader of

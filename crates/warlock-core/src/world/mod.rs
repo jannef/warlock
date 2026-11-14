@@ -1796,6 +1796,7 @@ impl World {
             character: self.state.character.as_ref(),
             campaign: &self.state.campaign,
             time: self.state.time,
+            turn: self.state.turn,
             death: self.state.death.as_ref(),
             experience: self.state.experience,
             progress: &self.state.progress,

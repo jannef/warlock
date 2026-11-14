@@ -26,10 +26,6 @@ Below the map, the **status bar** shows, from left to right:
   [Weather](weather.md)).
 - The [temperature](temperature.md) where you are, as `4 °C` (or °F). It is cool blue below
   freezing and warm orange from 30 °C (see [Temperature and ice](temperature.md)).
-- The [turn](time.md#what-takes-time) count and your position (column, row).
-- `Light`: how brightly your own cell is [lit](light.md#what-light-is), where 255 is full light (see
-  [Light](light.md)).
-- Your [vision type](vision.md#the-four-types).
 
 At its right end, `? controls` reminds you where the keys are. It names the key as you bound it
 (`Esc menu` when the controls have no key), and so does the welcome line at the start of a new
@@ -38,9 +34,8 @@ run.
 When the window is too narrow for everything, the status bar leaves out the least important parts
 first:
 
-1. your position, your vision, the light at your feet, and the turn count;
-2. then the moon's [phase](sun.md#phases), first shortened to its picture, then dropped;
-3. then the temperature, the region, the year of the date, and then the date.
+1. the moon's [phase](sun.md#phases), first shortened to its picture, then dropped;
+2. then the temperature, the region, the year of the date, and then the date.
 
 The [weather](weather.md#how-the-weather-changes), the time, your [burden](burden.md#burden-levels),
 your [hunger](hunger.md#how-hungry-you-are), your [status effects](status-effects.md#how-they-work)
@@ -160,3 +155,8 @@ are not part of normal play, and the browser version does not have them. `?` lis
 | `F6` | Skip an hour: the [clock](time.md#the-calendar) jumps ahead, and nobody acts meanwhile |
 | `F7` | Set the next [weather](weather.md) for three hours, after which the usual weather returns |
 | `F8` | Identify everything you carry: [magic items](magic-items.md) show what they are |
+
+With these keys on, the status bar also shows, at its end, the [turn](time.md#what-takes-time)
+count, your position (column, row), how brightly your own cell is [lit](light.md#what-light-is)
+(`Light`, where 255 is full light), and your [vision type](vision.md#the-four-types). They give
+way first when the window is narrow.

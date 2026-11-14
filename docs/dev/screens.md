@@ -461,5 +461,5 @@ add one, add a case to its group's `cases!` (`test_name: Case { name: "test-name
 `#[test]` a case, #1529, so one mismatch hides no other), run `cargo test -p warlock screen_snapshots`, then `cargo insta review` (or
 `INSTA_UPDATE=always`, then read the diff). The snapshot leaves out the status bar's row where
 it shows whole (`shown`, #1521: a HUD change rewrites only the cases about the bar, those with
-`status_bar: true`) and writes the game's version `[version]` (#1532). A changed screen shows as a text diff in the PR. New
+`status_bar: true`, which show the bar as a player sees it: a whole row is drawn again without the developer segments, the turn, position, light, vision, and seed, that the debug build adds, #1666) and writes the game's version `[version]` (#1532). A changed screen shows as a text diff in the PR. New
 screens get a case here, never a golden (CLAUDE.md "Golden screenshots").

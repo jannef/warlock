@@ -24,6 +24,7 @@ use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput, NativeKeyCode};
 use clap::Parser;
 use std::sync::{Arc, LazyLock};
+use warlock_core::World;
 use warlock_core::content::Content;
 
 /// One snapshot: a run (or the main menu) and what is open over it.
@@ -157,7 +158,17 @@ fn render(case: &Case, content: Arc<Content>) -> String {
     let mut app = start(case, content);
     press_keys(&mut app, case.keys.unwrap_or(""));
     if case.status_bar {
-        redact(text(app.world().resource::<Console>()))
+        // The bar as a player sees it (#1666): where the row shows whole, it is drawn again
+        // without the developer segments a debug build adds.
+        let console = app.world().resource::<Console>();
+        let mut lines: Vec<String> = text(console).split('\n').map(String::from).collect();
+        if let Some(bar) = status_bar(&app, drawn_dev(&app))
+            && lines.last() == Some(&bar)
+            && let Some(player) = status_bar(&app, false)
+        {
+            *lines.last_mut().expect("a row") = player;
+        }
+        redact(lines.join("\n"))
     } else {
         shown(&app)
     }
@@ -169,7 +180,7 @@ fn render(case: &Case, content: Arc<Content>) -> String {
 pub(super) fn shown(app: &App) -> String {
     let console = app.world().resource::<Console>();
     let mut lines: Vec<String> = text(console).split('\n').map(String::from).collect();
-    if let Some(bar) = status_bar(app)
+    if let Some(bar) = status_bar(app, drawn_dev(app))
         && lines.last() == Some(&bar)
     {
         lines.pop();
@@ -183,20 +194,25 @@ fn redact(text: String) -> String {
 }
 
 /// The status bar's row as the run's UI draws it on its own, trailing blanks trimmed; none
-/// without a run.
-fn status_bar(app: &App) -> Option<String> {
+/// without a run. `dev` is whether the developer segments show (turn, position, light, vision,
+/// seed; #1666): as drawn, a debug build's, always.
+fn status_bar(app: &App, dev: bool) -> Option<String> {
     let world = app.world();
     let game = world.get_resource::<Game>()?;
     let console = world.resource::<Console>();
     let settings = world.resource::<Settings>();
     let hint = controls_hint(world.resource::<Bindings>());
-    let dev = crate::input::dev_keys(world.resource::<Args>());
     let mut bar = Console::default();
     bar.resize(console.cols(), console.rows());
     let y = console.rows() as i32 - 1;
     let units = (settings.clock, settings.temperature, dev);
     draw_status(&mut bar, game, y, units, &hint);
     text(&bar).split('\n').next_back().map(String::from)
+}
+
+/// Whether this launch draws the developer segments: always, in the debug build the tests are.
+fn drawn_dev(app: &App) -> bool {
+    crate::input::dev_keys(app.world().resource::<Args>())
 }
 
 /// The folder a case's `save_dir` names, relative to the workspace root: the saved characters'

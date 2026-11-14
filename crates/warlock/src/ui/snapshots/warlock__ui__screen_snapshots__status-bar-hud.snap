@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Courtyard. Press ? for controls.
+ You are bleeding.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ The Courtyard  ·  HP 19/19  ·  MP 11/11  ·  Bleeding  ·  Lv 1  ·  06:30  ·  11 Darkening, Year 1444  ·  ◑ Waxing gibbous  ·  Clear  ·  -2 °C                                                ? controls

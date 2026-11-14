@@ -844,7 +844,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "Special rooms"), the price of goods for sale in a shop on a cell in sight ("A dagger (for
   sale, 45 gold), on plank floor."; §7 "Shops"), and a sound heard there ("You hear footsteps
   here.").
-- Screen layout: map viewport, message log, status panel (level, the player's hit points as
+- Screen layout: map viewport, message log, status panel (a HUD of the character's status, drawn
+  from the perception view only, `ui::status_segments`, #1666: level, the player's hit points as
   `HP 18/24` (never below 0), their mana as `MP 5/12` (the same way; §8 "Mana"), each alternative resource they hold
   (`Rage 11`, or `Focus 7/10` for one whose `show_max` is set; resource order; §8 "Resources"), the status effects they suffer by name, the most important first
   (`Bleeding`, `Poisoned`, `Diseased`; data order; §8 "Status effects"; never which disease, §8
@@ -858,12 +859,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Ilse ☽`), the weather under the open sky (`Clear`, `Overcast`, `Rain`, `Heavy rain`; §5
   "Weather"), the temperature where the player is, always (`4 °C`, or `39 °F` with the setting:
   whole degrees, rounded half away from zero; tinted a subtle cool blue below freezing and warm
-  from 30 °C, the number saying it all; §5 "Temperature"), turn, position, light at the player,
-  vision profile, seed). A lantern's mode shows in its name in the item lists ("a lantern (lit)"). The phase glyph
+  from 30 °C, the number saying it all; §5 "Temperature"); with the developer keys on, and
+  only then, turn, position, light at the player, vision profile, and seed: no part of the
+  character's status, #1557, #1666). A lantern's mode shows in its name in the item lists ("a lantern (lit)"). The phase glyph
   shows the lit part of the disc, lit on the right while waxing: `○` new, `☽` waxing crescent,
   `◑` first quarter and waxing gibbous, `●` full, `◐` waning gibbous and last quarter, `☾` waning
-  crescent. When the window is narrow, segments give way in priority order — seed, position,
-  vision, light, turn, then the moon's phase (first cut down to its glyph), the
+  crescent. When the window is narrow, segments give way in priority order — the developer
+  segments (seed, position, vision, light, turn), then the moon's phase (first cut down to its glyph), the
   temperature, region, date (first cut down to day and month, `12 Rainmoon`), weather, time,
   burden, hunger (Satiated and Bloated here; from Hungry down it stays to the last, drawn in its
   colour, §8 "Hunger"), the status effects (the least important first), the resources (the last

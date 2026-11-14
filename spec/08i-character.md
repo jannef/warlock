@@ -247,7 +247,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Eyes**: the player's vision profile is the race's (the dev vision switch still works).
   - **Light-blindness** (#255; a race's `light_blind = { glare, sight, to_hit }`, drow 250, 10,
     −1): while the light on the player's own cell, as their eyes perceive it (the light the
-    perception finds there, the status bar's `Light`), is at least `glare` bright, they are
+    perception finds there, the developer status bar's `Light`), is at least `glare` bright, they are
     **dazzled**: the perception shows nothing farther than `sight` cells (line of sight and
     light are unchanged within it; wall completion stops there too), and every attack they roll
     is `to_hit` worse (`World::glared`, in `resolve`, from the same light on their cell then).
