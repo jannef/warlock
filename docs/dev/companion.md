@@ -242,7 +242,7 @@ the same viewpoint, `docs/dev/familiar.md` "Familiar's sight"; `shared_sight` it
 companion).
 
 **Shared sight** (`BeastEffect::SharedSight` → `BeastMods::shared_sight`), a second viewpoint in
-`Perception::compute` (`perception.rs::BondView`, `bond_view`), only while the companion stands on
+`Perception::compute` (`perception/seeing.rs::BondView`, `bond_view`), only while the companion stands on
 the player's level (nothing from the retinue):
 
 - `sight::LineOfSight::cells` of the companion's line of sight within its type's sight

@@ -133,7 +133,7 @@ the way (`InputMode::GiveWay`). A witch trained in Handle animal has both once s
 The witch's level 25, beside Second sight (design §16 Q3; `assets/data/talents/familiars_sight.toml`:
 tree `class`, `granted`, systems `vision`, `allies`). Its one effect, `BeastEffect::FamiliarSight`
 → `BeastMods::familiar_sight`, opens Hunter's bond's second viewpoint on the familiar
-(`perception.rs::bond_view`; the viewpoint's rules, `docs/dev/companion.md` "Hunter's bond", stand
+(`perception/seeing.rs::bond_view`; the viewpoint's rules, `docs/dev/companion.md` "Hunter's bond", stand
 unchanged: creature sight's rule by its own eyes, cells lit as the player's eyes perceive them, the
 nose shows only the foe's cell, no hidden trap or secret door, a dazzled player keeps it, nothing
 from the retinue). Each talent reads its own beast: a witch's tamed companion lends no eyes, and
