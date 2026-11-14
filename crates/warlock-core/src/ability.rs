@@ -1244,7 +1244,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
             .flatten()
             .collect(),
         ClassActive::VeteransWind => mods.veterans_wind.map(|w| w.cooldown).into_iter().collect(),
-        // Volley costs Focus, Exploit and Master thief Openings, Stunning strike and Quivering
+        // Volley costs Focus, Exploit Openings, Stunning strike and Quivering
         // palm Ki, and the smites and Lay on hands Zeal instead
         // (their talents' `resource`, [`short_of`]), as War cry Rage; Lurk only its time.
         ClassActive::LayOnHands
@@ -1262,7 +1262,6 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::Stillness
         | ClassActive::Lurk
         | ClassActive::Exploit
-        | ClassActive::MasterThief
         | ClassActive::Inspire
         | ClassActive::Lullaby
         | ClassActive::Consecrate

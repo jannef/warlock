@@ -2,19 +2,18 @@
 //! design `docs/design/thief-openings.md` §5, §6; `docs/dev/openings.md`): the thief's Sneak
 //! attack grants the pool (from level 1), sneak attacks, feints, and the mark's kill build it
 //! (`builds` in `data/resources.toml`, through `ambush.rs`, `feint.rs`, and `mark.rs`), it
-//! decays with time, and two actives spend it:
-//!
-//! - **Exploit** (`use:exploit:E`, level 1): every opening held (n) spent on a melee blow at
-//!   the hostile that way that is a sneak attack whatever the foe knows
-//!   ([`super::weapon_active::Technique::sneak`]), with the ladder the thief's class talents
-//!   build ([`crate::talent::ExploitMods`]): +n × its dice after the sneak dice
-//!   ([`World::land_exploit`]), +n × its to-hit, and its status on the foe struck (Low blow's
-//!   Stunned). Refused, no time, nothing spent: no hostile there, no opening (greyed in the
-//!   menu), a mark standing that is not this creature (`mark.rs`), a foe the player sees without
-//!   vitals. After it the pool is 0 and the mark cleared, unless the blow killed it (then the
-//!   kill rule cleared it and gave its opening).
-//! - **Master thief's finisher** (`use:master_thief:E`): five openings for a blow that is a
-//!   critical if it hits, with no confirmation roll ([`crate::combat::Profile::sure_critical`]).
+//! decays with time, and one active spends it, **Exploit** (`use:exploit:E`, level 1): every
+//! opening held (n) spent on a melee blow at the hostile that way that is a sneak attack
+//! whatever the foe knows ([`super::weapon_active::Technique::sneak`]), with the ladder the
+//! thief's class talents build ([`crate::talent::ExploitMods`]): +n × its dice after the sneak
+//! dice ([`World::land_exploit`]; Exploit's 1d6, Improved sneak attack's second from 32), +n ×
+//! its to-hit and its status on the foe struck (Low blow's Stunned, 12), and a threat n × its
+//! points lower with a sure critical from five spent (Master thief's, 60:
+//! [`World::exploit_profile`], [`crate::combat::Profile::sure_critical`]). Refused, no time,
+//! nothing spent: no hostile there, no opening (greyed in the menu), a mark standing that is not
+//! this creature (`mark.rs`), a foe the player sees without vitals. After it the pool is 0 and
+//! the mark cleared, unless the blow killed it (then the kill rule cleared it and gave its
+//! opening).
 //!
 //! The grant is the general one for talents that grant a resource (`grants_resource`,
 //! `world/focus.rs::hold`). The ladder's dice are drawn from the gameplay stream after the sneak
@@ -22,7 +21,7 @@
 
 use super::{ActorId, Spent, World};
 use crate::action::{AttackKind, Event};
-use crate::combat::Blow;
+use crate::combat::{Blow, Profile};
 use crate::content::{ActionKind, ClassActive, Stance};
 use crate::geom::Dir;
 
@@ -64,8 +63,7 @@ impl World {
         let with = me.weapon_item(&content);
         let price = self.attack_price(player, ActionKind::Melee, with, melee);
         let ladder = me.talent_mods(&content).exploit;
-        let mut profile = me.melee(&content);
-        profile.to_hit += ladder.to_hit * i32::from(n);
+        let profile = self.exploit_profile(n, me.melee(&content));
         self.say(match n {
             0 | 1 => "You strike at the opening.",
             2..=4 => "You press your openings.",
@@ -134,28 +132,12 @@ impl World {
         }
     }
 
-    /// Master thief's finisher: a blow with what the player wields at the hostile in `dir` that
-    /// is a critical if it hits (no confirmation roll), for the price of a melee attack and its
-    /// exertion. Its openings were spent by `use_class`, which refused (no time) with no
-    /// hostile there.
-    pub(super) fn finisher(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
-        let content = self.content.clone();
-        let player = self.state.player;
-        let Some((target, seen)) = self.hostile_toward(dir) else {
-            return Spent::Nothing;
-        };
-        let me = self.state.player();
-        let melee = me.attack_skills(&content, AttackKind::Melee, None);
-        let with = me.weapon_item(&content);
-        let price = self.attack_price(player, ActionKind::Melee, with, melee);
-        let mut profile = me.melee(&content);
-        profile.sure_critical = true;
-        self.say("You strike at the opening!");
-        let vitalless = !self.has_vitals(target);
-        let blow = self.player_blow_with(target, seen, profile, events);
-        self.no_vital_spot(vitalless, blow);
-        self.after_attack(player, target, super::free_blow::parried(blow), events);
-        self.exert(ActionKind::Melee);
-        Spent::Turn(price)
+    /// `profile`, the player's attack in an exploit of `n` openings, with what their ladder does
+    /// before the roll ([`crate::talent::ExploitMods::profile`]: Low blow's to-hit, Master
+    /// thief's threat and sure critical). The one place the ladder touches the attack itself;
+    /// the dice after the hit are [`World::land_exploit`]'s.
+    pub(super) fn exploit_profile(&self, n: u16, profile: Profile) -> Profile {
+        let ladder = self.state.player().talent_mods(&self.content).exploit;
+        ladder.profile(n, profile)
     }
 }

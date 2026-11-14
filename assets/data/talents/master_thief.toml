@@ -3,7 +3,9 @@ id = "master_thief"
 name = "Master thief"
 tree = "class"
 granted = true
-description = "Your sneak attacks find the telling spot far more often, and five openings buy a blow in a direction (an ability) that finds it whenever it hits."
-effects = [{ kind = "ambush_threat", value = 2 }, { kind = "finisher" }]
-resource = { id = "openings", cost = 5 }
+description = "Your sneak attacks find the telling spot far more often, and your exploits the more often the more openings they spend; spend five or more and an exploit that hits always finds it."
+effects = [
+    { kind = "ambush_threat", value = 2 },
+    { kind = "exploit_threat", value = 4, sure_at = 5 },
+]
 systems = ["combat", "stealth", "resources", "sneak_attack"]

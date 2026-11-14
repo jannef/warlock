@@ -1064,9 +1064,6 @@ pub enum TalentEffect {
     /// Its attacks on a creature that has not seen it threaten a critical this many points
     /// lower (Master thief).
     AmbushThreat { value: u8 },
-    /// The class active Master thief: its finisher, a melee blow in a direction that is a
-    /// critical if it hits, with no confirmation roll (its cost is the talent's `resource`).
-    Finisher,
     /// The class active Lurk: a wait in ambush, a degree of `status` on it (Lurking: a hostile
     /// stepping up beside it takes its blow at once; `world/thief.rs`).
     Lurk { status: String },
@@ -1081,6 +1078,9 @@ pub enum TalentEffect {
     ExploitToHit { value: i32 },
     /// An exploit that hits leaves the foe a degree of `status` (Low blow: Stunned).
     ExploitStatus { status: String },
+    /// An exploit threatens a critical `value` lower per opening spent, never below 2, and with
+    /// `sure_at` or more spent is a critical whenever it hits, no confirmation (Master thief).
+    ExploitThreat { value: u8, sure_at: u16 },
     /// Every skill it is trained in counts this much higher (Jack of all trades).
     TrainedSkills { value: i32 },
     /// It holds alternative resource `resource` (spec §8 "Resources") from the moment it has the
@@ -1331,7 +1331,6 @@ impl TalentEffect {
             TalentEffect::Sic { .. } => A::Sic,
             TalentEffect::Lurk { .. } => A::Lurk,
             TalentEffect::Exploit => A::Exploit,
-            TalentEffect::Finisher => A::MasterThief,
             TalentEffect::Song { id, .. } => return A::from_id(id).filter(|a| a.sings()),
             TalentEffect::Consecrate { .. } => A::Consecrate,
             TalentEffect::Sanctuary { .. } => A::Sanctuary,
@@ -1537,6 +1536,10 @@ impl TalentEffect {
                 nonzero("unarmed_die", "sides", u32::from(*sides))
             }
             TalentEffect::KickDie { sides } => nonzero("kick_die", "sides", u32::from(*sides)),
+            TalentEffect::ExploitThreat { value, sure_at } => {
+                nonzero("exploit_threat", "value", u32::from(*value))?;
+                nonzero("exploit_threat", "sure_at", u32::from(*sure_at))
+            }
             TalentEffect::Smite {
                 per_levels, sides, ..
             } => {
@@ -2693,6 +2696,14 @@ systems = ["hit_points"]
             bad("effects = [{ kind = \"exploit_status\", status = \"dazed\" }]")
                 .contains("unknown status")
         );
+        // The ladder's top (#1464): a threat or a sure critical of nothing.
+        let threat = |fields: &str| {
+            bad(&format!(
+                "effects = [{{ kind = \"exploit_threat\", {fields} }}]"
+            ))
+        };
+        assert!(threat("value = 0, sure_at = 5").contains("at least 1"));
+        assert!(threat("value = 4, sure_at = 0").contains("at least 1"));
         let no_system = "[[talent]]\nid = \"x\"\nname = \"X\"\ntree = \"vigour\"\ndescription = \"d\"\n\
                          effects = [{ kind = \"dodge\", value = 1 }]\nsystems = [\"nope\"]\n";
         assert!(

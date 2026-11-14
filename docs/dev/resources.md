@@ -173,12 +173,12 @@ statuses).
 - **Openings** (R3, #251; `world/openings.rs`; the mark and its builds in **docs/dev/openings.md**):
   the thief's Sneak attack (level 1, #682) grants the pool
   (`grants_resource`); `marked = true` (its points are in one creature's guard); its builds are
-  the data's `sneak_attack`, `feint`, and `mark_kill`; Master thief's `finisher` effect is
-  the class active `ClassActive::MasterThief` (`use:master_thief:E`, aimed, the cost `resource = {
-  id = "openings", cost = 5 }` on the talent): a melee blow with `Profile::sure_critical` (every
-  hit a critical, no confirmation draw; `combat::strike_with`). `use_class` refuses an aimed
-  active with nobody hostile that way before it spends anything. Tests:
-  `world/openings_tests.rs`, and `combat.rs`'s sure-critical test.
+  the data's `sneak_attack`, `feint`, and `mark_kill`; Exploit (`use:exploit:E`) spends every
+  opening held, and the class talents' ladder grows it (Master thief's finisher is folded into
+  it since #1464: a sure critical from five spent, `Profile::sure_critical`, no confirmation
+  draw; `combat::strike_with`). `use_class` refuses an aimed active with nobody hostile that way
+  before it spends anything. Tests: `world/openings_tests.rs`, and `combat.rs`'s sure-critical
+  test.
 - **Zeal** (P1, #910; `docs/design/paladin-smites.md` §4): the last entry of `resources.toml`.
   The paladin's Smite (level 1) grants it (`grants_resource`) at `start = 5`; `max = 10`,
   `max_from = { stat = "presence", per_levels = 10, least = 6 }`, `regenerates = 60` (resting

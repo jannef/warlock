@@ -701,8 +701,6 @@ pub struct TalentMods {
     pub throw_voice: bool,
     /// Points lower its attacks on a creature that has not seen it threaten (Master thief).
     pub ambush_threat: u8,
-    /// The active Master thief: its finisher, a blow that is a sure critical.
-    pub finisher: bool,
     /// The active Lurk: the status it waits in ambush under (Lurking).
     pub lurk: Option<StatusId>,
     /// The active Exploit (`world/openings.rs`): every opening held spent on a blow that is a
@@ -889,13 +887,42 @@ pub struct MakeDo {
 
 /// What the thief's class talents add to an exploit, per opening spent (the openings design §6;
 /// `world/openings.rs::land_exploit`): dice of damage after Protection, never multiplied
-/// (`exploit_dice`, summed), to hit (`exploit_to_hit`), and a status the foe struck is left a
-/// degree of (`exploit_status`).
+/// (`exploit_dice`, summed), to hit (`exploit_to_hit`), a status the foe struck is left a
+/// degree of (`exploit_status`), and a lower threat with a sure critical from `sure_at`
+/// openings (`exploit_threat`: Master thief's finisher, folded in).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct ExploitMods {
     pub dice: Option<Dice>,
     pub to_hit: i32,
     pub status: Option<StatusId>,
+    /// Points lower the exploit threatens a critical per opening spent (never below 2).
+    pub threat: u8,
+    /// With this many openings spent or more, every hit is a critical, no confirmation.
+    pub sure_at: Option<u16>,
+}
+
+impl ExploitMods {
+    /// The lowest threat the ladder brings a blow to: every natural roll that is no fumble
+    /// threatens a critical.
+    pub const LOWEST_THREAT: u8 = 2;
+
+    /// `profile`, an exploit's attack spending `n` openings, with what the ladder does before
+    /// the roll: n × its to-hit (Low blow), a threat n × its points lower, never below
+    /// [`Self::LOWEST_THREAT`], and with `sure_at` or more spent a critical whenever it hits
+    /// (Master thief: the finisher, folded in). The dice after the hit are
+    /// `World::land_exploit`'s.
+    pub fn profile(&self, n: u16, mut profile: crate::combat::Profile) -> crate::combat::Profile {
+        profile.to_hit += self.to_hit * i32::from(n);
+        let lower = u32::from(self.threat) * u32::from(n);
+        let threat = u32::from(profile.threat)
+            .saturating_sub(lower)
+            .max(u32::from(Self::LOWEST_THREAT));
+        profile.threat = u8::try_from(threat).map_or(profile.threat, |t| t.min(profile.threat));
+        if self.sure_at.is_some_and(|at| n >= at) {
+            profile.sure_critical = true;
+        }
+        profile
+    }
 }
 
 /// The active Knock (spec §8 "Class abilities", "Chests"): its mana.
@@ -1234,7 +1261,6 @@ impl TalentMods {
             A::MakeDo => self.make_do.is_some(),
             A::Rig => self.rigs,
             A::SpiritWeapon => self.spirit_weapon.is_some(),
-            A::MasterThief => self.finisher,
             A::Inspire | A::Lullaby => self.songs.iter().any(|s| s.active == active),
             A::CallFamiliar => self.familiar,
             A::Consecrate => self.consecrate.is_some(),
@@ -2138,7 +2164,6 @@ impl TalentMods {
             TalentEffect::Steal => self.steal = true,
             TalentEffect::ThrowVoice => self.throw_voice = true,
             TalentEffect::AmbushThreat { value } => self.ambush_threat += value,
-            TalentEffect::Finisher => self.finisher = true,
             TalentEffect::PatientDefence { status } => {
                 self.patient_defence = content.status_id(&status).or(self.patient_defence);
             }
@@ -2152,6 +2177,11 @@ impl TalentMods {
             TalentEffect::ExploitToHit { value } => self.exploit.to_hit += value,
             TalentEffect::ExploitStatus { status } => {
                 self.exploit.status = content.status_id(&status).or(self.exploit.status);
+            }
+            TalentEffect::ExploitThreat { value, sure_at } => {
+                self.exploit.threat = self.exploit.threat.saturating_add(value);
+                let sure = self.exploit.sure_at.map_or(sure_at, |had| had.min(sure_at));
+                self.exploit.sure_at = Some(sure);
             }
             TalentEffect::MerchantsEye => self.merchants_eye = true,
             TalentEffect::FieldForge { seconds } => self.field_forge = Some(seconds),

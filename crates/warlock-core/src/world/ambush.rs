@@ -84,8 +84,8 @@ impl World {
         self.content.has_vitals(t.creature)
     }
 
-    /// A blow of the player's that would be a critical whenever it hits (Vital strike, Master
-    /// thief's finisher) hit a target that had no vitals (`vitalless`, asked before the blow):
+    /// A blow of the player's that would be a critical whenever it hits (Vital strike, an
+    /// exploit) hit a target that had no vitals (`vitalless`, asked before the blow):
     /// it was a plain blow, and the player is told so after its line.
     pub(super) fn no_vital_spot(&mut self, vitalless: bool, blow: Option<Blow>) {
         if vitalless && blow.is_some_and(|b| b.strike.is_hit()) {
@@ -115,7 +115,10 @@ impl World {
         }
         if let Some(a) = self.state.actors.get(&attacker) {
             let lower = a.talent_mods(&self.content).ambush_threat;
-            profile.threat = profile.threat.saturating_sub(lower).max(3);
+            // Never below 3, nor above what it was (an exploit's ladder may have brought it
+            // to 2 already, `openings.rs::exploit_profile`).
+            let lowered = profile.threat.saturating_sub(lower).max(3);
+            profile.threat = lowered.min(profile.threat);
         }
         profile
     }

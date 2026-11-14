@@ -264,7 +264,7 @@ pub struct Profile {
     /// abilities": Peerless).
     pub confirm: i32,
     /// Every hit is a critical, with no confirmation roll (spec §8 "Class abilities": the
-    /// Master thief's finisher).
+    /// Master thief's exploit of five or more).
     pub sure_critical: bool,
     /// Dice rolled with every roll of the damage, after its own (a magic weapon's "adds 1d4
     /// damage"; spec §8 "Magic items").
@@ -569,7 +569,7 @@ pub fn strike_with(profile: &Profile, target: &Target, rng: &mut Rng, reroll_fum
         |k| target.resistances.get(Some(k)),
         |k| target.protection.against(Some(k)),
     );
-    // A sure critical (the finisher) asks no confirmation: no draw; nor does a threat on a
+    // A sure critical (an exploit of five at 60) asks no confirmation: no draw; nor does a threat on a
     // target with no vitals, which is a plain hit.
     let threat = natural >= i32::from(profile.threat) && !target.no_criticals;
     let critical = !target.no_criticals
