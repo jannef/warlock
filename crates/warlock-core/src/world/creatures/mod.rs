@@ -1,0 +1,59 @@
+//! Creatures (docs/dev/creatures.md, summoning.md, animated.md).
+
+mod ai;
+mod animated;
+mod aura;
+mod avert;
+mod blink;
+mod breath;
+mod court;
+mod creature_burst;
+mod creature_cast;
+mod den;
+mod first_sight;
+mod gaze;
+mod incorporeal;
+mod mimic;
+mod path;
+mod rooted;
+mod snatch;
+mod spawn;
+mod split;
+mod statue;
+mod summon;
+mod unseen;
+cfg_if! {
+    if #[cfg(test)] {
+        mod ai_tests;
+        mod animated_blade_tests;
+        mod animated_dread_tests;
+        mod animated_panoply_tests;
+        mod animated_tests;
+        mod aura_tests;
+        mod beast_den_tests;
+        mod bestiary_tests;
+        mod breath_tests;
+        mod court_tests;
+        mod creature_burst_tests;
+        mod creature_cast_tests;
+        mod creature_flask_tests;
+        mod creature_magic_tests;
+        mod den_tests;
+        mod dwell_tests;
+        mod first_sight_tests;
+        mod fixture_factions;
+        mod gaze_tests;
+        mod incorporeal_tests;
+        mod mimic_tests;
+        mod retribution_tests;
+        mod rooted_tests;
+        mod spawn_tests;
+        mod split_tests;
+        mod statue_tests;
+        mod summon_tests;
+        mod tag_tests;
+        mod unique_tests;
+        mod unseen_tests;
+        mod variant_tests;
+    }
+}
