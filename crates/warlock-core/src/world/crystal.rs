@@ -131,8 +131,7 @@ impl World {
         };
         let me = self.state.player();
         let enchanting = content.skill_id("enchanting");
-        let modifier = me.effective_stats(&content).modifier(Stat::Willpower)
-            + me.talent_mods(&content).check(Stat::Willpower)
+        let modifier = me.check_modifier(&content, Stat::Willpower)
             + enchanting.map_or(0, |s| me.skill_effect_of(&content, s, Effect::Craft));
         for affix in &magic.affixes {
             let Some(def) = content.affixes().get(&affix.id) else {

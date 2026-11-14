@@ -107,6 +107,9 @@ you never choose them, they work by themselves as you fight. They have their own
     the line refuses it before you move. So does too little stamina for the whole run, or a run out of a
     [shop](shops.md)'s door while you owe it. A refused
     charge takes no time and costs nothing.
+  - Each cell you run into is entered as a step enters it: you are told what lies there, a
+    [zone](spellcasting.md#zones) does its work, and wading through a marsh may give you a
+    [disease](diseases.md), as walking would.
   - Nobody you pass or leave behind gets a [free blow](stances.md#free-blows) at you on the way.
   - Someone you cannot see on the line stops you short, with no blow. A hidden trap goes off as
     you run over it and stops you there.

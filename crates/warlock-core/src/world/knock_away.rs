@@ -45,8 +45,7 @@ pub const SHIELD_HOLD: i32 = 1;
 /// its grip: [`TWO_HANDED_HOLD`] for a two-handed weapon, [`SHIELD_HOLD`] with a shield, its
 /// rank in the style of one weapon alone (Duelist) when the other hand is empty.
 pub fn hold(content: &Content, who: &super::Actor, weapon: crate::content::ObjectId) -> i32 {
-    let dexterity = who.effective_stats(content).modifier(Stat::Dexterity)
-        + who.talent_mods(content).check(Stat::Dexterity);
+    let dexterity = who.check_modifier(content, Stat::Dexterity);
     let skill = (content.object(weapon).skill).map_or(0, |s| i32::from(who.weapon_skills.rank(s)));
     let grip = match who.grip(content) {
         Some((Grip::TwoHanded, _)) => TWO_HANDED_HOLD,

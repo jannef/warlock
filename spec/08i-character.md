@@ -1373,8 +1373,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a known trap, or anyone the player sees on the line, at nobody seen or nobody hostile, on
     the overworld, swimming, too burdened to move, or out of a shop's door owing it (its
     keeper steps into the way, as on a step, #1488); someone unseen on the line stops it short
-    with no blow, an unknown trap goes off and stops it there; the steps provoke no free blows,
-    no opportunist's, gatekeeper's, brace, or point-blank; 1 stamina and 1 more a cell moved,
+    with no blow, an unknown trap goes off and stops it there; each cell is entered as a step
+    enters it (#1615, `World::enter_cell`: the noise, a shop entered, a zone's work, a marsh's
+    wade, the marks of a rough step, stairs, a feature, and what lies there told, a collapsed
+    floor); the steps provoke no free blows, no opportunist's, gatekeeper's, brace, or
+    point-blank; 1 stamina and 1 more a cell moved,
     spent as it begins, refused while short of the whole; the steps' time, each priced as a step
     onto its terrain, the blow free with its exertion; its talent grants Stamina, §8
     "Resources"; with Whirling charge, the warrior's at 50 (#1467, `whirling_charge`), after each

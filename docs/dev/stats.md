@@ -22,7 +22,10 @@ checks use stats, **always through
 `Actor::effective_stats(content)`** (worn magic raising them, then status penalties, Weak, and
 stat damage; never `actor.stats` directly in a rule; the hit points a level adds,
 `World::level_hp`, read `Actor::raised_stats`, before the penalties, so a passing penalty never
-costs them for good), and
+costs them for good). A check of a stat starts from **`Actor::check_modifier(content, stat)`**
+(#1551): the effective score's modifier plus `TalentMods::check(stat)` (Iron will and the
+like), the one place a bonus to every check of a stat goes; each check adds its own terms (a
+skill, a resistance) to it. And
 no other D&D concept (checks, saves) comes with them. The status bar has no stats segment: it is already
 full at common window sizes (it shows `HP 18/18` right after the level name, dropping only
 before it, and the burden right after that when there is one).
