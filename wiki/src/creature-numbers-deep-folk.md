@@ -19,3 +19,5 @@ creature behaves on [Creatures](creatures.md#the-creatures).
 ## Pace, senses, and size
 
 {{#include generated/creature-senses.md:deep-folk}}
+
+See also: [Races](races.md) and [The dungeons one by one](dungeon-guide.md).

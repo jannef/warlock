@@ -281,3 +281,5 @@ criminal waits in a room of their own:
   its locked rooms. At the bottom is the **captain's hall**: the old table broken up, the captain
   he killed under a cairn in the corner, and Herrick in the captain's place, with two goblins at
   the door.
+
+See also: [Dungeons and danger](dungeons.md), [Hellegeat](pits.md), and [Quests](quests.md).

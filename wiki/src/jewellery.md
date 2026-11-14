@@ -34,3 +34,5 @@ Jewelcraft's checks get **+2** (not a bone amulet's: that is Woodcraft).
 ## The Jewelcraft recipes
 
 {{#include generated/recipes-jewelcraft.md}}
+
+See also: [Crafting](crafting.md), [Gem cutting](gem-cutting.md), and [Enchanting](enchanting.md).

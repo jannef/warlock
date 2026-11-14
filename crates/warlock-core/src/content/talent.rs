@@ -8,7 +8,8 @@
 
 use super::level::OneOrMany;
 use super::{
-    Content, ContentError, ItemKind, ResourceId, Role, StatusId, WeaponSkillId, duplicate_id,
+    ActionKind, Content, ContentError, ItemKind, ResourceId, Role, StatusId, WeaponSkillId,
+    duplicate_id,
 };
 use crate::alignment::Requirement;
 use crate::skills::SkillId;
@@ -16,7 +17,7 @@ use crate::stats::{PerStat, Stat};
 use crate::talent::{
     AllyEffect, BeastEffect, CraftEffect, DefenceEffect, DelvingEffect, FaithEffect, FortuneEffect,
     GrowthEffect, HungerEffect, MagicEffect, MartialEffect, MovementEffect, OffenceEffect,
-    ResourceEffect, SensesEffect, SignEffect, SongEffect, StealthEffect, VigourEffect,
+    ResourceEffect, SensesEffect, SignEffect, SlotEffect, SongEffect, StealthEffect, VigourEffect,
 };
 use crate::text::article;
 use serde::{Deserialize, Deserializer};
@@ -179,6 +180,8 @@ pub enum TalentEffect {
     Stealth(StealthEffect),
     /// What the holder's movement and burden get ([`MovementEffect`], `talent/movement.rs`).
     Movement(MovementEffect),
+    /// The equipment slots the holder's body bars or opens ([`SlotEffect`], `talent/slots.rs`).
+    Slots(SlotEffect),
     /// What the holder gets in the dungeon: searching, traps, chests, rooms, doors, digging
     /// ([`DelvingEffect`], `talent/delving.rs`).
     Delving(DelvingEffect),
@@ -314,6 +317,8 @@ impl<'de> Deserialize<'de> for TalentEffect {
             StealthEffect::deserialize(value).map(TalentEffect::Stealth)
         } else if MovementEffect::KINDS.contains(&kind) {
             MovementEffect::deserialize(value).map(TalentEffect::Movement)
+        } else if SlotEffect::KINDS.contains(&kind) {
+            SlotEffect::deserialize(value).map(TalentEffect::Slots)
         } else if DelvingEffect::KINDS.contains(&kind) {
             DelvingEffect::deserialize(value).map(TalentEffect::Delving)
         } else if FortuneEffect::KINDS.contains(&kind) {
@@ -356,6 +361,7 @@ impl TalentEffect {
                 .chain(SensesEffect::KINDS.iter())
                 .chain(StealthEffect::KINDS.iter())
                 .chain(MovementEffect::KINDS.iter())
+                .chain(SlotEffect::KINDS.iter())
                 .chain(DelvingEffect::KINDS.iter())
                 .chain(FortuneEffect::KINDS.iter())
                 .chain(GrowthEffect::KINDS.iter())
@@ -765,6 +771,23 @@ impl TalentEffect {
                     Err(format!("`spell`: no spell `{spell}` in data/spells/"))
                 }
             }
+            TalentEffect::Offence(OffenceEffect::UnarmedOnHit {
+                status: id, chance, ..
+            }) => {
+                if !(1..=100).contains(chance) {
+                    return Err(format!("`unarmed_on_hit`: chance {chance} is not 1 to 100"));
+                }
+                status(id)
+            }
+            TalentEffect::Senses(SensesEffect::Vision { profile }) => content
+                .vision(profile)
+                .map(|_| ())
+                .ok_or_else(|| format!("`vision`: names an unknown vision profile `{profile}`")),
+            TalentEffect::Beast(BeastEffect::KinTo { tag }) => {
+                super::tag::check(tag).map_err(|m| format!("`kin_to`: {m}"))
+            }
+            // Slots are checked once the objects load ([`check_slots`]), the creatures' tags
+            // `kin_to` names once the creatures do ([`check_kin`]).
             // Terrain is checked once it has loaded ([`TalentBook::check_terrain`]); the weapon
             // abilities `weapon_stamina` names once they have (`content/weapon_ability.rs`).
             _ => Ok(()),
@@ -1429,6 +1452,59 @@ pub(super) fn check_heirlooms(content: &Content) -> Result<(), String> {
     Ok(())
 }
 
+/// Every `bars_slot` and `opens_slot` names a slot (the slots load with the objects, after the
+/// talents): a bar never a grip's (a hand, or a `ready` slot: a body changes, a grip does not),
+/// an opening a slot gated to a class. The first that does not, in words.
+pub(super) fn check_slots(content: &Content) -> Result<(), String> {
+    for (_, def) in content.talents().iter() {
+        for effect in &def.effects {
+            let TalentEffect::Slots(effect) = effect else {
+                continue;
+            };
+            let id = effect.slot();
+            let bad = |m: &str| format!("talent `{}`: `{id}`: {m}", def.id);
+            if content.slots().is_empty() {
+                continue;
+            }
+            let Some(slot) = content.slot_id(id) else {
+                return Err(bad("no such slot in data/slots.toml"));
+            };
+            let slot = content.slot(slot);
+            match effect {
+                SlotEffect::BarsSlot { .. } if slot.hand || slot.action == ActionKind::Ready => {
+                    return Err(bad("`bars_slot` never bars a hand or a `ready` slot"));
+                }
+                SlotEffect::OpensSlot { .. } if slot.class.is_none() => {
+                    return Err(bad("`opens_slot` opens only a slot gated to a class"));
+                }
+                _ => {}
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Every `kin_to` names a tag some creature carries (creatures load after the talents): the
+/// first that does not, in words.
+pub(super) fn check_kin(content: &Content) -> Result<(), String> {
+    if content.creature_defs().is_empty() {
+        return Ok(());
+    }
+    for (_, def) in content.talents().iter() {
+        for effect in &def.effects {
+            if let TalentEffect::Beast(BeastEffect::KinTo { tag }) = effect
+                && content.tagged(tag).next().is_none()
+            {
+                return Err(format!(
+                    "talent `{}`: `kin_to`: no creature carries tag `{tag}`",
+                    def.id
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
 /// Every `trade` effect's tools are kit lines that resolve (objects load after the talents):
 /// the first that does not, in words.
 pub(super) fn check_trades(content: &Content) -> Result<(), String> {
@@ -1974,7 +2050,7 @@ systems = ["hit_points"]
                 })
                 .collect()
         };
-        let areas: [(&str, &str, &[&str]); 19] = [
+        let areas: [(&str, &str, &[&str]); 20] = [
             (
                 "ally",
                 include_str!("../talent/ally.rs"),
@@ -2054,6 +2130,11 @@ systems = ["hit_points"]
                 "sign",
                 include_str!("../talent/sign.rs"),
                 &SignEffect::KINDS,
+            ),
+            (
+                "slot",
+                include_str!("../talent/slots.rs"),
+                &SlotEffect::KINDS,
             ),
             (
                 "song",

@@ -25,6 +25,7 @@ mod offence;
 mod resource;
 mod senses;
 mod sign;
+mod slots;
 mod song;
 mod stealth;
 mod vigour;
@@ -719,6 +720,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::Senses(effect) => senses::text(content, effect),
         TalentEffect::Stealth(effect) => stealth::text(content, effect),
         TalentEffect::Movement(effect) => movement::text(content, effect),
+        TalentEffect::Slots(effect) => slots::text(content, effect),
         TalentEffect::Delving(effect) => delving::text(content, effect),
         TalentEffect::Fortune(effect) => fortune::text(content, effect),
         TalentEffect::Growth(effect) => growth::text(content, effect),

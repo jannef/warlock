@@ -36,7 +36,7 @@ strong they are or how long they will last.
   arcs: a circle appears, changes, and goes at once. Reduced effects also removes the glow
   ([Settings](settings.md)).
 
-Sleep is the one hex without a circle. A creature [asleep](status-effects.md#status-asleep), from
+Sleep is the one hex without a circle. A creature [asleep](status-list.md#status-asleep), from
 [Slumber](magic.md#spell-slumber) or in a den, shows none and sheds no light.
 
 Every buff shows on a creature, whatever gave it. Look mode calls a hasted creature "quickened", a
@@ -75,3 +75,5 @@ spell's own light is brighter and wins over it.
   drow in daylight just under their glare (250) can be dazzled by their own
   [Blessing](magic.md#spell-blessing).
 - A disguised [mimic](mimics.md) sheds no light: its disguise would glow.
+
+See also: [Buffs and hexes](buffs.md), [Settings](settings.md), and [Potions](potions.md).

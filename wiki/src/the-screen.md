@@ -160,3 +160,6 @@ are not part of normal play, and the browser version does not have them. `?` lis
 | `F6` | Skip an hour: the [clock](time.md#the-calendar) jumps ahead, and nobody acts meanwhile |
 | `F7` | Set the next [weather](weather.md) for three hours, after which the usual weather returns |
 | `F8` | Identify everything you carry: [magic items](magic-items.md) show what they are |
+
+See also: [Controls](controls.md), [Menus and lists](controls-menus.md), and
+[Your character](character.md).

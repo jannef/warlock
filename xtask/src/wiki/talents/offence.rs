@@ -147,6 +147,16 @@ pub(super) fn text(content: &Content, effect: &OffenceEffect) -> String {
         OffenceEffect::UnarmedDie { sides } => {
             format!("blows with nothing in hand and kicks roll 1d{sides}")
         }
+        OffenceEffect::UnarmedOnHit {
+            status: id,
+            chance,
+            severity,
+        } => format!(
+            "a blow with nothing in hand that hits (not a kick) has a {chance} % chance to cause \
+             {severity} {} of {}",
+            if severity == 1 { "degree" } else { "degrees" },
+            status(&id)
+        ),
         OffenceEffect::LauncherRange { value, skill: None } => {
             format!("missile weapon range {} cells", signed(value))
         }

@@ -98,3 +98,5 @@ talent at every third (see [When you level up](experience.md#when-you-level-up))
   [Death](hit-points.md#death)).
 
 Questions about a task? [How do I...?](how-do-i.md) links the answers.
+
+See also: [Controls](controls.md), [Your character](character.md), and [Combat](combat.md).

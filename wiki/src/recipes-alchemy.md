@@ -61,3 +61,5 @@ Intelligence with no talents (a dash: not yet listed at that value).
 Some potions are never brewed. The elixirs, the gamble draughts (the draught of chance and
 troll's blood), holy water, and the deeper potions (restoration, quickness, and the like) come
 only from loot and shops. Oil and tar are bought, never brewed.
+
+See also: [Herbs](herbs.md), [Potions](potions.md), and [Crafting](crafting.md).

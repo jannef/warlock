@@ -2,6 +2,8 @@
 
 {{#include generated/class-card.md:commoner}}
 
+See also: [Talents](talents.md) and [Crafting](crafting.md).
+
 ## How to play
 
 You are the plainest of folk: a club, a few turnips, and twelve copper coins. Levels come

@@ -1,0 +1,13 @@
+[[gift]]
+id = "fell_minded"
+name = "Fell-minded"
+kind = "boon"
+tier = "dire"
+weight = 10
+description = "Your thoughts come faster and colder: you are cleverer, your mana runs deeper, and it comes back sooner."
+line = "Your thoughts come faster and colder."
+effects = [
+    { kind = "stat", stat = "intelligence", value = 3 },
+    { kind = "max_mana_percent", value = 25 },
+    { kind = "mana_regen_percent", value = 25 },
+]

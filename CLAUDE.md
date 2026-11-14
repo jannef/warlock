@@ -231,8 +231,14 @@ away, and the wiki is also where facts are inspected during development.
 **Wiki prose links its terms once per section** (the owner, #1609): new or edited wiki prose
 links each mechanic or keyword at its first mention in a section to the section that explains it
 (`wiki/TERMS.md`, the term map, says where; generated tables anchor every row,
-`status-effects.md#status-staggered`), and not again in that section; CI checks the links
+`status-list.md#status-staggered`), and not again in that section; CI checks the links
 (`cargo xtask wiki --check-links`).
+
+**Worked examples are tested**: the hand-written `> **Example: ...**` boxes (Combat, Stats, Burden,
+Skills, Mana, Enchanting) are checked by `xtask/src/wiki/examples.rs` (`cargo test -p xtask`), which
+rebuilds each example's character through `warlock-core` and fails unless the box states the
+numbers the game computes. A tuning change that moves one fails there: fix the box. A new box gets
+a test there too.
 
 **A PR that changes gameplay mechanics or world facts updates the wiki in the same PR**, like the
 spec and this file: edit the page, and generate a table in `xtask/src/wiki/` if the fact lives

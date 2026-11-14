@@ -20,6 +20,10 @@ pub(super) fn text(content: &Content, effect: &SensesEffect) -> String {
             format!("the light your eyes need {}", percent(value))
         }
         SensesEffect::Darkvision { value } => format!("darkvision {} cells", signed(value)),
+        SensesEffect::Vision { profile } => format!(
+            "your eyes are of the [{}](vision.md#the-four-types) type, whatever your race's",
+            (content.vision(&profile)).map_or(profile.clone(), |v| v.name.to_lowercase())
+        ),
         SensesEffect::Scent { status: id, radius } => format!(
             "sees creatures that are {} in line of sight within {radius} cells, however dark",
             status(&id).to_lowercase()

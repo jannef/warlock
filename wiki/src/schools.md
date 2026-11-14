@@ -108,3 +108,5 @@ What a rank teaches, as with a weapon style ([What a rank teaches](fighting-styl
 Only Battle caster teaches an ability:
 
 {{#include generated/caster-style-abilities.md}}
+
+See also: [Magic](magic.md), [Learning spells](learning-spells.md), and [Miscasts](miscasts.md).

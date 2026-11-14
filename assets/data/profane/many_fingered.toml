@@ -1,0 +1,15 @@
+[[gift]]
+id = "many_fingered"
+name = "Many-fingered"
+kind = "mixed"
+tier = "greater"
+weight = 6
+description = "A sixth finger on each hand: room for another ring, though your hands are clumsier."
+line = "A sixth finger uncurls on each hand."
+effects = [
+    { kind = "opens_slot", slot = "extra_ring_1" },
+    { kind = "stat", stat = "dexterity", value = -1 },
+]
+# Written here, on the later of the two (docs/design/profane-gifts.md §6.5): made symmetric at
+# load.
+excludes = ["clawed"]

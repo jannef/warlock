@@ -6,7 +6,7 @@ use warlock_core::talent::BeastEffect;
 
 /// What `effect` does, as the talents' tables say it.
 pub(super) fn text(effect: &BeastEffect) -> String {
-    match *effect {
+    match effect {
         BeastEffect::Companion => "an [animal companion](companions.md#companions) from the first \
                                    turn: a beast of your race's kind, or rarely a rarer one, \
                                    that fights for you, always comes along, and grows with \
@@ -17,7 +17,7 @@ pub(super) fn text(effect: &BeastEffect) -> String {
                                   that goes for what you have hexed, always comes along, and \
                                   grows with your level"
             .into(),
-        BeastEffect::Tame { bonus } => format!("{} on your taming checks", signed(bonus)),
+        BeastEffect::Tame { bonus } => format!("{} on your taming checks", signed(*bonus)),
         BeastEffect::SharedSight => "you see what your [companion](companions.md#hunters-bond) \
                                      sees, by its own eyes, and the foes its nose finds, \
                                      through the dark and closed doors"
@@ -34,7 +34,7 @@ pub(super) fn text(effect: &BeastEffect) -> String {
             "a creature beside both you and your [companion](companions.md#companions) is flanked: \
              your melee attacks and your companion's at it, to hit {} (not shots, throws, or \
              spells)",
-            signed(to_hit)
+            signed(*to_hit)
         ),
         BeastEffect::SharesFavouredPrey => "your companion's attacks at your favoured prey \
                                             carry your Favoured prey bonus, to hit and damage \
@@ -43,5 +43,10 @@ pub(super) fn text(effect: &BeastEffect) -> String {
         BeastEffect::BeastFriend => "creatures of animal factions are neutral to you until you \
                                      attack one of that type"
             .into(),
+        BeastEffect::KinTo { tag } => format!(
+            "creatures tagged *{}* are neutral to you until you attack one of that type, as \
+             [Beast-friend](talents.md#talent-beast-friend)'s animals are",
+            tag.replace('-', " ")
+        ),
     }
 }

@@ -63,8 +63,9 @@ investments, prices, gems, loot, what is handed down), `growth` (experience, pic
 skills), `craft` (trades, salvage, tempering, fletching, the craftsperson's actives), `sign`
 (the birth signs' actives), `faith` (altars, temples, smites, rites, prayer, Retribution),
 `martial` (the warrior's, berserker's, ascetic's, and hunter's actives), `resource`, `song`,
-`ally` (Beast-bond, the summon bias, Sic 'em: `AllyMods`, the sum an ally reads), and `beast`
-(companion, familiar, taming, the bond).
+`ally` (Beast-bond, the summon bias, Sic 'em: `AllyMods`, the sum an ally reads), `beast`
+(companion, familiar, taming, the bond, Beast-friend and `kin_to`), and `slots` (the equipment
+slots a body bars or opens, #1628).
 
 **The kept sum** (#1495): `Actor::talent_mods` is `Talents::mods_cached`, a `SharedMods`
 (`Arc` of the sum, `Deref` to read, `into_owned` to change a copy): the sum is made on the
@@ -105,12 +106,14 @@ wiki's effect text appends "while raging".
 | `max_hp_per_levels` | handed out, not read: `take_talent` adds its `hp_at(level)` to `hp_base` and `hp`, `level_up` each later level's growth, as levels' own hit points are (so `Actor::max_hp` needs no level) |
 | `healing_percent` | `World::healing_rate`, summed with the regeneration affixes |
 | `mana_regen_percent` | `World::mana_rate`, summed with the mana regeneration affixes (Tidal, Clear mind) |
+| `max_mana_percent` | `Actor::max_mana`, `lasting_max_mana`, `is_whole` (`Actor::mana_scaled`, never below 0; Fell-minded) |
 | `max_mana_per_levels` | handed out, not read: `class::hand_out` adds its `mana_at(level)` to `mana_base` and `mana`, `level_up` each later level's growth (Deep well; past `mana_level` too) |
 | `mana_resting_percent` | `World::mana_rate`, on resting's pace (Meditation) |
 | `mana_cost_percent` | `World::spend_mana` through `Actor::mana_cost` (`MagicMods::mana_cost`: rounded to the nearest, at least 1; Frugal caster) |
 | `blood_magic` | `world/mana.rs::blood_magic` (`Action::UseTalent`, `use:blood_magic`, `Ability::BloodMagic` under `Source::Talent`): hit points for mana, no cooldown |
 | `footsteps_percent`, `silent_doors` | `noise::noise` (after the stealth skill and affixes; a silent door is no noise at all) |
 | `hearing` | `Actor::hearing`, with the listen skill |
+| `vision` | `WorldState::base_vision` (`world/eyes.rs`): the first such talent's profile in place of the race's `WorldState::vision`, for `eyes`, the glare of light-blind eyes, and an overworld encounter's dark; the dev `vision:` override still wins (Deep-eyed) |
 | `threshold_percent`, `darkvision` | `WorldState::eyes` (`world/eyes.rs`, the design's B4): the base profile (`WorldState::vision`) as the talents change it; `Perception::compute` reads it, so the view's `vision()` is the effective eye (id and name the base's). Creatures keep their types' profiles |
 | `scent` | `Perception::compute`: a creature suffering the status, in line of sight within the radius (not on the overworld), has its cell seen as darkvision would |
 | `night_sight` | `Perception::compute`: the overworld's sight radius at night (`daylight::phase`) |
@@ -137,6 +140,8 @@ wiki's effect text appends "while raging".
 | `light_on_ice`, `climb_percent` | `World::tread` (the load on the ice is the body's weight alone), `World::tread_price` (the climb's price) |
 | `wading_proof` | `World::wade`: no exposure, no draw |
 | `beast_friend` | `beast_friend::befriended` (`world/beast_friend.rs`), read by `World::stance`, `ai::nearest_hostile_in_sight`, and `PerceptionView::stance`; `World::resolve` (an attack by the player) records the type in `Progress::empathy_broken` |
+| `kin_to` | Beast-friend's rule by creature tag (`BeastMods::kin_tags`): `beast_friend::calms` holds for a type carrying a tag held, so `befriended`, `PerceptionView::stance`, and a rolled quest's pool read it as they read Beast-friend; a struck type stays hostile (`empathy_broken`). The loader asks that a creature carries the tag (`check_kin`). Rat-king's court's vermin |
+| `bars_slot`, `opens_slot` | `world/body_slots.rs` (`docs/dev/equipment.md` "Barred and opened slots"): `has_slot`, `World::barred_words`, `PerceptionView::barred`, and `World::shed_unworn` as a gift takes or goes; checked against `data/slots.toml` once the objects load (`check_slots`) |
 | `hunger_percent`, `no_exertion` | `World::hunger_percent` (the race's pace scaled), `exert` |
 | `xp_percent` | `grant_xp` (every gain: kills, discovery, quests, dev) |
 | `notice` | `search.rs`: `notices` (as if trained in Spot) and `search_modifier(Look::Passive)` |
@@ -174,6 +179,7 @@ wiki's effect text appends "while raging".
 | `weapon_marks` | `World::practise` (`OffenceMods::marks`; no `role`: every skill, Forge-born) |
 | `blaze` | `world/element_gifts.rs` (`Action::Gift`, `Ability::Sign` under `Source::Sign`): the burst, the fires, then its `cooldown` status |
 | `two_handed_crit`, `unarmed_die` | `Actor::melee` (and `kick` for the die, the bigger of it and `kick_die`) |
+| `unarmed_on_hit` | `Actor::melee`: a bare-handed profile carries them as its `on_hit` (a natural attack's place), applied in `World::after_blow`'s rider loop; never a kick's (Clawed's bleeding) |
 | `stance_dodge` (Wild guard) | `Actor::defence`, the stance's Dodge (`DefenceMods::stance_dodge`) |
 | `step_percent` | `World::step_price` (`MovementMods::step_percent`: body armour, burden, shield) |
 | `disease_immune`, `checks` | `World::expose` (refused, nothing rolled), `disease_turn`, `search_modifier(Look::Passive)` (Willpower) |

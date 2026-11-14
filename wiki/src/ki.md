@@ -26,3 +26,5 @@ every 9 seconds. What spends it:
 
 **[Inner calm](talents.md#talent-inner-calm)** (Finesse; [ascetic](class-ascetic.md), level 18):
 ki holds 2 more and comes back half again as fast, a point every 12 seconds instead of every 18. Inner calm changes nothing until something gives the [ascetic](class-ascetic.md) [ki](resources.md#resource-ki).
+
+See also: [Abilities](abilities.md) and [Fighting styles](fighting-styles.md).

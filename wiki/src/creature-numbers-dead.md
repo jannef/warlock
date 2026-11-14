@@ -20,3 +20,6 @@ numbers](creature-numbers.md), and how each creature behaves on
 ## Pace, senses, and size
 
 {{#include generated/creature-senses.md:dead}}
+
+See also: [Cursed and hallowed rooms](cursed-and-hallowed.md) and
+[Spells with a rule of their own](spell-rules.md).

@@ -43,6 +43,18 @@ cases! {
         screen: Some("equipment"),
         ..BASE
     },
+    // Profane gifts' slots (#1628): Horned bars the head (its helm fell as it took), and
+    // Many-fingered opens the first extra ring slot to a warrior.
+    equipment_horned: Case {
+        name: "equipment-horned",
+        actions: concat!(
+            "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N ",
+            "pickup move:S*2 pickup move:NW move:W*2 move:N pickup move:SW pickup equip:head:g ",
+            "equip:body:f gift:horned gift:many_fingered"
+        ),
+        screen: Some("equipment"),
+        ..BASE
+    },
     kit_inventory: Case {
         name: "kit-inventory",
         scenario: "world",

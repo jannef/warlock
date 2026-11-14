@@ -44,7 +44,7 @@ of every check that works it:
 {{#include generated/crafting-work.md}}
 
 Each craft skill gives **craft** points to its own checks: +8 at 100, +12 at 200 (see
-[what skills give](skills.md#what-skills-give)). They count only for the materials that skill
+[what skills give](skill-benefits.md)). They count only for the materials that skill
 works. Metalcraft never helps you salvage wood, even if you know both.
 
 ## The recipes

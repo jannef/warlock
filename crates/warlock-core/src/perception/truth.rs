@@ -1126,14 +1126,10 @@ impl<'a> PerceptionView<'a> {
 
     /// How a seen creature stands toward the player: its faction's stance (spec §7 "Factions"),
     /// which the player knows from its type; neutral for an animal a Beast-friend has not
-    /// attacked one of (spec §8 "Talents"). Nothing else about factions is perceived.
+    /// attacked one of, or a kin of a `kin_to` talent's (spec §8 "Talents"). Nothing else about factions is perceived.
     pub fn stance(&self, actor: &SeenActor) -> Stance {
-        let animal = actor
-            .faction
-            .is_some_and(|f| self.content.factions().def(f).animal);
-        if animal
-            && actor.kind == ActorKind::Creature
-            && self.player.talent_mods(self.content).beast.beast_friend
+        if actor.kind == ActorKind::Creature
+            && crate::world::calms(self.content, self.player, actor.creature)
             && !(self.progress.empathy_broken).contains(&self.content.creature(actor.creature).id)
         {
             return Stance::Neutral;

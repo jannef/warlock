@@ -49,3 +49,5 @@ out.
 
 Creatures have eyes of these types too, and see by the same rules (see [Creatures](creatures.md)).
 The game does not tell you which eyes a creature has.
+
+See also: [Light](light.md), [Sight and memory](sight.md), and [Your lantern](lantern.md).

@@ -162,3 +162,5 @@ through. No creature picks locks, and none kicks a door unless it is wedged (see
 - A guard post in a dungeon, with its guard and company, keeps its store room locked. The
   [kobold](creatures.md#creature-kobold) on guard carries the brass key, and a
   [skeleton key](#keys) lies in the store room.
+
+See also: [Chests](chests.md), [Traps](traps.md), and [Searching](searching.md).

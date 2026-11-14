@@ -41,7 +41,7 @@ more. The danger is read when a floor is made, at your level then.
 
 The fifth floor is the last. It leads nowhere deeper. Its hall belongs to the
 [warden of the gate](creatures.md#creature-gatewarden), a level-50 fiend with claws and a barbed
-whip that can [hold](status-effects.md#status-held) you. Every two minutes it tears open a new
+whip that can [hold](status-list.md#status-held) you. Every two minutes it tears open a new
 gate, a [rift](creatures.md#creature-rift) or a [hellmouth](creatures.md#creature-hellmouth), two
 at most at once, and what comes through fights for it. The Pit's other fiends leave it alone.
 A gate a [miscast](miscasts.md#gates) opens is different: the fiends it lets through attack the

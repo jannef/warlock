@@ -259,3 +259,6 @@ hags carry henbane and elementals leave their essence when they die
 An alchemist buys herbs, essences, and pieces (see [Shops](shops.md#selling)). Where herbs are
 found is on [Herbs](herbs.md). An alchemist [brews](recipes-alchemy.md) with both: herbs for
 most potions, an essence for the battle flasks and a few potions (frost, earthing, sea legs).
+
+See also: [Objects and your pack](objects.md), [Crafting](crafting.md), and
+[Forging at the anvil](forging.md).

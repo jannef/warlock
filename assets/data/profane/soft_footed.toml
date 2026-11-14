@@ -1,0 +1,9 @@
+[[gift]]
+id = "soft_footed"
+name = "Soft-footed"
+kind = "boon"
+tier = "lesser"
+weight = 12
+description = "Thick, silent soles: your footsteps are quieter."
+line = "The soles of your feet grow thick and silent."
+effects = [{ kind = "footsteps_percent", value = -50 }]

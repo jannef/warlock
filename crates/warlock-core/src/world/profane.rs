@@ -7,7 +7,8 @@
 //! A gift held is a talent in [`Actor::talents`](super::Actor) and [`Actor::boons`](super::Actor),
 //! so a restored run puts it back (`stars::grant`) and the state hash covers it. Its `stat`
 //! effects are handed out as it takes and taken back as it goes; every other effect is read at its
-//! hook and is simply there or not.
+//! hook and is simply there or not, but for what is worn in a slot it bars or opened, which falls
+//! as it takes or goes (`body_slots.rs`).
 
 use super::alignment::Deed;
 use super::{Spent, World};
@@ -127,6 +128,8 @@ impl World {
         self.shift_stats(&book.get(gift).effects, 1);
         self.say(def.line.clone());
         self.say(format!("You are {}.", book.get(gift).name));
+        // What it bars falls (Horned's helm, `body_slots.rs`).
+        self.shed_unworn();
         true
     }
 
@@ -150,6 +153,8 @@ impl World {
         if let Some(line) = &def.undone {
             self.say(line.clone());
         }
+        // A slot it opened is gone, and what was worn there falls (`body_slots.rs`).
+        self.shed_unworn();
         true
     }
 

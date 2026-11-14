@@ -159,7 +159,7 @@ pub(super) fn at_speed(price: i64, speed: u32) -> String {
 
 /// A kind of term a generated table defines, one row each: the page the table is on and the
 /// prefix of its rows' anchors (`status-staggered`, `skill-open-lock`). Prose links a row as
-/// `[Staggered](status-effects.md#status-staggered)`; the term map (`wiki/TERMS.md`) lists them.
+/// `[Staggered](status-list.md#status-staggered)`; the term map (`wiki/TERMS.md`) lists them.
 #[derive(Clone, Copy)]
 pub(super) enum Term {
     Ability,
@@ -226,7 +226,7 @@ impl Term {
             Term::Spell => ("magic.md", "spell"),
             Term::Stance => ("combat.md", "stance"),
             Term::Stat => ("stats.md", "stat"),
-            Term::Status => ("status-effects.md", "status"),
+            Term::Status => ("status-list.md", "status"),
             Term::Style => ("fighting-styles.md", "style"),
             Term::StyleAbility => ("fighting-styles.md", "style-ability"),
             Term::Talent => ("talents.md", "talent"),
@@ -257,7 +257,7 @@ pub(super) fn anchored(term: Term, id: &str, name: &str) -> String {
     format!("<a id=\"{}\"></a>{name}", term.anchor_id(id))
 }
 
-/// A link to the row that defines a term: `[Staggered](status-effects.md#status-staggered)`.
+/// A link to the row that defines a term: `[Staggered](status-list.md#status-staggered)`.
 pub(super) fn link(term: Term, id: &str, name: &str) -> String {
     format!("[{name}]({}#{})", term.place().0, term.anchor_id(id))
 }

@@ -5,7 +5,7 @@ Some harm comes slowly. A filthy bite, a night in the marshes, or a bad meal can
 by day until your body fights it off. Some diseases never go by themselves, and one of them can
 kill.
 
-Every disease shows the same way: as **[Diseased](status-effects.md#status-diseased)**, after your
+Every disease shows the same way: as **[Diseased](status-list.md#status-diseased)**, after your
 [hit points](hit-points.md#hit-points) in the [status bar](the-screen.md#the-screen), and among
 your [status effects](status-effects.md#how-they-work) on the [character screen](character.md). You
 learn which disease it is from its symptoms. Once it has run for a day, the character screen names
@@ -23,7 +23,7 @@ it (`Diseased  Filth fever`).
   **check**. Win it and nothing happens. Lose it and you have caught the disease. You are not told
   either way.
 - **Incubation.** For a few days nothing shows. Then it breaks out, with a message of its own ("You
-  feel feverish."), and from then on you are **[Diseased](status-effects.md#status-diseased)**.
+  feel feverish."), and from then on you are **[Diseased](status-list.md#status-diseased)**.
 - **Every day** after that, your body fights it again with another check. Winning costs nothing.
   Losing means the disease takes points off some of your [stats](stats.md)
   (**[stat damage](#stat-damage)**), and you are told how it worsens ("Fever wracks you.").
@@ -70,11 +70,11 @@ shows your stats with the damage taken off, in red.
 - **It never kills you by itself.** No stat goes below 1, and a disease's damage never takes your
   last hit point, unless it is a disease that kills.
 - **It mends slowly.** Once no disease shows, one point of each damaged stat comes back every day.
-  While you are still [Diseased](status-effects.md#status-diseased), nothing mends.
+  While you are still [Diseased](status-list.md#status-diseased), nothing mends.
 
 ## Healing while Diseased
 
-While you are [Diseased](status-effects.md#status-diseased), your
+While you are [Diseased](status-list.md#status-diseased), your
 [hit points](hit-points.md#hit-points) come back at half the pace, and
 [marsh ague](#disease-marsh-ague) slows them even more (see [Healing](healing.md)).
 [Resting](resting.md#how-resting-works) still doubles the pace.

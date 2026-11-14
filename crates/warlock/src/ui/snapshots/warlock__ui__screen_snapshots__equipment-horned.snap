@@ -1,0 +1,30 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Your iron helm no longer fits, and falls to the floor.
+ A sixth finger uncurls on each hand. You are Many-fingered.
+
+
+┌─ Equipment ──────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                  │
+│ > a  Head             — (horns)                                                                  │
+│   b  Neck             —                                                                          │
+│   c  Body           [ a chain mail shirt (Dv +2, Pv 3)                                    11 kg  │
+│   d  Cloak            —                                                                          │
+│   e  Main hand        —                                                                          │
+│   f  Off hand         —                                                                          │
+│   g  Hands            —                                                                          │
+│   h  Left ring        —                                                                          │
+│   i  Right ring       —                                                                          │
+│   j  Extra ring 1     —                                                                          │
+│   k  Feet             —                                                                          │
+│   l  Missile weapon   —                                                                          │
+│   m  Missiles         —                                                                          │
+│   n  Tool           ( a lantern                                                           400 g  │
+│                                                                                                  │
+│ Defence (Dv) 14   ·   Protection (Pv) 3                                                          │
+│ Carrying 19.8 kg   ·   Your weight 89.8 kg (you 70 kg)                                           │
+│                                                                                                  │
+│ a-n choose a slot   A-N look   Esc close                                                         │
+└─ 1 Char · 2 Inv · 3 Eqp · 4 Skl · 5 Weap · 6 Mag · 7 Qst · 8 Tal · 9 Story ──────────────────────┘

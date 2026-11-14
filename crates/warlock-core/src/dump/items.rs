@@ -82,7 +82,8 @@ pub(super) fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
 }
 
 /// The player's equipment, one slot a line by its letter: `c Body: a leather jerkin (b)` (the
-/// inventory position in parentheses, as action text names it), `a Head: -` when empty.
+/// inventory position in parentheses, as action text names it), `a Head: -` when empty, `a Head:
+/// - (horns)` when a talent bars it.
 pub(super) fn equipment_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let worn = view.equipment();
     (view.own_slots().into_iter())
@@ -92,7 +93,11 @@ pub(super) fn equipment_rows(view: &PerceptionView<'_>) -> Vec<String> {
                 Some(item) => view.inventory().get(item).map_or("?".into(), |s| {
                     format!("{} ({})", view.lore().describe(s), position_text(item))
                 }),
-                None => "-".into(),
+                // A slot the body bars: `a Head: - (horns)`.
+                None => match view.barred(slot) {
+                    Some(mark) => format!("- ({mark})"),
+                    None => "-".into(),
+                },
             };
             format!("{} {}: {what}", letter(i).unwrap_or('?'), def.name)
         })

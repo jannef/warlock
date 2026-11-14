@@ -8,7 +8,7 @@
 //! summed, read where the rules already read what magic items do (`Actor::defence`, `melee`,
 //! `hearing`, `World::healing_rate`, `burden::load`, `noise::noise`, `step_price`, hunger,
 //! experience, searching, free blows). Effects come in areas (#1495), each a module here
-//! (`talent/<area>.rs`: `offence`, `defence`, `vigour`, ... `beast`) with its enum of
+//! (`talent/<area>.rs`: `offence`, `defence`, `vigour`, ... `beast`, `slots`) with its enum of
 //! effects (`OffenceEffect`, wrapped by [`TalentEffect`]) and its sum (`OffenceMods`, a field
 //! here); a new effect is a variant of its area's enum, a field and an arm there, and one read.
 //!
@@ -44,6 +44,7 @@ mod offence;
 mod resource;
 mod senses;
 mod sign;
+mod slots;
 mod song;
 mod stealth;
 mod vigour;
@@ -67,6 +68,7 @@ pub use offence::{OffenceEffect, OffenceMods, WeaponBonus};
 pub use resource::{ResourceEffect, ResourceMods};
 pub use senses::{SensesEffect, SensesMods};
 pub use sign::{Blaze, FireBreath, HornsGrace, HoundsBay, SignEffect, SignMods, Stare};
+pub use slots::{Barred, SlotEffect, SlotMods};
 pub use song::{Song, SongCost, SongEffect, SongMods};
 pub use stealth::{ExploitMods, StealthEffect, StealthMods};
 pub use vigour::{Reprieve, Rise, VigourEffect, VigourMods};
@@ -337,6 +339,8 @@ pub struct TalentMods {
     pub stealth: StealthMods,
     /// What the holder's movement and burden get ([`MovementMods`], `talent/movement.rs`).
     pub movement: MovementMods,
+    /// The equipment slots the holder's body bars or opens ([`SlotMods`], `talent/slots.rs`).
+    pub slots: SlotMods,
     /// What the holder gets in the dungeon: searching, traps, chests, rooms, doors, digging
     /// ([`DelvingMods`], `talent/delving.rs`).
     pub delving: DelvingMods,
@@ -445,6 +449,7 @@ impl TalentMods {
             TalentEffect::Senses(effect) => self.senses.add(content, effect),
             TalentEffect::Stealth(effect) => self.stealth.add(content, effect),
             TalentEffect::Movement(effect) => self.movement.add(content, effect),
+            TalentEffect::Slots(effect) => self.slots.add(content, effect),
             TalentEffect::Delving(effect) => self.delving.add(content, effect),
             TalentEffect::Fortune(effect) => self.fortune.add(effect),
             TalentEffect::Growth(effect) => self.growth.add(content, effect, choice),

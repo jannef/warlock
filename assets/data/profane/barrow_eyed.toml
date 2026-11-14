@@ -1,0 +1,10 @@
+[[gift]]
+id = "barrow_eyed"
+name = "Barrow-eyed"
+kind = "boon"
+tier = "lesser"
+weight = 12
+description = "You see a little way into the dark, as if it were thinner."
+line = "The dark thins."
+undone = "The thin dark you saw through closes over, and opens wider."
+effects = [{ kind = "darkvision", value = 3 }]

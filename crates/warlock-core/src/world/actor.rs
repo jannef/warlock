@@ -625,19 +625,36 @@ impl Actor {
             stats.score(Stat::Toughness),
             self.hp_base + mods.get(ItemEffect::MaxHp),
         );
-        let max_mana =
-            crate::mana::max_mana(&stats, self.mana_base + mods.get(ItemEffect::MaxMana));
+        let max_mana = self.mana_scaled(
+            content,
+            crate::mana::max_mana(&stats, self.mana_base + mods.get(ItemEffect::MaxMana)),
+        );
         self.hp >= self.frail(content, max_hp) && self.mana >= max_mana
     }
 
     /// Its maximum mana (spec §8 "Mana"): [`Actor::mana_base`] plus what it wears and wields
-    /// adds, plus its (effective) mental stats' modifiers, at least 0. Damage to those stats
+    /// adds, plus its (effective) mental stats' modifiers, at least 0, scaled by its talents'
+    /// percent ([`Actor::mana_scaled`]). Damage to those stats
     /// lowers it, as Toughness damage lowers the hit points.
     pub fn max_mana(&self, content: &Content) -> i32 {
         let mods = self.mods(content);
         let stats = self.stats_with(content, &mods);
         let pool = crate::mana::max_mana(&stats, self.mana_base + mods.get(ItemEffect::MaxMana));
-        self.deeper_pool(content, pool)
+        self.mana_scaled(content, self.deeper_pool(content, pool))
+    }
+
+    /// Maximum mana `max` as its talents scale them (`max_mana_percent`: Fell-minded), never
+    /// below 0.
+    fn mana_scaled(&self, content: &Content, max: i32) -> i32 {
+        if self.talents.is_empty() {
+            return max;
+        }
+        let percent = self.talent_mods(content).magic.max_mana_percent;
+        if percent == 0 {
+            return max;
+        }
+        let scaled = TalentMods::scaled(u64::try_from(max.max(0)).unwrap_or(0), percent);
+        i32::try_from(scaled).unwrap_or(i32::MAX)
     }
 
     /// Its maximum mana as it will be once its penalties pass, like
@@ -647,7 +664,7 @@ impl Actor {
         let mods = self.mods(content);
         let stats = self.raised_with(&mods);
         let pool = crate::mana::max_mana(&stats, self.mana_base + mods.get(ItemEffect::MaxMana));
-        self.deeper_pool(content, pool)
+        self.mana_scaled(content, self.deeper_pool(content, pool))
     }
 
     /// How hurt it looks, in words.
@@ -1375,15 +1392,20 @@ impl Actor {
             (None, Some(natural)) => (natural.attack, Mods::default(), 0, None),
             (None, None) => (unarmed(), Mods::default(), 0, None),
         };
+        // Bare hands: no weapon, or a wielded thing that is none (a shield in the main hand).
+        let fists = natural.is_none() && weapon.is_none_or(|s| s.attack(content).is_none());
         let benefit = self.attack_benefit(content, AttackKind::Melee, None);
         let mut profile = Profile::melee(&attack, &self.stats_with(content, &mods)).with(&benefit);
         profile.penetration = penetration;
         // A natural attack's own `on_hit` (a giant rat's poison), first of what a hit causes:
-        // each of several natural attacks its own (`natural.rs`).
+        // each of several natural attacks its own (`natural.rs`); bare hands carry the
+        // talents' (`unarmed_on_hit`: Clawed's bleeding).
         if weapon.is_none()
             && let Some(natural) = natural
         {
             profile.on_hit = natural.on_hit.clone();
+        } else if fists {
+            profile.on_hit = talents.offence.unarmed_on_hit.clone();
         }
         // A companion's grade sharpens its blow (spec §8 "Allies"; `companion.rs`).
         profile = self.grown(content, profile);

@@ -107,3 +107,5 @@ The overworld is a special case. At night it is drawn by a faint cold light, so 
 cells you see from the ones you only remember, and moonlight comes on top of that. The cold light
 does not decide what you see there, but the moon does widen your sight. See [The
 overworld](overworld.md).
+
+See also: [Sight and memory](sight.md) and [Temperature and ice](temperature.md).

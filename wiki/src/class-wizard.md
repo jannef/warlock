@@ -2,6 +2,8 @@
 
 {{#include generated/class-card.md:wizard}}
 
+See also: [Magic](magic.md), [Learning spells](learning-spells.md), and [Scrolls](scrolls.md).
+
 ## How to play
 
 You have the most [mana](mana.md) and no hit points from your class at all: one or two blows can kill
