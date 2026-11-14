@@ -50,7 +50,7 @@ A hold also ends by itself ("You are free to move."):
   [transfixed](status-effects.md#status-transfixed), [sluggish](status-effects.md#status-sluggish));
 - after **3d4 turns** at most. Another hit rolls the turns again and keeps the longer of the two.
 
-A creature caught in your own [Drowning grip](talents.md#talent-drowning-grip) (a
+A creature caught in your own [Drowning grip](horoscope.md#talent-drowning-grip) (a
 [lucky day](horoscope.md#lucky-days)'s gift) is held the same way and gets free the same way. It
 does not struggle; it fights you instead.
 

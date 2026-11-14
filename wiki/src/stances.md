@@ -43,14 +43,14 @@ weapon already gives. Creatures do not take stances yet.
 
 ## Free blows
 
-Some fighters get a blow in for free, at no cost in time. [Talents](talents.md), [class abilities](talents.md#class-abilities), and the
+Some fighters get a blow in for free, at no cost in time. [Talents](talents.md), [class abilities](classes.md#levels), and the
 ranks of weapon skills and fighting styles teach them (see
 [What a rank teaches](weapon-skills.md#what-a-rank-teaches)).
 
 - **[Cleave](talents.md#talent-cleave)**: when your attack kills, you strike another [hostile](creatures.md#factions) creature next to you. It is the
   next one round from where your victim stood, going clockwise. This happens once per attack, or,
   with [Great cleave](talents.md#talent-great-cleave), again after every cleave that kills.
-- **[Retribution](talents.md#talent-retribution)**: the [paladin](classes.md#paladin)'s, from level 25. When a [hostile](creatures.md#factions) creature beside you lands a
+- **[Retribution](classes.md#talent-retribution)**: the [paladin](classes.md#paladin)'s, from level 25. When a [hostile](creatures.md#factions) creature beside you lands a
   blow of its melee attack on you, you answer with your [smite](abilities.md#ability-smite) once the attack is over. It uses
   the smite's dice, your [Presence](stats.md#stat-presence) to hit, and the extra die on the [unholy](classes.md#paladin), and costs 4 [zeal](resources.md#resource-zeal).
   With less zeal, or while you are not Kind or better (see [Alignment](alignment.md)), nothing happens. An
@@ -62,7 +62,7 @@ ranks of weapon skills and fighting styles teach them (see
 - **[Opportunist](talents.md#talent-opportunist)**: a [hostile](creatures.md#factions) creature that steps away from beside you is struck as it turns to go.
   It may not live to take the step. A creature that fights this way strikes you the same way when
   you step away from it.
-- **[Gatekeeper](talents.md#talent-gatekeeper)**: the Barghest's gift (see [The horoscope](horoscope.md#what-a-sign-does)). A [hostile](creatures.md#factions) creature that steps up
+- **[Gatekeeper](horoscope.md#talent-gatekeeper)**: the Barghest's gift (see [The horoscope](horoscope.md#what-a-sign-does)). A [hostile](creatures.md#factions) creature that steps up
   beside you from out of your reach may take a blow as it comes, after its step. The chance
   depends on your [stance](#stances): one time in 4 when neutral, twice that when aggressive, half that when
   defensive, a quarter as a coward, and every time in a frenzy (the *Gatekeeper's blow* column of
@@ -87,7 +87,7 @@ Toughness 18 (+4) at level 60 gives 20. [Damage to your Toughness](stats.md#drai
 Stamina comes back a point every 12 seconds (2 base [turns](time.md#what-takes-time)), while [resting](resting.md#how-resting-works) too, and half again as fast
 with [Steady breathing](talents.md#talent-steady-breathing). Spent, it sits at 0 and comes back. Creatures never have it.
 
-A warrior with [Battle rhythm](talents.md#talent-battle-rhythm) (at level 40) also gets a point back
+A warrior with [Battle rhythm](classes.md#talent-battle-rhythm) (at level 40) also gets a point back
 for every [melee](combat.md) blow of theirs that hits, and 1 more for every foe such a blow kills: a
 killing blow gives 2 in all. It never goes past the maximum. Shots, throws, and spells give none.
 
@@ -95,6 +95,6 @@ The active weapon abilities spend it (see
 [What a rank teaches](weapon-skills.md#what-a-rank-teaches)). Anyone else gets Stamina from the first
 rank that teaches one of them. Some talents make those abilities cheaper:
 
-- [Drillmaster](talents.md#talent-drillmaster) (the warrior's, at level 25) takes a point off every active's cost.
+- [Drillmaster](classes.md#talent-drillmaster) (the warrior's, at level 25) takes a point off every active's cost.
 - [Armour-breaker](talents.md#talent-armour-breaker) takes 2 off [Sunder's](weapon-skills.md#weapon-ability-sunder) and [Gap shot's](fighting-styles.md#style-ability-gap-shot) cost (never below 1).
 - [Practised technique](talents.md#talent-practised-technique) takes a quarter off their time (never below half the action's).

@@ -5,7 +5,7 @@
 
 use super::burden::factor;
 use super::combat::percent;
-use super::text::{Term, anchored};
+use super::text::{Term, anchored, link};
 use std::fmt::Write as _;
 use warlock_core::burden::Burden;
 use warlock_core::check::{CONTEST_WAYS, contest_ways, ways};
@@ -151,151 +151,164 @@ fn effect_name(effect: Effect) -> &'static str {
     }
 }
 
-/// The values the benefits table shows.
-const BENEFIT_VALUES: [u16; 14] = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 125, 150, 200];
+/// The values the benefits table shows (#1545: the skill's value as a column, few enough to read).
+const BENEFIT_VALUES: [u16; 6] = [0, 10, 20, 50, 100, 200];
 
-/// What each skill's benefits give at a range of values, one column per benefit, from the data.
+/// What each skill's benefits give at a range of values, from the data: one row per benefit, the
+/// skill named on its first row, the values as columns (#1545).
 pub(super) fn skill_benefits(content: &Content) -> String {
-    // Knowledge's resist is read above a creature's level, not at the value: its own table.
-    let columns: Vec<(&str, &warlock_core::skills::Benefit)> = (content.skills().iter())
-        .flat_map(|s| s.benefits.iter().map(move |b| (s.name.as_str(), b)))
-        .filter(|(_, b)| b.effect != Effect::Resist)
-        .collect();
-    let mut out = String::from("| Value |");
-    for (name, b) in &columns {
-        let what = match b.effect {
-            Effect::Dodge => "Dodge",
-            Effect::Quiet => "noise",
-            Effect::Hearing => "hears fainter by",
-            Effect::Search => "searching",
-            Effect::SearchReach => "search reaches",
-            Effect::Spot => "noticing",
-            Effect::DetectTraps => "finding traps",
-            Effect::Study => "study check",
-            Effect::Cast => "casting check",
-            Effect::Ward => "off a miscast's total",
-            Effect::Learn => "learning",
-            Effect::Decipher => "reading scrolls",
-            Effect::Disarm => "disarming traps",
-            Effect::Burden => "Burdened / Strained",
-            Effect::Travel => "journeys",
-            Effect::Forage => "foraging",
-            Effect::Bargain => "prices",
-            Effect::Freshness => "telling freshness, each hour",
-            Effect::Identify => "identifying, each hour",
-            Effect::IdentifyPotion => "telling potions, each hour",
-            Effect::IdentifyMagic => "telling magic, each hour",
-            Effect::Herbs => "a herb besides",
-            Effect::Dig => "digging",
-            Effect::Kick => "kicking doors in",
-            Effect::Slip => "slipping past",
-            Effect::Lookout => "lookout",
-            Effect::Stalk => "their lookout",
-            Effect::Evade => "slipping away",
-            Effect::Steal => "stealing",
-            Effect::Feint => "feint's difficulty",
-            Effect::SneakDice => "sneak attack dice",
-            Effect::Surprise => "their check's difficulty",
-            Effect::Initiative => "initiative check",
-            Effect::SurpriseEase => "surprise's extra cost",
-            Effect::Heal => "treating",
-            Effect::Tame => "taming",
-            Effect::Escape => "slipping bonds",
-            Effect::Climb => "a pit's climb",
-            Effect::Pick => "picking locks",
-            Effect::Intimidate => "threat's difficulty",
-            Effect::SongDegrees => "song degrees",
-            Effect::SongCraft => "song's difficulty",
-            Effect::Wedge => "wedged door's sturdiness",
-            Effect::Temper => "tempering",
-            Effect::Whittle => "whittling",
-            Effect::Craft => "craft",
-            Effect::EnchantLevel => "enchanting's item level",
-            Effect::Wade => "wading's extra cost",
-            Effect::Footing => "rough ground's extra cost",
-            Effect::SteadyEase => "staggering's extra cost",
-            Effect::Swim => "Swim check",
-            Effect::ManaRegen => "mana back",
-            Effect::MaxMana => "mana pool",
-            Effect::Speed => "speed",
-            Effect::Resist => "resisting",
-        };
-        let _ = write!(out, " {name}: {what} |");
-    }
-    out.push_str("\n|---:|");
-    out.push_str(&":---:|".repeat(columns.len()));
-    out.push('\n');
+    let mut out = String::from("| Skill | Benefit |");
     for value in BENEFIT_VALUES {
-        let _ = write!(out, "| {value} |");
-        for (_, b) in &columns {
-            let n = b.at(value);
-            let cell = match b.effect {
-                _ if n == 0 => "—".to_string(),
-                Effect::Dodge
-                | Effect::Search
-                | Effect::Spot
-                | Effect::DetectTraps
-                | Effect::Study
-                | Effect::Cast
-                | Effect::Decipher
-                | Effect::Slip
-                | Effect::Lookout
-                | Effect::Stalk
-                | Effect::Evade
-                | Effect::Steal
-                | Effect::Feint
-                | Effect::Heal
-                | Effect::Tame
-                | Effect::Disarm
-                | Effect::Escape
-                | Effect::Pick
-                | Effect::Intimidate
-                | Effect::SongDegrees
-                | Effect::SongCraft
-                | Effect::Wedge
-                | Effect::Temper
-                | Effect::Whittle
-                | Effect::Craft
-                | Effect::Swim
-                | Effect::Surprise
-                | Effect::Initiative
-                | Effect::Resist => format!("+{n}"),
-                Effect::Climb if n == 1 => "halved".to_string(),
-                Effect::Climb => "skipped".to_string(),
-                Effect::SneakDice => format!("{n}d6"),
-                Effect::SurpriseEase | Effect::Wade | Effect::Footing | Effect::SteadyEase => {
-                    format!("\u{2212}{n}%")
-                }
-                Effect::SearchReach => format!("+{n} cell{}", if n == 1 { "" } else { "s" }),
-                Effect::Kick => format!("+{n} Strength"),
-                Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),
-                Effect::Ward => format!("\u{2212}{n}"),
-                Effect::Bargain => format!("{n}% better"),
-                Effect::Forage => format!("+{n}%"),
-                Effect::Freshness
-                | Effect::Identify
-                | Effect::IdentifyPotion
-                | Effect::IdentifyMagic
-                | Effect::Herbs => format!("{n}%"),
-                Effect::Dig => format!("+{n}%"),
-                Effect::Speed | Effect::ManaRegen => format!("+{n}%"),
-                Effect::MaxMana => format!("+{n} mana"),
-                Effect::Hearing | Effect::Learn => n.to_string(),
-                Effect::EnchantLevel => format!("item level {n}"),
-                Effect::Burden => {
-                    let slowed = |b: Burden| factor(b.slow_eased(100, n));
-                    format!(
-                        "×{} / ×{}",
-                        slowed(Burden::Burdened),
-                        slowed(Burden::Strained)
-                    )
-                }
+        let _ = write!(out, " {value} |");
+    }
+    out.push_str("\n|---|---|");
+    out.push_str(&"---:|".repeat(BENEFIT_VALUES.len()));
+    out.push('\n');
+    for skill in content.skills() {
+        // Knowledge's resist is read above a creature's level, not at the value: its own table.
+        let benefits = skill.benefits.iter().filter(|b| b.effect != Effect::Resist);
+        for (i, b) in benefits.enumerate() {
+            let name = if i == 0 {
+                link(Term::Skill, &skill.id, &skill.name)
+            } else {
+                String::new()
             };
-            let _ = write!(out, " {cell} |");
+            let _ = write!(out, "| {name} | {} |", benefit_words(b.effect));
+            for value in BENEFIT_VALUES {
+                let _ = write!(out, " {} |", benefit_cell(b, value));
+            }
+            out.push('\n');
         }
-        out.push('\n');
     }
     out
+}
+
+/// A benefit's name in the benefits table.
+fn benefit_words(effect: Effect) -> &'static str {
+    match effect {
+        Effect::Dodge => "Dodge",
+        Effect::Quiet => "noise",
+        Effect::Hearing => "hears fainter by",
+        Effect::Search => "searching",
+        Effect::SearchReach => "search reaches",
+        Effect::Spot => "noticing",
+        Effect::DetectTraps => "finding traps",
+        Effect::Study => "study check",
+        Effect::Cast => "casting check",
+        Effect::Ward => "off a miscast's total",
+        Effect::Learn => "learning",
+        Effect::Decipher => "reading scrolls",
+        Effect::Disarm => "disarming traps",
+        Effect::Burden => "Burdened / Strained",
+        Effect::Travel => "journeys",
+        Effect::Forage => "foraging",
+        Effect::Bargain => "prices",
+        Effect::Freshness => "telling freshness, each hour",
+        Effect::Identify => "identifying, each hour",
+        Effect::IdentifyPotion => "telling potions, each hour",
+        Effect::IdentifyMagic => "telling magic, each hour",
+        Effect::Herbs => "a herb besides",
+        Effect::Dig => "digging",
+        Effect::Kick => "kicking doors in",
+        Effect::Slip => "slipping past",
+        Effect::Lookout => "lookout",
+        Effect::Stalk => "their lookout",
+        Effect::Evade => "slipping away",
+        Effect::Steal => "stealing",
+        Effect::Feint => "feint's difficulty",
+        Effect::SneakDice => "sneak attack dice",
+        Effect::Surprise => "their check's difficulty",
+        Effect::Initiative => "initiative check",
+        Effect::SurpriseEase => "surprise's extra cost",
+        Effect::Heal => "treating",
+        Effect::Tame => "taming",
+        Effect::Escape => "slipping bonds",
+        Effect::Climb => "a pit's climb",
+        Effect::Pick => "picking locks",
+        Effect::Intimidate => "threat's difficulty",
+        Effect::SongDegrees => "song degrees",
+        Effect::SongCraft => "song's difficulty",
+        Effect::Wedge => "wedged door's sturdiness",
+        Effect::Temper => "tempering",
+        Effect::Whittle => "whittling",
+        Effect::Craft => "craft",
+        Effect::EnchantLevel => "enchanting's item level",
+        Effect::Wade => "wading's extra cost",
+        Effect::Footing => "rough ground's extra cost",
+        Effect::SteadyEase => "staggering's extra cost",
+        Effect::Swim => "Swim check",
+        Effect::ManaRegen => "mana back",
+        Effect::MaxMana => "mana pool",
+        Effect::Speed => "speed",
+        Effect::Resist => "resisting",
+    }
+}
+
+/// What a benefit gives at a value, as the benefits table says it.
+fn benefit_cell(b: &warlock_core::skills::Benefit, value: u16) -> String {
+    let n = b.at(value);
+    match b.effect {
+        _ if n == 0 => "—".to_string(),
+        Effect::Dodge
+        | Effect::Search
+        | Effect::Spot
+        | Effect::DetectTraps
+        | Effect::Study
+        | Effect::Cast
+        | Effect::Decipher
+        | Effect::Slip
+        | Effect::Lookout
+        | Effect::Stalk
+        | Effect::Evade
+        | Effect::Steal
+        | Effect::Feint
+        | Effect::Heal
+        | Effect::Tame
+        | Effect::Disarm
+        | Effect::Escape
+        | Effect::Pick
+        | Effect::Intimidate
+        | Effect::SongDegrees
+        | Effect::SongCraft
+        | Effect::Wedge
+        | Effect::Temper
+        | Effect::Whittle
+        | Effect::Craft
+        | Effect::Swim
+        | Effect::Surprise
+        | Effect::Initiative
+        | Effect::Resist => format!("+{n}"),
+        Effect::Climb if n == 1 => "halved".to_string(),
+        Effect::Climb => "skipped".to_string(),
+        Effect::SneakDice => format!("{n}d6"),
+        Effect::SurpriseEase | Effect::Wade | Effect::Footing | Effect::SteadyEase => {
+            format!("\u{2212}{n}%")
+        }
+        Effect::SearchReach => format!("+{n} cell{}", if n == 1 { "" } else { "s" }),
+        Effect::Kick => format!("+{n} Strength"),
+        Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),
+        Effect::Ward => format!("\u{2212}{n}"),
+        Effect::Bargain => format!("{n}% better"),
+        Effect::Forage => format!("+{n}%"),
+        Effect::Freshness
+        | Effect::Identify
+        | Effect::IdentifyPotion
+        | Effect::IdentifyMagic
+        | Effect::Herbs => format!("{n}%"),
+        Effect::Dig => format!("+{n}%"),
+        Effect::Speed | Effect::ManaRegen => format!("+{n}%"),
+        Effect::MaxMana => format!("+{n} mana"),
+        Effect::Hearing | Effect::Learn => n.to_string(),
+        Effect::EnchantLevel => format!("item level {n}"),
+        Effect::Burden => {
+            let slowed = |b: Burden| factor(b.slow_eased(100, n));
+            format!(
+                "×{} / ×{}",
+                slowed(Burden::Burdened),
+                slowed(Burden::Strained)
+            )
+        }
+    }
 }
 
 /// The margins the resist table shows: how far a skill's value stands above a creature's level.

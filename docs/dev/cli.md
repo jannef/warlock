@@ -24,7 +24,7 @@ The one-line table is in CLAUDE.md ("Commands"); this is what each row does.
   "Releases, web build, logs").
 - **Release configuration**, `cargo build --no-default-features -p warlock -p warlock-cli`: no
   `showcase` feature, the test world left out, as in a release; `cargo test
-  --no-default-features -p warlock-core -p warlock release_content` checks it; CI's
+  --no-default-features -p warlock-core --test release_content` checks it; CI's
   `release-config` job; docs/dev/campaign.md.
 - **Web smoke test**, `cargo xtask web-smoke <chrome>`: serves `target/web`, drives headless
   Chromium through menu → New run (skipped: the web build lists one scenario, the Ascmearc's
@@ -35,10 +35,12 @@ The one-line table is in CLAUDE.md ("Commands"); this is what each row does.
   `target/xtask/web-smoke.png`; fails on logged errors; not run in CI.
 - **Regenerate the vast level**, `cargo xtask gen-vast`: writes
   `assets/campaigns/showcase/levels/vast.toml`; deterministic, never hand-edit. `--check` fails
-  if the file differs from the generator output; run it after touching `xtask/src/vast.rs`.
+  if the file differs from the generator output; run it after touching `xtask/src/vast.rs` (CI runs it).
 - **Third-party notices**, `cargo xtask licenses`: regenerates `THIRD_PARTY_LICENSES.html` with
   `cargo-about`, config `about.toml`/`about.hbs`; install: `cargo install cargo-about --locked
-  --features cli`; `--check` fails when it is stale (CI runs it). **Run it after changing
+  --features cli`; `--check` fails when it is stale (CI runs the same `cargo about` call in shell,
+  without building xtask: keep `.github/workflows/ci.yml`'s `deny` job in step with
+  `xtask/src/licenses.rs`). **Run it after changing
   dependencies** (`Cargo.toml`/`Cargo.lock`); keep `about.toml`'s `accepted` list in sync with
   `deny.toml`'s `allow`.
 - **Player wiki tables**, `cargo xtask wiki`: writes `wiki/src/generated/*.md` from the game data

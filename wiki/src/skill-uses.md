@@ -204,7 +204,7 @@ Woodcraft, and the result decides how much of the count you get. If you are trai
 Woodcraft, it earns a training mark for every finished batch. Fletch as often as you like: the
 time is the price.
 
-A [ranger](classes.md#ranger)'s [Fletcher](talents.md#talent-fletcher) makes this far quicker and
+A [ranger](classes.md#ranger)'s [Fletcher](classes.md#talent-fletcher) makes this far quicker and
 surer, and rangers start with a knife. But even a ranger's arrows need heads not to be brittle.
 
 {{#include generated/fletching.md}}

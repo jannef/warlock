@@ -366,6 +366,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("regeneration.md", combat::regeneration),
         ("healing.md", healing::healing),
         ("status-effects.md", healing::status_effects),
+        ("status-causes.md", healing::status_causes),
         ("diseases.md", healing::diseases),
         ("disease-checks.md", healing::disease_checks),
         ("mana.md", mana::races_and_classes),
@@ -569,11 +570,17 @@ mod tests {
     fn only_statuses_with_a_light_shed_one() {
         let content = Content::builtin().expect("content loads");
         let table = healing::status_effects(&content);
-        let rows: Vec<&str> = (table.lines())
-            .filter(|l| l.starts_with("| <a id="))
-            .collect();
-        assert_eq!(rows.len(), content.status_defs().len());
-        for ((i, def), row) in content.status_defs().iter().enumerate().zip(rows) {
+        let rows = (table.lines()).filter(|l| l.starts_with("| <a id="));
+        assert_eq!(rows.count(), content.status_defs().len());
+        for (i, def) in content.status_defs().iter().enumerate() {
+            // The tables group the statuses (#1558): each row found by its anchor.
+            let start = format!(
+                "| {} |",
+                text::anchored(text::Term::Status, &def.id, &def.name)
+            );
+            let row = (table.lines())
+                .find(|l| l.starts_with(&start))
+                .unwrap_or_else(|| panic!("no row {start}"));
             let sheds = row.contains("shed light") || row.contains("sheds a faint light");
             assert_eq!(sheds, def.light.is_some(), "{}", def.id);
             let circled = (content.circles().rows().iter())
@@ -928,7 +935,7 @@ mod tests {
         ));
         assert!(
             text("status-effects.md")
-                .contains("To hit +1; its abjuration spell circle sheds a faint light on your cell and the cells beside you")
+                .contains("to hit +1; its abjuration spell circle sheds a faint light on your cell and the cells beside you")
         );
         assert!(text("status-effects.md").contains("You shed light 6 cells around you"));
         assert!(
@@ -1330,28 +1337,33 @@ mod tests {
         );
         assert!(skills.contains("| Swim | read by rules |"));
         assert_eq!(skills.matches("\n| ").count(), 1 + 34, "{skills}");
-        // Checked by column header and row value, so a column added elsewhere changes nothing.
+        // Checked by skill, benefit, and value column, so a row added elsewhere changes nothing.
         let benefits = text("skill-benefits.md");
         let benefit = |value: &str, column: &str| -> String {
-            let rows: Vec<Vec<&str>> = benefits
-                .lines()
-                .filter(|l| l.starts_with('|'))
-                .map(|l| {
-                    l.trim()
-                        .trim_matches('|')
-                        .split('|')
-                        .map(str::trim)
-                        .collect()
-                })
-                .collect();
+            let (skill, what) = column.split_once(": ").expect("Skill: benefit");
+            let mut rows: Vec<Vec<String>> = Vec::new();
+            let mut last = String::new();
+            for l in benefits.lines().filter(|l| l.starts_with('|')) {
+                let mut r: Vec<String> = (l.trim().trim_matches('|').split('|'))
+                    .map(|c| c.trim().to_string())
+                    .collect();
+                // A skill's later rows leave its name out: its first row's link names it.
+                if r[0].is_empty() {
+                    r[0] = last.clone();
+                } else if let Some(name) = r[0].strip_prefix('[') {
+                    r[0] = name.split(']').next().unwrap_or_default().to_string();
+                }
+                last = r[0].clone();
+                rows.push(r);
+            }
             let at = rows[0]
                 .iter()
-                .position(|h| *h == column)
-                .unwrap_or_else(|| panic!("no column {column} in {benefits}"));
+                .position(|h| h == value)
+                .unwrap_or_else(|| panic!("no column {value} in {benefits}"));
             let row = rows
                 .iter()
-                .find(|r| r[0] == value)
-                .unwrap_or_else(|| panic!("no row {value} in {benefits}"));
+                .find(|r| r[0] == skill && r[1] == what)
+                .unwrap_or_else(|| panic!("no row {column} in {benefits}"));
             row[at].to_string()
         };
         let foraging = text("foraging.md");
@@ -1380,15 +1392,15 @@ mod tests {
         assert_eq!(benefit("100", "Decipher script: learning"), "30");
         assert_eq!(benefit("100", "Swim: wading's extra cost"), "\u{2212}60%");
         assert_eq!(benefit("100", "Tumble: Dodge"), "+5");
-        assert_eq!(benefit("150", "Appraise: identifying, each hour"), "16%");
+        assert_eq!(benefit("200", "Appraise: identifying, each hour"), "20%");
         assert_eq!(
-            benefit("150", "Balance: rough ground's extra cost"),
-            "\u{2212}80%"
+            benefit("200", "Balance: rough ground's extra cost"),
+            "\u{2212}100%"
         );
-        assert_eq!(benefit("150", "Bluff: feint's difficulty"), "+10");
-        assert_eq!(benefit("150", "Decipher script: reading scrolls"), "+10");
-        assert_eq!(benefit("150", "Sneak attack: sneak attack dice"), "6d6");
-        assert_eq!(benefit("150", "Tumble: Dodge"), "+7");
+        assert_eq!(benefit("200", "Bluff: feint's difficulty"), "+12");
+        assert_eq!(benefit("200", "Decipher script: reading scrolls"), "+12");
+        assert_eq!(benefit("200", "Sneak attack: sneak attack dice"), "7d6");
+        assert_eq!(benefit("200", "Tumble: Dodge"), "+9");
         // Treating oneself: the difficulty and odds of each ailment.
         let heal = text("heal-targets.md");
         assert!(
@@ -1487,21 +1499,23 @@ mod tests {
             "{rolls}"
         );
         assert!(rolls.contains("marks reach 100 rolls at once"), "{rolls}");
+        // The stats spelled out above the table (#1574), and the stats apart from the rest.
         assert!(
-            text("races.md")
-                .contains("| Race | St | Dx | To | In | Wi | Pr | Vision | Starting age |"),
+            text("races.md").contains("**St** Strength, **Dx** Dexterity, **To** Toughness")
+                && text("races.md").contains("| Race | St | Dx | To | In | Wi | Pr |\n")
+                && text("races.md").contains("| Race | Vision | Starting age |"),
             "{}",
             text("races.md")
         );
         // Adjustments as written in data, dice included.
         assert!(
-            text("races.md").contains(
-                "| Dwarf | +1 | \u{2212}1 | 1d2+2 | 0 | +1 | \u{2212}2 | Darkvision | 40–120 |"
-            ),
+            text("races.md").contains("| Dwarf | +1 | \u{2212}1 | 1d2+2 | 0 | +1 | \u{2212}2 |\n")
+                && text("races.md").contains("| Dwarf | Darkvision | 40–120 |"),
             "{}",
             text("races.md")
         );
-        assert!(text("races.md").contains("| Human | 0 | 0 | 0 | 0 | 0 | 0 | Normal | 16–35 |"));
+        assert!(text("races.md").contains("| Human | 0 | 0 | 0 | 0 | 0 | 0 |\n"));
+        assert!(text("races.md").contains("| Human | Normal | 16–35 |"));
         assert!(text("races.md").contains("| Elf | \u{2212}1 | 1d2+1 |"));
         assert!(text("races.md").contains("- **Halfling**: Small, quick"));
         // The races' gifts and flaws beyond their stats, by name; a race with none left out.
@@ -1670,42 +1684,44 @@ mod tests {
         let statuses = text("status-effects.md");
         row_has(
             statuses,
-            "| Bleeding | yes, \"bleeding\" | ",
+            "| Bleeding | ",
             &[
-                "Big hits and confirmed criticals; ",
-                "the elder troll's claws (20%, 2 degrees)",
-                "the forest troll's claws (20%, 1 degree)",
-                "the giant leech's sucker (12%, 1 degree)",
-                "the two-headed troll's bites (20%, 1 degree)",
-                "| A hit point every 40 seconds, faster the worse it is | A degree a minute | Not at \
-                 all | — | Bandage |",
+                "| Costs a hit point every 40 seconds, faster the worse it is; hit points do not \
+                 come back; shows on others as \"bleeding\" | ",
+                "| Big hits and confirmed criticals; the attacks of 11 creatures; ",
+                "| A degree a minute; cured at once by bandage |",
             ],
         );
         for row in [
-            "| A degree every 2 minutes | Half as fast |",
-            "; eating rotten food |",
+            "half as fast | The attacks of 27 creatures; eating rotten food | A degree every 2 \
+             minutes; cured at once by antidote |",
             "Strength \u{2212}1, Dexterity \u{2212}1 when strong",
         ] {
             assert!(statuses.contains(row), "{row} in {statuses}");
         }
-        row_has(
-            statuses,
-            "| Poisoned | ",
-            &[
-                "the barrow spider's bite (10%, 1 degree)",
-                "the giant centipede's bite (10%, 1 degree)",
-            ],
-        );
-        assert!(statuses.contains("| Diseased | no | Any disease, once it shows | Nothing |"));
-        // Buffs and cooldowns: a raise, what it keeps you from, and what follows it.
+        assert!(statuses.contains(
+            "| Diseased | Hit points come back half as fast | Any disease, once it shows | When \
+             the diseases are gone |"
+        ));
+        // Helpful: a raise, what it keeps you from, and what follows it.
         for row in [
-            "| Raging | yes, \"raging\" | Holding Rage | Nothing | When rage ends (the Resources \
-             page) |",
-            "| Strength +2, Toughness +2, Intelligence \u{2212}2 | — | You cannot read, study, or \
-             cast spells; Exhausted follows it |",
-            "| Exhausted | no | The end of Raging | Nothing | After 2 minutes and 30 seconds |",
+            "| Raging | Strength +2, Toughness +2, Intelligence \u{2212}2; you cannot read, \
+             study, or cast spells; Exhausted follows it; shows on others as \"raging\" | Holding \
+             Rage | When rage ends (the Resources page) |",
+            "| Exhausted | Strength \u{2212}1 | The end of Raging | After 2 minutes and 30 seconds |",
         ] {
             assert!(statuses.contains(row), "{row} in {statuses}");
+        }
+        // Who causes it: the creatures, a row each, the status named on its first.
+        let causes = text("status-causes.md");
+        for row in [
+            "| Elder troll | claws | 20% | 2 degrees |",
+            "| Forest troll | claws | 20% | 1 degree |",
+            "| Giant leech | sucker | 12% | 1 degree |",
+            "| Barrow spider | bite | 10% | 1 degree |",
+            "| Giant centipede | bite | 10% | 1 degree |",
+        ] {
+            assert!(causes.contains(row), "{row} in {causes}");
         }
         let diseases = text("diseases.md");
         row_has(

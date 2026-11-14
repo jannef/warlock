@@ -101,7 +101,7 @@ pub(super) fn exploit_ladder(content: &Content) -> String {
             let _ = writeln!(
                 out,
                 "| {level} | {} | {} | {} |",
-                link(Term::Talent, &t.id, &t.name),
+                super::talents::talent_link(content, &t.id, &t.name),
                 adds.join("; "),
                 ladder.words()
             );
