@@ -112,9 +112,8 @@ and of the Bear `tool`. `magic/tests.rs`, `every_shipped_affix_effect_is_read_by
 names each effect's reading module (an exhaustive match) and fails on a shipped affix whose
 effect that module never reads (a dead effect). **The skill suffixes** (C1, #636): of Seeking,
 of the Eagle, of the Stag, of the Leech, of the Picklock, of Disarming, of Appraisal, of Haggling (#666), of the
-Scholar (Decipher script since #1270, which folded of Letters into it: Spellcraft gives nothing
-now), of the Cutpurse, twelve tiers each (levels 1 to 12; 8–12 to 45–50 for the
-value skills, 4–6 to 28–32 for the five gated on `Skills::trains_effect` (of Appraisal keeps the value ladder, though Appraise is gated since #666), which help the
+Scholar (Decipher script, #1270; Spellcraft has no suffix), of the Cutpurse, twelve tiers each (levels 1 to 12; 8–12 to 45–50 for the
+value skills, 4–6 to 28–32 for the five gated on `Skills::trains_effect` (of Appraisal keeps the value ladder, though Appraise is gated, #666), which help the
 trained only), weight 60, category the skill's id. `every_shipped_skill_suffix_raises_a_read_benefit`
 holds each to a skill with benefits, every one read through `Actor::skill_effect` (so the
 items' bonus counts) in the module `skill_reader` names; the shops' bargain read

@@ -375,8 +375,8 @@ name and an ellipsis), described by `data/recipes.toml`'s line, `Aim::Recipes`, 
 unavailable. `Ability::every` lists it in its skill's place (skill order) for every skill with
 a recipe directory, before `Ability::use_of` and `Ability::Skill`, so a profession has no "not
 usable yet" row (Jewelcraft's went with Cut). `had_by`: trained in the skill (#1387: no recipe is
-open to the untrained). The former `Ability::Temper`, `Ability::Whittle`, and `Ability::Fletch`
-are gone; `Offer::Temper` stays: the anvil is the Temper recipe's station, and walking into it
+open to the untrained). The anvil keeps
+`Offer::Temper`: it is the Temper recipe's station, and walking into it
 (`ui/step_dialogs.rs::step_screen`, after `step_dialog` asks nothing) opens Metalcraft's profession screen,
 `ScreenName::Profession(skill)` of Temper's recipe's skill, at once, with no dialog and no time,
 for one who has that row (the owner, #1387). Untrained, the step goes to the rules:
@@ -637,10 +637,9 @@ The shipped ones (`docs/design/recipes.md` §6 "Missiles"):
 
 ## Arrows and bolts
 
-Fletching (spec §8 "Fletching", #1021) is these two recipes since #1336; `Action::Fletch`, its
-`fletch` action text, `ActionKind::Fletch`, `Spent::Fletch`, `Effect::Fletch`, `Use::Fletch`,
-`Unavailable::NoLauncher`, and the built-in `use = "fletch"` recipe are gone. A replay's `fletch`
-step is now `craft:arrows:HEAD,SHAFT` (or `craft:bolts:...`), `-` for no head: `craft:arrows:-,c`
+Fletching (spec §8 "Fletching", #1021) is these two recipes (#1336), with no action, ability,
+or built-in recipe of its own. Fletching in a replay is `craft:arrows:HEAD,SHAFT` (or
+`craft:bolts:...`), `-` for no head: `craft:arrows:-,c`
 for brittle arrows from billet `c`, `craft:arrows:-` where wood is free. `world/fletch.rs` holds
 what only they read:
 
@@ -662,8 +661,8 @@ what only they read:
 - **The launcher** (`fletch::shoots`): a missile weapon ready whose `launches` is the result's
   `ammo`; `fletch.toml`'s `[[makes]]` gives its word ("no bow ready", "a crossbow ready").
 - **The count**: `fletch.toml`'s `count` (`1d4`) + Woodcraft's trained value ÷ `value_per_count`
-  (25), Fletcher ×2, half the time, +4 on the check (`TalentMods::fletcher`; its "never brittle"
-  is gone: no heads, brittle, whatever the skill). `fletch.toml` is now `count`,
+  (25), Fletcher ×2, half the time, +4 on the check (`TalentMods::fletcher`; headless arrows are
+  brittle whatever the skill). `fletch.toml` holds `count`,
   `value_per_count`, `knives`, `[[makes]] { launches, launcher }` (`content/fletch.rs`); the time,
   difficulty, bands, and brittle objects are the recipes' and `data/recipes.toml`'s.
 
@@ -808,7 +807,7 @@ P11 (#1356; `docs/design/recipes.md` §6 "Rings and amulets"), generic recipes:
   wrong, and you save what you can of it." (the brittle blade's line is for arms and armour).
 - The wiki's table: generated `recipes-jewelcraft.md` (`recipes::recipes_jewelcraft`), under
   `crafting.md`'s "The recipes"; the prose in `crafting.md#making-jewellery`. The first generic
-  recipe with steps, `--screen craft-pick`'s, is now the amber amulet.
+  recipe with steps, `--screen craft-pick`'s, is the amber amulet.
 
 ## Salvage
 
