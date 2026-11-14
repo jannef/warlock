@@ -1,0 +1,58 @@
+# Enta Geweorc, "the work of giants" (#1684): the eleventh crypt under Līctūn, below
+# Munuccleofan, reached by the stairs that open there once its places are filled (spec §7
+# "Graves"; `docs/dev/graves.md`). Its stairs up (<) lead back to Munuccleofan. No danger, nobody
+# here.
+#
+# Older than everything above it: a burial hall of the people who held this land before the
+# English came, found when the monks dug too deep. Their rough tunnel breaks in through its north
+# wall. The hall is long and straight, on two rows of columns (P), niches cut in pairs along both
+# walls; columns have fallen and the floor has cracked. At its west end, in a round apse, a
+# stranger lies under letters no one in Cēaptūn can read (F). At its east end a stair the old
+# builders sealed is the way down to the next crypt (v), shut until every place here is filled.
+# Places for statues in the apse and at the hall's east corners (S).
+#
+# Places: 27 niches, filled in row order.
+name = "Enta Geweorc"
+arrival = "Enta Geweorc, the work of giants: a long hall on columns, built before the English came."
+temperature = 4
+ambient = [6, 6, 8, 0]
+item_level = 1
+map = '''
+################################################################
+################################################################
+################################,<##############################
+################################t,,#############################
+################################,,##############################
+#################################,,#############################
+############N#N###N#N###N#N###Nr,,:rN#N###N#N###N#N#############
+##########.....................:r:r:..................S#########
+#######.S......................r:r:r...................#########
+#####........P...P...rr..P...P...P...P..:P...P...P.....#########
+####.................r..............:::::::::...........i...####
+####i..F...........................:::::::::::.............v####
+####..........:::::.................:::::::::...............####
+#####........P:::P::.P...P...P...P...P..:P...r...P.....#########
+#######.S.....:::::.........................r.r........#########
+##########............................................S#########
+#############N#N###N#N###N#N###N#N###N#N###N#N###N#N############
+################################################################
+################################################################
+'''
+
+[burial]
+chain = "lictun"
+depth = 11
+epitaph = "Here lies {name}, {death}. Laid in the giants' work, among strangers."
+
+[legend]
+"," = "dusty_floor"
+":" = "cracked_floor"
+"r" = "rubble"
+"P" = "wall"
+"N" = "empty_niche"
+"i" = "candles"
+"t" = "sconce"
+"<" = { terrain = "stairs_up", to = "lictun_crypt_10" }
+"S" = { terrain = "floor", statue_place = true }
+"v" = { terrain = "floor", burial_stairs = "stairs_down" }
+"F" = { terrain = "sarcophagus", epitaph = "Letters cut deep, in a tongue no one here can read: D·M·AVRELIO·VICTORI·VIX·AN·XLII." }

@@ -194,8 +194,11 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   graveyard (the places empty, the way down shut), so a replay verifies under any graveyard
   unless it steps on or takes an opened way down; saves keep them. Līctūn, Cēaptūn's churchyard
   (§3), has ten fixed graves and forty plots; below it the Undercroft (`lictun_crypt_01`, family
-  vaults, 26 places) and Bānhūs (`lictun_crypt_02`, the bone-house, 30 places), no danger and
-  nobody there.
+  vaults, 26 places), Bānhūs (`lictun_crypt_02`, the bone-house, 30 places), and nine more
+  crypts, each older and rougher than the one above (`lictun_crypt_03` to `_11`: a priests'
+  crypt, a gild's vault, a sexton's store, a flooded crypt, a children's, a fallen one, a plague
+  pit, a monks' cloister, and a hall of the people before the English), no danger and nobody
+  there.
 - **Traps in level files** (M18; §8 "Traps"): a legend entry places a trap with `trap = "id"` (an
   id in `data/traps.toml`), hidden unless `known = true`, and for a bolt trap optionally the way
   its bolt runs, `dir = "E"` (default: along the longest clear line from it). Traps lie only on

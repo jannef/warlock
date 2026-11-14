@@ -1,0 +1,61 @@
+# Flōdærn, "the flood-house" (#1684): the sixth crypt under Līctūn, below Cyrcweardes Cofa,
+# reached by the stairs that open there once its places are filled (spec §7 "Graves";
+# `docs/dev/graves.md`). Its stairs up (<) lead back to Cyrcweardes Cofa. No danger, nobody here.
+#
+# Ground water found this crypt long ago and never left. The stairs come down onto a dry landing;
+# below it a gallery lies under a hand's depth of water, niches cut unevenly in both its walls. It
+# opens into a low round hall flooded the same way, stone coffins standing in the shallows round a
+# deeper pool in the middle, and more niches in its south wall. On a dry step at the hall's east
+# end lies the man who tried to drain it (F), places for statues round him (S), and behind him the
+# way down to the next crypt (v), shut until every place here is filled.
+#
+# Places: 17 niches and 8 sarcophagi, 25 in all, filled in row order.
+name = "Flōdærn"
+arrival = "Flōdærn, the flood-house: still water over the floor, and coffins standing in it."
+temperature = 6
+ambient = [6, 6, 8, 0]
+item_level = 1
+map = '''
+############################################################
+############################################################
+###,,,,,,###################################################
+##t,,<,,,t##################################################
+###,,,,,,###################################################
+####,,,,###N###N##N#t##N###N###N###N########################
+#####,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#######################
+#####~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#####################
+####~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###################
+#######N##N###N##N###N###N#####~~~~~~~~~~~~O~~##############
+#############################~~~~~~~~~~~~~~~~~~~############
+###########################~O~~~~~~~~~~~~~~~~~~O~~#:::::####
+##########################~~~~~~~~WWWWWWW~~~~~~~~~:i:S:S:###
+##########################~~~~~~~WWWWWWWWW~~~~~~~~:::::::###
+#########################~~O~~~~~WWWWWWWWW~~~~~~~~:::F::v###
+##########################~~~~~~~~WWWWWWW~~~~~~~~~:::::::###
+##########################~~~~~~~~~~~~~~~~~~~~~~~~:i:S:S:###
+###########################~O~~~~~~~~~~~~~~~~~~~O~#:::::####
+#############################~~~~O~~~~~~~~~O~~~~############
+###############################~~~~~~~~~~~~~~~##############
+#################################N#N#####N#N################
+############################################################
+############################################################
+'''
+
+[burial]
+chain = "lictun"
+depth = 6
+epitaph = "Here lies {name}, {death}. Laid above the water, as near as could be."
+
+[legend]
+"," = "dusty_floor"
+":" = "cracked_floor"
+"~" = "shallow_water"
+"W" = "water"
+"N" = "empty_niche"
+"O" = "open_sarcophagus"
+"i" = "candles"
+"t" = "sconce"
+"<" = { terrain = "stairs_up", to = "lictun_crypt_05" }
+"S" = { terrain = "cracked_floor", statue_place = true }
+"v" = { terrain = "cracked_floor", burial_stairs = "stairs_down" }
+"F" = { terrain = "sarcophagus", epitaph = "Here lies Ēadweard Wætermann, 1032–1077, who swore he would drain this crypt. The water had the last word." }

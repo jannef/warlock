@@ -1,0 +1,62 @@
+# Hryre, "the fall" (#1684): the eighth crypt under Līctūn, below Cildra Ærn, reached by the
+# stairs that open there once its places are filled (spec §7 "Graves"; `docs/dev/graves.md`).
+# Its stairs up (<) lead back to Cildra Ærn. No danger, nobody here.
+#
+# Once a long hall of two aisles on pillars (P), niches all along both walls. Its roof came down
+# in the middle long ago: a mound of fallen earth (E) fills the centre, rubble and cracked stone
+# round it, the niches under it buried. The way on is round the mound's edge, over the rubble.
+# Coffins stand at both ends of the hall, out of the fall's reach. In the east apse lies the
+# mason who built the roof (F), places for statues by him and at the hall's end (S), and behind
+# him the way down to the next crypt (v), shut until every place here is filled.
+#
+# Places: 25 niches and 6 sarcophagi, 31 in all, filled in row order.
+name = "Hryre"
+arrival = "Hryre, the fall: a pillared hall, its middle buried under the roof that came down."
+temperature = 6
+ambient = [6, 6, 8, 0]
+item_level = 1
+map = '''
+##############################################################
+##############################################################
+##############################################################
+##############################################################
+######N##N##N##N##N##N##E##E##E##E##E##N##N##N##N##N##N#######
+#####i................:::EEEEEEEEEEEEE...................#####
+#####.........r....::::::rEEEEEEEEEEE:::r.............S..#####
+#####............:::::rrrrrrrEEEEErrrrrr::...............#####
+#####....P....P.:::P:rrrrrEEEEEEErrrrrrP:::.P....P.......#####
+###t#..........:::::rrrEEEEEEEEEEEEErrr:::::.............S.i##
+##.............::::rrrEEEEEEEEEEEEEEErrr::::................##
+##<....O...O..::O::rrrEEEEEEEEEEEEEEErrr::O::.O....O.....F.v##
+##.............::::rrEEEEEEEEEEEEEEEEErr::::................##
+###t#..........::::rrrEEEEEEEEEEEEEEErrr::::.............S.i##
+#####....P....P.:::PrrEEEEEEEEEEEEEEErrP:::.P....P.......#####
+#####............::::rrEEEEEEEEEEEEErr::::...............#####
+#####..............r::rrrrEEEEEEErrrr:::....r.........S..#####
+#####i................:::rrrrrrrrr:::....................#####
+#######N##N##N##N##N##N##E##E##E##E##N##N##N##N##N##N##N######
+##############################################################
+##############################################################
+##############################################################
+##############################################################
+##############################################################
+'''
+
+[burial]
+chain = "lictun"
+depth = 8
+epitaph = "Here lies {name}, {death}. Laid where the roof still holds."
+
+[legend]
+":" = "cracked_floor"
+"r" = "rubble"
+"E" = "packed_earth"
+"P" = "wall"
+"N" = "empty_niche"
+"O" = "open_sarcophagus"
+"i" = "candles"
+"t" = "sconce"
+"<" = { terrain = "stairs_up", to = "lictun_crypt_07" }
+"S" = { terrain = "floor", statue_place = true }
+"v" = { terrain = "floor", burial_stairs = "stairs_down" }
+"F" = { terrain = "sarcophagus", epitaph = "Here lies Hūna the mason, who raised this roof, 948–1003. It stood while he lived." }

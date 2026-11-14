@@ -1,0 +1,56 @@
+# Prēostcleofa, "the priests' chamber" (#1684): the third crypt under Līctūn, below Bānhūs,
+# reached by the stairs that open there once its places are filled (spec §7 "Graves";
+# `docs/dev/graves.md`). Its stairs up (<) lead back to Bānhūs. No danger, nobody here.
+#
+# The crypt of an older church than the chapel above, laid out as a cross. The stairs come down at
+# the foot of a long nave lined with niches; at the crossing the arms open north and south, two
+# pairs of stone coffins in each, candles at their ends and places kept for statues (S). The south
+# arm's far corner has fallen in. East of the crossing the nave runs on, bare, to its altar; before
+# the altar lies the old priest who first said mass here (F), and behind it the way down to the
+# next crypt (v), shut until every place here is filled.
+#
+# Places: 22 niches and 8 sarcophagi, 30 in all, filled in row order.
+name = "Prēostcleofa"
+arrival = "Prēostcleofa, the priests' crypt: a nave and its arms laid out as a cross, an altar at its head."
+temperature = 8
+ambient = [6, 6, 8, 0]
+item_level = 1
+map = '''
+#####################################################
+#####################################################
+#######################N#N#N#N#######################
+######################i.......i######################
+######################..O...O..######################
+######################.........######################
+######################..O...O..######################
+######################S.......S######################
+######N#N#N#N#N#N#N#N#.........#############t########
+##t.............................................#####
+###<......................................F.._.v#####
+##t.............................................#####
+######N#N#N#N#N#N#N#N#.........#############t########
+######################S.......S######################
+######################.........######################
+######################..O...O.r######################
+######################........r######################
+######################i....rrr#######################
+#######################N#N#N#N#######################
+#####################################################
+#####################################################
+'''
+
+[burial]
+chain = "lictun"
+depth = 3
+epitaph = "Here lies {name}, {death}. Laid with the priests, under the cross."
+
+[legend]
+"N" = "empty_niche"
+"O" = "open_sarcophagus"
+"r" = "rubble"
+"i" = "candles"
+"t" = "sconce"
+"<" = { terrain = "stairs_up", to = "lictun_crypt_02" }
+"S" = { terrain = "floor", statue_place = true }
+"v" = { terrain = "floor", burial_stairs = "stairs_down" }
+"F" = { terrain = "sarcophagus", epitaph = "Here lies Ēadric, priest of Cēaptūn, 1192–1260, who said the first mass in this place. He sang it slow, and none went home unshriven." }

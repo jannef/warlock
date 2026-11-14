@@ -1,0 +1,62 @@
+# Cildra Ærn, "the children's house" (#1684): the seventh crypt under Līctūn, below Flōdærn,
+# reached by the stairs that open there once its places are filled (spec §7 "Graves";
+# `docs/dev/graves.md`). Its stairs up (<) lead back to Flōdærn. No danger, nobody here.
+#
+# Dug for the children of a hard winter, and small in every part. The stairs come down a narrow
+# passage into a round room where the children lie together under one stone (F), two candles
+# beside them and places for statues round it (S). Five more little round rooms open off it like
+# the petals of a flower, short niches in their walls; the way down to the next crypt is at the
+# far side of the southern one (v), shut until every place here is filled.
+#
+# Places: 24 niches, filled in row order.
+name = "Cildra Ærn"
+arrival = "Cildra Ærn, the children's house: little rooms round a little hall, and short niches."
+temperature = 6
+ambient = [6, 6, 8, 0]
+item_level = 1
+map = '''
+####################################################
+####################################################
+########################t.<.t#######################
+#########################...########################
+##########################.#########################
+##########################.#########################
+########################,,.,,#######################
+#######################,,,,,,,######################
+#######################,,,,,,,######################
+############N#N##########,,,#########N#N#N##########
+##########N,,i,,##########.##########,,i,,##########
+#########N,,,,,,,#########.#########,,,,,,,N########
+##########,,,,,,,.####.........####.,,,,,,,#########
+##########N#,,,###...S.........S...###,,,#N#########
+###################...............##################
+###################....i..F..i....##################
+###################...............##################
+############,,,###...S.........S...###,,,#N#########
+#########N,,,,,,,.####.........####.,,,,,,,#########
+#########N,,,,,,,#########.#########,,,,,,,N########
+###########,,,,,##########.##########,,,,,##########
+###########N#N#N#########,,,#########N#N#N##########
+#######################,,,i,,,######################
+#######################,,,,,,,######################
+#######################N,,v,,N######################
+#########################N#N########################
+####################################################
+####################################################
+####################################################
+'''
+
+[burial]
+chain = "lictun"
+depth = 7
+epitaph = "Here lies {name}, {death}. Laid among the little ones, to keep them company."
+
+[legend]
+"," = "dusty_floor"
+"N" = "empty_niche"
+"i" = "candles"
+"t" = "sconce"
+"<" = { terrain = "stairs_up", to = "lictun_crypt_06" }
+"S" = { terrain = "floor", statue_place = true }
+"v" = { terrain = "dusty_floor", burial_stairs = "stairs_down" }
+"F" = { terrain = "sarcophagus", epitaph = "Here lie the children of Cēaptūn whom the spotted fever took in the winter of 1009, forty-one of them. Suffer them to come." }
