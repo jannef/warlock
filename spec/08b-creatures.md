@@ -613,10 +613,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   whose `from` it reaches) names it, ten bands matching the chest bands one to one: mimicling,
   young mimic, mimic, old mimic, greater mimic, elder mimic, hoary mimic, ancient mimic, primeval
   mimic, eldest mimic. Numbers by level from the roster's formulas for a brute (Toughness +5,
-  `base_hp` 4 × L, the slam one dice step up), the hide's Protection (L − 10) ÷ 8 ("woody hide"),
-  XP by the guideline; faction **vermin**, tag `mimic` (a kill quest's `mimic` or `tag:mimic`
-  counts the family), speed 800, darkvision 6, `budge = "never"`, `stray = false` and in no
-  population, immune to poison and sleep, a corpse that makes the eater sick. Its slam
+  `base_hp` 5 × L, both cut at levels 1 to 5 (#1200), the slam one dice step up), the hide's
+  Protection (L − 10) ÷ 8 ("woody hide"), XP by the guideline; faction **vermin**, tag `mimic` (a
+  kill quest's `mimic` or `tag:mimic` counts the family), speed 800, darkvision 6,
+  `budge = "never"`, `stray = false` and in no population, immune to poison and sleep, a corpse
+  that makes the eater sick. Its slam
   (bludgeoning) holds with its chest band's `hold` chance against a grip of 12 + L ÷ 5. It comes
   **only** through a chest: a generated chest is one with its band's `mimic` chance (§8
   "Chests"; the swap draws nothing more), of the floor's item level, carrying exactly what the

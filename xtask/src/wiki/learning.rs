@@ -177,7 +177,7 @@ fn percent_in(content: &Content, band: Band, weight: u16) -> String {
     if total == 0 {
         return "—".into();
     }
-    super::text::percent_of(u32::from(weight), total)
+    super::util::percent_of(u32::from(weight), total)
 }
 
 /// What a mishap's effect does, in words.

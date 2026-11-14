@@ -2,9 +2,8 @@
 //! the rares with their odds, the growth table of the small beasts only a familiar is, and the
 //! rules in words.
 
-use super::actions::at_normal_pace;
 use super::companions::{growth_table, starts_table};
-use super::text::{Term, link};
+use super::util::{Term, at_normal_pace, link};
 use std::fmt::Write as _;
 use warlock_core::content::{ActionKind, BASE_TURN, Content, CreatureId, price};
 

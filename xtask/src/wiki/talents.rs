@@ -1,7 +1,7 @@
 //! Talents (spec §8 "Talents"): every tree with its talents, their prerequisites and their rules
 //! in full (the game says them in words), and the talents by system.
 
-use super::text::{Term, anchored, link, signed};
+use super::util::{Term, anchored, link, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{
     Content, Faced, Keep, KitLineSpec, Need, OverTime, PrayerUse, Role, SignActive, SmiteRiderKind,
@@ -2259,7 +2259,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              no mana, cooldown, or check, as often as you like): the thing is identified as a \
              scroll of identify would identify it. On a thing you already know it is refused, \
              with no time spent",
-            super::actions::at_normal_pace(warlock_core::content::price(
+            super::util::at_normal_pace(warlock_core::content::price(
                 content
                     .action_costs()
                     .cost(warlock_core::content::ActionKind::Read),
@@ -2315,7 +2315,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                  one), and one you hold fades first. It strikes {} to hit, threatens criticals \
                  {threat} lower{armour}; it fades the moment it leaves your hands (put away, \
                  swapped, dropped, sold) and cannot be thrown",
-                super::actions::at_normal_pace(warlock_core::content::price(
+                super::util::at_normal_pace(warlock_core::content::price(
                     content
                         .action_costs()
                         .cost(warlock_core::content::ActionKind::Wield),

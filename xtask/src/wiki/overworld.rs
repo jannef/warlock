@@ -2,7 +2,7 @@
 //! (the wiki tells the truth, campaign design §11.4).
 
 use super::order;
-use super::text::capital;
+use super::util::capital;
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 use warlock_core::Pos;

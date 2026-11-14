@@ -2,7 +2,7 @@
 //! the level add), its start, how it changes over time, what builds it, and whether it ends at
 //! zero.
 
-use super::text::{Term, anchored, link, signed};
+use super::util::{Term, anchored, link, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{Build, Content, OverTime, ResourceDef, TalentEffect};
 use warlock_core::dice::Dice;

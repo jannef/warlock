@@ -3,7 +3,7 @@
 //! numbers of consuming one and of catching them in salvage. From `data/crystals.toml` and
 //! `data/enchanting.toml`.
 
-use super::text::{Term, anchored, capital};
+use super::util::{Term, anchored, capital};
 use std::fmt::Write as _;
 use warlock_core::combat::{FUMBLE, HIGHEST};
 use warlock_core::content::Content;

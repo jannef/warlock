@@ -2,7 +2,7 @@
 //! campaign's `data/encounters/`; `docs/dev/encounters.md`): the rates by landscape and phase, the
 //! checks and their odds, the skill ladders, where everyone stands, and each campaign's tables.
 
-use super::text::{Term, capital, link, percent_of, signed};
+use super::util::{Term, capital, link, percent_of, signed};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{

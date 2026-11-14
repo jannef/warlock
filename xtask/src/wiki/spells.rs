@@ -2,7 +2,7 @@
 //! spell list by spell level, each spell's ranks, the classes' guaranteed spells, the armour
 //! that makes casting dearer, and the wands.
 
-use super::text::{Term, anchored, damage_link, link};
+use super::util::{Term, anchored, damage_link, link};
 use std::fmt::Write as _;
 use warlock_core::content::{
     BurstIce, Content, MAX_SPELL_RANK, Resolution, RodDoes, RodShape, RuinOf, Shape, SpellData,
@@ -237,7 +237,7 @@ pub(super) fn ranks(content: &Content) -> String {
         for (i, (rank, mods)) in steps.iter().enumerate() {
             let (name, level, total) = if i == 0 {
                 (
-                    link(super::text::Term::Spell, &spell.id, &spell.name),
+                    link(super::util::Term::Spell, &spell.id, &spell.name),
                     spell.level.to_string(),
                     all.clone(),
                 )

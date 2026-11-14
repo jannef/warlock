@@ -1,7 +1,7 @@
 //! Scrolls (spec §8 "Scrolls").
 
-use super::text::{Term, anchored, capital};
 use super::traps::sound_text;
+use super::util::{Term, anchored, capital};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Content, Reading};

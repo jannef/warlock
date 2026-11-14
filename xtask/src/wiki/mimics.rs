@@ -4,7 +4,9 @@
 use std::fmt::Write as _;
 use warlock_core::content::Content;
 use warlock_core::content::mimic::Mimics;
+use warlock_core::content::starter;
 use warlock_core::stats::Stat;
+use warlock_core::text::and_list;
 
 /// The bands: each band's levels, the chest it passes for, and its first member's numbers (every
 /// level between has its own type on the same formulas); then what every mimic is.
@@ -73,19 +75,34 @@ pub(super) fn mimic_bands(content: &Content) -> String {
     if let Some(def) = first {
         let faction = (def.faction.map(|f| content.factions().def(f).name.clone()))
             .unwrap_or_else(|| "none".into());
+        // The base of each score is `animated::Numbers::of`'s; the family adds its `stats`.
+        let base = |stat: Stat, of: i32| of + mimics.stats.get(&stat).copied().unwrap_or(0);
+        let cuts: Vec<String> = (1..=5)
+            .map(|l| match l {
+                1 => format!("{} % of the formulas' at level 1", starter::hp_percent(l)),
+                l => format!("{} % at level {l}", starter::hp_percent(l)),
+            })
+            .collect();
         let _ = write!(
             out,
             "\nEach row is the band's first level; every level from {} to {} has its own type on \
-             the same formulas (Strength 11 + 0.4 × level, Toughness 17 + 0.4 × level, Dexterity \
-             10 + level ÷ 4, Willpower 16 + 0.35 × level, rounded down; hit points 4 × level \
-             beyond Toughness; the slam one step up the dice ladder from the level's). Every \
-             mimic: faction **{faction}**, speed {} (slow), sight {} cells in the dark, hearing \
+             the same formulas (Strength {} + 0.4 × level, Toughness {} + 0.4 × level, \
+             Dexterity {} + level ÷ 4, Willpower {} + 0.35 × level, rounded down; hit points {} × \
+             level beyond Toughness; the slam one step up the dice ladder from the level's). The \
+             first five levels are softer: Toughness and the hit points beyond it are {}, \
+             rounded. Every mimic: faction **{faction}**, speed {} (slow), sight {} cells in the dark, hearing \
              {}, intelligence and presence 2, never sleeps or is poisoned; its slam holds you by \
              the chance shown (Strength against the grip to break free), and its woody hide's \
              Protection is (level − 10) ÷ 8, rounded down (none below level 18). Experience by \
              the guideline.\n",
             mimics.levels[0],
             mimics.levels[1],
+            base(Stat::Strength, 11),
+            base(Stat::Toughness, 12),
+            base(Stat::Dexterity, 10),
+            base(Stat::Willpower, 16),
+            2.5 * mimics.hp_factor,
+            and_list(&cuts),
             def.speed,
             def.sight,
             def.hearing.unwrap_or(0),

@@ -1,7 +1,7 @@
 //! Vision profiles and light presets, named as the player sees them.
 
 use super::order;
-use super::text::{article, capital, yes};
+use super::util::{article, capital, yes};
 use std::fmt::Write as _;
 use warlock_core::content::{AffixKind, Content, LightId, TalentEffect};
 
@@ -12,7 +12,7 @@ pub(super) fn vision(content: &Content) -> String {
     );
     for v in content.vision_profiles() {
         // Full light is 255 per channel.
-        let percent = super::text::percent_of(u32::from(v.threshold), 255);
+        let percent = super::util::percent_of(u32::from(v.threshold), 255);
         let dark = if v.darkvision > 0 {
             format!("{} cells", v.darkvision)
         } else {

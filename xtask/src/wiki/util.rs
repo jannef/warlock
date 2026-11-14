@@ -1,9 +1,11 @@
-//! Text helpers shared by the tables: glyphs, yes/no, capitals, table cells, articles, signs,
-//! damage.
+//! The helpers two or more tables share: glyphs, yes/no, capitals, table cells, articles,
+//! numbers (signs, ordinals, factors, percentages), damage, durations, and the terms' anchors
+//! and links. A helper one topic alone uses stays in its module.
 
-use warlock_core::content::{Content, DamageTypeId};
+use warlock_core::content::{Content, DamageTypeId, NORMAL_SPEED};
 use warlock_core::dice::Roll;
 use warlock_core::stats::Stat;
+use warlock_core::time::Duration;
 
 pub(super) fn glyph(c: char) -> String {
     if c == ' ' {
@@ -58,6 +60,11 @@ pub(super) fn percent_of(part: u32, of: u32) -> String {
     percent(f64::from(part) * 100.0 / f64::from(of))
 }
 
+/// A per mille chance as a [`percent`].
+pub(super) fn per_mille(n: u32) -> String {
+    percent(f64::from(n) / 10.0)
+}
+
 /// Free text for a table cell: command-line flags (`--seed`) as code, so they keep both hyphens,
 /// and `|` escaped.
 pub(super) fn table_text(text: &str) -> String {
@@ -82,6 +89,38 @@ pub(super) fn signed(n: i32) -> String {
     }
 }
 
+/// A score or a worth with its sign (a real minus), 0 bare.
+pub(super) fn signed_or_zero(n: i32) -> String {
+    if n == 0 { "0".into() } else { signed(n) }
+}
+
+/// `1st`, `2nd`, `3rd`, `5th`, `11th`, `21st`.
+pub(super) fn ordinal(n: usize) -> String {
+    let suffix = match (n % 10, n % 100) {
+        (1, x) if x != 11 => "st",
+        (2, x) if x != 12 => "nd",
+        (3, x) if x != 13 => "rd",
+        _ => "th",
+    };
+    format!("{n}{suffix}")
+}
+
+/// `percent` as a factor: `1`, `0.75`, `1.25`, `1.5`.
+pub(super) fn factor(percent: i64) -> String {
+    let text = format!("{}.{:02}", percent / 100, percent % 100);
+    text.trim_end_matches('0').trim_end_matches('.').to_string()
+}
+
+/// A multiplier in percent as a factor with a times sign: `×0.3`, `×1`, `×15`.
+pub(super) fn times(percent: u32) -> String {
+    let whole = percent / 100;
+    match percent % 100 {
+        0 => format!("×{whole}"),
+        r if r % 10 == 0 => format!("×{whole}.{}", r / 10),
+        r => format!("×{whole}.{r:02}"),
+    }
+}
+
 /// Damage dice with `bonus` added to every roll, its own fixed bonus included, with a real minus
 /// sign: `1d4`, `1d3−1`, `1d8+3` (a `1d8+2` bow and +1).
 pub(super) fn damage_text(dice: Roll, bonus: i32) -> String {
@@ -97,6 +136,25 @@ pub(super) fn damage_text(dice: Roll, bonus: i32) -> String {
         0 => base,
         n => format!("{base}{}", signed(n)),
     }
+}
+
+/// How long an action of energy price `price` takes at normal speed (the player's, 1000):
+/// `6 seconds`, `5.4 seconds`, `45 minutes`.
+pub(super) fn at_normal_pace(price: i64) -> String {
+    at_speed(price, NORMAL_SPEED)
+}
+
+/// How long an action of energy price `price` takes an actor of `speed` (spec §8 "Speed": it
+/// gains its speed in energy a second), to a tenth of a second under a minute: `6 seconds`,
+/// `7.5 seconds`, `45 minutes`.
+pub(super) fn at_speed(price: i64, speed: u32) -> String {
+    let speed = i64::from(speed.max(1));
+    let tenths = (price * 10 + speed / 2) / speed;
+    if tenths % 10 != 0 && tenths < 600 {
+        return format!("{}.{} seconds", tenths / 10, tenths % 10);
+    }
+    let seconds = u64::try_from(price.div_euclid(speed)).unwrap_or(0);
+    Duration::seconds(seconds).spoken()
 }
 
 /// A kind of term a generated table defines, one row each: the page the table is on and the

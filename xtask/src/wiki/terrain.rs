@@ -1,7 +1,6 @@
 //! Terrain: the local and overworld terrain tables and how loud footsteps are on each.
 
-use super::actions::at_normal_pace;
-use super::text::{Term, anchored, capital, glyph, yes};
+use super::util::{Term, anchored, at_normal_pace, capital, glyph, yes};
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use warlock_core::content::{ActionKind, BASE_TURN, Content, LevelKind, TerrainDef, price};
