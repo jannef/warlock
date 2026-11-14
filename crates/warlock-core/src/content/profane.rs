@@ -12,6 +12,7 @@
 
 use super::talent::{Needs, TalentBook, TalentDef, TalentEffect, TalentId};
 use super::{Content, ContentError};
+use crate::talent::BeastEffect;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -155,8 +156,7 @@ fn forbidden(effect: &TalentEffect) -> bool {
                 | TalentEffect::SkillRolls { .. }
                 | TalentEffect::TakeUpSkills { .. }
                 | TalentEffect::GrantsResource { .. }
-                | TalentEffect::Companion
-                | TalentEffect::Familiar
+                | TalentEffect::Beast(BeastEffect::Companion | BeastEffect::Familiar)
                 | TalentEffect::XpPercent { .. }
         )
 }
