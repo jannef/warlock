@@ -36,7 +36,8 @@ always reads `Some`, so an object file cannot ask for never): `Food::stage` is F
 `rot::gone_at` is `None`, so `rot_pack`, `rot_away`, `until_rots`, and `freshness::judged` (all
 through `rot::stage`/`gone_at`) leave it be; `crystallise` skips it and `fight.rs`'s `stoned` is
 false for it, so its death always lays the corpse. `content/layer_boss.rs::pin_lairs` refuses an
-endless branch's boss without `corpse` and `everlasting`. Tests: `world/everlasting_tests.rs`.
+endless branch's boss without `corpse` and `everlasting`. Tests: `world/everlasting_tests.rs`, the glass in `soulglass_tests.rs`, the refusals in
+`layer_boss_tests.rs`.
 **Rot** (#195): every food stack carries `Stack::died` (when
 it was made; a corpse, when its creature died; crate-private: presentation cannot read any
 food's age), and `Stack::is_valid_for` checks food knows it and nothing else does. Food that

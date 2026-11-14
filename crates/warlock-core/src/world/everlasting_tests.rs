@@ -1,7 +1,7 @@
 //! Everlasting corpses (#1624; docs/design/profane-gifts.md §3): every keeper of Grundlēas
 //! leaves a corpse that never rots (fresh at any age, never dropped from a pile or a pack, judged
 //! fresh by a trained eye), and leaves it even when stoned. The Soulglass case is in
-//! `soulglass_tests.rs`; the loader's refusals in `content/everlasting_tests.rs`.
+//! `soulglass_tests.rs`; the loader's refusals in `layer_boss_tests.rs`.
 
 use super::class_active_tests::beside;
 use super::*;
