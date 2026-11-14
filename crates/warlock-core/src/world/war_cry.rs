@@ -100,8 +100,7 @@ impl World {
         let Some(them) = self.state.actors.get(&id) else {
             return false;
         };
-        let nerve = them.effective_stats(&content).modifier(Stat::Willpower)
-            + them.talent_mods(&content).check(Stat::Willpower);
+        let nerve = them.check_modifier(&content, Stat::Willpower);
         let seen = self.perception.sees_actors_at(them.pos);
         let who = super::talk::capitalized(&self.called(them));
         let quails = !check::check(&mut self.state.rng, nerve, difficulty);

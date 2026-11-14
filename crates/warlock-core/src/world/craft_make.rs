@@ -1080,9 +1080,8 @@ impl World {
         let content = &self.content;
         let stat = profession_stat(content, def, main);
         let me = self.state.player();
-        me.effective_stats(content).modifier(stat)
+        me.check_modifier(content, stat)
             + me.skill_effect_of(content, def.skill, Effect::Craft)
-            + me.talent_mods(content).check(stat)
             + fletch::fletcher_check(content, me, def)
             + self.binding_boon(def.skill)
     }

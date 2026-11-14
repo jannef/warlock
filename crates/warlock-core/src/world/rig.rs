@@ -368,9 +368,8 @@ impl World {
             return;
         };
         let me = self.state.player();
-        let modifier = me.effective_stats(&content).modifier(Stat::Dexterity)
-            + me.skill_effect_of(&content, rules.skill, Effect::Craft)
-            + me.talent_mods(&content).check(Stat::Dexterity);
+        let modifier = me.check_modifier(&content, Stat::Dexterity)
+            + me.skill_effect_of(&content, rules.skill, Effect::Craft);
         let natural = combat::roll_natural(&mut self.state.rng);
         let snaps = natural == 2;
         if !snaps && !crate::check::makes(natural, modifier, rules.difficulty) {

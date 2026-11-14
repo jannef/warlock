@@ -71,8 +71,7 @@ impl World {
             + me.effective_stats(&content).modifier(Stat::Presence)
             + me.skill_effect(&content, Effect::Feint);
         let them = &self.state.actors[&foe];
-        let nerve = them.effective_stats(&content).modifier(Stat::Willpower)
-            + them.talent_mods(&content).check(Stat::Willpower);
+        let nerve = them.check_modifier(&content, Stat::Willpower);
         if check::check(&mut self.state.rng, nerve, difficulty) {
             self.say(format!("{name} is not fooled."));
         } else {

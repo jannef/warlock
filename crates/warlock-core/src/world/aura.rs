@@ -114,9 +114,7 @@ impl World {
             return;
         };
         if let Some((stat, difficulty)) = aura.check {
-            let talents = them.talent_mods(&content);
-            let modifier = (them.effective_stats(&content).modifier(stat))
-                .saturating_add(talents.check(stat))
+            let modifier = (them.check_modifier(&content, stat))
                 .saturating_add(self.resisting(target, Some(id)));
             if check(&mut self.state.rng, modifier, difficulty) {
                 self.train_resisting(target, stat);

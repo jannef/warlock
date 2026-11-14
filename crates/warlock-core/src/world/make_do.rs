@@ -144,9 +144,8 @@ impl World {
             self.say("You have nothing left to work on.");
             return;
         };
-        let modifier = me.effective_stats(&content).modifier(stat)
-            + me.talent_mods(&content).check(stat)
-            + me.skill_effect_of(&content, skill, Effect::Craft);
+        let modifier =
+            me.check_modifier(&content, stat) + me.skill_effect_of(&content, skill, Effect::Craft);
         let against = rules.difficulty + content.material(material).work;
         let natural = combat::roll_natural(&mut self.state.rng);
         if crate::check::makes(natural, modifier, against) {

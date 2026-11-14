@@ -2,7 +2,8 @@
 //! target with a blow, it moves at least a cell, it costs a point and a point a cell, it
 //! provokes no free blows, its refusals take no time and spend nothing, and a warrior holds
 //! stamina from level 1; Whirling charge strikes the hostiles beside the way, and Battle rhythm
-//! gives stamina back for melee hits and kills (#1467).
+//! gives stamina back for melee hits and kills (#1467); each cell is entered as a step enters
+//! it (#1615).
 
 use super::*;
 use crate::action::AttackKind;
@@ -357,4 +358,23 @@ fn a_warrior_takes_battle_rhythm_at_40_and_whirling_charge_at_50() {
     reach(&mut w, 50);
     assert!(holds(&w, "whirling_charge"));
     assert!(w.state.player().talent_mods(w.content()).whirling_charge);
+}
+
+#[test]
+fn a_charge_enters_each_cell_as_a_step_does() {
+    // A dagger on the way, at (3, 1): the charge tells of it as a step onto it does (#1615).
+    let pile = "[[pile]]\nat = [3, 1]\nobjects = [\"dagger\"]\n";
+    let map = "##########\n#@.....p.#\n##########\n";
+    let seen = |w: &World| said(w).iter().any(|m| m == "You see here a dagger.");
+    let mut w = world_with(map, pile);
+    let outcome = use_(&mut w, "use:charge:7,1");
+    assert!(outcome.took_turn, "{:#?}", said(&w));
+    assert_eq!(w.state.player().pos, Pos::new(6, 1));
+    assert!(seen(&w), "{:#?}", said(&w));
+    // Two steps onto the same cell say the same.
+    let mut w = world_with(map, pile);
+    w.apply(&Action::Move(Dir::E));
+    assert!(!seen(&w));
+    w.apply(&Action::Move(Dir::E));
+    assert!(seen(&w), "{:#?}", said(&w));
 }

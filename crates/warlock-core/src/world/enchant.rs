@@ -774,8 +774,7 @@ impl World {
             return;
         };
         let me = self.state.player();
-        let modifier = me.effective_stats(&content).modifier(Stat::Willpower)
-            + me.talent_mods(&content).check(Stat::Willpower)
+        let modifier = me.check_modifier(&content, Stat::Willpower)
             + me.skill_effect_of(&content, def.skill, Effect::Craft);
         let step = content.enchanting().map_or(3, |r| r.level_step.max(1));
         let against = def.difficulty + i32::from(resolved.level / step);

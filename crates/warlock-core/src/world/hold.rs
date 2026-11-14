@@ -146,11 +146,7 @@ impl World {
             .map(|h| self.called(h));
         let modifier = match trained {
             true => self.slipping(hold.check),
-            false => {
-                let talents = me.talent_mods(&content);
-                (me.effective_stats(&content).modifier(hold.check))
-                    .saturating_add(talents.check(hold.check))
-            }
+            false => me.check_modifier(&content, hold.check),
         };
         // Know your enemy (Knowledge, `knowledge.rs`): the holder's.
         let modifier = modifier.saturating_add(self.resisting(player, effect.by));
@@ -197,9 +193,7 @@ impl World {
     pub(super) fn slipping(&self, stat: Stat) -> i32 {
         let content = &self.content;
         let me = self.state.player();
-        let stats = me.effective_stats(content);
-        let talents = me.talent_mods(content);
-        let of = |s: Stat| stats.modifier(s).saturating_add(talents.check(s));
+        let of = |s: Stat| me.check_modifier(content, s);
         (of(stat).max(of(Stat::Dexterity)))
             .saturating_add(me.skill_effect(content, SkillEffect::Escape))
     }

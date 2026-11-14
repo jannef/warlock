@@ -115,6 +115,7 @@ mod prestige;
 mod quest;
 mod quest_roll;
 mod race;
+mod race_beasts;
 mod ranged;
 mod recipe;
 #[cfg(test)]
@@ -316,6 +317,7 @@ pub use quest::{
 pub(crate) use quest_roll::roll_known;
 pub use quest_roll::{Candidate, Pick, Roll, Rolled, Variant, one_of};
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
+pub use race_beasts::RaceBeasts;
 pub use ranged::{RangeBand, RangedRules};
 pub use recipe::{
     EnchantKind, InputKind, MOST_CRYSTALS, PartSource, ProfessionText, RecipeCount, RecipeDef,

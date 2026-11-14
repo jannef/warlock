@@ -381,7 +381,7 @@ fn the_imp_joins_the_draw_from_her_level_30_and_never_a_start() {
     let content = &*CONTENT;
     let rules = content.familiars().expect("familiars.toml");
     let imp = content.creature_id("imp").expect("imp");
-    let list = rules.list_of("human").expect("a list");
+    let list = rules.start.list_of("human").expect("a list");
     const DRAWS: u32 = 20_000;
     let count = |level: u8| {
         let mut rng = crate::rng::Rng::stream(1, "fcall/test");
@@ -390,7 +390,7 @@ fn the_imp_joins_the_draw_from_her_level_30_and_never_a_start() {
             let got = calling_draw(content, &mut rng, "human", level).expect("a beast");
             if got == imp {
                 imps += 1;
-            } else if rules.rare.contains(&got) {
+            } else if rules.start.rare.contains(&got) {
                 rares += 1;
             } else {
                 assert!(list.contains(&got));

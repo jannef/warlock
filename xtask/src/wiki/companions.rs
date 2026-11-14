@@ -8,7 +8,7 @@ use super::text::{Term, damage_text, link, signed};
 use std::fmt::Write as _;
 use warlock_core::burden::Burden;
 use warlock_core::combat::Category;
-use warlock_core::content::{Content, CreatureId};
+use warlock_core::content::{Content, CreatureId, RaceBeasts};
 use warlock_core::world::{Ally, AllySource, CompanionData, Order};
 
 /// The levels the growth table is printed at.
@@ -28,8 +28,25 @@ pub(super) fn starts(content: &Content) -> String {
     let Some(rules) = content.companions() else {
         return String::new();
     };
+    starts_table(
+        content,
+        &rules.start,
+        "ranger",
+        "; the ranger's starting beast is at least their own level from the first turn (see the \
+         growth table below)",
+    )
+}
+
+/// Every race's starting beasts of `start`, then the rares with the odds, for a `class`'s
+/// start; `more` ends the last sentence (the companion's and the familiar's tables, #1567).
+pub(super) fn starts_table(
+    content: &Content,
+    start: &RaceBeasts,
+    class: &str,
+    more: &str,
+) -> String {
     let mut out = String::from("| Race | Starting beasts |\n|---|---|\n");
-    for (race, list) in &rules.by_race {
+    for (race, list) in &start.by_race {
         let name = content.race(race).map_or(race.clone(), |r| r.name.clone());
         let beasts: Vec<String> = list.iter().map(|&b| beast(content, b)).collect();
         let _ = writeln!(
@@ -39,14 +56,13 @@ pub(super) fn starts(content: &Content) -> String {
             beasts.join(", ")
         );
     }
-    let rares: Vec<String> = rules.rare.iter().map(|&b| beast(content, b)).collect();
+    let rares: Vec<String> = start.rare.iter().map(|&b| beast(content, b)).collect();
     let _ = write!(
         out,
-        "\nAt {} in a thousand ({:.1} %), any race's ranger begins with one of the rares instead, \
-         each as likely: {}. The beast's level is in brackets; the ranger's starting beast is at \
-         least their own level from the first turn (see the growth table below).\n",
-        rules.rare_per_mille,
-        f64::from(rules.rare_per_mille) / 10.0,
+        "\nAt {} in a thousand ({:.1} %), any race's {class} begins with one of the rares instead, \
+         each as likely: {}. The beast's level is in brackets{more}.\n",
+        start.rare_per_mille,
+        f64::from(start.rare_per_mille) / 10.0,
         rares.join(", ")
     );
     out
@@ -136,7 +152,7 @@ pub(super) fn rules(content: &Content) -> String {
             "The start",
             format!(
                 "a ranger begins with a beast of their race's list, or at {} in a thousand one of the rares",
-                r.rare_per_mille
+                r.start.rare_per_mille
             ),
         ),
         (

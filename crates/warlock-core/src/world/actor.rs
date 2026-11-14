@@ -455,6 +455,14 @@ impl Actor {
         self.stats_with(content, &self.mods(content))
     }
 
+    /// What it adds to a check of `stat` (#1551): the modifier of its effective score and
+    /// what its talents add to every check of the stat (Iron will). Each check adds its own
+    /// terms (a skill, a resistance) to this.
+    pub fn check_modifier(&self, content: &Content, stat: Stat) -> i32 {
+        (self.effective_stats(content).modifier(stat))
+            .saturating_add(self.talent_mods(content).check(stat))
+    }
+
     /// Its own scores raised by what it wears and wields, before what its status effects,
     /// hunger, and stat damage take (the character screen marks the scores those lower).
     pub fn raised_stats(&self, content: &Content) -> Stats {

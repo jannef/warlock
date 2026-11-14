@@ -132,8 +132,7 @@ impl World {
         let pit = matches!(def.effect, TrapEffect::Pit { .. });
         let light = (talents.pit_proof && pit)
             || (talents.sure_step && {
-                let dexterity = player.effective_stats(&content).modifier(Stat::Dexterity)
-                    + talents.check(Stat::Dexterity);
+                let dexterity = player.check_modifier(&content, Stat::Dexterity);
                 check(&mut self.state.rng, dexterity, i32::from(def.difficulty))
             });
         if light {
