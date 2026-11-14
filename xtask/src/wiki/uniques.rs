@@ -2,7 +2,7 @@
 //! exactly, power exactly, and lore.
 
 use super::order;
-use super::text::capital;
+use super::util::capital;
 use std::fmt::Write as _;
 use warlock_core::content::{Affliction, Content, DialogueId, ItemKind, Power, UniqueDef};
 use warlock_core::magic::describe;

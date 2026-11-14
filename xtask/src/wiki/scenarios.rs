@@ -1,7 +1,7 @@
 //! The scenarios a new run can start: each campaign's start.
 
 use super::order;
-use super::text::table_text;
+use super::util::table_text;
 use std::fmt::Write as _;
 use warlock_core::content::Content;
 

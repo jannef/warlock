@@ -1,8 +1,7 @@
 //! Hunger (spec §8 "Hunger"): the states, the facts, each race's need, food, and corpses.
 
-use super::burden::factor;
 use super::order;
-use super::text::{capital, signed};
+use super::util::{capital, factor, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, HungerDef};
 use warlock_core::hunger::Hunger;

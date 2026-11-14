@@ -4,7 +4,7 @@
 //! cutting (`world/cut.rs`: the cut bands, a large uncut ruby's fates, the odds), and gem setting
 //! (`world/set.rs`: the odds).
 
-use super::text::{Term, anchored, capital, link};
+use super::util::{Term, anchored, capital, link};
 use std::fmt::Write as _;
 use warlock_core::combat::HIGHEST;
 use warlock_core::content::{
@@ -50,7 +50,7 @@ fn eased(margin: i32, ease: i32) -> i32 {
 /// The percentages of `counts` (each of `total`) from `from` on, joined by " / ".
 fn percents(counts: &[u32], from: usize, total: u32) -> String {
     let parts: Vec<String> = (counts[from..].iter())
-        .map(|&n| super::text::percent_of(n, total))
+        .map(|&n| super::util::percent_of(n, total))
         .collect();
     parts.join(" / ")
 }

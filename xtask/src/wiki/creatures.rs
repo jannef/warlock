@@ -2,10 +2,11 @@
 //! them (spec §8 "Creature behavior", "Combat", "Speed", "Stats"): the wiki states them exactly,
 //! read through the rules' own functions.
 
-use super::actions::at_speed;
 use super::combat::threat_range;
 use super::order;
-use super::text::{Term, anchored, capital, damage_link, damage_text, glyph, link, signed, yes};
+use super::util::{
+    Term, anchored, at_speed, capital, damage_link, damage_text, glyph, link, signed, yes,
+};
 use std::fmt::Write as _;
 use warlock_core::action::AttackKind;
 use warlock_core::burden::{self, Burden};
@@ -304,7 +305,7 @@ pub(super) fn creature_stats(content: &Content) -> String {
     let mut out = format!(
         "{}| Creature | Level | XP | Rarity |{stats} Potentials | Skills | Weapon skills |\n\
          |---|:---:|---:|---|{}---|---|---|\n",
-        super::text::stat_key(),
+        super::util::stat_key(),
         ":---:|".repeat(Stat::COUNT)
     );
     for (_, c) in listed(content) {

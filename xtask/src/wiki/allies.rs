@@ -3,7 +3,7 @@
 //! hard its scroll is to learn.
 
 use super::spells::grows_with;
-use super::text::{Term, capital, link};
+use super::util::{Term, capital, link};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, SpellData, SpellPurpose};
 

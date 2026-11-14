@@ -1,6 +1,6 @@
 //! Burden (spec §8 "Burden"): its levels, the races' sizes, and sample carrying limits.
 
-use super::actions::at_normal_pace;
+use super::util::{at_normal_pace, factor};
 use std::fmt::Write as _;
 use warlock_core::burden::{self, Burden, Load};
 use warlock_core::content::{BASE_TURN, Content, price};
@@ -44,12 +44,6 @@ pub(super) fn burden_levels(_content: &Content) -> String {
         );
     }
     out
-}
-
-/// `percent` as a factor: `1`, `0.75`, `1.25`, `1.5`.
-pub(super) fn factor(percent: i64) -> String {
-    let text = format!("{}.{:02}", percent / 100, percent % 100);
-    text.trim_end_matches('0').trim_end_matches('.').to_string()
 }
 
 /// Each race's size and what it carries next to a medium race, and whether it shrugs off
