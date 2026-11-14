@@ -20,7 +20,7 @@ pub use characters::{SavedCharacter, Summary, now, played_text};
 use crate::cli::Args;
 use crate::game::{Game, SimSet};
 use crate::paths::{SAVES_DIR, SNAPSHOTS_DIR};
-use crate::storage::Backend;
+use crate::storage::{self, Backend, Folder};
 use bevy::prelude::*;
 use bevy::window::ExitSystems;
 use std::sync::Arc;
@@ -87,7 +87,7 @@ impl SaveStore {
             args.save_dir
                 .clone()
                 .map(Backend::Dir)
-                .or_else(default_backend)
+                .or_else(|| storage::default_backend(Folder::Data, "progress will not be saved"))
         };
         Self {
             backend,
@@ -247,22 +247,6 @@ impl SaveStore {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-fn default_backend() -> Option<Backend> {
-    crate::paths::locations().data.dir.clone().map(Backend::Dir)
-}
-
-/// Browser storage, unless the browser refuses it (some privacy modes): then saving is off.
-#[cfg(target_arch = "wasm32")]
-fn default_backend() -> Option<Backend> {
-    if crate::storage::web::available() {
-        Some(Backend::Browser)
-    } else {
-        warn!("browser storage is unavailable; progress will not be saved");
-        None
-    }
-}
-
 /// Asks the save systems to act. Written by input.
 #[derive(Message, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SaveCommand {
@@ -304,9 +288,10 @@ impl Plugin for SavePlugin {
 }
 
 /// The web build also saves when the page is hidden or closed. A hidden tab runs no frames, so a
-/// system cannot do it: after each turn a copy of the state (cheap; encoding is not, on big
-/// levels) and the character's summary are parked in `storage::web`, and the
-/// `visibilitychange`/`pagehide` listeners encode and write them as the character's files.
+/// system cannot do it: after each turn a copy of the state (cheap: 2 to 25 µs natively in
+/// release, the vast level the dearest, #1565; encoding is not, 0.2 to 10 ms) and the
+/// character's summary are parked in `storage::web`, and the `visibilitychange`/`pagehide`
+/// listeners encode and write them as the character's files, so hiding the page loses no turn.
 #[cfg(target_arch = "wasm32")]
 mod web_hooks {
     use super::*;

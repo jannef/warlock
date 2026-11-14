@@ -56,7 +56,7 @@ A sentence may give or take:
   [identified](magic-items.md#unidentified-items) (you grew up with it), and a [scroll](scrolls.md)
   from it is known.
 - **A skill**: a start in a [skill](skills.md), or more of one you have.
-- **Marks** in a [weapon skill](weapon-skills.md#marks-and-ranks), never a rank.
+- **Marks** in a [weapon skill](weapon-skills.md#raising-a-weapon-skill), never a rank.
 - **A nudge** to your starting [alignment](alignment.md).
 - **A [talent](talents.md#choices-and-prerequisites)**, for life, whatever it would ask of you (the
   flux sentence gives [Hardy](talents.md#talent-hardy)). It is never one you hold already: a
@@ -115,7 +115,7 @@ chapters after it.
 
 Dice are written as the game rolls them: 2d4 is two four-sided dice added together. A skill's dice
 start the [skill](skills.md) if you were not trained in it, or raise it if you were.
-[Weapon marks](weapon-skills.md#marks-and-ranks) bring you toward your next rank, never past it.
+[Weapon marks](weapon-skills.md#raising-a-weapon-skill) bring you toward your next rank, never past it.
 
 ### Parents
 

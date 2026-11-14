@@ -3,6 +3,8 @@
 Some harm lasts longer than a blow. A deep wound keeps bleeding, and a bite can leave poison
 behind. These **status effects** cost [hit points](hit-points.md#hit-points) as time passes, slow
 your [healing](healing.md), sometimes weaken you, and wear off on their own. They can kill.
+What ends bleeding, poison, and disease sooner is gathered on
+[Healing](healing.md#curing-bleeding-poison-and-disease).
 
 **[Diseased](#status-diseased)** is a status effect too. It shows while any [disease](diseases.md)
 has broken out, and lasts as long as the diseases do.
@@ -126,7 +128,7 @@ You cannot tell whether a creature is poisoned by looking at it.
 
 A [draining room](special-rooms.md#room-draining) drinks at magic. While you stand in one, and for
 half a minute after you leave, you are **Ebbing** ("Your power ebbs away."). A point of
-[mana](mana.md#how-much) drains away every 20 seconds, and none comes back. It never takes you
+[mana](mana.md#how-much-mana-you-have) drains away every 20 seconds, and none comes back. It never takes you
 below zero and does you no other harm. Once you are out of the room it passes: "Your power stops
 ebbing."
 
@@ -161,7 +163,7 @@ that cannot cast closes in to fight hand to hand.
 
 A [shrine](special-rooms.md#room-shrine) of the other side from yours does not want you. While you
 stand in one, and for half a minute after you leave, you are **Unwelcome** ("You feel
-unwelcome."). Your [wounds heal](healing.md#how-fast) at half the pace, and you are a little less
+unwelcome."). Your [wounds heal](healing.md#how-fast-you-heal) at half the pace, and you are a little less
 likely to hit (−1 [to hit](combat.md#hitting)). Once it passes: "You no longer feel unwelcome."
 
 Creatures of the other side are unwelcome there too, and you can see it on them ("unwelcome").
@@ -172,7 +174,7 @@ A status effect can help or hinder in other ways while it lasts. The "What it do
 [the tables](#every-status-effect) says which of these each one does:
 
 - **Stats.** It may raise a score as well as lower one. If a higher
-  [Toughness](stats.md#stat-toughness) let you [heal](healing.md#how-fast) to more hit points,
+  [Toughness](stats.md#stat-toughness) let you [heal](healing.md#how-fast-you-heal) to more hit points,
   those extra hit points go again when it ends.
 - **Fighting.** It may add to your [to-hit](combat.md#hitting) and [damage](combat.md#damage), or
   to your [Dodge](combat.md#defence) and [Parry](combat.md#defence), as a

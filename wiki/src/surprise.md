@@ -124,7 +124,7 @@ This table shows what [Sneak attack](skills.md#skill-sneak-attack), [Initiative]
 [Stealth](skills.md#skill-stealth)'s slipping past give at each value. A thief starts with Sneak
 attack (`2d6+10`), and a [drow](races.md#race-drow) may too, whatever their class. Warriors,
 rangers, ascetics, berserkers, bards, and thieves train Initiative (see
-[Who trains what](skills.md#who-trains-what)).
+[Which skills you start with](skills.md#which-skills-you-start-with)).
 
 {{#include generated/surprise-ladders.md}}
 

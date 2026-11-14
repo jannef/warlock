@@ -325,7 +325,7 @@ pub(super) fn prayer_rites(content: &Content) -> String {
                         (
                             link(Term::Ability, &def.id, &def.name),
                             format!(
-                                "{mana} [mana](mana.md#spending-it) and {} of kneeling: every cell within {radius} of where you knelt (a {side} by {side} square) is [hallowed ground](cursed-and-hallowed.md#hallowed-ground) for {}; hostile creatures do not step onto it, and whoever stands on it [heals](healing.md#how-fast) and gets [mana back](mana.md#how-fast-it-comes-back) {pace}",
+                                "{mana} [mana](mana.md#spending-it) and {} of kneeling: every cell within {radius} of where you knelt (a {side} by {side} square) is [hallowed ground](cursed-and-hallowed.md#hallowed-ground) for {}; hostile creatures do not step onto it, and whoever stands on it [heals](healing.md#how-fast-you-heal) and gets [mana back](mana.md#how-fast-it-comes-back) {pace}",
                                 spoken(time),
                                 spoken(lasts)
                             ),

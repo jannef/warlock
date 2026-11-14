@@ -90,6 +90,14 @@ impl InvestRules {
     }
 }
 
+impl super::RulesFile for InvestRules {
+    const PATH: &'static str = "data/invest.toml";
+
+    fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
+        Self::parse(path, text)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::InvestRules;

@@ -17,7 +17,7 @@ creature exactly as they do for you. One that wears or wields a "+5 to maximum m
 more mana (and starts with all of it). One whose amulet makes "mana come back 50% faster" regains
 it half again as fast. A summoner pays for its summons from that larger pool.
 
-## How much
+## How much mana you have
 
 Your maximum mana is what your [race](races.md) and your [class](classes.md) give, plus what your
 [Intelligence](stats.md#stat-intelligence), [Willpower](stats.md#stat-willpower), and
@@ -36,7 +36,7 @@ that. Only [elves](races.md#race-elf), [gnomes](races.md#race-gnome),
 
 Each [level](experience.md#levels) up to 60 raises your maximum, and the mana you have now, by
 half your class's mana plus what the better of your Intelligence and Willpower adds (see
-[Experience](experience.md#what-a-level-gives)). So a wizard keeps growing their mana after
+[Experience](experience.md#levelling-up)). So a wizard keeps growing their mana after
 [hit points](hit-points.md#hit-points) stop at level 50, while a [warrior](classes.md#warrior)
 with ordinary wits gains none.
 
@@ -87,7 +87,7 @@ your [combat stance](stances.md#stances). Spending mana now and then trains Conc
 
 Anything that costs mana is refused when you have too little, and then spends nothing. Spending
 any mana trains your [Willpower](stats.md#stat-willpower): each time is a chance at a training mark
-(see [Stats](stats.md#training)).
+(see [Stats](stats.md#raising-your-stats)).
 
 The talent *[Frugal caster](talents.md#talent-frugal-caster)* makes abilities cost a fifth less
 mana, rounded to the nearest point and never below 1: 5 becomes 4, 6 becomes 5, 10 becomes 8.

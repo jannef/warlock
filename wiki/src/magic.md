@@ -72,7 +72,7 @@ up, a die more, bigger dice, a bonus, a die rolled again (see
 read and a [wand](wands-and-rods.md#wands) you use cast at a rung of their own.
 
 The list below gives each spell's level, its base (what it does and how far it reaches), its
-ladders, and its [mana](mana.md#how-much) cost without armour or talents. Under "Grows with", a
+ladders, and its [mana](mana.md#how-much-mana-you-have) cost without armour or talents. Under "Grows with", a
 stat alone is the damage or healing ladder; "range", "length", "radius", and "degrees" name the
 others.
 
@@ -90,7 +90,7 @@ unidentified opens, as for the [scroll of identify](scrolls.md#scroll-of-identif
 [Scrolls](scrolls.md#the-scroll-of-identify)). When it tells you something new, the thing's description opens.
 
 Every [scroll](scrolls.md) holds a spell, and reading it casts that spell once. Spells are learned
-for good from [grimoires](#learning-spells-from-grimoires): the grimoire of identify teaches
+for good from [grimoires](#learning-a-spell): the grimoire of identify teaches
 [Identify](#spell-identify), and the grimoire of light teaches [Light](#spell-light).
 
 ## Spell levels
@@ -111,10 +111,10 @@ What a spell does comes from its own roll and ladders (the list above) and its
 
 Your **learning** is how far your study of magic reaches. A grimoire of a spell at or below your
 learning teaches you for certain. Above it, reading it is a check (see
-[Learning spells from grimoires](#learning-spells-from-grimoires)).
+[Learning a spell](#learning-a-spell)).
 
 Learning never changes what a spell does or costs. Your [stats](stats.md) make a spell grow (see
-[How a spell grows](spellcasting.md#how-a-spell-grows)), and your [mana](mana.md#how-much) is what
+[How a spell grows](spellcasting.md#how-a-spell-grows)), and your [mana](mana.md#how-much-mana-you-have) is what
 holds you back.
 
 Learning comes from the [Decipher script](skills.md#skill-decipher-script) skill and nothing else. Take the
@@ -144,7 +144,7 @@ Every class that casts starts trained in Decipher script, with the dice given in
 
 Other classes do not start with it. Some [background stories](background.md) add to it, and
 level-up rolls raise it like any other skill. So does reading: see
-[Learning spells from grimoires](#learning-spells-from-grimoires).
+[Learning a spell](#learning-a-spell).
 
 ## What a spell costs
 
@@ -168,7 +168,7 @@ A spell's mana cost is worked out in steps:
    (see [Mana](mana.md)).
 
 Your [learning](#learning) never counts. A spell you know costs the same whoever you are, and your
-[mana](mana.md#how-much) is what holds you back.
+[mana](mana.md#how-much-mana-you-have) is what holds you back.
 
 A few spells have a cost of their own instead, whatever their level. **[Identify](#spell-identify)**
 costs 60 [mana](mana.md#spending-it) (before your armour and talents), so no caster can cast it in
@@ -187,7 +187,7 @@ another.
 
 {{#include generated/spell-armour.md}}
 
-## Learning spells from grimoires
+## Learning a spell
 
 You learn a spell from its **grimoire**, a book written for teaching it. Every spell with a scroll
 has a grimoire too: the grimoire of fireball teaches *[Fireball](#spell-fireball)*, the grimoire of
@@ -208,7 +208,7 @@ whatever comes of it: read it again after a failure, or keep it to deepen the sp
 [Spell ranks](#spell-ranks)), or sell it. Reading the grimoire of a spell you know at rank 10
 only tells you so, and takes no time.
 
-To learn at all you need some [mana](mana.md#how-much), and training in
+To learn at all you need some [mana](mana.md#how-much-mana-you-have), and training in
 [Decipher script](skills.md#skill-decipher-script). Without the training, reading a grimoire is refused and
 takes no time ("You have no training in Decipher script; you cannot make sense of how to learn a
 spell from a grimoire.").
@@ -267,7 +267,7 @@ rank, and so does the grimoire's description.
 
 **Reading a spell's grimoire again raises its rank.** Nothing else does: casting a spell a thousand
 times leaves it where it was. Reading for rank 2 takes twice the
-[learning time](#learning-spells-from-grimoires), rank 3 three times, and so on to rank 10, and the
+[learning time](#learning-a-spell), rank 3 three times, and so on to rank 10, and the
 check is always made, however high your [learning](#learning): the same 2d12 check as learning the
 spell, 2 harder for every rank you already hold (the overreach counts as 0 when the spell is within
 your learning). The read list shows the rank a grimoire would bring you to and your chance

@@ -23,6 +23,24 @@ pub mod shadows;
 pub mod spells;
 pub mod water;
 
+/// The value of `const NAME: T = VALUE;` in WESL source `src` (a `u` suffix dropped), for the
+/// tests that check each constant a shader shares with Rust against the Rust one (#1561): the
+/// two are copied by hand, and a one-sided edit would only show on the GPU.
+#[cfg(test)]
+pub(crate) fn wesl_const(src: &str, name: &str) -> f32 {
+    let prefix = format!("const {name}:");
+    let line = src
+        .lines()
+        .map(str::trim)
+        .find(|l| l.starts_with(&prefix))
+        .unwrap_or_else(|| panic!("no `const {name}` in the shader"));
+    let value = line.split('=').nth(1).expect("a value").trim();
+    let value = value.trim_end_matches(';').trim().trim_end_matches('u');
+    value
+        .parse()
+        .unwrap_or_else(|_| panic!("`{name}` = `{value}` is not a number"))
+}
+
 use crate::capture::CaptureTarget;
 use crate::cli::Args;
 use crate::game::GameContent;

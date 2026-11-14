@@ -11,7 +11,7 @@ You can also [bash](abilities.md#ability-shield-bash) it with your [shield](obje
 [Ranged combat](ranged.md)).
 
 Each attack trains the [weapon skill](weapon-skills.md) it uses and the [fighting style](fighting-styles.md) you fight in. Your
-[ranks](weapon-skills.md#marks-and-ranks) in them help you hit, hurt, and defend. With a [weapon in each hand](fighting-styles.md#two-weapons), an attack up close is a
+[ranks](weapon-skills.md#raising-a-weapon-skill) in them help you hit, hurt, and defend. With a [weapon in each hand](fighting-styles.md#two-weapons), an attack up close is a
 blow with each. Creatures fight each other and you by the same rules (see [Creatures](creatures.md)), and
 casters cast the same [spells](magic.md#the-spells) you do (see [Spells](creature-tricks.md#spells)).
 
@@ -22,7 +22,7 @@ when that roll plus the attacker's bonus to hit reaches the target's **[Defence]
 
 - Up close, your **[Strength](stats.md#stat-strength)** helps you hit. When shooting, your **[Dexterity](stats.md#stat-dexterity)** does. With a
   [finesse weapon](#finesse-weapons) up close, Dexterity helps you hit and Strength does not, even if your Strength is
-  higher. Some weapons are easier to hit with than others, and your [rank](weapon-skills.md#marks-and-ranks) in the weapon's
+  higher. Some weapons are easier to hit with than others, and your [rank](weapon-skills.md#raising-a-weapon-skill) in the weapon's
   [skill](weapon-skills.md) helps more the more you have trained.
 - **Two ones always miss, and a roll of 22 or better always hits.** 22, 23, and 24 are 6 of the
   144 ways the dice can fall, about one blow in 24. However high a [Defence](combat.md#defence) climbs, some blows
@@ -43,7 +43,7 @@ attacks beside your stats:
 - the shot or throw of your [missile weapon](ranged.md#getting-ready), with its range in steps.
 
 Each shows its bonus to hit and its [damage](combat.md#damage) (`+4 to hit, 1d8+2 slashing`). These count
-everything that goes into the attack as you stand now: your [stats](stats.md), your [ranks](weapon-skills.md#marks-and-ranks) in its
+everything that goes into the attack as you stand now: your [stats](stats.md), your [ranks](weapon-skills.md#raising-a-weapon-skill) in its
 [weapon skill](weapon-skills.md) and in the [fighting style](fighting-styles.md) you hold it in, [two-weapon](fighting-styles.md#two-weapons) penalties, your [stance](stances.md#stances), your
 [talents](talents.md), and the magic you know about. A [magic item](magic-items.md)'s unknown powers count only once it is
 [identified](magic-items.md#unidentified-items). Anything that depends on the moment, such as striking from hiding or being
@@ -71,10 +71,10 @@ protects you. It comes in kinds:
 
 - **Dexterity**: quick feet, your [Dexterity](stats.md#stat-dexterity) modifier (see [Stats](stats.md#modifiers)). A clumsy
   character's Defence is below 10. Heavy armour limits how much [Dexterity](stats.md#stat-dexterity) can add (see the table
-  below), and so does a heavy load: at most +3 when you are [burdened](burden.md#burden-1), +1 when [strained](burden.md#burden-1),
-  nothing when [overloaded](burden.md#burden-1) (see [Burden](burden.md)). The lower limit counts.
+  below), and so does a heavy load: at most +3 when you are [burdened](burden.md#burden-levels), +1 when [strained](burden.md#burden-levels),
+  nothing when [overloaded](burden.md#burden-levels) (see [Burden](burden.md)). The lower limit counts.
 - **Armour**: what you wear on your body.
-- **Shield**: a [shield](objects.md#class-shields) in your off hand. Your [rank](weapon-skills.md#marks-and-ranks) in [Sword and Board](fighting-styles.md#style-sword-and-board) adds more, with a weapon
+- **Shield**: a [shield](objects.md#class-shields) in your off hand. Your [rank](weapon-skills.md#raising-a-weapon-skill) in [Sword and Board](fighting-styles.md#style-sword-and-board) adds more, with a weapon
   in the other hand. In [Two Shields](fighting-styles.md#style-two-shields), you hold a shield in each.
 - **Parry**: a weapon that turns blows aside, such as the quarterstaff, plus your rank with the
   weapon you wield (blades, spears, and staves), plus your rank in [Duelist](fighting-styles.md#style-duelist) or [Staff Fighter](fighting-styles.md#style-staff-fighter) while
@@ -149,7 +149,7 @@ A hit does the weapon's damage dice, at least 1:
   drawn by strength, though: each point of [Strength](stats.md#stat-strength) you lack below what the bow needs costs you a
   point to hit and a point of damage.
 - Creatures without a weapon bite, claw, or kick, each in its own way.
-- Your [rank](weapon-skills.md#marks-and-ranks) in the weapon's [skill](weapon-skills.md) adds to the damage, and at higher ranks widens the
+- Your [rank](weapon-skills.md#raising-a-weapon-skill) in the weapon's [skill](weapon-skills.md) adds to the damage, and at higher ranks widens the
   [critical range](combat.md#criticals).
 - A **[shield bash](abilities.md#ability-shield-bash)** does the shield's own damage (below) plus your [Strength](stats.md#stat-strength). It takes the time of a
   plain blow. Neither a slow great weapon's time nor a quick one's (nor its magic) changes that.

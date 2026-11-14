@@ -78,6 +78,14 @@ impl SurpriseRules {
     }
 }
 
+impl super::RulesFile for SurpriseRules {
+    const PATH: &'static str = "data/surprise.toml";
+
+    fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
+        Self::parse(path, text, content)
+    }
+}
+
 impl Content {
     /// Whether creature type `id` has vitals to find: the one reader of what has none (spec §8
     /// "Surprise and sneak attacks"). Without vitals it is immune to criticals and to sneak

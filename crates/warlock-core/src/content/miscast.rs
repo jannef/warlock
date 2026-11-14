@@ -110,6 +110,14 @@ impl MiscastRules {
     }
 }
 
+impl super::RulesFile for MiscastRules {
+    const PATH: &'static str = "data/miscast.toml";
+
+    fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
+        Self::parse(path, text, &content.factions)
+    }
+}
+
 /// An entry of the miscast table: what befalls a caster whose total falls in `from..=to`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Miscast {

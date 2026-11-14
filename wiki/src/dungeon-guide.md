@@ -4,7 +4,8 @@ Most dungeons follow the rules on [Dungeons and danger](dungeons.md). The ones h
 of their own: Grundlēas never ends, Fennmynster and Fyrdelf hide their ways in until a quest names
 them, Ūtgang is found only from below, Ælfhām lies in the fey's own country, Dēopgang ends in a
 town, Meyn Bew opens only for a quest, and the four lairs each hold a criminal the Gilde wants
-dead.
+dead. Hellegeat, the fiends' own dungeon that a miscast tears open, has a page of its own:
+[Hellegeat, the Pits](pits.md).
 
 ## Grundlēas
 
@@ -28,7 +29,7 @@ Its [traps](traps.md) are [arrows](traps.md#trap-arrow), [spears](traps.md#trap-
 [pits](traps.md#trap-pit), and [alarms](traps.md#trap-alarm). It is [cold](temperature.md) (6 °C),
 and it has no [shops](shops.md).
 
-A floor pays [experience](experience.md#discovery) for arriving only if it is deeper than any you
+A floor pays [experience](experience.md#experience-for-something-new) for arriving only if it is deeper than any you
 have reached here.
 
 Your [allies](allies.md) come with you as anywhere else. Those too far away stay behind, and that

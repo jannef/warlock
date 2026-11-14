@@ -4,7 +4,7 @@ A **talent** is a knack your character picks up as they grow: a little more of s
 already measure, chosen by you. Talents come in **trees** (Vigour, Might, Finesse, and so on), and
 most ask something of you first.
 
-## When you pick
+## When you get a talent
 
 A new character picks **two talents at creation**, on the Talents step after the
 [class](classes.md). The **[bard](classes.md#bard)**, the lucky class, picks one more, and so does a
@@ -36,7 +36,7 @@ first. The [commoner](classes.md#commoner)'s bonus talents come from any tree.
 If there is nothing you can take (a run with no talents, or every talent you qualify for already
 learned), the pick is simply lost. A level never waits for the impossible.
 
-The **[level-up screen](experience.md#what-a-level-gives)** opens by itself when a level comes. It
+The **[level-up screen](experience.md#levelling-up)** opens by itself when a level comes. It
 walks through the level's choices in order:
 
 1. the [skill rolls](skills.md), each [skill](skills.md) shown with the dice a roll on it adds;
@@ -115,7 +115,7 @@ give comes at once, on top of your [starting kit](starting-kit.md).
   loose [gems](gems.md), as found at [item level](magic-items.md#finding-them) 2. Coins weigh 10 g
   each, so the weakest of the small peoples ([halflings](races.md#race-halfling),
   [gnomes](races.md#race-gnome), [goblins](races.md#race-goblin), [kobolds](races.md#race-kobold),
-  [ratfolk](races.md#race-ratfolk)) may set out [Burdened](burden.md#burden-1).
+  [ratfolk](races.md#race-ratfolk)) may set out [Burdened](burden.md#burden-levels).
   An [aristocrat](classes.md#aristocrat) is born to it: their class gives it at level 1, so they
   never pick it, and they may pick Father's sword straight away.
 - **[Father's sword](talents.md#talent-fathers-sword)** (needs Family wealth) is your people's
@@ -132,7 +132,7 @@ give comes at once, on top of your [starting kit](starting-kit.md).
 
 ## Crafts: a craftsperson's trades
 
-The **Crafts** tree holds the trades: one for each [profession](crafting.md#who-works-what) skill.
+The **Crafts** tree holds the trades: one for each [profession](crafting.md#which-skill-makes-what) skill.
 Only a [craftsperson](classes.md#craftsperson) may take one, and only at
 [character creation](character.md). No other class is offered them, and no later level is. A
 craftsperson's first two picks are always trades: the class gives them two
@@ -153,7 +153,7 @@ Taking a trade does three things:
 - It gives you the **tools of the trade**, on top of your [starting kit](starting-kit.md). A
   pick-axe is readied in the Tool [slot](equipment.md#what-fits-where) if your kit left it free,
   and carried otherwise. A scroll is known by its name from the start.
-- The skill **grows faster**: a [skill roll](skills.md#getting-better) on it throws the
+- The skill **grows faster**: a [skill roll](skills.md#improving-a-skill) on it throws the
   die one step up the ladder, as on a skill your [class](classes.md) is known for. A skill that is
   both rolls one step up, not two.
 

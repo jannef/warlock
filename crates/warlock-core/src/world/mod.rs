@@ -152,6 +152,7 @@ mod enchant;
 mod encounter;
 mod encounter_area;
 mod endless;
+mod enter;
 mod equip;
 mod escort;
 mod escort_waits;
@@ -1953,6 +1954,8 @@ mod equip_tests;
 mod escape_tests;
 #[cfg(test)]
 mod escort_tests;
+#[cfg(test)]
+mod everlasting_tests;
 #[cfg(test)]
 mod experience_tests;
 #[cfg(test)]

@@ -97,7 +97,7 @@ caster's own [stats](stats.md) as yours are at yours, with the same
 [spell types](spellcasting.md#spell-types), and [resistances](damage-types.md#armour-and-resistance).
 A spell that rolls to hit adds a quarter of the caster's level to the roll, as its blows do.
 
-Each cast costs the [mana](mana.md#how-much) below from the caster's pool, which comes back as
+Each cast costs the [mana](mana.md#how-much-mana-you-have) below from the caster's pool, which comes back as
 slowly as anyone's. So a caster casts a handful of spells and then fights with whatever it holds.
 One that cannot cast ([silenced](status-effects.md#status-silenced)) fights the same way.
 

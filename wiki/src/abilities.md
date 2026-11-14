@@ -4,7 +4,7 @@ Some of what you can do comes from who you are: your [race](races.md), your [cla
 in, your [weapon skills](weapon-skills.md) and [fighting styles](fighting-styles.md), and later the things you carry. These are your
 **abilities**. They do not each get a key of their own. Instead they are all in one menu.
 
-The basic commands keep their keys (see [Controls](controls.md)): moving, opening [doors](doors.md), [kicking](doors.md#kicking), [searching](searching.md#searching-1),
+The basic commands keep their keys (see [Controls](controls.md)): moving, opening [doors](doors.md), [kicking](doors.md#kicking-a-door-open), [searching](searching.md#how-to-search),
 [picking up](objects.md#picking-up), [eating](food.md#eating), [shooting](ranged.md#shooting-and-throwing), [resting](resting.md#how-resting-works), and so on.
 
 ## The abilities menu
@@ -35,6 +35,10 @@ Looking at the menu takes no time. It remembers the ability you used last and op
 `Enter` uses it again. `X` does the same in one key. With nothing used yet, `X` opens the menu.
 
 ## Every ability
+
+Every ability the menu can show, grouped as the menu groups them. The last column links the
+section that explains it in full: a [class](classes.md#levels)'s abilities under its class, the
+priest's prayer on [Prayer](prayer.md), a skill's use on [Using your skills](skill-uses.md).
 
 {{#include generated/abilities.md}}
 
@@ -77,54 +81,13 @@ you never choose them, they work by themselves as you fight. They have their own
 - **Shield bash**: anyone can bash with a shield (see [Weapon skills](weapon-skills.md)), so it is always in the menu,
   and you can use it while you hold a shield. It strikes whoever stands in the direction you
   choose, in the time of a blow.
-- **Disarm a trap**: everyone trained in [Disable device](skills.md#skill-disable-device) (the [thief](classes.md#thief)) has it, in the skill's place. Choose
-  a direction toward a [trap](traps.md#finding-traps) you know of next to you, on the floor or on a [door](doors.md), and you try to
-  take it apart (see [Traps](traps.md#disarming-traps)).
-- **Listen at a door**: everyone trained in [Listen](skills.md#skill-listen) has it, in the skill's place. Choose a direction
-  toward a closed [door](doors.md) next to you. You stop for a turn and hear what moves beyond it (see
-  [Hearing](hearing.md#listening-at-a-door)).
-- **Pick lock**: everyone trained in [Open lock](skills.md#skill-open-lock) (the [thief](classes.md#thief)) has it, in the skill's place. Choose a
-  direction toward a closed [door](doors.md) next to you, and you try its lock (see [Doors](doors.md#picking-locks)).
-- **Steal**: anyone trained in the [Steal](skills.md#skill-steal) skill has it, in the skill's place among the Skills. It asks
-  for a direction and tries to lift something from whoever stands there, if they are not hostile to
-  you (see [Stealing](skill-uses.md#stealing)).
-- **Feint**: anyone trained in the [Bluff](skills.md#skill-bluff) skill has it, in the skill's place among the Skills. It asks
-  for a direction and lies to the hostile creature there. Unless it sees through you, it is
-  [surprised](status-effects.md#status-surprised), and your next blow finds it off guard (see [Feinting](skill-uses.md#feinting)). For a
-  [thief](classes.md#thief) it makes the creature the [mark](resources.md#the-mark), and a feint it
-  falls for gives an [opening](resources.md#resource-openings). This is not the
-  Duelist style's [False lead](fighting-styles.md#style-ability-false-lead), which is a blow.
-- **Intimidate**: anyone trained in the [Intimidate](skills.md#skill-intimidate) skill has it, in the skill's place among the
-  Skills. It asks for a place you see within 6 cells and threatens the hostile creature there.
-  Unless it keeps its nerve, it is [frightened](status-effects.md#status-frightened) and flees, for longer the better your skill (see
-  [Intimidating](skill-uses.md#intimidating)).
-- **Heal**: anyone trained in the [Heal](skills.md#skill-heal) skill has it, in the skill's place among the Skills. It treats
-  you, or an [ally](allies.md) beside you, for [bleeding](status-effects.md#bleeding), a [poison](status-effects.md#poisoned), or a [disease](diseases.md#how-a-disease-goes) that shows. It asks which when
-  there is more than one. Otherwise it is greyed out: "nothing to treat" (see
-  [Treating yourself](skill-uses.md#treating-yourself)).
-- **Metalcraft…** and **Woodcraft…**: those trained in [Metalcraft](skills.md#skill-metalcraft)
-  or [Woodcraft](skills.md#skill-woodcraft) have its row, in the skill's place among the Skills. Each opens that [profession](skill-uses.md#professions)'s list of recipes.
-  Metalcraft's holds **Temper** (see [Forges](altars-forges-springs.md#forges)); Woodcraft's
-  holds **Arrows** and **Crossbow bolts** (see [Fletching](skill-uses.md#fletching)), **Sling
-  stones**, and **Whittle** (see [Whittling](skill-uses.md#whittling)). A recipe you cannot make
-  now is greyed out with the reason: "no anvil beside you", "no knife", "no bow ready".
-- **Jewelcraft…**: those trained in [Jewelcraft](skills.md#skill-jewelcraft) have it, in the
-  skill's place. It holds **Cut** (see [Gem cutting](gem-cutting.md)), **Set** (see
-  [Setting a gem](gem-cutting.md#setting-a-gem)), and the rings and amulets (see
-  [Making jewellery](crafting.md#making-jewellery)).
-- **Wedge a door**: anyone trained in [Woodcraft](skills.md#skill-woodcraft) has it, in the skill's place among the Skills. Choose
-  a direction, and you spend a turn wedging the closed door that way shut, so that creatures must
-  kick it in (see [Wedging a door](doors.md#wedging-a-door)).
-- **Forage**: anyone trained in [Survival](skills.md#skill-survival) has it, in the skill's place among the Skills. It asks for
-  nothing. You spend ten minutes searching the wild around you for food. It works only in the wild,
-  on the [overworld](overworld.md#travel) and in its [local areas](overworld.md#local-areas). Elsewhere it is greyed out: "not usable here" (see
-  [Foraging](skill-uses.md#foraging)).
-- **Tame**: anyone trained in [Handle animal](skills.md#skill-handle-animal) has it, in the skill's place among the Skills. It asks for
-  the direction of a beast next to you. A while beside it decides whether it becomes your
-  [companion](companions.md#companions) for good (see [Taming](companions.md#taming)). It is greyed out with "you already have a companion"
-  while you have one.
-- **Other skills used as actions** ([Knowledge](skills.md#skill-knowledge), ...): each is in the menu once you are trained in it
-  (see [Skills](skills.md)), greyed out until its use comes to the game.
+- **Skill uses**: a [skill](skills.md) that lets you do something puts its ability in the menu,
+  in the skill's place among the Skills, once you are trained in it. These are **Disarm a trap**,
+  **Listen at a door**, **Pick lock**, **Steal**, **Feint**, **Intimidate**, **Heal**, **Wedge a
+  door**, **Forage**, **Tame**, and the professions' rows (**Metalcraft…**, **Woodcraft…**,
+  **Jewelcraft…**). How each works is on [Using your skills](skill-uses.md), or on the page the
+  table's last column links. A skill whose use is not in the game yet is listed too, greyed out
+  (`not usable yet`).
 - **[Class abilities](classes.md#levels)** ([Rage](abilities.md#ability-rage), [War cry](abilities.md#ability-war-cry), [Charge](abilities.md#ability-charge), [Lullaby](abilities.md#ability-lullaby), [Cackle](abilities.md#ability-cackle), [Veteran's wind](abilities.md#ability-veterans-wind), [Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance),
   [Step of the wind](abilities.md#ability-step-of-the-wind), [Stunning strike](abilities.md#ability-stunning-strike), [Patient defence](abilities.md#ability-patient-defence), [Stillness](abilities.md#ability-stillness), [Quivering palm](abilities.md#ability-quivering-palm), [Consecrate](abilities.md#ability-consecrate), [Orison](abilities.md#ability-orison), [Sanctuary](abilities.md#ability-sanctuary), [Knock](abilities.md#ability-knock)) come
   from your [class](classes.md)'s level table (see [Classes](classes.md#levels)). Each is under Class from the level that brings
@@ -144,6 +107,9 @@ you never choose them, they work by themselves as you fight. They have their own
     the line refuses it before you move. So does too little stamina for the whole run, or a run out of a
     [shop](shops.md)'s door while you owe it. A refused
     charge takes no time and costs nothing.
+  - Each cell you run into is entered as a step enters it: you are told what lies there, a
+    [zone](spellcasting.md#zones) does its work, and wading through a marsh may give you a
+    [disease](diseases.md), as walking would.
   - Nobody you pass or leave behind gets a [free blow](stances.md#free-blows) at you on the way.
   - Someone you cannot see on the line stops you short, with no blow. A hidden trap goes off as
     you run over it and stops you there.
@@ -236,3 +202,6 @@ The key uses the ability just as the menu would, asking for a direction or a pla
 one. Without a shield, the bash key says so at once and takes no time. `a` ("Abilities") and `X`
 ("Use the last ability again") can be rebound like every key. Either of them also uses an ability
 that is being aimed at a place, as `Enter` does.
+
+See also: [Using your skills](skill-uses.md), [Classes](classes.md#levels), and
+[Resources](resources.md).

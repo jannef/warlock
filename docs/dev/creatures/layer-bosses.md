@@ -46,7 +46,7 @@ Every Pit (spec §7 "The Pits", `docs/dev/mapgen.md` "A Pit's warden", `world/pi
 warden on its fifth floor, so the type is **no unique** (`content/layer_boss.rs` asks `unique` only
 of an endless branch's bosses), and is shared (`assets/data/creatures/gatewarden.toml`, the lair
 `assets/vaults/wardens_hall.toml`, `dungeons = ["hellegeat"]`, pinned by the boss row). It is
-`stray = false` and in no population, so only the hall places it (`content/mod.rs`'s stray-list
+`stray = false` and in no population, so only the hall places it (`content/tests.rs`'s stray-list
 test counts a branch's boss as placed). Faction `layer_keepers`, not `loosed`: the Pit's folk keep
 their own factions and would fall on a `loosed` warden; the gates it summons take its faction
 (`world/summon.rs`), and so does what comes through them. Tags `fiend`, `summoner` (not `devil`:

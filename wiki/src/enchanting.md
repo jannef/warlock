@@ -7,7 +7,7 @@ hour's quiet work with the thing in your lap. The magic comes from
 [magic crystals](crystals.md), and the colour of a crystal decides what kind of magic it can
 give.
 
-## The recipes
+## Enchanting an item
 
 - **Kindle** makes a plain item magic, with one [affix](affixes.md#prefixes) (a prefix or a
   [suffix](affixes.md#suffixes)). It takes one crystal.
@@ -38,14 +38,14 @@ the same crystals as one item. Imbue's three crystals may all come from one stac
 
 {{#include generated/recipes-enchanting.md}}
 
-## The colour decides the magic
+## Which magic a crystal gives
 
 A crystal gives only magic of its colour's families (the [colours table](crystals.md#the-colours)
 lists them). A red crystal never gives mana, a blue one never gives life. If nothing of that
 colour can be added to the item (it already has every kind the colour gives, or the item cannot
 take them), the work is refused before it starts: "No more of that nature will take."
 
-## Seals
+## Keeping magic out with seals
 
 A **seal** keeps one family of magic out of the roll. After you choose the crystals, the work
 asks for up to three seals: a list of the families your crystal's colour gives, in words
@@ -100,4 +100,7 @@ your work and nothing is spent.
   falls apart. An item of Proof is spared. Of a stack of arrows or bolts, only one warps; the
   rest are as they were.
 
-Every finished work, made or not, can [train](skills.md#getting-better) Enchanting.
+Every finished work, made or not, can [train](skills.md#improving-a-skill) Enchanting.
+
+See also: [Magic crystals](crystals.md), [Magic items](magic-items.md), and
+[Prefixes and suffixes](affixes.md).

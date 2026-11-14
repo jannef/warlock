@@ -1,5 +1,7 @@
 # Warlock — Chests, mimics, and treasure rooms
 
+**Built; this file is history.** Current behaviour is in spec §7 "Chests" and "Mimics" and §8 "Chests", and `docs/dev/chests.md`.
+
 Design document for the owner's review (2026-10-28), revised with the owner's decisions the same day (§13). Written against `origin/main` at b9f41e21. Nothing here is implemented; §12 cuts it into issues. It builds on what is there: locks and keys (`docs/dev/doors.md`), traps (`docs/dev/traps.md`), searching (`docs/dev/searching.md`), digging (`docs/dev/digging.md`), the loot roll (`docs/dev/magic-items.md`), the creature rosters and the generated families (`docs/dev/creatures.md`, `docs/dev/animated.md`), and the special-rooms system (`docs/dev/special-rooms.md`, `docs/design/special-rooms.md`). Every number is data and hidden in the game; the wiki states it (the owner's rule: the game is vague, the wiki is accurate).
 
 ## Contents

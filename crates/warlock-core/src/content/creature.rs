@@ -369,6 +369,10 @@ pub(super) struct CreatureSpec {
     /// Whether it leaves a corpse when it dies (spec §8 "Hunger"; with `data/hunger.toml`).
     #[serde(default = "yes")]
     pub corpse: bool,
+    /// Whether its corpse never rots (docs/design/profane-gifts.md §3): a unique's alone, and
+    /// only one that leaves a corpse; it always leaves it, never glass or a statue.
+    #[serde(default)]
+    pub everlasting: bool,
     /// What eating its corpse does, beyond feeding the eater.
     pub on_eat: Option<OnEat>,
     /// The colour of its blood (`"#rrggbb"`), or `"none"` for a bloodless creature; none:
@@ -421,6 +425,104 @@ pub(super) struct CreatureSpec {
     /// What makes a generated type a mimic (`content/mimic.rs`); never written.
     #[serde(skip)]
     pub mimic: Option<super::mimic::MimicDef>,
+}
+
+/// A creature file that gives nothing but what it must (#1552): each field as serde fills it in
+/// when the file leaves it out, so a type built in code (`content/animated.rs`,
+/// `content/mimic.rs`) sets what it means and takes the rest with `..CreatureSpec::default()`.
+/// `id`, `name`, `glyph`, `fg`, and `weight`, which a file must give, are empty.
+/// `creature_spec_defaults_are_serdes` holds the two to each other.
+impl Default for CreatureSpec {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            name: String::new(),
+            plural: None,
+            glyph: char::default(),
+            fg: Rgb::default(),
+            speed: normal_speed(),
+            weight: 0,
+            size: None,
+            faction: None,
+            factions: BTreeMap::new(),
+            tags: Vec::new(),
+            alignment: Alignment::default(),
+            race: None,
+            vision: normal_vision(),
+            sight: default_sight(),
+            combat: Combat::default(),
+            range: None,
+            spells: Vec::new(),
+            opens_doors: false,
+            lurks: false,
+            hunts: false,
+            shadowy: false,
+            invisible: None,
+            budge: Budge::default(),
+            rooted: false,
+            attack_cost: None,
+            light: None,
+            footsteps: 0,
+            hearing: None,
+            stats: BTreeMap::new(),
+            potential: BTreeMap::new(),
+            base_hp: 0,
+            regen: full_regen(),
+            mana: 0,
+            level: first_level(),
+            xp: 0,
+            xp_percent: full_percent(),
+            unique: false,
+            stray: true,
+            rarity: None,
+            dread: false,
+            leavings: Vec::new(),
+            first_sight: None,
+            skills: BTreeMap::new(),
+            loot: 0,
+            drops: Vec::new(),
+            drops_from_tags: true,
+            attack: None,
+            breath: None,
+            gaze: None,
+            burst: None,
+            throw: None,
+            summon: None,
+            aura: None,
+            innate: Vec::new(),
+            cry: None,
+            splits: None,
+            dies_into: None,
+            steals: None,
+            blinks: None,
+            natural: None,
+            incorporeal: None,
+            vitals: true,
+            resist: BTreeMap::new(),
+            corrodes: None,
+            disarms: None,
+            corpse: true,
+            everlasting: false,
+            on_eat: None,
+            blood: None,
+            immune: Vec::new(),
+            dies: None,
+            depart: None,
+            tameable: false,
+            training: None,
+            nose: None,
+            grades: true,
+            grade_words: None,
+            weapon_skills: BTreeMap::new(),
+            racial_weapon: None,
+            gear: Vec::new(),
+            anim: None,
+            glow: 0.0,
+            particles: Vec::new(),
+            animated: None,
+            mimic: None,
+        }
+    }
 }
 
 /// What eating a creature's fresh corpse does (spec §8 "Hunger"), beyond feeding the eater by
@@ -792,6 +894,7 @@ impl CreatureSpec {
             corrodes: self.corrodes,
             disarms: self.disarms,
             corpse: self.corpse,
+            everlasting: self.everlasting,
             on_eat: self.on_eat,
             blood: r.blood,
             immune: r.immune,
@@ -1054,6 +1157,10 @@ pub struct CreatureDef {
     /// Gameplay: whether it leaves a corpse when it dies (spec §8 "Hunger"; only with
     /// `data/hunger.toml`, which says how corpses rot and feed).
     pub corpse: bool,
+    /// Gameplay: whether its corpse never rots (its `Food` keeps and lasts for ever) and its
+    /// death always lays it: no crystal spell turns it to glass, no petrifying death to stone.
+    /// A unique's alone, with `corpse` (the loader's check).
+    pub everlasting: bool,
     /// Gameplay: what eating its fresh corpse does, beyond feeding the eater. Hidden from the
     /// player until they try.
     pub on_eat: Option<OnEat>,
@@ -1134,5 +1241,19 @@ mod immunity_tests {
             err.contains("unknown status or damage type `nothing`"),
             "{err}"
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::CreatureSpec;
+
+    #[test]
+    fn creature_spec_defaults_are_serdes() {
+        // The required fields at their empty values; everything else left to serde.
+        let text = "id = \"\"\nname = \"\"\nglyph = \"\\u0000\"\nfg = \"#000000\"\nweight = 0\n";
+        let parsed: CreatureSpec = toml::from_str(text).expect("a bare creature parses");
+        let built = CreatureSpec::default();
+        assert_eq!(format!("{parsed:?}"), format!("{built:?}"));
     }
 }

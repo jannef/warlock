@@ -1,6 +1,6 @@
 # Prefixes and suffixes
 
-A [magic item](magic-items.md) is a base item with a prefix, a suffix, or both. This page lists the base items and every prefix and suffix, and says how an item's name is put together.
+A [magic item](magic-items.md) is a base item with a prefix, a suffix, or both. This page lists the base items and every prefix and suffix, and says how an item's name is put together. To put them on an item yourself, see [Enchanting](enchanting.md).
 
 ## Base items
 
@@ -18,7 +18,7 @@ Prefixes are mostly offensive, or give flat [Defence](combat.md#defence) and lif
 - *Mage-wrought*, *Baleful*, and *Potent* serve a caster (see [Magic](magic.md)). *Potent* adds 1
   to 3 more to every [spell](spellcasting.md#how-a-spell-grows)'s roll, harm or healing.
 - *Tireless* raises your [stamina](resources.md#resource-stamina) (see [Resources](resources.md)).
-- *Hobnailed* [boots](objects.md#class-boots) [kick doors](doors.md#kicking) in more easily.
+- *Hobnailed* [boots](objects.md#class-boots) [kick doors](doors.md#kicking-a-door-open) in more easily.
 - A *Delving* tool or pair of gloves [digs](digging.md#digging) faster. Magic pick-axes do turn up
   in loot.
 
@@ -112,3 +112,6 @@ emerald-pommelled long sword". An item of a material other than its usual one (s
 emerald-pommelled bronze long sword of the Bear".
 
 {{#include generated/magic-names.md}}
+
+See also: [Magic items](magic-items.md), [Enchanting](enchanting.md), and
+[Magic crystals](crystals.md).

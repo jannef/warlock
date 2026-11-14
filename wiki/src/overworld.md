@@ -56,7 +56,7 @@ local area ([Leaving an area](#leaving-an-area)).
 
 Some locations are **hidden**. Until someone tells you where one is, its cell is in every way just
 the land it looks like, a stretch of swamp or forest. Walking onto it is a journey through that
-land, and `>` explores it like any other cell. [Searching](searching.md#searching-1) does not find
+land, and `>` explores it like any other cell. [Searching](searching.md#how-to-search) does not find
 one.
 
 **Only a [quest](quests.md) reveals a hidden location**, or coming out of it from below. A few

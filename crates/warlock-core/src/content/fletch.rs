@@ -91,6 +91,14 @@ impl FletchRules {
     }
 }
 
+impl super::RulesFile for FletchRules {
+    const PATH: &'static str = "data/fletch.toml";
+
+    fn parse(path: &str, text: &str, content: &super::Content) -> Result<Self, ContentError> {
+        Self::parse(path, text, content)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::content::{Content, ContentFiles};

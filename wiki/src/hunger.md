@@ -1,5 +1,8 @@
 # Hunger
 
+This page has the rules of hunger: how fast it comes and what it does to you. What there is to
+eat, how food spoils, and what each corpse gives are on [Food and corpses](food.md).
+
 You have to eat. Your stomach empties as **time** passes, whatever you do: walking,
 [fighting](combat.md#hitting), [resting](resting.md#how-resting-works), and long journeys on the
 [overworld](overworld.md) all count. The game measures your food in points of **nutrition**.
@@ -20,10 +23,10 @@ You never see the count, only how hungry you are.
   scores. Eating gives them back.
 - **Fainting**: now and then you faint from hunger ("You faint from hunger.") and lose a few
   [turns](time.md#what-takes-time) while everything around you goes on.
-- **Starving**: your wounds stop [healing](healing.md#how-fast), and you lose [hit
+- **Starving**: your wounds stop [healing](healing.md#how-fast-you-heal), and you lose [hit
   points](hit-points.md#hit-points) as time passes until you eat or starve to death.
 - **Satiated** does nothing. **Bloated** slows everything you do, as a
-  [burden](burden.md#burden-1) does, so wait for it to pass. Eating more than your stomach can
+  [burden](burden.md#burden-levels) does, so wait for it to pass. Eating more than your stomach can
   hold is **overeating**: you may vomit, which leaves you hungry and feeds you nothing.
 
 You cannot choke to death on food.

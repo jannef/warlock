@@ -14,11 +14,11 @@ bar, and the info pages.
 | Attack | move into a [hostile](creatures.md#factions) [creature](creatures.md) |
 | [Swap places](npcs.md#getting-past) | move into any other creature |
 | [Chat](npcs.md#chatting) with someone next to you | `C` (then a direction, if several are near; see [Something beside you](#something-beside-you)) |
-| Wait a [turn](time.md#what-takes-time), [searching](searching.md#searching-1) the cells around you | numpad `5` or `s` |
-| [Search](searching.md#searching-1) for a while (up to 10 [turns](time.md#what-takes-time), stops when something turns up) | `Alt` with `s` or numpad `5` (`Option` on a Mac) |
+| Wait a [turn](time.md#what-takes-time), [searching](searching.md#how-to-search) the cells around you | numpad `5` or `s` |
+| [Search](searching.md#how-to-search) for a while (up to 10 [turns](time.md#what-takes-time), stops when something turns up) | `Alt` with `s` or numpad `5` (`Option` on a Mac) |
 | Open a [door](doors.md) or a [chest](chests.md) | `o` (then a direction, if several are beside you; or walk into the door) |
 | Close a [door](doors.md) | `c` (then a direction, if several are beside you) |
-| [Kick](doors.md#kicking) (a [door](doors.md), to break it in, or a [creature](creatures.md)) | `k`, then a direction, always (see [Doors](doors.md)) |
+| [Kick](doors.md#kicking-a-door-open) (a [door](doors.md), to break it in, or a [creature](creatures.md)) | `k`, then a direction, always (see [Doors](doors.md)) |
 | Go down [stairs](terrain.md#stairs), or enter a place on the [overworld](overworld.md#locations) | `>` |
 | Go up [stairs](terrain.md#stairs), or [leave an outdoor area](overworld.md#leaving-an-area) when no enemy is about | `<` |
 | [Pick up](objects.md#picking-up) | `,` or `;` |
@@ -173,7 +173,7 @@ a file, `keymaps/default.toml`.
 
 Some commands ask a question on the [message line](the-screen.md#messages) before they act:
 
-- [Kicking](doors.md#kicking) asks `In which direction? (Esc to cancel)`, and so do opening or
+- [Kicking](doors.md#kicking-a-door-open) asks `In which direction? (Esc to cancel)`, and so do opening or
   closing a [door](doors.md), [bashing](abilities.md#ability-shield-bash) with your shield, and
   [stealing](abilities.md#ability-steal) when more than one thing beside you could be meant (see
   [Something beside you](#something-beside-you)).
@@ -226,7 +226,7 @@ can see. What each one looks for:
 | [Gather](abilities.md#ability-gather) | the glowing fungus |
 | [Shield bash](abilities.md#ability-shield-bash), the smites and other class blows, weapon blows aimed in a direction | a hostile creature (a lunge reaches one two paces off) |
 
-[Kicking](doors.md#kicking) always asks: you may kick any way you like.
+[Kicking](doors.md#kicking-a-door-open) always asks: you may kick any way you like.
 
 ## Look mode
 

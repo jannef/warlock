@@ -1261,8 +1261,10 @@ impl World {
             self.hex_tithe(id);
             // What crawls out of its corpse (`split.rs`).
             let crawled = self.dies_into(id);
-            // Turned to stone, it leaves a statue (`statue.rs`).
-            let stoned = of.is_some_and(|s| self.content.status(s).statue);
+            // Turned to stone, it leaves a statue (`statue.rs`); an everlasting creature always
+            // leaves its corpse.
+            let stoned = of.is_some_and(|s| self.content.status(s).statue)
+                && !self.content.creature(creature).everlasting;
             // A business partner takes the stake with them (`invest.rs`).
             self.partner_dies(id);
             // A patron's open commission is off (`patron.rs`).

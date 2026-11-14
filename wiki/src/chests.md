@@ -15,7 +15,7 @@ things:
 {{#include generated/chest-descriptions.md}}
 
 You never see what a shut chest holds, or whether it is [locked](#locked-chests) or
-[trapped](#trapped-chests), until you try it (or [search it](searching.md#searching-1)).
+[trapped](#trapped-chests), until you try it (or [search it](searching.md#how-to-search)).
 
 ## Where chests are found
 
@@ -89,7 +89,7 @@ Without a key:
 - **[Pick lock](abilities.md#ability-pick-lock)** works on a chest's lock exactly as on a door's
   (see [Doors](doors.md#picking-locks)): `You pick the lock and open the coffer.`
 - **[Knock](abilities.md#ability-knock)** is the [wizard](classes.md#wizard)'s word of unbinding,
-  from level 4, for 5 [mana](mana.md#how-much) and the time of a spell (see [Classes](classes.md)).
+  from level 4, for 5 [mana](mana.md#how-much-mana-you-have) and the time of a spell (see [Classes](classes.md)).
   Choose it in the [abilities menu](abilities.md#the-abilities-menu) (`a`) and a direction, and the
   lock there, of a chest or a door, springs open: `The lock springs open with a click.` Nothing
   opens by itself; open it afterwards as an unlocked one. Where nothing locked stands, Knock is
@@ -98,7 +98,7 @@ Without a key:
 
 ## Kicking a chest open
 
-Press `k` and a chest's direction to kick it, as you [kick a door](doors.md#kicking): 6 seconds,
+Press `k` and a chest's direction to kick it, as you [kick a door](doors.md#kicking-a-door-open): 6 seconds,
 and just as [loud](hearing.md#how-loud). Your chance to break it is your
 [Strength](stats.md#stat-strength) against its **sturdiness**. Your
 [Athletics](skills.md#skill-athletics) skill and the [Lockbreaker](talents.md#talent-lockbreaker)
@@ -170,7 +170,7 @@ A chest blown apart by a blast from somewhere else (a
 [scroll of fireball](scrolls.md#scroll-of-fireball), another [trap](traps.md)) sets off its own
 trap at no one: the trap is simply gone with the lid.
 
-[Searching](searching.md#searching-1), helped by your [Detect traps](skills.md#skill-detect-traps)
+[Searching](searching.md#how-to-search), helped by your [Detect traps](skills.md#skill-detect-traps)
 skill, finds a chest's trap like any [hidden trap](traps.md#finding-traps)
 (`You notice that the coffer is trapped: an arrow trap.`). Once you know it,
 [look mode](controls.md#look-mode) says so: "A coffer, trapped: an arrow trap." The chest keeps its

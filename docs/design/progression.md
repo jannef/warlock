@@ -1,5 +1,7 @@
 # Warlock — Progression: experience, levels, class tables, skill rolls, stat training, talents, mana, resources
 
+**Built; this file is history.** Current behaviour is in spec §8 "Experience", "Talents", and the class tables, and `docs/dev/experience.md` and `docs/dev/progression.md`.
+
 Design document for the owner's review (2026-10-20). Written against `origin/main` at 64b3713. Nothing here is implemented; §11 cuts it into issues.
 
 ## Contents

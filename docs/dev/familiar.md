@@ -30,7 +30,8 @@ below). A familiar's kill pays as any ally's (`[xp] ally_percent`): the witch ha
 (`["imp"]`) and `bargain_level` (30), `[start]` (`rare_per_mille` 50, `rare`, `most_level` 2,
 `[start.by_race]` one to three beasts a race, as `companions.toml`'s), `[arrives]` (a line for every
 beast a start or a calling may draw, `every_kind()`). The load checks: known creatures, never
-the player (`content/familiar.rs`), a hex `touch` that lays a status, lists and names not empty
+the player (`content/familiar.rs`; `[start]` and the names through `content/race_beasts.rs`,
+`FamiliarRules::start` a `RaceBeasts` as the companion's, #1567), a hex `touch` that lays a status, lists and names not empty
 (the draws index them); the rest is the author's (#1205: what shape a beast listed has; a kind
 without an `arrives` line arrives unsaid; `world/familiar_tests.rs` checks the shipped lists have
 theirs).

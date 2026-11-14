@@ -19,9 +19,9 @@ One gem of a stack is cut; the rest stay as they were.
 
 When the time is up you make one check: 2d12, plus your
 [Dexterity](stats.md#stat-dexterity) [modifier](stats.md#modifiers), the
-[craft points](crafting.md#who-works-what) Jewelcraft gives (+8 at 100, +12 at 200), and your
+[craft points](crafting.md#which-skill-makes-what) Jewelcraft gives (+8 at 100, +12 at 200), and your
 [talents](talents.md) for Dexterity checks. The difficulty is 12 plus the gem's
-[work](crafting.md#who-works-what): a ruby is harder to cut than a smokestone. In
+[work](crafting.md#which-skill-makes-what): a ruby is harder to cut than a smokestone. In
 [Gimmwīc](ascmearc.md#gimmwīc), once the [crystal guardian](quests.md#lures) stands bound there,
 you get **+2** more. How far you beat it (the **margin**) sets the cut:
 
@@ -76,5 +76,5 @@ check, and it is never lost.
 
 ## Training
 
-Every cut or setting you finish may train [Jewelcraft](skills.md#getting-better), whatever came of
+Every cut or setting you finish may train [Jewelcraft](skills.md#improving-a-skill), whatever came of
 it.
