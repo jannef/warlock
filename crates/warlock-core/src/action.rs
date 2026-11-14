@@ -298,7 +298,7 @@ pub enum Action {
     /// takes the time of `wait`.
     UseTalent(TalentActive),
     /// Use a class active (spec §8 "Class abilities"; the abilities menu's Class group): rage,
-    /// veteran's wind, whirlwind, lay on hands, holy radiance, and, aimed in a direction, smite
+    /// veteran's wind, lay on hands, holy radiance, and, aimed in a direction, smite
     /// and quivering palm (`use:rage`, `use:smite:E`). Takes the time of its cost's action;
     /// refused (no time) without the ability, while its cooldown lasts, or without the
     /// direction it asks.

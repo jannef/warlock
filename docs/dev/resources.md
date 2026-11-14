@@ -38,7 +38,7 @@ statuses).
   The loader checks only well-formedness (#1205): unique ids, resolution, the divisors above,
   `ended` only with `ends_at_zero`; the grant and the pool keep a value within the maximum. `ResourceId` is an index, in `Content::fingerprint` (its own
   group, after the damage types). `Build` is the closed list of events (`kill`, `hit`,
-  `critical`, `struck`, `sneak_attack`, `feint`, `mark_kill`; `Build::ALL` in wiki order). Loaded before the talents,
+  `melee_hit`, `melee_kill`, `critical`, `struck`, `sneak_attack`, `feint`, `mark_kill`; `Build::ALL` in wiki order). Loaded before the talents,
   whose class actives may cost one (`TalentDef::resource: Option<ResourceCost>`, data `resource =
   { id, cost }`, checked: a known id, a talent with a class active, a cost no more than
   `ResourceDef::most`, the data's `max` with what `max_from` adds at the highest level for
@@ -54,7 +54,9 @@ statuses).
   - `World::gain_resource(id, on)`: every pool held that builds on `on` gains its amount (its
     `builds`, plus the talents' `resource_build`s, `TalentMods::resource_builds`), up to the
     maximum. Called in `fight.rs::dies` (`Kill`, for `by`, creatures' deaths only),
-    `fight.rs::resolve` (`Hit` and `Critical` for the attacker on a `Strike::Hit`, `Struck` for
+    `fight.rs::resolve` (`Hit` and `Critical` for the attacker on a `Strike::Hit`, `MeleeHit`
+    beside `Hit` for a melee blow and `MeleeKill` at the kill point of a melee blow (Battle
+    rhythm's stamina, the warrior's at 40, #1467; a bleed's later kill is no `MeleeKill`), `Struck` for
     the target on every strike that `is_hit()`, `Soaked` and `Resisted` too (#842: the rage
     builds on hits taken before mitigation; zeal builds on it too, #910), before the
     damage, so a killing blow counts), and `ambush.rs::ambushed`

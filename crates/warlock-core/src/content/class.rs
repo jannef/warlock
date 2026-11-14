@@ -593,8 +593,6 @@ pub enum ClassActive {
     WarCry,
     /// Hit points back at once, then a cooldown (the warrior's Veteran's wind).
     VeteransWind,
-    /// A blow at every hostile beside you for the price of one attack.
-    Whirlwind,
     /// Hit points back by the level, then a cooldown (the paladin's Lay on hands).
     LayOnHands,
     /// A blow of holy wrath in a direction with dice more damage, for zeal (`world/smite.rs`).
@@ -687,7 +685,6 @@ impl ClassActive {
         ClassActive::WarCry,
         ClassActive::Charge,
         ClassActive::VeteransWind,
-        ClassActive::Whirlwind,
         ClassActive::LayOnHands,
         ClassActive::Smite,
         ClassActive::BrandingSmite,
@@ -726,7 +723,6 @@ impl ClassActive {
             ClassActive::WarCry => "war_cry",
             ClassActive::Charge => "charge",
             ClassActive::VeteransWind => "veterans_wind",
-            ClassActive::Whirlwind => "whirlwind",
             ClassActive::LayOnHands => "lay_on_hands",
             ClassActive::Smite => "smite",
             ClassActive::BrandingSmite => "branding_smite",
@@ -867,8 +863,7 @@ impl ClassActive {
             // It takes no time (`takes_no_time`): none block a wait.
             | ClassActive::StepOfTheWind
             | ClassActive::Stillness => ActionKind::Wait,
-            ClassActive::Whirlwind
-            | ClassActive::Smite
+            ClassActive::Smite
             | ClassActive::BrandingSmite
             | ClassActive::WrathfulSmite
             | ClassActive::BanishingSmite

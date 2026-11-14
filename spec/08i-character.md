@@ -1341,7 +1341,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Who has them**: given as the level comes, "You gain Rage." (the shared rules of the bullet
     above); each is read with the talents through `Actor::talent_mods`. Their effects are the
     talents' kinds and the class's own (the effects README of `data/talents/`); an active's
-    effect (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `smite`, `radiance`,
+    effect (`rage`, `veterans_wind`, `lay_on_hands`, `smite`, `radiance`,
     `quivering_palm`) makes the talent that has it the ability's name and description in the
     menu; a holy gift's `alignment` names the bands it works for (§8 "Alignment"). Deflect
     missiles left the ascetic's table for Stunning strike at 12 (#848); it stays the ordinary
@@ -1376,10 +1376,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     no opportunist's, gatekeeper's, brace, or point-blank; 1 stamina and 1 more a cell moved,
     spent as it begins, refused while short of the whole; the steps' time, each priced as a step
     onto its terrain, the blow free with its exertion; its talent grants Stamina, §8
-    "Resources"),
-    Veteran's wind (1 hit point a level back, at least 10, then Winded; a wait), Whirlwind (a
-    blow at every hostile beside, clockwise from the north, each with the free blows the end of
-    an attack brings, for one melee attack's price and one exertion), Lay on hands (2 hit
+    "Resources"; with Whirling charge, the warrior's at 50 (#1467, `whirling_charge`), after each
+    step every hostile beside the cell entered takes a free blow, the cleave's kind (no time, no
+    stamina, no exertion, no mark moved), clockwise from the north, each at most once a charge,
+    the one charged at never on the way, only by the charge's blow at its end; one that falls
+    does not stop the charge),
+    Veteran's wind (1 hit point a level back, at least 10, then Winded; a wait), Lay on hands (2 hit
     points a level, for 6 zeal, §8 "Resources"; a cast; works for Kind or better), Smite (the
     paladin's at level 1, #910, `world/smite.rs`: a blow in a direction with 1d6 more per 10
     levels, at least 1d6, and a die more against the unholy, a creature type carrying a tag of
@@ -1434,8 +1436,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Passives**, each one read: Weapon drill (melee weapon skill marks +25 %, `practise`),
     Shield line (Shield +1 in a shield style, the styles' role since #1093), Cleaving strike (the cleave free blow; with the Cleave talent too, great
     cleave), Armour drill (worn armour's Dexterity cap +1, Protection +1 while wearing any),
-    Weapon mastery (threat +1 with melee weapon skills at rank 8 or more), Iron stance (the
-    aggressive stance's Dodge penalty and the defensive's to-hit penalty gone), Champion
+    Weapon mastery (threat +1 with melee weapon skills at rank 8 or more), Battle rhythm (the
+    warrior's at 40, #1467: a melee hit of theirs gives back a point of stamina, a melee kill one
+    more, a killing blow two in all, never past the pool's maximum; `resource_build` on the
+    `melee_hit` and `melee_kill` events, §8 "Resources"), Champion
     (critical multiplier +1 with melee weapons, at most ×5); Battle-scarred (Protection +1, and
     +2 more while raging: +3 in all, in any armour), Headlong (while raging, steps 20 % cheaper,
     in any armour and any burden, `World::step_price`), Brutal critical (critical multiplier +1

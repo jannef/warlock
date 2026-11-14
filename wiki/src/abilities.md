@@ -117,7 +117,7 @@ you never choose them, they work by themselves as you fight. They have their own
   while you have one.
 - **Other skills used as actions** ([Knowledge](skills.md#skill-knowledge), ...): each is in the menu once you are trained in it
   (see [Skills](skills.md)), greyed out until its use comes to the game.
-- **[Class abilities](talents.md#class-abilities)** ([Rage](abilities.md#ability-rage), [War cry](abilities.md#ability-war-cry), [Charge](abilities.md#ability-charge), [Lullaby](abilities.md#ability-lullaby), [Cackle](abilities.md#ability-cackle), [Veteran's wind](abilities.md#ability-veterans-wind), [Whirlwind](abilities.md#ability-whirlwind), [Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance),
+- **[Class abilities](talents.md#class-abilities)** ([Rage](abilities.md#ability-rage), [War cry](abilities.md#ability-war-cry), [Charge](abilities.md#ability-charge), [Lullaby](abilities.md#ability-lullaby), [Cackle](abilities.md#ability-cackle), [Veteran's wind](abilities.md#ability-veterans-wind), [Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance),
   [Step of the wind](abilities.md#ability-step-of-the-wind), [Stunning strike](abilities.md#ability-stunning-strike), [Patient defence](abilities.md#ability-patient-defence), [Stillness](abilities.md#ability-stillness), [Quivering palm](abilities.md#ability-quivering-palm), [Consecrate](abilities.md#ability-consecrate), [Orison](abilities.md#ability-orison), [Sanctuary](abilities.md#ability-sanctuary), [Knock](abilities.md#ability-knock)) come
   from your [class](classes.md)'s level table (see [Classes](classes.md#levels)). Each is under Class from the level that brings
   it.
@@ -139,6 +139,11 @@ you never choose them, they work by themselves as you fight. They have their own
   - Someone you cannot see on the line stops you short, with no blow. A hidden trap goes off as
     you run over it and stops you there.
   - Charge also gives the warrior their stamina pool from level 1.
+  - With [Whirling charge](talents.md#talent-whirling-charge) (the warrior's at level 50), every
+    hostile beside a cell you run into takes a [free blow](stances.md#free-blows) as you pass, in
+    the order you pass them. Each is struck once a charge. The foe you charge at gets only the
+    charge's own blow at the end. The blows cost no time and no stamina, and a foe that falls
+    does not stop you.
 - **[War cry](abilities.md#ability-war-cry)**, the [berserker](classes.md#berserker)'s at level 25, is paid in [rage](resources.md): 4 of it, plus the time of a wait.
   So it is greyed out with "you have not the rage for it" until you [rage](abilities.md#ability-rage). You roar as loud as a
   [howl](hearing.md), heard across the floor; it wakes sleepers and draws the curious.

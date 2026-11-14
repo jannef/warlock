@@ -738,14 +738,14 @@ pub enum TalentEffect {
     /// While raging: the statuses named tick nothing, and a blow that would take the last hit
     /// point leaves it for `cost` of the rage, when that much is held (Unstoppable).
     Unstoppable { statuses: Vec<String>, cost: u16 },
-    /// The class active Whirlwind: a blow at every hostile beside it for the price of one
-    /// attack.
-    Whirlwind,
     /// The class active Charge (the warrior's, `world/charge.rs`): a rush along the line to a
     /// hostile the player sees, ending beside it with a blow, provoking no free blows on the
     /// way: it costs the talent's `resource` (Stamina) and `per_cell` more for every cell
     /// moved.
     Charge { per_cell: u16 },
+    /// Charge also strikes every hostile beside a cell it passes, each once, a free blow (the
+    /// warrior's Whirling charge, `world/charge.rs`); the one charged at gets only its own.
+    WhirlingCharge,
     /// The class active Smite: a melee blow in a direction with one die of `sides` more damage
     /// per `per_levels` character levels (at least one), `unholy` dice more against an unholy
     /// foe (`data/smite.toml`), and the smiter's modifier in `aim` added to hit (what it costs
@@ -1316,7 +1316,6 @@ impl TalentEffect {
             TalentEffect::Cackle { .. } => A::Cackle,
             TalentEffect::Familiar => A::CallFamiliar,
             TalentEffect::VeteransWind { .. } => A::VeteransWind,
-            TalentEffect::Whirlwind => A::Whirlwind,
             TalentEffect::Charge { .. } => A::Charge,
             TalentEffect::LayOnHands { .. } => A::LayOnHands,
             TalentEffect::Smite { .. } => A::Smite,

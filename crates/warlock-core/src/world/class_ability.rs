@@ -1,6 +1,6 @@
 //! The class actives in the world (spec §8 "Class abilities"): what a class's level table gives
 //! that is used from the abilities menu ([`crate::ability::Ability::Class`]) as [`Action::Use`]
-//! (`use:rage`, `use:smite:E`): Rage, War cry (for rage, `world/war_cry.rs`), Veteran's wind, Whirlwind, Lay on hands, Smite (for zeal, `world/smite.rs`), Holy
+//! (`use:rage`, `use:smite:E`): Rage, War cry (for rage, `world/war_cry.rs`), Veteran's wind, Lay on hands, Smite (for zeal, `world/smite.rs`), Holy
 //! radiance, Stunning strike, Quivering palm and Step of the wind (for ki, `world/ascetic.rs`; the last takes no time), the songs (Inspire, for inspiration, `world/song.rs`), the thief's
 //! Lurk (`world/thief.rs`), Exploit (for openings,
 //! `world/openings.rs`; the ranger's Volley, aimed at a cell, is `world/volley.rs`, and the
@@ -22,7 +22,7 @@
 use super::smite::SmiteMode;
 use super::{ActorId, Spent, World};
 use crate::ability::{Ability, Unavailable};
-use crate::action::{AttackKind, Event};
+use crate::action::Event;
 use crate::content::{ActionKind, ClassActive, Stance};
 use crate::geom::Dir;
 use crate::status::Effect;
@@ -89,7 +89,6 @@ impl World {
             (ClassActive::Rage, _) => self.rage(events),
             (ClassActive::WarCry, _) => self.war_cry(events),
             (ClassActive::VeteransWind, _) => self.veterans_wind(events),
-            (ClassActive::Whirlwind, _) => self.whirlwind(events),
             (ClassActive::LayOnHands, _) => self.lay_on_hands(events),
             (ClassActive::HolyRadiance, _) => self.holy_radiance(events),
             (ClassActive::Inspire | ClassActive::Lullaby, _) => self.sing(active, events),
@@ -253,35 +252,6 @@ impl World {
             None => self.afflict(player, status, 1, Some(player), events),
         }
         Spent::Turn(self.price_of(player, ActionKind::Cast))
-    }
-
-    /// Whirlwind: one blow at every hostile beside the player, clockwise from the north, each
-    /// with the free blows the end of an attack brings, for the price of one attack and its one
-    /// exertion. Refused (no time) with no hostile beside them.
-    fn whirlwind(&mut self, events: &mut Vec<Event>) -> Spent {
-        let player = self.state.player;
-        let around = self.hostiles_beside();
-        if around.is_empty() {
-            self.say("There is nobody beside you to strike.");
-            return Spent::Nothing;
-        }
-        let me = self.state.player();
-        let melee = me.attack_skills(&self.content, AttackKind::Melee, None);
-        let with = me.weapon_item(&self.content);
-        let price = self.attack_price(player, ActionKind::Melee, with, melee);
-        self.say("You whirl about you!");
-        for (target, seen) in around {
-            if self.state.death.is_some() {
-                break;
-            }
-            if !self.state.actors.contains_key(&target) {
-                continue;
-            }
-            let first = self.player_blow(target, seen, None, events);
-            self.after_attack(player, target, super::free_blow::parried(first), events);
-        }
-        self.exert(ActionKind::Melee);
-        Spent::Turn(price)
     }
 
     /// Quivering palm: a blow of the player's bare hand at the hostile in `dir`; a hit that

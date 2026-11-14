@@ -7,7 +7,6 @@ use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
-use crate::combat::Category;
 use crate::content::{Build, ClassActive, Factor, StatusId, percent_of};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
@@ -214,7 +213,7 @@ fn the_bonus_picks_come_from_the_classs_trees() {
 }
 
 #[test]
-fn weapon_drill_shield_wall_armour_drill_and_iron_stance() {
+fn weapon_drill_shield_line_and_armour_drill() {
     let mut w = world("warrior");
     let content = w.content().clone();
     let mods = w.state.player().talent_mods(&content);
@@ -225,10 +224,6 @@ fn weapon_drill_shield_wall_armour_drill_and_iron_stance() {
         "Weapon drill: a quarter more marks"
     );
     assert_eq!(mods.marks(crate::content::Role::Launcher, 100), 100);
-    let defence = |w: &World| {
-        let me = w.state.player();
-        me.defence(&content, crate::burden::Burden::Unburdened, None)
-    };
     // Shield line: the class talent's own effect gives the shield +1 (the picks levelup:auto
     // makes on the way may add to Defence too).
     let book = content.talents();
@@ -243,11 +238,6 @@ fn weapon_drill_shield_wall_armour_drill_and_iron_stance() {
         protection + 1,
         "Armour drill, in the warrior's leathers"
     );
-    // Iron stance: aggressive costs no Dodge.
-    run(&mut w, "stance:aggressive");
-    let aggressive = defence(&w).bonus(Category::Dodge);
-    reach(&mut w, 40);
-    assert_eq!(defence(&w).bonus(Category::Dodge), aggressive + 3);
 }
 
 #[test]
@@ -690,35 +680,6 @@ fn martial_arts_flurry_still_mind_and_quivering_palm() {
     // Perfect self: a bigger die.
     reach(&mut w, 60);
     assert_eq!(fists(&w), "1d8");
-}
-
-#[test]
-fn whirlwind_strikes_every_hostile_beside_for_one_attack() {
-    let mut w = world("warrior");
-    run(&mut w, "use:whirlwind");
-    assert_eq!(last(&w), "You have no such ability.");
-    reach(&mut w, 50);
-    run(&mut w, "use:whirlwind");
-    assert_eq!(last(&w), "There is nobody beside you to strike.");
-    let first = beside(&mut w, "kobold", 500);
-    let second = beside(&mut w, "kobold", 500);
-    let below = w.player_pos().step(Dir::S);
-    w.state.actors.get_mut(&second).expect("second").pos = below;
-    let turn = w.state.turn;
-    let out = w.apply(&Action::Use(ClassActive::Whirlwind, None));
-    assert_eq!(w.state.turn, turn + 1, "one attack's time");
-    let struck: Vec<ActorId> = (out.events.iter())
-        .filter_map(|e| match e {
-            Event::Attacked {
-                attacker, target, ..
-            } if *attacker == w.state.player => Some(*target),
-            _ => None,
-        })
-        .collect();
-    assert!(
-        struck.contains(&first) && struck.contains(&second),
-        "{struck:?}"
-    );
 }
 
 #[test]

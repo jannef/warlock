@@ -31,6 +31,11 @@ pub enum Build {
     Kill,
     /// A blow of the holder's hit (any attack: melee, a shot, a throw, a bash, a kick).
     Hit,
+    /// A melee blow of the holder's hit (raised beside `Hit`; Battle rhythm's).
+    MeleeHit,
+    /// A melee blow of the holder's killed its target (raised at the blow's kill point, beside
+    /// `dies`' `Kill`; a wound bleeding it to death later does not count).
+    MeleeKill,
     /// A blow of the holder's was a critical.
     Critical,
     /// The holder was hit by a blow: any that hit, even one their armour soaked or they
@@ -50,9 +55,11 @@ pub enum Build {
 
 impl Build {
     /// Every event, in the order the wiki lists them.
-    pub const ALL: [Build; 7] = [
+    pub const ALL: [Build; 9] = [
         Build::Kill,
         Build::Hit,
+        Build::MeleeHit,
+        Build::MeleeKill,
         Build::Critical,
         Build::Struck,
         Build::SneakAttack,
@@ -65,6 +72,8 @@ impl Build {
         match self {
             Build::Kill => "kill",
             Build::Hit => "hit",
+            Build::MeleeHit => "melee_hit",
+            Build::MeleeKill => "melee_kill",
             Build::Critical => "critical",
             Build::Struck => "struck",
             Build::SneakAttack => "sneak_attack",
@@ -78,6 +87,8 @@ impl Build {
         match self {
             Build::Kill => "a kill",
             Build::Hit => "a hit",
+            Build::MeleeHit => "a melee hit",
+            Build::MeleeKill => "a kill in melee",
             Build::Critical => "a critical",
             Build::Struck => "being hit",
             Build::SneakAttack => "a sneak attack that hits",

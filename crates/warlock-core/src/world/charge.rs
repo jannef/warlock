@@ -20,12 +20,19 @@
 //!   distance costs. **Time**: the steps' (each priced as the step onto its terrain is); the
 //!   blow comes free, with its exertion.
 //!
-//! Nothing is drawn deciding; the trap and the blow draw as theirs always do.
+//! - **Whirling charge** (the warrior's level-50 talent, `whirling_charge`): after each step,
+//!   every hostile beside the cell just entered takes a free blow ([`Free::Cleave`]'s kind: no
+//!   time, no stamina, no exertion, the mark untouched), clockwise from the north, each at most
+//!   once a charge; the one charged at is never struck on the way, only by the charge's own
+//!   blow at its end. One that falls does not stop the charge.
+//!
+//! Nothing is drawn deciding; the trap and the blows draw as theirs always do.
 
+use super::free_blow::{Free, FreeBlow};
 use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, ClassActive, LevelKind, Stance};
-use crate::geom::Pos;
+use crate::geom::{Dir, Pos};
 
 impl World {
     /// Charge at `at` (the module docs); `use_class_at` has checked the ability.
@@ -50,6 +57,8 @@ impl World {
             self.spend_resource(player, cost.resource, amount, events);
         }
         self.say("You charge!");
+        let whirling = self.state.player().talent_mods(&content).whirling_charge;
+        let mut struck = Vec::new();
         let mut time = 0;
         let mut from = self.player_pos();
         for to in path {
@@ -78,6 +87,12 @@ impl World {
             if self.state.death.is_some() || self.player_pos() != to || climb > 0 || sprung {
                 return Spent::Turn(time);
             }
+            if whirling {
+                self.whirl(target, &mut struck, events);
+                if self.state.death.is_some() {
+                    return Spent::Turn(time);
+                }
+            }
             from = to;
         }
         if self.state.actors.contains_key(&target) && self.state.death.is_none() {
@@ -85,6 +100,38 @@ impl World {
             self.exert(ActionKind::Melee);
         }
         Spent::Turn(time)
+    }
+
+    /// Whirling charge (the module docs): a free blow at every hostile beside the player but
+    /// `target` and those in `struck`, clockwise from the north; each struck joins `struck`.
+    fn whirl(&mut self, target: ActorId, struck: &mut Vec<ActorId>, events: &mut Vec<Event>) {
+        let player = self.state.player;
+        let here = self.player_pos();
+        let level = self.state.current().id.clone();
+        for dir in Dir::ALL {
+            if self.state.death.is_some() {
+                return;
+            }
+            let Some(foe) = (self.state.actor_at(&level, here.step(dir))).map(|a| a.id) else {
+                continue;
+            };
+            if foe == target || foe == player || struck.contains(&foe) {
+                continue;
+            }
+            if self.stance(player, foe) != Stance::Hostile {
+                continue;
+            }
+            struck.push(foe);
+            let profile = self.state.player().melee(&self.content);
+            let blow = FreeBlow {
+                by: player,
+                at: foe,
+                kind: Free::Cleave,
+                with: None,
+                profile,
+            };
+            self.strike_free(blow, events);
+        }
     }
 
     /// The hostile the player charges at `at` and the cells they cross to reach it, if the
