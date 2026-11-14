@@ -1,5 +1,7 @@
 # Warlock — Miscasts, revision 3
 
+**Built; this file is history.** Current behaviour is in spec §8 "Spells" ("Miscasts") and §7 "Dungeon branches", and `docs/dev/spells.md`.
+
 Design for the owner's line-by-line review (revision 3, 2026-11-09). Revision 1 (2026-11-08) was
 a review of the miscast system #1275 built; the owner answered its seven questions and gave a
 direction and a list of new entries; revision 2 adopted them and asked six more, and the owner

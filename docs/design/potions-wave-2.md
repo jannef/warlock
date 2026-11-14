@@ -1,5 +1,7 @@
 # Warlock — Potions, wave 2: flasks to throw, draughts to gamble on
 
+**Built; this file is history.** Current behaviour is in spec §8 "Potions" and `docs/dev/potions.md`.
+
 Design document for the owner's review (2026-11-07). Written against `origin/main` at 855c7579. Nothing here is implemented; §11 cuts it into issues. It builds on what is there: the potions and their `Draught` kinds (`docs/dev/potions.md`, `content/potion.rs`, `world/potion.rs`, spec §8 "Potions"), throwing (`docs/dev/ranged-combat.md`, `world/shoot.rs`), the one cast path and what pays for a cast (`world/cast.rs`: `Pay::{Mana, Scroll, Wand, Creature}`), zones (`docs/dev/spells.md` "Zones": `fire`, `fouled`, `slick`, `dark`), the spell types' rules (`data/spells.toml` `[types]`), the statuses (`data/status.toml`), item damage (`docs/dev/objects.md`), hearing (`docs/dev/hearing.md`), the outcome tables (`data/outcomes/`), and the spell effects (`data/effects.toml`). Every number is data and hidden in the game; the wiki states it.
 
 **The owner's request** (2026-11-07, verbatim): *"design perhaps 20–40 new potions with various effects. Some potions should be dangerous to drink; their main purpose could be to use as a throwing weapon (like: releases a cloud of smoke to hide from archers etc, or an explosion of fire). Gives some small risk of chugging unidentified potions."*

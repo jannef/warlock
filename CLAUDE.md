@@ -3,7 +3,8 @@
 Warlock is a GPU-rendered ASCII roguelike in Rust + Bevy. **`specification.md` is the source of
 truth** for what to build (an index over `spec/`, one file per section); this file is about *how*
 to work on it, and `docs/dev/` holds the notes per subsystem (the index is under "Architecture").
-Update them together whenever behavior, commands, or architecture change.
+Each kind of fact has one home and the others link to it (`docs/dev/merging.md` "One home per
+fact"): a change edits the homes of the facts it changes.
 
 ## Toolchain
 

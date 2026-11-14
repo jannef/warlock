@@ -1,5 +1,7 @@
 # Warlock — Enchanting: affix capacity, magic crystals, and the enchanting recipes
 
+**Built; this file is history.** Current behaviour is in spec §8 "Professions" ("Enchanting", "Seals") and "Consuming a crystal", and `docs/dev/enchanting.md`.
+
 Design document (2026-11-13; #1414, the Enchanting line of the professions epic #1337), a follow-up to `docs/design/professions.md` (#1330) and `docs/design/recipes.md` (#1339). Written against `origin/main` at 926d4d874 (version 0.16.0). Nothing here is implemented; §13 maps it onto implementation issues, one PR each. It builds on what exists: magic items (`docs/dev/magic-items.md`: `Magic` on a `Stack`, `data/affixes.toml` and the 103 files of `data/affixes/`, categories, tiers, the tier window, `loot.rs`), professions and recipes (`docs/dev/crafting.md`: `data/recipes/<skill>/`, the profession screen, the forging wizard, the one check, salvage), parts and gems (`docs/dev/objects.md`), Temper's `Worked` (`magic/worked.rs`), and the spell data (`docs/dev/spells.md`, `data/spells/`). The owner's brief is §2; the owner's two additions of 2026-11-13 (the capacity limit applies to generated loot; how the excess is trimmed) are §4.
 
 **Status: approved by the owner, 2026-11-13.** The sixteen questions of the first draft are answered in §14, with two additions (silver holds magic badly; a crystal may be consumed); every section below is written to the answers. Anything marked "settled" is the owner's own word.

@@ -1,5 +1,7 @@
 # Warlock — The priest: one prayer, answered as far as it reaches
 
+**Built; this file is history.** Current behaviour is in spec §8 "The casters' class tables, and their spells" and `docs/dev/prayer.md`.
+
 Design document for the owner's review (2026-11-02, #820; round 2, after the owner's answers on
 PR #831, recorded in §13). Written against `origin/main` at c9201000 (the druid design). Nothing
 here is implemented; §11 cuts it into issues. It builds on what is there: the class tables and the

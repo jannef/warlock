@@ -1,5 +1,7 @@
 # Warlock — The bard: a jack of all trades, mediocre at everything
 
+**Built; this file is history.** Current behaviour is in spec §8 "The ranger's, thief's, and bard's tables" and `docs/dev/progression.md`.
+
 Design document for the owner's review (issue #819; first draft 2026-11-02, **second round
 2026-11-02** after the owner's answers on PR #835; the third round, 2026-11-02, changed only
 `prestige-classes.md`: the calling is now the oath said to the Strange Spirit, and the Hunter's
