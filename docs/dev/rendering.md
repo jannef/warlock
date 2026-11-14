@@ -173,7 +173,8 @@ origin, size, and flicker switch, and either no flickering source lit the grid o
 is the same (`VisualLight::would_repeat`; `--freeze-time`, flicker off, idle frames). A new input
 of the composite must become one of these conditions, or the map keeps stale light. Gameplay light lives in
 `warlock-core/src/light/` (`mod.rs`: falloff and the wall-face rule; `cache.rs`: per-source shadow
-masks, a `hollow` preset's leaving out its own cell, and the player's carried light from
+masks, kept for every level visited, so a terrain change on any level calls `terrain_changed`
+(#1518; ice, transparent to transparent, writes directly), a `hollow` preset's leaving out its own cell, and the player's carried light from
 `WorldState::carried_light`, `world/lamp.rs`: a lantern ready in the Tool slot, by its object's
 `light` and the stack's mode, hooded its `hooded` preset; `bounce.rs`: one weak
 bounce; `sun.rs`: sunlight; `moon.rs`: moonlight and `Sky`) and is combined in `perception.rs`;

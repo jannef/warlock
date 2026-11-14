@@ -1512,13 +1512,15 @@ impl Content {
             if let Some(first) = seen.insert(id.to_string(), path) {
                 return Err(duplicate_id("vault", id, path, first));
             }
+            // Its range first: the level parser would refuse a bad one without saying why.
+            let danger = vault::parse_danger(path, text)?.unwrap_or_default();
             let template = level::parse_level(path, id, text, &content, &default_legend)?;
             let mut vault =
                 Vault::new(template, &content).map_err(|m| ContentError::new(path, m))?;
             vault.campaign = campaign::of_path(path).map(str::to_string);
             vault.dungeons = vault::parse_dungeons(path, text)?;
             vault.turns = vault::parse_turns(path, text)?.unwrap_or(true);
-            vault.danger = vault::parse_danger(path, text)?.unwrap_or_default();
+            vault.danger = danger;
             content.vaults.push(vault);
         }
         content.load_dungeons(files)?;
