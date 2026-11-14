@@ -7,6 +7,7 @@
 use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::content::ContentFiles;
+use crate::test_support::builtin;
 
 /// The pack: a, a wand of magic missile; b, a wand of scorching ray; c, a crossbow; d, a
 /// scroll of identify; e, a wand of fireball.
@@ -274,7 +275,7 @@ fn the_zap_casts_at_the_stacks_rung() {
 
 #[test]
 fn a_wand_draws_its_rung_evenly_once_as_it_is_made() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let fireball = content.object_id("wand_of_fireball").expect("a wand");
     let mut counts = [0u32; 3];
     for seed in 0..3000 {
@@ -305,7 +306,7 @@ fn a_wand_draws_its_rung_evenly_once_as_it_is_made() {
 
 #[test]
 fn a_non_wand_draws_nothing_and_saves_as_before() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let dagger = content.object_id("dagger").expect("a dagger");
     let mut stack = Stack::one(dagger);
     let before = serde_json::to_string(&stack).expect("json");
@@ -410,7 +411,7 @@ fn charges_are_saved_and_change_the_state_hash() {
 
 #[test]
 fn wand_labels_leave_the_scrolls_labels_as_they_were() {
-    let with = Content::builtin().expect("content");
+    let with = builtin();
     let mut files = ContentFiles::builtin();
     files.remove("data/wand_labels.toml");
     let without = Content::load(&files).expect("content");
@@ -478,7 +479,7 @@ fn wand_data_is_checked() {
 /// only the damage spell has rungs (a hex has no ladder of rolls).
 #[test]
 fn the_wands_of_shatter_and_bind_are_loot_holding_their_spells() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for (id, spell, level, charges, rungs) in [
         ("wand_of_shatter", "shatter", 7, 9, (0, 2)),
         ("wand_of_bind", "bind", 8, 7, (0, 0)),

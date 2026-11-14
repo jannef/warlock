@@ -1,6 +1,7 @@
 //! The duergar (#518): their stance toward the others, and their weapons and ammunition.
 
-use super::{Combat, Content, Stance};
+use super::{Combat, Stance};
+use crate::test_support::builtin;
 
 /// The duergar who wield their racial weapons or shoot (the miners, warriors, and smiths of the
 /// delf are `bestiary_tests`').
@@ -18,7 +19,7 @@ const ARMED: &[&str] = &[
 
 #[test]
 fn the_duergar_hunt_the_player_and_leave_their_old_foes_be() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let stance = |a: &str, b: &str| {
         let id = |n: &str| content.creature_id(n).expect(n);
         content.stance(id(a), id(b))
@@ -45,7 +46,7 @@ fn the_duergar_hunt_the_player_and_leave_their_old_foes_be() {
 fn the_duergar_wield_their_weapons_and_the_shooters_their_ammunition() {
     use crate::gear;
     use crate::rng::Rng;
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for &id in ARMED {
         let creature = content.creature_id(id).expect(id);
         let def = content.creature(creature);

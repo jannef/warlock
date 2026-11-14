@@ -5,6 +5,7 @@ use super::*;
 use crate::action::{MissileEnd, SpellShape, parse_actions};
 use crate::content::{ContentFiles, TrapId};
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -256,7 +257,7 @@ fn creature_at(world: &World, p: Pos) -> ActorId {
 
 #[test]
 fn builtin_traps_load_and_bad_ones_are_reported() {
-    let content = Content::builtin().expect("builtin content");
+    let content = builtin();
     let ids: Vec<&str> = content.trap_defs().iter().map(|t| t.id.as_str()).collect();
     assert_eq!(
         ids,
@@ -670,7 +671,7 @@ fn a_rest_stops_when_a_trap_goes_off_in_view() {
 /// lightning strikes the beetle and leaves it alive.
 #[test]
 fn the_trap_hall_shows_hidden_traps_going_off() {
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = builtin();
     let mut w = World::new(content, "traps", None).expect("the trap hall");
     let known = |w: &World| w.perception().known_traps().len();
     assert_eq!(known(&w), 8, "the proving row, and the west closet's door");

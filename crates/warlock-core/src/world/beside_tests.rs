@@ -8,6 +8,7 @@ use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::beside::{Beside, Target, Way};
 use crate::content::Trap;
+use crate::test_support::builtin;
 
 const TRAP: &str = "arrow";
 
@@ -192,7 +193,7 @@ fn nothing_beside_is_refused_toward_a_known_wall() {
 
 #[test]
 fn walls_that_break_are_what_dig_acts_on() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let mut w = World::new(content, "quarry", None).expect("quarry");
     run(&mut w, "move:E pickup equip:tool:a");
     let content = w.content().clone();

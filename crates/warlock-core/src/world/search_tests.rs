@@ -9,6 +9,7 @@ use crate::combat;
 use crate::content::{ContentFiles, TerrainId};
 use crate::perception::CellView;
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 /// A hall on the built-in content, the player at `@` as `character` (`RACE,GENDER,CLASS`); `S` is
 /// a secret door anyone finds (difficulty 1: all but a natural 2), `H` one nobody does (50: only a
@@ -354,11 +355,11 @@ fn whatever_becomes_of_the_wall_takes_the_secret_with_it() {
 
 #[test]
 fn hidden_features_are_harder_deeper_down() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let def = content.dungeon("depths").expect("depths");
     assert_eq!(def.hidden_at(1), 0);
     assert_eq!(def.hidden_at(8), 7 * i32::from(def.hidden_per_depth));
-    let w = World::new(Arc::new(content), "depths", None).expect("world");
+    let w = World::new(content, "depths", None).expect("world");
     assert_eq!(w.difficulty_of(super::search::Hidden::Door(14)), 14);
 }
 

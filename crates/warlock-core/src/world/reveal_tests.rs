@@ -10,6 +10,7 @@ use crate::action::parse_actions;
 use crate::content::{ContentFiles, RevealWhen};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 const OVERWORLD: &str = include_str!("../../../../assets/campaigns/showcase/levels/overworld.toml");
 const QUESTS: &str =
@@ -351,12 +352,7 @@ fn a_run_without_reveals_keeps_its_state_as_before() {
     let json = serde_json::to_string(w.state()).expect("json");
     assert!(!json.contains("\"revealed\""));
     // The built-in Wildlands hide nothing.
-    let builtin = World::new(
-        Arc::new(Content::builtin().expect("content")),
-        "world",
-        None,
-    )
-    .expect("run");
+    let builtin = World::new(builtin(), "world", None).expect("run");
     let json = serde_json::to_string(builtin.state()).expect("json");
     assert!(!json.contains("\"hidden\""));
 }

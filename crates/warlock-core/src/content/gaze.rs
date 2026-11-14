@@ -163,7 +163,7 @@ mod tests {
 
     #[test]
     fn the_moved_riders_ride_the_gaze_and_no_blow() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let named = |hit: &OnHit| match hit.what {
             Affliction::Status { status, .. } => content.status(status).id.clone(),
             Affliction::Drain(d) => d.stat.map_or("random", |s| s.id()).to_string(),

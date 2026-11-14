@@ -9,6 +9,7 @@ use crate::content::{Affliction, ContentFiles, StatusId};
 use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::status::Effect;
+use crate::test_support::builtin;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -800,7 +801,7 @@ fn fights_with_wounds_and_poison_replay_exactly() {
 
 #[test]
 fn the_built_in_rat_may_sicken_and_wounds_may_bleed() {
-    let content = Content::builtin().expect("builtin content");
+    let content = builtin();
     let rat = content.creature_id("rat").expect("rat");
     let bite = content.creature(rat).attack.as_ref().expect("a bite");
     // A starter's rider (#1200): filth fever, 1 %; no poison.

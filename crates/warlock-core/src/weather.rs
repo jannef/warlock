@@ -638,7 +638,7 @@ mod tests {
         let days: u64 = var("WARLOCK_DAYS")
             .and_then(|s| s.parse().ok())
             .unwrap_or(30);
-        let content = crate::content::Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let from = GameTime::from_calendar(1, month, day, 0, 0).expect("a valid date");
         println!("seed {seed}; hours 0 to 23");
         for d in 0..days {

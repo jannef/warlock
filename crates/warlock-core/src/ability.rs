@@ -1442,7 +1442,7 @@ mod tests {
 
     #[test]
     fn every_ability_is_registered_in_menu_order() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let every = Ability::every(&content);
         assert!(every.windows(2).all(|w| w[0].source() <= w[1].source()));
         assert_eq!(
@@ -1525,7 +1525,7 @@ mod tests {
 
     #[test]
     fn no_two_abilities_share_an_id_or_a_name() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let every = Ability::every(&content);
         for (i, a) in every.iter().enumerate() {
             for b in &every[i + 1..] {
@@ -1541,7 +1541,7 @@ mod tests {
 
     #[test]
     fn stealing_asks_for_a_direction_and_is_had_by_those_trained_in_it() {
-        let content = std::sync::Arc::new(Content::builtin().expect("content"));
+        let content = crate::test_support::builtin();
         let steal = Ability::Steal;
         assert_eq!(steal.aim(&content), Aim::Direction);
         assert_eq!(steal.source(), Source::Skill);
@@ -1574,7 +1574,7 @@ mod tests {
 
     #[test]
     fn a_shield_bash_asks_for_a_direction_and_is_a_bash() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let bash = Ability::ShieldBash;
         assert_eq!(bash.aim(&content), Aim::Direction);
         assert_eq!(bash.source(), Source::WeaponSkill);
@@ -1594,7 +1594,7 @@ mod tests {
 
     #[test]
     fn throwing_a_voice_aims_at_a_cell() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let voice = Ability::ThrowVoice;
         assert_eq!(
             (voice.aim(&content), voice.source()),
@@ -1609,7 +1609,7 @@ mod tests {
 
     #[test]
     fn disarming_is_disable_devices_use_and_asks_for_a_direction() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let disable = (content.skills().iter())
             .find(|s| s.id == "disable_device")
             .expect("Disable device");
@@ -1638,7 +1638,7 @@ mod tests {
 
     #[test]
     fn picking_locks_is_open_locks_use_and_asks_for_a_direction() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let open_lock = (content.skills().iter())
             .find(|s| s.id == "open_lock")
             .expect("Open lock");

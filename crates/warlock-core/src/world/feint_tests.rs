@@ -9,6 +9,7 @@ use crate::ability::Ability;
 use crate::rng::Rng;
 use crate::skills::{Effect, Trained};
 use crate::stats::{PerStat, Stat, Stats};
+use crate::test_support::builtin;
 
 /// The player's skill `id` set to `value` (trained), the rest of their skills as they are.
 fn train(w: &mut World, id: &str, value: Option<u16>) {
@@ -162,7 +163,7 @@ fn the_check_is_presence_and_bluff_against_willpower() {
     let stubborn = fooled_of(10, 1, 30);
     assert!(stubborn < even, "{stubborn} against {even}");
     // The ladder of the curve, at most 20.
-    let content = crate::content::Content::builtin().expect("content");
+    let content = builtin();
     let bluff = (content.skills().iter())
         .find(|s| s.id == "bluff")
         .expect("bluff");

@@ -115,10 +115,8 @@ mod tests {
     use super::super::caster_tests::{sp, world_with};
     use super::*;
     use crate::stats::Stat;
-    use std::sync::{Arc, LazyLock};
 
-    static BUILTIN: LazyLock<Arc<Content>> =
-        LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+    use crate::test_support::CONTENT as BUILTIN;
 
     /// A wizard at Intelligence 19 with Empower and Sure hand, knowing a harm, a heal, and a
     /// buff besides the class's.

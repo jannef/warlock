@@ -11,6 +11,7 @@ use crate::geom::Dir;
 use crate::replay::Replay;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::Stat;
+use crate::test_support::builtin;
 use std::sync::Arc;
 
 /// A lit nook: the player below a beast walled in on three sides, so it cannot wander off.
@@ -190,7 +191,7 @@ fn the_check_is_willpower_skill_food_and_the_rangers_bonus_against_the_beasts_le
         assert_eq!(difficulty, rules.difficulty + rules.per_level * level);
     }
     // The ranger's Animal companion adds its 2.
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let spec: crate::character::CharacterSpec = "human,male,ranger".parse().expect("a ranger");
     let w = World::start_run(
         content.clone(),

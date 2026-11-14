@@ -10,7 +10,7 @@ use super::*;
 use crate::check;
 use crate::content::{ContentFiles, Miscast, MishapEffect, ZoneKind};
 use crate::dice::Dice;
-use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::{CONTENT as BUILTIN, builtin};
 
 /// The built-in content with `data/miscast.toml`'s `base` set to `base` (−1000: only the 1 and
 /// 1 fails; 1000: every cast fails, by far), and, with `only`, the table cut to that one entry
@@ -25,7 +25,7 @@ fn content(base: i32, only: Option<&str>) -> Arc<Content> {
         ),
     );
     if let Some(only) = only {
-        let builtin = Content::builtin().expect("content");
+        let builtin = builtin();
         for m in builtin.miscasts() {
             files.remove(&format!("data/miscasts/{}.toml", m.id));
         }
@@ -133,7 +133,7 @@ fn the_miss_carries_the_total() {
 
 #[test]
 fn each_rank_above_the_first_eases_the_check() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let mut w = world_with(content.clone(), "wizard");
     let spark = content.spell_id("spark").expect("spark");
     let def = content.spell(spark);
@@ -159,7 +159,7 @@ fn a_master_miscasts_only_on_the_one_and_one() {
 
 #[test]
 fn a_starting_wizard_miscasts_a_first_spell_rarely_and_a_far_one_often() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let mut w = world_with(content.clone(), "wizard");
     // Spellcraft 17 (the middle of a wizard's 2d6+10) and Intelligence 14 (world_with's).
     let id = content.skill_id("spellcraft").expect("spellcraft");
@@ -181,7 +181,7 @@ fn a_starting_wizard_miscasts_a_first_spell_rarely_and_a_far_one_often() {
 
 #[test]
 fn every_entry_is_reached_by_its_totals_and_the_table_climbs() {
-    let c = Content::builtin().expect("content");
+    let c = builtin();
     let table = c.miscasts();
     assert_eq!(table.len(), 65, "the table ships its 65 rows");
     for m in table {
@@ -211,7 +211,7 @@ fn every_entry_is_reached_by_its_totals_and_the_table_climbs() {
 
 #[test]
 fn a_protected_harm_never_kills() {
-    let c = Arc::new(Content::builtin().expect("content"));
+    let c = builtin();
     let (mut w, _) = wizard(c.clone());
     let player = w.state.player;
     let spell = c.spell_id("spark").expect("spark");
@@ -272,7 +272,7 @@ fn the_loader_keeps_what_could_kill_off_the_protected_half() {
 
 #[test]
 fn a_noise_is_heard_and_a_zone_is_laid() {
-    let c = Arc::new(Content::builtin().expect("content"));
+    let c = builtin();
     let (mut w, k) = wizard(c.clone());
     clear_round(&mut w, &[k]);
     let player = w.state.player;
@@ -300,7 +300,7 @@ fn a_noise_is_heard_and_a_zone_is_laid() {
 
 #[test]
 fn a_creatures_swap_never_takes_the_player() {
-    let c = Arc::new(Content::builtin().expect("content"));
+    let c = builtin();
     let (mut w, k) = wizard(c.clone());
     clear_round(&mut w, &[k]);
     let spell = c.spell_id("spark").expect("spark");
@@ -457,7 +457,7 @@ fn a_seen_line_names_the_caster_in_lower_case_inside_it() {
 fn a_run_that_miscasts_replays_the_same() {
     // The circles' caster knows every buff and hex but is no master of Spellcraft: casting
     // Haste and Fire cloak again and again miscasts.
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let mut w = World::new(content.clone(), "circles", None).expect("world");
     let mut replay = crate::replay::Replay::new(&w);
     let actions = "use:haste use:fire_cloak use:renewal use:haste use:fire_cloak use:renewal";

@@ -220,7 +220,7 @@ mod tests {
 
     #[test]
     fn the_builtin_rigs_load() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let rules = content.rigs().expect("rigs.toml");
         let ids: Vec<&str> = rules.rigs.iter().map(|r| r.id.as_str()).collect();
         assert_eq!(ids, ["tripwire", "stakes", "pitfall"]);

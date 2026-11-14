@@ -7,6 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, Reading};
 use crate::replay::Replay;
+use crate::test_support::builtin;
 use crate::time::Duration;
 
 /// The pack: a, two blank scrolls; b, a dagger.
@@ -211,7 +212,7 @@ fn a_blank_scroll_has_nothing_to_read() {
 
 #[test]
 fn every_shipped_spell_has_a_scroll_to_write() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for spell in content.spells_by_level() {
         let scroll = content.scroll_of(spell);
         let id = &content.spell(spell).id;
@@ -224,7 +225,7 @@ fn every_shipped_spell_has_a_scroll_to_write() {
 
 #[test]
 fn the_wizard_writes_from_12() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let spec: crate::character::CharacterSpec = "human,female,wizard".parse().expect("spec");
     let mut w = World::with_character(content, "showcase", None, Some(&spec)).expect("world");
     let has = |w: &World, id: &str| w.state.player().talents.holds(id, None);

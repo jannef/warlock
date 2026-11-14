@@ -2,6 +2,7 @@
 //! `gear_condition.toml`'s keys (#1556), on the built-in set with one file changed.
 
 use super::{Content, ContentFiles};
+use crate::test_support::builtin;
 
 fn load_err(files: &ContentFiles) -> String {
     Content::load(files).expect_err("refused").to_string()
@@ -40,7 +41,7 @@ fn a_required_id_missing_from_its_table_is_refused() {
         "{err}"
     );
 
-    let content = Content::builtin().expect("built-in content");
+    let content = builtin();
     let ids = content.ids();
     assert_eq!(ids.staggered, content.status_id("staggered"));
     assert_eq!(ids.player, content.creature_id("player"));

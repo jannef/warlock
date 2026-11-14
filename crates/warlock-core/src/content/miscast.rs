@@ -301,7 +301,7 @@ mod tests {
 
     #[test]
     fn the_backfire_faction_is_a_known_one() {
-        let c = Content::builtin().expect("content");
+        let c = crate::test_support::builtin();
         let rules = c.miscast_rules().expect("rules");
         let berserk = rules.backfire_faction.expect("the built-in names one");
         assert_eq!(c.factions().def(berserk).id, "berserk");

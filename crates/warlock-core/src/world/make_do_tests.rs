@@ -9,6 +9,7 @@ use crate::content::{ActionKind, ClassActive, ContentFiles, ItemHarm};
 use crate::item_list::ItemList;
 use crate::magic::Worked;
 use crate::talent::CraftEffect;
+use crate::test_support::builtin;
 
 const MEND: ClassActive = ClassActive::MakeDo;
 
@@ -75,7 +76,7 @@ fn row(w: &World) -> Option<Option<Unavailable>> {
 
 #[test]
 fn the_craftsperson_gains_it_at_level_eighteen() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let def = content.class("craftsperson").expect("craftsperson");
     let at = (def.abilities.iter()).find(|(_, t)| t == "make_do_and_mend");
     assert_eq!(at.map(|(level, _)| *level), Some(18));

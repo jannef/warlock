@@ -14,6 +14,7 @@ use crate::magic::{Affix, LootGrade, Magic, Rarity, loot};
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::rng::Rng;
+use crate::test_support::builtin;
 
 // A lit room: the player beside a pile with two rubies and a large fine emerald on top.
 const LEVEL: &str = r##"
@@ -76,7 +77,7 @@ fn set(content: &Content, id: &str, part: &str, gem: &str, size: &str, cut: &str
 
 #[test]
 fn the_ten_gems_their_sizes_and_cuts_are_data() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let gems = content.gems().expect("gems");
     let mut names: Vec<&str> = (content.materials().iter())
         .filter(|m| m.gem.is_some())
@@ -188,7 +189,7 @@ fn bad_gem_data_is_reported() {
 
 #[test]
 fn a_gem_is_worth_its_value_times_its_size_and_cut() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let gems = content.gems().expect("gems");
     let worth = |g: &str, size: &str, cut: &str| gem(&content, g, size, cut).value(&content);
     // The plain size and cut are ×1 both: a gem's own value.
@@ -222,7 +223,7 @@ fn a_gem_is_worth_its_value_times_its_size_and_cut() {
 
 #[test]
 fn an_ornament_adds_its_gems_worth_to_its_item() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let sword = content.object(object(&content, "long_sword"));
     let pommelled = set(&content, "long_sword", "pommel", "emerald", "small", "fine");
     // The long sword's own parts are all still there, at their shares; the pommel weighs nothing.
@@ -252,7 +253,7 @@ fn an_ornament_adds_its_gems_worth_to_its_item() {
 
 #[test]
 fn loose_gems_are_named_by_their_gem_size_and_cut() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let name = |g: &str, size: &str, cut: &str| gem(&content, g, size, cut).describe(&content);
     assert_eq!(name("ruby", "small", "fair"), "a ruby");
     assert_eq!(name("emerald", "large", "fine"), "a large fine emerald");
@@ -284,7 +285,7 @@ fn loose_gems_are_named_by_their_gem_size_and_cut() {
 
 #[test]
 fn ornaments_go_in_the_naming_order_and_the_description() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let sword = || set(&content, "long_sword", "pommel", "emerald", "small", "fine");
     assert_eq!(
         sword().describe(&content),
@@ -393,7 +394,7 @@ fn ornaments_go_in_the_naming_order_and_the_description() {
 
 #[test]
 fn gems_colour_their_glyph() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let color = |g: &str| {
         content
             .material(content.material_id(g).unwrap())
@@ -420,7 +421,7 @@ fn gems_colour_their_glyph() {
 
 #[test]
 fn only_identical_gems_stack() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let mut pile = Vec::new();
     let small = gem(&content, "ruby", "small", "fair");
     crate::object::add_to_pile(&mut pile, &[small.clone(), small.clone()], &content);
@@ -501,7 +502,7 @@ fn placements_and_items_name_their_gems() {
 
 #[test]
 fn loot_finds_gems_rarely_and_larger_and_finer_deeper() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let gems = content.gems().expect("gems");
     // Across seeds: 5000 finds from each of four runs' streams.
     let roll_many = |level: u8| {
@@ -556,7 +557,7 @@ fn loot_finds_gems_rarely_and_larger_and_finer_deeper() {
 
 #[test]
 fn loot_sets_rings_often_and_weapons_sometimes() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let mut rng = Rng::stream(7, "test/ornaments");
     let (mut rings, mut set_rings, mut weapons, mut set_weapons) = (0, 0, 0, 0);
     let ring_class = content.object(object(&content, "gold_ring")).class;
@@ -672,7 +673,7 @@ const INTO_SHOP: &str = "move:E*36 move:S pickup move:NE move:NE pickup:b move:S
 
 #[test]
 fn the_general_store_buys_gems_and_sells_them_back_by_their_gem() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let mut w = World::new(content.clone(), "courtyard", None).expect("courtyard");
     for action in parse_actions(INTO_SHOP).expect("actions") {
         w.apply(&action);

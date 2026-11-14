@@ -260,10 +260,9 @@ mod tests {
     use crate::stats::{AVERAGE, SCORES, Stat};
     use crate::talent::FortuneEffect;
     use crate::world::World;
-    use std::sync::{Arc, LazyLock};
+    use std::sync::Arc;
 
-    static CONTENT: LazyLock<Arc<Content>> =
-        LazyLock::new(|| Arc::new(Content::builtin().expect("built-in content")));
+    use crate::test_support::CONTENT;
 
     fn start(content: &Content, character: &str, seed: u64) -> Start {
         let spec: CharacterSpec = character.parse().expect("a character");

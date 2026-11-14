@@ -7,6 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::alignment::Score;
 use crate::content::ContentFiles;
+use crate::test_support::builtin;
 
 /// A lit hall: the player at (1, 1), a peaceful kobold beside them at `k` (2, 1), another at `j`
 /// (8, 1), and a peaceful skeleton (immune to poison) at `s` (5, 3); a wall at x 14 hides the
@@ -260,7 +261,7 @@ fn communion_keeps_a_draining_room_off() {
 
 #[test]
 fn communion_is_a_band_gated_passive() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let book = content.talents();
     let def = book.get(book.id("communion").expect("communion"));
     assert!(def.alignment.is_some());

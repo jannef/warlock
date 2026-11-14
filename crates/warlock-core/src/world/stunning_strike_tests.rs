@@ -14,6 +14,7 @@ use crate::content::{ClassActive, StatusId};
 use crate::equipment::{free_slot, slots_taken};
 use crate::object::Stack;
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 const STRIKE: Ability = Ability::Class(ClassActive::StunningStrike);
 
@@ -190,7 +191,7 @@ fn the_stunned_foes_next_action_ends_it() {
 
 #[test]
 fn a_stunning_strike_replays_the_same() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let spec: CharacterSpec = "human,male,ascetic".parse().expect("a character");
     let mut w = World::start_run(content, "arena", None, Some(&spec), None, true).expect("world");
     let text = "xp:100000 levelup:auto use:stunning_strike:E move:E*3 use:stunning_strike:E wait";

@@ -6,6 +6,7 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::temperature::Temperature;
+use crate::test_support::builtin;
 
 /// A hall, 30 wide: plain water at x 3 to 5, a sweltering chamber over x 10 to 19 (water at 13 to
 /// 15), a frigid hall over x 20 to 29 (water at 23 to 25), each unless the test leaves it out.
@@ -71,7 +72,7 @@ fn said(w: &World, line: &str) -> bool {
 
 #[test]
 fn hot_and_cold_rooms_are_data() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let effects = content.room_effects();
     let hot = effects.get(effects.id("hot").expect("hot"));
     let cold = effects.get(effects.id("cold").expect("cold"));

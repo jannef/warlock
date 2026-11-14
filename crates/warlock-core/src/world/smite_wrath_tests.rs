@@ -9,6 +9,7 @@ use crate::action::{Action, parse_actions};
 use crate::combat::{Blow, Strike};
 use crate::content::{ClassActive, ResourceId};
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 const HIT: Blow = Blow {
     strike: Strike::Hit { critical: false },
@@ -296,7 +297,7 @@ fn a_banishing_smite_spends_nothing_when_refused_or_unanswered() {
 
 #[test]
 fn a_replay_of_the_wrath_verifies() {
-    let content = std::sync::Arc::new(crate::content::Content::builtin().expect("content"));
+    let content = builtin();
     let spec: crate::character::CharacterSpec = "human,male,paladin".parse().expect("spec");
     let mut w = World::start_run(content.clone(), "arena", Some(7), Some(&spec), None, true)
         .expect("world");

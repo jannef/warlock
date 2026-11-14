@@ -7,6 +7,7 @@ use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::noise::SoundKind;
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -819,7 +820,7 @@ fn dialogue_data_is_validated() {
 
 #[test]
 fn the_showcase_people_talk() {
-    let content = Arc::new(Content::builtin().expect("builtin"));
+    let content = builtin();
     for creature in ["gardener", "bard", "hermit"] {
         let id = content.creature_id(creature).expect(creature);
         let dialogue = content.dialogue_of(id, None).expect("a dialogue");

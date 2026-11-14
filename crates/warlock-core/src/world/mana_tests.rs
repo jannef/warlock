@@ -6,6 +6,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 // Round numbers: resting brings mana back three times as fast; dazed halves the pace; a hex
 // drains 2 mana a tick (every 30 s a degree) and stops it, easing a degree a minute; befuddled
@@ -480,7 +481,7 @@ fn mana_of_level(w: &mut World, level: u8) -> i32 {
 fn mana_grows_with_every_level_to_60() {
     // `mana_level` is 60, the last level, so a wizard's levels 31 and 60
     // add mana as level 2 does.
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let spec: CharacterSpec = "human,male,wizard".parse().expect("a character");
     let mut w = World::with_character(content, "showcase", Some(7), Some(&spec)).expect("world");
     let early = mana_of_level(&mut w, 2);

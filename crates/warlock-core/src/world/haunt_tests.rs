@@ -6,6 +6,7 @@
 use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
+use crate::test_support::builtin;
 use crate::time::GameTime;
 
 /// A lit hall, 30 wide; its east part (x 10 on) the haunted room. A wall at x 18, open at its
@@ -79,7 +80,7 @@ fn just_before_the_hour(w: &mut World) {
 
 #[test]
 fn the_haunted_room_is_data() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let effects = content.room_effects();
     let haunted = effects.get(effects.id("haunted").expect("haunted"));
     assert_eq!(

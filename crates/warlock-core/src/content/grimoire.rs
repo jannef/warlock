@@ -135,7 +135,7 @@ mod tests {
 
     #[test]
     fn every_spell_scroll_has_a_grimoire_of_its_spell() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let mut scrolls = 0;
         for (i, def) in content.object_defs().iter().enumerate() {
             let Some(Reading::Cast(scroll)) = &def.read else {
@@ -161,7 +161,7 @@ mod tests {
 
     #[test]
     fn a_spell_scroll_made_at_random_is_its_grimoire_one_time_in_ten() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let scroll = content.object_id("scroll_of_frost").expect("object");
         let grimoire = content.object_id("grimoire_of_frost").expect("object");
         let mut rng = Rng::stream(1, "grimoire-test");

@@ -8,6 +8,7 @@ use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
 use crate::magic::LootGrade;
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 /// A lit hall, the player carrying: a, three scrolls of fireball; b, two of lightning; c, two of
 /// identify; d, a sealed letter (no reading).
@@ -189,7 +190,7 @@ fn dev_identify_names_scroll_types_too() {
 #[test]
 fn a_characters_kit_scrolls_are_known() {
     let spec: CharacterSpec = "human,male,wizard".parse().expect("a character");
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let w = World::start_run(content, "showcase", Some(7), Some(&spec), None, true).expect("w");
     let view = w.perception();
     let scrolls: Vec<&Stack> = (view.inventory().iter())
@@ -216,7 +217,7 @@ fn replays_that_read_unknown_scrolls_replay() {
 
 #[test]
 fn the_scroll_of_identify_is_the_commonest_scroll_and_the_general_store_has_it() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let identify = content.object_id("scroll_of_identify").expect("identify");
     let mut by_type: BTreeMap<ObjectId, u32> = BTreeMap::new();
     for i in 0..2000 {

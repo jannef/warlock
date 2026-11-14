@@ -348,7 +348,7 @@ const PLAYER: ActorId = ActorId(0);
 
 #[test]
 fn builtin_factions_set_who_fights_whom() {
-    let content = Content::builtin().expect("builtin content");
+    let content = builtin();
     let id = |name: &str| content.creature_id(name).expect(name);
     let stance = |a, b| content.stance(id(a), id(b));
     let hostile = [
@@ -1157,7 +1157,7 @@ fn the_override_is_seen_saved_and_checked() {
 
 #[test]
 fn the_showcase_is_safe_and_the_arena_is_not() {
-    let content = Content::builtin().expect("builtin content");
+    let content = builtin();
     let player = content.creature_id("player").expect("player");
     let hostile = |level: &str| {
         let template = content.level(level).expect("level");

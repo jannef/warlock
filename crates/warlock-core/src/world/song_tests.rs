@@ -12,10 +12,11 @@ use crate::content::{ClassActive, ResourceId};
 use crate::noise::{self, Act, SONG_NOISE, SoundKind};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stats};
+use crate::test_support::builtin;
 
 /// A human bard in `scenario` (seed 7), with their kit, born under no sign, every score 14.
 fn bard_in(scenario: &str) -> World {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let spec: CharacterSpec = "human,male,bard".parse().expect("a character");
     // Creation picks that no test here reads (a bard's one more, a human's Versatile one more).
     let picks = ["keen_ears", "lean", "healthy", "tunneler"];
@@ -102,7 +103,7 @@ fn music_lengthens_the_song_up_to_the_status_max() {
         assert_eq!(degrees(&w, "inspired"), expected, "Music {music}");
     }
     // The bonus is the status's, whatever the degrees: degrees are time.
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let inspired = content.status(content.status_id("inspired").expect("inspired"));
     assert_eq!((inspired.max, inspired.combat.to_hit), (3, 1));
 }
@@ -174,7 +175,7 @@ fn a_song_marks_music() {
 
 #[test]
 fn a_song_replays() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let spec: CharacterSpec = "human,female,bard".parse().expect("a character");
     let mut w =
         World::start_run(content, "showcase", Some(7), Some(&spec), None, true).expect("world");

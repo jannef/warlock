@@ -9,6 +9,7 @@ use super::fixture_factions::make_peace;
 use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, ZoneKind};
+use crate::test_support::builtin;
 
 // A training dummy takes a lot and never fights back.
 const DUMMY: &str = "[[creature]]\nid = \"dummy\"\nname = \"training dummy\"\nglyph = \"D\"\n\
@@ -89,7 +90,7 @@ fn zones_at(w: &World, p: Pos) -> Vec<ZoneKind> {
 
 #[test]
 fn the_fire_and_cold_flasks_cast_their_spells_and_are_drunk_too() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for (id, spell, range) in [
         ("flask_of_fire", "fireball", 6),
         ("flask_of_frost", "frost", 6),

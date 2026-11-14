@@ -6,6 +6,7 @@
 use super::*;
 use crate::action::parse_actions;
 use crate::chest::ChestState;
+use crate::test_support::builtin;
 
 const COFFER: Pos = Pos::new(4, 4);
 const LOCKED: Pos = Pos::new(8, 4);
@@ -13,7 +14,7 @@ const TRAPPED: Pos = Pos::new(12, 4);
 const MIMIC: Pos = Pos::new(16, 4);
 
 fn world() -> World {
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = builtin();
     World::new(content, "chests", None).expect("the chest hall")
 }
 

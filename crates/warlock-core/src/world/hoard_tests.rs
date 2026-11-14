@@ -6,6 +6,7 @@
 use super::*;
 use crate::action::Positions;
 use crate::content::{ContentFiles, SpecialRoom};
+use crate::test_support::builtin;
 
 /// A lit hall, its east part (x 7 on, walls included) a tempting hoard with one door, closed
 /// (`+`, at (7, 3)), and an open one (`'`, at (7, 1)). Daggers lie at `a` and `b` inside. A wall
@@ -83,7 +84,7 @@ fn creatures(w: &World) -> Vec<&Actor> {
 
 #[test]
 fn the_tempting_hoard_is_data() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let effects = content.room_effects();
     let hoard = effects.get(effects.id("hoard").expect("hoard"));
     let numbers = hoard.hoard.expect("a hoard");

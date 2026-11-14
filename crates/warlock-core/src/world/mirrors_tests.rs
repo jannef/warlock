@@ -7,6 +7,7 @@ use crate::action::{Event, parse_actions};
 use crate::content::ContentFiles;
 use crate::dump::{Layer, layer_rows};
 use crate::object::Stack;
+use crate::test_support::builtin;
 use std::collections::BTreeSet;
 
 /// A hall, 31 wide, fully lit: the east part (x 14 to 24, walls included) a hall of mirrors with
@@ -74,7 +75,7 @@ fn said(w: &World, line: &str) -> bool {
 
 #[test]
 fn the_hall_of_mirrors_is_data() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let effects = content.room_effects();
     let hall = effects.get(effects.id("mirrors").expect("mirrors"));
     assert_eq!(hall.name, "hall of mirrors");

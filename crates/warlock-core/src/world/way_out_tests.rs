@@ -7,6 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 /// Ūtgang's way in on the Ascmearc, on the volcano's south foot.
 const UTGANG: Pos = Pos::new(103, 17);
@@ -27,7 +28,7 @@ fn locations(world: &World) -> String {
 
 #[test]
 fn the_way_in_is_hidden_until_the_player_climbs_out_of_it() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let (at, hidden) = content
         .hidden_location("ascmearc", "utgang")
         .expect("hidden");
@@ -37,7 +38,7 @@ fn the_way_in_is_hidden_until_the_player_climbs_out_of_it() {
     let overworld = content.overworld_of("ascmearc").expect("the overworld");
     assert_eq!(overworld.terrain[UTGANG], hills);
 
-    let mut w = World::new(Arc::new(content), "utgang", None).expect("a run");
+    let mut w = World::new(content, "utgang", None).expect("a run");
     let mut replay = Replay::new(&w);
     assert_eq!(w.perception().level_id(), "utgang:1");
     assert!(!w.state.revealed.contains("utgang"));
@@ -78,7 +79,7 @@ fn the_way_in_is_hidden_until_the_player_climbs_out_of_it() {
 
 #[test]
 fn arriving_on_the_overworld_any_other_way_reveals_nothing() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     // Out of Fyrdelf, by its own way in.
     let mut w = World::new(content.clone(), "ascmearc", None).expect("a run");
     act(&mut w, "reveal:fyrdelf");

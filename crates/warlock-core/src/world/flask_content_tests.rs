@@ -7,6 +7,7 @@ use super::fixture_factions::make_peace;
 use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, ZoneKind};
+use crate::test_support::builtin;
 
 // A training dummy takes a lot and never fights back; a dead one is undead.
 const DUMMIES: &str = "[[creature]]\nid = \"dummy\"\nname = \"training dummy\"\nglyph = \"D\"\n\
@@ -93,7 +94,7 @@ fn thrown(letter: char) -> (World, ActorId) {
 
 #[test]
 fn every_flask_is_a_potion_with_a_splash_and_a_label() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for (id, spell) in [
         ("flask_of_oil", "slick"),
         ("stinking_flask", "reek"),

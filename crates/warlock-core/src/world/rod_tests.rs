@@ -9,6 +9,7 @@ use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::talent::TalentMods;
+use crate::test_support::builtin;
 
 /// The pack: a, a rod of digging; b, a rod of sleep; c, a rod of teleport other; d, a rod of
 /// terror; e, a scroll of identify; f, a crossbow.
@@ -371,7 +372,7 @@ fn a_rod_and_a_launcher_share_the_missile_weapon_slot_and_a_rod_saves_as_any_sta
 
 #[test]
 fn rod_labels_leave_the_scrolls_and_wands_labels_as_they_were() {
-    let with = Content::builtin().expect("content");
+    let with = builtin();
     let mut files = ContentFiles::builtin();
     files.remove("data/rod_labels.toml");
     let without = Content::load(&files).expect("content");

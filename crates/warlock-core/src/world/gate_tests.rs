@@ -7,6 +7,7 @@
 use super::caster_tests::{kobold, world_with};
 use super::*;
 use crate::content::{ContentFiles, Stance};
+use crate::test_support::builtin;
 
 /// The built-in content where every cast miscasts and the table is the `only` row alone,
 /// covering every total.
@@ -17,7 +18,7 @@ fn content(only: &str) -> Arc<Content> {
         "stat = \"intelligence\"\nbase = 1000\nper_level = 1\narmour_percent = 10\n\
          rank_ease = 1\ndie = \"2d12\"\nper_margin = 5\nsafe_below = 71\n",
     );
-    let builtin = Content::builtin().expect("content");
+    let builtin = builtin();
     for m in builtin.miscasts() {
         files.remove(&format!("data/miscasts/{}.toml", m.id));
     }

@@ -5,6 +5,7 @@ use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::content::ContentFiles;
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -640,7 +641,7 @@ fn kicks_and_keys_replay_exactly() {
 
 #[test]
 fn the_hubs_pantry_is_locked_and_its_key_lies_in_the_storeroom() {
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = builtin();
     let mut w = World::new(content, "showcase", None).expect("world");
     // From the start room up the door corridor to the pantry's west door.
     run(&mut w, "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4");

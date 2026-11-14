@@ -9,6 +9,7 @@ use crate::content::ContentFiles;
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::rot::{self, Stage as Age};
+use crate::test_support::builtin;
 
 /// The built-in hunger file, to edit for a test.
 const HUNGER: &str = include_str!("../../../../assets/data/hunger.toml");
@@ -438,12 +439,7 @@ const INTO_SHOP: &str = "move:E*36 move:S pickup move:NE move:NE pickup:b move:S
 
 #[test]
 fn rotten_food_is_worth_nothing_in_a_shop() {
-    let mut w = World::new(
-        Arc::new(Content::builtin().expect("content")),
-        "courtyard",
-        None,
-    )
-    .expect("courtyard");
+    let mut w = World::new(builtin(), "courtyard", None).expect("courtyard");
     run(&mut w, INTO_SHOP);
     let meat_at = Pos::new(62, 15);
     let meat = find(&w, w.state.current().objects_at(meat_at), "dried_meat")

@@ -21,15 +21,14 @@ impl World {
 
 #[cfg(test)]
 mod tests {
-    use crate::content::Content;
+
     use crate::geom::Pos;
     use crate::object::{Stack, add_to_inventory};
     use crate::stats::Stat;
     use crate::world::World;
-    use std::sync::Arc;
 
     fn town() -> World {
-        let content = Arc::new(Content::builtin().expect("content"));
+        let content = crate::test_support::builtin();
         World::new(content, "ceaptun", None).expect("world")
     }
 
@@ -67,7 +66,7 @@ mod tests {
 
     #[test]
     fn smiths_and_stores_trade_in_stock() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let shops = content.shops().expect("shops");
         let piece = content.object_id(crate::piece::ID).expect("piece");
         let iron = content.material_id("iron").expect("iron");
@@ -107,7 +106,7 @@ mod tests {
 
     #[test]
     fn herbs_and_essences_are_materials_objects() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let one = |id: &str| Stack::one(content.object_id(id).expect(id));
         let essences: Vec<String> = ELEMENTS.iter().map(|e| format!("essence_of_{e}")).collect();
         let all = (HERBS.iter().map(|&(id, _, value)| (id, 20, value)))
@@ -141,7 +140,7 @@ mod tests {
 
     #[test]
     fn the_alchemist_sells_herbs_and_buys_materials() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let shops = content.shops().expect("shops");
         let id = |id: &str| content.object_id(id).expect(id);
         let alchemist = shops.get(shops.id("alchemist").expect("alchemist"));

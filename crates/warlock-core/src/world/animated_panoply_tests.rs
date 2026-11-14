@@ -10,6 +10,7 @@ use crate::content::ContentFiles;
 use crate::damage::Damage;
 use crate::magic::{Affix, Magic, Rarity};
 use crate::object::Stack;
+use crate::test_support::builtin;
 
 // A lit hall: the player between hollow armour of level 12 (west) and a panoply of level 40
 // (east), a panoply of level 70 further on.
@@ -472,7 +473,7 @@ fn a_glowing_ring_lights_a_panoply() {
 
 #[test]
 fn hollow_armour_is_in_fyrdelf_and_a_panoply_nowhere_yet() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let armour = id(&content, "animated_armour");
     let panoply = id(&content, "animated_panoply");
     let population = |d: &crate::content::DungeonDef| {

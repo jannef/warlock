@@ -10,6 +10,7 @@ use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, StatusId};
 use crate::dice::Dice;
 use crate::stats::{PerStat, Stats};
+use crate::test_support::builtin;
 use std::sync::LazyLock;
 
 const POND: &str = r#"
@@ -405,7 +406,7 @@ fn the_spells_cast_on_oneself_and_the_presence_lengthens_them() {
 
 #[test]
 fn the_class_rows_and_the_scrolls_are_the_designs() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let row = |class: &str, talent: &str| {
         let class = (content.classes().iter())
             .find(|c| c.id == class)

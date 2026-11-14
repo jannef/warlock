@@ -9,6 +9,7 @@ use super::*;
 use crate::content::{ContentFiles, RecipeId};
 use crate::object::Stack;
 use crate::skills::{SkillId, Trained};
+use crate::test_support::builtin;
 
 /// The built-in content on a bare floor. The player (a craftsperson) carries nothing and has
 /// Woodcraft at 200.
@@ -273,7 +274,7 @@ fn a_lute_comes_out_plain_whatever_the_margin() {
 fn a_short_bow_made_at_the_forge_replays() {
     // The forge's craftsperson picks up the stock (wood `c` and sinew `d`, joining his trade's) and the
     // bench's dagger.
-    let content = Arc::new(Content::load(&ContentFiles::builtin()).expect("content"));
+    let content = builtin();
     let mut w = World::new(content.clone(), "forge", None).expect("world");
     let mut replay = crate::replay::Replay::new(&w);
     let actions = "move:E pickup move:S move:S pickup craft:short_bow:c,d";

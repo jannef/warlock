@@ -7,6 +7,7 @@ use crate::ability::Ability;
 use crate::content::ContentFiles;
 use crate::object::Stack;
 use crate::skills::{SkillId, Trained};
+use crate::test_support::builtin;
 use std::sync::LazyLock;
 
 /// The built-in content with two generic recipes: a long sword of stock, from Metalcraft 20, and
@@ -73,7 +74,7 @@ fn rows(w: &World, id: &str) -> Vec<String> {
 
 #[test]
 fn the_built_in_rows_are_the_trained_with_what_they_take_and_why_not() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let mut w = world(content.clone(), "showcase");
     // Untrained, no rows: every recipe is its skill's (#1387).
     assert!(rows(&w, "metalcraft").is_empty());
@@ -175,7 +176,7 @@ fn a_stock_part_wants_a_piece_the_profession_works_that_the_part_may_be_made_of(
 
 #[test]
 fn the_abilities_menu_lists_a_row_per_profession_and_no_temper_whittle_or_fletch() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let mut w = world(content.clone(), "forge");
     w.apply(&Action::Move(Dir::E));
     let metal = Ability::Profession(skill(&w, "metalcraft"));

@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn fire_burns_scrolls_and_spares_steel() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let fire = content.damage_type_id("fire").expect("fire");
         let scroll = content.object_id("scroll_of_fireball").expect("scroll");
         let sword = content.object_id("long_sword").expect("sword");

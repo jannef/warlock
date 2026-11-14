@@ -9,6 +9,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::{Band, ContentFiles, drawn_among};
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 /// The pack: a, two grimoires of fireball (Fireball, level 11); b, one of lightning (Lightning
 /// bolt, level 11); c, two of frost (Frost, level 6); d, one of identify; e, a dagger; f, two
@@ -617,7 +618,7 @@ fn the_classes_that_learn_start_with_decipher_script() {
 
 /// A level-1 `class` with its kit (spells from the class's table).
 pub(super) fn kitted(class: &str) -> World {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     super::caster_tests::world_with(content, class)
 }
 

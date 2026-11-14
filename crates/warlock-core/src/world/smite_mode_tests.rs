@@ -9,6 +9,7 @@ use crate::content::{ClassActive, ResourceId};
 use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::talent::SmiteRider;
+use crate::test_support::builtin;
 
 /// A blow that hit, as a rider asks for one.
 const A_HIT: crate::combat::Blow = crate::combat::Blow {
@@ -227,7 +228,7 @@ fn the_modes_spend_their_zeal_only_when_answered() {
 
 #[test]
 fn a_replay_of_the_modes_verifies() {
-    let content = std::sync::Arc::new(crate::content::Content::builtin().expect("content"));
+    let content = builtin();
     let spec: crate::character::CharacterSpec = "human,male,paladin".parse().expect("spec");
     let mut w = World::start_run(content.clone(), "arena", Some(7), Some(&spec), None, true)
         .expect("world");

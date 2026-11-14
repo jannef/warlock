@@ -6,6 +6,7 @@ use crate::action::{Command, parse_actions};
 use crate::content::{ContentFiles, Stance};
 use crate::noise::SoundKind;
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -582,7 +583,7 @@ fn an_ally_survives_a_save_as_it_was() {
 
 #[test]
 fn beast_bond_is_read_through_the_master_with_the_shipped_talent() {
-    let content = Arc::new(crate::content::Content::builtin().expect("content"));
+    let content = builtin();
     let mut w = World::new(content.clone(), "circles", None).expect("world");
     run(&mut w, "ally:rat");
     let rat = allies(&w)[0].id;
@@ -604,7 +605,7 @@ fn beast_bond_is_read_through_the_master_with_the_shipped_talent() {
 
 #[test]
 fn an_order_and_an_allys_kill_mark_handle_animal() {
-    let content = Arc::new(crate::content::Content::builtin().expect("content"));
+    let content = builtin();
     let spec: crate::character::CharacterSpec = "human,male,druid".parse().expect("a druid");
     let mut w = World::start_run(
         content.clone(),
@@ -627,7 +628,7 @@ fn an_order_and_an_allys_kill_mark_handle_animal() {
 
 #[test]
 fn the_retinue_crosses_the_overworld_and_steps_out_at_the_next_level() {
-    let content = Arc::new(crate::content::Content::builtin().expect("content"));
+    let content = builtin();
     // A commoner, not the scenario's ranger: no companion in the retinue (`companion_tests.rs`).
     let spec = crate::character::CharacterSpec {
         race: "human".into(),

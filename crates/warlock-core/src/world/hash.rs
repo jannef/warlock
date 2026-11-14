@@ -79,7 +79,7 @@ mod tests {
     /// every recorded replay hash stays as it was.
     #[test]
     fn streamed_hash_is_the_hash_of_the_encoding() {
-        let content = std::sync::Arc::new(crate::content::Content::builtin().expect("content"));
+        let content = crate::test_support::builtin();
         let world = World::new(content, "showcase", None).expect("world");
         HASHING.with(|h| h.set(true));
         let json = serde_json::to_vec(&world.state).expect("serializes");

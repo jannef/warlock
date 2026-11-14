@@ -7,6 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, ZoneKind};
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 /// A lit hall of `map` (`@` the player, `k` a kobold alchemist, `g` a goblin firebomber, `c` a
 /// cult chymist), the player with plenty of hit points.
@@ -122,7 +123,7 @@ fn a_bomber_beside_its_foe_fights_in_melee() {
 
 #[test]
 fn the_three_bombers_throw_flasks_and_carry_them() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for (bomber, flask) in [
         ("kobold_alchemist", "flask_of_oil"),
         ("goblin_firebomber", "flask_of_fire"),

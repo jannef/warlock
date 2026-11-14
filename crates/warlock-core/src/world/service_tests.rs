@@ -6,6 +6,7 @@ use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::stats::Stat;
+use crate::test_support::builtin;
 
 /// The sister's words and services, added to the built-in dialogue.
 const SISTER: &str = r##"
@@ -255,7 +256,7 @@ fn services_are_saved_and_replayed() {
 
 #[test]
 fn every_disease_is_cured_by_prayer() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for d in content.disease_defs() {
         assert!(
             d.cured_by.iter().any(|c| c == super::service::PRAYER),

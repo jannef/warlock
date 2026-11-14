@@ -7,6 +7,7 @@ use super::*;
 use crate::ability::Ability;
 use crate::alignment::{Alignment, Score};
 use crate::content::{ContentFiles, OutcomeDef, OutcomeKind, OutcomeTable};
+use crate::test_support::builtin;
 use crate::world::outcome::leaned_kinds;
 
 /// A room with a forgotten altar at (5, 2), the player beside it at (4, 3), and at `k` a kobold
@@ -429,7 +430,7 @@ fn summoned_creatures_come_on_a_level_with_a_danger_and_none_without() {
     befall(&mut w, "answered");
     assert_eq!(w.state.actors.len(), count, "no danger here: nothing comes");
     // A dungeon with a danger: one comes beside the "altar".
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let mut w = World::new(content, "fennmynster", None).expect("fennmynster");
     let feature = w.player_pos();
     let count = w.state.actors.len();
@@ -490,7 +491,7 @@ fn a_burst_altar_is_never_spent_and_a_prayer_shifts_alignment_by_side() {
 
 #[test]
 fn about_half_of_completed_prayers_spend_the_altar_and_a_spent_one_is_kept_as_terrain() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let (mut spent, mut standing) = (0u32, 0u32);
     let mut kept = None;
     for seed in 0..300 {

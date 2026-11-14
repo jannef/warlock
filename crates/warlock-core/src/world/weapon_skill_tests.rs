@@ -4,7 +4,7 @@
 //! to-hit, damage, threat, Defence, and cost, starting ranks come from race and class, and all of
 //! it is saved and replayed.
 
-use crate::test_support::CONTENT as BUILTIN;
+use crate::test_support::{CONTENT as BUILTIN, builtin};
 /// The test creatures name no level: level 1 (spec §8 "Experience").
 const UNLEVELLED: u32 = 1;
 use super::*;
@@ -675,7 +675,7 @@ fn creatures_fight_with_the_ranks_their_type_gives() {
         (plain.to_hit + 2, plain.bonus + 1)
     );
     // The built-in kobolds: spears 1, and the archer bows 1.
-    let builtin = Content::builtin().expect("content");
+    let builtin = builtin();
     let kobold = builtin.creature_id("kobold").expect("kobold");
     let spears = builtin.weapon_skills().id("spears").expect("spears");
     assert_eq!(builtin.creature(kobold).weapon_skills.rank(spears), 1);

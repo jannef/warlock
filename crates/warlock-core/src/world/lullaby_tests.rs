@@ -16,12 +16,13 @@ use crate::noise::Act;
 use crate::replay::Replay;
 use crate::skills::Effect;
 use crate::stats::{PerStat, Stats};
+use crate::test_support::builtin;
 
 const LULLABY: Ability = Ability::Class(ClassActive::Lullaby);
 
 /// A human bard (seed 7) with their kit, every score 14, born under no sign.
 fn bard_at(level: u8) -> World {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let spec: CharacterSpec = "human,male,bard".parse().expect("a character");
     let picks = ["keen_ears", "lean", "healthy", "tunneler"];
     let spec = spec.with_talents(picks.iter().map(|p| p.to_string()).collect());
@@ -228,7 +229,7 @@ fn the_peaceful_hear_it_and_draw_nothing() {
 
 #[test]
 fn a_lullaby_replays_and_restores() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let spec: CharacterSpec = "human,female,bard".parse().expect("a character");
     let mut w =
         World::start_run(content, "showcase", Some(7), Some(&spec), None, true).expect("world");

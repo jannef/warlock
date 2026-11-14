@@ -9,6 +9,7 @@ use crate::action::parse_actions;
 use crate::alignment::Score;
 use crate::content::{ClassActive, ContentFiles, CreatureId, CreatureSpawn};
 use crate::dump::{self, Layer};
+use crate::test_support::builtin;
 
 /// A hall, 30 wide, with a cursed room over x 10 to 19. Lit, so the player sees all of it.
 const HALL: &str = "\
@@ -121,7 +122,7 @@ fn undead(w: &World) -> crate::content::FactionId {
 
 #[test]
 fn the_cursed_room_is_data() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let effects = content.room_effects();
     let cursed = effects.get(effects.id("cursed").expect("cursed"));
     assert_eq!(
@@ -261,7 +262,7 @@ fn the_dead_outside_and_the_undead_never_rise() {
 
 #[test]
 fn the_nearest_level_stands_in_when_none_has_the_dead_s() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let undead = content.factions().id("undead").expect("undead");
     let level_of = |c: CreatureId| content.creature(c).level;
     let highest = (content.creature_defs().iter())

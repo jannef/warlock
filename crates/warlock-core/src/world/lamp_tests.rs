@@ -5,9 +5,10 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::object::LightMode;
+use crate::test_support::builtin;
 
 fn showcase() -> World {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     World::new(content, "showcase", None).expect("showcase")
 }
 

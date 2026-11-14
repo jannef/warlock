@@ -338,7 +338,7 @@ fn speeds_come_from_content_and_the_player_has_normal_speed() {
         .map(|id| speed(&w, *id))
         .collect();
     assert_eq!(speeds, [1000, 1500, 2000, 900]);
-    let builtin = Content::builtin().expect("builtin content");
+    let builtin = crate::test_support::builtin();
     let of = |id: &str| builtin.creature(builtin.creature_id(id).unwrap()).speed;
     assert_eq!(of("player"), crate::content::NORMAL_SPEED);
     assert!(

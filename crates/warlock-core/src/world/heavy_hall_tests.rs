@@ -6,6 +6,7 @@ use super::*;
 use crate::burden::{self, Burden};
 use crate::content::ContentFiles;
 use crate::object::Stack;
+use crate::test_support::builtin;
 
 /// A hall, 30 wide, with a heavy hall over x 10 to 19.
 const HALL: &str = "\
@@ -66,7 +67,7 @@ fn carry(w: &mut World, percent: u64) {
 
 #[test]
 fn the_heavy_hall_is_data() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let effects = content.room_effects();
     let heavy = effects.get(effects.id("heavy").expect("heavy"));
     assert_eq!(

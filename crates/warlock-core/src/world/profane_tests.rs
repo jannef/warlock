@@ -4,12 +4,12 @@
 use super::super::World;
 use crate::action::Action;
 use crate::character::CharacterSpec;
-use crate::content::{Content, GiftTier, TalentId};
+use crate::content::{GiftTier, TalentId};
 use crate::stats::{DRAIN_FLOOR, Stat};
-use std::sync::Arc;
+use crate::test_support::builtin;
 
 fn world(character: &str) -> World {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let spec: CharacterSpec = character.parse().expect("a character");
     World::start_run(content, "showcase", Some(1), Some(&spec), None, true).expect("world")
 }

@@ -410,7 +410,7 @@ mod tests {
 
     #[test]
     fn woods_blend_towards_the_neighbors_at_the_sides() {
-        let content = crate::content::Content::builtin().expect("builtin content");
+        let content = crate::test_support::builtin();
         let kit = super::super::Kit::resolve(&content).expect("kit");
         let land = Land::new(&content, kit, kit.grass, 80, 40);
         let setting = Setting {

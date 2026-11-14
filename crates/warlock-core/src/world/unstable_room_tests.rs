@@ -4,6 +4,7 @@
 
 use super::*;
 use crate::content::ContentFiles;
+use crate::test_support::builtin;
 
 /// A hall, 30 wide, with an unstable room over x 10 to 19; `r` is a giant rat inside it.
 const HALL: &str = "\
@@ -73,7 +74,7 @@ fn warps(w: &mut World, who: ActorId, at: Pos, times: u32) -> u32 {
 
 #[test]
 fn the_unstable_room_is_data() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let effects = content.room_effects();
     let unstable = effects.get(effects.id("unstable").expect("unstable"));
     assert_eq!(

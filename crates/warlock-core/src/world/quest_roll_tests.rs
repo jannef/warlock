@@ -11,6 +11,7 @@ use crate::action::parse_actions;
 use crate::content::{ContentFiles, TrapId};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 /// Godgifu, in the Gæsthūs: she gives the test quests.
 const GODGIFU: Pos = Pos::new(46, 26);
@@ -546,7 +547,7 @@ fn picks_variants_and_placeholders_are_checked_at_load() {
 
 #[test]
 fn sworn_foe_hits_its_kind_surer_and_harder() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let mut w = World::new(content.clone(), "arena", None).expect("run");
     let player = w.state.player;
     let first = |w: &World, name: &str| {

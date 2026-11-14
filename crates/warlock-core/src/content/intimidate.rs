@@ -83,7 +83,7 @@ mod tests {
 
     #[test]
     fn the_ladder_rises_from_one_degree_to_war_crys_three() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let rules = content.intimidate().expect("intimidating is in the game");
         assert_eq!(content.status(rules.status).id, "frightened");
         let at: Vec<u16> = [0, 2, 3, 5, 6, 12].map(|p| rules.degrees_at(p)).into();

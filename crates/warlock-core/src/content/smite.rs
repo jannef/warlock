@@ -80,7 +80,7 @@ mod tests {
 
     #[test]
     fn the_shipped_rules_parse() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let rules = content.smite().expect("smiting is in the game");
         assert!(rules.unholy.iter().any(|t| t == "undead"));
         let zeal = rules.sin_empties.expect("a sin empties zeal");

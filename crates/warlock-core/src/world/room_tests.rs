@@ -5,6 +5,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::noise::{self, Act};
+use crate::test_support::builtin;
 
 /// A hall, 25 wide: the west part plain, the east part (walls included) the special room
 /// `effect`. The player stands in the plain part unless the map puts them elsewhere.
@@ -90,7 +91,7 @@ fn the_room_effect_is_asked_of_any_visited_level() {
         "a level not visited"
     );
     // The showcase's stairs nook is a sanctuary.
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let showcase = World::new(content, "showcase", None).expect("showcase");
     let nook = showcase.effects_at("hub", Pos::new(75, 16)).room;
     assert_eq!(nook.map(|e| e.id.as_str()), Some("sanctuary"));

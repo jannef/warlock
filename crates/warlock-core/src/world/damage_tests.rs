@@ -144,7 +144,7 @@ fn said(w: &World) -> Vec<String> {
 
 #[test]
 fn the_built_in_content_types_every_source_of_damage() {
-    let c = Content::builtin().expect("content");
+    let c = crate::test_support::builtin();
     assert_eq!(c.unarmed_damage(), c.damage_type_id("bludgeoning"));
     for o in c.object_defs() {
         if let Some(attack) = &o.attack {

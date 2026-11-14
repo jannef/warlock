@@ -702,7 +702,7 @@ mod tests {
     /// while a `while` effect's status is held and after it ends.
     #[test]
     fn the_kept_sum_is_the_sum() {
-        let content = Content::builtin().expect("content");
+        let content = crate::test_support::builtin();
         let raging = content.status_id("raging").expect("raging");
         let calm = Effects::default();
         let mut rage = Effects::default();
@@ -734,7 +734,7 @@ mod tests {
     #[test]
     fn hit_points_by_level_grow_with_the_level_and_never_under_the_floor() {
         let mods = TalentMods::of(
-            &Content::builtin().expect("content"),
+            &crate::test_support::CONTENT,
             [TalentEffect::Vigour(VigourEffect::MaxHpPerLevels {
                 per_levels: 4,
                 at_least: 3,
@@ -745,7 +745,7 @@ mod tests {
         assert_eq!(mods.vigour.hp_at(16), 4);
         assert_eq!(mods.vigour.hp_at(60), 15);
         let two = TalentMods::of(
-            &Content::builtin().expect("content"),
+            &crate::test_support::CONTENT,
             [
                 TalentEffect::Vigour(VigourEffect::MaxHpPerLevels {
                     per_levels: 4,
@@ -763,7 +763,7 @@ mod tests {
     #[test]
     fn effects_sum_and_flags_switch() {
         let mods = TalentMods::of(
-            &Content::builtin().expect("content"),
+            &crate::test_support::CONTENT,
             [
                 TalentEffect::Defence(DefenceEffect::Dodge { value: 1 }),
                 TalentEffect::Defence(DefenceEffect::Dodge { value: 2 }),

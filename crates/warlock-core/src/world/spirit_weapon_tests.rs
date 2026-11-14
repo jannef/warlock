@@ -11,6 +11,7 @@ use crate::content::{ActionKind, ClassActive, ContentFiles};
 use crate::dump::{self, Layer};
 use crate::magic::describe::{self, LineKind};
 use crate::replay::Replay;
+use crate::test_support::builtin;
 use std::sync::LazyLock;
 
 const SPIRIT: ClassActive = ClassActive::SpiritWeapon;
@@ -290,12 +291,7 @@ fn it_is_never_thrown_or_handed_in() {
 fn a_shop_never_sees_it() {
     // Grimbold's General Store in the courtyard, the player carrying their lantern, gold, and
     // a scroll of light (`shop_tests.rs`).
-    let mut w = World::new(
-        Arc::new(Content::builtin().expect("content")),
-        "courtyard",
-        None,
-    )
-    .expect("courtyard");
+    let mut w = World::new(builtin(), "courtyard", None).expect("courtyard");
     run(
         &mut w,
         "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 move:E*5",

@@ -7,6 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -990,7 +991,7 @@ fn quest_files_are_validated() {
 
 /// A showcase run.
 fn showcase() -> World {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     World::new(content, "showcase", None).expect("run")
 }
 

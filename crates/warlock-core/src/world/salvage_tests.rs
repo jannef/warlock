@@ -13,6 +13,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::{PerStat, Stats};
+use crate::test_support::builtin;
 use std::sync::LazyLock;
 
 const ROOM: &str = "\
@@ -334,7 +335,7 @@ fn every_refusal_takes_no_time() {
 
 #[test]
 fn unpaid_goods_are_refused() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let mut w = World::new(content, "courtyard", None).expect("courtyard");
     let walk = "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 \
                 move:E*5 move:E move:NE pickup";

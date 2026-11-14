@@ -178,7 +178,7 @@ fn coarse_turns_replay() {
 /// finds, in the arena's fight and the depths, turn after turn, with the line of sight it keeps.
 #[test]
 fn a_rest_sees_whom_a_perception_sees() {
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = crate::test_support::builtin();
     for scenario in ["arena", "depths", "showcase"] {
         let mut w = World::new(content.clone(), scenario, None).expect("world");
         let mut kept = None;

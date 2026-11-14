@@ -7,6 +7,7 @@ use super::*;
 use crate::action::Meal;
 use crate::content::ContentFiles;
 use crate::stats::Stat;
+use crate::test_support::builtin;
 
 /// Food underfoot, nothing else about.
 const PANTRY: &str = r##"
@@ -68,7 +69,7 @@ fn pantry(content: &Arc<Content>) -> World {
 
 #[test]
 fn tags_give_corpses_their_gifts_and_a_creature_its_own_over_them() {
-    let content = Content::builtin().expect("content loads");
+    let content = builtin();
     let gifts = |id: &str| {
         let creature = content.creature(content.creature_id(id).expect(id));
         let eat = creature.on_eat.clone().unwrap_or_default();

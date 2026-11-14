@@ -10,6 +10,7 @@ use crate::content::{ClassActive, ContentFiles, Trap};
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::rng::Rng;
+use crate::test_support::builtin;
 
 /// A lit hall on the built-in content, the player at `@` as a human craftsperson with
 /// Trapwright, every score 10, born under no sign (no gift of theirs saves them); `r` a rat.
@@ -415,7 +416,7 @@ fn rigging_is_deterministic_and_saves() {
 /// hash.
 #[test]
 fn rigging_replays() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let spec: crate::character::CharacterSpec =
         "human,male,craftsperson".parse().expect("a character");
     let mut w =

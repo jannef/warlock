@@ -4,6 +4,7 @@
 
 use super::*;
 use crate::action::parse_actions;
+use crate::test_support::builtin;
 
 fn step(w: &mut World, text: &str) {
     for action in parse_actions(text).expect("actions") {
@@ -13,12 +14,7 @@ fn step(w: &mut World, text: &str) {
 
 #[test]
 fn the_deepest_floor_leads_down_to_the_town_and_back() {
-    let mut w = World::new(
-        Arc::new(Content::builtin().expect("content")),
-        "deopgang",
-        None,
-    )
-    .expect("a run");
+    let mut w = World::new(builtin(), "deopgang", None).expect("a run");
     assert_eq!(w.perception().level_id(), "deopgang:1");
     w.travel("deopgang:11", None).expect("the eleventh floor");
     let down = (w.state.levels["deopgang:11"].stairs.iter())
@@ -43,12 +39,7 @@ fn the_deepest_floor_leads_down_to_the_town_and_back() {
 
 #[test]
 fn the_town_is_peaceful_and_its_people_are_deep_gnomes() {
-    let w = World::new(
-        Arc::new(Content::builtin().expect("content")),
-        "gimmwic",
-        None,
-    )
-    .expect("a run");
+    let w = World::new(builtin(), "gimmwic", None).expect("a run");
     assert_eq!(w.perception().level_id(), "gimmwic");
     let content = w.content();
     let townsfolk: Vec<&Actor> = (w.state.actors.values())

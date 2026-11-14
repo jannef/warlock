@@ -293,10 +293,7 @@ pub(super) fn resolve(specs: &[KitLineSpec], content: &Content) -> Result<Kit, S
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::LazyLock;
-
-    static CONTENT: LazyLock<Content> =
-        LazyLock::new(|| Content::builtin().expect("built-in content"));
+    use crate::test_support::CONTENT;
 
     #[derive(Deserialize)]
     struct Lines {

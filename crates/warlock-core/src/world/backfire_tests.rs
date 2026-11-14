@@ -7,6 +7,7 @@ use super::caster_tests::{kobold, said, world_with};
 use super::miscast::Aim;
 use super::*;
 use crate::content::{Miscast, Stance};
+use crate::test_support::builtin;
 
 /// The built-in entry `id`.
 fn entry(c: &Content, id: &str) -> Miscast {
@@ -18,7 +19,7 @@ fn entry(c: &Content, id: &str) -> Miscast {
 
 /// A wizard on the showcase with every other actor sent far off, at full hit points.
 fn alone() -> World {
-    let c = Arc::new(Content::builtin().expect("content"));
+    let c = builtin();
     let mut w = world_with(c, "wizard");
     let player = w.state.player;
     for a in w.state.actors.values_mut() {

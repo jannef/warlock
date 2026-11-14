@@ -5,6 +5,7 @@
 use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
+use crate::test_support::builtin;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -330,7 +331,7 @@ fn summoning_is_deterministic() {
 /// kind, and a kill of what it called pays experience.
 #[test]
 fn the_goblin_wizard_calls_forth_goblins_that_pay_when_killed() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = builtin();
     let mut w = World::new(content, "summoners", None).expect("the summoning hall");
     run(&mut w, "move:W*13 move:NW open:N wait");
     let wizard = first_of(&w, "goblin_wizard").id;

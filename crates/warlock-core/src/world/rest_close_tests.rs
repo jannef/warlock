@@ -11,6 +11,7 @@ use crate::combat::Strike;
 use crate::content::ContentFiles;
 use crate::hunger::Hunger;
 use crate::replay::Replay;
+use crate::test_support::builtin;
 
 /// The built-in content with `map`: the player at `@` (a ration and a pick-axe under them), a
 /// creature of type `them` at `k`, a kobold walking west and back at `r`, a deer at `d`,
@@ -253,7 +254,7 @@ fn a_meal_and_digging_go_on_with_a_hostile_farther_off_in_view() {
 fn a_fight_seen_far_off_is_told_and_the_rest_goes_on() {
     // The arena's pit, seen from its dark corner: blows, shots, spells, and deaths among the
     // kobolds and the rats, none of them near the player.
-    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let content = builtin();
     let mut w = World::new(content, "arena", None).expect("world");
     w.apply(&Action::Rest(Rest::For(Duration::hours(1))));
     assert_eq!(last(&w), "You rest for 1 hour.");

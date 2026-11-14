@@ -2,11 +2,11 @@
 //! one type a level, named by bands that match the chest bands, every level's slam holding, and
 //! placed by nothing but a chest.
 
-use super::Content;
+use crate::test_support::builtin;
 
 #[test]
 fn one_mimic_a_level_whose_slam_holds() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let mimics = content.mimics();
     assert_eq!(mimics.levels, [1, 60]);
     let vermin = content.factions().id("vermin");
@@ -45,7 +45,7 @@ fn one_mimic_a_level_whose_slam_holds() {
 
 #[test]
 fn the_bands_are_the_chests_and_name_them() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     let names: Vec<&str> = content
         .mimics()
         .bands
@@ -78,7 +78,7 @@ fn the_bands_are_the_chests_and_name_them() {
 
 #[test]
 fn no_population_names_a_mimic() {
-    let content = Content::builtin().expect("content");
+    let content = builtin();
     for def in content.dungeons() {
         let population = def.spawning.iter().flat_map(|s| &s.population);
         for &c in population {
