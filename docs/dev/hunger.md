@@ -27,7 +27,7 @@ its tags', `Corpses::gifts_of`, then its own per stat, zeros dropped; `MAX_TRAIN
 `MAX_WIDEN` 20), so `eat.rs` and the wiki's `corpse-effects.md` read one resolved gift (the
 undead's files switch their caster, troll, and marsh-thing gifts off with zeros), scenarios' `carry` (a starting pack on top of the character's kit, docs/dev/character-creation.md). Corpses are objects made at load
 (`Content::load_hunger`, after the file's objects, id `<creature>_corpse`, `ObjectDef::corpse`
-names the creature, `Content::corpse_of`), feeding and keeping by their creature's size, and
+names the creature, `Content::corpse_of`; a unique's, `is_proper`, is its possessive, "Gnægan the Rat King's corpse", which `magic::name::describe` and the messages (`content::the`) say without an article, #1660), feeding and keeping by their creature's size, and
 level files cannot place corpses. **Everlasting corpses** (#1624, the profane gifts' P1,
 docs/design/profane-gifts.md §3): `CreatureDef::everlasting` (refused by `load_creatures`
 without `corpse`, on a non-`unique`, and on the player) makes `load_hunger` give its corpse

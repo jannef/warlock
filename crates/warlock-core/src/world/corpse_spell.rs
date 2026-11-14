@@ -104,8 +104,8 @@ impl World {
         self.heal_player(back);
         let me = self.player_mut();
         me.mana = (me.mana + mana).min(max_mana).max(me.mana);
-        let name = &content.object(corpse).name;
-        self.say(format!("You draw what life is left out of the {name}."));
+        let name = crate::content::the(&content.object(corpse).name);
+        self.say(format!("You draw what life is left out of {name}."));
         self.spell_landed(cast, self.state.player, back + mana > 0);
         true
     }

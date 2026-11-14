@@ -91,7 +91,8 @@ impl World {
         }
         for (stack, (one, many)) in told {
             let line = if stack.count == 1 {
-                format!("The {} {one}.", self.lore().title(&stack))
+                let title = self.lore().title(&stack);
+                format!("{} {one}.", crate::content::the_start(&title))
             } else {
                 format!("{} {many}.", capitalized(&self.lore().describe(&stack)))
             };

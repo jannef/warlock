@@ -513,7 +513,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   object may have `level` and `frequency`, as base items do, and is loot (never magic): the
   scrolls of fireball (item level 3), lightning (2), frost, and identify. **Corpses** are objects too, one made for every creature type
   that leaves one (not the player) when content loads, after the objects of the file in creature
-  order, with the id `<creature>_corpse`: "kobold corpse", `%` in the creature's color, made of
+  order, with the id `<creature>_corpse`: "kobold corpse" (a unique's by its name, without an
+  article: "Gnægan the Rat King's corpse"), `%` in the creature's color, made of
   the corpses' material (`data/hunger.toml`), weighing the creature's weight, not stackable, and
   feeding and keeping by the creature's size. Level files and `carry` cannot place them (a
   content error): only creatures that die leave them, each knowing when it died. What they do in a
