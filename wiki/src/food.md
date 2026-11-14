@@ -58,7 +58,7 @@ smell it. They will not buy it, and they do not sell it either (see [Shops](shop
 ## Corpses
 
 A [creature](creatures.md) that dies leaves its **corpse** where it fell, on top of whatever it
-dropped: a "kobold corpse", shown as `%` in the creature's color. A corpse weighs what the
+dropped: a "kobold corpse" ("Gnægan the Rat King's corpse" for a unique), shown as `%` in the creature's color. A corpse weighs what the
 creature did, so a [deer](creatures.md#creature-deer)'s is far too heavy to carry (see
 [Burden](burden.md)). It feeds you according to the creature's size and takes a while to eat.
 

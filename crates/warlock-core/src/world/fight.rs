@@ -152,7 +152,9 @@ impl Cause {
         let name = |o: ObjectId| content.object(o).name.clone();
         match self {
             Cause::Starvation => "You starve to death...".into(),
-            Cause::Choked(o) => format!("You choke to death on the {}...", name(o)),
+            Cause::Choked(o) => {
+                format!("You choke to death on {}...", crate::content::the(&name(o)))
+            }
             Cause::Trap(_)
             | Cause::Scroll(_)
             | Cause::Flask(_)

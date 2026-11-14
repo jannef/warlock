@@ -39,7 +39,7 @@
 
 use super::{Actor, Cause, Ended, Spent, World};
 use crate::action::{DiseaseNews, Event, Meal, Positions};
-use crate::content::{ActionKind, ObjectId};
+use crate::content::{ActionKind, ObjectId, the, the_start};
 use crate::object::{self, Stack};
 use crate::stats::Stat;
 use crate::talent::TalentMods;
@@ -161,7 +161,7 @@ impl World {
         };
         let def = content.object(food.object);
         self.train_judged(&food, self.state.time);
-        self.say(format!("You eat the {}.", def.name));
+        self.say(format!("You eat {}.", the(&def.name)));
         self.ate_goods(dish.meal, &food);
         if let Some(creature) = def.corpse {
             self.ate_corpse(creature);
@@ -344,16 +344,16 @@ impl World {
         // Deep roots (a Wood-born's pick) eats it as such a race does.
         let rooted = self.state.player().talent_mods(&content).hunger.eats_rotten;
         if rooted || race.is_some_and(|r| r.eats_rotten) {
-            let name = &content.object(what).name;
+            let name = the_start(&content.object(what).name);
             self.say(format!(
-                "The {name} was rotten, but your stomach does not mind."
+                "{name} was rotten, but your stomach does not mind."
             ));
             self.feed(nutrition, what);
             return;
         }
         self.say(format!(
-            "Ugh! The {} was rotten.",
-            content.object(what).name
+            "Ugh! {} was rotten.",
+            the_start(&content.object(what).name)
         ));
         // Iron stomach (spec §8 "Talents"): never vomits, and half the sickness (no draw for
         // the vomiting it is spared).

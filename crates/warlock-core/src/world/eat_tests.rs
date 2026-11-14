@@ -286,6 +286,23 @@ fn a_rotten_casters_corpse_teaches_nothing() {
 }
 
 #[test]
+fn a_uniques_corpse_is_named_by_its_proper_name() {
+    // #1660: "Gnægan the Rat King's corpse", never "the Gnægan the Rat King corpse".
+    let content = content_with(&[]);
+    let mut w = pantry(&content);
+    let named = |id: &str| {
+        let object = content.object_id(id).expect("a corpse");
+        Stack::corpse(object, w.time()).describe(&content)
+    };
+    assert_eq!(named("gnaegan_corpse"), "Gnægan the Rat King's corpse");
+    assert_eq!(named("kobold_corpse"), "a kobold corpse");
+    eat(&mut w, "gnaegan", 60);
+    assert!(said(&w, "You eat Gnægan the Rat King's corpse."));
+    eat(&mut w, "kobold", 60);
+    assert!(said(&w, "You eat the kobold corpse."));
+}
+
+#[test]
 fn skill_gifts_without_words_are_refused() {
     let necromancer = "on_eat = { skills = { decipher_script = { gives = 6, up_to = 45 } } }";
     let refused = |files: ContentFiles| Content::load(&files).expect_err("refused").to_string();

@@ -477,8 +477,10 @@ pub struct Burning {
 }
 
 impl ObjectDef {
-    /// The corpse of creature type `creature` (id `id`): "kobold corpse", `%` in its color, made
-    /// of `material` and weighing what it does, feeding as `food` (its size's).
+    /// The corpse of creature type `creature` (id `id`): "kobold corpse", a unique's by its
+    /// proper name as an owner, said without an article ("Gnægan the Rat King's corpse"; #1660),
+    /// `%` in its color, made of `material` and weighing what it does, feeding as `food` (its
+    /// size's).
     pub(super) fn corpse_of(
         id: CreatureId,
         creature: &CreatureDef,
@@ -486,12 +488,16 @@ impl ObjectDef {
         material: MaterialId,
         food: Food,
     ) -> Self {
+        let whose = match super::is_proper(&creature.name) {
+            true => super::possessive(&creature.name),
+            false => creature.name.clone(),
+        };
         Self {
             id: format!("{}_corpse", creature.id),
-            name: format!("{} corpse", creature.name),
-            plural: format!("{} corpses", creature.name),
-            written_name: format!("{} corpse", creature.name),
-            written_plural: format!("{} corpses", creature.name),
+            name: format!("{whose} corpse"),
+            plural: format!("{whose} corpses"),
+            written_name: format!("{whose} corpse"),
+            written_plural: format!("{whose} corpses"),
             glyph: '%',
             fg: creature.fg,
             class,

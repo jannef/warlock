@@ -15,7 +15,7 @@
 //! sword (magic)", "Grim Bite, a Masterwork long sword".
 
 use super::{AffixKind, Magic, Rarity};
-use crate::content::{Content, counted};
+use crate::content::{Content, counted, is_proper};
 use crate::text::article;
 
 /// `count` of an item called `names` (singular and plural, as it is made) with `magic` in
@@ -29,7 +29,11 @@ pub(crate) fn describe(
     known: bool,
     content: &Content,
 ) -> String {
-    let base = counted(&ahead(word, &names.0), &ahead(word, &names.1), count);
+    // A proper name ("Gnægan the Rat King's corpse") takes no article.
+    let base = match count == 1 && is_proper(&names.0) {
+        true => ahead(word, &names.0),
+        false => counted(&ahead(word, &names.0), &ahead(word, &names.1), count),
+    };
     let Some(magic) = magic else {
         return base;
     };
