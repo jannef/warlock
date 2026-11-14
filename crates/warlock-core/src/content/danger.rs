@@ -294,20 +294,7 @@ fn pick(
         true => weight(level_at(c.1, danger), c.2, danger),
         false => 0,
     };
-    let total: u32 = candidates.iter().map(weigh).sum();
-    if total == 0 {
-        return None;
-    }
-    let mut r = rng.below(total);
-    candidates.iter().find_map(|c| {
-        let w = weigh(c);
-        if r < w {
-            Some(member(*c, danger))
-        } else {
-            r -= w;
-            None
-        }
-    })
+    rng.weighted(candidates, weigh).map(|c| member(*c, danger))
 }
 
 /// The danger an out-of-depth draw at `danger` is made at: one deeper, then with `deeper` %

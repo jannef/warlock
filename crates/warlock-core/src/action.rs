@@ -1744,18 +1744,30 @@ impl FromStr for Action {
 fn parse_cell(text: &str) -> Result<Pos, String> {
     let bad = || format!("`{text}` is no cell; expected X,Y, e.g. `12,5`");
     let (x, y) = text.split_once(',').ok_or_else(bad)?;
-    let coord = |v: &str| v.trim().parse::<i32>().map_err(|_| bad());
+    let coord = |v: &str| {
+        (v.trim().parse::<i32>().ok())
+            .filter(|c| c.abs() <= MOST_COORDINATE)
+            .ok_or_else(bad)
+    };
     Ok(Pos::new(coord(x)?, coord(y)?))
 }
 
+/// The farthest a cell of action text lies from 0 on either axis: far past any level, and near
+/// enough that the cell arithmetic (`Pos::dist2`, lines, sight) never overflows (#1569).
+pub const MOST_COORDINATE: i32 = 10_000;
+
+/// The most times `ACTION*N` repeats an action ([`parse_actions`]).
+pub const MOST_REPEATS: usize = 100_000;
+
 /// Parses whitespace-separated actions, e.g. `"move:E move:SE wait"`; `ACTION*N` repeats an
-/// action, e.g. `"move:N*3 wait*10"`.
+/// action, e.g. `"move:N*3 wait*10"`, at most [`MOST_REPEATS`] times.
 pub fn parse_actions(text: &str) -> Result<Vec<Action>, String> {
     let mut actions = Vec::new();
     for word in text.split_whitespace() {
         let (action, count) = match word.split_once('*') {
             Some((action, n)) => match n.parse::<usize>() {
-                Ok(n) => (action, n),
+                Ok(n) if n <= MOST_REPEATS => (action, n),
+                Ok(_) => return Err(format!("`{word}`: repeats at most {MOST_REPEATS} times")),
                 Err(e) => return Err(format!("`{word}`: {e}")),
             },
             None => (word, 1),
@@ -2126,6 +2138,10 @@ mod tests {
         );
         assert!(parse_actions("move:N*x").is_err());
         assert!(parse_actions("wait*").is_err());
+        // A repeat count is capped: a huge one is an error, never an abort (#1598).
+        assert_eq!(parse_actions("wait*100000").map(|a| a.len()), Ok(100_000));
+        assert!(parse_actions("wait*100001").is_err());
+        assert!(parse_actions("wait*99999999999").is_err());
         assert_eq!(
             parse_actions("USE_TOOL vision:uv_sight"),
             Ok(vec![Action::UseTool, Action::SetVision("uv_sight".into())])

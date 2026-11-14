@@ -532,6 +532,11 @@ impl Content {
             let line = self.story_line(spec, &head.id).map_err(|m| m.to_string());
             lines.push(line?);
         }
+        // A draw sums the weights of lines of the chapter.
+        if crate::rng::weight_sum(lines.iter().map(|l| l.weight)).is_none() {
+            let m = crate::rng::WEIGHTS_OVERFLOW;
+            return Err(format!("chapter `{}`: {m}", head.id));
+        }
         Ok(Chapter {
             id: head.id,
             name: head.name,

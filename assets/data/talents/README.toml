@@ -109,6 +109,8 @@
 #                                 resting's pace
 #   mana_cost_percent { value }   abilities cost that percent more mana (negative: less; never
 #                                 below 1)
+#   rod_cost_percent { value }    rods cost that percent more mana (negative: less; never below 1;
+#                                 Channeler), before mana_cost_percent
 #   blood_magic { hp, mana }      the Blood magic ability: hp hit points (never the last) given
 #                                 for mana mana, for the time of a wait
 #   footsteps_percent { value }   footsteps that percent louder (negative: quieter)
@@ -140,6 +142,10 @@
 #                                 unaware mark (Stalker's eye)
 #   startled_blow                 an initiative check it makes against a hostile attacker
 #                                 beside it is answered with a free blow at once (Hair trigger)
+#   initiative_bonus { value }    that much added to its initiative check when it is caught unawares
+#                                 (Wary)
+#   surprise_ease { value }       that percent of the extra cost of an action it takes Surprised is
+#                                 spared (Cool head: 100, none)
 #   carry_percent { value }       carrying limit, that percent more
 #   ignore_burdened               being Burdened costs it nothing, as a dwarf's burden
 #   weightless_coins              coins it carries weigh nothing
@@ -213,6 +219,16 @@
 #                                 where more than everyone's (the most held)
 #   temper_safe                   a failed Temper or Whittle damages nothing (the attempt counts)
 #   craft_time_percent { value }  every craft takes that percent of its time (the least held)
+#   makers_mark { worth_percent } its graded work bears its mark (Maker's mark): an item it makes
+#                                 with a `kind` is built marked, and a marked item is worth that
+#                                 percent more, the patron pays more for it, and it holds one
+#                                 enchantment more
+#   patron                        a patron in town commissions graded work from its trades and
+#                                 advances the stock (Patron; ../patron.toml)
+#   fletcher { check, count_times, time_percent }   its batches of arrows and bolts (Fletcher, the
+#                                 ranger's level 1): `check` more on the check, `count_times` the
+#                                 count after the margin, `time_percent` of the time, and plain at
+#                                 any Woodcraft
 #   grade_ease { value }          added to a made check's margin as its grade or cut is read,
 #                                 never to whether it is made
 #   loot_magic_percent { value }  loot it finds and creatures drop: the weights of the rarities
@@ -221,10 +237,8 @@
 #   scroll_kept { chance }        a scroll it reads is not used up, by that chance in percent
 #   potion_kept { chance }        a potion it drinks is not used up, by that chance in percent
 #   spares_self                   its own bursts never catch it
-#   find { value }                added to its checks to find what is hidden, searching and in
-#                                 passing
-#   search { value }              added to its searching
-#   search_reach { value }        its searching reaches that many cells farther
+#   searching { value }           added to its searching, not to noticing in passing (Keen
+#                                 searcher)
 #   trap_damage_percent { value } the damage traps do it, that percent more (negative: less; at
 #                                 least 1)
 #   quest_gold_percent { value }  the gold a quest gives, that percent more
@@ -244,6 +258,11 @@
 #                                 that percent longer
 #   room_status_immune { status } a special room's (or a whole level's) status never takes it
 #                                 (Old delver: Ebbing)
+#   collapse_proof                a collapsed floor never gives way under it (Old delver)
+#   hoard_grace { value }         a tempting hoard seals only after that many stacks more are lifted
+#                                 inside it (Old delver)
+#   room_pace_percent { value }   where a special room quickens healing or mana, the quickening is
+#                                 that percent more (Old delver)
 #   grave_warden                  nothing it kills rises in a cursed room (a `rise` effect)
 #   stone_sense                   notices hidden things on stone in passing, as a dwarf does
 #   stone_find { value }          added to its checks to find what is hidden on stone,
@@ -350,6 +369,12 @@
 #   critical_confirm { value }    added to the roll that confirms its criticals
 #   ability_ranks { value }       its weapon abilities (weapon_abilities/) come that many ranks
 #                                 sooner: their thresholds read its ranks that much higher
+#   weapon_stamina { value, abilities }   its weapon actives cost that many points less stamina, at
+#                                 least 1: those `abilities` names (ids in ../weapon_abilities/), or
+#                                 every one when left out (Drillmaster; Armour-breaker's Sunder and
+#                                 Gap shot)
+#   weapon_energy_percent { value }   its weapon actives take that percent more time (negative:
+#                                 less; Practised technique), never below half the action's price
 #   brace { to_hit, status }      its Brace's blow is at that much more to hit, and a foe it
 #                                 hits suffers that status (one degree)
 #   critical_penetration { value } its confirmed criticals (every attack) ignore that much more
@@ -399,6 +424,10 @@
 #                                 would take the last hit point leaves it for `cost` of the rage
 #                                 (when that much is held; spent to nothing, the rage ends)
 #   veterans_wind { per_level, at_least, cooldown }   the active Veteran's wind (as second_wind)
+#   charge { per_cell }           the active Charge (`use:charge:12,5`): a rush along the line to a
+#                                 hostile the player sees, ending beside it with a blow, provoking
+#                                 no free blows on the way; it costs the talent's `resource`
+#                                 (Stamina) and `per_cell` more for every cell moved
 #   whirling_charge               Charge strikes every hostile beside a cell it passes, each once
 #                                 (a free blow; the one charged at not twice)
 #   lay_on_hands { per_level }    the active Lay on hands: hit points back by the level (its
@@ -496,6 +525,8 @@
 #   sworn_foe { to_hit, damage }  against creature types carrying the tag it was taken for (a
 #                                 talent with `choice = "tag"`), that to-hit and damage
 #   exact_sounds                  every sound it hears is placed where it was made
+#   exact_footsteps               the footsteps it hears are placed exactly, at the cell they came
+#                                 from (Watchful)
 #   silent_unburdened             its steps make no sound while it is Unburdened
 #   attack_noise_percent { value }   its attacks that percent louder (negative: quieter)
 #   trap_ease { value }           hidden traps that much easier for it to find (not to disarm)
@@ -549,6 +580,26 @@
 #                                 `range` (1 to 20; `use:sic:12,5`): the companion hunts it and
 #                                 suffers `blows` degrees of `status` (`auto_critical`, no tick);
 #                                 what it costs is the talent's `resource`
+#   companion                     an animal companion from the first turn (Animal companion, the
+#                                 ranger's level 1): a beast of its race's list
+#                                 (../companions.toml), or rarely a rare one
+#   tame { bonus }              that much on its taming checks (Animal companion's edge; the Tame
+#                                 ability)
+#   pack_tactics { to_hit }       a creature beside both it and its companion is flanked: its melee
+#                                 blows and the companion's at it are that much likelier to hit
+#                                 (Pack tactics)
+#   shares_favoured_prey          its companion's attacks carry its favoured_prey bonus against its
+#                                 favoured prey (Pack tactics)
+#   shared_sight                  it sees what its companion sees, by the companion's eyes and nose
+#                                 (Hunter's bond)
+#   shared_buffs                  a buff status that lands on it or its companion lands on the other
+#                                 too; never a hex (Hunter's bond)
+#   familiar                      a familiar from the first turn (Familiar, the witch's level 1): a
+#                                 small beast of its race's list (../familiars.toml), or rarely a
+#                                 rare one, whose touch is her evil eye
+#   familiar_sight                it sees what its familiar sees, by the familiar's eyes and nose
+#                                 (Familiar's sight; familiars.toml's `nose` at the least); no buff
+#                                 crosses
 #   song { id, on, status, severity, resource, cost, mana, check, difficulty }   a song (spec §8
 #                                 "Class abilities", the bard's songs): the class active `id`
 #                                 (`use:inspire`, `use:lullaby`; an active that sings), sung aloud (heard as a
@@ -588,6 +639,11 @@
 #                                 release, mana, hunger, restoration), `answers` problems a
 #                                 prayer (1 to 7, the largest held), `all` every problem and
 #                                 every resource pool at once; at least one of them
+#   war_cry { status, severity, difficulty }   the active War cry (`use:war_cry`): a roar as loud as
+#                                 a howl; every hostile that hears it, sees the player, and has
+#                                 vitals rolls Willpower against `difficulty` plus the player's
+#                                 Strength modifier and Intimidate; failed, it suffers `severity`
+#                                 degrees of `status` (one that flees)
 #   cackle { degrees, noise }     the active Cackle (`use:cackle`, the time of a cast): a voice
 #                                 that loud (1 to 300); every hex of its own on a creature it
 #                                 sees grows that many degrees (1 to 6) to its max and starts
@@ -610,6 +666,8 @@
 #                                 the open ground there over `seconds` (1 or more), a
 #                                 `makeshift_anvil` for good; refused, no time, on the overworld,
 #                                 without an ingot, or where the ground is not open
+#   rigs                          the active Trapwright: a trap rigged on a cell beside the player
+#                                 from what ../rigs.toml asks (`rig:tripwire:E`)
 #   make_do { seconds, difficulty }   the active Make do and mend (on a damaged stack carried,
 #                                 `use:make_do_and_mend:c`): after `seconds` of work, anywhere,
 #                                 a check by the stat of the profession that works its main
