@@ -96,8 +96,8 @@ impl World {
             .filter(|(p, t)| !t.known && near(p))
             .map(|(p, t)| (*p, Hidden::Trap(t.kind)));
         // A disguised mimic (`mimic.rs`) passes for a chest until found out.
-        let mimics = (self.state.actors.values())
-            .filter(|a| a.level == level.id && near(&a.pos) && a.effects.hides(&self.content))
+        let mimics = (self.state.actors.on_level(&level.id))
+            .filter(|a| near(&a.pos) && a.effects.hides(&self.content))
             .map(|a| (a.pos, Hidden::Mimic(a.id)));
         let content = &self.content;
         let hollows = (level.rooms.iter())

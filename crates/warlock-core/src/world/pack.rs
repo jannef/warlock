@@ -39,10 +39,13 @@ impl World {
             return profile;
         }
         let mods = me.talent_mods(&self.content);
-        if kind == AttackKind::Melee && mods.pack_tactics != 0 && self.flanked(companion, target) {
-            profile.to_hit += mods.pack_tactics;
+        if kind == AttackKind::Melee
+            && mods.beast.pack_tactics != 0
+            && self.flanked(companion, target)
+        {
+            profile.to_hit += mods.beast.pack_tactics;
         }
-        if attacker == companion && mods.shares_favoured_prey && self.is_prey(target) {
+        if attacker == companion && mods.beast.shares_favoured_prey && self.is_prey(target) {
             let (to_hit, damage) = mods.favoured_prey;
             profile.to_hit += to_hit;
             profile.bonus += damage;
