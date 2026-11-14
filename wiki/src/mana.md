@@ -37,18 +37,29 @@ that. Only [elves](races.md#race-elf), [gnomes](races.md#race-gnome),
 Each [level](experience.md#levels) up to 60 raises your maximum, and the mana you have now, by
 half your class's mana plus what the better of your Intelligence and Willpower adds (see
 [Experience](experience.md#levelling-up)). So a wizard keeps growing their mana after
-[hit points](hit-points.md#hit-points) stop at level 50, while a [warrior](class-warrior.md)
+[hit points](hit-points.md#hit-points) stop at level 50, while a warrior
 with ordinary wits gains none.
 
 [Magic items](magic-items.md) that add to it ("+5 to maximum mana") raise your maximum, not what
 you have now. The talent *[Deep well](talents.md#talent-deep-well)* raises both: by 1 for every 4
-[character levels](experience.md#levels), at least 2, when you take it and again as each later
+character levels, at least 2, when you take it and again as each later
 level comes (see [Talents](talents.md)).
 
 The skill *[Concentration](skills.md#skill-concentration)*, once you are trained in it, deepens
 your pool a little: +1 mana at 25, +5 at 100, +8 at 200. It never adds more than a fifth of what
 your pool would be without it, so a pool under 5 gains nothing. Untrained, it gives nothing, even
 when an item raises it (see [Skills](skills.md) for the table by value).
+
+> **Example: an elf wizard's mana.** Tathren, a level 1 elf
+> wizard, has Intelligence 15 (+2), Willpower 12 (+1), and Presence 10 (+0)
+> ([modifiers](stats.md#modifiers)).
+>
+> - **Her maximum:** 3 (elf) + 12 (wizard) + 2 + 1 + 0 = **18 mana**: three casts of
+>   [Burning hands](magic.md#spell-burning-hands) at 6 mana each.
+> - **Each level:** half the wizard's 12, plus the better of her Intelligence and Willpower
+>   modifiers: 6 + 2 = **8 more**.
+> - **Coming back:** with Willpower 12, a point every 360 − 12 × 12 = 216 seconds (3 minutes and
+>   36 seconds) at the usual pace, so an empty pool fills in about an hour.
 
 ## How fast it comes back
 

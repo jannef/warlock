@@ -2,8 +2,10 @@
 
 **[Salvage](abilities.md#ability-salvage)** is in everyone's
 [abilities menu](abilities.md#the-abilities-menu), after the skills' own uses. Choose something
-you carry. You need no tools and can do it anywhere. It takes ten minutes. If something comes
+you carry. It takes ten minutes. If something comes
 into view, you stop, the item is untouched, and the time is lost.
+
+**You need:** nothing. Anyone can salvage, trained or not, anywhere, with no tools.
 
 When the time is up, you make one check for each material in the item that a craft works, using
 that material's skill. A ruby-tipped hardwood quarterstaff takes two checks: Woodcraft for the

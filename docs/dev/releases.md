@@ -5,7 +5,7 @@ crash reports (moved from CLAUDE.md, #1505). Keep it current with `.github/workf
 `xtask/src/`, and `crates/warlock/src/logging.rs`, as CLAUDE.md says.
 
 
-**Cut a release.** Make sure `main` is green and README's install command names the new tag (`--tag vX.Y.Z`), then tag and push the tag (for example
+**Cut a release.** Make sure `main` is green and README's install command names the new tag (`--tag vX.Y.Z`; the wiki introduction's is generated from the workspace version, `xtask/src/wiki/install.rs`, so the workspace version must be the tag's), then tag and push the tag (for example
 `v0.1.0`); the `Release` workflow does the rest. It builds Linux x86_64 (`.tar.gz`), Windows
 x86_64 (`.zip`), macOS arm64 (`.zip` with an unsigned `Warlock.app` plus the bare binary; see
 `release/`) and the web build (`.zip` to serve from any static host) and attaches them, with

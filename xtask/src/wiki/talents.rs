@@ -1300,14 +1300,17 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             let role = match role {
                 None => {
                     return format!(
-                        "marks in every weapon skill and fighting style {}",
+                        "[training marks](weapon-skills.md#raising-a-weapon-skill) in every weapon skill and fighting style {}",
                         percent(value)
                     );
                 }
                 Some(Role::Launcher) => "missile".to_string(),
                 Some(r) => r.id().replace('_', " "),
             };
-            format!("marks in every {role} weapon skill {}", percent(value))
+            format!(
+                "[training marks](weapon-skills.md#raising-a-weapon-skill) in every {role} weapon skill {}",
+                percent(value)
+            )
         }
         TalentEffect::TwoHandedCrit { value } => {
             format!("critical multiplier +{value} with a two-handed weapon (at most \u{d7}5)")
@@ -1413,7 +1416,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 )
             });
             format!(
-                "active (the time of a wait): you gain {gain} (see Resources){brings}; no rage \
+                "active (the time of a wait): you gain {gain} (see [Resources](resources.md)){brings}; no rage \
                  while it or what follows it lasts"
             )
         }
@@ -2105,9 +2108,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             format!("every trained skill counts {}", signed(value))
         }
         TalentEffect::GrantsResource { resource } => {
+            let name = resource_name(content, &resource);
             format!(
-                "you hold {} from now on (see Resources)",
-                resource_name(content, &resource)
+                "you hold {} from now on",
+                link(Term::Resource, &resource, &name)
             )
         }
         TalentEffect::RapidShot {

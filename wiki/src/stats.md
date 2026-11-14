@@ -1,8 +1,7 @@
 # Stats
 
 You have six **stats**. Each is a number that says how strong, quick, hardy, clever, steadfast, or
-striking you are. If you know Dungeons & Dragons: [Toughness](stats.md#stat-toughness) is Constitution, [Willpower](stats.md#stat-willpower) is Wisdom, and
-[Presence](stats.md#stat-presence) is Charisma.
+striking you are.
 
 {{#include generated/stats.md}}
 
@@ -38,14 +37,14 @@ Stats matter in a fight (see [Combat](combat.md)), under a load (see [Burden](bu
 - **[Dexterity](stats.md#stat-dexterity)** helps you aim a shot or a throw and dodge blows. It adds to your [Defence](combat.md#defence), but less
   under a heavy load or in heavy armour.
 - **[Toughness](stats.md#stat-toughness)** gives you [hit points](hit-points.md#hit-points) and makes them come back sooner. It counts toward how much you
-  can [carry](burden.md#how-much-you-can-carry), and fights off most [diseases](diseases.md).
+  can carry, and fights off most [diseases](diseases.md).
 - **[Intelligence](stats.md#stat-intelligence)** helps you find hidden things when you search ([Searching](searching.md)) and adds to your
-  [mana](mana.md). It also strengthens the spells whose [ladders](magic.md#the-spells) name it, which covers most spells' damage.
-- **[Willpower](stats.md#stat-willpower)** helps you [notice hidden things in passing](searching.md#noticing-in-passing). It adds to your [mana](mana.md) and makes it come
+  mana. It also strengthens the spells whose [ladders](magic.md#the-spells) name it, which covers most spells' damage.
+- **[Willpower](stats.md#stat-willpower)** helps you [notice hidden things in passing](searching.md#noticing-in-passing). It adds to your mana and makes it come
   back sooner, and it fights off a few [diseases](diseases.md#how-a-disease-goes) (brain fever). It strengthens the spells whose
-  [ladders](magic.md#the-spells) name it: most spells' reach, and some spells' damage or healing.
+  ladders name it: most spells' reach, and some spells' damage or healing.
 - **[Presence](stats.md#stat-presence)** moves [shop](shops.md) prices in your favour, or against you if it is low. It adds to your
-  [mana](mana.md#how-much-mana-you-have), and strengthens the spells whose [ladders](magic.md#the-spells) name it: how long a blessing or a hex lasts.
+  mana, and strengthens the spells whose ladders name it: how long a blessing or a hex lasts.
 
 ### Modifiers
 
@@ -57,6 +56,20 @@ down. The game never shows a modifier. Here they are:
 Exactly which rules use the modifier and which use the score:
 
 {{#include generated/stat-uses.md}}
+
+> **Example: a dwarf warrior's stats.** Thora, a level 1 [dwarf](races.md#race-dwarf)
+> [warrior](class-warrior.md), starts with these scores and modifiers:
+>
+> | Strength | Dexterity | Toughness | Intelligence | Willpower | Presence |
+> |:---:|:---:|:---:|:---:|:---:|:---:|
+> | 15 (+2) | 10 (+0) | 17 (+3) | 9 (−1) | 14 (+2) | 7 (−2) |
+>
+> - Strength +2: +2 to hit and +2 damage with her long sword ([Combat](combat.md#hitting)).
+> - Dexterity +0: her Defence gets nothing from her feet, only from her armour and shield.
+> - Toughness 17: 17 + 6 (dwarf) + 7 (warrior) = 30 [hit points](hit-points.md#hit-points), and
+>   one back every 360 − 12 × 17 = 156 seconds. With her Strength it sets her
+>   [carrying limit](burden.md#how-much-you-can-carry): 1.5 kg × (2 × 15 + 17) = 70.5 kg.
+> - Presence −2: [shop](shops.md) prices are 6% against her.
 
 ### Potentials
 
@@ -82,7 +95,7 @@ For a while:
 
 - Strong [poison](status-effects.md#poisoned) lowers your [Strength](stats.md#stat-strength) and [Dexterity](stats.md#stat-dexterity) by one while it lasts, for everything they do
   (see [Status effects](status-effects.md)).
-- [Hunger](hunger.md#how-hungry-you-are) saps them: [Weak](hunger.md#how-hungry-you-are) lowers your Strength and Dexterity (see [Hunger](hunger.md)).
+- [Hunger](hunger.md#how-hungry-you-are) saps them: Weak lowers your Strength and Dexterity (see [Hunger](hunger.md)).
 - [Diseases](diseases.md#how-a-disease-goes) take points off your stats (**stat damage**). These come back a point a day once no
   disease shows (see [Diseases](diseases.md)).
 
@@ -157,7 +170,7 @@ at most one point per check, so a great pile becomes a point a day and one a lev
 
 The game says only "You feel stronger." (or quicker, tougher, sharper, more resolute, more
 confident). The new score shows on the character screen. A rise in [Toughness](stats.md#stat-toughness) brings its [hit point](hit-points.md#hit-points)
-at once, and a rise at 06:00 stops a [rest](resting.md#how-resting-works).
+at once, and a rise at 06:00 stops a rest.
 
 The daily check comes whether you are awake or resting, once a day at that hour and no other.
 Nothing decays and nothing is capped, so the only limit is the clock.
@@ -207,17 +220,17 @@ stat's [modifier](stats.md#modifiers) against the drain's difficulty, as for a [
 - If not, points come off one of your stats **for good** ("You feel your strength drain away!").
   Your score is simply lower from then on, for everything it does.
 
-A drain of [Toughness](stats.md#stat-toughness) lowers your maximum [hit points](hit-points.md#hit-points). A drain of [Intelligence](stats.md#stat-intelligence), [Willpower](stats.md#stat-willpower), or [Presence](stats.md#stat-presence) lowers
+A drain of [Toughness](stats.md#stat-toughness) lowers your maximum [hit points](hit-points.md#hit-points). A drain of [Intelligence](stats.md#stat-intelligence), Willpower, or [Presence](stats.md#stat-presence) lowers
 your maximum [mana](mana.md#how-much-mana-you-have). A drain never kills you, and never takes a score below 3 (nor below what
 the [stat damage](diseases.md#stat-damage) on it needs). [Resting](resting.md#how-resting-works) never brings drained points back.
 
 Your **[potential](stats.md#potentials)** stays where it was, so a drained stat can grow back by [training](#raising-your-stats) and corpses
 like any other. A temple's **mending** gives every drained point back at once, along with any
-[stat damage](diseases.md#stat-damage) (see [Services](npcs.md#services)).
+stat damage (see [Services](npcs.md#services)).
 
-[Talents](talents.md) help you hold: **[Unbroken soul](talents.md#talent-unbroken-soul)** (+4 to the check), **[Iron will](talents.md#talent-iron-will)** (+2 to every [Willpower](stats.md#stat-willpower) check),
-and the [paladin](class-paladin.md)'s **[Divine grace](class-paladin.md#talent-divine-grace)** (+2 to the check). See [Talents](talents.md).
+[Talents](talents.md) help you hold: **[Unbroken soul](talents.md#talent-unbroken-soul)** (+4 to the check), **[Iron will](talents.md#talent-iron-will)** (+2 to every Willpower check),
+and the [paladin](class-paladin.md)'s **[Divine grace](class-paladin.md#talent-divine-grace)** (+2 to the check).
 
-The [creatures](creatures.md) that drain:
+The creatures that drain:
 
 {{#include generated/drain-attacks.md}}

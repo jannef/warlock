@@ -35,7 +35,7 @@ you [rest](resting.md#how-resting-works). They come back slower, or not at all, 
 [diseased](status-effects.md#status-diseased). The details are on [Healing](healing.md).
 
 A [disease](diseases.md) that lowers your [Toughness](stats.md#stat-toughness) lowers your maximum hit points too (see
-[Diseases](diseases.md)). Creatures heal the same way while you are on their level. In a
+Diseases). Creatures heal the same way while you are on their level. In a
 [sanctuary](special-rooms.md#room-sanctuary) (a [special room](special-rooms.md)) wounds heal three times as fast, yours and
 everyone else's.
 
@@ -46,12 +46,13 @@ wore and wielded, falls where it stood for you to pick up, with its corpse on to
 [Food and corpses](food.md)). A wounded creature may also die later of its wounds: "The giant rat
 bleeds to death."
 
-When **you** reach 0 [hit points](#hit-points), you die: "You die..." The run is over. A screen tells you what
+When **you** reach 0 hit points, you die: "You die..." The run is over. A screen tells you what
 killed you, where, when, and after how many turns. It names the killer if you saw it, says "Bled to
 death" if your wounds did it, or says you starved (see [Hunger](hunger.md)).
 
-There is no going back. Your save is deleted at once (see [Saving](saving.md)). Press `Enter` or
-`Esc` to return to the main menu and start a new run.
+There is no going back. Your save is deleted at once (see [Saving](saving.md)). Your character
+is remembered in the [graveyard](saving.md#your-characters-and-the-graveyard) on the main menu,
+with what killed them. Press `Enter` or `Esc` to return to the main menu and start a new run.
 
 ## Blood
 
@@ -66,7 +67,7 @@ Only some [kinds of damage](damage-types.md) spill blood. Blades, blunt blows, [
 [force](damage-types.md#damage-force) do. [Fire](damage-types.md#damage-fire) sears the wound shut, and [cold](damage-types.md#damage-cold), [electricity](damage-types.md#damage-electricity),
 [poison](damage-types.md#damage-poison), and [necrotic](damage-types.md#damage-necrotic) harm leave no wound to bleed: a creature killed by a fireball leaves no
 blood, only [char](#char). A sword that cuts or stabs spills blood either way. The table on
-[Damage types](damage-types.md) lists every kind.
+Damage types lists every kind.
 
 How much blood depends on how big the victim was and how it died. A blow far beyond what was needed
 to kill, or a critical, spills more. An arrow or a thrown weapon spills less, sprayed along its

@@ -6,6 +6,23 @@ keys. In the game, `?` shows the list made from your current keys, so trust it o
 [The screen](the-screen.md) explains what the window shows: the map, the message line, the status
 bar, and the info pages.
 
+> **The ten keys you need first**
+>
+> | Key | Does |
+> |---|---|
+> | numpad or arrows | move; move into a [hostile](creatures.md#factions) creature to attack it |
+> | numpad `5` or `s` | wait a turn, [searching](searching.md#how-to-search) around you |
+> | `,` | [pick up](objects.md#picking-up) what is underfoot |
+> | `i` | [equipment](equipment.md): wear and wield |
+> | `a` | the [abilities menu](abilities.md#the-abilities-menu): spells, class abilities, skill uses |
+> | `t` | [shoot or throw](ranged.md#shooting-and-throwing) |
+> | `>` / `<` | down or up [stairs](terrain.md#stairs) |
+> | `l` | [look around](controls-prompts.md#look-mode) |
+> | `?` | every key, as you have bound it |
+> | `Esc` | the [pause menu](the-screen.md#menus): save and quit |
+
+## All the keys
+
 | Command | Keys |
 |---|---|
 | Move (numpad) | `8` `9` `6` `3` `2` `1` `4` `7` |
@@ -61,8 +78,8 @@ Controls. Give Kick, Look around, and Use a tool other keys first, since they us
 `u`, as in ADOM.
 
 Some commands ADOM does not have, or has only behind a prefix. They get keys ADOM leaves free:
-the [message history](the-screen.md#messages) `v`, [rest](resting.md#how-resting-works) `b`, the
-[talents](talents.md) `G`, and repeating an [ability](abilities.md) `X`. Waiting and searching are
+the message history `v`, rest `b`, the
+talents `G`, and repeating an ability `X`. Waiting and searching are
 one command, numpad `5` or `s`, and searching for a while is `Alt` with either. You save and quit from the pause menu (`Esc`), or
 bind a key for it in Controls.
 

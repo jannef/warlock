@@ -4,6 +4,16 @@ A smith trained in [Metalcraft](skills.md#skill-metalcraft) forges weapons, armo
 an [anvil](terrain.md#terrain-anvil) from metal stock. How well a piece comes out is under
 [Crafting](crafting.md#how-well-it-comes-out).
 
+**You need:**
+- **Skill:** Metalcraft. [Dwarves](races.md#race-dwarf) and
+  [duergar](races.md#race-duergar) start with it, a [craftsperson](class-craftsperson.md#trades)
+  may take the [Smith](talents.md#talent-smith) trade, and a [commoner](class-commoner.md) may have
+  it as their trade (others: [Which skills you start with](skills.md#which-skills-you-start-with)). [Eadric the smith](npcs.md#eadric-the-smith) in
+  Cēaptūn teaches it for 2000 gold.
+- **Stock:** ingots of metal, bought, found, or [salvaged](salvage.md).
+- **Place:** beside an anvil: in Eadric's smithy in Cēaptūn, or in a
+  [forge](altars-forges-springs.md#forges) in a dungeon.
+
 ## Forging a weapon
 
 Stand beside an [anvil](terrain.md#terrain-anvil), open

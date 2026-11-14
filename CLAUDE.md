@@ -227,9 +227,10 @@ stay hidden and effects are told in words (the perception rules above are unchan
 wiki states the truth exactly. The game is open source, so the truth is one look at the sources
 away, and the wiki is also where facts are inspected during development.
 
-**Wiki prose links its terms**: new or edited wiki prose links every mechanic or keyword it
-mentions to the section that explains it (`wiki/TERMS.md`, the term map, says where; generated
-tables anchor every row, `status-effects.md#status-staggered`), and CI checks the links
+**Wiki prose links its terms once per section** (the owner, #1609): new or edited wiki prose
+links each mechanic or keyword at its first mention in a section to the section that explains it
+(`wiki/TERMS.md`, the term map, says where; generated tables anchor every row,
+`status-effects.md#status-staggered`), and not again in that section; CI checks the links
 (`cargo xtask wiki --check-links`).
 
 **A PR that changes gameplay mechanics or world facts updates the wiki in the same PR**, like the
