@@ -57,3 +57,22 @@ pub(crate) fn last_text(world: &World) -> String {
 pub(crate) fn said_text(world: &World, text: &str) -> bool {
     world.messages().iter().any(|m| m.text == text)
 }
+
+/// `docs/dev/cli.md`, the command-line reference (#1667).
+const CLI_DOC: &str = include_str!("../../../docs/dev/cli.md");
+
+/// The names among `names` that `docs/dev/cli.md` never writes as code: a backtick, the name,
+/// then anything but more of a name (`` `move:DIR` ``, `` `wait*10` ``, `` `view` ``).
+pub(crate) fn missing_from_cli_doc<'a>(names: impl IntoIterator<Item = &'a str>) -> Vec<&'a str> {
+    names
+        .into_iter()
+        .filter(|name| {
+            !CLI_DOC.match_indices(&format!("`{name}")).any(|(at, m)| {
+                CLI_DOC[at + m.len()..]
+                    .chars()
+                    .next()
+                    .is_some_and(|c| !(c.is_ascii_alphanumeric() || c == '_' || c == '-'))
+            })
+        })
+        .collect()
+}

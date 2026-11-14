@@ -1,5 +1,5 @@
 ---
-source: crates/warlock-core/src/world/gift_table_tests.rs
+source: crates/warlock-core/src/world/character/gift_table_tests.rs
 expression: "rows.join(\"\\n\")"
 ---
 gnaegan: profane 2 held; pool lesser 12/14, greater 12/12, dire 14/14

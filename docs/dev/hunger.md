@@ -102,8 +102,8 @@ by `corpse_stats_percent`; then `corpse_skills`: per `on_eat.skills` entry (`Ski
 { gives, up_to }`, `SkillGift::apply`, no draw, not scaled by talents) an untrained skill is
 learned at `gives` and a trained one rises by it up to `up_to`, through `Skills::add`, told
 in `[corpses.skills]`'s `learn`/`rise` words (`SkillNews`), nothing past the cap; the loader
-(`OnEat::check`: `gives` 1 to `up_to`, `up_to` at most `MAX_VALUE`; `resolve_corpse_gifts`:
-`[corpses.skills]` names known skills, a creature only skills with words there) checks it;
+(`resolve_corpse_gifts`: `[corpses.skills]` names known skills, a creature only skills with
+words there) checks it;
 then heal, harm, feed; tests in `world/health/eat_tests.rs`) / plain food,
 `feed` with overeating, `vomit`, hunger and burden news). Saved and hashed (`Actor::satiation`,
 `Stack::died`, `Death::cause`).

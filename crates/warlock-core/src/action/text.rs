@@ -1002,6 +1002,16 @@ pub fn format_actions(actions: &[Action]) -> String {
 mod tests {
     use super::*;
 
+    /// `docs/dev/cli.md` lists every verb of action text by hand (#1667).
+    #[test]
+    fn every_verb_is_in_the_cli_doc() {
+        let missing = crate::test_support::missing_from_cli_doc(VERBS.iter().map(|(v, _)| *v));
+        assert!(
+            missing.is_empty(),
+            "docs/dev/cli.md lacks the verbs {missing:?}"
+        );
+    }
+
     #[test]
     fn positions_are_a_set_written_as_letters_or_numbers() {
         let mut l = Positions::of([3, 0, 3]);

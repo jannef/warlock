@@ -16,7 +16,7 @@ forge, P5), the forging wizard, and salvage. Material stock (the piece) is in
   Mining are skills with no craft yet (#1331). Each of the three declares `{ effect = "craft", curve = [[0, 0], [100, 8], [200, 12]] }`
   (Temper's curve, read by salvage and by a recipe made) and a `salvage` mark rule at 100 %
   (Metalcraft, Woodcraft, and Jewelcraft also a `craft` mark, for a recipe made or a gem cut). Temper's and Whittle's own
-  effects (`Effect::Temper`, `Whittle`) are unchanged; Fletch's (`Effect::Fletch`, `Use::Fletch`)
+  effects (`Effect::Temper`, `Whittle`) are unchanged; Fletch's own effect and use
   went with the action in #1336: the arrows read Woodcraft's `craft`, the same curve.
 - **Who works what** is data, never code: `data/stock.toml`'s `[[group]]` rows name the skill,
   stat, and verb per material group, and `gems = { ... }` the gems' (no group). Today metal is
@@ -720,7 +720,7 @@ optional, Esc back keeping the pick, the dialog's words) and the text snapshots 
 `world/crafting/cut.rs` (P10, #1355; `docs/design/recipes.md` §5), tests in `world/crafting/cut_tests.rs`. Cut is
 Jewelcraft's built-in recipe, run by `Action::Craft` itself (`craft:cut:LETTER`, one pick: the
 gem), dispatched from `World::start_craft` by one arm to `World::start_cut`; its turns are
-`ActionKind::Craft`, its work `Spent::Cut(cut::GemWork)`.
+`ActionKind::Craft`, its work `Task::Cut(cut::GemWork)` (`world/crafting/work.rs`).
 
 - **The list**: the profession screen's Cut row opens `ScreenName::Cut` (`--screen cut`;
   `ObjectList::Cut`, `world::cuttable`): every uncut loose gem, and every cut one above the
@@ -762,7 +762,7 @@ gem), dispatched from `World::start_craft` by one arm to `World::start_cut`; its
 `world/crafting/set.rs` (P11, #1356; `docs/design/recipes.md` §5), tests in `world/crafting/set_tests.rs`. Set is
 Jewelcraft's built-in recipe, run by `Action::Craft` itself (`craft:set:ITEM,GEM`, two picks),
 dispatched from `World::start_craft` by one arm to `World::start_set`; its turns are
-`ActionKind::Craft`, its work `Spent::Set(set::Setting)`.
+`ActionKind::Craft`, its work `Task::Set(set::Setting)` (`world/crafting/work.rs`).
 
 - **The wizard**: the profession screen's Set row opens `ScreenName::CraftPick(set)`, the forging
   wizard. `craft_steps` and `craft_plan` hand a Set recipe to `set::steps` and `set::plan` (one
@@ -905,8 +905,8 @@ Tests: `world/character/waste_not_tests.rs` (level 6, each read with and without
 
 `world/crafting/make_do.rs` (#1422; the craftsperson design §7.5): the craftsperson's class active at
 level 18, the talent `make_do_and_mend` with `{ kind = "make_do", seconds = 600, difficulty = 10
-}` (`CraftEffect::MakeDo`, `CraftMods::make_do`). One line each in `world/mod.rs`'s `Spent`
-(`Spent::MakeDo`) and dispatch, `world/classes/merchants_eye.rs`'s `use_class_on` (the class actives on a
+}` (`CraftEffect::MakeDo`, `CraftMods::make_do`). One line each in `world/crafting/work.rs`'s `Task`
+(`Task::MakeDo`) and dispatch, `world/classes/merchants_eye.rs`'s `use_class_on` (the class actives on a
 stack), and `world/classes/class_ability.rs`'s bare `use` ("Use it on what?").
 
 - **The ability**: `ClassActive::MakeDo` (id `make_do_and_mend`, `aims_item`, `ActionKind::Craft`),

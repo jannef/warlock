@@ -27,7 +27,7 @@ hearers), the talent's `noise` (60) for `Act::Cackle` (the witch's Cackle, `worl
 #904: a voice where she stands, untouched by stealth); `make_noise` passes the actor's
 `Load::penalty`):
 a new noisy action gets an `Act` variant there, and its call site in the feature's module (the makers are `world/turn/hearing.rs`) is one
-`self.make_noise(actor, Act::…)` where the action happens. `noise::make` delivers it at once to
+`self.make_noise(actor, Act::…)` where the action happens. `World::make_noise_at` delivers it at once (`World::spread_noise`) to
 every other actor on the level whose `hearing` threshold it reaches (`propagate`: integer Dijkstra,
 10 a step, 14 diagonally, plus terrain `muffle`; solid terrain blocks unless it has a muffle),
 pushing a `Heard { kind, at, loudness }` onto `Actor::heard`. A creature's list is what it heard

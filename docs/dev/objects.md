@@ -25,7 +25,7 @@ seen, updated by `Perception::remember` on cells where creatures would be seen);
 (`Actor::weight`, `World::actor_weight`); presentation reads only `PerceptionView::objects`
 (current pile in sight, else remembered), `inventory`, and `own_weight`: never what creatures
 carry. Actions name stacks by **position**, never by letter (#188): `Action::PickUp(Positions)` /
-`Action::Drop(Positions)` (`action.rs::Positions`, a set of positions, empty = everything; action
+`Action::Drop(Positions)` (`action/mod.rs::Positions`, a set of positions, empty = everything; action
 text writes `a`–`z` for positions 0–25, so old replays keep working, and numbers for any position:
 `drop:0,2,30`, `equip:body:26`; `position_text` is the one way a position is written) are actions
 of their own cost (`pick_up`, `drop`); a refused one takes no time, and no message names a

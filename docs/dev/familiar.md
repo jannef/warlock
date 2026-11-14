@@ -119,7 +119,7 @@ finds. Every other ally goes straight to `senses`.
 direction order). `input.rs::tend_way`: with more than one way and an ailment on one of them, Heal
 enters `InputMode::Ability(Ability::Heal)` and asks "Tend to which side?"; a direction goes to
 `Gameplay::tend(Some(dir))` and the wait key to `tend(None)` (the player), each its one ailment
-at once or the treat dialog of several, and a bare `heal::DIR` for nothing to treat, so the rules
+at once or the treat dialog of several, and a bare `Action::Heal` (no ailment named) for nothing to treat, so the rules
 say why. With one way the old rows hold.
 
 The collar (C3, #918, `docs/dev/companion.md`) reads the same `kept_beside()`: Give works on a
@@ -152,7 +152,7 @@ As the companion's (`docs/dev/companion.md`), a row or a segment per kept beast 
 The story is told the companion chapter's plain line until F3 (`Witness::kept` is what the
 chapter's `when` reads; `Witness::companion`, what its `only` lines read, stays a companion's).
 Dumps: the `familiar` layer and JSON `familiar`, one function with the companion's; the layer says `no familiar; Tibb, a cat, answers a calling` while the one remembered is dead
-(`dump.rs::Kept`); the `actors` layer's `(familiar; follow; named Tibb, grade 12)`.
+(`dump/kept.rs::Kept`); the `actors` layer's `(familiar; follow; named Tibb, grade 12)`.
 
 ## Determinism, saves, replays
 

@@ -1,6 +1,7 @@
 //! `cargo xtask <command>` — developer automation.
 //!
 //! Commands:
+//! - `docs-check`: every code path CLAUDE.md, `spec/`, and `docs/dev/` name exists (`docs_check.rs`).
 //! - `smoke`: run the game with `--capture` and check that something was rendered.
 //! - `web`: build the WebGPU site into `target/web` (needs `wasm-bindgen-cli`, see CLAUDE.md).
 //! - `web-smoke [CHROME]`: load `target/web` in headless Chromium, start a run, screenshot it.
@@ -19,6 +20,7 @@
 
 mod bench;
 mod bench_circles;
+mod docs_check;
 mod golden;
 mod licenses;
 mod vast;
@@ -32,6 +34,7 @@ use std::sync::OnceLock;
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let result = match args.first().map(String::as_str) {
+        Some("docs-check") => docs_check::run(),
         Some("smoke") => smoke(),
         Some("web") => web(),
         Some("web-smoke") => web_smoke(&args[1..]),
@@ -43,7 +46,7 @@ fn main() -> ExitCode {
         Some("bench-frames") => bench::frames(args.get(1).map_or("2560x1440", String::as_str)),
         _ => {
             eprintln!(
-                "usage: cargo xtask <smoke | web | web-smoke [CHROME] | gen-vast [--check] | licenses [--check] | golden [--update | --local] | wiki [--build | --check-links] | bench-turns [ROW...] | bench-frames [WxH]>"
+                "usage: cargo xtask <docs-check | smoke | web | web-smoke [CHROME] | gen-vast [--check] | licenses [--check] | golden [--update | --local] | wiki [--build | --check-links] | bench-turns [ROW...] | bench-frames [WxH]>"
             );
             return ExitCode::from(2);
         }

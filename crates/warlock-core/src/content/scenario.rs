@@ -186,6 +186,18 @@ impl ScenarioDef {
 mod tests {
     use super::*;
 
+    /// `docs/dev/cli.md` lists every scenario of the built-in content by hand (#1667).
+    #[test]
+    fn every_scenario_is_in_the_cli_doc() {
+        let content = crate::test_support::builtin();
+        let missing =
+            crate::test_support::missing_from_cli_doc(content.scenarios().map(|s| s.id.as_str()));
+        assert!(
+            missing.is_empty(),
+            "docs/dev/cli.md lacks the scenarios {missing:?}"
+        );
+    }
+
     #[test]
     fn start_defaults_to_eight_on_11_darkening_1444() {
         let def = ScenarioDef::parse("s", "s", "name = \"S\"\nstart_level = \"hub\"\n").unwrap();

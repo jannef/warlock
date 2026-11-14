@@ -90,7 +90,7 @@ and `class-screen-dwarf`; the wiki's `class-limits.md` (`xtask/src/wiki/characte
 **Races in the rules** (#255). `WorldState::race_of(content, actor)` is the one lookup of the
 player's race (`None` for a creature, or a run without a character); `load`, `size_of`, and every
 race trait go through it. The traits, each read in one place:
-- `natural` (`content::Hide`, as a creature's, checked by `Hide::check`): `Actor::hide(content,
+- `natural` (`content::Hide`, as a creature's): `Actor::hide(content,
   race)` is the race's hide, else the creature type's; `Actor::defence`, `protection`,
   `soaked_by`, and `target` take the race for it, and so does `fight::Guard::of` (the hide's name
   in messages). `World::defence_of`/`protection_of` pass it (the dump reads those).

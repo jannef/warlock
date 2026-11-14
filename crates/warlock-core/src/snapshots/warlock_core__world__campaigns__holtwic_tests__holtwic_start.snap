@@ -1,5 +1,5 @@
 ---
-source: crates/warlock-core/src/world/holtwic_tests.rs
+source: crates/warlock-core/src/world/campaigns/holtwic_tests.rs
 expression: rows
 ---
                         ..........

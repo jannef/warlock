@@ -29,6 +29,7 @@ fact"): a change edits the homes of the facts it changes.
 | Web smoke test | `cargo xtask web-smoke <chrome>` (drives headless Chromium through a new run and a reload; not run in CI) |
 | Regenerate the vast level | `cargo xtask gen-vast` (writes `assets/campaigns/showcase/levels/vast.toml`; deterministic, never hand-edit) |
 | Check the vast level is fresh | `cargo xtask gen-vast --check` (run it after touching `xtask/src/vast.rs`) |
+| Check the docs' code paths | `cargo xtask docs-check` (every source file, and item of a file, type, or module, named in CLAUDE.md, `spec/`, `docs/dev/` exists; CI runs it; docs/dev/cli.md) |
 | Third-party notices | `cargo xtask licenses` (regenerates `THIRD_PARTY_LICENSES.html`; `--check` in CI). **Run it after changing dependencies**; keep `about.toml`'s `accepted` in sync with `deny.toml`'s `allow` |
 | Player wiki tables | `cargo xtask wiki` (writes `wiki/src/generated/*.md`), `--build` (mdBook into `wiki/book/`), `--check-links` (CI runs it) |
 | Golden screenshots | `cargo xtask golden` (compare; authoritative on Linux only), `--local`, `--update` (see "Golden screenshots") |
@@ -222,7 +223,7 @@ page. A table has at most 5 columns where practical: split a wide one by topic (
 from the rest), turn one round (a row per skill effect, its values as columns), and put rare
 fields in a detail table or a per-row cell. A grid of short numbers along one axis (odds by bonus,
 a value by level) may be wider. Stat abbreviations (`St`, `Dx`, ...) are spelled out above the
-table that uses them (`text::stat_key`), and no cell holds code or action text (`use:...`).
+table that uses them (`wiki/util.rs::stat_key`), and no cell holds code or action text (`use:...`).
 
 **The game is vague, the wiki is accurate** (the owner, 2026-10-20): in the game, hidden numbers
 stay hidden and effects are told in words (the perception rules above are unchanged), but the

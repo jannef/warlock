@@ -114,7 +114,7 @@ conflict every time; two that insert at different places merge cleanly. So:
   per-release save bump's business, not the PR's.
 - **A feature's dispatch lives in its own module**: one match arm in `world/mod.rs::player_acts`
   calling `self.feature(..)` in `world/<group>/feature.rs`, one line each in the other hot files
-  (`action.rs`, `content/mod.rs`, `dump.rs`, `input/play.rs`, `settings/keys.rs`), and its own tests
+  (`action/mod.rs`, `content/mod.rs`, `dump/mod.rs`, `input/play.rs`, `settings/keys.rs`), and its own tests
   file (`world/<group>/feature_tests.rs`).
 - **`world/` is one folder per subsystem** (#1497, #1496): `world/mod.rs` declares the groups,
   each under a comment naming it and its `docs/dev/` topics (`turn`, `levels`, `combat`,

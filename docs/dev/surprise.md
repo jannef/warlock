@@ -112,7 +112,7 @@ Keep it current with the code, as CLAUDE.md says.
 | `trap.rs::step_onto_trap` | a hidden trap (any trap for a creature, an unknown one for the player) that sprang (`World::sprung` moved) `startle`s its victim, after the trap's own draws; nobody beside |
 | `free_blow.rs::free_blows_of` | flat-footed (`off_guard`: Surprised, Stunned): no riposte, opportunist, gatekeeper (its own attack's cleave, flurry, and second blow stay) |
 | `weapon_ability.rs::approached` | a flat-footed keeper fires no Point-blank shot |
-| `schedule.rs::slowed` | `Effects::slow_with(price, status_cost)`: the dear action |
+| `schedule.rs::burdened` | `Effects::slow_with(price, status_cost)`: the dear action |
 | `weapon_ability.rs::spend_actions` | a `per_action` status that ends pushes `Event::Status { began: false }` (its `end` line: "You recover your wits.", Staggered's and Pinned's too) |
 | `fight.rs::resolve` (#684) | `lurked` (a lurk's blow on a creature not hunting the player is unaware: `startle`, flat-footed, dice) and `sneak_taken` (an exploit passes `sneaks` as unaware: dice only; its ladder's dice after them, `openings.rs::exploited`); `vanishing_act` on a sneak attack's blow that kills |
 | the player's chosen attacks (#1461): `fight.rs::player_attacks`, `player_blow_with`, `player_kicks`, `bash`; `weapon_active.rs::rush`, `sweep` (the aimed one); `shoot.rs::fire`, `throw`, `weapon_active.rs::active_shot`, `volley.rs` (`choose_at_cell`); `cast.rs::cast_single` (the player's spell that rolls to hit) | `choose_mark` (`mark.rs`) before the attack: the mark rule, so its sneak attack builds in the new mark's pool (docs/dev/openings.md) |

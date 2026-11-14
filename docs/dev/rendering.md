@@ -5,7 +5,7 @@ rules it implements are in spec/04-rendering.md. Keep it current with the code, 
 
 Stairs and locations (terrain with `stairs`) under a pile: `ui/mod.rs::draw_map` draws the
 terrain's glyph in the top object's colour (remembered cells dimmed as any), and the dump's
-`view`/`memory` layers (`dump.rs::perceived_glyph`) show the stairs' glyph; a known trap still wins
+`view`/`memory` layers (`dump/map.rs::perceived_glyph`) show the stairs' glyph; a known trap still wins
 over both (#983).
 
 Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebuffer pixels:

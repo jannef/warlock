@@ -90,7 +90,7 @@ phrase in `describe.rs`, and a wiki word and tier form in `xtask/src/wiki/magic.
 (`effect_words`, `tier_value`). Affixes are saved by id, so
 adding affixes keeps saves; their values and tiers are checked on load, strictly
 (`Magic::check`: each tier one the affix has, each value within its tier's range). The lenient
-read of #637 (`world/retier.rs`, `Magic::retier`, re-tiering a save's affixes after a ladder was
+read of #637 (re-tiering a save's affixes after a ladder was
 regraded) is gone with #840: saves are pinned to the version that wrote them
 (docs/dev/saves.md), so a regraded ladder needs nothing for saves.
 

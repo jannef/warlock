@@ -13,7 +13,7 @@ attacks".
 - `marked = true` on a `[[resource]]` (`ResourceDef::marked`): its points are in one creature's
   guard. Only Openings has it. Every rule below reads the flag, never the id.
 - `builds` on Openings, one each: `sneak_attack`, `feint` (O2, #1462), and `mark_kill`.
-  `Build::MarkKill` (`mark_kill`) replaced `Build::SneakKill` (`sneak_kill`, gone).
+  `Build::MarkKill` (`mark_kill`) replaced the build `sneak_kill` (gone).
 
 | Build | Where | The mark rule |
 |---|---|---|
