@@ -487,6 +487,16 @@ impl World {
         Ok(())
     }
 
+    /// Moves the player to level `to` as [`World::travel`] does, with no stairs, no time, and
+    /// no word: the benches' way to fill a run with visited levels (`cargo xtask bench-turns`,
+    /// its `long` row), never an action of the rules.
+    #[doc(hidden)]
+    pub fn dev_travel(&mut self, to: &str) -> Result<(), WorldError> {
+        self.travel(to, None)?;
+        self.perceive(&mut Vec::new());
+        Ok(())
+    }
+
     /// Level `id` as it is now, generating it on the first visit (entered from `from`).
     pub(super) fn visit(
         &mut self,

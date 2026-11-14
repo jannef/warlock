@@ -75,8 +75,9 @@ const HEXED_LIGHT: &str = "circle_enchantment";
 /// at once; rested from the same state with the copies dark it is cut short too (60 turns), and
 /// no rest turn costs more lit than dark: a full night on that floor is the cost, not the light.
 /// `d-pet`'s rest runs the whole night (7600 turns, about 0.33 ms a turn): fewer neutral animals
-/// interrupt it, and only a hostile within five steps stops it (#1216).
-const UNJUDGED_REST: [&str; 2] = ["d-hex", "d-pet"];
+/// interrupt it, and only a hostile within five steps stops it (#1216). `l-1`'s and `long`'s
+/// run the whole night among 75 creatures too (about 0.1 ms a turn): shown to compare the two.
+const UNJUDGED_REST: [&str; 4] = ["d-hex", "d-pet", "l-1", "long"];
 
 /// The same cave floor at danger 40, all of it animated panoplies (spec §8 "Animated objects"):
 /// each wears and wields its pieces, whose magic every rule reads through `Mods::worn`, the
@@ -95,8 +96,28 @@ population = ["animated_panoply"]
 const PANOPLY_SCENARIO: &str = "name = \"Bench panoply\"\nstart_level = \"bench_panoply:1\"\n\
                                 seed = 1\nwield = [\"lantern\"]\nhp = 900\n";
 
+/// A long run's branch (#1507): forty 120×60 cave floors like `delf`'s, of danger 8 each, so a
+/// run that has visited them all holds their 3,000-odd creatures; the walk is on the deepest.
+const LONG_BRANCH: &str = r#"
+[[dungeon]]
+id = "bench_long"
+name = "Bench long"
+generator = "caves"
+depth = 40
+size = [120, 60]
+danger = { base = 8, per_depth = 0 }
+population = ["bat", "beetle", "kobold", "kobold_archer", "kobold_shaman", "rat"]
+"#;
+const LONG_SCENARIO: &str = "name = \"Bench long\"\nstart_level = \"bench_long:40\"\nseed = 1\n\
+                             wield = [\"lantern\"]\nhp = 900\n";
+/// The floors of `LONG_BRANCH`.
+const LONG_DEPTH: u32 = 40;
+/// The row that visits every other floor of `LONG_BRANCH` first (untimed), then walks the
+/// deepest: against `l-1`, the same floor walked fresh, what the run's other levels cost a turn.
+const LONG: &str = "long";
+
 /// (scenario, level label, budget in ms, minutes skipped before the walk)
-const CASES: [(&str, &str, f64, u64); 13] = [
+const CASES: [(&str, &str, f64, u64); 15] = [
     ("showcase", "hub", 5.0, 0),
     ("vast", "vast", 16.0, 0),
     ("depths", "depths", 5.0, 0),
@@ -119,19 +140,24 @@ const CASES: [(&str, &str, f64, u64); 13] = [
     ("bench_hexed", "d-hex", 16.0, 0),
     // The same at danger 40, of panoplies (`PANOPLY_BRANCH`).
     ("bench_panoply", "panop", 16.0, 0),
+    // The deepest floor of a 40-floor cave branch (`LONG_BRANCH`), fresh: the only level.
+    ("bench_long", "l-1", 16.0, 0),
+    // The same floor after visiting the other 39: a long run's actors on every one (#1507).
+    ("bench_long", LONG, 16.0, 0),
 ];
 
 /// The builtin content with the bench's cave branch and its scenario.
 fn content() -> Result<Content, String> {
     let mut files = ContentFiles::builtin();
     let dungeons = format!(
-        "{}{DELF_BRANCH}{HEXED_BRANCH}{PANOPLY_BRANCH}",
+        "{}{DELF_BRANCH}{HEXED_BRANCH}{PANOPLY_BRANCH}{LONG_BRANCH}",
         include_str!("../../assets/data/dungeons.toml")
     );
     files.insert("data/dungeons.toml", &dungeons);
     files.insert("scenarios/bench_delf.toml", DELF_SCENARIO);
     files.insert("scenarios/bench_panoply.toml", PANOPLY_SCENARIO);
     files.insert("scenarios/bench_hexed.toml", HEXED_SCENARIO);
+    files.insert("scenarios/bench_long.toml", LONG_SCENARIO);
     files.insert("scenarios/bench_pet.toml", PET_SCENARIO);
     for (id, text) in [
         ("bat", include_str!("../../assets/data/creatures/bat.toml")),
@@ -176,7 +202,12 @@ struct Stats {
     rest_turns: u64,
 }
 
-fn measure(content: &Arc<Content>, scenario: &str, skip: u64) -> Result<Stats, String> {
+fn measure(
+    content: &Arc<Content>,
+    scenario: &str,
+    label: &str,
+    skip: u64,
+) -> Result<Stats, String> {
     // The scenario's start; a walk that gets the player killed starts over from it, untimed.
     let fresh = || -> Result<World, String> {
         let mut world = World::new(content.clone(), scenario, None).map_err(|e| e.to_string())?;
@@ -188,6 +219,18 @@ fn measure(content: &Arc<Content>, scenario: &str, skip: u64) -> Result<Stats, S
             // walk among the cave's creatures for a while).
             for text in ["xp:300000", "levelup:auto", "levelup:auto", "levelup:auto"] {
                 world.apply(&text.parse::<Action>().map_err(|e| e.to_string())?);
+            }
+        }
+        if label == LONG {
+            // Every other floor visited, then back to the deepest, where the run started.
+            let start = world.perception().level_id().to_string();
+            for depth in 1..LONG_DEPTH {
+                (world.dev_travel(&format!("bench_long:{depth}"))).map_err(|e| e.to_string())?;
+            }
+            world.dev_travel(&start).map_err(|e| e.to_string())?;
+            // Discovering them brought levels: their choices made, or every action waits.
+            for _ in 0..4 {
+                world.apply(&Action::LevelUpAuto);
             }
         }
         Ok(world)
@@ -273,7 +316,9 @@ fn measure(content: &Arc<Content>, scenario: &str, skip: u64) -> Result<Stats, S
     })
 }
 
-pub fn run() -> Result<(), String> {
+/// Every row, or those `rows` names by label (`fight` the arena's rest).
+pub fn run(rows: &[String]) -> Result<(), String> {
+    let wanted = |label: &str| rows.is_empty() || rows.iter().any(|r| r == label);
     if cfg!(debug_assertions) {
         eprintln!(
             "warning: debug build; run `cargo xtask bench-turns` in release for real numbers"
@@ -286,7 +331,10 @@ pub fn run() -> Result<(), String> {
     );
     let mut failed = false;
     for (scenario, label, budget, skip) in CASES {
-        let s = measure(&content, scenario, skip)?;
+        if !wanted(label) {
+            continue;
+        }
+        let s = measure(&content, scenario, label, skip)?;
         let rest_ok = s.rest_ms <= REST_BUDGET_MS || UNJUDGED_REST.contains(&label);
         let ok = s.max_ms <= budget && rest_ok;
         failed |= !ok;
@@ -299,6 +347,13 @@ pub fn run() -> Result<(), String> {
             s.rest_ms,
             if ok { "ok" } else { "OVER BUDGET" },
         );
+    }
+    if !wanted("fight") {
+        return if failed {
+            Err("turn time over budget".into())
+        } else {
+            Ok(())
+        };
     }
     // A rest beside a fight nobody perceives, until one side is dead: every fighter
     // seeing, aiming, and attacking each turn, in view range, so no turn passes unperceived.
