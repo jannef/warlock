@@ -256,6 +256,14 @@ impl Stances {
     }
 }
 
+impl super::RulesFile for Stances {
+    const PATH: &'static str = "data/stances.toml";
+
+    fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
+        Self::parse(path, text)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

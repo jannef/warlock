@@ -806,8 +806,7 @@ impl World {
             false => dark,
         };
         let lit = here.phase != DayPhase::Day && self.state.carried_light(&content).is_some();
-        let mine = player.effective_stats(&content).modifier(Stat::Willpower)
-            + talents.check(Stat::Willpower)
+        let mine = player.check_modifier(&content, Stat::Willpower)
             + player.skill_effect(&content, Effect::Lookout)
             + talents.notice.unwrap_or(0);
         let mine_against =
@@ -859,10 +858,8 @@ impl World {
             Weather::HeavyRain => c.heavy_rain,
             _ => 0,
         };
-        let mine = player.effective_stats(&content).modifier(Stat::Willpower)
-            + talents.check(Stat::Willpower)
-            + ears
-            + talents.notice.unwrap_or(0);
+        let mine =
+            player.check_modifier(&content, Stat::Willpower) + ears + talents.notice.unwrap_or(0);
         let against = c.difficulty + lead.skills.effect(&content, Effect::Stalk) + rain;
         let woke = check::check(&mut self.state.rng, mine, against);
         if self.trains(Use::Hear) {
@@ -966,13 +963,11 @@ impl World {
         };
         let unaware = pending.outcome == Outcome::Drop;
         let player = self.state.player();
-        let talents = player.talent_mods(&content);
         let stalk = match unaware {
             true => player.skill_effect(&content, Effect::Stalk),
             false => 0,
         };
-        let modifier = player.effective_stats(&content).modifier(Stat::Dexterity)
-            + talents.check(Stat::Dexterity)
+        let modifier = player.check_modifier(&content, Stat::Dexterity)
             + player.skill_effect(&content, Effect::Evade)
             + stalk;
         let e = rules.evade;

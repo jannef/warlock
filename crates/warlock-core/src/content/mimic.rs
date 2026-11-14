@@ -8,7 +8,8 @@
 //! order, and the fingerprint are the same on every load.
 
 use super::animated::Numbers;
-use super::creature::CreatureSpec;
+use super::creature::{CreatureSpec, Hide};
+use super::status::OnHitSpec;
 use super::{Content, ContentError, ContentFiles, CreatureId};
 use crate::stats::Stat;
 use serde::Deserialize;
@@ -35,8 +36,8 @@ pub struct Mimics {
     pub dice_steps: i32,
     /// Its hide's name, given from the level its Protection comes (the body rule's hide).
     pub hide: String,
-    /// The fields every member shares, as written (`[creature]`).
-    pub creature: toml::Table,
+    /// The fields every member shares (`[creature]`), each member's own still empty.
+    pub(super) creature: CreatureSpec,
     /// The name bands, least first.
     pub bands: Vec<MimicBand>,
 }
@@ -104,6 +105,7 @@ impl Mimics {
                 "[creature]: `{key}` is each member's own, not the family's"
             )));
         }
+        let creature = Self::shared(file.creature).map_err(|m| err(format!("[creature]: {m}")))?;
         // A member's band indexes the chest bands too ([`Mimics::member`]).
         let chests = &content.chests().bands;
         if file.band.len() != chests.len() {
@@ -120,9 +122,26 @@ impl Mimics {
             hp_factor: file.family.hp_factor,
             dice_steps: file.family.dice_steps,
             hide: file.family.hide,
-            creature: file.creature,
+            creature,
             bands: file.band,
         })
+    }
+
+    /// The fields `[creature]` gives every member, read as a creature file: each member's own
+    /// (`OWN`, and the slam's damage) are written over by [`Mimics::member`], so they parse
+    /// empty here.
+    fn shared(mut table: toml::Table) -> Result<CreatureSpec, String> {
+        let Some(toml::Value::Table(attack)) = table.get_mut("attack") else {
+            return Err("needs an `attack` table".into());
+        };
+        attack.entry("damage").or_insert_with(|| "1d2".into());
+        for (key, value) in [("id", ""), ("name", ""), ("fg", "#000000")] {
+            table.insert(key.into(), value.into());
+        }
+        table.insert("weight".into(), 0.into());
+        toml::Value::Table(table)
+            .try_into()
+            .map_err(|e: toml::de::Error| e.to_string())
     }
 
     /// Whether there is a family.
@@ -187,49 +206,36 @@ impl Mimics {
         let band = self.band_index(level).ok_or("no bands")?;
         let (named, chest) = (&self.bands[band], &content.chests().bands[band]);
         let numbers = self.numbers(level);
-        let s = |v: &str| toml::Value::String(v.to_string());
-        let int = |v: i64| toml::Value::Integer(v);
-        let mut t = self.creature.clone();
-        t.insert("id".into(), s(&format!("{ID_PREFIX}{level}")));
-        t.insert("name".into(), s(&named.name));
-        t.insert("fg".into(), s(&named.fg));
-        t.insert("weight".into(), int(i64::from(named.weight)));
-        let mut stats = toml::Table::new();
-        for (stat, score) in &numbers.stats {
-            stats.insert(stat.id().into(), int(i64::from(*score)));
-        }
-        t.insert("stats".into(), toml::Value::Table(stats));
-        t.insert("base_hp".into(), int(i64::from(numbers.base_hp)));
-        t.insert("level".into(), int(i64::from(level)));
-        let xp = content.experience().guideline().xp(level);
-        t.insert("xp".into(), int(i64::from(xp)));
+        let mut spec = self.creature.clone();
+        spec.id = format!("{ID_PREFIX}{level}");
+        spec.name.clone_from(&named.name);
+        spec.fg = named.fg.parse()?;
+        spec.weight = named.weight;
+        spec.stats = numbers.stats;
+        spec.base_hp = numbers.base_hp;
+        spec.level = level;
+        spec.xp = content.experience().guideline().xp(level);
         let protection = Self::protection(level);
         if protection > 0 {
-            let mut hide = toml::Table::new();
-            hide.insert("protection".into(), int(i64::from(protection)));
-            hide.insert("name".into(), s(&self.hide));
-            t.insert("natural".into(), toml::Value::Table(hide));
+            spec.natural = Some(Hide {
+                defence: 0,
+                protection,
+                name: self.hide.clone(),
+            });
         }
         // The slam: the level's dice, sticky with the band's chance.
-        let mut attack = match t.remove("attack") {
-            Some(toml::Value::Table(a)) => a,
-            _ => return Err("[creature] needs an `attack` table".into()),
-        };
-        attack.insert("damage".into(), s(numbers.dice));
+        let slam = (spec.attack.as_mut())
+            .and_then(|a| a.0.first_mut())
+            .ok_or("[creature] needs an `attack` table")?;
+        slam.damage = numbers.dice.parse()?;
         if chest.hold > 0 {
-            let mut hold = toml::Table::new();
-            hold.insert("status".into(), s("held"));
-            hold.insert("chance".into(), int(i64::from(chest.hold)));
-            hold.insert("difficulty".into(), int(i64::from(Self::grip(level))));
-            attack.insert(
-                "on_hit".into(),
-                toml::Value::Array(vec![toml::Value::Table(hold)]),
-            );
+            slam.on_hit = vec![OnHitSpec {
+                status: Some("held".into()),
+                chance: chest.hold,
+                difficulty: Some(Self::grip(level)),
+                ..OnHitSpec::default()
+            }];
         }
-        t.insert("attack".into(), toml::Value::Table(attack));
-        let mut spec: CreatureSpec = toml::Value::Table(t)
-            .try_into()
-            .map_err(|e: toml::de::Error| e.to_string())?;
         spec.mimic = Some(MimicDef {
             family: CreatureId(0),
             member: level - self.levels[0],

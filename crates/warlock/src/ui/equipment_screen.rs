@@ -15,6 +15,7 @@
 //!
 //! Both are read from the perception snapshot: the player's own inventory and equipment.
 
+use super::cursor;
 use super::menu::{HINTS, Nav, Panel, Press};
 use super::paged_list::{PagedList, Row, draw_header};
 use super::screens::ScreenAction;
@@ -189,8 +190,8 @@ impl EquipmentScreen {
         match press.nav {
             Nav::Back => return ScreenAction::Close,
             _ if own_key => return ScreenAction::Close,
-            Nav::Up => self.cursor = (self.cursor + rows - 1) % rows,
-            Nav::Down => self.cursor = (self.cursor + 1) % rows,
+            Nav::Up => self.cursor = cursor::up(self.cursor, rows),
+            Nav::Down => self.cursor = cursor::down(self.cursor, rows),
             Nav::Enter if self.rows.is_empty() => return ScreenAction::Close,
             Nav::Enter => return ScreenAction::Open(super::ScreenName::EquipItem),
             _ => {}

@@ -20,6 +20,7 @@
 //! command by context, including Esc, and closes on `?` or Esc. The list is drawn by one piece
 //! of code for both, so help always matches the bindings.
 
+use super::cursor;
 use super::menu::{HINTS, Nav, Panel, Press, truncated, wrap};
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, Context, KeyBinding, KeyCommand};
@@ -281,11 +282,13 @@ impl ControlsScreen {
         match press.nav {
             Nav::Back => return true,
             Nav::Up => {
-                self.selected = self.next_selectable(self.selected + self.rows().len() - 1, -1);
+                self.selected =
+                    self.next_selectable(cursor::up(self.selected, self.rows().len()), -1);
                 self.message.clear();
             }
             Nav::Down => {
-                self.selected = self.next_selectable(self.selected + 1, 1);
+                self.selected =
+                    self.next_selectable(cursor::down(self.selected, self.rows().len()), 1);
                 self.message.clear();
             }
             Nav::Enter if !press.repeat => match row {
@@ -328,11 +331,13 @@ impl ControlsScreen {
         match press.nav {
             Nav::Back => self.close_keys(),
             Nav::Up => {
-                self.selected = self.next_selectable(self.selected + self.rows().len() - 1, -1);
+                self.selected =
+                    self.next_selectable(cursor::up(self.selected, self.rows().len()), -1);
                 self.message.clear();
             }
             Nav::Down => {
-                self.selected = self.next_selectable(self.selected + 1, 1);
+                self.selected =
+                    self.next_selectable(cursor::down(self.selected, self.rows().len()), 1);
                 self.message.clear();
             }
             Nav::Enter if !press.repeat => {

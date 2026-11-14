@@ -213,6 +213,14 @@ impl Climate {
     }
 }
 
+impl super::RulesFile for Climate {
+    const PATH: &'static str = "data/weather.toml";
+
+    fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
+        Self::parse(path, text)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

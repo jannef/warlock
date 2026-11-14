@@ -3,6 +3,7 @@
 //! (portable or the platform's folders), and an Open folder action for each (spec §7). The
 //! same facts as `warlock --paths`, from `paths.rs`.
 
+use super::cursor;
 use super::menu::{HINTS, Nav, Panel, Press, truncated_head, wrap};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM};
@@ -55,8 +56,8 @@ impl FilesScreen {
     pub fn handle(&mut self, press: &Press) -> ScreenAction {
         match press.nav {
             Nav::Back => return ScreenAction::Close,
-            Nav::Up => self.selected = (self.selected + self.rows() - 1) % self.rows(),
-            Nav::Down => self.selected = (self.selected + 1) % self.rows(),
+            Nav::Up => self.selected = cursor::up(self.selected, self.rows()),
+            Nav::Down => self.selected = cursor::down(self.selected, self.rows()),
             Nav::Enter if !press.repeat => match self.entries.get(self.selected) {
                 None => return ScreenAction::Close,
                 Some(entry) => {

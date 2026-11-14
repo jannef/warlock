@@ -1,5 +1,7 @@
 # Warlock — Animated objects: household junk, dancing blades, hollow armour, and panoplies that wear their loot
 
+**Built; this file is history.** Current behaviour is in spec §8 "Animated objects" and `docs/dev/animated.md`.
+
 Design document for the owner's review (2026-10-26). Written against `origin/main` at 2daff477
 (after #443, creature tags; #438, spell tiers; #442, undead batch 2). Nothing here is implemented;
 §15 cuts it into issues and names the first slice. §16 records the owner's decisions of

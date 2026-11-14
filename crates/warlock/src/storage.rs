@@ -144,6 +144,38 @@ impl Backend {
     }
 }
 
+/// The folders a store keeps its files in by default (`paths::Locations`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Folder {
+    /// Settings and the graveyard.
+    Config,
+    /// Saves and snapshots.
+    Data,
+}
+
+/// Where a store keeps its files when the command line names no folder: `folder` natively (none
+/// without one), browser storage on the web. A browser may refuse its storage (some privacy
+/// modes): then there is none, and the log says what is `lost` (`"progress will not be saved"`).
+#[cfg(not(target_arch = "wasm32"))]
+pub fn default_backend(folder: Folder, _lost: &str) -> Option<Backend> {
+    let locations = crate::paths::locations();
+    let place = match folder {
+        Folder::Config => &locations.config,
+        Folder::Data => &locations.data,
+    };
+    place.dir.clone().map(Backend::Dir)
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn default_backend(_folder: Folder, lost: &str) -> Option<Backend> {
+    if web::available() {
+        Some(Backend::Browser)
+    } else {
+        bevy::log::warn!("browser storage is unavailable; {lost}");
+        None
+    }
+}
+
 /// Browser storage's key prefix: the keys are `warlock/settings.toml`, `warlock/saves/a.sav`,
 /// and so on.
 const BROWSER_PREFIX: &str = "warlock/";

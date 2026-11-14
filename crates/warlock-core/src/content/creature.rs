@@ -427,6 +427,104 @@ pub(super) struct CreatureSpec {
     pub mimic: Option<super::mimic::MimicDef>,
 }
 
+/// A creature file that gives nothing but what it must (#1552): each field as serde fills it in
+/// when the file leaves it out, so a type built in code (`content/animated.rs`,
+/// `content/mimic.rs`) sets what it means and takes the rest with `..CreatureSpec::default()`.
+/// `id`, `name`, `glyph`, `fg`, and `weight`, which a file must give, are empty.
+/// `creature_spec_defaults_are_serdes` holds the two to each other.
+impl Default for CreatureSpec {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            name: String::new(),
+            plural: None,
+            glyph: char::default(),
+            fg: Rgb::default(),
+            speed: normal_speed(),
+            weight: 0,
+            size: None,
+            faction: None,
+            factions: BTreeMap::new(),
+            tags: Vec::new(),
+            alignment: Alignment::default(),
+            race: None,
+            vision: normal_vision(),
+            sight: default_sight(),
+            combat: Combat::default(),
+            range: None,
+            spells: Vec::new(),
+            opens_doors: false,
+            lurks: false,
+            hunts: false,
+            shadowy: false,
+            invisible: None,
+            budge: Budge::default(),
+            rooted: false,
+            attack_cost: None,
+            light: None,
+            footsteps: 0,
+            hearing: None,
+            stats: BTreeMap::new(),
+            potential: BTreeMap::new(),
+            base_hp: 0,
+            regen: full_regen(),
+            mana: 0,
+            level: first_level(),
+            xp: 0,
+            xp_percent: full_percent(),
+            unique: false,
+            stray: true,
+            rarity: None,
+            dread: false,
+            leavings: Vec::new(),
+            first_sight: None,
+            skills: BTreeMap::new(),
+            loot: 0,
+            drops: Vec::new(),
+            drops_from_tags: true,
+            attack: None,
+            breath: None,
+            gaze: None,
+            burst: None,
+            throw: None,
+            summon: None,
+            aura: None,
+            innate: Vec::new(),
+            cry: None,
+            splits: None,
+            dies_into: None,
+            steals: None,
+            blinks: None,
+            natural: None,
+            incorporeal: None,
+            vitals: true,
+            resist: BTreeMap::new(),
+            corrodes: None,
+            disarms: None,
+            corpse: true,
+            everlasting: false,
+            on_eat: None,
+            blood: None,
+            immune: Vec::new(),
+            dies: None,
+            depart: None,
+            tameable: false,
+            training: None,
+            nose: None,
+            grades: true,
+            grade_words: None,
+            weapon_skills: BTreeMap::new(),
+            racial_weapon: None,
+            gear: Vec::new(),
+            anim: None,
+            glow: 0.0,
+            particles: Vec::new(),
+            animated: None,
+            mimic: None,
+        }
+    }
+}
+
 /// What eating a creature's fresh corpse does (spec §8 "Hunger"), beyond feeding the eater by
 /// its size: `on_eat = { message = "...", train = { toughness = 30 }, widen = { toughness = 5 },
 /// heal = "1d4", harm = "1d2", satiation = 500, vomit = 25 }`. None of it is shown before the
@@ -1143,5 +1241,19 @@ mod immunity_tests {
             err.contains("unknown status or damage type `nothing`"),
             "{err}"
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::CreatureSpec;
+
+    #[test]
+    fn creature_spec_defaults_are_serdes() {
+        // The required fields at their empty values; everything else left to serde.
+        let text = "id = \"\"\nname = \"\"\nglyph = \"\\u0000\"\nfg = \"#000000\"\nweight = 0\n";
+        let parsed: CreatureSpec = toml::from_str(text).expect("a bare creature parses");
+        let built = CreatureSpec::default();
+        assert_eq!(format!("{parsed:?}"), format!("{built:?}"));
     }
 }

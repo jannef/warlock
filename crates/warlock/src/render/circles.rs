@@ -751,6 +751,30 @@ fn circle_mesh(
 mod tests {
     use super::*;
 
+    #[test]
+    fn shader_constants_match() {
+        use crate::render::lighting::{LIT, MARGIN, OCCUPIED, OPAQUE};
+        let src = include_str!("circles.wesl");
+        for (name, value) in [
+            ("RING", RING),
+            ("RING_GAP", RING_GAP),
+            ("OUTER_RING", OUTER_RING),
+            ("LINE_HALO_SIGMA", LINE_GLOW_SIGMA),
+            ("GLINT_PERIOD_A", GLINT_PERIODS[0]),
+            ("GLINT_PERIOD_B", GLINT_PERIODS[1]),
+            ("GLINT_SHARP", GLINT_SHARP),
+            ("NO_GLYPH", NO_GLYPH as f32),
+            ("LIT", f32::from(LIT)),
+            ("OPAQUE", f32::from(OPAQUE)),
+            ("OCCUPIED", f32::from(OCCUPIED)),
+            ("MARGIN", MARGIN as f32),
+        ] {
+            assert_eq!(crate::render::wesl_const(src, name), value, "{name}");
+        }
+        // `glint_phase`'s step per seed, the one number of the glint's math not a constant.
+        assert!(src.contains("f32(seed) * 0.137036"));
+    }
+
     /// Effect `slot` of school `school`.
     fn r(slot: u8, school: u8) -> Mark {
         Mark { slot, school }

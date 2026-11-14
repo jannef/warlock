@@ -87,6 +87,14 @@ impl AllyRules {
     }
 }
 
+impl super::RulesFile for AllyRules {
+    const PATH: &'static str = "data/allies.toml";
+
+    fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
+        Self::parse(path, text)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -139,6 +139,14 @@ impl RigRules {
     }
 }
 
+impl super::RulesFile for RigRules {
+    const PATH: &'static str = "data/rigs.toml";
+
+    fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
+        Self::parse(path, text, content)
+    }
+}
+
 impl RigSpec {
     fn resolve(self, content: &Content) -> Result<RigDef, String> {
         let id = self.id;

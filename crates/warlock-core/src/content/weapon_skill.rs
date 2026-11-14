@@ -933,6 +933,14 @@ impl WeaponSkillTable {
     }
 }
 
+impl super::RulesFile for WeaponSkillTable {
+    const PATH: &'static str = "data/weapon_skills.toml";
+
+    fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
+        Self::parse(path, text)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

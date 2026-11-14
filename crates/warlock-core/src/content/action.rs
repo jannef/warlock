@@ -362,6 +362,14 @@ impl ActionCosts {
     }
 }
 
+impl super::RulesFile for ActionCosts {
+    const PATH: &'static str = "data/actions.toml";
+
+    fn parse(path: &str, text: &str, _content: &super::Content) -> Result<Self, ContentError> {
+        Self::parse(path, text)
+    }
+}
+
 /// The energy price of an action of `cost` whose base time is `base`: the cost times the base in
 /// seconds, at least 1. An actor gains its speed in energy each second, so the action takes it
 /// `cost / 1000 × 1000 / speed × base`.
