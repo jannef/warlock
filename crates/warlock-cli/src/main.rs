@@ -18,7 +18,7 @@ use warlock_core::character::CharacterSpec;
 use warlock_core::content::Content;
 use warlock_core::dump;
 use warlock_core::mapgen;
-use warlock_core::replay::Replay;
+use warlock_core::replay::{Replay, ReplayError};
 use warlock_core::rng::parse_seed;
 use warlock_core::world::Fallen;
 use warlock_core::{Action, World};
@@ -70,9 +70,9 @@ struct RunArgs {
     #[arg(long)]
     talents: Option<String>,
     /// The dead of past runs, as the game's graveyard file gives a run them, the most recent
-    /// first: NAME:RACE[:stone] separated by commas (`Brakka:dwarf:stone,Tamsin:elf`), `stone`
-    /// for one turned to stone. Statues are named from the petrified, gravestones from them all;
-    /// the names are out of the state hash.
+    /// first: NAME:RACE[:CLASS][:stone] separated by commas (`Brakka:dwarf:stone,
+    /// Tamsin:elf:bard`), `stone` for one turned to stone. Statues are named from the
+    /// petrified, Līctūn's graves from the rest; out of the state hash.
     #[arg(long)]
     fallen: Option<String>,
     /// Actions as text, e.g. "move:E move:SE wait open:E close:W kick:N descend ascend pickup:ab
@@ -224,20 +224,24 @@ fn start(content: Arc<Content>, args: &RunArgs) -> Result<World, String> {
     Ok(world)
 }
 
-/// `--fallen`'s dead, the most recent first: `Brakka:dwarf` each, `Brakka:dwarf:stone` for one
-/// turned to stone (who died "Turned to stone"; the rest die untold).
+/// `--fallen`'s dead, the most recent first: `Brakka:dwarf` each, a class after the race
+/// (`Brakka:dwarf:warrior`), and `:stone` last for one turned to stone (who died "Turned to
+/// stone"; the rest die untold).
 fn fallen(args: &RunArgs) -> Vec<Fallen> {
     let text = args.fallen.as_deref().unwrap_or("");
     (text.split(',').map(str::trim).filter(|s| !s.is_empty()))
         .map(|entry| {
-            let mut parts = entry.split(':').map(str::trim);
-            let name = parts.next().unwrap_or("").to_string();
-            let race = parts.next().unwrap_or("").to_string();
-            let petrified = parts.next() == Some("stone");
+            let mut parts: Vec<&str> = entry.split(':').map(str::trim).collect();
+            let petrified = parts.len() > 2 && parts.last() == Some(&"stone");
+            if petrified {
+                parts.pop();
+            }
+            let part = |i: usize| parts.get(i).copied().unwrap_or("").to_string();
             let death = if petrified { "Turned to stone" } else { "" };
             Fallen {
-                name,
-                race,
+                name: part(0),
+                race: part(1),
+                class: part(2),
                 petrified,
                 death: death.to_string(),
             }
@@ -249,12 +253,21 @@ fn dump_command(content: Arc<Content>, args: DumpArgs) -> Result<(), String> {
     let layers = dump::parse_layers(&args.layers)?;
     let actions = parse_run_actions(&args.run)?;
     let mut world = match &args.replay {
-        Some(path) => read_replay(path)?.run(content).map_err(|e| e.to_string())?,
+        // Given the dead first, so the graves' ways down are open as the run had them; the
+        // hashes leave them out.
+        Some(path) => {
+            let replay = read_replay(path)?;
+            let mut start = replay.start(content).map_err(|e| e.to_string())?;
+            start.set_graveyard(fallen(&args.run));
+            match replay.play_from(start) {
+                (world, None) => world,
+                (_, Some(divergence)) => {
+                    return Err(ReplayError::Diverged(divergence).to_string());
+                }
+            }
+        }
         None => start(content, &args.run)?,
     };
-    if args.replay.is_some() {
-        world.set_graveyard(fallen(&args.run));
-    }
     for action in &actions {
         world.apply(action);
     }

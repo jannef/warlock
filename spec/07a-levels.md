@@ -174,26 +174,28 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   dev views read `hidden`: the `truth` layer and F2 draw a hidden entrance by its glyph. Quests
   are the only key: there is no search for one on the overworld. The dev action `reveal:ID`
   reveals one at once (no time).
-- **Graves** (#1258): a hand-made level's optional `[graves]` table gives the words its
-  gravestones are cut with: `names` (given names) and `bynames` (none: a given name alone) of the
-  folk buried there, `epitaphs` (`{name}`, `{born}`, `{died}` stand for the drawn name and
-  years), `fallen` (the inscription for one of the graveyard's dead: `{name}`, "Brakka the
-  dwarf", and `{death}`, "killed by a kobold in Fyrdelf 3, The Ascmearc"), `died` (`[least,
-  most]` years before the year the level is made) and `age` (`[least, most]` at death). Empty
-  `names` or `epitaphs`, or a range that runs downward, is a content error. As the level is made
-  every cell of a terrain with `grave = true` (the shared `gravestone`), in row order, draws an
-  inscription from the level's stream `graves/<level id>`: a roll of one in ten, then a stranger
-  (a given name and a byname, an epitaph, how long ago they died and how old they were). Where
-  the roll comes up and one of the run's graveyard (§7 "Saves": every character who has died,
-  the most recent first) is left, the stone is theirs, which one drawn from
-  `graves/<level id>/fallen`, never twice on a level: "Here lies Brakka the dwarf, turned to
-  stone." A stranger's stone reads the same under any graveyard, and a graveyard given after the
-  level was made (a replay's dump) cuts the stones again, the same as if given before. Look mode
-  reads a stone the player sees or remembers after its name: "A gravestone. Here lies Ælfric
-  Wudu, 1281–1336."; the `truth` dump lists them, `grave at (7, 3): …`. Decoration
-  (`LevelState::graves`): no rule reads it, it is out of the state hash, saves keep it. A stone
-  without words (a level with no `[graves]`) is blank. Līctūn, Cēaptūn's churchyard (§3), has
-  fifty.
+- **Graves** (#1258, #1682; `docs/dev/graves.md`): every character of past runs (the graveyard,
+  §7 "Saves") who was not turned to stone (those are statues, §8 "Statues") has a grave of their
+  own in a **burial chain**: a churchyard and the crypts below it, each a hand-made level with a
+  `[burial]` table (`chain`, its churchyard's id; `depth`, 0 the churchyard; an optional
+  `epitaph`, default "Here lies {name}, {death}."). A level's **places** are the cells of a
+  terrain with `burial` (an empty grave plot, an empty niche, an open sarcophagus), each the same
+  in every rule as the grave it becomes (a gravestone, a sealed niche, a lidded sarcophagus). The
+  dead fill them the oldest death first: the churchyard's places in row order, then the first
+  crypt's, then the second's; each grave is cut with the level's epitaph, `{name}` "Brakka the
+  dwarf warrior" and `{death}` "killed by a kobold in Fyrdelf 3, The Ascmearc". A level with no
+  place left opens its **way down** (`burial_stairs`: its own ground until then) to the next
+  level of the chain; the deepest's never opens, and the dead past its last place are not shown.
+  **Fixed graves** (a `grave` terrain with the legend's `epitaph`) carry the words written, the
+  town's own dead; cells marked `statue_place` are kept free for statues (none yet). Look mode
+  reads a grave the player sees or remembers after its name: "A gravestone. Here lies Ælfric
+  atte Welle, reeve of Cēaptūn, 1361–1419. …"; the `truth` dump lists them, `grave at (7, 3):
+  …`. Decoration: no rule reads the words, and the state hash sees every level as with no
+  graveyard (the places empty, the way down shut), so a replay verifies under any graveyard
+  unless it steps on or takes an opened way down; saves keep them. Līctūn, Cēaptūn's churchyard
+  (§3), has ten fixed graves and forty plots; below it the Undercroft (`lictun_crypt_01`, family
+  vaults, 26 places) and Bānhūs (`lictun_crypt_02`, the bone-house, 30 places), no danger and
+  nobody there.
 - **Traps in level files** (M18; §8 "Traps"): a legend entry places a trap with `trap = "id"` (an
   id in `data/traps.toml`), hidden unless `known = true`, and for a bolt trap optionally the way
   its bolt runs, `dir = "E"` (default: along the longest clear line from it). Traps lie only on

@@ -592,7 +592,8 @@ mod tests {
         }
         w.apply(&Action::Descend);
         assert_eq!(w.perception().level_id(), "lictun");
-        let stone = Pos::new(7, 19);
+        // One of the town's own, by the chapel (a fixed grave, `docs/dev/graves.md`).
+        let stone = Pos::new(21, 19);
         let cut = w.ground_truth().0.graves()[&stone].clone();
         assert_eq!(
             describe(&w.perception(), stone, true),

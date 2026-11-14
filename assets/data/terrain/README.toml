@@ -11,7 +11,10 @@
 # each; a shut one is not walkable, open and smashed ones are; its band, chests.toml, names and
 # colours it), statue (true: the statue a stoned creature leaves, spec §8 "Statues", at
 # most one terrain, with a `sturdiness` a kick breaks it against, as a door's, and no
-# `breaks_to` or `chest`; the data's is not walkable but transparent, and breaks with `hardness`), stairs ("up"/"down"),
+# `breaks_to` or `chest`; the data's is not walkable but transparent, and breaks with `hardness`),
+# grave (true: a grave whose inscription look mode reads, spec §7 "Graves"), burial (a place for
+# one of the run's dead: the grave terrain it becomes when one is laid there, the same in every
+# rule, checked at load; docs/dev/graves.md), stairs ("up"/"down"),
 # light (a preset in lights.toml the terrain emits), bounce (gameplay, spec §5: the tint of the
 # light the surface bounces, "#rrggbb", default white = neutral), height (gameplay, spec §5
 # "Sunlight": how many cells tall it stands for sun shadows; default 1 if opaque, else 0),

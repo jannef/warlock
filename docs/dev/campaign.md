@@ -238,26 +238,22 @@ and the way down, the three floors and the moss bed on the third, the view snaps
 
 ## Līctūn, Cēaptūn's churchyard (#1258)
 
-`campaigns/ascmearc/levels/lictun.toml` (46×25, `kind = "outdoor"`, `item_level = 1`, no
+`campaigns/ascmearc/levels/lictun.toml` (52×27, `kind = "outdoor"`, `item_level = 1`, no
 danger, no shop), entered from the overworld's `g` (19, 32), beside the south road four cells
 out of Cēaptūn (overworld terrain `graveyard`, `†`), arriving on the road outside the gate (its
-`@`, (2, 12)), and, with no stairs, left by its edge back to that cell. A `drystone_wall` (new,
-shared: stone, seen past, not walked through) with a `gate_open` lych-gate on the road; fifty
-`gravestone`s (new, shared: `grave = true`, `∩` with a cross now and then by `variants`) in four
-rows of twelve and two beside the chapel; yews (`tree`) in the corners; a little stone chapel
-in the middle (a door between two sconces, stools for pews, the altar between two lamps). The
-level's `[graves]` table gives the stones their words: given names and bynames of Cēaptūn's
-folk (Old and Middle English), seven epitaphs with `{name}`, `{born}`, `{died}`, the `fallen`
-words (`Here lies {name}, {death}.`), `died = [1, 150]`, `age = [1, 80]` (`world/graves.rs`,
-spec §7 "Graves"). The keeper is the campaign creature type `sexton`
+`@`, (2, 13)), and left by its edge back to that cell. A `drystone_wall` (shared: stone, seen
+past, not walked through) with a `gate_open` lych-gate on the road; forty `grave_plot`s in four
+rows of ten and ten fixed `gravestone`s by the chapel (each its own legend entry with its
+`epitaph`: Cēaptūn's own dead, world-building material); yews (`tree`) in the corners; a little
+stone chapel in the middle (a door between two sconces, stools for pews, the altar between two
+lamps, a back door onto a flagged path whose end, `v`, is the way down to the crypts). The
+burial ground and its crypts (`lictun_crypt_01`, The Undercroft; `lictun_crypt_02`, Bānhūs) are
+`docs/dev/graves.md`'s. The keeper is the campaign creature type `sexton`
 (`data/creatures/sexton.toml`), npc `dudda`, **Old Dudda**, on a `route` round the chapel
-(`E30 S11 W30 N11`); his words are `data/dialogue/lictun.toml`: greetings, nine one-liners and
-five mutters ("grumbles") in the commoner register, no topic, no service, no quest. No dev
-scenario: tests and captures walk from the Ascmearc's start (`move:E*6 move:S*4 move:E
-descend`). Tests: `world/lictun_tests.rs` (the way in and out, the sexton alone and at peace,
-his line, fifty stones each cut, one in ten for the graveyard and never twice, a stranger's
-stone the same under any graveyard, the hash, a graveyard given late, a save, the view
-snapshot `lictun_arrival`, a replay verified without the graveyard), `ui/look.rs`
+(`E36 S10 W36 N10`, clear of every plot); his words are `data/dialogue/lictun.toml`: greetings,
+nine one-liners and five mutters ("grumbles") in the commoner register, no topic, no service, no
+quest. No dev scenario: tests and captures walk from the Ascmearc's start (`move:E*6 move:S*4
+move:E descend`). Tests: `world/lictun_tests.rs` (`docs/dev/graves.md` "Tests"), `ui/look.rs`
 (`a_gravestone_reads_its_inscription`).
 
 ## The wiki (`xtask/src/wiki/order.rs::campaigns`)

@@ -80,10 +80,13 @@ pub(super) struct TerrainSpec {
     /// terrain, solid but seen past, breaking (`hardness`), with a `sturdiness`.
     #[serde(default)]
     pub statue: bool,
-    /// A gravestone (spec §7 "Graves"; `world/graves.rs`): its level's `graves` cut an
-    /// inscription in it, which look mode reads.
+    /// A grave (spec §7 "Graves"; `world/graves.rs`): a gravestone, a sealed niche, a lidded
+    /// tomb, whose inscription look mode reads.
     #[serde(default)]
     pub grave: bool,
+    /// A place for one of the run's dead (spec §7 "Graves"; `content/burial.rs`): the grave
+    /// terrain it becomes when one is laid there.
+    pub burial: Option<String>,
     pub stairs: Option<StairsDir>,
     /// Light preset the terrain emits (torch sconce, glowing fungus, rune). Must be transparent.
     pub light: Option<String>,
@@ -247,9 +250,13 @@ pub struct TerrainDef {
     /// kick breaks it against as digging would ([`crate::door::kick_breaks`]); what it held is
     /// per-cell state (`LevelState::statues`). `None`: no statue.
     pub statue: Option<u8>,
-    /// Presentation-only: a gravestone (spec §7 "Graves"), which its level's `graves` cut an
-    /// inscription in as the level is made (`world/graves.rs`).
+    /// Presentation-only: a grave (spec §7 "Graves"), whose inscription (its legend's
+    /// `epitaph`, or one of the run's dead laid there) look mode reads (`world/graves.rs`).
     pub grave: bool,
+    /// Presentation-only: a place for one of the run's dead (spec §7 "Graves";
+    /// `content/burial.rs`), and the grave it becomes when one is laid there: the same in every
+    /// rule (checked at load).
+    pub burial: Option<TerrainId>,
     pub stairs: Option<StairsDir>,
     /// Light this terrain emits, if any.
     pub light: Option<LightId>,

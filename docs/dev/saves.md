@@ -147,15 +147,16 @@ pins it, and `the_experience_field_reads_and_defaults` pins `xp` beside it. The 
 Graveyard screen reads it whole, ordered by `graveyard::by_experience` (`xp`, then `level`, then
 `when`, all most first; ties the last written first; `docs/dev/screens.md`). The core never reads it: as a run begins (`Game::start`, New run) the app gives the run
 every entry, most recent first (`GraveyardStore::dead` → `World::set_graveyard`), each a
-`world::Fallen` with its name, race, `petrified` (`cause = "stone"`), and `death`, how and
+`world::Fallen` with its name, race, class, `petrified` (`cause = "stone"`), and `death`, how and
 where they died in the Graveyard screen's words (`graveyard_screen::death_words`, "Killed by a
 kobold in Fyrdelf 3, The Ascmearc"); kept in `WorldState::graveyard` so a resumed run sees the
-list it began with. Statues are named from the petrified (`docs/dev/mapgen.md`), gravestones
-from them all (#1258, `world/graves.rs`, spec §7 "Graves"; `set_graveyard` cuts the stones of
-the levels made already again). The list, `Statue::name`, and `LevelState::graves` are left out
-of the state hash (`world/hash.rs::unhashed_vec`/`unhashed_option`/`unhashed_map`, skipped
-while `WorldState::hash` serializes), so a replay verifies under any graveyard; saves keep them.
-`warlock-cli --fallen NAME:RACE[:stone],...` gives a dev run one.
+list it began with. Statues are named from the petrified (`docs/dev/mapgen.md`), and the rest
+are laid in Līctūn's graves and crypts (`docs/dev/graves.md`; `set_graveyard` lays them again on
+the levels made already). The list, `Statue::name`, `LevelState::graves`, and
+`LevelState::buried` are left out of the state hash (`world/hash.rs::unhashed_vec`/
+`unhashed_option`/`unhashed_map`, skipped while `WorldState::hash` serializes, and
+`hash.rs::levels`), so a replay verifies under any graveyard; saves keep them.
+`warlock-cli --fallen NAME:RACE[:CLASS][:stone],...` gives a dev run one.
 
 **File locations** (`crates/warlock/src/paths.rs`, the one place that decides; never call
 `ProjectDirs` elsewhere): `paths::init(&args, check_only)` runs first in `main`, before logging,

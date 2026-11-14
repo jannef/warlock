@@ -31,7 +31,8 @@ file's optional `arrival = "..."` line is said when the player arrives by stairs
 branch's on its first level, `Content::arrival`; a scenario's `arrival` once, as a run of it
 starts). A legend entry's `name` (and `note`) names the place on
 its cell (`docs/dev/overworld.md`, "Named places"); a vault's are stamped with it
-(`docs/dev/mapgen.md`). A vault's legend entry may roll `loot` when the level is generated: a
+(`docs/dev/mapgen.md`). A burial ground's `[burial]` table and its legend's `epitaph`,
+`statue_place`, and `burial_stairs` are `docs/dev/graves.md`'s. A vault's legend entry may roll `loot` when the level is generated: a
 grade (`loot = "magic"`: `any`, `magic`, or `rare`, anything of at least that) or a pool (`loot = {
 pool = ["armour", "rings"], grade = "magic" }`, `grade` optional, default `any`; `pool` one name or
 a list). A pool's names are item class ids or the `group`s of `data/item_classes.toml` (`weapons`,

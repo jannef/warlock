@@ -147,7 +147,12 @@ impl Replay {
     /// Plays every step, returning the final world and the first divergence, if any. Playing
     /// continues past a divergence so the state can still be inspected.
     pub fn play(&self, content: Arc<Content>) -> Result<(World, Option<Divergence>), WorldError> {
-        let mut world = self.start(content)?;
+        Ok(self.play_from(self.start(content)?))
+    }
+
+    /// Plays every step on `world`, a world [`Replay::start`] made (given the run's graveyard,
+    /// say: `World::set_graveyard`, which the hashes leave out), as [`Replay::play`] does.
+    pub fn play_from(&self, mut world: World) -> (World, Option<Divergence>) {
         let mut divergence = None;
         for (step, recorded) in self.steps.iter().enumerate() {
             world.apply(&recorded.action);
@@ -161,7 +166,7 @@ impl Replay {
                 });
             }
         }
-        Ok((world, divergence))
+        (world, divergence)
     }
 
     /// Plays the replay and verifies every hash.
