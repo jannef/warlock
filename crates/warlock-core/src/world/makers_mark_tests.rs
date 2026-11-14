@@ -11,8 +11,7 @@ use crate::content::{ContentFiles, Factor};
 use crate::magic::worked::Quality;
 use crate::object::Stack;
 use crate::skills::{SkillId, Trained};
-use crate::test_support::CONTENT;
-use crate::test_support::run as act;
+use crate::test_support::{CONTENT, run as act};
 use std::sync::LazyLock;
 
 /// A forge with its anvil at (5, 2), the player beside it at (4, 3).

@@ -7,8 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::combat::Category;
 use crate::content::ContentFiles;
-use crate::test_support::last as last_message;
-use crate::test_support::run;
+use crate::test_support::{last as last_message, run};
 
 const TERRAIN: &str = r##"
 [[terrain]]

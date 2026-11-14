@@ -5,8 +5,7 @@
 
 use super::*;
 use crate::content::SpellPurpose;
-use crate::test_support::CONTENT;
-use crate::test_support::run;
+use crate::test_support::{CONTENT, run};
 
 fn circles() -> World {
     World::new(CONTENT.clone(), "circles", None).expect("the circles hall")

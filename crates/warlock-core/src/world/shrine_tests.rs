@@ -6,8 +6,7 @@
 use super::*;
 use crate::alignment::{Alignment, Score};
 use crate::content::{ContentFiles, Regard, Shrine, StatusId};
-use crate::test_support::run;
-use crate::test_support::said_text as said;
+use crate::test_support::{run, said_text as said};
 
 /// A hall, 25 wide: the west part plain, the east part (x 14 on, walls included) a shrine of
 /// a side with its stone at `S`. A creature may stand at `k` inside it.

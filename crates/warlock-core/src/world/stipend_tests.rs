@@ -8,9 +8,7 @@ use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::replay::Replay;
 use crate::talent::TalentMods;
-use crate::test_support::CONTENT;
-use crate::test_support::run as act;
-use crate::test_support::texts;
+use crate::test_support::{CONTENT, run as act, texts};
 
 /// Beside the servant's cell (40, 27) in the Gæsthūs, east of it.
 const BESIDE: Pos = Pos::new(41, 27);

@@ -7,9 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::{ActionKind, ContentFiles, Reading, SpellPurpose, TalentEffect};
 use crate::talent::MagicEffect;
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{builtin, run, said};
 
 /// The pack: a, two scrolls of magic missile; b, one of haste; c, one of web; d, one of sleep;
 /// e, one of fireball.

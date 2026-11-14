@@ -11,9 +11,7 @@ use crate::action::parse_actions;
 use crate::content::{ContentFiles, TrapId};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
-use crate::test_support::builtin;
-use crate::test_support::run as act;
-use crate::test_support::texts;
+use crate::test_support::{builtin, run as act, texts};
 
 /// Godgifu, in the Gæsthūs: she gives the test quests.
 const GODGIFU: Pos = Pos::new(46, 26);

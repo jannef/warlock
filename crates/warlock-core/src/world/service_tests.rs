@@ -6,9 +6,7 @@ use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::stats::Stat;
-use crate::test_support::builtin;
-use crate::test_support::last_text as last_message;
-use crate::test_support::run;
+use crate::test_support::{builtin, last_text as last_message, run};
 
 /// The sister's words and services, added to the built-in dialogue.
 const SISTER: &str = r##"

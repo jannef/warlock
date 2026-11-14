@@ -9,9 +9,7 @@ use crate::character::CharacterSpec;
 use crate::content::{Role, Sign, SignActive};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::run;
-use crate::test_support::{last, said};
+use crate::test_support::{CONTENT as BUILTIN, last, run, said};
 
 const BLAZE: Action = Action::Gift(SignActive::Blaze, None);
 

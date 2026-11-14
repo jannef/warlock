@@ -10,8 +10,7 @@ use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
 use crate::noise::Act;
 use crate::replay::Replay;
-use crate::test_support::run;
-use crate::test_support::{last_text as last_message, texts};
+use crate::test_support::{last_text as last_message, run, texts};
 
 const TERRAIN: &str = r##"
 [[terrain]]

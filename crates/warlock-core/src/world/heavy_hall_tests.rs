@@ -6,9 +6,7 @@ use super::*;
 use crate::burden::{self, Burden};
 use crate::content::ContentFiles;
 use crate::object::Stack;
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said_text as said;
+use crate::test_support::{builtin, run, said_text as said};
 
 /// A hall, 30 wide, with a heavy hall over x 10 to 19.
 const HALL: &str = "\

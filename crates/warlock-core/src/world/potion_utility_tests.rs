@@ -6,8 +6,7 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::stats::Stat;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{run, said};
 
 /// The test content: a lit hall, the player at `@` carrying `pack`; `more` adds files.
 fn content_with(pack: &str, more: &[(&str, &str)]) -> Result<Content, String> {

@@ -7,8 +7,7 @@ use super::*;
 use crate::action::{Action, parse_actions};
 use crate::content::{ContentFiles, StairsDir};
 use crate::grid::Grid;
-use crate::test_support::run as act;
-use crate::test_support::texts;
+use crate::test_support::{run as act, texts};
 use std::collections::{BTreeSet, VecDeque};
 use std::sync::LazyLock;
 

@@ -9,9 +9,7 @@ use crate::content::{Affliction, ContentFiles, StatusId};
 use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::status::Effect;
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said as messages;
+use crate::test_support::{builtin, run, said as messages};
 
 const TERRAIN: &str = r##"
 [[terrain]]

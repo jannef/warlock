@@ -5,9 +5,7 @@
 use super::*;
 use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{CONTENT as BUILTIN, run, said};
 
 /// Every potion type, by id.
 const POTIONS: &[&str] = &[

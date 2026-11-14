@@ -11,9 +11,7 @@ use crate::combat::Strike;
 use crate::content::ContentFiles;
 use crate::hunger::Hunger;
 use crate::replay::Replay;
-use crate::test_support::builtin;
-use crate::test_support::last_text as last;
-use crate::test_support::run;
+use crate::test_support::{builtin, last_text as last, run};
 
 /// The built-in content with `map`: the player at `@` (a ration and a pick-axe under them), a
 /// creature of type `them` at `k`, a kobold walking west and back at `r`, a deer at `d`,

@@ -6,9 +6,7 @@ use super::*;
 use crate::character::CharacterSpec;
 use crate::rng::Rng;
 use crate::skills::Effect;
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{CONTENT as BUILTIN, run, said};
 use crate::time::HOUR;
 
 /// A human of `class` in the showcase.

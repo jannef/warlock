@@ -9,8 +9,7 @@ use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
-use crate::test_support::run as act;
-use crate::test_support::texts;
+use crate::test_support::{run as act, texts};
 use std::sync::LazyLock;
 
 /// Wat One-Eye's post, by the Gildhalle's far wall.

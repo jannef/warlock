@@ -11,8 +11,7 @@ use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Factor, Table};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{run, said};
 use std::sync::LazyLock;
 
 /// The bard's cap in this fixture.

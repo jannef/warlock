@@ -10,8 +10,7 @@ use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, StatusId};
 use crate::dice::Dice;
 use crate::stats::{PerStat, Stats};
-use crate::test_support::builtin;
-use crate::test_support::said_text as said;
+use crate::test_support::{builtin, said_text as said};
 use std::sync::LazyLock;
 
 const POND: &str = r#"

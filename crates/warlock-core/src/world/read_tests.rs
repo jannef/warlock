@@ -8,9 +8,7 @@ use crate::action::{ReadTarget, SpellShape, parse_actions};
 use crate::content::{ContentFiles, Reading, SpellPurpose};
 use crate::magic::{Affix, LootGrade, Magic, Rarity};
 use crate::replay::Replay;
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said as texts;
+use crate::test_support::{builtin, run, said as texts};
 
 // A training dummy takes a lot and never fights back.
 const DUMMY: &str = "[[creature]]\nid = \"dummy\"\nname = \"training dummy\"\nglyph = \"D\"\n\

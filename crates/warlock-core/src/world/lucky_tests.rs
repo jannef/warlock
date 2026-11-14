@@ -13,8 +13,7 @@ use crate::combat::{Blow, Strike};
 use crate::content::{Sign, StatusId};
 use crate::geom::{Dir, Pos};
 use crate::stats::{PerStat, Stat, Stats};
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::last;
+use crate::test_support::{CONTENT as BUILTIN, last};
 
 /// A human warrior in the showcase (seed 7) born under the `element` `animal` on day `day`, every
 /// score 14 and at full hit points; the run restored, so the gifts are granted as a load does.

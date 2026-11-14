@@ -8,9 +8,7 @@ use super::*;
 use crate::action::{Action, parse_actions};
 use crate::content::{ContentFiles, LevelKind, local_area_id};
 use crate::replay::Replay;
-use crate::test_support::builtin;
-use crate::test_support::last_text as last;
-use crate::test_support::run as act;
+use crate::test_support::{builtin, last_text as last, run as act};
 
 const TABLE: &str = r#"
 [[table]]

@@ -6,8 +6,7 @@
 
 use super::*;
 use crate::content::ContentFiles;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{run, said};
 
 /// Two rats for five minutes, three of them at once.
 const RATS: &str = r#"

@@ -8,9 +8,7 @@ use crate::content::{Content, ContentFiles, Invisible};
 use crate::geom::Pos;
 use crate::noise::SoundKind;
 use crate::perception::Perception;
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{CONTENT as BUILTIN, run, said};
 use std::sync::Arc;
 
 /// A room, the player at its west end, then a second room behind a wall (no way between them

@@ -13,8 +13,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::{PerStat, Stats};
-use crate::test_support::builtin;
-use crate::test_support::{said_text as said, texts};
+use crate::test_support::{builtin, said_text as said, texts};
 use std::sync::LazyLock;
 
 const ROOM: &str = "\

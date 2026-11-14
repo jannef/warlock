@@ -13,9 +13,7 @@ use crate::equipment;
 use crate::geom::Pos;
 use crate::stats::{PerStat, Stats};
 use crate::talent::{Candidate, Refusal, may_take};
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::last;
-use crate::test_support::run;
+use crate::test_support::{CONTENT as BUILTIN, last, run};
 
 /// The fourteen picks with the sign each asks for (`(animal, element)`, one of them set).
 const PICKS: [(&str, Option<&str>, Option<&str>); 14] = [

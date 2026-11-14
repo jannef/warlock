@@ -8,9 +8,7 @@ use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{ClassActive, Factor, ResourceId, percent_of};
 use crate::replay::Replay;
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::last;
-use crate::test_support::run;
+use crate::test_support::{CONTENT as BUILTIN, last, run};
 
 /// A human ranger in the showcase (seed 7), with their kit, at `level` with every choice spent.
 fn ranger(level: u8) -> World {

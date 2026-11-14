@@ -5,8 +5,7 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::object::LightMode;
-use crate::test_support::builtin;
-use crate::test_support::last as last_message;
+use crate::test_support::{builtin, last as last_message};
 
 fn showcase() -> World {
     let content = builtin();

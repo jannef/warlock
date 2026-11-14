@@ -9,8 +9,7 @@ use crate::content::Content;
 use crate::content::{ContentFiles, OutcomeDef, OutcomeKind, OutcomeTier};
 use crate::magic::Rarity;
 use crate::stats::{PerStat, Stat, Stats};
-use crate::test_support::builtin;
-use crate::test_support::said_text as said;
+use crate::test_support::{builtin, said_text as said};
 use std::sync::Arc;
 
 /// A room with a forgotten altar at (5, 2), the player beside it at (4, 3).

@@ -10,8 +10,7 @@ use crate::ability::{Ability, Unavailable};
 use crate::action::{Command, parse_actions};
 use crate::content::{CombatStance, ContentFiles, QuestKind};
 use crate::replay::Replay;
-use crate::test_support::run;
-use crate::test_support::texts;
+use crate::test_support::{run, texts};
 
 /// The wise woman and Eadgyth, added to the built-in dialogue.
 const DIALOGUE: &str = r##"

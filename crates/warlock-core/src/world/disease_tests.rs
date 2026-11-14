@@ -11,9 +11,7 @@ use crate::combat::{Blow, Strike};
 use crate::content::{ContentFiles, DiseaseId, StatusId};
 use crate::replay::Replay;
 use crate::stats::Stat;
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said as messages;
+use crate::test_support::{builtin, run, said as messages};
 use crate::time::DAY;
 
 const TERRAIN: &str = r##"

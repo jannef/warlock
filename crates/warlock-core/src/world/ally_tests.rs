@@ -6,9 +6,7 @@ use crate::action::{Command, parse_actions};
 use crate::content::{ContentFiles, Stance};
 use crate::noise::SoundKind;
 use crate::replay::Replay;
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{builtin, run, said};
 
 const TERRAIN: &str = r##"
 [[terrain]]

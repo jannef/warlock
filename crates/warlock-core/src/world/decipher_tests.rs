@@ -11,8 +11,7 @@ use crate::replay::Replay;
 use crate::rng::Rng;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::Stat;
-use crate::test_support::run;
-use crate::test_support::said_text as said;
+use crate::test_support::{run, said_text as said};
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 

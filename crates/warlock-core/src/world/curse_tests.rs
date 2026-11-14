@@ -8,9 +8,7 @@ use crate::ability::{Ability, Unavailable};
 use crate::alignment::Score;
 use crate::content::{ClassActive, ContentFiles, CreatureId, CreatureSpawn};
 use crate::dump::{self, Layer};
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said_text as said;
+use crate::test_support::{builtin, run, said_text as said};
 
 /// A hall, 30 wide, with a cursed room over x 10 to 19. Lit, so the player sees all of it.
 const HALL: &str = "\

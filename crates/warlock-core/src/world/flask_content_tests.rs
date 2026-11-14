@@ -6,9 +6,7 @@
 use super::fixture_factions::make_peace;
 use super::*;
 use crate::content::{ContentFiles, ZoneKind};
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said as texts;
+use crate::test_support::{builtin, run, said as texts};
 
 // A training dummy takes a lot and never fights back; a dead one is undead.
 const DUMMIES: &str = "[[creature]]\nid = \"dummy\"\nname = \"training dummy\"\nglyph = \"D\"\n\

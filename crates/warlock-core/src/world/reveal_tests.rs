@@ -10,9 +10,7 @@ use crate::action::parse_actions;
 use crate::content::{ContentFiles, RevealWhen};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
-use crate::test_support::builtin;
-use crate::test_support::run as act;
-use crate::test_support::texts;
+use crate::test_support::{builtin, run as act, texts};
 
 const OVERWORLD: &str = include_str!("../../../../assets/campaigns/showcase/levels/overworld.toml");
 const QUESTS: &str =

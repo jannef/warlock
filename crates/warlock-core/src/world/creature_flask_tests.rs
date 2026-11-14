@@ -7,9 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::{ContentFiles, ZoneKind};
 use crate::replay::Replay;
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said as texts;
+use crate::test_support::{builtin, run, said as texts};
 
 /// A lit hall of `map` (`@` the player, `k` a kobold alchemist, `g` a goblin firebomber, `c` a
 /// cult chymist), the player with plenty of hit points.

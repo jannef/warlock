@@ -11,9 +11,7 @@ use crate::geom::{Dir, Pos};
 use crate::magic::{Affix, Magic, Rarity};
 use crate::object::Stack;
 use crate::replay::Replay;
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{CONTENT as BUILTIN, run, said};
 use std::sync::Arc;
 
 /// A kitted run of `spec` in the courtyard.

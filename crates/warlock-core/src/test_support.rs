@@ -21,6 +21,11 @@ pub(crate) fn builtin() -> Arc<Content> {
     CONTENT.clone()
 }
 
+/// Scenario `scenario` of the built-in content, at its own seed.
+pub(crate) fn world(scenario: &str) -> World {
+    World::new(builtin(), scenario, None).expect("world")
+}
+
 /// Applies action text (`move:N wait*3`) to `world`, returning each action's outcome.
 pub(crate) fn run(world: &mut World, actions: &str) -> Vec<Outcome> {
     (parse_actions(actions).expect("actions").iter())

@@ -6,9 +6,7 @@ use super::patron::{self, Patron};
 use super::*;
 use crate::character::CharacterSpec;
 use crate::magic::worked::Quality;
-use crate::test_support::CONTENT;
-use crate::test_support::run as act;
-use crate::test_support::texts;
+use crate::test_support::{CONTENT, run as act, texts};
 
 /// The patron's corner of the Gæsthūs, and the cell west of it.
 const CORNER: Pos = Pos::new(50, 23);

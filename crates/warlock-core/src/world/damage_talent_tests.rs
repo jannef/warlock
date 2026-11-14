@@ -10,9 +10,7 @@ use crate::damage::{Damage, ResistanceWord};
 use crate::equipment::{free_slot, slots_taken};
 use crate::object::Stack;
 use crate::stats::{PerStat, Stats};
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::last;
-use crate::test_support::run;
+use crate::test_support::{CONTENT as BUILTIN, last, run};
 
 /// A human warrior in the showcase, every score 14, holding nothing.
 fn world() -> World {

@@ -10,9 +10,7 @@ use crate::content::{ActionKind, CreatureSpawn, StatusId};
 use crate::geom::Pos;
 use crate::perception::Perception;
 use crate::replay::Replay;
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::last;
-use crate::test_support::run;
+use crate::test_support::{CONTENT as BUILTIN, last, run};
 
 const ME: Pos = Pos::new(7, 15);
 

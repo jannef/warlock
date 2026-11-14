@@ -10,8 +10,7 @@ use crate::character::CharacterSpec;
 use crate::combat::Strike;
 use crate::content::{Build, ClassActive, ContentFiles, ResourceId};
 use crate::replay::Replay;
-use crate::test_support::last;
-use crate::test_support::run;
+use crate::test_support::{last, run};
 use crate::time::Duration;
 
 // A lit hall without creatures; a den with a kobold east of the player.

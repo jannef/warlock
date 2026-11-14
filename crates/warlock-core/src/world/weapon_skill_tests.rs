@@ -4,8 +4,7 @@
 //! to-hit, damage, threat, Defence, and cost, starting ranks come from race and class, and all of
 //! it is saved and replayed.
 
-use crate::test_support::said as messages;
-use crate::test_support::{CONTENT as BUILTIN, builtin};
+use crate::test_support::{CONTENT as BUILTIN, builtin, said as messages};
 /// The test creatures name no level: level 1 (spec §8 "Experience").
 const UNLEVELLED: u32 = 1;
 use super::*;

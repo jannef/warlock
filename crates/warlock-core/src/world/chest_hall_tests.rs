@@ -5,9 +5,7 @@
 
 use super::*;
 use crate::chest::ChestState;
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said_text as said;
+use crate::test_support::{builtin, run, said_text as said};
 
 const COFFER: Pos = Pos::new(4, 4);
 const LOCKED: Pos = Pos::new(8, 4);

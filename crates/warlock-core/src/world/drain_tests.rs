@@ -10,9 +10,7 @@ use crate::combat::{Blow, Strike};
 use crate::content::{Affliction, ContentFiles, Drain};
 use crate::replay::Replay;
 use crate::stats::{DRAIN_FLOOR, PerStat, Stat, Stats};
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{CONTENT as BUILTIN, run, said};
 
 const TERRAIN: &str = r##"
 [[terrain]]

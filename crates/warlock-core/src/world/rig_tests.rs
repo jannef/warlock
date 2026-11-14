@@ -10,9 +10,7 @@ use crate::content::{ClassActive, ContentFiles, Trap};
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::rng::Rng;
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said as texts;
+use crate::test_support::{builtin, run, said as texts};
 
 /// A lit hall on the built-in content, the player at `@` as a human craftsperson with
 /// Trapwright, every score 10, born under no sign (no gift of theirs saves them); `r` a rat.

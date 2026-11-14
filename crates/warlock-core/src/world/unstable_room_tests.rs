@@ -4,8 +4,7 @@
 
 use super::*;
 use crate::content::ContentFiles;
-use crate::test_support::builtin;
-use crate::test_support::said_text as said;
+use crate::test_support::{builtin, said_text as said};
 
 /// A hall, 30 wide, with an unstable room over x 10 to 19; `r` is a giant rat inside it.
 const HALL: &str = "\

@@ -6,8 +6,7 @@
 use super::split::Split;
 use super::*;
 use crate::content::{ActionKind, Affliction, ContentFiles, StatusId};
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{run, said};
 
 /// A breeder of its own kind at no cost, for the self-pool.
 const BREEDER: &str = r##"

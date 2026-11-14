@@ -12,8 +12,7 @@ use crate::magic::{Affix, Magic, Rarity};
 use crate::noise::Act;
 use crate::replay::Replay;
 use crate::stats::Stat;
-use crate::test_support::builtin;
-use crate::test_support::run;
+use crate::test_support::{builtin, run};
 
 // A lit room: the player, and a kobold behind a door.
 const LEVEL: &str = r##"

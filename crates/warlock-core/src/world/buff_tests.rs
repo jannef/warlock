@@ -12,8 +12,7 @@ use crate::equipment;
 use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::status::Effect;
-use crate::test_support::run;
-use crate::test_support::said as messages;
+use crate::test_support::{run, said as messages};
 
 /// Statuses for the tests, after the built-in ones: a buff, a hex, a slow, one that blocks, and
 /// one that wears off or is cured, followed by a cooldown.

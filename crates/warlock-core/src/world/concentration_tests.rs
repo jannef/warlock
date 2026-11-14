@@ -5,8 +5,7 @@ use super::*;
 use crate::character::CharacterSpec;
 use crate::skills::Skills;
 use crate::stats::{PerStat, Stats};
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::run;
+use crate::test_support::{CONTENT as BUILTIN, run};
 
 /// An elf wizard in the showcase, every score 14, trained in nothing but Concentration at
 /// `value` (untrained with `None`), with a pool of `base` before Concentration, full.

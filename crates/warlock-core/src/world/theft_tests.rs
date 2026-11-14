@@ -7,8 +7,7 @@ use crate::character::CharacterSpec;
 use crate::content::{CreatureSpawn, Takes};
 use crate::geom::Pos;
 use crate::object::Stack;
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::last;
+use crate::test_support::{CONTENT as BUILTIN, last};
 
 /// A kitted human warrior in the showcase (seed 7), alone on the level, carrying only what they
 /// wear and wield, in an open room of floor 21 by 11 cells walled round, its west end at the

@@ -12,8 +12,7 @@ use crate::magic::{Aspect, Worked};
 use crate::object::Stack;
 use crate::rng::Rng;
 use crate::skills::{SkillId, Trained};
-use crate::test_support::builtin;
-use crate::test_support::said_text as said;
+use crate::test_support::{builtin, said_text as said};
 use std::sync::LazyLock;
 
 /// A forge with its anvil at (5, 2), the player beside it at (4, 3).

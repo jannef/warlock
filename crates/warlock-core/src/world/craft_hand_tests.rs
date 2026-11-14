@@ -8,8 +8,7 @@ use super::*;
 use crate::content::{ContentFiles, RecipeId};
 use crate::object::Stack;
 use crate::skills::{SkillId, Trained};
-use crate::test_support::last_text as said;
-use crate::test_support::run as apply;
+use crate::test_support::{last_text as said, run as apply};
 
 /// A forge with its anvil at (5, 2) and the player beside it at (4, 3).
 const ROOM: &str = "\

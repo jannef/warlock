@@ -12,8 +12,7 @@ use crate::hunger::Hunger;
 use crate::replay::Replay;
 use crate::rot::Stage as Age;
 use crate::stats::Stat;
-use crate::test_support::run;
-use crate::test_support::texts;
+use crate::test_support::{run, texts};
 
 /// The built-in hunger file, to edit for a test.
 const HUNGER: &str = include_str!("../../../../assets/data/hunger.toml");

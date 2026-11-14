@@ -5,8 +5,7 @@
 use super::*;
 use crate::ability::Ability;
 use crate::content::{ContentFiles, OutcomeDef, OutcomeKind, OutcomeTable};
-use crate::test_support::builtin;
-use crate::test_support::said_text as said;
+use crate::test_support::{builtin, said_text as said};
 
 /// A room with a spring at (5, 2), the player beside it at (4, 3), and at `k` a kobold (also
 /// beside it), when asked for.

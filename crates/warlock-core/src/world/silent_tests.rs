@@ -5,8 +5,7 @@
 use super::*;
 use crate::action::Rest;
 use crate::content::{ActionKind, ContentFiles, StatusId};
-use crate::test_support::run;
-use crate::test_support::{last_text as last, said_text as said};
+use crate::test_support::{last_text as last, run, said_text as said};
 use crate::time::Duration;
 
 /// A hall, 25 wide: the west part plain, the east part (x 14 on, walls included) a silent vault

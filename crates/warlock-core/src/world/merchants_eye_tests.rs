@@ -8,8 +8,7 @@ use crate::action::parse_actions;
 use crate::content::{ActionKind, ClassActive, ContentFiles, Rarity};
 use crate::item_list::ItemList;
 use crate::magic::{Affix, Magic};
-use crate::test_support::last;
-use crate::test_support::run;
+use crate::test_support::{last, run};
 
 const EYE: ClassActive = ClassActive::MerchantsEye;
 

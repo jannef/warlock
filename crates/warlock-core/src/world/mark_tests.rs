@@ -12,8 +12,7 @@ use crate::dump::{self, Layer};
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stats};
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::run;
+use crate::test_support::{CONTENT as BUILTIN, run};
 
 /// A human thief in the showcase (seed 7), with their kit, every score 14, hit points to spare.
 fn thief() -> World {

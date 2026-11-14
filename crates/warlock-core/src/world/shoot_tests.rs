@@ -7,8 +7,7 @@ use crate::action::{AttackKind, MissileEnd, Positions, parse_actions};
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::sight::{self, LineOfSight};
-use crate::test_support::last as last_message;
-use crate::test_support::run;
+use crate::test_support::{last as last_message, run};
 
 const TERRAIN: &str = r##"
 [[terrain]]

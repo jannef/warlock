@@ -8,9 +8,7 @@ use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
 use crate::magic::LootGrade;
 use crate::replay::Replay;
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said as texts;
+use crate::test_support::{builtin, run, said as texts};
 
 /// A lit hall, the player carrying: a, three scrolls of fireball; b, two of lightning; c, two of
 /// identify; d, a sealed letter (no reading).

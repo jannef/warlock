@@ -16,9 +16,7 @@ use crate::object::Stack;
 use crate::rng::Rng;
 use crate::stats::{PerStat, Stats};
 use crate::talent::{self, Candidate};
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{CONTENT as BUILTIN, run, said};
 
 /// A human warrior in the showcase, every score 14.
 fn world() -> World {

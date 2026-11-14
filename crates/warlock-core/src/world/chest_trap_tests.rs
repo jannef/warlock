@@ -16,8 +16,7 @@ use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::rng::Rng;
 use crate::skills::{SkillId, Trained};
-use crate::test_support::run;
-use crate::test_support::said_text as said;
+use crate::test_support::{run, said_text as said};
 
 /// A lit hall: the player at the west end of the walk (row 2), trapped chests along row 1: a
 /// coffer with a hidden arrow trap holding bread (`A`, x 1), a coffer with a fireball trap

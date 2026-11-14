@@ -14,8 +14,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stats};
-use crate::test_support::run as apply;
-use crate::test_support::{last_text as last, said_text as said, texts};
+use crate::test_support::{last_text as last, run as apply, said_text as said, texts};
 use std::sync::LazyLock;
 
 const ROOM: &str = "\

@@ -7,9 +7,7 @@ use crate::action::Event;
 use crate::content::ContentFiles;
 use crate::dump::{Layer, layer_rows};
 use crate::object::Stack;
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said_text as said;
+use crate::test_support::{builtin, run, said_text as said};
 use std::collections::BTreeSet;
 
 /// A hall, 31 wide, fully lit: the east part (x 14 to 24, walls included) a hall of mirrors with

@@ -8,9 +8,7 @@ use crate::content::Generator;
 use crate::dump::{self, Layer};
 use crate::mapgen;
 use crate::replay::Replay;
-use crate::test_support::CONTENT;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{CONTENT, run, said};
 use proptest::prelude::*;
 
 const BRANCH: &str = "grundleas";

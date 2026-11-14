@@ -7,9 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
-use crate::test_support::builtin;
-use crate::test_support::run as act;
-use crate::test_support::texts;
+use crate::test_support::{builtin, run as act, texts};
 
 /// Ūtgang's way in on the Ascmearc, on the volcano's south foot.
 const UTGANG: Pos = Pos::new(103, 17);

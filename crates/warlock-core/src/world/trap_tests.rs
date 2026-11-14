@@ -5,9 +5,7 @@ use super::*;
 use crate::action::{MissileEnd, SpellShape, parse_actions};
 use crate::content::{ContentFiles, TrapId};
 use crate::replay::Replay;
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said as texts;
+use crate::test_support::{builtin, run, said as texts};
 
 const TERRAIN: &str = r##"
 [[terrain]]

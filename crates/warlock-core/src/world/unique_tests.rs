@@ -9,8 +9,7 @@ use crate::combat::{Blow, Strike};
 use crate::content::{Affliction, ContentFiles, OnHit, Power, StatusId};
 use crate::magic::describe::{self, LineKind};
 use crate::magic::{Affix, Rarity};
-use crate::test_support::last as last_message;
-use crate::test_support::run;
+use crate::test_support::{last as last_message, run};
 
 // A dark room: the player, and a giant rat three cells off (no light of its own).
 const LEVEL: &str = r##"

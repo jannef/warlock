@@ -11,8 +11,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::{LevelKind, Stance};
 use crate::replay::Replay;
-use crate::test_support::builtin as content;
-use crate::test_support::last_text as last;
+use crate::test_support::{builtin as content, last_text as last};
 
 /// The town's square, where the dev scenario starts, and its cell on the overworld.
 const SQUARE: Pos = Pos::new(46, 17);

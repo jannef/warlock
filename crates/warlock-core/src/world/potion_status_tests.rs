@@ -6,8 +6,7 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::stats::Stat;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{run, said};
 
 /// The test content: a dark hall (no light at all), the player at `@` carrying `pack`; `more`
 /// adds or replaces files.

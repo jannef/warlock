@@ -7,8 +7,7 @@ use crate::ability::{Ability, Unavailable};
 use crate::character::{CharacterSpec, RememberedFamiliar};
 use crate::content::{ClassActive, Content, ContentFiles};
 use crate::perception::Perception;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{run, said};
 use crate::time::Duration;
 use std::sync::{Arc, LazyLock};
 

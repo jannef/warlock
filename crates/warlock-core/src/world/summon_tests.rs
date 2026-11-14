@@ -4,9 +4,7 @@
 
 use super::*;
 use crate::content::ContentFiles;
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{builtin, run, said};
 
 const TERRAIN: &str = r##"
 [[terrain]]

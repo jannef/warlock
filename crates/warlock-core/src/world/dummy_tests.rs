@@ -7,8 +7,7 @@ use super::*;
 use crate::action::AttackKind;
 use crate::content::WeaponSkillId;
 use crate::object::Stack;
-use crate::test_support::CONTENT;
-use crate::test_support::run as act;
+use crate::test_support::{CONTENT, run as act};
 
 /// The dummy at the west end of the shooting lane, and one of the three below it.
 const LANE: Pos = Pos::new(73, 17);

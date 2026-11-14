@@ -6,8 +6,7 @@
 use super::*;
 use crate::action::Positions;
 use crate::content::{ContentFiles, SpecialRoom};
-use crate::test_support::builtin;
-use crate::test_support::said_text as said;
+use crate::test_support::{builtin, said_text as said};
 
 /// A lit hall, its east part (x 7 on, walls included) a tempting hoard with one door, closed
 /// (`+`, at (7, 3)), and an open one (`'`, at (7, 1)). Daggers lie at `a` and `b` inside. A wall

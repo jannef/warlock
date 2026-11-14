@@ -8,9 +8,7 @@ use crate::action::AttackKind;
 use crate::character::CharacterSpec;
 use crate::content::{Content, ContentFiles, Stance};
 use crate::perception::Perception;
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{CONTENT as BUILTIN, run, said};
 use crate::world::stance_between;
 use std::sync::{Arc, LazyLock};
 

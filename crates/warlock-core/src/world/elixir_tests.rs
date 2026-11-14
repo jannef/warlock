@@ -5,8 +5,7 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::stats::{PerStat, Stat, Stats};
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{run, said};
 
 /// The six elixirs, by id, with the stat each raises.
 const ELIXIRS: &[(&str, Stat)] = &[

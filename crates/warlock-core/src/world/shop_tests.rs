@@ -9,8 +9,7 @@ use crate::object::Stack;
 use crate::perception::Sale;
 use crate::replay::Replay;
 use crate::stats::{Stat, Stats};
-use crate::test_support::builtin as content;
-use crate::test_support::last_text as last;
+use crate::test_support::{builtin as content, last_text as last};
 
 /// From the courtyard's start: east along the path, the purse in the gazebo (a), the scroll of
 /// light beside it (b), then along the flagstones to the hut, opening its door, and in.

@@ -13,8 +13,7 @@ use crate::replay::Replay;
 use crate::rng::Rng;
 use crate::skills::{Effect, SkillId};
 use crate::stats::Stat;
-use crate::test_support::run;
-use crate::test_support::said as texts;
+use crate::test_support::{run, said as texts};
 use crate::time::Duration;
 
 /// A lit hall on the built-in content, the player at `@` as `character` (`RACE,GENDER,CLASS`):

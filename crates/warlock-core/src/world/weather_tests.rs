@@ -10,8 +10,7 @@ use crate::fov::radius2;
 use crate::light::Sun;
 use crate::perception::Emitter;
 use crate::replay::Replay;
-use crate::test_support::CONTENT;
-use crate::test_support::texts;
+use crate::test_support::{CONTENT, texts, world};
 use crate::weather::{Clouds, Weather, weather_at};
 
 /// From the showcase start to the courtyard, up the stairs nook's `<`.
@@ -29,10 +28,6 @@ fn run(world: &mut World, text: &str) {
             world.apply(&action);
         }
     }
-}
-
-fn world(scenario: &str) -> World {
-    World::new(CONTENT.clone(), scenario, None).expect("scenario starts")
 }
 
 fn climate() -> &'static Climate {

@@ -12,9 +12,7 @@ use crate::content::{ContentFiles, Factor, ODDS_SCALE, StatUse};
 use crate::dump::{self, Layer};
 use crate::skills::Use;
 use crate::stats::{PerStat, Stat, Stats};
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{CONTENT as BUILTIN, run, said};
 use crate::time::{DAWN, DAY};
 use std::sync::LazyLock;
 

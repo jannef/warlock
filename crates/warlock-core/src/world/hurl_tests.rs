@@ -6,8 +6,7 @@ use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::content::ContentFiles;
 use crate::replay::Replay;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{run, said};
 
 const TERRAIN: &str = r##"
 [[terrain]]

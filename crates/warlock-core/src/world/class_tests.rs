@@ -13,8 +13,7 @@ use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::rng::Rng;
 use crate::stats::{PerStat, Stat, Stats};
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::said;
+use crate::test_support::{CONTENT as BUILTIN, said};
 
 /// A human of `class` in the showcase.
 fn world(class: &str) -> World {

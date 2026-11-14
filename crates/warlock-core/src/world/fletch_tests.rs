@@ -14,8 +14,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::{PerStat, Stats};
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::last_text as last_message;
+use crate::test_support::{CONTENT as BUILTIN, last_text as last_message};
 use crate::world::{CraftStepKind, RecipeLack};
 use std::sync::LazyLock;
 

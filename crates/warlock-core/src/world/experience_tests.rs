@@ -8,9 +8,7 @@ use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, StairsDir};
 use crate::replay::Replay;
 use crate::stats::Stat;
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{CONTENT as BUILTIN, run, said};
 
 const TERRAIN: &str = r##"
 [[terrain]]

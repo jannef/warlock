@@ -8,8 +8,7 @@ use super::*;
 use crate::ability::Ability;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Sign, SignActive};
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::run;
+use crate::test_support::{CONTENT as BUILTIN, run};
 use crate::time::{Duration, GameTime};
 use std::sync::LazyLock;
 

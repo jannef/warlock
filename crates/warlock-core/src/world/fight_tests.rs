@@ -7,9 +7,7 @@ use crate::action::{AttackKind, parse_actions};
 use crate::combat::{Category, Health, Strike};
 use crate::content::{ContentFiles, Role};
 use crate::replay::Replay;
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said as messages;
+use crate::test_support::{builtin, run, said as messages};
 
 #[test]
 fn messages_say_what_came_of_an_attack_without_numbers() {

@@ -4,9 +4,7 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::noise::{self, Act};
-use crate::test_support::builtin;
-use crate::test_support::last_text as last_message;
-use crate::test_support::run as apply;
+use crate::test_support::{builtin, last_text as last_message, run as apply};
 
 /// A hall, 25 wide: the west part plain, the east part (walls included) the special room
 /// `effect`. The player stands in the plain part unless the map puts them elsewhere.

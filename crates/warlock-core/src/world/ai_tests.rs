@@ -6,9 +6,7 @@ use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::content::{ContentFiles, Stance};
 use crate::replay::Replay;
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said as messages;
+use crate::test_support::{builtin, run, said as messages};
 use std::sync::LazyLock;
 
 const TERRAIN: &str = r##"

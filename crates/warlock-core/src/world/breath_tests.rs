@@ -5,8 +5,7 @@
 use super::*;
 use crate::action::{AttackKind, Event, parse_actions};
 use crate::content::ContentFiles;
-use crate::test_support::builtin;
-use crate::test_support::said;
+use crate::test_support::{builtin, said};
 
 const TERRAIN: &str = r##"
 [[terrain]]

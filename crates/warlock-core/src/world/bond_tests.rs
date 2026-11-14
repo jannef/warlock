@@ -9,8 +9,7 @@ use crate::content::{Content, ContentFiles};
 use crate::geom::Pos;
 use crate::perception::Perception;
 use crate::sight::{self, LineOfSight};
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::run;
+use crate::test_support::{CONTENT as BUILTIN, run};
 use std::sync::Arc;
 
 /// Two dim rooms, a wall between them and a closed door in it: the player in the west room

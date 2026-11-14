@@ -11,9 +11,7 @@ use crate::content::{ActionKind, ClassActive, ContentFiles};
 use crate::dump::{self, Layer};
 use crate::magic::describe::{self, LineKind};
 use crate::replay::Replay;
-use crate::test_support::builtin;
-use crate::test_support::last;
-use crate::test_support::run;
+use crate::test_support::{builtin, last, run};
 use std::sync::LazyLock;
 
 const SPIRIT: ClassActive = ClassActive::SpiritWeapon;

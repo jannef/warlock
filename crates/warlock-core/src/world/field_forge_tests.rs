@@ -9,8 +9,7 @@ use crate::action::parse_actions;
 use crate::beside::{Beside, Target};
 use crate::content::{ClassActive, ContentFiles, Offer, RecipeUse};
 use crate::object::Stack;
-use crate::test_support::last_text as last;
-use crate::test_support::run;
+use crate::test_support::{last_text as last, run};
 
 const FORGE: ClassActive = ClassActive::FieldForge;
 

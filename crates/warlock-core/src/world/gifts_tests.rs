@@ -11,9 +11,7 @@ use crate::content::{Sign, SignActive, StatusId};
 use crate::damage::Damage;
 use crate::geom::Pos;
 use crate::stats::{PerStat, Stats};
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::last;
-use crate::test_support::run;
+use crate::test_support::{CONTENT as BUILTIN, last, run};
 
 /// A human warrior in `scenario` (seed 7), born under the `element` `animal` (`None`: under no
 /// sign), every score 14; the run restored, so the gifts are granted as a load grants them.

@@ -6,8 +6,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
-use crate::test_support::builtin;
-use crate::test_support::run;
+use crate::test_support::{builtin, run};
 
 // Round numbers: resting brings mana back three times as fast; dazed halves the pace; a hex
 // drains 2 mana a tick (every 30 s a degree) and stops it, easing a degree a minute; befuddled

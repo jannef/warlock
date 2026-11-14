@@ -10,8 +10,7 @@ use super::quick_leave::QUICK_LEAVE_REFUSED;
 use super::*;
 use crate::action::parse_actions;
 use crate::content::Stance;
-use crate::test_support::builtin as content;
-use crate::test_support::last_text as last;
+use crate::test_support::{builtin as content, last_text as last};
 
 /// A run in the forest's local area, the player on a free, walkable cell of its west edge.
 fn at_the_edge() -> World {

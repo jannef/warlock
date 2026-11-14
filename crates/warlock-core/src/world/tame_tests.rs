@@ -11,8 +11,7 @@ use crate::geom::Dir;
 use crate::replay::Replay;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::Stat;
-use crate::test_support::builtin;
-use crate::test_support::texts;
+use crate::test_support::{builtin, texts};
 use std::sync::Arc;
 
 /// A lit nook: the player below a beast walled in on three sides, so it cannot wander off.

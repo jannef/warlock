@@ -11,8 +11,7 @@ use crate::perception::Freshness;
 use crate::rng::Rng;
 use crate::stats::{PerStat, Stats};
 use crate::talent::{OffenceEffect, VigourEffect};
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::said;
+use crate::test_support::{CONTENT as BUILTIN, said};
 use crate::time::Duration;
 
 /// A human warrior in `scenario` born under the `element` `animal` (`None`: under no sign), the

@@ -7,9 +7,7 @@
 use super::*;
 use crate::action::AttackKind;
 use crate::content::ContentFiles;
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{builtin, run, said};
 
 /// The pack: a, a wand of magic missile; b, a wand of scorching ray; c, a crossbow; d, a
 /// scroll of identify; e, a wand of fireball.

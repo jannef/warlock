@@ -9,9 +9,7 @@ use crate::content::ContentFiles;
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::rot::{self, Stage as Age};
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::texts;
+use crate::test_support::{builtin, run, texts};
 
 /// The built-in hunger file, to edit for a test.
 const HUNGER: &str = include_str!("../../../../assets/data/hunger.toml");

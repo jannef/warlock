@@ -12,8 +12,7 @@ use crate::dump::{self, Layer};
 use crate::noise::{self, Act};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stat, Stats};
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{run, said};
 use std::sync::LazyLock;
 
 /// The built-in content without the class tables (`world/class_tests.rs` has those): the

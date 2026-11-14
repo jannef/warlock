@@ -6,8 +6,7 @@ use super::fight::Harm;
 use super::*;
 use crate::action::Event;
 use crate::content::ContentFiles;
-use crate::test_support::run;
-use crate::test_support::texts;
+use crate::test_support::{run, texts};
 
 /// The player stands on stairs down and up (below): `k` beside them, `f` two cells off.
 const TOP: &str = "\

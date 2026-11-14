@@ -9,9 +9,7 @@ use crate::combat;
 use crate::content::{ContentFiles, TerrainId};
 use crate::perception::CellView;
 use crate::replay::Replay;
-use crate::test_support::builtin;
-use crate::test_support::run;
-use crate::test_support::said as texts;
+use crate::test_support::{builtin, run, said as texts};
 
 /// A hall on the built-in content, the player at `@` as `character` (`RACE,GENDER,CLASS`); `S` is
 /// a secret door anyone finds (difficulty 1: all but a natural 2), `H` one nobody does (50: only a

@@ -8,9 +8,7 @@ use super::*;
 use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, StatDeed, TrapId};
 use crate::stats::{PerStat, Stat, Stats};
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{CONTENT as BUILTIN, run, said};
 use crate::time::DAWN;
 use std::sync::LazyLock;
 

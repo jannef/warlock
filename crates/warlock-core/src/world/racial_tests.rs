@@ -9,8 +9,7 @@ use crate::combat::Category;
 use crate::content::{ContentFiles, Role};
 use crate::stats::{PerStat, Stats};
 use crate::talent;
-use crate::test_support::CONTENT;
-use crate::test_support::run;
+use crate::test_support::{CONTENT, run};
 
 fn spec(text: &str) -> CharacterSpec {
     text.parse().expect("a character")

@@ -8,9 +8,7 @@ use crate::ability::{Ability, Source};
 use crate::character::CharacterSpec;
 use crate::stats::{PerStat, Stat, Stats};
 use crate::talent::TalentMods;
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::last;
-use crate::test_support::run;
+use crate::test_support::{CONTENT as BUILTIN, last, run};
 
 /// An elf wizard in the showcase, every score 14.
 fn world() -> World {

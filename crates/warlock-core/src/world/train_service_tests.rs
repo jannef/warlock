@@ -7,8 +7,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::replay::Replay;
-use crate::test_support::last_text as last_message;
-use crate::test_support::run;
+use crate::test_support::{last_text as last_message, run};
 
 /// The teacher's words and service, added to the built-in dialogue.
 const TEACHER: &str = r##"

@@ -7,8 +7,7 @@ use super::*;
 use crate::content::ContentFiles;
 use crate::skills::{SkillId, Trained};
 use crate::stats::Stat;
-use crate::test_support::run;
-use crate::test_support::texts;
+use crate::test_support::{run, texts};
 
 // A lit hall: the player by a pick-axe and a scroll of restoration, a kobold east of them on a
 // dagger, a deer far off, and a basilisk behind the wall (B) for the gaze.

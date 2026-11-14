@@ -10,8 +10,7 @@ use crate::content::{Factor, LevelKind, SpellId, StatusId};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stat, Stats};
-pub(super) use crate::test_support::run;
-pub(super) use crate::test_support::said;
+pub(super) use crate::test_support::{run, said};
 use std::sync::LazyLock;
 
 static BUILTIN: LazyLock<Arc<Content>> = LazyLock::new(|| Arc::new(quiet()));

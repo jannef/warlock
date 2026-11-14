@@ -9,9 +9,7 @@ use crate::alignment::{Alignment, Band, Score};
 use crate::content::{ClassActive, ContentFiles, Sign};
 use crate::object::Stack;
 use crate::replay::Replay;
-use crate::test_support::builtin;
-use crate::test_support::last_text as last;
-use crate::test_support::run;
+use crate::test_support::{builtin, last_text as last, run};
 
 const TERRAIN: &str = r##"
 [[terrain]]

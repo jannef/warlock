@@ -11,8 +11,7 @@ use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{SkillId, Trained};
 use crate::stats::Stat;
-use crate::test_support::builtin;
-use crate::test_support::run as apply;
+use crate::test_support::{builtin, run as apply};
 
 /// A cave with glowing fungus north-east of the player.
 const ROOM: &str = "\

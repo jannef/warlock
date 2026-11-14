@@ -9,9 +9,7 @@ use crate::combat::Category;
 use crate::content::{Content, ContentFiles, Stance};
 use crate::geom::Dir;
 use crate::replay::Replay;
-use crate::test_support::CONTENT as BUILTIN;
-use crate::test_support::run;
-use crate::test_support::said;
+use crate::test_support::{CONTENT as BUILTIN, run, said};
 use crate::world::{Order, stance_between};
 use std::sync::Arc;
 

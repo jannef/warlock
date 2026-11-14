@@ -5,8 +5,7 @@
 
 use super::*;
 use crate::content::ContentFiles;
-use crate::test_support::builtin;
-use crate::test_support::run;
+use crate::test_support::{builtin, run};
 use crate::time::GameTime;
 
 /// A lit hall, 30 wide; its east part (x 10 on) the haunted room. A wall at x 18, open at its

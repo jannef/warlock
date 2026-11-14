@@ -10,8 +10,7 @@ use crate::ice::{self, Shock};
 use crate::perception::CellView;
 use crate::replay::Replay;
 use crate::temperature::{self, Temperature};
-use crate::test_support::run;
-use crate::test_support::texts;
+use crate::test_support::{run, texts};
 use std::sync::LazyLock;
 
 /// A lit pond below freezing: thin ice (t, 20 mm), ice (i, 50 mm), thick ice (T, 200 mm), open

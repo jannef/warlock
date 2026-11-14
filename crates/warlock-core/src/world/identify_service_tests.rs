@@ -7,8 +7,7 @@ use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::magic::{Affix, Magic, Rarity};
 use crate::replay::Replay;
-use crate::test_support::run;
-use crate::test_support::texts;
+use crate::test_support::{run, texts};
 
 /// The appraiser's words and service, added to the built-in dialogue.
 const APPRAISER: &str = r##"

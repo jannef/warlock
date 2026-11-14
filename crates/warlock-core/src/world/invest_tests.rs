@@ -8,9 +8,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::replay::Replay;
-use crate::test_support::CONTENT;
-use crate::test_support::run as act;
-use crate::test_support::texts;
+use crate::test_support::{CONTENT, run as act, texts};
 
 /// The partner's desk in Wulfrun's office, and the cell west of it.
 const DESK: Pos = Pos::new(75, 23);

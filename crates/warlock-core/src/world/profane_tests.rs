@@ -6,8 +6,7 @@ use crate::action::Action;
 use crate::character::CharacterSpec;
 use crate::content::{GiftTier, TalentId};
 use crate::stats::{DRAIN_FLOOR, Stat};
-use crate::test_support::builtin;
-use crate::test_support::said_text as said;
+use crate::test_support::{builtin, said_text as said};
 
 fn world(character: &str) -> World {
     let content = builtin();

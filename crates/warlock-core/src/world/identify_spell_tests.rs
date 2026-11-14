@@ -7,8 +7,7 @@ use crate::ability::{Ability, Aim};
 use crate::content::{Rarity, SpellId};
 use crate::item_list::ItemList;
 use crate::magic::{Affix, Magic};
-use crate::test_support::last;
-use crate::test_support::run;
+use crate::test_support::{last, run};
 
 /// The pack: a, two scrolls of identify.
 const PACK: &str = "carry = [\"scroll_of_identify*2\"]";

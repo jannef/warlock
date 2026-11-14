@@ -9,8 +9,7 @@ use crate::content::ContentFiles;
 use crate::dump::{self, Layer};
 use crate::object::Stack;
 use crate::replay::Replay;
-use crate::test_support::run as act;
-use crate::test_support::texts;
+use crate::test_support::{run as act, texts};
 use std::sync::LazyLock;
 
 const HILD: Pos = Pos::new(27, 25);

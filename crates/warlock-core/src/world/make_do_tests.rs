@@ -9,9 +9,7 @@ use crate::content::{ActionKind, ClassActive, ContentFiles, ItemHarm};
 use crate::item_list::ItemList;
 use crate::magic::Worked;
 use crate::talent::CraftEffect;
-use crate::test_support::builtin;
-use crate::test_support::last;
-use crate::test_support::run;
+use crate::test_support::{builtin, last, run};
 
 const MEND: ClassActive = ClassActive::MakeDo;
 

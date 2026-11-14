@@ -3,8 +3,7 @@
 //! are peaceful, and its keepers and unique characters are deep gnomes.
 
 use super::*;
-use crate::test_support::builtin;
-use crate::test_support::run as step;
+use crate::test_support::{builtin, run as step};
 
 #[test]
 fn the_deepest_floor_leads_down_to_the_town_and_back() {
