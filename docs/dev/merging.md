@@ -91,7 +91,7 @@ conflict every time; two that insert at different places merge cleanly. So:
   `VERBS` table and `Display`), `ActionKind::ALL` and `data/actions.toml`, `KeyCommand` and `REBINDABLE`
   (`settings/keys.rs`: the controls screen shows that order, so a new command goes next to its
   group), the dump layers (`dump/layer.rs`, `dump/mod.rs::layer_rows`), the settings rows (`ui/settings_screen.rs`), the
-  `Content` fields and `Content::load` steps, the `mod` lists (`world/mod.rs` is alphabetical),
+  `Content` fields and `Content::load` steps, the `mod` lists (`world/mod.rs`: below),
   the wiki's `generate()` list (`xtask/src/wiki/mod.rs`) and `wiki/src/SUMMARY.md` (pages by
   topic), `tests/golden/manifest/*.toml` (the feature's own file), the content fingerprint
   groups, and single-file data tables (`data/slots.toml`, `stats.rs`, `data/weapon_skills.toml`,
@@ -116,6 +116,15 @@ conflict every time; two that insert at different places merge cleanly. So:
   calling `self.feature(..)` in `world/feature.rs`, one line each in the other hot files
   (`action.rs`, `content/mod.rs`, `dump.rs`, `input/play.rs`, `settings/keys.rs`), and its own tests
   file (`world/feature_tests.rs`).
+- **`world/mod.rs`'s module lists are grouped by subsystem** (#1497), each group under a comment
+  naming it and its `docs/dev/` topics: the group's modules, then its test modules inside one
+  `cfg_if! { if #[cfg(test)] { ... } }` block, each list sorted by name. A new module is one line,
+  `mod feature;` in its group's list, and its tests one line, `mod feature_tests;` in the group's
+  `cfg_if!` block (no `#[cfg(test)]` of its own: the block gives it). Pick the group of the
+  feature's `docs/dev/` topic; a test of a campaign's places end to end goes in the last group. The
+  `cfg_if!` is a local macro shaped and named after the `cfg-if` crate's because rustfmt follows
+  `mod` declarations inside `cfg_if!` and no other macro: under any other name `cargo fmt` would
+  skip the test files. The groups are the folders #1496 will move `world/` into, one per PR.
 - **Docs follow the same rule**: a feature edits its own `docs/dev/<topic>.md` and the `spec/`
   files of the sections it touches (bullets next to the related ones); `docs/dev/cli.md` for a new
   flag, `--screen` name, scenario, dump layer, or action (by its group); CLAUDE.md only for a new

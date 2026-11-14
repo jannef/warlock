@@ -83,206 +83,217 @@
 //! like the floor until the player finds them, searching (a check of Intelligence) or in passing
 //! (of Willpower, after every turn, for those who notice such things).
 
+// The modules, by subsystem (docs/dev/merging.md, "Hot registries"): each group lists its modules,
+// then its test modules, each sorted by name. A new module is one line in its group's list.
+
+/// Gives every item inside `#[cfg(test)]`, so a test module is one line in its group. Shaped and
+/// named after the `cfg-if` crate's macro on purpose: rustfmt follows `mod` declarations inside a
+/// `cfg_if!` (and inside no other macro), so `cargo fmt` still reaches these files.
+macro_rules! cfg_if {
+    (if #[cfg(test)] { $($item:item)* }) => {
+        $(#[cfg(test)] $item)*
+    };
+}
+
+// The run, the turn, and time (docs/dev/time.md, saves.md, rendering.md's perception).
 mod actor;
 mod actors;
-mod ai;
-mod alignment;
-mod ally;
-#[cfg(test)]
-mod ally_tests;
-mod ambush;
-mod animated;
-mod appraise;
-mod ascetic;
-mod attacks;
-mod aura;
-#[cfg(test)]
-mod aura_tests;
-mod avert;
-mod backfire;
-mod background;
-mod beast_friend;
-mod bleed;
-mod blink;
-mod bond;
-mod boons;
-mod breath;
-mod buff;
-mod calling;
-mod carry;
-mod cast;
-mod cast_style;
-mod caster;
-mod charge;
-mod charm;
-mod chest;
-mod class;
-mod class_ability;
-mod collapse;
-mod collar;
-mod companion;
-mod concentration;
-mod consecrate;
-mod corpse_spell;
-mod corrode;
-mod court;
-mod craft;
-mod craft_make;
-mod creation;
-mod creature_burst;
-mod creature_cast;
-mod crystal;
-mod curse;
-mod cut;
-mod dark_face;
-mod decipher;
-mod den;
 mod dev;
-mod dig;
-mod disarm;
-mod disease;
-mod door;
-mod drain;
-mod drink;
-mod dummy;
-mod eat;
+mod eyes;
+mod glare;
+mod hash;
+mod hearing;
+mod level;
+mod perceive;
+mod rest;
+mod run;
+mod schedule;
+mod stride;
+mod voice;
+cfg_if! {
+    if #[cfg(test)] {
+        mod cost_tests;
+        mod hearing_tests;
+        mod light_tests;
+        mod moon_tests;
+        mod numbers_tests;
+        mod rest_close_tests;
+        mod run_tests;
+        mod speed_tests;
+        mod stamina_tests;
+        mod stride_tests;
+        mod sun_tests;
+        mod tests;
+        mod time_tests;
+        mod voice_tests;
+        mod weather_tests;
+    }
+}
+
+// Travel, levels, and the overworld (docs/dev/overworld.md, encounters.md, mapgen.md,
+// temperature.md).
 mod edge_leave;
-mod element_gifts;
-mod elixir;
-mod enchant;
 mod encounter;
 mod encounter_area;
 mod endless;
 mod enter;
-mod equip;
-mod escort;
-mod escort_waits;
-mod experience;
-mod eyes;
-mod familiar;
-mod feature;
-mod feint;
-mod field_forge;
-mod fight;
-mod first_sight;
-mod flask;
-mod flavour;
-mod fletch;
-mod focus;
 mod footing;
-mod forage;
-mod forget;
+mod ice;
+mod layer_boss;
+mod pit;
+mod quick_leave;
+mod reveal;
+mod stair_followers;
+mod swim;
+mod talk_past;
+mod travel;
+mod wriggle;
+cfg_if! {
+    if #[cfg(test)] {
+        mod beside_tests;
+        mod branch_tests;
+        mod edge_leave_tests;
+        mod encounter_tests;
+        mod endless_tests;
+        mod escape_tests;
+        mod everlasting_tests;
+        mod footing_tests;
+        mod gate_tests;
+        mod ice_tests;
+        mod layer_boss_tests;
+        mod overworld_tests;
+        mod pit_tests;
+        mod quick_leave_tests;
+        mod reveal_tests;
+        mod room_temperature_tests;
+        mod stair_followers_tests;
+        mod swim_deep_tests;
+        mod swim_tests;
+        mod way_out_tests;
+        mod wriggle_tests;
+    }
+}
+
+// Combat (docs/dev/combat.md, ranged-combat.md, weapon-skills.md, weapon-abilities.md, blood.md,
+// surprise.md).
+mod ambush;
+mod attacks;
+mod bleed;
+mod corrode;
+mod dummy;
+mod fight;
 mod free_blow;
 mod frenzy;
+mod hurl;
+mod item_damage;
+mod knock_away;
+mod lurk;
+mod natural;
+mod reflect;
+mod sear;
+mod shoot;
+mod slip;
+pub(crate) mod surprise;
+mod two_shields;
+mod weapon_ability;
+mod weapon_active;
+cfg_if! {
+    if #[cfg(test)] {
+        mod ambush_tests;
+        mod attacks_tests;
+        mod balance_probe;
+        mod blood_tests;
+        mod corrode_tests;
+        mod damage_tests;
+        mod dummy_tests;
+        mod fight_tests;
+        mod free_blow_tests;
+        mod frenzy_tests;
+        mod hurl_tests;
+        mod item_damage_tests;
+        mod knock_away_tests;
+        mod lurk_tests;
+        mod protection_tests;
+        mod sear_tests;
+        mod shoot_tests;
+        mod shot_range_tests;
+        mod silent_tests;
+        mod slip_tests;
+        mod stunning_strike_tests;
+        mod style_tests;
+        mod surprise_tests;
+        mod surprise_words_tests;
+        mod thrown_exploit_tests;
+        mod two_shield_tests;
+        mod vitals_tests;
+        mod weapon_ability_tests;
+        mod weapon_active_tests;
+        mod weapon_skill_tests;
+    }
+}
+
+// Statuses, healing, hunger, and potions (docs/dev/status-effects.md, hunger.md, potions.md,
+// burden.md).
+mod buff;
+mod disease;
+mod drain;
+mod eat;
+mod elixir;
+mod flask;
 pub(crate) mod freshness;
-mod gather;
-mod gaze;
-pub(crate) mod gear_condition;
-#[cfg(test)]
-mod gear_condition_tests;
-mod gifts;
-mod glare;
-mod goodwill;
-mod graves;
-mod graveyard;
-#[cfg(test)]
-mod graveyard_tests;
-mod guild;
-mod hash;
-mod haunt;
 mod heal;
 mod heal_harm;
-mod hearing;
-mod heirloom;
-mod hoard;
 mod hold;
 mod hunger;
-mod hurl;
-mod ice;
-mod incorporeal;
-mod intimidate;
-mod invest;
-mod item_damage;
-mod jack;
-mod knock;
-mod knock_away;
-mod knowledge;
-mod lamp;
-mod layer_boss;
+mod potion;
+mod regen;
+mod rot;
+mod status;
+cfg_if! {
+    if #[cfg(test)] {
+        mod buff_field_tests;
+        mod buff_tests;
+        mod burden_tests;
+        mod disease_tests;
+        mod drain_tests;
+        mod eat_tests;
+        mod elixir_tests;
+        mod flask_content_tests;
+        mod flask_fire_tests;
+        mod flask_tests;
+        mod freshness_tests;
+        mod heal_harm_tests;
+        mod heal_tests;
+        mod hold_tests;
+        mod hunger_tests;
+        mod potion_gamble_tests;
+        mod potion_status_tests;
+        mod potion_tests;
+        mod potion_utility_tests;
+        mod rot_tests;
+        mod smoke_tests;
+        mod status_tests;
+    }
+}
+
+// Magic: mana, spells, scrolls, wands (docs/dev/mana.md, spells.md, caster-styles.md, scrolls.md).
+mod backfire;
+mod cast;
+mod cast_style;
+mod caster;
+mod concentration;
+mod corpse_spell;
+mod decipher;
+mod forget;
 mod learn;
-mod level;
-mod listen;
-mod lockpick;
-mod loot;
-mod lucky;
-mod lure;
-mod lurk;
-mod make_do;
 mod malison;
 mod mana;
-mod mark;
-mod mastery;
-mod material_drops;
-mod merchants_eye;
-mod mimic;
-mod mine;
-pub(crate) mod mirrors;
 mod miscast;
-mod natural;
-mod openings;
-mod orison;
-mod outcome;
-mod pack;
-mod path;
-pub(crate) mod patron;
-mod perceive;
-mod pit;
-mod potion;
-mod pray;
-mod profane;
-mod quest;
-mod quest_roll;
-mod quick_leave;
-mod racial;
-mod rage;
 mod read;
-mod reflect;
-mod regen;
-mod resource;
-mod rest;
 mod restore;
-mod reveal;
-mod rig;
 mod rod;
-mod rooms;
-mod rooted;
-mod rot;
 mod ruin;
-mod rumour;
-mod run;
-mod salvage;
-mod sanctuary;
-mod schedule;
 mod scribe;
-mod seal;
-mod sear;
-mod search;
-mod second_wind;
-mod service;
-mod set;
-mod shoot;
-mod shop;
-mod shrine;
-mod sic;
-mod sidestep;
-mod sign_picks;
-mod siphon;
-mod skill_roll;
-mod slip;
-mod smite;
-mod snatch;
-mod song;
-mod spawn;
 mod spell;
 mod spell_arc;
 mod spell_mods;
@@ -291,49 +302,452 @@ mod spell_rule;
 mod spell_rung;
 mod spell_type;
 mod spell_words;
-mod spirit_weapon;
+mod summon_spell;
+mod zap;
+mod zone;
+cfg_if! {
+    if #[cfg(test)] {
+        mod backfire_tests;
+        mod cast_tests;
+        mod caster_style_tests;
+        mod caster_tests;
+        mod circle_tests;
+        mod concentration_tests;
+        mod corpse_spell_tests;
+        mod decipher_tests;
+        mod forget_tests;
+        mod identify_spell_tests;
+        mod learn_tests;
+        mod magic_tests;
+        mod malison_tests;
+        mod mana_tests;
+        mod miscast_stat_tests;
+        mod miscast_tests;
+        mod necromancy_rank_tests;
+        mod read_tests;
+        mod rod_tests;
+        mod ruin_tests;
+        mod scribe_tests;
+        mod scroll_label_tests;
+        mod spell_arc_tests;
+        mod spell_data_tests;
+        mod spell_list_tests;
+        mod spell_rank_tests;
+        mod spell_rule_tests;
+        mod spell_type_force_tests;
+        mod spell_type_tests;
+        mod summon_spell_tests;
+        mod transmutation_rank_tests;
+        mod zap_tests;
+        mod zone_tests;
+    }
+}
+
+// Creatures (docs/dev/creatures.md, summoning.md, animated.md).
+mod ai;
+mod animated;
+mod aura;
+mod avert;
+mod blink;
+mod breath;
+mod court;
+mod creature_burst;
+mod creature_cast;
+mod den;
+mod first_sight;
+mod gaze;
+mod incorporeal;
+mod mimic;
+mod path;
+mod rooted;
+mod snatch;
+mod spawn;
 mod split;
-mod stair_followers;
+mod statue;
+mod summon;
+mod unseen;
+cfg_if! {
+    if #[cfg(test)] {
+        mod ai_tests;
+        mod animated_blade_tests;
+        mod animated_dread_tests;
+        mod animated_panoply_tests;
+        mod animated_tests;
+        mod aura_tests;
+        mod beast_den_tests;
+        mod bestiary_tests;
+        mod breath_tests;
+        mod court_tests;
+        mod creature_burst_tests;
+        mod creature_cast_tests;
+        mod creature_flask_tests;
+        mod creature_magic_tests;
+        mod den_tests;
+        mod dwell_tests;
+        mod first_sight_tests;
+        mod fixture_factions;
+        mod gaze_tests;
+        mod incorporeal_tests;
+        mod mimic_tests;
+        mod retribution_tests;
+        mod rooted_tests;
+        mod spawn_tests;
+        mod split_tests;
+        mod statue_tests;
+        mod summon_tests;
+        mod tag_tests;
+        mod unique_tests;
+        mod unseen_tests;
+        mod variant_tests;
+    }
+}
+
+// Allies (docs/dev/allies.md, companion.md, familiar.md).
+mod ally;
+mod beast_friend;
+mod bond;
+mod charm;
+mod collar;
+mod companion;
+mod familiar;
+mod pack;
+mod sic;
+mod tame;
+cfg_if! {
+    if #[cfg(test)] {
+        mod ally_tests;
+        mod bond_tests;
+        mod charm_tests;
+        mod collar_tests;
+        mod pack_tests;
+        mod sic_tests;
+        mod tame_tests;
+    }
+}
+
+// The character: creation, progression, stats (docs/dev/character-creation.md, background.md,
+// progression.md, experience.md, stats.md, skills.md, alignment.md, resources.md).
+mod alignment;
+mod background;
+mod creation;
+mod element_gifts;
+mod experience;
+mod flavour;
+mod gifts;
+mod heirloom;
+mod lucky;
+mod profane;
+mod racial;
+mod resource;
+mod second_wind;
+mod sign_picks;
+mod skill_roll;
 mod stars;
 mod stat_deeds;
 mod stat_training;
-mod statue;
-mod status;
-mod steal;
-mod stipend;
-mod stock;
-mod stride;
-mod summon;
-mod summon_spell;
-pub(crate) mod surprise;
-mod swim;
 mod talent;
-mod talk;
-mod talk_past;
-mod tame;
-mod temper;
-mod thief;
-mod trade;
 mod train;
-mod trap;
-mod travel;
-mod treasury;
-mod two_shields;
-mod unseen;
-mod voice;
+cfg_if! {
+    if #[cfg(test)] {
+        mod alignment_tests;
+        mod body_talent_tests;
+        mod character_tests;
+        mod creation_tests;
+        mod damage_talent_tests;
+        mod element_gift_tests;
+        mod experience_tests;
+        mod flavour_tests;
+        mod gifts_tests;
+        mod heirloom_tests;
+        mod land_talent_tests;
+        mod lucky_tests;
+        mod mana_talent_tests;
+        mod race_tests;
+        mod racial_tests;
+        mod resource_talent_tests;
+        mod resource_tests;
+        mod sign_pick_tests;
+        mod skill_roll_tests;
+        mod skills_tests;
+        mod spell_talent_tests;
+        mod stars_roc_tests;
+        mod stars_tests;
+        mod stat_deeds_tests;
+        mod stat_paths_tests;
+        mod stat_training_tests;
+        mod stats_tests;
+        mod talent_arms_tests;
+        mod talent_tests;
+        mod talent_wits_tests;
+        mod waste_not_tests;
+    }
+}
+
+// Classes and their abilities (docs/dev/progression.md, openings.md, prayer.md).
+mod ascetic;
+mod calling;
+mod charge;
+mod class;
+mod class_ability;
+mod consecrate;
+mod dark_face;
+mod focus;
+mod invest;
+mod jack;
+mod mark;
+mod merchants_eye;
+mod openings;
+mod orison;
+mod rage;
+mod sanctuary;
+mod smite;
+mod song;
+mod spirit_weapon;
+mod stipend;
+mod thief;
 mod volley;
 mod war_cry;
-mod wares;
-mod warp;
-mod weapon_ability;
-mod weapon_active;
-mod wedge;
 mod witch;
+cfg_if! {
+    if #[cfg(test)] {
+        mod ascetic_tests;
+        mod calling_tests;
+        mod charge_tests;
+        mod class_active_tests;
+        mod class_rogue_tests;
+        mod class_tests;
+        mod dark_face_tests;
+        mod focus_tests;
+        mod invest_tests;
+        mod ki_tests;
+        mod lullaby_tests;
+        mod mark_tests;
+        mod merchants_eye_tests;
+        mod openings_tests;
+        mod orison_tests;
+        mod sanctuary_tests;
+        mod smite_mode_tests;
+        mod smite_tests;
+        mod smite_wrath_tests;
+        mod song_tests;
+        mod spirit_weapon_tests;
+        mod stipend_tests;
+        mod war_cry_tests;
+        mod witch_tests;
+    }
+}
+
+// Skill uses (docs/dev/skills.md, searching.md, stealing.md, hearing.md).
+mod appraise;
+mod disarm;
+mod feint;
+mod forage;
+mod gather;
+mod intimidate;
+mod knowledge;
+mod listen;
+mod lockpick;
+mod search;
+mod sidestep;
+mod steal;
+mod wedge;
+cfg_if! {
+    if #[cfg(test)] {
+        mod appraise_tests;
+        mod disarm_tests;
+        mod feint_tests;
+        mod forage_tests;
+        mod gather_tests;
+        mod intimidate_tests;
+        mod knowledge_tests;
+        mod lockpick_tests;
+        mod search_tests;
+        mod sidestep_tests;
+        mod steal_tests;
+        mod theft_tests;
+        mod wedge_tests;
+    }
+}
+
+// Objects, equipment, and magic items (docs/dev/objects.md, equipment.md, magic-items.md).
+mod carry;
+mod equip;
+pub(crate) mod gear_condition;
+mod lamp;
+mod loot;
+mod material_drops;
+mod siphon;
+mod stock;
+cfg_if! {
+    if #[cfg(test)] {
+        mod affix_draught_tests;
+        mod affix_spell_tests;
+        mod affix_stamina_tests;
+        mod affix_utility_tests;
+        mod equip_tests;
+        mod gear_condition_tests;
+        mod gear_tests;
+        mod gem_tests;
+        mod lamp_tests;
+        mod material_draw_tests;
+        mod material_drops_tests;
+        mod object_tests;
+        mod parts_tests;
+        mod siphon_tests;
+    }
+}
+
+// Crafting, enchanting, and digging (docs/dev/crafting.md, enchanting.md, digging.md).
+mod craft;
+mod craft_make;
+mod crystal;
+mod cut;
+mod dig;
+mod enchant;
+mod field_forge;
+mod fletch;
+mod make_do;
+mod mastery;
+mod mine;
+pub(crate) mod patron;
+mod rig;
+mod salvage;
+mod seal;
+mod set;
+mod temper;
+mod trade;
 mod work;
 mod work_on;
-mod wriggle;
-mod zap;
-mod zone;
+cfg_if! {
+    if #[cfg(test)] {
+        mod brew_tests;
+        mod craft_armour_tests;
+        mod craft_bow_tests;
+        mod craft_hand_tests;
+        mod craft_hide_tests;
+        mod craft_make_tests;
+        mod craft_tests;
+        mod craftsperson_tests;
+        mod cut_tests;
+        mod dig_tests;
+        mod enchant_tests;
+        mod field_forge_tests;
+        mod fletch_tests;
+        mod make_do_tests;
+        mod makers_mark_tests;
+        mod mastery_tests;
+        mod mine_tests;
+        mod patron_tests;
+        mod rig_tests;
+        mod salvage_tests;
+        mod set_tests;
+        mod temper_tests;
+        mod trade_tests;
+        mod whittle_tests;
+    }
+}
+
+// Doors, chests, traps, and special rooms (docs/dev/doors.md, chests.md, traps.md,
+// special-rooms.md).
+mod boons;
+mod chest;
+mod collapse;
+mod curse;
+mod door;
+mod drink;
+mod feature;
+mod graves;
+mod graveyard;
+mod haunt;
+mod hoard;
+mod knock;
+pub(crate) mod mirrors;
+mod outcome;
+mod pray;
+mod rooms;
+mod shrine;
+mod trap;
+mod treasury;
+mod warp;
+cfg_if! {
+    if #[cfg(test)] {
+        mod chest_hall_tests;
+        mod chest_tests;
+        mod chest_trap_tests;
+        mod collapse_tests;
+        mod curse_tests;
+        mod door_tests;
+        mod door_trap_tests;
+        mod feature_tests;
+        mod graveyard_tests;
+        mod haunt_tests;
+        mod heavy_hall_tests;
+        mod hoard_tests;
+        mod mirrors_tests;
+        mod outcome_tests;
+        mod room_tests;
+        mod shrine_tests;
+        mod spring_tests;
+        mod trap_rung_tests;
+        mod trap_tests;
+        mod treasury_tests;
+        mod unstable_room_tests;
+    }
+}
+
+// People: talk, quests, shops, guilds (docs/dev/npcs.md, quests.md, shops.md, guild.md).
+mod escort;
+mod escort_waits;
+mod goodwill;
+mod guild;
+mod lure;
+mod quest;
+mod quest_roll;
+mod rumour;
+mod service;
+mod shop;
+mod talk;
+mod wares;
+cfg_if! {
+    if #[cfg(test)] {
+        mod escort_tests;
+        mod goodwill_tests;
+        mod guild_tests;
+        mod guild_wanted_tests;
+        mod identify_service_tests;
+        mod outlaw_tests;
+        mod quest_roll_tests;
+        mod quest_tests;
+        mod rumour_tests;
+        mod service_haggle_tests;
+        mod service_tests;
+        mod shop_tests;
+        mod talk_tests;
+        mod train_service_tests;
+        mod wares_tests;
+    }
+}
+
+// The campaigns' places and people, end to end.
+cfg_if! {
+    if #[cfg(test)] {
+        mod ascmearc_encounter_tests;
+        mod ascmearc_tests;
+        mod ceaptun_quest_tests;
+        mod ceaptun_tests;
+        mod crystal_guardian_tests;
+        mod deep_gnome_tests;
+        mod druid_quest_tests;
+        mod gnome_letter_tests;
+        mod hellegeat_tests;
+        mod holtwic_tests;
+        mod lictun_tests;
+        mod pit_warden_tests;
+        mod scriptorium_tests;
+        mod strange_spirit_tests;
+        mod wynflaed_quest_tests;
+    }
+}
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use actors::Actors;
@@ -1754,633 +2168,6 @@ impl World {
         Spent::NoTime
     }
 }
-
-#[cfg(test)]
-mod affix_draught_tests;
-#[cfg(test)]
-mod affix_spell_tests;
-#[cfg(test)]
-mod affix_stamina_tests;
-#[cfg(test)]
-#[cfg(test)]
-mod affix_utility_tests;
-#[cfg(test)]
-mod ai_tests;
-#[cfg(test)]
-mod alignment_tests;
-#[cfg(test)]
-mod ambush_tests;
-#[cfg(test)]
-mod animated_blade_tests;
-#[cfg(test)]
-mod animated_dread_tests;
-#[cfg(test)]
-mod animated_panoply_tests;
-#[cfg(test)]
-mod animated_tests;
-#[cfg(test)]
-mod appraise_tests;
-#[cfg(test)]
-mod ascetic_tests;
-#[cfg(test)]
-mod ascmearc_encounter_tests;
-#[cfg(test)]
-mod ascmearc_tests;
-#[cfg(test)]
-mod attacks_tests;
-#[cfg(test)]
-mod backfire_tests;
-#[cfg(test)]
-mod balance_probe;
-#[cfg(test)]
-mod beast_den_tests;
-#[cfg(test)]
-mod beside_tests;
-#[cfg(test)]
-mod bestiary_tests;
-#[cfg(test)]
-mod blood_tests;
-#[cfg(test)]
-mod body_talent_tests;
-#[cfg(test)]
-mod bond_tests;
-#[cfg(test)]
-mod branch_tests;
-#[cfg(test)]
-mod breath_tests;
-#[cfg(test)]
-mod brew_tests;
-#[cfg(test)]
-mod buff_field_tests;
-#[cfg(test)]
-mod buff_tests;
-#[cfg(test)]
-mod burden_tests;
-#[cfg(test)]
-mod calling_tests;
-#[cfg(test)]
-mod cast_tests;
-#[cfg(test)]
-mod caster_style_tests;
-#[cfg(test)]
-mod caster_tests;
-#[cfg(test)]
-mod ceaptun_quest_tests;
-#[cfg(test)]
-mod ceaptun_tests;
-#[cfg(test)]
-mod character_tests;
-#[cfg(test)]
-mod charge_tests;
-#[cfg(test)]
-mod charm_tests;
-#[cfg(test)]
-mod chest_hall_tests;
-#[cfg(test)]
-mod chest_tests;
-#[cfg(test)]
-mod chest_trap_tests;
-#[cfg(test)]
-mod circle_tests;
-#[cfg(test)]
-mod class_active_tests;
-#[cfg(test)]
-mod class_rogue_tests;
-#[cfg(test)]
-mod class_tests;
-#[cfg(test)]
-mod collapse_tests;
-#[cfg(test)]
-mod collar_tests;
-#[cfg(test)]
-mod concentration_tests;
-#[cfg(test)]
-mod corpse_spell_tests;
-#[cfg(test)]
-mod corrode_tests;
-#[cfg(test)]
-mod cost_tests;
-#[cfg(test)]
-mod court_tests;
-#[cfg(test)]
-mod craft_armour_tests;
-#[cfg(test)]
-mod craft_bow_tests;
-#[cfg(test)]
-mod craft_hand_tests;
-#[cfg(test)]
-mod craft_hide_tests;
-#[cfg(test)]
-mod craft_make_tests;
-#[cfg(test)]
-mod craft_tests;
-#[cfg(test)]
-mod craftsperson_tests;
-#[cfg(test)]
-mod creation_tests;
-#[cfg(test)]
-mod creature_burst_tests;
-#[cfg(test)]
-mod creature_cast_tests;
-#[cfg(test)]
-mod creature_flask_tests;
-#[cfg(test)]
-mod creature_magic_tests;
-#[cfg(test)]
-mod crystal_guardian_tests;
-#[cfg(test)]
-mod curse_tests;
-#[cfg(test)]
-mod cut_tests;
-#[cfg(test)]
-mod damage_talent_tests;
-#[cfg(test)]
-mod damage_tests;
-#[cfg(test)]
-mod dark_face_tests;
-#[cfg(test)]
-mod decipher_tests;
-#[cfg(test)]
-mod deep_gnome_tests;
-#[cfg(test)]
-mod den_tests;
-#[cfg(test)]
-mod dig_tests;
-#[cfg(test)]
-mod disarm_tests;
-#[cfg(test)]
-mod disease_tests;
-#[cfg(test)]
-mod door_tests;
-#[cfg(test)]
-mod door_trap_tests;
-#[cfg(test)]
-mod drain_tests;
-#[cfg(test)]
-mod druid_quest_tests;
-#[cfg(test)]
-mod dummy_tests;
-#[cfg(test)]
-mod dwell_tests;
-#[cfg(test)]
-mod eat_tests;
-#[cfg(test)]
-mod edge_leave_tests;
-#[cfg(test)]
-mod element_gift_tests;
-#[cfg(test)]
-mod elixir_tests;
-#[cfg(test)]
-mod enchant_tests;
-#[cfg(test)]
-mod encounter_tests;
-#[cfg(test)]
-mod endless_tests;
-#[cfg(test)]
-mod equip_tests;
-#[cfg(test)]
-mod escape_tests;
-#[cfg(test)]
-mod escort_tests;
-#[cfg(test)]
-mod everlasting_tests;
-#[cfg(test)]
-mod experience_tests;
-#[cfg(test)]
-mod feature_tests;
-#[cfg(test)]
-mod feint_tests;
-#[cfg(test)]
-mod field_forge_tests;
-#[cfg(test)]
-mod fight_tests;
-#[cfg(test)]
-mod first_sight_tests;
-#[cfg(test)]
-mod fixture_factions;
-#[cfg(test)]
-mod flask_content_tests;
-#[cfg(test)]
-mod flask_fire_tests;
-#[cfg(test)]
-mod flask_tests;
-#[cfg(test)]
-mod flavour_tests;
-#[cfg(test)]
-mod fletch_tests;
-#[cfg(test)]
-mod focus_tests;
-#[cfg(test)]
-mod footing_tests;
-#[cfg(test)]
-mod forage_tests;
-#[cfg(test)]
-mod forget_tests;
-#[cfg(test)]
-mod free_blow_tests;
-#[cfg(test)]
-mod frenzy_tests;
-#[cfg(test)]
-mod freshness_tests;
-#[cfg(test)]
-mod gate_tests;
-#[cfg(test)]
-mod gather_tests;
-#[cfg(test)]
-mod gaze_tests;
-#[cfg(test)]
-mod gear_tests;
-#[cfg(test)]
-mod gem_tests;
-#[cfg(test)]
-mod gifts_tests;
-#[cfg(test)]
-mod gnome_letter_tests;
-#[cfg(test)]
-mod goodwill_tests;
-#[cfg(test)]
-mod guild_tests;
-#[cfg(test)]
-mod guild_wanted_tests;
-#[cfg(test)]
-mod haunt_tests;
-#[cfg(test)]
-mod heal_harm_tests;
-#[cfg(test)]
-mod heal_tests;
-#[cfg(test)]
-mod hearing_tests;
-#[cfg(test)]
-mod heavy_hall_tests;
-#[cfg(test)]
-mod heirloom_tests;
-#[cfg(test)]
-mod hellegeat_tests;
-#[cfg(test)]
-mod hoard_tests;
-#[cfg(test)]
-mod hold_tests;
-#[cfg(test)]
-mod holtwic_tests;
-#[cfg(test)]
-mod hunger_tests;
-#[cfg(test)]
-mod hurl_tests;
-#[cfg(test)]
-mod ice_tests;
-#[cfg(test)]
-mod identify_service_tests;
-#[cfg(test)]
-mod identify_spell_tests;
-#[cfg(test)]
-mod incorporeal_tests;
-#[cfg(test)]
-mod intimidate_tests;
-#[cfg(test)]
-mod invest_tests;
-#[cfg(test)]
-mod item_damage_tests;
-#[cfg(test)]
-mod ki_tests;
-#[cfg(test)]
-mod knock_away_tests;
-#[cfg(test)]
-mod knowledge_tests;
-#[cfg(test)]
-mod lamp_tests;
-#[cfg(test)]
-mod land_talent_tests;
-#[cfg(test)]
-mod layer_boss_tests;
-#[cfg(test)]
-mod learn_tests;
-#[cfg(test)]
-mod lictun_tests;
-#[cfg(test)]
-mod light_tests;
-#[cfg(test)]
-mod lockpick_tests;
-#[cfg(test)]
-mod lucky_tests;
-#[cfg(test)]
-mod lullaby_tests;
-#[cfg(test)]
-mod lurk_tests;
-#[cfg(test)]
-mod magic_tests;
-#[cfg(test)]
-mod make_do_tests;
-#[cfg(test)]
-mod makers_mark_tests;
-#[cfg(test)]
-mod malison_tests;
-#[cfg(test)]
-mod mana_talent_tests;
-#[cfg(test)]
-mod mana_tests;
-#[cfg(test)]
-mod mark_tests;
-#[cfg(test)]
-mod mastery_tests;
-#[cfg(test)]
-mod material_draw_tests;
-#[cfg(test)]
-mod material_drops_tests;
-#[cfg(test)]
-mod merchants_eye_tests;
-#[cfg(test)]
-mod mimic_tests;
-#[cfg(test)]
-mod mine_tests;
-#[cfg(test)]
-mod mirrors_tests;
-#[cfg(test)]
-mod miscast_stat_tests;
-#[cfg(test)]
-mod miscast_tests;
-#[cfg(test)]
-mod moon_tests;
-#[cfg(test)]
-mod necromancy_rank_tests;
-#[cfg(test)]
-mod numbers_tests;
-#[cfg(test)]
-mod object_tests;
-#[cfg(test)]
-mod openings_tests;
-#[cfg(test)]
-mod orison_tests;
-#[cfg(test)]
-mod outcome_tests;
-#[cfg(test)]
-mod outlaw_tests;
-#[cfg(test)]
-mod overworld_tests;
-#[cfg(test)]
-mod pack_tests;
-#[cfg(test)]
-mod parts_tests;
-#[cfg(test)]
-mod patron_tests;
-#[cfg(test)]
-mod pit_tests;
-#[cfg(test)]
-mod pit_warden_tests;
-#[cfg(test)]
-mod potion_gamble_tests;
-#[cfg(test)]
-mod potion_status_tests;
-#[cfg(test)]
-mod potion_tests;
-#[cfg(test)]
-mod potion_utility_tests;
-#[cfg(test)]
-mod protection_tests;
-#[cfg(test)]
-mod quest_roll_tests;
-#[cfg(test)]
-mod quest_tests;
-#[cfg(test)]
-mod quick_leave_tests;
-#[cfg(test)]
-mod race_tests;
-#[cfg(test)]
-mod racial_tests;
-#[cfg(test)]
-mod read_tests;
-#[cfg(test)]
-mod resource_talent_tests;
-#[cfg(test)]
-mod resource_tests;
-#[cfg(test)]
-mod rest_close_tests;
-#[cfg(test)]
-mod retribution_tests;
-#[cfg(test)]
-mod reveal_tests;
-#[cfg(test)]
-mod rig_tests;
-#[cfg(test)]
-mod rod_tests;
-#[cfg(test)]
-mod room_temperature_tests;
-#[cfg(test)]
-mod room_tests;
-#[cfg(test)]
-mod rooted_tests;
-#[cfg(test)]
-mod rot_tests;
-#[cfg(test)]
-mod ruin_tests;
-#[cfg(test)]
-mod rumour_tests;
-#[cfg(test)]
-mod run_tests;
-#[cfg(test)]
-mod salvage_tests;
-#[cfg(test)]
-mod sanctuary_tests;
-#[cfg(test)]
-mod scribe_tests;
-#[cfg(test)]
-mod scriptorium_tests;
-#[cfg(test)]
-mod scroll_label_tests;
-#[cfg(test)]
-mod sear_tests;
-#[cfg(test)]
-mod search_tests;
-#[cfg(test)]
-mod service_haggle_tests;
-#[cfg(test)]
-mod service_tests;
-#[cfg(test)]
-mod set_tests;
-#[cfg(test)]
-mod shoot_tests;
-#[cfg(test)]
-mod shop_tests;
-#[cfg(test)]
-mod shot_range_tests;
-#[cfg(test)]
-mod shrine_tests;
-#[cfg(test)]
-mod sic_tests;
-#[cfg(test)]
-mod sidestep_tests;
-#[cfg(test)]
-mod sign_pick_tests;
-#[cfg(test)]
-mod silent_tests;
-#[cfg(test)]
-mod siphon_tests;
-#[cfg(test)]
-mod skill_roll_tests;
-#[cfg(test)]
-mod skills_tests;
-#[cfg(test)]
-mod slip_tests;
-#[cfg(test)]
-mod smite_mode_tests;
-#[cfg(test)]
-mod smite_tests;
-#[cfg(test)]
-mod smite_wrath_tests;
-#[cfg(test)]
-mod smoke_tests;
-#[cfg(test)]
-mod song_tests;
-#[cfg(test)]
-mod spawn_tests;
-#[cfg(test)]
-mod speed_tests;
-#[cfg(test)]
-mod spell_arc_tests;
-#[cfg(test)]
-mod spell_data_tests;
-#[cfg(test)]
-mod spell_list_tests;
-#[cfg(test)]
-mod spell_rank_tests;
-#[cfg(test)]
-mod spell_rule_tests;
-#[cfg(test)]
-mod spell_talent_tests;
-#[cfg(test)]
-mod spell_type_force_tests;
-#[cfg(test)]
-mod spell_type_tests;
-#[cfg(test)]
-mod spirit_weapon_tests;
-#[cfg(test)]
-mod split_tests;
-#[cfg(test)]
-mod spring_tests;
-#[cfg(test)]
-mod stair_followers_tests;
-#[cfg(test)]
-mod stamina_tests;
-#[cfg(test)]
-mod stars_roc_tests;
-#[cfg(test)]
-mod stars_tests;
-#[cfg(test)]
-mod stat_deeds_tests;
-#[cfg(test)]
-mod stat_paths_tests;
-#[cfg(test)]
-mod stat_training_tests;
-#[cfg(test)]
-mod stats_tests;
-#[cfg(test)]
-mod statue_tests;
-#[cfg(test)]
-mod status_tests;
-#[cfg(test)]
-mod steal_tests;
-#[cfg(test)]
-mod stipend_tests;
-#[cfg(test)]
-mod strange_spirit_tests;
-#[cfg(test)]
-mod stride_tests;
-#[cfg(test)]
-mod stunning_strike_tests;
-#[cfg(test)]
-mod style_tests;
-#[cfg(test)]
-mod summon_spell_tests;
-#[cfg(test)]
-mod summon_tests;
-#[cfg(test)]
-mod sun_tests;
-#[cfg(test)]
-mod surprise_tests;
-#[cfg(test)]
-mod surprise_words_tests;
-#[cfg(test)]
-mod swim_deep_tests;
-#[cfg(test)]
-mod swim_tests;
-#[cfg(test)]
-mod tag_tests;
-#[cfg(test)]
-mod talent_arms_tests;
-#[cfg(test)]
-mod talent_tests;
-#[cfg(test)]
-mod talent_wits_tests;
-#[cfg(test)]
-mod talk_tests;
-#[cfg(test)]
-mod tame_tests;
-#[cfg(test)]
-mod temper_tests;
-#[cfg(test)]
-mod tests;
-#[cfg(test)]
-mod theft_tests;
-#[cfg(test)]
-mod thrown_exploit_tests;
-#[cfg(test)]
-mod time_tests;
-#[cfg(test)]
-mod trade_tests;
-#[cfg(test)]
-mod train_service_tests;
-#[cfg(test)]
-mod transmutation_rank_tests;
-#[cfg(test)]
-mod trap_rung_tests;
-#[cfg(test)]
-mod trap_tests;
-#[cfg(test)]
-mod treasury_tests;
-#[cfg(test)]
-mod two_shield_tests;
-#[cfg(test)]
-mod unique_tests;
-#[cfg(test)]
-mod unseen_tests;
-#[cfg(test)]
-mod unstable_room_tests;
-#[cfg(test)]
-mod variant_tests;
-#[cfg(test)]
-mod vitals_tests;
-#[cfg(test)]
-mod voice_tests;
-#[cfg(test)]
-mod war_cry_tests;
-#[cfg(test)]
-mod wares_tests;
-#[cfg(test)]
-mod waste_not_tests;
-#[cfg(test)]
-mod way_out_tests;
-#[cfg(test)]
-mod weapon_ability_tests;
-#[cfg(test)]
-mod weapon_active_tests;
-#[cfg(test)]
-mod weapon_skill_tests;
-#[cfg(test)]
-mod weather_tests;
-
-#[cfg(test)]
-mod wedge_tests;
-#[cfg(test)]
-mod whittle_tests;
-#[cfg(test)]
-mod witch_tests;
-#[cfg(test)]
-mod wriggle_tests;
-#[cfg(test)]
-mod wynflaed_quest_tests;
-#[cfg(test)]
-mod zap_tests;
-#[cfg(test)]
-mod zone_tests;
 
 /// How actors `a` and `b` stand toward each other ([`World::stance`], for a borrowed state): the
 /// stance of their factions, [`Stance::Neutral`] for a Beast-friend and an animal they befriended.
